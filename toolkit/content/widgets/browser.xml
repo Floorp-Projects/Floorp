@@ -639,6 +639,11 @@
           this.removeEventListener("pageshow", this.onPageShow, true);
           this.removeEventListener("pagehide", this.onPageHide, true);
           this.removeEventListener("DOMPopupBlocked", this.onPopupBlocked, true);
+
+          if (this._autoScrollNeedsCleanup) {
+            // we polluted the global scope, so clean it up
+            this._autoScrollPopup.parentNode.removeChild(this._autoScrollPopup);
+          }
           ]]>
         </body>
       </method>
@@ -679,6 +684,7 @@
       <field name="_screenX">null</field>
       <field name="_screenY">null</field>
       <field name="_autoScrollPopup">null</field>
+      <field name="_autoScrollNeedsCleanup">false</field>
 
       <method name="stopScroll">
         <body>
@@ -694,19 +700,37 @@
          ]]>
        </body>
      </method>
+
+      <method name="_createAutoScrollPopup">
+        <body>
+          <![CDATA[
+            const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+            var popup = document.createElementNS(XUL_NS, "popup");
+            popup.id = "autoscroller";
+            return popup;
+          ]]>
+        </body>
+      </method>
      
       <method name="startScroll">
         <parameter name="event"/>
         <body>
           <![CDATA[
-            // if the tabbrowser didn't point us to a cached popup, we're not in a tabbrowser, so use global scope
-           if (!this._autoScrollPopup) {
-              const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-              this._autoScrollPopup = document.createElementNS(XUL_NS, "popup");
-              this._autoScrollPopup.id = "autoscroller";
-              this._autoScrollPopup.addEventListener("popuphidden", this, true);
-              document.documentElement.appendChild(this._autoScrollPopup);
+            if (!this._autoScrollPopup) {
+              if (this.hasAttribute("autoscrollpopup")) {
+                // our creator provided a popup to share
+                this._autoScrollPopup = document.getElementById(this.getAttribute("autoscrollpopup"));
+              }
+              else {
+                // we weren't provided a popup; we have to use the global scope
+                this._autoScrollPopup = this._createAutoScrollPopup();
+                document.documentElement.appendChild(this._autoScrollPopup);
+                this._autoScrollNeedsCleanup = true;
+              }
             }
+
+            this._autoScrollPopup.addEventListener("popuphidden", this, true);
+
             this._scrollingView = event.originalTarget.ownerDocument.defaultView;
             if (this._scrollingView.scrollMaxX > 0) {
               this._autoScrollPopup.setAttribute("scrolldir", this._scrollingView.scrollMaxY > 0 ? "NSEW" : "EW");
@@ -853,6 +877,7 @@
                 break;
               }
               case "popuphidden": {
+                this._autoScrollPopup.removeEventListener("popuphidden", this, true);
                 this.stopScroll();
                 break;
               }
