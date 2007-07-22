@@ -731,6 +731,14 @@
 
             this._autoScrollPopup.addEventListener("popuphidden", this, true);
 
+            // we need these attributes so themers don't need to create per-platform packages
+            if (screen.colorDepth > 8) { // need high color for transparency
+              // Exclude second-rate platforms
+              this._autoScrollPopup.setAttribute("transparent", !/BeOS|Mac|OS\/2|Photon/.test(navigator.appVersion));
+              // Enable translucency on W2K+ (but not WinNT4.0)
+              this._autoScrollPopup.setAttribute("translucent", /^Windows NT /.test(navigator.oscpu));
+            }
+
             this._scrollingView = event.originalTarget.ownerDocument.defaultView;
             if (this._scrollingView.scrollMaxX > 0) {
               this._autoScrollPopup.setAttribute("scrolldir", this._scrollingView.scrollMaxY > 0 ? "NSEW" : "EW");
