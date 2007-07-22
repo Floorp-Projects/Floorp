@@ -80,12 +80,10 @@ panel[type="autocomplete"],
   background-color: -moz-Field !important;
   font: icon;
   -moz-appearance: none;
-  border-top: 1px solid #C3C3C3 !important;
 }
 
 .autocomplete-history-popup {
   max-height: 180px;
-  border-top: 1px solid #C3C3C3 !important;
 }
 
 /* ::::: tree ::::: */
@@ -105,6 +103,10 @@ panel[type="autocomplete"],
 
 .autocomplete-treebody::-moz-tree-cell-text {
   padding-left: 2px;
+}
+
+.autocomplete-treebody::-moz-tree-row {
+  border-top: none;
 }
 
 treechildren.autocomplete-treebody::-moz-tree-row(selected) {
