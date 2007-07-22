@@ -22,13 +22,6 @@
 
 /** Test for computation of CSS 'inherit' **/
 
-var gNoComputedStyle = {
-};
-
-function xfail_diffcomputed(property) {
-  return property in gNoComputedStyle;
-}
-
 var gBrokenInherit = {
   // Not implemented in nsRuleNode
   "-moz-border-bottom-colors": true,
@@ -82,12 +75,10 @@ function test_property(property)
     gChildRule1.style.setProperty(property, info.other_values[0], "");
     var other_computed_n = get_computed_value_node(gNChild, property);
     var other_computed_f = get_computed_value_node(gFChild, property);
-    (xfail_diffcomputed(property) ? todo_isnot : isnot)(
-          other_computed_n, initial_computed_n,
+    isnot(other_computed_n, initial_computed_n,
           "should be testing with values that compute to different things " +
           "for '" + property + "'");
-    (xfail_diffcomputed(property) ? todo_isnot : isnot)(
-          other_computed_f, initial_computed_f,
+    isnot(other_computed_f, initial_computed_f,
           "should be testing with values that compute to different things " +
           "for '" + property + "'");
     gChildRule3.style.setProperty(property, "inherit", "");
@@ -127,12 +118,10 @@ function test_property(property)
     var initial_computed_f = get_computed_value_node(gFChild, property);
     var other_computed_n = get_computed_value_node(gNParent, property);
     var other_computed_f = get_computed_value_node(gFParent, property);
-    (xfail_diffcomputed(property) ? todo_isnot : isnot)(
-          other_computed_n, initial_computed_n,
+    isnot(other_computed_n, initial_computed_n,
           "should be testing with values that compute to different things " +
           "for '" + property + "'");
-    (xfail_diffcomputed(property) ? todo_isnot : isnot)(
-          other_computed_f, initial_computed_f,
+    isnot(other_computed_f, initial_computed_f,
           "should be testing with values that compute to different things " +
           "for '" + property + "'");
     gChildRule2.style.setProperty(property, "inherit", "");
