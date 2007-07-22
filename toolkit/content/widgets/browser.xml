@@ -735,8 +735,39 @@
             window.addEventListener("mouseup", this, true);
             window.addEventListener("contextmenu", this, true);
 
+            this._scrollErrorX = 0;
+            this._scrollErrorY = 0;
+
             this._autoScrollTimer = setInterval(function(self) { self.autoScrollLoop(); },
                                                 20, this);
+         ]]>
+       </body>
+     </method>
+
+     <method name="_roundToZero">
+       <parameter name="num"/>
+       <body>
+         <![CDATA[
+            if (num > 0)
+              return Math.floor(num);
+            return Math.ceil(num);
+         ]]>
+       </body>
+     </method>
+
+     <method name="_accelerate">
+       <parameter name="curr"/>
+       <parameter name="start"/>
+       <body>
+         <![CDATA[
+            const speed = 12;
+            var val = (curr - start) / speed;
+
+            if (val > 1)
+              return val * Math.sqrt(val) - 1;
+            if (val < -1)
+              return val * Math.sqrt(-val) + 1;
+            return 0;
          ]]>
        </body>
      </method>
@@ -744,10 +775,17 @@
      <method name="autoScrollLoop">
        <body>
          <![CDATA[
-           var x = (this._screenX - this._startX) / this._AUTOSCROLL_SPEED;
-           var y = (this._screenY - this._startY) / this._AUTOSCROLL_SPEED;
+           var x = this._accelerate(this._screenX, this._startX);
+           var y = this._accelerate(this._screenY, this._startY);
 
-           this._scrollingView.scrollBy(x, y);
+           var desiredScrollX = this._scrollErrorX + x;
+           var actualScrollX = this._roundToZero(desiredScrollX);
+           this._scrollErrorX = (desiredScrollX - actualScrollX);
+           var desiredScrollY = this._scrollErrorY + y;
+           var actualScrollY = this._roundToZero(desiredScrollY);
+           this._scrollErrorY = (desiredScrollY - actualScrollY);
+
+           this._scrollingView.scrollBy(actualScrollX, actualScrollY);
          ]]>
        </body>
      </method>
