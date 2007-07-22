@@ -69,9 +69,8 @@ public:
     NS_ENSURE_SUCCESS(rv, rv);
     
     rv = dm->AddDownload(nsIDownloadManager::DOWNLOAD_TYPE_DOWNLOAD, aSource,
-                         aTarget, aDisplayName, EmptyString(), aMIMEInfo,
-                         aStartTime, aTempFile, aCancelable,
-                         getter_AddRefs(mInner));
+                         aTarget, aDisplayName, aMIMEInfo, aStartTime,
+                         aTempFile, aCancelable, getter_AddRefs(mInner));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);

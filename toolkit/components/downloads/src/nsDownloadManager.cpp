@@ -88,7 +88,7 @@ static PRBool gStoppingDownloads = PR_FALSE;
 
 static const PRInt64 gUpdateInterval = 400 * PR_USEC_PER_MSEC;
 
-#define DM_SCHEMA_VERSION      1
+#define DM_SCHEMA_VERSION      2
 #define DM_DB_NAME             NS_LITERAL_STRING("downloads.sqlite")
 #define DM_DB_CORRUPT_FILENAME NS_LITERAL_STRING("downloads.sqlite.corrupt")
 
@@ -256,7 +256,68 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
         // Every time you increment the database schema, you need to implement
         // the upgrading code from the previous version to the new one.
         // Also, don't forget to make a unit test to test your upgradeing code!
-      }
+        if (schemaVersion < 2) {
+          // This version simple drops a column from the database (iconURL)
+          
+          // Safely wrap this in a transaction so we don't hose the whole DB
+          mozStorageTransaction safeTransaction(mDBConn, PR_TRUE);
+
+          // Create a temporary table that we'll store the existing records
+          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+            "CREATE TEMPORARY TABLE moz_downloads_backup ("
+              "id INTEGER PRIMARY KEY, "
+              "name TEXT, "
+              "source TEXT, "
+              "target TEXT, "
+              "startTime INTEGER, "
+              "endTime INTEGER, "
+              "state INTEGER"
+            ")"));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // Insert into a temporary table
+          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+            "INSERT INTO moz_downloads_backup "
+            "SELECT id, name, source, target, startTime, endTime, state "
+            "FROM moz_downloads"));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // drop the old table
+          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+            "DROP TABLE moz_downloads"));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // now recreate it with this schema version
+          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+            "CREATE  TABLE moz_downloads ("
+              "id INTEGER PRIMARY KEY, "
+              "name TEXT, "
+              "source TEXT, "
+              "target TEXT, "
+              "startTime INTEGER, "
+              "endTime INTEGER, "
+              "state INTEGER"
+            ")"));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // insert the data back into it
+          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+            "INSERT INTO moz_downloads "
+            "SELECT id, name, source, target, startTime, endTime, state "
+            "FROM moz_downloads_backup"));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // and drop our temporary table
+          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+            "DROP TABLE moz_downloads_backup"));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // Finally, update the schemaVersion variable and the database schema
+          schemaVersion = 2;
+          rv = mDBConn->SetSchemaVersion(schemaVersion);
+          NS_ENSURE_SUCCESS(rv, rv);
+        } // End of schema #2 upgrade code
+      } // End of upgrading
     }
   }
 
@@ -271,8 +332,14 @@ nsDownloadManager::CreateTable()
 
   return mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "CREATE TABLE moz_downloads ("
-    "id INTEGER PRIMARY KEY, name TEXT, source TEXT, target TEXT,"
-    "iconURL TEXT, startTime INTEGER, endTime INTEGER, state INTEGER)"));
+      "id INTEGER PRIMARY KEY, "
+      "name TEXT, "
+      "source TEXT, "
+      "target TEXT, "
+      "startTime INTEGER, "
+      "endTime INTEGER, "
+      "state INTEGER"
+    ")"));
 }
 
 nsresult
@@ -407,8 +474,7 @@ nsDownloadManager::ImportDownloadHistory()
     rv = rdfInt->GetValue(&state);
     if (NS_FAILED(rv)) continue;
  
-    (void)AddDownloadToDB(name, source, target, EmptyString(), startTime,
-                          endTime, state);
+    (void)AddDownloadToDB(name, source, target, startTime, endTime, state);
   }
 
   return NS_OK;
@@ -418,7 +484,6 @@ PRInt64
 nsDownloadManager::AddDownloadToDB(const nsAString &aName,
                                    const nsACString &aSource,
                                    const nsACString &aTarget,
-                                   const nsAString &aIconURL,
                                    PRInt64 aStartTime,
                                    PRInt64 aEndTime,
                                    PRInt32 aState)
@@ -426,8 +491,8 @@ nsDownloadManager::AddDownloadToDB(const nsAString &aName,
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "INSERT INTO moz_downloads "
-    "(name, source, target, iconURL, startTime, endTime, state) "
-    "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"), getter_AddRefs(stmt));
+    "(name, source, target, startTime, endTime, state) "
+    "VALUES (?1, ?2, ?3, ?4, ?5, ?6)"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, 0);
 
   // name
@@ -442,20 +507,16 @@ nsDownloadManager::AddDownloadToDB(const nsAString &aName,
   rv = stmt->BindUTF8StringParameter(2, aTarget);
   NS_ENSURE_SUCCESS(rv, 0);
 
-  // iconURL
-  rv = stmt->BindStringParameter(3, aIconURL);
-  NS_ENSURE_SUCCESS(rv, 0);
-
   // startTime
-  rv = stmt->BindInt64Parameter(4, aStartTime);
+  rv = stmt->BindInt64Parameter(3, aStartTime);
   NS_ENSURE_SUCCESS(rv, 0);
 
   // endTime
-  rv = stmt->BindInt64Parameter(5, aEndTime);
+  rv = stmt->BindInt64Parameter(4, aEndTime);
   NS_ENSURE_SUCCESS(rv, 0);
 
   // state
-  rv = stmt->BindInt32Parameter(6, aState);
+  rv = stmt->BindInt32Parameter(5, aState);
   NS_ENSURE_SUCCESS(rv, 0);
 
   PRBool hasMore;
@@ -626,7 +687,6 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
                                nsIURI* aSource,
                                nsIURI* aTarget,
                                const nsAString& aDisplayName,
-                               const nsAString& aIconURL, 
                                nsIMIMEInfo *aMIMEInfo,
                                PRTime aStartTime,
                                nsILocalFile* aTempFile,
@@ -672,8 +732,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   aSource->GetSpec(source);
   aTarget->GetSpec(target);
   
-  PRInt64 id = AddDownloadToDB(dl->mDisplayName, source, target, aIconURL,
-                               aStartTime, 0,
+  PRInt64 id = AddDownloadToDB(dl->mDisplayName, source, target, aStartTime, 0,
                                nsIDownloadManager::DOWNLOAD_NOTSTARTED);
   NS_ENSURE_TRUE(id, NS_ERROR_FAILURE);
   dl->mID = id;
