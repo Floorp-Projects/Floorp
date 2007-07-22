@@ -333,6 +333,27 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType,
   return mimeInfo;
 }
 
+already_AddRefed<nsIHandlerInfo>
+nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme)
+{
+  NS_ASSERTION(!aScheme.IsEmpty(), "No scheme was specified!");
+
+  PRBool exists;
+  nsresult rv = OSProtocolHandlerExists(nsPromiseFlatCString(aScheme).get(),
+                                        &exists);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsMIMEInfoMac *handlerInfo = new nsMIMEInfoMac();
+  NS_ENSURE_TRUE(handlerInfo, nsnull);
+  NS_ADDREF(handlerInfo);
+
+  nsAutoString desc;
+  GetApplicationDescription(aScheme, desc);
+  handlerInfo->SetDefaultDescription(desc);
+
+  return handlerInfo;
+}
+
 // we never want to use a hard coded value for the creator and file type for the mac. always look these values up
 // from internet config.
 void nsOSHelperAppService::UpdateCreatorInfo(nsIMIMEInfo * aMIMEInfo)
