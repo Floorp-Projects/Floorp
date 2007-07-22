@@ -149,21 +149,22 @@ function run_test() {
   // Create to a folder
   var txn2a = ptSvc.createFolder("Folder", root, bmStartIndex);
   var fldrId = bmsvc.getChildFolder(root, "Folder");
-  var txn2b = ptSvc.createItem(uri("http://www.example.com"), fldrId, bmStartIndex, "Testing1b");
-  ptSvc.commitTransaction(txn2); 
-  var b2 = (bmsvc.getBookmarkIdsForURI(uri("http://www.example.com"), {}))[0];
+  var txn2b = ptSvc.createItem(uri("http://www.example2.com"), fldrId, bmStartIndex, "Testing1b");
+  ptSvc.commitTransaction(txn2b);
+  var b2 = (bmsvc.getBookmarkIdsForURI(uri("http://www.example2.com"), {}))[0];
   do_check_eq(observer._itemAddedId, b2);
   do_check_eq(observer._itemAddedIndex, bmStartIndex);
-  do_check_true(bmsvc.isBookmarked(uri("http://www.example.com")));
+  do_check_true(bmsvc.isBookmarked(uri("http://www.example2.com")));
   txn2.undoTransaction();
   do_check_eq(observer._itemRemovedId, b2);
   do_check_eq(observer._itemRemovedIndex, bmStartIndex);
 
   // Testing moving an item
-  ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.example.com"), root, -1, "Testing2"));
-  ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.example.com"), root, -1, "Testing3"));   
-  ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.example.com"), fldrId, -1, "Testing4"));
-  var bkmkIds = bmsvc.getBookmarkIdsForURI(uri("http://www.example.com"), {});
+  ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.example3.com"), root, -1, "Testing2"));
+  ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.example3.com"), root, -1, "Testing3"));   
+  ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.example3.com"), fldrId, -1, "Testing4"));
+  var bkmkIds = bmsvc.getBookmarkIdsForURI(uri("http://www.example3.com"), {});
+  bkmkIds.sort();
   var bkmk1Id = bkmkIds[0];
   var bkmk2Id = bkmkIds[1];
   var bkmk3Id = bkmkIds[2];
@@ -266,7 +267,7 @@ function run_test() {
   txn9.undoTransaction();
   do_check_eq(observer._itemChangedId, bkmk1Id);
   do_check_eq(observer._itemChangedProperty, "uri");
-  do_check_eq(observer._itemChangedValue, "http://www.example.com/");
+  do_check_eq(observer._itemChangedValue, "http://www.example3.com/");
   
   // Test edit item description
   var txn10 = ptSvc.editItemDescription(bkmk1Id, "Description1");
@@ -345,6 +346,7 @@ function run_test() {
   ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "b"));   
   ptSvc.commitTransaction(ptSvc.createItem(uri("http://www.sortingtest.com"), srtFldId, -1, "a"));
   var b = bmsvc.getBookmarkIdsForURI(uri("http://www.sortingtest.com"), {});
+  b.sort();
   var b1 = b[0];
   var b2 = b[1];
   var b3 = b[2];
