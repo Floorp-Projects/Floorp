@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+span { color: green }
+:checked + span { color: red }
+input { display: none }
+</style>
+
+<body onload='document.getElementById("foo").checked = false;
+              document.getElementById("bar").checked = false;'>
+<input type="checkbox" checked="checked" id="foo"><span>There should be no red</span>
+<input type="radio" checked="checked" id="bar"><span>There should be no red</span>
+</body>
+</html>
