@@ -512,6 +512,7 @@ void nsSVGForeignObjectFrame::RequestReflow(nsIPresShell::IntrinsicDirty aType)
   if (!kid)
     return;
 
+/* commenting out to fix reftest failure - see bug 381285
   // If we're called while the PresShell is handling reflow events we must do
   // the reflow synchronously here and now. Calling FrameNeedsReflow could
   // confuse the PresShell and prevent us from being reflowed correctly in
@@ -526,6 +527,7 @@ void nsSVGForeignObjectFrame::RequestReflow(nsIPresShell::IntrinsicDirty aType)
     }
     return;
   }
+*/
 
   PresContext()->PresShell()->FrameNeedsReflow(kid, aType, NS_FRAME_IS_DIRTY);
 }
