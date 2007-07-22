@@ -35,13 +35,6 @@
 
 /** Test for computation of values in property database **/
 
-var gNoComputedStyle = {
-};
-
-function xfail_diffcomputed(property) {
-  return property in gNoComputedStyle;
-}
-
 var gNotAccepted = {
   "-moz-column-width": [ "50%" ],
   "-moz-user-select": [ "auto" ],
@@ -99,9 +92,6 @@ var gBadComputedNoFrame = {
 };
 
 function xfail_value(property, value, is_initial, has_frame) {
-  if (property in gNoComputedStyle)
-    return !is_initial;
-
   if ((property in gNotAccepted) &&
       gNotAccepted[property].indexOf(value) != -1)
     return true;
@@ -112,14 +102,6 @@ function xfail_value(property, value, is_initial, has_frame) {
 
   if (!has_frame && (property in gBadComputedNoFrame) &&
       gBadComputedNoFrame[property].indexOf(value) != -1)
-    return true;
-
-  return false;
-}
-
-function xfail_empty(property, value) {
-  if ((property in gNoComputedStyle) &&
-      !("subproperties" in gCSSProperties[property]))
     return true;
 
   return false;
@@ -169,12 +151,10 @@ function test_value(property, val, is_initial)
     gRule1.style.setProperty(property, info.other_values[0], "");
     var other_computed_n = get_computed_value(getComputedStyle(gElementN, ""), property);
     var other_computed_f = get_computed_value(getComputedStyle(gElementF, ""), property);
-    (xfail_diffcomputed(property) ? todo_isnot : isnot)(
-          other_computed_n, initial_computed_n,
+    isnot(other_computed_n, initial_computed_n,
           "should be testing with values that compute to different things " +
           "for '" + property + "'");
-    (xfail_diffcomputed(property) ? todo_isnot : isnot)(
-          other_computed_f, initial_computed_f,
+    isnot(other_computed_f, initial_computed_f,
           "should be testing with values that compute to different things " +
           "for '" + property + "'");
   }
@@ -190,12 +170,10 @@ function test_value(property, val, is_initial)
   gRule2.style.setProperty(property, val, "");
   var val_computed_n = get_computed_value(getComputedStyle(gElementN, ""), property);
   var val_computed_f = get_computed_value(getComputedStyle(gElementF, ""), property);
-  (xfail_empty(property, val) ? todo_isnot : isnot)(
-     val_computed_n, "",
-     "should not get empty value for '" + property + ":" + val + "'");
-  (xfail_empty(property, val) ? todo_isnot : isnot)(
-     val_computed_f, "",
-     "should not get empty value for '" + property + ":" + val + "'");
+  isnot(val_computed_n, "",
+        "should not get empty value for '" + property + ":" + val + "'");
+  isnot(val_computed_f, "",
+        "should not get empty value for '" + property + ":" + val + "'");
   if (is_initial) {
     (xfail_value(property, val, is_initial, false) ? todo_is : is)(
        val_computed_n, initial_computed_n,

@@ -35,13 +35,6 @@
 
 /** Test for computation of CSS '-moz-initial' **/
 
-var gNoComputedStyle = {
-};
-
-function xfail_diffcomputed(property) {
-  return property in gNoComputedStyle;
-}
-
 var gBrokenInitial = {
   // Presumably either not parsed or not implemented in nsRuleNode.
   "-moz-appearance": true,
@@ -176,12 +169,10 @@ function test_property(property)
   gRule1.style.setProperty(property, info.other_values[0], "");
   var other_computed_n = get_computed_value(getComputedStyle(gElementN, ""), property);
   var other_computed_f = get_computed_value(getComputedStyle(gElementF, ""), property);
-  (xfail_diffcomputed(property) ? todo_isnot : isnot)(
-        other_computed_n, initial_computed_n,
+  isnot(other_computed_n, initial_computed_n,
         "should be testing with values that compute to different things " +
         "for '" + property + "'");
-  (xfail_diffcomputed(property) ? todo_isnot : isnot)(
-        other_computed_f, initial_computed_f,
+  isnot(other_computed_f, initial_computed_f,
         "should be testing with values that compute to different things " +
         "for '" + property + "'");
   // It's important (given the current design of nsRuleNode) that we're
