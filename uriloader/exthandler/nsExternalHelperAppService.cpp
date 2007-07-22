@@ -1476,18 +1476,26 @@ nsExternalHelperAppService::GetProtocolHandlerInfo(const nsACString &aScheme,
   // and subclasses have lots of good platform specific-knowledge of local
   // applications which we might need later.  For now, just use nsMIMEInfoImpl
   // instead of implementating a separate nsIHandlerInfo object.
-  nsMIMEInfoImpl *mimeInfo = new nsMIMEInfoImpl;
-  if (!mimeInfo) {
-    return NS_ERROR_OUT_OF_MEMORY;    
+  *aHandlerInfo = GetProtocolInfoFromOS(aScheme).get();
+  if (!aHandlerInfo) {
+    // Either it knows nothing, or we ran out of memory
+    return NS_ERROR_FAILURE;
   }
-  NS_ADDREF(*aHandlerInfo = mimeInfo);
-     
+
   nsresult rv = FillProtoInfoForSchemeFromDS(aScheme, *aHandlerInfo);     
-  if (NS_FAILED(rv)) {
+  if (NS_ERROR_NOT_AVAILABLE == rv) {
+    // We don't know it, so we always ask the user.  By the time we call this
+    // method, we already have checked if we should open this protocol and ask
+    // the user, so these defaults are OK.
+    // XXX this is a bit different than the MIME system, so we may want to look
+    //     into this more in the future.
+    (*aHandlerInfo)->SetPreferredAction(nsIHandlerInfo::useSystemDefault);
+    (*aHandlerInfo)->SetAlwaysAskBeforeHandling(PR_TRUE);
+  } else if (NS_FAILED(rv)) {
     NS_RELEASE(*aHandlerInfo);
     return rv;
   }
-  
+
   return NS_OK;
 }
  
