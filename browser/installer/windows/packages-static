@@ -333,6 +333,7 @@ bin\softokn3.dll
 bin\freebl3.chk
 bin\freebl3.dll
 bin\ssl3.dll
+bin\nssdbm3.dll
 bin\chrome\pippki.jar
 bin\chrome\pippki.manifest
 
