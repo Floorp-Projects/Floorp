@@ -3619,7 +3619,17 @@ nsBrowserStatusHandler.prototype =
     const wpl = Components.interfaces.nsIWebProgressListener;
     this.securityButton.removeAttribute("label");
 
-    switch (aState) {
+    const wpl_security_bits = wpl.STATE_IS_SECURE |
+                              wpl.STATE_IS_BROKEN |
+                              wpl.STATE_IS_INSECURE |
+                              wpl.STATE_SECURE_HIGH |
+                              wpl.STATE_SECURE_MED |
+                              wpl.STATE_SECURE_LOW;
+
+    /* aState is defined as a bitmask that may be extended in the future.
+     * We filter out any unknown bits before testing for known values.
+     */
+    switch (aState & wpl_security_bits) {
       case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_HIGH:
         this.securityButton.setAttribute("level", "high");
         if (this.urlBar)
@@ -3629,6 +3639,7 @@ nsBrowserStatusHandler.prototype =
             gBrowser.contentWindow.location.host);
         } catch(exception) {}
         break;
+      case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_MED:
       case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_LOW:
         this.securityButton.setAttribute("level", "low");
         if (this.urlBar)
