@@ -1214,7 +1214,19 @@ class nsExternalLoadRequest : public nsRunnable {
 
 NS_IMETHODIMP nsExternalHelperAppService::LoadURI(nsIURI * aURL, nsIPrompt * aPrompt)
 {
-  nsCOMPtr<nsIRunnable> event = new nsExternalLoadRequest(aURL, aPrompt);
+  nsCAutoString spec;
+  aURL->GetSpec(spec);
+
+  spec.ReplaceSubstring("\"", "%22");
+  spec.ReplaceSubstring("'", "%27");
+  spec.ReplaceSubstring("`", "%60");
+
+  nsCOMPtr<nsIIOService> ios(do_GetIOService());
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = ios->NewURI(spec, nsnull, nsnull, getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIRunnable> event = new nsExternalLoadRequest(uri, aPrompt);
   return NS_DispatchToCurrentThread(event);
 }
 
