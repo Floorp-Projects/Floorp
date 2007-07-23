@@ -1404,7 +1404,22 @@ nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 NS_IMETHODIMP
 nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    gint x = 0, y = 0;
+
+    if (mContainer) {
+        gdk_window_get_root_origin(GTK_WIDGET(mContainer)->window,
+                                   &x, &y);
+    }
+    else if (mDrawingarea) {
+        gdk_window_get_origin(mDrawingarea->inner_window, &x, &y);
+    }
+
+    aNewRect.x = aOldRect.x - x;
+    aNewRect.y = aOldRect.y - y;
+    aNewRect.width = aOldRect.width;
+    aNewRect.height = aOldRect.height;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
