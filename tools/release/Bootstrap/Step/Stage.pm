@@ -399,11 +399,25 @@ sub Verify {
     my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
     my $stageHome = $config->Get(var => 'stageHome');
+    my $productTag = $config->Get(var => 'productTag');
+    my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
  
     ## Prepare the staging directory for the release.
     # Create the staging directory.
 
     my $stageDir = $this->GetStageDir();
+
+    # check out locales manifest (shipped-locales)
+    $this->Shell(
+      cmd => 'cvs', 
+      cmdArgs => [ '-d', $mozillaCvsroot, 
+                   'co', '-d', 'config',
+                   '-r', $productTag . '_RELEASE',
+                   CvsCatfile('mozilla', $appName, 'locales', 
+                              'shipped-locales')],
+      logFile => catfile($logDir, 'stage_shipped-locales_checkout.log'),
+      dir => catfile($stageDir, 'batch1'),
+    );
 
     # Verify locales
     $this->Shell(
