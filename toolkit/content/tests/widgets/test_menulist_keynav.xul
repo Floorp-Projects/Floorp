@@ -27,6 +27,8 @@
 
 SimpleTest.waitForExplicitFinish();
 
+var iswin = (navigator.platform.indexOf("Win") == 0);
+
 function runTests()
 {
   var list = $("list");
@@ -35,7 +37,7 @@ function runTests()
   // cursor keys navigate between items without opening the menu
   if (navigator.platform.indexOf("Mac") == -1) {
     keyCheck(list, "VK_DOWN", 2, "cursor down");
-    keyCheck(list, "VK_DOWN", 3, "cursor down skip disabled");
+    keyCheck(list, "VK_DOWN", iswin ? "2b" : 3, "cursor down skip disabled");
     keyCheck(list, "VK_UP", 2, "cursor up skip disabled");
     keyCheck(list, "VK_UP", 1, "cursor up");
     keyCheck(list, "VK_UP", 4, "cursor up wrap");
@@ -53,7 +55,7 @@ function runTests()
 function pressedAgain()
 {
   var list = $("list");
-  keyCheck(list, "T", 3, "letter pressed again");
+  keyCheck(list, "T", iswin ? "2b" : 3, "letter pressed again");
   keyCheck(list, "W", 2, "second letter pressed");
   setTimeout(differentPressed, 1200); 
 }
