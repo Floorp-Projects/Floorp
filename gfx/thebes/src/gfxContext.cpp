@@ -643,7 +643,7 @@ gfxContext::GetPattern()
     else
         wrapper = new gfxPattern(gfxRGBA(0,0,0,0));
 
-    NS_ADDREF(wrapper);
+    NS_IF_ADDREF(wrapper);
     return wrapper;
 }
 
@@ -681,7 +681,8 @@ gfxContext::PopGroup()
 {
     cairo_pattern_t *pat = cairo_pop_group(mCairo);
     gfxPattern *wrapper = new gfxPattern(pat);
-    NS_ADDREF(wrapper);
+    cairo_pattern_destroy(pat);
+    NS_IF_ADDREF(wrapper);
     return wrapper;
 }
 
