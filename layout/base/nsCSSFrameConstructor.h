@@ -272,6 +272,8 @@ private:
    * @param aAttrNamespace the namespace of the attribute in question
    * @param aAttrName the localname of the attribute
    * @param aStyleContext the style context to use
+   * @param aGeneratedContent the array of generated content to append the
+   *                          created content to.
    * @param [out] aNewContent the content node we create
    * @param [out] aNewFrame the new frame we create
    */
@@ -280,6 +282,7 @@ private:
                                   PRInt32 aAttrNamespace,
                                   nsIAtom* aAttrName,
                                   nsStyleContext* aStyleContext,
+                                  nsCOMArray<nsIContent>& aGeneratedContent,
                                   nsIContent** aNewContent,
                                   nsIFrame** aNewFrame);
   
@@ -288,6 +291,7 @@ private:
                                    nsStyleContext*       aStyleContext,
                                    const nsStyleContent* aStyleContent,
                                    PRUint32              aContentIndex,
+                                   nsCOMArray<nsIContent>& aGeneratedContent,
                                    nsIFrame**            aFrame);
 
   PRBool CreateGeneratedContentFrame(nsFrameConstructorState& aState,

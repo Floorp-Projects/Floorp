@@ -172,6 +172,9 @@ enum {
   NS_FRAME_CONTAINS_RELATIVE_HEIGHT =           0x00000020,
 
   // If this bit is set, then the frame corresponds to generated content
+  // Such frames store an nsCOMArray<nsIContent> of their generated content
+  // in the nsGkAtoms::generatedContent frame property, except for continuation
+  // frames.
   NS_FRAME_GENERATED_CONTENT =                  0x00000040,
 
   // If this bit is set, then the frame has been moved out of the flow,

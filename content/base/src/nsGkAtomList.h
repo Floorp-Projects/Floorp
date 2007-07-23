@@ -1452,6 +1452,7 @@ GK_ATOM(boxMetricsProperty, "BoxMetricsProperty") // nsBoxLayoutMetrics*
 GK_ATOM(changeListProperty, "ChangeListProperty") // void*
 GK_ATOM(collapseOffsetProperty, "CollapseOffsetProperty")  // nsPoint*
 GK_ATOM(computedOffsetProperty, "ComputedOffsetProperty")  // nsPoint*
+GK_ATOM(generatedContent, "GeneratedContentProperty")  // nsCOMArray<nsIContent>*
 GK_ATOM(IBSplitSpecialPrevSibling, "IBSplitSpecialPrevSibling")// nsIFrame*
 GK_ATOM(IBSplitSpecialSibling, "IBSplitSpecialSibling")    // nsIFrame*
 GK_ATOM(lineCursorProperty, "LineCursorProperty") // nsLineBox*
