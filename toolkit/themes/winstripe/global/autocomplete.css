@@ -169,6 +169,7 @@ textbox[chromedir="rtl"] .autocomplete-history-dropmarker {
 
 panel[type="autocomplete"],
 .autocomplete-history-popup {
+  -moz-appearance: none;
   border-width: 1px;
   -moz-border-top-colors: ThreeDDarkShadow;
   -moz-border-right-colors: ThreeDDarkShadow;
