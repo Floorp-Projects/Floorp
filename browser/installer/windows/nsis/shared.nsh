@@ -426,5 +426,8 @@
   ${Unless} ${Errors}
     DeleteRegKey SHCTX "$0\gopher"
   ${EndUnless}
+
+  ; Remove protocol handler registry keys added by the MS shim
+  DeleteRegKey HKLM "Software\Classes\Firefox.URL"
 !macroend
 !define FixClassKeys "!insertmacro FixClassKeys"
