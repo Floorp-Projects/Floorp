@@ -616,8 +616,9 @@ static void ReparentFrame(nsIFrame* aFrame, nsIFrame* aOldParent,
 /* virtual */ void
 nsBlockFrame::MarkIntrinsicWidthsDirty()
 {
-  mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
-  mPrefWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
+  nsBlockFrame* dirtyBlock = NS_STATIC_CAST(nsBlockFrame*, GetFirstContinuation());
+  dirtyBlock->mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
+  dirtyBlock->mPrefWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
 
   nsBlockFrameSuper::MarkIntrinsicWidthsDirty();
 }
@@ -625,6 +626,10 @@ nsBlockFrame::MarkIntrinsicWidthsDirty()
 /* virtual */ nscoord
 nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 {
+  nsIFrame* firstInFlow = GetFirstContinuation();
+  if (firstInFlow != this)
+    return firstInFlow->GetMinWidth(aRenderingContext);
+
   DISPLAY_MIN_WIDTH(this, mMinWidth);
   if (mMinWidth != NS_INTRINSIC_WIDTH_UNKNOWN)
     return mMinWidth;
@@ -638,49 +643,49 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   AutoNoisyIndenter indent(gNoisyIntrinsic);
 #endif
 
-#ifdef IBMBIDI
-  ResolveBidi();
-#endif // IBMBIDI
-
   InlineMinWidthData data;
-  for (line_iterator line = begin_lines(), line_end = end_lines();
-       line != line_end; ++line)
-  {
+  for (nsBlockFrame* curFrame = this; curFrame;
+       curFrame = NS_STATIC_CAST(nsBlockFrame*, curFrame->GetNextContinuation())) {
+    curFrame->ResolveBidi();
+    for (line_iterator line = curFrame->begin_lines(), line_end = curFrame->end_lines();
+      line != line_end; ++line)
+    {
 #ifdef DEBUG
-    if (gNoisyIntrinsic) {
-      IndentBy(stdout, gNoiseIndent);
-      printf("line (%s%s)\n",
-             line->IsBlock() ? "block" : "inline",
-             line->IsEmpty() ? ", empty" : "");
-    }
-    AutoNoisyIndenter lineindent(gNoisyIntrinsic);
-#endif
-    if (line->IsBlock()) {
-      data.ForceBreak(aRenderingContext);
-      data.currentLine = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-          line->mFirstChild, nsLayoutUtils::MIN_WIDTH);
-      data.ForceBreak(aRenderingContext);
-    } else {
-      if (line == begin_lines() && !GetPrevContinuation()) {
-        const nsStyleCoord &indent = GetStyleText()->mTextIndent;
-        if (indent.GetUnit() == eStyleUnit_Coord)
-          data.currentLine += indent.GetCoordValue();
+      if (gNoisyIntrinsic) {
+        IndentBy(stdout, gNoiseIndent);
+        printf("line (%s%s)\n",
+               line->IsBlock() ? "block" : "inline",
+               line->IsEmpty() ? ", empty" : "");
       }
-      // XXX Bug NNNNNN Should probably handle percentage text-indent.
+      AutoNoisyIndenter lineindent(gNoisyIntrinsic);
+#endif
+      if (line->IsBlock()) {
+        data.ForceBreak(aRenderingContext);
+        data.currentLine = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                        line->mFirstChild, nsLayoutUtils::MIN_WIDTH);
+        data.ForceBreak(aRenderingContext);
+      } else {
+        if (line == begin_lines()) {
+          const nsStyleCoord &indent = GetStyleText()->mTextIndent;
+          if (indent.GetUnit() == eStyleUnit_Coord)
+            data.currentLine += indent.GetCoordValue();
+        }
+        // XXX Bug NNNNNN Should probably handle percentage text-indent.
 
-      nsIFrame *kid = line->mFirstChild;
-      for (PRInt32 i = 0, i_end = line->GetChildCount(); i != i_end;
-           ++i, kid = kid->GetNextSibling()) {
-        kid->AddInlineMinWidth(aRenderingContext, &data);
+        nsIFrame *kid = line->mFirstChild;
+        for (PRInt32 i = 0, i_end = line->GetChildCount(); i != i_end;
+             ++i, kid = kid->GetNextSibling()) {
+          kid->AddInlineMinWidth(aRenderingContext, &data);
+        }
       }
-    }
 #ifdef DEBUG
-    if (gNoisyIntrinsic) {
-      IndentBy(stdout, gNoiseIndent);
-      printf("min: [prevLines=%d currentLine=%d]\n",
-             data.prevLines, data.currentLine);
-    }
+      if (gNoisyIntrinsic) {
+        IndentBy(stdout, gNoiseIndent);
+        printf("min: [prevLines=%d currentLine=%d]\n",
+               data.prevLines, data.currentLine);
+      }
 #endif
+    }
   }
   data.ForceBreak(aRenderingContext);
 
@@ -691,7 +696,12 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 /* virtual */ nscoord
 nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 {
+  nsIFrame* firstInFlow = GetFirstContinuation();
+  if (firstInFlow != this)
+    return firstInFlow->GetPrefWidth(aRenderingContext);
+
   DISPLAY_PREF_WIDTH(this, mPrefWidth);
+
   if (mPrefWidth != NS_INTRINSIC_WIDTH_UNKNOWN)
     return mPrefWidth;
 
@@ -704,49 +714,49 @@ nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   AutoNoisyIndenter indent(gNoisyIntrinsic);
 #endif
 
-#ifdef IBMBIDI
-  ResolveBidi();
-#endif // IBMBIDI
-
   InlinePrefWidthData data;
-  for (line_iterator line = begin_lines(), line_end = end_lines();
-       line != line_end; ++line)
-  {
+  for (nsBlockFrame* curFrame = this; curFrame;
+       curFrame = NS_STATIC_CAST(nsBlockFrame*, curFrame->GetNextContinuation())) {
+    curFrame->ResolveBidi();
+    for (line_iterator line = curFrame->begin_lines(), line_end = curFrame->end_lines();
+         line != line_end; ++line)
+    {
 #ifdef DEBUG
-    if (gNoisyIntrinsic) {
-      IndentBy(stdout, gNoiseIndent);
-      printf("line (%s%s)\n",
-             line->IsBlock() ? "block" : "inline",
-             line->IsEmpty() ? ", empty" : "");
-    }
-    AutoNoisyIndenter lineindent(gNoisyIntrinsic);
-#endif
-    if (line->IsBlock()) {
-      data.ForceBreak(aRenderingContext);
-      data.currentLine = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                      line->mFirstChild, nsLayoutUtils::PREF_WIDTH);
-      data.ForceBreak(aRenderingContext);
-    } else {
-      if (line == begin_lines() && !GetPrevContinuation()) {
-        const nsStyleCoord &indent = GetStyleText()->mTextIndent;
-        if (indent.GetUnit() == eStyleUnit_Coord)
-          data.currentLine += indent.GetCoordValue();
+      if (gNoisyIntrinsic) {
+        IndentBy(stdout, gNoiseIndent);
+        printf("line (%s%s)\n",
+               line->IsBlock() ? "block" : "inline",
+               line->IsEmpty() ? ", empty" : "");
       }
-      // XXX Bug NNNNNN Should probably handle percentage text-indent.
+      AutoNoisyIndenter lineindent(gNoisyIntrinsic);
+#endif
+      if (line->IsBlock()) {
+        data.ForceBreak(aRenderingContext);
+        data.currentLine = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
+                        line->mFirstChild, nsLayoutUtils::PREF_WIDTH);
+        data.ForceBreak(aRenderingContext);
+      } else {
+        if (line == begin_lines()) {
+          const nsStyleCoord &indent = GetStyleText()->mTextIndent;
+          if (indent.GetUnit() == eStyleUnit_Coord)
+            data.currentLine += indent.GetCoordValue();
+        }
+        // XXX Bug NNNNNN Should probably handle percentage text-indent.
 
-      nsIFrame *kid = line->mFirstChild;
-      for (PRInt32 i = 0, i_end = line->GetChildCount(); i != i_end;
-           ++i, kid = kid->GetNextSibling()) {
-        kid->AddInlinePrefWidth(aRenderingContext, &data);
+        nsIFrame *kid = line->mFirstChild;
+        for (PRInt32 i = 0, i_end = line->GetChildCount(); i != i_end;
+             ++i, kid = kid->GetNextSibling()) {
+          kid->AddInlinePrefWidth(aRenderingContext, &data);
+        }
       }
-    }
 #ifdef DEBUG
-    if (gNoisyIntrinsic) {
-      IndentBy(stdout, gNoiseIndent);
-      printf("pref: [prevLines=%d currentLine=%d]\n",
-             data.prevLines, data.currentLine);
-    }
+      if (gNoisyIntrinsic) {
+        IndentBy(stdout, gNoiseIndent);
+        printf("pref: [prevLines=%d currentLine=%d]\n",
+               data.prevLines, data.currentLine);
+      }
 #endif
+    }
   }
   data.ForceBreak(aRenderingContext);
 
