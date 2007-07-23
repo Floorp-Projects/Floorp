@@ -559,7 +559,10 @@ nsContextMenu.prototype = {
                                 .getInterface(Ci.nsIWebNavigation)
                                 .QueryInterface(Ci.nsIInterfaceRequestor)
                                 .getInterface(Ci.nsIEditingSession);
-        isEditable = editingSession.windowIsEditable(win);
+        if (editingSession.windowIsEditable(win) &&
+            this.getComputedStyle(this.target, "-moz-user-modify") == "read-write") {
+          isEditable = true;
+        }
       }
       catch(ex) {
         // If someone built with composer disabled, we can't get an editing session.
@@ -587,9 +590,9 @@ nsContextMenu.prototype = {
 
   // Returns the computed style attribute for the given element.
   getComputedStyle: function(aElem, aProp) {
-    return elem.ownerDocument
-               .defaultView
-               .getComputedStyle(aElem, "").getPropertyValue(prop);
+    return aElem.ownerDocument
+                .defaultView
+                .getComputedStyle(aElem, "").getPropertyValue(aProp);
   },
 
   // Returns a "url"-type computed style attribute value, with the url() stripped.
