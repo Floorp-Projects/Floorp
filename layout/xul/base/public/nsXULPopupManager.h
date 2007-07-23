@@ -514,15 +514,29 @@ public:
 
   /**
    * Handles navigation for menu accelkeys. Returns true if the key has
-   * been handled.
+   * been handled. If aFrame is specified, then the key is handled by that
+   * popup, otherwise if aFrame is null, the key is handled by the active
+   * popup or menubar.
    */
-  PRBool HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent);
+  PRBool HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent,
+                                  nsMenuPopupFrame* aFrame);
 
   /**
    * Handles cursor navigation within a menu. Returns true if the key has
    * been handled.
    */
   PRBool HandleKeyboardNavigation(PRUint32 aKeyCode);
+
+  /**
+   * Handle keyboard navigation within a menu popup specified by aFrame.
+   * Returns true if the key was handled and that other default handling
+   * should not occur.
+   */
+  PRBool HandleKeyboardNavigationInPopup(nsMenuPopupFrame* aFrame,
+                                         nsNavigationDirection aDir)
+  {
+    return HandleKeyboardNavigationInPopup(nsnull, aFrame, aDir);
+  }
 
   NS_IMETHODIMP HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
@@ -594,10 +608,28 @@ protected:
                             PRBool aIsMenu,
                             PRBool aDeselectMenu);
 
-  // handle keyboard navigation within a menu popup. Returns true if the
-  // key was handled and that other default handling should not occur.
-  PRBool HandleKeyboardNavigationInPopup(nsMenuChainItem* item,
+  /**
+   * Handle keyboard navigation within a menu popup specified by aItem.
+   */
+  PRBool HandleKeyboardNavigationInPopup(nsMenuChainItem* aItem,
+                                         nsNavigationDirection aDir)
+  {
+    return HandleKeyboardNavigationInPopup(aItem, aItem->Frame(), aDir);
+  }
+
+private:
+  /**
+   * Handle keyboard navigation within a menu popup aFrame. If aItem is
+   * supplied, then it is expected to have a frame equal to aFrame.
+   * If aItem is non-null, then the navigation may be redirected to
+   * an open submenu if one exists. Returns true if the key was
+   * handled and that other default handling should not occur.
+   */
+  PRBool HandleKeyboardNavigationInPopup(nsMenuChainItem* aItem,
+                                         nsMenuPopupFrame* aFrame,
                                          nsNavigationDirection aDir);
+
+protected:
 
   /**
    * Set mouse capturing for the current popup. This traps mouse clicks that
