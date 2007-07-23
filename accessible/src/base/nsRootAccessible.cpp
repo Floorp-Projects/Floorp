@@ -806,13 +806,12 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
       NS_ENSURE_TRUE(menuFrame, NS_ERROR_FAILURE);
       nsIMenuFrame* imenuFrame;
       CallQueryInterface(menuFrame, &imenuFrame);
-      NS_ENSURE_TRUE(imenuFrame, NS_ERROR_FAILURE);
-      if (imenuFrame->IsOnMenuBar()) {
-        if (!imenuFrame->IsOnActiveMenuBar()) {
-          // It is a top level menuitem. Only fire a focus event when the menu bar
-          // is active.
-          return NS_OK;
-        }
+      // QI failed for nsIMenuFrame means it's not on menu bar
+      if (imenuFrame && imenuFrame->IsOnMenuBar() &&
+                       !imenuFrame->IsOnActiveMenuBar()) {
+        // It is a top level menuitem. Only fire a focus event when the menu bar
+        // is active.
+        return NS_OK;
       } else {
         nsCOMPtr<nsIAccessible> containerAccessible;
         accessible->GetParent(getter_AddRefs(containerAccessible));
