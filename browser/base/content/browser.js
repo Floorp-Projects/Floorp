@@ -3425,7 +3425,7 @@ nsBrowserStatusHandler.prototype =
       }
       else {
         for (var tooltipWindow =
-               document.tooltipNode.target.ownerDocument.defaultView;
+               document.tooltipNode.ownerDocument.defaultView;
              tooltipWindow != tooltipWindow.parent;
              tooltipWindow = tooltipWindow.parent) {
           if (tooltipWindow == aWebProgress.DOMWindow) {
