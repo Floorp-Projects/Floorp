@@ -523,6 +523,9 @@
         <body>
         <![CDATA[
           this.stop();
+          // hack needed to fix js error, see bug 386470
+          if (!this.innerDiv)
+            return;
           // store the original height before we add padding
           this.innerDiv.style.padding = 0;
           this.originalHeight = this.innerDiv.offsetHeight;
@@ -680,6 +683,37 @@
           ><children
         /></html:div
       ></html:div>
+    </content>
+
+  </binding>
+
+  <!-- use -moz-margin-end to force large intrinsic width -->
+  <binding id="marquee-horizontal-editable"
+           inheritstyle="false">
+
+    <!-- White-space isn't allowed because a marquee could be 
+         inside 'white-space: pre' -->
+    <content>
+      <html:div style="overflow: auto; width: 100%; -moz-margin-end: 100%"
+        ><html:div style="display: -moz-box;"
+          ><html:div
+            ><children
+          /></html:div
+        ></html:div
+      ></html:div>
+    </content>
+
+  </binding>
+
+  <!-- use -moz-margin-end to force large intrinsic width -->
+  <binding id="marquee-vertical-editable"
+           inheritstyle="false">
+
+    <!-- White-space isn't allowed because a marquee could be 
+         inside 'white-space: pre' -->
+    <content>
+      <html:div style="overflow: auto; height: inherit; width: 100%; -moz-margin-end: 100%"
+        ><children/></html:div>
     </content>
 
   </binding>
