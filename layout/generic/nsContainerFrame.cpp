@@ -235,28 +235,6 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
 }
 
 void
-nsContainerFrame::CleanupGeneratedContentIn(nsIContent* aRealContent,
-                                            nsIFrame* aRoot) {
-  nsIAtom* frameList = nsnull;
-  PRInt32 listIndex = 0;
-  do {
-    nsIFrame* child = aRoot->GetFirstChild(frameList);
-    while (child) {
-      nsIContent* content = child->GetContent();
-      if (content && content != aRealContent) {
-        // Tell the ESM that this content is going away now, so it'll update
-        // its hover content, etc.
-        aRoot->PresContext()->EventStateManager()->ContentRemoved(content);
-        content->UnbindFromTree();
-      }
-      CleanupGeneratedContentIn(aRealContent, child);
-      child = child->GetNextSibling();
-    }
-    frameList = aRoot->GetAdditionalChildListName(listIndex++);
-  } while (frameList);
-}
-
-void
 nsContainerFrame::Destroy()
 {
   // Prevent event dispatch during destruction
@@ -270,6 +248,27 @@ nsContainerFrame::Destroy()
   // Destroy overflow frames now
   nsFrameList overflowFrames(GetOverflowFrames(PresContext(), PR_TRUE));
   overflowFrames.DestroyFrames();
+
+  if (IsGeneratedContentFrame()) {
+    // Make sure all the content nodes for the generated content inside
+    // this frame know it's going away.
+    // See also nsCSSFrameConstructor::CreateGeneratedContentFrame which
+    // created this frame.
+    nsCOMArray<nsIContent>* generatedContent =
+      static_cast<nsCOMArray<nsIContent>*>(
+        UnsetProperty(nsGkAtoms::generatedContent));
+
+    if (generatedContent) {
+      for (int i = generatedContent->Count() - 1; i >= 0; --i) {
+        nsIContent* content = generatedContent->ObjectAt(i);
+        // Tell the ESM that this content is going away now, so it'll update
+        // its hover content, etc.
+        PresContext()->EventStateManager()->ContentRemoved(content);
+        content->UnbindFromTree();
+      }
+      delete generatedContent;
+    }
+  }
 
   // Destroy the frame and remove the flow pointers
   nsSplittableFrame::Destroy();
