@@ -20,6 +20,7 @@
 # Contributor(s):
 #   Annie Sullivan <annie.sullivan@gmail.com> (original author)
 #   Ben Hearsum    <bhearsum@wittydomain.com> (OS independence)
+#   Zach Lipton   <zach@zachlipton.com> (Mac port)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or

@@ -9,19 +9,28 @@ these performance tests:
 
     Make sure to correctly set the path to python in the paths.py file.
 
-    After you download and install Python 2.4, you'll need to install
+    After you download and install Python 2.4, Windows users will need to install
     some extensions:
 
       * Python Win32 Extensions
         These extensions provide some support for process management and
         performance monitoring.
         http://prdownloads.sourceforge.net/pywin32/pywin32-208.win32-py2.4.exe?download
+     
+    Mac users may use Python 2.3.5, included with Mac OS X, but they will need 
+    to download the 'subprocess.py' file included with more recent Python distributions
+    and install it in the library path (/Library/Python/2.3/site-packages/). 
 
   * Apache HTTP Server
     Found at http://httpd.apache.org/
     The page cycler works on a local Apache server.  After installing Apache simply place
     the page_load_test/ directory into htdocs/ directory of Apache (found on most systems
     at c:\Program Files\Apache Software Foundation\Apache2.2\htdocs)
+    
+  * Syck YAML Parser
+  	You'll need to download and install Syck from http://whytheluckystiff.net/syck/
+  	Install the binary (a standard install) and the Python extension: 
+  	  cd ext/python/ && python setup.py build && sudo python setup.py install
 
   1. Make sure the prerequisites, above, are installed.
   2. Copy this entire directory and all subdirectories onto your local disk
@@ -32,41 +41,8 @@ these performance tests:
      network.proxy.http_port:80 - these settings ensure that the browser will only
      contact local web pages and will not attempt to pull information from the live web,
      this is important for collecting consistant testing results.
-     It should look something like this:
-
-# Filename will be appended to the timestamp in the report filename.
-# Use letters and underscores only
-filename: testfilename
-
-# The title of the report
-title: testtitle
-
-# Name of profile to test
-Test profile 1:
-  # Path to Firefox to test
-  firefox: C:\cygwin\tmp\test\firefox\firefox\firefox.exe
-
-  branch: testbranch
-
-  branchid: testbranchid
-
-  profile_path: C:\win32\base_profile
-
-  # Preferences to set in the test (use "preferences : {}" for no prefs)
-  preferences :
-    browser.shell.checkDefaultBrowser : false
-    dom.allow_scripts_to_close_windows : true
-    dom.disable_open_during_load: false
-    browser.dom.window.dump.enabled: true
-    network.proxy.type : 1
-    network.proxy.http : localhost
-    network.proxy.http_port : 80
-
-  # Extensions to install in test (use "extensions: {}" for none)
-  extensions :
-    # Need quotes around guid because of curly braces
-    "{12345678-1234-1234-1234-abcd12345678}" : c:\path\to\unzipped\xpi
-    foo@sample.com : c:\path\to\other\unzipped\xpi
+     Your config file should look something like the sample.config file in the 
+     Talos distribution.
 
   5. Provide a pages/ directory
      The page_load_test/ relies upon having a pages directory that includes the web pages
