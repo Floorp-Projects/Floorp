@@ -44,7 +44,7 @@ function DownloadProgressListener (aDocument, aStringBundle)
 {
   this.doc = aDocument;
 
-  this._statusFormat = aStringBundle.getString("statusFormat");
+  this._statusFormat = aStringBundle.getString("statusFormat2");
   this._transferSameUnits = aStringBundle.getString("transferSameUnits");
   this._transferDiffUnits = aStringBundle.getString("transferDiffUnits");
   this._transferNoTotal = aStringBundle.getString("transferNoTotal");
