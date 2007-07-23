@@ -68,6 +68,8 @@
 
 #include "nsMathUtils.h"
 
+#include "lcms.h"
+
 PRInt32 gfxPlatformGtk::sDPI = -1;
 gfxFontconfigUtils *gfxPlatformGtk::sFontconfigUtils = nsnull;
 
@@ -364,4 +366,131 @@ gfxPlatformGtk::InitDPI()
             sDPI = 96;
         }
     }
+}
+
+cmsHPROFILE
+gfxPlatformGtk::GetPlatformCMSOutputProfile()
+{
+    const char EDID1_ATOM_NAME[] = "XFree86_DDC_EDID1_RAWDATA";
+    const char ICC_PROFILE_ATOM_NAME[] = "_ICC_PROFILE";
+
+    Atom edidAtom, iccAtom;
+    Display *dpy = GDK_DISPLAY();
+    Window root = gdk_x11_get_default_root_xwindow();
+
+    Atom retAtom;
+    int retFormat;
+    unsigned long retLength, retAfter;
+    unsigned char *retProperty ;
+
+    iccAtom = XInternAtom(dpy, ICC_PROFILE_ATOM_NAME, TRUE);
+    if (iccAtom) {
+        // read once to get size, once for the data
+        if (Success == XGetWindowProperty(dpy, root, iccAtom,
+                                          0, 0 /* length */,
+                                          False, AnyPropertyType,
+                                          &retAtom, &retFormat, &retLength,
+                                          &retAfter, &retProperty)) {
+            XGetWindowProperty(dpy, root, iccAtom,
+                               0, retLength,
+                               False, AnyPropertyType,
+                               &retAtom, &retFormat, &retLength,
+                               &retAfter, &retProperty);
+
+            cmsHPROFILE profile =
+                cmsOpenProfileFromMem(retProperty, retLength);
+
+            XFree(retProperty);
+
+            if (profile) {
+#ifdef DEBUG_tor
+                fprintf(stderr,
+                        "ICM profile read from %s successfully\n",
+                        ICC_PROFILE_ATOM_NAME);
+#endif
+                return profile;
+            }
+        }
+    }
+
+    edidAtom = XInternAtom(dpy, EDID1_ATOM_NAME, TRUE);
+    if (edidAtom) {
+        if (Success == XGetWindowProperty(dpy, root, edidAtom, 0, 32,
+                                          False, AnyPropertyType,
+                                          &retAtom, &retFormat, &retLength,
+                                          &retAfter, &retProperty)) {
+            double gamma;
+            cmsCIExyY whitePoint;
+            cmsCIExyYTRIPLE primaries;
+
+            if (retLength != 128) {
+#ifdef DEBUG_tor
+                fprintf(stderr, "Short EDID data\n");
+#endif
+                return nsnull;
+            }
+
+            // Format documented in "VESA E-EDID Implementation Guide"
+
+            gamma = (100 + retProperty[0x17]) / 100.0;
+            whitePoint.x = ((retProperty[0x21] << 2) |
+                            (retProperty[0x1a] >> 2 & 3)) / 1024.0;
+            whitePoint.y = ((retProperty[0x22] << 2) |
+                            (retProperty[0x1a] >> 0 & 3)) / 1024.0;
+            whitePoint.Y = 1.0;
+
+            primaries.Red.x = ((retProperty[0x1b] << 2) |
+                               (retProperty[0x19] >> 6 & 3)) / 1024.0;
+            primaries.Red.y = ((retProperty[0x1c] << 2) |
+                               (retProperty[0x19] >> 4 & 3)) / 1024.0;
+            primaries.Red.Y = 1.0;
+
+            primaries.Green.x = ((retProperty[0x1d] << 2) |
+                                 (retProperty[0x19] >> 2 & 3)) / 1024.0;
+            primaries.Green.y = ((retProperty[0x1e] << 2) |
+                                 (retProperty[0x19] >> 0 & 3)) / 1024.0;
+            primaries.Green.Y = 1.0;
+
+            primaries.Blue.x = ((retProperty[0x1f] << 2) |
+                               (retProperty[0x1a] >> 6 & 3)) / 1024.0;
+            primaries.Blue.y = ((retProperty[0x20] << 2) |
+                               (retProperty[0x1a] >> 4 & 3)) / 1024.0;
+            primaries.Blue.Y = 1.0;
+
+            XFree(retProperty);
+
+#ifdef DEBUG_tor
+            fprintf(stderr, "EDID gamma: %f\n", gamma);
+            fprintf(stderr, "EDID whitepoint: %f %f %f\n",
+                    whitePoint.x, whitePoint.y, whitePoint.Y);
+            fprintf(stderr, "EDID primaries: [%f %f %f] [%f %f %f] [%f %f %f]\n",
+                    primaries.Red.x, primaries.Red.y, primaries.Red.Y,
+                    primaries.Green.x, primaries.Green.y, primaries.Green.Y,
+                    primaries.Blue.x, primaries.Blue.y, primaries.Blue.Y);
+#endif
+
+            LPGAMMATABLE gammaTable[3];
+            gammaTable[0] = gammaTable[1] = gammaTable[2] =
+                cmsBuildGamma(256, gamma);
+
+            if (!gammaTable[0])
+                return nsnull;
+
+            cmsHPROFILE profile =
+                cmsCreateRGBProfile(&whitePoint, &primaries, gammaTable);
+
+            cmsFreeGamma(gammaTable[0]);
+
+#ifdef DEBUG_tor
+            if (profile) {
+                fprintf(stderr,
+                        "ICM profile read from %s successfully\n",
+                        EDID1_ATOM_NAME);
+            }
+#endif
+
+            return profile;
+        }
+    }
+    return nsnull;
 }

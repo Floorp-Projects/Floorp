@@ -56,6 +56,8 @@
 #include "nspr.h"
 #include "png.h"
 
+#include "gfxPlatform.h"
+
 // for nsPNGDecoder.apngFlags
 enum { 
   FRAME_HIDDEN         = 0x01
@@ -77,16 +79,25 @@ NS_IMPL_ISUPPORTS1(nsPNGDecoder, imgIDecoder)
 
 nsPNGDecoder::nsPNGDecoder() :
   mPNG(nsnull), mInfo(nsnull),
-  apngFlags(0),
-  interlacebuf(nsnull), ibpr(0),
-  mError(PR_FALSE)
+  mCMSLine(nsnull), interlacebuf(nsnull),
+  mInProfile(nsnull), mTransform(nsnull),
+  ibpr(0), apngFlags(0), mChannels(0), mError(PR_FALSE)
 {
 }
 
 nsPNGDecoder::~nsPNGDecoder()
 {
+  if (mCMSLine)
+    nsMemory::Free(mCMSLine);
   if (interlacebuf)
     nsMemory::Free(interlacebuf);
+  if (mInProfile) {
+    cmsCloseProfile(mInProfile);
+
+    /* mTransform belongs to us only if mInProfile is non-null */
+    if (mTransform)
+      cmsDeleteTransform(mTransform);
+  }
 }
 
 // CreateFrame() is used for both simple and animated images
@@ -153,9 +164,7 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
 #if defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
   static png_byte unused_chunks[]=
        { 98,  75,  71,  68, '\0',   /* bKGD */
-         99,  72,  82,  77, '\0',   /* cHRM */
         104,  73,  83,  84, '\0',   /* hIST */
-        105,  67,  67,  80, '\0',   /* iCCP */
         105,  84,  88, 116, '\0',   /* iTXt */
         111,  70,  70, 115, '\0',   /* oFFs */
         112,  67,  65,  76, '\0',   /* pCAL */
@@ -266,6 +275,119 @@ NS_IMETHODIMP nsPNGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRU
   return rv;
 }
 
+// Adapted from http://www.littlecms.com/pngchrm.c example code
+static cmsHPROFILE
+PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
+                   int color_type, PRUint32 *inType, PRUint32 *intent)
+{
+  cmsHPROFILE profile = nsnull;
+  *intent = INTENT_PERCEPTUAL;   // XXX: should this be the default?
+
+  // First try to see if iCCP chunk is present
+  if (png_get_valid(png_ptr, info_ptr, PNG_INFO_iCCP)) {
+    png_uint_32 profileLen;
+    char *profileData, *profileName;
+    int compression;
+
+    png_get_iCCP(png_ptr, info_ptr, &profileName, &compression,
+                 &profileData, &profileLen);
+
+    profile = cmsOpenProfileFromMem(profileData, profileLen);
+    PRUint32 profileSpace = cmsGetColorSpace(profile);
+
+#ifdef DEBUG_tor
+    fprintf(stderr, "PNG profileSpace: 0x%08X\n", profileSpace);
+#endif
+
+    PRBool mismatch = PR_FALSE;
+    if (color_type & PNG_COLOR_MASK_COLOR) {
+      if (profileSpace != icSigRgbData)
+        mismatch = PR_TRUE;
+    } else {
+      if (profileSpace == icSigRgbData)
+        png_set_gray_to_rgb(png_ptr);
+      else if (profileSpace != icSigGrayData)
+        mismatch = PR_TRUE;
+    }
+
+    if (mismatch) {
+      cmsCloseProfile(profile);
+      profile = nsnull;
+    } else {
+      *intent = cmsTakeRenderingIntent(profile);
+    }
+  }
+
+  // Check sRGB chunk
+  if (!profile && png_get_valid(png_ptr, info_ptr, PNG_INFO_sRGB)) {
+    profile = cmsCreate_sRGBProfile();
+
+    if (profile) {
+      int fileIntent;
+      png_get_sRGB(png_ptr, info_ptr, &fileIntent);
+      PRUint32 map[] = { INTENT_PERCEPTUAL, INTENT_RELATIVE_COLORIMETRIC,
+                         INTENT_SATURATION, INTENT_ABSOLUTE_COLORIMETRIC };
+      *intent = map[fileIntent];
+    }
+  }
+
+  // Check gAMA/cHRM chunks
+  if (!profile && png_get_valid(png_ptr, info_ptr, PNG_INFO_gAMA)) {
+    cmsCIExyY whitePoint = {0.3127, 0.3290, 1.0};         // D65
+    cmsCIExyYTRIPLE primaries = {
+      {0.6400, 0.3300, 1.0},
+      {0.3000, 0.6000, 1.0},
+      {0.1500, 0.0600, 1.0}
+    };
+
+    if (png_get_valid(png_ptr, info_ptr, PNG_INFO_cHRM)) {
+      png_get_cHRM(png_ptr, info_ptr,
+                   &whitePoint.x, &whitePoint.y,
+                   &primaries.Red.x,   &primaries.Red.y,
+                   &primaries.Green.x, &primaries.Green.y,
+                   &primaries.Blue.x,  &primaries.Blue.y);
+
+      whitePoint.Y =
+        primaries.Red.Y = primaries.Green.Y = primaries.Blue.Y = 1.0;
+    }
+
+    double gammaOfFile;
+    LPGAMMATABLE gammaTable[3];
+
+    png_get_gAMA(png_ptr, info_ptr, &gammaOfFile);
+
+    gammaTable[0] = gammaTable[1] = gammaTable[2] =
+      cmsBuildGamma(256, 1/gammaOfFile);
+
+    if (!gammaTable[0])
+      return nsnull;
+
+    profile = cmsCreateRGBProfile(&whitePoint, &primaries, gammaTable);
+
+    if (profile && !(color_type & PNG_COLOR_MASK_COLOR))
+      png_set_gray_to_rgb(png_ptr);
+
+    cmsFreeGamma(gammaTable[0]);
+  }
+
+  if (profile) {
+    PRUint32 profileSpace = cmsGetColorSpace(profile);
+    if (profileSpace == icSigGrayData) {
+      if (color_type & PNG_COLOR_MASK_ALPHA)
+        *inType = TYPE_GRAYA_8;
+      else
+        *inType = TYPE_GRAY_8;
+    } else {
+      if (color_type & PNG_COLOR_MASK_ALPHA ||
+          png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
+        *inType = TYPE_RGBA_8;
+      else
+        *inType = TYPE_RGB_8;
+    }
+  }
+
+  return profile;
+}
 
 void
 info_callback(png_structp png_ptr, png_infop info_ptr)
@@ -305,6 +427,53 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   if (bit_depth == 16)
     png_set_strip_16(png_ptr);
 
+  PRUint32 inType, intent;
+  if (gfxPlatform::IsCMSEnabled()) {
+    decoder->mInProfile = PNGGetColorProfile(png_ptr, info_ptr,
+                                             color_type, &inType, &intent);
+  }
+  if (decoder->mInProfile && gfxPlatform::GetCMSOutputProfile()) {
+    PRUint32 outType;
+
+    if (color_type & PNG_COLOR_MASK_ALPHA || trans)
+      outType = TYPE_RGBA_8;
+    else
+      outType = TYPE_RGB_8;
+
+    decoder->mTransform = cmsCreateTransform(decoder->mInProfile,
+                                             inType,
+                                             gfxPlatform::GetCMSOutputProfile(),
+                                             outType,
+                                             intent,
+                                             0);
+  } else {
+    if (color_type == PNG_COLOR_TYPE_GRAY ||
+        color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+      png_set_gray_to_rgb(png_ptr);
+    if (gfxPlatform::IsCMSEnabled()) {
+      if (color_type & PNG_COLOR_MASK_ALPHA || trans)
+        decoder->mTransform = gfxPlatform::GetCMSRGBATransform();
+      else
+        decoder->mTransform = gfxPlatform::GetCMSRGBTransform();
+    }
+  }
+
+  if (!decoder->mTransform) {
+    if (color_type == PNG_COLOR_TYPE_GRAY ||
+        color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+      png_set_gray_to_rgb(png_ptr);
+
+    if (png_get_gAMA(png_ptr, info_ptr, &aGamma)) {
+      if ((aGamma <= 0.0) || (aGamma > 21474.83)) {
+        aGamma = 0.45455;
+        png_set_gAMA(png_ptr, info_ptr, aGamma);
+      }
+      png_set_gamma(png_ptr, 2.2, aGamma);
+    }
+    else
+      png_set_gamma(png_ptr, 2.2, 0.45455);
+  }
+
   if (color_type == PNG_COLOR_TYPE_GRAY ||
       color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
       png_set_gray_to_rgb(png_ptr);
@@ -328,8 +497,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   /* now all of those things we set above are used to update various struct
    * members and whatnot, after which we can get channels, rowbytes, etc. */
   png_read_update_info(png_ptr, info_ptr);
-  channels = png_get_channels(png_ptr, info_ptr);
-  PR_ASSERT(channels == 3 || channels == 4);
+  decoder->mChannels = channels = png_get_channels(png_ptr, info_ptr);
 
   /*---------------------------------------------------------------*/
   /* copy PNG info into imagelib structs (formerly png_set_dims()) */
@@ -337,7 +505,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
 
   PRInt32 alpha_bits = 1;
 
-  if (channels > 3) {
+  if (channels == 2 || channels == 4) {
     /* check if alpha is coming from a tRNS chunk and is binary */
     if (num_trans) {
       /* if it's not a indexed color image, tRNS means binary */
@@ -368,9 +536,9 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   if (decoder->mObserver)
     decoder->mObserver->OnStartContainer(nsnull, decoder->mImage);
 
-  if (channels == 3) {
+  if (channels == 1 || channels == 3) {
     decoder->format = gfxIFormats::RGB;
-  } else if (channels > 3) {
+  } else if (channels == 2 || channels == 4) {
     if (alpha_bits == 8) {
       decoder->mImage->GetPreferredAlphaChannelFormat(&(decoder->format));
     } else if (alpha_bits == 1) {
@@ -398,11 +566,17 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   PRUint32 bpr;
   decoder->mFrame->GetImageBytesPerRow(&bpr);
 
+  if (decoder->mTransform &&
+      (channels <= 2 || interlace_type == PNG_INTERLACE_ADAM7)) {
+    PRUint32 bpp[] = { 0, 3, 4, 3, 4 };
+    decoder->mCMSLine =
+      (PRUint8 *)nsMemory::Alloc(bpp[channels] * width);
+    if (!decoder->mCMSLine)
+      longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
+  }
+
   if (interlace_type == PNG_INTERLACE_ADAM7) {
-    if (channels > 3)
-      decoder->ibpr = channels*width;
-    else
-      decoder->ibpr = bpr;
+      decoder->ibpr = channels * width;
     decoder->interlacebuf = (PRUint8 *)nsMemory::Alloc(decoder->ibpr*height);
     if (!decoder->interlacebuf) {
       longjmp(decoder->mPNG->jmpbuf, 5); // NS_ERROR_OUT_OF_MEMORY
@@ -474,6 +648,21 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     PRUint32 imageDataLength, bpr = width * sizeof(PRUint32);
     decoder->mFrame->GetImageData(&imageData, &imageDataLength);
     PRUint32 *cptr32 = (PRUint32*)(imageData + (row_num*bpr));
+
+    if (decoder->mTransform) {
+      if (decoder->mCMSLine) {
+        cmsDoTransform(decoder->mTransform, line, decoder->mCMSLine, iwidth);
+        /* copy alpha over */
+        PRUint32 channels = decoder->mChannels;
+        if (channels == 2 || channels == 4) {
+          for (PRUint32 i = 0; i < iwidth; i++)
+            decoder->mCMSLine[4 * i + 3] = line[channels * i + channels - 1];
+        }
+        line = decoder->mCMSLine;
+      } else {
+        cmsDoTransform(decoder->mTransform, line, line, iwidth);
+       }
+     }
 
     switch (format) {
     case gfxIFormats::RGB:
