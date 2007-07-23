@@ -41,6 +41,7 @@ EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
 	$(JPEG_LIBS) \
 	$(PNG_LIBS) \
+	$(LCMS_LIBS) \
 	$(MOZ_JS_LIBS) \
 	$(NSS_LIBS) \
 	$(NULL)
