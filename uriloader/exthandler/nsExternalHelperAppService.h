@@ -140,6 +140,7 @@ public:
   NS_HIDDEN_(nsresult) FillProtoInfoForSchemeFromDS(
     const nsACString& aScheme, nsIHandlerInfo * aMIMEInfo);
 
+#ifdef MOZ_RDF
   /**
    * Fill in the generic handler info stuff; called by Fill*InfoFor*FromDS.
    * 
@@ -154,6 +155,7 @@ public:
     nsIRDFResource *aTypeNodeResource, const nsCAutoString& aType,
     nsIRDFService *aRDFService, const char *aTypeNodePrefix, 
     nsIHandlerInfo * aHandlerInfo);
+#endif
     
   /**
    * Given an extension, look up the user override information to see if we
