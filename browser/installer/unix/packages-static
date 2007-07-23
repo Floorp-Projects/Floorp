@@ -346,6 +346,7 @@ bin/libsoftokn3.so
 bin/libfreebl3.chk
 bin/libfreebl3.so
 bin/libssl3.so
+bin/libnssdbm3.so
 bin/chrome/pipnss.jar
 bin/chrome/pippki.jar
 bin/chrome/pippki.manifest
