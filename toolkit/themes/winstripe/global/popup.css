@@ -93,6 +93,7 @@ tooltip[titletip="true"] {
 
 menulist > menupopup,
 .menulist-menupopup {
+  -moz-appearance: none;
   border-width: 1px;
   -moz-border-top-colors: -moz-FieldText;
   -moz-border-right-colors: -moz-FieldText;
