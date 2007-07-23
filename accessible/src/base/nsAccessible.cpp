@@ -582,6 +582,18 @@ NS_IMETHODIMP nsAccessible::Shutdown()
 NS_IMETHODIMP nsAccessible::InvalidateChildren()
 {
   // Document has transformed, reset our invalid children and child count
+
+  // Reset the sibling pointers, they will be set up again the next time
+  // CacheChildren() is called.
+  // Note: we don't want to start creating accessibles at this point,
+  // so don't use GetNextSibling() here. (bug 387252)
+  nsAccessible* child = static_cast<nsAccessible*>(mFirstChild);
+  while (child && child->mNextSibling != DEAD_END_ACCESSIBLE) {
+    nsIAccessible *next = child->mNextSibling;
+    child->mNextSibling = nsnull;
+    child = static_cast<nsAccessible*>(next);
+  }
+
   mAccChildCount = eChildCountUninitialized;
   mFirstChild = nsnull;
   return NS_OK;
