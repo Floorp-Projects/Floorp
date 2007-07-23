@@ -1129,15 +1129,17 @@ nsXULPopupManager::CancelMenuTimer(nsIMenuParent* aMenuParent)
 }
 
 PRBool
-nsXULPopupManager::HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent)
+nsXULPopupManager::HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent,
+                                            nsMenuPopupFrame* aFrame)
 {
-  if (mCurrentMenu) {
-    nsMenuPopupFrame* currentPopup = mCurrentMenu->Frame();
+  if (!aFrame && mCurrentMenu)
+    aFrame = mCurrentMenu->Frame();
 
+  if (aFrame) {
     PRBool action;
-    nsMenuFrame* result = currentPopup->FindMenuWithShortcut(aKeyEvent, action);
+    nsMenuFrame* result = aFrame->FindMenuWithShortcut(aKeyEvent, action);
     if (result) {
-      currentPopup->ChangeMenuItem(result, PR_FALSE);
+      aFrame->ChangeMenuItem(result, PR_FALSE);
       if (action) {
         nsMenuFrame* menuToOpen = result->Enter();
         if (menuToOpen) {
@@ -1236,21 +1238,25 @@ nsXULPopupManager::HandleKeyboardNavigation(PRUint32 aKeyCode)
 
 PRBool
 nsXULPopupManager::HandleKeyboardNavigationInPopup(nsMenuChainItem* item,
+                                                   nsMenuPopupFrame* aFrame,
                                                    nsNavigationDirection aDir)
 {
-  nsMenuPopupFrame* popupFrame = item->Frame();
-  nsMenuFrame* currentMenu = popupFrame->GetCurrentMenuItem();
+  NS_ASSERTION(aFrame, "aFrame is null");
+  NS_ASSERTION(!item || item->Frame() == aFrame,
+               "aFrame is expected to be equal to item->Frame()");
 
-  popupFrame->ClearIncrementalString();
+  nsMenuFrame* currentMenu = aFrame->GetCurrentMenuItem();
+
+  aFrame->ClearIncrementalString();
 
   // This method only gets called if we're open.
   if (!currentMenu && NS_DIRECTION_IS_INLINE(aDir)) {
     // We've been opened, but we haven't had anything selected.
     // We can handle End, but our parent handles Start.
     if (aDir == eNavigationDirection_End) {
-      nsMenuFrame* nextItem = GetNextMenuItem(popupFrame, nsnull, PR_TRUE);
+      nsMenuFrame* nextItem = GetNextMenuItem(aFrame, nsnull, PR_TRUE);
       if (nextItem) {
-        popupFrame->ChangeMenuItem(nextItem, PR_FALSE);
+        aFrame->ChangeMenuItem(nextItem, PR_FALSE);
         return PR_TRUE;
       }
     }
@@ -1264,7 +1270,7 @@ nsXULPopupManager::HandleKeyboardNavigationInPopup(nsMenuChainItem* item,
     isContainer = currentMenu->IsMenu();
     if (isOpen) {
       // for an open popup, have the child process the event
-      nsMenuChainItem* child = item->GetChild();
+      nsMenuChainItem* child = item ? item->GetChild() : nsnull;
       if (child && HandleKeyboardNavigationInPopup(child, aDir))
         return PR_TRUE;
     }
@@ -1283,16 +1289,16 @@ nsXULPopupManager::HandleKeyboardNavigationInPopup(nsMenuChainItem* item,
     nsMenuFrame* nextItem;
 
     if (aDir == eNavigationDirection_Before)
-      nextItem = GetPreviousMenuItem(popupFrame, currentMenu, PR_TRUE);
+      nextItem = GetPreviousMenuItem(aFrame, currentMenu, PR_TRUE);
     else if (aDir == eNavigationDirection_After)
-      nextItem = GetNextMenuItem(popupFrame, currentMenu, PR_TRUE);
+      nextItem = GetNextMenuItem(aFrame, currentMenu, PR_TRUE);
     else if (aDir == eNavigationDirection_First)
-      nextItem = GetNextMenuItem(popupFrame, nsnull, PR_TRUE);
+      nextItem = GetNextMenuItem(aFrame, nsnull, PR_TRUE);
     else
-      nextItem = GetPreviousMenuItem(popupFrame, nsnull, PR_TRUE);
+      nextItem = GetPreviousMenuItem(aFrame, nsnull, PR_TRUE);
 
     if (nextItem) {
-      popupFrame->ChangeMenuItem(nextItem, PR_FALSE);
+      aFrame->ChangeMenuItem(nextItem, PR_FALSE);
       return PR_TRUE;
     }
   }
@@ -1538,7 +1544,7 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
   }
 #endif // !XP_MAC && !XP_MACOSX
   else {
-    HandleShortcutNavigation(keyEvent);
+    HandleShortcutNavigation(keyEvent, nsnull);
   }
 
   aKeyEvent->StopPropagation();
