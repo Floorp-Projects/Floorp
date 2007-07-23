@@ -31,7 +31,7 @@
                       xbl:inherits="open,hidden=disablehistory" anonid="historydropmarker"/>
 
       <xul:popupset>
-        <xul:panel type="autocomplete" ignorekeys="true" anonid="popup" class="autocomplete-result-popup" hidden="true" xbl:inherits="for=id,nomatch"/>
+        <xul:panel type="autocomplete" anonid="popup" class="autocomplete-result-popup" xbl:inherits="for=id,nomatch"/>
       </xul:popupset>
       
       <children includes="menupopup"/>
@@ -1128,7 +1128,6 @@
             var w = this.boxObject.width;
             if (w != this.resultsPopup.boxObject.width)
               this.resultsPopup.setAttribute("width", w);
-            this.resultsPopup.removeAttribute("hidden");
             this.resultsPopup.showPopup(this, -1, -1, "popup", "bottomleft", "topleft");
             this.mMenuOpen = true;
           }
@@ -1140,7 +1139,6 @@
         <body><![CDATA[
           if (this.resultsPopup && this.mMenuOpen) {
             this.resultsPopup.hidePopup();
-            this.resultsPopup.setAttribute("hidden", "true");
             this.mMenuOpen = false;
           }
         ]]></body>
@@ -1401,6 +1399,11 @@
   </binding> 
 
   <binding id="autocomplete-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
+    <resources>
+      <stylesheet src="chrome://global/content/autocomplete.css"/>
+      <stylesheet src="chrome://global/skin/autocomplete.css"/>
+    </resources>
+
     <content>
       <xul:tree anonid="tree" class="autocomplete-tree plain" flex="1">
         <xul:treecols anonid="treecols">
@@ -1411,7 +1414,7 @@
       </xul:tree>
     </content>
     
-    <implementation>
+    <implementation implements="nsIAutoCompletePopup">
       <constructor><![CDATA[
         if (this.textbox && this.textbox.view)
           this.initialize();
@@ -1514,6 +1517,12 @@
         ]]></body>
       </method>
 
+      <!-- =================== nsIAutoCompletePopup =================== -->
+
+      <field name="input">
+        null
+      </field>
+
       <!-- This property is meant to be overriden by bindings extending
            this one.  When the user selects an item from the list by
            hitting enter or clicking, this method can set the value
@@ -1540,16 +1549,53 @@
         ]]></setter>
       </property>
 
+      <property name="popupOpen" onget="return !!this.input;" readonly="true"/>
+
+      <method name="openAutocompletePopup">
+        <parameter name="aInput"/>
+        <parameter name="aX"/>
+        <parameter name="aY"/>
+        <parameter name="aWidth"/>
+        <body>
+          if (!this.input) {
+            this.tree.view = aInput.controller;
+            this.view = this.tree.view;
+            this.showCommentColumn = aInput.showCommentColumn;
+            this.input = aInput;
+            this.width = aWidth;
+            this.invalidate();
+            this.openPopupAtScreen(aX, aY, false);
+            this.popupBoxObject.setConsumeRollupEvent(aInput.consumeRollupEvent);
+          }
+        </body>
+      </method>
+
+      <method name="closePopup">
+        <body>
+          this.hidePopup();
+        </body>
+      </method>
+
+      <method name="invalidate">
+        <body>
+          if (this.view)
+            this.adjustHeight();
+          this.tree.treeBoxObject.invalidate();
+        </body>
+      </method>
     </implementation>
 
     <handlers>
       <handler event="popupshowing">
-        this.textbox.mMenuOpen = true;
+        if (this.textbox)
+          this.textbox.mMenuOpen = true;
       </handler>
 
       <handler event="popuphiding">
-        this.textbox.mMenuOpen = false;
+        if (this.textbox)
+          this.textbox.mMenuOpen = false;
         this.selectedIndex = -1;
+        this.input = null;
       </handler>
 
       <handler event="mousedown" phase="capturing" preventdefault="true"/>
