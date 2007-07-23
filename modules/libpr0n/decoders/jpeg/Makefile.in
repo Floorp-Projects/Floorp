@@ -54,9 +54,12 @@ REQUIRES	= xpcom \
 		  thebes \
 		  imglib2 \
 		  $(JPEG_REQUIRES) \
+		  $(LCMS_REQUIRES) \
 		  $(NULL)
 
 CPPSRCS		= nsJPEGDecoder.cpp
+
+CSRCS		= iccjpeg.c
 
 include $(topsrcdir)/config/rules.mk
 

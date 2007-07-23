@@ -53,6 +53,12 @@
 
 #include "jerror.h"
 
+#include "gfxPlatform.h"
+
+extern "C" {
+#include "iccjpeg.h"
+}
+
 NS_IMPL_ISUPPORTS1(nsJPEGDecoder, imgIDecoder)
 
 #if defined(PR_LOGGING)
@@ -89,12 +95,19 @@ nsJPEGDecoder::nsJPEGDecoder()
 
   mBackBuffer = nsnull;
   mBackBufferLen = mBackBufferSize = mBackBufferUnreadLen = 0;
+
+  mInProfile = nsnull;
+  mTransform = nsnull;
 }
 
 nsJPEGDecoder::~nsJPEGDecoder()
 {
   PR_FREEIF(mBuffer);
   PR_FREEIF(mBackBuffer);
+  if (mTransform)
+    cmsDeleteTransform(mTransform);
+  if (mInProfile)
+    cmsCloseProfile(mInProfile);
 }
 
 
@@ -131,6 +144,10 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgILoad *aLoad)
   mSourceMgr.skip_input_data = skip_input_data;
   mSourceMgr.resync_to_restart = jpeg_resync_to_restart;
   mSourceMgr.term_source = term_source;
+
+  /* Record app markers for ICC data */
+  for (PRUint32 m = 0; m < 16; m++)
+    jpeg_save_markers(&mInfo, JPEG_APP0 + m, 0xFFFF);
 
   return NS_OK;
 }
@@ -223,18 +240,107 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     if (jpeg_read_header(&mInfo, TRUE) == JPEG_SUSPENDED)
       return NS_OK; /* I/O suspension */
 
-    /* let libjpeg take care of gray->RGB and YCbCr->RGB conversions */
-    switch (mInfo.jpeg_color_space) {
+    JOCTET  *profile;
+    PRUint32 profileLength;
+
+    if (gfxPlatform::IsCMSEnabled() &&
+        read_icc_profile(&mInfo, &profile, &profileLength) &&
+        (mInProfile = cmsOpenProfileFromMem(profile, profileLength)) != NULL) {
+      free(profile);
+
+      PRUint32 profileSpace = cmsGetColorSpace(mInProfile);
+      PRBool mismatch = PR_FALSE;
+
+#ifdef DEBUG_tor
+      fprintf(stderr, "JPEG profileSpace: 0x%08X\n", profileSpace);
+#endif
+      switch (mInfo.jpeg_color_space) {
+      case JCS_GRAYSCALE:
+        if (profileSpace == icSigRgbData)
+          mInfo.out_color_space = JCS_RGB;
+        else if (profileSpace != icSigGrayData)
+          mismatch = PR_TRUE;
+        break;
+      case JCS_RGB:
+        if (profileSpace != icSigRgbData)
+          mismatch =  PR_TRUE;
+        break;
+      case JCS_YCbCr:
+        if (profileSpace == icSigRgbData)
+          mInfo.out_color_space = JCS_RGB;
+        else if (profileSpace != icSigYCbCrData)
+          mismatch = PR_TRUE;
+        break;
+      case JCS_CMYK:
+      case JCS_YCCK:
+        if (profileSpace == icSigCmykData)
+          mInfo.out_color_space = JCS_CMYK;
+        else
+          mismatch = PR_TRUE;
+        break;
+      default:
+        mState = JPEG_ERROR;
+        return NS_ERROR_UNEXPECTED;
+      }
+
+      if (!mismatch) {
+        PRUint32 space, channels;
+        switch (mInfo.out_color_space) {
+        case JCS_GRAYSCALE:
+          space = PT_GRAY;
+          channels = 1;
+          break;
+        case JCS_RGB:
+          space = PT_RGB;
+          channels = 3;
+          break;
+        case JCS_YCbCr:
+          space = PT_YCbCr;
+          channels = 3;
+        case JCS_CMYK:
+          space = PT_CMYK;
+          channels = 4;
+          break;
+        default:
+          mState = JPEG_ERROR;
+          return NS_ERROR_UNEXPECTED;
+        }
+
+        PRUint32 type =
+          COLORSPACE_SH(space) |
+          CHANNELS_SH(channels) |
+          BYTES_SH(1);
+
+        /* Adobe Photoshop writes CMYK files with inverted data */
+        if (mInfo.jpeg_color_space == JCS_CMYK)
+          type |= FLAVOR_SH(mInfo.saw_Adobe_marker ? 1 : 0);
+
+        if (gfxPlatform::GetCMSOutputProfile())
+          mTransform = cmsCreateTransform(mInProfile,
+                                          type,
+                                          gfxPlatform::GetCMSOutputProfile(),
+                                          TYPE_RGB_8,
+                                          cmsTakeRenderingIntent(mInProfile),
+                                          0);
+      } else {
+#ifdef DEBUG_tor
+        fprintf(stderr, "ICM profile colorspace mismatch\n");
+#endif
+      }
+    }
+
+    if (!mTransform) {
+      switch (mInfo.jpeg_color_space) {
       case JCS_GRAYSCALE:
       case JCS_RGB:
       case JCS_YCbCr:
         mInfo.out_color_space = JCS_RGB;
         break;
-      case JCS_CMYK:
-      case JCS_YCCK:
       default:
         mState = JPEG_ERROR;
         return NS_ERROR_UNEXPECTED;
+        break;
+      }
     }
 
     /*
@@ -477,6 +583,30 @@ nsJPEGDecoder::OutputScanlines()
       if (jpeg_read_scanlines(&mInfo, mSamples, 1) != 1) {
         rv = PR_FALSE; /* suspend */
         break;
+      }
+
+      if (mTransform) {
+        if (mInfo.out_color_space == JCS_GRAYSCALE) {
+          /* move gray data to end of mSample array so
+             cmsDoTransform can do in-place transform */
+          memcpy(mSamples[0] + 2 * mInfo.output_width,
+                 mSamples[0],
+                 mInfo.output_width);
+          cmsDoTransform(mTransform,
+                         mSamples[0] + 2 * mInfo.output_width, mSamples[0],
+                         mInfo.output_width);
+        } else
+          cmsDoTransform(mTransform,
+                         mSamples[0], mSamples[0],
+                         mInfo.output_width);
+      } else {
+        /* No embedded ICC profile - treat as sRGB */
+        cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBTransform();
+        if (transform) {
+          cmsDoTransform(transform,
+                         mSamples[0], mSamples[0],
+                         mInfo.output_width);
+        }
       }
 
       // offset is in Cairo pixels (PRUint32)

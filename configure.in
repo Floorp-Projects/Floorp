@@ -126,6 +126,7 @@ GCONF_VERSION=1.2.1
 LIBGNOME_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
+LCMS_VERSION=1.17
 
 MSMANIFEST_TOOL=
 
@@ -7048,6 +7049,35 @@ fi
 AC_SUBST(MOZ_TREE_CAIRO)
 AC_SUBST(MOZ_CAIRO_CFLAGS)
 AC_SUBST(MOZ_CAIRO_LIBS)
+
+dnl ========================================================
+dnl Check for lcms
+dnl ========================================================
+
+MOZ_NATIVE_LCMS=
+MOZ_ARG_ENABLE_BOOL(system-lcms,
+[ --enable-system-lcms Use system lcms (located with pkgconfig)],
+MOZ_NATIVE_LCMS=1,
+MOZ_NATIVE_LCMS= )
+
+if test -z "$MOZ_NATIVE_LCMS"
+then
+    LCMS_CFLAGS=
+    if test "$OS_ARCH" = "WINNT"; then
+        if test -z "$BUILD_STATIC_LIBS" -a -z "$MOZ_ENABLE_LIBXUL"; then
+            LCMS_CFLAGS=-DLCMS_DLL
+        fi
+        LCMS_LIBS='$(LIBXUL_DIST)/lib/mozlcms.lib'
+    else
+        LCMS_LIBS='-L$(LIBXUL_DIST)/bin -lmozlcms'
+    fi
+else
+    PKG_CHECK_MODULES(LCMS, lcms >= $LCMS_VERSION)
+fi
+
+AC_SUBST(MOZ_NATIVE_LCMS)
+AC_SUBST(LCMS_CFLAGS)
+AC_SUBST(LCMS_LIBS)
 
 dnl ========================================================
 dnl disable xul

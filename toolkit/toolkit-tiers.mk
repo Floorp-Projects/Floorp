@@ -68,6 +68,10 @@ tier_external_dirs += modules/libbz2
 tier_external_dirs += modules/libmar
 endif
 
+ifndef MOZ_NATIVE_LCMS
+tier_external_dirs	+= modules/lcms
+endif
+
 #
 # tier "gecko" - core components
 #
