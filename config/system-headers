@@ -937,3 +937,6 @@ png.h
 #if MOZ_NATIVE_ZLIB==1
 zlib.h
 #endif
+#if MOZ_TREE_LCMS==1
+lcms.h
+#endif
