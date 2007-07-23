@@ -163,6 +163,7 @@ MODULES_core :=                                 \
   mozilla/js/src/liveconnect                    \
   mozilla/js/src/xpconnect                      \
   mozilla/js/jsd/idl                            \
+  mozilla/modules/lcms                          \
   mozilla/modules/libimg                        \
   mozilla/modules/libjar                        \
   mozilla/modules/libpr0n                       \
