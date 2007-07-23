@@ -22,6 +22,7 @@
 # Contributor(s):
 #   Annie Sullivan <annie.sullivan@gmail.com> (original author)
 #   Ben Hearsum    <bhearsum@wittydomain.com> (ported to linux)
+#   Zach Lipton    <zach@zachlipton.com>  (Mac port)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,49 +54,41 @@ __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 import os
 import time
 import threading
+import subprocess
 
 import ffprocess
 
+def GetProcessData(pid):
+  """Runs a ps on the process identified by pid and returns the output line
+    as a list (uid, pid, ppid, cpu, pri, ni, vsz, rss, wchan, stat, tt, time, command)
+  """
+  command = ['ps -Acup'+str(pid)]
+  handle = subprocess.Popen(command, stdout=subprocess.PIPE, universal_newlines=True, shell=True)
+  handle.wait()
+  data = handle.stdout.readlines()
+  
+  # find all matching processes and add them to the list
+  for line in data:
+    if line.find(str(pid)) >= 0:
+      # splits by whitespace
+      line = line.split()
+      if (line[1] == str(pid)):
+        return line
+
 def GetPrivateBytes(pid):
   """Calculate the amount of private, writeable memory allocated to a process.
-     This code was adapted from 'pmap.c', part of the procps project.
   """
-  mapfile = '/proc/%s/maps' % pid
-  maps = open(mapfile)
-
-  private = 0
-
-  for line in maps:
-    # split up
-    (range,line) = line.split(" ", 1)
-
-    (start,end) = range.split("-")
-    flags = line.split(" ", 1)[0]
-
-    size = int(end, 16) - int(start, 16)
-
-    if flags.find("p") >= 0:
-      if flags.find("w") >= 0:
-        private += size
-
-  return private
+  psData = GetProcessData(pid)
+  return psData[5]
 
 
 def GetResidentSize(pid):
   """Retrieve the current resident memory for a given process"""
-  # for some reason /proc/PID/stat doesn't give accurate information
-  # so we use status instead
-  file = '/proc/%s/status' % pid
+  psData = GetProcessData(pid)
+  return psData[4]
 
-  status = open(file)
-
-  for line in status:
-    if line.find("VmRSS") >= 0:
-      return int(line.split()[1]) * 1024
-
-
-def GetCpuTime(pid, sampleTime=1):
-  # return all zeros on this platform as per the 7/18/07 perf meeting
+def GetCpuTime(pid):
+  # return all zeros for now on this platform as per 7/18/07 perf meeting
   return 0
 
 counterDict = {}
@@ -189,7 +182,6 @@ class CounterManager(threading.Thread):
     try:
       # the last process is the useful one
       self.pid = ffprocess.GetPidsByName(self.process)[-1]
-      os.stat('/proc/%s' % self.pid)
       self.runThread = True
       self.start()
     except:
