@@ -23,7 +23,9 @@
  * SOFTWARE.
  */
 
+#if HAVE_CONFIG_H
 #include <config.h>
+#endif
 
 #include <stdlib.h>
 #include <string.h>
@@ -3301,10 +3303,10 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
  *        ·       ╲r₂
  *  p₁ ·           ╲
  *  •              θ╲
- *   ╲             ╌╌•
+ *   ╲             〓〓•
  *    ╲r₁        ·   c₂
  *    θ╲    ·
- *    ╌╌•
+ *    〓〓•
  *      c₁
  *
  * Given (c₁,r₁), (c₂,r₂) and p, we must find an angle θ such that two
@@ -3352,7 +3354,7 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
  *   ╲       ┆       •c₂
  *    ╲r₁    ┆   ·   ┆
  *     ╲    ·┆       ┆cdy
- *      •╌╌╌╌┴╌╌╌╌╌╌╌┘
+ *      •〓〓〓〓┴〓〓〓〓〓〓〓┘
  *    c₁  pdx   cdx
  *
  * cdx = (c₂x - c₁x)
@@ -3391,7 +3393,7 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
  * precomputed. From here we just use the quadratic formula to solve
  * for t:
  *
- * t = (-2·B ± ⎷(B² - 4·A·C)) / 2·A
+ * t = (-2·B ± 〓(B² - 4·A·C)) / 2·A
  */
         /* radial or conical */
         pixman_bool_t affine = TRUE;
