@@ -58,6 +58,11 @@
   ; Remove files that may be left behind by the application in the
   ; VirtualStore directory.
   ${CleanVirtualStore}
+
+  ; Remove talkback if it is present (remove after bug 386760 is fixed)
+  ${If} ${FileExists} "$INSTDIR\extensions\talkback@mozilla.org\"
+    RmDir /r "$INSTDIR\extensions\talkback@mozilla.org\"
+  ${EndIf}
 !macroend
 !define PostUpdate "!insertmacro PostUpdate"
 
