@@ -312,7 +312,7 @@ function makeItem(id, version, locationKey, minVersion, maxVersion, name,
 }
 
 /**
- * Gets the specified directory at the speciifed hierarchy under a 
+ * Gets the specified directory at the specified hierarchy under a 
  * Directory Service key. 
  * @param   key
  *          The Directory Service Key to start from
@@ -328,7 +328,7 @@ function getDir(key, pathArray) {
 }
 
 /**
- * Gets the specified directory at the speciifed hierarchy under a 
+ * Gets the specified directory at the specified hierarchy under a 
  * Directory Service key. 
  * @param   key
  *          The Directory Service Key to start from
@@ -343,7 +343,7 @@ function getDirNoCreate(key, pathArray) {
 }
 
 /**
- * Gets the specified directory at the speciifed hierarchy under a 
+ * Gets the specified directory at the specified hierarchy under a 
  * Directory Service key. 
  * @param   key
  *          The Directory Service Key to start from
@@ -370,7 +370,7 @@ function getDirInternal(key, pathArray, shouldCreate) {
 }
 
 /**
- * Gets the file at the speciifed hierarchy under a Directory Service key.
+ * Gets the file at the specified hierarchy under a Directory Service key.
  * @param   key
  *          The Directory Service Key to start from
  * @param   pathArray
