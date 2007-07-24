@@ -275,8 +275,7 @@ nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme)
                                         &exists);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  nsMIMEInfoBeOS *handlerInfo =
-	new nsMIMEInfoBeOS(aScheme, nsMIMEInfoBase::eProtocolInfo);
+  nsMIMEInfoBeOS *handlerInfo = new nsMIMEInfoBeOS();
   NS_ENSURE_TRUE(handlerInfo, nsnull);
   NS_ADDREF(handlerInfo);
 
