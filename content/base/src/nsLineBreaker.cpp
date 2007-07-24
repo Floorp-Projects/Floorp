@@ -131,8 +131,10 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
   }
 
   nsAutoTArray<PRPackedBool,4000> breakState;
-  if (!breakState.AppendElements(aLength))
-    return NS_ERROR_OUT_OF_MEMORY;
+  if (aSink) {
+    if (!breakState.AppendElements(aLength))
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   PRUint32 start = offset;
   if (!aSink && !aFlags) {
@@ -151,13 +153,15 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUnichar* aText, PRUint32 
     PRUnichar ch = aText[offset];
     PRBool isSpace = IsSpace(ch);
 
-    breakState[offset] = mAfterSpace && !isSpace &&
-      (aFlags & (offset == 0 ? BREAK_ALLOW_INITIAL : BREAK_ALLOW_INSIDE));
+    if (aSink) {
+      breakState[offset] = mAfterSpace && !isSpace &&
+        (aFlags & (offset == 0 ? BREAK_ALLOW_INITIAL : BREAK_ALLOW_INSIDE));
+    }
     mAfterSpace = isSpace;
 
     if (isSpace) {
       if (offset > wordStart && wordHasComplexChar) {
-        if (aFlags & BREAK_ALLOW_INSIDE) {
+        if (aSink && (aFlags & BREAK_ALLOW_INSIDE)) {
           // Save current start-of-word state because GetJISx4051Breaks will
           // set it to false
           PRPackedBool currentStart = breakState[wordStart];
@@ -267,7 +271,7 @@ nsLineBreaker::AppendText(nsIAtom* aLangGroup, const PRUint8* aText, PRUint32 aL
 
     if (isSpace) {
       if (offset > wordStart && wordHasComplexChar) {
-        if (aFlags & BREAK_ALLOW_INSIDE) {
+        if (aSink && (aFlags & BREAK_ALLOW_INSIDE)) {
           // Save current start-of-word state because GetJISx4051Breaks will
           // set it to false
           PRPackedBool currentStart = breakState[wordStart];
