@@ -214,8 +214,11 @@ nsDocAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   // nsAccessible::GetState() always fail for document accessible.
   nsAccessible::GetState(aState, aExtraState);
 
+#ifdef MOZ_XUL
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
-  if (!xulDoc) {
+  if (!xulDoc)
+#endif
+  {
     // XXX Need to invent better check to see if doc is focusable,
     // which it should be if it is scrollable. A XUL document could be focusable.
     // See bug 376803.
