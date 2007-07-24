@@ -13064,6 +13064,7 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
   // this is hard-coded to handle only menu popup frames
   nsIFrame* frame = mPresShell->GetPrimaryFrameFor(mContent);
   if (frame && frame->GetType() == nsGkAtoms::menuPopupFrame) {
+#ifdef MOZ_XUL
     // it is possible that the frame is different than the one that requested
     // the lazy generation, but as long as it's a popup frame that hasn't
     // generated its children yet, that's OK.
@@ -13073,6 +13074,7 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
 
     // indicate that the children have been generated
     menuPopupFrame->SetGeneratedChildren();
+#endif
 
     nsFrameItems childItems;
     nsFrameConstructorState state(mPresShell, nsnull, nsnull, nsnull);

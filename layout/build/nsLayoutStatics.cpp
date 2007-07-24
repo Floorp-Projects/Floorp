@@ -79,10 +79,10 @@
 #include "nsCellMap.h"
 #include "nsTextFrameTextRunCache.h"
 #include "nsCCUncollectableMarker.h"
-#include "nsXULPopupManager.h"
 #include "nsTextFragment.h"
 
 #ifdef MOZ_XUL
+#include "nsXULPopupManager.h"
 #include "nsXULContentUtils.h"
 #include "nsXULElement.h"
 #include "nsXULPrototypeCache.h"
@@ -220,11 +220,13 @@ nsLayoutStatics::Initialize()
     return rv;
   }
 
+#ifdef MOZ_XUL
   rv = nsXULPopupManager::Init();
   if (NS_FAILED(rv)) {
     NS_ERROR("Could not initialize nsXULPopupManager");
     return rv;
   }
+#endif
 
   return NS_OK;
 }
@@ -232,7 +234,9 @@ nsLayoutStatics::Initialize()
 void
 nsLayoutStatics::Shutdown()
 {
+#ifdef MOZ_XUL
   nsXULPopupManager::Shutdown();
+#endif
   nsDOMStorageManager::Shutdown();
   txMozillaXSLTProcessor::Shutdown();
   nsDOMAttribute::Shutdown();
