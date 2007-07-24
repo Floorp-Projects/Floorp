@@ -157,24 +157,34 @@ HandlerService.prototype = {
     var handlerID = this._getPreferredHandlerID(aHandlerInfo);
     var handler = aHandlerInfo.preferredApplicationHandler;
 
-    // First add a record for the preferred app to the datasource.  In the
-    // process we also need to remove any vestiges of an existing record, so
-    // we remove any properties that we aren't overwriting.
-    this._setLiteral(handlerID, NC_PRETTY_NAME, handler.name);
-    if (handler instanceof Ci.nsILocalHandlerApp) {
-      this._setLiteral(handlerID, NC_PATH, handler.executable.path);
-      this._removeValue(handlerID, NC_URI_TEMPLATE);
+    if (handler) {
+      // First add a record for the preferred app to the datasource.  In the
+      // process we also need to remove any vestiges of an existing record, so
+      // we remove any properties that we aren't overwriting.
+      this._setLiteral(handlerID, NC_PRETTY_NAME, handler.name);
+      if (handler instanceof Ci.nsILocalHandlerApp) {
+        this._setLiteral(handlerID, NC_PATH, handler.executable.path);
+        this._removeValue(handlerID, NC_URI_TEMPLATE);
+      }
+      else {
+        handler.QueryInterface(Ci.nsIWebHandlerApp);
+        this._setLiteral(handlerID, NC_URI_TEMPLATE, handler.uriTemplate);
+        this._removeValue(handlerID, NC_PATH);
+      }
+
+      // Finally, make this app be the preferred app for the handler info.
+      // Note: at least some code completely ignores this setting and assumes
+      // the preferred app is the one whose URI follows the appropriate pattern.
+      this._setResource(infoID, NC_PREFERRED_APP, handlerID);
     }
     else {
-      handler.QueryInterface(Ci.nsIWebHandlerApp);
-      this._setLiteral(handlerID, NC_URI_TEMPLATE, handler.uriTemplate);
+      // There isn't a preferred handler.  Remove the existing record for it,
+      // if any.
+      this._removeValue(handlerID, NC_PRETTY_NAME);
       this._removeValue(handlerID, NC_PATH);
+      this._removeValue(handlerID, NC_URI_TEMPLATE);
+      this._removeValue(infoID, NC_PREFERRED_APP);
     }
-
-    // Finally, make the handler app be the preferred app for the handler info.
-    // Note: at least some code completely ignores this setting and assumes
-    // the preferred app is the one whose URI follows the appropriate pattern.
-    this._setResource(infoID, NC_PREFERRED_APP, handlerID);
   },
 
   _storeAlwaysAsk: function HS__storeAlwaysAsk(aHandlerInfo) {

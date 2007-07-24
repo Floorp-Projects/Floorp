@@ -127,6 +127,29 @@ function run_test() {
 
   do_check_false(handlerInfo.alwaysAskBeforeHandling);
 
+  // Make sure we can store and retrieve a handler info object with no preferred
+  // handler.
+  var noPreferredHandlerInfo =
+    mimeSvc.getFromTypeAndExtension("nonexistent/no-preferred-handler", null);
+  handlerSvc.store(noPreferredHandlerInfo);
+  noPreferredHandlerInfo =
+    mimeSvc.getFromTypeAndExtension("nonexistent/no-preferred-handler", null);
+  do_check_eq(noPreferredHandlerInfo.preferredApplicationHandler, null);
+
+  // Make sure that the handler service removes an existing handler record
+  // if we store a handler info object with no preferred handler.
+  var removePreferredHandlerInfo =
+    mimeSvc.getFromTypeAndExtension("nonexistent/rem-preferred-handler", null);
+  removePreferredHandlerInfo.preferredApplicationHandler = localHandler;
+  handlerSvc.store(removePreferredHandlerInfo);
+  removePreferredHandlerInfo =
+    mimeSvc.getFromTypeAndExtension("nonexistent/rem-preferred-handler", null);
+  removePreferredHandlerInfo.preferredApplicationHandler = null;
+  handlerSvc.store(removePreferredHandlerInfo);
+  removePreferredHandlerInfo =
+    mimeSvc.getFromTypeAndExtension("nonexistent/rem-preferred-handler", null);
+  do_check_eq(removePreferredHandlerInfo.preferredApplicationHandler, null);
+
   // FIXME: test round trip integrity for a protocol.
   // FIXME: test round trip integrity for a handler info with a web handler.
 }
