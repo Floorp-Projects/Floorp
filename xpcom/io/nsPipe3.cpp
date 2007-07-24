@@ -46,6 +46,7 @@
 #include "nsCRT.h"
 #include "prlog.h"
 #include "nsInt64.h"
+#include "nsIClassInfoImpl.h"
 
 #if defined(PR_LOGGING)
 //

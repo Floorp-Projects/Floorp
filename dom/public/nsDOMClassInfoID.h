@@ -410,6 +410,8 @@ enum nsDOMClassInfoID {
  * nsIClassInfo helper macros
  */
 
+class nsIClassInfo;
+
 extern nsIClassInfo*
 NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);
 
