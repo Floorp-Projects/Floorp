@@ -2287,6 +2287,7 @@ nsLocalFile::GetHashCode(PRUint32 *aResult)
     CFStringRef pathStrRef = ::CFURLCopyFileSystemPath(mBaseRef, kCFURLPOSIXPathStyle);
     nsCAutoString path;
     CFStringReftoUTF8(pathStrRef, path);
+    ::CFRelease(pathStrRef);
     *aResult = HashString(path);
     return NS_OK;
 }
