@@ -30,4 +30,9 @@ and only use the font_face's hfont if we're sure it's appropriate
 
 win32-logical-font-scale.patch: set CAIRO_WIN32_LOGICAL_FONT_SCALE to 1
 
+win32-no-printer-bitblt.patch: If we need to BitBlt from a DC (to do
+fallback), only bother trying if the IS_DISPLAY flag is set -- many
+printers lie about their support for BitBlt, and we end up getting
+black instead of what we want.
+
 nonfatal-assertions.patch: Make assertions non-fatal
