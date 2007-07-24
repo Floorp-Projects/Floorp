@@ -51,6 +51,19 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIXPCScriptable.h"
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
+#endif
+#include "prlog.h"
+
+// NSPR_LOG_MODULES=jssh
+#ifdef PR_LOGGING
+extern PRLogModuleInfo *gJSShLog;
+#define LOG(args) PR_LOG(gJSShLog, PR_LOG_DEBUG, args)
+#else
+#define LOG(args)
+#endif
+
 class nsJSSh : public nsIRunnable, public nsIJSSh,
                public nsIScriptObjectPrincipal,
                public nsIXPCScriptable
