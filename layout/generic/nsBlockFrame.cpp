@@ -1797,7 +1797,13 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // it to invalidate the dirty area if necessary
       rv = ReflowLine(aState, line, &keepGoing);
       NS_ENSURE_SUCCESS(rv, rv);
-      
+
+      if (aState.mReflowState.mDiscoveredClearance &&
+          *aState.mReflowState.mDiscoveredClearance) {
+        line->MarkDirty();
+        return NS_OK;
+      }
+
       if (line->HasFloats()) {
         reflowedFloat = PR_TRUE;
       }
@@ -2732,6 +2738,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       }
       // Exactly what we do now is flexible since we'll definitely be
       // reflowed.
+      return NS_OK;
     }
   }
   if (treatWithClearance) {
