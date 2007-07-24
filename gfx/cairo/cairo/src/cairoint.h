@@ -64,7 +64,11 @@
 #include <stdio.h>
 
 #include "cairo.h"
+#ifdef MOZ_TREE_CAIRO
+#include "pixman.h"
+#else
 #include <pixman/pixman.h>
+#endif
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
