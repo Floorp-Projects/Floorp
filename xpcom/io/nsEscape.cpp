@@ -410,7 +410,7 @@ NS_COM PRBool NS_EscapeURL(const char *part,
       // non-ASCII character as it may be part of a multi-byte character.
       if ((NO_NEED_ESC(c) || (c == HEX_ESCAPE && !forced)
                           || (c > 0x7f && ignoreNonAscii)
-                          || (c > 0x1f && c < 0x7f && ignoreAscii))
+                          || (c > 0x20 && c < 0x7f && ignoreAscii))
           && !(c == ':' && colon)
           && !(previousIsNonASCII && c == '|' && !ignoreNonAscii))
       {
