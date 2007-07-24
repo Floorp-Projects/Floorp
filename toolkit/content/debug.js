@@ -65,8 +65,29 @@ function NS_ASSERT(condition, message) {
   if (condition)
     return;
 
+  var releaseBuild = true;
+  var defB = Components.classes["@mozilla.org/preferences-service;1"]
+                       .getService(Components.interfaces.nsIPrefService)
+                       .getDefaultBranch(null);
+  try {
+    switch (defB.getCharPref("app.update.channel")) {
+      case "nightly":
+      case "beta":
+      case "default":
+        releaseBuild = false;
+    }
+  } catch(ex) {}
+
   var caller = arguments.callee.caller;
   var assertionText = "ASSERT: " + message + "\n";
+
+  if (releaseBuild) {
+    // Just report the error to the console
+    Components.utils.reportError(assertionText);
+    return;
+  }
+
+  // Otherwise, dump to stdout and launch an assertion failure dialog
   dump(assertionText);
 
   var stackText = "";
