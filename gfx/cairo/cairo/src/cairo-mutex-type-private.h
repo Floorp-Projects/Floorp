@@ -49,6 +49,9 @@
 
 CAIRO_BEGIN_DECLS
 
+#ifndef MOZILLA_CAIRO_NOT_DEFINED
+#define CAIRO_NO_MUTEX 1
+#endif
 
 /* A fully qualified no-operation statement */
 #define CAIRO_MUTEX_NOOP	do {/*no-op*/} while (0)
