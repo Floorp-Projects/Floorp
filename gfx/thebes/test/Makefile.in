@@ -82,6 +82,7 @@ LIBS =  $(HELPER_OBJS) \
 	$(NSPR_LIBS) \
 	$(TK_LIBS) \
 	$(ZLIB_LIBS) \
+	$(LCMS_LIBS) \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
