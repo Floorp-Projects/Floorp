@@ -708,18 +708,26 @@ CheckFontCallback(const nsRuleDataStruct& aData,
 
   // em, ex, percent, 'larger', and 'smaller' values on font-size depend
   // on the parent context's font-size
+  // Likewise, 'lighter' and 'bolder' values of 'font-weight' depend on
+  // the parent.
   const nsCSSValue& size = fontData.mSize;
+  const nsCSSValue& weight = fontData.mWeight;
   if ((size.IsRelativeLengthUnit() && size.GetUnit() != eCSSUnit_Pixel) ||
       size.GetUnit() == eCSSUnit_Percent ||
       (size.GetUnit() == eCSSUnit_Enumerated &&
        (size.GetIntValue() == NS_STYLE_FONT_SIZE_SMALLER ||
-        size.GetIntValue() == NS_STYLE_FONT_SIZE_LARGER))) {
+        size.GetIntValue() == NS_STYLE_FONT_SIZE_LARGER)) ||
+      (weight.GetUnit() == eCSSUnit_Enumerated &&
+       (weight.GetIntValue() == NS_STYLE_FONT_WEIGHT_BOLDER ||
+        weight.GetIntValue() == NS_STYLE_FONT_WEIGHT_LIGHTER))) {
     NS_ASSERTION(aResult == nsRuleNode::eRulePartialReset ||
                  aResult == nsRuleNode::eRuleFullReset ||
                  aResult == nsRuleNode::eRulePartialMixed ||
                  aResult == nsRuleNode::eRuleFullMixed,
                  "we know we already have a reset-counted property");
-    // promote reset to mixed since we have something inherited
+    // Promote reset to mixed since we have something that depends on
+    // the parent.  But never promote to inherited since that could
+    // cause inheritance of the exact value.
     if (aResult == nsRuleNode::eRulePartialReset)
       aResult = nsRuleNode::eRulePartialMixed;
     else if (aResult == nsRuleNode::eRuleFullReset)
@@ -1421,6 +1429,11 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     ruleNode = ruleNode->mParent;
   }
 
+  NS_ASSERTION(!startStruct || (detail != eRuleFullReset &&
+                                detail != eRuleFullMixed &&
+                                detail != eRuleFullInherited),
+               "can't have start struct and be fully specified");
+
   PRBool isReset = nsCachedStyleData::IsReset(aSID);
   if (!highestNode)
     highestNode = rootNode;
@@ -1438,8 +1451,10 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     PropagateDependentBit(bit, ruleNode);
     return startStruct;
   }
-  else if (!startStruct && ((!isReset && (detail == eRuleNone || detail == eRulePartialInherited)) 
-                             || detail == eRuleFullInherited)) {
+  // FIXME Do we need to check for mPostResolveCallback?
+  if ((!startStruct && !isReset &&
+       (detail == eRuleNone || detail == eRulePartialInherited)) ||
+      detail == eRuleFullInherited) {
     // We specified no non-inherited information and neither did any of
     // our parent rules.
 
@@ -1764,6 +1779,9 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
  * @param rdata_ Variable (declared here) holding the nsCSS* used here.
  */
 #define COMPUTE_START_INHERITED(type_, ctorargs_, data_, parentdata_, rdtype_, rdata_) \
+  NS_ASSERTION(aRuleDetail != eRuleFullInherited,                             \
+               "should not have bothered calling Compute*Data");              \
+                                                                              \
   nsStyleContext* parentContext = aContext->GetParent();                      \
                                                                               \
   const nsRuleData##rdtype_& rdata_ =                                         \
@@ -1772,7 +1790,12 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   const nsStyle##type_* parentdata_ = nsnull;                                 \
   PRBool inherited = aInherited;                                              \
                                                                               \
-  if (parentContext && aRuleDetail != eRuleFullReset)                         \
+  /* If |inherited| might be false by the time we're done, we can't call */   \
+  /* parentContext->GetStyle##type_() since it could recur into setting */    \
+  /* the same struct on the same rule node, causing a leak. */                \
+  if (parentContext && aRuleDetail != eRuleFullReset &&                       \
+      (!aStartStruct || (aRuleDetail != eRulePartialReset &&                  \
+                         aRuleDetail != eRuleNone)))                          \
     parentdata_ = parentContext->GetStyle##type_();                           \
   if (aStartStruct)                                                           \
     /* We only need to compute the delta between this computed data and */    \
@@ -1780,7 +1803,6 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
     data_ = new (mPresContext)                                                \
             nsStyle##type_(*static_cast<nsStyle##type_*>(aStartStruct));      \
   else {                                                                      \
-    /* XXXldb What about eRuleFullInherited?  Which path is faster? */        \
     if (aRuleDetail != eRuleFullMixed && aRuleDetail != eRuleFullReset) {     \
       /* No question. We will have to inherit. Go ahead and init */           \
       /* with inherited vals from parent. */                                  \
@@ -1812,6 +1834,9 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
  * @param rdata_ Variable (declared here) holding the nsCSS* used here.
  */
 #define COMPUTE_START_RESET(type_, ctorargs_, data_, parentdata_, rdtype_, rdata_) \
+  NS_ASSERTION(aRuleDetail != eRuleFullInherited,                             \
+               "should not have bothered calling Compute*Data");              \
+                                                                              \
   nsStyleContext* parentContext = aContext->GetParent();                      \
                                                                               \
   const nsRuleData##rdtype_& rdata_ =                                         \
@@ -1828,6 +1853,9 @@ nsRuleNode::AdjustLogicalBoxProp(nsStyleContext* aContext,
   if (NS_UNLIKELY(!data_))                                                    \
     return nsnull;  /* Out Of Memory */                                       \
                                                                               \
+  /* If |inherited| might be false by the time we're done, we can't call */   \
+  /* parentContext->GetStyle##type_() since it could recur into setting */    \
+  /* the same struct on the same rule node, causing a leak. */                \
   const nsStyle##type_* parentdata_ = data_;                                  \
   if (parentContext &&                                                        \
       aRuleDetail != eRuleFullReset &&                                        \
@@ -2339,10 +2367,9 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
   // Now compute our font struct
   if (generic == kGenericFont_NONE) {
     // continue the normal processing
-    // our default font is the most recent generic font
-    // XXXldb Probably should be the serif/sans-serif pref instead.
+    // our default font is the user's default (serif or sans-serif)
     const nsFont* defaultFont =
-      mPresContext->GetDefaultFont(parentFont->mFlags & NS_STYLE_FONT_FACE_MASK);
+      mPresContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID);
 
     nsRuleNode::SetFont(mPresContext, aContext, minimumFontSize, PR_FALSE,
                         fontData, *defaultFont, parentFont, font, inherited);
