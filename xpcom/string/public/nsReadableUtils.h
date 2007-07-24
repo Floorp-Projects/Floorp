@@ -310,8 +310,6 @@ NS_COM PRBool CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACStr
    * Returns |PR_TRUE| if a match was found, and adjusts |aSearchStart| and |aSearchEnd| to
    * point to the match.  If no match was found, returns |PR_FALSE| and makes |aSearchStart == aSearchEnd|.
    *
-   * Currently, this is equivalent to the O(m*n) implementation previously on |ns[C]String|.
-   * If we need something faster, then we can implement that later.
    */
 NS_COM PRBool RFindInReadable( const nsAString& aPattern, nsAString::const_iterator&, nsAString::const_iterator&, const nsStringComparator& = nsDefaultStringComparator() );
 NS_COM PRBool RFindInReadable( const nsACString& aPattern, nsACString::const_iterator&, nsACString::const_iterator&, const nsCStringComparator& = nsDefaultCStringComparator() );
