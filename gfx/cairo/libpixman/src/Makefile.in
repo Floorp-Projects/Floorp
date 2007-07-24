@@ -21,6 +21,7 @@
 # Contributor(s):
 #  Brian Ryner <bryner@brianryner.com>
 #  Stuart Parmenter <pavlov@pavlov.net>
+#  Vladimir Vukicevic <vladimir@pobox.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -63,33 +64,26 @@ endif
 endif
 
 CSRCS	= \
-	fbcompose.c \
-	fbedge.c \
-	fbpict.c \
-	fbtrap.c \
-	icblt.c \
-	icbltone.c \
-	iccolor.c \
-	icformat.c \
-	icimage.c \
-	icpixels.c \
-	icrect.c \
-	icstipple.c \
-	ictransform.c \
-	ictrap.c \
-	ictri.c \
-	icutil.c \
-	pixregion.c \
-	renderedge.c \
+	pixman-compose-accessors.c \
+	pixman-compose-noaccessors.c \
+	pixman-compute-region.c \
+	pixman-edge-accessors.c \
+	pixman-edge-noaccessors.c \
+	pixman-image.c \
+	pixman-pict.c \
+	pixman-region.c \
+	pixman-timer.c \
+	pixman-trap.c \
+	pixman-utils.c \
 	$(NULL)
 
 ifdef MOZ_X11
-#CSRCS   += fbmmx.c
+#CSRCS   += pixman-mmx.c
 #DEFINES += -DUSE_MMX
 endif
 
 ifdef _MSC_VER
-CSRCS   += fbmmx.c
+CSRCS   += pixman-mmx.c
 DEFINES += -DUSE_MMX
 endif
 
@@ -102,6 +96,8 @@ FORCE_STATIC_LIB = 1
 FORCE_USE_PIC = 1
 
 include $(topsrcdir)/config/rules.mk
+
+CFLAGS += -DPACKAGE="mozpixman"
 
 ifdef MOZ_X11
 #CFLAGS  += -mmmx -msse -Winline --param inline-unit-growth=10000 --param large-function-growth=10000
