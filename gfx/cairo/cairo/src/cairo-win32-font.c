@@ -32,9 +32,8 @@
  * Contributor(s):
  */
 
-#include <string.h>
-#include <stdio.h>
 #include "cairoint.h"
+
 #include "cairo-win32-private.h"
 
 #ifndef SPI_GETFONTSMOOTHINGTYPE
@@ -227,15 +226,9 @@ _get_system_quality (void)
     }
 }
 
-/* If face_hfont is non-NULL then font_matrix must be a simple scale by some
- * factor S, ctm must be the identity, logfont->lfHeight must be -S,
- * logfont->lfWidth, logfont->lfEscapement, logfont->lfOrientation must
- * all be 0, and face_hfont is the result of calling CreateFontIndirectW on
- * logfont.
- */
 static cairo_scaled_font_t *
 _win32_scaled_font_create (LOGFONTW                   *logfont,
-			   HFONT                      face_hfont,
+			   HFONT                      hfont,
 			   cairo_font_face_t	      *font_face,
 			   const cairo_matrix_t       *font_matrix,
 			   const cairo_matrix_t       *ctm,
@@ -244,8 +237,6 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     cairo_win32_scaled_font_t *f;
     cairo_matrix_t scale;
     cairo_status_t status;
-
-    _cairo_win32_initialize ();
 
     f = malloc (sizeof(cairo_win32_scaled_font_t));
     if (f == NULL)
@@ -283,29 +274,22 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     }
 
     f->em_square = 0;
-    f->scaled_hfont = NULL;
+    f->scaled_hfont = hfont;
     f->unscaled_hfont = NULL;
-    if (f->quality == logfont->lfQuality ||
-        (logfont->lfQuality == DEFAULT_QUALITY &&
-         options->antialias == CAIRO_ANTIALIAS_DEFAULT)) {
-        /* If face_hfont is non-NULL, then we can use it to avoid creating our
-         * own --- because the constraints on face_hfont mentioned above
-         * guarantee it was created in exactly the same way that
-         * _win32_scaled_font_get_scaled_hfont would create it.
-         */
-        f->scaled_hfont = face_hfont;
-    }
-    /* don't delete the hfont if we're using the one passed in to us */
-    f->delete_scaled_hfont = !f->scaled_hfont;
+
+    /* don't delete the hfont if it was passed in to us */
+    f->delete_scaled_hfont = !hfont;
 
     cairo_matrix_multiply (&scale, font_matrix, ctm);
     _compute_transform (f, &scale);
 
-    _cairo_scaled_font_init (&f->base, font_face,
-			     font_matrix, ctm, options,
-			     &cairo_win32_scaled_font_backend);
+    status = _cairo_scaled_font_init (&f->base, font_face,
+				      font_matrix, ctm, options,
+				      &cairo_win32_scaled_font_backend);
 
-    status = _cairo_win32_scaled_font_set_metrics (f);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = _cairo_win32_scaled_font_set_metrics (f);
+
     if (status) {
 	cairo_scaled_font_destroy (&f->base);
 	return NULL;
@@ -487,8 +471,6 @@ _cairo_win32_scaled_font_create_toy (cairo_toy_font_face_t *toy_face,
     int face_name_len;
     cairo_status_t status;
 
-    _cairo_win32_initialize ();
-
     status = _cairo_utf8_to_utf16 (toy_face->family, -1,
 				   &face_name, &face_name_len);
     if (status)
@@ -631,8 +613,8 @@ _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
 	    dx = NULL;
 	}
 
-	glyph_indices = malloc (sizeof (WCHAR) * buffer_size);
-	dx = malloc (sizeof (int) * buffer_size);
+	glyph_indices = _cairo_malloc_ab (buffer_size, sizeof (WCHAR));
+	dx = _cairo_malloc_ab (buffer_size, sizeof (int));
 	if (!glyph_indices || !dx) {
 	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto FAIL2;
@@ -663,7 +645,7 @@ _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
     }
 
     *num_glyphs = gcp_results.nGlyphs;
-    *glyphs = malloc (sizeof (cairo_glyph_t) * gcp_results.nGlyphs);
+    *glyphs = _cairo_malloc_ab (gcp_results.nGlyphs, sizeof (cairo_glyph_t));
     if (!*glyphs) {
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto FAIL2;
@@ -1471,16 +1453,14 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
     }
     free(buffer);
 
-CLEANUP_FONT:
-
     _cairo_scaled_glyph_set_path (scaled_glyph,
 				  &scaled_font->base,
 				  path);
 
+ CLEANUP_FONT:
     cairo_win32_scaled_font_done_font (&scaled_font->base);
 
  CLEANUP_PATH:
-
     if (status != CAIRO_STATUS_SUCCESS)
 	_cairo_path_fixed_destroy (path);
 
@@ -1503,11 +1483,6 @@ const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend = {
 
 typedef struct _cairo_win32_font_face cairo_win32_font_face_t;
 
-/* If hfont is non-NULL then logfont->lfHeight must be -S for some S,
- * logfont->lfWidth, logfont->lfEscapement, logfont->lfOrientation must
- * all be 0, and hfont is the result of calling CreateFontIndirectW on
- * logfont.
- */
 struct _cairo_win32_font_face {
     cairo_font_face_t base;
     LOGFONTW logfont;
@@ -1521,14 +1496,6 @@ _cairo_win32_font_face_destroy (void *abstract_face)
 {
 }
 
-static cairo_bool_t
-_is_scale (const cairo_matrix_t *matrix, double scale)
-{
-    return matrix->xx == scale && matrix->yy == scale &&
-           matrix->xy == 0. && matrix->yx == 0. &&
-           matrix->x0 == 0. && matrix->y0 == 0.;
-}
-
 static cairo_status_t
 _cairo_win32_font_face_scaled_font_create (void			*abstract_face,
 					   const cairo_matrix_t	*font_matrix,
@@ -1536,22 +1503,10 @@ _cairo_win32_font_face_scaled_font_create (void			*abstract_face,
 					   const cairo_font_options_t *options,
 					   cairo_scaled_font_t **font)
 {
-    HFONT hfont = NULL;
-
     cairo_win32_font_face_t *font_face = abstract_face;
 
-    _cairo_win32_initialize ();
-
-    if (font_face->hfont) {
-        /* Check whether it's OK to go ahead and use the font-face's HFONT. */
-        if (_is_scale (ctm, 1.) &&
-            _is_scale (font_matrix, -font_face->logfont.lfHeight)) {
-            hfont = font_face->hfont;
-        }
-    }
-
     *font = _win32_scaled_font_create (&font_face->logfont,
-				       hfont,
+				       font_face->hfont,
 				       &font_face->base,
 				       font_matrix, ctm, options);
     if (*font)
@@ -1565,46 +1520,6 @@ static const cairo_font_face_backend_t _cairo_win32_font_face_backend = {
     _cairo_win32_font_face_destroy,
     _cairo_win32_font_face_scaled_font_create
 };
-
-/**
- * cairo_win32_font_face_create_for_logfontw_hfont:
- * @logfont: A #LOGFONTW structure specifying the font to use.
- *   If hfont is null then the lfHeight, lfWidth, lfOrientation and lfEscapement
- *   fields of this structure are ignored. Otherwise lfWidth, lfOrientation and
- *   lfEscapement must be zero.
- * @font: An #HFONT that can be used when the font matrix is a scale by
- *   -lfHeight and the CTM is identity.
- *
- * Creates a new font for the Win32 font backend based on a
- * #LOGFONT. This font can then be used with
- * cairo_set_font_face() or cairo_scaled_font_create().
- * The #cairo_scaled_font_t
- * returned from cairo_scaled_font_create() is also for the Win32 backend
- * and can be used with functions such as cairo_win32_scaled_font_select_font().
- *
- * Return value: a newly created #cairo_font_face_t. Free with
- *  cairo_font_face_destroy() when you are done using it.
- **/
-cairo_font_face_t *
-cairo_win32_font_face_create_for_logfontw_hfont (LOGFONTW *logfont, HFONT font)
-{
-    cairo_win32_font_face_t *font_face;
-
-    _cairo_win32_initialize ();
-
-    font_face = malloc (sizeof (cairo_win32_font_face_t));
-    if (!font_face) {
-        _cairo_error (CAIRO_STATUS_NO_MEMORY);
-        return (cairo_font_face_t *)&_cairo_font_face_nil;
-    }
-
-    font_face->logfont = *logfont;
-    font_face->hfont = font;
-
-    _cairo_font_face_init (&font_face->base, &_cairo_win32_font_face_backend);
-
-    return &font_face->base;
-}
 
 /**
  * cairo_win32_font_face_create_for_logfontw:
@@ -1625,7 +1540,20 @@ cairo_win32_font_face_create_for_logfontw_hfont (LOGFONTW *logfont, HFONT font)
 cairo_font_face_t *
 cairo_win32_font_face_create_for_logfontw (LOGFONTW *logfont)
 {
-    return cairo_win32_font_face_create_for_logfontw_hfont (logfont, NULL);
+    cairo_win32_font_face_t *font_face;
+
+    font_face = malloc (sizeof (cairo_win32_font_face_t));
+    if (!font_face) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_font_face_t *)&_cairo_font_face_nil;
+    }
+
+    font_face->logfont = *logfont;
+    font_face->hfont = NULL;
+
+    _cairo_font_face_init (&font_face->base, &_cairo_win32_font_face_backend);
+
+    return &font_face->base;
 }
 
 /**
@@ -1645,17 +1573,19 @@ cairo_win32_font_face_create_for_logfontw (LOGFONTW *logfont)
 cairo_font_face_t *
 cairo_win32_font_face_create_for_hfont (HFONT font)
 {
-    LOGFONTW logfont;
-    GetObject (font, sizeof(logfont), &logfont);
+    cairo_win32_font_face_t *font_face;
 
-    if (logfont.lfEscapement != 0 || logfont.lfOrientation != 0 ||
-        logfont.lfWidth != 0) {
-        /* We can't use this font because that optimization requires that
-         * lfEscapement, lfOrientation and lfWidth be zero. */
-        font = NULL;
+    font_face = malloc (sizeof (cairo_win32_font_face_t));
+    if (!font_face) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_font_face_t *)&_cairo_font_face_nil;
     }
 
-    return cairo_win32_font_face_create_for_logfontw_hfont (&logfont, font);
+    font_face->hfont = font;
+
+    _cairo_font_face_init (&font_face->base, &_cairo_win32_font_face_backend);
+
+    return &font_face->base;
 }
 
 /**

@@ -35,10 +35,9 @@
  *    Claudio Ciccani <klan@users.sf.net>
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <assert.h>
+#include "cairoint.h"
+
+#include "cairo-directfb.h"
 
 #include <directfb.h>
 
@@ -46,9 +45,6 @@
 #include <direct/debug.h>
 #include <direct/memcpy.h>
 #include <direct/util.h>
-
-#include "cairo-directfb.h"
-#include "cairoint.h"
 
 
 /*
@@ -324,9 +320,9 @@ _directfb_buffer_surface_create (IDirectFB             *dfb,
 
 static cairo_status_t
 _directfb_acquire_surface (cairo_directfb_surface_t *surface, 
-                                              cairo_rectangle_int16_t *intrest_rec,
+                                              cairo_rectangle_int_t *intrest_rec,
                                               cairo_image_surface_t **image_out,
-                                              cairo_rectangle_int16_t *image_rect_out,
+                                              cairo_rectangle_int_t *image_rect_out,
                                               void                  **image_extra,
                                               DFBSurfaceLockFlags       lock_flags)
 {   
@@ -337,7 +333,7 @@ _directfb_acquire_surface (cairo_directfb_surface_t *surface,
     cairo_format_t            cairo_format;
     cairo_format = surface->format;    
         
-    if (surface->format == -1) {
+    if (surface->format == (cairo_format_t) -1) {
         if( intrest_rec ) {
             source_rect.x = intrest_rec->x;
             source_rect.y = intrest_rec->y;
@@ -503,9 +499,9 @@ _cairo_directfb_surface_release_source_image (void                  *abstract_su
 
 static cairo_status_t
 _cairo_directfb_surface_acquire_dest_image (void                   *abstract_surface,
-                                            cairo_rectangle_int16_t      *interest_rect,
+                                            cairo_rectangle_int_t      *interest_rect,
                                             cairo_image_surface_t **image_out,
-                                            cairo_rectangle_int16_t      *image_rect_out,
+                                            cairo_rectangle_int_t      *image_rect_out,
                                             void                  **image_extra)
 {
     cairo_directfb_surface_t *surface = abstract_surface;
@@ -519,9 +515,9 @@ _cairo_directfb_surface_acquire_dest_image (void                   *abstract_sur
 
 static void
 _cairo_directfb_surface_release_dest_image (void                  *abstract_surface,
-                                            cairo_rectangle_int16_t     *interest_rect,
+                                            cairo_rectangle_int_t     *interest_rect,
                                             cairo_image_surface_t *image,
-                                            cairo_rectangle_int16_t     *image_rect,
+                                            cairo_rectangle_int_t     *image_rect,
                                             void                  *image_extra)
 {
     cairo_directfb_surface_t *surface = abstract_surface;
@@ -915,7 +911,7 @@ static cairo_int_status_t
 _cairo_directfb_surface_fill_rectangles (void                *abstract_surface,
                                          cairo_operator_t     op,
                                          const cairo_color_t *color,
-                                         cairo_rectangle_int16_t   *rects,
+                                         cairo_rectangle_int_t   *rects,
                                          int                  n_rects)
 {
     cairo_directfb_surface_t *dst = abstract_surface;
@@ -1099,8 +1095,8 @@ _cairo_directfb_surface_composite_trapezoids (cairo_operator_t   op,
 #endif /* DFB_COMPOSITE_TRAPEZOIDS */
 
 static cairo_int_status_t
-_cairo_directfb_surface_set_clip_region (void              *abstract_surface,
-                                         pixman_region16_t *region)
+_cairo_directfb_surface_set_clip_region (void           *abstract_surface,
+                                         cairo_region_t *region)
 {
     cairo_directfb_surface_t *surface = abstract_surface;
     
@@ -1109,16 +1105,19 @@ _cairo_directfb_surface_set_clip_region (void              *abstract_surface,
                 __FUNCTION__, surface, region);
     
     if (region) {
-        pixman_box16_t *boxes   = pixman_region_rects (region);
-        int             n_boxes = pixman_region_num_rects (region);
-        int             i;
-        
+        cairo_box_int_t *boxes;
+        int n_boxes, i;
+
+        if (_cairo_region_get_boxes (region, &n_boxes, &boxes) != CAIRO_STATUS_SUCCESS)
+            return CAIRO_STATUS_NO_MEMORY;
+
         if (surface->n_clips != n_boxes) {
             if( surface->clips )
                 free (surface->clips);
             
-            surface->clips = malloc (n_boxes * sizeof(DFBRegion));
+            surface->clips = _cairo_malloc_ab (n_boxes, sizeof(DFBRegion));
             if (!surface->clips) {
+                _cairo_region_boxes_fini (region, boxes);
                 surface->n_clips = 0;
                 return CAIRO_STATUS_NO_MEMORY;
             }
@@ -1127,11 +1126,13 @@ _cairo_directfb_surface_set_clip_region (void              *abstract_surface,
         }
         
         for (i = 0; i < n_boxes; i++) {
-            surface->clips[i].x1 = boxes[i].x1;
-            surface->clips[i].y1 = boxes[i].y1;
-            surface->clips[i].x2 = boxes[i].x2;
-            surface->clips[i].y2 = boxes[i].y2;
+            surface->clips[i].x1 = boxes[i].p1.x;
+            surface->clips[i].y1 = boxes[i].p1.y;
+            surface->clips[i].x2 = boxes[i].p2.x;
+            surface->clips[i].y2 = boxes[i].p2.y;
         }
+
+        _cairo_region_boxes_fini (region, boxes);
     }
     else {
         if (surface->clips) {
@@ -1146,7 +1147,7 @@ _cairo_directfb_surface_set_clip_region (void              *abstract_surface,
 
 static cairo_int_status_t
 _cairo_directfb_abstract_surface_get_extents (void              *abstract_surface,
-                                              cairo_rectangle_int16_t *rectangle)
+                                              cairo_rectangle_int_t *rectangle)
 {
     cairo_directfb_surface_t *surface = abstract_surface;
     
@@ -1515,6 +1516,17 @@ _cairo_directfb_surface_show_glyphs ( void                 *abstract_dst,
 #endif /* DFB_SHOW_GLYPHS */
 
 
+static cairo_bool_t
+_cairo_directfb_surface_is_similar (void *surface_a,
+	                           void *surface_b,
+				   cairo_content_t content)
+{
+    cairo_directfb_surface_t *a = (cairo_directfb_surface_t *) surface_a;
+    cairo_directfb_surface_t *b = (cairo_directfb_surface_t *) surface_b;
+
+    return a->dfb == b->dfb;
+}
+
 static cairo_surface_backend_t cairo_directfb_surface_backend = {
          CAIRO_SURFACE_TYPE_DIRECTFB, /*type*/
         _cairo_directfb_surface_create_similar,/*create_similar*/
@@ -1564,7 +1576,9 @@ static cairo_surface_backend_t cairo_directfb_surface_backend = {
 #else
         NULL, /* show_glyphs */
 #endif
-        NULL /* snapshot */
+        NULL, /* snapshot */
+	_cairo_directfb_surface_is_similar,
+	NULL /* reset */
 };
 
 

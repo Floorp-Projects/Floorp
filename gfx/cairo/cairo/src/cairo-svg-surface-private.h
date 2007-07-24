@@ -1,6 +1,8 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2006 Red Hat, Inc.
+ * Copyright © 2004 Red Hat, Inc
+ * Copyright © 2005-2006 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ * Copyright © 2006 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -31,24 +33,42 @@
  * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
+ *	Kristian Høgsberg <krh@redhat.com>
+ * 	Emmanuel Pacaud <emmanuel.pacaud@univ-poitiers.fr>
+ *	Carl Worth <cworth@cworth.org>
  */
 
-#ifndef CAIRO_PS_TEST_H
-#define CAIRO_PS_TEST_H
+#ifndef CAIRO_SVG_SURFACE_PRIVATE_H
+#define CAIRO_SVG_SURFACE_PRIVATE_H
 
-#include <cairo.h>
+#include "cairo-svg.h"
 
-#if CAIRO_HAS_PS_SURFACE
+#include "cairo-surface-private.h"
 
-#include <cairo-ps.h>
+typedef struct cairo_svg_document cairo_svg_document_t;
 
-CAIRO_BEGIN_DECLS
+typedef struct cairo_svg_surface {
+    cairo_surface_t base;
 
-cairo_public void
-_cairo_ps_test_force_fallbacks (void);
+    cairo_content_t content;
 
-CAIRO_END_DECLS
+    unsigned int id;
 
-#endif /* CAIRO_HAS_PS_SURFACE */
-#endif /* CAIRO_PS_TEST_H */
+    double width;
+    double height;
+
+    cairo_svg_document_t *document;
+
+    cairo_output_stream_t *xml_node;
+    cairo_array_t	   page_set;
+
+    unsigned int clip_level;
+    unsigned int base_clip;
+    cairo_bool_t is_base_clip_emitted;
+
+    cairo_paginated_mode_t paginated_mode;
+
+    cairo_bool_t force_fallbacks;
+} cairo_svg_surface_t;
+
+#endif /* CAIRO_SVG_SURFACE_PRIVATE_H */

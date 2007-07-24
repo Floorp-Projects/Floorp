@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2006 Red Hat, Inc.
+ * Copyright © 2003 University of Southern California
+ * Copyright © 2005 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -32,18 +33,48 @@
  *
  * Contributor(s):
  *	Carl D. Worth <cworth@cworth.org>
+ *	Kristian Høgsberg <krh@redhat.com>
+ *	Keith Packard <keithp@keithp.com>
  */
 
-#ifndef CAIRO_SCALED_FONT_TEST_H
-#define CAIRO_SCALED_FONT_TEST_H
+#ifndef CAIRO_PS_SURFACE_PRIVATE_H
+#define CAIRO_PS_SURFACE_PRIVATE_H
 
-#include <cairo.h>
+#include "cairo-ps.h"
 
-CAIRO_BEGIN_DECLS
+#include "cairo-surface-private.h"
 
-cairo_public void
-_cairo_scaled_font_test_set_max_glyphs_cached_per_font (int max);
+typedef struct cairo_ps_surface {
+    cairo_surface_t base;
 
-CAIRO_END_DECLS
+    /* Here final_stream corresponds to the stream/file passed to
+     * cairo_ps_surface_create surface is built. Meanwhile stream is a
+     * temporary stream in which the file output is built, (so that
+     * the header can be built and inserted into the target stream
+     * before the contents of the temporary stream are copied). */
+    cairo_output_stream_t *final_stream;
 
-#endif /* CAIRO_SCALED_FONT_TEST_H */
+    FILE *tmpfile;
+    cairo_output_stream_t *stream;
+
+    double width;
+    double height;
+    double max_width;
+    double max_height;
+
+    int num_pages;
+
+    cairo_paginated_mode_t paginated_mode;
+
+    cairo_bool_t force_fallbacks;
+
+    cairo_scaled_font_subsets_t *font_subsets;
+
+    cairo_array_t dsc_header_comments;
+    cairo_array_t dsc_setup_comments;
+    cairo_array_t dsc_page_setup_comments;
+
+    cairo_array_t *dsc_comment_target;
+} cairo_ps_surface_t;
+
+#endif /* CAIRO_PS_SURFACE_PRIVATE_H */

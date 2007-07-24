@@ -51,9 +51,9 @@
  * there.
  */
 
-#include "test-fallback-surface.h"
-
 #include "cairoint.h"
+
+#include "test-fallback-surface.h"
 
 typedef struct _test_fallback_surface {
     cairo_surface_t base;
@@ -80,6 +80,7 @@ _cairo_test_fallback_surface_create (cairo_content_t	content,
 
     surface = malloc (sizeof (test_fallback_surface_t));
     if (surface == NULL) {
+	cairo_surface_destroy (backing);
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
@@ -139,9 +140,9 @@ _test_fallback_surface_release_source_image (void	     *abstract_surface,
 
 static cairo_status_t
 _test_fallback_surface_acquire_dest_image (void		           *abstract_surface,
-					   cairo_rectangle_int16_t *interest_rect,
+					   cairo_rectangle_int_t   *interest_rect,
 					   cairo_image_surface_t  **image_out,
-					   cairo_rectangle_int16_t *image_rect_out,
+					   cairo_rectangle_int_t   *image_rect_out,
 					   void			  **image_extra)
 {
     test_fallback_surface_t *surface = abstract_surface;
@@ -155,9 +156,9 @@ _test_fallback_surface_acquire_dest_image (void		           *abstract_surface,
 
 static void
 _test_fallback_surface_release_dest_image (void			   *abstract_surface,
-					   cairo_rectangle_int16_t *interest_rect,
+					   cairo_rectangle_int_t   *interest_rect,
 					   cairo_image_surface_t   *image,
-					   cairo_rectangle_int16_t *image_rect,
+					   cairo_rectangle_int_t   *image_rect,
 					   void			   *image_extra)
 {
     test_fallback_surface_t *surface = abstract_surface;
@@ -169,9 +170,29 @@ _test_fallback_surface_release_dest_image (void			   *abstract_surface,
 				       image_extra);
 }
 
+static cairo_status_t
+_test_fallback_surface_clone_similar (void		  *abstract_surface,
+				      cairo_surface_t     *src,
+				      int                  src_x,
+				      int                  src_y,
+				      int                  width,
+				      int                  height,
+				      cairo_surface_t    **clone_out)
+{
+    test_fallback_surface_t *surface = abstract_surface;
+
+    if (src->backend == surface->base.backend) {
+	*clone_out = cairo_surface_reference (src);
+
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
 static cairo_int_status_t
-_test_fallback_surface_get_extents (void		            *abstract_surface,
-				    cairo_rectangle_int16_t *rectangle)
+_test_fallback_surface_get_extents (void		  *abstract_surface,
+				    cairo_rectangle_int_t *rectangle)
 {
     test_fallback_surface_t *surface = abstract_surface;
 
@@ -186,7 +207,7 @@ const cairo_surface_backend_t test_fallback_surface_backend = {
     _test_fallback_surface_release_source_image,
     _test_fallback_surface_acquire_dest_image,
     _test_fallback_surface_release_dest_image,
-    NULL, /* clone_similar */
+    _test_fallback_surface_clone_similar,
     NULL, /* composite */
     NULL, /* fill_rectangles */
     NULL, /* composite_trapezoids */
