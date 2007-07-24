@@ -266,13 +266,15 @@ public:
                         PRBool aShift,
                         PRBool aControl,
                         PRBool aAlt,
-                        PRBool aMeta)
+                        PRBool aMeta,
+                        PRBool aUserInput)
     : mMenu(aMenu),
       mIsTrusted(aIsTrusted),
       mShift(aShift),
       mControl(aControl),
       mAlt(aAlt),
-      mMeta(aMeta)
+      mMeta(aMeta),
+      mUserInput(aUserInput)
   {
     NS_ASSERTION(aMenu, "null menu supplied to nsXULMenuCommandEvent constructor");
   }
@@ -286,6 +288,7 @@ private:
   PRBool mControl;
   PRBool mAlt;
   PRBool mMeta;
+  PRBool mUserInput;
 };
 
 class nsXULPopupManager : public nsIDOMKeyListener,
