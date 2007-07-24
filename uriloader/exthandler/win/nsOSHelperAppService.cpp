@@ -598,8 +598,7 @@ nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme)
                                         &exists);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  nsMIMEInfoWin *handlerInfo =
-    new nsMIMEInfoWin(aScheme, nsMIMEInfoBase::eProtocolInfo);
+  nsMIMEInfoWin *handlerInfo = new nsMIMEInfoWin();
   NS_ENSURE_TRUE(handlerInfo, nsnull);
   NS_ADDREF(handlerInfo);
 

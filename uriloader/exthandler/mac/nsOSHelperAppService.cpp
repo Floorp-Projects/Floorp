@@ -343,8 +343,7 @@ nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme)
                                         &exists);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  nsMIMEInfoMac *handlerInfo =
-    new nsMIMEInfoMac(aScheme, nsMIMEInfoBase::eProtocolInfo);
+  nsMIMEInfoMac *handlerInfo = new nsMIMEInfoMac();
   NS_ENSURE_TRUE(handlerInfo, nsnull);
   NS_ADDREF(handlerInfo);
 
