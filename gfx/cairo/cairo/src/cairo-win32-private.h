@@ -46,7 +46,11 @@
 #define SB_NONE 0
 #endif
 
+#if MOZILLA_CAIRO_NOT_DEFINED
+#define WIN32_FONT_LOGICAL_SCALE 32
+#else
 #define WIN32_FONT_LOGICAL_SCALE 1
+#endif
 
 typedef struct _cairo_win32_surface {
     cairo_surface_t base;
@@ -71,11 +75,11 @@ typedef struct _cairo_win32_surface {
 
     cairo_surface_t *image;
 
-    cairo_rectangle_int_t clip_rect;
+    cairo_rectangle_int16_t clip_rect;
 
     HRGN saved_clip;
 
-    cairo_rectangle_int_t extents;
+    cairo_rectangle_int16_t extents;
 
     /* Surface DC flags */
     uint32_t flags;
@@ -104,5 +108,8 @@ _cairo_win32_print_gdi_error (const char *context);
 
 cairo_bool_t
 _cairo_surface_is_win32 (cairo_surface_t *surface);
+
+void
+_cairo_win32_initialize (void);
 
 #endif /* CAIRO_WIN32_PRIVATE_H */
