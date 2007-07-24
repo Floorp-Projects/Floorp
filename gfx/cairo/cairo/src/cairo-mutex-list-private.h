@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2006 Red Hat, Inc.
+ * Copyright © 2007 Mathias Hasselmann
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,28 +27,25 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is University of Southern
- * California.
- *
  * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
+ *	Mathias Hasselmann <mathias.hasselmann@gmx.de>
  */
 
-#ifndef CAIRO_PDF_TEST_H
-#define CAIRO_PDF_TEST_H
 
-#include <cairo.h>
+CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_pattern_cache_lock);
+CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_surface_cache_lock);
 
-#if CAIRO_HAS_PDF_SURFACE
+CAIRO_MUTEX_DECLARE (_cairo_font_face_mutex);
+CAIRO_MUTEX_DECLARE (_cairo_scaled_font_map_mutex);
 
-#include <cairo-pdf.h>
+#if CAIRO_HAS_FT_FONT
+CAIRO_MUTEX_DECLARE (_cairo_ft_unscaled_font_map_mutex);
+#endif
 
-CAIRO_BEGIN_DECLS
+#if CAIRO_HAS_XLIB_SURFACE
+CAIRO_MUTEX_DECLARE (_cairo_xlib_display_mutex);
+#endif
 
-cairo_public void
-_cairo_pdf_test_force_fallbacks (void);
 
-CAIRO_END_DECLS
-
-#endif /* CAIRO_HAS_PDF_SURFACE */
-#endif /* CAIRO_PDF_TEST_H */
+/* Undefine, to err on unintended inclusion */
+#undef   CAIRO_MUTEX_DECLARE

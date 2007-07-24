@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2006 Red Hat, Inc.
+ * Copyright © 2007 Mathias Hasselmann
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,28 +27,54 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is University of Southern
- * California.
- *
  * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
+ *	Mathias Hasselmann <mathias.hasselmann@gmx.de>
  */
 
-#ifndef CAIRO_SVG_TEST_H
-#define CAIRO_SVG_TEST_H
+#include "cairoint.h"
 
-#include <cairo.h>
+#define CAIRO_MUTEX_DECLARE(mutex) cairo_mutex_t mutex = CAIRO_MUTEX_NIL_INITIALIZER
+#include "cairo-mutex-list-private.h"
+#undef   CAIRO_MUTEX_DECLARE
 
-#if CAIRO_HAS_SVG_SURFACE
+#if _CAIRO_MUTEX_USE_STATIC_INITIALIZER || _CAIRO_MUTEX_USE_STATIC_FINALIZER
 
-#include <cairo-svg.h>
+# if _CAIRO_MUTEX_USE_STATIC_INITIALIZER
+#  define _CAIRO_MUTEX_INITIALIZED_DEFAULT_VALUE FALSE
+# else
+#  define _CAIRO_MUTEX_INITIALIZED_DEFAULT_VALUE TRUE
+# endif
 
-CAIRO_BEGIN_DECLS
+cairo_bool_t _cairo_mutex_initialized = _CAIRO_MUTEX_INITIALIZED_DEFAULT_VALUE;
 
-cairo_public void
-_cairo_svg_test_force_fallbacks (void);
+# undef _CAIRO_MUTEX_INITIALIZED_DEFAULT_VALUE
 
-CAIRO_END_DECLS
+#endif
 
-#endif /* CAIRO_HAS_SVG_SURFACE */
-#endif /* CAIRO_SVG_TEST_H */
+#if _CAIRO_MUTEX_USE_STATIC_INITIALIZER
+void _cairo_mutex_initialize (void)
+{
+    if (_cairo_mutex_initialized)
+        return;
+
+    _cairo_mutex_initialized = TRUE;
+
+#define  CAIRO_MUTEX_DECLARE(mutex) CAIRO_MUTEX_INIT (mutex)
+#include "cairo-mutex-list-private.h"
+#undef   CAIRO_MUTEX_DECLARE
+}
+#endif
+
+#if _CAIRO_MUTEX_USE_STATIC_FINALIZER
+void _cairo_mutex_finalize (void)
+{
+    if (!_cairo_mutex_initialized)
+        return;
+
+    _cairo_mutex_initialized = FALSE;
+
+#define  CAIRO_MUTEX_DECLARE(mutex) CAIRO_MUTEX_FINI (mutex)
+#include "cairo-mutex-list-private.h"
+#undef   CAIRO_MUTEX_DECLARE
+}
+#endif
