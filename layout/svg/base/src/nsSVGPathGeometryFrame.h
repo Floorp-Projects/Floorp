@@ -59,14 +59,22 @@ typedef nsSVGGeometryFrame nsSVGPathGeometryFrameBase;
 class nsSVGPathGeometryFrame : public nsSVGPathGeometryFrameBase,
                                public nsISVGChildFrame
 {
-public:
-  nsSVGPathGeometryFrame(nsStyleContext* aContext);
+  friend nsIFrame*
+  NS_NewSVGPathGeometryFrame(nsIPresShell* aPresShell, nsIContent* aContent,
+                             nsStyleContext* aContext);
+protected:
+  nsSVGPathGeometryFrame(nsStyleContext* aContext) :
+    nsSVGPathGeometryFrameBase(aContext),
+    mPropagateTransform(PR_TRUE) {}
 
-   // nsISupports interface:
+public:
+  // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }
   NS_IMETHOD_(nsrefcnt) Release() { return 1; }
 
+public:
   // nsIFrame interface:
   virtual void Destroy();
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,

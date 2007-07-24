@@ -222,18 +222,6 @@ NS_NewSVGPathGeometryFrame(nsIPresShell* aPresShell,
   return new (aPresShell) nsSVGPathGeometryFrame(aContext);
 }
 
-////////////////////////////////////////////////////////////////////////
-// nsSVGPathGeometryFrame
-
-nsSVGPathGeometryFrame::nsSVGPathGeometryFrame(nsStyleContext* aContext)
-  : nsSVGPathGeometryFrameBase(aContext),
-    mPropagateTransform(PR_TRUE)
-{
-#ifdef DEBUG
-//  printf("nsSVGPathGeometryFrame %p CTOR\n", this);
-#endif
-}
-
 //----------------------------------------------------------------------
 // nsISupports methods
 
@@ -287,43 +275,6 @@ nsIAtom *
 nsSVGPathGeometryFrame::GetType() const
 {
   return nsGkAtoms::svgPathGeometryFrame;
-}
-
-nsSVGMarkerProperty *
-nsSVGPathGeometryFrame::GetMarkerProperty()
-{
-  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS)
-    return static_cast<nsSVGMarkerProperty *>
-                      (GetProperty(nsGkAtoms::marker));
-
-  return nsnull;
-}
-
-void
-nsSVGPathGeometryFrame::UpdateMarkerProperty()
-{
-  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS)
-    return;
-
-  const nsStyleSVG *style = GetStyleSVG();
-
-  if ((style->mMarkerStart || style->mMarkerMid || style->mMarkerEnd) &&
-      !new nsSVGMarkerProperty(style->mMarkerStart,
-                               style->mMarkerMid,
-                               style->mMarkerEnd,
-                               this)) {
-    NS_ERROR("Could not create marker property");
-    return;
-  }
-}
-
-void
-nsSVGPathGeometryFrame::RemovePathProperties()
-{
-  nsSVGUtils::StyleEffects(this);
-
-  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS)
-    DeleteProperty(nsGkAtoms::marker);
 }
 
 //----------------------------------------------------------------------
@@ -601,6 +552,43 @@ nsSVGPathGeometryFrame::GetCanvasTM(nsIDOMSVGMatrix * *aCTM)
 
 //----------------------------------------------------------------------
 // nsSVGPathGeometryFrame methods:
+
+nsSVGMarkerProperty *
+nsSVGPathGeometryFrame::GetMarkerProperty()
+{
+  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS)
+    return static_cast<nsSVGMarkerProperty *>
+                      (GetProperty(nsGkAtoms::marker));
+
+  return nsnull;
+}
+
+void
+nsSVGPathGeometryFrame::UpdateMarkerProperty()
+{
+  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS)
+    return;
+
+  const nsStyleSVG *style = GetStyleSVG();
+
+  if ((style->mMarkerStart || style->mMarkerMid || style->mMarkerEnd) &&
+      !new nsSVGMarkerProperty(style->mMarkerStart,
+                               style->mMarkerMid,
+                               style->mMarkerEnd,
+                               this)) {
+    NS_ERROR("Could not create marker property");
+    return;
+  }
+}
+
+void
+nsSVGPathGeometryFrame::RemovePathProperties()
+{
+  nsSVGUtils::StyleEffects(this);
+
+  if (GetStateBits() & NS_STATE_SVG_HAS_MARKERS)
+    DeleteProperty(nsGkAtoms::marker);
+}
 
 void
 nsSVGPathGeometryFrame::Render(nsSVGRenderState *aContext)
