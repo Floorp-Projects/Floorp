@@ -19,8 +19,9 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
  * OF THIS SOFTWARE.
  */
-#include <stdlib.h>
-#include <string.h>
+
+#include "cairoint.h"
+
 #include "cairo-freelist-private.h"
 
 void
