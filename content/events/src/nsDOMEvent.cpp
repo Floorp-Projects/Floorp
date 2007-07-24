@@ -1131,6 +1131,10 @@ nsDOMEvent::GetEventPopupControlState(nsEvent *aEvent)
       }
     }
     break;
+  case NS_XUL_COMMAND_EVENT :
+    if (nsEventStateManager::IsHandlingUserInput()) {
+      abuse = openControlled;
+    }
   }
 
   return abuse;

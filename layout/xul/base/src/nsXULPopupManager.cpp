@@ -47,6 +47,7 @@
 #include "nsIDOMNSUIEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsEventDispatcher.h"
+#include "nsEventStateManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsLayoutUtils.h"
 #include "nsIViewManager.h"
@@ -681,8 +682,13 @@ nsXULPopupManager::ExecuteMenu(nsIContent* aMenu, nsEvent* aEvent)
     meta = static_cast<nsInputEvent *>(aEvent)->isMeta;
   }
 
+  // Because the command event is firing asynchronously, a flag is needed to
+  // indicate whether user input is being handled. This ensures that a popup
+  // window won't get blocked.
+  PRBool userinput = nsEventStateManager::IsHandlingUserInput();
+
   nsCOMPtr<nsIRunnable> event =
-    new nsXULMenuCommandEvent(aMenu, isTrusted, shift, control, alt, meta);
+    new nsXULMenuCommandEvent(aMenu, isTrusted, shift, control, alt, meta, userinput);
   NS_DispatchToCurrentThread(event);
 }
 
@@ -1611,6 +1617,8 @@ nsXULMenuCommandEvent::Run()
 
     // Deselect ourselves.
     menuFrame->SelectMenu(PR_FALSE);
+
+    nsAutoHandlingUserInputStatePusher userInpStatePusher(mUserInput);
 
     nsEventStatus status = nsEventStatus_eIgnore;
     nsXULCommandEvent commandEvent(mIsTrusted, NS_XUL_COMMAND, nsnull);
