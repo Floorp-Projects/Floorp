@@ -41,7 +41,6 @@
 
 interface nsIVariant;
 interface nsIURI;
-interface nsIInputStream;
 interface nsIMicrosummary;
 interface nsITransactionManager;
 interface nsITransaction;
@@ -53,7 +52,7 @@ interface nsITransaction;
  * the global scope of a js window.
  */
 
-[scriptable, uuid(224f6833-762b-43ba-8911-020b589b2da3)]
+[scriptable, uuid(2d176a73-a908-420b-8c5d-209a45997f45)]
 interface nsIPlacesTransactionsService : nsISupports
 {
   /**
@@ -259,7 +258,7 @@ interface nsIPlacesTransactionsService : nsISupports
    * @returns nsITransaction object
    */
   nsITransaction editURIPostData(in nsIURI aURI,
-                                 in nsIInputStream aPostData);
+                                 in AString aPostData);
 
   /**
    * Transaction for editting a live bookmark's site URI.
