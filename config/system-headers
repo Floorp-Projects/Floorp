@@ -937,6 +937,15 @@ png.h
 #if MOZ_NATIVE_ZLIB==1
 zlib.h
 #endif
-#if MOZ_TREE_LCMS==1
+#if MOZ_ENABLE_LIBXUL!=1
+#if BUILD_STATIC_LIBS!=1
+#define WRAP_LCMS_HEADERS
+#endif
+#endif
+#if MOZ_NATIVE_LCMS==1
+#define WRAP_LCMS_HEADERS
+#endif
+#ifdef WRAP_LCMS_HEADERS
+icc34.h
 lcms.h
 #endif
