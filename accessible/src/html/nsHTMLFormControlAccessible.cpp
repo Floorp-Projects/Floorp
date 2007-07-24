@@ -286,8 +286,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& aName)
       nsIFrame* frame = GetFrame();
       if (frame) {
         nsIFormControlFrame* fcFrame;
-        frame->QueryInterface(NS_GET_IID(nsIFormControlFrame),
-                              (void**) &fcFrame);
+        CallQueryInterface(frame, &fcFrame);
         if (fcFrame)
           fcFrame->GetFormProperty(nsAccessibilityAtoms::defaultLabel, name);
       }
