@@ -44,8 +44,6 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
   public:
     nsMIMEInfoWin(const char* aType = "") : nsMIMEInfoBase(aType) {}
     nsMIMEInfoWin(const nsACString& aMIMEType) : nsMIMEInfoBase(aMIMEType) {}
-    nsMIMEInfoWin(const nsACString& aType, HandlerClass aClass) :
-    nsMIMEInfoBase(aType, aClass) {}
     virtual ~nsMIMEInfoWin();
 
     NS_IMETHOD GetHasDefaultHandler(PRBool * _retval);

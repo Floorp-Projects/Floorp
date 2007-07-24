@@ -74,7 +74,6 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     NS_IMETHOD AppendExtension(const nsACString & aExtension);
     NS_IMETHOD GetPrimaryExtension(nsACString & aPrimaryExtension);
     NS_IMETHOD SetPrimaryExtension(const nsACString & aPrimaryExtension);
-    NS_IMETHOD GetType(nsACString & aType);
     NS_IMETHOD GetMIMEType(nsACString & aMIMEType);
     NS_IMETHOD GetDescription(nsAString & aDescription);
     NS_IMETHOD SetDescription(const nsAString & aDescription);
@@ -92,18 +91,10 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling);
     NS_IMETHOD SetAlwaysAskBeforeHandling(PRBool aAlwaysAskBeforeHandling); 
 
-    enum HandlerClass {
-      eMIMEInfo,
-      eProtocolInfo
-    };
-
     // nsMIMEInfoBase methods
     nsMIMEInfoBase(const char *aMIMEType = "") NS_HIDDEN;
     nsMIMEInfoBase(const nsACString& aMIMEType) NS_HIDDEN;
-    nsMIMEInfoBase(const nsACString& aType, HandlerClass aClass) NS_HIDDEN;
     virtual ~nsMIMEInfoBase();        // must be virtual, as the the base class's Release should call the subclass's destructor
-
-    void SetType(const nsACString & aType) { mType = aType; }
 
     void SetMIMEType(const nsACString & aMIMEType) { mMIMEType = aMIMEType; }
 
@@ -167,7 +158,6 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     nsCStringArray         mExtensions; ///< array of file extensions associated w/ this MIME obj
     nsString               mDescription; ///< human readable description
     PRUint32               mMacType, mMacCreator; ///< Mac file type and creator
-    nsCString              mType;
     nsCString              mMIMEType;
     nsCOMPtr<nsIHandlerApp> mPreferredApplication;
     nsHandlerInfoAction    mPreferredAction; ///< preferred action to associate with this type
@@ -189,8 +179,6 @@ class nsMIMEInfoImpl : public nsMIMEInfoBase {
   public:
     nsMIMEInfoImpl(const char *aMIMEType = "") : nsMIMEInfoBase(aMIMEType) {}
     nsMIMEInfoImpl(const nsACString& aMIMEType) : nsMIMEInfoBase(aMIMEType) {}
-    nsMIMEInfoImpl(const nsACString& aType, HandlerClass aClass) :
-      nsMIMEInfoBase(aType, aClass) {}
     virtual ~nsMIMEInfoImpl() {}
 
     // nsIMIMEInfo methods

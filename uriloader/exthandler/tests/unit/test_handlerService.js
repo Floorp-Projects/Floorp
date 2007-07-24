@@ -83,9 +83,6 @@ function run_test() {
   // Make sure it's also an nsIHandlerInfo.
   do_check_true(handlerInfo instanceof Ci.nsIHandlerInfo);
 
-  do_check_eq(handlerInfo.type, "nonexistent/type");
-
-  // Deprecated property, but we should still make sure it's set correctly.
   do_check_eq(handlerInfo.MIMEType, "nonexistent/type");
 
   // These three properties are the ones the handler service knows how to store.
