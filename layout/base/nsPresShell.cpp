@@ -5418,6 +5418,7 @@ PresShell::HandleEvent(nsIView         *aView,
     if (framePresContext == rootPresContext &&
         frame == FrameManager()->GetRootFrame()) {
 
+#ifdef MOZ_XUL
       nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
       if (pm) {
         nsTArray<nsIFrame*> popups = pm->GetOpenPopups();
@@ -5433,6 +5434,7 @@ PresShell::HandleEvent(nsIView         *aView,
           }
         }
       }
+#endif
     }
 
     nsPoint eventPoint
