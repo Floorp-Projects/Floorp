@@ -54,13 +54,14 @@ REQUIRES	= \
 		  webbrowserpersist \
 		  dom \
 		  intl \
+		  unicharutil \
 		  necko \
 		  content \
 		  imglib2 \
 		  browsercomps \
 		  gfx \
 		  thebes \
-                  widget \
+		  widget \
 		  pref \
 		  layout \
 		  $(NULL)
