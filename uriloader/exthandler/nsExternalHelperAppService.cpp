@@ -1486,7 +1486,7 @@ nsExternalHelperAppService::GetProtocolHandlerInfo(const nsACString &aScheme,
   // applications which we might need later.  For now, just use nsMIMEInfoImpl
   // instead of implementating a separate nsIHandlerInfo object.
   *aHandlerInfo = GetProtocolInfoFromOS(aScheme).get();
-  if (!aHandlerInfo) {
+  if (!(*aHandlerInfo)) {
     // Either it knows nothing, or we ran out of memory
     return NS_ERROR_FAILURE;
   }
