@@ -40,7 +40,9 @@
  *	Owen Taylor <otaylor@redhat.com>
  */
 
-#include "cairoint.h"
+#include <limits.h>
+
+#include <cairoint.h>
 
 #define UTF8_COMPUTE(Char, Mask, Len)					      \
   if (Char < 128)							      \
@@ -240,7 +242,7 @@ _cairo_utf8_to_ucs4 (const unsigned char *str,
 	in = UTF8_NEXT_CHAR (in);
     }
 
-    str32 = _cairo_malloc_ab (n_chars + 1, sizeof (uint32_t));
+    str32 = malloc (sizeof (uint32_t) * (n_chars + 1));
     if (!str32)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -307,7 +309,7 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
 	in = UTF8_NEXT_CHAR (in);
     }
 
-    str16 = _cairo_malloc_ab (n16 + 1, sizeof (uint16_t));
+    str16 = malloc (sizeof (uint16_t) * (n16 + 1));
     if (!str16)
 	return CAIRO_STATUS_NO_MEMORY;
 

@@ -67,7 +67,7 @@ typedef struct cairo_stroker {
 } cairo_stroker_t;
 
 /* private functions */
-static cairo_status_t
+static void
 _cairo_stroker_init (cairo_stroker_t		*stroker,
 		     cairo_stroke_style_t	*stroke_style,
 		     cairo_matrix_t		*ctm,
@@ -148,7 +148,7 @@ _cairo_stroker_step_dash (cairo_stroker_t *stroker, double step)
     }
 }
 
-static cairo_status_t
+static void
 _cairo_stroker_init (cairo_stroker_t		*stroker,
 		     cairo_stroke_style_t	*stroke_style,
 		     cairo_matrix_t		*ctm,
@@ -156,18 +156,15 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
 		     double			 tolerance,
 		     cairo_traps_t		*traps)
 {
-    cairo_status_t status;
     stroker->style = stroke_style;
     stroker->ctm = ctm;
     stroker->ctm_inverse = ctm_inverse;
     stroker->tolerance = tolerance;
     stroker->traps = traps;
 
-    status = _cairo_pen_init (&stroker->pen,
-		              stroke_style->line_width / 2.0,
-			      tolerance, ctm);
-    if (status)
-	return status;
+    _cairo_pen_init (&stroker->pen,
+		     stroke_style->line_width / 2.0,
+		     tolerance, ctm);
 
     stroker->has_current_face = FALSE;
     stroker->has_first_face = FALSE;
@@ -177,8 +174,6 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
 	_cairo_stroker_start_dash (stroker);
     else
 	stroker->dashed = FALSE;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -210,7 +205,6 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 {
     int			clockwise = _cairo_stroker_face_clockwise (out, in);
     cairo_point_t	*inpt, *outpt;
-    cairo_status_t status;
 
     if (in->cw.x == out->cw.x
 	&& in->cw.y == out->cw.y
@@ -237,21 +231,13 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 
 	tri[0] = in->point;
 	if (clockwise) {
-	    status = _cairo_pen_find_active_ccw_vertex_index (pen, &in->dev_vector, &start);
-	    if (status)
-		return status;
+	    _cairo_pen_find_active_ccw_vertex_index (pen, &in->dev_vector, &start);
 	    step = -1;
-	    status = _cairo_pen_find_active_ccw_vertex_index (pen, &out->dev_vector, &stop);
-	    if (status)
-		return status;
+	    _cairo_pen_find_active_ccw_vertex_index (pen, &out->dev_vector, &stop);
 	} else {
-	    status = _cairo_pen_find_active_cw_vertex_index (pen, &in->dev_vector, &start);
-	    if (status)
-		return status;
+	    _cairo_pen_find_active_cw_vertex_index (pen, &in->dev_vector, &start);
 	    step = +1;
-	    status = _cairo_pen_find_active_cw_vertex_index (pen, &out->dev_vector, &stop);
-	    if (status)
-		return status;
+	    _cairo_pen_find_active_cw_vertex_index (pen, &out->dev_vector, &stop);
 	}
 
 	i = start;
@@ -259,9 +245,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	while (i != stop) {
 	    tri[2] = in->point;
 	    _translate_point (&tri[2], &pen->vertices[i].point);
-	    status = _cairo_traps_tessellate_triangle (stroker->traps, tri);
-	    if (status)
-		return status;
+	    _cairo_traps_tessellate_triangle (stroker->traps, tri);
 	    tri[1] = tri[2];
 	    i += step;
 	    if (i < 0)
@@ -394,23 +378,17 @@ _cairo_stroker_add_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 	cairo_pen_t *pen = &stroker->pen;
 
 	slope = f->dev_vector;
-	status = _cairo_pen_find_active_cw_vertex_index (pen, &slope, &start);
-	if (status)
-	    return status;
+	_cairo_pen_find_active_cw_vertex_index (pen, &slope, &start);
 	slope.dx = -slope.dx;
 	slope.dy = -slope.dy;
-	status = _cairo_pen_find_active_cw_vertex_index (pen, &slope, &stop);
-	if (status)
-	    return status;
+	_cairo_pen_find_active_cw_vertex_index (pen, &slope, &stop);
 
 	tri[0] = f->point;
 	tri[1] = f->cw;
 	for (i=start; i != stop; i = (i+1) % pen->num_vertices) {
 	    tri[2] = f->point;
 	    _translate_point (&tri[2], &pen->vertices[i].point);
-	    status = _cairo_traps_tessellate_triangle (stroker->traps, tri);
-	    if (status)
-		return status;
+	    _cairo_traps_tessellate_triangle (stroker->traps, tri);
 	    tri[1] = tri[2];
 	}
 	tri[2] = f->ccw;
@@ -441,14 +419,8 @@ _cairo_stroker_add_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 	_cairo_polygon_line_to (&polygon, &occw);
 	_cairo_polygon_line_to (&polygon, &f->ccw);
 	_cairo_polygon_close (&polygon);
-	status = _cairo_polygon_status (&polygon);
 
-	if (status == CAIRO_STATUS_SUCCESS) {
-	    status = _cairo_bentley_ottmann_tessellate_polygon (stroker->traps,
-								&polygon,
-								CAIRO_FILL_RULE_WINDING);
-	}
-
+	status = _cairo_bentley_ottmann_tessellate_polygon (stroker->traps, &polygon, CAIRO_FILL_RULE_WINDING);
 	_cairo_polygon_fini (&polygon);
 
 	return status;
@@ -995,11 +967,9 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t	*path,
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
-    status = _cairo_stroker_init (&stroker, stroke_style,
-			          ctm, ctm_inverse, tolerance,
-				  traps);
-    if (status)
-	return status;
+    _cairo_stroker_init (&stroker, stroke_style,
+			 ctm, ctm_inverse, tolerance,
+			 traps);
 
     if (stroker.style->dash)
 	status = _cairo_path_fixed_interpret (path,

@@ -39,7 +39,7 @@
 #ifndef CAIRO_CACHE_PRIVATE_H
 #define CAIRO_CACHE_PRIVATE_H
 
-#include "cairo-types-private.h"
+typedef struct _cairo_cache cairo_cache_t;
 
 /**
  * cairo_cache_entry_t:

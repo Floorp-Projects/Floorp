@@ -115,7 +115,7 @@ _cairo_base85_stream_create (cairo_output_stream_t *output)
 
     stream = malloc (sizeof (cairo_base85_stream_t));
     if (stream == NULL)
-	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
+	return (cairo_output_stream_t *) &cairo_output_stream_nil;
 
     _cairo_output_stream_init (&stream->base,
 			       _cairo_base85_stream_write,

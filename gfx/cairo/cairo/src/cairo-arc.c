@@ -34,8 +34,6 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-#include "cairoint.h"
-
 #include "cairo-arc-private.h"
 
 /* Spline deviation from the circle in radius would be given by:
@@ -87,7 +85,7 @@ _arc_max_angle_for_tolerance_normalized (double tolerance)
 	{ M_PI / 10.0,  1.73863223499021216974e-08 },
 	{ M_PI / 11.0,  9.81410988043554039085e-09 },
     };
-    int table_size = ARRAY_LENGTH (table);
+    int table_size = (sizeof (table) / sizeof (table[0]));
 
     for (i = 0; i < table_size; i++)
 	if (table[i].error < tolerance)

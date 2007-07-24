@@ -44,17 +44,12 @@
 #if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
 # define _WIN32_WINNT 0x0500
 #endif
-
-#include "cairoint.h"
-
-#include "cairo-clip-private.h"
-#include "cairo-win32-private.h"
-
 #include <windows.h>
 
-#if defined(__MINGW32__) && !defined(ETO_PDY)
-# define ETO_PDY 0x2000
-#endif
+#include <stdio.h>
+#include "cairoint.h"
+#include "cairo-clip-private.h"
+#include "cairo-win32-private.h"
 
 #undef DEBUG_COMPOSITE
 
@@ -186,7 +181,7 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
     }
 
     if (num_palette > 2) {
-	bitmap_info = _cairo_malloc_ab_plus_c (num_palette, sizeof(RGBQUAD), sizeof(BITMAPINFOHEADER));
+	bitmap_info = malloc (sizeof (BITMAPINFOHEADER) + num_palette * sizeof (RGBQUAD));
 	if (!bitmap_info)
 	    return CAIRO_STATUS_NO_MEMORY;
     } else {
@@ -332,6 +327,8 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
     char *bits;
     int rowstride;
 
+    _cairo_win32_initialize ();
+
     surface = malloc (sizeof (cairo_win32_surface_t));
     if (surface == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -476,7 +473,12 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if ((local->flags & CAIRO_WIN32_SURFACE_CAN_BITBLT) &&
+    /* Check for SURFACE_IS_DISPLAY here, because there are a lot
+     * of printer drivers that lie and say they can BitBlt, but
+     * just spit out black instead.
+     */
+    if ((local->flags & CAIRO_WIN32_SURFACE_IS_DISPLAY) &&
+	(local->flags & CAIRO_WIN32_SURFACE_CAN_BITBLT) &&
 	BitBlt (local->dc,
 		0, 0,
 		width, height,
@@ -547,9 +549,9 @@ _cairo_win32_surface_release_source_image (void                   *abstract_surf
 
 static cairo_status_t
 _cairo_win32_surface_acquire_dest_image (void                    *abstract_surface,
-					 cairo_rectangle_int_t   *interest_rect,
+					 cairo_rectangle_int16_t *interest_rect,
 					 cairo_image_surface_t  **image_out,
-					 cairo_rectangle_int_t   *image_rect,
+					 cairo_rectangle_int16_t *image_rect,
 					 void                   **image_extra)
 {
     cairo_win32_surface_t *surface = abstract_surface;
@@ -615,9 +617,9 @@ _cairo_win32_surface_acquire_dest_image (void                    *abstract_surfa
 
 static void
 _cairo_win32_surface_release_dest_image (void                    *abstract_surface,
-					 cairo_rectangle_int_t   *interest_rect,
+					 cairo_rectangle_int16_t *interest_rect,
 					 cairo_image_surface_t   *image,
-					 cairo_rectangle_int_t   *image_rect,
+					 cairo_rectangle_int16_t *image_rect,
 					 void                    *image_extra)
 {
     cairo_win32_surface_t *surface = abstract_surface;
@@ -736,7 +738,7 @@ static cairo_int_status_t
 _cairo_win32_surface_composite_inner (cairo_win32_surface_t *src,
 				      cairo_image_surface_t *src_image,
 				      cairo_win32_surface_t *dst,
-				      cairo_rectangle_int_t src_extents,
+				      cairo_rectangle_int16_t src_extents,
 				      cairo_rectangle_int32_t src_r,
 				      cairo_rectangle_int32_t dst_r,
 				      int alpha,
@@ -844,7 +846,7 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
     cairo_image_surface_t *src_image = NULL;
 
     cairo_format_t src_format;
-    cairo_rectangle_int_t src_extents;
+    cairo_rectangle_int16_t src_extents;
 
     cairo_rectangle_int32_t src_r = { src_x, src_y, width, height };
     cairo_rectangle_int32_t dst_r = { dst_x, dst_y, width, height };
@@ -1312,7 +1314,7 @@ static cairo_int_status_t
 _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
 				      cairo_operator_t		op,
 				      const cairo_color_t	*color,
-				      cairo_rectangle_int_t	*rects,
+				      cairo_rectangle_int16_t		*rects,
 				      int			num_rects)
 {
     cairo_win32_surface_t *surface = abstract_surface;
@@ -1374,8 +1376,8 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_win32_surface_set_clip_region (void           *abstract_surface,
-				      cairo_region_t *region)
+_cairo_win32_surface_set_clip_region (void              *abstract_surface,
+				      pixman_region16_t *region)
 {
     cairo_win32_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -1404,9 +1406,9 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 	return CAIRO_STATUS_SUCCESS;
 
     } else {
-	cairo_rectangle_int_t extents;
-	cairo_box_int_t *boxes;
-	int num_boxes;
+	pixman_box16_t *boxes = pixman_region_rects (region);
+	int num_boxes = pixman_region_num_rects (region);
+	pixman_box16_t *extents = pixman_region_extents (region);
 	RGNDATA *data;
 	size_t data_size;
 	RECT *rects;
@@ -1415,35 +1417,27 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 
 	/* Create a GDI region for the cairo region */
 
-	_cairo_region_get_extents (region, &extents);
-	if (_cairo_region_get_boxes (region, &num_boxes, &boxes) != CAIRO_STATUS_SUCCESS)
-	    return CAIRO_STATUS_NO_MEMORY;
-
 	data_size = sizeof (RGNDATAHEADER) + num_boxes * sizeof (RECT);
 	data = malloc (data_size);
-	if (!data) {
-	    _cairo_region_boxes_fini (region, boxes);
+	if (!data)
 	    return CAIRO_STATUS_NO_MEMORY;
-	}
 	rects = (RECT *)data->Buffer;
 
 	data->rdh.dwSize = sizeof (RGNDATAHEADER);
 	data->rdh.iType = RDH_RECTANGLES;
 	data->rdh.nCount = num_boxes;
 	data->rdh.nRgnSize = num_boxes * sizeof (RECT);
-	data->rdh.rcBound.left = extents.x;
-	data->rdh.rcBound.top = extents.y;
-	data->rdh.rcBound.right = extents.x + extents.width;
-	data->rdh.rcBound.bottom = extents.y + extents.height;
+	data->rdh.rcBound.left = extents->x1;
+	data->rdh.rcBound.top = extents->y1;
+	data->rdh.rcBound.right = extents->x2;
+	data->rdh.rcBound.bottom = extents->y2;
 
 	for (i = 0; i < num_boxes; i++) {
-	    rects[i].left = boxes[i].p1.x;
-	    rects[i].top = boxes[i].p1.y;
-	    rects[i].right = boxes[i].p2.x;
-	    rects[i].bottom = boxes[i].p2.y;
+	    rects[i].left = boxes[i].x1;
+	    rects[i].top = boxes[i].y1;
+	    rects[i].right = boxes[i].x2;
+	    rects[i].bottom = boxes[i].y2;
 	}
-
-	_cairo_region_boxes_fini (region, boxes);
 
 	gdi_region = ExtCreateRegion (NULL, data_size, data);
 	free (data);
@@ -1473,7 +1467,7 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 
 static cairo_int_status_t
 _cairo_win32_surface_get_extents (void		          *abstract_surface,
-				  cairo_rectangle_int_t   *rectangle)
+				  cairo_rectangle_int16_t *rectangle)
 {
     cairo_win32_surface_t *surface = abstract_surface;
 
@@ -1554,8 +1548,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
     SetBkMode(dst->dc, TRANSPARENT);
 
     if (num_glyphs > STACK_GLYPH_SIZE) {
-	glyph_buf = (WORD *) _cairo_malloc_ab (num_glyphs, sizeof(WORD));
-        dxy_buf = (int *) _cairo_malloc_abc (num_glyphs, sizeof(int), 2);
+	glyph_buf = (WORD *)malloc(num_glyphs * sizeof(WORD));
+        dxy_buf = (int *)malloc(num_glyphs * 2 * sizeof(int));
     }
 
     /* It is vital that dx values for dxy_buf are calculated from the delta of
@@ -1645,6 +1639,8 @@ cairo_win32_surface_create (HDC hdc)
     RECT rect;
     int depth;
     cairo_format_t format;
+
+    _cairo_win32_initialize ();
 
     /* Try to figure out the drawing bounds for the Device context
      */
@@ -1863,30 +1859,6 @@ cairo_win32_surface_get_image (cairo_surface_t *surface)
     return ((cairo_win32_surface_t*)surface)->image;
 }
 
-static cairo_bool_t
-_cairo_win32_surface_is_similar (void *surface_a,
-	                         void *surface_b,
-				 cairo_content_t content)
-{
-    cairo_win32_surface_t *a = surface_a;
-    cairo_win32_surface_t *b = surface_b;
-
-    return a->dc == b->dc;
-}
-
-static cairo_status_t
-_cairo_win32_surface_reset (void *abstract_surface)
-{
-    cairo_win32_surface_t *surface = abstract_surface;
-    cairo_status_t status;
-
-    status = _cairo_win32_surface_set_clip_region (surface, NULL);
-    if (status)
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static const cairo_surface_backend_t cairo_win32_surface_backend = {
     CAIRO_SURFACE_TYPE_WIN32,
     _cairo_win32_surface_create_similar,
@@ -1917,11 +1889,69 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     NULL, /* fill */
     _cairo_win32_surface_show_glyphs,
 
-    NULL,  /* snapshot */
-    _cairo_win32_surface_is_similar,
-
-    _cairo_win32_surface_reset
+    NULL  /* snapshot */
 };
+
+/*
+ * Without pthread, on win32 we need to initialize all the 'mutex'es
+ * before use. It is guaranteed that DllMain will get called single
+ * threaded before any other function.
+ * Initializing more than finally needed should not matter much.
+ */
+#if !defined(HAVE_PTHREAD_H) 
+
+CRITICAL_SECTION _cairo_scaled_font_map_mutex;
+#ifdef CAIRO_HAS_FT_FONT
+CRITICAL_SECTION _cairo_ft_unscaled_font_map_mutex;
+#endif
+CRITICAL_SECTION _cairo_font_face_mutex;
+
+static int _cairo_win32_initialized = 0;
+
+void
+_cairo_win32_initialize (void) {
+    if (_cairo_win32_initialized)
+	return;
+
+    /* every 'mutex' from CAIRO_MUTEX_DECALRE needs to be initialized here */
+    InitializeCriticalSection (&_cairo_scaled_font_map_mutex);
+#ifdef CAIRO_HAS_FT_FONT
+    InitializeCriticalSection (&_cairo_ft_unscaled_font_map_mutex);
+#endif
+    InitializeCriticalSection (&_cairo_font_face_mutex);
+
+    _cairo_win32_initialized = 1;
+}
+
+#if !defined(CAIRO_WIN32_STATIC_BUILD)
+BOOL WINAPI
+DllMain (HINSTANCE hinstDLL,
+	 DWORD     fdwReason,
+	 LPVOID    lpvReserved)
+{
+  switch (fdwReason)
+  {
+  case DLL_PROCESS_ATTACH:
+    _cairo_win32_initialize();
+    break;
+  case DLL_PROCESS_DETACH:
+    DeleteCriticalSection (&_cairo_scaled_font_map_mutex);
+#ifdef CAIRO_HAS_FT_FONT
+    DeleteCriticalSection (&_cairo_ft_unscaled_font_map_mutex);
+#endif
+    DeleteCriticalSection (&_cairo_font_face_mutex);
+    break;
+  }
+  return TRUE;
+}
+#endif
+#else
+/* Need a function definition here too since it's called outside of ifdefs */
+void
+_cairo_win32_initialize (void)
+{
+}
+#endif
 
 /* Notes:
  *
@@ -1936,33 +1966,3 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
  *              it will still copy over the src alpha, because the SCA value (255) will be
  *              multiplied by all the src components.
  */
-
-
-#if !defined(CAIRO_WIN32_STATIC_BUILD)
-
-/* declare to avoid "no previous prototype for 'DllMain'" warning */
-BOOL WINAPI
-DllMain (HINSTANCE hinstDLL,
-         DWORD     fdwReason,
-         LPVOID    lpvReserved);
-
-BOOL WINAPI
-DllMain (HINSTANCE hinstDLL,
-         DWORD     fdwReason,
-         LPVOID    lpvReserved)
-{
-    switch (fdwReason) {
-        case DLL_PROCESS_ATTACH:
-            CAIRO_MUTEX_INITIALIZE ();
-            break;
-
-        case DLL_PROCESS_DETACH:
-            CAIRO_MUTEX_FINALIZE ();
-            break;
-    }
-
-    return TRUE;
-}
-
-#endif
-
