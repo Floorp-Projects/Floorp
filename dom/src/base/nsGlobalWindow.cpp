@@ -161,7 +161,9 @@
 #include "nsIObserverService.h"
 #include "nsIXULAppInfo.h"
 #include "nsNetUtil.h"
+#ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
+#endif
 
 #include "plbase64.h"
 
@@ -3038,6 +3040,7 @@ nsGlobalWindow::SetScreenY(PRInt32 aScreenY)
 nsresult
 nsGlobalWindow::CheckSecurityWidthAndHeight(PRInt32* aWidth, PRInt32* aHeight)
 {
+#ifdef MOZ_XUL
   if (!nsContentUtils::IsCallerTrustedForWrite()) {
     // if attempting to resize the window, hide any open popups
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
@@ -3045,6 +3048,7 @@ nsGlobalWindow::CheckSecurityWidthAndHeight(PRInt32* aWidth, PRInt32* aHeight)
     if (pm && doc)
       pm->HidePopupsInDocument(doc);
   }
+#endif
 
   // This one is easy. Just ensure the variable is greater than 100;
   if ((aWidth && *aWidth < 100) || (aHeight && *aHeight < 100)) {
@@ -3072,11 +3076,13 @@ nsGlobalWindow::CheckSecurityLeftAndTop(PRInt32* aLeft, PRInt32* aTop)
   // Check security state for use in determing window dimensions
 
   if (!nsContentUtils::IsCallerTrustedForWrite()) {
+#ifdef MOZ_XUL
     // if attempting to move the window, hide any open popups
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
     if (pm && doc)
       pm->HidePopupsInDocument(doc);
+#endif
 
     PRInt32 screenLeft, screenTop, screenWidth, screenHeight;
     PRInt32 winLeft, winTop, winWidth, winHeight;

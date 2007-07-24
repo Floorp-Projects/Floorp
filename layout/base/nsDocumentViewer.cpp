@@ -109,8 +109,8 @@
 #include "nsIDOMHTMLFrameSetElement.h"
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
-#endif
 #include "nsXULPopupManager.h"
+#endif
 #include "nsPrintfCString.h"
 
 #include "nsIClipboardHelper.h"
@@ -1151,11 +1151,13 @@ DocumentViewerImpl::PageHide(PRBool aIsUnload)
     nsEventDispatcher::Dispatch(window, mPresContext, &event, nsnull, &status);
   }
 
+#ifdef MOZ_XUL
   // look for open menupopups and close them after the unload event, in case
   // the unload event listeners open any new popups
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (pm && mDocument)
     pm->HidePopupsInDocument(mDocument);
+#endif
 
   return NS_OK;
 }
