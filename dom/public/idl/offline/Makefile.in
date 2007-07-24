@@ -46,7 +46,7 @@ MODULE         = dom
 XPIDL_MODULE   = dom_offline
 GRE_MODULE     = 1
 
-SDK_XPIDLSRCS =                       \
+XPIDLSRCS =                           \
         nsIDOMOfflineResourceList.idl \
         nsIDOMLoadStatusList.idl      \
         nsIDOMLoadStatus.idl          \
