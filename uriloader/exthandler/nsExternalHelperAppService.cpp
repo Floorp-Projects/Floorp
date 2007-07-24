@@ -865,11 +865,11 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(
           return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        rv = aHandlerInfo->SetPreferredApplicationHandler(handlerApp);
+        return aHandlerInfo->SetPreferredApplicationHandler(handlerApp);
       }
     } else {
-      // if we got here, there's no path name in the RDF graph, so this must 
-      // be a web app
+      // maybe we've get a uri template, which would indicate that this is a
+      // web-handler
       FillLiteralValueFromTarget(externalAppNodeResource, kNC_UriTemplate, 
                                  &stringValue);
       if (stringValue && stringValue[0]) {
@@ -879,14 +879,13 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(
         if (!handlerApp) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        rv = aHandlerInfo->SetPreferredApplicationHandler(handlerApp);
-      } else {
-        return NS_ERROR_FAILURE; // no path name _and_ no uri template
+        return aHandlerInfo->SetPreferredApplicationHandler(handlerApp);
       }
+    // otherwise, no handler at all; fall through to return NS_OK
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 #endif /* MOZ_RDF */
 
