@@ -5542,6 +5542,8 @@ PRBool CSSParserImpl::ParseBorderColors(nsresult& aErrorCode,
         aErrorCode = NS_OK;
         return PR_TRUE;
       }
+      // FIXME Bug 389404: We should not accept inherit, -moz-initial,
+      // or none as anything other than the first value.
       if (ParseVariant(aErrorCode, value, VARIANT_HCK|VARIANT_NONE, nsCSSProps::kBorderColorKTable)) {
         list->mNext = new nsCSSValueList();
         list = list->mNext;

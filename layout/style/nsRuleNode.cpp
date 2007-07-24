@@ -63,6 +63,7 @@
 #include "nsRuleData.h"
 #include "nsILanguageAtomService.h"
 #include "nsIStyleRule.h"
+#include "nsBidiUtils.h"
 
 /*
  * For storage of an |nsRuleNode|'s children in a linked list.
@@ -247,15 +248,19 @@ nscoord CalcLength(const nsCSSValue& aValue,
   return 0;
 }
 
-#define SETCOORD_NORMAL       0x01   // N
-#define SETCOORD_AUTO         0x02   // A
-#define SETCOORD_INHERIT      0x04   // H
-#define SETCOORD_PERCENT      0x08   // P
-#define SETCOORD_FACTOR       0x10   // F
-#define SETCOORD_LENGTH       0x20   // L
-#define SETCOORD_INTEGER      0x40   // I
-#define SETCOORD_ENUMERATED   0x80   // E
-#define SETCOORD_NONE         0x100  // O
+#define SETCOORD_NORMAL                 0x01   // N
+#define SETCOORD_AUTO                   0x02   // A
+#define SETCOORD_INHERIT                0x04   // H
+#define SETCOORD_PERCENT                0x08   // P
+#define SETCOORD_FACTOR                 0x10   // F
+#define SETCOORD_LENGTH                 0x20   // L
+#define SETCOORD_INTEGER                0x40   // I
+#define SETCOORD_ENUMERATED             0x80   // E
+#define SETCOORD_NONE                   0x100  // O
+#define SETCOORD_INITIAL_ZERO           0x200
+#define SETCOORD_INITIAL_AUTO           0x400
+#define SETCOORD_INITIAL_NONE           0x800
+#define SETCOORD_INITIAL_NORMAL         0x1000
 
 #define SETCOORD_LP     (SETCOORD_LENGTH | SETCOORD_PERCENT)
 #define SETCOORD_LH     (SETCOORD_LENGTH | SETCOORD_INHERIT)
@@ -322,6 +327,22 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   else if (((aMask & SETCOORD_FACTOR) != 0) && 
            (aValue.GetUnit() == eCSSUnit_Number)) {
     aCoord.SetFactorValue(aValue.GetFloatValue());
+  }
+  else if (((aMask & SETCOORD_INITIAL_AUTO) != 0) && 
+           (aValue.GetUnit() == eCSSUnit_Initial)) {
+    aCoord.SetAutoValue();
+  }
+  else if (((aMask & SETCOORD_INITIAL_ZERO) != 0) && 
+           (aValue.GetUnit() == eCSSUnit_Initial)) {
+    aCoord.SetCoordValue(0);
+  }
+  else if (((aMask & SETCOORD_INITIAL_NONE) != 0) && 
+           (aValue.GetUnit() == eCSSUnit_Initial)) {
+    aCoord.SetNoneValue();
+  }
+  else if (((aMask & SETCOORD_INITIAL_NORMAL) != 0) && 
+           (aValue.GetUnit() == eCSSUnit_Initial)) {
+    aCoord.SetNormalValue();
   }
   else {
     result = PR_FALSE;  // didn't set anything
@@ -2398,7 +2419,8 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct,
 
     // letter-spacing: normal, length, inherit
   SetCoord(textData.mLetterSpacing, text->mLetterSpacing, parentText->mLetterSpacing,
-           SETCOORD_LH | SETCOORD_NORMAL, aContext, mPresContext, inherited);
+           SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
+           aContext, mPresContext, inherited);
 
   // line-height: normal, number, length, percent, inherit
   if (eCSSUnit_Percent == textData.mLineHeight.GetUnit()) {
@@ -2456,13 +2478,15 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct,
 
   // text-indent: length, percent, inherit
   SetCoord(textData.mTextIndent, text->mTextIndent, parentText->mTextIndent,
-           SETCOORD_LPH, aContext, mPresContext, inherited);
+           SETCOORD_LPH | SETCOORD_INITIAL_ZERO, aContext,
+           mPresContext, inherited);
 
   // text-transform: enum, none, inherit
   if (eCSSUnit_Enumerated == textData.mTextTransform.GetUnit()) {
     text->mTextTransform = textData.mTextTransform.GetIntValue();
   }
-  else if (eCSSUnit_None == textData.mTextTransform.GetUnit()) {
+  else if (eCSSUnit_None == textData.mTextTransform.GetUnit() ||
+           eCSSUnit_Initial == textData.mTextTransform.GetUnit()) {
     text->mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
   }
   else if (eCSSUnit_Inherit == textData.mTextTransform.GetUnit()) {
@@ -2474,7 +2498,8 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct,
   if (eCSSUnit_Enumerated == textData.mWhiteSpace.GetUnit()) {
     text->mWhiteSpace = textData.mWhiteSpace.GetIntValue();
   }
-  else if (eCSSUnit_Normal == textData.mWhiteSpace.GetUnit()) {
+  else if (eCSSUnit_Normal == textData.mWhiteSpace.GetUnit() ||
+           eCSSUnit_Initial == textData.mWhiteSpace.GetUnit()) {
     text->mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
   }
   else if (eCSSUnit_Inherit == textData.mWhiteSpace.GetUnit()) {
@@ -2484,7 +2509,8 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct,
 
   // word-spacing: normal, length, inherit
   SetCoord(textData.mWordSpacing, text->mWordSpacing, parentText->mWordSpacing,
-           SETCOORD_LH | SETCOORD_NORMAL, aContext, mPresContext, inherited);
+           SETCOORD_LH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
+           aContext, mPresContext, inherited);
 
   COMPUTE_END_INHERITED(Text, text)
 }
@@ -2499,8 +2525,14 @@ nsRuleNode::ComputeTextResetData(nsStyleStruct* aStartStruct,
   COMPUTE_START_RESET(TextReset, (), text, parentText, Text, textData)
   
   // vertical-align: enum, length, percent, inherit
-  SetCoord(textData.mVerticalAlign, text->mVerticalAlign, parentText->mVerticalAlign,
-           SETCOORD_LPH | SETCOORD_ENUMERATED, aContext, mPresContext, inherited);
+  if (!SetCoord(textData.mVerticalAlign, text->mVerticalAlign,
+                parentText->mVerticalAlign, SETCOORD_LPH | SETCOORD_ENUMERATED,
+                aContext, mPresContext, inherited)) {
+    if (eCSSUnit_Initial == textData.mVerticalAlign.GetUnit()) {
+      text->mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE,
+                                       eStyleUnit_Enumerated);
+    }
+  }
 
   // text-decoration: none, enum (bit field), inherit
   if (eCSSUnit_Enumerated == textData.mDecoration.GetUnit()) {
@@ -2517,7 +2549,8 @@ nsRuleNode::ComputeTextResetData(nsStyleStruct* aStartStruct,
       }
     }
   }
-  else if (eCSSUnit_None == textData.mDecoration.GetUnit()) {
+  else if (eCSSUnit_None == textData.mDecoration.GetUnit() ||
+           eCSSUnit_Initial == textData.mDecoration.GetUnit()) {
     text->mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
   }
   else if (eCSSUnit_Inherit == textData.mDecoration.GetUnit()) {
@@ -2526,7 +2559,8 @@ nsRuleNode::ComputeTextResetData(nsStyleStruct* aStartStruct,
   }
 
   // unicode-bidi: enum, normal, inherit
-  if (eCSSUnit_Normal == textData.mUnicodeBidi.GetUnit() ) {
+  if (eCSSUnit_Normal == textData.mUnicodeBidi.GetUnit() ||
+      eCSSUnit_Initial == textData.mUnicodeBidi.GetUnit()) {
     text->mUnicodeBidi = NS_STYLE_UNICODE_BIDI_NORMAL;
   }
   else if (eCSSUnit_Enumerated == textData.mUnicodeBidi.GetUnit() ) {
@@ -2616,7 +2650,8 @@ nsRuleNode::ComputeUserInterfaceData(nsStyleStruct* aStartStruct,
   if (eCSSUnit_Enumerated == uiData.mUserInput.GetUnit()) {
     ui->mUserInput = uiData.mUserInput.GetIntValue();
   }
-  else if (eCSSUnit_Auto == uiData.mUserInput.GetUnit()) {
+  else if (eCSSUnit_Auto == uiData.mUserInput.GetUnit() ||
+           eCSSUnit_Initial == uiData.mUserInput.GetUnit()) {
     ui->mUserInput = NS_STYLE_USER_INPUT_AUTO;
   }
   else if (eCSSUnit_None == uiData.mUserInput.GetUnit()) {
@@ -2635,12 +2670,16 @@ nsRuleNode::ComputeUserInterfaceData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     ui->mUserModify = parentUI->mUserModify;
   }
+  else if (eCSSUnit_Initial == uiData.mUserModify.GetUnit()) {
+    ui->mUserModify = NS_STYLE_USER_MODIFY_READ_ONLY;
+  }
 
   // user-focus: none, normal, enum, inherit
   if (eCSSUnit_Enumerated == uiData.mUserFocus.GetUnit()) {
     ui->mUserFocus = uiData.mUserFocus.GetIntValue();
   }
-  else if (eCSSUnit_None == uiData.mUserFocus.GetUnit()) {
+  else if (eCSSUnit_None == uiData.mUserFocus.GetUnit() ||
+           eCSSUnit_Initial == uiData.mUserFocus.GetUnit()) {
     ui->mUserFocus = NS_STYLE_USER_FOCUS_NONE;
   }
   else if (eCSSUnit_Normal == uiData.mUserFocus.GetUnit()) {
@@ -2673,6 +2712,10 @@ nsRuleNode::ComputeUIResetData(nsStyleStruct* aStartStruct,
   else if (eCSSUnit_Inherit == uiData.mUserSelect.GetUnit()) {
     inherited = PR_TRUE;
     ui->mUserSelect = parentUI->mUserSelect;
+  }
+  else if (eCSSUnit_Initial == uiData.mUserSelect.GetUnit()) {
+    // FIXME There's no other way to specify this value!
+    ui->mUserSelect = NS_STYLE_USER_SELECT_AUTO;
   }
 
   // ime-mode: auto, normal, enum, inherit
@@ -2732,6 +2775,9 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     display->mOpacity = parentDisplay->mOpacity;
   }
+  else if (eCSSUnit_Initial == displayData.mOpacity.GetUnit()) {
+    display->mOpacity = 1.0f;
+  }
 
   // display: enum, none, inherit
   if (eCSSUnit_Enumerated == displayData.mDisplay.GetUnit()) {
@@ -2744,12 +2790,16 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     display->mDisplay = parentDisplay->mDisplay;
   }
+  else if (eCSSUnit_Initial == displayData.mDisplay.GetUnit()) {
+    display->mDisplay = NS_STYLE_DISPLAY_INLINE;
+  }
 
   // appearance: enum, none, inherit
   if (eCSSUnit_Enumerated == displayData.mAppearance.GetUnit()) {
     display->mAppearance = displayData.mAppearance.GetIntValue();
   }
-  else if (eCSSUnit_None == displayData.mAppearance.GetUnit()) {
+  else if (eCSSUnit_None == displayData.mAppearance.GetUnit() ||
+           eCSSUnit_Initial == displayData.mAppearance.GetUnit()) {
     display->mAppearance = NS_THEME_NONE;
   }
   else if (eCSSUnit_Inherit == displayData.mAppearance.GetUnit()) {
@@ -2768,7 +2818,8 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
       display->mBinding = nsnull;
     }
   }
-  else if (eCSSUnit_None == displayData.mBinding.GetUnit()) {
+  else if (eCSSUnit_None == displayData.mBinding.GetUnit() ||
+           eCSSUnit_Initial == displayData.mBinding.GetUnit()) {
     display->mBinding = nsnull;
   }
   else if (eCSSUnit_Inherit == displayData.mBinding.GetUnit()) {
@@ -2784,12 +2835,16 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     display->mPosition = parentDisplay->mPosition;
   }
+  else if (eCSSUnit_Initial == displayData.mPosition.GetUnit()) {
+    display->mPosition = NS_STYLE_POSITION_STATIC;
+  }
 
   // clear: enum, none, inherit
   if (eCSSUnit_Enumerated == displayData.mClear.GetUnit()) {
     display->mBreakType = displayData.mClear.GetIntValue();
   }
-  else if (eCSSUnit_None == displayData.mClear.GetUnit()) {
+  else if (eCSSUnit_None == displayData.mClear.GetUnit() ||
+           eCSSUnit_Initial == displayData.mClear.GetUnit()) {
     display->mBreakType = NS_STYLE_CLEAR_NONE;
   }
   else if (eCSSUnit_Inherit == displayData.mClear.GetUnit()) {
@@ -2831,7 +2886,8 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
   if (eCSSUnit_Enumerated == displayData.mFloat.GetUnit()) {
     display->mFloats = displayData.mFloat.GetIntValue();
   }
-  else if (eCSSUnit_None == displayData.mFloat.GetUnit()) {
+  else if (eCSSUnit_None == displayData.mFloat.GetUnit() ||
+           eCSSUnit_Initial == displayData.mFloat.GetUnit()) {
     display->mFloats = NS_STYLE_FLOAT_NONE;
   }
   else if (eCSSUnit_Inherit == displayData.mFloat.GetUnit()) {
@@ -2850,6 +2906,9 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     display->mOverflowX = parentDisplay->mOverflowX;
   }
+  else if (eCSSUnit_Initial == displayData.mOverflowX.GetUnit()) {
+    display->mOverflowX = NS_STYLE_OVERFLOW_VISIBLE;
+  }
 
   // overflow-y: enum, auto, inherit
   if (eCSSUnit_Enumerated == displayData.mOverflowY.GetUnit()) {
@@ -2861,6 +2920,9 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
   else if (eCSSUnit_Inherit == displayData.mOverflowY.GetUnit()) {
     inherited = PR_TRUE;
     display->mOverflowY = parentDisplay->mOverflowY;
+  }
+  else if (eCSSUnit_Initial == displayData.mOverflowY.GetUnit()) {
+    display->mOverflowY = NS_STYLE_OVERFLOW_VISIBLE;
   }
 
   // CSS3 overflow-x and overflow-y require some fixup as well in some
@@ -2895,6 +2957,11 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     display->mClipFlags = parentDisplay->mClipFlags;
     display->mClip = parentDisplay->mClip;
+  }
+  // if one is initial, they all are
+  else if (eCSSUnit_Initial == displayData.mClip.mTop.GetUnit()) {
+    display->mClipFlags = NS_STYLE_CLIP_AUTO;
+    display->mClip.SetRect(0,0,0,0);
   }
   else {
     PRBool  fullAuto = PR_TRUE;
@@ -3059,6 +3126,13 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     visibility->mDirection = parentVisibility->mDirection;
   }
+  else if (eCSSUnit_Initial == displayData.mDirection.GetUnit()) {
+    PRUint32 bidiOptions = mPresContext->GetBidi();
+    if (GET_BIDI_OPTION_DIRECTION(bidiOptions) == IBMBIDI_TEXTDIRECTION_RTL)
+      visibility->mDirection = NS_STYLE_DIRECTION_RTL;
+    else
+      visibility->mDirection = NS_STYLE_DIRECTION_LTR;
+  }
 
   // visibility: enum, inherit
   if (eCSSUnit_Enumerated == displayData.mVisibility.GetUnit()) {
@@ -3067,6 +3141,9 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct,
   else if (eCSSUnit_Inherit == displayData.mVisibility.GetUnit()) {
     inherited = PR_TRUE;
     visibility->mVisible = parentVisibility->mVisible;
+  }
+  else if (eCSSUnit_Initial == displayData.mVisibility.GetUnit()) {
+    visibility->mVisible = NS_STYLE_VISIBILITY_VISIBLE;
   }
 
   // lang: string, inherit
@@ -3103,7 +3180,11 @@ nsRuleNode::ComputeColorData(nsStyleStruct* aStartStruct,
       colorData.mColor.GetIntValue() == NS_COLOR_CURRENTCOLOR) {
     color->mColor = parentColor->mColor;
     inherited = PR_TRUE;
-  } else {
+  }
+  else if (colorData.mColor.GetUnit() == eCSSUnit_Initial) {
+    color->mColor = mPresContext->DefaultColor();
+  }
+  else {
     SetColor(colorData.mColor, parentColor->mColor, mPresContext, aContext, color->mColor, 
              inherited);
   }
@@ -3324,7 +3405,7 @@ nsRuleNode::ComputeMarginData(nsStyleStruct* aStartStruct,
   NS_FOR_CSS_SIDES(side) {
     parentMargin->mMargin.Get(side, parentCoord);
     if (SetCoord(ourMargin.*(nsCSSRect::sides[side]),
-                 coord, parentCoord, SETCOORD_LPAH,
+                 coord, parentCoord, SETCOORD_LPAH | SETCOORD_INITIAL_ZERO,
                  aContext, mPresContext, inherited)) {
       margin->mMargin.Set(side, coord);
     }
@@ -3439,6 +3520,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
     NS_FOR_CSS_SIDES(side) {
       nsCSSValueList* list =
           marginData.mBorderColors.*(nsCSSValueListRect::sides[side]);
+      // FIXME Bug 389404: Implement inherit and -moz-initial.
       if (list) {
         // Some composite border color information has been specified for this
         // border side.
@@ -3507,6 +3589,9 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
             break;
         }
       }
+      else if (eCSSUnit_Initial == value.GetUnit()) {
+        border->SetBorderToForeground(side);
+      }
     }
   }
 
@@ -3515,8 +3600,8 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
     NS_FOR_CSS_SIDES(side) {
       parentBorder->mBorderRadius.Get(side, parentCoord);
       if (SetCoord(marginData.mBorderRadius.*(nsCSSRect::sides[side]), coord,
-                   parentCoord, SETCOORD_LPH, aContext, mPresContext,
-                   inherited))
+                   parentCoord, SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
+                   aContext, mPresContext, inherited))
         border->mBorderRadius.Set(side, coord);
     }
   }
@@ -3527,6 +3612,9 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
   else if (eCSSUnit_Inherit == marginData.mFloatEdge.GetUnit()) {
     inherited = PR_TRUE;
     border->mFloatEdge = parentBorder->mFloatEdge;
+  }
+  else if (eCSSUnit_Initial == marginData.mFloatEdge.GetUnit()) {
+    border->mFloatEdge = NS_STYLE_FLOAT_EDGE_CONTENT;
   }
 
   COMPUTE_END_RESET(Border, border)
@@ -3558,7 +3646,7 @@ nsRuleNode::ComputePaddingData(nsStyleStruct* aStartStruct,
   NS_FOR_CSS_SIDES(side) {
     parentPadding->mPadding.Get(side, parentCoord);
     if (SetCoord(ourPadding.*(nsCSSRect::sides[side]),
-                 coord, parentCoord, SETCOORD_LPH,
+                 coord, parentCoord, SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
                  aContext, mPresContext, inherited)) {
       padding->mPadding.Set(side, coord);
     }
@@ -3579,12 +3667,20 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct,
                       Margin, marginData)
 
   // outline-width: length, enum, inherit
-  SetCoord(marginData.mOutlineWidth, outline->mOutlineWidth, parentOutline->mOutlineWidth,
-           SETCOORD_LEH, aContext, mPresContext, inherited);
+  if (eCSSUnit_Initial == marginData.mOutlineWidth.GetUnit()) {
+    outline->mOutlineWidth =
+      nsStyleCoord(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated);
+  }
+  else {
+    SetCoord(marginData.mOutlineWidth, outline->mOutlineWidth,
+             parentOutline->mOutlineWidth, SETCOORD_LEH, aContext,
+             mPresContext, inherited);
+  }
 
   // outline-offset: length, inherit
   SetCoord(marginData.mOutlineOffset, outline->mOutlineOffset, parentOutline->mOutlineOffset,
-           SETCOORD_LH, aContext, mPresContext, inherited);
+           SETCOORD_LH | SETCOORD_INITIAL_ZERO, aContext, mPresContext,
+           inherited);
   
 
   // outline-color: color, string, enum, inherit
@@ -3613,18 +3709,20 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct,
   }
   else if (SetColor(marginData.mOutlineColor, unused, mPresContext, aContext, outlineColor, inherited))
     outline->SetOutlineColor(outlineColor);
-  else if (eCSSUnit_Enumerated == marginData.mOutlineColor.GetUnit())
+  else if (eCSSUnit_Enumerated == marginData.mOutlineColor.GetUnit() ||
+           eCSSUnit_Initial == marginData.mOutlineColor.GetUnit()) {
     outline->SetOutlineInitialColor();
+  }
 
-// -moz-outline-radius: length, percent, inherit
+  // -moz-outline-radius: length, percent, inherit
   nsStyleCoord  coord;
   nsStyleCoord  parentCoord;
   { // scope for compilers with broken |for| loop scoping
     NS_FOR_CSS_SIDES(side) {
       parentOutline->mOutlineRadius.Get(side, parentCoord);
       if (SetCoord(marginData.mOutlineRadius.*(nsCSSRect::sides[side]), coord,
-                   parentCoord, SETCOORD_LPH, aContext, mPresContext,
-                   inherited))
+                   parentCoord, SETCOORD_LPH | SETCOORD_INITIAL_ZERO,
+                   aContext, mPresContext, inherited))
         outline->mOutlineRadius.Set(side, coord);
     }
   }
@@ -3632,7 +3730,8 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct,
   // outline-style: auto, enum, none, inherit
   if (eCSSUnit_Enumerated == marginData.mOutlineStyle.GetUnit())
     outline->SetOutlineStyle(marginData.mOutlineStyle.GetIntValue());
-  else if (eCSSUnit_None == marginData.mOutlineStyle.GetUnit())
+  else if (eCSSUnit_None == marginData.mOutlineStyle.GetUnit() ||
+           eCSSUnit_Initial == marginData.mOutlineStyle.GetUnit())
     outline->SetOutlineStyle(NS_STYLE_BORDER_STYLE_NONE);
   else if (eCSSUnit_Auto == marginData.mOutlineStyle.GetUnit()) {
     outline->SetOutlineStyle(NS_STYLE_BORDER_STYLE_AUTO);
@@ -3665,12 +3764,16 @@ nsRuleNode::ComputeListData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     list->mListStyleType = parentList->mListStyleType;
   }
+  else if (eCSSUnit_Initial == listData.mType.GetUnit()) {
+    list->mListStyleType = NS_STYLE_LIST_STYLE_DISC;
+  }
 
   // list-style-image: url, none, inherit
   if (eCSSUnit_Image == listData.mImage.GetUnit()) {
     list->mListStyleImage = listData.mImage.GetImageValue();
   }
-  else if (eCSSUnit_None == listData.mImage.GetUnit()) {
+  else if (eCSSUnit_None == listData.mImage.GetUnit() ||
+           eCSSUnit_Initial == listData.mImage.GetUnit()) {
     list->mListStyleImage = nsnull;
   }
   else if (eCSSUnit_Inherit == listData.mImage.GetUnit()) {
@@ -3686,11 +3789,18 @@ nsRuleNode::ComputeListData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     list->mListStylePosition = parentList->mListStylePosition;
   }
+  else if (eCSSUnit_Initial == listData.mPosition.GetUnit()) {
+    list->mListStylePosition = NS_STYLE_LIST_STYLE_POSITION_OUTSIDE;
+  }
 
   // image region property: length, auto, inherit
   if (eCSSUnit_Inherit == listData.mImageRegion.mTop.GetUnit()) { // if one is inherit, they all are
     inherited = PR_TRUE;
     list->mImageRegion = parentList->mImageRegion;
+  }
+  // if one is -moz-initial, they all are
+  else if (eCSSUnit_Initial == listData.mImageRegion.mTop.GetUnit()) {
+    list->mImageRegion.Empty();
   }
   else {
     if (eCSSUnit_Auto == listData.mImageRegion.mTop.GetUnit())
@@ -3734,25 +3844,31 @@ nsRuleNode::ComputePositionData(nsStyleStruct* aStartStruct,
   NS_FOR_CSS_SIDES(side) {
     parentPos->mOffset.Get(side, parentCoord);
     if (SetCoord(posData.mOffset.*(nsCSSRect::sides[side]),
-                 coord, parentCoord, SETCOORD_LPAH,
+                 coord, parentCoord, SETCOORD_LPAH | SETCOORD_INITIAL_AUTO,
                  aContext, mPresContext, inherited)) {
       pos->mOffset.Set(side, coord);
     }
   }
 
   SetCoord(posData.mWidth, pos->mWidth, parentPos->mWidth,
-           SETCOORD_LPAEH, aContext, mPresContext, inherited);
+           SETCOORD_LPAEH | SETCOORD_INITIAL_AUTO, aContext,
+           mPresContext, inherited);
   SetCoord(posData.mMinWidth, pos->mMinWidth, parentPos->mMinWidth,
-           SETCOORD_LPEH, aContext, mPresContext, inherited);
+           SETCOORD_LPEH | SETCOORD_INITIAL_ZERO, aContext,
+           mPresContext, inherited);
   SetCoord(posData.mMaxWidth, pos->mMaxWidth, parentPos->mMaxWidth,
-           SETCOORD_LPOEH, aContext, mPresContext, inherited);
+           SETCOORD_LPOEH | SETCOORD_INITIAL_NONE, aContext,
+           mPresContext, inherited);
 
   SetCoord(posData.mHeight, pos->mHeight, parentPos->mHeight,
-           SETCOORD_LPAH, aContext, mPresContext, inherited);
+           SETCOORD_LPAH | SETCOORD_INITIAL_AUTO, aContext,
+           mPresContext, inherited);
   SetCoord(posData.mMinHeight, pos->mMinHeight, parentPos->mMinHeight,
-           SETCOORD_LPH, aContext, mPresContext, inherited);
+           SETCOORD_LPH | SETCOORD_INITIAL_ZERO, aContext,
+           mPresContext, inherited);
   SetCoord(posData.mMaxHeight, pos->mMaxHeight, parentPos->mMaxHeight,
-           SETCOORD_LPOH, aContext, mPresContext, inherited);
+           SETCOORD_LPOH | SETCOORD_INITIAL_NONE, aContext,
+           mPresContext, inherited);
 
   // box-sizing: enum, inherit
   if (eCSSUnit_Enumerated == posData.mBoxSizing.GetUnit()) {
@@ -3762,10 +3878,14 @@ nsRuleNode::ComputePositionData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     pos->mBoxSizing = parentPos->mBoxSizing;
   }
+  else if (eCSSUnit_Initial == posData.mBoxSizing.GetUnit()) {
+    pos->mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
+  }
 
   // z-index
   if (! SetCoord(posData.mZIndex, pos->mZIndex, parentPos->mZIndex,
-                 SETCOORD_IA, aContext, nsnull, inherited)) {
+                 SETCOORD_IA | SETCOORD_INITIAL_AUTO, aContext,
+                 nsnull, inherited)) {
     if (eCSSUnit_Inherit == posData.mZIndex.GetUnit()) {
       // handle inherit, because it's ok to inherit 'auto' here
       inherited = PR_TRUE;
@@ -3788,7 +3908,8 @@ nsRuleNode::ComputeTableData(nsStyleStruct* aStartStruct,
   // table-layout: auto, enum, inherit
   if (eCSSUnit_Enumerated == tableData.mLayout.GetUnit())
     table->mLayoutStrategy = tableData.mLayout.GetIntValue();
-  else if (eCSSUnit_Auto == tableData.mLayout.GetUnit())
+  else if (eCSSUnit_Auto == tableData.mLayout.GetUnit() ||
+           eCSSUnit_Initial == tableData.mLayout.GetUnit())
     table->mLayoutStrategy = NS_STYLE_TABLE_LAYOUT_AUTO;
   else if (eCSSUnit_Inherit == tableData.mLayout.GetUnit()) {
     inherited = PR_TRUE;
@@ -3834,14 +3955,17 @@ nsRuleNode::ComputeTableBorderData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     table->mBorderCollapse = parentTable->mBorderCollapse;
   }
+  else if (eCSSUnit_Initial == tableData.mBorderCollapse.GetUnit()) {
+    table->mBorderCollapse = NS_STYLE_BORDER_SEPARATE;
+  }
 
   // border-spacing-x: length, inherit
   SetCoord(tableData.mBorderSpacing.mXValue, table->mBorderSpacingX,
-           parentTable->mBorderSpacingX, SETCOORD_LH,
+           parentTable->mBorderSpacingX, SETCOORD_LH | SETCOORD_INITIAL_ZERO,
            aContext, mPresContext, inherited);
   // border-spacing-y: length, inherit
   SetCoord(tableData.mBorderSpacing.mYValue, table->mBorderSpacingY,
-           parentTable->mBorderSpacingY, SETCOORD_LH,
+           parentTable->mBorderSpacingY, SETCOORD_LH | SETCOORD_INITIAL_ZERO,
            aContext, mPresContext, inherited);
 
   // caption-side: enum, inherit
@@ -3852,6 +3976,9 @@ nsRuleNode::ComputeTableBorderData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     table->mCaptionSide = parentTable->mCaptionSide;
   }
+  else if (eCSSUnit_Initial == tableData.mCaptionSide.GetUnit()) {
+    table->mCaptionSide = NS_SIDE_TOP;
+  }
 
   // empty-cells: enum, inherit
   if (eCSSUnit_Enumerated == tableData.mEmptyCells.GetUnit()) {
@@ -3860,6 +3987,13 @@ nsRuleNode::ComputeTableBorderData(nsStyleStruct* aStartStruct,
   else if (eCSSUnit_Inherit == tableData.mEmptyCells.GetUnit()) {
     inherited = PR_TRUE;
     table->mEmptyCells = parentTable->mEmptyCells;
+  }
+  else if (eCSSUnit_Initial == tableData.mEmptyCells.GetUnit()) {
+    table->mEmptyCells =
+      (mPresContext->CompatibilityMode() == eCompatibility_NavQuirks)
+        ? NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND     
+        : NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
+
   }
 
   COMPUTE_END_INHERITED(TableBorder, table)
@@ -4046,7 +4180,8 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct,
 
   // marker-offset: length, auto, inherit
   SetCoord(contentData.mMarkerOffset, content->mMarkerOffset, parentContent->mMarkerOffset,
-           SETCOORD_LH | SETCOORD_AUTO, aContext, mPresContext, inherited);
+           SETCOORD_LH | SETCOORD_AUTO | SETCOORD_INITIAL_AUTO, aContext,
+           mPresContext, inherited);
     
   COMPUTE_END_RESET(Content, content)
 }
@@ -4067,6 +4202,8 @@ nsRuleNode::ComputeQuotesData(nsStyleStruct* aStartStruct,
   nsCSSQuotes* ourQuotes = contentData.mQuotes;
   if (ourQuotes) {
     nsAutoString  closeBuffer;
+    // FIXME Bug 389406: Implement eCSSUnit_Initial (correctly, unlike
+    // nsStyleStruct), and remove the "initial" value from ua.css.
     if (eCSSUnit_Inherit == ourQuotes->mOpen.GetUnit()) {
       inherited = PR_TRUE;
       count = parentQuotes->QuotesCount();
@@ -4121,6 +4258,9 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     xul->mBoxAlign = parentXUL->mBoxAlign;
   }
+  else if (eCSSUnit_Initial == xulData.mBoxAlign.GetUnit()) {
+    xul->mBoxAlign = NS_STYLE_BOX_ALIGN_STRETCH;
+  }
 
   // box-direction: enum, inherit
   if (eCSSUnit_Enumerated == xulData.mBoxDirection.GetUnit()) {
@@ -4129,6 +4269,9 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct,
   else if (eCSSUnit_Inherit == xulData.mBoxDirection.GetUnit()) {
     inherited = PR_TRUE;
     xul->mBoxDirection = parentXUL->mBoxDirection;
+  }
+  else if (eCSSUnit_Initial == xulData.mBoxDirection.GetUnit()) {
+    xul->mBoxDirection = NS_STYLE_BOX_DIRECTION_NORMAL;
   }
 
   // box-flex: factor, inherit
@@ -4139,6 +4282,9 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     xul->mBoxFlex = parentXUL->mBoxFlex;
   }
+  else if (eCSSUnit_Initial == xulData.mBoxFlex.GetUnit()) {
+    xul->mBoxFlex = 0.0f;
+  }
 
   // box-orient: enum, inherit
   if (eCSSUnit_Enumerated == xulData.mBoxOrient.GetUnit()) {
@@ -4148,6 +4294,9 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
     xul->mBoxOrient = parentXUL->mBoxOrient;
   }
+  else if (eCSSUnit_Initial == xulData.mBoxOrient.GetUnit()) {
+    xul->mBoxOrient = NS_STYLE_BOX_ORIENT_HORIZONTAL;
+  }
 
   // box-pack: enum, inherit
   if (eCSSUnit_Enumerated == xulData.mBoxPack.GetUnit()) {
@@ -4156,6 +4305,9 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct,
   else if (eCSSUnit_Inherit == xulData.mBoxPack.GetUnit()) {
     inherited = PR_TRUE;
     xul->mBoxPack = parentXUL->mBoxPack;
+  }
+  else if (eCSSUnit_Initial == xulData.mBoxPack.GetUnit()) {
+    xul->mBoxPack = NS_STYLE_BOX_PACK_START;
   }
 
   // box-ordinal-group: integer
@@ -4182,16 +4334,19 @@ nsRuleNode::ComputeColumnData(nsStyleStruct* aStartStruct,
 
   // column-width: length, auto, inherit
   SetCoord(columnData.mColumnWidth,
-           column->mColumnWidth, parent->mColumnWidth, SETCOORD_LAH,
+           column->mColumnWidth, parent->mColumnWidth,
+           SETCOORD_LAH | SETCOORD_INITIAL_AUTO,
            aContext, mPresContext, inherited);
 
   // column-gap: length, percentage, inherit, normal
   SetCoord(columnData.mColumnGap,
            column->mColumnGap, parent->mColumnGap,
-           SETCOORD_LPH | SETCOORD_NORMAL, aContext, mPresContext, inherited);
+           SETCOORD_LPH | SETCOORD_NORMAL | SETCOORD_INITIAL_NORMAL,
+           aContext, mPresContext, inherited);
 
   // column-count: auto, integer, inherit
-  if (eCSSUnit_Auto == columnData.mColumnCount.GetUnit()) {
+  if (eCSSUnit_Auto == columnData.mColumnCount.GetUnit() ||
+      eCSSUnit_Initial == columnData.mColumnCount.GetUnit()) {
     column->mColumnCount = NS_STYLE_COLUMN_COUNT_AUTO;
   } else if (eCSSUnit_Integer == columnData.mColumnCount.GetUnit()) {
     column->mColumnCount = columnData.mColumnCount.GetIntValue();
@@ -4391,6 +4546,7 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   if (list) {
     if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
       // only do the copy if weren't already set up by the copy constructor
+      // FIXME Bug 389408: This is broken when aStartStruct is non-null!
       if (!svg->mStrokeDasharray) {
         inherited = PR_TRUE;
         svg->mStrokeDasharrayLength = parentSVG->mStrokeDasharrayLength;
@@ -4439,14 +4595,10 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   }
 
   // stroke-dashoffset: <dashoffset>, inherit
-  if (eCSSUnit_Initial == SVGData.mStrokeDashoffset.GetUnit()) {
-    svg->mStrokeDashoffset.SetCoordValue(0);
-  } else {
-    SetCoord(SVGData.mStrokeDashoffset,
-             svg->mStrokeDashoffset, parentSVG->mStrokeDashoffset,
-             SETCOORD_LPH | SETCOORD_FACTOR,
-             aContext, mPresContext, inherited);
-  }
+  SetCoord(SVGData.mStrokeDashoffset,
+           svg->mStrokeDashoffset, parentSVG->mStrokeDashoffset,
+           SETCOORD_LPH | SETCOORD_FACTOR | SETCOORD_INITIAL_ZERO,
+           aContext, mPresContext, inherited);
 
   // stroke-linecap: enum, inherit
   if (eCSSUnit_Enumerated == SVGData.mStrokeLinecap.GetUnit()) {
