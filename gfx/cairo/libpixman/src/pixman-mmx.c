@@ -28,7 +28,10 @@
  *
  * Based on work by Owen Taylor
  */
+
+#if HAVE_CONFIG_H
 #include <config.h>
+#endif
 
 #ifdef USE_MMX
 
