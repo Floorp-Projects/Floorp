@@ -176,7 +176,7 @@ gfx/cairo/glitz/src/wgl/Makefile
 "
 fi
 
-if [ !"$MOZ_NATIVE_LCMS" ] ; then
+if [ ! "$MOZ_NATIVE_LCMS" ] ; then
 MAKEFILES_gfx="$MAKEFILES_gfx
 modules/lcms/Makefile
 modules/lcms/include/Makefile
