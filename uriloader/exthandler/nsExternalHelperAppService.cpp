@@ -1216,7 +1216,6 @@ NS_IMETHODIMP nsExternalHelperAppService::LoadURI(nsIURI * aURL, nsIPrompt * aPr
   aURL->GetSpec(spec);
 
   spec.ReplaceSubstring("\"", "%22");
-  spec.ReplaceSubstring("'", "%27");
   spec.ReplaceSubstring("`", "%60");
 
   nsCOMPtr<nsIIOService> ios(do_GetIOService());
