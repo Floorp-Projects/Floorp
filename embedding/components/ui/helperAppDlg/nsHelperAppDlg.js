@@ -641,7 +641,8 @@ nsHelperAppDialog.prototype = {
         // Verify typed app path, if necessary.
         if ( this.dialogElement( "openUsing" ).selected ) {
             var helperApp = this.helperAppChoice();
-            if ( !helperApp || !helperApp.executable || !helperApp.exists() ) {
+            if ( !helperApp || !helperApp.executable ||
+                 !helperApp.executable.exists() ) {
                 // Show alert and try again.
                 var msg = this.replaceInsert( this.getString( "badApp" ), 1, this.dialogElement( "appPath" ).value );
                 var svc = Components.classes[ "@mozilla.org/embedcomp/prompt-service;1" ]
