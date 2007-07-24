@@ -695,9 +695,9 @@ nsCSSSelectorList::~nsCSSSelectorList()
   NS_IF_DEEP_DELETE(nsCSSSelectorList, mNext);
 }
 
-void nsCSSSelectorList::AddSelector(const nsCSSSelector& aSelector)
+void nsCSSSelectorList::AddSelector(nsAutoPtr<nsCSSSelector>& aSelector)
 { // prepend to list
-  nsCSSSelector* newSel = aSelector.Clone();
+  nsCSSSelector* newSel = aSelector.forget();
   if (newSel) {
     newSel->mNext = mSelectors;
     mSelectors = newSel;
