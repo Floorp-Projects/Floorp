@@ -408,6 +408,9 @@ NS_COM PRBool NS_EscapeURL(const char *part,
       //
       // And, we should escape the '|' character when it occurs after any
       // non-ASCII character as it may be part of a multi-byte character.
+      //
+      // 0x20..0x7e are the valid ASCII characters. We also escape spaces
+      // (0x20) since they are not legal in URLs.
       if ((NO_NEED_ESC(c) || (c == HEX_ESCAPE && !forced)
                           || (c > 0x7f && ignoreNonAscii)
                           || (c > 0x20 && c < 0x7f && ignoreAscii))
