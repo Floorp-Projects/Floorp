@@ -148,7 +148,6 @@ nsImageToClipboard::CreateFromImage ( nsIImage* inImage, HANDLE* outBitmap )
     nsresult result = NS_OK;
     *outBitmap = nsnull;
 
-#ifdef MOZ_CAIRO_GFX
     inImage->LockImagePixels(PR_FALSE);
 
     const PRUint32 imageSize = inImage->GetLineStride() * inImage->GetHeight();
@@ -192,121 +191,6 @@ nsImageToClipboard::CreateFromImage ( nsIImage* inImage, HANDLE* outBitmap )
 
     // Wow the old code is broken.  I'm not touching it.
     // It should probably lock/unlock the same object....
-#else
-
-
-
-/*
-  //pHead = (BITMAPINFOHEADER*)pImage->GetBitInfo();
-  //pImage->GetNativeData((void**)&hBitMap);
- if (hBitMap)
-  {
-         BITMAPINFO * pBMI;
-         pBMI                    = (BITMAPINFO *)new BYTE[(sizeof(BITMAPINFOHEADER)+256*4)];
-         BITMAPINFOHEADER * pBIH = (BITMAPINFOHEADER *)pBMI;
-         pBIH->biSize            = sizeof(BITMAPINFOHEADER);
-         pBIH->biBitCount        = 0;
-         pBIH->biPlanes          = 1;
-         pBIH->biSizeImage       = 0;
-         pBIH->biXPelsPerMeter   = 0;
-         pBIH->biYPelsPerMeter   = 0;
-         pBIH->biClrUsed         = 0;                            // Always use the whole palette.
-
-         pBIH->biClrImportant    = 0;
-
-         // Get bitmap format.
-
-         HDC hdc  =  ::GetDC(NULL);
-         int rc   =  ::GetDIBits(hdc, hBitMap, 0, 0, NULL, pBMI, DIB_RGB_COLORS);
-         NS_ASSERTION(rc, "rc returned false");
-
-         nLength = CalcSize(pBIH->biHeight, pBIH->biClrUsed, pBIH->biBitCount, CalcSpanLength(pBIH->biWidth, pBIH->biBitCount));
-
-         // alloc and lock
-
-         mBitmap = (HANDLE)::GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE | GMEM_ZEROINIT, nLength);
-         if (mBitmap && (mHeader = (BITMAPINFOHEADER*)::GlobalLock((HGLOBAL) mBitmap)) )
-         {
-                 result = TRUE;
-
-                 pBits = (PBYTE)&mHeader[1];
-                 memcpy(mHeader, pBIH, sizeof (BITMAPINFOHEADER));
-                 rc = ::GetDIBits(hdc, hBitMap, 0, mHeader->biHeight, pBits, (BITMAPINFO *)mHeader, DIB_RGB_COLORS);
-                 NS_ASSERTION(rc, "rc returned false");
-                 delete[] (BYTE*)pBMI;
-                 ::GlobalUnlock((HGLOBAL)mBitmap); // we use mHeader to tell if we have to free it later.
-
-         }
-         ::ReleaseDC(NULL, hdc);
-  }
-  else
-  {
-*/
-
-  inImage->LockImagePixels ( PR_FALSE );
-  if ( inImage->GetBits() ) {
-    BITMAPINFOHEADER* imageHeader = reinterpret_cast<BITMAPINFOHEADER*>(inImage->GetBitInfo());
-    NS_ASSERTION ( imageHeader, "Can't get header for image" );
-    if ( !imageHeader )
-      return NS_ERROR_FAILURE;
-      
-    PRInt32 imageSize = CalcSize(imageHeader->biHeight, imageHeader->biClrUsed, imageHeader->biBitCount, inImage->GetLineStride());
-
-    // Create the buffer where we'll copy the image bits (and header) into and lock it
-    BITMAPINFOHEADER*  header = nsnull;
-    *outBitmap = (HANDLE)::GlobalAlloc(GMEM_MOVEABLE | GMEM_DDESHARE | GMEM_ZEROINIT, imageSize);
-    if (*outBitmap && (header = (BITMAPINFOHEADER*)::GlobalLock((HGLOBAL) *outBitmap)) )
-    {
-      RGBQUAD *pRGBQUAD = (RGBQUAD *)&header[1];
-      PBYTE bits = (PBYTE)&pRGBQUAD[imageHeader->biClrUsed];
-
-      // Fill in the header info.
-
-      header->biSize          = sizeof(BITMAPINFOHEADER);
-      header->biWidth         = imageHeader->biWidth;
-      header->biHeight        = imageHeader->biHeight;
-
-      header->biPlanes        = 1;
-      header->biBitCount      = imageHeader->biBitCount;
-      header->biCompression   = BI_RGB;               // No compression
-
-      header->biSizeImage     = 0;
-      header->biXPelsPerMeter = 0;
-      header->biYPelsPerMeter = 0;
-      header->biClrUsed       = imageHeader->biClrUsed;
-      header->biClrImportant  = 0;
-
-      // Set up the color map.
-      
-      nsColorMap *colorMap = inImage->GetColorMap();
-      if ( colorMap ) {
-        PBYTE pClr = colorMap->Index;
-
-        NS_ASSERTION(( ((DWORD)colorMap->NumColors) == header->biClrUsed), "Color counts must match");
-        for ( UINT i=0; i < header->biClrUsed; ++i ) {
-          NS_WARNING ( "Cool! You found a test case for this! Let Gus or Pink know" );
-          
-          // now verify that the order is correct
-          pRGBQUAD[i].rgbBlue  = *pClr++;
-          pRGBQUAD[i].rgbGreen = *pClr++;
-          pRGBQUAD[i].rgbRed   = *pClr++;
-        }
-      }
-      else
-        NS_ASSERTION(header->biClrUsed == 0, "Ok, now why are there colors and no table?");
-
-      // Copy!!
-      ::CopyMemory(bits, inImage->GetBits(), inImage->GetLineStride() * header->biHeight);
-      
-      ::GlobalUnlock((HGLOBAL)outBitmap);
-    }
-    else
-      result = NS_ERROR_FAILURE;
-  } // if we can get the bits from the image
-  
-  inImage->UnlockImagePixels ( PR_FALSE );
-  return result;
-#endif
 }
 
 nsImageFromClipboard :: nsImageFromClipboard ()
