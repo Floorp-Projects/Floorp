@@ -830,6 +830,49 @@ nsCacheService::IsStorageEnabledForPolicy_Locked(nsCacheStoragePolicy  storagePo
     return PR_FALSE;
 }
 
+
+nsresult nsCacheService::GetOfflineOwnerDomains(nsCacheSession * session,
+                                                PRUint32 * count,
+                                                char *** domains)
+{
+#ifdef NECKO_OFFLINE_CACHE
+    if (session->StoragePolicy() != nsICache::STORE_OFFLINE)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    if (!gService->mOfflineDevice) {
+        nsresult rv = gService->CreateOfflineDevice();
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return gService->mOfflineDevice->GetOwnerDomains(session->ClientID()->get(),
+                                                     count, domains);
+#else // !NECKO_OFFLINE_CACHE
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+
+nsresult nsCacheService::GetOfflineOwnerURIs(nsCacheSession * session,
+                                             const nsACString & ownerDomain,
+                                             PRUint32 * count,
+                                             char *** uris)
+{
+#ifdef NECKO_OFFLINE_CACHE
+    if (session->StoragePolicy() != nsICache::STORE_OFFLINE)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    if (!gService->mOfflineDevice) {
+        nsresult rv = gService->CreateOfflineDevice();
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return gService->mOfflineDevice->GetOwnerURIs(session->ClientID()->get(),
+                                                  ownerDomain, count, uris);
+#else // !NECKO_OFFLINE_CACHE
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 nsresult
 nsCacheService::SetOfflineOwnedKeys(nsCacheSession * session,
                                     const nsACString & ownerDomain,

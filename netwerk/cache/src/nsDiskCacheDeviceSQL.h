@@ -86,6 +86,13 @@ public:
 
 
   /* Entry ownership */
+  nsresult                GetOwnerDomains(const char *        clientID,
+                                          PRUint32 *          count,
+                                          char ***            domains);
+  nsresult                GetOwnerURIs(const char *           clientID,
+                                       const nsACString &     ownerDomain,
+                                       PRUint32 *             count,
+                                       char ***               uris);
   nsresult                SetOwnedKeys(const char *           clientID,
                                        const nsACString &     ownerDomain,
                                        const nsACString &     ownerUrl,
@@ -135,6 +142,10 @@ private:
   nsresult DeleteData(nsCacheEntry *entry);
   nsresult EnableEvictionObserver();
   nsresult DisableEvictionObserver();
+  nsresult RunSimpleQuery(mozIStorageStatement *statment,
+                          PRUint32 resultIndex,
+                          PRUint32 * count,
+                          char *** values);
 
   nsCOMPtr<mozIStorageConnection> mDB;
   nsCOMPtr<mozIStorageStatement>  mStatement_CacheSize;
@@ -152,6 +163,8 @@ private:
   nsCOMPtr<mozIStorageStatement>  mStatement_CheckOwnership;
   nsCOMPtr<mozIStorageStatement>  mStatement_DeleteUnowned;
   nsCOMPtr<mozIStorageStatement>  mStatement_ListOwned;
+  nsCOMPtr<mozIStorageStatement>  mStatement_ListOwnerDomains;
+  nsCOMPtr<mozIStorageStatement>  mStatement_ListOwnerURIs;
 
   nsCOMPtr<nsILocalFile>          mCacheDirectory;
   PRUint32                        mCacheCapacity;
