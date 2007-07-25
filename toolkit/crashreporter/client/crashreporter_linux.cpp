@@ -48,6 +48,7 @@
 #include <cctype>
 
 using std::string;
+using std::vector;
 
 bool UIInit()
 {
@@ -67,7 +68,8 @@ void UIShowDefaultUI()
 
 void UIShowCrashUI(const string& dumpfile,
                    const StringTable& queryParameters,
-                   const string& sendURL)
+                   const string& sendURL,
+                   const vector<string>& restartArgs)
 {
   //XXX: implement me
 }
