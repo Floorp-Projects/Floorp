@@ -43,29 +43,24 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= breakpad_mac_common
 LIBRARY_NAME	= breakpad_mac_common_s
-HOST_LIBRARY_NAME = host_breakpad_mac_common_s
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../..
 
-# This is a little weird, but we're building a host and a target lib here.
-# The host lib is used for dump_syms, and the target lib for the
-# crash reporter client.  Therefore, we don't need all the srcs in both.
-CPPSRCS	= \
-  file_id.cc \
-  macho_id.cc \
-  macho_walker.cc \
-  string_utilities.cc \
-  $(NULL)
+CPPSRCS		= \
+		file_id.cc \
+		macho_id.cc \
+		macho_walker.cc \
+		string_utilities.cc \
+		../string_conversion.cc \
+		$(NULL)
 
-CMSRCS = \
-  HTTPMultipartUpload.m \
-  $(NULL)
+CMSRCS		= \
+		HTTPMultipartUpload.m \
+		$(NULL)
 
-HOST_CPPSRCS = $(CPPSRCS)
+CSRCS           = \
+		../convert_UTF.c
 
-HOST_CMMSRCS = \
-  dump_syms.mm \
-  $(NULL)
 
 # need static lib
 FORCE_STATIC_LIB = 1
