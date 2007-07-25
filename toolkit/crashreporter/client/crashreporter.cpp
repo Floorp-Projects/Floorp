@@ -203,7 +203,7 @@ static bool AddSubmittedReport(const string& serverResponse)
 
   if (responseItems.find("ViewURL") != responseItems.end()) {
     UI_SNPRINTF(buf, 1024,
-                gStrings["ViewURL"].c_str(),
+                gStrings["CrashDetailsURL"].c_str(),
                 responseItems["ViewURL"].c_str());
     file << buf << "\n";
   }
