@@ -245,12 +245,16 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // locate crashreporter executable
-  nsString exePath;
+  nsCOMPtr<nsIFile> exePath;
+  rv = aXREDirectory->Clone(getter_AddRefs(exePath));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  aXREDirectory->GetPath(exePath);
-  NS_NAMED_LITERAL_STRING(crashReporterFilename, CRASH_REPORTER_FILENAME);
+  exePath->Append(NS_LITERAL_STRING(CRASH_REPORTER_FILENAME));
 
-  crashReporterPath = TO_NEW_XP_CHAR(exePath + crashReporterFilename);
+  nsString crashReporterPath_temp;
+  exePath->GetPath(crashReporterPath_temp);
+
+  crashReporterPath = TO_NEW_XP_CHAR(crashReporterPath_temp);
 
   // get temp path to use for minidump path
   nsString tempPath;
