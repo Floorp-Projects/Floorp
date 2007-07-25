@@ -41,7 +41,7 @@
 #include "nsCRT.h"
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsAppleFileDecoder, nsIAppleFileDecoder, nsIOutputStream)
+NS_IMPL_ISUPPORTS2(nsAppleFileDecoder, nsIAppleFileDecoder, nsIOutputStream)
 
 nsAppleFileDecoder::nsAppleFileDecoder()
 {

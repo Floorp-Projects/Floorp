@@ -51,11 +51,11 @@
 #include "nsIPlatformCharset.h"
 #include "nsInt64.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsIndexedToHTML,
-                              nsIDirIndexListener,
-                              nsIStreamConverter,
-                              nsIRequestObserver,
-                              nsIStreamListener)
+NS_IMPL_ISUPPORTS4(nsIndexedToHTML,
+                   nsIDirIndexListener,
+                   nsIStreamConverter,
+                   nsIRequestObserver,
+                   nsIStreamListener)
 
 static void ConvertNonAsciiToNCR(const nsAString& in, nsAFlatString& out)
 {
