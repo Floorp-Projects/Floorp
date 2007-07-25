@@ -57,6 +57,7 @@
 #include "nsDebug.h"
 #include "nsCRT.h"
 #include "nsILocalFile.h"
+#include "nsDataHashtable.h"
 
 #ifdef XP_WIN32
 #define CRASH_REPORTER_FILENAME "crashreporter.exe"
@@ -96,6 +97,7 @@ static PRUnichar* crashReporterAPIDataFilename = nsnull;
 static PRUnichar* crashReporterAPIDataFilenameEnd = nsnull;
 
 // this holds additional data sent via the API
+static nsDataHashtable<nsCStringHashKey,nsCString>* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
 
 bool MinidumpCallback(const wchar_t *dump_path,
@@ -225,6 +227,13 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
   crashReporterAPIData = new nsCString();
   NS_ENSURE_TRUE(crashReporterAPIData, NS_ERROR_OUT_OF_MEMORY);
 
+  crashReporterAPIData_Hash =
+    new nsDataHashtable<nsCStringHashKey,nsCString>();
+  NS_ENSURE_TRUE(crashReporterAPIData_Hash, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = crashReporterAPIData_Hash->Init();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // locate crashreporter executable
   nsString exePath;
 
@@ -312,6 +321,10 @@ nsresult UnsetExceptionHandler()
     delete crashReporterAPIData;
     crashReporterAPIData = nsnull;
   }
+  if (crashReporterAPIData_Hash) {
+    delete crashReporterAPIData_Hash;
+    crashReporterAPIData_Hash = nsnull;
+  }
 
   if (!gExceptionHandler)
     return NS_ERROR_NOT_INITIALIZED;
@@ -361,6 +374,15 @@ static PRBool DoFindInReadable(const nsACString& str, const nsACString& value)
   return FindInReadable(value, start, end);
 }
 
+static PLDHashOperator PR_CALLBACK EnumerateEntries(const nsACString& key,
+                                                    nsCString entry,
+                                                    void* userData)
+{
+  crashReporterAPIData->Append(key + NS_LITERAL_CSTRING("=") + entry +
+                               NS_LITERAL_CSTRING("\n"));
+  return PL_DHASH_NEXT;
+}
+
 nsresult AnnotateCrashReport(const nsACString &key, const nsACString &data)
 {
   if (!gExceptionHandler)
@@ -382,8 +404,14 @@ nsresult AnnotateCrashReport(const nsACString &key, const nsACString &data)
   ReplaceChar(escapedData, NS_LITERAL_CSTRING("\n"),
               NS_LITERAL_CSTRING("\\n"));
 
-  crashReporterAPIData->Append(key + NS_LITERAL_CSTRING("=") + escapedData +
-                               NS_LITERAL_CSTRING("\n"));
+  nsresult rv = crashReporterAPIData_Hash->Put(key, escapedData);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // now rebuild the file contents
+  crashReporterAPIData->Truncate(0);
+  crashReporterAPIData_Hash->EnumerateRead(EnumerateEntries,
+                                           crashReporterAPIData);
+
   return NS_OK;
 }
 
