@@ -400,8 +400,6 @@ NS_IMETHODIMP nsDocAccessible::GetDocument(nsIDOMDocument **aDOMDoc)
 void nsDocAccessible::SetEditor(nsIEditor* aEditor)
 {
   mEditor = aEditor;
-  if (mEditor)
-    mEditor->AddEditActionListener(this);
 }
 
 void nsDocAccessible::CheckForEditor()
@@ -533,10 +531,7 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
   nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
   ShutdownChildDocuments(treeItem);
 
-  if (mEditor) {
-    mEditor->RemoveEditActionListener(this);
-    mEditor = nsnull;
-  }
+  mEditor = nsnull;
 
   if (mDocLoadTimer) {
     mDocLoadTimer->Cancel();
@@ -1126,14 +1121,17 @@ void nsDocAccessible::ContentAppended(nsIDocument *aDocument,
                                       nsIContent* aContainer,
                                       PRInt32 aNewIndexInContainer)
 {
-  // InvalidateCacheSubtree will not fire the EVENT_SHOW for the new node
-  // unless an accessible can be created for the passed in node, which it
-  // can't do unless the node is visible. The right thing happens there so
-  // no need for an extra visibility check here.
   PRUint32 childCount = aContainer->GetChildCount();
   for (PRUint32 index = aNewIndexInContainer; index < childCount; index ++) {
-    InvalidateCacheSubtree(aContainer->GetChildAt(index),
-                           nsIAccessibleEvent::EVENT_SHOW);
+    nsCOMPtr<nsIContent> child(aContainer->GetChildAt(index));
+
+    FireTextChangedEventOnDOMNodeInserted(child, aContainer, index);
+
+    // InvalidateCacheSubtree will not fire the EVENT_SHOW for the new node
+    // unless an accessible can be created for the passed in node, which it
+    // can't do unless the node is visible. The right thing happens there so
+    // no need for an extra visibility check here.
+    InvalidateCacheSubtree(child, nsIAccessibleEvent::EVENT_SHOW);
   }
 }
 
@@ -1154,13 +1152,15 @@ void nsDocAccessible::CharacterDataChanged(nsIDocument *aDocument,
                                            nsIContent* aContent,
                                            CharacterDataChangeInfo* aInfo)
 {
-  // XXX fire text change events here? See bug 377891
+  FireTextChangedEventOnDOMCharacterDataModified(aContent, aInfo);
 }
 
 void
 nsDocAccessible::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
                                  nsIContent* aChild, PRInt32 aIndexInContainer)
 {
+  FireTextChangedEventOnDOMNodeInserted(aChild, aContainer, aIndexInContainer);
+
   // InvalidateCacheSubtree will not fire the EVENT_SHOW for the new node
   // unless an accessible can be created for the passed in node, which it
   // can't do unless the node is visible. The right thing happens there so
@@ -1172,12 +1172,167 @@ void
 nsDocAccessible::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
                                 nsIContent* aChild, PRInt32 aIndexInContainer)
 {
+  FireTextChangedEventOnDOMNodeRemoved(aChild, aContainer, aIndexInContainer);
+
+  // Invalidate the subtree of the removed element.
   InvalidateCacheSubtree(aChild, nsIAccessibleEvent::EVENT_HIDE);
 }
 
 void
 nsDocAccessible::ParentChainChanged(nsIContent *aContent)
 {
+}
+
+void
+nsDocAccessible::FireTextChangedEventOnDOMCharacterDataModified(nsIContent *aContent,
+                                                                CharacterDataChangeInfo* aInfo)
+{
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
+  if (!node)
+    return;
+
+  nsCOMPtr<nsIAccessible> accessible;
+  nsresult rv = GetAccessibleInParentChain(node, getter_AddRefs(accessible));
+  if (NS_FAILED(rv) || !accessible)
+    return;
+
+  nsRefPtr<nsHyperTextAccessible> textAccessible;
+  rv = accessible->QueryInterface(NS_GET_IID(nsHyperTextAccessible),
+                                  getter_AddRefs(textAccessible));
+  if (NS_FAILED(rv) || !textAccessible)
+    return;
+
+  PRInt32 start = aInfo->mChangeStart;
+  PRUint32 end = aInfo->mChangeEnd;
+  PRInt32 length = end - start;
+  PRUint32 replaceLen = aInfo->mReplaceLength;
+
+  PRInt32 offset = 0;
+  rv = textAccessible->DOMPointToOffset(node, start, &offset);
+  if (NS_FAILED(rv))
+    return;
+
+  // Text has been removed.
+  if (length > 0) {
+    nsCOMPtr<nsIAccessibleTextChangeEvent> event =
+      new nsAccTextChangeEvent(accessible, offset, length, PR_FALSE);
+    textAccessible->FireAccessibleEvent(event);
+  }
+
+  // Text has been added.
+  if (replaceLen) {
+    nsCOMPtr<nsIAccessibleTextChangeEvent> event =
+      new nsAccTextChangeEvent(accessible, offset, replaceLen, PR_TRUE);
+    textAccessible->FireAccessibleEvent(event);
+  }
+}
+
+void
+nsDocAccessible::FireTextChangedEventOnDOMNodeInserted(nsIContent *aChild,
+                                                       nsIContent *aContainer,
+                                                       PRInt32 aIndexInContainer)
+{
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aChild));
+  if (!node)
+    return;
+
+  nsCOMPtr<nsIAccessible> accessible;
+  nsresult rv = GetAccessibleInParentChain(node, getter_AddRefs(accessible));
+  if (NS_FAILED(rv) || !accessible)
+    return;
+
+  nsRefPtr<nsHyperTextAccessible> textAccessible;
+  rv = accessible->QueryInterface(NS_GET_IID(nsHyperTextAccessible),
+                                  getter_AddRefs(textAccessible));
+  if (NS_FAILED(rv) || !textAccessible)
+    return;
+
+  PRUint32 length = 1;
+  if (aChild && aChild->IsNodeOfType(nsINode::eTEXT)) {
+    length = aChild->TextLength();
+    if (!length)
+      return;
+  } else {
+    // Don't fire event for the first html:br in an editor.
+    nsCOMPtr<nsIEditor> editor;
+    textAccessible->GetAssociatedEditor(getter_AddRefs(editor));
+    if (editor) {
+      PRBool isEmpty = PR_FALSE;
+      editor->GetDocumentIsEmpty(&isEmpty);
+      if (isEmpty)
+        return;
+    }
+  }
+
+  nsCOMPtr<nsIDOMNode> parentNode(do_QueryInterface(aContainer));
+  if (!parentNode)
+    return;
+
+  PRInt32 offset = 0;
+  rv = textAccessible->DOMPointToOffset(parentNode, aIndexInContainer, &offset);
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIAccessibleTextChangeEvent> event =
+    new nsAccTextChangeEvent(accessible, offset, length, PR_TRUE);
+  if (!event)
+    return;
+
+  textAccessible->FireAccessibleEvent(event);
+}
+
+void
+nsDocAccessible::FireTextChangedEventOnDOMNodeRemoved(nsIContent *aChild,
+                                                      nsIContent *aContainer,
+                                                      PRInt32 aIndexInContainer)
+{
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aChild));
+  if (!node)
+    return;
+
+  nsCOMPtr<nsIAccessible> accessible;
+  nsresult rv = GetAccessibleInParentChain(node, getter_AddRefs(accessible));
+  if (NS_FAILED(rv) || !accessible)
+    return;
+
+  nsRefPtr<nsHyperTextAccessible> textAccessible;
+  rv = accessible->QueryInterface(NS_GET_IID(nsHyperTextAccessible),
+                                  getter_AddRefs(textAccessible));
+  if (NS_FAILED(rv) || !textAccessible)
+    return;
+
+  PRUint32 length = 1;
+  if (aChild && aChild->IsNodeOfType(nsINode::eTEXT)) {
+    length = aChild->TextLength();
+    if (!length)
+      return;
+  } else {
+    // Don't fire event for the last html:br in an editor.
+    nsCOMPtr<nsIEditor> editor;
+    textAccessible->GetAssociatedEditor(getter_AddRefs(editor));
+    if (editor) {
+      PRBool isEmpty = PR_FALSE;
+      editor->GetDocumentIsEmpty(&isEmpty);
+      if (isEmpty)
+        return;
+    }
+  }
+
+  nsCOMPtr<nsIDOMNode> parentNode(do_QueryInterface(aContainer));
+  if (!parentNode)
+    return;
+
+  PRInt32 offset = 0;
+  rv = textAccessible->DOMPointToOffset(parentNode, aIndexInContainer, &offset);
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIAccessibleTextChangeEvent> event =
+    new nsAccTextChangeEvent(accessible, offset, length, PR_FALSE);
+  if (!event)
+    return;
+
+  textAccessible->FireAccessibleEvent(event);
 }
 
 nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
