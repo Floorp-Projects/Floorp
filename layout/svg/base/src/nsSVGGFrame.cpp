@@ -53,9 +53,7 @@ NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* 
 {  
   nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(aContent);
   if (!transformable) {
-#ifdef DEBUG
-    printf("warning: trying to construct an SVGGFrame for a content element that doesn't support the right interfaces\n");
-#endif
+    NS_ERROR("Can't create frame. The element doesn't support the right interface\n");
     return nsnull;
   }
 
