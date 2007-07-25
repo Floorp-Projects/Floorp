@@ -434,6 +434,21 @@ int main(int argc, char** argv)
     // we don't need to actually send this
     queryParameters.erase("ServerURL");
 
+    // re-set XUL_APP_FILE for xulrunner wrapped apps
+    const char *appfile = getenv("MOZ_CRASHREPORTER_RESTART_XUL_APP_FILE");
+    if (appfile && *appfile) {
+      const char prefix[] = "XUL_APP_FILE=";
+      char *env = (char*) malloc(strlen(appfile)+strlen(prefix));
+      if (!env) {
+        UIError("Out of memory");
+        return 0;
+      }
+      strcpy(env, prefix);
+      strcat(env, appfile);
+      putenv(env);
+      free(env);
+    }
+
     vector<string> restartArgs;
 
     ostringstream paramName;
