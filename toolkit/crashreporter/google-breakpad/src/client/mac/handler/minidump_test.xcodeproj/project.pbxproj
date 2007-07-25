@@ -30,6 +30,25 @@
 		9BD82C2D0B01345E0055103E /* string_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BD82C2B0B01345E0055103E /* string_utilities.cc */; };
 		9BD82C2E0B01345E0055103E /* string_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9BD82C2B0B01345E0055103E /* string_utilities.cc */; };
 		9BD82C2F0B01345E0055103E /* string_utilities.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9BD82C2C0B01345E0055103E /* string_utilities.h */; };
+		D2F651000BEF947200920385 /* file_id.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F650FA0BEF947200920385 /* file_id.cc */; };
+		D2F651010BEF947200920385 /* file_id.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = D2F650FB0BEF947200920385 /* file_id.h */; };
+		D2F651020BEF947200920385 /* macho_id.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F650FC0BEF947200920385 /* macho_id.cc */; };
+		D2F651030BEF947200920385 /* macho_id.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = D2F650FD0BEF947200920385 /* macho_id.h */; };
+		D2F651040BEF947200920385 /* macho_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F650FE0BEF947200920385 /* macho_utilities.cc */; };
+		D2F651050BEF947200920385 /* macho_utilities.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = D2F650FF0BEF947200920385 /* macho_utilities.h */; };
+		D2F651090BEF949A00920385 /* dynamic_images.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F651070BEF949A00920385 /* dynamic_images.cc */; };
+		D2F6510A0BEF949A00920385 /* dynamic_images.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = D2F651080BEF949A00920385 /* dynamic_images.h */; };
+		D2F6510E0BEF94EB00920385 /* macho_walker.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F6510C0BEF94EB00920385 /* macho_walker.cc */; };
+		D2F6510F0BEF94EB00920385 /* macho_walker.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = D2F6510D0BEF94EB00920385 /* macho_walker.h */; };
+		D2F651110BEF951700920385 /* string_conversion.cc in Sources */ = {isa = PBXBuildFile; fileRef = 9B35FF580B267D5F008DE8C7 /* string_conversion.cc */; };
+		D2F651130BEF951C00920385 /* string_conversion.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9B35FF590B267D5F008DE8C7 /* string_conversion.h */; };
+		D2F651150BEF953000920385 /* convert_UTF.c in Sources */ = {isa = PBXBuildFile; fileRef = 9B35FF560B267D5F008DE8C7 /* convert_UTF.c */; };
+		D2F651160BEF953100920385 /* convert_UTF.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9B35FF570B267D5F008DE8C7 /* convert_UTF.h */; };
+		D2F6511B0BEF970E00920385 /* dynamic_images.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F651070BEF949A00920385 /* dynamic_images.cc */; };
+		D2F6511D0BEF973500920385 /* file_id.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F650FA0BEF947200920385 /* file_id.cc */; };
+		D2F6511E0BEF973600920385 /* macho_id.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F650FC0BEF947200920385 /* macho_id.cc */; };
+		D2F6511F0BEF973900920385 /* macho_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F650FE0BEF947200920385 /* macho_utilities.cc */; };
+		D2F651210BEF975400920385 /* macho_walker.cc in Sources */ = {isa = PBXBuildFile; fileRef = D2F6510C0BEF94EB00920385 /* macho_walker.cc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -44,6 +63,13 @@
 				9BD82C270B01344C0055103E /* minidump_file_writer.h in CopyFiles */,
 				9BD82C2F0B01345E0055103E /* string_utilities.h in CopyFiles */,
 				9B7CA7700B12873A00CD3A1D /* minidump_file_writer-inl.h in CopyFiles */,
+				D2F651010BEF947200920385 /* file_id.h in CopyFiles */,
+				D2F651030BEF947200920385 /* macho_id.h in CopyFiles */,
+				D2F651050BEF947200920385 /* macho_utilities.h in CopyFiles */,
+				D2F6510A0BEF949A00920385 /* dynamic_images.h in CopyFiles */,
+				D2F6510F0BEF94EB00920385 /* macho_walker.h in CopyFiles */,
+				D2F651130BEF951C00920385 /* string_conversion.h in CopyFiles */,
+				D2F651160BEF953100920385 /* convert_UTF.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
@@ -70,6 +96,16 @@
 		9BD82C2B0B01345E0055103E /* string_utilities.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = string_utilities.cc; path = ../../../common/mac/string_utilities.cc; sourceTree = SOURCE_ROOT; };
 		9BD82C2C0B01345E0055103E /* string_utilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = string_utilities.h; path = ../../../common/mac/string_utilities.h; sourceTree = SOURCE_ROOT; };
 		9BE3C01E0B0CE329009892DF /* minidump_file_writer-inl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "minidump_file_writer-inl.h"; path = "../../minidump_file_writer-inl.h"; sourceTree = SOURCE_ROOT; };
+		D2F650FA0BEF947200920385 /* file_id.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = file_id.cc; path = ../../../common/mac/file_id.cc; sourceTree = SOURCE_ROOT; };
+		D2F650FB0BEF947200920385 /* file_id.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = file_id.h; path = ../../../common/mac/file_id.h; sourceTree = SOURCE_ROOT; };
+		D2F650FC0BEF947200920385 /* macho_id.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = macho_id.cc; path = ../../../common/mac/macho_id.cc; sourceTree = SOURCE_ROOT; };
+		D2F650FD0BEF947200920385 /* macho_id.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macho_id.h; path = ../../../common/mac/macho_id.h; sourceTree = SOURCE_ROOT; };
+		D2F650FE0BEF947200920385 /* macho_utilities.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = macho_utilities.cc; path = ../../../common/mac/macho_utilities.cc; sourceTree = SOURCE_ROOT; };
+		D2F650FF0BEF947200920385 /* macho_utilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macho_utilities.h; path = ../../../common/mac/macho_utilities.h; sourceTree = SOURCE_ROOT; };
+		D2F651070BEF949A00920385 /* dynamic_images.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = dynamic_images.cc; sourceTree = "<group>"; };
+		D2F651080BEF949A00920385 /* dynamic_images.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = dynamic_images.h; sourceTree = "<group>"; };
+		D2F6510C0BEF94EB00920385 /* macho_walker.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = macho_walker.cc; path = ../../../common/mac/macho_walker.cc; sourceTree = SOURCE_ROOT; };
+		D2F6510D0BEF94EB00920385 /* macho_walker.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macho_walker.h; path = ../../../common/mac/macho_walker.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,6 +138,16 @@
 		08FB7794FE84155DC02AAC07 /* MinidumpWriter */ = {
 			isa = PBXGroup;
 			children = (
+				D2F6510C0BEF94EB00920385 /* macho_walker.cc */,
+				D2F6510D0BEF94EB00920385 /* macho_walker.h */,
+				D2F651070BEF949A00920385 /* dynamic_images.cc */,
+				D2F651080BEF949A00920385 /* dynamic_images.h */,
+				D2F650FA0BEF947200920385 /* file_id.cc */,
+				D2F650FB0BEF947200920385 /* file_id.h */,
+				D2F650FC0BEF947200920385 /* macho_id.cc */,
+				D2F650FD0BEF947200920385 /* macho_id.h */,
+				D2F650FE0BEF947200920385 /* macho_utilities.cc */,
+				D2F650FF0BEF947200920385 /* macho_utilities.h */,
 				9BD82C040B0133420055103E /* Breakpad */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				9B37CEEA0AF98EB600FA4BD4 /* Frameworks */,
@@ -238,6 +284,13 @@
 				9BD82C110B0133520055103E /* minidump_generator.cc in Sources */,
 				9BD82C260B01344C0055103E /* minidump_file_writer.cc in Sources */,
 				9BD82C2E0B01345E0055103E /* string_utilities.cc in Sources */,
+				D2F651000BEF947200920385 /* file_id.cc in Sources */,
+				D2F651020BEF947200920385 /* macho_id.cc in Sources */,
+				D2F651040BEF947200920385 /* macho_utilities.cc in Sources */,
+				D2F651090BEF949A00920385 /* dynamic_images.cc in Sources */,
+				D2F6510E0BEF94EB00920385 /* macho_walker.cc in Sources */,
+				D2F651110BEF951700920385 /* string_conversion.cc in Sources */,
+				D2F651150BEF953000920385 /* convert_UTF.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -263,6 +316,11 @@
 				9BD82C2D0B01345E0055103E /* string_utilities.cc in Sources */,
 				9B35FF5A0B267D5F008DE8C7 /* convert_UTF.c in Sources */,
 				9B35FF5B0B267D5F008DE8C7 /* string_conversion.cc in Sources */,
+				D2F6511B0BEF970E00920385 /* dynamic_images.cc in Sources */,
+				D2F6511D0BEF973500920385 /* file_id.cc in Sources */,
+				D2F6511E0BEF973600920385 /* macho_id.cc in Sources */,
+				D2F6511F0BEF973900920385 /* macho_utilities.cc in Sources */,
+				D2F651210BEF975400920385 /* macho_walker.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -311,6 +369,7 @@
 			buildSettings = {
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				OTHER_LDFLAGS = "-lcrypto";
 				PREBINDING = NO;
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 			};
@@ -321,6 +380,7 @@
 			buildSettings = {
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				OTHER_LDFLAGS = "-lcrypto";
 				PREBINDING = NO;
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 			};
@@ -361,10 +421,7 @@
 		9BD82AA70B0026BF0055103E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					"$(NATIVE_ARCH)",
-					i386,
-				);
+				ARCHS = "$(NATIVE_ARCH)";
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
@@ -384,10 +441,7 @@
 		9BD82AA80B0026BF0055103E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					"$(NATIVE_ARCH)",
-					i386,
-				);
+				ARCHS = "$(NATIVE_ARCH)";
 				COPY_PHASE_STRIP = YES;
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
