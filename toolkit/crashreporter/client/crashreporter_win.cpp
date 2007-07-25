@@ -706,7 +706,7 @@ void UIShowCrashUI(const string& dumpFile,
                  (DLGPROC)CrashReporterDialogProc, 0);
 }
 
-void UIError(const string& message)
+void UIError_impl(const string& message)
 {
   wstring title = Str(ST_CRASHREPORTERTITLE);
   if (title.empty())
@@ -763,6 +763,12 @@ bool UIEnsurePathExists(const string& path)
   }
 
   return true;
+}
+
+bool UIFileExists(const string& path)
+{
+  DWORD attrs = GetFileAttributes(UTF8ToWide(path).c_str());
+  return (attrs != INVALID_FILE_ATTRIBUTES);
 }
 
 bool UIMoveFile(const string& oldfile, const string& newfile)
