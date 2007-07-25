@@ -61,6 +61,8 @@ REQUIRES	= xpcom \
 		  necko \
 		  nkcache \
 		  mimetype \
+		  exthandler \
+		  chardet \
 		  caps \
 		  lwbrk \
 		  uconv \
@@ -115,6 +117,7 @@ CPPSRCS		= \
 		nsDOMAttribute.cpp \
 		nsDOMAttributeMap.cpp \
 		nsDOMDocumentType.cpp \
+		nsDOMFile.cpp \
 		nsDOMLists.cpp \
 		nsDOMParser.cpp \
 		nsDOMSerializer.cpp \

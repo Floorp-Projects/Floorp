@@ -1644,6 +1644,26 @@ public:
   }
 };
 
+class nsFileListSH : public nsArraySH
+{
+protected:
+  nsFileListSH(nsDOMClassInfoData *aData) : nsArraySH(aData)
+  {
+  }
+
+  virtual ~nsFileListSH()
+  {
+  }
+
+  virtual nsresult GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                             nsISupports **aResult);
+
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsFileListSH(aData);
+  }
+};
 
 void InvalidateContextAndWrapperCache();
 
