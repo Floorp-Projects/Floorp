@@ -313,7 +313,11 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
                      nsnull,
                      MinidumpCallback,
                      nsnull,
+#if defined(XP_WIN32)
+                     google_breakpad::ExceptionHandler::HANDLER_ALL);
+#else
                      true);
+#endif
 
   if (!gExceptionHandler)
     return NS_ERROR_OUT_OF_MEMORY;
