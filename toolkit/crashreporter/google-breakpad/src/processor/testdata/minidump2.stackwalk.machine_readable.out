@@ -1,0 +1,21 @@
+OS|Windows NT|5.1.2600 Service Pack 2
+CPU|x86|GenuineIntel family 6 model 13 stepping 8
+Crash|EXCEPTION_ACCESS_VIOLATION|0x45|0
+Module|test_app.exe||0x00400000|0x0042cfff|1
+Module|dbghelp.dll|5.1.2600.2180|0x59a60000|0x59b00fff|0
+Module|imm32.dll|5.1.2600.2180|0x76390000|0x763acfff|0
+Module|psapi.dll|5.1.2600.2180|0x76bf0000|0x76bfafff|0
+Module|ole32.dll|5.1.2600.2726|0x774e0000|0x7761cfff|0
+Module|version.dll|5.1.2600.2180|0x77c00000|0x77c07fff|0
+Module|msvcrt.dll|7.0.2600.2180|0x77c10000|0x77c67fff|0
+Module|user32.dll|5.1.2600.2622|0x77d40000|0x77dcffff|0
+Module|advapi32.dll|5.1.2600.2180|0x77dd0000|0x77e6afff|0
+Module|rpcrt4.dll|5.1.2600.2180|0x77e70000|0x77f00fff|0
+Module|gdi32.dll|5.1.2600.2818|0x77f10000|0x77f56fff|0
+Module|kernel32.dll|5.1.2600.2945|0x7c800000|0x7c8f3fff|0
+Module|ntdll.dll|5.1.2600.2180|0x7c900000|0x7c9affff|0
+
+0|0|test_app.exe|`anonymous namespace'::CrashFunction|c:\test_app.cc|58|0x3
+0|1|test_app.exe|main|c:\test_app.cc|65|0x4
+0|2|test_app.exe|__tmainCRTStartup|f:\sp\vctools\crt_bld\self_x86\crt\src\crt0.c|327|0x11
+0|3|kernel32.dll|BaseProcessStart|||0x22

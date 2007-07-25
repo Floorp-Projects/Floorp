@@ -39,7 +39,7 @@
 
 namespace {
 
-using google_airbag::PathnameStripper;
+using google_breakpad::PathnameStripper;
 
 static bool RunTests() {
   ASSERT_EQ(PathnameStripper::File("/dir/file"), "file");

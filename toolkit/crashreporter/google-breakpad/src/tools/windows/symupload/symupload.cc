@@ -31,11 +31,16 @@
 // The PDB file is located automatically, using the path embedded in the
 // executable.  The upload is sent as a multipart/form-data POST request,
 // with the following parameters:
-//  module: the name of the module, e.g. app.exe
-//  ver: the file version of the module, e.g. 1.2.3.4
-//  guid: the GUID string embedded in the module pdb,
-//        e.g. 11111111-2222-3333-4444-555555555555
-//  symbol_file: the airbag-format symbol file
+//  code_file: the basename of the module, e.g. "app.exe"
+//  debug_file: the basename of the debugging file, e.g. "app.pdb"
+//  debug_identifier: the debug file's identifier, usually consisting of
+//                    the guid and age embedded in the pdb, e.g.
+//                    "11111111BBBB3333DDDD555555555555F"
+//  version: the file version of the module, e.g. "1.2.3.4"
+//  os: the operating system that the module was built for, always
+//      "windows" in this implementation.
+//  cpu: the CPU that the module was built for, typically "x86".
+//  symbol_file: the contents of the breakpad-format symbol file
 
 #include <Windows.h>
 #include <DbgHelp.h>
@@ -55,9 +60,10 @@ using std::string;
 using std::wstring;
 using std::vector;
 using std::map;
-using google_airbag::HTTPUpload;
-using google_airbag::PDBSourceLineWriter;
-using google_airbag::WindowsStringUtils;
+using google_breakpad::HTTPUpload;
+using google_breakpad::PDBModuleInfo;
+using google_breakpad::PDBSourceLineWriter;
+using google_breakpad::WindowsStringUtils;
 
 // Extracts the file version information for the given filename,
 // as a string, for example, "1.2.3.4".  Returns true on success.
@@ -85,27 +91,29 @@ static bool GetFileVersionString(const wchar_t *filename, wstring *version) {
   wchar_t ver_string[24];
   VS_FIXEDFILEINFO *file_info =
     reinterpret_cast<VS_FIXEDFILEINFO*>(file_info_buffer);
-  WindowsStringUtils::safe_swprintf(
-      ver_string, sizeof(ver_string) / sizeof(ver_string[0]),
-      L"%d.%d.%d.%d",
-      file_info->dwFileVersionMS >> 16,
-      file_info->dwFileVersionMS & 0xffff,
-      file_info->dwFileVersionLS >> 16,
-      file_info->dwFileVersionLS & 0xffff);
+  swprintf(ver_string, sizeof(ver_string) / sizeof(ver_string[0]),
+           L"%d.%d.%d.%d",
+           file_info->dwFileVersionMS >> 16,
+           file_info->dwFileVersionMS & 0xffff,
+           file_info->dwFileVersionLS >> 16,
+           file_info->dwFileVersionLS & 0xffff);
+  GB_WSU_SAFE_SWPRINTF_TERMINATE(ver_string,
+                                 sizeof(ver_string) / sizeof(ver_string[0]));
   *version = ver_string;
   return true;
 }
 
 // Creates a new temporary file and writes the symbol data from the given
-// exe/dll file to it.  Returns the path to the temp file in temp_file_path,
-// and the unique identifier (GUID) for the pdb in module_guid.
+// exe/dll file to it.  Returns the path to the temp file in temp_file_path
+// and information about the pdb in pdb_info.
 static bool DumpSymbolsToTempFile(const wchar_t *file,
                                   wstring *temp_file_path,
-                                  wstring *module_guid,
-                                  int *module_age,
-                                  wstring *module_filename) {
-  google_airbag::PDBSourceLineWriter writer;
-  if (!writer.Open(file, PDBSourceLineWriter::ANY_FILE)) {
+                                  PDBModuleInfo *pdb_info) {
+  google_breakpad::PDBSourceLineWriter writer;
+  // Use EXE_FILE to get information out of the exe/dll in addition to the
+  // pdb.  The name and version number of the exe/dll are of value, and
+  // there's no way to locate an exe/dll given a pdb.
+  if (!writer.Open(file, PDBSourceLineWriter::EXE_FILE)) {
     return false;
   }
 
@@ -139,34 +147,31 @@ static bool DumpSymbolsToTempFile(const wchar_t *file,
 
   *temp_file_path = temp_filename;
 
-  return writer.GetModuleInfo(module_guid, module_age, module_filename);
+  return writer.GetModuleInfo(pdb_info);
 }
 
 int wmain(int argc, wchar_t *argv[]) {
   if (argc < 3) {
-    wprintf(L"Usage: %s file.[pdb|exe|dll] <symbol upload URL>\n", argv[0]);
+    wprintf(L"Usage: %s <file.exe|file.dll> <symbol upload URL>\n", argv[0]);
     return 0;
   }
   const wchar_t *module = argv[1], *url = argv[2];
 
-  wstring symbol_file, module_guid, module_basename;
-  int module_age;
-  if (!DumpSymbolsToTempFile(module, &symbol_file,
-                             &module_guid, &module_age, &module_basename)) {
+  wstring symbol_file;
+  PDBModuleInfo pdb_info;
+  if (!DumpSymbolsToTempFile(module, &symbol_file, &pdb_info)) {
     fwprintf(stderr, L"Could not get symbol data from %s\n", module);
     return 1;
   }
 
-  wchar_t module_age_string[11];
-  WindowsStringUtils::safe_swprintf(
-      module_age_string,
-      sizeof(module_age_string) / sizeof(module_age_string[0]),
-      L"0x%x", module_age);
+  wstring code_file = WindowsStringUtils::GetBaseName(wstring(module));
 
   map<wstring, wstring> parameters;
-  parameters[L"module"] = module_basename;
-  parameters[L"guid"] = module_guid;
-  parameters[L"age"] = module_age_string;
+  parameters[L"code_file"] = code_file;
+  parameters[L"debug_file"] = pdb_info.debug_file;
+  parameters[L"debug_identifier"] = pdb_info.debug_identifier;
+  parameters[L"os"] = L"windows";  // This version of symupload is Windows-only
+  parameters[L"cpu"] = pdb_info.cpu;
 
   // Don't make a missing version a hard error.  Issue a warning, and let the
   // server decide whether to reject files without versions.
@@ -178,7 +183,8 @@ int wmain(int argc, wchar_t *argv[]) {
   }
 
   bool success = HTTPUpload::SendRequest(url, parameters,
-                                         symbol_file, L"symbol_file");
+                                         symbol_file, L"symbol_file",
+                                         NULL, NULL);
   _wunlink(symbol_file.c_str());
 
   if (!success) {
@@ -186,7 +192,9 @@ int wmain(int argc, wchar_t *argv[]) {
     return 1;
   }
 
-  wprintf(L"Uploaded symbols for %s/%s/%s\n",
-         module_basename.c_str(), file_version.c_str(), module_guid.c_str());
+  wprintf(L"Uploaded symbols for windows-%s/%s/%s (%s %s)\n",
+          pdb_info.cpu.c_str(), pdb_info.debug_file.c_str(),
+          pdb_info.debug_identifier.c_str(), code_file.c_str(),
+          file_version.c_str());
   return 0;
 }

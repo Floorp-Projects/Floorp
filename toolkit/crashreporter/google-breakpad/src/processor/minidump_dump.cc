@@ -34,18 +34,18 @@
 
 #include <cstdio>
 
-#include "google_airbag/processor/minidump.h"
+#include "google_breakpad/processor/minidump.h"
 
 namespace {
 
-using google_airbag::Minidump;
-using google_airbag::MinidumpThreadList;
-using google_airbag::MinidumpModuleList;
-using google_airbag::MinidumpMemoryList;
-using google_airbag::MinidumpException;
-using google_airbag::MinidumpSystemInfo;
-using google_airbag::MinidumpMiscInfo;
-using google_airbag::MinidumpAirbagInfo;
+using google_breakpad::Minidump;
+using google_breakpad::MinidumpThreadList;
+using google_breakpad::MinidumpModuleList;
+using google_breakpad::MinidumpMemoryList;
+using google_breakpad::MinidumpException;
+using google_breakpad::MinidumpSystemInfo;
+using google_breakpad::MinidumpMiscInfo;
+using google_breakpad::MinidumpBreakpadInfo;
 
 static bool PrintMinidumpDump(const char *minidump_file) {
   Minidump minidump(minidump_file);
@@ -105,12 +105,12 @@ static bool PrintMinidumpDump(const char *minidump_file) {
     misc_info->Print();
   }
 
-  MinidumpAirbagInfo *airbag_info = minidump.GetAirbagInfo();
-  if (!airbag_info) {
-    // Airbag info is optional, so don't treat this as an error.
-    printf("minidump.GetAirbagInfo() failed\n");
+  MinidumpBreakpadInfo *breakpad_info = minidump.GetBreakpadInfo();
+  if (!breakpad_info) {
+    // Breakpad info is optional, so don't treat this as an error.
+    printf("minidump.GetBreakpadInfo() failed\n");
   } else {
-    airbag_info->Print();
+    breakpad_info->Print();
   }
 
   return errors == 0;

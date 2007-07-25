@@ -211,6 +211,10 @@
 				RelativePath="..\..\..\common\windows\pdb_source_line_writer.cc"
 				>
 			</File>
+			<File
+				RelativePath="..\..\..\common\windows\string_utils.cc"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

@@ -28,8 +28,6 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
-#include <Windows.h>
-#include <WinInet.h>
 
 // Disable exception handler warnings.
 #pragma warning( disable : 4530 ) 
@@ -40,12 +38,12 @@
 
 #include "common/windows/http_upload.h"
 
-namespace google_airbag {
+namespace google_breakpad {
 
 using std::ifstream;
 using std::ios;
 
-static const wchar_t kUserAgent[] = L"Airbag/1.0 (Windows)";
+static const wchar_t kUserAgent[] = L"Breakpad/1.0 (Windows)";
 
 // Helper class which closes an internet handle when it goes away
 class HTTPUpload::AutoInternetHandle {
@@ -67,7 +65,13 @@ class HTTPUpload::AutoInternetHandle {
 bool HTTPUpload::SendRequest(const wstring &url,
                              const map<wstring, wstring> &parameters,
                              const wstring &upload_file,
-                             const wstring &file_part_name) {
+                             const wstring &file_part_name,
+                             wstring *response_body,
+                             int *response_code) {
+  if (response_code) {
+    *response_code = 0;
+  }
+                               
   // TODO(bryner): support non-ASCII parameter names
   if (!CheckParameters(parameters)) {
     return false;
@@ -154,7 +158,64 @@ bool HTTPUpload::SendRequest(const wstring &url,
     return false;
   }
 
-  return (wcscmp(http_status, L"200") == 0);
+  int http_response = wcstol(http_status, NULL, 10);
+  if (response_code) {
+    *response_code = http_response;
+  }
+
+  bool result = (http_response == 200);
+
+  if (result) {
+    result = ReadResponse(request.get(), response_body);
+  }
+
+  return result;
+}
+
+// static
+bool HTTPUpload::ReadResponse(HINTERNET request, wstring *response) {
+  bool has_content_length_header = false;
+  wchar_t content_length[32];
+  DWORD content_length_size = sizeof(content_length);
+  DWORD claimed_size;
+  string response_body;
+
+  if (HttpQueryInfo(request, HTTP_QUERY_CONTENT_LENGTH,
+                    static_cast<LPVOID>(&content_length),
+                    &content_length_size, 0)) {
+    has_content_length_header = true;
+    claimed_size = wcstol(content_length, NULL, 10);
+    response_body.reserve(claimed_size);
+  }
+
+
+  DWORD bytes_available;
+  DWORD total_read = 0;
+  bool return_code;
+
+  while ((return_code = InternetQueryDataAvailable(request, &bytes_available,
+                                                   0, 0) != 0) &&
+          bytes_available > 0) {
+    vector<char> response_buffer(bytes_available);
+    DWORD size_read;
+
+    if ((return_code = InternetReadFile(request, &response_buffer[0],
+                                        bytes_available, &size_read) != 0) &&
+        size_read > 0) {
+      total_read += size_read;
+      response_body.append(&response_buffer[0], size_read);
+    } else {
+      break;
+    }
+  }
+
+  bool succeeded = return_code && (!has_content_length_header ||
+                                   (total_read == claimed_size));
+  if (succeeded && response) {
+    *response = UTF8ToWide(response_body);
+  }
+
+  return succeeded;
 }
 
 // static
@@ -168,8 +229,8 @@ wstring HTTPUpload::GenerateMultipartBoundary() {
   int r1 = rand();
 
   wchar_t temp[kBoundaryLength];
-  WindowsStringUtils::safe_swprintf(temp, kBoundaryLength, L"%s%08X%08X",
-                                    kBoundaryPrefix, r0, r1);
+  swprintf(temp, kBoundaryLength, L"%s%08X%08X", kBoundaryPrefix, r0, r1);
+  GB_WSU_SAFE_SWPRINTF_TERMINATE(temp, kBoundaryLength);
   return wstring(temp);
 }
 
@@ -226,7 +287,9 @@ bool HTTPUpload::GenerateRequestBody(const map<wstring, wstring> &parameters,
   request_body->append("Content-Type: application/octet-stream\r\n");
   request_body->append("\r\n");
 
-  request_body->append(&(contents[0]), contents.size());
+  if (!contents.empty()) {
+      request_body->append(&(contents[0]), contents.size());
+  }
   request_body->append("\r\n");
   request_body->append("--" + boundary_str + "--\r\n");
   return true;
@@ -249,12 +312,35 @@ void HTTPUpload::GetFileContents(const wstring &filename,
     file.seekg(0, ios::end);
     int length = file.tellg();
     contents->resize(length);
-    file.seekg(0, ios::beg);
-    file.read(&((*contents)[0]), length);
+    if (length != 0) {
+        file.seekg(0, ios::beg);
+        file.read(&((*contents)[0]), length);
+    }
     file.close();
   } else {
     contents->clear();
   }
+}
+
+// static
+wstring HTTPUpload::UTF8ToWide(const string &utf8) {
+  if (utf8.length() == 0) {
+    return wstring();
+  }
+
+  // compute the length of the buffer we'll need
+  int charcount = MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, NULL, 0);
+
+  if (charcount == 0) {
+    return wstring();
+  }
+
+  // convert
+  wchar_t* buf = new wchar_t[charcount];
+  MultiByteToWideChar(CP_UTF8, 0, utf8.c_str(), -1, buf, charcount);
+  wstring result(buf);
+  delete[] buf;
+  return result;
 }
 
 // static
@@ -298,4 +384,4 @@ bool HTTPUpload::CheckParameters(const map<wstring, wstring> &parameters) {
   return true;
 }
 
-}  // namespace google_airbag
+}  // namespace google_breakpad
