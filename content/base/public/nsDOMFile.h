@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,16 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is mozila.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Peter Van der Beken <peterv@netscape.com> (original author)
- *
+ *   Dave Camp <dcamp@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,40 +36,60 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
-#include "nsIBaseDOMException.h"
-#include "nsIException.h"
+#ifndef nsDOMFile_h__
+#define nsDOMFile_h__
 
-class nsBaseDOMException : public nsIException,
-                           public nsIBaseDOMException
+#include "nsICharsetDetectionObserver.h"
+#include "nsIDOMFile.h"
+#include "nsIDOMFileList.h"
+#include "nsIInputStream.h"
+#include "nsCOMArray.h"
+#include "nsCOMPtr.h"
+#include "nsString.h"
+
+class nsIDOMDocument;
+class nsIFile;
+class nsIInputStream;
+
+class nsDOMFile : public nsIDOMFile,
+                  public nsICharsetDetectionObserver
 {
 public:
-  nsBaseDOMException();
-  virtual ~nsBaseDOMException();
-
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIEXCEPTION
-  NS_IMETHOD Init(nsresult aNSResult, const char* aName,
-                  const char* aMessage,
-                  nsIException* aDefaultException);
+  NS_DECL_NSIDOMFILE
 
-protected:
-  nsresult mResult;
-  const char* mName;
-  const char* mMessage;
-  nsCOMPtr<nsIException> mInner;
+  nsDOMFile(nsIFile *aFile)
+    : mFile(aFile)
+  {}
+  ~nsDOMFile() {}
+
+  // from nsICharsetDetectionObserver
+  NS_IMETHOD Notify(const char *aCharset, nsDetectionConfident aConf);
+
+private:
+  nsCOMPtr<nsIFile> mFile;
+  nsString mContentType;
+  nsCString mCharset;
+
+  nsresult GuessCharset(nsIInputStream *aStream,
+                        nsACString &aCharset);
+  nsresult ConvertStream(nsIInputStream *aStream, const char *aCharset,
+                         nsAString &aResult);
 };
 
-#define DECL_INTERNAL_DOM_EXCEPTION(domname)                                 \
-nsresult                                                                     \
-NS_New##domname(nsresult aNSResult, nsIException* aDefaultException,         \
-                nsIException** aException);
+class nsDOMFileList : public nsIDOMFileList
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMFILELIST
 
+  PRBool Append(nsIDOMFile *aFile) { return mFiles.AppendObject(aFile); }
 
-DECL_INTERNAL_DOM_EXCEPTION(DOMException)
-DECL_INTERNAL_DOM_EXCEPTION(RangeException)
-#ifdef MOZ_SVG
-DECL_INTERNAL_DOM_EXCEPTION(SVGException)
+  PRBool Remove(PRUint32 aIndex) { return mFiles.RemoveObjectAt(aIndex); }
+  void Clear() { return mFiles.Clear(); }
+
+private:
+  nsCOMArray<nsIDOMFile> mFiles;
+};
+
 #endif
-DECL_INTERNAL_DOM_EXCEPTION(XPathException)
-DECL_INTERNAL_DOM_EXCEPTION(FileException)

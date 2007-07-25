@@ -402,6 +402,10 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_LoadStatus_id,
   eDOMClassInfo_LoadStatusEvent_id,
 
+  eDOMClassInfo_FileList_id,
+  eDOMClassInfo_File_id,
+  eDOMClassInfo_FileException_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };
