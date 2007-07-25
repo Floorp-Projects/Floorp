@@ -360,7 +360,7 @@ nsOfflineCacheUpdateItem::GetStatus(PRUint16 *aStatus)
 //-----------------------------------------------------------------------------
 
 NS_IMPL_ISUPPORTS1(nsOfflineCacheUpdate,
-                   nsIOfflineCacheUpdate);
+                   nsIOfflineCacheUpdate)
 
 //-----------------------------------------------------------------------------
 // nsOfflineCacheUpdate <public>
