@@ -116,6 +116,13 @@ interface nsIDOMCanvasRenderingContext2D : nsISupports
   void stroke();
   void clip();
 
+  // text api
+  attribute DOMString mozTextStyle; 
+  void mozDrawText(in DOMString textToDraw);
+  float mozMeasureText(in DOMString textToMeasure);
+  void mozPathText(in DOMString textToPath);
+  void mozTextAlongPath(in DOMString textToDraw, in boolean stroke);
+
   // image api
   void drawImage();
 /*
