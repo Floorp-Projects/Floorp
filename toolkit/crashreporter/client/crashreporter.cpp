@@ -467,7 +467,7 @@ int main(int argc, char** argv)
 #if defined(XP_WIN) && !defined(__GNUC__)
 // We need WinMain in order to not be a console app.  This function is unused
 // if we are a console application.
-int WINAPI wWinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
+int WINAPI wWinMain( HINSTANCE, HINSTANCE, LPWSTR args, int )
 {
   char** argv = static_cast<char**>(malloc(__argc * sizeof(char*)));
   for (int i = 0; i < __argc; i++) {
