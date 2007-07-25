@@ -1251,7 +1251,7 @@ tabpanels.plain {
 }
 
 .toolbar-drop-indicator-bar {
-  display: none;
+  visibility: hidden;
   height: 16px;
   margin-bottom: -16px;
   margin-left: 4px;
@@ -1259,7 +1259,7 @@ tabpanels.plain {
 }
 
 .toolbar-drop-indicator-bar[dragging="true"] {
-  display: -moz-box;
+  visibility: visible;
 }
 
 toolbarbutton.bookmark-item[dragover="true"][open="true"] {
