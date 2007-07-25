@@ -4662,29 +4662,11 @@ nsWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       printf(" --- Forwarding add to inner window %p\n", (void *)innerWin);
 #endif
 
-      jsid interned_id;
-      if (!::JS_ValueToId(cx, id, &interned_id)) {
-        *_retval = JS_FALSE;
-        return NS_OK;
-      }
-
-      JSProperty *prop = nsnull;
-      JSObject *pobj;
-      if (!OBJ_LOOKUP_PROPERTY(cx, obj, interned_id, &pobj, &prop)) {
-        *_retval = JS_FALSE;
-        return NS_OK;
-      }
-
-      NS_ASSERTION(prop && obj == pobj, "The JS engine lies");
-      JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
-      JSPropertyOp getter = sprop->getter;
-      JSPropertyOp setter = sprop->setter;
-      uintN attrs = sprop->attrs;
-      OBJ_DROP_PROPERTY(cx, pobj, prop);
-
       // Forward the add to the inner object
-      *_retval = OBJ_DEFINE_PROPERTY(cx, innerObj, interned_id, *vp, getter,
-                                     setter, attrs | JSPROP_ENUMERATE, nsnull);
+      jsid interned_id;
+      *_retval = (::JS_ValueToId(cx, id, &interned_id) &&
+                  OBJ_DEFINE_PROPERTY(cx, innerObj, interned_id, *vp, nsnull,
+                                      nsnull, JSPROP_ENUMERATE, nsnull));
 
       return NS_OK;
     }
