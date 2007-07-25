@@ -51,6 +51,9 @@
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsISelectionController.h"
+#include "jsapi.h"
+#include "nsIJSContextStack.h"
+#include "nsIServiceManager.h"
 #include "nsITextControlFrame.h"
 
 // --- checkbox -----
@@ -556,10 +559,23 @@ void nsHTMLTextFieldAccessible::CheckForEditor()
     return;
   }
 
+  // nsGenericHTMLElement::GetEditor has a security check.
+  // Make sure we're not restricted by the permissions of
+  // whatever script is currently running.
+  nsCOMPtr<nsIJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  PRBool pushed = stack && NS_SUCCEEDED(stack->Push(nsnull));
+
   nsCOMPtr<nsIEditor> editor;
   nsresult rv = editableElt->GetEditor(getter_AddRefs(editor));
   if (NS_SUCCEEDED(rv)) {
     SetEditor(editor);
+  }
+
+  if (pushed) {
+    JSContext* cx;
+    stack->Pop(&cx);
+    NS_ASSERTION(!cx, "context should be null");
   }
 }
 
