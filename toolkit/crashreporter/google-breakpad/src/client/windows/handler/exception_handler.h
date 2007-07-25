@@ -119,17 +119,33 @@ class ExceptionHandler {
                                    MDRawAssertionInfo *assertion,
                                    bool succeeded);
 
+  // HandlerType specifies which types of handlers should be installed, if
+  // any.  Use HANDLER_NONE for an ExceptionHandler that remains idle,
+  // without catching any failures on its own.  This type of handler may
+  // still be triggered by calling WriteMinidump.  Otherwise, use a
+  // combination of the other HANDLER_ values, or HANDLER_ALL to install
+  // all handlers.
+  enum HandlerType {
+    HANDLER_NONE = 0,
+    HANDLER_EXCEPTION = 1 << 0,          // SetUnhandledExceptionFilter
+    HANDLER_INVALID_PARAMETER = 1 << 1,  // _set_invalid_parameter_handler
+    HANDLER_PURECALL = 1 << 2,           // _set_purecall_handler
+    HANDLER_ALL = HANDLER_EXCEPTION |
+                  HANDLER_INVALID_PARAMETER |
+                  HANDLER_PURECALL
+  };
+
   // Creates a new ExceptionHandler instance to handle writing minidumps.
   // Before writing a minidump, the optional filter callback will be called.
-  // Its return value determines whether or not Breakpad should write a minidump.
-  // Minidump files will be written to dump_path, and the optional callback
-  // is called after writing the dump file, as described above.
-  // If install_handler is true, then a minidump will be written whenever
-  // an unhandled exception occurs.  If it is false, minidumps will only
-  // be written when WriteMinidump is called.
+  // Its return value determines whether or not Breakpad should write a
+  // minidump.  Minidump files will be written to dump_path, and the optional
+  // callback is called after writing the dump file, as described above.
+  // handler_types specifies the types of handlers that should be installed.
   ExceptionHandler(const wstring &dump_path,
-                   FilterCallback filter, MinidumpCallback callback,
-                   void *callback_context, bool install_handler);
+                   FilterCallback filter,
+                   MinidumpCallback callback,
+                   void *callback_context,
+                   int handler_types);
   ~ExceptionHandler();
 
   // Get and set the minidump path.
@@ -143,6 +159,10 @@ class ExceptionHandler {
   // Writes a minidump immediately.  This can be used to capture the
   // execution state independently of a crash.  Returns true on success.
   bool WriteMinidump();
+
+  // Writes a minidump immediately, with the user-supplied exception
+  // information.
+  bool WriteMinidumpForException(EXCEPTION_POINTERS *exinfo);
 
   // Convenience form of WriteMinidump which does not require an
   // ExceptionHandler instance.
@@ -240,9 +260,9 @@ class ExceptionHandler {
   HMODULE dbghelp_module_;
   MiniDumpWriteDump_type minidump_write_dump_;
 
-  // True if the ExceptionHandler installed an unhandled exception filter
-  // when created (with an install_handler parameter set to true).
-  bool installed_handler_;
+  // Tracks the handler types that were installed according to the
+  // handler_types constructor argument.
+  int handler_types_;
 
   // When installed_handler_ is true, previous_filter_ is the unhandled
   // exception filter that was set prior to installing ExceptionHandler as
