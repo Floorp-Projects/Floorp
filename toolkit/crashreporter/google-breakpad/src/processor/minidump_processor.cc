@@ -33,6 +33,7 @@
 #include "google_breakpad/processor/call_stack.h"
 #include "google_breakpad/processor/minidump.h"
 #include "google_breakpad/processor/process_state.h"
+#include "processor/logging.h"
 #include "processor/scoped_ptr.h"
 #include "processor/stackwalker_x86.h"
 
@@ -48,19 +49,23 @@ MinidumpProcessor::~MinidumpProcessor() {
 
 MinidumpProcessor::ProcessResult MinidumpProcessor::Process(
     const string &minidump_file, ProcessState *process_state) {
+  BPLOG(INFO) << "Processing minidump in file " << minidump_file;
+
   Minidump dump(minidump_file);
   if (!dump.Read()) {
+    BPLOG(ERROR) << "Minidump " << minidump_file << " could not be read";
     return PROCESS_ERROR;
   }
 
   process_state->Clear();
 
   const MDRawHeader *header = dump.header();
+  BPLOG_IF(ERROR, !header) << "Minidump " << minidump_file << " has no header";
   assert(header);
   process_state->time_date_stamp_ = header->time_date_stamp;
 
-  GetCPUInfo(&dump, &process_state->system_info_);
-  GetOSInfo(&dump, &process_state->system_info_);
+  bool has_cpu_info = GetCPUInfo(&dump, &process_state->system_info_);
+  bool has_os_info = GetOSInfo(&dump, &process_state->system_info_);
 
   u_int32_t dump_thread_id = 0;
   bool has_dump_thread = false;
@@ -93,23 +98,44 @@ MinidumpProcessor::ProcessResult MinidumpProcessor::Process(
 
   MinidumpThreadList *threads = dump.GetThreadList();
   if (!threads) {
+    BPLOG(ERROR) << "Minidump " << minidump_file << " has no thread list";
     return PROCESS_ERROR;
   }
+
+  BPLOG(INFO) << "Minidump " << minidump_file << " has " <<
+              (has_cpu_info           ? "" : "no ") << "CPU info, " <<
+              (has_os_info            ? "" : "no ") << "OS info, " <<
+              (breakpad_info != NULL  ? "" : "no ") << "Breakpad info, " <<
+              (exception != NULL      ? "" : "no ") << "exception, " <<
+              (module_list != NULL    ? "" : "no ") << "module list, " <<
+              (threads != NULL        ? "" : "no ") << "thread list, " <<
+              (has_dump_thread        ? "" : "no ") << "dump thread, and " <<
+              (has_requesting_thread  ? "" : "no ") << "requesting thread";
 
   bool found_requesting_thread = false;
   unsigned int thread_count = threads->thread_count();
   for (unsigned int thread_index = 0;
        thread_index < thread_count;
        ++thread_index) {
+    char thread_string_buffer[64];
+    snprintf(thread_string_buffer, sizeof(thread_string_buffer), "%d/%d",
+             thread_index, thread_count);
+    string thread_string = minidump_file + ":" + thread_string_buffer;
+
     MinidumpThread *thread = threads->GetThreadAtIndex(thread_index);
     if (!thread) {
+      BPLOG(ERROR) << "Could not get thread for " << thread_string;
       return PROCESS_ERROR;
     }
 
     u_int32_t thread_id;
     if (!thread->GetThreadID(&thread_id)) {
+      BPLOG(ERROR) << "Could not get thread ID for " << thread_string;
       return PROCESS_ERROR;
     }
+
+    thread_string += " id " + HexString(thread_id);
+    BPLOG(INFO) << "Looking at thread " << thread_string;
 
     // If this thread is the thread that produced the minidump, don't process
     // it.  Because of the problems associated with a thread producing a
@@ -124,6 +150,7 @@ MinidumpProcessor::ProcessResult MinidumpProcessor::Process(
     if (has_requesting_thread && thread_id == requesting_thread_id) {
       if (found_requesting_thread) {
         // There can't be more than one requesting thread.
+        BPLOG(ERROR) << "Duplicate requesting thread: " << thread_string;
         return PROCESS_ERROR;
       }
 
@@ -150,6 +177,7 @@ MinidumpProcessor::ProcessResult MinidumpProcessor::Process(
 
     MinidumpMemoryRegion *thread_memory = thread->GetMemory();
     if (!thread_memory) {
+      BPLOG(ERROR) << "No memory region for " << thread_string;
       return PROCESS_ERROR;
     }
 
@@ -169,11 +197,14 @@ MinidumpProcessor::ProcessResult MinidumpProcessor::Process(
                                        supplier_,
                                        resolver_));
     if (!stackwalker.get()) {
+      BPLOG(ERROR) << "No stackwalker for " << thread_string;
       return PROCESS_ERROR;
     }
 
     scoped_ptr<CallStack> stack(new CallStack());
     if (!stackwalker->Walk(stack.get())) {
+      BPLOG(INFO) << "Processing interrupted by stackwalker (missing " <<
+                     "symbols?) at " << thread_string;
       return PROCESS_INTERRUPTED;
     }
     process_state->threads_.push_back(stack.release());
@@ -182,9 +213,13 @@ MinidumpProcessor::ProcessResult MinidumpProcessor::Process(
   // If a requesting thread was indicated, it must be present.
   if (has_requesting_thread && !found_requesting_thread) {
     // Don't mark as an error, but invalidate the requesting thread
+    BPLOG(ERROR) << "Minidump indicated requesting thread " <<
+                    HexString(requesting_thread_id) << ", not found in " <<
+                    minidump_file;
     process_state->requesting_thread_ = -1;
   }
 
+  BPLOG(INFO) << "Processed " << minidump_file;
   return PROCESS_OK;
 }
 
@@ -204,7 +239,7 @@ static const MDRawSystemInfo* GetSystemInfo(Minidump *dump,
 }
 
 // static
-void MinidumpProcessor::GetCPUInfo(Minidump *dump, SystemInfo *info) {
+bool MinidumpProcessor::GetCPUInfo(Minidump *dump, SystemInfo *info) {
   assert(dump);
   assert(info);
 
@@ -214,7 +249,7 @@ void MinidumpProcessor::GetCPUInfo(Minidump *dump, SystemInfo *info) {
   MinidumpSystemInfo *system_info;
   const MDRawSystemInfo *raw_system_info = GetSystemInfo(dump, &system_info);
   if (!raw_system_info)
-    return;
+    return false;
 
   switch (raw_system_info->processor_architecture) {
     case MD_CPU_ARCHITECTURE_X86: {
@@ -248,10 +283,12 @@ void MinidumpProcessor::GetCPUInfo(Minidump *dump, SystemInfo *info) {
       break;
     }
   }
+
+  return true;
 }
 
 // static
-void MinidumpProcessor::GetOSInfo(Minidump *dump, SystemInfo *info) {
+bool MinidumpProcessor::GetOSInfo(Minidump *dump, SystemInfo *info) {
   assert(dump);
   assert(info);
 
@@ -262,7 +299,7 @@ void MinidumpProcessor::GetOSInfo(Minidump *dump, SystemInfo *info) {
   MinidumpSystemInfo *system_info;
   const MDRawSystemInfo *raw_system_info = GetSystemInfo(dump, &system_info);
   if (!raw_system_info)
-    return;
+    return false;
 
   info->os_short = system_info->GetOS();
 
@@ -309,6 +346,8 @@ void MinidumpProcessor::GetOSInfo(Minidump *dump, SystemInfo *info) {
     info->os_version.append(" ");
     info->os_version.append(*csd_version);
   }
+
+  return true;
 }
 
 // static
@@ -375,6 +414,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
               break;
             default:
               reason.append(flags_string);
+              BPLOG(INFO) << "Unknown exception reason " << reason;
               break;
           }
           break;
@@ -403,6 +443,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
                   break;
                 default:
                   reason.append(flags_string);
+                  BPLOG(INFO) << "Unknown exception reason " << reason;
                   break;
               }
               break;
@@ -429,12 +470,14 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
                   break;
                 default:
                   reason.append(flags_string);
+                  BPLOG(INFO) << "Unknown exception reason " << reason;
                   break;
               }
               break;
             }
             default:
               reason.append(flags_string);
+              BPLOG(INFO) << "Unknown exception reason " << reason;
               break;
           }
           break;
@@ -471,6 +514,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
                   reason.append("EXC_PPC_ALTIVECASSIST");
                 default:
                   reason.append(flags_string);
+                  BPLOG(INFO) << "Unknown exception reason " << reason;
                   break;
               }
               break;
@@ -503,12 +547,14 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
                   break;
                 default:
                   reason.append(flags_string);
+                  BPLOG(INFO) << "Unknown exception reason " << reason;
                   break;
               }
               break;
             }
             default:
               reason.append(flags_string);
+              BPLOG(INFO) << "Unknown exception reason " << reason;
               break;
           }
           break;
@@ -529,6 +575,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
               break;
             default:
               reason.append(flags_string);
+              BPLOG(INFO) << "Unknown exception reason " << reason;
               break;
           }
           break;
@@ -542,6 +589,7 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
                   break;
                 default:
                   reason.append(flags_string);
+                  BPLOG(INFO) << "Unknown exception reason " << reason;
                   break;
               }
               break;
@@ -556,12 +604,14 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
                   break;
                 default:
                   reason.append(flags_string);
+                  BPLOG(INFO) << "Unknown exception reason " << reason;
                   break;
               }
               break;
             }
             default:
               reason.append(flags_string);
+              BPLOG(INFO) << "Unknown exception reason " << reason;
               break;
           }
           break;
@@ -668,7 +718,16 @@ string MinidumpProcessor::GetCrashReason(Minidump *dump, u_int64_t *address) {
         case MD_EXCEPTION_CODE_WIN_POSSIBLE_DEADLOCK:
           reason = "EXCEPTION_POSSIBLE_DEADLOCK";
           break;
+        default:
+          BPLOG(INFO) << "Unknown exception reason " << reason;
+          break;
       }
+      break;
+    }
+
+    default: {
+      BPLOG(INFO) << "Unknown exception reason " << reason;
+      break;
     }
   }
 

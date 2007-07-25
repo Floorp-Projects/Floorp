@@ -37,7 +37,10 @@
 #define PROCESSOR_CONTAINED_RANGE_MAP_INL_H__
 
 
+#include <cassert>
+
 #include "processor/contained_range_map.h"
+#include "processor/logging.h"
 
 
 namespace google_breakpad {
@@ -56,8 +59,11 @@ bool ContainedRangeMap<AddressType, EntryType>::StoreRange(
   AddressType high = base + size - 1;
 
   // Check for undersize or overflow.
-  if (size <= 0 || high < base)
+  if (size <= 0 || high < base) {
+    BPLOG(INFO) << "StoreRange failed, " << HexString(base) << "+" <<
+                   HexString(size) << ", " << HexString(high);
     return false;
+  }
 
   if (!map_)
     map_ = new AddressToRangeMap();
@@ -74,8 +80,11 @@ bool ContainedRangeMap<AddressType, EntryType>::StoreRange(
     // range's, it violates the containment rules, and an attempt to store
     // it must fail.  iterator_base->first contains the key, which was the
     // containing child's high address.
-    if (iterator_base->second->base_ == base && iterator_base->first == high)
+    if (iterator_base->second->base_ == base && iterator_base->first == high) {
+      BPLOG(INFO) << "StoreRange failed, identical range is already "
+                     "present: " << HexString(base) << "+" << HexString(size);
       return false;
+    }
 
     // Pass the new range on to the child to attempt to store.
     return iterator_base->second->StoreRange(base, size, entry);
@@ -92,6 +101,12 @@ bool ContainedRangeMap<AddressType, EntryType>::StoreRange(
   // fully.  Partial containment isn't allowed.
   if ((iterator_base != iterator_end && base > iterator_base->second->base_) ||
       (contains_high && high < iterator_high->first)) {
+    // TODO(mmentovai): Some symbol files will trip this check frequently
+    // on STACK lines.  Too many messages will be produced.  These are more
+    // suitable for a DEBUG channel than an INFO channel.
+    // BPLOG(INFO) << "StoreRange failed, new range partially contains "
+    //               "existing range: " << HexString(base) << "+" <<
+    //               HexString(size);
     return false;
   }
 
@@ -130,7 +145,12 @@ bool ContainedRangeMap<AddressType, EntryType>::StoreRange(
 template<typename AddressType, typename EntryType>
 bool ContainedRangeMap<AddressType, EntryType>::RetrieveRange(
     const AddressType &address, EntryType *entry) const {
-  if (!entry || !map_)
+  BPLOG_IF(ERROR, !entry) << "ContainedRangeMap::RetrieveRange requires "
+                             "|entry|";
+  assert(entry);
+
+  // If nothing was ever stored, then there's nothing to retrieve.
+  if (!map_)
     return false;
 
   // Get an iterator to the child range whose high address is equal to or

@@ -38,6 +38,7 @@
 
 
 #include "processor/range_map.h"
+#include "processor/logging.h"
 
 
 namespace google_breakpad {
@@ -50,8 +51,15 @@ bool RangeMap<AddressType, EntryType>::StoreRange(const AddressType &base,
   AddressType high = base + size - 1;
 
   // Check for undersize or overflow.
-  if (size <= 0 || high < base)
+  if (size <= 0 || high < base) {
+    // The processor will hit this case too frequently with common symbol
+    // files in the size == 0 case, which is more suited to a DEBUG channel.
+    // Filter those out since there's no DEBUG channel at the moment.
+    BPLOG_IF(INFO, size != 0) << "StoreRange failed, " << HexString(base) <<
+                                 "+" << HexString(size) << ", " <<
+                                 HexString(high);
     return false;
+  }
 
   // Ensure that this range does not overlap with another one already in the
   // map.
@@ -62,14 +70,27 @@ bool RangeMap<AddressType, EntryType>::StoreRange(const AddressType &base,
     // Some other range begins in the space used by this range.  It may be
     // contained within the space used by this range, or it may extend lower.
     // Regardless, it is an error.
+    AddressType other_base = iterator_base->second.base();
+    AddressType other_size = iterator_base->first - other_base + 1;
+    BPLOG(INFO) << "StoreRange failed, an existing range is contained by or "
+                   "extends lower than the new range: new " <<
+                   HexString(base) << "+" << HexString(size) << ", existing " <<
+                   HexString(other_base) << "+" << HexString(other_size);
     return false;
   }
 
   if (iterator_high != map_.end()) {
     if (iterator_high->second.base() <= high) {
       // The range above this one overlaps with this one.  It may fully
-      // contain  this range, or it may begin within this range and extend
+      // contain this range, or it may begin within this range and extend
       // higher.  Regardless, it's an error.
+      AddressType other_base = iterator_high->second.base();
+      AddressType other_size = iterator_high->first - other_base + 1;
+      BPLOG(INFO) << "StoreRange failed, an existing range contains or "
+                     "extends higher than the new range: new " <<
+                     HexString(base) << "+" << HexString(size) <<
+                     ", existing " <<
+                     HexString(other_base) << "+" << HexString(other_size);
       return false;
     }
   }
@@ -85,8 +106,8 @@ template<typename AddressType, typename EntryType>
 bool RangeMap<AddressType, EntryType>::RetrieveRange(
     const AddressType &address, EntryType *entry,
     AddressType *entry_base, AddressType *entry_size) const {
-  if (!entry)
-    return false;
+  BPLOG_IF(ERROR, !entry) << "RangeMap::RetrieveRange requires |entry|";
+  assert(entry);
 
   MapConstIterator iterator = map_.lower_bound(address);
   if (iterator == map_.end())
@@ -114,8 +135,8 @@ template<typename AddressType, typename EntryType>
 bool RangeMap<AddressType, EntryType>::RetrieveNearestRange(
     const AddressType &address, EntryType *entry,
     AddressType *entry_base, AddressType *entry_size) const {
-  if (!entry)
-    return false;
+  BPLOG_IF(ERROR, !entry) << "RangeMap::RetrieveNearestRange requires |entry|";
+  assert(entry);
 
   // If address is within a range, RetrieveRange can handle it.
   if (RetrieveRange(address, entry, entry_base, entry_size))
@@ -145,8 +166,13 @@ template<typename AddressType, typename EntryType>
 bool RangeMap<AddressType, EntryType>::RetrieveRangeAtIndex(
     int index, EntryType *entry,
     AddressType *entry_base, AddressType *entry_size) const {
-  if (!entry || index >= GetCount())
+  BPLOG_IF(ERROR, !entry) << "RangeMap::RetrieveRangeAtIndex requires |entry|";
+  assert(entry);
+
+  if (index >= GetCount()) {
+    BPLOG(ERROR) << "Index out of range: " << index << "/" << GetCount();
     return false;
+  }
 
   // Walk through the map.  Although it's ordered, it's not a vector, so it
   // can't be addressed directly by index.

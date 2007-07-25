@@ -145,7 +145,7 @@ class BasicSourceLineResolver::Module {
   static bool Tokenize(char *line, int max_tokens, vector<char*> *tokens);
 
   // Parses a file declaration
-  void ParseFile(char *file_line);
+  bool ParseFile(char *file_line);
 
   // Parses a function declaration, returning a new Function object.
   Function* ParseFunction(char *function_line);
@@ -188,8 +188,12 @@ bool BasicSourceLineResolver::LoadModule(const string &module_name,
                                          const string &map_file) {
   // Make sure we don't already have a module with the given name.
   if (modules_->find(module_name) != modules_->end()) {
+    BPLOG(INFO) << "Symbols for module " << module_name << " already loaded";
     return false;
   }
+
+  BPLOG(INFO) << "Loading symbols for module " << module_name << " from " <<
+                 map_file;
 
   Module *module = new Module(module_name);
   if (!module->LoadMap(map_file)) {
@@ -216,11 +220,29 @@ StackFrameInfo* BasicSourceLineResolver::FillSourceLineInfo(
   return NULL;
 }
 
+class AutoFileCloser {
+ public:
+  AutoFileCloser(FILE *file) : file_(file) {}
+  ~AutoFileCloser() {
+    if (file_)
+      fclose(file_);
+  }
+
+ private:
+  FILE *file_;
+};
+
 bool BasicSourceLineResolver::Module::LoadMap(const string &map_file) {
   FILE *f = fopen(map_file.c_str(), "r");
   if (!f) {
+    string error_string;
+    int error_code = ErrnoString(&error_string);
+    BPLOG(ERROR) << "Could not open " << map_file <<
+                    ", error " << error_code << ": " << error_string;
     return false;
   }
+
+  AutoFileCloser closer(f);
 
   // TODO(mmentovai): this might not be large enough to handle really long
   // lines, which might be present for FUNC lines of highly-templatized
@@ -228,16 +250,26 @@ bool BasicSourceLineResolver::Module::LoadMap(const string &map_file) {
   char buffer[8192];
   linked_ptr<Function> cur_func;
 
+  int line_number = 0;
   while (fgets(buffer, sizeof(buffer), f)) {
+    ++line_number;
     if (strncmp(buffer, "FILE ", 5) == 0) {
-      ParseFile(buffer);
+      if (!ParseFile(buffer)) {
+        BPLOG(ERROR) << "ParseFile failed at " <<
+                        map_file << ":" << line_number;
+        return false;
+      }
     } else if (strncmp(buffer, "STACK ", 6) == 0) {
       if (!ParseStackInfo(buffer)) {
+        BPLOG(ERROR) << "ParseStackInfo failed at " <<
+                        map_file << ":" << line_number;
         return false;
       }
     } else if (strncmp(buffer, "FUNC ", 5) == 0) {
       cur_func.reset(ParseFunction(buffer));
       if (!cur_func.get()) {
+        BPLOG(ERROR) << "ParseFunction failed at " <<
+                        map_file << ":" << line_number;
         return false;
       }
       // StoreRange will fail if the function has an invalid address or size.
@@ -249,6 +281,8 @@ bool BasicSourceLineResolver::Module::LoadMap(const string &map_file) {
       cur_func.reset();
 
       if (!ParsePublicSymbol(buffer)) {
+        BPLOG(ERROR) << "ParsePublicSymbol failed at " <<
+                        map_file << ":" << line_number;
         return false;
       }
     } else if (strncmp(buffer, "MODULE ", 7) == 0) {
@@ -260,10 +294,14 @@ bool BasicSourceLineResolver::Module::LoadMap(const string &map_file) {
       // MODULE <guid> <age> <filename>
     } else {
       if (!cur_func.get()) {
+        BPLOG(ERROR) << "Found source line data without a function at " <<
+                        map_file << ":" << line_number;
         return false;
       }
       Line *line = ParseLine(buffer);
       if (!line) {
+        BPLOG(ERROR) << "ParseLine failed at " <<
+                        map_file << ":" << line_number;
         return false;
       }
       cur_func->lines.StoreRange(line->address, line->size,
@@ -271,7 +309,6 @@ bool BasicSourceLineResolver::Module::LoadMap(const string &map_file) {
     }
   }
 
-  fclose(f);
   return true;
 }
 
@@ -387,24 +424,27 @@ bool BasicSourceLineResolver::Module::Tokenize(char *line, int max_tokens,
   return tokens->size() == static_cast<unsigned int>(max_tokens);
 }
 
-void BasicSourceLineResolver::Module::ParseFile(char *file_line) {
+bool BasicSourceLineResolver::Module::ParseFile(char *file_line) {
   // FILE <id> <filename>
   file_line += 5;  // skip prefix
 
   vector<char*> tokens;
   if (!Tokenize(file_line, 2, &tokens)) {
-    return;
+    return false;
   }
 
   int index = atoi(tokens[0]);
   if (index < 0) {
-    return;
+    return false;
   }
 
   char *filename = tokens[1];
-  if (filename) {
-    files_.insert(make_pair(index, string(filename)));
+  if (!filename) {
+    return false;
   }
+
+  files_.insert(make_pair(index, string(filename)));
+  return true;
 }
 
 BasicSourceLineResolver::Function*

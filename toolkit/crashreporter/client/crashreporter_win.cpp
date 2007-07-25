@@ -255,11 +255,11 @@ static DWORD WINAPI SendThreadProc(LPVOID param)
       query_parameters[UTF8ToWide(i->first)] = UTF8ToWide(i->second);
     }
 
-    finishedOk = (google_breakpad::CrashReportSender
-      ::SendCrashReport(td->send_url,
-                        query_parameters,
-                        td->dumpFile,
-                        td->server_response)
+    google_breakpad::CrashReportSender sender(L"");
+    finishedOk = (sender.SendCrashReport(td->send_url,
+                                         query_parameters,
+                                         td->dumpFile,
+                                         td->server_response)
                   == google_breakpad::RESULT_SUCCEEDED);
   }
   PostMessage(td->hDlg, WM_UPLOADCOMPLETE, finishedOk ? 1 : 0, 0);

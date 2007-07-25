@@ -147,19 +147,8 @@ class DynamicImage {
   }
 
   // Debugging
-  void Print() {
-    char *path = GetFilePath();
-    if (!path) {
-      path = "(unknown)";
-    }
-    printf("%p: %s\n", GetLoadAddress(), path);
-    mach_header *header = GetMachHeader();
-    MachHeader(*header).Print();
-    printf("vmaddr\t\t: %p\n", reinterpret_cast<void*>(GetVMAddr()));
-    printf("vmsize\t\t: %d\n", GetVMSize());
-    printf("slide\t\t: %d\n", GetVMAddrSlide());
-  }
-
+  void Print();
+ 
  private:
   friend class DynamicImages;
 

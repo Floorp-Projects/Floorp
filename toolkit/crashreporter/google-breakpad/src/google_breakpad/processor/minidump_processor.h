@@ -63,13 +63,15 @@ class MinidumpProcessor {
 
   // Populates the cpu_* fields of the |info| parameter with textual
   // representations of the CPU type that the minidump in |dump| was
-  // produced on.
-  static void GetCPUInfo(Minidump *dump, SystemInfo *info);
+  // produced on.  Returns false if this information is not available in
+  // the minidump.
+  static bool GetCPUInfo(Minidump *dump, SystemInfo *info);
 
   // Populates the os_* fields of the |info| parameter with textual
   // representations of the operating system that the minidump in |dump|
-  // was produced on.
-  static void GetOSInfo(Minidump *dump, SystemInfo *info);
+  // was produced on.  Returns false if this information is not available in
+  // the minidump.
+  static bool GetOSInfo(Minidump *dump, SystemInfo *info);
 
   // Returns a textual representation of the reason that a crash occurred,
   // if the minidump in dump was produced as a result of a crash.  Returns
