@@ -146,7 +146,7 @@ class Dumper:
     ProcessDir.  Instead, call GetPlatformSpecificDumper to
     get an instance of a subclass."""
     def __init__(self, dump_syms, symbol_path,
-                 archs=None, srcdir=None, copy_debug=False):
+                 archs=None, srcdir=None, copy_debug=False, vcsinfo=False):
         self.dump_syms = dump_syms
         self.symbol_path = symbol_path
         if archs is None:
@@ -159,6 +159,7 @@ class Dumper:
         else:
             self.srcdir = None
         self.copy_debug = copy_debug
+        self.vcsinfo = vcsinfo
 
     # subclasses override this
     def ShouldProcess(self, file):
@@ -229,7 +230,8 @@ class Dumper:
                             # FILE index filename
                             (x, index, filename) = line.split(None, 2)
                             filename = self.FixFilenameCase(filename.rstrip())
-                            filename = GetVCSFilename(filename, self.srcdir)
+                            if self.vcsinfo:
+                                filename = GetVCSFilename(filename, self.srcdir)
                             f.write("FILE %s %s\n" % (index, filename))
                         else:
                             # pass through all other lines unchanged
@@ -313,6 +315,9 @@ def main():
     parser.add_option("-s", "--srcdir",
                       action="store", dest="srcdir",
                       help="Use SRCDIR to determine relative paths to source files")
+    parser.add_option("-v", "--vcs-info",
+                      action="store_true", dest="vcsinfo",
+                      help="Try to retrieve VCS info for each FILE listed in the output")
     (options, args) = parser.parse_args()
 
     if len(args) < 3:
@@ -323,7 +328,8 @@ def main():
                                        symbol_path=args[1],
                                        copy_debug=options.copy_debug,
                                        archs=options.archs,
-                                       srcdir=options.srcdir)
+                                       srcdir=options.srcdir,
+                                       vcsinfo=options.vcsinfo)
     for arg in args[2:]:
         dumper.Process(arg)
 
