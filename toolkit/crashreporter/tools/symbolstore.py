@@ -102,6 +102,9 @@ def GetVCSFilename(file, srcdir):
     For example:
     cvs:cvs.mozilla.org/cvsroot:mozilla/browser/app/nsBrowserApp.cpp:1.36"""
     (path, filename) = os.path.split(file)
+    if path == '' or filename == '':
+        return file
+    
     cvsdir = os.path.join(path, "CVS")
     if os.path.isdir(cvsdir):
         rev = GetCVSRevision(file)
