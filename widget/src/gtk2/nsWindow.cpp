@@ -2028,6 +2028,9 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
 
     PRUint16 domButton;
     switch (aEvent->button) {
+    case 1:
+        domButton = nsMouseEvent::eLeftButton;
+        break;
     case 2:
         domButton = nsMouseEvent::eMiddleButton;
         break;
@@ -2035,8 +2038,7 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
         domButton = nsMouseEvent::eRightButton;
         break;
     default:
-        domButton = nsMouseEvent::eLeftButton;
-        break;
+        return;
     }
 
     nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_DOWN, this, nsMouseEvent::eReal);
@@ -2062,21 +2064,17 @@ nsWindow::OnButtonReleaseEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     mLastButtonReleaseTime = aEvent->time;
 
     switch (aEvent->button) {
+    case 1:
+        domButton = nsMouseEvent::eLeftButton;
+        break;
     case 2:
         domButton = nsMouseEvent::eMiddleButton;
         break;
     case 3:
         domButton = nsMouseEvent::eRightButton;
         break;
-        // don't send events for these types
-    case 4:
-    case 5:
-        return;
-        break;
-        // default including button 1 is left button up
     default:
-        domButton = nsMouseEvent::eLeftButton;
-        break;
+        return;
     }
 
     nsMouseEvent event(PR_TRUE, NS_MOUSE_BUTTON_UP, this, nsMouseEvent::eReal);
