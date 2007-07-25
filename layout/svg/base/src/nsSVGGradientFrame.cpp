@@ -735,9 +735,10 @@ NS_NewSVGLinearGradientFrame(nsIPresShell*   aPresShell,
                              nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGLinearGradientElement> grad = do_QueryInterface(aContent);
-  NS_ASSERTION(grad, "NS_NewSVGLinearGradientFrame -- Content doesn't support nsIDOMSVGLinearGradient");
-  if (!grad)
+  if (!grad) {
+    NS_ERROR("Can't create frame! Content is not an SVG linearGradient");
     return nsnull;
+  }
   
   nsCOMPtr<nsIDOMSVGURIReference> aRef = do_QueryInterface(aContent);
   NS_ASSERTION(aRef, "NS_NewSVGLinearGradientFrame -- Content doesn't support nsIDOMSVGURIReference");
@@ -751,9 +752,10 @@ NS_NewSVGRadialGradientFrame(nsIPresShell*   aPresShell,
                              nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGRadialGradientElement> grad = do_QueryInterface(aContent);
-  NS_ASSERTION(grad, "NS_NewSVGRadialGradientFrame -- Content doesn't support nsIDOMSVGRadialGradient");
-  if (!grad)
+  if (!grad) {
+    NS_ERROR("Can't create frame! Content is not an SVG radialGradient");
     return nsnull;
+  }
   
   nsCOMPtr<nsIDOMSVGURIReference> aRef = do_QueryInterface(aContent);
   NS_ASSERTION(aRef, "NS_NewSVGRadialGradientFrame -- Content doesn't support nsIDOMSVGURIReference");
