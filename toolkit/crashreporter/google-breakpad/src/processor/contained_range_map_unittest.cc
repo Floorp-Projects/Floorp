@@ -45,6 +45,9 @@
 #define ASSERT_FALSE(condition) ASSERT_TRUE(!(condition))
 
 
+namespace {
+
+
 using google_airbag::ContainedRangeMap;
 
 
@@ -246,6 +249,9 @@ static bool RunTests() {
 
   return true;
 }
+
+
+}  // namespace
 
 
 int main(int argc, char **argv) {
