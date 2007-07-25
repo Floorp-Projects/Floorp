@@ -437,6 +437,10 @@
 #include "nsIDOMLoadStatus.h"
 #include "nsIDOMLoadStatusEvent.h"
 
+#include "nsIDOMFileList.h"
+#include "nsIDOMFile.h"
+#include "nsIDOMFileException.h"
+
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_CID(kDOMSOF_CID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
 
@@ -1192,6 +1196,14 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(LoadStatusEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(FileList, nsFileListSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(File, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(FileException, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
 };
 
 // Objects that shuld be constructable through |new Name();|
@@ -3229,6 +3241,19 @@ nsDOMClassInfo::Init()
  
   DOM_CLASSINFO_MAP_BEGIN(TextRectangleList, nsIDOMTextRectangleList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMTextRectangleList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(FileList, nsIDOMFileList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMFileList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(File, nsIDOMFile)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMFile)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(FileException, nsIDOMFileException)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMFileException)
+    DOM_CLASSINFO_MAP_ENTRY(nsIException)
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
@@ -10110,6 +10135,22 @@ nsLoadStatusListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
   nsresult rv = list->Item(aIndex, &status);
 
   *aResult = status;
+
+  return rv;
+}
+
+// nsFileListSH
+nsresult
+nsFileListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                        nsISupports **aResult)
+{
+  nsCOMPtr<nsIDOMFileList> list(do_QueryInterface(aNative));
+  NS_ENSURE_TRUE(list, NS_ERROR_UNEXPECTED);
+
+  nsIDOMFile *file = nsnull; // weak, transfer ownership over to aResult
+  nsresult rv = list->Item(aIndex, &file);
+
+  *aResult = file;
 
   return rv;
 }

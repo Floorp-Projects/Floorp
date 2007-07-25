@@ -15,13 +15,11 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Mozilla Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Peter Van der Beken <peterv@netscape.com> (original author)
- *
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,40 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
-#include "nsIBaseDOMException.h"
-#include "nsIException.h"
+#include "domstubs.idl"
 
-class nsBaseDOMException : public nsIException,
-                           public nsIBaseDOMException
+interface nsIDOMFile;
+
+[scriptable, uuid(3bfef9fa-8ad3-4e49-bd62-d6cd75b29298)]
+interface nsIDOMFileList : nsISupports
 {
-public:
-  nsBaseDOMException();
-  virtual ~nsBaseDOMException();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIEXCEPTION
-  NS_IMETHOD Init(nsresult aNSResult, const char* aName,
-                  const char* aMessage,
-                  nsIException* aDefaultException);
-
-protected:
-  nsresult mResult;
-  const char* mName;
-  const char* mMessage;
-  nsCOMPtr<nsIException> mInner;
+  readonly attribute unsigned long length;
+  nsIDOMFile item(in unsigned long index);
 };
-
-#define DECL_INTERNAL_DOM_EXCEPTION(domname)                                 \
-nsresult                                                                     \
-NS_New##domname(nsresult aNSResult, nsIException* aDefaultException,         \
-                nsIException** aException);
-
-
-DECL_INTERNAL_DOM_EXCEPTION(DOMException)
-DECL_INTERNAL_DOM_EXCEPTION(RangeException)
-#ifdef MOZ_SVG
-DECL_INTERNAL_DOM_EXCEPTION(SVGException)
-#endif
-DECL_INTERNAL_DOM_EXCEPTION(XPathException)
-DECL_INTERNAL_DOM_EXCEPTION(FileException)

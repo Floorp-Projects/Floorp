@@ -105,6 +105,7 @@
 #include "nsILocalFile.h"
 #include "nsIFileStreams.h"
 #include "nsNetUtil.h"
+#include "nsDOMFile.h"
 
 // input type=image
 #include "nsImageLoadingContent.h"
@@ -315,7 +316,17 @@ protected:
    * and submits the form if either is present.
    */
   nsresult MaybeSubmitForm(nsPresContext* aPresContext);
-  
+
+  /**
+   * Get an nsIFile for the currently selected file in an file control.
+   */
+  nsresult GetFile(nsIFile** aFile);
+
+  /**
+   * Update mFileList with the currently selected file.
+   */
+  nsresult UpdateFileList();
+
   nsCOMPtr<nsIControllers> mControllers;
 
   /**
@@ -343,6 +354,8 @@ protected:
    * SetFileName to update this member.
    */
   nsAutoPtr<nsString>      mFileName;
+
+  nsRefPtr<nsDOMFileList>  mFileList;
 };
 
 #ifdef ACCESSIBILITY
@@ -811,8 +824,61 @@ nsHTMLInputElement::SetFileName(const nsAString& aValue)
   if (formControlFrame) {
     formControlFrame->SetFormProperty(nsGkAtoms::value, aValue);
   }
+
+  UpdateFileList();
   
   SetValueChanged(PR_TRUE);
+}
+
+nsresult
+nsHTMLInputElement::GetFile(nsIFile** aFile)
+{
+  *aFile = nsnull;
+
+  if (!mFileName || mType != NS_FORM_INPUT_FILE) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsresult rv = NS_ERROR_NOT_AVAILABLE;
+
+  if (StringBeginsWith(*mFileName, NS_LITERAL_STRING("file:"),
+                       nsCaseInsensitiveStringComparator())) {
+    // Converts the URL string into the corresponding nsIFile if possible.
+    // A local file will be created if the URL string begins with file://.
+    rv = NS_GetFileFromURLSpec(NS_ConvertUTF16toUTF8(*mFileName), aFile);
+  }
+
+  if (!(*aFile)) {
+    // this is no "file://", try as local file
+    nsCOMPtr<nsILocalFile> localFile;
+    rv = NS_NewLocalFile(*mFileName, PR_FALSE, getter_AddRefs(localFile));
+    NS_IF_ADDREF(*aFile = localFile);
+  }
+
+  return rv;
+}
+
+nsresult
+nsHTMLInputElement::UpdateFileList()
+{
+  if (mFileList) {
+    mFileList->Clear();
+
+    if (mType == NS_FORM_INPUT_FILE && mFileName) {
+      nsCOMPtr<nsIFile> file;
+      nsresult rv = GetFile(getter_AddRefs(file));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsRefPtr<nsDOMFile> domFile = new nsDOMFile(file);
+      if (domFile) {
+        if (!mFileList->Append(domFile)) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+    }
+  }
+
+  return NS_OK;
 }
 
 nsresult
@@ -1893,9 +1959,12 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
     if (aAttribute == nsGkAtoms::type) {
       // XXX ARG!! This is major evilness. ParseAttribute
       // shouldn't set members. Override SetAttr instead
-      if (!aResult.ParseEnumValue(aValue, kInputTypeTable)) {
-        mType = NS_FORM_INPUT_TEXT;
-        return PR_FALSE;
+      PRInt32 newType;
+      PRBool success;
+      if ((success = aResult.ParseEnumValue(aValue, kInputTypeTable))) {
+        newType = aResult.GetEnumValue();
+      } else {
+        newType = NS_FORM_INPUT_TEXT;
       }
 
       // Make sure to do the check for newType being NS_FORM_INPUT_FILE and the
@@ -1904,18 +1973,19 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
       // assumptions about our frame based on mType, but we won't have had time
       // to recreate frames yet -- that happens later in the SetAttr()
       // process).
-      PRInt32 newType = aResult.GetEnumValue();
       if (newType == NS_FORM_INPUT_FILE) {
         // These calls aren't strictly needed any more since we'll never
         // confuse values and filenames. However they're there for backwards
         // compat.
         SetFileName(EmptyString());
         SetValueInternal(EmptyString(), nsnull);
+      } else if (mType == NS_FORM_INPUT_FILE) {
+        SetFileName(EmptyString());
       }
 
       mType = newType;
 
-      return PR_TRUE;
+      return success;
     }
     if (aAttribute == nsGkAtoms::width) {
       return aResult.ParseSpecialIntValue(aValue, PR_TRUE, PR_FALSE);
@@ -2151,6 +2221,27 @@ nsHTMLInputElement::SetSelectionEnd(PRInt32 aSelectionEnd)
   return rv;
 }
 
+NS_IMETHODIMP
+nsHTMLInputElement::GetFileList(nsIDOMFileList** aFileList)
+{
+  *aFileList = nsnull;
+
+  if (mType != NS_FORM_INPUT_FILE) {
+    return NS_OK;
+  }
+
+  if (!mFileList) {
+    mFileList = new nsDOMFileList();
+    if (!mFileList) return NS_ERROR_OUT_OF_MEMORY;
+
+    UpdateFileList();
+  }
+
+  NS_ADDREF(*aFileList = mFileList);
+
+  return NS_OK;
+}
+
 nsresult
 nsHTMLInputElement::GetSelectionRange(PRInt32* aSelectionStart,
                                       PRInt32* aSelectionEnd)
@@ -2366,21 +2457,7 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
     //
     nsCOMPtr<nsIFile> file;
  
-    if (mFileName) {
-      if (StringBeginsWith(*mFileName, NS_LITERAL_STRING("file:"),
-                           nsCaseInsensitiveStringComparator())) {
-        // Converts the URL string into the corresponding nsIFile if possible.
-        // A local file will be created if the URL string begins with file://.
-        rv = NS_GetFileFromURLSpec(NS_ConvertUTF16toUTF8(*mFileName),
-                                   getter_AddRefs(file));
-      }
-      if (!file) {
-        // this is no "file://", try as local file
-        nsCOMPtr<nsILocalFile> localFile;
-        rv = NS_NewLocalFile(*mFileName, PR_FALSE, getter_AddRefs(localFile));
-        file = localFile;
-      }
-    }
+    rv = GetFile(getter_AddRefs(file));
 
     if (file) {
 
@@ -3015,3 +3092,4 @@ NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
 
   return NS_OK;
 }
+
