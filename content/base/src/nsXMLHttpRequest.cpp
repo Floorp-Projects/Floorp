@@ -64,6 +64,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
 #include "nsIVariant.h"
+#include "nsVariant.h"
 #include "nsIParser.h"
 #include "nsLoadListenerProxy.h"
 #include "nsIWindowWatcher.h"
@@ -82,6 +83,7 @@
 #include "nsContentPolicyUtils.h"
 #include "nsContentErrors.h"
 #include "nsLayoutStatics.h"
+#include "nsDOMError.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -1491,6 +1493,42 @@ nsXMLHttpRequest::RequestCompleted()
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsXMLHttpRequest::SendAsBinary(const nsAString &aBody)
+{
+  char *data = static_cast<char*>(NS_Alloc(aBody.Length() + 1));
+  if (!data)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsAString::const_iterator iter, end;
+  aBody.BeginReading(iter);
+  aBody.EndReading(end);
+  char *p = data;
+  while (iter != end) {
+    if (*iter & 0xFF00) {
+      NS_Free(data);
+      return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+    }
+    *p++ = static_cast<char>(*iter++);
+  }
+  *p = '\0';
+
+  nsCOMPtr<nsIInputStream> stream;
+  nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream), data,
+                                      aBody.Length(), NS_ASSIGNMENT_ADOPT);
+  if (NS_FAILED(rv))
+    NS_Free(data);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIWritableVariant> variant = new nsVariant();
+  if (!variant) return NS_ERROR_OUT_OF_MEMORY;
+
+  rv = variant->SetAsISupports(stream);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return Send(variant);
 }
 
 /* void send (in nsIVariant aBody); */
