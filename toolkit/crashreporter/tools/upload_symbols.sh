@@ -41,15 +41,10 @@
 # AIRBAG_SYMBOL_USER    : username on that host
 # AIRBAG_SYMBOL_PATH    : path on that host to put symbols in
 #
-: ${AIRBAG_SYMBOL_SERVER?} ${AIRBAG_SYMBOL_USER?} ${AIRBAG_SYMBOL_PATH?} ${1?"You must specify a symbol directory to upload"}
-PREVD=$PWD
-cd $1
-echo "Packing symbols..."
-BUILD_ID=`basename $PWD`
-tar -cvjf ${BUILD_ID}.tar.bz2 *
-echo "Transferring symbols..."
-rsync -avvz -e "ssh -2" ${BUILD_ID}.tar.bz2 ${AIRBAG_SYMBOL_USER}@${AIRBAG_SYMBOL_SERVER}:${AIRBAG_SYMBOL_PATH}/
+: ${AIRBAG_SYMBOL_SERVER?} ${AIRBAG_SYMBOL_USER?} ${AIRBAG_SYMBOL_PATH?} ${1?"You must specify a symbol archive to upload"}
+archive=`basename $1`
+echo "Transferring symbols... $1"
+rsync -avvz -e "ssh -2" $1 ${AIRBAG_SYMBOL_USER}@${AIRBAG_SYMBOL_SERVER}:${AIRBAG_SYMBOL_PATH}/
 echo "Unpacking symbols on remote host..."
-ssh -2 -l ${AIRBAG_SYMBOL_USER} ${AIRBAG_SYMBOL_SERVER} "cd ${AIRBAG_SYMBOL_PATH}; tar -xvjf ${BUILD_ID}.tar.bz2; rm -fv ${BUILD_ID}.tar.bz2"
+ssh -2 -l ${AIRBAG_SYMBOL_USER} ${AIRBAG_SYMBOL_SERVER} "cd ${AIRBAG_SYMBOL_PATH}; tar -xvjf $archive; rm -fv $archive"
 echo "Symbol transfer completed"
-cd $PREVD
