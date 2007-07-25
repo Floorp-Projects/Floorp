@@ -66,6 +66,7 @@ REQUIRES	= xpcom \
 		  java \
 		  locale \
 		  uriloader \
+		  prefetch \
 		  xuldoc \
 		  webshell \
 		  view \

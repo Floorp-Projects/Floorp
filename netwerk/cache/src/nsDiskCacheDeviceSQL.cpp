@@ -789,7 +789,9 @@ nsOfflineCacheDevice::Init()
     StatementSql ( mStatement_AddOwnership,      "INSERT INTO moz_cache_owners (ClientID, Domain, URI, Key) VALUES (?, ?, ?, ?);" ),
     StatementSql ( mStatement_CheckOwnership,    "SELECT Key From moz_cache_owners WHERE ClientID = ? AND Domain = ? AND URI = ? AND Key = ?;" ),
     StatementSql ( mStatement_ListOwned,         "SELECT Key FROM moz_cache_owners WHERE ClientID = ? AND Domain = ? AND URI = ?;" ),
-    StatementSql ( mStatement_DeleteUnowned,     "DELETE FROM moz_cache WHERE rowid IN (SELECT moz_cache.rowid FROM moz_cache LEFT OUTER JOIN moz_cache_owners ON (moz_cache.ClientID = moz_cache_owners.ClientID AND moz_cache.Key = moz_cache_owners.Key) WHERE moz_cache.ClientID = ? AND moz_cache_owners.Domain ISNULL);" ),
+    StatementSql ( mStatement_ListOwnerDomains,  "SELECT DISTINCT Domain FROM moz_cache_owners WHERE ClientID = ?;"),
+    StatementSql ( mStatement_ListOwnerURIs,     "SELECT DISTINCT URI FROM moz_cache_owners WHERE ClientID = ? AND Domain = ?;"),
+    StatementSql ( mStatement_DeleteUnowned,     "DELETE FROM moz_cache WHERE rowid IN (SELECT moz_cache.rowid FROM moz_cache LEFT OUTER JOIN moz_cache_owners ON (moz_cache.ClientID = moz_cache_owners.ClientID AND moz_cache.Key = moz_cache_owners.Key) WHERE moz_cache.ClientID = ? AND moz_cache_owners.Domain ISNULL);" )
   };
   for (PRUint32 i=0; i<NS_ARRAY_LENGTH(prepared); ++i)
   {
@@ -1252,6 +1254,77 @@ nsOfflineCacheDevice::EvictEntries(const char *clientID)
 }
 
 nsresult
+nsOfflineCacheDevice::RunSimpleQuery(mozIStorageStatement * statement,
+                                     PRUint32 resultIndex,
+                                     PRUint32 * count,
+                                     char *** values)
+{
+  PRBool hasRows;
+  nsresult rv = statement->ExecuteStep(&hasRows);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsTArray<nsCString> valArray;
+  while (hasRows)
+  {
+    PRUint32 length;
+    valArray.AppendElement(
+      nsDependentCString(statement->AsSharedUTF8String(resultIndex, &length)));
+
+    rv = statement->ExecuteStep(&hasRows);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  *count = valArray.Length();
+  char **ret = static_cast<char **>(NS_Alloc(*count * sizeof(char*)));
+  if (!ret) return NS_ERROR_OUT_OF_MEMORY;
+
+  for (PRUint32 i = 0; i <  *count; i++) {
+    ret[i] = NS_strdup(valArray[i].get());
+    if (!ret[i]) {
+      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, ret);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  *values = ret;
+
+  return NS_OK;
+}
+
+nsresult
+nsOfflineCacheDevice::GetOwnerDomains(const char * clientID,
+                                      PRUint32 * count,
+                                      char *** domains)
+{
+  LOG(("nsOfflineCacheDevice::GetOwnerDomains [cid=%s]\n", clientID));
+
+  AutoResetStatement statement(mStatement_ListOwnerDomains);
+  nsresult rv = statement->BindUTF8StringParameter(
+                                          0, nsDependentCString(clientID));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return RunSimpleQuery(mStatement_ListOwnerDomains, 0, count, domains);
+}
+
+nsresult
+nsOfflineCacheDevice::GetOwnerURIs(const char * clientID,
+                                   const nsACString & ownerDomain,
+                                   PRUint32 * count,
+                                   char *** domains)
+{
+  LOG(("nsOfflineCacheDevice::GetOwnerURIs [cid=%s]\n", clientID));
+
+  AutoResetStatement statement(mStatement_ListOwnerURIs);
+  nsresult rv = statement->BindUTF8StringParameter(
+                                          0, nsDependentCString(clientID));
+  rv = statement->BindUTF8StringParameter(
+                                          1, ownerDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return RunSimpleQuery(mStatement_ListOwnerURIs, 0, count, domains);
+}
+
+nsresult
 nsOfflineCacheDevice::SetOwnedKeys(const char * clientID,
                                    const nsACString & ownerDomain,
                                    const nsACString & ownerURI,
@@ -1305,36 +1378,7 @@ nsOfflineCacheDevice::GetOwnedKeys(const char * clientID,
   rv |= statement->BindUTF8StringParameter(2, ownerURI);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool hasRows;
-  rv = statement->ExecuteStep(&hasRows);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsTArray<nsCString> keyArray;
-  while (hasRows)
-  {
-    PRUint32 length;
-    keyArray.AppendElement(
-      nsDependentCString(statement->AsSharedUTF8String(0, &length)));
-
-    rv = statement->ExecuteStep(&hasRows);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  *count = keyArray.Length();
-  char **ret = static_cast<char **>(NS_Alloc(*count * sizeof(char*)));
-  if (!ret) return NS_ERROR_OUT_OF_MEMORY;
-
-  for (PRUint32 i = 0; i <  *count; i++) {
-    ret[i] = NS_strdup(keyArray[i].get());
-    if (!ret[i]) {
-      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, ret);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  *keys = ret;
-
-  return NS_OK;
+  return RunSimpleQuery(mStatement_ListOwned, 0, count, keys);
 }
 
 nsresult

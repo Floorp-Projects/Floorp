@@ -57,9 +57,12 @@ REQUIRES	= xpcom \
 
 CPPSRCS = \
 		nsPrefetchService.cpp \
+		nsOfflineCacheUpdate.cpp \
 		$(NULL)
+
 XPIDLSRCS =	\
 		nsIPrefetchService.idl \
+		nsIOfflineCacheUpdate.idl \
 		$(NULL)
 EXPORTS = \
 		nsCPrefetchService.h \

@@ -104,10 +104,6 @@ function run_test()
                                                  load_completed,
                                                  false);
 
-  // The <link rel="offline-resource"> should already be in the queue
-  ok(navigator.pendingOfflineLoads.length == 2,
-     "<link rel=\"offline-resource\"> loads should already be in the queue");
-
   for (var i = 0; i < navigator.pendingOfflineLoads.length; i++) {
     var load = navigator.pendingOfflineLoads[i];
     check_load_added(navigator.pendingOfflineLoads[i]);

@@ -54,6 +54,7 @@
 #include "nsOSHelperAppService.h"
 #include "nsExternalProtocolHandler.h"
 #include "nsPrefetchService.h"
+#include "nsOfflineCacheUpdate.h"
 #include "nsHandlerAppImpl.h"
 
 // session history
@@ -100,6 +101,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsOSHelperAppService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlockedExternalProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefetchService, Init)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsOfflineCacheUpdateService,
+                                         nsOfflineCacheUpdateService::GetInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsOfflineCacheUpdate)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLocalHandlerApp)
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
@@ -205,6 +209,10 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
      nsBlockedExternalProtocolHandlerConstructor, },
   {  NS_PREFETCHSERVICE_CLASSNAME, NS_PREFETCHSERVICE_CID, NS_PREFETCHSERVICE_CONTRACTID,
      nsPrefetchServiceConstructor, },
+  { NS_OFFLINECACHEUPDATESERVICE_CLASSNAME, NS_OFFLINECACHEUPDATESERVICE_CID, NS_OFFLINECACHEUPDATESERVICE_CONTRACTID,
+    nsOfflineCacheUpdateServiceConstructor, },
+  { NS_OFFLINECACHEUPDATE_CLASSNAME, NS_OFFLINECACHEUPDATE_CID, NS_OFFLINECACHEUPDATE_CONTRACTID,
+    nsOfflineCacheUpdateConstructor, },
   { "Local Application Handler App", NS_LOCALHANDLERAPP_CID, 
     NS_LOCALHANDLERAPP_CONTRACTID, nsLocalHandlerAppConstructor, },
 #if defined(XP_MAC) || defined(XP_MACOSX)

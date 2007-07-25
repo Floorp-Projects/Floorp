@@ -43,7 +43,7 @@
 #include "nsIDOMLoadStatus.h"
 #include "nsIDOMLoadStatusEvent.h"
 #include "nsIDOMLoadStatusList.h"
-#include "nsIOfflineCacheSession.h"
+#include "nsIOfflineCacheUpdate.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsIURI.h"
@@ -59,6 +59,7 @@ class nsDOMOfflineLoadStatus;
 class nsDOMOfflineLoadStatusList : public nsIDOMLoadStatusList,
                                    public nsIDOMEventTarget,
                                    public nsIObserver,
+                                   public nsIOfflineCacheUpdateObserver,
                                    public nsSupportsWeakReference
 {
 public:
@@ -66,6 +67,7 @@ public:
   NS_DECL_NSIDOMLOADSTATUSLIST
   NS_DECL_NSIDOMEVENTTARGET
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
 
   nsDOMOfflineLoadStatusList(nsIURI *aURI);
   virtual ~nsDOMOfflineLoadStatusList();
@@ -73,8 +75,7 @@ public:
   nsresult Init();
 
 private :
-  nsresult          ShouldInclude       (nsIDOMLoadStatus *aStatus,
-                                         PRBool *aInclude);
+  nsresult          WatchUpdate         (nsIOfflineCacheUpdate *aUpdate);
   nsIDOMLoadStatus *FindWrapper         (nsIDOMLoadStatus *aStatus,
                                          PRUint32 *aIndex);
   void              NotifyEventListeners(const nsCOMArray<nsIDOMEventListener>& aListeners,
@@ -89,7 +90,6 @@ private :
   nsCOMPtr<nsIURI> mURI;
   nsCOMArray<nsIDOMLoadStatus> mItems;
   nsCString mHostPort;
-  nsCOMPtr<nsIOfflineCacheSession> mCacheSession;
 
   nsCOMPtr<nsIScriptContext> mScriptContext;
 
