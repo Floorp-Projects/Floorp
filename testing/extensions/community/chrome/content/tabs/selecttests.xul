@@ -21,7 +21,7 @@
 	<script type="application/x-javascript" src="chrome://qa/content/settings.js" />
 	<script type="application/x-javascript" src="chrome://qa/content/common.js" />
 	
-	<script type="application/x-javascript" src="chrome://qa/content/selecttests.js" />
+	<script type="application/x-javascript" src="chrome://qa/content/tabs/selecttests.js" />
 	
 	<dialogheader title="Select test group" />
 	<spacer height="20" />
