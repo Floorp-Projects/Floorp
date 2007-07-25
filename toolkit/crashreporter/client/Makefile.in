@@ -88,6 +88,7 @@ LOCAL_INCLUDES += -I$(srcdir)
 OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS) $(MOZ_LIBCURL_CFLAGS)
 OS_LIBS += $(MOZ_GTK2_LIBS) $(MOZ_LIBCURL_LIBS)
 CPPSRCS += http_upload.cc
+FORCE_USE_PIC=1
 endif
 
 include $(topsrcdir)/config/rules.mk
