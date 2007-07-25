@@ -11,11 +11,11 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Airbag integration
+# The Original Code is Mozilla Breakpad integration
 #
 # The Initial Developer of the Original Code is
 # Ted Mielczarek <ted.mielczarek@gmail.com>
-# Portions created by the Initial Developer are Copyright (C) 2006
+# Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -34,62 +34,35 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = airbag
-LIBXUL_LIBRARY = 1
-LIBRARY_NAME = exception_handler_s
+HOST_PROGRAM = dump_syms
 
-REQUIRES = \
-	xpcom \
-	string \
-	xulapp \
-	$(NULL)
-
-DIRS = \
-	$(NULL)
-
-ifeq  ($(OS_ARCH),WINNT)
-	DIRS += airbag/src/common/windows \
-		airbag/src/client/windows \
-		$(NULL)
-endif
-
-ifeq ($(OS_ARCH),Darwin)
-DIRS += \
-  airbag/src/common/ \
-  airbag/src/common/mac \
-  airbag/src/client/mac/handler \
-  airbag/src/tools/mac/dump_syms \
+LOCAL_INCLUDES 	= \
+  -I$(srcdir)/../../.. \
+  -I$(srcdir)/../../../common/mac \
   $(NULL)
-endif
 
-DIRS += client
+HOST_CMSRCS = \
+  dump_syms_tool.m \
+  $(NULL)
 
-LOCAL_INCLUDES = -I$(srcdir)/airbag/src
-DEFINES += -DUNICODE -D_UNICODE
+HOST_LIBS += \
+  $(DEPTH)/toolkit/airbag/airbag/src/common/mac/$(LIB_PREFIX)host_breakpad_mac_common_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/airbag/airbag/src/common/$(LIB_PREFIX)host_breakpad_common_s.$(LIB_SUFFIX) \
+  $(NULL)
 
-XPIDLSRCS = \
-	nsICrashReporter.idl \
-	$(NULL)
+HOST_LDFLAGS += \
+  -framework Foundation \
+  -lcrypto \
+  $(NULL)
 
-EXPORTS = \
-	nsAirbagExceptionHandler.h \
-	$(NULL)
-
-CPPSRCS = \
-	nsAirbagExceptionHandler.cpp \
-	$(NULL)
-
-FORCE_STATIC_LIB = 1
-
-ifdef ENABLE_TESTS
-DIRS += test
-endif
+# force C++ linking
+CPP_PROG_LINK = 1
 
 include $(topsrcdir)/config/rules.mk
