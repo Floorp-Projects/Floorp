@@ -284,14 +284,15 @@ bool UIGetSettingsPath(const string& vendor,
                        const string& product,
                        string& settingsPath)
 {
-  NSArray* paths;
-  paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory,
-                                              NSUserDomainMask,
-                                              YES);
-  if ([paths count] < 1)
+  FSRef foundRef;
+  OSErr err = FSFindFolder(kUserDomain, kApplicationSupportFolderType,
+                           kCreateFolder, &foundRef);
+  if (err != noErr)
     return false;
 
-  NSString* destPath = [paths objectAtIndex:0];
+  unsigned char path[PATH_MAX];
+  FSRefMakePath(&foundRef, path, sizeof(path));
+  NSString* destPath = [NSString stringWithUTF8String:reinterpret_cast<char*>(path)];
 
   // Note that MacOS ignores the vendor when creating the profile hierarchy -
   // all application preferences directories live alongside one another in
