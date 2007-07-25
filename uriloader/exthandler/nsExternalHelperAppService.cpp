@@ -1215,6 +1215,9 @@ NS_IMETHODIMP nsExternalHelperAppService::LoadURI(nsIURI * aURL, nsIPrompt * aPr
   nsCAutoString spec;
   aURL->GetSpec(spec);
 
+  if (spec.Find("%00") != -1)
+    return NS_ERROR_MALFORMED_URI;
+
   spec.ReplaceSubstring("\"", "%22");
   spec.ReplaceSubstring("`", "%60");
 
