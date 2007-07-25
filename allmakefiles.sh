@@ -707,7 +707,6 @@ xpfe/components/alerts/public/Makefile
 xpfe/components/alerts/src/Makefile
 xpfe/components/console/Makefile
 xpfe/components/resetPref/Makefile
-xpfe/components/killAll/Makefile
 xpfe/components/build/Makefile
 xpfe/components/xremote/Makefile
 xpfe/components/xremote/public/Makefile
