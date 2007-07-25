@@ -771,9 +771,6 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
   /* Get the cert chain from NSS */
   CERTCertList *nssChain = NULL;
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting chain for \"%s\"\n", mCert->nickname));
-  // XXX This function is buggy - if it can't find the issuer, it crashes
-  //     on a null pointer.  Will have to wait until it is fixed in NSS.
-#ifdef NSS_CHAIN_BUG_FIXED
   nssChain = CERT_GetCertChainFromCert(mCert, PR_Now(), certUsageSSLClient);
   if (!nssChain)
     return NS_ERROR_FAILURE;
@@ -783,6 +780,7 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
   if (NS_FAILED(rv)) { 
     goto done; 
   }
+  CERTCertListNode *node;
   for (node = CERT_LIST_HEAD(nssChain);
        !CERT_LIST_END(node, nssChain);
        node = CERT_LIST_NEXT(node)) {
@@ -790,35 +788,6 @@ nsNSSCertificate::GetChain(nsIArray **_rvChain)
     nsCOMPtr<nsIX509Cert> cert = new nsNSSCertificate(node->cert);
     array->AppendElement(cert, PR_FALSE);
   }
-#else // workaround here
-  CERTCertificate *cert = nsnull;
-  /* enumerate the chain for scripting purposes */
-  nsCOMPtr<nsIMutableArray> array =
-    do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) { 
-    goto done; 
-  }
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Getting chain for \"%s\"\n", mCert->nickname));
-  cert = CERT_DupCertificate(mCert);
-  while (cert) {
-    nsCOMPtr<nsIX509Cert> pipCert = new nsNSSCertificate(cert);
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("adding %s to chain\n", cert->nickname));
-    array->AppendElement(pipCert, PR_FALSE);
-    PRBool wantToBreak = PR_FALSE;
-    CERTCertificate *next_cert = nsnull;
-    if (SECITEM_CompareItem(&cert->derIssuer, &cert->derSubject) == SECEqual) {
-      wantToBreak = PR_TRUE;
-    }
-    else {
-      next_cert = CERT_FindCertIssuer(cert, PR_Now(), certUsageSSLClient);
-    }
-    CERT_DestroyCertificate(cert);
-    if (wantToBreak) {
-      break;
-    }
-    cert = next_cert;
-  }
-#endif // NSS_CHAIN_BUG_FIXED
   *_rvChain = array;
   NS_IF_ADDREF(*_rvChain);
   rv = NS_OK;
