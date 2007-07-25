@@ -49,10 +49,14 @@
 #include <string>
 #include <Carbon/Carbon.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include "mac_utils.h"
 #elif defined(XP_LINUX)
 #include "client/linux/handler/exception_handler.h"
 #include <fcntl.h>
+#include <sys/types.h>
+#include <unistd.h>
 #else
 #error "Not yet implemented for this platform"
 #endif // defined(XP_WIN32)
