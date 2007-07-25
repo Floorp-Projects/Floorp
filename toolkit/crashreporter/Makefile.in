@@ -60,6 +60,12 @@ ifeq  ($(OS_ARCH),WINNT)
 		$(NULL)
 endif
 
+ifeq ($(OS_ARCH),Darwin)
+	DIRS += airbag/src/common/mac \
+		airbag/src/client/mac/handler \
+		$(NULL)
+endif
+
 DIRS += client
 
 LOCAL_INCLUDES = -I$(srcdir)/airbag/src
