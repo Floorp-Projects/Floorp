@@ -80,7 +80,6 @@ ifdef MOZ_HAVE_BROWSER
 DIRS += \
         directory \
         resetPref \
-        killAll \
         $(NULL)
 
 ifndef MOZ_PHOENIX
