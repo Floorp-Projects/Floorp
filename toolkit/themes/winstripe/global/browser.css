@@ -24,11 +24,10 @@
   -moz-appearance: none !important;
   -moz-binding: url("chrome://global/skin/globalBindings.xml#tabbrowser-tab") !important;
   background: transparent !important;
-  margin: 0px  !important;
+  margin: 0px 0px 1px !important;
   padding: 0px !important;
   border: none !important;
   height: 22px !important;
-  margin-bottom: 1px;
 }
 
 .tabbrowser-tab > .tab-image-middle {
