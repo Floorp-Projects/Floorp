@@ -59,7 +59,6 @@ class nsDOMOfflineLoadStatus;
 class nsDOMOfflineLoadStatusList : public nsIDOMLoadStatusList,
                                    public nsIDOMEventTarget,
                                    public nsIObserver,
-                                   public nsIOfflineCacheUpdateObserver,
                                    public nsSupportsWeakReference
 {
 public:
@@ -67,7 +66,6 @@ public:
   NS_DECL_NSIDOMLOADSTATUSLIST
   NS_DECL_NSIDOMEVENTTARGET
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
 
   nsDOMOfflineLoadStatusList(nsIURI *aURI);
   virtual ~nsDOMOfflineLoadStatusList();
@@ -75,7 +73,8 @@ public:
   nsresult Init();
 
 private :
-  nsresult          WatchUpdate         (nsIOfflineCacheUpdate *aUpdate);
+  nsresult          UpdateAdded         (nsIOfflineCacheUpdate *aUpdate);
+  nsresult          UpdateCompleted     (nsIOfflineCacheUpdate *aUpdate);
   nsIDOMLoadStatus *FindWrapper         (nsIDOMLoadStatus *aStatus,
                                          PRUint32 *aIndex);
   void              NotifyEventListeners(const nsCOMArray<nsIDOMEventListener>& aListeners,
@@ -95,6 +94,7 @@ private :
 
   nsCOMArray<nsIDOMEventListener> mLoadRequestedEventListeners;
   nsCOMArray<nsIDOMEventListener> mLoadCompletedEventListeners;
+  nsCOMArray<nsIDOMEventListener> mUpdateCompletedEventListeners;
 };
 
 class nsDOMLoadStatusEvent : public nsDOMEvent,

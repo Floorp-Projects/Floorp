@@ -52,6 +52,7 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStreamUtils.h"
+#include "nsThreadUtils.h"
 #include "prlog.h"
 
 static nsOfflineCacheUpdateService *gOfflineCacheUpdateService = nsnull;
@@ -85,10 +86,11 @@ private:
 // nsOfflineCacheUpdateItem::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS5(nsOfflineCacheUpdateItem,
+NS_IMPL_ISUPPORTS6(nsOfflineCacheUpdateItem,
                    nsIDOMLoadStatus,
                    nsIRequestObserver,
                    nsIStreamListener,
+                   nsIRunnable,
                    nsIInterfaceRequestor,
                    nsIChannelEventSink)
 
@@ -99,9 +101,11 @@ NS_IMPL_ISUPPORTS5(nsOfflineCacheUpdateItem,
 nsOfflineCacheUpdateItem::nsOfflineCacheUpdateItem(nsOfflineCacheUpdate *aUpdate,
                                                    nsIURI *aURI,
                                                    nsIURI *aReferrerURI,
-                                                   nsIDOMNode *aSource)
+                                                   nsIDOMNode *aSource,
+                                                   const nsACString &aClientID)
     : mURI(aURI)
     , mReferrerURI(aReferrerURI)
+    , mClientID(aClientID)
     , mUpdate(aUpdate)
     , mChannel(nsnull)
     , mState(nsIDOMLoadStatus::UNINITIALIZED)
@@ -139,6 +143,11 @@ nsOfflineCacheUpdateItem::OpenChannel()
     if (cachingChannel) {
         rv = cachingChannel->SetCacheForOfflineUse(PR_TRUE);
         NS_ENSURE_SUCCESS(rv, rv);
+
+        if (!mClientID.IsEmpty()) {
+            rv = cachingChannel->SetOfflineCacheClientID(mClientID);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
     }
 
     rv = mChannel->AsyncOpen(this, nsnull);
@@ -206,6 +215,20 @@ nsOfflineCacheUpdateItem::OnStopRequest(nsIRequest *aRequest,
         mChannel->GetContentLength(&mBytesRead);
     }
 
+    // We need to notify the update that the load is complete, but we
+    // want to give the channel a chance to close the cache entries.
+    NS_DispatchToCurrentThread(this);
+
+    return NS_OK;
+}
+
+
+//-----------------------------------------------------------------------------
+// nsOfflineCacheUpdateItem::nsIRunnable
+//-----------------------------------------------------------------------------
+NS_IMETHODIMP
+nsOfflineCacheUpdateItem::Run()
+{
     mUpdate->LoadCompleted();
 
     return NS_OK;
@@ -245,8 +268,15 @@ nsOfflineCacheUpdateItem::OnChannelRedirect(nsIChannel *aOldChannel,
         do_QueryInterface(aOldChannel);
     nsCOMPtr<nsICachingChannel> newCachingChannel =
       do_QueryInterface(aOldChannel);
-    if (newCachingChannel)
-      newCachingChannel->SetCacheForOfflineUse(PR_TRUE);
+    if (newCachingChannel) {
+        rv = newCachingChannel->SetCacheForOfflineUse(PR_TRUE);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (!mClientID.IsEmpty()) {
+            rv = newCachingChannel->SetOfflineCacheClientID(mClientID);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+    }
+
 
     PRBool match;
     rv = newURI->SchemeIs("http", &match);
@@ -370,6 +400,8 @@ nsOfflineCacheUpdate::nsOfflineCacheUpdate()
     : mState(STATE_UNINITIALIZED)
     , mAddedItems(PR_FALSE)
     , mPartialUpdate(PR_FALSE)
+    , mSucceeded(PR_TRUE)
+    , mCurrentItem(-1)
 {
 }
 
@@ -409,8 +441,26 @@ nsOfflineCacheUpdate::Init(PRBool aPartialUpdate,
                                      getter_AddRefs(session));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    mCacheSession = do_QueryInterface(session, &rv);
+    mMainCacheSession = do_QueryInterface(session, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Partial updates don't use temporary cache sessions
+    if (aPartialUpdate) {
+        mCacheSession = mMainCacheSession;
+    } else {
+        rv = cacheService->CreateTemporaryClientID(nsICache::STORE_OFFLINE,
+                                                   mClientID);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = cacheService->CreateSession(mClientID.get(),
+                                         nsICache::STORE_OFFLINE,
+                                         nsICache::STREAM_BASED,
+                                         getter_AddRefs(session));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        mCacheSession = do_QueryInterface(session, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     mState = STATE_INITIALIZED;
 
@@ -424,10 +474,23 @@ nsOfflineCacheUpdate::LoadCompleted()
 
     LOG(("nsOfflineCacheUpdate::LoadCompleted [%p]", this));
 
-    NS_ASSERTION(mItems.Length() >= 1, "Unknown load completed");
+    nsRefPtr<nsOfflineCacheUpdateItem> item = mItems[mCurrentItem];
+    mCurrentItem++;
 
-    nsRefPtr<nsOfflineCacheUpdateItem> item = mItems[0];
-    mItems.RemoveElementAt(0);
+    PRUint16 status;
+    rv = item->GetStatus(&status);
+
+    // Check for failures.  Only connection or server errors (5XX) will cause
+    // the update to fail.
+    if (NS_FAILED(rv) || status == 0 || status >= 500) {
+        // Only fail updates from this domain.  Outside-of-domain updates
+        // are not guaranteeed to be updated.
+        nsCAutoString domain;
+        item->mURI->GetHostPort(domain);
+        if (domain == mUpdateDomain) {
+            mSucceeded = PR_FALSE;
+        }
+    }
 
     rv = NotifyCompleted(item);
     if (NS_FAILED(rv)) return;
@@ -449,6 +512,7 @@ nsOfflineCacheUpdate::Begin()
 
     mState = STATE_RUNNING;
 
+    mCurrentItem = 0;
     ProcessNextURI();
 
     return NS_OK;
@@ -460,10 +524,12 @@ nsOfflineCacheUpdate::Cancel()
     LOG(("nsOfflineCacheUpdate::Cancel [%p]", this));
 
     mState = STATE_CANCELLED;
+    mSucceeded = PR_FALSE;
 
-    if (mItems.Length() > 0) {
-        // First load might be running
-        mItems[0]->Cancel();
+    if (mCurrentItem >= 0 &&
+        mCurrentItem < static_cast<PRInt32>(mItems.Length())) {
+        // Load might be running
+        mItems[mCurrentItem]->Cancel();
     }
 
     return NS_OK;
@@ -478,8 +544,8 @@ nsOfflineCacheUpdate::AddOwnedItems(const nsACString &aOwnerURI)
 {
     PRUint32 count;
     char **keys;
-    nsresult rv = mCacheSession->GetOwnedKeys(mUpdateDomain, aOwnerURI,
-                                              &count, &keys);
+    nsresult rv = mMainCacheSession->GetOwnedKeys(mUpdateDomain, aOwnerURI,
+                                                  &count, &keys);
     NS_ENSURE_SUCCESS(rv, rv);
 
     AutoFreeArray autoFree(count, keys);
@@ -488,7 +554,8 @@ nsOfflineCacheUpdate::AddOwnedItems(const nsACString &aOwnerURI)
         nsCOMPtr<nsIURI> uri;
         if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(uri), keys[i]))) {
             nsRefPtr<nsOfflineCacheUpdateItem> item =
-                new nsOfflineCacheUpdateItem(this, uri, mReferrerURI, nsnull);
+                new nsOfflineCacheUpdateItem(this, uri, mReferrerURI,
+                                             nsnull, mClientID);
             if (!item) return NS_ERROR_OUT_OF_MEMORY;
 
             mItems.AppendElement(item);
@@ -504,7 +571,7 @@ nsOfflineCacheUpdate::AddDomainItems()
 {
     PRUint32 count;
     char **uris;
-    nsresult rv = mCacheSession->GetOwnerURIs(mUpdateDomain, &count, &uris);
+    nsresult rv = mMainCacheSession->GetOwnerURIs(mUpdateDomain, &count, &uris);
     NS_ENSURE_SUCCESS(rv, rv);
 
     AutoFreeArray autoFree(count, uris);
@@ -525,22 +592,23 @@ nsOfflineCacheUpdate::AddDomainItems()
 nsresult
 nsOfflineCacheUpdate::ProcessNextURI()
 {
-    LOG(("nsOfflineCacheUpdate::ProcessNextURI [%p, numItems=%d]",
-         this, mItems.Length()));
+    LOG(("nsOfflineCacheUpdate::ProcessNextURI [%p, current=%d, numItems=%d]",
+         this, mCurrentItem, mItems.Length()));
 
-    if (mState == STATE_CANCELLED || mItems.Length() == 0) {
+    if (mState == STATE_CANCELLED ||
+        mCurrentItem >= static_cast<PRInt32>(mItems.Length())) {
         return Finish();
     }
 
 #if defined(PR_LOGGING)
     if (LOG_ENABLED()) {
         nsCAutoString spec;
-        mItems[0]->mURI->GetSpec(spec);
+        mItems[mCurrentItem]->mURI->GetSpec(spec);
         LOG(("%p: Opening channel for %s", this, spec.get()));
     }
 #endif
 
-    nsresult rv = mItems[0]->OpenChannel();
+    nsresult rv = mItems[mCurrentItem]->OpenChannel();
     if (NS_FAILED(rv)) {
         LoadCompleted();
         return rv;
@@ -583,6 +651,21 @@ nsOfflineCacheUpdate::Finish()
 
     nsOfflineCacheUpdateService *service =
         nsOfflineCacheUpdateService::GetInstance();
+
+    if (!mPartialUpdate) {
+        if (mSucceeded) {
+            nsresult rv = mMainCacheSession->MergeTemporaryClientID(mClientID);
+            if (NS_FAILED(rv))
+                mSucceeded = PR_FALSE;
+        }
+
+        if (!mSucceeded) {
+            // Update was not merged, mark all the loads as failures
+            for (PRUint32 i = 0; i < mItems.Length(); i++) {
+                mItems[i]->Cancel();
+            }
+        }
+    }
 
     if (!service)
         return NS_ERROR_FAILURE;
@@ -651,8 +734,9 @@ nsOfflineCacheUpdate::AddURI(nsIURI *aURI, nsIDOMNode *aSource)
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-   nsRefPtr<nsOfflineCacheUpdateItem> item =
-        new nsOfflineCacheUpdateItem(this, aURI, mReferrerURI, aSource);
+    nsRefPtr<nsOfflineCacheUpdateItem> item =
+        new nsOfflineCacheUpdateItem(this, aURI, mReferrerURI,
+                                     aSource, mClientID);
     if (!item) return NS_ERROR_OUT_OF_MEMORY;
 
     mItems.AppendElement(item);

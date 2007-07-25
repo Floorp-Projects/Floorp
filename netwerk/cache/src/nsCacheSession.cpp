@@ -197,3 +197,7 @@ NS_IMETHODIMP nsCacheSession::EvictUnownedEntries()
     return nsCacheService::EvictUnownedOfflineEntries(this);
 }
 
+NS_IMETHODIMP nsCacheSession::MergeTemporaryClientID(const nsACString& fromClientID)
+{
+    return nsCacheService::MergeTemporaryClientID(this, fromClientID);
+}

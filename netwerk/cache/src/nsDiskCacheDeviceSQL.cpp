@@ -60,6 +60,7 @@ static const char OFFLINE_CACHE_DEVICE_ID[] = { "offline" };
 
 #define LOG(args) CACHE_LOG_DEBUG(args)
 
+static PRUint32 gNextTemporaryClientID = 0;
 
 /*****************************************************************************
  * helpers
@@ -118,7 +119,7 @@ class EvictionObserver
           NS_LITERAL_CSTRING("CREATE TEMP TRIGGER cache_on_delete AFTER DELETE"
                              " ON moz_cache FOR EACH ROW BEGIN SELECT"
                              " cache_eviction_observer("
-                             "  OLD.clientID, OLD.key, OLD.generation);"
+                             "  OLD.key, OLD.generation);"
                              " END;"));
     }
 
@@ -175,19 +176,14 @@ NS_IMPL_ISUPPORTS1(nsOfflineCacheEvictionFunction, mozIStorageFunction)
 // helper function for directly exposing the same data file binding
 // path algorithm used in nsOfflineCacheBinding::Create
 static nsresult
-GetCacheDataFile(nsIFile *cacheDir, const char *cid, const char *key,
+GetCacheDataFile(nsIFile *cacheDir, const char *key,
                  int generation, nsCOMPtr<nsIFile> &file)
 {
   cacheDir->Clone(getter_AddRefs(file));
   if (!file)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCAutoString fullKey;
-  fullKey.Append(cid);
-  fullKey.Append(':');
-  fullKey.Append(key);
-
-  PRUint64 hash = DCacheHash(fullKey.get());
+  PRUint64 hash = DCacheHash(key);
 
   PRUint32 dir1 = (PRUint32) (hash & 0x0F);
   PRUint32 dir2 = (PRUint32)((hash & 0xF0) >> 4);
@@ -212,20 +208,19 @@ nsOfflineCacheEvictionFunction::OnFunctionCall(mozIStorageValueArray *values, ns
   PRUint32 numEntries;
   nsresult rv = values->GetNumEntries(&numEntries);
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(numEntries == 3, "unexpected number of arguments");
+  NS_ASSERTION(numEntries == 2, "unexpected number of arguments");
 
   PRUint32 valueLen;
-  const char *cid = values->AsSharedUTF8String(0, &valueLen);
-  const char *key = values->AsSharedUTF8String(1, &valueLen);
-  int generation  = values->AsInt32(2);
+  const char *key = values->AsSharedUTF8String(0, &valueLen);
+  int generation  = values->AsInt32(1);
 
   nsCOMPtr<nsIFile> file;
-  rv = GetCacheDataFile(mDevice->CacheDirectory(), cid, key,
+  rv = GetCacheDataFile(mDevice->CacheDirectory(), key,
                         generation, file);
   if (NS_FAILED(rv))
   {
-    LOG(("GetCacheDataFile [cid=%s key=%s generation=%d] failed [rv=%x]!\n",
-         cid, key, generation, rv));
+    LOG(("GetCacheDataFile [key=%s generation=%d] failed [rv=%x]!\n",
+         key, generation, rv));
     return rv;
   }
 
@@ -323,7 +318,7 @@ public:
   NS_DECL_ISUPPORTS
 
   static nsOfflineCacheBinding *
-      Create(nsIFile *cacheDir, const char *key, int generation);
+      Create(nsIFile *cacheDir, const nsCString *key, int generation);
 
   nsCOMPtr<nsIFile> mDataFile;
   int               mGeneration;
@@ -333,12 +328,17 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(nsOfflineCacheBinding)
 
 nsOfflineCacheBinding *
 nsOfflineCacheBinding::Create(nsIFile *cacheDir,
-                              const char *key,
+                              const nsCString *fullKey,
                               int generation)
 {
   nsCOMPtr<nsIFile> file;
   cacheDir->Clone(getter_AddRefs(file));
   if (!file)
+    return nsnull;
+
+  nsCAutoString keyBuf;
+  const char *cid, *key;
+  if (!DecomposeCacheEntryKey(fullKey, &cid, &key, keyBuf))
     return nsnull;
 
   PRUint64 hash = DCacheHash(key);
@@ -444,7 +444,7 @@ CreateCacheEntry(nsOfflineCacheDevice *device,
   // create a binding object for this entry
   nsOfflineCacheBinding *binding =
       nsOfflineCacheBinding::Create(device->CacheDirectory(),
-                                    fullKey->get(),
+                                    fullKey,
                                     rec.generation);
   if (!binding)
   {
@@ -765,7 +765,7 @@ nsOfflineCacheDevice::Init()
     new nsOfflineCacheEvictionFunction(this);
   if (!evictionFunction) return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = mDB->CreateFunction(NS_LITERAL_CSTRING("cache_eviction_observer"), 3, evictionFunction);
+  rv = mDB->CreateFunction(NS_LITERAL_CSTRING("cache_eviction_observer"), 2, evictionFunction);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create all (most) of our statements up front
@@ -789,9 +789,11 @@ nsOfflineCacheDevice::Init()
     StatementSql ( mStatement_AddOwnership,      "INSERT INTO moz_cache_owners (ClientID, Domain, URI, Key) VALUES (?, ?, ?, ?);" ),
     StatementSql ( mStatement_CheckOwnership,    "SELECT Key From moz_cache_owners WHERE ClientID = ? AND Domain = ? AND URI = ? AND Key = ?;" ),
     StatementSql ( mStatement_ListOwned,         "SELECT Key FROM moz_cache_owners WHERE ClientID = ? AND Domain = ? AND URI = ?;" ),
+    StatementSql ( mStatement_ListOwners,        "SELECT DISTINCT Domain, URI FROM moz_cache_owners WHERE ClientID = ?;"),
     StatementSql ( mStatement_ListOwnerDomains,  "SELECT DISTINCT Domain FROM moz_cache_owners WHERE ClientID = ?;"),
     StatementSql ( mStatement_ListOwnerURIs,     "SELECT DISTINCT URI FROM moz_cache_owners WHERE ClientID = ? AND Domain = ?;"),
-    StatementSql ( mStatement_DeleteUnowned,     "DELETE FROM moz_cache WHERE rowid IN (SELECT moz_cache.rowid FROM moz_cache LEFT OUTER JOIN moz_cache_owners ON (moz_cache.ClientID = moz_cache_owners.ClientID AND moz_cache.Key = moz_cache_owners.Key) WHERE moz_cache.ClientID = ? AND moz_cache_owners.Domain ISNULL);" )
+    StatementSql ( mStatement_DeleteUnowned,     "DELETE FROM moz_cache WHERE rowid IN (SELECT moz_cache.rowid FROM moz_cache LEFT OUTER JOIN moz_cache_owners ON (moz_cache.ClientID = moz_cache_owners.ClientID AND moz_cache.Key = moz_cache_owners.Key) WHERE moz_cache.ClientID = ? AND moz_cache_owners.Domain ISNULL);" ),
+    StatementSql ( mStatement_SwapClientID,       "UPDATE OR REPLACE moz_cache SET ClientID = ? WHERE ClientID = ?;")
   };
   for (PRUint32 i=0; i<NS_ARRAY_LENGTH(prepared); ++i)
   {
@@ -805,6 +807,14 @@ nsOfflineCacheDevice::Init()
          NS_LITERAL_CSTRING("UPDATE moz_cache"
                             " SET Flags=(Flags & ~1)"
                             " WHERE (Flags & 1);"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Clear up dangling temporary sessions
+  EvictionObserver evictionObserver(mDB);
+
+  rv = mDB->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("DELETE FROM moz_cache"
+                       " WHERE (ClientID GLOB \"TempClient*\")"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -972,7 +982,7 @@ nsOfflineCacheDevice::BindEntry(nsCacheEntry *entry)
 
   // create binding, pick best generation number
   nsRefPtr<nsOfflineCacheBinding> binding =
-      nsOfflineCacheBinding::Create(mCacheDirectory, entry->Key()->get(), -1);
+      nsOfflineCacheBinding::Create(mCacheDirectory, entry->Key(), -1);
   if (!binding)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1472,6 +1482,84 @@ nsOfflineCacheDevice::EvictUnownedEntries(const char *clientID)
   NS_ENSURE_SUCCESS(rv, rv);
 
   return statement->Execute();
+}
+
+nsresult
+nsOfflineCacheDevice::CreateTemporaryClientID(nsACString &clientID)
+{
+  nsCAutoString str;
+  str.AssignLiteral("TempClient");
+  str.AppendInt(gNextTemporaryClientID++);
+
+  clientID.Assign(str);
+
+  return NS_OK;
+}
+
+nsresult
+nsOfflineCacheDevice::MergeTemporaryClientID(const char *clientID,
+                                             const char *fromClientID)
+{
+  LOG(("nsOfflineCacheDevice::MergeTemporaryClientID [cid=%s, from=%s]\n",
+       clientID, fromClientID));
+  mozStorageTransaction transaction(mDB, PR_FALSE);
+
+  // Move over ownerships
+  AutoResetStatement listOwnersStatement(mStatement_ListOwners);
+  nsresult rv = listOwnersStatement->BindUTF8StringParameter(
+                                          0, nsDependentCString(fromClientID));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // List all the owners in the new session
+  nsTArray<nsCString> domainArray;
+  nsTArray<nsCString> uriArray;
+
+  PRBool hasRows;
+  rv = listOwnersStatement->ExecuteStep(&hasRows);
+  NS_ENSURE_SUCCESS(rv, rv);
+  while (hasRows)
+  {
+    PRUint32 length;
+    domainArray.AppendElement(
+      nsDependentCString(listOwnersStatement->AsSharedUTF8String(0, &length)));
+    uriArray.AppendElement(
+      nsDependentCString(listOwnersStatement->AsSharedUTF8String(1, &length)));
+
+    rv = listOwnersStatement->ExecuteStep(&hasRows);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Now move over each ownership set
+  for (PRUint32 i = 0; i < domainArray.Length(); i++) {
+    PRUint32 count;
+    char **keys;
+    rv = GetOwnedKeys(fromClientID, domainArray[i], uriArray[i],
+                      &count, &keys);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = SetOwnedKeys(clientID, domainArray[i], uriArray[i],
+                      count, const_cast<const char **>(keys));
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, keys);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Now clear out the temporary session's copy
+    rv = SetOwnedKeys(fromClientID, domainArray[i], uriArray[i], 0, 0);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  EvictionObserver evictionObserver(mDB);
+
+  AutoResetStatement swapStatement(mStatement_SwapClientID);
+  rv = swapStatement->BindUTF8StringParameter(
+                                          0, nsDependentCString(clientID));
+  rv |= swapStatement->BindUTF8StringParameter(
+                                          1, nsDependentCString(fromClientID));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = swapStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return transaction.Commit();
 }
 
 /**
