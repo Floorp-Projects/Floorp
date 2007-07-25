@@ -4093,6 +4093,20 @@ nsTreeBodyFrame::ClearStyleAndImageCaches()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTreeBodyFrame::DidSetStyleContext()
+{
+  // Clear the style cache; the pointers are no longer even valid
+  mStyleCache.Clear();
+  // XXX The following is hacky, but it's not incorrect,
+  // and appears to fix a few bugs with style changes, like text zoom and
+  // dpi changes
+  mIndentation = GetIndentation();
+  mRowHeight = GetRowHeight();
+  mStringWidth = -1;
+  return NS_OK;
+}
+
 PRBool 
 nsTreeBodyFrame::OffsetForHorzScroll(nsRect& rect, PRBool clip)
 {
