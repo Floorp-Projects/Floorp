@@ -59,10 +59,10 @@
 #include "nsGopherDirListingConv.h"
 
 // nsISupports implementation
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsGopherDirListingConv,
-                              nsIStreamConverter,
-                              nsIStreamListener,
-                              nsIRequestObserver)
+NS_IMPL_ISUPPORTS3(nsGopherDirListingConv,
+                   nsIStreamConverter,
+                   nsIStreamListener,
+                   nsIRequestObserver)
 
 // nsIStreamConverter implementation
 

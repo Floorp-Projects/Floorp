@@ -40,7 +40,6 @@
 #include "nsMemory.h"
 #include "plstr.h"
 #include "prlog.h"
-#include "nsIAtom.h"
 #include "nsIServiceManager.h"
 #include "nsIGenericFactory.h"
 #include "nsXPIDLString.h"
@@ -76,10 +75,10 @@ PRLogModuleInfo* gFTPDirListConvLog = nsnull;
 #endif /* PR_LOGGING */
 
 // nsISupports implementation
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsFTPDirListingConv,
-                              nsIStreamConverter,
-                              nsIStreamListener, 
-                              nsIRequestObserver)
+NS_IMPL_ISUPPORTS3(nsFTPDirListingConv,
+                   nsIStreamConverter,
+                   nsIStreamListener, 
+                   nsIRequestObserver)
 
 
 // nsIStreamConverter implementation
