@@ -7,6 +7,7 @@ use IO::Handle;
 use IO::Select;
 use IPC::Open3;
 use POSIX qw(:sys_wait_h);
+use File::Temp qw(tempfile);
 use Cwd;
 
 use base qw(Exporter);
@@ -380,27 +381,40 @@ sub Email {
 
     if (-f $sendmail) {
         open(SENDMAIL, "|$sendmail -oi -t")
-          or die("Can't fork for sendmail: $!\n");
+          or die("MozBuild::Utils::Email(): Can't fork for sendmail: $!\n");
         print SENDMAIL "From: $from\n";
         print SENDMAIL "To: $to\n";
         foreach my $cc (@{$ccList}) {
             print SENDMAIL "CC: $cc\n";
         }
         print SENDMAIL "Subject: $subject\n\n";
+        print SENDMAIL "\n$message";
+
+        close(SENDMAIL);
     } elsif(-f $blat) {
+        my ($mh, $mailfile) = tempfile(DIR => '.');
+
         my $toList = $to;
         foreach my $cc (@{$ccList}) {
             $toList .= ',';
             $toList .= $cc;
         }
-        open(SENDMAIL, "|$blat -to $toList -subject \"$subject\"")
-          or die("Can't fork for blat: $!\n");
-    } else {
-        die("ASSERT: cannot find $sendmail or $blat");
-    }
+        print $mh "\n$message";
+        close($mh) or die("MozBuild::Utils::Email(): could not close tempmail file $mailfile: $!");
 
-    print SENDMAIL "$message";
-    close(SENDMAIL) or warn "sendmail didn't close nicely: $!";
+        my $rv = RunShellCommand(command => $blat,
+                                 args => [$mailfile, '-to', $toList,
+                                          '-subject', '"' . $subject . '"']);
+        if ($rv->{'timedOut'} || $rv->{'exitValue'} != 0) {
+          die("MozBuild::Utils::Email(): FAILED: $rv->{'exitValue'}," .
+              " output: $rv->{'output'}\n");
+        }
+
+        print "$rv->{'output'}\n";
+
+    } else {
+        die("MozBuild::Utils::Email(): ASSERT: cannot find $sendmail or $blat");
+    }
 }
 
 sub DownloadFile {
