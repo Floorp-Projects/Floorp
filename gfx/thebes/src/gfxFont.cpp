@@ -217,6 +217,8 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
     double x = aPt->x;
     double y = aPt->y;
 
+    NS_ASSERTION(appUnitsPerDevUnit != 0, "Invalid app unit scale");
+
     cairo_t *cr = aContext->GetCairo();
     SetupCairoFont(cr);
 
