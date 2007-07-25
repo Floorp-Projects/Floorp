@@ -1571,9 +1571,6 @@ ProcessAsyncMessages()
         AsyncQueueLast = nsnull;
       AsyncQueueFirst = message->mNext;
       nsMemory::Free(message);
-
-      // free any out-of-memory flags in the library
-      sqlite3ApiExit(nsnull, 0);
     }
     // Drop the queue mutex before continuing to the next write operation
     // in order to give other threads a chance to work with the write queue
