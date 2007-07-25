@@ -35,6 +35,7 @@
 #include <cstdio>
 
 #include "google_breakpad/processor/minidump.h"
+#include "processor/logging.h"
 
 namespace {
 
@@ -50,7 +51,7 @@ using google_breakpad::MinidumpBreakpadInfo;
 static bool PrintMinidumpDump(const char *minidump_file) {
   Minidump minidump(minidump_file);
   if (!minidump.Read()) {
-    fprintf(stderr, "minidump.Read() failed\n");
+    BPLOG(ERROR) << "minidump.Read() failed";
     return false;
   }
   minidump.Print();
@@ -60,7 +61,7 @@ static bool PrintMinidumpDump(const char *minidump_file) {
   MinidumpThreadList *thread_list = minidump.GetThreadList();
   if (!thread_list) {
     ++errors;
-    printf("minidump.GetThreadList() failed\n");
+    BPLOG(ERROR) << "minidump.GetThreadList() failed";
   } else {
     thread_list->Print();
   }
@@ -68,7 +69,7 @@ static bool PrintMinidumpDump(const char *minidump_file) {
   MinidumpModuleList *module_list = minidump.GetModuleList();
   if (!module_list) {
     ++errors;
-    printf("minidump.GetModuleList() failed\n");
+    BPLOG(ERROR) << "minidump.GetModuleList() failed";
   } else {
     module_list->Print();
   }
@@ -76,15 +77,14 @@ static bool PrintMinidumpDump(const char *minidump_file) {
   MinidumpMemoryList *memory_list = minidump.GetMemoryList();
   if (!memory_list) {
     ++errors;
-    printf("minidump.GetMemoryList() failed\n");
+    BPLOG(ERROR) << "minidump.GetMemoryList() failed";
   } else {
     memory_list->Print();
   }
 
   MinidumpException *exception = minidump.GetException();
   if (!exception) {
-    // Exception info is optional, so don't treat this as an error.
-    printf("minidump.GetException() failed\n");
+    BPLOG(INFO) << "minidump.GetException() failed";
   } else {
     exception->Print();
   }
@@ -92,7 +92,7 @@ static bool PrintMinidumpDump(const char *minidump_file) {
   MinidumpSystemInfo *system_info = minidump.GetSystemInfo();
   if (!system_info) {
     ++errors;
-    printf("minidump.GetSystemInfo() failed\n");
+    BPLOG(ERROR) << "minidump.GetSystemInfo() failed";
   } else {
     system_info->Print();
   }
@@ -100,7 +100,7 @@ static bool PrintMinidumpDump(const char *minidump_file) {
   MinidumpMiscInfo *misc_info = minidump.GetMiscInfo();
   if (!misc_info) {
     ++errors;
-    printf("minidump.GetMiscInfo() failed\n");
+    BPLOG(ERROR) << "minidump.GetMiscInfo() failed";
   } else {
     misc_info->Print();
   }
@@ -108,7 +108,7 @@ static bool PrintMinidumpDump(const char *minidump_file) {
   MinidumpBreakpadInfo *breakpad_info = minidump.GetBreakpadInfo();
   if (!breakpad_info) {
     // Breakpad info is optional, so don't treat this as an error.
-    printf("minidump.GetBreakpadInfo() failed\n");
+    BPLOG(INFO) << "minidump.GetBreakpadInfo() failed";
   } else {
     breakpad_info->Print();
   }
@@ -119,6 +119,8 @@ static bool PrintMinidumpDump(const char *minidump_file) {
 }  // namespace
 
 int main(int argc, char **argv) {
+  BPLOG_INIT(&argc, &argv);
+
   if (argc != 2) {
     fprintf(stderr, "usage: %s <file>\n", argv[0]);
     return 1;

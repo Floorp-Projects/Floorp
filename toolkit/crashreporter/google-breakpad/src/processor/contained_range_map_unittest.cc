@@ -35,6 +35,8 @@
 
 #include "processor/contained_range_map-inl.h"
 
+#include "processor/logging.h"
+
 
 #define ASSERT_TRUE(condition) \
   if (!(condition)) { \
@@ -255,5 +257,7 @@ static bool RunTests() {
 
 
 int main(int argc, char **argv) {
+  BPLOG_INIT(&argc, &argv);
+
   return RunTests() ? 0 : 1;
 }

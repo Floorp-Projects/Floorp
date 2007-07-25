@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		557800400BE1F28500EC23E0 /* macho_utilities.cc in Sources */ = {isa = PBXBuildFile; fileRef = 5578003E0BE1F28500EC23E0 /* macho_utilities.cc */; };
 		557800410BE1F28500EC23E0 /* macho_utilities.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5578003F0BE1F28500EC23E0 /* macho_utilities.h */; };
+		8B40BDC00C0638E4009535AF /* logging.cc in Sources */ = {isa = PBXBuildFile; fileRef = 8B40BDBF0C0638E4009535AF /* logging.cc */; };
 		8DD76F9A0486AA7600D96B5E /* crash_report.mm in Sources */ = {isa = PBXBuildFile; fileRef = 08FB7796FE84155DC02AAC07 /* crash_report.mm */; settings = {ATTRIBUTES = (); }; };
 		8DD76F9C0486AA7600D96B5E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 08FB779EFE84155DC02AAC07 /* Foundation.framework */; };
 		9B35FEE40B2675F9008DE8C7 /* code_module.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 9B35FEE20B2675F9008DE8C7 /* code_module.h */; };
@@ -78,6 +79,7 @@
 		08FB779EFE84155DC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		5578003E0BE1F28500EC23E0 /* macho_utilities.cc */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = macho_utilities.cc; path = ../../../common/mac/macho_utilities.cc; sourceTree = SOURCE_ROOT; };
 		5578003F0BE1F28500EC23E0 /* macho_utilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = macho_utilities.h; path = ../../../common/mac/macho_utilities.h; sourceTree = SOURCE_ROOT; };
+		8B40BDBF0C0638E4009535AF /* logging.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = logging.cc; path = ../../../processor/logging.cc; sourceTree = SOURCE_ROOT; };
 		8DD76FA10486AA7600D96B5E /* crash_report */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = crash_report; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B35FEE20B2675F9008DE8C7 /* code_module.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = code_module.h; path = ../../../google_breakpad/processor/code_module.h; sourceTree = SOURCE_ROOT; };
 		9B35FEE30B2675F9008DE8C7 /* code_modules.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = code_modules.h; path = ../../../google_breakpad/processor/code_modules.h; sourceTree = SOURCE_ROOT; };
@@ -228,6 +230,7 @@
 				9B35FEE70B26761C008DE8C7 /* basic_code_modules.cc */,
 				9B35FEE80B26761C008DE8C7 /* basic_code_modules.h */,
 				9BDF172A0B1B8B2400F8391B /* call_stack.cc */,
+				8B40BDBF0C0638E4009535AF /* logging.cc */,
 				9BDF173F0B1B8B9A00F8391B /* minidump.cc */,
 				9BDF172B0B1B8B2400F8391B /* minidump_processor.cc */,
 				9BDF1A270B1BD58200F8391B /* pathname_stripper.cc */,
@@ -312,6 +315,7 @@
 				9BE650B40B52FE3000611104 /* macho_id.cc in Sources */,
 				9BE650B60B52FE3000611104 /* macho_walker.cc in Sources */,
 				557800400BE1F28500EC23E0 /* macho_utilities.cc in Sources */,
+				8B40BDC00C0638E4009535AF /* logging.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

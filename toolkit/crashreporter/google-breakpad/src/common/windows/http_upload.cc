@@ -140,8 +140,10 @@ bool HTTPUpload::SendRequest(const wstring &url,
                         -1, HTTP_ADDREQ_FLAG_ADD);
 
   string request_body;
-  GenerateRequestBody(parameters, upload_file,
-                      file_part_name, boundary, &request_body);
+  if (!GenerateRequestBody(parameters, upload_file,
+                           file_part_name, boundary, &request_body)) {
+    return false;
+  }
 
   if (!HttpSendRequest(request.get(), NULL, 0,
                        const_cast<char *>(request_body.data()),

@@ -45,6 +45,7 @@
 #include "google_breakpad/processor/minidump_processor.h"
 #include "google_breakpad/processor/process_state.h"
 #include "google_breakpad/processor/stack_frame_cpu.h"
+#include "processor/logging.h"
 #include "processor/pathname_stripper.h"
 #include "processor/scoped_ptr.h"
 #include "processor/simple_symbol_supplier.h"
@@ -232,7 +233,7 @@ static void PrintModules(const CodeModules *modules) {
   printf("\n");
   printf("Loaded modules:\n");
 
-  u_int64_t main_address = 0xffffffffffffffffLL;
+  u_int64_t main_address = 0;
   const CodeModule *main_module = modules->GetMainModule();
   if (main_module) {
     main_address = main_module->base_address();
@@ -248,7 +249,8 @@ static void PrintModules(const CodeModules *modules) {
            base_address, base_address + module->size() - 1,
            PathnameStripper::File(module->code_file()).c_str(),
            module->version().empty() ? "???" : module->version().c_str(),
-           base_address == main_address ? "  (main)" : "");
+           main_module != NULL && base_address == main_address ?
+               "  (main)" : "");
   }
 }
 
@@ -261,7 +263,7 @@ static void PrintModulesMachineReadable(const CodeModules *modules) {
   if (!modules)
     return;
 
-  u_int64_t main_address = 0xffffffffffffffffLL;
+  u_int64_t main_address = 0;
   const CodeModule *main_module = modules->GetMainModule();
   if (main_module) {
     main_address = main_module->base_address();
@@ -283,7 +285,8 @@ static void PrintModulesMachineReadable(const CodeModules *modules) {
            StripSeparator(module->debug_identifier()).c_str(),
            kOutputSeparator, base_address,
            kOutputSeparator, base_address + module->size() - 1,
-           kOutputSeparator, base_address == main_address ? 1 : 0);
+           kOutputSeparator,
+           main_module != NULL && base_address == main_address ? 1 : 0);
   }
 }
 
@@ -299,6 +302,9 @@ static void PrintProcessState(const ProcessState& process_state) {
     // This field is optional.
     printf("     %s\n", cpu_info.c_str());
   }
+  printf("     %d CPU%s\n",
+         process_state.system_info()->cpu_count,
+         process_state.system_info()->cpu_count != 1 ? "s" : "");
   printf("\n");
 
   // Print crash information.
@@ -338,16 +344,18 @@ static void PrintProcessStateMachineReadable(const ProcessState& process_state)
 {
   // Print OS and CPU information.
   // OS|{OS Name}|{OS Version}
-  // CPU|{CPU Name}|{CPU Info}
+  // CPU|{CPU Name}|{CPU Info}|{Number of CPUs}
   printf("OS%c%s%c%s\n", kOutputSeparator,
          StripSeparator(process_state.system_info()->os).c_str(),
          kOutputSeparator,
          StripSeparator(process_state.system_info()->os_version).c_str());
-  printf("CPU%c%s%c%s\n", kOutputSeparator,
+  printf("CPU%c%s%c%s%c%d\n", kOutputSeparator,
          StripSeparator(process_state.system_info()->cpu).c_str(),
          kOutputSeparator,
          // this may be empty
-         StripSeparator(process_state.system_info()->cpu_info).c_str());
+         StripSeparator(process_state.system_info()->cpu_info).c_str(),
+         kOutputSeparator,
+         process_state.system_info()->cpu_count);
 
   int requesting_thread = process_state.requesting_thread();
 
@@ -416,7 +424,7 @@ static bool PrintMinidumpProcess(const string &minidump_file,
   ProcessState process_state;
   if (minidump_processor.Process(minidump_file, &process_state) !=
       MinidumpProcessor::PROCESS_OK) {
-    fprintf(stderr, "MinidumpProcessor::Process failed\n");
+    BPLOG(ERROR) << "MinidumpProcessor::Process failed";
     return false;
   }
 
@@ -438,6 +446,8 @@ static void usage(const char *program_name) {
 }
 
 int main(int argc, char **argv) {
+  BPLOG_INIT(&argc, &argv);
+
   if (argc < 2) {
     usage(argv[0]);
     return 1;

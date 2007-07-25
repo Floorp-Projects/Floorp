@@ -221,6 +221,9 @@ class MinidumpMemoryRegion : public MinidumpObject,
  public:
   virtual ~MinidumpMemoryRegion();
 
+  static void set_max_bytes(u_int32_t max_bytes) { max_bytes_ = max_bytes; }
+  static u_int32_t max_bytes() { return max_bytes_; }
+
   // Returns a pointer to the base of the memory region.  Returns the
   // cached value if available, otherwise, reads the minidump file and
   // caches the memory region.
@@ -257,6 +260,10 @@ class MinidumpMemoryRegion : public MinidumpObject,
   // Implementation for GetMemoryAtAddress
   template<typename T> bool GetMemoryAtAddressInternal(u_int64_t address,
                                                        T*        value);
+
+  // The largest memory region that will be read from a minidump.  The
+  // default is 1MB.
+  static u_int32_t max_bytes_;
 
   // Base address and size of the memory region, and its position in the
   // minidump file.
@@ -312,6 +319,11 @@ class MinidumpThreadList : public MinidumpStream {
  public:
   virtual ~MinidumpThreadList();
 
+  static void set_max_threads(u_int32_t max_threads) {
+    max_threads_ = max_threads;
+  }
+  static u_int32_t max_threads() { return max_threads_; }
+
   unsigned int thread_count() const { return valid_ ? thread_count_ : 0; }
 
   // Sequential access to threads.
@@ -335,6 +347,10 @@ class MinidumpThreadList : public MinidumpStream {
 
   bool Read(u_int32_t aExpectedSize);
 
+  // The largest number of threads that will be read from a minidump.  The
+  // default is 256.
+  static u_int32_t max_threads_;
+
   // Access to threads using the thread ID as the key.
   IDToThreadMap    id_to_thread_map_;
 
@@ -352,6 +368,16 @@ class MinidumpModule : public MinidumpObject,
                        public CodeModule {
  public:
   virtual ~MinidumpModule();
+
+  static void set_max_cv_bytes(u_int32_t max_cv_bytes) {
+    max_cv_bytes_ = max_cv_bytes;
+  }
+  static u_int32_t max_cv_bytes() { return max_cv_bytes_; }
+
+  static void set_max_misc_bytes(u_int32_t max_misc_bytes) {
+    max_misc_bytes_ = max_misc_bytes;
+  }
+  static u_int32_t max_misc_bytes() { return max_misc_bytes_; }
 
   const MDRawModule* module() const { return valid_ ? &module_ : NULL; }
 
@@ -408,6 +434,12 @@ class MinidumpModule : public MinidumpObject,
   // allow the CodeModule getters to be const methods.
   bool ReadAuxiliaryData();
 
+  // The largest number of bytes that will be read from a minidump for a
+  // CodeView record or miscellaneous debugging record, respectively.  The
+  // default for each is 1024.
+  static u_int32_t max_cv_bytes_;
+  static u_int32_t max_misc_bytes_;
+
   // True after a successful Read.  This is different from valid_, which is
   // not set true until ReadAuxiliaryData also completes successfully.
   // module_valid_ is only used by ReadAuxiliaryData and the functions it
@@ -447,6 +479,11 @@ class MinidumpModuleList : public MinidumpStream,
  public:
   virtual ~MinidumpModuleList();
 
+  static void set_max_modules(u_int32_t max_modules) {
+    max_modules_ = max_modules;
+  }
+  static u_int32_t max_modules() { return max_modules_; }
+
   // CodeModules implementation.
   virtual unsigned int module_count() const {
     return valid_ ? module_count_ : 0;
@@ -472,6 +509,10 @@ class MinidumpModuleList : public MinidumpStream,
 
   bool Read(u_int32_t expected_size);
 
+  // The largest number of modules that will be read from a minidump.  The
+  // default is 1024.
+  static u_int32_t max_modules_;
+
   // Access to modules using addresses as the key.
   RangeMap<u_int64_t, unsigned int> *range_map_;
 
@@ -492,6 +533,11 @@ class MinidumpModuleList : public MinidumpStream,
 class MinidumpMemoryList : public MinidumpStream {
  public:
   virtual ~MinidumpMemoryList();
+
+  static void set_max_regions(u_int32_t max_regions) {
+    max_regions_ = max_regions;
+  }
+  static u_int32_t max_regions() { return max_regions_; }
 
   unsigned int region_count() const { return valid_ ? region_count_ : 0; }
 
@@ -516,6 +562,10 @@ class MinidumpMemoryList : public MinidumpStream {
   explicit MinidumpMemoryList(Minidump* minidump);
 
   bool Read(u_int32_t expected_size);
+
+  // The largest number of memory regions that will be read from a minidump.
+  // The default is 256.
+  static u_int32_t max_regions_;
 
   // Access to memory regions using addresses as the key.
   RangeMap<u_int64_t, unsigned int> *range_map_;
@@ -690,6 +740,16 @@ class Minidump {
 
   ~Minidump();
 
+  static void set_max_streams(u_int32_t max_streams) {
+    max_streams_ = max_streams;
+  }
+  static u_int32_t max_streams() { return max_streams_; }
+
+  static void set_max_string_length(u_int32_t max_string_length) {
+    max_string_length_ = max_string_length;
+  }
+  static u_int32_t max_string_length() { return max_string_length_; }
+
   const MDRawHeader* header() const { return valid_ ? &header_ : NULL; }
 
   // Reads the minidump file's header and top-level stream directory.
@@ -778,6 +838,17 @@ class Minidump {
 
   // Opens the minidump file, or if already open, seeks to the beginning.
   bool Open();
+
+  // The largest number of top-level streams that will be read from a minidump.
+  // Note that streams are only read (and only consume memory) as needed,
+  // when directed by the caller.  The default is 128.
+  static u_int32_t max_streams_;
+
+  // The maximum length of a UTF-16 string that will be read from a minidump
+  // in 16-bit words.  The default is 1024.  UTF-16 strings are converted
+  // to UTF-8 when stored in memory, and each UTF-16 word will be represented
+  // by as many as 3 bytes in UTF-8.
+  static unsigned int max_string_length_;
 
   MDRawHeader               header_;
 
