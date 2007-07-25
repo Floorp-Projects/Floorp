@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <style>
+   span { color: red }
+   :default + span { color: green }
+   span.reverse { color: green }
+   :default + span.reverse { color: red }
+   input { display: none }
+  </style>
+ </head>
+ <body>
+  <form>
+    <input type="submit"><span>This should be green</span>
+    <input type="image">
+  </form>
+ </body>
+</html>
