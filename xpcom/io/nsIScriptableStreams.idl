@@ -1,0 +1,212 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Scriptable IO.
+ *
+ * The Initial Developer of the Original Code is Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Neil Deakin <enndeakin@sympatico.ca> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIVariant;
+interface nsIFile;
+interface nsIInputStream;
+interface nsIOutputStream;
+interface nsIUnicharInputStream;
+interface nsIUnicharOutputStream;
+
+/**
+ * Streams used with scriptable IO, which is itself located within netwerk.
+ */
+
+[scriptable, uuid(9245740D-D22E-4065-A1A0-72F0AE45E6DF)]
+interface nsIScriptableIOInputStream : nsISupports
+{
+  /**
+   * Called to initialize the stream.
+   */
+  void initWithStreams(in nsIInputStream aStream,
+                       in nsIUnicharInputStream aCharStream);
+
+  /**
+   * Read string of aCount characters from the stream. If the stream is
+   * text, then the characters are read in the expected character set.
+   * If the stream is non-text aCount bytes are read and returned as a
+   * string. If the end of the stream, or the end of the available data
+   * is reached, the returned string may be shorter than the desired
+   * length.
+   *
+   * @param aCount the number of characters to read
+   * @returns the string read from the stream 
+   */
+  AString readString(in unsigned long aCount);
+
+  /**
+   * Read from the stream until an end of line is reached and return a string
+   * containing all characters up until that point. An end of line is
+   * indicated by a 0x0A, 0x0D, a sequence of 0x0A 0x0D or a sequence of
+   * 0x0D 0x0A. These characters are not returned as part of the string.
+   *
+   * @returns the next line from the stream
+   */
+  AString readLine();
+
+  /**
+   * Read a single byte from a stream and return false if the byte is zero and
+   * true if the byte is non-zero.
+   *
+   * @param a boolean value for the next byte in the stream
+   */
+  boolean readBoolean();
+
+  /**
+   * Read a single byte from a stream.
+   *
+   * @returns the next byte in the stream
+   */
+  octet read8();
+
+  /**
+   * Read and interpret the next two bytes in the stream as an unsigned
+   * big endian integer.
+   *
+   * @returns the next 16-bit integer in the stream
+   */
+  unsigned short read16();
+
+  /**
+   * Read and interpret the next four bytes in the stream as an unsigned
+   * big endian integer.
+   *
+   * @returns the next 32-bit integer in the stream
+   */
+  unsigned long read32();
+
+  /**
+   * Read and interpret the next four bytes in the stream as a floating point
+   * value.
+   *
+   * @returns the next float in the stream
+   */
+  float readFloat();
+
+  /**
+   * Read and interpret the next eight bytes in the stream as a double
+   * floating point value.
+   *
+   * @returns the next double in the stream
+   */
+  double readDouble();
+
+  /**
+   * Read aCount bytes from the stream and fill the aBytes array with
+   * the bytes.
+   *
+   * @param aCount the number of bytes to read
+   * @param aBytes [out] set to the array of read bytes
+   */
+  void readByteArray(in unsigned long aCount,
+                     [array, size_is(aCount), retval] out octet aBytes);
+
+};
+
+[scriptable, uuid(11FAE7E6-DF5B-4D80-B4C9-61849378364D)]
+interface nsIScriptableIOOutputStream : nsISupports
+{
+  /**
+   * Called to initialize the stream.
+   */
+  void initWithStreams(in nsIOutputStream aStream,
+                       in nsIUnicharOutputStream aCharStream);
+
+  /**
+   * Write the string aString to the stream. For text streams, the string is
+   * written in the expected character set. For other streams, the string is
+   * interpreted as bytes, which means that characters above 255 are only
+   * written using their low 8 bits.
+   *
+   * @param aString the string to write
+   * @returns true if the entire string was written, false otherwise
+   */
+  boolean writeString(in AString aString);
+
+  /**
+   * Write a boolean to the stream. If the boolean is false, 0 is written,
+   * and if the boolean is true, 1 is written.
+   *
+   * @param aBoolean the value to write
+   */
+  void writeBoolean(in boolean aBoolean);
+
+  /**
+   * Write a single byte to the stream.
+   *
+   * @param aByte the value to write
+   */
+  void write8(in octet aByte);
+
+  /**
+   * Write a 16-bit integer to the stream as an unsigned big endian value.
+   *
+   * @param a16 the value to write
+   */
+  void write16(in unsigned short a16);
+
+  /**
+   * Write a 32-bit integer to the stream as an unsigned big endian value.
+   *
+   * @param a32 the value to write
+   */
+  void write32(in unsigned long a32);
+
+  /**
+   * Write a floating point value to the stream in 4 bytes.
+   *
+   * @param aFloat the value to write
+   */
+  void writeFloat(in float aFloat);
+
+  /**
+   * Write a double floating point value to the stream in 8 bytes.
+   *
+   * @param aDouble the value to write
+   */
+  void writeDouble(in double aDouble);
+
+  /**
+   * Write aCount values from the array aBytes to the stream.
+   *
+   * @param aBytes the array of write
+   * @param aCount the number of bytes to write
+   */
+  void writeByteArray([array, size_is(aCount)] in octet aBytes,
+                      in unsigned long aCount);
+};

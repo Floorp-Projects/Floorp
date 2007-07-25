@@ -51,6 +51,7 @@
 #include "nsIProperties.h"
 #include "nsPersistentProperties.h"
 #include "nsScriptableInputStream.h"
+#include "nsScriptableOutputStream.h"
 #include "nsBinaryStream.h"
 #include "nsStorageStream.h"
 #include "nsPipe.h"
@@ -244,6 +245,9 @@ NS_DECL_CLASSINFO(nsThreadManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThreadPool)
 NS_DECL_CLASSINFO(nsThreadPool)
 
+NS_DECL_CLASSINFO(nsScriptableInputStream)
+NS_DECL_CLASSINFO(nsScriptableOutputStream)
+
 static NS_METHOD
 nsXPTIInterfaceInfoManagerGetSingleton(nsISupports* outer,
                                        const nsIID& aIID,
@@ -351,7 +355,10 @@ static const nsModuleComponentInfo components[] = {
     COMPONENT(ERRORSERVICE, nsErrorService::Create),
 
     COMPONENT(BYTEBUFFER, ByteBufferImpl::Create),
-    COMPONENT(SCRIPTABLEINPUTSTREAM, nsScriptableInputStream::Create),
+    COMPONENT_CI(SCRIPTABLEINPUTSTREAM, nsScriptableInputStream::Create,
+                 nsScriptableInputStream),
+    COMPONENT_CI(SCRIPTABLEOUTPUTSTREAM, nsScriptableOutputStream::Create,
+                 nsScriptableOutputStream),
     COMPONENT(BINARYINPUTSTREAM, nsBinaryInputStreamConstructor),
     COMPONENT(BINARYOUTPUTSTREAM, nsBinaryOutputStreamConstructor),
     COMPONENT(STORAGESTREAM, nsStorageStreamConstructor),
