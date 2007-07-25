@@ -61,6 +61,8 @@ ifeq  ($(OS_ARCH),WINNT)
 endif
 
 ifeq ($(OS_ARCH),Darwin)
+CMMSRCS = mac_utils.mm
+
 DIRS += \
   airbag/src/common \
   airbag/src/common/mac \
