@@ -57,7 +57,7 @@ LIBS = \
 	$(XPCOM_GLUE_LDOPTS) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
-        $(DEPTH)/toolkit/airbag/$(LIB_PREFIX)airbagexception_s.$(LIB_SUFFIX) \
+        $(DEPTH)/toolkit/airbag/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 MOZILLA_INTERNAL_API = 1
