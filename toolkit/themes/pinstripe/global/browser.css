@@ -169,7 +169,7 @@ tabbrowser > tabbox > tabpanels {
 }
 
 .tab-drop-indicator-bar {
-   display:none;
+   visibility: hidden;
    height: 9px;
    margin-top: -9px;
    position: relative;
@@ -184,7 +184,7 @@ tabbrowser > tabbox > tabpanels {
 }
 
 .tab-drop-indicator-bar[dragging="true"] {
-   display: -moz-box;
+   visibility: visible;
 }
 
 /**
