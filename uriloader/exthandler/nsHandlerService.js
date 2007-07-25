@@ -244,9 +244,7 @@ HandlerService.prototype = {
    * @returns {string} the ID
    */
   _getClass: function HS__getClass(aHandlerInfo) {
-    if (aHandlerInfo instanceof Ci.nsIMIMEInfo &&
-        // FIXME: remove this extra condition in the fix for bug 388388.
-        aHandlerInfo.QueryInterface(Ci.nsIMIMEInfo).MIMEType)
+    if (aHandlerInfo instanceof Ci.nsIMIMEInfo)
       return "mimetype";
     else
       return "scheme";
@@ -265,10 +263,7 @@ HandlerService.prototype = {
    * @returns {string} the ID
    */
   _getTypeID: function HS__getTypeID(aHandlerInfo) {
-    return "urn:" + this._getClass(aHandlerInfo) + ":" +
-           // FIXME: change this to aHandlerInfo.type in the fix for bug 388388.
-           aHandlerInfo.QueryInterface(Ci.nsIMIMEInfo).MIMEType;
-
+    return "urn:" + this._getClass(aHandlerInfo) + ":" + aHandlerInfo.type;
   },
 
   /**
@@ -288,8 +283,7 @@ HandlerService.prototype = {
    */
   _getInfoID: function HS__getInfoID(aHandlerInfo) {
     return "urn:" + this._getClass(aHandlerInfo) + ":handler:" +
-           // FIXME: change this to aHandlerInfo.type in the fix for bug 388388.
-           aHandlerInfo.QueryInterface(Ci.nsIMIMEInfo).MIMEType;
+           aHandlerInfo.type;
   },
 
   /**
@@ -314,8 +308,7 @@ HandlerService.prototype = {
    */
   _getPreferredHandlerID: function HS__getPreferredHandlerID(aHandlerInfo) {
     return "urn:" + this._getClass(aHandlerInfo) + ":externalApplication:" +
-           // FIXME: change this to aHandlerInfo.type in the fix for bug 388388.
-           aHandlerInfo.QueryInterface(Ci.nsIMIMEInfo).MIMEType;
+           aHandlerInfo.type;
   },
 
   /**
@@ -383,9 +376,7 @@ HandlerService.prototype = {
     // Create a basic type record for this type.
     typeList.AppendElement(type);
     this._setLiteral(typeID, NC_EDITABLE, "true");
-    this._setLiteral(typeID, NC_VALUE,
-        // FIXME: change this to aHandlerInfo.type in the fix for bug 388388.
-        aHandlerInfo.QueryInterface(Ci.nsIMIMEInfo).MIMEType);
+    this._setLiteral(typeID, NC_VALUE, aHandlerInfo.type);
     
     // Create a basic info record for this type.
     var infoID = this._getInfoID(aHandlerInfo);
