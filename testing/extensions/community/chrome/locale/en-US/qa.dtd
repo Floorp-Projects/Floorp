@@ -1,6 +1,7 @@
 <!ENTITY qa.litmus.title "Litmus">
 <!ENTITY qa.litmus.selecttests "Select Tests">
-
+<!ENTITY qa.litmus.testlist.initiallabel "No tests loaded, select some tests!">
+<!ENTITY qa.litmus.testlist.initialdescription "No testcase">
 <!ENTITY qa.statusbar.label	"QA">
 <!ENTITY qa.mainwindow.prefs	"Preferences">
 <!ENTITY qa.mainwindow.title	"Mozilla QA">
@@ -10,6 +11,8 @@
 <!ENTITY qa.testcase.result.fail	"Test Failed">
 <!ENTITY qa.testcase.result.unclearbroken	"Test is unclear or broken">
 <!ENTITY qa.testcase.comment	"Comment (optional):">
+
+<!ENTITY qa.selecttests.load	"Loading...">
 
 <!ENTITY qa.preferences.title "Settings">
 <!ENTITY qa.preferences.litmus.title "Litmus Settings">
