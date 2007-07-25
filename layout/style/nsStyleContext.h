@@ -158,8 +158,6 @@ public:
 
   NS_HIDDEN_(nsStyleStruct*) GetUniqueStyleData(const nsStyleStructID& aSID);
 
-  NS_HIDDEN_(void) ClearStyleData(nsPresContext* aPresContext);
-
   NS_HIDDEN_(nsChangeHint) CalcStyleDifference(nsStyleContext* aOther);
 
 #ifdef DEBUG

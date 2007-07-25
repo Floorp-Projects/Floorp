@@ -693,7 +693,6 @@ public:
   // NOTE: Does not |AddRef|.
   nsPresContext* GetPresContext() const { return mPresContext; }
 
-  NS_HIDDEN_(nsresult) ClearStyleData();
   NS_HIDDEN_(const nsStyleStruct*) GetStyleData(nsStyleStructID aSID, 
                                                 nsStyleContext* aContext,
                                                 PRBool aComputeData);

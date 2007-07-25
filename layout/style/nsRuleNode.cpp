@@ -557,35 +557,6 @@ nsRuleNode::ConvertChildrenToHash()
   SetChildrenHash(hash);
 }
 
-PR_STATIC_CALLBACK(PLDHashOperator)
-ClearStyleDataHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                               PRUint32 number, void *arg)
-{
-  ChildrenHashEntry *entry = static_cast<ChildrenHashEntry*>(hdr);
-  entry->mRuleNode->ClearStyleData();
-  return PL_DHASH_NEXT;
-}
-
-nsresult
-nsRuleNode::ClearStyleData()
-{
-  // Blow away all data stored at this node.
-  if (mStyleData.mResetData || mStyleData.mInheritedData)
-    mStyleData.Destroy(0, mPresContext);
-
-  mNoneBits &= ~NS_STYLE_INHERIT_MASK;
-  mDependentBits &= ~NS_STYLE_INHERIT_MASK;
-
-  if (ChildrenAreHashed())
-    PL_DHashTableEnumerate(ChildrenHash(),
-                           ClearStyleDataHelper, nsnull);
-  else
-    for (nsRuleList* curr = ChildrenList(); curr; curr = curr->mNext)
-      curr->mRuleNode->ClearStyleData();
-
-  return NS_OK;
-}
-
 inline void
 nsRuleNode::PropagateNoneBit(PRUint32 aBit, nsRuleNode* aHighestNode)
 {
