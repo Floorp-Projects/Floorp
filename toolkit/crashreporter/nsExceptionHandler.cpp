@@ -354,6 +354,9 @@ nsresult AnnotateCrashReport(const nsACString &key, const nsACString &data)
       DoFindInReadable(key, NS_LITERAL_CSTRING("\n")))
     return NS_ERROR_INVALID_ARG;
 
+  if (DoFindInReadable(data, NS_LITERAL_CSTRING("\0")))
+    return NS_ERROR_INVALID_ARG;
+
   nsCString escapedData(data);
   
   // escape backslashes

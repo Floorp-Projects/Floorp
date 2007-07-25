@@ -1,3 +1,4 @@
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -11,18 +12,18 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Airbag integration
+# The Original Code is Mozilla Breakpad integration.
 #
 # The Initial Developer of the Original Code is
-# Ted Mielczarek <ted.mielczarek@gmail.com>
-# Portions created by the Initial Developer are Copyright (C) 2006
+#   Ted Mielczarek <ted.mielczarek@gmail.com>
+# Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,53 +35,43 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = airbag
-LIBXUL_LIBRARY = 1
-LIBRARY_NAME = exception_handler_s
+PROGRAM = TestCrashReporterAPI$(BIN_SUFFIX)
+
+CPPSRCS = TestCrashReporterAPI.cpp
 
 REQUIRES = \
 	xpcom \
 	string \
-	xulapp \
+	airbag \
 	$(NULL)
 
-DIRS = \
+LIBS = \
+	$(EXTRA_DSO_LIBS) \
+	$(XPCOM_GLUE_LDOPTS) \
+	$(XPCOM_LIBS) \
+	$(NSPR_LIBS) \
+        $(DEPTH)/toolkit/airbag/$(LIB_PREFIX)airbagexception_s.$(LIB_SUFFIX) \
 	$(NULL)
 
-ifeq  ($(OS_ARCH),WINNT)
-	DIRS += airbag/src/common/windows \
-		airbag/src/client/windows \
-		$(NULL)
-endif
-
-DIRS += client
-
-LOCAL_INCLUDES = -I$(srcdir)/airbag/src
-DEFINES += -DUNICODE -D_UNICODE
-
-XPIDLSRCS = \
-	nsICrashReporter.idl \
-	$(NULL)
-
-EXPORTS = \
-	nsAirbagExceptionHandler.h \
-	$(NULL)
-
-CPPSRCS = \
-	nsAirbagExceptionHandler.cpp \
-	$(NULL)
-
-FORCE_STATIC_LIB = 1
-
-ifdef ENABLE_TESTS
-DIRS += test
-endif
+MOZILLA_INTERNAL_API = 1
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_ARCH),WINNT)
+LIBS += \
+	$(DEPTH)/toolkit/airbag/airbag/src/client/windows/handler/$(LIB_PREFIX)exception_handler.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/airbag/airbag/src/common/windows/$(LIB_PREFIX)airbag_common_s.$(LIB_SUFFIX)
+LIBS += $(call expand_libname shell32)
+endif
+
+OS_LIBS += $(call EXPAND_LIBNAME,ole32)
+
+check:: $(PROGRAM)
+	$(RUN_TEST_PROGRAM) $(DIST)/bin/TestCrashReporterAPI
