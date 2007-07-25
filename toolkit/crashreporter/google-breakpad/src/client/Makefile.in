@@ -11,11 +11,11 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Airbag integration
+# The Original Code is Mozilla Breakpad integration
 #
 # The Initial Developer of the Original Code is
 # Ted Mielczarek <ted.mielczarek@gmail.com>
-# Portions created by the Initial Developer are Copyright (C) 2006
+# Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -34,63 +34,24 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
+DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = airbag
-LIBXUL_LIBRARY = 1
-LIBRARY_NAME = exception_handler_s
+MODULE		= minidump_file_writer
+LIBRARY_NAME	= minidump_file_writer_s
+XPI_NAME 	= crashreporter
 
-REQUIRES = \
-	xpcom \
-	string \
-	xulapp \
-	$(NULL)
+LOCAL_INCLUDES 	= -I$(srcdir)/..
 
-DIRS = \
-	$(NULL)
-
-ifeq  ($(OS_ARCH),WINNT)
-	DIRS += airbag/src/common/windows \
-		airbag/src/client/windows \
-		$(NULL)
-endif
-
-ifeq ($(OS_ARCH),Darwin)
-DIRS += \
-  airbag/src/common \
-  airbag/src/common/mac \
-  airbag/src/client \
-  airbag/src/client/mac/handler \
-  airbag/src/tools/mac/dump_syms \
+CPPSRCS	= \
+  minidump_file_writer.cc \
   $(NULL)
-endif
 
-DIRS += client
-
-LOCAL_INCLUDES = -I$(srcdir)/airbag/src
-DEFINES += -DUNICODE -D_UNICODE
-
-XPIDLSRCS = \
-	nsICrashReporter.idl \
-	$(NULL)
-
-EXPORTS = \
-	nsAirbagExceptionHandler.h \
-	$(NULL)
-
-CPPSRCS = \
-	nsAirbagExceptionHandler.cpp \
-	$(NULL)
-
+# need static lib
 FORCE_STATIC_LIB = 1
-
-ifdef ENABLE_TESTS
-DIRS += test
-endif
 
 include $(topsrcdir)/config/rules.mk
