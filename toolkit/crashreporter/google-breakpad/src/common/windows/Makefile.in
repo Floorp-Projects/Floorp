@@ -50,6 +50,7 @@ DEFINES += -DUNICODE -D_UNICODE
 CPPSRCS		= \
 		guid_string.cc \
 		http_upload.cc \
+		string_utils.cc \
 		$(NULL)
 
 # need static lib
