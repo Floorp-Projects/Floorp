@@ -40,7 +40,7 @@
 
 #include <map>
 
-namespace google_airbag {
+namespace google_breakpad {
 
 template<typename AddressType, typename EntryType>
 class AddressMap {
@@ -74,7 +74,7 @@ class AddressMap {
   AddressToEntryMap map_;
 };
 
-}  // namespace google_airbag
+}  // namespace google_breakpad
 
 #endif  // PROCESSOR_ADDRESS_MAP_H__
 

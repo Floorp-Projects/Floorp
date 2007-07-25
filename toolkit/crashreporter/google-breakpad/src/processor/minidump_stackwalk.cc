@@ -35,12 +35,16 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
+#include <vector>
 
-#include "google_airbag/processor/call_stack.h"
-#include "google_airbag/processor/minidump.h"
-#include "google_airbag/processor/minidump_processor.h"
-#include "google_airbag/processor/process_state.h"
-#include "google_airbag/processor/stack_frame_cpu.h"
+#include "google_breakpad/processor/basic_source_line_resolver.h"
+#include "google_breakpad/processor/call_stack.h"
+#include "google_breakpad/processor/code_module.h"
+#include "google_breakpad/processor/code_modules.h"
+#include "google_breakpad/processor/minidump.h"
+#include "google_breakpad/processor/minidump_processor.h"
+#include "google_breakpad/processor/process_state.h"
+#include "google_breakpad/processor/stack_frame_cpu.h"
 #include "processor/pathname_stripper.h"
 #include "processor/scoped_ptr.h"
 #include "processor/simple_symbol_supplier.h"
@@ -48,16 +52,23 @@
 namespace {
 
 using std::string;
-using google_airbag::CallStack;
-using google_airbag::MinidumpModule;
-using google_airbag::MinidumpProcessor;
-using google_airbag::PathnameStripper;
-using google_airbag::ProcessState;
-using google_airbag::scoped_ptr;
-using google_airbag::SimpleSymbolSupplier;
-using google_airbag::StackFrame;
-using google_airbag::StackFramePPC;
-using google_airbag::StackFrameX86;
+using std::vector;
+using google_breakpad::BasicSourceLineResolver;
+using google_breakpad::CallStack;
+using google_breakpad::CodeModule;
+using google_breakpad::CodeModules;
+using google_breakpad::MinidumpModule;
+using google_breakpad::MinidumpProcessor;
+using google_breakpad::PathnameStripper;
+using google_breakpad::ProcessState;
+using google_breakpad::scoped_ptr;
+using google_breakpad::SimpleSymbolSupplier;
+using google_breakpad::StackFrame;
+using google_breakpad::StackFramePPC;
+using google_breakpad::StackFrameX86;
+
+// Separator character for machine readable output.
+static const char kOutputSeparator = '|';
 
 // PrintRegister prints a register's name and value to stdout.  It will
 // print four registers on a line.  For the first register in a set,
@@ -75,6 +86,17 @@ static int PrintRegister(const char *name, u_int32_t value, int sequence) {
   return ++sequence;
 }
 
+// StripSeparator takes a string |original| and returns a copy
+// of the string with all occurences of |kOutputSeparator| removed.
+static string StripSeparator(const string &original) {
+  string result = original;
+  string::size_type position = 0;
+  while ((position = result.find(kOutputSeparator, position)) != string::npos) {
+    result.erase(position, 1);
+  }
+  return result;
+}
+
 // PrintStack prints the call stack in |stack| to stdout, in a reasonably
 // useful form.  Module, function, and source file names are displayed if
 // they are available.  The code offset to the base code address of the
@@ -90,8 +112,8 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
     const StackFrame *frame = stack->frames()->at(frame_index);
     printf("%2d  ", frame_index);
 
-    if (!frame->module_name.empty()) {
-      printf("%s", PathnameStripper::File(frame->module_name).c_str());
+    if (frame->module) {
+      printf("%s", PathnameStripper::File(frame->module->code_file()).c_str());
       if (!frame->function_name.empty()) {
         printf("!%s", frame->function_name.c_str());
         if (!frame->source_file_name.empty()) {
@@ -104,7 +126,7 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
           printf(" + 0x%llx", frame->instruction - frame->function_base);
         }
       } else {
-        printf(" + 0x%llx", frame->instruction - frame->module_base);
+        printf(" + 0x%llx", frame->instruction - frame->module->base_address());
       }
     } else {
       printf("0x%llx", frame->instruction);
@@ -147,6 +169,222 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
   }
 }
 
+// PrintStackMachineReadable prints the call stack in |stack| to stdout,
+// in the following machine readable pipe-delimited text format:
+// thread number|frame number|module|function|source file|line|offset
+//
+// Module, function, source file, and source line may all be empty
+// depending on availability.  The code offset follows the same rules as
+// PrintStack above.
+static void PrintStackMachineReadable(int thread_num, const CallStack *stack) {
+  int frame_count = stack->frames()->size();
+  for (int frame_index = 0; frame_index < frame_count; ++frame_index) {
+    const StackFrame *frame = stack->frames()->at(frame_index);
+    printf("%d%c%d%c", thread_num, kOutputSeparator, frame_index,
+           kOutputSeparator);
+
+    if (frame->module) {
+      assert(!frame->module->code_file().empty());
+      printf("%s", StripSeparator(PathnameStripper::File(
+                     frame->module->code_file())).c_str());
+      if (!frame->function_name.empty()) {
+        printf("%c%s", kOutputSeparator,
+               StripSeparator(frame->function_name).c_str());
+        if (!frame->source_file_name.empty()) {
+          printf("%c%s%c%d%c0x%llx", kOutputSeparator,
+                                     StripSeparator(frame->source_file_name)
+                                       .c_str(),
+                                     kOutputSeparator,
+                                     frame->source_line,
+                                     kOutputSeparator,
+                                     frame->instruction -
+                                       frame->source_line_base);
+        } else {
+          printf("%c%c%c0x%llx", kOutputSeparator,  // empty source file
+                                 kOutputSeparator,  // empty source line
+                                 kOutputSeparator,
+                                 frame->instruction - frame->function_base);
+        }
+      } else {
+        printf("%c%c%c%c0x%llx", kOutputSeparator,  // empty function name
+                                 kOutputSeparator,  // empty source file
+                                 kOutputSeparator,  // empty source line
+                                 kOutputSeparator,
+                                 frame->instruction -
+                                   frame->module->base_address());
+      }
+    } else {
+      // the printf before this prints a trailing separator for module name
+      printf("%c%c%c%c0x%llx", kOutputSeparator,  // empty function name
+                               kOutputSeparator,  // empty source file
+                               kOutputSeparator,  // empty source line
+                               kOutputSeparator,
+                               frame->instruction);
+    }
+    printf("\n");
+  }
+}
+
+static void PrintModules(const CodeModules *modules) {
+  if (!modules)
+    return;
+
+  printf("\n");
+  printf("Loaded modules:\n");
+
+  u_int64_t main_address = 0xffffffffffffffffLL;
+  const CodeModule *main_module = modules->GetMainModule();
+  if (main_module) {
+    main_address = main_module->base_address();
+  }
+
+  unsigned int module_count = modules->module_count();
+  for (unsigned int module_sequence = 0;
+       module_sequence < module_count;
+       ++module_sequence) {
+    const CodeModule *module = modules->GetModuleAtSequence(module_sequence);
+    u_int64_t base_address = module->base_address();
+    printf("0x%08llx - 0x%08llx  %s  %s%s\n",
+           base_address, base_address + module->size() - 1,
+           PathnameStripper::File(module->code_file()).c_str(),
+           module->version().empty() ? "???" : module->version().c_str(),
+           base_address == main_address ? "  (main)" : "");
+  }
+}
+
+// PrintModulesMachineReadable outputs a list of loaded modules,
+// one per line, in the following machine-readable pipe-delimited
+// text format:
+// Module|{Module Filename}|{Version}|{Base Address}|{Max Address}|{Main}
+static void PrintModulesMachineReadable(const CodeModules *modules) {
+  if (!modules)
+    return;
+
+  u_int64_t main_address = 0xffffffffffffffffLL;
+  const CodeModule *main_module = modules->GetMainModule();
+  if (main_module) {
+    main_address = main_module->base_address();
+  }
+
+  unsigned int module_count = modules->module_count();
+  for (unsigned int module_sequence = 0;
+       module_sequence < module_count;
+       ++module_sequence) {
+    const CodeModule *module = modules->GetModuleAtSequence(module_sequence);
+    u_int64_t base_address = module->base_address();
+    printf("Module%c%s%c%s%c0x%08llx%c0x%08llx%c%d\n",
+           kOutputSeparator,
+           StripSeparator(PathnameStripper::File(module->code_file())).c_str(),
+           kOutputSeparator, StripSeparator(module->version()).c_str(),
+           kOutputSeparator, base_address,
+           kOutputSeparator, base_address + module->size() - 1,
+           kOutputSeparator, base_address == main_address ? 1 : 0);
+  }
+}
+
+static void PrintProcessState(const ProcessState& process_state) {
+  // Print OS and CPU information.
+  string cpu = process_state.system_info()->cpu;
+  string cpu_info = process_state.system_info()->cpu_info;
+  printf("Operating system: %s\n", process_state.system_info()->os.c_str());
+  printf("                  %s\n",
+         process_state.system_info()->os_version.c_str());
+  printf("CPU: %s\n", cpu.c_str());
+  if (!cpu_info.empty()) {
+    // This field is optional.
+    printf("     %s\n", cpu_info.c_str());
+  }
+  printf("\n");
+
+  // Print crash information.
+  if (process_state.crashed()) {
+    printf("Crash reason:  %s\n", process_state.crash_reason().c_str());
+    printf("Crash address: 0x%llx\n", process_state.crash_address());
+  } else {
+    printf("No crash\n");
+  }
+
+  // If the thread that requested the dump is known, print it first.
+  int requesting_thread = process_state.requesting_thread();
+  if (requesting_thread != -1) {
+    printf("\n");
+    printf("Thread %d (%s)\n",
+          requesting_thread,
+          process_state.crashed() ? "crashed" :
+                                    "requested dump, did not crash");
+    PrintStack(process_state.threads()->at(requesting_thread), cpu);
+  }
+
+  // Print all of the threads in the dump.
+  int thread_count = process_state.threads()->size();
+  for (int thread_index = 0; thread_index < thread_count; ++thread_index) {
+    if (thread_index != requesting_thread) {
+      // Don't print the crash thread again, it was already printed.
+      printf("\n");
+      printf("Thread %d\n", thread_index);
+      PrintStack(process_state.threads()->at(thread_index), cpu);
+    }
+  }
+
+  PrintModules(process_state.modules());
+}
+
+static void PrintProcessStateMachineReadable(const ProcessState& process_state)
+{
+  // Print OS and CPU information.
+  // OS|{OS Name}|{OS Version}
+  // CPU|{CPU Name}|{CPU Info}
+  printf("OS%c%s%c%s\n", kOutputSeparator,
+         StripSeparator(process_state.system_info()->os).c_str(),
+         kOutputSeparator,
+         StripSeparator(process_state.system_info()->os_version).c_str());
+  printf("CPU%c%s%c%s\n", kOutputSeparator,
+         StripSeparator(process_state.system_info()->cpu).c_str(),
+         kOutputSeparator,
+         // this may be empty
+         StripSeparator(process_state.system_info()->cpu_info).c_str());
+
+  int requesting_thread = process_state.requesting_thread();
+
+  // Print crash information.
+  // Crash|{Crash Reason}|{Crash Address}|{Crashed Thread}
+  printf("Crash%c", kOutputSeparator);
+  if (process_state.crashed()) {
+    printf("%s%c0x%llx%c",
+           StripSeparator(process_state.crash_reason()).c_str(),
+           kOutputSeparator, process_state.crash_address(), kOutputSeparator);
+  } else {
+    printf("No crash%c%c\n", kOutputSeparator, kOutputSeparator);
+  }
+
+  if (requesting_thread != -1) {
+    printf("%d\n", requesting_thread);
+  } else {
+    printf("\n");
+  }
+
+  PrintModulesMachineReadable(process_state.modules());
+
+  // blank line to indicate start of threads
+  printf("\n");
+
+  // If the thread that requested the dump is known, print it first.
+  if (requesting_thread != -1) {
+    PrintStackMachineReadable(requesting_thread,
+                              process_state.threads()->at(requesting_thread));
+  }
+
+  // Print all of the threads in the dump.
+  int thread_count = process_state.threads()->size();
+  for (int thread_index = 0; thread_index < thread_count; ++thread_index) {
+    if (thread_index != requesting_thread) {
+      // Don't print the crash thread again, it was already printed.
+      PrintStackMachineReadable(thread_index,
+                                process_state.threads()->at(thread_index));
+    }
+  }
+}
+
 // Processes |minidump_file| using MinidumpProcessor.  |symbol_path|, if
 // non-empty, is the base directory of a symbol storage area, laid out in
 // the format required by SimpleSymbolSupplier.  If such a storage area
@@ -158,63 +396,29 @@ static void PrintStack(const CallStack *stack, const string &cpu) {
 // call stacks for each thread contained in the minidump.  All information
 // is printed to stdout.
 static bool PrintMinidumpProcess(const string &minidump_file,
-                                 const string &symbol_path) {
+                                 const vector<string> &symbol_paths,
+                                 bool machine_readable) {
   scoped_ptr<SimpleSymbolSupplier> symbol_supplier;
-  if (!symbol_path.empty()) {
+  if (!symbol_paths.empty()) {
     // TODO(mmentovai): check existence of symbol_path if specified?
-    symbol_supplier.reset(new SimpleSymbolSupplier(symbol_path));
+    symbol_supplier.reset(new SimpleSymbolSupplier(symbol_paths));
   }
 
-  MinidumpProcessor minidump_processor(symbol_supplier.get());
+  BasicSourceLineResolver resolver;
+  MinidumpProcessor minidump_processor(symbol_supplier.get(), &resolver);
 
   // Process the minidump.
-  scoped_ptr<ProcessState> process_state(
-      minidump_processor.Process(minidump_file));
-  if (!process_state.get()) {
+  ProcessState process_state;
+  if (minidump_processor.Process(minidump_file, &process_state) !=
+      MinidumpProcessor::PROCESS_OK) {
     fprintf(stderr, "MinidumpProcessor::Process failed\n");
     return false;
   }
 
-  // Print OS and CPU information.
-  string cpu = process_state->cpu();
-  string cpu_info = process_state->cpu_info();
-  printf("Operating system: %s\n", process_state->os().c_str());
-  printf("                  %s\n", process_state->os_version().c_str());
-  printf("CPU: %s\n", cpu.c_str());
-  if (!cpu_info.empty()) {
-    // This field is optional.
-    printf("     %s\n", cpu_info.c_str());
-  }
-  printf("\n");
-
-  // Print crash information.
-  if (process_state->crashed()) {
-    printf("Crash reason:  %s\n", process_state->crash_reason().c_str());
-    printf("Crash address: 0x%llx\n", process_state->crash_address());
+  if (machine_readable) {
+    PrintProcessStateMachineReadable(process_state);
   } else {
-    printf("No crash\n");
-  }
-
-  // If the thread that requested the dump is known, print it first.
-  int requesting_thread = process_state->requesting_thread(); 
-  if (requesting_thread != -1) {
-    printf("\n");
-    printf("Thread %d (%s)\n",
-          requesting_thread,
-          process_state->crashed() ? "crashed" :
-                                     "requested dump, did not crash");
-    PrintStack(process_state->threads()->at(requesting_thread), cpu);
-  }
-
-  // Print all of the threads in the dump.
-  int thread_count = process_state->threads()->size();
-  for (int thread_index = 0; thread_index < thread_count; ++thread_index) {
-    if (thread_index != requesting_thread) {
-      // Don't print the crash thread again, it was already printed.
-      printf("\n");
-      printf("Thread %d\n", thread_index);
-      PrintStack(process_state->threads()->at(thread_index), cpu);
-    }
+    PrintProcessState(process_state);
   }
 
   return true;
@@ -222,17 +426,45 @@ static bool PrintMinidumpProcess(const string &minidump_file,
 
 }  // namespace
 
+static void usage(const char *program_name) {
+  fprintf(stderr, "usage: %s [-m] <minidump-file> [symbol-path ...]\n"
+          "    -m : Output in machine-readable format\n",
+          program_name);
+}
+
 int main(int argc, char **argv) {
-  if (argc < 2 || argc > 3) {
-    fprintf(stderr, "usage: %s <minidump-file> [symbol-path]\n", argv[0]);
+  if (argc < 2) {
+    usage(argv[0]);
     return 1;
   }
 
-  const char *minidump_file = argv[1];
-  const char *symbol_path = "";
-  if (argc == 3) {
-    symbol_path = argv[2];
+  const char *minidump_file;
+  bool machine_readable;
+  int symbol_path_arg;
+
+  if (strcmp(argv[1], "-m") == 0) {
+    if (argc < 3) {
+      usage(argv[0]);
+      return 1;
+    }
+
+    machine_readable = true;
+    minidump_file = argv[2];
+    symbol_path_arg = 3;
+  } else {
+    machine_readable = false;
+    minidump_file = argv[1];
+    symbol_path_arg = 2;
   }
 
-  return PrintMinidumpProcess(minidump_file, symbol_path) ? 0 : 1;
+  // extra arguments are symbol paths
+  std::vector<std::string> symbol_paths;
+  if (argc > symbol_path_arg) {
+    for (int argi = symbol_path_arg; argi < argc; ++argi)
+      symbol_paths.push_back(argv[argi]);
+  }
+
+  return PrintMinidumpProcess(minidump_file,
+                              symbol_paths,
+                              machine_readable) ? 0 : 1;
 }

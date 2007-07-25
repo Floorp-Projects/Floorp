@@ -30,12 +30,12 @@
 
 AC_PREREQ(2.57)
 
-AC_INIT(airbag, 0.1, opensource@google.com)
+AC_INIT(breakpad, 0.1, opensource@google.com)
 dnl Sanity check: the argument is just a file that should exist.
 AC_CONFIG_SRCDIR(README)
 AC_CONFIG_AUX_DIR(autotools)
 
-AM_INIT_AUTOMAKE(subdir-objects)
+AM_INIT_AUTOMAKE(subdir-objects tar-ustar)
 AM_CONFIG_HEADER(src/config.h)
 
 AC_PROG_CC

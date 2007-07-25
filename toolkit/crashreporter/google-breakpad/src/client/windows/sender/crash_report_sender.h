@@ -45,10 +45,17 @@
 #include <map>
 #include <string>
 
-namespace google_airbag {
+namespace google_breakpad {
 
 using std::wstring;
 using std::map;
+
+typedef enum {
+  RESULT_FAILED = 0,  // Failed to communicate with the server; try later.
+  RESULT_REJECTED,    // Successfully sent the crash report, but the
+                      // server rejected it; don't resend this report.
+  RESULT_SUCCEEDED    // The server accepted the crash report.
+} ReportResult;
 
 class CrashReportSender {
  public:
@@ -56,11 +63,16 @@ class CrashReportSender {
   // name value pairs, as a multipart POST request to the given URL.
   // Parameter names must contain only printable ASCII characters,
   // and may not contain a quote (") character.
-  // Only HTTP(S) URLs are currently supported.  Returns true on success.
-  // TODO(bryner): we should expose the response to the caller.
-  static bool SendCrashReport(const wstring &url,
-                              const map<wstring, wstring> &parameters,
-                              const wstring &dump_file_name);
+  // Only HTTP(S) URLs are currently supported.  The return value indicates
+  // the result of the operation (see above for possible results).
+  // If report_code is non-NULL and the report is sent successfully (that is,
+  // the return value is RESULT_SUCCEEDED), a code uniquely identifying the
+  // report will be returned in report_code.
+  // (Otherwise, report_code will be unchanged.)
+  static ReportResult SendCrashReport(const wstring &url,
+                                      const map<wstring, wstring> &parameters,
+                                      const wstring &dump_file_name,
+                                      wstring *report_code);
 
  private:
   // No instances of this class should be created.
@@ -71,7 +83,7 @@ class CrashReportSender {
   ~CrashReportSender();
 };
 
-}  // namespace google_airbag
+}  // namespace google_breakpad
 
 #pragma warning( pop )
 

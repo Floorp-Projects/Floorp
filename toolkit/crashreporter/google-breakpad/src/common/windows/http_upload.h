@@ -38,11 +38,14 @@
 // Disable exception handler warnings.
 #pragma warning( disable : 4530 ) 
 
+#include <Windows.h>
+#include <WinInet.h>
+
 #include <map>
 #include <string>
 #include <vector>
 
-namespace google_airbag {
+namespace google_breakpad {
 
 using std::string;
 using std::wstring;
@@ -58,14 +61,25 @@ class HTTPUpload {
   // Parameter names must contain only printable ASCII characters,
   // and may not contain a quote (") character.
   // Only HTTP(S) URLs are currently supported.  Returns true on success.
-  // TODO(bryner): we should expose the response to the caller.
+  // If the request is successful and response_body is non-NULL,
+  // the response body will be returned in response_body.
+  // If response_code is non-NULL, it will be set to the HTTP response code
+  // received (or 0 if the request failed before getting an HTTP response).
   static bool SendRequest(const wstring &url,
                           const map<wstring, wstring> &parameters,
                           const wstring &upload_file,
-                          const wstring &file_part_name);
+                          const wstring &file_part_name,
+                          wstring *response_body,
+                          int *response_code);
 
  private:
   class AutoInternetHandle;
+
+  // Retrieves the HTTP response.  If NULL is passed in for response,
+  // this merely checks (via the return value) that we were successfully
+  // able to retrieve exactly as many bytes of content in the response as
+  // were specified in the Content-Length header.
+  static bool HTTPUpload::ReadResponse(HINTERNET request, wstring* response);
 
   // Generates a new multipart boundary for a POST request
   static wstring GenerateMultipartBoundary();
@@ -85,6 +99,9 @@ class HTTPUpload {
   // Fills the supplied vector with the contents of filename.
   static void GetFileContents(const wstring &filename, vector<char> *contents);
 
+  // Converts a UTF8 string to UTF16.
+  static wstring UTF8ToWide(const string &utf8);
+
   // Converts a UTF16 string to UTF8.
   static string WideToUTF8(const wstring &wide);
 
@@ -101,7 +118,7 @@ class HTTPUpload {
   ~HTTPUpload();
 };
 
-}  // namespace google_airbag
+}  // namespace google_breakpad
 
 #pragma warning( pop )
 

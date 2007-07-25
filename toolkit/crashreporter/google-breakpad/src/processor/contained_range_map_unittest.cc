@@ -48,7 +48,7 @@
 namespace {
 
 
-using google_airbag::ContainedRangeMap;
+using google_breakpad::ContainedRangeMap;
 
 
 static bool RunTests() {

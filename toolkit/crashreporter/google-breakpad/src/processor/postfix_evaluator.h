@@ -55,7 +55,7 @@
 #include <string>
 #include <vector>
 
-namespace google_airbag {
+namespace google_breakpad {
 
 using std::map;
 using std::string;
@@ -137,7 +137,7 @@ class PostfixEvaluator {
   vector<string> stack_;
 };
 
-}  // namespace google_airbag
+}  // namespace google_breakpad
 
 
 #endif  // PROCESSOR_POSTFIX_EVALUATOR_H__
