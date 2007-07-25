@@ -288,20 +288,13 @@ static nsresult GetExecutablePath(nsString& exePath)
 #endif
 }
 
-nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
+nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
+                             const char* aServerURL)
 {
   nsresult rv;
 
   if (gExceptionHandler)
     return NS_ERROR_ALREADY_INITIALIZED;
-
-  // check environment var to see if we're enabled.
-  // we're off by default until we sort out the
-  // rest of the infrastructure,
-  // so it must exist and be set to a non-empty value.
-  const char* airbagEnv = PR_GetEnv("MOZ_AIRBAG");
-  if (airbagEnv == NULL || *airbagEnv == '\0')
-    return NS_ERROR_NOT_AVAILABLE;
 
   // this environment variable prevents us from launching
   // the crash reporter client
@@ -363,7 +356,7 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 
-  // finally, set the exception handler
+  // now set the exception handler
   gExceptionHandler = new google_breakpad::
     ExceptionHandler(CONVERT_UTF16_TO_XP_CHAR(tempPath).get(),
                      nsnull,
@@ -373,6 +366,11 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
 
   if (!gExceptionHandler)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  // store server URL with the API data
+  if (aServerURL)
+    AnnotateCrashReport(NS_LITERAL_CSTRING("ServerURL"),
+                        nsDependentCString(aServerURL));
 
   return NS_OK;
 }
