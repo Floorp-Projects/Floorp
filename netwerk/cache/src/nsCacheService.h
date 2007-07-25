@@ -98,6 +98,14 @@ public:
                                                PRBool *              result);
 
 
+    static nsresult  GetOfflineOwnerDomains(nsCacheSession *          session,
+                                            PRUint32 *                count,
+                                            char ***                  domains);
+    static nsresult  GetOfflineOwnerURIs(nsCacheSession *             session,
+                                         const nsACString &           ownerDomain,
+                                         PRUint32 *                   count,
+                                         char ***                     uris);
+
     static nsresult  SetOfflineOwnedKeys(nsCacheSession *             session,
                                          const nsACString &           ownerDomain,
                                          const nsACString &           ownerUri,

@@ -40,7 +40,7 @@
 #include "nsISupports.idl"
 #include "nsICache.idl"
 
-[scriptable, uuid(e9581d9f-3c0c-4722-8d2b-3d18f8d41299)]
+[scriptable, uuid(0058c32b-0d93-4cf8-a561-e6f749c8a7b1)]
 interface nsIOfflineCacheSession : nsISupports
 {
     /**
@@ -65,6 +65,26 @@ interface nsIOfflineCacheSession : nsISupports
      * A key can optionally be associated with a specific URI within
      * the domain.
      */
+
+    /**
+     * Gets the list of owner domains in the cache.
+     *
+     * @param count The number of domains returned
+     * @param uris The domains that own resources in the cache
+     */
+    void getOwnerDomains(out unsigned long count,
+                         [array, size_is(count)]out string domains);
+
+    /**
+     * Gets the list of owner URIs associated with a domain.
+     *
+     * @param ownerDomain The domain to query
+     * @param count The number of uris returned
+     * @param uris The uris in this domain that own resources
+     */
+    void getOwnerURIs(in ACString ownerDomain,
+                      out unsigned long count,
+                      [array, size_is(count)]out string uris);
 
     /**
      * Sets the resources owned by a given domain/URI pair.
