@@ -37,20 +37,25 @@
 # ***** END LICENSE BLOCK *****
 #
 # This script expects the following environment variables to be set:
-# AIRBAG_SYMBOL_SERVER  : host to upload symbols to
-# AIRBAG_SYMBOL_USER    : username on that host
-# AIRBAG_SYMBOL_PATH    : path on that host to put symbols in
+# SYMBOL_SERVER_HOST    : host to upload symbols to
+# SYMBOL_SERVER_USER    : username on that host
+# SYMBOL_SERVER_PATH    : path on that host to put symbols in
+#
+# And will use the following optional environment variable if set:
+# SYMBOL_SERVER_SSH_KEY : path to a ssh private key to use
 #
 set -e
 
-: ${AIRBAG_SYMBOL_SERVER?} ${AIRBAG_SYMBOL_USER?} ${AIRBAG_SYMBOL_PATH?} ${1?"You must specify a symbol archive to upload"}
+: ${SYMBOL_SERVER_HOST?} ${SYMBOL_SERVER_USER?} ${SYMBOL_SERVER_PATH?} ${1?"You must specify a symbol archive to upload"}
 archive=`basename $1`
 echo "Transferring symbols... $1"
-scp -v $1 ${AIRBAG_SYMBOL_USER}@${AIRBAG_SYMBOL_SERVER}:${AIRBAG_SYMBOL_PATH}/
+scp -v ${SYMBOL_SERVER_SSH_KEY:-i $SYMBOL_SERVER_SSH_KEY} $1 \
+  ${SYMBOL_SERVER_USER}@${SYMBOL_SERVER_HOST}:${SYMBOL_SERVER_PATH}/
 echo "Unpacking symbols on remote host..."
-ssh -2 -l ${AIRBAG_SYMBOL_USER} ${AIRBAG_SYMBOL_SERVER} \
+ssh -2 ${SYMBOL_SERVER_SSH_KEY:-i $SYMBOL_SERVER_SSH_KEY} \
+  -l ${SYMBOL_SERVER_USER} ${SYMBOL_SERVER_HOST} \
   "set -e;
-   cd ${AIRBAG_SYMBOL_PATH};
+   cd ${SYMBOL_SERVER_PATH};
    unzip $archive;
    rm -v $archive;"
 echo "Symbol transfer completed"
