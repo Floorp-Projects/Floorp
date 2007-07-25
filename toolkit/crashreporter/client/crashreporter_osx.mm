@@ -47,6 +47,8 @@
 using std::string;
 using std::vector;
 
+using namespace CrashReporter;
+
 static NSAutoreleasePool* gMainPool;
 static CrashReporterUI* gUI = 0;
 static string gDumpFile;
@@ -382,7 +384,7 @@ static bool RestartApplication()
     reply = [r UTF8String];
   }
 
-  CrashReporterSendCompleted(success, reply);
+  SendCompleted(success, reply);
 
   if (success) {
     [NSApp terminate:self];
