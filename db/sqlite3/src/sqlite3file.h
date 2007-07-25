@@ -72,7 +72,6 @@ struct ThreadData;
 ** See definition in util.c
 */
 struct sqlite3;
-int sqlite3ApiExit(sqlite3 *db, int);
 
 
 /*
