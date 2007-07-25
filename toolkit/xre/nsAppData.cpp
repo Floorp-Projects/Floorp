@@ -115,7 +115,7 @@ XRE_CreateAppData(nsILocalFile* aINIFile, nsXREAppData **aAppData)
 {
   NS_ENSURE_ARG(aINIFile && aAppData);
 
-  nsAutoPtr<nsXREAppData> data = new ScopedAppData();
+  nsAutoPtr<ScopedAppData> data = new ScopedAppData();
   if (!data)
     return NS_ERROR_OUT_OF_MEMORY;
 
