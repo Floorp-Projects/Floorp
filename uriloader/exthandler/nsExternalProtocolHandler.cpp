@@ -565,7 +565,7 @@ NS_IMETHODIMP nsExternalProtocolHandler::GetProtocolFlags(PRUint32 *aUritype)
 {
     // Make it norelative since it is a simple uri
     *aUritype = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE |
-        URI_NON_PERSISTABLE;
+        URI_NON_PERSISTABLE | URI_DOES_NOT_RETURN_DATA;
     return NS_OK;
 }
 
