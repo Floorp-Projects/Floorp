@@ -44,6 +44,8 @@ class nsMIMEInfoOS2 : public nsMIMEInfoImpl
   public:
     nsMIMEInfoOS2(const char* aType = "") : nsMIMEInfoImpl(aType) {}
     nsMIMEInfoOS2(const nsACString& aMIMEType) : nsMIMEInfoImpl(aMIMEType) {}
+    nsMIMEInfoOS2(const nsACString& aType, HandlerClass aClass) :
+      nsMIMEInfoImpl(aType, aClass) {}
     virtual ~nsMIMEInfoOS2();
 
     NS_IMETHOD LaunchWithURI(nsIURI* aURI);
