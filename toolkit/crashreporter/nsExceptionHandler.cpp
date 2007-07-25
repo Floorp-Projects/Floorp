@@ -98,6 +98,9 @@ static google_breakpad::ExceptionHandler* gExceptionHandler = nsnull;
 
 static XP_CHAR* crashReporterPath;
 
+// if this is false, we don't launch the crash reporter
+static bool doReport = true;
+
 // this holds additional data sent via the API
 static nsDataHashtable<nsCStringHashKey,nsCString>* crashReporterAPIData_Hash;
 static nsCString* crashReporterAPIData = nsnull;
@@ -161,6 +164,10 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
     }
   }
 
+  if (!doReport) {
+    return succeeded;
+  }
+
   STARTUPINFO si;
   PROCESS_INFORMATION pi;
 
@@ -189,6 +196,10 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
       write(fd, crashReporterAPIData->get(), crashReporterAPIData->Length());
       close (fd);
     }
+  }
+
+  if (!doReport) {
+    return succeeded;
   }
 
   pid_t pid = fork();
@@ -287,10 +298,16 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory)
   // check environment var to see if we're enabled.
   // we're off by default until we sort out the
   // rest of the infrastructure,
-  // so it must exist and be set to a non-zero value.
+  // so it must exist and be set to a non-empty value.
   const char* airbagEnv = PR_GetEnv("MOZ_AIRBAG");
-  if (airbagEnv == NULL || atoi(airbagEnv) == 0)
+  if (airbagEnv == NULL || *airbagEnv == '\0')
     return NS_ERROR_NOT_AVAILABLE;
+
+  // this environment variable prevents us from launching
+  // the crash reporter client
+  const char* noReportEnv = PR_GetEnv("MOZ_CRASHREPORTER_NO_REPORT");
+  if (noReportEnv && *noReportEnv)
+    doReport = false;
 
   // allocate our strings
   crashReporterAPIData = new nsCString();
