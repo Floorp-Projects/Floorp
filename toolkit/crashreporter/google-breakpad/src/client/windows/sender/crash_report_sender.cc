@@ -33,17 +33,43 @@
 #include "client/windows/sender/crash_report_sender.h"
 #include "common/windows/http_upload.h"
 
+#if _MSC_VER < 1400  // MSVC 2005/8
+// Older MSVC doesn't have fscanf_s, but they are compatible as long as
+// we don't use the string conversions (%s/%c/%S/%C).
+#define fscanf_s fscanf
+#endif
+
 namespace google_breakpad {
 
-// static
+static const char kCheckpointSignature[] = "GBP1\n";
+
+CrashReportSender::CrashReportSender(const wstring &checkpoint_file)
+    : checkpoint_file_(checkpoint_file),
+      max_reports_per_day_(-1),
+      last_sent_date_(-1),
+      reports_sent_(0) {
+  FILE *fd;
+  if (OpenCheckpointFile(L"r", &fd) == 0) {
+    ReadCheckpoint(fd);
+    fclose(fd);
+  }
+}
+
 ReportResult CrashReportSender::SendCrashReport(
     const wstring &url, const map<wstring, wstring> &parameters,
     const wstring &dump_file_name, wstring *report_code) {
+  int today = GetCurrentDate();
+  if (today == last_sent_date_ &&
+      max_reports_per_day_ != -1 &&
+      reports_sent_ >= max_reports_per_day_) {
+    return RESULT_THROTTLED;
+  }
 
   int http_response = 0;
   bool result = HTTPUpload::SendRequest(
     url, parameters, dump_file_name, L"upload_file_minidump", report_code,
     &http_response);
+  ReportSent(today);
 
   if (result) {
     return RESULT_SUCCEEDED;
@@ -53,6 +79,60 @@ ReportResult CrashReportSender::SendCrashReport(
   } else {
     return RESULT_FAILED;
   }
+}
+
+void CrashReportSender::ReadCheckpoint(FILE *fd) {
+  char buf[128];
+  if (!fgets(buf, sizeof(buf), fd) ||
+      strcmp(buf, kCheckpointSignature) != 0) {
+    return;
+  }
+
+  if (fscanf_s(fd, "%d\n", &last_sent_date_) != 1) {
+    last_sent_date_ = -1;
+    return;
+  }
+  if (fscanf_s(fd, "%d\n", &reports_sent_) != 1) {
+    reports_sent_ = 0;
+    return;
+  }
+}
+
+void CrashReportSender::ReportSent(int today) {
+  // Update the report stats
+  if (today != last_sent_date_) {
+    last_sent_date_ = today;
+    reports_sent_ = 0;
+  }
+  ++reports_sent_;
+
+  // Update the checkpoint file
+  FILE *fd;
+  if (OpenCheckpointFile(L"w", &fd) == 0) {
+    fputs(kCheckpointSignature, fd);
+    fprintf(fd, "%d\n", last_sent_date_);
+    fprintf(fd, "%d\n", reports_sent_);
+    fclose(fd);
+  }
+}
+
+int CrashReportSender::GetCurrentDate() const {
+  SYSTEMTIME system_time;
+  GetSystemTime(&system_time);
+  return (system_time.wYear * 10000) + (system_time.wMonth * 100) +
+      system_time.wDay;
+}
+
+int CrashReportSender::OpenCheckpointFile(const wchar_t *mode, FILE **fd) {
+#if _MSC_VER >= 1400  // MSVC 2005/8
+  return _wfopen_s(fd, checkpoint_file_.c_str(), mode);
+#else
+  *fd = _wfopen(checkpoint_file_.c_str(), mode);
+  if (*fd == NULL) {
+    return errno;
+  }
+  return 0;
+#endif
 }
 
 }  // namespace google_breakpad

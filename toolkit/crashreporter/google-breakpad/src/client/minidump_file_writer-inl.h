@@ -76,7 +76,8 @@ inline bool TypedMDRVA<MDType>::CopyIndex(unsigned int index, MDType *item) {
 
 template<typename MDType>
 inline bool TypedMDRVA<MDType>::CopyIndexAfterObject(unsigned int index,
-                                                     void *src, size_t size) {
+                                                     const void *src, 
+                                                     size_t size) {
   assert(allocation_state_ == SINGLE_OBJECT_WITH_ARRAY);
   return writer_->Copy(position_ + sizeof(MDType) + index * size, src, size);
 }

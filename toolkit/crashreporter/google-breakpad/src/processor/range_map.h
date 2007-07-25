@@ -60,9 +60,8 @@ class RangeMap {
                   const EntryType &entry);
 
   // Locates the range encompassing the supplied address.  If there is
-  // no such range, or if there is a parameter error, returns false.
-  // entry_base and entry_size, if non-NULL, are set to the base and size
-  // of the entry's range.
+  // no such range, returns false.  entry_base and entry_size, if non-NULL,
+  // are set to the base and size of the entry's range.
   bool RetrieveRange(const AddressType &address, EntryType *entry,
                      AddressType *entry_base, AddressType *entry_size) const;
 
@@ -77,9 +76,9 @@ class RangeMap {
 
   // Treating all ranges as a list ordered by the address spaces that they
   // occupy, locates the range at the index specified by index.  Returns
-  // false if index is larger than the number of ranges stored, or if another
-  // parameter error occurs.  entry_base and entry_size, if non-NULL, are set
-  // to the base and size of the entry's range.
+  // false if index is larger than the number of ranges stored.  entry_base
+  // and entry_size, if non-NULL, are set to the base and size of the entry's
+  // range.
   //
   // RetrieveRangeAtIndex is not optimized for speedy operation.
   bool RetrieveRangeAtIndex(int index, EntryType *entry,

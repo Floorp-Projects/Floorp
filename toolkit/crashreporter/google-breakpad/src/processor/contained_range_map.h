@@ -92,8 +92,7 @@ class ContainedRangeMap {
   // the specified address.  This method will only return entries held by
   // child ranges, and not the entry contained by |this|.  This is necessary
   // to support a sparsely-populated root range.  If no descendant range
-  // encompasses the address, or if there is a parameter error, returns
-  // false.
+  // encompasses the address, returns false.
   bool RetrieveRange(const AddressType &address, EntryType *entry) const;
 
   // Removes all children.  Note that Clear only removes descendants,

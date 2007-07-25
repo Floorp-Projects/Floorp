@@ -53,8 +53,8 @@ class AddressMap {
   bool Store(const AddressType &address, const EntryType &entry);
 
   // Locates the entry stored at the highest address less than or equal to
-  // the address argument.  If there is no such range, or if there is a
-  // parameter error, returns false.  The entry is returned in entry.  If
+  // the address argument.  If there is no such range, returns false.  The
+  // entry is returned in entry, which is a required argument.  If
   // entry_address is not NULL, it will be set to the address that the entry
   // was stored at.
   bool Retrieve(const AddressType &address,
