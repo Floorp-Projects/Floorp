@@ -47,11 +47,12 @@ XPI_NAME 	= crashreporter
 
 LOCAL_INCLUDES 	= -I$(srcdir)/../../..
 
-CPPSRCS		= \
-		exception_handler.cc \
-		minidump_generator.cc \
-		../../minidump_file_writer.cc \
-		$(NULL)
+CPPSRCS	= \
+  exception_handler.cc \
+  minidump_generator.cc \
+  dynamic_images.cc \
+  ../../minidump_file_writer.cc \
+  $(NULL)
 
 # need static lib
 FORCE_STATIC_LIB = 1

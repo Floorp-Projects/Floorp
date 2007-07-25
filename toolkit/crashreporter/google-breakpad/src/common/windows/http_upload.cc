@@ -230,7 +230,10 @@ wstring HTTPUpload::GenerateMultipartBoundary() {
 
   wchar_t temp[kBoundaryLength];
   swprintf(temp, kBoundaryLength, L"%s%08X%08X", kBoundaryPrefix, r0, r1);
-  GB_WSU_SAFE_SWPRINTF_TERMINATE(temp, kBoundaryLength);
+
+  // remove when VC++7.1 is no longer supported
+  temp[kBoundaryLength - 1] = L'\0';
+
   return wstring(temp);
 }
 
