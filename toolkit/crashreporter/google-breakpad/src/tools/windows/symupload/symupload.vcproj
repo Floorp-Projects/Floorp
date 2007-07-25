@@ -217,6 +217,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\..\common\windows\string_utils.cc"
+				>
+			</File>
+			<File
 				RelativePath=".\symupload.cc"
 				>
 			</File>

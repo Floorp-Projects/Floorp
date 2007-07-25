@@ -33,15 +33,26 @@
 #include "client/windows/sender/crash_report_sender.h"
 #include "common/windows/http_upload.h"
 
-namespace google_airbag {
+namespace google_breakpad {
 
 // static
-bool CrashReportSender::SendCrashReport(
+ReportResult CrashReportSender::SendCrashReport(
     const wstring &url, const map<wstring, wstring> &parameters,
-    const wstring &dump_file_name) {
+    const wstring &dump_file_name, wstring *report_code) {
 
-  return HTTPUpload::SendRequest(url, parameters, dump_file_name,
-                                 L"upload_file_minidump");
+  int http_response = 0;
+  bool result = HTTPUpload::SendRequest(
+    url, parameters, dump_file_name, L"upload_file_minidump", report_code,
+    &http_response);
+
+  if (result) {
+    return RESULT_SUCCEEDED;
+  } else if (http_response == 400) {  // TODO: update if/when the server
+                                      //       switches to a different code
+    return RESULT_REJECTED;
+  } else {
+    return RESULT_FAILED;
+  }
 }
 
-}  // namespace google_airbag
+}  // namespace google_breakpad

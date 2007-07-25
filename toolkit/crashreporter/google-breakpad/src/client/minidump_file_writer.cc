@@ -38,8 +38,11 @@
 #include <unistd.h>
 
 #include "client/minidump_file_writer-inl.h"
+#include "common/string_conversion.h"
 
-namespace google_airbag {
+namespace google_breakpad {
+
+const MDRVA MinidumpFileWriter::kInvalidMDRVA = static_cast<MDRVA>(-1);
 
 MinidumpFileWriter::MinidumpFileWriter() : file_(-1), position_(0), size_(0) {
 }
@@ -48,9 +51,9 @@ MinidumpFileWriter::~MinidumpFileWriter() {
   Close();
 }
 
-bool MinidumpFileWriter::Open(const std::string &path) {
+bool MinidumpFileWriter::Open(const char *path) {
   assert(file_ == -1);
-  file_ = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+  file_ = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 
   return file_ != -1;
 }
@@ -60,58 +63,98 @@ bool MinidumpFileWriter::Close() {
 
   if (file_ != -1) {
     ftruncate(file_, position_);
-    result = close(file_) == 0;
+    result = (close(file_) == 0);
     file_ = -1;
   }
 
   return result;
 }
 
-bool MinidumpFileWriter::WriteString(const wchar_t *str,
-                                     unsigned int length,
-                                     MDLocationDescriptor *location) {
+bool MinidumpFileWriter::CopyStringToMDString(const wchar_t *str,
+                                              unsigned int length,
+                                              TypedMDRVA<MDString> *mdstring) {
+  bool result = true;
+  if (sizeof(wchar_t) == sizeof(u_int16_t)) {
+    // Shortcut if wchar_t is the same size as MDString's buffer
+    result = mdstring->Copy(str, mdstring->get()->length);
+  } else {
+    u_int16_t out[2];
+    int out_idx = 0;
+    
+    // Copy the string character by character
+    while (length && result) {
+      UTF32ToUTF16Char(*str, out);
+      if (!out[0])
+        return false;
+      
+      // Process one character at a time
+      --length;
+      ++str;
+      
+      // Append the one or two UTF-16 characters.  The first one will be non-
+      // zero, but the second one may be zero, depending on the conversion from
+      // UTF-32.
+      int out_count = out[1] ? 2 : 1;
+      int out_size = sizeof(u_int16_t) * out_count;
+      result = mdstring->CopyIndexAfterObject(out_idx, out, out_size);
+      out_idx += out_count;
+    }
+  }
+  return result;
+}
+
+bool MinidumpFileWriter::CopyStringToMDString(const char *str,
+                                              unsigned int length,
+                                              TypedMDRVA<MDString> *mdstring) {
+  bool result = true;
+  u_int16_t out[2];
+  int out_idx = 0;
+
+  // Copy the string character by character
+  while (length && result) {
+    int conversion_count = UTF8ToUTF16Char(str, length, out);
+    if (!conversion_count)
+      return false;
+    
+    // Move the pointer along based on the nubmer of converted characters
+    length -= conversion_count;
+    str += conversion_count;
+    
+    // Append the one or two UTF-16 characters
+    int out_count = out[1] ? 2 : 1;
+    int out_size = sizeof(u_int16_t) * out_count;
+    result = mdstring->CopyIndexAfterObject(out_idx, out, out_size);
+    out_idx += out_count;
+  }
+  return result;
+}
+
+template <typename CharType>
+bool MinidumpFileWriter::WriteStringCore(const CharType *str,
+                                         unsigned int length,
+                                         MDLocationDescriptor *location) {
   assert(str);
   assert(location);
   // Calculate the mdstring length by either limiting to |length| as passed in
   // or by finding the location of the NULL character.
+  unsigned int mdstring_length = 0;
   if (!length)
     length = INT_MAX;
-
-  unsigned int mdstring_length = 0;
-  for (; mdstring_length < length && str[mdstring_length]; ++mdstring_length) {
-  }
+  for (; mdstring_length < length && str[mdstring_length]; ++mdstring_length)
+    ;
 
   // Allocate the string buffer
   TypedMDRVA<MDString> mdstring(this);
-
   if (!mdstring.AllocateObjectAndArray(mdstring_length + 1, sizeof(u_int16_t)))
     return false;
 
-  // Set length excluding the NULL
+  // Set length excluding the NULL and copy the string
   mdstring.get()->length = mdstring_length * sizeof(u_int16_t);
-
-  u_int16_t ch;
-  bool result = true;
-
-  if (sizeof(wchar_t) == sizeof(u_int16_t)) {
-    // Shortcut if wchar_t is the same size as MDString's buffer
-    result = mdstring.Copy(str, mdstring.get()->length);
-  } else {
-    // Copy the string character by character
-    for (unsigned int c = 0; c < mdstring_length && result == true; c++) {
-      ch = str[c];
-      // TODO: For the UTF-32->UTF-16 conversion, it's possible that there
-      // are characters that will require more than one UTF-16 character to
-      // represent it.  Fully supporting this will require a more sophisticated
-      // calculation of the size of the resulting string and for converting the
-      // UTF-32 character into the two UTF-16 characters.
-      result = mdstring.CopyIndexAfterObject(c, &ch, sizeof(ch));
-    }
-  }
+  bool result = CopyStringToMDString(str, mdstring_length, &mdstring);
 
   // NULL terminate
   if (result) {
-    ch = 0;
+    u_int16_t ch = 0;
     result = mdstring.CopyIndexAfterObject(mdstring_length, &ch, sizeof(ch));
 
     if (result)
@@ -121,52 +164,14 @@ bool MinidumpFileWriter::WriteString(const wchar_t *str,
   return result;
 }
 
+bool MinidumpFileWriter::WriteString(const wchar_t *str, unsigned int length,
+                 MDLocationDescriptor *location) {
+  return WriteStringCore(str, length, location);
+}
+
 bool MinidumpFileWriter::WriteString(const char *str, unsigned int length,
-                                     MDLocationDescriptor *location) {
-  assert(str);
-  assert(location);
-  // Calculate the mdstring length by either limiting to |length| as passed in
-  // or by finding the location of the NULL character.
-  if (!length)
-    length = INT_MAX;
-
-  unsigned int mdstring_length = 0;
-  for (; mdstring_length < length && str[mdstring_length]; ++mdstring_length) {
-  }
-
-  // Allocate the string buffer
-  TypedMDRVA<MDString> mdstring(this);
-
-  if (!mdstring.AllocateObjectAndArray(mdstring_length + 1, sizeof(u_int16_t)))
-    return false;
-
-  // Set length excluding the NULL
-  mdstring.get()->length = mdstring_length * sizeof(u_int16_t);
-
-  u_int16_t ch;
-  bool result = true;
-
-  // Copy the string character by character
-  for (unsigned int c = 0; c < mdstring_length && result == true; c++) {
-    ch = str[c];
-    // TODO: For the UTF-8->UTF-16 conversion, it's possible that there are
-    // characters that will convert one or more UTF-8 character into a single
-    // UTF-16 character.  Fully supporting this will require a more
-    // sophisticated calculation of the size of the resulting string and for
-    // converting the UTF-8 characters into a UTF-16 character.
-    result = mdstring.CopyIndexAfterObject(c, &ch, sizeof(ch));
-  }
-
-  // NULL terminate
-  if (result) {
-    ch = 0;
-    result = mdstring.CopyIndexAfterObject(mdstring_length, &ch, sizeof(ch));
-
-    if (result)
-      *location = mdstring.location();
-  }
-
-  return result;
+                 MDLocationDescriptor *location) {
+  return WriteStringCore(str, length, location);
 }
 
 bool MinidumpFileWriter::WriteMemory(const void *src, size_t size,
@@ -177,7 +182,6 @@ bool MinidumpFileWriter::WriteMemory(const void *src, size_t size,
 
   if (!mem.Allocate(size))
     return false;
-
   if (!mem.Copy(src, mem.size()))
     return false;
 
@@ -190,7 +194,6 @@ bool MinidumpFileWriter::WriteMemory(const void *src, size_t size,
 MDRVA MinidumpFileWriter::Allocate(size_t size) {
   assert(size);
   assert(file_ != -1);
-
   size_t aligned_size = (size + 7) & ~7;  // 64-bit alignment
 
   if (position_ + aligned_size > size_) {
@@ -202,7 +205,6 @@ MDRVA MinidumpFileWriter::Allocate(size_t size) {
       growth = minimal_growth;
 
     size_t new_size = size_ + growth;
-
     if (ftruncate(file_, new_size) != 0)
       return kInvalidMDRVA;
 
@@ -215,7 +217,7 @@ MDRVA MinidumpFileWriter::Allocate(size_t size) {
   return current_position;
 }
 
-bool MinidumpFileWriter::Copy(MDRVA position, const void* src, ssize_t size) {
+bool MinidumpFileWriter::Copy(MDRVA position, const void *src, ssize_t size) {
   assert(src);
   assert(size);
   assert(file_ != -1);
@@ -246,4 +248,4 @@ bool UntypedMDRVA::Copy(MDRVA position, const void *src, size_t size) {
   return writer_->Copy(position, src, size);
 }
 
-}  // namespace google_airbag
+}  // namespace google_breakpad

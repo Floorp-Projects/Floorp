@@ -40,9 +40,9 @@
 
 #include <string>
 
-#include "google_airbag/common/airbag_types.h"
+#include "google_breakpad/common/breakpad_types.h"
 
-namespace google_airbag {
+namespace google_breakpad {
 
 struct StackFrameInfo {
  public:
@@ -120,7 +120,7 @@ struct StackFrameInfo {
   std::string program_string;
 };
 
-}  // namespace google_airbag
+}  // namespace google_breakpad
 
 
 #endif  // PROCESSOR_STACK_FRAME_INFO_H__

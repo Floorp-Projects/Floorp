@@ -295,7 +295,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\google_airbag\common\minidump_format.h"
+				RelativePath="..\..\..\google_breakpad\common\minidump_format.h"
 				>
 			</File>
 			<File
