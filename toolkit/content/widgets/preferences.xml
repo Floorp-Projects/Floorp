@@ -730,7 +730,7 @@
           var prefpanes = this.preferencePanes;
           for (var i = 0; i < prefpanes.length; ++i) {
             if (prefpanes[i] == aPaneElement) {
-              this._paneDeck.setAttribute("selectedIndex", i);
+              this._paneDeck.selectedIndex = i;
               
               if (this.type != "child") {
                 var oldPane = this.lastSelected ? document.getElementById(this.lastSelected) : this.preferencePanes[0];
