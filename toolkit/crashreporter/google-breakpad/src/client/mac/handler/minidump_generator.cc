@@ -47,28 +47,36 @@ using MacStringUtils::ConvertToString;
 using MacStringUtils::IntegerValueAtIndex;
 
 namespace google_breakpad {
-  
+
+// constructor when generating from within the crashed process  
 MinidumpGenerator::MinidumpGenerator()
     : exception_type_(0),
       exception_code_(0),
       exception_thread_(0),
       crashing_task_(mach_task_self()),
-      handler_thread_(mach_thread_self()) {
-  dynamic_images_ = new DynamicImages(mach_task_self());
+      handler_thread_(mach_thread_self()),
+      dynamic_images_(NULL) {
   GatherSystemInformation();
 }
 
+// constructor when generating from a different process than the crashed process  
 MinidumpGenerator::MinidumpGenerator(mach_port_t crashing_task, mach_port_t handler_thread)
     : exception_type_(0),
       exception_code_(0),
       exception_thread_(0),
       crashing_task_(crashing_task),
       handler_thread_(handler_thread) {
-  dynamic_images_ = new DynamicImages(crashing_task_);
+  if (crashing_task != mach_task_self()) {
+    dynamic_images_ = new DynamicImages(crashing_task_);
+  } else {
+    dynamic_images_ = NULL;
+  }
+  
   GatherSystemInformation();
 }
 
 MinidumpGenerator::~MinidumpGenerator() {
+  delete dynamic_images_;
 }
 
 char MinidumpGenerator::build_string_[16];
@@ -240,12 +248,14 @@ bool MinidumpGenerator::WriteStackFromStartAddress(
   if (!memory.Allocate(size))
     return false;
 
-  void *stack_memory = ReadTaskMemory(crashing_task_, (void*)start_addr, size);
-
-  bool result = memory.Copy(stack_memory, size);
-  
-  free(stack_memory);
-  
+  bool result;
+  if (dynamic_images_) {
+    void *stack_memory = ReadTaskMemory(crashing_task_, (void*)start_addr, size);
+    result = memory.Copy(stack_memory, size);
+    free(stack_memory);
+  } else {
+    result = memory.Copy(reinterpret_cast<const void *>(start_addr), size);
+  }
   
   stack_location->start_of_memory_range = start_addr;
   stack_location->memory = memory.location();
@@ -493,6 +503,35 @@ bool MinidumpGenerator::WriteSystemInfoStream(
       break;
     case CPU_TYPE_I386:
       info_ptr->processor_architecture = MD_CPU_ARCHITECTURE_X86;
+#ifdef __i386__
+      // ebx is used for PIC code, so we need
+      // to preserve it.
+#define cpuid(op,eax,ebx,ecx,edx)      \
+  asm ("pushl %%ebx   \n\t"            \
+       "cpuid         \n\t"	       \
+       "movl %%ebx,%1 \n\t"	       \
+       "popl %%ebx"		       \
+       : "=a" (eax),		       \
+         "=g" (ebx),		       \
+         "=c" (ecx),		       \
+         "=d" (edx)		       \
+       : "0" (op))
+      int unused, unused2;
+      // get vendor id
+      cpuid(0, unused, info_ptr->cpu.x86_cpu_info.vendor_id[0],
+            info_ptr->cpu.x86_cpu_info.vendor_id[2],
+            info_ptr->cpu.x86_cpu_info.vendor_id[1]);
+      // get version and feature info
+      cpuid(1, info_ptr->cpu.x86_cpu_info.version_information, unused, unused2,
+            info_ptr->cpu.x86_cpu_info.feature_information);
+      // family
+      info_ptr->processor_level =
+        (info_ptr->cpu.x86_cpu_info.version_information & 0xF00) >> 8;
+      // 0xMMSS (Model, Stepping)
+      info_ptr->processor_revision =
+        (info_ptr->cpu.x86_cpu_info.version_information & 0xF) |
+        ((info_ptr->cpu.x86_cpu_info.version_information & 0xF0) << 4);
+#endif // __i386__
       break;
     default:
       info_ptr->processor_architecture = MD_CPU_ARCHITECTURE_UNKNOWN;
@@ -518,42 +557,95 @@ bool MinidumpGenerator::WriteSystemInfoStream(
 
 bool MinidumpGenerator::WriteModuleStream(unsigned int index,
                                           MDRawModule *module) {
-  DynamicImage *image = dynamic_images_->GetImage(index);
+  if (dynamic_images_) {
+    // we're in a different process than the crashed process
+    DynamicImage *image = dynamic_images_->GetImage(index);
 
-  if (!image)
-    return false;
+    if (!image)
+      return false;
 
-  const mach_header *header = image->GetMachHeader();
+    const mach_header *header = image->GetMachHeader();
 
-  if (!header)
-    return false;
+    if (!header)
+      return false;
 
-  int cpu_type = header->cputype;
+    int cpu_type = header->cputype;
 
-  memset(module, 0, sizeof(MDRawModule));
+    memset(module, 0, sizeof(MDRawModule));
 
-  MDLocationDescriptor string_location;
+    MDLocationDescriptor string_location;
 
-  const char* name = image->GetFilePath();
-  if (!writer_.WriteString(name, 0, &string_location))
-    return false;
+    const char* name = image->GetFilePath();
+    if (!writer_.WriteString(name, 0, &string_location))
+      return false;
 
-  module->base_of_image = image->GetVMAddr() + image->GetVMAddrSlide();
-  module->size_of_image = image->GetVMSize();
-  module->module_name_rva = string_location.rva;
+    module->base_of_image = image->GetVMAddr() + image->GetVMAddrSlide();
+    module->size_of_image = image->GetVMSize();
+    module->module_name_rva = string_location.rva;
 
-  if (!WriteCVRecord(module, cpu_type, name)) {
-    return false;
+    if (!WriteCVRecord(module, cpu_type, name)) {
+      return false;
+    }
+  } else {
+    // we're getting module info in the crashed process
+    const struct mach_header *header = _dyld_get_image_header(index);
+
+    if (!header)
+      return false;
+
+    int cpu_type = header->cputype;
+    unsigned long slide = _dyld_get_image_vmaddr_slide(index);
+    const char* name = _dyld_get_image_name(index);
+    const struct load_command *cmd =
+      reinterpret_cast<const struct load_command *>(header + 1);
+
+    memset(module, 0, sizeof(MDRawModule));
+
+    for (unsigned int i = 0; cmd && (i < header->ncmds); i++) {
+      if (cmd->cmd == LC_SEGMENT) {
+        const struct segment_command *seg =
+          reinterpret_cast<const struct segment_command *>(cmd);
+        if (!strcmp(seg->segname, "__TEXT")) {
+          MDLocationDescriptor string_location;
+
+          if (!writer_.WriteString(name, 0, &string_location))
+            return false;
+
+          module->base_of_image = seg->vmaddr + slide;
+          module->size_of_image = seg->vmsize;
+          module->module_name_rva = string_location.rva;
+
+          if (!WriteCVRecord(module, cpu_type, name))
+            return false;
+
+          return true;
+        }
+      }
+
+      cmd = reinterpret_cast<struct load_command *>((char *)cmd + cmd->cmdsize);
+    }
   }
-
+  
   return true;
 }
 
 int MinidumpGenerator::FindExecutableModule() {
-  int index = dynamic_images_->GetExecutableImageIndex();
+  if (dynamic_images_) {
+    int index = dynamic_images_->GetExecutableImageIndex();
 
-  if (index >= 0) {
-    return index;
+    if (index >= 0) {
+      return index;
+    }
+  } else {
+    int image_count = _dyld_image_count();
+    const struct mach_header *header;
+
+    for (int index = 0; index < image_count; ++index) {
+      header = _dyld_get_image_header(index);
+
+      if (header->filetype == MH_EXECUTE)
+        return index;
+    }
   }
   
   // failed - just use the first image
@@ -565,7 +657,7 @@ bool MinidumpGenerator::WriteCVRecord(MDRawModule *module, int cpu_type,
   TypedMDRVA<MDCVInfoPDB70> cv(&writer_);
 
   // Only return the last path component of the full module path
-  char *module_name = strrchr(module_path, '/');
+  const char *module_name = strrchr(module_path, '/');
 
   // Increment past the slash
   if (module_name)
@@ -616,7 +708,8 @@ bool MinidumpGenerator::WriteModuleListStream(
   if (!_dyld_present())
     return false;
 
-  int image_count = dynamic_images_->GetImageCount();
+  int image_count = dynamic_images_ ?
+    dynamic_images_->GetImageCount() : _dyld_image_count();
 
   if (!list.AllocateObjectAndArray(image_count, MD_MODULE_SIZE))
     return false;

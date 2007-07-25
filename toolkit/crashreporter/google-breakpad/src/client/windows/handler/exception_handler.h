@@ -183,6 +183,10 @@ class ExceptionHandler {
                                      uintptr_t reserved);
 #endif  // _MSC_VER >= 1400
 
+  // This function will be called by the CRT when a pure virtual
+  // function is called.
+  static void HandlePureVirtualCall();
+
   // This is called on the exception thread or on another thread that
   // the user wishes to produce a dump from.  It calls
   // WriteMinidumpWithException on the handler thread, avoiding stack
@@ -253,6 +257,10 @@ class ExceptionHandler {
   // crashes.
   _invalid_parameter_handler previous_iph_;
 #endif  // _MSC_VER >= 1400
+
+  // The CRT allows you to override the default handler for pure
+  // virtual function calls.
+  _purecall_handler previous_pch_;
 
   // The exception handler thread.
   HANDLE handler_thread_;

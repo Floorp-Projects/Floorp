@@ -228,7 +228,7 @@ class TypedMDRVA : public UntypedMDRVA {
   // Copy |size| bytes starting at |str| to |index|
   // Must have been allocated using AllocateObjectAndArray().
   // Return true on success, or false on failure
-  bool CopyIndexAfterObject(unsigned int index, void *src, size_t size);
+  bool CopyIndexAfterObject(unsigned int index, const void *src, size_t size);
 
   // Write data_
   bool Flush();
