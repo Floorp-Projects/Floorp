@@ -522,3 +522,13 @@ bool UIDeleteFile(const string& file)
 {
   return (unlink(file.c_str()) != -1);
 }
+
+std::ifstream* UIOpenRead(const string& filename)
+{
+  return new std::ifstream(filename.c_str(), std::ios::in);
+}
+
+std::ofstream* UIOpenWrite(const string& filename)
+{
+  return new std::ofstream(filename.c_str(), std::ios::out);
+}

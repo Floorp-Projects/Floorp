@@ -151,10 +151,15 @@ bool ReadStringsFromFile(const string& path,
                          StringTable& strings,
                          bool unescape)
 {
-  ifstream f(path.c_str(), std::ios::in);
-  if (!f.is_open()) return false;
+  ifstream* f = UIOpenRead(path);
+  bool success = false;
+  if (f->is_open()) {
+    success = ReadStrings(*f, strings, unescape);
+  }
 
-  return ReadStrings(f, strings, unescape);
+  f->close();
+  delete f;
+  return success;
 }
 
 bool WriteStrings(ostream& out,
@@ -183,10 +188,15 @@ bool WriteStringsToFile(const string& path,
                         StringTable& strings,
                         bool escape)
 {
-  ofstream f(path.c_str(), std::ios::out);
-  if (!f.is_open()) return false;
+  ofstream* f = UIOpenWrite(path.c_str());
+  bool success = false;
+  if (f->is_open()) {
+    success = WriteStrings(*f, header, strings, escape);
+  }
 
-  return WriteStrings(f, header, strings, escape);
+  f->close();
+  delete f;
+  return success;
 }
 
 static bool ReadConfig()
@@ -455,9 +465,14 @@ int main(int argc, char** argv)
 #if defined(XP_WIN) && !defined(__GNUC__)
 // We need WinMain in order to not be a console app.  This function is unused
 // if we are a console application.
-int WINAPI WinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
+int WINAPI wWinMain( HINSTANCE, HINSTANCE, LPSTR args, int )
 {
+  char** argv = static_cast<char**>(malloc(__argc * sizeof(char*)));
+  for (int i = 0; i < __argc; i++) {
+    argv[i] = strdup(WideToUTF8(__wargv[i]).c_str());
+  }
+
   // Do the real work.
-  return main(__argc, __argv);
+  return main(__argc, argv);
 }
 #endif
