@@ -67,6 +67,7 @@
 
 #include <stdlib.h>
 #include <prenv.h>
+#include <prio.h>
 #include "nsDebug.h"
 #include "nsCRT.h"
 #include "nsILocalFile.h"
@@ -344,6 +345,131 @@ nsresult SetMinidumpPath(const nsAString& aPath)
 
   gExceptionHandler->set_dump_path(CONVERT_UTF16_TO_XP_CHAR(aPath).BeginReading());
 
+  return NS_OK;
+}
+
+static nsresult
+WriteDataToFile(nsIFile* aFile, const nsACString& data)
+{
+  nsCAutoString filename;
+  nsresult rv = aFile->GetNativePath(filename);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRFileDesc* fd = PR_Open(filename.get(), PR_WRONLY | PR_CREATE_FILE, 00600);
+  NS_ENSURE_TRUE(fd, NS_ERROR_FAILURE);
+
+  rv = NS_OK;
+  if (PR_Write(fd, data.Data(), data.Length()) == -1) {
+    rv = NS_ERROR_FAILURE;
+  }
+  PR_Close(fd);
+  return rv;
+}
+
+static nsresult
+GetFileContents(nsIFile* aFile, nsACString& data)
+{
+  nsCAutoString filename;
+  nsresult rv = aFile->GetNativePath(filename);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRFileDesc* fd = PR_Open(filename.get(), PR_RDONLY, 0);
+  NS_ENSURE_TRUE(fd, NS_ERROR_FILE_NOT_FOUND);
+
+  rv = NS_OK;
+  PRInt32 filesize = PR_Available(fd);
+  if (filesize <= 0) {
+    rv = NS_ERROR_FILE_NOT_FOUND;
+  }
+  else {
+    data.SetLength(filesize);
+    if (PR_Read(fd, data.BeginWriting(), filesize) == -1) {
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+  PR_Close(fd);
+  return rv;
+}
+
+// Function typedef for initializing a piece of data that we
+// don't already have.
+typedef nsresult (*InitDataFunc)(nsACString&);
+
+// Attempt to read aFile's contents into aContents, if aFile
+// does not exist, create it and initialize its contents
+// by calling aInitFunc for the data.
+static nsresult 
+GetOrInit(nsIFile* aFile, nsACString& aContents, InitDataFunc aInitFunc)
+{
+  PRBool exists;
+  nsresult rv = aFile->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!exists) {
+    // get the initial value and write it to the file
+    rv = aInitFunc(aContents);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return WriteDataToFile(aFile, aContents);
+  }
+
+  // just get the file's contents
+  return GetFileContents(aFile, aContents);
+}
+
+// Generate a unique user ID.  We're using a GUID form,
+// but not jumping through hoops to make it cryptographically
+// secure.  We just want it to distinguish unique users.
+static nsresult
+InitUserID(nsACString& aUserID)
+{
+  nsID id;
+
+  // copied shamelessly from nsUUIDGenerator.cpp
+#if defined(XP_WIN)
+  HRESULT hr = CoCreateGuid((GUID*)&id);
+  if (NS_FAILED(hr))
+    return NS_ERROR_FAILURE;
+#elif defined(XP_MACOSX)
+  CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
+  if (!uuid)
+    return NS_ERROR_FAILURE;
+  
+  CFUUIDBytes bytes = CFUUIDGetUUIDBytes(uuid);
+  memcpy(&id, &bytes, sizeof(nsID));
+
+  CFRelease(uuid);
+#else
+  // UNIX or some such thing
+  id.m0 = random();
+  id.m1 = random();
+  id.m2 = random();
+  *reinterpret_cast<PRUint32*>(&id.m3[0]) = random();
+  *reinterpret_cast<PRUint32*>(&id.m3[4]) = random();
+#endif
+
+  nsCAutoString id_str(id.ToString());
+  aUserID = Substring(id_str, 1, id_str.Length()-2);
+  
+  return NS_OK;
+}
+
+// Annotate the crash report with a Unique User ID.
+// TODO: also add time since install, and time since last crash.
+// (bug 376720 and bug 376721)
+// If any piece of data doesn't exist, initialize it first.
+nsresult SetupExtraData(nsILocalFile* aAppDataDirectory)
+{
+  nsresult rv = aAppDataDirectory->Append(NS_LITERAL_STRING("Crash Reports"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFile> userIDfile;
+  if (NS_SUCCEEDED(aAppDataDirectory->Clone(getter_AddRefs(userIDfile)))
+      && NS_SUCCEEDED(userIDfile->Append(NS_LITERAL_STRING("UserID")))) {
+    nsCAutoString userID;
+    if (NS_SUCCEEDED(GetOrInit(userIDfile, userID, InitUserID))) {
+      AnnotateCrashReport(NS_LITERAL_CSTRING("UserID"), userID);
+    }
+  }
   return NS_OK;
 }
 
