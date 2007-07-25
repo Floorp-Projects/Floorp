@@ -42,6 +42,7 @@
 #include <unistd.h>
 
 #include "common/mac/macho_walker.h"
+#include "common/mac/macho_utilities.h"
 
 namespace MacFileUtilities {
 
@@ -130,6 +131,9 @@ bool MachoWalker::FindHeader(int cpu_type, off_t &offset) {
     if (!ReadBytes(&header_cpu_type, sizeof(header_cpu_type), offset))
       return false;
 
+    if (magic == MH_CIGAM || magic == MH_CIGAM_64)
+      header_cpu_type = NXSwapInt(header_cpu_type);
+
     if (valid_cpu_type != header_cpu_type)
       return false;
 
@@ -201,7 +205,7 @@ bool MachoWalker::WalkHeader64AtOffset(off_t offset) {
 
   bool swap = (header.magic == MH_CIGAM_64);
   if (swap)
-    swap_mach_header_64(&header, NXHostByteOrder());
+    breakpad_swap_mach_header_64(&header, NXHostByteOrder());
 
   current_header_ = &header;
   current_header_size_ = sizeof(header);

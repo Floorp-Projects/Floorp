@@ -493,7 +493,7 @@ bool WriteModuleInfo(int fd, ElfW(Half) arch, const std::string &obj_file) {
     size_t slash_pos = obj_file.find_last_of("/");
     if (slash_pos != std::string::npos)
       filename = obj_file.substr(slash_pos + 1);
-    return WriteFormat(fd, "MODULE Linux %s %s 1 %s\n", arch_name,
+    return WriteFormat(fd, "MODULE Linux %s %s %s\n", arch_name,
                        id_no_dash, filename.c_str());
   }
   return false;
@@ -616,7 +616,7 @@ class MmapWrapper {
 namespace google_breakpad {
 
 bool DumpSymbols::WriteSymbolFile(const std::string &obj_file,
-                       const std::string &symbol_file) {
+				  int sym_fd) {
   int obj_fd = open(obj_file.c_str(), O_RDONLY);
   if (obj_fd < 0)
     return false;
@@ -636,16 +636,10 @@ bool DumpSymbols::WriteSymbolFile(const std::string &obj_file,
   if (!LoadSymbols(elf_header, &symbols))
      return false;
   // Write to symbol file.
-  int sym_fd = open(symbol_file.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0666);
-  if (sym_fd < 0)
-    return false;
-  FDWrapper sym_fd_wrapper(sym_fd);
   if (WriteModuleInfo(sym_fd, elf_header->e_machine, obj_file) &&
       DumpStabSymbols(sym_fd, symbols))
     return true;
 
-  // Remove the symbol file if failed to write the symbols.
-  unlink(symbol_file.c_str());
   return false;
 }
 

@@ -615,7 +615,8 @@ int PDBSourceLineWriter::GetFunctionStackParamSize(IDiaSymbol *function) {
       goto next_child;
     }
 
-    if (FAILED(child->get_type(&child_type))) {
+    // IDiaSymbol::get_type can succeed but still pass back a NULL value.
+    if (FAILED(child->get_type(&child_type)) || !child_type) {
       goto next_child;
     }
 
@@ -725,8 +726,9 @@ bool PDBSourceLineWriter::GetModuleInfo(PDBModuleInfo *info) {
     wchar_t age_string[9];
     swprintf(age_string, sizeof(age_string) / sizeof(age_string[0]),
              L"%x", age);
-    GB_WSU_SAFE_SWPRINTF_TERMINATE(age_string,
-                                   sizeof(age_string) / sizeof(age_string[0]));
+
+    // remove when VC++7.1 is no longer supported
+    age_string[sizeof(age_string) / sizeof(age_string[0]) - 1] = L'\0';
 
     info->debug_identifier = GUIDString::GUIDToSymbolServerWString(&guid);
     info->debug_identifier.append(age_string);
@@ -742,9 +744,11 @@ bool PDBSourceLineWriter::GetModuleInfo(PDBModuleInfo *info) {
     swprintf(identifier_string,
              sizeof(identifier_string) / sizeof(identifier_string[0]),
              L"%08X%x", signature, age);
-    GB_WSU_SAFE_SWPRINTF_TERMINATE(identifier_string,
-                                   sizeof(identifier_string) /
-                                       sizeof(identifier_string[0]));
+
+    // remove when VC++7.1 is no longer supported
+    identifier_string[sizeof(identifier_string) /
+                      sizeof(identifier_string[0]) - 1] = L'\0';
+
     info->debug_identifier = identifier_string;
   }
 

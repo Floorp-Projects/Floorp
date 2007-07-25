@@ -38,6 +38,9 @@
 
 #include "client/minidump_file_writer.h"
 #include "google_breakpad/common/minidump_format.h"
+#include "common/mac/macho_utilities.h"
+
+#include "dynamic_images.h"
 
 namespace google_breakpad {
 
@@ -53,6 +56,8 @@ using std::string;
 class MinidumpGenerator {
  public:
   MinidumpGenerator();
+  MinidumpGenerator(mach_port_t crashing_task, mach_port_t handler_thread);
+
   ~MinidumpGenerator();
 
   // Return <dir>/<unique_name>.dmp
@@ -87,17 +92,19 @@ class MinidumpGenerator {
   bool WriteBreakpadInfoStream(MDRawDirectory *breakpad_info_stream);
 
   // Helpers
-  u_int64_t CurrentPCForStack(thread_state_data_t state);
+  u_int64_t CurrentPCForStack(breakpad_thread_state_data_t state);
   bool WriteStackFromStartAddress(vm_address_t start_addr,
                                   MDMemoryDescriptor *stack_location);
-  bool WriteStack(thread_state_data_t state,
+  bool WriteStack(breakpad_thread_state_data_t state,
                   MDMemoryDescriptor *stack_location);
-  bool WriteContext(thread_state_data_t state,
+  bool WriteContext(breakpad_thread_state_data_t state,
                     MDLocationDescriptor *register_location);
   bool WriteThreadStream(mach_port_t thread_id, MDRawThread *thread);
   bool WriteCVRecord(MDRawModule *module, int cpu_type, 
                      const char *module_path);
   bool WriteModuleStream(unsigned int index, MDRawModule *module);
+  size_t CalculateStackSize(vm_address_t start_addr);
+  int  FindExecutableModule();
 
   // disallow copy ctor and operator=
   explicit MinidumpGenerator(const MinidumpGenerator &);
@@ -110,12 +117,17 @@ class MinidumpGenerator {
   int exception_type_;
   int exception_code_;
   mach_port_t exception_thread_;
-
+  mach_port_t crashing_task_;
+  mach_port_t handler_thread_;
+  
   // System information
   static char build_string_[16];
   static int os_major_version_;
   static int os_minor_version_;
   static int os_build_number_;
+  
+  // Information about dynamically loaded code
+  DynamicImages *dynamic_images_;
 };
 
 }  // namespace google_breakpad

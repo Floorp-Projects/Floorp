@@ -103,6 +103,10 @@ class Stackwalker {
   // get information from the stack.
   MemoryRegion *memory_;
 
+  // A list of modules, for populating each StackFrame's module information.
+  // This field is optional and may be NULL.
+  const CodeModules *modules_;
+
  private:
   // Obtains the context frame, the innermost called procedure in a stack
   // trace.  Returns NULL on failure.  GetContextFrame allocates a new
@@ -121,10 +125,6 @@ class Stackwalker {
   virtual StackFrame* GetCallerFrame(
       const CallStack *stack,
       const vector< linked_ptr<StackFrameInfo> > &stack_frame_info) = 0;
-
-  // A list of modules, for populating each StackFrame's module information.
-  // This field is optional and may be NULL.
-  const CodeModules *modules_;
 
   // The optional SymbolSupplier for resolving source line info.
   SymbolSupplier *supplier_;
