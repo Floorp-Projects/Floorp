@@ -1502,7 +1502,7 @@ function restartApp() {
                      .getService(Components.interfaces.nsIObserverService);
   var cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"]
                              .createInstance(Components.interfaces.nsISupportsPRBool);
-  os.notifyObservers(cancelQuit, "quit-application-requested", null);
+  os.notifyObservers(cancelQuit, "quit-application-requested", "restart");
 
   // Something aborted the quit process. 
   if (cancelQuit.data)
