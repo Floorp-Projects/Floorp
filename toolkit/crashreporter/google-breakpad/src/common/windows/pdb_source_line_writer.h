@@ -50,6 +50,7 @@ class PDBSourceLineWriter {
   enum FileFormat {
     PDB_FILE,  // a .pdb file containing debug symbols
     EXE_FILE,  // a .exe or .dll file
+    ANY_FILE   // try PDB_FILE and then EXE_FILE
   };
 
   explicit PDBSourceLineWriter();
@@ -73,9 +74,11 @@ class PDBSourceLineWriter {
   // Closes the current pdb file and its associated resources.
   void Close();
 
-  // Returns the GUID for the module, as a string,
-  // e.g. "11111111-2222-3333-4444-555555555555".
-  wstring GetModuleGUID();
+  // Sets guid to the GUID for the module, as a string,
+  // e.g. "11111111-2222-3333-4444-555555555555".  age will be set to the
+  // age of the pdb file, and filename will be set to the basename of the
+  // PDB's file name.  Returns true on success and false on failure.
+  bool GetModuleInfo(wstring *guid, int *age, wstring *filename);
 
  private:
   // Outputs the line/address pairs for each line in the enumerator.
@@ -101,6 +104,13 @@ class PDBSourceLineWriter {
   // to a code address.  Returns true on success.  If symbol is does not
   // correspond to code, returns true without outputting anything.
   bool PrintCodePublicSymbol(IDiaSymbol *symbol);
+
+  // Outputs a line identifying the PDB file that is being dumped, along with
+  // its uuid and age.
+  bool PrintPDBInfo();
+
+  // Returns the base name of a file, e.g. strips off the path.
+  static wstring GetBaseName(const wstring &filename);
 
   // Returns the function name for a symbol.  If possible, the name is
   // undecorated.  If the symbol's decorated form indicates the size of

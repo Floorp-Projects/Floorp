@@ -27,10 +27,10 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "google/minidump_processor.h"
-#include "google/call_stack.h"
-#include "google/process_state.h"
-#include "processor/minidump.h"
+#include "google_airbag/processor/minidump_processor.h"
+#include "google_airbag/processor/call_stack.h"
+#include "google_airbag/processor/minidump.h"
+#include "google_airbag/processor/process_state.h"
 #include "processor/scoped_ptr.h"
 #include "processor/stackwalker_x86.h"
 
@@ -54,11 +54,22 @@ ProcessState* MinidumpProcessor::Process(const string &minidump_file) {
   process_state->cpu_ = GetCPUInfo(&dump, &process_state->cpu_info_);
   process_state->os_ = GetOSInfo(&dump, &process_state->os_version_);
 
-  u_int32_t exception_thread_id = 0;
+  u_int32_t dump_thread_id = 0;
+  bool has_dump_thread = false;
+  u_int32_t requesting_thread_id = 0;
+  bool has_requesting_thread = false;
+
+  MinidumpAirbagInfo *airbag_info = dump.GetAirbagInfo();
+  if (airbag_info) {
+    has_dump_thread = airbag_info->GetDumpThreadID(&dump_thread_id);
+    has_requesting_thread =
+        airbag_info->GetRequestingThreadID(&requesting_thread_id);
+  }
+
   MinidumpException *exception = dump.GetException();
   if (exception) {
     process_state->crashed_ = true;
-    exception_thread_id = exception->GetThreadID();
+    has_requesting_thread = exception->GetThreadID(&requesting_thread_id);
 
     process_state->crash_reason_ = GetCrashReason(
         &dump, &process_state->crash_address_);
@@ -69,7 +80,7 @@ ProcessState* MinidumpProcessor::Process(const string &minidump_file) {
     return NULL;
   }
 
-  bool found_crash_thread = false;
+  bool found_requesting_thread = false;
   unsigned int thread_count = threads->thread_count();
   for (unsigned int thread_index = 0;
        thread_index < thread_count;
@@ -79,15 +90,46 @@ ProcessState* MinidumpProcessor::Process(const string &minidump_file) {
       return NULL;
     }
 
-    if (process_state->crashed_ &&
-        thread->GetThreadID() == exception_thread_id) {
-      if (found_crash_thread) {
-        // There can't be more than one crash thread.
+    u_int32_t thread_id;
+    if (!thread->GetThreadID(&thread_id)) {
+      return NULL;
+    }
+
+    // If this thread is the thread that produced the minidump, don't process
+    // it.  Because of the problems associated with a thread producing a
+    // dump of itself (when both its context and its stack are in flux),
+    // processing that stack wouldn't provide much useful data.
+    if (has_dump_thread && thread_id == dump_thread_id) {
+      continue;
+    }
+
+    MinidumpContext *context = thread->GetContext();
+
+    if (has_requesting_thread && thread_id == requesting_thread_id) {
+      if (found_requesting_thread) {
+        // There can't be more than one requesting thread.
         return NULL;
       }
 
-      process_state->crash_thread_ = thread_index;
-      found_crash_thread = true;
+      // Use processed_state->threads_.size() instead of thread_index.
+      // thread_index points to the thread index in the minidump, which
+      // might be greater than the thread index in the threads vector if
+      // any of the minidump's threads are skipped and not placed into the
+      // processed threads vector.  The thread vector's current size will
+      // be the index of the current thread when it's pushed into the
+      // vector.
+      process_state->requesting_thread_ = process_state->threads_.size();
+
+      found_requesting_thread = true;
+
+      if (process_state->crashed_) {
+        // Use the exception record's context for the crashed thread, instead
+        // of the thread's own context.  For the crashed thread, the thread's
+        // own context is the state inside the exception handler.  Using it
+        // would not result in the expected stack trace from the time of the
+        // crash.
+        context = exception->GetContext();
+      }
     }
 
     MinidumpMemoryRegion *thread_memory = thread->GetMemory();
@@ -96,7 +138,7 @@ ProcessState* MinidumpProcessor::Process(const string &minidump_file) {
     }
 
     scoped_ptr<Stackwalker> stackwalker(
-        Stackwalker::StackwalkerForCPU(exception->GetContext(),
+        Stackwalker::StackwalkerForCPU(context,
                                        thread_memory,
                                        dump.GetModuleList(),
                                        supplier_));
@@ -112,8 +154,8 @@ ProcessState* MinidumpProcessor::Process(const string &minidump_file) {
     process_state->threads_.push_back(stack.release());
   }
 
-  // If the process crashed, there must be a crash thread.
-  if (process_state->crashed_ && !found_crash_thread) {
+  // If a requesting thread was indicated, it must be present.
+  if (has_requesting_thread && !found_requesting_thread) {
     return NULL;
   }
 

@@ -28,47 +28,32 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // This file is used to generate minidump2.dmp and minidump2.sym.
-// cl /Zi /Fetest_app.exe test_app.cc dbghelp.lib
+// cl /Zi test_app.cc /Fetest_app.exe /I airbag/src \
+//   airbag/src/client/windows/releasestaticcrt/exception_handler.lib \
+//   ole32.lib
 // Then run test_app to generate a dump, and dump_syms to create the .sym file.
 
-#include <windows.h>
-#include <dbghelp.h>
+#include <cstdio>
 
-static LONG HandleException(EXCEPTION_POINTERS *exinfo) {
-  HANDLE dump_file = CreateFile("dump.dmp",
-                                GENERIC_WRITE,
-                                FILE_SHARE_WRITE,
-                                NULL,
-                                CREATE_ALWAYS,
-                                FILE_ATTRIBUTE_NORMAL,
-                                NULL);
+#include "client/windows/handler/exception_handler.h"
 
-  MINIDUMP_EXCEPTION_INFORMATION except_info;
-  except_info.ThreadId = GetCurrentThreadId();
-  except_info.ExceptionPointers = exinfo;
-  except_info.ClientPointers = false;
-  
-  MiniDumpWriteDump(GetCurrentProcess(),
-                    GetCurrentProcessId(),
-                    dump_file,
-                    MiniDumpNormal,
-                    &except_info,
-                    NULL,
-                    NULL);
-
-  CloseHandle(dump_file);
-  return EXCEPTION_EXECUTE_HANDLER;
+void callback(const std::wstring &id, void *context, bool succeeded) {
+  if (succeeded) {
+    printf("dump guid is %ws\n", id.c_str());
+  } else {
+    printf("dump failed\n");
+  }
+  exit(1);
 }
 
 void CrashFunction() {
-  int *i = NULL;
+  int *i = reinterpret_cast<int*>(0x45);
   *i = 5;  // crash!
 }
 
-int main(int argc, char *argv[]) {
-  __try {
-    CrashFunction();
-  } __except(HandleException(GetExceptionInformation())) {
-  }
+int main(int argc, char **argv) {
+  google_airbag::ExceptionHandler eh(L".", callback, NULL, true);
+  CrashFunction();
+  printf("did not crash?\n");
   return 0;
 }
