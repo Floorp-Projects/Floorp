@@ -9,7 +9,14 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://qa/content/settings.js" />
+<script type="application/x-javascript">
 
+    // on load, set an event listener to deal with saving settings when 
+    // changing tabs
+    window.addEventListener('load', function() {
+        $('qa_tabrow').addEventListener('select', qaPrefsWindow.onSwitchTab, false);
+    }, false);
+</script>
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_qa" src="chrome://qa/locale/qa.properties" />
 </stringbundleset>

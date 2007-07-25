@@ -1,26 +1,29 @@
+
  const FIREFOX_ID = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
  
  var litmus = {
 	baseURL : qaPref.getPref(qaPref.prefBase+".litmus.url", "char"),
 	
 	getTestcase : function(testcase_id, callback) {
-		var url = litmus.baseURL+'json.cgi?testcase_id='+testcase_id;
-		var d = loadJSONDoc(url);
-		d.addBoth(function (res) { 
-		d.deferred = null;  
-		return res; 
-		});
-		d.addCallback(callback);
-		d.addErrback(function (err) { 
-		if (err instanceof CancelledError) { 
-			return; 
-		}
-			alert(err);
-		});
+        litmus.getLitmusJson(testcase_id, callback, "testcase_id=");
 	},
-	
 	getSubgroup : function(subgroupID, callback) {
-        var url = litmus.baseURL+'json.cgi?subgroup_id='+subgroupID;
+        litmus.getLitmusJson(subgroupID, callback, "subgroup_id=");
+    },
+    getTestgroup : function(testgroupID, callback) {
+        litmus.getLitmusJson(testgroupID, callback, "testgroup_id=");
+    },
+    getTestrun : function(testrunID, callback) {
+        litmus.getLitmusJson(testrunID, callback, "test_run_id=");
+    },
+    getTestruns : function(callback) {
+        var s = new Sysconfig(); // TODO: actually detect settings
+        var branch = encodeURIComponent(s.branch);
+        litmus.getLitmusJson("&product_name=Firefox&branch_name=" + branch,
+                        callback, "test_runs_by_branch_product_name=1");
+    },
+    getLitmusJson : function(ID, callback, prefix) {
+        var url = litmus.baseURL+'json.cgi?' + prefix + ID;
         var d = loadJSONDoc(url);
 		d.addBoth(function (res) { 
 			d.deferred = null;  
@@ -31,15 +34,19 @@
             if (err instanceof CancelledError) { 
                 return; 
             }
-            	alert(err);
-            });
-        },
-	
+            alert(err);
+        });
+    },
+    
+    handleDialog : function() {
+        var newWindow = window.openDialog('chrome://qa/content/tabs/selecttests.xul', '_blank', 'chrome,all,dialog=yes', litmus.readStateFromPref);
+    },
+    
 	validateLogin : function(uname, passwd, callback) {
 	    var req = doSimpleXMLHttpRequest(litmus.baseURL+'json.cgi', {
 	       validate_login: 1,
 	       username: uname,
-	       password: passwd,
+	       password: passwd
 	    });
 	    req.addErrback(callback);
 	    req.addCallback(callback);
@@ -62,14 +69,22 @@
 		});
 	},
     
-    
     currentTestCaseIndex: 0, // position in array
 	
-   currentSubgroupID: 21,	
+    currentSubgroupID: null,	
 	cachedTests: null,
     
+    writeStateToPref : function(subgroupID, index) {
+        qaPref.setPref(qaPref.prefBase + ".currentTestcase.subgroupId", subgroupID, "int");
+        qaPref.setPref(qaPref.prefBase + ".currentTestcase.testcaseIndex", index, "int");
+    },
+    readStateFromPref : function() {
+        litmus.currentSubgroupID = qaPref.getPref(qaPref.prefBase + ".currentTestcase.subgroupId", "int");
+        litmus.getSubgroup(litmus.currentSubgroupID,litmus.statePopulateFields);
+    },
     checkRadioButtons : function() {
         var menu = document.getElementById('testlist');
+        if (menu.selectedIndex == -1) return;
         var disable = menu.selectedItem.firstChild.getAttribute("checked");
         document.getElementById("qa-testcase-result").disabled = disable;
     },
@@ -87,18 +102,19 @@
 		litmus.selectCurrentTestCase();
 	},
     handleSelect : function() {
-        litmus.currentTestCaseIndex = document.getElementById('testlist').selectedIndex;
+        var menu = document.getElementById('testlist');
+        if (menu.selectedIndex == litmus.currentTestCaseIndex || menu.selectedIndex == -1)
+            return; // prevent recursion or triggering by removal of elements
+        
+        litmus.currentTestCaseIndex = menu.selectedIndex;
         litmus.selectCurrentTestCase();
     },
     selectCurrentTestCase : function() {
-
         var menu = document.getElementById('testlist');
         menu.selectedIndex = litmus.currentTestCaseIndex;
-        litmus.populateTestcase(litmus.cachedTests[litmus.currentTestCaseIndex]);
-        litmus.checkRadioButtons();
+        litmus.getTestcase(menu.selectedItem.value, litmus.populateTestcase);
     },
 	populatePreviewBox : function() {
-        //document.getElementById("prev1").innerHTML = "hi!"; This doesn't even work, I guess I'll rewrite table in XUL
         
         var menu = document.getElementById('testlist');
         if (!menu) return;
@@ -108,37 +124,48 @@
         };
     
         for (var i = 0; i < litmus.cachedTests.length; i++) {
-            var row = menu.appendItem("");
+            var row = menu.appendItem("", litmus.cachedTests[i].testcase_id);
             var checkbox = document.createElement("listcell");
             checkbox.setAttribute("label", "");
             checkbox.setAttribute("type", "checkbox");
             checkbox.setAttribute("disabled", "true");
-            //checkbox.setAttribute("checked", "true");
             var name = document.createElement("listcell");
             name.setAttribute("label", "#" + litmus.cachedTests[i].testcase_id + " -- " + litmus.cachedTests[i].summary);
             name.setAttribute("crop", "end");
-            
             name.setAttribute("maxwidth", "175");
             row.appendChild(checkbox);
             row.appendChild(name);
         }
-	},
+    },
     populateTestcase : function(testcase) {
+        if (testcase == undefined) {
+                return;
+            }
         document.getElementById('qa-testcase-id').value = 
             qaMain.bundle.getString("qa.extension.testcase.head")+testcase.testcase_id;
 		document.getElementById('qa-testcase-summary').value = testcase.summary;
 	
-		document.getElementById('qa-testcase-steps').innerHTML = testcase.steps;
-		document.getElementById('qa-testcase-expected').innerHTML = testcase.expected_results;
-	},
+        qaTools.writeSafeHTML('qa-testcase-steps', testcase.steps_formatted);
+        qaTools.writeSafeHTML('qa-testcase-expected', testcase.expected_results_formatted);
+        
+        qaTools.linkTargetsToBlank($('qa-testcase-steps'));
+        qaTools.linkTargetsToBlank($('qa-testcase-expected'));
+        
+        litmus.checkRadioButtons();
+    },
 	populateFields : function(subgroup) {
 		litmus.cachedTests = subgroup.testcases;
-		//litmus.currentTestCaseIndex = 0;
 		litmus.populatePreviewBox();
         litmus.currentTestCaseIndex = 0;
         litmus.selectCurrentTestCase();
 	},
-	
+    statePopulateFields : function(subgroup) {  //TODO: there's gotta be a better way to do this...
+        litmus.cachedTests = subgroup.testcases;
+        litmus.populatePreviewBox();
+        
+        litmus.currentTestCaseIndex = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testcaseIndex", "int");
+        litmus.selectCurrentTestCase();
+    },
 	submitResult : function() {
 		var rs;
 		var item = $('qa-testcase-result').selectedItem;
