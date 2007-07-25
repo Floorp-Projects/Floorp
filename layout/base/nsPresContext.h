@@ -270,6 +270,19 @@ public:
   /**
    * Get the default font corresponding to the given ID.  This object is
    * read-only, you must copy the font to modify it.
+   * 
+   * When aFontID is kPresContext_DefaultVariableFontID or
+   * kPresContext_DefaultFixedFontID (which equals
+   * kGenericFont_moz_fixed, which is used for the -moz-fixed generic),
+   * the nsFont returned has its name as a CSS generic family (serif or
+   * sans-serif for the former, monospace for the latter), and its size
+   * as the default font size for variable or fixed fonts for the pres
+   * context's language group.
+   *
+   * For aFontID corresponds to a CSS Generic, the nsFont returned has
+   * its name as the name or names of the fonts in the user's
+   * preferences for the given generic and the pres context's language
+   * group, and its size set to the default variable font size.
    */
   virtual NS_HIDDEN_(const nsFont*) GetDefaultFontExternal(PRUint8 aFontID) const;
   NS_HIDDEN_(const nsFont*) GetDefaultFontInternal(PRUint8 aFontID) const;
