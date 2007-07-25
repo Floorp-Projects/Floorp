@@ -275,7 +275,11 @@ bool MachoID::WalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
       if (swap)
         swap_section(&sec, 1, NXHostByteOrder());
 
-      macho_id->Update(walker, header_offset + sec.offset, sec.size);
+      // sections of type S_ZEROFILL are "virtual" and contain no data
+      // in the file itself
+      if ((sec.flags & SECTION_TYPE) != S_ZEROFILL && sec.offset != 0)
+        macho_id->Update(walker, header_offset + sec.offset, sec.size);
+
       offset += sizeof(struct section);
     }
   } else if (cmd->cmd == LC_SEGMENT_64) {
@@ -304,7 +308,11 @@ bool MachoID::WalkerCB(MachoWalker *walker, load_command *cmd, off_t offset,
       if (swap)
         breakpad_swap_section_64(&sec64, 1, NXHostByteOrder());
 
-      macho_id->Update(walker, header_offset + sec64.offset, sec64.size);
+      // sections of type S_ZEROFILL are "virtual" and contain no data
+      // in the file itself
+      if ((sec64.flags & SECTION_TYPE) != S_ZEROFILL && sec64.offset != 0)
+        macho_id->Update(walker, header_offset + sec64.offset, sec64.size);
+
       offset += sizeof(struct section_64);
     }
   }

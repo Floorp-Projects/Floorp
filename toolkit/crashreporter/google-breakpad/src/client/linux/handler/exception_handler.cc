@@ -118,7 +118,7 @@ ExceptionHandler::~ExceptionHandler() {
 }
 
 bool ExceptionHandler::WriteMinidump() {
-  return InternalWriteMinidump(0, NULL);
+  return InternalWriteMinidump(0, 0, NULL);
 }
 
 // static
@@ -127,7 +127,7 @@ bool ExceptionHandler::WriteMinidump(const string &dump_path,
                    void *callback_context) {
   ExceptionHandler handler(dump_path, NULL, callback,
                            callback_context, false);
-  return handler.InternalWriteMinidump(0, NULL);
+  return handler.InternalWriteMinidump(0, 0, NULL);
 }
 
 void ExceptionHandler::SetupHandler() {
@@ -176,8 +176,15 @@ void ExceptionHandler::HandleException(int signo) {
   // the signal handler frame as value parameter. For some reasons, the
   // prototype of the handler doesn't declare this information as parameter, we
   // will do it by hand. It is the second parameter above the signal number.
-  const struct sigcontext *sig_ctx =
-    reinterpret_cast<const struct sigcontext *>(&signo + 1);
+  // However, if we are being called by another signal handler passing the
+  // signal up the chain, then we may not have this random extra parameter,
+  // so we may have to walk the stack to find it.  We do the actual work
+  // on another thread, where it's a little safer, but we want the ebp
+  // from this frame to find it.
+  uintptr_t current_ebp = 0;
+  asm volatile ("movl %%ebp, %0"
+                :"=m"(current_ebp));
+
   pthread_mutex_lock(&handler_stack_mutex_);
   ExceptionHandler *current_handler =
     handler_stack_->at(handler_stack_->size() - ++handler_stack_index_);
@@ -185,7 +192,9 @@ void ExceptionHandler::HandleException(int signo) {
 
   // Restore original handler.
   current_handler->TeardownHandler(signo);
-  if (current_handler->InternalWriteMinidump(signo, sig_ctx)) {
+
+  struct sigcontext *sig_ctx = NULL;
+  if (current_handler->InternalWriteMinidump(signo, current_ebp, &sig_ctx)) {
     // Fully handled this exception, safe to exit.
     exit(EXIT_FAILURE);
   } else {
@@ -194,7 +203,7 @@ void ExceptionHandler::HandleException(int signo) {
     typedef void (*SignalHandler)(int signo, struct sigcontext);
     SignalHandler old_handler =
       reinterpret_cast<SignalHandler>(current_handler->old_handlers_[signo]);
-    if (old_handler != NULL)
+    if (old_handler != NULL && sig_ctx != NULL)
       old_handler(signo, *sig_ctx);
   }
 
@@ -212,7 +221,8 @@ void ExceptionHandler::HandleException(int signo) {
 }
 
 bool ExceptionHandler::InternalWriteMinidump(int signo,
-                                    const struct sigcontext *sig_ctx) {
+                                             uintptr_t sighandler_ebp,
+                                             struct sigcontext **sig_ctx) {
   if (filter_ && !filter_(callback_context_))
     return false;
 
@@ -239,7 +249,7 @@ bool ExceptionHandler::InternalWriteMinidump(int signo,
     }
 
     success = minidump_generator_.WriteMinidumpToFile(
-        minidump_path, signo, sig_ctx);
+                       minidump_path, signo, sighandler_ebp, sig_ctx);
 
     // Unblock the signals.
     if (blocked) {

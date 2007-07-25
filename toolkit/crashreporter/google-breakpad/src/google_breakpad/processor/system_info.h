@@ -43,6 +43,9 @@ using std::string;
 
 struct SystemInfo {
  public:
+  SystemInfo() : os(), os_short(), os_version(), cpu(), cpu_info(),
+    cpu_count(0) {}
+
   // Resets the SystemInfo object to its default values.
   void Clear() {
     os.clear();
@@ -50,6 +53,7 @@ struct SystemInfo {
     os_version.clear();
     cpu.clear();
     cpu_info.clear();
+    cpu_count = 0;
   }
 
   // A string identifying the operating system, such as "Windows NT",
@@ -82,6 +86,10 @@ struct SystemInfo {
   // present in the dump, or additional identifying information is not
   // defined for the CPU family, this field will be empty.
   string cpu_info;
+
+  // The number of processors in the system.  Will be greater than one for
+  // multi-core systems.
+  int cpu_count;
 };
 
 }  // namespace google_breakpad

@@ -2,6 +2,7 @@ Operating system: Windows NT
                   5.1.2600 Service Pack 2
 CPU: x86
      GenuineIntel family 6 model 13 stepping 8
+     1 CPU
 
 Crash reason:  EXCEPTION_ACCESS_VIOLATION
 Crash address: 0x45

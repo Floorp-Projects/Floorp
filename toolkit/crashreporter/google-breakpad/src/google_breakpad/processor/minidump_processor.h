@@ -46,9 +46,9 @@ class MinidumpProcessor {
  public:
   // Return type for Process()
   enum ProcessResult {
-    PROCESS_OK,  // the minidump was processed successfully
-    PROCESS_ERROR,  // there was an error processing the minidump
-    PROCESS_INTERRUPTED,  // processing was interrupted by the SymbolSupplier
+    PROCESS_OK,           // the minidump was processed successfully
+    PROCESS_ERROR,        // there was an error processing the minidump
+    PROCESS_INTERRUPTED   // processing was interrupted by the SymbolSupplier
   };
 
   // Initializes this MinidumpProcessor.  supplier should be an

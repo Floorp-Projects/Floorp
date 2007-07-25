@@ -380,6 +380,7 @@ lib_LTLIBRARIES = src/libbreakpad.la
 src_libbreakpad_la_SOURCES = \
 	src/google_breakpad/common/breakpad_types.h \
 	src/google_breakpad/common/minidump_format.h \
+	src/google_breakpad/common/minidump_size.h \
 	src/google_breakpad/processor/basic_source_line_resolver.h \
 	src/google_breakpad/processor/call_stack.h \
 	src/google_breakpad/processor/code_module.h \
