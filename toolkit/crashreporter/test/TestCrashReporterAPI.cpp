@@ -62,8 +62,15 @@ int tests_run;
 char *
 test_init_exception_handler()
 {
+  nsCOMPtr<nsILocalFile> lf;
+  // we don't plan on launching the crash reporter in this app anyway,
+  // so it's ok to pass a bogus nsILocalFile
+  mu_assert("NS_NewNativeLocalFile", NS_NewNativeLocalFile(EmptyCString(),
+                                                           PR_TRUE,
+                                                           getter_AddRefs(lf)));
+
   mu_assert("CrashReporter::SetExceptionHandler",
-            CrashReporter::SetExceptionHandler(nsnull, nsnull));
+            CrashReporter::SetExceptionHandler(lf, nsnull));
   return 0;
 }
 
