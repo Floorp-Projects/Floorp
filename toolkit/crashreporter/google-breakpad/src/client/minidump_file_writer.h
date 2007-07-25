@@ -200,12 +200,12 @@ class TypedMDRVA : public UntypedMDRVA {
   // alter its contents.
   MDType *get() { return &data_; }
 
-  // Allocates sizeof(MDType) bytes.
+  // Allocates minidump_size<MDType>::size() bytes.
   // Must not call more than once.
   // Return true on success, or false on failure
   bool Allocate();
 
-  // Allocates sizeof(MDType) + |additional| bytes.
+  // Allocates minidump_size<MDType>::size() + |additional| bytes.
   // Must not call more than once.
   // Return true on success, or false on failure
   bool Allocate(size_t additional);

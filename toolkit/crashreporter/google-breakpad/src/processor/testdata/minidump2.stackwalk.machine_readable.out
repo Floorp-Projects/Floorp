@@ -1,5 +1,5 @@
 OS|Windows NT|5.1.2600 Service Pack 2
-CPU|x86|GenuineIntel family 6 model 13 stepping 8
+CPU|x86|GenuineIntel family 6 model 13 stepping 8|1
 Crash|EXCEPTION_ACCESS_VIOLATION|0x45|0
 Module|test_app.exe||test_app.pdb|5A9832E5287241C1838ED98914E9B7FF1|0x00400000|0x0042cfff|1
 Module|dbghelp.dll|5.1.2600.2180|dbghelp.pdb|39559573E21B46F28E286923BE9E6A761|0x59a60000|0x59b00fff|0

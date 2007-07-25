@@ -77,7 +77,7 @@ static void CreateThread(int num) {
 int main(int argc, char *argv[]) {
   CreateThread(10);
   google_breakpad::MinidumpGenerator mg;
-  if (mg.WriteMinidumpToFile("minidump_test.out", -1, NULL))
+  if (mg.WriteMinidumpToFile("minidump_test.out", -1, 0, NULL))
     printf("Succeeded written minidump\n");
   else
     printf("Failed to write minidump\n");

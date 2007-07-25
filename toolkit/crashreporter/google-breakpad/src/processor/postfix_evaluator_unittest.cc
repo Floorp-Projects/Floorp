@@ -39,6 +39,7 @@
 
 #include "google_breakpad/common/breakpad_types.h"
 #include "google_breakpad/processor/memory_region.h"
+#include "processor/logging.h"
 
 
 namespace {
@@ -296,5 +297,7 @@ static bool RunTests() {
 
 
 int main(int argc, char **argv) {
+  BPLOG_INIT(&argc, &argv);
+
   return RunTests() ? 0 : 1;
 }

@@ -132,7 +132,7 @@ class ExceptionHandler {
   // execution state independently of a crash.  Returns true on success.
   bool WriteMinidump();
 
-    // Convenience form of WriteMinidump which does not require an
+  // Convenience form of WriteMinidump which does not require an
   // ExceptionHandler instance.
   static bool WriteMinidump(const string &dump_path,
                             MinidumpCallback callback,
@@ -151,7 +151,14 @@ class ExceptionHandler {
   // Signal handler.
   static void HandleException(int signo);
 
-  bool InternalWriteMinidump(int signo, const struct sigcontext *sig_ctx);
+  // If called from a signal handler, sighandler_ebp is the ebp of
+  // that signal handler's frame, and sig_ctx is an out parameter
+  // that will be set to point at the sigcontext that was placed
+  // on the stack by the kernel.  You can pass zero and NULL
+  // for the second and third parameters if you are not calling
+  // this from a signal handler.
+  bool InternalWriteMinidump(int signo, uintptr_t sighandler_ebp,
+                             struct sigcontext **sig_ctx);
 
  private:
   FilterCallback filter_;
