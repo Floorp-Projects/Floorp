@@ -47,6 +47,7 @@
 #include "nsNetCID.h"
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
+#include "nsIOfflineCacheUpdate.h"
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
 #include "nsNetUtil.h"
@@ -154,7 +155,6 @@ NS_INTERFACE_MAP_BEGIN(nsDOMOfflineLoadStatusList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMLoadStatusList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIOfflineCacheUpdateObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(LoadStatusList)
 NS_INTERFACE_MAP_END
@@ -199,7 +199,7 @@ nsDOMOfflineLoadStatusList::Init()
     rv = cacheUpdateService->GetUpdate(i, getter_AddRefs(cacheUpdate));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = WatchUpdate(cacheUpdate);
+    UpdateAdded(cacheUpdate);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -209,6 +209,8 @@ nsDOMOfflineLoadStatusList::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = observerServ->AddObserver(this, "offline-cache-update-added", PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = observerServ->AddObserver(this, "offline-cache-update-completed", PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -231,7 +233,7 @@ nsDOMOfflineLoadStatusList::FindWrapper(nsIDOMLoadStatus *aStatus,
 }
 
 nsresult
-nsDOMOfflineLoadStatusList::WatchUpdate(nsIOfflineCacheUpdate *aUpdate)
+nsDOMOfflineLoadStatusList::UpdateAdded(nsIOfflineCacheUpdate *aUpdate)
 {
   nsCAutoString owner;
   nsresult rv = aUpdate->GetUpdateDomain(owner);
@@ -256,18 +258,49 @@ nsDOMOfflineLoadStatusList::WatchUpdate(nsIOfflineCacheUpdate *aUpdate)
 
     mItems.AppendObject(wrapper);
 
-    rv = SendLoadEvent(NS_LITERAL_STRING(LOADREQUESTED_STR),
-                       mLoadRequestedEventListeners,
-                       wrapper);
-    NS_ENSURE_SUCCESS(rv, rv);
+    SendLoadEvent(NS_LITERAL_STRING(LOADREQUESTED_STR),
+                  mLoadRequestedEventListeners,
+                  wrapper);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = aUpdate->AddObserver(this, PR_TRUE);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMOfflineLoadStatusList::UpdateCompleted(nsIOfflineCacheUpdate *aUpdate)
+{
+  nsCAutoString owner;
+  nsresult rv = aUpdate->GetUpdateDomain(owner);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (owner != mHostPort) {
+    // This update doesn't belong to us
+    return NS_OK;
+  }
+
+  PRUint32 numItems;
+  rv = aUpdate->GetCount(&numItems);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRUint32 i = 0; i < numItems; i++) {
+    nsCOMPtr<nsIDOMLoadStatus> status;
+    rv = aUpdate->Item(i, getter_AddRefs(status));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 index;
+    nsCOMPtr<nsIDOMLoadStatus> wrapper = FindWrapper(status, &index);
+    if (wrapper) {
+      mItems.RemoveObjectAt(index);
+      nsresult rv = SendLoadEvent(NS_LITERAL_STRING(LOADCOMPLETED_STR),
+                                  mLoadCompletedEventListeners,
+                                  wrapper);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  return NS_OK;
+}
+
 
 //
 // nsDOMOfflineLoadStatusList::nsIDOMLoadStatusList
@@ -468,29 +501,13 @@ nsDOMOfflineLoadStatusList::Observe(nsISupports *aSubject,
   if (!strcmp(aTopic, "offline-cache-update-added")) {
     nsCOMPtr<nsIOfflineCacheUpdate> update = do_QueryInterface(aSubject);
     if (update) {
-      rv = WatchUpdate(update);
-      NS_ENSURE_SUCCESS(rv, rv);
+      UpdateAdded(update);
     }
-  }
-
-  return NS_OK;
-}
-
-//
-// nsDOMLoadStatusList::nsIOfflineCacheUpdateObserver
-//
-
-NS_IMETHODIMP
-nsDOMOfflineLoadStatusList::ItemCompleted(nsIDOMLoadStatus *aItem)
-{
-  PRUint32 index;
-  nsCOMPtr<nsIDOMLoadStatus> wrapper = FindWrapper(aItem, &index);
-  if (wrapper) {
-    mItems.RemoveObjectAt(index);
-    nsresult rv = SendLoadEvent(NS_LITERAL_STRING(LOADCOMPLETED_STR),
-                                mLoadCompletedEventListeners,
-                                wrapper);
-    NS_ENSURE_SUCCESS(rv, rv);
+  } else if (!strcmp(aTopic, "offline-cache-update-completed")) {
+    nsCOMPtr<nsIOfflineCacheUpdate> update = do_QueryInterface(aSubject);
+    if (update) {
+      UpdateCompleted(update);
+    }
   }
 
   return NS_OK;
