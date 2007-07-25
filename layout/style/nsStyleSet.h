@@ -80,6 +80,10 @@ class nsStyleSet
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(nsIContent* aContent, nsStyleContext* aParentContext);
 
+  // get a style context from some rules
+  already_AddRefed<nsStyleContext>
+  ResolveStyleForRules(nsStyleContext* aParentContext, const nsCOMArray<nsIStyleRule> &rules);
+
   // Get a style context for a non-element (which no rules will match),
   // such as text nodes, placeholder frames, and the nsFirstLetterFrame
   // for everything after the first letter.

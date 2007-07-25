@@ -660,6 +660,35 @@ nsStyleSet::ResolveStyleFor(nsIContent* aContent,
 }
 
 already_AddRefed<nsStyleContext>
+nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext, const nsCOMArray<nsIStyleRule> &rules)
+{
+  NS_ENSURE_FALSE(mInShutdown, nsnull);
+  nsStyleContext* result = nsnull;
+  nsPresContext *presContext = PresContext();
+
+  if (presContext) {
+    if (mRuleProcessors[eAgentSheet]        ||
+        mRuleProcessors[ePresHintSheet]     ||
+        mRuleProcessors[eUserSheet]         ||
+        mRuleProcessors[eHTMLPresHintSheet] ||
+        mRuleProcessors[eDocSheet]          ||
+        mRuleProcessors[eStyleAttrSheet]    ||
+        mRuleProcessors[eOverrideSheet]) {
+      
+      mRuleWalker->SetLevel(eDocSheet, PR_FALSE);
+      for (PRInt32 i = 0; i < rules.Count(); i++) {
+        mRuleWalker->Forward(rules.ObjectAt(i));
+      }
+      result = GetContext(presContext, aParentContext, nsnull).get();
+
+      // Now reset the walker back to the root of the tree.
+      mRuleWalker->Reset();
+    }
+  }
+  return result;
+}
+
+already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext)
 {
   nsStyleContext* result = nsnull;
