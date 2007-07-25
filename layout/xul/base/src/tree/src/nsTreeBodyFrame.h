@@ -120,6 +120,8 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
+  NS_IMETHOD DidSetStyleContext();
+
   friend nsIFrame* NS_NewTreeBodyFrame(nsIPresShell* aPresShell);
 
   struct ScrollParts {
