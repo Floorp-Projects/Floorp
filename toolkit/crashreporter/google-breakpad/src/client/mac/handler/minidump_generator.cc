@@ -330,24 +330,24 @@ bool MinidumpGenerator::WriteContext(breakpad_thread_state_data_t state,
 #elif TARGET_CPU_X86
 bool MinidumpGenerator::WriteStack(breakpad_thread_state_data_t state,
                                    MDMemoryDescriptor *stack_location) {
-  x86_thread_state_t *machine_state =
-    reinterpret_cast<x86_thread_state_t *>(state);
-  vm_address_t start_addr = machine_state->uts.ts32.esp;
+  i386_thread_state_t *machine_state =
+    reinterpret_cast<i386_thread_state_t *>(state);
+  vm_address_t start_addr = machine_state->esp;
   return WriteStackFromStartAddress(start_addr, stack_location);
 }
 
 u_int64_t MinidumpGenerator::CurrentPCForStack(breakpad_thread_state_data_t state) {
-  x86_thread_state_t *machine_state =
-    reinterpret_cast<x86_thread_state_t *>(state);
+  i386_thread_state_t *machine_state =
+    reinterpret_cast<i386_thread_state_t *>(state);
 
-  return machine_state->uts.ts32.eip;
+  return machine_state->eip;
 }
 
 bool MinidumpGenerator::WriteContext(breakpad_thread_state_data_t state,
                                      MDLocationDescriptor *register_location) {
   TypedMDRVA<MDRawContextX86> context(&writer_);
-  x86_thread_state_t *machine_state =
-    reinterpret_cast<x86_thread_state_t *>(state);
+  i386_thread_state_t *machine_state =
+    reinterpret_cast<i386_thread_state_t *>(state);
 
   if (!context.Allocate())
     return false;
@@ -355,7 +355,7 @@ bool MinidumpGenerator::WriteContext(breakpad_thread_state_data_t state,
   *register_location = context.location();
   MDRawContextX86 *context_ptr = context.get();
   context_ptr->context_flags = MD_CONTEXT_X86;
-#define AddReg(a) context_ptr->a = machine_state->uts.ts32.a
+#define AddReg(a) context_ptr->a = machine_state->a
   AddReg(cs);
   AddReg(ds);
   AddReg(ss);
@@ -382,7 +382,8 @@ bool MinidumpGenerator::WriteThreadStream(mach_port_t thread_id,
   breakpad_thread_state_data_t state;
   mach_msg_type_number_t state_count = sizeof(state);
 
-  if (thread_get_state(thread_id, MACHINE_THREAD_STATE, state, &state_count) ==
+  if (thread_get_state(thread_id, BREAKPAD_MACHINE_THREAD_STATE,
+                       state, &state_count) ==
       KERN_SUCCESS) {
     if (!WriteStack(state, &thread->stack))
       return false;
@@ -455,7 +456,7 @@ bool MinidumpGenerator::WriteExceptionStream(MDRawDirectory *exception_stream) {
   breakpad_thread_state_data_t state;
   mach_msg_type_number_t stateCount = sizeof(state);
 
-  if (thread_get_state(exception_thread_, MACHINE_THREAD_STATE, state,
+  if (thread_get_state(exception_thread_, BREAKPAD_MACHINE_THREAD_STATE, state,
                        &stateCount) != KERN_SUCCESS)
     return false;
 
