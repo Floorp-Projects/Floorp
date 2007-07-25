@@ -66,7 +66,7 @@ include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)
 LIBS += \
-	$(DEPTH)/toolkit/airbag/airbag/src/client/windows/handler/$(LIB_PREFIX)exception_handler.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/airbag/airbag/src/client/windows/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
 	$(DEPTH)/toolkit/airbag/airbag/src/common/windows/$(LIB_PREFIX)airbag_common_s.$(LIB_SUFFIX)
 LIBS += $(call expand_libname shell32)
 endif
