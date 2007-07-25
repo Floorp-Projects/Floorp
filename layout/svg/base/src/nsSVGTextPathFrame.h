@@ -67,9 +67,13 @@ typedef nsSVGTSpanFrame nsSVGTextPathFrameBase;
 
 class nsSVGTextPathFrame : public nsSVGTextPathFrameBase
 {
-public:
+  friend nsIFrame*
+  NS_NewSVGTextPathFrame(nsIPresShell* aPresShell, nsIContent* aContent,
+                         nsIFrame* parentFrame, nsStyleContext* aContext);
+protected:
   nsSVGTextPathFrame(nsStyleContext* aContext) : nsSVGTextPathFrameBase(aContext) {}
 
+public:
   // nsIFrame:
   NS_IMETHOD Init(nsIContent*      aContent,
                   nsIFrame*        aParent,

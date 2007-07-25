@@ -871,10 +871,10 @@ nsIFrame* NS_NewSVGPatternFrame(nsIPresShell*   aPresShell,
                                 nsStyleContext* aContext)
 {
   nsCOMPtr<nsIDOMSVGPatternElement> patternElement = do_QueryInterface(aContent);
-  NS_ASSERTION(patternElement, 
-               "NS_NewSVGPatternFrame -- Content doesn't support nsIDOMSVGPattern");
-  if (!patternElement)
+  if (!patternElement) {
+    NS_ERROR("Can't create frame! Content is not an SVG pattern");
     return nsnull;
+  }
 
   nsCOMPtr<nsIDOMSVGURIReference> ref = do_QueryInterface(aContent);
   NS_ASSERTION(ref, 
