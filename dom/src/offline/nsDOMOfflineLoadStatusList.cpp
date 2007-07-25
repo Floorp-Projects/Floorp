@@ -266,7 +266,7 @@ nsDOMOfflineLoadStatusList::UpdateAdded(nsIOfflineCacheUpdate *aUpdate)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsDOMOfflineLoadStatusList::UpdateCompleted(nsIOfflineCacheUpdate *aUpdate)
 {
   nsCAutoString owner;
