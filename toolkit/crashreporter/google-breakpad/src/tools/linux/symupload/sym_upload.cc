@@ -75,12 +75,12 @@ static void TokenizeByChar(const std::string &source_string,
 }
 
 //=============================================================================
-// Parse out the module line which have 6 parts.
-// MODULE <os> <cpu> <uuid> <age> <module-name>
+// Parse out the module line which have 5 parts.
+// MODULE <os> <cpu> <uuid> <module-name>
 static bool ModuleDataForSymbolFile(const std::string &file,
                                     std::vector<std::string> *module_parts) {
   assert(module_parts);
-  const size_t kModulePartNumber = 6;
+  const size_t kModulePartNumber = 5;
   FILE *fp = fopen(file.c_str(), "r");
   if (fp) {
     char buffer[1024];
@@ -105,14 +105,12 @@ static bool ModuleDataForSymbolFile(const std::string &file,
 }
 
 //=============================================================================
-static std::string CompactIdentifier(const std::string &uuid,
-                                     const std::string &age) {
+static std::string CompactIdentifier(const std::string &uuid) {
   std::vector<std::string> components;
   TokenizeByChar(uuid, '-', &components);
   std::string result;
   for (size_t i = 0; i < components.size(); ++i)
     result += components[i];
-  result += age;
   return result;
 }
 
@@ -126,20 +124,18 @@ static void Start(Options *options) {
     return;
   }
 
-  std::string compacted_id = CompactIdentifier(module_parts[3],
-                                               module_parts[4]);
+  std::string compacted_id = CompactIdentifier(module_parts[3]);
 
   // Add parameters
   if (!options->version.empty())
     parameters["version"] = options->version;
 
-  // MODULE <os> <cpu> <uuid> <age> <module-name>
-  // 0      1    2     3      4     5
-  parameters["age"] = "1";
+  // MODULE <os> <cpu> <uuid> <module-name>
+  // 0      1    2     3      4
   parameters["os"] = module_parts[1];
   parameters["cpu"] = module_parts[2];
-  parameters["debug_file"] = module_parts[5];
-  parameters["code_file"] = module_parts[5];
+  parameters["debug_file"] = module_parts[4];
+  parameters["code_file"] = module_parts[4];
   parameters["debug_identifier"] = compacted_id;
   std::string response;
   bool success = HTTPUpload::SendRequest(options->uploadURLStr,

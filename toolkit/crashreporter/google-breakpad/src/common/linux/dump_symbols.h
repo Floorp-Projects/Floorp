@@ -40,7 +40,7 @@ namespace google_breakpad {
 class DumpSymbols {
  public:
   bool WriteSymbolFile(const std::string &obj_file,
-                       const std::string &symbol_file);
+                       int sym_fd);
 };
 
 }  // namespace google_breakpad

@@ -31,7 +31,7 @@
 /* Begin PBXFileReference section */
 		08FB7796FE84155DC02AAC07 /* symupload.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = symupload.m; sourceTree = "<group>"; };
 		08FB779EFE84155DC02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		8DD76FA10486AA7600D96B5E /* symupload */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "compiled.mach-o.executable"; path = symupload; sourceTree = BUILT_PRODUCTS_DIR; };
+		8DD76FA10486AA7600D96B5E /* symupload */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = symupload; sourceTree = BUILT_PRODUCTS_DIR; };
 		9BD833680B03E4080055103E /* HTTPMultipartUpload.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HTTPMultipartUpload.h; path = ../../../common/mac/HTTPMultipartUpload.h; sourceTree = "<group>"; };
 		9BD833690B03E4080055103E /* HTTPMultipartUpload.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = HTTPMultipartUpload.m; path = ../../../common/mac/HTTPMultipartUpload.m; sourceTree = "<group>"; };
 		9BD835FB0B0544950055103E /* minidump_upload */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = minidump_upload; sourceTree = BUILT_PRODUCTS_DIR; };

@@ -49,18 +49,14 @@
 #define WIN_STRING_FORMAT_LL "I64"
 #endif  // MSC_VER >= 1400
 
-// When using swprintf, call GB_WSU_SWPRINTF_TERMINATE afterwards using the
-// first two arguments to swprintf.  This will ensure that the buffer is
-// 0-terminated.  MSVC8's swprintf always 0-terminates the buffer, so the
-// macro is a no-op.  This is done in a macro rather than a function
-// because the function approach relies on vswprintf, which is incompatible
-// with some analysis tools.
-#if _MSC_VER >= 1400 // MSVC 2005/8
-#define GB_WSU_SAFE_SWPRINTF_TERMINATE(buffer, count);
-#else  // _MSC_VER >= 1400
-#define GB_WSU_SAFE_SWPRINTF_TERMINATE(buffer, count); \
-    (buffer)[(count) - 1] = L'\0';
-#endif  // _MSC_VER >= 1400
+// A nonconforming version of swprintf, without the length argument, was
+// included with the CRT prior to MSVC8.  Although a conforming version was
+// also available via an overload, it is not reliably chosen.  _snwprintf
+// behaves as a standards-confirming swprintf should, so force the use of
+// _snwprintf when using older CRTs.
+#if _MSC_VER < 1400  // MSVC 2005/8
+#define swprintf _snwprintf
+#endif  // MSC_VER < 1400
 
 namespace google_breakpad {
 

@@ -49,8 +49,10 @@ wstring GUIDString::GUIDToWString(GUID *guid) {
       guid->Data4[0], guid->Data4[1], guid->Data4[2],
       guid->Data4[3], guid->Data4[4], guid->Data4[5],
       guid->Data4[6], guid->Data4[7]);
-  GB_WSU_SAFE_SWPRINTF_TERMINATE(guid_string,
-                                 sizeof(guid_string) / sizeof(guid_string[0]));
+
+  // remove when VC++7.1 is no longer supported
+  guid_string[sizeof(guid_string) / sizeof(guid_string[0]) - 1] = L'\0';
+
   return wstring(guid_string);
 }
 
@@ -64,8 +66,10 @@ wstring GUIDString::GUIDToSymbolServerWString(GUID *guid) {
       guid->Data4[0], guid->Data4[1], guid->Data4[2],
       guid->Data4[3], guid->Data4[4], guid->Data4[5],
       guid->Data4[6], guid->Data4[7]);
-  GB_WSU_SAFE_SWPRINTF_TERMINATE(guid_string,
-                                 sizeof(guid_string) / sizeof(guid_string[0]));
+
+  // remove when VC++7.1 is no longer supported
+  guid_string[sizeof(guid_string) / sizeof(guid_string[0]) - 1] = L'\0';
+
   return wstring(guid_string);
 }
 
