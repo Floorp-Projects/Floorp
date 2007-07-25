@@ -45,7 +45,6 @@
 #include "nsIAccessibleHyperText.h"
 #include "nsIAccessibleEditableText.h"
 #include "nsAccessibleEventData.h"
-#include "nsIEditActionListener.h"
 #include "nsIEditor.h"
 #include "nsFrameSelection.h"
 #include "nsISelectionController.h"
@@ -57,14 +56,22 @@ enum EGetTextType { eGetBefore=-1, eGetAt=0, eGetAfter=1 };
 const PRUnichar kEmbeddedObjectChar = 0xfffc;
 const PRUnichar kForcedNewLineChar = '\n';
 
+#define NS_HYPERTEXTACCESSIBLE_IMPL_CID                 \
+{  /* 245f3bc9-224f-4839-a92e-95239705f30b */           \
+  0x245f3bc9,                                           \
+  0x224f,                                               \
+  0x4839,                                               \
+  { 0xa9, 0x2e, 0x95, 0x23, 0x97, 0x05, 0xf3, 0x0b }    \
+}
+
+
 /**
   * Special Accessible that knows how contain both text and embedded objects
   */
 class nsHyperTextAccessible : public nsAccessibleWrap,
                               public nsIAccessibleText,
                               public nsIAccessibleHyperText,
-                              public nsIAccessibleEditableText,
-                              public nsIEditActionListener
+                              public nsIAccessibleEditableText
 {
 public:
   nsHyperTextAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
@@ -72,12 +79,31 @@ public:
   NS_DECL_NSIACCESSIBLETEXT
   NS_DECL_NSIACCESSIBLEHYPERTEXT
   NS_DECL_NSIACCESSIBLEEDITABLETEXT
-  NS_DECL_NSIEDITACTIONLISTENER
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_HYPERTEXTACCESSIBLE_IMPL_CID)
 
   NS_IMETHOD GetRole(PRUint32 *aRole);
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   void CacheChildren();
+
+  /**
+    * Turn a DOM Node and offset into a character offset into this hypertext.
+    * Will look for closest match when the DOM node does not have an accessible
+    * object associated with it. Will return an offset for the end of
+    * the string if the node is not found.
+    *
+    * @param aNode - the node to look for
+    * @param aNodeOffset - the offset to look for
+    * @param aResultOffset - the character offset into the current
+    *                        nsHyperTextAccessible
+    * @param aFinalAccessible [optional] - returns the accessible child which
+    *                                      contained the offset, if it is within
+    *                                      the current nsHyperTextAccessible,
+    *                                      otherwise it is set to nsnull.
+    */
+  nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset,
+                            PRInt32 *aResultOffset,
+                            nsIAccessible **aFinalAccessible = nsnull);
 
 protected:
   PRBool IsHyperText();
@@ -122,20 +148,7 @@ protected:
     */
   nsIFrame* GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset, nsAString *aText = nsnull,
                           nsIFrame **aEndFrame = nsnull, nsIntRect *aBoundsRect = nsnull);
-  /**
-    * Turn a DOM Node and offset into a character offset into this hypertext. Will look for closest match
-    * when the DOM node does not have an accessible object associated with it.
-    * Will return an offset for the end of the string if the node is not found.
-    * @param aNode, the node to look for
-    * @param aNodeOffset, the offset to look for
-    * @param aResult, the character offset into the current nsHyperTextAccessible
-    * @param aFinalAccessible (optional), returns the accessible child which contained the offset,
-    *                                     if it is within the current nsHyperTextAccessible, otherwise
-    *                                     it is set to nsnull.
-    * @return failure/success code
-    */
-  nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset, PRInt32 *aResultOffset,
-                            nsIAccessible **aFinalAccessible = nsnull);
+
   nsIntRect GetBoundsForString(nsIFrame *aFrame, PRInt32 aStartOffset, PRInt32 aLength);
 
   // Editor helpers, subclasses of nsHyperTextAccessible may have editor
@@ -147,4 +160,8 @@ protected:
   nsresult SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos);
 };
 
+NS_DEFINE_STATIC_IID_ACCESSOR(nsHyperTextAccessible,
+                              NS_HYPERTEXTACCESSIBLE_IMPL_CID)
+
 #endif  // _nsHyperTextAccessible_H_
+

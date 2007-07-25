@@ -383,10 +383,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::Init()
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::Shutdown()
 {
-  if (mEditor) {
-    mEditor->RemoveEditActionListener(this);
-    mEditor = nsnull;
-  }
+  mEditor = nsnull;
   return nsHyperTextAccessibleWrap::Shutdown();
 }
 
@@ -548,8 +545,6 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::DoAction(PRUint8 index)
 void nsHTMLTextFieldAccessible::SetEditor(nsIEditor* aEditor)
 {
   mEditor = aEditor;
-  if (mEditor)
-    mEditor->AddEditActionListener(this);
 }
 
 void nsHTMLTextFieldAccessible::CheckForEditor()
