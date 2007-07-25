@@ -41,34 +41,48 @@
 
 #include <Cocoa/Cocoa.h>
 #include "HTTPMultipartUpload.h"
+#include "crashreporter.h"
 
 @interface CrashReporterUI : NSObject
 {
-    /* Enabled view */
-    IBOutlet NSView *enableView;
+    IBOutlet NSWindow* window;
 
-    IBOutlet NSTextField *descriptionLabel;
-    IBOutlet NSButton *disableReportingButton;
-    IBOutlet NSButton *dontSendButton;
-    IBOutlet NSButton *sendButton;
+    /* Enabled view */
+    IBOutlet NSView* enableView;
+
+    IBOutlet NSTextField* descriptionLabel;
+    IBOutlet NSButton* disableReportingButton;
+    IBOutlet NSButton* dontSendButton;
+    IBOutlet NSButton* sendButton;
 
     /* Upload progress view */
-    IBOutlet NSView *uploadingView;
+    IBOutlet NSView* uploadingView;
 
-    IBOutlet NSTextField *progressLabel;
-    IBOutlet NSProgressIndicator *progressBar;
-    IBOutlet NSButton *closeButton;
+    IBOutlet NSTextField* progressLabel;
+    IBOutlet NSProgressIndicator* progressBar;
+    IBOutlet NSButton* closeButton;
+
+    /* Error view */
+    IBOutlet NSView* errorView;
+    IBOutlet NSTextField* errorLabel;
+    IBOutlet NSButton* errorCloseButton;
 
     HTTPMultipartUpload *mPost;
 }
+
+- (void)showDefaultUI;
+- (void)showCrashUI:(const std::string&)dumpfile
+    queryParameters:(const StringTable&)queryParameters
+            sendURL:(const std::string&)sendURL;
+- (void)showErrorUI:(const std::string&)dumpfile;
 
 - (IBAction)closeClicked:(id)sender;
 - (IBAction)sendClicked:(id)sender;
 
 - (void)setView:(NSWindow *)w newView: (NSView *)v animate: (BOOL) animate;
-- (void)setupPost;
+- (bool)setupPost;
 - (void)uploadThread:(id)post;
-- (void)uploadComplete:(id)error;
+- (void)uploadComplete:(id)data;
 
 @end
 
