@@ -27,35 +27,30 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// Windows utility to dump the line number data from a pdb file to
-// a text-based format that we can use from the minidump processor.
+// pathname_stripper.cc: Manipulates pathnames into their component parts.
+//
+// See pathname_stripper.h for documentation.
+//
+// Author: Mark Mentovai
 
-#include <stdio.h>
+#include "processor/pathname_stripper.h"
 
-#include <string>
+namespace google_airbag {
 
-#include "common/windows/pdb_source_line_writer.h"
+// static
+string PathnameStripper::File(const string &path) {
+  string::size_type slash = path.rfind('/');
+  string::size_type backslash = path.rfind('\\');
 
-using std::wstring;
-using google_airbag::PDBSourceLineWriter;
-
-int wmain(int argc, wchar_t **argv) {
-  if (argc < 2) {
-    fprintf(stderr, "Usage: %ws <pdb file>\n", argv[0]);
-    return 1;
+  string::size_type file_start = 0;
+  if (slash != string::npos &&
+      (backslash == string::npos || slash > backslash)) {
+    file_start = slash + 1;
+  } else if (backslash != string::npos) {
+    file_start = backslash + 1;
   }
 
-  PDBSourceLineWriter writer;
-  if (!writer.Open(wstring(argv[1]), PDBSourceLineWriter::ANY_FILE)) {
-    fprintf(stderr, "Open failed\n");
-    return 1;
-  }
-
-  if (!writer.WriteMap(stdout)) {
-    fprintf(stderr, "WriteMap failed\n");
-    return 1;
-  }
-
-  writer.Close();
-  return 0;
+  return path.substr(file_start);
 }
+
+}  // namespace google_airbag

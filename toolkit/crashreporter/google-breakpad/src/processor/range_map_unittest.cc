@@ -41,6 +41,9 @@
 #include "processor/scoped_ptr.h"
 
 
+namespace {
+
+
 using google_airbag::linked_ptr;
 using google_airbag::scoped_ptr;
 using google_airbag::RangeMap;
@@ -99,7 +102,7 @@ struct RangeTestSet {
 // StoreTest uses the data in a RangeTest and calls StoreRange on the
 // test RangeMap.  It returns true if the expected result occurred, and
 // false if something else happened.
-bool StoreTest(TestMap *range_map, const RangeTest *range_test) {
+static bool StoreTest(TestMap *range_map, const RangeTest *range_test) {
   linked_ptr<CountedObject> object(new CountedObject(range_test->id));
   bool stored = range_map->StoreRange(range_test->address,
                                       range_test->size,
@@ -123,7 +126,7 @@ bool StoreTest(TestMap *range_map, const RangeTest *range_test) {
 // map entry at the specified range,) it returns true, otherwise, it returns
 // false.  RetrieveTest will check the values around the base address and
 // the high address of a range to guard against off-by-one errors.
-bool RetrieveTest(TestMap *range_map, const RangeTest *range_test) {
+static bool RetrieveTest(TestMap *range_map, const RangeTest *range_test) {
   for (unsigned int side = 0; side <= 1; ++side) {
     // When side == 0, check the low side (base address) of each range.
     // When side == 1, check the high side (base + size) of each range.
@@ -241,7 +244,7 @@ bool RetrieveTest(TestMap *range_map, const RangeTest *range_test) {
 
 
 // RunTests runs a series of test sets.
-bool RunTests() {
+static bool RunTests() {
   // These tests will be run sequentially.  The first set of tests exercises
   // most functions of RangeTest, and verifies all of the bounds-checking.
   const RangeTest range_tests_0[] = {
@@ -401,6 +404,10 @@ bool RunTests() {
 
   return true;
 }
+
+
+}  // namespace
+
 
 int main(int argc, char **argv) {
   return RunTests() ? 0 : 1;

@@ -31,8 +31,12 @@
 #include <Windows.h>
 #include <WinInet.h>
 
+// Disable exception handler warnings.
 #pragma warning( disable : 4530 ) 
+
 #include <fstream>
+
+#include "common/windows/string_utils-inl.h"
 
 #include "common/windows/http_upload.h"
 
@@ -164,7 +168,8 @@ wstring HTTPUpload::GenerateMultipartBoundary() {
   int r1 = rand();
 
   wchar_t temp[kBoundaryLength];
-  swprintf_s(temp, kBoundaryLength, L"%s%08X%08X", kBoundaryPrefix, r0, r1);
+  WindowsStringUtils::safe_swprintf(temp, kBoundaryLength, L"%s%08X%08X",
+                                    kBoundaryPrefix, r0, r1);
   return wstring(temp);
 }
 
@@ -230,8 +235,16 @@ bool HTTPUpload::GenerateRequestBody(const map<wstring, wstring> &parameters,
 // static
 void HTTPUpload::GetFileContents(const wstring &filename,
                                  vector<char> *contents) {
+  // The "open" method on pre-MSVC8 ifstream implementations doesn't accept a
+  // wchar_t* filename, so use _wfopen directly in that case.  For VC8 and
+  // later, _wfopen has been deprecated in favor of _wfopen_s, which does
+  // not exist in earlier versions, so let the ifstream open the file itself.
+#if _MSC_VER >= 1400  // MSVC 2005/8
   ifstream file;
   file.open(filename.c_str(), ios::binary);
+#else  // _MSC_VER >= 1400
+  ifstream file(_wfopen(filename.c_str(), L"rb"));
+#endif  // _MSC_VER >= 1400
   if (file.is_open()) {
     file.seekg(0, ios::end);
     int length = file.tellg();

@@ -39,12 +39,12 @@
 
 #include <cstdio>
 
-#include "google/airbag_types.h"
-#include "google/call_stack.h"
-#include "google/stack_frame.h"
-#include "google/stack_frame_cpu.h"
-#include "processor/memory_region.h"
-#include "processor/minidump_format.h"
+#include "google_airbag/common/airbag_types.h"
+#include "google_airbag/common/minidump_format.h"
+#include "google_airbag/processor/call_stack.h"
+#include "google_airbag/processor/memory_region.h"
+#include "google_airbag/processor/stack_frame.h"
+#include "google_airbag/processor/stack_frame_cpu.h"
 #include "processor/scoped_ptr.h"
 
 using google_airbag::CallStack;

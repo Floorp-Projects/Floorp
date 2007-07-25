@@ -35,9 +35,9 @@
 
 
 #include "processor/stackwalker_ppc.h"
-#include "google/call_stack.h"
-#include "google/stack_frame_cpu.h"
-#include "processor/minidump.h"
+#include "google_airbag/processor/call_stack.h"
+#include "google_airbag/processor/minidump.h"
+#include "google_airbag/processor/stack_frame_cpu.h"
 
 namespace google_airbag {
 

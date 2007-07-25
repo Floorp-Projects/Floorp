@@ -50,35 +50,39 @@ dist_doc_DATA = \
 lib_LTLIBRARIES = src/libairbag.la
 
 src_libairbag_la_SOURCES = \
-	src/google/airbag_types.h \
-	src/google/call_stack.h \
-	src/google/minidump_processor.h \
-	src/google/process_state.h \
-	src/google/stack_frame.h \
-	src/google/stack_frame_cpu.h \
-	src/google/symbol_supplier.h \
+	src/google_airbag/common/airbag_types.h \
+	src/google_airbag/common/minidump_format.h \
+	src/google_airbag/processor/call_stack.h \
+	src/google_airbag/processor/memory_region.h \
+	src/google_airbag/processor/minidump.h \
+	src/google_airbag/processor/minidump_processor.h \
+	src/google_airbag/processor/process_state.h \
+	src/google_airbag/processor/stack_frame.h \
+	src/google_airbag/processor/stack_frame_cpu.h \
+	src/google_airbag/processor/stackwalker.h \
+	src/google_airbag/processor/symbol_supplier.h \
 	src/processor/address_map.h \
 	src/processor/address_map-inl.h \
 	src/processor/call_stack.cc \
 	src/processor/contained_range_map.h \
 	src/processor/contained_range_map-inl.h \
 	src/processor/linked_ptr.h \
-	src/processor/memory_region.h \
 	src/processor/minidump.cc \
-	src/processor/minidump.h \
-	src/processor/minidump_format.h \
 	src/processor/minidump_processor.cc \
+	src/processor/pathname_stripper.cc \
+	src/processor/pathname_stripper.h \
 	src/processor/postfix_evaluator.h \
 	src/processor/postfix_evaluator-inl.h \
 	src/processor/process_state.cc \
 	src/processor/range_map.h \
 	src/processor/range_map-inl.h \
 	src/processor/scoped_ptr.h \
+	src/processor/simple_symbol_supplier.cc \
+	src/processor/simple_symbol_supplier.h \
 	src/processor/source_line_resolver.cc \
 	src/processor/source_line_resolver.h \
 	src/processor/stack_frame_info.h \
 	src/processor/stackwalker.cc \
-	src/processor/stackwalker.h \
 	src/processor/stackwalker_ppc.cc \
 	src/processor/stackwalker_ppc.h \
 	src/processor/stackwalker_x86.cc \
@@ -96,6 +100,7 @@ check_PROGRAMS = \
 	src/processor/address_map_unittest \
 	src/processor/contained_range_map_unittest \
 	src/processor/minidump_processor_unittest \
+	src/processor/pathname_stripper_unittest \
 	src/processor/postfix_evaluator_unittest \
 	src/processor/range_map_unittest \
 	src/processor/source_line_resolver_unittest
@@ -129,6 +134,11 @@ src_processor_minidump_processor_unittest_LDADD = \
 	src/processor/stackwalker_ppc.lo \
 	src/processor/stackwalker_x86.lo \
 	src/processor/source_line_resolver.lo
+
+src_processor_pathname_stripper_unittest_SOURCES = \
+	src/processor/pathname_stripper_unittest.cc
+src_processor_pathname_stripper_unittest_LDADD = \
+	src/processor/pathname_stripper.lo
 
 src_processor_postfix_evaluator_unittest_SOURCES = \
 	src/processor/postfix_evaluator_unittest.cc
@@ -165,6 +175,10 @@ src_processor_minidump_stackwalk_SOURCES = \
 src_processor_minidump_stackwalk_LDADD = \
 	src/processor/call_stack.lo \
 	src/processor/minidump.lo \
+	src/processor/minidump_processor.lo \
+	src/processor/pathname_stripper.lo \
+	src/processor/process_state.lo \
+	src/processor/simple_symbol_supplier.lo \
 	src/processor/stackwalker.lo \
 	src/processor/stackwalker_ppc.lo \
 	src/processor/stackwalker_x86.lo \

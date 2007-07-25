@@ -32,6 +32,8 @@
 #include <dia2.h>
 #include <stdio.h>
 
+#include "common/windows/string_utils-inl.h"
+
 #include "common/windows/pdb_source_line_writer.h"
 #include "common/windows/guid_string.h"
 
@@ -75,6 +77,14 @@ bool PDBSourceLineWriter::Open(const wstring &file, FileFormat format) {
       if (FAILED(data_source->loadDataForExe(file.c_str(), NULL, NULL))) {
         fprintf(stderr, "loadDataForExe failed\n");
         return false;
+      }
+      break;
+    case ANY_FILE:
+      if (FAILED(data_source->loadDataFromPdb(file.c_str()))) {
+        if (FAILED(data_source->loadDataForExe(file.c_str(), NULL, NULL))) {
+          fprintf(stderr, "loadDataForPdb and loadDataFromExe failed\n");
+          return false;
+        }
       }
       break;
     default:
@@ -153,7 +163,7 @@ bool PDBSourceLineWriter::PrintFunction(IDiaSymbol *function) {
     stack_param_size = GetFunctionStackParamSize(function);
   }
 
-  fprintf(output_, "FUNC %x %llx %x %ws\n",
+  fprintf(output_, "FUNC %x %" WIN_STRING_FORMAT_LL "x %x %ws\n",
           rva, length, stack_param_size, name);
 
   CComPtr<IDiaEnumLineNumbers> lines;
@@ -379,6 +389,18 @@ bool PDBSourceLineWriter::PrintCodePublicSymbol(IDiaSymbol *symbol) {
   return true;
 }
 
+bool PDBSourceLineWriter::PrintPDBInfo() {
+  wstring guid, filename;
+  int age;
+  if (!GetModuleInfo(&guid, &age, &filename)) {
+    return false;
+  }
+
+  fprintf(output_, "MODULE %ws %x %ws\n", guid.c_str(), age, filename.c_str());
+
+  return true;
+}
+
 // wcstol_positive_strict is sort of like wcstol, but much stricter.  string
 // should be a buffer pointing to a null-terminated string containing only
 // decimal digits.  If the entire string can be converted to an integer
@@ -441,6 +463,11 @@ bool PDBSourceLineWriter::GetSymbolFunctionName(IDiaSymbol *function,
     // If a name comes from get_name because no undecorated form existed,
     // it's already formatted properly to be used as output.  Don't do any
     // additional processing.
+    //
+    // MSVC7's DIA seems to not undecorate names in as many cases as MSVC8's.
+    // This will result in calling get_name for some C++ symbols, so
+    // all of the parameter and return type information may not be included in
+    // the name string.
   } else {
     // C++ uses a bogus "void" argument for functions and methods that don't
     // take any parameters.  Take it out of the undecorated name because it's
@@ -452,7 +479,8 @@ bool PDBSourceLineWriter::GetSymbolFunctionName(IDiaSymbol *function,
     if (length >= replace_length) {
       wchar_t *name_end = *name + length - replace_length;
       if (wcscmp(name_end, replace_string) == 0) {
-        wcscpy_s(name_end, replace_length, replacement_string);
+        WindowsStringUtils::safe_wcscpy(name_end, replace_length,
+                                        replacement_string);
         length = wcslen(*name);
       }
     }
@@ -481,13 +509,14 @@ bool PDBSourceLineWriter::GetSymbolFunctionName(IDiaSymbol *function,
 
         // Undecorate the name by moving it one character to the left in its
         // buffer, and terminating it where the last '@' had been.
-        wcsncpy_s(*name, length, *name + 1, last_at - *name - 1);
-      } else if (*name[0] == '_') {
+        WindowsStringUtils::safe_wcsncpy(*name, length,
+                                         *name + 1, last_at - *name - 1);
+     } else if (*name[0] == '_') {
         // This symbol's name is encoded according to the cdecl rules.  The
         // name doesn't end in a '@' character followed by a decimal positive
         // integer, so it's not a stdcall name.  Strip off the leading
         // underscore.
-        wcsncpy_s(*name, length, *name + 1, length - 1);
+        WindowsStringUtils::safe_wcsncpy(*name, length, *name + 1, length);
       }
     }
   }
@@ -608,11 +637,12 @@ next_child:
 }
 
 bool PDBSourceLineWriter::WriteMap(FILE *map_file) {
-  bool ret = false;
   output_ = map_file;
-  if (PrintSourceFiles() && PrintFunctions() && PrintFrameData()) {
-    ret = true;
-  }
+
+  bool ret = PrintPDBInfo() &&
+             PrintSourceFiles() && 
+             PrintFunctions() &&
+             PrintFrameData();
 
   output_ = NULL;
   return ret;
@@ -622,18 +652,47 @@ void PDBSourceLineWriter::Close() {
   session_.Release();
 }
 
-wstring PDBSourceLineWriter::GetModuleGUID() {
+// static
+wstring PDBSourceLineWriter::GetBaseName(const wstring &filename) {
+  wstring base_name(filename);
+  size_t slash_pos = base_name.find_last_of(L"/\\");
+  if (slash_pos != wstring::npos) {
+    base_name.erase(0, slash_pos + 1);
+  }
+  return base_name;
+}
+
+bool PDBSourceLineWriter::GetModuleInfo(wstring *guid, int *age,
+                                        wstring *filename) {
+  guid->clear();
+  *age = 0;
+  filename->clear();
+
   CComPtr<IDiaSymbol> global;
   if (FAILED(session_->get_globalScope(&global))) {
-    return L"";
+    return false;
   }
 
-  GUID guid;
-  if (FAILED(global->get_guid(&guid))) {
-    return L"";
+  GUID guid_number;
+  if (FAILED(global->get_guid(&guid_number))) {
+    return false;
   }
+  *guid = GUIDString::GUIDToWString(&guid_number);
 
-  return GUIDString::GUIDToWString(&guid);
+  // DWORD* and int* are not compatible.  This is clean and avoids a cast.
+  DWORD age_dword;
+  if (FAILED(global->get_age(&age_dword))) {
+    return false;
+  }
+  *age = age_dword;
+
+  CComBSTR filename_string;
+  if (FAILED(global->get_symbolsFileName(&filename_string))) {
+    return false;
+  }
+  *filename = GetBaseName(wstring(filename_string));
+
+  return true;
 }
 
 }  // namespace google_airbag

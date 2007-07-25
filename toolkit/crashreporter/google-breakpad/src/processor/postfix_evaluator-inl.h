@@ -26,7 +26,7 @@
 #include <sstream>
 
 #include "processor/postfix_evaluator.h"
-#include "processor/memory_region.h"
+#include "google_airbag/processor/memory_region.h"
 
 namespace google_airbag {
 

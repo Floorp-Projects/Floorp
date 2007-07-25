@@ -63,8 +63,9 @@
 #include <DbgHelp.h>
 
 #pragma warning( push )
-// disable exception handler warnings
+// Disable exception handler warnings.
 #pragma warning( disable : 4530 ) 
+
 #include <string>
 
 namespace google_airbag {
@@ -90,7 +91,7 @@ class ExceptionHandler {
                    void *callback_context, bool install_handler);
   ~ExceptionHandler();
 
-  // Get and set the minidump path
+  // Get and set the minidump path.
   wstring dump_path() const { return dump_path_; }
   void set_dump_path(const wstring &dump_path) { dump_path_ = dump_path; }
 
@@ -115,11 +116,29 @@ class ExceptionHandler {
       CONST PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam,
       CONST PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
 
-  // This function does the actual writing of a minidump.
-  bool WriteMinidumpWithException(EXCEPTION_POINTERS *exinfo);
+  // Runs the main loop for the exception handler thread.
+  static DWORD WINAPI ExceptionHandlerThreadMain(void *lpParameter);
 
-  // Called when an unhandled exception occurs.
+  // Called on the exception thread when an unhandled exception occurs.
+  // Signals the exception handler thread to handle the exception.
   static LONG WINAPI HandleException(EXCEPTION_POINTERS *exinfo);
+
+  // This is called on the exception thread or on another thread that
+  // the user wishes to produce a dump from.  It calls
+  // WriteMinidumpWithException on the handler thread, avoiding stack
+  // overflows and inconsistent dumps due to writing the dump from
+  // the exception thread.  If the dump is requested as a result of an
+  // exception, exinfo contains exception information, otherwise, it
+  // is NULL.
+  bool WriteMinidumpOnHandlerThread(EXCEPTION_POINTERS *exinfo);
+
+  // This function does the actual writing of a minidump.  It is called
+  // on the handler thread.  requesting_thread_id is the ID of the thread
+  // that requested the dump.  If the dump is requested as a result of
+  // an exception, exinfo contains exception information, otherwise,
+  // it is NULL.
+  bool WriteMinidumpWithException(DWORD requesting_thread_id,
+                                  EXCEPTION_POINTERS *exinfo);
 
   // Generates a new ID and stores it in next_minidump_id_.
   void UpdateNextID();
@@ -139,6 +158,41 @@ class ExceptionHandler {
   // the currently-installed ExceptionHandler, of which there can be only 1
   static ExceptionHandler *current_handler_;
 
+  // The exception handler thread, if one has been created.
+  static HANDLE handler_thread_;
+
+  // The critical section enforcing the requirement that only one exception be
+  // handled at a time.
+  static CRITICAL_SECTION handler_critical_section_;
+
+  // Semaphores used to move exception handling between the exception thread
+  // and the handler thread.  handler_start_semaphore_ is signalled by the
+  // exception thread to wake up the handler thread when an exception occurs.
+  // handler_finish_semaphore_ is signalled by the handler thread to wake up
+  // the exception thread when handling is complete.
+  static HANDLE handler_start_semaphore_;
+  static HANDLE handler_finish_semaphore_;
+
+  // The next 3 fields are static data passed from the requesting thread to
+  // the handler thread.
+
+  // The ExceptionHandler through which a request to write a dump was routed.
+  // This will be the same as current_handler_ for exceptions, but
+  // user-requested dumps may be routed through any live ExceptionHandler.
+  static ExceptionHandler *requesting_handler_;
+
+  // The thread ID of the thread requesting the dump (either the exception
+  // thread or any other thread that called WriteMinidump directly).
+  static DWORD requesting_thread_id_;
+
+  // The exception info passed to the exception handler on the exception
+  // thread, if an exception occurred.  NULL for user-requested dumps.
+  static EXCEPTION_POINTERS *exception_info_;
+
+  // The return value of the handler, passed from the handler thread back to
+  // the requesting thread.
+  static bool handler_return_value_;
+
   // disallow copy ctor and operator=
   explicit ExceptionHandler(const ExceptionHandler &);
   void operator=(const ExceptionHandler &);
@@ -147,4 +201,5 @@ class ExceptionHandler {
 }  // namespace google_airbag
 
 #pragma warning( pop )
+
 #endif  // CLIENT_WINDOWS_HANDLER_EXCEPTION_HANDLER_H__

@@ -32,81 +32,97 @@
 //
 // Author: Mark Mentovai
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdio>
 
-#include <string>
+#include "google_airbag/processor/minidump.h"
 
-#include "processor/minidump.h"
+namespace {
 
+using google_airbag::Minidump;
+using google_airbag::MinidumpThreadList;
+using google_airbag::MinidumpModuleList;
+using google_airbag::MinidumpMemoryList;
+using google_airbag::MinidumpException;
+using google_airbag::MinidumpSystemInfo;
+using google_airbag::MinidumpMiscInfo;
+using google_airbag::MinidumpAirbagInfo;
 
-using std::string;
-using namespace google_airbag;
-
-
-int main(int argc, char** argv) {
-  if (argc != 2) {
-    fprintf(stderr, "usage: %s <file>\n", argv[0]);
-    exit(1);
-  }
-
-  Minidump minidump(argv[1]);
+static bool PrintMinidumpDump(const char *minidump_file) {
+  Minidump minidump(minidump_file);
   if (!minidump.Read()) {
-    printf("minidump.Read() failed\n");
-    exit(1);
+    fprintf(stderr, "minidump.Read() failed\n");
+    return false;
   }
   minidump.Print();
 
-  int error = 0;
+  int errors = 0;
 
-  MinidumpThreadList* threadList = minidump.GetThreadList();
-  if (!threadList) {
-    error |= 1 << 2;
+  MinidumpThreadList *thread_list = minidump.GetThreadList();
+  if (!thread_list) {
+    ++errors;
     printf("minidump.GetThreadList() failed\n");
   } else {
-    threadList->Print();
+    thread_list->Print();
   }
 
-  MinidumpModuleList* moduleList = minidump.GetModuleList();
-  if (!moduleList) {
-    error |= 1 << 3;
+  MinidumpModuleList *module_list = minidump.GetModuleList();
+  if (!module_list) {
+    ++errors;
     printf("minidump.GetModuleList() failed\n");
   } else {
-    moduleList->Print();
+    module_list->Print();
   }
 
-  MinidumpMemoryList* memoryList = minidump.GetMemoryList();
-  if (!memoryList) {
-    error |= 1 << 4;
+  MinidumpMemoryList *memory_list = minidump.GetMemoryList();
+  if (!memory_list) {
+    ++errors;
     printf("minidump.GetMemoryList() failed\n");
   } else {
-    memoryList->Print();
+    memory_list->Print();
   }
 
-  MinidumpException* exception = minidump.GetException();
+  MinidumpException *exception = minidump.GetException();
   if (!exception) {
-    error |= 1 << 5;
+    // Exception info is optional, so don't treat this as an error.
     printf("minidump.GetException() failed\n");
   } else {
     exception->Print();
   }
 
-  MinidumpSystemInfo* systemInfo = minidump.GetSystemInfo();
-  if (!systemInfo) {
-    error |= 1 << 6;
+  MinidumpSystemInfo *system_info = minidump.GetSystemInfo();
+  if (!system_info) {
+    ++errors;
     printf("minidump.GetSystemInfo() failed\n");
   } else {
-    systemInfo->Print();
+    system_info->Print();
   }
 
-  MinidumpMiscInfo* miscInfo = minidump.GetMiscInfo();
-  if (!miscInfo) {
-    error |= 1 << 7;
+  MinidumpMiscInfo *misc_info = minidump.GetMiscInfo();
+  if (!misc_info) {
+    ++errors;
     printf("minidump.GetMiscInfo() failed\n");
   } else {
-    miscInfo->Print();
+    misc_info->Print();
   }
 
-  // Use return instead of exit to allow destructors to run.
-  return(error);
+  MinidumpAirbagInfo *airbag_info = minidump.GetAirbagInfo();
+  if (!airbag_info) {
+    // Airbag info is optional, so don't treat this as an error.
+    printf("minidump.GetAirbagInfo() failed\n");
+  } else {
+    airbag_info->Print();
+  }
+
+  return errors == 0;
+}
+
+}  // namespace
+
+int main(int argc, char **argv) {
+  if (argc != 2) {
+    fprintf(stderr, "usage: %s <file>\n", argv[0]);
+    return 1;
+  }
+
+  return PrintMinidumpDump(argv[1]) ? 0 : 1;
 }
