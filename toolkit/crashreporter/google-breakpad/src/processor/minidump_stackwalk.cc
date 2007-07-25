@@ -354,7 +354,7 @@ static void PrintProcessStateMachineReadable(const ProcessState& process_state)
            StripSeparator(process_state.crash_reason()).c_str(),
            kOutputSeparator, process_state.crash_address(), kOutputSeparator);
   } else {
-    printf("No crash%c%c\n", kOutputSeparator, kOutputSeparator);
+    printf("No crash%c%c", kOutputSeparator, kOutputSeparator);
   }
 
   if (requesting_thread != -1) {
