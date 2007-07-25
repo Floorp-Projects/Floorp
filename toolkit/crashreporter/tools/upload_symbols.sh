@@ -55,6 +55,7 @@ echo "Unpacking symbols on remote host..."
 ssh -2 ${SYMBOL_SERVER_SSH_KEY:+-i $SYMBOL_SERVER_SSH_KEY} \
   -l ${SYMBOL_SERVER_USER} ${SYMBOL_SERVER_HOST} \
   "set -e;
+   umask 0022;
    cd ${SYMBOL_SERVER_PATH};
    unzip $archive;
    rm -v $archive;"
