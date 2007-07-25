@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!DOCTYPE dialog PUBLIC "-//MOZILLA//DTD XUL V1.0//EN" "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+[<!ENTITY % qaDTD SYSTEM "chrome://qa/locale/qa.dtd"> %qaDTD;
+]>
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chome://qa/skin/" type="text/css"?>
+
+<dialog id="dialog-name"
+				xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+				persist="screenX screenY width height"
+				buttons="accept,cancel"
+				ondialogaccept="return OK();"
+				ondialogcancel="return Cancel();"
+				onload="handleLoad();">
+	
+	<script type="application/x-javascript" src="chrome://qa/content/MochiKit/MochiKit.js" />
+	<script type="application/x-javascript" src="chrome://qa/content/prefs.js" />
+	<script type="application/x-javascript" src="chrome://qa/content/litmus.js" />
+	<script type="application/x-javascript" src="chrome://qa/content/qa.js" />
+	<script type="application/x-javascript" src="chrome://qa/content/settings.js" />
+	<script type="application/x-javascript" src="chrome://qa/content/common.js" />
+	
+	<script type="application/x-javascript" src="chrome://qa/content/selecttests.js" />
+	
+	<dialogheader title="Select test group" />
+	<spacer height="20" />
+	<vbox>
+		<hbox>
+		<description value="Test Run:" />
+		<menulist label="  " id="qa-st-testrun" onselect="handleRunSelect()">
+			<menupopup >
+				<menuitem label="&qa.selecttests.load;" selected="true" />
+			</menupopup>
+		</menulist>
+		</hbox>
+		<spacer height="20" />
+		<hbox>
+			<vbox>
+				<description value="Test Group:" />
+				<listbox id="qa-st-testgroup" rows = "5" onselect="handleTestgroupSelect()">
+					<listitem label="&qa.selecttests.load;" />
+				</listbox>
+			</vbox>
+			<vbox>
+				<description value="Subgroup" />
+				<listbox id="qa-st-subgroup" rows = "5" onselect="handleSubgroupSelect()">
+					<listitem label="&qa.selecttests.load;" />
+				</listbox>
+			</vbox>
+		</hbox>
+		
+	</vbox>
+
+</dialog>

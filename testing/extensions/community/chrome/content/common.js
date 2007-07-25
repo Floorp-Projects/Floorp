@@ -88,4 +88,26 @@ var qaTools = {
 			}
 		}
 	},
+    arrayify : function(obj) {
+        if (obj instanceof Array) {
+            return obj;
+        }
+        var newArray = new Array();
+        newArray[0] = obj;
+        return newArray;
+    },
+    writeSafeHTML : function(elementID, htmlstr) {
+        document.getElementById(elementID).innerHTML = "";  //clear it.
+        var gUnescapeHTML = Components.classes["@mozilla.org/feed-unescapehtml;1"].getService(Components.interfaces.nsIScriptableUnescapeHTML);
+        var context = document.getElementById(elementID);
+        var fragment = gUnescapeHTML.parseFragment(htmlstr, false, null, context);
+        context.appendChild(fragment);
+        
+    },
+    
+    linkTargetsToBlank : function(node) {
+        var children = node.getElementsByTagName('a');
+        for (var i = 0; i < children.length; i++)
+            children[i].setAttribute("target", "_blank");
+    }
 };

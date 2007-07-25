@@ -84,11 +84,6 @@ var qaPrefsWindow = {
 	},
 };
 
-// on load, set an event listener to deal with saving settings when 
-// changing tabs
-window.addEventListener('load', function() {
-	$('qa_tabrow').addEventListener('select', qaPrefsWindow.onSwitchTab, false);
-}, false);
 
 var qaSetup = {
 	didSubmitForm : 0,

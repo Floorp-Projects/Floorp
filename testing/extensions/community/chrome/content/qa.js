@@ -10,8 +10,6 @@ var qaMain = {
         }
 		
 	},
-
-
 };
 qaMain.__defineGetter__("bundle", function(){return $("bundle_qa");});
 qaMain.__defineGetter__("urlbundle", function(){return $("bundle_urls");});
