@@ -39,6 +39,8 @@
 
 #include "crashreporter.h"
 
+// Disable exception handler warnings.
+#pragma warning( disable : 4530 )
 #include <fstream>
 #include <sstream>
 
@@ -53,12 +55,9 @@ StringTable  gStrings;
 int          gArgc;
 const char** gArgv;
 
-static string       gSendURL;
 static string       gDumpFile;
 static string       gExtraFile;
 static string       gSettingsPath;
-static bool         gDeleteDump = true;
-
 
 static string kExtraDataExtension = ".extra";
 
@@ -97,11 +96,6 @@ static bool ReadConfig()
 
   if (!ReadStringsFromFile(iniPath, gStrings))
     return false;
-
-  gSendURL = gStrings["URL"];
-
-  string deleteSetting = gStrings["Delete"];
-  gDeleteDump = deleteSetting.empty() || atoi(deleteSetting.c_str()) != 0;
 
   return true;
 }
@@ -196,12 +190,10 @@ bool CrashReporterSendCompleted(bool success,
                                 const string& serverResponse)
 {
   if (success) {
-    if (gDeleteDump) {
-      if (!gDumpFile.empty())
-        UIDeleteFile(gDumpFile);
-      if (!gExtraFile.empty())
-        UIDeleteFile(gExtraFile);
-    }
+    if (!gDumpFile.empty())
+      UIDeleteFile(gDumpFile);
+    if (!gExtraFile.empty())
+      UIDeleteFile(gExtraFile);
 
     return AddSubmittedReport(serverResponse);
   }
@@ -246,6 +238,11 @@ int main(int argc, const char** argv)
       return 0;
     }
 
+    if (queryParameters.find("ServerURL") == queryParameters.end()) {
+      UIError("No server URL specified");
+      return 0;
+    }
+
     string product = queryParameters["ProductName"];
     string vendor = queryParameters["Vendor"];
     if (!UIGetSettingsPath(vendor, product, gSettingsPath)) {
@@ -259,7 +256,19 @@ int main(int argc, const char** argv)
       return 0;
     }
 
-    UIShowCrashUI(gDumpFile, queryParameters, gSendURL);
+    string sendURL = queryParameters["ServerURL"];
+    // we don't need to actually send this
+    queryParameters.erase("ServerURL");
+
+    // allow override of the server url via environment variable
+    //XXX: remove this in the far future when our robot
+    // masters force everyone to use XULRunner
+    char* urlEnv = getenv("MOZ_CRASHREPORTER_URL");
+    if (urlEnv && *urlEnv) {
+      sendURL = urlEnv;
+    }
+
+    UIShowCrashUI(gDumpFile, queryParameters, sendURL);
   }
 
   UIShutdown();

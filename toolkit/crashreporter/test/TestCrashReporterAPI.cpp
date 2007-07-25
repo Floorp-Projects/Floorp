@@ -63,7 +63,7 @@ char *
 test_init_exception_handler()
 {
   mu_assert("CrashReporter::SetExceptionHandler",
-            CrashReporter::SetExceptionHandler(nsnull));
+            CrashReporter::SetExceptionHandler(nsnull, nsnull));
   return 0;
 }
 
