@@ -45,22 +45,48 @@
 #include <fcntl.h>
 
 using std::string;
+using std::vector;
 
 static NSAutoreleasePool* gMainPool;
 static CrashReporterUI* gUI = 0;
 static string gDumpFile;
 static StringTable gQueryParameters;
 static string gSendURL;
-
+static vector<string> gRestartArgs;
 
 #define NSSTR(s) [NSString stringWithUTF8String:(s).c_str()]
 
-static NSString *
-Str(const char* aName)
+static NSString* Str(const char* aName)
 {
   string str = gStrings[aName];
   if (str.empty()) str = "?";
   return NSSTR(str);
+}
+
+static bool RestartApplication()
+{
+  char** argv = reinterpret_cast<char**>(
+    malloc(sizeof(char*) * (gRestartArgs.size() + 1)));
+
+  if (!argv) return false;
+
+  unsigned int i;
+  for (i = 0; i < gRestartArgs.size(); i++) {
+    argv[i] = (char*)gRestartArgs[i].c_str();
+  }
+  argv[i] = 0;
+
+  pid_t pid = fork();
+  if (pid == -1)
+    return false;
+  else if (pid == 0) {
+    (void)execv(argv[0], argv);
+    _exit(1);
+  }
+
+  free(argv);
+
+  return true;
 }
 
 @implementation CrashReporterUI
@@ -71,22 +97,7 @@ Str(const char* aName)
   [window center];
 
   [window setTitle:[[NSBundle mainBundle]
-                objectForInfoDictionaryKey:@"CFBundleName"]];
-  [descriptionLabel setStringValue:Str(ST_CRASHREPORTERDESCRIPTION)];
-  [disableReportingButton setTitle:Str(ST_RADIODISABLE)];
-
-  [closeButton setTitle:Str(ST_CLOSE)];
-  [errorCloseButton setTitle:Str(ST_CLOSE)];
-}
-
--(void)showDefaultUI
-{
-  [dontSendButton setFrame:[sendButton frame]];
-  [dontSendButton setTitle:Str(ST_CLOSE)];
-  [dontSendButton setKeyEquivalent:@"\r"];
-  [sendButton removeFromSuperview];
-
-  [window makeKeyAndOrderFront:nil];
+                      objectForInfoDictionaryKey:@"CFBundleName"]];
 }
 
 -(void)showCrashUI:(const string&)dumpfile
@@ -97,19 +108,113 @@ Str(const char* aName)
   gQueryParameters = queryParameters;
   gSendURL = sendURL;
 
-  [sendButton setTitle:Str(ST_SEND)];
-  [sendButton setKeyEquivalent:@"\r"];
-  [dontSendButton setTitle:Str(ST_DONTSEND)];
+  [headerLabel setStringValue:Str(ST_CRASHREPORTERHEADER)];
+
+  [self setStringFitVertically:descriptionLabel
+                        string:Str(ST_CRASHREPORTERDESCRIPTION)
+                  resizeWindow:YES];
+  [viewReportLabel setStringValue:Str(ST_VIEWREPORT)];
+  [submitReportButton setTitle:Str(ST_CHECKSUBMIT)];
+  [emailMeButton setTitle:Str(ST_CHECKEMAIL)];
+  [closeButton setTitle:Str(ST_CLOSE)];
+
+  [viewReportScrollView retain];
+  [viewReportScrollView removeFromSuperview];
+
+  if (gRestartArgs.size() == 0) {
+    NSRect restartFrame = [restartButton frame];
+    [restartButton removeFromSuperview];
+    NSRect closeFrame = [closeButton frame];
+    closeFrame.origin.x = restartFrame.origin.x +
+      (restartFrame.size.width - closeFrame.size.width);
+    [closeButton setFrame: closeFrame];
+    [closeButton setKeyEquivalent:@"\r"];
+  } else {
+    [restartButton setTitle:Str(ST_RESTART)];
+    [restartButton setKeyEquivalent:@"\r"];
+  }
+
+  [self updateEmail];
+  [self showReportInfo];
 
   [window makeKeyAndOrderFront:nil];
 }
 
 -(void)showErrorUI:(const string&)message
 {
-  [errorLabel setStringValue: NSSTR(message)];
+  [self setView: errorView animate: NO];
 
-  [self setView: window newView: errorView animate: NO];
+  [errorHeaderLabel setStringValue:Str(ST_CRASHREPORTERHEADER)];
+  [self setStringFitVertically:errorLabel
+                        string:NSSTR(message)
+                  resizeWindow:YES];
+  [errorCloseButton setTitle:Str(ST_CLOSE)];
+
   [window makeKeyAndOrderFront:nil];
+}
+
+-(void)showReportInfo
+{
+  NSDictionary* boldAttr = [NSDictionary
+                            dictionaryWithObject:[NSFont boldSystemFontOfSize:0]
+                                          forKey:NSFontAttributeName];
+  NSDictionary* normalAttr = [NSDictionary
+                              dictionaryWithObject:[NSFont systemFontOfSize:0]
+                                            forKey:NSFontAttributeName];
+
+  [viewReportTextView setString:@""];
+  for (StringTable::iterator iter = gQueryParameters.begin();
+       iter != gQueryParameters.end();
+       iter++) {
+    [[viewReportTextView textStorage]
+     appendAttributedString: [[NSAttributedString alloc]
+                              initWithString:NSSTR(iter->first + ": ")
+                                  attributes:boldAttr]];
+    [[viewReportTextView textStorage]
+     appendAttributedString: [[NSAttributedString alloc]
+                              initWithString:NSSTR(iter->second + "\n")
+                                  attributes:normalAttr]];
+  }
+
+  [[viewReportTextView textStorage]
+   appendAttributedString: [[NSAttributedString alloc]
+                            initWithString:NSSTR("\n" + gStrings[ST_EXTRAREPORTINFO])
+                            attributes:normalAttr]];
+}
+
+-(IBAction)viewReportClicked:(id)sender
+{
+  NSRect frame = [window frame];
+  NSRect scrolledFrame = [viewReportScrollView frame];
+
+  float delta = scrolledFrame.size.height + 5; // FIXME
+
+  if ([viewReportButton state] == NSOnState) {
+    [[window contentView] addSubview:viewReportScrollView];
+  } else {
+    delta = 0 - delta;
+  }
+
+  frame.origin.y -= delta;
+  frame.size.height += delta;
+
+  int buttonMask = [viewReportButton autoresizingMask];
+  int textMask = [viewReportLabel autoresizingMask];
+  int reportMask = [viewReportScrollView autoresizingMask];
+
+  [viewReportButton setAutoresizingMask:NSViewMinYMargin];
+  [viewReportLabel setAutoresizingMask:NSViewMinYMargin];
+  [viewReportScrollView setAutoresizingMask:NSViewMinYMargin];
+
+  [window setFrame: frame display: true animate: NO];
+
+  if ([viewReportButton state] == NSOffState) {
+    [viewReportScrollView removeFromSuperview];
+  }
+
+  [viewReportButton setAutoresizingMask:buttonMask];
+  [viewReportLabel setAutoresizingMask:textMask];
+  [viewReportScrollView setAutoresizingMask:reportMask];
 }
 
 -(IBAction)closeClicked:(id)sender
@@ -117,25 +222,83 @@ Str(const char* aName)
   [NSApp terminate: self];
 }
 
--(IBAction)sendClicked:(id)sender
+-(IBAction)closeAndSendClicked:(id)sender
 {
-  [self setView: window newView: uploadingView animate: YES];
-  [progressBar startAnimation: self];
-  [progressLabel setStringValue:Str(ST_SENDTITLE)];
-
-  if (![self setupPost])
-    [NSApp terminate];
-
-  [NSThread detachNewThreadSelector:@selector(uploadThread:)
-            toTarget:self
-            withObject:mPost];
+  if ([submitReportButton state] == NSOnState) {
+    // Hide the dialog after "closing", but leave it around to coordinate
+    // with the upload thread
+    [window orderOut:nil];
+    [self sendReport];
+  } else {
+    [NSApp terminate:self];
+  }
 }
 
--(void)setView:(NSWindow*)w newView: (NSView*)v animate: (BOOL)animate
+-(IBAction)restartClicked:(id)sender
 {
-  NSRect frame = [w frame];
+  RestartApplication();
+  if ([submitReportButton state] == NSOnState) {
+    // Hide the dialog after "closing", but leave it around to coordinate
+    // with the upload thread
+    [window orderOut:nil];
+    [self sendReport];
+  } else {
+    [NSApp terminate:self];
+  }
+}
 
-  NSRect oldViewFrame = [[w contentView] frame];
+-(IBAction)emailMeClicked:(id)sender
+{
+  [self updateEmail];
+  [self showReportInfo];
+}
+
+-(void)controlTextDidChange:(NSNotification *)note
+{
+  // Email text changed, assume they want the "Email me" checkbox
+  // updated appropriately
+  if ([[emailText stringValue] length] > 0)
+    [emailMeButton setState:NSOnState];
+  else
+    [emailMeButton setState:NSOffState];
+
+  [self updateEmail];
+  [self showReportInfo];
+}
+
+-(float)setStringFitVertically:(NSControl*)control
+                        string:(NSString*)str
+                  resizeWindow:(BOOL)resizeWindow
+{
+  // hack to make the text field grow vertically
+  NSRect frame = [control frame];
+  float oldHeight = frame.size.height;
+
+  frame.size.height = 10000;
+  NSSize oldCellSize = [[control cell] cellSizeForBounds: frame];
+  [control setStringValue: str];
+  NSSize newCellSize = [[control cell] cellSizeForBounds: frame];
+
+  float delta = newCellSize.height - oldCellSize.height;
+  frame.origin.y -= delta;
+  frame.size.height = oldHeight + delta;
+  [control setFrame: frame];
+
+  if (resizeWindow) {
+    NSRect frame = [window frame];
+    frame.origin.y -= delta;
+    frame.size.height += delta;
+    [window setFrame:frame display: true animate: NO];
+  }
+
+  return delta;
+}
+
+-(void)setView: (NSView*)v animate: (BOOL)animate
+{
+  NSRect frame = [window frame];
+
+  NSRect oldViewFrame = [[window contentView] frame];
   NSRect newViewFrame = [v frame];
 
   frame.origin.y += oldViewFrame.size.height - newViewFrame.size.height;
@@ -144,8 +307,28 @@ Str(const char* aName)
   frame.origin.x += oldViewFrame.size.width - newViewFrame.size.width;
   frame.size.width -= oldViewFrame.size.width - newViewFrame.size.width;
 
-  [w setContentView: v];
-  [w setFrame: frame display: true animate: animate];
+  [window setContentView:v];
+  [window setFrame:frame display:true animate:animate];
+}
+
+-(void)updateEmail
+{
+  if ([emailMeButton state] == NSOnState) {
+    NSString* email = [emailText stringValue];
+    gQueryParameters["Email"] = [email UTF8String];
+  } else {
+    gQueryParameters.erase("Email");
+  }
+}
+
+-(void)sendReport
+{
+  if (![self setupPost])
+    [NSApp terminate:self];
+
+  [NSThread detachNewThreadSelector:@selector(uploadThread:)
+            toTarget:self
+            withObject:mPost];
 }
 
 -(bool)setupPost
@@ -177,19 +360,14 @@ Str(const char* aName)
 
 -(void)uploadComplete:(id)data
 {
-  [progressBar stopAnimation: self];
-
   NSHTTPURLResponse* response = [mPost response];
 
-  NSString* status;
   bool success;
   string reply;
   if (!data || !response || [response statusCode] != 200) {
-    status = Str(ST_SUBMITFAILED);
     success = false;
     reply = "";
   } else {
-    status = Str(ST_SUBMITSUCCESS);
     success = true;
 
     NSString* encodingName = [response textEncodingName];
@@ -204,11 +382,13 @@ Str(const char* aName)
     reply = [r UTF8String];
   }
 
-  [progressLabel setStringValue: status];
-  [closeButton setEnabled: true];
-  [closeButton setKeyEquivalent:@"\r"];
-
   CrashReporterSendCompleted(success, reply);
+
+  if (success) {
+    [NSApp terminate:self];
+  } else {
+    [self showErrorUI:gStrings[ST_SUBMITFAILED]];
+  }
 }
 
 -(void)uploadThread:(id)post
@@ -246,14 +426,16 @@ void UIShutdown()
 
 void UIShowDefaultUI()
 {
-  [gUI showDefaultUI];
-  [NSApp run];
+  UIError(gStrings[ST_CRASHREPORTERDEFAULT]);
 }
 
 void UIShowCrashUI(const string& dumpfile,
                    const StringTable& queryParameters,
-                   const string& sendURL)
+                   const string& sendURL,
+                   const vector<string>& restartArgs)
 {
+  gRestartArgs = restartArgs;
+
   [gUI showCrashUI: dumpfile
        queryParameters: queryParameters
        sendURL: sendURL];

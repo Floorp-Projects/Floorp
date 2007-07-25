@@ -47,39 +47,48 @@
 {
     IBOutlet NSWindow* window;
 
-    /* Enabled view */
-    IBOutlet NSView* enableView;
-
+    /* Crash reporter view */
+    IBOutlet NSTextField* headerLabel;
     IBOutlet NSTextField* descriptionLabel;
-    IBOutlet NSButton* disableReportingButton;
-    IBOutlet NSButton* dontSendButton;
-    IBOutlet NSButton* sendButton;
-
-    /* Upload progress view */
-    IBOutlet NSView* uploadingView;
-
-    IBOutlet NSTextField* progressLabel;
-    IBOutlet NSProgressIndicator* progressBar;
+    IBOutlet NSButton* viewReportButton;
+    IBOutlet NSTextField* viewReportLabel;
+    IBOutlet NSScrollView* viewReportScrollView;
+    IBOutlet NSTextView* viewReportTextView;
+    IBOutlet NSButton* submitReportButton;
+    IBOutlet NSButton* emailMeButton;
+    IBOutlet NSTextField* emailText;
     IBOutlet NSButton* closeButton;
+    IBOutlet NSButton* restartButton;
 
     /* Error view */
     IBOutlet NSView* errorView;
+    IBOutlet NSTextField* errorHeaderLabel;
     IBOutlet NSTextField* errorLabel;
     IBOutlet NSButton* errorCloseButton;
 
     HTTPMultipartUpload *mPost;
 }
 
-- (void)showDefaultUI;
 - (void)showCrashUI:(const std::string&)dumpfile
     queryParameters:(const StringTable&)queryParameters
             sendURL:(const std::string&)sendURL;
 - (void)showErrorUI:(const std::string&)dumpfile;
+- (void)showReportInfo;
 
+- (IBAction)viewReportClicked:(id)sender;
 - (IBAction)closeClicked:(id)sender;
-- (IBAction)sendClicked:(id)sender;
+- (IBAction)closeAndSendClicked:(id)sender;
+- (IBAction)restartClicked:(id)sender;
+- (IBAction)emailMeClicked:(id)sender;
 
-- (void)setView:(NSWindow *)w newView: (NSView *)v animate: (BOOL) animate;
+- (void)controlTextDidChange:(NSNotification *)note;
+
+- (float)setStringFitVertically:(NSControl*)control
+                         string:(NSString*)str
+                   resizeWindow:(BOOL)resizeWindow;
+- (void)setView:(NSView*)v animate: (BOOL) animate;
+- (void)updateEmail;
+- (void)sendReport;
 - (bool)setupPost;
 - (void)uploadThread:(id)post;
 - (void)uploadComplete:(id)data;
