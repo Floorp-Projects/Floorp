@@ -1489,7 +1489,7 @@ nsTextControlFrame::CreateFrameFor(nsIContent*      aContent)
       }
     } else {
       // Never wrap non-textareas
-      textEditor->SetWrapWidth(-1);
+      textEditor->SetWrapColumn(-1);
     }
 
 

@@ -980,7 +980,7 @@ static void CutStyle(const char* stylename, nsString& styleValue)
 NS_IMETHODIMP 
 nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
 {
-  mWrapColumn = aWrapColumn;
+  SetWrapColumn(aWrapColumn);
 
   // Make sure we're a plaintext editor, otherwise we shouldn't
   // do the rest of this.
@@ -1047,6 +1047,13 @@ nsPlaintextEditor::SetWrapWidth(PRInt32 aWrapColumn)
     styleValue.AppendLiteral("white-space: pre;");
 
   return rootElement->SetAttribute(styleName, styleValue);
+}
+
+NS_IMETHODIMP 
+nsPlaintextEditor::SetWrapColumn(PRInt32 aWrapColumn)
+{
+  mWrapColumn = aWrapColumn;
+  return NS_OK;
 }
 
 //
