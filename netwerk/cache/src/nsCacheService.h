@@ -139,6 +139,9 @@ public:
 
     static nsresult  EvictUnownedOfflineEntries(nsCacheSession *      session);
 
+    static nsresult  MergeTemporaryClientID(nsCacheSession *            session,
+                                            const nsACString &          fromClientID);
+
     /**
      * Methods called by nsCacheEntryDescriptor
      */

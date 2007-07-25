@@ -121,6 +121,10 @@ public:
                                                  const nsACString &ownerDomain);
   nsresult                EvictUnownedEntries(const char *clientID);
 
+  nsresult                CreateTemporaryClientID(nsACString &clientID);
+  nsresult                MergeTemporaryClientID(const char *clientID,
+                                                 const char *fromClientID);
+
 
   /**
    * Preference accessors
@@ -163,8 +167,10 @@ private:
   nsCOMPtr<mozIStorageStatement>  mStatement_CheckOwnership;
   nsCOMPtr<mozIStorageStatement>  mStatement_DeleteUnowned;
   nsCOMPtr<mozIStorageStatement>  mStatement_ListOwned;
+  nsCOMPtr<mozIStorageStatement>  mStatement_ListOwners;
   nsCOMPtr<mozIStorageStatement>  mStatement_ListOwnerDomains;
   nsCOMPtr<mozIStorageStatement>  mStatement_ListOwnerURIs;
+  nsCOMPtr<mozIStorageStatement>  mStatement_SwapClientID;
 
   nsCOMPtr<nsILocalFile>          mCacheDirectory;
   PRUint32                        mCacheCapacity;

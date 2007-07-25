@@ -40,37 +40,39 @@
 #include "nsISupports.idl"
 #include "nsICache.idl"
 
-[scriptable, uuid(0058c32b-0d93-4cf8-a561-e6f749c8a7b1)]
+/**
+ * The offline cache is meant to reliably store resources for
+ * offline use.  The expected semantics are:
+ *
+ * a) Once populated, the cache will not evict an application resource
+ *    unless explicitly asked.
+ *
+ * b) Resources no longer in use by the application should be evicted.
+ *
+ * c) If the cache fills up, new entries should be rejected rather
+ *    than throwing out old ones.
+ *
+ * The offline cache uses domains to concretely represent an
+ * application.  It maintains a list of resources to be pinned for
+ * each domain.  This list is separate from actual cache
+ * population - the caller is still responsible for placing items
+ * in the cache, and ownership can be declared without a
+ * corresponding entry.
+ *
+ * A key can optionally be associated with a specific URI within
+ * the domain.
+ */
+
+[scriptable, uuid(de7875e5-a7e2-4d8d-ad01-807ef55ef8c0)]
 interface nsIOfflineCacheSession : nsISupports
 {
     /**
-     * The offline cache is meant to reliably store resources for
-     * offline use.  The expected semantics are:
-     *
-     * a) Once populated, the cache will not evict an application resource
-     *    unless explicitly asked.
-     *
-     * b) Resources no longer in use by the application should be evicted.
-     *
-     * c) If the cache fills up, new entries should be rejected rather
-     *    than throwing out old ones.
-     *
-     * The offline cache uses domains to concretely represent an
-     * application.  It maintains a list of resources to be pinned for
-     * each domain.  This list is separate from actual cache
-     * population - the caller is still responsible for placing items
-     * in the cache, and ownership can be declared without a
-     * corresponding entry.
-     *
-     * A key can optionally be associated with a specific URI within
-     * the domain.
-     */
-
-    /**
      * Gets the list of owner domains in the cache.
      *
-     * @param count The number of domains returned
-     * @param uris The domains that own resources in the cache
+     * @param count
+     *        The number of domains returned
+     * @param uris
+     *        The domains that own resources in the cache
      */
     void getOwnerDomains(out unsigned long count,
                          [array, size_is(count)]out string domains);
@@ -78,9 +80,12 @@ interface nsIOfflineCacheSession : nsISupports
     /**
      * Gets the list of owner URIs associated with a domain.
      *
-     * @param ownerDomain The domain to query
-     * @param count The number of uris returned
-     * @param uris The uris in this domain that own resources
+     * @param ownerDomain
+     *        The domain to query
+     * @param count
+     *        The number of uris returned
+     * @param uris
+     *        The uris in this domain that own resources
      */
     void getOwnerURIs(in ACString ownerDomain,
                       out unsigned long count,
@@ -96,12 +101,16 @@ interface nsIOfflineCacheSession : nsISupports
      * an entry is created with this key, it will be owned by the
      * domain/URI pair.
      *
-     * @param ownerDomain The domain that owns the resources.
-     * @param ownerURI The specific URI that owns the resources.  This can
-     *        be empty if no URI specifically owns the resources.
-     * @param count The number of keys in keys.
-     * @param keys The keys that the domain/URI pair own.  This can be empty
-     *        to clear ownership for the domain/URI pair.
+     * @param ownerDomain
+     *        The domain that owns the resources.
+     * @param ownerURI
+     *        The specific URI that owns the resources.  This can be empty if
+     *        no URI specifically owns the resources.
+     * @param count
+     *        The number of keys in keys.
+     * @param keys
+     *        The keys that the domain/URI pair own.  This can be empty to
+     *        clear ownership for the domain/URI pair.
      */
     void setOwnedKeys(in ACString ownerDomain,
                       in ACString ownerURI,
@@ -111,11 +120,15 @@ interface nsIOfflineCacheSession : nsISupports
     /**
      * Gets the list of resources owned by a given domain/URI pair.
      *
-     * @param ownerDomain The domain that owns the resources.
-     * @param ownerURI The specific URI that owns the resources.  This can
-     *        be empty if no URI specifically owns the resources.
-     * @param count The number of keys in keys.
-     * @param keys The keys that the domain/URI pair own.
+     * @param ownerDomain
+     *        The domain that owns the resources.
+     * @param ownerURI
+     *        The specific URI that owns the resources.  This can be empty
+     *        if no URI specifically owns the resources.
+     * @param count
+     *        The number of keys in keys.
+     * @param keys
+     *        The keys that the domain/URI pair own.
      */
     void getOwnedKeys(in ACString ownerDomain,
                       in ACString ownerURI,
@@ -129,10 +142,13 @@ interface nsIOfflineCacheSession : nsISupports
      * an entry is created with this key, it will be owned by the
      * domain/URI pair.
      *
-     * @param ownerDomain The domain that owns the resources.
-     * @param ownerURI The specific URI that owns the resources.  This can
-     *        be empty if no URI specifically owns the resources.
-     * @param key The key to add.
+     * @param ownerDomain
+     *        The domain that owns the resources.
+     * @param ownerURI
+     *        The specific URI that owns the resources.  This can be empty
+     *        if no URI specifically owns the resources.
+     * @param key
+     *        The key to add.
      */
     void addOwnedKey(in ACString ownerDomain,
                      in ACString ownerURI,
@@ -144,9 +160,11 @@ interface nsIOfflineCacheSession : nsISupports
      * If the key does not exist, an NS_ERROR_NOT_AVAILABLE exception
      * will be thrown.
      *
-     * @param ownerDomain The domain that owns the resources.
-     * @param ownerURI The specific URI that owns the resources.  This can
-     *        be empty if no URI specifically owns the resources.
+     * @param ownerDomain
+     *        The domain that owns the resources.
+     * @param ownerURI
+     *        The specific URI that owns the resources.  This can be empty
+     *        if no URI specifically owns the resources.
      * @param key The key to remove.
      */
     void removeOwnedKey(in ACString ownerDomain,
@@ -156,9 +174,11 @@ interface nsIOfflineCacheSession : nsISupports
     /**
      * Checks whether a key is owned by a given domain/URI pair.
      *
-     * @param ownerDomain The domain that owns the resources.
-     * @param ownerURI The specific URI that owns the resources.  This can
-     *        be empty if no URI specifically owns the resources.
+     * @param ownerDomain
+     *        The domain that owns the resources.
+     * @param ownerURI
+     *        The specific URI that owns the resources.  This can be empty
+     *        if no URI specifically owns the resources.
      * @param key The key to check
      */
     boolean keyIsOwned(in ACString ownerDomain,
@@ -177,4 +197,17 @@ interface nsIOfflineCacheSession : nsISupports
      * Evict all entries that are not owned by a domain.
      */
     void evictUnownedEntries();
+
+    /**
+     * Merge the items from a temporary clientID in to this client.  This lets
+     * offline cache updates accumulate in a temporary client and be moved
+     * in all at once.
+     *
+     * Entries in the temporary client will replace any entries in this client
+     * with the same cache key.
+     *
+     * Ownership lists for a given domain/URI pair from the temporary client
+     * will replace ownership lists for the same domain/URI pair.
+     */
+    void mergeTemporaryClientID(in ACString temporaryClientID);
 };
