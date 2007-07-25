@@ -42,6 +42,7 @@
 #include "nsILocalFileMac.h"
 #include "nsString.h"
 #include "nsIHashable.h"
+#include "nsIClassInfoImpl.h"
 
 class nsDirEnumerator;
 
@@ -57,7 +58,8 @@ class nsDirEnumerator;
 //*****************************************************************************
 
 class NS_COM nsLocalFile : public nsILocalFileMac,
-                           public nsIHashable
+                           public nsIHashable,
+                           public nsIClassInfo
 {
     friend class nsDirEnumerator;
     
@@ -73,6 +75,7 @@ public:
     NS_DECL_NSILOCALFILE
     NS_DECL_NSILOCALFILEMAC
     NS_DECL_NSIHASHABLE
+    NS_DECL_NSICLASSINFO
 
 public:
 
