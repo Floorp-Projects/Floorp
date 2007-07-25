@@ -85,8 +85,8 @@ LIBS += \
   $(DEPTH)/toolkit/airbag/airbag/src/common/linux/$(LIB_PREFIX)breakpad_linux_common_s.$(LIB_SUFFIX) \
   $(NULL)
 LOCAL_INCLUDES += -I$(srcdir)
-OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS) $(MOZ_LIBCURL_CFLAGS)
-OS_LIBS += $(MOZ_GTK2_LIBS) $(MOZ_LIBCURL_LIBS)
+OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS)
+OS_LIBS += $(MOZ_GTK2_LIBS) -lcurl
 CPPSRCS += http_upload.cc
 FORCE_USE_PIC=1
 endif
