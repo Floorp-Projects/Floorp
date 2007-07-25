@@ -603,9 +603,8 @@ protected:
   static NS_HIDDEN_(void) SetFont(nsPresContext* aPresContext,
                                   nsStyleContext* aContext,
                                   nscoord aMinFontSize,
-                                  PRBool aIsGeneric,
+                                  PRUint8 aGenericFontID,
                                   const nsRuleDataFont& aFontData,
-                                  const nsFont& aDefaultFont,
                                   const nsStyleFont* aParentFont,
                                   nsStyleFont* aFont, PRBool& aInherited);
 
