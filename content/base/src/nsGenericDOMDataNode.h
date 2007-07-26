@@ -195,9 +195,7 @@ public:
   virtual void UnbindFromTree(PRBool aDeep = PR_TRUE,
                               PRBool aNullParent = PR_TRUE);
 
-  virtual nsIAtom *GetIDAttributeName(PRInt32& aNamespaceId) const;
-  virtual PRBool IsPotentialIDAttributeName(PRInt32 aNameSpaceID,
-                                            nsIAtom* aAtom) const;
+  virtual nsIAtom *GetIDAttributeName() const;
   virtual already_AddRefed<nsINodeInfo> GetExistingAttrNameFromQName(const nsAString& aStr) const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, PRBool aNotify)

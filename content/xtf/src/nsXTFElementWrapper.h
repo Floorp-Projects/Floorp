@@ -78,9 +78,7 @@ public:
   nsresult InsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                          PRBool aNotify);
   nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
-  virtual nsIAtom *GetIDAttributeName(PRInt32& aNameSpaceID) const;
-  virtual PRBool IsPotentialIDAttributeName(PRInt32 aNameSpaceID,
-                                            nsIAtom* aAtom) const;
+  nsIAtom *GetIDAttributeName() const;
   nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                    nsIAtom* aPrefix, const nsAString& aValue,
                    PRBool aNotify);

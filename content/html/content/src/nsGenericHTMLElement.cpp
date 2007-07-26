@@ -1493,21 +1493,9 @@ nsGenericHTMLElement::GetClasses() const
 }
 
 nsIAtom *
-nsGenericHTMLElement::GetIDAttributeName(PRInt32& aNameSpaceID) const
+nsGenericHTMLElement::GetIDAttributeName() const
 {
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::id)) {
-    aNameSpaceID = kNameSpaceID_None;
-    return nsGkAtoms::id;
-  }
-  return nsGenericElement::GetIDAttributeName(aNameSpaceID);
-}
-
-PRBool
-nsGenericHTMLElement::IsPotentialIDAttributeName(PRInt32 aNameSpaceID,
-                                                 nsIAtom* aAtom) const
-{
-  return (aNameSpaceID == kNameSpaceID_None && aAtom == nsGkAtoms::id) ||
-    nsGenericElement::IsPotentialIDAttributeName(aNameSpaceID, aAtom);
+  return nsGkAtoms::id;
 }
 
 nsIAtom *

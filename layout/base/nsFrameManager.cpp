@@ -1445,14 +1445,12 @@ nsFrameManager::ComputeStyleChangeFor(nsIFrame          *aFrame,
 
 nsReStyleHint
 nsFrameManager::HasAttributeDependentStyle(nsIContent *aContent,
-                                           PRInt32 aNameSpaceID,
                                            nsIAtom *aAttribute,
                                            PRInt32 aModType,
                                            PRUint32 aStateMask)
 {
   nsReStyleHint hint = mStyleSet->HasAttributeDependentStyle(GetPresContext(),
                                                              aContent,
-                                                             aNameSpaceID,
                                                              aAttribute,
                                                              aModType,
                                                              aStateMask);
