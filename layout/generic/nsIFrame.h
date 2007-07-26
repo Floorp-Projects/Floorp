@@ -177,6 +177,13 @@ enum {
   // frames.
   NS_FRAME_GENERATED_CONTENT =                  0x00000040,
 
+  // If this bit is set the frame is a continuation that is holding overflow,
+  // i.e. it is a next-in-flow created to hold overflow after the box's
+  // height has ended. This means the frame should be a) at the top of the
+  // page and b) invisible: no borders, zero height, ignored in margin
+  // collapsing, etc. See nsContainerFrame.h
+  NS_FRAME_IS_OVERFLOW_CONTAINER =              0x00000080,
+
   // If this bit is set, then the frame has been moved out of the flow,
   // e.g., it is absolutely positioned or floated
   NS_FRAME_OUT_OF_FLOW =                        0x00000100,
@@ -287,16 +294,31 @@ enum nsSpread {
 //----------------------------------------------------------------------
 
 /**
- * Reflow status returned by the reflow methods.
+ * Reflow status returned by the reflow methods. There are three
+ * completion statuses, represented by two bit flags.
+ *
+ * NS_FRAME_COMPLETE means the frame is fully complete.
  *
  * NS_FRAME_NOT_COMPLETE bit flag means the frame does not map all its
  * content, and that the parent frame should create a continuing frame.
  * If this bit isn't set it means the frame does map all its content.
+ * This bit is mutually exclusive with NS_FRAME_OVERFLOW_INCOMPLETE.
+ *
+ * NS_FRAME_OVERFLOW_INCOMPLETE bit flag means that the frame has
+ * overflow that is not complete, but its own box is complete.
+ * (This happens when content overflows a fixed-height box.)
+ * The reflower should place and size the frame and continue its reflow,
+ * but needs to create an overflow container as a continuation for this
+ * frame. See nsContainerFrame.h for more information.
+ * This bit is mutually exclusive with NS_FRAME_NOT_COMPLETE.
+ * 
+ * Please use the SET and MERGE macros below for handling
+ * NS_FRAME_NOT_COMPLETE and NS_FRAME_OVERFLOW_INCOMPLETE.
  *
  * NS_FRAME_REFLOW_NEXTINFLOW bit flag means that the next-in-flow is
  * dirty, and also needs to be reflowed. This status only makes sense
  * for a frame that is not complete, i.e. you wouldn't set both
- * NS_FRAME_COMPLETE and NS_FRAME_REFLOW_NEXTINFLOW
+ * NS_FRAME_COMPLETE and NS_FRAME_REFLOW_NEXTINFLOW.
  *
  * The low 8 bits of the nsReflowStatus are reserved for future extensions;
  * the remaining 24 bits are zero (and available for extensions; however
@@ -307,15 +329,39 @@ enum nsSpread {
  */
 typedef PRUint32 nsReflowStatus;
 
-#define NS_FRAME_COMPLETE          0            // Note: not a bit!
-#define NS_FRAME_NOT_COMPLETE      0x1
-#define NS_FRAME_REFLOW_NEXTINFLOW 0x2
+#define NS_FRAME_COMPLETE             0       // Note: not a bit!
+#define NS_FRAME_NOT_COMPLETE         0x1
+#define NS_FRAME_REFLOW_NEXTINFLOW    0x2
+#define NS_FRAME_OVERFLOW_INCOMPLETE  0x4
 
 #define NS_FRAME_IS_COMPLETE(status) \
   (0 == ((status) & NS_FRAME_NOT_COMPLETE))
 
 #define NS_FRAME_IS_NOT_COMPLETE(status) \
   (0 != ((status) & NS_FRAME_NOT_COMPLETE))
+
+#define NS_FRAME_OVERFLOW_IS_INCOMPLETE(status) \
+  (0 != ((status) & NS_FRAME_OVERFLOW_INCOMPLETE))
+
+#define NS_FRAME_IS_FULLY_COMPLETE(status) \
+  (NS_FRAME_IS_COMPLETE(status) && !NS_FRAME_OVERFLOW_IS_INCOMPLETE(status))
+
+// These macros set or switch incompete statuses without touching th
+// NS_FRAME_REFLOW_NEXTINFLOW bit.
+#define NS_FRAME_SET_INCOMPLETE(status) \
+  status = status & ~NS_FRAME_OVERFLOW_INCOMPLETE | NS_FRAME_NOT_COMPLETE
+
+#define NS_FRAME_SET_OVERFLOW_INCOMPLETE(status) \
+  status = status & ~NS_FRAME_NOT_COMPLETE | NS_FRAME_OVERFLOW_INCOMPLETE
+
+// Combines two statuses and returns the most severe bits of the pair
+#define NS_FRAME_MERGE_INCOMPLETE(status1, status2)        \
+  ( (NS_FRAME_REFLOW_NEXTINFLOW & (status1 | status2))     \
+  | ( (NS_FRAME_NOT_COMPLETE & (status1 | status2))        \
+    ? NS_FRAME_NOT_COMPLETE                                \
+    : NS_FRAME_OVERFLOW_INCOMPLETE & (status1 | status2)   \
+    )                                                      \
+  )
 
 // This macro tests to see if an nsReflowStatus is an error value
 // or just a regular return value
@@ -1463,6 +1509,7 @@ public:
     // requires nsHTMLReflowState::mLineLayout.
     eLineParticipant =                  1 << 6,
     eXULBox =                           1 << 7,
+    eCanContainOverflowContainers =     1 << 8,
 
 
     // These are to allow nsFrame::Init to assert that IsFrameOfType

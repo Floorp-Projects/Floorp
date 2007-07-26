@@ -320,6 +320,7 @@ GK_ATOM(error, "error")
 GK_ATOM(even, "even")
 GK_ATOM(event, "event")
 GK_ATOM(events, "events")
+GK_ATOM(excessOverflowContainersList, "ExcessOverflowContainers-list")
 GK_ATOM(excludeResultPrefixes, "exclude-result-prefixes")
 GK_ATOM(excludes, "excludes")
 GK_ATOM(expr, "expr")
@@ -624,6 +625,7 @@ GK_ATOM(output, "output")
 GK_ATOM(overflow, "overflow")
 GK_ATOM(overflowList, "Overflow-list")
 GK_ATOM(overflowchanged, "overflowchanged")
+GK_ATOM(overflowContainersList, "OverflowContainers-list")
 GK_ATOM(overflowOutOfFlowList, "OverflowOutOfFlow-list")
 GK_ATOM(overlay, "overlay")
 GK_ATOM(overlap, "overlap")
@@ -1461,6 +1463,8 @@ GK_ATOM(maxElementWidthProperty, "MaxElementWidthProperty")  // nscoord*
 GK_ATOM(outOfFlowDirtyRectProperty, "OutOfFlowDirtyRectProperty") // nsRect*
 GK_ATOM(overflowAreaProperty, "OverflowArea")              // nsRect*
 GK_ATOM(overflowProperty, "OverflowProperty")              // list of nsIFrame*
+GK_ATOM(overflowContainersProperty, "OverflowContainersProperty")             // nsFrameList*
+GK_ATOM(excessOverflowContainersProperty, "ExcessOverflowContainersProperty") // nsFrameList*
 GK_ATOM(overflowLinesProperty, "OverflowLinesProperty")    // list of nsLineBox*
 GK_ATOM(overflowOutOfFlowsProperty, "OverflowOutOfFlowsProperty")      // nsFrameList*
 GK_ATOM(overflowPlaceholdersProperty, "OverflowPlaceholdersProperty")  // nsFrameList*

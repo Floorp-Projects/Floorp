@@ -1261,6 +1261,8 @@ nsComboboxControlFrame::SetInitialChildList(nsIAtom*        aListName,
   return rv;
 }
 
+#define NS_COMBO_FRAME_POPUP_LIST_INDEX   (NS_BLOCK_LIST_COUNT)
+
 nsIAtom*
 nsComboboxControlFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
@@ -1268,7 +1270,7 @@ nsComboboxControlFrame::GetAdditionalChildListName(PRInt32 aIndex) const
    // This is necessary because we don't want the listbox to be included in the layout
    // of the combox's children because it would take up space, when it is suppose to
    // be floating above the display.
-  if (aIndex <= NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX) {
+  if (aIndex < NS_BLOCK_LIST_COUNT) {
     return nsAreaFrame::GetAdditionalChildListName(aIndex);
   }
   

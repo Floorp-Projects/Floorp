@@ -7337,7 +7337,7 @@ void nsFrame::DisplayReflowExit(nsPresContext*      aPresContext,
     DR_state->PrettyUC(aMetrics.height, height);
     printf("Reflow d=%s,%s ", width, height);
 
-    if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
+    if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
       printf("status=0x%x", aStatus);
     }
     if (aFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
