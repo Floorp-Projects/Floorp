@@ -66,7 +66,6 @@ struct TableReadClosure
     : reader(aReader), history(aHistory), swapBytes(PR_FALSE),
       byteOrderColumn(-1)
   {
-    const_cast<nsString*>(&voidString)->SetIsVoid(PR_TRUE);
     for (PRUint32 i = 0; i < kColumnCount; ++i) {
       columnIndexes[i] = -1;
     }
@@ -75,9 +74,6 @@ struct TableReadClosure
   // Backpointers to the reader and history we're operating on
   const nsMorkReader *reader;
   nsNavHistory *history;
-
-  // A voided string to use for the user title
-  const nsString voidString;
 
   // Whether we need to swap bytes (file format is other-endian)
   PRBool swapBytes;
@@ -164,7 +160,6 @@ nsMorkHistoryImporter::AddToHistoryCB(const nsCSubstring &aRowID,
 
     history->AddPageWithVisit(uri,
                               nsDependentString(title, titleLength),
-                              data->voidString,
                               values[kHiddenColumn].EqualsLiteral("1"),
                               isTyped, count, transition, date);
   }

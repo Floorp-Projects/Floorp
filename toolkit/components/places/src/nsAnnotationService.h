@@ -115,6 +115,8 @@ protected:
   static const int kAnnoIndex_Flags;
   static const int kAnnoIndex_Expiration;
   static const int kAnnoIndex_Type;
+  static const int kAnnoIndex_DateAdded;
+  static const int kAnnoIndex_LastModified;
 
   nsresult HasAnnotationInternal(PRInt64 aFkId, PRBool aIsBookmarkId,
                                  const nsACString& aName, PRBool* hasAnnotation,

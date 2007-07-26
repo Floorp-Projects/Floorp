@@ -761,8 +761,7 @@ interface nsINavHistoryObserver : nsISupports
    *                          changed. If false, that means the "real" page
    *                          title was changed instead.
    */
-  void onTitleChanged(in nsIURI aURI, in AString aPageTitle,
-                      in AString aUserTitle, in PRBool aUserTitleChanged);
+  void onTitleChanged(in nsIURI aURI, in AString aPageTitle);
 
   /**
    * This page and all of its visits are being deleted. Note: the page may not
@@ -1145,7 +1144,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   nsINavHistoryQueryOptions clone();
 };
 
-[scriptable, uuid(b6751da3-a87c-4991-bb69-3c2289d3e0ff)]
+[scriptable, uuid(ac992686-b98a-40e1-b104-7b1ff8f0c016)]
 interface nsINavHistoryService : nsISupports
 {
   /**
@@ -1193,13 +1192,6 @@ interface nsINavHistoryService : nsISupports
   readonly attribute boolean hasHistoryEntries;
 
   /**
-   * This sets the user-defined title of the page. Silently fails if we have
-   * no knowledge of this page. Set to empty string to clear the user title and
-   * only use the "real" title as declared on the page.
-   */
-  void setPageUserTitle(in nsIURI aURI, in AString aUserTitle);
-
-  /**
    * Gets the original title of the page.
    */
   AString getPageTitle(in nsIURI aURI);
@@ -1231,7 +1223,6 @@ interface nsINavHistoryService : nsISupports
    *
    * @param aURI        Page to add/change.
    * @param aTitle      Title as specified by the page.
-   * @param aUserTitle  Custom title provided by user. Set to NULL if none.
    * @param aVisitCount Number of times this page has been visited. Setting this
    *                    to 0 may make the page invisible in some views.
    * @param aHidden     Whether the page is hidden. If the page has only
@@ -1239,7 +1230,7 @@ interface nsINavHistoryService : nsISupports
    *                    false.
    * @param aTyped      True if this URI has ever been typed.
    */
-  void setPageDetails(in nsIURI aURI, in AString aTitle, in AString aUserTitle,
+  void setPageDetails(in nsIURI aURI, in AString aTitle, 
                       in unsigned long aVisitCount, in boolean aHidden,
                       in boolean aTyped);
 
