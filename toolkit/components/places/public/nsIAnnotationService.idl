@@ -60,39 +60,44 @@ interface nsIAnnotationObserver : nsISupports
     void onItemAnnotationRemoved(in long long aItemId, in AUTF8String aName);
 };
 
-[scriptable, uuid(db773ab7-38c9-4e30-9010-9bd620ceedfb)]
+[scriptable, uuid(ba249b58-346f-42a9-a393-203ae34ec6c4)]
 interface nsIAnnotationService : nsISupports
 {
     /**
      * Valid values for aExpiration, which sets the expiration policy for your
-     * annotation. These times are measured since the last visit date of the
-     * page in question. This means that if you set an annotation with anything
-     * but session expiration, it will not expire so long as the user keeps
-     * visiting the page from time to time.
+     * annotation. The times for the days, weeks and months policies are
+     * measured since the last visit date of the page in question. These 
+     * will not expire so long as the user keeps visiting the page from time
+     * to time.
      */
 
-    /* EXPIRATION IS CURRENTLY UNIMPLEMENTED. This is here as a proposed
-       expiration policy. May be changed. Currently, use 0 for expiration.
-     */
-      // For temporary stuff that can be discarded when the user exists
-    const unsigned short EXPIRE_SESSION = 0;
+    // For annotations that only live as long as the URI is in history
+    // (eg: Has >0 visits).
+    const unsigned short EXPIRE_WITH_HISTORY = 0;
 
-      // for short-lived temporary data that you still want to outlast a session
-    const unsigned short EXPIRE_DAYS = 1;
+    // For data that should never expire. Must be explictly removed.
+    const unsigned short EXPIRE_NEVER = 1;
 
-      // for general page settings, things the user is interested in seeing
-      // if they come back to this page some time in the future.
-    const unsigned short EXPIRE_WEEKS = 2;
+    // For temporary data that can be discarded when the user exits.
+    // Removed at application exit.
+    const unsigned short EXPIRE_SESSION = 2;
 
-      // Something that the user will be interested in seeing in their
-      // history like favicons. If they haven't visited a page in a couple
-      // of months, they probably aren't interested in much other annotation,
-      // the positions of things, or other stuff you create, so put that in
-      // the weeks policy.
-    const unsigned short EXPIRE_MONTHS = 3;
+    // For short-lived temporary data that you still want to outlast a session.
+    // Removed at 7 days.
+    const unsigned short EXPIRE_DAYS = 3;
 
-      // For small, user-entered data like notes that should never expire.
-    const unsigned short EXPIRE_NEVER = 4;
+    // For general page settings, things the user is interested in seeing
+    // if they come back to this page some time in the near future.
+    // Removed at 30 days. 
+    const unsigned short EXPIRE_WEEKS = 4;
+
+    // Something that the user will be interested in seeing in their
+    // history like favicons. If they haven't visited a page in a couple
+    // of months, they probably aren't interested in many other annotations,
+    // the positions of things, or other stuff you create, so put that in
+    // the weeks policy.
+    // Removed at 180 days.
+    const unsigned short EXPIRE_MONTHS = 5;
 
     // type constants
     const unsigned short TYPE_INT32  = 1;
@@ -114,18 +119,17 @@ interface nsIAnnotationService : nsISupports
      * aExpiration is one of EXPIRE_* above. aFlags should be 0 for now, some
      * flags will be defined in the future.
      *
-     * NOTE (NOTE: NOT YET IMPLEMENTED, see bug 319455),: ALL ANNOTATIONS WILL
-     * GET DELETED WHEN THE PAGE IS REMOVED FROM HISTORY,
-     * regardless of expiration date. This means that if you create an
+     * NOTE: ALL ANNOTATIONS WILL GET DELETED WHEN THE PAGE IS REMOVED FROM HISTORY,
+     * UNLESS YOU USE THE EXPIRE_NEVER FLAG. This means that if you create an
      * annotation on a random unvisited URI, it will get deleted when the
-     * browser shuts down.  Otherwise, things can exist in history as
+     * browser shuts down. Otherwise, things can exist in history as
      * annotations but the user has no way of knowing it, potentially violating
      * their privacy expectations about actions such as "Clear history." If
      * there is an important annotation that the user wants to keep, you should
-     * make sure that URL is bookmarked. This will ensure the item is never
-     * completely deleted from the history database.
+     * make sure that you use EXPIRE_NEVER. This will ensure the item is never
+     * completely deleted from the Places database.
      *
-     * The annotation "favicon" is special. favicons are stored in the favicon
+     * The annotation "favicon" is special. Favicons are stored in the favicon
      * service, but are special cased in the protocol handler so they look like
      * annotations. Do not set favicons using this service, it will not work.
      *

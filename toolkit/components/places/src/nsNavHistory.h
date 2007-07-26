@@ -318,7 +318,6 @@ public:
   // aLastVisitDate can be -1 if there is no last visit date to record.
   nsresult AddPageWithVisit(nsIURI *aURI,
                             const nsString &aTitle,
-                            const nsString &aUserTitle,
                             PRBool aHidden, PRBool aTyped,
                             PRInt32 aVisitCount,
                             PRInt32 aLastVisitTransition,
@@ -381,6 +380,7 @@ protected:
   nsresult InitStatements();
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
   nsresult MigrateV3Up(mozIStorageConnection *aDBConn);
+  nsresult MigrateV6Up(mozIStorageConnection *aDBConn);
 
 #ifdef IN_MEMORY_LINKS
   // this is the cache DB in memory used for storing visited URLs
@@ -493,8 +493,7 @@ protected:
 
   void TitleForDomain(const nsCString& domain, nsACString& aTitle);
 
-  nsresult SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
-                                const nsAString& aTitle);
+  nsresult SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle);
 
   nsresult GroupByDay(nsNavHistoryQueryResultNode *aResultNode,
                       const nsCOMArray<nsNavHistoryResultNode>& aSource,
