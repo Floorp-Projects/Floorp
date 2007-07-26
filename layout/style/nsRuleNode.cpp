@@ -24,6 +24,7 @@
  *   Daniel Glazman <glazman@netscape.com>
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   Mats Palmgren <mats.palmgren@bredband.net>
+ *   L. David Baron <dbaron@dbaron.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -2221,12 +2222,12 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
 /* static */ void
 nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
                            nsStyleContext* aContext,
-                           const nsRuleDataFont& aFontData,
                            PRUint8 aGenericFontID, nscoord aMinFontSize,
                            nsStyleFont* aFont)
 {
   // walk up the contexts until a context with the desired generic font
   nsAutoVoidArray contextPath;
+  contextPath.AppendElement(aContext);
   nsStyleContext* higherContext = aContext->GetParent();
   while (higherContext) {
     if (higherContext->GetStyleFont()->mFlags & aGenericFontID) {
@@ -2266,6 +2267,9 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
     ruleData.mFontData = &fontData;
 
     // Trimmed down version of ::WalkRuleTree() to re-apply the style rules
+    // Note that we *do* need to do this for our own data, since what is
+    // in |fontData| in ComputeFontData is only for the rules below
+    // aStartStruct.
     for (nsRuleNode* ruleNode = context->GetRuleNode(); ruleNode;
          ruleNode = ruleNode->GetParent()) {
       if (ruleNode->mNoneBits & fontBit)
@@ -2281,7 +2285,11 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
     }
 
     // Compute the delta from the information that the rules specified
-    fontData.mFamily.Reset(); // avoid unnecessary operations in SetFont()
+
+    // Avoid unnecessary operations in SetFont().  But we care if it's
+    // the final value that we're computing.
+    if (i != 0)
+      fontData.mFamily.Reset();
 
     nsRuleNode::SetFont(aPresContext, context, aMinFontSize,
                         aGenericFontID, fontData, &parentFont, aFont, dummy);
@@ -2295,12 +2303,6 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
     parentFont.mFont = aFont->mFont;
     parentFont.mSize = aFont->mSize;
   }
-
-  // Finish off by applying our own rules. In this case, aFontData
-  // already has the current cascading information that we want. We
-  // can just compute the delta from the parent.
-  nsRuleNode::SetFont(aPresContext, aContext, aMinFontSize,
-                      aGenericFontID, aFontData, &parentFont, aFont, dummy);
 }
 
 static PRBool ExtractGeneric(const nsString& aFamily, PRBool aGeneric,
@@ -2348,6 +2350,8 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
 
   // Figure out if we are a generic font
   PRUint8 generic = kGenericFont_NONE;
+  // XXXldb What if we would have had a string if we hadn't been doing
+  // the optimization with a non-null aStartStruct?
   if (eCSSUnit_String == fontData.mFamily.GetUnit()) {
     fontData.mFamily.GetStringValue(font->mFont.name);
     // XXXldb Do we want to extract the generic for this if it's not only a
@@ -2387,7 +2391,7 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
   else {
     // re-calculate the font as a generic font
     inherited = PR_TRUE;
-    nsRuleNode::SetGenericFont(mPresContext, aContext, fontData, generic,
+    nsRuleNode::SetGenericFont(mPresContext, aContext, generic,
                                minimumFontSize, font);
   }
 
