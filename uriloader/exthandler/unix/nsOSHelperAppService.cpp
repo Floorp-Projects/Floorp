@@ -42,6 +42,7 @@
 #include <sys/stat.h>
 
 #include "nsOSHelperAppService.h"
+#include "nsMIMEInfoUnix.h"
 #ifdef MOZ_WIDGET_GTK2
 #include "nsGNOMERegistry.h"
 #endif
