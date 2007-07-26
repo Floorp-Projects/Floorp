@@ -56,7 +56,7 @@ static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
 NS_IMPL_ISUPPORTS5(nsCrossSiteListenerProxy, nsIStreamListener,
                    nsIRequestObserver, nsIContentSink, nsIXMLContentSink,
-                   nsIExpatSink);
+                   nsIExpatSink)
 
 nsCrossSiteListenerProxy::nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
                                                    nsIPrincipal* aRequestingPrincipal)
