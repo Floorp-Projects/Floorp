@@ -112,8 +112,9 @@ class AutoResetStatement
 class EvictionObserver
 {
   public:
-    EvictionObserver(mozIStorageConnection *db)
-      : mDB(db)
+  EvictionObserver(mozIStorageConnection *db,
+                   nsOfflineCacheEvictionFunction *evictionFunction)
+    : mDB(db), mEvictionFunction(evictionFunction)
     {
       mDB->ExecuteSimpleSQL(
           NS_LITERAL_CSTRING("CREATE TEMP TRIGGER cache_on_delete AFTER DELETE"
@@ -121,16 +122,21 @@ class EvictionObserver
                              " cache_eviction_observer("
                              "  OLD.key, OLD.generation);"
                              " END;"));
+      mEvictionFunction->Reset();
     }
 
     ~EvictionObserver()
     {
       mDB->ExecuteSimpleSQL(
         NS_LITERAL_CSTRING("DROP TRIGGER cache_on_delete;"));
+      mEvictionFunction->Reset();
     }
+
+    void Apply() { return mEvictionFunction->Apply(); }
 
   private:
     mozIStorageConnection *mDB;
+    nsRefPtr<nsOfflineCacheEvictionFunction> mEvictionFunction;
 };
 
 #define DCACHE_HASH_MAX  LL_MAXINT
@@ -156,20 +162,6 @@ DCacheHash(const char * key)
 /******************************************************************************
  * nsOfflineCacheEvictionFunction
  */
-
-class nsOfflineCacheEvictionFunction : public mozIStorageFunction {
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_MOZISTORAGEFUNCTION
-
-  nsOfflineCacheEvictionFunction(nsOfflineCacheDevice *device)
-    : mDevice(device)
-  {}
-
-private:
-  nsOfflineCacheDevice *mDevice;
-
-};
 
 NS_IMPL_ISUPPORTS1(nsOfflineCacheEvictionFunction, mozIStorageFunction)
 
@@ -201,8 +193,8 @@ GetCacheDataFile(nsIFile *cacheDir, const char *key,
 NS_IMETHODIMP
 nsOfflineCacheEvictionFunction::OnFunctionCall(mozIStorageValueArray *values, nsIVariant **_retval)
 {
-  LOG(("nsOfflineCacheDevice::EvictionObserver\n"));
-  
+  LOG(("nsOfflineCacheEvictionFunction::OnFunctionCall\n"));
+
   *_retval = nsnull;
 
   PRUint32 numEntries;
@@ -224,15 +216,27 @@ nsOfflineCacheEvictionFunction::OnFunctionCall(mozIStorageValueArray *values, ns
     return rv;
   }
 
-#if defined(PR_LOGGING)
-  nsCAutoString path;
-  file->GetNativePath(path);
-  LOG(("  removing %s\n", path.get()));
-#endif
-
-  file->Remove(PR_FALSE);
+  mItems.AppendObject(file);
 
   return NS_OK;
+}
+
+void
+nsOfflineCacheEvictionFunction::Apply()
+{
+  LOG(("nsOfflineCacheEvictionFunction::Apply\n"));
+
+  for (PRInt32 i = 0; i < mItems.Count(); i++) {
+#if defined(PR_LOGGING)
+    nsCAutoString path;
+    mItems[i]->GetNativePath(path);
+    LOG(("  removing %s\n", path.get()));
+#endif
+
+    mItems[i]->Remove(PR_FALSE);
+  }
+
+  Reset();
 }
 
 /******************************************************************************
@@ -761,11 +765,10 @@ nsOfflineCacheDevice::Init()
                          " ON moz_cache (ClientID, Key);"));
   // maybe the index already exists, so don't bother checking for errors.
 
-  nsCOMPtr<mozIStorageFunction> evictionFunction =
-    new nsOfflineCacheEvictionFunction(this);
-  if (!evictionFunction) return NS_ERROR_OUT_OF_MEMORY;
+  mEvictionFunction = new nsOfflineCacheEvictionFunction(this);
+  if (!mEvictionFunction) return NS_ERROR_OUT_OF_MEMORY;
 
-  rv = mDB->CreateFunction(NS_LITERAL_CSTRING("cache_eviction_observer"), 2, evictionFunction);
+  rv = mDB->CreateFunction(NS_LITERAL_CSTRING("cache_eviction_observer"), 2, mEvictionFunction);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create all (most) of our statements up front
@@ -792,6 +795,7 @@ nsOfflineCacheDevice::Init()
     StatementSql ( mStatement_ListOwners,        "SELECT DISTINCT Domain, URI FROM moz_cache_owners WHERE ClientID = ?;"),
     StatementSql ( mStatement_ListOwnerDomains,  "SELECT DISTINCT Domain FROM moz_cache_owners WHERE ClientID = ?;"),
     StatementSql ( mStatement_ListOwnerURIs,     "SELECT DISTINCT URI FROM moz_cache_owners WHERE ClientID = ? AND Domain = ?;"),
+    StatementSql ( mStatement_DeleteConflicts,   "DELETE FROM moz_cache WHERE rowid IN (SELECT old.rowid FROM moz_cache AS old, moz_cache AS new WHERE old.Key = new.Key AND old.ClientID = ? AND new.ClientID = ?)"),
     StatementSql ( mStatement_DeleteUnowned,     "DELETE FROM moz_cache WHERE rowid IN (SELECT moz_cache.rowid FROM moz_cache LEFT OUTER JOIN moz_cache_owners ON (moz_cache.ClientID = moz_cache_owners.ClientID AND moz_cache.Key = moz_cache_owners.Key) WHERE moz_cache.ClientID = ? AND moz_cache_owners.Domain ISNULL);" ),
     StatementSql ( mStatement_SwapClientID,       "UPDATE OR REPLACE moz_cache SET ClientID = ? WHERE ClientID = ?;")
   };
@@ -810,12 +814,14 @@ nsOfflineCacheDevice::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Clear up dangling temporary sessions
-  EvictionObserver evictionObserver(mDB);
+  EvictionObserver evictionObserver(mDB, mEvictionFunction);
 
   rv = mDB->ExecuteSimpleSQL(
     NS_LITERAL_CSTRING("DELETE FROM moz_cache"
                        " WHERE (ClientID GLOB \"TempClient*\")"));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  evictionObserver.Apply();
 
   return NS_OK;
 }
@@ -826,6 +832,8 @@ nsOfflineCacheDevice::Shutdown()
   NS_ENSURE_TRUE(mDB, NS_ERROR_NOT_INITIALIZED);
 
   mDB = 0;
+  mEvictionFunction = 0;
+
   return NS_OK;
 }
 
@@ -1239,7 +1247,7 @@ nsOfflineCacheDevice::EvictEntries(const char *clientID)
 
   // need trigger to fire user defined function after a row is deleted
   // so we can delete the corresponding data file.
-  EvictionObserver evictionObserver(mDB);
+  EvictionObserver evictionObserver(mDB, mEvictionFunction);
 
   const char *deleteCmd;
   if (clientID)
@@ -1259,6 +1267,8 @@ nsOfflineCacheDevice::EvictEntries(const char *clientID)
   if (clientID)
     PR_smprintf_free((char *) deleteCmd);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  evictionObserver.Apply();
 
   return NS_OK;
 }
@@ -1474,14 +1484,18 @@ nsresult
 nsOfflineCacheDevice::EvictUnownedEntries(const char *clientID)
 {
   LOG(("nsOfflineCacheDevice::EvictUnownedEntries [cid=%s]\n", clientID));
-  EvictionObserver evictionObserver(mDB);
+  EvictionObserver evictionObserver(mDB, mEvictionFunction);
 
   AutoResetStatement statement(mStatement_DeleteUnowned);
   nsresult rv = statement->BindUTF8StringParameter(
                                               0, nsDependentCString(clientID));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return statement->Execute();
+  rv = statement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  evictionObserver.Apply();
+  return NS_OK;
 }
 
 nsresult
@@ -1547,7 +1561,17 @@ nsOfflineCacheDevice::MergeTemporaryClientID(const char *clientID,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  EvictionObserver evictionObserver(mDB);
+  EvictionObserver evictionObserver(mDB, mEvictionFunction);
+
+  AutoResetStatement deleteStatement(mStatement_DeleteConflicts);
+  rv = deleteStatement->BindUTF8StringParameter(
+                                          0, nsDependentCString(clientID));
+  rv |= deleteStatement->BindUTF8StringParameter(
+                                          1, nsDependentCString(fromClientID));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = deleteStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   AutoResetStatement swapStatement(mStatement_SwapClientID);
   rv = swapStatement->BindUTF8StringParameter(
@@ -1559,7 +1583,12 @@ nsOfflineCacheDevice::MergeTemporaryClientID(const char *clientID,
   rv = swapStatement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return transaction.Commit();
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  evictionObserver.Apply();
+
+  return NS_OK;
 }
 
 /**
