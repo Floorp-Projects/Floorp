@@ -265,11 +265,9 @@
           this._protocol.hidden = false;
           this._presentationBox.hidden = false;
           this._prePath.width = "";
-          this.removeAttribute("protocolhidden");
           if (this._protocolHidden) {
             this._prePath.width = this._prePath.boxObject.width;
             this._protocol.hidden = true;
-            this.setAttribute("protocolhidden","true");
           }
         ]]></body>
       </method>
