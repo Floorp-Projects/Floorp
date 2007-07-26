@@ -138,6 +138,9 @@ private:
 
   mozIStorageConnection* DBConn() { return History()->GetStorageConnection(); }
 
+  nsString mGUIDBase;
+  PRInt32 mItemCount;
+
   nsMaybeWeakPtrArray<nsINavBookmarkObserver> mObservers;
   PRInt64 mRoot;
   PRInt64 mBookmarksRoot;
@@ -200,6 +203,8 @@ private:
   static const PRInt32 kGetItemPropertiesIndex_FolderType;
   static const PRInt32 kGetItemPropertiesIndex_DateAdded;
   static const PRInt32 kGetItemPropertiesIndex_LastModified;
+
+  nsCOMPtr<mozIStorageStatement> mDBGetItemIdForGUID;
 
   nsCOMPtr<mozIStorageStatement> mDBGetRedirectDestinations;
 
