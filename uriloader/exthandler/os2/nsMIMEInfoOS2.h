@@ -49,9 +49,9 @@ class nsMIMEInfoOS2 : public nsMIMEInfoImpl
     virtual ~nsMIMEInfoOS2();
 
     NS_IMETHOD LaunchWithURI(nsIURI* aURI);
-
-#ifdef DEBUG
   protected:
+    virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI);
+#ifdef DEBUG
     virtual NS_HIDDEN_(nsresult) LaunchDefaultWithFile(nsIFile* aFile) {
       NS_NOTREACHED("Do not call this, use LaunchWithFile");
       return NS_ERROR_UNEXPECTED;

@@ -41,7 +41,7 @@
 
 interface nsIURI;
 interface nsIFile;
-interface nsIPrompt;
+interface nsIInterfaceRequestor;
 
 /**
  * The external protocol service is used for finding and launching
@@ -52,7 +52,7 @@ interface nsIPrompt;
  * handler for a given protocol scheme. And you can ask it to load 
  * the url using the default handler.
  */
-[scriptable, uuid(a49813a4-98b7-4bdb-998c-8bd9704af0c0)]
+[scriptable, uuid(01e9ce6e-1c81-4f1a-b128-2f2526ec40e3)]
 interface nsIExternalProtocolService : nsISupports
 {
   /**
@@ -76,18 +76,21 @@ interface nsIExternalProtocolService : nsISupports
 
   /**
    * Used to load a url via an external protocol handler (if one exists)
+   *
    * @param aURL The url to load
+   * @deprecated Use LoadURI instead (See Bug 389565 for removal)
    */
-  void loadUrl (in nsIURI aURL);
+   void loadUrl (in nsIURI aURL);
 
   /**
    * Used to load a URI via an external application. Might prompt the user for
-   * permission to load the external application. Replaces loadUrl()
+   * permission to load the external application.
    *
-   * @param aURI    The URI to load
-   * @param aPrompt If null we grab one from windowwatcher if we need it
+   * @param aURI           The URI to load
+   * @param aWindowContext The parent window to open the dialog with.
    */
-  void loadURI(in nsIURI aURI, in nsIPrompt aPrompt);
+  void loadURI(in nsIURI aURI,
+               [optional] in nsIInterfaceRequestor aWindowContext);
 
   /**
    * Gets a human-readable description for the application responsible for

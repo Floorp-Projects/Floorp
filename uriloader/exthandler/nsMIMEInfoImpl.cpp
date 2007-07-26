@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=4 sw=4 sts=4 et: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -364,6 +364,9 @@ nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI)
     return LaunchWithIProcess(executable, docToLoad);
   }
   else if (mPreferredAction == useSystemDefault) {
+    if (mClass == eProtocolInfo)
+      return LoadUriInternal(aURI);
+
     rv = GetLocalFileFromURI(aURI, getter_AddRefs(docToLoad));
     NS_ENSURE_SUCCESS(rv, rv);
 

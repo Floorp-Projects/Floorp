@@ -1,0 +1,3 @@
+richlistitem[type="handler"] {
+  -moz-binding: url('chrome://mozapps/content/handling/handler.xml#handler');
+}

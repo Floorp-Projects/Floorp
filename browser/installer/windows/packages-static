@@ -234,6 +234,7 @@ bin\components\nsLivemarkService.js
 bin\components\nsTaggingService.js
 bin\components\nsDefaultCLH.js
 bin\components\nsContentPrefService.js
+bin\components\nsContentDispatchChooser.js
 
 ; Modules
 bin\modules\*
