@@ -2572,6 +2572,24 @@ DocumentViewerImpl::GetTextZoom(float* aTextZoom)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+DocumentViewerImpl::SetFullZoom(float aFullZoom)
+{
+  if (mPresContext) {
+      mPresContext->SetFullZoom(aFullZoom);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::GetFullZoom(float* aFullZoom)
+{
+  NS_ENSURE_ARG_POINTER(aFullZoom);
+  *aFullZoom = mPresContext ? mPresContext->GetFullZoom() : 1.0;
+  return NS_OK;
+}
+
 static void
 SetChildAuthorStyleDisabled(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {

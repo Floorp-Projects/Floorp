@@ -1073,9 +1073,23 @@ nsPresContext::GetDefaultFontExternal(PRUint8 aFontID) const
 }
 
 void
-nsPresContext::SetTextZoomExternal(float aZoom)
+nsPresContext::SetFullZoom(float aZoom)
 {
-  SetTextZoomInternal(aZoom);
+  nsPresContext* rootPresContext = RootPresContext();
+  if (rootPresContext != this) {
+    NS_WARNING("Zoom set on non-root prescontext");
+    rootPresContext->SetFullZoom(aZoom);
+    return;
+  }
+  nsRect bounds(mVisibleArea);
+  bounds.ScaleRoundPreservingCentersInverse(AppUnitsPerDevPixel());
+  if (!mShell || !mDeviceContext->SetPixelScale(aZoom))
+    return;
+  mDeviceContext->FlushFontCache();
+  nscoord width = DevPixelsToAppUnits(bounds.width);
+  nscoord height = DevPixelsToAppUnits(bounds.height);
+  GetViewManager()->SetWindowDimensions(width, height);
+  ClearStyleDataAndReflow();
 }
 
 imgIRequest*

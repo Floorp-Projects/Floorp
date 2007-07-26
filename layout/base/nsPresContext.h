@@ -462,16 +462,13 @@ public:
   nsIAtom* GetLangGroup() { return mLangGroup; }
 
   float TextZoom() { return mTextZoom; }
-  void SetTextZoomInternal(float aZoom) {
+  void SetTextZoom(float aZoom) {
     mTextZoom = aZoom;
     ClearStyleDataAndReflow();
   }
-  virtual NS_HIDDEN_(void) SetTextZoomExternal(float aZoom);
-#ifdef _IMPL_NS_LAYOUT
-  void SetTextZoom(float aZoom) { SetTextZoomInternal(aZoom); }
-#else
-  void SetTextZoom(float aZoom) { SetTextZoomExternal(aZoom); }
-#endif
+
+  float GetFullZoom() {return mDeviceContext->GetPixelScale();}
+  void SetFullZoom(float aZoom);
 
   static PRInt32 AppUnitsPerCSSPixel() { return nsIDeviceContext::AppUnitsPerCSSPixel(); }
   PRInt32 AppUnitsPerDevPixel() const  { return mDeviceContext->AppUnitsPerDevPixel(); }
