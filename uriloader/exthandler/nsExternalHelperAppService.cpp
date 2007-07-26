@@ -1212,9 +1212,9 @@ nsExternalHelperAppService::LoadURI(nsIURI *aURI,
   spec.ReplaceSubstring("\"", "%22");
   spec.ReplaceSubstring("`", "%60");
   
-  nsCOMPtr<nsIOService> ios(do_GetIOService());
+  nsCOMPtr<nsIIOService> ios(do_GetIOService());
   nsCOMPtr<nsIURI> uri;
-  nsresult rv = ios->NewURI(spec, nsnull, nsnull, gettter_AddRefs(uri));
+  nsresult rv = ios->NewURI(spec, nsnull, nsnull, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString scheme;
@@ -1230,7 +1230,7 @@ nsExternalHelperAppService::LoadURI(nsIURI *aURI,
   nsCAutoString externalPref(kExternalProtocolPrefPrefix);
   externalPref += scheme;
   PRBool allowLoad  = PR_FALSE;
-  nsresult rv = prefs->GetBoolPref(externalPref.get(), &allowLoad);
+  rv = prefs->GetBoolPref(externalPref.get(), &allowLoad);
   if (NS_FAILED(rv))
   {
     // no scheme-specific value, check the default
