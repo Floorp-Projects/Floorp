@@ -1305,6 +1305,12 @@ jsval nsDOMClassInfo::sAddEventListener_id= JSVAL_VOID;
 jsval nsDOMClassInfo::sBaseURIObject_id   = JSVAL_VOID;
 jsval nsDOMClassInfo::sNodePrincipal_id   = JSVAL_VOID;
 jsval nsDOMClassInfo::sDocumentURIObject_id=JSVAL_VOID;
+jsval nsDOMClassInfo::sOncopy_id          = JSVAL_VOID;
+jsval nsDOMClassInfo::sOncut_id           = JSVAL_VOID;
+jsval nsDOMClassInfo::sOnpaste_id         = JSVAL_VOID;
+jsval nsDOMClassInfo::sOnbeforecopy_id    = JSVAL_VOID;
+jsval nsDOMClassInfo::sOnbeforecut_id     = JSVAL_VOID;
+jsval nsDOMClassInfo::sOnbeforepaste_id   = JSVAL_VOID;
 
 const JSClass *nsDOMClassInfo::sObjectClass = nsnull;
 const JSClass *nsDOMClassInfo::sXPCNativeWrapperClass = nsnull;
@@ -1496,6 +1502,12 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sBaseURIObject_id,   cx, "baseURIObject");
   SET_JSVAL_TO_STRING(sNodePrincipal_id,   cx, "nodePrincipal");
   SET_JSVAL_TO_STRING(sDocumentURIObject_id,cx,"documentURIObject");
+  SET_JSVAL_TO_STRING(sOncopy_id,          cx, "oncopy");
+  SET_JSVAL_TO_STRING(sOncut_id,           cx, "oncut");
+  SET_JSVAL_TO_STRING(sOnpaste_id,         cx, "onpaste");
+  SET_JSVAL_TO_STRING(sOnbeforecopy_id,    cx, "oncopy");
+  SET_JSVAL_TO_STRING(sOnbeforecut_id,     cx, "oncut");
+  SET_JSVAL_TO_STRING(sOnbeforepaste_id,   cx, "onpaste");
 
   return NS_OK;
 }
@@ -3972,6 +3984,12 @@ nsDOMClassInfo::ShutDown()
   sBaseURIObject_id   = JSVAL_VOID;
   sNodePrincipal_id   = JSVAL_VOID;
   sDocumentURIObject_id=JSVAL_VOID;
+  sOncopy_id          = JSVAL_VOID;
+  sOncut_id           = JSVAL_VOID;
+  sOnpaste_id         = JSVAL_VOID;
+  sOnbeforecopy_id    = JSVAL_VOID;
+  sOnbeforecut_id     = JSVAL_VOID;
+  sOnbeforepaste_id   = JSVAL_VOID;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
@@ -6629,7 +6647,10 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
     return id == sOnabort_id;
   case 'b' :
     return (id == sOnbeforeunload_id ||
-            id == sOnblur_id);
+            id == sOnblur_id         ||
+            id == sOnbeforecopy_id   ||
+            id == sOnbeforecut_id    ||
+            id == sOnbeforepaste_id);
   case 'e' :
     return id == sOnerror_id;
   case 'f' :
@@ -6637,7 +6658,9 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
   case 'c' :
     return (id == sOnchange_id       ||
             id == sOnclick_id        ||
-            id == sOncontextmenu_id);
+            id == sOncontextmenu_id  ||
+            id == sOncopy_id         ||
+            id == sOncut_id);
   case 'd' :
     return id == sOndblclick_id;
   case 'l' :
@@ -6645,7 +6668,8 @@ nsEventReceiverSH::ReallyIsEventName(jsval id, jschar aFirstChar)
   case 'p' :
     return (id == sOnpaint_id        ||
             id == sOnpageshow_id     ||
-            id == sOnpagehide_id);
+            id == sOnpagehide_id     ||
+            id == sOnpaste_id);
   case 'k' :
     return (id == sOnkeydown_id      ||
             id == sOnkeypress_id     ||
