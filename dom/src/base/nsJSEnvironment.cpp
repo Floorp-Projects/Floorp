@@ -992,8 +992,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
   mBranchCallbackTime = LL_ZERO;
   mProcessingScriptTag = PR_FALSE;
   mIsTrackingChromeCodeTime = PR_FALSE;
-
-  InvalidateContextAndWrapperCache();
 }
 
 nsJSContext::~nsJSContext()
@@ -2220,8 +2218,6 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 
   if (!mContext)
     return NS_ERROR_OUT_OF_MEMORY;
-
-  InvalidateContextAndWrapperCache();
 
   nsresult rv;
 

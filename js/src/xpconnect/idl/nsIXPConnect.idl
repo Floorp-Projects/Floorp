@@ -443,7 +443,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(33f03128-e8a0-4906-8cdb-79c8c1144009)]
+[uuid(52fc2ff3-c0ea-46c1-9105-655283c361ff)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -717,4 +717,14 @@ interface nsIXPConnect : nsISupports
     [noscript] JSVal evalInSandboxObject(in AString source, in JSContextPtr cx,
                                          in nsIXPConnectJSObjectHolder sandbox,
                                          in PRBool returnStringOnly);
+
+    /**
+     * Wrap a jsval in a cross origin wrapper.
+     * @param aJSContext A context to use to create objects.
+     * @param aParent The parent to create the wrapper with.
+     * @param aWrappedObj The object to wrap.
+     */
+    [noscript] JSVal getCrossOriginWrapperForObject(in JSContextPtr aJSContext,
+                                                    in JSObjectPtr aParent,
+                                                    in JSObjectPtr aWrappedObj);
 };

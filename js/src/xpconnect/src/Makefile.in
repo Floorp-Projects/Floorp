@@ -97,6 +97,8 @@ CPPSRCS		= \
 		XPCNativeWrapper.cpp \
 		xpcJSWeakReference.cpp \
 		XPCSafeJSObjectWrapper.cpp \
+		XPCCrossOriginWrapper.cpp \
+		XPCWrapper.cpp \
 		$(NULL)
 ifdef XPC_IDISPATCH_SUPPORT
 CPPSRCS +=	XPCDispObject.cpp	\
