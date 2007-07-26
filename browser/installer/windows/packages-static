@@ -235,6 +235,7 @@ bin\components\nsTaggingService.js
 bin\components\nsDefaultCLH.js
 bin\components\nsContentPrefService.js
 bin\components\nsContentDispatchChooser.js
+bin\components\nsHandlerService.js
 
 ; Modules
 bin\modules\*
