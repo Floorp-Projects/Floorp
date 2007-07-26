@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +13,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is the Metrics extension.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is Google Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,29 +36,42 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-#include "nsIUrlListManager.idl"
+/**
+ * This file contains trivial implementations of the NSS PORT_* functions
+ * that sha256.c uses.
+ */
 
-// A map that contains a string keys mapped to string values.
+#include "prmem.h"
+#include "prerror.h"
+#include "string.h"
 
-[scriptable, uuid(fd1f8334-1859-472d-b01f-4ac6b1121ce4)]
-interface nsIUrlClassifierTable : nsISupports
+void*
+PORT_Alloc(size_t bytes)
 {
-    /**
-     * The name used to identify this table
-     */
-    attribute ACString name;
+  /* Always allocate a non-zero amount of bytes */
+  return (void *)PR_Malloc(bytes ? bytes : 1);
+}
 
-    /**
-     * Set to false if we don't want to update this table.
-     */
-    attribute boolean needsUpdate;
+void
+PORT_Free(void *ptr)
+{
+  if (ptr) {
+    PR_Free(ptr);
+  }
+}
 
-    /**
-     * In the simple case, exists just looks up the string in the
-     * table and call the callback after the query returns with true or
-     * false.  It's possible that something more complex happens
-     * (e.g., canonicalize the url).
-     */
-    void exists(in ACString key, in nsIUrlListManagerCallback cb);
-};
+void
+PORT_ZFree(void *ptr, size_t len)
+{
+  if (ptr) {
+    memset(ptr, 0, len);
+    PR_Free(ptr);
+  }
+}
+
+void
+PORT_SetError(int value)
+{
+  PR_SetError(value, 0);
+  return;
+}

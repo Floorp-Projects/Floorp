@@ -49,32 +49,34 @@ interface nsIUrlClassifierCallback : nsISupports {
  * It provides async methods for querying and updating the database.  As the
  * methods complete, they call the callback function.
  */
-[scriptable, uuid(211d5360-4af6-4a1d-99c1-926d35861eaf)]
+[scriptable, uuid(10928bf5-e18d-4086-854b-6c4006f2b009)]
 interface nsIUrlClassifierDBService : nsISupports
 {
   /**
-   * Looks up a key in the database.  After it finds a value, it calls
-   * callback with the value as the first param.  If the key is not in
-   * the db or the table does not exist, the callback is called with
-   * an empty string parameter.
+   * Looks up a key in the database.
+   *
+   * @param key: The URL to search for.  This URL will be canonicalized
+   *        by the service.
+   * @param c: The callback will be called with a comma-separated list
+   *        of tables to which the key belongs.
+   * @param needsProxy: Should be true if the callback needs to be called
+   *        in the main thread, false if the callback is threadsafe.
    */
-  void exists(in ACString tableName, in ACString key,
-              in nsIUrlClassifierCallback c);
+  void lookup(in ACString spec,
+              in nsIUrlClassifierCallback c,
+              in boolean needsProxy);
 
   /**
-   * Checks to see if the tables exist.  tableNames is a comma separated list
-   * of table names to check.  The callback is called with a comma separated
-   * list of tables that no longer exist (either the db is corrupted or the
-   * user deleted the file).
+   * Lists the tables along with which chunks are available in each table.
+   * This list is in the format of the request body:
+   *   tablename;chunkdata\n
+   *   tablename2;chunkdata2\n
+   *
+   * For example:
+   *   goog-phish-regexp;a:10,14,30-40s:56,67
+   *   goog-white-regexp;a:1-3,5
    */
-  void checkTables(in ACString tableNames, in nsIUrlClassifierCallback c);
-
-  /**
-   * Updates the table in the background.  Calls callback after each table
-   * completes processing with the new table line as the parameter.  This
-   * allows us to keep track of the table version in our main thread.
-   */
-  void updateTables(in ACString updateString, in nsIUrlClassifierCallback c);
+  void getTables(in nsIUrlClassifierCallback c);
 
   ////////////////////////////////////////////////////////////////////////////
   // Incremental update methods.  These are named to match similar methods
@@ -89,10 +91,12 @@ interface nsIUrlClassifierDBService : nsISupports
   // interface, but it's tricky because of XPCOM proxies.
 
   /**
-   * Finish an incremental update.  This commits any pending tables and
-   * calls the callback for each completed table.
+   * Finish an incremental update.  Calls successCallback with the
+   * requested delay before the next update, or failureCallback with a
+   * result code.
    */
-  void finish(in nsIUrlClassifierCallback c);
+  void finish(in nsIUrlClassifierCallback successCallback,
+              in nsIUrlClassifierCallback failureCallback);
 
   /**
    * Cancel an incremental update.  This rolls back and pending changes.
