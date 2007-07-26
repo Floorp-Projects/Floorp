@@ -43,9 +43,8 @@
 #include "nsStringGlue.h"
 
 #define NS_IDOM_SCRIPT_OBJECT_FACTORY_IID   \
-  { /* {38EC7717-6CBE-44a8-B2BB-53F2BA998B31} */ \
-  0x38ec7717, 0x6cbe, 0x44a8, \
-  { 0xb2, 0xbb, 0x53, 0xf2, 0xba, 0x99, 0x8b, 0x31 } }
+{ 0xd5a4f935, 0xe428, 0x47ec, \
+  { 0x8f, 0x36, 0x44, 0x23, 0xfa, 0xa2, 0x21, 0x90 } }
 
 class nsIScriptContext;
 class nsIScriptGlobalObject;
@@ -74,6 +73,7 @@ public:
                                 PRUint32 *aScriptTypeID) = 0;
 
   NS_IMETHOD NewScriptGlobalObject(PRBool aIsChrome,
+                                   PRBool aIsModalContentWindow,
                                    nsIScriptGlobalObject **aGlobal) = 0;
 
   NS_IMETHOD_(nsISupports *) GetClassInfoInstance(nsDOMClassInfoID aID) = 0;
