@@ -877,14 +877,6 @@ public:
   virtual PRInt32 IntrinsicState() const;
 
 protected:
-  /**
-   * Find the form for this element and set aFormControl's form to it
-   * (aFormControl is passed in to avoid QI)
-   *
-   * @param aFormControl the form control to set the form for
-   */
-  void FindAndSetForm();
-
   virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                  const nsAString* aValue, PRBool aNotify);
 

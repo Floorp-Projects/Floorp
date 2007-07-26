@@ -111,6 +111,12 @@
 #include "nsLayoutUtils.h"
 #include "nsContentCreatorFunctions.h"
 
+// If this flag is set on an nsGenericHTMLFormElement, that means that we have
+// added ourselves to our mForm.  It's possible to have a non-null mForm, but
+// not have this flag set.  That happens when the form is set via the content
+// sink.
+#define ADDED_TO_FORM (1 << NODE_TYPE_SPECIFIC_BITS_OFFSET)
+
 class nsINodeInfo;
 class nsIDOMNodeList;
 class nsRuleWalker;
@@ -2726,14 +2732,14 @@ nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
                                   PRBool aRemoveFromForm,
                                   PRBool aNotify)
 {
-  nsAutoString nameVal, idVal;
-
-  if (aForm || (mForm && aRemoveFromForm)) {
-    GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
-    GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
-  }
+  NS_ASSERTION(!mForm || HasFlag(ADDED_TO_FORM),
+               "Form control should have had flag set.");
 
   if (mForm && aRemoveFromForm) {
+    nsAutoString nameVal, idVal;
+    GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
+    GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
+
     mForm->RemoveElement(this, aNotify);
 
     if (!nameVal.IsEmpty()) {
@@ -2743,6 +2749,8 @@ nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
     if (!idVal.IsEmpty()) {
       mForm->RemoveElementFromTable(this, idVal);
     }
+
+    UnsetFlags(ADDED_TO_FORM);
   }
 
   if (aForm) {
@@ -2751,18 +2759,6 @@ nsGenericHTMLFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
     mForm->Release();
   } else {
     mForm = nsnull;
-  }
-
-  if (mForm) {
-    mForm->AddElement(this, aNotify);
-
-    if (!nameVal.IsEmpty()) {
-      mForm->AddElementToTable(this, nameVal);
-    }
-
-    if (!idVal.IsEmpty()) {
-      mForm->AddElementToTable(this, idVal);
-    }
   }
 
   return NS_OK;
@@ -2850,18 +2846,46 @@ nsGenericHTMLFormElement::BindToTree(nsIDocument* aDocument,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
+  if (!aParent) {
+    return NS_OK;
+  }
 
-  if (!mForm && aParent) {
+  PRBool hadForm = (mForm != nsnull);
+  
+  if (!mForm) {
     // We now have a parent, so we may have picked up an ancestor form.  Search
     // for it.  Note that if mForm is already set we don't want to do this,
     // because that means someone (probably the content sink) has already set
     // it to the right value.  Also note that even if being bound here didn't
     // change our parent, we still need to search, since our parent chain
     // probably changed _somewhere_.
-    FindAndSetForm();
+    nsCOMPtr<nsIDOMHTMLFormElement> form = FindForm();
+    if (form) {
+      SetForm(form, PR_FALSE, PR_FALSE);
+    }
   }
+
+  if (mForm && !HasFlag(ADDED_TO_FORM)) {
+    // Now we need to add ourselves to the form
+    nsAutoString nameVal, idVal;
+    GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
+    GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
     
-  return rv;
+    SetFlags(ADDED_TO_FORM);
+
+    // Notify only if we just found this mForm.
+    mForm->AddElement(this, !hadForm);
+    
+    if (!nameVal.IsEmpty()) {
+      mForm->AddElementToTable(this, nameVal);
+    }
+
+    if (!idVal.IsEmpty()) {
+      mForm->AddElementToTable(this, idVal);
+    }
+  }
+
+  return NS_OK;
 }
 
 void
@@ -3016,15 +3040,6 @@ nsGenericHTMLFormElement::IsSubmitControl() const
   return type == NS_FORM_INPUT_SUBMIT ||
          type == NS_FORM_BUTTON_SUBMIT ||
          type == NS_FORM_INPUT_IMAGE;
-}
-
-void
-nsGenericHTMLFormElement::FindAndSetForm()
-{
-  nsCOMPtr<nsIDOMHTMLFormElement> form = FindForm();
-  if (form) {
-    SetForm(form, PR_TRUE, PR_TRUE);  // always succeeds
-  }
 }
 
 PRInt32
