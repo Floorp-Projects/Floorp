@@ -470,6 +470,10 @@ public:
   float GetFullZoom() {return mDeviceContext->GetPixelScale();}
   void SetFullZoom(float aZoom);
 
+  nscoord GetAutoQualityMinFontSize() {
+    return DevPixelsToAppUnits(mAutoQualityMinFontSizePixelsPref);
+  }
+  
   static PRInt32 AppUnitsPerCSSPixel() { return nsIDeviceContext::AppUnitsPerCSSPixel(); }
   PRInt32 AppUnitsPerDevPixel() const  { return mDeviceContext->AppUnitsPerDevPixel(); }
   PRInt32 AppUnitsPerInch() const      { return mDeviceContext->AppUnitsPerInch(); }
@@ -755,6 +759,7 @@ protected:
   nsWeakPtr             mContainer;
 
   float                 mTextZoom;      // Text zoom, defaults to 1.0
+  PRInt32               mAutoQualityMinFontSizePixelsPref;
 
 #ifdef IBMBIDI
   nsBidiPresUtils*      mBidiUtils;

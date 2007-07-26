@@ -65,9 +65,11 @@
 #include "imgIContainer.h"
 #include "gfxRect.h"
 #include "gfxContext.h"
+#include "gfxFont.h"
 #include "nsIImage.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCSSRendering.h"
+#include "nsContentUtils.h"
 
 #ifdef MOZ_SVG_FOREIGNOBJECT
 #include "nsSVGForeignObjectFrame.h"
@@ -2332,4 +2334,39 @@ nsLayoutUtils::FrameHasTransparency(nsIFrame* aFrame) {
   if (bg->mBackgroundClip != NS_STYLE_BG_CLIP_BORDER)
     return PR_TRUE;
   return PR_FALSE;
+}
+
+static PRBool
+IsNonzeroCoord(const nsStyleCoord& aCoord)
+{
+  if (eStyleUnit_Coord == aCoord.GetUnit())
+    return aCoord.GetCoordValue() != 0;
+  return PR_FALSE;
+}
+
+/* static */ PRUint32
+nsLayoutUtils::GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
+                                       const nsStyleText* aStyleText,
+                                       const nsStyleFont* aStyleFont)
+{
+  PRUint32 result = 0;
+  if (IsNonzeroCoord(aStyleText->mLetterSpacing)) {
+    result |= gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES;
+  }
+#ifdef MOZ_SVG
+  switch (aStyleContext->GetStyleSVG()->mTextRendering) {
+  case NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED:
+    result |= gfxTextRunFactory::TEXT_OPTIMIZE_SPEED;
+    break;
+  case NS_STYLE_TEXT_RENDERING_AUTO:
+    if (aStyleFont->mFont.size <
+        aStyleContext->PresContext()->GetAutoQualityMinFontSize()) {
+      result |= gfxTextRunFactory::TEXT_OPTIMIZE_SPEED;
+    }
+    break;
+  default:
+    break;
+  }
+#endif
+  return result;
 }
