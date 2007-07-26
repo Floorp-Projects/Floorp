@@ -351,13 +351,6 @@ protected:
    * Array for the files that should be deleted
    */
   nsCOMArray<nsILocalFile> mTemporaryFilesList;
-
-  /**
-   * OS-specific loading of external URLs
-   */
-  virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI * aURL) = 0;
-  NS_HIDDEN_(PRBool) isExternalLoadOK(nsIURI* aURI, nsIPrompt* aPrompt);
-  NS_HIDDEN_(PRBool) promptForScheme(nsIURI* aURI, nsIPrompt* aPrompt, PRBool *aRemember);
 };
 
 /**

@@ -44,6 +44,7 @@
 #include "nsIVariant.h"
 #include "nsMIMEInfoWin.h"
 #include "nsNetUtil.h"
+#include <shellapi.h>
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsMIMEInfoWin, nsMIMEInfoBase, nsIPropertyBag)
 
@@ -130,5 +131,41 @@ nsMIMEInfoWin::GetProperty(const nsAString& aName, nsIVariant* *_retval)
   }
 
   return NS_OK;
+}
+
+// this implementation was pretty much copied verbatime from 
+// Tony Robinson's code in nsExternalProtocolWin.cpp
+nsresult
+nsMIMEInfoWin::LoadUriInternal(nsIURI * aURL)
+{
+  nsresult rv = NS_OK;
+
+  // 1. Find the default app for this protocol
+  // 2. Set up the command line
+  // 3. Launch the app.
+
+  // For now, we'll just cheat essentially, check for the command line
+  // then just call ShellExecute()!
+
+  if (aURL)
+  {
+    // extract the url spec from the url
+    nsCAutoString urlSpec;
+    aURL->GetAsciiSpec(urlSpec);
+
+    // Some versions of windows (Win2k before SP3, Win XP before SP1)
+    // crash in ShellExecute on long URLs (bug 161357).
+    // IE 5 and 6 support URLS of 2083 chars in length, 2K is safe
+    const PRUint32 maxSafeURL(2048);
+    if (urlSpec.Length() > maxSafeURL)
+      return NS_ERROR_FAILURE;
+
+    LONG r = (LONG) ::ShellExecute(NULL, "open", urlSpec.get(), NULL, NULL, 
+                                   SW_SHOWNORMAL);
+    if (r < 32) 
+      rv = NS_ERROR_FAILURE;
+  }
+
+  return rv;
 }
 

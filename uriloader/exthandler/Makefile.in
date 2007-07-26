@@ -111,6 +111,7 @@ LOCAL_INCLUDES = -I$(srcdir)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 OSHELPER	+= nsGNOMERegistry.cpp
+OSHELPER  += nsMIMEInfoUnix.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
@@ -135,6 +136,7 @@ XPIDLSRCS = \
 	nsIExternalProtocolService.idl \
 	nsIExternalHelperAppService.idl	\
 	nsIHelperAppLauncherDialog.idl \
+	nsIContentDispatchChooser.idl \
 	nsIHandlerService.idl	\
 	$(NULL)
 

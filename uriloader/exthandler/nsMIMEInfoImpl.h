@@ -133,6 +133,13 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     virtual NS_HIDDEN_(nsresult) LaunchDefaultWithFile(nsIFile* aFile) = 0;
 
     /**
+     * Loads the URI with the OS default app.
+     *
+     * @param aURI The URI to pass off to the OS.
+     */
+    virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI) = 0;
+
+    /**
      * This method can be used to launch the file using nsIProcess, with the
      * path of the file being the first parameter to the executable. This is
      * meant as a helper method for implementations of
@@ -201,6 +208,7 @@ class nsMIMEInfoImpl : public nsMIMEInfoBase {
      * App Services; the default application is immutable after it is first set.
      */
     void SetDefaultApplication(nsIFile* aApp) { if (!mDefaultApplication) mDefaultApplication = aApp; }
+
   protected:
     // nsMIMEInfoBase methods
     /**
@@ -209,6 +217,11 @@ class nsMIMEInfoImpl : public nsMIMEInfoBase {
      */
     virtual NS_HIDDEN_(nsresult) LaunchDefaultWithFile(nsIFile* aFile);
 
+    /**
+     * Loads the URI with the OS default app.  This should be overridden by each
+     * OS's implementation.
+     */
+    virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI) = 0;
 
     nsCOMPtr<nsIFile>      mDefaultApplication; ///< default application associated with this type.
 };
