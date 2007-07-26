@@ -1,0 +1,5 @@
+<?access-control allow="foo.com"?>
+<?access-control deny="*" exclude="localhost:8888"?>
+<?access-control deny="ftp://localhost:8888"?>
+<?access-control allow="http://localhost:8888"?>
+<res>hello</res>

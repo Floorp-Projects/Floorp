@@ -847,6 +847,11 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   }
 
   // Security checks
+  if (doc->IsLoadedAsData()) {
+    Fallback(PR_FALSE);
+    return NS_OK;
+  }
+
   // Can't do security checks without a URI - hopefully the plugin will take
   // care of that
   // Null URIs happen when the URL to load is specified via other means than the

@@ -43,7 +43,7 @@
 #include "txForwardContext.h"
 #include "txXMLUtils.h"
 #include "txXSLTFunctions.h"
-#include "txTokenizer.h"
+#include "nsWhitespaceTokenizer.h"
 #ifndef TX_EXE
 #include "nsIContent.h"
 #endif
@@ -289,7 +289,7 @@ txRootPattern::toString(nsAString& aDest)
  */
 txIdPattern::txIdPattern(const nsSubstring& aString)
 {
-    txTokenizer tokenizer(aString);
+    nsWhitespaceTokenizer tokenizer(aString);
     while (tokenizer.hasMoreTokens()) {
         // this can fail, XXX move to a Init(aString) method
         nsCOMPtr<nsIAtom> atom = do_GetAtom(tokenizer.nextToken());
