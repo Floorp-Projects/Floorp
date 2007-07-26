@@ -316,6 +316,12 @@ protected:
   static jsval sBaseURIObject_id;
   static jsval sNodePrincipal_id;
   static jsval sDocumentURIObject_id;
+  static jsval sOncopy_id;
+  static jsval sOncut_id;
+  static jsval sOnpaste_id;
+  static jsval sOnbeforecopy_id;
+  static jsval sOnbeforecut_id;
+  static jsval sOnbeforepaste_id;
 
   static const JSClass *sObjectClass;
   static const JSClass *sXPCNativeWrapperClass;
