@@ -1,4 +1,4 @@
-//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+//* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pamela Greene <pamg.bugs@gmail.com> (original author)
+ *   Daniel Witte <dwitte@stanford.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -42,14 +43,12 @@
 
 #include "nsEffectiveTLDService.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsDataHashtable.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsFileStreams.h"
 #include "nsIFile.h"
 #include "nsIIDNService.h"
 #include "nsNetUtil.h"
-#include "nsString.h"
 
 // The file name of the list of TLD-like names.  A file with this name in the
 // system "res" directory will always be used.  In addition, if a file with
@@ -57,156 +56,60 @@
 // also be used, as though those rules were appended to the system file.
 #define EFF_TLD_FILENAME NS_LITERAL_CSTRING("effective_tld_names.dat")
 
-// Define this as nonzero to eanble logging of the tree state after the file has
-// been loaded.
-#define EFF_TLD_SERVICE_DEBUG 0
-
-/*
-  The list of subdomain rules is stored as a wide tree of SubdomainNodes,
-  primarily to facilitate multiple levels of wildcards.  Each node represents
-  one level of a particular rule in the list, and stores meta-information about
-  the rule it represents as well as a list (hash) of all the subdomains beneath
-  it.
-
-  stopOK: If true, this node marks the end of a rule.
-  exception: If true, this node marks the end of an exception rule.
-
-  For example, if the effective-TLD list contains
-
-     foo.com
-     *.bar.com
-     !baz.bar.com
-
-  then the subdomain tree will look like this (conceptually; the actual order
-  of the nodes in the hashes is not guaranteed):
-
-  +--------------+
-  | com          |
-  | exception: 0 |        +--------------+
-  | stopOK: 0    |        | foo          |
-  | children ----|------> | exception: 0 |
-  +--------------+        | stopOK: 1    |
-                          | children     |
-                          +--------------+
-                          | bar          |
-                          | exception: 0 |        +--------------+
-                          | stopOK: 0    |        | *            |
-                          | children ----|------> | exception: 0 |
-                          +--------------+        | stopOK: 1    |
-                                                  | children     |
-                                                  +--------------+
-                                                  | baz          |
-                                                  | exception: 1 |
-                                                  | stopOK: 1    |
-                                                  | children     |
-                                                  +--------------+
-
-*/
-struct SubdomainNode;
-typedef nsDataHashtable<nsCStringHashKey, SubdomainNode *> SubdomainNodeHash;
-struct SubdomainNode {
-  PRBool exception;
-  PRBool stopOK;
-  SubdomainNodeHash children;
-};
-
-static void EmptyEffectiveTLDTree();
-static nsresult LoadEffectiveTLDFiles();
-static nsresult NormalizeHostname(nsCString &aHostname);
-static PRInt32 FindEarlierDot(const nsACString &aHostname, PRInt32 aDotLoc);
-static SubdomainNode *FindMatchingChildNode(SubdomainNode *parent,
-                                            const nsCSubstring &aSubname,
-                                            PRBool aCreateNewNode);
-
-nsEffectiveTLDService* nsEffectiveTLDService::sInstance = nsnull;
-static SubdomainNode sSubdomainTreeHead;
-
 NS_IMPL_ISUPPORTS1(nsEffectiveTLDService, nsIEffectiveTLDService)
 
 // ----------------------------------------------------------------------
 
-#if defined(EFF_TLD_SERVICE_DEBUG) && EFF_TLD_SERVICE_DEBUG
-// LOG_EFF_TLD_NODE
-//
-// If debugging is enabled, this function is called by LOG_EFF_TLD_TREE to
-// recursively print the current state of the effective-TLD tree.
-PR_STATIC_CALLBACK(PLDHashOperator)
-LOG_EFF_TLD_NODE(const nsACString& aKey, SubdomainNode *aData, void *aLevel)
+#define PL_ARENA_CONST_ALIGN_MASK 3
+#include "plarena.h"
+
+static PLArenaPool *gArena = nsnull;
+
+#define ARENA_SIZE 512
+
+// equivalent to strdup() - does no error checking,
+// we're assuming we're only called with a valid pointer
+static char *
+ArenaStrDup(const char* str, PLArenaPool* aArena)
 {
-  // Dump this node's information.
-  PRInt32 *level = (PRInt32 *) aLevel;
-  for (PRInt32 i = 0; i < *level; i++)    printf("-");
-  if (aData->exception)                   printf("!");
-  if (aData->stopOK)                      printf("^");
-  printf("'%s'\n", PromiseFlatCString(aKey).get());
-
-  // Dump its children's information.
-  PRInt32 newlevel = (*level) + 1;
-  aData->children.EnumerateRead(LOG_EFF_TLD_NODE, &newlevel);
-
-  return PL_DHASH_NEXT;
+  void *mem;
+  PRUint32 size = strlen(str) + 1;
+  PL_ARENA_ALLOCATE(mem, aArena, size);
+  if (mem)
+    memcpy(mem, str, size);
+  return static_cast<char*>(mem);
 }
-#endif // EFF_TLD_SERVICE_DEBUG
 
-// LOG_EFF_TLD_TREE
-//
-// If debugging is enabled, prints the current state of the effective-TLD tree.
-void LOG_EFF_TLD_TREE(const char *msg = "",
-                  SubdomainNode *head = &sSubdomainTreeHead)
+nsDomainEntry::nsDomainEntry(const char *aDomain)
+ : mDomain(ArenaStrDup(aDomain, gArena))
+ , mIsNormal(PR_FALSE)
+ , mIsException(PR_FALSE)
+ , mIsWild(PR_FALSE)
 {
-#if defined(EFF_TLD_SERVICE_DEBUG) && EFF_TLD_SERVICE_DEBUG
-  if (msg && msg != "")
-    printf("%s\n", msg);
-
-  PRInt32 level = 0;
-  head->children.EnumerateRead(LOG_EFF_TLD_NODE, &level);
-#endif // EFF_TLD_SERVICE_DEBUG
-
-  return;
 }
 
 // ----------------------------------------------------------------------
 
-// nsEffectiveTLDService::Init
-//
-// Initializes the root subdomain node and loads the effective-TLD file.
-// Returns NS_OK upon successful completion, propagated errors if any were
-// encountered during the loading of the file and construction of the
-// effective-TLD tree.
 nsresult
 nsEffectiveTLDService::Init()
 {
-  sSubdomainTreeHead.exception = PR_FALSE;
-  sSubdomainTreeHead.stopOK = PR_FALSE;
-  nsresult rv = NS_OK;
-  if (!sSubdomainTreeHead.children.Init())
-    rv = NS_ERROR_OUT_OF_MEMORY;
+  if (!mHash.Init())
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  if (NS_SUCCEEDED(rv))
-    rv = LoadEffectiveTLDFiles();
-
-  // In the event of an error, clear any partially constructed tree.
-  if (NS_FAILED(rv))
-    EmptyEffectiveTLDTree();
-
-  return rv;
+  return LoadEffectiveTLDFiles();
 }
 
-// nsEffectiveTLDService::nsEffectiveTLDService
-//
 nsEffectiveTLDService::nsEffectiveTLDService()
 {
-  NS_ASSERTION(!sInstance, "Multiple effective-TLD services being created");
-  sInstance = this;
 }
 
-// nsEffectiveTLDService::~nsEffectiveTLDService
-//
 nsEffectiveTLDService::~nsEffectiveTLDService()
 {
-  NS_ASSERTION(sInstance == this, "Multiple effective-TLD services exist");
-  EmptyEffectiveTLDTree();
-  sInstance = nsnull;
+  if (gArena) {
+    PL_FinishArenaPool(gArena);
+    delete gArena;
+  }
+  gArena = nsnull;
 }
 
 // nsEffectiveTLDService::getEffectiveTLDLength
@@ -218,21 +121,6 @@ NS_IMETHODIMP
 nsEffectiveTLDService::GetEffectiveTLDLength(const nsACString &aHostname,
                                              PRUint32 *effTLDLength)
 {
-  // Calcluate a default length: either the level-0 TLD, or the whole string
-  // length if no dots are present. Make sure to ignore the trailing dot if one
-  // is there.
-  PRInt32 nameLength = aHostname.Length();
-  PRInt32 trailingDotOffset = (nameLength && aHostname.Last() == '.' ? 1 : 0);
-  PRInt32 defaultTLDLength;
-  PRInt32 dotLoc = FindEarlierDot(aHostname, nameLength - 1 - trailingDotOffset);
-  if (dotLoc < 0) {
-    defaultTLDLength = nameLength;
-  }
-  else {
-    defaultTLDLength = nameLength - dotLoc - 1;
-  }
-  *effTLDLength = static_cast<PRUint32>(defaultTLDLength);
-
   // Create a mutable copy of the hostname and normalize it.  This will fail
   // if the hostname includes invalid characters.
   nsCAutoString normHostname(aHostname);
@@ -240,64 +128,53 @@ nsEffectiveTLDService::GetEffectiveTLDLength(const nsACString &aHostname,
   if (NS_FAILED(rv))
     return rv;
 
-  // Walk the domain tree looking for matches at each level.
-  SubdomainNode *node = &sSubdomainTreeHead;
-  dotLoc = nameLength - trailingDotOffset;
-  while (dotLoc > 0) {
-    PRInt32 nextDotLoc = FindEarlierDot(normHostname, dotLoc - 1);
-    const nsCSubstring &subname = Substring(normHostname, nextDotLoc + 1,
-                                            dotLoc - nextDotLoc - 1);
-    SubdomainNode *child = FindMatchingChildNode(node, subname, false);
-    if (nsnull == child)
-      break;
-    if (child->exception) {
-      // Exception rules use one fewer levels than were matched.
-      *effTLDLength = static_cast<PRUint32>(nameLength - dotLoc - 1);
-      node = child;
+  // chomp any trailing dot, and remember to add it back later
+  PRUint32 trailingDot = normHostname.Last() == '.';
+  if (trailingDot)
+    normHostname.Truncate(normHostname.Length() - 1);
+
+  // walk up the domain tree, most specific to least specific,
+  // looking for matches at each level. note that a given level may
+  // have multiple attributes (e.g. IsWild() and IsNormal()).
+  const char *prevDomain = nsnull;
+  const char *currDomain = normHostname.get();
+  const char *nextDot = strchr(currDomain, '.');
+  const char *end = currDomain + normHostname.Length();
+  while (1) {
+    if (!nextDot) {
+      // we've hit the top domain level; return it by default.
+      *effTLDLength = end - currDomain;
       break;
     }
-    // For a normal match, save the location of the last stop, in case we find
-    // a non-stop match followed by a non-match further along.
-    if (child->stopOK)
-      *effTLDLength = static_cast<PRUint32>(nameLength - nextDotLoc - 1);
-    node = child;
-    dotLoc = nextDotLoc;
+
+    nsDomainEntry *entry = mHash.GetEntry(currDomain);
+    if (entry) {
+      if (entry->IsWild() && prevDomain) {
+        // wildcard rules imply an eTLD one level inferior to the match.
+        *effTLDLength = end - prevDomain;
+        break;
+
+      } else if (entry->IsNormal()) {
+        // specific match
+        *effTLDLength = end - currDomain;
+        break;
+
+      } else if (entry->IsException()) {
+        // exception rules imply an eTLD one level superior to the match.
+        *effTLDLength = end - nextDot - 1;
+        break;
+      }
+    }
+
+    prevDomain = currDomain;
+    currDomain = nextDot + 1;
+    nextDot = strchr(currDomain, '.');
   }
+
+  // add on the trailing dot, if applicable
+  *effTLDLength += trailingDot;
 
   return NS_OK;
-}
-
-// ----------------------------------------------------------------------
-
-PR_STATIC_CALLBACK(PLDHashOperator)
-DeleteSubdomainNode(const nsACString& aKey, SubdomainNode *aData, void *aUser)
-{
-  // Neither aData nor its children should ever be null in a properly
-  // constructed tree, but this function may also be called to clear a tree
-  // that encountered errors during initialization.
-  if (nsnull != aData && aData->children.IsInitialized()) {
-    // Delete this node's descendants.
-    aData->children.EnumerateRead(DeleteSubdomainNode, nsnull);
-
-    // Delete this node's hash of children.
-    aData->children.Clear();
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-// EmptyEffectiveTLDTree
-//
-// Release the memory allocated by the static effective-TLD tree and reset the
-// semaphore to indicate that the tree is not loaded.
-void
-EmptyEffectiveTLDTree()
-{
-  if (sSubdomainTreeHead.children.IsInitialized()) {
-    sSubdomainTreeHead.children.EnumerateRead(DeleteSubdomainNode, nsnull);
-    sSubdomainTreeHead.children.Clear();
-  }
-  return;
 }
 
 // NormalizeHostname
@@ -305,169 +182,73 @@ EmptyEffectiveTLDTree()
 // Normalizes characters of hostname. ASCII names are lower-cased, and names
 // using other characters are normalized with nsIIDNService::Normalize, which
 // follows RFC 3454.
-nsresult NormalizeHostname(nsCString &aHostname)
+nsresult
+nsEffectiveTLDService::NormalizeHostname(nsCString &aHostname)
 {
-  nsresult rv = NS_OK;
-
   if (IsASCII(aHostname)) {
     ToLowerCase(aHostname);
-  }
-  else {
-    nsCOMPtr<nsIIDNService> idnServ = do_GetService(NS_IDNSERVICE_CONTRACTID);
-    if (idnServ)
-      rv = idnServ->Normalize(aHostname, aHostname);
+    return NS_OK;
   }
 
-  return rv;
-}
-
-// ----------------------------------------------------------------------
-
-// FillStringInformation
-//
-// Fills a start pointer and length for the given string.
-void
-FillStringInformation(const nsACString &aString, const char **start,
-                      PRUint32 *length)
-{
-  nsACString::const_iterator iter;
-  aString.BeginReading(iter);
-  *start = iter.get();
-  *length = iter.size_forward();
-  return;
-}
-
-// FindEarlierDot
-//
-// Finds the byte location of the next dot (.) at or earlier in the string than
-// the given aDotLoc.  Returns -1 if no more dots are found.
-PRInt32
-FindEarlierDot(const nsACString &aHostname, PRInt32 aDotLoc)
-{
-  if (aDotLoc < 0)
-    return -1;
-
-  // Searching for '.' one byte at a time is fine since UTF-8 is a superset of
-  // 7-bit ASCII.
-  const char *start;
-  PRUint32 length;
-  FillStringInformation(aHostname, &start, &length);
-  PRInt32 endLoc = length - 1;
-
-  if (aDotLoc < endLoc)
-    endLoc = aDotLoc;
-  for (const char *where = start + endLoc; where >= start; --where) {
-    if (*where == '.')
-      return (where - start);
+  if (!mIDNService) {
+    nsresult rv;
+    mIDNService = do_GetService(NS_IDNSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return -1;
-}
-
-// FindEndOfName
-//
-// Finds the byte loaction of the first space or tab in the string, or the
-// length of the string (i.e., one past its end) if no spaces or tabs are found.
-PRInt32
-FindEndOfName(const nsACString &aHostname) {
-  // Searching for a space or tab one byte at a time is fine since UTF-8 is a
-  // superset of 7-bit ASCII.
-  const char *start;
-  PRUint32 length;
-  FillStringInformation(aHostname, &start, &length);
-
-  for (const char *where = start; where < start + length; ++where) {
-    if (*where == ' ' || *where == '\t')
-      return (where - start);
-  }
-
-  return length;
-}
-
-// FindMatchingChildNode
-//
-// Given a parent node and a candidate subname, searches the parent's children
-// for a matching subdomain and returns a pointer to the matching node if one
-// was found.  If no exact match was found and aCreateNewNode is true, creates
-// a new child node for the given subname and returns that, or nsnull if an
-// error was encountered (typically because of memory allocation failure) while
-// creating the new child.
-//
-// If no exact match was found and aCreateNewNode is false, looks for a
-// wildcard node (*) instead.  If no wildcard node is found either, returns
-// nsnull.
-//
-// Typically, aCreateNewNode will be true when the subdomain tree is being
-// built, and false when it is being searched to determine a hostname's
-// effective TLD.
-SubdomainNode *
-FindMatchingChildNode(SubdomainNode *parent, const nsCSubstring &aSubname,
-                      PRBool aCreateNewNode)
-{
-  // Make a mutable copy of the name in case we need to strip ! from the start.
-  nsCAutoString name(aSubname);
-  PRBool exception = PR_FALSE;
-
-  // Is this node an exception?
-  if (name.Length() > 0 && name.First() == '!') {
-    exception = PR_TRUE;
-    name.Cut(0, 1);
-  }
-
-  // Look for an exact match.
-  SubdomainNode *result = nsnull;
-  SubdomainNode *match;
-  if (parent->children.Get(name, &match)) {
-    result = match;
-  }
-
-  // If the subname wasn't found, optionally create it.
-  else if (aCreateNewNode) {
-    SubdomainNode *node = new SubdomainNode;
-    if (node) {
-      node->exception = exception;
-      node->stopOK = PR_FALSE;
-      if (node->children.Init() && parent->children.Put(name, node))
-        result = node;
-    }
-  }
-
-  // Otherwise, if we're not making new nodes, look for a wildcard child.
-  else if (parent->children.Get(NS_LITERAL_CSTRING("*"), &match)) {
-    result = match;
-  }
-
-  return result;
+  return mIDNService->Normalize(aHostname, aHostname);
 }
 
 // AddEffectiveTLDEntry
 //
-// Adds the given domain name rule to the effective-TLD tree.
+// Adds the given domain name rule to the effective-TLD hash.
 //
-// CAUTION: As a side effect, the domain name rule will be normalized: in the
-// case of ASCII, it will be lower-cased; otherwise, it will be normalized as
-// an IDN.
+// CAUTION: As a side effect, the domain name rule will be normalized.
+// see NormalizeHostname().
 nsresult
-AddEffectiveTLDEntry(nsCString &aDomainName) {
-  SubdomainNode *node = &sSubdomainTreeHead;
+nsEffectiveTLDService::AddEffectiveTLDEntry(nsCString &aDomainName)
+{
+  // lazily init the arena pool
+  if (!gArena) {
+    gArena = new PLArenaPool;
+    NS_ENSURE_TRUE(gArena, NS_ERROR_OUT_OF_MEMORY);
+    PL_INIT_ARENA_POOL(gArena, "eTLDArena", ARENA_SIZE);
+  }
+
+  PRBool isException = PR_FALSE, isWild = PR_FALSE;
+
+  // Is this node an exception?
+  if (aDomainName.First() == '!') {
+    isException = PR_TRUE;
+    aDomainName.Cut(0, 1);
+
+  // ... or wild?
+  } else if (StringBeginsWith(aDomainName, NS_LITERAL_CSTRING("*."))) {
+    isWild = PR_TRUE;
+    aDomainName.Cut(0, 2);
+
+    NS_ASSERTION(!StringBeginsWith(aDomainName, NS_LITERAL_CSTRING("*.")),
+                 "only one wildcard level supported!");
+  }
 
   // Normalize the domain name.
   nsresult rv = NormalizeHostname(aDomainName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 dotLoc = FindEndOfName(aDomainName);
-  while (dotLoc > 0) {
-    PRInt32 nextDotLoc = FindEarlierDot(aDomainName, dotLoc - 1);
-    const nsCSubstring &subname = Substring(aDomainName, nextDotLoc + 1,
-                                            dotLoc - nextDotLoc - 1);
-    dotLoc = nextDotLoc;
-    node = FindMatchingChildNode(node, subname, true);
-    if (!node)
-      return NS_ERROR_OUT_OF_MEMORY;
+  nsDomainEntry *entry = mHash.PutEntry(aDomainName.get());
+  NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
+
+  // check for arena string alloc failure
+  if (!entry->GetKey()) {
+    mHash.RawRemoveEntry(entry);
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  // The last node in an entry is by definition a stop-OK node.
-  node->stopOK = true;
+  // add the new flags, without stomping existing ones
+  entry->IsWild() |= isWild;
+  entry->IsException() |= isException;
+  // note: isWild also implies isNormal (e.g. *.co.nz also implies the co.nz eTLD)
+  entry->IsNormal() |= isWild || !isException;
 
   return NS_OK;
 }
@@ -516,12 +297,29 @@ LocateEffectiveTLDFile(nsCOMPtr<nsIFile>& foundFile, PRBool aUseProfile)
   return rv;
 }
 
+void
+TruncateAtWhitespace(nsCString &aString)
+{
+  // Searching for a space or tab one byte at a time is fine since UTF-8 is a
+  // superset of 7-bit ASCII.
+  nsASingleFragmentCString::const_char_iterator begin, iter, end;
+  aString.BeginReading(begin);
+  aString.EndReading(end);
+
+  for (iter = begin; iter != end; ++iter) {
+    if (*iter == ' ' || *iter == '\t') {
+      aString.Truncate(iter - begin);
+      break;
+    }
+  }
+}
+
 // LoadOneEffectiveTLDFile
 //
 // Loads the contents of the given effective-TLD file, building the tree as it
 // goes.
 nsresult
-LoadOneEffectiveTLDFile(nsCOMPtr<nsIFile>& effTLDFile)
+nsEffectiveTLDService::LoadOneEffectiveTLDFile(nsCOMPtr<nsIFile>& effTLDFile)
 {
   // Open the file as an input stream.
   nsCOMPtr<nsIInputStream> fileStream;
@@ -536,34 +334,30 @@ LoadOneEffectiveTLDFile(nsCOMPtr<nsIFile>& effTLDFile)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString lineData;
-  PRBool moreData = PR_TRUE;
-  NS_NAMED_LITERAL_CSTRING(commentMarker, "//");
-  while (moreData) {
-    rv = lineStream->ReadLine(lineData, &moreData);
-    if (NS_SUCCEEDED(rv)) {
-      if (! lineData.IsEmpty() &&
-          ! StringBeginsWith(lineData, commentMarker)) {
-        rv = AddEffectiveTLDEntry(lineData);
-      }
-    }
-    else {
-      NS_WARNING("Error reading effective-TLD file; attempting to continue");
+  PRBool isMore;
+  NS_NAMED_LITERAL_CSTRING(kCommentMarker, "//");
+  while (NS_SUCCEEDED(lineStream->ReadLine(lineData, &isMore)) && isMore) {
+    if (StringBeginsWith(lineData, kCommentMarker))
+      continue;
+
+    TruncateAtWhitespace(lineData);
+    if (!lineData.IsEmpty()) {
+      rv = AddEffectiveTLDEntry(lineData);
+      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Error adding effective TLD to list");
     }
   }
 
-  LOG_EFF_TLD_TREE("Effective-TLD tree:");
-
-  return rv;
+  return NS_OK;
 }
 
 // LoadEffectiveTLDFiles
 //
 // Loads the contents of the system and user effective-TLD files.
 nsresult
-LoadEffectiveTLDFiles()
+nsEffectiveTLDService::LoadEffectiveTLDFiles()
 {
   nsCOMPtr<nsIFile> effTLDFile;
-  nsresult rv = LocateEffectiveTLDFile(effTLDFile, false);
+  nsresult rv = LocateEffectiveTLDFile(effTLDFile, PR_FALSE);
 
   // If we didn't find any system effective-TLD file, warn but keep trying.  We
   // can struggle along using the base TLDs.
@@ -575,7 +369,7 @@ LoadEffectiveTLDFiles()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  rv = LocateEffectiveTLDFile(effTLDFile, true);
+  rv = LocateEffectiveTLDFile(effTLDFile, PR_TRUE);
 
   // Since the profile copy isn't strictly needed, ignore any errors trying to
   // find or read it, in order to allow testing using xpcshell.
