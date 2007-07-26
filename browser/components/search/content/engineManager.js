@@ -164,33 +164,36 @@ var gEngineManagerDialog = {
     var msg = strings.getFormattedString("editMsg", [selectedEngine.name]);
 
     while (prompt.prompt(window, title, msg, alias, null, { })) {
-      var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                          getService(Ci.nsIBrowserSearchService);
-      var engine = searchService.getEngineByAlias(alias.value);
       var bduplicate = false;
       var eduplicate = false;
 
-      if (engine) {
-        if (engine.name != selectedEngine.name)
-          eduplicate = true;
-      } else {
-        try {
-          var bmserv = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                       getService(Ci.nsINavBookmarksService);
-          if (bmserv.getURIForKeyword(alias.value))
-            bduplicate = true;
-        } catch(ex) {}
+      if (alias.value != "") {
+        var searchService = Cc["@mozilla.org/browser/search-service;1"].
+                            getService(Ci.nsIBrowserSearchService);
+        var engine = searchService.getEngineByAlias(alias.value);
 
-        // Check for duplicates in changes we haven't committed yet
-        var engines = gEngineView._engineStore.engines;
-        for each (var engine in engines) {
-          if (engine.alias == alias.value && 
-              engine.name != selectedEngine.name) {
+        if (engine) {
+          if (engine.name != selectedEngine.name)
             eduplicate = true;
-            break;
+        } else {
+          try {
+            var bmserv = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
+                         getService(Ci.nsINavBookmarksService);
+            if (bmserv.getURIForKeyword(alias.value))
+              bduplicate = true;
+          } catch(ex) {}
+
+          // Check for duplicates in changes we haven't committed yet
+          var engines = gEngineView._engineStore.engines;
+          for each (var engine in engines) {
+            if (engine.alias == alias.value && 
+                engine.name != selectedEngine.name) {
+              eduplicate = true;
+              break;
+            }
           }
         }
-      } 
+      }
 
       // Notify the user if they have chosen an existing engine/bookmark keyword
       if (eduplicate || bduplicate) {
