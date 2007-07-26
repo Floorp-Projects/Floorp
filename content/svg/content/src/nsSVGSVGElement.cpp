@@ -1089,6 +1089,7 @@ nsSVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
     sFontSpecificationMap,
     sGradientStopMap,
     sGraphicsMap,
+    sLightingEffectsMap,
     sMarkersMap,
     sTextContentElementsMap,
     sViewportsMap

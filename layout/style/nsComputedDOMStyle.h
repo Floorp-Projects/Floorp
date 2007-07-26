@@ -307,8 +307,9 @@ private:
   nsresult GetShapeRendering(nsIDOMCSSValue** aValue);
   nsresult GetTextRendering(nsIDOMCSSValue** aValue);
 
-  nsresult GetStopColor(nsIDOMCSSValue** aValue);
   nsresult GetFloodColor(nsIDOMCSSValue** aValue);
+  nsresult GetLightingColor(nsIDOMCSSValue** aValue);
+  nsresult GetStopColor(nsIDOMCSSValue** aValue);
 
   nsresult GetClipPath(nsIDOMCSSValue** aValue);
   nsresult GetFilter(nsIDOMCSSValue** aValue);
