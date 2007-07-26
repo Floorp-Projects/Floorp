@@ -144,6 +144,14 @@ public:
    * Returns whether the document is editable.
    */
   virtual PRBool IsEditingOn() = 0;
+
+  /**
+   * Returns the result of document.all[aID] which can either be a node
+   * or a nodelist depending on if there are multiple nodes with the same
+   * id.
+   */
+  virtual nsresult GetDocumentAllResult(const nsAString& aID,
+                                        nsISupports** aResult) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLDocument, NS_IHTMLDOCUMENT_IID)

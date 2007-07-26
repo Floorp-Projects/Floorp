@@ -85,10 +85,10 @@ public:
   NS_DECL_NSIDOMNODELIST
   NS_DECL_CYCLE_COLLECTION_CLASS(nsBaseContentList)
 
-  virtual void AppendElement(nsIContent *aContent);
-  virtual void RemoveElement(nsIContent *aContent);
+  void AppendElement(nsIContent *aContent);
+  void RemoveElement(nsIContent *aContent);
   virtual PRInt32 IndexOf(nsIContent *aContent, PRBool aDoFlush);
-  virtual void Reset();
+  void Reset();
 
   static void Shutdown();
 

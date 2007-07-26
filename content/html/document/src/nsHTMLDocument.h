@@ -171,6 +171,8 @@ public:
   NS_IMETHOD Writeln(const nsAString & text);
   NS_IMETHOD GetElementsByName(const nsAString & elementName,
                                nsIDOMNodeList **_retval);
+  virtual nsresult GetDocumentAllResult(const nsAString& aID,
+                                        nsISupports** aResult);
 
   // nsIDOMNSHTMLDocument interface
   NS_DECL_NSIDOMNSHTMLDOCUMENT

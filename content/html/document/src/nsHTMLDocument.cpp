@@ -250,6 +250,7 @@ public:
 
   nsCOMPtr<nsIAtom> mKey;
   nsBaseContentList *mNameContentList;
+  nsRefPtr<nsContentList> mDocAllList;
 private:
   nsSmallVoidArray mIdContentList;
 };
@@ -353,6 +354,8 @@ IdAndNameMapEntryTraverse(PLDHashTable *table, PLDHashEntryHdr *hdr,
 
   if (entry->mNameContentList != NAME_NOT_VALID)
     cb->NoteXPCOMChild(entry->mNameContentList);
+
+  cb->NoteXPCOMChild(entry->mDocAllList);
 
   return PL_DHASH_NEXT;
 }
@@ -3783,6 +3786,82 @@ nsHTMLDocument::ChangeContentEditableCount(nsIContent *aElement,
       }
     }
   }
+
+  return NS_OK;
+}
+
+static PRBool
+DocAllResultMatch(nsIContent* aContent, PRInt32 aNamespaceID, nsIAtom* aAtom,
+                  void* aData)
+{
+  if (aContent->GetID() == aAtom) {
+    return PR_TRUE;
+  }
+
+  nsGenericHTMLElement* elm = nsGenericHTMLElement::FromContent(aContent);
+  if (!elm || aContent->GetNameSpaceID() != kNameSpaceID_None) {
+    return PR_FALSE;
+  }
+
+  nsIAtom* tag = elm->Tag();
+  if (tag != nsGkAtoms::img    &&
+      tag != nsGkAtoms::form   &&
+      tag != nsGkAtoms::applet &&
+      tag != nsGkAtoms::embed  &&
+      tag != nsGkAtoms::object &&
+      tag != nsGkAtoms::input) {
+    return PR_FALSE;
+  }
+
+  const nsAttrValue* val = elm->GetParsedAttr(nsGkAtoms::name);
+  return val && val->Type() == nsAttrValue::eAtom &&
+         val->GetAtomValue() == aAtom;
+}
+
+
+nsresult
+nsHTMLDocument::GetDocumentAllResult(const nsAString& aID, nsISupports** aResult)
+{
+  *aResult = nsnull;
+
+  PLDHashOperator op = IdTableIsLive() ? PL_DHASH_LOOKUP : PL_DHASH_ADD;
+
+  nsCOMPtr<nsIAtom> id = do_GetAtom(aID);
+  IdAndNameMapEntry *entry =
+    static_cast<IdAndNameMapEntry *>
+               (PL_DHashTableOperate(&mIdAndNameHashTable, id, op));
+  NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
+
+  // If we did a lookup and it failed, there are no items with this id
+  if (PL_DHASH_ENTRY_IS_FREE(entry)) {
+    NS_ASSERTION(IdTableIsLive(), "should have gotten a busy entry");
+
+    return NS_OK;
+  }
+
+  if (!mRootContent) {
+    return NS_OK;
+  }
+
+  if (!entry->mDocAllList) {
+    entry->mDocAllList = new nsContentList(mRootContent, DocAllResultMatch,
+                                           nsnull, nsnull, PR_TRUE, id);
+    NS_ENSURE_TRUE(entry->mDocAllList, NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  // Check if there are more than 1 entries. Do this by getting the second one
+  // rather than the length since getting the length always requires walking
+  // the entire document.
+
+  nsIContent* cont = entry->mDocAllList->Item(1, PR_TRUE);
+  if (cont) {
+    NS_ADDREF(*aResult = static_cast<nsIDOMNodeList*>(entry->mDocAllList));
+
+    return NS_OK;
+  }
+
+  // There's only 0 or 1 items. Return the first one or null.
+  NS_IF_ADDREF(*aResult = entry->mDocAllList->Item(0, PR_TRUE));
 
   return NS_OK;
 }
