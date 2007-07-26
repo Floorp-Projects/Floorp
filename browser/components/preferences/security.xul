@@ -112,15 +112,15 @@
                label="&useDownloadedList.label;"
                accesskey="&useDownloadedList.accesskey;"
                value="false"/>
-        <hbox id="onloadBox" align="center">
+        <hbox align="center">
           <radio id="onloadRadio"
                  label="&askThirdParty.label;"
                  accesskey="&askThirdParty.accesskey;"
-                 value="true" aaa:labelledby="onloadBox"/>
+                 value="true" aaa:labelledby="onloadRadio onloadProvider onloadAfter"/>
           <menulist id="onloadProvider"
                     preference="browser.safebrowsing.dataProvider"
                     onsyncfrompreference="return gSecurityPane.readOnloadPhishProvider();"
-                    aaa:labelledby="onloadBox"/>
+                    aaa:labelledby="onloadRadio onloadProvider onloadAfter"/>
           <label id="onloadAfter">&askThirdPartyAfter.label;</label>
         </hbox>
       </radiogroup>
