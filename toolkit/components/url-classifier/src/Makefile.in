@@ -16,6 +16,7 @@ REQUIRES = necko \
            storage \
            string \
            xpcom \
+           $(ZLIB_REQUIRES) \
            $(NULL)
 
 CPPSRCS = \
@@ -25,14 +26,16 @@ CPPSRCS = \
           $(NULL)
 
 LOCAL_INCLUDES = \
-                 -I$(srcdir)/../../build
+                 -I$(srcdir)/../../build \
                  $(NULL)
 
 
 # Same as JS components that are run through the pre-processor.
-EXTRA_PP_COMPONENTS = nsUrlClassifierTable.js \
-                      nsUrlClassifierLib.js \
+EXTRA_PP_COMPONENTS = nsUrlClassifierLib.js \
                       nsUrlClassifierListManager.js \
                       $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+export:: $(topsrcdir)/security/nss/lib/freebl/sha512.c
+	$(INSTALL) $^ .

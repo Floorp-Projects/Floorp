@@ -39,27 +39,18 @@
  * Some utility methods used by the url classifier.
  */
 
-[scriptable, uuid(89ea43b0-a23f-4db2-8d23-6d90dc55f67a)]
+interface nsIURI;
+
+[scriptable, uuid(e4f0e59c-b922-48b0-a7b6-1735c1f96fed)]
 interface nsIUrlClassifierUtils : nsISupports
 {
   /**
-   * Canonicalize a URL.  DON'T USE THIS DIRECTLY.  Use
-   * PROT_EnchashDecrypter.prototype.getCanonicalUrl instead.  This method
-   * url-decodes a string, but it doesn't normalize the hostname.  The method
-   * in EnchashDecrypter first calls this method, then normalizes the hostname.
+   * Get the lookup string for a given URI.  This normalizes the hostname,
+   * url-decodes the string, and strips off the protocol.
    *
-   * @param url String to canonicalize
+   * @param uri URI to get the lookup key for.
    *
-   * @returns String containing the canonicalized url (maximally url-decoded,
-   *          then specially url-encoded)
+   * @returns String containing the canonicalized URI.
    */
-  ACString canonicalizeURL(in ACString url);
-
-  /**
-   * When canonicalizing hostnames, the final step is to url escape everything that
-   * is not alphanumeric or hyphen or dot.  The existing methods (escape,
-   * encodeURIComponent and encodeURI are close, but not exactly what we want
-   * so we write our own function to do this.
-   */
-  ACString escapeHostname(in ACString hostname);
+  ACString getKeyForURI(in nsIURI uri);
 };
