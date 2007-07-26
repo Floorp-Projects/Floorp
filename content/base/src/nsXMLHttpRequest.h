@@ -157,11 +157,20 @@ protected:
   void ClearEventListeners();
   already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
 
+  /**
+   * Check if mChannel is ok for a cross-site request by making sure no
+   * inappropriate headers are set, and no username/password is set.
+   *
+   * Also updates the XML_HTTP_REQUEST_USE_XSITE_AC bit.
+   */
+  nsresult CheckChannelForCrossSiteRequest();
+
   nsCOMPtr<nsISupports> mContext;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mDocument;
+  nsCOMPtr<nsIChannel> mACGetChannel;
 
   nsCOMArray<nsIDOMEventListener> mLoadEventListeners;
   nsCOMArray<nsIDOMEventListener> mErrorEventListeners;
@@ -209,6 +218,10 @@ protected:
   nsCOMPtr<nsIProgressEventSink> mProgressEventSink;
 
   PRUint32 mState;
+
+  // List of potentially dangerous headers explicitly set using
+  // SetRequestHeader.
+  nsTArray<nsCString> mExtraRequestHeaders;
 };
 
 

@@ -1,0 +1,53 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Cross Site XMLHttpRequest</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var passFiles = ['file_CrossSiteXHR_pass1.xml',
+                 'file_CrossSiteXHR_pass2.xml',
+                 'file_CrossSiteXHR_pass3.xml'];
+
+var failFiles = ['file_CrossSiteXHR_fail1.xml',
+                 'file_CrossSiteXHR_fail2.xml',
+                 'file_CrossSiteXHR_fail3.xml',
+                 'file_CrossSiteXHR_fail4.xml'];
+
+for (i = 0; i < passFiles.length; ++i) {
+  xhr = new XMLHttpRequest();
+  xhr.open("GET", "http://example.com/tests/content/base/test/" + passFiles[i], false); 
+  xhr.send(null);
+  ok(xhr.status == 200, "wrong status");
+  ok((new XMLSerializer()).serializeToString(xhr.responseXML.documentElement) ==
+       "<res>hello</res>",
+     "wrong response");
+}
+
+for (i = 0; i < failFiles.length; ++i) {
+  xhr = new XMLHttpRequest();
+  success = false;
+  try {
+    xhr.open("GET", "http://example.com/tests/content/base/test/" + failFiles[i], false); 
+    xhr.send(null);
+  }
+  catch (e) {
+    success = true;
+  }
+  ok(success, "should have thrown");
+}
+
+
+</script>
+</pre>
+</body>
+</html>
