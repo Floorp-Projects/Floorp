@@ -355,7 +355,7 @@ IdAndNameMapEntryTraverse(PLDHashTable *table, PLDHashEntryHdr *hdr,
   if (entry->mNameContentList != NAME_NOT_VALID)
     cb->NoteXPCOMChild(entry->mNameContentList);
 
-  cb->NoteXPCOMChild(static_cast<nsIDOMNodeList*>entry->mDocAllList);
+  cb->NoteXPCOMChild(static_cast<nsIDOMNodeList*>(entry->mDocAllList));
 
   return PL_DHASH_NEXT;
 }
