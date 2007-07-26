@@ -58,7 +58,6 @@ public:
 
 	// override nsIExternalProtocolService methods
 	nsresult OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
-	nsresult LoadUriInternal(nsIURI * aURL);
 
 protected:
 	nsresult SetMIMEInfoForType(const char *aMIMEType, nsMIMEInfoBeOS **_retval);

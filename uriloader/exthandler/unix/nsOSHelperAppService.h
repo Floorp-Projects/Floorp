@@ -65,7 +65,6 @@ public:
 
   // override nsIExternalProtocolService methods
   nsresult OSProtocolHandlerExists(const char * aProtocolScheme, PRBool * aHandlerExists);
-  nsresult LoadUriInternal(nsIURI * aURL);
   NS_IMETHOD GetApplicationDescription(const nsACString& aScheme, nsAString& _retval);
 
   // GetFileTokenForPath must be implemented by each platform. 
