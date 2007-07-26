@@ -1203,8 +1203,22 @@ nsExternalHelperAppService::LoadURI(nsIURI *aURI,
 {
   NS_ENSURE_ARG_POINTER(aURI);
 
+  nsCAutoString spec;
+  aURI->GetSpec(spec);
+
+  if (spec.Find("%00") != -1)
+    return NS_ERROR_MALFORMED_URI;
+
+  spec.ReplaceSubstring("\"", "%22");
+  spec.ReplaceSubstring("`", "%60");
+  
+  nsCOMPtr<nsIOService> ios(do_GetIOService());
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = ios->NewURI(spec, nsnull, nsnull, gettter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCAutoString scheme;
-  aURI->GetScheme(scheme);
+  uri->GetScheme(scheme);
   if (scheme.IsEmpty())
     return NS_OK; // must have a scheme
 
@@ -1251,13 +1265,13 @@ nsExternalHelperAppService::LoadURI(nsIURI *aURI,
   if (!warn ||
       !alwaysAsk && (preferredAction == nsIHandlerInfo::useHelperApp ||
                      preferredAction == nsIHandlerInfo::useSystemDefault))
-    return handler->LaunchWithURI(aURI);
+    return handler->LaunchWithURI(uri);
   
   nsCOMPtr<nsIContentDispatchChooser> chooser =
     do_CreateInstance("@mozilla.org/content-dispatch-chooser;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  return chooser->Ask(handler, aWindowContext, aURI,
+  return chooser->Ask(handler, aWindowContext, uri,
                       nsIContentDispatchChooser::REASON_CANNOT_HANDLE);
 }
 
