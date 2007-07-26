@@ -44,7 +44,7 @@
  * downloading the whole update and then updating the sqlite database, we
  * update tables as the data is streaming in.
  */
-[scriptable, uuid(adf0dfaa-ce91-4cf2-ab15-f5810408e2ec)]
+[scriptable, uuid(d9277fa4-7d51-4175-bd4e-546c080a83bf)]
 interface nsIUrlClassifierStreamUpdater : nsISupports
 {
   /**
@@ -56,14 +56,11 @@ interface nsIUrlClassifierStreamUpdater : nsISupports
    * Try to download updates from updateUrl.  Only one instance of this
    * runs at a time, so we return false if another instance is already
    * running.
-   * @param aRequestBody The body for the request.
-   * @param aSuccessCallback Called after a successful update.
-   * @param aUpdateErrorCallback Called for problems applying the update
-   * @param aDownloadErrorCallback Called if we get an http error or a
-   *        connection refused error.
+   * @param aTableCallback Called once for each table that we successfully
+   *     download with the table header as the parameter.
+   * @param aErrorCallback Called if we get an http error or a connection
+   *   refused.
    */
-  boolean downloadUpdates(in ACString aRequestBody,
-                          in nsIUrlClassifierCallback aSuccessCallback,
-                          in nsIUrlClassifierCallback aUpdateErrorCallback,
-                          in nsIUrlClassifierCallback aDownloadErrorCallback);
+  boolean downloadUpdates(in nsIUrlClassifierCallback aTableCallback,
+                          in nsIUrlClassifierCallback aErrorCallback);
 };

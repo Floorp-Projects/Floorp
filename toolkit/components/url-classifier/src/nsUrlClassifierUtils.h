@@ -77,14 +77,10 @@ public:
   nsUrlClassifierUtils();
   ~nsUrlClassifierUtils() {}
 
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIURLCLASSIFIERUTILS
-
   nsresult Init();
 
-  nsresult CanonicalizeHostname(const nsACString & hostname,
-                                nsACString & _retval);
-  nsresult CanonicalizePath(const nsACString & url, nsACString & _retval);
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIURLCLASSIFIERUTILS
 
   // This function will encode all "special" characters in typical url encoding,
   // that is %hh where h is a valid hex digit.  The characters which are encoded
@@ -92,23 +88,14 @@ public:
   // space), 37(%), and anything 127 or above (special characters).  Url is the
   // string to encode, ret is the encoded string.  Function returns true if
   // ret != url.
-  PRBool SpecialEncode(const nsACString & url,
-                       PRBool foldSlashes,
-                       nsACString & _retval);
+  PRBool SpecialEncode(const nsACString & url, nsACString & _retval);
 
-  void ParseIPAddress(const nsACString & host, nsACString & _retval);
-  void CanonicalNum(const nsACString & num,
-                    PRUint32 bytes,
-                    PRBool allowOctal,
-                    nsACString & _retval);
 private:
   // Disallow copy constructor
   nsUrlClassifierUtils(const nsUrlClassifierUtils&);
 
   // Function to tell if we should encode a character.
   PRBool ShouldURLEscape(const unsigned char c) const;
-
-  void CleanupHostname(const nsACString & host, nsACString & _retval);
 
   nsAutoPtr<Charmap> mEscapeCharmap;
 };

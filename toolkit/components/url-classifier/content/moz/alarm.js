@@ -134,10 +134,6 @@ G_Alarm.prototype.notify = function(timer) {
   return ret;
 }
 
-G_Alarm.prototype.setDelay = function(delay) {
-  this.timer_.delay = delay;
-}
-
 /**
  * XPCOM cruft
  */
