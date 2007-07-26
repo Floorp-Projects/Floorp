@@ -205,10 +205,6 @@ public:
   // returns true if history has been disabled
   PRBool IsHistoryDisabled() { return mExpireDays == 0; }
 
-  // remember tree state
-  void SaveExpandItem(const nsAString& aTitle);
-  void SaveCollapseItem(const nsAString& aTitle);
-
   // get the statement for selecting a history row by URL
   mozIStorageStatement* DBGetURLPageInfo() { return mDBGetURLPageInfo; }
 
@@ -469,6 +465,10 @@ protected:
   static void LazyTimerCallback(nsITimer* aTimer, void* aClosure);
   void CommitLazyMessages();
 #endif
+
+  nsresult ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries, 
+                                nsNavHistoryQueryOptions *aOptions,
+                                nsCString &queryString);
 
   nsresult QueryToSelectClause(nsNavHistoryQuery* aQuery,
                                nsNavHistoryQueryOptions* aOptions,
