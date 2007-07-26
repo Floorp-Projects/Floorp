@@ -482,7 +482,7 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
 //
 
 
-#define PLACES_SCHEMA_VERSION 5
+#define PLACES_SCHEMA_VERSION 6
 
 nsresult
 nsNavHistory::InitDB(PRBool *aDoImport)
@@ -541,7 +541,7 @@ nsNavHistory::InitDB(PRBool *aDoImport)
     if (DBSchemaVersion < PLACES_SCHEMA_VERSION) {
       // Upgrading
 
-      // Migration anno tables up to V3
+      // Migrate anno tables up to V3
       if (DBSchemaVersion < 3) {
         rv = MigrateV3Up(mDBConn);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -553,7 +553,13 @@ nsNavHistory::InitDB(PRBool *aDoImport)
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
-      // XXX Upgrades >V5 must add migration code here.
+      // Migrate anno tables up to V6
+      if (DBSchemaVersion < 6) {
+        rv = MigrateV6Up(mDBConn);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // XXX Upgrades >V6 must add migration code here.
 
     } else {
       // Downgrading
@@ -561,10 +567,10 @@ nsNavHistory::InitDB(PRBool *aDoImport)
       // XXX Need to prompt user or otherwise notify of 
       // potential dataloss when downgrading.
 
-      // XXX Downgrades from >V5 must add migration code here.
+      // XXX Downgrades from >V6 must add migration code here.
 
       // Downgrade v1,2,4,5
-      // V3 had no backwards incompatible changes.
+      // v3,6 have no backwards incompatible changes.
       if (DBSchemaVersion > 2) {
         // perform downgrade to v2
         rv = ForceMigrateBookmarksDB(mDBConn);
@@ -624,7 +630,6 @@ nsNavHistory::InitDB(PRBool *aDoImport)
         "id INTEGER PRIMARY KEY, "
         "url LONGVARCHAR, "
         "title LONGVARCHAR, "
-        "user_title LONGVARCHAR, "
         "rev_host LONGVARCHAR, "
         "visit_count INTEGER DEFAULT 0, "
         "hidden INTEGER DEFAULT 0 NOT NULL, "
@@ -634,6 +639,10 @@ nsNavHistory::InitDB(PRBool *aDoImport)
 
     rv = mDBConn->ExecuteSimpleSQL(
         NS_LITERAL_CSTRING("CREATE INDEX moz_places_urlindex ON moz_places (url)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE INDEX moz_places_titleindex ON moz_places (title)"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -912,6 +921,96 @@ nsNavHistory::MigrateV3Up(mozIStorageConnection* aDBConn)
   return NS_OK;
 }
 
+// nsNavHistory::MigrateV6Up
+nsresult
+nsNavHistory::MigrateV6Up(mozIStorageConnection* aDBConn) 
+{
+  // if dateAdded & lastModified cols are already there, then a partial update occurred.
+  // return, making no changes, and allowing db version to be updated.
+  nsCOMPtr<mozIStorageStatement> statement;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT a.dateAdded, a.lastModified, b.dateAdded, b.lastModified "
+    "FROM moz_annos a, moz_items_annos b"), getter_AddRefs(statement));
+  if (NS_FAILED(rv)) {
+    // add dateAdded and lastModified columns to moz_annos
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_annos ADD dateAdded INTEGER DEFAULT 0"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_annos ADD lastModified INTEGER DEFAULT 0"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // add dateAdded and lastModified columns to moz_items_annos
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_items_annos ADD dateAdded INTEGER DEFAULT 0"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "ALTER TABLE moz_items_annos ADD lastModified INTEGER DEFAULT 0"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // we used to create an indexes on moz_favicons.url and
+  // moz_anno_attributes.name, but those indexes are not needed
+  // because those columns are UNIQUE, so remove them.
+  // see bug #386303 for more details
+  rv = aDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_favicons_url"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = aDBConn->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_anno_attributes_nameindex"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // bug #371800 - remove moz_places.user_title
+  // test for moz_places.user_title
+  nsCOMPtr<mozIStorageStatement> statement2;
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT user_title FROM moz_places"), getter_AddRefs(statement2));
+  if (NS_SUCCEEDED(rv)) {
+    // 1. rename moz_places to moz_places_backup
+    rv = aDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("ALTER TABLE moz_places RENAME TO moz_places_backup"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // 2. create moz_places w/o user_title, and its index
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_places ("
+        "id INTEGER PRIMARY KEY, "
+        "url LONGVARCHAR, "
+        "title LONGVARCHAR, "
+        "rev_host LONGVARCHAR, "
+        "visit_count INTEGER DEFAULT 0, "
+        "hidden INTEGER DEFAULT 0 NOT NULL, "
+        "typed INTEGER DEFAULT 0 NOT NULL, "
+        "favicon_id INTEGER)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = aDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_urlindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE INDEX moz_places_urlindex ON moz_places (url)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // 3. copy all data into moz_places
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "INSERT INTO moz_places "
+      "SELECT id, url, title, rev_host, visit_count, hidden, typed, favicon_id "
+      "FROM moz_places_backup"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // 4. drop moz_places_backup
+    rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+      "DROP TABLE moz_places_backup"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // bug #389492 - index on page title
+  rv = mDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS moz_places_titleindex ON moz_places (title)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 #ifdef IN_MEMORY_LINKS
 // nsNavHistory::InitMemDB
 //
@@ -994,7 +1093,6 @@ nsNavHistory::GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
 {
   *aEntryID = 0;
 
-  mozStorageTransaction transaction(mDBConn, PR_FALSE);
   mozStorageStatementScoper statementResetter(mDBGetURLPageInfo);
   nsresult rv = BindStatementURI(mDBGetURLPageInfo, 0, aURI);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1011,10 +1109,7 @@ nsNavHistory::GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
     statementResetter.Abandon();
     nsString voidString;
     voidString.SetIsVoid(PR_TRUE);
-    rv = InternalAddNewPage(aURI, voidString, PR_TRUE, PR_FALSE, 0, aEntryID);
-    if (NS_SUCCEEDED(rv))
-      transaction.Commit();
-    return rv;
+    return InternalAddNewPage(aURI, voidString, PR_TRUE, PR_FALSE, 0, aEntryID);
   } else {
     // Doesn't exist: don't do anything, entry ID was already set to 0 above
     return NS_OK;
@@ -1565,15 +1660,6 @@ nsNavHistory::GetHasHistoryEntries(PRBool* aHasEntries)
 }
 
 
-// nsNavHistory::SetPageUserTitle
-
-NS_IMETHODIMP
-nsNavHistory::SetPageUserTitle(nsIURI* aURI, const nsAString& aUserTitle)
-{
-  return SetPageTitleInternal(aURI, PR_TRUE, aUserTitle);
-}
-
-
 // nsNavHistory::MarkPageAsFollowedBookmark
 //
 //    @see MarkPageAsTyped
@@ -1650,8 +1736,8 @@ nsNavHistory::CanAddURI(nsIURI* aURI, PRBool* canAdd)
 
 NS_IMETHODIMP
 nsNavHistory::SetPageDetails(nsIURI* aURI, const nsAString& aTitle,
-                             const nsAString& aUserTitle, PRUint32 aVisitCount,
-                             PRBool aHidden, PRBool aTyped)
+                             PRUint32 aVisitCount, PRBool aHidden,
+                             PRBool aTyped)
 {
   // look up the page ID, creating a new one if necessary
   PRInt64 pageID;
@@ -1662,7 +1748,6 @@ nsNavHistory::SetPageDetails(nsIURI* aURI, const nsAString& aTitle,
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "UPDATE moz_places "
       "SET title = ?2, "
-          "user_title = ?3, "
           "visit_count = ?4, "
           "hidden = ?5, "
           "typed = ?6 "
@@ -1678,11 +1763,6 @@ nsNavHistory::SetPageDetails(nsIURI* aURI, const nsAString& aTitle,
     statement->BindNullParameter(1);
   else
     statement->BindStringParameter(1, StringHead(aTitle, HISTORY_TITLE_LENGTH_MAX));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (aUserTitle.IsVoid())
-    statement->BindNullParameter(2);
-  else
-    statement->BindStringParameter(2, StringHead(aUserTitle, HISTORY_TITLE_LENGTH_MAX));
   NS_ENSURE_SUCCESS(rv, rv);
 
   statement->BindInt32Parameter(3, aVisitCount);
@@ -2303,7 +2383,7 @@ nsNavHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle,
                          0, &visitID);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return SetPageTitleInternal(aURI, PR_FALSE, nsString(aTitle));
+  return SetPageTitleInternal(aURI, nsString(aTitle));
 }
 
 
@@ -2364,39 +2444,53 @@ nsNavHistory::GetCount(PRUint32 *aCount)
 NS_IMETHODIMP
 nsNavHistory::RemovePage(nsIURI *aURI)
 {
-  nsresult rv;
+  PRInt64 placeId;
+  nsresult rv = GetUrlIdFor(aURI, &placeId, PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   mozStorageTransaction transaction(mDBConn, PR_FALSE);
   nsCOMPtr<mozIStorageStatement> statement;
 
   // delete all visits for this page
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_historyvisits WHERE place_id IN (SELECT id FROM moz_places WHERE url = ?1)"),
+      "DELETE FROM moz_historyvisits WHERE place_id = ?1"),
       getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = BindStatementURI(statement, 0, aURI);
+  rv = statement->BindInt64Parameter(0, placeId);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // now that visits have been removed, run annotation expiration.
+  // this will remove all expire-able annotations for this URI.
+  (void)mExpire.OnDeleteURI();
+
+  // does the uri have un-expirable annotations?
+  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+  NS_ENSURE_STATE(annosvc);
+  nsTArray<nsCString> annoNames;
+  rv = annosvc->GetAnnotationNamesTArray(placeId, &annoNames, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // is the uri bookmarked?
   nsNavBookmarks* bookmarksService = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarksService, NS_ERROR_FAILURE);
+  NS_ENSURE_STATE(bookmarksService);
   PRBool bookmarked = PR_FALSE;
   rv = bookmarksService->IsBookmarked(aURI, &bookmarked);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (! bookmarked) {
-    // Only delete everything else if the page is not bookmarked.  Note that we
-    // do NOT delete favicons. Any unreferenced favicons will be deleted next
-    // time the browser is shut down.
-
-    // FIXME: delete annotations
+  // if there are no more annotations, and the entry is not bookmarked
+  // then we can remove the moz_places entry.
+  if (annoNames.Length() == 0 && !bookmarked) {
+    // Note that we do NOT delete favicons. Any unreferenced favicons will be
+    // deleted next time the browser is shut down.
 
     // delete main history entries
     rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "DELETE FROM moz_places WHERE url = ?1"),
+        "DELETE FROM moz_places WHERE id = ?1"),
         getter_AddRefs(statement));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = BindStatementURI(statement, 0, aURI);
+    rv = statement->BindInt64Parameter(0, placeId);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = statement->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2420,11 +2514,11 @@ nsNavHistory::RemovePage(nsIURI *aURI)
 //    means local files and anything else with no host name. You can also pass
 //    in the localized "(local files)" title given to you from a history query.
 //
-//    Silently fails if we have no knowledge of the host
+//    Silently fails if we have no knowledge of the host.
 //
 //    This function is actually pretty simple, it just boils down to a DELETE
-//    statement, but is out of control due to observers and the two types of
-//    similar delete operations that we need to supports.
+//    statement, but is made complex due to the observers and the two types of
+//    similar delete operations that we need to support.
 
 NS_IMETHODIMP
 nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
@@ -2442,7 +2536,7 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
   nsCString localFiles;
   TitleForDomain(EmptyCString(), localFiles);
   nsAutoString host16;
-  if (! aHost.Equals(localFiles))
+  if (!aHost.Equals(localFiles))
     host16 = NS_ConvertUTF8toUTF16(aHost);
 
   // nsISupports version of the host string for passing to observers
@@ -2462,9 +2556,9 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
   // how we are selecting host names
   nsCAutoString conditionString;
   if (aEntireDomain)
-    conditionString.AssignLiteral("WHERE h.rev_host >= ?1 AND h.rev_host < ?2 ");
+    conditionString.AssignLiteral("h.rev_host >= ?1 AND h.rev_host < ?2 ");
   else
-    conditionString.AssignLiteral("WHERE h.rev_host = ?1");
+    conditionString.AssignLiteral("h.rev_host = ?1 ");
 
   // Tell the observers about the non-hidden items we are about to delete.
   // Since this is a two-step process, if we get an error, we may tell them we
@@ -2475,55 +2569,21 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
   // deleting the visits (like we always do) will cause the item to disappear
   // from history views. This will also cause all visit dates to be deleted,
   // which affects many bookmark views
-  nsCStringArray deletedURIs;
-  nsCOMPtr<mozIStorageStatement> statement;
+
+  // is bookmarked?
+  conditionString.AppendLiteral("AND (b.type = ?3 OR b.id IS NULL) ");
+
+  // has EXPIRES_NEVER annotations?
+  conditionString.AppendLiteral("AND (a.expiration = ?4 OR a.id IS NULL) ");
 
   // create statement depending on delete type
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT url FROM moz_places h ") + conditionString,
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindStringParameter(0, revHostDot);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (aEntireDomain) {
-    rv = statement->BindStringParameter(1, revHostSlash);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  PRBool hasMore = PR_FALSE;
-  while ((statement->ExecuteStep(&hasMore) == NS_OK) && hasMore) {
-    nsCAutoString thisURIString;
-    if (NS_FAILED(statement->GetUTF8String(0, thisURIString)) || 
-        thisURIString.IsEmpty())
-      continue; // no URI
-    if (! deletedURIs.AppendCString(thisURIString))
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  // first, delete all the visits
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_historyvisits WHERE place_id IN (SELECT id FROM moz_places h ") + conditionString + NS_LITERAL_CSTRING(")"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->BindStringParameter(0, revHostDot);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (aEntireDomain) {
-    rv = statement->BindStringParameter(1, revHostSlash);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  rv = statement->Execute();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // FIXME: delete annotations
-
-  // now, delete the actual history entries that are not bookmarked
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_places WHERE id IN "
-      "(SELECT id from moz_places h "
-      " LEFT OUTER JOIN moz_bookmarks b ON h.id = b.fk WHERE b.type = ?3")
-      + conditionString +
-      NS_LITERAL_CSTRING("AND b.fk IS NULL)"),
-    getter_AddRefs(statement));
+  nsCAutoString getURIsForDeletion = NS_LITERAL_CSTRING(
+    "SELECT h.id, h.url, b.id, a.id FROM moz_places h "
+      "LEFT OUTER JOIN moz_bookmarks b ON h.id = b.fk "
+      "LEFT OUTER JOIN moz_annos a ON h.id = a.place_id WHERE ") +
+      conditionString;
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = mDBConn->CreateStatement(getURIsForDeletion, getter_AddRefs(statement));
   NS_ENSURE_SUCCESS(rv, rv);
   rv = statement->BindStringParameter(0, revHostDot);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2533,7 +2593,62 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
   }
   rv = statement->BindInt32Parameter(2, nsNavBookmarks::TYPE_BOOKMARK);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = statement->Execute();
+  rv = statement->BindInt32Parameter(3, nsIAnnotationService::EXPIRE_NEVER);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString deletedPlaceIds;
+  nsCAutoString deletedPlaceIdsBookmarked;
+  nsCAutoString deletedPlaceIdsWithAnno;
+  nsCStringArray deletedURIs;
+
+  PRBool hasMore = PR_FALSE;
+  while ((statement->ExecuteStep(&hasMore) == NS_OK) && hasMore) {
+    nsCAutoString thisURIString;
+    if (NS_FAILED(statement->GetUTF8String(1, thisURIString)) || 
+        thisURIString.IsEmpty())
+      continue; // no URI
+    if (!deletedURIs.AppendCString(thisURIString))
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    if (!deletedPlaceIds.IsEmpty())
+      deletedPlaceIds.AppendLiteral(", ");
+
+    PRInt64 placeId;
+    rv = statement->GetInt64(0, &placeId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    deletedPlaceIds.AppendInt(placeId);
+    if (statement->AsInt64(2)) {
+      if (!deletedPlaceIdsBookmarked.IsEmpty())
+        deletedPlaceIdsBookmarked.AppendLiteral(", ");
+      deletedPlaceIdsBookmarked.AppendInt(placeId);
+    }
+    if (statement->AsInt64(3)) {
+      if (!deletedPlaceIdsWithAnno.IsEmpty())
+        deletedPlaceIdsWithAnno.AppendLiteral(", ");
+      deletedPlaceIdsWithAnno.AppendInt(placeId);
+    }
+  }
+
+  // first, delete all the visits
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_historyvisits WHERE place_id IN (") +
+      deletedPlaceIds + NS_LITERAL_CSTRING(")"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // delete annotations (except EXPIRE_NEVER)
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_annos WHERE place_id NOT IN (") +
+      deletedPlaceIdsBookmarked + NS_LITERAL_CSTRING(")"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // finally, delete the actual moz_places records that are
+  // - not bookmarked
+  // - do not have EXPIRE_NEVER annotations 
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_places WHERE id IN (") + deletedPlaceIds +
+      NS_LITERAL_CSTRING(") AND id NOT IN (") + deletedPlaceIdsBookmarked +
+      NS_LITERAL_CSTRING(") AND id NOT IN (") + deletedPlaceIdsWithAnno +
+      NS_LITERAL_CSTRING(")")); 
   NS_ENSURE_SUCCESS(rv, rv);
 
   transaction.Commit();
@@ -2909,8 +3024,7 @@ nsNavHistory::IsVisited(nsIURI *aURI, PRBool *_retval)
 
 // nsNavHistory::SetPageTitle
 //
-//    This sets the page "real" title. Use nsINavHistory::SetPageUserTitle to
-//    set any user-defined title.
+//    This sets the page title.
 //
 //    Note that we do not allow empty real titles and will silently ignore such
 //    requests. When a URL is added we give it a default title based on the
@@ -2936,7 +3050,7 @@ nsNavHistory::SetPageTitle(nsIURI *aURI,
   message.title = aTitle;
   return AddLazyMessage(message);
 #else
-  return SetPageTitleInternal(aURI, PR_FALSE, aTitle);
+  return SetPageTitleInternal(aURI, aTitle);
 #endif
 }
 
@@ -3186,7 +3300,7 @@ nsNavHistory::CommitLazyMessages()
                        message.isToplevel, message.referrer);
         break;
       case LazyMessage::Type_Title:
-        SetPageTitleInternal(message.uri, PR_FALSE, message.title);
+        SetPageTitleInternal(message.uri, message.title);
         break;
       case LazyMessage::Type_Favicon: {
         nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
@@ -4228,17 +4342,15 @@ nsNavHistory::GetStringFromName(const PRUnichar *aName, nsACString& aResult)
 
 // nsNavHistory::SetPageTitleInternal
 //
-//    Called to set either the user-defined title (aIsUserTitle=true) or the
-//    "real" page title (aIsUserTitle=false) for the given URI. Used as a
-//    backend for SetPageUserTitle and SetTitle
+//    Called to set the title for the given URI. Used as a
+//    backend for SetTitle.
 //
 //    Will fail for pages that are not in the DB. To clear the corresponding
 //    title, use aTitle.SetIsVoid(). Sending an empty string will save an
 //    empty string instead of clearing it.
 
 nsresult
-nsNavHistory::SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
-                                   const nsAString& aTitle)
+nsNavHistory::SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle)
 {
   nsresult rv;
 
@@ -4247,7 +4359,6 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
   // first, make sure the page exists, and fetch the old title (we need the one
   // that isn't changing to send notifications)
   nsAutoString title;
-  nsAutoString userTitle;
   { // scope for statement
     mozStorageStatementScoper infoScoper(mDBGetURLPageInfo);
     rv = BindStatementURI(mDBGetURLPageInfo, 0, aURI);
@@ -4269,25 +4380,15 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
   // be. For example, going to any web page will always cause a title to be set,
   // even though it will often be unchanged since the last visit. In these
   // cases, we can avoid DB writing and (most significantly) observer overhead.
-  if (aIsUserTitle && aTitle.IsVoid() == userTitle.IsVoid() &&
-      aTitle == userTitle)
-    return NS_OK;
-  if (! aIsUserTitle && aTitle.IsVoid() == title.IsVoid() &&
+  if (aTitle.IsVoid() == title.IsVoid() &&
       aTitle == title)
     return NS_OK;
 
   nsCOMPtr<mozIStorageStatement> dbModStatement;
-  if (aIsUserTitle) {
-    userTitle = aTitle;
-    rv = mDBConn->CreateStatement(
-        NS_LITERAL_CSTRING("UPDATE moz_places SET user_title = ?1 WHERE url = ?2"),
-        getter_AddRefs(dbModStatement));
-  } else {
-    title = aTitle;
-    rv = mDBConn->CreateStatement(
-        NS_LITERAL_CSTRING("UPDATE moz_places SET title = ?1 WHERE url = ?2"),
-        getter_AddRefs(dbModStatement));
-  }
+  title = aTitle;
+  rv = mDBConn->CreateStatement(
+      NS_LITERAL_CSTRING("UPDATE moz_places SET title = ?1 WHERE url = ?2"),
+      getter_AddRefs(dbModStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // title
@@ -4307,7 +4408,7 @@ nsNavHistory::SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
 
   // observers (have to check first if it's bookmarked)
   ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
-                      OnTitleChanged(aURI, title, userTitle, aIsUserTitle))
+                      OnTitleChanged(aURI, title))
 
   return NS_OK;
 
@@ -4336,6 +4437,8 @@ nsNavHistory::CreateLookupIndexes()
   rv = mDBConn->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("CREATE INDEX moz_places_visitcount ON moz_places (visit_count)"));
   //NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBConn->ExecuteSimpleSQL(
+      NS_LITERAL_CSTRING("CREATE INDEX moz_places_titleindex ON moz_places (title)"));
 
   // Visit table indexes
   rv = mDBConn->ExecuteSimpleSQL(
@@ -4358,7 +4461,6 @@ nsNavHistory::CreateLookupIndexes()
 nsresult
 nsNavHistory::AddPageWithVisit(nsIURI *aURI,
                                const nsString &aTitle,
-                               const nsString &aUserTitle,
                                PRBool aHidden, PRBool aTyped,
                                PRInt32 aVisitCount,
                                PRInt32 aLastVisitTransition,

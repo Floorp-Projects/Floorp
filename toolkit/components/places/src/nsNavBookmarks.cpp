@@ -2585,9 +2585,7 @@ nsNavBookmarks::OnClearHistory()
 }
 
 NS_IMETHODIMP
-nsNavBookmarks::OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle,
-                               const nsAString& aUserTitle,
-                               PRBool aIsUserTitleChanged)
+nsNavBookmarks::OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle)
 {
   // NOOP. We don't consume page titles from moz_places anymore.
   // Title-change notifications are sent from SetItemTitle.

@@ -98,9 +98,7 @@ private:
   NS_IMETHOD OnVisit(nsIURI* aURI, PRInt64 aVisitId, PRTime aTime,      \
                      PRInt64 aSessionId, PRInt64 aReferringId,          \
                      PRUint32 aTransitionType);                         \
-  NS_IMETHOD OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle,  \
-                            const nsAString& aUserTitle,                \
-                            PRBool aIsUserTitleChanged);                \
+  NS_IMETHOD OnTitleChanged(nsIURI* aURI, const nsAString& aPageTitle); \
   NS_IMETHOD OnDeleteURI(nsIURI *aURI);                                 \
   NS_IMETHOD OnClearHistory();                                          \
   NS_IMETHOD OnPageChanged(nsIURI *aURI, PRUint32 aWhat,                \
