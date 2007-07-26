@@ -4739,6 +4739,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HC, nsnull);
   case eCSSProperty_flood_opacity:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
+  case eCSSProperty_lighting_color:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HC, nsnull);
   case eCSSProperty_marker_end:
   case eCSSProperty_marker_mid:
   case eCSSProperty_marker_start:

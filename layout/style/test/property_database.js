@@ -1695,6 +1695,14 @@ var gCSSProperties = {
 		other_values: [ "0", "0.3", "-7.3" ],
 		invalid_values: []
 	},
+	"lighting-color": {
+		domProp: null,
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "white", "#fff", "#ffffff", "rgb(255,255,255)", "rgba(255,255,255,1.0)", "rgba(255,255,255,42.0)" ],
+		other_values: [ "green", "#fc3" ],
+		invalid_values: [ "url('#myserver')", "url(foo.svg#myserver)", 'url("#myserver") green' ]
+	},
 	"marker": {
 		domProp: null,
 		inherited: true,

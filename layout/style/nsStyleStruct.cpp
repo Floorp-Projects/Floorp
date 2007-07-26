@@ -772,6 +772,7 @@ nsStyleSVGReset::nsStyleSVGReset()
 {
     mStopColor               = NS_RGB(0,0,0);
     mFloodColor              = NS_RGB(0,0,0);
+    mLightingColor           = NS_RGB(255,255,255);
     mClipPath                = nsnull;
     mFilter                  = nsnull;
     mMask                    = nsnull;
@@ -788,6 +789,7 @@ nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
 {
   mStopColor = aSource.mStopColor;
   mFloodColor = aSource.mFloodColor;
+  mLightingColor = aSource.mLightingColor;
   mClipPath = aSource.mClipPath;
   mFilter = aSource.mFilter;
   mMask = aSource.mMask;
@@ -798,13 +800,14 @@ nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
 
 nsChangeHint nsStyleSVGReset::CalcDifference(const nsStyleSVGReset& aOther) const
 {
-  if (mStopColor             != aOther.mStopColor    ||
-      mFloodColor            != aOther.mFloodColor   ||
-      !EqualURIs(mClipPath, aOther.mClipPath)        ||
-      !EqualURIs(mFilter, aOther.mFilter)            ||
-      !EqualURIs(mMask, aOther.mMask)                ||
-      mStopOpacity           != aOther.mStopOpacity  ||
-      mFloodOpacity          != aOther.mFloodOpacity ||
+  if (mStopColor             != aOther.mStopColor     ||
+      mFloodColor            != aOther.mFloodColor    ||
+      mLightingColor         != aOther.mLightingColor ||
+      !EqualURIs(mClipPath, aOther.mClipPath)         ||
+      !EqualURIs(mFilter, aOther.mFilter)             ||
+      !EqualURIs(mMask, aOther.mMask)                 ||
+      mStopOpacity           != aOther.mStopOpacity   ||
+      mFloodOpacity          != aOther.mFloodOpacity  ||
       mDominantBaseline != aOther.mDominantBaseline)
     return NS_STYLE_HINT_VISUAL;
   
