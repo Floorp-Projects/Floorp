@@ -57,7 +57,7 @@ SDK_XPIDLSRCS =                                 \
 
 XPIDLSRCS =					\
 	nsIBrowserDOMWindow.idl			\
-	nsIDOMClientInformation.idl			\
+	nsIDOMClientInformation.idl		\
 	nsIDOMConstructor.idl			\
 	nsIDOMCRMFObject.idl			\
 	nsIDOMCrypto.idl			\
@@ -74,10 +74,11 @@ XPIDLSRCS =					\
 	nsIDOMScreen.idl			\
 	nsIDOMWindowInternal.idl		\
 	nsIDOMJSWindow.idl			\
+	nsIDOMModalContentWindow.idl		\
 	nsIDOMChromeWindow.idl			\
 	nsIDOMNSFeatureFactory.idl		\
-        nsIDOMTextRectangle.idl \
-        nsIDOMTextRectangleList.idl \
+        nsIDOMTextRectangle.idl			\
+        nsIDOMTextRectangleList.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

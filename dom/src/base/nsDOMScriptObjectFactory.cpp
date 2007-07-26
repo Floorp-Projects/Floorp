@@ -212,9 +212,10 @@ nsDOMScriptObjectFactory::GetIDForScriptType(const nsAString &aLanguageName,
 
 NS_IMETHODIMP
 nsDOMScriptObjectFactory::NewScriptGlobalObject(PRBool aIsChrome,
+                                                PRBool aIsModalContentWindow,
                                                 nsIScriptGlobalObject **aGlobal)
 {
-  return NS_NewScriptGlobalObject(aIsChrome, aGlobal);
+  return NS_NewScriptGlobalObject(aIsChrome, aIsModalContentWindow, aGlobal);
 }
 
 NS_IMETHODIMP_(nsISupports *)
