@@ -141,12 +141,6 @@ nsEffectiveTLDService::GetEffectiveTLDLength(const nsACString &aHostname,
   const char *nextDot = strchr(currDomain, '.');
   const char *end = currDomain + normHostname.Length();
   while (1) {
-    if (!nextDot) {
-      // we've hit the top domain level; return it by default.
-      *effTLDLength = end - currDomain;
-      break;
-    }
-
     nsDomainEntry *entry = mHash.GetEntry(currDomain);
     if (entry) {
       if (entry->IsWild() && prevDomain) {
@@ -164,6 +158,12 @@ nsEffectiveTLDService::GetEffectiveTLDLength(const nsACString &aHostname,
         *effTLDLength = end - nextDot - 1;
         break;
       }
+    }
+
+    if (!nextDot) {
+      // we've hit the top domain level; return it by default.
+      *effTLDLength = end - currDomain;
+      break;
     }
 
     prevDomain = currDomain;
