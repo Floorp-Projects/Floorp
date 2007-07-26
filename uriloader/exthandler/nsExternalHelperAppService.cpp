@@ -1206,7 +1206,7 @@ nsExternalHelperAppService::LoadURI(nsIURI *aURI,
   NS_ENSURE_ARG_POINTER(aURI);
 
   nsCAutoString scheme;
-  (void)aURI->GetScheme(scheme);
+  aURI->GetScheme(scheme);
   if (scheme.IsEmpty())
     return NS_OK; // must have a scheme
 
