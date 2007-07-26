@@ -888,6 +888,8 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
 
   fprintf(out, "%ld ", (long)svgReset->mFloodColor);
 
+  fprintf(out, "%ld ", (long)svgReset->mLightingColor);
+
   fprintf(out, "%s %s %s %f %f %d\" />\n",
           URICString(svgReset->mClipPath).get(),
           URICString(svgReset->mFilter).get(),

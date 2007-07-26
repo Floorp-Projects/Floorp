@@ -586,6 +586,7 @@ struct nsCSSSVG : public nsCSSStruct {
   nsCSSValue mFilter;
   nsCSSValue mFloodColor;
   nsCSSValue mFloodOpacity;
+  nsCSSValue mLightingColor;
   nsCSSValue mMarkerEnd;
   nsCSSValue mMarkerMid;
   nsCSSValue mMarkerStart;

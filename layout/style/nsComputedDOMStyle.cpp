@@ -3524,12 +3524,12 @@ nsComputedDOMStyle::GetTextRendering(nsIDOMCSSValue** aValue)
 }
 
 nsresult
-nsComputedDOMStyle::GetStopColor(nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetFloodColor(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = SetToRGBAColor(val, GetStyleSVGReset()->mStopColor);
+  nsresult rv = SetToRGBAColor(val, GetStyleSVGReset()->mFloodColor);
   if (NS_FAILED(rv)) {
     delete val;
     return rv;
@@ -3539,12 +3539,27 @@ nsComputedDOMStyle::GetStopColor(nsIDOMCSSValue** aValue)
 }
 
 nsresult
-nsComputedDOMStyle::GetFloodColor(nsIDOMCSSValue** aValue)
+nsComputedDOMStyle::GetLightingColor(nsIDOMCSSValue** aValue)
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
 
-  nsresult rv = SetToRGBAColor(val, GetStyleSVGReset()->mFloodColor);
+  nsresult rv = SetToRGBAColor(val, GetStyleSVGReset()->mLightingColor);
+  if (NS_FAILED(rv)) {
+    delete val;
+    return rv;
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetStopColor(nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv = SetToRGBAColor(val, GetStyleSVGReset()->mStopColor);
   if (NS_FAILED(rv)) {
     delete val;
     return rv;
@@ -3807,6 +3822,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(filter,                        Filter),
     COMPUTED_STYLE_MAP_ENTRY(flood_color,                   FloodColor),
     COMPUTED_STYLE_MAP_ENTRY(flood_opacity,                 FloodOpacity),
+    COMPUTED_STYLE_MAP_ENTRY(lighting_color,                LightingColor),
     COMPUTED_STYLE_MAP_ENTRY(mask,                          Mask),
     COMPUTED_STYLE_MAP_ENTRY(marker_end,                    MarkerEnd),
     COMPUTED_STYLE_MAP_ENTRY(marker_mid,                    MarkerMid),

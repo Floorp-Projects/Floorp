@@ -146,6 +146,16 @@ nsresult
 NS_NewSVGSwitchElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 nsresult
 NS_NewSVGFEConvolveMatrixElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEDistantLightElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEPointLightElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFESpotLightElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFEDiffuseLightingElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
+nsresult
+NS_NewSVGFESpecularLightingElement(nsIContent **aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
@@ -254,10 +264,18 @@ NS_NewSVGElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
     return NS_NewSVGFETurbulenceElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::feConvolveMatrix)
     return NS_NewSVGFEConvolveMatrixElement(aResult, aNodeInfo);
-  if (name == nsGkAtoms::feDiffuseLighting  ||
-      name == nsGkAtoms::feDisplacementMap  ||
+  if (name == nsGkAtoms::feDistantLight)
+    return NS_NewSVGFEDistantLightElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::fePointLight)
+    return NS_NewSVGFEPointLightElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::feSpotLight)
+    return NS_NewSVGFESpotLightElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::feDiffuseLighting)
+    return NS_NewSVGFEDiffuseLightingElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::feSpecularLighting)
+    return NS_NewSVGFESpecularLightingElement(aResult, aNodeInfo);
+  if (name == nsGkAtoms::feDisplacementMap  ||
       name == nsGkAtoms::feImage            ||
-      name == nsGkAtoms::feSpecularLighting ||
       name == nsGkAtoms::feTile)
     return NS_NewSVGFEUnimplementedMOZElement(aResult, aNodeInfo);
   if (name == nsGkAtoms::pattern)

@@ -92,7 +92,8 @@ public:
   static const MappedAttributeEntry sColorMap[];
   static const MappedAttributeEntry sFiltersMap[];
   static const MappedAttributeEntry sFEFloodMap[];
-  
+  static const MappedAttributeEntry sLightingEffectsMap[];
+
   // nsIDOMNode
   NS_IMETHOD IsSupported(const nsAString& aFeature, const nsAString& aVersion, PRBool* aReturn);
   
@@ -217,6 +218,5 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
                                                                              \
   return rv;                                                                 \
 }
-
 
 #endif // __NS_SVGELEMENT_H__
