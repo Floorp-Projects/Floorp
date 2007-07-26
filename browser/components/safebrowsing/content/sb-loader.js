@@ -79,8 +79,10 @@ var safebrowsing = {
     // Register tables
     // XXX: move table names to a pref that we originally will download
     // from the provider (need to workout protocol details)
-    phishWarden.registerWhiteTable("goog-white-exp");
-    phishWarden.registerBlackTable("goog-phish-sha128");
+    phishWarden.registerWhiteTable("goog-white-domain");
+    phishWarden.registerWhiteTable("goog-white-url");
+    phishWarden.registerBlackTable("goog-black-url");
+    phishWarden.registerBlackTable("goog-black-enchash");
 
     // Download/update lists if we're in non-enhanced mode
     phishWarden.maybeToggleUpdateChecking();

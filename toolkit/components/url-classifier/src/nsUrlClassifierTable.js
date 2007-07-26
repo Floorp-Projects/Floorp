@@ -38,76 +38,100 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-#include ../content/listmanager.js
-#include ../content/wireformat.js
+// moz/lang.js is needed for Function.prototype.inherts
+#include ../content/moz/lang.js
+#include ../content/enchash-decrypter.js
+#include ../content/multi-querier.js
+#include ../content/trtable.js
 
 var modScope = this;
 function Init() {
   // Pull the library in.
   var jslib = Cc["@mozilla.org/url-classifier/jslib;1"]
               .getService().wrappedJSObject;
-  Function.prototype.inherits = jslib.Function.prototype.inherits;
   modScope.G_Preferences = jslib.G_Preferences;
   modScope.G_PreferenceObserver = jslib.G_PreferenceObserver;
-  modScope.G_ObserverServiceObserver = jslib.G_ObserverServiceObserver;
   modScope.G_Debug = jslib.G_Debug;
-  modScope.G_Assert = jslib.G_Assert;
-  modScope.G_debugService = jslib.G_debugService;
-  modScope.G_Alarm = jslib.G_Alarm;
+  modScope.G_CryptoHasher = jslib.G_CryptoHasher;
   modScope.BindToObject = jslib.BindToObject;
-  modScope.PROT_XMLFetcher = jslib.PROT_XMLFetcher;
-  modScope.PROT_UrlCrypto = jslib.PROT_UrlCrypto;
-  modScope.RequestBackoff = jslib.RequestBackoff;
 
   // We only need to call Init once.
   modScope.Init = function() {};
 }
 
-// Module object
-function UrlClassifierListManagerMod() {
-  this.firstTime = true;
-  this.cid = Components.ID("{ca168834-cc00-48f9-b83c-fd018e58cae3}");
-  this.progid = "@mozilla.org/url-classifier/listmanager;1";
+
+function UrlClassifierTableMod() {
+  this.components = {};
+  this.addComponent({
+      cid: "{43399ee0-da0b-46a8-9541-08721265981c}",
+      name: "UrlClassifier Table Url Module",
+      progid: "@mozilla.org/url-classifier/table;1?type=url",
+      factory: new UrlClassifierTableFactory(UrlClassifierTableUrl)
+    });
+  this.addComponent({
+      cid: "{3b5004c6-3fcd-4b12-b311-a4dfbeaf27aa}",
+      name: "UrlClassifier Table Domain Module",
+      progid: "@mozilla.org/url-classifier/table;1?type=domain",
+      factory: new UrlClassifierTableFactory(UrlClassifierTableDomain)
+    });
+  this.addComponent({
+      cid: "{04f15d1d-2db8-4b8e-91d7-82f30308b434}",
+      name: "UrlClassifier Table Enchash Module",
+      progid: "@mozilla.org/url-classifier/table;1?type=enchash",
+      factory: new UrlClassifierTableFactory(UrlClassifierTableEnchash)
+    });
 }
 
-UrlClassifierListManagerMod.prototype.registerSelf = function(compMgr, fileSpec, loc, type) {
-  if (this.firstTime) {
-    this.firstTime = false;
-    throw Components.results.NS_ERROR_FACTORY_REGISTER_AGAIN;
-  }
-  compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
-  compMgr.registerFactoryLocation(this.cid,
-                                  "UrlClassifier List Manager Module",
-                                  this.progid,
-                                  fileSpec,
-                                  loc,
-                                  type);
+UrlClassifierTableMod.prototype.addComponent = function(comp) {
+  this.components[comp.cid] = comp;
 };
 
-UrlClassifierListManagerMod.prototype.getClassObject = function(compMgr, cid, iid) {  
-  if (!cid.equals(this.cid))
+UrlClassifierTableMod.prototype.registerSelf = function(compMgr, fileSpec, loc, type) {
+  compMgr = compMgr.QueryInterface(Ci.nsIComponentRegistrar);
+  // Register all the components
+  for (var cid in this.components) {
+    var comp = this.components[cid];
+    compMgr.registerFactoryLocation(Components.ID(comp.cid),
+                                    comp.name,
+                                    comp.progid,
+                                    fileSpec,
+                                    loc,
+                                    type);
+  }
+};
+
+UrlClassifierTableMod.prototype.getClassObject = function(compMgr, cid, iid) {
+  var comp = this.components[cid.toString()];
+
+  if (!comp)
     throw Components.results.NS_ERROR_NO_INTERFACE;
   if (!iid.equals(Ci.nsIFactory))
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
 
-  return this.factory;
-}
-
-UrlClassifierListManagerMod.prototype.canUnload = function(compMgr) {
-  return true;
-}
-
-UrlClassifierListManagerMod.prototype.factory = {
-  createInstance: function(outer, iid) {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    Init();
-    return (new PROT_ListManager()).QueryInterface(iid);
-  }
+  return comp.factory;
 };
 
-var ListManagerModInst = new UrlClassifierListManagerMod();
+UrlClassifierTableMod.prototype.canUnload = function(compMgr) {
+  return true;
+};
+
+/**
+ * Create a factory.
+ * @param ctor Function constructor for the object we're creating.
+ */
+function UrlClassifierTableFactory(ctor) {
+  this.ctor = ctor;
+}
+
+UrlClassifierTableFactory.prototype.createInstance = function(outer, iid) {
+  if (outer != null)
+    throw Components.results.NS_ERROR_NO_AGGREGATION;
+  Init();
+  return (new this.ctor()).QueryInterface(iid);
+};
+
+var modInst = new UrlClassifierTableMod();
 
 function NSGetModule(compMgr, fileSpec) {
-  return ListManagerModInst;
+  return modInst;
 }

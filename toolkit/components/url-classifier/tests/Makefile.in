@@ -52,11 +52,15 @@ REQUIRES = \
 	string \
 	url-classifier \
 	xpcom \
-	necko \
 	$(NULL)
 
-# xpcshell tests
-XPCSHELL_TESTS=unit
+# mochitests
+_TEST_FILES = \
+	test_enchash-decrypter.xhtml \
+	$(NULL)
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
 
 # simple c++ tests (no xpcom)
 CPPSRCS = \
@@ -72,7 +76,6 @@ LOCAL_INCLUDES = \
 
 LIBS = \
 	../src/$(LIB_PREFIX)urlclassifier_s.$(LIB_SUFFIX) \
-	$(MOZ_COMPONENT_LIBS) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
