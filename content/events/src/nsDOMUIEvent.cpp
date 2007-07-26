@@ -135,12 +135,13 @@ nsPoint nsDOMUIEvent::GetScreenPoint() {
   if (!((nsGUIEvent*)mEvent)->widget ) {
     return mEvent->refPoint;
   }
-    
+
   nsRect bounds(mEvent->refPoint, nsSize(1, 1));
   nsRect offset;
   ((nsGUIEvent*)mEvent)->widget->WidgetToScreen ( bounds, offset );
-  return nsPoint(nsPresContext::AppUnitsToIntCSSPixels(mPresContext->DevPixelsToAppUnits(offset.x)),
-                 nsPresContext::AppUnitsToIntCSSPixels(mPresContext->DevPixelsToAppUnits(offset.y)));
+  PRInt32 factor = mPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel();
+  return nsPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
+                 nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
 }
 
 nsPoint nsDOMUIEvent::GetClientPoint() {

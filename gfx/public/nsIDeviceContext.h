@@ -465,9 +465,30 @@ public:
   */
   virtual PRBool CheckDPIChange() = 0;
 
+  /**
+   * Set the pixel scaling factor: all lengths are multiplied by this factor
+   * when we convert them to device pixels. Returns whether the ratio of 
+   * app units to dev pixels changed because of the scale factor.
+   */
+  virtual PRBool SetPixelScale(float aScale) = 0;
+
+  /**
+   * Get the pixel scaling factor; defaults to 1.0, but can be changed with
+   * SetPixelScale.
+   */
+  float GetPixelScale() const { return mPixelScale; }
+
+  /**
+   * Get the unscaled ratio of app units to dev pixels; useful if something
+   * needs to be converted from to unscaled pixels
+   */
+  PRInt32 UnscaledAppUnitsPerDevPixel() { return mAppUnitsPerDevNotScaledPixel; }
+
 protected:
   PRInt32 mAppUnitsPerDevPixel;
   PRInt32 mAppUnitsPerInch;
+  PRInt32 mAppUnitsPerDevNotScaledPixel;
+  float  mPixelScale;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDeviceContext, NS_IDEVICE_CONTEXT_IID)
