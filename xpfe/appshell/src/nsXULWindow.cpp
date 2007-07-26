@@ -65,7 +65,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMXULElement.h"
-#include "nsIDOMWindowInternal.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMScreen.h"
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsIEmbeddingSiteWindow2.h"
@@ -1797,6 +1797,18 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
   nsXULWindow *xulWin = static_cast<nsXULWindow*>
                                    (static_cast<nsIXULWindow*>
                                                (newWindow));
+
+  nsCOMPtr<nsIDocShell> newDocShell;
+  xulWin->GetDocShell(getter_AddRefs(newDocShell));
+
+  // If we're opening a non-chrome modal window (i.e. a modal content
+  // window), tell the DOM window that it is modal.
+  nsCOMPtr<nsPIDOMWindow> domWin(do_GetInterface(newDocShell));
+
+  if (domWin && (aChromeFlags & nsIWebBrowserChrome::CHROME_MODAL) &&
+      !(aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)) {
+    domWin->SetModalContentWindow(PR_TRUE);
+  }
 
   xulWin->LockUntilChromeLoad();
 

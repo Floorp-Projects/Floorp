@@ -2364,18 +2364,32 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
   void *mark;
 
   JSAutoRequest ar(mContext);
-  
+
   nsresult rv;
   rv = ConvertSupportsTojsvals(aArgs, GetNativeGlobal(), &argc,
                                reinterpret_cast<void **>(&argv), &mark);
   NS_ENSURE_SUCCESS(rv, rv);
   AutoFreeJSStack stackGuard(mContext, mark); // ensure always freed.
 
-  // got the array, now attach it.
-  JSObject *args = ::JS_NewArrayObject(mContext, argc, argv);
-  jsval vargs = OBJECT_TO_JSVAL(args);
+  jsval vargs;
 
-  rv = ::JS_SetProperty(mContext, reinterpret_cast<JSObject *>(aTarget), aPropName, &vargs) ?
+  // got the arguments, now attach them.
+
+  // window.dialogArguments is supposed to be an array if a JS array
+  // was passed to showModalDialog(), deal with that here.
+  if (strcmp(aPropName, "dialogArguments") == 0 && argc == 1 &&
+      JSVAL_IS_OBJECT(argv[0]) &&
+      ::JS_IsArrayObject(mContext, JSVAL_TO_OBJECT(argv[0]))) {
+    vargs = argv[0];
+  } else {
+    JSObject *args = ::JS_NewArrayObject(mContext, argc, argv);
+    vargs = OBJECT_TO_JSVAL(args);
+  }
+
+  // Make sure to use JS_DefineProperty here so that we can override
+  // readonly XPConnect properties here as well (read dialogArguments).
+  rv = ::JS_DefineProperty(mContext, reinterpret_cast<JSObject *>(aTarget),
+                           aPropName, vargs, nsnull, nsnull, 0) ?
        NS_OK : NS_ERROR_FAILURE;
   // free 'args'???
 
@@ -2446,7 +2460,7 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
         // as we have code for handling all, we may as well use it.
         rv = AddSupportsPrimitiveTojsvals(arg, thisval);
         if (rv == NS_ERROR_NO_INTERFACE) {
-          // something else - probably an event object or similar - just
+          // something else - probably an event object or similar -
           // just wrap it.
 #ifdef NS_DEBUG
           // but first, check its not another nsISupportsPrimitive, as
