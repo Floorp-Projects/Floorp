@@ -134,6 +134,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIContentFilter.h"
+#include "nsEventDispatcher.h"
 
 const PRUnichar nbsp = 160;
 
@@ -1825,8 +1826,31 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
 {
   ForceCompositionEnd();
 
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // Fire the paste event.
+  nsCOMPtr<nsIDOMNode> eventTarget;
+  nsresult rv = GetClipboardEventTarget(getter_AddRefs(eventTarget));
+  // On failure to get event target, just forget about it and don't fire.
+  if (NS_SUCCEEDED(rv)) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent evt(PR_TRUE, NS_PASTE);
+    nsEventDispatcher::Dispatch(eventTarget, ps->GetPresContext(), &evt,
+                                nsnull, &status);
+    // if event handler return'd false (PreventDefault)
+    if (status == nsEventStatus_eConsumeNoDefault)
+      return NS_OK;
+
+    // Did the event handler cause the editor to be destroyed?
+    // (ie. the input element was removed from the document)
+    // Don't proceed with paste.
+    if (mDidPreDestroy)
+      return NS_OK;
+  }
+
   // Get Clipboard Service
-  nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if (NS_FAILED(rv))
     return rv;
@@ -1934,15 +1958,34 @@ NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(PRInt32 aSelectionType)
 
 NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
 {
-  if (!aCanPaste)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aCanPaste);
   *aCanPaste = PR_FALSE;
+
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // Fire the beforepaste event.  If the event handler requests to prevent
+  // default behavior, set *aCanPaste = true.  (IE-style behavior)
+  nsCOMPtr<nsIDOMNode> eventTarget;
+  nsresult rv = GetClipboardEventTarget(getter_AddRefs(eventTarget));
+  // On failure to get event target, just forget about it and don't fire.
+  if (NS_SUCCEEDED(rv)) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent evt(PR_TRUE, NS_BEFOREPASTE);
+    nsEventDispatcher::Dispatch(eventTarget, ps->GetPresContext(), &evt,
+                                nsnull, &status);
+    // if event handler return'd false (PreventDefault)
+    if (status == nsEventStatus_eConsumeNoDefault) {
+      *aCanPaste = PR_TRUE;
+      return NS_OK;
+    }
+  }
   
   // can't paste if readonly
   if (!IsModifiable())
     return NS_OK;
     
-  nsresult rv;
   nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1", &rv));
   if (NS_FAILED(rv)) return rv;
   
