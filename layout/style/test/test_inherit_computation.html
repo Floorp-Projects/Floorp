@@ -97,13 +97,11 @@ function test_property(property)
     gParentRuleTop.style.setProperty(property, info.other_values[0], "");
     var inherit_other_computed_n = get_computed_value_node(gNChild, property);
     var inherit_other_computed_f = get_computed_value_node(gFChild, property);
-    var xfail_inherit_other = xfail_inherit(property, false) ||
-                              property == "font-family"; /* bug 385699 */
-    (xfail_inherit_other ? todo_is : is)(
+    (xfail_inherit(property, false) ? todo_is : is)(
        inherit_other_computed_n, other_computed_n,
        "inherit should cause inheritance of other value for '" +
        property + "'");
-    (xfail_inherit_other ? todo_is : is)(
+    (xfail_inherit(property, false) ? todo_is : is)(
        inherit_other_computed_f, other_computed_f,
        "inherit should cause inheritance of other value for '" +
        property + "'");
