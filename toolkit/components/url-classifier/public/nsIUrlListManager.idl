@@ -39,17 +39,16 @@
 #include "nsISupports.idl"
 
 /**
- * Interface for a class that manages updates of the url classifier database.
+ * Interface for a class that manages updates of multiple nsIUrlClassifierTables.
  */
 
 // Interface for JS function callbacks
-[scriptable, function, uuid(fa4caf12-d057-4e7e-81e9-ce066ceee90b)]
+[scriptable, function, uuid(ba913c5c-13d6-41eb-83c1-de2f4165a516)]
 interface nsIUrlListManagerCallback : nsISupports {
-  void handleEvent(in ACString value);
+  void handleEvent(in boolean value);
 };
 
-
-[scriptable, uuid(874d6c95-fb8b-4f89-b36d-85fe267ab356)]
+[scriptable, uuid(d39982d6-da4f-4a27-8d91-f9c7b179aa33)]
 interface nsIUrlListManager : nsISupports
 {
     /**
@@ -83,12 +82,10 @@ interface nsIUrlListManager : nsISupports
     void disableUpdate(in ACString tableName);
 
     /**
-     * Lookup a key.  Should not raise exceptions.  Calls the callback
-     * function with a comma-separated list of tables to which the key
-     * belongs.
+     * Lookup a key in a table.  Should not raise exceptions.  Calls
+     * the callback function with a single parameter: true if the key
+     * is in the table, false if it isn't.
      */
-    void safeLookup(in ACString key,
+    void safeExists(in ACString tableName, in ACString key,
                     in nsIUrlListManagerCallback cb);
-
-    void checkForUpdates();
 };

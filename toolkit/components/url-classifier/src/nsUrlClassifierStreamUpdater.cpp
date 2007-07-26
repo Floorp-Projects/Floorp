@@ -37,14 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCRT.h"
-#include "nsIHttpChannel.h"
 #include "nsIObserverService.h"
-#include "nsIStringStream.h"
-#include "nsIUploadChannel.h"
 #include "nsIURI.h"
 #include "nsIUrlClassifierDBService.h"
 #include "nsStreamUtils.h"
-#include "nsStringStream.h"
 #include "nsToolkitCompsCID.h"
 #include "nsUrlClassifierStreamUpdater.h"
 #include "prlog.h"
@@ -67,9 +63,8 @@ class nsUrlClassifierStreamUpdater;
 class TableUpdateListener : public nsIStreamListener
 {
 public:
-  TableUpdateListener(nsIUrlClassifierCallback *aSuccessCallback,
-                      nsIUrlClassifierCallback *aUpdateErrorCallback,
-                      nsIUrlClassifierCallback *aDownloadErrorCallback,
+  TableUpdateListener(nsIUrlClassifierCallback *aTableCallback,
+                      nsIUrlClassifierCallback *aErrorCallback,
                       nsUrlClassifierStreamUpdater* aStreamUpdater);
   nsCOMPtr<nsIUrlClassifierDBService> mDBService;
 
@@ -81,23 +76,20 @@ private:
   ~TableUpdateListener() {}
 
   // Callback when table updates complete.
-  nsCOMPtr<nsIUrlClassifierCallback> mSuccessCallback;
-  nsCOMPtr<nsIUrlClassifierCallback> mUpdateErrorCallback;
-  nsCOMPtr<nsIUrlClassifierCallback> mDownloadErrorCallback;
+  nsCOMPtr<nsIUrlClassifierCallback> mTableCallback;
+  nsCOMPtr<nsIUrlClassifierCallback> mErrorCallback;
 
   // Reference to the stream updater that created this.
   nsUrlClassifierStreamUpdater *mStreamUpdater;
 };
 
 TableUpdateListener::TableUpdateListener(
-                                nsIUrlClassifierCallback *aSuccessCallback,
-                                nsIUrlClassifierCallback *aUpdateErrorCallback,
-                                nsIUrlClassifierCallback *aDownloadErrorCallback,
+                                nsIUrlClassifierCallback *aTableCallback,
+                                nsIUrlClassifierCallback *aErrorCallback,
                                 nsUrlClassifierStreamUpdater* aStreamUpdater)
 {
-  mSuccessCallback = aSuccessCallback;
-  mDownloadErrorCallback = aDownloadErrorCallback;
-  mUpdateErrorCallback = aUpdateErrorCallback;
+  mTableCallback = aTableCallback;
+  mErrorCallback = aErrorCallback;
   mStreamUpdater = aStreamUpdater;
 }
 
@@ -118,13 +110,10 @@ TableUpdateListener::OnStartRequest(nsIRequest *request, nsISupports* context)
   nsresult status;
   rv = httpChannel->GetStatus(&status);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  LOG(("OnStartRequest (status %d)", status));
-
   if (NS_ERROR_CONNECTION_REFUSED == status ||
       NS_ERROR_NET_TIMEOUT == status) {
     // Assume that we're overloading the server and trigger backoff.
-    mDownloadErrorCallback->HandleEvent(nsCString());
+    mErrorCallback->HandleEvent(nsCString());
     return NS_ERROR_ABORT;
   }
 
@@ -162,7 +151,7 @@ TableUpdateListener::OnDataAvailable(nsIRequest *request,
 
     nsCAutoString strStatus;
     strStatus.AppendInt(status);
-    mDownloadErrorCallback->HandleEvent(strStatus);
+    mErrorCallback->HandleEvent(strStatus);
     return NS_ERROR_ABORT;
   }
 
@@ -191,7 +180,7 @@ TableUpdateListener::OnStopRequest(nsIRequest *request, nsISupports* context,
   // If we got the whole stream, call Finish to commit the changes.
   // Otherwise, call Cancel to rollback the changes.
   if (NS_SUCCEEDED(aStatus))
-    mDBService->Finish(mSuccessCallback, mUpdateErrorCallback);
+    mDBService->Finish(mTableCallback);
   else
     mDBService->CancelStream();
 
@@ -246,8 +235,6 @@ nsUrlClassifierStreamUpdater::GetUpdateUrl(nsACString & aUpdateUrl)
 NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::SetUpdateUrl(const nsACString & aUpdateUrl)
 {
-  LOG(("Update URL is %s\n", PromiseFlatCString(aUpdateUrl).get()));
-
   nsresult rv = NS_NewURI(getter_AddRefs(mUpdateUrl), aUpdateUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -256,10 +243,8 @@ nsUrlClassifierStreamUpdater::SetUpdateUrl(const nsACString & aUpdateUrl)
 
 NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::DownloadUpdates(
-                                const nsACString &aRequestBody,
-                                nsIUrlClassifierCallback *aSuccessCallback,
-                                nsIUrlClassifierCallback *aUpdateErrorCallback,
-                                nsIUrlClassifierCallback *aDownloadErrorCallback,
+                                nsIUrlClassifierCallback *aTableCallback,
+                                nsIUrlClassifierCallback *aErrorCallback,
                                 PRBool *_retval)
 {
   if (mIsUpdating) {
@@ -291,12 +276,8 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
   rv = NS_NewChannel(getter_AddRefs(mChannel), mUpdateUrl);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AddRequestBody(aRequestBody);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Bind to a different callback each time we invoke this method.
-  mListener = new TableUpdateListener(aSuccessCallback, aUpdateErrorCallback,
-                                      aDownloadErrorCallback, this);
+  mListener = new TableUpdateListener(aTableCallback, aErrorCallback, this);
 
   // Make the request
   rv = mChannel->AsyncOpen(mListener.get(), nsnull);
@@ -304,35 +285,6 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
 
   mIsUpdating = PR_TRUE;
   *_retval = PR_TRUE;
-
-  return NS_OK;
-}
-
-nsresult
-nsUrlClassifierStreamUpdater::AddRequestBody(const nsACString &aRequestBody)
-{
-  nsresult rv;
-  nsCOMPtr<nsIStringInputStream> strStream =
-    do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = strStream->SetData(aRequestBody.BeginReading(),
-                          aRequestBody.Length());
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIUploadChannel> uploadChannel = do_QueryInterface(mChannel, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = uploadChannel->SetUploadStream(strStream,
-                                      NS_LITERAL_CSTRING("text/plain"),
-                                      -1);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = httpChannel->SetRequestMethod(NS_LITERAL_CSTRING("POST"));
-  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }

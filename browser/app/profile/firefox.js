@@ -493,7 +493,7 @@ pref("browser.safebrowsing.enabled", true);
 pref("browser.safebrowsing.remoteLookups", false);
 
 // Non-enhanced mode (local url lists) URL list to check for updates
-pref("browser.safebrowsing.provider.0.updateURL", "http://sb.google.com/safebrowsing/downloads?client={moz:client}&appver={moz:version}&pver=2.0");
+pref("browser.safebrowsing.provider.0.updateURL", "http://sb.google.com/safebrowsing/update?client={moz:client}&appver={moz:version}&");
 
 pref("browser.safebrowsing.dataProvider", 0);
 
