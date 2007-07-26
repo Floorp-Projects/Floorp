@@ -1,11 +1,15 @@
 classic.jar:
 % skin mozapps classic/1.0 %skin/classic/mozapps/
 #ifndef MINIMO
-  skin/classic/mozapps/downloads/progress-bar-paused.gif          (downloads/progress-bar-paused.gif)
-  skin/classic/mozapps/downloads/progress-bar.gif                 (downloads/progress-bar.gif)
-  skin/classic/mozapps/downloads/progress-remainder.gif           (downloads/progress-remainder.gif)
-  skin/classic/mozapps/downloads/background-gradient.gif          (downloads/background-gradient.gif)
-  skin/classic/mozapps/downloads/background-stripe.gif            (downloads/background-stripe.gif)
+  skin/classic/mozapps/downloads/pause.png                        (downloads/pause.png)
+  skin/classic/mozapps/downloads/remove.png                       (downloads/remove.png)
+  skin/classic/mozapps/downloads/reload.png                       (downloads/reload.png)
+  skin/classic/mozapps/downloads/cancel.png                       (downloads/cancel.png)
+  skin/classic/mozapps/downloads/open.png                         (downloads/open.png)
+  skin/classic/mozapps/downloads/start.png                        (downloads/start.png)
+  skin/classic/mozapps/downloads/info.png                         (downloads/info.png)
+  skin/classic/mozapps/downloads/link.png                         (downloads/link.png)
+  skin/classic/mozapps/downloads/location.png                     (downloads/location.png)
   skin/classic/mozapps/downloads/download-inprogress.png          (downloads/download-inprogress.png)
   skin/classic/mozapps/downloads/downloadIcon.png                 (downloads/downloadIcon.png)
   skin/classic/mozapps/downloads/downloads.css                    (downloads/downloads.css)
@@ -38,4 +42,5 @@ classic.jar:
   skin/classic/mozapps/places/defaultFavicon.png                  (places/defaultFavicon.png)
   skin/classic/mozapps/places/tagContainerIcon.png                (places/tagContainerIcon.png)
 #endif
+  skin/classic/mozapps/handling/handling.css                      (handling/handling.css)
 #endif

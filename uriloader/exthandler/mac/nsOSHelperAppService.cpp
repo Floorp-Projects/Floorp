@@ -169,24 +169,6 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
   return rv;
 }
 
-nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
-{
-  nsCAutoString url;
-  nsresult rv = NS_ERROR_FAILURE;
-  
-  if (aURL)
-  {
-    aURL->GetSpec(url);
-    if (!url.IsEmpty())
-    {
-      nsCOMPtr<nsIInternetConfigService> icService (do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID));
-      if (icService)
-        rv = icService->LaunchURL(url.get());
-    }
-  }
-  return rv;
-}
-
 nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * aPlatformAppPath, nsIFile ** aFile)
 {
   nsresult rv;

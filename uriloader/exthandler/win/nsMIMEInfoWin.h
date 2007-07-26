@@ -57,7 +57,9 @@ class nsMIMEInfoWin : public nsMIMEInfoBase, public nsIPropertyBag {
     { 
       mDefaultApplication = aDefaultApplication; 
     }
+
   protected:
+    virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI);
     virtual nsresult LaunchDefaultWithFile(nsIFile* aFile);
   
   private:

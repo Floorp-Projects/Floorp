@@ -44,6 +44,7 @@
 #include "nsMIMEInfoMac.h"
 #include "nsILocalFileMac.h"
 #include "nsIFileURL.h"
+#include "nsIInternetConfigService.h"
 
 NS_IMETHODIMP
 nsMIMEInfoMac::LaunchWithURI(nsIURI* aURI)
@@ -73,10 +74,13 @@ nsMIMEInfoMac::LaunchWithURI(nsIURI* aURI)
   else
     return NS_ERROR_INVALID_ARG;
 
+  if (mClass == eProtocolInfo)
+    return LoadUriInternal(aURI);
+
   // get the nsILocalFile version of the doc to launch with
   nsCOMPtr<nsILocalFile> docToLoad;
   rv = GetLocalFileFromURI(aURI, getter_AddRefs(docToLoad));
-  if (NS_FAILED(rv)) return rv;
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // if we've already got an app, just QI so we have the launchWithDoc method
   nsCOMPtr<nsILocalFileMac> app;
@@ -104,3 +108,29 @@ nsMIMEInfoMac::LaunchWithURI(nsIURI* aURI)
   
   return app->LaunchWithDoc(docToLoad, PR_FALSE); 
 }
+
+nsresult 
+nsMIMEInfoMac::LoadUriInternal(nsIURI *aURI)
+{
+  NS_ENSURE_ARG_POINTER(aURI);
+  nsresult rv = NS_ERROR_FAILURE;
+  
+  nsCAutoString uri;
+  aURI->GetSpec(uri);
+  if (!uri.IsEmpty()) {
+    nsCOMPtr<nsIInternetConfigService> icService = 
+      do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID);
+    if (icService)
+      rv = icService->LaunchURL(uri.get());
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMIMEInfoMac::GetHasDefaultHandler(PRBool *_retval)
+{
+  // We have a default application if we have a description
+  *_retval = !mDefaultAppDescription.IsEmpty();
+  return NS_OK;
+}
+
