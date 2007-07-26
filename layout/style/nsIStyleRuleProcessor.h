@@ -153,19 +153,24 @@ struct StateRuleProcessorData : public RuleProcessorData {
 struct AttributeRuleProcessorData : public RuleProcessorData {
   AttributeRuleProcessorData(nsPresContext* aPresContext,
                              nsIContent* aContent,
+                             PRInt32 aNameSpaceID,
                              nsIAtom* aAttribute,
                              PRInt32 aModType,
                              PRUint32 aStateMask)
     : RuleProcessorData(aPresContext, aContent, nsnull),
+      mNameSpaceID(aNameSpaceID),
       mAttribute(aAttribute),
       mModType(aModType),
       mStateMask(aStateMask)
   {
     NS_PRECONDITION(aContent, "null pointer");
   }
-  nsIAtom* mAttribute; // |HasAttributeDependentStyle| for which attribute?
-  PRInt32 mModType;    // The type of modification (see nsIDOMMutationEvent).
-  PRUint32 mStateMask; // The states that changed with the attr change.
+  // |HasAttributeDependentStyle| for which attribute?
+  PRInt32  mNameSpaceID;
+  nsIAtom* mAttribute;
+
+  PRInt32  mModType;     // The type of modification (see nsIDOMMutationEvent).
+  PRUint32 mStateMask;   // The states that changed with the attr change.
 };
 
 

@@ -1001,6 +1001,8 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
 static PRBool SelectorMatches(RuleProcessorData &data,
                               nsCSSSelector* aSelector,
                               PRInt32 aStateMask, // states NOT to test
+                              PRInt32 aNameSpaceID, // the namespace of the
+                                                    // attribute NOT to test
                               nsIAtom* aAttribute, // attribute NOT to test
                               PRBool* const aDependence = nsnull) 
 
@@ -1322,9 +1324,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       result = PR_TRUE;
       nsAttrSelector* attr = aSelector->mAttrList;
       do {
-        if (attr->mAttr == aAttribute) {
-          // XXX we should really have a namespace, not just an attr
-          // name, in HasAttributeDependentStyle!
+        if (attr->mAttr == aAttribute &&
+            (attr->mNameSpace == aNameSpaceID ||
+             attr->mNameSpace == kNameSpaceID_Unknown)) {
           result = PR_TRUE;
           if (aDependence)
             *aDependence = PR_TRUE;
@@ -1396,8 +1398,9 @@ static PRBool SelectorMatches(RuleProcessorData &data,
   if (result && IDList) {
     // test for ID match
     result = PR_FALSE;
-
-    if (aAttribute && aAttribute == data.mContent->GetIDAttributeName()) {
+    PRInt32 namespaceID;
+    if (aAttribute &&
+        data.mContent->IsPotentialIDAttributeName(namespaceID, aAttribute)) {
       result = PR_TRUE;
       if (aDependence)
         *aDependence = PR_TRUE;
@@ -1435,7 +1438,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     
   if (result && aSelector->mClassList) {
     // test for class match
-    if (aAttribute && aAttribute == data.mContent->GetClassAttributeName()) {
+    if (aAttribute && aAttribute == data.mContent->GetClassAttributeName() &&
+        aNameSpaceID == kNameSpaceID_None) {
       result = PR_TRUE;
       if (aDependence)
         *aDependence = PR_TRUE;
@@ -1462,7 +1466,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
     for (nsCSSSelector *negation = aSelector->mNegations;
          result && negation; negation = negation->mNegations) {
       PRBool dependence = PR_FALSE;
-      result = !SelectorMatches(data, negation, aStateMask,
+      result = !SelectorMatches(data, negation, aStateMask, aNameSpaceID,
                                 aAttribute, &dependence);
       // If the selector does match due to the dependence on aStateMask
       // or aAttribute, then we want to keep result true so that the
@@ -1536,7 +1540,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData& aPrevData,
     if (! data) {
       return PR_FALSE;
     }
-    if (SelectorMatches(*data, selector, 0, nsnull)) {
+    if (SelectorMatches(*data, selector, 0, kNameSpaceID_Unknown, nsnull)) {
       // to avoid greedy matching, we need to recur if this is a
       // descendant combinator and the next combinator is not
       if ((NS_IS_GREEDY_OPERATOR(selector->mOperator)) &&
@@ -1573,7 +1577,7 @@ static void ContentEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
 {
   ElementRuleProcessorData* data = (ElementRuleProcessorData*)aData;
 
-  if (SelectorMatches(*data, aSelector, 0, nsnull)) {
+  if (SelectorMatches(*data, aSelector, 0, kNameSpaceID_Unknown, nsnull)) {
     nsCSSSelector *next = aSelector->mNext;
     if (!next || SelectorMatchesTree(*data, next)) {
       // for performance, require that every implementation of
@@ -1626,7 +1630,7 @@ static void PseudoEnumFunc(nsICSSStyleRule* aRule, nsCSSSelector* aSelector,
       if (PRUnichar('+') == selector->mOperator) {
         return; // not valid here, can't match
       }
-      if (SelectorMatches(*data, selector, 0, nsnull)) {
+      if (SelectorMatches(*data, selector, 0, kNameSpaceID_Unknown, nsnull)) {
         selector = selector->mNext;
       }
       else {
@@ -1697,7 +1701,8 @@ PR_STATIC_CALLBACK(PRBool) StateEnumFunc(void* aSelector, void* aData)
   // bother calling SelectorMatches, since even if it returns false
   // enumData->change won't change.
   if ((possibleChange & ~(enumData->change)) &&
-      SelectorMatches(*data, selector, data->mStateMask, nsnull) &&
+      SelectorMatches(*data, selector, data->mStateMask, kNameSpaceID_Unknown,
+                      nsnull) &&
       SelectorMatchesTree(*data, selector->mNext)) {
     enumData->change = nsReStyleHint(enumData->change | possibleChange);
   }
@@ -1751,7 +1756,8 @@ PR_STATIC_CALLBACK(PRBool) AttributeEnumFunc(void* aSelector, void* aData)
   // bother calling SelectorMatches, since even if it returns false
   // enumData->change won't change.
   if ((possibleChange & ~(enumData->change)) &&
-      SelectorMatches(*data, selector, data->mStateMask, data->mAttribute) &&
+      SelectorMatches(*data, selector, data->mStateMask, data->mNameSpaceID,
+                      data->mAttribute) &&
       SelectorMatchesTree(*data, selector->mNext)) {
     enumData->change = nsReStyleHint(enumData->change | possibleChange);
   }
@@ -1772,6 +1778,7 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   // and :visited rules from prefs), rather than hacking AddRule below
   // to add |href| to the hash, we'll just handle it here.
   if (aData->mAttribute == nsGkAtoms::href &&
+      aData->mNameSpaceID == kNameSpaceID_None &&
       aData->mIsHTMLContent &&
       (aData->mContentTag == nsGkAtoms::a ||
        aData->mContentTag == nsGkAtoms::area ||
@@ -1789,11 +1796,13 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   // we have a hashtable with a per-attribute list.
 
   if (cascade) {
-    if (aData->mAttribute == aData->mContent->GetIDAttributeName()) {
+    if (aData->mContent->IsPotentialIDAttributeName(aData->mNameSpaceID,
+                                                    aData->mAttribute)) {
       cascade->mIDSelectors.EnumerateForwards(AttributeEnumFunc, &data);
     }
     
-    if (aData->mAttribute == aData->mContent->GetClassAttributeName()) {
+    if (aData->mNameSpaceID == kNameSpaceID_None &&
+        aData->mAttribute == aData->mContent->GetClassAttributeName()) {
       cascade->mClassSelectors.EnumerateForwards(AttributeEnumFunc, &data);
     }
 

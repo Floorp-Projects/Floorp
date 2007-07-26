@@ -46,7 +46,9 @@ public:
   virtual ~nsXMLEventsElement();
   NS_FORWARD_NSIDOMNODE(nsXMLElement::)
 
-  virtual nsIAtom *GetIDAttributeName() const;
+  virtual nsIAtom *GetIDAttributeName(PRInt32& aNameSpaceID) const;
+  virtual PRBool IsPotentialIDAttributeName(PRInt32 aNameSpaceID,
+                                            nsIAtom* aAtom) const;
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
@@ -63,11 +65,21 @@ nsXMLEventsElement::~nsXMLEventsElement()
 }
 
 nsIAtom *
-nsXMLEventsElement::GetIDAttributeName() const
+nsXMLEventsElement::GetIDAttributeName(PRInt32& aNameSpaceID) const
 {
-  if (mNodeInfo->Equals(nsGkAtoms::listener))
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::id)) {
+    aNameSpaceID = kNameSpaceID_None;
     return nsGkAtoms::id;
-  return nsXMLElement::GetIDAttributeName();
+  }
+  return nsGenericElement::GetIDAttributeName(aNameSpaceID);
+}
+
+PRBool
+nsXMLEventsElement::IsPotentialIDAttributeName(PRInt32 aNameSpaceID,
+                                               nsIAtom* aAtom) const
+{
+  return (aNameSpaceID == kNameSpaceID_None && aAtom == nsGkAtoms::id) ||
+    nsGenericElement::IsPotentialIDAttributeName(aNameSpaceID, aAtom);
 }
 
 nsresult

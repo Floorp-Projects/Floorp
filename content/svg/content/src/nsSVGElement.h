@@ -71,7 +71,9 @@ public:
 
   // nsIContent interface methods
 
-  virtual nsIAtom *GetIDAttributeName() const;
+  virtual nsIAtom *GetIDAttributeName(PRInt32& aNameSpaceID) const;
+  virtual PRBool IsPotentialIDAttributeName(PRInt32 aNameSpaceID,
+                                            nsIAtom* aAtom) const;
   virtual nsIAtom *GetClassAttributeName() const;
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);

@@ -929,7 +929,8 @@ nsXULDocument::AttributeChanged(nsIDocument* aDocument,
 
     // XXXbz check aNameSpaceID, dammit!
     // First see if we need to update our element map.
-    if ((aAttribute == nsGkAtoms::id) || (aAttribute == nsGkAtoms::ref)) {
+    if (aElement->IsPotentialIDAttributeName(aNameSpaceID, aAttribute) ||
+        (aAttribute == nsGkAtoms::ref && aNameSpaceID == kNameSpaceID_None)) {
 
         rv = mElementMap.Enumerate(RemoveElementsFromMapByContent, aElement);
         if (NS_FAILED(rv)) return;
@@ -1757,29 +1758,27 @@ nsXULDocument::GetTemplateBuilderFor(nsIContent* aContent,
     return NS_OK;
 }
 
-// Attributes that are used with getElementById() and the
-// resource-to-element map.
-nsIAtom** nsXULDocument::kIdentityAttrs[] =
-{
-    &nsGkAtoms::id,
-    &nsGkAtoms::ref,
-    nsnull
-};
-
 nsresult
 nsXULDocument::AddElementToMap(nsIContent* aElement)
 {
-    // Look at the element's 'id' and 'ref' attributes, and if set,
+    // Look at the element's ID and 'ref' attributes, and if set,
     // add pointers in the resource-to-element map to the element.
     nsresult rv;
-
-    for (PRInt32 i = 0; kIdentityAttrs[i] != nsnull; ++i) {
-        nsAutoString value;
-        aElement->GetAttr(kNameSpaceID_None, *kIdentityAttrs[i], value);
-        if (!value.IsEmpty()) {
-            rv = mElementMap.Add(value, aElement);
-            if (NS_FAILED(rv)) return rv;
+    nsIAtom* idAtom = aElement->GetID();
+    if (idAtom) {
+        nsAutoString idStr;
+        idAtom->ToString(idStr);
+        if (!idStr.IsEmpty()) {
+            rv = mElementMap.Add(idStr, aElement);
+            NS_ENSURE_SUCCESS(rv, rv);
         }
+    }
+
+    nsAutoString refvalue;
+    aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::ref, refvalue);
+    if (!refvalue.IsEmpty()) {
+        rv = mElementMap.Add(refvalue, aElement);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     return NS_OK;
@@ -1791,14 +1790,21 @@ nsXULDocument::RemoveElementFromMap(nsIContent* aElement)
 {
     // Remove the element from the resource-to-element map.
     nsresult rv;
-
-    for (PRInt32 i = 0; kIdentityAttrs[i] != nsnull; ++i) {
-        nsAutoString value;
-        aElement->GetAttr(kNameSpaceID_None, *kIdentityAttrs[i], value);
-        if (!value.IsEmpty()) {
-            rv = mElementMap.Remove(value, aElement);
-            if (NS_FAILED(rv)) return rv;
+    nsIAtom* idAtom = aElement->GetID();
+    if (idAtom) {
+        nsAutoString idStr;
+        idAtom->ToString(idStr);
+        if (!idStr.IsEmpty()) {
+            rv = mElementMap.Remove(idStr, aElement);
+            NS_ENSURE_SUCCESS(rv, rv);
         }
+    }
+
+    nsAutoString refvalue;
+    aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::ref, refvalue);
+    if (!refvalue.IsEmpty()) {
+        rv = mElementMap.Remove(refvalue, aElement);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     return NS_OK;
