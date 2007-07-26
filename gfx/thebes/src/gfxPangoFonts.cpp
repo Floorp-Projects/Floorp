@@ -856,7 +856,7 @@ gfxPangoFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
     PRBool is8Bit = PR_FALSE;
 #if defined(ENABLE_XFT_FAST_PATH_8BIT)
     if (CanTakeFastPath(aFlags)) {
-        PRUint32 allBits;
+        PRUint32 allBits = 0;
         PRUint32 i;
         for (i = 0; i < aLength; ++i) {
             allBits |= aString[i];
