@@ -1,0 +1,52 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-print">
+ <head>
+  <title>CSS 2.1 Test Suite: Overflow Pagination (Multiple)</title>
+  <link rel="author" title="Elika J. Etemad" href="http://fantasai.inkedblade.net/contact"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#the-height-property"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#length-units"/>
+  <style type="text/css">
+    .overflow {
+      border: solid 2pt silver;
+      height: 25in;
+      border-bottom: 4pt solid black;
+    }
+    #following {
+      position: absolute;
+      top: 0; left: 0;
+      margin: 0;
+      height: 72pt;
+      border: 2pt black;
+      border-style: none solid;
+      background: white;
+      font-size: 10pt;
+      line-height: 10pt;
+      text-align: center;
+      color: blue;
+    }
+    body {
+      position: relative;
+    }
+  </style>
+ </head>
+ <body>
+  <p id="following">
+    This paragraph must be on the first page in paged media.
+    There must be no red on any page. There must be a blue line
+    on a page <em>after</em> the first (assuming the page area
+    is shorter than 25 inches).
+  </p>
+  <div class="container no1">
+    <div class="overflow">
+    </div>
+  </div>
+  <div class="container no2">
+    <div class="overflow">
+    </div>
+  </div>
+  <div class="container no3">
+    <div class="overflow">
+    </div>
+  </div>
+ </body>
+</html>
