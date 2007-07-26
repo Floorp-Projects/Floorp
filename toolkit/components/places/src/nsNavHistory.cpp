@@ -270,8 +270,6 @@ nsNavHistory::Init()
 {
   nsresult rv;
 
-  gExpandedItems.Init(128);
-
   // prefs (must be before DB init, which uses the pref service)
   nsCOMPtr<nsIPrefService> prefService =
     do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
@@ -474,7 +472,7 @@ nsNavHistory::InitDBFile(PRBool aForceInit)
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
-  
+
   return NS_OK;
 }
 
@@ -1064,18 +1062,6 @@ nsNavHistory::InitMemDB()
 #endif
 
 
-// nsNavHistory::SaveExpandItem
-//
-//    This adds an item to the persistent list of items that should be
-//    expanded.
-
-void
-nsNavHistory::SaveExpandItem(const nsAString& aTitle)
-{
-  gExpandedItems.Put(aTitle, 1);
-}
-
-
 // nsNavHistory::GetUrlIdFor
 //
 //    Called by the bookmarks and annotation services, this function returns the
@@ -1114,20 +1100,6 @@ nsNavHistory::GetUrlIdFor(nsIURI* aURI, PRInt64* aEntryID,
     // Doesn't exist: don't do anything, entry ID was already set to 0 above
     return NS_OK;
   }
-}
-
-
-// nsNavHistory::SaveCollapseItem
-//
-//    For now, just remove things that should be collapsed. Maybe in the
-//    future we'll want to save things that have been explicitly collapsed
-//    versus things that were just never expanded in the first place. This could
-//    be done by doing a put with a value of 0.
-
-void
-nsNavHistory::SaveCollapseItem(const nsAString& aTitle)
-{
-  gExpandedItems.Remove(aTitle);
 }
 
 
@@ -2026,38 +1998,116 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
   return NS_OK;
 }
 
+// determine from our nsNavHistoryQuery array and nsNavHistoryQueryOptions
+// if this is the place query from the history menu.
+// from browser-menubar.inc, our history menu query is:
+// place:type=0&sort=4&maxResults=10
+// note, any maxResult > 0 will still be considered a history menu query
+static
+PRBool IsHistoryMenuQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries, nsNavHistoryQueryOptions *aOptions)
+{
+  if (aQueries.Count() != 1)
+    return PR_FALSE;
 
-// nsNavHistory::GetQueryResults
-//
-//    Call this to get the results from a complex query. This is used by
-//    nsNavHistoryQueryResultNode to populate its children. For simple bookmark
-//    queries, use nsNavBookmarks::QueryFolderChildren.
-//
-//    THIS DOES NOT DO SORTING. You will need to sort the container yourself
-//    when you get the results. This is because sorting depends on tree
-//    statistics that will be built from the perspective of the tree. See
-//    nsNavHistoryQueryResultNode::FillChildren
-//
-//    FIXME: This only does keyword searching for the first query, and does
-//    it ANDed with the all the rest of the queries.
+  nsNavHistoryQuery *aQuery = aQueries[0];
+ 
+  if (aOptions->QueryType() != nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY)
+    return PR_FALSE;
+
+  if (aOptions->ResultType() != nsINavHistoryQueryOptions::RESULTS_AS_URI)
+    return PR_FALSE;
+
+  if (aOptions->SortingMode() != nsINavHistoryQueryOptions::SORT_BY_DATE_DESCENDING)
+    return PR_FALSE;
+
+  if (aOptions->MaxResults() <= 0)
+    return PR_FALSE;
+
+  PRUint32 groupCount;
+  const PRUint16* groupings = aOptions->GroupingMode(&groupCount);
+  if (groupings || groupCount)
+    return PR_FALSE;
+
+  if (aOptions->ExcludeItems())
+    return PR_FALSE;
+
+  if (aOptions->ExcludeQueries())
+    return PR_FALSE;
+
+  if (aOptions->ExcludeReadOnlyFolders())
+    return PR_FALSE;
+
+  if (aOptions->ExpandQueries())
+    return PR_FALSE;
+
+  if (aOptions->IncludeHidden())
+    return PR_FALSE;
+
+  if (aOptions->ShowSessions())
+    return PR_FALSE;
+
+  nsCString sortingAnnotation;
+  aOptions->GetSortingAnnotation(sortingAnnotation);
+  if (!sortingAnnotation.IsEmpty())
+    return PR_FALSE;
+
+  if (aQuery->MinVisits() != -1 || aQuery->MaxVisits() != -1)
+    return PR_FALSE;
+
+  if (aQuery->BeginTime() || aQuery->BeginTimeReference()) 
+    return PR_FALSE;
+
+  if (aQuery->EndTime() || aQuery->EndTimeReference()) 
+    return PR_FALSE;
+
+  if (!aQuery->SearchTerms().IsEmpty()) 
+    return PR_FALSE;
+
+  if (aQuery->OnlyBookmarked()) 
+    return PR_FALSE;
+
+  if (aQuery->DomainIsHost() || !aQuery->Domain().IsEmpty())
+    return PR_FALSE;
+
+  if (aQuery->AnnotationIsNot() || !aQuery->Annotation().IsEmpty()) 
+    return PR_FALSE;
+
+  if (aQuery->UriIsPrefix() || aQuery->Uri()) 
+    return PR_FALSE;
+
+  if (aQuery->Folders().Length() > 0)
+    return PR_FALSE;
+
+  return PR_TRUE;
+}
 
 nsresult
-nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
-                              const nsCOMArray<nsNavHistoryQuery>& aQueries,
-                              nsNavHistoryQueryOptions *aOptions,
-                              nsCOMArray<nsNavHistoryResultNode>* aResults)
+nsNavHistory::ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries,
+                                   nsNavHistoryQueryOptions *aOptions, 
+                                   nsCString &queryString)
 {
-  NS_ENSURE_ARG_POINTER(aOptions);
-  NS_ASSERTION(aResults->Count() == 0, "Initial result array must be empty");
-  if (! aQueries.Count())
-    return NS_ERROR_INVALID_ARG;
-
-  nsresult rv;
-
   PRInt32 sortingMode = aOptions->SortingMode();
   if (sortingMode < 0 ||
       sortingMode > nsINavHistoryQueryOptions::SORT_BY_ANNOTATION_DESCENDING) {
     return NS_ERROR_INVALID_ARG;
+  }
+
+  // for the very special query for the history menu 
+  // we generate a super-optimized SQL query
+  if (IsHistoryMenuQuery(aQueries, aOptions)) {
+    queryString = NS_LITERAL_CSTRING(
+      "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
+      "MAX(v.visit_date), f.url, null, null "
+      "FROM moz_places h "
+      "JOIN moz_historyvisits v ON h.id = v.place_id "
+      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id WHERE "
+      "(h.id IN (SELECT DISTINCT h.id FROM moz_historyvisits, "
+      " moz_places h WHERE place_id = "
+      " h.id AND hidden <> 1 AND visit_type <> 4 "
+      " ORDER BY visit_date DESC LIMIT ");
+    queryString.AppendInt(aOptions->MaxResults());
+    queryString += NS_LITERAL_CSTRING(")) GROUP BY h.id ORDER BY 6 DESC"); // v.visit_date
+    return NS_OK;
   }
 
   PRBool asVisits =
@@ -2087,7 +2137,7 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
   // these same indices for passing to RowToResult. If you add something to
   // this, you also need to update the bookmark statements to keep them in
   // sync!
-  nsCAutoString queryString;
+  
   nsCAutoString groupBy;
   if (asVisits) {
     // if we want visits, this is easy, just combine all possible matches
@@ -2107,9 +2157,8 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
     // FIXME(brettw) add nulls for full visit info
     if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY) {
       queryString = NS_LITERAL_CSTRING(
-        "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
-          "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = h.id), "
-          "f.url, null, null "
+        "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, MAX(visit_date), "
+        "f.url, null, null "
         "FROM moz_places h "
         "LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
         "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id ");
@@ -2137,7 +2186,7 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
   for (i = 0; i < aQueries.Count(); i ++) {
     nsCString queryClause;
     PRInt32 clauseParameters = 0;
-    rv = QueryToSelectClause(aQueries[i], aOptions, numParameters,
+    nsresult rv = QueryToSelectClause(aQueries[i], aOptions, numParameters,
                              &queryClause, &clauseParameters,
                              commonConditions);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2160,10 +2209,6 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
     queryString += commonConditions;
   }
   queryString += groupBy;
-
-  PRBool hasSearchTerms;
-  rv = aQueries[0]->GetHasSearchTerms(&hasSearchTerms);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // Sort clause: we will sort later, but if it comes out of the DB sorted,
   // our later sort will be basically free. The DB can sort these for free
@@ -2231,6 +2276,38 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
     queryString.AppendLiteral(" ");
   }
 
+  return NS_OK;
+}
+
+// nsNavHistory::GetQueryResults
+//
+//    Call this to get the results from a complex query. This is used by
+//    nsNavHistoryQueryResultNode to populate its children. For simple bookmark
+//    queries, use nsNavBookmarks::QueryFolderChildren.
+//
+//    THIS DOES NOT DO SORTING. You will need to sort the container yourself
+//    when you get the results. This is because sorting depends on tree
+//    statistics that will be built from the perspective of the tree. See
+//    nsNavHistoryQueryResultNode::FillChildren
+//
+//    FIXME: This only does keyword searching for the first query, and does
+//    it ANDed with the all the rest of the queries.
+
+nsresult
+nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
+                              const nsCOMArray<nsNavHistoryQuery>& aQueries,
+                              nsNavHistoryQueryOptions *aOptions,
+                              nsCOMArray<nsNavHistoryResultNode>* aResults)
+{
+  NS_ENSURE_ARG_POINTER(aOptions);
+  NS_ASSERTION(aResults->Count() == 0, "Initial result array must be empty");
+  if (! aQueries.Count())
+    return NS_ERROR_INVALID_ARG;
+
+  nsCString queryString;
+  nsresult rv = ConstructQueryString(aQueries, aOptions, queryString);
+  NS_ENSURE_SUCCESS(rv,rv);
+
 #ifdef DEBUG_thunder
   printf("Constructed the query: %s\n", PromiseFlatCString(queryString).get());
 #endif
@@ -2246,7 +2323,8 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // bind parameters
-  numParameters = 0;
+  PRInt32 numParameters = 0;
+  PRInt32 i;
   for (i = 0; i < aQueries.Count(); i ++) {
     PRInt32 clauseParameters = 0;
     rv = BindQueryClauseParameters(statement, numParameters,
@@ -2257,6 +2335,10 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
 
   PRUint32 groupCount;
   const PRUint16 *groupings = aOptions->GroupingMode(&groupCount);
+
+  PRBool hasSearchTerms;
+  rv = aQueries[0]->GetHasSearchTerms(&hasSearchTerms);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (groupCount == 0 && ! hasSearchTerms) {
     // optimize the case where we just want a list with no grouping: this
@@ -2289,14 +2371,8 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
     }
   }
 
-  // automatically expand things that were expanded before
-  // FIXME(brettw)
-  //if (gExpandedItems.Count() > 0)
-  //  result->ApplyTreeState(gExpandedItems);
-
   return NS_OK;
 }
-
 
 // nsNavHistory::AddObserver
 
@@ -3119,6 +3195,7 @@ PLDHashOperator PR_CALLBACK nsNavHistory::ExpireNonrecentRedirects(
     return PL_DHASH_REMOVE;
   return PL_DHASH_NEXT;
 }
+
 NS_IMETHODIMP
 nsNavHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
                                   nsIChannel *aNewChannel,
