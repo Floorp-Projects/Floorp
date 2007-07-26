@@ -636,7 +636,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
       }
       nsIFrame* nextFrame = aFrame->GetNextSibling();
       if (nextFrame) {
-        aStatus |= NS_FRAME_NOT_COMPLETE;
+        NS_FRAME_SET_INCOMPLETE(aStatus);
         PushFrames(aPresContext, nextFrame, aFrame);
       }
       else if (nsnull != GetNextInFlow()) {
@@ -645,7 +645,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
         nsInlineFrame* nextInFlow = (nsInlineFrame*) GetNextInFlow();
         while (nsnull != nextInFlow) {
           if (nextInFlow->mFrames.NotEmpty()) {
-            aStatus |= NS_FRAME_NOT_COMPLETE;
+            NS_FRAME_SET_INCOMPLETE(aStatus);
             break;
           }
           nextInFlow = (nsInlineFrame*) nextInFlow->GetNextInFlow();

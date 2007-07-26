@@ -4646,7 +4646,12 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*   aPresShell,
 
   // Initialize the page content frame and force it to have a view. Also make it the
   // containing block for fixed elements which are repeated on every page.
-  aPageContentFrame->Init(nsnull, aPageFrame, nsnull);
+  nsIFrame* prevPageContentFrame = nsnull;
+  if (aPrevPageFrame) {
+    prevPageContentFrame = aPrevPageFrame->GetFirstChild(nsnull);
+    NS_ASSERTION(prevPageContentFrame, "missing page content frame");
+  }
+  aPageContentFrame->Init(nsnull, aPageFrame, prevPageContentFrame);
   mFixedContainingBlock = aPageContentFrame;
 
   aPageFrame->SetInitialChildList(nsnull, aPageContentFrame);
