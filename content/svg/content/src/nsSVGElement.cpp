@@ -126,10 +126,22 @@ NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
 //----------------------------------------------------------------------
 // nsIContent methods
 
-nsIAtom *
-nsSVGElement::GetIDAttributeName() const
+nsIAtom*
+nsSVGElement::GetIDAttributeName(PRInt32& aNameSpaceID) const
 {
-  return nsGkAtoms::id;
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::id)) {
+    aNameSpaceID = kNameSpaceID_None;
+    return nsGkAtoms::id;
+  }
+  return nsGenericElement::GetIDAttributeName(aNameSpaceID);
+}
+
+PRBool
+nsSVGElement::IsPotentialIDAttributeName(PRInt32 aNameSpaceID,
+                                         nsIAtom* aAtom) const
+{
+  return (aNameSpaceID == kNameSpaceID_None && aAtom == nsGkAtoms::id) ||
+    nsGenericElement::IsPotentialIDAttributeName(aNameSpaceID, aAtom);
 }
 
 nsIAtom *

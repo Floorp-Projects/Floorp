@@ -505,7 +505,9 @@ public:
     virtual void UnbindFromTree(PRBool aDeep, PRBool aNullParent);
     virtual void SetNativeAnonymous(PRBool aAnonymous);
     virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
-    virtual nsIAtom *GetIDAttributeName() const;
+    virtual nsIAtom *GetIDAttributeName(PRInt32& aNameSpaceID) const;
+    virtual PRBool IsPotentialIDAttributeName(PRInt32 aNameSpaceID,
+                                              nsIAtom* aAtom) const;
     virtual nsIAtom *GetClassAttributeName() const;
     virtual PRBool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsAString& aResult) const;

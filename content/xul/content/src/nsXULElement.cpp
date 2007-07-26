@@ -1633,7 +1633,9 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify)
 nsIAtom*
 nsXULElement::GetID() const
 {
-    const nsAttrValue* attrVal = FindLocalOrProtoAttr(kNameSpaceID_None, nsGkAtoms::id);
+    PRInt32 namespaceID;
+    nsIAtom* IDName = GetIDAttributeName(namespaceID);
+    const nsAttrValue* attrVal = FindLocalOrProtoAttr(namespaceID, IDName);
 
     NS_ASSERTION(!attrVal ||
                  attrVal->Type() == nsAttrValue::eAtom ||
@@ -1739,9 +1741,21 @@ nsXULElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 }
 
 nsIAtom *
-nsXULElement::GetIDAttributeName() const
+nsXULElement::GetIDAttributeName(PRInt32& aNameSpaceID) const
 {
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::id)) {
+    aNameSpaceID = kNameSpaceID_None;
     return nsGkAtoms::id;
+  }
+  return nsGenericElement::GetIDAttributeName(aNameSpaceID);
+}
+
+PRBool
+nsXULElement::IsPotentialIDAttributeName(PRInt32 aNameSpaceID,
+                                         nsIAtom* aAtom) const
+{
+  return (aNameSpaceID == kNameSpaceID_None && aAtom == nsGkAtoms::id) ||
+    nsGenericElement::IsPotentialIDAttributeName(aNameSpaceID, aAtom);
 }
 
 nsIAtom *

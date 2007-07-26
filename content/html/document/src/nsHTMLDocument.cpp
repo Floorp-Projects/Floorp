@@ -1376,8 +1376,7 @@ nsHTMLDocument::AttributeWillChange(nsIContent* aContent, PRInt32 aNameSpaceID,
         return;
       }
     }
-  } else if (aAttribute == aContent->GetIDAttributeName() &&
-             aNameSpaceID == kNameSpaceID_None) {
+  } else if (aContent->IsPotentialIDAttributeName(aNameSpaceID, aAttribute)) {
     nsresult rv = RemoveFromIdTable(aContent);
 
     if (NS_FAILED(rv)) {
@@ -1406,8 +1405,7 @@ nsHTMLDocument::AttributeChanged(nsIDocument* aDocument,
     if (name) {
       UpdateNameTableEntry(name, aContent);
     }
-  } else if (aAttribute == aContent->GetIDAttributeName() &&
-             aNameSpaceID == kNameSpaceID_None) {
+  } else if (aContent->IsPotentialIDAttributeName(aNameSpaceID, aAttribute)) {
     nsIAtom* id = aContent->GetID();
     if (id) {
       UpdateIdTableEntry(id, aContent);
