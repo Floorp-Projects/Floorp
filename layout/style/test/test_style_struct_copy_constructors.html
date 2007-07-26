@@ -73,15 +73,8 @@ for (var prop in gCSSProperties) {
     var parent = getComputedStyle(gElementParent, "").getPropertyValue(prop);
     var child = getComputedStyle(gElementChild, "").getPropertyValue(prop);
 
-    // We get a failure here for font-family because
-    // nsRuleNode::ComputeFontData clobbers the NS_STYLE_FONT_FACE_MASK
-    // part of font->mFlags even when the font name was copied from
-    // aStartStruct.  This causes nsComputedDOMStyle::GetFontFamily to
-    // chop a bunch of characters off of the end of font->mFont.name.
-    var func = (prop == "font-family" ? todo_is : is);
-
-    func(child, parent,
-         "property '" + prop + "' was copy-constructed correctly (inheritance)");
+    is(child, parent,
+       "property '" + prop + "' was copy-constructed correctly (inheritance)");
 
     gRule2.style.setProperty(prop, info.other_values[0], "");
   }
