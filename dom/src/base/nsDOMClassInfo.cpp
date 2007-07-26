@@ -478,10 +478,6 @@ static const char kDOMStringBundleURL[] =
 #define ELEMENT_SCRIPTABLE_FLAGS                                              \
   (NODE_SCRIPTABLE_FLAGS & ~nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY)
 
-#define FRAME_ELEMENT_SCRIPTABLE_FLAGS                                        \
-  (ELEMENT_SCRIPTABLE_FLAGS |                                                 \
-   nsIXPCScriptable::WANT_DELPROPERTY)
-
 #define EXTERNAL_OBJ_SCRIPTABLE_FLAGS                                         \
   (ELEMENT_SCRIPTABLE_FLAGS & ~nsIXPCScriptable::USE_JSSTUB_FOR_SETPROPERTY | \
    nsIXPCScriptable::WANT_GETPROPERTY |                                       \
@@ -686,8 +682,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_GETPROPERTY |
                            nsIXPCScriptable::WANT_NEWENUMERATE)
-  NS_DEFINE_CLASSINFO_DATA(HTMLFrameElement, nsHTMLFrameElementSH,
-                           FRAME_ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(HTMLFrameElement, nsHTMLElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLFrameSetElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLHRElement, nsHTMLElementSH,
@@ -698,8 +694,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLHtmlElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(HTMLIFrameElement, nsHTMLFrameElementSH,
-                           FRAME_ELEMENT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(HTMLIFrameElement, nsHTMLElementSH,
+                           ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLImageElement, nsHTMLElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLInputElement, nsHTMLElementSH,
@@ -4049,147 +4045,7 @@ nsDOMClassInfo::ShutDown()
   sIsInitialized = PR_FALSE;
 }
 
-
-static const nsIXPConnectWrappedNative *cached_win_wrapper;
-static const JSContext *cached_win_cx;
-static PRBool cached_win_needs_check = PR_TRUE;
-static const nsIXPConnectWrappedNative *cached_doc_wrapper;
-static const JSContext *cached_doc_cx;
-static PRBool cached_doc_needs_check = PR_TRUE;
-
-
-void InvalidateContextAndWrapperCache()
-{
-  cached_win_wrapper = nsnull;
-  cached_doc_wrapper = nsnull;
-  cached_win_cx = nsnull;
-  cached_doc_cx = nsnull;
-  cached_win_needs_check = PR_TRUE;
-  cached_doc_needs_check = PR_TRUE;
-}
-
-// static helper that determines if a security manager check is needed
-// by checking if the callee's context is the same as the caller's
-// context
-// Note: See documentNeedsSecurityCheck for information about the control
-// flow in this function.
-
-static inline PRBool
-needsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
-{
-  // We cache a pointer to a wrapper and a context that we've last vetted
-  // and cache what the verdict was.
-
-  // First, compare the context and wrapper with the cached ones
-  if (cx == cached_win_cx && wrapper == cached_win_wrapper) {
-    return cached_win_needs_check;
-  }
-
-  cached_win_cx = cx;
-  cached_win_wrapper = wrapper;
-  cached_win_needs_check = PR_TRUE;
-  
-  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryWrappedNative(wrapper));
-
-  if (!sgo) {
-    NS_ERROR("Huh, global not a nsIScriptGlobalObject?");
-
-    return PR_TRUE;
-  }
-
-  nsIScriptContext *otherScriptContext = sgo->GetContext();
-
-  if (!otherScriptContext) {
-    return PR_TRUE;
-  }
-
-  if (cx != (JSContext *)otherScriptContext->GetNativeContext()) {
-    return PR_TRUE;
-  }
-
-  // Compare the current context and function object
-  // to the ones in the next JS frame
-  JSStackFrame *fp = nsnull;
-  JSObject *fp_obj = nsnull;
-
-  cached_win_needs_check = PR_FALSE;
-
-  do {
-    fp = ::JS_FrameIterator(cx, &fp);
-
-    if (!fp) {
-      cached_win_cx = nsnull;
-      return cached_win_needs_check;
-    }
-
-    fp_obj = ::JS_GetFrameFunctionObject(cx, fp);
-    cached_win_needs_check = PR_TRUE;
-  } while (!fp_obj);
-
-  JSObject *global = GetGlobalJSObject(cx, fp_obj);
-
-  JSObject *wrapper_obj = nsnull;
-  wrapper->GetJSObject(&wrapper_obj);
-
-  if (global != wrapper_obj) {
-    return PR_TRUE;
-  }
-
-  cached_win_needs_check = PR_FALSE;
-  return PR_FALSE;
-}
-
-
 // Window helper
-
-nsresult
-nsDOMClassInfo::doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
-                                      nsIXPConnectWrappedNative *wrapper,
-                                      PRUint32 accessMode, PRBool isWindow)
-{
-  if (!sSecMan) {
-    return NS_OK;
-  }
-
-  nsISupports *native = wrapper->Native();
-  nsCOMPtr<nsIScriptGlobalObject> sgo;
-
-  if (isWindow) {
-    sgo = do_QueryInterface(native);
-    NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
-  } else {
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(native));
-    NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
-
-    sgo = doc->GetScriptGlobalObject();
-
-    if (!sgo) {
-      // There's no script global in the document. This means that
-      // this document is a result from using XMLHttpRequest or it's a
-      // document created through a DOMImplementation. In that case
-      // there's nothing we can do since the context on which the
-      // document was created is not accessible and we can't do a
-      // security check, but the document must remain
-      // scriptable. Documents loaded through these methods have
-      // already been vetted by the security manager before they were
-      // loaded, so allowing access here w/o doing a security check
-      // here is probably safe anyway.
-
-      return NS_OK;
-    }
-  }
-
-  nsIScriptContext *scx = sgo->GetContext();
-  JSObject *global;
-
-  if (!scx || !scx->IsContextInitialized() ||
-      !(global = sgo->GetGlobalJSObject())) {
-    return NS_OK;
-  }
-
-  return sSecMan->CheckPropertyAccess(cx, global, mData->mName, id,
-                                      accessMode);
-}
 
 NS_IMETHODIMP
 nsWindowSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
@@ -4499,7 +4355,9 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 #endif
 
-  if (win->IsOuterWindow() && !ObjectIsNativeWrapper(cx, obj)) {
+  JSObject *realObj;
+  wrapper->GetJSObject(&realObj);
+  if (win->IsOuterWindow() && realObj == obj) {
     // XXXjst: Do security checks here when we remove the security
     // checks on the inner window.
 
@@ -4558,46 +4416,26 @@ nsWindowSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_FAILED(rv) ? rv : NS_SUCCESS_I_DID_SOMETHING;
   }
 
-  if (needsSecurityCheck(cx, wrapper)) {
-    // Even if we'd need to do a security check for access to "normal"
-    // properties on a window, we won't do a security check if we're
-    // accessing a child frame.
+  if (JSVAL_IS_STRING(id) && !JSVAL_IS_PRIMITIVE(*vp) &&
+      ::JS_TypeOfValue(cx, *vp) != JSTYPE_FUNCTION) {
+    // A named property accessed which could have been resolved to a
+    // child frame in nsWindowSH::NewResolve() (*vp will tell us if
+    // that's the case). If *vp is a window object (i.e. a child
+    // frame), return without doing a security check.
 
-    if (JSVAL_IS_STRING(id) && !JSVAL_IS_PRIMITIVE(*vp) &&
-        ::JS_TypeOfValue(cx, *vp) != JSTYPE_FUNCTION) {
-      // A named property accessed which could have been resolved to a
-      // child frame in nsWindowSH::NewResolve() (*vp will tell us if
-      // that's the case). If *vp is a window object (i.e. a child
-      // frame), return without doing a security check.
+    nsCOMPtr<nsIXPConnectWrappedNative> vpwrapper;
+    sXPConnect->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(*vp),
+                                           getter_AddRefs(vpwrapper));
 
-      nsCOMPtr<nsIXPConnectWrappedNative> vpwrapper;
-      sXPConnect->GetWrappedNativeOfJSObject(cx, JSVAL_TO_OBJECT(*vp),
-                                             getter_AddRefs(vpwrapper));
+    if (vpwrapper) {
+      nsCOMPtr<nsIDOMWindow> window(do_QueryWrappedNative(vpwrapper));
 
-      if (vpwrapper) {
-        nsCOMPtr<nsIDOMWindow> window(do_QueryWrappedNative(vpwrapper));
+      if (window) {
+        // Yup, *vp is a window object, return early (*vp is already
+        // the window, so no need to wrap it again).
 
-        if (window) {
-          // Yup, *vp is a window object, return early (*vp is already
-          // the window, so no need to wrap it again).
-
-          return NS_SUCCESS_I_DID_SOMETHING;
-        }
+        return NS_SUCCESS_I_DID_SOMETHING;
       }
-    }
-
-    nsresult rv =
-      doCheckPropertyAccess(cx, obj, id, wrapper,
-                            nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
-                            PR_TRUE);
-
-    if (NS_FAILED(rv)) {
-      // Security check failed. The security manager set a JS
-      // exception, we must make sure that exception is propagated.
-
-      *_retval = PR_FALSE;
-
-      *vp = JSVAL_NULL;
     }
   }
 
@@ -4651,22 +4489,6 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
         return NS_ERROR_NOT_IMPLEMENTED;
       }
-
-      return NS_OK;
-    }
-  }
-
-  if (needsSecurityCheck(cx, wrapper)) {
-    nsresult rv =
-      doCheckPropertyAccess(cx, obj, id, wrapper,
-                            nsIXPCSecurityManager::ACCESS_SET_PROPERTY,
-                            PR_TRUE);
-
-    if (NS_FAILED(rv)) {
-      // Security check failed. The security manager set a JS
-      // exception, we must make sure that exception is propagated.
-
-      *_retval = PR_FALSE;
 
       return NS_OK;
     }
@@ -4774,20 +4596,6 @@ nsWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
-  nsresult rv =
-    doCheckPropertyAccess(cx, obj, id, wrapper,
-                          nsIXPCSecurityManager::ACCESS_SET_PROPERTY,
-                          PR_TRUE);
-
-  if (NS_FAILED(rv)) {
-    // Security check failed. The security manager set a JS
-    // exception, we must make sure that exception is propagated.
-
-    *_retval = PR_FALSE;
-
-    return NS_OK;
-  }
-
   return nsEventReceiverSH::AddProperty(wrapper, cx, obj, id, vp, _retval);
 }
 
@@ -4840,18 +4648,6 @@ nsWindowSH::DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     // to security bugs (see bug 143369).
 
     return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  nsresult rv =
-    doCheckPropertyAccess(cx, obj, id, wrapper,
-                          nsIXPCSecurityManager::ACCESS_SET_PROPERTY,
-                          PR_TRUE);
-
-  if (NS_FAILED(rv)) {
-    // Security check failed. The security manager set a JS
-    // exception, we must make sure that exception is propagated.
-
-    *_retval = PR_FALSE;
   }
 
   return NS_OK;
@@ -5967,15 +5763,21 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // property is 'ok' in this case, even if the call comes from
         // a different context.
 
-        PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
-        sDoSecurityCheckInAddProperty = PR_FALSE;
+        nsCOMPtr<nsIDOMChromeWindow> chrome =
+          do_QueryInterface((nsIScriptGlobalObject *)win);
+        if (!chrome) {
+          rv = sXPConnect->GetCrossOriginWrapperForObject(cx,
+                                                          win->GetGlobalJSObject(),
+                                                          JSVAL_TO_OBJECT(v),
+                                                          &v);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
 
         JSAutoRequest ar(cx);
 
-        PRBool ok = ::JS_DefineUCProperty(cx, obj, chars, ::JS_GetStringLength(str),
-                                    v, nsnull, nsnull, 0);
-
-        sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
+        PRBool ok = ::JS_DefineUCProperty(cx, obj, chars,
+                                          ::JS_GetStringLength(str),
+                                          v, nsnull, nsnull, 0);
 
         if (!ok) {
           return NS_ERROR_FAILURE;
@@ -6077,6 +5879,15 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
     sDoSecurityCheckInAddProperty = PR_FALSE;
 
+    nsCOMPtr<nsIDOMChromeWindow> chrome =
+      do_QueryInterface((nsIScriptGlobalObject *)win);
+    if (!chrome) {
+      rv = sXPConnect->GetCrossOriginWrapperForObject(cx, scope,
+                                                      JSVAL_TO_OBJECT(v),
+                                                      &v);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     JSAutoRequest ar(cx);
 
     JSBool ok = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
@@ -6159,6 +5970,16 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     if (id == sWindow_id) {
       // window should *always* be the outer window object.
+      JSObject *scope;
+      nsGlobalWindow *innerWin;
+      if (win->IsInnerWindow()) {
+        scope = win->GetGlobalJSObject();
+      } else if (!(innerWin = win->GetCurrentInnerWindowInternal())) {
+        scope = innerWin->GetGlobalJSObject();
+      } else {
+        NS_ERROR("I don't know what scope to use!");
+        scope = win->GetGlobalJSObject();
+      }
       win = win->GetOuterWindowInternal();
       NS_ENSURE_TRUE(win, NS_ERROR_NOT_AVAILABLE);
 
@@ -6167,11 +5988,20 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
       sDoSecurityCheckInAddProperty = PR_FALSE;
 
+      jsval winVal = OBJECT_TO_JSVAL(win->GetGlobalJSObject());
+      nsCOMPtr<nsIDOMChromeWindow> chrome =
+        do_QueryInterface((nsIScriptGlobalObject *)win);
+      if (!chrome) {
+        rv = sXPConnect->GetCrossOriginWrapperForObject(cx,
+                                                        scope,
+                                                        JSVAL_TO_OBJECT(winVal),
+                                                        &winVal);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
       PRBool ok =
         ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
                               ::JS_GetStringLength(str),
-                              OBJECT_TO_JSVAL(win->GetGlobalJSObject()),
-                              nsnull, nsnull,
+                              winVal, nsnull, nsnull,
                               JSPROP_READONLY | JSPROP_ENUMERATE);
 
       sDoSecurityCheckInAddProperty = doSecurityCheckInAddProperty;
@@ -6180,25 +6010,6 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         return NS_ERROR_FAILURE;
       }
       *objp = obj;
-
-      return NS_OK;
-    }
-
-    // Do a security check when resolving heretofore unknown string
-    // properties on window objects to prevent detection of a
-    // property's existence across origins. We only do this when
-    // resolving for a GET, no need to do it for set since we'll do
-    // a security check in nsWindowSH::SetProperty() in that case.
-    rv =
-      doCheckPropertyAccess(cx, obj, id, wrapper,
-                            nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
-                            PR_TRUE);
-    if (NS_FAILED(rv)) {
-      // Security check failed. The security manager set a JS
-      // exception, we must make sure that exception is propagated, so
-      // return NS_OK here.
-
-      *_retval = PR_FALSE;
 
       return NS_OK;
     }
@@ -7400,92 +7211,6 @@ nsFormControlListSH::GetNamedItem(nsISupports *aNative,
 
 // Document helper for document.location and document.on*
 
-static inline PRBool
-documentNeedsSecurityCheck(JSContext *cx, nsIXPConnectWrappedNative *wrapper)
-{
-  // We cache a pointer to a wrapper and a context that we've last vetted
-  // and cache what the verdict was.
-
-  if (cx == cached_doc_cx && wrapper == cached_doc_wrapper) {
-    return cached_doc_needs_check;
-  }
-
-  cached_doc_cx = cx;
-  cached_doc_wrapper = wrapper;
-  
-  // Get the JS object from the wrapper
-  JSObject *wrapper_obj = nsnull;
-  wrapper->GetJSObject(&wrapper_obj);
-
-  JSObject *wrapper_global = GetGlobalJSObject(cx, wrapper_obj);
-
-#ifdef DEBUG
-  {
-    JSClass *clazz = JS_GET_CLASS(cx, wrapper_obj);
-
-    NS_ASSERTION(clazz && clazz->flags & JSCLASS_HAS_PRIVATE &&
-                 clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS,
-                 "Bad class for Document object!");
-  }
-#endif
-
-  // Check if the calling function comes from the same scope that the
-  // wrapper comes from. If that's the case, or if there's no JS
-  // running at the moment (i.e. someone is using the JS engine API
-  // directly to access a property on a JS object) there's no need to
-  // do a security check.
-
-  JSObject *function_obj = nsnull;
-  JSStackFrame *fp = nsnull;
-
-  // Initialize to false to handle the case where there's no JS running
-  // on the current context (e.g., we're getting here from a property
-  // access from the JS API).  Since the scope chain is immutable, it's
-  // OK to keep skipping the check.
-
-  cached_doc_needs_check = PR_FALSE;
-
-  do {
-    fp = ::JS_FrameIterator(cx, &fp);
-    if (!fp) {
-      // Clear cached_doc_cx so that we don't really cache this return
-      // value. If we hit this case, then we didn't really have enough
-      // information about the currently running code to make any long-term
-      // decisions.
-
-      cached_doc_cx = nsnull;
-      return cached_doc_needs_check;
-    }
-
-    function_obj = ::JS_GetFrameFunctionObject(cx, fp);
-
-    // Since we're here, we know that there is some JS running. Now, we
-    // need to default to being paranoid, and can only skip the security
-    // check if we find that the currently-running function is from the
-    // same scope.
-
-    cached_doc_needs_check = PR_TRUE;
-  } while (!function_obj);
-
-  // Get the global object that the calling function comes from.
-  JSObject *function_global = GetGlobalJSObject(cx, function_obj);
-
-  if (function_global != wrapper_global) {
-    // The global object we're trying to access a property on is not
-    // from the scope that the calling function comes from. Do a
-    // security check.
-
-    return PR_TRUE;
-  }
-
-  // We're called from the same context as the context in the global
-  // object in the scope that wrapper came from, no need to do a
-  // security check now.
-  cached_doc_needs_check = PR_FALSE;
-
-  return PR_FALSE;
-}
-
 NS_IMETHODIMP
 nsDocumentSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                           JSObject *obj, jsval id, jsval *vp,
@@ -7570,30 +7295,6 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  if (documentNeedsSecurityCheck(cx, wrapper)) {
-    PRUint32 accessType;
-
-    if (flags & JSRESOLVE_ASSIGNING)
-      accessType = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
-    else
-      accessType = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
-
-    // Do a security check when resolving heretofore unknown string
-    // properties on document objects to prevent detection of a
-    // property's existence across origins.
-    rv = doCheckPropertyAccess(cx, obj, id, wrapper, accessType, PR_FALSE);
-
-    if (NS_FAILED(rv)) {
-      // Security check failed. The security manager set a JS exception,
-      // we must make sure that exception is propagated, so return NS_OK
-      // here.
-
-      *_retval = PR_FALSE;
-      
-      return NS_OK;
-    }
-  }
-
   if (id == sDocumentURIObject_id && IsPrivilegedScript()) {
     return DefineVoidProp(cx, obj, id, objp);
   } 
@@ -7605,22 +7306,6 @@ NS_IMETHODIMP
 nsDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                           JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
 {
-  if (documentNeedsSecurityCheck(cx, wrapper)) {
-    nsresult rv =
-      doCheckPropertyAccess(cx, obj, id, wrapper,
-                            nsIXPCSecurityManager::ACCESS_GET_PROPERTY,
-                            PR_FALSE);
-
-    if (NS_FAILED(rv)) {
-      // Security check failed. The security manager set a JS
-      // exception, we must make sure that exception is propagated.
-
-      *_retval = PR_FALSE;
-
-      *vp = JSVAL_NULL;
-    }
-  }
-
   if (id == sDocumentURIObject_id && IsPrivilegedScript()) {
     nsCOMPtr<nsIDocument> doc = do_QueryWrappedNative(wrapper);
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
@@ -7642,22 +7327,6 @@ NS_IMETHODIMP
 nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                           JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
 {
-  if (documentNeedsSecurityCheck(cx, wrapper)) {
-    nsresult rv =
-      doCheckPropertyAccess(cx, obj, id, wrapper,
-                            nsIXPCSecurityManager::ACCESS_SET_PROPERTY,
-                            PR_FALSE);
-
-    if (NS_FAILED(rv)) {
-      // Security check failed. The security manager set a JS
-      // exception, we must make sure that exception is propagated.
-
-      *_retval = PR_FALSE;
-
-      return NS_OK;
-    }
-  }
-
   if (id == sLocation_id) {
     nsCOMPtr<nsIDOMNSDocument> doc(do_QueryWrappedNative(wrapper));
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
@@ -7717,8 +7386,8 @@ nsDocumentSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_ERROR_UNEXPECTED;
   }
 
-  nsCOMPtr<nsPIDOMWindow> win =
-    do_QueryInterface(doc->GetScriptGlobalObject());
+  nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
+  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(sgo);
   if (!win) {
     // No window, nothing else to do here
     return NS_OK;
@@ -7727,7 +7396,7 @@ nsDocumentSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   nsIDOMDocument* currentDoc = win->GetExtantDocument();
 
   if (SameCOMIdentity(doc, currentDoc)) {
-    jsval winVal;
+    jsval winVal, docVal;
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = WrapNative(cx, obj, win, NS_GET_IID(nsIDOMWindow), &winVal,
@@ -7736,13 +7405,22 @@ nsDocumentSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     NS_NAMED_LITERAL_STRING(doc_str, "document");
 
+    docVal = OBJECT_TO_JSVAL(obj);
+
+    nsCOMPtr<nsIDOMChromeWindow> chrome = do_QueryInterface(win);
+    if (!chrome) {
+      rv = sXPConnect->GetCrossOriginWrapperForObject(cx, sgo->GetGlobalJSObject(),
+                                                      obj, &docVal);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     if (!::JS_DefineUCProperty(cx, JSVAL_TO_OBJECT(winVal),
                                reinterpret_cast<const jschar *>
                                                (doc_str.get()),
-                               doc_str.Length(), OBJECT_TO_JSVAL(obj), nsnull,
+                               doc_str.Length(), docVal, nsnull,
                                nsnull, JSPROP_READONLY | JSPROP_ENUMERATE)) {
       return NS_ERROR_FAILURE;
-    }    
+    }
   }
   return NS_OK;
 }
@@ -8502,109 +8180,6 @@ nsHTMLElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   return nsElementSH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
 }
-
-
-// HTML[I]FrameElement helper
-
-NS_IMETHODIMP
-nsHTMLFrameElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
-                                  JSContext *cx, JSObject *obj, jsval id,
-                                  jsval *vp, PRBool *_retval)
-{
-  nsresult rv =
-    sSecMan->CheckPropertyAccess(cx, obj, mData->mName, id,
-                                 nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
-
-  if (NS_FAILED(rv)) {
-    // Let XPConnect know that the access was not granted.
-    *_retval = PR_FALSE;
-  }
-
-  // None of our base classes "implement" GetProperty(), so simply
-  // return NS_OK;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLFrameElementSH::SetProperty(nsIXPConnectWrappedNative *wrapper,
-                                  JSContext *cx, JSObject *obj, jsval id,
-                                  jsval *vp, PRBool *_retval)
-{
-  nsresult rv =
-    sSecMan->CheckPropertyAccess(cx, obj, mData->mName, id,
-                                 nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
-
-  if (NS_FAILED(rv)) {
-    // Let XPConnect know that the access was not granted.
-    *_retval = PR_FALSE;
-
-    return NS_OK;
-  }
-
-  return nsHTMLElementSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
-}
-
-NS_IMETHODIMP
-nsHTMLFrameElementSH::AddProperty(nsIXPConnectWrappedNative *wrapper,
-                                  JSContext *cx, JSObject *obj, jsval id,
-                                  jsval *vp, PRBool *_retval)
-{
-  nsresult rv =
-    sSecMan->CheckPropertyAccess(cx, obj, mData->mName, id,
-                                 nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
-
-  if (NS_FAILED(rv)) {
-    // Let XPConnect know that the access was not granted.
-    *_retval = PR_FALSE;
-
-    return NS_OK;
-  }
-
-  return nsHTMLElementSH::AddProperty(wrapper, cx, obj, id, vp, _retval);
-}
-
-NS_IMETHODIMP
-nsHTMLFrameElementSH::DelProperty(nsIXPConnectWrappedNative *wrapper,
-                                  JSContext *cx, JSObject *obj, jsval id,
-                                  jsval *vp, PRBool *_retval)
-{
-  nsresult rv =
-    sSecMan->CheckPropertyAccess(cx, obj, mData->mName, id,
-                                 nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
-
-  if (NS_FAILED(rv)) {
-    // Let XPConnect know that the access was not granted.
-    *_retval = PR_FALSE;
-  }
-
-  // None of our base classes "implement" GetProperty(), so simply
-  // return NS_OK;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLFrameElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
-                                 JSContext *cx, JSObject *obj, jsval id,
-                                 PRUint32 flags, JSObject **objp,
-                                 PRBool *_retval)
-{
-  nsresult rv =
-    sSecMan->CheckPropertyAccess(cx, obj, mData->mName, id,
-                                 nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
-
-  if (NS_FAILED(rv)) {
-    // Let XPConnect know that the access was not granted.
-    *_retval = PR_FALSE;
-
-    return NS_OK;
-  }
-
-  return nsHTMLElementSH::NewResolve(wrapper, cx, obj, id, flags, objp,
-                                     _retval);
-}
-
 
 // HTMLFormElement helper
 

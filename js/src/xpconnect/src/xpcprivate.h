@@ -222,6 +222,7 @@ void DEBUG_CheckWrapperThreadSafety(const XPCWrappedNative* wrapper);
 #define XPC_NATIVE_JSCLASS_MAP_SIZE         32
 #define XPC_THIS_TRANSLATOR_MAP_SIZE         8
 #define XPC_NATIVE_WRAPPER_MAP_SIZE         16
+#define XPC_WRAPPER_MAP_SIZE                 8
 
 /***************************************************************************/
 // data declarations...
@@ -1107,6 +1108,9 @@ public:
     Native2WrappedNativeMap*
     GetWrappedNativeMap() const {return mWrappedNativeMap;}
 
+    WrappedNative2WrapperMap*
+    GetWrapperMap() const {return mWrapperMap;}
+
     ClassInfo2WrappedNativeProtoMap*
     GetWrappedNativeProtoMap() const {return mWrappedNativeProtoMap;}
 
@@ -1202,6 +1206,7 @@ private:
     XPCJSRuntime*                    mRuntime;
     Native2WrappedNativeMap*         mWrappedNativeMap;
     ClassInfo2WrappedNativeProtoMap* mWrappedNativeProtoMap;
+    WrappedNative2WrapperMap*        mWrapperMap;
     nsXPCComponents*                 mComponents;
     XPCWrappedNativeScope*           mNext;
     // The JS global object for this scope.  If non-null, this will be the
@@ -2089,11 +2094,9 @@ public:
         if(mScriptableInfo && JS_IsGCMarkingTracer(trc))
             mScriptableInfo->Mark();
         if(HasProto()) mMaybeProto->TraceJS(trc);
-        if(mNativeWrapper)
-        {
-            JS_CALL_OBJECT_TRACER(trc, mNativeWrapper,
-                                  "XPCWrappedNative::mNativeWrapper");
-        }
+        if(mWrapper)
+            JS_CALL_OBJECT_TRACER(trc, mWrapper, "XPCWrappedNative::mWrapper");
+        TraceOtherWrapper(trc);
     }
 
     inline void AutoTrace(JSTracer* trc)
@@ -2132,8 +2135,8 @@ public:
 
     JSBool HasExternalReference() const {return mRefCnt > 1;}
 
-    JSObject* GetNativeWrapper()              { return mNativeWrapper; }
-    void      SetNativeWrapper(JSObject *obj) { mNativeWrapper = obj; }
+    JSObject* GetWrapper()              { return mWrapper; }
+    void      SetWrapper(JSObject *obj) { mWrapper = obj; }
 
     // Make ctor and dtor protected (rather than private) to placate nsCOMPtr.
 protected:
@@ -2151,6 +2154,7 @@ protected:
     virtual ~XPCWrappedNative();
 
 private:
+    void TraceOtherWrapper(JSTracer* trc);
     JSBool Init(XPCCallContext& ccx, JSObject* parent, JSBool isGlobal,
                 const XPCNativeScriptableCreateInfo* sci);
 
@@ -2181,7 +2185,7 @@ private:
     JSObject*                    mFlatJSObject;
     XPCNativeScriptableInfo*     mScriptableInfo;
     XPCWrappedNativeTearOffChunk mFirstChunk;
-    JSObject*                    mNativeWrapper;
+    JSObject*                    mWrapper;
 
 public:
     nsCOMPtr<nsIThread>          mThread; // Don't want to overload _mOwningThread
@@ -3790,6 +3794,9 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN, jsval *argv,
 PRBool
 XPC_SJOW_AttachNewConstructorObject(XPCCallContext &ccx,
                                     JSObject *aGlobalObject);
+
+JSBool
+XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp);
 
 #ifdef XPC_IDISPATCH_SUPPORT
 // IDispatch specific classes
