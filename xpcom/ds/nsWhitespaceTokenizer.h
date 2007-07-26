@@ -36,24 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef txTokenizer_h___
-#define txTokenizer_h___
+#ifndef __nsWhitespaceTokenizer_h
+#define __nsWhitespaceTokenizer_h
 
 #include "nsDependentSubstring.h"
-#include "txXMLUtils.h"
 
-class txTokenizer
+class nsWhitespaceTokenizer
 {
 public:
-    /**
-     * Creates a new txTokenizer using the given source string.
-     */
-    txTokenizer(const nsSubstring& aSource)
+    nsWhitespaceTokenizer(const nsSubstring& aSource)
     {
         aSource.BeginReading(mIter);
         aSource.EndReading(mEnd);
 
-        while (mIter != mEnd && XMLUtils::isWhitespace(*mIter)) {
+        while (mIter != mEnd && isWhitespace(*mIter)) {
             ++mIter;
         }
     }
@@ -63,7 +59,7 @@ public:
      */
     PRBool hasMoreTokens()
     {
-        return (mIter != mEnd);
+        return mIter != mEnd;
     }
 
     /**
@@ -71,12 +67,12 @@ public:
      */
     const nsDependentSubstring nextToken()
     {
-        nsAFlatString::const_char_iterator begin = mIter;
-        while (mIter != mEnd && !XMLUtils::isWhitespace(*mIter)) {
+        nsSubstring::const_char_iterator begin = mIter;
+        while (mIter != mEnd && !isWhitespace(*mIter)) {
             ++mIter;
         }
-        nsAFlatString::const_char_iterator end = mIter;
-        while (mIter != mEnd && XMLUtils::isWhitespace(*mIter)) {
+        nsSubstring::const_char_iterator end = mIter;
+        while (mIter != mEnd && isWhitespace(*mIter)) {
             ++mIter;
         }
         return Substring(begin, end);
@@ -84,7 +80,61 @@ public:
 
 private:
     nsSubstring::const_char_iterator mIter, mEnd;
+
+    PRBool isWhitespace(PRUnichar aChar)
+    {
+        return aChar <= ' ' &&
+               (aChar == ' ' || aChar == '\n' ||
+                aChar == '\r'|| aChar == '\t');
+    }
 };
 
-#endif /* txTokenizer_h___ */
+class nsCWhitespaceTokenizer
+{
+public:
+    nsCWhitespaceTokenizer(const nsCSubstring& aSource)
+    {
+        aSource.BeginReading(mIter);
+        aSource.EndReading(mEnd);
 
+        while (mIter != mEnd && isWhitespace(*mIter)) {
+            ++mIter;
+        }
+    }
+
+    /**
+     * Checks if any more tokens are available.
+     */
+    PRBool hasMoreTokens()
+    {
+        return mIter != mEnd;
+    }
+
+    /**
+     * Returns the next token.
+     */
+    const nsDependentCSubstring nextToken()
+    {
+        nsCSubstring::const_char_iterator begin = mIter;
+        while (mIter != mEnd && !isWhitespace(*mIter)) {
+            ++mIter;
+        }
+        nsCSubstring::const_char_iterator end = mIter;
+        while (mIter != mEnd && isWhitespace(*mIter)) {
+            ++mIter;
+        }
+        return Substring(begin, end);
+    }
+
+private:
+    nsCSubstring::const_char_iterator mIter, mEnd;
+
+    PRBool isWhitespace(char aChar)
+    {
+        return aChar <= ' ' &&
+               (aChar == ' ' || aChar == '\n' ||
+                aChar == '\r'|| aChar == '\t');
+    }
+};
+
+#endif /* __nsWhitespaceTokenizer_h */
