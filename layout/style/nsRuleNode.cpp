@@ -664,40 +664,6 @@ CheckFontCallback(const nsRuleDataStruct& aData,
 {
   const nsRuleDataFont& fontData =
       static_cast<const nsRuleDataFont&>(aData);
-  if (eCSSUnit_Enumerated == fontData.mFamily.GetUnit()) {
-    // A special case. We treat this as a fully specified font,
-    // since no other font props are legal with a system font.
-    NS_ASSERTION(aResult == nsRuleNode::eRulePartialReset ||
-                 aResult == nsRuleNode::eRuleFullReset ||
-                 aResult == nsRuleNode::eRulePartialMixed ||
-                 aResult == nsRuleNode::eRuleFullMixed,
-                 "we know we already have a reset-counted property");
-    PRInt32 family = fontData.mFamily.GetIntValue();
-    if ((family == NS_STYLE_FONT_CAPTION) ||
-        (family == NS_STYLE_FONT_ICON) ||
-        (family == NS_STYLE_FONT_MENU) ||
-        (family == NS_STYLE_FONT_MESSAGE_BOX) ||
-        (family == NS_STYLE_FONT_SMALL_CAPTION) ||
-        (family == NS_STYLE_FONT_STATUS_BAR) ||
-        (family == NS_STYLE_FONT_WINDOW) ||
-        (family == NS_STYLE_FONT_DOCUMENT) ||
-        (family == NS_STYLE_FONT_WORKSPACE) ||
-        (family == NS_STYLE_FONT_DESKTOP) ||
-        (family == NS_STYLE_FONT_INFO) ||
-        (family == NS_STYLE_FONT_DIALOG) ||
-        (family == NS_STYLE_FONT_BUTTON) ||
-        (family == NS_STYLE_FONT_PULL_DOWN_MENU) ||
-        (family == NS_STYLE_FONT_LIST) ||
-        (family == NS_STYLE_FONT_FIELD)) {
-      // promote partial to full since we're fully specified
-      if (aResult == nsRuleNode::eRulePartialMixed ||
-          aResult == nsRuleNode::eRuleFullMixed) {
-        aResult = nsRuleNode::eRuleFullMixed;
-      } else {
-        aResult = nsRuleNode::eRuleFullReset;
-      }
-    }
-  }
 
   // em, ex, percent, 'larger', and 'smaller' values on font-size depend
   // on the parent context's font-size
@@ -1930,8 +1896,6 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
   if (eCSSUnit_Enumerated == aFontData.mSystemFont.GetUnit()) {
     nsSystemFontID sysID;
     switch (aFontData.mSystemFont.GetIntValue()) {
-      // If you add fonts to this list, you need to also patch the list
-      // in CheckFontCallback (also in this file).
       case NS_STYLE_FONT_CAPTION:       sysID = eSystemFont_Caption;      break;    // css2
       case NS_STYLE_FONT_ICON:          sysID = eSystemFont_Icon;         break;
       case NS_STYLE_FONT_MENU:          sysID = eSystemFont_Menu;         break;
@@ -2326,6 +2290,17 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct,
 {
   COMPUTE_START_INHERITED(Font, (mPresContext), font, parentFont,
                           Font, fontData)
+
+  // NOTE:  The |aRuleDetail| passed in is a little bit conservative due
+  // to the -moz-system-font property.  We really don't need to consider
+  // it here in determining whether to cache in the rule tree.  However,
+  // we do need to consider it in WalkRuleTree when deciding whether to
+  // walk further up the tree.  So this means that when the font struct
+  // is fully specified using *longhand* properties (excluding
+  // -moz-system-font), we won't cache in the rule tree even though we
+  // could.  However, it's pretty unlikely authors will do that
+  // (although there is a pretty good chance they'll fully specify it
+  // using the 'font' shorthand).
 
   // See if there is a minimum font-size constraint to honor
   nscoord minimumFontSize = 
