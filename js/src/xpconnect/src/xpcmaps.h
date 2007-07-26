@@ -684,4 +684,61 @@ private:
     JSDHashTable *mTable;
 };
 
+class WrappedNative2WrapperMap
+{
+public:
+    struct Entry : public JSDHashEntryHdr
+    {
+        // Note: key must be the flat JSObject for a wrapped native.
+        JSObject*         key;
+        JSObject*         value;
+    };
+
+    static WrappedNative2WrapperMap* newMap(int size);
+
+    inline JSObject* Find(JSObject* wrapper)
+    {
+        NS_PRECONDITION(wrapper, "bad param");
+        Entry* entry = (Entry*)
+            JS_DHashTableOperate(mTable, wrapper, JS_DHASH_LOOKUP);
+        if(JS_DHASH_ENTRY_IS_FREE(entry))
+            return nsnull;
+        return entry->value;
+    }
+
+    // Note: If the entry already exists, then this will overwrite the
+    // existing entry, returning the old value.
+    inline JSObject* Add(JSObject* wrapper, JSObject *obj)
+    {
+        NS_PRECONDITION(wrapper,"bad param");
+        Entry* entry = (Entry*)
+            JS_DHashTableOperate(mTable, wrapper, JS_DHASH_ADD);
+        if(!entry)
+            return nsnull;
+        JSObject *old;
+        if(!entry->key)
+            entry->key = wrapper;
+        old = entry->value;
+        entry->value = obj;
+        return old;
+    }
+
+    inline void Remove(JSObject* wrapper)
+    {
+        NS_PRECONDITION(wrapper,"bad param");
+        JS_DHashTableOperate(mTable, wrapper, JS_DHASH_REMOVE);
+    }
+
+    inline uint32 Count() {return mTable->entryCount;}
+    inline uint32 Enumerate(JSDHashEnumerator f, void *arg)
+        {return JS_DHashTableEnumerate(mTable, f, arg);}
+
+    ~WrappedNative2WrapperMap();
+private:
+    WrappedNative2WrapperMap();    // no implementation
+    WrappedNative2WrapperMap(int size);
+private:
+    JSDHashTable *mTable;
+};
+
 #endif /* xpcmaps_h___ */

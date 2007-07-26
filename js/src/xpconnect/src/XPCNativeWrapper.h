@@ -75,3 +75,6 @@ protected:
   static JSExtendedClass sXPC_NW_JSClass;
 };
 
+JSBool
+XPC_XOW_WrapObject(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                   jsval *rval);

@@ -1754,6 +1754,18 @@ nsXPConnect::GetWrappedNativePrototype(JSContext * aJSContext,
     return NS_OK;
 }
 
+/* [noscript] JSVal GetCrossOriginWrapperForValue(in JSContextPtr aJSContext, in JSVal aCurrentVal); */
+NS_IMETHODIMP
+nsXPConnect::GetCrossOriginWrapperForObject(JSContext * aJSContext,
+                                            JSObject * aParent,
+                                            JSObject * aWrappedObj,
+                                            jsval * rval)
+{
+    *rval = OBJECT_TO_JSVAL(aWrappedObj);
+    return XPC_XOW_WrapObject(aJSContext, aParent, rval)
+           ? NS_OK : NS_ERROR_FAILURE;
+}
+
 /* attribute PRBool collectGarbageOnMainThreadOnly; */
 NS_IMETHODIMP 
 nsXPConnect::GetCollectGarbageOnMainThreadOnly(PRBool *aCollectGarbageOnMainThreadOnly)
