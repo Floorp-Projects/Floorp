@@ -2172,7 +2172,7 @@ var urlbarObserver = {
       // The URL bar automatically handles inputs with newline characters,
       // so we can get away with treating text/x-moz-url flavours as text/unicode.
       if (url) {
-        getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
+        nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
 
         try {
           gURLBar.value = url;
@@ -2517,7 +2517,7 @@ var newTabButtonObserver = {
       var postData = {};
       var url = getShortcutOrURI(draggedText, postData);
       if (url) {
-        getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
+        nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
         // allow third-party services to fixup this URL
         openNewTabWith(url, null, postData.value, aEvent, true);
       }
@@ -2553,7 +2553,7 @@ var newWindowButtonObserver = {
       var postData = {};
       var url = getShortcutOrURI(draggedText, postData);
       if (url) {
-        getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
+        nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
         // allow third-party services to fixup this URL
         openNewWindowWith(url, null, postData.value, true);
       }
@@ -2589,7 +2589,7 @@ var goButtonObserver = {
       var postData = {};
       var url = getShortcutOrURI(draggedText, postData);
       try {
-        getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
+        nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
         urlSecurityCheck(url,
                          gBrowser.contentPrincipal,
                          Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
@@ -2628,7 +2628,7 @@ var DownloadsButtonDNDObserver = {
     var split = aXferData.data.split("\n");
     var url = split[0];
     if (url != aXferData.data) {  //do nothing, not a valid URL
-      getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
+      nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
 
       var name = split[1];
       saveURL(url, name, null, true, true);
@@ -4335,7 +4335,7 @@ var contentAreaDNDObserver = {
           /^\s*(javascript|data):/.test(url))
         return;
 
-      getBrowser().dragDropSecurityCheck(aEvent, aDragSession, url);
+      nsDragAndDrop.dragDropSecurityCheck(aEvent, aDragSession, url);
 
       switch (document.documentElement.getAttribute('windowtype')) {
         case "navigator:browser":
