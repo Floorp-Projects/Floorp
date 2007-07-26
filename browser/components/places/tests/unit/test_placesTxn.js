@@ -109,7 +109,7 @@ var observer = {
       return this;
     }
     throw Cr.NS_ERROR_NO_INTERFACE;
-  },
+  }
 };
 bmsvc.addObserver(observer, false);
 
@@ -374,11 +374,9 @@ function run_test() {
   var txn18 = ptSvc.editBookmarkMicrosummary(bId, tmpMs);
   txn18.doTransaction();
   do_check_eq(observer._itemChangedId, bId);
-  do_check_eq(observer._itemChangedProperty, "bookmarks/generatedTitle");
   do_check_true(mss.hasMicrosummary(bId));
   txn18.undoTransaction();
   do_check_eq(observer._itemChangedId, bId);
-  do_check_eq(observer._itemChangedProperty, "bookmarks/generatedTitle");
   do_check_true(!mss.hasMicrosummary(bId));
 
   // Testing edit Post Data...
