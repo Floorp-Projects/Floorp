@@ -840,6 +840,12 @@ toolbar[iconsize="small"] #paste-button:hover:active {
   margin: 0 3px;
   /*XXX Gecko 1.9 quirk*/
   -moz-padding-start: 1px;
+  color: -moz-fieldtext;
+}
+
+#urlbar[level="high"] .formatted-url ,
+#urlbar[level="low"] .formatted-url {
+  color: black;
 }
 
 .formatted-url * {
@@ -848,36 +854,12 @@ toolbar[iconsize="small"] #paste-button:hover:active {
   cursor: text;
 }
 
-.formatted-url-contents {
-  color: graytext;
-}
-
-.formatted-url-domain {
-  color: -moz-fieldtext;
-}
-
-#urlbar[level="high"] .formatted-url-contents ,
-#urlbar[level="low"] .formatted-url-contents {
-  color: rgb(150, 150, 130);
-}
-
-#urlbar[level="low"] .formatted-url-domain ,
-#urlbar[level="high"] .formatted-url-domain {
-  color: black;
-}
-
 .formatted-url-ellipsis {
-  -moz-margin-start: .3em;
+  -moz-margin-start: 1px;
 }
 
-#urlbar[protocolhidden="true"] .formatted-url-prePath > .formatted-url-subdomain {
-  -moz-box-flex: 1;
-  text-align: right;
-}
-
-#urlbar[protocolhidden="true"] .formatted-url-prePath > .formatted-url-port {
-  -moz-box-flex: 1;
-  text-align: left;
+.formatted-url-prePath {
+  -moz-box-pack: center;
 }
 
 #urlbar[level="high"] > .autocomplete-textbox-container,
