@@ -47,19 +47,20 @@
 #include "nsContentUtils.h"
 #include "nsIParserService.h"
 
-#define SKIP_WHITESPACE(iter, end_iter, end_res)                 \
+#define SKIP_WHITESPACE(iter, end_iter)                          \
   while ((iter) != (end_iter) && nsCRT::IsAsciiSpace(*(iter))) { \
     ++(iter);                                                    \
   }                                                              \
-  if ((iter) == (end_iter)) {                                    \
-    return (end_res);                                            \
-  }
+  if ((iter) == (end_iter))                                      \
+    break
 
 #define SKIP_ATTR_NAME(iter, end_iter)                            \
   while ((iter) != (end_iter) && !nsCRT::IsAsciiSpace(*(iter)) && \
          *(iter) != '=') {                                        \
     ++(iter);                                                     \
-  }
+  }                                                               \
+  if ((iter) == (end_iter))                                       \
+    break
 
 PRBool
 nsParserUtils::GetQuotedAttributeValue(const nsString& aSource, nsIAtom *aName,
@@ -72,33 +73,29 @@ nsParserUtils::GetQuotedAttributeValue(const nsString& aSource, nsIAtom *aName,
   const PRUnichar *iter;
   
   while (start != end) {
-    SKIP_WHITESPACE(start, end, PR_FALSE)
+    SKIP_WHITESPACE(start, end);
     iter = start;
-    SKIP_ATTR_NAME(iter, end)
-
-    if (start == iter) {
-      return PR_FALSE;
-    }
+    SKIP_ATTR_NAME(iter, end);
 
     // Remember the attr name.
     const nsDependentSubstring & attrName = Substring(start, iter);
 
     // Now check whether this is a valid name="value" pair.
     start = iter;
-    SKIP_WHITESPACE(start, end, PR_FALSE)
+    SKIP_WHITESPACE(start, end);
     if (*start != '=') {
       // No '=', so this is not a name="value" pair.  We don't know
       // what it is, and we have no way to handle it.
-      return PR_FALSE;
+      break;
     }
     
     // Have to skip the value.
     ++start;
-    SKIP_WHITESPACE(start, end, PR_FALSE)
+    SKIP_WHITESPACE(start, end);
     PRUnichar q = *start;
     if (q != kQuote && q != kApostrophe) {
       // Not a valid quoted value, so bail.
-      return PR_FALSE;
+      break;
     }
     
     ++start;  // Point to the first char of the value.
@@ -110,7 +107,7 @@ nsParserUtils::GetQuotedAttributeValue(const nsString& aSource, nsIAtom *aName,
 
     if (iter == end) {
       // Oops, unterminated quoted string.
-      return PR_FALSE;
+      break;
     }
 
     // At this point attrName holds the name of the "attribute" and
@@ -171,74 +168,6 @@ nsParserUtils::GetQuotedAttributeValue(const nsString& aSource, nsIAtom *aName,
   return PR_FALSE;
 }
 
-PRBool
-nsParserUtils::GetQuotedAttrNameAt(const nsString& aSource, PRUint32 aIndex,
-                                   nsAString& aName)
-{
-  aName.Truncate();
-
-  const PRUnichar *start = aSource.get();
-  const PRUnichar *end = start + aSource.Length();
-  const PRUnichar *iter;
-  PRUint32 currIndex = 0;
-  
-  for (;;) {
-    SKIP_WHITESPACE(start, end, PR_TRUE)
-
-    iter = start;
-    SKIP_ATTR_NAME(iter, end)
-
-    if (start == iter) {
-      return PR_FALSE;
-    }
-
-    // Remember the attr name.
-    const nsDependentSubstring & attrName = Substring(start, iter);
-
-    // Now check whether this is a valid name="value" pair.
-    start = iter;
-    SKIP_WHITESPACE(start, end, PR_FALSE);
-    if (*start != '=') {
-      // No '=', so this is not a name="value" pair.  We don't know
-      // what it is, and we have no way to handle it.
-      return PR_FALSE;
-    }
-    
-    // Have to skip the value.
-    ++start;
-    SKIP_WHITESPACE(start, end, PR_FALSE);
-    PRUnichar q = *start;
-    if (q != kQuote && q != kApostrophe) {
-      // Not a valid quoted value, so bail.
-      return PR_FALSE;
-    }
-    
-    // Scan to the end of the value.
-    do {
-      ++start;
-    } while (start != end && *start != q);
-
-    if (start == end) {
-      // Oops, unterminated quoted string.
-      return PR_FALSE;
-    }
-
-    // At this point attrName holds the name of the "attribute"
-    
-    if (aIndex == currIndex) {
-      aName = attrName;
-
-      return PR_TRUE;
-    }
-
-    // Resume scanning after the end of the attribute value (past the quote
-    // char).
-    ++start;
-    ++currIndex;
-  }
-
-  return PR_TRUE;
-}
 
 // Returns PR_TRUE if the language name is a version of JavaScript and
 // PR_FALSE otherwise

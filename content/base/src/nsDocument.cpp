@@ -1428,19 +1428,6 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   }
 #endif
 
-  if (nsCRT::strcmp(kLoadAsData, aCommand) == 0) {
-    mLoadedAsData = PR_TRUE;
-    // We need to disable script & style loading in this case.
-    // We leave them disabled even in EndLoad(), and let anyone
-    // who puts the document on display to worry about enabling.
-
-    // Do not load/process scripts when loading as data
-    ScriptLoader()->SetEnabled(PR_FALSE);
-
-    // styles
-    CSSLoader()->SetEnabled(PR_FALSE); // Do not load/process styles when loading as data
-  }
-
   if (aReset) {
     Reset(aChannel, aLoadGroup);
   }

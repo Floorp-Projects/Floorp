@@ -57,31 +57,10 @@ public:
    * @param aName the name of the attribute to get the value for
    * @param aValue [out] the value for the attribute with name specified in
    *                     aAttribute. Empty if the attribute isn't present.
-   * @return PR_TRUE  if the attribute exists and was successfully parsed.
-   *         PR_FALSE if the attribute doesn't exist, or has a malformed
-   *                  value, such as an unknown or unterminated entity.
    */
   static PRBool
   GetQuotedAttributeValue(const nsString& aSource, nsIAtom *aName,
                           nsAString& aValue);
-
-  /**
-   * This will parse aSource, to extract the name of the pseudo attribute
-   * at the specified index. See
-   * http://www.w3.org/TR/xml-stylesheet/#NT-StyleSheetPI for the specification
-   * which is used to parse aSource.
-   *
-   * @param aSource the string to parse
-   * @param aIndex the index of the attribute to get the value for
-   * @param aName [out] the name for the attribute with specified index.
-   *                    Empty if there aren't enough attributes.
-   * @return PR_TRUE if parsing succeeded, even if there aren't enough
-   *                 attributes.
-   *         PR_FALSE if parsing failed.
-   */
-  static PRBool
-  GetQuotedAttrNameAt(const nsString& aSource, PRUint32 aIndex,
-                      nsAString& aName);
 
   static PRBool
   IsJavaScriptLanguage(const nsString& aName, PRUint32 *aVerFlags);

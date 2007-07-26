@@ -561,17 +561,27 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
                                  PRBool aReset,
                                  nsIContentSink* aSink)
 {
+  if (nsCRT::strcmp(kLoadAsData, aCommand) == 0) {
+    mLoadedAsData = PR_TRUE;
+    // We need to disable script & style loading in this case.
+    // We leave them disabled even in EndLoad(), and let anyone
+    // who puts the document on display to worry about enabling.
+
+    // Do not load/process scripts when loading as data
+    ScriptLoader()->SetEnabled(PR_FALSE);
+
+    // styles
+    CSSLoader()->SetEnabled(PR_FALSE); // Do not load/process styles when loading as data
+  } else if (nsCRT::strcmp("loadAsInteractiveData", aCommand) == 0) {
+    mLoadedAsInteractiveData = PR_TRUE;
+    aCommand = kLoadAsData; // XBL, for example, needs scripts and styles
+  }
+
   nsresult rv = nsDocument::StartDocumentLoad(aCommand,
                                               aChannel, aLoadGroup,
                                               aContainer, 
                                               aDocListener, aReset, aSink);
   if (NS_FAILED(rv)) return rv;
-
-  if (nsCRT::strcmp("loadAsInteractiveData", aCommand) == 0) {
-    mLoadedAsInteractiveData = PR_TRUE;
-    aCommand = kLoadAsData; // XBL, for example, needs scripts and styles
-  }
-
 
   PRInt32 charsetSource = kCharsetFromDocTypeDefault;
   nsCAutoString charset(NS_LITERAL_CSTRING("UTF-8"));
@@ -645,6 +655,13 @@ nsXMLDocument::EndLoad()
   }    
   nsDocument::EndLoad();  
 }
+
+PRBool
+nsXMLDocument::IsLoadedAsData()
+{
+  return mLoadedAsData;
+}
+  
 
 // nsIDOMNode interface
 
