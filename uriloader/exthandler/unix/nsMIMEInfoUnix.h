@@ -42,8 +42,14 @@
 
 #include "nsMIMEInfoImpl.h"
 
-class nsMIMEInfoUnix : public nsMIMEInfoBase
+class nsMIMEInfoUnix : public nsMIMEInfoImpl
 {
+public:
+  nsMIMEInfoUnix(const char *aMIMEType = "") : nsMIMEInfoImpl(aMIMEType) {}
+  nsMIMEInfoUnix(const nsACString& aMIMEType) : nsMIMEInfoImpl(aMIMEType) {}
+  nsMIMEInfoUnix(const nsACString& aType, HandlerClass aClass) :
+    nsMIMEInfoImpl(aType, aClass) {}
+
 protected:
   virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI);
 };

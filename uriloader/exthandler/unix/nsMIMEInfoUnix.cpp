@@ -37,7 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsMIMEInfoWin.h"
+#include "nsMIMEInfoUnix.h"
+#include "nsGNOMERegistry.h"
 
 nsresult
 nsMIMEInfoUnix::LoadUriInternal(nsIURI * aURI)
