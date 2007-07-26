@@ -536,23 +536,28 @@ nsBlockFrame::GetFirstChild(nsIAtom* aListName) const
     return mFloats.FirstChild();
   }
   else if (aListName == nsGkAtoms::bulletList) {
-    if (HaveOutsideBullet()) {
-      return mBullet;
-    }
+    return (HaveOutsideBullet()) ? mBullet : nsnull;
   }
-  return nsnull;
+  return nsContainerFrame::GetFirstChild(aListName);;
 }
+
+#define NS_BLOCK_FRAME_OVERFLOW_OOF_LIST_INDEX  (NS_CONTAINER_LIST_COUNT_INCL_OC + 0)
+#define NS_BLOCK_FRAME_FLOAT_LIST_INDEX         (NS_CONTAINER_LIST_COUNT_INCL_OC + 1)
+#define NS_BLOCK_FRAME_BULLET_LIST_INDEX        (NS_CONTAINER_LIST_COUNT_INCL_OC + 2)
+#define NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX      (NS_CONTAINER_LIST_COUNT_INCL_OC + 3)
+// If adding/removing lists, don't forget to update the count in nsBlockFrame.h
 
 nsIAtom*
 nsBlockFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
+  if (aIndex < NS_CONTAINER_LIST_COUNT_INCL_OC)
+    return nsContainerFrame::GetAdditionalChildListName(aIndex);
+
   switch (aIndex) {
   case NS_BLOCK_FRAME_FLOAT_LIST_INDEX:
     return nsGkAtoms::floatList;
   case NS_BLOCK_FRAME_BULLET_LIST_INDEX:
     return nsGkAtoms::bulletList;
-  case NS_BLOCK_FRAME_OVERFLOW_LIST_INDEX:
-    return nsGkAtoms::overflowList;
   case NS_BLOCK_FRAME_OVERFLOW_OOF_LIST_INDEX:
     return nsGkAtoms::overflowOutOfFlowList;
   case NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX:
@@ -830,7 +835,7 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
 }
 
 NS_IMETHODIMP
-nsBlockFrame::Reflow(nsPresContext*          aPresContext,
+nsBlockFrame::Reflow(nsPresContext*           aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
@@ -919,6 +924,14 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   NS_ASSERTION(NS_SUCCEEDED(rv), "reflow dirty lines failed");
   if (NS_FAILED(rv)) return rv;
 
+  // Handle paginated overflow (see nsContainerFrame.h)
+  nsRect overflowContainerBounds;
+  if (GetPrevInFlow()) {
+    ReflowOverflowContainerChildren(aPresContext, aReflowState,
+                                    overflowContainerBounds, 0,
+                                    state.mReflowStatus);
+  }
+
   // If the block is complete, put continuted floats in the closest ancestor 
   // block that uses the same space manager and leave the block complete; this 
   // allows subsequent lines on the page to be impacted by floats. If the 
@@ -927,7 +940,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   if (state.mOverflowPlaceholders.NotEmpty()) {
     NS_ASSERTION(aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE,
                  "Somehow we failed to fit all content, even though we have unlimited space!");
-    if (NS_FRAME_IS_COMPLETE(state.mReflowStatus)) {
+    if (NS_FRAME_IS_FULLY_COMPLETE(state.mReflowStatus)) {
       // find the nearest block ancestor that uses the same space manager
       for (const nsHTMLReflowState* ancestorRS = aReflowState.parentReflowState; 
            ancestorRS; 
@@ -1006,7 +1019,8 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
         }
         state.mOverflowPlaceholders.SetFrames(nsnull);
       }
-      state.mReflowStatus |= NS_FRAME_NOT_COMPLETE | NS_FRAME_REFLOW_NEXTINFLOW;
+      state.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+      NS_FRAME_SET_INCOMPLETE(state.mReflowStatus);
     }
   }
 
@@ -1065,6 +1079,9 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   ComputeFinalSize(aReflowState, state, aMetrics);
 
   ComputeCombinedArea(aReflowState, aMetrics);
+  // Factor overflow container child bounds into the overflow area
+  aMetrics.mOverflowArea.UnionRect(aMetrics.mOverflowArea,
+                                   overflowContainerBounds);
 
   // see if verifyReflow is enabled, and if so store off the space manager pointer
 #ifdef DEBUG
@@ -1261,9 +1278,19 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // We may have stretched the frame beyond its computed height. Oh well.
       computedHeightLeftOver = PR_MAX(0, computedHeightLeftOver);
     }
+    NS_ASSERTION(!( (mState & NS_FRAME_IS_OVERFLOW_CONTAINER)
+                    && computedHeightLeftOver ),
+                 "overflow container must not have computedHeightLeftOver");
+
+    aMetrics.height = borderPadding.top + computedHeightLeftOver + borderPadding.bottom;
+    if (NS_FRAME_IS_NOT_COMPLETE(aState.mReflowStatus)
+        && aMetrics.height < aReflowState.availableHeight) {
+      // We ran out of height on this page but we're incomplete
+      // Set status to complete except for overflow
+      NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
+    }
 
     if (NS_FRAME_IS_COMPLETE(aState.mReflowStatus)) {
-      aMetrics.height = borderPadding.top + computedHeightLeftOver + borderPadding.bottom;
       if (computedHeightLeftOver > 0 &&
           aMetrics.height > aReflowState.availableHeight) {
         // We don't fit and we consumed some of the computed height,
@@ -1273,7 +1300,9 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
         // border/padding to the next page/column.
         aMetrics.height = PR_MAX(aReflowState.availableHeight,
                                  aState.mY + nonCarriedOutVerticalMargin);
-        aState.mReflowStatus |= NS_FRAME_NOT_COMPLETE;
+        NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
+        if (!GetNextInFlow())
+          aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
       }
     }
     else {
@@ -1860,6 +1889,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // used.
       deltaY = line->mBounds.YMost() - oldYMost;
     } else {
+      aState.mOverflowTracker.Skip(line->mFirstChild, aState.mReflowStatus);
+        // Nop except for blocks (we don't create overflow container
+        // continuations for any inlines atm), so only checking mFirstChild
+        // is enough
+
       lastLineMovedUp = deltaY < 0;
 
       if (deltaY != 0)
@@ -1926,15 +1960,14 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   // didn't change)
   // XXXldb We should also check that the first line of the next-in-flow
   // isn't dirty.
-  if (!aState.mNextInFlow ||
+  if (aState.mNextInFlow &&
       (aState.mReflowState.mFlags.mNextInFlowUntouched &&
        !lastLineMovedUp && 
        !(GetStateBits() & NS_FRAME_IS_DIRTY) &&
        !reflowedFloat)) {
-    if (aState.mNextInFlow) {
-      aState.mReflowStatus |= NS_FRAME_NOT_COMPLETE;
-    }
-  } else {
+    NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
+  }
+  else if (aState.mNextInFlow) {
     // Pull data from a next-in-flow if there's still room for more
     // content here.
     while (keepGoing && (nsnull != aState.mNextInFlow)) {
@@ -2041,7 +2074,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
     if (NS_FRAME_IS_NOT_COMPLETE(aState.mReflowStatus)) {
       aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
-    }
+    } //XXXfr shouldn't set this flag when nextinflow has no lines
   }
 
   // Handle an odd-ball case: a list-item with no lines
@@ -2926,7 +2959,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       UndoSplitPlaceholders(aState, lastPlaceholder);
       PushLines(aState, aLine.prev());
       *aKeepReflowGoing = PR_FALSE;
-      aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
+      NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
     }
     else {
       // Note: line-break-after a block is a nop
@@ -2962,65 +2995,113 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         
         // Continue the block frame now if it didn't completely fit in
         // the available space.
-        if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
+        if (!NS_FRAME_IS_FULLY_COMPLETE(frameReflowStatus)) {
           PRBool madeContinuation;
           rv = CreateContinuationFor(aState, nsnull, frame, madeContinuation);
           NS_ENSURE_SUCCESS(rv, rv);
           
           nsIFrame* nextFrame = frame->GetNextInFlow();
+          NS_ASSERTION(nextFrame, "We're supposed to have a next-in-flow by now");
           
-          // Push continuation to a new line, but only if we actually made one.
-          if (madeContinuation) {
-            nsLineBox* line = aState.NewLineBox(nextFrame, 1, PR_TRUE);
-            NS_ENSURE_TRUE(line, NS_ERROR_OUT_OF_MEMORY);
-            mLines.after_insert(aLine, line);
-          }
-          
-          // Advance to next line since some of the block fit. That way
-          // only the following lines will be pushed.
-          PushLines(aState, aLine);
-          aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
-          // If we need to reflow the continuation of the block child,
-          // then we'd better reflow our continuation
-          if (frameReflowStatus & NS_FRAME_REFLOW_NEXTINFLOW) {
-            aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
-            // We also need to make that continuation's line dirty so
-            // it gets reflowed when we reflow our next in flow. The
-            // nif's line must always be either a line of the nif's
-            // parent block (only if we didn't make a continuation) or
-            // else one of our own overflow lines. In the latter case
-            // the line is already marked dirty, so just handle the
-            // first case.
-            if (!madeContinuation) {
-              nsBlockFrame* nifBlock = static_cast<nsBlockFrame*>(nextFrame->GetParent());
-              NS_ASSERTION(nifBlock->GetType() == nsGkAtoms::blockFrame
-                           || nifBlock->GetType() == nsGkAtoms::areaFrame,
-                           "A block's child's next in flow's parent must be a block!");
-              for (line_iterator line = nifBlock->begin_lines(),
+          if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
+            // If nextFrame used to be an overflow container, make it a normal block
+            if (!madeContinuation &&
+                (NS_FRAME_IS_OVERFLOW_CONTAINER & nextFrame->GetStateBits())) {
+              aState.mOverflowTracker.Finish(frame);
+              nsContainerFrame* parent =
+                static_cast<nsContainerFrame*>(nextFrame->GetParent());
+              rv = parent->StealFrame(aState.mPresContext, nextFrame);
+              NS_ENSURE_SUCCESS(rv, rv);
+              ReparentFrame(nextFrame, parent, this);
+              nextFrame->SetNextSibling(frame->GetNextSibling());
+              frame->SetNextSibling(nextFrame);
+              madeContinuation = PR_TRUE; // needs to be added to mLines
+              nextFrame->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
+              frameReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+            }
+
+            // Push continuation to a new line, but only if we actually made one.
+            if (madeContinuation) {
+              nsLineBox* line = aState.NewLineBox(nextFrame, 1, PR_TRUE);
+              NS_ENSURE_TRUE(line, NS_ERROR_OUT_OF_MEMORY);
+              mLines.after_insert(aLine, line);
+            }
+
+            PushLines(aState, aLine);
+            NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
+
+            // If we need to reflow the continuation of the block child,
+            // then we'd better reflow our continuation
+            if (frameReflowStatus & NS_FRAME_REFLOW_NEXTINFLOW) {
+              aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+              // We also need to make that continuation's line dirty so
+              // it gets reflowed when we reflow our next in flow. The
+              // nif's line must always be either a line of the nif's
+              // parent block (only if we didn't make a continuation) or
+              // else one of our own overflow lines. In the latter case
+              // the line is already marked dirty, so just handle the
+              // first case.
+              if (!madeContinuation) {
+                nsBlockFrame* nifBlock = static_cast<nsBlockFrame*>(nextFrame->GetParent());
+                NS_ASSERTION(nifBlock->GetType() == nsGkAtoms::blockFrame
+                             || nifBlock->GetType() == nsGkAtoms::areaFrame,
+                             "A block's child's next in flow's parent must be a block!");
+                for (line_iterator line = nifBlock->begin_lines(),
                      line_end = nifBlock->end_lines(); line != line_end; ++line) {
-                if (line->Contains(nextFrame)) {
-                  line->MarkDirty();
-                  break;
+                  if (line->Contains(nextFrame)) {
+                    line->MarkDirty();
+                    break;
+                  }
                 }
               }
             }
-          }
-          *aKeepReflowGoing = PR_FALSE;
-          
-          // The bottom margin for a block is only applied on the last
-          // flow block. Since we just continued the child block frame,
-          // we know that line->mFirstChild is not the last flow block
-          // therefore zero out the running margin value.
+            *aKeepReflowGoing = PR_FALSE;
+            
+            // The bottom margin for a block is only applied on the last
+            // flow block. Since we just continued the child block frame,
+            // we know that line->mFirstChild is not the last flow block
+            // therefore zero out the running margin value.
 #ifdef NOISY_VERTICAL_MARGINS
-          ListTag(stdout);
-          printf(": reflow incomplete, frame=");
-          nsFrame::ListTag(stdout, frame);
-          printf(" prevBottomMargin=%d, setting to zero\n",
-                 aState.mPrevBottomMargin);
+            ListTag(stdout);
+            printf(": reflow incomplete, frame=");
+            nsFrame::ListTag(stdout, frame);
+            printf(" prevBottomMargin=%d, setting to zero\n",
+                   aState.mPrevBottomMargin);
 #endif
-          aState.mPrevBottomMargin.Zero();
+            aState.mPrevBottomMargin.Zero();
+          }
+          else { // frame is complete but its overflow is not complete
+            // Disconnect the next-in-flow and put it in our overflow tracker
+            if (!madeContinuation &&
+                !(NS_FRAME_IS_OVERFLOW_CONTAINER & nextFrame->GetStateBits())) {
+              // It already exists, but as a normal next-in-flow, so we need
+              // to dig it out of the child lists.
+              nsContainerFrame* parent = static_cast<nsContainerFrame*>
+                                           (nextFrame->GetParent());
+              rv = parent->StealFrame(aState.mPresContext, nextFrame);
+              NS_ENSURE_SUCCESS(rv, rv);
+            }
+            else if (madeContinuation) {
+              frame->SetNextSibling(nextFrame->GetNextSibling());
+              nextFrame->SetNextSibling(nsnull);
+            }
+
+            // Put it in our overflow list
+            aState.mOverflowTracker.Insert(nextFrame, frameReflowStatus);
+            aState.mReflowStatus = NS_FRAME_MERGE_INCOMPLETE(frameReflowStatus,
+                                     aState.mReflowStatus);
+
+#ifdef NOISY_VERTICAL_MARGINS
+            ListTag(stdout);
+            printf(": reflow complete but overflow incomplete for ");
+            nsFrame::ListTag(stdout, frame);
+            printf(" prevBottomMargin=%d collapsedBottomMargin=%d\n",
+                   aState.mPrevBottomMargin, collapsedBottomMargin.get());
+#endif
+            aState.mPrevBottomMargin = collapsedBottomMargin;
+          }
         }
-        else {
+        else { // frame is fully complete
 #ifdef NOISY_VERTICAL_MARGINS
           ListTag(stdout);
           printf(": reflow complete for ");
@@ -3052,7 +3133,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
           // to our next-in-flow.
           UndoSplitPlaceholders(aState, lastPlaceholder);
           PushLines(aState, aLine.prev());
-          aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
+          NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
         }
       }
     }
@@ -3174,7 +3255,7 @@ nsBlockFrame::PushTruncatedPlaceholderLine(nsBlockReflowState& aState,
   --prevLine;
   PushLines(aState, prevLine);
   aKeepReflowGoing = PR_FALSE;
-  aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
+  NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
 }
 
 #ifdef DEBUG
@@ -3927,7 +4008,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     // Stop reflow and whack the reflow status if reflow hasn't
     // already been stopped.
     if (*aKeepReflowGoing) {
-      aState.mReflowStatus |= NS_FRAME_NOT_COMPLETE;
+      NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
       *aKeepReflowGoing = PR_FALSE;
     }
     return PR_TRUE;
@@ -4946,7 +5027,8 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsIFrame* aFrame)
 
   // The containing block is always the parent of aFrame.
   nsBlockFrame* block = (nsBlockFrame*)aFrame->GetParent();
-  // Remove aFrame from the appropriate list. 
+
+  // Remove aFrame from the appropriate list.
   if (display->IsAbsolutelyPositioned()) {
     block->mAbsoluteContainer.RemoveFrame(block,
                                           block->mAbsoluteContainer.GetChildListName(),
@@ -5013,6 +5095,11 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
   
   nsPresContext* presContext = PresContext();
   nsIPresShell* presShell = presContext->PresShell();
+
+  if (NS_FRAME_IS_OVERFLOW_CONTAINER & aDeletedFrame->GetStateBits()) {
+    nsContainerFrame::DeleteNextInFlowChild(presContext, aDeletedFrame);
+    return NS_OK;
+  }
 
   PRBool isPlaceholder = nsGkAtoms::placeholderFrame == aDeletedFrame->GetType();
   if (isPlaceholder) {
@@ -5222,15 +5309,91 @@ found_frame:;
   return RemoveBlockChild(aDeletedFrame, aDestroyFrames);
 }
 
+nsresult
+nsBlockFrame::StealFrame(nsPresContext* aPresContext,
+                         nsIFrame*      aChild,
+                         PRBool         aForceNormal)
+{
+  NS_PRECONDITION(aPresContext && aChild, "null pointer");
+
+  if ((aChild->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)
+      && !aForceNormal)
+    return nsContainerFrame::StealFrame(aPresContext, aChild);
+
+  // Find the line and the previous sibling that contains
+  // aChild; we also find the pointer to the line.
+  nsLineList::iterator line = mLines.begin(),
+                       line_end = mLines.end();
+  PRBool searchingOverflowList = PR_FALSE;
+  nsIFrame* prevSibling = nsnull;
+  // Make sure we look in the overflow lines even if the normal line
+  // list is empty
+  TryAllLines(&line, &line_end, &searchingOverflowList);
+  while (line != line_end) {
+    nsIFrame* frame = line->mFirstChild;
+    PRInt32 n = line->GetChildCount();
+    while (--n >= 0) {
+      if (frame == aChild) {
+        // Disconnect from sibling list
+        if (prevSibling)
+          prevSibling->SetNextSibling(frame->GetNextSibling());
+        else
+          line->mFirstChild = frame->GetNextSibling();
+        frame->SetNextSibling(nsnull);
+
+        // Register removal with the line boxes
+        PRInt32 count = line->GetChildCount();
+        line->SetChildCount(--count);
+        if (count > 0) {
+           line->MarkDirty();
+        }
+        else {
+          // Remove the line box
+          nsLineBox* lineBox = line;
+          if (searchingOverflowList) {
+            // Erase line, but avoid making the overflow line list empty
+            nsLineList* lineList = RemoveOverflowLines();
+            lineList->erase(line);
+            if (!lineList->empty()) {
+              nsresult rv = SetOverflowLines(lineList);
+              NS_ENSURE_SUCCESS(rv, rv);
+            }
+          }
+          else {
+            mLines.erase(line);
+          }
+          lineBox->Destroy(aPresContext->PresShell());
+          if (line != line_end) {
+            // Line disappeared, so tell next line it may have to change position
+            line->MarkPreviousMarginDirty();
+          }
+        }
+
+        // Ok, we're done
+        return NS_OK;
+      }
+      prevSibling = frame;
+      frame = frame->GetNextSibling();
+    }
+    ++line;
+    TryAllLines(&line, &line_end, &searchingOverflowList);
+  }
+  return NS_ERROR_UNEXPECTED;
+}
+
 void
 nsBlockFrame::DeleteNextInFlowChild(nsPresContext* aPresContext,
                                     nsIFrame*       aNextInFlow)
 {
   nsIFrame* prevInFlow = aNextInFlow->GetPrevInFlow();
   NS_PRECONDITION(prevInFlow, "bad next-in-flow");
-  NS_PRECONDITION(IsChild(aNextInFlow), "bad geometric parent");
 
-  DoRemoveFrame(aNextInFlow);
+  if (NS_FRAME_IS_OVERFLOW_CONTAINER & aNextInFlow->GetStateBits()) {
+    nsContainerFrame::DeleteNextInFlowChild(aPresContext, aNextInFlow);
+  }
+  else {
+    DoRemoveFrame(aNextInFlow);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -5329,6 +5492,10 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   // if the height is constrained (bug 145305). 
   if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) && (NS_UNCONSTRAINEDSIZE == availHeight))
     aReflowStatus = NS_FRAME_COMPLETE;
+
+  //XXXfr Floats can't be overflow incomplete yet
+  if (NS_FRAME_OVERFLOW_IS_INCOMPLETE(aReflowStatus))
+    NS_FRAME_SET_INCOMPLETE(aReflowStatus);
   
   if (NS_FRAME_IS_COMPLETE(aReflowStatus)) {
     // Float is now complete, so delete the placeholder's next in
@@ -5410,9 +5577,12 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
       // get the containing block of prevPlaceholder which is our prev-in-flow
       if (GetPrevInFlow()) {
         // get the break type of the last line in mPrevInFlow
-        line_iterator endLine = --((nsBlockFrame*)GetPrevInFlow())->end_lines();
-        if (endLine->HasFloatBreakAfter()) {
-          aState.mFloatBreakType = endLine->GetBreakTypeAfter();
+        nsBlockFrame* prevBlock = static_cast<nsBlockFrame*>(GetPrevInFlow());
+        line_iterator endLine = prevBlock->end_lines();
+        if (endLine != prevBlock->begin_lines()) {
+          --endLine;
+          if (endLine->HasFloatBreakAfter())
+            aState.mFloatBreakType = endLine->GetBreakTypeAfter();
         }
       }
       else NS_ASSERTION(PR_FALSE, "no prev in flow");
@@ -5427,11 +5597,15 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
 PRIntn
 nsBlockFrame::GetSkipSides() const
 {
+  if (mState & NS_FRAME_IS_OVERFLOW_CONTAINER)
+    return (1 << NS_SIDE_TOP) | (1 << NS_SIDE_BOTTOM);
+
   PRIntn skip = 0;
-  if (nsnull != GetPrevInFlow()) {
+  if (GetPrevInFlow()) {
     skip |= 1 << NS_SIDE_TOP;
   }
-  if (nsnull != GetNextInFlow()) {
+  nsIFrame* nif = GetNextInFlow();
+  if (nif && !(nif->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
     skip |= 1 << NS_SIDE_BOTTOM;
   }
   return skip;
@@ -5629,7 +5803,11 @@ nsBlockFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 #endif
 
   DisplayBorderBackgroundOutline(aBuilder, aLists);
-  
+
+  if (GetPrevInFlow()) {
+    DisplayOverflowContainers(aBuilder, aDirtyRect, aLists);
+  }
+
   aBuilder->MarkFramesForDisplayList(this, mFloats.FirstChild(), aDirtyRect);
   aBuilder->MarkFramesForDisplayList(this, mAbsoluteContainer.GetFirstChild(), aDirtyRect);
 
@@ -5886,43 +6064,6 @@ InSiblingList(nsLineList& aLines, nsIFrame* aFrame)
       }
       frame = frame->GetNextSibling();
     }
-  }
-  return PR_FALSE;
-}
-
-PRBool
-nsBlockFrame::IsChild(nsIFrame* aFrame)
-{
-  // Continued out-of-flows don't satisfy InLineList(), continued out-of-flows
-  // and placeholders don't satisfy InSiblingList().
-  PRBool skipLineList    = PR_FALSE;
-  PRBool skipSiblingList = PR_FALSE;
-  nsIFrame* prevInFlow = aFrame->GetPrevInFlow();
-  PRBool isPlaceholder = nsGkAtoms::placeholderFrame == aFrame->GetType();
-  if (prevInFlow) {
-    nsFrameState state = aFrame->GetStateBits();
-    skipLineList    = (state & NS_FRAME_OUT_OF_FLOW); 
-    skipSiblingList = isPlaceholder || (state & NS_FRAME_OUT_OF_FLOW);
-  }
-
-  if (isPlaceholder) {
-    nsFrameList* overflowPlaceholders = GetOverflowPlaceholders();
-    if (overflowPlaceholders && overflowPlaceholders->ContainsFrame(aFrame)) {
-      return PR_TRUE;
-    }
-  }
-
-  if (aFrame->GetParent() != (nsIFrame*)this) {
-    return PR_FALSE;
-  }
-  if ((skipLineList || InLineList(mLines, aFrame)) && 
-      (skipSiblingList || InSiblingList(mLines, aFrame))) {
-    return PR_TRUE;
-  }
-  nsLineList* overflowLines = GetOverflowLines();
-  if (overflowLines && (skipLineList || InLineList(*overflowLines, aFrame)) && 
-      (skipSiblingList || InSiblingList(*overflowLines, aFrame))) {
-    return PR_TRUE;
   }
   return PR_FALSE;
 }

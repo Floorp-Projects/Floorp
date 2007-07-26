@@ -851,6 +851,12 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
 
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState,
               kidOrigin.x, kidOrigin.y, 0, aStatus);
+  if (NS_FRAME_OVERFLOW_IS_INCOMPLETE(aStatus)) {
+    // Don't pass OVERFLOW_INCOMPLETE through tables until they can actually handle it
+    //XXX should paginate overflow as overflow, but not in this patch (bug 379349)
+    NS_FRAME_SET_INCOMPLETE(aStatus);
+    printf("Set table cell incomplete %p\n", this);
+  }
   if (GetStateBits() & NS_FRAME_IS_DIRTY) {
     Invalidate(GetOverflowRect(), PR_FALSE);
   }
