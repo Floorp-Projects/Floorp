@@ -44,6 +44,7 @@
 #include "nsIVariant.h"
 #include "nsMIMEInfoWin.h"
 #include "nsNetUtil.h"
+#include <Windows.h>
 #include <shellapi.h>
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsMIMEInfoWin, nsMIMEInfoBase, nsIPropertyBag)
