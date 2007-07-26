@@ -119,14 +119,12 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define KEY_POST_DATA_LOWER "post_data"
 #define KEY_NAME_LOWER "name"
 #define KEY_MICSUM_GEN_URI_LOWER "micsum_gen_uri"
-#define KEY_GENERATED_TITLE_LOWER "generated_title"
 #define KEY_DATE_ADDED_LOWER "add_date"
 #define KEY_LAST_MODIFIED_LOWER "last_modified"
 
 #define LOAD_IN_SIDEBAR_ANNO NS_LITERAL_CSTRING("bookmarkProperties/loadInSidebar")
 #define DESCRIPTION_ANNO NS_LITERAL_CSTRING("bookmarkProperties/description")
 #define POST_DATA_ANNO NS_LITERAL_CSTRING("URIProperties/POSTData")
-#define GENERATED_TITLE_ANNO NS_LITERAL_CSTRING("bookmarks/generatedTitle")
 #define LAST_CHARSET_ANNO NS_LITERAL_CSTRING("URIProperties/characterSet")
 
 #define BOOKMARKS_MENU_ICON_URI "chrome://browser/skin/places/bookmarksMenu.png"
@@ -805,7 +803,6 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   nsAutoString webPanel;
   nsAutoString itemId;
   nsAutoString micsumGenURI;
-  nsAutoString generatedTitle;
   nsAutoString dateAdded;
   nsAutoString lastModified;
 
@@ -830,8 +827,6 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
       webPanel = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_MICSUM_GEN_URI_LOWER)) {
       micsumGenURI = node.GetValueAt(i);
-    } else if (key.LowerCaseEqualsLiteral(KEY_GENERATED_TITLE_LOWER)) {
-      generatedTitle = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_DATE_ADDED_LOWER)) {
       dateAdded = node.GetValueAt(i);
     } else if (key.LowerCaseEqualsLiteral(KEY_LAST_MODIFIED_LOWER)) {
@@ -848,7 +843,6 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   webPanel.Trim(kWhitespace);
   itemId.Trim(kWhitespace);
   micsumGenURI.Trim(kWhitespace);
-  generatedTitle.Trim(kWhitespace);
   dateAdded.Trim(kWhitespace);
   lastModified.Trim(kWhitespace);
 
@@ -952,8 +946,8 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   }
 
   // import microsummary
-  // Note: expiration and generated title are ignored, and will be
-  // recalculated by the microsummary service
+  // Note: expiration and generated title are ignored, and will be recalculated
+  // by the microsummary service
   if (!micsumGenURI.IsEmpty()) {
     nsCOMPtr<nsIURI> micsumGenURIObject;
     if (NS_SUCCEEDED(NS_NewURI(getter_AddRefs(micsumGenURIObject), micsumGenURI))) {
@@ -961,12 +955,6 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
       mMicrosummaryService->CreateMicrosummary(frame.mPreviousLink, micsumGenURIObject,
                                                getter_AddRefs(microsummary));
       mMicrosummaryService->SetMicrosummary(frame.mPreviousId, microsummary);
-
-      // create generated title anno
-      rv = mAnnotationService->SetItemAnnotationString(frame.mPreviousId, GENERATED_TITLE_ANNO,
-                                                       generatedTitle, 0,
-                                                       nsIAnnotationService::EXPIRE_NEVER);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "Creating microsummary generated title failed");
     }
   }
 
