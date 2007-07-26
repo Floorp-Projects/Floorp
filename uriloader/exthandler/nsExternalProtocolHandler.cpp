@@ -188,7 +188,7 @@ nsresult nsExtProtocolChannel::OpenURL()
     NS_ASSERTION(haveHandler, "Why do we have a channel for this url if we don't support the protocol?");
 #endif
 
-    rv = extProtService->LoadURI(mUrl, nsnull);
+    rv = extProtService->LoadURI(mUrl, mCallbacks);
   }
 
   // Drop notification callbacks to prevent cycles.
