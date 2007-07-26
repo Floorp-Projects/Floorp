@@ -188,82 +188,51 @@ function MultiTableQuerier(url, whiteTables, blackTables, callback) {
   this.debugZone = "multitablequerier";
   this.url_ = url;
 
-  this.whiteTables_ = whiteTables;
-  this.blackTables_ = blackTables;
-  this.whiteIdx_ = 0;
-  this.blackIdx_ = 0;
+  this.whiteTables_ = {};
+  for (var i = 0; i < whiteTables.length; i++) {
+    this.whiteTables_[whiteTables[i]] = true;
+  }
+
+  this.blackTables_ = {};
+  for (var i = 0; i < blackTables.length; i++) {
+    this.blackTables_[blackTables[i]] = true;
+  }
 
   this.callback_ = callback;
   this.listManager_ = Cc["@mozilla.org/url-classifier/listmanager;1"]
                       .getService(Ci.nsIUrlListManager);
 }
 
-/**
- * We first query the white tables in succession.  If any contain
- * the url, we stop.  If none contain the url, we query the black tables
- * in succession.  If any contain the url, we call callback and
- * stop.  If none of the black tables contain the url, then we just stop
- * (i.e., it's not black url).
- */
 MultiTableQuerier.prototype.run = function() {
-  var whiteTable = this.whiteTables_[this.whiteIdx_];
-  var blackTable = this.blackTables_[this.blackIdx_];
-  if (whiteTable) {
-    //G_Debug(this, "Looking in whitetable: " + whiteTable);
-    ++this.whiteIdx_;
-    this.listManager_.safeExists(whiteTable, this.url_,
-                                 BindToObject(this.whiteTableCallback_,
-                                              this));
-  } else if (blackTable) {
-    //G_Debug(this, "Looking in blacktable: " + blackTable);
-    ++this.blackIdx_;
-    this.listManager_.safeExists(blackTable, this.url_,
-                                 BindToObject(this.blackTableCallback_,
-                                              this));
-  } else {
-    // No tables left to check, so we quit.
-    G_Debug(this, "Not found in any tables: " + this.url_);
+  /* ask the dbservice for all the tables to which this URL belongs */
+  this.listManager_.safeLookup(this.url_,
+                               BindToObject(this.lookupCallback_, this));
+}
+
+MultiTableQuerier.prototype.lookupCallback_ = function(result) {
+  if (result == "") {
     this.callback_(PROT_ListWarden.NOT_FOUND);
-
-    // Break circular ref to callback.
-    this.callback_ = null;
-    this.listManager_ = null;
+    return;
   }
-}
 
-/**
- * After checking a white table, we return here.  If the url is found,
- * we can stop.  Otherwise, we call run again.
- */
-MultiTableQuerier.prototype.whiteTableCallback_ = function(isFound) {
-  //G_Debug(this, "whiteTableCallback_: " + isFound);
-  if (!isFound)
-    this.run();
-  else {
-    G_Debug(this, "Found in whitelist: " + this.url_)
-    this.callback_(PROT_ListWarden.IN_WHITELIST);
+  var tableNames = result.split(",");
 
-    // Break circular ref to callback.
-    this.callback_ = null;
-    this.listManager_ = null;
+  /* Check the whitelists */
+  for (var i = 0; i < tableNames.length; i++) {
+    if (tableNames[i] && this.whiteTables_[tableNames[i]]) {
+      this.callback_(PROT_ListWarden.IN_WHITELIST);
+      return;
+    }
   }
-}
 
-/**
- * After checking a black table, we return here.  If the url is found,
- * we can call the callback and stop.  Otherwise, we call run again.
- */
-MultiTableQuerier.prototype.blackTableCallback_ = function(isFound) {
-  //G_Debug(this, "blackTableCallback_: " + isFound);
-  if (!isFound) {
-    this.run();
-  } else {
-    // In the blacklist, must be an evil url.
-    G_Debug(this, "Found in blacklist: " + this.url_)
-    this.callback_(PROT_ListWarden.IN_BLACKLIST);
-
-    // Break circular ref to callback.
-    this.callback_ = null;
-    this.listManager_ = null;
+  /* Check the blacklists */
+  for (var i = 0; i < tableNames.length; i++) {
+    if (tableNames[i] && this.blackTables_[tableNames[i]]) {
+      this.callback_(PROT_ListWarden.IN_BLACKLIST);
+      return;
+    }
   }
+
+  /* Not in any lists we know about */
+  this.callback_(PROT_ListWarden.NOT_FOUND);
 }

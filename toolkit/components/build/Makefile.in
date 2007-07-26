@@ -129,6 +129,7 @@ endif
 
 ifdef MOZ_URL_CLASSIFIER
 SHARED_LIBRARY_LIBS += ../url-classifier/src/$(LIB_PREFIX)urlclassifier_s.$(LIB_SUFFIX)
+EXTRA_DSO_LDOPTS += $(ZLIB_LIBS)
 endif
 
 ifdef MOZ_FEEDS
