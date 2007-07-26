@@ -96,6 +96,11 @@ public:
    * @param aRemoveFromForm set false if you do not want this element removed
    *        from the form.  (Used by nsFormControlList::Clear())
    * @param aNofify If true, send nsIDocumentObserver notifications as needed.
+   *
+   * @param note that when setting a new form aNotify is ignored and the
+   * control is not added to the form itself.  It adds itself when it gets
+   * bound to the tree thereafter, so that it can be properly sorted with the
+   * other controls in the form.
    */
   NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm,
                      PRBool aRemoveFromForm,
