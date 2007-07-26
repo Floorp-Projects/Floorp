@@ -48,6 +48,9 @@
 #include "nsAnnotationService.h"
 #include "nsPrintfCString.h"
 #include "nsAutoLock.h"
+#include "nsIUUIDGenerator.h"
+#include "prmem.h"
+#include "prprf.h"
 
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_ID = 0;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Type = 1;
@@ -76,10 +79,11 @@ nsNavBookmarks* nsNavBookmarks::sInstance = nsnull;
 
 #define BOOKMARKS_ANNO_PREFIX "bookmarks/"
 #define BOOKMARKS_TOOLBAR_FOLDER_ANNO NS_LITERAL_CSTRING(BOOKMARKS_ANNO_PREFIX "toolbarFolder")
+#define GUID_ANNO NS_LITERAL_CSTRING("placesInternal/GUID")
 
 nsNavBookmarks::nsNavBookmarks()
   : mRoot(0), mBookmarksRoot(0), mTagRoot(0), mToolbarFolder(0), mBatchLevel(0),
-    mBatchHasTransaction(PR_FALSE), mLock(nsnull)
+    mItemCount(0), mBatchHasTransaction(PR_FALSE), mLock(nsnull)
 {
   NS_ASSERTION(!sInstance, "Multiple nsNavBookmarks instances!");
   sInstance = this;
@@ -185,6 +189,13 @@ nsNavBookmarks::Init()
     getter_AddRefs(mDBGetItemProperties));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT item_id FROM moz_items_annos "
+      "WHERE content = ?1 "
+      "LIMIT 1"),
+    getter_AddRefs(mDBGetItemIdForGUID));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // mDBGetRedirectDestinations
   // input = page ID, time threshold; output = unique ID input has redirected to
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -227,6 +238,17 @@ nsNavBookmarks::Init()
       "WHERE k.keyword = ?1"),
     getter_AddRefs(mDBGetURIForKeyword));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // generate a new GUID base for this session
+  nsCOMPtr<nsIUUIDGenerator> uuidgen = do_GetService("@mozilla.org/uuid-generator;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsID GUID;
+  rv = uuidgen->GenerateUUIDInPlace(&GUID);
+  NS_ENSURE_SUCCESS(rv, rv);
+  char* GUIDChars = GUID.ToString();
+  NS_ENSURE_TRUE(GUIDChars, NS_ERROR_OUT_OF_MEMORY);
+  mGUIDBase.Assign(NS_ConvertASCIItoUTF16(GUIDChars));
+  PR_Free(GUIDChars);
 
   rv = InitRoots();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1695,6 +1717,56 @@ nsNavBookmarks::GetItemLastModified(PRInt64 aItemId, PRTime *aLastModified)
     return NS_ERROR_INVALID_ARG; // invalid item id
 
   return mDBGetItemProperties->GetInt64(kGetItemPropertiesIndex_LastModified, aLastModified);
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::GetItemGUID(PRInt64 aItemId, nsAString &aGUID)
+{
+  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
+  nsresult rv = annosvc->GetItemAnnotationString(aItemId, GUID_ANNO, aGUID);
+
+  if (NS_SUCCEEDED(rv) || rv != NS_ERROR_NOT_AVAILABLE)
+    return rv;
+
+  nsAutoString tmp;
+  tmp.Assign(mGUIDBase);
+  tmp.AppendInt(mItemCount++);
+  aGUID.Assign(tmp);
+
+  return SetItemGUID(aItemId, aGUID);
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::SetItemGUID(PRInt64 aItemId, const nsAString &aGUID)
+{
+  PRInt64 checkId;
+  GetItemIdForGUID(aGUID, &checkId);
+  if (checkId != -1)
+    return NS_ERROR_INVALID_ARG; // invalid GUID, already exists
+
+  nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
+  NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
+  return annosvc->SetItemAnnotationString(aItemId, GUID_ANNO, aGUID, 0,
+                                          nsIAnnotationService::EXPIRE_NEVER);
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::GetItemIdForGUID(const nsAString &aGUID, PRInt64 *aItemId)
+{
+  mozStorageStatementScoper scoper(mDBGetItemIdForGUID);
+  nsresult rv = mDBGetItemIdForGUID->BindStringParameter(0, aGUID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMore = PR_FALSE;
+  rv = mDBGetItemIdForGUID->ExecuteStep(&hasMore);
+  if (NS_FAILED(rv) || ! hasMore) {
+    *aItemId = -1;
+    return NS_OK; // not found: return -1
+  }
+
+  // found, get the itemId
+  return mDBGetItemIdForGUID->GetInt64(0, aItemId);
 }
 
 NS_IMETHODIMP
