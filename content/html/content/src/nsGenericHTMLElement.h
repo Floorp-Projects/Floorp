@@ -241,9 +241,7 @@ public:
   virtual void UpdateEditableState();
 
   virtual const nsAttrValue* GetClasses() const;
-  virtual nsIAtom *GetIDAttributeName(PRInt32& aNameSpaceID) const;
-  virtual PRBool IsPotentialIDAttributeName(PRInt32 aNameSpaceID,
-                                            nsIAtom* aAtom) const;
+  virtual nsIAtom *GetIDAttributeName() const;
   virtual nsIAtom *GetClassAttributeName() const;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
   virtual nsICSSStyleRule* GetInlineStyleRule();

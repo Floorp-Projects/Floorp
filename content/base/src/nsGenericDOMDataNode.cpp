@@ -631,17 +631,9 @@ nsGenericDOMDataNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 }
 
 nsIAtom *
-nsGenericDOMDataNode::GetIDAttributeName(PRInt32& aNameSpaceID) const
+nsGenericDOMDataNode::GetIDAttributeName() const
 {
-  aNameSpaceID = kNameSpaceID_Unknown;
   return nsnull;
-}
-
-PRBool
-nsGenericDOMDataNode::IsPotentialIDAttributeName(PRInt32 aNameSpaceID,
-                                                 nsIAtom* aAtom) const
-{
-  return PR_FALSE;
 }
 
 already_AddRefed<nsINodeInfo>

@@ -191,7 +191,6 @@ public:
 
   // Determine whether an attribute affects style
   NS_HIDDEN_(nsReStyleHint) HasAttributeDependentStyle(nsIContent *aContent,
-                                                       PRInt32 aNameSpaceID,
                                                        nsIAtom *aAttribute,
                                                        PRInt32 aModType,
                                                        PRUint32 aStateMask);
