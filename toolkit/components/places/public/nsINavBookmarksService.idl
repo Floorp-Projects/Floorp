@@ -161,7 +161,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(c3307160-525d-4d3c-9d75-b4f13a9ca05d)]
+[scriptable, uuid(630dcd21-402c-44cd-8336-78bff3efc5f3)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -326,6 +326,35 @@ interface nsINavBookmarksService : nsISupports
    *         The index of the child to remove
    */
   void removeChildAt(in long long aFolder, in long aIndex);
+
+  /**
+   * Get a globally unique identifier for an item, meant to be used in
+   * sync scenarios.  Even if their contents are exactly the same
+   * (including an item in a different profile with the same ItemId),
+   * the GUID would be different.
+   *  @param   aItemId
+   *           The ID of the item to get the GUID for
+   *  @returns The GUID string
+   */
+  AString getItemGUID(in long long aItemId);
+
+  /**
+   * Set a globally unique identifier.  This can be useful when a sync
+   * algorithm deems two independently created items (on different
+   * profiles) to be the same item.
+   *  @param   aItemId
+   *           The id of the item to set the GUID of
+   *  @returns The GUID string
+   */
+  void setItemGUID(in long long aItemId, in AString aGUID);
+
+  /**
+   * Get the ID of the item with the given GUID.
+   * @param   aGUID
+   *          The GUID string of the item to search for
+   * @returns The item ID, or -1 if not found
+   */
+  long long getItemIdForGUID(in AString aGUID);
 
   /**
    * Set the title for an item.
