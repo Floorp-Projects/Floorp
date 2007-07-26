@@ -63,8 +63,8 @@ class nsIDocShell;
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x36b375cb, 0xf01e, 0x4c18, \
-  { 0xbf, 0x9e, 0xba, 0xad, 0x77, 0x1d, 0xce, 0x22 } }
+{ 0x609baee8, 0x3c0a, 0x4122, \
+  { 0x9c, 0xc6, 0xe4, 0xc9, 0x83, 0x53, 0xff, 0x9c } }
 
 // hack to make egcs / gcc 2.95.2 happy
 class nsIContent_base : public nsINode {
@@ -211,10 +211,21 @@ public:
 
   /**
    * Returns an atom holding the name of the attribute of type ID on
-   * this content node (if applicable).  Returns null for non-element
-   * content nodes.
+   * this content node (if applicable).
+   * Language specific ID attribute has the highest priority, then
+   * ID attribute defined in DTD, and finally xml:id.
+   * Returns null for non-element content nodes.
    */
-  virtual nsIAtom *GetIDAttributeName() const = 0;
+  virtual nsIAtom* GetIDAttributeName(PRInt32& aNameSpaceID) const = 0;
+
+  /**
+   * Returns true if the attribute can be
+   * used as an ID attribute of the element.
+   * Note this may return true with many attributes, but only one
+   * is used as an ID at a time.
+   */
+  virtual PRBool IsPotentialIDAttributeName(PRInt32 aNameSpaceID,
+                                            nsIAtom* aAtom) const = 0;
 
   /**
    * Normalizes an attribute name and returns it as a nodeinfo if an attribute
@@ -731,8 +742,8 @@ public:
 
   /**
    * Get the ID of this content node (the atom corresponding to the
-   * value of the null-namespace attribute whose name is given by
-   * GetIDAttributeName().  This may be null if there is no ID.
+   * value of the attribute whose name is given by GetIDAttributeName().
+   * This may be null if there is no ID.
    */
   virtual nsIAtom* GetID() const = 0;
 

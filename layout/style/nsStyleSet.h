@@ -139,6 +139,7 @@ class nsStyleSet
   // Test if style is dependent on the presence of an attribute.
   nsReStyleHint HasAttributeDependentStyle(nsPresContext* aPresContext,
                                            nsIContent*    aContent,
+                                           PRInt32        aNameSpaceID,
                                            nsIAtom*       aAttribute,
                                            PRInt32        aModType,
                                            PRUint32       aStateMask);

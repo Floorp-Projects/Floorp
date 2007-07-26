@@ -10128,7 +10128,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
 #endif
 
   // the style tag has its own interpretation based on aHint 
-  nsChangeHint hint = aContent->GetAttributeChangeHint(aAttribute, aModType);
+  nsChangeHint hint = (aNameSpaceID == kNameSpaceID_None)
+    ? aContent->GetAttributeChangeHint(aAttribute, aModType) : nsChangeHint(0);
 
   PRBool reframe = (hint & nsChangeHint_ReconstructFrame) != 0;
 
@@ -10163,15 +10164,19 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
 
   if (primaryFrame) {
     // See if we have appearance information for a theme.
-    const nsStyleDisplay* disp = primaryFrame->GetStyleDisplay();
-    if (disp->mAppearance) {
-      nsPresContext* presContext = mPresShell->GetPresContext();
-      nsITheme *theme = presContext->GetTheme();
-      if (theme && theme->ThemeSupportsWidget(presContext, primaryFrame, disp->mAppearance)) {
-        PRBool repaint = PR_FALSE;
-        theme->WidgetStateChanged(primaryFrame, disp->mAppearance, aAttribute, &repaint);
-        if (repaint)
-          NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+    if (aNameSpaceID == kNameSpaceID_None) {
+      const nsStyleDisplay* disp = primaryFrame->GetStyleDisplay();
+      if (disp->mAppearance) {
+        nsPresContext* presContext = mPresShell->GetPresContext();
+        nsITheme *theme = presContext->GetTheme();
+        if (theme && theme->ThemeSupportsWidget(presContext, primaryFrame,
+                                                disp->mAppearance)) {
+          PRBool repaint = PR_FALSE;
+          theme->WidgetStateChanged(primaryFrame, disp->mAppearance, aAttribute,
+                                    &repaint);
+          if (repaint)
+            NS_UpdateHint(hint, nsChangeHint_RepaintFrame);
+        }
       }
     }
    
@@ -10188,6 +10193,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIContent* aContent,
   // the frame's AttributeChanged() in case it does something that affects the style
   nsFrameManager *frameManager = shell->FrameManager();
   nsReStyleHint rshint = frameManager->HasAttributeDependentStyle(aContent,
+                                                                  aNameSpaceID,
                                                                   aAttribute,
                                                                   aModType,
                                                                   aStateMask);

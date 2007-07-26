@@ -265,10 +265,21 @@ nsXTFElementWrapper::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 }
 
 nsIAtom *
-nsXTFElementWrapper::GetIDAttributeName() const
+nsXTFElementWrapper::GetIDAttributeName(PRInt32& aNameSpaceID) const
 {
-  // XXX:
-  return nsGkAtoms::id;
+  if (HasAttr(kNameSpaceID_None, nsGkAtoms::id)) {
+    aNameSpaceID = kNameSpaceID_None;
+    return nsGkAtoms::id;
+  }
+  return nsXTFElementWrapperBase::GetIDAttributeName(aNameSpaceID);
+}
+
+PRBool
+nsXTFElementWrapper::IsPotentialIDAttributeName(PRInt32 aNameSpaceID,
+                                                nsIAtom* aAtom) const
+{
+  return (aNameSpaceID == kNameSpaceID_None && aAtom == nsGkAtoms::id) ||
+    nsXTFElementWrapperBase::IsPotentialIDAttributeName(aNameSpaceID, aAtom);
 }
 
 nsresult

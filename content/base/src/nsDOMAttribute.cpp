@@ -600,14 +600,15 @@ nsDOMAttribute::GetIsId(PRBool* aReturn)
     return NS_OK;
   }
 
-  nsIAtom* idAtom = content->GetIDAttributeName();
+  PRInt32 namespaceID;
+  nsIAtom* idAtom = content->GetIDAttributeName(namespaceID);
   if (!idAtom)
   {
     *aReturn = PR_FALSE;
     return NS_OK;
   }
 
-  *aReturn = mNodeInfo->Equals(idAtom, kNameSpaceID_None);
+  *aReturn = mNodeInfo->Equals(idAtom, namespaceID);
   return NS_OK;
 }
 
