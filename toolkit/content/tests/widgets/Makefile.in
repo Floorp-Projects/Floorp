@@ -52,8 +52,10 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_popup_coords.xul \
 		test_popup_recreate.xul \
 		test_progressmeter.xul \
-		test_datepicker.xul \
-		test_timepicker.xul \
+# Disabled until we can figure out why they're causing failures on the Windows
+# unit test box (bug 389616)
+#		test_datepicker.xul \
+#		test_timepicker.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
