@@ -2336,68 +2336,110 @@ NS_IMETHODIMP nsAccessible::GetValue(nsAString& aValue)
   return NS_OK;
 }
 
-// nsIAccessibleValue
-NS_IMETHODIMP
-nsAccessible::GetMaximumValue(double *aMaximumValue)
+NS_IMETHODIMP nsAccessible::GetMaximumValue(double *aMaximumValue)
 {
-  return GetAttrValue(kNameSpaceID_WAIProperties,
-                      nsAccessibilityAtoms::valuemax, aMaximumValue);
-}
-
-NS_IMETHODIMP
-nsAccessible::GetMinimumValue(double *aMinimumValue)
-{
-  return GetAttrValue(kNameSpaceID_WAIProperties,
-                      nsAccessibilityAtoms::valuemin, aMinimumValue);
-}
-
-NS_IMETHODIMP
-nsAccessible::GetMinimumIncrement(double *aMinIncrement)
-{
-  NS_ENSURE_ARG_POINTER(aMinIncrement);
-  *aMinIncrement = 0;
-
-  // No mimimum increment in dynamic content spec right now
-  return NS_OK_NO_ARIA_VALUE;
-}
-
-NS_IMETHODIMP
-nsAccessible::GetCurrentValue(double *aValue)
-{
-  return GetAttrValue(kNameSpaceID_WAIProperties,
-                      nsAccessibilityAtoms::valuenow, aValue);
-}
-
-NS_IMETHODIMP
-nsAccessible::SetCurrentValue(double aValue)
-{
-  if (!mDOMNode)
+  *aMaximumValue = 0;
+  if (!mDOMNode) {
     return NS_ERROR_FAILURE;  // Node already shut down
+  }
+  if (mRoleMapEntry) {
+    if (mRoleMapEntry->valueRule == eNoValue) {
+      return NS_OK;
+    }
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    nsAutoString valueMax;
+    if (content && content->GetAttr(kNameSpaceID_WAIProperties,
+                                    nsAccessibilityAtoms::valuemax, valueMax) &&
+        valueMax.IsEmpty() == PR_FALSE) {
+      *aMaximumValue = PR_strtod(NS_LossyConvertUTF16toASCII(valueMax).get(), nsnull);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE; // No maximum
+}
 
-  if (!mRoleMapEntry || mRoleMapEntry->valueRule == eNoValue)
-    return NS_OK_NO_ARIA_VALUE;
+NS_IMETHODIMP nsAccessible::GetMinimumValue(double *aMinimumValue)
+{
+  *aMinimumValue = 0;
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
+  if (mRoleMapEntry) {
+    if (mRoleMapEntry->valueRule == eNoValue) {
+      return NS_OK;
+    }
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    nsAutoString valueMin;
+    if (content && content->GetAttr(kNameSpaceID_WAIProperties,
+                                    nsAccessibilityAtoms::valuemin, valueMin) &&
+        valueMin.IsEmpty() == PR_FALSE) {
+      *aMinimumValue = PR_strtod(NS_LossyConvertUTF16toASCII(valueMin).get(), nsnull);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE; // No minimum
+}
 
-  const PRUint32 kValueCannotChange = nsIAccessibleStates::STATE_READONLY |
-                                      nsIAccessibleStates::STATE_UNAVAILABLE;
+NS_IMETHODIMP nsAccessible::GetMinimumIncrement(double *aMinIncrement)
+{
+  *aMinIncrement = 0;
+  return NS_ERROR_NOT_IMPLEMENTED; // No mimimum increment in dynamic content spec right now
+}
 
-  if (State(this) & kValueCannotChange)
-    return NS_ERROR_FAILURE;
+NS_IMETHODIMP nsAccessible::GetCurrentValue(double *aValue)
+{
+  *aValue = 0;
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
+  if (mRoleMapEntry) {
+    if (mRoleMapEntry->valueRule == eNoValue) {
+      return NS_OK;
+    }
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    nsAutoString value;
+    if (content && content->GetAttr(kNameSpaceID_WAIProperties,
+                                    nsAccessibilityAtoms::valuenow, value) &&
+        value.IsEmpty() == PR_FALSE) {
+      *aValue = PR_strtod(NS_LossyConvertUTF16toASCII(value).get(), nsnull);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE; // No value
+}
 
-  double minValue = 0;
-  if (NS_SUCCEEDED(GetMinimumValue(&minValue)) && aValue < minValue)
-    return NS_ERROR_INVALID_ARG;
+NS_IMETHODIMP nsAccessible::SetCurrentValue(double aValue)
+{
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
+  if (mRoleMapEntry) {
+    if (mRoleMapEntry->valueRule == eNoValue) {
+      return NS_OK;
+    }
+    const PRUint32 kValueCannotChange = nsIAccessibleStates::STATE_READONLY |
+                                        nsIAccessibleStates::STATE_UNAVAILABLE;
 
-  double maxValue = 0;
-  if (NS_SUCCEEDED(GetMaximumValue(&maxValue)) && aValue > maxValue)
-    return NS_ERROR_INVALID_ARG;
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  NS_ENSURE_STATE(content);
-
-  nsAutoString newValue;
-  newValue.AppendFloat(aValue);
-  return content->SetAttr(kNameSpaceID_WAIProperties,
-                          nsAccessibilityAtoms::valuenow, newValue, PR_TRUE);
+    if (State(this) & kValueCannotChange) {
+      return NS_ERROR_FAILURE;
+    }
+    double minValue;
+    if (NS_SUCCEEDED(GetMinimumValue(&minValue)) && aValue < minValue) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    double maxValue;
+    if (NS_SUCCEEDED(GetMaximumValue(&maxValue)) && aValue > maxValue) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    if (content) {
+      nsAutoString newValue;
+      newValue.AppendFloat(aValue);
+      return content->SetAttr(kNameSpaceID_WAIProperties,
+                              nsAccessibilityAtoms::valuenow, newValue, PR_TRUE);
+    }
+  }
+  return NS_ERROR_FAILURE; // Not in a role that can accept value
 }
 
 /* void setName (in DOMString name); */
@@ -3189,28 +3231,3 @@ PRBool nsAccessible::CheckVisibilityInParentChain(nsIDocument* aDocument, nsIVie
 
   return PR_TRUE;
 }
-
-nsresult
-nsAccessible::GetAttrValue(PRUint32 aNameSpaceID, nsIAtom *aName,
-                           double *aValue)
-{
-  NS_ENSURE_ARG_POINTER(aValue);
-  *aValue = 0;
-
-  if (!mDOMNode)
-    return NS_ERROR_FAILURE;  // Node already shut down
-
- if (!mRoleMapEntry || mRoleMapEntry->valueRule == eNoValue)
-    return NS_OK_NO_ARIA_VALUE;
-
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  NS_ENSURE_STATE(content);
-
-  PRInt32 result = NS_OK;
-  nsAutoString value;
-  if (content->GetAttr(aNameSpaceID, aName, value) && !value.IsEmpty())
-    *aValue = value.ToFloat(&result);
-
-  return result;
-}
-
