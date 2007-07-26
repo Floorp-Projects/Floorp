@@ -525,12 +525,12 @@ private:
 
   enum {
     STATE_LINE,
-    STATE_CHUNK,
+    STATE_CHUNK
   } mState;
 
   enum {
     CHUNK_ADD,
-    CHUNK_SUB,
+    CHUNK_SUB
   } mChunkType;
 
   PRUint32 mChunkNum;
