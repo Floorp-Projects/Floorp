@@ -1394,7 +1394,7 @@ nsOSHelperAppService::GetFromExtension(const nsCString& aFileExt) {
   }
 
   nsCAutoString mimeType(asciiMajorType + NS_LITERAL_CSTRING("/") + asciiMinorType);
-  nsMIMEInfoImpl* mimeInfo = new nsMIMEInfoImpl(mimeType);
+  nsMIMEInfoUnix* mimeInfo = new nsMIMEInfoUnix(mimeType);
   if (!mimeInfo)
     return nsnull;
   NS_ADDREF(mimeInfo);
@@ -1559,7 +1559,7 @@ nsOSHelperAppService::GetFromType(const nsCString& aMIMEType) {
     return nsnull;
   }
   
-  nsMIMEInfoImpl* mimeInfo = new nsMIMEInfoImpl(aMIMEType);
+  nsMIMEInfoUnix* mimeInfo = new nsMIMEInfoUnix(aMIMEType);
   if (!mimeInfo)
     return nsnull;
   NS_ADDREF(mimeInfo);
@@ -1615,7 +1615,7 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
     // If we got nothing, make a new mimeinfo
     if (!retval) {
       *aFound = PR_FALSE;
-      retval = new nsMIMEInfoImpl(aType);
+      retval = new nsMIMEInfoUnix(aType);
       if (retval) {
         NS_ADDREF(retval);
         if (!aFileExt.IsEmpty())
@@ -1643,8 +1643,8 @@ nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme)
                                         &exists);
   NS_ENSURE_SUCCESS(rv, nsnull);
 
-  nsMIMEInfoImpl *handlerInfo =
-    new nsMIMEInfoImpl(aScheme, nsMIMEInfoBase::eProtocolInfo);
+  nsMIMEInfoUnix *handlerInfo =
+    new nsMIMEInfoUnix(aScheme, nsMIMEInfoBase::eProtocolInfo);
   NS_ENSURE_TRUE(handlerInfo, nsnull);
   NS_ADDREF(handlerInfo);
 
