@@ -1285,12 +1285,6 @@ static nscoord StyleToCoord(const nsStyleCoord& aCoord)
 }
 
 static PRBool
-ShouldDisableOptionalLigatures(const nsStyleText* aTextStyle)
-{
-  return StyleToCoord(aTextStyle->mLetterSpacing) != 0;
-}
-
-static PRBool
 HasTerminalNewline(const nsTextFrame* aFrame)
 {
   if (aFrame->GetContentLength() == 0)
@@ -1320,9 +1314,13 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   nsStyleContext* sc2 = aFrame2->GetStyleContext();
   if (sc1 == sc2)
     return PR_TRUE;
-  return sc1->GetStyleFont()->mFont.BaseEquals(sc2->GetStyleFont()->mFont) &&
+  const nsStyleFont* fontStyle1 = sc1->GetStyleFont();
+  const nsStyleFont* fontStyle2 = sc2->GetStyleFont();
+  const nsStyleText* textStyle2 = sc2->GetStyleText();
+  return fontStyle1->mFont.BaseEquals(fontStyle2->mFont) &&
     sc1->GetStyleVisibility()->mLangGroup == sc2->GetStyleVisibility()->mLangGroup &&
-    ShouldDisableOptionalLigatures(textStyle1) == ShouldDisableOptionalLigatures(sc2->GetStyleText());
+    nsLayoutUtils::GetTextRunFlagsForStyle(sc1, textStyle1, fontStyle1) ==
+      nsLayoutUtils::GetTextRunFlagsForStyle(sc2, textStyle2, fontStyle2);
 }
 
 void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
@@ -1531,14 +1529,18 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   nsTextFrame* nextBreakBeforeFrame = GetNextBreakBeforeFrame(&nextBreakIndex);
 
   PRUint32 i;
+  const nsStyleText* textStyle = nsnull;
+  const nsStyleFont* fontStyle = nsnull;
+  nsStyleContext* lastStyleContext = nsnull;
   for (i = 0; i < mMappedFlows.Length(); ++i) {
     MappedFlow* mappedFlow = &mMappedFlows[i];
     nsTextFrame* f = mappedFlow->mStartFrame;
 
     mappedFlow->mTransformedTextOffset = currentTransformedTextOffset;
 
+    lastStyleContext = f->GetStyleContext();
     // Detect use of text-transform or font-variant anywhere in the run
-    const nsStyleText* textStyle = f->GetStyleText();
+    textStyle = f->GetStyleText();
     if (NS_STYLE_TEXT_TRANSFORM_NONE != textStyle->mTextTransform) {
       anyTextTransformStyle = PR_TRUE;
     }
@@ -1548,7 +1550,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     if (NS_STYLE_TEXT_ALIGN_JUSTIFY == textStyle->mTextAlign && compressWhitespace) {
       textFlags |= gfxTextRunFactory::TEXT_ENABLE_SPACING;
     }
-    const nsStyleFont* fontStyle = f->GetStyleFont();
+    fontStyle = f->GetStyleFont();
     if (NS_STYLE_FONT_VARIANT_SMALL_CAPS == fontStyle->mFont.variant) {
       anySmallcapsStyle = PR_TRUE;
     }
@@ -1708,10 +1710,11 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   if (mTrimNextRunLeadingWhitespace) {
     textFlags |= nsTextFrameUtils::TEXT_TRAILING_WHITESPACE;
   }
-  if (ShouldDisableOptionalLigatures(firstFrame->GetStyleText())) {
-    textFlags |= gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES;
-  }
- 
+  // ContinueTextRunAcrossFrames guarantees that it doesn't matter which
+  // frame's style is used, so use the last frame's
+  textFlags |= nsLayoutUtils::GetTextRunFlagsForStyle(lastStyleContext,
+      textStyle, fontStyle);
+
   gfxSkipChars skipChars;
   skipChars.TakeFrom(&builder);
   // Convert linebreak coordinates to transformed string offsets

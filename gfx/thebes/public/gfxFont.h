@@ -489,7 +489,13 @@ public:
          * When set, optional ligatures are disabled. Ligatures that are
          * required for legible text should still be enabled.
          */
-        TEXT_DISABLE_OPTIONAL_LIGATURES = 0x0400
+        TEXT_DISABLE_OPTIONAL_LIGATURES = 0x0400,
+        /**
+         * When set, the textrun should favour speed of construction over
+         * quality. This may involve disabling ligatures and/or kerning or
+         * other effects.
+         */
+        TEXT_OPTIMIZE_SPEED          = 0x0800
     };
 
     /**

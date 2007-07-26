@@ -1351,8 +1351,10 @@ nsSVGGlyphFrame::GetTextRun(gfxContext *aCtx, const nsString &aText)
   if (!mFontGroup)
     return nsnull;
 
+  PRUint32 flags = nsLayoutUtils::GetTextRunFlagsForStyle(GetStyleContext(),
+      GetStyleText(), GetStyleFont());
   return gfxTextRunCache::MakeTextRun(aText.get(), aText.Length(),
-      mFontGroup, aCtx, 1, 0);
+      mFontGroup, aCtx, 1, flags);
 }
 
 //----------------------------------------------------------------------

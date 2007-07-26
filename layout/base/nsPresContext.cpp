@@ -669,6 +669,8 @@ nsPresContext::ClearStyleDataAndReflow()
   }
 }
 
+static const char sMinFontSizePref[] = "browser.display.auto_quality_min_font_size";
+
 void
 nsPresContext::PreferenceChanged(const char* aPrefName)
 {
@@ -685,6 +687,11 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
 
       ClearStyleDataAndReflow();
     }
+    return;
+  }
+  if (!nsCRT::strcmp(aPrefName, sMinFontSizePref)) {
+    mAutoQualityMinFontSizePixelsPref = nsContentUtils::GetIntPref(sMinFontSizePref);
+    ClearStyleDataAndReflow();
     return;
   }
   // we use a zero-delay timer to coalesce multiple pref updates
@@ -779,6 +786,9 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   nsContentUtils::RegisterPrefCallback("layout.css.dpi",
                                        nsPresContext::PrefChangedCallback,
                                        this);
+
+  // This is observed thanks to the browser.display. observer above.
+  mAutoQualityMinFontSizePixelsPref = nsContentUtils::GetIntPref(sMinFontSizePref);
 
   rv = mEventManager->Init();
   NS_ENSURE_SUCCESS(rv, rv);
