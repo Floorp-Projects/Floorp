@@ -600,33 +600,39 @@ nsImageDocument::CreateSyntheticDocument()
 nsresult
 nsImageDocument::CheckOverflowing(PRBool changeState)
 {
-  nsIPresShell *shell = GetPrimaryShell();
-  if (!shell) {
-    return NS_OK;
-  }
+  /* Create a scope so that the style context gets destroyed before we might
+   * call ClearStyleDataAndReflow.  Also, holding onto pointers to the
+   * presentatation through style resolution is potentially dangerous.
+   */
+  {
+    nsIPresShell *shell = GetPrimaryShell();
+    if (!shell) {
+      return NS_OK;
+    }
 
-  nsPresContext *context = shell->GetPresContext();
-  nsRect visibleArea = context->GetVisibleArea();
+    nsPresContext *context = shell->GetPresContext();
+    nsRect visibleArea = context->GetVisibleArea();
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mBodyContent);
-  if (!content) {
-    NS_WARNING("no body on image document!");
-    return NS_ERROR_FAILURE;
-  }
+    nsCOMPtr<nsIContent> content = do_QueryInterface(mBodyContent);
+    if (!content) {
+      NS_WARNING("no body on image document!");
+      return NS_ERROR_FAILURE;
+    }
 
-  nsRefPtr<nsStyleContext> styleContext =
-    context->StyleSet()->ResolveStyleFor(content, nsnull);
+    nsRefPtr<nsStyleContext> styleContext =
+      context->StyleSet()->ResolveStyleFor(content, nsnull);
 
-  nsMargin m;
-  if (styleContext->GetStyleMargin()->GetMargin(m))
+    nsMargin m;
+    if (styleContext->GetStyleMargin()->GetMargin(m))
+      visibleArea.Deflate(m);
+    m = styleContext->GetStyleBorder()->GetBorder();
     visibleArea.Deflate(m);
-  m = styleContext->GetStyleBorder()->GetBorder();
-  visibleArea.Deflate(m);
-  if (styleContext->GetStylePadding()->GetPadding(m))
-    visibleArea.Deflate(m);
+    if (styleContext->GetStylePadding()->GetPadding(m))
+      visibleArea.Deflate(m);
 
-  mVisibleWidth = nsPresContext::AppUnitsToIntCSSPixels(visibleArea.width);
-  mVisibleHeight = nsPresContext::AppUnitsToIntCSSPixels(visibleArea.height);
+    mVisibleWidth = nsPresContext::AppUnitsToIntCSSPixels(visibleArea.width);
+    mVisibleHeight = nsPresContext::AppUnitsToIntCSSPixels(visibleArea.height);
+  }
 
   PRBool imageWasOverflowing = mImageIsOverflowing;
   mImageIsOverflowing =
