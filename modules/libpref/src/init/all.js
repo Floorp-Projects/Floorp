@@ -443,7 +443,6 @@ pref("capability.policy.mailnews.WebServiceProxyFactory.onError", "noAccess");
 // XMLExtras
 pref("capability.policy.default.XMLHttpRequest.channel", "noAccess");
 pref("capability.policy.default.XMLHttpRequest.getInterface", "noAccess");
-pref("capability.policy.default.XMLHttpRequest.open-uri", "allAccess");
 pref("capability.policy.default.DOMParser.parseFromStream", "noAccess");
 
 // Clipboard

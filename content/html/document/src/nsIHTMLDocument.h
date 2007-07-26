@@ -152,11 +152,6 @@ public:
    */
   virtual nsresult GetDocumentAllResult(const nsAString& aID,
                                         nsISupports** aResult) = 0;
-
-  /**
-   * Disables getting and setting cookies
-   */
-  virtual void DisableCookieAccess() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLDocument, NS_IHTMLDOCUMENT_IID)
