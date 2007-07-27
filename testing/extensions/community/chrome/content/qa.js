@@ -8,7 +8,9 @@ var qaMain = {
 		if (qaPref.getPref(qaPref.prefBase+'.isFirstTime', 'bool') == true) {
 			window.open("chrome://qa/content/setup.xul", "_blank", "chrome,all,dialog=yes");
         }
-		
+		if (qaPref.getPref(qaPref.prefBase + '.currentTestcase.testrunSummary', 'char') != null) {
+            litmus.readStateFromPref();
+        }
 	},
 };
 qaMain.__defineGetter__("bundle", function(){return $("bundle_qa");});
