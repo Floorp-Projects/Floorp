@@ -38,8 +38,59 @@
         });
     },
     
+    
+    /* this code is horrible in general, but i can't figure out a better way to do it */
+    lastTestRunSummary : "",
+    lastTestGroupSummary : "",
+    lastSubgroupObject: null,    // these have to be objects to avoid the async call later.
+    lastTestcaseObject: null,    // they are saved every time a subgroup or testcase is written to screen
+    lastTestcaseIndex: null,
+    
+    preDialogSubgroupObject: null,  // saved to be restored in case of Cancel()
+    preDialogTestcaseObject: null,
+    
+    storeSubgroup : function(subgroup) {
+        litmus.lastSubgroupObject = subgroup;
+    },
+    storeTestcase : function(testcase) {
+        litmus.lastTestcaseObject = testcase;
+    },
+    
     handleDialog : function() {
-        var newWindow = window.openDialog('chrome://qa/content/tabs/selecttests.xul', '_blank', 'chrome,all,dialog=yes', litmus.readStateFromPref);
+        if ($("qa-testrun-label").value != "") {
+            litmus.lastTestRunSummary = $("qa-testrun-label").value;
+            litmus.lastTestGroupSummary = $("qa-testgroup-label").value;
+            lastTestcaseIndex = $("testlist").selectedIndex;
+        }
+        litmus.preDialogueSubgroupObject = litmus.lastSubgroupObject;
+        litmus.preDialogTestcaseObject = litmus.lastTestcaseObject;
+        var newWindow = window.openDialog('chrome://qa/content/tabs/selecttests.xul', '_blank', 'chrome,all,dialog=yes',
+                                          litmus.readStateFromPref, litmus.handleDialogCancel);
+    },
+    
+    handleDialogCancel : function() {
+        if (litmus.lastTestRunSummary == "") return;
+        
+        
+        // this code is v. similar to readStateFromPref, but without an async call.
+        $("qa-testrun-label").value = litmus.lastTestRunSummary;
+        $("qa-testgroup-label").value = litmus.lastTestGroupSummary;
+        litmus.lastSubgroupObject = litmus.preDialogueSubgroupObject;
+        litmus.lastTestcaseObject = litmus.preDialogTestcaseObject;
+        
+        if (litmus.lastSubgroupObject != null)
+            litmus.populatePreviewBox(litmus.lastSubgroupObject.testcases);
+        if (litmus.lastTestcaseObject != null) {
+            litmus.populateTestcase(litmus.lastTestcaseObject);
+        }
+        // set the selection without firing an event, which would cause async call
+        $("testlist").setAttribute("suppressonselect", "true");
+        $("testlist").selectedIndex = lastTestcaseIndex;
+        $("testlist").setAttribute("suppressonselect", "false");
+        
+        // rewrite the prefs
+        litmus.writeStateToPref(litmus.lastTestRunSummary, litmus.lastTestGroupSummary,
+                                litmus.lastSubgroupObject.subgroup_id, lastTestcaseIndex);
     },
     
 	validateLogin : function(uname, passwd, callback) {
@@ -69,7 +120,6 @@
 		});
 	},
     
-    currentTestCaseIndex: 0, // position in array
     currentSubgroupID: null,	
     
     writeStateToPref : function(testrunSummary, testgroupSummary, subgroupID, index) {
@@ -94,29 +144,31 @@
     },
     
     prevButton : function() {
-        litmus.currentTestCaseIndex--;
-        litmus.selectCurrentTestCase();
+        $("testlist").selectedIndex--;
+        //litmus.selectCurrentTestCase();
     },
 	nextButton: function() {
 		// if they selected a result, then submit the result
 		if ($('qa-testcase-result').selectedItem) {
 			litmus.submitResult();
 		}
-        litmus.currentTestCaseIndex++;
-		litmus.selectCurrentTestCase();
+        $("testlist").selectedIndex++;
+		//litmus.selectCurrentTestCase();
 	},
     handleSelect : function() {
-        var menu = document.getElementById('testlist');
-        if (menu.selectedIndex == litmus.currentTestCaseIndex || menu.selectedIndex == -1)
-            return; // prevent recursion or triggering by removal of elements
+        if ($("testlist").selectedIndex == -1)
+            return;
+        //var menu = document.getElementById('testlist');
+        //if (menu.selectedIndex == litmus.currentTestCaseIndex || menu.selectedIndex == -1)
+          //  return; // prevent recursion or triggering by removal of elements
         
-        litmus.currentTestCaseIndex = menu.selectedIndex;
+        //litmus.currentTestCaseIndex = menu.selectedIndex;
         litmus.selectCurrentTestCase();
     },
     selectCurrentTestCase : function() {
-        var menu = document.getElementById('testlist');
-        menu.selectedIndex = litmus.currentTestCaseIndex;
-        litmus.getTestcase(menu.selectedItem.value, litmus.populateTestcase);
+        //var menu = document.getElementById('testlist');
+        //menu.selectedIndex = litmus.currentTestCaseIndex;
+        litmus.getTestcase($("testlist").selectedItem.value, litmus.populateTestcase);
     },
 	populatePreviewBox : function(testcases) {
         
@@ -144,6 +196,7 @@
         }
     },
     populateTestcase : function(testcase) {
+        litmus.lastTestcaseObject = testcase;
         if (testcase == undefined) {
                 return;
             }
@@ -160,14 +213,16 @@
         litmus.checkRadioButtons();
     },
 	populateFields : function(subgroup) {
+        litmus.lastSubgroupObject = subgroup;
 		litmus.populatePreviewBox(subgroup.testcases);
-        litmus.currentTestCaseIndex = 0;
+        $("testlist").selectedIndex = 0;
         litmus.selectCurrentTestCase();
 	},
     statePopulateFields : function(subgroup) {  //TODO: there's gotta be a better way to do this...
+        litmus.lastSubgroupObject = subgroup;
         litmus.populatePreviewBox(subgroup.testcases);
         
-        litmus.currentTestCaseIndex = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testcaseIndex", "int");
+        $("testlist").selectedIndex = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testcaseIndex", "int");
         litmus.selectCurrentTestCase();
     },
 	submitResult : function() {
