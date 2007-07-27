@@ -208,13 +208,6 @@
 #define NS_ERROR_NET_INTERRUPT \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 71)
 
-/**
- * The requested action would require network IO, but
- * nsIChannel::LOAD_NO_NETWORK_IO was specified.
- */
-#define NS_ERROR_NEEDS_NETWORK \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 72)
-
 // XXX really need to better rationalize these error codes.  are consumers of
 //     necko really expected to know how to discern the meaning of these??
 
