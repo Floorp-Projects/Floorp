@@ -542,6 +542,10 @@ nsNavHistoryExpire::EraseAnnotations(mozIStorageConnection* aConnection,
 //
 //    Periodic expiration of annotations that have time-sensitive
 //    expiration policies.
+//
+//    NOTE: Always specify the exact policy constant, as they're
+//    not guaranteed to be in numerical order.
+//
 nsresult
 nsNavHistoryExpire::ExpireAnnotations(mozIStorageConnection* aConnection)
 {
