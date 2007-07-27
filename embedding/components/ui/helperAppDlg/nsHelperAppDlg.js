@@ -461,7 +461,13 @@ nsHelperAppDialog.prototype = {
     // initAppAndSaveToDiskValues:
     initAppAndSaveToDiskValues: function() {
         // Fill in helper app info, if there is any.
-        this.chosenApp = this.mLauncher.MIMEInfo.preferredApplicationHandler;
+        try {
+            this.chosenApp =
+              this.mLauncher.MIMEInfo.preferredApplicationHandler
+                  .QueryInterface(Components.interfaces.nsILocalHandlerApp);
+        } catch (e) {
+            this.chosenApp = null;
+        }
         // Initialize "default application" field.
         this.initDefaultApp();
 
