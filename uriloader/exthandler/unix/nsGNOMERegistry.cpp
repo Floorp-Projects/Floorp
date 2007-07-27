@@ -242,6 +242,14 @@ nsGNOMERegistry::HandlerExists(const char *aProtocolScheme)
   return PR_FALSE;
 }
 
+// XXX Check HandlerExists() before calling LoadURL.
+//
+// If there is not a registered handler for the protocol, gnome_url_show()
+// falls back to using gnomevfs modules.  See bug 389632.  We don't want
+// this fallback to happen as we are not sure of the safety of all gnomevfs
+// modules and MIME-default applications.  (gnomevfs should be handled in
+// nsGnomeVFSProtocolHandler.)
+
 /* static */ nsresult
 nsGNOMERegistry::LoadURL(nsIURI *aURL)
 {
