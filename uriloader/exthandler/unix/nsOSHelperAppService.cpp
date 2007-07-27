@@ -1639,10 +1639,14 @@ nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme)
 {
   NS_ASSERTION(!aScheme.IsEmpty(), "No scheme was specified!");
 
+  // We must check that a registered handler exists so that gnome_url_show
+  // doesn't fallback to gnomevfs.
+  // See nsGNOMERegistry::LoadURL and bug 389632.
   PRBool exists;
   nsresult rv = OSProtocolHandlerExists(nsPromiseFlatCString(aScheme).get(),
                                         &exists);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  if (NS_FAILED(rv) || !exists)
+    return nsnull;
 
   nsMIMEInfoUnix *handlerInfo =
     new nsMIMEInfoUnix(aScheme, nsMIMEInfoBase::eProtocolInfo);

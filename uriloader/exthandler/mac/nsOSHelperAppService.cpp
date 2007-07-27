@@ -323,7 +323,8 @@ nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme)
   PRBool exists;
   nsresult rv = OSProtocolHandlerExists(nsPromiseFlatCString(aScheme).get(),
                                         &exists);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  if (NS_FAILED(rv) || !exists)
+    return nsnull;
 
   nsMIMEInfoMac *handlerInfo =
     new nsMIMEInfoMac(aScheme, nsMIMEInfoBase::eProtocolInfo);
