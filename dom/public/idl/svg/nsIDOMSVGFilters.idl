@@ -190,6 +190,12 @@ interface nsIDOMSVGFEFloodElement : nsIDOMSVGFilterPrimitiveStandardAttributes
     readonly attribute nsIDOMSVGAnimatedString in1;
 };
 
+[scriptable, uuid(ed042a81-39fc-4c89-9385-75758a2434b5)]
+interface nsIDOMSVGFETileElement : nsIDOMSVGFilterPrimitiveStandardAttributes
+{
+    readonly attribute nsIDOMSVGAnimatedString in1;
+};
+
 [scriptable, uuid(77bc4d70-0d49-4c81-b7a7-7432f0fe3e04)]
 interface nsIDOMSVGFETurbulenceElement : nsIDOMSVGFilterPrimitiveStandardAttributes
 { 
