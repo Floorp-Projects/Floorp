@@ -123,7 +123,7 @@ var dialog = {
       let elm = document.createElement("richlistitem");
       elm.setAttribute("type", "handler");
       elm.setAttribute("name", app.name);
-      elm.object = app;
+      elm.obj = app;
 
       document.getElementById("items").insertBefore(elm, this._itemChoose);
     }
