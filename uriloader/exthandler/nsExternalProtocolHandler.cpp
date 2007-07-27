@@ -584,8 +584,10 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewURI(const nsACString &aSpec,
 
 NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
-  // only try to return a channel if we have a protocol handler for the url
-
+  // Only try to return a channel if we have a protocol handler for the url.
+  // nsOSHelperAppService::LoadUriInternal relies on this to check trustedness
+  // for some platforms at least.  (win uses ::ShellExecute and unix uses
+  // gnome_url_show.)
   PRBool haveExternalHandler = HaveExternalProtocolHandler(aURI);
   if (haveExternalHandler)
   {
