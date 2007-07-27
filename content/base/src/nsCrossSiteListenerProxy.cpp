@@ -66,7 +66,7 @@ nsCrossSiteListenerProxy::nsCrossSiteListenerProxy(nsIStreamListener* aOuter,
 }
 
 nsresult
-nsCrossSiteListenerProxy::ForwardRequest()
+nsCrossSiteListenerProxy::ForwardRequest(PRBool aFromStop)
 {
   if (mHasForwardedRequest) {
     return NS_OK;
@@ -77,10 +77,15 @@ nsCrossSiteListenerProxy::ForwardRequest()
   mParserListener = nsnull;
 
   if (mAcceptState != eAccept) {
-    // Only call OnStartRequest here. The call to Cancel will make us
-    // get an OnStopRequest later so we'll forward OnStopRequest then.
     mOuterRequest->Cancel(NS_ERROR_DOM_BAD_URI);
     mOuter->OnStartRequest(mOuterRequest, mOuterContext);
+
+    // Only call OnStopRequest here if we were called from OnStopRequest.
+    // Otherwise the call to Cancel will make us get an OnStopRequest later
+    // so we'll forward OnStopRequest then.
+    if (aFromStop) {
+      mOuter->OnStopRequest(mOuterRequest, mOuterContext, NS_ERROR_DOM_BAD_URI);
+    }
 
     return NS_ERROR_DOM_BAD_URI;
   }
@@ -107,19 +112,28 @@ nsCrossSiteListenerProxy::OnStartRequest(nsIRequest* aRequest,
 {
   mOuterRequest = aRequest;
   mOuterContext = aContext;
+
+  // Check if the request failed
+  nsresult status;
+  nsresult rv = aRequest->GetStatus(&status);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(status)) {
+    mAcceptState = eDeny;
+    return ForwardRequest(PR_FALSE);
+  }
+
   // Check if this was actually a cross domain request
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
   if (!channel) {
     return NS_ERROR_DOM_BAD_URI;
   }
-
   nsCOMPtr<nsIURI> finalURI;
   channel->GetURI(getter_AddRefs(finalURI));
-  nsresult rv = nsContentUtils::GetSecurityManager()->
+  rv = nsContentUtils::GetSecurityManager()->
     CheckSameOriginURI(mRequestingURI, finalURI);
   if (NS_SUCCEEDED(rv)) {
     mAcceptState = eAccept;
-    return ForwardRequest();
+    return ForwardRequest(PR_FALSE);
   }
 
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(channel);
@@ -130,7 +144,7 @@ nsCrossSiteListenerProxy::OnStartRequest(nsIRequest* aRequest,
 
     if (!succeeded) {
       mAcceptState = eDeny;
-      return ForwardRequest();
+      return ForwardRequest(PR_FALSE);
     }
   }
 
@@ -157,7 +171,7 @@ nsCrossSiteListenerProxy::OnStartRequest(nsIRequest* aRequest,
   }
 
   if (mAcceptState == eDeny) {
-    return ForwardRequest();
+    return ForwardRequest(PR_FALSE);
   }
 
   // Set up a parser with us as a sink to look for PIs
@@ -229,7 +243,7 @@ nsCrossSiteListenerProxy::OnStopRequest(nsIRequest* aRequest,
   }
 
   mAcceptState = eDeny;
-  return ForwardRequest();
+  return ForwardRequest(PR_TRUE);
 }
 
 NS_METHOD
@@ -288,7 +302,7 @@ nsCrossSiteListenerProxy::HandleStartElement(const PRUnichar *aName,
                                              PRUint32 aLineNumber)
 {
   // We're done processing the prolog.
-  return ForwardRequest();
+  return ForwardRequest(PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -381,7 +395,7 @@ nsCrossSiteListenerProxy::HandleProcessingInstruction(const PRUnichar *aTarget,
     if (!res) {
       // parsing attribute value failed or unknown/duplicated attribute
       mAcceptState = eDeny;
-      return ForwardRequest();
+      return ForwardRequest(PR_FALSE);
     }
   }
 
@@ -392,7 +406,7 @@ nsCrossSiteListenerProxy::HandleProcessingInstruction(const PRUnichar *aTarget,
   if (!itemTok.hasMoreTokens()) {
     mAcceptState = eDeny;
 
-    return ForwardRequest();
+    return ForwardRequest(PR_FALSE);
   }
 
   while (itemTok.hasMoreTokens()) {
@@ -413,7 +427,7 @@ nsCrossSiteListenerProxy::HandleProcessingInstruction(const PRUnichar *aTarget,
   }
 
   if (mAcceptState == eDeny) {
-    return ForwardRequest();
+    return ForwardRequest(PR_FALSE);
   }
 
   return NS_OK;
@@ -436,7 +450,7 @@ nsCrossSiteListenerProxy::ReportError(const PRUnichar *aErrorText,
   if (!mHasForwardedRequest) {
     mAcceptState = eDeny;
 
-    return ForwardRequest();
+    return ForwardRequest(PR_FALSE);
   }
 
   return NS_OK;
@@ -449,7 +463,7 @@ nsCrossSiteListenerProxy::WillBuildModel()
   mParser->GetDTD(getter_AddRefs(dtd));
   NS_ASSERTION(dtd, "missing dtd in WillBuildModel");
   if (dtd && !(dtd->GetType() & NS_IPARSER_FLAG_XML)) {
-    return ForwardRequest();
+    return ForwardRequest(PR_FALSE);
   }
 
   return NS_OK;
