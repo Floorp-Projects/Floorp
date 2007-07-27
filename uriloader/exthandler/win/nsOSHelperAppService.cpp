@@ -148,7 +148,8 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
                                KEY_QUERY_VALUE, &hKey);
      if (err == ERROR_SUCCESS)
      {
-       *aHandlerExists = PR_TRUE;
+       err = ::RegQueryValueEx(hKey, "URL Protocol", NULL, NULL, NULL, NULL);
+       *aHandlerExists = (err == ERROR_SUCCESS);
        // close the key
        ::RegCloseKey(hKey);
      }
