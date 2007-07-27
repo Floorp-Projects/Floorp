@@ -17,7 +17,7 @@
         litmus.getLitmusJson(testrunID, callback, "test_run_id=");
     },
     getTestruns : function(callback) {
-        var s = new Sysconfig(); // TODO: actually detect settings
+        var s = new Sysconfig(); 
         var branch = encodeURIComponent(s.branch);
         litmus.getLitmusJson("&product_name=Firefox&branch_name=" + branch,
                         callback, "test_runs_by_branch_product_name=1");
@@ -70,17 +70,21 @@
 	},
     
     currentTestCaseIndex: 0, // position in array
-	
     currentSubgroupID: null,	
-	cachedTests: null,
     
-    writeStateToPref : function(subgroupID, index) {
+    writeStateToPref : function(testrunSummary, testgroupSummary, subgroupID, index) {
+        qaPref.setPref(qaPref.prefBase + ".currentTestcase.testrunSummary", testrunSummary, "char");
+        qaPref.setPref(qaPref.prefBase + ".currentTestcase.testgroupSummary", testgroupSummary, "char");
         qaPref.setPref(qaPref.prefBase + ".currentTestcase.subgroupId", subgroupID, "int");
         qaPref.setPref(qaPref.prefBase + ".currentTestcase.testcaseIndex", index, "int");
     },
     readStateFromPref : function() {
+        $("qa-testrun-label").value = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testrunSummary", "char");
+        $("qa-testgroup-label").value = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testgroupSummary", "char");
         litmus.currentSubgroupID = qaPref.getPref(qaPref.prefBase + ".currentTestcase.subgroupId", "int");
-        litmus.getSubgroup(litmus.currentSubgroupID,litmus.statePopulateFields);
+        
+        if (litmus.currentSubgroupID != 0)
+            litmus.getSubgroup(litmus.currentSubgroupID,litmus.statePopulateFields);
     },
     checkRadioButtons : function() {
         var menu = document.getElementById('testlist');
@@ -114,7 +118,7 @@
         menu.selectedIndex = litmus.currentTestCaseIndex;
         litmus.getTestcase(menu.selectedItem.value, litmus.populateTestcase);
     },
-	populatePreviewBox : function() {
+	populatePreviewBox : function(testcases) {
         
         var menu = document.getElementById('testlist');
         if (!menu) return;
@@ -123,18 +127,20 @@
             menu.removeChild(menu.firstChild);
         };
     
-        for (var i = 0; i < litmus.cachedTests.length; i++) {
-            var row = menu.appendItem("", litmus.cachedTests[i].testcase_id);
+        for (var i = 0; i < testcases.length; i++) {
+            var row = document.createElement("listitem");
+            row.value = testcases[i].testcase_id;
             var checkbox = document.createElement("listcell");
             checkbox.setAttribute("label", "");
             checkbox.setAttribute("type", "checkbox");
             checkbox.setAttribute("disabled", "true");
             var name = document.createElement("listcell");
-            name.setAttribute("label", "#" + litmus.cachedTests[i].testcase_id + " -- " + litmus.cachedTests[i].summary);
+            name.setAttribute("label", "#" + testcases[i].testcase_id + " -- " + testcases[i].summary);
             name.setAttribute("crop", "end");
             name.setAttribute("maxwidth", "175");
             row.appendChild(checkbox);
             row.appendChild(name);
+            menu.appendChild(row);
         }
     },
     populateTestcase : function(testcase) {
@@ -154,14 +160,12 @@
         litmus.checkRadioButtons();
     },
 	populateFields : function(subgroup) {
-		litmus.cachedTests = subgroup.testcases;
-		litmus.populatePreviewBox();
+		litmus.populatePreviewBox(subgroup.testcases);
         litmus.currentTestCaseIndex = 0;
         litmus.selectCurrentTestCase();
 	},
     statePopulateFields : function(subgroup) {  //TODO: there's gotta be a better way to do this...
-        litmus.cachedTests = subgroup.testcases;
-        litmus.populatePreviewBox();
+        litmus.populatePreviewBox(subgroup.testcases);
         
         litmus.currentTestCaseIndex = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testcaseIndex", "int");
         litmus.selectCurrentTestCase();
@@ -180,13 +184,15 @@
 			return false;
 		}
 
+        var menu = document.getElementById('testlist');
+        
 		var l = new LitmusResults({username: qaPref.litmus.getUsername(), 
 								  password: qaPref.litmus.getPassword(),
 								  server: litmus.baseURL});
 		l.sysconfig(new Sysconfig());
 		
 		l.addResult(new Result({
-			testid: litmus.cachedTests[litmus.currentTestCaseIndex].testcase_id,
+			testid: menu.selectedItem.value,
 			resultstatus: rs,
 			exitstatus: 'Exited Normally',
 			duration: 0,
@@ -202,9 +208,7 @@
 			alert(resp.responseText);
 		};
 		
-		litmus.postResultXML(l.toXML(), callback, errback);
-        
-        var menu = document.getElementById('testlist');
+		litmus.postResultXML(l.toXML(), callback, errback);        
         var item = menu.selectedItem;
         item.firstChild.setAttribute("checked", "true");
         return false;   // ?? Got rid of strict warning...

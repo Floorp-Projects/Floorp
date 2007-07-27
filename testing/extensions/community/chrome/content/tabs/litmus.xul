@@ -10,19 +10,19 @@
 <script type="application/x-javascript" src="chrome://qa/content/tabs/qa.js" />
 <script type="application/x-javascript" src="chrome://qa/content/tabs/prefs.js" />
 <script type="application/x-javascript" src="chrome://qa/content/tabs/litmus.js" />
-<tabpanel id="qa-tab-litmus" >
+<tabpanel id="qa-tab-litmus" onload="litmus.readStateFromPref()">
 		
 <vbox align="start" pack="start">
 	<hbox align="start" pack="start">
-		<vbox maxwidth="110">
+		<vbox minwidth="150">
 			 <button maxwidth="110" label="&qa.litmus.selecttests;"
                      oncommand="litmus.handleDialog()"
                      style="margin-left: 4px;" />
-			 <label value="" id="qa-testrun-label"/>
-			 <label value="" id="qa-testgroup-label"/>
-			 <label value="" id="qa-subgroup-label"/>
+			 <label maxwidth="140" value="" id="qa-testrun-label"/>
+			 <label maxwidth="140" value="" id="qa-testgroup-label"/>
+			 <label maxwidth="140" value="" id="qa-subgroup-label"/>
 		</vbox>
-		<listbox rows="7" equalsize="always" onselect="litmus.handleSelect()" id="testlist">
+		<listbox rows="7" minwidth="200" onselect="litmus.handleSelect()" id="testlist">
             <listcols>
                 <listcol />
                 <listcol />
@@ -39,15 +39,15 @@
 		 
 	 </hbox>
 	
-	<vbox>
-		<groupbox height="160px">
+	<vbox width="370px" minwidth="370px">
+		<groupbox height="160px" minwidth="370px" width="370px">
 			<caption label="&qa.testcase.steps;" crop="end" maxwidth="200"/>
 			<div xmlns="http://www.w3.org/1999/xhtml" style="width: 350px; height: 160px; overflow: auto;" id="qa-testcase-steps" class="list"/>
 		</groupbox>
 		<splitter id="qa-mainwindow-splitter" state="open" collapse="none">
 			<grippy/>
 		</splitter>
-		<groupbox height="130px">
+		<groupbox height="130px" minwidth="370px" width="370px">
 			<caption label="&qa.testcase.expected;" />
 			<div xmlns="http://www.w3.org/1999/xhtml" style="width: 350px; height: 130px; overflow: auto;" id="qa-testcase-expected" class="list"/>
 		</groupbox>
