@@ -225,7 +225,7 @@ nsUrlClassifierUtils::CleanupHostname(const nsACString & hostname,
   }
 
   // cut off trailing dots
-  while (_retval[_retval.Length() - 1] == '.') {
+  while (_retval.Length() > 0 && _retval[_retval.Length() - 1] == '.') {
     _retval.SetLength(_retval.Length() - 1);
   }
 }
