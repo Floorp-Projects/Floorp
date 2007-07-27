@@ -71,25 +71,16 @@ interface nsIAnnotationService : nsISupports
      * to time.
      */
 
-    // For annotations that only live as long as the URI is in history
-    // (eg: Has >0 visits).
-    const unsigned short EXPIRE_WITH_HISTORY = 0;
-
-    // For data that should never expire. Must be explictly removed.
-    const unsigned short EXPIRE_NEVER = 1;
-
     // For temporary data that can be discarded when the user exits.
     // Removed at application exit.
-    const unsigned short EXPIRE_SESSION = 2;
+    const unsigned short EXPIRE_SESSION = 0;
 
-    // For short-lived temporary data that you still want to outlast a session.
-    // Removed at 7 days.
-    const unsigned short EXPIRE_DAYS = 3;
+    // NOTE: 1 is skipped due to it's temporary use as EXPIRE_NEVER in bug #319455.
 
     // For general page settings, things the user is interested in seeing
     // if they come back to this page some time in the near future.
     // Removed at 30 days. 
-    const unsigned short EXPIRE_WEEKS = 4;
+    const unsigned short EXPIRE_WEEKS = 2;
 
     // Something that the user will be interested in seeing in their
     // history like favicons. If they haven't visited a page in a couple
@@ -97,7 +88,18 @@ interface nsIAnnotationService : nsISupports
     // the positions of things, or other stuff you create, so put that in
     // the weeks policy.
     // Removed at 180 days.
-    const unsigned short EXPIRE_MONTHS = 5;
+    const unsigned short EXPIRE_MONTHS = 3;
+
+    // For data that should never expire. Must be explictly removed.
+    const unsigned short EXPIRE_NEVER = 4;
+
+    // For annotations that only live as long as the URI is in history
+    // (eg: Has >0 visits).
+    const unsigned short EXPIRE_WITH_HISTORY = 5;
+
+    // For short-lived temporary data that you still want to outlast a session.
+    // Removed at 7 days.
+    const unsigned short EXPIRE_DAYS = 6;
 
     // type constants
     const unsigned short TYPE_INT32  = 1;

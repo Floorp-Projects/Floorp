@@ -493,6 +493,34 @@ nsNavBookmarks::InitToolbarFolder()
       NS_ENSURE_SUCCESS(rv, rv);
       rv = SetToolbarFolder(toolbarFolder);
       NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      /**
+      * XXXdietrich: temporary migration code to fix bug 389808.
+      *              should be removed some time after alpha 7. 
+      */
+      
+      nsCOMPtr<mozIStorageStatement> getToolbarFolderStatement;
+      rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT id from moz_bookmarks WHERE title = ?1 AND type = ?2"),
+                                   getter_AddRefs(getToolbarFolderStatement));
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      nsXPIDLString toolbarTitle;
+      rv = mBundle->GetStringFromName(NS_LITERAL_STRING("PlacesBookmarksToolbarTitle").get(),
+                                      getter_Copies(toolbarTitle));
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = getToolbarFolderStatement->BindStringParameter(0, toolbarTitle);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = getToolbarFolderStatement->BindInt32Parameter(1, TYPE_FOLDER);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = getToolbarFolderStatement->ExecuteStep(&hasResult);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (hasResult) {
+        PRInt64 toolbarFolder;
+        rv = getToolbarFolderStatement->GetInt64(0, &toolbarFolder);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = SetToolbarFolder(toolbarFolder);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
     return NS_OK;
   }
