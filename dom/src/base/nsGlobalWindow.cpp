@@ -8791,7 +8791,7 @@ nsNavigator::IsLocallyAvailable(const nsAString &aURI,
   // if the cache is busy, assume that it is not yet available rather
   // than waiting for it to become available.
   PRUint32 loadFlags = nsIChannel::INHIBIT_CACHING |
-                       nsIChannel::LOAD_NO_NETWORK_IO |
+                       nsICachingChannel::LOAD_NO_NETWORK_IO |
                        nsICachingChannel::LOAD_ONLY_IF_MODIFIED |
                        nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
 

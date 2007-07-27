@@ -332,7 +332,7 @@ nsHttpChannel::Connect(PRBool firstTime)
     AddAuthorizationHeaders();
 
     if (mLoadFlags & LOAD_NO_NETWORK_IO) {
-        return NS_ERROR_NEEDS_NETWORK;
+        return NS_ERROR_DOCUMENT_NOT_CACHED;
     }
 
     // hit the net...
