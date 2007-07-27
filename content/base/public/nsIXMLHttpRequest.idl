@@ -261,16 +261,50 @@ interface nsIXMLHttpRequest : nsISupports
   void   setRequestHeader(in AUTF8String header, in AUTF8String value);
 
   /**
-   * The state of the request.
-   *
-   * Possible values:
-   *   0 UNINITIALIZED open() has not been called yet.
-   *   1 LOADING       send() has not been called yet.
-   *   2 LOADED        send() has been called, headers and status are available.
-   *   3 INTERACTIVE   Downloading, responseText holds the partial data.
-   *   4 COMPLETED     Finished with all operations.
+   * The state of the request.  Represented by one of the constants below.
+   * @see http://www.w3.org/TR/XMLHttpRequest/#xmlhttprequest
+   * @see nsIXMLHttpRequest#UNSENT
+   * @see nsIXMLHttpRequest#OPEN
+   * @see nsIXMLHttpRequest#SENT
+   * @see nsIXMLHttpRequest#LOADING
+   * @see nsIXMLHttpRequest#DONE
    */
-  readonly attribute long readyState;
+  readonly attribute unsinged short readyState;
+
+  /**
+   * Initial state of new XMLHttpRequest object. open() has not been called.
+   * @see http://www.w3.org/TR/XMLHttpRequest/#unsent
+   * @see nsIXMLHttpRequest#readyState
+   */
+  const unsigned short UNSENT = 0;
+
+  /**
+   * open() has been called. send() has not.
+   * @see http://www.w3.org/TR/XMLHttpRequest/#open
+   * @see nsIXMLHttpRequest#readyState
+   */
+  const unsigned short OPEN = 1;
+
+  /**
+   * send() has been called. Headers and status are available.
+   * @see http://www.w3.org/TR/XMLHttpRequest/#sent
+   * @see nsIXMLHttpRequest#readyState
+   */
+  const unsigned short SENT = 2;
+
+  /**
+   * Downloading, responseText holds the partial data.
+   * @see http://www.w3.org/TR/XMLHttpRequest/#loading
+   * @see nsIXMLHttpRequest#readyState
+   */
+  const unsigned short LOADING = 3;
+
+  /**
+   * All operations are complete.
+   * @see http://www.w3.org/TR/XMLHttpRequest/#done
+   * @see nsIXMLHttpRequest#readyState
+   */
+  const unsigned short DONE = 4;
 
   /**
    * Override the mime type returned by the server (if any). This may
