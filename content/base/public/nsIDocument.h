@@ -664,11 +664,6 @@ public:
 
   virtual nsresult AddXMLEventsContent(nsIContent * aXMLEventsElement) = 0;
 
-  virtual PRBool IsLoadedAsData()
-  {
-    return PR_FALSE;
-  }
-
   /**
    * Create an element with the specified name, prefix and namespace ID.
    * If aDocumentDefaultType is true we create an element of the default type
@@ -876,7 +871,11 @@ public:
   {
     return mMarkedCCGeneration;
   }
-  
+
+  PRBool IsLoadedAsData()
+  {
+    return mLoadedAsData;
+  }
 
 protected:
   ~nsIDocument()
@@ -939,6 +938,10 @@ protected:
   PRPackedBool mIsInitialDocumentInWindow;
 
   PRPackedBool mShellsAreHidden;
+
+  // True if we're loaded as data and therefor has any dangerous stuff, such
+  // as scripts and plugins, disabled.
+  PRPackedBool mLoadedAsData;
 
   // The bidi options for this document.  What this bitfield means is
   // defined in nsBidiUtils.h

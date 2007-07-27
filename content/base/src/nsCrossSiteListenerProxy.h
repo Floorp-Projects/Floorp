@@ -75,7 +75,7 @@ public:
 
 private:
 
-  nsresult ForwardRequest();
+  nsresult ForwardRequest(PRBool aCallStop);
   PRBool MatchPatternList(const char*& aIter, const char* aEnd);
   void CheckHeader(const nsCString& aHeader);
   PRBool VerifyAndMatchDomainPattern(const nsACString& aDomainPattern);

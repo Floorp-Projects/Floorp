@@ -3426,6 +3426,13 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
                                          const nsAString& aValue,
                                          PRBool aDefer)
 {
+  nsIDocument *ownerDoc = GetOwnerDoc();
+  if (!ownerDoc || ownerDoc->IsLoadedAsData()) {
+    // Make this a no-op rather than throwing an error to avoid
+    // the error causing problems setting the attribute.
+    return NS_OK;
+  }
+
   NS_PRECONDITION(aEventName, "Must have event name!");
   nsCOMPtr<nsISupports> target;
   PRBool defer = PR_TRUE;
@@ -3437,8 +3444,6 @@ nsGenericElement::AddScriptEventListener(nsIAtom* aEventName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (manager) {
-    nsIDocument *ownerDoc = GetOwnerDoc();
-
     defer = defer && aDefer; // only defer if everyone agrees...
 
     PRUint32 lang = GetScriptTypeID();
