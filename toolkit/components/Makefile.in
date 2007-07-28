@@ -92,8 +92,6 @@ DIRS +=	\
 	cookie \
 	$(NULL)
 
-ifndef MOZ_SUITE
-# XXX Suite doesn't want these just yet
 ifdef MOZ_XUL
 DIRS += \
 	autocomplete \
@@ -101,6 +99,9 @@ DIRS += \
 	satchel \
 	$(NULL)
 endif # MOZ_XUL
+
+ifndef MOZ_SUITE
+# XXX Suite doesn't want these just yet
 ifndef MOZ_PLACES
 DIRS +=	history
 endif # MOZ_PLACES
@@ -131,10 +132,6 @@ DIRS += \
 EXTRA_PP_COMPONENTS = nsDefaultCLH.js
 
 endif # MOZ_XUL_APP
-
-ifdef MOZ_SUITE
-DIRS += autocomplete/public
-endif
 
 ifeq ($(MOZ_BUILD_APP),camino)
 DIRS += autocomplete/public
