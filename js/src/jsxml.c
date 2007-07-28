@@ -1409,7 +1409,7 @@ ParseNodeToQName(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
     colon = js_strchr_limit(start, ':', limit);
     if (colon) {
         offset = PTRDIFF(colon, start, jschar);
-        prefix = js_NewDependentString(cx, str, 0, offset, 0);
+        prefix = js_NewDependentString(cx, str, 0, offset);
         if (!prefix)
             return NULL;
 
@@ -1447,7 +1447,7 @@ ParseNodeToQName(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
             return NULL;
         }
 
-        localName = js_NewStringCopyN(cx, colon + 1, length - (offset + 1), 0);
+        localName = js_NewStringCopyN(cx, colon + 1, length - (offset + 1));
         if (!localName)
             return NULL;
     } else {
@@ -1502,7 +1502,7 @@ ChompXMLWhitespace(JSContext *cx, JSString *str)
     if (newlength == length)
         return str;
     offset = PTRDIFF(cp, start, jschar);
-    return js_NewDependentString(cx, str, offset, newlength, 0);
+    return js_NewDependentString(cx, str, offset, newlength);
 }
 
 static JSXML *
@@ -1685,7 +1685,7 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
                     /* 10.3.2.1. Step 6(h)(i)(1)(a). */
                     prefix = cx->runtime->emptyString;
                 } else {
-                    prefix = js_NewStringCopyN(cx, chars + 6, length - 6, 0);
+                    prefix = js_NewStringCopyN(cx, chars + 6, length - 6);
                     if (!prefix)
                         goto fail;
                 }
@@ -2649,7 +2649,7 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
 
     if (bp == cp) {
         offset = PTRDIFF(cp, start, jschar);
-        prefix = js_NewDependentString(cx, uri, offset, length, 0);
+        prefix = js_NewDependentString(cx, uri, offset, length);
     } else {
         prefix = js_NewString(cx, bp, newlength, 0);
         if (!prefix)
@@ -3205,7 +3205,7 @@ ToXMLName(JSContext *cx, jsval v, jsid *funidp)
         goto bad;
 
     if (*JSSTRING_CHARS(name) == '@') {
-        name = js_NewDependentString(cx, name, 1, JSSTRING_LENGTH(name) - 1, 0);
+        name = js_NewDependentString(cx, name, 1, JSSTRING_LENGTH(name) - 1);
         if (!name)
             return NULL;
         *funidp = 0;
@@ -7879,8 +7879,7 @@ js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
 
     if (JSSTRING_IS_DEPENDENT(str) ||
         !(*js_GetGCThingFlags(str) & GCF_MUTABLE)) {
-        str = js_NewStringCopyN(cx, JSSTRING_CHARS(str), JSSTRING_LENGTH(str),
-                                0);
+        str = js_NewStringCopyN(cx, JSSTRING_CHARS(str), JSSTRING_LENGTH(str));
         if (!str)
             return NULL;
     }

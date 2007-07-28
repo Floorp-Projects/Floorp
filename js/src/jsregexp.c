@@ -3445,7 +3445,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
     }                                                                         \
 }
 
-        matchstr = js_NewStringCopyN(cx, cp, matchlen, 0);
+        matchstr = js_NewStringCopyN(cx, cp, matchlen);
         if (!matchstr) {
             cx->weakRoots.newborn[GCX_OBJECT] = NULL;
             ok = JS_FALSE;
@@ -3506,7 +3506,7 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
                                        JSPROP_ENUMERATE, NULL);
             } else {
                 parstr = js_NewStringCopyN(cx, gData.cpbegin + parsub->index,
-                                           parsub->length, 0);
+                                           parsub->length);
                 if (!parstr) {
                     cx->weakRoots.newborn[GCX_OBJECT] = NULL;
                     cx->weakRoots.newborn[GCX_STRING] = NULL;
@@ -3716,7 +3716,7 @@ regexp_static_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         sub = REGEXP_PAREN_SUBSTRING(res, slot);
         break;
     }
-    str = js_NewStringCopyN(cx, sub->chars, sub->length, 0);
+    str = js_NewStringCopyN(cx, sub->chars, sub->length);
     if (!str)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
@@ -4248,7 +4248,7 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
     JSRegExp *re;
     JSTempValueRooter tvr;
 
-    str = js_NewStringCopyN(cx, chars, length, 0);
+    str = js_NewStringCopyN(cx, chars, length);
     if (!str)
         return NULL;
     re = js_NewRegExp(cx, ts,  str, flags, JS_FALSE);
