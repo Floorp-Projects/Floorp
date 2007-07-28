@@ -5009,7 +5009,7 @@ JS_PUBLIC_API(JSString *)
 JS_NewUCStringCopyN(JSContext *cx, const jschar *s, size_t n)
 {
     CHECK_REQUEST(cx);
-    return js_NewStringCopyN(cx, s, n, 0);
+    return js_NewStringCopyN(cx, s, n);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -5018,7 +5018,7 @@ JS_NewUCStringCopyZ(JSContext *cx, const jschar *s)
     CHECK_REQUEST(cx);
     if (!s)
         return cx->runtime->emptyString;
-    return js_NewStringCopyZ(cx, s, 0);
+    return js_NewStringCopyZ(cx, s);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -5107,7 +5107,7 @@ JS_NewDependentString(JSContext *cx, JSString *str, size_t start,
                       size_t length)
 {
     CHECK_REQUEST(cx);
-    return js_NewDependentString(cx, str, start, length, 0);
+    return js_NewDependentString(cx, str, start, length);
 }
 
 JS_PUBLIC_API(JSString *)

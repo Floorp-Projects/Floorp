@@ -369,12 +369,12 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             JS_BeginRequest(cx);
 #endif
 
-        /* Unpin all pinned atoms before final GC. */
-        js_UnpinPinnedAtoms(&rt->atomState);
-
         /* Unlock and clear GC things held by runtime pointers. */
         js_FinishRuntimeNumberState(cx);
         js_FinishRuntimeStringState(cx);
+
+        /* Unpin all pinned atoms before final GC. */
+        js_UnpinPinnedAtoms(&rt->atomState);
 
         /* Clear debugging state to remove GC roots. */
         JS_ClearAllTraps(cx);

@@ -323,15 +323,15 @@ js_NewString(JSContext *cx, jschar *chars, size_t length, uintN gcflag);
 
 extern JSString *
 js_NewDependentString(JSContext *cx, JSString *base, size_t start,
-                      size_t length, uintN gcflag);
+                      size_t length);
 
 /* Copy a counted string and GC-allocate a descriptor for it. */
 extern JSString *
-js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n, uintN gcflag);
+js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n);
 
 /* Copy a C string and GC-allocate a descriptor for it. */
 extern JSString *
-js_NewStringCopyZ(JSContext *cx, const jschar *s, uintN gcflag);
+js_NewStringCopyZ(JSContext *cx, const jschar *s);
 
 /* Free the chars held by str when it is finalized by the GC. */
 extern void
