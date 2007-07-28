@@ -661,7 +661,7 @@ textbox[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete");
 }
 
-.autocomplete-result-popup {
+panel[type="autocomplete"] {
   -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-result-popup");
 }
 
