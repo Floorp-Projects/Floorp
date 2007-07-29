@@ -56,6 +56,9 @@ class nsMIMEInfoMac : public nsMIMEInfoImpl {
       return NS_ERROR_UNEXPECTED;
     }
 #endif
+    static NS_HIDDEN_(nsresult) OpenApplicationWithURI(nsIFile *aApplication, 
+                                                       const nsCString& aURI);
+    
 };
 
 
