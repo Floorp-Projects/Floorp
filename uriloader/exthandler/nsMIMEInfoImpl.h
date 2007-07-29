@@ -140,16 +140,16 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI) = 0;
 
     /**
-     * This method can be used to launch the file using nsIProcess, with the
-     * path of the file being the first parameter to the executable. This is
+     * This method can be used to launch the file or URI with a single 
+     * argument (typically either a file path or a URI spec).  This is 
      * meant as a helper method for implementations of
-     * LaunchWithFile/LaunchDefaultWithFile.
-     * Neither aApp nor aFile may be null.
+     * LaunchWithURI/LaunchDefaultWithFile.
      *
-     * @param aApp The application to launch
-     * @param aFile The file to open in the application
+     * @param aApp The application to launch (may not be null)
+     * @param aArg The argument to pass on the command line
      */
-    static NS_HIDDEN_(nsresult) LaunchWithIProcess(nsIFile* aApp, nsIFile* aFile);
+    static NS_HIDDEN_(nsresult) LaunchWithIProcess(nsIFile* aApp,
+                                                   const nsCString &aArg);
 
     /**
      * Used to launch a web-based handler with this URI.
