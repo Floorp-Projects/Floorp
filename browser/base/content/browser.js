@@ -1097,7 +1097,11 @@ function delayedStartup()
 
   // Initialize the microsummary service by retrieving it, prompting its factory
   // to create its singleton, whose constructor initializes the service.
-  Cc["@mozilla.org/microsummary/service;1"].getService(Ci.nsIMicrosummaryService);
+  try {
+    Cc["@mozilla.org/microsummary/service;1"].getService(Ci.nsIMicrosummaryService);
+  } catch (ex) {
+    Components.utils.reportError("Failed to init microsummary service:\n" + ex);
+  }
 
   // Initialize the content pref event sink and the text zoom setting.
   // We do this before the session restore service gets initialized so we can
@@ -1107,7 +1111,7 @@ function delayedStartup()
     TextZoom.init();
   }
   catch(ex) {
-    Components.utils.reportError(ex);
+    Components.utils.reportError("Failed to init content pref service:\n" + ex);
   }
 
   // initialize the session-restore service (in case it's not already running)
