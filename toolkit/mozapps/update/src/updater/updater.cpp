@@ -263,7 +263,9 @@ private:
 
 static char* gSourcePath;
 static ArchiveReader gArchiveReader;
+#ifdef XP_WIN
 static bool gSucceeded = FALSE;
+#endif
 
 static const char kWhitespace[] = " \t";
 static const char kNL[] = "\r\n";
@@ -1310,8 +1312,10 @@ ActionList::Finish(int status)
     a = a->mNext;
   }
 
+#ifdef XP_WIN
   if (status == OK)
     gSucceeded = TRUE;
+#endif
 
   UpdateProgressUI(100.0f);
 }
