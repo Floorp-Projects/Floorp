@@ -2165,7 +2165,7 @@ pref("font.scale.tt_bitmap.dark_text.gain", "0.8");
 //pref("font.directory.truetype.3", "/u/sam/tt_font3");
 pref("font.FreeType2.printing", true);
 
-// below a certian pixel size anti-aliased bitmat scaled fonts 
+// below a certain pixel size anti-aliased bitmap scaled fonts 
 // produce poor results
 pref("font.scale.aa_bitmap.enable", true);
 pref("font.scale.aa_bitmap.always", false);
