@@ -191,8 +191,8 @@ nsAnnotationService::Init()
   //   Note: kAnnoIndex_Name here is a name ID and not a string like the getters
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "INSERT INTO moz_annos "
-      "(place_id, anno_attribute_id, mime_type, content, flags, expiration, type, dateAdded, lastModified) "
-      "VALUES (?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"),
+      "(place_id, anno_attribute_id, mime_type, content, flags, expiration, type, dateAdded) "
+      "VALUES (?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)"),
     getter_AddRefs(mDBAddAnnotation));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -200,8 +200,8 @@ nsAnnotationService::Init()
   //   Note: kAnnoIndex_Name here is a name ID and not a string like the getters
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
       "INSERT INTO moz_items_annos "
-      "(item_id, anno_attribute_id, mime_type, content, flags, expiration, type, dateAdded, lastModified) "
-      "VALUES (?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"),
+      "(item_id, anno_attribute_id, mime_type, content, flags, expiration, type, dateAdded) "
+      "VALUES (?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)"),
     getter_AddRefs(mDBAddItemAnnotation));
   NS_ENSURE_SUCCESS(rv, rv);
 
