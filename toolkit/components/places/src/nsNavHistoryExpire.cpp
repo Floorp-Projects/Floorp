@@ -550,15 +550,18 @@ nsresult
 nsNavHistoryExpire::ExpireAnnotations(mozIStorageConnection* aConnection)
 {
   mozStorageTransaction transaction(aConnection, PR_TRUE);
+
+  // Note: The COALESCE is used to cover a short period where NULLs were inserted
+  // into the lastModified column.
   PRTime now = PR_Now();
   nsCOMPtr<mozIStorageStatement> expirePagesStatement;
   nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_annos WHERE expiration = ?1 AND (?2 > dateAdded)"),
+      "DELETE FROM moz_annos WHERE expiration = ?1 AND (?2 > MAX(COALESCE(lastModified, 0), dateAdded))"),
     getter_AddRefs(expirePagesStatement));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<mozIStorageStatement> expireItemsStatement;
   rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_items_annos WHERE expiration = ?1 AND (?2 > dateAdded)"),
+      "DELETE FROM moz_items_annos WHERE expiration = ?1 AND (?2 > MAX(COALESCE(lastModified, 0), dateAdded))"),
     getter_AddRefs(expireItemsStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
