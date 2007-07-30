@@ -389,11 +389,11 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 !macroend
 
 !macro GetParentDir
-   Exch $R0
-   Push $R1
-   Push $R2
-   Push $R3
-   StrLen $R3 $R0
+  Exch $R0
+  Push $R1
+  Push $R2
+  Push $R3
+  StrLen $R3 $R0
   ${DoWhile} 1 > 0
     IntOp $R1 $R1 - 1
     ${If} $R1 <= -$R3
@@ -1071,6 +1071,9 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 /**
  * Writes a registry string using SHCTX and the supplied params and logs the
  * action to the install log and the uninstall log if _LOG_UNINSTALL equals 1.
+ *
+ * Define NO_LOG to prevent all logging when calling this from the uninstaller.
+ *
  * @param   _ROOT
  *          The registry key root as defined by NSIS (e.g. HKLM, HKCU, etc.).
  *          This will only be used for logging.
@@ -1176,6 +1179,9 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 /**
  * Writes a registry dword using SHCTX and the supplied params and logs the
  * action to the install log and the uninstall log if _LOG_UNINSTALL equals 1.
+ *
+ * Define NO_LOG to prevent all logging when calling this from the uninstaller.
+ *
  * @param   _ROOT
  *          The registry key root as defined by NSIS (e.g. HKLM, HKCU, etc.).
  *          This will only be used for logging.
@@ -1280,6 +1286,9 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 /**
  * Writes a registry string to HKCR using the supplied params and logs the
  * action to the install log and the uninstall log if _LOG_UNINSTALL equals 1.
+ *
+ * Define NO_LOG to prevent all logging when calling this from the uninstaller.
+ *
  * @param   _ROOT
  *          The registry key root as defined by NSIS (e.g. HKLM, HKCU, etc.).
  *          This will only be used for logging.
@@ -1398,6 +1407,9 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  * Creates a registry key. This will log the actions to the install and
  * uninstall logs. Alternatively you can set a registry value to create the key
  * and then delete the value.
+ *
+ * Define NO_LOG to prevent all logging when calling this from the uninstaller.
+ *
  * @param   _ROOT
  *          The registry key root as defined by NSIS (e.g. HKLM, HKCU, etc.).
  * @param   _KEY
@@ -1899,103 +1911,104 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 */
 !macro GetPathFromString
 
- !ifndef ${_MOZFUNC_UN}GetPathFromString
-   !verbose push
-   !verbose ${_MOZFUNC_VERBOSE}
-   !define ${_MOZFUNC_UN}GetPathFromString "!insertmacro ${_MOZFUNC_UN}GetPathFromStringCall"
+  !ifndef ${_MOZFUNC_UN}GetPathFromString
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}GetPathFromString "!insertmacro ${_MOZFUNC_UN}GetPathFromStringCall"
 
-   Function ${_MOZFUNC_UN}GetPathFromString
-     Exch $R8
-     Push $R7
-     Push $R6
-     ClearErrors
+    Function ${_MOZFUNC_UN}GetPathFromString
+      Exch $R8
+      Push $R7
+      Push $R6
+      ClearErrors
 
-     StrCpy $R9 $R8
-     StrCpy $R6 0          ; Set the counter to 0.
+      StrCpy $R9 $R8
+      StrCpy $R6 0          ; Set the counter to 0.
 
-     ClearErrors
-     ; Handle quoted paths with arguments.
-     StrCpy $R7 $R9 1      ; Copy the first char.
-     StrCmp $R7 '"' +2 +1  ; Is it a "?
-     StrCmp $R7 "'" +1 +9  ; Is it a '?
-     StrCpy $R9 $R9 "" 1   ; Remove the first char.
-     IntOp $R6 $R6 + 1     ; Increment the counter.
-     StrCpy $R7 $R9 1 $R6  ; Starting from the counter copy the next char.
-     StrCmp $R7 "" end     ; Are there no more chars?
-     StrCmp $R7 '"' +2 +1  ; Is it a " char?
-     StrCmp $R7 "'" +1 -4  ; Is it a ' char?
-     StrCpy $R9 $R9 $R6    ; Copy chars up to the counter.
-     GoTo end
+      ClearErrors
+      ; Handle quoted paths with arguments.
+      StrCpy $R7 $R9 1      ; Copy the first char.
+      StrCmp $R7 '"' +2 +1  ; Is it a "?
+      StrCmp $R7 "'" +1 +9  ; Is it a '?
+      StrCpy $R9 $R9 "" 1   ; Remove the first char.
+      IntOp $R6 $R6 + 1     ; Increment the counter.
+      StrCpy $R7 $R9 1 $R6  ; Starting from the counter copy the next char.
+      StrCmp $R7 "" end     ; Are there no more chars?
+      StrCmp $R7 '"' +2 +1  ; Is it a " char?
+      StrCmp $R7 "'" +1 -4  ; Is it a ' char?
+      StrCpy $R9 $R9 $R6    ; Copy chars up to the counter.
+      GoTo end
 
-     ; Handle DefaultIcon paths. DefaultIcon paths are not quoted and end with
-     ; a , and a number.
-     IntOp $R6 $R6 - 1     ; Decrement the counter.
-     StrCpy $R7 $R9 1 $R6  ; Copy one char from the end minus the counter.
-     StrCmp $R7 '' +4      ; Are there no more chars?
-     StrCmp $R7 ',' +1 -3  ; Is it a , char?
-     StrCpy $R9 $R9 $R6    ; Copy chars up to the end minus the counter.
-     GoTo end
+      ; Handle DefaultIcon paths. DefaultIcon paths are not quoted and end with
+      ; a , and a number.
+      IntOp $R6 $R6 - 1     ; Decrement the counter.
+      StrCpy $R7 $R9 1 $R6  ; Copy one char from the end minus the counter.
+      StrCmp $R7 '' +4      ; Are there no more chars?
+      StrCmp $R7 ',' +1 -3  ; Is it a , char?
+      StrCpy $R9 $R9 $R6    ; Copy chars up to the end minus the counter.
+      GoTo end
 
-     ; Handle unquoted paths with arguments. An unquoted path with arguments
-     ; must be an 8dot3 path.
-     StrCpy $R6 -1          ; Set the counter to -1 so it will start at 0.
-     IntOp $R6 $R6 + 1      ; Increment the counter.
-     StrCpy $R7 $R9 1 $R6   ; Starting from the counter copy the next char.
-     StrCmp $R7 "" end      ; Are there no more chars?
-     StrCmp $R7 " " +1 -3   ; Is it a space char?
-     StrCpy $R9 $R9 $R6     ; Copy chars up to the counter.
+      ; Handle unquoted paths with arguments. An unquoted path with arguments
+      ; must be an 8dot3 path.
+      StrCpy $R6 -1          ; Set the counter to -1 so it will start at 0.
+      IntOp $R6 $R6 + 1      ; Increment the counter.
+      StrCpy $R7 $R9 1 $R6   ; Starting from the counter copy the next char.
+      StrCmp $R7 "" end      ; Are there no more chars?
+      StrCmp $R7 " " +1 -3   ; Is it a space char?
+      StrCpy $R9 $R9 $R6     ; Copy chars up to the counter.
 
-     end:
+      end:
 
-     Pop $R6
-     Pop $R7
-     Exch $R8
-     Push $R9
-   FunctionEnd
+      Pop $R6
+      Pop $R7
+      Exch $R8
+      Push $R9
+    FunctionEnd
 
-   !verbose pop
- !endif
+    !verbose pop
+  !endif
 !macroend
 
 !macro GetPathFromStringCall _STRING _RESULT
- !verbose push
- !verbose ${_MOZFUNC_VERBOSE}
- Push "${_STRING}"
- Call GetPathFromString
- Pop ${_RESULT}
- !verbose pop
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_STRING}"
+  Call GetPathFromString
+  Pop ${_RESULT}
+  !verbose pop
 !macroend
 
 !macro un.GetPathFromStringCall _STRING _RESULT
- !verbose push
- !verbose ${_MOZFUNC_VERBOSE}
- Push "${_STRING}"
- Call un.GetPathFromString
- Pop ${_RESULT}
- !verbose pop
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_STRING}"
+  Call un.GetPathFromString
+  Pop ${_RESULT}
+  !verbose pop
 !macroend
 
 !macro un.GetPathFromString
- !ifndef un.GetPathFromString
-   !verbose push
-   !verbose ${_MOZFUNC_VERBOSE}
-   !undef _MOZFUNC_UN
-   !define _MOZFUNC_UN "un."
+  !ifndef un.GetPathFromString
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
 
-   !insertmacro GetPathFromString
+    !insertmacro GetPathFromString
 
-   !undef _MOZFUNC_UN
-   !define _MOZFUNC_UN
-   !verbose pop
- !endif
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
 !macroend
 
 /**
  * If present removes the VirtualStore directory for this installation. Uses the
  * program files directory path and the current install location to determine
  * the sub-directory in the VirtualStore directory.
-*/
+ */
 !macro CleanVirtualStore
+
   !ifndef ${_MOZFUNC_UN}CleanVirtualStore
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
@@ -2046,30 +2059,155 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 !macroend
 
 !macro CleanVirtualStoreCall
- !verbose push
- !verbose ${_MOZFUNC_VERBOSE}
- Call CleanVirtualStore
- !verbose pop
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call CleanVirtualStore
+  !verbose pop
 !macroend
 
 !macro un.CleanVirtualStoreCall
- !verbose push
- !verbose ${_MOZFUNC_VERBOSE}
- Call un.CleanVirtualStore
- !verbose pop
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call un.CleanVirtualStore
+  !verbose pop
 !macroend
 
 !macro un.CleanVirtualStore
- !ifndef un.CleanVirtualStore
-   !verbose push
-   !verbose ${_MOZFUNC_VERBOSE}
-   !undef _MOZFUNC_UN
-   !define _MOZFUNC_UN "un."
+  !ifndef un.CleanVirtualStore
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
 
-   !insertmacro CleanVirtualStore
+    !insertmacro CleanVirtualStore
 
-   !undef _MOZFUNC_UN
-   !define _MOZFUNC_UN
-   !verbose pop
- !endif
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * Updates the uninstall.log with new files added by software update.
+ *
+ * Requires FileJoin, LineFind, TextCompare, and TrimNewLines.
+ *
+ * IMPORTANT! The LineFind docs claim that it uses all registers except $R0-$R3.
+ *            Though it appears that this is not true all registers besides
+ *            $R0-$R3 may be overwritten so protect yourself!
+ */
+!macro UpdateUninstallLog
+
+  !ifndef ${_MOZFUNC_UN}UpdateUninstallLog
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}UpdateUninstallLog "!insertmacro ${_MOZFUNC_UN}UpdateUninstallLogCall"
+
+    Function ${_MOZFUNC_UN}UpdateUninstallLog
+      Push $R3
+      Push $R2
+      Push $R1
+      Push $R0
+
+      ClearErrors
+
+      GetFullPathName $R3 "$INSTDIR\uninstall"
+      IfFileExists "$R3\uninstall.update" +2 0
+      Return
+
+      ${${_MOZFUNC_UN}LineFind} "$R3\uninstall.update" "" "1:-1" "${_MOZFUNC_UN}CleanupUpdateLog"
+
+      GetTempFileName $R2 "$R3"
+      FileOpen $R1 $R2 w
+      ${${_MOZFUNC_UN}TextCompare} "$R3\uninstall.update" "$R3\uninstall.log" "SlowDiff" "${_MOZFUNC_UN}CreateUpdateDiff"
+      FileClose $R1
+
+      IfErrors +2 0
+      ${${_MOZFUNC_UN}FileJoin} "$R3\uninstall.log" "$R2" "$R3\uninstall.log"
+
+      ${DeleteFile} "$R2"
+
+      ClearErrors
+
+      Pop $R0
+      Pop $R1
+      Pop $R2
+      Pop $R3
+    FunctionEnd
+
+    ; This callback MUST use labels vs. relative line numbers.
+    Function ${_MOZFUNC_UN}CleanupUpdateLog
+      StrCpy $R2 "$R9" 12
+      StrCmp "$R2" "EXECUTE ADD " 0 skip
+      StrCpy $R9 "$R9" "" 12
+
+      Push $R6
+      Push $R5
+      Push $R4
+      StrCpy $R4 ""         ; Initialize to an empty string.
+      StrCpy $R6 -1         ; Set the counter to -1 so it will start at 0.
+
+      loop:
+      IntOp $R6 $R6 + 1     ; Increment the counter.
+      StrCpy $R5 $R9 1 $R6  ; Starting from the counter copy the next char.
+      StrCmp $R5 "" copy    ; Are there no more chars?
+      StrCmp $R5 "/" 0 +2   ; Is the char a /?
+      StrCpy $R5 "\"        ; Replace the char with a \.
+
+      StrCpy $R4 "$R4$R5"
+      GoTo loop
+
+      copy:
+      StrCpy $R9 "File: \$R4"
+      Pop $R6
+      Pop $R5
+      Pop $R4
+      GoTo end
+
+      skip:
+      StrCpy $0 "SkipWrite"
+
+      end:
+      Push $0
+    FunctionEnd
+
+    Function ${_MOZFUNC_UN}CreateUpdateDiff
+      ${${_MOZFUNC_UN}TrimNewLines} "$9" "$9"
+      StrCmp $9 "" +2 0
+      FileWrite $R1 "$9$\r$\n"
+
+      Push 0
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro UpdateUninstallLogCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call UpdateUninstallLog
+  !verbose pop
+!macroend
+
+!macro un.UpdateUninstallLogCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call un.UpdateUninstallLog
+  !verbose pop
+!macroend
+
+!macro un.UpdateUninstallLog
+  !ifndef un.UpdateUninstallLog
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro UpdateUninstallLog
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
 !macroend
