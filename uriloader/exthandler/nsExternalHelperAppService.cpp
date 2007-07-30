@@ -1337,7 +1337,8 @@ nsExternalHelperAppService::GetProtocolHandlerInfo(const nsACString &aScheme,
   // and subclasses have lots of good platform specific-knowledge of local
   // applications which we might need later.  For now, just use nsMIMEInfoImpl
   // instead of implementating a separate nsIHandlerInfo object.
-  *aHandlerInfo = GetProtocolInfoFromOS(aScheme).get();
+  PRBool exists;
+  *aHandlerInfo = GetProtocolInfoFromOS(aScheme, &exists).get();
   if (!(*aHandlerInfo)) {
     // Either it knows nothing, or we ran out of memory
     return NS_ERROR_FAILURE;
@@ -1350,8 +1351,13 @@ nsExternalHelperAppService::GetProtocolHandlerInfo(const nsACString &aScheme,
     // the user, so these defaults are OK.
     // XXX this is a bit different than the MIME system, so we may want to look
     //     into this more in the future.
-    (*aHandlerInfo)->SetPreferredAction(nsIHandlerInfo::useSystemDefault);
     (*aHandlerInfo)->SetAlwaysAskBeforeHandling(PR_TRUE);
+    // If no OS default existed, we set the preferred action to alwaysAsk.  This
+    // really means not initialized to all the code...
+    if (exists)
+      (*aHandlerInfo)->SetPreferredAction(nsIHandlerInfo::useSystemDefault);
+    else
+      (*aHandlerInfo)->SetPreferredAction(nsIHandlerInfo::alwaysAsk);
   } else if (NS_FAILED(rv)) {
     NS_RELEASE(*aHandlerInfo);
     return rv;

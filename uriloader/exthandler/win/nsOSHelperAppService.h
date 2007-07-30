@@ -63,7 +63,8 @@ public:
 
   // method overrides for windows registry look up steps....
   already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACString& aFileExt, PRBool *aFound);
-  already_AddRefed<nsIHandlerInfo> GetProtocolInfoFromOS(const nsACString &aScheme);
+  already_AddRefed<nsIHandlerInfo> GetProtocolInfoFromOS(const nsACString &aScheme,
+                                                         PRBool *found);
 
   /** Get the string value of a registry value and store it in result.
    * @return PR_TRUE on success, PR_FALSE on failure
