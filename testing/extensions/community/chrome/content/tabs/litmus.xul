@@ -40,16 +40,16 @@
 	 </hbox>
 	
 	<vbox width="370px" minwidth="370px">
-		<groupbox height="160px" minwidth="370px" width="370px">
+		<groupbox maxheight="130px" minwidth="370px" width="370px">
 			<caption label="&qa.testcase.steps;" crop="end" maxwidth="200"/>
-			<div xmlns="http://www.w3.org/1999/xhtml" style="width: 350px; height: 160px; overflow: auto;" id="qa-testcase-steps" class="list"/>
+			<div xmlns="http://www.w3.org/1999/xhtml" style="width: 350px; height: 140px; overflow: auto;" id="qa-testcase-steps" class="list"/>
 		</groupbox>
 		<splitter id="qa-mainwindow-splitter" state="open" collapse="none">
 			<grippy/>
 		</splitter>
-		<groupbox height="130px" minwidth="370px" width="370px">
+		<groupbox maxheight="120px" minwidth="370px" width="370px">
 			<caption label="&qa.testcase.expected;" />
-			<div xmlns="http://www.w3.org/1999/xhtml" style="width: 350px; height: 130px; overflow: auto;" id="qa-testcase-expected" class="list"/>
+			<div xmlns="http://www.w3.org/1999/xhtml" style="width: 350px; height: 120px; overflow: auto;" id="qa-testcase-expected" class="list"/>
 		</groupbox>
 	</vbox>
 	

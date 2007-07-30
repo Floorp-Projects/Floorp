@@ -10,12 +10,13 @@
 			if (window.arguments.length > 0) {
 				updateFunction = window.arguments[0];   // parent window passes in a function to update itself with data
                 handleCancel = window.arguments[1];     // parent window passes in a function to restore state if dialog canceled
-            }
+            } 
 			litmus.getTestruns(populateTestRuns);
 		}
 
         function handleRunSelect() {
             var id = document.getElementById("qa-st-testrun").selectedItem.getAttribute("value");
+            if (id == "") return;  // oddly, this check doesn't seem necessary in the other handlers...
             litmus.getTestrun(id, populateTestGroups);
         }
 
