@@ -449,7 +449,7 @@ nsMIMEInfoImpl::GetDefaultDescription(nsAString& aDefaultDescription)
 NS_IMETHODIMP
 nsMIMEInfoImpl::GetHasDefaultHandler(PRBool * _retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = !mDefaultAppDescription.IsEmpty();
   if (mDefaultApplication) {
     PRBool exists;
     *_retval = NS_SUCCEEDED(mDefaultApplication->Exists(&exists)) && exists;

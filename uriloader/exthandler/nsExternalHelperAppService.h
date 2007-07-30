@@ -204,7 +204,8 @@ public:
    * @param aScheme The protocol scheme we are looking for.
    * @return An nsIHanderInfo for the protocol.
    */
-  virtual already_AddRefed<nsIHandlerInfo> GetProtocolInfoFromOS(const nsACString &aScheme) = 0;
+  virtual already_AddRefed<nsIHandlerInfo> GetProtocolInfoFromOS(const nsACString &aScheme,
+                                                                 PRBool *found) = 0;
 
   /**
    * Given a string identifying an application, create an nsIFile representing

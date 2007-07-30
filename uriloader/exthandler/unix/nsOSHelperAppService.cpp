@@ -1635,23 +1635,29 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
 }
 
 already_AddRefed<nsIHandlerInfo>
-nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme)
+nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme,
+                                            PRBool *found)
 {
   NS_ASSERTION(!aScheme.IsEmpty(), "No scheme was specified!");
 
   // We must check that a registered handler exists so that gnome_url_show
   // doesn't fallback to gnomevfs.
   // See nsGNOMERegistry::LoadURL and bug 389632.
-  PRBool exists;
   nsresult rv = OSProtocolHandlerExists(nsPromiseFlatCString(aScheme).get(),
-                                        &exists);
-  if (NS_FAILED(rv) || !exists)
+                                        found);
+  if (NS_FAILED(rv))
     return nsnull;
 
   nsMIMEInfoUnix *handlerInfo =
     new nsMIMEInfoUnix(aScheme, nsMIMEInfoBase::eProtocolInfo);
   NS_ENSURE_TRUE(handlerInfo, nsnull);
   NS_ADDREF(handlerInfo);
+
+  if (!*found) {
+    // Code that calls this requires an object regardless if the OS has
+    // something for us, so we return the empty object.
+    return handlerInfo;
+  }
 
   nsAutoString desc;
   GetApplicationDescription(aScheme, desc);
