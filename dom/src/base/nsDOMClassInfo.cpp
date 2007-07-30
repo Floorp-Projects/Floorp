@@ -5979,16 +5979,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     if (id == sWindow_id) {
       // window should *always* be the outer window object.
-      JSObject *scope;
-      nsGlobalWindow *innerWin;
-      if (win->IsInnerWindow()) {
-        scope = win->GetGlobalJSObject();
-      } else if (!(innerWin = win->GetCurrentInnerWindowInternal())) {
-        scope = innerWin->GetGlobalJSObject();
-      } else {
-        NS_ERROR("I don't know what scope to use!");
-        scope = win->GetGlobalJSObject();
-      }
+      nsGlobalWindow *oldWin = win;
       win = win->GetOuterWindowInternal();
       NS_ENSURE_TRUE(win, NS_ERROR_NOT_AVAILABLE);
 
@@ -6001,6 +5992,17 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       nsCOMPtr<nsIDOMChromeWindow> chrome =
         do_QueryInterface((nsIScriptGlobalObject *)win);
       if (!chrome) {
+        JSObject *scope;
+        nsGlobalWindow *innerWin;
+        if (oldWin->IsInnerWindow()) {
+          scope = oldWin->GetGlobalJSObject();
+        } else if ((innerWin = oldWin->GetCurrentInnerWindowInternal())) {
+          scope = innerWin->GetGlobalJSObject();
+        } else {
+          NS_ERROR("I don't know what scope to use!");
+          scope = oldWin->GetGlobalJSObject();
+        }
+
         rv = sXPConnect->GetCrossOriginWrapperForObject(cx,
                                                         scope,
                                                         JSVAL_TO_OBJECT(winVal),
