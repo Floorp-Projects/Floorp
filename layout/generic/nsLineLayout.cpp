@@ -883,6 +883,16 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nscoord ty = y - psd->mReflowState->mComputedBorderPadding.top;
   mSpaceManager->Translate(tx, ty);
 
+#ifdef IBMBIDI
+  PRInt32 start, end;
+
+  if (mPresContext->BidiEnabled()) {
+    if (aFrame->GetStateBits() & NS_FRAME_IS_BIDI) {
+      aFrame->GetOffsets(start, end);
+    }
+  }
+#endif // IBMBIDI
+
   nsIAtom* frameType = aFrame->GetType();
   PRInt32 savedOptionalBreakOffset;
   nsIContent* savedOptionalBreakContent =
@@ -1075,6 +1085,24 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nsFrame::ListTag(stdout, aFrame);
   printf(" status=%x\n", aReflowStatus);
 #endif
+
+  if (aFrame->GetStateBits() & NS_FRAME_IS_BIDI) {
+    // Since aReflowStatus may change, check it at the end
+    if (NS_INLINE_IS_BREAK_BEFORE(aReflowStatus) ) {
+      aFrame->AdjustOffsetsForBidi(start, end);
+    }
+    else if (!NS_FRAME_IS_COMPLETE(aReflowStatus) ) {
+      PRInt32 newEnd;
+      aFrame->GetOffsets(start, newEnd);
+      if (newEnd != end) {
+        nsIFrame* nextInFlow = aFrame->GetNextInFlow();
+        if (nextInFlow) {
+          nextInFlow->GetOffsets(start, end);
+          nextInFlow->AdjustOffsetsForBidi(newEnd, end);
+        } // nextInFlow
+      } // newEnd != end
+    } // !NS_FRAME_IS_COMPLETE(aReflowStatus)
+  } // isBidiFrame
 
   return rv;
 }
