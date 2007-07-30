@@ -105,6 +105,10 @@ interface nsIHandlerInfo : nsISupports {
     attribute nsHandlerInfoAction preferredAction;
 
     const long saveToDisk = 0;
+    /**
+     * Used to indicate that we know nothing about what to do with this.  You
+     * could consider this to be not initialized.
+     */
     const long alwaysAsk = 1;
     const long useHelperApp = 2;
     const long handleInternally = 3;

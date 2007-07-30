@@ -554,20 +554,26 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
 }
 
 already_AddRefed<nsIHandlerInfo>
-nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme)
+nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme,
+                                            PRBool *found)
 {
   NS_ASSERTION(!aScheme.IsEmpty(), "No scheme was specified!");
 
-  PRBool exists;
   nsresult rv = OSProtocolHandlerExists(nsPromiseFlatCString(aScheme).get(),
-                                        &exists);
-  if (NS_FAILED(rv) || !exists)
+                                        found);
+  if (NS_FAILED(rv))
     return nsnull;
 
   nsMIMEInfoWin *handlerInfo =
     new nsMIMEInfoWin(aScheme, nsMIMEInfoBase::eProtocolInfo);
   NS_ENSURE_TRUE(handlerInfo, nsnull);
   NS_ADDREF(handlerInfo);
+
+  if (!*found) {
+    // Code that calls this requires an object regardless if the OS has
+    // something for us, so we return the empty object.
+    return handlerInfo;
+  }
 
   nsAutoString desc;
   GetApplicationDescription(aScheme, desc);
