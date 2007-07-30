@@ -256,7 +256,7 @@ placesCreateFolderTransactions.prototype = {
     this._id = PlacesUtils.bookmarks.createFolder(this._container, 
                                                   this._name, this._index);
     if (this._annotations && this._annotations.length > 0)
-      PlacesUtils.setAnnotationsForItem(this.id, this._annotations);
+      PlacesUtils.setAnnotationsForItem(this._id, this._annotations);
 
     for (var i = 0; i < this._childItemsTransactions.length; ++i) {
       var txn = this._childItemsTransactions[i];
