@@ -293,7 +293,8 @@ endif
 ifdef MOZ_UPDATER
 libs:: $(addprefix $(LOCALE_SRCDIR)/,updater/updater.ini)
 ifeq ($(OS_ARCH),WINNT)
-	iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) $< > $(FINAL_TARGET)/updater.ini
+	cat $< $(srcdir)/../installer/windows/nsis/updater_append.ini | \
+	  iconv -f UTF-8 -t $(WIN_INSTALLER_CHARSET) > $(FINAL_TARGET)/updater.ini
 else
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/updater.app/Contents/MacOS

@@ -263,6 +263,7 @@ private:
 
 static char* gSourcePath;
 static ArchiveReader gArchiveReader;
+static bool gSucceeded = FALSE;
 
 static const char kWhitespace[] = " \t";
 static const char kNL[] = "\r\n";
@@ -1006,6 +1007,61 @@ PatchIfFile::Finish(int status)
 
 #ifdef XP_WIN
 #include "nsWindowsRestart.cpp"
+
+static void
+LaunchWinPostProcess(const char *appExe)
+{
+  // Launch helper.exe to perform post processing (e.g. registry and log file
+  // modifications) for the update.
+  char inifile[MAXPATHLEN];
+  strcpy(inifile, appExe);
+
+  char *slash = strrchr(inifile, '\\');
+  if (!slash)
+    return;
+
+  strcpy(slash + 1, "updater.ini");
+
+  char exefile[MAXPATHLEN];
+  char exearg[MAXPATHLEN];
+  if (!GetPrivateProfileString("PostUpdateWin", "ExeRelPath", NULL, exefile,
+      sizeof(exefile), inifile))
+    return;
+
+  if (!GetPrivateProfileString("PostUpdateWin", "ExeArg", NULL, exearg,
+      sizeof(exearg), inifile))
+    return;
+
+  char exefullpath[MAXPATHLEN];
+  strcpy(exefullpath, appExe);
+
+  slash = strrchr(exefullpath, '\\');
+  strcpy(slash + 1, exefile);
+
+  char dlogFile[MAXPATHLEN];
+  strcpy(dlogFile, exefullpath);
+
+  slash = strrchr(dlogFile, '\\');
+  strcpy(slash + 1, "uninstall.update");
+
+  char slogFile[MAXPATHLEN];
+  snprintf(slogFile, MAXPATHLEN, "%s/update.log", gSourcePath);
+
+  // We want to launch the post update helper app to update the Windows
+  // registry even if there is a failure with removing the uninstall.update
+  // file or copying the update.log file.
+  ensure_remove(dlogFile);
+  copy_file(slogFile, dlogFile);
+
+  static int    argc = 2;
+  static char **argv = (char**) malloc(sizeof(char*) * (argc + 1));
+  argv[0] = "argv0ignoredbywinlaunchchild";
+  argv[1] = exearg;
+  argv[2] = "\0";
+
+  WinLaunchChild(exefullpath, argc, argv, 1);
+  free(argv);
+}
 #endif
 
 static void
@@ -1144,6 +1200,9 @@ int main(int argc, char **argv)
 #ifdef XP_WIN
   if (exefile)
     CloseHandle(exefile);
+
+  if (gSucceeded)
+    LaunchWinPostProcess(argv[4]);
 #endif
 
   // The callback to execute is given as the last N arguments of our command
@@ -1250,6 +1309,9 @@ ActionList::Finish(int status)
     a->Finish(status);
     a = a->mNext;
   }
+
+  if (status == OK)
+    gSucceeded = TRUE;
 
   UpdateProgressUI(100.0f);
 }

@@ -589,6 +589,16 @@ nsPostUpdateWin.prototype = {
   },
 
   run: function() {
+    // When uninstall/uninstall.update exists the uninstaller has already
+    // updated the uninstall.log with the files added by software update.
+    var updateUninstallFile = getFile(KEY_APPDIR); 
+    updateUninstallFile.append("uninstall");
+    updateUninstallFile.append("uninstall.update");
+    if (updateUninstallFile.exists()) {
+      LOG("nothing to do, uninstall.log has already been updated"); 
+      return;
+    }
+
     try {
       installLogWriter = new InstallLogWriter();
       try {
