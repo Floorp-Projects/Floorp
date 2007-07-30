@@ -126,7 +126,12 @@ var qaSetup = {
 				alert("create account page is missing");
 				return false;
 			}
-			if (page.location == 'http://laptop.local/litmus/extension.cgi?createAccount=1'
+			if (page.wrappedJSObject == null)
+				page.wrappedJSObject = page;
+			if (page.forms[0] && page.forms[0].wrappedJSObject == null)
+				page.forms[0].wrappedJSObject = page.forms[0];
+			
+			if (page.location == litmus.baseURL+'extension.cgi?createAccount=1'
 			    && qaSetup.didSubmitForm==0) {
 			    document.getElementById('qa-setup-accountconfirmloading').value = 
 document.getElementById("bundle_qa").getString("qa.extension.prefs.loadingMsg");
@@ -163,12 +168,12 @@ document.getElementById("bundle_qa").getString("qa.extension.prefs.loadingMsg");
 		var passwd = document.getElementById('password').value;
 		
 		var callback = function(resp) {
-			if (resp.responseText == 0) {
+			if (resp.responseText != 1) { // failure
 				alert(document.getElementById("bundle_qa").
 					getString("qa.extension.prefs.loginError"));
 					document.getElementById('qa-setup-accountconfirmloading').value = null;
 				return false;
-			} else {
+			} else { // all's well
 				qaPref.litmus.setPassword(uname, passwd);
 				document.getElementById('qa-setup-accountconfirmloading').value = null;
 				document.getElementById('qa-setup').pageIndex++; // advance
@@ -229,6 +234,5 @@ document.getElementById("bundle_qa").getString("qa.extension.prefs.loadingMsg");
 	
 	finish : function() {
 		qaPref.setPref(qaPref.prefBase+'.isFirstTime', false, 'bool');
-		qaPrefsWindow.loadPrefsWindow();
 	},
 };

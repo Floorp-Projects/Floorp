@@ -42,7 +42,7 @@ html|a {
 
 #qa-notify-box {
   padding: 0px 6px 6px 6px;
-	display: table;
+  display: table;
 }
 
 #qa-notify-header {
@@ -50,6 +50,34 @@ html|a {
   font-weight: bold;
 }
 
+#qa-notify-header-box {
+	position: absolute;
+	top: 2px;
+}
+
+#qa-notify-content {
+	position: absolute;
+	left: 12px;
+}
+
+#qa-notify description {
+	max-width: 400px;
+}
+
+#qa-notify-event {
+	border-style: dashed;
+	border-width: 1px;
+	margin-left: 15px;
+}
+
+#qa-notify-inprogress {
+	color: red;
+	font-size: 1.25em;
+}
+
+#qa-notify-text {
+	margin-top: 3px;	
+}
 
 
 /* general formatting */

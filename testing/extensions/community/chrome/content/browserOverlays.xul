@@ -16,25 +16,33 @@
  
  <statusbar id="status-bar">
   <statusbarpanel class="statusbarpanel-iconic" id="qa-statusbar-overlay" 
-  	src="chrome://qa/skin/qmo-16px.png" onclick="qaMain.openQATool(); qaNotifications.checkNotificationStatus();" />
+  	src="chrome://qa/skin/qmo-16px.png" 
+  	onclick="qaMain.openQATool(); qaNotifications.checkNotificationStatus();" />
  </statusbar>
  
  <window id="main-window">
    <vbox id="qa-notify" class="qa-notify" hidden="true">
      <vbox flex="1" class="qa-notify">
        <hbox pack="end" align="center">
-         <toolbarbutton class="tabs-closebutton" 
+         <toolbarbutton class="tabs-closebutton" id="qa-notify-close"
            oncommand="qaNotifications.showHideNotify(false);" />
        </hbox>
        <vbox id="qa-notify-box">
        <vbox>
+         <label id="qa-notify-inprogress" value="&qa.notification.inprogress;" />
          <hbox align="center" id="qa-notify-header-box" style="overflow: hidden">
            <label id="qa-notify-header" value="" />
          </hbox>  
-         <vbox>
-           <description id="qa-notify-text"></description>
+         <vbox id="qa-notify-event" style="display: none;">
+           <label id="qa-notify-event-datetime" value="" />
+           <label id="qa-notify-event-place" value="" />
+         </vbox>
+         <vbox id="qa-notify-content">
+           <description id="qa-notify-text" />
            <label id="qa-notify-infolink" class="text-link" href="" 
-             value="" />
+             	value="" />
+             <label id="qa-notify-getstartedlink" class="text-link" href="" 
+             	value="" style="display: none;" />
          </vbox> 
          </vbox>
        </vbox>  
