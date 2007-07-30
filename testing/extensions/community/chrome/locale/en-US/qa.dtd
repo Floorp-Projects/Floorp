@@ -13,6 +13,7 @@
 <!ENTITY qa.testcase.comment	"Comment (optional):">
 
 <!ENTITY qa.selecttests.load	"Loading...">
+<!ENTITY qa.selecttests.header "Select test group">
 
 <!ENTITY qa.preferences.title "Settings">
 <!ENTITY qa.preferences.litmus.title "Litmus Settings">
@@ -144,3 +145,5 @@ possible, but please check the settings below and make any necessary changes.
 <!ENTITY qa.chat.howdoI.joinnow "Join IRC Now">
 
 <!ENTITY qa.help.title "Help">
+
+<!ENTITY qa.notification.inprogress "Come Join! Event in Progress Now!">

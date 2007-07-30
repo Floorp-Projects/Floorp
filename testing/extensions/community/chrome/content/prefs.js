@@ -136,10 +136,9 @@ if (CC_passwordManager != null) { // old-fashioned password manager
 			var nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                         Components.interfaces.nsILoginInfo,
                                         "init");
-            var newLogin = new nsLoginInfo();
-            newLogin.init('chrome://qa', 'Litmus Login', litmus.baseURL, 
+            var newLogin = new nsLoginInfo('chrome://qa', 'Litmus Login', litmus.baseURL, 
             	username, password, null, null);
-            this.manager().addLogin(newLogin);                                 
+            this.manager().addLogin(newLogin);        
 		},
 		getPasswordObj: function() {
 			try {
