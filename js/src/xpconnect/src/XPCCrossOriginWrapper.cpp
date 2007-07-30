@@ -160,6 +160,7 @@ nsIScriptSecurityManager *
 GetSecurityManager(JSContext *cx)
 {
   XPCCallContext ccx(JS_CALLER, cx);
+  NS_ENSURE_TRUE(ccx.IsValid(), nsnull);
 
   // XXX HOOK_CALL_METHOD seems wrong.
   nsCOMPtr<nsIXPCSecurityManager> sm = ccx.GetXPCContext()->
@@ -370,6 +371,8 @@ XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp)
 
   XPCJSRuntime *rt = nsXPConnect::GetRuntime();
   XPCCallContext ccx(NATIVE_CALLER, cx);
+  NS_ENSURE_TRUE(ccx.IsValid(), JS_FALSE);
+
   XPCWrappedNativeScope *parentScope =
     XPCWrappedNativeScope::FindInJSObjectScope(ccx, parent);
   XPCWrappedNativeScope *wrapperScope = wn->GetScope();
@@ -529,6 +532,10 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     NS_ASSERTION(wn, "How did we wrap a non-WrappedNative?");
     if (!IsValFrame(cx, wrappedObj, id, wn)) {
       nsIScriptSecurityManager *ssm = GetSecurityManager(cx);
+      if (!ssm) {
+        return ThrowException(NS_ERROR_NOT_INITIALIZED, cx);
+      }
+
       PRUint32 check = isSet
                        ? (PRUint32)nsIXPCSecurityManager::ACCESS_SET_PROPERTY
                        : (PRUint32)nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
@@ -648,6 +655,9 @@ XPC_XOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     NS_ASSERTION(wn, "How did we wrap a non-WrappedNative?");
     if (!IsValFrame(cx, wrappedObj, id, wn)) {
       nsIScriptSecurityManager *ssm = GetSecurityManager(cx);
+      if (!ssm) {
+        return ThrowException(NS_ERROR_NOT_INITIALIZED, cx);
+      }
       PRUint32 action = (flags & JSRESOLVE_ASSIGNING)
                         ? (PRUint32)nsIXPCSecurityManager::ACCESS_SET_PROPERTY
                         : (PRUint32)nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
@@ -702,8 +712,11 @@ XPC_XOW_Finalize(JSContext *cx, JSObject *obj)
     return;
   }
 
-  // Get our scope.
-  XPCCallContext ccx(NATIVE_CALLER, cx);
+  // Get our scope. Use the safe context in case cx has been deleted.
+  XPCCallContext ccx(NATIVE_CALLER);
+  if (!ccx.IsValid()) {
+    return;
+  }
 
   // Get our scope, using ourselves to find the right scope.
   // It's OK if we're not intialized, we can be called pretty late.
@@ -853,6 +866,9 @@ XPC_XOW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
   if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
     nsIScriptSecurityManager *ssm = GetSecurityManager(cx);
+    if (!ssm) {
+      return ThrowException(NS_ERROR_NOT_INITIALIZED, cx);
+    }
     rv = ssm->CheckPropertyAccess(cx, wrappedObj,
                                   JS_GET_CLASS(cx, wrappedObj)->name,
                                   GetRTStringByIndex(cx, XPCJSRuntime::IDX_TO_STRING),
