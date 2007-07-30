@@ -161,6 +161,18 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
     MOZ_COUNT_CTOR(XPCWrappedNativeScope);
 }
 
+// static
+JSBool
+XPCWrappedNativeScope::IsDyingScope(XPCWrappedNativeScope *scope)
+{
+    for(XPCWrappedNativeScope *cur = gDyingScopes; cur; cur = cur->mNext)
+    {
+        if(scope == cur)
+            return JS_TRUE;
+    }
+    return JS_FALSE;
+}
+
 void
 XPCWrappedNativeScope::SetComponents(nsXPCComponents* aComponents)
 {
