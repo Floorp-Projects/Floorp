@@ -22,7 +22,7 @@
 	<script type="application/x-javascript" src="chrome://qa/content/common.js" />
 	<script type="application/x-javascript" src="chrome://qa/content/tabs/selecttests.js" />
 	
-	<dialogheader title="Select test group" />
+	<dialogheader description="&qa.selecttests.header;" />
 	<spacer height="20" />
 	<vbox>
 		<hbox>
