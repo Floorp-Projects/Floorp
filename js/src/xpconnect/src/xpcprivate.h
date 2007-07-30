@@ -1177,6 +1177,9 @@ public:
     JSBool
     IsValid() const {return mRuntime != nsnull;}
 
+    static JSBool
+    IsDyingScope(XPCWrappedNativeScope *scope);
+
     void SetComponents(nsXPCComponents* aComponents);
     void SetGlobal(XPCCallContext& ccx, JSObject* aGlobal);
 

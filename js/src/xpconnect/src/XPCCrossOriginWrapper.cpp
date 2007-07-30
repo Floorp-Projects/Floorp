@@ -91,7 +91,7 @@ JSExtendedClass sXPC_XOW_JSClass = {
   // JSClass (JSExtendedClass.base) initialization
   { "XPCCrossOriginWrapper",
     JSCLASS_NEW_RESOLVE | JSCLASS_IS_EXTENDED |
-    JSCLASS_HAS_RESERVED_SLOTS(XPCWrapper::sNumSlots),
+    JSCLASS_HAS_RESERVED_SLOTS(XPCWrapper::sNumSlots + 1),
     XPC_XOW_AddProperty, XPC_XOW_DelProperty,
     XPC_XOW_GetProperty, XPC_XOW_SetProperty,
     XPC_XOW_Enumerate,   (JSResolveOp)XPC_XOW_NewResolve,
@@ -104,6 +104,17 @@ JSExtendedClass sXPC_XOW_JSClass = {
   // JSExtendedClass initialization
   XPC_XOW_Equality
 };
+
+// The slot that we stick our scope into.
+// This is used in the finalizer to see if we actually need to remove
+// ourselves from our scope's map. Because we cannot outlive our scope
+// (the parent link ensures this), we know that, when we're being
+// finalized, either our scope is still alive (i.e. we became garbage
+// due to no more references) or it is being garbage collected right now.
+// Therefore, we can look in gDyingScopes, and if our scope is there,
+// then the map is about to be destroyed anyway, so we don't need to
+// do anything.
+static const int XPC_XOW_ScopeSlot = XPCWrapper::sNumSlots;
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_XOW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
@@ -432,7 +443,9 @@ XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp)
 
   if (!JS_SetReservedSlot(cx, outerObj, XPCWrapper::sWrappedObjSlot, *vp) ||
       !JS_SetReservedSlot(cx, outerObj, XPCWrapper::sResolvingSlot,
-                          BOOLEAN_TO_JSVAL(JS_FALSE))) {
+                          BOOLEAN_TO_JSVAL(JS_FALSE)) ||
+      !JS_SetReservedSlot(cx, outerObj, XPC_XOW_ScopeSlot,
+                          PRIVATE_TO_JSVAL(parentScope))) {
     return JS_FALSE;
   }
 
@@ -712,20 +725,23 @@ XPC_XOW_Finalize(JSContext *cx, JSObject *obj)
     return;
   }
 
-  // Get our scope. Use the safe context in case cx has been deleted.
-  XPCCallContext ccx(NATIVE_CALLER);
-  if (!ccx.IsValid()) {
+  // Get our scope.
+  jsval scopeVal;
+  if (!JS_GetReservedSlot(cx, obj, XPC_XOW_ScopeSlot, &scopeVal)) {
     return;
   }
 
-  // Get our scope, using ourselves to find the right scope.
-  // It's OK if we're not intialized, we can be called pretty late.
-  XPCWrappedNativeScope *scope =
-    XPCWrappedNativeScope::FindInJSObjectScope(ccx, obj, JS_TRUE);
-
-  if (scope) {
-    scope->GetWrapperMap()->Remove(wrappedObj);
+  // Now that we have our scope, see if it's going away. If it is,
+  // then our work here is going to be done when we destroy the scope
+  // entirely.
+  XPCWrappedNativeScope *scope = reinterpret_cast<XPCWrappedNativeScope *>
+                                                 (JSVAL_TO_PRIVATE(scopeVal));
+  if (XPCWrappedNativeScope::IsDyingScope(scope)) {
+    return;
   }
+
+  // Remove ourselves from the map.
+  scope->GetWrapperMap()->Remove(wrappedObj);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
