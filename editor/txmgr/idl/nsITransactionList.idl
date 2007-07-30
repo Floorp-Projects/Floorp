@@ -43,7 +43,7 @@ interface nsITransaction;
  * <P>
  * The implementation for this interface is provided by the Transaction Manager.
  * This interface provides a mechanism for accessing the transactions on the
- * Undo or Redo stacks as well as any auto-aggragated children that a
+ * Undo or Redo stacks as well as any auto-aggregated children that a
  * transaction may have.
  */
 [scriptable, uuid(97f863f3-f886-11d4-9d39-0060b0f8baff)]
