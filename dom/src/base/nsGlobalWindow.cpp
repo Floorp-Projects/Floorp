@@ -5234,15 +5234,15 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                                 const nsAString& aOptions,
                                 nsIVariant **aRetVal)
 {
-  nsCOMPtr<nsIDOMWindow> dlgWin;
+  *aRetVal = nsnull;
 
+  nsCOMPtr<nsIDOMWindow> dlgWin;
   nsAutoString options(NS_LITERAL_STRING("modal=1,status=1"));
   nsAutoString dialogOptions(aOptions);
 
   ConvertDialogOptions(dialogOptions, options);
 
   options.AppendLiteral(",scrollbars=1,centerscreen=1,resizable=0");
-
 
   nsresult rv = OpenInternal(aURI, EmptyString(), options,
                              PR_FALSE,          // aDialog
@@ -5252,7 +5252,8 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                              GetPrincipal(),    // aCalleePrincipal
                              nsnull,            // aJSCallerContext
                              getter_AddRefs(dlgWin));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return NS_OK;
 
   nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(dlgWin));
 
