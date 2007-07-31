@@ -52,7 +52,7 @@
  <statusbar id="status-bar">
   <statusbarpanel class="statusbarpanel-iconic" id="qa-statusbar-overlay" 
   	src="chrome://qa/skin/qmo-16px.png" 
-  	onclick="qaMain.openQATool(); qaNotifications.checkNotificationStatus();" />
+  	onclick="qaMain.openQATool();" />
  </statusbar>
  
  <window id="main-window">
