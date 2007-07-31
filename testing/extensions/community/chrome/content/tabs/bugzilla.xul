@@ -1,4 +1,4 @@
-<?xml version="1.0"?><!-- -*- Mode: HTML -*- --> 
+<?xml version="1.0"?><!-- -*- Mode: HTML -*- 
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -35,7 +35,7 @@
 #
 # ***** END LICENSE BLOCK ***** -->
 
-<?xml-stylesheet href="chome://qa/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://qa/skin/" type="text/css"?>
 
 <!DOCTYPE overlay [
 <!ENTITY % qaDTD SYSTEM "chrome://qa/locale/qa.dtd"> %qaDTD;
