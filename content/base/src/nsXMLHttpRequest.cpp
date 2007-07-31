@@ -87,6 +87,7 @@
 #include "nsDOMError.h"
 #include "nsIHTMLDocument.h"
 #include "nsWhitespaceTokenizer.h"
+#include "nsIMultiPartChannel.h"
 
 #define LOAD_STR "load"
 #define ERROR_STR "error"
@@ -116,6 +117,7 @@
 #define XML_HTTP_REQUEST_MULTIPART      (1 << 12) // Internal
 #define XML_HTTP_REQUEST_USE_XSITE_AC   (1 << 13) // Internal
 #define XML_HTTP_REQUEST_NON_GET        (1 << 14) // Internal
+#define XML_HTTP_REQUEST_GOT_FINAL_STOP (1 << 15) // Internal
 
 #define XML_HTTP_REQUEST_LOADSTATES         \
   (XML_HTTP_REQUEST_UNINITIALIZED |         \
@@ -1133,6 +1135,12 @@ nsXMLHttpRequest::GetCurrentHttpChannel()
 static PRBool
 IsSameOrigin(nsIPrincipal* aPrincipal, nsIChannel* aChannel)
 {
+  if (!aPrincipal) {
+    // XXX Until we got our principal story straight we have to do this to
+    // support C++ callers.
+    return PR_TRUE;
+  }
+
   nsCOMPtr<nsIURI> codebase;
   nsresult rv = aPrincipal->GetURI(getter_AddRefs(codebase));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1629,6 +1637,19 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     rv = mXMLParserStreamListener->OnStopRequest(request, ctxt, status);
   }
 
+  nsCOMPtr<nsIMultiPartChannel> mpChannel = do_QueryInterface(request);
+  if (mpChannel) {
+    PRBool last;
+    rv = mpChannel->GetIsLastPart(&last);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (last) {
+      mState |= XML_HTTP_REQUEST_GOT_FINAL_STOP;
+    }
+  }
+  else {
+    mState |= XML_HTTP_REQUEST_GOT_FINAL_STOP;
+  }
+
   mXMLParserStreamListener = nsnull;
   mReadRequest = nsnull;
   mContext = nsnull;
@@ -1719,13 +1740,13 @@ nsXMLHttpRequest::RequestCompleted()
 
   // Clear listeners here unless we're multipart
   ChangeState(XML_HTTP_REQUEST_COMPLETED, PR_TRUE,
-              !(mState & XML_HTTP_REQUEST_MULTIPART));
+              !!(mState & XML_HTTP_REQUEST_GOT_FINAL_STOP));
 
   if (NS_SUCCEEDED(rv) && domevent) {
     NotifyEventListeners(loadEventListeners, domevent);
   }
 
-  if (mState & XML_HTTP_REQUEST_MULTIPART) {
+  if (!(mState & XML_HTTP_REQUEST_GOT_FINAL_STOP)) {
     // We're a multipart request, so we're not done. Reset to opened.
     ChangeState(XML_HTTP_REQUEST_OPENED);
   }
@@ -1958,18 +1979,18 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
 
   // Create our listener
   nsCOMPtr<nsIStreamListener> listener = this;
-  if (!(mState & XML_HTTP_REQUEST_XSITEENABLED)) {
-    // Always create a nsCrossSiteListenerProxy here even if it's
-    // a same-origin request right now, since it could be redirected.
-    listener = new nsCrossSiteListenerProxy(listener, mPrincipal);
-    NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
-  }
-
   if (mState & XML_HTTP_REQUEST_MULTIPART) {
     listener = new nsMultipartProxyListener(listener);
     if (!listener) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+  }
+
+  if (!(mState & XML_HTTP_REQUEST_XSITEENABLED)) {
+    // Always create a nsCrossSiteListenerProxy here even if it's
+    // a same-origin request right now, since it could be redirected.
+    listener = new nsCrossSiteListenerProxy(listener, mPrincipal);
+    NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
   }
 
   // Bypass the network cache in cases where it makes no sense:
@@ -2009,7 +2030,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     listener = new nsCrossSiteListenerProxy(acListener, mPrincipal);
     NS_ENSURE_TRUE(listener, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = mACGetChannel->AsyncOpen(acListener, nsnull);
+    rv = mACGetChannel->AsyncOpen(listener, nsnull);
   }
   else {
     // Start reading from the channel
@@ -2066,9 +2087,13 @@ nsXMLHttpRequest::SetRequestHeader(const nsACString& header,
     }
   }
 
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
-  if (!httpChannel)          // open() initializes mChannel, and open()
+  if (!mChannel)             // open() initializes mChannel, and open()
     return NS_ERROR_FAILURE; // must be called before first setRequestHeader()
+
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
+  if (!httpChannel) {
+    return NS_OK;
+  }
 
   // Prevent modification to certain HTTP headers (see bug 302263), unless
   // the executing script has UniversalBrowserWrite permission.

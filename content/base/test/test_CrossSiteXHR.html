@@ -14,30 +14,48 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-var passFiles = ['file_CrossSiteXHR_pass1.xml',
-                 'file_CrossSiteXHR_pass2.xml',
-                 'file_CrossSiteXHR_pass3.xml'];
+var local = "http://example.com/tests/content/base/test/";
+var post = "http://people.mozilla.com/cgi-bin/sicking/xhr/posttest.pl/";
 
-var failFiles = ['file_CrossSiteXHR_fail1.xml',
-                 'file_CrossSiteXHR_fail2.xml',
-                 'file_CrossSiteXHR_fail3.xml',
-                 'file_CrossSiteXHR_fail4.xml'];
+var passFiles = [[local + 'file_CrossSiteXHR_pass1.xml', 'GET'],
+                 [local + 'file_CrossSiteXHR_pass2.xml', 'GET'],
+                 [local + 'file_CrossSiteXHR_pass3.xml', 'GET'],
+                 [post + 'pass1', 'POST'],
+                 [post + 'pass2', 'POST'],
+                 [post + 'pass3', 'POST'],
+                 ];
+
+var failFiles = [[local + 'file_CrossSiteXHR_fail1.xml', 'GET'],
+                 [local + 'file_CrossSiteXHR_fail2.xml', 'GET'],
+                 [local + 'file_CrossSiteXHR_fail3.xml', 'GET'],
+                 [local + 'file_CrossSiteXHR_fail4.xml', 'GET'],
+                 [post + 'fail1', 'POST'],
+                 [post + 'fail2', 'POST'],
+                 [post + 'fail3', 'POST'],
+                 [post + 'fail4', 'POST'],
+                 [post + 'fail5', 'POST'],
+                 ];
 
 for (i = 0; i < passFiles.length; ++i) {
   xhr = new XMLHttpRequest();
-  xhr.open("GET", "http://example.com/tests/content/base/test/" + passFiles[i], false); 
+  xhr.open(passFiles[i][1], passFiles[i][0], false); 
   xhr.send(null);
-  ok(xhr.status == 200, "wrong status");
-  ok((new XMLSerializer()).serializeToString(xhr.responseXML.documentElement) ==
+  is(xhr.status, 200, "wrong status");
+  if (xhr.responseXML) {
+    is((new XMLSerializer()).serializeToString(xhr.responseXML.documentElement),
        "<res>hello</res>",
-     "wrong response");
+       "wrong response");
+  }
+  else {
+    is(xhr.responseText, "hello pass\n", "wrong response");
+  }
 }
 
 for (i = 0; i < failFiles.length; ++i) {
   xhr = new XMLHttpRequest();
   success = false;
   try {
-    xhr.open("GET", "http://example.com/tests/content/base/test/" + failFiles[i], false); 
+    xhr.open(failFiles[i][1], failFiles[i][0], false); 
     xhr.send(null);
   }
   catch (e) {
@@ -45,8 +63,6 @@ for (i = 0; i < failFiles.length; ++i) {
   }
   ok(success, "should have thrown");
 }
-
-
 </script>
 </pre>
 </body>
