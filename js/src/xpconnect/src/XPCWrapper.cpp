@@ -51,6 +51,9 @@ XPCWrapper::sResolvingSlot = 0;
 const PRUint32
 XPCWrapper::sNumSlots = 2;
 
+JSNative
+XPCWrapper::sEvalNative = nsnull;
+
 // static
 JSBool
 XPCWrapper::AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)

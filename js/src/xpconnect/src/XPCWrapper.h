@@ -117,6 +117,40 @@ public:
   static const PRUint32 sNumSlots;
 
   /**
+   * Cross origin wrappers and safe JSObject wrappers both need to know
+   * which native is 'eval' for various purposes.
+   */
+  static JSNative sEvalNative;
+
+  /**
+   * Given a context and a global object, fill our eval native.
+   */
+  static JSBool FindEval(XPCCallContext &ccx, JSObject *obj) {
+    if (sEvalNative) {
+      return JS_TRUE;
+    }
+
+    jsval eval_val;
+    if (!::JS_GetProperty(ccx, obj, "eval", &eval_val)) {
+      return ThrowException(NS_ERROR_UNEXPECTED, ccx);
+    }
+
+    if (JSVAL_IS_PRIMITIVE(eval_val) ||
+        !::JS_ObjectIsFunction(ccx, JSVAL_TO_OBJECT(eval_val))) {
+      return ThrowException(NS_ERROR_UNEXPECTED, ccx);
+    }
+
+    sEvalNative =
+      ::JS_GetFunctionNative(ccx, ::JS_ValueToFunction(ccx, eval_val));
+
+    if (!sEvalNative) {
+      return ThrowException(NS_ERROR_UNEXPECTED, ccx);
+    }
+
+    return JS_TRUE;
+  }
+
+  /**
    * A useful function that throws an exception onto cx.
    */
   static JSBool ThrowException(nsresult ex, JSContext *cx) {
