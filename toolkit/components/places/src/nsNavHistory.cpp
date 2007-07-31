@@ -958,18 +958,43 @@ nsNavHistory::MigrateV6Up(mozIStorageConnection* aDBConn)
     NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_anno_attributes_nameindex"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  return NS_OK;
+}
+
+nsresult
+nsNavHistory::CleanUpOnQuit()
+{
   // bug #371800 - remove moz_places.user_title
   // test for moz_places.user_title
   nsCOMPtr<mozIStorageStatement> statement2;
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT user_title FROM moz_places"), getter_AddRefs(statement2));
   if (NS_SUCCEEDED(rv)) {
-    // 1. rename moz_places to moz_places_backup
-    rv = aDBConn->ExecuteSimpleSQL(
+    // 1. Indexes are moved along with the renamed table. Since we're dropping
+    // that table, we're also dropping it's indexes, and later re-creating them
+    // for the new table.
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_urlindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_titleindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_faviconindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_hostindex"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_visitcount"));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // 2. rename moz_places to moz_places_backup
+    rv = mDBConn->ExecuteSimpleSQL(
       NS_LITERAL_CSTRING("ALTER TABLE moz_places RENAME TO moz_places_backup"));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // 2. create moz_places w/o user_title, and its index
+    // 3. create moz_places w/o user_title
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("CREATE TABLE moz_places ("
         "id INTEGER PRIMARY KEY, "
         "url LONGVARCHAR, "
@@ -981,33 +1006,40 @@ nsNavHistory::MigrateV6Up(mozIStorageConnection* aDBConn)
         "favicon_id INTEGER)"));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = aDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("DROP INDEX IF EXISTS moz_places_urlindex"));
-    NS_ENSURE_SUCCESS(rv, rv);
+    // 4. recreate the indexes
+    // NOTE: tests showed that it's faster to create the indexes prior to filling
+    // the table than it is to add them afterwards.
     rv = mDBConn->ExecuteSimpleSQL(
         NS_LITERAL_CSTRING("CREATE INDEX moz_places_urlindex ON moz_places (url)"));
     NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE INDEX moz_places_titleindex ON moz_places (title)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE INDEX moz_places_faviconindex ON moz_places (favicon_id)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE INDEX moz_places_hostindex ON moz_places (rev_host)"));
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("CREATE INDEX moz_places_visitcount ON moz_places (rev_host)"));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    // 3. copy all data into moz_places
+    // 5. copy all data into moz_places
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "INSERT INTO moz_places "
       "SELECT id, url, title, rev_host, visit_count, hidden, typed, favicon_id "
       "FROM moz_places_backup"));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // 4. drop moz_places_backup
+    // 6. drop moz_places_backup
     rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "DROP TABLE moz_places_backup"));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  // bug #389492 - index on page title
-  rv = mDBConn->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE INDEX IF NOT EXISTS moz_places_titleindex ON moz_places (title)"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   return NS_OK;
 }
+
 
 #ifdef IN_MEMORY_LINKS
 // nsNavHistory::InitMemDB
@@ -3261,6 +3293,11 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
     // notify expiring system that we're quitting, it may want to do stuff
     mExpire.OnQuit();
     
+    // run post-run migration
+    // NOTE: This must run after expiration. It causes expiration to take a
+    // very long time if run first.
+    (void)CleanUpOnQuit();
+
     // notify the bookmarks service we're quitting
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
