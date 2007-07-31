@@ -15,25 +15,16 @@
 <script class="testbody" type="text/javascript">
 
 var local = "http://example.com/tests/content/base/test/";
-var post = "http://people.mozilla.com/cgi-bin/sicking/xhr/posttest.pl/";
 
 var passFiles = [[local + 'file_CrossSiteXHR_pass1.xml', 'GET'],
                  [local + 'file_CrossSiteXHR_pass2.xml', 'GET'],
                  [local + 'file_CrossSiteXHR_pass3.xml', 'GET'],
-                 [post + 'pass1', 'POST'],
-                 [post + 'pass2', 'POST'],
-                 [post + 'pass3', 'POST'],
                  ];
 
 var failFiles = [[local + 'file_CrossSiteXHR_fail1.xml', 'GET'],
                  [local + 'file_CrossSiteXHR_fail2.xml', 'GET'],
                  [local + 'file_CrossSiteXHR_fail3.xml', 'GET'],
                  [local + 'file_CrossSiteXHR_fail4.xml', 'GET'],
-                 [post + 'fail1', 'POST'],
-                 [post + 'fail2', 'POST'],
-                 [post + 'fail3', 'POST'],
-                 [post + 'fail4', 'POST'],
-                 [post + 'fail5', 'POST'],
                  ];
 
 for (i = 0; i < passFiles.length; ++i) {
