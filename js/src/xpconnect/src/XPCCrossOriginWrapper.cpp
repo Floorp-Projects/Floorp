@@ -598,6 +598,12 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
   }
 
   wrappedObj = JSVAL_TO_OBJECT(*vp);
+  if (JS_ObjectIsFunction(cx, wrappedObj) &&
+      JS_GetFunctionNative(cx, JS_ValueToFunction(cx, *vp)) ==
+      XPCWrapper::sEvalNative) {
+    return XPC_XOW_WrapFunction(cx, obj, wrappedObj, vp);
+  }
+
   const char *name = JS_GET_CLASS(cx, wrappedObj)->name;
   if (XPC_XOW_ClassNeedsXOW(name)) {
     return XPC_XOW_WrapObject(cx, GetGlobalObject(cx, obj), vp);
