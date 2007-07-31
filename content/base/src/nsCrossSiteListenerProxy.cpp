@@ -73,8 +73,12 @@ nsCrossSiteListenerProxy::ForwardRequest(PRBool aFromStop)
   }
 
   mHasForwardedRequest = PR_TRUE;
-  mParser = nsnull;
-  mParserListener = nsnull;
+
+  if (mParser) {
+    mParser->Terminate();
+    mParser = nsnull;
+    mParserListener = nsnull;
+  }
 
   if (mAcceptState != eAccept) {
     mOuterRequest->Cancel(NS_ERROR_DOM_BAD_URI);
@@ -290,8 +294,15 @@ nsCrossSiteListenerProxy::OnDataAvailable(nsIRequest* aRequest,
 
   // Hold a local reference to make sure the parser doesn't go away
   nsCOMPtr<nsIStreamListener> stackedListener = mParserListener;
-  return stackedListener->OnDataAvailable(aRequest, aContext, stream, aOffset,
-                                          aCount);
+  rv = stackedListener->OnDataAvailable(aRequest, aContext, stream, aOffset,
+                                        aCount);
+  // When we forward the request we also terminate the parsing which will
+  // result in an error bubbling up to here. We want to ignore the error
+  // in that case.
+  if (mHasForwardedRequest) {
+    rv = NS_OK;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -302,7 +313,11 @@ nsCrossSiteListenerProxy::HandleStartElement(const PRUnichar *aName,
                                              PRUint32 aLineNumber)
 {
   // We're done processing the prolog.
-  return ForwardRequest(PR_FALSE);
+  ForwardRequest(PR_FALSE);
+
+  // Block the parser since we don't want to spend more cycles on parsing
+  // stuff.
+  return NS_ERROR_HTMLPARSER_BLOCK;
 }
 
 NS_IMETHODIMP
@@ -463,7 +478,11 @@ nsCrossSiteListenerProxy::WillBuildModel()
   mParser->GetDTD(getter_AddRefs(dtd));
   NS_ASSERTION(dtd, "missing dtd in WillBuildModel");
   if (dtd && !(dtd->GetType() & NS_IPARSER_FLAG_XML)) {
-    return ForwardRequest(PR_FALSE);
+    ForwardRequest(PR_FALSE);
+    
+    // Block the parser since we don't want to spend more cycles on parsing
+    // stuff.
+    return NS_ERROR_HTMLPARSER_BLOCK;
   }
 
   return NS_OK;
