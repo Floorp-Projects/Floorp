@@ -2746,7 +2746,7 @@ nsNavHistory::RemovePagesFromHost(const nsACString& aHost, PRBool aEntireDomain)
   // delete annotations (except EXPIRE_NEVER)
   rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "DELETE FROM moz_annos WHERE place_id NOT IN (") +
-      deletedPlaceIdsBookmarked + NS_LITERAL_CSTRING(")"));
+      deletedPlaceIdsWithAnno + NS_LITERAL_CSTRING(")"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // finally, delete the actual moz_places records that are
