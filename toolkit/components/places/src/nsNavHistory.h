@@ -377,6 +377,7 @@ protected:
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
   nsresult MigrateV3Up(mozIStorageConnection *aDBConn);
   nsresult MigrateV6Up(mozIStorageConnection *aDBConn);
+  nsresult CleanUpOnQuit();
 
 #ifdef IN_MEMORY_LINKS
   // this is the cache DB in memory used for storing visited URLs
