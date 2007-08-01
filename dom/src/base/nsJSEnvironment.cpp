@@ -2385,10 +2385,8 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
 
   // window.dialogArguments is supposed to be an array if a JS array
   // was passed to showModalDialog(), deal with that here.
-  if (strcmp(aPropName, "dialogArguments") == 0 && argc == 1 &&
-      JSVAL_IS_OBJECT(argv[0]) &&
-      ::JS_IsArrayObject(mContext, JSVAL_TO_OBJECT(argv[0]))) {
-    vargs = argv[0];
+  if (strcmp(aPropName, "dialogArguments") == 0 && argc <= 1) {
+    vargs = argc ? argv[0] : JSVAL_VOID;
   } else {
     JSObject *args = ::JS_NewArrayObject(mContext, argc, argv);
     vargs = OBJECT_TO_JSVAL(args);
@@ -2399,7 +2397,6 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
   rv = ::JS_DefineProperty(mContext, reinterpret_cast<JSObject *>(aTarget),
                            aPropName, vargs, nsnull, nsnull, 0) ?
        NS_OK : NS_ERROR_FAILURE;
-  // free 'args'???
 
   return rv;
 }
