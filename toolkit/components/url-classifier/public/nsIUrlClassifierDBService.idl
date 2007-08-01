@@ -109,7 +109,7 @@ interface nsIUrlClassifierDBService : nsISupports
  * Interface for the actual worker thread.  Implementations of this need not
  * be thread aware and just work on the database.
  */
-[scriptable, uuid(5d405325-2ba1-4040-b69b-8bda8353d3d3)]
+[scriptable, uuid(1e416670-5c89-462c-8a4f-6fd628af2d10)]
 interface nsIUrlClassifierDBServiceWorker : nsIUrlClassifierDBService
 {
   // Provide a way to forcibly close the db connection.
