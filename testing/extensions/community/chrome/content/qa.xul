@@ -80,7 +80,7 @@
     <tab label="&qa.litmus.title;" />
     <tab label="&qa.bugzilla.title;" />
     <tab label="&qa.chat.title;" />
-    <spacer flex="1" />
+    <spacer width="30" />
     <tab label="&qa.preferences.title;" id="qa-tabbar-prefs" />
     <tab label="&qa.help.title;" />
   </tabs>
