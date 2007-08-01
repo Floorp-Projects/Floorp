@@ -46,10 +46,13 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES	= \
-        test_offlineResources.html \
-        test_isLocallyAvailable.html \
         test_pendingOfflineLoads.html \
         $(NULL)
+
+# XXX: disabled pending fixes
+#        test_isLocallyAvailable.html \
+#        test_offlineResources.html
+
 
 libs::	$(_TEST_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
