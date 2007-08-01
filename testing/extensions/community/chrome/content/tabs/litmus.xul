@@ -40,6 +40,7 @@
 
 <!DOCTYPE overlay [
 <!ENTITY % qaDTD SYSTEM "chrome://qa/locale/qa.dtd"> %qaDTD;
+<!ENTITY % xhtmlDTD SYSTEM "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"> %xhtmlDTD;
 ]>
 
 <overlay id="qa-litmus-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -55,9 +56,9 @@
 			 <button maxwidth="110" label="&qa.litmus.selecttests;"
                      oncommand="litmus.handleDialog()"
                      style="margin-left: 4px;" />
-			 <label maxwidth="140" value="" id="qa-testrun-label"/>
-			 <label maxwidth="140" value="" id="qa-testgroup-label"/>
-			 <label maxwidth="140" value="" id="qa-subgroup-label"/>
+			 <label maxwidth="160" value="" id="qa-testrun-label"/>
+			 <label maxwidth="160" value="" id="qa-testgroup-label"/>
+			 <label maxwidth="160" value="" id="qa-subgroup-label"/>
 		</vbox>
 		<listbox rows="7" minwidth="200" onselect="litmus.handleSelect()" id="testlist">
             <listcols>
@@ -68,13 +69,15 @@
                 
         </listbox>
 	 </hbox>
-	 <hbox style="font-weight: bold;">
-    
-		 <label id="qa-testcase-id" width = "100px" value="&qa.litmus.testlist.initialdescription;" />
-		 <label value=" --" />
-         <description id="qa-testcase-summary" maxwidth="230px" crop="end"></description>
-		 
-	 </hbox>
+	 <vbox>
+	   <hbox style="font-weight: bold;">
+	  	   <label id="qa-testcase-id" value="&qa.litmus.testlist.initialdescription;" />
+	  	   <label value="&mdash;" />
+           <description id="qa-testcase-summary" maxwidth="230px" crop="end"></description> 
+	   </hbox>
+	   <label value="" id="qa-testcase-progress" />
+	 </vbox>
+	 
 	
 	<vbox width="370px" minwidth="370px">
 		<groupbox maxheight="130px" minwidth="370px" width="370px">

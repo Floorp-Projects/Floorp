@@ -9,22 +9,76 @@
   display: none;
 }
 
+/*-------------------------------
+               HTML
+  -------------------------------*/
+
 html|ul, html|ol {
-  padding-left: 12px;
-  margin-top: 2px;
-  margin-bottom: 2px;
+  margin: 0;
+  padding: 0;
+}
+html|ul li {
+  list-style-type: square;
+  margin-bottom: 0.4em;
 }
 
 html|p {
-  margin-top: 2px;
+  
 }
 
-html|a {
-  text-decoration: underline;
-  color: black;
+html|a, html|a:link, html|a:visited {
+  border-bottom: 1px solid #5383DF;
+  color: #039;
 }
+html|a:focus, html|a:hover, html|a:active {
+  color: #333;
+  border-bottom-color: #333;
+}
+
+
+/*-------------------------------
+               TABS
+  -------------------------------*/
+
+tabs {
+  background: #e1dece url(tabrow-bg.gif) repeat-x left top;
+  height: 26px;
+}
+tab {
+  padding: 0.1em 0.6em;
+  vertical-align: middle;
+  background-color: transparent;
+}
+
+/*-------------------------------
+               PANELS
+  -------------------------------*/
+tabpanel {
+  color: #5F6775;
+  line-height: 1.6;
+}
+groupbox {
+  border-color: #e0e0e0;
+  background-color: #fff;
+  padding: 6px 8px;
+}
+caption {
+  font: bold 12px helvetica, arial, sans-serif;
+  color: #BD1D01;
+  background: transparent url(caption-bg.gif) repeat-x left 6px;
+  padding: 0;
+}
+
+#qa-qmo-help {
+
+}
+
+/*-------------------------------
+               NOTIFY
+  -------------------------------*/
 
 #qa-notify {
+  display: none; /* take out eventually... this just got annoying -zak */
   right: 18px;
   bottom: 21px;
   position: fixed;
@@ -42,7 +96,7 @@ html|a {
 
 #qa-notify-box {
   padding: 0px 6px 6px 6px;
-  display: table;
+	display: table;
 }
 
 #qa-notify-header {
@@ -50,37 +104,10 @@ html|a {
   font-weight: bold;
 }
 
-#qa-notify-header-box {
-	position: absolute;
-	top: 2px;
-}
 
-#qa-notify-content {
-	position: absolute;
-	left: 12px;
-}
-
-#qa-notify description {
-	max-width: 400px;
-}
-
-#qa-notify-event {
-	border-style: dashed;
-	border-width: 1px;
-	margin-left: 15px;
-}
-
-#qa-notify-inprogress {
-	color: red;
-	font-size: 1.25em;
-}
-
-#qa-notify-text {
-	margin-top: 3px;	
-}
-
-
-/* general formatting */
+/*-------------------------------
+               GENERAL
+  -------------------------------*/
 
 .list {
   padding-left: 10px;
