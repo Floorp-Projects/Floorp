@@ -1,8 +1,8 @@
-This is sqlite 3.4.0
+This is sqlite 3.4.1
 
 This version has some security stuff dealing with the upper
 bounds of data types.  See the change log for more details:
-http://www.sqlite.org/changes.html#version_3_4_0
+http://www.sqlite.org/changes.html#version_3_4_1
 
 -- Shawn Wilsher <me@shawnwilsher.com> 08/2007
 
