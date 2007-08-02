@@ -121,7 +121,7 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth);
 cairo_private cairo_status_t
 _cairo_xlib_screen_put_gc (cairo_xlib_screen_info_t *info, int depth, GC gc, cairo_bool_t reset_clip);
 
-#if CAIRO_HAS_XLIB_XRENDER_SURFACE
+#if 1 /* CAIRO_HAS_XLIB_XRENDER_SURFACE */
 
 #include "cairo-xlib-xrender.h"
 slim_hidden_proto (cairo_xlib_surface_create_with_xrender_format);
