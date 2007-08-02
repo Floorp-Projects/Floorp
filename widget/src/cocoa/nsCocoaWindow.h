@@ -93,8 +93,7 @@ class nsChildView;
 }
 - (id)initWithGeckoWindow:(nsCocoaWindow*)geckoWind;
 - (void)windowDidResize:(NSNotification*)aNotification;
-- (void)sendGotFocusAndActivate;
-- (void)sendLostFocusAndDeactivate;
+- (void)sendFocusEvent:(PRUint32)eventType;
 - (nsCocoaWindow*)geckoWidget;
 @end
 

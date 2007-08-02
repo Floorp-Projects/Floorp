@@ -471,14 +471,16 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
           mVisible = PR_TRUE;
           mSheetNeedsShow = PR_FALSE;
           mSheetWindowParent = topNonSheetWindow;
-          [[mSheetWindowParent delegate] sendLostFocusAndDeactivate];
+          [[mSheetWindowParent delegate] sendFocusEvent:NS_LOSTFOCUS];
+          [[mSheetWindowParent delegate] sendFocusEvent:NS_DEACTIVATE];
           [mWindow setAcceptsMouseMovedEvents:YES];
           [NSApp beginSheet:mWindow
              modalForWindow:mSheetWindowParent
               modalDelegate:mDelegate
              didEndSelector:@selector(didEndSheet:returnCode:contextInfo:)
                 contextInfo:mSheetWindowParent];
-          [[mWindow delegate] sendGotFocusAndActivate];
+          [[mWindow delegate] sendFocusEvent:NS_GOTFOCUS];
+          [[mWindow delegate] sendFocusEvent:NS_ACTIVATE];
           SendSetZLevelEvent();
         }
       }
@@ -537,8 +539,9 @@ NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
         [NSApp endSheet:mWindow];
         
         [mWindow setAcceptsMouseMovedEvents:NO];
-        
-        [[mWindow delegate] sendLostFocusAndDeactivate];
+
+        [[mWindow delegate] sendFocusEvent:NS_LOSTFOCUS];
+        [[mWindow delegate] sendFocusEvent:NS_DEACTIVATE];
 
         nsCocoaWindow* siblingSheetToShow = nsnull;
         PRBool parentIsSheet = PR_FALSE;
@@ -1247,37 +1250,15 @@ gfxASurface* nsCocoaWindow::GetThebesSurface()
 }
 
 
-- (void)sendGotFocusAndActivate
+- (void)sendFocusEvent:(PRUint32)eventType
 {
   if (!mGeckoWindow)
     return;
-  
+
   nsEventStatus status = nsEventStatus_eIgnore;
-  
-  nsGUIEvent focusGuiEvent(PR_TRUE, NS_GOTFOCUS, mGeckoWindow);
+  nsGUIEvent focusGuiEvent(PR_TRUE, eventType, mGeckoWindow);
   focusGuiEvent.time = PR_IntervalNow();
   mGeckoWindow->DispatchEvent(&focusGuiEvent, status);
-  
-  nsGUIEvent activateGuiEvent(PR_TRUE, NS_ACTIVATE, mGeckoWindow);
-  activateGuiEvent.time = PR_IntervalNow();
-  mGeckoWindow->DispatchEvent(&activateGuiEvent, status);
-}
-
-
-- (void)sendLostFocusAndDeactivate
-{
-  if (!mGeckoWindow)
-    return;
-  
-  nsEventStatus status = nsEventStatus_eIgnore;
-  
-  nsGUIEvent deactivateGuiEvent(PR_TRUE, NS_DEACTIVATE, mGeckoWindow);
-  deactivateGuiEvent.time = PR_IntervalNow();
-  mGeckoWindow->DispatchEvent(&deactivateGuiEvent, status);
-  
-  nsGUIEvent lostfocusGuiEvent(PR_TRUE, NS_LOSTFOCUS, mGeckoWindow);
-  lostfocusGuiEvent.time = PR_IntervalNow();
-  mGeckoWindow->DispatchEvent(&lostfocusGuiEvent, status);
 }
 
 
@@ -1286,9 +1267,11 @@ gfxASurface* nsCocoaWindow::GetThebesSurface()
   // Note: 'contextInfo' is the window that is the parent of the sheet,
   // we set that in nsCocoaWindow::Show. 'contextInfo' is always the top-level
   // window, not another sheet itself.
-  [[sheet delegate] sendLostFocusAndDeactivate];
+  [[sheet delegate] sendFocusEvent:NS_LOSTFOCUS];
+  [[sheet delegate] sendFocusEvent:NS_DEACTIVATE];
   [sheet orderOut:self];
-  [[(NSWindow*)contextInfo delegate] sendGotFocusAndActivate];
+  [[(NSWindow*)contextInfo delegate] sendFocusEvent:NS_GOTFOCUS];
+  [[(NSWindow*)contextInfo delegate] sendFocusEvent:NS_ACTIVATE];
 }
 
 
