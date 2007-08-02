@@ -494,6 +494,15 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
     if (NS_FAILED(rv)) {
       LOG(("OBJLC [%p]: mFinalListener->OnStartRequest failed (%08x), falling back\n",
            this, rv));
+#ifdef XP_MACOSX
+      // Shockwave on Mac is special and returns an error here even when it
+      // handles the content
+      if (mContentType.EqualsLiteral("application/x-director")) {
+        LOG(("OBJLC [%p]: (ignoring)\n", this));
+        rv = NS_OK; // otherwise, the AutoFallback will make us fall back
+        return NS_BINDING_ABORTED;
+      }
+#endif
       Fallback(PR_FALSE);
     }
     return rv;
