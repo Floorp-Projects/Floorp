@@ -1,4 +1,6 @@
 /*
+ * $Id: pixman-edge-imp.h,v 1.3 2007/08/02 06:54:41 vladimir%pobox.com Exp $
+ *
  * Copyright © 2004 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -24,68 +26,75 @@
 #endif
 
 static void
-rasterizeEdges (FbBits		*buf,
-		int		width,
-		int		stride,
-		RenderEdge	*l,
-		RenderEdge	*r,
-		xFixed		t,
-		xFixed		b)
+rasterizeEdges (pixman_image_t  *image,
+		pixman_edge_t	*l,
+		pixman_edge_t	*r,
+		pixman_fixed_t		t,
+		pixman_fixed_t		b)
 {
-    xFixed  y = t;
-    FbBits  *line;
-
-    line = buf + xFixedToInt (y) * stride;
-
+    pixman_fixed_t  y = t;
+    uint32_t  *line;
+    uint32_t *buf = (image)->bits.bits;
+    uint32_t stride = (image)->bits.rowstride;
+    uint32_t width = (image)->bits.width;
+    
+    line = buf + pixman_fixed_to_int (y) * stride;
+    
     for (;;)
     {
-	xFixed	lx, rx;
-	int	lxi, rxi;
-
+	pixman_fixed_t	lx;
+	pixman_fixed_t      rx;
+	int	lxi;
+	int rxi;
+	
 	/* clip X */
 	lx = l->x;
 	if (lx < 0)
 	    lx = 0;
 	rx = r->x;
-	if (xFixedToInt (rx) >= width)
-	    rx = IntToxFixed (width);
-
+	if (pixman_fixed_to_int (rx) >= width)
+	    rx = pixman_int_to_fixed (width);
+	
 	/* Skip empty (or backwards) sections */
 	if (rx > lx)
 	{
-
-	    /* Find pixel bounds for span. */
-	    lxi = xFixedToInt (lx);
-	    rxi = xFixedToInt (rx);
-
+	    
+	    /* Find pixel bounds for span */
+	    lxi = pixman_fixed_to_int (lx);
+	    rxi = pixman_fixed_to_int (rx);
+	    
 #if N_BITS == 1
 	    {
-		FbBits  *a = line;
-		FbBits  startmask, endmask;
+		uint32_t  *a = line;
+		uint32_t  startmask;
+		uint32_t  endmask;
 		int	    nmiddle;
 		int	    width = rxi - lxi;
 		int	    x = lxi;
-
+		
 		a += x >> FB_SHIFT;
 		x &= FB_MASK;
-
+		
 		FbMaskBits (x, width, startmask, nmiddle, endmask);
-		if (startmask)
-		    *a++ |= startmask;
-		while (nmiddle--)
-		    *a++ = FB_ALLONES;
-		if (endmask)
-		    *a |= endmask;
+		    if (startmask) {
+			WRITE(a, READ(a) | startmask);
+			a++;
+		    }
+		    while (nmiddle--)
+			WRITE(a++, FB_ALLONES);
+		    if (endmask)
+			WRITE(a, READ(a) | endmask);
 	    }
 #else
 	    {
 		DefineAlpha(line,lxi);
-		int	    lxs, rxs;
-
+		int	    lxs;
+		int     rxs;
+		
 		/* Sample coverage for edge pixels */
 		lxs = RenderSamplesX (lx, N_BITS);
 		rxs = RenderSamplesX (rx, N_BITS);
-
+		
 		/* Add coverage across row */
 		if (lxi == rxi)
 		{
@@ -94,7 +103,7 @@ rasterizeEdges (FbBits		*buf,
 		else
 		{
 		    int	xi;
-
+		    
 		    AddAlpha (N_X_FRAC(N_BITS) - lxs);
 		    StepAlpha;
 		    for (xi = lxi + 1; xi < rxi; xi++)
@@ -102,21 +111,22 @@ rasterizeEdges (FbBits		*buf,
 			AddAlpha (N_X_FRAC(N_BITS));
 			StepAlpha;
 		    }
-		    /* Do not add in a 0 alpha here. This check is
-		     * necessary to avoid a buffer overrun, (when rx
-		     * is exactly on a pixel boundary). */
-		    if (rxs)
+		    /* Do not add in a 0 alpha here. This check is necessary
+		     * to avoid a buffer overrun when rx is exactly on a pixel
+		     * boundary.
+		     */
+		    if (rxs != 0)
 			AddAlpha (rxs);
 		}
 	    }
 #endif
 	}
-
+	
 	if (y == b)
 	    break;
-
+	
 #if N_BITS > 1
-	if (xFixedFrac (y) != Y_FRAC_LAST(N_BITS))
+	if (pixman_fixed_frac (y) != Y_FRAC_LAST(N_BITS))
 	{
 	    RenderEdgeStepSmall (l);
 	    RenderEdgeStepSmall (r);
