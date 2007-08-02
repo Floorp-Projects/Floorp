@@ -72,7 +72,6 @@ CSRCS	= \
 	pixman-image.c \
 	pixman-pict.c \
 	pixman-region.c \
-	pixman-timer.c \
 	pixman-trap.c \
 	pixman-utils.c \
 	$(NULL)
