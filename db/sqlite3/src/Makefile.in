@@ -88,3 +88,8 @@ include $(topsrcdir)/config/rules.mk
 
 # next line allows use of MOZ_OBJDIR in .mozconfig with older gcc on BeOS, maybe others
 LOCAL_INCLUDES += -I$(srcdir)
+
+ifeq ($(OS_ARCH),OS2)
+ADD_TO_DEF_FILE = sed -e '1,/^EXPORTS$$/ d' -e 's,sqlite3,_\0,' -e 's,\ DATA.*$$,,' \
+		$(srcdir)/sqlite.def >> $(DEF_FILE)
+endif
