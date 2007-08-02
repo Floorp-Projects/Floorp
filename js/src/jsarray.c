@@ -497,14 +497,13 @@ enum ArrayToStringOp {
  */
 static JSBool
 array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
-               JSString *sep, uintN argc, jsval *vp)
+               JSString *sep, jsval *rval)
 {
     JSBool ok, hole;
     jsuint length, index;
     jschar *chars, *ochars;
     size_t nchars, growth, seplen, tmplen, extratail;
     const jschar *sepstr;
-    jsval *root;
     JSString *str;
     JSHashEntry *he;
     JSAtom *atom;
@@ -580,7 +579,7 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
         /* Return the empty string on a cycle as well as on empty join. */
         if (IS_BUSY(he) || length == 0) {
             js_LeaveSharpObject(cx, NULL);
-            *vp = JS_GetEmptyStringValue(cx);
+            *rval = JS_GetEmptyStringValue(cx);
             return ok;
         }
 
@@ -596,37 +595,35 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
         }
     }
 
-    /* Use our local root to protect each element as we loop and convert. */
-    root = vp + 2 + argc;
-
+    /* Use rval to locally root each element value as we loop and convert. */
     for (index = 0; index < length; index++) {
         ok = (JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) &&
-              GetArrayElement(cx, obj, index, &hole, root));
+              GetArrayElement(cx, obj, index, &hole, rval));
         if (!ok)
             goto done;
         if (hole ||
             (op != TO_SOURCE &&
-             (JSVAL_IS_VOID(*root) || JSVAL_IS_NULL(*root)))) {
+             (JSVAL_IS_VOID(*rval) || JSVAL_IS_NULL(*rval)))) {
             str = cx->runtime->emptyString;
         } else {
             if (op == TO_LOCALE_STRING) {
                 JSObject *robj;
 
                 atom = cx->runtime->atomState.toLocaleStringAtom;
-                ok = js_ValueToObject(cx, *root, &robj);
+                ok = js_ValueToObject(cx, *rval, &robj);
                 if (ok) {
-                    /* Re-use *root to protect robj temporarily. */
-                    *root = OBJECT_TO_JSVAL(robj);
-                    ok = js_TryMethod(cx, robj, atom, 0, NULL, root);
+                    /* Re-use *rval to protect robj temporarily. */
+                    *rval = OBJECT_TO_JSVAL(robj);
+                    ok = js_TryMethod(cx, robj, atom, 0, NULL, rval);
                 }
                 if (!ok)
                     goto done;
-                str = js_ValueToString(cx, *root);
+                str = js_ValueToString(cx, *rval);
             } else if (op == TO_STRING) {
-                str = js_ValueToString(cx, *root);
+                str = js_ValueToString(cx, *rval);
             } else {
                 JS_ASSERT(op == TO_SOURCE);
-                str = js_ValueToSource(cx, *root);
+                str = js_ValueToSource(cx, *rval);
             }
             if (!str) {
                 ok = JS_FALSE;
@@ -708,7 +705,7 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
         free(chars);
         return JS_FALSE;
     }
-    *vp = STRING_TO_JSVAL(str);
+    *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
 
@@ -721,7 +718,7 @@ array_toSource(JSContext *cx, uintN argc, jsval *vp)
     obj = JSVAL_TO_OBJECT(vp[1]);
     if (!JS_InstanceOf(cx, obj, &js_ArrayClass, vp + 2))
         return JS_FALSE;
-    return array_join_sub(cx, obj, TO_SOURCE, NULL, argc, vp);
+    return array_join_sub(cx, obj, TO_SOURCE, NULL, vp);
 }
 #endif
 
@@ -733,7 +730,7 @@ array_toString(JSContext *cx, uintN argc, jsval *vp)
     obj = JSVAL_TO_OBJECT(vp[1]);
     if (!JS_InstanceOf(cx, obj, &js_ArrayClass, vp + 2))
         return JS_FALSE;
-    return array_join_sub(cx, obj, TO_STRING, NULL, argc, vp);
+    return array_join_sub(cx, obj, TO_STRING, NULL, vp);
 }
 
 static JSBool
@@ -749,7 +746,7 @@ array_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
      *  Passing comma here as the separator. Need a way to get a
      *  locale-specific version.
      */
-    return array_join_sub(cx, obj, TO_LOCALE_STRING, NULL, argc, vp);
+    return array_join_sub(cx, obj, TO_LOCALE_STRING, NULL, vp);
 }
 
 static JSBool
@@ -793,7 +790,7 @@ array_join(JSContext *cx, uintN argc, jsval *vp)
             return JS_FALSE;
         vp[2] = STRING_TO_JSVAL(str);
     }
-    return array_join_sub(cx, JS_THIS_OBJECT(cx, vp), TO_STRING, str, argc, vp);
+    return array_join_sub(cx, JS_THIS_OBJECT(cx, vp), TO_STRING, str, vp);
 }
 
 static JSBool
@@ -1399,7 +1396,7 @@ array_unshift(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 array_splice(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval *argv, *roots;
+    jsval *argv, *localroot;
     JSObject *obj;
     jsuint length, begin, end, count, delta, last;
     jsdouble d;
@@ -1407,13 +1404,13 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
     JSObject *obj2;
 
     /*
-     * Nothing to do if no args.  Otherwise point roots at our pair of
-     * stack-local roots and get length.
+     * Nothing to do if no args.  Otherwise point localroot at our single
+     * stack-local root and get length.
      */
     if (argc == 0)
         return JS_TRUE;
     argv = JS_ARGV(cx, vp);
-    roots = argv + argc;
+    localroot = argv + argc;
     obj = JS_THIS_OBJECT(cx, vp);
     if (!js_GetLengthProperty(cx, obj, &length))
         return JS_FALSE;
@@ -1462,18 +1459,18 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
     obj2 = js_NewArrayObject(cx, 0, NULL);
     if (!obj2)
         return JS_FALSE;
-    roots[0] = OBJECT_TO_JSVAL(obj2);
+    *vp = OBJECT_TO_JSVAL(obj2);
 
     /* If there are elements to remove, put them into the return value. */
     if (count > 0) {
         for (last = begin; last < end; last++) {
             if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) ||
-                !GetArrayElement(cx, obj, last, &hole, &roots[1])) {
+                !GetArrayElement(cx, obj, last, &hole, localroot)) {
                 return JS_FALSE;
             }
 
-            /* Copy roots[1] to new array unless it's a hole. */
-            if (!hole && !SetArrayElement(cx, obj2, last - begin, roots[1]))
+            /* Copy *localroot to new array unless it's a hole. */
+            if (!hole && !SetArrayElement(cx, obj2, last - begin, *localroot))
                 return JS_FALSE;
         }
 
@@ -1488,9 +1485,9 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
         /* (uint) end could be 0, so can't use vanilla >= test */
         while (last-- > end) {
             if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) ||
-                !GetArrayElement(cx, obj, last, &hole, &roots[1]) ||
+                !GetArrayElement(cx, obj, last, &hole, localroot) ||
                 !SetOrDeleteArrayElement(cx, obj, last + delta, hole,
-                                         roots[1])) {
+                                         *localroot)) {
                 return JS_FALSE;
             }
         }
@@ -1499,9 +1496,9 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
         delta = count - (jsuint)argc;
         for (last = end; last < length; last++) {
             if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) ||
-                !GetArrayElement(cx, obj, last, &hole, &roots[1]) ||
+                !GetArrayElement(cx, obj, last, &hole, localroot) ||
                 !SetOrDeleteArrayElement(cx, obj, last - delta, hole,
-                                         roots[1])) {
+                                         *localroot)) {
                 return JS_FALSE;
             }
         }
@@ -1513,7 +1510,6 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     /* Update length in case we deleted elements from the end. */
-    *vp = roots[0];
     return js_SetLengthProperty(cx, obj, length);
 }
 
@@ -1523,7 +1519,7 @@ array_splice(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 array_concat(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval *argv, *roots, v;
+    jsval *argv, *localroot, v;
     JSObject *nobj, *aobj;
     jsuint length, alength, slot;
     uintN i;
@@ -1531,7 +1527,7 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
 
     /* Hoist the explicit local root address computation. */
     argv = JS_ARGV(cx, vp);
-    roots = argv + argc;
+    localroot = argv + argc;
 
     /* Treat our |this| object as the first argument; see ECMA 15.4.4.4. */
     --argv;
@@ -1541,7 +1537,7 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
     nobj = js_NewArrayObject(cx, 0, NULL);
     if (!nobj)
         return JS_FALSE;
-    roots[0] = OBJECT_TO_JSVAL(nobj);
+    *vp = OBJECT_TO_JSVAL(nobj);
 
     /* Loop over [0, argc] to concat args into nobj, expanding all Arrays. */
     length = 0;
@@ -1555,14 +1551,14 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
                 if (!OBJ_GET_PROPERTY(cx, aobj,
                                       ATOM_TO_JSID(cx->runtime->atomState
                                                    .lengthAtom),
-                                      &roots[1])) {
+                                      localroot)) {
                     return JS_FALSE;
                 }
-                if (!ValueIsLength(cx, roots[1], &alength))
+                if (!ValueIsLength(cx, *localroot, &alength))
                     return JS_FALSE;
                 for (slot = 0; slot < alength; slot++) {
                     if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) ||
-                        !GetArrayElement(cx, aobj, slot, &hole, &roots[1])) {
+                        !GetArrayElement(cx, aobj, slot, &hole, localroot)) {
                         return JS_FALSE;
                     }
 
@@ -1571,7 +1567,7 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
                      * properties.
                      */
                     if (!hole &&
-                        !SetArrayElement(cx, nobj, length + slot, roots[1])) {
+                        !SetArrayElement(cx, nobj, length + slot, *localroot)) {
                         return JS_FALSE;
                     }
                 }
@@ -1585,14 +1581,13 @@ array_concat(JSContext *cx, uintN argc, jsval *vp)
         length++;
     }
 
-    *vp = roots[0];
     return js_SetLengthProperty(cx, nobj, length);
 }
 
 static JSBool
 array_slice(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval *argv, *roots;
+    jsval *argv, *localroot;
     JSObject *nobj, *obj;
     jsuint length, begin, end, slot;
     jsdouble d;
@@ -1600,13 +1595,13 @@ array_slice(JSContext *cx, uintN argc, jsval *vp)
 
     /* Hoist the explicit local root address computation. */
     argv = JS_ARGV(cx, vp);
-    roots = argv + argc;
+    localroot = argv + argc;
 
     /* Create a new Array object and root it using *vp. */
     nobj = js_NewArrayObject(cx, 0, NULL);
     if (!nobj)
         return JS_FALSE;
-    roots[0] = OBJECT_TO_JSVAL(nobj);
+    *vp = OBJECT_TO_JSVAL(nobj);
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!js_GetLengthProperty(cx, obj, &length))
@@ -1647,13 +1642,12 @@ array_slice(JSContext *cx, uintN argc, jsval *vp)
 
     for (slot = begin; slot < end; slot++) {
         if (!JS_CHECK_OPERATION_LIMIT(cx, JSOW_JUMP) ||
-            !GetArrayElement(cx, obj, slot, &hole, &roots[1])) {
+            !GetArrayElement(cx, obj, slot, &hole, localroot)) {
             return JS_FALSE;
         }
-        if (!hole && !SetArrayElement(cx, nobj, slot - begin, roots[1]))
+        if (!hole && !SetArrayElement(cx, nobj, slot - begin, *localroot))
             return JS_FALSE;
     }
-    *vp = roots[0];
     return js_SetLengthProperty(cx, nobj, end - begin);
 }
 
@@ -2006,24 +2000,24 @@ static JSPropertySpec array_props[] = {
 
 static JSFunctionSpec array_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,      array_toSource,     0,0,0,1),
+    JS_FN(js_toSource_str,      array_toSource,     0,0,0,0),
 #endif
-    JS_FN(js_toString_str,      array_toString,     0,0,0,1),
-    JS_FN(js_toLocaleString_str,array_toLocaleString,0,0,0,1),
+    JS_FN(js_toString_str,      array_toString,     0,0,0,0),
+    JS_FN(js_toLocaleString_str,array_toLocaleString,0,0,0,0),
 
     /* Perl-ish methods. */
-    JS_FN("join",               array_join,         1,1,JSFUN_GENERIC_NATIVE,1),
+    JS_FN("join",               array_join,         1,1,JSFUN_GENERIC_NATIVE,0),
     JS_FN("reverse",            array_reverse,      0,0,JSFUN_GENERIC_NATIVE,2),
     JS_FN("sort",               array_sort,         0,1,JSFUN_GENERIC_NATIVE,1),
     JS_FN("push",               array_push,         1,1,JSFUN_GENERIC_NATIVE,0),
     JS_FN("pop",                array_pop,          0,0,JSFUN_GENERIC_NATIVE,0),
     JS_FN("shift",              array_shift,        0,0,JSFUN_GENERIC_NATIVE,1),
     JS_FN("unshift",            array_unshift,      0,1,JSFUN_GENERIC_NATIVE,1),
-    JS_FN("splice",             array_splice,       0,2,JSFUN_GENERIC_NATIVE,2),
+    JS_FN("splice",             array_splice,       0,2,JSFUN_GENERIC_NATIVE,1),
 
     /* Python-esque sequence methods. */
-    JS_FN("concat",             array_concat,       0,1,JSFUN_GENERIC_NATIVE,2),
-    JS_FN("slice",              array_slice,        0,2,JSFUN_GENERIC_NATIVE,2),
+    JS_FN("concat",             array_concat,       0,1,JSFUN_GENERIC_NATIVE,1),
+    JS_FN("slice",              array_slice,        0,2,JSFUN_GENERIC_NATIVE,1),
 
 #if JS_HAS_ARRAY_EXTRAS
     JS_FN("indexOf",            array_indexOf,      1,1,JSFUN_GENERIC_NATIVE,0),
