@@ -10772,8 +10772,6 @@ nsCSSFrameConstructor::FindFrameWithContent(nsFrameManager*  aFrameManager,
               kidFrame = parentFrame->GetFirstChild(listName);
               // Leave |aParentFrame| as-is, since the only time we'll
               // reuse it is if the hint fails.
-              NS_ASSERTION(!kidFrame || parentFrame->GetContent() == aParentContent,
-                           "next-in-flow has different content");
             }
           }
 #ifdef NOISY_FINDFRAME
