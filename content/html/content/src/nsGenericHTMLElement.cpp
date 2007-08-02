@@ -1246,8 +1246,18 @@ nsGenericHTMLElement::FindForm(nsIForm* aCurrentForm)
     // If the current ancestor is a form, return it as our form
     if (content->Tag() == nsGkAtoms::form &&
         content->IsNodeOfType(nsINode::eHTML)) {
-      NS_ASSERTION(nsContentUtils::IsInSameAnonymousTree(this, content),
-                   "Walked too far?");
+#ifdef DEBUG
+      if (!nsContentUtils::IsInSameAnonymousTree(this, content)) {
+        // It's possible that we started unbinding at |content| or
+        // some ancestor of it, and |content| and |this| used to all be
+        // anonymous.  Check for this the hard way.
+        for (nsIContent* child = this; child != content;
+             child = child->GetParent()) {
+          NS_ASSERTION(child->GetParent()->IndexOf(child) != -1,
+                       "Walked too far?");
+        }
+      }
+#endif
       nsIDOMHTMLFormElement* form;
       CallQueryInterface(content, &form);
 
