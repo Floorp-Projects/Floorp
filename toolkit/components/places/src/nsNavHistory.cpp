@@ -1220,6 +1220,7 @@ nsNavHistory::InternalAddVisit(PRInt64 aPageID, PRInt64 aReferringVisit,
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBInsertVisit->BindInt64Parameter(2, aTime);
   NS_ENSURE_SUCCESS(rv, rv);
+
   rv = mDBInsertVisit->BindInt32Parameter(3, aTransitionType);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = mDBInsertVisit->BindInt64Parameter(4, aSessionID);
@@ -2129,6 +2130,8 @@ nsNavHistory::ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries
   // for the very special query for the history menu 
   // we generate a super-optimized SQL query
   if (IsHistoryMenuQuery(aQueries, aOptions)) {
+    // visit_type <> 4 == TRANSITION_EMBED
+    // visit_type <> 0 == undefined (see bug #375777 for details)
     queryString = NS_LITERAL_CSTRING(
       "SELECT h.id, h.url, h.title, h.rev_host, h.visit_count, "
       "MAX(v.visit_date), f.url, null, null "
@@ -2137,7 +2140,7 @@ nsNavHistory::ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries
       "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id WHERE "
       "(h.id IN (SELECT DISTINCT h.id FROM moz_historyvisits, "
       " moz_places h WHERE place_id = "
-      " h.id AND hidden <> 1 AND visit_type <> 4 "
+      " h.id AND hidden <> 1 AND visit_type <> 4 AND visit_type <> 0 "
       " ORDER BY visit_date DESC LIMIT ");
     queryString.AppendInt(aOptions->MaxResults());
     queryString += NS_LITERAL_CSTRING(")) GROUP BY h.id ORDER BY 6 DESC"); // v.visit_date
@@ -2155,15 +2158,15 @@ nsNavHistory::ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries
     commonConditions.AssignLiteral("b.type = 1 ");
   } else if (!aOptions->IncludeHidden()) {
     // The hiding code here must match the notification behavior in AddVisit
-    commonConditions.AssignLiteral("h.hidden <> 1 ");
-
     // Some items are unhidden but are subframe navigations that we shouldn't
     // show. This happens especially on imported profiles because the previous
     // history system didn't hide as many things as we do now. Some sites,
     // especially Javascript-heavy ones, load things in frames to display them,
     // resulting in a lot of these entries. This filters those visits out.
-    if (asVisits)
-      commonConditions.AppendLiteral("AND v.visit_type <> 4 "); // not TRANSITION_EMBED
+    // 4 == TRANSITION_EMBED
+    // 0 == undefined (see bug #375777 for details)
+    commonConditions.AssignLiteral(
+      "h.hidden <> 1 AND v.visit_type <> 4 AND v.visit_type <> 0 "); 
   }
 
   // Query string: Output parameters should be in order of kGetInfoIndex_*
@@ -3093,10 +3096,19 @@ nsNavHistory::AddVisitChain(nsIURI* aURI, PRTime aTime,
     // When there is no referrer, we know the user must have gotten the link
     // from somewhere, so check our sources to see if it was recently typed or
     // has a bookmark selected. We don't handle drag-and-drop operations.
+    // note:  the link may have also come from a new window (set to load a homepage)
+    // or on start up (if we've set to load the home page or restore tabs)
+    // we treat these as TRANSITION_LINK (if they are top level) or
+    // TRANSITION_EMBED (if not top level).  We don't want to to add visits to 
+    // history without a transition type.
     if (CheckIsRecentEvent(&mRecentTyped, spec))
       transitionType = nsINavHistoryService::TRANSITION_TYPED;
     else if (CheckIsRecentEvent(&mRecentBookmark, spec))
       transitionType = nsINavHistoryService::TRANSITION_BOOKMARK;
+    else if (aToplevel)
+      transitionType = nsINavHistoryService::TRANSITION_LINK;
+    else
+      transitionType = nsINavHistoryService::TRANSITION_EMBED;
 
     visitTime = PR_Now();
     *aSessionID = GetNewSessionID();
@@ -3294,7 +3306,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
     // notify expiring system that we're quitting, it may want to do stuff
     mExpire.OnQuit();
-    
+
     // run post-run migration
     // NOTE: This must run after expiration. It causes expiration to take a
     // very long time if run first.
