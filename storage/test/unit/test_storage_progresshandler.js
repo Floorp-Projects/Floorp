@@ -107,8 +107,8 @@ function test_handler_abort()
     do_throw("We shouldn't get here!");
   } catch (e) {
     do_check_eq(Cr.NS_ERROR_ABORT, e.result);
-    // Magic value: callback abort
-    //do_check_eq(msc.lastError, 4); XXX see Bug 387609
+    // Magic value: SQLITE_INTERRUPT
+    do_check_eq(msc.lastError, 9);
   }
 }
 
