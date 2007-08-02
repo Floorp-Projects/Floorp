@@ -967,7 +967,7 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
   }
 
   // this will call pi->SetWindow and take care of window subclassing
-  // if needed, see bug 132759
+  // if needed, see bug 132759.
   window->CallSetWindow(pi);
 
   mInstanceOwner->ReleasePluginPort((nsPluginPort *)window->window);
