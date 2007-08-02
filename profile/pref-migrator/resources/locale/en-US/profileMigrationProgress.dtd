@@ -1,6 +1,0 @@
-<!ENTITY dialogCancel.label "Cancel"> 
-<!-- LOCALIZATION NOTE (window.title) : 'Migrating' refers to converting settings to Mozilla format. -->
-<!ENTITY window.title "Converting..."> 
-<!ENTITY dialogTitle.label "Converting user profile">
-<!ENTITY currentlyProcessing.text "This may take a little while.">
-<!ENTITY downloadBeforeUpdate.text "">
