@@ -6823,8 +6823,8 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     InitAndRestoreFrame(aState, aContent, newFrame, nsnull, blockFrame);
 
     // then, create the table frame itself
-    nsRefPtr<nsStyleContext> tableContext;
-    tableContext = styleSet->ResolveStyleFor(aContent, blockContext);
+    nsRefPtr<nsStyleContext> tableContext =
+      ResolveStyleContext(blockFrame, aContent);
 
     nsFrameItems tempItems;
     nsIFrame* outerTable;
