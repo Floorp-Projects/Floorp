@@ -635,8 +635,8 @@ nsSVGOuterSVGFrame::CalculateAvailableSpace(nsRect *maxRect,
   if (aReflowState.availableHeight != NS_INTRINSICSIZE)
     maxRect->height = aReflowState.availableHeight;    
   else if (aReflowState.parentReflowState &&
-           aReflowState.parentReflowState->mComputedHeight != NS_INTRINSICSIZE)
-    maxRect->height = aReflowState.parentReflowState->mComputedHeight;
+           aReflowState.parentReflowState->ComputedHeight() != NS_INTRINSICSIZE)
+    maxRect->height = aReflowState.parentReflowState->ComputedHeight();
   else
     maxRect->height = NS_MAXSIZE;
 

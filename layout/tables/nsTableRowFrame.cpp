@@ -73,16 +73,17 @@ void nsTableCellReflowState::FixUp(const nsSize& aAvailSpace)
   NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aAvailSpace.width,
                "unconstrained available width in reflow");
   if (NS_UNCONSTRAINEDSIZE != ComputedWidth()) {
-    nscoord computedWidth = aAvailSpace.width - mComputedBorderPadding.left -
-      mComputedBorderPadding.right;
+    nscoord computedWidth =
+      aAvailSpace.width - mComputedBorderPadding.LeftRight();
     computedWidth = PR_MAX(0, computedWidth);
     SetComputedWidth(computedWidth);
   }
-  if (NS_UNCONSTRAINEDSIZE != mComputedHeight) {
-    if (NS_UNCONSTRAINEDSIZE != aAvailSpace.height) {
-      mComputedHeight = aAvailSpace.height - mComputedBorderPadding.top - mComputedBorderPadding.bottom;
-      mComputedHeight = PR_MAX(0, mComputedHeight);
-    }
+  if (NS_UNCONSTRAINEDSIZE != ComputedHeight() &&
+      NS_UNCONSTRAINEDSIZE != aAvailSpace.height) {
+    nscoord computedHeight =
+      aAvailSpace.height - mComputedBorderPadding.TopBottom();
+    computedHeight = PR_MAX(0, computedHeight);
+    SetComputedHeight(computedHeight);
   }
 }
 
@@ -495,8 +496,8 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
   if (!tableFrame)
     return 0;
 
-  nscoord computedHeight = (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight)
-                            ? 0 : aReflowState.mComputedHeight;
+  nscoord computedHeight = (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedHeight())
+                            ? 0 : aReflowState.ComputedHeight();
   ResetHeight(computedHeight);
 
   const nsStylePosition* position = GetStylePosition();

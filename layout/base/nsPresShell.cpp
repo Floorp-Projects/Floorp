@@ -6070,8 +6070,10 @@ PresShell::DoReflow(nsIFrame* target)
   NS_ASSERTION(reflowState.mComputedMargin == nsMargin(0, 0, 0, 0),
                "reflow state should not set margin for reflow roots");
   if (size.height != NS_UNCONSTRAINEDSIZE) {
-    reflowState.mComputedHeight =
+    nscoord computedHeight =
       size.height - reflowState.mComputedBorderPadding.TopBottom();
+    computedHeight = PR_MAX(computedHeight, 0);
+    reflowState.SetComputedHeight(computedHeight);
   }
   NS_ASSERTION(reflowState.ComputedWidth() ==
                  size.width -

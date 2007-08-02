@@ -163,7 +163,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   // ask our children to compute their bounding metrics 
   nsHTMLReflowMetrics childDesiredSize(
                       aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
-  nsSize availSize(aReflowState.ComputedWidth(), aReflowState.mComputedHeight);
+  nsSize availSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
   nsReflowStatus childStatus;
 
   aDesiredSize.width = aDesiredSize.height = 0;

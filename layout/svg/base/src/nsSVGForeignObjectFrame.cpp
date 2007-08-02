@@ -166,7 +166,7 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
   NS_ASSERTION(!aReflowState.parentReflowState,
                "should only get reflow from being reflow root");
   NS_ASSERTION(aReflowState.ComputedWidth() == GetSize().width &&
-               aReflowState.mComputedHeight == GetSize().height,
+               aReflowState.ComputedHeight() == GetSize().height,
                "reflow roots should be reflown at existing size and "
                "svg.css should ensure we have no padding/border/margin");
 
@@ -174,7 +174,7 @@ nsSVGForeignObjectFrame::Reflow(nsPresContext*           aPresContext,
 
   // XXX why don't we convert from CSS pixels to app units? How does this work?
   aDesiredSize.width = aReflowState.ComputedWidth();
-  aDesiredSize.height = aReflowState.mComputedHeight;
+  aDesiredSize.height = aReflowState.ComputedHeight();
   aDesiredSize.mOverflowArea =
     nsRect(nsPoint(0, 0), nsSize(aDesiredSize.width, aDesiredSize.height));
   aStatus = NS_FRAME_COMPLETE;
@@ -624,7 +624,7 @@ nsSVGForeignObjectFrame::DoReflow()
                "does not get styled");
   NS_ASSERTION(reflowState.ComputedWidth() == size.width,
                "reflow state made child wrong size");
-  reflowState.mComputedHeight = size.height;
+  reflowState.SetComputedHeight(size.height);
   
   ReflowChild(kid, presContext, desiredSize, reflowState, 0, 0,
               NS_FRAME_NO_MOVE_FRAME, status);

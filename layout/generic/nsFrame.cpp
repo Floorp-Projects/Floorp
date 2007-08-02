@@ -3302,8 +3302,8 @@ nsFrame::DidReflow(nsPresContext*           aPresContext,
   // where a table cell has no computed height but can fabricate one
   // when the cell height is known.
   if (aReflowState && aReflowState->mPercentHeightObserver &&
-      ((NS_UNCONSTRAINEDSIZE == aReflowState->mComputedHeight) ||         // no computed height 
-       (0                    == aReflowState->mComputedHeight))        && 
+      ((NS_UNCONSTRAINEDSIZE == aReflowState->ComputedHeight()) ||         // no computed height 
+       (0                    == aReflowState->ComputedHeight()))        && 
       (eStyleUnit_Percent == aReflowState->mStylePosition->mHeight.GetUnit())) {
 
     nsIFrame* prevInFlow = GetPrevInFlow();
@@ -6187,7 +6187,7 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     if (parentSize.width != NS_INTRINSICSIZE)
       parentReflowState.SetComputedWidth(parentSize.width);
     if (parentSize.height != NS_INTRINSICSIZE)
-      parentReflowState.mComputedHeight = parentSize.height;
+      parentReflowState.SetComputedHeight(parentSize.height);
     parentReflowState.mComputedMargin.SizeTo(0, 0, 0, 0);
     // XXX use box methods
     parentFrame->GetPadding(parentReflowState.mComputedPadding);
@@ -6215,12 +6215,12 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
       reflowState.SetComputedWidth(computedWidth);
     }
     if (aHeight != NS_INTRINSICSIZE) {
-      reflowState.mComputedHeight =
+      nscoord computedHeight =
         aHeight - reflowState.mComputedBorderPadding.TopBottom();
-      if (reflowState.mComputedHeight < 0)
-        reflowState.mComputedHeight = 0;
+      computedHeight = PR_MAX(computedHeight, 0);
+      reflowState.SetComputedHeight(computedHeight);
     } else {
-      reflowState.mComputedHeight =
+      reflowState.SetComputedHeight(
         ComputeSize(aRenderingContext, availSize, availSize.width,
                     nsSize(reflowState.mComputedMargin.LeftRight(),
                            reflowState.mComputedMargin.TopBottom()),
@@ -6230,7 +6230,8 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
                              reflowState.mComputedPadding.TopBottom()),
                     nsSize(reflowState.mComputedPadding.LeftRight(),
                            reflowState.mComputedPadding.TopBottom()),
-                    PR_FALSE).height;
+                    PR_FALSE).height
+        );
     }
 
     // Box layout calls SetRect before Layout, whereas non-box layout
@@ -6246,7 +6247,8 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
 
     #ifdef DEBUG_REFLOW
       nsAdaptorAddIndents();
-      printf("Size=(%d,%d)\n",reflowState.ComputedWidth(), reflowState.mComputedHeight);
+      printf("Size=(%d,%d)\n",reflowState.ComputedWidth(),
+             reflowState.ComputedHeight());
       nsAdaptorAddIndents();
       nsAdaptorPrintReason(reflowState);
       printf("\n");
@@ -7211,7 +7213,7 @@ static void DisplayReflowEnterPrint(nsPresContext*          aPresContext,
     printf("Reflow a=%s,%s ", width, height);
 
     DR_state->PrettyUC(aReflowState.ComputedWidth(), width);
-    DR_state->PrettyUC(aReflowState.mComputedHeight, height);
+    DR_state->PrettyUC(aReflowState.ComputedHeight(), height);
     printf("c=%s,%s ", width, height);
 
     if (aFrame->GetStateBits() & NS_FRAME_IS_DIRTY)
@@ -7246,7 +7248,7 @@ static void DisplayReflowEnterPrint(nsPresContext*          aPresContext,
       CheckPixelError(aReflowState.availableWidth, p2t);
       CheckPixelError(aReflowState.availableHeight, p2t);
       CheckPixelError(aReflowState.ComputedWidth(), p2t);
-      CheckPixelError(aReflowState.mComputedHeight, p2t);
+      CheckPixelError(aReflowState.ComputedHeight(), p2t);
     }
   }
 }
