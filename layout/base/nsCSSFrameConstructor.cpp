@@ -9436,6 +9436,17 @@ nsCSSFrameConstructor::RemoveMappingsForFrameSubtree(nsIFrame* aRemovedFrame)
   return ::DeletingFrameSubtree(mPresShell->FrameManager(), aRemovedFrame);
 }
 
+static void UnregisterPlaceholderChain(nsFrameManager* frameManager,
+                                       nsPlaceholderFrame* placeholderFrame)
+{
+  // Remove the mapping from the frame to its placeholder
+  nsPlaceholderFrame* curFrame = placeholderFrame;
+  do {
+    frameManager->UnregisterPlaceholderFrame(curFrame);
+    curFrame = static_cast<nsPlaceholderFrame*>(curFrame->GetNextContinuation());
+  } while (curFrame);
+}
+
 nsresult
 nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
                                       nsIContent*     aChild,
@@ -9573,9 +9584,8 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
       nsPlaceholderFrame* placeholderFrame =
         frameManager->GetPlaceholderFrameFor(childFrame);
       NS_ASSERTION(placeholderFrame, "No placeholder for out-of-flow?");
-      
-      // Remove the mapping from the frame to its placeholder
-      frameManager->UnregisterPlaceholderFrame(placeholderFrame);
+
+      UnregisterPlaceholderChain(frameManager, placeholderFrame);
 
       // Now we remove the out-of-flow frame
       // XXX has to be done first for now: for floats, the block's line list
@@ -12105,9 +12115,8 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   printf("RemoveFloatingFirstLetterFrames: textContent=%p oldTextFrame=%p newTextFrame=%p\n",
          textContent.get(), textFrame, newTextFrame);
 #endif
-  // Should we call DeletingFrameSubtree on the placeholder instead
-  // and skip this call?
-  aFrameManager->UnregisterPlaceholderFrame(placeholderFrame);
+
+  UnregisterPlaceholderChain(aFrameManager, placeholderFrame);
 
   // Remove the float frame
   ::DeletingFrameSubtree(aFrameManager, floatFrame);
@@ -12115,6 +12124,7 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
                              floatFrame);
 
   // Remove placeholder frame
+  ::DeletingFrameSubtree(aFrameManager, placeholderFrame);
   aFrameManager->RemoveFrame(parentFrame, nsnull, placeholderFrame);
 
   // Insert text frame in its place
@@ -12862,14 +12872,13 @@ nsresult nsCSSFrameConstructor::RemoveFixedItems(const nsFrameConstructorState& 
       if (fixedChild) {
         // Remove the placeholder so it doesn't end up sitting about pointing
         // to the removed fixed frame.
-        nsIFrame *placeholderFrame;
-        mPresShell->GetPlaceholderFrameFor(fixedChild, &placeholderFrame);
+        nsPlaceholderFrame *placeholderFrame =
+          aState.mFrameManager->GetPlaceholderFrameFor(fixedChild);
         NS_ASSERTION(placeholderFrame, "no placeholder for fixed-pos frame");
         NS_ASSERTION(placeholderFrame->GetType() ==
                      nsGkAtoms::placeholderFrame,
                      "Wrong type");
-        aState.mFrameManager->UnregisterPlaceholderFrame(
-          static_cast<nsPlaceholderFrame*>(placeholderFrame));
+        UnregisterPlaceholderChain(aState.mFrameManager, placeholderFrame);
         nsIFrame* placeholderParent = placeholderFrame->GetParent();
         ::DeletingFrameSubtree(aState.mFrameManager, placeholderFrame);
         rv = aState.mFrameManager->RemoveFrame(placeholderParent, nsnull,
