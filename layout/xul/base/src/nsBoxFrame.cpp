@@ -683,7 +683,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   printSize("AW", aReflowState.availableWidth);
   printSize("AH", aReflowState.availableHeight);
   printSize("CW", aReflowState.ComputedWidth());
-  printSize("CH", aReflowState.mComputedHeight);
+  printSize("CH", aReflowState.ComputedHeight());
 
   printf(" *\n");
 
@@ -694,7 +694,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   // create the layout state
   nsBoxLayoutState state(aPresContext, aReflowState.rendContext);
 
-  nsSize computedSize(aReflowState.ComputedWidth(),aReflowState.mComputedHeight);
+  nsSize computedSize(aReflowState.ComputedWidth(),aReflowState.ComputedHeight());
 
   nsMargin m;
   m = aReflowState.mComputedBorderPadding;
@@ -715,7 +715,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
   // get our desiredSize
   computedSize.width += m.left + m.right;
 
-  if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) {
+  if (aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
     computedSize.height = prefSize.height;
   } else {
     computedSize.height += m.top + m.bottom;

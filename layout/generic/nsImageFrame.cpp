@@ -149,7 +149,7 @@ static PRBool HaveFixedSize(const nsStylePosition* aStylePosition)
 inline PRBool HaveFixedSize(const nsHTMLReflowState& aReflowState)
 { 
   NS_ASSERTION(aReflowState.mStylePosition, "crappy reflowState - null stylePosition");
-  // when an image has percent css style height or width, but mComputedHeight 
+  // when an image has percent css style height or width, but ComputedHeight() 
   // or ComputedWidth() of reflow state is  NS_UNCONSTRAINEDSIZE  
   // it needs to return PR_FALSE to cause an incremental reflow later
   // if an image is inside table like bug 156731 simple testcase III, 
@@ -158,7 +158,7 @@ inline PRBool HaveFixedSize(const nsHTMLReflowState& aReflowState)
   // see bug 156731
   nsStyleUnit heightUnit = (*(aReflowState.mStylePosition)).mHeight.GetUnit();
   nsStyleUnit widthUnit = (*(aReflowState.mStylePosition)).mWidth.GetUnit();
-  return ((eStyleUnit_Percent == heightUnit && NS_UNCONSTRAINEDSIZE == aReflowState.mComputedHeight) ||
+  return ((eStyleUnit_Percent == heightUnit && NS_UNCONSTRAINEDSIZE == aReflowState.ComputedHeight()) ||
           (eStyleUnit_Percent == widthUnit && (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedWidth() ||
            0 == aReflowState.ComputedWidth())))
           ? PR_FALSE
@@ -792,7 +792,7 @@ nsImageFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   mComputedSize = 
-    nsSize(aReflowState.ComputedWidth(), aReflowState.mComputedHeight);
+    nsSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
   RecalculateTransform();
 
   aMetrics.width = mComputedSize.width;
