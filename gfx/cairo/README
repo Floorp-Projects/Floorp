@@ -7,7 +7,8 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo (1.4.2)
+  cairo (1.5.x - c0a7d33ac6c81dd74ee2a9daaa3749a346ef4897)
+  pixman (0.9.3 - 0c80a0cd84f30616563cef5910df9deb4f8ed687)
   glitz 0.5.2 (cvs - 2006-01-10)
 
 ***** NOTE FOR VISUAL C++ 6.0 *****
@@ -16,7 +17,8 @@ VC6 is not supported.  Please upgrade to VC8.
 
 ==== Patches ====
 
-All patches in the cairo tree are surrounded by "MOZILLA_CAIRO_NOT_DEFINED" (which should NOT be defined).
+All patches in the cairo tree are surrounded by "MOZILLA_CAIRO_NOT_DEFINED"
+(which should obviously not be defined).
 
 Some specific things:
 

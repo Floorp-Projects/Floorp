@@ -36,44 +36,16 @@
 
 /* The paginated surface layer exists to provide as much code sharing
  * as possible for the various paginated surface backends in cairo
- * (PostScript, PDF, etc.). See cairo-paginated-surface-private.h for
+ * (PostScript, PDF, etc.). See cairo-paginated-private.h for
  * more details on how it works and how to use it.
  */
 
 #include "cairoint.h"
 
+#include "cairo-paginated-private.h"
 #include "cairo-paginated-surface-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-analysis-surface-private.h"
-
-typedef struct _cairo_paginated_surface {
-    cairo_surface_t base;
-
-    /* The target surface to hold the final result. */
-    cairo_surface_t *target;
-
-    cairo_content_t content;
-
-    /* XXX: These shouldn't actually exist. We inherit this ugliness
-     * from _cairo_meta_surface_create. The width/height parameters
-     * from that function also should not exist. The fix that will
-     * allow us to remove all of these is to fix acquire_source_image
-     * to pass an interest rectangle. */
-    int width;
-    int height;
-
-    /* Paginated-surface specific functions for the target */
-    const cairo_paginated_surface_backend_t *backend;
-
-    /* A cairo_meta_surface to record all operations. To be replayed
-     * against target, and also against image surface as necessary for
-     * fallbacks. */
-    cairo_surface_t *meta;
-
-    int page_num;
-    cairo_bool_t page_is_blank;
-
-} cairo_paginated_surface_t;
 
 const cairo_private cairo_surface_backend_t cairo_paginated_surface_backend;
 
@@ -162,11 +134,15 @@ _cairo_paginated_surface_finish (void *abstract_surface)
     if (surface->page_is_blank == FALSE || surface->page_num == 1)
 	status = _cairo_paginated_surface_show_page (abstract_surface);
 
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (status == CAIRO_STATUS_SUCCESS) {
 	cairo_surface_finish (surface->target);
+	status = cairo_surface_status (surface->target);
+    }
 
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (status == CAIRO_STATUS_SUCCESS) {
 	cairo_surface_finish (surface->meta);
+	status = cairo_surface_status (surface->meta);
+    }
 
     cairo_surface_destroy (surface->target);
 
@@ -201,15 +177,22 @@ _cairo_paginated_surface_acquire_source_image (void	       *abstract_surface,
 {
     cairo_paginated_surface_t *surface = abstract_surface;
     cairo_surface_t *image;
-    cairo_rectangle_int16_t extents;
+    cairo_status_t status;
+    cairo_rectangle_int_t extents;
 
-    _cairo_surface_get_extents (surface->target, &extents);
+    status = _cairo_surface_get_extents (surface->target, &extents);
+    if (status)
+	return status;
 
     image = _cairo_paginated_surface_create_image_surface (surface,
 							   extents.width,
 							   extents.height);
 
-    _cairo_meta_surface_replay (surface->meta, image);
+    status = _cairo_meta_surface_replay (surface->meta, image);
+    if (status) {
+	cairo_surface_destroy (image);
+	return status;
+    }
 
     *image_out = (cairo_image_surface_t*) image;
     *image_extra = NULL;
@@ -235,13 +218,16 @@ _paint_page (cairo_paginated_surface_t *surface)
 
     analysis = _cairo_analysis_surface_create (surface->target,
 					       surface->width, surface->height);
+    if (analysis == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
 
     surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
-    _cairo_meta_surface_replay (surface->meta, analysis);
+    status = _cairo_meta_surface_replay (surface->meta, analysis);
     surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
 
-    if (analysis->status) {
-	status = analysis->status;
+    if (status || analysis->status) {
+	if (status == CAIRO_STATUS_SUCCESS)
+	    status = analysis->status;
 	cairo_surface_destroy (analysis);
 	return status;
     }
@@ -257,26 +243,29 @@ _paint_page (cairo_paginated_surface_t *surface)
 							       surface->height * y_scale);
 	_cairo_surface_set_device_scale (image, x_scale, y_scale);
 
-	_cairo_meta_surface_replay (surface->meta, image);
+	status = _cairo_meta_surface_replay (surface->meta, image);
+	if (status)
+	    goto CLEANUP_IMAGE;
 
 	pattern = cairo_pattern_create_for_surface (image);
 	cairo_matrix_init_scale (&matrix, x_scale, y_scale);
 	cairo_pattern_set_matrix (pattern, &matrix);
 
-	_cairo_surface_paint (surface->target, CAIRO_OPERATOR_SOURCE, pattern);
+	status = _cairo_surface_paint (surface->target, CAIRO_OPERATOR_SOURCE, pattern);
 
 	cairo_pattern_destroy (pattern);
 
+     CLEANUP_IMAGE:
 	cairo_surface_destroy (image);
     }
     else
     {
-	_cairo_meta_surface_replay (surface->meta, surface->target);
+	status = _cairo_meta_surface_replay (surface->meta, surface->target);
     }
 
     cairo_surface_destroy (analysis);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_status_t
@@ -298,7 +287,9 @@ _cairo_paginated_surface_copy_page (void *abstract_surface)
     if (status)
 	return status;
 
-    _paint_page (surface);
+    status = _paint_page (surface);
+    if (status)
+	return status;
 
     surface->page_num++;
 
@@ -323,9 +314,16 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
     if (status)
 	return status;
 
-    _paint_page (surface);
+    status = _paint_page (surface);
+    if (status)
+	return status;
 
-    _cairo_surface_show_page (surface->target);
+    status = _cairo_surface_show_page (surface->target);
+    if (status)
+	return status;
+
+    if (cairo_surface_status (surface->meta))
+	return cairo_surface_status (surface->meta);
 
     cairo_surface_destroy (surface->meta);
 
@@ -356,7 +354,7 @@ _cairo_paginated_surface_intersect_clip_path (void	  *abstract_surface,
 
 static cairo_int_status_t
 _cairo_paginated_surface_get_extents (void	              *abstract_surface,
-				      cairo_rectangle_int16_t *rectangle)
+				      cairo_rectangle_int_t   *rectangle)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
@@ -485,6 +483,7 @@ _cairo_paginated_surface_show_glyphs (void			*abstract_surface,
 static cairo_surface_t *
 _cairo_paginated_surface_snapshot (void *abstract_other)
 {
+    cairo_status_t status;
     cairo_paginated_surface_t *other = abstract_other;
 
     /* XXX: Just making a snapshot of other->meta is what we really
@@ -502,16 +501,22 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
 #if 0
     return _cairo_surface_snapshot (other->meta);
 #else
-    cairo_rectangle_int16_t extents;
+    cairo_rectangle_int_t extents;
     cairo_surface_t *surface;
 
-    _cairo_surface_get_extents (other->target, &extents);
+    status = _cairo_surface_get_extents (other->target, &extents);
+    if (status)
+	return (cairo_surface_t*) &_cairo_surface_nil;
 
     surface = _cairo_paginated_surface_create_image_surface (other,
 							     extents.width,
 							     extents.height);
 
-    _cairo_meta_surface_replay (other->meta, surface);
+    status = _cairo_meta_surface_replay (other->meta, surface);
+    if (status) {
+	cairo_surface_destroy (surface);
+	surface = (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     return surface;
 #endif
