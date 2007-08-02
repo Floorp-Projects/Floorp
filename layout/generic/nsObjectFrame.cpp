@@ -644,7 +644,7 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
   }
   
   aMetrics.width = aReflowState.ComputedWidth();
-  aMetrics.height = aReflowState.mComputedHeight;
+  aMetrics.height = aReflowState.ComputedHeight();
 
   // for EMBED and APPLET, default to 240x200 for compatibility
   nsIAtom *atom = mContent->Tag();

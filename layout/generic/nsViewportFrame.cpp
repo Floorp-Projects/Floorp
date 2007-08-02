@@ -232,9 +232,10 @@ nsPoint
   if (scrollingFrame) {
     nsMargin scrollbars = scrollingFrame->GetActualScrollbarSizes();
     aReflowState->SetComputedWidth(aReflowState->ComputedWidth() -
-                                   (scrollbars.left + scrollbars.right));
-    aReflowState->availableWidth -= scrollbars.left + scrollbars.right;
-    aReflowState->mComputedHeight -= scrollbars.top + scrollbars.bottom;
+                                   scrollbars.LeftRight());
+    aReflowState->availableWidth -= scrollbars.LeftRight();
+    aReflowState->SetComputedHeight(aReflowState->ComputedHeight() -
+                                    scrollbars.TopBottom());
     // XXX why don't we also adjust "aReflowState->availableHeight"?
     return nsPoint(scrollbars.left, scrollbars.top);
   }
@@ -280,7 +281,7 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
                                          kidFrame, availableSpace);
 
       // Reflow the frame
-      kidReflowState.mComputedHeight = aReflowState.availableHeight;
+      kidReflowState.SetComputedHeight(aReflowState.availableHeight);
       rv = ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                        0, 0, 0, aStatus);
       kidRect.width = kidDesiredSize.width;
@@ -317,7 +318,7 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
   // Just reflow all the fixed-pos frames.
   rv = mFixedContainer.Reflow(this, aPresContext, reflowState,
                               reflowState.ComputedWidth(),
-                              reflowState.mComputedHeight,
+                              reflowState.ComputedHeight(),
                               PR_TRUE, PR_TRUE); // XXX could be optimized
 
   // If we were dirty then do a repaint

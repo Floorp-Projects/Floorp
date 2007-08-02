@@ -511,7 +511,7 @@ GetContainingBlockSize(const nsHTMLReflowState& aOuterRS)
     if (NS_UNCONSTRAINEDSIZE == size.width) {
       size.width = 0;
     }
-    size.height = containRS->mComputedHeight;
+    size.height = containRS->ComputedHeight();
     if (NS_UNCONSTRAINEDSIZE == size.height) {
       size.height = 0;
     }
