@@ -27,12 +27,11 @@ html|p {
 }
 
 html|a, html|a:link, html|a:visited {
-  border-bottom: 1px solid #5383DF;
-  color: #039;
+  font-weight: bold;
+  color: #0067ac;
 }
 html|a:focus, html|a:hover, html|a:active {
   color: #333;
-  border-bottom-color: #333;
 }
 
 
@@ -64,21 +63,17 @@ groupbox {
 }
 caption {
   font: bold 12px helvetica, arial, sans-serif;
-  color: #BD1D01;
+  color: #ec891d;
   background: white none repeat-x left 6px;
   padding: 0;
 }
 
-#qa-qmo-help {
-
-}
 
 /*-------------------------------
                NOTIFY
   -------------------------------*/
 
 #qa-notify {
-  display: none; 
   right: 18px;
   bottom: 21px;
   position: fixed;
@@ -129,6 +124,3 @@ caption {
 	font-weight: bold;
 }
 /* @end */
-
-
-

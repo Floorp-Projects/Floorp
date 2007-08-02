@@ -59,6 +59,8 @@
 			 <label maxwidth="160" value="" id="qa-testrun-label"/>
 			 <label maxwidth="160" value="" id="qa-testgroup-label"/>
 			 <label maxwidth="160" value="" id="qa-subgroup-label"/>
+             <label value="" />
+             <label value="" id="qa-testcase-progress" />
 		</vbox>
 		<listbox rows="7" minwidth="200" onselect="litmus.handleSelect()" id="testlist">
             <listcols>
@@ -75,7 +77,7 @@
 	  	   <label value="&mdash;" />
            <description id="qa-testcase-summary" maxwidth="230px" crop="end"></description> 
 	   </hbox>
-	   <label value="" id="qa-testcase-progress" />
+	   
 	 </vbox>
 	 
 	
@@ -92,7 +94,7 @@
 			<div xmlns="http://www.w3.org/1999/xhtml" style="width: 350px; height: 120px; overflow: auto;" id="qa-testcase-expected" class="list"/>
 		</groupbox>
 	</vbox>
-	
+	<hbox>
 	<groupbox>
 		<caption label="Result:" />
 		<radiogroup id="qa-testcase-result">
@@ -101,10 +103,11 @@
 			<radio id="qa-testcase-unclearBroken" label="&qa.testcase.result.unclearbroken;"/>
 		</radiogroup>
 	</groupbox>
-	
-	<label control="qa-testcase-comment" value="&qa.testcase.comment;"/>
-	<textbox id="qa-testcase-comment" style="min-height: 75px; max-width:300px"/>
-	
+	<groupbox>
+	<caption control="qa-testcase-comment" label="&qa.testcase.comment;"/>
+	<textbox id="qa-testcase-comment" style="min-height: 75px; width:150px;" class="plain"/>
+    </groupbox>
+	</hbox>
 	<hbox flex="1" maxheight="30px">
 		 <button id="qa-mainwindow-previousButton" label="Previous" oncommand="litmus.prevButton()"/> 
 		<button id="qa-mainwindow-nextButton" label="Next (Submit)" oncommand="litmus.nextButton()"/>
