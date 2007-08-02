@@ -61,6 +61,7 @@ struct JSStackFrame {
     JSObject        *callobj;       /* lazily created Call object */
     JSObject        *argsobj;       /* lazily created arguments object */
     JSObject        *varobj;        /* variables object, where vars go */
+    JSObject        *callee;        /* function or script object */
     JSScript        *script;        /* script being interpreted */
     JSFunction      *fun;           /* function being called or null */
     JSObject        *thisp;         /* "this" pointer if in method */
@@ -110,6 +111,8 @@ typedef struct JSInlineFrame {
 #define JSFRAME_ITERATOR      0x800 /* trying to get an iterator for for-in */
 #define JSFRAME_POP_BLOCKS   0x1000 /* scope chain contains blocks to pop */
 #define JSFRAME_GENERATOR    0x2000 /* frame belongs to generator-iterator */
+#define JSFRAME_IN_FAST_CALL 0x4000 /* calling frame is calling a fast native */
+#define JSFRAME_DID_SET_RVAL 0x8000 /* fast native used JS_SET_RVAL(cx, vp) */
 
 #define JSFRAME_OVERRIDE_SHIFT 24   /* override bit-set params; see jsfun.c */
 #define JSFRAME_OVERRIDE_BITS  8
@@ -150,6 +153,18 @@ extern void         js_DumpCallTable(JSContext *cx);
  */
 extern JSObject *
 js_GetScopeChain(JSContext *cx, JSStackFrame *fp);
+
+/*
+ * Given a context and a vector of [callee, this, args...] for a function that
+ * was specified with a JSFUN_THISP_PRIMITIVE flag, get the primitive value of
+ * |this| into *thisvp. In doing so, if |this| is an object, insist it is an
+ * instance of clasp and extract its private slot value to return via *thisvp.
+ *
+ * NB: this function loads and uses *vp before storing *thisvp, so the two may
+ * alias the same jsval.
+ */
+extern JSBool
+js_GetPrimitiveThis(JSContext *cx, jsval *vp, JSClass *clasp, jsval *thisvp);
 
 /*
  * For a call with arguments argv including argv[-1] (nominal |this|) and
