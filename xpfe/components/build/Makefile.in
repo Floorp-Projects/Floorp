@@ -111,11 +111,9 @@ LOCAL_INCLUDES += \
 
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += \
-	../urlwidget/$(LIB_PREFIX)urlwidgt_s.$(LIB_SUFFIX) \
 	../winhooks/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
 	$(NULL)
 LOCAL_INCLUDES += \
-	-I$(srcdir)/../urlwidget \
 	-I$(srcdir)/../winhooks \
 	$(NULL)
 endif # WINNT
