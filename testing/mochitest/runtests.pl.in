@@ -558,6 +558,8 @@ sub runTests {
 
   # On Windows and Linux, the application is focused for us. On OS X, we
   # need to use applescript to focus the app and then set the url.
+  my $rc = 0;
+if (0) {
   my $rc = -1;
   if (!$is_mac) {
     my @runargs = ($app, '-no-remote', '-profile', $profile_arg);
@@ -566,6 +568,7 @@ sub runTests {
   } else {
     $rc = executeMac($profile_arg, $test_url);
   }
+}
 
   if ($rc != 0) {
     print "FAIL Exited with code $rc during test run\n";
