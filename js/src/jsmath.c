@@ -101,57 +101,57 @@ JSClass js_MathClass = {
 };
 
 static JSBool
-math_abs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_abs(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fd_fabs(x);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_acos(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_acos(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fd_acos(x);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_asin(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_asin(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fd_asin(x);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_atan(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_atan(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fd_atan(x);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_atan2(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_atan2(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, y, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
-    if (!js_ValueToNumber(cx, argv[1], &y))
+    if (!js_ValueToNumber(cx, vp[3], &y))
         return JS_FALSE;
 #if !JS_USE_FDLIBM_MATH && defined(_MSC_VER)
     /*
@@ -165,95 +165,97 @@ math_atan2(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         z = fd_copysign(M_PI / 4, x);
         if (y < 0)
             z *= 3;
-        return js_NewDoubleValue(cx, z, rval);
+        return js_NewDoubleValue(cx, z, vp);
     }
 #endif
     z = fd_atan2(x, y);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_ceil(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_ceil(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fd_ceil(x);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_cos(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_cos(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fd_cos(x);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_exp(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_exp(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
 #ifdef _WIN32
     if (!JSDOUBLE_IS_NaN(x)) {
         if (x == *cx->runtime->jsPositiveInfinity) {
-            *rval = DOUBLE_TO_JSVAL(cx->runtime->jsPositiveInfinity);
+            *vp = DOUBLE_TO_JSVAL(cx->runtime->jsPositiveInfinity);
             return JS_TRUE;
         }
         if (x == *cx->runtime->jsNegativeInfinity) {
-            *rval = JSVAL_ZERO;
+            *vp = JSVAL_ZERO;
             return JS_TRUE;
         }
     }
 #endif
     z = fd_exp(x);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_floor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_floor(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fd_floor(x);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_log(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_log(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fd_log(x);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_max(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_max(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z = *cx->runtime->jsNegativeInfinity;
+    jsval *argv;
     uintN i;
 
     if (argc == 0) {
-        *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNegativeInfinity);
+        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNegativeInfinity);
         return JS_TRUE;
     }
+    argv = vp + 2;
     for (i = 0; i < argc; i++) {
         if (!js_ValueToNumber(cx, argv[i], &x))
             return JS_FALSE;
         if (JSDOUBLE_IS_NaN(x)) {
-            *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+            *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
             return JS_TRUE;
         }
         if (x == 0 && x == z && fd_copysign(1.0, z) == -1)
@@ -261,24 +263,26 @@ math_max(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         else
             z = (x > z) ? x : z;
     }
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_min(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_min(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z = *cx->runtime->jsPositiveInfinity;
+    jsval *argv;
     uintN i;
 
     if (argc == 0) {
-        *rval = DOUBLE_TO_JSVAL(cx->runtime->jsPositiveInfinity);
+        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsPositiveInfinity);
         return JS_TRUE;
     }
+    argv = vp + 2;
     for (i = 0; i < argc; i++) {
         if (!js_ValueToNumber(cx, argv[i], &x))
             return JS_FALSE;
         if (JSDOUBLE_IS_NaN(x)) {
-            *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+            *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
             return JS_TRUE;
         }
         if (x == 0 && x == z && fd_copysign(1.0,x) == -1)
@@ -286,17 +290,17 @@ math_min(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         else
             z = (x < z) ? x : z;
     }
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_pow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_pow(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, y, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
-    if (!js_ValueToNumber(cx, argv[1], &y))
+    if (!js_ValueToNumber(cx, vp[3], &y))
         return JS_FALSE;
 #if !JS_USE_FDLIBM_MATH
     /*
@@ -304,17 +308,17 @@ math_pow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
      * we need to wrap the libm call to make it ECMA compliant.
      */
     if (!JSDOUBLE_IS_FINITE(y) && (x == 1.0 || x == -1.0)) {
-        *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+        *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
         return JS_TRUE;
     }
     /* pow(x, +-0) is always 1, even for x = NaN. */
     if (y == 0) {
-        *rval = JSVAL_ONE;
+        *vp = JSVAL_ONE;
         return JS_TRUE;
     }
 #endif
     z = fd_pow(x, y);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 /*
@@ -391,7 +395,7 @@ random_nextDouble(JSRuntime *rt)
 }
 
 static JSBool
-math_random(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_random(JSContext *cx, uintN argc, jsval *vp)
 {
     JSRuntime *rt;
     jsdouble z;
@@ -401,7 +405,7 @@ math_random(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     random_init(rt);
     z = random_nextDouble(rt);
     JS_UNLOCK_RUNTIME(rt);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 #if defined _WIN32 && !defined WINCE && _MSC_VER < 1400
@@ -420,82 +424,81 @@ js_copysign(double x, double y)
 #endif
 
 static JSBool
-math_round(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_round(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fd_copysign(fd_floor(x + 0.5), x);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_sin(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_sin(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fd_sin(x);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_sqrt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_sqrt(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fd_sqrt(x);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 static JSBool
-math_tan(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+math_tan(JSContext *cx, uintN argc, jsval *vp)
 {
     jsdouble x, z;
 
-    if (!js_ValueToNumber(cx, argv[0], &x))
+    if (!js_ValueToNumber(cx, vp[2], &x))
         return JS_FALSE;
     z = fd_tan(x);
-    return js_NewNumberValue(cx, z, rval);
+    return js_NewNumberValue(cx, z, vp);
 }
 
 #if JS_HAS_TOSOURCE
 static JSBool
-math_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval)
+math_toSource(JSContext *cx, uintN argc, jsval *vp)
 {
-    *rval = ATOM_KEY(CLASS_ATOM(cx, Math));
+    *vp = ATOM_KEY(CLASS_ATOM(cx, Math));
     return JS_TRUE;
 }
 #endif
 
 static JSFunctionSpec math_static_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   math_toSource,          0, 0, 0},
+    JS_FN(js_toSource_str,  math_toSource,      0, 0, 0, 0),
 #endif
-    {"abs",             math_abs,               1, 0, 0},
-    {"acos",            math_acos,              1, 0, 0},
-    {"asin",            math_asin,              1, 0, 0},
-    {"atan",            math_atan,              1, 0, 0},
-    {"atan2",           math_atan2,             2, 0, 0},
-    {"ceil",            math_ceil,              1, 0, 0},
-    {"cos",             math_cos,               1, 0, 0},
-    {"exp",             math_exp,               1, 0, 0},
-    {"floor",           math_floor,             1, 0, 0},
-    {"log",             math_log,               1, 0, 0},
-    {"max",             math_max,               2, 0, 0},
-    {"min",             math_min,               2, 0, 0},
-    {"pow",             math_pow,               2, 0, 0},
-    {"random",          math_random,            0, 0, 0},
-    {"round",           math_round,             1, 0, 0},
-    {"sin",             math_sin,               1, 0, 0},
-    {"sqrt",            math_sqrt,              1, 0, 0},
-    {"tan",             math_tan,               1, 0, 0},
-    {0,0,0,0,0}
+    JS_FN("abs",            math_abs,           1, 1, 0, 0),
+    JS_FN("acos",           math_acos,          1, 1, 0, 0),
+    JS_FN("asin",           math_asin,          1, 1, 0, 0),
+    JS_FN("atan",           math_atan,          1, 1, 0, 0),
+    JS_FN("atan2",          math_atan2,         2, 2, 0, 0),
+    JS_FN("ceil",           math_ceil,          1, 1, 0, 0),
+    JS_FN("cos",            math_cos,           1, 1, 0, 0),
+    JS_FN("exp",            math_exp,           1, 1, 0, 0),
+    JS_FN("floor",          math_floor,         1, 1, 0, 0),
+    JS_FN("log",            math_log,           1, 1, 0, 0),
+    JS_FN("max",            math_max,           0, 2, 0, 0),
+    JS_FN("min",            math_min,           0, 2, 0, 0),
+    JS_FN("pow",            math_pow,           2, 2, 0, 0),
+    JS_FN("random",         math_random,        0, 0, 0, 0),
+    JS_FN("round",          math_round,         1, 1, 0, 0),
+    JS_FN("sin",            math_sin,           1, 1, 0, 0),
+    JS_FN("sqrt",           math_sqrt,          1, 1, 0, 0),
+    JS_FN("tan",            math_tan,           1, 1, 0, 0),
+    JS_FS_END
 };
 
 JSObject *

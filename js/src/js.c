@@ -625,7 +625,7 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
  * Provides a hook for scripts to read a line from stdin.
  */
 static JSBool
-ReadLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+ReadLine(JSContext *cx, uintN argc, jsval *vp)
 {
 #define BUFSIZE 256
     FILE *from;
@@ -669,7 +669,7 @@ ReadLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     /* Treat the empty string specially. */
     if (buflength == 0) {
-        *rval = feof(from) ? JSVAL_NULL : JS_GetEmptyStringValue(cx);
+        *vp = feof(from) ? JSVAL_NULL : JS_GetEmptyStringValue(cx);
         JS_free(cx, buf);
         return JS_TRUE;
     }
@@ -693,7 +693,7 @@ ReadLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         return JS_FALSE;
     }
 
-    *rval = STRING_TO_JSVAL(str);
+    *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
 
@@ -730,7 +730,7 @@ Quit(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
-GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+GC(JSContext *cx, uintN argc, jsval *vp)
 {
     JSRuntime *rt;
     uint32 preBytes;
@@ -750,18 +750,20 @@ GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #ifdef JS_GCMETER
     js_DumpGCStats(rt, stdout);
 #endif
+    *vp = JSVAL_VOID;
     return JS_TRUE;
 }
 
 #ifdef JS_GC_ZEAL
 static JSBool
-GCZeal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+GCZeal(JSContext *cx, uintN argc, jsval *vp)
 {
     uintN zeal;
 
-    if (!JS_ValueToECMAUint32(cx, argv[0], &zeal))
+    if (!JS_ValueToECMAUint32(cx, vp[2], &zeal))
         return JS_FALSE;
     JS_SetGCZeal(cx, zeal);
+    *vp = JSVAL_VOID;
     return JS_TRUE;
 }
 #endif /* JS_GC_ZEAL */
@@ -1030,7 +1032,7 @@ SrcNotes(JSContext *cx, JSScript *script)
 
             index = js_GetSrcNoteOffset(sn, 0);
             JS_GET_SCRIPT_OBJECT(script, index, obj);
-            fun = (JSFunction *)JS_GetPrivate(cx, obj);
+            fun = (JSFunction *) OBJ_GET_PRIVATE(cx, obj);
             str = JS_DecompileFunction(cx, fun, JS_DONT_PRETTY_PRINT);
             bytes = str ? JS_GetStringBytes(str) : "N/A";
             fprintf(gOutFile, " function %u (%s)", index, bytes);
@@ -1619,13 +1621,14 @@ ConvertArgs(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 
 static JSBool
-BuildDate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+BuildDate(JSContext *cx, uintN argc, jsval *vp)
 {
     char version[20] = "\n";
 #if JS_VERSION < 150
     sprintf(version, " for version %d\n", JS_VERSION);
 #endif
     fprintf(gOutFile, "built on %s at %s%s", __DATE__, __TIME__, version);
+    *vp = JSVAL_VOID;
     return JS_TRUE;
 }
 
@@ -1639,17 +1642,18 @@ Clear(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
-Intern(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+Intern(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
 
-    str = JS_ValueToString(cx, argv[0]);
+    str = JS_ValueToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
     if (!JS_InternUCStringN(cx, JS_GetStringChars(str),
                                 JS_GetStringLength(str))) {
         return JS_FALSE;
     }
+    *vp = JSVAL_VOID;
     return JS_TRUE;
 }
 
@@ -1690,7 +1694,7 @@ Seal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
-GetPDA(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+GetPDA(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *vobj, *aobj, *pdobj;
     JSBool ok;
@@ -1699,7 +1703,7 @@ GetPDA(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     uint32 i;
     jsval v;
 
-    if (!JS_ValueToObject(cx, argv[0], &vobj))
+    if (!JS_ValueToObject(cx, vp[2], &vobj))
         return JS_FALSE;
     if (!vobj)
         return JS_TRUE;
@@ -1707,7 +1711,7 @@ GetPDA(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     aobj = JS_NewArrayObject(cx, 0, NULL);
     if (!aobj)
         return JS_FALSE;
-    *rval = OBJECT_TO_JSVAL(aobj);
+    *vp = OBJECT_TO_JSVAL(aobj);
 
     ok = JS_GetPropertyDescArray(cx, vobj, &pda);
     if (!ok)
@@ -1740,25 +1744,25 @@ GetPDA(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSBool
-GetSLX(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+GetSLX(JSContext *cx, uintN argc, jsval *vp)
 {
     JSScript *script;
 
-    script = ValueToScript(cx, argv[0]);
+    script = ValueToScript(cx, vp[2]);
     if (!script)
         return JS_FALSE;
-    *rval = INT_TO_JSVAL(js_GetScriptLineExtent(script));
+    *vp = INT_TO_JSVAL(js_GetScriptLineExtent(script));
     return JS_TRUE;
 }
 
 static JSBool
-ToInt32(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+ToInt32(JSContext *cx, uintN argc, jsval *vp)
 {
     int32 i;
 
-    if (!JS_ValueToInt32(cx, argv[0], &i))
+    if (!JS_ValueToInt32(cx, vp[2], &i))
         return JS_FALSE;
-    return JS_NewNumberValue(cx, i, rval);
+    return JS_NewNumberValue(cx, i, vp);
 }
 
 static JSBool
@@ -2224,49 +2228,50 @@ out:
     return ok;
 }
 
+/* We use a mix of JS_FS and JS_FN to test both kinds of natives. */
 static JSFunctionSpec shell_functions[] = {
-    {"version",         Version,        0,0,0},
-    {"options",         Options,        0,0,0},
-    {"load",            Load,           1,0,0},
-    {"readline",        ReadLine,       0,0,0},
-    {"print",           Print,          0,0,0},
-    {"help",            Help,           0,0,0},
-    {"quit",            Quit,           0,0,0},
-    {"gc",              GC,             0,0,0},
+    JS_FS("version",        Version,        0,0,0),
+    JS_FS("options",        Options,        0,0,0),
+    JS_FS("load",           Load,           1,0,0),
+    JS_FN("readline",       ReadLine,       0,0,0,0),
+    JS_FS("print",          Print,          0,0,0),
+    JS_FS("help",           Help,           0,0,0),
+    JS_FS("quit",           Quit,           0,0,0),
+    JS_FN("gc",             GC,             0,0,0,0),
 #ifdef JS_GC_ZEAL
-    {"gczeal",          GCZeal,         1,0,0},
+    JS_FN("gczeal",         GCZeal,         1,1,0,0),
 #endif
-    {"trap",            Trap,           3,0,0},
-    {"untrap",          Untrap,         2,0,0},
-    {"line2pc",         LineToPC,       0,0,0},
-    {"pc2line",         PCToLine,       0,0,0},
-    {"stringsAreUTF8",  StringsAreUTF8, 0,0,0},
-    {"testUTF8",        TestUTF8,       1,0,0},
-    {"throwError",      ThrowError,     0,0,0},
+    JS_FS("trap",           Trap,           3,0,0),
+    JS_FS("untrap",         Untrap,         2,0,0),
+    JS_FS("line2pc",        LineToPC,       0,0,0),
+    JS_FS("pc2line",        PCToLine,       0,0,0),
+    JS_FS("stringsAreUTF8", StringsAreUTF8, 0,0,0),
+    JS_FS("testUTF8",       TestUTF8,       1,0,0),
+    JS_FS("throwError",     ThrowError,     0,0,0),
 #ifdef DEBUG
-    {"dis",             Disassemble,    1,0,0},
-    {"dissrc",          DisassWithSrc,  1,0,0},
-    {"dumpHeap",        DumpHeap,       5,0,0},
-    {"notes",           Notes,          1,0,0},
-    {"tracing",         Tracing,        0,0,0},
-    {"stats",           DumpStats,      1,0,0},
+    JS_FS("dis",            Disassemble,    1,0,0),
+    JS_FS("dissrc",         DisassWithSrc,  1,0,0),
+    JS_FS("dumpHeap",       DumpHeap,       5,0,0),
+    JS_FS("notes",          Notes,          1,0,0),
+    JS_FS("tracing",        Tracing,        0,0,0),
+    JS_FS("stats",          DumpStats,      1,0,0),
 #endif
 #ifdef TEST_EXPORT
-    {"xport",           DoExport,       2,0,0},
+    JS_FS("xport",          DoExport,       2,0,0),
 #endif
 #ifdef TEST_CVTARGS
-    {"cvtargs",         ConvertArgs,    0,0,12},
+    JS_FS("cvtargs",        ConvertArgs,    0,0,12),
 #endif
-    {"build",           BuildDate,      0,0,0},
-    {"clear",           Clear,          0,0,0},
-    {"intern",          Intern,         1,0,0},
-    {"clone",           Clone,          1,0,0},
-    {"seal",            Seal,           1,0,1},
-    {"getpda",          GetPDA,         1,0,0},
-    {"getslx",          GetSLX,         1,0,0},
-    {"toint32",         ToInt32,        1,0,0},
-    {"evalcx",          EvalInContext,  1,0,0},
-    {NULL,NULL,0,0,0}
+    JS_FN("build",          BuildDate,      0,0,0,0),
+    JS_FS("clear",          Clear,          0,0,0),
+    JS_FN("intern",         Intern,         1,1,0,0),
+    JS_FS("clone",          Clone,          1,0,0),
+    JS_FS("seal",           Seal,           1,0,1),
+    JS_FN("getpda",         GetPDA,         1,1,0,0),
+    JS_FN("getslx",         GetSLX,         1,1,0,0),
+    JS_FN("toint32",        ToInt32,        1,1,0,0),
+    JS_FS("evalcx",         EvalInContext,  1,0,0),
+    JS_FS_END
 };
 
 /* NOTE: These must be kept in sync with the above. */
