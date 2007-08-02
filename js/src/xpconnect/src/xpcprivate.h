@@ -650,6 +650,7 @@ public:
         IDX_COM_OBJECT              ,
         IDX_ACTIVEX_SUPPORTS        ,
 #endif
+        IDX_PROTO                   ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
