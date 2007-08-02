@@ -461,7 +461,7 @@ PlacesController.prototype = {
    *    "bookmark"          node is a bookamrk
    *    "folder"            node is a folder
    *    "query"             node is a query
-   *    "remotecontainer"   node is a remote container
+   *    "dynamiccontainer"  node is a dynamic container
    *    "separator"         node is a separator line
    *    "host"              node is a host
    *    "mutable"           node can have items inserted or reordered
@@ -497,16 +497,12 @@ PlacesController.prototype = {
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_QUERY:
           nodeData["query"] = true;
           break;
-        case Ci.nsINavHistoryResultNode.RESULT_TYPE_REMOTE_CONTAINER:
-          nodeData["remotecontainer"] = true;
+        case Ci.nsINavHistoryResultNode.RESULT_TYPE_DYNAMIC_CONTAINER:
+          nodeData["dynamiccontainer"] = true;
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER:
           nodeData["folder"] = true;
           uri = PlacesUtils.bookmarks.getFolderURI(node.itemId);
-
-          // See nodeIsRemoteContainer
-          if (asContainer(node).remoteContainerType != "")
-            nodeData["remotecontainer"] = true;
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_HOST:
           nodeData["host"] = true;
