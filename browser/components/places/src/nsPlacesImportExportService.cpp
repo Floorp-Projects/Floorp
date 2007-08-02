@@ -2399,7 +2399,7 @@ nsPlacesImportExportService::ExportHTMLToFile(nsILocalFile* aBookmarksFile)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // get root (folder) node
-  nsCOMPtr<nsINavHistoryQueryResultNode> rootNode;
+  nsCOMPtr<nsINavHistoryContainerResultNode> rootNode;
   rv = result->GetRoot(getter_AddRefs(rootNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
