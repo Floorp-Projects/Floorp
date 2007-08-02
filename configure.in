@@ -4106,7 +4106,6 @@ MOZ_PYTHON_VER_DOTTED=
 MOZ_RDF=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
-MOZ_SINGLE_PROFILE=
 MOZ_SPELLCHECK=1
 MOZ_STATIC_MAIL_BUILD=
 MOZ_STORAGE=1
@@ -4234,7 +4233,6 @@ basic)
   MOZ_PREF_EXTENSIONS=
   MOZ_PROFILELOCKING=
   MOZ_PROFILESHARING=
-  MOZ_SINGLE_PROFILE=1
   MOZ_SPELLCHECK=
   MOZ_SVG=
   MOZ_UNIVERSALCHARDET=
@@ -4282,7 +4280,6 @@ minimal)
   MOZ_PREF_EXTENSIONS=
   MOZ_PROFILELOCKING=
   MOZ_PROFILESHARING=
-  MOZ_SINGLE_PROFILE=1
   MOZ_SPELLCHECK=
   MOZ_STORAGE=
   MOZ_SVG=
@@ -4408,7 +4405,6 @@ AC_SUBST(MOZ_XULRUNNER)
 AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
 
 if test "$MOZ_XUL_APP"; then
-  MOZ_SINGLE_PROFILE=1
   MOZ_PROFILESHARING=
   AC_DEFINE(MOZ_XUL_APP)
 fi
@@ -5095,14 +5091,6 @@ if test "$MOZ_XPINSTALL"; then
 fi
 
 dnl ========================================================
-dnl Single profile support off by default
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(single-profile,
-[  --enable-single-profile Enable single profile support ],
-    MOZ_SINGLE_PROFILE=1,
-    MOZ_SINGLE_PROFILE= )
-
-dnl ========================================================
 dnl xpcom js loader support on by default
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(jsloader,
@@ -5173,9 +5161,6 @@ MOZ_ARG_DISABLE_BOOL(xpcom-obsolete,
     MOZ_NO_XPCOM_OBSOLETE=)
 
 if test -n "$MOZ_NO_XPCOM_OBSOLETE"; then
-if test -z "$MOZ_SINGLE_PROFILE"; then
-    AC_MSG_ERROR([Building without xpcom-obsolete isn't support when building full profile support.])
-fi
     AC_DEFINE(MOZ_NO_XPCOM_OBSOLETE)
 fi
 
@@ -7479,7 +7464,6 @@ AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_XPINSTALL)
 AC_SUBST(MOZ_VIEW_SOURCE)
-AC_SUBST(MOZ_SINGLE_PROFILE)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_XPFE_COMPONENTS)
 AC_SUBST(MOZ_USER_DIR)
