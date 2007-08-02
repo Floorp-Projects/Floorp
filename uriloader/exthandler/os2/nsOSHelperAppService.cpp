@@ -1502,6 +1502,27 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
   return retval;
 }
 
+already_AddRefed<nsIHandlerInfo>
+nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme)
+{
+  NS_ASSERTION(!aScheme.IsEmpty(), "No scheme was specified!");
+
+  PRBool exists;
+  nsresult rv = OSProtocolHandlerExists(nsPromiseFlatCString(aScheme).get(),
+                                        &exists);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+
+  nsMIMEInfoOS2 *handlerInfo = new nsMIMEInfoOS2();
+  NS_ENSURE_TRUE(handlerInfo, nsnull);
+  NS_ADDREF(handlerInfo);
+
+  nsAutoString desc;
+  GetApplicationDescription(aScheme, desc);
+  handlerInfo->SetDefaultDescription(desc);
+
+  return handlerInfo;
+}
+
 
 NS_IMETHODIMP
 nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
