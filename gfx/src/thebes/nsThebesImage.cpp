@@ -377,9 +377,8 @@ nsThebesImage::Draw(nsIRenderingContext &aContext,
       destRect.pos.x += (srcRect.pos.x - aSourceRect.pos.x)*xscale;
       destRect.pos.y += (srcRect.pos.y - aSourceRect.pos.y)*yscale;
 
-      // use '+ 1 - *scale' to get rid of rounding errors
-      destRect.size.width  = (srcRect.size.width)*xscale + 1 - xscale;
-      destRect.size.height = (srcRect.size.height)*yscale + 1 - yscale;
+      destRect.size.width  = srcRect.size.width * xscale;
+      destRect.size.height = srcRect.size.height * yscale;
     }
 
     // Reject over-wide or over-tall images.
