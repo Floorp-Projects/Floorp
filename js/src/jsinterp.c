@@ -4030,7 +4030,7 @@ interrupt:
 
                     /* Compute the 'this' parameter now that argv is set. */
                     JS_ASSERT(!JSFUN_BOUND_METHOD_TEST(fun->flags));
-                    JS_ASSERT(!PRIMITIVE_THIS_TEST(fun, vp[1]));
+                    JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
                     newifp->frame.thisp = (JSObject *)vp[1];
 #ifdef DUMP_CALL_TABLE
                     LogCall(cx, *vp, argc, vp + 2);
