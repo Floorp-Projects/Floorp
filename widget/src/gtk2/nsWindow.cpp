@@ -904,18 +904,6 @@ nsWindow::SetBackgroundColor(const nscolor &aColor)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsIFontMetrics*
-nsWindow::GetFont(void)
-{
-    return nsnull;
-}
-
-NS_IMETHODIMP
-nsWindow::SetFont(const nsFont &aFont)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 NS_IMETHODIMP
 nsWindow::SetCursor(nsCursor aCursor)
 {

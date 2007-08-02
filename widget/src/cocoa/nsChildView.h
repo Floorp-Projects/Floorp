@@ -251,8 +251,6 @@ public:
   NS_IMETHOD              SetBounds(const nsRect &aRect);
   NS_IMETHOD              GetBounds(nsRect &aRect);
 
-  virtual nsIFontMetrics* GetFont(void);
-  NS_IMETHOD              SetFont(const nsFont &aFont);
   NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD              Invalidate(const nsRect &aRect,PRBool aIsSynchronous);
   NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);

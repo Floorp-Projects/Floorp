@@ -179,8 +179,6 @@ public:
 
     NS_IMETHOD              SetTitle(const nsAString& aTitle);
 
-    virtual nsIFontMetrics* GetFont(void) { return nsnull; }
-    NS_IMETHOD SetFont(const nsFont &aFont) { return NS_OK; }
     NS_IMETHOD Invalidate(const nsRect & aRect, PRBool aIsSynchronous);
     NS_IMETHOD Invalidate(PRBool aIsSynchronous);
     NS_IMETHOD Update();
