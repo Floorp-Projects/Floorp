@@ -5772,9 +5772,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
         // property is 'ok' in this case, even if the call comes from
         // a different context.
 
-        nsCOMPtr<nsIDOMChromeWindow> chrome =
-          do_QueryInterface((nsIScriptGlobalObject *)win);
-        if (!chrome) {
+        if (!win->IsChromeWindow()) {
           rv = sXPConnect->GetCrossOriginWrapperForObject(cx,
                                                           win->GetGlobalJSObject(),
                                                           JSVAL_TO_OBJECT(v),
@@ -5888,9 +5886,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     PRBool doSecurityCheckInAddProperty = sDoSecurityCheckInAddProperty;
     sDoSecurityCheckInAddProperty = PR_FALSE;
 
-    nsCOMPtr<nsIDOMChromeWindow> chrome =
-      do_QueryInterface((nsIScriptGlobalObject *)win);
-    if (!chrome) {
+    if (!win->IsChromeWindow()) {
       rv = sXPConnect->GetCrossOriginWrapperForObject(cx, scope,
                                                       JSVAL_TO_OBJECT(v),
                                                       &v);
@@ -5989,9 +5985,7 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       sDoSecurityCheckInAddProperty = PR_FALSE;
 
       jsval winVal = OBJECT_TO_JSVAL(win->GetGlobalJSObject());
-      nsCOMPtr<nsIDOMChromeWindow> chrome =
-        do_QueryInterface((nsIScriptGlobalObject *)win);
-      if (!chrome) {
+      if (!win->IsChromeWindow()) {
         JSObject *scope;
         nsGlobalWindow *innerWin;
         if (oldWin->IsInnerWindow()) {
@@ -6162,9 +6156,25 @@ nsWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
 
   // Return the outer window.
 
-  *_retval = win->GetGlobalJSObject();
+  nsresult rv;
+  if (win->IsChromeWindow()) {
+    // Chrome windows don't get XOW wrapping.
+    *_retval = win->GetGlobalJSObject();
+    rv = NS_OK;
+  } else {
+    JSObject *winObj = win->GetGlobalJSObject();
+    JSObject *scope = JS_GetScopeChain(cx);
+    if (!scope) {
+      *_retval = nsnull;
+      return NS_ERROR_FAILURE;
+    }
+    scope = GetGlobalJSObject(cx, scope);
+    jsval v;
+    rv = sXPConnect->GetCrossOriginWrapperForObject(cx, scope, winObj, &v);
+    *_retval = NS_SUCCEEDED(rv) ? JSVAL_TO_OBJECT(v) : nsnull;
+  }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -7418,8 +7428,8 @@ nsDocumentSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     docVal = OBJECT_TO_JSVAL(obj);
 
-    nsCOMPtr<nsIDOMChromeWindow> chrome = do_QueryInterface(win);
-    if (!chrome) {
+    nsGlobalWindow *internalWin = static_cast<nsGlobalWindow *>(sgo);
+    if (!internalWin->IsChromeWindow()) {
       rv = sXPConnect->GetCrossOriginWrapperForObject(cx, sgo->GetGlobalJSObject(),
                                                       obj, &docVal);
       NS_ENSURE_SUCCESS(rv, rv);
