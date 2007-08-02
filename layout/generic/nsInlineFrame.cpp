@@ -993,7 +993,7 @@ nsPositionedInlineFrame::SetInitialChildList(nsIAtom*        aListName,
 {
   nsresult  rv;
 
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     rv = mAbsoluteContainer.SetInitialChildList(this, aListName, aChildList);
   } else {
     rv = nsInlineFrame::SetInitialChildList(aListName, aChildList);
@@ -1008,7 +1008,7 @@ nsPositionedInlineFrame::AppendFrames(nsIAtom*        aListName,
 {
   nsresult  rv;
   
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     rv = mAbsoluteContainer.AppendFrames(this, aListName, aFrameList);
   } else {
     rv = nsInlineFrame::AppendFrames(aListName, aFrameList);
@@ -1024,7 +1024,7 @@ nsPositionedInlineFrame::InsertFrames(nsIAtom*        aListName,
 {
   nsresult  rv;
 
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     rv = mAbsoluteContainer.InsertFrames(this, aListName, aPrevFrame,
                                          aFrameList);
   } else {
@@ -1040,7 +1040,7 @@ nsPositionedInlineFrame::RemoveFrame(nsIAtom*        aListName,
 {
   nsresult  rv;
 
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     rv = mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
   } else {
     rv = nsInlineFrame::RemoveFrame(aListName, aOldFrame);
@@ -1062,7 +1062,7 @@ nsIAtom*
 nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
   if (0 == aIndex) {
-    return mAbsoluteContainer.GetChildListName();
+    return nsGkAtoms::absoluteList;
   }
   return nsnull;
 }
@@ -1070,7 +1070,7 @@ nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 nsIFrame*
 nsPositionedInlineFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     nsIFrame* result = nsnull;
     mAbsoluteContainer.FirstChild(this, aListName, &result);
     return result;

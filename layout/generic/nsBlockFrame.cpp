@@ -517,7 +517,7 @@ nsBlockFrame::GetBaseline() const
 nsIFrame*
 nsBlockFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     nsIFrame* result = nsnull;
     mAbsoluteContainer.FirstChild(this, aListName, &result);
     return result;
@@ -561,7 +561,7 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   case NS_BLOCK_FRAME_OVERFLOW_OOF_LIST_INDEX:
     return nsGkAtoms::overflowOutOfFlowList;
   case NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX:
-    return mAbsoluteContainer.GetChildListName();
+    return nsGkAtoms::absoluteList;
   default:
     return nsnull;
   }
@@ -4639,7 +4639,7 @@ nsBlockFrame::AppendFrames(nsIAtom*  aListName,
     return NS_OK;
   }
   if (aListName) {
-    if (mAbsoluteContainer.GetChildListName() == aListName) {
+    if (nsGkAtoms::absoluteList == aListName) {
       return mAbsoluteContainer.AppendFrames(this, aListName, aFrameList);
     }
     else if (nsGkAtoms::floatList == aListName) {
@@ -4688,7 +4688,7 @@ nsBlockFrame::InsertFrames(nsIAtom*  aListName,
                "inserting after sibling frame with different parent");
 
   if (aListName) {
-    if (mAbsoluteContainer.GetChildListName() == aListName) {
+    if (nsGkAtoms::absoluteList == aListName) {
       return mAbsoluteContainer.InsertFrames(this, aListName, aPrevFrame,
                                              aFrameList);
     }
@@ -4981,7 +4981,7 @@ nsBlockFrame::RemoveFrame(nsIAtom*  aListName,
       MarkSameSpaceManagerLinesDirty(this);
     }
   }
-  else if (mAbsoluteContainer.GetChildListName() == aListName) {
+  else if (nsGkAtoms::absoluteList == aListName) {
     return mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
   }
   else if (nsGkAtoms::floatList == aListName) {
@@ -5024,7 +5024,7 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsIFrame* aFrame)
   // Remove aFrame from the appropriate list.
   if (display->IsAbsolutelyPositioned()) {
     block->mAbsoluteContainer.RemoveFrame(block,
-                                          block->mAbsoluteContainer.GetChildListName(),
+                                          nsGkAtoms::absoluteList,
                                           aFrame);
     aFrame->Destroy();
   }
@@ -6096,7 +6096,7 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
 {
   nsresult rv = NS_OK;
 
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     mAbsoluteContainer.SetInitialChildList(this, aListName, aChildList);
   }
   else if (nsGkAtoms::floatList == aListName) {

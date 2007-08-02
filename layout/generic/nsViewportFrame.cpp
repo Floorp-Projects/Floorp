@@ -78,7 +78,7 @@ ViewportFrame::SetInitialChildList(nsIAtom*        aListName,
 #ifdef NS_DEBUG
   nsFrame::VerifyDirtyBitSet(aChildList);
 #endif
-  if (mFixedContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::fixedList == aListName) {
     rv = mFixedContainer.SetInitialChildList(this, aListName, aChildList);
   } 
   else {
@@ -115,7 +115,7 @@ ViewportFrame::AppendFrames(nsIAtom*        aListName,
 {
   nsresult rv = NS_OK;
 
-  if (mFixedContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::fixedList == aListName) {
     rv = mFixedContainer.AppendFrames(this, aListName, aFrameList);
   }
   else {
@@ -134,7 +134,7 @@ ViewportFrame::InsertFrames(nsIAtom*        aListName,
 {
   nsresult rv = NS_OK;
 
-  if (mFixedContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::fixedList == aListName) {
     rv = mFixedContainer.InsertFrames(this, aListName, aPrevFrame, aFrameList);
   }
   else {
@@ -152,7 +152,7 @@ ViewportFrame::RemoveFrame(nsIAtom*        aListName,
 {
   nsresult rv = NS_OK;
 
-  if (mFixedContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::fixedList == aListName) {
     rv = mFixedContainer.RemoveFrame(this, aListName, aOldFrame);
   }
   else {
@@ -170,7 +170,7 @@ ViewportFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   NS_PRECONDITION(aIndex >= 0, "illegal index");
 
   if (0 == aIndex) {
-    return mFixedContainer.GetChildListName();
+    return nsGkAtoms::fixedList;
   }
 
   return nsnull;
@@ -179,7 +179,7 @@ ViewportFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 nsIFrame*
 ViewportFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  if (mFixedContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::fixedList == aListName) {
     nsIFrame* result = nsnull;
     mFixedContainer.FirstChild(this, aListName, &result);
     return result;
