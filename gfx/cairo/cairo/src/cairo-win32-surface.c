@@ -1431,10 +1431,10 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 	data->rdh.iType = RDH_RECTANGLES;
 	data->rdh.nCount = num_boxes;
 	data->rdh.nRgnSize = num_boxes * sizeof (RECT);
-	data->rdh.rcBound.left = extents->x1;
-	data->rdh.rcBound.top = extents->y1;
-	data->rdh.rcBound.right = extents->x2;
-	data->rdh.rcBound.bottom = extents->y2;
+	data->rdh.rcBound.left = extents.x;
+	data->rdh.rcBound.top = extents.y;
+	data->rdh.rcBound.right = extents.x + extents.width;
+	data->rdh.rcBound.bottom = extents.y + extents.height;
 
 	for (i = 0; i < num_boxes; i++) {
 	    rects[i].left = boxes[i].p1.x;
@@ -1443,7 +1443,7 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 	    rects[i].bottom = boxes[i].p2.y;
 	}
 
-	_cairo_region_boxes_fini (region, &boxes);
+	_cairo_region_boxes_fini (region, boxes);
 
 	gdi_region = ExtCreateRegion (NULL, data_size, data);
 	free (data);
