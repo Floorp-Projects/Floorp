@@ -245,7 +245,10 @@ protected:
 class nsPositionedInlineFrame : public nsInlineFrame
 {
 public:
-  nsPositionedInlineFrame(nsStyleContext* aContext) : nsInlineFrame(aContext) {}
+  nsPositionedInlineFrame(nsStyleContext* aContext)
+    : nsInlineFrame(aContext)
+    , mAbsoluteContainer(nsGkAtoms::absoluteList)
+  {}
 
   virtual ~nsPositionedInlineFrame() { } // useful for debugging
 
