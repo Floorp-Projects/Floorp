@@ -3331,9 +3331,8 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
                      aMustCallValueAppended, aChanged);
     return PR_TRUE;
   }
-  else {
-    if (eCSSToken_Symbol == tk->mType) {
-      if ('!' == tk->mSymbol) {
+
+  if (eCSSToken_Symbol == tk->mType && '!' == tk->mSymbol) {
         // Look for important ident
         if (!GetToken(aErrorCode, PR_TRUE)) {
           // Premature eof is not ok
@@ -3355,24 +3354,12 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
         // Not a !important declaration
         UngetToken();
       }
-    }
-    else {
-      // Not a !important declaration
-      UngetToken();
-    }
-  }
 
   // Make sure valid property declaration is terminated with either a
-  // semicolon or a right-curly-brace (when aCheckForBraces is true).
-  // When aCheckForBraces is false, proper termination is either
-  // semicolon or EOF.
+  // semicolon, EOF or a right-curly-brace (this last only when
+  // aCheckForBraces is true).
   if (!GetToken(aErrorCode, PR_TRUE)) {
-    if (aCheckForBraces) {
-      // Premature eof is not ok
-      REPORT_UNEXPECTED_EOF(PEDeclEndEOF);
-      ClearTempData(propID);
-      return PR_FALSE;
-    }
+    // EOF is a perfectly good way to end a declaration and declaration block
     TransferTempData(aDeclaration, propID, isImportant,
                      aMustCallValueAppended, aChanged);
     return PR_TRUE;
@@ -3383,16 +3370,9 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
                        aMustCallValueAppended, aChanged);
       return PR_TRUE;
     }
-    if (!aCheckForBraces) {
-      // If we didn't hit eof and we didn't see a semicolon then the
-      // declaration is not properly terminated.
-      REPORT_UNEXPECTED_TOKEN(PEBadDeclEnd);
-      REPORT_UNEXPECTED(PEDeclDropped);
-      OUTPUT_ERROR();
-      ClearTempData(propID);
-      return PR_FALSE;
-    }
-    if ('}' == tk->mSymbol) {
+    if (aCheckForBraces && '}' == tk->mSymbol) {
+      // Unget the '}' so we'll be able to tell that this is the end
+      // of the declaration block when we unwind from here.
       UngetToken();
       TransferTempData(aDeclaration, propID, isImportant,
                        aMustCallValueAppended, aChanged);
