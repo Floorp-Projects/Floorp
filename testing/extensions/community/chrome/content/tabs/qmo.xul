@@ -52,27 +52,26 @@
 </script>
 
 <tabpanel id="qa-tab-qmo">
-<vbox>
+<vbox pack="start">
   <label href="http://quality.mozilla.org" value="&qa.qmo.visit;" class="text-link" />
   
-  <hbox>
-  <groupbox>
-    <caption label="&qa.qmo.help;" />
-    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-help">
-    </div>
-  </groupbox>
-  <groupbox>
-    <caption label="&qa.qmo.events;" />
-    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-events">
-      <ul>
-      </ul>
-    </div>
-  </groupbox>
+  <hbox maxheight="130px" height="130px">
+	<groupbox maxheight="130px" height="130px">
+		<caption label="&qa.qmo.help;" />
+		<div style="max-height: 130px; height: 130px" xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-help">
+		</div>
+	</groupbox>
+	<groupbox maxheight="130px" height="130px">
+		<caption label="&qa.qmo.events;" />
+		<div style="max-height: 130px; height: 130px" xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-events">
+			<ul>
+			</ul>
+		</div>
+	</groupbox>
   </hbox>
-  
   <groupbox>
     <caption label="&qa.qmo.forumposts;" />
-    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-forumposts">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="width: 290px" id="qa-qmo-forumposts">
       <ul>
       </ul>
     </div>

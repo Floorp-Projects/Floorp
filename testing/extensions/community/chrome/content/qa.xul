@@ -53,7 +53,7 @@
   id="qa-mainwindow"
   title="&qa.mainwindow.title;"
   width="400"
-  height="800"
+  height="720"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml"
   onload="qaMain.onToolOpen();">
