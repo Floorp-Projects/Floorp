@@ -1,5 +1,5 @@
 /*
- * $Id: pixman-trap.c,v 1.4 2007/08/02 06:54:41 vladimir%pobox.com Exp $
+ * $Id: pixman-trap.c,v 1.5 2007/08/02 06:57:51 vladimir%pobox.com Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -22,7 +22,10 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+#if HAVE_CONFIG_H
 #include <config.h>
+#endif
+
 #include <stdio.h>
 #include "pixman-private.h"
 

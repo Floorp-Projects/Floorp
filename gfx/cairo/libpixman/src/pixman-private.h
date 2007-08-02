@@ -27,7 +27,9 @@
 #  define BITMAP_BIT_ORDER LSBFirst
 #endif
 
+#ifndef DEBUG
 #define DEBUG 0
+#endif
 
 #if defined (__GNUC__)
 #  define FUNC     ((const char*) (__PRETTY_FUNCTION__))
@@ -636,8 +638,8 @@ union pixman_image
     } while (0)
 
 /* FIXME */
-#define fbPrepareAccess(x)
-#define fbFinishAccess(x)
+#define fbPrepareAccess(x) do { } while (0)
+#define fbFinishAccess(x) do { } while (0)
 
 #else
 
@@ -647,8 +649,8 @@ union pixman_image
     memcpy(dst, src, size)
 #define MEMSET_WRAPPED(dst, val, size)					\
     memset(dst, val, size)
-#define fbPrepareAccess(x)
-#define fbFinishAccess(x)
+#define fbPrepareAccess(x) do { } while (0)
+#define fbFinishAccess(x) do { } while (0)
 #endif
 
 #define fbComposeGetSolid(img, res, fmt)				\
@@ -784,6 +786,8 @@ oil_profile_stamp_rdtsc (void)
 }
 #define OIL_STAMP oil_profile_stamp_rdtsc
 
+#ifndef MOZILLA_CLIENT
+
 typedef struct PixmanTimer PixmanTimer;
 
 struct PixmanTimer
@@ -817,5 +821,6 @@ void pixman_timer_register (PixmanTimer *timer);
         timer##tname.total += OIL_STAMP() - begin##tname;		\
     }
 
+#endif /* MOZILLA_CLIENT */
 
 #endif /* PIXMAN_PRIVATE_H */
