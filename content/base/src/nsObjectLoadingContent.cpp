@@ -504,6 +504,14 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
       }
 #endif
       Fallback(PR_FALSE);
+    } else if (mType == eType_Plugin) {
+      nsIObjectFrame* frame = GetFrame(PR_FALSE);
+      if (frame) {
+        // We have to notify the wrapper here instead of right after
+        // Instantiate because the plugin only gets instantiated by
+        // OnStartRequest, not by Instantiate.
+        frame->TryNotifyContentObjectWrapper();
+      }
     }
     return rv;
   }
