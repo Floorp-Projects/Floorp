@@ -1119,7 +1119,6 @@ js_GetToken(JSContext *cx, JSTokenStream *ts)
 
 /* The following 4 macros should only be used when TOKENBUF_OK() is true. */
 #define TOKENBUF_BASE()     (ts->tokenbuf.base)
-#define TOKENBUF_END()      (ts->tokenbuf.ptr)
 #define TOKENBUF_CHAR(i)    (ts->tokenbuf.base[i])
 #define TRIM_TOKENBUF(i)    (ts->tokenbuf.ptr = ts->tokenbuf.base + i)
 #define NUL_TERM_TOKENBUF() (*ts->tokenbuf.ptr = 0)
@@ -1444,16 +1443,14 @@ retry:
         if (!TOKENBUF_OK())
             goto error;
         if (radix == 10) {
-            if (!js_strtod(cx, TOKENBUF_BASE(), TOKENBUF_END(),
-                           &endptr, &dval)) {
+            if (!js_strtod(cx, TOKENBUF_BASE(), &endptr, &dval)) {
                 js_ReportCompileErrorNumber(cx, ts,
                                             JSREPORT_TS | JSREPORT_ERROR,
                                             JSMSG_OUT_OF_MEMORY);
                 goto error;
             }
         } else {
-            if (!js_strtointeger(cx, TOKENBUF_BASE(), TOKENBUF_END(),
-                                 &endptr, radix, &dval)) {
+            if (!js_strtointeger(cx, TOKENBUF_BASE(), &endptr, radix, &dval)) {
                 js_ReportCompileErrorNumber(cx, ts,
                                             JSREPORT_TS | JSREPORT_ERROR,
                                             JSMSG_OUT_OF_MEMORY);
