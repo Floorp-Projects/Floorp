@@ -699,7 +699,6 @@ xpfe/components/autocomplete/public/Makefile
 xpfe/components/autocomplete/src/Makefile
 xpfe/components/updates/Makefile
 xpfe/components/updates/src/Makefile
-xpfe/components/urlwidget/Makefile
 xpfe/components/winhooks/Makefile
 xpfe/components/windowds/Makefile
 xpfe/components/alerts/Makefile
