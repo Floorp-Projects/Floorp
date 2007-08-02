@@ -437,7 +437,7 @@ js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
  * Return s advanced past any Unicode white space characters.
  */
 extern const jschar *
-js_SkipWhiteSpace(const jschar *s, const jschar *end);
+js_SkipWhiteSpace(const jschar *s);
 
 /*
  * Inflate bytes to JS chars and vice versa.  Report out of memory via cx

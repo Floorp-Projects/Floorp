@@ -97,8 +97,11 @@ num_parseFloat(JSContext *cx, uintN argc, jsval *vp)
     str = js_ValueToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
-    bp = JSSTRING_CHARS(str);
-    if (!js_strtod(cx, bp, bp + JSSTRING_LENGTH(str), &ep, &d))
+    /* XXXbe js_strtod shouldn't require NUL termination */
+    bp = js_UndependString(cx, str);
+    if (!bp)
+        return JS_FALSE;
+    if (!js_strtod(cx, bp, &ep, &d))
         return JS_FALSE;
     if (ep == bp) {
         *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
@@ -130,8 +133,11 @@ num_parseInt(JSContext *cx, uintN argc, jsval *vp)
     str = js_ValueToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
-    bp = JSSTRING_CHARS(str);
-    if (!js_strtointeger(cx, bp, bp + JSSTRING_LENGTH(str), &ep, radix, &d))
+    /* XXXbe js_strtointeger shouldn't require NUL termination */
+    bp = js_UndependString(cx, str);
+    if (!bp)
+        return JS_FALSE;
+    if (!js_strtointeger(cx, bp, &ep, radix, &d))
         return JS_FALSE;
     if (ep == bp) {
         *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
@@ -700,7 +706,7 @@ js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
 {
     JSObject *obj;
     JSString *str;
-    const jschar *bp, *end, *ep;
+    const jschar *bp, *ep;
 
     if (JSVAL_IS_OBJECT(v)) {
         obj = JSVAL_TO_OBJECT(v);
@@ -717,19 +723,20 @@ js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
         *dp = *JSVAL_TO_DOUBLE(v);
     } else if (JSVAL_IS_STRING(v)) {
         str = JSVAL_TO_STRING(v);
-
         /*
          * Note that ECMA doesn't treat a string beginning with a '0' as an
          * octal number here.  This works because all such numbers will be
          * interpreted as decimal by js_strtod and will never get passed to
          * js_strtointeger (which would interpret them as octal).
          */
-        bp = JSSTRING_CHARS(str);
-        end = bp + JSSTRING_LENGTH(str);
-        if ((!js_strtod(cx, bp, end, &ep, dp) ||
-             js_SkipWhiteSpace(ep, end) != end) &&
-             (!js_strtointeger(cx, bp, end, &ep, 0, dp) ||
-              js_SkipWhiteSpace(ep, end) != end)) {
+        /* XXXbe js_strtod shouldn't require NUL termination */
+        bp = js_UndependString(cx, str);
+        if (!bp)
+            return JS_FALSE;
+        if ((!js_strtod(cx, bp, &ep, dp) ||
+             js_SkipWhiteSpace(ep) != bp + str->length) &&
+            (!js_strtointeger(cx, bp, &ep, 0, dp) ||
+             js_SkipWhiteSpace(ep) != bp + str->length)) {
             goto badstr;
         }
     } else if (JSVAL_IS_BOOLEAN(v)) {
@@ -870,18 +877,15 @@ js_DoubleToInteger(jsdouble d)
 
 
 JSBool
-js_strtod(JSContext *cx, const jschar *s, const jschar *send,
-          const jschar **ep, jsdouble *dp)
+js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
 {
-    const jschar *s1;
-    size_t length, i;
     char cbuf[32];
+    size_t i;
     char *cstr, *istr, *estr;
     JSBool negative;
     jsdouble d;
-
-    s1 = js_SkipWhiteSpace(s, send);
-    length = send - s1;
+    const jschar *s1 = js_SkipWhiteSpace(s);
+    size_t length = js_strlen(s1);
 
     /* Use cbuf to avoid malloc */
     if (length >= sizeof cbuf) {
@@ -892,12 +896,13 @@ js_strtod(JSContext *cx, const jschar *s, const jschar *send,
         cstr = cbuf;
     }
 
-    for (i = 0; i != length; i++) {
-        if (s1[i] >> 8)
+    for (i = 0; i <= length; i++) {
+        if (s1[i] >> 8) {
+            cstr[i] = 0;
             break;
+        }
         cstr[i] = (char)s1[i];
     }
-    cstr[i] = 0;
 
     istr = cstr;
     if ((negative = (*istr == '-')) != 0 || *istr == '+')
@@ -974,54 +979,41 @@ static intN GetNextBinaryDigit(struct BinaryDigitReader *bdr)
 }
 
 JSBool
-js_strtointeger(JSContext *cx, const jschar *s, const jschar *send,
-                const jschar **ep, jsint base, jsdouble *dp)
+js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint base, jsdouble *dp)
 {
-    const jschar *s1, *start;
     JSBool negative;
     jsdouble value;
+    const jschar *start;
+    const jschar *s1 = js_SkipWhiteSpace(s);
 
-    s1 = js_SkipWhiteSpace(s, send);
-    if (s1 == send)
-        goto no_digits;
-    if ((negative = (*s1 == '-')) != 0 || *s1 == '+') {
+    if ((negative = (*s1 == '-')) != 0 || *s1 == '+')
         s1++;
-        if (s1 == send)
-            goto no_digits;
-    }
 
     if (base == 0) {
         /* No base supplied, or some base that evaluated to 0. */
         if (*s1 == '0') {
             /* It's either hex or octal; only increment char if str isn't '0' */
-            if (s1 + 1 != send && (s1[1] == 'X' || s1[1] == 'x')) {
-                base = 16;
+            if (s1[1] == 'X' || s1[1] == 'x') { /* Hex */
                 s1 += 2;
-                if (s1 == send)
-                    goto no_digits;
-            } else {
+                base = 16;
+            } else {    /* Octal */
                 base = 8;
             }
         } else {
             base = 10; /* Default to decimal. */
         }
-    } else if (base == 16) {
+    } else if (base == 16 && *s1 == '0' && (s1[1] == 'X' || s1[1] == 'x')) {
         /* If base is 16, ignore hex prefix. */
-        if (*s1 == '0' && s1 + 1 != send && (s1[1] == 'X' || s1[1] == 'x')) {
-            s1 += 2;
-            if (s1 == send)
-                goto no_digits;
-        }
+        s1 += 2;
     }
 
     /*
      * Done with the preliminaries; find some prefix of the string that's
      * a number in the given base.
      */
-    JS_ASSERT(s1 < send);
-    start = s1;
+    start = s1; /* Mark - if string is empty, we return NaN. */
     value = 0.0;
-    do {
+    for (;;) {
         uintN digit;
         jschar c = *s1;
         if ('0' <= c && c <= '9')
@@ -1035,7 +1027,8 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar *send,
         if (digit >= (uintN)base)
             break;
         value = value * base + digit;
-    } while (++s1 != send);
+        s1++;
+    }
 
     if (value >= 9007199254740992.0) {
         if (base == 10) {
@@ -1121,7 +1114,6 @@ js_strtointeger(JSContext *cx, const jschar *s, const jschar *send,
     /* We don't worry about inaccurate numbers for any other base. */
 
     if (s1 == start) {
-      no_digits:
         *dp = 0.0;
         *ep = s;
     } else {
