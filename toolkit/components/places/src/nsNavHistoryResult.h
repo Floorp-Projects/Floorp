@@ -292,7 +292,7 @@ public:
   // Note that GetType() already has a vtable slot because its on the iface.
   PRBool IsTypeContainer(PRUint32 type) {
     return (type == nsINavHistoryResultNode::RESULT_TYPE_HOST ||
-            type == nsINavHistoryResultNode::RESULT_TYPE_REMOTE_CONTAINER ||
+            type == nsINavHistoryResultNode::RESULT_TYPE_DYNAMIC_CONTAINER ||
             type == nsINavHistoryResultNode::RESULT_TYPE_QUERY ||
             type == nsINavHistoryResultNode::RESULT_TYPE_FOLDER ||
             type == nsINavHistoryResultNode::RESULT_TYPE_DAY);
@@ -301,6 +301,11 @@ public:
     PRUint32 type;
     GetType(&type);
     return IsTypeContainer(type);
+  }
+  PRBool IsDynamicContainer() {
+    PRUint32 type;
+    GetType(&type);
+    return (type == nsINavHistoryResultNode::RESULT_TYPE_DYNAMIC_CONTAINER);
   }
   static PRBool IsTypeQuerySubcontainer(PRUint32 type) {
     // Tests containers that are inside queries that really belong to the query
@@ -476,11 +481,13 @@ public:
     { return nsNavHistoryContainerResultNode::GetChildCount(aChildCount); } \
   NS_IMETHOD GetChild(PRUint32 index, nsINavHistoryResultNode **_retval) \
     { return nsNavHistoryContainerResultNode::GetChild(index, _retval); } \
-  NS_IMETHOD GetRemoteContainerType(nsACString& aRemoteContainerType) \
-    { return nsNavHistoryContainerResultNode::GetRemoteContainerType(aRemoteContainerType); }
-/* Untested container API functions
+  NS_IMETHOD GetDynamicContainerType(nsACString& aDynamicContainerType) \
+    { return nsNavHistoryContainerResultNode::GetDynamicContainerType(aDynamicContainerType); } \
   NS_IMETHOD AppendURINode(const nsACString& aURI, const nsACString& aTitle, PRUint32 aAccessCount, PRTime aTime, const nsACString& aIconURI, nsINavHistoryResultNode **_retval) \
     { return nsNavHistoryContainerResultNode::AppendURINode(aURI, aTitle, aAccessCount, aTime, aIconURI, _retval); } \
+  NS_IMETHOD AppendFolderNode(PRInt64 aFolderId, nsINavHistoryContainerResultNode **_retval) \
+    { return nsNavHistoryContainerResultNode::AppendFolderNode(aFolderId, _retval); }
+/* Untested container API functions
   NS_IMETHOD AppendVisitNode(const nsACString& aURI, const nsACString & aTitle, PRUint32 aAccessCount, PRTime aTime, const nsACString & aIconURI, PRInt64 aSession, nsINavHistoryVisitResultNode **_retval) \
     { return nsNavHistoryContainerResultNode::AppendVisitNode(aURI, aTitle, aAccessCount, aTime, aIconURI, aSession, _retval); } \
   NS_IMETHOD AppendFullVisitNode(const nsACString& aURI, const nsACString & aTitle, PRUint32 aAccessCount, PRTime aTime, const nsACString & aIconURI, PRInt64 aSession, PRInt64 aVisitId, PRInt64 aReferringVisitId, PRInt32 aTransitionType, nsINavHistoryFullVisitResultNode **_retval) \
@@ -489,8 +496,6 @@ public:
     { return nsNavHistoryContainerResultNode::AppendContainerNode(aTitle, aIconURI, aContainerType, aRemoteContainerType, _retval); } \
   NS_IMETHOD AppendQueryNode(const nsACString& aQueryURI, const nsACString & aTitle, const nsACString & aIconURI, nsINavHistoryQueryResultNode **_retval) \
     { return nsNavHistoryContainerResultNode::AppendQueryNode(aQueryURI, aTitle, aIconURI, _retval); } \
-  NS_IMETHOD AppendFolderNode(PRInt64 aFolderId, nsINavHistoryFolderResultNode **_retval) \
-    { return nsNavHistoryContainerResultNode::AppendFolderNode(aFolderId, _retval); } \
   NS_IMETHOD ClearContents() \
     { return nsNavHistoryContainerResultNode::ClearContents(); }
 */
@@ -505,7 +510,8 @@ public:
   nsNavHistoryContainerResultNode(
     const nsACString& aURI, const nsACString& aTitle,
     const nsACString& aIconURI, PRUint32 aContainerType,
-    PRBool aReadOnly, const nsACString& aRemoteContainerType);
+    PRBool aReadOnly, const nsACString& aDynamicContainerType,
+    nsNavHistoryQueryOptions* aOptions);
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_NAVHISTORYCONTAINERRESULTNODE_IID)
 
@@ -546,10 +552,10 @@ public:
 
   PRBool mChildrenReadOnly;
 
-  // ID of a remote container interface that we can use GetService to get.
-  // This is empty to indicate there is no remote container service for this
-  // container (the common case).
-  nsCString mRemoteContainerType;
+  nsCOMPtr<nsNavHistoryQueryOptions> mOptions;
+
+  // ID of a dynamic container interface that we can use GetService to get.
+  nsCString mDynamicContainerType;
 
   void FillStats();
   void ReverseUpdateStats(PRInt32 aAccessCountChange);
@@ -630,8 +636,6 @@ public:
   nsresult ReplaceChildURIAt(PRUint32 aIndex, nsNavHistoryResultNode* aNode);
   nsresult RemoveChildAt(PRInt32 aIndex, PRBool aIsTemporary = PR_FALSE);
 
-  PRBool CanRemoteContainersChange();
-
   void RecursiveFindURIs(PRBool aOnlyOne,
                          nsNavHistoryContainerResultNode* aContainer,
                          const nsCString& aSpec,
@@ -691,7 +695,6 @@ public:
   // these may be constructed lazily from mURI, call VerifyQueriesParsed
   // either this or mURI should be valid
   nsCOMArray<nsNavHistoryQuery> mQueries;
-  nsCOMPtr<nsNavHistoryQueryOptions> mOptions;
   PRUint32 mLiveUpdate; // one of QUERYUPDATE_* in nsNavHistory.h
   PRBool mHasSearchTerms;
   nsresult VerifyQueriesParsed();
@@ -723,7 +726,7 @@ public:
   nsNavHistoryFolderResultNode(const nsACString& aTitle,
                                nsNavHistoryQueryOptions* options,
                                PRInt64 aFolderId,
-                               const nsACString& aRemoteContainerType);
+                               const nsACString& aDynamicContainerType);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_COMMON_RESULTNODE_TO_BASE
@@ -749,8 +752,6 @@ public:
   // this indicates whether the folder contents are valid, they don't go away
   // after the container is closed until a notification comes in
   PRBool mContentsValid;
-
-  nsCOMPtr<nsNavHistoryQueryOptions> mOptions;
 
   nsresult FillChildren();
   void ClearChildren(PRBool aUnregister);

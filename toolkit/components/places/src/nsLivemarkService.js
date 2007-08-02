@@ -144,6 +144,8 @@ function LivemarkService() {
       );
     this._pushLivemark(livemarks[i], feedURI);
   }
+
+  this._bms.addObserver(this, false);
 }
 
 LivemarkService.prototype = {
@@ -277,7 +279,8 @@ LivemarkService.prototype = {
 
   _createFolder:
   function LS__createFolder(bms, folder, name, siteURI, feedURI, index) {
-    var livemarkID = bms.createContainer(folder, name, LS_CONTRACTID, index);
+    var livemarkID = bms.createFolder(folder, name, index);
+    this._bms.setFolderReadonly(livemarkID, true);
 
     // Add an annotation to map the folder URI to the livemark feed URI
     this._ans.setItemAnnotation(livemarkID, LMANNO_FEEDURI, feedURI.spec, 0,
@@ -380,9 +383,22 @@ LivemarkService.prototype = {
     this._updateLivemarkChildren(livemarkIndex, true);
   },
 
-  // nsIRemoteContainer
-  onContainerRemoving: function LS_onContainerRemoving(container) {
-    var livemarkIndex = this._getLivemarkIndex(container);
+  // nsINavBookmarkObserver
+  onBeginUpdateBatch: function() { },
+  onEndUpdateBatch: function() { },
+  onItemAdded: function() { },
+  onItemChanged: function() { },
+  onItemVisited: function() { },
+  onItemMoved: function() { },
+
+  onItemRemoved: function(aItemId, aParentFolder, aIndex) {
+    try {
+      var livemarkIndex = this._getLivemarkIndex(aItemId);
+    }
+    catch(ex) {
+      // not a livemark
+      return;
+    }
     var livemark = this._livemarks[livemarkIndex];
 
     var stillInUse = false;
@@ -398,13 +414,7 @@ LivemarkService.prototype = {
     if (livemark.loadGroup) 
       livemark.loadGroup.cancel(Cr.NS_BINDING_ABORTED);
     this._livemarks.splice(livemarkIndex, 1);
-    this.deleteLivemarkChildren(container);
   },
-
-  onContainerMoved:
-  function LS_onContainerMoved(container, newFolder, newIndex) { },
-
-  childrenReadOnly: true,
 
   createInstance: function LS_createInstance(outer, iid) {
     if (outer != null)
@@ -414,12 +424,12 @@ LivemarkService.prototype = {
   
   QueryInterface: function LS_QueryInterface(iid) {
     if (iid.equals(Ci.nsILivemarkService) ||
-        iid.equals(Ci.nsIRemoteContainer) ||
         iid.equals(Ci.nsIFactory) ||
+        iid.equals(Ci.nsINavBookmarkObserver) ||
         iid.equals(Ci.nsISupports))
       return this;
     throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
+  }
 };
 
 function LivemarkLoadListener(livemark) {

@@ -2012,8 +2012,8 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
     NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
     nsCOMPtr<nsNavHistoryResultNode> tempRootNode;
-    rv = bookmarks->ResultNodeForFolder(folderId, options,
-                                        getter_AddRefs(tempRootNode));
+    rv = bookmarks->ResultNodeForContainer(folderId, options,
+                                           getter_AddRefs(tempRootNode));
     NS_ENSURE_SUCCESS(rv, rv);
     rootNode = tempRootNode->GetAsContainer();
   } else {
@@ -3911,7 +3911,8 @@ nsNavHistory::GroupByDay(nsNavHistoryQueryResultNode *aResultNode,
           EmptyCString(),
           nsNavHistoryResultNode::RESULT_TYPE_DAY,
           PR_TRUE,
-          EmptyCString());
+          EmptyCString(),
+          nsnull);
 
       if (!dates[ageInDays])
         return NS_ERROR_OUT_OF_MEMORY;
@@ -3989,7 +3990,7 @@ nsNavHistory::GroupByHost(nsNavHistoryQueryResultNode *aResultNode,
 
       curTopGroup = new nsNavHistoryContainerResultNode(urn, title,
           EmptyCString(), nsNavHistoryResultNode::RESULT_TYPE_HOST, PR_TRUE,
-          EmptyCString());
+          EmptyCString(), nsnull);
       if (! curTopGroup)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -4326,7 +4327,7 @@ nsNavHistory::QueryRowToResult(const nsACString& aURI, const nsACString& aTitle,
       NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
 
       // this addrefs for us
-      rv = bookmarks->ResultNodeForFolder(folderId, options, aNode);
+      rv = bookmarks->ResultNodeForContainer(folderId, options, aNode);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
       // regular query
