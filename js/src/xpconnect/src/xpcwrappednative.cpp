@@ -642,7 +642,6 @@ XPCWrappedNative::~XPCWrappedNative()
     }
 
     Native2WrappedNativeMap* map = GetScope()->GetWrappedNativeMap();
-    WrappedNative2WrapperMap* wn2wmmap = GetScope()->GetWrapperMap();
     {   // scoped lock
         XPCAutoLock lock(GetRuntime()->GetMapLock());
         map->Remove(this);
