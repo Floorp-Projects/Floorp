@@ -763,7 +763,9 @@ nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
                                            const nsAString& aEncoderOptions,
                                            nsIInputStream **aStream)
 {
-    if (!mSurface || cairo_surface_status(mSurface) != CAIRO_STATUS_SUCCESS)
+    if (!mSurface ||
+        cairo_status(mCairo) != CAIRO_STATUS_SUCCESS ||
+        cairo_surface_status(mSurface) != CAIRO_STATUS_SUCCESS)
         return NS_ERROR_FAILURE;
 
     nsCString conid(NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type="));
