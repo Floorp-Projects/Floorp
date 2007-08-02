@@ -325,6 +325,12 @@ nsTableOuterFrame::InsertFrames(nsIAtom*        aListName,
                  "inserting non-caption frame into captionList");
     mCaptionFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
     mCaptionFrame = mCaptionFrames.FirstChild();
+
+    // Reflow the new caption frame. It's already marked dirty, so
+    // just tell the pres shell.
+    PresContext()->PresShell()->
+      FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                       NS_FRAME_HAS_DIRTY_CHILDREN);
     return NS_OK;
   }
   else {
