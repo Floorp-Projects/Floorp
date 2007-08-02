@@ -69,16 +69,23 @@ const EXPECTED_DEATH = 3;  // test must be skipped to avoid e.g. crash/hang
 
 const HTTP_SERVER_PORT = 4444;
 
+var gCanvasWidth, gCanvasHeight;
+function CreateCanvas()
+{
+    gCanvas = document.createElementNS(XHTML_NS, "canvas");
+    gCanvas.setAttribute("width", gCanvasWidth);
+    gCanvas.setAttribute("height", gCanvasHeight);
+}
+
 function OnRefTestLoad()
 {
     gBrowser = document.getElementById("browser");
 
     gBrowser.addEventListener("load", OnDocumentLoad, true);
 
-    gCanvas = document.createElementNS(XHTML_NS, "canvas");
     var windowElem = document.documentElement;
-    gCanvas.setAttribute("width", windowElem.getAttribute("width"));
-    gCanvas.setAttribute("height", windowElem.getAttribute("height"));
+    gCanvasWidth = windowElem.getAttribute("width");
+    gCanvasHeight = windowElem.getAttribute("height");
 
     gIOService = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
 
@@ -88,7 +95,9 @@ function OnRefTestLoad()
             gServer.start(HTTP_SERVER_PORT);
         StartCurrentTest();
     } catch (ex) {
-        gBrowser.loadURI('data:text/plain,' + ex);
+        //gBrowser.loadURI('data:text/plain,' + ex);
+        dump("REFTEST EXCEPTION: " + ex);
+        DoneTests();
     }
 }
 
@@ -262,6 +271,7 @@ function DoneTests()
 
 function IFrameToKey()
 {
+    CreateCanvas();
     var ctx = gCanvas.getContext("2d");
     /* XXX This needs to be rgb(255,255,255) because otherwise we get
      * black bars at the bottom of every test that are different size
