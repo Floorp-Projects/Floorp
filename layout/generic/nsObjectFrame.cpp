@@ -1138,6 +1138,8 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   // On Windows, this will be the HDC
   void* dc;
   dc = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
+  if (!dc)
+    return; // no dc implemented so quit
 
   npprint.print.embedPrint.platformPrint = dc;
   npprint.print.embedPrint.window = window;
