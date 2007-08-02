@@ -63,6 +63,7 @@
 #include "imgIRequest.h"
 #include "gfxIImageFrame.h"
 #include "nsIImage.h"
+#include "nsMenuX.h"
 
 
 static const PRUint32 kIconWidth = 16;
@@ -85,7 +86,8 @@ NS_IMPL_ISUPPORTS2(nsMenuItemIconX, imgIContainerObserver, imgIDecoderObserver)
 
 nsMenuItemIconX::nsMenuItemIconX(nsISupports* aMenuItem,
                                nsIMenu*     aMenu,
-                               nsIContent*  aContent)
+                               nsIContent*  aContent,
+                               NSMenuItem* aNativeMenuItem)
 : mContent(aContent)
 , mMenuItem(aMenuItem)
 , mMenu(aMenu)
@@ -93,7 +95,9 @@ nsMenuItemIconX::nsMenuItemIconX(nsISupports* aMenuItem,
 , mMenuItemIndex(0)
 , mLoadedIcon(PR_FALSE)
 , mSetIcon(PR_FALSE)
+, mNativeMenuItem(aNativeMenuItem)
 {
+  //  printf("Creating icon for menu item %d, menu %d, native item is %d\n", aMenuItem, aMenu, aNativeMenuItem);
 }
 
 
@@ -119,14 +123,23 @@ nsMenuItemIconX::SetupIcon()
     if (NS_FAILED(rv)) return rv;
   }
 
+  // If our native menu item isn't filled in, it's because this icon is for
+  // a submenu that wasn't given its native menu item until later.
+  if (!mNativeMenuItem)
+    mNativeMenuItem = (static_cast<nsMenuX*>(mMenu))->GetNativeMenuItem();
+
+  // Still don't have one, then something is wrong, get out of here.
+  if (!mNativeMenuItem) {
+    NS_ERROR("No native menu item\n");
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIURI> iconURI;
   rv = GetIconURI(getter_AddRefs(iconURI));
   if (NS_FAILED(rv)) {
     // There is no icon for this menu item. An icon might have been set
     // earlier.  Clear it.
-    OSStatus err;
-    err = ::SetMenuItemIconHandle(mMenuRef, mMenuItemIndex, kMenuNoIcon, NULL);
-    if (err != noErr) return NS_ERROR_FAILURE;
+    [mNativeMenuItem setImage:nil];
 
     return NS_OK;
   }
@@ -248,54 +261,18 @@ nsMenuItemIconX::LoadIcon(nsIURI* aIconURI)
     // prevents it from jumping around or looking misaligned.
 
     static PRBool sInitializedPlaceholder;
-    static CGImageRef sPlaceholderIconImage;
+    static NSImage* sPlaceholderIconImage;
     if (!sInitializedPlaceholder) {
       sInitializedPlaceholder = PR_TRUE;
 
-      PRUint8* bitmap = (PRUint8*)malloc(kIconBytes);
-
-      CGColorSpaceRef colorSpace = ::CGColorSpaceCreateDeviceRGB();
-
-      CGContextRef bitmapContext;
-      bitmapContext = ::CGBitmapContextCreate(bitmap, kIconWidth, kIconHeight,
-                                              kIconBitsPerComponent,
-                                              kIconBytesPerRow,
-                                              colorSpace,
-                                              kCGImageAlphaPremultipliedFirst);
-      if (!bitmapContext) {
-        free(bitmap);
-        ::CGColorSpaceRelease(colorSpace);
-        return NS_ERROR_FAILURE;
-      }
-
-      CGRect iconRect = ::CGRectMake(0, 0, kIconWidth, kIconHeight);
-      ::CGContextClearRect(bitmapContext, iconRect);
-      ::CGContextRelease(bitmapContext);
-
-      CGDataProviderRef provider;
-      provider = ::CGDataProviderCreateWithData(NULL, bitmap, kIconBytes,
-                                              PRAllocCGFree);
-      if (!provider) {
-        free(bitmap);
-        ::CGColorSpaceRelease(colorSpace);
-        return NS_ERROR_FAILURE;
-      }
-
-      sPlaceholderIconImage =
-       ::CGImageCreate(kIconWidth, kIconHeight, kIconBitsPerComponent,
-                       kIconBitsPerPixel, kIconBytesPerRow, colorSpace,
-                       kCGImageAlphaPremultipliedFirst, provider, NULL, TRUE,
-                       kCGRenderingIntentDefault);
-      ::CGColorSpaceRelease(colorSpace);
-      ::CGDataProviderRelease(provider);
+      // Note that we only create the one and reuse it forever, so this is not a leak.
+      sPlaceholderIconImage = [[NSImage alloc] initWithSize:NSMakeSize(kIconWidth, kIconHeight)];
     }
 
     if (!sPlaceholderIconImage) return NS_ERROR_FAILURE;
 
-    OSStatus err;
-    err = ::SetMenuItemIconHandle(mMenuRef, mMenuItemIndex, kMenuCGImageRefType,
-                                  (Handle)sPlaceholderIconImage);
-    if (err != noErr) return NS_ERROR_FAILURE;
+    if (mNativeMenuItem)
+      [mNativeMenuItem setImage:sPlaceholderIconImage];
   }
 
   rv = loader->LoadImage(aIconURI, nsnull, nsnull, loadGroup, this,
@@ -541,11 +518,30 @@ nsMenuItemIconX::OnStopFrame(imgIRequest*    aRequest,
   ::CGDataProviderRelease(provider);
   if (!iconImage) return NS_ERROR_FAILURE;
 
-  OSStatus err;
-  err = ::SetMenuItemIconHandle(mMenuRef, mMenuItemIndex, kMenuCGImageRefType,
-                                (Handle)iconImage);
+  NSRect imageRect = NSMakeRect(0.0, 0.0, 0.0, 0.0);
+  CGContextRef imageContext = nil;
+ 
+  // Get the image dimensions.
+  imageRect.size.width = kIconWidth;
+  imageRect.size.height = kIconHeight;
+ 
+  // Create a new image to receive the Quartz image data.
+  NSImage* newImage = [[NSImage alloc] initWithSize:imageRect.size];
+
+  [newImage lockFocus];
+ 
+  // Get the Quartz context and draw.
+  imageContext = (CGContextRef)[[NSGraphicsContext currentContext]
+                                graphicsPort];
+  CGContextDrawImage(imageContext, *(CGRect*)&imageRect, iconImage);
+  [newImage unlockFocus];
+
+  if (!mNativeMenuItem) return NS_ERROR_FAILURE;
+
+  [mNativeMenuItem setImage:newImage];
+  
+  [newImage release];
   ::CGImageRelease(iconImage);
-  if (err != noErr) return NS_ERROR_FAILURE;
 
   mLoadedIcon = PR_TRUE;
   mSetIcon = PR_TRUE;
