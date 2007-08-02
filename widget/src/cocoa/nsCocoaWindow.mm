@@ -1079,6 +1079,13 @@ NS_IMETHODIMP nsCocoaWindow::GetAnimatedResize(PRUint16* aAnimation)
   return NS_OK;
 }
 
+gfxASurface* nsCocoaWindow::GetThebesSurface()
+{
+  if (mPopupContentView)
+    return mPopupContentView->GetThebesSurface();
+  return nsnull;
+}
+
 
 @implementation WindowDelegate
 
