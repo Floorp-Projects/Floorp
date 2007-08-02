@@ -484,14 +484,7 @@ uriloader/exthandler/Makefile
 
 MAKEFILES_profile="
 profile/Makefile
-profile/src/Makefile
 profile/public/Makefile
-profile/resources/Makefile
-profile/pref-migrator/Makefile
-profile/pref-migrator/public/Makefile
-profile/pref-migrator/src/Makefile
-profile/pref-migrator/resources/Makefile
-profile/defaults/Makefile
 profile/dirserviceprovider/Makefile
 profile/dirserviceprovider/public/Makefile
 profile/dirserviceprovider/src/Makefile

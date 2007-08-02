@@ -46,9 +46,5 @@ MODULE		= profile
 
 DIRS		= public dirserviceprovider 
 
-ifndef MOZ_SINGLE_PROFILE
-DIRS            += src build resources defaults pref-migrator
-endif
-
 include $(topsrcdir)/config/rules.mk
 
