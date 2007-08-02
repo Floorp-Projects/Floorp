@@ -88,37 +88,28 @@ _cairo_filler_fini (cairo_filler_t *filler)
 static cairo_status_t
 _cairo_filler_move_to (void *closure, cairo_point_t *point)
 {
-    cairo_status_t status;
     cairo_filler_t *filler = closure;
     cairo_polygon_t *polygon = &filler->polygon;
 
-    status = _cairo_polygon_close (polygon);
-    if (status)
-	return status;
-
-    status = _cairo_polygon_move_to (polygon, point);
-    if (status)
-	return status;
+    _cairo_polygon_close (polygon);
+    _cairo_polygon_move_to (polygon, point);
 
     filler->current_point = *point;
 
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_polygon_status (&filler->polygon);
 }
 
 static cairo_status_t
 _cairo_filler_line_to (void *closure, cairo_point_t *point)
 {
-    cairo_status_t status;
     cairo_filler_t *filler = closure;
     cairo_polygon_t *polygon = &filler->polygon;
 
-    status = _cairo_polygon_line_to (polygon, point);
-    if (status)
-	return status;
+    _cairo_polygon_line_to (polygon, point);
 
     filler->current_point = *point;
 
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_polygon_status (&filler->polygon);
 }
 
 static cairo_status_t
@@ -138,15 +129,12 @@ _cairo_filler_curve_to (void *closure,
     if (status == CAIRO_INT_STATUS_DEGENERATE)
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_spline_decompose (&spline, filler->tolerance);
+    status = _cairo_spline_decompose (&spline, filler->tolerance);
     if (status)
 	goto CLEANUP_SPLINE;
 
-    for (i = 1; i < spline.num_points; i++) {
-	status = _cairo_polygon_line_to (polygon, &spline.points[i]);
-	if (status)
-	    break;
-    }
+    for (i = 1; i < spline.num_points; i++)
+	_cairo_polygon_line_to (polygon, &spline.points[i]);
 
   CLEANUP_SPLINE:
     _cairo_spline_fini (&spline);
@@ -159,15 +147,12 @@ _cairo_filler_curve_to (void *closure,
 static cairo_status_t
 _cairo_filler_close_path (void *closure)
 {
-    cairo_status_t status;
     cairo_filler_t *filler = closure;
     cairo_polygon_t *polygon = &filler->polygon;
 
-    status = _cairo_polygon_close (polygon);
-    if (status)
-	return status;
+    _cairo_polygon_close (polygon);
 
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_polygon_status (polygon);
 }
 
 static cairo_int_status_t
@@ -201,7 +186,8 @@ _cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,
     if (status)
 	goto BAIL;
 
-    status = _cairo_polygon_close (&filler.polygon);
+    _cairo_polygon_close (&filler.polygon);
+    status = _cairo_polygon_status (&filler.polygon);
     if (status)
 	goto BAIL;
 
