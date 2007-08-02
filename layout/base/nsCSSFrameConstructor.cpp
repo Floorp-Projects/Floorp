@@ -3447,21 +3447,14 @@ nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
   // tableCaptionFrame, otherwise the inner table frame is the parent
   // (bug 341858).
   nsIAtom* parentType = aParentFrame->GetType();
-  if (parentType == nsGkAtoms::tableOuterFrame) {
+  NS_ASSERTION(parentType != nsGkAtoms::tableOuterFrame,
+               "Shouldn't be happening");
+  if (parentType == nsGkAtoms::tableColGroupFrame) {
     childIsSpecialContent = IsSpecialContent(aChildContent, aTag, aNameSpaceID,
                                              aChildStyle);
     if (childIsSpecialContent ||
-       (aChildStyle->GetStyleDisplay()->mDisplay !=
-       NS_STYLE_DISPLAY_TABLE_CAPTION)) {
-      aParentFrame = aParentFrame->GetContentInsertionFrame();
-    }
-  }
-  else if (parentType == nsGkAtoms::tableColGroupFrame) {
-    childIsSpecialContent = IsSpecialContent(aChildContent, aTag, aNameSpaceID,
-                                             aChildStyle);
-    if (childIsSpecialContent ||
-       (aChildStyle->GetStyleDisplay()->mDisplay !=
-        NS_STYLE_DISPLAY_TABLE_COLUMN)) {
+        (aChildStyle->GetStyleDisplay()->mDisplay !=
+         NS_STYLE_DISPLAY_TABLE_COLUMN)) {
       aSuppressFrame = PR_TRUE;
       return NS_OK;
     }
@@ -6539,14 +6532,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsFrameConstructorState& aSta
     {
       // aParentFrame may be an inner table frame rather than an outer frame 
       // In this case we need to get the outer frame.
-      nsIFrame* parentFrame = aParentFrame;
-      nsIFrame* outerFrame = aParentFrame->GetParent();
-      if (outerFrame) {
-        if ((nsGkAtoms::tableOuterFrame == outerFrame->GetType()) &&
-            (nsGkAtoms::tableFrame == parentFrame->GetType())) {
-          parentFrame = outerFrame;
-        }
-      }
+      nsIFrame* parentFrame = AdjustCaptionParentFrame(aParentFrame);
       rv = ConstructTableCaptionFrame(aState, aContent, parentFrame,
                                       aStyleContext, aNameSpaceID, aFrameItems,
                                       newFrame, aHasPseudoParent);
@@ -8256,7 +8242,6 @@ ShouldIgnoreSelectChild(nsIContent* aContainer)
   return PR_FALSE;
 }
 
-// For tables, returns the inner table, if the child is not a caption. 
 // For fieldsets, returns the area frame, if the child is not a legend. 
 static nsIFrame*
 GetAdjustedParentFrame(nsIFrame*       aParentFrame,
@@ -8264,17 +8249,13 @@ GetAdjustedParentFrame(nsIFrame*       aParentFrame,
                        nsIContent*     aParentContent,
                        PRInt32         aChildIndex)
 {
+  NS_PRECONDITION(nsGkAtoms::tableOuterFrame != aParentFrameType,
+                  "Shouldn't be happening!");
+  
   nsIContent *childContent = aParentContent->GetChildAt(aChildIndex);
   nsIFrame* newParent = nsnull;
 
-  if (nsGkAtoms::tableOuterFrame == aParentFrameType) {
-    nsCOMPtr<nsIDOMHTMLTableCaptionElement> captionContent(do_QueryInterface(childContent));
-    // If the parent frame is an outer table, use the innner table
-    // as the parent unless the new content is a caption.
-    if (!captionContent) 
-      newParent = aParentFrame->GetFirstChild(nsnull);
-  }
-  else if (nsGkAtoms::fieldSetFrame == aParentFrameType) {
+  if (nsGkAtoms::fieldSetFrame == aParentFrameType) {
     // If the parent is a fieldSet, use the fieldSet's area frame as the
     // parent unless the new content is a legend. 
     nsCOMPtr<nsIDOMHTMLLegendElement> legendContent(do_QueryInterface(childContent));
@@ -8497,7 +8478,7 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   parentFrame = parentFrame->GetLastContinuation();
 
   nsIAtom* frameType = parentFrame->GetType();
-  // Deal with inner/outer tables, fieldsets
+  // Deal with fieldsets
   parentFrame = ::GetAdjustedParentFrame(parentFrame, frameType,
                                          aContainer, aNewIndexInContainer);
 
@@ -8558,14 +8539,6 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
         }
         newFrame = tempItems.childList;
       }
-    }
-    else if (nsGkAtoms::tableColGroupFrame == frameType) {
-      nsRefPtr<nsStyleContext> childStyleContext;
-      childStyleContext = ResolveStyleContext(parentFrame, childContent);
-      if (childStyleContext->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_TABLE_COLUMN)
-        continue; //don't create anything else than columns below a colgroup
-      ConstructFrame(state, childContent, parentFrame, frameItems);
-      newFrame = frameItems.lastChild;
     }
     else {
       // Construct a child frame (that does not have a table as parent)
@@ -8966,16 +8939,16 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   // otherwise use the next sibling.
   if (prevSibling) {
     if (!handleSpecialFrame)
-      parentFrame = prevSibling->GetParent();
+      parentFrame = prevSibling->GetParent()->GetContentInsertionFrame();
   }
   else if (nextSibling) {
     if (!handleSpecialFrame)
-      parentFrame = nextSibling->GetParent();
+      parentFrame = nextSibling->GetParent()->GetContentInsertionFrame();
   }
   else {
     // No previous or next sibling, so treat this like an appended frame.
     isAppend = PR_TRUE;
-    // Deal with inner/outer tables, fieldsets
+    // Deal with fieldsets
     parentFrame = ::GetAdjustedParentFrame(parentFrame, parentFrame->GetType(),
                                            aContainer, aIndexInContainer);
     parentFrame =
@@ -9110,12 +9083,6 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
       }
     }
   }
-  else if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == parentDisplay->mDisplay) {
-      nsRefPtr<nsStyleContext> childStyleContext;
-      childStyleContext = ResolveStyleContext(parentFrame, aChild);
-      if (childStyleContext->GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_TABLE_COLUMN)
-        return NS_OK; //don't create anything else than columns below a colgroup  
-  }
 
   // if the container is a table and a caption will be appended, it needs to be
   // put in the outer table frame's additional child list.
@@ -9138,12 +9105,12 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   if (!state.mPseudoFrames.IsEmpty())
     ProcessPseudoFrames(state, frameItems);
 
-  // If the final parent frame (decided by AdjustParentFrame()) is different
-  // from the parent of the insertion point we calculated above then
-  // parentFrame/prevSibling/appendAfterFrame are now invalid and  as it is
-  // unknown where to insert correctly we append instead (bug 341858).
-  if (frameItems.childList &&
-      frameItems.childList->GetParent() != parentFrame) {
+  // If the parent of our current prevSibling is different from the frame we'll
+  // actually use as the parent, then the calculated insertion point is now
+  // invalid and as it is unknown where to insert correctly we append instead
+  // (bug 341858).
+  if (prevSibling && frameItems.childList &&
+      frameItems.childList->GetParent() != prevSibling->GetParent()) {
     prevSibling = nsnull;
     isAppend = PR_TRUE;
     parentFrame =
@@ -9216,9 +9183,10 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
     if (NS_SUCCEEDED(rv) && newCaptionFrame) {
       nsIFrame* outerTableFrame;
       if (GetCaptionAdjustedParent(parentFrame, newCaptionFrame, &outerTableFrame)) {
-        // If we did adjust the parent then the calculated insertion point is
-        // now invalid (bug 341382).
-        if (parentFrame != outerTableFrame) {
+        // If the parent of our current prevSibling is different from the frame
+        // we'll actually use as the parent, then the calculated insertion
+        // point is now invalid (bug 341382).
+        if (prevSibling && prevSibling->GetParent() != outerTableFrame) {
           prevSibling = nsnull;
         }
         // If the parent is not a outer table frame we will try to add frames
