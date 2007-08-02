@@ -78,6 +78,7 @@ ConvertResultCode(int srv)
         case SQLITE_MISUSE:
             return NS_ERROR_UNEXPECTED;
         case SQLITE_ABORT:
+        case SQLITE_INTERRUPT:
             return NS_ERROR_ABORT;
     }
 
