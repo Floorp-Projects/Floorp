@@ -1,5 +1,5 @@
 /*
- * $Id: pixman-edge.c,v 1.4 2007/08/02 06:54:41 vladimir%pobox.com Exp $
+ * $Id: pixman-edge.c,v 1.5 2007/08/02 06:57:51 vladimir%pobox.com Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -21,7 +21,11 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
+
+#if HAVE_CONFIG_H
 #include <config.h>
+#endif
+
 #include <string.h>
 #include "pixman.h"
 #include "pixman-private.h"
