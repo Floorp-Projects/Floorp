@@ -576,6 +576,13 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     return XPC_XOW_RewrapIfNeeded(cx, obj, vp);
   }
 
+  JSObject *proto = nsnull; // Initialize this to quiet GCC.
+  JSBool checkProto =
+    (isSet && id == GetRTStringByIndex(cx, XPCJSRuntime::IDX_PROTO));
+  if (checkProto) {
+    proto = JS_GetPrototype(cx, wrappedObj);
+  }
+
   // Same origin, pass this request along as though nothing interesting
   // happened.
   jsid asId;
@@ -589,6 +596,27 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
               : OBJ_GET_PROPERTY(cx, wrappedObj, asId, vp);
   if (!ok) {
     return JS_FALSE;
+  }
+
+  if (checkProto && JS_GetPrototype(cx, wrappedObj) != proto) {
+    // Ensure that this __proto__ setting didn't create a cycle. The JS
+    // engine tries to do this, but XOWs confuse it. So here we deal with
+    // them by unwrapping each step up the prototype chain.
+
+    JSObject *oldProto = proto;
+    proto = wrappedObj;
+    while ((proto = JS_GetPrototype(cx, proto)) != nsnull) {
+      JSObject *unwrapped = GetWrappedObject(cx, proto);
+      if (unwrapped) {
+        proto = unwrapped;
+      }
+
+      if (proto == wrappedObj) {
+        JS_SetPrototype(cx, wrappedObj, oldProto);
+        JS_ReportError(cx, "cyclic __proto__ value");
+        return JS_FALSE;
+      }
+    }
   }
 
   // Don't call XPC_XOW_RewrapIfNeeded for same origin properties. We only
