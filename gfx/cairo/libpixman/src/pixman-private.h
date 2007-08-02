@@ -5,6 +5,8 @@
 #ifndef PIXMAN_PRIVATE_H
 #define PIXMAN_PRIVATE_H
 
+#include "cairo-platform.h"
+
 #include "pixman.h"
 #include <time.h>
 
@@ -14,6 +16,30 @@
 
 #ifndef TRUE
 #define TRUE 1
+#endif
+
+#ifdef _MSC_VER
+
+#define snprintf _snprintf
+#undef inline
+#define inline __inline
+
+# ifndef INT16_MIN
+#  define INT16_MIN	(-32767-1)
+# endif
+# ifndef INT16_MAX
+#  define INT16_MAX	(32767)
+# endif
+# ifndef INT32_MIN
+#  define INT32_MIN	(-2147483647-1)
+# endif
+# ifndef INT32_MAX
+#  define INT32_MAX	(2147483647)
+# endif
+# ifndef UINT32_MAX
+#  define UINT32_MAX    (4294967295)
+# endif
+
 #endif
 
 #define MSBFirst 0
@@ -776,6 +802,8 @@ pixman_rasterize_edges_accessors (pixman_image_t *image,
 				  pixman_fixed_t	b);
 
 
+#ifndef MOZILLA_CLIENT
+
 /* Timing */
 static inline uint64_t
 oil_profile_stamp_rdtsc (void)
@@ -785,8 +813,6 @@ oil_profile_stamp_rdtsc (void)
     return ts;
 }
 #define OIL_STAMP oil_profile_stamp_rdtsc
-
-#ifndef MOZILLA_CLIENT
 
 typedef struct PixmanTimer PixmanTimer;
 
