@@ -2127,6 +2127,18 @@ NSEvent* globalDragEvent = nil;
 }
 
 
+- (void)sendFocusEvent:(PRUint32)eventType
+{
+  if (!mGeckoChild)
+    return;
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsGUIEvent focusGuiEvent(PR_TRUE, eventType, mGeckoChild);
+  focusGuiEvent.time = PR_IntervalNow();
+  mGeckoChild->DispatchEvent(&focusGuiEvent, status);
+}
+
+
 // We accept key and mouse events, so don't keep passing them up the chain. Allow
 // this to be a 'focussed' widget for event dispatch
 - (BOOL)acceptsFirstResponder
@@ -3967,8 +3979,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (!mGeckoChild)
     return NO;
 
-  nsGUIEvent event(PR_TRUE, NS_GOTFOCUS, mGeckoChild);
-  mGeckoChild->DispatchWindowEvent(event);
+  [self sendFocusEvent:NS_GOTFOCUS];
 
   return [super becomeFirstResponder];
 }
@@ -3979,10 +3990,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 // nil -- otherwise the keyboard focus can end up in the wrong NSView.
 - (BOOL)resignFirstResponder
 {
-  if (mGeckoChild) {
-    nsGUIEvent event(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
-    mGeckoChild->DispatchWindowEvent(event);
-  }
+  if (mGeckoChild)
+    [self sendFocusEvent:NS_LOSTFOCUS];
 
   return [super resignFirstResponder];
 }
@@ -4001,11 +4010,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (isMozWindow)
     [[self window] setSuppressMakeKeyFront:YES];
 
-  nsGUIEvent focusEvent(PR_TRUE, NS_GOTFOCUS, mGeckoChild);
-  mGeckoChild->DispatchWindowEvent(focusEvent);
-
-  nsGUIEvent activateEvent(PR_TRUE, NS_ACTIVATE, mGeckoChild);
-  mGeckoChild->DispatchWindowEvent(activateEvent);
+  [self sendFocusEvent:NS_GOTFOCUS];
+  [self sendFocusEvent:NS_ACTIVATE];
 
   if (isMozWindow)
     [[self window] setSuppressMakeKeyFront:NO];
@@ -4017,11 +4023,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (!mGeckoChild)
     return;
 
-  nsGUIEvent deactivateEvent(PR_TRUE, NS_DEACTIVATE, mGeckoChild);
-  mGeckoChild->DispatchWindowEvent(deactivateEvent);
-
-  nsGUIEvent unfocusEvent(PR_TRUE, NS_LOSTFOCUS, mGeckoChild);
-  mGeckoChild->DispatchWindowEvent(unfocusEvent);
+  [self sendFocusEvent:NS_DEACTIVATE];
+  [self sendFocusEvent:NS_LOSTFOCUS];
 }
 
 
