@@ -8720,10 +8720,12 @@ nsCSSFrameConstructor::NeedSpecialFrameReframe(nsIContent*     aParent1,
             aParentFrame = prevParent;
           }
         }
-        else { 
-          // there is no ending enline frame (which should never happen) but aChild needs to go 
-          // there, so for now just bail and force a reframe.
-          NS_ASSERTION(PR_FALSE, "no last inline frame");
+        else {
+          // The child has no next sibling, so we can't find the ending inline
+          // frame (which might not exist in this case anyway!), but aChild
+          // should go in there.  Force a reframe.
+          // XXXbz wouldn't getting prevParent's special sibling work, with
+          // reframing only needed if that's null?
           return PR_TRUE;
         }
       }
