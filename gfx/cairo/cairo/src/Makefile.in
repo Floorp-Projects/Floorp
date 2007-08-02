@@ -81,6 +81,7 @@ CSRCS   = \
         cairo-debug.c \
         cairo-deflate-stream.c \
         cairo-fixed.c \
+	cairo-font-face.c \
         cairo-font-options.c \
         cairo-freelist.c \
         cairo-gstate.c \
@@ -196,4 +197,8 @@ DEFINES += -DPACKAGE_VERSION="\"moz\"" -DPACKAGE_BUGREPORT="\"http://bugzilla.mo
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 DEFINES += -DCAIRO_WIN32_STATIC_BUILD
+endif
+
+ifdef MOZ_TREE_CAIRO
+DEFINES += -DMOZ_TREE_CAIRO
 endif
