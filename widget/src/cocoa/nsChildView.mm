@@ -731,18 +731,6 @@ NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
 }
 
 
-nsIFontMetrics* nsChildView::GetFont(void)
-{
-  return nsnull;
-}
-
-
-NS_IMETHODIMP nsChildView::SetFont(const nsFont &aFont)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
 // Set the colormap of the window
 NS_IMETHODIMP nsChildView::SetColorMap(nsColorMap *aColorMap)
 {

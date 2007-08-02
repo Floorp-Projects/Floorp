@@ -1253,31 +1253,6 @@ NS_METHOD nsWindow::SetBackgroundColor(const nscolor &aColor)
 	return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-//
-// Get this component font
-//
-//-------------------------------------------------------------------------
-nsIFontMetrics* nsWindow::GetFont(void)
-{
-	return mFontMetrics;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Set this component font
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetFont(const nsFont &aFont)
-{
-  // Cache Font for owner draw
-	NS_IF_RELEASE(mFontMetrics);
-	if (mContext)
-		mContext->GetMetricsFor(aFont, mFontMetrics);
-	return NS_OK;
-}
-
 
 //-------------------------------------------------------------------------
 //
