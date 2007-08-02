@@ -166,8 +166,6 @@ public:
   NS_IMETHOD              GetClientBounds(nsRect &aRect);
   NS_IMETHOD              GetScreenBounds(nsRect &aRect);
   NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
-  virtual nsIFontMetrics* GetFont(void);
-  NS_IMETHOD              SetFont(const nsFont &aFont);
   NS_IMETHOD              SetCursor(nsCursor aCursor);
   NS_IMETHOD              SetCursor(imgIContainer* aCursor,
                                     PRUint32 aHotspotX, PRUint32 aHotspotY);
@@ -437,9 +435,6 @@ protected:
   char          mLeadByte;
   PRUint32      mBlurEventSuppressionLevel;
   nsContentType mContentType;
-
-  // XXX Temporary, should not be caching the font
-  nsFont *      mFont;
 
   PRInt32       mPreferredWidth;
   PRInt32       mPreferredHeight;

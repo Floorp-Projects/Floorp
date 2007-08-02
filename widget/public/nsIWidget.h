@@ -619,22 +619,6 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD SetBackgroundColor(const nscolor &aColor) = 0;
 
     /**
-     * Get the font for this widget
-     *
-     * @return the font metrics 
-     */
-
-    virtual nsIFontMetrics* GetFont(void) = 0;
-
-    /**
-     * Set the font for this widget 
-     *
-     * @param aFont font to display. See nsFont for allowable fonts
-     */
-
-    NS_IMETHOD SetFont(const nsFont &aFont) = 0;
-
-    /**
      * Get the cursor for this widget.
      *
      * @return this widget's cursor.

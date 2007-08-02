@@ -54,7 +54,6 @@ public:
     nsDeviceContextSpecX();
 
     NS_DECL_ISUPPORTS
-#ifdef MOZ_CAIRO_GFX
     NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
     NS_IMETHOD BeginDocument(PRUnichar*  aTitle, 
                              PRUnichar*  aPrintToFileName,
@@ -63,7 +62,6 @@ public:
     NS_IMETHOD EndDocument();
     NS_IMETHOD BeginPage();
     NS_IMETHOD EndPage();
-#endif
 
     /**
      * Initialize the nsDeviceContextSpecX for use.  This will allocate a printrecord for use
