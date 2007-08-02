@@ -5747,6 +5747,11 @@ void nsWindow::OnDestroy()
   mOnDestroyCalled = PR_TRUE;
 
   SubclassWindow(FALSE);
+
+  // We have to destroy the native drag target before we null out our
+  // window pointer
+  EnableDragDrop(PR_FALSE);
+
   mWnd = NULL;
 
   // free GDI objects
