@@ -559,15 +559,17 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
    *
    * - We're reflowing with a constrained computed height -- just use that
    *   height.
-   * - We're not dirty and have no dirty kids.  In this case, our cached max
-   *   height of a child is not going to change.
+   * - We're not dirty and have no dirty kids and shouldn't be reflowing all
+   *   kids.  In this case, our cached max height of a child is not going to
+   *   change.
    * - We do our first reflow using our cached max height of a child, then
    *   compute the new max height and it's the same as the old one.
    */
 
   PRBool autoHeight = (aReflowState.ComputedHeight() == NS_UNCONSTRAINEDSIZE);
 
-  mMightNeedSecondPass = autoHeight && NS_SUBTREE_DIRTY(this);
+  mMightNeedSecondPass = autoHeight &&
+    (NS_SUBTREE_DIRTY(this) || aReflowState.ShouldReflowAllKids());
   
   nsHTMLReflowState state(aReflowState);
   PRInt32 length = GetNumberOfOptions();  
@@ -637,7 +639,8 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
   NS_PRECONDITION(aReflowState.ComputedHeight() == NS_UNCONSTRAINEDSIZE,
                   "We should not have a computed height here!");
   
-  mMightNeedSecondPass = NS_SUBTREE_DIRTY(this);
+  mMightNeedSecondPass = NS_SUBTREE_DIRTY(this) ||
+    aReflowState.ShouldReflowAllKids();
 
   nscoord oldHeightOfARow = HeightOfARow();
 
