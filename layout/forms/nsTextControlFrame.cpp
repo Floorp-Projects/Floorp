@@ -1312,6 +1312,16 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
     if (PresContext()->CompatibilityMode() == eCompatibility_FullStandards) {
       aIntrinsicSize.width += 1;
     }
+
+    // Also add in the padding of our anonymous div child.  Note that it hasn't
+    // been reflowed yet, so we can't get its used padding, but it shouldn't be
+    // using percentage padding anyway.
+    nsMargin childPadding;
+    if (GetFirstChild(nsnull)->GetStylePadding()->GetPadding(childPadding)) {
+      aIntrinsicSize.width += childPadding.LeftRight();
+    } else {
+      NS_ERROR("Percentage padding on anonymous div?");
+    }
   }
 
   // Increment width with cols * letter-spacing.
