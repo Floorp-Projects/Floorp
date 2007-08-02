@@ -22,6 +22,8 @@
  * Contributor(s):
  *   Brian Ryner <bryner@brianryner.com> (original author)
  *   Joe Hughes <joe@retrovirus.com>
+ *   Dietrich Ayala <dietrich@mozilla.com>
+ *   Asaf Romano <mano@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -161,7 +163,7 @@ interface nsINavBookmarkObserver : nsISupports
  * folders.  A URI in history can be contained in one or more such folders.
  */
 
-[scriptable, uuid(630dcd21-402c-44cd-8336-78bff3efc5f3)]
+[scriptable, uuid(117e4d4c-8c10-4c50-b588-848942b55b6e)]
 interface nsINavBookmarksService : nsISupports
 {
   /**
@@ -197,6 +199,7 @@ interface nsINavBookmarksService : nsISupports
   const unsigned short TYPE_BOOKMARK = 1;
   const unsigned short TYPE_FOLDER = 2;
   const unsigned short TYPE_SEPARATOR = 3;
+  const unsigned short TYPE_DYNAMIC_CONTAINER = 4;
 
   /**
    * Inserts a child bookmark into the given folder. If this item already exists in
@@ -235,22 +238,22 @@ interface nsINavBookmarksService : nsISupports
                          in long index);
 
   /**
-   * Wrapper for container services.  Creates a folder under the given
-   * parent and sets the container type. Containers are wrappers around
-   * read-only folders, with a specific type.
+   * Creates a dynamic container under the given parent folder.
    *
    *  @param aParentFolder
    *         The id of the parent folder
    *  @param aName
    *         The name of the new folder
-   *  @param aType
-   *         The type of container to insert
+   *  @param aContractId
+   *         The contract id of the service which is to manipulate this
+   *         container.
    *  @param aIndex
    *         The index to insert at, or -1 to append
+   *         
    *  @returns the ID of the newly-inserted folder
    */
-  long long createContainer(in long long aParentFolder, in AString aName,
-                            in AString aType, in long aIndex);
+  long long createDynamicContainer(in long long aParentFolder, in AString aName,
+                                  in AString aContractId, in long aIndex);
 
   /**
    * Removes a folder from the bookmarks tree.
@@ -434,12 +437,22 @@ interface nsINavBookmarksService : nsISupports
   unsigned short getItemType(in long long aItemId);
 
   /**
-   * Checks whether a folder has read-only children.  This property is
-   * defined by the nsIBookmarsContainer for the folder, if one exists.
+   * Checks whether a folder is marked as read-only.
    * If this is set to true, UI should not allow the user to add, remove,
-   * or reorder children in this folder.  The default for all folders is false.
+   * or reorder children in this folder. The default for all folders is false.
+   * @param aFolder
+   *        the item-id of the folder.
    */
   boolean getFolderReadonly(in long long aFolder);
+
+  /**
+   * Sets or unsets the readonly flag from a folder
+   * @param aFolder
+   *        the item-id of the folder.
+   * @param aReadOnly
+   *        the read-only state (boolean).
+   */
+  void setFolderReadonly(in long long aFolder, in boolean aReadOnly);
 
   /**
    * Returns true if the given URI is in any bookmark folder. If you want the
@@ -537,4 +550,3 @@ interface nsINavBookmarksService : nsISupports
   void runInBatchMode(in nsINavHistoryBatchCallback aCallback,
                       in nsISupports aUserData);
 };
-
