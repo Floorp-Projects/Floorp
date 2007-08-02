@@ -1339,8 +1339,14 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
     nsWindowType type;
     mParentWidget->GetWindowType(type);
     if (type == eWindowType_popup) {
-      event->widget = mParentWidget;
-      kungFuDeathGrip2 = mParentWidget;
+      // use the parent popup's widget if there is no view
+      void* clientData = nsnull;
+      if (event->widget)
+        event->widget->GetClientData(clientData);
+      if (!clientData) {
+        event->widget = mParentWidget;
+        kungFuDeathGrip2 = mParentWidget;
+      }
     }
   }
   
