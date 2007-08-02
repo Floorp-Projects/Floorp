@@ -1302,7 +1302,9 @@ array_pop(JSContext *cx, uintN argc, jsval *vp)
     obj = JS_THIS_OBJECT(cx, vp);
     if (!js_GetLengthProperty(cx, obj, &index))
         return JS_FALSE;
-    if (index > 0) {
+    if (index == 0) {
+        *vp = JSVAL_VOID;
+    } else {
         index--;
 
         /* Get the to-be-deleted property's value into vp. */
