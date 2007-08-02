@@ -128,7 +128,7 @@ nsAsyncInstantiateEvent::Run()
   // the type here - GetFrame() only returns object frames, and that means we're
   // a plugin)
   // Also make sure that we still refer to the same data.
-  if (mContent->GetFrame() == mFrame &&
+  if (mContent->GetFrame(PR_FALSE) == mFrame &&
       mContent->mURI == mURI &&
       mContent->mContentType.Equals(mContentType)) {
     if (LOG_ENABLED()) {
@@ -455,7 +455,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
         notifier.Notify();
       }
       nsIObjectFrame* frame;
-      frame = GetFrame();
+      frame = GetFrame(PR_TRUE);
       if (!frame) {
         // Do nothing in this case: This is probably due to a display:none
         // frame. If we ever get a frame, HasNewFrame will do the right thing.
@@ -577,7 +577,7 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
     return NS_OK;
   }
 
-  nsIObjectFrame* frame = GetFrame();
+  nsIObjectFrame* frame = GetFrame(PR_FALSE);
   if (frame) {
     // If we have a frame, we may have pending instantiate events; revoke
     // them.
@@ -614,7 +614,7 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
 
     mInstantiating = PR_FALSE;
 
-    frame = GetFrame();
+    frame = GetFrame(PR_FALSE);
     if (!frame) {
       return NS_OK;
     }
@@ -1369,7 +1369,7 @@ nsObjectLoadingContent::GetObjectBaseURI(nsIContent* thisContent, nsIURI** aURI)
 }
 
 nsIObjectFrame*
-nsObjectLoadingContent::GetFrame()
+nsObjectLoadingContent::GetFrame(PRBool aFlushLayout)
 {
   nsCOMPtr<nsIContent> thisContent = 
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
@@ -1399,7 +1399,9 @@ nsObjectLoadingContent::GetFrame()
     
     // OK, let's flush out and try again.  Note that we want to reget
     // the document, etc, since flushing might run script.
-    doc->FlushPendingNotifications(Flush_ContentAndNotify);
+    mozFlushType flushType =
+      aFlushLayout ? Flush_Layout : Flush_ContentAndNotify;
+    doc->FlushPendingNotifications(flushType);
 
     flushed = PR_TRUE;
   } while (1);
@@ -1412,7 +1414,7 @@ nsObjectLoadingContent::GetFrame()
 nsresult
 nsObjectLoadingContent::Instantiate(const nsACString& aMIMEType, nsIURI* aURI)
 {
-  nsIObjectFrame* frame = GetFrame();
+  nsIObjectFrame* frame = GetFrame(PR_FALSE);
   if (!frame) {
     LOG(("OBJLC [%p]: Attempted to instantiate, but have no frame\n", this));
     return NS_OK; // Not a failure to have no frame
