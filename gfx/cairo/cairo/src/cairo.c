@@ -480,6 +480,8 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
     cairo_status_t status;
     cairo_rectangle_int_t extents;
     cairo_surface_t *parent_surface, *group_surface = NULL;
+    int width;
+    int height;
 
     if (cr->status)
 	return;
@@ -493,10 +495,15 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
     if (status)
 	goto bail;
 
+    width = extents.width;
+    height = extents.height;
+
+    if (width == 0 || height == 0)
+	width = height = 1;
+
     group_surface = cairo_surface_create_similar (_cairo_gstate_get_target (cr->gstate),
 						  content,
-						  extents.width,
-						  extents.height);
+						  width, height);
     status = cairo_surface_status (group_surface);
     if (status)
 	goto bail;
