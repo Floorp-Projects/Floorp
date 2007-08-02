@@ -6133,8 +6133,7 @@ RDFItemUpdater.prototype = {
     // Items that have a pending install, uninstall, or upgrade are not checked
     // for updates.
     var opType = emDS.getItemProperty(aItem.id, "opType");
-    if (opType == OP_NEEDS_INSTALL || opType == OP_NEEDS_UNINSTALL ||
-        opType == OP_NEEDS_UPGRADE) {
+    if (opType) {
       var status = nsIAddonUpdateCheckListener.STATUS_PENDING_OP;
       this._updater.checkForDone(aItem, status);
       return;
