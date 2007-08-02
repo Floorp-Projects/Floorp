@@ -401,6 +401,11 @@ public:
     return  mCreatingInnerWindow;
   }
 
+  PRBool IsChromeWindow() const
+  {
+    return mIsChrome;
+  }
+
   nsresult Observe(nsISupports* aSubject, const char* aTopic,
                    const PRUnichar* aData);
 
@@ -643,7 +648,10 @@ protected:
   // Indicates whether we're in the middle of creating an initializing
   // a new inner window object.
   PRPackedBool                  mCreatingInnerWindow : 1;
-  
+
+  // Fast way to tell if this is a chrome window (without having to QI).
+  PRPackedBool                  mIsChrome : 1;
+
   nsCOMPtr<nsIScriptContext>    mContext;
   nsCOMPtr<nsIDOMWindowInternal> mOpener;
   nsCOMPtr<nsIControllers>      mControllers;
@@ -721,6 +729,7 @@ public:
   nsGlobalChromeWindow(nsGlobalWindow *aOuterWindow)
     : nsGlobalWindow(aOuterWindow)
   {
+    mIsChrome = PR_TRUE;
   }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsGlobalChromeWindow,
