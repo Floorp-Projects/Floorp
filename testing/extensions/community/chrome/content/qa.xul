@@ -47,6 +47,7 @@
 <?xul-overlay href="chrome://qa/content/tabs/qmo.xul"?>
 <?xul-overlay href="chrome://qa/content/tabs/chat.xul"?>
 <?xul-overlay href="chrome://qa/content/tabs/bugzilla.xul"?>
+<?xul-overlay href="chrome://qa/content/tabs/help.xul"?>
 
 <window
   id="qa-mainwindow"
