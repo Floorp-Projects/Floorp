@@ -735,7 +735,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
     NS_INTERFACE_TABLE_ENTRY(_class, _i8)                                     \
     NS_INTERFACE_TABLE_ENTRY(_class, _i9)                                     \
     NS_INTERFACE_TABLE_ENTRY(_class, _i10)                                    \
-    NS_INTERFACE_TABLE_ENTRY(_class, _i12)                                    \
+    NS_INTERFACE_TABLE_ENTRY(_class, _i11)                                    \
     NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsISupports, _i1)              \
   NS_INTERFACE_TABLE_END                                                      \
   NS_INTERFACE_TABLE_TAIL
