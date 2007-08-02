@@ -2861,10 +2861,10 @@ js_strchr_limit(const jschar *s, jschar c, const jschar *limit)
 }
 
 const jschar *
-js_SkipWhiteSpace(const jschar *s, const jschar *end)
+js_SkipWhiteSpace(const jschar *s)
 {
-    JS_ASSERT(s <= end);
-    while (s != end && JS_ISSPACE(*s))
+    /* JS_ISSPACE is false on a null. */
+    while (JS_ISSPACE(*s))
         s++;
     return s;
 }
