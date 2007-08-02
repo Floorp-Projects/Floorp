@@ -938,7 +938,7 @@ out_of_range:
     return JS_TRUE;
 }
 
-int
+jsint
 js_BoyerMooreHorspool(const jschar *text, jsint textlen,
                       const jschar *pat, jsint patlen,
                       jsint start)
