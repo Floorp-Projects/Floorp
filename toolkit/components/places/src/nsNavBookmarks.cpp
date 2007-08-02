@@ -2532,6 +2532,9 @@ nsNavBookmarks::RemoveObserver(nsINavBookmarkObserver *aObserver)
 nsresult
 nsNavBookmarks::OnQuit()
 {
+  // remove observers on shutdown
+  mObservers.Clear();
+
   return NS_OK;
 }
 
