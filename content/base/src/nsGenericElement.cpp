@@ -3218,8 +3218,12 @@ nsGenericElement::doReplaceOrInsertBefore(PRBool aReplace,
     if (oldParent) {
       PRInt32 removeIndex = oldParent->IndexOf(newContent);
 
-      if (removeIndex < 0) {
-        // newContent is anonymous.  We can't deal with this, so just bail
+      if (removeIndex < 0 ||
+          !nsContentUtils::IsInSameAnonymousTree(container, newContent)) {
+        // newContent is an anonymous child or it is in the anonymous content
+        // and someone is trying to move it out from the anonymous content or
+        // to the anonymous content of some other binding.
+        // We can't deal with this, so just bail
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
       

@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=378866
+-->
+<head>
+  <title>Test for Bug 378866</title>
+  <bindings xmlns="http://www.mozilla.org/xbl" xmlns:html="http://www.w3.org/1999/xhtml">
+    <binding id="b1">
+      <content><html:span><html:span>
+        <children/>
+      </html:span><html:span></html:span></html:span></content>
+    </binding>
+  </bindings>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=378866">Mozilla Bug 378866</a>
+<p id="display"></p>
+<div id="content">
+  <span id="grandparent" style="-moz-binding: url(#b1);">
+    <span id="parent">
+      <span id="child"/>
+    </span>
+  </span>
+  <span id="grandparent2" style="-moz-binding: url(#b1);">
+    <span id="parent2">
+      <span id="child2"/>
+    </span>
+  </span>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 378866 **/
+
+  function test() {
+    var anon = document.getAnonymousNodes(document.getElementById('grandparent'));
+    var child = document.getElementById('child');
+    var appendedAnonymousContent = true;
+    try {
+      child.appendChild(anon[0].childNodes[0]);
+    } catch (e) {
+      appendedAnonymousContent = false;
+    }
+    ok(!appendedAnonymousContent,
+       "Appending anonymous content to normal content is not supported.");
+
+    var anon2 = document.getAnonymousNodes(document.getElementById('grandparent2'));
+    var anonElementInBinding1 = anon[0].childNodes[1];
+    var anonElementInBinding2 = anon2[0].childNodes[1];
+    appendedAnonymousContent = true;
+    try {
+      anonElementInBinding1.appendChild(anonElementInBinding2);
+    } catch (e) {
+      appendedAnonymousContent = false;
+    }
+    ok(!appendedAnonymousContent,
+       "Moving anonymous content from one binding to another is not supported.");
+
+    SimpleTest.finish();
+  }
+
+  function startTest() {
+    setTimeout(test, 100);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(startTest);
+
+]]>
+</script>
+</pre>
+</body>
+</html>
+
