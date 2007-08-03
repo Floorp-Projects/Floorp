@@ -48,78 +48,10 @@ PACKAGE_FILE = unix.pkg
 
 include $(topsrcdir)/config/rules.mk
 
-# Hack to make sure that mozilla-config has the proper nspr dependencies
-ifdef MOZ_NATIVE_NSPR
-FULL_NSPR_CFLAGS=$(shell $(NSPR_CONFIG) --cflags)
-FULL_NSPR_LIBS=$(shell $(NSPR_CONFIG) --libs)
-NSPR_NAME=nspr
-NSPR_VERSION=$(shell $(NSPR_CONFIG) --version)
-else
-FULL_NSPR_CFLAGS=-I$(includedir)/nspr
-FULL_NSPR_LIBS=$(subst -L$(libdir),-L$(mozappdir),$(shell $(DEPTH)/nsprpub/config/nspr-config --libs))
-NSPR_NAME=$(MOZ_APP_NAME)-nspr
-NSPR_VERSION=$(shell $(DEPTH)/nsprpub/config/nspr-config --version)
-endif
-
-ifdef MOZ_ENABLE_GTK
-SUPERWIN_LIBS=-lgtksuperwin
-endif
-
-_DEFS = $(subst \,\\\\\,$(ACDEFINES))
-
-pkg_config_files=$(MOZ_APP_NAME)-nspr.pc $(MOZ_APP_NAME)-xpcom.pc \
-	$(MOZ_APP_NAME)-js.pc \
-	$(MOZ_APP_NAME)-nss.pc $(MOZ_APP_NAME)-plugin.pc
-
-GARBAGE	= $(pkg_config_files) $(MOZ_APP_NAME)-config
-
-$(MOZ_APP_NAME)-config:: mozilla-config.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
-	cat $< | sed \
-	-e "s|%prefix%|$(prefix)|" \
-	-e "s|%exec_prefix%|$(exec_prefix)|" \
-	-e "s|%includedir%|$(includedir)|" \
-	-e "s|%libdir%|$(mozappdir)|" \
-	-e "s|%idldir%|$(idldir)|" \
-	-e "s|%MOZILLA_VERSION%|$(MOZ_APP_VERSION)|" \
-	-e "s|%DEFS%|$(_DEFS)|" \
-	-e "s|%FULL_NSPR_LIBS%|$(FULL_NSPR_LIBS)|" \
-	-e "s|%FULL_NSPR_CFLAGS%|$(FULL_NSPR_CFLAGS)|" > $@
-
-$(MOZ_APP_NAME)-%.pc : mozilla-%.pc.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
-	cat $< | sed \
-	-e "s|%prefix%|$(prefix)|" \
-	-e "s|%exec_prefix%|$(exec_prefix)|" \
-	-e "s|%includedir%|$(includedir)|" \
-	-e "s|%libdir%|$(mozappdir)|" \
-	-e "s|%idldir%|$(idldir)|" \
-	-e "s|%MOZ_APP_NAME%|$(MOZ_APP_NAME)|" \
-	-e "s|%MOZILLA_VERSION%|$(MOZ_APP_VERSION)|" \
-	-e "s|%SUPERWIN_LIBS%|$(SUPERWIN_LIBS)|" \
-	-e "s|%DEFS%|$(_DEFS)|" \
-	-e "s|%FULL_NSPR_LIBS%|$(FULL_NSPR_LIBS)|" \
-	-e "s|%FULL_NSPR_CFLAGS%|$(FULL_NSPR_CFLAGS)|" \
-	-e "s|%NSPR_NAME%|$(NSPR_NAME)|" \
-	-e "s|%NSPR_VERSION%|$(NSPR_VERSION)|" > $@
-
-libs:: $(MOZ_APP_NAME)-config
-	chmod 755 $<
-	$(INSTALL) -m 755 $< $(DIST)/bin
-
-libs:: $(srcdir)/run-mozilla.sh $(pkg_config_files)
+libs:: $(srcdir)/run-mozilla.sh
 	$(INSTALL) $< $(DIST)/bin
 
 ifeq ($(OS_ARCH),OpenVMS)
 libs:: vms/mozilla.com vms/install.com vms/getinfo.com
 	$(INSTALL) $? $(DIST)/bin
 endif
-
-install:: run-mozilla.sh
-	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(mozappdir)
-
-install:: $(MOZ_APP_NAME)-config
-	$(SYSINSTALL) $(IFLAGS2) $< $(DESTDIR)$(bindir)
-
-install:: $(pkg_config_files)
-	chmod 644 $<
-	$(SYSINSTALL) $(IFLAGS1) $(pkg_config_files) \
-		$(DESTDIR)$(libdir)/pkgconfig

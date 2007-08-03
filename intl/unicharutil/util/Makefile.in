@@ -53,14 +53,18 @@ include $(srcdir)/objs.mk
 MODULE=unicharutil
 LIBRARY_NAME=unicharutil_external_s
 DIST_INSTALL = 1
+SDK_LIBRARY = $(LIBRARY)
 
 REQUIRES=xpcom \
 		string \
 		uconv \
 		$(NULL)
 
-EXPORTS = \
+SDK_HEADERS = \
 	nsUnicharUtils.h \
+	$(NULL)
+
+EXPORTS = \
 	nsCompressedCharMap.h \
 	nsBidiUtils.h \
 	$(NULL)
