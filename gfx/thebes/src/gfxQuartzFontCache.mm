@@ -740,8 +740,12 @@ gfxQuartzFontCache::ResolveFontName(const nsAString& aFontName,
     }
     // try to find from apple family names.
     if (mAppleFamilyNames.Get(key, &name)) {
-        NSString *familyName = GetNSStringForString(name);        
-        NSFont *font = [NSFont fontWithName:familyName size:10.0];
+        NSString *familyName = GetNSStringForString(name);
+        NSFontManager *fontManager = [NSFontManager sharedFontManager];
+        NSFont *font = [fontManager fontWithFamily:familyName
+                                            traits:(NSUnboldFontMask | NSUnitalicFontMask)
+                                            weight:5
+                                              size:10.0];
         // XXX Don't use fontName of NSFont. It is buggy in some cases.
         if (mFontIDTable.Get(PRUint32([font _atsFontID]), &fe)) {
             mAllFamilyNames.Put(key, fe->Name());
