@@ -45,6 +45,10 @@
 #include "gfxTypes.h"
 #include "gfxASurface.h"
 
+#ifdef XP_OS2
+#undef OS2EMX_PLAIN_CHAR
+#endif
+
 typedef void* cmsHPROFILE;
 typedef void* cmsHTRANSFORM;
 
