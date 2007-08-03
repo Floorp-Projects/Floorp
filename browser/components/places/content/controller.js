@@ -1165,7 +1165,8 @@ PlacesController.prototype = {
 
       var data = new TransferData();
       function addData(type, overrideURI) {
-        data.addDataForFlavour(type, PlacesUtils._wrapString(PlacesUtils.wrapNode(node, type, overrideURI)));
+        data.addDataForFlavour(type, PlacesUtils._wrapString(
+                               PlacesUtils.wrapNode(node, type, overrideURI)));
       }
 
       function addURIData(overrideURI) {
@@ -1174,29 +1175,17 @@ PlacesController.prototype = {
         addData(PlacesUtils.TYPE_HTML, overrideURI);
       }
 
-      if (PlacesUtils.nodeIsFolder(node) || PlacesUtils.nodeIsQuery(node)) {
-        // Look up this node's place: URI in the annotation service to see if 
-        // it is a special, non-movable folder. 
-        // XXXben: TODO
-
-        addData(PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
-
-        // Allow dropping the feed uri of live-bookmark folders
-        if (PlacesUtils.nodeIsLivemarkContainer(node)) {
-          var uri = PlacesUtils.livemarks.getFeedURI(node.itemId);
-          addURIData(uri.spec);
-        }
-
-      }
-      else if (PlacesUtils.nodeIsSeparator(node)) {
-        addData(PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR);
-      }
-      else {
-        // This order is _important_! It controls how this and other 
-        // applications select data to be inserted based on type. 
-        addData(PlacesUtils.TYPE_X_MOZ_PLACE);
-        addURIData();
-      }
+      // This order is _important_! It controls how this and other 
+      // applications select data to be inserted based on type.
+      addData(PlacesUtils.TYPE_X_MOZ_PLACE);
+      
+      var uri;
+      
+      // Allow dropping the feed uri of live-bookmark folders
+      if (PlacesUtils.nodeIsLivemarkContainer(node))
+        uri = PlacesUtils.livemarks.getFeedURI(node.itemId).spec;
+      
+      addURIData(uri);
       dataSet.push(data);
     }
     return dataSet;
