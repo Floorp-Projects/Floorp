@@ -227,7 +227,7 @@
 #endif
             button.appendChild(popup);
             popup._result = this._result;
-            popup._resultNode = child;
+            popup._resultNode = asContainer(child);
             popup._containerNodesMap = this._containerNodesMap;
             this._containerNodesMap.push({ resultNode: child,
                                            domNode: popup });
