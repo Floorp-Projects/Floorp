@@ -288,6 +288,8 @@ GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, firefox.js)
 
 endif
 
+endif # LIBXUL_SDK
+
 ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
 
 ICON_FILES	= \
@@ -362,29 +364,43 @@ AB := $(firstword $(subst -, ,$(AB_CD)))
 clean clobber repackage::
 	rm -rf $(DIST)/$(APP_NAME).app
 
-libs repackage:: $(PROGRAM)
+ifdef LIBXUL_SDK
+APPFILES = Resources
+else
+APPFILES = MacOS
+endif
+
+libs repackage:: $(PROGRAM) application.ini
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
 	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
 	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
 	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
 	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj/InfoPlist.strings
-	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
-	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS/mangle $(DIST)/$(APP_NAME).app/Contents/MacOS/shlibsign
+	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)
+	$(RM) $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/mangle $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)/shlibsign
+ifdef LIBXUL_SDK
+	cp $(LIBXUL_DIST)/bin/$(XR_STUB_NAME) $(DIST)/$(APP_NAME).app/Contents/MacOS/firefox-bin
+else
+	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
+endif
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Plug-Ins
-	rsync -a --copy-unsafe-links $(DIST)/package/PrintPDE.plugin $(DIST)/$(APP_NAME).app/Contents/Plug-Ins
-	-cp -L $(DIST)/bin/mangle $(DIST)/bin/shlibsign $(DIST)/$(APP_NAME).app/Contents/MacOS
+	rsync -a --copy-unsafe-links $(LIBXUL_DIST)/package/PrintPDE.plugin $(DIST)/$(APP_NAME).app/Contents/Plug-Ins
+	-cp -L $(DIST)/bin/mangle $(DIST)/bin/shlibsign $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)
 	cp -RL $(DIST)/branding/firefox.icns $(DIST)/$(APP_NAME).app/Contents/Resources/firefox.icns
 	cp -RL $(DIST)/branding/document.icns $(DIST)/$(APP_NAME).app/Contents/Resources/document.icns
-	cp -RL $(DIST)/package/mozillaSuite.rsrc $(DIST)/$(APP_NAME).app/Contents/Resources/$(PROGRAM).rsrc
+	cp -RL $(LIBXUL_DIST)/package/mozillaSuite.rsrc $(DIST)/$(APP_NAME).app/Contents/Resources/firefox-bin.rsrc
 	echo -n APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
 #       remove CVS dirs from packaged app
 	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
 
+else
+ifdef LIBXUL_SDK
+libs::
+	cp $(LIBXUL_DIST)/bin/xulrunner-stub$(BIN_SUFFIX) $(DIST)/bin/firefox$(BIN_SUFFIX)
 endif
-
-endif # LIBXUL_SDK
+endif
 
 libs::
 	$(INSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin
@@ -394,3 +410,15 @@ libs:: $(srcdir)/profile/prefs.js
 
 install:: $(srcdir)/profile/prefs.js
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/defaults/profile
+
+ifdef LIBXUL_SDK
+ifndef SKIP_COPY_XULRUNNER
+libs::
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+	rsync -a --copy-unsafe-links $(LIBXUL_DIST)/XUL.framework $(DIST)/$(APP_NAME).app/Contents/Frameworks
+else
+	$(NSINSTALL) -D $(DIST)/bin/xulrunner
+	(cd $(LIBXUL_SDK)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)
+endif # cocoa
+endif # SKIP_COPY_XULRUNNER
+endif # LIBXUL_SDK
