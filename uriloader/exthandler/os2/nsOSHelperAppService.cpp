@@ -46,11 +46,9 @@
 #include "nsUnicharUtils.h"
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
-#include "nsNetCID.h"
 #include "nsIFileStreams.h"
 #include "nsILineInputStream.h"
 #include "nsILocalFile.h"
-#include "nsEscape.h"
 #include "nsIProcess.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
@@ -61,20 +59,7 @@
 #include "prenv.h"      // for PR_GetEnv()
 #include "nsMIMEInfoOS2.h"
 #include "nsAutoPtr.h"
-#include <stdlib.h>		// for system()
-
-#include "nsIPref.h" // XX Need to convert Handler code to new pref stuff
-static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID); // XXX need to convert to contract id
-
-#define INCL_DOSMISC
-#define INCL_DOSERRORS
-#define INCL_WINSHELLDATA
-#include <os2.h>
-
-#define MAXINIPARAMLENGTH 1024 // max length of OS/2 INI key for application parameters
-
-#define LOG(args) PR_LOG(mLog, PR_LOG_DEBUG, args)
-#define LOG_ENABLED() PR_LOG_TEST(mLog, PR_LOG_DEBUG)
+#include <stdlib.h>     // for system()
 
 static nsresult
 FindSemicolon(nsAString::const_iterator& aSemicolon_iter,
@@ -1503,18 +1488,26 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aType,
 }
 
 already_AddRefed<nsIHandlerInfo>
-nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme)
+nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme,
+                                            PRBool *found)
 {
   NS_ASSERTION(!aScheme.IsEmpty(), "No scheme was specified!");
 
-  PRBool exists;
   nsresult rv = OSProtocolHandlerExists(nsPromiseFlatCString(aScheme).get(),
-                                        &exists);
-  NS_ENSURE_SUCCESS(rv, nsnull);
+                                        found);
+  if (NS_FAILED(rv))
+    return nsnull;
 
-  nsMIMEInfoOS2 *handlerInfo = new nsMIMEInfoOS2();
+  nsMIMEInfoOS2 *handlerInfo =
+    new nsMIMEInfoOS2(aScheme, nsMIMEInfoBase::eProtocolInfo);
   NS_ENSURE_TRUE(handlerInfo, nsnull);
   NS_ADDREF(handlerInfo);
+
+  if (!*found) {
+    // Code that calls this requires an object regardless if the OS has
+    // something for us, so we return the empty object.
+    return handlerInfo;
+  }
 
   nsAutoString desc;
   GetApplicationDescription(aScheme, desc);
