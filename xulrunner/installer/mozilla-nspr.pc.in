@@ -1,6 +1,5 @@
 prefix=%prefix%
-exec_prefix=%exec_prefix%
-libdir=%libdir%
+sdkdir=%sdkdir%
 includedir=%includedir%
 
 Name: NSPR

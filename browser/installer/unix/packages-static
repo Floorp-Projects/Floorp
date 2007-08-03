@@ -15,7 +15,7 @@ bin/.autoreg
 [@AB_CD@]
 bin/chrome/@AB_CD@.jar
 bin/chrome/@AB_CD@.manifest
-bin/defaults/pref/firefox-l10n.js
+bin/@PREF_DIR@/firefox-l10n.js
 bin/defaults/existing-profile-defaults.js
 ; If you add a new directory you must explicitly call addDirectory in ab-CD.jst
 bin/browserconfig.properties
@@ -268,7 +268,7 @@ bin/chrome/toolkit.manifest
 bin/chrome/icons/default/default.xpm
 bin/chrome/reporter.manifest
 bin/chrome/reporter.jar
-bin/defaults/pref/reporter.js
+bin/@PREF_DIR@/reporter.js
 
 ; shell icons
 bin/icons/*.xpm
@@ -276,9 +276,9 @@ bin/icons/*.png
 
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
-bin/defaults/pref/firefox.js
-bin/defaults/pref/firefox-branding.js
-bin/defaults/pref/channel-prefs.js
+bin/@PREF_DIR@/firefox.js
+bin/@PREF_DIR@/firefox-branding.js
+bin/@PREF_DIR@/channel-prefs.js
 bin/greprefs/all.js
 bin/greprefs/security-prefs.js
 bin/greprefs/xpinstall.js

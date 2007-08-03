@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-## $Id: mozilla.in,v 1.14 2007/06/23 05:30:29 ajschult%verizon.net Exp $
+## $Id: mozilla.in,v 1.15 2007/08/03 14:46:19 benjamin%smedbergs.us Exp $
 ## 
 ## Usage:
 ##
@@ -53,7 +53,6 @@
 #set -x
 
 moz_libdir=%MOZAPPDIR%
-MRE_HOME=%MREDIR%
 
 # Use run-mozilla.sh in the current dir if it exists
 # If not, then start resolving symlinks until we find run-mozilla.sh
@@ -130,8 +129,6 @@ do
       ;;
   esac
 done
-
-export MRE_HOME
 
 if [ $debugging = 1 ]
 then
