@@ -402,7 +402,7 @@ nsThebesDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
     aFont->familyNameQuirks = fontStyle.familyNameQuirks;
     aFont->weight = fontStyle.weight;
     aFont->decorations = NS_FONT_DECORATION_NONE;
-    aFont->size = NSFloatPixelsToAppUnits(fontStyle.size, AppUnitsPerDevPixel());
+    aFont->size = NSFloatPixelsToAppUnits(fontStyle.size, UnscaledAppUnitsPerDevPixel());
     //aFont->langGroup = fontStyle.langGroup;
     aFont->sizeAdjust = fontStyle.sizeAdjust;
 
