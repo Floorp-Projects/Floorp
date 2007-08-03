@@ -465,14 +465,17 @@ nsXULPopupListener::LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent)
   //            used by the spellchecking popup. See bug 383930.
   pm->SetMouseLocation(aEvent, popup);
 
-  // if the popup has an anchoring attribute, anchor it to the element,
-  // otherwise just open it at the screen position where the mouse was clicked.
+  // For left-clicks, if the popup has an position attribute, or both the
+  // popupanchor and popupalign attributes are used, anchor the popup to the
+  // element, otherwise just open it at the screen position where the mouse
+  // was clicked. Context menus always open at the mouse position.
   mPopupContent = popup;
-  if (mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::position) ||
-      mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popupanchor) ||
-      mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popupalign)) {
+  if (!mIsContext &&
+      (mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::position) ||
+       (mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popupanchor) &&
+        mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popupalign)))) {
     pm->ShowPopup(mPopupContent, content, EmptyString(), 0, 0,
-                  mIsContext, PR_TRUE, PR_FALSE);
+                  PR_FALSE, PR_TRUE, PR_FALSE);
   }
   else {
     PRInt32 xPos = 0, yPos = 0;
