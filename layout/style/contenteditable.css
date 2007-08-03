@@ -65,7 +65,6 @@ a[name]:-moz-only-whitespace {
 
 :-moz-any-link:-moz-read-write {
   cursor: text;
-  color : inherit;
 }
 
 /* Prevent clicking on links from going to link */
