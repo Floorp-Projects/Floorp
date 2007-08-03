@@ -1672,7 +1672,7 @@ nsCanvasRenderingContext2D::MozTextAlongPath(const nsAString& textToDraw, PRBool
 
     PathChar *cp = new PathChar[strLength];
 
-    gfxPoint position;//(mThebesContext->CurrentPoint());
+    gfxPoint position(0.0,0.0);
     gfxFloat x = position.x;
     for (PRUint32 i = 0; i < strLength; i++)
     {
