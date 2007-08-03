@@ -130,13 +130,12 @@
     },
     
 	validateLogin : function(uname, passwd, callback) {
-	    var req = doSimpleXMLHttpRequest(litmus.baseURL+'json.cgi', {
-	       validate_login: 1,
-	       username: uname,
-	       password: passwd
+		var qs = queryString({ 
+		    validate_login: 1,
+	        username: uname,
+	        password: passwd
 	    });
-	    req.addErrback(callback);
-	    req.addCallback(callback);
+	    qaTools.httpPostRequest(litmus.baseURL+'json.cgi', qs, callback);
 	},
 	createAccount : function() {
 	    alert("XXX: not implemented");
