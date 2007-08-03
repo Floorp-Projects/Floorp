@@ -176,6 +176,9 @@ LivemarkService.prototype = {
   },
 
   _shutdown: function LS__shutdown() {
+    // remove bookmarks observer
+    this._bms.removeObserver(this);
+
     for (var livemark in this._livemarks) {
       if (livemark.loadGroup) 
         livemark.loadGroup.cancel(Cr.NS_BINDING_ABORTED);
