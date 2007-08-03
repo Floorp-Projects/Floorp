@@ -36,12 +36,12 @@
 
 # NSIS defines for release builds.
 # The nightly build branding.nsi is located in browser/installer/windows/nsis/
-!define BrandShortName        "Firefox"
-!define BrandFullName         "Mozilla Firefox"
+!define BrandShortName        "MooseCat"
+!define BrandFullName         "BorisSoft MooseCat"
 # BrandFullNameInternal is used for some registry and file system values that
 # should not contain release that may be in the BrandFullName (e.g. Beta 1, etc.)
-!define BrandFullNameInternal "Mozilla Firefox"
-!define CompanyName           "Mozilla Corporation"
+!define BrandFullNameInternal "BorisSoft MooseCat"
+!define CompanyName           "BorisSoft Narf"
 !define URLInfoAbout          "http://${AB_CD}.www.mozilla.com/${AB_CD}/"
 !define URLUpdateInfo         "http://${AB_CD}.www.mozilla.com/${AB_CD}/firefox/"
 !define SurveyURL             "https://survey.mozilla.com/1/Mozilla%20Firefox/${AppVersion}/${AB_CD}/exit.html"
