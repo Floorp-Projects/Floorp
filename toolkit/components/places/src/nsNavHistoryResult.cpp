@@ -1265,8 +1265,18 @@ nsNavHistoryContainerResultNode::MergeResults(
         PRUint32 oldIndex;
         nsNavHistoryResultNode* oldNode =
           FindChildURI(curAddition->mURI, &oldIndex);
-        if (oldNode)
-          ReplaceChildURIAt(oldIndex, curAddition);
+        if (oldNode) {
+          // if we don't have a parent (for example, the history
+          // sidebar, when sorted by last visited or most visited)
+          // we have to manually Remove/Insert instead of Replace
+          // see bug #389782 for details
+          if (mParent)
+            ReplaceChildURIAt(oldIndex, curAddition);
+          else {
+            RemoveChildAt(oldIndex, PR_TRUE);
+            InsertSortedChild(curAddition, PR_TRUE);
+          }
+        }
         else
           InsertSortedChild(curAddition);
       }
@@ -2446,8 +2456,9 @@ nsNavHistoryQueryResultNode::OnDeleteURI(nsIURI *aURI)
   for (PRInt32 i = 0; i < matches.Count(); i ++) {
     nsNavHistoryResultNode* node = matches[i];
     nsNavHistoryContainerResultNode* parent = node->mParent;
-    NS_ASSERTION(parent, "URI nodes should always have parents");
-
+    // URI nodes should always have parents
+    NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
+    
     PRInt32 childIndex = parent->FindChild(node);
     NS_ASSERTION(childIndex >= 0, "Child not found in parent");
     parent->RemoveChildAt(childIndex);
