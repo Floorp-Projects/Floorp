@@ -576,6 +576,8 @@ protected:
   /**
    * Fire a popupshowing event on the popup aPopup and then open the popup.
    *
+   * The caller must keep a strong reference to aPopup.
+   *
    * aPopup - the popup node to open
    * aMenu - should be set to the parent menu if this is a popup associated
    *         with a menu. Otherwise, should be null.
@@ -596,6 +598,8 @@ protected:
    * if aIsMenu is true, yet the next popup is not a menu, then this ends the
    * closing of popups. This allows a menulist inside a non-menu to close up
    * the menu but not close up the panel it is contained within.
+   *
+   * The caller must keep a strong reference to aPopup, aNextPopup and aLastPopup.
    *
    * aPopup - the popup to hide
    * aNextPopup - the next popup to hide

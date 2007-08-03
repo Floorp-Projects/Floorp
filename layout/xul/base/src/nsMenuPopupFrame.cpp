@@ -115,9 +115,8 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContex
   mPopupAlignment(POPUPALIGNMENT_NONE),
   mPopupAnchor(POPUPALIGNMENT_NONE),
   mPopupType(ePopupTypePanel),
-  mIsOpen(PR_FALSE),
+  mPopupState(ePopupClosed),
   mIsOpenChanged(PR_FALSE),
-  mIsOpenPending(PR_FALSE),
   mIsContextMenu(PR_FALSE),
   mGeneratedChildren(PR_FALSE),
   mMenuCanOverlapOSBar(PR_FALSE),
@@ -258,7 +257,7 @@ nsMenuPopupFrame::SetInitialChildList(nsIAtom* aListName,
 void
 nsMenuPopupFrame::AdjustView()
 {
-  if (mIsOpen) {
+  if (mPopupState == ePopupOpen || mPopupState == ePopupOpenAndVisible) {
     // if the popup has just opened, make sure the scrolled window is at 0,0
     if (mIsOpenChanged) {
       nsIBox* child = GetChildBox();
@@ -273,6 +272,7 @@ nsMenuPopupFrame::AdjustView()
     rect.x = rect.y = 0;
     viewManager->ResizeView(view, rect);
     viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
+    mPopupState = ePopupOpenAndVisible;
 
     nsPresContext* pc = PresContext();
     nsContainerFrame::SyncFrameViewProperties(pc, this, nsnull, view, 0);
@@ -321,7 +321,7 @@ nsMenuPopupFrame::InitializePopup(nsIContent* aAnchorContent,
 {
   EnsureWidget();
 
-  mIsOpenPending = PR_TRUE;
+  mPopupState = ePopupShowing;
   mAnchorContent = aAnchorContent;
   mXPos = aXPos;
   mYPos = aYPos;
@@ -424,7 +424,7 @@ nsMenuPopupFrame::InitializePopupAtScreen(PRInt32 aXPos, PRInt32 aYPos)
 {
   EnsureWidget();
 
-  mIsOpenPending = PR_TRUE;
+  mPopupState = ePopupShowing;
   mAnchorContent = nsnull;
   mScreenXPos = aXPos;
   mScreenYPos = aYPos;
@@ -440,7 +440,7 @@ nsMenuPopupFrame::InitializePopupWithAnchorAlign(nsIContent* aAnchorContent,
 {
   EnsureWidget();
 
-  mIsOpenPending = PR_TRUE;
+  mPopupState = ePopupShowing;
 
   // this popup opening function is provided for backwards compatibility
   // only. It accepts either coordinates or an anchor and alignment value
@@ -502,8 +502,8 @@ nsMenuPopupFrame::ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem)
 
   PRBool hasChildren = PR_FALSE;
 
-  if (!mIsOpen) {
-    mIsOpen = PR_TRUE;
+  if (mPopupState == ePopupShowing) {
+    mPopupState = ePopupOpen;
     mIsOpenChanged = PR_TRUE;
 
     nsIFrame* parent = GetParent();
@@ -533,25 +533,39 @@ nsMenuPopupFrame::ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem)
 }
 
 void
-nsMenuPopupFrame::HidePopup(PRBool aDeselectMenu)
+nsMenuPopupFrame::HidePopup(PRBool aDeselectMenu, nsPopupState aNewState)
 {
-  if (mIsOpen) {
-    if (IsMenu())
-      SetCurrentMenuItem(nsnull);
+  NS_ASSERTION(aNewState == ePopupClosed || aNewState == ePopupInvisible,
+               "popup being set to unexpected state");
 
-    mIncrementalString.Truncate();
+  // don't hide the popup when it isn't open
+  if (mPopupState == ePopupClosed || mPopupState == ePopupShowing)
+    return;
 
-    mIsOpen = PR_FALSE;
-    mIsOpenChanged = PR_FALSE;
-    mCurrentMenu = nsnull; // make sure no current menu is set
- 
-    nsIView* view = GetView();
-    nsIViewManager* viewManager = view->GetViewManager();
-    viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-    viewManager->ResizeView(view, nsRect(0, 0, 0, 0));
-
-    FireDOMEvent(NS_LITERAL_STRING("DOMMenuInactive"), mContent);
+  // when invisible and about to be closed, HidePopup has already been called,
+  // so just set the new state to closed and return
+  if (mPopupState == ePopupInvisible) {
+    if (aNewState == ePopupClosed)
+      mPopupState = ePopupClosed;
+    return;
   }
+
+  mPopupState = aNewState;
+
+  if (IsMenu())
+    SetCurrentMenuItem(nsnull);
+
+  mIncrementalString.Truncate();
+
+  mIsOpenChanged = PR_FALSE;
+  mCurrentMenu = nsnull; // make sure no current menu is set
+ 
+  nsIView* view = GetView();
+  nsIViewManager* viewManager = view->GetViewManager();
+  viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
+  viewManager->ResizeView(view, nsRect(0, 0, 0, 0));
+
+  FireDOMEvent(NS_LITERAL_STRING("DOMMenuInactive"), mContent);
 
   // XXX, bug 137033, In Windows, if mouse is outside the window when the menupopup closes, no
   // mouse_enter/mouse_exit event will be fired to clear current hover state, we should clear it manually.
