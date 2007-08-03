@@ -107,6 +107,17 @@ var qaTools = {
 			alert(e);
 		}
 	},
+	httpPostRequest : function (url, data, callback, errback) {
+		// do a xmlhttprequest sending data with the post method
+		var req = getXMLHttpRequest();
+		req.open("POST", url, true);
+	    req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	    req.setRequestHeader("Content-length", data.length);
+	    req.setRequestHeader("Connection", "close");
+	    req = sendXMLHttpRequest(req, data);
+	    req.addErrback(errback);
+	    req.addCallback(callback);
+	},
 	showHideLoadingMessage : function(box, bool) {
 		if (bool == true) { // show
 			var loading = document.createElementNS("http://www.w3.org/1999/xhtml", "p");
