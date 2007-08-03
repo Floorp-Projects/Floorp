@@ -1944,6 +1944,7 @@ void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 {
     uintN depth, nslots, minargs;
+    jsval *vp;
 
     if (fp->callobj)
         JS_CALL_OBJECT_TRACER(trc, fp->callobj, "call");
@@ -1976,6 +1977,7 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         JS_CALL_OBJECT_TRACER(trc, fp->callee, "callee");
 
     if (fp->argv) {
+        /* Trace argv including callee and thisp slots. */
         nslots = fp->argc;
         if (fp->fun) {
             minargs = FUN_MINARGS(fp->fun);
@@ -1984,7 +1986,23 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
             if (!FUN_INTERPRETED(fp->fun))
                 nslots += fp->fun->u.n.extra;
         }
-        TRACE_JSVALS(trc, nslots + 2, fp->argv - 2, "arg");
+        nslots += 2;
+        vp = fp->argv - 2;
+        if (fp->down && fp->down->spbase) {
+            /*
+             * Avoid unnecessary tracing in the common case when args overlaps
+             * with the stack segment of the previous frame. That segment is
+             * traced via the above spbase code and, when sp > spbase + depth,
+             * during tracing of the stack headers in js_TraceContext.
+             */
+            if (JS_UPTRDIFF(vp, fp->down->spbase) <
+                JS_UPTRDIFF(fp->down->sp, fp->down->spbase)) {
+                JS_ASSERT((size_t)nslots >= (size_t)(fp->down->sp - vp));
+                nslots -= (uintN)(fp->down->sp - vp);
+                vp = fp->down->sp;
+            }
+        }
+        TRACE_JSVALS(trc, nslots, vp, "arg");
     }
     JS_CALL_VALUE_TRACER(trc, fp->rval, "rval");
     if (fp->vars)
