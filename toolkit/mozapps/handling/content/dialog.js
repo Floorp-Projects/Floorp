@@ -210,10 +210,10 @@ var dialog = {
   */
   onCheck: function onCheck()
   {
-    document.getElementById("remember-text").hidden =
-      !document.getElementById("remember").checked;
-
-    window.sizeToContent();
+    if (document.getElementById("remember").checked)
+      document.getElementById("remember-text").setAttribute("visible", "true");
+    else
+      document.getElementById("remember-text").removeAttribute("visible");
   },
 
   /////////////////////////////////////////////////////////////////////////////
