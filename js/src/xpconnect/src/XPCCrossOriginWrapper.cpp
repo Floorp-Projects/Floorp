@@ -205,7 +205,8 @@ IsValFrame(JSContext *cx, JSObject *obj, jsval v, XPCWrappedNative *wn)
   if (JSVAL_IS_INT(v)) {
     col->Item(JSVAL_TO_INT(v), getter_AddRefs(domwin));
   } else {
-    nsAutoString str(JS_GetStringChars(JSVAL_TO_STRING(v)));
+    nsAutoString str(reinterpret_cast<PRUnichar *>
+                                     (JS_GetStringChars(JSVAL_TO_STRING(v))));
     col->NamedItem(str, getter_AddRefs(domwin));
   }
 
