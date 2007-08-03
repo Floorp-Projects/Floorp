@@ -856,18 +856,9 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     }
   }
 
-  PRInt32 clientPosPx;
-  nsIntRect screenRect = GetScreenRect();
-  nscoord pos;
-  if (isHorizontal) {
-    mouseEvent->GetScreenX(&clientPosPx);
-    pos = nsPresContext::CSSPixelsToAppUnits(clientPosPx) - 
-          PresContext()->DevPixelsToAppUnits(screenRect.x);
-  } else {
-    mouseEvent->GetScreenY(&clientPosPx);
-    pos = nsPresContext::CSSPixelsToAppUnits(clientPosPx) - 
-          PresContext()->DevPixelsToAppUnits(screenRect.y);
-  }
+  nsPoint pt =  nsLayoutUtils::GetDOMEventCoordinatesRelativeTo(mouseEvent,
+                                                                this);
+  nscoord pos = isHorizontal ? pt.x : pt.y;
 
   // If shift click or middle button, first
   // place the middle of the slider thumb under the click
