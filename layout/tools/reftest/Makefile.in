@@ -43,6 +43,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= reftest
+
+ifdef DISABLED_FOR_NOW
+
 LIBRARY_NAME    = reftest
 IS_COMPONENT	= 1
 MODULE_NAME	= nsReftestModule
@@ -92,6 +95,8 @@ EXTRA_DSO_LDOPTS = \
 XPIDLSRCS = nsIReftestHelper.idl
 
 CPPSRCS = nsReftestHelper.cpp
+
+endif
 
 EXTRA_COMPONENTS= \
 		reftest-cmdline.js \
