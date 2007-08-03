@@ -482,7 +482,7 @@ public:
    * Get the unscaled ratio of app units to dev pixels; useful if something
    * needs to be converted from to unscaled pixels
    */
-  PRInt32 UnscaledAppUnitsPerDevPixel() { return mAppUnitsPerDevNotScaledPixel; }
+  PRInt32 UnscaledAppUnitsPerDevPixel() const { return mAppUnitsPerDevNotScaledPixel; }
 
 protected:
   PRInt32 mAppUnitsPerDevPixel;
