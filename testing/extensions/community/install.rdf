@@ -1,28 +1,20 @@
 <?xml version="1.0"?>
-
-<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
-
-  <Description about="urn:mozilla:install-manifest">
-    <em:id>{667e9f3d-0096-4d2b-b171-9a96afbabe20}</em:id>
-    <em:version>0.0.3</em:version>
-    <em:type>2</em:type>
-   
-    <!-- Target Application this extension can install into, 
-         with minimum and maximum supported versions. --> 
-    <em:targetApplication>
-      <Description>
-        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-        <em:minVersion>2.0</em:minVersion>
-        <em:maxVersion>3.0a8</em:maxVersion>
-      </Description>
-    </em:targetApplication>
-   
-    <!-- Front End MetaData -->
-    <em:name>Mozilla Quality Extension</em:name>
-    <em:description>The QA tool</em:description>
-    <em:creator>Mozilla Quality Assurance</em:creator>
-    <em:homepageURL>http://quality.mozilla.org/</em:homepageURL>
-    <em:updateURL>https://landfill.bugzilla.org/mozillaQA/update.rdf</em:updateURL>
-  </Description>      
-</RDF>
+<RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#"
+         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <RDF:Description RDF:about="rdf:#$QJqvE"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="2.0"
+                   em:maxVersion="3.0a9" />
+  <RDF:Description RDF:about="urn:mozilla:install-manifest"
+                   em:id="{667e9f3d-0096-4d2b-b171-9a96afbabe20}"
+                   em:version="0.1.0"
+                   em:type="2"
+                   em:name="Mozilla Quality Extension"
+                   em:description="The QA tool"
+                   em:creator="Mozilla Quality Assurance"
+                   em:homepageURL="http://quality.mozilla.org/"
+                   em:updateURL="https://landfill.bugzilla.org/mozillaQA/update.rdf">
+    <em:targetApplication RDF:resource="rdf:#$QJqvE"/>
+  </RDF:Description>
+</RDF:RDF>
