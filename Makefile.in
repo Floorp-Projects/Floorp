@@ -82,11 +82,6 @@ export::
 	$(MAKE) -C config export
 	$(MAKE) tier_nspr
 
-install::
-ifdef MOZ_LDAP_XPCOM
-	$(MAKE) -C directory/c-sdk real_install DESTDIR=$(DESTDIR) libdir=$(mozappdir) includedir=$(includedir)/ldap
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 # After we build tier toolkit, go back and build the tools from previous dirs

@@ -1,11 +1,10 @@
 prefix=%prefix%
-exec_prefix=%exec_prefix%
-libdir=%libdir%
+sdkdir=%sdkdir%
 includedir=%includedir%
 
 Name: NSS
 Description: Mozilla Network Security Services
 Version: %MOZILLA_VERSION%
 Requires: %NSPR_NAME% >= %NSPR_VERSION%
-Libs: -L${libdir} -lnss3 -lsmime3 -lssl3 -lsoftokn3
-Cflags: -I${includedir}/nss
+Libs: -L${sdkdir}/lib -lnss3 -lsmime3 -lssl3 -lsoftokn3
+Cflags: -I${includedir}/stable

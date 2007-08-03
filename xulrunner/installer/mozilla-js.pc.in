@@ -1,11 +1,10 @@
 prefix=%prefix%
-exec_prefix=%exec_prefix%
-libdir=%libdir%
+sdkdir=%sdkdir%
 includedir=%includedir%
 
 Name: JavaScript
 Description: The Mozilla JavaScript Library
 Version: %MOZILLA_VERSION%
 Requires: %NSPR_NAME% >= %NSPR_VERSION%
-Libs: -L${libdir} -lmozjs
-Cflags: -I${includedir}/js -DXP_UNIX -DJS_THREADSAFE
+Libs: -L${sdkdir}/lib -lmozjs
+Cflags: -I${includedir}/stable -DXP_UNIX -DJS_THREADSAFE
