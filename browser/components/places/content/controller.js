@@ -40,7 +40,6 @@
 const NHRVO = Ci.nsINavHistoryResultViewObserver;
 
 // XXXmano: we should move most/all of these constants to PlacesUtils
-const ORGANIZER_ROOT_HISTORY_UNSORTED = "place:type=1";
 const ORGANIZER_ROOT_BOOKMARKS = "place:folder=2&group=3&excludeItems=1&queryType=1";
 const ORGANIZER_SUBSCRIPTIONS_QUERY = "place:annotation=livemark%2FfeedURI";
 

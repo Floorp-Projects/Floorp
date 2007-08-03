@@ -64,7 +64,7 @@ function HistorySidebarInit()
 
   initContextMenu();
   
-  initPlace();
+  searchHistory("");
 
   gSearchBox.focus();
 }
@@ -109,63 +109,55 @@ function historyAddBookmarks()
   PlacesUtils.showMinimalAddBookmarkUI(PlacesUtils._uri(node.uri), node.title);
 }
 
-function SetSortingAndGrouping(aOptions) 
+function searchHistory(aInput)
 {
+  var query = PlacesUtils.history.getNewQuery();
+  var options = PlacesUtils.history.getNewQueryOptions();
+
   const NHQO = Ci.nsINavHistoryQueryOptions;
   var sortingMode;
-  var groups = [];
-  switch (gHistoryGrouping) {
-    case "site":
-      sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
-      break; 
-    case "visited":
-      sortingMode = NHQO.SORT_BY_VISITCOUNT_DESCENDING;
-      break; 
-    case "lastvisited":
-      sortingMode = NHQO.SORT_BY_DATE_DESCENDING;
-      break; 
-    case "dayandsite":
-      groups.push(NHQO.GROUP_BY_DAY);
-      groups.push(NHQO.GROUP_BY_HOST);
-      sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
-      break;
-    default:
-      groups.push(NHQO.GROUP_BY_DAY);
-      sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
-      break;
-  }
-  aOptions.setGroupingMode(groups, groups.length);
-  aOptions.sortingMode = sortingMode;
-}
+  var groups = []; 
+  var resultType;
 
-function initPlace()
-{
+  if (aInput) {
+    query.searchTerms = aInput;
+    sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
+    resultType = NHQO.RESULTS_AS_URI;
+  }
+  else {
+    switch (gHistoryGrouping) {
+      case "site":
+        resultType = NHQO.RESULTS_AS_URI;
+        sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
+        break; 
+      case "visited":
+        resultType = NHQO.RESULTS_AS_URI;
+        sortingMode = NHQO.SORT_BY_VISITCOUNT_DESCENDING;
+        break; 
+      case "lastvisited":
+        resultType = NHQO.RESULTS_AS_URI;
+        sortingMode = NHQO.SORT_BY_DATE_DESCENDING;
+        break; 
+      case "dayandsite":
+        resultType = NHQO.RESULTS_AS_VISIT;
+        groups.push(NHQO.GROUP_BY_DAY);
+        groups.push(NHQO.GROUP_BY_HOST);
+        sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
+        break;
+      default:
+        resultType = NHQO.RESULTS_AS_VISIT;
+        groups.push(NHQO.GROUP_BY_DAY);
+        sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
+        break;
+    }
+  }
+
+  options.setGroupingMode(groups, groups.length);
+  options.sortingMode = sortingMode;
+  options.resultType = resultType;
+
   // call load() on the tree manually
   // instead of setting the place attribute in history-panel.xul
   // otherwise, we will end up calling load() twice
-  var optionsRef = {};
-  var queriesRef = {};
-  PlacesUtils.history.queryStringToQueries(ORGANIZER_ROOT_HISTORY_UNSORTED, queriesRef, {}, optionsRef);
-  SetSortingAndGrouping(optionsRef.value);
-  gHistoryTree.load(queriesRef.value, optionsRef.value);
-}
-
-function searchHistory(aInput)
-{
-  if (aInput) {
-    if (!gSearching) {
-      // Unset grouping when searching; 
-      var options = asQuery(gHistoryTree.getResult().root).queryOptions;
-      options.setGroupingMode([], 0);
-      gSearching = true;
-    }
-    
-    // applyFilter will update the view by calling load()
-    gHistoryTree.applyFilter(aInput, false /* onlyBookmarks */, 
-                             null /* folderRestrict */, null);
-  }
-  else {
-    initPlace();
-    gSearching = false;
-  }
+  gHistoryTree.load([query], options);
 }
