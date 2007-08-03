@@ -39,10 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-#define INCL_DOS
-#include <os2.h>
-
 #include "nsMIMEInfoOS2.h"
 #include "nsExternalHelperAppService.h"
 #include "nsCExternalHandlerService.h"
@@ -156,7 +152,9 @@ NS_IMETHODIMP nsMIMEInfoOS2::LaunchWithURI(nsIURI* aURI)
 
 nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI * aURL)
 {
-  LOG(("-- nsOSHelperAppService::LoadUriInternal\n"));
+// XXX this is just a build break fix, functionality is broken, see bug 390075
+#warning nsMIMEInfoOS2::LoadUriInternal is dysfunctional!
+//  LOG(("-- nsOSHelperAppService::LoadUriInternal\n"));
   nsCOMPtr<nsIPref> thePrefsService(do_GetService(NS_PREF_CONTRACTID));
   if (!thePrefsService) {
     return NS_ERROR_FAILURE;
@@ -188,9 +186,10 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI * aURL)
     char szAppFromINI[CCHMAXPATH];
     char szParamsFromINI[MAXINIPARAMLENGTH];
     /* did OS2.INI contain application? */
-    rv = GetApplicationAndParametersFromINI(uProtocol,
-                                            szAppFromINI, sizeof(szAppFromINI),
-                                            szParamsFromINI, sizeof(szParamsFromINI));
+// XXX this is just a build break fix, functionality is broken, see bug 390075
+//    rv = GetApplicationAndParametersFromINI(uProtocol,
+//                                            szAppFromINI, sizeof(szAppFromINI),
+//                                            szParamsFromINI, sizeof(szParamsFromINI));
     if (NS_SUCCEEDED(rv)) {
       applicationName = szAppFromINI;
       parameters = szParamsFromINI;
