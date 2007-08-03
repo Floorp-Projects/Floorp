@@ -35,8 +35,6 @@
 #
 # ***** END LICENSE BLOCK ***** -->
 
-<?xml-stylesheet href="chrome://qa/skin/" type="text/css"?>
-
 <!DOCTYPE overlay [
 <!ENTITY % qaDTD SYSTEM "chrome://qa/locale/qa.dtd"> %qaDTD;
 ]>

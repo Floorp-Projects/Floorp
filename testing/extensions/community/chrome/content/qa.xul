@@ -37,6 +37,7 @@
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xml-stylesheet href="chrome://qa/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://qa/skin/platform.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % qaDTD SYSTEM "chrome://qa/locale/qa.dtd"> %qaDTD;
@@ -58,10 +59,6 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   onload="qaMain.onToolOpen();">
 
-<style xmlns="http://www.w3.org/1999/xhtml">
-@import url(chrome://qa/skin/);
-</style>
-
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_qa" src="chrome://qa/locale/qa.properties" />
   <stringbundle id="bundle_urls" src="chrome://qa/locale/urls.properties" />
@@ -73,7 +70,6 @@
 <script type="application/x-javascript" src="chrome://qa/content/common.js" />
 <script type="application/x-javascript" src="chrome://qa/content/litmus.js" />
 <script type="application/x-javascript" src="chrome://qa/content/qa.js" />
-
 
 <tabbox id="qa_tabbox">
   <tabs id="qa_tabrow">
