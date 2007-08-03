@@ -58,13 +58,12 @@ tabpanel {
 }
 groupbox {
   border-color: #e0e0e0;
-  background-color: #fff;
   padding: 6px 8px;
 }
 caption {
   font: bold 12px helvetica, arial, sans-serif;
   color: #ec891d;
-  background: white none repeat-x left 6px;
+  background: transparent none repeat-x left 6px;
   padding: 0;
 }
 
@@ -108,7 +107,10 @@ caption {
   padding-left: 10px;
 }
 
-/* @group test overview */
+#qa-tab-qmo > html|li {
+	list-style-type: none;
+}
+
 #qa-litmus-testoverview {
 	text-decoration: underline;
 	font-size: x-small;
