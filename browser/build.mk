@@ -57,5 +57,5 @@ installer:
 package:
 	@$(MAKE) -C browser/installer
 
-install:
+install::
 	@$(MAKE) -C browser/installer install
