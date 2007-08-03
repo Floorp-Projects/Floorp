@@ -56,11 +56,13 @@ class nsSVGGlyphFrame : public nsSVGGlyphFrameBase,
                         public nsISVGGlyphFragmentLeaf, // : nsISVGGlyphFragmentNode
                         public nsISVGChildFrame
 {
-protected:
   friend nsIFrame*
   NS_NewSVGGlyphFrame(nsIPresShell* aPresShell, nsIContent* aContent,
                       nsIFrame* parentFrame, nsStyleContext* aContext);
-  nsSVGGlyphFrame(nsStyleContext* aContext);
+protected:
+  nsSVGGlyphFrame(nsStyleContext* aContext)
+    : nsSVGGlyphFrameBase(aContext), 
+      mWhitespaceHandling(COMPRESS_WHITESPACE) {}
 
 public:
    // nsISupports interface:
