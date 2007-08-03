@@ -45,7 +45,8 @@
 <dialog id="handling"
         ondialogaccept="return dialog.onAccept();"
         onload="dialog.initialize();"
-        style="width: 320px;"
+        width="&window.width;" height="&window.height;"
+        persist="width height screenX screenY sizemode"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mozapps/content/handling/dialog.js" type="application/javascript"/>
@@ -73,6 +74,6 @@
   </vbox>
 
   <checkbox id="remember" oncommand="dialog.onCheck();"/>
-  <description id="remember-text" hidden="true"/>
+  <description id="remember-text"/>
 
 </dialog>
