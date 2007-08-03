@@ -48,14 +48,19 @@ class nsSVGTextFrame : public nsSVGTextFrameBase
   friend nsIFrame*
   NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
-  nsSVGTextFrame(nsStyleContext* aContext);
+  nsSVGTextFrame(nsStyleContext* aContext)
+    : nsSVGTextFrameBase(aContext),
+      mMetricsState(unsuspended),
+      mPropagateTransform(PR_TRUE),
+      mPositioningDirty(PR_FALSE) {}
 
 public:
   // nsIFrame:
+  NS_IMETHOD  SetInitialChildList(nsIAtom*  aListName,
+                                  nsIFrame* aChildList);
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
-
   NS_IMETHOD DidSetStyleContext();
 
   /**
