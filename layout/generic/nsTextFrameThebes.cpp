@@ -81,6 +81,7 @@
 #include "nsFrameManager.h"
 #include "nsTextFrameTextRunCache.h"
 #include "nsExpirationTracker.h"
+#include "nsICaseConversion.h"
 
 #include "nsTextFragment.h"
 #include "nsGkAtoms.h"
@@ -449,6 +450,11 @@ public:
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth,
                                     PRBool& aLastCharIsJustifiable);
+  virtual nsresult GetRenderedText(nsAString* aString = nsnull,
+                                   gfxSkipChars* aSkipChars = nsnull,
+                                   gfxSkipCharsIterator* aSkipIter = nsnull,
+                                   PRUint32 aSkippedStartOffset = 0,
+                                   PRUint32 aSkippedMaxLength = PR_UINT32_MAX);
 
   void AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
                                 nsIFrame::InlineMinWidthData *aData);
@@ -539,6 +545,7 @@ public:
   struct TrimmedOffsets {
     PRInt32 mStart;
     PRInt32 mLength;
+    PRInt32 GetEnd() { return mStart + mLength; }
   };
   TrimmedOffsets GetTrimmedOffsets(const nsTextFragment* aFrag,
                                    PRBool aTrimAfter);
@@ -2048,7 +2055,7 @@ nsTextFrame::GetTrimmedOffsets(const nsTextFragment* aFrag,
   if (aTrimAfter && (GetStateBits() & TEXT_END_OF_LINE) &&
       textStyle->WhiteSpaceCanWrap()) {
     PRInt32 whitespaceCount =
-      GetTrimmableWhitespaceCount(aFrag, offsets.mStart + offsets.mLength - 1,
+      GetTrimmableWhitespaceCount(aFrag, offsets.GetEnd() - 1,
                                   offsets.mLength, -1);
     offsets.mLength -= whitespaceCount;
   }
@@ -3260,6 +3267,13 @@ public:
   virtual void AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
                                   InlinePrefWidthData *aData);
   
+  virtual nsresult GetRenderedText(nsAString* aString = nsnull,
+                                   gfxSkipChars* aSkipChars = nsnull,
+                                   gfxSkipCharsIterator* aSkipIter = nsnull,
+                                   PRUint32 aSkippedStartOffset = 0,
+                                   PRUint32 aSkippedMaxLength = PR_UINT32_MAX)
+  { return NS_ERROR_NOT_IMPLEMENTED; } // Call on a primary text frame only
+
 protected:
   nsContinuingTextFrame(nsStyleContext* aContext) : nsTextFrame(aContext) {}
   nsIFrame* mPrevContinuation;
@@ -4589,7 +4603,7 @@ nsTextFrame::PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset)
 
   TrimmedOffsets trimmed = GetTrimmedOffsets(mContent->GetText(), PR_TRUE);
   // Check whether there are nonskipped characters in the trimmmed range
-  return iter.ConvertOriginalToSkipped(trimmed.mStart + trimmed.mLength) >
+  return iter.ConvertOriginalToSkipped(trimmed.GetEnd()) >
          iter.ConvertOriginalToSkipped(trimmed.mStart);
 }
 
@@ -4644,7 +4658,7 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
 
   if (!aForward) {
     PRInt32 i;
-    for (i = PR_MIN(trimmed.mStart + trimmed.mLength, startOffset) - 1;
+    for (i = PR_MIN(trimmed.GetEnd(), startOffset) - 1;
          i >= trimmed.mStart; --i) {
       iter.SetOriginalOffset(i);
       if (!iter.IsOriginalCharSkipped() &&
@@ -4656,12 +4670,12 @@ nsTextFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
     *aOffset = 0;
   } else {
     PRInt32 i;
-    for (i = startOffset + 1; i <= trimmed.mStart + trimmed.mLength; ++i) {
+    for (i = startOffset + 1; i <= trimmed.GetEnd(); ++i) {
       iter.SetOriginalOffset(i);
       // XXX we can't necessarily stop at the end of this frame,
       // but we really have no choice right now. We need to do a deeper
       // fix/restructuring of PeekOffsetCharacter
-      if (i == trimmed.mStart + trimmed.mLength ||
+      if (i == trimmed.GetEnd() ||
           (!iter.IsOriginalCharSkipped() &&
            mTextRun->IsClusterStart(iter.GetSkippedOffset()))) {
         *aOffset = i - mContentOffset;
@@ -4717,7 +4731,7 @@ ClusterIterator::NextCluster()
 
   while (PR_TRUE) {
     if (mDirection > 0) {
-      if (mIterator.GetOriginalOffset() >= mTrimmed.mStart + mTrimmed.mLength)
+      if (mIterator.GetOriginalOffset() >= mTrimmed.GetEnd())
         return PR_FALSE;
       if (mIterator.IsOriginalCharSkipped() ||
           mIterator.GetOriginalOffset() < mTrimmed.mStart ||
@@ -4732,7 +4746,7 @@ ClusterIterator::NextCluster()
         return PR_FALSE;
       mIterator.AdvanceOriginal(-1);
       if (mIterator.IsOriginalCharSkipped() ||
-          mIterator.GetOriginalOffset() >= mTrimmed.mStart + mTrimmed.mLength ||
+          mIterator.GetOriginalOffset() >= mTrimmed.GetEnd() ||
           !textRun->IsClusterStart(mIterator.GetSkippedOffset()))
         continue;
       mCharIndex = mIterator.GetOriginalOffset();
@@ -5581,13 +5595,13 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
   const nsTextFragment* frag = mContent->GetText();
   TrimmedOffsets trimmed = GetTrimmedOffsets(frag, PR_TRUE);
   gfxSkipCharsIterator iter = start;
-  PRUint32 trimmedEnd = iter.ConvertOriginalToSkipped(trimmed.mStart + trimmed.mLength);
+  PRUint32 trimmedEnd = iter.ConvertOriginalToSkipped(trimmed.GetEnd());
   const nsStyleText* textStyle = GetStyleText();
   gfxFloat delta = 0;
 
   if (GetStateBits() & TEXT_TRIMMED_TRAILING_WHITESPACE) {
     aLastCharIsJustifiable = PR_TRUE;
-  } else if (trimmed.mStart + trimmed.mLength < mContentOffset + mContentLength) {
+  } else if (trimmed.GetEnd() < GetContentEnd()) {
     gfxSkipCharsIterator end = iter;
     PRUint32 endOffset = end.ConvertOriginalToSkipped(mContentOffset + mContentLength);
     if (trimmedEnd < endOffset) {
@@ -5613,7 +5627,7 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
     provider.FindEndOfJustificationRange(&justificationEnd);
 
     PRInt32 i;
-    for (i = justificationEnd.GetOriginalOffset(); i < trimmed.mStart + trimmed.mLength; ++i) {
+    for (i = justificationEnd.GetOriginalOffset(); i < trimmed.GetEnd(); ++i) {
       if (IsJustifiableCharacter(frag, i, isCJK)) {
         aLastCharIsJustifiable = PR_TRUE;
       }
@@ -5650,6 +5664,98 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
   ListTag(stdout);
   printf(": trim => %d\n", aDeltaWidth);
 #endif
+  return NS_OK;
+}
+
+static PRUnichar TransformChar(const nsStyleText* aStyle, gfxTextRun* aTextRun,
+                               PRUint32 aSkippedOffset, PRUnichar aChar)
+{
+  if (aChar == '\n' || aChar == '\r') {
+    return aStyle->WhiteSpaceIsSignificant() ? aChar : ' ';
+  }
+  switch (aStyle->mTextTransform) {
+  case NS_STYLE_TEXT_TRANSFORM_LOWERCASE:
+    nsContentUtils::GetCaseConv()->ToLower(aChar, &aChar);
+    break;
+  case NS_STYLE_TEXT_TRANSFORM_UPPERCASE:
+    nsContentUtils::GetCaseConv()->ToUpper(aChar, &aChar);
+    break;
+  case NS_STYLE_TEXT_TRANSFORM_CAPITALIZE:
+    if (aTextRun->CanBreakLineBefore(aSkippedOffset)) {
+      nsContentUtils::GetCaseConv()->ToTitle(aChar, &aChar);
+    }
+    break;
+  }
+
+  return aChar;
+}
+
+nsresult nsTextFrame::GetRenderedText(nsAString* aAppendToString,
+                                      gfxSkipChars* aSkipChars,
+                                      gfxSkipCharsIterator* aSkipIter,
+                                      PRUint32 aSkippedStartOffset,
+                                      PRUint32 aSkippedMaxLength)
+{
+  // The handling of aSkippedStartOffset and aSkippedMaxLength could be more efficient...
+  gfxSkipCharsBuilder skipCharsBuilder;
+  nsTextFrame* textFrame;
+  const nsTextFragment* textFrag = mContent->GetText();
+  PRInt32 keptCharsLength = 0;
+  PRInt32 validCharsLength = 0;
+
+  // Build skipChars and copy text, for each text frame in this continuation block
+  for (textFrame = this; textFrame;
+       textFrame = static_cast<nsTextFrame*>(textFrame->GetNextContinuation())) {
+    // For each text frame continuation in this block ...
+
+    // Ensure the text run and grab the gfxSkipCharsIterator for it
+    gfxSkipCharsIterator iter = textFrame->EnsureTextRun();
+    if (!textFrame->mTextRun)
+      return NS_ERROR_FAILURE;
+
+    // Skip to the start of the text run, past ignored chars at start of line
+    // XXX In the future we may decide to trim extra spaces before a hard line
+    // break, in which case we need to accurately detect those sitations and 
+    // call GetTrimmedOffsets() with PR_TRUE to trim whitespace at the line's end
+    TrimmedOffsets trimmedContentOffsets = textFrame->GetTrimmedOffsets(textFrag, PR_FALSE);
+    PRInt32 startOfLineSkipChars = trimmedContentOffsets.mStart - textFrame->mContentOffset;
+    if (startOfLineSkipChars > 0) {
+      skipCharsBuilder.SkipChars(startOfLineSkipChars);
+      iter.SetOriginalOffset(trimmedContentOffsets.mStart);
+    }
+
+    // Keep and copy the appropriate chars withing the caller's requested range
+    const nsStyleText* textStyle = textFrame->GetStyleText();
+    while (iter.GetOriginalOffset() < trimmedContentOffsets.GetEnd() &&
+           keptCharsLength < aSkippedMaxLength) {
+      // For each original char from content text
+      if (iter.IsOriginalCharSkipped() || ++ validCharsLength <= aSkippedStartOffset) {
+        skipCharsBuilder.SkipChar();
+      } else {
+        ++ keptCharsLength;
+        skipCharsBuilder.KeepChar();
+        if (aAppendToString) {
+          aAppendToString->Append(
+              TransformChar(textStyle, textFrame->mTextRun, iter.GetSkippedOffset(),
+                            textFrag->CharAt(iter.GetOriginalOffset())));
+        }
+      }
+      iter.AdvanceOriginal(1);
+    }
+    if (keptCharsLength >= aSkippedMaxLength) {
+      break; // Already past the end, don't build string or gfxSkipCharsIter anymore
+    }
+  }
+  
+  if (aSkipChars) {
+    aSkipChars->TakeFrom(&skipCharsBuilder); // Copy skipChars into aSkipChars
+    if (aSkipIter) {
+      // Caller must provide both pointers in order to retrieve a gfxSkipCharsIterator,
+      // because the gfxSkipCharsIterator holds a weak pointer to the gfxSkipCars.
+      *aSkipIter = gfxSkipCharsIterator(*aSkipChars, GetContentLength());
+    }
+  }
+
   return NS_OK;
 }
 

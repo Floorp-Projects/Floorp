@@ -1519,12 +1519,13 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
       }
     }
     if (aContent->TextLength() > 0) {
-      nsAutoString text;
-      aContent->AppendTextTo(text);
-      if (!text.IsEmpty())
-        aFlatString->Append(text);
-      if (isHTMLBlock && !aFlatString->IsEmpty())
+      nsIFrame *frame = shell->GetPrimaryFrameFor(aContent);
+      NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+      nsresult rv = frame->GetRenderedText(aFlatString);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (isHTMLBlock && !aFlatString->IsEmpty()) {
         aFlatString->Append(PRUnichar(' '));
+      }
     }
     return NS_OK;
   }
@@ -3147,18 +3148,34 @@ PRInt32 nsAccessible::TextLength(nsIAccessible *aAccessible)
   if (!IsText(aAccessible))
     return 1;
 
+  nsCOMPtr<nsPIAccessNode> pAccNode(do_QueryInterface(aAccessible));
+  NS_ASSERTION(pAccNode, "QI to nsPIAccessNode failed");
+
+  nsIFrame *frame = pAccNode->GetFrame();
+  if (frame) { // Optimal way to get the text length -- no string copy
+    nsIContent *content = frame->GetContent();
+    if (content) {
+      PRUint32 length;
+      nsresult rv = nsHyperTextAccessible::ContentToRenderedOffset(frame, content->TextLength(), &length);
+      return NS_SUCCEEDED(rv) ? length : -1;
+    }
+  }
+
+  // For list bullets (or anything other accessible which would compute its own text
+  // They don't have their own frame.
+  // XXX In the future, list bullets may have frame and anon content, so 
+  // we should be able to remove this at that point
   nsCOMPtr<nsPIAccessible> pAcc(do_QueryInterface(aAccessible));
-  NS_ENSURE_TRUE(pAcc, NS_ERROR_FAILURE);
+  NS_ASSERTION(pAcc, "QI to nsPIAccessible failed");
 
   nsAutoString text;
-  pAcc->GetContentText(text);
+  pAcc->AppendTextTo(text, 0, PR_UINT32_MAX); // Get all the text
   return text.Length();
 }
 
 NS_IMETHODIMP
-nsAccessible::GetContentText(nsAString& aText)
+nsAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLength)
 {
-  aText.Truncate();
   return NS_OK;
 }
 
