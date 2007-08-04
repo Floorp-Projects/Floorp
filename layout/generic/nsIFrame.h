@@ -90,6 +90,8 @@ class nsIAccessible;
 class nsDisplayListBuilder;
 class nsDisplayListSet;
 class nsDisplayList;
+class gfxSkipChars;
+class gfxSkipCharsIterator;
 
 struct nsPeekOffsetStruct;
 struct nsPoint;
@@ -1397,6 +1399,28 @@ public:
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth,
                                     PRBool& aLastCharIsJustifiable) = 0;
+
+  /**
+   * Append the rendered text to the passed-in string.
+   * The appended text will often not contain all the whitespace from source,
+   * depending on whether the CSS rule "white-space: pre" is active for this frame.
+   * if aStartOffset + aLength goes past end, or if aLength is not specified
+   * then use the text up to the string's end.
+   * Call this on the primary frame for a text node.
+   * @param aAppendToString   String to append text to, or null if text should not be returned
+   * @param aSkipChars         if aSkipIter is non-null, this must also be non-null.
+   * This gets used as backing data for the iterator so it should outlive the iterator.
+   * @param aSkipIter         Where to fill in the gfxSkipCharsIterator info, or null if not needed by caller
+   * @param aStartOffset       Skipped (rendered text) start offset
+   * @param aSkippedMaxLength  Maximum number of characters to return
+   * The iterator can be used to map content offsets to offsets in the returned string, or vice versa.
+   */
+  virtual nsresult GetRenderedText(nsAString* aAppendToString = nsnull,
+                                   gfxSkipChars* aSkipChars = nsnull,
+                                   gfxSkipCharsIterator* aSkipIter = nsnull,
+                                   PRUint32 aSkippedStartOffset = 0,
+                                   PRUint32 aSkippedMaxLength = PR_UINT32_MAX)
+  { return NS_ERROR_NOT_IMPLEMENTED; }
 
   /**
    * Accessor functions to get/set the associated view object

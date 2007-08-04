@@ -59,6 +59,7 @@ REQUIRES	= content \
 		  locale \
 		  necko \
 		  string \
+		  thebes \
 		  webshell \
 		  widget \
 		  xpcom \
