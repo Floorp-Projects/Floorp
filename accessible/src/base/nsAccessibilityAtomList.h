@@ -157,8 +157,10 @@ ACCESSIBILITY_ATOM(control, "control")
 ACCESSIBILITY_ATOM(cycles, "cycles") // used for XUL cycler attribute
 ACCESSIBILITY_ATOM(data, "data")
 ACCESSIBILITY_ATOM(disabled, "disabled")
+ACCESSIBILITY_ATOM(droppable, "droppable")   // XUL combo box
 ACCESSIBILITY_ATOM(editable, "editable")
 ACCESSIBILITY_ATOM(_for, "for")
+ACCESSIBILITY_ATOM(hidden, "hidden")   // XUL tree columns
 ACCESSIBILITY_ATOM(href, "href")
 ACCESSIBILITY_ATOM(id, "id")
 ACCESSIBILITY_ATOM(lang, "lang")
@@ -175,16 +177,23 @@ ACCESSIBILITY_ATOM(type, "type")
 ACCESSIBILITY_ATOM(value, "value")
 
   // ARIA (DHTML accessibility) attributes
+ACCESSIBILITY_ATOM(atomic, "atomic")
+ACCESSIBILITY_ATOM(busy, "busy")
+ACCESSIBILITY_ATOM(channel, "channel")
 ACCESSIBILITY_ATOM(activedescendant, "activedescendant")
 ACCESSIBILITY_ATOM(checked, "checked")
-ACCESSIBILITY_ATOM(droppable, "droppable")
+ACCESSIBILITY_ATOM(datatype, "datatype")
+ACCESSIBILITY_ATOM(dropeffect, "dropeffect")
 ACCESSIBILITY_ATOM(expanded, "expanded")
+ACCESSIBILITY_ATOM(grab, "grab")
 ACCESSIBILITY_ATOM(haspopup, "haspopup")
 ACCESSIBILITY_ATOM(invalid, "invalid")
 ACCESSIBILITY_ATOM(level, "level")
+ACCESSIBILITY_ATOM(live, "live")
 ACCESSIBILITY_ATOM(multiselectable, "multiselectable")
 ACCESSIBILITY_ATOM(posinset, "posinset")
 ACCESSIBILITY_ATOM(pressed, "pressed")
+ACCESSIBILITY_ATOM(relevant, "relevant")
 ACCESSIBILITY_ATOM(required, "required")
 ACCESSIBILITY_ATOM(role, "role")
 ACCESSIBILITY_ATOM(secret, "secret")
@@ -193,7 +202,6 @@ ACCESSIBILITY_ATOM(setsize, "setsize")
 ACCESSIBILITY_ATOM(valuenow, "valuenow")    // For DHTML widget values
 ACCESSIBILITY_ATOM(valuemin, "valuemin")
 ACCESSIBILITY_ATOM(valuemax, "valuemax")
-ACCESSIBILITY_ATOM(hidden, "hidden")
 
   // misc atoms
 // a form property used to obtain the default label
