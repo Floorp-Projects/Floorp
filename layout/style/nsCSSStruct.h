@@ -513,7 +513,6 @@ struct nsCSSAural : public nsCSSStruct  { // NEW
   nsCSSValue mPauseBefore;
   nsCSSValue mPitch;
   nsCSSValue mPitchRange;
-  nsCSSValuePair mPlayDuring; // mXValue is URI, mYValue are flags
   nsCSSValue mRichness;
   nsCSSValue mSpeak;
   nsCSSValue mSpeakHeader;
