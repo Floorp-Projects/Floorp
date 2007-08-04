@@ -1208,7 +1208,7 @@ nsDocAccessible::FireTextChangedEventOnDOMCharacterDataModified(nsIContent *aCon
   PRUint32 replaceLen = aInfo->mReplaceLength;
 
   PRInt32 offset = 0;
-  rv = textAccessible->DOMPointToOffset(node, start, &offset);
+  rv = textAccessible->DOMPointToHypertextOffset(node, start, &offset);
   if (NS_FAILED(rv))
     return;
 
@@ -1269,7 +1269,7 @@ nsDocAccessible::FireTextChangedEventOnDOMNodeInserted(nsIContent *aChild,
     return;
 
   PRInt32 offset = 0;
-  rv = textAccessible->DOMPointToOffset(parentNode, aIndexInContainer, &offset);
+  rv = textAccessible->DOMPointToHypertextOffset(parentNode, aIndexInContainer, &offset);
   if (NS_FAILED(rv))
     return;
 
@@ -1323,7 +1323,7 @@ nsDocAccessible::FireTextChangedEventOnDOMNodeRemoved(nsIContent *aChild,
     return;
 
   PRInt32 offset = 0;
-  rv = textAccessible->DOMPointToOffset(parentNode, aIndexInContainer, &offset);
+  rv = textAccessible->DOMPointToHypertextOffset(parentNode, aIndexInContainer, &offset);
   if (NS_FAILED(rv))
     return;
 

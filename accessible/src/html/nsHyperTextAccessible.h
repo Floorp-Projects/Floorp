@@ -86,6 +86,14 @@ public:
   virtual nsresult GetAttributesInternal(nsIPersistentProperties *aAttributes);
   void CacheChildren();
 
+  // Convert content offset to rendered text offset  
+  static nsresult ContentToRenderedOffset(nsIFrame *aFrame, PRInt32 aContentOffset,
+                                          PRUint32 *aRenderedOffset);
+  
+  // Convert rendered text offset to content offset
+  static nsresult RenderedToContentOffset(nsIFrame *aFrame, PRUint32 aRenderedOffset,
+                                          PRInt32 *aContentOffset);
+
   /**
     * Turn a DOM Node and offset into a character offset into this hypertext.
     * Will look for closest match when the DOM node does not have an accessible
@@ -101,9 +109,9 @@ public:
     *                                      the current nsHyperTextAccessible,
     *                                      otherwise it is set to nsnull.
     */
-  nsresult DOMPointToOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset,
-                            PRInt32 *aResultOffset,
-                            nsIAccessible **aFinalAccessible = nsnull);
+  nsresult DOMPointToHypertextOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset,
+                                     PRInt32 *aHypertextOffset,
+                                     nsIAccessible **aFinalAccessible = nsnull);
 
 protected:
   PRBool IsHyperText();
@@ -138,9 +146,9 @@ protected:
     * Given a start offset and end offset, get substring information. Different info is returned depending
     * on what optional paramters are provided.
     * @param aStartOffset, the start offset into the hyper text. This is also an out parameter used to return
-    *                      the offset into the start frame's text content (start frame is the @return)
-    * @param aEndOffset, the endoffset into the hyper text. This is also an out parameter used to return
-    *                    the offset into the end frame's text content
+    *                      the offset into the start frame's rendered text content (start frame is the @return)
+    * @param aEndHyperOffset, the endoffset into the hyper text. This is also an out parameter used to return
+    *                    the offset into the end frame's rendered text content
     * @param aText (optional), return the substring's text
     * @param aEndFrame (optional), return the end frame for this substring
     * @param aBoundsRect (optional), return the bounds rectangle for this substring
@@ -149,7 +157,7 @@ protected:
   nsIFrame* GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset, nsAString *aText = nsnull,
                           nsIFrame **aEndFrame = nsnull, nsIntRect *aBoundsRect = nsnull);
 
-  nsIntRect GetBoundsForString(nsIFrame *aFrame, PRInt32 aStartOffset, PRInt32 aLength);
+  nsIntRect GetBoundsForString(nsIFrame *aFrame, PRInt32 aStartContentOffset, PRInt32 aEndContentOffset);
 
   // Editor helpers, subclasses of nsHyperTextAccessible may have editor
   virtual void SetEditor(nsIEditor *aEditor) { return; }
