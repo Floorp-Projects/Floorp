@@ -279,28 +279,18 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
     return JS_TRUE;
 }
 
-static JSAtom *
-AtomizeHashedKey(JSContext *cx, jsval key, JSHashNumber keyHash);
-
 JSBool
 js_InitPinnedAtoms(JSContext *cx, JSAtomState *state)
 {
-    JSString *empty;
     uintN i;
-
-    empty = js_NewStringCopyN(cx, js_empty_ucstr, 0);
-    if (!empty)
-        return JS_FALSE;
-    JS_ASSERT(js_HashString(empty) == 0);
-    state->emptyAtom = AtomizeHashedKey(cx, STRING_TO_JSVAL(empty), 0);
-    if (!state->emptyAtom)
-        return JS_FALSE;
 
 #define FROB(lval,str)                                                        \
     JS_BEGIN_MACRO                                                            \
         if (!(state->lval = js_Atomize(cx, str, strlen(str), ATOM_PINNED)))   \
             return JS_FALSE;                                                  \
     JS_END_MACRO
+
+    FROB(emptyAtom,               "");
 
     for (i = 0; i < JSTYPE_LIMIT; i++)
         FROB(typeAtoms[i],        js_type_strs[i]);
