@@ -248,7 +248,7 @@ static uint8 GCTypeToTraceKindMap[GCX_NTYPES] = {
     JSTRACE_STRING,     /* GCX_STRING */
     JSTRACE_DOUBLE,     /* GCX_DOUBLE */
     JSTRACE_STRING,     /* GCX_MUTABLE_STRING */
-    JSTRACE_FUNCTION,   /* GCX_PRIVATE */
+    JSTRACE_FUNCTION,   /* GCX_FUNCTION */
     JSTRACE_NAMESPACE,  /* GCX_NAMESPACE */
     JSTRACE_QNAME,      /* GCX_QNAME */
     JSTRACE_XML,        /* GCX_XML */
@@ -560,7 +560,7 @@ static GCFinalizeOp gc_finalizers[GCX_NTYPES] = {
     (GCFinalizeOp) js_FinalizeString,           /* GCX_STRING */
     (GCFinalizeOp) js_FinalizeDouble,           /* GCX_DOUBLE */
     (GCFinalizeOp) js_FinalizeString,           /* GCX_MUTABLE_STRING */
-    NULL,                                       /* GCX_PRIVATE */
+    (GCFinalizeOp) js_FinalizeFunction,         /* GCX_FUNCTION */
     (GCFinalizeOp) js_FinalizeXMLNamespace,     /* GCX_NAMESPACE */
     (GCFinalizeOp) js_FinalizeXMLQName,         /* GCX_QNAME */
     (GCFinalizeOp) js_FinalizeXML,              /* GCX_XML */
@@ -582,7 +582,7 @@ static const char *gc_typenames[GCX_NTYPES] = {
     "newborn string",
     "newborn double",
     "newborn mutable string",
-    "newborn private",
+    "newborn function",
     "newborn Namespace",
     "newborn QName",
     "newborn XML",
@@ -2398,8 +2398,8 @@ restart:
      * rather than nest badly and leave the unmarked newborn to be swept.
      *
      * Here we need to ensure that JSObject instances are finalized before GC-
-     * allocated JSFunction instances so fun_finalize from jsfun.c can get the
-     * proper result from the call to js_IsAboutToBeFinalized. For that we
+     * allocated JSFunction instances so fun_finalize from jsfun.c can clear
+     * the weak pointer from the JSFunction back to the JSObject.  For that we
      * simply finalize the list containing JSObject first since the static
      * assert at the beginning of the file guarantees that JSFunction instances
      * are allocated from a different list.
