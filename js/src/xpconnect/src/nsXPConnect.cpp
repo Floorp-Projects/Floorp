@@ -673,7 +673,7 @@ static uint8 GCTypeToTraceKindMap[GCX_NTYPES] = {
     JSTRACE_STRING,     /* GCX_STRING (unused) */
     JSTRACE_DOUBLE,     /* GCX_DOUBLE (unused) */
     JSTRACE_STRING,     /* GCX_MUTABLE_STRING (unused) */
-    JSTRACE_FUNCTION,   /* GCX_PRIVATE (unused) */
+    JSTRACE_FUNCTION,   /* GCX_FUNCTION (unused) */
     JSTRACE_NAMESPACE,  /* GCX_NAMESPACE */
     JSTRACE_QNAME,      /* GCX_QNAME */
     JSTRACE_XML         /* GCX_XML */
