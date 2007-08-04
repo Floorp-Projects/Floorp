@@ -67,6 +67,9 @@ class nsIDOMNode;
 class nsIAtom;
 class nsIView;
 
+#define NS_OK_NO_ARIA_VALUE \
+NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x21)
+
 // When mNextSibling is set to this, it indicates there ar eno more siblings
 #define DEAD_END_ACCESSIBLE static_cast<nsIAccessible*>((void*)1)
 
@@ -274,6 +277,17 @@ protected:
 
   // Check the visibility across both parent content and chrome
   PRBool CheckVisibilityInParentChain(nsIDocument* aDocument, nsIView* aView);
+
+  /**
+   * Get numeric value of the given attribute.
+   *
+   * @param aNameSpaceID - namespace ID of the attribute
+   * @param aName - name of the attribute
+   * @param aValue - value of the attribute
+   *
+   * @return - NS_OK_NO_ARIA_VALUE if there is no setted ARIA attribute
+   */
+  nsresult GetAttrValue(PRUint32 aNameSpaceID, nsIAtom *aName, double *aValue);
 
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;

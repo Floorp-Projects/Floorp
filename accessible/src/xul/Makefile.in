@@ -72,6 +72,7 @@ CPPSRCS = \
   nsXULFormControlAccessible.cpp \
   nsXULMenuAccessible.cpp \
   nsXULSelectAccessible.cpp \
+  nsXULSliderAccessible.cpp \
   nsXULTabAccessible.cpp \
   nsXULTextAccessible.cpp \
   nsXULTreeAccessible.cpp \
