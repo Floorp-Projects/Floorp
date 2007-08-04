@@ -155,6 +155,7 @@ ACCESSIBILITY_ATOM(anonid, "anonid") // Used for ID's in XBL
 ACCESSIBILITY_ATOM(autocomplete, "autocomplete") // Used as attribute value too
 ACCESSIBILITY_ATOM(control, "control")
 ACCESSIBILITY_ATOM(cycles, "cycles") // used for XUL cycler attribute
+ACCESSIBILITY_ATOM(curpos, "curpos") // XUL
 ACCESSIBILITY_ATOM(data, "data")
 ACCESSIBILITY_ATOM(disabled, "disabled")
 ACCESSIBILITY_ATOM(droppable, "droppable")   // XUL combo box
@@ -163,7 +164,10 @@ ACCESSIBILITY_ATOM(_for, "for")
 ACCESSIBILITY_ATOM(hidden, "hidden")   // XUL tree columns
 ACCESSIBILITY_ATOM(href, "href")
 ACCESSIBILITY_ATOM(id, "id")
+ACCESSIBILITY_ATOM(increment, "increment") // XUL
 ACCESSIBILITY_ATOM(lang, "lang")
+ACCESSIBILITY_ATOM(maxpos, "maxpos") // XUL
+ACCESSIBILITY_ATOM(minpos, "minpos") // XUL
 ACCESSIBILITY_ATOM(multiline, "multiline")
 ACCESSIBILITY_ATOM(name, "name")
 ACCESSIBILITY_ATOM(onclick, "onclick")

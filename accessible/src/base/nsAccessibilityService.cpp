@@ -87,6 +87,7 @@
 #include "nsXULFormControlAccessible.h"
 #include "nsXULMenuAccessibleWrap.h"
 #include "nsXULSelectAccessible.h"
+#include "nsXULSliderAccessible.h"
 #include "nsXULTabAccessible.h"
 #include "nsXULTextAccessible.h"
 #include "nsXULTreeAccessibleWrap.h"
@@ -1613,6 +1614,9 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XULStatusBar:
       *aAccessible = new nsXULStatusBarAccessible(aNode, weakShell);
       break;
+    case nsIAccessibleProvider::XULScale:
+      *aAccessible = new nsXULSliderAccessible(aNode, weakShell);
+      break;
     case nsIAccessibleProvider::XULRadioButton:
       *aAccessible = new nsXULRadioButtonAccessible(aNode, weakShell);
       break;
@@ -1633,6 +1637,9 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
       break;
     case nsIAccessibleProvider::XULTextBox:
       *aAccessible = new nsXULTextFieldAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULThumb:
+      *aAccessible = new nsXULThumbAccessible(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XULTree:
       *aAccessible = new nsXULTreeAccessibleWrap(aNode, weakShell);
