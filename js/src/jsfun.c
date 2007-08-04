@@ -1497,7 +1497,7 @@ fun_trace(JSTracer *trc, JSObject *obj)
 {
     JSFunction *fun;
 
-    fun = (JSFunction *) OBJ_GET_PRIVATE(cx, obj);
+    fun = (JSFunction *) JS_GetPrivate(trc->context, obj);
     if (fun) {
         JS_CALL_TRACER(trc, fun, JSTRACE_FUNCTION, "private");
         if (fun->object != obj)
