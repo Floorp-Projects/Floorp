@@ -86,7 +86,7 @@
       <xul:popupset anonid="popupset" class="autocomplete-result-popupset"/>
     </content>
 
-    <implementation implements="nsIObserver">
+    <implementation implements="nsIObserver, nsIDOMEventListener">
       <constructor><![CDATA[
         this._ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                     .getService(Components.interfaces.nsIIOService);
@@ -99,6 +99,7 @@
         this._hideProtocols = this._prefs.getCharPref("hideProtocols").split(" ");
         this._animateBlend = this._prefs.getBoolPref("animateBlend");
         this.clickSelectsAll = this._prefs.getBoolPref("clickSelectsAll");
+        this.doubleClickSelectsAll = this._prefs.getBoolPref("doubleClickSelectsAll");
         this.completeDefaultIndex = this._prefs.getBoolPref("autoFill");
 
         this._inputBox = document.getAnonymousElementByAttribute(this, "anonid", "textbox-input-box");
@@ -113,6 +114,7 @@
         this._urlTooltip = document.getElementById("urlTooltip");
 
         this.inputField.controllers.insertControllerAt(0, this._copyCutController);
+        this.inputField.addEventListener("mousedown", this, false);
 
         this._blendingTimers = [];
       ]]></constructor>
@@ -123,6 +125,7 @@
         this._ioService = null;
         this._tldService = null;
         this.inputField.controllers.removeController(this._copyCutController);
+        this.inputField.removeEventListener("mousedown", this, false);
       ]]></destructor>
 
       <!-- initially empty fields:
@@ -406,7 +409,8 @@
                   this._prettyView(false);
                 break;
               case "clickSelectsAll":
-                this.clickSelectsAll = this._prefs.getBoolPref(aData);
+              case "doubleClickSelectsAll":
+                this[aData] = this._prefs.getBoolPref(aData);
                 break;
               case "autoFill":
                 this.completeDefaultIndex = this._prefs.getBoolPref(aData);
@@ -415,6 +419,18 @@
                 this._animateBlend = this._prefs.getBoolPref(aData);
                 break;
             }
+          }
+        ]]></body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.type == "mousedown" &&
+              aEvent.button == 0 && aEvent.detail == 2 &&
+              this.doubleClickSelectsAll) {
+            this.inputField.select();
+            aEvent.preventDefault();
           }
         ]]></body>
       </method>

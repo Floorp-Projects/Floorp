@@ -1987,9 +1987,6 @@ pref("browser.urlbar.clickSelectsAll", false);
 // Leave this at the default, 7, to match mozilla1.0-era user expectations.
 // pref("accessibility.tabfocus", 1);
 
-// override double-click word selection behavior.
-pref("layout.word_select.stop_at_punctuation", false);
-
 // autocomplete keyboard grab workaround
 pref("autocomplete.grab_during_popup", true);
 pref("autocomplete.ungrab_during_mode_switch", true);
