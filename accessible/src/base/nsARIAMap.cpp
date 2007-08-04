@@ -61,7 +61,7 @@ static const nsStateMapEntry kEndEntry = {0, 0, 0};  // To fill in array of stat
 
 nsRoleMapEntry nsARIAMap::gWAIRoleMap[] = 
 {
-  {"alert", nsIAccessibleRole::ROLE_ALERT, eNameOkFromChildren, eNoValue, kNoReqStates, kEndEntry},
+  {"alert", nsIAccessibleRole::ROLE_ALERT, eNameLabelOrTitle, eNoValue, kNoReqStates, kEndEntry},
   {"alertdialog", nsIAccessibleRole::ROLE_ALERT, eNameOkFromChildren, eNoValue, kNoReqStates, kEndEntry},
   {"application", nsIAccessibleRole::ROLE_APPLICATION, eNameLabelOrTitle, eNoValue, kNoReqStates, kEndEntry},
   {"button", nsIAccessibleRole::ROLE_PUSHBUTTON, eNameOkFromChildren, eNoValue, kNoReqStates,
