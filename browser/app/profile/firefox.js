@@ -182,14 +182,25 @@ pref("browser.startup.homepage",            "resource:/browserconfig.properties"
 
 pref("browser.cache.disk.capacity",         50000);
 pref("browser.enable_automatic_image_resizing", true);
-pref("browser.urlbar.autoFill", false);
-pref("browser.urlbar.matchOnlyTyped", false);
-pref("browser.urlbar.hideProtocols", "");
-pref("browser.urlbar.animateBlend", true);
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);
 pref("browser.formfill.enable", true);
 pref("browser.warnOnQuit", true);
+
+#ifdef XP_UNIX
+pref("browser.urlbar.clickSelectsAll", false);
+#else
+pref("browser.urlbar.clickSelectsAll", true);
+#endif
+#ifdef UNIX_BUT_NOT_MAC
+pref("browser.urlbar.doubleClickSelectsAll", true);
+#else
+pref("browser.urlbar.doubleClickSelectsAll", false);
+#endif
+pref("browser.urlbar.autoFill", false);
+pref("browser.urlbar.matchOnlyTyped", false);
+pref("browser.urlbar.hideProtocols", "");
+pref("browser.urlbar.animateBlend", true);
 
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
@@ -407,12 +418,6 @@ pref("security.warn_entering_weak.show_once", true);
 pref("security.warn_leaving_secure.show_once", true);
 pref("security.warn_viewing_mixed.show_once", true);
 pref("security.warn_submit_insecure.show_once", true);
-
-#ifdef XP_UNIX
-pref("browser.urlbar.clickSelectsAll", false);
-#else
-pref("browser.urlbar.clickSelectsAll", true);
-#endif
 
 pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);
