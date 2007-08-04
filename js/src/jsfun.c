@@ -1252,30 +1252,18 @@ static void
 fun_finalize(JSContext *cx, JSObject *obj)
 {
     JSFunction *fun;
-    JSScript *script;
 
     /* No valid function object should lack private data, but check anyway. */
     fun = (JSFunction *) JS_GetPrivate(cx, obj);
     if (!fun)
         return;
 
+    /*
+     * This works because obj is finalized before JSFunction. See
+     * comments in js_GC before the finalization loop.
+     */
     if (fun->object == obj)
         fun->object = NULL;
-
-    /*
-     * Null-check of i.script is required since the parser sets interpreted
-     * very early.
-     *
-     * Here js_IsAboutToBeFinalized works because obj is finalized before
-     * JSFunction. See comments in js_GC before the finalization loop.
-     */
-    if (FUN_INTERPRETED(fun) && fun->u.i.script &&
-        js_IsAboutToBeFinalized(cx, fun))
-    {
-        script = fun->u.i.script;
-        fun->u.i.script = NULL;
-        js_DestroyScript(cx, script);
-    }
 }
 
 #if JS_HAS_XDR
@@ -2196,10 +2184,10 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
     JS_PUSH_SINGLE_TEMP_ROOT(cx, OBJECT_TO_JSVAL(funobj), &tvr);
 
     /*
-     * Allocate fun after allocating funobj so slot allocation in js_NewObject
-     * does not wipe out fun from newborn[GCX_PRIVATE].
+     * Allocate fun after allocating funobj so allocations in js_NewObject
+     * and hooks called from it do not wipe out fun from newborn[GCX_FUNCTION].
      */
-    fun = (JSFunction *) js_NewGCThing(cx, GCX_PRIVATE, sizeof(JSFunction));
+    fun = (JSFunction *) js_NewGCThing(cx, GCX_FUNCTION, sizeof(JSFunction));
     if (!fun)
         goto out;
 
@@ -2222,6 +2210,22 @@ js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
 out:
     JS_POP_TEMP_ROOT(cx, &tvr);
     return fun;
+}
+
+void
+js_FinalizeFunction(JSContext *cx, JSFunction *fun)
+{
+    JSScript *script;
+
+    /*
+     * Null-check of i.script is required since the parser sets interpreted
+     * very early.
+     */
+    if (FUN_INTERPRETED(fun) && fun->u.i.script) {
+        script = fun->u.i.script;
+        fun->u.i.script = NULL;
+        js_DestroyScript(cx, script);
+    }
 }
 
 JSObject *

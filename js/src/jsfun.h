@@ -111,6 +111,9 @@ extern JSFunction *
 js_NewFunction(JSContext *cx, JSObject *funobj, JSNative native, uintN nargs,
                uintN flags, JSObject *parent, JSAtom *atom);
 
+extern void
+js_FinalizeFunction(JSContext *cx, JSFunction *fun);
+
 extern JSObject *
 js_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
 

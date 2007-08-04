@@ -55,7 +55,7 @@ JS_BEGIN_EXTERN_C
 #define GCX_DOUBLE              2               /* jsdouble */
 #define GCX_MUTABLE_STRING      3               /* JSString that's mutable --
                                                    single-threaded only! */
-#define GCX_PRIVATE             4               /* private (unscanned) data */
+#define GCX_FUNCTION            4               /* JSFunction */
 #define GCX_NAMESPACE           5               /* JSXMLNamespace */
 #define GCX_QNAME               6               /* JSXMLQName */
 #define GCX_XML                 7               /* JSXML */
