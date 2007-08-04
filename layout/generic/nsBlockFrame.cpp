@@ -1292,6 +1292,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 
     if (NS_FRAME_IS_COMPLETE(aState.mReflowStatus)) {
       if (computedHeightLeftOver > 0 &&
+          NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight &&
           aMetrics.height > aReflowState.availableHeight) {
         // We don't fit and we consumed some of the computed height,
         // so we should consume all the available height and then
