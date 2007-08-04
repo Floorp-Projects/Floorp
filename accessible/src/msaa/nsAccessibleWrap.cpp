@@ -1402,7 +1402,7 @@ nsAccessibleWrap::get_attributes(BSTR *aAttributes)
 
     offset = 0;
     while ((offset = value.FindCharInSet(kCharsToEscape, offset)) != kNotFound) {
-      name.Insert('\\', offset);
+      value.Insert('\\', offset);
       offset += 2;
     }
 
