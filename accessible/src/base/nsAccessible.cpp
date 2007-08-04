@@ -2290,9 +2290,18 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
                       nsIAccessibleStates::EXT_STATE_SENSITIVE;
     }
 
-    if (*aState & (nsIAccessibleStates::STATE_COLLAPSED |
-                   nsIAccessibleStates::STATE_EXPANDED)) {
+    const PRUint32 kExpandCollapseStates =
+      nsIAccessibleStates::STATE_COLLAPSED | nsIAccessibleStates::STATE_EXPANDED;
+    if (*aState & kExpandCollapseStates) {
       *aExtraState |= nsIAccessibleStates::EXT_STATE_EXPANDABLE;
+      if ((*aState & kExpandCollapseStates) == kExpandCollapseStates) {
+        // Cannot be both expanded and collapsed -- this happens 
+        // in ARIA expanded combobox because of limitation of nsARIAMap
+        // XXX Perhaps we will be able to make this less hacky if 
+        // we support extended states in nsARIAMap, e.g. derive
+        // COLLAPSED from EXPANDABLE && !EXPANDED
+        *aExtraState &= ~nsIAccessibleStates::STATE_COLLAPSED;
+      } 
     }
   }
 
