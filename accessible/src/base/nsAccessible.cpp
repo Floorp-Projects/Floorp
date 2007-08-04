@@ -2043,6 +2043,34 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
 {
   if (mRoleMapEntry) {
     *aRole = mRoleMapEntry->role;
+
+    // These unfortunate exceptions don't fit into the ARIA table
+    // This is where the nsIAccessible role depends on both the role and ARIA state
+    if (*aRole == nsIAccessibleRole::ROLE_ENTRY) {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+      if (content && 
+          content->AttrValueIs(kNameSpaceID_WAIProperties , nsAccessibilityAtoms::secret,
+                               nsAccessibilityAtoms::_true, eCaseMatters)) {
+        // For entry field with aaa:secret="true"
+        *aRole = nsIAccessibleRole::ROLE_PASSWORD_TEXT;
+      }
+    }
+    else if (*aRole == nsIAccessibleRole::ROLE_PUSHBUTTON) {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+      if (content) {
+        if (content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::pressed)) {
+          // For aaa:pressed="false" or aaa:pressed="true"
+          // For simplicity, any pressed attribute indicates it's a toggle button
+          *aRole = nsIAccessibleRole::ROLE_TOGGLE_BUTTON;
+        }
+        else if (content->AttrValueIs(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::haspopup,
+                                      nsAccessibilityAtoms::_true, eCaseMatters)) {
+          // For button with aaa:haspopup="true"
+          *aRole = nsIAccessibleRole::ROLE_BUTTONMENU;
+        }
+      }
+    }
+  
     if (*aRole != nsIAccessibleRole::ROLE_NOTHING) {
       return NS_OK;
     }
