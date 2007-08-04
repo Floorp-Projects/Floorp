@@ -323,14 +323,7 @@ protected:
   PRUint16 mEnumVARIANTPosition;
 
   // Should this accessible be allowed to have any MSAA children
-  static PRBool MustPrune(nsIAccessible *accessible)
-  { 
-    PRUint32 role = Role(accessible);
-    return role == nsIAccessibleRole::ROLE_MENUITEM || 
-           role == nsIAccessibleRole::ROLE_ENTRY ||
-           role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
-           role == nsIAccessibleRole::ROLE_PUSHBUTTON;
-  }
+  static PRBool MustPrune(nsIAccessible *aAccessible);
 
   enum navRelations {
     NAVRELATION_CONTROLLED_BY = 0x1000,

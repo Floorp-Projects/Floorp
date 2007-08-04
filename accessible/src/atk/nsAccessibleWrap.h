@@ -127,6 +127,9 @@ protected:
 
     AtkObject *mAtkObject;
 
+    // Should this accessible be allowed to have any ATK children
+    static PRBool MustPrune(nsIAccessible *aAccessible);
+
 private:
     PRUint16 CreateMaiInterfaces(void);
 };
