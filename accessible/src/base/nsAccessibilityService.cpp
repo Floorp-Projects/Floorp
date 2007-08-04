@@ -1406,6 +1406,17 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
       (isHTML && nsAccUtils::HasListener(content, NS_LITERAL_STRING("click"))) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::describedby) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::labelledby) ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::flowto) ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::controls) ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::atomic) ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::busy) ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::channel) ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::datatype) ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::dropeffect) ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::grab) ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::haspopup) ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::live) ||
+       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::relevant) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::required) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::invalid) ||
        !role.IsEmpty())) {
