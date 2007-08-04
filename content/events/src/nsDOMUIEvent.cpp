@@ -152,6 +152,9 @@ nsPoint nsDOMUIEvent::GetClientPoint() {
     return nsPoint(0, 0);
   }
 
+  if (!((nsGUIEvent*)mEvent)->widget)
+    return mClientPoint;
+
   nsPoint pt(0, 0);
   nsIFrame* rootFrame = mPresContext->PresShell()->GetRootFrame();
   if (rootFrame)
