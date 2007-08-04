@@ -44,7 +44,7 @@
  * @note - When adding a new role, be sure to also add it to nsRoleMap.h for
  *         each platform.
  */
-[scriptable, uuid(d6d73bc4-0fe9-46a1-a8dd-6d93b041e54b)]
+[scriptable, uuid(31685b85-36a3-448c-99ed-b034a198e303)]
 interface nsIAccessibleRole : nsISupports
 {
   /**
@@ -744,9 +744,14 @@ interface nsIAccessibleRole : nsISupports
   const unsigned long ROLE_COMBOBOX_LISTITEM = 115;
 
   /**
+   * An image map -- has child links representing the areas
+   */
+  const unsigned long ROLE_IMAGE_MAP = 116;
+  
+  /**
    * It's not role actually. This contanst is important to help ensure
    * nsRoleMap's are synchronized.
    */
-  const unsigned long ROLE_LAST_ENTRY = 116;
+  const unsigned long ROLE_LAST_ENTRY = 117;
 };
 
