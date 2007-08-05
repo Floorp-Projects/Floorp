@@ -39,7 +39,7 @@
 <!-- Values for newserver.xul -->
 <!ENTITY newserver.title    "Website Certified by an Unknown Authority">
 <!ENTITY newserver.reasons  "Possible reasons for this error:">
-<!ENTITY newserver.reason1  "- Your browser does not recognize the Certificate Authority that issued the site's certificate.">
+<!ENTITY newserver.reason1x "- The Certificate Authority that issued the site's certificate is not recognized.">
 <!ENTITY newserver.reason2  "- The site's certificate is incomplete due to a server misconfiguration.">
 <!ENTITY newserver.notify   "Please notify the site's webmaster about this problem.">
 <!ENTITY newserver.examine  "View Certificate...">
