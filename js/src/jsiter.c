@@ -679,11 +679,23 @@ generator_trace(JSTracer *trc, JSObject *obj)
     JSGenerator *gen;
 
     gen = (JSGenerator *) JS_GetPrivate(trc->context, obj);
-    if (gen) {
-        /* js_TraceStackFrame does not trace recursively the down chain. */
-        JS_ASSERT(!gen->frame.down);
-        js_TraceStackFrame(trc, &gen->frame);
-    }
+    if (!gen)
+        return;
+
+    /*
+     * js_TraceStackFrame does not recursively trace the down-linked frame
+     * chain, so we insist that gen->frame has no parent to trace when the
+     * generator is not running.
+     */
+    JS_ASSERT_IF(gen->state != JSGEN_RUNNING && gen->state != JSGEN_CLOSING,
+                 !gen->frame.down);
+
+    /*
+     * FIXME be 390950. Generator's frame is a part of the JS stack when the
+     * generator is running or closing. Thus tracing the frame in this case
+     * here duplicates the work done in js_TraceContext.
+     */
+    js_TraceStackFrame(trc, &gen->frame);
 }
 
 JSClass js_GeneratorClass = {
