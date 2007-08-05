@@ -67,21 +67,21 @@ nsContentDispatchChooser.prototype =
 
   ask: function ask(aHandler, aWindowContext, aURI, aReason)
   {
-    let window = null;
+    var window = null;
     try {
       if (aWindowContext)
         window = aWindowContext.getInterface(Ci.nsIDOMWindow);
     } catch (e) { /* it's OK to not have a window */ }
 
-    let sbs = Cc["@mozilla.org/intl/stringbundle;1"].
+    var sbs = Cc["@mozilla.org/intl/stringbundle;1"].
               getService(Ci.nsIStringBundleService);
-    let bundle = sbs.createBundle(STRINGBUNDLE_URL);
+    var bundle = sbs.createBundle(STRINGBUNDLE_URL);
 
-    let xai = Cc["@mozilla.org/xre/app-info;1"].
+    var xai = Cc["@mozilla.org/xre/app-info;1"].
               getService(Ci.nsIXULAppInfo);
     // TODO when this is hooked up for content, we will need different strings
     //      for most of these
-    let arr = [bundle.GetStringFromName("protocol.title"),
+    var arr = [bundle.GetStringFromName("protocol.title"),
                "",
                bundle.GetStringFromName("protocol.description"),
                bundle.GetStringFromName("protocol.choices.label"),
@@ -90,7 +90,7 @@ nsContentDispatchChooser.prototype =
                bundle.formatStringFromName("protocol.checkbox.extra",
                                            [xai.name], 1)];
 
-    let params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+    var params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
     for each (let text in arr) {
       let string = Cc["@mozilla.org/supports-string;1"].
                    createInstance(Ci.nsISupportsString);
@@ -100,7 +100,7 @@ nsContentDispatchChooser.prototype =
     params.appendElement(aHandler, false);
     params.appendElement(aURI, false);
 
-    let ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+    var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
              getService(Ci.nsIWindowWatcher);
     ww.openWindow(window,
                   CONTENT_HANDLING_URL,
