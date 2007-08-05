@@ -92,7 +92,7 @@ static PRBool IsArg(const char* arg, const char* s)
 }
 
 /**
- * A helper class which calls NS_LogTerm/NS_LogTerm in its scope.
+ * A helper class which calls NS_LogInit/NS_LogTerm in its scope.
  */
 class ScopedLogging
 {
