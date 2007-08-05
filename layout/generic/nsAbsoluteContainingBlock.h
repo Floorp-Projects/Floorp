@@ -147,7 +147,7 @@ protected:
   nsFrameList mAbsoluteFrames;  // additional named child list
 
 #ifdef DEBUG
-   nsIAtom* const mChildListName; // nsGkAtoms::fixedList or nsGkAtoms::absoluteList
+  nsIAtom* const mChildListName; // nsGkAtoms::fixedList or nsGkAtoms::absoluteList
 
   // helper routine for debug printout
   void PrettyUC(nscoord aSize,
