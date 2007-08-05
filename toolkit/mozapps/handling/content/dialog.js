@@ -85,12 +85,12 @@ var dialog = {
 
     this.updateOKButton();
 
-    let description = {
+    var description = {
       image: document.getElementById("description-image"),
       text:  document.getElementById("description-text")
     };
-    let options = document.getElementById("item-action-text");
-    let checkbox = {
+    var options = document.getElementById("item-action-text");
+    var checkbox = {
       desc: document.getElementById("remember"),
       text:  document.getElementById("remember-text")
     };
@@ -117,7 +117,7 @@ var dialog = {
   populateList: function populateList()
   {
     // TODO: make this work with more than one (depends on Bug 385740)
-    let app = this._handlerInfo.preferredApplicationHandler;
+    var app = this._handlerInfo.preferredApplicationHandler;
 
     if (app) {
       let elm = document.createElement("richlistitem");
@@ -154,10 +154,10 @@ var dialog = {
   */
   chooseApplication: function chooseApplication()
   {
-    let bundle = document.getElementById("base-strings");
-    let title = bundle.getString("choose.application.title");
+    var bundle = document.getElementById("base-strings");
+    var title = bundle.getString("choose.application.title");
 
-    let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+    var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
     fp.init(window, title, Ci.nsIFilePicker.modeOpen);
     fp.appendFilters(Ci.nsIFilePicker.filterApps);
 
@@ -186,7 +186,7 @@ var dialog = {
   */
   onAccept: function onAccept()
   {
-    let checkbox = document.getElementById("remember");
+    var checkbox = document.getElementById("remember");
     if (!checkbox.hidden) {
       // We need to make sure that the default is properly set now
       if (this.selectedItem.obj) {
@@ -199,7 +199,7 @@ var dialog = {
     }
     this._handlerInfo.alwaysAskBeforeHandling = !checkbox.checked;
 
-    let hs = Cc["@mozilla.org/uriloader/handler-service;1"].
+    var hs = Cc["@mozilla.org/uriloader/handler-service;1"].
              getService(Ci.nsIHandlerService);
     hs.store(this._handlerInfo);
 
@@ -238,4 +238,3 @@ var dialog = {
     return document.getElementById("items").selectedItem;
   }
 };
-
