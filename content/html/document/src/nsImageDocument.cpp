@@ -406,12 +406,14 @@ nsImageDocument::GetImageRequest(imgIRequest** aImageRequest)
 NS_IMETHODIMP
 nsImageDocument::ShrinkToFit()
 {
+  // Keep image content alive while changing the attributes.
+  nsCOMPtr<nsIContent> imageContent = mImageContent;
   nsCOMPtr<nsIDOMHTMLImageElement> image = do_QueryInterface(mImageContent);
   image->SetWidth(PR_MAX(1, NSToCoordFloor(GetRatio() * mImageWidth)));
   image->SetHeight(PR_MAX(1, NSToCoordFloor(GetRatio() * mImageHeight)));
   
-  mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
-                         NS_LITERAL_STRING("cursor: -moz-zoom-in"), PR_TRUE);
+  imageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
+                        NS_LITERAL_STRING("cursor: -moz-zoom-in"), PR_TRUE);
   
   mImageIsResized = PR_TRUE;
   
@@ -459,15 +461,17 @@ nsImageDocument::RestoreImageTo(PRInt32 aX, PRInt32 aY)
 NS_IMETHODIMP
 nsImageDocument::RestoreImage()
 {
-  mImageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::width, PR_TRUE);
-  mImageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::height, PR_TRUE);
+  // Keep image content alive while changing the attributes.
+  nsCOMPtr<nsIContent> imageContent = mImageContent;
+  imageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::width, PR_TRUE);
+  imageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::height, PR_TRUE);
   
   if (mImageIsOverflowing) {
-    mImageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
-                           NS_LITERAL_STRING("cursor: -moz-zoom-out"), PR_TRUE);
+    imageContent->SetAttr(kNameSpaceID_None, nsGkAtoms::style,
+                          NS_LITERAL_STRING("cursor: -moz-zoom-out"), PR_TRUE);
   }
   else {
-    mImageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, PR_TRUE);
+    imageContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::style, PR_TRUE);
   }
   
   mImageIsResized = PR_FALSE;
