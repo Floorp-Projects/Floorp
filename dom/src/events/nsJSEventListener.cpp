@@ -53,6 +53,8 @@
 
 
 #ifdef NS_DEBUG
+#include "nsIJSContextStack.h"
+#include "nsDOMJSUtils.h"
 
 #include "nspr.h" // PR_fprintf
 
@@ -207,9 +209,16 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     iargv = do_QueryInterface(tempargv);
   }
 
-  // FIXME: bug 347480 - [The JSContext inside mContext] doesn't seem like
-  // the correct context on which to execute the event handler. Might need to
-  // get one from the JS thread context stack.
+  // mContext is the same context which event listener manager pushes
+  // to JS context stack.
+#ifdef NS_DEBUG
+  JSContext* cx = nsnull;
+  nsCOMPtr<nsIJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  NS_ASSERTION(stack && NS_SUCCEEDED(stack->Peek(&cx)) && cx &&
+               GetScriptContextFromJSContext(cx) == mContext,
+               "JSEventListener has wrong script context?");
+#endif
   nsCOMPtr<nsIVariant> vrv;
   rv = mContext->CallEventHandler(mTarget, mScopeObject, funcval, iargv,
                                   getter_AddRefs(vrv));
