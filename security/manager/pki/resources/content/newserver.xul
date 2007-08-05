@@ -72,7 +72,7 @@
     <description id="intro"/>
     <separator class="thin"/>
     <description>&newserver.reasons;</description>
-    <description>&newserver.reason1;</description>
+    <description>&newserver.reason1x;</description>
     <description>&newserver.reason2;</description>
     <description id="reason3"/>
     <separator class="thin"/>
