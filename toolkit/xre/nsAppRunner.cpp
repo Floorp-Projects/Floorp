@@ -1003,7 +1003,7 @@ ScopedXPCOMStartup::SetWindowCreator(nsINativeAppSupport* native)
 }
 
 /**
- * A helper class which calls NS_LogInit/NS_LogTerm in it's scope.
+ * A helper class which calls NS_LogInit/NS_LogTerm in its scope.
  */
 class ScopedLogging
 {
