@@ -42,8 +42,6 @@
 #include "nsIGenericFactory.h"
 #include "nsISupports.h"
 
-#include "nsIFrame.h"
-
 #include "nsIDOMHTMLCanvasElement.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsICanvasRenderingContextInternal.h"
@@ -52,6 +50,8 @@
 
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
+
+#include "nsStringGlue.h"
 
 class nsReftestHelper :
     public nsIReftestHelper
