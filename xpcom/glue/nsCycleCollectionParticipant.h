@@ -42,10 +42,10 @@
 
 #define NS_CYCLECOLLECTIONPARTICIPANT_IID                                      \
 {                                                                              \
-    0x8057ad9e,                                                                \
-    0x3ecc,                                                                    \
-    0x4e89,                                                                    \
-    { 0x89, 0xac, 0x0a, 0x71, 0xf3, 0x8b, 0x14, 0xc2 }                         \
+    0x9674489b,                                                                \
+    0x1f6f,                                                                    \
+    0x4550,                                                                    \
+    { 0xa7, 0x30, 0xcc, 0xae, 0xdd, 0x10, 0x4c, 0xf9 }                         \
 }
 
 /**
@@ -66,7 +66,7 @@
 /**
  * Just holds the IID so NS_GET_IID works.
  */
-class NS_COM nsCycleCollectionISupports
+class nsCycleCollectionISupports
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CYCLECOLLECTIONISUPPORTS_IID)
@@ -75,31 +75,31 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionISupports, 
                               NS_CYCLECOLLECTIONISUPPORTS_IID)
 
-#undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
-
 class nsCycleCollectionParticipant;
 
-struct nsCycleCollectionTraversalCallback
+class NS_NO_VTABLE nsCycleCollectionTraversalCallback
 {
+public:
     // You must call DescribeNode() with an accurate refcount,
     // otherwise cycle collection will fail, and probably crash.
 #ifdef DEBUG_CC
-    virtual void DescribeNode(size_t refcount,
-                              size_t objsz,
-                              const char *objname) = 0;
+    NS_IMETHOD_(void) DescribeNode(nsrefcnt refcount,
+                                   size_t objsz,
+                                   const char *objname) = 0;
 #else
-    virtual void DescribeNode(size_t refcount) = 0;
+    NS_IMETHOD_(void) DescribeNode(nsrefcnt refcount) = 0;
 #endif
-    virtual void NoteScriptChild(PRUint32 langID, void *child) = 0;
-    virtual void NoteXPCOMChild(nsISupports *child) = 0;
-    virtual void NoteNativeChild(void *child,
-                                 nsCycleCollectionParticipant *helper) = 0;
+    NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void *child) = 0;
+    NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child) = 0;
+    NS_IMETHOD_(void) NoteNativeChild(void *child,
+                                      nsCycleCollectionParticipant *helper) = 0;
 };
 
 class NS_NO_VTABLE nsCycleCollectionParticipant
 {
 public:
+    NS_DECLARE_STATIC_IID_ACCESSOR(NS_CYCLECOLLECTIONPARTICIPANT_IID)
+
     NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb) = 0;
 
     NS_IMETHOD Root(void *p) = 0;
@@ -107,12 +107,16 @@ public:
     NS_IMETHOD Unroot(void *p) = 0;
 };
 
-class NS_COM nsXPCOMCycleCollectionParticipant
+NS_DEFINE_STATIC_IID_ACCESSOR(nsCycleCollectionParticipant, 
+                              NS_CYCLECOLLECTIONPARTICIPANT_IID)
+
+#undef IMETHOD_VISIBILITY
+#define IMETHOD_VISIBILITY NS_COM_GLUE
+
+class NS_COM_GLUE nsXPCOMCycleCollectionParticipant
     : public nsCycleCollectionParticipant
 {
 public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(NS_CYCLECOLLECTIONPARTICIPANT_IID)
-
     NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb);
 
     NS_IMETHOD Root(void *p);
@@ -121,17 +125,11 @@ public:
 
     NS_IMETHOD_(void) UnmarkPurple(nsISupports *p);
 
-#ifdef DEBUG
-    NS_EXTERNAL_VIS_(PRBool) CheckForRightISupports(nsISupports *s);
-#endif
+    PRBool CheckForRightISupports(nsISupports *s);
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsXPCOMCycleCollectionParticipant, 
-                              NS_CYCLECOLLECTIONPARTICIPANT_IID)
-
-#undef  IMETHOD_VISIBILITY
+#undef IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helpers for implementing a QI to nsXPCOMCycleCollectionParticipant
