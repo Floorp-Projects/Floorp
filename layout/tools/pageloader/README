@@ -7,11 +7,39 @@ Usage:
 
 See ./firefox -help for other arguments.
 
-The manifest file should contain a list of URLs or URL fragments, one
-per line.  Empty lines or lines starting with # are ignored.  If URL
-fragments are specified, then -tpprefix must be used to give a prefix
-to prepend to each line in the manifest to turn it into a complete
-URL.
+
+Manifest file format
+====================
+
+Comments in the manifest file start with a #.  Each line may be:
+
+* a URL (absolute or relative to the manifest)
+
+This URL is added to the list of tests.
+
+* one or more flags, followed by whitespace, followed by a URL
+
+The only flag supported currently is '%', which indicates that
+a test will do its own timing.  (See Self-timing Tests below.)
+
+* "include" followed by whitespace, followed by a URL
+
+Parse the given manifest file.
+
+Self-timing Tests
+=================
+
+Most timing tests are interested in timing how long it takes the page
+to load; that is, from the start of page loading until the 'load'
+event is dispatched.  By default, this is what the pageloader will
+time.  However, if a test URL has the % flag, the test is expected to
+report its own timing.  For this purpose, the pageloader will provide
+a function named "tpRecordTime" in the test's global object that it
+should call once it has performed whatever timing it wants to do.
+The given value will be used as the timing result for this test.
+
+Output format
+=============
 
 The result is a dump to stdout via dump() --
 browser.dom.window.dump.enabled must be set to true in the profile.  A
