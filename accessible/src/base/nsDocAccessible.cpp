@@ -1121,6 +1121,14 @@ void nsDocAccessible::ContentAppended(nsIDocument *aDocument,
                                       nsIContent* aContainer,
                                       PRInt32 aNewIndexInContainer)
 {
+  if (!mIsContentLoaded || !mDocument) {
+    if (mAccessNodeCache.Count() <= 1) {
+      // See comments in nsDocAccessible::InvalidateCacheSubtree
+      InvalidateChildren();
+    }
+    return;
+  }
+
   PRUint32 childCount = aContainer->GetChildCount();
   for (PRUint32 index = aNewIndexInContainer; index < childCount; index ++) {
     nsCOMPtr<nsIContent> child(aContainer->GetChildAt(index));
@@ -1187,6 +1195,10 @@ void
 nsDocAccessible::FireTextChangedEventOnDOMCharacterDataModified(nsIContent *aContent,
                                                                 CharacterDataChangeInfo* aInfo)
 {
+  if (!mIsContentLoaded || !mDocument) {
+    return;
+  }
+
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aContent));
   if (!node)
     return;
@@ -1232,6 +1244,10 @@ nsDocAccessible::FireTextChangedEventOnDOMNodeInserted(nsIContent *aChild,
                                                        nsIContent *aContainer,
                                                        PRInt32 aIndexInContainer)
 {
+  if (!mIsContentLoaded || !mDocument) {
+    return;
+  }
+
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aChild));
   if (!node)
     return;
@@ -1286,6 +1302,10 @@ nsDocAccessible::FireTextChangedEventOnDOMNodeRemoved(nsIContent *aChild,
                                                       nsIContent *aContainer,
                                                       PRInt32 aIndexInContainer)
 {
+  if (!mIsContentLoaded || !mDocument) {
+    return;
+  }
+
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aChild));
   if (!node)
     return;
