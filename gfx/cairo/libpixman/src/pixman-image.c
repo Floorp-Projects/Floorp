@@ -400,7 +400,7 @@ pixman_image_set_transform (pixman_image_t           *image,
 
     if (memcmp (&id, transform, sizeof (pixman_transform_t)) == 0)
     {
-	transform = NULL;
+	common->transform = NULL;
 	return TRUE;
     }
     
