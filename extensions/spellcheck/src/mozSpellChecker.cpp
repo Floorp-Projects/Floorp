@@ -65,7 +65,7 @@ mozSpellChecker::Init()
   mPersonalDictionary = do_GetService("@mozilla.org/spellchecker/personaldictionary;1");
   
   nsresult rv;
-  mSpellCheckingEngine = do_GetService("@mozilla.org/spellchecker/myspell;1",&rv);
+  mSpellCheckingEngine = do_GetService("@mozilla.org/spellchecker/hunspell;1",&rv);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -131,8 +131,7 @@ mozSpellChecker::CheckWord(const nsAString &aWord, PRBool *aIsMisspelled, nsStri
   if(!mSpellCheckingEngine)
     return NS_ERROR_NULL_POINTER;
 
-  // don't bother to check crazy words, also, myspell gets unhappy if you
-  // give it too much data and crashes sometimes
+  // don't bother to check crazy words
   if (aWord.Length() > UNREASONABLE_WORD_LENGTH) {
     *aIsMisspelled = PR_TRUE;
     return NS_OK;

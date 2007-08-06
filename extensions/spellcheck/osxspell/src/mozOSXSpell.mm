@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * This spellchecker is based on the built-in spellchecker on Mac OS X. It
- * does not use any MySpell technology or rely on their dictionaries. It's just
+ * does not use any Hunspell technology or rely on their dictionaries. It's just
  * a thin wrapper around the Cocoa NSSpellChecker API.
  *
  * ***** END LICENSE BLOCK ***** */
@@ -136,7 +136,7 @@ NS_IMETHODIMP mozOSXSpell::GetProvidesWordUtils(PRBool *aProvidesWordUtils)
 //
 // GetName
 //
-// Name not supported (nor is it in MySpell impl)
+// Name not supported (nor is it in Hunspell impl)
 //
 NS_IMETHODIMP mozOSXSpell::GetName(PRUnichar * *aName)
 {
@@ -146,7 +146,7 @@ NS_IMETHODIMP mozOSXSpell::GetName(PRUnichar * *aName)
 //
 // GetCopyright
 //
-// Copyright not supported (nor is it in MySpell impl)
+// Copyright not supported (nor is it in Hunspell impl)
 //
 NS_IMETHODIMP mozOSXSpell::GetCopyright(PRUnichar * *aCopyright)
 {

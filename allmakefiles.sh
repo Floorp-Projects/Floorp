@@ -723,9 +723,9 @@ xpfe/global/resources/locale/en-US/unix/Makefile
 xpfe/global/resources/locale/en-US/win/Makefile
 xpfe/communicator/Makefile
 extensions/spellcheck/Makefile
+extensions/spellcheck/hunspell/Makefile
 extensions/spellcheck/idl/Makefile
 extensions/spellcheck/locales/Makefile
-extensions/spellcheck/myspell/Makefile
 extensions/spellcheck/src/Makefile
 "
 
