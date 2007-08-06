@@ -60,7 +60,7 @@
 #include "nsEventListenerManager.h"
 #include "nsFrame.h"
 #include "nsGenericElement.h"  // for nsDOMEventRTTearoff
-#include "nsGenericHTMLElement.h"
+#include "nsStyledElement.h"
 #include "nsGlobalWindow.h"
 #include "nsGkAtoms.h"
 #include "nsImageFrame.h"
@@ -280,7 +280,7 @@ nsLayoutStatics::Shutdown()
 
   NS_IF_RELEASE(nsContentDLF::gUAStyleSheet);
   NS_IF_RELEASE(nsRuleNode::gLangService);
-  nsGenericHTMLElement::Shutdown();
+  nsStyledElement::Shutdown();
 
   nsTextFragment::Shutdown();
 
