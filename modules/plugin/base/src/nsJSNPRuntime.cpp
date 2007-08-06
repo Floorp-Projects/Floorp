@@ -1565,13 +1565,22 @@ JSObjWrapperPluginDestroyedCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
   return PL_DHASH_NEXT;
 }
 
+// Struct for passing an NPP and a JSContext to
+// NPObjWrapperPluginDestroyedCallback
+struct NppAndCx
+{
+  NPP npp;
+  JSContext *cx;
+};
+
 PR_STATIC_CALLBACK(PLDHashOperator)
 NPObjWrapperPluginDestroyedCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                     PRUint32 number, void *arg)
 {
   NPObjWrapperHashEntry *entry = (NPObjWrapperHashEntry *)hdr;
+  NppAndCx *nppcx = reinterpret_cast<NppAndCx *>(arg);
 
-  if (entry->mNpp == arg) {
+  if (entry->mNpp == nppcx->npp) {
     NPObject *npobj = entry->mNPObj;
 
     if (npobj->_class && npobj->_class->invalidate) {
@@ -1586,13 +1595,7 @@ NPObjWrapperPluginDestroyedCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
       PR_Free(npobj);
     }
 
-    JSContext *cx = GetJSContext((NPP)arg);
-
-    if (cx) {
-      ::JS_SetPrivate(cx, entry->mJSObj, nsnull);
-    } else {
-      NS_ERROR("dangling entry->mJSObj JSPrivate because we can't find cx");
-    }
+    ::JS_SetPrivate(nppcx->cx, entry->mJSObj, nsnull);
 
     return PL_DHASH_REMOVE;
   }
@@ -1609,17 +1612,35 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
                            JSObjWrapperPluginDestroyedCallback, npp);
   }
 
+  // Use the safe JSContext here as we're not always able to find the
+  // JSContext associated with the NPP any more.
+
+  nsCOMPtr<nsIThreadJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  if (!stack) {
+    NS_ERROR("No context stack available!");
+
+    return;
+  }
+
+  stack->GetSafeJSContext(&cx);
+  if (!cx) {
+    NS_ERROR("No safe JS context available!");
+
+    return;
+  }
+
   if (sNPObjWrappers.ops) {
+    NppAndCx nppcx = { npp, cx };
     PL_DHashTableEnumerate(&sNPObjWrappers,
-                           NPObjWrapperPluginDestroyedCallback, npp);
+                           NPObjWrapperPluginDestroyedCallback, &nppcx);
   }
 
   // If this plugin was scripted from a webpage, the plugin's
   // scriptable object will be on the DOM element's prototype
   // chain. Now that the plugin is being destroyed we need to pull the
   // plugin's scriptable object out of that prototype chain.
-  JSContext *cx = GetJSContext(npp);
-  if (!cx || !npp) {
+  if (!npp) {
     return;
   }
 
