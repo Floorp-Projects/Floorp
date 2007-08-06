@@ -47,7 +47,6 @@
 menupopup,
 popup,
 panel {
-  -moz-appearance: menupopup;
   border: 3px solid transparent;
   -moz-border-top-colors   : ThreeDLightShadow ThreeDHighlight ThreeDFace;
   -moz-border-left-colors  : ThreeDLightShadow ThreeDHighlight ThreeDFace;
@@ -56,6 +55,13 @@ panel {
   padding: 0px;
   min-width: 1px;
   background: Menu;
+}
+
+menupopup,
+/* auto complete popups don't render well as vista menus */
+popup:not([type="autocomplete"])
+{
+  -moz-appearance: menupopup;
 }
 
 menupopup > menu > menupopup,
@@ -103,4 +109,3 @@ menulist > menupopup,
   min-width: 0px;
   background-color: -moz-Field;
 }
-
