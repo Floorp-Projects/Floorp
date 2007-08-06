@@ -55,5 +55,5 @@ _SIMPLETEST_FILES =	MozillaFileLogger.js \
 			$(NULL)
 
 libs:: $(_SIMPLETEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/$(relativesrcdir)
 
