@@ -50,7 +50,10 @@
 #include "nsICSSStyleRule.h"
 #include "nsICSSParser.h"
 #include "nsICSSLoader.h"
+
+#ifdef MOZ_SVG
 #include "nsIDOMSVGStylable.h"
+#endif
 
 //----------------------------------------------------------------------
 // nsIContent methods
@@ -83,8 +86,10 @@ nsStyledElement::ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
       return PR_TRUE;
     }
     if (aAttribute == nsGkAtoms::_class) {
+#ifdef MOZ_SVG
       NS_ASSERTION(!nsCOMPtr<nsIDOMSVGStylable>(do_QueryInterface(this)),
                    "SVG code should have handled this 'class' attribute!");
+#endif
       aResult.ParseAtomArray(aValue);
       return PR_TRUE;
     }
