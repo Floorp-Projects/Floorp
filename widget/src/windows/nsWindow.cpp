@@ -339,20 +339,23 @@ static PRBool IsCursorTranslucencySupported() {
 
 static PRBool IsWin2k()
 {
+  return GetWindowsVersion() == WIN2K_VERSION;
+}
+
+PRInt32 GetWindowsVersion()
+{
+  static PRInt32 version = 0;
   static PRBool didCheck = PR_FALSE;
-  static PRBool isWin2k = PR_FALSE;
 
-  if (!didCheck) {
-    didCheck = PR_TRUE;
-    OSVERSIONINFO versionInfo;
-  
-    versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
-    if (::GetVersionEx(&versionInfo))
-      isWin2k = versionInfo.dwMajorVersion == 5 &&
-                versionInfo.dwMinorVersion == 0;
+  if (!didCheck)
+  {
+    OSVERSIONINFOEX osInfo;
+    osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    // This cast is safe and supposed to be here, don't worry
+    ::GetVersionEx((OSVERSIONINFO*)&osInfo);
+    version = (osInfo.dwMajorVersion & 0xff) << 8 | (osInfo.dwMinorVersion & 0xff);
   }
-
-  return isWin2k;
+  return version;
 }
 
 

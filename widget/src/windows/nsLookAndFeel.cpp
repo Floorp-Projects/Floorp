@@ -44,6 +44,34 @@
 #include <shellapi.h>
 #include "nsWindow.h"
 
+#ifndef WINCE
+typedef HANDLE (WINAPI*OpenThemeDataPtr)(HWND hwnd, LPCWSTR pszClassList);
+typedef HRESULT (WINAPI*CloseThemeDataPtr)(HANDLE hTheme);
+typedef HRESULT (WINAPI*GetThemeColorPtr)(HANDLE hTheme, int iPartId,
+                                          int iStateId, int iPropId, OUT COLORREF* pFont);
+typedef BOOL (WINAPI*IsAppThemedPtr)(VOID);
+
+static OpenThemeDataPtr openTheme = NULL;
+static CloseThemeDataPtr closeTheme = NULL;
+static GetThemeColorPtr getThemeColor = NULL;
+static IsAppThemedPtr isAppThemed = NULL;
+
+static const char kThemeLibraryName[] = "uxtheme.dll";
+static HINSTANCE gThemeDLLInst = NULL;
+static HANDLE gMenuTheme = NULL;
+
+#define MENU_POPUPITEM 14
+
+#define MPI_NORMAL 1
+#define MPI_HOT 2
+#define MPI_DISABLED 3
+#define MPI_DISABLEDHOT 4
+
+// From tmschema.h in the Vista SDK
+#define TMT_TEXTCOLOR 3803
+
+#endif
+
 // Constants only found in new (2K+, XP+, etc.) Windows.
 #ifndef COLOR_MENUHILIGHT
 #define COLOR_MENUHILIGHT    29
@@ -82,6 +110,15 @@ nsLookAndFeel::nsLookAndFeel() : nsXPLookAndFeel()
   {
       gSHAppBarMessage = (SHAppBarMessagePtr) GetProcAddress(gShell32DLLInst,
                                                              "SHAppBarMessage");
+  }
+  gThemeDLLInst = LoadLibrary(kThemeLibraryName);
+  if(gThemeDLLInst)
+  {
+    openTheme = (OpenThemeDataPtr)GetProcAddress(gThemeDLLInst, "OpenThemeData");
+    closeTheme = (CloseThemeDataPtr)GetProcAddress(gThemeDLLInst, "CloseThemeData");
+    getThemeColor = (GetThemeColorPtr)GetProcAddress(gThemeDLLInst, "GetThemeColor");
+    isAppThemed = (IsAppThemedPtr)GetProcAddress(gThemeDLLInst, "IsAppThemed");
+    gMenuTheme = openTheme(NULL, L"Menu");
   }
 #endif
 }
@@ -198,8 +235,46 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_menuhover:
       idx = COLOR_HIGHLIGHT;
       break;
-    case eColor_highlighttext:
+    case eColor__moz_menubarhovertext:OSVERSIONINFOEX:
+#ifndef WINCE
+      if (GetWindowsVersion() < VISTA_VERSION || !isAppThemed())
+#endif
+      {
+        // GetSystemParam will return 0 on failure and we get non-flat as
+        // desired for Windows 2000 and sometimes on XP.
+        idx = (GetSystemParam(SPI_GETFLATMENU, 0)) ?
+                COLOR_HIGHLIGHTTEXT :
+                COLOR_MENUTEXT;
+        break;
+      }
+      // Fall through
     case eColor__moz_menuhovertext:
+#ifndef WINCE
+      if (isAppThemed && isAppThemed() && GetWindowsVersion() >= VISTA_VERSION)
+      {
+        COLORREF color;
+        HRESULT hr;
+        hr = getThemeColor(gMenuTheme, MENU_POPUPITEM, MPI_HOT, TMT_TEXTCOLOR, &color);
+        if (hr == S_OK)
+        {
+          aColor = COLOREF_2_NSRGB(color);
+          return NS_OK;
+        }
+        // Since we don't get theme changed messages, check if we lost the handle
+        else if (hr == E_HANDLE)
+        {
+          closeTheme(gMenuTheme);
+          gMenuTheme = openTheme(NULL, L"Menu");
+          // gMenuTheme shouldn't be null since it was non-null before so we
+          // are running on Vista or higher
+          getThemeColor(gMenuTheme, MENU_POPUPITEM, MPI_HOT, TMT_TEXTCOLOR, &color);
+          aColor = COLOREF_2_NSRGB(color);
+          return NS_OK;
+        }
+        // fall through to highlight case
+      }
+#endif
+    case eColor_highlighttext:
       idx = COLOR_HIGHLIGHTTEXT;
       break;
     case eColor_inactiveborder:
@@ -270,14 +345,6 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
     case eColor__moz_buttondefault:
       idx = COLOR_3DDKSHADOW;
       break;
-    case eColor__moz_menubarhovertext: {
-     // GetSystemParam will return 0 on failure and we get non-flat as
-     // desired for Windows 2000 and sometimes on XP.
-      idx = (GetSystemParam(SPI_GETFLATMENU, 0)) ?
-                COLOR_HIGHLIGHTTEXT :
-                COLOR_MENUTEXT;
-      break;
-    }
     default:
       idx = COLOR_WINDOW;
       break;
