@@ -68,4 +68,4 @@ _JS_FILES =	Async.js \
 		$(NULL)	
 
 libs:: $(_JS_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/$(relativesrcdir)
