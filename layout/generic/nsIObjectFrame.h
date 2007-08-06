@@ -47,9 +47,9 @@
 
 class nsIPluginInstance;
 
-// {F455B51F-7A1F-4bbe-B55D-679F033AD3FE}
+// {3e2df1fe-a898-4e2e-8763-4ca904fa338e}
 #define NS_IOBJECTFRAME_IID \
-{ 0xf455b51f, 0x7a1f, 0x4bbe, { 0xb5, 0x5d, 0x67, 0x9f, 0x3, 0x3a, 0xd3, 0xfe } }
+{ 0x3e2df1fe, 0xa898, 0x4e2e, { 0x87, 0x63, 0x4c, 0xa9, 0x4, 0xfa, 0x33, 0x8e } }
 
 class nsIObjectFrame : public nsISupports {
 public:
@@ -62,6 +62,8 @@ public:
    * data.
    */
   virtual nsresult Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamListener) = 0;
+
+  virtual void TryNotifyContentObjectWrapper() = 0;
 
   /**
    * Instantiate a plugin that loads the data itself.

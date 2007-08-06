@@ -216,3 +216,8 @@
 #define NS_THEME_MENURADIO                                 216
 #define NS_THEME_MENUSEPARATOR                             217
 #define NS_THEME_MENUARROW                                 218
+// An image in the menu gutter, like in bookmarks or history
+#define NS_THEME_MENUIMAGE                                 219
+// For text on non-iconic menuitems only
+#define NS_THEME_MENUITEMTEXT                              220
+

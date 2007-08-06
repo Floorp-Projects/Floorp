@@ -40,9 +40,9 @@
 #include "domstubs.idl"
 
 interface nsIControllers;
+interface nsIDOMFileList;
 
-
-[scriptable, uuid(993d2efc-a768-11d3-bccd-0060b0fc76bd)]
+[scriptable, uuid(7564318a-8d75-4191-890d-f0150488d431)]
 interface nsIDOMNSHTMLInputElement : nsISupports
 {
 	readonly attribute nsIControllers   controllers;
@@ -51,6 +51,8 @@ interface nsIDOMNSHTMLInputElement : nsISupports
 	
            attribute long             selectionStart;
            attribute long             selectionEnd;
+
+	readonly attribute nsIDOMFileList   fileList;
 
 	/* convenience */
   void                      setSelectionRange(in long selectionStart,

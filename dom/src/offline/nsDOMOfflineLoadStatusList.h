@@ -43,7 +43,7 @@
 #include "nsIDOMLoadStatus.h"
 #include "nsIDOMLoadStatusEvent.h"
 #include "nsIDOMLoadStatusList.h"
-#include "nsIOfflineCacheSession.h"
+#include "nsIOfflineCacheUpdate.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsIURI.h"
@@ -73,8 +73,8 @@ public:
   nsresult Init();
 
 private :
-  nsresult          ShouldInclude       (nsIDOMLoadStatus *aStatus,
-                                         PRBool *aInclude);
+  nsresult          UpdateAdded         (nsIOfflineCacheUpdate *aUpdate);
+  nsresult          UpdateCompleted     (nsIOfflineCacheUpdate *aUpdate);
   nsIDOMLoadStatus *FindWrapper         (nsIDOMLoadStatus *aStatus,
                                          PRUint32 *aIndex);
   void              NotifyEventListeners(const nsCOMArray<nsIDOMEventListener>& aListeners,
@@ -89,12 +89,12 @@ private :
   nsCOMPtr<nsIURI> mURI;
   nsCOMArray<nsIDOMLoadStatus> mItems;
   nsCString mHostPort;
-  nsCOMPtr<nsIOfflineCacheSession> mCacheSession;
 
   nsCOMPtr<nsIScriptContext> mScriptContext;
 
   nsCOMArray<nsIDOMEventListener> mLoadRequestedEventListeners;
   nsCOMArray<nsIDOMEventListener> mLoadCompletedEventListeners;
+  nsCOMArray<nsIDOMEventListener> mUpdateCompletedEventListeners;
 };
 
 class nsDOMLoadStatusEvent : public nsDOMEvent,

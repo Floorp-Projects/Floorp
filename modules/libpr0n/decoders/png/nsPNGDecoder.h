@@ -52,6 +52,8 @@
 
 #include "png.h"
 
+#include "lcms.h"
+
 #define NS_PNGDECODER_CID \
 { /* 36fa00c2-1dd2-11b2-be07-d16eeb4c50ed */         \
      0x36fa00c2,                                     \
@@ -81,10 +83,15 @@ public:
 
   png_structp mPNG;
   png_infop mInfo;
+  PRUint8 *mCMSLine;
+  PRUint8 *interlacebuf;
+  cmsHPROFILE mInProfile;
+  cmsHTRANSFORM mTransform;
+
+  PRUint32 ibpr;
   gfx_format format;
   PRUint8 apngFlags;
-  PRUint8 *interlacebuf;
-  PRUint32 ibpr;
+  PRUint8 mChannels;
   PRPackedBool mError;
 };
 

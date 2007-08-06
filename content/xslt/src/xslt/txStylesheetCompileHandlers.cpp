@@ -38,7 +38,7 @@
 
 #include "txStylesheetCompiler.h"
 #include "txStylesheetCompileHandlers.h"
-#include "txTokenizer.h"
+#include "nsWhitespaceTokenizer.h"
 #include "txInstructions.h"
 #include "txAtoms.h"
 #include "txCore.h"
@@ -132,7 +132,7 @@ parseUseAttrSets(txStylesheetAttr* aAttributes,
         return rv;
     }
 
-    txTokenizer tok(attr->mValue);
+    nsWhitespaceTokenizer tok(attr->mValue);
     while (tok.hasMoreTokens()) {
         txExpandedName name;
         rv = name.init(tok.nextToken(), aState.mElementContext->mMappings,
@@ -996,7 +996,7 @@ txFnStartOutput(PRInt32 aNamespaceID,
     getStyleAttr(aAttributes, aAttrCount, kNameSpaceID_None,
                  txXSLTAtoms::cdataSectionElements, PR_FALSE, &attr);
     if (attr) {
-        txTokenizer tokens(attr->mValue);
+        nsWhitespaceTokenizer tokens(attr->mValue);
         while (tokens.hasMoreTokens()) {
             txExpandedName* qname = new txExpandedName();
             NS_ENSURE_TRUE(qname, NS_ERROR_OUT_OF_MEMORY);
@@ -1056,7 +1056,7 @@ txFnStartStripSpace(PRInt32 aNamespaceID,
     nsAutoPtr<txStripSpaceItem> stripItem(new txStripSpaceItem);
     NS_ENSURE_TRUE(stripItem, NS_ERROR_OUT_OF_MEMORY);
 
-    txTokenizer tokenizer(attr->mValue);
+    nsWhitespaceTokenizer tokenizer(attr->mValue);
     while (tokenizer.hasMoreTokens()) {
         const nsASingleFragmentString& name = tokenizer.nextToken();
         PRInt32 ns = kNameSpaceID_None;

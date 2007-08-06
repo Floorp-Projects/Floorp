@@ -75,6 +75,7 @@
 #include "nsStreamUtils.h"
 #include "nsIOService.h"
 #include "nsAuthInformationHolder.h"
+#include "nsICacheService.h"
 
 // True if the local cache should be bypassed when processing a request.
 #define BYPASS_LOCAL_CACHE(loadFlags) \
@@ -331,7 +332,7 @@ nsHttpChannel::Connect(PRBool firstTime)
     AddAuthorizationHeaders();
 
     if (mLoadFlags & LOAD_NO_NETWORK_IO) {
-        return NS_ERROR_NEEDS_NETWORK;
+        return NS_ERROR_DOCUMENT_NOT_CACHED;
     }
 
     // hit the net...
@@ -1405,8 +1406,19 @@ nsHttpChannel::OpenOfflineCacheEntryForWriting()
     GenerateCacheKey(cacheKey);
 
     nsCOMPtr<nsICacheSession> session;
-    rv = gHttpHandler->GetCacheSession(nsICache::STORE_OFFLINE,
-                                       getter_AddRefs(session));
+    if (!mOfflineCacheClientID.IsEmpty()) {
+        nsCOMPtr<nsICacheService> serv =
+            do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = serv->CreateSession(mOfflineCacheClientID.get(),
+                                 nsICache::STORE_OFFLINE,
+                                 nsICache::STREAM_BASED,
+                                 getter_AddRefs(session));
+    } else {
+        rv = gHttpHandler->GetCacheSession(nsICache::STORE_OFFLINE,
+                                           getter_AddRefs(session));
+    }
     if (NS_FAILED(rv)) return rv;
 
     rv = session->OpenCacheEntry(cacheKey, nsICache::ACCESS_READ_WRITE,
@@ -4546,6 +4558,22 @@ NS_IMETHODIMP
 nsHttpChannel::SetCacheForOfflineUse(PRBool value)
 {
     mCacheForOfflineUse = value;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetOfflineCacheClientID(nsACString &value)
+{
+    value = mOfflineCacheClientID;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetOfflineCacheClientID(const nsACString &value)
+{
+    mOfflineCacheClientID = value;
 
     return NS_OK;
 }

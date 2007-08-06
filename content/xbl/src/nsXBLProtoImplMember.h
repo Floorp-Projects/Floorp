@@ -51,7 +51,7 @@
 class nsIScriptContext;
 struct JSRuntime;
 class nsIJSRuntimeService;
-struct nsCycleCollectionTraversalCallback;
+class nsCycleCollectionTraversalCallback;
 
 struct nsXBLTextWithLineNumber
 {

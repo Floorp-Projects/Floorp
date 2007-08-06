@@ -100,6 +100,57 @@ nsString *nsMenuFrame::gMetaText = nsnull;
 nsString *nsMenuFrame::gAltText = nsnull;
 nsString *nsMenuFrame::gModifierSeparator = nsnull;
 
+// this class is used for dispatching menu activation events asynchronously.
+class nsMenuActivateEvent : public nsRunnable
+{
+public:
+  nsMenuActivateEvent(nsIContent *aMenu,
+                      nsPresContext* aPresContext,
+                      PRBool aIsActivate)
+    : mMenu(aMenu), mPresContext(aPresContext), mIsActivate(aIsActivate)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsAutoString domEventToFire;
+
+    if (mIsActivate) {
+      // Highlight the menu.
+      mMenu->SetAttr(kNameSpaceID_None, nsGkAtoms::menuactive,
+                     NS_LITERAL_STRING("true"), PR_TRUE);
+      // The menuactivated event is used by accessibility to track the user's
+      // movements through menus
+      domEventToFire.AssignLiteral("DOMMenuItemActive");
+    }
+    else {
+      // Unhighlight the menu.
+      mMenu->UnsetAttr(kNameSpaceID_None, nsGkAtoms::menuactive, PR_TRUE);
+      domEventToFire.AssignLiteral("DOMMenuItemInactive");
+    }
+
+    nsCOMPtr<nsIDOMEvent> event;
+    if (NS_SUCCEEDED(nsEventDispatcher::CreateEvent(mPresContext, nsnull,
+                                                    NS_LITERAL_STRING("Events"),
+                                                    getter_AddRefs(event)))) {
+      event->InitEvent(domEventToFire, PR_TRUE, PR_TRUE);
+
+      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
+      privateEvent->SetTrusted(PR_TRUE);
+
+      nsEventDispatcher::DispatchDOMEvent(mMenu, nsnull, event,
+                                          mPresContext, nsnull);
+    }
+
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIContent> mMenu;
+  nsCOMPtr<nsPresContext> mPresContext;
+  PRBool mIsActivate;
+};
+
 //
 // NS_NewMenuFrame
 //
@@ -523,61 +574,22 @@ nsMenuFrame::PopupClosed(PRBool aDeselectMenu)
 
   // if the popup is for a menu on a menubar, inform menubar to deactivate
   if (mMenuParent && mMenuParent->MenuClosed()) {
-    if (aDeselectMenu)
+    if (aDeselectMenu) {
       SelectMenu(PR_FALSE);
+    } else {
+      // We are not deselecting the parent menu while closing the popup, so send
+      // a DOMMenuItemActive event to the menu to indicate that the menu is
+      // becoming active again.
+      nsMenuFrame *current = mMenuParent->GetCurrentMenuItem();
+      if (current) {
+        nsCOMPtr<nsIRunnable> event =
+          new nsMenuActivateEvent(current->GetContent(),
+                                  PresContext(), PR_TRUE);
+        NS_DispatchToCurrentThread(event);
+      }
+    }
   }
 }
-
-// this class is used for dispatching menu activation events asynchronously.
-class nsMenuActivateEvent : public nsRunnable
-{
-public:
-  nsMenuActivateEvent(nsIContent *aMenu,
-                      nsPresContext* aPresContext,
-                      PRBool aIsActivate)
-    : mMenu(aMenu), mPresContext(aPresContext), mIsActivate(aIsActivate)
-  {
-  }
-
-  NS_IMETHOD Run()
-  {
-    nsAutoString domEventToFire;
-
-    if (mIsActivate) {
-      // Highlight the menu.
-      mMenu->SetAttr(kNameSpaceID_None, nsGkAtoms::menuactive,
-                     NS_LITERAL_STRING("true"), PR_TRUE);
-      // The menuactivated event is used by accessibility to track the user's
-      // movements through menus
-      domEventToFire.AssignLiteral("DOMMenuItemActive");
-    }
-    else {
-      // Unhighlight the menu.
-      mMenu->UnsetAttr(kNameSpaceID_None, nsGkAtoms::menuactive, PR_TRUE);
-      domEventToFire.AssignLiteral("DOMMenuItemInactive");
-    }
-
-    nsCOMPtr<nsIDOMEvent> event;
-    if (NS_SUCCEEDED(nsEventDispatcher::CreateEvent(mPresContext, nsnull,
-                                                    NS_LITERAL_STRING("Events"),
-                                                    getter_AddRefs(event)))) {
-      event->InitEvent(domEventToFire, PR_TRUE, PR_TRUE);
-
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-      privateEvent->SetTrusted(PR_TRUE);
-
-      nsEventDispatcher::DispatchDOMEvent(mMenu, nsnull, event,
-                                          mPresContext, nsnull);
-    }
-
-    return NS_OK;
-  }
-
-private:
-  nsCOMPtr<nsIContent> mMenu;
-  nsCOMPtr<nsPresContext> mPresContext;
-  PRBool mIsActivate;
-};
 
 NS_IMETHODIMP
 nsMenuFrame::SelectMenu(PRBool aActivateFlag)

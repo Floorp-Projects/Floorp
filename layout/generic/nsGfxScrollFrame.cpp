@@ -269,7 +269,7 @@ static nsSize ComputeInsideBorderSize(ScrollReflowState* aState,
     contentWidth = aDesiredInsideBorderSize.width -
       aState->mReflowState.mComputedPadding.LeftRight();
   }
-  nscoord contentHeight = aState->mReflowState.mComputedHeight;
+  nscoord contentHeight = aState->mReflowState.ComputedHeight();
   if (contentHeight == NS_UNCONSTRAINEDSIZE) {
     contentHeight = aDesiredInsideBorderSize.height -
       aState->mReflowState.mComputedPadding.TopBottom();

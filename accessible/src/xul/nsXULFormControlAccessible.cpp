@@ -774,10 +774,7 @@ NS_IMETHODIMP nsXULTextFieldAccessible::Init()
 
 NS_IMETHODIMP nsXULTextFieldAccessible::Shutdown()
 {
-  if (mEditor) {
-    mEditor->RemoveEditActionListener(this);
-    mEditor = nsnull;
-  }
+  mEditor = nsnull;
   return nsHyperTextAccessibleWrap::Shutdown();
 }
 
@@ -941,8 +938,6 @@ nsXULTextFieldAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChild
 void nsXULTextFieldAccessible::SetEditor(nsIEditor* aEditor)
 {
   mEditor = aEditor;
-  if (mEditor)
-    mEditor->AddEditActionListener(this);
 }
 
 void nsXULTextFieldAccessible::CheckForEditor()

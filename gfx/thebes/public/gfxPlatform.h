@@ -45,6 +45,13 @@
 #include "gfxTypes.h"
 #include "gfxASurface.h"
 
+#ifdef XP_OS2
+#undef OS2EMX_PLAIN_CHAR
+#endif
+
+typedef void* cmsHPROFILE;
+typedef void* cmsHTRANSFORM;
+
 class gfxImageSurface;
 class gfxFontGroup;
 struct gfxFontStyle;
@@ -135,10 +142,32 @@ public:
 
     void GetPrefFonts(const char *aLangGroup, nsString& array, PRBool aAppendUnicode = PR_TRUE);
 
+    /**
+     * Are we going to try color management?
+     */
+    static PRBool IsCMSEnabled();
+
+    /**
+     * Return the output device ICC profile.
+     */
+    static cmsHPROFILE GetCMSOutputProfile();
+
+    /**
+     * Return sRGB -> output device transform.
+     */
+    static cmsHTRANSFORM GetCMSRGBTransform();
+
+    /**
+     * Return sRGBA -> output device transform.
+     */
+    static cmsHTRANSFORM GetCMSRGBATransform();
+
 protected:
     gfxPlatform() { }
     virtual ~gfxPlatform();
 
+private:
+    virtual cmsHPROFILE GetPlatformCMSOutputProfile();
 };
 
 #endif /* GFX_PLATFORM_H */

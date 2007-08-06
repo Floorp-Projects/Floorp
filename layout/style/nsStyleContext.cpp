@@ -384,34 +384,6 @@ nsStyleContext::ApplyStyleFixups(nsPresContext* aPresContext)
   GetStyleUserInterface();
 }
 
-void
-nsStyleContext::ClearStyleData(nsPresContext* aPresContext)
-{
-  // First we need to clear out all of our style data.
-  if (mCachedStyleData.mResetData || mCachedStyleData.mInheritedData)
-    mCachedStyleData.Destroy(mBits, aPresContext);
-
-  mBits = 0; // Clear all bits.
-
-  ApplyStyleFixups(aPresContext);
-
-  if (mChild) {
-    nsStyleContext* child = mChild;
-    do {
-      child->ClearStyleData(aPresContext);
-      child = child->mNextSibling;
-    } while (mChild != child);
-  }
-  
-  if (mEmptyChild) {
-    nsStyleContext* child = mEmptyChild;
-    do {
-      child->ClearStyleData(aPresContext);
-      child = child->mNextSibling;
-    } while (mEmptyChild != child);
-  }
-}
-
 nsChangeHint
 nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
 {
@@ -915,6 +887,8 @@ void nsStyleContext::DumpRegressionData(nsPresContext* aPresContext, FILE* out, 
   fprintf(out, "<svgreset data=\"%ld ", (long)svgReset->mStopColor);
 
   fprintf(out, "%ld ", (long)svgReset->mFloodColor);
+
+  fprintf(out, "%ld ", (long)svgReset->mLightingColor);
 
   fprintf(out, "%s %s %s %f %f %d\" />\n",
           URICString(svgReset->mClipPath).get(),

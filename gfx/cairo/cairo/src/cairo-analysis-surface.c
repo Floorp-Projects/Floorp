@@ -35,7 +35,7 @@
 #include "cairoint.h"
 
 #include "cairo-analysis-surface-private.h"
-#include "cairo-paginated-surface-private.h"
+#include "cairo-paginated-private.h"
 
 typedef struct {
     cairo_surface_t base;
@@ -49,7 +49,7 @@ typedef struct {
 
 static cairo_int_status_t
 _cairo_analysis_surface_get_extents (void	 		*abstract_surface,
-				     cairo_rectangle_int16_t	*rectangle)
+				     cairo_rectangle_int_t	*rectangle)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
 
@@ -234,14 +234,14 @@ FAIL:
     return NULL;
 }
 
-cairo_private pixman_region16_t *
+cairo_private cairo_region_t *
 _cairo_analysis_surface_get_supported (cairo_surface_t *abstract_surface)
 {
     /* XXX */
     return NULL;
 }
 
-cairo_private pixman_region16_t *
+cairo_private cairo_region_t *
 _cairo_analysis_surface_get_unsupported (cairo_surface_t *abstract_surface)
 {
     /* XXX */

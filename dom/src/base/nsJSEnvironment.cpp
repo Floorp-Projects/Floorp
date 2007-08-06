@@ -992,8 +992,6 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
   mBranchCallbackTime = LL_ZERO;
   mProcessingScriptTag = PR_FALSE;
   mIsTrackingChromeCodeTime = PR_FALSE;
-
-  InvalidateContextAndWrapperCache();
 }
 
 nsJSContext::~nsJSContext()
@@ -1758,6 +1756,18 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
   if (!mScriptsEnabled) {
     return NS_OK;
   }
+
+  // This may not be strictly needed, but lets do it as an extra level
+  // of safety. Ideally the check in nsGenericElement::AddScriptEventListener
+  // is enough.
+  nsCOMPtr<nsINode> nodeTarget = do_QueryInterface(aTarget);
+  if (nodeTarget) {
+    nsIDocument* doc = nodeTarget->GetOwnerDoc();
+    if (!doc || doc->IsLoadedAsData()) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+
   nsresult rv;
   JSObject* target = nsnull;
   nsAutoGCRoot root(&target, &rv);
@@ -2082,6 +2092,11 @@ nsJSContext::Deserialize(nsIObjectInputStream* aStream,
         nsMemory::Free(data);
     NS_ASSERTION(aResult.getScriptTypeID()==JAVASCRIPT,
                  "Expecting JS script object holder");
+
+    // Now that we've cleaned up, handle the case when rv is a failure
+    // code, which could happen for all sorts of reasons above.
+    NS_ENSURE_SUCCESS(rv, rv);
+    
     return aResult.set(result);
 }
 
@@ -2215,8 +2230,6 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 
   if (!mContext)
     return NS_ERROR_OUT_OF_MEMORY;
-
-  InvalidateContextAndWrapperCache();
 
   nsresult rv;
 
@@ -2359,20 +2372,31 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
   void *mark;
 
   JSAutoRequest ar(mContext);
-  
+
   nsresult rv;
   rv = ConvertSupportsTojsvals(aArgs, GetNativeGlobal(), &argc,
                                reinterpret_cast<void **>(&argv), &mark);
   NS_ENSURE_SUCCESS(rv, rv);
   AutoFreeJSStack stackGuard(mContext, mark); // ensure always freed.
 
-  // got the array, now attach it.
-  JSObject *args = ::JS_NewArrayObject(mContext, argc, argv);
-  jsval vargs = OBJECT_TO_JSVAL(args);
+  jsval vargs;
 
-  rv = ::JS_SetProperty(mContext, reinterpret_cast<JSObject *>(aTarget), aPropName, &vargs) ?
+  // got the arguments, now attach them.
+
+  // window.dialogArguments is supposed to be an array if a JS array
+  // was passed to showModalDialog(), deal with that here.
+  if (strcmp(aPropName, "dialogArguments") == 0 && argc <= 1) {
+    vargs = argc ? argv[0] : JSVAL_VOID;
+  } else {
+    JSObject *args = ::JS_NewArrayObject(mContext, argc, argv);
+    vargs = OBJECT_TO_JSVAL(args);
+  }
+
+  // Make sure to use JS_DefineProperty here so that we can override
+  // readonly XPConnect properties here as well (read dialogArguments).
+  rv = ::JS_DefineProperty(mContext, reinterpret_cast<JSObject *>(aTarget),
+                           aPropName, vargs, nsnull, nsnull, 0) ?
        NS_OK : NS_ERROR_FAILURE;
-  // free 'args'???
 
   return rv;
 }
@@ -2441,7 +2465,7 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
         // as we have code for handling all, we may as well use it.
         rv = AddSupportsPrimitiveTojsvals(arg, thisval);
         if (rv == NS_ERROR_NO_INTERFACE) {
-          // something else - probably an event object or similar - just
+          // something else - probably an event object or similar -
           // just wrap it.
 #ifdef NS_DEBUG
           // but first, check its not another nsISupportsPrimitive, as

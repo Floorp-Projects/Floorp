@@ -830,6 +830,16 @@ gfxPangoFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
     return run;
 }
 
+static PRBool
+CanTakeFastPath(PRUint32 aFlags)
+{
+    // Can take fast path only if OPTIMIZE_SPEED is set and IS_RTL isn't
+    // We need to always use Pango for RTL text, in case glyph mirroring is required
+    return (aFlags &
+            (gfxTextRunFactory::TEXT_OPTIMIZE_SPEED | gfxTextRunFactory::TEXT_IS_RTL)) ==
+        gfxTextRunFactory::TEXT_OPTIMIZE_SPEED;
+}
+
 gfxTextRun *
 gfxPangoFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
                                const Parameters *aParams, PRUint32 aFlags)
@@ -843,14 +853,17 @@ gfxPangoFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
     nsCAutoString utf8;
     PRInt32 headerLen = AppendDirectionalIndicatorUTF8(run->IsRightToLeft(), utf8);
     AppendUTF16toUTF8(Substring(aString, aString + aLength), utf8);
-    PRUint32 allBits = 0;
+    PRBool is8Bit = PR_FALSE;
 #if defined(ENABLE_XFT_FAST_PATH_8BIT)
-    PRUint32 i;
-    for (i = 0; i < aLength; ++i) {
-        allBits |= aString[i];
+    if (CanTakeFastPath(aFlags)) {
+        PRUint32 allBits = 0;
+        PRUint32 i;
+        for (i = 0; i < aLength; ++i) {
+            allBits |= aString[i];
+        }
+        is8Bit = (allBits & 0xFF00) == 0;
     }
 #endif
-    PRBool is8Bit = (allBits & 0xFF00) == 0;
     InitTextRun(run, utf8.get(), utf8.Length(), headerLen, is8Bit);
     return run;
 }
@@ -864,8 +877,7 @@ gfxPangoFontGroup::InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
     CreateGlyphRunsXft(aTextRun, aUTF8Text + aUTF8HeaderLength, aUTF8Length - aUTF8HeaderLength);
 #else
 #if defined(ENABLE_XFT_FAST_PATH_8BIT)
-    // We need to always use Pango for RTL text, in case glyph mirroring is required
-    if (aTake8BitPath && !aTextRun->IsRightToLeft()) {
+    if (aTake8BitPath && CanTakeFastPath(aTextRun->GetFlags())) {
         CreateGlyphRunsXft(aTextRun, aUTF8Text + aUTF8HeaderLength, aUTF8Length - aUTF8HeaderLength);
         return;
     }
@@ -902,7 +914,7 @@ CreateScaledFont(cairo_t *aCR, cairo_matrix_t *aCTM, PangoFont *aPangoFont)
     return scaledFont;
 }
 
-void
+PRBool
 gfxPangoFont::SetupCairoFont(cairo_t *aCR)
 {
     cairo_matrix_t currentCTM;
@@ -915,7 +927,7 @@ gfxPangoFont::SetupCairoFont(cairo_t *aCR)
         if (fontCTM.xx == currentCTM.xx && fontCTM.yy == currentCTM.yy &&
             fontCTM.xy == currentCTM.xy && fontCTM.yx == currentCTM.yx) {
             cairo_set_scaled_font(aCR, mCairoFont);
-            return;
+            return PR_TRUE;
         }
 
         // Just recreate it from scratch, simplest way
@@ -923,7 +935,11 @@ gfxPangoFont::SetupCairoFont(cairo_t *aCR)
     }
 
     mCairoFont = CreateScaledFont(aCR, &currentCTM, GetPangoFont());
-    cairo_set_scaled_font(aCR, mCairoFont);
+    if (NS_LIKELY(mCairoFont)) {
+        cairo_set_scaled_font(aCR, mCairoFont);
+        return PR_TRUE;
+    }
+    return PR_FALSE;
 }
 
 static void

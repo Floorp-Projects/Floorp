@@ -418,7 +418,7 @@ protected:
     gfxFontStyle      mStyle;
 
     // This is called by the default Draw() implementation above.
-    virtual void SetupCairoFont(cairo_t *aCR) = 0;
+    virtual PRBool SetupCairoFont(cairo_t *aCR) = 0;
 };
 
 class THEBES_API gfxTextRunFactory {
@@ -489,7 +489,13 @@ public:
          * When set, optional ligatures are disabled. Ligatures that are
          * required for legible text should still be enabled.
          */
-        TEXT_DISABLE_OPTIONAL_LIGATURES = 0x0400
+        TEXT_DISABLE_OPTIONAL_LIGATURES = 0x0400,
+        /**
+         * When set, the textrun should favour speed of construction over
+         * quality. This may involve disabling ligatures and/or kerning or
+         * other effects.
+         */
+        TEXT_OPTIMIZE_SPEED          = 0x0800
     };
 
     /**

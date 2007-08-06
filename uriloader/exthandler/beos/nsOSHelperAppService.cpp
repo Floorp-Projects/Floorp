@@ -92,39 +92,6 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
 	return NS_OK;
 }
 
-nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
-{
-	LOG(("-- nsOSHelperAppService::LoadUrl\n"));
-	nsresult rv = NS_OK;
-
-	if (aURL) {
-		// Get the Protocol
-		nsCAutoString scheme;
-		aURL->GetScheme(scheme);
-		BString protoStr(scheme.get());
-		protoStr.Prepend("application/x-vnd.Be.URL.");
-		// Get the Spec
-		nsCAutoString spec;
-		aURL->GetSpec(spec);
-		const char* args[] = { spec.get() };
-		
-		//Launch the app		
-		BMimeType protocol;
-		bool isInstalled = false;
-		if (protocol.SetTo(protoStr.String()) == B_OK)
-		{
-			if(protocol.IsInstalled())
-			{
-				isInstalled = true;	
-				be_roster->Launch(protoStr.String(), NS_ARRAY_LENGTH(args), (char **)args);
-			}
-		}
-		if ((!isInstalled) && (!strcmp("mailto", scheme.get())))
-			be_roster->Launch("text/x-email", NS_ARRAY_LENGTH(args), (char **)args);
-	}
-	return rv;
-}
-
 
 nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsMIMEInfoBeOS**_retval) {
 
@@ -264,3 +231,33 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const nsACString& aMIMEType, const nsACS
 
   return mi;
 }
+
+already_AddRefed<nsIHandlerInfo>
+nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme,
+                                            PRBool *found)
+{
+  NS_ASSERTION(!aScheme.IsEmpty(), "No scheme was specified!");
+
+  nsresult rv = OSProtocolHandlerExists(nsPromiseFlatCString(aScheme).get(),
+                                        found);
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  nsMIMEInfoBeOS *handlerInfo =
+	new nsMIMEInfoBeOS(aScheme, nsMIMEInfoBase::eProtocolInfo);
+  NS_ENSURE_TRUE(handlerInfo, nsnull);
+  NS_ADDREF(handlerInfo);
+
+  if (!*found) {
+    // Code that calls this requires an object regardless if the OS has
+    // something for us, so we return the empty object.
+    return handlerInfo;
+  }
+
+  nsAutoString desc;
+  GetApplicationDescription(aScheme, desc);
+  handlerInfo->SetDefaultDescription(desc);
+
+  return handlerInfo;
+}
+

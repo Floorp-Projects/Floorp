@@ -79,12 +79,7 @@ class nsIntervalSet;
  * Child list name indices
  * @see #GetAdditionalChildListName()
  */
-#define NS_BLOCK_FRAME_FLOAT_LIST_INDEX         0
-#define NS_BLOCK_FRAME_BULLET_LIST_INDEX        1
-#define NS_BLOCK_FRAME_OVERFLOW_LIST_INDEX      2
-#define NS_BLOCK_FRAME_OVERFLOW_OOF_LIST_INDEX  3
-#define NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX      4
-#define NS_BLOCK_FRAME_LAST_LIST_INDEX      NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX
+#define NS_BLOCK_LIST_COUNT  (NS_CONTAINER_LIST_COUNT_INCL_OC + 4)
 
 /**
  * Some invariants:
@@ -186,6 +181,12 @@ public:
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
                                   PRBool aImmediate);
   virtual nsIAtom* GetType() const;
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsContainerFrame::IsFrameOfType(aFlags &
+             ~(nsIFrame::eCanContainOverflowContainers));
+  }
+
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD_(nsFrameState) GetDebugStateBits() const;
@@ -241,6 +242,10 @@ public:
                               nsIAtom*        aAttribute,
                               PRInt32         aModType);
 
+  virtual nsresult StealFrame(nsPresContext* aPresContext,
+                              nsIFrame*      aChild,
+                              PRBool         aForceNormal);
+
   virtual void DeleteNextInFlowChild(nsPresContext* aPresContext,
                                      nsIFrame*       aNextInFlow);
 
@@ -284,6 +289,7 @@ protected:
     : nsHTMLContainerFrame(aContext)
     , mMinWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mPrefWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
+    , mAbsoluteContainer(nsGkAtoms::absoluteList)
   {
 #ifdef DEBUG
   InitDebugFlags();
@@ -310,7 +316,8 @@ protected:
                                        nscolor aColor,
                                        nscoord aOffset,
                                        nscoord aAscent,
-                                       nscoord aSize);
+                                       nscoord aSize,
+                                       const PRUint8 aDecoration);
 
   void TryAllLines(nsLineList::iterator* aIterator,
                    nsLineList::iterator* aEndIterator,
@@ -584,7 +591,6 @@ protected:
   nsIFrame* LastChild();
 
 #ifdef NS_DEBUG
-  PRBool IsChild(nsIFrame* aFrame);
   void VerifyLines(PRBool aFinalCheckOK);
   void VerifyOverflowSituation();
   PRInt32 GetDepth() const;

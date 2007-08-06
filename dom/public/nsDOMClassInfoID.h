@@ -247,6 +247,8 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGDescElement_id,
   eDOMClassInfo_SVGEllipseElement_id,
   eDOMClassInfo_SVGFEBlendElement_id,
+  eDOMClassInfo_SVGFEDiffuseLightingElement_id,
+  eDOMClassInfo_SVGFEDistantLightElement_id,
   eDOMClassInfo_SVGFEColorMatrixElement_id,
   eDOMClassInfo_SVGFEComponentTransferElement_id,
   eDOMClassInfo_SVGFECompositeElement_id,
@@ -261,6 +263,10 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_SVGFEMergeNodeElement_id,
   eDOMClassInfo_SVGFEMorphologyElement_id,
   eDOMClassInfo_SVGFEOffsetElement_id,
+  eDOMClassInfo_SVGFEPointLightElement_id,
+  eDOMClassInfo_SVGFESpecularLightingElement_id,
+  eDOMClassInfo_SVGFESpotLightElement_id,
+  eDOMClassInfo_SVGFETileElement_id,
   eDOMClassInfo_SVGFETurbulenceElement_id,
   eDOMClassInfo_SVGFEUnimplementedMOZElement_id,
   eDOMClassInfo_SVGFilterElement_id,
@@ -402,6 +408,13 @@ enum nsDOMClassInfoID {
   eDOMClassInfo_LoadStatus_id,
   eDOMClassInfo_LoadStatusEvent_id,
 
+  eDOMClassInfo_FileList_id,
+  eDOMClassInfo_File_id,
+  eDOMClassInfo_FileException_id,
+
+  // DOM modal content window class, almost identical to Window
+  eDOMClassInfo_ModalContentWindow_id,
+
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };
@@ -409,6 +422,8 @@ enum nsDOMClassInfoID {
 /**
  * nsIClassInfo helper macros
  */
+
+class nsIClassInfo;
 
 extern nsIClassInfo*
 NS_GetDOMClassInfoInstance(nsDOMClassInfoID aID);

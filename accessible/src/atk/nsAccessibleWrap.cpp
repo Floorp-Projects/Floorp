@@ -427,7 +427,7 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
 
     PRUint32 accRole;
     GetRole(&accRole);
-
+  
     //nsIAccessibleText
     nsCOMPtr<nsIAccessibleText> accessInterfaceText;
     QueryInterface(NS_GET_IID(nsIAccessibleText),
@@ -444,48 +444,12 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
         interfacesBits |= 1 << MAI_INTERFACE_EDITABLE_TEXT;
     }
 
-    //nsIAccessibleSelection
-    nsCOMPtr<nsIAccessibleSelectable> accessInterfaceSelection;
-    QueryInterface(NS_GET_IID(nsIAccessibleSelectable),
-                   getter_AddRefs(accessInterfaceSelection));
-    if (accessInterfaceSelection) {
-        interfacesBits |= 1 << MAI_INTERFACE_SELECTION;
-    }
-
     //nsIAccessibleValue
     nsCOMPtr<nsIAccessibleValue> accessInterfaceValue;
     QueryInterface(NS_GET_IID(nsIAccessibleValue),
                    getter_AddRefs(accessInterfaceValue));
     if (accessInterfaceValue) {
        interfacesBits |= 1 << MAI_INTERFACE_VALUE; 
-    }
-
-    //nsIAccessibleHypertext
-    PRInt32 linkCount = 0;
-    nsCOMPtr<nsIAccessibleHyperText> accessInterfaceHypertext;
-    QueryInterface(NS_GET_IID(nsIAccessibleHyperText),
-                   getter_AddRefs(accessInterfaceHypertext));
-    if (accessInterfaceHypertext) {
-        nsresult rv = accessInterfaceHypertext->GetLinks(&linkCount);
-        if (NS_SUCCEEDED(rv) && (linkCount > 0)) {
-            interfacesBits |= 1 << MAI_INTERFACE_HYPERTEXT;
-        }
-    }
-
-    //nsIAccessibleHyperLink
-    nsCOMPtr<nsIAccessibleHyperLink> accessInterfaceHyperlink;
-    QueryInterface(NS_GET_IID(nsIAccessibleHyperLink),
-                   getter_AddRefs(accessInterfaceHyperlink));
-    if (accessInterfaceHyperlink) {
-       interfacesBits |= 1 << MAI_INTERFACE_HYPERLINK_IMPL;
-    }
-
-    //nsIAccessibleTable
-    nsCOMPtr<nsIAccessibleTable> accessInterfaceTable;
-    QueryInterface(NS_GET_IID(nsIAccessibleTable),
-                   getter_AddRefs(accessInterfaceTable));
-    if (accessInterfaceTable) {
-        interfacesBits |= 1 << MAI_INTERFACE_TABLE;
     }
 
     //nsIAccessibleDocument
@@ -502,6 +466,44 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
                               getter_AddRefs(accessInterfaceImage));
     if (accessInterfaceImage) {
         interfacesBits |= 1 << MAI_INTERFACE_IMAGE;
+    }
+
+    //nsIAccessibleHyperLink
+    nsCOMPtr<nsIAccessibleHyperLink> accessInterfaceHyperlink;
+    QueryInterface(NS_GET_IID(nsIAccessibleHyperLink),
+                   getter_AddRefs(accessInterfaceHyperlink));
+    if (accessInterfaceHyperlink) {
+       interfacesBits |= 1 << MAI_INTERFACE_HYPERLINK_IMPL;
+    }
+
+    if (!MustPrune(this)) {  // These interfaces require children
+      //nsIAccessibleHypertext
+      PRInt32 linkCount = 0;
+      nsCOMPtr<nsIAccessibleHyperText> accessInterfaceHypertext;
+      QueryInterface(NS_GET_IID(nsIAccessibleHyperText),
+                     getter_AddRefs(accessInterfaceHypertext));
+      if (accessInterfaceHypertext) {
+          nsresult rv = accessInterfaceHypertext->GetLinks(&linkCount);
+          if (NS_SUCCEEDED(rv) && (linkCount > 0)) {
+              interfacesBits |= 1 << MAI_INTERFACE_HYPERTEXT;
+          }
+      }
+
+      //nsIAccessibleTable
+      nsCOMPtr<nsIAccessibleTable> accessInterfaceTable;
+      QueryInterface(NS_GET_IID(nsIAccessibleTable),
+                     getter_AddRefs(accessInterfaceTable));
+      if (accessInterfaceTable) {
+          interfacesBits |= 1 << MAI_INTERFACE_TABLE;
+      }
+      
+      //nsIAccessibleSelection
+      nsCOMPtr<nsIAccessibleSelectable> accessInterfaceSelection;
+      QueryInterface(NS_GET_IID(nsIAccessibleSelectable),
+                     getter_AddRefs(accessInterfaceSelection));
+      if (accessInterfaceSelection) {
+          interfacesBits |= 1 << MAI_INTERFACE_SELECTION;
+      }
     }
 
     return interfacesBits;
@@ -872,7 +874,7 @@ gint
 getChildCountCB(AtkObject *aAtkObj)
 {
     nsAccessibleWrap *accWrap = GetAccessibleWrap(aAtkObj);
-    if (!accWrap) {
+    if (!accWrap || nsAccessibleWrap::MustPrune(accWrap)) {
         return 0;
     }
 
@@ -906,7 +908,7 @@ refChildCB(AtkObject *aAtkObj, gint aChildIndex)
     // or we should cache an array of children in each nsAccessible
     // (instead of mNextSibling on the children)
     nsAccessibleWrap *accWrap = GetAccessibleWrap(aAtkObj);
-    if (!accWrap) {
+    if (!accWrap || nsAccessibleWrap::MustPrune(accWrap)) {
         return nsnull;
     }
 
@@ -1551,3 +1553,8 @@ nsAccessibleWrap::FireAtkShowHideEvent(nsIAccessibleEvent *aEvent,
     return NS_OK;
 }
 
+PRBool nsAccessibleWrap::MustPrune(nsIAccessible *aAccessible)
+{
+  PRUint32 role = Role(aAccessible);
+  return role == nsIAccessibleRole::ROLE_GRAPHIC;
+}

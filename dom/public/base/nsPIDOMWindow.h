@@ -72,8 +72,8 @@ class nsPresContext;
 struct nsTimeout;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0xbf81c452, 0xbd39, 0x4001, \
-  { 0x85, 0xf4, 0x21, 0x79, 0x36, 0xc5, 0x85, 0x7d } }
+{ 0x42764ad5, 0xa196, 0x408c, \
+  { 0xa4, 0x87, 0x97, 0xf4, 0xc6, 0x31, 0x57, 0x21 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -361,6 +361,15 @@ public:
   virtual void EnterModalState() = 0;
   virtual void LeaveModalState() = 0;
 
+  void SetModalContentWindow(PRBool aIsModalContentWindow)
+  {
+    mIsModalContentWindow = aIsModalContentWindow;
+  }
+
+  PRBool IsModalContentWindow() const
+  {
+    return mIsModalContentWindow;
+  }
 
 protected:
   // The nsPIDOMWindow constructor. The aOuterWindow argument should
@@ -371,7 +380,8 @@ protected:
     : mFrameElement(nsnull), mDocShell(nsnull), mModalStateDepth(0),
       mRunningTimeout(nsnull), mMutationBits(0), mIsDocumentLoaded(PR_FALSE),
       mIsHandlingResizeEvent(PR_FALSE), mIsInnerWindow(aOuterWindow != nsnull),
-      mInnerWindow(nsnull), mOuterWindow(aOuterWindow)
+      mIsModalContentWindow(PR_FALSE), mInnerWindow(nsnull),
+      mOuterWindow(aOuterWindow)
   {
   }
 
@@ -395,6 +405,10 @@ protected:
   PRPackedBool           mIsDocumentLoaded;
   PRPackedBool           mIsHandlingResizeEvent;
   PRPackedBool           mIsInnerWindow;
+
+  // This variable is used on both inner and outer windows (and they
+  // should match).
+  PRPackedBool           mIsModalContentWindow;
 
   // And these are the references between inner and outer windows.
   nsPIDOMWindow         *mInnerWindow;

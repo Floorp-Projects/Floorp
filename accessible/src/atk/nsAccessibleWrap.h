@@ -115,6 +115,9 @@ public:
       return returnedString.get();
     }
 
+    // Should this accessible be allowed to have any ATK children
+    static PRBool MustPrune(nsIAccessible *aAccessible);
+
 protected:
     nsresult FireAtkStateChangeEvent(nsIAccessibleEvent *aEvent,
                                      AtkObject *aObject);

@@ -517,3 +517,21 @@ NS_InvokeByIndex(nsISupports* that, PRUint32 methodIndex,
     return xpcomFunctions.invokeByIndexFunc(that, methodIndex,
                                             paramCount, params);
 }
+
+XPCOM_API(PRBool)
+NS_CycleCollectorSuspect(nsISupports* obj)
+{
+    if (!xpcomFunctions.cycleSuspectFunc)
+        return PR_FALSE;
+
+    return xpcomFunctions.cycleSuspectFunc(obj);
+}
+
+XPCOM_API(PRBool)
+NS_CycleCollectorForget(nsISupports* obj)
+{
+    if (!xpcomFunctions.cycleForgetFunc)
+        return PR_FALSE;
+
+    return xpcomFunctions.cycleForgetFunc(obj);
+}

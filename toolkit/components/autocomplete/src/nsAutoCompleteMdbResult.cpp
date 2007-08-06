@@ -161,6 +161,12 @@ nsAutoCompleteMdbResult::GetStyleAt(PRInt32 aIndex, nsAString & _retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsAutoCompleteMdbResult::GetImageAt(PRInt32 aIndex, nsAString & _retval)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ////////////////////////////////////////////////////////////////////////
 //// nsIAutoCompleteBaseResult
 

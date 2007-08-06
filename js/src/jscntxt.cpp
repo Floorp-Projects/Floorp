@@ -369,12 +369,12 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             JS_BeginRequest(cx);
 #endif
 
-        /* Unpin all pinned atoms before final GC. */
-        js_UnpinPinnedAtoms(&rt->atomState);
-
         /* Unlock and clear GC things held by runtime pointers. */
         js_FinishRuntimeNumberState(cx);
         js_FinishRuntimeStringState(cx);
+
+        /* Unpin all pinned atoms before final GC. */
+        js_UnpinPinnedAtoms(&rt->atomState);
 
         /* Clear debugging state to remove GC roots. */
         JS_ClearAllTraps(cx);
@@ -421,6 +421,14 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
          * collected all unleaked strings.
          */
         js_FinishDeflatedStringCache(rt);
+
+        /*
+         * Free unit string storage only after the last GC has completed, so
+         * that js_FinalizeStringRT can detect unit strings and avoid calling
+         * free on their chars storage.
+         */
+        free(rt->unitStrings);
+        rt->unitStrings = NULL;
 
         /* Take the runtime down, now that it has no contexts or atoms. */
         JS_LOCK_GC(rt);

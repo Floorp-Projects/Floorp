@@ -78,7 +78,7 @@ class nsComboboxDisplayFrame;
  * Child list name indices
  * @see #GetAdditionalChildListName()
  */
-#define NS_COMBO_FRAME_POPUP_LIST_INDEX   (NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX + 1)
+#define NS_COMBO_LIST_COUNT   (NS_BLOCK_LIST_COUNT + 1)
 
 class nsComboboxControlFrame : public nsAreaFrame,
                                public nsIFormControlFrame,

@@ -1,26 +1,66 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Mozilla Community QA Extension
+ *
+ * The Initial Developer of the Original Code is the Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Zach Lipton <zach@zachlipton.com>
+ *	Ben Hsieh <bhsieh@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+* ***** END LICENSE BLOCK ***** */
+
+
  const FIREFOX_ID = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
  
  var litmus = {
 	baseURL : qaPref.getPref(qaPref.prefBase+".litmus.url", "char"),
 	
 	getTestcase : function(testcase_id, callback) {
-		var url = litmus.baseURL+'json.cgi?testcase_id='+testcase_id;
-		var d = loadJSONDoc(url);
-		d.addBoth(function (res) { 
-		d.deferred = null;  
-		return res; 
-		});
-		d.addCallback(callback);
-		d.addErrback(function (err) { 
-		if (err instanceof CancelledError) { 
-			return; 
-		}
-			alert(err);
-		});
+        litmus.getLitmusJson(testcase_id, callback, "testcase_id=");
 	},
-	
 	getSubgroup : function(subgroupID, callback) {
-        var url = litmus.baseURL+'json.cgi?subgroup_id='+subgroupID;
+        litmus.getLitmusJson(subgroupID, callback, "subgroup_id=");
+    },
+    getTestgroup : function(testgroupID, callback) {
+        litmus.getLitmusJson(testgroupID, callback, "testgroup_id=");
+    },
+    getTestrun : function(testrunID, callback) {
+        litmus.getLitmusJson(testrunID, callback, "test_run_id=");
+    },
+    getTestruns : function(callback) {
+        var s = new Sysconfig(); 
+        var branch = encodeURIComponent(s.branch);
+        litmus.getLitmusJson("&product_name=Firefox&branch_name=" + branch,
+                        callback, "test_runs_by_branch_product_name=1");
+    },
+    getLitmusJson : function(ID, callback, prefix) {
+        var url = litmus.baseURL+'json.cgi?' + prefix + ID;
         var d = loadJSONDoc(url);
 		d.addBoth(function (res) { 
 			d.deferred = null;  
@@ -31,18 +71,71 @@
             if (err instanceof CancelledError) { 
                 return; 
             }
-            	alert(err);
-            });
-        },
-	
+            alert(err);
+        });
+    },
+    
+    
+    /* this code is horrible in general, but i can't figure out a better way to do it */
+    lastTestRunSummary : "",
+    lastTestGroupSummary : "",
+    lastSubgroupObject: null,    // these have to be objects to avoid the async call later.
+    lastTestcaseObject: null,    // they are saved every time a subgroup or testcase is written to screen
+    lastTestcaseIndex: null,
+    
+    preDialogSubgroupObject: null,  // saved to be restored in case of Cancel()
+    preDialogTestcaseObject: null,
+    
+    storeSubgroup : function(subgroup) {
+        litmus.lastSubgroupObject = subgroup;
+    },
+    storeTestcase : function(testcase) {
+        litmus.lastTestcaseObject = testcase;
+    },
+    
+    handleDialog : function() {
+        if ($("qa-testrun-label").value != "") {
+            litmus.lastTestRunSummary = $("qa-testrun-label").value;
+            litmus.lastTestGroupSummary = $("qa-testgroup-label").value;
+            lastTestcaseIndex = $("testlist").selectedIndex;
+        }
+        litmus.preDialogueSubgroupObject = litmus.lastSubgroupObject;
+        litmus.preDialogTestcaseObject = litmus.lastTestcaseObject;
+        var newWindow = window.openDialog('chrome://qa/content/tabs/selecttests.xul', '_blank', 'chrome,all,dialog=yes',
+                                          litmus.readStateFromPref, litmus.handleDialogCancel);
+    },
+    
+    handleDialogCancel : function() {
+        if (litmus.lastTestRunSummary == "") return;
+        
+        // this code is v. similar to readStateFromPref, but without an async call.
+        $("qa-testrun-label").value = litmus.lastTestRunSummary;
+        $("qa-testgroup-label").value = litmus.lastTestGroupSummary;
+        litmus.lastSubgroupObject = litmus.preDialogueSubgroupObject;
+        litmus.lastTestcaseObject = litmus.preDialogTestcaseObject;
+        
+        if (litmus.lastSubgroupObject != null)
+            litmus.populatePreviewBox(litmus.lastSubgroupObject.testcases);
+        if (litmus.lastTestcaseObject != null) {
+            litmus.populateTestcase(litmus.lastTestcaseObject);
+        }
+        // set the selection without firing an event, which would cause async call
+        $("testlist").setAttribute("suppressonselect", "true");
+        $("testlist").selectedIndex = lastTestcaseIndex;
+        $("testlist").setAttribute("suppressonselect", "false");
+        
+        // rewrite the prefs
+        litmus.writeStateToPref(litmus.lastTestRunSummary, litmus.lastTestGroupSummary,
+                                litmus.lastSubgroupObject.subgroup_id, lastTestcaseIndex);
+    },
+    
 	validateLogin : function(uname, passwd, callback) {
-	    var req = doSimpleXMLHttpRequest(litmus.baseURL+'json.cgi', {
-	       validate_login: 1,
-	       username: uname,
-	       password: passwd,
+		var qs = queryString({ 
+		    validate_login: 1,
+	        username: uname,
+	        password: passwd
 	    });
-	    req.addErrback(callback);
-	    req.addCallback(callback);
+	    qaTools.httpPostRequest(litmus.baseURL+'json.cgi', qs, callback);
 	},
 	createAccount : function() {
 	    alert("XXX: not implemented");
@@ -62,43 +155,62 @@
 		});
 	},
     
+    currentSubgroupID: null,	
     
-    currentTestCaseIndex: 0, // position in array
-	
-   currentSubgroupID: 21,	
-	cachedTests: null,
-    
+    writeStateToPref : function(testrunSummary, testgroupSummary, subgroupID, index) {
+        qaPref.setPref(qaPref.prefBase + ".currentTestcase.testrunSummary", testrunSummary, "char");
+        qaPref.setPref(qaPref.prefBase + ".currentTestcase.testgroupSummary", testgroupSummary, "char");
+        qaPref.setPref(qaPref.prefBase + ".currentTestcase.subgroupId", subgroupID, "int");
+        qaPref.setPref(qaPref.prefBase + ".currentTestcase.testcaseIndex", index, "int");
+    },
+    readStateFromPref : function() {
+        $("qa-testrun-label").value = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testrunSummary", "char");
+        $("qa-testgroup-label").value = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testgroupSummary", "char");
+        litmus.currentSubgroupID = qaPref.getPref(qaPref.prefBase + ".currentTestcase.subgroupId", "int");
+        
+        if (litmus.currentSubgroupID != 0)
+            litmus.getSubgroup(litmus.currentSubgroupID,litmus.statePopulateFields);
+    },
     checkRadioButtons : function() {
         var menu = document.getElementById('testlist');
+        if (menu.selectedIndex == -1) return;
         var disable = menu.selectedItem.firstChild.getAttribute("checked");
         document.getElementById("qa-testcase-result").disabled = disable;
     },
     
     prevButton : function() {
-        litmus.currentTestCaseIndex--;
-        litmus.selectCurrentTestCase();
+        $("testlist").selectedIndex--;
+        //litmus.selectCurrentTestCase();
     },
 	nextButton: function() {
 		// if they selected a result, then submit the result
 		if ($('qa-testcase-result').selectedItem) {
 			litmus.submitResult();
 		}
-        litmus.currentTestCaseIndex++;
-		litmus.selectCurrentTestCase();
+        $("testlist").selectedIndex++;
+		//litmus.selectCurrentTestCase();
 	},
     handleSelect : function() {
-        litmus.currentTestCaseIndex = document.getElementById('testlist').selectedIndex;
+        if ($("testlist").selectedIndex == -1)
+            return;
+        //var menu = document.getElementById('testlist');
+        //if (menu.selectedIndex == litmus.currentTestCaseIndex || menu.selectedIndex == -1)
+          //  return; // prevent recursion or triggering by removal of elements
+        
+        //litmus.currentTestCaseIndex = menu.selectedIndex;
         litmus.selectCurrentTestCase();
     },
     selectCurrentTestCase : function() {
-
-        var menu = document.getElementById('testlist');
-        menu.selectedIndex = litmus.currentTestCaseIndex;
-        litmus.populateTestcase(litmus.cachedTests[litmus.currentTestCaseIndex]);
-        litmus.checkRadioButtons();
+        //var menu = document.getElementById('testlist');
+        //menu.selectedIndex = litmus.currentTestCaseIndex;
+        litmus.getTestcase($("testlist").selectedItem.value, function(testcase) {
+        	litmus.populateTestcase(testcase);
+        	$('qa-testcase-progress').value = 
+        		qaMain.bundle.getFormattedString('qa.extension.litmus.progress',
+        			[$("testlist").selectedIndex+1, $("testlist").getRowCount()]);
+        });
     },
-	populatePreviewBox : function() {
-        //document.getElementById("prev1").innerHTML = "hi!"; This doesn't even work, I guess I'll rewrite table in XUL
+	populatePreviewBox : function(testcases) {
         
         var menu = document.getElementById('testlist');
         if (!menu) return;
@@ -107,38 +219,54 @@
             menu.removeChild(menu.firstChild);
         };
     
-        for (var i = 0; i < litmus.cachedTests.length; i++) {
-            var row = menu.appendItem("");
+        for (var i = 0; i < testcases.length; i++) {
+            var row = document.createElement("listitem");
+            row.value = testcases[i].testcase_id;
             var checkbox = document.createElement("listcell");
             checkbox.setAttribute("label", "");
             checkbox.setAttribute("type", "checkbox");
             checkbox.setAttribute("disabled", "true");
-            //checkbox.setAttribute("checked", "true");
             var name = document.createElement("listcell");
-            name.setAttribute("label", "#" + litmus.cachedTests[i].testcase_id + " -- " + litmus.cachedTests[i].summary);
+            name.setAttribute("label", (i+1) + " -- " + testcases[i].summary);
             name.setAttribute("crop", "end");
-            
             name.setAttribute("maxwidth", "175");
             row.appendChild(checkbox);
             row.appendChild(name);
+            menu.appendChild(row);
         }
-	},
+    },
     populateTestcase : function(testcase) {
+        litmus.lastTestcaseObject = testcase;
+        if (testcase == undefined) {
+                return;
+            }
         document.getElementById('qa-testcase-id').value = 
             qaMain.bundle.getString("qa.extension.testcase.head")+testcase.testcase_id;
 		document.getElementById('qa-testcase-summary').value = testcase.summary;
 	
-		document.getElementById('qa-testcase-steps').innerHTML = testcase.steps;
-		document.getElementById('qa-testcase-expected').innerHTML = testcase.expected_results;
-	},
+        qaTools.writeSafeHTML('qa-testcase-steps', testcase.steps_formatted);
+        qaTools.writeSafeHTML('qa-testcase-expected', testcase.expected_results_formatted);
+        
+        qaTools.linkTargetsToBlank($('qa-testcase-steps'));
+        qaTools.linkTargetsToBlank($('qa-testcase-expected'));
+        
+        litmus.checkRadioButtons();
+    },
 	populateFields : function(subgroup) {
-		litmus.cachedTests = subgroup.testcases;
-		//litmus.currentTestCaseIndex = 0;
-		litmus.populatePreviewBox();
-        litmus.currentTestCaseIndex = 0;
+        litmus.lastSubgroupObject = subgroup;
+		litmus.populatePreviewBox(subgroup.testcases);
+		$('qa-subgroup-label').value = subgroup.name;
+        $("testlist").selectedIndex = 0;
         litmus.selectCurrentTestCase();
 	},
-	
+    statePopulateFields : function(subgroup) {  //TODO: there's gotta be a better way to do this...
+        litmus.lastSubgroupObject = subgroup;
+        litmus.populatePreviewBox(subgroup.testcases);
+        $('qa-subgroup-label').value = subgroup.name;
+        
+        $("testlist").selectedIndex = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testcaseIndex", "int");
+        litmus.selectCurrentTestCase();
+    },
 	submitResult : function() {
 		var rs;
 		var item = $('qa-testcase-result').selectedItem;
@@ -153,13 +281,15 @@
 			return false;
 		}
 
+        var menu = document.getElementById('testlist');
+        
 		var l = new LitmusResults({username: qaPref.litmus.getUsername(), 
 								  password: qaPref.litmus.getPassword(),
 								  server: litmus.baseURL});
 		l.sysconfig(new Sysconfig());
 		
 		l.addResult(new Result({
-			testid: litmus.cachedTests[litmus.currentTestCaseIndex].testcase_id,
+			testid: menu.selectedItem.value,
 			resultstatus: rs,
 			exitstatus: 'Exited Normally',
 			duration: 0,
@@ -175,9 +305,7 @@
 			alert(resp.responseText);
 		};
 		
-		litmus.postResultXML(l.toXML(), callback, errback);
-        
-        var menu = document.getElementById('testlist');
+		litmus.postResultXML(l.toXML(), callback, errback);        
         var item = menu.selectedItem;
         item.firstChild.setAttribute("checked", "true");
         return false;   // ?? Got rid of strict warning...

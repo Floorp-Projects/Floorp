@@ -21,11 +21,7 @@
  * OF THIS SOFTWARE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <string.h>
-#include <assert.h>
+#include "cairoint.h"
 
 #include "cairo-skiplist-private.h"
 
@@ -236,6 +232,9 @@ _cairo_skip_list_init (cairo_skip_list_t		*list,
 
     for (i = 0; i < MAX_LEVEL; i++) {
 	list->chains[i] = NULL;
+    }
+
+    for (i = 0; i < MAX_FREELIST_LEVEL; i++) {
 	list->freelists[i] = NULL;
     }
 
@@ -251,7 +250,7 @@ _cairo_skip_list_fini (cairo_skip_list_t *list)
     while ((elt = list->chains[0])) {
 	_cairo_skip_list_delete_given (list, elt);
     }
-    for (i=0; i<MAX_LEVEL; i++) {
+    for (i=0; i<MAX_FREELIST_LEVEL; i++) {
 	elt = list->freelists[i];
 	while (elt) {
 	    skip_elt_t *nextfree = elt->prev;
@@ -265,14 +264,17 @@ _cairo_skip_list_fini (cairo_skip_list_t *list)
  * Generate a random level number, distributed
  * so that each level is 1/4 as likely as the one before
  *
- * Note that level numbers run 1 <= level <= MAX_LEVEL
+ * Note that level numbers run 1 <= level < MAX_LEVEL
  */
 static int
 random_level (void)
 {
-    /* tricky bit -- each bit is '1' 75% of the time */
-    long int	bits = lfsr_random() | lfsr_random();
     int	level = 0;
+    /* tricky bit -- each bit is '1' 75% of the time.
+     * This works because we only use the lower MAX_LEVEL
+     * bits, and MAX_LEVEL < 16 */
+    long int	bits = lfsr_random();
+    bits |= bits >> 16;
 
     while (++level < MAX_LEVEL)
     {
@@ -286,19 +288,23 @@ random_level (void)
 static void *
 alloc_node_for_level (cairo_skip_list_t *list, unsigned level)
 {
-    if (list->freelists[level-1]) {
-	skip_elt_t *elt = list->freelists[level-1];
-	list->freelists[level-1] = elt->prev;
+    int freelist_level = FREELIST_FOR_LEVEL (level);
+    if (list->freelists[freelist_level]) {
+	skip_elt_t *elt = list->freelists[freelist_level];
+	list->freelists[freelist_level] = elt->prev;
 	return ELT_DATA(elt);
     }
-    return malloc (list->elt_size + (level-1) * sizeof (skip_elt_t *));
+    return malloc (list->elt_size
+		   + (FREELIST_MAX_LEVEL_FOR (level) - 1) * sizeof (skip_elt_t *));
 }
 
 static void
 free_elt (cairo_skip_list_t *list, skip_elt_t *elt)
 {
-    elt->prev = list->freelists[elt->prev_index];
-    list->freelists[elt->prev_index] = elt;
+    int level = elt->prev_index + 1;
+    int freelist_level = FREELIST_FOR_LEVEL (level);
+    elt->prev = list->freelists[freelist_level];
+    list->freelists[freelist_level] = elt;
 }
 
 /*
@@ -349,6 +355,8 @@ _cairo_skip_list_insert (cairo_skip_list_t *list, void *data, int unique)
     }
 
     data_and_elt = alloc_node_for_level (list, level);
+    if (data_and_elt == NULL)
+	return NULL;
     memcpy (data_and_elt, data, list->data_size);
     elt = (skip_elt_t *) (data_and_elt + list->data_size);
 

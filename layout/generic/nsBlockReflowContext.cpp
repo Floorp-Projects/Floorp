@@ -175,7 +175,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
             if (frame != aRS.frame) {
               NS_ASSERTION(frame->GetParent() == aRS.frame,
                            "Can only drill through one level of block wrapper");
-              nsSize availSpace(aRS.ComputedWidth(), aRS.mComputedHeight);
+              nsSize availSpace(aRS.ComputedWidth(), aRS.ComputedHeight());
               outerReflowState = new nsHTMLReflowState(prescontext,
                                                        aRS, frame, availSpace);
               if (!outerReflowState)
@@ -183,7 +183,7 @@ nsBlockReflowContext::ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
             }
             {
               nsSize availSpace(outerReflowState->ComputedWidth(),
-                                outerReflowState->mComputedHeight);
+                                outerReflowState->ComputedHeight());
               nsHTMLReflowState innerReflowState(prescontext,
                                                  *outerReflowState, kid,
                                                  availSpace);
@@ -400,7 +400,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
     // them now. Do not do this when a break-before is signaled because
     // the frame is going to get reflowed again (and may end up wanting
     // a next-in-flow where it ends up), unless it is an out of flow frame.
-    if (NS_FRAME_IS_COMPLETE(aFrameReflowStatus)) {
+    if (NS_FRAME_IS_FULLY_COMPLETE(aFrameReflowStatus)) {
       nsIFrame* kidNextInFlow = mFrame->GetNextInFlow();
       if (nsnull != kidNextInFlow) {
         // Remove all of the childs next-in-flows. Make sure that we ask

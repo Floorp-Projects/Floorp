@@ -46,6 +46,8 @@
 #include FT_OUTLINE_H
 #include FT_TYPE1_TABLES_H
 
+#include <ctype.h>
+
 typedef struct _cairo_type1_font_subset {
 
     cairo_scaled_font_subset_t *scaled_font_subset;
@@ -1133,9 +1135,6 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
 	cairo_type1_font_subset_use_glyph (font, parent_glyph);
     }
 
-    /* Pull in the .notdef glyph */
-    cairo_type1_font_subset_use_glyph (font, 0);
-
     status = cairo_type1_font_subset_generate (font, name);
     if (status)
 	goto fail1;
@@ -1194,4 +1193,31 @@ _cairo_type1_subset_fini (cairo_type1_subset_t *subset)
     free (subset->base_font);
     free (subset->widths);
     free (subset->data);
+}
+
+cairo_bool_t
+_cairo_type1_scaled_font_is_type1 (cairo_scaled_font_t *scaled_font)
+{
+    cairo_ft_unscaled_font_t *unscaled;
+    FT_Face face;
+    PS_FontInfoRec font_info;
+    cairo_bool_t is_type1 = FALSE;
+
+    unscaled = (cairo_ft_unscaled_font_t *) _cairo_ft_scaled_font_get_unscaled_font (scaled_font);
+    face = _cairo_ft_unscaled_font_lock_face (unscaled);
+    if (!face)
+        return FALSE;
+
+    if (FT_Get_PS_Font_Info(face, &font_info) == 0)
+        is_type1 = TRUE;
+
+    /* OpenType/CFF fonts also have a PS_FontInfoRec */
+#if HAVE_FT_LOAD_SFNT_TABLE
+    if (FT_IS_SFNT (face))
+        is_type1 = FALSE;
+#endif
+
+    _cairo_ft_unscaled_font_unlock_face (unscaled);
+
+    return is_type1;
 }

@@ -148,49 +148,14 @@ nsresult nsOSHelperAppService::OSProtocolHandlerExists(const char * aProtocolSch
                                KEY_QUERY_VALUE, &hKey);
      if (err == ERROR_SUCCESS)
      {
-       *aHandlerExists = PR_TRUE;
+       err = ::RegQueryValueEx(hKey, "URL Protocol", NULL, NULL, NULL, NULL);
+       *aHandlerExists = (err == ERROR_SUCCESS);
        // close the key
        ::RegCloseKey(hKey);
      }
   }
 
   return NS_OK;
-}
-
-// this implementation was pretty much copied verbatime from 
-// Tony Robinson's code in nsExternalProtocolWin.cpp
-
-nsresult nsOSHelperAppService::LoadUriInternal(nsIURI * aURL)
-{
-  nsresult rv = NS_OK;
-
-  // 1. Find the default app for this protocol
-  // 2. Set up the command line
-  // 3. Launch the app.
-
-  // For now, we'll just cheat essentially, check for the command line
-  // then just call ShellExecute()!
-
-  if (aURL)
-  {
-    // extract the url spec from the url
-    nsCAutoString urlSpec;
-    aURL->GetAsciiSpec(urlSpec);
-
-    // Some versions of windows (Win2k before SP3, Win XP before SP1)
-    // crash in ShellExecute on long URLs (bug 161357).
-    // IE 5 and 6 support URLS of 2083 chars in length, 2K is safe
-    const PRUint32 maxSafeURL(2048);
-    if (urlSpec.Length() > maxSafeURL)
-      return NS_ERROR_FAILURE;
-
-    LONG r = (LONG) ::ShellExecute(NULL, "open", urlSpec.get(), NULL, NULL, 
-                                   SW_SHOWNORMAL);
-    if (r < 32) 
-      rv = NS_ERROR_FAILURE;
-  }
-
-  return rv;
 }
 
 NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
@@ -587,3 +552,33 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const nsAC
   }
   return mi;
 }
+
+already_AddRefed<nsIHandlerInfo>
+nsOSHelperAppService::GetProtocolInfoFromOS(const nsACString &aScheme,
+                                            PRBool *found)
+{
+  NS_ASSERTION(!aScheme.IsEmpty(), "No scheme was specified!");
+
+  nsresult rv = OSProtocolHandlerExists(nsPromiseFlatCString(aScheme).get(),
+                                        found);
+  if (NS_FAILED(rv))
+    return nsnull;
+
+  nsMIMEInfoWin *handlerInfo =
+    new nsMIMEInfoWin(aScheme, nsMIMEInfoBase::eProtocolInfo);
+  NS_ENSURE_TRUE(handlerInfo, nsnull);
+  NS_ADDREF(handlerInfo);
+
+  if (!*found) {
+    // Code that calls this requires an object regardless if the OS has
+    // something for us, so we return the empty object.
+    return handlerInfo;
+  }
+
+  nsAutoString desc;
+  GetApplicationDescription(aScheme, desc);
+  handlerInfo->SetDefaultDescription(desc);
+
+  return handlerInfo;
+}
+

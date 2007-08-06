@@ -159,7 +159,8 @@ gfxWindowsFont::CairoScaledFont()
         cairo_font_options_destroy(fontOptions);
     }
 
-    NS_ASSERTION(mScaledFont, "Failed to make scaled font");
+    NS_ASSERTION(mScaledFont || mAdjustedSize == 0.0,
+                 "Failed to make scaled font");
 
     return mScaledFont;
 }
@@ -414,10 +415,15 @@ gfxWindowsFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                   aSpacing);
 }
 
-void
+PRBool
 gfxWindowsFont::SetupCairoFont(cairo_t *aCR)
 {
-    cairo_set_scaled_font(aCR, CairoScaledFont());
+    cairo_scaled_font_t *scaledFont = CairoScaledFont();
+    if (NS_LIKELY(scaledFont)) {
+        cairo_set_scaled_font(aCR, scaledFont);
+        return PR_TRUE;
+    }
+    return PR_FALSE;
 }
 
 /**********************************************************************
@@ -504,6 +510,16 @@ gfxWindowsFontGroup::Copy(const gfxFontStyle *aStyle)
     return new gfxWindowsFontGroup(mFamilies, aStyle);
 }
 
+static PRBool
+CanTakeFastPath(PRUint32 aFlags)
+{
+    // Can take fast path only if OPTIMIZE_SPEED is set and IS_RTL isn't
+    // We need to always use Uniscribe for RTL text, in case glyph mirroring is required
+    return (aFlags &
+            (gfxTextRunFactory::TEXT_OPTIMIZE_SPEED | gfxTextRunFactory::TEXT_IS_RTL)) ==
+        gfxTextRunFactory::TEXT_OPTIMIZE_SPEED;
+}
+
 gfxTextRun *
 gfxWindowsFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
                                  const Parameters *aParams, PRUint32 aFlags)
@@ -522,8 +538,8 @@ gfxWindowsFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
 #ifdef FORCE_UNISCRIBE
     const PRBool isComplex = PR_TRUE;
 #else
-    const PRBool isComplex = ScriptIsComplex(aString, aLength, SIC_COMPLEX) == S_OK ||
-                             textRun->IsRightToLeft();
+    const PRBool isComplex = !CanTakeFastPath(aFlags) ||
+                             ScriptIsComplex(aString, aLength, SIC_COMPLEX) == S_OK;
 #endif
     if (isComplex)
         InitTextRunUniscribe(aParams->mContext, textRun, aString, aLength);
@@ -547,7 +563,7 @@ gfxWindowsFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
 #ifdef FORCE_UNISCRIBE
     const PRBool isComplex = PR_TRUE;
 #else
-    const PRBool isComplex = textRun->IsRightToLeft();
+    const PRBool isComplex = !CanTakeFastPath(aFlags);
 #endif
 
     /* We can only call GDI "A" functions if this is a true 7bit ASCII string,
@@ -1095,7 +1111,9 @@ public:
     void SetCurrentFont(gfxWindowsFont *aFont) {
         if (mCurrentFont != aFont) {
             mCurrentFont = aFont;
-            cairo_win32_scaled_font_done_font(mCurrentFont->CairoScaledFont());
+            cairo_scaled_font_t *scaledFont = mCurrentFont->CairoScaledFont();
+            if (scaledFont)
+                cairo_win32_scaled_font_done_font(scaledFont);
             mFontSelected = PR_FALSE;
         }
     }
@@ -1112,8 +1130,9 @@ public:
 
         cairo_set_font_face(cr, mCurrentFont->CairoFontFace());
         cairo_set_font_size(cr, mCurrentFont->GetAdjustedSize());
-
-        cairo_win32_scaled_font_select_font(mCurrentFont->CairoScaledFont(), mDC);
+        cairo_scaled_font_t *scaledFont = mCurrentFont->CairoScaledFont();
+        if (scaledFont)
+            cairo_win32_scaled_font_select_font(scaledFont, mDC);
 
         mFontSelected = PR_TRUE;
     }

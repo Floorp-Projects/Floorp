@@ -67,7 +67,6 @@ a[name]:-moz-only-whitespace {
 
 a:visited, a:active {
   cursor: text;
-  color : inherit;
 }
 
 /* Prevent clicking on links from going to link */

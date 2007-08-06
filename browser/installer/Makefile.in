@@ -67,7 +67,7 @@ MOZ_PKG_MANIFEST_P = $(srcdir)/unix/packages-static
 endif
 endif
 else
-$(error you need a "--enable-static or --enable-libxul" build to create an installer)
+$(error you need a "--enable-static or --enable-libxul" build to package a build)
 endif
 
 MOZ_NONLOCALIZED_PKG_LIST = \
@@ -81,7 +81,7 @@ MOZ_OPTIONAL_PKG_LIST = \
 	adt \
 	$(NULL)
 
-DEFINES += -DAB_CD=$(AB_CD) -DMOZ_APP_NAME=$(MOZ_APP_NAME)
+DEFINES += -DAB_CD=$(AB_CD) -DMOZ_APP_NAME=$(MOZ_APP_NAME) -DPREF_DIR=$(PREF_DIR)
 
 ifdef MOZ_PKG_MANIFEST_P
 MOZ_PKG_MANIFEST = packages-static
@@ -95,6 +95,10 @@ MOZ_PKG_MAC_DSSTORE=branding/dsstore
 MOZ_PKG_MAC_BACKGROUND=branding/background.png
 MOZ_PKG_MAC_ICON=branding/disk.icns
 MOZ_PKG_MAC_RSRC=branding/license.r
+endif
+
+ifndef LIBXUL_SDK
+INSTALL_SDK = 1
 endif
 
 include $(topsrcdir)/toolkit/mozapps/installer/packager.mk

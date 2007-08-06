@@ -134,6 +134,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
     :   mRuntime(ccx.GetRuntime()),
         mWrappedNativeMap(Native2WrappedNativeMap::newMap(XPC_NATIVE_MAP_SIZE)),
         mWrappedNativeProtoMap(ClassInfo2WrappedNativeProtoMap::newMap(XPC_NATIVE_PROTO_MAP_SIZE)),
+        mWrapperMap(WrappedNative2WrapperMap::newMap(XPC_WRAPPER_MAP_SIZE)),
         mComponents(nsnull),
         mNext(nsnull),
         mGlobalJSObject(nsnull),
@@ -158,6 +159,18 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(XPCCallContext& ccx,
 
     DEBUG_TrackNewScope(this);
     MOZ_COUNT_CTOR(XPCWrappedNativeScope);
+}
+
+// static
+JSBool
+XPCWrappedNativeScope::IsDyingScope(XPCWrappedNativeScope *scope)
+{
+    for(XPCWrappedNativeScope *cur = gDyingScopes; cur; cur = cur->mNext)
+    {
+        if(scope == cur)
+            return JS_TRUE;
+    }
+    return JS_FALSE;
 }
 
 void

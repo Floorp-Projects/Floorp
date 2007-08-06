@@ -47,7 +47,7 @@ interface nsIAutoCompleteSimpleResultListener;
  * an array.
  */
 
-[scriptable, uuid(916e3d78-4622-446b-924a-20f7021793b7)]
+[scriptable, uuid(f9841787-ad26-49e6-a2dd-ba9020ee1c64)]
 interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
 {
   /**
@@ -75,10 +75,12 @@ interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
   void setSearchResult(in unsigned short aSearchResult);
 
   /**
-   * Appends a result item consisting of the given value and comment. This is
-   * how you add results.
+   * Appends a result item consisting of the given value, comment, image and style.
+   * This is how you add results.  Note:  image and style are optional. 
    */
-  void appendMatch(in AString aValue, in AString aComment);
+  void appendMatch(in AString aValue, in AString aComment, 
+                   [optional] in AString aImage, 
+                   [optional] in AString aStyle);
 
   /**
    * Sets a listener for changes in the result.

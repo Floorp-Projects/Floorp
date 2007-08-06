@@ -161,7 +161,9 @@
 #include "nsIObserverService.h"
 #include "nsIXULAppInfo.h"
 #include "nsNetUtil.h"
+#ifdef MOZ_XUL
 #include "nsXULPopupManager.h"
+#endif
 
 #include "plbase64.h"
 
@@ -258,6 +260,18 @@ PRInt32 gTimeoutCnt                                    = 0;
   }                                                                           \
   PR_END_MACRO
 
+#define FORWARD_TO_OUTER_MODAL_CONTENT_WINDOW(method, args, err_rval)         \
+  PR_BEGIN_MACRO                                                              \
+  if (IsInnerWindow()) {                                                      \
+    nsGlobalWindow *outer = GetOuterWindowInternal();                         \
+    if (!outer) {                                                             \
+      NS_WARNING("No outer window available!");                               \
+      return err_rval;                                                        \
+    }                                                                         \
+    return ((nsGlobalModalWindow *)outer)->method args;                       \
+  }                                                                           \
+  PR_END_MACRO
+
 #define FORWARD_TO_INNER(method, args, err_rval)                              \
   PR_BEGIN_MACRO                                                              \
   if (IsOuterWindow()) {                                                      \
@@ -266,6 +280,17 @@ PRInt32 gTimeoutCnt                                    = 0;
       return err_rval;                                                        \
     }                                                                         \
     return GetCurrentInnerWindowInternal()->method args;                      \
+  }                                                                           \
+  PR_END_MACRO
+
+#define FORWARD_TO_INNER_MODAL_CONTENT_WINDOW(method, args, err_rval)         \
+  PR_BEGIN_MACRO                                                              \
+  if (IsOuterWindow()) {                                                      \
+    if (!mInnerWindow) {                                                      \
+      NS_WARNING("No inner window available!");                               \
+      return err_rval;                                                        \
+    }                                                                         \
+    return ((nsGlobalModalWindow*)GetCurrentInnerWindowInternal())->method args; \
   }                                                                           \
   PR_END_MACRO
 
@@ -420,6 +445,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mBlockScriptedClosingFlag(PR_FALSE),
     mFireOfflineStatusChangeEventOnThaw(PR_FALSE),
     mCreatingInnerWindow(PR_FALSE),
+    mIsChrome(PR_FALSE),
     mGlobalObjectOwner(nsnull),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
@@ -1424,7 +1450,11 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
           isChrome = PR_TRUE;
         } else {
-          newInnerWindow = new nsGlobalWindow(this);
+          if (mIsModalContentWindow) {
+            newInnerWindow = new nsGlobalModalWindow(this);
+          } else {
+            newInnerWindow = new nsGlobalWindow(this);
+          }
         }
 
         mLocation = nsnull;
@@ -2051,7 +2081,11 @@ nsGlobalWindow::SetNewArguments(nsIArray *aArguments)
       void *glob = currentInner->GetScriptGlobal(langID);
       nsIScriptContext *ctx = GetScriptContext(langID);
       if (glob && ctx) {
-        rv = ctx->SetProperty(glob, "arguments", aArguments);
+        if (mIsModalContentWindow) {
+          rv = ctx->SetProperty(glob, "dialogArguments", aArguments);
+        } else {
+          rv = ctx->SetProperty(glob, "arguments", aArguments);
+        }
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
@@ -3038,6 +3072,7 @@ nsGlobalWindow::SetScreenY(PRInt32 aScreenY)
 nsresult
 nsGlobalWindow::CheckSecurityWidthAndHeight(PRInt32* aWidth, PRInt32* aHeight)
 {
+#ifdef MOZ_XUL
   if (!nsContentUtils::IsCallerTrustedForWrite()) {
     // if attempting to resize the window, hide any open popups
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
@@ -3045,6 +3080,7 @@ nsGlobalWindow::CheckSecurityWidthAndHeight(PRInt32* aWidth, PRInt32* aHeight)
     if (pm && doc)
       pm->HidePopupsInDocument(doc);
   }
+#endif
 
   // This one is easy. Just ensure the variable is greater than 100;
   if ((aWidth && *aWidth < 100) || (aHeight && *aHeight < 100)) {
@@ -3072,11 +3108,13 @@ nsGlobalWindow::CheckSecurityLeftAndTop(PRInt32* aLeft, PRInt32* aTop)
   // Check security state for use in determing window dimensions
 
   if (!nsContentUtils::IsCallerTrustedForWrite()) {
+#ifdef MOZ_XUL
     // if attempting to move the window, hide any open popups
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
     if (pm && doc)
       pm->HidePopupsInDocument(doc);
+#endif
 
     PRInt32 screenLeft, screenTop, screenWidth, screenHeight;
     PRInt32 winLeft, winTop, winWidth, winHeight;
@@ -5069,6 +5107,164 @@ nsGlobalWindow::GetFrameElement(nsIDOMElement** aFrameElement)
 
   *aFrameElement = mFrameElement;
   NS_IF_ADDREF(*aFrameElement);
+
+  return NS_OK;
+}
+
+void
+ConvertDialogOptions(const nsAString& aOptions, nsAString& aResult)
+{
+  nsAString::const_iterator end;
+  aOptions.EndReading(end);
+
+  nsAString::const_iterator iter;
+  aOptions.BeginReading(iter);
+
+  while (iter != end) {
+    // Skip whitespace.
+    while (nsCRT::IsAsciiSpace(*iter) && iter != end) {
+      ++iter;
+    }
+
+    nsAString::const_iterator name_start = iter;
+
+    // Skip characters until we find whitespace, ';', ':', or '='
+    while (iter != end && !nsCRT::IsAsciiSpace(*iter) &&
+           *iter != ';' &&
+           *iter != ':' &&
+           *iter != '=') {
+      ++iter;
+    }
+
+    nsAString::const_iterator name_end = iter;
+
+    // Skip whitespace.
+    while (nsCRT::IsAsciiSpace(*iter) && iter != end) {
+      ++iter;
+    }
+
+    if (*iter == ';') {
+      // No value found, skip the ';' and keep going.
+      ++iter;
+
+      continue;
+    }
+
+    nsAString::const_iterator value_start = iter;
+    nsAString::const_iterator value_end = iter;
+
+    if (*iter == ':' || *iter == '=') {
+      // We found name followed by ':' or '='. Look for a value.
+
+      iter++; // Skip the ':' or '='
+
+      // Skip whitespace.
+      while (nsCRT::IsAsciiSpace(*iter) && iter != end) {
+        ++iter;
+      }
+
+      value_start = iter;
+
+      // Skip until we find whitespace, or ';'.
+      while (iter != end && !nsCRT::IsAsciiSpace(*iter) &&
+             *iter != ';') {
+        ++iter;
+      }
+
+      value_end = iter;
+
+      // Skip whitespace.
+      while (nsCRT::IsAsciiSpace(*iter) && iter != end) {
+        ++iter;
+      }
+    }
+
+    const nsDependentSubstring& name = Substring(name_start, name_end);
+    const nsDependentSubstring& value = Substring(value_start, value_end);
+
+    if (name.LowerCaseEqualsLiteral("center")) {
+      if (value.LowerCaseEqualsLiteral("on")  ||
+          value.LowerCaseEqualsLiteral("yes") ||
+          value.LowerCaseEqualsLiteral("1")) {
+        aResult.AppendLiteral(",centerscreen=1");
+      }
+    } else if (name.LowerCaseEqualsLiteral("dialogwidth")) {
+      if (!value.IsEmpty()) {
+        aResult.AppendLiteral(",width=");
+        aResult.Append(value);
+      }
+    } else if (name.LowerCaseEqualsLiteral("dialogheight")) {
+      if (!value.IsEmpty()) {
+        aResult.AppendLiteral(",height=");
+        aResult.Append(value);
+      }
+    } else if (name.LowerCaseEqualsLiteral("dialogtop")) {
+      if (!value.IsEmpty()) {
+        aResult.AppendLiteral(",top=");
+        aResult.Append(value);
+      }
+    } else if (name.LowerCaseEqualsLiteral("dialogleft")) {
+      if (!value.IsEmpty()) {
+        aResult.AppendLiteral(",left=");
+        aResult.Append(value);
+      }
+    } else if (name.LowerCaseEqualsLiteral("resizable")) {
+      if (value.LowerCaseEqualsLiteral("on")  ||
+          value.LowerCaseEqualsLiteral("yes") ||
+          value.LowerCaseEqualsLiteral("1")) {
+        aResult.AppendLiteral(",resizable=1");
+      }
+    } else if (name.LowerCaseEqualsLiteral("scroll")) {
+      if (value.LowerCaseEqualsLiteral("off")  ||
+          value.LowerCaseEqualsLiteral("no") ||
+          value.LowerCaseEqualsLiteral("0")) {
+        aResult.AppendLiteral(",scrollbars=0");
+      }
+    }
+
+    if (iter == end) {
+      break;
+    }
+
+    iter++;
+  }
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
+                                const nsAString& aOptions,
+                                nsIVariant **aRetVal)
+{
+  *aRetVal = nsnull;
+
+  nsCOMPtr<nsIDOMWindow> dlgWin;
+  nsAutoString options(NS_LITERAL_STRING("modal=1,status=1"));
+  nsAutoString dialogOptions(aOptions);
+
+  ConvertDialogOptions(dialogOptions, options);
+
+  options.AppendLiteral(",scrollbars=1,centerscreen=1,resizable=0");
+
+  nsresult rv = OpenInternal(aURI, EmptyString(), options,
+                             PR_FALSE,          // aDialog
+                             PR_TRUE,           // aCalledNoScript
+                             PR_FALSE,          // aDoJSFixups
+                             nsnull, aArgs,     // args
+                             GetPrincipal(),    // aCalleePrincipal
+                             nsnull,            // aJSCallerContext
+                             getter_AddRefs(dlgWin));
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(dlgWin));
+
+  nsPIDOMWindow *inner = win->GetCurrentInnerWindow();
+
+  nsCOMPtr<nsIDOMModalContentWindow> dlgInner(do_QueryInterface(inner));
+
+  if (dlgInner) {
+    dlgInner->GetReturnValue(aRetVal);
+  }
 
   return NS_OK;
 }
@@ -7645,6 +7841,8 @@ nsGlobalWindow::SetScriptTypeID(PRUint32 aScriptType)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+// nsGlobalChromeWindow implementation
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalChromeWindow)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalChromeWindow,
                                                   nsGlobalWindow)
@@ -7659,8 +7857,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsGlobalWindow)
 
 NS_IMPL_ADDREF_INHERITED(nsGlobalChromeWindow, nsGlobalWindow)
 NS_IMPL_RELEASE_INHERITED(nsGlobalChromeWindow, nsGlobalWindow)
-
-// nsGlobalChromeWindow implementation
 
 static void TitleConsoleWarning()
 {
@@ -7900,12 +8096,68 @@ nsGlobalChromeWindow::SetBrowserDOMWindow(nsIBrowserDOMWindow *aBrowserWindow)
   return NS_OK;
 }
 
+// nsGlobalModalWindow implementation
+
+// QueryInterface implementation for nsGlobalModalWindow
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsGlobalModalWindow)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGlobalModalWindow,
+                                                  nsGlobalWindow)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mArguments)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsGlobalModalWindow)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMModalContentWindow)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ModalContentWindow)
+NS_INTERFACE_MAP_END_INHERITING(nsGlobalWindow)
+
+NS_IMPL_ADDREF_INHERITED(nsGlobalModalWindow, nsGlobalWindow)
+NS_IMPL_RELEASE_INHERITED(nsGlobalModalWindow, nsGlobalWindow)
+
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsGlobalModalWindow,
+                                                nsGlobalWindow)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mReturnValue)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+
+NS_IMETHODIMP
+nsGlobalModalWindow::GetDialogArguments(nsIArray **aArguments)
+{
+  FORWARD_TO_INNER_MODAL_CONTENT_WINDOW(GetDialogArguments, (aArguments),
+                                        NS_ERROR_NOT_INITIALIZED);
+
+  *aArguments = mArguments;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalModalWindow::GetReturnValue(nsIVariant **aRetVal)
+{
+  FORWARD_TO_OUTER_MODAL_CONTENT_WINDOW(GetReturnValue, (aRetVal), NS_OK);
+
+  NS_IF_ADDREF(*aRetVal = mReturnValue);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalModalWindow::SetReturnValue(nsIVariant *aRetVal)
+{
+  FORWARD_TO_OUTER_MODAL_CONTENT_WINDOW(SetReturnValue, (aRetVal), NS_OK);
+
+  mReturnValue = aRetVal;
+
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsGlobalWindow: Creator Function (This should go away)
 //*****************************************************************************
 
 nsresult
-NS_NewScriptGlobalObject(PRBool aIsChrome, nsIScriptGlobalObject **aResult)
+NS_NewScriptGlobalObject(PRBool aIsChrome, PRBool aIsModalContentWindow,
+                         nsIScriptGlobalObject **aResult)
 {
   *aResult = nsnull;
 
@@ -7913,14 +8165,17 @@ NS_NewScriptGlobalObject(PRBool aIsChrome, nsIScriptGlobalObject **aResult)
 
   if (aIsChrome) {
     global = new nsGlobalChromeWindow(nsnull);
+  } else if (aIsModalContentWindow) {
+    global = new nsGlobalModalWindow(nsnull);
   } else {
     global = new nsGlobalWindow(nsnull);
   }
 
   NS_ENSURE_TRUE(global, NS_ERROR_OUT_OF_MEMORY);
 
-  return CallQueryInterface(static_cast<nsIScriptGlobalObject *>(global),
-                            aResult);
+  NS_ADDREF(*aResult = global);
+
+  return NS_OK;
 }
 
 //*****************************************************************************
@@ -8538,7 +8793,7 @@ nsNavigator::IsLocallyAvailable(const nsAString &aURI,
   // if the cache is busy, assume that it is not yet available rather
   // than waiting for it to become available.
   PRUint32 loadFlags = nsIChannel::INHIBIT_CACHING |
-                       nsIChannel::LOAD_NO_NETWORK_IO |
+                       nsICachingChannel::LOAD_NO_NETWORK_IO |
                        nsICachingChannel::LOAD_ONLY_IF_MODIFIED |
                        nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
 

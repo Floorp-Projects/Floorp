@@ -65,9 +65,11 @@
 #include "imgIContainer.h"
 #include "gfxRect.h"
 #include "gfxContext.h"
+#include "gfxFont.h"
 #include "nsIImage.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsCSSRendering.h"
+#include "nsContentUtils.h"
 
 #ifdef MOZ_SVG_FOREIGNOBJECT
 #include "nsSVGForeignObjectFrame.h"
@@ -655,20 +657,47 @@ nsLayoutUtils::GetEventCoordinatesForNearestView(nsEvent* aEvent,
                                GUIEvent->refPoint, frameView);
 }
 
+static nsPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRootWidget) {
+  nsPoint offset(0, 0);
+  nsIWidget* parent = aWidget->GetParent();
+  while (parent) {
+    nsRect bounds;
+    aWidget->GetBounds(bounds);
+    offset += bounds.TopLeft();
+    aWidget = parent;
+    parent = aWidget->GetParent();
+  }
+  aRootWidget = aWidget;
+  return offset;
+}
+
 nsPoint
 nsLayoutUtils::TranslateWidgetToView(nsPresContext* aPresContext, 
                                      nsIWidget* aWidget, nsIntPoint aPt,
                                      nsIView* aView)
 {
-  nsIView* baseView = nsIView::GetViewFor(aWidget);
-  if (!baseView)
-    return nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  nsPoint viewToWidget;
-  nsIWidget* wid = baseView->GetNearestWidget(&viewToWidget);
-  NS_ASSERTION(aWidget == wid, "Clashing widgets");
-  nsPoint refPointAppUnits(aPresContext->DevPixelsToAppUnits(aPt.x),
-                           aPresContext->DevPixelsToAppUnits(aPt.y));
-  return refPointAppUnits - viewToWidget - aView->GetOffsetTo(baseView);
+  nsPoint viewOffset;
+  nsIWidget* viewWidget = aView->GetNearestWidget(&viewOffset);
+
+  nsIWidget* fromRoot;
+  nsPoint fromOffset = GetWidgetOffset(aWidget, fromRoot);
+  nsIWidget* toRoot;
+  nsPoint toOffset = GetWidgetOffset(viewWidget, toRoot);
+
+  nsIntPoint widgetPoint;
+  if (fromRoot == toRoot) {
+    widgetPoint = aPt + fromOffset - toOffset;
+  } else {
+    nsIntRect widgetRect(0, 0, 0, 0);
+    nsIntRect screenRect;
+    aWidget->WidgetToScreen(widgetRect, screenRect);
+    viewWidget->ScreenToWidget(screenRect, widgetRect);
+    widgetPoint = aPt + widgetRect.TopLeft();
+  }
+
+  nsPoint widgetAppUnits(aPresContext->DevPixelsToAppUnits(widgetPoint.x),
+                         aPresContext->DevPixelsToAppUnits(widgetPoint.y));
+  return widgetAppUnits - viewOffset;
 }
 
 // Combine aNewBreakType with aOrigBreakType, but limit the break types
@@ -2305,4 +2334,39 @@ nsLayoutUtils::FrameHasTransparency(nsIFrame* aFrame) {
   if (bg->mBackgroundClip != NS_STYLE_BG_CLIP_BORDER)
     return PR_TRUE;
   return PR_FALSE;
+}
+
+static PRBool
+IsNonzeroCoord(const nsStyleCoord& aCoord)
+{
+  if (eStyleUnit_Coord == aCoord.GetUnit())
+    return aCoord.GetCoordValue() != 0;
+  return PR_FALSE;
+}
+
+/* static */ PRUint32
+nsLayoutUtils::GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
+                                       const nsStyleText* aStyleText,
+                                       const nsStyleFont* aStyleFont)
+{
+  PRUint32 result = 0;
+  if (IsNonzeroCoord(aStyleText->mLetterSpacing)) {
+    result |= gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES;
+  }
+#ifdef MOZ_SVG
+  switch (aStyleContext->GetStyleSVG()->mTextRendering) {
+  case NS_STYLE_TEXT_RENDERING_OPTIMIZESPEED:
+    result |= gfxTextRunFactory::TEXT_OPTIMIZE_SPEED;
+    break;
+  case NS_STYLE_TEXT_RENDERING_AUTO:
+    if (aStyleFont->mFont.size <
+        aStyleContext->PresContext()->GetAutoQualityMinFontSize()) {
+      result |= gfxTextRunFactory::TEXT_OPTIMIZE_SPEED;
+    }
+    break;
+  default:
+    break;
+  }
+#endif
+  return result;
 }

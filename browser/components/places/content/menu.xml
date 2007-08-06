@@ -240,7 +240,7 @@
             popup.setAttribute("context", "placesContext");
 #endif
             popup._result = this._result;
-            popup._resultNode = child;
+            popup._resultNode = asContainer(child);
             element.className = "menu-iconic bookmark-item";
 #ifdef XP_MACOSX
             // If this is a child of the bookmarks menubar, we have to manually attach
@@ -254,8 +254,7 @@
             popup._containerNodesMap = this._containerNodesMap;
             this._containerNodesMap.push({ resultNode: child, domNode: popup });
           }
-          // else if (nodeIsQuery) ... add menu to build kids
-           
+
           if (element) {
             element.node = child;
             if (child.icon)

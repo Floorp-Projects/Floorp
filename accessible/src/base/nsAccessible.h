@@ -67,6 +67,9 @@ class nsIDOMNode;
 class nsIAtom;
 class nsIView;
 
+#define NS_OK_NO_ARIA_VALUE \
+NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_GENERAL, 0x21)
+
 // When mNextSibling is set to this, it indicates there ar eno more siblings
 #define DEAD_END_ACCESSIBLE static_cast<nsIAccessible*>((void*)1)
 
@@ -149,7 +152,7 @@ public:
   static PRUint32 Role(nsIAccessible *aAcc) { PRUint32 role; aAcc->GetFinalRole(&role); return role; }
   static PRBool IsText(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role == nsIAccessibleRole::ROLE_TEXT_LEAF || role == nsIAccessibleRole::ROLE_STATICTEXT; }
   static PRBool IsEmbeddedObject(nsIAccessible *aAcc) { PRUint32 role = Role(aAcc); return role != nsIAccessibleRole::ROLE_TEXT_LEAF && role != nsIAccessibleRole::ROLE_WHITESPACE && role != nsIAccessibleRole::ROLE_STATICTEXT; }
-  static PRInt32 TextLength(nsIAccessible *aAccessible);
+  static PRInt32 TextLength(nsIAccessible *aAccessible); // Returns -1 on failure
   static PRBool IsLeaf(nsIAccessible *aAcc) { PRInt32 numChildren; aAcc->GetChildCount(&numChildren); return numChildren > 0; }
   static PRBool IsNodeRelevant(nsIDOMNode *aNode); // Is node something that could have an attached accessible
   
@@ -274,6 +277,17 @@ protected:
 
   // Check the visibility across both parent content and chrome
   PRBool CheckVisibilityInParentChain(nsIDocument* aDocument, nsIView* aView);
+
+  /**
+   * Get numeric value of the given attribute.
+   *
+   * @param aNameSpaceID - namespace ID of the attribute
+   * @param aName - name of the attribute
+   * @param aValue - value of the attribute
+   *
+   * @return - NS_OK_NO_ARIA_VALUE if there is no setted ARIA attribute
+   */
+  nsresult GetAttrValue(PRUint32 aNameSpaceID, nsIAtom *aName, double *aValue);
 
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;

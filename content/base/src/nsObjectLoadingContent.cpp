@@ -128,7 +128,7 @@ nsAsyncInstantiateEvent::Run()
   // the type here - GetFrame() only returns object frames, and that means we're
   // a plugin)
   // Also make sure that we still refer to the same data.
-  if (mContent->GetFrame() == mFrame &&
+  if (mContent->GetFrame(PR_FALSE) == mFrame &&
       mContent->mURI == mURI &&
       mContent->mContentType.Equals(mContentType)) {
     if (LOG_ENABLED()) {
@@ -314,6 +314,9 @@ IsPluginEnabledByExtension(nsIURI* uri, nsCString& mimeType)
   nsCAutoString ext;
   GetExtensionFromURI(uri, ext);
 
+  if (ext.IsEmpty())
+    return PR_FALSE;
+
   nsCOMPtr<nsIPluginHost> host(do_GetService("@mozilla.org/plugin/host;1"));
   const char* typeFromExt;
   if (host &&
@@ -455,7 +458,7 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
         notifier.Notify();
       }
       nsIObjectFrame* frame;
-      frame = GetFrame();
+      frame = GetFrame(PR_TRUE);
       if (!frame) {
         // Do nothing in this case: This is probably due to a display:none
         // frame. If we ever get a frame, HasNewFrame will do the right thing.
@@ -494,7 +497,24 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
     if (NS_FAILED(rv)) {
       LOG(("OBJLC [%p]: mFinalListener->OnStartRequest failed (%08x), falling back\n",
            this, rv));
+#ifdef XP_MACOSX
+      // Shockwave on Mac is special and returns an error here even when it
+      // handles the content
+      if (mContentType.EqualsLiteral("application/x-director")) {
+        LOG(("OBJLC [%p]: (ignoring)\n", this));
+        rv = NS_OK; // otherwise, the AutoFallback will make us fall back
+        return NS_BINDING_ABORTED;
+      }
+#endif
       Fallback(PR_FALSE);
+    } else if (mType == eType_Plugin) {
+      nsIObjectFrame* frame = GetFrame(PR_FALSE);
+      if (frame) {
+        // We have to notify the wrapper here instead of right after
+        // Instantiate because the plugin only gets instantiated by
+        // OnStartRequest, not by Instantiate.
+        frame->TryNotifyContentObjectWrapper();
+      }
     }
     return rv;
   }
@@ -577,7 +597,7 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
     return NS_OK;
   }
 
-  nsIObjectFrame* frame = GetFrame();
+  nsIObjectFrame* frame = GetFrame(PR_FALSE);
   if (frame) {
     // If we have a frame, we may have pending instantiate events; revoke
     // them.
@@ -614,7 +634,7 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
 
     mInstantiating = PR_FALSE;
 
-    frame = GetFrame();
+    frame = GetFrame(PR_FALSE);
     if (!frame) {
       return NS_OK;
     }
@@ -847,6 +867,11 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
   }
 
   // Security checks
+  if (doc->IsLoadedAsData()) {
+    Fallback(PR_FALSE);
+    return NS_OK;
+  }
+
   // Can't do security checks without a URI - hopefully the plugin will take
   // care of that
   // Null URIs happen when the URL to load is specified via other means than the
@@ -1031,6 +1056,10 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
 
   if (!CanHandleURI(aURI)) {
     LOG(("OBJLC [%p]: can't handle URI\n", this));
+    if (aTypeHint.IsEmpty()) {
+      rv = NS_ERROR_NOT_AVAILABLE;
+      return NS_OK;
+    }
     // E.g. mms://
     mType = eType_Plugin;
     if (aNotify)
@@ -1364,7 +1393,7 @@ nsObjectLoadingContent::GetObjectBaseURI(nsIContent* thisContent, nsIURI** aURI)
 }
 
 nsIObjectFrame*
-nsObjectLoadingContent::GetFrame()
+nsObjectLoadingContent::GetFrame(PRBool aFlushLayout)
 {
   nsCOMPtr<nsIContent> thisContent = 
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
@@ -1394,7 +1423,9 @@ nsObjectLoadingContent::GetFrame()
     
     // OK, let's flush out and try again.  Note that we want to reget
     // the document, etc, since flushing might run script.
-    doc->FlushPendingNotifications(Flush_ContentAndNotify);
+    mozFlushType flushType =
+      aFlushLayout ? Flush_Layout : Flush_ContentAndNotify;
+    doc->FlushPendingNotifications(flushType);
 
     flushed = PR_TRUE;
   } while (1);
@@ -1407,7 +1438,7 @@ nsObjectLoadingContent::GetFrame()
 nsresult
 nsObjectLoadingContent::Instantiate(const nsACString& aMIMEType, nsIURI* aURI)
 {
-  nsIObjectFrame* frame = GetFrame();
+  nsIObjectFrame* frame = GetFrame(PR_FALSE);
   if (!frame) {
     LOG(("OBJLC [%p]: Attempted to instantiate, but have no frame\n", this));
     return NS_OK; // Not a failure to have no frame

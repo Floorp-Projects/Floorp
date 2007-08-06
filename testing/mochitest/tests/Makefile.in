@@ -78,4 +78,4 @@ _TEST_FILES = test_MochiKit-Async.html \
 # in the test screen. We leave them in tests/ in the src tree to mirror
 # the upstream MochiKit repository
 libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/$(relativesrcdir)/MochiKit_Unit_Tests
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/$(relativesrcdir)/MochiKit_Unit_Tests

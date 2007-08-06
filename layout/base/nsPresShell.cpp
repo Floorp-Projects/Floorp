@@ -1794,11 +1794,10 @@ PresShell::SetPreferenceStyleRules(PRBool aForceReflow)
     }
 #ifdef DEBUG_attinasi
     printf( "Preference Style Rules set: error=%ld\n", (long)result);
-#endif    
+#endif
 
-    if (aForceReflow){
-      mPresContext->ClearStyleDataAndReflow();
-    }
+    // Note that this method never needs to force any calculation; the caller
+    // will recalculate style if needed
 
     return result;
   }
@@ -5410,7 +5409,7 @@ PresShell::HandleEvent(nsIView         *aView,
 
     nsPresContext* framePresContext = frame->PresContext();
     nsPresContext* rootPresContext = framePresContext->RootPresContext();
-    NS_ASSERTION(rootPresContext = mPresContext->RootPresContext(),
+    NS_ASSERTION(rootPresContext == mPresContext->RootPresContext(),
                  "How did we end up outside the connected prescontext/viewmanager hierarchy?"); 
     // If we aren't starting our event dispatch from the root frame of the root prescontext,
     // then someone must be capturing the mouse. In that case we don't want to search the popup
@@ -5418,6 +5417,7 @@ PresShell::HandleEvent(nsIView         *aView,
     if (framePresContext == rootPresContext &&
         frame == FrameManager()->GetRootFrame()) {
 
+#ifdef MOZ_XUL
       nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
       if (pm) {
         nsTArray<nsIFrame*> popups = pm->GetOpenPopups();
@@ -5433,6 +5433,7 @@ PresShell::HandleEvent(nsIView         *aView,
           }
         }
       }
+#endif
     }
 
     nsPoint eventPoint
@@ -6069,8 +6070,10 @@ PresShell::DoReflow(nsIFrame* target)
   NS_ASSERTION(reflowState.mComputedMargin == nsMargin(0, 0, 0, 0),
                "reflow state should not set margin for reflow roots");
   if (size.height != NS_UNCONSTRAINEDSIZE) {
-    reflowState.mComputedHeight =
+    nscoord computedHeight =
       size.height - reflowState.mComputedBorderPadding.TopBottom();
+    computedHeight = PR_MAX(computedHeight, 0);
+    reflowState.SetComputedHeight(computedHeight);
   }
   NS_ASSERTION(reflowState.ComputedWidth() ==
                  size.width -

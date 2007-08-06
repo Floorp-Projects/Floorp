@@ -361,7 +361,7 @@ var PlacesSearchBox = {
 
     switch (PlacesSearchBox.filterCollection) {
     case "collection":
-      var folderId = content.getResult().root.itemId;
+      var folderId = PlacesOrganizer._places.selectedNode.itemId;
       content.applyFilter(filterString, true, [folderId], OptionsFilter);
       PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
       break;

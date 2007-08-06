@@ -122,7 +122,7 @@ function addDownload()
 
   var dl = dm.addDownload(nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
                           createURI("http://localhost:4444/LICENSE"),
-                          createURI(destFile), null, null, null,
+                          createURI(destFile), null, null,
                           Math.round(Date.now() * 1000), null, persist);
 
   // This will throw if it isn't found, and that would mean test failure, so no

@@ -45,11 +45,11 @@
  * backend.
  */
 
-#include "test-paginated-surface.h"
-
 #include "cairoint.h"
 
-#include "cairo-paginated-surface-private.h"
+#include "test-paginated-surface.h"
+
+#include "cairo-paginated-private.h"
 
 typedef struct _test_paginated_surface {
     cairo_surface_t base;
@@ -107,7 +107,7 @@ _test_paginated_surface_finish (void *abstract_surface)
 
 static cairo_int_status_t
 _test_paginated_surface_set_clip_region (void *abstract_surface,
-					 pixman_region16_t *region)
+					 cairo_region_t *region)
 {
     test_paginated_surface_t *surface = abstract_surface;
 
@@ -149,7 +149,7 @@ _test_paginated_surface_set_clip_region (void *abstract_surface,
 
 static cairo_int_status_t
 _test_paginated_surface_get_extents (void			*abstract_surface,
-				     cairo_rectangle_int16_t	*rectangle)
+				     cairo_rectangle_int_t	*rectangle)
 {
     test_paginated_surface_t *surface = abstract_surface;
 

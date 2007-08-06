@@ -54,8 +54,9 @@ _TEST_FILES = 	bug288254_window.xul \
 		test_bug366992.xul \
 		bug331215_window.xul \
 		test_bug331215.xul \
-        widget_progressmeter.xul \
+		test_popup_preventdefault_chrome.xul \
+		window_popup_preventdefault_chrome.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

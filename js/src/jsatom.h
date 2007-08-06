@@ -300,7 +300,6 @@ extern const char   js_next_str[];
 extern const char   js_noSuchMethod_str[];
 extern const char   js_object_str[];
 extern const char   js_parent_str[];
-extern const char   js_private_str[];
 extern const char   js_proto_str[];
 extern const char   js_ptagc_str[];
 extern const char   js_qualifier_str[];

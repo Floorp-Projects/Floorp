@@ -147,6 +147,7 @@ private:
   nsresult GetBackgroundAttachment(nsIDOMCSSValue** aValue);
   nsresult GetBackgroundColor(nsIDOMCSSValue** aValue);
   nsresult GetBackgroundImage(nsIDOMCSSValue** aValue);
+  nsresult GetBackgroundPosition(nsIDOMCSSValue** aValue);
   nsresult GetBackgroundRepeat(nsIDOMCSSValue** aValue);
   nsresult GetBackgroundClip(nsIDOMCSSValue** aValue);
   nsresult GetBackgroundInlinePolicy(nsIDOMCSSValue** aValue);
@@ -211,9 +212,13 @@ private:
   nsresult GetOutlineRadiusTopRight(nsIDOMCSSValue** aValue);
 
   /* Content Properties */
+  nsresult GetContent(nsIDOMCSSValue** aValue);
   nsresult GetCounterIncrement(nsIDOMCSSValue** aValue);
   nsresult GetCounterReset(nsIDOMCSSValue** aValue);
   nsresult GetMarkerOffset(nsIDOMCSSValue** aValue);
+
+  /* Quotes Properties */
+  nsresult GetQuotes(nsIDOMCSSValue** aValue);
 
   /* z-index */
   nsresult GetZIndex(nsIDOMCSSValue** aValue);
@@ -252,9 +257,12 @@ private:
   nsresult GetOverflow(nsIDOMCSSValue** aValue);
   nsresult GetOverflowX(nsIDOMCSSValue** aValue);
   nsresult GetOverflowY(nsIDOMCSSValue** aValue);
+  nsresult GetPageBreakAfter(nsIDOMCSSValue** aValue);
+  nsresult GetPageBreakBefore(nsIDOMCSSValue** aValue);
 
   /* User interface properties */
   nsresult GetCursor(nsIDOMCSSValue** aValue);
+  nsresult GetForceBrokenImageIcon(nsIDOMCSSValue** aValue);
   nsresult GetIMEMode(nsIDOMCSSValue** aValue);
   nsresult GetUserFocus(nsIDOMCSSValue** aValue);
   nsresult GetUserInput(nsIDOMCSSValue** aValue);
@@ -265,6 +273,48 @@ private:
   nsresult GetColumnCount(nsIDOMCSSValue** aValue);
   nsresult GetColumnWidth(nsIDOMCSSValue** aValue);
   nsresult GetColumnGap(nsIDOMCSSValue** aValue);
+
+#ifdef MOZ_SVG
+  /* SVG properties */
+  nsresult GetSVGPaintFor(PRBool aFill, nsIDOMCSSValue** aValue);
+
+  nsresult GetFill(nsIDOMCSSValue** aValue);
+  nsresult GetStroke(nsIDOMCSSValue** aValue);
+  nsresult GetMarkerEnd(nsIDOMCSSValue** aValue);
+  nsresult GetMarkerMid(nsIDOMCSSValue** aValue);
+  nsresult GetMarkerStart(nsIDOMCSSValue** aValue);
+  nsresult GetStrokeDasharray(nsIDOMCSSValue** aValue);
+
+  nsresult GetStrokeDashoffset(nsIDOMCSSValue** aValue);
+  nsresult GetStrokeWidth(nsIDOMCSSValue** aValue);
+
+  nsresult GetFillOpacity(nsIDOMCSSValue** aValue);
+  nsresult GetFloodOpacity(nsIDOMCSSValue** aValue);
+  nsresult GetStopOpacity(nsIDOMCSSValue** aValue);
+  nsresult GetStrokeMiterlimit(nsIDOMCSSValue** aValue);
+  nsresult GetStrokeOpacity(nsIDOMCSSValue** aValue);
+
+  nsresult GetClipRule(nsIDOMCSSValue** aValue);
+  nsresult GetFillRule(nsIDOMCSSValue** aValue);
+  nsresult GetStrokeLinecap(nsIDOMCSSValue** aValue);
+  nsresult GetStrokeLinejoin(nsIDOMCSSValue** aValue);
+  nsresult GetTextAnchor(nsIDOMCSSValue** aValue);
+
+  nsresult GetColorInterpolation(nsIDOMCSSValue** aValue);
+  nsresult GetColorInterpolationFilters(nsIDOMCSSValue** aValue);
+  nsresult GetDominantBaseline(nsIDOMCSSValue** aValue);
+  nsresult GetPointerEvents(nsIDOMCSSValue** aValue);
+  nsresult GetShapeRendering(nsIDOMCSSValue** aValue);
+  nsresult GetTextRendering(nsIDOMCSSValue** aValue);
+
+  nsresult GetFloodColor(nsIDOMCSSValue** aValue);
+  nsresult GetLightingColor(nsIDOMCSSValue** aValue);
+  nsresult GetStopColor(nsIDOMCSSValue** aValue);
+
+  nsresult GetClipPath(nsIDOMCSSValue** aValue);
+  nsresult GetFilter(nsIDOMCSSValue** aValue);
+  nsresult GetMask(nsIDOMCSSValue** aValue);
+#endif // MOZ_SVG
 
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
   nsDOMCSSValueList* GetROCSSValueList(PRBool aCommaDelimited);

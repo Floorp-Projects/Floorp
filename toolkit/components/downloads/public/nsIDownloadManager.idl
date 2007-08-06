@@ -51,7 +51,7 @@ interface nsIDownloadProgressListener;
 interface nsISimpleEnumerator;
 interface mozIStorageConnection;
 
-[scriptable, uuid(bbf6561b-d7d7-48fa-967c-9cc46cc372b4)]
+[scriptable, uuid(0e8ded0d-c6e4-4b67-9d1e-42fe3d405491)]
 interface nsIDownloadManager : nsISupports {
   // Download States
   const short DOWNLOAD_NOTSTARTED       = -1;
@@ -99,7 +99,6 @@ interface nsIDownloadManager : nsISupports {
                           in nsIURI aSource,
                           in nsIURI aTarget,
                           in AString aDisplayName,
-                          in AString aIconURL,
                           in nsIMIMEInfo aMIMEInfo,
                           in PRTime aStartTime,
                           in nsILocalFile aTempFile,

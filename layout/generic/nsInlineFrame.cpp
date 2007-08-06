@@ -88,25 +88,6 @@ nsInlineFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsInlineFrameSuper::QueryInterface(aIID, aInstancePtr);
 }
 
-void
-nsInlineFrame::Destroy()
-{
-  if (mState & NS_FRAME_GENERATED_CONTENT) {
-    // Make sure all the content nodes for the generated content inside
-    // this frame know it's going away.
-    // This is duplicated in nsBlockFrame::Destroy.
-    // See also nsCSSFrameConstructor::CreateGeneratedContentFrame which
-    // created this frame.
-
-    // XXXbz would this be better done via a global structure in
-    // nsCSSFrameConstructor that could key off of
-    // GeneratedContentFrameRemoved or something?  The problem is that
-    // our kids are gone by the time that's called.
-    nsContainerFrame::CleanupGeneratedContentIn(mContent, this);
-  }
-  nsInlineFrameSuper::Destroy();
-}
-
 #ifdef DEBUG
 NS_IMETHODIMP
 nsInlineFrame::GetFrameName(nsAString& aResult) const
@@ -655,7 +636,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
       }
       nsIFrame* nextFrame = aFrame->GetNextSibling();
       if (nextFrame) {
-        aStatus |= NS_FRAME_NOT_COMPLETE;
+        NS_FRAME_SET_INCOMPLETE(aStatus);
         PushFrames(aPresContext, nextFrame, aFrame);
       }
       else if (nsnull != GetNextInFlow()) {
@@ -664,7 +645,7 @@ nsInlineFrame::ReflowInlineFrame(nsPresContext* aPresContext,
         nsInlineFrame* nextInFlow = (nsInlineFrame*) GetNextInFlow();
         while (nsnull != nextInFlow) {
           if (nextInFlow->mFrames.NotEmpty()) {
-            aStatus |= NS_FRAME_NOT_COMPLETE;
+            NS_FRAME_SET_INCOMPLETE(aStatus);
             break;
           }
           nextInFlow = (nsInlineFrame*) nextInFlow->GetNextInFlow();
@@ -1012,7 +993,7 @@ nsPositionedInlineFrame::SetInitialChildList(nsIAtom*        aListName,
 {
   nsresult  rv;
 
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     rv = mAbsoluteContainer.SetInitialChildList(this, aListName, aChildList);
   } else {
     rv = nsInlineFrame::SetInitialChildList(aListName, aChildList);
@@ -1027,7 +1008,7 @@ nsPositionedInlineFrame::AppendFrames(nsIAtom*        aListName,
 {
   nsresult  rv;
   
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     rv = mAbsoluteContainer.AppendFrames(this, aListName, aFrameList);
   } else {
     rv = nsInlineFrame::AppendFrames(aListName, aFrameList);
@@ -1043,7 +1024,7 @@ nsPositionedInlineFrame::InsertFrames(nsIAtom*        aListName,
 {
   nsresult  rv;
 
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     rv = mAbsoluteContainer.InsertFrames(this, aListName, aPrevFrame,
                                          aFrameList);
   } else {
@@ -1059,7 +1040,7 @@ nsPositionedInlineFrame::RemoveFrame(nsIAtom*        aListName,
 {
   nsresult  rv;
 
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     rv = mAbsoluteContainer.RemoveFrame(this, aListName, aOldFrame);
   } else {
     rv = nsInlineFrame::RemoveFrame(aListName, aOldFrame);
@@ -1081,7 +1062,7 @@ nsIAtom*
 nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
   if (0 == aIndex) {
-    return mAbsoluteContainer.GetChildListName();
+    return nsGkAtoms::absoluteList;
   }
   return nsnull;
 }
@@ -1089,7 +1070,7 @@ nsPositionedInlineFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 nsIFrame*
 nsPositionedInlineFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  if (mAbsoluteContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::absoluteList == aListName) {
     nsIFrame* result = nsnull;
     mAbsoluteContainer.FirstChild(this, aListName, &result);
     return result;

@@ -40,6 +40,9 @@
 #include "nsSVGStylableElement.h"
 #include "nsSVGLength2.h"
 
+class nsSVGFilterResource;
+class nsIDOMSVGAnimatedString;
+
 typedef nsSVGStylableElement nsSVGFEBase;
 
 class nsSVGFE : public nsSVGFEBase
@@ -58,6 +61,25 @@ protected:
 
   nsSVGFilterInstance::ColorModel
   GetColorModel(nsSVGFilterInstance::ColorModel::AlphaChannel aAlphaChannel);
+
+  struct ScaleInfo {
+    nsRefPtr<gfxImageSurface> mRealSource;
+    nsRefPtr<gfxImageSurface> mRealTarget;
+    nsRefPtr<gfxImageSurface> mSource;
+    nsRefPtr<gfxImageSurface> mTarget;
+    nsRect mRect;
+    PRPackedBool mRescaling;
+  };
+
+  nsresult SetupScalingFilter(nsSVGFilterInstance *aInstance,
+                              nsSVGFilterResource *aResource,
+                              nsIDOMSVGAnimatedString *aIn,
+                              nsSVGNumber2 *aUnitX, nsSVGNumber2 *aUnitY,
+                              ScaleInfo *aScaleInfo);
+
+  void FinishScalingFilter(nsSVGFilterResource *aResource,
+                           ScaleInfo *aScaleInfo);
+
 
 public:
   // interfaces:

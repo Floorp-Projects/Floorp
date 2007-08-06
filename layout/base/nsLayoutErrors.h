@@ -47,11 +47,6 @@
 #define NS_POSITION_BEFORE_TABLE \
   NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 3)
 
-/** Error code to return from nsIFrame::Init() if the frame got
-    replaced by alt text or something like that **/
-#define NS_ERROR_FRAME_REPLACED \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_LAYOUT, 4)
-
 /** Error codes for nsPresState::GetProperty() */
 
 /** Returned if the property exists */

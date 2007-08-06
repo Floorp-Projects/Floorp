@@ -58,6 +58,7 @@ import string
 import socket
 socket.setdefaulttimeout(480)
 
+import utils
 import config
 import post_file
 import tp
@@ -80,7 +81,7 @@ def process_Request(post):
   lines = post.split('\n')
   for line in lines:
     if line.find("RETURN:") > -1:
-        str += line.rsplit(":")[3] + ":" + shortNames(line.rsplit(":")[1]) + ":" + line.rsplit(":")[2] + '\n'
+        str += line.split(":")[3] + ":" + shortNames(line.split(":")[1]) + ":" + line.split(":")[2] + '\n'
   return str
 
 def test_file(filename):
@@ -117,7 +118,8 @@ def test_file(filename):
                     yaml[item]['firefox'],
                     yaml[item]['branch'],
                     yaml[item]['branchid'],
-                    yaml[item]['profile_path']]
+                    yaml[item]['profile_path'],
+                    yaml[item]['env']]
       test_configs.append(new_config)
       test_names.append(item)
   config_file.close()
@@ -230,11 +232,11 @@ def test_file(filename):
     url = url_format % (config.RESULTS_SERVER, values[0],)
     link = link_format % (url, linkName,)
     print "RETURN: " + link
-
   
 if __name__=='__main__':
 
   # Read in each config file and run the tests on it.
   for i in range(1, len(sys.argv)):
+    utils.debug("running test file " + sys.argv[i])
     test_file(sys.argv[i])
 

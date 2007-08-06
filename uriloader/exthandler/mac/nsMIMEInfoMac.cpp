@@ -44,6 +44,7 @@
 #include "nsMIMEInfoMac.h"
 #include "nsILocalFileMac.h"
 #include "nsIFileURL.h"
+#include "nsIInternetConfigService.h"
 
 NS_IMETHODIMP
 nsMIMEInfoMac::LaunchWithURI(nsIURI* aURI)
@@ -68,16 +69,40 @@ nsMIMEInfoMac::LaunchWithURI(nsIURI* aURI)
     rv = localHandlerApp->GetExecutable(getter_AddRefs(application));
     NS_ENSURE_SUCCESS(rv, rv);
     
-  } else if (mPreferredAction == useSystemDefault)
+  } else if (mPreferredAction == useSystemDefault) {
+
+    // because nsMIMEInfoMac isn't yet set up with mDefaultApplication
+    // in the protocol handler case, we need to do it another way for now
+    // (which is fine, but this code would be a little more readable if we
+    // could fall through this case).
+    if (mClass == eProtocolInfo) {
+      return LoadUriInternal(aURI);      
+    }
+
     application = mDefaultApplication;
+  }
   else
     return NS_ERROR_INVALID_ARG;
+
 
   // get the nsILocalFile version of the doc to launch with
   nsCOMPtr<nsILocalFile> docToLoad;
   rv = GetLocalFileFromURI(aURI, getter_AddRefs(docToLoad));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
 
+    // If we don't have a file, we must be a protocol handler
+    NS_ASSERTION(mClass == eProtocolInfo, 
+                 "nsMIMEInfoMac should be a protocol handler");
+
+    // so pass the entire URI to the handler.
+    nsCAutoString spec;
+    aURI->GetSpec(spec);
+    return OpenApplicationWithURI(application, spec);
+  }
+
+  // note that the file pointed to by docToLoad could possibly have originated
+  // as a file: URI if we're in some non-browser application.
+  
   // if we've already got an app, just QI so we have the launchWithDoc method
   nsCOMPtr<nsILocalFileMac> app;
   if (application) {
@@ -103,4 +128,78 @@ nsMIMEInfoMac::LaunchWithURI(nsIURI* aURI)
   }
   
   return app->LaunchWithDoc(docToLoad, PR_FALSE); 
+}
+
+nsresult 
+nsMIMEInfoMac::LoadUriInternal(nsIURI *aURI)
+{
+  NS_ENSURE_ARG_POINTER(aURI);
+  nsresult rv = NS_ERROR_FAILURE;
+  
+  nsCAutoString uri;
+  aURI->GetSpec(uri);
+  if (!uri.IsEmpty()) {
+    nsCOMPtr<nsIInternetConfigService> icService = 
+      do_GetService(NS_INTERNETCONFIGSERVICE_CONTRACTID);
+    if (icService)
+      rv = icService->LaunchURL(uri.get());
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsMIMEInfoMac::GetHasDefaultHandler(PRBool *_retval)
+{
+  // We have a default application if we have a description
+  *_retval = !mDefaultAppDescription.IsEmpty();
+  return NS_OK;
+}
+
+/** 
+ * static; mostly copy/pasted from nsMacShellService.cpp (which is in browser/,
+ * so we can't depend on it here).  This code probably really wants to live
+ * somewhere more central; see bug 389922.
+ */
+nsresult
+nsMIMEInfoMac::OpenApplicationWithURI(nsIFile* aApplication, 
+                                      const nsCString& aURI)
+{
+  nsresult rv;
+  nsCOMPtr<nsILocalFileMac> lfm(do_QueryInterface(aApplication, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  CFURLRef appURL;
+  rv = lfm->GetCFURL(&appURL);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  const UInt8* uriString = (const UInt8*)aURI.get();
+  CFURLRef uri = ::CFURLCreateWithBytes(NULL, uriString, aURI.Length(),
+                                        kCFStringEncodingUTF8, NULL);
+  if (!uri) {
+    ::CFRelease(appURL);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  CFArrayRef uris = ::CFArrayCreate(NULL, (const void**)&uri, 1, NULL);
+  if (!uris) {
+    ::CFRelease(uri);
+    ::CFRelease(appURL);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  LSLaunchURLSpec launchSpec;
+  launchSpec.appURL = appURL;
+  launchSpec.itemURLs = uris;
+  launchSpec.passThruParams = NULL;
+  launchSpec.launchFlags = kLSLaunchDefaults;
+  launchSpec.asyncRefCon = NULL;
+  
+  OSErr err = ::LSOpenFromURLSpec(&launchSpec, NULL);
+  
+  ::CFRelease(uris);
+  ::CFRelease(uri);
+  ::CFRelease(appURL);
+  
+  return err != noErr ? NS_ERROR_FAILURE : NS_OK;
 }

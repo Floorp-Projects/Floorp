@@ -102,8 +102,8 @@ var HandlerServiceTest = {
   // Utilities
 
   /**
-   * Get the datasource file, registering ourselves as a provider
-   * of that directory if necessary.
+   * Get the datasource file, registering ourselves as a provider of the file
+   * if necessary.
    */
   getDatasourceFile: function HandlerServiceTest_getDatasourceFile() {
     var datasourceFile;
@@ -121,15 +121,40 @@ var HandlerServiceTest = {
     return datasourceFile;
   },
 
-  deleteDatasourceFile: function HandlerServiceTest_deleteDatasourceFile() {
-    try {
-      var file = this.getDatasourceFile();
-      if (file.exists())
-        file.remove(false);
-    }
-    catch(ex) {
-      Cu.reportError(ex);
-    }
+  /**
+   * Get the contents of the datasource as a serialized string.  Useful for
+   * debugging problems with test failures, i.e.:
+   *
+   * HandlerServiceTest.log(HandlerServiceTest.getDatasourceContents());
+   *
+   * @returns {string} the serialized datasource
+   */
+  getDatasourceContents: function HandlerServiceTest_getDatasourceContents() {
+    var rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
+  
+    var ioService = Cc["@mozilla.org/network/io-service;1"].
+                    getService(Ci.nsIIOService);
+    var fileHandler = ioService.getProtocolHandler("file").
+                      QueryInterface(Ci.nsIFileProtocolHandler);
+    var fileURL = fileHandler.getURLSpecFromFile(this.getDatasourceFile());
+    var ds = rdf.GetDataSourceBlocking(fileURL);
+  
+    var outputStream = {
+      data: "",
+      close: function() {},
+      flush: function() {},
+      write: function (buffer,count) {
+        this.data += buffer;
+        return count;
+      },
+      writeFrom: function (stream,count) {},
+      isNonBlocking: false
+    };
+  
+    ds.QueryInterface(Components.interfaces.nsIRDFXMLSource);
+    ds.Serialize(outputStream);
+  
+    return outputStream.data;
   },
 
   /**
@@ -144,8 +169,6 @@ var HandlerServiceTest = {
 };
 
 HandlerServiceTest.getDatasourceFile();
-//HandlerServiceTest.deleteDatasourceFile();
-//HandlerServiceTest.createDatasourceFile();
 
 // Turn on logging so we can troubleshoot problems with the tests.
 var prefBranch = Cc["@mozilla.org/preferences-service;1"].

@@ -54,13 +54,16 @@ REQUIRES	= content \
 		  gfx \
 		  imglib2 \
 		  intl \
+		  js \
 		  layout \
 		  locale \
 		  necko \
 		  string \
+		  thebes \
 		  webshell \
 		  widget \
 		  xpcom \
+		  xpconnect \
 		  $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)

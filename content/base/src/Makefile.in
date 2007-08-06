@@ -61,6 +61,8 @@ REQUIRES	= xpcom \
 		  necko \
 		  nkcache \
 		  mimetype \
+		  exthandler \
+		  chardet \
 		  caps \
 		  lwbrk \
 		  uconv \
@@ -111,10 +113,12 @@ CPPSRCS		= \
 		nsContentSink.cpp \
 		nsContentUtils.cpp \
 		nsCopySupport.cpp \
+		nsCrossSiteListenerProxy.cpp \
 		nsDataDocumentContentPolicy.cpp \
 		nsDOMAttribute.cpp \
 		nsDOMAttributeMap.cpp \
 		nsDOMDocumentType.cpp \
+		nsDOMFile.cpp \
 		nsDOMLists.cpp \
 		nsDOMParser.cpp \
 		nsDOMSerializer.cpp \
@@ -148,6 +152,7 @@ CPPSRCS		= \
 		nsStubDocumentObserver.cpp \
 		nsStubImageDecoderObserver.cpp \
 		nsStubMutationObserver.cpp \
+		nsStyledElement.cpp \
 		nsStyleLinkElement.cpp \
 		nsSyncLoadService.cpp \
 		nsTextFragment.cpp \

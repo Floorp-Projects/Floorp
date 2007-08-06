@@ -51,4 +51,4 @@ _STATIC_FILES = test.template.txt \
 		$(NULL)
 
 libs:: $(_STATIC_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/$(relativesrcdir)

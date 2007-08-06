@@ -38,10 +38,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
   <head>
+    <script language="Javascript" type="text/javascript" src="page_load_test/quit.js"></script>
     <title>shutdown script</title>
   </head>
 
-  <body onload="window.close();">
+  <body onload="goQuitApplication(); window.close();">
     This page should close Firefox.  If it does not, please make sure that
     the dom.allow_scripts_to_close_windows preference is set to true in
     <a href="about:config">about:config</a>

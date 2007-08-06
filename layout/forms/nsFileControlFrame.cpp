@@ -404,7 +404,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsPresContext*          aPresContext,
         nsHTMLReflowState   txtKidReflowState(aPresContext,
                                               *aReflowState.parentReflowState,
                                               this, txtAvailSize);
-        txtKidReflowState.mComputedHeight = aDesiredSize.height;
+        txtKidReflowState.SetComputedHeight(aDesiredSize.height);
         rv = nsAreaFrame::WillReflow(aPresContext);
         NS_ASSERTION(NS_SUCCEEDED(rv), "Should have succeeded");
         rv = nsAreaFrame::Reflow(aPresContext, txtKidSize, txtKidReflowState, aStatus);

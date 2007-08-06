@@ -45,12 +45,14 @@
 #include "nsNavHistory.h"
 #include "mozStorageHelper.h"
 #include "nsNetUtil.h"
+#include "nsIAnnotationService.h"
+#include "nsPrintfCString.h"
 
 struct nsNavHistoryExpireRecord {
   nsNavHistoryExpireRecord(mozIStorageStatement* statement);
 
   PRInt64 visitID;
-  PRInt64 pageID;
+  PRInt64 placeID;
   PRTime visitDate;
   nsCString uri;
   PRInt64 faviconID;
@@ -83,6 +85,10 @@ struct nsNavHistoryExpireRecord {
 // being shown, because expiration may interfere with media playback.
 #define MAX_SEQUENTIAL_RUNS 1
 
+// Expiration policy amounts (in microseconds)
+const PRTime EXPIRATION_POLICY_DAYS = (7 * 86400 * PR_MSEC_PER_SEC);
+const PRTime EXPIRATION_POLICY_WEEKS = (30 * 86400 * PR_MSEC_PER_SEC);
+const PRTime EXPIRATION_POLICY_MONTHS = (180 * 86400 * PR_MSEC_PER_SEC);
 
 // nsNavHistoryExpire::nsNavHistoryExpire
 //
@@ -138,6 +144,21 @@ nsNavHistoryExpire::OnAddURI(PRTime aNow)
   StartTimer(PARTIAL_EXPIRATION_TIMEOUT);
 }
 
+// nsNavHistoryExpire::OnDeleteURI
+//
+//    Called by history when a URI is deleted from history.
+//    This kicks off an expiration of annotations.
+//
+void
+nsNavHistoryExpire::OnDeleteURI()
+{
+  mozIStorageConnection* connection = mHistory->GetStorageConnection();
+  if (! connection) {
+    NS_NOTREACHED("No connection");
+    return;
+  }
+  ExpireAnnotations(connection);
+}
 
 // nsNavHistoryExpire::OnQuit
 //
@@ -213,6 +234,7 @@ nsNavHistoryExpire::DoPartialExpiration()
 {
   mSequentialRuns ++;
 
+  // expire history items
   PRBool keepGoing;
   ExpireItems(EXPIRATION_COUNT_PER_RUN, &keepGoing);
 
@@ -262,7 +284,7 @@ nsNavHistoryExpire::ExpireItems(PRUint32 aNumToExpire, PRBool* aKeepGoing)
                            expiredVisits);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // if we didn't find the as many things to expire as we could have, then
+  // if we didn't find as many things to expire as we could have, then
   // we should note the next time we need to expire.
   if (expiredVisits.Length() < aNumToExpire) {
     *aKeepGoing = PR_FALSE;
@@ -297,9 +319,15 @@ nsNavHistoryExpire::ExpireItems(PRUint32 aNumToExpire, PRBool* aKeepGoing)
                                       expiredVisits[i].erased));
   }
 
-  // don't worry about errors here, it doesn't affect out ability to continue
+  // don't worry about errors here, it doesn't affect our ability to continue
   EraseFavicons(connection, expiredVisits);
   EraseAnnotations(connection, expiredVisits);
+
+  // expire annotations by policy
+  ExpireAnnotations(connection);
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
 }
@@ -314,7 +342,7 @@ nsNavHistoryExpireRecord::nsNavHistoryExpireRecord(
                                               mozIStorageStatement* statement)
 {
   visitID = statement->AsInt64(0);
-  pageID = statement->AsInt64(1);
+  placeID = statement->AsInt64(1);
   visitDate = statement->AsInt64(2);
   statement->GetUTF8String(3, uri);
   faviconID = statement->AsInt64(4);
@@ -420,7 +448,7 @@ nsNavHistoryExpire::EraseHistory(mozIStorageConnection* aConnection,
       continue; // don't delete "place" URIs
 
     // check that there are no visits
-    rv = selectStatement->BindInt64Parameter(0, aRecords[i].pageID);
+    rv = selectStatement->BindInt64Parameter(0, aRecords[i].placeID);
     NS_ENSURE_SUCCESS(rv, rv);
     PRBool hasVisit = PR_FALSE;
     rv = selectStatement->ExecuteStep(&hasVisit);
@@ -428,7 +456,7 @@ nsNavHistoryExpire::EraseHistory(mozIStorageConnection* aConnection,
     if (hasVisit) continue;
 
     aRecords[i].erased = PR_TRUE;
-    rv = deleteStatement->BindInt64Parameter(0, aRecords[i].pageID);
+    rv = deleteStatement->BindInt64Parameter(0, aRecords[i].placeID);
     rv = deleteStatement->Execute();
   }
   return NS_OK;
@@ -485,7 +513,109 @@ nsresult
 nsNavHistoryExpire::EraseAnnotations(mozIStorageConnection* aConnection,
     const nsTArray<nsNavHistoryExpireRecord>& aRecords)
 {
-  // FIXME bug 319455 expire annotations
+  nsresult rv;
+  nsCOMPtr<nsIAnnotationService> annotationService = do_GetService("@mozilla.org/browser/annotation-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<mozIStorageStatement> statement;
+  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_annos WHERE id in ("
+      "SELECT a.id from moz_annos a JOIN moz_places p on a.place_id = p.id "
+      "WHERE p.url = ?1 AND a.expiration != ?2)"),
+    getter_AddRefs(statement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // remove annotations for the set of records passed in
+  for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
+    // delete annotations (except EXPIRE_NEVER)
+    rv = statement->BindUTF8StringParameter(0, aRecords[i].uri);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->BindInt32Parameter(1, nsIAnnotationService::EXPIRE_NEVER);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = statement->Execute();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+// nsAnnotationService::ExpireAnnotations
+//
+//    Periodic expiration of annotations that have time-sensitive
+//    expiration policies.
+//
+//    NOTE: Always specify the exact policy constant, as they're
+//    not guaranteed to be in numerical order.
+//
+nsresult
+nsNavHistoryExpire::ExpireAnnotations(mozIStorageConnection* aConnection)
+{
+  mozStorageTransaction transaction(aConnection, PR_TRUE);
+
+  // Note: The COALESCE is used to cover a short period where NULLs were inserted
+  // into the lastModified column.
+  PRTime now = PR_Now();
+  nsCOMPtr<mozIStorageStatement> expirePagesStatement;
+  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_annos WHERE expiration = ?1 AND (?2 > MAX(COALESCE(lastModified, 0), dateAdded))"),
+    getter_AddRefs(expirePagesStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<mozIStorageStatement> expireItemsStatement;
+  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
+      "DELETE FROM moz_items_annos WHERE expiration = ?1 AND (?2 > MAX(COALESCE(lastModified, 0), dateAdded))"),
+    getter_AddRefs(expireItemsStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // remove days annos
+  rv = expirePagesStatement->BindInt32Parameter(0, nsIAnnotationService::EXPIRE_DAYS);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = expirePagesStatement->BindInt64Parameter(1, (now - EXPIRATION_POLICY_DAYS));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = expirePagesStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // remove days item annos
+  rv = expireItemsStatement->BindInt32Parameter(0, nsIAnnotationService::EXPIRE_DAYS);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = expireItemsStatement->BindInt64Parameter(1, (now - EXPIRATION_POLICY_DAYS));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = expireItemsStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // remove weeks annos
+  rv = expirePagesStatement->BindInt32Parameter(0, nsIAnnotationService::EXPIRE_WEEKS);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = expirePagesStatement->BindInt64Parameter(1, (now - EXPIRATION_POLICY_WEEKS));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = expirePagesStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // remove weeks item annos
+  rv = expireItemsStatement->BindInt32Parameter(0, nsIAnnotationService::EXPIRE_WEEKS);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = expireItemsStatement->BindInt64Parameter(1, (now - EXPIRATION_POLICY_WEEKS));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = expireItemsStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // remove months annos
+  rv = expirePagesStatement->BindInt32Parameter(0, nsIAnnotationService::EXPIRE_MONTHS);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = expirePagesStatement->BindInt64Parameter(1, (now - EXPIRATION_POLICY_MONTHS));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = expirePagesStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // remove months item annos
+  rv = expireItemsStatement->BindInt32Parameter(0, nsIAnnotationService::EXPIRE_MONTHS);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = expireItemsStatement->BindInt64Parameter(1, (now - EXPIRATION_POLICY_MONTHS));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = expireItemsStatement->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = transaction.Commit();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -534,19 +664,54 @@ nsNavHistoryExpire::ExpireFaviconsParanoid(mozIStorageConnection* aConnection)
 
 
 // nsNavHistoryExpire::ExpireAnnotationsParanoid
+//
+//    Deletes session annotations, dangling annotations
+//    and annotation names that are unused.
 
 nsresult
 nsNavHistoryExpire::ExpireAnnotationsParanoid(mozIStorageConnection* aConnection)
 {
-  // FIXME bug 319455 expire annotations
-  // Also remember to expire unused names in moz_anno_attributes
+  // delete session annos
+  nsCAutoString session_query = NS_LITERAL_CSTRING(
+    "DELETE FROM moz_annos WHERE expiration = ") +
+    nsPrintfCString("%d", nsIAnnotationService::EXPIRE_SESSION);
+  nsresult rv = aConnection->ExecuteSimpleSQL(session_query);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // delete all uri annos w/o a corresponding place id
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_annos WHERE id IN "
+      "(SELECT a.id FROM moz_annos a "
+      "LEFT OUTER JOIN moz_places p ON a.place_id = p.id "
+      "WHERE p.id IS NULL)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // delete item annos w/o a corresponding item id
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_items_annos WHERE id IN "
+      "(SELECT a.id FROM moz_items_annos a "
+      "LEFT OUTER JOIN moz_bookmarks b ON a.item_id = b.id "
+      "WHERE b.id IS NULL)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // delete all anno names w/o a corresponding uri or item entry
+  rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_anno_attributes WHERE " 
+    "id NOT IN (SELECT DISTINCT a.id FROM moz_anno_attributes a "
+      "JOIN moz_annos b ON b.anno_attribute_id = a.id "
+      "JOIN moz_places p ON b.place_id = p.id) "
+    "AND "
+    "id NOT IN (SELECT DISTINCT a.id FROM moz_anno_attributes a "
+      "JOIN moz_items_annos c ON c.anno_attribute_id = a.id "
+      "JOIN moz_bookmarks p ON c.item_id = p.id)"));
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
 
 // nsNavHistoryExpire::ExpireForDegenerateRuns
 //
-//    This checks for potentiall degenerate runs. For example, a tinderbox
+//    This checks for potential degenerate runs. For example, a tinderbox
 //    loads many web pages quickly and we'll never have a chance to expire.
 //    Particularly crazy users might also do this. If we detect this, then we
 //    want to force some expiration so history doesn't keep increasing.

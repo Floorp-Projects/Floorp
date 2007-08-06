@@ -1,0 +1,4 @@
+<?access-control allow="http://localhost:8889"?>
+<?access-control deny="*" exclude="localhost:8888"?>
+<?access-control deny="ftp://localhost:8888"?>
+<res>hello</res>

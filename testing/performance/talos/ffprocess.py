@@ -45,6 +45,7 @@ import platform
 import os
 import re
 import time
+import subprocess
 
 import config
 
@@ -52,6 +53,8 @@ if platform.system() == "Linux":
     from ffprocess_linux import *
 elif platform.system() == "Windows":
     from ffprocess_win32 import *
+elif platform.system() == "Darwin":
+    from ffprocess_mac import *
 
 
 
@@ -61,7 +64,7 @@ def SyncAndSleep():
   """
 
   os.spawnl(os.P_WAIT, config.SYNC)
-  time.sleep(3)
+  time.sleep(5)
 
 
 def RunProcessAndWaitForOutput(command, process_name, output_regex, timeout):
@@ -83,7 +86,8 @@ def RunProcessAndWaitForOutput(command, process_name, output_regex, timeout):
   """
 
   # Start the process
-  handle = os.popen(command)
+  process = subprocess.Popen(command, stdout=subprocess.PIPE, universal_newlines=True, shell=True, env=os.environ)
+  handle = process.stdout
 
   # Wait for it to print output, terminate, or time out.
   time_elapsed = 0
@@ -96,7 +100,7 @@ def RunProcessAndWaitForOutput(command, process_name, output_regex, timeout):
 
     (bytes, current_output) = NonBlockingReadProcessOutput(handle)
     output += current_output
-
+    
     result = output_regex.search(output)
     if result:
       try:

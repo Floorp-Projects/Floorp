@@ -168,12 +168,18 @@ EXTRA_DSO_LIBS += tracemalloc
 endif
 endif
 
+ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
+SDK_LIBRARY = $(IMPORT_LIBRARY)
+else
+SDK_LIBRARY = $(SHARED_LIBRARY)
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 export:: $(RDF_UTIL_SRC_CPPSRCS) $(INTL_UNICHARUTIL_UTIL_CPPSRCS)
 	$(INSTALL) $^ .
 
-EXTRA_DSO_LDOPTS += $(EXTRA_DSO_LIBS)
+EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(EXTRA_DSO_LIBS)
 
 ifdef MOZ_ENABLE_LIBXUL
 include $(srcdir)/libxul-rules.mk

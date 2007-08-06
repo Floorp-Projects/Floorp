@@ -205,10 +205,6 @@ public:
   // returns true if history has been disabled
   PRBool IsHistoryDisabled() { return mExpireDays == 0; }
 
-  // remember tree state
-  void SaveExpandItem(const nsAString& aTitle);
-  void SaveCollapseItem(const nsAString& aTitle);
-
   // get the statement for selecting a history row by URL
   mozIStorageStatement* DBGetURLPageInfo() { return mDBGetURLPageInfo; }
 
@@ -318,7 +314,6 @@ public:
   // aLastVisitDate can be -1 if there is no last visit date to record.
   nsresult AddPageWithVisit(nsIURI *aURI,
                             const nsString &aTitle,
-                            const nsString &aUserTitle,
                             PRBool aHidden, PRBool aTyped,
                             PRInt32 aVisitCount,
                             PRInt32 aLastVisitTransition,
@@ -381,6 +376,8 @@ protected:
   nsresult InitStatements();
   nsresult ForceMigrateBookmarksDB(mozIStorageConnection *aDBConn);
   nsresult MigrateV3Up(mozIStorageConnection *aDBConn);
+  nsresult MigrateV6Up(mozIStorageConnection *aDBConn);
+  nsresult CleanUpOnQuit();
 
 #ifdef IN_MEMORY_LINKS
   // this is the cache DB in memory used for storing visited URLs
@@ -470,6 +467,10 @@ protected:
   void CommitLazyMessages();
 #endif
 
+  nsresult ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries, 
+                                nsNavHistoryQueryOptions *aOptions,
+                                nsCString &queryString);
+
   nsresult QueryToSelectClause(nsNavHistoryQuery* aQuery,
                                nsNavHistoryQueryOptions* aOptions,
                                PRInt32 aStartParameter,
@@ -493,8 +494,7 @@ protected:
 
   void TitleForDomain(const nsCString& domain, nsACString& aTitle);
 
-  nsresult SetPageTitleInternal(nsIURI* aURI, PRBool aIsUserTitle,
-                                const nsAString& aTitle);
+  nsresult SetPageTitleInternal(nsIURI* aURI, const nsAString& aTitle);
 
   nsresult GroupByDay(nsNavHistoryQueryResultNode *aResultNode,
                       const nsCOMArray<nsNavHistoryResultNode>& aSource,

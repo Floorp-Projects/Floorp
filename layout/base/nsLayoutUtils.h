@@ -700,6 +700,17 @@ public:
    *   @return a value suitable for passing to SetWindowTranslucency
    */
   static PRBool FrameHasTransparency(nsIFrame* aFrame);
+
+  /**
+   * Get textrun construction flags determined by a given style; in particular
+   * some combination of:
+   * -- TEXT_DISABLE_OPTIONAL_LIGATURES if letter-spacing is in use
+   * -- TEXT_OPTIMIZE_SPEED if the text-rendering CSS property and font size
+   * and prefs indicate we should be optimizing for speed over quality
+   */
+  static PRUint32 GetTextRunFlagsForStyle(nsStyleContext* aStyleContext,
+                                          const nsStyleText* aStyleText,
+                                          const nsStyleFont* aStyleFont);
 };
 
 #endif // nsLayoutUtils_h__

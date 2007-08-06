@@ -592,18 +592,16 @@ nsBidiPresUtils::CreateBlockBuffer(nsPresContext* aPresContext)
     }
     else if (nsGkAtoms::brFrame == frameType) { // break frame
       // Append line separator
-      mBuffer.Append( (PRUnichar) kLineSeparator);
+      mBuffer.Append(kLineSeparator);
     }
     else if (nsGkAtoms::directionalFrame == frameType) {
-      nsDirectionalFrame* dirFrame;
-      frame->QueryInterface(NS_GET_IID(nsDirectionalFrame),
-                            (void**) &dirFrame);
-      mBuffer.Append(dirFrame->GetChar() );
+      nsDirectionalFrame* dirFrame = static_cast<nsDirectionalFrame*>(frame);
+      mBuffer.Append(dirFrame->GetChar());
     }
     else { // not text frame
       // See the Unicode Bidi Algorithm:
       // "...inline objects (such as graphics) are treated as if they are ... U+FFFC"
-      mBuffer.Append( (PRUnichar) kObjectSubstitute);
+      mBuffer.Append(kObjectSubstitute);
     }
   }
   // XXX: TODO: Handle preformatted text ('\n')

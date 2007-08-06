@@ -308,7 +308,7 @@ endif
 		"$(DEPTH)/installer-stage/optional", \
 		"$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
 		$(foreach pkg,$(MOZ_OPTIONAL_PKG_LIST),$(PKG_ARG)) )
-	$(PERL) $(topsrcdir)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DEPTH)/installer-stage/nonlocalized/components -v
+	$(PERL) $(topsrcdir)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DEPTH)/installer-stage/nonlocalized/components -v -x $(LIBXUL_DIST)/bin/xpt_link
 
 stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_REMOVALS_GEN)
 	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $(DIST)/$(PKG_BASENAME).dmg $@ $(EXCLUDE_LIST)
@@ -321,7 +321,7 @@ ifdef MOZ_PKG_MANIFEST
 	$(call PACKAGER_COPY, "$(DIST)",\
 		 "$(DIST)/$(MOZ_PKG_APPNAME)", \
 		"$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1)
-	$(PERL) $(topsrcdir)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DIST)/$(MOZ_PKG_APPNAME)/components -v
+	$(PERL) $(topsrcdir)/xpinstall/packager/xptlink.pl -s $(DIST) -d $(DIST)/xpt -f $(DIST)/$(MOZ_PKG_APPNAME)/components -v -x $(LIBXUL_DIST)/bin/xpt_link
 else # !MOZ_PKG_MANIFEST
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 # If UNIVERSAL_BINARY, the package will be made from an already-prepared
@@ -370,4 +370,53 @@ endif # MOZ_PKG_REMOVALS
 
 make-package: stage-package
 	@echo "Compressing..."
-	cd $(DIST); $(MAKE_PACKAGE)
+	cd $(DIST) && $(MAKE_PACKAGE)
+
+# The install target will install the application to prefix/lib/appname-version
+# In addition if INSTALL_SDK is set, it will install the development headers,
+# libraries, and IDL files as follows:
+# dist/sdk/include -> prefix/include/appname-version/stable
+# dist/include -> prefix/include/appname-version/unstable
+# dist/sdk/idl -> prefix/share/idl/appname-version/stable
+# dist/idl -> prefix/share/idl/appname-version/unstable
+# dist/sdk/lib -> prefix/lib/appname-devel-version/lib
+# prefix/lib/appname-devel-version/* symlinks to the above directories
+install:: stage-package
+ifeq (WINNT,$(OS_ARCH))
+	$(error "make install" is not supported on Windows. Use "make package" instead.)
+endif
+	$(NSINSTALL) -D $(DESTDIR)$(installdir)
+	(cd $(DIST)/$(MOZ_PKG_APPNAME) && tar $(TAR_CREATE_FLAGS) - .) | \
+	  (cd $(DESTDIR)$(installdir) && tar -xf -)
+	$(NSINSTALL) -D $(DESTDIR)$(bindir)
+	$(RM) -f $(DESTDIR)$(bindir)/$(MOZ_APP_NAME)
+	ln -s $(installdir)/$(MOZ_APP_NAME) $(DESTDIR)$(bindir)
+ifdef INSTALL_SDK # Here comes the hard part
+# include directory is stable (dist/sdk/include) and unstable (dist/include)
+	$(NSINSTALL) -D $(DESTDIR)$(includedir)/stable
+	$(NSINSTALL) -D $(DESTDIR)$(includedir)/unstable
+	(cd $(DIST)/sdk/include && tar $(TAR_CREATE_FLAGS) - .) | \
+	  (cd $(DESTDIR)$(includedir)/stable && tar -xf -)
+# The dist/include has module subdirectories that we need to flatten
+	find $(DIST)/include -xtype f -exec $(SYSINSTALL) $(IFLAGS1) {} $(DESTDIR)$(includedir)/unstable \;
+# IDL directory is stable (dist/sdk/idl) and unstable (dist/idl)
+	$(NSINSTALL) -D $(DESTDIR)$(idldir)/stable 
+	$(NSINSTALL) -D $(DESTDIR)$(idldir)/unstable
+	(cd $(DIST)/sdk/idl && tar $(TAR_CREATE_FLAGS) - .) | \
+	  (cd $(DESTDIR)$(idldir)/stable && tar -xf -)
+	(cd $(DIST)/idl && tar $(TAR_CREATE_FLAGS) - .) | \
+	  (cd $(DESTDIR)$(idldir)/unstable && tar -xf -)
+# SDK directory is the libs + a bunch of symlinks
+	$(NSINSTALL) -D $(DESTDIR)$(sdkdir)/sdk/lib
+	if test -f $(DIST)/sdk/include/xpcom-config.h; then \
+	  $(SYSINSTALL) $(IFLAGS1) $(DIST)/sdk/include/xpcom-config.h $(DESTDIR)$(sdkdir); \
+	fi
+	(cd $(DIST)/sdk/lib && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DESTDIR)$(sdkdir)/sdk/lib && tar -xf -)
+	$(RM) -f $(DESTDIR)$(sdkdir)/lib $(DESTDIR)$(sdkdir)/bin $(DESTDIR)$(sdkdir)/sdk/include $(DESTDIR)$(sdkdir)/include $(DESTDIR)$(sdkdir)/sdk/idl $(DESTDIR)$(sdkdir)/idl
+	ln -s $(sdkdir)/sdk/lib $(DESTDIR)$(sdkdir)/lib
+	ln -s $(installdir) $(DESTDIR)$(sdkdir)/bin
+	ln -s $(includedir)/stable $(DESTDIR)$(sdkdir)/sdk/include
+	ln -s $(includedir)/unstable $(DESTDIR)$(sdkdir)/include
+	ln -s $(idldir)/stable $(DESTDIR)$(sdkdir)/sdk/idl
+	ln -s $(idldir)/unstable $(DESTDIR)$(sdkdir)/idl
+endif # INSTALL_SDK

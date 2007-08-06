@@ -47,6 +47,7 @@
 #include "nsNetCID.h"
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
+#include "nsIOfflineCacheUpdate.h"
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
 #include "nsNetUtil.h"
@@ -185,113 +186,32 @@ nsDOMOfflineLoadStatusList::Init()
   nsresult rv = mURI->GetHostPort(mHostPort);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsICacheService> serv =
-    do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
+  nsCOMPtr<nsIOfflineCacheUpdateService> cacheUpdateService =
+    do_GetService(NS_OFFLINECACHEUPDATESERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsICacheSession> session;
-  rv = serv->CreateSession("HTTP-offline",
-                           nsICache::STORE_OFFLINE,
-                           nsICache::STREAM_BASED,
-                           getter_AddRefs(session));
+  PRUint32 numUpdates;
+  rv = cacheUpdateService->GetNumUpdates(&numUpdates);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mCacheSession = do_QueryInterface(session, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // get the current list of loads from the prefetch queue
-  nsCOMPtr<nsIPrefetchService> prefetchService =
-    do_GetService(NS_PREFETCHSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISimpleEnumerator> e;
-  rv = prefetchService->EnumerateQueue(PR_FALSE, PR_TRUE, getter_AddRefs(e));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool more;
-  while (NS_SUCCEEDED(rv = e->HasMoreElements(&more)) && more) {
-    nsCOMPtr<nsIDOMLoadStatus> status;
-    rv = e->GetNext(getter_AddRefs(status));
+  for (PRUint32 i = 0; i < numUpdates; i++) {
+    nsCOMPtr<nsIOfflineCacheUpdate> cacheUpdate;
+    rv = cacheUpdateService->GetUpdate(i, getter_AddRefs(cacheUpdate));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRBool shouldInclude;
-    rv = ShouldInclude(status, &shouldInclude);
+    UpdateAdded(cacheUpdate);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!shouldInclude) {
-      continue;
-    }
-
-    nsDOMOfflineLoadStatus *wrapper = new nsDOMOfflineLoadStatus(status);
-    if (!wrapper) return NS_ERROR_OUT_OF_MEMORY;
-
-    mItems.AppendObject(wrapper);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  // watch for changes in the prefetch queue
+  // watch for new offline cache updates
   nsCOMPtr<nsIObserverService> observerServ =
     do_GetService("@mozilla.org/observer-service;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = observerServ->AddObserver(this, "offline-load-requested", PR_TRUE);
+  rv = observerServ->AddObserver(this, "offline-cache-update-added", PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = observerServ->AddObserver(this, "offline-load-completed", PR_TRUE);
+  rv = observerServ->AddObserver(this, "offline-cache-update-completed", PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-nsresult
-nsDOMOfflineLoadStatusList::ShouldInclude(nsIDOMLoadStatus *aStatus,
-                                          PRBool *aShouldInclude)
-{
-  *aShouldInclude = PR_FALSE;
-
-  nsAutoString uriStr;
-  nsresult rv = aStatus->GetUri(uriStr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), uriStr);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString hostport;
-  rv = uri->GetHostPort(hostport);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (hostport != mHostPort)
-    return NS_OK;
-
-  // Check that the URL is owned by this domain
-  nsCAutoString spec;
-  rv = uri->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMNode> source;
-  rv = aStatus->GetSource(getter_AddRefs(source));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString ownerURI;
-  if (source) {
-    // Came from a <link> element, check that it's owned by this URI
-    rv = mURI->GetSpec(ownerURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    // Didn't come from a <link> element, check that it's owned by
-    // resource list (no owner URI)
-    ownerURI.Truncate();
-  }
-
-  PRBool owned;
-  rv = mCacheSession->KeyIsOwned(mHostPort, ownerURI, spec, &owned);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!owned) {
-    return NS_OK;
-  }
-
-  *aShouldInclude = PR_TRUE;
 
   return NS_OK;
 }
@@ -311,6 +231,76 @@ nsDOMOfflineLoadStatusList::FindWrapper(nsIDOMLoadStatus *aStatus,
 
   return nsnull;
 }
+
+nsresult
+nsDOMOfflineLoadStatusList::UpdateAdded(nsIOfflineCacheUpdate *aUpdate)
+{
+  nsCAutoString owner;
+  nsresult rv = aUpdate->GetUpdateDomain(owner);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (owner != mHostPort) {
+    // This update doesn't belong to us
+    return NS_OK;
+  }
+
+  PRUint32 numItems;
+  rv = aUpdate->GetCount(&numItems);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRUint32 i = 0; i < numItems; i++) {
+    nsCOMPtr<nsIDOMLoadStatus> status;
+    rv = aUpdate->Item(i, getter_AddRefs(status));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsDOMOfflineLoadStatus *wrapper = new nsDOMOfflineLoadStatus(status);
+    if (!wrapper) return NS_ERROR_OUT_OF_MEMORY;
+
+    mItems.AppendObject(wrapper);
+
+    SendLoadEvent(NS_LITERAL_STRING(LOADREQUESTED_STR),
+                  mLoadRequestedEventListeners,
+                  wrapper);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsDOMOfflineLoadStatusList::UpdateCompleted(nsIOfflineCacheUpdate *aUpdate)
+{
+  nsCAutoString owner;
+  nsresult rv = aUpdate->GetUpdateDomain(owner);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (owner != mHostPort) {
+    // This update doesn't belong to us
+    return NS_OK;
+  }
+
+  PRUint32 numItems;
+  rv = aUpdate->GetCount(&numItems);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRUint32 i = 0; i < numItems; i++) {
+    nsCOMPtr<nsIDOMLoadStatus> status;
+    rv = aUpdate->Item(i, getter_AddRefs(status));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 index;
+    nsCOMPtr<nsIDOMLoadStatus> wrapper = FindWrapper(status, &index);
+    if (wrapper) {
+      mItems.RemoveObjectAt(index);
+      nsresult rv = SendLoadEvent(NS_LITERAL_STRING(LOADCOMPLETED_STR),
+                                  mLoadCompletedEventListeners,
+                                  wrapper);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  return NS_OK;
+}
+
 
 //
 // nsDOMOfflineLoadStatusList::nsIDOMLoadStatusList
@@ -508,38 +498,15 @@ nsDOMOfflineLoadStatusList::Observe(nsISupports *aSubject,
                                     const PRUnichar *aData)
 {
   nsresult rv;
-  if (!strcmp(aTopic, "offline-load-requested")) {
-    nsCOMPtr<nsIDOMLoadStatus> status = do_QueryInterface(aSubject);
-    if (status) {
-      PRBool shouldInclude;
-      rv = ShouldInclude(status, &shouldInclude);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (!shouldInclude) return NS_OK;
-
-      nsDOMOfflineLoadStatus *wrapper = new nsDOMOfflineLoadStatus(status);
-      if (!wrapper) return NS_ERROR_OUT_OF_MEMORY;
-
-      mItems.AppendObject(wrapper);
-
-      rv = SendLoadEvent(NS_LITERAL_STRING(LOADREQUESTED_STR),
-                         mLoadRequestedEventListeners,
-                         wrapper);
-      NS_ENSURE_SUCCESS(rv, rv);
+  if (!strcmp(aTopic, "offline-cache-update-added")) {
+    nsCOMPtr<nsIOfflineCacheUpdate> update = do_QueryInterface(aSubject);
+    if (update) {
+      UpdateAdded(update);
     }
-  } else if (!strcmp(aTopic, "offline-load-completed")) {
-    nsCOMPtr<nsIDOMLoadStatus> status = do_QueryInterface(aSubject);
-    if (status) {
-      PRUint32 index;
-      nsCOMPtr<nsIDOMLoadStatus> wrapper = FindWrapper(status, &index);
-      if (wrapper) {
-        mItems.RemoveObjectAt(index);
-
-        rv = SendLoadEvent(NS_LITERAL_STRING(LOADCOMPLETED_STR),
-                           mLoadCompletedEventListeners,
-                           wrapper);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+  } else if (!strcmp(aTopic, "offline-cache-update-completed")) {
+    nsCOMPtr<nsIOfflineCacheUpdate> update = do_QueryInterface(aSubject);
+    if (update) {
+      UpdateCompleted(update);
     }
   }
 
