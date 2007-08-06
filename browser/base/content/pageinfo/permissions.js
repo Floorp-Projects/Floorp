@@ -86,6 +86,7 @@ function onLoadPermission()
                      .getService(Components.interfaces.nsIPrefBranch2);
 
   var uri = gDocument.documentURIObject;
+  var permTab = document.getElementById("permTab");
   if(/^https?/.test(uri.scheme)) {
     gPermURI = uri;
     var hostText = document.getElementById("hostText");
@@ -97,9 +98,10 @@ function onLoadPermission()
                        .getService(Components.interfaces.nsIObserverService);
     os.addObserver(permissionObserver, "perm-changed", false);
     onUnloadRegistry.push(onUnloadPermission);
+    permTab.hidden = false;
   }
   else
-    document.getElementById("permTab").hidden = true;
+    permTab.hidden = true;
 }
 
 function onUnloadPermission()
