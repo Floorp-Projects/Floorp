@@ -140,6 +140,7 @@ public:
   NS_HIDDEN_(nsresult) FillProtoInfoForSchemeFromDS(
     const nsACString& aScheme, nsIHandlerInfo * aMIMEInfo);
 
+#ifdef MOZ_RDF
   /**
    * Fill in the generic handler info stuff; called by Fill*InfoFor*FromDS.
    * 
@@ -154,6 +155,7 @@ public:
     nsIRDFResource *aTypeNodeResource, const nsCAutoString& aType,
     nsIRDFService *aRDFService, const char *aTypeNodePrefix, 
     nsIHandlerInfo * aHandlerInfo);
+#endif
     
   /**
    * Given an extension, look up the user override information to see if we
@@ -194,6 +196,16 @@ public:
   virtual already_AddRefed<nsIMIMEInfo> GetMIMEInfoFromOS(const nsACString& aMIMEType,
                                                           const nsACString& aFileExt,
                                                           PRBool     * aFound) = 0;
+
+  /**
+   * Given a scheme, looks up the protocol info from the OS.  This should be
+   * overridden by each OS's implementation.
+   *
+   * @param aScheme The protocol scheme we are looking for.
+   * @return An nsIHanderInfo for the protocol.
+   */
+  virtual already_AddRefed<nsIHandlerInfo> GetProtocolInfoFromOS(const nsACString &aScheme,
+                                                                 PRBool *found) = 0;
 
   /**
    * Given a string identifying an application, create an nsIFile representing
@@ -340,13 +352,6 @@ protected:
    * Array for the files that should be deleted
    */
   nsCOMArray<nsILocalFile> mTemporaryFilesList;
-
-  /**
-   * OS-specific loading of external URLs
-   */
-  virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI * aURL) = 0;
-  NS_HIDDEN_(PRBool) isExternalLoadOK(nsIURI* aURI, nsIPrompt* aPrompt);
-  NS_HIDDEN_(PRBool) promptForScheme(nsIURI* aURI, nsIPrompt* aPrompt, PRBool *aRemember);
 };
 
 /**

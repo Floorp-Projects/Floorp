@@ -895,7 +895,7 @@ typedef enum _cairo_subpixel_order {
 /**
  * cairo_hint_style_t:
  * @CAIRO_HINT_STYLE_DEFAULT: Use the default hint style for
- *   for font backend and target device
+ *   font backend and target device
  * @CAIRO_HINT_STYLE_NONE: Do not hint outlines
  * @CAIRO_HINT_STYLE_SLIGHT: Hint outlines slightly to improve
  *   contrast while retaining good fidelity to the original

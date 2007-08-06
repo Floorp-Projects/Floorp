@@ -1174,38 +1174,78 @@ nsHTMLFormElement::GetElementAt(PRInt32 aIndex,
   return NS_OK;
 }
 
-// Compares the position of control1 and control2 in the document
-//
-// returns < 0 if control1 is before control2,
-//         > 0 if control1 is after control2,
-//         0 otherwise
-static PRInt32 CompareFormControlPosition(nsIFormControl *control1, nsIFormControl *control2)
+/**
+ * Compares the position of aControl1 and aControl2 in the document
+ * @param aControl1 First control to compare.
+ * @param aControl2 Second control to compare.
+ * @param aForm Parent form of the controls.
+ * @return < 0 if aControl1 is before aControl2,
+ *         > 0 if aControl1 is after aControl2,
+ *         0 otherwise
+ */
+static PRInt32 CompareFormControlPosition(nsIFormControl *aControl1,
+                                          nsIFormControl *aControl2,
+                                          nsIContent* aForm)
 {
-  nsCOMPtr<nsIContent> content1 = do_QueryInterface(control1);
-  nsCOMPtr<nsIContent> content2 = do_QueryInterface(control2);
+  NS_ASSERTION(aControl1 != aControl2, "Comparing a form control to itself");
 
-  NS_ASSERTION(content1 && content2, "We should be able to QI to nsIContent here!");
+  nsCOMPtr<nsIContent> content1 = do_QueryInterface(aControl1);
+  nsCOMPtr<nsIContent> content2 = do_QueryInterface(aControl2);
 
-  // We check that the parent of both content nodes is non-null here, because
-  // newly created form control elements may not be in the parent form
-  // element's DOM tree yet. This prevents an assertion in CompareTreePosition.
-  // See Bug 267511 for more information.
-  if (content1 && content2 && content1->GetParent() && content2->GetParent())
-    return nsLayoutUtils::CompareTreePosition(content1, content2);
-  
-  return 0;
+  NS_ASSERTION(content1 && content2,
+               "We should be able to QI to nsIContent here!");
+  NS_ASSERTION(content1->GetParent() && content2->GetParent(),
+               "Form controls should always have parents");
+ 
+  return nsLayoutUtils::CompareTreePosition(content1, content2, aForm);
 }
+ 
+#ifdef DEBUG
+/**
+ * Checks that all form elements are in document order. Asserts if any pair of
+ * consecutive elements are not in increasing document order.
+ *
+ * @param aControls List of form controls to check.
+ * @param aForm Parent form of the controls.
+ */
+static void
+AssertDocumentOrder(const nsTArray<nsIFormControl*>& aControls,
+                    nsIContent* aForm)
+{
+  // Only iterate if aControls is not empty, since otherwise
+  // |aControls.Length() - 1| will be a very large unsigned number... not what
+  // we want here.
+  if (!aControls.IsEmpty()) {
+    for (PRUint32 i = 0; i < aControls.Length() - 1; ++i) {
+      NS_ASSERTION(CompareFormControlPosition(aControls[i], aControls[i + 1],
+                                              aForm) < 0,
+                   "Form controls not ordered correctly");
+    }
+  }
+}
+#endif
 
 NS_IMETHODIMP
 nsHTMLFormElement::AddElement(nsIFormControl* aChild,
                               PRBool aNotify)
 {
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aChild);
+    NS_ASSERTION(content->GetParent(),
+                 "Form control should have a parent");
+  }
+#endif
+
   // Determine whether to add the new element to the elements or
   // the not-in-elements list.
   PRBool childInElements = ShouldBeInElements(aChild);
   nsTArray<nsIFormControl*>& controlList = childInElements ?
       mControls->mElements : mControls->mNotInElements;
   
+  NS_ASSERTION(controlList.IndexOf(aChild) == controlList.NoIndex,
+               "Form control already in form");
+
   PRUint32 count = controlList.Length();
   nsCOMPtr<nsIFormControl> element;
   
@@ -1214,7 +1254,7 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild,
   PRInt32 position = -1;
   if (count > 0) {
     element = controlList[count - 1];
-    position = CompareFormControlPosition(aChild, element);
+    position = CompareFormControlPosition(aChild, element, this);
   }
 
   // If this item comes after the last element, or the elements array is
@@ -1233,7 +1273,7 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild,
       mid = (low + high) / 2;
         
       element = controlList[mid];
-      position = CompareFormControlPosition(aChild, element);
+      position = CompareFormControlPosition(aChild, element, this);
       if (position >= 0)
         low = mid + 1;
       else
@@ -1244,6 +1284,10 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild,
     controlList.InsertElementAt(low, aChild);
   }
 
+#ifdef DEBUG
+  AssertDocumentOrder(controlList, this);
+#endif
+  
   //
   // Notify the radio button it's been added to a group
   //
@@ -1279,7 +1323,7 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild,
     if (!mDefaultSubmitElement ||
         ((!lastElement ||
           ShouldBeInElements(mDefaultSubmitElement) != childInElements) &&
-         CompareFormControlPosition(aChild, mDefaultSubmitElement) < 0)) {
+         CompareFormControlPosition(aChild, mDefaultSubmitElement, this) < 0)) {
       mDefaultSubmitElement = aChild;
     }
 
@@ -1406,7 +1450,8 @@ nsHTMLFormElement::FindDefaultSubmit(PRBool aPrevDefaultInElements,
 
     if (currControl->IsSubmitControl()) {
       if (!defaultSubmit ||
-          CompareFormControlPosition(currControl, defaultSubmit) < 0) {
+          CompareFormControlPosition(currControl, defaultSubmit,
+                                     NS_CONST_CAST(nsHTMLFormElement*, this)) < 0) {
         defaultSubmit = currControl;
       }
       break;
@@ -2236,6 +2281,11 @@ nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild,
 nsresult
 nsFormControlList::GetSortedControls(nsTArray<nsIFormControl*>& aControls) const
 {
+#ifdef DEBUG
+  AssertDocumentOrder(mElements, mForm);
+  AssertDocumentOrder(mNotInElements, mForm);
+#endif
+
   aControls.Clear();
 
   // Merge the elements list and the not in elements list. Both lists are
@@ -2282,7 +2332,8 @@ nsFormControlList::GetSortedControls(nsTArray<nsIFormControl*>& aControls) const
     // first and add it to the end of the list.
     nsIFormControl* elementToAdd;
     if (CompareFormControlPosition(mElements[elementsIdx],
-                                   mNotInElements[notInElementsIdx]) < 0) {
+                                   mNotInElements[notInElementsIdx],
+                                   mForm) < 0) {
       elementToAdd = mElements[elementsIdx];
       ++elementsIdx;
     } else {
@@ -2298,13 +2349,8 @@ nsFormControlList::GetSortedControls(nsTArray<nsIFormControl*>& aControls) const
   NS_ASSERTION(aControls.Length() == elementsLen + notInElementsLen,
                "Not all form controls were added to the sorted list");
 #ifdef DEBUG
-  if (!aControls.IsEmpty()) {
-    for (PRUint32 i = 0; i < aControls.Length() - 1; ++i) {
-      NS_ASSERTION(CompareFormControlPosition(aControls[i],
-                     aControls[i + 1]) < 0,
-                   "Form controls sorted incorrectly");
-    }
-  }
+  AssertDocumentOrder(aControls, mForm);
 #endif
+
   return NS_OK;
 }

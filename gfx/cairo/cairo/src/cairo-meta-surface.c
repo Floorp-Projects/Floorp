@@ -212,7 +212,11 @@ static cairo_status_t
 _init_pattern_with_snapshot (cairo_pattern_t       *pattern,
 			     const cairo_pattern_t *other)
 {
-    _cairo_pattern_init_copy (pattern, other);
+    cairo_status_t status;
+
+    status = _cairo_pattern_init_copy (pattern, other);
+    if (status)
+	return status;
 
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	cairo_surface_pattern_t *surface_pattern =
@@ -435,7 +439,7 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
     if (status)
 	goto CLEANUP_COMMAND;
 
-    command->glyphs = malloc (sizeof (cairo_glyph_t) * num_glyphs);
+    command->glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
     if (command->glyphs == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto CLEANUP_SOURCE;
@@ -552,7 +556,7 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
  */
 static cairo_int_status_t
 _cairo_meta_surface_get_extents (void			 *abstract_surface,
-				 cairo_rectangle_int16_t *rectangle)
+				 cairo_rectangle_int_t   *rectangle)
 {
     cairo_meta_surface_t *surface = abstract_surface;
 
@@ -648,6 +652,9 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     cairo_matrix_t *device_transform = &target->device_transform;
     cairo_path_fixed_t path_copy, *dev_path;
 
+    if (surface->status)
+	return surface->status;
+
     meta = (cairo_meta_surface_t *) surface;
     status = CAIRO_STATUS_SUCCESS;
 
@@ -668,7 +675,9 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 
 	dev_path = _cairo_command_get_path (command);
 	if (dev_path && has_device_transform) {
-	    _cairo_path_fixed_init_copy (&path_copy, dev_path);
+	    status = _cairo_path_fixed_init_copy (&path_copy, dev_path);
+	    if (status)
+		break;
 	    _cairo_path_fixed_device_transform (&path_copy, device_transform);
 	    dev_path = &path_copy;
 	}
@@ -726,7 +735,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 	    int i, num_glyphs = command->show_glyphs.num_glyphs;
 
 	    if (has_device_transform) {
-		dev_glyphs = malloc (sizeof (cairo_glyph_t) * num_glyphs);
+		dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
 		if (dev_glyphs == NULL) {
 		    status = CAIRO_STATUS_NO_MEMORY;
 		    break;
@@ -754,7 +763,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 	    /* XXX Meta surface clipping is broken and requires some
 	     * cairo-gstate.c rewriting.  Work around it for now. */
 	    if (dev_path == NULL)
-		status = _cairo_clip_reset (&clip);
+		_cairo_clip_reset (&clip);
 	    else
 		status = _cairo_clip_clip (&clip, dev_path,
 					   command->intersect_clip_path.fill_rule,
@@ -773,7 +782,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 	    break;
     }
 
-    _cairo_clip_fini (&clip);
+    _cairo_clip_reset (&clip);
 
     return status;
 }

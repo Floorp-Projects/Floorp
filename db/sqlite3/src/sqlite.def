@@ -35,7 +35,8 @@
 
 LIBRARY sqlite3.dll
 
-EXPORTS sqlite3_aggregate_context
+EXPORTS
+        sqlite3_aggregate_context
         sqlite3_aggregate_count
         sqlite3_apis
         sqlite3_auto_extension
@@ -155,5 +156,4 @@ EXPORTS sqlite3_aggregate_context
         sqlite3_value_type
         sqlite3_version
         sqlite3_vmprintf
-        sqlite3ApiExit               ;needed by mozStorage
         sqlite3Os DATA               ;needed by mozStorage

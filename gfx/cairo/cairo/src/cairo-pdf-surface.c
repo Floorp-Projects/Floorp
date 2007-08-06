@@ -38,9 +38,9 @@
 
 #include "cairoint.h"
 #include "cairo-pdf.h"
-#include "cairo-pdf-test.h"
+#include "cairo-pdf-surface-private.h"
 #include "cairo-scaled-font-subsets-private.h"
-#include "cairo-paginated-surface-private.h"
+#include "cairo-paginated-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-output-stream-private.h"
 
@@ -63,8 +63,6 @@
  * - Backend specific meta data.
  *
  * - Surface patterns.
- *
- * - Alpha channels in gradients.
  *
  * - Should/does cairo support drawing into a scratch surface and then
  *   using that as a fill pattern?  For this backend, that would involve
@@ -91,54 +89,23 @@ typedef struct _cairo_pdf_object {
     long offset;
 } cairo_pdf_object_t;
 
-typedef struct _cairo_pdf_resource {
-    unsigned int id;
-} cairo_pdf_resource_t;
-
 typedef struct _cairo_pdf_font {
     unsigned int font_id;
     unsigned int subset_id;
     cairo_pdf_resource_t subset_resource;
 } cairo_pdf_font_t;
 
-typedef struct _cairo_pdf_surface {
-    cairo_surface_t base;
+typedef struct _cairo_pdf_rgb_linear_function {
+    cairo_pdf_resource_t resource;
+    double               color1[3];
+    double               color2[3];
+} cairo_pdf_rgb_linear_function_t;
 
-    /* Prefer the name "output" here to avoid confusion over the
-     * structure within a PDF document known as a "stream". */
-    cairo_output_stream_t *output;
-
-    double width;
-    double height;
-
-    cairo_array_t objects;
-    cairo_array_t pages;
-    cairo_array_t patterns;
-    cairo_array_t xobjects;
-    cairo_array_t streams;
-    cairo_array_t alphas;
-
-    cairo_scaled_font_subsets_t *font_subsets;
-    cairo_array_t fonts;
-
-    cairo_pdf_resource_t next_available_resource;
-    cairo_pdf_resource_t pages_resource;
-
-    struct {
-	cairo_bool_t active;
-	cairo_pdf_resource_t self;
-	cairo_pdf_resource_t length;
-	long start_offset;
-        cairo_bool_t compressed;
-        cairo_output_stream_t *old_output;
-    } current_stream;
-
-    cairo_bool_t has_clip;
-
-    cairo_paginated_mode_t paginated_mode;
-} cairo_pdf_surface_t;
-
-#define PDF_SURFACE_MAX_GLYPHS_PER_FONT	256
+typedef struct _cairo_pdf_alpha_linear_function {
+    cairo_pdf_resource_t resource;
+    double               alpha1;
+    double               alpha2;
+} cairo_pdf_alpha_linear_function_t;
 
 static cairo_pdf_resource_t
 _cairo_pdf_surface_new_object (cairo_pdf_surface_t *surface);
@@ -151,10 +118,10 @@ _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
                                 cairo_bool_t             compressed,
 				const char		*fmt,
 				...) CAIRO_PRINTF_FORMAT(3, 4);
-static void
+static cairo_status_t
 _cairo_pdf_surface_close_stream (cairo_pdf_surface_t	*surface);
 
-static void
+static cairo_status_t
 _cairo_pdf_surface_add_stream (cairo_pdf_surface_t	*surface,
 			       cairo_pdf_resource_t	 stream);
 
@@ -210,43 +177,50 @@ _cairo_pdf_surface_update_object (cairo_pdf_surface_t	*surface,
     object->offset = _cairo_output_stream_get_position (surface->output);
 }
 
-static void
+static cairo_status_t
 _cairo_pdf_surface_add_stream (cairo_pdf_surface_t	*surface,
 			       cairo_pdf_resource_t	 stream)
 {
-    /* XXX: Should be checking the return value here. */
-    _cairo_array_append (&surface->streams, &stream);
+    return _cairo_array_append (&surface->streams, &stream);
 }
 
-static void
+static cairo_status_t
 _cairo_pdf_surface_add_pattern (cairo_pdf_surface_t	*surface,
 				cairo_pdf_resource_t	 pattern)
 {
-    /* XXX: Should be checking the return value here. */
-    _cairo_array_append (&surface->patterns, &pattern);
+    return _cairo_array_append (&surface->patterns, &pattern);
 }
 
-static cairo_pdf_resource_t
-_cairo_pdf_surface_add_alpha (cairo_pdf_surface_t *surface, double alpha)
+static cairo_status_t
+_cairo_pdf_surface_add_smask (cairo_pdf_surface_t  *surface,
+                              cairo_pdf_resource_t  smask)
 {
-    cairo_pdf_resource_t resource;
+    return _cairo_array_append (&surface->smasks, &smask);
+}
+
+static cairo_status_t
+_cairo_pdf_surface_add_alpha (cairo_pdf_surface_t *surface, double alpha, int *index)
+{
     int num_alphas, i;
     double other;
+    cairo_status_t status;
 
     num_alphas = _cairo_array_num_elements (&surface->alphas);
     for (i = 0; i < num_alphas; i++) {
-	_cairo_array_copy_element (&surface->alphas, i, &other);
-	if (alpha == other) {
-	    resource.id  = i;
-	    return resource;
-	}
+        _cairo_array_copy_element (&surface->alphas, i, &other);
+        if (alpha == other) {
+            *index = i;
+            return CAIRO_STATUS_SUCCESS;
+        }
     }
 
-    /* XXX: Should be checking the return value here. */
-    _cairo_array_append (&surface->alphas, &alpha);
+    status = _cairo_array_append (&surface->alphas, &alpha);
+    if (status)
+	return status;
 
-    resource.id = _cairo_array_num_elements (&surface->alphas) - 1;
-    return resource;
+    *index = _cairo_array_num_elements (&surface->alphas) - 1;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_surface_t *
@@ -255,6 +229,8 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 					       double			 height)
 {
     cairo_pdf_surface_t *surface;
+    cairo_status_t status;
+    int alpha;
 
     surface = malloc (sizeof (cairo_pdf_surface_t));
     if (surface == NULL) {
@@ -269,6 +245,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 
     surface->width = width;
     surface->height = height;
+    cairo_matrix_init (&surface->cairo_to_pdf, 1, 0, 0, -1, 0, height);
 
     _cairo_array_init (&surface->objects, sizeof (cairo_pdf_object_t));
     _cairo_array_init (&surface->pages, sizeof (cairo_pdf_resource_t));
@@ -276,13 +253,23 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     _cairo_array_init (&surface->xobjects, sizeof (cairo_pdf_resource_t));
     _cairo_array_init (&surface->streams, sizeof (cairo_pdf_resource_t));
     _cairo_array_init (&surface->alphas, sizeof (double));
+    _cairo_array_init (&surface->smasks, sizeof (cairo_pdf_resource_t));
+    _cairo_array_init (&surface->rgb_linear_functions, sizeof (cairo_pdf_rgb_linear_function_t));
+    _cairo_array_init (&surface->alpha_linear_functions, sizeof (cairo_pdf_alpha_linear_function_t));
 
-    surface->font_subsets = _cairo_scaled_font_subsets_create (PDF_SURFACE_MAX_GLYPHS_PER_FONT,
-                                                               PDF_SURFACE_MAX_GLYPHS_PER_FONT);
+
+    /* Add alpha=1 as the first element in the list of alpha values as
+     * this is the most frequently referenced value. */
+    status = _cairo_pdf_surface_add_alpha (surface, 1, &alpha);
+    if (status) {
+	_cairo_error (status);
+        goto fail1;
+    }
+
+    surface->font_subsets = _cairo_scaled_font_subsets_create_composite ();
     if (! surface->font_subsets) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	free (surface);
-	return (cairo_surface_t*) &_cairo_surface_nil;
+        goto fail2;
     }
 
     _cairo_array_init (&surface->fonts, sizeof (cairo_pdf_font_t));
@@ -296,6 +283,8 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
 
+    surface->force_fallbacks = FALSE;
+
     /* Document header */
     _cairo_output_stream_printf (surface->output,
 				 "%%PDF-1.4\r\n");
@@ -306,6 +295,11 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 					    CAIRO_CONTENT_COLOR_ALPHA,
 					    width, height,
 					    &cairo_pdf_surface_paginated_backend);
+
+fail1:
+    free (surface);
+fail2:
+	return (cairo_surface_t*) &_cairo_surface_nil;
 }
 
 /**
@@ -502,16 +496,17 @@ _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
     return surface->current_stream.self;
 }
 
-static void
+static cairo_status_t
 _cairo_pdf_surface_close_stream (cairo_pdf_surface_t *surface)
 {
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     long length;
 
     if (! surface->current_stream.active)
-	return;
+	return CAIRO_STATUS_SUCCESS;
 
     if (surface->current_stream.compressed) {
-        _cairo_output_stream_destroy (surface->output);
+        status = _cairo_output_stream_destroy (surface->output);
         surface->output = surface->current_stream.old_output;
         _cairo_output_stream_printf (surface->output,
                                      "\r\n");
@@ -533,17 +528,19 @@ _cairo_pdf_surface_close_stream (cairo_pdf_surface_t *surface)
 				 length);
 
     surface->current_stream.active = FALSE;
+
+    return status;
 }
 
 static cairo_status_t
 _cairo_pdf_surface_finish (void *abstract_surface)
 {
-    cairo_status_t status;
+    cairo_status_t status, status2;
     cairo_pdf_surface_t *surface = abstract_surface;
     long offset;
     cairo_pdf_resource_t info, catalog;
 
-    _cairo_pdf_surface_close_stream (surface);
+    status = _cairo_pdf_surface_close_stream (surface);
 
     _cairo_pdf_surface_emit_font_subsets (surface);
 
@@ -569,7 +566,9 @@ _cairo_pdf_surface_finish (void *abstract_surface)
 				 "%%%%EOF\r\n",
 				 offset);
 
-    status = _cairo_output_stream_destroy (surface->output);
+    status2 = _cairo_output_stream_destroy (surface->output);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
 
     _cairo_array_fini (&surface->objects);
     _cairo_array_fini (&surface->pages);
@@ -577,6 +576,9 @@ _cairo_pdf_surface_finish (void *abstract_surface)
     _cairo_array_fini (&surface->xobjects);
     _cairo_array_fini (&surface->streams);
     _cairo_array_fini (&surface->alphas);
+    _cairo_array_fini (&surface->smasks);
+    _cairo_array_fini (&surface->rgb_linear_functions);
+    _cairo_array_fini (&surface->alpha_linear_functions);
 
     if (surface->font_subsets) {
 	_cairo_scaled_font_subsets_destroy (surface->font_subsets);
@@ -588,13 +590,13 @@ _cairo_pdf_surface_finish (void *abstract_surface)
     return status;
 }
 
-static void
+static cairo_status_t
 _cairo_pdf_surface_pause_content_stream (cairo_pdf_surface_t *surface)
 {
-    _cairo_pdf_surface_close_stream (surface);
+    return _cairo_pdf_surface_close_stream (surface);
 }
 
-static void
+static cairo_status_t
 _cairo_pdf_surface_resume_content_stream (cairo_pdf_surface_t *surface)
 {
     cairo_pdf_resource_t stream;
@@ -607,12 +609,46 @@ _cairo_pdf_surface_resume_content_stream (cairo_pdf_surface_t *surface)
 					     surface->width,
 					     surface->height);
 
-    _cairo_pdf_surface_add_stream (surface, stream);
+    return _cairo_pdf_surface_add_stream (surface, stream);
+}
+
+static cairo_status_t
+_cairo_pdf_surface_begin_group (cairo_pdf_surface_t *surface, cairo_pdf_resource_t *group)
+{
+    cairo_pdf_resource_t g;
+    cairo_status_t status;
+
+    _cairo_pdf_surface_pause_content_stream (surface);
+    g = _cairo_pdf_surface_open_stream (surface,
+                                        TRUE,
+                                        "   /Type /XObject\r\n"
+                                        "   /Subtype /Form\r\n"
+                                        "   /BBox [ 0 0 %f %f ]\r\n"
+                                        "   /Group <<\r\n"
+                                        "      /Type /Group\r\n"
+                                        "      /S /Transparency\r\n"
+                                        "      /CS /DeviceRGB\r\n"
+                                        "   >>\r\n",
+                                        surface->width,
+                                        surface->height);
+
+    status = _cairo_array_append (&surface->xobjects, &g);
+    *group = g;
+
+    return status;
+}
+
+static void
+_cairo_pdf_surface_end_group (cairo_pdf_surface_t *surface)
+{
+    _cairo_pdf_surface_close_stream (surface);
+    _cairo_pdf_surface_resume_content_stream (surface);
 }
 
 static cairo_int_status_t
 _cairo_pdf_surface_start_page (void *abstract_surface)
 {
+    cairo_status_t status;
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_pdf_resource_t stream;
 
@@ -624,11 +660,9 @@ _cairo_pdf_surface_start_page (void *abstract_surface)
 					     surface->width,
 					     surface->height);
 
-    _cairo_pdf_surface_add_stream (surface, stream);
-
-    _cairo_output_stream_printf (surface->output,
-				 "1 0 0 -1 0 %f cm\r\n",
-				 surface->height);
+    status = _cairo_pdf_surface_add_stream (surface, stream);
+    if (status)
+	return status;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -664,7 +698,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t		*surface,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     char *alpha, *alpha_compressed;
     unsigned long alpha_size, alpha_compressed_size;
-    pixman_bits_t *pixel;
+    uint32_t *pixel;
     int i, x, y;
     cairo_bool_t opaque;
     uint8_t a;
@@ -682,7 +716,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t		*surface,
     opaque = TRUE;
     i = 0;
     for (y = 0; y < image->height; y++) {
-	pixel = (pixman_bits_t *) (image->data + y * image->stride);
+	pixel = (uint32_t *) (image->data + y * image->stride);
 
 	for (x = 0; x < image->width; x++, pixel++) {
 	    a = (*pixel & 0xff000000) >> 24;
@@ -716,7 +750,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t		*surface,
 						  image->width, image->height);
     _cairo_output_stream_write (surface->output, alpha_compressed, alpha_compressed_size);
     _cairo_output_stream_printf (surface->output, "\r\n");
-    _cairo_pdf_surface_close_stream (surface);
+    status = _cairo_pdf_surface_close_stream (surface);
 
     free (alpha_compressed);
  CLEANUP_ALPHA:
@@ -728,14 +762,14 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t		*surface,
 /* Emit image data into the given surface, providing a resource that
  * can be used to reference the data in image_ret. */
 static cairo_status_t
-_cairo_pdf_surface_emit_image (cairo_pdf_surface_t		*surface,
-	    cairo_image_surface_t	*image,
-	    cairo_pdf_resource_t	*image_ret)
+_cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
+                               cairo_image_surface_t *image,
+                               cairo_pdf_resource_t  *image_ret)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     char *rgb, *compressed;
     unsigned long rgb_size, compressed_size;
-    pixman_bits_t *pixel;
+    uint32_t *pixel;
     int i, x, y;
     cairo_pdf_resource_t smask = {0}; /* squelch bogus compiler warning */
     cairo_bool_t need_smask;
@@ -761,7 +795,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t		*surface,
 
     i = 0;
     for (y = 0; y < image->height; y++) {
-	pixel = (pixman_bits_t *) (image->data + y * image->stride);
+	pixel = (uint32_t *) (image->data + y * image->stride);
 
 	for (x = 0; x < image->width; x++, pixel++) {
 	    /* XXX: We're un-premultiplying alpha here. My reading of the PDF
@@ -830,7 +864,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t		*surface,
 
     _cairo_output_stream_write (surface->output, compressed, compressed_size);
     _cairo_output_stream_printf (surface->output, "\r\n");
-    _cairo_pdf_surface_close_stream (surface);
+    status = _cairo_pdf_surface_close_stream (surface);
 
  CLEANUP_COMPRESSED:
     free (compressed);
@@ -841,33 +875,30 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t		*surface,
 }
 
 static cairo_status_t
-_cairo_pdf_surface_emit_solid_pattern (cairo_pdf_surface_t *surface,
-		    cairo_solid_pattern_t *pattern)
+_cairo_pdf_surface_emit_solid_pattern (cairo_pdf_surface_t   *surface,
+                                       cairo_solid_pattern_t *pattern)
 {
-    cairo_pdf_resource_t alpha;
+    int alpha;
+    cairo_status_t status;
 
-    alpha = _cairo_pdf_surface_add_alpha (surface, pattern->color.alpha);
+    status = _cairo_pdf_surface_add_alpha (surface, pattern->color.alpha, &alpha);
+    if (status)
+	return status;
 
-    /* With some work, we could separate the stroking
-     * or non-stroking color here as actually needed. */
-    _cairo_output_stream_printf (surface->output,
-				 "%f %f %f RG "
-				 "%f %f %f rg "
-				 "/a%d gs\r\n",
-				 pattern->color.red,
-				 pattern->color.green,
-				 pattern->color.blue,
-				 pattern->color.red,
-				 pattern->color.green,
-				 pattern->color.blue,
-				 alpha.id);
+    surface->emitted_pattern.type = CAIRO_PATTERN_TYPE_SOLID;
+    surface->emitted_pattern.red = pattern->color.red;
+    surface->emitted_pattern.green = pattern->color.green;
+    surface->emitted_pattern.blue = pattern->color.blue;
+    surface->emitted_pattern.alpha = alpha;
+    surface->emitted_pattern.smask.id = 0;
+    surface->emitted_pattern.pattern.id = 0;
 
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
-_cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
-		      cairo_surface_pattern_t	*pattern)
+_cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	 *surface,
+                                         cairo_surface_pattern_t *pattern)
 {
     cairo_pdf_resource_t stream;
     cairo_surface_t *pat_surface;
@@ -875,15 +906,17 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
     cairo_image_surface_t *image;
     void *image_extra;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    cairo_pdf_resource_t alpha, image_resource = {0}; /* squelch bogus compiler warning */
+    cairo_pdf_resource_t image_resource = {0}; /* squelch bogus compiler warning */
     cairo_matrix_t cairo_p2d, pdf_p2d;
     cairo_extend_t extend = cairo_pattern_get_extend (&pattern->base);
     double xstep, ystep;
-    cairo_rectangle_int16_t surface_extents;
+    cairo_rectangle_int_t surface_extents;
 
     /* XXX: Should do something clever here for PDF source surfaces ? */
 
-    _cairo_pdf_surface_pause_content_stream (surface);
+    status = _cairo_pdf_surface_pause_content_stream (surface);
+    if (status)
+	return status;
 
     status = _cairo_pattern_acquire_surface ((cairo_pattern_t *)pattern,
 					     (cairo_surface_t *)surface,
@@ -900,7 +933,9 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
     if (status)
 	goto BAIL;
 
-    _cairo_surface_get_extents (&surface->base, &surface_extents);
+    status = _cairo_surface_get_extents (&surface->base, &surface_extents);
+    if (status)
+	goto BAIL;
 
     switch (extend) {
     /* We implement EXTEND_PAD like EXTEND_NONE for now */
@@ -974,7 +1009,9 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
      * pattern cell.
      */
     cairo_p2d = pattern->base.matrix;
-    cairo_matrix_invert (&cairo_p2d);
+    status = cairo_matrix_invert (&cairo_p2d);
+    /* cairo_pattern_set_matrix ensures the matrix is invertible */
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     cairo_matrix_init_identity (&pdf_p2d);
     cairo_matrix_translate (&pdf_p2d, 0.0, surface_extents.height);
@@ -1006,20 +1043,24 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
 				 image->width, image->height,
 				 image_resource.id);
 
-    _cairo_pdf_surface_close_stream (surface);
+    status = _cairo_pdf_surface_close_stream (surface);
+    if (status)
+	goto BAIL;
 
-    _cairo_pdf_surface_resume_content_stream (surface);
+    status = _cairo_pdf_surface_resume_content_stream (surface);
+    if (status)
+	goto BAIL;
 
-    _cairo_pdf_surface_add_pattern (surface, stream);
+    status = _cairo_pdf_surface_add_pattern (surface, stream);
+    if (status)
+	goto BAIL;
 
-    alpha = _cairo_pdf_surface_add_alpha (surface, 1.0);
-    /* With some work, we could separate the stroking
-     * or non-stroking pattern here as actually needed. */
-    _cairo_output_stream_printf (surface->output,
-				 "/Pattern CS /res%d SCN "
-				 "/Pattern cs /res%d scn "
-				 "/a%d gs\r\n",
-				 stream.id, stream.id, alpha.id);
+    status = _cairo_pdf_surface_add_alpha (surface, 1.0, &surface->emitted_pattern.alpha);
+    if (status)
+	goto BAIL;
+    surface->emitted_pattern.type = CAIRO_PATTERN_TYPE_SURFACE;
+    surface->emitted_pattern.smask.id = 0;
+    surface->emitted_pattern.pattern = stream;
 
  BAIL:
     _cairo_surface_release_source_image (pat_surface, image, image_extra);
@@ -1030,90 +1071,168 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
 }
 
 typedef struct _cairo_pdf_color_stop {
-    double	  		offset;
-    cairo_pdf_resource_t	gradient;
-    unsigned char		color_char[4];
+    double offset;
+    double color[4];
+    cairo_pdf_resource_t resource;
 } cairo_pdf_color_stop_t;
 
-static cairo_pdf_resource_t
-_cairo_pdf_surface_emit_linear_colorgradient (cairo_pdf_surface_t		*surface,
-			   cairo_pdf_color_stop_t	*stop1,
-			   cairo_pdf_color_stop_t	*stop2)
+static cairo_status_t
+cairo_pdf_surface_emit_rgb_linear_function (cairo_pdf_surface_t    *surface,
+                                            cairo_pdf_color_stop_t *stop1,
+                                            cairo_pdf_color_stop_t *stop2,
+                                            cairo_pdf_resource_t   *function)
 {
-    cairo_pdf_resource_t function = _cairo_pdf_surface_new_object (surface);
+    int num_elems, i;
+    cairo_pdf_rgb_linear_function_t elem;
+    cairo_pdf_resource_t res;
+    cairo_status_t status;
+
+    num_elems = _cairo_array_num_elements (&surface->rgb_linear_functions);
+    for (i = 0; i < num_elems; i++) {
+	_cairo_array_copy_element (&surface->rgb_linear_functions, i, &elem);
+        if (memcmp (&elem.color1[0], &stop1->color[0], sizeof (double)*3) != 0)
+            continue;
+        if (memcmp (&elem.color2[0], &stop2->color[0], sizeof (double)*3) != 0)
+            continue;
+        *function =  elem.resource;
+        return CAIRO_STATUS_SUCCESS;
+    }
+
+    res = _cairo_pdf_surface_new_object (surface);
 
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
-				 "<< /FunctionType 0\r\n"
+				 "<< /FunctionType 2\r\n"
 				 "   /Domain [ 0 1 ]\r\n"
-				 "   /Size [ 2 ]\r\n"
-				 "   /BitsPerSample 8\r\n"
-				 "   /Range [ 0 1 0 1 0 1 ]\r\n"
-				 "   /Length 6\r\n"
+				 "   /C0 [ %f %f %f ]\r\n"
+				 "   /C1 [ %f %f %f ]\r\n"
+				 "   /N 1\r\n"
 				 ">>\r\n"
-				 "stream\r\n",
-				 function.id);
+				 "endobj\r\n",
+				 res.id,
+                                 stop1->color[0],
+                                 stop1->color[1],
+                                 stop1->color[2],
+                                 stop2->color[0],
+                                 stop2->color[1],
+                                 stop2->color[2]);
 
-    _cairo_output_stream_write (surface->output, stop1->color_char, 3);
-    _cairo_output_stream_write (surface->output, stop2->color_char, 3);
-    _cairo_output_stream_printf (surface->output,
-				 "\r\n"
-				 "endstream\r\n"
-				 "endobj\r\n");
+    elem.resource = res;
+    memcpy (&elem.color1[0], &stop1->color[0], sizeof (double)*3);
+    memcpy (&elem.color2[0], &stop2->color[0], sizeof (double)*3);
 
-    return function;
+    status = _cairo_array_append (&surface->rgb_linear_functions, &elem);
+    *function = res;
+
+    return status;
 }
 
-static cairo_pdf_resource_t
-_cairo_pdf_surface_emit_stitched_colorgradient (cairo_pdf_surface_t   *surface,
-			    unsigned int 	   n_stops,
-			    cairo_pdf_color_stop_t stops[])
+static cairo_status_t
+cairo_pdf_surface_emit_alpha_linear_function (cairo_pdf_surface_t    *surface,
+                                              cairo_pdf_color_stop_t *stop1,
+                                              cairo_pdf_color_stop_t *stop2,
+                                              cairo_pdf_resource_t   *function)
 {
-    cairo_pdf_resource_t function;
+    int num_elems, i;
+    cairo_pdf_alpha_linear_function_t elem;
+    cairo_pdf_resource_t res;
+    cairo_status_t status;
+
+    num_elems = _cairo_array_num_elements (&surface->alpha_linear_functions);
+    for (i = 0; i < num_elems; i++) {
+	_cairo_array_copy_element (&surface->alpha_linear_functions, i, &elem);
+        if (elem.alpha1 != stop1->color[3])
+            continue;
+        if (elem.alpha2 != stop2->color[3])
+            continue;
+        *function =  elem.resource;
+        return CAIRO_STATUS_SUCCESS;
+    }
+
+    res = _cairo_pdf_surface_new_object (surface);
+
+    _cairo_output_stream_printf (surface->output,
+				 "%d 0 obj\r\n"
+				 "<< /FunctionType 2\r\n"
+				 "   /Domain [ 0 1 ]\r\n"
+				 "   /C0 [ %f ]\r\n"
+				 "   /C1 [ %f ]\r\n"
+				 "   /N 1\r\n"
+				 ">>\r\n"
+				 "endobj\r\n",
+				 res.id,
+                                 stop1->color[3],
+                                 stop2->color[3]);
+
+    elem.resource = res;
+    elem.alpha1 = stop1->color[3];
+    elem.alpha2 = stop2->color[3];
+
+    status = _cairo_array_append (&surface->alpha_linear_functions, &elem);
+    *function = res;
+
+    return status;
+}
+
+static cairo_status_t
+_cairo_pdf_surface_emit_stitched_colorgradient (cairo_pdf_surface_t    *surface,
+                                                unsigned int 	        n_stops,
+                                                cairo_pdf_color_stop_t *stops,
+                                                cairo_bool_t	        is_alpha,
+                                                cairo_pdf_resource_t   *function)
+{
+    cairo_pdf_resource_t res;
     unsigned int i;
+    cairo_status_t status;
 
     /* emit linear gradients between pairs of subsequent stops... */
     for (i = 0; i < n_stops-1; i++) {
-	stops[i].gradient = _cairo_pdf_surface_emit_linear_colorgradient (surface,
-						       &stops[i],
-						       &stops[i+1]);
+        if (is_alpha) {
+            status = cairo_pdf_surface_emit_alpha_linear_function (surface,
+                                                             &stops[i],
+                                                             &stops[i+1],
+                                                             &stops[i].resource);
+            if (status)
+                return status;
+        } else {
+            status = cairo_pdf_surface_emit_rgb_linear_function (surface,
+                                                                 &stops[i],
+                                                                 &stops[i+1],
+                                                                 &stops[i].resource);
+            if (status)
+                return status;
+        }
     }
 
     /* ... and stitch them together */
-    function = _cairo_pdf_surface_new_object (surface);
+    res = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
 				 "<< /FunctionType 3\r\n"
 				 "   /Domain [ 0 1 ]\r\n",
-				 function.id);
+				 res.id);
 
     _cairo_output_stream_printf (surface->output,
 				 "   /Functions [ ");
     for (i = 0; i < n_stops-1; i++)
-    {
         _cairo_output_stream_printf (surface->output,
-				     "%d 0 R ", stops[i].gradient.id);
-    }
+                                     "%d 0 R ", stops[i].resource.id);
     _cairo_output_stream_printf (surface->output,
 		    		 "]\r\n");
 
     _cairo_output_stream_printf (surface->output,
 				 "   /Bounds [ ");
     for (i = 1; i < n_stops-1; i++)
-    {
         _cairo_output_stream_printf (surface->output,
 				     "%f ", stops[i].offset);
-    }
     _cairo_output_stream_printf (surface->output,
 		    		 "]\r\n");
 
     _cairo_output_stream_printf (surface->output,
 				 "   /Encode [ ");
     for (i = 1; i < n_stops; i++)
-    {
         _cairo_output_stream_printf (surface->output,
 				     "0 1 ");
-    }
     _cairo_output_stream_printf (surface->output,
 	    			 "]\r\n");
 
@@ -1121,34 +1240,42 @@ _cairo_pdf_surface_emit_stitched_colorgradient (cairo_pdf_surface_t   *surface,
 	    			 ">>\r\n"
 				 "endobj\r\n");
 
-    return function;
+    *function = res;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 #define COLOR_STOP_EPSILON 1e-6
 
-static cairo_pdf_resource_t
-_cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradient_pattern_t *pattern)
+static cairo_status_t
+_cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t      *surface,
+                                       cairo_gradient_pattern_t *pattern,
+                                       cairo_pdf_resource_t     *color_function,
+                                       cairo_pdf_resource_t     *alpha_function)
 {
-    cairo_pdf_resource_t    function;
     cairo_pdf_color_stop_t *allstops, *stops;
-    unsigned int i, n_stops;
+    unsigned int n_stops;
+    unsigned int i;
+    cairo_bool_t emit_alpha = FALSE;
+    cairo_status_t status;
 
-    function = _cairo_pdf_surface_new_object (surface);
+    color_function->id = 0;
+    alpha_function->id = 0;
 
-    allstops = malloc ((pattern->n_stops + 2) * sizeof (cairo_pdf_color_stop_t));
-    if (allstops == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	function.id = 0;
-	return function;
-    }
+    allstops = _cairo_malloc_ab ((pattern->n_stops + 2), sizeof (cairo_pdf_color_stop_t));
+    if (allstops == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
     stops = &allstops[1];
     n_stops = pattern->n_stops;
 
-    for (i = 0; i < pattern->n_stops; i++) {
-	stops[i].color_char[0] = pattern->stops[i].color.red   >> 8;
-	stops[i].color_char[1] = pattern->stops[i].color.green >> 8;
-	stops[i].color_char[2] = pattern->stops[i].color.blue  >> 8;
-	stops[i].color_char[3] = pattern->stops[i].color.alpha >> 8;
+    for (i = 0; i < n_stops; i++) {
+	stops[i].color[0] = pattern->stops[i].color.red / 65535.0;
+	stops[i].color[1] = pattern->stops[i].color.green / 65535.0;
+	stops[i].color[2] = pattern->stops[i].color.blue / 65535.0;
+	stops[i].color[3] = pattern->stops[i].color.alpha / 65535.0;
+        if (!CAIRO_ALPHA_IS_OPAQUE (stops[i].color[3]))
+            emit_alpha = TRUE;
 	stops[i].offset = _cairo_fixed_to_double (pattern->stops[i].x);
     }
 
@@ -1157,170 +1284,378 @@ _cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t *surface, cairo_gradi
     if (stops[0].offset > COLOR_STOP_EPSILON) {
 	    memcpy (allstops, stops, sizeof (cairo_pdf_color_stop_t));
 	    stops = allstops;
-	    stops[0].offset = 0.0;
 	    n_stops++;
     }
+    stops[0].offset = 0.0;
+
     if (stops[n_stops-1].offset < 1.0 - COLOR_STOP_EPSILON) {
 	    memcpy (&stops[n_stops],
 		    &stops[n_stops - 1],
 		    sizeof (cairo_pdf_color_stop_t));
-	    stops[n_stops].offset = 1.0;
 	    n_stops++;
     }
+    stops[n_stops-1].offset = 1.0;
 
     if (n_stops == 2) {
-	/* no need for stitched function */
-	function = _cairo_pdf_surface_emit_linear_colorgradient (surface, &stops[0], &stops[1]);
+        /* no need for stitched function */
+        status = cairo_pdf_surface_emit_rgb_linear_function (surface,
+                                                             &stops[0],
+                                                             &stops[1],
+                                                             color_function);
+        if (status)
+            goto BAIL;
+
+        if (emit_alpha) {
+            status = cairo_pdf_surface_emit_alpha_linear_function (surface,
+                                                                   &stops[0],
+                                                                   &stops[1],
+                                                                   alpha_function);
+            if (status)
+                goto BAIL;
+        }
     } else {
-	/* multiple stops: stitch. XXX possible optimization: regulary spaced
-	 * stops do not require stitching. XXX */
-	function = _cairo_pdf_surface_emit_stitched_colorgradient (surface,
-					       n_stops,
-					       stops);
+        /* multiple stops: stitch. XXX possible optimization: regulary spaced
+         * stops do not require stitching. XXX */
+        status = _cairo_pdf_surface_emit_stitched_colorgradient (surface,
+                                                                 n_stops,
+                                                                 stops,
+                                                                 FALSE,
+                                                                 color_function);
+        if (status)
+            goto BAIL;
+
+        if (emit_alpha) {
+            status = _cairo_pdf_surface_emit_stitched_colorgradient (surface,
+                                                                     n_stops,
+                                                                     stops,
+                                                                     TRUE,
+                                                                     alpha_function);
+            if (status)
+                goto BAIL;
+        }
     }
 
+BAIL:
     free (allstops);
+    return status;
+}
 
-    return function;
+static cairo_pdf_resource_t
+cairo_pdf_surface_emit_transparency_group (cairo_pdf_surface_t  *surface,
+                                           cairo_pdf_resource_t  gradient_mask)
+{
+    cairo_pdf_resource_t xobj_resource, smask_resource, gstate_resource;
+
+    xobj_resource = _cairo_pdf_surface_open_stream (surface,
+                                                    TRUE,
+                                                    "   /Type /XObject\r\n"
+                                                    "   /Subtype /Form\r\n"
+                                                    "   /FormType 1\r\n"
+                                                    "   /BBox [ 0 0 %f %f ]\r\n"
+                                                    "   /Resources\r\n"
+                                                    "      << /ExtGState\r\n"
+                                                    "            << /a0 << /ca 1 /CA 1 >>"
+                                                    "      >>\r\n"
+                                                    "         /Pattern\r\n"
+                                                    "            << /res%d %d 0 R >>\r\n"
+                                                    "      >>\r\n"
+                                                    "   /Group\r\n"
+                                                    "      << /Type /Group\r\n"
+                                                    "         /S /Transparency\r\n"
+                                                    "         /CS /DeviceGray\r\n"
+                                                    "      >>\r\n",
+                                                    surface->width,
+                                                    surface->height,
+                                                    gradient_mask.id,
+                                                    gradient_mask.id);
+
+    _cairo_output_stream_printf (surface->output,
+                                 "q\r\n"
+                                 "/a0 gs\r\n"
+                                 "/Pattern cs /res%d scn\r\n"
+                                 "0 0 %f %f re\r\n"
+                                 "f\r\n"
+                                 "Q\r\n",
+                                 gradient_mask.id,
+                                 surface->width,
+                                 surface->height);
+
+    _cairo_pdf_surface_close_stream (surface);
+
+    smask_resource = _cairo_pdf_surface_new_object (surface);
+    _cairo_output_stream_printf (surface->output,
+                                 "%d 0 obj\r\n"
+                                 "<< /Type /Mask\r\n"
+                                 "   /S /Luminosity\r\n"
+                                 "   /G %d 0 R\r\n"
+                                 "   /BC [ 0.0 ]\r\n"
+                                 ">>\r\n"
+                                 "endobj\r\n",
+                                 smask_resource.id,
+                                 xobj_resource.id);
+
+    /* Create GState which uses the transparency group as an SMask. */
+    gstate_resource = _cairo_pdf_surface_new_object (surface);
+    _cairo_output_stream_printf (surface->output,
+                                 "%d 0 obj\r\n"
+                                 "<< /Type /ExtGState\r\n"
+                                 "   /SMask %d 0 R\r\n"
+                                 "   /ca 1\r\n"
+                                 "   /CA 1\r\n"
+                                 "   /AIS false\r\n"
+                                 ">>\r\n"
+                                 "endobj\r\n",
+                                 gstate_resource.id,
+                                 smask_resource.id);
+
+    _cairo_pdf_surface_add_smask (surface, gstate_resource);
+
+    return gstate_resource;
 }
 
 static cairo_status_t
-_cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t *surface, cairo_linear_pattern_t *pattern)
+_cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
+                                        cairo_linear_pattern_t *pattern)
 {
-    cairo_pdf_resource_t function, pattern_resource, alpha;
-    double x0, y0, x1, y1;
-    cairo_matrix_t p2u;
+    cairo_pdf_resource_t pattern_resource, smask;
+    cairo_pdf_resource_t color_function, alpha_function;
+    double x1, y1, x2, y2;
+    cairo_matrix_t pat_to_pdf;
+    cairo_extend_t extend;
+    cairo_status_t status;
 
-    _cairo_pdf_surface_pause_content_stream (surface);
+    extend = cairo_pattern_get_extend (&pattern->base.base);
+    status = _cairo_pdf_surface_pause_content_stream (surface);
+    if (status)
+	return status;
 
-    function = _cairo_pdf_surface_emit_pattern_stops (surface, &pattern->base);
-    if (function.id == 0)
-	return CAIRO_STATUS_NO_MEMORY;
+    status = _cairo_pdf_surface_emit_pattern_stops (surface,
+                                                    &pattern->base,
+                                                    &color_function,
+                                                    &alpha_function);
+    if (status)
+	return status;
 
-    p2u = pattern->base.base.matrix;
-    cairo_matrix_invert (&p2u);
+    pat_to_pdf = pattern->base.base.matrix;
+    status = cairo_matrix_invert (&pat_to_pdf);
+    if (status)
+	return status;
 
-    x0 = _cairo_fixed_to_double (pattern->gradient.p1.x);
-    y0 = _cairo_fixed_to_double (pattern->gradient.p1.y);
-    cairo_matrix_transform_point (&p2u, &x0, &y0);
-    x1 = _cairo_fixed_to_double (pattern->gradient.p2.x);
-    y1 = _cairo_fixed_to_double (pattern->gradient.p2.y);
-    cairo_matrix_transform_point (&p2u, &x1, &y1);
+    cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
+    x1 = _cairo_fixed_to_double (pattern->p1.x);
+    y1 = _cairo_fixed_to_double (pattern->p1.y);
+    x2 = _cairo_fixed_to_double (pattern->p2.x);
+    y2 = _cairo_fixed_to_double (pattern->p2.y);
 
     pattern_resource = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
-				 "%d 0 obj\r\n"
-				 "<< /Type /Pattern\r\n"
-				 "   /PatternType 2\r\n"
-				 "   /Matrix [ 1 0 0 -1 0 %f ]\r\n"
-				 "   /Shading\r\n"
-				 "      << /ShadingType 2\r\n"
-				 "         /ColorSpace /DeviceRGB\r\n"
-				 "         /Coords [ %f %f %f %f ]\r\n"
-				 "         /Function %d 0 R\r\n"
-				 "         /Extend [ true true ]\r\n"
-				 "      >>\r\n"
-				 ">>\r\n"
-				 "endobj\r\n",
-				 pattern_resource.id,
-				 surface->height,
-				 x0, y0, x1, y1,
-				 function.id);
+                                 "%d 0 obj\r\n"
+                                 "<< /Type /Pattern\r\n"
+                                 "   /PatternType 2\r\n"
+                                 "   /Matrix [ %f %f %f %f %f %f ]\r\n"
+                                 "   /Shading\r\n"
+                                 "      << /ShadingType 2\r\n"
+                                 "         /ColorSpace /DeviceRGB\r\n"
+                                 "         /Coords [ %f %f %f %f ]\r\n"
+                                 "         /Function %d 0 R\r\n",
+                                 pattern_resource.id,
+                                 pat_to_pdf.xx, pat_to_pdf.yx,
+                                 pat_to_pdf.xy, pat_to_pdf.yy,
+                                 pat_to_pdf.x0, pat_to_pdf.y0,
+                                 x1, y1, x2, y2,
+                                 color_function.id);
 
-    _cairo_pdf_surface_add_pattern (surface, pattern_resource);
+    if (extend == CAIRO_EXTEND_PAD) {
+        _cairo_output_stream_printf (surface->output,
+                                     "         /Extend [ true true ]\r\n");
+    } else {
+        _cairo_output_stream_printf (surface->output,
+                                     "         /Extend [ false false ]\r\n");
+    }
 
-    alpha = _cairo_pdf_surface_add_alpha (surface, 1.0);
-
-    /* Use pattern */
-    /* With some work, we could separate the stroking
-     * or non-stroking pattern here as actually needed. */
     _cairo_output_stream_printf (surface->output,
-				 "/Pattern CS /res%d SCN "
-				 "/Pattern cs /res%d scn "
-				 "/a%d gs\r\n",
-				 pattern_resource.id,
-				 pattern_resource.id,
-				 alpha.id);
+                                 "      >>\r\n"
+                                 ">>\r\n"
+                                 "endobj\r\n");
 
-    _cairo_pdf_surface_resume_content_stream (surface);
+    if (alpha_function.id == 0) {
+         surface->emitted_pattern.smask.id = 0;
+    } else {
+        cairo_pdf_resource_t mask_resource;
 
-    return CAIRO_STATUS_SUCCESS;
+        /* Create pattern for SMask. */
+        mask_resource = _cairo_pdf_surface_new_object (surface);
+        _cairo_output_stream_printf (surface->output,
+                                     "%d 0 obj\r\n"
+                                     "<< /Type /Pattern\r\n"
+                                     "   /PatternType 2\r\n"
+                                     "   /Matrix [ %f %f %f %f %f %f ]\r\n"
+                                     "   /Shading\r\n"
+                                     "      << /ShadingType 2\r\n"
+                                     "         /ColorSpace /DeviceGray\r\n"
+                                     "         /Coords [ %f %f %f %f ]\r\n"
+                                     "         /Function %d 0 R\r\n",
+                                     mask_resource.id,
+                                     pat_to_pdf.xx, pat_to_pdf.yx,
+                                     pat_to_pdf.xy, pat_to_pdf.yy,
+                                     pat_to_pdf.x0, pat_to_pdf.y0,
+                                     x1, y1, x2, y2,
+                                     alpha_function.id);
+
+        if (extend == CAIRO_EXTEND_PAD) {
+            _cairo_output_stream_printf (surface->output,
+                                         "         /Extend [ true true ]\r\n");
+        } else {
+            _cairo_output_stream_printf (surface->output,
+                                         "         /Extend [ false false ]\r\n");
+        }
+
+        _cairo_output_stream_printf (surface->output,
+                                     "      >>\r\n"
+                                     ">>\r\n"
+                                     "endobj\r\n");
+        status = _cairo_pdf_surface_add_pattern (surface, mask_resource);
+        if (status)
+            return status;
+
+        smask = cairo_pdf_surface_emit_transparency_group (surface, mask_resource);
+        surface->emitted_pattern.smask = smask;
+    }
+
+    surface->emitted_pattern.type = CAIRO_PATTERN_TYPE_LINEAR;
+    status = _cairo_pdf_surface_add_alpha (surface, 1, &surface->emitted_pattern.alpha);
+    if (status)
+        return status;
+
+    surface->emitted_pattern.pattern = pattern_resource;
+    status = _cairo_pdf_surface_add_pattern (surface, pattern_resource);
+    if (status)
+        return status;
+
+    return _cairo_pdf_surface_resume_content_stream (surface);
 }
 
 static cairo_status_t
-_cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_radial_pattern_t *pattern)
+_cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t    *surface,
+                                        cairo_radial_pattern_t *pattern)
 {
-    cairo_pdf_resource_t function, pattern_resource, alpha;
-    double x0, y0, x1, y1, r0, r1;
-    cairo_matrix_t p2u;
+    cairo_pdf_resource_t pattern_resource, smask;
+    cairo_pdf_resource_t color_function, alpha_function;
+    double x1, y1, x2, y2, r1, r2;
+    cairo_matrix_t pat_to_pdf;
+    cairo_extend_t extend;
+    cairo_status_t status;
 
-    _cairo_pdf_surface_pause_content_stream (surface);
+    extend = cairo_pattern_get_extend (&pattern->base.base);
+    status = _cairo_pdf_surface_pause_content_stream (surface);
+    if (status)
+	return status;
 
-    function = _cairo_pdf_surface_emit_pattern_stops (surface, &pattern->base);
-    if (function.id == 0)
-	return CAIRO_STATUS_NO_MEMORY;
+    status = _cairo_pdf_surface_emit_pattern_stops (surface,
+                                                    &pattern->base,
+                                                    &color_function,
+                                                    &alpha_function);
+    if (status)
+	return status;
 
-    p2u = pattern->base.base.matrix;
-    cairo_matrix_invert (&p2u);
+    pat_to_pdf = pattern->base.base.matrix;
+    status = cairo_matrix_invert (&pat_to_pdf);
+    if (status)
+	return status;
 
-    x0 = _cairo_fixed_to_double (pattern->gradient.c1.x);
-    y0 = _cairo_fixed_to_double (pattern->gradient.c1.y);
-    r0 = _cairo_fixed_to_double (pattern->gradient.c1.radius);
-    cairo_matrix_transform_point (&p2u, &x0, &y0);
-    x1 = _cairo_fixed_to_double (pattern->gradient.c2.x);
-    y1 = _cairo_fixed_to_double (pattern->gradient.c2.y);
-    r1 = _cairo_fixed_to_double (pattern->gradient.c2.radius);
-    cairo_matrix_transform_point (&p2u, &x1, &y1);
+    cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
+    x1 = _cairo_fixed_to_double (pattern->c1.x);
+    y1 = _cairo_fixed_to_double (pattern->c1.y);
+    r1 = _cairo_fixed_to_double (pattern->r1);
+    x2 = _cairo_fixed_to_double (pattern->c2.x);
+    y2 = _cairo_fixed_to_double (pattern->c2.y);
+    r2 = _cairo_fixed_to_double (pattern->r2);
 
-    /* FIXME: This is surely crack, but how should you scale a radius
-     * in a non-orthogonal coordinate system? */
-    cairo_matrix_transform_distance (&p2u, &r0, &r1);
-
-    /* FIXME: There is a difference between the cairo gradient extend
-     * semantics and PDF extend semantics. PDFs extend=false means
-     * that nothing is painted outside the gradient boundaries,
-     * whereas cairo takes this to mean that the end color is padded
-     * to infinity. Setting extend=true in PDF gives the cairo default
-     * behavoir, not yet sure how to implement the cairo mirror and
-     * repeat behaviour. */
     pattern_resource = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
-				 "%d 0 obj\r\n"
-				 "<< /Type /Pattern\r\n"
-				 "   /PatternType 2\r\n"
-				 "   /Matrix [ 1 0 0 -1 0 %f ]\r\n"
-				 "   /Shading\r\n"
-				 "      << /ShadingType 3\r\n"
-				 "         /ColorSpace /DeviceRGB\r\n"
-				 "         /Coords [ %f %f %f %f %f %f ]\r\n"
-				 "         /Function %d 0 R\r\n"
-				 "         /Extend [ true true ]\r\n"
-				 "      >>\r\n"
-				 ">>\r\n"
-				 "endobj\r\n",
-				 pattern_resource.id,
-				 surface->height,
-				 x0, y0, r0, x1, y1, r1,
-				 function.id);
+                                 "%d 0 obj\r\n"
+                                 "<< /Type /Pattern\r\n"
+                                 "   /PatternType 2\r\n"
+                                 "   /Matrix [ %f %f %f %f %f %f ]\r\n"
+                                 "   /Shading\r\n"
+                                 "      << /ShadingType 3\r\n"
+                                 "         /ColorSpace /DeviceRGB\r\n"
+                                 "         /Coords [ %f %f %f %f %f %f ]\r\n"
+                                 "         /Function %d 0 R\r\n",
+                                 pattern_resource.id,
+                                 pat_to_pdf.xx, pat_to_pdf.yx,
+                                 pat_to_pdf.xy, pat_to_pdf.yy,
+                                 pat_to_pdf.x0, pat_to_pdf.y0,
+                                 x1, y1, r1, x2, y2, r2,
+                                 color_function.id);
 
-    _cairo_pdf_surface_add_pattern (surface, pattern_resource);
+    if (extend == CAIRO_EXTEND_PAD) {
+        _cairo_output_stream_printf (surface->output,
+                                     "         /Extend [ true true ]\r\n");
+    } else {
+        _cairo_output_stream_printf (surface->output,
+                                     "         /Extend [ false false ]\r\n");
+    }
 
-    alpha = _cairo_pdf_surface_add_alpha (surface, 1.0);
-
-    /* Use pattern */
-    /* With some work, we could separate the stroking
-     * or non-stroking pattern here as actually needed. */
     _cairo_output_stream_printf (surface->output,
-				 "/Pattern CS /res%d SCN "
-				 "/Pattern cs /res%d scn "
-				 "/a%d gs\r\n",
-				 pattern_resource.id,
-				 pattern_resource.id,
-				 alpha.id);
+                                 "      >>\r\n"
+                                 ">>\r\n"
+                                 "endobj\r\n");
 
-    _cairo_pdf_surface_resume_content_stream (surface);
+    if (alpha_function.id == 0) {
+        surface->emitted_pattern.smask.id = 0;
+    } else {
+        cairo_pdf_resource_t mask_resource;
 
-    return CAIRO_STATUS_SUCCESS;
+        /* Create pattern for SMask. */
+        mask_resource = _cairo_pdf_surface_new_object (surface);
+        _cairo_output_stream_printf (surface->output,
+                                     "%d 0 obj\r\n"
+                                     "<< /Type /Pattern\r\n"
+                                     "   /PatternType 2\r\n"
+                                     "   /Matrix [ %f %f %f %f %f %f ]\r\n"
+                                     "   /Shading\r\n"
+                                     "      << /ShadingType 3\r\n"
+                                     "         /ColorSpace /DeviceGray\r\n"
+                                     "         /Coords [ %f %f %f %f %f %f ]\r\n"
+                                     "         /Function %d 0 R\r\n",
+                                     mask_resource.id,
+                                     pat_to_pdf.xx, pat_to_pdf.yx,
+                                     pat_to_pdf.xy, pat_to_pdf.yy,
+                                     pat_to_pdf.x0, pat_to_pdf.y0,
+                                     x1, y1, r1, x2, y2, r2,
+                                     alpha_function.id);
+
+        if (extend == CAIRO_EXTEND_PAD) {
+            _cairo_output_stream_printf (surface->output,
+                                         "         /Extend [ true true ]\r\n");
+        } else {
+            _cairo_output_stream_printf (surface->output,
+                                         "         /Extend [ false false ]\r\n");
+        }
+
+        _cairo_output_stream_printf (surface->output,
+                                     "      >>\r\n"
+                                     ">>\r\n"
+                                     "endobj\r\n");
+
+        smask = cairo_pdf_surface_emit_transparency_group (surface, mask_resource);
+        surface->emitted_pattern.smask = smask;
+    }
+
+    surface->emitted_pattern.type = CAIRO_PATTERN_TYPE_RADIAL;
+
+    status = _cairo_pdf_surface_add_alpha (surface, 1.0, &surface->emitted_pattern.alpha);
+    if (status)
+	return status;
+
+    surface->emitted_pattern.pattern = pattern_resource;
+
+    status = _cairo_pdf_surface_add_pattern (surface, pattern_resource);
+    if (status)
+	return status;
+
+    return _cairo_pdf_surface_resume_content_stream (surface);
 }
 
 static cairo_status_t
@@ -1338,11 +1673,50 @@ _cairo_pdf_surface_emit_pattern (cairo_pdf_surface_t *surface, cairo_pattern_t *
 
     case CAIRO_PATTERN_TYPE_RADIAL:
 	return _cairo_pdf_surface_emit_radial_pattern (surface, (cairo_radial_pattern_t *) pattern);
-
     }
 
     ASSERT_NOT_REACHED;
     return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
+}
+
+static cairo_status_t
+_cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
+                                   cairo_bool_t         is_stroke)
+{
+    if (surface->emitted_pattern.type == CAIRO_PATTERN_TYPE_SOLID) {
+	_cairo_output_stream_printf (surface->output,
+                                     "%f %f %f ",
+                                     surface->emitted_pattern.red,
+                                     surface->emitted_pattern.green,
+                                     surface->emitted_pattern.blue);
+
+        if (is_stroke)
+            _cairo_output_stream_printf (surface->output, "RG ");
+        else
+            _cairo_output_stream_printf (surface->output, "rg ");
+
+        _cairo_output_stream_printf (surface->output,
+                                     "/a%d gs\r\n",
+                                     surface->emitted_pattern.alpha);
+    } else {
+        if (is_stroke) {
+            _cairo_output_stream_printf (surface->output,
+                                         "/Pattern CS /res%d SCN ",
+                                         surface->emitted_pattern.pattern);
+        } else {
+            _cairo_output_stream_printf (surface->output,
+                                         "/Pattern cs /res%d scn ",
+                                         surface->emitted_pattern.pattern);
+        }
+
+        _cairo_output_stream_printf (surface->output,
+                                     "/a%d gs ",
+                                     surface->emitted_pattern.alpha );
+
+        _cairo_output_stream_printf (surface->output, "\r\n");
+    }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -1370,7 +1744,7 @@ _cairo_pdf_surface_show_page (void *abstract_surface)
 
 static cairo_int_status_t
 _cairo_pdf_surface_get_extents (void		        *abstract_surface,
-				cairo_rectangle_int16_t *rectangle)
+				cairo_rectangle_int_t   *rectangle)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
 
@@ -1389,6 +1763,7 @@ _cairo_pdf_surface_get_extents (void		        *abstract_surface,
 
 typedef struct _pdf_path_info {
     cairo_output_stream_t   *output;
+    cairo_matrix_t	    *cairo_to_pdf;
     cairo_matrix_t	    *ctm_inverse;
 } pdf_path_info_t;
 
@@ -1399,6 +1774,8 @@ _cairo_pdf_path_move_to (void *closure, cairo_point_t *point)
     double x = _cairo_fixed_to_double (point->x);
     double y = _cairo_fixed_to_double (point->y);
 
+    if (info->cairo_to_pdf)
+        cairo_matrix_transform_point (info->cairo_to_pdf, &x, &y);
     if (info->ctm_inverse)
 	cairo_matrix_transform_point (info->ctm_inverse, &x, &y);
 
@@ -1415,6 +1792,8 @@ _cairo_pdf_path_line_to (void *closure, cairo_point_t *point)
     double x = _cairo_fixed_to_double (point->x);
     double y = _cairo_fixed_to_double (point->y);
 
+    if (info->cairo_to_pdf)
+        cairo_matrix_transform_point (info->cairo_to_pdf, &x, &y);
     if (info->ctm_inverse)
 	cairo_matrix_transform_point (info->ctm_inverse, &x, &y);
 
@@ -1437,6 +1816,11 @@ _cairo_pdf_path_curve_to (void          *closure,
     double dx = _cairo_fixed_to_double (d->x);
     double dy = _cairo_fixed_to_double (d->y);
 
+    if (info->cairo_to_pdf) {
+        cairo_matrix_transform_point (info->cairo_to_pdf, &bx, &by);
+        cairo_matrix_transform_point (info->cairo_to_pdf, &cx, &cy);
+        cairo_matrix_transform_point (info->cairo_to_pdf, &dx, &dy);
+    }
     if (info->ctm_inverse) {
 	cairo_matrix_transform_point (info->ctm_inverse, &bx, &by);
 	cairo_matrix_transform_point (info->ctm_inverse, &cx, &cy);
@@ -1485,6 +1869,7 @@ _cairo_pdf_surface_intersect_clip_path (void			*abstract_surface,
     }
 
     info.output = surface->output;
+    info.cairo_to_pdf = &surface->cairo_to_pdf;
     info.ctm_inverse = NULL;
 
     status = _cairo_path_fixed_interpret (path,
@@ -1546,10 +1931,10 @@ _cairo_pdf_surface_write_info (cairo_pdf_surface_t *surface)
 static void
 _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
 {
-    cairo_pdf_resource_t page, *res;
+    cairo_pdf_resource_t page, *res, smask;
     cairo_pdf_font_t font;
     int num_pages, num_fonts, i;
-    int num_alphas, num_resources;
+    int num_alphas, num_smasks, num_resources;
     double alpha;
 
     _cairo_pdf_surface_update_object (surface, surface->pages_resource);
@@ -1571,17 +1956,23 @@ _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
     _cairo_output_stream_printf (surface->output, "   /Resources <<\r\n");
 
     num_alphas =  _cairo_array_num_elements (&surface->alphas);
-    if (num_alphas > 0) {
+    num_smasks =  _cairo_array_num_elements (&surface->smasks);
+    if (num_alphas > 0 || num_smasks > 0) {
 	_cairo_output_stream_printf (surface->output,
 				     "      /ExtGState <<\r\n");
 
 	for (i = 0; i < num_alphas; i++) {
-	    /* With some work, we could separate the stroking
-	     * or non-stroking alpha here as actually needed. */
 	    _cairo_array_copy_element (&surface->alphas, i, &alpha);
 	    _cairo_output_stream_printf (surface->output,
 					 "         /a%d << /CA %f /ca %f >>\r\n",
 					 i, alpha, alpha);
+	}
+
+        for (i = 0; i < num_smasks; i++) {
+	    _cairo_array_copy_element (&surface->smasks, i, &smask);
+	    _cairo_output_stream_printf (surface->output,
+					 "         /sm%d %d 0 R\r\n",
+					 smask.id, smask.id);
 	}
 
 	_cairo_output_stream_printf (surface->output,
@@ -1619,14 +2010,20 @@ _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
 				     " >>\r\n");
     }
 
-    _cairo_output_stream_printf (surface->output,"      /Font <<\r\n");
     num_fonts = _cairo_array_num_elements (&surface->fonts);
-    for (i = 0; i < num_fonts; i++) {
-	_cairo_array_copy_element (&surface->fonts, i, &font);
-	_cairo_output_stream_printf (surface->output, "         /CairoFont-%d-%d %d 0 R\r\n",
-				     font.font_id, font.subset_id, font.subset_resource.id);
+    if (num_fonts > 0) {
+        _cairo_output_stream_printf (surface->output,"      /Font <<\r\n");
+        num_fonts = _cairo_array_num_elements (&surface->fonts);
+        for (i = 0; i < num_fonts; i++) {
+            _cairo_array_copy_element (&surface->fonts, i, &font);
+            _cairo_output_stream_printf (surface->output,
+                                         "         /CairoFont-%d-%d %d 0 R\r\n",
+                                         font.font_id,
+                                         font.subset_id,
+                                         font.subset_resource.id);
+        }
+        _cairo_output_stream_printf (surface->output, "      >>\r\n");
     }
-    _cairo_output_stream_printf (surface->output, "      >>\r\n");
 
     _cairo_output_stream_printf (surface->output,
 				 "   >>\r\n");
@@ -1639,12 +2036,14 @@ _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
 }
 
 static cairo_pdf_resource_t
-_cairo_pdf_surface_emit_toUnicode_stream (cairo_pdf_surface_t		*surface,
-                                          cairo_scaled_font_subset_t	*font_subset)
+_cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
+					   cairo_scaled_font_subset_t	*font_subset,
+                                           cairo_bool_t                  is_composite)
 {
     const cairo_scaled_font_backend_t *backend;
     cairo_pdf_resource_t stream;
-    unsigned int i;
+    unsigned int i, num_bfchar;
+    cairo_status_t status;
 
     if (font_subset->to_unicode == NULL) {
         stream.id = 0;
@@ -1666,88 +2065,86 @@ _cairo_pdf_surface_emit_toUnicode_stream (cairo_pdf_surface_t		*surface,
                                  "12 dict begin\r\n"
                                  "begincmap\r\n"
                                  "/CIDSystemInfo\r\n"
-                                 "<< /Registry (Cairo)\r\n"
-                                 "   /Ordering (ToUnicode-%d-%d)\r\n"
+                                 "<< /Registry (Adobe)\r\n"
+                                 "   /Ordering (UCS)\r\n"
                                  "   /Supplement 0\r\n"
                                  ">> def\r\n"
-                                 "/CMapName /Cairo-ToUnicode-%d-%d def\r\n"
+                                 "/CMapName /Adobe-Identity-UCS def\r\n"
                                  "/CMapType 2 def\r\n"
-                                 "1 begincodespacerange\r\n"
-                                 "<00> <ff>\r\n"
-                                 "endcodespacerange\r\n",
-                                 font_subset->font_id,
-                                 font_subset->subset_id,
-                                 font_subset->font_id,
-                                 font_subset->subset_id);
+                                 "1 begincodespacerange\r\n");
 
+    if (is_composite) {
+        _cairo_output_stream_printf (surface->output,
+                                     "<0000> <ffff>\r\n");
+    } else {
+        _cairo_output_stream_printf (surface->output,
+                                     "<00> <ff>\r\n");
+    }
+
+    _cairo_output_stream_printf (surface->output,
+                                  "endcodespacerange\r\n");
+
+    num_bfchar = font_subset->num_glyphs - 1;
     /* The CMap specification has a limit of 100 characters per beginbfchar operator */
     _cairo_output_stream_printf (surface->output,
                                  "%d beginbfchar\r\n",
-                                 font_subset->num_glyphs > 100 ? 100 : font_subset->num_glyphs);
-    for (i = 0; i < font_subset->num_glyphs; i++) {
+                                 num_bfchar > 100 ? 100 : num_bfchar);
+    for (i = 0; i < num_bfchar; i++) {
         if (i != 0 && i % 100 == 0) {
             _cairo_output_stream_printf (surface->output,
                                          "endbfchar\r\n"
                                          "%d beginbfchar\r\n",
-                                         font_subset->num_glyphs - i > 100 ? 100 : font_subset->num_glyphs - i);
+                                         num_bfchar - i > 100 ? 100 : num_bfchar - i);
         }
-        _cairo_output_stream_printf (surface->output,
-                                     "<%02x> <%04x>\r\n",
-                                     i, font_subset->to_unicode[i]);
+        if (is_composite) {
+            _cairo_output_stream_printf (surface->output,
+                                         "<%04x> <%04x>\r\n",
+                                         i + 1, font_subset->to_unicode[i + 1]);
+        } else {
+            _cairo_output_stream_printf (surface->output,
+                                         "<%02x> <%04x>\r\n",
+                                         i + 1, font_subset->to_unicode[i + 1]);
+        }
     }
     _cairo_output_stream_printf (surface->output,
                                  "endbfchar\r\n");
 
-    if (font_subset->num_glyphs < 256) {
-        _cairo_output_stream_printf (surface->output,
-                                     "1 beginnotdefrange\r\n"
-                                     "<%02x> <ff> 0\r\n"
-                                     "endnotdefrange\r\n",
-                                     font_subset->num_glyphs);
-    }
-
     _cairo_output_stream_printf (surface->output,
-                                "endcmap\r\n"
-                                "CMapName currentdict /CMap defineresource pop\r\n"
-                                "end\r\n"
+                                 "endcmap\r\n"
+                                 "CMapName currentdict /CMap defineresource pop\r\n"
+                                 "end\r\n"
                                  "end\r\n");
 
-    _cairo_pdf_surface_close_stream (surface);
+    status = _cairo_pdf_surface_close_stream (surface);
+    if (status)
+	stream.id = 0;
 
     return stream;
 }
 
 static cairo_status_t
-_cairo_pdf_surface_emit_cff_font_subset (cairo_pdf_surface_t		*surface,
-                                         cairo_scaled_font_subset_t	*font_subset)
+_cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
+                                  cairo_scaled_font_subset_t	*font_subset,
+                                  cairo_cff_subset_t            *subset)
 {
-    cairo_pdf_resource_t stream, descriptor, subset_resource, to_unicode_stream;
-    cairo_status_t status;
+    cairo_pdf_resource_t stream, descriptor, cidfont_dict;
+    cairo_pdf_resource_t subset_resource, to_unicode_stream;
     cairo_pdf_font_t font;
-    cairo_cff_subset_t subset;
     unsigned long compressed_length;
     char *compressed;
     unsigned int i;
-    char name[64];
+    cairo_status_t status;
 
-    snprintf (name, sizeof name, "CairoFont-%d-%d",
-	      font_subset->font_id, font_subset->subset_id);
-    status = _cairo_cff_subset_init (&subset, name, font_subset);
-    if (status)
-	return status;
-
-    compressed = compress_dup (subset.data, subset.data_length, &compressed_length);
-    if (compressed == NULL) {
-	_cairo_cff_subset_fini (&subset);
+    compressed = compress_dup (subset->data, subset->data_length, &compressed_length);
+    if (compressed == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
-    }
 
     stream = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
 				 "<< /Filter /FlateDecode\r\n"
 				 "   /Length %lu\r\n"
-				 "   /Subtype /Type1C\r\n"
+				 "   /Subtype /CIDFontType0C\r\n"
 				 ">>\r\n"
 				 "stream\r\n",
 				 stream.id,
@@ -1759,7 +2156,7 @@ _cairo_pdf_surface_emit_cff_font_subset (cairo_pdf_surface_t		*surface,
 				 "endobj\r\n");
     free (compressed);
 
-    to_unicode_stream = _cairo_pdf_surface_emit_toUnicode_stream (surface, font_subset);
+    to_unicode_stream = _cairo_pdf_surface_emit_to_unicode_stream (surface, font_subset, TRUE);
 
     descriptor = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -1778,41 +2175,57 @@ _cairo_pdf_surface_emit_cff_font_subset (cairo_pdf_surface_t		*surface,
 				 ">>\r\n"
 				 "endobj\r\n",
 				 descriptor.id,
-				 subset.base_font,
-				 subset.x_min,
-				 subset.y_min,
-				 subset.x_max,
-				 subset.y_max,
-				 subset.ascent,
-				 subset.descent,
+				 subset->base_font,
+				 subset->x_min,
+				 subset->y_min,
+				 subset->x_max,
+				 subset->y_max,
+				 subset->ascent,
+				 subset->descent,
 				 stream.id);
+
+    cidfont_dict = _cairo_pdf_surface_new_object (surface);
+    _cairo_output_stream_printf (surface->output,
+                                 "%d 0 obj\r\n"
+                                 "<< /Type /Font\r\n"
+                                 "   /Subtype /CIDFontType0\r\n"
+                                 "   /BaseFont /%s\r\n"
+                                 "   /CIDSystemInfo\r\n"
+                                 "   << /Registry (Adobe)\r\n"
+                                 "      /Ordering (Identity)\r\n"
+                                 "      /Supplement 0\r\n"
+                                 "   >>\r\n"
+                                 "   /FontDescriptor %d 0 R\r\n"
+                                 "   /W [0 [",
+                                 cidfont_dict.id,
+                                 subset->base_font,
+                                 descriptor.id);
+
+    for (i = 0; i < font_subset->num_glyphs; i++)
+	_cairo_output_stream_printf (surface->output,
+				     " %d",
+				     subset->widths[i]);
+
+    _cairo_output_stream_printf (surface->output,
+                                 " ]]\r\n"
+				 ">>\r\n"
+				 "endobj\r\n");
 
     subset_resource = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
 				 "<< /Type /Font\r\n"
-				 "   /Subtype /Type1\r\n"
+				 "   /Subtype /Type0\r\n"
 				 "   /BaseFont /%s\r\n"
-				 "   /FirstChar 0\r\n"
-				 "   /LastChar %d\r\n"
-				 "   /FontDescriptor %d 0 R\r\n"
-				 "   /Widths [",
+                                 "   /Encoding /Identity-H\r\n"
+				 "   /DescendantFonts [ %d 0 R]\r\n",
 				 subset_resource.id,
-				 subset.base_font,
-				 font_subset->num_glyphs - 1,
-				 descriptor.id);
-
-    for (i = 0; i < font_subset->num_glyphs; i++)
-	_cairo_output_stream_printf (surface->output,
-				     " %d",
-				     subset.widths[i]);
-
-    _cairo_output_stream_printf (surface->output,
-				 " ]\r\n");
+				 subset->base_font,
+				 cidfont_dict.id);
 
     if (to_unicode_stream.id != 0)
         _cairo_output_stream_printf (surface->output,
-                                     "    /ToUnicode %d 0 R\r\n",
+                                     "   /ToUnicode %d 0 R\r\n",
                                      to_unicode_stream.id);
 
     _cairo_output_stream_printf (surface->output,
@@ -1822,11 +2235,51 @@ _cairo_pdf_surface_emit_cff_font_subset (cairo_pdf_surface_t		*surface,
     font.font_id = font_subset->font_id;
     font.subset_id = font_subset->subset_id;
     font.subset_resource = subset_resource;
-    _cairo_array_append (&surface->fonts, &font);
+    status = _cairo_array_append (&surface->fonts, &font);
+
+    return status;
+}
+
+static cairo_status_t
+_cairo_pdf_surface_emit_cff_font_subset (cairo_pdf_surface_t	     *surface,
+                                         cairo_scaled_font_subset_t  *font_subset)
+{
+    cairo_status_t status;
+    cairo_cff_subset_t subset;
+    char name[64];
+
+    snprintf (name, sizeof name, "CairoFont-%d-%d",
+              font_subset->font_id, font_subset->subset_id);
+    status = _cairo_cff_subset_init (&subset, name, font_subset);
+    if (status)
+        return status;
+
+    status = _cairo_pdf_surface_emit_cff_font (surface, font_subset, &subset);
 
     _cairo_cff_subset_fini (&subset);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
+}
+
+static cairo_status_t
+_cairo_pdf_surface_emit_cff_fallback_font (cairo_pdf_surface_t	       *surface,
+                                           cairo_scaled_font_subset_t  *font_subset)
+{
+    cairo_status_t status;
+    cairo_cff_subset_t subset;
+    char name[64];
+
+    snprintf (name, sizeof name, "CairoFont-%d-%d",
+              font_subset->font_id, font_subset->subset_id);
+    status = _cairo_cff_fallback_init (&subset, name, font_subset);
+    if (status)
+        return status;
+
+    status = _cairo_pdf_surface_emit_cff_font (surface, font_subset, &subset);
+
+    _cairo_cff_fallback_fini (&subset);
+
+    return status;
 }
 
 static cairo_status_t
@@ -1868,7 +2321,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				 "endobj\r\n");
     free (compressed);
 
-    to_unicode_stream = _cairo_pdf_surface_emit_toUnicode_stream (surface, font_subset);
+    to_unicode_stream = _cairo_pdf_surface_emit_to_unicode_stream (surface, font_subset, FALSE);
 
     descriptor = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -1931,9 +2384,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
     font.font_id = font_subset->font_id;
     font.subset_id = font_subset->subset_id;
     font.subset_resource = subset_resource;
-    _cairo_array_append (&surface->fonts, &font);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_array_append (&surface->fonts, &font);
 }
 
 #if CAIRO_HAS_FT_FONT
@@ -1984,7 +2435,8 @@ static cairo_status_t
 _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 					      cairo_scaled_font_subset_t	*font_subset)
 {
-    cairo_pdf_resource_t stream, descriptor, encoding, subset_resource, to_unicode_stream;
+    cairo_pdf_resource_t stream, descriptor, cidfont_dict;
+    cairo_pdf_resource_t subset_resource, to_unicode_stream;
     cairo_status_t status;
     cairo_pdf_font_t font;
     cairo_truetype_subset_t subset;
@@ -2021,7 +2473,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 "endobj\r\n");
     free (compressed);
 
-    to_unicode_stream = _cairo_pdf_surface_emit_toUnicode_stream (surface, font_subset);
+    to_unicode_stream = _cairo_pdf_surface_emit_to_unicode_stream (surface, font_subset, TRUE);
 
     descriptor = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -2050,18 +2502,30 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 (long)(subset.y_max*PDF_UNITS_PER_EM),
 				 stream.id);
 
-    encoding = _cairo_pdf_surface_new_object (surface);
+    cidfont_dict = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
-				 "%d 0 obj\r\n"
-				 "<< /Type /Encoding\r\n"
-				 "   /Differences [0 ",
-                                 encoding.id);
+                                 "%d 0 obj\r\n"
+                                 "<< /Type /Font\r\n"
+                                 "   /Subtype /CIDFontType2\r\n"
+                                 "   /BaseFont /%s\r\n"
+                                 "   /CIDSystemInfo\r\n"
+                                 "   << /Registry (Adobe)\r\n"
+                                 "      /Ordering (Identity)\r\n"
+                                 "      /Supplement 0\r\n"
+                                 "   >>\r\n"
+                                 "   /FontDescriptor %d 0 R\r\n"
+                                 "   /W [0 [",
+                                 cidfont_dict.id,
+                                 subset.base_font,
+                                 descriptor.id);
 
     for (i = 0; i < font_subset->num_glyphs; i++)
-            _cairo_output_stream_printf (surface->output, "/g%d ", i);
+        _cairo_output_stream_printf (surface->output,
+                                     " %ld",
+                                     (long)(subset.widths[i]*PDF_UNITS_PER_EM));
 
     _cairo_output_stream_printf (surface->output,
-                                 " ]\r\n"
+                                 " ]]\r\n"
 				 ">>\r\n"
 				 "endobj\r\n");
 
@@ -2069,30 +2533,17 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
 				 "<< /Type /Font\r\n"
-				 "   /Subtype /TrueType\r\n"
+				 "   /Subtype /Type0\r\n"
 				 "   /BaseFont /%s\r\n"
-				 "   /FirstChar 0\r\n"
-				 "   /LastChar %d\r\n"
-				 "   /FontDescriptor %d 0 R\r\n"
-				 "   /Encoding %d 0 R\r\n"
-				 "   /Widths [",
+                                 "   /Encoding /Identity-H\r\n"
+				 "   /DescendantFonts [ %d 0 R]\r\n",
 				 subset_resource.id,
 				 subset.base_font,
-				 font_subset->num_glyphs - 1,
-				 descriptor.id,
-                                 encoding.id);
-
-    for (i = 0; i < font_subset->num_glyphs; i++)
-	_cairo_output_stream_printf (surface->output,
-				     " %ld",
-				     (long)(subset.widths[i]*PDF_UNITS_PER_EM));
-
-    _cairo_output_stream_printf (surface->output,
-				 " ]\r\n");
+				 cidfont_dict.id);
 
     if (to_unicode_stream.id != 0)
         _cairo_output_stream_printf (surface->output,
-                                     "    /ToUnicode %d 0 R\r\n",
+                                     "   /ToUnicode %d 0 R\r\n",
                                      to_unicode_stream.id);
 
     _cairo_output_stream_printf (surface->output,
@@ -2102,11 +2553,11 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     font.font_id = font_subset->font_id;
     font.subset_id = font_subset->subset_id;
     font.subset_resource = subset_resource;
-    _cairo_array_append (&surface->fonts, &font);
+    status = _cairo_array_append (&surface->fonts, &font);
 
     _cairo_truetype_subset_fini (&subset);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_int_status_t
@@ -2137,6 +2588,7 @@ _cairo_pdf_surface_emit_outline_glyph (cairo_pdf_surface_t	*surface,
 				 -_cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
 
     info.output = surface->output;
+    info.cairo_to_pdf = &surface->cairo_to_pdf;
     info.ctm_inverse = NULL;
 
     status = _cairo_path_fixed_interpret (scaled_glyph->path,
@@ -2150,9 +2602,7 @@ _cairo_pdf_surface_emit_outline_glyph (cairo_pdf_surface_t	*surface,
     _cairo_output_stream_printf (surface->output,
 				 " f");
 
-    _cairo_pdf_surface_close_stream (surface);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_pdf_surface_close_stream (surface);
 }
 
 static cairo_int_status_t
@@ -2229,7 +2679,7 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
     _cairo_output_stream_printf (surface->output,
 				 "\r\nEI\r\n");
 
-    _cairo_pdf_surface_close_stream (surface);
+    status = _cairo_pdf_surface_close_stream (surface);
 
     if (image != scaled_glyph->surface)
 	cairo_surface_destroy (&image->base);
@@ -2267,6 +2717,7 @@ static cairo_status_t
 _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 					   cairo_scaled_font_subset_t	*font_subset)
 {
+    cairo_status_t status;
     cairo_pdf_resource_t *glyphs, encoding, char_procs, subset_resource, to_unicode_stream;
     cairo_pdf_font_t font;
     cairo_matrix_t matrix;
@@ -2275,13 +2726,13 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     cairo_box_t font_bbox = {{0,0},{0,0}};
     cairo_box_t bbox = {{0,0},{0,0}};
 
-    glyphs = malloc (font_subset->num_glyphs * sizeof (cairo_pdf_resource_t));
+    glyphs = _cairo_malloc_ab (font_subset->num_glyphs, sizeof (cairo_pdf_resource_t));
     if (glyphs == NULL) {
 	_cairo_surface_set_error (&surface->base, CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
-    widths = malloc (font_subset->num_glyphs * sizeof (double));
+    widths = _cairo_malloc_ab (font_subset->num_glyphs, sizeof (double));
     if (widths == NULL) {
         free (glyphs);
 	_cairo_surface_set_error (&surface->base, CAIRO_STATUS_NO_MEMORY);
@@ -2339,11 +2790,13 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 
     free (glyphs);
 
-    to_unicode_stream = _cairo_pdf_surface_emit_toUnicode_stream (surface, font_subset);
+    to_unicode_stream = _cairo_pdf_surface_emit_to_unicode_stream (surface, font_subset, FALSE);
 
     subset_resource = _cairo_pdf_surface_new_object (surface);
     matrix = font_subset->scaled_font->scale;
-    cairo_matrix_invert (&matrix);
+    status = cairo_matrix_invert (&matrix);
+    /* _cairo_scaled_font_init ensures the matrix is invertible */
+    assert (status == CAIRO_STATUS_SUCCESS);
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
 				 "<< /Type /Font\r\n"
@@ -2387,9 +2840,7 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     font.font_id = font_subset->font_id;
     font.subset_id = font_subset->subset_id;
     font.subset_resource = subset_resource;
-    _cairo_array_append (&surface->fonts, &font);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_array_append (&surface->fonts, &font);
 }
 
 static void
@@ -2399,23 +2850,29 @@ _cairo_pdf_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t *font_s
     cairo_pdf_surface_t *surface = closure;
     cairo_status_t status;
 
-    status = _cairo_pdf_surface_emit_cff_font_subset (surface, font_subset);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return;
+    if (font_subset->is_composite) {
+        status = _cairo_pdf_surface_emit_cff_font_subset (surface, font_subset);
+        if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+            return;
 
+        status = _cairo_pdf_surface_emit_truetype_font_subset (surface, font_subset);
+        if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+            return;
+
+        status = _cairo_pdf_surface_emit_cff_fallback_font (surface, font_subset);
+        if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+            return;
+    } else {
 #if CAIRO_HAS_FT_FONT
-    status = _cairo_pdf_surface_emit_type1_font_subset (surface, font_subset);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return;
+        status = _cairo_pdf_surface_emit_type1_font_subset (surface, font_subset);
+        if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+            return;
 #endif
 
-    status = _cairo_pdf_surface_emit_truetype_font_subset (surface, font_subset);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return;
-
-    status = _cairo_pdf_surface_emit_type1_fallback_font (surface, font_subset);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return;
+        status = _cairo_pdf_surface_emit_type1_fallback_font (surface, font_subset);
+        if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+            return;
+    }
 }
 
 static void
@@ -2509,7 +2966,9 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
 	surface->has_clip = FALSE;
     }
 
-    _cairo_pdf_surface_close_stream (surface);
+    status = _cairo_pdf_surface_close_stream (surface);
+    if (status)
+	return status;
 
     page = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -2583,10 +3042,48 @@ _surface_pattern_supported (cairo_surface_pattern_t *pattern)
 }
 
 static cairo_bool_t
+_gradient_pattern_supported (cairo_pattern_t *pattern)
+{
+    cairo_extend_t extend;
+
+    extend = cairo_pattern_get_extend (pattern);
+
+    if (extend == CAIRO_EXTEND_REPEAT ||
+        extend == CAIRO_EXTEND_REFLECT) {
+        return FALSE;
+    }
+
+    /* Radial gradients are currently only supported when one circle
+     * is inside the other. */
+    if (pattern->type == CAIRO_PATTERN_TYPE_RADIAL) {
+        double x1, y1, x2, y2, r1, r2, d;
+        cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) pattern;
+
+        x1 = _cairo_fixed_to_double (radial->c1.x);
+        y1 = _cairo_fixed_to_double (radial->c1.y);
+        r1 = _cairo_fixed_to_double (radial->r1);
+        x2 = _cairo_fixed_to_double (radial->c2.x);
+        y2 = _cairo_fixed_to_double (radial->c2.y);
+        r2 = _cairo_fixed_to_double (radial->r2);
+
+        d = sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));
+        if (d > fabs(r2 - r1)) {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+static cairo_bool_t
 _pattern_supported (cairo_pattern_t *pattern)
 {
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID)
 	return TRUE;
+
+    if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR ||
+	pattern->type == CAIRO_PATTERN_TYPE_RADIAL)
+	return _gradient_pattern_supported (pattern);
 
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
 	return _surface_pattern_supported ((cairo_surface_pattern_t *) pattern);
@@ -2594,32 +3091,12 @@ _pattern_supported (cairo_pattern_t *pattern)
     return FALSE;
 }
 
-static cairo_bool_t cairo_pdf_force_fallbacks = FALSE;
-
-/**
- * _cairo_pdf_test_force_fallbacks
- *
- * Force the PDF surface backend to use image fallbacks for every
- * operation.
- *
- * <note>
- * This function is <emphasis>only</emphasis> intended for internal
- * testing use within the cairo distribution. It is not installed in
- * any public header file.
- * </note>
- **/
-void
-_cairo_pdf_test_force_fallbacks (void)
-{
-    cairo_pdf_force_fallbacks = TRUE;
-}
-
 static cairo_int_status_t
-__cairo_pdf_surface_operation_supported (cairo_pdf_surface_t *surface,
+_cairo_pdf_surface_operation_supported (cairo_pdf_surface_t *surface,
 		      cairo_operator_t op,
 		      cairo_pattern_t *pattern)
 {
-    if (cairo_pdf_force_fallbacks)
+    if (surface->force_fallbacks)
 	return FALSE;
 
     if (! _pattern_supported (pattern))
@@ -2638,7 +3115,7 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t *surface,
 		    cairo_operator_t op,
 		    cairo_pattern_t *pattern)
 {
-    if (__cairo_pdf_surface_operation_supported (surface, op, pattern))
+    if (_cairo_pdf_surface_operation_supported (surface, op, pattern))
 	return CAIRO_STATUS_SUCCESS;
     else
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -2650,6 +3127,7 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 			  cairo_pattern_t	*source)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
+    cairo_pdf_resource_t group = {0}; /* squelch bogus compiler warning */
     cairo_status_t status;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
@@ -2662,16 +3140,37 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
      * possible only because there is nothing between the fallback
      * images and the paper, nor is anything painted above. */
     /*
-    assert (__cairo_pdf_surface_operation_supported (op, source));
+    assert (_cairo_pdf_surface_operation_supported (op, source));
     */
 
     status = _cairo_pdf_surface_emit_pattern (surface, source);
     if (status)
 	return status;
 
+    if (surface->emitted_pattern.smask.id != 0) {
+	status = _cairo_pdf_surface_begin_group (surface, &group);
+        if (status)
+            return status;
+    } else {
+        _cairo_output_stream_printf (surface->output, "q ");
+    }
+
+    _cairo_pdf_surface_select_pattern (surface, FALSE);
+
     _cairo_output_stream_printf (surface->output,
 				 "0 0 %f %f re f\r\n",
 				 surface->width, surface->height);
+
+    if (surface->emitted_pattern.smask.id != 0) {
+        _cairo_pdf_surface_end_group (surface);
+
+        _cairo_output_stream_printf (surface->output,
+                                     "q /sm%d gs /res%d Do Q\r\n",
+                                     surface->emitted_pattern.smask,
+                                     group.id);
+    } else {
+        _cairo_output_stream_printf (surface->output, "Q\r\n");
+    }
 
     return _cairo_output_stream_get_status (surface->output);
 }
@@ -2770,17 +3269,29 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 			   cairo_antialias_t	 antialias)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
+    cairo_pdf_resource_t group = {0}; /* squelch bogus compiler warning */
     pdf_path_info_t info;
     cairo_status_t status;
+    cairo_matrix_t m;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_pdf_surface_analyze_operation (surface, op, source);
 
-    assert (__cairo_pdf_surface_operation_supported (surface, op, source));
+    assert (_cairo_pdf_surface_operation_supported (surface, op, source));
 
     status = _cairo_pdf_surface_emit_pattern (surface, source);
     if (status)
 	return status;
+
+    if (surface->emitted_pattern.smask.id != 0) {
+	status = _cairo_pdf_surface_begin_group (surface, &group);
+        if (status)
+            return status;
+    } else {
+        _cairo_output_stream_printf (surface->output, "q ");
+    }
+
+    _cairo_pdf_surface_select_pattern (surface, TRUE);
 
     status = _cairo_pdf_surface_emit_stroke_style (surface,
 						   style);
@@ -2788,12 +3299,14 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 	return status;
 
     info.output = surface->output;
+    info.cairo_to_pdf = NULL;
     info.ctm_inverse = ctm_inverse;
 
+    cairo_matrix_multiply (&m, ctm, &surface->cairo_to_pdf);
     _cairo_output_stream_printf (surface->output,
 				 "q %f %f %f %f %f %f cm\r\n",
-				 ctm->xx, ctm->yx, ctm->xy, ctm->yy,
-				 ctm->x0, ctm->y0);
+				 m.xx, m.yx, m.xy, m.yy,
+				 m.x0, m.y0);
 
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
@@ -2804,6 +3317,17 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 					  &info);
 
     _cairo_output_stream_printf (surface->output, "S Q\r\n");
+
+    if (surface->emitted_pattern.smask.id != 0) {
+        _cairo_pdf_surface_end_group (surface);
+
+        _cairo_output_stream_printf (surface->output,
+                                     "q /sm%d gs /res%d Do Q\r\n",
+                                     surface->emitted_pattern.smask,
+                                     group.id);
+    } else {
+        _cairo_output_stream_printf (surface->output, "Q\r\n");
+    }
 
     return status;
 }
@@ -2818,6 +3342,7 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 			 cairo_antialias_t	 antialias)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
+    cairo_pdf_resource_t group = {0}; /* squelch bogus compiler warning */
     const char *pdf_operator;
     cairo_status_t status;
     pdf_path_info_t info;
@@ -2825,15 +3350,24 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_pdf_surface_analyze_operation (surface, op, source);
 
-    assert (__cairo_pdf_surface_operation_supported (surface, op, source));
+    assert (_cairo_pdf_surface_operation_supported (surface, op, source));
 
     status = _cairo_pdf_surface_emit_pattern (surface, source);
     if (status)
 	return status;
 
-    info.output = surface->output;
-    info.ctm_inverse = NULL;
+    if (surface->emitted_pattern.smask.id != 0) {
+	status = _cairo_pdf_surface_begin_group (surface, &group);
+        if (status)
+            return status;
+    } else {
+        _cairo_output_stream_printf (surface->output, "q ");
+    }
 
+    _cairo_pdf_surface_select_pattern (surface, FALSE);
+    info.output = surface->output;
+    info.cairo_to_pdf = &surface->cairo_to_pdf;
+    info.ctm_inverse = NULL;
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
 					  _cairo_pdf_path_move_to,
@@ -2857,8 +3391,21 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 				 "%s\r\n",
 				 pdf_operator);
 
+    if (surface->emitted_pattern.smask.id != 0) {
+        _cairo_pdf_surface_end_group (surface);
+
+        _cairo_output_stream_printf (surface->output,
+                                     "q /sm%d gs /res%d Do Q\r\n",
+                                     surface->emitted_pattern.smask,
+                                     group.id);
+    } else {
+        _cairo_output_stream_printf (surface->output, "Q\r\n");
+    }
+
     return status;
 }
+
+#define GLYPH_POSITION_TOLERANCE 0.001
 
 static cairo_int_status_t
 _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
@@ -2869,20 +3416,33 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 				cairo_scaled_font_t	*scaled_font)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
+    cairo_pdf_resource_t group = {0}; /* squelch bogus compiler warning */
     unsigned int current_subset_id = (unsigned int)-1;
-    unsigned int font_id, subset_id, subset_glyph_index;
-    cairo_bool_t diagonal;
+    cairo_scaled_font_subsets_glyph_t subset_glyph;
+    cairo_bool_t diagonal, in_TJ;
     cairo_status_t status;
-    int i;
+    double Tlm_x = 0, Tlm_y = 0;
+    double Tm_x = 0, y;
+    int i, hex_width;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_pdf_surface_analyze_operation (surface, op, source);
 
-    assert (__cairo_pdf_surface_operation_supported (surface, op, source));
+    assert (_cairo_pdf_surface_operation_supported (surface, op, source));
 
     status = _cairo_pdf_surface_emit_pattern (surface, source);
     if (status)
 	return status;
+
+    if (surface->emitted_pattern.smask.id != 0) {
+	status = _cairo_pdf_surface_begin_group (surface, &group);
+        if (status)
+            return status;
+    } else {
+        _cairo_output_stream_printf (surface->output, "q ");
+    }
+
+    _cairo_pdf_surface_select_pattern (surface, FALSE);
 
     _cairo_output_stream_printf (surface->output,
 				 "BT\r\n");
@@ -2893,40 +3453,145 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
     else
         diagonal = FALSE;
 
+    in_TJ = FALSE;
     for (i = 0; i < num_glyphs; i++) {
-	status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
-						       scaled_font, glyphs[i].index,
-						       &font_id, &subset_id, &subset_glyph_index);
+        status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
+                                                       scaled_font, glyphs[i].index,
+                                                       &subset_glyph);
 	if (status)
-	    return status;
+            return status;
 
-	if (subset_id != current_subset_id)
-	    _cairo_output_stream_printf (surface->output,
-					 "/CairoFont-%d-%d 1 Tf\r\n",
-					 font_id, subset_id);
+        if (subset_glyph.is_composite)
+            hex_width = 4;
+        else
+            hex_width = 2;
 
-        if (subset_id != current_subset_id || !diagonal) {
+        if (subset_glyph.is_scaled == FALSE) {
+            y = 0.0;
+            cairo_matrix_transform_distance (&scaled_font->scale,
+                                             &subset_glyph.x_advance,
+                                             &y);
+        }
+
+	if (subset_glyph.subset_id != current_subset_id) {
+            if (in_TJ) {
+                _cairo_output_stream_printf (surface->output, ">] TJ\r\n");
+                in_TJ = FALSE;
+            }
             _cairo_output_stream_printf (surface->output,
-                                         "%f %f %f %f %f %f Tm <%02x> Tj\r\n",
+                                         "/CairoFont-%d-%d 1 Tf\r\n",
+                                         subset_glyph.font_id,
+                                         subset_glyph.subset_id);
+        }
+
+        if (subset_glyph.subset_id != current_subset_id || !diagonal) {
+            _cairo_output_stream_printf (surface->output,
+                                         "%f %f %f %f %f %f Tm\r\n",
                                          scaled_font->scale.xx,
-                                         scaled_font->scale.yx,
+                                         -scaled_font->scale.yx,
                                          -scaled_font->scale.xy,
-                                         -scaled_font->scale.yy,
+                                         scaled_font->scale.yy,
                                          glyphs[i].x,
-                                         glyphs[i].y,
-                                         subset_glyph_index);
-	    current_subset_id = subset_id;
+                                         surface->height - glyphs[i].y);
+            current_subset_id = subset_glyph.subset_id;
+            Tlm_x = glyphs[i].x;
+            Tlm_y = glyphs[i].y;
+            Tm_x = Tlm_x;
+        }
+
+        if (diagonal) {
+            if (i < num_glyphs - 1 &&
+                fabs((glyphs[i].y - glyphs[i+1].y)/scaled_font->scale.yy) < GLYPH_POSITION_TOLERANCE &&
+                fabs((glyphs[i].x - glyphs[i+1].x)/scaled_font->scale.xx) < 10)
+            {
+                if (!in_TJ) {
+                    if (i != 0) {
+                        _cairo_output_stream_printf (surface->output,
+                                                     "%f %f Td\r\n",
+                                                     (glyphs[i].x - Tlm_x)/scaled_font->scale.xx,
+                                                     -(glyphs[i].y - Tlm_y)/scaled_font->scale.yy);
+
+                        Tlm_x = glyphs[i].x;
+                        Tlm_y = glyphs[i].y;
+                        Tm_x = Tlm_x;
+                    }
+                    _cairo_output_stream_printf (surface->output,
+                                                 "[<%0*x",
+                                                 hex_width,
+                                                 subset_glyph.subset_glyph_index);
+                    Tm_x += subset_glyph.x_advance;
+                    in_TJ = TRUE;
+                } else {
+                    if (fabs((glyphs[i].x - Tm_x)/scaled_font->scale.xx) > GLYPH_POSITION_TOLERANCE) {
+                        double delta = glyphs[i].x - Tm_x;
+
+                        _cairo_output_stream_printf (surface->output,
+                                                     "> %f <",
+                                                     -1000.0*delta/scaled_font->scale.xx);
+                        Tm_x += delta;
+                    }
+                    _cairo_output_stream_printf (surface->output,
+                                                 "%0*x",
+                                                 hex_width,
+                                                 subset_glyph.subset_glyph_index);
+                    Tm_x += subset_glyph.x_advance;
+                }
+            }
+            else
+            {
+                if (in_TJ) {
+                    if (fabs((glyphs[i].x - Tm_x)/scaled_font->scale.xx) > GLYPH_POSITION_TOLERANCE) {
+                        double delta = glyphs[i].x - Tm_x;
+
+                        _cairo_output_stream_printf (surface->output,
+                                                     "> %f <",
+                                                     -1000.0*delta/scaled_font->scale.xx);
+                        Tm_x += delta;
+                    }
+                    _cairo_output_stream_printf (surface->output,
+                                                 "%0*x>] TJ\r\n",
+                                                 hex_width,
+                                                 subset_glyph.subset_glyph_index);
+                    Tm_x += subset_glyph.x_advance;
+                    in_TJ = FALSE;
+                } else {
+                    if (i != 0) {
+                        _cairo_output_stream_printf (surface->output,
+                                                     "%f %f Td ",
+                                                     (glyphs[i].x - Tlm_x)/scaled_font->scale.xx,
+                                                     (glyphs[i].y - Tlm_y)/-scaled_font->scale.yy);
+                        Tlm_x = glyphs[i].x;
+                        Tlm_y = glyphs[i].y;
+                        Tm_x = Tlm_x;
+                    }
+                    _cairo_output_stream_printf (surface->output,
+                                                 "<%0*x> Tj ",
+                                                 hex_width,
+                                                 subset_glyph.subset_glyph_index);
+                    Tm_x += subset_glyph.x_advance;
+                }
+            }
         } else {
             _cairo_output_stream_printf (surface->output,
-                                         "%f %f Td <%02x> Tj\r\n",
-                                         (glyphs[i].x - glyphs[i-1].x)/scaled_font->scale.xx,
-                                         (glyphs[i].y - glyphs[i-1].y)/-scaled_font->scale.yy,
-                                         subset_glyph_index);
+                                         "<%0*x> Tj\r\n",
+                                         hex_width,
+                                         subset_glyph.subset_glyph_index);
         }
     }
 
     _cairo_output_stream_printf (surface->output,
 				 "ET\r\n");
+
+    if (surface->emitted_pattern.smask.id != 0) {
+        _cairo_pdf_surface_end_group (surface);
+
+        _cairo_output_stream_printf (surface->output,
+                                     "q /sm%d gs /res%d Do Q\r\n",
+                                     surface->emitted_pattern.smask,
+                                     group.id);
+    } else {
+        _cairo_output_stream_printf (surface->output, "Q\r\n");
+    }
 
     return _cairo_output_stream_get_status (surface->output);
 }
@@ -2972,6 +3637,9 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     _cairo_pdf_surface_fill,
     _cairo_pdf_surface_show_glyphs,
     NULL, /* snapshot */
+
+    NULL, /* is_compatible */
+    NULL, /* reset */
 };
 
 static const cairo_paginated_surface_backend_t cairo_pdf_surface_paginated_backend = {

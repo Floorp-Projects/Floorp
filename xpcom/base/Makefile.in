@@ -65,7 +65,6 @@ CPPSRCS		= \
 		nsUUIDGenerator.cpp \
 		nsSystemInfo.cpp \
 		nsCycleCollector.cpp \
-		nsCycleCollectionParticipant.cpp \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR
@@ -118,7 +117,6 @@ SDK_HEADERS     = \
 		nsISupportsBase.h \
 		nscore.h \
 		nsCycleCollector.h \
-		nsCycleCollectionParticipant.h
 
 XPIDLSRCS	= \
 		nsIConsoleListener.idl \

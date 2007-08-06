@@ -337,7 +337,7 @@ nsString gfxOS2Font::GetUniqueName()
     return mName;
 }
 
-void gfxOS2Font::SetupCairoFont(cairo_t *aCR)
+PRBool gfxOS2Font::SetupCairoFont(cairo_t *aCR)
 {
 #ifdef DEBUG_thebes_2
     printf("gfxOS2Font[%#x]::SetupCairoFont(%#x)\n",
@@ -346,7 +346,12 @@ void gfxOS2Font::SetupCairoFont(cairo_t *aCR)
     // gfxPangoFont checks the CTM but Windows doesn't so leave away here, too
 
     // this implicitely ensures that mScaledFont is created if NULL
-    cairo_set_scaled_font(aCR, CairoScaledFont());
+    cairo_scaled_font_t *scaledFont = CairoScaledFont();
+    if (NS_LIKELY(scaledFont)) {
+        cairo_set_scaled_font(aCR, scaledFont);
+        return PR_TRUE;
+    }
+    return PR_FALSE;
 }
 
 /**********************************************************************

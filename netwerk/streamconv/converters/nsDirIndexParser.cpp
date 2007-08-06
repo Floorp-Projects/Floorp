@@ -56,10 +56,10 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefLocalizedString.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsDirIndexParser,
-                              nsIRequestObserver,
-                              nsIStreamListener,
-                              nsIDirIndexParser)
+NS_IMPL_ISUPPORTS3(nsDirIndexParser,
+                   nsIRequestObserver,
+                   nsIStreamListener,
+                   nsIDirIndexParser)
 
 nsDirIndexParser::nsDirIndexParser() {
 }

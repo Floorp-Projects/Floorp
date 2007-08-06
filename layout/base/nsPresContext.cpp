@@ -77,6 +77,8 @@
 #include "nsFrameManager.h"
 #include "nsLayoutUtils.h"
 #include "nsIViewManager.h"
+#include "nsCSSFrameConstructor.h"
+#include "nsStyleChangeList.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -642,17 +644,32 @@ nsPresContext::GetUserPreferences()
 void
 nsPresContext::ClearStyleDataAndReflow()
 {
-  if (mShell) {
-    // Clear out all our style data.
-    mShell->StyleSet()->ClearStyleData(this);
-
-    // Force a reflow of the root frame
-    // XXX We really should only do a reflow if a preference that affects
-    // formatting changed, e.g., a font change. If it's just a color change
-    // then we only need to repaint...
-    mShell->StyleChangeReflow();
+  // This method is used to recompute the style data when some change happens
+  // outside of any style rules, like a color preference change or a change
+  // in a system font size
+  if (mShell && mShell->GetRootFrame()) {
+    // Tell the style set to get the old rule tree out of the way
+    // so we can recalculate while maintaining rule tree immutability
+    nsresult rv = mShell->StyleSet()->BeginReconstruct();
+    if (NS_FAILED(rv))
+      return;
+    // Recalculate all of the style contexts for the document
+    // Note that we can ignore the return value of ComputeStyleChangeFor
+    // because we never need to reframe the root frame
+    // XXX This could be made faster by not rerunning rule matching
+    // (but note that nsPresShell::SetPreferenceStyleRules currently depends
+    // on us re-running rule matching here
+    nsStyleChangeList changeList;
+    mShell->FrameManager()->ComputeStyleChangeFor(mShell->GetRootFrame(),
+                                                  &changeList, nsChangeHint(0));
+    // Tell the style set it's safe to destroy the old rule tree
+    mShell->StyleSet()->EndReconstruct();
+    // Tell the frame constructor to process the required changes
+    mShell->FrameConstructor()->ProcessRestyledFrames(changeList);
   }
 }
+
+static const char sMinFontSizePref[] = "browser.display.auto_quality_min_font_size";
 
 void
 nsPresContext::PreferenceChanged(const char* aPrefName)
@@ -670,6 +687,11 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
 
       ClearStyleDataAndReflow();
     }
+    return;
+  }
+  if (!nsCRT::strcmp(aPrefName, sMinFontSizePref)) {
+    mAutoQualityMinFontSizePixelsPref = nsContentUtils::GetIntPref(sMinFontSizePref);
+    ClearStyleDataAndReflow();
     return;
   }
   // we use a zero-delay timer to coalesce multiple pref updates
@@ -764,6 +786,9 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   nsContentUtils::RegisterPrefCallback("layout.css.dpi",
                                        nsPresContext::PrefChangedCallback,
                                        this);
+
+  // This is observed thanks to the browser.display. observer above.
+  mAutoQualityMinFontSizePixelsPref = nsContentUtils::GetIntPref(sMinFontSizePref);
 
   rv = mEventManager->Init();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1058,9 +1083,23 @@ nsPresContext::GetDefaultFontExternal(PRUint8 aFontID) const
 }
 
 void
-nsPresContext::SetTextZoomExternal(float aZoom)
+nsPresContext::SetFullZoom(float aZoom)
 {
-  SetTextZoomInternal(aZoom);
+  nsPresContext* rootPresContext = RootPresContext();
+  if (rootPresContext != this) {
+    NS_WARNING("Zoom set on non-root prescontext");
+    rootPresContext->SetFullZoom(aZoom);
+    return;
+  }
+  nsRect bounds(mVisibleArea);
+  bounds.ScaleRoundPreservingCentersInverse(AppUnitsPerDevPixel());
+  if (!mShell || !mDeviceContext->SetPixelScale(aZoom))
+    return;
+  mDeviceContext->FlushFontCache();
+  nscoord width = DevPixelsToAppUnits(bounds.width);
+  nscoord height = DevPixelsToAppUnits(bounds.height);
+  GetViewManager()->SetWindowDimensions(width, height);
+  ClearStyleDataAndReflow();
 }
 
 imgIRequest*

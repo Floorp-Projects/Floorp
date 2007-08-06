@@ -243,8 +243,15 @@ const XHTMLre = RegExp(XHTMLNSre + "|" + XHTML2NSre, "");
  * invoked as "XXXLoadFunc();"
  */
 
-// These functions are called once when the Page Info window is opened.
+// These functions are called to build the data displayed in the Page
+// Info window. The global variables gDocument and gWindow are set.
 var onLoadRegistry = [ ];
+
+// These functions are called to remove old data still displayed in
+// the window when the document whose information is displayed
+// changes. For example, at this time, the list of images of the Media
+// tab is cleared.
+var onResetRegistry = [ ];
 
 // These are called once for each subframe of the target document and
 // the target document itself. The frame is passed as an argument.
@@ -294,27 +301,12 @@ function onLoadPageInfo()
     gDocument = gWindow.document;
   }
 
-  var titleFormat = gWindow != gWindow.top ? "pageInfo.frame.title"
-                                           : "pageInfo.page.title";
-  document.title = gBundle.getFormattedString(titleFormat, [gDocument.location]);
-
-  document.getElementById("main-window").setAttribute("relatedUrl", gDocument.location);
-
-  // do the easy stuff first
-  makeGeneralTab();
-
   // init media view
   var imageTree = document.getElementById("imagetree");
   imageTree.view = gImageView;
 
-  // and then the hard stuff
-  makeTabs(gDocument, gWindow);
-
-  initFeedTab();
-  onLoadPermission();
-
-  /* Call registered overlay init functions */
-  onLoadRegistry.map(function(func) { func(); });
+  // build the content
+  loadPageInfo();
 
   /* Select the requested tab, if the name is specified */
   var initialTab = "general";
@@ -326,6 +318,55 @@ function onLoadPageInfo()
   radioGroup.selectedItem = initialTab;
   radioGroup.selectedItem.doCommand();
   radioGroup.focus();
+}
+
+function loadPageInfo()
+{
+  var titleFormat = gWindow != gWindow.top ? "pageInfo.frame.title"
+                                           : "pageInfo.page.title";
+  document.title = gBundle.getFormattedString(titleFormat, [gDocument.location]);
+
+  document.getElementById("main-window").setAttribute("relatedUrl", gDocument.location);
+
+  // do the easy stuff first
+  makeGeneralTab();
+
+  // and then the hard stuff
+  makeTabs(gDocument, gWindow);
+
+  initFeedTab();
+  onLoadPermission();
+
+  /* Call registered overlay init functions */
+  onLoadRegistry.map(function(func) { func(); });
+}
+
+function resetPageInfo()
+{
+  /* Reset Meta tags part */
+  gMetaView.clear();
+
+  /* Reset Media tab */
+  var mediaTab = document.getElementById("mediaTab");
+  if (!mediaTab.hidden) {
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                       .getService(Components.interfaces.nsIObserverService);
+    os.removeObserver(imagePermissionObserver, "perm-changed");
+    mediaTab.hidden = true;
+  }
+  gImageView.clear();
+  gImageHash = {};
+
+  /* Reset Feeds Tab */
+  var feedListbox = document.getElementById("feedListbox");
+  while (feedListbox.firstChild)
+    feedListbox.removeChild(feedListbox.firstChild);
+
+  /* Call registered overlay reset functions */
+  onResetRegistry.map(function(func) { func(); });
+
+  /* And let's rebuild the data */
+  loadPageInfo();
 }
 
 function onUnloadPageInfo()
@@ -410,10 +451,9 @@ function makeGeneralTab()
   var metaNodes = gDocument.getElementsByTagName("meta");
   var length = metaNodes.length;
 
-  if (!length) {
-    var metaGroup = document.getElementById("metaTags");
+  var metaGroup = document.getElementById("metaTags");
+  if (!length)
     metaGroup.collapsed = true;
-  }
   else {
     var metaTagsCaption = document.getElementById("metaTagsCaption");
     if (length == 1)
@@ -425,6 +465,8 @@ function makeGeneralTab()
 
     for (var i = 0; i < length; i++)
       gMetaView.addRow([metaNodes[i].name || metaNodes[i].httpEquiv, metaNodes[i].content]);
+
+    metaGroup.collapsed = false;
   }
 
   // get the date of last modification

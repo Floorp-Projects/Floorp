@@ -42,7 +42,7 @@
 #include "nsString.h"
 #include "nsIComponentManager.h"
 #include "nsILocalFile.h"
-#include "nsMIMEInfoImpl.h"
+#include "nsMIMEInfoUnix.h"
 #include "nsAutoPtr.h"
 
 #include <glib.h>
@@ -242,6 +242,14 @@ nsGNOMERegistry::HandlerExists(const char *aProtocolScheme)
   return PR_FALSE;
 }
 
+// XXX Check HandlerExists() before calling LoadURL.
+//
+// If there is not a registered handler for the protocol, gnome_url_show()
+// falls back to using gnomevfs modules.  See bug 389632.  We don't want
+// this fallback to happen as we are not sure of the safety of all gnomevfs
+// modules and MIME-default applications.  (gnomevfs should be handled in
+// nsGnomeVFSProtocolHandler.)
+
 /* static */ nsresult
 nsGNOMERegistry::LoadURL(nsIURI *aURL)
 {
@@ -304,7 +312,7 @@ nsGNOMERegistry::GetFromType(const char *aMIMEType)
   if (!handlerApp)
     return nsnull;
 
-  nsRefPtr<nsMIMEInfoImpl> mimeInfo = new nsMIMEInfoImpl(aMIMEType);
+  nsRefPtr<nsMIMEInfoUnix> mimeInfo = new nsMIMEInfoUnix(aMIMEType);
   NS_ENSURE_TRUE(mimeInfo, nsnull);
 
   // Get the list of extensions and append then to the mimeInfo.

@@ -297,6 +297,22 @@ typedef enum JSCharType {
 extern JSBool
 js_InitRuntimeStringState(JSContext *cx);
 
+/*
+ * Maximum character code for which we will create a pinned unit string on
+ * demand -- see JSRuntime.unitStrings in jscntxt.h.
+ */
+#define UNIT_STRING_LIMIT 256
+
+/*
+ * Get the independent string containing only character code c (backstopped
+ * with a NUL as usual for independent strings).
+ *
+ * This function must be called only for c < UNIT_STRING_LIMIT. It asserts to
+ * insist on this requirement in DEBUG builds.
+ */
+extern JSString *
+js_GetUnitString(JSContext *cx, jschar c);
+
 extern void
 js_FinishRuntimeStringState(JSContext *cx);
 
@@ -323,15 +339,15 @@ js_NewString(JSContext *cx, jschar *chars, size_t length, uintN gcflag);
 
 extern JSString *
 js_NewDependentString(JSContext *cx, JSString *base, size_t start,
-                      size_t length, uintN gcflag);
+                      size_t length);
 
 /* Copy a counted string and GC-allocate a descriptor for it. */
 extern JSString *
-js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n, uintN gcflag);
+js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n);
 
 /* Copy a C string and GC-allocate a descriptor for it. */
 extern JSString *
-js_NewStringCopyZ(JSContext *cx, const jschar *s, uintN gcflag);
+js_NewStringCopyZ(JSContext *cx, const jschar *s);
 
 /* Free the chars held by str when it is finalized by the GC. */
 extern void
@@ -421,7 +437,7 @@ js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
  * Return s advanced past any Unicode white space characters.
  */
 extern const jschar *
-js_SkipWhiteSpace(const jschar *s);
+js_SkipWhiteSpace(const jschar *s, const jschar *end);
 
 /*
  * Inflate bytes to JS chars and vice versa.  Report out of memory via cx

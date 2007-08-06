@@ -45,10 +45,10 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= spellchecker
 LIBRARY_NAME	= spellchecker
 MODULE_NAME     = mozSpellCheckerModule
-SHORT_LIBNAME = spellchk
+SHORT_LIBNAME   = spellchk
 EXPORT_LIBRARY  = 1
 IS_COMPONENT	= 1
-LIBXUL_LIBRARY = 1
+LIBXUL_LIBRARY  = 1
 
 REQUIRES	= xpcom \
 		  string \
@@ -79,8 +79,8 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 SHARED_LIBRARY_LIBS += ../osxspell/src/$(LIB_PREFIX)osxspell_s.$(LIB_SUFFIX)
 LOCAL_INCLUDES += -I$(srcdir)/../osxspell/src
 else
-SHARED_LIBRARY_LIBS += ../myspell/src/$(LIB_PREFIX)myspell_s.$(LIB_SUFFIX)
-LOCAL_INCLUDES += -I$(srcdir)/../myspell/src
+SHARED_LIBRARY_LIBS += ../hunspell/src/$(LIB_PREFIX)hunspell_s.$(LIB_SUFFIX)
+LOCAL_INCLUDES += -I$(srcdir)/../hunspell/src
 endif
 
 EXTRA_DSO_LDOPTS = \

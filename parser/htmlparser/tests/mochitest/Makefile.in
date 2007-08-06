@@ -53,8 +53,8 @@ _TEST_FILES =	parser_datreader.js \
 		test_html5_tree_construction.html \
 	 	test_bug339350.xhtml \
 		test_bug358797.html \
-		bug379025.txt \
+		regressions.txt \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

@@ -68,6 +68,8 @@
 #include "nsIScriptError.h"
 
 #include "nsICSSParser.h"
+#include "nsICSSStyleRule.h"
+#include "nsStyleSet.h"
 
 #include "nsPrintfCString.h"
 
@@ -98,6 +100,8 @@
 #include "gfxContext.h"
 #include "gfxASurface.h"
 #include "gfxPlatform.h"
+#include "gfxFont.h"
+#include "gfxTextRunCache.h"
 
 #include "nsFrameManager.h"
 
@@ -348,6 +352,10 @@ protected:
     cairo_t *mCairo;
     cairo_surface_t *mSurface;
 
+    nsString mTextStyle;
+    nsRefPtr<gfxFontGroup> mFontGroup;
+    gfxFontGroup *GetCurrentFontStyle();
+ 
     // only non-null if mSurface is an image surface
     PRUint8 *mImageSurfaceData;
 
@@ -600,10 +608,12 @@ nsCanvasRenderingContext2D::DoDrawImageSecurityCheck(nsIURI* aURI, PRBool forceW
         ssm->GetCodebasePrincipal(aURI, getter_AddRefs(uriPrincipal));
 
         if (uriPrincipal) {
-            nsresult rv = ssm->CheckSameOriginPrincipal(elem->NodePrincipal(),
-                                                        uriPrincipal);
-            if (NS_SUCCEEDED(rv)) {
-                // Same origin
+            PRBool subsumes;
+            nsresult rv =
+                elem->NodePrincipal()->Subsumes(uriPrincipal, &subsumes);
+            
+            if (NS_SUCCEEDED(rv) && subsumes) {
+                // This canvas has access to that image anyway
                 return;
             }
         }
@@ -753,7 +763,9 @@ nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
                                            const nsAString& aEncoderOptions,
                                            nsIInputStream **aStream)
 {
-    if (!mSurface || cairo_surface_status(mSurface) != CAIRO_STATUS_SUCCESS)
+    if (!mSurface ||
+        cairo_status(mCairo) != CAIRO_STATUS_SUCCESS ||
+        cairo_surface_status(mSurface) != CAIRO_STATUS_SUCCESS)
         return NS_ERROR_FAILURE;
 
     nsCString conid(NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type="));
@@ -1422,6 +1434,296 @@ nsCanvasRenderingContext2D::Rect(float x, float y, float w, float h)
     return NS_OK;
 }
 
+//
+// text
+//
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::SetMozTextStyle(const nsAString& textStyle)
+{
+    if(mTextStyle.Equals(textStyle)) return NS_OK;
+
+    nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
+    NS_ASSERTION(elem, "Canvas element must be a dom node");
+
+    nsCOMPtr<nsIPrincipal> elemPrincipal;
+    nsCOMPtr<nsIDocument> elemDocument;
+
+    elemPrincipal = elem->NodePrincipal();
+    elemDocument = elem->GetOwnerDoc();
+
+    NS_ASSERTION(elemDocument && elemPrincipal, "Element is missing document or principal");
+
+    nsIURI *docURL = elemDocument->GetDocumentURI();
+    nsIURI *baseURL = elemDocument->GetBaseURI();
+
+    nsCString langGroup;
+    elemDocument->GetPrimaryShell()->GetPresContext()->GetLangGroup()->ToUTF8String(langGroup);
+
+    nsCOMArray<nsIStyleRule> rules;
+    PRBool changed;
+
+    nsCOMPtr<nsICSSStyleRule> rule;
+    mCSSParser->ParseStyleAttribute(
+            EmptyString(),
+            docURL,
+            baseURL,
+            elemPrincipal,
+            getter_AddRefs(rule));
+
+    mCSSParser->ParseProperty(eCSSProperty_font,
+                              textStyle,
+                              docURL,
+                              baseURL,
+                              elemPrincipal,
+                              rule->GetDeclaration(),
+                              &changed);
+
+    rules.AppendObject(rule);
+
+    nsStyleSet *styleSet = elemDocument->GetPrimaryShell()->StyleSet();
+
+    nsRefPtr<nsStyleContext> sc = styleSet->ResolveStyleForRules(nsnull,rules);
+    const nsStyleFont *fontStyle = sc->GetStyleFont();
+
+    NS_ASSERTION(fontStyle, "Could not obtain font style");
+
+    PRUint32 aupdp = elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerDevPixel();
+
+    gfxFontStyle style(fontStyle->mFont.style,
+                       fontStyle->mFont.weight,
+                       NSAppUnitsToFloatPixels(fontStyle->mFont.size,aupdp),
+                       langGroup,
+                       fontStyle->mFont.sizeAdjust,
+                       fontStyle->mFont.systemFont,
+                       fontStyle->mFont.familyNameQuirks);
+
+    mFontGroup = gfxPlatform::GetPlatform()->CreateFontGroup(fontStyle->mFont.name, &style);
+    NS_ASSERTION(mFontGroup, "Could not get font group");
+    mTextStyle = textStyle;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::GetMozTextStyle(nsAString& textStyle)
+{
+    textStyle = mTextStyle;
+    return NS_OK;
+}
+
+gfxFontGroup *nsCanvasRenderingContext2D::GetCurrentFontStyle()
+{
+    if(!mFontGroup)
+    {
+        nsString style;
+        style.AssignLiteral("12pt sans serif");
+        nsresult res = SetMozTextStyle(style);
+        NS_ASSERTION(res == NS_OK, "Default canvas font is invalid");
+    }
+    return mFontGroup;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::MozDrawText(const nsAString& textToDraw)
+{
+    nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
+    NS_ASSERTION(elem, "Canvas element must be an nsINode");
+
+    nsCOMPtr<nsIDocument> elemDocument(elem->GetOwnerDoc());
+
+    const PRUnichar* textdata;
+    textToDraw.GetData(&textdata);
+
+    PRUint32 textrunflags = 0;
+    PRUint32 aupdp = elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerDevPixel();
+
+    gfxTextRunCache::AutoTextRun textRun;
+    textRun = gfxTextRunCache::MakeTextRun(textdata,
+                                           textToDraw.Length(),
+                                           GetCurrentFontStyle(),
+                                           mThebesContext,
+                                           aupdp,
+                                           textrunflags);
+
+    if(!textRun.get())
+        return NS_ERROR_FAILURE;
+
+    gfxPoint pt(0.0f,0.0f);
+
+    // Fill color is text color
+    ApplyStyle(STYLE_FILL);
+    
+    textRun->Draw(mThebesContext,
+                  pt,
+                  /* offset = */ 0,
+                  textToDraw.Length(),
+                  nsnull,
+                  nsnull,
+                  nsnull);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::MozMeasureText(const nsAString& textToMeasure, float *retVal)
+{
+    nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
+    NS_ASSERTION(elem, "Canvas element must be an nsINode");
+
+    nsCOMPtr<nsIDocument> elemDocument(elem->GetOwnerDoc());
+
+    const PRUnichar* textdata;
+    textToMeasure.GetData(&textdata);
+
+    PRUint32 textrunflags = 0;
+    PRUint32 aupdp = elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerDevPixel();
+
+    gfxTextRunCache::AutoTextRun textRun;
+    textRun = gfxTextRunCache::MakeTextRun(textdata,
+                                           textToMeasure.Length(),
+                                           GetCurrentFontStyle(),
+                                           mThebesContext,
+                                           aupdp,
+                                           textrunflags);
+
+    if(!textRun.get())
+        return NS_ERROR_FAILURE;
+
+    PRBool tightBoundingBox = PR_FALSE;
+    gfxTextRun::Metrics metrics = textRun->MeasureText(/* offset = */ 0, textToMeasure.Length(),
+                                                         tightBoundingBox,
+                                                         nsnull);
+    *retVal = metrics.mAdvanceWidth/gfxFloat(elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerCSSPixel());
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::MozPathText(const nsAString& textToPath)
+{
+    nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
+    NS_ASSERTION(elem, "Canvas element must be an nsINode");
+
+    nsCOMPtr<nsIDocument> elemDocument(elem->GetOwnerDoc());
+
+    const PRUnichar* textdata;
+    textToPath.GetData(&textdata);
+
+    PRUint32 textrunflags = 0;
+    PRUint32 aupdp = elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerDevPixel();
+
+    gfxTextRunCache::AutoTextRun textRun;
+    textRun = gfxTextRunCache::MakeTextRun(textdata,
+                                           textToPath.Length(),
+                                           GetCurrentFontStyle(),
+                                           mThebesContext,
+                                           aupdp,
+                                           textrunflags);
+
+    if(!textRun.get())
+        return NS_ERROR_FAILURE;
+
+    gfxPoint pt(0.0f,0.0f);
+
+    textRun->DrawToPath(mThebesContext,
+                        pt,
+                        /* offset = */ 0,
+                        textToPath.Length(),
+                        nsnull,
+                        nsnull);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCanvasRenderingContext2D::MozTextAlongPath(const nsAString& textToDraw, PRBool stroke)
+{
+    // Most of this code is copied from its svg equivalent
+    nsRefPtr<gfxFlattenedPath> path(mThebesContext->GetFlattenedPath());
+
+    nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
+    NS_ASSERTION(elem, "Canvas element must be an nsINode");
+
+    nsCOMPtr<nsIDocument> elemDocument(elem->GetOwnerDoc());
+
+    const PRUnichar* textdata;
+    textToDraw.GetData(&textdata);
+
+    PRUint32 textrunflags = 0;
+    PRUint32 aupdp = elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerDevPixel();
+
+    gfxTextRunCache::AutoTextRun textRun;
+    textRun = gfxTextRunCache::MakeTextRun(textdata,
+                                           textToDraw.Length(),
+                                           GetCurrentFontStyle(),
+                                           mThebesContext,
+                                           aupdp,
+                                           textrunflags);
+
+    if(!textRun.get())
+        return NS_ERROR_FAILURE;
+
+    struct PathChar
+    {
+        PRBool draw;
+        gfxFloat angle;
+        gfxPoint pos;
+        PathChar() : draw(PR_FALSE), angle(0.0), pos(0.0,0.0) {}
+    };
+
+    gfxFloat length = path->GetLength();
+    PRUint32 strLength = textToDraw.Length();
+
+    PathChar *cp = new PathChar[strLength];
+
+    gfxPoint position(0.0,0.0);
+    gfxFloat x = position.x;
+    for (PRUint32 i = 0; i < strLength; i++)
+    {
+        gfxFloat halfAdvance = textRun->GetAdvanceWidth(i, 1, nsnull) / (2.0 * aupdp);
+
+        // Check for end of path
+        if(x + halfAdvance > length)
+            break;
+
+        if(x + halfAdvance >= 0)
+        {
+            cp[i].draw = PR_TRUE;
+            gfxPoint pt = path->FindPoint(gfxPoint(x + halfAdvance, position.y), &(cp[i].angle));
+
+            cp[i].pos = pt - gfxPoint(cos(cp[i].angle), sin(cp[i].angle)) * halfAdvance;
+        }
+        x += 2 * halfAdvance;
+    }
+
+    if(stroke)
+        ApplyStyle(STYLE_STROKE);
+    else
+        ApplyStyle(STYLE_FILL);
+
+    for(PRUint32 i = 0; i < strLength; i++)
+    {
+        // Skip non-visible characters
+        if(!cp[i].draw) continue;
+
+        gfxMatrix matrix = mThebesContext->CurrentMatrix();
+
+        gfxMatrix rot;
+        rot.Rotate(cp[i].angle);
+        mThebesContext->Multiply(rot);
+
+        rot.Invert();
+        rot.Scale(aupdp,aupdp);
+        gfxPoint pt = rot.Transform(cp[i].pos);
+
+        if(stroke) {
+            textRun->DrawToPath(mThebesContext, pt, i, 1, nsnull, nsnull);
+        } else {
+            textRun->Draw(mThebesContext, pt, i, 1, nsnull, nsnull, nsnull);
+        }
+        mThebesContext->SetMatrix(matrix);
+    }
+
+    delete[] cp;
+
+    return NS_OK;
+}
 
 //
 // line caps/joins

@@ -1312,6 +1312,16 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
     if (PresContext()->CompatibilityMode() == eCompatibility_FullStandards) {
       aIntrinsicSize.width += 1;
     }
+
+    // Also add in the padding of our anonymous div child.  Note that it hasn't
+    // been reflowed yet, so we can't get its used padding, but it shouldn't be
+    // using percentage padding anyway.
+    nsMargin childPadding;
+    if (GetFirstChild(nsnull)->GetStylePadding()->GetPadding(childPadding)) {
+      aIntrinsicSize.width += childPadding.LeftRight();
+    } else {
+      NS_ERROR("Percentage padding on anonymous div?");
+    }
   }
 
   // Increment width with cols * letter-spacing.
@@ -1489,7 +1499,7 @@ nsTextControlFrame::CreateFrameFor(nsIContent*      aContent)
       }
     } else {
       // Never wrap non-textareas
-      textEditor->SetWrapWidth(-1);
+      textEditor->SetWrapColumn(-1);
     }
 
 
@@ -2575,6 +2585,16 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
   // so much easier...
   if (mEditor && mUseEditor) 
   {
+    // This method isn't used for user-generated changes, except for calls
+    // from nsFileControlFrame which sets mFireChangeEventState==true and
+    // restores it afterwards (ie. we want 'change' events for those changes).
+    // Focused value must be updated to prevent incorrect 'change' events,
+    // but only if user hasn't changed the value.
+    nsString val;
+    GetText(&val);
+    PRBool focusValueInit = !mFireChangeEventState &&
+      mFocusedValue.Equals(val);
+
     nsCOMPtr<nsIEditor> editor = mEditor;
     nsWeakFrame weakFrame(this);
     nsAutoString currentValue;
@@ -2669,10 +2689,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       if (outerTransaction)
         mNotifyOnInput = PR_TRUE;
 
-      // This method isn't used for user-generated changes, except for calls
-      // from nsFileControlFrame which sets mFireChangeEventState==true and
-      // restores it afterwards (ie. we want onchange events for those changes).
-      if (!mFireChangeEventState) {
+      if (focusValueInit) {
         // Reset mFocusedValue so the onchange event doesn't fire incorrectly.
         InitFocusedValue();
       }

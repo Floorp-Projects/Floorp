@@ -327,7 +327,7 @@ nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
 
   // No more rects left in the band. If we haven't yet reached the right edge,
   // then all the remaining space is available
-  if (left < rightEdge) {
+  if (left < rightEdge || aBandData.mCount == 0) {
     if (aBandData.mCount >= aBandData.mSize) {
       // Not enough space in the array of trapezoids
       aBandData.mCount++;
@@ -879,7 +879,7 @@ nsSpaceManager::AddRectRegion(nsIFrame* aFrame, const nsRect& aUnavailableSpace)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (aUnavailableSpace.height <= 0)
+  if (aUnavailableSpace.IsEmpty())
     return NS_OK;
 
   // Allocate a band rect
@@ -930,7 +930,7 @@ nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (frameInfo->mRect.height > 0) {
+  if (!frameInfo->mRect.IsEmpty()) {
     NS_ASSERTION(!mBandList.IsEmpty(), "no bands");
     BandRect* band = mBandList.Head();
     BandRect* prevBand = nsnull;

@@ -35,7 +35,6 @@
  */
 
 #define _GNU_SOURCE
-#include <stdlib.h>
 
 #include "cairoint.h"
 
@@ -198,7 +197,7 @@ slim_hidden_def(cairo_matrix_init_scale);
  * @sx: scale factor in the X direction
  * @sy: scale factor in the Y direction
  *
- * Applies scaling by @tx, @ty to the transformation in @matrix. The
+ * Applies scaling by @sx, @sy to the transformation in @matrix. The
  * effect of the new transformation is to first scale the coordinates
  * by @sx and @sy, then apply the original transformation to the coordinates.
  **/
@@ -476,6 +475,10 @@ cairo_matrix_invert (cairo_matrix_t *matrix)
     if (det == 0)
 	return CAIRO_STATUS_INVALID_MATRIX;
 
+    /* this weird construct is for detecting NaNs */
+    if (! (det * det > 0.))
+	return CAIRO_STATUS_INVALID_MATRIX;
+
     _cairo_matrix_compute_adjoint (matrix);
     _cairo_matrix_scalar_multiply (matrix, 1 / det);
 
@@ -496,7 +499,7 @@ _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix,
 }
 
 /* Compute the amount that each basis vector is scaled by. */
-cairo_status_t
+void
 _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 				     double *sx, double *sy, int x_major)
 {
@@ -536,8 +539,6 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 	    *sy = major;
 	}
     }
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_bool_t
@@ -735,13 +736,13 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
         *pixman_transform = pixman_identity_transform;
     }
     else {
-        pixman_transform->matrix[0][0] = _cairo_fixed_from_double (matrix->xx);
-        pixman_transform->matrix[0][1] = _cairo_fixed_from_double (matrix->xy);
-        pixman_transform->matrix[0][2] = _cairo_fixed_from_double (matrix->x0);
+        pixman_transform->matrix[0][0] = _cairo_fixed_16_16_from_double (matrix->xx);
+        pixman_transform->matrix[0][1] = _cairo_fixed_16_16_from_double (matrix->xy);
+        pixman_transform->matrix[0][2] = _cairo_fixed_16_16_from_double (matrix->x0);
 
-        pixman_transform->matrix[1][0] = _cairo_fixed_from_double (matrix->yx);
-        pixman_transform->matrix[1][1] = _cairo_fixed_from_double (matrix->yy);
-        pixman_transform->matrix[1][2] = _cairo_fixed_from_double (matrix->y0);
+        pixman_transform->matrix[1][0] = _cairo_fixed_16_16_from_double (matrix->yx);
+        pixman_transform->matrix[1][1] = _cairo_fixed_16_16_from_double (matrix->yy);
+        pixman_transform->matrix[1][2] = _cairo_fixed_16_16_from_double (matrix->y0);
 
         pixman_transform->matrix[2][0] = 0;
         pixman_transform->matrix[2][1] = 0;

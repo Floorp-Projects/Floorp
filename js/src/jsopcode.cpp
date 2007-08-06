@@ -2078,7 +2078,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     JS_GET_SCRIPT_OBJECT(jp->script, js_GetSrcNoteOffset(sn, 0),
                                          obj);
                   do_function:
-                    fun = (JSFunction *) JS_GetPrivate(cx, obj);
+                    fun = (JSFunction *) OBJ_GET_PRIVATE(cx, obj);
                     jp2 = JS_NEW_PRINTER(cx, "nested_function",
                                          jp->indent, jp->pretty);
                     if (!jp2)
@@ -2114,6 +2114,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 if ((cs->prec != 0 &&
                      cs->prec <= js_CodeSpec[NEXT_OP(pc)].prec) ||
                     pc[JSOP_GROUP_LENGTH] == JSOP_NULL ||
+                    pc[JSOP_GROUP_LENGTH] == JSOP_GLOBALTHIS ||
                     pc[JSOP_GROUP_LENGTH] == JSOP_DUP ||
                     pc[JSOP_GROUP_LENGTH] == JSOP_IFEQ ||
                     pc[JSOP_GROUP_LENGTH] == JSOP_IFNE) {
@@ -2736,7 +2737,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_RETURN:
                 obj = jp->object;
                 LOCAL_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);
-                fun = (JSFunction *) JS_GetPrivate(cx, obj);
+                fun = (JSFunction *) OBJ_GET_PRIVATE(cx, obj);
                 if (fun->flags & JSFUN_EXPR_CLOSURE) {
                     rval = POP_STR();
                     js_printf(jp, (*rval == '{') ? "(%s)%s" : ss_format,
@@ -3822,7 +3823,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     SprintStack ss2;
 
                     LOAD_FUNCTION(0);
-                    fun = (JSFunction *) JS_GetPrivate(cx, obj);
+                    fun = (JSFunction *) OBJ_GET_PRIVATE(cx, obj);
                     LOCAL_ASSERT(FUN_INTERPRETED(fun));
                     inner = fun->u.i.script;
 
@@ -3855,11 +3856,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     jp->script = outer;
 
                     /*
-                     * Advance over this op and its null |this| push, and
+                     * Advance over this op and its global |this| push, and
                      * arrange to advance over the call to this lambda.
                      */
                     pc += len;
-                    LOCAL_ASSERT(*pc == JSOP_NULL);
+                    LOCAL_ASSERT(*pc == JSOP_GLOBALTHIS);
                     pc += JSOP_NULL_LENGTH;
                     LOCAL_ASSERT(*pc == JSOP_CALL);
                     LOCAL_ASSERT(GET_ARGC(pc) == 0);
@@ -3938,14 +3939,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * parenthesization without confusing getter/setter code
                      * that checks for JSOP_ANONFUNOBJ and JSOP_NAMEDFUNOBJ.
                      */
-                    fun = (JSFunction *) JS_GetPrivate(cx, obj);
+                    fun = (JSFunction *) OBJ_GET_PRIVATE(cx, obj);
                     if (!(fun->flags & JSFUN_EXPR_CLOSURE))
                         indent |= JS_IN_GROUP_CONTEXT;
-                    if (!js_fun_toString(cx, obj, indent, 0, NULL, &val))
+                    str = JS_DecompileFunction(cx, fun, indent);
+                    if (!str)
                         return NULL;
                 }
-              sprint_string_value:
-                str = JSVAL_TO_STRING(val);
+              sprint_string:
                 todo = SprintString(&ss->sprinter, str);
                 break;
 
@@ -3957,9 +3958,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
               case JSOP_REGEXP:
                 GET_REGEXP_FROM_BYTECODE(jp->script, pc, 0, obj);
               do_regexp:
-                if (!js_regexp_toString(cx, obj, 0, NULL, &val))
+                if (!js_regexp_toString(cx, obj, &val))
                     return NULL;
-                goto sprint_string_value;
+                str = JSVAL_TO_STRING(val);
+                goto sprint_string;
 
               case JSOP_TABLESWITCH:
               case JSOP_TABLESWITCHX:

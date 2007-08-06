@@ -47,6 +47,8 @@ include $(topsrcdir)/config/rules.mk
 _TEST_FILES = 	test_bug5141.html \
 		test_bug51034.html \
 		test_bug218236.html \
+		file_bug218236_multipart.txt \
+		file_bug218236_multipart.txt^headers^ \
 		test_bug218277.html \
 		test_bug238409.html \
 		test_bug276037-1.html \
@@ -85,7 +87,17 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug375314.html \
 		test_bug382113.html \
 		bug382113_object.html \
+		test_CrossSiteXHR.html \
+		file_CrossSiteXHR_fail1.xml \
+		file_CrossSiteXHR_fail2.xml \
+		file_CrossSiteXHR_fail2.xml^headers^ \
+		file_CrossSiteXHR_fail3.xml \
+		file_CrossSiteXHR_fail4.xml \
+		file_CrossSiteXHR_pass1.xml \
+		file_CrossSiteXHR_pass1.xml^headers^ \
+		file_CrossSiteXHR_pass2.xml \
+		file_CrossSiteXHR_pass3.xml \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

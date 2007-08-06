@@ -41,7 +41,7 @@
 
 interface nsIAutoCompleteInput;
 
-[scriptable, uuid(476E1472-4357-4CD0-AFE3-FEA3112617B2)]
+[scriptable, uuid(b865d5cf-2ce1-4a5b-bb99-3d8a71df5ee9)]
 interface nsIAutoCompleteController : nsISupports
 {
   /*
@@ -136,6 +136,11 @@ interface nsIAutoCompleteController : nsISupports
    * Get a the style hint for the result at a given index in the last completed search
    */
   AString getStyleAt(in long index);
+
+  /*
+   * Get the url of the image of the result at a given index in the last completed search
+   */
+  AString getImageAt(in long index);
 
   /*
    * Set the current search string, but don't start searching

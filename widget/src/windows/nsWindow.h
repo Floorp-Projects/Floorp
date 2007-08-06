@@ -81,6 +81,13 @@ class imgIContainer;
 #define COLOREF_2_NSRGB(color) \
             NS_RGB(GetRValue(color), GetGValue(color), GetBValue(color))
 
+#define WIN2K_VERSION   0x500
+#define WINXP_VERSION   0x501
+#define WIN2K3_VERSION  0x502
+#define VISTA_VERSION   0x600
+
+PRInt32 GetWindowsVersion();
+
 /*
  * ::: IMPORTANT :::
  * External apps and drivers depend on window class names.
@@ -166,8 +173,6 @@ public:
   NS_IMETHOD              GetClientBounds(nsRect &aRect);
   NS_IMETHOD              GetScreenBounds(nsRect &aRect);
   NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
-  virtual nsIFontMetrics* GetFont(void);
-  NS_IMETHOD              SetFont(const nsFont &aFont);
   NS_IMETHOD              SetCursor(nsCursor aCursor);
   NS_IMETHOD              SetCursor(imgIContainer* aCursor,
                                     PRUint32 aHotspotX, PRUint32 aHotspotY);
@@ -421,6 +426,7 @@ protected:
   PRPackedBool  mIsTranslucent;
   PRPackedBool  mIsTopTranslucent;     // Topmost window itself or any of it's child windows has tranlucency enabled
 #endif
+  PRPackedBool  mHasAeroGlass;
   PRPackedBool  mIsTopWidgetWindow;
   PRPackedBool  mHas3DBorder;
   PRPackedBool  mIsShiftDown;
@@ -437,9 +443,6 @@ protected:
   char          mLeadByte;
   PRUint32      mBlurEventSuppressionLevel;
   nsContentType mContentType;
-
-  // XXX Temporary, should not be caching the font
-  nsFont *      mFont;
 
   PRInt32       mPreferredWidth;
   PRInt32       mPreferredHeight;

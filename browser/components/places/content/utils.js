@@ -230,7 +230,7 @@ var PlacesUtils = {
   /**
    * Determines whether or not a ResultNode is a Bookmark folder or not.
    * @param   aNode
-   *          A NavHistoryResultNode
+   *          A result node
    * @returns true if the node is a Bookmark folder, false otherwise
    */
   nodeIsFolder: function PU_nodeIsFolder(aNode) {
@@ -241,7 +241,7 @@ var PlacesUtils = {
   /**
    * Determines whether or not a ResultNode represents a bookmarked URI.
    * @param   aNode
-   *          A NavHistoryResultNode
+   *          A result node
    * @returns true if the node represents a bookmarked URI, false otherwise
    */
   nodeIsBookmark: function PU_nodeIsBookmark(aNode) {
@@ -253,7 +253,7 @@ var PlacesUtils = {
   /**
    * Determines whether or not a ResultNode is a Bookmark separator.
    * @param   aNode
-   *          A NavHistoryResultNode
+   *          A result node
    * @returns true if the node is a Bookmark separator, false otherwise
    */
   nodeIsSeparator: function PU_nodeIsSeparator(aNode) {
@@ -265,7 +265,7 @@ var PlacesUtils = {
   /**
    * Determines whether or not a ResultNode is a visit item or not
    * @param   aNode
-   *          A NavHistoryResultNode
+   *          A result node
    * @returns true if the node is a visit item, false otherwise
    */
   nodeIsVisit: function PU_nodeIsVisit(aNode) {
@@ -280,7 +280,7 @@ var PlacesUtils = {
   /**
    * Determines whether or not a ResultNode is a URL item or not
    * @param   aNode
-   *          A NavHistoryResultNode
+   *          A result node
    * @returns true if the node is a URL item, false otherwise
    */
   nodeIsURI: function PU_nodeIsURI(aNode) {
@@ -296,7 +296,7 @@ var PlacesUtils = {
   /**
    * Determines whether or not a ResultNode is a Query item or not
    * @param   aNode
-   *          A NavHistoryResultNode
+   *          A result node
    * @returns true if the node is a Query item, false otherwise
    */
   nodeIsQuery: function PU_nodeIsQuery(aNode) {
@@ -309,7 +309,7 @@ var PlacesUtils = {
    * Determines if a node is read only (children cannot be inserted, sometimes
    * they cannot be removed depending on the circumstance)
    * @param   aNode
-   *          A NavHistoryResultNode
+   *          A result node
    * @returns true if the node is readonly, false otherwise
    */
   nodeIsReadOnly: function PU_nodeIsReadOnly(aNode) {
@@ -325,7 +325,7 @@ var PlacesUtils = {
   /**
    * Determines whether or not a ResultNode is a host folder or not
    * @param   aNode
-   *          A NavHistoryResultNode
+   *          A result node
    * @returns true if the node is a host item, false otherwise
    */
   nodeIsHost: function PU_nodeIsHost(aNode) {
@@ -337,7 +337,7 @@ var PlacesUtils = {
   /**
    * Determines whether or not a ResultNode is a container item or not
    * @param   aNode
-   *          A NavHistoryResultNode
+   *          A result node
    * @returns true if the node is a container item, false otherwise
    */
   nodeIsContainer: function PU_nodeIsContainer(aNode) {
@@ -349,31 +349,22 @@ var PlacesUtils = {
            type == NHRN.RESULT_TYPE_QUERY ||
            type == NHRN.RESULT_TYPE_FOLDER ||
            type == NHRN.RESULT_TYPE_DAY ||
-           type == NHRN.RESULT_TYPE_REMOTE_CONTAINER;
+           type == NHRN.RESULT_TYPE_DYNAMIC_CONTAINER;
   },
 
   /**
-   * Determines whether or not a ResultNode is a remotecontainer item.
-   * ResultNote may be either a remote container result type or a bookmark folder
-   * with a nonempty remoteContainerType.  The remote container result node
-   * type is for dynamically created remote containers (i.e., for the file
-   * browser service where you get your folders in bookmark menus).  Bookmark
-   * folders are marked as remote containers when some other component is
-   * registered as interested in them and providing some operations, in which
-   * case their remoteContainerType indicates which component is thus registered.
-   * For exmaple, the livemark service uses this mechanism.
+   * Determines whether or not a result-node is a dynamic-container item.
+   * The dynamic container result node type is for dynamically created
+   * containers (e.g. for the file browser service where you get your folders
+   * in bookmark menus).
    * @param   aNode
-   *          A NavHistoryResultNode
-   * @returns true if the node is a container item, false otherwise
+   *          A result node
+   * @returns true if the node is a dynamic container item, false otherwise
    */
-  nodeIsRemoteContainer: function PU_nodeIsRemoteContainer(aNode) {
+  nodeIsDynamicContainer: function PU_nodeIsDynamicContainer(aNode) {
     NS_ASSERT(aNode, "null node");
-
-    const NHRN = Ci.nsINavHistoryResultNode;
-    if (aNode.type == NHRN.RESULT_TYPE_REMOTE_CONTAINER)
+    if (aNode.type == NHRN.RESULT_TYPE_DYNAMIC_CONTAINER)
       return true;
-    if (this.nodeIsFolder(aNode))
-      return asContainer(aNode).remoteContainerType != "";
     return false;
   },
 
@@ -385,9 +376,8 @@ var PlacesUtils = {
   * @returns true if the node is a livemark container item
   */
   nodeIsLivemarkContainer: function PU_nodeIsLivemarkContainer(aNode) {
-    return (this.nodeIsRemoteContainer(aNode) &&
-            asContainer(aNode).remoteContainerType ==
-               "@mozilla.org/browser/livemark-service;2");
+    return this.nodeIsFolder(aNode) &&
+           this.annotations.itemHasAnnotation(aNode.itemId, "livemark/feedURI");
   },
 
  /**

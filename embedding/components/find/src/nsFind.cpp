@@ -73,6 +73,8 @@ static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_CID(kCPreContentIteratorCID, NS_PRECONTENTITERATOR_CID);
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
+#define CH_SHY 173
+
 // -----------------------------------------------------------------------
 // nsFindContentIterator is a special iterator that also goes through
 // any existing <textarea>'s or text <input>'s editor to lookup the
@@ -956,6 +958,11 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
   nsAutoString patAutoStr(aPatText);
   if (!mCaseSensitive)
     ToLowerCase(patAutoStr);
+
+  // Ignore soft hyphens in the pattern  
+  static const char kShy[] = { CH_SHY };
+  patAutoStr.StripChars(kShy);
+
   const PRUnichar* patStr = patAutoStr.get();
   PRInt32 patLen = patAutoStr.Length() - 1;
 
@@ -1142,6 +1149,7 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
     // The two characters we'll be comparing:
     PRUnichar c = (t2b ? t2b[findex] : CHAR_TO_UNICHAR(t1b[findex]));
     PRUnichar patc = patStr[pindex];
+
 #ifdef DEBUG_FIND
     printf("Comparing '%c'=%x to '%c' (%d of %d), findex=%d%s\n",
            (char)c, (int)c, patc, pindex, patLen, findex,
@@ -1170,6 +1178,10 @@ nsFind::Find(const PRUnichar *aPatText, nsIDOMRange* aSearchRange,
     // convert to lower case if necessary
     else if (!inWhitespace && !mCaseSensitive && IsUpperCase(c))
       c = ToLowerCase(c);
+
+    // ignore soft hyphens in the document
+    if (c == CH_SHY)
+      continue;
 
     // a '\n' between CJ characters is ignored
     if (pindex != (mFindBackward ? patLen : 0) && c != patc && !inWhitespace) {

@@ -39,50 +39,12 @@
 #ifndef CAIRO_HASH_PRIVATE_H
 #define CAIRO_HASH_PRIVATE_H
 
+#include "cairo-types-private.h"
+
 /* XXX: I'd like this file to be self-contained in terms of
  * includeability, but that's not really possible with the current
  * monolithic cairoint.h. So, for now, just include cairoint.h instead
  * if you want to include this file. */
-
-typedef struct _cairo_hash_table cairo_hash_table_t;
-
-/**
- * cairo_hash_entry_t:
- *
- * A #cairo_hash_entry_t contains both a key and a value for
- * cairo_hash_table_t. User-derived types for cairo_hash_entry_t must
- * be type-compatible with this structure (eg. they must have an
- * unsigned long as the first parameter. The easiest way to get this
- * is to use:
- *
- * 	typedef _my_entry {
- *	    cairo_hash_entry_t base;
- *	    ... Remainder of key and value fields here ..
- *	} my_entry_t;
- *
- * which then allows a pointer to my_entry_t to be passed to any of
- * the cairo_hash_table functions as follows without requiring a cast:
- *
- *	_cairo_hash_table_insert (hash_table, &my_entry->base);
- *
- * IMPORTANT: The caller is reponsible for initializing
- * my_entry->base.hash with a hash code derived from the key. The
- * essential property of the hash code is that keys_equal must never
- * return TRUE for two keys that have different hashes. The best hash
- * code will reduce the frequency of two keys with the same code for
- * which keys_equal returns FALSE.
- *
- * Which parts of the entry make up the "key" and which part make up
- * the value are entirely up to the caller, (as determined by the
- * computation going into base.hash as well as the keys_equal
- * function). A few of the cairo_hash_table functions accept an entry
- * which will be used exclusively as a "key", (indicated by a
- * parameter name of key). In these cases, the value-related fields of
- * the entry need not be initialized if so desired.
- **/
-typedef struct _cairo_hash_entry {
-    unsigned long hash;
-} cairo_hash_entry_t;
 
 typedef cairo_bool_t
 (*cairo_hash_keys_equal_func_t) (const void *key_a, const void *key_b);

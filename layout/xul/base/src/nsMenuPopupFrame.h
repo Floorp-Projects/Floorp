@@ -64,6 +64,40 @@ enum nsPopupType {
   ePopupTypeTooltip
 };
 
+// XUL popups can be in several different states. When opening a popup, the
+// state changes as follows:
+//   ePopupClosed - initial state
+//   ePopupShowing - during the period when the popupshowing event fires
+//   ePopupOpen - between the popupshowing event and being visible. Creation
+//                of the child frames, layout and reflow occurs in this state.
+//   ePopupOpenAndVisible - layout is done and AdjustView is called to make
+//                          the popup's widget visible. The popup is now
+//                          visible and the popupshown event fires.
+// When closing a popup:
+//   ePopupHidden - during the period when the popuphiding event fires and
+//                  the popup is removed.
+//   ePopupClosed - the popup's widget is made invisible.
+enum nsPopupState {
+  // state when a popup is not open
+  ePopupClosed,
+  // state from when a popup is requested to be shown to after the
+  // popupshowing event has been fired.
+  ePopupShowing,
+  // state while a popup is open but the widget is not yet visible
+  ePopupOpen,
+  // state while a popup is open and visible on screen
+  ePopupOpenAndVisible,
+  // state from when a popup is requested to be hidden to when it is closed.
+  ePopupHiding,
+  // state which indicates that the popup was hidden without firing the
+  // popuphiding or popuphidden events. It is used when executing a menu
+  // command because the menu needs to be hidden before the command event
+  // fires, yet the popuphiding and popuphidden events are fired after. This
+  // state can also occur when the popup is removed because the document is
+  // unloaded.
+  ePopupInvisible
+};
+
 // values are selected so that the direction can be flipped just by
 // changing the sign
 #define POPUPALIGNMENT_NONE 0
@@ -99,8 +133,8 @@ public:
 
   // as popups are opened asynchronously, the popup pending state is used to
   // prevent multiple requests from attempting to open the same popup twice
-  PRBool IsOpenPending() { return mIsOpenPending; }
-  void ClearOpenPending() { mIsOpenPending = PR_FALSE; }
+  nsPopupState PopupState() { return mPopupState; }
+  void SetPopupState(nsPopupState aPopupState) { mPopupState = aPopupState; }
 
   NS_IMETHOD SetActive(PRBool aActiveFlag) { return NS_OK; } // We don't care.
   virtual PRBool IsActive() { return PR_FALSE; }
@@ -197,8 +231,12 @@ public:
 
   PRInt32 PopupType() const { return mPopupType; }
   PRBool IsMenu() { return mPopupType == ePopupTypeMenu; }
-  PRBool IsOpen() { return mIsOpen; }
+  PRBool IsOpen() { return mPopupState == ePopupOpen || mPopupState == ePopupOpenAndVisible; }
   PRBool HasOpenChanged() { return mIsOpenChanged; }
+
+  // returns true if the popup is in a content shell, or false for a popup in
+  // a chrome shell
+  PRBool IsInContentShell() { return mInContentShell; }
 
   // the Initialize methods are used to set the anchor position for
   // each way of opening a popup.
@@ -216,8 +254,9 @@ public:
 
   // indicate that the popup should be opened
   PRBool ShowPopup(PRBool aIsContextMenu, PRBool aSelectFirstItem);
-  // indicate that the popup should be hidden
-  void HidePopup(PRBool aDeselectMenu);
+  // indicate that the popup should be hidden. The new state should either be
+  // ePopupClosed or ePopupInvisible.
+  void HidePopup(PRBool aDeselectMenu, nsPopupState aNewState);
 
   // locate and return the menu frame that should be activated for the
   // supplied key event. If doAction is set to true by this method,
@@ -293,10 +332,9 @@ protected:
   PRInt32 mScreenYPos;
 
   nsPopupType mPopupType; // type of popup
+  nsPopupState mPopupState; // open state of the popup
 
-  PRPackedBool mIsOpen;  // true if the popup is open
   PRPackedBool mIsOpenChanged; // true if the open state changed since the last layout
-  PRPackedBool mIsOpenPending; // true if an open is pending
   PRPackedBool mIsContextMenu; // true for context menus
   PRPackedBool mGeneratedChildren; // true if the contents have been created
 

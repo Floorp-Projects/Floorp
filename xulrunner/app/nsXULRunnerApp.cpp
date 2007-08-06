@@ -443,17 +443,6 @@ int main(int argc, char* argv[])
     return 2;
   }
 
-  if (!appData->directory) {
-    nsCOMPtr<nsIFile> appDir;
-    rv = appDataLF->GetParent(getter_AddRefs(appDir));
-    if (NS_FAILED(rv)) {
-      Output(PR_TRUE, "Error: could not get application directory.\n");
-      return 2;
-    }
-
-    CallQueryInterface(appDir, &appData->directory);
-  }
-
   return XRE_main(argc, argv, appData);
 }
 

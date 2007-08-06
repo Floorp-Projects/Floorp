@@ -644,7 +644,7 @@ nsObjectFrame::GetDesiredSize(nsPresContext* aPresContext,
   }
   
   aMetrics.width = aReflowState.ComputedWidth();
-  aMetrics.height = aReflowState.mComputedHeight;
+  aMetrics.height = aReflowState.ComputedHeight();
 
   // for EMBED and APPLET, default to 240x200 for compatibility
   nsIAtom *atom = mContent->Tag();
@@ -967,7 +967,7 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
   }
 
   // this will call pi->SetWindow and take care of window subclassing
-  // if needed, see bug 132759
+  // if needed, see bug 132759.
   window->CallSetWindow(pi);
 
   mInstanceOwner->ReleasePluginPort((nsPluginPort *)window->window);
@@ -1138,6 +1138,8 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   // On Windows, this will be the HDC
   void* dc;
   dc = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
+  if (!dc)
+    return; // no dc implemented so quit
 
   npprint.print.embedPrint.platformPrint = dc;
   npprint.print.embedPrint.window = window;
@@ -1393,6 +1395,7 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
   // to FixupWindow.
   PresContext()->GetPresShell()->
     FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
+
   return rv;
 }
 
@@ -1416,18 +1419,24 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
 
   // finish up
   if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIPluginInstance> inst;
-    mInstanceOwner->GetInstance(*getter_AddRefs(inst));
-    if (inst) {
-      // The plugin may have set up new interfaces; we need to mess with our JS
-      // wrapper.  Note that we DO NOT want to call this if there is no plugin
-      // instance!  That would just reenter Instantiate(), trying to create
-      // said plugin instance.
-      NotifyContentObjectWrapper();
-    }
+    TryNotifyContentObjectWrapper();
   }
 
   return rv;
+}
+
+void
+nsObjectFrame::TryNotifyContentObjectWrapper()
+{
+  nsCOMPtr<nsIPluginInstance> inst;
+  mInstanceOwner->GetInstance(*getter_AddRefs(inst));
+  if (inst) {
+    // The plugin may have set up new interfaces; we need to mess with our JS
+    // wrapper.  Note that we DO NOT want to call this if there is no plugin
+    // instance!  That would just reenter Instantiate(), trying to create
+    // said plugin instance.
+    NotifyContentObjectWrapper();
+  }
 }
 
 void

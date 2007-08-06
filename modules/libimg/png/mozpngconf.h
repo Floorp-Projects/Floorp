@@ -57,9 +57,7 @@
 #define PNG_NO_READ_RGB_TO_GRAY
 #define PNG_NO_READ_USER_TRANSFORM
 #define PNG_NO_READ_bKGD
-#define PNG_NO_READ_cHRM
 #define PNG_NO_READ_hIST
-#define PNG_NO_READ_iCCP
 #define PNG_NO_READ_pCAL
 #define PNG_NO_READ_pHYs
 #define PNG_NO_READ_sBIT

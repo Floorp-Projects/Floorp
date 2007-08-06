@@ -650,3 +650,29 @@ XPCNativeWrapperMap::~XPCNativeWrapperMap()
 }
 
 /***************************************************************************/
+// implement WrappedNative2WrapperMap...
+
+// static
+WrappedNative2WrapperMap*
+WrappedNative2WrapperMap::newMap(int size)
+{
+    WrappedNative2WrapperMap* map = new WrappedNative2WrapperMap(size);
+    if(map && map->mTable)
+        return map;
+    delete map;
+    return nsnull;
+}
+
+WrappedNative2WrapperMap::WrappedNative2WrapperMap(int size)
+{
+    mTable = JS_NewDHashTable(JS_DHashGetStubOps(), nsnull,
+                              sizeof(Entry), size);
+}
+
+WrappedNative2WrapperMap::~WrappedNative2WrapperMap()
+{
+    if(mTable)
+        JS_DHashTableDestroy(mTable);
+}
+
+/***************************************************************************/

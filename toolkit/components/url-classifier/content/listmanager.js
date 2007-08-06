@@ -38,48 +38,23 @@
 
 // A class that manages lists, namely white and black lists for
 // phishing or malware protection. The ListManager knows how to fetch,
-// update, and store lists, and knows the "kind" of list each is (is
-// it a whitelist? a blacklist? etc). However it doesn't know how the
-// lists are serialized or deserialized (the wireformat classes know
-// this) nor the specific format of each list. For example, the list
-// could be a map of domains to "1" if the domain is phishy. Or it
-// could be a map of hosts to regular expressions to match, who knows?
-// Answer: the trtable knows. List are serialized/deserialized by the
-// wireformat reader from/to trtables, and queried by the listmanager.
+// update, and store lists.
 //
 // There is a single listmanager for the whole application.
 //
-// The listmanager is used only in privacy mode; in advanced protection
-// mode a remote server is queried.
-//
-// How to add a new table:
-// 1) get it up on the server
-// 2) add it to tablesKnown
-// 3) if it is not a known table type (trtable.js), add an implementation
-//    for it in trtable.js
-// 4) add a check for it in the phishwarden's isXY() method, for example
-//    isBlackURL()
-//
-// TODO: obviously the way this works could use a lot of improvement. In
-//       particular adding a list should just be a matter of adding
-//       its name to the listmanager and an implementation to trtable
-//       (or not if a talbe of that type exists). The format and semantics
-//       of the list comprise its name, so the listmanager should easily
-//       be able to figure out what to do with what list (i.e., no
-//       need for step 4).
 // TODO more comprehensive update tests, for example add unittest check 
 //      that the listmanagers tables are properly written on updates
 
-/**
- * The base pref name for where we keep table version numbers.
- * We add append the table name to this and set the value to
- * the version.  E.g., tableversion.goog-black-enchash may have
- * a value of 1.1234.
- */
-const kTableVersionPrefPrefix = "urlclassifier.tableversion.";
-
 // How frequently we check for updates (30 minutes)
 const kUpdateInterval = 30 * 60 * 1000;
+
+function QueryAdapter(callback) {
+  this.callback_ = callback;
+};
+
+QueryAdapter.prototype.handleResponse = function(value) {
+  this.callback_.handleEvent(value);
+}
 
 /**
  * A ListManager keeps track of black and white lists and knows
@@ -96,28 +71,7 @@ function PROT_ListManager() {
 
   this.updateserverURL_ = null;
 
-  // The lists we know about and the parses we can use to read
-  // them. Default all to the earlies possible version (1.-1); this
-  // version will get updated when successfully read from disk or
-  // fetch updates.
-  this.tablesKnown_ = {};
   this.isTesting_ = false;
-  
-  if (this.isTesting_) {
-    // populate with some tables for unittesting
-    this.tablesKnown_ = {
-      // A major version of zero means local, so don't ask for updates       
-      "test1-foo-domain" : new PROT_VersionParser("test1-foo-domain", 0, -1),
-      "test2-foo-domain" : new PROT_VersionParser("test2-foo-domain", 0, -1),
-      "test-white-domain" : 
-        new PROT_VersionParser("test-white-domain", 0, -1, true /* require mac*/),
-      "test-mac-domain" :
-        new PROT_VersionParser("test-mac-domain", 0, -1, true /* require mac */)
-    };
-    
-    // expose the object for unittesting
-    this.wrappedJSObject = this;
-  }
 
   this.tablesData = {};
 
@@ -133,6 +87,9 @@ function PROT_ListManager() {
                                    10*60*1000 /* error time, 10min */,
                                    60*60*1000 /* backoff interval, 60min */,
                                    6*60*60*1000 /* max backoff, 6hr */);
+
+  this.dbService_ = Cc["@mozilla.org/url-classifier/dbservice;1"]
+                   .getService(Ci.nsIUrlClassifierDBService);
 }
 
 /**
@@ -163,7 +120,6 @@ PROT_ListManager.prototype.setUpdateUrl = function(url) {
     // Remove old tables which probably aren't valid for the new provider.
     for (var name in this.tablesData) {
       delete this.tablesData[name];
-      delete this.tablesKnown_[name];
     }
   }
 }
@@ -188,11 +144,8 @@ PROT_ListManager.prototype.setKeyUrl = function(url) {
  */
 PROT_ListManager.prototype.registerTable = function(tableName, 
                                                     opt_requireMac) {
-  var table = new PROT_VersionParser(tableName, 1, -1, opt_requireMac);
-  if (!table)
-    return false;
-  this.tablesKnown_[tableName] = table;
-  this.tablesData[tableName] = newUrlClassifierTable(tableName);
+  this.tablesData[tableName] = {};
+  this.tablesData[tableName].needsUpdate = false;
 
   return true;
 }
@@ -203,7 +156,7 @@ PROT_ListManager.prototype.registerTable = function(tableName,
  */
 PROT_ListManager.prototype.enableUpdate = function(tableName) {
   var changed = false;
-  var table = this.tablesKnown_[tableName];
+  var table = this.tablesData[tableName];
   if (table) {
     G_Debug(this, "Enabling table updates for " + tableName);
     table.needsUpdate = true;
@@ -220,7 +173,7 @@ PROT_ListManager.prototype.enableUpdate = function(tableName) {
  */
 PROT_ListManager.prototype.disableUpdate = function(tableName) {
   var changed = false;
-  var table = this.tablesKnown_[tableName];
+  var table = this.tablesData[tableName];
   if (table) {
     G_Debug(this, "Disabling table updates for " + tableName);
     table.needsUpdate = false;
@@ -235,14 +188,9 @@ PROT_ListManager.prototype.disableUpdate = function(tableName) {
  * Determine if we have some tables that need updating.
  */
 PROT_ListManager.prototype.requireTableUpdates = function() {
-  for (var type in this.tablesKnown_) {
-    // All tables with a major of 0 are internal tables that we never
-    // update remotely.
-    if (this.tablesKnown_[type].major == 0)
-      continue;
-     
+  for (var type in this.tablesData) {
     // Tables that need updating even if other tables dont require it
-    if (this.tablesKnown_[type].needsUpdate)
+    if (this.tablesData[type].needsUpdate)
       return true;
   }
 
@@ -263,6 +211,22 @@ PROT_ListManager.prototype.maybeStartManagingUpdates = function() {
   this.maybeToggleUpdateChecking();
 }
 
+PROT_ListManager.prototype.kickoffUpdate_ = function (tableData)
+{
+  this.startingUpdate_ = false;
+  // If the user has never downloaded tables, do the check now.
+  // If the user has tables, add a fuzz of a few minutes.
+  var initialUpdateDelay = 3000;
+  if (tableData != "") {
+    // Add a fuzz of 0-5 minutes.
+    initialUpdateDelay += Math.floor(Math.random() * (5 * 60 * 1000));
+  }
+
+  this.currentUpdateChecker_ =
+    new G_Alarm(BindToObject(this.checkForUpdates, this),
+                initialUpdateDelay);
+}
+
 /**
  * Determine if we have any tables that require updating.  Different
  * Wardens may call us with new tables that need to be updated.
@@ -281,26 +245,10 @@ PROT_ListManager.prototype.maybeToggleUpdateChecking = function() {
 
     // Multiple warden can ask us to reenable updates at the same time, but we
     // really just need to schedule a single update.
-    if (!this.currentUpdateChecker_) {
-      // If the user has never downloaded tables, do the check now.
-      // If the user has tables, add a fuzz of a few minutes.
-      this.loadTableVersions_();
-      var hasTables = false;
-      for (var table in this.tablesKnown_) {
-        if (this.tablesKnown_[table].minor != -1) {
-          hasTables = true;
-          break;
-        }
-      }
-
-      var initialUpdateDelay = 3000;
-      if (hasTables) {
-        // Add a fuzz of 0-5 minutes.
-        initialUpdateDelay += Math.floor(Math.random() * (5 * 60 * 1000));
-      }
-      this.currentUpdateChecker_ =
-        new G_Alarm(BindToObject(this.checkForUpdates, this),
-                    initialUpdateDelay);
+    if (!this.currentUpdateChecker && !this.startingUpdate_) {
+      this.startingUpdate_ = true;
+      // check the current state of tables in the database
+      this.dbService_.getTables(BindToObject(this.kickoffUpdate_, this));
     }
   } else {
     G_Debug(this, "Stopping managing lists (if currently active)");
@@ -363,114 +311,17 @@ PROT_ListManager.prototype.stopUpdateChecker = function() {
  *        value in the table corresponding to key.  If the table name does not
  *        exist, we return false, too.
  */
-PROT_ListManager.prototype.safeExists = function(table, key, callback) {
+PROT_ListManager.prototype.safeLookup = function(key, callback) {
   try {
-    G_Debug(this, "safeExists: " + table + ", " + key);
-    var map = this.tablesData[table];
-    map.exists(key, callback);
+    G_Debug(this, "safeLookup: " + key);
+    var cb = new QueryAdapter(callback);
+    this.dbService_.lookup(key,
+                           BindToObject(cb.handleResponse, cb),
+                           true);
   } catch(e) {
-    G_Debug(this, "safeExists masked failure for " + table + ", key " + key + ": " + e);
-    callback.handleEvent(false);
+    G_Debug(this, "safeLookup masked failure for key " + key + ": " + e);
+    callback.handleEvent("");
   }
-}
-
-/**
- * We store table versions in user prefs.  This method pulls the values out of
- * the user prefs and into the tablesKnown objects.
- */
-PROT_ListManager.prototype.loadTableVersions_ = function() {
-  // Pull values out of prefs.
-  var prefBase = kTableVersionPrefPrefix;
-  for (var table in this.tablesKnown_) {
-    var version = this.prefs_.getPref(prefBase + table, "1.-1");
-    G_Debug(this, "loadTableVersion " + table + ": " + version);
-    var tokens = version.split(".");
-    G_Assert(this, tokens.length == 2, "invalid version number");
-    
-    this.tablesKnown_[table].major = tokens[0];
-    this.tablesKnown_[table].minor = tokens[1];
-  }
-}
-
-/**
- * Callback from db update service.  As new tables are added to the db,
- * this callback is fired so we can update the version number.
- * @param versionString String containing the table update response from the
- *        server
- */
-PROT_ListManager.prototype.setTableVersion_ = function(versionString) {
-  G_Debug(this, "Got version string: " + versionString);
-  var versionParser = new PROT_VersionParser("");
-  if (versionParser.fromString(versionString)) {
-    var tableName = versionParser.type;
-    var versionNumber = versionParser.versionString();
-    var prefBase = kTableVersionPrefPrefix;
-
-    this.prefs_.setPref(prefBase + tableName, versionNumber);
-    
-    if (!this.tablesKnown_[tableName]) {
-      this.tablesKnown_[tableName] = versionParser;
-    } else {
-      this.tablesKnown_[tableName].ImportVersion(versionParser);
-    }
-    
-    if (!this.tablesData[tableName])
-      this.tablesData[tableName] = newUrlClassifierTable(tableName);
-  }
-
-  // Since this is called from the update server, it means there was
-  // a successful http request.  Make sure to notify the request backoff
-  // object.
-  this.requestBackoff_.noteServerResponse(200 /* ok */);
-}
-
-/**
- * Prepares a URL to fetch upates from. Format is a squence of 
- * type:major:minor, fields
- * 
- * @param url The base URL to which query parameters are appended; assumes
- *            already has a trailing ?
- * @returns the URL that we should request the table update from.
- */
-PROT_ListManager.prototype.getRequestURL_ = function(url) {
-  url += "version=";
-  var firstElement = true;
-  var requestMac = false;
-
-  for (var type in this.tablesKnown_) {
-    // All tables with a major of 0 are internal tables that we never
-    // update remotely.
-    if (this.tablesKnown_[type].major == 0)
-      continue;
-
-    // Check if the table needs updating
-    if (this.tablesKnown_[type].needsUpdate == false)
-      continue;
-
-    if (!firstElement) {
-      url += ","
-    } else {
-      firstElement = false;
-    }
-    url += type + ":" + this.tablesKnown_[type].toUrl();
-
-    if (this.tablesKnown_[type].requireMac)
-      requestMac = true;
-  }
-
-  // Request a mac only if at least one of the tables to be updated requires
-  // it
-  if (requestMac) {
-    // Add the wrapped key for requesting macs
-    if (!this.urlCrypto_)
-      this.urlCrypto_ = new PROT_UrlCrypto();
-
-    url += "&wrkey=" +
-      encodeURIComponent(this.urlCrypto_.getManager().getWrappedKey());
-  }
-
-  G_Debug(this, "getRequestURL returning: " + url);
-  return url;
 }
 
 /**
@@ -492,56 +343,87 @@ PROT_ListManager.prototype.checkForUpdates = function() {
   if (!this.requestBackoff_.canMakeRequest())
     return false;
 
-  // Check to make sure our tables still exist (maybe the db got corrupted or
-  // the user deleted the file).  If not, we need to reset the table version
-  // before sending the update check.
-  var tableNames = [];
-  for (var tableName in this.tablesKnown_) {
-    tableNames.push(tableName);
-  }
-  var dbService = Cc["@mozilla.org/url-classifier/dbservice;1"]
-                  .getService(Ci.nsIUrlClassifierDBService);
-  dbService.checkTables(tableNames.join(","),
-                        BindToObject(this.makeUpdateRequest_, this));
+  // Grab the current state of the tables from the database
+  this.dbService_.getTables(BindToObject(this.makeUpdateRequest_, this));
   return true;
 }
 
 /**
  * Method that fires the actual HTTP update request.
  * First we reset any tables that have disappeared.
- * @param tableNames String comma separated list of tables that
- *   don't exist
+ * @param tableData List of table data already in the database, in the form
+ *        tablename;<chunk ranges>\n
  */
-PROT_ListManager.prototype.makeUpdateRequest_ = function(tableNames) {
-  // Clear prefs that track table version if they no longer exist in the db.
-  var tables = tableNames.split(",");
-  for (var i = 0; i < tables.length; ++i) {
-    G_Debug(this, "Table |" + tables[i] + "| no longer exists, clearing pref.");
-    this.prefs_.clearPref(kTableVersionPrefPrefix + tables[i]);
+PROT_ListManager.prototype.makeUpdateRequest_ = function(tableData) {
+  var tableNames = {};
+  for (var tableName in this.tablesData) {
+    tableNames[tableName] = true;
   }
 
-  // Ok, now reload the table version.
-  this.loadTableVersions_();
+  var request = "";
+
+  // For each table already in the database, include the chunk data from
+  // the database
+  var lines = tableData.split("\n");
+  for (var i = 0; i < lines.length; i++) {
+    var fields = lines[i].split(";");
+    if (tableNames[fields[0]]) {
+      request += lines[i] + "\n";
+      delete tableNames[fields[0]];
+    }
+  }
+
+  // For each requested table that didn't have chunk data in the database,
+  // request it fresh
+  for (var tableName in tableNames) {
+    request += tableName + ";\n";
+  }
 
   G_Debug(this, 'checkForUpdates: scheduling request..');
-  var url = this.getRequestURL_(this.updateserverURL_);
   var streamer = Cc["@mozilla.org/url-classifier/streamupdater;1"]
                  .getService(Ci.nsIUrlClassifierStreamUpdater);
   try {
-    streamer.updateUrl = url;
+    streamer.updateUrl = this.updateserverURL_;
   } catch (e) {
     G_Debug(this, 'invalid url');
     return;
   }
 
-  if (!streamer.downloadUpdates(BindToObject(this.setTableVersion_, this),
+  if (!streamer.downloadUpdates(request,
+                                BindToObject(this.updateSuccess_, this),
+                                BindToObject(this.updateError_, this),
                                 BindToObject(this.downloadError_, this))) {
     G_Debug(this, "pending update, wait until later");
   }
 }
 
 /**
- * Callback function if there's a download error.
+ * Callback function if the update request succeeded.
+ * @param waitForUpdate String The number of seconds that the client should
+ *        wait before requesting again.
+ */
+PROT_ListManager.prototype.updateSuccess_ = function(waitForUpdate) {
+  G_Debug(this, "update success: " + waitForUpdate);
+  if (waitForUpdate) {
+    var delay = parseInt(waitForUpdate, 10);
+    // As long as the delay is something sane (5 minutes or more), update
+    // our delay time for requesting updates
+    if (delay >= (5 * 60) && this.updateChecker_)
+      this.updateChecker_.setDelay(delay * 1000);
+  }
+}
+
+/**
+ * Callback function if the update request succeeded.
+ * @param result String The error code of the failure
+ */
+PROT_ListManager.prototype.updateError_ = function(result) {
+  G_Debug(this, "update error: " + result);
+  // XXX: there was some trouble applying the updates.
+}
+
+/**
+ * Callback function when the download failed
  * @param status String http status or an empty string if connection refused.
  */
 PROT_ListManager.prototype.downloadError_ = function(status) {
@@ -567,18 +449,4 @@ PROT_ListManager.prototype.QueryInterface = function(iid) {
 
   Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
   return null;
-}
-
-// A simple factory function that creates nsIUrlClassifierTable instances based
-// on a name.  The name is a string of the format
-// provider_name-semantic_type-table_type.  For example, goog-white-enchash
-// or goog-black-url.
-function newUrlClassifierTable(name) {
-  G_Debug("protfactory", "Creating a new nsIUrlClassifierTable: " + name);
-  var tokens = name.split('-');
-  var type = tokens[2];
-  var table = Cc['@mozilla.org/url-classifier/table;1?type=' + type]
-                .createInstance(Ci.nsIUrlClassifierTable);
-  table.name = name;
-  return table;
 }

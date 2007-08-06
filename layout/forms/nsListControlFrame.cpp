@@ -559,15 +559,17 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
    *
    * - We're reflowing with a constrained computed height -- just use that
    *   height.
-   * - We're not dirty and have no dirty kids.  In this case, our cached max
-   *   height of a child is not going to change.
+   * - We're not dirty and have no dirty kids and shouldn't be reflowing all
+   *   kids.  In this case, our cached max height of a child is not going to
+   *   change.
    * - We do our first reflow using our cached max height of a child, then
    *   compute the new max height and it's the same as the old one.
    */
 
-  PRBool autoHeight = (aReflowState.mComputedHeight == NS_UNCONSTRAINEDSIZE);
+  PRBool autoHeight = (aReflowState.ComputedHeight() == NS_UNCONSTRAINEDSIZE);
 
-  mMightNeedSecondPass = autoHeight && NS_SUBTREE_DIRTY(this);
+  mMightNeedSecondPass = autoHeight &&
+    (NS_SUBTREE_DIRTY(this) || aReflowState.ShouldReflowAllKids());
   
   nsHTMLReflowState state(aReflowState);
   PRInt32 length = GetNumberOfOptions();  
@@ -577,8 +579,9 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW) && autoHeight) {
     // When not doing an initial reflow, and when the height is auto, start off
     // with our computed height set to what we'd expect our height to be.
-    state.mComputedHeight = CalcIntrinsicHeight(oldHeightOfARow, length);
-    state.ApplyMinMaxConstraints(nsnull, &state.mComputedHeight);
+    nscoord computedHeight = CalcIntrinsicHeight(oldHeightOfARow, length);
+    state.ApplyMinMaxConstraints(nsnull, &computedHeight);
+    state.SetComputedHeight(computedHeight);
   }
 
   nsresult rv = nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize,
@@ -615,8 +618,9 @@ nsListControlFrame::Reflow(nsPresContext*           aPresContext,
   nsHTMLScrollFrame::DidReflow(aPresContext, &state, aStatus);
 
   // Now compute the height we want to have
-  state.mComputedHeight = CalcIntrinsicHeight(HeightOfARow(), length);
-  state.ApplyMinMaxConstraints(nsnull, &state.mComputedHeight);
+  nscoord computedHeight = CalcIntrinsicHeight(HeightOfARow(), length); 
+  state.ApplyMinMaxConstraints(nsnull, &computedHeight);
+  state.SetComputedHeight(computedHeight);
 
   nsHTMLScrollFrame::WillReflow(aPresContext);
 
@@ -632,10 +636,11 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
                                      const nsHTMLReflowState& aReflowState, 
                                      nsReflowStatus&          aStatus)
 {
-  NS_PRECONDITION(aReflowState.mComputedHeight == NS_UNCONSTRAINEDSIZE,
+  NS_PRECONDITION(aReflowState.ComputedHeight() == NS_UNCONSTRAINEDSIZE,
                   "We should not have a computed height here!");
   
-  mMightNeedSecondPass = NS_SUBTREE_DIRTY(this);
+  mMightNeedSecondPass = NS_SUBTREE_DIRTY(this) ||
+    aReflowState.ShouldReflowAllKids();
 
   nscoord oldHeightOfARow = HeightOfARow();
 
@@ -648,7 +653,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
     // Note: At this point, mLastDropdownComputedHeight can be
     // NS_UNCONSTRAINEDSIZE in cases when last time we didn't have to constrain
     // the height.  That's fine; just do the same thing as last time.
-    state.mComputedHeight = mLastDropdownComputedHeight;
+    state.SetComputedHeight(mLastDropdownComputedHeight);
     oldVisibleHeight = GetScrolledFrame()->GetSize().height;
   } else {
     // Set oldVisibleHeight to something that will never test true against a
@@ -729,22 +734,22 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
       }
     }
 
-    state.mComputedHeight = mNumDisplayRows * heightOfARow;
+    state.SetComputedHeight(mNumDisplayRows * heightOfARow);
     // Note: no need to apply min/max constraints, since we have no such
     // rules applied to the combobox dropdown.
     // XXXbz this is ending up too big!!  Figure out why.
   } else if (visibleHeight == 0) {
     // Looks like we have no options.  Just size us to a single row height.
-    state.mComputedHeight = heightOfARow;
+    state.SetComputedHeight(heightOfARow);
   } else {
     // Not too big, not too small.  Just use it!
-    state.mComputedHeight = NS_UNCONSTRAINEDSIZE;
+    state.SetComputedHeight(NS_UNCONSTRAINEDSIZE);
   }
 
   // Note: At this point, state.mComputedHeight can be NS_UNCONSTRAINEDSIZE in
   // cases when there were some options, but not too many (so no scrollbar was
   // needed).  That's fine; just store that.
-  mLastDropdownComputedHeight = state.mComputedHeight;
+  mLastDropdownComputedHeight = state.ComputedHeight();
 
   nsHTMLScrollFrame::WillReflow(aPresContext);
   return nsHTMLScrollFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);

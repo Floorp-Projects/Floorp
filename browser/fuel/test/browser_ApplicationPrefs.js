@@ -109,7 +109,7 @@ function test() {
   // test getting all preferences
   var allPrefs = Application.prefs.all;
   ok(allPrefs.length >= 800, "Check 'Application.prefs.all' for the right number of preferences");
-  is(allPrefs[0].name, "capability.policy.default.Window.parent.get", "Check 'Application.prefs.all' for the right starting preference");
+  ok(allPrefs[0].name.length > 0, "Check 'Application.prefs.all' for a valid name in the starting preference");
 
   // test the value of the preference root
   is(Application.prefs.root, "", "Check the Application preference root");

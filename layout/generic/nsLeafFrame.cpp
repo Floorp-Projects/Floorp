@@ -87,8 +87,8 @@ nsLeafFrame::Reflow(nsPresContext* aPresContext,
                "Shouldn't have unconstrained stuff here");
 
   aMetrics.width = aReflowState.ComputedWidth();
-  if (NS_INTRINSICSIZE != aReflowState.mComputedHeight) {
-    aMetrics.height = aReflowState.mComputedHeight;
+  if (NS_INTRINSICSIZE != aReflowState.ComputedHeight()) {
+    aMetrics.height = aReflowState.ComputedHeight();
   } else {
     aMetrics.height = GetIntrinsicHeight();
     // XXXbz using NS_CSS_MINMAX like this presupposes content-box sizing.

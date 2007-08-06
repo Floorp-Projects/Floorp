@@ -1,3 +1,4 @@
+/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -35,7 +36,6 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-#include <stdlib.h>
 #include "cairoint.h"
 
 #include "cairo-path-fixed-private.h"
@@ -356,8 +356,8 @@ _cairo_path_fixed_add (cairo_path_fixed_t *path,
 		       cairo_point_t	  *points,
 		       int		   num_points)
 {
-    if (path->buf_tail->num_ops + 1 > CAIRO_PATH_BUF_SIZE ||
-	path->buf_tail->num_points + num_points > CAIRO_PATH_BUF_SIZE)
+    if ((unsigned int) path->buf_tail->num_ops + 1 > CAIRO_PATH_BUF_SIZE ||
+	(unsigned int) path->buf_tail->num_points + num_points > CAIRO_PATH_BUF_SIZE)
     {
 	cairo_path_buf_t *buf;
 
@@ -510,25 +510,19 @@ _cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
 {
     cairo_path_buf_t *buf = path->buf_head;
     int i;
-    cairo_int64_t i64temp;
-    cairo_fixed_t fixedtemp;
 
     while (buf) {
 	 for (i = 0; i < buf->num_points; i++) {
 	     if (scalex == CAIRO_FIXED_ONE) {
 		 buf->points[i].x += offx;
 	     } else {
-		 fixedtemp = buf->points[i].x + offx;
-		 i64temp = _cairo_int32x32_64_mul (fixedtemp, scalex);
-		 buf->points[i].x = _cairo_int64_to_int32(_cairo_int64_rsl (i64temp, 16));
+		 buf->points[i].x = _cairo_fixed_mul (buf->points[i].x + offx, scalex);
 	     }
 
 	     if (scaley == CAIRO_FIXED_ONE) {
 		 buf->points[i].y += offy;
 	     } else {
-		 fixedtemp = buf->points[i].y + offy;
-		 i64temp = _cairo_int32x32_64_mul (fixedtemp, scaley);
-		 buf->points[i].y = _cairo_int64_to_int32(_cairo_int64_rsl (i64temp, 16));
+		 buf->points[i].y = _cairo_fixed_mul (buf->points[i].y + offy, scaley);
 	     }
 	 }
 

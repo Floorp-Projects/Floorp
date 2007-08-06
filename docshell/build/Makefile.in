@@ -60,6 +60,7 @@ REQUIRES	= xpcom \
 		  js \
 		  shistory \
 		  necko \
+		  nkcache \
 		  gfx \
 		  content \
 		  layout \

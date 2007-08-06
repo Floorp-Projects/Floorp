@@ -89,8 +89,6 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
-  virtual void Destroy();
-
 #ifdef ACCESSIBILITY
   NS_IMETHODIMP GetAccessible(nsIAccessible** aAccessible);
 #endif
@@ -247,7 +245,10 @@ protected:
 class nsPositionedInlineFrame : public nsInlineFrame
 {
 public:
-  nsPositionedInlineFrame(nsStyleContext* aContext) : nsInlineFrame(aContext) {}
+  nsPositionedInlineFrame(nsStyleContext* aContext)
+    : nsInlineFrame(aContext)
+    , mAbsoluteContainer(nsGkAtoms::absoluteList)
+  {}
 
   virtual ~nsPositionedInlineFrame() { } // useful for debugging
 

@@ -112,15 +112,15 @@
                label="&useDownloadedList.label;"
                accesskey="&useDownloadedList.accesskey;"
                value="false"/>
-        <hbox id="onloadBox" align="center">
+        <hbox align="center">
           <radio id="onloadRadio"
                  label="&askThirdParty.label;"
                  accesskey="&askThirdParty.accesskey;"
-                 value="true" aaa:labelledby="onloadBox"/>
+                 value="true" aaa:labelledby="onloadRadio onloadProvider onloadAfter"/>
           <menulist id="onloadProvider"
                     preference="browser.safebrowsing.dataProvider"
                     onsyncfrompreference="return gSecurityPane.readOnloadPhishProvider();"
-                    aaa:labelledby="onloadBox"/>
+                    aaa:labelledby="onloadRadio onloadProvider onloadAfter"/>
           <label id="onloadAfter">&askThirdPartyAfter.label;</label>
         </hbox>
       </radiogroup>
@@ -143,11 +143,11 @@
                 preference="pref.privacy.disable_button.view_passwords_exceptions"/>
       </hbox>
       <hbox id="masterPasswordBox">
-        <checkbox id="useMasterPassword" flex="1"
+        <checkbox id="useMasterPassword" flex="1" disabled="true"
                   oncommand="gSecurityPane.updateMasterPasswordButton();"
                   label="&useMasterPassword.label;"
                   accesskey="&useMasterPassword.accesskey;"/>
-        <button id="changeMasterPassword"
+        <button id="changeMasterPassword" disabled="true"
                 label="&changeMasterPassword.label;"
                 accesskey="&changeMasterPassword.accesskey;"
                 oncommand="gSecurityPane.changeMasterPassword();"/>

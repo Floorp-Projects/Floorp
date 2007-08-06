@@ -874,6 +874,12 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   margin: 0 3px;
   /*XXX Gecko 1.9 quirk*/
   -moz-padding-start: 1px;
+  color: -moz-fieldtext;
+}
+
+#urlbar[level="high"] .formatted-url ,
+#urlbar[level="low"] .formatted-url {
+  color: black;
 }
 
 .formatted-url * {
@@ -882,37 +888,12 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   cursor: text;
 }
 
-.formatted-url-contents {
-  color: graytext;
-}
-
-.formatted-url-domain {
-  color: -moz-fieldtext;
-}
-
-#urlbar[level="high"] .formatted-url-contents ,
-#urlbar[level="low"] .formatted-url-contents {
-  color: rgb(150, 150, 130);
-}
-
-#urlbar[level="low"] .formatted-url-domain ,
-#urlbar[level="high"] .formatted-url-domain {
-  color: black;
-}
-
 .formatted-url-ellipsis {
-  -moz-margin-start: .3em;
+  -moz-margin-start: 1px;
 }
 
-#urlbar[protocolhidden="true"] .formatted-url-prePath > .formatted-url-subdomain ,
-#urlbar[protocolhidden="true"] .formatted-url-prePath > .formatted-url-port {
-  -moz-box-flex: 1;
-  text-align: right;
-}
-
-#urlbar[chromedir="rtl"][protocolhidden="true"] .formatted-url-prePath > .formatted-url-subdomain ,
-#urlbar[chromedir="ltr"][protocolhidden="true"] .formatted-url-prePath > .formatted-url-port {
-  text-align: left;
+.formatted-url-prePath {
+  -moz-box-pack: center;
 }
 
 #urlbar-container {
@@ -985,6 +966,11 @@ statusbarpanel#statusbar-display {
 }
 
 /* ::::: autocomplete ::::: */
+
+.autocomplete-treebody::-moz-tree-image(favicon, treecolAutoCompleteValue) {
+  width: 16px;
+  height: 16px;
+}
 
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
   color: #555566;
@@ -1227,6 +1213,13 @@ toolbarpaletteitem:not([place="toolbar"]) .search-go-button {
   opacity: 0.5;
 }
 
+/* the default settings for the throbber hbox is too tall for vista menus */
+#navigator-throbber > hbox {
+  border-top: 0px;
+  border-bottom: 0px;
+  padding-bottom: 1px;
+}
+
 toolbar[iconsize="small"] #navigator-throbber,
 toolbar[mode="text"] #navigator-throbber {
   list-style-image: url("chrome://browser/skin/Throbber-small.png");
@@ -1422,7 +1415,7 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 }
 
 .toolbar-drop-indicator-bar {
-  display: none;
+  visibility: hidden;
   height: 16px;
   margin-bottom: -16px;
   margin-left: 4px;
@@ -1430,7 +1423,7 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
 }
 
 .toolbar-drop-indicator-bar[dragging="true"] {
-  display: -moz-box;
+  visibility: visible;
 }
 
 toolbarbutton.bookmark-item[dragover="true"][open="true"] {

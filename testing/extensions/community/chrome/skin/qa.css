@@ -9,56 +9,76 @@
   display: none;
 }
 
+/*-------------------------------
+               HTML
+  -------------------------------*/
+
 html|ul, html|ol {
-  padding-left: 12px;
-  margin-top: 2px;
-  margin-bottom: 2px;
+  margin: 0;
+  padding: 0;
+}
+html|ul li {
+  list-style-type: square;
+  margin-bottom: 0.4em;
 }
 
 html|p {
-  margin-top: 2px;
+  
 }
 
-html|a {
-  text-decoration: underline;
-  color: black;
-}
-
-#qa-notify {
-  right: 18px;
-  bottom: 21px;
-  position: fixed;
-  border: 1px solid grey;
-  background-color: white;
-  background-image: url("logolight.png");
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-.qa-notify {
-  height: 140px;
-  width: 420px;
-}
-
-#qa-notify-box {
-  padding: 0px 6px 6px 6px;
-	display: table;
-}
-
-#qa-notify-header {
-  font-size: 1.5em;
+html|a, html|a:link, html|a:visited {
   font-weight: bold;
+  color: #0067ac;
+}
+html|a:focus, html|a:hover, html|a:active {
+  color: #333;
 }
 
 
+/*-------------------------------
+               TABS
+  -------------------------------*/
 
-/* general formatting */
+tabs {
+  background: #e1dece url(tabrow-bg.gif) repeat-x left top;
+  height: 26px;
+}
+tab {
+  padding: 0.1em 0.6em;
+  vertical-align: middle;
+  background-color: transparent;
+}
+
+/*-------------------------------
+               PANELS
+  -------------------------------*/
+tabpanel {
+  color: #5F6775;
+  line-height: 1.6;
+}
+groupbox {
+  border-color: #e0e0e0;
+  padding: 6px 8px;
+}
+caption {
+  font: bold 12px helvetica, arial, sans-serif;
+  color: #ec891d;
+  background: transparent none repeat-x left 6px;
+  padding: 0;
+}
+
+/*-------------------------------
+               GENERAL
+  -------------------------------*/
 
 .list {
   padding-left: 10px;
 }
 
-/* @group test overview */
+#qa-tab-qmo > html|li {
+	list-style-type: none;
+}
+
 #qa-litmus-testoverview {
 	text-decoration: underline;
 	font-size: x-small;
@@ -74,6 +94,3 @@ html|a {
 	font-weight: bold;
 }
 /* @end */
-
-
-

@@ -80,7 +80,8 @@ menuitem.spell-suggestion {
 }
 
 .menu-text {
-  -moz-margin-start: 1.28em !important;
+  -moz-padding-start: 1.28em !important;
+  -moz-appearance: menuitemtext;
 }
 
 .menu-text,
@@ -109,9 +110,11 @@ menuitem.spell-suggestion {
   min-height: 1.21em;
 }
 
+menu.menu-iconic > .menu-iconic-left,
 menuitem.menuitem-iconic > .menu-iconic-left {
   /* there's only space for 15px - make room for one more */
   -moz-margin-start: -1px;
+  -moz-appearance: menuimage;
 }
 
 /* ..... menu arrow box ..... */
@@ -142,7 +145,7 @@ menubar > menu[_moz-menuactive="true"][open="true"] {
 }
 
 .menubar-text {
-  margin: 2px 6px 2px 6px !important;
+  margin: 1px 6px 2px 6px !important;
   color: inherit;
 }
 
@@ -169,6 +172,7 @@ popup > menuitem[_moz-menuactive="true"] {
 menulist > menupopup > menuitem,
 .menulist-menupopup > menu,
 menulist > menupopup > menu {
+  -moz-appearance: none;
   border: 1px solid transparent;
   padding-top: 1px;
   -moz-padding-end: 30px;
@@ -188,6 +192,12 @@ menulist > menupopup > menu > .menu-iconic-left {
 
 menulist > menupopup > menuitem[_moz-menuactive="true"] {
   border: 1px dotted #F5DB95;
+  background-color: highlight;
+  color: highlighttext;
+}
+
+menulist > menupopup > menuitem[_moz-menuactive="true"][disabled="true"] {
+  color: GrayText;
 }
 
 menulist > menupopup > menuitem > .menu-iconic-text {
@@ -215,14 +225,15 @@ menuitem[type="radio"] > .menu-iconic-left {
 /* ::::: menuseparator ::::: */
 
 menuseparator {
-  margin: 3px 1px 4px 1px;
+  -moz-appearance: menuseparator;
+  padding: 3px 1px 4px 1px;
   border-top: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDHighlight;
 }
 
 menulist > menupopup > menuseparator,
 .menulist-menupopup > menuseparator {
-  margin: 6px 0 5px 0;
+  padding: 6px 0 5px 0;
   border-top: 1px solid #000000;
   border-bottom: none;
 }

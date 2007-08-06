@@ -171,6 +171,8 @@ public:
   NS_IMETHOD Writeln(const nsAString & text);
   NS_IMETHOD GetElementsByName(const nsAString & elementName,
                                nsIDOMNodeList **_retval);
+  virtual nsresult GetDocumentAllResult(const nsAString& aID,
+                                        nsISupports** aResult);
 
   // nsIDOMNSHTMLDocument interface
   NS_DECL_NSIDOMNSHTMLDOCUMENT
@@ -203,6 +205,11 @@ public:
   virtual PRBool IsEditingOn()
   {
     return mEditingState != eOff;
+  }
+
+  virtual void DisableCookieAccess()
+  {
+    mDisableCookieAccess = PR_TRUE;
   }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsHTMLDocument, nsDocument)
@@ -387,6 +394,8 @@ protected:
   // XXXbz should this be reset if someone manually calls
   // SetContentType() on this document?
   PRInt32 mDefaultNamespaceID;
+
+  PRBool mDisableCookieAccess;
 };
 
 #endif /* nsHTMLDocument_h___ */

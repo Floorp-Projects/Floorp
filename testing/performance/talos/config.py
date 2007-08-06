@@ -41,7 +41,6 @@
 
 __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 
-
 BROWSER_HEIGHT = 768
 BROWSER_WIDTH = 1024
 
@@ -85,12 +84,14 @@ TP_RESOLUTION = 1
 """Run page load test.
    For possible values of counters argument on Windows, see
    http://technet2.microsoft.com/WindowsServer/en/Library/86b5d116-6fb3-427b-af8c-9077162125fe1033.mspx?mfr=true
-   Possible values on Linux:
+   Possible values on Linux and Mac:
      'Private Bytes', '% Processor Time', 'RSS'
 """
-
 COUNTERS = ['Private Bytes', 'Working Set', '% Processor Time']
 
 """URL for the results server"""
 RESULTS_SERVER = 'graphserver.url.here'
 RESULTS_LINK = '/bulk.cgi'
+
+"""Enable/disable debugging output"""
+DEBUG = 0

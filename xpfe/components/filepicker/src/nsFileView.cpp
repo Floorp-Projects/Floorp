@@ -177,6 +177,12 @@ NS_IMETHODIMP nsFileResult::GetStyleAt(PRInt32 index, nsAString & aStyle)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsFileResult::GetImageAt(PRInt32 index, nsAString & aImage)
+{
+  aImage.Truncate();
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsFileResult::RemoveValueAt(PRInt32 rowIndex, PRBool removeFromDb)
 {
   return NS_OK;

@@ -76,13 +76,13 @@ function fireEventForElement(aElement, aEventType)
   aElement.dispatchEvent(e);
 }
 
-function createDownloadItem(aID, aFile, aImage, aTarget, aURI, aState,
+function createDownloadItem(aID, aFile, aTarget, aURI, aState,
                             aAnimated, aStatus, aProgress)
 {
   var dl = document.createElement("download");
   dl.setAttribute("id", "dl" + aID);
   dl.setAttribute("dlid", aID);
-  dl.setAttribute("image", aImage);
+  dl.setAttribute("image", "moz-icon://" + aFile + "?size=32");
   dl.setAttribute("file", aFile);
   dl.setAttribute("target", aTarget);
   dl.setAttribute("uri", aURI);
@@ -205,8 +205,7 @@ var gDownloadObserver = {
       var uri = Components.classes["@mozilla.org/network/util;1"]
                           .getService(Components.interfaces.nsIIOService)
                           .newFileURI(dl.targetFile);
-      var img = "moz-icon://" + uri.spec + "?size=32";
-      var itm = createDownloadItem(dl.id, uri.spec, img, dl.displayName,
+      var itm = createDownloadItem(dl.id, uri.spec, dl.displayName,
                                    dl.source.spec, dl.state, "",
                                    dl.percentComplete);
       gDownloadsView.insertBefore(itm, gDownloadsView.firstChild);
@@ -480,16 +479,13 @@ function Startup()
   gDownloadsView = document.getElementById("downloadView");
 
   var db = gDownloadManager.DBConnection;
-  var stmt = db.createStatement("SELECT id, target, iconURL, name, source," +
-                                "state " +
+  var stmt = db.createStatement("SELECT id, target, name, source, state " +
                                 "FROM moz_downloads " +
                                 "ORDER BY startTime DESC");
   while (stmt.executeStep()) {
-    var i = stmt.getString(2) == "" ?
-      "moz-icon://" + stmt.getString(1) + "?size=32" : stmt.getString(2);
-    var dl = createDownloadItem(stmt.getInt64(0), stmt.getString(1), i,
-                                stmt.getString(3), stmt.getString(4),
-                                stmt.getInt32(5), "", "", "100");
+    var dl = createDownloadItem(stmt.getInt64(0), stmt.getString(1),
+                                stmt.getString(2), stmt.getString(3),
+                                stmt.getInt32(4), "", "", "100");
     gDownloadsView.appendChild(dl);
   }
 

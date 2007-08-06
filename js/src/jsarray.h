@@ -61,6 +61,8 @@ js_InitArrayClass(JSContext *cx, JSObject *obj);
 extern JSObject *
 js_NewArrayObject(JSContext *cx, jsuint length, jsval *vector);
 
+#define JSSLOT_ARRAY_LENGTH     JSSLOT_PRIVATE
+
 extern JSBool
 js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 

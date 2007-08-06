@@ -40,6 +40,7 @@
 #include "xpcprivate.h"
 #include "jsdbgapi.h"
 #include "jsscript.h" // for js_ScriptClass
+#include "XPCWrapper.h"
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_SJOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
@@ -80,8 +81,6 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_SJOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
-
-static JSNative sEvalNative;
 
 static inline
 JSBool
@@ -186,7 +185,8 @@ FindObjectPrincipals(JSContext *cx, JSObject *obj)
 JSExtendedClass sXPC_SJOW_JSClass = {
   // JSClass (JSExtendedClass.base) initialization
   { "XPCSafeJSObjectWrapper",
-    JSCLASS_NEW_RESOLVE | JSCLASS_IS_EXTENDED | JSCLASS_HAS_RESERVED_SLOTS(5),
+    JSCLASS_NEW_RESOLVE | JSCLASS_IS_EXTENDED |
+    JSCLASS_HAS_RESERVED_SLOTS(XPCWrapper::sNumSlots + 3),
     XPC_SJOW_AddProperty, XPC_SJOW_DelProperty,
     XPC_SJOW_GetProperty, XPC_SJOW_SetProperty,
     XPC_SJOW_Enumerate,   (JSResolveOp)XPC_SJOW_NewResolve,
@@ -495,21 +495,7 @@ XPC_SJOW_AddProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_FALSE;
   }
 
-  if (JSVAL_IS_STRING(id)) {
-    JSString *str = JSVAL_TO_STRING(id);
-    jschar *chars = ::JS_GetStringChars(str);
-    size_t length = ::JS_GetStringLength(str);
-
-    return ::JS_DefineUCProperty(cx, unsafeObj, chars, length, *vp, nsnull,
-                                 nsnull, JSPROP_ENUMERATE);
-  }
-
-  if (!JSVAL_IS_INT(id)) {
-    return ThrowException(NS_ERROR_NOT_IMPLEMENTED, cx);
-  }
-
-  return ::JS_DefineElement(cx, unsafeObj, JSVAL_TO_INT(id), *vp, nsnull,
-                            nsnull, JSPROP_ENUMERATE);
+  return XPCWrapper::AddProperty(cx, unsafeObj, id, vp);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -526,19 +512,7 @@ XPC_SJOW_DelProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_FALSE;
   }
 
-  if (JSVAL_IS_STRING(id)) {
-    JSString *str = JSVAL_TO_STRING(id);
-    jschar *chars = ::JS_GetStringChars(str);
-    size_t length = ::JS_GetStringLength(str);
-
-    return ::JS_DeleteUCProperty2(cx, unsafeObj, chars, length, vp);
-  }
-
-  if (!JSVAL_IS_INT(id)) {
-    return ThrowException(NS_ERROR_NOT_IMPLEMENTED, cx);
-  }
-
-  return ::JS_DeleteElement2(cx, unsafeObj, JSVAL_TO_INT(id), vp);
+  return XPCWrapper::DelProperty(cx, unsafeObj, id, vp);
 }
 
 // Call wrapper to help with wrapping calls to functions or callable
@@ -649,32 +623,7 @@ XPC_SJOW_Enumerate(JSContext *cx, JSObject *obj)
   // look up unsafeObj.__iterator__ and if we don't have permission to
   // access that, it'll throw and we'll be safe.
 
-  JSIdArray *ida = JS_Enumerate(cx, unsafeObj);
-  if (!ida) {
-    return JS_FALSE;
-  }
-
-  JSBool ok = JS_TRUE;
-
-  for (jsint i = 0, n = ida->length; i < n; i++) {
-    JSObject *pobj;
-    JSProperty *prop;
-
-    // Let OBJ_LOOKUP_PROPERTY, in particular XPC_SJOW_NewResolve,
-    // figure out whether this id should be reflected.
-    ok = OBJ_LOOKUP_PROPERTY(cx, obj, ida->vector[i], &pobj, &prop);
-    if (!ok) {
-      break;
-    }
-
-    if (prop) {
-      OBJ_DROP_PROPERTY(cx, pobj, prop);
-    }
-  }
-
-  JS_DestroyIdArray(cx, ida);
-
-  return ok;
+  return XPCWrapper::Enumerate(cx, obj, unsafeObj);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -702,58 +651,7 @@ XPC_SJOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     return JS_FALSE;
   }
 
-  jschar *chars = nsnull;
-  size_t length;
-  JSBool hasProp, ok;
-
-  if (JSVAL_IS_STRING(id)) {
-    JSString *str = JSVAL_TO_STRING(id);
-
-    chars = ::JS_GetStringChars(str);
-    length = ::JS_GetStringLength(str);
-
-    ok = ::JS_HasUCProperty(cx, unsafeObj, chars, length, &hasProp);
-  } else if (JSVAL_IS_INT(id)) {
-    ok = ::JS_HasElement(cx, unsafeObj, JSVAL_TO_INT(id), &hasProp);
-  } else {
-    // A non-string and non-int id is being resolved. We don't deal
-    // with those yet, return early.
-
-    return ThrowException(NS_ERROR_INVALID_ARG, cx);
-  }
-
-  if (!ok || !hasProp) {
-    // An error occured, or the property was not found. Return
-    // early. This is safe even in the case of a set operation since
-    // if the property doesn't exist there's no chance of a setter
-    // being called or any other code being run as a result of the
-    // set.
-
-    return ok;
-  }
-
-  jsval oldSlotVal;
-  if (!::JS_GetReservedSlot(cx, obj, XPC_SJOW_SLOT_IS_RESOLVING,
-                            &oldSlotVal) ||
-      !::JS_SetReservedSlot(cx, obj, XPC_SJOW_SLOT_IS_RESOLVING,
-                            BOOLEAN_TO_JSVAL(JS_TRUE))) {
-    return JS_FALSE;
-  }
-
-  if (chars) {
-    ok = ::JS_DefineUCProperty(cx, obj, chars, length, JSVAL_VOID,
-                               nsnull, nsnull, JSPROP_ENUMERATE);
-  } else {
-    ok = ::JS_DefineElement(cx, obj, JSVAL_TO_INT(id), JSVAL_VOID,
-                            nsnull, nsnull, JSPROP_ENUMERATE);
-  }
-
-  if (ok && (ok = ::JS_SetReservedSlot(cx, obj, XPC_SJOW_SLOT_IS_RESOLVING,
-                                       oldSlotVal))) {
-    *objp = obj;
-  }
-
-  return ok;
+  return XPCWrapper::NewResolve(cx, obj, unsafeObj, id, flags, objp);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -981,7 +879,7 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   if (JS_GET_CLASS(cx, objToWrap) == &js_ScriptClass ||
       (::JS_ObjectIsFunction(cx, objToWrap) &&
        ::JS_GetFunctionNative(cx, ::JS_ValueToFunction(cx, argv[0])) ==
-       sEvalNative)) {
+       XPCWrapper::sEvalNative)) {
     return ThrowException(NS_ERROR_INVALID_ARG, cx);
   }
 
@@ -1097,28 +995,11 @@ PRBool
 XPC_SJOW_AttachNewConstructorObject(XPCCallContext &ccx,
                                     JSObject *aGlobalObject)
 {
-  // Initialize sEvalNative the first time we attach a constructor to
-  // a global that is an XPCWrappedNative (i.e. don't bother if the
-  // global is the one from the XPConnect safe context, since it
-  // doesn't have what it takes to do this)
-  if (!sEvalNative &&
-      XPCWrappedNative::GetWrappedNativeOfJSObject(ccx, aGlobalObject)) {
-    jsval eval_val;
-    if (!::JS_GetProperty(ccx, aGlobalObject, "eval", &eval_val)) {
-      return ThrowException(NS_ERROR_UNEXPECTED, ccx);
-    }
-
-    if (JSVAL_IS_PRIMITIVE(eval_val) ||
-        !::JS_ObjectIsFunction(ccx, JSVAL_TO_OBJECT(eval_val))) {
-      return ThrowException(NS_ERROR_UNEXPECTED, ccx);
-    }
-
-    sEvalNative =
-      ::JS_GetFunctionNative(ccx, ::JS_ValueToFunction(ccx, eval_val));
-
-    if (!sEvalNative) {
-      return ThrowException(NS_ERROR_UNEXPECTED, ccx);
-    }
+  // Initialize sEvalNative the first time we attach a constructor.
+  // NB: This always happens before any cross origin wrappers are
+  // created, so it's OK to do this here.
+  if (!XPCWrapper::FindEval(ccx, aGlobalObject)) {
+    return PR_FALSE;
   }
 
   JSObject *class_obj =

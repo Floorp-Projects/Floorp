@@ -69,14 +69,15 @@
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
+#include "nsCSSRendering.h"
 
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
 #include "nsBidiPresUtils.h"
 #endif // IBMBIDI
-#include "nsReadableUtils.h"
 
-#define ELLIPSIS "..."
+// horizontal ellipsis (U+2026)
+#define ELLIPSIS PRUnichar(0x2026)
 
 #define CROP_LEFT   "left"
 #define CROP_RIGHT  "right"
@@ -401,22 +402,48 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
     presContext->DeviceContext()->GetMetricsFor(fontStyle->mFont,
                                                 *getter_AddRefs(fontMet));
     fontMet->GetMaxAscent(baseline);
+    PRBool isRTL = vis->mDirection == NS_STYLE_DIRECTION_RTL;
 
+    nsRefPtr<gfxContext> ctx = (gfxContext*)
+      aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+    gfxFloat a2p = 1.0 / presContext->AppUnitsPerDevPixel();
+    gfxPoint pt(textRect.x * a2p, textRect.y * a2p);
+    gfxFloat width = textRect.width * a2p;
+    gfxFloat baselinePixel = baseline * a2p;
     if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
       fontMet->GetUnderline(offset, size);
+      gfxFloat offsetPixel = offset * a2p;
+      gfxFloat sizePixel = size * a2p;
       if (decorations & NS_FONT_DECORATION_OVERLINE) {
-        aRenderingContext.SetColor(overColor);
-        aRenderingContext.FillRect(textRect.x, textRect.y, textRect.width, size);
+        nsCSSRendering::PaintDecorationLine(ctx, overColor,
+                                            pt, gfxSize(width, sizePixel),
+                                            baselinePixel, baselinePixel,
+                                            sizePixel,
+                                            NS_STYLE_TEXT_DECORATION_OVERLINE,
+                                            NS_STYLE_BORDER_STYLE_SOLID,
+                                            isRTL);
       }
       if (decorations & NS_FONT_DECORATION_UNDERLINE) {
-        aRenderingContext.SetColor(underColor);
-        aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, textRect.width, size);
+        nsCSSRendering::PaintDecorationLine(ctx, underColor,
+                                            pt, gfxSize(width, sizePixel),
+                                            baselinePixel, offsetPixel,
+                                            sizePixel,
+                                            NS_STYLE_TEXT_DECORATION_UNDERLINE,
+                                            NS_STYLE_BORDER_STYLE_SOLID,
+                                            isRTL);
       }
     }
     if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
       fontMet->GetStrikeout(offset, size);
-      aRenderingContext.SetColor(strikeColor);
-      aRenderingContext.FillRect(textRect.x, textRect.y + baseline - offset, textRect.width, size);
+      gfxFloat offsetPixel = offset * a2p;
+      gfxFloat sizePixel = size * a2p;
+      nsCSSRendering::PaintDecorationLine(ctx, underColor,
+                                          pt, gfxSize(width, sizePixel),
+                                          baselinePixel, offsetPixel,
+                                          sizePixel,
+                                          NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
+                                          NS_STYLE_BORDER_STYLE_SOLID,
+                                          isRTL);
     }
  
     aRenderingContext.SetFont(fontStyle->mFont, nsnull);
@@ -559,7 +586,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
     }
 
     // start with an ellipsis
-    mCroppedTitle.AssignASCII(ELLIPSIS);
+    mCroppedTitle.Assign(ELLIPSIS);
 
     // see if the width is even smaller than the ellipsis
     // if so, clear the text (XXX set as many '.' as we can?).
@@ -706,7 +733,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
 
             // form the new cropped string
             nsAutoString ellipsisString;
-            ellipsisString.AssignASCII(ELLIPSIS);
+            ellipsisString.Assign(ELLIPSIS);
 
             mCroppedTitle = leftString + ellipsisString + rightString;
         }

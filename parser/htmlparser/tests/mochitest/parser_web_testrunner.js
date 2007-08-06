@@ -57,7 +57,7 @@ function writeErrorSummary(input, expected, got, isTodo) {
     SPAN("Matched: "), "" + (expected == got),
     P("Input: " + input),
     PRE("Expected:\n|" + expected +"|", "\n-\n",
-	"Output:\n|" + got + "|\n\n"),
+        "Output:\n|" + got + "|\n\n"),
     HR()
   );
 }
@@ -79,9 +79,9 @@ function makeTestChecker(input, expected, errors) {
         todo(reorderedDOM == expected, "HTML5 expected failure. " + new Date());
         writeErrorSummary(input, expected, reorderedDOM, true);
       } else {
-	      if (reorderedDOM != expected) {
+        if (reorderedDOM != expected) {
           is(reorderedDOM, expected, "HTML5 unexpected failure. " + input + " " + new Date());
-	        writeErrorSummary(input, expected, reorderedDOM, false);
+          writeErrorSummary(input, expected, reorderedDOM, false);
         } else {
           is(reorderedDOM, expected, "HTML5 expected success. " + new Date());
         }

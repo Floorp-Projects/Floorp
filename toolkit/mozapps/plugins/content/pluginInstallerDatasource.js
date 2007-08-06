@@ -126,6 +126,8 @@ nsRDFItemUpdater.prototype = {
           pid: getPFSValueFromRDF("guid"),
           version: getPFSValueFromRDF("version"),
           IconUrl: getPFSValueFromRDF("IconUrl"),
+          InstallerLocation: getPFSValueFromRDF("InstallerLocation"),
+          InstallerHash: getPFSValueFromRDF("InstallerHash"),
           XPILocation: getPFSValueFromRDF("XPILocation"),
           XPIHash: getPFSValueFromRDF("XPIHash"),
           InstallerShowsUI: getPFSValueFromRDF("InstallerShowsUI"),
@@ -145,7 +147,7 @@ nsRDFItemUpdater.prototype = {
   onDatasourceError: function pfs_onDatasourceError (aPluginRequestItem, aError){
     this._os.notifyObservers(aPluginRequestItem, "error", aError);
     gPluginInstaller.pluginInfoReceived(null);
-  },
+  }
 };
 
 function nsPluginXMLRDFDSObserver(aUpdater, aPluginRequestItem){

@@ -65,5 +65,7 @@ var html5Exceptions = {
   "<!doctype html><!--x--": true,
   "<head></head><!-- --><style></style><!-- --><script></script>": true,
   "<head></head><!-- -->x<style></style><!-- --><script></script>": true,
+  "<body><body><base><link><meta><title><p></title><body><p></body>": true,
+  "<!doctype html><body><title>X</title><meta name=z><link rel=foo><style>\nx { content:\"</style\" } </style>": true,
 }
 

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Elika J. Etemad ("fantasai") <fantasai@inkedblade.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -44,12 +45,23 @@
 #include "nsFrameList.h"
 #include "nsLayoutUtils.h"
 
+/**
+ * Child list name indices
+ * @see #GetAdditionalChildListName()
+ */
+#define NS_CONTAINER_LIST_COUNT_SANS_OC 1
+  // for frames that don't use overflow containers
+#define NS_CONTAINER_LIST_COUNT_INCL_OC 3
+  // for frames that support overflow containers
+
 // Option flags for ReflowChild() and FinishReflowChild()
 // member functions
 #define NS_FRAME_NO_MOVE_VIEW         0x0001
 #define NS_FRAME_NO_MOVE_FRAME        (0x0002 | NS_FRAME_NO_MOVE_VIEW)
 #define NS_FRAME_NO_SIZE_VIEW         0x0004
 #define NS_FRAME_NO_VISIBILITY        0x0008
+
+class nsOverflowContinuationTracker;
 
 /**
  * Implementation of a container frame.
@@ -150,14 +162,15 @@ public:
    * NS_FRAME_NO_MOVE_FRAME - don't move the frame. aX and aY are ignored in this
    *    case. Also implies NS_FRAME_NO_MOVE_VIEW
    */
-  nsresult ReflowChild(nsIFrame*                aKidFrame,
-                       nsPresContext*           aPresContext,
-                       nsHTMLReflowMetrics&     aDesiredSize,
-                       const nsHTMLReflowState& aReflowState,
-                       nscoord                  aX,
-                       nscoord                  aY,
-                       PRUint32                 aFlags,
-                       nsReflowStatus&          aStatus);
+  nsresult ReflowChild(nsIFrame*                      aKidFrame,
+                       nsPresContext*                 aPresContext,
+                       nsHTMLReflowMetrics&           aDesiredSize,
+                       const nsHTMLReflowState&       aReflowState,
+                       nscoord                        aX,
+                       nscoord                        aY,
+                       PRUint32                       aFlags,
+                       nsReflowStatus&                aStatus,
+                       nsOverflowContinuationTracker* aTracker = nsnull);
 
   /**
    * The second half of frame reflow. Does the following:
@@ -186,7 +199,98 @@ public:
 
   
   static void PositionChildViews(nsIFrame* aFrame);
-  
+
+  // ==========================================================================
+  /* Overflow containers are continuation frames that hold overflow. They
+   * are created when the frame runs out of computed height, but still has
+   * too much content to fit in the availableHeight. The parent creates a
+   * continuation as usual, but marks it as NS_FRAME_IS_OVERFLOW_CONTAINER
+   * and adds it to its next-in-flow's overflow container list, either by
+   * adding it directly or by putting it in its own excess overflow containers
+   * list (to be drained by the next-in-flow when it calls
+   * ReflowOverflowContainerChildren). The parent continues reflow as if
+   * the frame was complete once it ran out of computed height, but returns
+   * either an NS_FRAME_NOT_COMPLETE or NS_FRAME_OVERFLOW_INCOMPLETE reflow
+   * status to request a next-in-flow. The parent's next-in-flow is then
+   * responsible for calling ReflowOverflowContainerChildren to (drain and)
+   * reflow these overflow continuations. Overflow containers do not affect
+   * other frames' size or position during reflow (but do affect their
+   * parent's overflow area).
+   *
+   * Overflow container continuations are different from normal continuations
+   * in that
+   *   - more than one child of the frame can have its next-in-flow broken
+   *     off and pushed into the frame's next-in-flow
+   *   - new continuations may need to be spliced into the middle of the list
+   *     or deleted continuations slipped out
+   *     e.g. A, B, C are all fixed-size containers on one page, all have
+   *      overflow beyond availableHeight, and content is dynamically added
+   *      and removed from B
+   * As a result, it is not possible to simply prepend the new continuations
+   * to the old list as with the overflowProperty mechanism. To avoid
+   * complicated list splicing, the code assumes only one overflow containers
+   * list exists for a given frame: either its own overflowContainersProperty
+   * or its prev-in-flow's excessOverflowContainersProperty, not both.
+   *
+   * The nsOverflowContinuationTracker helper class should be used for tracking
+   * overflow containers and adding them to the appropriate list.
+   * See nsBlockFrame::Reflow for a sample implementation.
+   */
+
+  friend class nsOverflowContinuationTracker;
+
+  /**
+   * Reflow overflow container children. They are invisible to normal reflow
+   * (i.e. don't affect sizing or placement of other children) and inherit
+   * width and horizontal position from their prev-in-flow.
+   *
+   * This method
+   *   1. Pulls excess overflow containers from the prev-in-flow and adds
+   *      them to our overflow container list
+   *   2. Reflows all our overflow container kids
+   *   3. Expands aOverflowRect as necessary to accomodate these children.
+   *   4. Sets aStatus's NS_FRAME_OVERFLOW_IS_INCOMPLETE flag (along with
+   *      NS_FRAME_REFLOW_NEXTINFLOW as necessary) if any overflow children
+   *      are incomplete and
+   *   5. Prepends a list of their continuations to our excess overflow
+   *      container list, to be drained into our next-in-flow when it is
+   *      reflowed.
+   *
+   * The caller is responsible for tracking any new overflow container
+   * continuations it makes, removing them from its child list, and
+   * making sure they are stored properly in the overflow container lists.
+   * The nsOverflowContinuationTracker helper class should be used for this.
+   *
+   * (aFlags just gets passed through to ReflowChild)
+   */
+  nsresult ReflowOverflowContainerChildren(nsPresContext*           aPresContext,
+                                           const nsHTMLReflowState& aReflowState,
+                                           nsRect&                  aOverflowRect,
+                                           PRUint32                 aFlags,
+                                           nsReflowStatus&          aStatus);
+
+  /**
+   * Removes aChild without destroying it and without requesting reflow.
+   * Continuations are not affected. Checks the primary and overflow
+   * or overflow containers and excess overflow containers lists, depending
+   * on whether the NS_FRAME_IS_OVERFLOW_CONTAINER flag is set. Does not
+   * check any other auxiliary lists.
+   * Returns NS_ERROR_UNEXPECTED if we failed to remove aChild.
+   * Returns other error codes if we failed to put back a proptable list.
+   * If aForceNormal is true, only checks the primary and overflow lists
+   * even when the NS_FRAME_IS_OVERFLOW_CONTAINER flag is set.
+   */
+  virtual nsresult StealFrame(nsPresContext* aPresContext,
+                              nsIFrame*      aChild,
+                              PRBool         aForceNormal = PR_FALSE);
+
+  /**
+   * Add overflow containers to the display list
+   */
+  void DisplayOverflowContainers(nsDisplayListBuilder*   aBuilder,
+                                 const nsRect&           aDirtyRect,
+                                 const nsDisplayListSet& aLists);
+
   /**
    * Builds display lists for the children. The background
    * of each child is placed in the Content() list (suitable for inline
@@ -218,12 +322,19 @@ protected:
                                                const nsDisplayListSet& aLists,
                                                PRUint32                aFlags = 0);
 
+
+  // ==========================================================================
+  /* Overflow Frames are frames that did not fit and must be pulled by
+   * our next-in-flow during its reflow. (The same concept for overflow
+   * containers is called "excess frames". We should probably make the
+   * names match.)
+   */
+
   /**
    * Get the frames on the overflow list
    */
   nsIFrame* GetOverflowFrames(nsPresContext*  aPresContext,
                               PRBool          aRemoveProperty) const;
-
   /**
    * Set the overflow list
    */
@@ -259,15 +370,162 @@ protected:
                     nsIFrame*       aFromChild,
                     nsIFrame*       aPrevSibling);
 
-  /**
-   * A helper for frames corresponding to generated content, which is used to
-   * remove the generated content from the tree when the :before or :after
-   * frame is destroyed.
+  // ==========================================================================
+  /*
+   * Convenience methods for nsFrameLists stored in the
+   * PresContext's proptable
    */
-  static void CleanupGeneratedContentIn(nsIContent* aRealContent,
-                                        nsIFrame* aRoot);
+
+  /**
+   * Get the PresContext-stored nsFrameList named aPropID for this frame.
+   * May return null.
+   */
+  nsFrameList* GetPropTableFrames(nsPresContext*  aPresContext,
+                                  nsIAtom*        aPropID) const;
+
+  /**
+   * Remove and return the PresContext-stored nsFrameList named aPropID for
+   * this frame. May return null.
+   */
+  nsFrameList* RemovePropTableFrames(nsPresContext*  aPresContext,
+                                     nsIAtom*        aPropID) const;
+
+  /**
+   * Remove aFrame from the PresContext-stored nsFrameList named aPropID
+   * for this frame, deleting the list if it is now empty.
+   * Return true if the aFrame was successfully removed,
+   * Return false otherwise.
+   */
+
+  PRBool RemovePropTableFrame(nsPresContext*  aPresContext,
+                              nsIFrame*       aFrame,
+                              nsIAtom*        aPropID) const;
+
+  /**
+   * Set the PresContext-stored nsFrameList named aPropID for this frame
+   * to the given aFrameList, which must not be null.
+   */
+  nsresult SetPropTableFrames(nsPresContext*  aPresContext,
+                              nsFrameList*    aFrameList,
+                              nsIAtom*        aPropID) const;
+  // ==========================================================================
 
   nsFrameList mFrames;
+};
+
+/**
+ * Helper class for tracking overflow container continuations during reflow.
+ *
+ * A frame is related to two sets of overflow containers: those that /are/
+ * its own children, and those that are /continuations/ of its children.
+ * This tracker walks through those continuations (the frame's NIF's children)
+ * and their prev-in-flows (a subset of the frame's normal and overflow
+ * container children) in parallel. It allows the reflower to synchronously
+ * walk its overflow continuations while it loops through and reflows its
+ * children. This makes it possible to insert new continuations at the correct
+ * place in the overflow containers list.
+ *
+ * The reflower is expected to loop through its children in the same order it
+ * looped through them the last time (if there was a last time).
+ * For each child, the reflower should either
+ *   - call Skip for the child if was not reflowed in this pass
+ *   - call Insert for the overflow continuation if the child was reflowed
+ *     but has incomplete overflow
+ *   - call Finished for the child if it was reflowed in this pass but
+ *     is either complete or has a normal next-in-flow. This call can
+ *     be skipped if the child did not previously have an overflow
+ *     continuation.
+ */
+class nsOverflowContinuationTracker {
+public:
+  /**
+   * Initializes an nsOverflowContinuationTracker to help track overflow
+   * continuations of aFrame's children. Typically invoked on 'this'.
+   *
+   * Don't set aSkipOverflowContainerChildren to PR_FALSE unless you plan
+   * to walk your own overflow container children. (Usually they are handled
+   * by calling ReflowOverflowContainerChildren.)
+   */
+  nsOverflowContinuationTracker(nsPresContext*    aPresContext,
+                                nsContainerFrame* aFrame,
+                                PRBool            aSkipOverflowContainerChildren = PR_TRUE);
+  /**
+   * This function adds an overflow continuation to our running list and
+   * sets its NS_FRAME_IS_OVERFLOW_CONTAINER flag.
+   *
+   * aReflowStatus should preferably be specific to the recently-reflowed
+   * child and not influenced by any of its siblings' statuses. This
+   * function sets the NS_FRAME_IS_DIRTY bit on aOverflowCont if it needs
+   * to be reflowed. (Its need for reflow depends on changes to its
+   * prev-in-flow, not to its parent--for whom it is invisible, reflow-wise.)
+   *
+   * The caller MUST disconnect the frame from its parent's child list
+   * if it was not previously an NS_FRAME_IS_OVERFLOW_CONTAINER (because
+   * StealFrame is much more inefficient than disconnecting in place
+   * during Reflow, which the caller is able to do but we are not).
+   *
+   * The caller MUST NOT disconnect the frame from its parent's
+   * child list if it is already an NS_FRAME_IS_OVERFLOW_CONTAINER.
+   * (In this case we will disconnect and reconnect it ourselves.)
+   */
+  nsresult Insert(nsIFrame*       aOverflowCont,
+                  nsReflowStatus& aReflowStatus);
+  /**
+   * This function should be called for each child that is reflowed
+   * but no longer has an overflow continuation. It increments our
+   * walker and makes sure we drop any dangling pointers to its
+   * next-in-flow. This function MUST be called before stealing or
+   * deleting aChild's next-in-flow.
+   */
+  void Finish(nsIFrame* aChild);
+
+  /**
+   * This function should be called for each child that isn't reflowed.
+   * It increments our walker and sets the NS_FRAME_OVERFLOW_INCOMPLETE
+   * reflow flag if it encounters an overflow continuation so that our
+   * next-in-flow doesn't get prematurely deleted. It MUST be called on
+   * each unreflowed child that has an overflow container continuation;
+   * it MAY be called on other children, but it isn't necessary (doesn't
+   * do anything).
+   */
+  void Skip(nsIFrame* aChild, nsReflowStatus& aReflowStatus)
+  {
+    NS_PRECONDITION(aChild, "null ptr");
+    if (aChild == mSentry) {
+      StepForward();
+      aReflowStatus = NS_FRAME_MERGE_INCOMPLETE(aReflowStatus,
+                                                NS_FRAME_OVERFLOW_INCOMPLETE);
+    }
+  }
+
+private:
+
+  void SetUpListWalker();
+  void StepForward();
+
+  /* We hold a pointer to either the next-in-flow's overflow containers list
+     or, if that doesn't exist, our frame's excess overflow containers list.
+     We need to make sure that we drop that pointer if the list becomes
+     empty and is deleted elsewhere. */
+  nsFrameList* mOverflowContList;
+  /* We hold a pointer to the most recently-reflowed child that has an
+     overflow container next-in-flow. We do this because it's a known
+     good point; this pointer won't be deleted on us. We can use it to
+     recover our place in the list. */
+  nsIFrame* mPrevOverflowCont;
+  /* This is a pointer to the next overflow container's prev-in-flow, which
+     is (or should be) a child of our frame. When we hit this, we will need
+     to increment this walker to the next overflow container. */
+  nsIFrame* mSentry;
+  /* Parent of all frames in mOverflowContList. If our mOverflowContList
+     is an excessOverflowContainersProperty, then this our frame (the frame
+     that was passed in to our constructor). Otherwise this is that frame's
+     next-in-flow, and our mOverflowContList is mParent's
+     overflowContainersProperty */
+  nsContainerFrame* mParent;
+  /* Tells SetUpListWalker whether or not to walk us past any continuations
+     of overflow containers. */
+  PRBool mSkipOverflowContainerChildren;
 };
 
 #endif /* nsContainerFrame_h___ */

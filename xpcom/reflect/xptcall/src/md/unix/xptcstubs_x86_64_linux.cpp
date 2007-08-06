@@ -163,14 +163,17 @@ asm(".section	\".text\"\n\t" \
     ".align	2\n\t" \
     ".if	" #n " < 10\n\t" \
     ".globl	_ZN14nsXPTCStubBase5Stub" #n "Ev\n\t" \
+    ".hidden	_ZN14nsXPTCStubBase5Stub" #n "Ev\n\t" \
     ".type	_ZN14nsXPTCStubBase5Stub" #n "Ev,@function\n" \
     "_ZN14nsXPTCStubBase5Stub" #n "Ev:\n\t" \
     ".elseif	" #n " < 100\n\t" \
     ".globl	_ZN14nsXPTCStubBase6Stub" #n "Ev\n\t" \
+    ".hidden	_ZN14nsXPTCStubBase6Stub" #n "Ev\n\t" \
     ".type	_ZN14nsXPTCStubBase6Stub" #n "Ev,@function\n" \
     "_ZN14nsXPTCStubBase6Stub" #n "Ev:\n\t" \
     ".elseif    " #n " < 1000\n\t" \
     ".globl     _ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
+    ".hidden    _ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
     ".type      _ZN14nsXPTCStubBase7Stub" #n "Ev,@function\n" \
     "_ZN14nsXPTCStubBase7Stub" #n "Ev:\n\t" \
     ".else\n\t" \

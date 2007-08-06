@@ -50,7 +50,7 @@ interface nsIFile;
  *   3) Support for uniquely identifying cached data in cases when the URL
  *      is insufficient (e.g., HTTP form submission).
  */
-[scriptable, uuid(afafb719-bdf5-49c8-a4a9-db39ec331c9b)]
+[scriptable, uuid(09556ba7-b13d-47d2-b154-fe690b063899)]
 interface nsICachingChannel : nsISupports
 {
     /**
@@ -106,6 +106,12 @@ interface nsICachingChannel : nsISupports
     attribute boolean cacheForOfflineUse;
 
     /**
+     * The session into which to cache offline data.  If not specified,
+     * data will be placed in "HTTP-offline"
+     */
+    attribute ACString offlineCacheClientID;
+
+    /**
      * Get the "file" where the cached data can be found.  This is valid for
      * as long as a reference to the cache token is held.  This may return
      * an error if cacheAsFile is false.
@@ -122,6 +128,21 @@ interface nsICachingChannel : nsISupports
     /**************************************************************************
      * Caching channel specific load flags:
      */
+
+    /**
+     * This load flag inhibits fetching from the net.  An error of
+     * NS_ERROR_DOCUMENT_NOT_CACHED will be sent to the listener's
+     * onStopRequest if network IO is necessary to complete the request.
+     *
+     * This flag can be used to find out whether fetching this URL would
+     * cause validation of the cache entry via the network.
+     *
+     * Combining this flag with LOAD_BYPASS_LOCAL_CACHE will cause all
+     * loads to fail. This flag differs from LOAD_ONLY_FROM_CACHE in that
+     * this flag fails the load if validation is required while
+     * LOAD_ONLY_FROM_CACHE skips validation where possible.
+     */
+    const unsigned long LOAD_NO_NETWORK_IO = 1 << 26;
 
     /**
      * This load flag causes the offline cache to be checked when fetching

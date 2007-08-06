@@ -125,7 +125,13 @@ public:
     eDOMEvents_pagehide,
     eDOMEvents_DOMMouseScroll,
     eDOMEvents_offline,
-    eDOMEvents_online
+    eDOMEvents_online,
+    eDOMEvents_copy,
+    eDOMEvents_cut,
+    eDOMEvents_paste,
+    eDOMEvents_beforecopy,
+    eDOMEvents_beforecut,
+    eDOMEvents_beforepaste
 #ifdef MOZ_SVG
    ,
     eDOMEvents_SVGLoad,

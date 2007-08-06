@@ -157,25 +157,34 @@ HandlerService.prototype = {
     var handlerID = this._getPreferredHandlerID(aHandlerInfo);
     var handler = aHandlerInfo.preferredApplicationHandler;
 
-    // First add a record for the preferred app to the datasource.  In the
-    // process we also need to remove any vestiges of an existing record, so
-    // we remove any properties that we aren't overwriting.
-    this._setLiteral(handlerID, NC_PRETTY_NAME, handler.name);
-    if (handler instanceof Ci.nsILocalHandlerApp) {
-      handler.QueryInterface(Ci.nsILocalHandlerApp);
-      this._setLiteral(handlerID, NC_PATH, handler.executable.path);
-      this._removeValue(handlerID, NC_URI_TEMPLATE);
+    if (handler) {
+      // First add a record for the preferred app to the datasource.  In the
+      // process we also need to remove any vestiges of an existing record, so
+      // we remove any properties that we aren't overwriting.
+      this._setLiteral(handlerID, NC_PRETTY_NAME, handler.name);
+      if (handler instanceof Ci.nsILocalHandlerApp) {
+        this._setLiteral(handlerID, NC_PATH, handler.executable.path);
+        this._removeValue(handlerID, NC_URI_TEMPLATE);
+      }
+      else {
+        handler.QueryInterface(Ci.nsIWebHandlerApp);
+        this._setLiteral(handlerID, NC_URI_TEMPLATE, handler.uriTemplate);
+        this._removeValue(handlerID, NC_PATH);
+      }
+
+      // Finally, make this app be the preferred app for the handler info.
+      // Note: at least some code completely ignores this setting and assumes
+      // the preferred app is the one whose URI follows the appropriate pattern.
+      this._setResource(infoID, NC_PREFERRED_APP, handlerID);
     }
     else {
-      handler.QueryInterface(Ci.nsIWebHandlerApp);
-      this._setLiteral(handlerID, NC_URI_TEMPLATE, handler.uriTemplate);
+      // There isn't a preferred handler.  Remove the existing record for it,
+      // if any.
+      this._removeValue(handlerID, NC_PRETTY_NAME);
       this._removeValue(handlerID, NC_PATH);
+      this._removeValue(handlerID, NC_URI_TEMPLATE);
+      this._removeValue(infoID, NC_PREFERRED_APP);
     }
-
-    // Finally, make the handler app be the preferred app for the handler info.
-    // Note: at least some code completely ignores this setting and assumes
-    // the preferred app is the one whose URI follows the appropriate pattern.
-    this._setResource(infoID, NC_PREFERRED_APP, handlerID);
   },
 
   _storeAlwaysAsk: function HS__storeAlwaysAsk(aHandlerInfo) {
@@ -227,42 +236,34 @@ HandlerService.prototype = {
   },
 
   /**
-   * Get the string value identifying the given content type (i.e. the MIME
-   * type or protocol scheme).
+   * Get the string identifying whether this is a MIME or a protocol handler.
+   * This string is used in the URI IDs of various RDF properties.
    * 
-   * FIXME: this should be a property of nsIHandlerInfo.
+   * @param aHandlerInfo {nsIHandlerInfo} the handler for which to get the class
    * 
-   * @param aHandlerInfo {nsIHandlerInfo} the type for which to get the string
+   * @returns {string} the ID
    */
-  _getType: function HS__getType(aHandlerInfo) {
-    // FIXME: once nsIHandlerInfo supports retrieving the scheme
-    // (and differentiating between MIME and protocol content types),
-    // implement support for protocols.
-    var mimeInfo = aHandlerInfo.QueryInterface(Ci.nsIMIMEInfo);
-    try       { var type = mimeInfo.MIMEType }
-    catch(ex) { throw Cr.NS_ERROR_NOT_IMPLEMENTED }
-
-    return type;
+  _getClass: function HS__getClass(aHandlerInfo) {
+    if (aHandlerInfo instanceof Ci.nsIMIMEInfo)
+      return "mimetype";
+    else
+      return "scheme";
   },
 
   /**
    * Return the unique identifier for a content type record, which stores
    * the editable and value fields plus a reference to the type's handler.
    * 
-   * FIXME: the ID should be a property of nsIHandlerInfo.
-   * 
    * |urn:(mimetype|scheme):<type>|
    * 
+   * XXX: should this be a property of nsIHandlerInfo?
+   * 
    * @param aHandlerInfo {nsIHandlerInfo} the type for which to get the ID
+   * 
+   * @returns {string} the ID
    */
   _getTypeID: function HS__getTypeID(aHandlerInfo) {
-    // FIXME: once nsIHandlerInfo supports retrieving the scheme
-    // (and differentiating between MIME and protocol content types),
-    // implement support for protocols.
-
-    var id = "urn:mimetype:" + this._getType(aHandlerInfo);
-
-    return id;
+    return "urn:" + this._getClass(aHandlerInfo) + ":" + aHandlerInfo.type;
   },
 
   /**
@@ -270,22 +271,19 @@ HandlerService.prototype = {
    * the preferredAction and alwaysAsk fields plus a reference to the preferred
    * handler.  Roughly equivalent to the nsIHandlerInfo interface.
    * 
+   * |urn:(mimetype|scheme):handler:<type>|
+   * 
    * FIXME: the type info record should be merged into the type record,
    * since there's a one to one relationship between them, and this record
    * merely stores additional attributes of a content type.
    * 
-   * |urn:(mimetype|scheme):handler:<type>|
+   * @param aHandlerInfo {nsIHandlerInfo} the handler for which to get the ID
    * 
-   * @param aHandlerInfo {nsIHandlerInfo} the type for which to get the ID
+   * @returns {string} the ID
    */
   _getInfoID: function HS__getInfoID(aHandlerInfo) {
-    // FIXME: once nsIHandlerInfo supports retrieving the scheme
-    // (and differentiating between MIME and protocol content types),
-    // implement support for protocols.
-
-    var id = "urn:mimetype:handler:" + this._getType(aHandlerInfo);
-
-    return id;
+    return "urn:" + this._getClass(aHandlerInfo) + ":handler:" +
+           aHandlerInfo.type;
   },
 
   /**
@@ -296,34 +294,45 @@ HandlerService.prototype = {
    * 
    * |urn:(mimetype|scheme):externalApplication:<type>|
    *
-   * FIXME: this should be a property of nsIHandlerApp.
+   * XXX: should this be a property of nsIHandlerApp?
    *
    * FIXME: this should be an arbitrary ID, and we should retrieve it from
    * the datastore for a given content type via the NC:ExternalApplication
    * property rather than looking for a specific ID, so a handler doesn't
    * have to change IDs when it goes from being a possible handler to being
-   * the preferred one.
+   * the preferred one (once we support possible handlers).
    * 
-   * @param aHandlerInfo {nsIHandlerInfo} the type for which to get the ID
+   * @param aHandlerInfo {nsIHandlerInfo} the handler for which to get the ID
+   * 
+   * @returns {string} the ID
    */
   _getPreferredHandlerID: function HS__getPreferredHandlerID(aHandlerInfo) {
-    // FIXME: once nsIHandlerInfo supports retrieving the scheme
-    // (and differentiating between MIME and protocol content types),
-    // implement support for protocols.
-
-    var id = "urn:mimetype:externalApplication:" + this._getType(aHandlerInfo);
-
-    return id;
+    return "urn:" + this._getClass(aHandlerInfo) + ":externalApplication:" +
+           aHandlerInfo.type;
   },
 
-  _ensureAndGetTypeList: function HS__ensureAndGetTypeList(aHandlerInfo) {
+  /**
+   * Get the list of types for the given class, creating the list if it
+   * doesn't already exist.  The class can be either "mimetype" or "scheme"
+   * (i.e. the result of a call to _getClass).
+   * 
+   * |urn:(mimetype|scheme)s|
+   * |urn:(mimetype|scheme)s:root|
+   * 
+   * @param aClass {string} the class for which to retrieve a list of types
+   *
+   * @returns {nsIRDFContainer} the list of types
+   */
+  _ensureAndGetTypeList: function HS__ensureAndGetTypeList(aClass) {
     // FIXME: once nsIHandlerInfo supports retrieving the scheme
     // (and differentiating between MIME and protocol content types),
     // implement support for protocols.
 
-    var source = this._rdf.GetResource("urn:mimetypes");
-    var property = this._rdf.GetResource(NC_MIME_TYPES);
-    var target = this._rdf.GetResource("urn:mimetypes:root");
+    var source = this._rdf.GetResource("urn:" + aClass + "s");
+    var property =
+      this._rdf.GetResource(aClass == "mimetype" ? NC_MIME_TYPES
+                                                 : NC_PROTOCOL_SCHEMES);
+    var target = this._rdf.GetResource("urn:" + aClass + "s:root");
 
     // Make sure we have an arc from the source to the target.
     if (!this._ds.HasAssertion(source, property, target, true))
@@ -355,7 +364,7 @@ HandlerService.prototype = {
    */
   _ensureRecordsForType: function HS__ensureRecordsForType(aHandlerInfo) {
     // Get the list of types.
-    var typeList = this._ensureAndGetTypeList(aHandlerInfo);
+    var typeList = this._ensureAndGetTypeList(this._getClass(aHandlerInfo));
 
     // If there's already a record in the datastore for this type, then we
     // don't need to do anything more.
@@ -367,7 +376,7 @@ HandlerService.prototype = {
     // Create a basic type record for this type.
     typeList.AppendElement(type);
     this._setLiteral(typeID, NC_EDITABLE, "true");
-    this._setLiteral(typeID, NC_VALUE, this._getType(aHandlerInfo));
+    this._setLiteral(typeID, NC_VALUE, aHandlerInfo.type);
     
     // Create a basic info record for this type.
     var infoID = this._getInfoID(aHandlerInfo);

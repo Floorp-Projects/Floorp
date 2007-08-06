@@ -830,6 +830,49 @@ nsCacheService::IsStorageEnabledForPolicy_Locked(nsCacheStoragePolicy  storagePo
     return PR_FALSE;
 }
 
+
+nsresult nsCacheService::GetOfflineOwnerDomains(nsCacheSession * session,
+                                                PRUint32 * count,
+                                                char *** domains)
+{
+#ifdef NECKO_OFFLINE_CACHE
+    if (session->StoragePolicy() != nsICache::STORE_OFFLINE)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    if (!gService->mOfflineDevice) {
+        nsresult rv = gService->CreateOfflineDevice();
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return gService->mOfflineDevice->GetOwnerDomains(session->ClientID()->get(),
+                                                     count, domains);
+#else // !NECKO_OFFLINE_CACHE
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+
+nsresult nsCacheService::GetOfflineOwnerURIs(nsCacheSession * session,
+                                             const nsACString & ownerDomain,
+                                             PRUint32 * count,
+                                             char *** uris)
+{
+#ifdef NECKO_OFFLINE_CACHE
+    if (session->StoragePolicy() != nsICache::STORE_OFFLINE)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    if (!gService->mOfflineDevice) {
+        nsresult rv = gService->CreateOfflineDevice();
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return gService->mOfflineDevice->GetOwnerURIs(session->ClientID()->get(),
+                                                  ownerDomain, count, uris);
+#else // !NECKO_OFFLINE_CACHE
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 nsresult
 nsCacheService::SetOfflineOwnedKeys(nsCacheSession * session,
                                     const nsACString & ownerDomain,
@@ -987,6 +1030,25 @@ nsresult nsCacheService::EvictUnownedOfflineEntries(nsCacheSession * session)
 #endif
 }
 
+nsresult nsCacheService::MergeTemporaryClientID(nsCacheSession * session,
+                                                const nsACString & clientID)
+{
+#ifdef NECKO_OFFLINE_CACHE
+    if (session->StoragePolicy() != nsICache::STORE_OFFLINE)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    if (!gService->mOfflineDevice) {
+        nsresult rv = gService->CreateOfflineDevice();
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return gService->mOfflineDevice->MergeTemporaryClientID
+        (session->ClientID()->get(), PromiseFlatCString(clientID).get());
+#else // !NECKO_OFFLINE_CACHE
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
 {
     NS_ENSURE_ARG_POINTER(visitor);
@@ -1040,6 +1102,24 @@ NS_IMETHODIMP nsCacheService::EvictEntries(nsCacheStoragePolicy storagePolicy)
     return  EvictEntriesForClient(nsnull, storagePolicy);
 }
 
+NS_IMETHODIMP nsCacheService::CreateTemporaryClientID(nsCacheStoragePolicy storagePolicy,
+                                                      nsACString &clientID)
+{
+#ifdef NECKO_OFFLINE_CACHE
+    // Only the offline cache device supports temporary clients
+    if (storagePolicy != nsICache::STORE_OFFLINE)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    if (!gService->mOfflineDevice) {
+        nsresult rv = gService->CreateOfflineDevice();
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    return gService->mOfflineDevice->CreateTemporaryClientID(clientID);
+#else // !NECKO_OFFLINE_CACHE
+    return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
 
 /**
  * Internal Methods

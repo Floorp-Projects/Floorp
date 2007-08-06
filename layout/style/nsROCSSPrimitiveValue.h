@@ -47,6 +47,7 @@
 #include "nsReadableUtils.h"
 #include "nsIURI.h"
 #include "nsIAtom.h"
+#include "nsCSSKeywords.h"
 
 #include "nsCOMPtr.h"
 #include "nsDOMError.h"
@@ -67,6 +68,8 @@ public:
   // nsROCSSPrimitiveValue
   nsROCSSPrimitiveValue(PRInt32 aAppUnitsPerInch);
   virtual ~nsROCSSPrimitiveValue();
+
+  // FIXME Many of these methods should be out-of-line.
 
   void SetNumber(float aValue)
   {
@@ -116,6 +119,12 @@ public:
     mType = CSS_IDENT;
   }
 
+  // FIXME More callers should use this variant.
+  void SetIdent(nsCSSKeyword aKeyword)
+  {
+    SetIdent(nsCSSKeywords::GetStringValue(aKeyword));
+  }
+
   void SetIdent(const nsACString& aString)
   {
     Reset();
@@ -128,24 +137,26 @@ public:
     }
   }
 
-  void SetString(const nsACString& aString)
+  // FIXME: CSS_STRING should imply a string with "" and a need for escaping.
+  void SetString(const nsACString& aString, PRUint16 aType = CSS_STRING)
   {
     Reset();
     mValue.mString = ToNewUnicode(aString);
     if (mValue.mString) {
-      mType = CSS_STRING;
+      mType = aType;
     } else {
       // XXXcaa We should probably let the caller know we are out of memory
       mType = CSS_UNKNOWN;
     }
   }
 
-  void SetString(const nsAString& aString)
+  // FIXME: CSS_STRING should imply a string with "" and a need for escaping.
+  void SetString(const nsAString& aString, PRUint16 aType = CSS_STRING)
   {
     Reset();
     mValue.mString = ToNewUnicode(aString);
     if (mValue.mString) {
-      mType = CSS_STRING;
+      mType = aType;
     } else {
       // XXXcaa We should probably let the caller know we are out of memory
       mType = CSS_UNKNOWN;
@@ -196,6 +207,8 @@ public:
         NS_RELEASE(mValue.mAtom);
         break;
       case CSS_STRING:
+      case CSS_ATTR:
+      case CSS_COUNTER: // FIXME: Counter should use an object
         NS_ASSERTION(mValue.mString, "Null string should never happen");
         nsMemory::Free(mValue.mString);
         mValue.mString = nsnull;
@@ -226,7 +239,7 @@ private:
     nsIDOMRect*     mRect;
     PRUnichar*      mString;
     nsIURI*         mURI;
-    nsIAtom*        mAtom;
+    nsIAtom*        mAtom; // FIXME use nsCSSKeyword instead
   } mValue;
   
   PRInt32 mAppUnitsPerInch;

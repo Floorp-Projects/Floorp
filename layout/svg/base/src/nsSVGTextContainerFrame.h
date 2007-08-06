@@ -67,6 +67,9 @@ private:
 
 public:
   // nsIFrame
+  NS_IMETHOD InsertFrames(nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList);
   NS_IMETHOD RemoveFrame(nsIAtom *aListName, nsIFrame *aOldFrame);
 
   // nsISVGTextContentMetrics

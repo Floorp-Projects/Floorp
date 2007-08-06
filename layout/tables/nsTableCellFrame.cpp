@@ -129,8 +129,8 @@ nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
   const nsHTMLReflowState *cellRS = aReflowState.mCBReflowState;
 
   if (cellRS && cellRS->frame == this &&
-      (cellRS->mComputedHeight == NS_UNCONSTRAINEDSIZE ||
-       cellRS->mComputedHeight == 0)) { // XXXldb Why 0?
+      (cellRS->ComputedHeight() == NS_UNCONSTRAINEDSIZE ||
+       cellRS->ComputedHeight() == 0)) { // XXXldb Why 0?
     // This is a percentage height on a frame whose percentage heights
     // are based on the height of the cell, since its containing block
     // is the inner cell frame.
@@ -819,13 +819,13 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   nscoord computedPaginatedHeight = 0;
 
   if (aReflowState.mFlags.mSpecialHeightReflow) {
-    ((nsHTMLReflowState&)aReflowState).mComputedHeight = mRect.height - topInset - bottomInset;
+    const_cast<nsHTMLReflowState&>(aReflowState).SetComputedHeight(mRect.height - topInset - bottomInset);
     DISPLAY_REFLOW_CHANGE();
   }
   else if (aPresContext->IsPaginated()) {
     computedPaginatedHeight = CalcUnpaginagedHeight(aPresContext, (nsTableCellFrame&)*this, *tableFrame, topInset + bottomInset);
     if (computedPaginatedHeight > 0) {
-      ((nsHTMLReflowState&)aReflowState).mComputedHeight = computedPaginatedHeight;
+      const_cast<nsHTMLReflowState&>(aReflowState).SetComputedHeight(computedPaginatedHeight);
       DISPLAY_REFLOW_CHANGE();
     }
   }      
@@ -851,6 +851,12 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
 
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState,
               kidOrigin.x, kidOrigin.y, 0, aStatus);
+  if (NS_FRAME_OVERFLOW_IS_INCOMPLETE(aStatus)) {
+    // Don't pass OVERFLOW_INCOMPLETE through tables until they can actually handle it
+    //XXX should paginate overflow as overflow, but not in this patch (bug 379349)
+    NS_FRAME_SET_INCOMPLETE(aStatus);
+    printf("Set table cell incomplete %p\n", this);
+  }
   if (GetStateBits() & NS_FRAME_IS_DIRTY) {
     Invalidate(GetOverflowRect(), PR_FALSE);
   }

@@ -48,7 +48,7 @@
 
 class nsPresContext;
 class nsIFrame;
-
+template <class T> class nsTArray;
 
 // {7568a516-3831-4db4-88a7-a42578acc136}
 #define NS_IANONYMOUS_CONTENT_CREATOR_IID \

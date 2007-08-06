@@ -34,11 +34,12 @@
  *	Kristian Høgsberg <krh@redhat.com>
  */
 
-#include <stdio.h>
+#include "cairoint.h"
+
+#include "cairo-output-stream-private.h"
+
 #include <locale.h>
 #include <ctype.h>
-#include "cairoint.h"
-#include "cairo-output-stream-private.h"
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
@@ -63,7 +64,7 @@ _cairo_output_stream_fini (cairo_output_stream_t *stream)
     return _cairo_output_stream_close (stream);
 }
 
-const cairo_output_stream_t cairo_output_stream_nil = {
+const cairo_output_stream_t _cairo_output_stream_nil = {
     NULL, /* write_func */
     NULL, /* close_func */
     0,    /* position */
@@ -71,7 +72,7 @@ const cairo_output_stream_t cairo_output_stream_nil = {
     FALSE /* closed */
 };
 
-static const cairo_output_stream_t cairo_output_stream_nil_write_error = {
+static const cairo_output_stream_t _cairo_output_stream_nil_write_error = {
     NULL, /* write_func */
     NULL, /* close_func */
     0,    /* position */
@@ -119,7 +120,7 @@ _cairo_output_stream_create (cairo_write_func_t		write_func,
 
     stream = malloc (sizeof (cairo_output_stream_with_closure_t));
     if (stream == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
 
     _cairo_output_stream_init (&stream->base, closure_write, closure_close);
     stream->write_func = write_func;
@@ -137,8 +138,8 @@ _cairo_output_stream_close (cairo_output_stream_t *stream)
     if (stream->closed)
 	return stream->status;
 
-    if (stream == &cairo_output_stream_nil ||
-	stream == &cairo_output_stream_nil_write_error)
+    if (stream == &_cairo_output_stream_nil ||
+	stream == &_cairo_output_stream_nil_write_error)
     {
 	return stream->status;
     }
@@ -214,52 +215,49 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
  * has been relicensed under the LGPL/MPL dual license for inclusion
  * into cairo (see COPYING). -- Kristian Høgsberg <krh@redhat.com>
  */
-
-int
+void
 _cairo_dtostr (char *buffer, size_t size, double d)
 {
-  struct lconv *locale_data;
-  const char *decimal_point;
-  int decimal_point_len;
-  char *p;
-  int decimal_len;
+    struct lconv *locale_data;
+    const char *decimal_point;
+    int decimal_point_len;
+    char *p;
+    int decimal_len;
 
-  /* Omit the minus sign from negative zero. */
-  if (d == 0.0)
-      d = 0.0;
+    /* Omit the minus sign from negative zero. */
+    if (d == 0.0)
+	d = 0.0;
 
-  snprintf (buffer, size, "%f", d);
+    snprintf (buffer, size, "%f", d);
 
-  locale_data = localeconv ();
-  decimal_point = locale_data->decimal_point;
-  decimal_point_len = strlen (decimal_point);
+    locale_data = localeconv ();
+    decimal_point = locale_data->decimal_point;
+    decimal_point_len = strlen (decimal_point);
 
-  assert (decimal_point_len != 0);
-  p = buffer;
+    assert (decimal_point_len != 0);
+    p = buffer;
 
-  if (*p == '+' || *p == '-')
-      p++;
+    if (*p == '+' || *p == '-')
+	p++;
 
-  while (isdigit (*p))
-      p++;
+    while (isdigit (*p))
+	p++;
 
-  if (strncmp (p, decimal_point, decimal_point_len) == 0) {
-      *p = '.';
-      decimal_len = strlen (p + decimal_point_len);
-      memmove (p + 1, p + decimal_point_len, decimal_len);
-      p[1 + decimal_len] = 0;
+    if (strncmp (p, decimal_point, decimal_point_len) == 0) {
+	*p = '.';
+	decimal_len = strlen (p + decimal_point_len);
+	memmove (p + 1, p + decimal_point_len, decimal_len);
+	p[1 + decimal_len] = 0;
 
-      /* Remove trailing zeros and decimal point if possible. */
-      for (p = p + decimal_len; *p == '0'; p--)
-	  *p = 0;
+	/* Remove trailing zeros and decimal point if possible. */
+	for (p = p + decimal_len; *p == '0'; p--)
+	    *p = 0;
 
-      if (*p == '.') {
-	  *p = 0;
-	  p--;
-      }
-  }
-
-  return p + 1 - buffer;
+	if (*p == '.') {
+	    *p = 0;
+	    p--;
+	}
+    }
 }
 
 enum {
@@ -278,10 +276,13 @@ void
 _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 			      const char *fmt, va_list ap)
 {
-    char buffer[512], single_fmt[32];
-    char *p, *end;
+#define SINGLE_FMT_BUFFER_SIZE 32
+    char buffer[512], single_fmt[SINGLE_FMT_BUFFER_SIZE];
+    int single_fmt_length;
+    char *p;
     const char *f, *start;
-    int length_modifier;
+    int length_modifier, width;
+    cairo_bool_t var_width;
 
     if (stream->status)
 	return;
@@ -305,10 +306,14 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	if (*f == '0')
 	    f++;
 
-	if (isdigit (*f)) {
-	    strtol (f, &end, 10);
-	    f = end;
-	}
+        var_width = FALSE;
+        if (*f == '*') {
+            var_width = TRUE;
+	    f++;
+        }
+
+	while (isdigit (*f))
+	    f++;
 
 	length_modifier = 0;
 	if (*f == 'l') {
@@ -316,9 +321,15 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	    f++;
 	}
 
+	/* The only format strings exist in the cairo implementation
+	 * itself. So there's an internal consistency problem if any
+	 * of them is larger than our format buffer size. */
+	single_fmt_length = f - start + 1;
+	assert (single_fmt_length + 1 <= SINGLE_FMT_BUFFER_SIZE);
+
 	/* Reuse the format string for this conversion. */
-	memcpy (single_fmt, start, f + 1 - start);
-	single_fmt[f + 1 - start] = '\0';
+	memcpy (single_fmt, start, single_fmt_length);
+	single_fmt[single_fmt_length] = '\0';
 
 	/* Flush contents of buffer before snprintf()'ing into it. */
 	_cairo_output_stream_write (stream, buffer, p - buffer);
@@ -337,15 +348,27 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	case 'o':
 	case 'x':
 	case 'X':
-	    snprintf (buffer, sizeof buffer, single_fmt, va_arg (ap, int));
+            if (var_width) {
+                width = va_arg (ap, int);
+                snprintf (buffer, sizeof buffer,
+                          single_fmt, width, va_arg (ap, int));
+            } else {
+                snprintf (buffer, sizeof buffer, single_fmt, va_arg (ap, int));
+            }
 	    break;
 	case 'd' | LENGTH_MODIFIER_LONG:
 	case 'u' | LENGTH_MODIFIER_LONG:
 	case 'o' | LENGTH_MODIFIER_LONG:
 	case 'x' | LENGTH_MODIFIER_LONG:
 	case 'X' | LENGTH_MODIFIER_LONG:
-	    snprintf (buffer, sizeof buffer,
-		      single_fmt, va_arg (ap, long int));
+            if (var_width) {
+                width = va_arg (ap, int);
+                snprintf (buffer, sizeof buffer,
+                          single_fmt, width, va_arg (ap, long int));
+            } else {
+                snprintf (buffer, sizeof buffer,
+                          single_fmt, va_arg (ap, long int));
+            }
 	    break;
 	case 's':
 	    snprintf (buffer, sizeof buffer,
@@ -446,11 +469,11 @@ _cairo_output_stream_create_for_file (FILE *file)
     stdio_stream_t *stream;
 
     if (file == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil_write_error;
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil_write_error;
 
     stream = malloc (sizeof *stream);
     if (stream == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
 
     _cairo_output_stream_init (&stream->base, stdio_write, stdio_flush);
     stream->file = file;
@@ -466,12 +489,12 @@ _cairo_output_stream_create_for_filename (const char *filename)
 
     file = fopen (filename, "wb");
     if (file == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil_write_error;
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil_write_error;
 
     stream = malloc (sizeof *stream);
     if (stream == NULL) {
 	fclose (file);
-	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
     }
 
     _cairo_output_stream_init (&stream->base, stdio_write, stdio_close);
@@ -512,7 +535,7 @@ _cairo_memory_stream_create (void)
 
     stream = malloc (sizeof *stream);
     if (stream == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
 
     _cairo_output_stream_init (&stream->base, memory_write, memory_close);
     _cairo_array_init (&stream->array, 1);

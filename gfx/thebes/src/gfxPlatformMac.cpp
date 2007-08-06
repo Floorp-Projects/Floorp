@@ -49,6 +49,8 @@
 #include "glitz-agl.h"
 #endif
 
+#include "lcms.h"
+
 gfxPlatformMac::gfxPlatformMac()
 {
 #ifdef MOZ_ENABLE_GLITZ
@@ -173,4 +175,51 @@ gfxPlatformMac::UpdateFontList()
 {
     gfxQuartzFontCache::SharedFontCache()->UpdateFontList();
     return NS_OK;
+}
+
+cmsHPROFILE
+gfxPlatformMac::GetPlatformCMSOutputProfile()
+{
+    CMProfileLocation device;
+    CMError err = CMGetDeviceProfile(cmDisplayDeviceClass,
+                                     cmDefaultDeviceID,
+                                     cmDefaultProfileID,
+                                     &device);
+    if (err != noErr)
+        return nsnull;
+
+    cmsHPROFILE profile = nsnull;
+    switch (device.locType) {
+    case cmFileBasedProfile: {
+        FSRef fsRef;
+        if (!FSpMakeFSRef(&device.u.fileLoc.spec, &fsRef)) {
+            char path[512];
+            if (!FSRefMakePath(&fsRef, (UInt8*)(path), sizeof(path))) {
+                profile = cmsOpenProfileFromFile(path, "r");
+#ifdef DEBUG_tor
+                if (profile)
+                    fprintf(stderr,
+                            "ICM profile read from %s fileLoc successfully\n", path);
+#endif
+            }
+        }
+        break;
+    }
+    case cmPathBasedProfile:
+        profile = cmsOpenProfileFromFile(device.u.pathLoc.path, "r");
+#ifdef DEBUG_tor
+        if (profile)
+            fprintf(stderr,
+                    "ICM profile read from %s pathLoc successfully\n",
+                    device.u.pathLoc.path);
+#endif
+        break;
+    default:
+#ifdef DEBUG_tor
+        fprintf(stderr, "Unhandled ColorSync profile location\n");
+#endif
+        break;
+    }
+
+    return profile;
 }

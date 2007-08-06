@@ -54,6 +54,7 @@ $finaldir         = "";   # where to put the final linked XPT
 $verbose          = 0;		# shorthand for --debug 1
 $debug            = 0;		# controls amount of debug output
 $help             = 0;		# flag: if set, print usage
+$xptlink          = "";   # path to the xpt_link binary
 
 # get command line options
 $return = GetOptions(	"source|s=s",           \$srcdir,
@@ -62,6 +63,7 @@ $return = GetOptions(	"source|s=s",           \$srcdir,
 			"help|h",               \$help,
 			"debug=i",              \$debug,
 			"verbose|v",            \$verbose,
+			"xptlink|x=s",          \$xptlink,
 			"<>",                   \&do_badargument
 			);
 
@@ -154,7 +156,7 @@ foreach my $component (@xptdirs) {
 	  $realmerged = $merged;
       }
 
-      my $cmdline = "$srcdir/bin/xpt_link $realmerged @realxptfiles";
+      my $cmdline = "$xptlink $realmerged @realxptfiles";
 			($debug >= 4) && print "$cmdline\n";
 			system($cmdline) == 0 || die ("'$cmdline' failed");
 
@@ -218,6 +220,10 @@ sub check_arguments
 		print "See \'$0 --help\' for more information.\n";
 		print "Exiting...\n";
 		exit ($exitval);
+	}
+
+	if ($xptlink eq "") {
+		$xptlink = "$srcdir/bin/xpt_link";
 	}
 }
 

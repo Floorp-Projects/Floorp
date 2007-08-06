@@ -264,6 +264,32 @@ nsHTMLReflowState::SetComputedWidth(nscoord aComputedWidth)
 }
 
 void
+nsHTMLReflowState::SetComputedHeight(nscoord aComputedHeight)
+{
+  NS_ASSERTION(frame, "Must have a frame!");
+  // It'd be nice to assert that |frame| is not in reflow, but this fails for
+  // two reasons:
+  //
+  // 1) Viewport frames reset the computed height on a copy of their reflow
+  //    state when reflowing fixed-pos kids.  In that case we actually don't
+  //    want to mess with the resize flags, because comparing the frame's rect
+  //    to the munged computed width is pointless.
+  // 2) nsFrame::BoxReflow creates a reflow state for its parent.  This reflow
+  //    state is not used to reflow the parent, but just as a parent for the
+  //    frame's own reflow state.  So given a nsBoxFrame inside some non-XUL
+  //    (like a text control, for example), we'll end up creating a reflow
+  //    state for the parent while the parent is reflowing.
+
+  NS_PRECONDITION(aComputedHeight >= 0, "Invalid computed height");
+  if (mComputedHeight != aComputedHeight) {
+    mComputedHeight = aComputedHeight;
+    if (frame->GetType() != nsGkAtoms::viewportFrame) { // Or check GetParent()?
+      InitResizeFlags(frame->PresContext());
+    }
+  }
+}
+
+void
 nsHTMLReflowState::Init(nsPresContext* aPresContext,
                         nscoord         aContainingBlockWidth,
                         nscoord         aContainingBlockHeight,
@@ -346,7 +372,7 @@ IsQuirkContainingBlockHeight(const nsHTMLReflowState* rs)
     
     // Note: This next condition could change due to a style change,
     // but that would cause a style reflow anyway, which means we're ok.
-    if (NS_AUTOHEIGHT == rs->mComputedHeight) {
+    if (NS_AUTOHEIGHT == rs->ComputedHeight()) {
       if (!rs->frame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
         return PR_FALSE;
       }
@@ -1400,7 +1426,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
       // go any further (see bug 221784).  The behavior we want here is: 1) If
       // not auto-height, use this as the percentage base.  2) If auto-height,
       // keep looking, unless the frame is positioned.
-      if (NS_AUTOHEIGHT == rs->mComputedHeight) {
+      if (NS_AUTOHEIGHT == rs->ComputedHeight()) {
         if (rs->frame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
           break;
         } else {
@@ -1429,7 +1455,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
     // if the ancestor is the page content frame then the percent base is 
     // the avail height, otherwise it is the computed height
     result = (nsGkAtoms::pageContentFrame == frameType)
-             ? rs->availableHeight : rs->mComputedHeight;
+             ? rs->availableHeight : rs->ComputedHeight();
     // if unconstrained - don't sutract borders - would result in huge height
     if (NS_AUTOHEIGHT == result) return result;
 

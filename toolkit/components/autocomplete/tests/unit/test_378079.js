@@ -149,6 +149,10 @@ AutoCompleteResult.prototype = {
     return this._styles[aIndex];
   },
   
+  getImageAt: function(aIndex) {
+    return "";
+  },
+
   removeValueAt: function (aRowIndex, aRemoveFromDb) {},
 
   // nsISupports implementation

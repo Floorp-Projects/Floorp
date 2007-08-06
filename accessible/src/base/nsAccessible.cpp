@@ -582,6 +582,18 @@ NS_IMETHODIMP nsAccessible::Shutdown()
 NS_IMETHODIMP nsAccessible::InvalidateChildren()
 {
   // Document has transformed, reset our invalid children and child count
+
+  // Reset the sibling pointers, they will be set up again the next time
+  // CacheChildren() is called.
+  // Note: we don't want to start creating accessibles at this point,
+  // so don't use GetNextSibling() here. (bug 387252)
+  nsAccessible* child = static_cast<nsAccessible*>(mFirstChild);
+  while (child && child->mNextSibling != DEAD_END_ACCESSIBLE) {
+    nsIAccessible *next = child->mNextSibling;
+    child->mNextSibling = nsnull;
+    child = static_cast<nsAccessible*>(next);
+  }
+
   mAccChildCount = eChildCountUninitialized;
   mFirstChild = nsnull;
   return NS_OK;
@@ -1449,6 +1461,10 @@ nsresult nsAccessible::AppendNameFromAccessibleFor(nsIContent *aContent,
   nsCOMPtr<nsIAccessible> accessible;
   if (domNode == mDOMNode) {
     accessible = this;
+    if (!aFromValue) {
+      // prevent recursive call GetName()
+      return NS_OK;
+    }
   }
   else {
     nsCOMPtr<nsIAccessibilityService> accService =
@@ -1507,12 +1523,13 @@ nsresult nsAccessible::AppendFlatStringFromContentNode(nsIContent *aContent, nsA
       }
     }
     if (aContent->TextLength() > 0) {
-      nsAutoString text;
-      aContent->AppendTextTo(text);
-      if (!text.IsEmpty())
-        aFlatString->Append(text);
-      if (isHTMLBlock && !aFlatString->IsEmpty())
+      nsIFrame *frame = shell->GetPrimaryFrameFor(aContent);
+      NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+      nsresult rv = frame->GetRenderedText(aFlatString);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (isHTMLBlock && !aFlatString->IsEmpty()) {
         aFlatString->Append(PRUnichar(' '));
+      }
     }
     return NS_OK;
   }
@@ -2030,6 +2047,34 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
 {
   if (mRoleMapEntry) {
     *aRole = mRoleMapEntry->role;
+
+    // These unfortunate exceptions don't fit into the ARIA table
+    // This is where the nsIAccessible role depends on both the role and ARIA state
+    if (*aRole == nsIAccessibleRole::ROLE_ENTRY) {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+      if (content && 
+          content->AttrValueIs(kNameSpaceID_WAIProperties , nsAccessibilityAtoms::secret,
+                               nsAccessibilityAtoms::_true, eCaseMatters)) {
+        // For entry field with aaa:secret="true"
+        *aRole = nsIAccessibleRole::ROLE_PASSWORD_TEXT;
+      }
+    }
+    else if (*aRole == nsIAccessibleRole::ROLE_PUSHBUTTON) {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+      if (content) {
+        if (content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::pressed)) {
+          // For aaa:pressed="false" or aaa:pressed="true"
+          // For simplicity, any pressed attribute indicates it's a toggle button
+          *aRole = nsIAccessibleRole::ROLE_TOGGLE_BUTTON;
+        }
+        else if (content->AttrValueIs(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::haspopup,
+                                      nsAccessibilityAtoms::_true, eCaseMatters)) {
+          // For button with aaa:haspopup="true"
+          *aRole = nsIAccessibleRole::ROLE_BUTTONMENU;
+        }
+      }
+    }
+  
     if (*aRole != nsIAccessibleRole::ROLE_NOTHING) {
       return NS_OK;
     }
@@ -2072,6 +2117,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(ariaProperties); index ++) {
       nsAutoString value;
       nsCOMPtr<nsIAtom> attr = do_GetAtom(ariaProperties[index]);
+      NS_ENSURE_TRUE(attr, NS_ERROR_OUT_OF_MEMORY);
       if (content->GetAttr(kNameSpaceID_WAIProperties, attr, value)) {
         ToLowerCase(value);
         attributes->SetStringProperty(nsDependentCString(ariaProperties[index]), value, oldValueUnused);    
@@ -2218,6 +2264,7 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
 
   nsAutoString attribValue;
   nsCOMPtr<nsIAtom> attribAtom = do_GetAtom(aStateMapEntry->attributeName); // XXX put atoms directly in entry
+  NS_ENSURE_TRUE(attribAtom, NS_ERROR_OUT_OF_MEMORY);
   if (aContent->GetAttr(kNameSpaceID_WAIProperties, attribAtom, attribValue)) {
     if (aStateMapEntry->attributeValue == kBoolState) {
       // No attribute value map specified in state map entry indicates state cleared
@@ -2249,9 +2296,18 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
                       nsIAccessibleStates::EXT_STATE_SENSITIVE;
     }
 
-    if (*aState & (nsIAccessibleStates::STATE_COLLAPSED |
-                   nsIAccessibleStates::STATE_EXPANDED)) {
+    const PRUint32 kExpandCollapseStates =
+      nsIAccessibleStates::STATE_COLLAPSED | nsIAccessibleStates::STATE_EXPANDED;
+    if (*aState & kExpandCollapseStates) {
       *aExtraState |= nsIAccessibleStates::EXT_STATE_EXPANDABLE;
+      if ((*aState & kExpandCollapseStates) == kExpandCollapseStates) {
+        // Cannot be both expanded and collapsed -- this happens 
+        // in ARIA expanded combobox because of limitation of nsARIAMap
+        // XXX Perhaps we will be able to make this less hacky if 
+        // we support extended states in nsARIAMap, e.g. derive
+        // COLLAPSED from EXPANDABLE && !EXPANDED
+        *aExtraState &= ~nsIAccessibleStates::STATE_COLLAPSED;
+      } 
     }
   }
 
@@ -2324,110 +2380,68 @@ NS_IMETHODIMP nsAccessible::GetValue(nsAString& aValue)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::GetMaximumValue(double *aMaximumValue)
+// nsIAccessibleValue
+NS_IMETHODIMP
+nsAccessible::GetMaximumValue(double *aMaximumValue)
 {
-  *aMaximumValue = 0;
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE;  // Node already shut down
-  }
-  if (mRoleMapEntry) {
-    if (mRoleMapEntry->valueRule == eNoValue) {
-      return NS_OK;
-    }
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    nsAutoString valueMax;
-    if (content && content->GetAttr(kNameSpaceID_WAIProperties,
-                                    nsAccessibilityAtoms::valuemax, valueMax) &&
-        valueMax.IsEmpty() == PR_FALSE) {
-      *aMaximumValue = PR_strtod(NS_LossyConvertUTF16toASCII(valueMax).get(), nsnull);
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE; // No maximum
+  return GetAttrValue(kNameSpaceID_WAIProperties,
+                      nsAccessibilityAtoms::valuemax, aMaximumValue);
 }
 
-NS_IMETHODIMP nsAccessible::GetMinimumValue(double *aMinimumValue)
+NS_IMETHODIMP
+nsAccessible::GetMinimumValue(double *aMinimumValue)
 {
-  *aMinimumValue = 0;
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE;  // Node already shut down
-  }
-  if (mRoleMapEntry) {
-    if (mRoleMapEntry->valueRule == eNoValue) {
-      return NS_OK;
-    }
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    nsAutoString valueMin;
-    if (content && content->GetAttr(kNameSpaceID_WAIProperties,
-                                    nsAccessibilityAtoms::valuemin, valueMin) &&
-        valueMin.IsEmpty() == PR_FALSE) {
-      *aMinimumValue = PR_strtod(NS_LossyConvertUTF16toASCII(valueMin).get(), nsnull);
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE; // No minimum
+  return GetAttrValue(kNameSpaceID_WAIProperties,
+                      nsAccessibilityAtoms::valuemin, aMinimumValue);
 }
 
-NS_IMETHODIMP nsAccessible::GetMinimumIncrement(double *aMinIncrement)
+NS_IMETHODIMP
+nsAccessible::GetMinimumIncrement(double *aMinIncrement)
 {
+  NS_ENSURE_ARG_POINTER(aMinIncrement);
   *aMinIncrement = 0;
-  return NS_ERROR_NOT_IMPLEMENTED; // No mimimum increment in dynamic content spec right now
+
+  // No mimimum increment in dynamic content spec right now
+  return NS_OK_NO_ARIA_VALUE;
 }
 
-NS_IMETHODIMP nsAccessible::GetCurrentValue(double *aValue)
+NS_IMETHODIMP
+nsAccessible::GetCurrentValue(double *aValue)
 {
-  *aValue = 0;
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE;  // Node already shut down
-  }
-  if (mRoleMapEntry) {
-    if (mRoleMapEntry->valueRule == eNoValue) {
-      return NS_OK;
-    }
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    nsAutoString value;
-    if (content && content->GetAttr(kNameSpaceID_WAIProperties,
-                                    nsAccessibilityAtoms::valuenow, value) &&
-        value.IsEmpty() == PR_FALSE) {
-      *aValue = PR_strtod(NS_LossyConvertUTF16toASCII(value).get(), nsnull);
-      return NS_OK;
-    }
-  }
-  return NS_ERROR_FAILURE; // No value
+  return GetAttrValue(kNameSpaceID_WAIProperties,
+                      nsAccessibilityAtoms::valuenow, aValue);
 }
 
-NS_IMETHODIMP nsAccessible::SetCurrentValue(double aValue)
+NS_IMETHODIMP
+nsAccessible::SetCurrentValue(double aValue)
 {
-  if (!mDOMNode) {
+  if (!mDOMNode)
     return NS_ERROR_FAILURE;  // Node already shut down
-  }
-  if (mRoleMapEntry) {
-    if (mRoleMapEntry->valueRule == eNoValue) {
-      return NS_OK;
-    }
-    const PRUint32 kValueCannotChange = nsIAccessibleStates::STATE_READONLY |
-                                        nsIAccessibleStates::STATE_UNAVAILABLE;
 
-    if (State(this) & kValueCannotChange) {
-      return NS_ERROR_FAILURE;
-    }
-    double minValue;
-    if (NS_SUCCEEDED(GetMinimumValue(&minValue)) && aValue < minValue) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    double maxValue;
-    if (NS_SUCCEEDED(GetMaximumValue(&maxValue)) && aValue > maxValue) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    if (content) {
-      nsAutoString newValue;
-      newValue.AppendFloat(aValue);
-      return content->SetAttr(kNameSpaceID_WAIProperties,
-                              nsAccessibilityAtoms::valuenow, newValue, PR_TRUE);
-    }
-  }
-  return NS_ERROR_FAILURE; // Not in a role that can accept value
+  if (!mRoleMapEntry || mRoleMapEntry->valueRule == eNoValue)
+    return NS_OK_NO_ARIA_VALUE;
+
+  const PRUint32 kValueCannotChange = nsIAccessibleStates::STATE_READONLY |
+                                      nsIAccessibleStates::STATE_UNAVAILABLE;
+
+  if (State(this) & kValueCannotChange)
+    return NS_ERROR_FAILURE;
+
+  double minValue = 0;
+  if (NS_SUCCEEDED(GetMinimumValue(&minValue)) && aValue < minValue)
+    return NS_ERROR_INVALID_ARG;
+
+  double maxValue = 0;
+  if (NS_SUCCEEDED(GetMaximumValue(&maxValue)) && aValue > maxValue)
+    return NS_ERROR_INVALID_ARG;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  NS_ENSURE_STATE(content);
+
+  nsAutoString newValue;
+  newValue.AppendFloat(aValue);
+  return content->SetAttr(kNameSpaceID_WAIProperties,
+                          nsAccessibilityAtoms::valuenow, newValue, PR_TRUE);
 }
 
 /* void setName (in DOMString name); */
@@ -3135,18 +3149,34 @@ PRInt32 nsAccessible::TextLength(nsIAccessible *aAccessible)
   if (!IsText(aAccessible))
     return 1;
 
+  nsCOMPtr<nsPIAccessNode> pAccNode(do_QueryInterface(aAccessible));
+  NS_ASSERTION(pAccNode, "QI to nsPIAccessNode failed");
+
+  nsIFrame *frame = pAccNode->GetFrame();
+  if (frame) { // Optimal way to get the text length -- no string copy
+    nsIContent *content = frame->GetContent();
+    if (content) {
+      PRUint32 length;
+      nsresult rv = nsHyperTextAccessible::ContentToRenderedOffset(frame, content->TextLength(), &length);
+      return NS_SUCCEEDED(rv) ? length : -1;
+    }
+  }
+
+  // For list bullets (or anything other accessible which would compute its own text
+  // They don't have their own frame.
+  // XXX In the future, list bullets may have frame and anon content, so 
+  // we should be able to remove this at that point
   nsCOMPtr<nsPIAccessible> pAcc(do_QueryInterface(aAccessible));
-  NS_ENSURE_TRUE(pAcc, NS_ERROR_FAILURE);
+  NS_ASSERTION(pAcc, "QI to nsPIAccessible failed");
 
   nsAutoString text;
-  pAcc->GetContentText(text);
+  pAcc->AppendTextTo(text, 0, PR_UINT32_MAX); // Get all the text
   return text.Length();
 }
 
 NS_IMETHODIMP
-nsAccessible::GetContentText(nsAString& aText)
+nsAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset, PRUint32 aLength)
 {
-  aText.Truncate();
   return NS_OK;
 }
 
@@ -3219,3 +3249,28 @@ PRBool nsAccessible::CheckVisibilityInParentChain(nsIDocument* aDocument, nsIVie
 
   return PR_TRUE;
 }
+
+nsresult
+nsAccessible::GetAttrValue(PRUint32 aNameSpaceID, nsIAtom *aName,
+                           double *aValue)
+{
+  NS_ENSURE_ARG_POINTER(aValue);
+  *aValue = 0;
+
+  if (!mDOMNode)
+    return NS_ERROR_FAILURE;  // Node already shut down
+
+ if (!mRoleMapEntry || mRoleMapEntry->valueRule == eNoValue)
+    return NS_OK_NO_ARIA_VALUE;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  NS_ENSURE_STATE(content);
+
+  PRInt32 result = NS_OK;
+  nsAutoString value;
+  if (content->GetAttr(aNameSpaceID, aName, value) && !value.IsEmpty())
+    *aValue = value.ToFloat(&result);
+
+  return result;
+}
+

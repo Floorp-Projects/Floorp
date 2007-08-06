@@ -214,6 +214,13 @@ interface nsIProtocolHandler : nsISupports
      * it unsuitable for saving to a local file.
      */
     const unsigned long URI_NON_PERSISTABLE = (1<<10);
+
+    /**
+     * Channels using this protocol never call OnDataAvailable
+     * on the listener passed to AsyncOpen and they therefore
+     * do not return any data that we can use.
+     */
+    const unsigned long URI_DOES_NOT_RETURN_DATA = (1<<11);
     
     /**
      * This protocol handler can be proxied via a proxy (socks or http)

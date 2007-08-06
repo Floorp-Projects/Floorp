@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+span { color: red }
+:checked + span { color: green }
+input { display: none }
+</style>
+
+<body>
+<input type="checkbox" checked="checked" id="foo"><span>There should be no red</span>
+<input type="radio" checked="checked" id="foo"><span>There should be no red</span>
+</body>
+</html>

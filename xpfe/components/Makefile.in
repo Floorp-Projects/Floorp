@@ -80,7 +80,6 @@ ifdef MOZ_HAVE_BROWSER
 DIRS += \
         directory \
         resetPref \
-        killAll \
         $(NULL)
 
 ifndef MOZ_PHOENIX
@@ -106,7 +105,7 @@ endif
 
 ifdef MOZ_SUITE
 ifeq ($(OS_ARCH),WINNT)
-DIRS += urlwidget winhooks
+DIRS += winhooks
 endif
 endif
 

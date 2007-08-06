@@ -166,11 +166,7 @@ gfxFont::gfxFont(const nsAString &aName, const gfxFontStyle *aFontStyle) :
  * A helper function in case we need to do any rounding or other
  * processing here.
  */
-static double
-ToDeviceUnits(double aAppUnits, double aDevUnitsPerAppUnit)
-{
-    return aAppUnits*aDevUnitsPerAppUnit;
-}
+#define ToDeviceUnits(aAppUnits, aDevUnitsPerAppUnit)   (double(aAppUnits)*double(aDevUnitsPerAppUnit))
 
 struct GlyphBuffer {
 #define GLYPH_BUFFER_SIZE (2048/sizeof(cairo_glyph_t))
@@ -218,7 +214,9 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
     double y = aPt->y;
 
     cairo_t *cr = aContext->GetCairo();
-    SetupCairoFont(cr);
+    PRBool success = SetupCairoFont(cr);
+    if (NS_UNLIKELY(!success))
+        return;
 
     GlyphBuffer glyphs;
     cairo_glyph_t *glyph;
@@ -258,10 +256,12 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                     glyph->x -= ToDeviceUnits(advance, devUnitsPerAppUnit);
                 }
                 x += direction*advance;
+
+                glyphs.Flush(cr, aDrawToPath);
+
                 if (details->mIsLastGlyph)
                     break;
                 ++details;
-                glyphs.Flush(cr, aDrawToPath);
             }
         } else if (glyphData->IsMissing()) {
             const gfxTextRun::DetailedGlyph *details = aTextRun->GetDetailedGlyphs(i);
@@ -679,6 +679,7 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void 
     mAppUnitsPerDevUnit(aParams->mAppUnitsPerDevUnit),
     mFlags(aFlags), mCharacterCount(aLength), mHashCode(0)
 {
+    NS_ASSERTION(mAppUnitsPerDevUnit != 0, "Invalid app unit scale");
     MOZ_COUNT_CTOR(gfxTextRun);
     NS_ADDREF(mFontGroup);
     if (aParams->mSkipChars) {

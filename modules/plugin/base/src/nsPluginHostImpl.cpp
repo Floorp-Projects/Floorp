@@ -5520,7 +5520,7 @@ nsPluginHostImpl::WritePluginInfo()
   if (NS_FAILED(rv))
     return rv;
 
-  directoryService->Get(NS_APP_APPLICATION_REGISTRY_DIR, NS_GET_IID(nsIFile),
+  directoryService->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile),
                         getter_AddRefs(mPluginRegFile));
 
   if (!mPluginRegFile)
@@ -5624,7 +5624,7 @@ nsPluginHostImpl::ReadPluginInfo()
   if (NS_FAILED(rv))
     return rv;
 
-  directoryService->Get(NS_APP_APPLICATION_REGISTRY_DIR, NS_GET_IID(nsIFile),
+  directoryService->Get(NS_APP_USER_PROFILE_50_DIR, NS_GET_IID(nsIFile),
                         getter_AddRefs(mPluginRegFile));
 
   if (!mPluginRegFile)

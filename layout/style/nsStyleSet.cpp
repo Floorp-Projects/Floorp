@@ -63,6 +63,7 @@ nsStyleSet::nsStyleSet()
     mRuleWalker(nsnull),
     mDestroyedCount(0),
     mBatching(0),
+    mOldRuleTree(nsnull),
     mInShutdown(PR_FALSE),
     mAuthorStyleDisabled(PR_FALSE),
     mDirty(0)
@@ -97,6 +98,48 @@ nsStyleSet::Init(nsPresContext *aPresContext)
   }
 
   return NS_OK;
+}
+
+nsresult
+nsStyleSet::BeginReconstruct()
+{
+  NS_ASSERTION(!mOldRuleTree, "Unmatched begin/end?");
+  NS_ASSERTION(mRuleTree, "Reconstructing before first construction?");
+
+  // Create a new rule tree root
+  nsRuleNode* newTree =
+    nsRuleNode::CreateRootNode(mRuleTree->GetPresContext());
+  if (!newTree)
+    return NS_ERROR_OUT_OF_MEMORY;
+  nsRuleWalker* ruleWalker = new nsRuleWalker(newTree);
+  if (!ruleWalker) {
+    newTree->Destroy();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  // Save the old rule tree so we can destroy it later
+  mOldRuleTree = mRuleTree;
+  // Delete mRuleWalker because it holds a reference to the rule tree root
+  delete mRuleWalker;
+  // Clear out the old style contexts; we don't need them anymore
+  mRoots.Clear();
+
+  mRuleTree = newTree;
+  mRuleWalker = ruleWalker;
+
+  return NS_OK;
+}
+
+void
+nsStyleSet::EndReconstruct()
+{
+  NS_ASSERTION(mOldRuleTree, "Unmatched begin/end?");
+  // Reset the destroyed count; it's no longer valid
+  mDestroyedCount = 0;
+  // Destroy the old rule tree (all the associated style contexts should have
+  // been destroyed by the caller beforehand)
+  mOldRuleTree->Destroy();
+  mOldRuleTree = nsnull;
 }
 
 nsresult
@@ -617,6 +660,35 @@ nsStyleSet::ResolveStyleFor(nsIContent* aContent,
 }
 
 already_AddRefed<nsStyleContext>
+nsStyleSet::ResolveStyleForRules(nsStyleContext* aParentContext, const nsCOMArray<nsIStyleRule> &rules)
+{
+  NS_ENSURE_FALSE(mInShutdown, nsnull);
+  nsStyleContext* result = nsnull;
+  nsPresContext *presContext = PresContext();
+
+  if (presContext) {
+    if (mRuleProcessors[eAgentSheet]        ||
+        mRuleProcessors[ePresHintSheet]     ||
+        mRuleProcessors[eUserSheet]         ||
+        mRuleProcessors[eHTMLPresHintSheet] ||
+        mRuleProcessors[eDocSheet]          ||
+        mRuleProcessors[eStyleAttrSheet]    ||
+        mRuleProcessors[eOverrideSheet]) {
+      
+      mRuleWalker->SetLevel(eDocSheet, PR_FALSE);
+      for (PRInt32 i = 0; i < rules.Count(); i++) {
+        mRuleWalker->Forward(rules.ObjectAt(i));
+      }
+      result = GetContext(presContext, aParentContext, nsnull).get();
+
+      // Now reset the walker back to the root of the tree.
+      mRuleWalker->Reset();
+    }
+  }
+  return result;
+}
+
+already_AddRefed<nsStyleContext>
 nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext)
 {
   nsStyleContext* result = nsnull;
@@ -785,6 +857,9 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
     return;
 
   NS_ASSERTION(mRuleWalker->AtRoot(), "Rule walker should be at root");
+  
+  if (mOldRuleTree)
+    return;
 
   if (!aStyleContext->GetParent()) {
     mRoots.RemoveElement(aStyleContext);
@@ -797,8 +872,8 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
     // all descendants.  This will reach style contexts in the
     // undisplayed map and "additional style contexts" since they are
     // descendants of the root.
-    for (PRInt32 i = mRoots.Count() - 1; i >= 0; --i) {
-      static_cast<nsStyleContext*>(mRoots[i])->Mark();
+    for (PRInt32 i = mRoots.Length() - 1; i >= 0; --i) {
+      mRoots[i]->Mark();
     }
 
     // Sweep the rule tree.
@@ -808,16 +883,6 @@ nsStyleSet::NotifyStyleContextDestroyed(nsPresContext* aPresContext,
       mRuleTree->Sweep();
 
     NS_ASSERTION(!deleted, "Root node must not be gc'd");
-  }
-}
-
-void
-nsStyleSet::ClearStyleData(nsPresContext* aPresContext)
-{
-  mRuleTree->ClearStyleData();
-
-  for (PRInt32 i = mRoots.Count() - 1; i >= 0; --i) {
-    static_cast<nsStyleContext*>(mRoots[i])->ClearStyleData(aPresContext);
   }
 }
 

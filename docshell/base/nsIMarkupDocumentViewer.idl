@@ -52,7 +52,7 @@
 interface nsIDOMNode;
 
 
-[scriptable, uuid(18cbdb18-3917-42fd-9c4a-0b2112d41a6d)]
+[scriptable, uuid(40b2282a-a882-4483-a634-dec468d88377)]
 interface nsIMarkupDocumentViewer : nsISupports
 {
 
@@ -63,6 +63,9 @@ interface nsIMarkupDocumentViewer : nsISupports
 
 	/** The amount by which to scale all text. Default is 1.0. */
 	attribute float textZoom;
+
+	/** The amount by which to scale all lengths. Default is 1.0. */
+	attribute float fullZoom;
 
 	/** Disable entire author style level (including HTML presentation hints) */
 	attribute boolean authorStyleDisabled;

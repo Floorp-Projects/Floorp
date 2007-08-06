@@ -230,18 +230,20 @@ nsThebesDeviceContext::SetDPI()
         // dev pixels per CSS pixel.  Then, divide that into AppUnitsPerCSSPixel()
         // to get the number of app units per dev pixel.  The PR_MAXes are to
         // make sure we don't end up dividing by zero.
-        mAppUnitsPerDevPixel = PR_MAX(1, AppUnitsPerCSSPixel() /
-                                      PR_MAX(1, (dpi + 48) / 96));
+        mAppUnitsPerDevNotScaledPixel = PR_MAX(1, AppUnitsPerCSSPixel() /
+                                        PR_MAX(1, (dpi + 48) / 96));
 
     } else {
         /* set mAppUnitsPerDevPixel so we're using exactly 72 dpi, even
          * though that means we have a non-integer number of device "pixels"
          * per CSS pixel
          */
-        mAppUnitsPerDevPixel = (AppUnitsPerCSSPixel() * 96) / dpi;
+        mAppUnitsPerDevNotScaledPixel = (AppUnitsPerCSSPixel() * 96) / dpi;
     }
 
-    mAppUnitsPerInch = NSIntPixelsToAppUnits(dpi, mAppUnitsPerDevPixel);
+    mAppUnitsPerInch = NSIntPixelsToAppUnits(dpi, mAppUnitsPerDevNotScaledPixel);
+
+    UpdateScaledAppUnits();
 
     return NS_OK;
 }
@@ -400,7 +402,7 @@ nsThebesDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
     aFont->familyNameQuirks = fontStyle.familyNameQuirks;
     aFont->weight = fontStyle.weight;
     aFont->decorations = NS_FONT_DECORATION_NONE;
-    aFont->size = NSFloatPixelsToAppUnits(fontStyle.size, AppUnitsPerDevPixel());
+    aFont->size = NSFloatPixelsToAppUnits(fontStyle.size, UnscaledAppUnitsPerDevPixel());
     //aFont->langGroup = fontStyle.langGroup;
     aFont->sizeAdjust = fontStyle.sizeAdjust;
 
@@ -727,11 +729,30 @@ nsThebesDeviceContext::CalcPrintingSize()
 }
 
 PRBool nsThebesDeviceContext::CheckDPIChange() {
-    PRInt32 oldDevPixels = mAppUnitsPerDevPixel;
+    PRInt32 oldDevPixels = mAppUnitsPerDevNotScaledPixel;
     PRInt32 oldInches = mAppUnitsPerInch;
 
     SetDPI();
 
-    return oldDevPixels != mAppUnitsPerDevPixel ||
+    return oldDevPixels != mAppUnitsPerDevNotScaledPixel ||
            oldInches != mAppUnitsPerInch;
+}
+
+PRBool
+nsThebesDeviceContext::SetPixelScale(float aScale)
+{
+    if (aScale <= 0) {
+        NS_NOTREACHED("Invalid pixel scale value");
+        return PR_FALSE;
+    }
+    PRInt32 oldAppUnitsPerDevPixel = mAppUnitsPerDevPixel;
+    mPixelScale = aScale;
+    UpdateScaledAppUnits();
+    return oldAppUnitsPerDevPixel != mAppUnitsPerDevPixel;
+}
+
+void
+nsThebesDeviceContext::UpdateScaledAppUnits()
+{
+    mAppUnitsPerDevPixel = PR_MAX(1, PRInt32(float(mAppUnitsPerDevNotScaledPixel) / mPixelScale));
 }

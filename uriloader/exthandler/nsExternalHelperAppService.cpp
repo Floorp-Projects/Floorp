@@ -77,6 +77,7 @@
 #include "nsIRefreshURI.h" // XXX needed to redirect according to Refresh: URI
 #include "nsIDocumentLoader.h" // XXX needed to get orig. channel and assoc. refresh uri
 #include "nsIHelperAppLauncherDialog.h"
+#include "nsIContentDispatchChooser.h"
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
 #include "nsNetCID.h"
@@ -865,11 +866,11 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(
           return NS_ERROR_OUT_OF_MEMORY;
         }
 
-        rv = aHandlerInfo->SetPreferredApplicationHandler(handlerApp);
+        return aHandlerInfo->SetPreferredApplicationHandler(handlerApp);
       }
     } else {
-      // if we got here, there's no path name in the RDF graph, so this must 
-      // be a web app
+      // maybe we've get a uri template, which would indicate that this is a
+      // web-handler
       FillLiteralValueFromTarget(externalAppNodeResource, kNC_UriTemplate, 
                                  &stringValue);
       if (stringValue && stringValue[0]) {
@@ -879,14 +880,13 @@ nsresult nsExternalHelperAppService::FillContentHandlerProperties(
         if (!handlerApp) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        rv = aHandlerInfo->SetPreferredApplicationHandler(handlerApp);
-      } else {
-        return NS_ERROR_FAILURE; // no path name _and_ no uri template
+        return aHandlerInfo->SetPreferredApplicationHandler(handlerApp);
       }
+    // otherwise, no handler at all; fall through to return NS_OK
     }
   }
 
-  return rv;
+  return NS_OK;
 }
 #endif /* MOZ_RDF */
 
@@ -1000,12 +1000,12 @@ nsresult nsExternalHelperAppService::FillProtoInfoForSchemeFromDS(
 #endif
 }
 
+#ifdef MOZ_RDF
 nsresult nsExternalHelperAppService::FillHandlerInfoForTypeFromDS(
   nsIRDFResource *aTypeNodeResource, const nsCAutoString &aType, 
   nsIRDFService *rdf, const char *aTypeNodePrefix,
   nsIHandlerInfo * aHandlerInfo)
 {
-#ifdef MOZ_RDF
 
   // we need a way to determine if this type resource is really in the graph
   // or not... Test that there's a #value arc from the type resource to the
@@ -1040,10 +1040,8 @@ nsresult nsExternalHelperAppService::FillHandlerInfoForTypeFromDS(
   }
 
   return rv;
-#else
-  return NS_ERROR_NOT_AVAILABLE;
-#endif /* MOZ_RDF */
 }
+#endif /* MOZ_RDF */
 
 nsresult nsExternalHelperAppService::FillMIMEInfoForExtensionFromDS(
   const nsACString& aFileExtension, nsIMIMEInfo * aMIMEInfo)
@@ -1191,33 +1189,6 @@ NS_IMETHODIMP nsExternalHelperAppService::LoadUrl(nsIURI * aURL)
   return LoadURI(aURL, nsnull);
 }
 
-
-//  nsExternalHelperAppService::LoadURI() may now pose a confirm dialog
-//  that existing callers aren't expecting. We must do it on an event
-//  callback to make sure we don't hang someone up.
-
-class nsExternalLoadRequest : public nsRunnable {
-  public:
-    nsExternalLoadRequest(nsIURI *uri, nsIPrompt *prompt)
-      : mURI(uri), mPrompt(prompt) {}
-
-    NS_IMETHOD Run() {
-      if (gExtProtSvc && gExtProtSvc->isExternalLoadOK(mURI, mPrompt))
-        gExtProtSvc->LoadUriInternal(mURI);
-      return NS_OK;
-    }
-
-  private:
-    nsCOMPtr<nsIURI>    mURI;
-    nsCOMPtr<nsIPrompt> mPrompt;
-};
-
-NS_IMETHODIMP nsExternalHelperAppService::LoadURI(nsIURI * aURL, nsIPrompt * aPrompt)
-{
-  nsCOMPtr<nsIRunnable> event = new nsExternalLoadRequest(aURL, aPrompt);
-  return NS_DispatchToCurrentThread(event);
-}
-
 // helper routines used by LoadURI to check whether we're allowed
 // to load external schemes and whether or not to warn the user
 
@@ -1226,35 +1197,47 @@ static const char kExternalProtocolDefaultPref[] = "network.protocol-handler.ext
 static const char kExternalWarningPrefPrefix[]   = "network.protocol-handler.warn-external.";
 static const char kExternalWarningDefaultPref[]  = "network.protocol-handler.warn-external-default";
 
-
-PRBool nsExternalHelperAppService::isExternalLoadOK(nsIURI* aURL, nsIPrompt* aPrompt)
+NS_IMETHODIMP 
+nsExternalHelperAppService::LoadURI(nsIURI *aURI,
+                                    nsIInterfaceRequestor *aWindowContext)
 {
-  if (!aURL)
-    return PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aURI);
+
+  nsCAutoString spec;
+  aURI->GetSpec(spec);
+
+  if (spec.Find("%00") != -1)
+    return NS_ERROR_MALFORMED_URI;
+
+  spec.ReplaceSubstring("\"", "%22");
+  spec.ReplaceSubstring("`", "%60");
+  
+  nsCOMPtr<nsIIOService> ios(do_GetIOService());
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = ios->NewURI(spec, nsnull, nsnull, getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString scheme;
-  aURL->GetScheme(scheme);
+  uri->GetScheme(scheme);
   if (scheme.IsEmpty())
-    return PR_FALSE; // must have a scheme
+    return NS_OK; // must have a scheme
 
   nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (!prefs)
-    return PR_FALSE; // deny if we can't check prefs
-
+    return NS_OK; // deny if we can't check prefs
 
   // Deny load if the prefs say to do so
   nsCAutoString externalPref(kExternalProtocolPrefPrefix);
   externalPref += scheme;
   PRBool allowLoad  = PR_FALSE;
-  nsresult rv = prefs->GetBoolPref(externalPref.get(), &allowLoad);
+  rv = prefs->GetBoolPref(externalPref.get(), &allowLoad);
   if (NS_FAILED(rv))
   {
     // no scheme-specific value, check the default
     rv = prefs->GetBoolPref(kExternalProtocolDefaultPref, &allowLoad);
   }
   if (NS_FAILED(rv) || !allowLoad)
-    return PR_FALSE; // explicitly denied or missing default pref
-
+    return NS_OK; // explicitly denied or missing default pref
 
   // allowLoad is now true. See whether we have to ask the user
   nsCAutoString warningPref(kExternalWarningPrefPrefix);
@@ -1264,154 +1247,32 @@ PRBool nsExternalHelperAppService::isExternalLoadOK(nsIURI* aURL, nsIPrompt* aPr
   if (NS_FAILED(rv))
   {
     // no scheme-specific value, check the default
-    rv = prefs->GetBoolPref(kExternalWarningDefaultPref, &warn);
+    prefs->GetBoolPref(kExternalWarningDefaultPref, &warn);
   }
+ 
+  nsCOMPtr<nsIHandlerInfo> handler;
+  rv = GetProtocolHandlerInfo(scheme, getter_AddRefs(handler));
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  nsHandlerInfoAction preferredAction;
+  handler->GetPreferredAction(&preferredAction);
+  PRBool alwaysAsk = PR_TRUE;
+  handler->GetAlwaysAskBeforeHandling(&alwaysAsk);
 
-  if (NS_FAILED(rv) || warn)
-  {
-    // explicit "warn" setting or missing default pref:
-    // we must ask the user before loading this type externally
-    PRBool remember = PR_FALSE;
-    allowLoad = promptForScheme(aURL, aPrompt, &remember);
-
-    if (remember)
-    {
-      if (allowLoad)
-        // suppress future warnings for this scheme
-        prefs->SetBoolPref(warningPref.get(), PR_FALSE);
-      else
-        // prevent externally loading this scheme in the future
-        prefs->SetBoolPref(externalPref.get(), PR_FALSE);
-    }
-  }
-
-  return allowLoad;
-}
-
-PRBool nsExternalHelperAppService::promptForScheme(nsIURI* aURI,
-                                                   nsIPrompt* aPrompt,
-                                                   PRBool *aRemember)
-{
-  // if no prompt passed in get one from the windowwatcher
-  nsCOMPtr<nsIPrompt> prompt(aPrompt);
-  if (!prompt)
-  {
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-    if (wwatch)
-      wwatch->GetNewPrompter(0, getter_AddRefs(prompt));
-  }
-  if (!prompt) {
-    NS_ERROR("No prompt to warn user about external load, denying");
-    return PR_FALSE; // told to warn but no prompt: deny
-  }
-
-  // load the strings we need
-  nsCOMPtr<nsIStringBundleService> sbSvc(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
-  if (!sbSvc) {
-    NS_ERROR("Couldn't load StringBundleService");
-    return PR_FALSE;
-  }
-
-  nsCOMPtr<nsIStringBundle> appstrings;
-  nsresult rv = sbSvc->CreateBundle("chrome://global/locale/appstrings.properties",
-                                    getter_AddRefs(appstrings));
-  if (NS_FAILED(rv) || !appstrings) {
-    NS_ERROR("Failed to create appstrings.properties bundle");
-    return PR_FALSE;
-  }
-
-  nsCAutoString spec;
-  aURI->GetSpec(spec);
-  NS_ConvertUTF8toUTF16 uri(spec);
-
-  // The maximum amount of space the URI should take up in the dialog.
-  const PRUint32 maxWidth = 75;
-  const PRUint32 maxLines = 12; // (not counting ellipsis line)
-  const PRUint32 maxLength = maxWidth * maxLines;
-
-  // If the URI seems too long, insert zero-width spaces to make it wrappable
-  // and crop it in the middle (replacing the cropped portion with an ellipsis),
-  // so the dialog doesn't grow so wide or tall it renders buttons off-screen.
-  if (uri.Length() > maxWidth) {
-    PRUint32 charIdx = maxWidth;
-    PRUint32 lineIdx = 1;
-    
-    PRInt32 numCharsToCrop = uri.Length() - maxLength;
-
-    while (charIdx < uri.Length()) {
-      // Don't insert characters in the middle of a surrogate pair.
-      if (NS_IS_LOW_SURROGATE(uri[charIdx]))
-        --charIdx;
-
-      if (numCharsToCrop > 0 && lineIdx == maxLines / 2) {
-        NS_NAMED_LITERAL_STRING(ellipsis, "\n...\n");
-
-        // Don't end the crop in the middle of a surrogate pair.
-        if (NS_IS_HIGH_SURROGATE(uri[charIdx + numCharsToCrop - 1]))
-          ++numCharsToCrop;
-
-        uri.Replace(charIdx, numCharsToCrop, ellipsis);
-        charIdx += ellipsis.Length();
-      }
-      else {
-        // 0x200B is the zero-width breakable space character.
-        uri.Insert(PRUnichar(0x200B), charIdx);
-        charIdx += 1;
-      }
+  // if we are not supposed to warn, or we are not supposed to always ask and
+  // the preferred action is to use a helper app or the system default, we just
+  // launch the URI.
+  if (!warn ||
+      !alwaysAsk && (preferredAction == nsIHandlerInfo::useHelperApp ||
+                     preferredAction == nsIHandlerInfo::useSystemDefault))
+    return handler->LaunchWithURI(uri);
   
-      charIdx += maxWidth;
-      ++lineIdx;
-    }
-  }
-
-  nsCAutoString asciischeme;
-  aURI->GetScheme(asciischeme);
-  NS_ConvertUTF8toUTF16 scheme(asciischeme);
-
-  nsXPIDLString desc;
-  GetApplicationDescription(asciischeme, desc);
-
-  nsXPIDLString title;
-  appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolTitle").get(),
-                                getter_Copies(title));
-  nsXPIDLString checkMsg;
-  appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolChkMsg").get(),
-                                getter_Copies(checkMsg));
-  nsXPIDLString launchBtn;
-  appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolLaunchBtn").get(),
-                                getter_Copies(launchBtn));
-
-  if (desc.IsEmpty())
-    appstrings->GetStringFromName(NS_LITERAL_STRING("externalProtocolUnknown").get(),
-                                  getter_Copies(desc));
-
-  nsXPIDLString message;
-  const PRUnichar* msgArgs[] = { scheme.get(), uri.get(), desc.get() };
-  appstrings->FormatStringFromName(NS_LITERAL_STRING("externalProtocolPrompt").get(),
-                                   msgArgs,
-                                   NS_ARRAY_LENGTH(msgArgs),
-                                   getter_Copies(message));
-
-  if (scheme.IsEmpty() || uri.IsEmpty() || title.IsEmpty() ||
-      checkMsg.IsEmpty() || launchBtn.IsEmpty() || message.IsEmpty() ||
-      desc.IsEmpty())
-    return PR_FALSE;
-
-  // all pieces assembled, now we can pose the dialog
-  PRInt32 choice = 1; // assume "cancel" in case of failure
-  rv = prompt->ConfirmEx(title.get(), message.get(),
-                         nsIPrompt::BUTTON_DELAY_ENABLE +
-                         nsIPrompt::BUTTON_POS_1_DEFAULT +
-                         (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_0) +
-                         (nsIPrompt::BUTTON_TITLE_CANCEL * nsIPrompt::BUTTON_POS_1),
-                         launchBtn.get(), 0, 0, checkMsg.get(),
-                         aRemember, &choice);
-
-  if (NS_SUCCEEDED(rv) && choice == 0)
-    return PR_TRUE;
-
-  return PR_FALSE;
+  nsCOMPtr<nsIContentDispatchChooser> chooser =
+    do_CreateInstance("@mozilla.org/content-dispatch-chooser;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  return chooser->Ask(handler, aWindowContext, uri,
+                      nsIContentDispatchChooser::REASON_CANNOT_HANDLE);
 }
 
 NS_IMETHODIMP nsExternalHelperAppService::GetApplicationDescription(const nsACString& aScheme, nsAString& _retval)
@@ -1476,18 +1337,32 @@ nsExternalHelperAppService::GetProtocolHandlerInfo(const nsACString &aScheme,
   // and subclasses have lots of good platform specific-knowledge of local
   // applications which we might need later.  For now, just use nsMIMEInfoImpl
   // instead of implementating a separate nsIHandlerInfo object.
-  nsMIMEInfoImpl *mimeInfo = new nsMIMEInfoImpl;
-  if (!mimeInfo) {
-    return NS_ERROR_OUT_OF_MEMORY;    
+  PRBool exists;
+  *aHandlerInfo = GetProtocolInfoFromOS(aScheme, &exists).get();
+  if (!(*aHandlerInfo)) {
+    // Either it knows nothing, or we ran out of memory
+    return NS_ERROR_FAILURE;
   }
-  NS_ADDREF(*aHandlerInfo = mimeInfo);
-     
+
   nsresult rv = FillProtoInfoForSchemeFromDS(aScheme, *aHandlerInfo);     
-  if (NS_FAILED(rv)) {
+  if (NS_ERROR_NOT_AVAILABLE == rv) {
+    // We don't know it, so we always ask the user.  By the time we call this
+    // method, we already have checked if we should open this protocol and ask
+    // the user, so these defaults are OK.
+    // XXX this is a bit different than the MIME system, so we may want to look
+    //     into this more in the future.
+    (*aHandlerInfo)->SetAlwaysAskBeforeHandling(PR_TRUE);
+    // If no OS default existed, we set the preferred action to alwaysAsk.  This
+    // really means not initialized to all the code...
+    if (exists)
+      (*aHandlerInfo)->SetPreferredAction(nsIHandlerInfo::useSystemDefault);
+    else
+      (*aHandlerInfo)->SetPreferredAction(nsIHandlerInfo::alwaysAsk);
+  } else if (NS_FAILED(rv)) {
     NS_RELEASE(*aHandlerInfo);
     return rv;
   }
-  
+
   return NS_OK;
 }
  

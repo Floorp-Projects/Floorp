@@ -41,10 +41,11 @@
 #include "txNodeSet.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
-#include "txTokenizer.h"
+#include "nsWhitespaceTokenizer.h"
 #include "txXPathTreeWalker.h"
 #include <math.h>
 #include "txStringUtils.h"
+#include "txXMLUtils.h"
 
 struct txCoreFunctionDescriptor
 {
@@ -141,7 +142,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 for (i = 0; i < nodes->size(); ++i) {
                     nsAutoString idList;
                     txXPathNodeUtils::appendNodeValue(nodes->get(i), idList);
-                    txTokenizer tokenizer(idList);
+                    nsWhitespaceTokenizer tokenizer(idList);
                     while (tokenizer.hasMoreTokens()) {
                         if (walker.moveToElementById(tokenizer.nextToken())) {
                             resultSet->add(walker.getCurrentPosition());
@@ -152,7 +153,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             else {
                 nsAutoString idList;
                 exprResult->stringValue(idList);
-                txTokenizer tokenizer(idList);
+                nsWhitespaceTokenizer tokenizer(idList);
                 while (tokenizer.hasMoreTokens()) {
                     if (walker.moveToElementById(tokenizer.nextToken())) {
                         resultSet->add(walker.getCurrentPosition());

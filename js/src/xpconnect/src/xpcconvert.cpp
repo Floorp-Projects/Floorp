@@ -46,6 +46,7 @@
 #include "nsString.h"
 #include "XPCNativeWrapper.h"
 #include "nsIAtom.h"
+#include "XPCWrapper.h"
 
 //#define STRICT_CHECK_OF_UNICODE
 #ifdef STRICT_CHECK_OF_UNICODE
@@ -1191,10 +1192,32 @@ XPCConvert::NativeInterface2JSObject(XPCCallContext& ccx,
                 }
             }
 
+            JSObject *flat = wrapper->GetFlatJSObject();
+            const char *name = JS_GET_CLASS(ccx, flat)->name;
+            uint32 flags = JS_GetTopScriptFilenameFlags(ccx, nsnull);
+            if(allowNativeWrapper &&
+               !(flags & JSFILENAME_SYSTEM) &&
+               !JS_IsSystemObject(ccx, flat) &&
+               XPC_XOW_ClassNeedsXOW(name))
+            {
+                jsval v = OBJECT_TO_JSVAL(flat);
+                XPCJSObjectHolder *objHolder = nsnull;
+                if (!XPC_XOW_WrapObject(ccx, scope, &v) ||
+                    !(objHolder = XPCJSObjectHolder::newHolder(ccx, JSVAL_TO_OBJECT(v))))
+                {
+                    NS_RELEASE(wrapper);
+                    return JS_FALSE;
+                }
+
+                NS_ADDREF(objHolder);
+                NS_RELEASE(wrapper);
+                *dest = objHolder;
+                return JS_TRUE;
+            }
+
             *dest = static_cast<nsIXPConnectJSObjectHolder*>(wrapper);
             return JS_TRUE;
         }
-        
     }
     return JS_FALSE;
 }

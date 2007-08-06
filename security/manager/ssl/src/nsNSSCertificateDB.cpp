@@ -999,6 +999,8 @@ nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert,
   SECStatus srv;
   nsNSSCertTrust trust;
   nsCOMPtr<nsIX509Cert2> pipCert = do_QueryInterface(cert);
+  if (!pipCert)
+    return NS_ERROR_FAILURE;
   CERTCertificate *nsscert = pipCert->GetCert();
   CERTCertificateCleaner certCleaner(nsscert);
   if (type == nsIX509Cert::CA_CERT) {
@@ -1091,6 +1093,7 @@ nsNSSCertificateDB::ImportCertsFromFile(nsISupports *aToken,
                                         nsILocalFile *aFile,
                                         PRUint32 aType)
 {
+  NS_ENSURE_ARG(aFile);
   switch (aType) {
     case nsIX509Cert::CA_CERT:
     case nsIX509Cert::EMAIL_CERT:

@@ -74,4 +74,4 @@ include $(topsrcdir)/config/rules.mk
 check::
 
 libs:: $(MOCHI_TESTS)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
