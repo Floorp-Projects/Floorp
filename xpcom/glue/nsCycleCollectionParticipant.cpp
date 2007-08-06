@@ -38,7 +38,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 
-NS_IMETHODIMP
+nsresult
 nsXPCOMCycleCollectionParticipant::Root(void *p)
 {
     nsISupports *s = static_cast<nsISupports*>(p);
@@ -46,13 +46,13 @@ nsXPCOMCycleCollectionParticipant::Root(void *p)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXPCOMCycleCollectionParticipant::Unlink(void *p)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXPCOMCycleCollectionParticipant::Unroot(void *p)
 {
     nsISupports *s = static_cast<nsISupports*>(p);
@@ -60,19 +60,18 @@ nsXPCOMCycleCollectionParticipant::Unroot(void *p)
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+nsresult
 nsXPCOMCycleCollectionParticipant::Traverse
     (void *p, nsCycleCollectionTraversalCallback &cb)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP_(void)
+void
 nsXPCOMCycleCollectionParticipant::UnmarkPurple(nsISupports *n)
 {
 }
 
-#ifdef DEBUG
 PRBool
 nsXPCOMCycleCollectionParticipant::CheckForRightISupports(nsISupports *s)
 {
@@ -81,4 +80,3 @@ nsXPCOMCycleCollectionParticipant::CheckForRightISupports(nsISupports *s)
                       getter_AddRefs(foo));
     return s == foo;
 }
-#endif

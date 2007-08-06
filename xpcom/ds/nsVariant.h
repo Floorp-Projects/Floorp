@@ -43,7 +43,7 @@
 #include "nsStringFwd.h"
 #include "xpt_struct.h"
 
-struct nsCycleCollectionTraversalCallback;
+class nsCycleCollectionTraversalCallback;
 
 /** 
  * Map the nsAUTF8String, nsUTF8String classes to the nsACString and
