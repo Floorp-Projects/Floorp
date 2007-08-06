@@ -1,0 +1,411 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=280959
+-->
+<head>
+  <title>Test for Bug 280959</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=280959">Mozilla Bug 280959</a>
+<p id="display"></p>
+<div id="content" style="border: 3px solid black; padding: 3em;">CONTENT TEXT<input id="content-input" value="INPUT TEXT"></div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+
+/** Test for Bug 280959 **/
+
+// Enable full privledges for clipboard read/write operations.
+netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
+
+var content = document.getElementById("content");
+var contentInput = document.getElementById("content-input");
+var clipboardInitialValue = "empty";
+
+// Test that clearing and reading the clipboard works.  A random number
+// is used to make sure that leftover clipboard values from a previous
+// test run don't cause a false-positive test.
+var cb_text = "empty_" + Math.random();
+setClipboardText(cb_text);
+ok(getClipboardText() == cb_text, "set/get clipboard text failed");
+
+// A list of test functions to run.  Before each test function is run, the
+// clipboard is initialized to clipboardInitialValue, and the contents of
+// div#content are set as the window's selection.
+var testFunctions = [
+  test_dom_oncopy,
+  test_dom_oncut,
+  test_dom_onpaste,
+  test_dom_oncopy_abort,
+  test_input_oncopy,
+  test_input_oncut,
+  test_input_onpaste,
+  test_input_oncopy_abort,
+  test_input_oncut_abort,
+  test_input_onpaste_abort,
+  test_firing_on_closing_crash,
+  test_input_removal_on_firing,
+  ];
+
+// Some test functions need to be run with delays.
+var delayedTests = [];
+
+for (let i = 0; i < testFunctions.length; i++) {
+  // Init clipboard
+  setClipboardText(clipboardInitialValue);
+
+  // Reset value of contentInput.
+  contentInput.value = "INPUT TEXT";
+  
+  var func = testFunctions[i];
+  func();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// runNextTest is called by each test when finished (on unload event)
+function runNextTest() {
+  if (delayedTests.length == 0) {
+    // Finished all delayed tests.
+    SimpleTest.finish();
+    return;
+  }
+  var test = delayedTests.pop();
+  test();
+}
+
+// Start running tests.
+runNextTest();
+
+
+
+function getClipboardText() {
+  var trans = Components.classes["@mozilla.org/widget/transferable;1"]
+    .createInstance();
+  trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+  trans.addDataFlavor("text/unicode");
+  
+  var clipboard = Components.classes["@mozilla.org/widget/clipboard;1"]
+    .getService();
+  clipboard = clipboard.QueryInterface(Components.interfaces.nsIClipboard);
+  clipboard.getData(trans, clipboard.kGlobalClipboard);
+
+  var str = new Object();
+  var strLen = new Object();
+    
+  try {
+    trans.getTransferData("text/unicode", str, strLen);
+  } catch(e) {
+    // NS_ERROR_FAILURE will occur if the transferable object has no
+    // text/unicode data in it.  In that case, it's not an error:
+    if (e instanceof Components.interfaces.nsIXPCException &&
+      e.result == Components.results.NS_ERROR_FAILURE) {
+      return null;
+    } else {
+      // if we don't know how to handle it then rethrow
+      throw e;
+    }
+  }
+    
+  if (!str) return null;
+
+  str = str.value.QueryInterface(Components.interfaces.nsISupportsString);
+  if (!str) return null;
+ 
+  str = str.data.substring(0, strLen.value / 2);
+  if (!str) return null;
+ 
+  return str;
+}
+
+
+function setClipboardText(text) {
+  var helper = Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+    .getService(Components.interfaces.nsIClipboardHelper);
+  helper.copyString(text);
+}
+
+function selectContentDiv() {
+  // Set selection
+  var selection = window.getSelection();
+  selection.removeAllRanges();
+  selection.selectAllChildren(content);
+}
+
+function selectContentInput() {
+  contentInput.select();
+  contentInput.focus();
+}
+
+function test_dom_oncopy() {
+  // Setup an oncopy event handler, fire copy.  Ensure that the event
+  // handler was called, and the clipboard contents have set to CONTENT TEXT.
+  // Test firing oncopy event on ctrl-c:
+  selectContentDiv();
+  var oncopy_fired = false;
+  content.oncopy = function() { oncopy_fired = true; };
+  try {
+    synthesizeKey("c", {accelKey: 1});
+    ok(oncopy_fired, "oncopy event not fired");
+    ok(getClipboardText() == "CONTENT TEXT", "copy failed");
+  } finally {
+    content.oncopy = null;
+  }
+}
+
+
+function test_dom_oncut() {
+  // Setup an oncut event handler, fire cut.  Ensure that the event handler
+  // was called.  The <div> doesn't handle a cut, so ensure that the
+  // clipboard text is clipboardInitialValue, NOT "CONTENT TEXT".
+  selectContentDiv();
+  var oncut_fired = false;
+  content.oncut = function() { oncut_fired = true; };
+  try {
+    synthesizeKey("x", {accelKey: 1});
+    ok(oncut_fired, "oncut event not fired");
+    ok(getClipboardText() == clipboardInitialValue,
+      "aborted cut modified clipboard unexpectedly");
+  } finally {
+    content.oncut = null;
+  }
+}
+
+
+function test_dom_onpaste() {
+  // Setup an onpaste event handler, fire paste.  Ensure that the event
+  // handler was called.
+  selectContentDiv();
+  var onpaste_fired = false;
+  content.onpaste = function() { onpaste_fired = true; };
+  try {
+    synthesizeKey("v", {accelKey: 1});
+    ok(onpaste_fired, "onpaste event not fired");
+  } finally {
+    content.onpaste = null;
+  }
+}
+
+
+function test_dom_oncopy_abort() {
+  // Setup an oncopy event handler that aborts the copy, and fire the copy
+  // event.  Ensure that the event handler was fired, and the clipboard
+  // contents have not been modified.
+  selectContentDiv();
+  var oncopy_fired = false;
+  content.oncopy = function() { oncopy_fired = true; return false; };
+  try {
+    synthesizeKey("c", {accelKey: 1});
+    ok(oncopy_fired, "oncopy event not fired");
+    ok(getClipboardText() == clipboardInitialValue,
+      "copy should have failed, modified clipboard unexpectedly");
+  } finally {
+    content.oncopy = null;
+  }
+}
+
+
+function test_input_oncopy() {
+  // Setup an oncopy event handler, fire copy.  Ensure that the event
+  // handler was called, and the clipboard contents have set to INPUT TEXT.
+  // Test firing oncopy event on ctrl-c:
+  selectContentInput();
+  var oncopy_fired = false;
+  contentInput.oncopy = function() { oncopy_fired = true; };
+  try {
+    synthesizeKey("c", {accelKey: 1});
+    ok(oncopy_fired, "oncopy event not fired");
+    ok(getClipboardText() == "INPUT TEXT", "copy failed");
+  } finally {
+    contentInput.oncopy = null;
+  }
+}
+
+
+function test_input_oncut() {
+  // Setup an oncut event handler, and fire cut.  Ensure that the event
+  // handler was fired, the clipboard contains the INPUT TEXT, and
+  // that the input itself is empty.
+  selectContentInput();
+  var oncut_fired = false;
+  contentInput.oncut = function() { oncut_fired = true; };
+  try {
+    synthesizeKey("x", {accelKey: 1});
+    ok(oncut_fired, "oncut event not fired");
+    ok(getClipboardText() == "INPUT TEXT", "cut failed to set clipboard");
+    ok(contentInput.value == "", "cut failed to empty input");
+  } finally {
+    contentInput.oncut = null;
+  }
+}
+
+
+function test_input_onpaste() {
+  // Setup an onpaste event handler, and fire paste.  Ensure that the event
+  // handler was fired, the clipboard contents didn't change, and that the
+  // input value did change (ie. paste succeeded).
+  selectContentInput();
+  var onpaste_fired = false;
+  contentInput.onpaste = function() { onpaste_fired = true; };
+  try {
+    synthesizeKey("v", {accelKey: 1});
+    ok(onpaste_fired, "onpaste event not fired");
+    ok(getClipboardText() == clipboardInitialValue,
+      "paste modified clipboard unexpectedly");
+    ok(contentInput.value == clipboardInitialValue,
+      "paste failed to change input value");
+  } finally {
+    contentInput.onpaste = null;
+  }
+}
+
+
+function test_input_oncopy_abort() {
+  // Setup an oncopy event handler, fire copy.  Ensure that the event
+  // handler was called, and that the clipboard value did NOT change.
+  selectContentInput();
+  var oncopy_fired = false;
+  contentInput.oncopy = function() { oncopy_fired = true; return false; };
+  try {
+    synthesizeKey("c", {accelKey: 1});
+    ok(oncopy_fired, "oncopy event not fired");
+    ok(getClipboardText() == clipboardInitialValue,
+      "aborted copy modified clipboard unexpectedly");
+  } finally {
+    contentInput.oncopy = null;
+  }
+}
+
+
+function test_input_oncut_abort() {
+  // Setup an oncut event handler, and fire cut.  Ensure that the event
+  // handler was fired, the clipboard contains the INPUT TEXT, and
+  // that the input itself is empty.
+  selectContentInput();
+  var oncut_fired = false;
+  contentInput.oncut = function() { oncut_fired = true; return false; };
+  try {
+    synthesizeKey("x", {accelKey: 1});
+    ok(oncut_fired, "oncut event not fired");
+    ok(getClipboardText() == clipboardInitialValue,
+      "aborted cut modified clipboard unexpectedly");
+    ok(contentInput.value == "INPUT TEXT",
+      "aborted cut modified input value unexpectedly");
+  } finally {
+    contentInput.oncut = null;
+  }
+}
+
+
+function test_input_onpaste_abort() {
+  // Setup an onpaste event handler, and fire paste.  Ensure that the event
+  // handler was fired, the clipboard contents didn't change, and that the
+  // input value did change (ie. paste succeeded).
+  selectContentInput();
+  var onpaste_fired = false;
+  contentInput.onpaste = function() { onpaste_fired = true; return false; };
+  try {
+    synthesizeKey("v", {accelKey: 1});
+    ok(onpaste_fired, "onpaste event not fired");
+    ok(getClipboardText() == clipboardInitialValue,
+      "aborted paste modified clipboard unexpectedly");
+    ok(contentInput.value == "INPUT TEXT",
+      "aborted paste modified input value unexpectedly");
+  } finally {
+    contentInput.onpaste = null;
+  }
+}
+
+
+function test_firing_on_closing_crash() {
+  // This test runs by opening a new window that automatically selects its
+  // own text and fires cut/copy/paste.  The event handler closes the
+  // window.  The purpose of this test is to confirm that a potential crash
+  // is avoided.  To run tests all on three events, window.open calls must
+  // be delayed, so we build an array of test functions and put them in
+  // the delayedTests array.
+
+  var runTest = function(key, handler) {
+    var html = 
+      <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+          <script src="http://localhost:8888/tests/SimpleTest/EventUtils.js" type="text/javascript"/>
+        </head>
+      </html>;
+    html.body = "Body Text";
+    html.body.@onload = 
+      "var sel = window.getSelection(); " +
+      "sel.removeAllRanges(); " +
+      "sel.selectAllChildren(document.body); " +
+      "synthesizeKey('" + key + "', {accelKey: 1});";
+    html.body.@onunload =
+      "window.opener.runNextTest();";
+    html.body['@' + handler] = "window.close();";
+    window.open("data:application/xhtml+xml," + html.toString());
+    ok(true); // increment test count
+  };
+
+  // note: for before events, the key doesn't matter since the events are
+  // fired on selection, not by the synthesizeKey.
+  var keys = ['c', 'x', 'v', 'c', 'x', 'v'];
+  var handlers = ['oncopy', 'oncut', 'onpaste', 'onbeforecopy', 'onbeforecut', 'onbeforepaste'];
+  for (let i = 0; i < keys.length; i++) {
+    var test = MochiKit.Base.bind(runTest, null, keys[i], handlers[i]);
+    delayedTests.push(test);
+  }
+}
+
+
+function test_input_removal_on_firing() {
+  // This test runs by opening a new window, containing an input element.
+  // The window selects the text in the input element, focuses on it, and
+  // fires cut/copy/paste key events.  The event handler removes the DOM
+  // element and closes the window.  The purpose of this test is to confirm
+  // that a potential crash is avoided.  To run tests all on three events,
+  // window.open calls must be delayed, so we build an array of test
+  // functions and put them in the delayedTests array.
+
+  var runTest = function(key, handler) {
+    var html = 
+      <html xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+          <script src="http://localhost:8888/tests/SimpleTest/EventUtils.js" type="text/javascript"/>
+        </head>
+      </html>;
+    html.body.@onload = 
+      "var inp = document.getElementById('test'); " +
+      "inp.select(); inp.focus(); " +
+      "synthesizeKey('" + key + "', {accelKey: 1});";
+    html.body.@onunload =
+      "window.opener.runNextTest();";
+    html.body.input.@id = "test";
+    html.body.input.@value = "Input Text";
+    html.body.input['@' + handler] = 
+      "var inp = document.getElementById('test'); " +
+      "inp.parentNode.removeChild(inp); " +
+      "setTimeout(window.close, 100);";
+    window.open("data:application/xhtml+xml," + html.toString());
+    ok(true); // increment test count
+  };
+
+  // note: for before events, the key doesn't matter since the events are
+  // fired on selection, not by the synthesizeKey.
+  var keys = ['c', 'x', 'v', 'c', 'x', 'v'];
+  var handlers = ['oncopy', 'oncut', 'onpaste', 'onbeforecopy', 'onbeforecut', 'onbeforepaste'];
+  for (let i = 0; i < keys.length; i++) {
+    var test = MochiKit.Base.bind(runTest, null, keys[i], handlers[i]);
+    delayedTests.push(test);
+  }
+}
+
+
+</script>
+</pre>
+</body>
+</html>
+
