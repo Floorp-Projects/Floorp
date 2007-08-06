@@ -314,6 +314,9 @@ IsPluginEnabledByExtension(nsIURI* uri, nsCString& mimeType)
   nsCAutoString ext;
   GetExtensionFromURI(uri, ext);
 
+  if (ext.IsEmpty())
+    return PR_FALSE;
+
   nsCOMPtr<nsIPluginHost> host(do_GetService("@mozilla.org/plugin/host;1"));
   const char* typeFromExt;
   if (host &&
@@ -1053,6 +1056,10 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
 
   if (!CanHandleURI(aURI)) {
     LOG(("OBJLC [%p]: can't handle URI\n", this));
+    if (aTypeHint.IsEmpty()) {
+      rv = NS_ERROR_NOT_AVAILABLE;
+      return NS_OK;
+    }
     // E.g. mms://
     mType = eType_Plugin;
     if (aNotify)
