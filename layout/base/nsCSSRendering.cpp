@@ -4355,3 +4355,128 @@ nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
 
 // End table border-collapsing section
 
+void
+nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
+                                    const nscolor aColor,
+                                    const gfxPoint& aPt,
+                                    const gfxSize& aLineSize,
+                                    const gfxFloat aAscent,
+                                    const gfxFloat aOffset,
+                                    const gfxFloat aPreferredHeight,
+                                    const PRUint8 aDecoration,
+                                    const PRUint8 aStyle,
+                                    const PRBool aIsRTL)
+{
+  if (aLineSize.width <= 0 || aLineSize.height <= 0 ||
+      aStyle == NS_STYLE_BORDER_STYLE_NONE)
+    return;
+
+  PRBool contextIsSaved = PR_FALSE;
+  gfxFloat totalHeight = aLineSize.height;
+  switch (aStyle) {
+    case NS_STYLE_BORDER_STYLE_SOLID:
+      break;
+    case NS_STYLE_BORDER_STYLE_DASHED: {
+      aGfxContext->Save();
+      contextIsSaved = PR_TRUE;
+      gfxFloat dashWidth = aLineSize.height * DOT_LENGTH * DASH_LENGTH;
+      gfxFloat dash[2] = { dashWidth, dashWidth };
+      aGfxContext->SetLineCap(gfxContext::LINE_CAP_BUTT);
+      aGfxContext->SetDash(dash, 2, 0.0);
+      break;
+    }
+    case NS_STYLE_BORDER_STYLE_DOTTED: {
+      aGfxContext->Save();
+      contextIsSaved = PR_TRUE;
+      gfxFloat dashWidth = aLineSize.height * DOT_LENGTH;
+      gfxFloat dash[2];
+      if (aLineSize.height > 2.0) {
+        dash[0] = 0.0;
+        dash[1] = dashWidth * 2.0;
+        aGfxContext->SetLineCap(gfxContext::LINE_CAP_ROUND);
+      } else {
+        dash[0] = dashWidth;
+        dash[1] = dashWidth;
+      }
+      aGfxContext->SetDash(dash, 2, 0.0);
+      break;
+    }
+    case NS_STYLE_BORDER_STYLE_DOUBLE:
+      totalHeight *= 3.0;
+      break;
+    default:
+      NS_ERROR("Invalid style value!");
+      return;
+  }
+
+  gfxFloat offset = aOffset;
+  switch (aDecoration) {
+    case NS_STYLE_TEXT_DECORATION_UNDERLINE:
+      break;
+    case NS_STYLE_TEXT_DECORATION_OVERLINE:
+      // The offset includes the preferred size, we should remove it
+      offset += aPreferredHeight;
+      // the bottom of the decoration line should be aligned to the top of the
+      // text.
+      offset -= totalHeight;
+      break;
+    case NS_STYLE_TEXT_DECORATION_LINE_THROUGH: {
+      // The offset includes the preferred size, we should remove it
+      offset += aPreferredHeight;
+      // the middle of the decoration line should be aligned to the middle of
+      // the original strike out offset.
+      offset -= PR_MAX(aPreferredHeight, (totalHeight / 2.0));
+      break;
+    }
+    default:
+      NS_ERROR("Invalid decoration value!");
+      if (contextIsSaved)
+        aGfxContext->Restore();
+      return;
+  }
+
+  // round to device pixels for suppressing the AA.
+  gfxFloat x = NS_round(aPt.x);
+  gfxFloat y = NS_round(aPt.y + aAscent - offset);
+  gfxFloat width = NS_round(aLineSize.width);
+  gfxFloat height = NS_round(aLineSize.height);
+  // The y position should be set to the middle of the line.
+  y += height / 2;
+
+  aGfxContext->SetColor(gfxRGBA(aColor));
+  aGfxContext->SetLineWidth(height);
+  switch (aStyle) {
+    case NS_STYLE_BORDER_STYLE_SOLID:
+      aGfxContext->NewPath();
+      aGfxContext->MoveTo(gfxPoint(x, y));
+      aGfxContext->LineTo(gfxPoint(x + width, y));
+      aGfxContext->Stroke();
+      break;
+    case NS_STYLE_BORDER_STYLE_DOUBLE:
+      aGfxContext->NewPath();
+      aGfxContext->MoveTo(gfxPoint(x, y));
+      aGfxContext->LineTo(gfxPoint(x + width, y));
+      aGfxContext->MoveTo(gfxPoint(x, y + height * 2.0));
+      aGfxContext->LineTo(gfxPoint(x + width, y + height * 2.0));
+      aGfxContext->Stroke();
+      break;
+    case NS_STYLE_BORDER_STYLE_DOTTED:
+    case NS_STYLE_BORDER_STYLE_DASHED:
+      aGfxContext->NewPath();
+      if (aIsRTL) {
+        aGfxContext->MoveTo(gfxPoint(x + width, y));
+        aGfxContext->LineTo(gfxPoint(x, y));
+      } else {
+        aGfxContext->MoveTo(gfxPoint(x, y));
+        aGfxContext->LineTo(gfxPoint(x + width, y));
+      }
+      aGfxContext->Stroke();
+      aGfxContext->Restore();
+      contextIsSaved = PR_FALSE;
+      break;
+    default:
+      NS_ERROR("Invalid style value!");
+      break;
+  }
+  NS_ASSERTION(!contextIsSaved, "The gfxContext has been saved, but not restored!");
+}
