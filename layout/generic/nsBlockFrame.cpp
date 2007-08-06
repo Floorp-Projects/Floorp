@@ -88,6 +88,7 @@
 #include "nsDisplayList.h"
 #include "nsContentErrors.h"
 #include "nsCSSAnonBoxes.h"
+#include "nsCSSRendering.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -5663,9 +5664,9 @@ nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
                                       nscolor aColor, 
                                       nscoord aOffset, 
                                       nscoord aAscent, 
-                                      nscoord aSize) 
+                                      nscoord aSize,
+                                      const PRUint8 aDecoration) 
 {
-  aRenderingContext.SetColor(aColor);
   NS_ASSERTION(!aLine->IsBlock(), "Why did we ask for decorations on a block?");
 
   nscoord start = aLine->mBounds.x;
@@ -5698,9 +5699,18 @@ nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
       
   // Only paint if we have a positive width
   if (width > 0) {
-    aRenderingContext.FillRect(start + aPt.x,
-                               aLine->mBounds.y + aLine->GetAscent() - aOffset + aPt.y, 
-                               width, aSize);
+    const nsStyleVisibility* visibility = GetStyleVisibility();
+    PRBool isRTL = visibility->mDirection == NS_STYLE_DIRECTION_RTL;
+    nsRefPtr<gfxContext> ctx = (gfxContext*)
+      aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+    gfxFloat a2p = 1.0 / PresContext()->AppUnitsPerDevPixel();
+    gfxPoint pt((start + aPt.x) * a2p, (aLine->mBounds.y + aPt.y) * a2p);
+    gfxSize size(width * a2p, aSize * a2p);
+    nsCSSRendering::PaintDecorationLine(ctx, aColor, pt, size,
+                                        aLine->GetAscent() * a2p, aOffset * a2p,
+                                        aSize * a2p, aDecoration,
+                                        NS_STYLE_BORDER_STYLE_SOLID,
+                                        isRTL);
   }
 }
 
