@@ -150,7 +150,7 @@ interface nsIXPCSecurityManager;
 interface nsIPrincipal;
 
 %{C++
-struct nsCycleCollectionTraversalCallback;
+class nsCycleCollectionTraversalCallback;
 %}
 
 /***************************************************************************/

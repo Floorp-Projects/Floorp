@@ -114,6 +114,7 @@ typedef void       (* LogCOMPtrFunc)(void*, nsISupports*);
 typedef nsresult   (* GetXPTCallStubFunc)(REFNSIID, nsIXPTCProxy*, nsISomeInterface**);
 typedef void       (* DestroyXPTCallStubFunc)(nsISomeInterface*);
 typedef nsresult   (* InvokeByIndexFunc)(nsISupports*, PRUint32, PRUint32, nsXPTCVariant*);
+typedef PRBool     (* CycleCollectorFunc)(nsISupports*);
 
 // PRIVATE AND DEPRECATED
 typedef NS_CALLBACK(XPCOMExitRoutine)(void);
@@ -182,6 +183,8 @@ typedef struct XPCOMFunctions{
     GetXPTCallStubFunc getXPTCallStubFunc;
     DestroyXPTCallStubFunc destroyXPTCallStubFunc;
     InvokeByIndexFunc invokeByIndexFunc;
+    CycleCollectorFunc cycleSuspectFunc;
+    CycleCollectorFunc cycleForgetFunc;
 
 } XPCOMFunctions;
 
