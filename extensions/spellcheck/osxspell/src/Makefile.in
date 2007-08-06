@@ -40,7 +40,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= myspell
+MODULE		= hunspell
 LIBRARY_NAME	= osxspell_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY = 1
