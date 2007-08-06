@@ -48,4 +48,4 @@ _TEST_FILES = 	test_bug371080.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
-	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
