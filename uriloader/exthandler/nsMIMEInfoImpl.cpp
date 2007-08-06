@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=4 sw=4 sts=4 et: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -45,13 +45,24 @@
 #include "nsIFileURL.h"
 
 // nsISupports methods
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsMIMEInfoBase, nsIMIMEInfo, nsIHandlerInfo)
+NS_IMPL_THREADSAFE_ADDREF(nsMIMEInfoBase)
+NS_IMPL_THREADSAFE_RELEASE(nsMIMEInfoBase)
+
+NS_INTERFACE_MAP_BEGIN(nsMIMEInfoBase)
+    NS_INTERFACE_MAP_ENTRY(nsIHandlerInfo)
+    // This is only an nsIMIMEInfo if it's a MIME handler.
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIMIMEInfo, mClass == eMIMEInfo)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIHandlerInfo)
+NS_INTERFACE_MAP_END_THREADSAFE
 
 // nsMIMEInfoImpl methods
+
+// Constructors for a MIME handler.
 nsMIMEInfoBase::nsMIMEInfoBase(const char *aMIMEType) :
     mMacType(0),
     mMacCreator(0),
-    mMIMEType(aMIMEType),
+    mType(aMIMEType),
+    mClass(eMIMEInfo),
     mPreferredAction(nsIMIMEInfo::saveToDisk),
     mAlwaysAskBeforeHandling(PR_TRUE)
 {
@@ -60,7 +71,23 @@ nsMIMEInfoBase::nsMIMEInfoBase(const char *aMIMEType) :
 nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aMIMEType) :
     mMacType(0),
     mMacCreator(0),
-    mMIMEType(aMIMEType),
+    mType(aMIMEType),
+    mClass(eMIMEInfo),
+    mPreferredAction(nsIMIMEInfo::saveToDisk),
+    mAlwaysAskBeforeHandling(PR_TRUE)
+{
+}
+
+// Constructor for a handler that lets the caller specify whether this is a
+// MIME handler or a protocol handler.  In the long run, these will be distinct
+// classes (f.e. nsMIMEInfo and nsProtocolInfo), but for now we reuse this class
+// for both and distinguish between the two kinds of handlers via the aClass
+// argument to this method, which can be either eMIMEInfo or eProtocolInfo.
+nsMIMEInfoBase::nsMIMEInfoBase(const nsACString& aType, HandlerClass aClass) :
+    mMacType(0),
+    mMacCreator(0),
+    mType(aType),
+    mClass(aClass),
     mPreferredAction(nsIMIMEInfo::saveToDisk),
     mAlwaysAskBeforeHandling(PR_TRUE)
 {
@@ -137,12 +164,22 @@ nsMIMEInfoBase::AppendExtension(const nsACString& aExtension)
 }
 
 NS_IMETHODIMP
-nsMIMEInfoBase::GetMIMEType(nsACString& aMIMEType)
+nsMIMEInfoBase::GetType(nsACString& aType)
 {
-    if (mMIMEType.IsEmpty())
+    if (mType.IsEmpty())
         return NS_ERROR_NOT_INITIALIZED;
 
-    aMIMEType = mMIMEType;
+    aType = mType;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMIMEInfoBase::GetMIMEType(nsACString& aMIMEType)
+{
+    if (mType.IsEmpty())
+        return NS_ERROR_NOT_INITIALIZED;
+
+    aMIMEType = mType;
     return NS_OK;
 }
 
@@ -169,7 +206,7 @@ nsMIMEInfoBase::Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval)
     nsresult rv = aMIMEInfo->GetMIMEType(type);
     if (NS_FAILED(rv)) return rv;
 
-    *_retval = mMIMEType.Equals(type);
+    *_retval = mType.Equals(type);
 
     return NS_OK;
 }
@@ -321,12 +358,31 @@ nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI)
     rv = localHandler->GetExecutable(getter_AddRefs(executable));
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // get the nsILocalFile version of the doc to launch with
     rv = GetLocalFileFromURI(aURI, getter_AddRefs(docToLoad));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) {
 
-    return LaunchWithIProcess(executable, docToLoad);
+      // If we don't have a file, we must be a protocol handler        
+      NS_ASSERTION(mClass == eProtocolInfo,
+                   "nsMIMEInfoBase should be a protocol handler");
+
+      // so pass the entire URI to the handler.
+      nsCAutoString spec;
+      aURI->GetSpec(spec);
+      return LaunchWithIProcess(executable, spec);
+    }
+
+    // note that the file pointed to by docToLoad could possibly have
+    // originated as a file: URI if we're in some non-browser application.
+
+    nsCAutoString path;
+    docToLoad->GetNativePath(path);
+    return LaunchWithIProcess(executable, path);
   }
   else if (mPreferredAction == useSystemDefault) {
+    if (mClass == eProtocolInfo)
+      return LoadUriInternal(aURI);
+
     rv = GetLocalFileFromURI(aURI, getter_AddRefs(docToLoad));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -339,7 +395,7 @@ nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI)
 void
 nsMIMEInfoBase::CopyBasicDataTo(nsMIMEInfoBase* aOther)
 {
-  aOther->mMIMEType = mMIMEType;
+  aOther->mType = mType;
   aOther->mDefaultAppDescription = mDefaultAppDescription;
   aOther->mExtensions = mExtensions;
 
@@ -349,9 +405,9 @@ nsMIMEInfoBase::CopyBasicDataTo(nsMIMEInfoBase* aOther)
 
 /* static */
 nsresult
-nsMIMEInfoBase::LaunchWithIProcess(nsIFile* aApp, nsIFile* aFile)
+nsMIMEInfoBase::LaunchWithIProcess(nsIFile* aApp, const nsCString& aArg)
 {
-  NS_ASSERTION(aApp && aFile, "Unexpected null pointer, fix caller");
+  NS_ASSERTION(aApp, "Unexpected null pointer, fix caller");
 
   nsresult rv;
   nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID, &rv);
@@ -361,13 +417,10 @@ nsMIMEInfoBase::LaunchWithIProcess(nsIFile* aApp, nsIFile* aFile)
   if (NS_FAILED(rv = process->Init(aApp)))
     return rv;
 
-  nsCAutoString path;
-  aFile->GetNativePath(path);
-
-  const char * strPath = path.get();
+  const char *string = aArg.get();
 
   PRUint32 pid;
-  return process->Run(PR_FALSE, &strPath, 1, &pid);
+  return process->Run(PR_FALSE, &string, 1, &pid);
 }
 
 /* static */
@@ -396,7 +449,7 @@ nsMIMEInfoImpl::GetDefaultDescription(nsAString& aDefaultDescription)
 NS_IMETHODIMP
 nsMIMEInfoImpl::GetHasDefaultHandler(PRBool * _retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = !mDefaultAppDescription.IsEmpty();
   if (mDefaultApplication) {
     PRBool exists;
     *_retval = NS_SUCCEEDED(mDefaultApplication->Exists(&exists)) && exists;
@@ -410,6 +463,9 @@ nsMIMEInfoImpl::LaunchDefaultWithFile(nsIFile* aFile)
   if (!mDefaultApplication)
     return NS_ERROR_FILE_NOT_FOUND;
 
-  return LaunchWithIProcess(mDefaultApplication, aFile);
+  nsCAutoString nativePath;
+  aFile->GetNativePath(nativePath);
+  
+  return LaunchWithIProcess(mDefaultApplication, nativePath);
 }
 

@@ -47,13 +47,11 @@ var reportFormat = "js";
 var useBrowser = true;
 var winWidth = 1024;
 var winHeight = 768;
-var urlPrefix = null;
 
 var doRenderTest = false;
 
 var pages;
 var pageIndex;
-var results;
 var start_time;
 var cycle;
 var report;
@@ -62,7 +60,12 @@ var running = false;
 
 var content;
 
+var TEST_DOES_OWN_TIMING = 1;
+
 var browserWindow = null;
+
+// the io service
+var gIOS = null;
 
 function plInit() {
   if (running) {
@@ -71,7 +74,6 @@ function plInit() {
   running = true;
 
   cycle = 0;
-  results = {};
 
   try {
     var args = window.arguments[0].wrappedJSObject;
@@ -86,14 +88,13 @@ function plInit() {
     if (args.width) winWidth = parseInt(args.width);
     if (args.height) winHeight = parseInt(args.height);
     if (args.filter) pageFilterRegexp = new RegExp(args.filter);
-    if (args.prefix) urlPrefix = args.prefix;
     doRenderTest = args.doRender;
 
-    var ios = Cc["@mozilla.org/network/io-service;1"]
+    gIOS = Cc["@mozilla.org/network/io-service;1"]
       .getService(Ci.nsIIOService);
     if (args.offline)
-      ios.offline = true;
-    var fileURI = ios.newURI(manifestURI, null, null);
+      gIOS.offline = true;
+    var fileURI = gIOS.newURI(manifestURI, null, null);
     pages = plLoadURLsFromURI(fileURI);
 
     if (!pages) {
@@ -116,18 +117,19 @@ function plInit() {
     }
 
     pages = pages.slice(startIndex,endIndex+1);
-    report = new Report(pages);
+    var pageUrls = pages.map(function(p) { return p.url.spec.toString(); });
+    report = new Report(pageUrls);
 
     if (doRenderTest)
-      renderReport = new Report(pages);
+      renderReport = new Report(pageUrls);
 
     pageIndex = 0;
 
     if (args.useBrowserChrome) {
       var wwatch = Cc["@mozilla.org/embedcomp/window-watcher;1"]
-	.getService(Ci.nsIWindowWatcher);
+        .getService(Ci.nsIWindowWatcher);
       var blank = Cc["@mozilla.org/supports-string;1"]
-	.createInstance(Ci.nsISupportsString);
+        .createInstance(Ci.nsISupportsString);
       blank.data = "about:blank";
       browserWindow = wwatch.openWindow
         (null, "chrome://browser/content/", "_blank",
@@ -158,7 +160,6 @@ function plInit() {
       window.resizeTo(winWidth, winHeight);
 
       content = document.getElementById('contentPageloader');
-      content.addEventListener('load', plLoadHandler, true);
 
       setTimeout(plLoadPage, 0);
     }
@@ -168,11 +169,76 @@ function plInit() {
   }
 }
 
-function plLoadPage() {
-  start_time = Date.now();
-  content.loadURI(pages[pageIndex]);
+function plPageFlags() {
+  return pages[pageIndex].flags;
 }
 
+// load the current page, start timing
+var removeLastAddedListener = null;
+function plLoadPage() {
+  var pageName = pages[pageIndex].url.spec;
+
+  if (removeLastAddedListener)
+    removeLastAddedListener();
+
+  if (plPageFlags() & TEST_DOES_OWN_TIMING) {
+    // if the page does its own timing, use a capturig handler
+    // to make sure that we can set up the function for content to call
+    content.addEventListener('load', plLoadHandlerCapturing, true);
+    removeLastAddedListener = function() {
+      content.removeEventListener('load', plLoadHandlerCapturing, true);
+    };
+  } else {
+    // if the page doesn't do its own timing, use a bubbling handler
+    // to make sure that we're called after the page's own onload() handling
+
+    // XXX we use a capturing event here too -- load events don't bubble up
+    // to the <browser> element.  See bug 390263.
+    content.addEventListener('load', plLoadHandler, true);
+    removeLastAddedListener = function() {
+      content.removeEventListener('load', plLoadHandler, true);
+    };
+  }
+
+  start_time = Date.now();
+  content.loadURI(pageName);
+}
+
+function plNextPage() {
+  if (pageIndex < pages.length-1) {
+    pageIndex++;
+
+    setTimeout(plLoadPage, 0);
+  } else {
+    plStop(false);
+  }
+}
+
+function plRecordTime(time) {
+  var pageName = pages[pageIndex].url.spec;
+  report.recordTime(pageIndex, time);
+}
+
+function plLoadHandlerCapturing(evt) {
+  // make sure we pick up the right load event
+  if (evt.type != 'load' ||
+      (!evt.originalTarget instanceof Ci.nsIDOMHTMLDocument ||
+       evt.originalTarget.defaultView.frameElement))
+      return;
+
+  if (!(plPageFlags() & TEST_DOES_OWN_TIMING)) {
+    dumpLine("tp: Capturing onload handler used with page that doesn't do its own timing?");
+    plStop(true);
+  }
+
+  // set up the function for content to call
+  content.contentWindow.wrappedJSObject.tpRecordTime = function (time) {
+    plRecordTime(time);
+    setTimeout(plNextPage, 0);
+  };
+}
+
+// the onload handler
 function plLoadHandler(evt) {
   // make sure we pick up the right load event
   if (evt.type != 'load' ||
@@ -183,25 +249,23 @@ function plLoadHandler(evt) {
   var end_time = Date.now();
   var time = (end_time - start_time);
 
-  var pageName = pages[pageIndex];
+  // does this page want to do its own timing?
+  // if so, we shouldn't be here
+  if (plPageFlags() & TEST_DOES_OWN_TIMING) {
+    dumpLine("tp: Bubbling onload handler used with page that does its own timing?");
+    plStop(true);
+  }
 
-  results[pageName] = time;
-  report.recordTime(pageIndex, time);
+  plRecordTime(time);
 
   if (doRenderTest)
     runRenderTest();
 
-  if (pageIndex < pages.length-1) {
-    pageIndex++;
-    setTimeout(plLoadPage, 0);
-  } else {
-    plStop(false);
-  }
+  plNextPage();
 }
 
 function runRenderTest() {
-  const redrawsPerSample = 5;
-  const renderCycles = 10;
+  const redrawsPerSample = 500;
 
   if (!Ci.nsIDOMWindowUtils)
     return;
@@ -214,36 +278,33 @@ function runRenderTest() {
     win = window;
   var wu = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
 
-  for (var i = 0; i < renderCycles; i++) {
-    var start = Date.now();
-    for (var j = 0; j < redrawsPerSample; j++)
-      wu.redraw();
-    var end = Date.now();
+  var start = Date.now();
+  for (var j = 0; j < redrawsPerSample; j++)
+    wu.redraw();
+  var end = Date.now();
 
-    renderReport.recordTime(pageIndex, end - start);
-  }
+  renderReport.recordTime(pageIndex, end - start);
 }
 
 function plStop(force) {
   try {
     if (force == false) {
       pageIndex = 0;
-      results = {};
       if (cycle < NUM_CYCLES-1) {
-	cycle++;
-	setTimeout(plLoadPage, 0);
-	return;
+        cycle++;
+        setTimeout(plLoadPage, 0);
+        return;
       }
 
       var formats = reportFormat.split(",");
 
       for each (var fmt in formats)
-	dumpLine(report.getReport(fmt));
+        dumpLine(report.getReport(fmt));
 
       if (renderReport) {
-	dumpLine ("*************** Render report *******************");
-	for each (var fmt in formats)
-	  dumpLine(renderReport.getReport(fmt));
+        dumpLine ("*************** Render report *******************");
+        for each (var fmt in formats)
+          dumpLine(renderReport.getReport(fmt));
       }
     }
   } catch (e) {
@@ -257,41 +318,76 @@ function plStop(force) {
 }
 
 /* Returns array */
-function plLoadURLsFromURI(uri) {
-  var data = "";
+function plLoadURLsFromURI(manifestUri) {
   var fstream = Cc["@mozilla.org/network/file-input-stream;1"]
     .createInstance(Ci.nsIFileInputStream);
-  var sstream = Cc["@mozilla.org/scriptableinputstream;1"]
-    .createInstance(Ci.nsIScriptableInputStream);
-  var uriFile = uri.QueryInterface(Ci.nsIFileURL);
+  var uriFile = manifestUri.QueryInterface(Ci.nsIFileURL);
+
   fstream.init(uriFile.file, -1, 0, 0);
-  sstream.init(fstream); 
-    
-  var str = sstream.read(4096);
-  while (str.length > 0) {
-    data += str;
-    str = sstream.read(4096);
-  }
-    
-  sstream.close();
-  fstream.close();
-  var p = data.split("\n");
+  var lstream = fstream.QueryInterface(Ci.nsILineInputStream);
 
-  // get rid of things that start with # (comments),
-  // or that don't have the load string, if given
-  p = p.filter(function(s) {
-		 if (s == "" || s.indexOf("#") == 0)
-		   return false;
-		 if (pageFilterRegexp && !pageFilterRegexp.test(s))
-		   return false;
-		 return true;
-	       });
+  var d = [];
 
-  // stick urlPrefix to the start if necessary
-  if (urlPrefix)
-    p = p.map(function(s) { return urlPrefix + s; });
+  var lineNo = 0;
+  var line = {value:null};
+  var more;
+  do {
+    lineNo++;
+    more = lstream.readLine(line);
+    var s = line.value;
 
-  return p;
+    // strip comments
+    s = s.replace(/#.*/, '');
+
+    // strip leading and trailing whitespace
+    s = s.replace(/^\s*/, '').replace(/s\*$/, '');
+
+    if (!s)
+      continue;
+
+    var flags = 0;
+    var urlspec = s;
+
+    // split on whitespace, and figure out if we have any flags
+    var items = s.split(/\s+/);
+    if (items[0] == "include") {
+      if (items.length != 2) {
+        dumpLine("tp: Error on line " + lineNo + " in " + manifestUri.spec + ": include must be followed by the manifest to include!");
+        return null;
+      }
+
+      var subManifest = gIOS.newURI(items[1], null, manifestUri);
+      if (subManifest == null) {
+        dumpLine("tp: invalid URI on line " + manifestUri.spec + ":" + lineNo + " : '" + line.value + "'");
+        return null;
+      }
+
+      var subItems = plLoadURLsFromURI(subManifest);
+      if (subItems == null)
+        return null;
+      d = d.concat(subItems);
+    } else {
+      if (items.length == 2) {
+        if (items[0].indexOf("%") != -1)
+          flags |= TEST_DOES_OWN_TIMING;
+
+        urlspec = items[1];
+      } else if (items.length != 1) {
+        dumpLine("tp: Error on line " + lineNo + " in " + manifestUri.spec + ": whitespace must be %-escaped!");
+        return null;
+      }
+
+      var url = gIOS.newURI(urlspec, null, manifestUri);
+
+      if (pageFilterRegexp && !pageFilterRegexp.test(url.spec))
+        continue;
+
+      d.push({   url: url,
+               flags: flags });
+    }
+  } while (more);
+
+  return d;
 }
 
 function dumpLine(str) {

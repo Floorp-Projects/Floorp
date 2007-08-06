@@ -50,6 +50,7 @@
 #include "imgILoad.h"
 #include "nsIInputStream.h"
 #include "nsIPipe.h"
+#include "lcms.h"
 
 extern "C" {
 #include "jpeglib.h"
@@ -117,6 +118,12 @@ public:
   PRUint32 mBackBufferLen; // Offset of end of active backtrack data
   PRUint32 mBackBufferSize; // size in bytes what mBackBuffer was created with
   PRUint32 mBackBufferUnreadLen; // amount of data currently in mBackBuffer
+
+  JOCTET  *mProfile;
+  PRUint32 mProfileLength;
+
+  cmsHPROFILE mInProfile;
+  cmsHTRANSFORM mTransform;
 
   PRPackedBool mReading;
 };

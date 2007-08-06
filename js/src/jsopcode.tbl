@@ -262,7 +262,9 @@ OPDEF(JSOP_RETSUB,    115,"retsub",     NULL,         1,  0,  0,  0,  JOF_BYTE)
 
 /* More exception handling ops. */
 OPDEF(JSOP_EXCEPTION, 116,"exception",  NULL,         1,  0,  1,  0,  JOF_BYTE)
-OPDEF(JSOP_UNUSED117, 117,"",           NULL,         0,  0,  0,  0,  0)
+
+/* Push the global object as |this| for a non-reference-type callable. */
+OPDEF(JSOP_GLOBALTHIS,117,"globalthis", js_null_str,  1,  0,  1,  0,  JOF_BYTE)
 
 /*
  * ECMA-compliant switch statement ops.
@@ -310,10 +312,13 @@ OPDEF(JSOP_NAMEDFUNOBJ, 129, "namedfunobj", NULL,     3,  0,  1, 19,  JOF_OBJECT
  */
 OPDEF(JSOP_SETLOCALPOP, 130, "setlocalpop", NULL,     3,  1,  0,  3,  JOF_LOCAL|JOF_NAME|JOF_SET)
 
-/* ECMA-mandated parenthesization opcode, which nulls the reference base register, obj; see jsinterp.c. */
+/* Parenthesization opcode to help the decompiler. */
 OPDEF(JSOP_GROUP,       131, "group",       NULL,     1,  0,  0, 19,  JOF_BYTE)
 
-/* Host object extension: given 'o.item(i) = j', the left-hand side compiles JSOP_SETCALL, rather than JSOP_CALL. */
+/*
+ * Host object extension: given 'o.item(i) = j', the left-hand side compiles
+ * JSOP_SETCALL, rather than JSOP_CALL.
+ */
 OPDEF(JSOP_SETCALL,     132, "setcall",     NULL,     3, -1,  2, 18,  JOF_UINT16|JOF_SET|JOF_ASSIGNING)
 
 /*

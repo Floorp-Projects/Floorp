@@ -114,8 +114,6 @@ public:
     NS_IMETHOD         GetScreenBounds(nsRect &aRect);
     NS_IMETHOD         SetForegroundColor(const nscolor &aColor);
     NS_IMETHOD         SetBackgroundColor(const nscolor &aColor);
-    virtual            nsIFontMetrics* GetFont(void);
-    NS_IMETHOD         SetFont(const nsFont &aFont);
     NS_IMETHOD         SetCursor(nsCursor aCursor);
     NS_IMETHOD         SetCursor(imgIContainer* aCursor,
                                  PRUint32 aHotspotX, PRUint32 aHotspotY);

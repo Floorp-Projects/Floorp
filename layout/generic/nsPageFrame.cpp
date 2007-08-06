@@ -90,34 +90,9 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
-  // Do we have any children?
-  // XXX We should use the overflow list instead...
-  nsIFrame*           firstFrame  = mFrames.FirstChild();
-  nsPageContentFrame* contentPage = static_cast<nsPageContentFrame*>(firstFrame);
-  NS_ASSERTION(contentPage, "There should always be a content page");
-  NS_ASSERTION(nsGkAtoms::pageContentFrame == firstFrame->GetType(),
-               "This frame isn't a pageContentFrame");
-
-  if (contentPage && GetPrevInFlow() && !contentPage->GetFirstChild(nsnull)) {
-
-    nsPageFrame*        prevPage        = static_cast<nsPageFrame*>(GetPrevInFlow());
-    nsPageContentFrame* prevContentPage = static_cast<nsPageContentFrame*>(prevPage->mFrames.FirstChild());
-    nsIFrame*           prevLastChild   = prevContentPage->mFrames.LastChild();
-
-    // Create a continuing child of the previous page's last child
-    nsIFrame*     newFrame;
-
-    nsresult rv = aPresContext->PresShell()->FrameConstructor()->
-      CreateContinuingFrame(aPresContext, prevLastChild,
-                            contentPage, &newFrame);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    // Make the new area frame the 1st child of the page content frame. There may already be
-    // children placeholders which don't get reflowed but must not be destroyed until the 
-    // page content frame is destroyed.
-    contentPage->mFrames.InsertFrame(contentPage, nsnull, newFrame);
-  }
+  NS_ASSERTION(mFrames.FirstChild() &&
+               nsGkAtoms::pageContentFrame == mFrames.FirstChild()->GetType(),
+               "pageFrame must have a pageContentFrame child");
 
   // Resize our frame allowing it only to be as big as we are
   // XXX Pay attention to the page's border and padding...
@@ -163,7 +138,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsPresContext*          aPresContext,
     // Place and size the child
     FinishReflowChild(frame, aPresContext, &kidReflowState, aDesiredSize, xc, yc, 0);
 
-    NS_ASSERTION(!NS_FRAME_IS_COMPLETE(aStatus) ||
+    NS_ASSERTION(!NS_FRAME_IS_FULLY_COMPLETE(aStatus) ||
                  !frame->GetNextInFlow(), "bad child flow list");
   }
   PR_PL(("PageFrame::Reflow %p ", this));

@@ -184,3 +184,39 @@ function do_load_module(path) {
   do_check_true(Components.manager instanceof nsIComponentRegistrar);
   Components.manager.autoRegister(lf);
 }
+
+/**
+ * Parse a DOM document.
+ *
+ * @param aPath File path to the document.
+ * @param aType Content type to use in DOMParser.
+ *
+ * @return nsIDOMDocument from the file.
+ */
+function do_parse_document(aPath, aType) {
+  switch (aType) {
+    case "application/xhtml+xml":
+    case "application/xml":
+    case "text/xml":
+      break;
+
+    default:
+      throw new Error("do_parse_document requires content-type of " +
+                      "application/xhtml+xml, application/xml, or text/xml.");
+  }
+
+  var lf = do_get_file(aPath);
+  const C_i = Components.interfaces;
+  const parserClass = "@mozilla.org/xmlextras/domparser;1";
+  const streamClass = "@mozilla.org/network/file-input-stream;1";
+  var stream = Components.classes[streamClass]
+                         .createInstance(C_i.nsIFileInputStream);
+  stream.init(lf, -1, -1, C_i.nsIFileInputStream.CLOSE_ON_EOF);
+  var parser = Components.classes[parserClass]
+                         .createInstance(C_i.nsIDOMParser);
+  var doc = parser.parseFromStream(stream, null, lf.fileSize, aType);
+  parser = null;
+  stream = null;
+  lf = null;
+  return doc;
+}

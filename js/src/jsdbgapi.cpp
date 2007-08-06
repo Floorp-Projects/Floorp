@@ -525,7 +525,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 closure = (JSObject *) wp->closure;
                 clasp = OBJ_GET_CLASS(cx, closure);
                 if (clasp == &js_FunctionClass) {
-                    fun = (JSFunction *) JS_GetPrivate(cx, closure);
+                    fun = (JSFunction *) OBJ_GET_PRIVATE(cx, closure);
                     script = FUN_SCRIPT(fun);
                 } else if (clasp == &js_ScriptClass) {
                     fun = NULL;
@@ -537,8 +537,8 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
                 nslots = 2;
                 if (fun) {
-                    nslots += fun->nargs;
-                    if (FUN_NATIVE(fun))
+                    nslots += FUN_MINARGS(fun);
+                    if (!FUN_INTERPRETED(fun))
                         nslots += fun->u.n.extra;
                 }
 
@@ -564,6 +564,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                     frame.pc = script->code + script->length
                              - JSOP_STOP_LENGTH;
                 }
+                frame.callee = closure;
                 frame.fun = fun;
                 frame.argv = argv + 2;
                 frame.down = cx->fp;
@@ -597,7 +598,7 @@ js_watch_set_wrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     funobj = JSVAL_TO_OBJECT(argv[-2]);
     JS_ASSERT(OBJ_GET_CLASS(cx, funobj) == &js_FunctionClass);
-    wrapper = (JSFunction *) JS_GetPrivate(cx, funobj);
+    wrapper = (JSFunction *) OBJ_GET_PRIVATE(cx, funobj);
     userid = ATOM_KEY(wrapper->atom);
     *rval = argv[0];
     return js_watch_set(cx, obj, userid, rval);
@@ -879,6 +880,12 @@ JS_GetFunctionNative(JSContext *cx, JSFunction *fun)
     return FUN_NATIVE(fun);
 }
 
+JS_PUBLIC_API(JSFastNative)
+JS_GetFunctionFastNative(JSContext *cx, JSFunction *fun)
+{
+    return FUN_FAST_NATIVE(fun);
+}
+
 JS_PUBLIC_API(JSPrincipals *)
 JS_GetScriptPrincipals(JSContext *cx, JSScript *script)
 {
@@ -914,9 +921,10 @@ JS_GetScriptedCaller(JSContext *cx, JSStackFrame *fp)
 {
     if (!fp)
         fp = cx->fp;
-    while ((fp = fp->down) != NULL) {
+    while (fp) {
         if (fp->script)
             return fp;
+        fp = fp->down;
     }
     return NULL;
 }
@@ -928,10 +936,8 @@ JS_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
         JSRuntime *rt = cx->runtime;
 
         if (rt->findObjectPrincipals) {
-            JSObject *callee = JSVAL_TO_OBJECT(fp->argv[-2]);
-
-            if (fp->fun->object != callee)
-                return rt->findObjectPrincipals(cx, callee);
+            if (fp->fun->object != fp->callee)
+                return rt->findObjectPrincipals(cx, fp->callee);
             /* FALL THROUGH */
         }
     }
@@ -944,13 +950,11 @@ JS_PUBLIC_API(JSPrincipals *)
 JS_EvalFramePrincipals(JSContext *cx, JSStackFrame *fp, JSStackFrame *caller)
 {
     JSRuntime *rt;
-    JSObject *callee;
     JSPrincipals *principals, *callerPrincipals;
 
     rt = cx->runtime;
     if (rt->findObjectPrincipals) {
-        callee = JSVAL_TO_OBJECT(fp->argv[-2]);
-        principals = rt->findObjectPrincipals(cx, callee);
+        principals = rt->findObjectPrincipals(cx, fp->callee);
     } else {
         principals = NULL;
     }
@@ -1051,7 +1055,19 @@ JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameFunctionObject(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->argv && fp->fun ? JSVAL_TO_OBJECT(fp->argv[-2]) : NULL;
+    /*
+     * Test both fp->fun and fp->argv to defend against any control flow from
+     * the compiler reaching this API entry point, where fp is a frame pushed
+     * by the compiler that has non-null fun but null argv.
+     */
+    if (fp->fun && fp->argv) {
+        JSObject *obj = fp->callee;
+
+        JS_ASSERT(OBJ_GET_CLASS(cx, obj) == &js_FunctionClass);
+        JS_ASSERT(OBJ_GET_PRIVATE(cx, obj) == fp->fun);
+        return obj;
+    }
+    return NULL;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1063,7 +1079,7 @@ JS_IsConstructorFrame(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSObject *)
 JS_GetFrameCalleeObject(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->argv ? JSVAL_TO_OBJECT(fp->argv[-2]) : NULL;
+    return fp->callee;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -1550,9 +1566,8 @@ JS_GetTopScriptFilenameFlags(JSContext *cx, JSStackFrame *fp)
     if (!fp)
         fp = cx->fp;
     while (fp) {
-        if (fp->script) {
+        if (fp->script)
             return JS_GetScriptFilenameFlags(fp->script);
-        }
         fp = fp->down;
     }
     return 0;

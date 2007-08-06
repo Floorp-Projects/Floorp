@@ -1742,10 +1742,10 @@ nsXPCWrappedJSClass::DebugDump(PRInt16 depth)
         if(depth)
         {
             uint16 i;
-            nsIInterfaceInfo* parent;
+            nsCOMPtr<nsIInterfaceInfo> parent;
             XPC_LOG_INDENT();
-            mInfo->GetParent(&parent);
-            XPC_LOG_ALWAYS(("parent @ %x", parent));
+            mInfo->GetParent(getter_AddRefs(parent));
+            XPC_LOG_ALWAYS(("parent @ %x", parent.get()));
             mInfo->GetMethodCount(&methodCount);
             XPC_LOG_ALWAYS(("MethodCount = %d", methodCount));
             mInfo->GetConstantCount(&i);

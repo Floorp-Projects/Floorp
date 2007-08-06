@@ -21,10 +21,11 @@
  * Contributor(s):
  *  Ben Goodger    <ben@mozilla.org>       (Clients, Mail, New Default Browser)
  *  Joe Hewitt     <hewitt@netscape.com>   (Set Background)
- *  Blake Ross     <blake@cs.stanford.edu  (Desktop Color, DDE support)
+ *  Blake Ross     <blake@cs.stanford.edu> (Desktop Color, DDE support)
  *  Jungshik Shin  <jshin@mailaps.org>     (I18N)
  *  Robert Strong  <robert.bugzilla@gmail.com>  (Long paths, DDE)
  *  Asaf Romano    <mano@mozilla.com>
+ *  Ryan Jones     <sciguyryan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -59,11 +60,12 @@
 #include "nsBrowserCompsCID.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
-#include "shlobj.h"
 #include "nsIWindowsRegKey.h"
+#include "nsUnicharUtils.h"
 
 #include "windows.h"
 #include "shellapi.h"
+#include "shlobj.h"
 
 #include <mbstring.h>
 
@@ -80,11 +82,12 @@
 NS_IMPL_ISUPPORTS2(nsWindowsShellService, nsIWindowsShellService, nsIShellService)
 
 static nsresult
-OpenUserKeyForReading(HKEY aStartKey, const char* aKeyName, HKEY* aKey)
+OpenUserKeyForReading(HKEY aStartKey, const nsAString& aKeyName, HKEY* aKey)
 {
-  DWORD result = ::RegOpenKeyEx(aStartKey, aKeyName, 0, KEY_READ, aKey);
+  const nsString &flatName = PromiseFlatString(aKeyName);
 
-  switch (result) {
+  DWORD res = ::RegOpenKeyExW(aStartKey, flatName.get(), 0, KEY_READ, aKey);
+  switch (res) {
   case ERROR_SUCCESS:
     break;
   case ERROR_ACCESS_DENIED:
@@ -97,6 +100,7 @@ OpenUserKeyForReading(HKEY aStartKey, const char* aKeyName, HKEY* aKey)
     }
     return OpenUserKeyForReading(HKEY_LOCAL_MACHINE, aKeyName, aKey);
   }
+
   return NS_OK;
 }
 
@@ -105,14 +109,16 @@ OpenUserKeyForReading(HKEY aStartKey, const char* aKeyName, HKEY* aKey)
 // in HKCU. Though this is not strictly the behavior I would expect it is the
 // same behavior that IE has when setting the default browser previous to Vista.
 static nsresult
-OpenKeyForWriting(HKEY aStartKey, const char* aKeyName, HKEY* aKey,
+OpenKeyForWriting(HKEY aStartKey, const nsAString& aKeyName, HKEY* aKey,
                   PRBool aHKLMOnly)
 {
-  DWORD dwDisp = 0;
-  DWORD rv = ::RegCreateKeyEx(aStartKey, aKeyName, 0, NULL, 0,
-                              KEY_READ | KEY_WRITE, NULL, aKey, &dwDisp);
+  const nsString &flatName = PromiseFlatString(aKeyName);
 
-  switch (rv) {
+  DWORD dwDisp = 0;
+  DWORD res = ::RegCreateKeyExW(aStartKey, flatName.get(), 0, NULL,
+                                0, KEY_READ | KEY_WRITE, NULL, aKey,
+                                &dwDisp);
+  switch (res) {
   case ERROR_SUCCESS:
     break;
   case ERROR_ACCESS_DENIED:
@@ -122,8 +128,10 @@ OpenKeyForWriting(HKEY aStartKey, const char* aKeyName, HKEY* aKey,
     // to create the key.
     return OpenKeyForWriting(HKEY_CURRENT_USER, aKeyName, aKey, aHKLMOnly);
   case ERROR_FILE_NOT_FOUND:
-    rv = ::RegCreateKey(aStartKey, aKeyName, aKey);
-    if (rv != ERROR_SUCCESS) {
+    res = ::RegCreateKeyExW(aStartKey, flatName.get(), 0, NULL,
+                            0, KEY_READ | KEY_WRITE, NULL, aKey,
+                            NULL);
+    if (res != ERROR_SUCCESS) {
       if (aHKLMOnly || aStartKey == HKEY_CURRENT_USER) {
         // prevent infinite recursion on the second pass through here if 
         // ::RegCreateKey fails in the current user case.
@@ -202,12 +210,15 @@ OpenKeyForWriting(HKEY aStartKey, const char* aKeyName, HKEY* aKey,
 //     shell\safemode\command           (default)         REG_SZ     <apppath> -safe-mode
 //
 
-typedef enum { NO_SUBSTITUTION           = 0x00,
-               APP_PATH_SUBSTITUTION     = 0x01,
-               EXE_NAME_SUBSTITUTION     = 0x02,
-               UNINST_PATH_SUBSTITUTION  = 0x04,
-               HKLM_ONLY                 = 0x08,
-               NON_ESSENTIAL             = 0x10 } SettingFlags;
+typedef enum {
+  NO_SUBSTITUTION           = 0x00,
+  APP_PATH_SUBSTITUTION     = 0x01,
+  EXE_NAME_SUBSTITUTION     = 0x02,
+  UNINST_PATH_SUBSTITUTION  = 0x04,
+  HKLM_ONLY                 = 0x08,
+  NON_ESSENTIAL             = 0x10
+} SettingFlags;
+
 typedef struct {
   char* keyName;
   char* valueName;
@@ -330,15 +341,13 @@ static SETTING gSettings[] = {
 // Support for versions of shlobj.h that don't include the Vista API's
 #if !defined(IApplicationAssociationRegistration)
 
-typedef enum tagASSOCIATIONLEVEL
-{
+typedef enum tagASSOCIATIONLEVEL {
   AL_MACHINE,
   AL_EFFECTIVE,
   AL_USER
 } ASSOCIATIONLEVEL;
 
-typedef enum tagASSOCIATIONTYPE
-{
+typedef enum tagASSOCIATIONTYPE {
   AT_FILEEXTENSION,
   AT_URLPROTOCOL,
   AT_STARTMENUCLIENT,
@@ -365,7 +374,7 @@ IApplicationAssociationRegistration : public IUnknown
                                                     LPCWSTR pszSet,
                                                     ASSOCIATIONTYPE atSetType) = 0;
   virtual HRESULT STDMETHODCALLTYPE SetAppAsDefaultAll(LPCWSTR pszAppRegistryName) = 0;
-  virtual HRESULT STDMETHODCALLTYPE ClearUserAssociations( void) = 0;
+  virtual HRESULT STDMETHODCALLTYPE ClearUserAssociations(void) = 0;
 };
 #endif
 
@@ -378,14 +387,13 @@ nsWindowsShellService::IsDefaultBrowserVista(PRBool aStartupCheck, PRBool* aIsDe
 {
   IApplicationAssociationRegistration* pAAR;
   
-  HRESULT hr = CoCreateInstance (CLSID_ApplicationAssociationReg,
-                                 NULL,
-                                 CLSCTX_INPROC,
-                                 IID_IApplicationAssociationReg,
-                                 (void**)&pAAR);
+  HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationReg,
+                                NULL,
+                                CLSCTX_INPROC,
+                                IID_IApplicationAssociationReg,
+                                (void**)&pAAR);
   
-  if (SUCCEEDED(hr))
-  {
+  if (SUCCEEDED(hr)) {
     hr = pAAR->QueryAppIsDefaultAll(AL_EFFECTIVE,
                                     APP_REG_NAME,
                                     aIsDefaultBrowser);
@@ -408,14 +416,13 @@ nsWindowsShellService::SetDefaultBrowserVista()
 {
   IApplicationAssociationRegistration* pAAR;
   
-  HRESULT hr = CoCreateInstance (CLSID_ApplicationAssociationReg,
-                                 NULL,
-                                 CLSCTX_INPROC,
-                                 IID_IApplicationAssociationReg,
-                                 (void**)&pAAR);
+  HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationReg,
+                                NULL,
+                                CLSCTX_INPROC,
+                                IID_IApplicationAssociationReg,
+                                (void**)&pAAR);
   
-  if (SUCCEEDED(hr))
-  {
+  if (SUCCEEDED(hr)) {
     hr = pAAR->SetAppAsDefaultAll(APP_REG_NAME);
     
     pAAR->Release();
@@ -426,7 +433,8 @@ nsWindowsShellService::SetDefaultBrowserVista()
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefaultBrowser)
+nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck,
+                                        PRBool* aIsDefaultBrowser)
 {
   // To support side by side installs on Vista we also need to check if the
   // FirefoxHTML and FirefoxURL registry keys in HKLM / HKCU point to our
@@ -442,41 +450,41 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
 
   *aIsDefaultBrowser = PR_TRUE;
 
-  char exePath[MAX_BUF];
-  if (!::GetModuleFileName(0, exePath, MAX_BUF))
+  PRUnichar exePath[MAX_BUF];
+  if (!::GetModuleFileNameW(0, exePath, MAX_BUF))
     return NS_ERROR_FAILURE;
 
-  nsCAutoString appLongPath(exePath);
+  nsAutoString appLongPath(exePath);
 
   // Support short path to the exe so if it is already set the user is not
   // prompted to set the default browser again.
-  if (!::GetShortPathName(exePath, exePath, sizeof(exePath)))
+  if (!::GetShortPathNameW(exePath, exePath, sizeof(exePath)))
     return NS_ERROR_FAILURE;
 
-  nsCAutoString appShortPath;
-  ToUpperCase(appShortPath = exePath);
+  nsAutoString appShortPath(exePath);
+  ToUpperCase(appShortPath);
 
   nsCOMPtr<nsILocalFile> lf;
-  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(exePath), PR_TRUE,
-                                      getter_AddRefs(lf));
+  nsresult rv = NS_NewLocalFile(appShortPath, PR_TRUE,
+                                getter_AddRefs(lf));
   if (NS_FAILED(rv))
     return rv;
 
-  nsCAutoString exeName;
-  rv = lf->GetNativeLeafName(exeName);
+  nsAutoString exeName;
+  rv = lf->GetLeafName(exeName);
   if (NS_FAILED(rv))
     return rv;
   ToUpperCase(exeName);
 
-  char currValue[MAX_BUF];
+  PRUnichar currValue[MAX_BUF];
   for (settings = gSettings; settings < end; ++settings) {
     if (settings->flags & NON_ESSENTIAL)
       continue; // This is not a registry key that determines whether
                 // or not we consider Firefox the "Default Browser."
-
-    nsCAutoString dataLongPath(settings->valueData);
-    nsCAutoString dataShortPath(settings->valueData);
-    nsCAutoString key(settings->keyName);
+    NS_ConvertUTF8toUTF16 dataLongPath(settings->valueData);
+    NS_ConvertUTF8toUTF16 dataShortPath(settings->valueData);
+    NS_ConvertUTF8toUTF16 key(settings->keyName);
+    NS_ConvertUTF8toUTF16 value(settings->valueName);
     if (settings->flags & APP_PATH_SUBSTITUTION) {
       PRInt32 offset = dataLongPath.Find("%APPPATH%");
       dataLongPath.Replace(offset, 9, appLongPath);
@@ -494,13 +502,14 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
 
     ::ZeroMemory(currValue, sizeof(currValue));
     HKEY theKey;
-    nsresult rv = OpenUserKeyForReading(HKEY_CURRENT_USER, key.get(), &theKey);
+    rv = OpenUserKeyForReading(HKEY_CURRENT_USER, key, &theKey);
     if (NS_SUCCEEDED(rv)) {
       DWORD len = sizeof currValue;
-      DWORD result = ::RegQueryValueEx(theKey, settings->valueName, NULL, NULL, (LPBYTE)currValue, &len);
+      DWORD res = ::RegQueryValueExW(theKey, PromiseFlatString(value).get(),
+                                     NULL, NULL, (LPBYTE)currValue, &len);
       // Close the key we opened.
       ::RegCloseKey(theKey);
-      if (REG_FAILED(result) ||
+      if (REG_FAILED(res) ||
           !dataLongPath.Equals(currValue, CaseInsensitiveCompare) &&
           !dataShortPath.Equals(currValue, CaseInsensitiveCompare)) {
         // Key wasn't set, or was set to something else (something else became the default browser)
@@ -520,15 +529,18 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck, PRBool* aIsDefault
 }
 
 DWORD
-nsWindowsShellService::DeleteRegKeyDefaultValue(HKEY baseKey, const char *keyName)
+nsWindowsShellService::DeleteRegKeyDefaultValue(HKEY baseKey,
+                                                const nsString& keyName)
 {
   HKEY key;
-  DWORD rc = ::RegOpenKeyEx(baseKey, keyName, 0, KEY_WRITE, &key);
-  if (rc == ERROR_SUCCESS) {
-    rc = ::RegDeleteValue(key, "");
+  DWORD res = ::RegOpenKeyExW(baseKey, keyName.get(),
+                              0, KEY_WRITE, &key);
+  if (res == ERROR_SUCCESS) {
+    res = ::RegDeleteValueW(key, EmptyString().get());
     ::RegCloseKey(key);
   }
-  return rc;
+
+  return res;
 }
 
 NS_IMETHODIMP
@@ -537,20 +549,33 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   // Delete the protocol and file handlers under HKCU if they exist. This way
   // the HKCU registry is cleaned up when HKLM is writeable or if it isn't
   // the values will then be added under HKCU.
-  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\http\\shell\\open");
-  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\http\\DefaultIcon");
-  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\https\\shell\\open");
-  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\https\\DefaultIcon");
-  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\ftp\\shell\\open");
-  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\ftp\\DefaultIcon");
-  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\FirefoxURL");
-  (void)DeleteRegKey(HKEY_CURRENT_USER, "Software\\Classes\\FirefoxHTML");
+  (void)DeleteRegKey(HKEY_CURRENT_USER,
+    NS_LITERAL_STRING("Software\\Classes\\http\\shell\\open"));
+  (void)DeleteRegKey(HKEY_CURRENT_USER,
+    NS_LITERAL_STRING("Software\\Classes\\http\\DefaultIcon"));
+  (void)DeleteRegKey(HKEY_CURRENT_USER,
+    NS_LITERAL_STRING("Software\\Classes\\https\\shell\\open"));
+  (void)DeleteRegKey(HKEY_CURRENT_USER,
+     NS_LITERAL_STRING("Software\\Classes\\https\\DefaultIcon"));
+  (void)DeleteRegKey(HKEY_CURRENT_USER,
+   NS_LITERAL_STRING("Software\\Classes\\ftp\\shell\\open"));
+  (void)DeleteRegKey(HKEY_CURRENT_USER,
+     NS_LITERAL_STRING("Software\\Classes\\ftp\\DefaultIcon"));
+  (void)DeleteRegKey(HKEY_CURRENT_USER,
+     NS_LITERAL_STRING("Software\\Classes\\FirefoxURL"));
+  (void)DeleteRegKey(HKEY_CURRENT_USER,
+     NS_LITERAL_STRING("Software\\Classes\\FirefoxHTML"));
 
-  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER, "Software\\Classes\\.htm");
-  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER, "Software\\Classes\\.html");
-  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER, "Software\\Classes\\.shtml");
-  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER, "Software\\Classes\\.xht");
-  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER, "Software\\Classes\\.xhtml");
+  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER,
+     NS_LITERAL_STRING("Software\\Classes\\.htm"));
+  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER,
+     NS_LITERAL_STRING("Software\\Classes\\.html"));
+  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER,
+     NS_LITERAL_STRING("Software\\Classes\\.shtml"));
+  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER,
+     NS_LITERAL_STRING("Software\\Classes\\.xht"));
+  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER,
+     NS_LITERAL_STRING("Software\\Classes\\.xhtml"));
 
   if (!aForAllUsers && SetDefaultBrowserVista())
     return NS_OK;
@@ -558,20 +583,20 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   SETTING* settings;
   SETTING* end = gSettings + sizeof(gSettings)/sizeof(SETTING);
 
-  char exePath[MAX_BUF];
-  if (!::GetModuleFileName(0, exePath, MAX_BUF))
+  PRUnichar exePath[MAX_BUF];
+  if (!::GetModuleFileNameW(0, exePath, MAX_BUF))
     return NS_ERROR_FAILURE;
 
-  nsCAutoString appLongPath(exePath);
+  nsAutoString appLongPath(exePath);
 
   nsCOMPtr<nsILocalFile> lf;
-  nsresult rv = NS_NewNativeLocalFile(nsDependentCString(exePath), PR_TRUE,
-                                      getter_AddRefs(lf));
+  nsresult rv = NS_NewLocalFile(nsDependentString(exePath), PR_TRUE,
+                                getter_AddRefs(lf));
   if (NS_FAILED(rv))
     return rv;
 
-  nsCAutoString exeName;
-  rv = lf->GetNativeLeafName(exeName);
+  nsAutoString exeName;
+  rv = lf->GetLeafName(exeName);
   if (NS_FAILED(rv))
     return rv;
   ToUpperCase(exeName);
@@ -581,15 +606,14 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   if (NS_FAILED(rv))
     return rv;
 
-  nsCAutoString parentPath;
-  appDir->GetNativePath(parentPath);
-
-  nsCAutoString uninstLongPath(parentPath.get());
-  uninstLongPath.Append(UNINSTALL_EXE);
+  nsAutoString uninstLongPath;
+  appDir->GetPath(uninstLongPath);
+  uninstLongPath.AppendLiteral(UNINSTALL_EXE);
 
   for (settings = gSettings; settings < end; ++settings) {
-    nsCAutoString dataLongPath(settings->valueData);
-    nsCAutoString key(settings->keyName);
+    NS_ConvertUTF8toUTF16 dataLongPath(settings->valueData);
+    NS_ConvertUTF8toUTF16 key(settings->keyName);
+    NS_ConvertUTF8toUTF16 value(settings->valueName);
     if (settings->flags & APP_PATH_SUBSTITUTION) {
       PRInt32 offset = dataLongPath.Find("%APPPATH%");
       dataLongPath.Replace(offset, 9, appLongPath);
@@ -603,14 +627,15 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
       key.Replace(offset, 8, exeName);
     }
 
-    SetRegKey(key.get(), settings->valueName, dataLongPath.get(),
+    SetRegKey(key, value, dataLongPath,
               (settings->flags & HKLM_ONLY));
   }
 
   // Select the Default Browser for the Windows XP Start Menu
-  SetRegKey(NS_LITERAL_CSTRING(SMI).get(), "", exeName.get(), PR_TRUE);
+  SetRegKey(NS_LITERAL_STRING(SMI), EmptyString(), exeName, PR_TRUE);
 
-  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService("@mozilla.org/intl/stringbundle;1"));
+  nsCOMPtr<nsIStringBundleService>
+    bundleService(do_GetService("@mozilla.org/intl/stringbundle;1"));
   if (!bundleService)
     return NS_ERROR_FAILURE;
 
@@ -624,24 +649,20 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   nsString brandFullName;
   brandBundle->GetStringFromName(NS_LITERAL_STRING("brandFullName").get(),
                                  getter_Copies(brandFullName));
-  nsCAutoString nativeFullName;
-  // For the now, we use 'A' APIs (see bug 240272, 239279)
-  NS_UTF16ToCString(brandFullName, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM,
-                    nativeFullName);
 
-  nsCAutoString key1(NS_LITERAL_CSTRING(SMI));
+  nsAutoString key1(NS_LITERAL_STRING(SMI));
   key1.Append(exeName);
-  key1.Append("\\");
-  SetRegKey(key1.get(), "", nativeFullName.get(), PR_TRUE);
+  key1.AppendLiteral("\\");
+  SetRegKey(key1, EmptyString(), brandFullName, PR_TRUE);
 
   // Set the Options and Safe Mode start menu context menu item labels
-  nsCAutoString optionsKey(SMI);
+  nsAutoString optionsKey(NS_LITERAL_STRING(SMI));
   optionsKey.Append(exeName);
-  optionsKey.Append("\\shell\\properties");
+  optionsKey.AppendLiteral("\\shell\\properties");
 
-  nsCAutoString safeModeKey(SMI);
+  nsAutoString safeModeKey(NS_LITERAL_STRING(SMI));
   safeModeKey.Append(exeName);
-  safeModeKey.Append("\\shell\\safemode");
+  safeModeKey.AppendLiteral("\\shell\\safemode");
 
   nsString brandShortName;
   brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
@@ -652,22 +673,17 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
   // Set the Options menu item
   nsString optionsTitle;
   bundle->FormatStringFromName(NS_LITERAL_STRING("optionsLabel").get(),
-                               brandNameStrings, 1, getter_Copies(optionsTitle));
+                               brandNameStrings, 1,
+                               getter_Copies(optionsTitle));
   // Set the Safe Mode menu item
   nsString safeModeTitle;
   bundle->FormatStringFromName(NS_LITERAL_STRING("safeModeLabel").get(),
-                               brandNameStrings, 1, getter_Copies(safeModeTitle));
+                               brandNameStrings, 1,
+                               getter_Copies(safeModeTitle));
 
   // Set the registry keys
-  nsCAutoString nativeTitle;
-  // For the now, we use 'A' APIs (see bug 240272,  239279)
-  NS_UTF16ToCString(optionsTitle, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM,
-                    nativeTitle);
-  SetRegKey(optionsKey.get(), "", nativeTitle.get(), PR_TRUE);
-  // For the now, we use 'A' APIs (see bug 240272,  239279)
-  NS_UTF16ToCString(safeModeTitle, NS_CSTRING_ENCODING_NATIVE_FILESYSTEM,
-                    nativeTitle);
-  SetRegKey(safeModeKey.get(), "", nativeTitle.get(), PR_TRUE);
+  SetRegKey(optionsKey, EmptyString(), optionsTitle, PR_TRUE);
+  SetRegKey(safeModeKey, EmptyString(), safeModeTitle, PR_TRUE);
 
   // Refresh the Shell
   SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, 0, 0);
@@ -676,61 +692,70 @@ nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUs
 
 // Utility function to delete a registry subkey.
 DWORD
-nsWindowsShellService::DeleteRegKey(HKEY baseKey, const char *keyName)
+nsWindowsShellService::DeleteRegKey(HKEY baseKey, const nsString& keyName)
 {
- // Make sure input subkey isn't null. 
- if (!keyName || !::strlen(keyName))
-   return ERROR_BADKEY;
+  // Make sure input subkey isn't null.
+  if (keyName.IsEmpty())
+    return ERROR_BADKEY;
 
- DWORD rc;
- // Open subkey.
- HKEY key;
- rc = ::RegOpenKeyEx(baseKey, keyName, 0, KEY_ENUMERATE_SUB_KEYS | DELETE, &key);
- 
- // Continue till we get an error or are done.
- while (rc == ERROR_SUCCESS) {
-   char subkeyName[_MAX_PATH];
-   DWORD len = sizeof subkeyName;
-   // Get first subkey name.  Note that we always get the
-   // first one, then delete it.  So we need to get
-   // the first one next time, also.
-   rc = ::RegEnumKeyEx(key, 0, subkeyName, &len, 0, 0, 0, 0);
-   if (rc == ERROR_NO_MORE_ITEMS) {
-     // No more subkeys.  Delete the main one.
-     rc = ::RegDeleteKey(baseKey, keyName);
-     break;
-   } 
-   if (rc == ERROR_SUCCESS) {
-     // Another subkey, delete it, recursively.
-     rc = DeleteRegKey(key, subkeyName);
-   }
- }
- 
- // Close the key we opened.
- ::RegCloseKey(key);
- return rc;
+  const nsString &flatName = PromiseFlatString(keyName);
+
+  // Open subkey.
+  HKEY key;
+  DWORD res = ::RegOpenKeyExW(baseKey, flatName.get(), 0,
+                              KEY_ENUMERATE_SUB_KEYS | DELETE, &key);
+  // Continue till we get an error or are done.
+  while (res == ERROR_SUCCESS) {
+    PRUnichar subkeyName[MAX_PATH];
+    DWORD len = sizeof subkeyName;
+    // Get first subkey name.  Note that we always get the
+    // first one, then delete it.  So we need to get
+    // the first one next time, also.
+    res = ::RegEnumKeyExW(key, 0, subkeyName, &len, NULL, NULL,
+                          NULL, NULL);
+    if (res == ERROR_NO_MORE_ITEMS) {
+      // No more subkeys.  Delete the main one.
+      res = ::RegDeleteKeyW(baseKey, flatName.get());
+      break;
+    }
+    // If we find another subkey, delete it, recursively.
+    if (res == ERROR_SUCCESS)
+      res = DeleteRegKey(key, nsDependentString(subkeyName));
+  }
+  
+  // Close the key we opened.
+  ::RegCloseKey(key);
+  return res;
 }
 
 void
-nsWindowsShellService::SetRegKey(const char* aKeyName, const char* aValueName, 
-                                 const char* aValue, PRBool aHKLMOnly)
+nsWindowsShellService::SetRegKey(const nsString& aKeyName,
+                                 const nsString& aValueName,
+                                 const nsString& aValue, PRBool aHKLMOnly)
 {
-  char buf[MAX_BUF];
+  PRUnichar buf[MAX_BUF];
   DWORD len = sizeof buf;
 
   HKEY theKey;
-  nsresult rv = OpenKeyForWriting(HKEY_LOCAL_MACHINE, aKeyName, &theKey, aHKLMOnly);
+  nsresult rv = OpenKeyForWriting(HKEY_LOCAL_MACHINE, aKeyName, &theKey,
+                                  aHKLMOnly);
   if (NS_FAILED(rv))
     return;
 
   // Get the old value
-  DWORD result = ::RegQueryValueEx(theKey, aValueName, NULL, NULL, (LPBYTE)buf, &len);
+  DWORD res = ::RegQueryValueExW(theKey, PromiseFlatString(aValueName).get(),
+                                 NULL, NULL, (LPBYTE)buf, &len);
 
   // Set the new value
-  if (REG_FAILED(result) || strcmp(buf, aValue) != 0)
-    ::RegSetValueEx(theKey, aValueName, 0, REG_SZ, 
-                    (LPBYTE)aValue, nsDependentCString(aValue).Length());
-  
+  nsAutoString current(buf);
+  if (REG_FAILED(res) || !current.Equals(aValue)) {
+    const nsString &flatValue = PromiseFlatString(aValue);
+
+    ::RegSetValueExW(theKey, PromiseFlatString(aValueName).get(),
+                     0, REG_SZ, (const BYTE *)flatValue.get(),
+                     (flatValue.Length() + 1) * sizeof(PRUnichar));
+  }
+
   // Close the key we opened.
   ::RegCloseKey(theKey);
 }
@@ -811,10 +836,8 @@ WriteBitmap(nsIFile* aFile, gfxIImageFrame* aImage)
   bf.bfSize = bf.bfOffBits + bmi.biSizeImage;
 
   // get a file output stream
-  nsresult rv;
-
   nsCOMPtr<nsIOutputStream> stream;
-  rv = NS_NewLocalFileOutputStream(getter_AddRefs(stream), aFile);
+  nsresult rv = NS_NewLocalFileOutputStream(getter_AddRefs(stream), aFile);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // write the bitmap headers and rgb pixel data to the file
@@ -861,14 +884,17 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
     // XXX write background loading stuff!
   } 
   else {
-    nsCOMPtr<nsIImageLoadingContent> imageContent = do_QueryInterface(aElement, &rv);
-    if (!imageContent) return rv;
+    nsCOMPtr<nsIImageLoadingContent> imageContent =
+      do_QueryInterface(aElement, &rv);
+    if (!imageContent)
+      return rv;
 
     // get the image container
     nsCOMPtr<imgIRequest> request;
     rv = imageContent->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
                                   getter_AddRefs(request));
-    if (!request) return rv;
+    if (!request)
+      return rv;
     nsCOMPtr<imgIContainer> container;
     rv = request->GetImage(getter_AddRefs(container));
     if (!container)
@@ -908,8 +934,8 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
   rv = file->Append(fileLeafName);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCAutoString nativePath;
-  rv = file->GetNativePath(nativePath);
+  nsAutoString path;
+  rv = file->GetPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // write the bitmap to a file in the profile directory
@@ -917,41 +943,41 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
 
   // if the file was written successfully, set it as the system wallpaper
   if (NS_SUCCEEDED(rv)) {
-     char   subKey[] = "Control Panel\\Desktop";
      PRBool result = PR_FALSE;
      DWORD  dwDisp = 0;
      HKEY   key;
      // Try to create/open a subkey under HKLM.
-     DWORD rc = ::RegCreateKeyEx( HKEY_CURRENT_USER,
-                                  subKey,
-                                  0,
-                                  NULL,
-                                  REG_OPTION_NON_VOLATILE,
-                                  KEY_WRITE,
-                                  NULL,
-                                  &key,
-                                  &dwDisp );
-    if (REG_SUCCEEDED(rc)) {
-      unsigned char tile[2];
-      unsigned char style[2];
-      if (aPosition == BACKGROUND_TILE) {
-        tile[0] = '1';
-        style[0] = '1';
-      }
-      else if (aPosition == BACKGROUND_CENTER) {
-        tile[0] = '0';
-        style[0] = '0';
-      }
-      else if (aPosition == BACKGROUND_STRETCH) {
-        tile[0] = '0';
-        style[0] = '2';
+     DWORD res = ::RegCreateKeyExW(HKEY_CURRENT_USER,
+                                   L"Control Panel\\Desktop",
+                                   0, NULL, REG_OPTION_NON_VOLATILE,
+                                   KEY_WRITE, NULL, &key, &dwDisp);
+    if (REG_SUCCEEDED(res)) {
+      PRUnichar tile[2], style[2];
+      switch (aPosition) {
+        case BACKGROUND_TILE:
+          tile[0] = '1';
+          style[0] = '1';
+          break;
+        case BACKGROUND_CENTER:
+          tile[0] = '0';
+          style[0] = '0';
+          break;
+        case BACKGROUND_STRETCH:
+          tile[0] = '0';
+          style[0] = '2';
+          break;
       }
       tile[1] = '\0';
       style[1] = '\0';
-      ::RegSetValueEx(key, "TileWallpaper", 0, REG_SZ, tile, sizeof(tile));
-      ::RegSetValueEx(key, "WallpaperStyle", 0, REG_SZ, style, sizeof(style));
-      ::SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, (PVOID) nativePath.get(),
-                             SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
+
+      // The size is always 3 unicode characters.
+      PRInt32 size = 3 * sizeof(PRUnichar);
+      ::RegSetValueExW(key, L"TileWallpaper",
+                       0, REG_SZ, (const BYTE *)tile, size);
+      ::RegSetValueExW(key, L"WallpaperStyle",
+                       0, REG_SZ, (const BYTE *)style, size);
+      ::SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, (PVOID)path.get(),
+                              SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
       // Close the key we opened.
       ::RegCloseKey(key);
     }
@@ -962,13 +988,13 @@ nsWindowsShellService::SetDesktopBackground(nsIDOMElement* aElement,
 NS_IMETHODIMP
 nsWindowsShellService::OpenApplication(PRInt32 aApplication)
 {
-  nsCAutoString application;
+  nsAutoString application;
   switch (aApplication) {
   case nsIShellService::APPLICATION_MAIL:
-    application = NS_LITERAL_CSTRING("Mail");
+    application.AssignLiteral("Mail");
     break;
   case nsIShellService::APPLICATION_NEWS:
-    application = NS_LITERAL_CSTRING("News");
+    application.AssignLiteral("News");
     break;
   }
 
@@ -981,79 +1007,82 @@ nsWindowsShellService::OpenApplication(PRInt32 aApplication)
   //             \Client Subkey Name\shell\open\command\ 
   //             \Client Subkey Name\shell\open\command\(default) = path to exe
   //
-  nsCAutoString clientKey(NS_LITERAL_CSTRING("SOFTWARE\\Clients\\"));
-  clientKey += application;
+  nsAutoString clientKey;
+  clientKey.AssignLiteral("SOFTWARE\\Clients\\");
+  clientKey.Append(application);
 
   // Find the default application for this class.
   HKEY theKey;
-  nsresult rv = OpenUserKeyForReading(HKEY_CURRENT_USER, clientKey.get(), &theKey);
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv = OpenUserKeyForReading(HKEY_CURRENT_USER, clientKey, &theKey);
+  if (NS_FAILED(rv))
+    return rv;
 
-  char buf[MAX_BUF];
+  PRUnichar buf[MAX_BUF];
   DWORD type, len = sizeof buf;
-  DWORD result = ::RegQueryValueEx(theKey, "", 0, &type, (LPBYTE)&buf, &len);
-  if (REG_FAILED(result) || nsDependentCString(buf).IsEmpty()) 
+  DWORD res = ::RegQueryValueExW(theKey, EmptyString().get(), 0,
+                                 &type, (LPBYTE)&buf, &len);
+
+  if (REG_FAILED(res) || !*buf)
     return NS_OK;
 
   // Close the key we opened.
   ::RegCloseKey(theKey);
 
   // Find the "open" command
-  clientKey.Append("\\");
+  clientKey.AppendLiteral("\\");
   clientKey.Append(buf);
-  clientKey.Append("\\shell\\open\\command");
+  clientKey.AppendLiteral("\\shell\\open\\command");
 
-  rv = OpenUserKeyForReading(HKEY_CURRENT_USER, clientKey.get(), &theKey);
-  if (NS_FAILED(rv)) return rv;
+  rv = OpenUserKeyForReading(HKEY_CURRENT_USER, clientKey, &theKey);
+  if (NS_FAILED(rv))
+    return rv;
 
   ::ZeroMemory(buf, sizeof(buf));
   len = sizeof buf;
-  result = ::RegQueryValueEx(theKey, "", 0, &type, (LPBYTE)&buf, &len);
-  if (REG_FAILED(result) || nsDependentCString(buf).IsEmpty()) 
+  res = ::RegQueryValueExW(theKey, EmptyString().get(), 0,
+                           &type, (LPBYTE)&buf, &len);
+  if (REG_FAILED(res) || !*buf)
     return NS_ERROR_FAILURE;
 
   // Close the key we opened.
   ::RegCloseKey(theKey);
 
-  nsCAutoString path(buf);
-
   // Look for any embedded environment variables and substitute their 
-  // values, as |::CreateProcess| is unable to do this. 
+  // values, as |::CreateProcessW| is unable to do this.
+  nsAutoString path(buf);
   PRInt32 end = path.Length();
   PRInt32 cursor = 0, temp = 0;
   ::ZeroMemory(buf, sizeof(buf));
   do {
-    // XXX : This would not work with multibyte strings. 
     cursor = path.FindChar('%', cursor);
     if (cursor < 0) 
       break;
 
     temp = path.FindChar('%', cursor + 1);
-
     ++cursor;
 
     ::ZeroMemory(&buf, sizeof(buf));
-    ::GetEnvironmentVariable(nsCAutoString(Substring(path, cursor, temp - cursor)).get(), 
-                             buf, sizeof(buf));
+
+    ::GetEnvironmentVariableW(nsAutoString(Substring(path, cursor, temp - cursor)).get(),
+                              buf, sizeof(buf));
     
     // "+ 2" is to subtract the extra characters used to delimit the environment
     // variable ('%').
-    path.Replace((cursor - 1), temp - cursor + 2, nsDependentCString(buf));
+    path.Replace((cursor - 1), temp - cursor + 2, nsDependentString(buf));
 
     ++cursor;
   }
   while (cursor < end);
 
-  STARTUPINFO si;
+  STARTUPINFOW si;
   PROCESS_INFORMATION pi;
 
-  ::ZeroMemory(&si, sizeof(STARTUPINFO));
+  ::ZeroMemory(&si, sizeof(STARTUPINFOW));
   ::ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
 
-  char *pathCStr = ToNewCString(path);
-  BOOL success = ::CreateProcess(NULL, pathCStr, NULL, NULL, FALSE, 0, NULL, 
-                                 NULL, &si, &pi);
-  nsMemory::Free(pathCStr);
+  BOOL success = ::CreateProcessW(NULL, (LPWSTR)path.get(), NULL,
+                                  NULL, FALSE, 0, NULL,  NULL,
+                                  &si, &pi);
   if (!success)
     return NS_ERROR_FAILURE;
 
@@ -1079,18 +1108,23 @@ nsWindowsShellService::SetDesktopBackgroundColor(PRUint32 aColor)
 
   ::SetSysColors(sizeof(aParameters) / sizeof(int), aParameters, colors);
 
-  char   subKey[] = "Control Panel\\Colors";
   PRBool result = PR_FALSE;
   DWORD  dwDisp = 0;
   HKEY   key;
   // Try to create/open a subkey under HKLM.
-  DWORD rc = ::RegCreateKeyEx(HKEY_CURRENT_USER, subKey, 0, NULL, 
-                              REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &key,
-                              &dwDisp);
-  if (REG_SUCCEEDED(rc)) {
-    unsigned char rgb[12];
+  DWORD rv = ::RegCreateKeyExW(HKEY_CURRENT_USER,
+                               L"Control Panel\\Colors", 0, NULL,
+                               REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL,
+                               &key, &dwDisp);
+
+  if (REG_SUCCEEDED(rv)) {
+    char rgb[12];
     sprintf((char*)rgb, "%u %u %u\0", r, g, b);
-    ::RegSetValueEx(key, "Background", 0, REG_SZ, (const unsigned char*)rgb, strlen((char*)rgb));
+    NS_ConvertUTF8toUTF16 backColor(rgb);
+
+    ::RegSetValueExW(key, L"Background",
+                     0, REG_SZ, (const BYTE *)backColor.get(),
+                     (backColor.Length() + 1) * sizeof(PRUnichar));
   }
   
   // Close the key we opened.
@@ -1107,11 +1141,10 @@ nsWindowsShellService::GetUnreadMailCount(PRUint32* aCount)
   if (GetMailAccountKey(&accountKey)) {
     DWORD type, unreadCount;
     DWORD len = sizeof unreadCount;
-    DWORD result = ::RegQueryValueEx(accountKey, "MessageCount", 0, &type, 
-                                     (LPBYTE)&unreadCount, &len);
-    if (REG_SUCCEEDED(result)) {
+    DWORD res = ::RegQueryValueExW(accountKey, L"MessageCount", 0,
+                                   &type, (LPBYTE)&unreadCount, &len);
+    if (REG_SUCCEEDED(res))
       *aCount = unreadCount;
-    }
 
   // Close the key we opened.
   ::RegCloseKey(accountKey);
@@ -1123,20 +1156,24 @@ nsWindowsShellService::GetUnreadMailCount(PRUint32* aCount)
 PRBool
 nsWindowsShellService::GetMailAccountKey(HKEY* aResult)
 {
+  NS_NAMED_LITERAL_STRING(unread,
+    "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\UnreadMail\\");
+
   HKEY mailKey;
-  DWORD result = ::RegOpenKeyEx(HKEY_CURRENT_USER, 
-                                "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\UnreadMail\\",
-                                0, KEY_ENUMERATE_SUB_KEYS, &mailKey);
+  DWORD res = ::RegOpenKeyExW(HKEY_CURRENT_USER, unread.get(), 0,
+                              KEY_ENUMERATE_SUB_KEYS, &mailKey);
 
   PRInt32 i = 0;
   do {
-    char subkeyName[MAX_BUF];
+    PRUnichar subkeyName[MAX_BUF];
     DWORD len = sizeof subkeyName;
-    result = ::RegEnumKeyEx(mailKey, i++, subkeyName, &len, 0, 0, 0, 0);
-    if (REG_SUCCEEDED(result)) {
+    res = ::RegEnumKeyExW(mailKey, i++, subkeyName, &len, NULL, NULL,
+                          NULL, NULL);
+    if (REG_SUCCEEDED(res)) {
       HKEY accountKey;
-      result = ::RegOpenKeyEx(mailKey, subkeyName, 0, KEY_READ, &accountKey);
-      if (REG_SUCCEEDED(result)) {
+      res = ::RegOpenKeyExW(mailKey, PromiseFlatString(subkeyName).get(),
+                            0, KEY_READ, &accountKey);
+      if (REG_SUCCEEDED(res)) {
         *aResult = accountKey;
     
         // Close the key we opened.
@@ -1156,7 +1193,8 @@ nsWindowsShellService::GetMailAccountKey(HKEY* aResult)
 }
 
 NS_IMETHODIMP
-nsWindowsShellService::OpenApplicationWithURI(nsILocalFile* aApplication, const nsACString& aURI)
+nsWindowsShellService::OpenApplicationWithURI(nsILocalFile* aApplication,
+                                              const nsACString& aURI)
 {
   nsresult rv;
   nsCOMPtr<nsIProcess> process = 

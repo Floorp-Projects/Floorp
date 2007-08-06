@@ -303,8 +303,8 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   aDesiredSize.width = aReflowState.ComputedWidth();
 
   // If computed use the computed value.
-  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) 
-    aDesiredSize.height = aReflowState.mComputedHeight;
+  if (aReflowState.ComputedHeight() != NS_INTRINSICSIZE) 
+    aDesiredSize.height = aReflowState.ComputedHeight();
   else
     aDesiredSize.height += focusPadding.TopBottom();
   
@@ -384,8 +384,8 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
 
   // center child vertically
   nscoord yoff = 0;
-  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) {
-    yoff = (aReflowState.mComputedHeight - aDesiredSize.height)/2;
+  if (aReflowState.ComputedHeight() != NS_INTRINSICSIZE) {
+    yoff = (aReflowState.ComputedHeight() - aDesiredSize.height)/2;
     if (yoff < 0) {
       yoff = 0;
     }

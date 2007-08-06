@@ -126,14 +126,17 @@ asm(".text\n\t" \
     ".align	2\n\t" \
     ".if	" #n " < 10\n\t" \
     ".globl	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev\n\t" \
+    ".hidden	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev\n\t" \
     ".type	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev,@function\n" \
     SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase5Stub" #n "Ev:\n\t" \
     ".elseif	" #n " < 100\n\t" \
     ".globl	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev\n\t" \
+    ".hidden	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev\n\t" \
     ".type	" SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev,@function\n" \
     SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase6Stub" #n "Ev:\n\t" \
     ".elseif    " #n " < 1000\n\t" \
     ".globl     " SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
+    ".hidden    " SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev\n\t" \
     ".type      " SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev,@function\n" \
     SYMBOL_UNDERSCORE "_ZN14nsXPTCStubBase7Stub" #n "Ev:\n\t" \
     ".else\n\t" \
@@ -153,6 +156,7 @@ asm(".text\n\t" \
 asm(".text\n\t" \
     ".align	2\n\t" \
     ".globl	" SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase\n\t" \
+    ".hidden	" SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase\n\t" \
     ".type	" SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase,@function\n" \
     SYMBOL_UNDERSCORE "Stub" #n "__14nsXPTCStubBase:\n\t" \
     "movl	$" #n ", %eax\n\t" \

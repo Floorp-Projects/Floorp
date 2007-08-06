@@ -82,7 +82,7 @@ function setWindowName()
   {
      title = bundle.GetStringFromName("deleteCaCertTitle");
      confirm = bundle.GetStringFromName("deleteCaCertConfirm");
-     impact = bundle.GetStringFromName("deleteCaCertImpact");
+     impact = bundle.GetStringFromName("deleteCaCertImpactX");
   }
   else if(typeFlag == "others_tab")
   {

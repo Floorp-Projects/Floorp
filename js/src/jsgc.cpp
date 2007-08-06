@@ -248,7 +248,7 @@ static uint8 GCTypeToTraceKindMap[GCX_NTYPES] = {
     JSTRACE_STRING,     /* GCX_STRING */
     JSTRACE_DOUBLE,     /* GCX_DOUBLE */
     JSTRACE_STRING,     /* GCX_MUTABLE_STRING */
-    JSTRACE_FUNCTION,   /* GCX_PRIVATE */
+    JSTRACE_FUNCTION,   /* GCX_FUNCTION */
     JSTRACE_NAMESPACE,  /* GCX_NAMESPACE */
     JSTRACE_QNAME,      /* GCX_QNAME */
     JSTRACE_XML,        /* GCX_XML */
@@ -560,7 +560,7 @@ static GCFinalizeOp gc_finalizers[GCX_NTYPES] = {
     (GCFinalizeOp) js_FinalizeString,           /* GCX_STRING */
     (GCFinalizeOp) js_FinalizeDouble,           /* GCX_DOUBLE */
     (GCFinalizeOp) js_FinalizeString,           /* GCX_MUTABLE_STRING */
-    NULL,                                       /* GCX_PRIVATE */
+    (GCFinalizeOp) js_FinalizeFunction,         /* GCX_FUNCTION */
     (GCFinalizeOp) js_FinalizeXMLNamespace,     /* GCX_NAMESPACE */
     (GCFinalizeOp) js_FinalizeXMLQName,         /* GCX_QNAME */
     (GCFinalizeOp) js_FinalizeXML,              /* GCX_XML */
@@ -582,7 +582,7 @@ static const char *gc_typenames[GCX_NTYPES] = {
     "newborn string",
     "newborn double",
     "newborn mutable string",
-    "newborn private",
+    "newborn function",
     "newborn Namespace",
     "newborn QName",
     "newborn XML",
@@ -1943,7 +1943,9 @@ gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
 void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 {
-    uintN depth, nslots;
+    uintN depth, nslots, minargs;
+    jsval *vp;
+
     if (fp->callobj)
         JS_CALL_OBJECT_TRACER(trc, fp->callobj, "call");
     if (fp->argsobj)
@@ -1971,41 +1973,36 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
               (fp->fun && JSFUN_THISP_FLAGS(fp->fun->flags)));
     JS_CALL_VALUE_TRACER(trc, (jsval)fp->thisp, "this");
 
-    /*
-     * Mark fp->argv, even though in the common case it will be marked via our
-     * caller's frame, or via a JSStackHeader if fp was pushed by an external
-     * invocation.
-     *
-     * The hard case is when there is not enough contiguous space in the stack
-     * arena for actual, missing formal, and local root (JSFunctionSpec.extra)
-     * slots.  In this case, fp->argv points to new space in a new arena, and
-     * marking the caller's operand stack, or an external caller's allocated
-     * stack tracked by a JSStackHeader, will not mark all the values stored
-     * and addressable via fp->argv.
-     *
-     * But note that fp->argv[-2] will be marked via the caller, even when the
-     * arg-vector moves.  And fp->argv[-1] will be marked as well, and we mark
-     * it redundantly just above this comment.
-     *
-     * So in summary, solely for the hard case of moving argv due to missing
-     * formals and extra roots, we must mark actuals, missing formals, and any
-     * local roots arrayed at fp->argv here.
-     *
-     * It would be good to avoid redundant marking of the same reference, in
-     * the case where fp->argv does point into caller-allocated space tracked
-     * by fp->down->spbase or cx->stackHeaders.  This would allow callbacks
-     * such as the forthcoming rt->gcThingCallback (bug 333078) to compute JS
-     * reference counts.  So this comment deserves a FIXME bug to cite.
-     */
+    if (fp->callee)
+        JS_CALL_OBJECT_TRACER(trc, fp->callee, "callee");
+
     if (fp->argv) {
+        /* Trace argv including callee and thisp slots. */
         nslots = fp->argc;
         if (fp->fun) {
-            if (fp->fun->nargs > nslots)
-                nslots = fp->fun->nargs;
+            minargs = FUN_MINARGS(fp->fun);
+            if (minargs > nslots)
+                nslots = minargs;
             if (!FUN_INTERPRETED(fp->fun))
                 nslots += fp->fun->u.n.extra;
         }
-        TRACE_JSVALS(trc, nslots, fp->argv, "arg");
+        nslots += 2;
+        vp = fp->argv - 2;
+        if (fp->down && fp->down->spbase) {
+            /*
+             * Avoid unnecessary tracing in the common case when args overlaps
+             * with the stack segment of the previous frame. That segment is
+             * traced via the above spbase code and, when sp > spbase + depth,
+             * during tracing of the stack headers in js_TraceContext.
+             */
+            if (JS_UPTRDIFF(vp, fp->down->spbase) <
+                JS_UPTRDIFF(fp->down->sp, fp->down->spbase)) {
+                JS_ASSERT((size_t)nslots >= (size_t)(fp->down->sp - vp));
+                nslots -= (uintN)(fp->down->sp - vp);
+                vp = fp->down->sp;
+            }
+        }
+        TRACE_JSVALS(trc, nslots, vp, "arg");
     }
     JS_CALL_VALUE_TRACER(trc, fp->rval, "rval");
     if (fp->vars)
@@ -2401,8 +2398,8 @@ restart:
      * rather than nest badly and leave the unmarked newborn to be swept.
      *
      * Here we need to ensure that JSObject instances are finalized before GC-
-     * allocated JSFunction instances so fun_finalize from jsfun.c can get the
-     * proper result from the call to js_IsAboutToBeFinalized. For that we
+     * allocated JSFunction instances so fun_finalize from jsfun.c can clear
+     * the weak pointer from the JSFunction back to the JSObject.  For that we
      * simply finalize the list containing JSObject first since the static
      * assert at the beginning of the file guarantees that JSFunction instances
      * are allocated from a different list.

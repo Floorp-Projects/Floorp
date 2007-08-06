@@ -41,8 +41,8 @@
 #include "nsCRT.h"
 #include "nsISupportsObsolete.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsDirIndex,
-                              nsIDirIndex)
+NS_IMPL_ISUPPORTS1(nsDirIndex,
+                   nsIDirIndex)
 
 nsDirIndex::nsDirIndex() : mType(TYPE_UNKNOWN),
                            mSize(LL_MAXUINT),

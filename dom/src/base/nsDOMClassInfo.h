@@ -227,10 +227,6 @@ protected:
             id == sName_id);
   }
 
-  nsresult doCheckPropertyAccess(JSContext *cx, JSObject *obj, jsval id,
-                                 nsIXPConnectWrappedNative *wrapper,
-                                 PRUint32 accessMode, PRBool isWindow);
-
   static JSClass sDOMConstructorProtoClass;
   static JSFunctionSpec sDOMJSClass_methods[];
 
@@ -316,6 +312,12 @@ protected:
   static jsval sBaseURIObject_id;
   static jsval sNodePrincipal_id;
   static jsval sDocumentURIObject_id;
+  static jsval sOncopy_id;
+  static jsval sOncut_id;
+  static jsval sOnpaste_id;
+  static jsval sOnbeforecopy_id;
+  static jsval sOnbeforecut_id;
+  static jsval sOnbeforepaste_id;
 
   static const JSClass *sObjectClass;
   static const JSClass *sXPCNativeWrapperClass;
@@ -916,39 +918,6 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsHTMLFormElementSH(aData);
-  }
-};
-
-
-// HTML[I]FrameElement helper
-
-class nsHTMLFrameElementSH : public nsHTMLElementSH
-{
-protected:
-  nsHTMLFrameElementSH(nsDOMClassInfoData* aData) : nsHTMLElementSH(aData)
-  {
-  }
-
-  virtual ~nsHTMLFrameElementSH()
-  {
-  }
-
-public:
-  NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
-  NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
-  NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
-  NS_IMETHOD DelProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
-  NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                        JSObject *obj, jsval id, PRUint32 flags,
-                        JSObject **objp, PRBool *_retval);
-
-  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
-  {
-    return new nsHTMLFrameElementSH(aData);
   }
 };
 
@@ -1644,8 +1613,25 @@ public:
   }
 };
 
+class nsFileListSH : public nsArraySH
+{
+protected:
+  nsFileListSH(nsDOMClassInfoData *aData) : nsArraySH(aData)
+  {
+  }
 
-void InvalidateContextAndWrapperCache();
+  virtual ~nsFileListSH()
+  {
+  }
 
+  virtual nsresult GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                             nsISupports **aResult);
+
+public:
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsFileListSH(aData);
+  }
+};
 
 #endif /* nsDOMClassInfo_h___ */

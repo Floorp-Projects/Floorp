@@ -41,7 +41,7 @@
 interface nsIAccessible;
 interface nsIAccessibleEvent;
 
-[uuid(817ae493-b238-4fbc-a623-d20ed81eebcd)]
+[uuid(03932812-53d1-4dc7-965d-6b6ad8a872b1)]
 interface nsPIAccessible : nsISupports
 {
   /**
@@ -100,6 +100,7 @@ interface nsPIAccessible : nsISupports
    * Returns text of accessible if accessible has text role otherwise empty
    * string.
    */
-  AString getContentText();
+  void appendTextTo(out AString aString, in unsigned long aStartOffset,
+                    in unsigned long aLength);
 };
 

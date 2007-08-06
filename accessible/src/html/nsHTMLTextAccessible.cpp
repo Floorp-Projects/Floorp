@@ -56,24 +56,7 @@ nsTextAccessibleWrap(aDomNode, aShell)
 NS_IMETHODIMP nsHTMLTextAccessible::GetName(nsAString& aName)
 {
   aName.Truncate();
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIFrame *frame = GetFrame();
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-  nsAutoString name;
-  nsresult rv = mDOMNode->GetNodeValue(name);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!frame->GetStyleText()->WhiteSpaceIsSignificant()) {
-    // Replace \r\n\t in markup with space unless in this is preformatted text
-    // where those characters are significant
-    name.ReplaceChar("\r\n\t", ' ');
-  }
-  aName = name;
-  return rv;
+  return AppendTextTo(aName, 0, PR_UINT32_MAX);
 }
 
 NS_IMETHODIMP nsHTMLTextAccessible::GetRole(PRUint32 *aRole)
@@ -367,9 +350,14 @@ nsHTMLListBulletAccessible::GetParent(nsIAccessible **aParentAccessible)
 }
 
 NS_IMETHODIMP
-nsHTMLListBulletAccessible::GetContentText(nsAString& aText)
+nsHTMLListBulletAccessible::AppendTextTo(nsAString& aText, PRUint32 aStartOffset,
+                                         PRUint32 aLength)
 {
-  aText = mBulletText;
+  PRUint32 maxLength = mBulletText.Length() - aStartOffset;
+  if (aLength > maxLength) {
+    aLength = maxLength;
+  }
+  aText += nsDependentSubstring(mBulletText, aStartOffset, aLength);
   return NS_OK;
 }
 

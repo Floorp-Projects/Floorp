@@ -283,7 +283,7 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
     nsSize availSize(aReflowState.ComputedWidth(),
-                     aReflowState.mComputedHeight);
+                     aReflowState.ComputedHeight());
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
     rv = ReflowChild(childFrame, aPresContext, aDesiredSize,

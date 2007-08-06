@@ -158,8 +158,6 @@ public:
 	NS_IMETHOD              SetFocus(PRBool aRaise);
 	NS_IMETHOD              GetScreenBounds(nsRect &aRect);
 	NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
-	virtual nsIFontMetrics* GetFont(void);
-	NS_IMETHOD              SetFont(const nsFont &aFont);
 	NS_IMETHOD              SetCursor(nsCursor aCursor);
 	NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
 	NS_IMETHOD              Invalidate(const nsRect & aRect, PRBool aIsSynchronous);

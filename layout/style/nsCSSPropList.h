@@ -532,6 +532,7 @@ CSS_PROP_SVG(fill-rule, fill_rule, FillRule, SVG, mFillRule, eCSSType_Value, kFi
 CSS_PROP_SVGRESET(filter, filter, Filter, SVG, mFilter, eCSSType_Value, nsnull)
 CSS_PROP_SVGRESET(flood-color, flood_color, FloodColor, SVG, mFloodColor, eCSSType_Value, nsnull)
 CSS_PROP_SVGRESET(flood-opacity, flood_opacity, FloodOpacity, SVG, mFloodOpacity, eCSSType_Value, nsnull)
+CSS_PROP_SVGRESET(lighting-color, lighting_color, LightingColor, SVG, mLightingColor, eCSSType_Value, nsnull)
 CSS_PROP_SHORTHAND(marker, marker, Marker)
 CSS_PROP_SVG(marker-end, marker_end, MarkerEnd, SVG, mMarkerEnd, eCSSType_Value, nsnull)
 CSS_PROP_SVG(marker-mid, marker_mid, MarkerMid, SVG, mMarkerMid, eCSSType_Value, nsnull)

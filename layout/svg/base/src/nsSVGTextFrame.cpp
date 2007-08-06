@@ -61,28 +61,26 @@
 nsIFrame*
 NS_NewSVGTextFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
-  nsCOMPtr<nsIDOMSVGTextElement> text_elem = do_QueryInterface(aContent);
-  if (!text_elem) {
-#ifdef DEBUG
-    printf("warning: trying to construct an SVGTextFrame for a "
-           "content element that doesn't support the right interfaces\n");
-#endif
+  nsCOMPtr<nsIDOMSVGTextElement> text = do_QueryInterface(aContent);
+  if (!text) {
+    NS_ERROR("Can't create frame! Content is not an SVG text");
     return nsnull;
   }
 
   return new (aPresShell) nsSVGTextFrame(aContext);
 }
 
-nsSVGTextFrame::nsSVGTextFrame(nsStyleContext* aContext)
-    : nsSVGTextFrameBase(aContext),
-      mMetricsState(unsuspended),
-      mPropagateTransform(PR_TRUE),
-      mPositioningDirty(PR_FALSE)
-{
-}
-
 //----------------------------------------------------------------------
 // nsIFrame methods
+
+NS_IMETHODIMP
+nsSVGTextFrame::SetInitialChildList(nsIAtom*  aListName,
+                                    nsIFrame* aChildList)
+{
+  nsresult rv = nsSVGTextFrameBase::SetInitialChildList(aListName, aChildList);
+  NotifyGlyphMetricsChange();
+  return rv;
+}
 
 NS_IMETHODIMP
 nsSVGTextFrame::AttributeChanged(PRInt32         aNameSpaceID,

@@ -88,11 +88,18 @@ endif
 # dependent libraries
 STATIC_LIBS += \
 	xpcom_core \
-	mozreg_s \
 	ucvutil_s \
 	gkgfx \
 	gfxshared_s \
 	$(NULL)
+
+#ifndef MOZ_EMBEDDING_LEVEL_DEFAULT
+ifdef MOZ_XPINSTALL
+STATIC_LIBS += \
+	mozreg_s \
+	$(NULL)
+endif
+#endif
 
 # component libraries
 COMPONENT_LIBS += \

@@ -59,6 +59,7 @@
 #include "nsWidgetAtoms.h"
 #include <malloc.h>
 
+#include "gfxPlatform.h"
 #include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "gfxWindowsSurface.h"
@@ -138,6 +139,65 @@
 // Dropdown constants
 #define CBP_DROPMARKER       1
 
+// Menu Constants
+#define MENU_BARBACKGROUND 7
+#define MENU_BARITEM 8
+#define MENU_POPUPBACKGROUND 9
+#define MENU_POPUPBORDERS 10
+#define MENU_POPUPCHECK 11
+#define MENU_POPUPCHECKBACKGROUND 12
+#define MENU_POPUPGUTTER 13
+#define MENU_POPUPITEM 14
+#define MENU_POPUPSEPARATOR 15
+#define MENU_POPUPSUBMENU 16
+#define MENU_SYSTEMCLOSE 17
+#define MENU_SYSTEMMAXIMIZE 18
+#define MENU_SYSTEMMINIMIZE 19
+#define MENU_SYSTEMRESTORE 20
+
+#define MB_ACTIVE 1
+#define MB_INACTIVE 2
+
+#define MS_NORMAL    1
+#define MS_SELECTED  2
+#define MS_DEMOTED   3
+
+#define MBI_NORMAL 1
+#define MBI_HOT 2
+#define MBI_PUSHED 3
+#define MBI_DISABLED 4
+#define MBI_DISABLEDHOT 5
+#define MBI_DISABLEDPUSHED 6
+
+#define MC_CHECKMARKNORMAL 1
+#define MC_CHECKMARKDISABLED 2
+#define MC_BULLETNORMAL 3
+#define MC_BULLETDISABLED 4
+
+#define MCB_DISABLED 1
+#define MCB_NORMAL 2
+#define MCB_BITMAP 3
+
+#define MPI_NORMAL 1
+#define MPI_HOT 2
+#define MPI_DISABLED 3
+#define MPI_DISABLEDHOT 4
+
+#define MSM_NORMAL 1
+#define MSM_DISABLED 2
+
+// Theme size constants
+// minimum size
+#define TS_MIN 0
+// size without stretching
+#define TS_TRUE 1
+// size that theme mgr will use to draw part
+#define TS_DRAW 2
+
+#define TMT_SIZINGMARGINS 3601
+#define TMT_CONTENTMARGINS 3602
+#define TMT_CAPTIONMARGINS 3603
+
 // Rebar constants
 #define RP_BAND              3
 
@@ -165,6 +225,14 @@
 
 NS_IMPL_ISUPPORTS1(nsNativeThemeWin, nsITheme)
 
+struct MARGINS
+{
+  int cxLeftWidth;
+  int cxRightWidth;
+  int cyTopHeight;
+  int cyBottomHeight;
+};
+
 typedef HANDLE (WINAPI*OpenThemeDataPtr)(HWND hwnd, LPCWSTR pszClassList);
 typedef HRESULT (WINAPI*CloseThemeDataPtr)(HANDLE hTheme);
 typedef HRESULT (WINAPI*DrawThemeBackgroundPtr)(HANDLE hTheme, HDC hdc, int iPartId, 
@@ -181,8 +249,11 @@ typedef HRESULT (WINAPI*GetThemePartSizePtr)(HANDLE hTheme, HDC hdc, int iPartId
                                        int iStateId, RECT* prc, int ts,
                                        SIZE* psz);
 typedef HRESULT (WINAPI*GetThemeSysFontPtr)(HANDLE hTheme, int iFontId, OUT LOGFONT* pFont);
-typedef HRESULT (WINAPI*GetThemeColorPtr)(HANDLE hTheme, HDC hdc, int iPartId,
+typedef HRESULT (WINAPI*GetThemeColorPtr)(HANDLE hTheme, int iPartId,
                                    int iStateId, int iPropId, OUT COLORREF* pFont);
+typedef HRESULT (WINAPI*GetThemeMarginsPtr)(HANDLE hTheme, HDC hdc, int iPartId,
+                                         int iStateid, int iPropId,
+                                         LPRECT prc, MARGINS *pMargins);
 
 static OpenThemeDataPtr openTheme = NULL;
 static CloseThemeDataPtr closeTheme = NULL;
@@ -192,6 +263,7 @@ static GetThemeContentRectPtr getThemeContentRect = NULL;
 static GetThemePartSizePtr getThemePartSize = NULL;
 static GetThemeSysFontPtr getThemeSysFont = NULL;
 static GetThemeColorPtr getThemeColor = NULL;
+static GetThemeMarginsPtr getThemeMargins = NULL;
 
 static const char kThemeLibraryName[] = "uxtheme.dll";
 
@@ -221,6 +293,7 @@ nsNativeThemeWin::nsNativeThemeWin() {
   mTreeViewTheme = NULL;
   mComboBoxTheme = NULL;
   mHeaderTheme = NULL;
+  mMenuTheme = NULL;
 
   mThemeDLL = ::LoadLibrary(kThemeLibraryName);
   if (mThemeDLL) {
@@ -232,6 +305,7 @@ nsNativeThemeWin::nsNativeThemeWin() {
     getThemePartSize = (GetThemePartSizePtr)GetProcAddress(mThemeDLL, "GetThemePartSize");
     getThemeSysFont = (GetThemeSysFontPtr)GetProcAddress(mThemeDLL, "GetThemeSysFont");
     getThemeColor = (GetThemeColorPtr)GetProcAddress(mThemeDLL, "GetThemeColor");
+    getThemeMargins = (GetThemeMarginsPtr)GetProcAddress(mThemeDLL, "GetThemeMargins");
   }
   mOsVersion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
   GetVersionEx(&mOsVersion);
@@ -259,6 +333,83 @@ static void GetNativeRect(const nsRect& aSrc, RECT& aDst)
   aDst.bottom = aSrc.y + aSrc.height;
   aDst.left = aSrc.x;
   aDst.right = aSrc.x + aSrc.width;
+}
+
+static PRBool IsTopLevelMenu(nsIFrame *aFrame)
+{
+  PRBool isTopLevel(PR_FALSE);
+  nsIMenuFrame *menuFrame(nsnull);
+  CallQueryInterface(aFrame, &menuFrame);
+
+  if (menuFrame) {
+    isTopLevel = menuFrame->IsOnMenuBar();
+  }
+  return isTopLevel;
+}
+
+
+static SIZE GetCheckboxSize(HANDLE theme, HDC hdc)
+{
+    SIZE checkboxSize;
+    getThemePartSize(theme, hdc, MENU_POPUPCHECK, MC_CHECKMARKNORMAL, NULL, TS_TRUE, &checkboxSize);
+
+    MARGINS checkboxSizing;
+    MARGINS checkboxContent;
+    getThemeMargins(theme, hdc, MENU_POPUPCHECKBACKGROUND, MCB_NORMAL, TMT_SIZINGMARGINS, NULL, &checkboxSizing);
+    getThemeMargins(theme, hdc, MENU_POPUPCHECKBACKGROUND, MCB_NORMAL, TMT_CONTENTMARGINS, NULL, &checkboxContent);
+
+    int leftMargin = checkboxSizing.cxLeftWidth;
+    int rightMargin = checkboxSizing.cxRightWidth;
+    int topMargin = checkboxSizing.cyTopHeight;
+    int bottomMargin = checkboxSizing.cyBottomHeight;
+
+    int width = leftMargin + checkboxSize.cx + rightMargin;
+    int height = topMargin + checkboxSize.cy + bottomMargin;
+    SIZE ret;
+    ret.cx = width;
+    ret.cy = height;
+    return ret;
+}
+static SIZE GetCheckboxBounds(HANDLE theme, HDC hdc)
+{
+    MARGINS checkboxSizing;
+    MARGINS checkboxContent;
+    getThemeMargins(theme, hdc, MENU_POPUPCHECKBACKGROUND, MCB_NORMAL, TMT_SIZINGMARGINS, NULL, &checkboxSizing);
+    getThemeMargins(theme, hdc, MENU_POPUPCHECKBACKGROUND, MCB_NORMAL, TMT_CONTENTMARGINS, NULL, &checkboxContent);
+
+#define posdx(d) ((d) > 0 ? d : 0)
+
+    int dx = posdx(checkboxContent.cxRightWidth - checkboxSizing.cxRightWidth) + posdx(checkboxContent.cxLeftWidth - checkboxSizing.cxLeftWidth);
+    int dy = posdx(checkboxContent.cyTopHeight - checkboxSizing.cyTopHeight) + posdx(checkboxContent.cyBottomHeight - checkboxSizing.cyBottomHeight);
+
+#undef posdx
+
+    SIZE ret(GetCheckboxSize(theme,hdc));
+    ret.cx += dx;
+    ret.cy += dy;
+    return ret;
+}
+static SIZE GetGutterSize(HANDLE theme, HDC hdc)
+{
+    SIZE gutterSize;
+    getThemePartSize(theme, hdc, MENU_POPUPGUTTER, 0, NULL, TS_TRUE, &gutterSize);
+
+    SIZE checkboxSize(GetCheckboxBounds(theme, hdc));
+
+    SIZE itemSize;
+    getThemePartSize(theme, hdc, MENU_POPUPITEM, MPI_NORMAL, NULL, TS_TRUE, &itemSize);
+
+    int width = max(itemSize.cx, checkboxSize.cx + gutterSize.cx);
+    int height = max(itemSize.cy, checkboxSize.cy);
+    SIZE ret;
+    ret.cx = width;
+    ret.cy = height;
+    return ret;
+}
+
+static PRBool IsFrameRTL(nsIFrame *frame)
+{
+  return frame->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
 }
 
 void
@@ -389,6 +540,20 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
         mTreeViewTheme = openTheme(NULL, L"Listview");
       return mTreeViewTheme;
     }
+    case NS_THEME_MENUBAR:
+    case NS_THEME_MENUPOPUP:
+    case NS_THEME_MENUITEM:
+    case NS_THEME_CHECKMENUITEM:
+    case NS_THEME_RADIOMENUITEM:
+    case NS_THEME_MENUCHECKBOX:
+    case NS_THEME_MENURADIO:
+    case NS_THEME_MENUSEPARATOR:
+    case NS_THEME_MENUARROW:
+    case NS_THEME_MENUIMAGE:
+    case NS_THEME_MENUITEMTEXT:
+      if (!mMenuTheme)
+        mMenuTheme = openTheme(NULL, L"Menu");
+      return mMenuTheme;
   }
   return NULL;
 }
@@ -816,6 +981,89 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
 
       return NS_OK;
     }
+    case NS_THEME_MENUPOPUP: {
+      aPart = MENU_POPUPBACKGROUND;
+      aState = MB_ACTIVE;
+      return NS_OK;
+    }
+    case NS_THEME_MENUITEM:
+    case NS_THEME_CHECKMENUITEM: 
+    case NS_THEME_RADIOMENUITEM: {
+      PRBool isTopLevel = PR_FALSE;
+      PRBool isOpen = PR_FALSE;
+      PRBool isHover = PR_FALSE;
+      nsIMenuFrame *menuFrame;
+      CallQueryInterface(aFrame, &menuFrame);
+
+      isTopLevel = IsTopLevelMenu(aFrame);
+
+      if (menuFrame)
+        isOpen = menuFrame->IsOpen();
+      isHover = CheckBooleanAttr(aFrame, nsWidgetAtoms::mozmenuactive);
+
+      if (isTopLevel) {
+        aPart = MENU_BARITEM;
+
+        if (isOpen)
+          aState = MBI_PUSHED;
+        else if (isHover)
+          aState = MBI_HOT;
+        else
+          aState = MBI_NORMAL;
+
+        // the disabled states are offset by 3
+        if (IsDisabled(aFrame))
+          aState += 3;
+      } else {
+        aPart = MENU_POPUPITEM;
+
+        if (isHover)
+          aState = MPI_HOT;
+        else
+          aState = MPI_NORMAL;
+
+        // the disabled states are offset by 2
+        if (IsDisabled(aFrame))
+          aState += 2;
+      }
+
+      return NS_OK;
+    }
+    case NS_THEME_MENUSEPARATOR:
+      aPart = MENU_POPUPSEPARATOR;
+      aState = 0;
+      return NS_OK;
+    case NS_THEME_MENUARROW:
+      aPart = MENU_POPUPSUBMENU;
+      aState = IsDisabled(aFrame) ? MSM_DISABLED : MSM_NORMAL;
+      return NS_OK;
+    case NS_THEME_MENUCHECKBOX:
+    case NS_THEME_MENURADIO:
+      {
+        PRBool isChecked;
+        PRBool isDisabled;
+
+        isChecked = CheckBooleanAttr(aFrame, nsWidgetAtoms::checked);
+        isDisabled = CheckBooleanAttr(aFrame, nsWidgetAtoms::disabled);
+
+        aPart = MENU_POPUPCHECK;
+        aState = MC_CHECKMARKNORMAL;
+
+        // Radio states are offset by 2
+        if (aWidgetType == NS_THEME_MENURADIO)
+          aState += 2;
+
+        // the disabled states are offset by 1
+        if (isDisabled)
+          aState += 1;
+
+        return NS_OK;
+      }
+    case NS_THEME_MENUITEMTEXT:
+    case NS_THEME_MENUIMAGE:
+      aPart = -1;
+      aState = 0;
+      return NS_OK;
   }
 
   aPart = 0;
@@ -926,6 +1174,65 @@ RENDER_AGAIN:
 
     drawThemeBG(theme, hdc, part, state, &contentRect, &clipRect);
   }
+  else if (aWidgetType == NS_THEME_MENUCHECKBOX || aWidgetType == NS_THEME_MENURADIO)
+  {
+      PRBool isChecked = PR_FALSE;
+      isChecked = CheckBooleanAttr(aFrame, nsWidgetAtoms::checked);
+
+      if (isChecked)
+      {
+        int bgState = MCB_NORMAL;
+        PRBool isDisabled = IsDisabled(aFrame);
+
+        // the disabled states are offset by 1
+        if (isDisabled)
+          bgState += 1;
+
+        SIZE checkboxSize(GetCheckboxSize(theme,hdc));
+
+        RECT checkRect = widgetRect;
+        checkRect.right = checkRect.left+checkboxSize.cx;
+
+        // Center the checkbox vertically in the menuitem
+        checkRect.top += (checkRect.bottom - checkRect.top)/2 - checkboxSize.cy/2;
+        checkRect.bottom = checkRect.top + checkboxSize.cy;
+
+        drawThemeBG(theme, hdc, MENU_POPUPCHECKBACKGROUND, bgState, &checkRect, &clipRect);
+        drawThemeBG(theme, hdc, MENU_POPUPCHECK, state, &checkRect, &clipRect);
+      }
+  }
+  else if (aWidgetType == NS_THEME_MENUPOPUP)
+  {
+    drawThemeBG(theme, hdc, MENU_POPUPBORDERS, /* state */ 0, &widgetRect, &clipRect);
+    SIZE borderSize;
+    getThemePartSize(theme, hdc, MENU_POPUPBORDERS, 0, NULL, TS_TRUE, &borderSize);
+
+    RECT bgRect = widgetRect;
+    bgRect.top += borderSize.cy;
+    bgRect.bottom -= borderSize.cy;
+    bgRect.left += borderSize.cx;
+    bgRect.right -= borderSize.cx;
+
+    drawThemeBG(theme, hdc, MENU_POPUPBACKGROUND, /* state */ 0, &bgRect, &clipRect);
+
+    SIZE gutterSize(GetGutterSize(theme, hdc));
+
+    RECT gutterRect;
+    gutterRect.top = bgRect.top;
+    gutterRect.bottom = bgRect.bottom;
+    gutterRect.left = bgRect.left;
+    gutterRect.right = gutterRect.left+gutterSize.cx;
+    drawThemeBG(theme, hdc, MENU_POPUPGUTTER, /* state */ 0, &gutterRect, &clipRect);
+  }
+  else if (aWidgetType == NS_THEME_MENUSEPARATOR)
+  {
+    SIZE gutterSize(GetGutterSize(theme,hdc));
+
+    RECT sepRect = widgetRect;
+    sepRect.left += gutterSize.cx;
+    
+    drawThemeBG(theme, hdc, MENU_POPUPSEPARATOR, /* state */ 0, &sepRect, &clipRect);
+  }
   // If part is negative, the element wishes us to not render a themed
   // background, instead opting to be drawn specially below.
   else if (part >= 0) {
@@ -991,7 +1298,10 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
       aWidgetType == NS_THEME_STATUSBAR || 
       aWidgetType == NS_THEME_RESIZER || aWidgetType == NS_THEME_TAB_PANEL ||
       aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL ||
-      aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL)
+      aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL ||
+      aWidgetType == NS_THEME_MENUITEM || aWidgetType == NS_THEME_CHECKMENUITEM ||
+      aWidgetType == NS_THEME_RADIOMENUITEM || aWidgetType == NS_THEME_MENUPOPUP ||
+      aWidgetType == NS_THEME_MENUIMAGE || aWidgetType == NS_THEME_MENUITEMTEXT)
     return NS_OK; // Don't worry about it.
 
   if (!getThemeContentRect)
@@ -1055,7 +1365,69 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
                                    PRUint8 aWidgetType,
                                    nsMargin* aResult)
 {
-  return PR_FALSE;
+  HANDLE theme = GetTheme(aWidgetType);
+  if (!theme && aWidgetType != NS_THEME_MENUITEMTEXT)
+    return PR_FALSE;
+
+  if (aWidgetType == NS_THEME_MENUPOPUP)
+  {
+    SIZE popupSize;
+    getThemePartSize(theme, NULL, MENU_POPUPBORDERS, /* state */ 0, NULL, TS_TRUE, &popupSize);
+    aResult->top = aResult->bottom = popupSize.cy;
+    aResult->left = aResult->right = popupSize.cx;
+    return PR_TRUE;
+  }
+
+  PRInt32 right, left, top, bottom;
+  right = left = top = bottom = 0;
+  switch (aWidgetType)
+  {
+    case NS_THEME_MENUIMAGE:
+        right = 9;
+        left = 3;
+        break;
+    case NS_THEME_MENUCHECKBOX:
+    case NS_THEME_MENURADIO:
+        right = 11;
+        left = 0;
+        break;
+    case NS_THEME_MENUITEMTEXT:
+        if (!theme)
+        {
+          left = 16;
+        }
+        else
+        {
+          // There seem to be exactly 4 pixels from the edge
+          // of the gutter to the text
+          SIZE size(GetGutterSize(theme, NULL));
+          left = size.cx + 4;
+        }
+        break;
+    case NS_THEME_MENUSEPARATOR:
+        {
+          SIZE size(GetGutterSize(theme, NULL));
+          left = size.cx + 5;
+          top = 10;
+          bottom = 7;
+        }
+        break;
+    default:
+        return PR_FALSE;
+  }
+
+  if (IsFrameRTL(aFrame))
+  {
+    aResult->right = left;
+    aResult->left = right;
+  }
+  else
+  {
+    aResult->right = right;
+    aResult->left = left;
+  }
+  
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
@@ -1069,13 +1441,16 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
   HANDLE theme = GetTheme(aWidgetType);
   if (!theme)
     return ClassicGetMinimumWidgetSize(aContext, aFrame, aWidgetType, aResult, aIsOverridable);
- 
+
   if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR || 
       aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
       aWidgetType == NS_THEME_TAB_PANELS || aWidgetType == NS_THEME_TAB_PANEL ||
-      aWidgetType == NS_THEME_LISTBOX || aWidgetType == NS_THEME_TREEVIEW)
+      aWidgetType == NS_THEME_LISTBOX || aWidgetType == NS_THEME_TREEVIEW || aWidgetType == NS_THEME_MENUITEMTEXT)
     return NS_OK; // Don't worry about it.
+
+  if (aWidgetType == NS_THEME_MENUITEM && IsTopLevelMenu(aFrame))
+      return NS_OK; // Don't worry about it for top level menus
 
   if (!getThemePartSize)
     return NS_ERROR_FAILURE;
@@ -1094,6 +1469,33 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_DROPDOWN_BUTTON: 
       return ClassicGetMinimumWidgetSize(aContext, aFrame, aWidgetType, aResult, aIsOverridable);
+    case NS_THEME_MENUITEM:
+    case NS_THEME_CHECKMENUITEM:
+    case NS_THEME_RADIOMENUITEM:
+      if(!IsTopLevelMenu(aFrame))
+      {
+        SIZE gutterSize(GetGutterSize(theme, NULL));
+        aResult->width = gutterSize.cx;
+        aResult->height = gutterSize.cy;
+        return NS_OK;
+      }
+      break;
+    case NS_THEME_MENUIMAGE:
+      aResult->width = 1;
+    case NS_THEME_MENUCHECKBOX:
+    case NS_THEME_MENURADIO:
+      {
+        SIZE boxSize(GetGutterSize(theme, NULL));
+        aResult->width += boxSize.cx+2;
+        aResult->height = boxSize.cy;
+        *aIsOverridable = PR_FALSE;
+      }
+    case NS_THEME_MENUITEMTEXT:
+      return NS_OK;
+    case NS_THEME_MENUARROW:
+      aResult->width = 26;
+      aResult->height = 16;
+      return NS_OK;
   }
 
   if (aWidgetType == NS_THEME_SCALE_THUMB_HORIZONTAL ||
@@ -1128,7 +1530,11 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
     aResult->width++;
     aResult->height = aResult->height / 2 + 1;
   }
-
+  else if (aWidgetType == NS_THEME_MENUSEPARATOR)
+  {
+    SIZE gutterSize(GetGutterSize(theme,hdc));
+    aResult->width += gutterSize.cx;
+  }
   return NS_OK;
 }
 
@@ -1234,6 +1640,10 @@ nsNativeThemeWin::CloseData()
     closeTheme(mHeaderTheme);
     mHeaderTheme = NULL;
   }
+  if (mMenuTheme) {
+    closeTheme(mMenuTheme);
+    mMenuTheme = NULL;
+  }
 }
 
 NS_IMETHODIMP
@@ -1249,6 +1659,8 @@ nsNativeThemeWin::ThemeSupportsWidget(nsPresContext* aPresContext,
                                       nsIFrame* aFrame,
                                       PRUint8 aWidgetType)
 {
+  if (gfxPlatform::UseGlitz())
+    return PR_FALSE;
   // XXXdwh We can go even further and call the API to ask if support exists for
   // specific widgets.
 
@@ -1352,6 +1764,8 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
     case NS_THEME_MENUCHECKBOX:
     case NS_THEME_MENURADIO:
     case NS_THEME_MENUARROW:
+    case NS_THEME_MENUSEPARATOR:
+    case NS_THEME_MENUITEMTEXT:
       return PR_TRUE;
   }
   return PR_FALSE;
@@ -1542,6 +1956,12 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
       break;
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
       (*aResult).width = ::GetSystemMetrics(SM_CXHTHUMB) << 1;
+      break;
+    }
+    case NS_THEME_MENUSEPARATOR:
+    {
+      aResult->width = 0;
+      aResult->height = 10;
       break;
     }
     default:
@@ -1803,6 +2223,10 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
     case NS_THEME_RESIZER:    
       aPart = DFC_SCROLL;
       aState = DFCS_SCROLLSIZEGRIP;
+      return NS_OK;
+    case NS_THEME_MENUSEPARATOR:
+      aPart = 0;
+      aState = 0;
       return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -2255,6 +2679,21 @@ RENDER_AGAIN:
         DrawMenuImage(hdc, widgetRect, 
                       (state & DFCS_RTL) ? DFCS_MENUARROWRIGHT : DFCS_MENUARROW,
                       color);
+      break;
+    }
+    case NS_THEME_MENUSEPARATOR: {
+      // separators are offset by a bit (see menu.css)
+      widgetRect.left++;
+      widgetRect.right--;
+
+      // This magic number is brought to you by the value in menu.css
+      widgetRect.top += 4;
+      // Our rectangles are 1 pixel high (see border size in menu.css)
+      widgetRect.bottom = widgetRect.top+1;
+      ::FillRect(hdc, &widgetRect, (HBRUSH)(COLOR_3DSHADOW+1));
+      widgetRect.top++;
+      widgetRect.bottom++;
+      ::FillRect(hdc, &widgetRect, (HBRUSH)(COLOR_3DHILIGHT+1));
       break;
     }
 #endif

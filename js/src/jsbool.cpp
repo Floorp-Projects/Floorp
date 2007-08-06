@@ -66,78 +66,57 @@ JSClass js_BooleanClass = {
 #include "jsprf.h"
 
 static JSBool
-bool_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval)
+bool_toSource(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval v;
     char buf[32];
     JSString *str;
 
-    if (JSVAL_IS_BOOLEAN((jsval)obj)) {
-        v = (jsval)obj;
-    } else {
-        if (!JS_InstanceOf(cx, obj, &js_BooleanClass, argv))
-            return JS_FALSE;
-        v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
-        if (!JSVAL_IS_BOOLEAN(v))
-            return js_obj_toSource(cx, obj, argc, argv, rval);
-    }
+    if (!js_GetPrimitiveThis(cx, vp, &js_BooleanClass, &v))
+        return JS_FALSE;
+    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
     JS_snprintf(buf, sizeof buf, "(new %s(%s))",
                 js_BooleanClass.name,
                 js_boolean_strs[JSVAL_TO_BOOLEAN(v) ? 1 : 0]);
     str = JS_NewStringCopyZ(cx, buf);
     if (!str)
         return JS_FALSE;
-    *rval = STRING_TO_JSVAL(str);
+    *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
 #endif
 
 static JSBool
-bool_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-              jsval *rval)
+bool_toString(JSContext *cx, uintN argc, jsval *vp)
 {
     jsval v;
     JSAtom *atom;
     JSString *str;
 
-    if (JSVAL_IS_BOOLEAN((jsval)obj)) {
-        v = (jsval)obj;
-    } else {
-        if (!JS_InstanceOf(cx, obj, &js_BooleanClass, argv))
-            return JS_FALSE;
-        v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
-        if (!JSVAL_IS_BOOLEAN(v))
-            return js_obj_toString(cx, obj, argc, argv, rval);
-    }
+    if (!js_GetPrimitiveThis(cx, vp, &js_BooleanClass, &v))
+        return JS_FALSE;
+    JS_ASSERT(JSVAL_IS_BOOLEAN(v));
     atom = cx->runtime->atomState.booleanAtoms[JSVAL_TO_BOOLEAN(v) ? 1 : 0];
     str = ATOM_TO_STRING(atom);
     if (!str)
         return JS_FALSE;
-    *rval = STRING_TO_JSVAL(str);
+    *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
 
 static JSBool
-bool_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+bool_valueOf(JSContext *cx, uintN argc, jsval *vp)
 {
-    if (JSVAL_IS_BOOLEAN((jsval)obj)) {
-        *rval = (jsval)obj;
-        return JS_TRUE;
-    }
-    if (!JS_InstanceOf(cx, obj, &js_BooleanClass, argv))
-        return JS_FALSE;
-    *rval = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
-    return JS_TRUE;
+    return js_GetPrimitiveThis(cx, vp, &js_BooleanClass, vp);
 }
 
 static JSFunctionSpec boolean_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   bool_toSource,          0,JSFUN_THISP_BOOLEAN,0},
+    JS_FN(js_toSource_str,  bool_toSource,  0, 0, JSFUN_THISP_BOOLEAN,0),
 #endif
-    {js_toString_str,   bool_toString,          0,JSFUN_THISP_BOOLEAN,0},
-    {js_valueOf_str,    bool_valueOf,           0,JSFUN_THISP_BOOLEAN,0},
-    {0,0,0,0,0}
+    JS_FN(js_toString_str,  bool_toString,  0, 0, JSFUN_THISP_BOOLEAN,0),
+    JS_FN(js_valueOf_str,   bool_valueOf,   0, 0, JSFUN_THISP_BOOLEAN,0),
+    JS_FS_END
 };
 
 static JSBool

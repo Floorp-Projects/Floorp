@@ -1,4 +1,4 @@
-//* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+//* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -38,6 +38,69 @@
 
 #include "nsIEffectiveTLDService.h"
 
+#include "nsTHashtable.h"
+#include "nsString.h"
+#include "nsCOMPtr.h"
+
+class nsIIDNService;
+class nsIFile;
+
+// hash entry class
+class nsDomainEntry : public PLDHashEntryHdr
+{
+public:
+  // Hash methods
+  typedef const char* KeyType;
+  typedef const char* KeyTypePointer;
+
+  nsDomainEntry(const char* aDomain);
+
+  nsDomainEntry(const nsDomainEntry& toCopy)
+  {
+    // if we end up here, things will break. nsTHashtable shouldn't
+    // allow this, since we set ALLOW_MEMMOVE to true.
+    NS_NOTREACHED("nsDomainEntry copy constructor is forbidden!");
+  }
+
+  ~nsDomainEntry()
+  {
+  }
+
+  KeyType GetKey() const
+  {
+    return mDomain;
+  }
+
+  PRBool KeyEquals(KeyTypePointer aKey) const
+  {
+    return !strcmp(mDomain, aKey);
+  }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey)
+  {
+    return aKey;
+  }
+
+  static PLDHashNumber HashKey(KeyTypePointer aKey)
+  {
+    // PL_DHashStringKey doesn't use the table parameter, so we can safely
+    // pass nsnull
+    return PL_DHashStringKey(nsnull, aKey);
+  }
+
+  enum { ALLOW_MEMMOVE = PR_TRUE };
+
+  PRPackedBool& IsNormal()    { return mIsNormal; }
+  PRPackedBool& IsException() { return mIsException; }
+  PRPackedBool& IsWild()      { return mIsWild; }
+
+private:
+  const char   *mDomain;
+  PRPackedBool  mIsNormal;
+  PRPackedBool  mIsException;
+  PRPackedBool  mIsWild;
+};
+
 class nsEffectiveTLDService : public nsIEffectiveTLDService
 {
 public:
@@ -48,6 +111,13 @@ public:
   nsresult Init();
 
 private:
-  static nsEffectiveTLDService* sInstance;
-  ~nsEffectiveTLDService();
+  nsresult NormalizeHostname(nsCString &aHostname);
+  nsresult AddEffectiveTLDEntry(nsCString &aDomainName);
+  nsresult LoadEffectiveTLDFiles();
+  nsresult LoadOneEffectiveTLDFile(nsCOMPtr<nsIFile>& effTLDFile);
+
+  virtual ~nsEffectiveTLDService();
+
+  nsTHashtable<nsDomainEntry> mHash;
+  nsCOMPtr<nsIIDNService>     mIDNService;
 };

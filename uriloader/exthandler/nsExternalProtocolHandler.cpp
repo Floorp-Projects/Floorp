@@ -188,10 +188,7 @@ nsresult nsExtProtocolChannel::OpenURL()
     NS_ASSERTION(haveHandler, "Why do we have a channel for this url if we don't support the protocol?");
 #endif
 
-    // get an nsIPrompt from the channel if we can
-    nsCOMPtr<nsIPrompt> prompt;
-    NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, prompt);
-    rv = extProtService->LoadURI(mUrl, prompt);
+    rv = extProtService->LoadURI(mUrl, mCallbacks);
   }
 
   // Drop notification callbacks to prevent cycles.
@@ -346,14 +343,26 @@ NS_IMETHODIMP nsExtProtocolChannel::AsyncOpen(nsIStreamListener *listener, nsISu
   nsCOMPtr<nsIHandlerInfo> handlerInfo;
   rv = gExtProtSvc->GetProtocolHandlerInfo(urlScheme, 
                                            getter_AddRefs(handlerInfo));
+  // TODO all this code should be moved to nsIHandlerInfo::LaunchWithURI
   if (NS_SUCCEEDED(rv)) {
     PRInt32 preferredAction;                                           
     rv = handlerInfo->GetPreferredAction(&preferredAction);
 
-    // for now, anything that triggers a helper app is going to be a web-based
-    // protocol handler, so we use that to decide which path to take...
     if (preferredAction == nsIHandlerInfo::useHelperApp) {
 
+      nsCOMPtr<nsIHandlerApp> handler;
+      rv = handlerInfo->GetPreferredApplicationHandler(getter_AddRefs(handler));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Now we check to see if this is a local handler or not
+      nsCOMPtr<nsILocalHandlerApp> localHandler =
+        do_QueryInterface(handler, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        OpenURL();
+        return NS_ERROR_NO_CONTENT; // force caller to abort
+      }
+
+      // We must have a web handler
       // redirecting to the web handler involves calling OnChannelRedirect
       // (which is supposed to happen after AsyncOpen completes) or possibly
       // opening a dialog, so we do it in an event
@@ -565,7 +574,7 @@ NS_IMETHODIMP nsExternalProtocolHandler::GetProtocolFlags(PRUint32 *aUritype)
 {
     // Make it norelative since it is a simple uri
     *aUritype = URI_NORELATIVE | URI_NOAUTH | URI_LOADABLE_BY_ANYONE |
-        URI_NON_PERSISTABLE;
+        URI_NON_PERSISTABLE | URI_DOES_NOT_RETURN_DATA;
     return NS_OK;
 }
 
@@ -587,8 +596,10 @@ NS_IMETHODIMP nsExternalProtocolHandler::NewURI(const nsACString &aSpec,
 
 NS_IMETHODIMP nsExternalProtocolHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval)
 {
-  // only try to return a channel if we have a protocol handler for the url
-
+  // Only try to return a channel if we have a protocol handler for the url.
+  // nsOSHelperAppService::LoadUriInternal relies on this to check trustedness
+  // for some platforms at least.  (win uses ::ShellExecute and unix uses
+  // gnome_url_show.)
   PRBool haveExternalHandler = HaveExternalProtocolHandler(aURI);
   if (haveExternalHandler)
   {

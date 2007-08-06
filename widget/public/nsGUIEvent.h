@@ -335,6 +335,15 @@ class nsHashKey;
 #define NS_XULCOMMAND_EVENT_START       3000
 #define NS_XUL_COMMAND                  (NS_XULCOMMAND_EVENT_START)
 
+// Cut, copy, paste events
+#define NS_CUTCOPYPASTE_EVENT_START     3100
+#define NS_COPY             (NS_CUTCOPYPASTE_EVENT_START)
+#define NS_CUT              (NS_CUTCOPYPASTE_EVENT_START + 1)
+#define NS_PASTE            (NS_CUTCOPYPASTE_EVENT_START + 2)
+#define NS_BEFORECOPY       (NS_CUTCOPYPASTE_EVENT_START + 3)
+#define NS_BEFORECUT        (NS_CUTCOPYPASTE_EVENT_START + 4)
+#define NS_BEFOREPASTE      (NS_CUTCOPYPASTE_EVENT_START + 5)
+
 /**
  * Return status for event processors, nsEventStatus, is defined in
  * nsEvent.h.

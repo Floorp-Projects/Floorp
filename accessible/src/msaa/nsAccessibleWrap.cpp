@@ -434,13 +434,6 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
   NS_ASSERTION(gWindowsRoleMap[nsIAccessibleRole::ROLE_LAST_ENTRY].msaaRole == ROLE_WINDOWS_LAST_ENTRY,
                "MSAA role map skewed");
 
-  // Special case, not a great place for this, but it's better than adding extra role buttonmenu role to ARIA
-  // Other APIs do not have a special role for this.
-  // Really the HASPOPUP state should have been enough for MSAA, but this avoids asking vendors for a fix.
-  if (msaaRole == ROLE_SYSTEM_PUSHBUTTON && (State(xpAccessible) & nsIAccessibleStates::STATE_HASPOPUP)) {
-    msaaRole = ROLE_SYSTEM_BUTTONMENU;
-  }
-  
   // Special case, if there is a ROLE_ROW inside of a ROLE_TREE_TABLE, then call the MSAA role
   // a ROLE_OUTLINEITEM for consistency and compatibility.
   // We need this because ARIA has a role of "row" for both grid and treegrid
@@ -1409,7 +1402,7 @@ nsAccessibleWrap::get_attributes(BSTR *aAttributes)
 
     offset = 0;
     while ((offset = value.FindCharInSet(kCharsToEscape, offset)) != kNotFound) {
-      name.Insert('\\', offset);
+      value.Insert('\\', offset);
       offset += 2;
     }
 
@@ -1719,3 +1712,13 @@ void nsAccessibleWrap::UpdateSystemCaret()
   }
 }
 
+PRBool nsAccessibleWrap::MustPrune(nsIAccessible *aAccessible)
+{ 
+  PRUint32 role = Role(aAccessible);
+  return role == nsIAccessibleRole::ROLE_MENUITEM || 
+         role == nsIAccessibleRole::ROLE_ENTRY ||
+         role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
+         role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
+         role == nsIAccessibleRole::ROLE_TOGGLE_BUTTON ||
+         role == nsIAccessibleRole::ROLE_GRAPHIC;
+}

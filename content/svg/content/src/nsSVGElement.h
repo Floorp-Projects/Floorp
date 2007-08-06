@@ -48,6 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMSVGElement.h"
 #include "nsGenericElement.h"
+#include "nsStyledElement.h"
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
@@ -57,7 +58,9 @@ class nsSVGSVGElement;
 class nsSVGLength2;
 class nsSVGNumber2;
 
-class nsSVGElement : public nsGenericElement,    // nsIContent
+typedef nsStyledElement nsSVGElementBase;
+
+class nsSVGElement : public nsSVGElementBase,    // nsIContent
                      public nsISVGValueObserver  // :nsISupportsWeakReference
 {
 protected:
@@ -71,16 +74,12 @@ public:
 
   // nsIContent interface methods
 
-  virtual nsIAtom *GetIDAttributeName() const;
-  virtual nsIAtom *GetClassAttributeName() const;
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 
   virtual PRBool IsNodeOfType(PRUint32 aFlags) const;
 
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-  NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify);
-  virtual nsICSSStyleRule* GetInlineStyleRule();
 
   static const MappedAttributeEntry sFillStrokeMap[];
   static const MappedAttributeEntry sGraphicsMap[];
@@ -92,9 +91,11 @@ public:
   static const MappedAttributeEntry sColorMap[];
   static const MappedAttributeEntry sFiltersMap[];
   static const MappedAttributeEntry sFEFloodMap[];
-  
+  static const MappedAttributeEntry sLightingEffectsMap[];
+
   // nsIDOMNode
-  NS_IMETHOD IsSupported(const nsAString& aFeature, const nsAString& aVersion, PRBool* aReturn);
+  NS_IMETHOD IsSupported(const nsAString& aFeature, const nsAString& aVersion,
+                         PRBool* aReturn);
   
   // nsIDOMSVGElement
   NS_IMETHOD GetId(nsAString & aId);
@@ -217,6 +218,5 @@ NS_NewSVG##_elementName##Element(nsIContent **aResult,                       \
                                                                              \
   return rv;                                                                 \
 }
-
 
 #endif // __NS_SVGELEMENT_H__

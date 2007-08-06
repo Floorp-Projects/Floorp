@@ -45,7 +45,7 @@
    object. For that XBL binding of element should implement the interface.
  */
 
-[scriptable, uuid(7250d0f0-732d-4981-b73e-dd5d71b16183)]
+[scriptable, uuid(3f7f9194-c625-4a85-8148-6d92d34897fa)]
 interface nsIAccessibleProvider : nsISupports
 {
   /**
@@ -69,37 +69,39 @@ interface nsIAccessibleProvider : nsISupports
   const long XULDropmarker = 0x00001007;
   const long XULGroupbox = 0x00001008;
   const long XULImage = 0x00001009;
-  const long XULLink = 0x00001010;
-  const long XULListbox = 0x00001011;
-  const long XULListitem = 0x00001012;
-  const long XULMenubar = 0x00001013;
-  const long XULMenuitem = 0x00001014;
-  const long XULMenupopup = 0x00001015;
-  const long XULMenuSeparator = 0x00001016;
-  const long XULProgressMeter = 0x00001017;
-  const long XULStatusBar = 0x00001018;
-  const long XULRadioButton = 0x00001019;
-  const long XULRadioGroup = 0x00001020;
+  const long XULLink = 0x0000100A;
+  const long XULListbox = 0x0000100B;
+  const long XULListitem = 0x0000100C;
+  const long XULMenubar = 0x0000100D;
+  const long XULMenuitem = 0x0000100E;
+  const long XULMenupopup = 0x0000100F;
+  const long XULMenuSeparator = 0x00001010;
+  const long XULProgressMeter = 0x00001011;
+  const long XULScale = 0x00001012;
+  const long XULStatusBar = 0x00001013;
+  const long XULRadioButton = 0x00001014;
+  const long XULRadioGroup = 0x00001015;
 
   /** The single tab in a dialog or tabbrowser/editor interface */
-  const long XULTab = 0x00001021;
+  const long XULTab = 0x00001016;
 
   /** A combination of a tabs object and a tabpanels object */
-  const long XULTabBox = 0x00001022;
+  const long XULTabBox = 0x00001017;
 
   /** The collection of tab objects, useable in the TabBox and independant of
    as well */
-  const long XULTabs = 0x00001023;
+  const long XULTabs = 0x00001018;
 
-  const long XULText             = 0x00001024;
-  const long XULTextBox          = 0x00001025;
-  const long XULTree             = 0x00001026;
-  const long XULTreeColumns      = 0x00001027;
-  const long XULTreeColumnitem   = 0x00001028;
-  const long XULToolbar          = 0x00001029;
-  const long XULToolbarSeparator = 0x00001030;
-  const long XULTooltip          = 0x00001031;
-  const long XULToolbarButton    = 0x00001032;
+  const long XULText             = 0x00001019;
+  const long XULTextBox          = 0x0000101A;
+  const long XULThumb            = 0x0000101B;
+  const long XULTree             = 0x0000101C;
+  const long XULTreeColumns      = 0x0000101D;
+  const long XULTreeColumnitem   = 0x0000101E;
+  const long XULToolbar          = 0x0000101F;
+  const long XULToolbarSeparator = 0x00001020;
+  const long XULTooltip          = 0x00001021;
+  const long XULToolbarButton    = 0x00001022;
 
 
   /**

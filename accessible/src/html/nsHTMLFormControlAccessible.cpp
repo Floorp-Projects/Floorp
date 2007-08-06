@@ -51,6 +51,9 @@
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsISelectionController.h"
+#include "jsapi.h"
+#include "nsIJSContextStack.h"
+#include "nsIServiceManager.h"
 #include "nsITextControlFrame.h"
 
 // --- checkbox -----
@@ -286,8 +289,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& aName)
       nsIFrame* frame = GetFrame();
       if (frame) {
         nsIFormControlFrame* fcFrame;
-        frame->QueryInterface(NS_GET_IID(nsIFormControlFrame),
-                              (void**) &fcFrame);
+        CallQueryInterface(frame, &fcFrame);
         if (fcFrame)
           fcFrame->GetFormProperty(nsAccessibilityAtoms::defaultLabel, name);
       }
@@ -381,10 +383,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::Init()
 
 NS_IMETHODIMP nsHTMLTextFieldAccessible::Shutdown()
 {
-  if (mEditor) {
-    mEditor->RemoveEditActionListener(this);
-    mEditor = nsnull;
-  }
+  mEditor = nsnull;
   return nsHyperTextAccessibleWrap::Shutdown();
 }
 
@@ -546,8 +545,6 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::DoAction(PRUint8 index)
 void nsHTMLTextFieldAccessible::SetEditor(nsIEditor* aEditor)
 {
   mEditor = aEditor;
-  if (mEditor)
-    mEditor->AddEditActionListener(this);
 }
 
 void nsHTMLTextFieldAccessible::CheckForEditor()
@@ -557,10 +554,23 @@ void nsHTMLTextFieldAccessible::CheckForEditor()
     return;
   }
 
+  // nsGenericHTMLElement::GetEditor has a security check.
+  // Make sure we're not restricted by the permissions of
+  // whatever script is currently running.
+  nsCOMPtr<nsIJSContextStack> stack =
+    do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+  PRBool pushed = stack && NS_SUCCEEDED(stack->Push(nsnull));
+
   nsCOMPtr<nsIEditor> editor;
   nsresult rv = editableElt->GetEditor(getter_AddRefs(editor));
   if (NS_SUCCEEDED(rv)) {
     SetEditor(editor);
+  }
+
+  if (pushed) {
+    JSContext* cx;
+    stack->Pop(&cx);
+    NS_ASSERTION(!cx, "context should be null");
   }
 }
 

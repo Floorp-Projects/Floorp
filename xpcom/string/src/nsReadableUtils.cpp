@@ -897,6 +897,62 @@ FindInReadable_Impl( const StringT& aPattern, IteratorT& aSearchStart, IteratorT
     return found_it;
   }
 
+  /**
+   * This searches the entire string from right to left, and returns the first match found, if any.
+   */
+template <class StringT, class IteratorT, class Comparator>
+PRBool
+RFindInReadable_Impl( const StringT& aPattern, IteratorT& aSearchStart, IteratorT& aSearchEnd, const Comparator& compare )
+  {
+    IteratorT patternStart, patternEnd, searchEnd = aSearchEnd;
+    aPattern.BeginReading(patternStart);
+    aPattern.EndReading(patternEnd);
+
+      // Point to the last character in the pattern
+    --patternEnd;
+      // outer loop keeps searching till we run out of string to search
+    while ( aSearchStart != searchEnd )
+      {
+          // Point to the end position of the next possible match
+        --searchEnd;
+    
+          // Check last character, if a match, explore further from here
+        if ( compare(*patternEnd, *searchEnd) == 0 )
+          {  
+              // We're at a potential match, let's see if we really hit one
+            IteratorT testPattern(patternEnd);
+            IteratorT testSearch(searchEnd);
+
+              // inner loop verifies the potential match at the current position
+            do
+              {
+                  // if we verified all the way to the end of the pattern, then we found it!
+                if ( testPattern == patternStart )
+                  {
+                    aSearchStart = testSearch;  // point to start of match
+                    aSearchEnd = ++searchEnd;   // point to end of match
+                    return PR_TRUE;
+                  }
+    
+                  // if we got to end of the string we're searching before we hit the end of the
+                  //  pattern, we'll never find what we're looking for
+                if ( testSearch == aSearchStart )
+                  {
+                    aSearchStart = aSearchEnd;
+                    return PR_FALSE;
+                  }
+    
+                  // test previous character for a match
+                --testPattern;
+                --testSearch;
+              }
+            while ( compare(*testPattern, *testSearch) == 0 );
+          }
+      }
+
+    aSearchStart = aSearchEnd;
+    return PR_FALSE;
+  }
 
 NS_COM
 PRBool
@@ -919,75 +975,18 @@ CaseInsensitiveFindInReadable( const nsACString& aPattern, nsACString::const_ite
     return FindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, nsCaseInsensitiveCStringComparator());
   }
 
-  /**
-   * This implementation is simple, but does too much work.
-   * It searches the entire string from left to right, and returns the last match found, if any.
-   * This implementation will be replaced when I get |reverse_iterator|s working.
-   */
 NS_COM
 PRBool
 RFindInReadable( const nsAString& aPattern, nsAString::const_iterator& aSearchStart, nsAString::const_iterator& aSearchEnd, const nsStringComparator& aComparator)
   {
-    PRBool found_it = PR_FALSE;
-
-    nsAString::const_iterator savedSearchEnd(aSearchEnd);
-    nsAString::const_iterator searchStart(aSearchStart), searchEnd(aSearchEnd);
-
-    while ( searchStart != searchEnd )
-      {
-        if ( FindInReadable(aPattern, searchStart, searchEnd, aComparator) )
-          {
-            found_it = PR_TRUE;
-
-              // this is the best match so far, so remember it
-            aSearchStart = searchStart;
-            aSearchEnd = searchEnd;
-
-              // ...and get ready to search some more
-              //  (it's tempting to set |searchStart=searchEnd| ... but that misses overlapping patterns)
-            ++searchStart;
-            searchEnd = savedSearchEnd;
-          }
-      }
-
-      // if we never found it, return an empty range
-    if ( !found_it )
-      aSearchStart = aSearchEnd;
-
-    return found_it;
+    return RFindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, aComparator);
   }
 
 NS_COM
 PRBool
 RFindInReadable( const nsACString& aPattern, nsACString::const_iterator& aSearchStart, nsACString::const_iterator& aSearchEnd, const nsCStringComparator& aComparator)
   {
-    PRBool found_it = PR_FALSE;
-
-    nsACString::const_iterator savedSearchEnd(aSearchEnd);
-    nsACString::const_iterator searchStart(aSearchStart), searchEnd(aSearchEnd);
-
-    while ( searchStart != searchEnd )
-      {
-        if ( FindInReadable(aPattern, searchStart, searchEnd, aComparator) )
-          {
-            found_it = PR_TRUE;
-
-              // this is the best match so far, so remember it
-            aSearchStart = searchStart;
-            aSearchEnd = searchEnd;
-
-              // ...and get ready to search some more
-              //  (it's tempting to set |searchStart=searchEnd| ... but that misses overlapping patterns)
-            ++searchStart;
-            searchEnd = savedSearchEnd;
-          }
-      }
-
-      // if we never found it, return an empty range
-    if ( !found_it )
-      aSearchStart = aSearchEnd;
-
-    return found_it;
+    return RFindInReadable_Impl(aPattern, aSearchStart, aSearchEnd, aComparator);
   }
 
 NS_COM 

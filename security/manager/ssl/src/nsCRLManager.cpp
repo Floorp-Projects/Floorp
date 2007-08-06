@@ -188,7 +188,7 @@ done:
       nsCOMPtr<nsIPrompt> prompter;
       if (wwatch){
         wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
-        nssComponent->GetPIPNSSBundleString("CrlImportFailure1", message);
+        nssComponent->GetPIPNSSBundleString("CrlImportFailure1x", message);
         message.Append(NS_LITERAL_STRING("\n").get());
         message.Append(errorMessage);
         nssComponent->GetPIPNSSBundleString("CrlImportFailure2", temp);

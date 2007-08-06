@@ -67,6 +67,7 @@
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
 #include "nsDisplayList.h"
+#include "nsCSSRendering.h"
 
 class nsDisplayTextDecoration : public nsDisplayItem {
 public:
@@ -117,13 +118,16 @@ nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
   if (mDecoration != NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
     fm->GetUnderline(offset, size);
     if (mDecoration == NS_STYLE_TEXT_DECORATION_UNDERLINE) {
-      f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, offset, ascent, size);
+      f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor,
+                                 offset, ascent, size, mDecoration);
     } else if (mDecoration == NS_STYLE_TEXT_DECORATION_OVERLINE) {
-      f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, ascent, ascent, size);
+      f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor,
+                                 ascent, ascent, size, mDecoration);
     }
   } else {
     fm->GetStrikeout(offset, size);
-    f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor, offset, ascent, size);
+    f->PaintTextDecorationLine(*aCtx, pt, mLine, mColor,
+                               offset, ascent, size, mDecoration);
   }
 }
 
@@ -203,7 +207,8 @@ nsHTMLContainerFrame::PaintTextDecorationLine(
                    nscolor aColor, 
                    nscoord aOffset, 
                    nscoord aAscent, 
-                   nscoord aSize) 
+                   nscoord aSize,
+                   const PRUint8 aDecoration) 
 {
   NS_ASSERTION(!aLine, "Should not have passed a linebox to a non-block frame");
   nsMargin bp = GetUsedBorderAndPadding();
@@ -213,10 +218,17 @@ nsHTMLContainerFrame::PaintTextDecorationLine(
       bp.side(side) = 0;
     }
   }
-  aRenderingContext.SetColor(aColor);
+  const nsStyleVisibility* visibility = GetStyleVisibility();
+  PRBool isRTL = visibility->mDirection == NS_STYLE_DIRECTION_RTL;
   nscoord innerWidth = mRect.width - bp.left - bp.right;
-  aRenderingContext.FillRect(bp.left + aPt.x, 
-                             bp.top + aAscent - aOffset + aPt.y, innerWidth, aSize);
+  nsRefPtr<gfxContext> ctx = (gfxContext*)
+    aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
+  gfxFloat a2p = 1.0 / PresContext()->AppUnitsPerDevPixel();
+  gfxPoint pt((bp.left + aPt.x) * a2p, (bp.top + aPt.y) * a2p);
+  gfxSize size(innerWidth * a2p, aSize * a2p);
+  nsCSSRendering::PaintDecorationLine(ctx, aColor, pt, size, aAscent * a2p,
+                                      aOffset * a2p, aSize * a2p, aDecoration,
+                                      NS_STYLE_BORDER_STYLE_SOLID, isRTL);
 }
 
 void

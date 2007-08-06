@@ -93,6 +93,7 @@ protected:
         PRPackedBool mIsDoubleByteText;
         PRPackedBool mIsRTL;
         PRPackedBool mEnabledOptionalLigatures;
+        PRPackedBool mOptimizeSpeed;
         
         CacheHashKey(gfxTextRun *aBaseTextRun, void *aFontOrGroup,
                      PRUint32 aStart, PRUint32 aLength, PRUint32 aHash)
@@ -102,7 +103,8 @@ protected:
               mStringHash(aHash),
               mIsDoubleByteText((aBaseTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) == 0),
               mIsRTL(aBaseTextRun->IsRightToLeft()),
-              mEnabledOptionalLigatures((aBaseTextRun->GetFlags() & gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES) == 0)
+              mEnabledOptionalLigatures((aBaseTextRun->GetFlags() & gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES) == 0),
+              mOptimizeSpeed((aBaseTextRun->GetFlags() & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED) != 0)
         {
         }
     };
@@ -586,7 +588,8 @@ TextRunWordCache::CacheHashEntry::KeyEquals(const KeyTypePointer aKey) const
         GetFontOrGroup(fontGroup, mHashedByFont) != aKey->mFontOrGroup ||
         aKey->mAppUnitsPerDevUnit != mTextRun->GetAppUnitsPerDevUnit() ||
         aKey->mIsRTL != mTextRun->IsRightToLeft() ||
-        aKey->mEnabledOptionalLigatures != ((mTextRun->GetFlags() & gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES) == 0))
+        aKey->mEnabledOptionalLigatures != ((mTextRun->GetFlags() & gfxTextRunFactory::TEXT_DISABLE_OPTIONAL_LIGATURES) == 0) ||
+        aKey->mOptimizeSpeed != ((mTextRun->GetFlags() & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED) != 0))
         return PR_FALSE;
 
     if (mTextRun->GetFlags() & gfxFontGroup::TEXT_IS_8BIT) {
@@ -608,7 +611,8 @@ PLDHashNumber
 TextRunWordCache::CacheHashEntry::HashKey(const KeyTypePointer aKey)
 {
     return aKey->mStringHash + (long)aKey->mFontOrGroup + aKey->mAppUnitsPerDevUnit +
-        aKey->mIsDoubleByteText + aKey->mIsRTL*2 + aKey->mEnabledOptionalLigatures*4;
+        aKey->mIsDoubleByteText + aKey->mIsRTL*2 + aKey->mEnabledOptionalLigatures*4 +
+        aKey->mOptimizeSpeed*8;
 }
 
 static TextRunWordCache *gTextRunWordCache = nsnull;

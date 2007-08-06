@@ -44,8 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= test_uriloader_exthandler
 
-ifdef MOZ_PHOENIX
 XPCSHELL_TESTS = unit
-endif
 
 include $(topsrcdir)/config/rules.mk

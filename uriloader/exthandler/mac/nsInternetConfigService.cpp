@@ -126,12 +126,12 @@ NS_IMETHODIMP nsInternetConfigService::HasMappingForMIMEType(const char *mimetyp
 }
 
 /* boolean hasProtocolHandler (in string protocol); */
-// returns NS_ERROR_NOT_AVAILABLE if the current application is registered for as the
-// protocol handler for protocol
+// returns NS_ERROR_NOT_AVAILABLE if the current application is registered
+// as the protocol handler for the given protocol
 NS_IMETHODIMP nsInternetConfigService::HasProtocolHandler(const char *protocol, PRBool *_retval)
 {
-  *_retval = PR_FALSE;            // Presume failure
-  nsresult rv = NS_ERROR_FAILURE; // Ditto
+  *_retval = PR_FALSE;            // presume the OS doesn't have a handler
+  nsresult rv = NS_OK;
 
   // Since protocol comes in with _just_ the protocol we have to add a ':' to
   // the end of it or LaunchServices will be very unhappy with the CFURLRef
@@ -163,7 +163,6 @@ NS_IMETHODIMP nsInternetConfigService::HasProtocolHandler(const char *protocol, 
           else
           {
             *_retval = PR_TRUE;
-            rv = NS_OK;
           }
         }
       }

@@ -86,6 +86,9 @@ mailing address.
 
 #include "imgContainer.h"
 
+#include "gfxPlatform.h"
+#include "lcms.h"
+
 /*
  * GETN(n, s) requests at least 'n' bytes available from 'q', at start of state 's'
  *
@@ -817,17 +820,29 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
           GETN(size, gif_global_colormap);
           break;
         }
-        // Copy everything and directly go to gif_lzw_start
+        // Copy everything, go to colormap state to do CMS correction
         memcpy(mGIFStruct.global_colormap, buf, size);
         buf += size;
         len -= size;
+        GETN(0, gif_global_colormap);
+        break;
       }
 
       GETN(1, gif_image_start);
       break;
 
     case gif_global_colormap:
-      // Everything is already copied into global_colormap
+      if (gfxPlatform::IsCMSEnabled()) {
+        // Everything is already copied into global_colormap
+        cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBTransform();
+        if (transform) {
+          cmsDoTransform(transform,
+                         mGIFStruct.global_colormap,
+                         mGIFStruct.global_colormap,
+                         mGIFStruct.global_colormap_size);
+        }
+      }
+
       GETN(1, gif_image_start);
       break;
 
@@ -1069,10 +1084,12 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
           GETN(size, gif_image_colormap);
           break;
         }
-        // Copy everything and directly go to gif_lzw_start
+        // Copy everything, go to colormap state to do CMS correction
         memcpy(mGIFStruct.local_colormap, buf, size);
         buf += size;
         len -= size;
+        GETN(0, gif_image_colormap);
+        break;
       } else {
         /* Switch back to the global palette */
         mGIFStruct.is_local_colormap_defined = PR_FALSE;
@@ -1081,7 +1098,17 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
       break;
 
     case gif_image_colormap:
-      // Everything is already copied into local_colormap
+      if (gfxPlatform::IsCMSEnabled()) {
+        // Everything is already copied into local_colormap
+        cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBTransform();
+        if (transform) {
+          cmsDoTransform(transform,
+                         mGIFStruct.local_colormap,
+                         mGIFStruct.local_colormap,
+                         mGIFStruct.local_colormap_size);
+        }
+      }
+
       GETN(1, gif_lzw_start);
       break;
 

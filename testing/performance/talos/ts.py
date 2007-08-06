@@ -52,6 +52,7 @@ import re
 import shutil
 import time
 
+import utils
 import ffprocess
 import ffprofile
 import ffinfo
@@ -91,6 +92,7 @@ def RunStartupTest(firefox_path, profile_dir, num_runs, timeout):
   startup_times = []
   for i in range(-1, num_runs):
     # Make sure we don't get "Firefox is already running..." errors
+    utils.debug("syncing and sleeping")
     ffprocess.SyncAndSleep()
 
     # Create a command line that passes in the url of the startup test
@@ -98,15 +100,19 @@ def RunStartupTest(firefox_path, profile_dir, num_runs, timeout):
     time_arg = int(time.time() * 1000)
     url = config.TS_URL + str(time_arg)
     command_line = ffprocess.GenerateFirefoxCommandLine(firefox_path, profile_dir, url)
+    utils.debug("about to run ts test iteration")
     (match, timed_out) = ffprocess.RunProcessAndWaitForOutput(command_line,
                                                               'firefox',
                                                               TS_REGEX,
                                                               timeout)
+    if match > 0:
+      utils.debug("ts output match is " + match)
+    else:
+      utils.debug("ts failed to match")
     if timed_out or not IsInteger(match):
       match = None
     if i > -1 and match and match > 0:
       startup_times.append(match)
-
   return startup_times
 
 
@@ -123,18 +129,22 @@ def RunStartupTests(profile_configs, num_runs):
   Returns:
     Array of arrays of startup times, one for each profile.
   """
-
+  utils.debug("Running startup time tests")
   all_times = []
   for config in profile_configs:
+    utils.setEnvironmentVars(config[6])
     # Create the new profile
     profile_dir = ffprofile.CreateTempProfileDir(config[5],
                                                  config[0],
                                                  config[1])
-
+    utils.debug("temp profile dir created")
     # Run Firefox once with new profile so initializing it doesn't
     # cause a performance hit, and the second Firefox that gets
     # created is properly terminated.
+    utils.debug("initializing new profile")
     ffprofile.InitializeNewProfile(config[2], profile_dir)
+    
+    utils.debug("getting configuration metrics from browser")
     ffinfo.GetMetricsFromBrowser(config[2], profile_dir)
 
     # Run the startup tests for this profile and log the results.
@@ -147,5 +157,7 @@ def RunStartupTests(profile_configs, num_runs):
     ffprocess.SyncAndSleep()
     ffprofile.MakeDirectoryContentsWritable(profile_dir)
     shutil.rmtree(profile_dir)
+    
+    utils.restoreEnvironmentVars()
 
   return all_times

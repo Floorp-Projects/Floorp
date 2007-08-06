@@ -48,9 +48,10 @@
 
 #include "nsIStyleRuleProcessor.h"
 #include "nsICSSStyleSheet.h"
-#include "nsVoidArray.h"
 #include "nsBindingManager.h"
 #include "nsRuleNode.h"
+#include "nsTArray.h"
+#include "nsCOMArray.h"
 
 class nsIURI;
 
@@ -72,15 +73,16 @@ class nsStyleSet
   // To be used only by nsRuleNode.
   nsCachedStyleData* DefaultStyleData() { return &mDefaultStyleData; }
 
-  // clear out all of the computed style data
-  void ClearStyleData(nsPresContext *aPresContext);
-
   // enable / disable the Quirk style sheet
   void EnableQuirkStyleSheet(PRBool aEnable);
 
   // get a style context for a non-pseudo frame.
   already_AddRefed<nsStyleContext>
   ResolveStyleFor(nsIContent* aContent, nsStyleContext* aParentContext);
+
+  // get a style context from some rules
+  already_AddRefed<nsStyleContext>
+  ResolveStyleForRules(nsStyleContext* aParentContext, const nsCOMArray<nsIStyleRule> &rules);
 
   // Get a style context for a non-element (which no rules will match),
   // such as text nodes, placeholder frames, and the nsFirstLetterFrame
@@ -192,6 +194,13 @@ class nsStyleSet
   void     BeginUpdate();
   nsresult EndUpdate();
 
+  // Methods for reconstructing the tree; BeginReconstruct basically moves the
+  // old rule tree root and style context roots out of the way,
+  // and EndReconstruct destroys the old rule tree when we're done
+  nsresult BeginReconstruct();
+  // Note: EndReconstruct should not be called if BeginReconstruct fails
+  void EndReconstruct();
+
  private:
   // Not to be implemented
   nsStyleSet(const nsStyleSet& aCopy);
@@ -265,13 +274,17 @@ class nsStyleSet
                              // be used to navigate through our tree.
 
   PRInt32 mDestroyedCount; // used to batch style context GC
-  nsVoidArray mRoots; // style contexts with no parent
+  nsTArray<nsStyleContext*> mRoots; // style contexts with no parent
 
   PRUint16 mBatching;
+
+  nsRuleNode* mOldRuleTree; // Old rule tree; used during tree reconstruction
+                            // (See BeginReconstruct and EndReconstruct)
 
   unsigned mInShutdown : 1;
   unsigned mAuthorStyleDisabled: 1;
   unsigned mDirty : 7;  // one dirty bit is used per sheet type
+
 };
 
 #endif

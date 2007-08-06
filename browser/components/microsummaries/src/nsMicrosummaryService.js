@@ -58,7 +58,7 @@ const XSLT_NS = new Namespace("http://www.w3.org/1999/XSL/Transform");
 
 const FIELD_MICSUM_GEN_URI    = "microsummary/generatorURI";
 const FIELD_MICSUM_EXPIRATION = "microsummary/expiration";
-const FIELD_GENERATED_TITLE   = "bookmarks/generatedTitle";
+const FIELD_STATIC_TITLE      = "bookmarks/staticTitle";
 const FIELD_CONTENT_TYPE      = "bookmarks/contentType";
 
 const MAX_SUMMARY_LENGTH = 4096;
@@ -229,21 +229,23 @@ MicrosummaryService.prototype = {
   },
   
   _updateMicrosummary: function MSS__updateMicrosummary(bookmarkID, microsummary) {
-    // Get the current live title to see if it's actually changed.
-    var oldValue = null;
-    if (this._hasField(bookmarkID, FIELD_GENERATED_TITLE))
-      oldValue = this._getField(bookmarkID, FIELD_GENERATED_TITLE);
+    var title = this._getTitle(bookmarkID);
+
+    // Ensure the user-given title is cached
+    if (!this._hasField(bookmarkID, FIELD_STATIC_TITLE))
+      this._setField(bookmarkID, FIELD_STATIC_TITLE, title);
 
     // A string identifying the bookmark to use when logging the update.
     var bookmarkIdentity = bookmarkID;
 
-    if (oldValue == null || oldValue != microsummary.content) {
-      this._setField(bookmarkID, FIELD_GENERATED_TITLE, microsummary.content);
+    // Update if the microsummary differs from the current title.
+    if (!title || title != microsummary.content) {
+      this._setTitle(bookmarkID, microsummary.content);
       var subject = new LiveTitleNotificationSubject(bookmarkID, microsummary);
       LOG("updated live title for " + bookmarkIdentity +
-          " from '" + (oldValue == null ? "<no live title>" : oldValue) +
+          " from '" + (title == null ? "<no live title>" : title) +
           "' to '" + microsummary.content + "'");
-      this._obs.notifyObservers(subject, "microsummary-livetitle-updated", oldValue);
+      this._obs.notifyObservers(subject, "microsummary-livetitle-updated", title);
     }
     else {
       LOG("didn't update live title for " + bookmarkIdentity + "; it hasn't changed");
@@ -555,7 +557,7 @@ MicrosummaryService.prototype = {
         // If this is the current microsummary for this bookmark, load the content
         // from the datastore so it shows up immediately in microsummary picking UI.
         if (bookmarkID != -1 && this.isMicrosummary(bookmarkID, microsummary))
-          microsummary._content = this._getField(bookmarkID, FIELD_GENERATED_TITLE);
+          microsummary._content = this._getTitle(bookmarkID);
 
         microsummaries.AppendElement(microsummary);
       }
@@ -660,6 +662,14 @@ MicrosummaryService.prototype = {
                                 this._ans.EXPIRE_NEVER);
   },
 
+  _getTitle: function MSS_getTitle(aBookmarkId) {
+    return this._bms.getItemTitle(aBookmarkId);
+  },
+
+  _setTitle: function MSS_setTitle(aBookmarkId, aValue) {
+    this._bms.setItemTitle(aBookmarkId, aValue);
+  },
+
   _clearField: function MSS__clearField(aBookmarkId, aFieldName) {
     this._ans.removeItemAnnotation(aBookmarkId, aFieldName);
   },
@@ -741,11 +751,7 @@ MicrosummaryService.prototype = {
       this._updateMicrosummary(bookmarkID, microsummary);
     }
     else {
-      // Display a static title initially (unless there's already one set)
-      if (!this._hasField(bookmarkID, FIELD_GENERATED_TITLE))
-        this._setField(bookmarkID, FIELD_GENERATED_TITLE,
-                       microsummary.generator.name || microsummary.generator.uri.spec);
-
+      // Use the bookmark's title for now and attempt an update
       this.refreshMicrosummary(bookmarkID);
     }
   },
@@ -758,12 +764,16 @@ MicrosummaryService.prototype = {
    *
    */
   removeMicrosummary: function MSS_removeMicrosummary(bookmarkID) {
+    // Restore the user's title
+    if (this._hasField(bookmarkID, FIELD_STATIC_TITLE))
+      this._setTitle(bookmarkID, this._getField(bookmarkID, FIELD_STATIC_TITLE));
+
     var fields = [FIELD_MICSUM_GEN_URI,
                   FIELD_MICSUM_EXPIRATION,
-                  FIELD_GENERATED_TITLE,
+                  FIELD_STATIC_TITLE,
                   FIELD_CONTENT_TYPE];
 
-    for ( var i = 0; i < fields.length; i++ ) {
+    for (let i = 0; i < fields.length; i++) {
       var field = fields[i];
       if (this._hasField(bookmarkID, field))
         this._clearField(bookmarkID, field);

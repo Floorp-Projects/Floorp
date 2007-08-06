@@ -58,6 +58,11 @@
   ; Remove files that may be left behind by the application in the
   ; VirtualStore directory.
   ${CleanVirtualStore}
+
+  ; Remove talkback if it is present (remove after bug 386760 is fixed)
+  ${If} ${FileExists} "$INSTDIR\extensions\talkback@mozilla.org\"
+    RmDir /r "$INSTDIR\extensions\talkback@mozilla.org\"
+  ${EndIf}
 !macroend
 !define PostUpdate "!insertmacro PostUpdate"
 
@@ -426,5 +431,8 @@
   ${Unless} ${Errors}
     DeleteRegKey SHCTX "$0\gopher"
   ${EndUnless}
+
+  ; Remove protocol handler registry keys added by the MS shim
+  DeleteRegKey HKLM "Software\Classes\Firefox.URL"
 !macroend
 !define FixClassKeys "!insertmacro FixClassKeys"

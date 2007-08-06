@@ -1,0 +1,244 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Scriptable IO.
+ *
+ * The Initial Developer of the Original Code is Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *  Neil Deakin <enndeakin@sympatico.ca> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsISupports.idl"
+
+interface nsIVariant;
+interface nsIFile;
+interface nsIInputStream;
+interface nsIOutputStream;
+interface nsIUnicharInputStream;
+interface nsIUnicharOutputStream;
+interface nsIURI;
+
+/**
+ * A singleton object which contains a number of methods for creating files,
+ * streams and uris.
+ *
+ * This interface is intended to be used only from script.
+ */
+[scriptable, uuid(E54798D5-7693-43F9-9BB6-F21E434DD3FC)]
+interface nsIScriptableIO : nsISupports
+{
+  /**
+   * Retrieves a reference to a file or directory on disk, which may or may
+   * not exist. If the file exists, it may be opened for reading by passing
+   * the file as the base to newInputStream. If it doesn't exist, it may be
+   * created by opening an output stream and writing to it.
+   *
+   * Files are identified by the filename argument. The file is found relative
+   * to a well known directory identified by the location argument. This
+   * location is a string key which identifies common directories typically
+   * found on a system. For instance, using the location key 'Desk' will
+   * retrieve files in the desktop folder, and the location key 'TmpD' will
+   * retrieve files in the system's temporary directory.
+   *
+   * A complete list of location keys may be found at
+   *   http://developer.mozilla.org/en/docs/IO_Guide/Directory_Keys
+   *
+   * The filename is always a file within the directory identified by the
+   * location key and this does not include a path. To retrieve
+   * subdirectories, retrieve a file and then use the file's append method
+   * to navigate into further subdirectories. This allows platform independent
+   * paths to be constructed.
+   *
+   * The filename may be a null string to retrieve a reference to the
+   * location directory itself.
+   *
+   * @param aLocation location key of well-known directory
+   * @param aFileName filename to locate within this directory, may be null
+   * @returns a file object
+   * @throws NS_ERROR_INVALID_ARG when aLocation is null
+   */
+  nsIFile getFile(in AString aLocation, in AString aFileName);
+
+  /**
+   * Retrieves a reference to a file given a absolute file path.
+   *
+   * Use this method only when absolutely necessary. In most cases, getFile
+   * should be used instead, as file paths are not portable across different
+   * platforms and systems so this method should be avoided if possible.
+   * Instead, the getFile method should be used and a path constructed from
+   * it.
+   *
+   * The filepath should be an absolute path or the value of the
+   * persistentDescriptor of a file.
+   *
+   * @param aFilePath path to the file
+   * @returns a file object
+   * @throws NS_ERROR_INVALID_ARG when aFilePath is null
+   */
+  nsIFile getFileWithPath(in AString aFilePath);
+
+  /**
+   * Creates a URI object which implements nsIURI. The url argument may either
+   * be a string or a file.
+   *
+   * @param aUri the url to create
+   * @returns a new nsIURI object
+   * @throws NS_ERROR_INVALID_ARG when aUri is null
+   */
+  nsIURI newURI(in nsIVariant aUri);
+
+  /**
+   * Retrieves a stream which may be read from.
+   *
+   * The base argument may be one of a number of different types of objects
+   * which may be read from:
+   *   nsIFile - an object returned from the getFile or getFileWithPath
+   *             methods, or any object which implements the nsIFile
+   *             interface.
+   *   nsITransport - a transport object such as a socket.
+   *   nsIInputStream - a stream returned by a previous call to this method or
+   *                    any other object which implements the nsIInputStream
+   *                    interface.
+   *   string - a string
+   *
+   * The mode may be any number of space separated strings which control
+   * the manner is which the stream is created. If no strings apply, use
+   * a null string. Possible values are:
+   *   text - read unicode converted text. The default character set is UTF-8.
+   *          To read text in a different character set, set the aCharSet
+   *          argument to the desired character set.
+   *   buffered - a stream which uses a buffer to hold a block of the next
+   *              part of the data to read. This mode would normally be used
+   *              as a wrapper for other streams. The size of the buffer
+   *              defaults to 1024 bytes, however the size may be changed by
+   *              specifying the aBufferSize argument. If the text mode is
+   *              used, the stream is always buffered.
+   *   block - when reading from a transport such as a socket, an attempt to
+   *           read from the stream while there is no data available will wait
+   *           until data is available before returning. Without this mode,
+   *           the stream will throw an exception if there is no data
+   *           available.
+   *   deleteonclose - the file is automatically deleted when the stream is
+   *                   closed. This might be used for temporary files.
+   *   closeoneof - the file is automatically closed when the end of the file
+   *                is reached.
+   *   reopenonrewind - used in conjuction with the seek mode, the file will
+   *                    be reopened when a seek to the beginning of the file
+   *                    is done.
+   *   multi - a stream which is used to concatenate the input from multiple
+   *           streams together as if it was one long continuous stream. The
+   *           returned stream implements the nsIMultiplexInputStream
+   *           interface. This mode may only be used if the text or buffered
+   *           modes are not used.
+   *
+   * If the mode is a null string, then no special type of reading is
+   * performed. In this case, the data from the stream is not interpreted in
+   * any way.
+   *
+   * @param aBase the base object to read from
+   * @param aMode flags controlling the reading
+   * @param aCharSet the character set to use when parsing text streams
+   * @param aReplaceChar the replacement character for unknown characters
+   * @param aBufferSize the size of buffer to use for buffered streams
+   * @returns a new input stream
+   * @throws NS_ERROR_INVALID_ARG when aBase is null
+   */
+  nsISupports newInputStream(in nsIVariant aBase,
+                             in AString aMode,
+                             [optional] in AString aCharSet,
+                             [optional] in AString aReplaceChar,
+                             [optional] in unsigned long aBufferSize);
+
+  /**
+   * Retrieves a stream which may be written to.
+   *
+   * The base argument may be one of a number of different types of objects
+   * which may be written to:
+   *   nsIFile - an object returned from the getFile or getFileWithPath
+   *             methods, or any object which implements the nsIFile
+   *             interface.
+   *   nsITransport - a transport object such as a socket.
+   *   nsIOutputStream - a stream returned by a previous call to this method
+   *                     or any other object which implements the
+   *                     nsIOutputStream interface.
+   *   string - a string
+   *
+   * The mode may be any number of space separated strings which control
+   * the manner is which the stream is created. If no strings apply, use
+   * a null string. Possible values are:
+   *   text - write unicode converted text. The default character set is
+   *          UTF-8. To write text in a different character set, set the
+   *          aCharSet argument to the desired character set.
+   *   buffered - a stream which buffers the data being written, which would
+   *              normally be used as a wrapper for other streams. The size of
+   *              the buffer defaults to 1024 bytes, however the size may be
+   *              changed by specifying the aBufferSize argument. If the text
+   *              mode is used, the stream is always buffered.
+   *   append - when writing to files, append to the end of the file instead
+   *            of overwriting. If used in conjuction with the create mode, an
+   *            existing file may be opened for appending, or a new file
+   *            created.
+   *   nocreate - when writing to files, and the file does not yet exist,
+   *              don't create a new file. If this mode is not used, a
+   *              new file will be created if it doesn't exist.
+   *   notruncate - when writing to an existing file, overwrite the existing
+   *                content. If this mode is not used, the file will be
+   *                truncated to 0 length.
+   *   syncsave - if used, then writing methods do not return until the
+   *              data is properly saved.
+   *   block - when writing to a transport such as a socket, an attempt
+   *           to write to the stream will not return until all of the
+   *           data has been written. This may cause a delay if the
+   *           socket's underlying buffer is full. If this mode is not used,
+   *           then an exception will be thrown if the buffer is full.
+   *
+   * If the mode is a null string, then no special type of writing is
+   * performed. In this case, the data being written to the stream is not
+   * interpreted in any way.
+   *
+   * The permissions may be set if a file is created. Typically, an octal
+   * value is used, for example: 0775. The default value when calling
+   * newOutputStream is 0664.
+   *
+   * @param aBase the base object to write to
+   * @param aMode flags controlling the writing
+   * @param aCharSet the character set to use when writing text streams
+   * @param aReplaceChar the replacement character for unknown characters
+   * @param aBufferSize the size of buffer to use for buffered streams
+   * @param aPermissions permissions of a file if one is created.
+   * @returns a new output stream
+   * @throws NS_ERROR_INVALID_ARG when aBase is null
+   */
+  nsISupports newOutputStream(in nsIVariant aBase,
+                              in AString aMode,
+                              [optional] in AString aCharSet,
+                              [optional] in AString aReplaceChar,
+                              [optional] in unsigned long aBufferSize,
+                              [optional] in unsigned long aPermissions);
+};

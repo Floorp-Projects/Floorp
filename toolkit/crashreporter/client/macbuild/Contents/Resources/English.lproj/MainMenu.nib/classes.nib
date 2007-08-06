@@ -1,0 +1,36 @@
+{
+    IBClasses = (
+        {
+            ACTIONS = {
+                closeAndSendClicked = id; 
+                closeClicked = id; 
+                emailMeClicked = id; 
+                restartClicked = id; 
+                viewReportClicked = id; 
+            }; 
+            CLASS = CrashReporterUI; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                closeButton = NSButton; 
+                descriptionLabel = NSTextField; 
+                emailMeButton = NSButton; 
+                emailText = NSTextField; 
+                errorCloseButton = NSButton; 
+                errorHeaderLabel = NSTextField; 
+                errorLabel = NSTextField; 
+                errorView = NSView; 
+                headerLabel = NSTextField; 
+                restartButton = NSButton; 
+                submitReportButton = NSButton; 
+                viewReportButton = NSButton; 
+                viewReportLabel = NSTextField; 
+                viewReportScrollView = NSScrollView; 
+                viewReportTextView = NSTextView; 
+                window = NSWindow; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }
+    ); 
+    IBVersion = 1; 
+}

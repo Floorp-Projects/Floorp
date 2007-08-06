@@ -474,6 +474,70 @@ LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
   while (PR_TRUE);
 }
 
+
+static void
+LoadAppPlatformDirIntoArray(nsIFile* aXULAppDir,
+                  const char *const* aAppendList,
+                  nsCOMArray<nsIFile>& aDirectories)
+{
+  NS_NAMED_LITERAL_CSTRING(platform, "platform");
+  NS_NAMED_LITERAL_CSTRING(osTarget, OS_TARGET);
+#ifdef TARGET_OS_ABI
+  NS_NAMED_LITERAL_CSTRING(targetOSABI, TARGET_OS_ABI);
+#endif
+
+  nsCOMPtr<nsIFile> dir;
+  nsresult rv = aXULAppDir->Clone(getter_AddRefs(dir));
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIFile> platformDir;
+#ifdef TARGET_OS_ABI
+  nsCOMPtr<nsIFile> platformABIDir;
+#endif
+  rv = dir->Clone(getter_AddRefs(platformDir));
+  if (NS_FAILED(rv))
+    return;
+
+  platformDir->AppendNative(platform);
+  platformDir->AppendNative(osTarget);
+
+#ifdef TARGET_OS_ABI
+  rv = dir->Clone(getter_AddRefs(platformABIDir));
+  if (NS_FAILED(rv))
+    return;
+
+  platformABIDir->AppendNative(platform);
+  platformABIDir->AppendNative(targetOSABI);
+#endif
+
+  const char* const* a = aAppendList;
+  while (*a) {
+    nsDependentCString directory(*a);
+    dir->AppendNative(directory);
+    platformDir->AppendNative(directory);
+#ifdef TARGET_OS_ABI
+    platformABIDir->AppendNative(directory);
+#endif
+    ++a;
+  }
+
+  PRBool exists;
+  rv = dir->Exists(&exists);
+  if (NS_SUCCEEDED(rv) && exists)
+    aDirectories.AppendObject(dir);
+
+  rv = platformDir->Exists(&exists);
+  if (NS_SUCCEEDED(rv) && exists)
+    aDirectories.AppendObject(platformDir);
+
+#ifdef TARGET_OS_ABI
+  rv = platformABIDir->Exists(&exists);
+  if (NS_SUCCEEDED(rv) && exists)
+    aDirectories.AppendObject(platformABIDir);
+#endif
+}
+
 static const char *const kAppendChromeManifests[] =
   { "chrome.manifest", nsnull };
 
@@ -540,6 +604,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
     rv = NS_NewArrayEnumerator(aResult, directories);
   }
   else if (!strcmp(aProperty, NS_XPCOM_COMPONENT_DIR_LIST)) {
+    static const char *const kAppendCompDir[] = { "components", nsnull };
     nsCOMArray<nsIFile> directories;
 
     if (mXULAppDir) {
@@ -549,11 +614,11 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
       PRBool exists;
       if (NS_SUCCEEDED(file->Exists(&exists)) && exists)
         directories.AppendObject(file);
+
+       LoadAppPlatformDirIntoArray(mXULAppDir, kAppendCompDir, directories);
     }
 
     if (mProfileDir && !gSafeMode) {
-      static const char *const kAppendCompDir[] = { "components", nsnull };
-
       LoadDirsIntoArray(profileFile, "ExtensionDirs",
                         kAppendCompDir, directories);
     }
@@ -561,6 +626,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
     rv = NS_NewArrayEnumerator(aResult, directories);
   }
   else if (!strcmp(aProperty, NS_APP_PREFS_DEFAULTS_DIR_LIST)) {
+    static const char *const kAppendPrefDir[] = { "defaults", "preferences", nsnull };
     nsCOMArray<nsIFile> directories;
     PRBool exists;
 
@@ -571,6 +637,8 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
       file->AppendNative(NS_LITERAL_CSTRING("preferences"));
       if (NS_SUCCEEDED(file->Exists(&exists)) && exists)
         directories.AppendObject(file);
+
+       LoadAppPlatformDirIntoArray(mXULAppDir, kAppendPrefDir, directories);
     }
     
     if (mProfileDir) {
@@ -581,8 +649,6 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
         directories.AppendObject(overrideFile);
 
       if (!gSafeMode) {
-        static const char *const kAppendPrefDir[] = { "defaults", "preferences", nsnull };
-
         LoadDirsIntoArray(profileFile, "ExtensionDirs",
                           kAppendPrefDir, directories);
       }
@@ -610,6 +676,9 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
       file->AppendNative(NS_LITERAL_CSTRING("chrome.manifest"));
       if (NS_SUCCEEDED(file->Exists(&exists)) && exists)
         manifests.AppendObject(file);
+
+      LoadAppPlatformDirIntoArray(mXULAppDir, kAppendChromeManifests,
+                                  manifests);
     }
 
     if (mProfileDir && !gSafeMode) {
@@ -632,6 +701,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
     // NS_APP_CHROME_DIR_LIST is only used to get default (native) icons
     // for OS window decoration.
 
+    static const char *const kAppendChromeDir[] = { "chrome", nsnull };
     nsCOMArray<nsIFile> directories;
 
     if (mXULAppDir) {
@@ -641,11 +711,11 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
       PRBool exists;
       if (NS_SUCCEEDED(file->Exists(&exists)) && exists)
         directories.AppendObject(file);
+
+      LoadAppPlatformDirIntoArray(mXULAppDir, kAppendChromeDir, directories);
     }
 
     if (mProfileDir && !gSafeMode) {
-      static const char *const kAppendChromeDir[] = { "chrome", nsnull };
-
       LoadDirsIntoArray(profileFile, "ExtensionDirs",
                         kAppendChromeDir, directories);
     }
@@ -653,6 +723,7 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
     rv = NS_NewArrayEnumerator(aResult, directories);
   }
   else if (!strcmp(aProperty, NS_APP_PLUGINS_DIR_LIST)) {
+    static const char *const kAppendPlugins[] = { "plugins", nsnull };
     nsCOMArray<nsIFile> directories;
 
     // The root dirserviceprovider does quite a bit for us: we're mainly
@@ -664,11 +735,11 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
       PRBool exists;
       if (NS_SUCCEEDED(file->Exists(&exists)) && exists)
         directories.AppendObject(file);
+
+      LoadAppPlatformDirIntoArray(mXULAppDir, kAppendPlugins, directories);
     }
 
     if (mProfileDir && !gSafeMode) {
-      static const char *const kAppendPlugins[] = { "plugins", nsnull };
-
       LoadDirsIntoArray(profileFile, "ExtensionDirs",
                         kAppendPlugins, directories);
     }

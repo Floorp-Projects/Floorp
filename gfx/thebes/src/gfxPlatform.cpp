@@ -63,9 +63,16 @@
 #endif
 
 #include "cairo.h"
+#include "lcms.h"
+
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 gfxPlatform *gPlatform = nsnull;
 int gGlitzState = -1;
+static cmsHPROFILE gCMSOutputProfile = nsnull;
+static cmsHTRANSFORM gCMSRGBTransform = nsnull;
+static cmsHTRANSFORM gCMSRGBATransform = nsnull;
 
 gfxPlatform*
 gfxPlatform::GetPlatform()
@@ -296,3 +303,106 @@ gfxPlatform::GetPrefFonts(const char *aLangGroup, nsString& aFonts, PRBool aAppe
         AppendGenericFontFromPref(aFonts, "x-unicode", nsnull);
 }
 
+PRBool
+gfxPlatform::IsCMSEnabled()
+{
+    static PRBool sEnabled = -1;
+    if (sEnabled == -1) {
+        sEnabled = PR_TRUE;
+        nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (prefs) {
+            PRBool enabled;
+            nsresult rv =
+                prefs->GetBoolPref("gfx.color_management.enabled", &enabled);
+            if (NS_SUCCEEDED(rv)) {
+                sEnabled = enabled;
+            }
+        }
+    }
+    return sEnabled;
+}
+
+cmsHPROFILE
+gfxPlatform::GetPlatformCMSOutputProfile()
+{
+    return nsnull;
+}
+
+cmsHPROFILE
+gfxPlatform::GetCMSOutputProfile()
+{
+    if (!gCMSOutputProfile) {
+        /* Default lcms error action is to abort on error - change */
+#ifdef DEBUG_tor
+        cmsErrorAction(LCMS_ERROR_SHOW);
+#else
+        cmsErrorAction(LCMS_ERROR_IGNORE);
+#endif
+
+        nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+        if (prefs) {
+            nsXPIDLCString fname;
+            nsresult rv =
+                prefs->GetCharPref("gfx.color_management.display_profile",
+                                   getter_Copies(fname));
+            if (NS_SUCCEEDED(rv) && !fname.IsEmpty()) {
+                gCMSOutputProfile = cmsOpenProfileFromFile(fname, "r");
+#ifdef DEBUG_tor
+                if (gCMSOutputProfile)
+                    fprintf(stderr,
+                            "ICM profile read from %s successfully\n",
+                            fname.get());
+#endif
+            }
+        }
+
+        if (!gCMSOutputProfile) {
+            gCMSOutputProfile =
+                gfxPlatform::GetPlatform()->GetPlatformCMSOutputProfile();
+        }
+
+        if (!gCMSOutputProfile) {
+            gCMSOutputProfile = cmsCreate_sRGBProfile();
+        }
+    }
+
+    return gCMSOutputProfile;
+}
+
+cmsHTRANSFORM
+gfxPlatform::GetCMSRGBTransform()
+{
+    if (!gCMSRGBTransform) {
+        cmsHPROFILE inProfile, outProfile;
+        outProfile = GetCMSOutputProfile();
+        inProfile = cmsCreate_sRGBProfile();
+
+        if (!inProfile || !outProfile)
+            return nsnull;
+
+        gCMSRGBTransform = cmsCreateTransform(inProfile, TYPE_RGB_8,
+                                              outProfile, TYPE_RGB_8,
+                                              INTENT_PERCEPTUAL, 0);
+    }
+
+    return gCMSRGBTransform;
+}
+
+cmsHTRANSFORM
+gfxPlatform::GetCMSRGBATransform()
+{
+    if (!gCMSRGBATransform) {
+        cmsHPROFILE inProfile, outProfile;
+        outProfile = GetCMSOutputProfile();
+        inProfile = cmsCreate_sRGBProfile();
+
+        if (!inProfile || !outProfile)
+            return nsnull;
+
+        gCMSRGBATransform = cmsCreateTransform(inProfile, TYPE_RGBA_8,
+                                               outProfile, TYPE_RGBA_8,
+                                               INTENT_PERCEPTUAL, 0);
+    }
+
+    return gCMSRGBATransform;
+}

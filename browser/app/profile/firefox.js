@@ -148,8 +148,8 @@ pref("extensions.update.url", "chrome://mozapps/locale/extensions/extensions.pro
 pref("extensions.update.interval", 86400);  // Check for updates to Extensions and 
                                             // Themes every day
 // Non-symmetric (not shared by extensions) extension-specific [update] preferences
-pref("extensions.getMoreExtensionsURL", "http://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/%VERSION%/extensions/");
-pref("extensions.getMoreThemesURL", "http://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/%VERSION%/themes/");
+pref("extensions.getMoreExtensionsURL", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/%VERSION%/extensions/");
+pref("extensions.getMoreThemesURL", "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/%APP%/%VERSION%/themes/");
 pref("extensions.dss.enabled", false);          // Dynamic Skin Switching                                               
 pref("extensions.dss.switchPending", false);    // Non-dynamic switch pending after next
                                                 // restart.
@@ -182,14 +182,25 @@ pref("browser.startup.homepage",            "resource:/browserconfig.properties"
 
 pref("browser.cache.disk.capacity",         50000);
 pref("browser.enable_automatic_image_resizing", true);
-pref("browser.urlbar.autoFill", false);
-pref("browser.urlbar.matchOnlyTyped", false);
-pref("browser.urlbar.hideProtocols", "");
-pref("browser.urlbar.animateBlend", true);
 pref("browser.chrome.site_icons", true);
 pref("browser.chrome.favicons", true);
 pref("browser.formfill.enable", true);
 pref("browser.warnOnQuit", true);
+
+#ifdef XP_UNIX
+pref("browser.urlbar.clickSelectsAll", false);
+#else
+pref("browser.urlbar.clickSelectsAll", true);
+#endif
+#ifdef UNIX_BUT_NOT_MAC
+pref("browser.urlbar.doubleClickSelectsAll", true);
+#else
+pref("browser.urlbar.doubleClickSelectsAll", false);
+#endif
+pref("browser.urlbar.autoFill", false);
+pref("browser.urlbar.matchOnlyTyped", false);
+pref("browser.urlbar.hideProtocols", "");
+pref("browser.urlbar.animateBlend", true);
 
 pref("browser.download.useDownloadDir", true);
 pref("browser.download.folderList", 0);
@@ -234,6 +245,7 @@ pref("browser.search.suggest.enabled", true);
 pref("browser.history.grouping", "day");
 pref("browser.history.showSessions", false);
 pref("browser.sessionhistory.max_entries", 50);
+pref("browser.history_expire_days", 180);
 
 // handle external links
 // 0=default window, 1=current window/tab, 2=new window, 3=new tab in most recent window
@@ -407,12 +419,6 @@ pref("security.warn_leaving_secure.show_once", true);
 pref("security.warn_viewing_mixed.show_once", true);
 pref("security.warn_submit_insecure.show_once", true);
 
-#ifdef XP_UNIX
-pref("browser.urlbar.clickSelectsAll", false);
-#else
-pref("browser.urlbar.clickSelectsAll", true);
-#endif
-
 pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);
 pref("accessibility.typeaheadfind.linksonly", false);
@@ -492,7 +498,7 @@ pref("browser.safebrowsing.enabled", true);
 pref("browser.safebrowsing.remoteLookups", false);
 
 // Non-enhanced mode (local url lists) URL list to check for updates
-pref("browser.safebrowsing.provider.0.updateURL", "http://sb.google.com/safebrowsing/update?client={moz:client}&appver={moz:version}&");
+pref("browser.safebrowsing.provider.0.updateURL", "http://sb.google.com/safebrowsing/downloads?client={moz:client}&appver={moz:version}&pver=2.0");
 
 pref("browser.safebrowsing.dataProvider", 0);
 

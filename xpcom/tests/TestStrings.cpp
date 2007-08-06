@@ -186,6 +186,198 @@ PRBool test_rfind_4()
     return PR_TRUE;
   }
 
+PRBool test_findinreadable()
+  {
+    const char text[] = "jar:jar:file:///c:/software/mozilla/mozilla_2006_02_21.jar!/browser/chrome/classic.jar!/";
+    nsCAutoString value(text);
+
+    nsACString::const_iterator begin, end;
+    value.BeginReading(begin);
+    value.EndReading(end);
+    nsACString::const_iterator delim_begin (begin),
+                               delim_end   (end);
+
+    // Search for last !/ at the end of the string
+    if (!FindInReadable(NS_LITERAL_CSTRING("!/"), delim_begin, delim_end))
+        return PR_FALSE;
+    char *r = ToNewCString(Substring(delim_begin, delim_end));
+    // Should match the first "!/" but not the last
+    if ((delim_end == end) || (strcmp(r, "!/")!=0))
+      {
+        printf("r = %s\n", r);
+        nsMemory::Free(r);
+        return PR_FALSE;
+      }
+    nsMemory::Free(r);
+
+    delim_begin = begin;
+    delim_end = end;
+
+    // Search for first jar:
+    if (!FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end))
+        return PR_FALSE;
+
+    r = ToNewCString(Substring(delim_begin, delim_end));
+    // Should not match the first jar:, but the second one
+    if ((delim_begin != begin) || (strcmp(r, "jar:")!=0))
+      {
+        printf("r = %s\n", r);
+        nsMemory::Free(r);
+        return PR_FALSE;
+      }
+    nsMemory::Free(r);
+
+    // Search for jar: in a Substring
+    delim_begin = begin; delim_begin++;
+    delim_end = end;
+    if (!FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end))
+        return PR_FALSE;
+
+    r = ToNewCString(Substring(delim_begin, delim_end));
+    // Should not match the first jar:, but the second one
+    if ((delim_begin == begin) || (strcmp(r, "jar:")!=0))
+      {
+        printf("r = %s\n", r);
+        nsMemory::Free(r);
+        return PR_FALSE;
+      }
+    nsMemory::Free(r);
+
+    // Should not find a match
+    if (FindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end))
+        return PR_FALSE;
+
+    // When no match is found, range should be empty
+    if (delim_begin != delim_end) 
+        return PR_FALSE;
+
+    // Should not find a match (search not beyond Substring)
+    delim_begin = begin; for (int i=0;i<6;i++) delim_begin++;
+    delim_end = end;
+    if (FindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end))
+        return PR_FALSE;
+
+    // When no match is found, range should be empty
+    if (delim_begin != delim_end) 
+        return PR_FALSE;
+
+    // Should not find a match (search not beyond Substring)
+    delim_begin = begin;
+    delim_end = end; for (int i=0;i<7;i++) delim_end--;
+    if (FindInReadable(NS_LITERAL_CSTRING("classic"), delim_begin, delim_end))
+        return PR_FALSE;
+
+    // When no match is found, range should be empty
+    if (delim_begin != delim_end) 
+        return PR_FALSE;
+
+    return PR_TRUE;
+  }
+
+PRBool test_rfindinreadable()
+  {
+    const char text[] = "jar:jar:file:///c:/software/mozilla/mozilla_2006_02_21.jar!/browser/chrome/classic.jar!/";
+    nsCAutoString value(text);
+
+    nsACString::const_iterator begin, end;
+    value.BeginReading(begin);
+    value.EndReading(end);
+    nsACString::const_iterator delim_begin (begin),
+                               delim_end   (end);
+
+    // Search for last !/ at the end of the string
+    if (!RFindInReadable(NS_LITERAL_CSTRING("!/"), delim_begin, delim_end))
+        return PR_FALSE;
+    char *r = ToNewCString(Substring(delim_begin, delim_end));
+    // Should match the last "!/"
+    if ((delim_end != end) || (strcmp(r, "!/")!=0))
+      {
+        printf("r = %s\n", r);
+        nsMemory::Free(r);
+        return PR_FALSE;
+      }
+    nsMemory::Free(r);
+
+    delim_begin = begin;
+    delim_end = end;
+
+    // Search for last jar: but not the first one...
+    if (!RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end))
+        return PR_FALSE;
+
+    r = ToNewCString(Substring(delim_begin, delim_end));
+    // Should not match the first jar:, but the second one
+    if ((delim_begin == begin) || (strcmp(r, "jar:")!=0))
+      {
+        printf("r = %s\n", r);
+        nsMemory::Free(r);
+        return PR_FALSE;
+      }
+    nsMemory::Free(r);
+
+    // Search for jar: in a Substring
+    delim_begin = begin;
+    delim_end = begin; for (int i=0;i<6;i++) delim_end++;
+    if (!RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end)) {
+        printf("Search for jar: in a Substring\n");
+        return PR_FALSE;
+    }
+
+    r = ToNewCString(Substring(delim_begin, delim_end));
+    // Should not match the first jar:, but the second one
+    if ((delim_begin != begin) || (strcmp(r, "jar:")!=0))
+      {
+        printf("r = %s\n", r);
+        nsMemory::Free(r);
+        return PR_FALSE;
+      }
+    nsMemory::Free(r);
+
+    // Should not find a match
+    delim_begin = begin;
+    delim_end = end;
+    if (RFindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end)) {
+        printf("Should not find a match\n");
+        return PR_FALSE;
+    }
+
+    // When no match is found, range should be empty
+    if (delim_begin != delim_end) {
+        printf("1: When no match is found, range should be empty\n");
+        return PR_FALSE;
+    }
+
+    // Should not find a match (search not before Substring)
+    delim_begin = begin; for (int i=0;i<6;i++) delim_begin++;
+    delim_end = end;
+    if (RFindInReadable(NS_LITERAL_CSTRING("jar:"), delim_begin, delim_end)) {
+        printf("Should not find a match (search not before Substring)\n");
+        return PR_FALSE;
+    }
+
+    // When no match is found, range should be empty
+    if (delim_begin != delim_end) {
+        printf("2: When no match is found, range should be empty\n");
+        return PR_FALSE;
+    }
+
+    // Should not find a match (search not beyond Substring)
+    delim_begin = begin;
+    delim_end = end; for (int i=0;i<7;i++) delim_end--;
+    if (RFindInReadable(NS_LITERAL_CSTRING("classic"), delim_begin, delim_end)) {
+        printf("Should not find a match (search not beyond Substring)\n");
+        return PR_FALSE;
+    }
+
+    // When no match is found, range should be empty
+    if (delim_begin != delim_end) {
+        printf("3: When no match is found, range should be empty\n");
+        return PR_FALSE;
+    }
+
+    return PR_TRUE;
+  }
+
 PRBool test_distance()
   {
     const char text[] = "abc-xyz";
@@ -721,6 +913,8 @@ tests[] =
     { "test_rfind_2", test_rfind_2 },
     { "test_rfind_3", test_rfind_3 },
     { "test_rfind_4", test_rfind_4 },
+    { "test_findinreadable", test_findinreadable },
+    { "test_rfindinreadable", test_rfindinreadable },
     { "test_distance", test_distance },
     { "test_length", test_length },
     { "test_trim", test_trim },

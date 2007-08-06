@@ -132,6 +132,8 @@ typedef struct JSContext         JSContext;
 typedef struct JSErrorReport     JSErrorReport;
 typedef struct JSFunction        JSFunction;
 typedef struct JSFunctionSpec    JSFunctionSpec;
+typedef struct JSFastNativeSpec  JSFastNativeSpec;
+typedef struct JSFastNativeBlock JSFastNativeBlock;
 typedef struct JSTracer          JSTracer;
 typedef struct JSIdArray         JSIdArray;
 typedef struct JSProperty        JSProperty;
@@ -588,6 +590,10 @@ typedef JSBool
 typedef JSBool
 (* JS_DLL_CALLBACK JSNative)(JSContext *cx, JSObject *obj, uintN argc,
                              jsval *argv, jsval *rval);
+
+/* See jsapi.h, the JS_CALLEE, JS_THIS, etc. macros. */
+typedef JSBool
+(* JS_DLL_CALLBACK JSFastNative)(JSContext *cx, uintN argc, jsval *vp);
 
 /* Callbacks and their arguments. */
 

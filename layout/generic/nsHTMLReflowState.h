@@ -278,7 +278,6 @@ private:
   // containing block, the margin/border/padding areas, and the min/max width.
   nscoord          mComputedWidth; 
 
-public:
   // The computed height specifies the frame's content height, and it does
   // not apply to inline non-replaced elements
   //
@@ -294,6 +293,7 @@ public:
   // means you use your intrinsic height as the computed height
   nscoord          mComputedHeight;
 
+public:
   // Computed values for 'left/top/right/bottom' offsets. Only applies to
   // 'positioned' elements
   nsMargin         mComputedOffsets;
@@ -447,7 +447,12 @@ public:
   }
 
   nscoord ComputedWidth() const { return mComputedWidth; }
+  // This method doesn't apply min/max computed widths to the value passed in.
   void SetComputedWidth(nscoord aComputedWidth);
+
+  nscoord ComputedHeight() const { return mComputedHeight; }
+  // This method doesn't apply min/max computed heights to the value passed in.
+  void SetComputedHeight(nscoord aComputedHeight);
 
   void SetTruncated(const nsHTMLReflowMetrics& aMetrics, nsReflowStatus* aStatus) const;
 

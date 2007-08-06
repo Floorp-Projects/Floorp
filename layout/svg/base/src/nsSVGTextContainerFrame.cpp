@@ -133,6 +133,19 @@ nsSVGTextContainerFrame::GetDy()
 // nsIFrame methods
 
 NS_IMETHODIMP
+nsSVGTextContainerFrame::InsertFrames(nsIAtom* aListName,
+                                      nsIFrame* aPrevFrame,
+                                      nsIFrame* aFrameList)
+{
+  nsresult rv = nsSVGDisplayContainerFrame::InsertFrames(aListName,
+                                                         aPrevFrame,
+                                                         aFrameList);
+
+  UpdateGraphic();
+  return rv;
+}
+
+NS_IMETHODIMP
 nsSVGTextContainerFrame::RemoveFrame(nsIAtom *aListName, nsIFrame *aOldFrame)
 {
   nsSVGTextFrame *textFrame = GetTextFrame();

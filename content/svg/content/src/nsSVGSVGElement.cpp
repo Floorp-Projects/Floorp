@@ -301,7 +301,8 @@ nsSVGSVGElement::GetScreenPixelToMillimeterX(float *aScreenPixelToMillimeterX)
     return NS_OK;
   }
 
-  *aScreenPixelToMillimeterX = 25.4f / context->AppUnitsToDevPixels(context->AppUnitsPerInch());
+  *aScreenPixelToMillimeterX = 25.4f /
+      nsPresContext::AppUnitsToIntCSSPixels(context->AppUnitsPerInch());
   return NS_OK;
 }
 
@@ -1089,6 +1090,7 @@ nsSVGSVGElement::IsAttributeMapped(const nsIAtom* name) const
     sFontSpecificationMap,
     sGradientStopMap,
     sGraphicsMap,
+    sLightingEffectsMap,
     sMarkersMap,
     sTextContentElementsMap,
     sViewportsMap

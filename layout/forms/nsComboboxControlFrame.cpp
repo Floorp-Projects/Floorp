@@ -679,7 +679,7 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
   nsRect buttonRect = mButtonFrame->GetRect();
   // If we have a non-intrinsic computed height, our kids should have sized
   // themselves properly on their own.
-  if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) {
+  if (aReflowState.ComputedHeight() == NS_INTRINSICSIZE) {
     // The display frame is going to be the right height and width at this
     // point. Use its height as the button height.
     nsRect displayRect = mDisplayFrame->GetRect();
@@ -694,10 +694,10 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
     // The button and display area should be equal heights, unless the computed
     // height on the combobox is too small to fit their borders and padding.
     NS_ASSERTION(buttonHeight == displayHeight ||
-                 (aReflowState.mComputedHeight < buttonHeight &&
+                 (aReflowState.ComputedHeight() < buttonHeight &&
                   buttonHeight ==
                     mButtonFrame->GetUsedBorderAndPadding().TopBottom()) ||
-                 (aReflowState.mComputedHeight < displayHeight &&
+                 (aReflowState.ComputedHeight() < displayHeight &&
                   displayHeight ==
                     mDisplayFrame->GetUsedBorderAndPadding().TopBottom()),
                  "Different heights?");
@@ -1098,11 +1098,11 @@ nsComboboxDisplayFrame::Reflow(nsPresContext*           aPresContext,
                                nsReflowStatus&          aStatus)
 {
   nsHTMLReflowState state(aReflowState);
-  if (state.mComputedHeight == NS_INTRINSICSIZE) {
+  if (state.ComputedHeight() == NS_INTRINSICSIZE) {
     // Note that the only way we can have a computed height here is if the
     // combobox had a specified height.  If it didn't, size based on what our
     // rows look like, for lack of anything better.
-    state.mComputedHeight = mComboBox->mListControlFrame->GetHeightOfARow();
+    state.SetComputedHeight(mComboBox->mListControlFrame->GetHeightOfARow());
   }
   nscoord computedWidth = mComboBox->mDisplayWidth -
     state.mComputedBorderPadding.LeftRight(); 
@@ -1261,6 +1261,8 @@ nsComboboxControlFrame::SetInitialChildList(nsIAtom*        aListName,
   return rv;
 }
 
+#define NS_COMBO_FRAME_POPUP_LIST_INDEX   (NS_BLOCK_LIST_COUNT)
+
 nsIAtom*
 nsComboboxControlFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
@@ -1268,7 +1270,7 @@ nsComboboxControlFrame::GetAdditionalChildListName(PRInt32 aIndex) const
    // This is necessary because we don't want the listbox to be included in the layout
    // of the combox's children because it would take up space, when it is suppose to
    // be floating above the display.
-  if (aIndex <= NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX) {
+  if (aIndex < NS_BLOCK_LIST_COUNT) {
     return nsAreaFrame::GetAdditionalChildListName(aIndex);
   }
   

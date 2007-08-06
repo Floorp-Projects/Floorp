@@ -1,0 +1,16 @@
+prefix=%prefix%
+sdkdir=%sdkdir%
+includedir=%includedir%
+idldir=%idldir%
+includetype=stable
+
+# Note: the default pkg-config includes will only list include directories
+# that contain stable (frozen or safe for linking) header files. To include
+# nonfrozen headers, run pkg-config with --define-variable=includetype=unstable
+
+Name: libxul
+Description: The Mozilla Runtime and Embedding Engine
+Version: %MOZILLA_VERSION%
+Requires: %NSPR_NAME% >= %NSPR_VERSION%
+Libs: -L${sdkdir}/lib -lxpcomglue_s -lxul -lxpcom
+Cflags: -I${includedir}/${includetype} -fshort-wchar

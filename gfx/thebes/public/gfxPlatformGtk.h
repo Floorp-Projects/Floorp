@@ -88,6 +88,9 @@ protected:
 
     static PRInt32 sDPI;
     static gfxFontconfigUtils *sFontconfigUtils;
+
+private:
+    virtual cmsHPROFILE GetPlatformCMSOutputProfile();
 };
 
 #endif /* GFX_PLATFORM_GTK_H */

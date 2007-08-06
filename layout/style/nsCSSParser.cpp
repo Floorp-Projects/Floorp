@@ -1910,14 +1910,19 @@ static PRBool IsTreePseudoElement(nsIAtom* aPseudo)
 PRBool CSSParserImpl::ParseSelectorGroup(nsresult& aErrorCode,
                                          nsCSSSelectorList*& aList)
 {
-  nsCSSSelectorList* list = nsnull;
+  nsAutoPtr<nsCSSSelectorList> list;
   PRUnichar     combinator = PRUnichar(0);
   PRInt32       weight = 0;
   PRBool        havePseudoElement = PR_FALSE;
   PRBool        done = PR_FALSE;
   while (!done) {
-    nsCSSSelector selector;
-    nsSelectorParsingStatus parsingStatus = ParseSelector(aErrorCode, selector);
+    nsAutoPtr<nsCSSSelector> newSelector(new nsCSSSelector());
+    if (!newSelector) {
+      aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+      return PR_FALSE;
+    }
+    nsSelectorParsingStatus parsingStatus =
+      ParseSelector(aErrorCode, *newSelector);
     if (parsingStatus == eSelectorParsingStatus_Empty) {
       if (!list) {
         REPORT_UNEXPECTED(PESelectorGroupNoSelector);
@@ -1925,10 +1930,7 @@ PRBool CSSParserImpl::ParseSelectorGroup(nsresult& aErrorCode,
       break;
     }
     if (parsingStatus == eSelectorParsingStatus_Error) {
-      if (list) {
-        delete list;
-        list = nsnull;
-      }
+      list = nsnull;
       break;
     }
     if (nsnull == list) {
@@ -1938,7 +1940,7 @@ PRBool CSSParserImpl::ParseSelectorGroup(nsresult& aErrorCode,
         return PR_FALSE;
       }
     }
-    list->AddSelector(selector);
+    list->AddSelector(newSelector);
     nsCSSSelector* listSel = list->mSelectors;
 
     // pull out pseudo elements here
@@ -1953,26 +1955,34 @@ PRBool CSSParserImpl::ParseSelectorGroup(nsresult& aErrorCode,
           listSel->Reset();
           if (listSel->mNext) {// more to the selector
             listSel->mOperator = PRUnichar('>');
-            nsCSSSelector empty;
+            nsAutoPtr<nsCSSSelector> empty(new nsCSSSelector());
+            if (!empty) {
+              aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+              return PR_FALSE;
+            }
             list->AddSelector(empty); // leave a blank (universal) selector in the middle
             listSel = list->mSelectors; // use the new one for the pseudo
           }
           listSel->mTag = pseudoElement;
         }
         else {  // append new pseudo element selector
-          selector.Reset();
-          selector.mTag = pseudoClassList->mAtom; // steal ref count
+          nsAutoPtr<nsCSSSelector> pseudoTagSelector(new nsCSSSelector());
+          if (!pseudoTagSelector) {
+            aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+            return PR_FALSE;
+          }
+          pseudoTagSelector->mTag = pseudoClassList->mAtom; // steal ref count
 #ifdef MOZ_XUL
-          if (IsTreePseudoElement(selector.mTag)) {
+          if (IsTreePseudoElement(pseudoTagSelector->mTag)) {
             // Take the remaining "pseudoclasses" that we parsed
             // inside the tree pseudoelement's ()-list, and
             // make our new selector have these pseudoclasses
             // in its pseudoclass list.
-            selector.mPseudoClassList = pseudoClassList->mNext;
+            pseudoTagSelector->mPseudoClassList = pseudoClassList->mNext;
             pseudoClassList->mNext = nsnull;
           }
 #endif
-          list->AddSelector(selector);
+          list->AddSelector(pseudoTagSelector);
           pseudoClassList->mAtom = nsnull;
           listSel->mOperator = PRUnichar('>');
           if (nsnull == prevList) { // delete list entry
@@ -2014,28 +2024,32 @@ PRBool CSSParserImpl::ParseSelectorGroup(nsresult& aErrorCode,
       list->mSelectors->SetOperator(combinator);
     }
     else {
-      UngetToken(); // give it back to selector
+      if (eCSSToken_Symbol == mToken.mType &&
+          ('{' == mToken.mSymbol ||
+           ',' == mToken.mSymbol)) {
+        // End of this selector group
+        done = PR_TRUE;
+      }
+      UngetToken(); // give it back to selector if we're not done, or make sure
+                    // we see it as the end of the selector if we are.
     }
 
     if (havePseudoElement) {
       break;
     }
     else {
-      weight += selector.CalcWeight();
+      weight += listSel->CalcWeight();
     }
   }
 
   if (PRUnichar(0) != combinator) { // no dangling combinators
-    if (list) {
-      delete list;
-      list = nsnull;
-    }
+    list = nsnull;
     // This should report the problematic combinator
     REPORT_UNEXPECTED(PESelectorGroupExtraCombinator);
   }
-  aList = list;
-  if (nsnull != list) {
-    list->mWeight = weight;
+  aList = list.forget();
+  if (aList) {
+    aList->mWeight = weight;
   }
   return PRBool(nsnull != aList);
 }
@@ -3317,9 +3331,8 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
                      aMustCallValueAppended, aChanged);
     return PR_TRUE;
   }
-  else {
-    if (eCSSToken_Symbol == tk->mType) {
-      if ('!' == tk->mSymbol) {
+
+  if (eCSSToken_Symbol == tk->mType && '!' == tk->mSymbol) {
         // Look for important ident
         if (!GetToken(aErrorCode, PR_TRUE)) {
           // Premature eof is not ok
@@ -3341,24 +3354,12 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
         // Not a !important declaration
         UngetToken();
       }
-    }
-    else {
-      // Not a !important declaration
-      UngetToken();
-    }
-  }
 
   // Make sure valid property declaration is terminated with either a
-  // semicolon or a right-curly-brace (when aCheckForBraces is true).
-  // When aCheckForBraces is false, proper termination is either
-  // semicolon or EOF.
+  // semicolon, EOF or a right-curly-brace (this last only when
+  // aCheckForBraces is true).
   if (!GetToken(aErrorCode, PR_TRUE)) {
-    if (aCheckForBraces) {
-      // Premature eof is not ok
-      REPORT_UNEXPECTED_EOF(PEDeclEndEOF);
-      ClearTempData(propID);
-      return PR_FALSE;
-    }
+    // EOF is a perfectly good way to end a declaration and declaration block
     TransferTempData(aDeclaration, propID, isImportant,
                      aMustCallValueAppended, aChanged);
     return PR_TRUE;
@@ -3369,16 +3370,9 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
                        aMustCallValueAppended, aChanged);
       return PR_TRUE;
     }
-    if (!aCheckForBraces) {
-      // If we didn't hit eof and we didn't see a semicolon then the
-      // declaration is not properly terminated.
-      REPORT_UNEXPECTED_TOKEN(PEBadDeclEnd);
-      REPORT_UNEXPECTED(PEDeclDropped);
-      OUTPUT_ERROR();
-      ClearTempData(propID);
-      return PR_FALSE;
-    }
-    if ('}' == tk->mSymbol) {
+    if (aCheckForBraces && '}' == tk->mSymbol) {
+      // Unget the '}' so we'll be able to tell that this is the end
+      // of the declaration block when we unwind from here.
       UngetToken();
       TransferTempData(aDeclaration, propID, isImportant,
                        aMustCallValueAppended, aChanged);
@@ -4725,6 +4719,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(nsresult& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HC, nsnull);
   case eCSSProperty_flood_opacity:
     return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
+  case eCSSProperty_lighting_color:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HC, nsnull);
   case eCSSProperty_marker_end:
   case eCSSProperty_marker_mid:
   case eCSSProperty_marker_start:
@@ -5528,6 +5524,8 @@ PRBool CSSParserImpl::ParseBorderColors(nsresult& aErrorCode,
         aErrorCode = NS_OK;
         return PR_TRUE;
       }
+      // FIXME Bug 389404: We should not accept inherit, -moz-initial,
+      // or none as anything other than the first value.
       if (ParseVariant(aErrorCode, value, VARIANT_HCK|VARIANT_NONE, nsCSSProps::kBorderColorKTable)) {
         list->mNext = new nsCSSValueList();
         list = list->mNext;

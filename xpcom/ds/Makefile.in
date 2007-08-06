@@ -111,6 +111,7 @@ EXPORTS		= \
 		nsStringEnumerator.h \
 		nsAutoBuffer.h \
 		nsHashPropertyBag.h \
+		nsWhitespaceTokenizer.h \
 		$(NULL)			
 
 XPIDLSRCS	= \

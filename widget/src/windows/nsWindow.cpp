@@ -339,20 +339,23 @@ static PRBool IsCursorTranslucencySupported() {
 
 static PRBool IsWin2k()
 {
+  return GetWindowsVersion() == WIN2K_VERSION;
+}
+
+PRInt32 GetWindowsVersion()
+{
+  static PRInt32 version = 0;
   static PRBool didCheck = PR_FALSE;
-  static PRBool isWin2k = PR_FALSE;
 
-  if (!didCheck) {
-    didCheck = PR_TRUE;
-    OSVERSIONINFO versionInfo;
-  
-    versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
-    if (::GetVersionEx(&versionInfo))
-      isWin2k = versionInfo.dwMajorVersion == 5 &&
-                versionInfo.dwMinorVersion == 0;
+  if (!didCheck)
+  {
+    OSVERSIONINFOEX osInfo;
+    osInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    // This cast is safe and supposed to be here, don't worry
+    ::GetVersionEx((OSVERSIONINFO*)&osInfo);
+    version = (osInfo.dwMajorVersion & 0xff) << 8 | (osInfo.dwMinorVersion & 0xff);
   }
-
-  return isWin2k;
+  return version;
 }
 
 
@@ -796,7 +799,6 @@ nsWindow::nsWindow() : nsBaseWidget()
   mLastPoint.y        = 0;
   mPreferredWidth     = 0;
   mPreferredHeight    = 0;
-  mFont               = nsnull;
   mIsVisible          = PR_FALSE;
   mHas3DBorder        = PR_FALSE;
 #ifdef MOZ_XUL
@@ -890,9 +892,6 @@ nsWindow::~nsWindow()
   if (NULL != mWnd) {
     Destroy();
   }
-
-  //XXX Temporary: Should not be caching the font
-  delete mFont;
 
   if (mCursor == -1) {
     // A successfull SetCursor call will destroy the custom cursor, if it's ours
@@ -2391,52 +2390,6 @@ NS_METHOD nsWindow::SetBackgroundColor(const nscolor &aColor)
 #endif
   return NS_OK;
 }
-
-
-//-------------------------------------------------------------------------
-//
-// Get this component font
-//
-//-------------------------------------------------------------------------
-nsIFontMetrics* nsWindow::GetFont(void)
-{
-  NS_NOTYETIMPLEMENTED("GetFont not yet implemented"); // to be implemented
-  return NULL;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Set this component font
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetFont(const nsFont &aFont)
-{
-  // Cache Font for owner draw
-  if (mFont == nsnull) {
-    mFont = new nsFont(aFont);
-  } else {
-    *mFont  = aFont;
-  }
-
-  // Bail out if there is no context
-  if (nsnull == mContext) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIFontMetrics* metrics;
-  mContext->GetMetricsFor(aFont, metrics);
-  nsFontHandle  fontHandle;
-  metrics->GetFontHandle(fontHandle);
-  HFONT hfont = (HFONT)fontHandle;
-
-  // Draw in the new font
-  ::SendMessageW(mWnd, WM_SETFONT, (WPARAM)hfont, (LPARAM)0);
-  NS_RELEASE(metrics);
-
-  return NS_OK;
-}
-
 
 //-------------------------------------------------------------------------
 //
@@ -5797,6 +5750,11 @@ void nsWindow::OnDestroy()
   mOnDestroyCalled = PR_TRUE;
 
   SubclassWindow(FALSE);
+
+  // We have to destroy the native drag target before we null out our
+  // window pointer
+  EnableDragDrop(PR_FALSE);
+
   mWnd = NULL;
 
   // free GDI objects

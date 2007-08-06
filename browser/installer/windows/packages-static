@@ -234,6 +234,8 @@ bin\components\nsLivemarkService.js
 bin\components\nsTaggingService.js
 bin\components\nsDefaultCLH.js
 bin\components\nsContentPrefService.js
+bin\components\nsContentDispatchChooser.js
+bin\components\nsHandlerService.js
 
 ; Modules
 bin\modules\*
@@ -333,6 +335,7 @@ bin\softokn3.dll
 bin\freebl3.chk
 bin\freebl3.dll
 bin\ssl3.dll
+bin\nssdbm3.dll
 bin\chrome\pippki.jar
 bin\chrome\pippki.manifest
 

@@ -107,6 +107,8 @@ private:
                                                              nsRefPtr<FontEntry>& aFontEntry,
                                                              void* userArg);
 
+    virtual cmsHPROFILE GetPlatformCMSOutputProfile();
+
     nsDataHashtable<nsStringHashKey, nsRefPtr<FontEntry> > mFonts;
     nsDataHashtable<nsStringHashKey, nsRefPtr<FontEntry> > mFontAliases;
     nsDataHashtable<nsStringHashKey, nsRefPtr<FontEntry> > mFontSubstitutes;

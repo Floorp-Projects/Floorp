@@ -47,6 +47,7 @@
 #include "nsLocalFile.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsNativeCharsetUtils.h"
+#include "nsIProgrammingLanguage.h"
 
 #include "nsISimpleEnumerator.h"
 #include "nsIComponentManager.h"
@@ -746,11 +747,22 @@ nsLocalFile::nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void*
 // nsLocalFile::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsLocalFile,
-                              nsILocalFile,
-                              nsIFile,
-                              nsILocalFileWin,
-                              nsIHashable)
+NS_IMPL_THREADSAFE_ADDREF(nsLocalFile)
+NS_IMPL_THREADSAFE_RELEASE(nsLocalFile)
+NS_IMPL_QUERY_INTERFACE5_CI(nsLocalFile,
+                            nsILocalFile,
+                            nsIFile,
+                            nsILocalFileWin,
+                            nsIHashable,
+                            nsIClassInfo)
+NS_IMPL_CI_INTERFACE_GETTER4(nsLocalFile,
+                             nsILocalFile,
+                             nsIFile,
+                             nsILocalFileWin,
+                             nsIHashable)
+
+NS_DECL_CLASSINFO(nsLocalFile)
+NS_IMPL_THREADSAFE_CI(nsLocalFile)
 
 
 //-----------------------------------------------------------------------------

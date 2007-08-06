@@ -95,49 +95,8 @@ def GetResidentSize(pid):
 
 
 def GetCpuTime(pid, sampleTime=1):
-  """Calculates the percent of time a process spent executing
-     This function samples /proc/PID/status at a rate of 20samples/sec to
-     check whether a process is active or idle.
-
-  Args:
-    pid: The PID of process to calculate time for
-    sampleTime: The length of time to monitor the process for. If this
-          argument is unspecified or 0 it will be monitored until
-          it terminates
-  Returns:
-    A percent of time a PID was idle (between 0.00 and 100.00)
-  """
-  file = '/proc/%s/status' % pid
-
-  sampleInterval = .05
-  totalSamples = (1 / sampleInterval) * sampleTime
-
-  states = []
-
-  while os.path.exists(file):
-    status = open(file)
-
-    for line in status:
-      if line.find("State") >= 0:
-        states.append(line.split()[1])
-
-    # check to see if we've reached the maximum number of samples
-    if totalSamples != 0 and len(states) >= totalSamples:
-      break;
-
-    time.sleep(sampleInterval);
-    
-  # non-idle cpu time = active cpu time / total cpu time
-  # ex: 10 total cycles, 8 idle cycles, 2 active cycles
-  # non-idle cpu time = 2 / 10
-  # non-idle cpu time = .2 (20%)
-  try:
-    activeCpuTime = float(states.count("R")) / float(len(states))
-  except ZeroDivisionError:
-    activeCpuTime = -1
-
-  return float("%.2lf" % (activeCpuTime * 100))
-
+  # return all zeros on this platform as per the 7/18/07 perf meeting
+  return 0
 
 counterDict = {}
 counterDict["Private Bytes"] = GetPrivateBytes

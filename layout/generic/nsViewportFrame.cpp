@@ -78,7 +78,7 @@ ViewportFrame::SetInitialChildList(nsIAtom*        aListName,
 #ifdef NS_DEBUG
   nsFrame::VerifyDirtyBitSet(aChildList);
 #endif
-  if (mFixedContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::fixedList == aListName) {
     rv = mFixedContainer.SetInitialChildList(this, aListName, aChildList);
   } 
   else {
@@ -115,7 +115,7 @@ ViewportFrame::AppendFrames(nsIAtom*        aListName,
 {
   nsresult rv = NS_OK;
 
-  if (mFixedContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::fixedList == aListName) {
     rv = mFixedContainer.AppendFrames(this, aListName, aFrameList);
   }
   else {
@@ -134,7 +134,7 @@ ViewportFrame::InsertFrames(nsIAtom*        aListName,
 {
   nsresult rv = NS_OK;
 
-  if (mFixedContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::fixedList == aListName) {
     rv = mFixedContainer.InsertFrames(this, aListName, aPrevFrame, aFrameList);
   }
   else {
@@ -152,7 +152,7 @@ ViewportFrame::RemoveFrame(nsIAtom*        aListName,
 {
   nsresult rv = NS_OK;
 
-  if (mFixedContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::fixedList == aListName) {
     rv = mFixedContainer.RemoveFrame(this, aListName, aOldFrame);
   }
   else {
@@ -170,7 +170,7 @@ ViewportFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   NS_PRECONDITION(aIndex >= 0, "illegal index");
 
   if (0 == aIndex) {
-    return mFixedContainer.GetChildListName();
+    return nsGkAtoms::fixedList;
   }
 
   return nsnull;
@@ -179,7 +179,7 @@ ViewportFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 nsIFrame*
 ViewportFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  if (mFixedContainer.GetChildListName() == aListName) {
+  if (nsGkAtoms::fixedList == aListName) {
     nsIFrame* result = nsnull;
     mFixedContainer.FirstChild(this, aListName, &result);
     return result;
@@ -232,9 +232,10 @@ nsPoint
   if (scrollingFrame) {
     nsMargin scrollbars = scrollingFrame->GetActualScrollbarSizes();
     aReflowState->SetComputedWidth(aReflowState->ComputedWidth() -
-                                   (scrollbars.left + scrollbars.right));
-    aReflowState->availableWidth -= scrollbars.left + scrollbars.right;
-    aReflowState->mComputedHeight -= scrollbars.top + scrollbars.bottom;
+                                   scrollbars.LeftRight());
+    aReflowState->availableWidth -= scrollbars.LeftRight();
+    aReflowState->SetComputedHeight(aReflowState->ComputedHeight() -
+                                    scrollbars.TopBottom());
     // XXX why don't we also adjust "aReflowState->availableHeight"?
     return nsPoint(scrollbars.left, scrollbars.top);
   }
@@ -280,7 +281,7 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
                                          kidFrame, availableSpace);
 
       // Reflow the frame
-      kidReflowState.mComputedHeight = aReflowState.availableHeight;
+      kidReflowState.SetComputedHeight(aReflowState.availableHeight);
       rv = ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                        0, 0, 0, aStatus);
       kidRect.width = kidDesiredSize.width;
@@ -316,8 +317,8 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
 
   // Just reflow all the fixed-pos frames.
   rv = mFixedContainer.Reflow(this, aPresContext, reflowState,
-                              reflowState.ComputedWidth(), 
-                              reflowState.mComputedHeight,
+                              reflowState.ComputedWidth(),
+                              reflowState.ComputedHeight(),
                               PR_TRUE, PR_TRUE); // XXX could be optimized
 
   // If we were dirty then do a repaint

@@ -1110,14 +1110,14 @@ public:
 private:
     // nsCycleCollectionTraversalCallback methods.
 #ifdef DEBUG_CC
-    void DescribeNode(size_t refCount, size_t objSz, const char *objName);
+    NS_METHOD_(void) DescribeNode(nsrefcnt refCount, size_t objSz, const char *objName);
 #else
-    void DescribeNode(size_t refCount);
+    NS_METHOD_(void) DescribeNode(nsrefcnt refCount);
 #endif
-    void NoteXPCOMChild(nsISupports *child);
-    void NoteNativeChild(void *child,
-                         nsCycleCollectionParticipant *participant);
-    void NoteScriptChild(PRUint32 langID, void *child);
+    NS_METHOD_(void) NoteXPCOMChild(nsISupports *child);
+    NS_METHOD_(void) NoteNativeChild(void *child,
+                                     nsCycleCollectionParticipant *participant);
+    NS_METHOD_(void) NoteScriptChild(PRUint32 langID, void *child);
 };
 
 GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
@@ -1182,9 +1182,9 @@ GCGraphBuilder::Traverse(PtrInfo* aPtrInfo)
 
 void 
 #ifdef DEBUG_CC
-GCGraphBuilder::DescribeNode(size_t refCount, size_t objSz, const char *objName)
+GCGraphBuilder::DescribeNode(nsrefcnt refCount, size_t objSz, const char *objName)
 #else
-GCGraphBuilder::DescribeNode(size_t refCount)
+GCGraphBuilder::DescribeNode(nsrefcnt refCount)
 #endif
 {
 #ifdef DEBUG_CC
@@ -1846,7 +1846,7 @@ public:
         return mSuppressThisNode;
     }
 
-    void DescribeNode(size_t refCount, size_t objSz, const char *objName)
+    void DescribeNode(nsrefcnt refCount, size_t objSz, const char *objName)
     {
         mSuppressThisNode = (PL_strstr(sSuppressionList, objName) != nsnull);
     }
@@ -2519,7 +2519,7 @@ nsCycleCollector_forgetRuntime(PRUint32 langID)
 
 
 PRBool
-nsCycleCollector_suspect(nsISupports *n)
+NS_CycleCollectorSuspect(nsISupports *n)
 {
     if (sCollector)
         return sCollector->Suspect(n);
@@ -2539,7 +2539,7 @@ nsCycleCollector_suspectCurrent(nsISupports *n)
 
 
 PRBool
-nsCycleCollector_forget(nsISupports *n)
+NS_CycleCollectorForget(nsISupports *n)
 {
     if (sCollector)
         return sCollector->Forget(n);

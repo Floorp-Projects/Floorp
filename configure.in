@@ -126,6 +126,7 @@ GCONF_VERSION=1.2.1
 LIBGNOME_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
+LCMS_VERSION=1.17
 
 MSMANIFEST_TOOL=
 
@@ -3872,7 +3873,7 @@ fi
 if test -n "$MOZ_NATIVE_NSS"; then
    NSS_LIBS="$NSS_LIBS -lcrmf"
 else
-   NSS_CFLAGS='-I$(LIBXUL_DIST)/public/nss'
+   NSS_CFLAGS='-I$(LIBXUL_DIST)/include/nss'
    NSS_DEP_LIBS='\\\
         $(LIBXUL_DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \\\
         $(LIBXUL_DIST)/lib/$(DLL_PREFIX)smime'$NSS_VERSION'$(DLL_SUFFIX) \\\
@@ -4105,7 +4106,6 @@ MOZ_PYTHON_VER_DOTTED=
 MOZ_RDF=1
 MOZ_REFLOW_PERF=
 MOZ_SAFE_BROWSING=
-MOZ_SINGLE_PROFILE=
 MOZ_SPELLCHECK=1
 MOZ_STATIC_MAIL_BUILD=
 MOZ_STORAGE=1
@@ -4231,7 +4231,6 @@ basic)
   MOZ_PREF_EXTENSIONS=
   MOZ_PROFILELOCKING=
   MOZ_PROFILESHARING=
-  MOZ_SINGLE_PROFILE=1
   MOZ_SPELLCHECK=
   MOZ_SVG=
   MOZ_UNIVERSALCHARDET=
@@ -4279,7 +4278,6 @@ minimal)
   MOZ_PREF_EXTENSIONS=
   MOZ_PROFILELOCKING=
   MOZ_PROFILESHARING=
-  MOZ_SINGLE_PROFILE=1
   MOZ_SPELLCHECK=
   MOZ_STORAGE=
   MOZ_SVG=
@@ -4405,7 +4403,6 @@ AC_SUBST(MOZ_XULRUNNER)
 AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
 
 if test "$MOZ_XUL_APP"; then
-  MOZ_SINGLE_PROFILE=1
   MOZ_PROFILESHARING=
   AC_DEFINE(MOZ_XUL_APP)
 fi
@@ -5092,14 +5089,6 @@ if test "$MOZ_XPINSTALL"; then
 fi
 
 dnl ========================================================
-dnl Single profile support off by default
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(single-profile,
-[  --enable-single-profile Enable single profile support ],
-    MOZ_SINGLE_PROFILE=1,
-    MOZ_SINGLE_PROFILE= )
-
-dnl ========================================================
 dnl xpcom js loader support on by default
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(jsloader,
@@ -5170,9 +5159,6 @@ MOZ_ARG_DISABLE_BOOL(xpcom-obsolete,
     MOZ_NO_XPCOM_OBSOLETE=)
 
 if test -n "$MOZ_NO_XPCOM_OBSOLETE"; then
-if test -z "$MOZ_SINGLE_PROFILE"; then
-    AC_MSG_ERROR([Building without xpcom-obsolete isn't support when building full profile support.])
-fi
     AC_DEFINE(MOZ_NO_XPCOM_OBSOLETE)
 fi
 
@@ -5311,7 +5297,7 @@ dnl ========================================================
 
 if (test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC" \
     || test "$OS_ARCH" = "Darwin" \
-    || test "$OS_ARCH" = "Linux") \
+    || test "$OS_ARCH" = "Linux" -a "$CPU_ARCH" = "x86") \
    && test -z "$HAVE_64BIT_OS"; then
    MOZ_AIRBAG=1
 fi
@@ -6929,6 +6915,7 @@ if test "$MOZ_SVG" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_GFX" ; then
        # Define macros for cairo-features.h
        if test "$MOZ_X11"; then
            XLIB_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_SURFACE 1"
+           XLIB_XRENDER_SURFACE_FEATURE="#define CAIRO_HAS_XLIB_XRENDER_SURFACE 1"
            PS_SURFACE_FEATURE="#define CAIRO_HAS_PS_SURFACE 1"
            PDF_SURFACE_FEATURE="#define CAIRO_HAS_PDF_SURFACE 1"
            FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
@@ -6975,6 +6962,7 @@ if test "$MOZ_SVG" -o "$MOZ_ENABLE_CANVAS" -o "$MOZ_ENABLE_CAIRO_GFX" ; then
        AC_SUBST(PDF_SURFACE_FEATURE)
        AC_SUBST(SVG_SURFACE_FEATURE)
        AC_SUBST(XLIB_SURFACE_FEATURE)
+       AC_SUBST(XLIB_XRENDER_SURFACE_FEATURE)
        AC_SUBST(QUARTZ_SURFACE_FEATURE)
        AC_SUBST(NQUARTZ_SURFACE_FEATURE)
        AC_SUBST(XCB_SURFACE_FEATURE)
@@ -7020,6 +7008,35 @@ fi
 AC_SUBST(MOZ_TREE_CAIRO)
 AC_SUBST(MOZ_CAIRO_CFLAGS)
 AC_SUBST(MOZ_CAIRO_LIBS)
+
+dnl ========================================================
+dnl Check for lcms
+dnl ========================================================
+
+MOZ_NATIVE_LCMS=
+MOZ_ARG_ENABLE_BOOL(system-lcms,
+[ --enable-system-lcms Use system lcms (located with pkgconfig)],
+MOZ_NATIVE_LCMS=1,
+MOZ_NATIVE_LCMS= )
+
+if test -z "$MOZ_NATIVE_LCMS"
+then
+    LCMS_CFLAGS=
+    if test "$OS_ARCH" = "WINNT"; then
+        if test -z "$BUILD_STATIC_LIBS" -a -z "$MOZ_ENABLE_LIBXUL"; then
+            LCMS_CFLAGS=-DLCMS_DLL
+        fi
+        LCMS_LIBS='$(LIBXUL_DIST)/lib/mozlcms.lib'
+    else
+        LCMS_LIBS='-L$(LIBXUL_DIST)/bin -lmozlcms'
+    fi
+else
+    PKG_CHECK_MODULES(LCMS, lcms >= $LCMS_VERSION)
+fi
+
+AC_SUBST(MOZ_NATIVE_LCMS)
+AC_SUBST(LCMS_CFLAGS)
+AC_SUBST(LCMS_LIBS)
 
 dnl ========================================================
 dnl disable xul
@@ -7417,7 +7434,6 @@ AC_SUBST(MOZ_UNIVERSALCHARDET)
 AC_SUBST(ACCESSIBILITY)
 AC_SUBST(MOZ_XPINSTALL)
 AC_SUBST(MOZ_VIEW_SOURCE)
-AC_SUBST(MOZ_SINGLE_PROFILE)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_XPFE_COMPONENTS)
 AC_SUBST(MOZ_USER_DIR)

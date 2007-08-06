@@ -81,13 +81,15 @@ class nsAccessibleWrap : public nsAccessible
 
     // we'll flatten buttons and checkboxes. usually they have a text node
     // child, that is their title. Works in conjunction with IsPruned() below.
+    // XXX There is no IsPruned() method, so what does that comment mean?
     PRBool IsFlat() {
       PRUint32 role = Role(this);
       return (role == nsIAccessibleRole::ROLE_CHECKBUTTON ||
               role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
               role == nsIAccessibleRole::ROLE_TOGGLE_BUTTON ||
               role == nsIAccessibleRole::ROLE_SPLITBUTTON ||
-              role == nsIAccessibleRole::ROLE_ENTRY);
+              role == nsIAccessibleRole::ROLE_ENTRY ||
+              role == nsIAccessibleRole::ROLE_IMAGE);
     }
     
     // ignored means that the accessible might still have children, but is not displayed

@@ -50,9 +50,6 @@ SDK_XPIDLSRCS	= \
 		$(NULL)
 
 XPIDLSRCS	= \
-		nsIProfileInternal.idl \
-		nsIProfileStartupListener.idl \
-	        nsISessionRoaming.idl \
 	        nsIProfileUnlocker.idl \
 		$(NULL)
 

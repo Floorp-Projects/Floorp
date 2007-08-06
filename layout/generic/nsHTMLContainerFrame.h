@@ -170,6 +170,10 @@ protected:
    *                                i.e. negative offsets draws *below*
    *                                the baseline.
    *    @param aSize              the thickness of the line
+   *    @param aDecoration        which line will be painted
+   *                                i.e., NS_STYLE_TEXT_DECORATION_UNDERLINE or
+   *                                      NS_STYLE_TEXT_DECORATION_OVERLINE or
+   *                                      NS_STYLE_TEXT_DECORATION_LINE_THROUGH.
    */
   virtual void PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
                                        nsPoint aPt,
@@ -177,8 +181,9 @@ protected:
                                        nscolor aColor,
                                        nscoord aOffset,
                                        nscoord aAscent,
-                                       nscoord aSize);
-                                       
+                                       nscoord aSize,
+                                       const PRUint8 aDecoration);
+
   friend class nsDisplayTextDecoration;
 };
 

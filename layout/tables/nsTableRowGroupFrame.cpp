@@ -757,9 +757,9 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
   PRBool styleHeightAllocation = PR_FALSE;
   nscoord rowGroupHeight = startRowGroupHeight + heightOfRows + ((numRows - 1) * cellSpacingY);
   // if we have a style height, allocate the extra height to unconstrained rows
-  if ((aReflowState.mComputedHeight > rowGroupHeight) && 
-      (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight)) {
-    nscoord extraComputedHeight = aReflowState.mComputedHeight - rowGroupHeight;
+  if ((aReflowState.ComputedHeight() > rowGroupHeight) && 
+      (NS_UNCONSTRAINEDSIZE != aReflowState.ComputedHeight())) {
+    nscoord extraComputedHeight = aReflowState.ComputedHeight() - rowGroupHeight;
     nscoord extraUsed = 0;
     PRBool haveUnStyledRows = (heightOfUnStyledRows > 0);
     nscoord divisor = (haveUnStyledRows) 
@@ -786,7 +786,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsPresContext*          aPresContext,
         }
       }
     }
-    rowGroupHeight = aReflowState.mComputedHeight;
+    rowGroupHeight = aReflowState.ComputedHeight();
   }
 
   nscoord yOrigin = startRowGroupHeight;
@@ -1295,8 +1295,8 @@ nsTableRowGroupFrame::Reflow(nsPresContext*          aPresContext,
     aStatus = NS_FRAME_NOT_COMPLETE;
   }
 
-  SetHasStyleHeight((NS_UNCONSTRAINEDSIZE != aReflowState.mComputedHeight) &&
-                    (aReflowState.mComputedHeight > 0)); 
+  SetHasStyleHeight((NS_UNCONSTRAINEDSIZE != aReflowState.ComputedHeight()) &&
+                    (aReflowState.ComputedHeight() > 0)); 
   
   // just set our width to what was available. The table will calculate the width and not use our value.
   aDesiredSize.width = aReflowState.availableWidth;
@@ -1440,9 +1440,9 @@ nsTableRowGroupFrame::GetHeightBasis(const nsHTMLReflowState& aReflowState)
   nscoord result = 0;
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(this);
   if (tableFrame) {
-    if ((aReflowState.mComputedHeight > 0) && (aReflowState.mComputedHeight < NS_UNCONSTRAINEDSIZE)) {
+    if ((aReflowState.ComputedHeight() > 0) && (aReflowState.ComputedHeight() < NS_UNCONSTRAINEDSIZE)) {
       nscoord cellSpacing = PR_MAX(0, GetRowCount() - 1) * tableFrame->GetCellSpacingY();
-      result = aReflowState.mComputedHeight - cellSpacing;
+      result = aReflowState.ComputedHeight() - cellSpacing;
     }
     else {
       const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
@@ -1450,9 +1450,9 @@ nsTableRowGroupFrame::GetHeightBasis(const nsHTMLReflowState& aReflowState)
         parentRS = parentRS->parentReflowState;
       }
       if (parentRS && (tableFrame == parentRS->frame) && 
-          (parentRS->mComputedHeight > 0) && (parentRS->mComputedHeight < NS_UNCONSTRAINEDSIZE)) {
+          (parentRS->ComputedHeight() > 0) && (parentRS->ComputedHeight() < NS_UNCONSTRAINEDSIZE)) {
         nscoord cellSpacing = PR_MAX(0, tableFrame->GetRowCount() + 1) * tableFrame->GetCellSpacingY();
-        result = parentRS->mComputedHeight - cellSpacing;
+        result = parentRS->ComputedHeight() - cellSpacing;
       }
     }
   }

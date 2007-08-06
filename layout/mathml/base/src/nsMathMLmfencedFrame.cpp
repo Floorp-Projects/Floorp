@@ -286,7 +286,7 @@ nsMathMLmfencedFrame::doReflow(nsPresContext*          aPresContext,
 
   PRInt32 count = 0;
   nsReflowStatus childStatus;
-  nsSize availSize(aReflowState.ComputedWidth(), aReflowState.mComputedHeight);
+  nsSize availSize(aReflowState.ComputedWidth(), aReflowState.ComputedHeight());
   nsHTMLReflowMetrics childDesiredSize(
                       aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
   nsIFrame* firstChild = aForFrame->GetFirstChild(nsnull);
