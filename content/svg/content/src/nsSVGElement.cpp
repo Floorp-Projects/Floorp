@@ -70,7 +70,7 @@
 #include <stdarg.h>
 
 nsSVGElement::nsSVGElement(nsINodeInfo *aNodeInfo)
-  : nsGenericElement(aNodeInfo), mSuppressNotification(PR_FALSE)
+  : nsSVGElementBase(aNodeInfo), mSuppressNotification(PR_FALSE)
 {
 }
 
@@ -110,33 +110,21 @@ nsSVGElement::~nsSVGElement()
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ADDREF_INHERITED(nsSVGElement,nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsSVGElement,nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsSVGElement, nsSVGElementBase)
+NS_IMPL_RELEASE_INHERITED(nsSVGElement, nsSVGElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
 // provided by nsGenericElement:
 //  NS_INTERFACE_MAP_ENTRY(nsIContent)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
+NS_INTERFACE_MAP_END_INHERITING(nsSVGElementBase)
 
 //----------------------------------------------------------------------
 // Implementation
   
 //----------------------------------------------------------------------
 // nsIContent methods
-
-nsIAtom *
-nsSVGElement::GetIDAttributeName() const
-{
-  return nsGkAtoms::id;
-}
-
-nsIAtom *
-nsSVGElement::GetClassAttributeName() const
-{
-  return nsGkAtoms::_class;
-}
 
 nsresult
 nsSVGElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
@@ -151,7 +139,7 @@ nsSVGElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     mContentStyleRule = nsnull;
   }
 
-  return nsGenericElement::BeforeSetAttr(aNamespaceID, aName, aValue, aNotify);
+  return nsSVGElementBase::BeforeSetAttr(aNamespaceID, aName, aValue, aNotify);
 }
 
 nsresult
@@ -163,7 +151,7 @@ nsSVGElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return nsGenericElement::AfterSetAttr(aNamespaceID, aName, aValue, aNotify);
+  return nsSVGElementBase::AfterSetAttr(aNamespaceID, aName, aValue, aNotify);
 }
 
 PRBool
@@ -219,12 +207,6 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
   }
 
   if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::style) {
-      nsGenericHTMLElement::ParseStyleAttribute(this, PR_TRUE,
-                                                aValue, aResult);
-      return PR_TRUE;
-    }
-
     // Check for nsSVGLength2 attribute
     LengthAttributesInfo lengthInfo = GetLengthInfo();
     PRUint32 i;
@@ -257,7 +239,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
     }
   }
 
-  return nsGenericElement::ParseAttribute(aNamespaceID, aAttribute, aValue,
+  return nsSVGElementBase::ParseAttribute(aNamespaceID, aAttribute, aValue,
                                           aResult);
 }
 
@@ -305,7 +287,7 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
     }
   }
 
-  return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
+  return nsSVGElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
 }
 
 PRBool
@@ -327,50 +309,6 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
     aRuleWalker->Forward(mContentStyleRule);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
-{
-  PRBool modification = PR_FALSE;
-  nsAutoString oldValueStr;
-
-  PRBool hasListeners = aNotify &&
-    nsContentUtils::HasMutationListeners(this,
-                                         NS_EVENT_BITS_MUTATION_ATTRMODIFIED,
-                                         this);
-
-  // There's no point in comparing the stylerule pointers since we're always
-  // getting a new stylerule here. And we can't compare the stringvalues of
-  // the old and the new rules since both will point to the same declaration
-  // and thus will be the same.
-  if (hasListeners) {
-    // save the old attribute so we can set up the mutation event properly
-    // XXXbz if the old rule points to the same declaration as the new one,
-    // this is getting the new attr value, not the old one....
-    modification = GetAttr(kNameSpaceID_None, nsGkAtoms::style,
-                           oldValueStr);
-  }
-  else if (aNotify && IsInDoc()) {
-    modification = !!mAttrsAndChildren.GetAttr(nsGkAtoms::style);
-  }
-
-  nsAttrValue attrValue(aStyleRule);
-
-  return SetAttrAndNotify(kNameSpaceID_None, nsGkAtoms::style, nsnull, oldValueStr,
-                          attrValue, modification, hasListeners, aNotify);
-}
-
-nsICSSStyleRule*
-nsSVGElement::GetInlineStyleRule()
-{
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
-
-  if (attrVal && attrVal->Type() == nsAttrValue::eCSSStyleRule) {
-    return attrVal->GetCSSStyleRuleValue();
-  }
-
-  return nsnull;
 }
 
 // PresentationAttributes-FillStroke
