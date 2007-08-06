@@ -159,7 +159,8 @@ gfxWindowsFont::CairoScaledFont()
         cairo_font_options_destroy(fontOptions);
     }
 
-    NS_ASSERTION(mScaledFont, "Failed to make scaled font");
+    NS_ASSERTION(mScaledFont || mAdjustedSize == 0.0,
+                 "Failed to make scaled font");
 
     return mScaledFont;
 }
@@ -414,10 +415,15 @@ gfxWindowsFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
                   aSpacing);
 }
 
-void
+PRBool
 gfxWindowsFont::SetupCairoFont(cairo_t *aCR)
 {
-    cairo_set_scaled_font(aCR, CairoScaledFont());
+    cairo_scaled_font_t *scaledFont = CairoScaledFont();
+    if (NS_LIKELY(scaledFont)) {
+        cairo_set_scaled_font(aCR, scaledFont);
+        return PR_TRUE;
+    }
+    return PR_FALSE;
 }
 
 /**********************************************************************
@@ -1105,7 +1111,9 @@ public:
     void SetCurrentFont(gfxWindowsFont *aFont) {
         if (mCurrentFont != aFont) {
             mCurrentFont = aFont;
-            cairo_win32_scaled_font_done_font(mCurrentFont->CairoScaledFont());
+            cairo_scaled_font_t *scaledFont = mCurrentFont->CairoScaledFont();
+            if (scaledFont)
+                cairo_win32_scaled_font_done_font(scaledFont);
             mFontSelected = PR_FALSE;
         }
     }
@@ -1122,8 +1130,9 @@ public:
 
         cairo_set_font_face(cr, mCurrentFont->CairoFontFace());
         cairo_set_font_size(cr, mCurrentFont->GetAdjustedSize());
-
-        cairo_win32_scaled_font_select_font(mCurrentFont->CairoScaledFont(), mDC);
+        cairo_scaled_font_t *scaledFont = mCurrentFont->CairoScaledFont();
+        if (scaledFont)
+            cairo_win32_scaled_font_select_font(scaledFont, mDC);
 
         mFontSelected = PR_TRUE;
     }
