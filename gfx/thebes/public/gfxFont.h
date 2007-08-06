@@ -418,7 +418,7 @@ protected:
     gfxFontStyle      mStyle;
 
     // This is called by the default Draw() implementation above.
-    virtual void SetupCairoFont(cairo_t *aCR) = 0;
+    virtual PRBool SetupCairoFont(cairo_t *aCR) = 0;
 };
 
 class THEBES_API gfxTextRunFactory {

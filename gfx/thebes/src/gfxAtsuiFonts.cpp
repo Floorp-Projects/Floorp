@@ -223,6 +223,17 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
 #endif
 }
 
+PRBool
+gfxAtsuiFont::SetupCairoFont(cairo_t *aCR)
+{
+    cairo_scaled_font_t *scaledFont = CairoScaledFont();
+    if (NS_LIKELY(scaledFont)) {
+        cairo_set_scaled_font(aCR, scaledFont);
+        return PR_TRUE;
+    }
+    return PR_FALSE;
+}
+
 nsString
 gfxAtsuiFont::GetUniqueName()
 {

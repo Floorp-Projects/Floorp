@@ -213,10 +213,10 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
     double x = aPt->x;
     double y = aPt->y;
 
-    NS_ASSERTION(appUnitsPerDevUnit != 0, "Invalid app unit scale");
-
     cairo_t *cr = aContext->GetCairo();
-    SetupCairoFont(cr);
+    PRBool success = SetupCairoFont(cr);
+    if (NS_UNLIKELY(!success))
+        return;
 
     GlyphBuffer glyphs;
     cairo_glyph_t *glyph;
@@ -679,6 +679,7 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters *aParams, const void 
     mAppUnitsPerDevUnit(aParams->mAppUnitsPerDevUnit),
     mFlags(aFlags), mCharacterCount(aLength), mHashCode(0)
 {
+    NS_ASSERTION(mAppUnitsPerDevUnit != 0, "Invalid app unit scale");
     MOZ_COUNT_CTOR(gfxTextRun);
     NS_ADDREF(mFontGroup);
     if (aParams->mSkipChars) {

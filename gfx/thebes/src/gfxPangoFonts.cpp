@@ -914,7 +914,7 @@ CreateScaledFont(cairo_t *aCR, cairo_matrix_t *aCTM, PangoFont *aPangoFont)
     return scaledFont;
 }
 
-void
+PRBool
 gfxPangoFont::SetupCairoFont(cairo_t *aCR)
 {
     cairo_matrix_t currentCTM;
@@ -927,7 +927,7 @@ gfxPangoFont::SetupCairoFont(cairo_t *aCR)
         if (fontCTM.xx == currentCTM.xx && fontCTM.yy == currentCTM.yy &&
             fontCTM.xy == currentCTM.xy && fontCTM.yx == currentCTM.yx) {
             cairo_set_scaled_font(aCR, mCairoFont);
-            return;
+            return PR_TRUE;
         }
 
         // Just recreate it from scratch, simplest way
@@ -935,7 +935,11 @@ gfxPangoFont::SetupCairoFont(cairo_t *aCR)
     }
 
     mCairoFont = CreateScaledFont(aCR, &currentCTM, GetPangoFont());
-    cairo_set_scaled_font(aCR, mCairoFont);
+    if (NS_LIKELY(mCairoFont)) {
+        cairo_set_scaled_font(aCR, mCairoFont);
+        return PR_TRUE;
+    }
+    return PR_FALSE;
 }
 
 static void
