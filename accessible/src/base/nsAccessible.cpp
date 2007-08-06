@@ -2113,6 +2113,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
     for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(ariaProperties); index ++) {
       nsAutoString value;
       nsCOMPtr<nsIAtom> attr = do_GetAtom(ariaProperties[index]);
+      NS_ENSURE_TRUE(attr, NS_ERROR_OUT_OF_MEMORY);
       if (content->GetAttr(kNameSpaceID_WAIProperties, attr, value)) {
         ToLowerCase(value);
         attributes->SetStringProperty(nsDependentCString(ariaProperties[index]), value, oldValueUnused);    
@@ -2259,6 +2260,7 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
 
   nsAutoString attribValue;
   nsCOMPtr<nsIAtom> attribAtom = do_GetAtom(aStateMapEntry->attributeName); // XXX put atoms directly in entry
+  NS_ENSURE_TRUE(attribAtom, NS_ERROR_OUT_OF_MEMORY);
   if (aContent->GetAttr(kNameSpaceID_WAIProperties, attribAtom, attribValue)) {
     if (aStateMapEntry->attributeValue == kBoolState) {
       // No attribute value map specified in state map entry indicates state cleared
