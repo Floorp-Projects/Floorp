@@ -316,7 +316,8 @@ protected:
                                        nscolor aColor,
                                        nscoord aOffset,
                                        nscoord aAscent,
-                                       nscoord aSize);
+                                       nscoord aSize,
+                                       const PRUint8 aDecoration);
 
   void TryAllLines(nsLineList::iterator* aIterator,
                    nsLineList::iterator* aEndIterator,

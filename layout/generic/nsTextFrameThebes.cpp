@@ -3691,7 +3691,7 @@ FillClippedRect(gfxContext* aCtx, nsPresContext* aPresContext,
 {
   gfxRect r = aRect.Intersect(aDirtyRect);
   // For now, we need to put this in pixel coordinates
-  float t2p = 1.0/aPresContext->AppUnitsPerDevPixel();
+  float t2p = 1.0f / aPresContext->AppUnitsPerDevPixel();
   aCtx->NewPath();
   // pixel-snap
   aCtx->Rectangle(gfxRect(r.X()*t2p, r.Y()*t2p, r.Width()*t2p, r.Height()*t2p), PR_TRUE);
@@ -3765,24 +3765,35 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
     return;
 
   gfxFont::Metrics fontMetrics = GetFontMetrics(aProvider.GetFontGroup());
-  gfxFloat pix2app = mTextRun->GetAppUnitsPerDevUnit();
+  gfxFloat a2p = 1.0 / aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
+
+  // XXX aFramePt is in AppUnits, shouldn't it be nsFloatPoint?
+  gfxPoint pt(aFramePt.x * a2p, aFramePt.y * a2p);
+  gfxSize size(GetRect().width * a2p, 0);
+  gfxFloat ascent = mAscent * a2p;
 
   if (decorations & NS_FONT_DECORATION_OVERLINE) {
-    FillClippedRect(aCtx, aTextPaintStyle.PresContext(), overColor, aDirtyRect,
-                    gfxRect(aFramePt.x, aFramePt.y,
-                            GetRect().width, NS_round(fontMetrics.underlineSize)*pix2app));
+    size.height = fontMetrics.underlineSize;
+    nsCSSRendering::PaintDecorationLine(
+      aCtx, overColor, pt, size, ascent, ascent, size.height,
+      NS_STYLE_TEXT_DECORATION_OVERLINE, NS_STYLE_BORDER_STYLE_SOLID,
+      mTextRun->IsRightToLeft());
   }
   if (decorations & NS_FONT_DECORATION_UNDERLINE) {
-    FillClippedRect(aCtx, aTextPaintStyle.PresContext(), underColor, aDirtyRect,
-                    gfxRect(aFramePt.x,
-                            GetSnappedBaselineY(aCtx, aFramePt.y) - NS_round(fontMetrics.underlineOffset)*pix2app,
-                            GetRect().width, NS_round(fontMetrics.underlineSize)*pix2app));
+    size.height = fontMetrics.underlineSize;
+    gfxFloat offset = fontMetrics.underlineOffset;
+    nsCSSRendering::PaintDecorationLine(
+      aCtx, underColor, pt, size, ascent, offset, size.height,
+      NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID,
+      mTextRun->IsRightToLeft());
   }
   if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
-    FillClippedRect(aCtx, aTextPaintStyle.PresContext(), strikeColor, aDirtyRect,
-                    gfxRect(aFramePt.x,
-                            GetSnappedBaselineY(aCtx, aFramePt.y) - NS_round(fontMetrics.strikeoutOffset)*pix2app,
-                            GetRect().width, NS_round(fontMetrics.strikeoutSize)*pix2app));
+    size.height = fontMetrics.strikeoutSize;
+    gfxFloat offset = fontMetrics.strikeoutOffset;
+    nsCSSRendering::PaintDecorationLine(
+      aCtx, strikeColor, pt, size, ascent, offset, size.height,
+      NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID,
+      mTextRun->IsRightToLeft());
   }
 }
 
@@ -3795,21 +3806,20 @@ static const SelectionType SelectionTypesWithDecorations =
   nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT;
 
 static void DrawIMEUnderline(gfxContext* aContext, PRInt32 aIndex,
-    nsTextPaintStyle& aTextPaintStyle, const gfxPoint& aBaselinePt, gfxFloat aWidth,
-    const gfxRect& aDirtyRect, const gfxFont::Metrics& aFontMetrics)
+    nsTextPaintStyle& aTextPaintStyle, const gfxPoint& aPt, gfxFloat aWidth,
+    gfxFloat aAscent, gfxFloat aSize, gfxFloat aOffset, PRBool aIsRTL)
 {
-  float p2t = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
   nscolor color;
   float relativeSize;
   if (!aTextPaintStyle.GetIMEUnderline(aIndex, &color, &relativeSize))
     return;
 
-  gfxFloat y = aBaselinePt.y - aFontMetrics.underlineOffset*p2t;
-  gfxFloat size = aFontMetrics.underlineSize*p2t;
-  FillClippedRect(aContext, aTextPaintStyle.PresContext(),
-                  color, aDirtyRect,
-                  gfxRect(aBaselinePt.x + size, y,
-                          PR_MAX(0, aWidth - 2*size), relativeSize*size));
+  gfxFloat actualSize = relativeSize * aSize;
+  gfxFloat width = PR_MAX(0, aWidth - 2.0 * aSize);
+  gfxPoint pt(aPt.x + 1.0, aPt.y);
+  nsCSSRendering::PaintDecorationLine(
+    aContext, color, pt, gfxSize(width, actualSize), aAscent, aOffset, aSize,
+    NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID, aIsRTL);
 }
 
 /**
@@ -3817,40 +3827,41 @@ static void DrawIMEUnderline(gfxContext* aContext, PRInt32 aIndex,
  * drawing text decoration for selections.
  */
 static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
-    nsTextPaintStyle& aTextPaintStyle, const gfxPoint& aBaselinePt, gfxFloat aWidth,
-    const gfxRect& aDirtyRect, const gfxFont::Metrics& aFontMetrics)
+    nsTextPaintStyle& aTextPaintStyle, const gfxPoint& aPt, gfxFloat aWidth,
+    gfxFloat aAscent, const gfxFont::Metrics& aFontMetrics, PRBool aIsRTL)
 {
-  float p2t = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
-  float t2p = 1/p2t;
+  gfxSize size(aWidth, aFontMetrics.underlineSize);
+  gfxFloat offset = aFontMetrics.underlineOffset;
 
   switch (aType) {
     case nsISelectionController::SELECTION_SPELLCHECK: {
-      gfxFloat y = aBaselinePt.y*t2p - aFontMetrics.underlineOffset;
-      aContext->SetDash(gfxContext::gfxLineDotted);
-      aContext->SetColor(gfxRGBA(1.0, 0.0, 0.0));
-      aContext->SetLineWidth(1.0);
-      aContext->NewPath();
-      aContext->Line(gfxPoint(aBaselinePt.x*t2p, y),
-                     gfxPoint((aBaselinePt.x + aWidth)*t2p, y));
-      aContext->Stroke();
+      nsCSSRendering::PaintDecorationLine(
+        aContext, NS_RGB(255,0,0),
+        aPt, size, aAscent, aFontMetrics.underlineOffset, size.height,
+        NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_DOTTED,
+        aIsRTL);
       break;
     }
 
     case nsISelectionController::SELECTION_IME_RAWINPUT:
-      DrawIMEUnderline(aContext, nsTextPaintStyle::eIndexRawInput, aTextPaintStyle,
-                       aBaselinePt, aWidth, aDirtyRect, aFontMetrics);
+      DrawIMEUnderline(aContext, nsTextPaintStyle::eIndexRawInput,
+                       aTextPaintStyle, aPt, aWidth, aAscent, size.height,
+                       aFontMetrics.underlineOffset, aIsRTL);
       break;
     case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:
-      DrawIMEUnderline(aContext, nsTextPaintStyle::eIndexSelRawText, aTextPaintStyle,
-                       aBaselinePt, aWidth, aDirtyRect, aFontMetrics);
+      DrawIMEUnderline(aContext, nsTextPaintStyle::eIndexSelRawText,
+                       aTextPaintStyle, aPt, aWidth, aAscent, size.height,
+                       aFontMetrics.underlineOffset, aIsRTL);
       break;
     case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:
-      DrawIMEUnderline(aContext, nsTextPaintStyle::eIndexConvText, aTextPaintStyle,
-                       aBaselinePt, aWidth, aDirtyRect, aFontMetrics);
+      DrawIMEUnderline(aContext, nsTextPaintStyle::eIndexConvText,
+                       aTextPaintStyle, aPt, aWidth, aAscent, size.height,
+                       aFontMetrics.underlineOffset, aIsRTL);
       break;
     case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:
-      DrawIMEUnderline(aContext, nsTextPaintStyle::eIndexSelConvText, aTextPaintStyle,
-                       aBaselinePt, aWidth, aDirtyRect, aFontMetrics);
+      DrawIMEUnderline(aContext, nsTextPaintStyle::eIndexSelConvText,
+                       aTextPaintStyle, aPt, aWidth, aAscent, size.height,
+                       aFontMetrics.underlineOffset, aIsRTL);
       break;
 
     default:
@@ -4137,10 +4148,14 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     gfxFloat advance = hyphenWidth +
       mTextRun->GetAdvanceWidth(offset, length, &aProvider);
     if (type == aSelectionType) {
-      gfxFloat x = aTextBaselinePt.x + xOffset - (mTextRun->IsRightToLeft() ? advance : 0);
+      gfxFloat a2p = 1.0 / aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
+      // XXX aTextBaselinePt is in AppUnits, shouldn't it be nsFloatPoint?
+      gfxPoint pt((aTextBaselinePt.x + xOffset) * a2p,
+                  (aTextBaselinePt.y - mAscent) * a2p);
+      gfxFloat width = PR_ABS(advance) * a2p;
       DrawSelectionDecorations(aCtx, aSelectionType, aTextPaintStyle,
-                               gfxPoint(x, aTextBaselinePt.y), advance,
-                               aDirtyRect, decorationMetrics);
+                               pt, width, mAscent * a2p, decorationMetrics,
+                               mTextRun->IsRightToLeft());
     }
     iterator.UpdateWithAdvance(advance);
   }
