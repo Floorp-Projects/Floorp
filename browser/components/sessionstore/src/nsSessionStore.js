@@ -480,6 +480,9 @@ SessionStoreService.prototype = {
       this.saveStateDelayed();
     }
     
+    // cache the window state until the window is completely gone
+    aWindow.__SS_dyingCache = this._windows[aWindow.__SSi] || this._lastWindowClosed;
+    
     delete aWindow.__SSi;
   },
 
@@ -641,6 +644,9 @@ SessionStoreService.prototype = {
   },
 
   getWindowState: function sss_getWindowState(aWindow) {
+    if (!aWindow.__SSi && aWindow.__SS_dyingCache)
+      return this._toJSONString({ windows: [aWindow.__SS_dyingCache] });
+    
     return this._toJSONString(this._getWindowState(aWindow));
   },
 
@@ -649,16 +655,29 @@ SessionStoreService.prototype = {
   },
 
   getClosedTabCount: function sss_getClosedTabCount(aWindow) {
+    if (!aWindow.__SSi && aWindow.__SS_dyingCache)
+      return aWindow.__SS_dyingCache._closedTabs.length;
+    
     return this._windows[aWindow.__SSi]._closedTabs.length;
   },
 
   closedTabNameAt: function sss_closedTabNameAt(aWindow, aIx) {
-    var tabs = this._windows[aWindow.__SSi]._closedTabs;
+    var tabs;
     
-    return aIx in tabs ? tabs[aIx].title : null;
+    if (aWindow.__SSi && aWindow.__SSi in this._windows)
+      tabs = this._windows[aWindow.__SSi]._closedTabs;
+    else if (aWindow.__SS_dyingCache)
+      tabs = aWindow.__SS_dyingCache._closedTabs;
+    else
+      Components.returnCode = Cr.NS_ERROR_INVALID_ARG;
+    
+    return tabs && aIx in tabs ? tabs[aIx].title : null;
   },
 
   getClosedTabData: function sss_getClosedTabDataAt(aWindow) {
+    if (!aWindow.__SSi && aWindow.__SS_dyingCache)
+      return this._toJSONString(aWindow.__SS_dyingCache._closedTabs);
+    
     return this._toJSONString(this._windows[aWindow.__SSi]._closedTabs);
   },
 
@@ -696,6 +715,10 @@ SessionStoreService.prototype = {
   getWindowValue: function sss_getWindowValue(aWindow, aKey) {
     if (aWindow.__SSi) {
       var data = this._windows[aWindow.__SSi].extData || {};
+      return data[aKey] || "";
+    }
+    else if (aWindow.__SS_dyingCache) {
+      data = aWindow.__SS_dyingCache.extData || {};
       return data[aKey] || "";
     }
     else {
