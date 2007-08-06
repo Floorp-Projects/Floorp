@@ -33,7 +33,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * This spellchecker is based on the built-in spellchecker on Mac OS X. It
- * does not use any MySpell technology or rely on their dictionaries. It's just
+ * does not use any Hunspell technology or rely on their dictionaries. It's just
  * a thin wrapper around the Cocoa NSSpellChecker API.
  *
  * ***** END LICENSE BLOCK ***** */
@@ -48,7 +48,7 @@
 
 // use the same contract id as the MySpell spelchecker so we get picked up
 // instead on Mac OS X but we have our own CID. 
-#define MOZ_OSXSPELL_CONTRACTID "@mozilla.org/spellchecker/myspell;1"
+#define MOZ_OSXSPELL_CONTRACTID "@mozilla.org/spellchecker/hunspell;1"
 #define MOZ_OSXSPELL_CID         \
 { /* BAABBAF4-71C3-47F4-A576-E75469E485E2 */  \
 0xBAABBAF4, 0x71C3, 0x47F4,                    \
