@@ -1,5 +1,4 @@
 /*
- * $Id: pixman-edge-imp.h,v 1.5 2007/08/07 01:52:15 vladimir%pobox.com Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -35,8 +34,8 @@ rasterizeEdges (pixman_image_t  *image,
     pixman_fixed_t  y = t;
     uint32_t  *line;
     uint32_t *buf = (image)->bits.bits;
-    uint32_t stride = (image)->bits.rowstride;
-    uint32_t width = (image)->bits.width;
+    int32_t stride = (image)->bits.rowstride;
+    int32_t width = (image)->bits.width;
     
     line = buf + pixman_fixed_to_int (y) * stride;
     
