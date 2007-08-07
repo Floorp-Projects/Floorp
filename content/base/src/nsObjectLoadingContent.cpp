@@ -128,7 +128,8 @@ nsAsyncInstantiateEvent::Run()
   // the type here - GetFrame() only returns object frames, and that means we're
   // a plugin)
   // Also make sure that we still refer to the same data.
-  if (mContent->GetFrame(PR_FALSE) == mFrame &&
+  nsIObjectFrame* frame = mContent->GetFrame(PR_FALSE);
+  if (frame == mFrame &&
       mContent->mURI == mURI &&
       mContent->mContentType.Equals(mContentType)) {
     if (LOG_ENABLED()) {
@@ -140,7 +141,7 @@ nsAsyncInstantiateEvent::Run()
            mContent, mContentType.get(), mURI.get(), spec.get()));
     }
 
-    nsresult rv = mContent->Instantiate(mContentType, mURI);
+    nsresult rv = mContent->Instantiate(frame, mContentType, mURI);
     if (NS_FAILED(rv)) {
       mContent->Fallback(PR_TRUE);
     }
@@ -643,7 +644,7 @@ nsObjectLoadingContent::EnsureInstantiation(nsIPluginInstance** aInstance)
   // We may have a plugin instance already; if so, do nothing
   nsresult rv = frame->GetPluginInstance(*aInstance);
   if (!*aInstance) {
-    rv = Instantiate(mContentType, mURI);
+    rv = Instantiate(frame, mContentType, mURI);
     if (NS_SUCCEEDED(rv)) {
       rv = frame->GetPluginInstance(*aInstance);
     } else {
@@ -931,6 +932,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
     if (overrideType.IsEmpty()) {
       newType = GetTypeOfContent(aTypeHint);
     } else {
+      mContentType = overrideType;
       newType = eType_Plugin;
     }
 
@@ -957,6 +959,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
       // Must notify here for plugins
       // If aNotify is false, we'll just wait until we get a frame and use the
       // async instantiate path.
+      // XXX is this still needed? (for documents?)
       mType = newType;
       if (aNotify)
         notifier.Notify();
@@ -967,7 +970,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
         rv = LoadImage(aURI, aForceLoad, PR_FALSE);
         break;
       case eType_Plugin:
-        rv = Instantiate(aTypeHint, aURI);
+        rv = TryInstantiate(mContentType, mURI);
         break;
       case eType_Document:
         rv = mFrameLoader->LoadURI(aURI);
@@ -1019,8 +1022,6 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
     // Or: supported class id, plugin will handle the load.
     LOG(("OBJLC [%p]: (classid) Changing type from %u to eType_Plugin\n", this, mType));
     mType = eType_Plugin;
-    if (aNotify)
-      notifier.Notify();
 
     // At this point, the stored content type
     // must be equal to our type hint. Similar,
@@ -1043,7 +1044,7 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
       }
     }
 
-    rv = Instantiate(mContentType, mURI);
+    rv = TryInstantiate(mContentType, mURI);
     return NS_OK;
   }
 
@@ -1062,10 +1063,8 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
     }
     // E.g. mms://
     mType = eType_Plugin;
-    if (aNotify)
-      notifier.Notify();
 
-    rv = Instantiate(aTypeHint, aURI);
+    rv = TryInstantiate(aTypeHint, aURI);
     return NS_OK;
   }
 
@@ -1436,13 +1435,29 @@ nsObjectLoadingContent::GetFrame(PRBool aFlushLayout)
 }
 
 nsresult
-nsObjectLoadingContent::Instantiate(const nsACString& aMIMEType, nsIURI* aURI)
+nsObjectLoadingContent::TryInstantiate(const nsACString& aMIMEType,
+                                       nsIURI* aURI)
 {
   nsIObjectFrame* frame = GetFrame(PR_FALSE);
   if (!frame) {
-    LOG(("OBJLC [%p]: Attempted to instantiate, but have no frame\n", this));
+    LOG(("OBJLC [%p]: No frame yet\n", this));
     return NS_OK; // Not a failure to have no frame
   }
+  nsIFrame* iframe;
+  CallQueryInterface(frame, &iframe);
+  if (iframe->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+    LOG(("OBJLC [%p]: Frame hasn't been reflown yet\n", this));
+    return NS_OK; // Not a failure to have no frame
+  }
+  return Instantiate(frame, aMIMEType, aURI);
+}
+
+nsresult
+nsObjectLoadingContent::Instantiate(nsIObjectFrame* aFrame,
+                                    const nsACString& aMIMEType,
+                                    nsIURI* aURI)
+{
+  NS_ASSERTION(aFrame, "Must have a frame here");
 
   nsCString typeToUse(aMIMEType);
   if (typeToUse.IsEmpty() && aURI) {
@@ -1463,9 +1478,9 @@ nsObjectLoadingContent::Instantiate(const nsACString& aMIMEType, nsIURI* aURI)
 
   // We'll always have a type or a URI by the time we get here
   NS_ASSERTION(aURI || !typeToUse.IsEmpty(), "Need a URI or a type");
-  LOG(("OBJLC [%p]: Calling [%p]->Instantiate(<%s>, %p)\n", this, frame,
+  LOG(("OBJLC [%p]: Calling [%p]->Instantiate(<%s>, %p)\n", this, aFrame,
        typeToUse.get(), aURI));
-  return frame->Instantiate(typeToUse.get(), aURI);
+  return aFrame->Instantiate(typeToUse.get(), aURI);
 }
 
 /* static */ PRBool
