@@ -1,5 +1,4 @@
 /*
- * $Id: pixman-trap.c,v 1.7 2007/08/07 01:52:15 vladimir%pobox.com Exp $
  *
  * Copyright © 2004 Keith Packard
  *
