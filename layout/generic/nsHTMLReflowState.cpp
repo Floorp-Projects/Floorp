@@ -2062,14 +2062,9 @@ ComputeLineHeight(nsIRenderingContext* aRenderingContext,
     lineHeight = NSToCoordRound(factor * font->mFont.size);
   } else {
     NS_ASSERTION(eStyleUnit_Normal == unit, "bad unit");
-    nsCOMPtr<nsIDeviceContext> deviceContext = aDeviceContext;
-    if (NS_UNLIKELY(!deviceContext)) {
-      aRenderingContext->GetDeviceContext(*getter_AddRefs(deviceContext));
-    }
-    const nsStyleVisibility* vis = aStyleContext->GetStyleVisibility();
     nsCOMPtr<nsIFontMetrics> fm;
-    deviceContext->GetMetricsFor(font->mFont, vis->mLangGroup,
-                                 *getter_AddRefs(fm));
+    nsLayoutUtils::GetFontMetricsForStyleContext(aStyleContext,
+                                                 getter_AddRefs(fm));
     lineHeight = GetNormalLineHeight(fm);
   }
   return lineHeight;
