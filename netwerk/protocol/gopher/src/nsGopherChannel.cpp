@@ -156,6 +156,14 @@ nsGopherContentStream::OnInputStreamReady(nsIAsyncInputStream *stream)
 NS_IMETHODIMP
 nsGopherContentStream::OnOutputStreamReady(nsIAsyncOutputStream *stream)
 {
+    // If we're already closed, mSocketOutput is going to be null and we'll
+    // just be getting notified that it got closed (by outselves).  In that
+    // case, nothing to do here.
+    if (!mSocketOutput) {
+        NS_ASSERTION(NS_FAILED(Status()), "How did that happen?");
+        return NS_OK;
+    }
+    
     // We have to close ourselves if we hit an error here in order to propagate
     // the error to our consumer.  Otherwise, just forward the notification so
     // that the consumer will know to start reading.
