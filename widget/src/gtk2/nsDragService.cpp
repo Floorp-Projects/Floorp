@@ -50,7 +50,6 @@
 #include "nsISupportsPrimitives.h"
 #include "prlog.h"
 #include "nsVoidArray.h"
-#include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
 #include "prtime.h"
 #include "prthread.h"
@@ -66,14 +65,6 @@ static PRLogModuleInfo *sDragLm = NULL;
 static const char gMimeListType[] = "application/x-moz-internal-item-list";
 static const char gMozUrlType[] = "_NETSCAPE_URL";
 static const char gTextUriListType[] = "text/uri-list";
-
-NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
-NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
-NS_IMPL_QUERY_INTERFACE4(nsDragService,
-                         nsIDragService,
-                         nsIDragSession,
-                         nsIDragSessionGTK,
-                         nsIObserver)
 
 static void
 invisibleSourceDragEnd(GtkWidget        *aWidget,
@@ -125,6 +116,9 @@ nsDragService::~nsDragService()
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("nsDragService::~nsDragService"));
 }
+
+NS_IMPL_ISUPPORTS_INHERITED2(nsDragService, nsBaseDragService,
+                             nsIDragSessionGTK, nsIObserver)
 
 // nsIObserver
 
