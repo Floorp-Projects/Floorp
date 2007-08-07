@@ -285,11 +285,17 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     nsIObjectFrame* GetFrame(PRBool aFlushLayout);
 
     /**
+     * Checks if we have a frame that's ready for instantiation, and if so,
+     * calls Instantiate().
+     */
+    nsresult TryInstantiate(const nsACString& aMIMEType, nsIURI* aURI);
+
+    /**
      * Instantiates the plugin. This differs from GetFrame()->Instantiate() in
      * that it ensures that the URI will be non-null, and that a MIME type
      * will be passed.
      */
-    nsresult Instantiate(const nsACString& aMIMEType, nsIURI* aURI);
+    nsresult Instantiate(nsIObjectFrame* aFrame, const nsACString& aMIMEType, nsIURI* aURI);
 
     /**
      * Whether to treat this content as a plugin, even though we can't handle
