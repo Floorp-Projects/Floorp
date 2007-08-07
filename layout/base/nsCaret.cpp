@@ -998,23 +998,9 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
   // after we've got an RC.
   if (frameRect.height == 0)
   {
-    nsIWidget *widget = aFrame->GetWindow();
-    if (!widget)
-      return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIRenderingContext> rendContext;
-    nsresult rv = presContext->DeviceContext()->
-      CreateRenderingContext(widget, *getter_AddRefs(rendContext));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!rendContext)
-      return NS_ERROR_UNEXPECTED;
-
-    const nsStyleFont* fontStyle = aFrame->GetStyleFont();
-    const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
-    rendContext->SetFont(fontStyle->mFont, vis->mLangGroup);
-
     nsCOMPtr<nsIFontMetrics> fm;
-    rendContext->GetFontMetrics(*getter_AddRefs(fm));
+    nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
+
     if (fm)
     {
       nscoord ascent, descent;

@@ -393,14 +393,12 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
       }
     } while (context && hasDecorations && (0 != decorMask));
 
-    const nsStyleFont* fontStyle = GetStyleFont();
-    
+    nsCOMPtr<nsIFontMetrics> fontMet;
+    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
+
     nscoord offset;
     nscoord size;
     nscoord baseline;
-    nsCOMPtr<nsIFontMetrics> fontMet;
-    presContext->DeviceContext()->GetMetricsFor(fontStyle->mFont,
-                                                *getter_AddRefs(fontMet));
     fontMet->GetMaxAscent(baseline);
     PRBool isRTL = vis->mDirection == NS_STYLE_DIRECTION_RTL;
 
@@ -445,8 +443,8 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
                                           NS_STYLE_BORDER_STYLE_SOLID,
                                           isRTL);
     }
- 
-    aRenderingContext.SetFont(fontStyle->mFont, nsnull);
+
+    aRenderingContext.SetFont(fontMet);
 
     CalculateUnderline(aRenderingContext);
 
@@ -557,10 +555,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
     if (mTitle.IsEmpty())
         return;
 
-    nsCOMPtr<nsIFontMetrics> fontMet;
-    aPresContext->DeviceContext()->GetMetricsFor(GetStyleFont()->mFont,
-                                                 *getter_AddRefs(fontMet));
-    aRenderingContext.SetFont(fontMet);
+    nsLayoutUtils::SetFontFromStyle(&aRenderingContext, GetStyleContext());
 
     // see if the text will completely fit in the width given
     mTitleWidth = nsLayoutUtils::GetStringWidth(this, &aRenderingContext,
@@ -863,8 +858,7 @@ nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext, nsIRenderingContext& aR
                                 const nsString& aString, nsSize& aSize, nscoord& aAscent)
 {
     nsCOMPtr<nsIFontMetrics> fontMet;
-    aPresContext->DeviceContext()->GetMetricsFor(GetStyleFont()->mFont,
-                                                 *getter_AddRefs(fontMet));
+    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
     fontMet->GetHeight(aSize.height);
     aRenderingContext.SetFont(fontMet);
     aSize.width =

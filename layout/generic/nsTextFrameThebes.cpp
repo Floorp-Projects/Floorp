@@ -1443,12 +1443,9 @@ GetSpacingFlags(const nsStyleCoord& aStyleCoord)
 static gfxFontGroup*
 GetFontGroupForFrame(nsIFrame* aFrame)
 {
-  nsIDeviceContext* devContext = aFrame->PresContext()->DeviceContext();
-  const nsStyleFont* fontStyle = aFrame->GetStyleFont();
-  const nsStyleVisibility* visibilityStyle = aFrame->GetStyleVisibility();
   nsCOMPtr<nsIFontMetrics> metrics;
-  devContext->GetMetricsFor(fontStyle->mFont, visibilityStyle->mLangGroup,
-                            *getter_AddRefs(metrics));
+  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(metrics));
+
   if (!metrics)
     return nsnull;
 
