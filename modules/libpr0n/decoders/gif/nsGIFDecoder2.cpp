@@ -1121,11 +1121,11 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
         if (!mGIFStruct.rows_remaining) {
 #ifdef DONT_TOLERATE_BROKEN_GIFS
           mGIFStruct.state = gif_error;
+          break;
 #else
           /* This is an illegal GIF, but we remain tolerant. */
           GETN(1, gif_sub_block);
 #endif
-          break;
         }
         GETN(mGIFStruct.count, gif_lzw);
       } else {
