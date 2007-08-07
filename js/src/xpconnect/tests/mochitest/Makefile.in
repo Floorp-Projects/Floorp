@@ -12,12 +12,11 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Communicator client code, released
-# March 31, 1998.
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1998
+# Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -36,47 +35,17 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
+DEPTH		= ../../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir  = js/src/xpconnect/tests/mochitest
 
 include $(DEPTH)/config/autoconf.mk
-
-MODULE		= TestXPC
-SIMPLE_PROGRAMS = TestXPC$(BIN_SUFFIX)
-
-REQUIRES	= xpconnect \
-		  xpcom \
-		  string \
-		  js \
-		  xpconnect_tests \
-		  $(NULL)
-
-DIRS		= idl
-
-ifndef MOZ_ENABLE_LIBXUL
-DIRS += components
-endif
-
-ifdef MOZ_MOCHITEST
-DIRS += mochitest \
-        $(NULL)
-endif
-
-ifdef ENABLE_TESTS
-XPCSHELL_TESTS = unit
-endif
-
-CPPSRCS		= TestXPC.cpp
-
-LIBS		= \
-		$(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
-		$(LIBS_DIR) \
-		$(MOZ_JS_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DJS_THREADSAFE -DJSFILE
+_TEST_FILES =	test_bug390488.html \
+		$(NULL)
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
