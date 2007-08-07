@@ -63,10 +63,8 @@ _TEST_FILES = 	test_bug360220.xul \
 		window_popup_attribute.xul \
 		window_tooltip.xul \
 		test_progressmeter.xul \
-# Disabled until we can figure out why they're causing failures on the Windows
-# unit test box (bug 389616)
-#		test_datepicker.xul \
-#		test_timepicker.xul \
+		test_datepicker.xul \
+		test_timepicker.xul \
 		$(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
