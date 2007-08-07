@@ -569,11 +569,7 @@ private:
   PRUint32 mDelay;
 };
 
-NS_IMPL_ADDREF(nsAutoScrollTimer)
-NS_IMPL_RELEASE(nsAutoScrollTimer)
-NS_IMPL_QUERY_INTERFACE1(nsAutoScrollTimer, nsITimerCallback)
-
-nsresult NS_NewSelection(nsFrameSelection **aFrameSelection);
+NS_IMPL_ISUPPORTS1(nsAutoScrollTimer, nsITimerCallback)
 
 nsresult NS_NewSelection(nsFrameSelection **aFrameSelection)
 {
@@ -584,8 +580,6 @@ nsresult NS_NewSelection(nsFrameSelection **aFrameSelection)
   NS_ADDREF(rlist);
   return NS_OK;
 }
-
-nsresult NS_NewDomSelection(nsISelection **aDomSelection);
 
 nsresult NS_NewDomSelection(nsISelection **aDomSelection)
 {
