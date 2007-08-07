@@ -658,7 +658,7 @@ union pixman_image
     do {								\
 	size_t _i;							\
 	uint8_t *_dst = (uint8_t*)(dst);				\
-	for(_i = 0; _i < (size_t) size; _i++) {                          \
+	for(_i = 0; _i < size; _i++) {					\
 	    WRITE(_dst +_i, (val));					\
 	}								\
     } while (0)
