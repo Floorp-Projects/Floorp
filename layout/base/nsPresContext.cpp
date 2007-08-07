@@ -161,7 +161,7 @@ static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
   // bother initializing members to 0.
 
 nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
-  : mType(aType), mDocument(aDocument), mTextZoom(1.0),
+  : mType(aType), mDocument(aDocument), mTextZoom(1.0), mFullZoom(1.0),
     mPageSize(-1, -1), mPPScale(1.0f),
     mViewportStyleOverflow(NS_STYLE_OVERFLOW_AUTO, NS_STYLE_OVERFLOW_AUTO),
     mImageAnimationModePref(imgIContainer::kNormalAnimMode),
@@ -1085,21 +1085,19 @@ nsPresContext::GetDefaultFontExternal(PRUint8 aFontID) const
 void
 nsPresContext::SetFullZoom(float aZoom)
 {
-  nsPresContext* rootPresContext = RootPresContext();
-  if (rootPresContext != this) {
-    NS_WARNING("Zoom set on non-root prescontext");
-    rootPresContext->SetFullZoom(aZoom);
+  float oldWidth = mVisibleArea.width * mFullZoom;
+  float oldHeight = mVisibleArea.height * mFullZoom;
+  if (!mShell) {
     return;
   }
-  nsRect bounds(mVisibleArea);
-  bounds.ScaleRoundPreservingCentersInverse(AppUnitsPerDevPixel());
-  if (!mShell || !mDeviceContext->SetPixelScale(aZoom))
-    return;
-  mDeviceContext->FlushFontCache();
-  nscoord width = DevPixelsToAppUnits(bounds.width);
-  nscoord height = DevPixelsToAppUnits(bounds.height);
-  GetViewManager()->SetWindowDimensions(width, height);
-  ClearStyleDataAndReflow();
+  if (mDeviceContext->SetPixelScale(aZoom)) {
+    mDeviceContext->FlushFontCache();
+  }
+  if (mFullZoom != aZoom) {
+    mFullZoom = aZoom;
+    GetViewManager()->SetWindowDimensions(oldWidth / aZoom, oldHeight / aZoom);
+    ClearStyleDataAndReflow();
+  }
 }
 
 imgIRequest*

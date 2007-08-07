@@ -2654,16 +2654,23 @@ DocumentViewerImpl::CallChildren(CallChildFunc aFunc, void* aClosure)
   }
 }
 
-struct TextZoomInfo
+struct ZoomInfo
 {
-  float mTextZoom;
+  float mZoom;
 };
 
 static void
 SetChildTextZoom(nsIMarkupDocumentViewer* aChild, void* aClosure)
 {
-  struct TextZoomInfo* textZoomInfo = (struct TextZoomInfo*) aClosure;
-  aChild->SetTextZoom(textZoomInfo->mTextZoom);
+  struct ZoomInfo* ZoomInfo = (struct ZoomInfo*) aClosure;
+  aChild->SetTextZoom(ZoomInfo->mZoom);
+}
+
+static void
+SetChildFullZoom(nsIMarkupDocumentViewer* aChild, void* aClosure)
+{
+  struct ZoomInfo* ZoomInfo = (struct ZoomInfo*) aClosure;
+  aChild->SetFullZoom(ZoomInfo->mZoom);
 }
 
 NS_IMETHODIMP
@@ -2679,8 +2686,8 @@ DocumentViewerImpl::SetTextZoom(float aTextZoom)
   // change, our children's zoom may be different, though it would be unusual).
   // Do this first, in case kids are auto-sizing and post reflow commands on
   // our presshell (which should be subsumed into our own style change reflow).
-  struct TextZoomInfo textZoomInfo = { aTextZoom };
-  CallChildren(SetChildTextZoom, &textZoomInfo);
+  struct ZoomInfo ZoomInfo = { aTextZoom };
+  CallChildren(SetChildTextZoom, &ZoomInfo);
 
   // Now change our own zoom
   if (mPresContext && aTextZoom != mPresContext->TextZoom()) {
@@ -2708,6 +2715,8 @@ DocumentViewerImpl::GetTextZoom(float* aTextZoom)
 NS_IMETHODIMP
 DocumentViewerImpl::SetFullZoom(float aFullZoom)
 {
+  struct ZoomInfo ZoomInfo = { aFullZoom };
+  CallChildren(SetChildFullZoom, &ZoomInfo);
   if (mPresContext) {
       mPresContext->SetFullZoom(aFullZoom);
   }
