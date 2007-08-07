@@ -4649,8 +4649,6 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*   aPresShell,
 
   aPageFrame->SetInitialChildList(nsnull, aPageContentFrame);
 
-  // Fixed pos kids are taken care of directly in CreateContinuingFrame()
-
   return NS_OK;
 }
 
@@ -10605,75 +10603,58 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
   if (aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT) {
     newFrame->AddStateBits(NS_FRAME_GENERATED_CONTENT);
   }
-  
+
+  if (nextInFlow) {
+    nextInFlow->SetPrevInFlow(newFrame);
+    newFrame->SetNextInFlow(nextInFlow);
+  } else if (nextContinuation) {
+    nextContinuation->SetPrevContinuation(newFrame);
+    newFrame->SetNextContinuation(nextContinuation);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
+{
   // Now deal with fixed-pos things....  They should appear on all pages, and
   // the placeholders must be kids of a block, so we want to move over the
   // placeholders when processing the child of the pageContentFrame.
-  if (!aParentFrame) {
-    return NS_OK;
-  }
 
-  if (aParentFrame->GetType() != nsGkAtoms::pageContentFrame) {
-    if (nextInFlow) {
-      nextInFlow->SetPrevInFlow(newFrame);
-      newFrame->SetNextInFlow(nextInFlow);
-    } else if (nextContinuation) {
-      nextContinuation->SetPrevContinuation(newFrame);
-      newFrame->SetNextContinuation(nextContinuation);
-    }
-    return NS_OK;
-  }
-
-  // Our parent is a page content frame.  Look up its page frame and
-  // see whether it has a prev-in-flow.
-  nsIFrame* pageFrame = aParentFrame->GetParent();
-  if (!pageFrame) {
-    NS_ERROR("pageContentFrame does not have parent!");
-    newFrame->Destroy();
-    *aContinuingFrame = nsnull;
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsIFrame* prevPage = pageFrame->GetPrevInFlow();
-  if (!prevPage) {
-    return NS_OK;
-  }
-
-  // OK.  now we need to do this fixed-pos game.
-  // Get prevPage's page content frame
-  nsIFrame* prevPageContentFrame = prevPage->GetFirstChild(nsnull);
-
+  nsIFrame* prevPageContentFrame = aParentFrame->GetPrevInFlow();
   if (!prevPageContentFrame) {
-    newFrame->Destroy();
-    *aContinuingFrame = nsnull;
+    return NS_OK;
+  }
+  nsIFrame* docRootFrame = aParentFrame->GetFirstChild(nsnull);
+  if (!docRootFrame) {
+    // document's root element's frame: don't need a page if there's no content
     return NS_ERROR_UNEXPECTED;
   }
-  
+
   nsFrameItems fixedPlaceholders;
   nsIFrame* firstFixed = prevPageContentFrame->GetFirstChild(nsGkAtoms::fixedList);
   if (!firstFixed) {
     return NS_OK;
   }
 
+  //XXXbz Should mInitialContainingBlock be docRootFrame? It probably doesn't matter.
   nsFrameConstructorState state(mPresShell, aParentFrame,
                                 mInitialContainingBlock,
                                 mInitialContainingBlock);
   
   // Iterate the fixed frames and replicate each
   for (nsIFrame* fixed = firstFixed; fixed; fixed = fixed->GetNextSibling()) {
-    rv = ConstructFrame(state, fixed->GetContent(),
-                        newFrame, fixedPlaceholders);
-    if (NS_FAILED(rv)) {
-      newFrame->Destroy();
-      *aContinuingFrame = nsnull;
-      return rv;
-    }
+    nsresult rv = ConstructFrame(state, fixed->GetContent(),
+                                 docRootFrame, fixedPlaceholders);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Add the placeholders to our primary child list.
   // XXXbz this is a little screwed up, since the fixed frames will have the
   // wrong parent block and hence auto-positioning will be broken.  Oh, well.
-  newFrame->SetInitialChildList(nsnull, fixedPlaceholders.childList);
+  NS_ASSERTION(!docRootFrame->GetFirstChild(nsnull),
+               "leaking frames; doc root continuation must be empty");
+  docRootFrame->SetInitialChildList(nsnull, fixedPlaceholders.childList);
   return NS_OK;
 }
 

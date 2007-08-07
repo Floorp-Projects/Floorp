@@ -51,6 +51,7 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsThreadUtils.h"
+#include "nsPageContentFrame.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -184,6 +185,9 @@ public:
                                  nsIFrame*       aParentFrame,
                                  nsIFrame**      aContinuingFrame,
                                  PRBool          aIsFluid = PR_TRUE);
+
+  // Copy over fixed frames from aParentFrame's prev-in-flow
+  nsresult ReplicateFixedFrames(nsPageContentFrame* aParentFrame);
 
   // Request to find the primary frame associated with a given content object.
   // This is typically called by the pres shell when there is no mapping in
