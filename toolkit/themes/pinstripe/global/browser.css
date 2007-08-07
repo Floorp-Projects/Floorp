@@ -384,8 +384,6 @@ tabbrowser > tabbox > tabpanels {
  */
 
 .alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-  width: 16px;
-  height: 16px;
   list-style-image: url("chrome://global/skin/icons/small-globe-sunken.png");
 }
 
