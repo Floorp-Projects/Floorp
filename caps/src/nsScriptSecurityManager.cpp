@@ -256,7 +256,7 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
     // security purposes.  Otherwise, for example, two javascript: URIs that
     // are otherwise unrelated could end up "same origin", which would be
     // unfortunate.
-    if (aSourceURI == aTargetURI)
+    if (aSourceURI && aSourceURI == aTargetURI)
     {
         return PR_TRUE;
     }
@@ -1247,8 +1247,11 @@ nsScriptSecurityManager::CheckLoadURIWithPrincipal(nsIPrincipal* aPrincipal,
     
     nsCOMPtr<nsIURI> sourceURI;
     aPrincipal->GetURI(getter_AddRefs(sourceURI));
-
-    NS_ASSERTION(sourceURI, "Non-system principals passed to CheckLoadURIWithPrincipal must have a URI!");
+    if (!sourceURI) {
+        NS_ERROR("Non-system principals passed to CheckLoadURIWithPrincipal "
+                 "must have a URI!");
+        return NS_ERROR_UNEXPECTED;
+    }
     
     // Automatic loads are not allowed from certain protocols.
     if (aFlags & nsIScriptSecurityManager::LOAD_IS_AUTOMATIC_DOCUMENT_REPLACEMENT) {
@@ -1663,21 +1666,24 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
     // case.
     nsCOMPtr<nsIURI> principalURI;
     aPrincipal->GetURI(getter_AddRefs(principalURI));
-    if (principalURI)
-    {
-        PRBool isAbout;
-        rv = principalURI->SchemeIs("about", &isAbout);
-        if (NS_SUCCEEDED(rv) && isAbout) {
-            nsCOMPtr<nsIAboutModule> module;
-            rv = NS_GetAboutModule(principalURI, getter_AddRefs(module));
-            if (NS_SUCCEEDED(rv)) {
-                PRUint32 flags;
-                rv = module->GetURIFlags(principalURI, &flags);
-                if (NS_SUCCEEDED(rv) &&
-                    (flags & nsIAboutModule::ALLOW_SCRIPT)) {
-                    *result = PR_TRUE;
-                    return NS_OK;              
-                }
+    if (!principalURI) {
+        // Broken principal of some sort.  Disallow.
+        *result = PR_FALSE;
+        return NS_ERROR_UNEXPECTED;
+    }
+        
+    PRBool isAbout;
+    rv = principalURI->SchemeIs("about", &isAbout);
+    if (NS_SUCCEEDED(rv) && isAbout) {
+        nsCOMPtr<nsIAboutModule> module;
+        rv = NS_GetAboutModule(principalURI, getter_AddRefs(module));
+        if (NS_SUCCEEDED(rv)) {
+            PRUint32 flags;
+            rv = module->GetURIFlags(principalURI, &flags);
+            if (NS_SUCCEEDED(rv) &&
+                (flags & nsIAboutModule::ALLOW_SCRIPT)) {
+                *result = PR_TRUE;
+                return NS_OK;              
             }
         }
     }
@@ -1918,6 +1924,8 @@ NS_IMETHODIMP
 nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
                                               nsIPrincipal **result)
 {
+    NS_ENSURE_ARG(aURI);
+    
     PRBool inheritsPrincipal;
     nsresult rv =
         NS_URIChainHasFlags(aURI,
