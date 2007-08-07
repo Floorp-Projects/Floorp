@@ -2455,7 +2455,7 @@ restart:
      * referenced from dead property ids.
      */
     js_SweepScopeProperties(cx);
-    js_SweepAtomState(&rt->atomState);
+    js_SweepAtomState(cx);
 
     /*
      * Sweep script filenames after sweeping functions in the generic loop

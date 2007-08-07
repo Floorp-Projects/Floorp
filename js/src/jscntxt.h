@@ -224,9 +224,6 @@ struct JSRuntime {
     JSTraceDataOp       gcExtraRootsTraceOp;
     void                *gcExtraRootsData;
 
-    /* Literal table maintained by jsatom.c functions. */
-    JSAtomState         atomState;
-
     /* Random number generator state, used by jsmath.c. */
     JSBool              rngInitialized;
     int64               rngMultiplier;
@@ -385,6 +382,9 @@ struct JSRuntime {
 
 #define JS_GSN_CACHE(cx) ((cx)->runtime->gsnCache)
 #endif
+
+    /* Literal table maintained by jsatom.c functions. */
+    JSAtomState         atomState;
 
 #ifdef DEBUG
     /* Function invocation metering. */

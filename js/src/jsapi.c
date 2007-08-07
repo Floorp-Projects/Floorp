@@ -648,7 +648,7 @@ JS_GetTypeName(JSContext *cx, JSType type)
 {
     if ((uintN)type >= (uintN)JSTYPE_LIMIT)
         return NULL;
-    return js_type_strs[type];
+    return JS_TYPE_STR(type);
 }
 
 /************************************************************************/
@@ -702,6 +702,8 @@ JS_NewRuntime(uint32 maxbytes)
     JS_INIT_CLIST(&rt->watchPointList);
 
     if (!js_InitGC(rt, maxbytes))
+        goto bad;
+    if (!js_InitAtomState(rt))
         goto bad;
 #ifdef JS_THREADSAFE
     if (!js_InitThreadPrivateIndex(js_ThreadDestructorCB))
@@ -764,7 +766,7 @@ JS_DestroyRuntime(JSRuntime *rt)
 #endif
 
     js_FreeRuntimeScriptState(rt);
-    js_FinishAtomState(&rt->atomState);
+    js_FinishAtomState(rt);
     js_FinishGC(rt);
 #ifdef JS_THREADSAFE
     if (rt->gcLock)
