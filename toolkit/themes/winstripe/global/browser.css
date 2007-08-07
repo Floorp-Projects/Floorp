@@ -463,8 +463,6 @@ stack[chromedir="rtl"] > hbox > .tabs-alltabs-box-animate {
  */
 
 .alltabs-item > .menu-iconic-left > .menu-iconic-icon {
-  width: 16px;
-  height: 16px;
   list-style-image: url("chrome://global/skin/icons/folder-item.png");
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
