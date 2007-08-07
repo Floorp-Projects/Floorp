@@ -114,8 +114,6 @@ public:
                                      nsIAccessible **aFinalAccessible = nsnull);
 
 protected:
-  PRBool IsHyperText();
-
   /*
    * This does the work for nsIAccessibleText::GetText[At|Before|After]Offset
    * @param aType, eGetBefore, eGetAt, eGetAfter
