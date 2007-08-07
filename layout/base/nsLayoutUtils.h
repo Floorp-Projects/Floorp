@@ -479,6 +479,15 @@ public:
                                          nsIFontMetrics** aFontMetrics);
 
   /**
+   * Get the font metrics corresponding to the given style data.
+   * @param aStyleContext the style data
+   * @param aFontMetrics the font metrics result
+   * @return success or failure code
+   */
+  static nsresult GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
+                                                nsIFontMetrics** aFontMetrics);
+
+  /**
    * Find the immediate child of aParent whose frame subtree contains
    * aDescendantFrame. Returns null if aDescendantFrame is not a descendant
    * of aParent.
