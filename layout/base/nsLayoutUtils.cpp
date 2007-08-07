@@ -1083,10 +1083,17 @@ nsresult
 nsLayoutUtils::GetFontMetricsForFrame(nsIFrame* aFrame,
                                       nsIFontMetrics** aFontMetrics)
 {
-  nsStyleContext* sc = aFrame->GetStyleContext();
-  return aFrame->PresContext()->DeviceContext()->
-    GetMetricsFor(sc->GetStyleFont()->mFont,
-                  sc->GetStyleVisibility()->mLangGroup,
+  return nsLayoutUtils::GetFontMetricsForStyleContext(aFrame->GetStyleContext(),
+                                                      aFontMetrics);
+}
+
+nsresult
+nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
+                                             nsIFontMetrics** aFontMetrics)
+{
+  return aStyleContext->PresContext()->DeviceContext()->
+    GetMetricsFor(aStyleContext->GetStyleFont()->mFont,
+                  aStyleContext->GetStyleVisibility()->mLangGroup,
                   *aFontMetrics);
 }
 
