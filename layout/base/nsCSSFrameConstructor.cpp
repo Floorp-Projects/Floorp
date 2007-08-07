@@ -10626,8 +10626,9 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
     return NS_OK;
   }
   nsIFrame* docRootFrame = aParentFrame->GetFirstChild(nsnull);
-  if (!docRootFrame) {
-    // document's root element's frame: don't need a page if there's no content
+  nsIFrame* prevDocRootFrame = prevPageContentFrame->GetFirstChild(nsnull);
+  if (!docRootFrame || !prevDocRootFrame) {
+    // document's root element frame missing
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -10641,12 +10642,20 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
   nsFrameConstructorState state(mPresShell, aParentFrame,
                                 mInitialContainingBlock,
                                 mInitialContainingBlock);
-  
-  // Iterate the fixed frames and replicate each
+
+  // Iterate across fixed frames and replicate each whose placeholder is a
+  // descendant of aFrame. (We don't want to explicitly copy placeholders that
+  // are within fixed frames, because that would cause duplicates on the new
+  // page - bug 389619)
   for (nsIFrame* fixed = firstFixed; fixed; fixed = fixed->GetNextSibling()) {
-    nsresult rv = ConstructFrame(state, fixed->GetContent(),
-                                 docRootFrame, fixedPlaceholders);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsIFrame* prevPlaceholder = nsnull;
+    mPresShell->GetPlaceholderFrameFor(fixed, &prevPlaceholder);
+    if (prevPlaceholder &&
+        nsLayoutUtils::IsProperAncestorFrame(prevDocRootFrame, prevPlaceholder)) {
+      nsresult rv = ConstructFrame(state, fixed->GetContent(),
+                                   docRootFrame, fixedPlaceholders);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
   }
 
   // Add the placeholders to our primary child list.
