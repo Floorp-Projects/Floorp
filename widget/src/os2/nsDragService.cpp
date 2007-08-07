@@ -56,11 +56,6 @@
 #include "nsIDocument.h"
 #include "nsGUIEvent.h"
 
-NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
-NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)
-NS_IMPL_QUERY_INTERFACE3(nsDragService, nsIDragService, nsIDragSession, \
-                         nsIDragSessionOS2)
-
 // --------------------------------------------------------------------------
 // Local defines
 
@@ -134,6 +129,8 @@ nsDragService::~nsDragService()
     gPtrArray[i] = 0;
   }
 }
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsDragService, nsBaseDragService, nsIDragSessionOS2)
 
 // --------------------------------------------------------------------------
 

@@ -38,25 +38,11 @@
 #include "nsBaseClipboard.h"
 
 #include "nsIClipboardOwner.h"
-#include "nsString.h"
-
-#include "nsIWidget.h"
-#include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 
 
-NS_IMPL_ADDREF(nsBaseClipboard)
-NS_IMPL_RELEASE(nsBaseClipboard)
-NS_IMPL_QUERY_INTERFACE1(nsBaseClipboard, nsIClipboard)
-
-
-//-------------------------------------------------------------------------
-//
-// nsBaseClipboard constructor
-//
-//-------------------------------------------------------------------------
 nsBaseClipboard::nsBaseClipboard()
 {
   mClipboardOwner          = nsnull;
@@ -65,17 +51,13 @@ nsBaseClipboard::nsBaseClipboard()
 
 }
 
-//-------------------------------------------------------------------------
-//
-// nsBaseClipboard destructor
-//
-//-------------------------------------------------------------------------
 nsBaseClipboard::~nsBaseClipboard()
 {
   EmptyClipboard(kSelectionClipboard);
   EmptyClipboard(kGlobalClipboard);
 }
 
+NS_IMPL_ISUPPORTS1(nsBaseClipboard, nsIClipboard)
 
 /**
   * Sets the transferable object
@@ -130,11 +112,6 @@ NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable, PRInt32 
   return NS_ERROR_FAILURE;
 }
 
-
-/**
-  * 
-  *
-  */
 NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
 {
   PRBool selectClipPresent;
@@ -155,21 +132,17 @@ NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(PRInt32 aWhichClipboard)
   return NS_OK;
 }
 
-
-/**
-  * 
-  *
-  */
 NS_IMETHODIMP
-nsBaseClipboard :: HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRInt32 aWhichClipboard, PRBool * outResult ) 
+nsBaseClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
+                                        PRInt32 aWhichClipboard,
+                                        PRBool* outResult) 
 {
   *outResult = PR_TRUE;  // say we always do.
   return NS_OK;
 }
 
-
 NS_IMETHODIMP
-nsBaseClipboard :: SupportsSelectionClipboard ( PRBool *_retval )
+nsBaseClipboard::SupportsSelectionClipboard(PRBool* _retval)
 {
   *_retval = PR_FALSE;   // we don't support the selection clipboard by default.
   return NS_OK;

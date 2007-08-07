@@ -120,10 +120,7 @@ public:
   nsWindow();
   virtual ~nsWindow();
 
-  // nsISupports
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIWidget interface
   NS_IMETHOD              Create(nsIWidget *aParent,
