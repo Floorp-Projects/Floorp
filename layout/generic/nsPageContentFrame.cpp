@@ -65,15 +65,24 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter
 
+  // A PageContentFrame must always have one child: the doc root element's frame.
+  // We only need to get overflow frames if we don't already have that child;
+  // Also we need to avoid repeating the call to ReplicateFixedFrames.
   nsPageContentFrame* prevPageContentFrame = static_cast<nsPageContentFrame*>
-                                             (GetPrevInFlow());
-  if (prevPageContentFrame) {
+                                               (GetPrevInFlow());
+  if (mFrames.IsEmpty() && prevPageContentFrame) {
+    // Pull the doc root frame's continuation and copy fixed frames.
     nsIFrame* overflow = prevPageContentFrame->GetOverflowFrames(aPresContext, PR_TRUE);
-    nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, overflow, prevPageContentFrame, this);
+    NS_ASSERTION(overflow && !overflow->GetNextSibling(),
+                 "must have doc root as pageContentFrame's only child");
+    nsHTMLContainerFrame::ReparentFrameView(aPresContext, overflow, prevPageContentFrame, this);
     // Prepend overflow to the page content frame. There may already be
     // children placeholders which don't get reflowed but must not be
     // lost until the page content frame is destroyed.
     mFrames.InsertFrames(this, nsnull, overflow);
+    nsresult rv = aPresContext->PresShell()->FrameConstructor()
+                    ->ReplicateFixedFrames(this);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Resize our frame allowing it only to be as big as we are
