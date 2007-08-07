@@ -4322,6 +4322,15 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
                 return NS_OK;
         }
 
+        // If DoAuthRetry failed, or if we have been cancelled since showing
+        // the auth. dialog, then we need to send OnStartRequest now
+        if (authRetry || (mAuthRetryPending && NS_FAILED(status))) {
+            NS_ASSERTION(NS_FAILED(status), "should have a failure code here");
+            // NOTE: since we have a failure status, we can ignore the return
+            // value from onStartRequest.
+            mListener->OnStartRequest(this, mListenerContext);
+        }
+
         // if this transaction has been replaced, then bail.
         if (mTransactionReplaced)
             return NS_OK;
