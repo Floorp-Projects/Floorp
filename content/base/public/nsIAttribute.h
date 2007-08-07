@@ -75,10 +75,12 @@ public:
   virtual nsresult SetOwnerDocument(nsIDocument* aDocument) = 0;
 
 protected:
+#ifdef MOZILLA_INTERNAL_API
   nsIAttribute(nsDOMAttributeMap *aAttrMap, nsINodeInfo *aNodeInfo)
     : nsINode(aNodeInfo), mAttrMap(aAttrMap)
   {
   }
+#endif //MOZILLA_INTERNAL_API
 
   nsDOMAttributeMap *mAttrMap; // WEAK
 };
