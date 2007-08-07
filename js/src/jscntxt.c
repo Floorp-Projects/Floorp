@@ -279,16 +279,13 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 #ifdef JS_THREADSAFE
         JS_BeginRequest(cx);
 #endif
+        ok = js_InitCommonAtoms(cx);
+
         /*
-         * Both atomState and the scriptFilenameTable may be left over from a
-         * previous episode of non-zero contexts alive in rt, so don't re-init
-         * either table if it's not necessary.  Just repopulate atomState with
-         * well-known internal atoms, and with the reserved identifiers added
-         * by the scanner.
+         * scriptFilenameTable may be left over from a previous episode of
+         * non-zero contexts alive in rt, so don't re-init the table if it's
+         * not necessary.
          */
-        ok = (rt->atomState.liveAtoms == 0)
-             ? js_InitAtomState(cx, &rt->atomState)
-             : js_InitPinnedAtoms(cx, &rt->atomState);
         if (ok && !rt->scriptFilenameTable)
             ok = js_InitRuntimeScriptState(rt);
         if (ok)
@@ -373,8 +370,8 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         js_FinishRuntimeNumberState(cx);
         js_FinishRuntimeStringState(cx);
 
-        /* Unpin all pinned atoms before final GC. */
-        js_UnpinPinnedAtoms(&rt->atomState);
+        /* Unpin all common atoms before final GC. */
+        js_FinishCommonAtoms(cx);
 
         /* Clear debugging state to remove GC roots. */
         JS_ClearAllTraps(cx);
@@ -408,11 +405,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     if (last) {
         js_GC(cx, GC_LAST_CONTEXT);
 
-        /* Try to free atom state, now that no unrooted scripts survive. */
-        if (rt->atomState.liveAtoms == 0)
-            js_FreeAtomState(cx, &rt->atomState);
-
-        /* Also free the script filename table if it exists and is empty. */
+        /* Free the script filename table if it exists and is empty. */
         if (rt->scriptFilenameTable && rt->scriptFilenameTable->nentries == 0)
             js_FinishRuntimeScriptState(rt);
 
