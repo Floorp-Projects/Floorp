@@ -28,9 +28,9 @@
 <!ENTITY cmd.installUpdatesAll.label      "Install Updates">
 <!ENTITY cmd.installUpdatesAll.accesskey  "I">
 <!ENTITY cmd.installUpdatesAll.tooltip    "Installs the selected updates">
-<!ENTITY cmd.restartApp.label             "Restart &brandShortName;">
-<!ENTITY cmd.restartApp.accesskey         "R">
-<!ENTITY cmd.restartApp.tooltip           "Restarts &brandShortName; to finish the installation">
+<!ENTITY cmd.restartApp2.label            "Restart &brandShortName;">
+<!ENTITY cmd.restartApp2.accesskey        "R">
+<!ENTITY cmd.restartApp2.tooltip          "Restart &brandShortName; to apply changes">
 <!ENTITY cmd.skip.label                   "Skip">
 <!ENTITY cmd.skip.accesskey               "S">
 <!ENTITY cmd.skip.tooltip                 "Skip these updates">

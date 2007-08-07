@@ -218,9 +218,9 @@
               accesskey="&cmd.installUpdatesAll.accesskey;"
               tooltiptext="&cmd.installUpdatesAll.tooltip;"
               command="cmd_installUpdatesAll"/>
-      <button id="restartAppButton" label="&cmd.restartApp.label;"
-              accesskey="&cmd.restartApp.accesskey;"
-              tooltiptext="&cmd.restartApp.tooltip;"
+      <button id="restartAppButton" label="&cmd.restartApp2.label;"
+              accesskey="&cmd.restartApp2.accesskey;"
+              tooltiptext="&cmd.restartApp2.tooltip;"
               command="cmd_restartApp"/>
       <button id="continueDialogButton" label="&cmd.continue.label;"
               accesskey="&cmd.continue.accesskey;"
