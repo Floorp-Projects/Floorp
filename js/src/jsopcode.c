@@ -1760,6 +1760,14 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
 #define LOAD_REGEXP(PCOFF)                                                    \
     GET_REGEXP_FROM_BYTECODE(jp->script, pc, PCOFF, obj)
 
+#define GET_SOURCE_NOTE_ATOM(sn, atom)                                        \
+    JS_BEGIN_MACRO                                                            \
+        jsatomid atomIndex_ = (jsatomid) js_GetSrcNoteOffset((sn), 0);        \
+                                                                              \
+        LOCAL_ASSERT(atomIndex_ < jp->script->atomMap.length);                \
+        (atom) = jp->script->atomMap.vector[atomIndex_];                      \
+    JS_END_MACRO
+
 /*
  * Get atom from jp->script's atom map, quote/escape its string appropriately
  * into rval, and select fmt from the quoted and unquoted alternatives.
@@ -2047,8 +2055,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     break;
 
                   case SRC_LABEL:
-                    atom = js_GetAtom(cx, &jp->script->atomMap,
-                                      (jsatomid) js_GetSrcNoteOffset(sn, 0));
+                    GET_SOURCE_NOTE_ATOM(sn, atom);
                     jp->indent -= 4;
                     rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                     if (!rval)
@@ -2059,8 +2066,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     break;
 
                   case SRC_LABELBRACE:
-                    atom = js_GetAtom(cx, &jp->script->atomMap,
-                                      (jsatomid) js_GetSrcNoteOffset(sn, 0));
+                    GET_SOURCE_NOTE_ATOM(sn, atom);
                     rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                     if (!rval)
                         return NULL;
@@ -2903,8 +2909,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     break;
 
                   case SRC_CONT2LABEL:
-                    atom = js_GetAtom(cx, &jp->script->atomMap,
-                                      (jsatomid) js_GetSrcNoteOffset(sn, 0));
+                    GET_SOURCE_NOTE_ATOM(sn, atom);
                     rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                     if (!rval)
                         return NULL;
@@ -2917,8 +2922,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     break;
 
                   case SRC_BREAK2LABEL:
-                    atom = js_GetAtom(cx, &jp->script->atomMap,
-                                      (jsatomid) js_GetSrcNoteOffset(sn, 0));
+                    GET_SOURCE_NOTE_ATOM(sn, atom);
                     rval = QuoteString(&ss->sprinter, ATOM_TO_STRING(atom), 0);
                     if (!rval)
                         return NULL;
@@ -4000,10 +4004,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                             sn = js_GetSrcNote(jp->script, pc2);
                             if (sn) {
                                 LOCAL_ASSERT(SN_TYPE(sn) == SRC_LABEL);
-                                table[j].label =
-                                    js_GetAtom(cx, &jp->script->atomMap,
-                                               (jsatomid)
-                                               js_GetSrcNoteOffset(sn, 0));
+                                GET_SOURCE_NOTE_ATOM(sn, table[j].label);
                             }
                             table[j].key = INT_TO_JSVAL(low + i);
                             table[j].offset = off2;
@@ -4060,9 +4061,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     sn = js_GetSrcNote(jp->script, pc2);
                     if (sn) {
                         LOCAL_ASSERT(SN_TYPE(sn) == SRC_LABEL);
-                        table[k].label =
-                            js_GetAtom(cx, &jp->script->atomMap, (jsatomid)
-                                       js_GetSrcNoteOffset(sn, 0));
+                        GET_SOURCE_NOTE_ATOM(sn, table[k].label);
                     } else {
                         table[k].label = NULL;
                     }
