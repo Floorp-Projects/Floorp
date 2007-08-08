@@ -191,8 +191,8 @@ extern "C" void ShowOSAlert(const char* aMessage);
 #include "jprof.h"
 #endif
 
-#ifdef MOZ_AIRBAG
-#include "nsAirbagExceptionHandler.h"
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
 #include "nsICrashReporter.h"
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #endif
@@ -526,7 +526,7 @@ class nsXULAppInfo : public nsIXULAppInfo,
 #ifdef XP_WIN
                      public nsIWinAppHelper,
 #endif
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
                      public nsICrashReporter,
 #endif
                      public nsIXULRuntime
@@ -536,7 +536,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXULAPPINFO
   NS_DECL_NSIXULRUNTIME
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
   NS_DECL_NSICRASHREPORTER
 #endif
 #ifdef XP_WIN
@@ -552,7 +552,7 @@ NS_INTERFACE_MAP_BEGIN(nsXULAppInfo)
 #ifdef XP_WIN
   NS_INTERFACE_MAP_ENTRY(nsIWinAppHelper)
 #endif
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
   NS_INTERFACE_MAP_ENTRY(nsICrashReporter)
 #endif
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIXULAppInfo, gAppData)
@@ -751,7 +751,7 @@ nsXULAppInfo::PostUpdate(nsILocalFile *aLogFile)
 }
 #endif
 
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
 NS_IMETHODIMP
 nsXULAppInfo::AnnotateCrashReport(const nsACString& key,
                                   const nsACString& data)
@@ -835,7 +835,7 @@ static nsModuleComponentInfo kComponents[] =
     XULAPPINFO_SERVICE_CONTRACTID,
     AppInfoConstructor
   }
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
 ,
   {
     "nsXULAppInfo",
@@ -2239,8 +2239,8 @@ static void RestoreStateForAppInitiatedRestart()
   }
 }
 
-#ifdef MOZ_AIRBAG
-// When we first initialize airbag we don't have a profile,
+#ifdef MOZ_CRASHREPORTER
+// When we first initialize the crash reporter we don't have a profile,
 // so we set the minidump path to $TEMP.  Once we have a profile,
 // we set it to $PROFILE/minidumps, creating the directory
 // if needed.
@@ -2503,9 +2503,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
   }
 
-#ifdef MOZ_AIRBAG
-  const char* airbagEnv = PR_GetEnv("MOZ_CRASHREPORTER");
-  if (airbagEnv && *airbagEnv) {
+#ifdef MOZ_CRASHREPORTER
+  const char* crashreporterEnv = PR_GetEnv("MOZ_CRASHREPORTER");
+  if (crashreporterEnv && *crashreporterEnv) {
     appData.flags |= NS_XRE_ENABLE_CRASH_REPORTER;
   }
 
@@ -2798,7 +2798,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     //////////////////////// NOW WE HAVE A PROFILE ////////////////////////
 
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
     if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)
         MakeOrSetMinidumpPath(profD);
 #endif
@@ -3147,7 +3147,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
       rv = LaunchChild(nativeApp, appInitiatedRestart, upgraded ? -1 : 0);
 
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
       if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)
         CrashReporter::UnsetExceptionHandler();
 #endif
@@ -3156,7 +3156,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
   }
 
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
   if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)
       CrashReporter::UnsetExceptionHandler();
 #endif

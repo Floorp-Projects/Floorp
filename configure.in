@@ -5310,23 +5310,23 @@ if test -n "${MOZ_JAVAXPCOM}"; then
 fi
 
 dnl ========================================================
-dnl = Airbag crash reporting (on by default on supported platforms)
+dnl = Breakpad crash reporting (on by default on supported platforms)
 dnl ========================================================
 
 if (test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC" \
     || test "$OS_ARCH" = "Darwin" \
     || test "$OS_ARCH" = "Linux" -a "$CPU_ARCH" = "x86") \
    && test -z "$HAVE_64BIT_OS"; then
-   MOZ_AIRBAG=1
+   MOZ_CRASHREPORTER=1
 fi
 
-MOZ_ARG_DISABLE_BOOL(airbag,
-[  --disable-airbag          Disable airbag crash reporting],
-    MOZ_AIRBAG=,
-    MOZ_AIRBAG=1)
+MOZ_ARG_DISABLE_BOOL(crashreporter,
+[  --disable-crashreporter          Disable breakpad crash reporting],
+    MOZ_CRASHREPORTER=,
+    MOZ_CRASHREPORTER=1)
 
-if test -n "$MOZ_AIRBAG"; then
-   AC_DEFINE(MOZ_AIRBAG)
+if test -n "$MOZ_CRASHREPORTER"; then
+   AC_DEFINE(MOZ_CRASHREPORTER)
 
   if test "$OS_ARCH" = "Linux" && \
      test -z "$SKIP_LIBRARY_CHECKS"; then
@@ -5339,7 +5339,7 @@ if test -n "$MOZ_AIRBAG"; then
                                  ac_cv_have_libcurl="yes",
                                  ac_cv_have_libcurl="no")])
     if test "$ac_cv_have_libcurl" = "no"; then
-        AC_MSG_ERROR([Couldn't find libcurl, which is required for the crash reporter.  Use --disable-airbag to disable the crash reporter.])
+        AC_MSG_ERROR([Couldn't find libcurl, which is required for the crash reporter.  Use --disable-crashreporter to disable the crash reporter.])
     fi
     LDFLAGS=$_SAVE_LDFLAGS
   fi
@@ -7467,7 +7467,7 @@ AC_SUBST(MOZ_VIEW_SOURCE)
 AC_SUBST(MOZ_SPELLCHECK)
 AC_SUBST(MOZ_XPFE_COMPONENTS)
 AC_SUBST(MOZ_USER_DIR)
-AC_SUBST(MOZ_AIRBAG)
+AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_MOCHITEST)
 
 AC_SUBST(ENABLE_STRIP)

@@ -51,15 +51,15 @@ REQUIRES = sender
 #XXX: should move to toolkit/locale
 DIST_FILES = crashreporter.ini
 
-LOCAL_INCLUDES = -I$(srcdir)/../airbag/src
+LOCAL_INCLUDES = -I$(srcdir)/../google-breakpad/src
 
 CPPSRCS = crashreporter.cpp
 
 ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += crashreporter_win.cpp
 LIBS += \
-  $(DEPTH)/toolkit/airbag/airbag/src/client/windows/sender/$(LIB_PREFIX)crash_report_sender_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/airbag/airbag/src/common/windows/$(LIB_PREFIX)breakpad_windows_common_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/windows/sender/$(LIB_PREFIX)crash_report_sender_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/windows/$(LIB_PREFIX)breakpad_windows_common_s.$(LIB_SUFFIX) \
   $(NULL)
 LOCAL_INCLUDES += -I$(srcdir)
 RCINCLUDE = crashreporter.rc
@@ -72,17 +72,17 @@ ifeq ($(OS_ARCH),Darwin)
 CMMSRCS += crashreporter_osx.mm
 OS_LIBS += -framework Cocoa
 LIBS += \
-  $(DEPTH)/toolkit/airbag/airbag/src/client/mac/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/airbag/airbag/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/mac/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX) \
   $(NULL)
 
-LOCAL_INCLUDES += -I$(srcdir) -I$(srcdir)/../airbag/src/common/mac/
+LOCAL_INCLUDES += -I$(srcdir) -I$(srcdir)/../google-breakpad/src/common/mac/
 endif
 
 ifeq ($(OS_ARCH),Linux)
 CPPSRCS += crashreporter_linux.cpp
 LIBS += \
-  $(DEPTH)/toolkit/airbag/airbag/src/common/linux/$(LIB_PREFIX)breakpad_linux_common_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/linux/$(LIB_PREFIX)breakpad_linux_common_s.$(LIB_SUFFIX) \
   $(NULL)
 LOCAL_INCLUDES += -I$(srcdir)
 OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS)
@@ -107,6 +107,6 @@ libs::
 endif
 
 ifeq ($(OS_ARCH),Linux)
-export:: $(srcdir)/../airbag/src/common/linux/http_upload.cc
+export:: $(srcdir)/../google-breakpad/src/common/linux/http_upload.cc
 	$(INSTALL) $^ .
 endif
