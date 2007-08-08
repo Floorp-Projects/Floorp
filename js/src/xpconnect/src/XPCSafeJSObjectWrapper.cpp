@@ -867,7 +867,8 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   obj = nsnull;
 
   if (JSVAL_IS_PRIMITIVE(argv[0])) {
-    return ThrowException(NS_ERROR_INVALID_ARG, cx);
+    *rval = argv[0];
+    return JS_TRUE;
   }
 
   JSObject *objToWrap = JSVAL_TO_OBJECT(argv[0]);
