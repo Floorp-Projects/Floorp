@@ -2116,20 +2116,18 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
     }
   }
 
-  nsCOMPtr<nsIURI> loadingURI;
-  rv = aLoadingPrincipal->GetURI(getter_AddRefs(loadingURI));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
-
   PRInt16 decision = nsIContentPolicy::ACCEPT;
 
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_IMAGE,
                                  aURI,
-                                 loadingURI,
+                                 nsnull,
+                                 aLoadingPrincipal,
                                  aContext,
                                  EmptyCString(), //mime guess
                                  nsnull,         //extra
                                  &decision,
-                                 GetContentPolicy());
+                                 GetContentPolicy(),
+                                 sSecurityManager);
 
   if (aImageBlockingStatus) {
     *aImageBlockingStatus =
@@ -3611,13 +3609,11 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
                                         const nsACString& aMimeGuess,
                                         nsISupports* aExtra)
 {
+  NS_PRECONDITION(aLoadingPrincipal, "Must have a loading principal here");
+  
   // XXXbz do we want to fast-path skin stylesheets loading XBL here somehow?
-  nsCOMPtr<nsIURI> loadingURI;
-  nsresult rv = aLoadingPrincipal->GetURI(getter_AddRefs(loadingURI));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // CheckLoadURIWithPrincipal
-  rv = sSecurityManager->
+  nsresult rv = sSecurityManager->
     CheckLoadURIWithPrincipal(aLoadingPrincipal, aURIToLoad, aCheckLoadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3625,12 +3621,14 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(aContentPolicyType,
                                  aURIToLoad,
-                                 loadingURI,
+                                 nsnull,
+                                 aLoadingPrincipal,
                                  aContext,
                                  aMimeGuess,
                                  aExtra,
                                  &shouldLoad,
-                                 GetContentPolicy());
+                                 GetContentPolicy(),
+                                 sSecurityManager);
   NS_ENSURE_SUCCESS(rv, rv);
   if (NS_CP_REJECTED(shouldLoad)) {
     return NS_ERROR_CONTENT_BLOCKED;
@@ -3642,6 +3640,10 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
        SchemeIs(aURIToLoad, "chrome"))) {
     return NS_OK;
   }
+
+  nsCOMPtr<nsIURI> loadingURI;
+  rv = aLoadingPrincipal->GetURI(getter_AddRefs(loadingURI));
+  NS_ENSURE_SUCCESS(rv, rv);
   return sSecurityManager->CheckSameOriginURI(loadingURI, aURIToLoad);
 }
 

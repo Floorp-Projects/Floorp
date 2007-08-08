@@ -448,9 +448,11 @@ CheckLoadURI(nsIURI *aUri, nsIURI *aReferrerUri,
     // Then do a content policy check.
     PRInt16 decision = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
-                                   aUri, aReferrerUri, aContext,
+                                   aUri, nsnull, aReferrerPrincipal, aContext,
                                    NS_LITERAL_CSTRING("application/xml"), nsnull,
-                                   &decision);
+                                   &decision,
+                                   nsContentUtils::GetContentPolicy(),
+                                   nsContentUtils::GetSecurityManager());
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_CP_REJECTED(decision) ? NS_ERROR_XSLT_LOAD_BLOCKED_ERROR : NS_OK;
@@ -473,9 +475,9 @@ protected:
     nsAutoRefCnt mRefCnt;
 
 private:
-    nsCOMPtr<nsIPrincipal> mCallerPrincipal;
     nsRefPtr<txMozillaXSLTProcessor> mProcessor;
     nsCOMPtr<nsILoadGroup> mLoadGroup;
+    nsCOMPtr<nsIPrincipal> mCallerPrincipal;
 
 protected:
     // This exists solely to suppress a warning from nsDerivedSafe

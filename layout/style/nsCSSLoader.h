@@ -342,13 +342,11 @@ public:
                            nsICSSStyleSheet** aSheet);
 
   NS_IMETHOD LoadSheet(nsIURI* aURL,
-                       nsIURI* aOriginURI,
                        nsIPrincipal* aOriginPrincipal,
                        nsICSSLoaderObserver* aObserver,
                        nsICSSStyleSheet** aSheet);
 
   NS_IMETHOD LoadSheet(nsIURI* aURL,
-                       nsIURI* aOriginURI,
                        nsIPrincipal* aOriginPrincipal,
                        nsICSSLoaderObserver* aObserver);
 
@@ -379,10 +377,9 @@ public:
   PRBool IsAlternate(const nsAString& aTitle, PRBool aHasAlternateRel);
 
 private:
-  // Note: null aSourceURI or aSourcePrincipal indicates that the content
-  // policy or CheckLoadURI checks (respectively) should be skipped.
-  nsresult CheckLoadAllowed(nsIURI* aSourceURI,
-                            nsIPrincipal* aSourcePrincipal,
+  // Note: null aSourcePrincipal indicates that the content policy and
+  // CheckLoadURI checks should be skipped.
+  nsresult CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
                             nsIURI* aTargetURI,
                             nsISupports* aContext);
 
@@ -418,7 +415,6 @@ private:
 
   nsresult InternalLoadNonDocumentSheet(nsIURI* aURL,
                                         PRBool aAllowUnsafeRules,
-                                        nsIURI* aOriginURI,
                                         nsIPrincipal* aOriginPrincipal,
                                         nsICSSStyleSheet** aSheet,
                                         nsICSSLoaderObserver* aObserver);
