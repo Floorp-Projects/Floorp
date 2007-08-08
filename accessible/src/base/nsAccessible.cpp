@@ -2289,6 +2289,10 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
   nsresult rv = GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Apply ARIA states to be sure accessible states will be overriden.
+  rv = GetARIAState(aState);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Set additional states which presence depends on another states.
   if (aExtraState) {
     if (!(*aState & nsIAccessibleStates::STATE_UNAVAILABLE)) {
@@ -2311,8 +2315,7 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
     }
   }
 
-  // Apply ARIA states to be sure accessible states will be overriden.
-  return GetARIAState(aState);
+  return NS_OK;
 }
 
 nsresult
