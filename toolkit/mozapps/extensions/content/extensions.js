@@ -21,6 +21,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
 #   Robert Strong <robert.bugzilla@gmail.com>
+#   Dão Gottwald <dao@design-noir.de>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,6 +61,7 @@ var gUpdatesOnly      = false;
 var gAppID            = "";
 var gPref             = null;
 var gPriorityCount    = 0;
+var gInstallCount     = 0;
 
 const PREF_EM_CHECK_COMPATIBILITY           = "extensions.checkCompatibility";
 const PREF_EXTENSIONS_GETMORETHEMESURL      = "extensions.getMoreThemesURL";
@@ -554,7 +556,7 @@ function noUpdatesDismiss(aEvent)
 function setRestartMessage(aItem)
 {
   var themeName = aItem.getAttribute("name");
-  var restartMessage = getExtensionString("dssSwitchAfterRestart", 
+  var restartMessage = getExtensionString("dssSwitchAfterRestart",
                                           [getBrandShortName()]);
   var children = gExtensionsView.children;
   for (var i = 0; i < children.length; ++i) {
@@ -570,7 +572,7 @@ function setRestartMessage(aItem)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Startup, Shutdown
-function Startup() 
+function Startup()
 {
   gExtensionStrings = document.getElementById("extensionsStrings");
   gPref = Components.classes["@mozilla.org/preferences-service;1"]
@@ -582,7 +584,7 @@ function Startup()
     gDefaultTheme = defaultPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
   }
   catch (e) { }
-  
+
   gExtensionsView = document.getElementById("extensionsView");
   gExtensionManager = Components.classes["@mozilla.org/extensions/manager;1"]
                                 .getService(nsIExtensionManager);
@@ -592,7 +594,7 @@ function Startup()
   gInSafeMode = appInfo.inSafeMode;
   gAppID = appInfo.ID;
   updateOptionalViews();
-  
+
   try {
     gCheckCompat = gPref.getBoolPref(PREF_EM_CHECK_COMPATIBILITY);
   } catch(e) { }
@@ -610,7 +612,7 @@ function Startup()
 
   gExtensionsView.focus();
   gExtensionsViewController.onCommandUpdate(); 
-  
+
   // Now look and see if we're being opened by XPInstall
   gDownloadManager = new XPInstallDownloadManager();
   var os = Components.classes["@mozilla.org/observer-service;1"]
@@ -619,7 +621,7 @@ function Startup()
   os.addObserver(gAddonsMsgObserver, "addons-message-notification", false);
 
   gObserverIndex = gExtensionManager.addUpdateListener(gDownloadManager);
-  
+
   if (!gCheckCompat) {
     var msgText = getExtensionString("disabledCompatMsg");
     var buttonLabel = getExtensionString("enableButtonLabel");
@@ -716,8 +718,8 @@ XPInstallDownloadManager.prototype = {
   _statusFormatKBMB : null,
   _statusFormatKBKB : null,
   _statusFormatMBMB : null,
-  
-  observe: function (aSubject, aTopic, aData) 
+
+  observe: function (aSubject, aTopic, aData)
   {
     switch (aTopic) {
       case "xpinstall-download-started":
@@ -729,7 +731,7 @@ XPInstallDownloadManager.prototype = {
         break;
     }
   },
-  
+
   addDownloads: function (aParams)
   {
     var numXPInstallItems = aParams.GetInt(1);
@@ -745,7 +747,7 @@ XPInstallDownloadManager.prototype = {
         iconURL = isTheme ? "chrome://mozapps/skin/extensions/themeGeneric.png" :
                             "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
       }
-      
+
       var type = isTheme ? nsIUpdateItem.TYPE_THEME : nsIUpdateItem.TYPE_EXTENSION;
       var item = Components.classes["@mozilla.org/updates/item;1"]
                            .createInstance(Components.interfaces.nsIUpdateItem);
@@ -755,12 +757,12 @@ XPInstallDownloadManager.prototype = {
       // Advance the enumerator
       var certName = aParams.GetString(i++);
     }
-    
+
     gExtensionManager.addDownloads(items, items.length, false);
     updateGlobalCommands();
   },
-  
-  getElementForAddon: function(aAddon) 
+
+  getElementForAddon: function(aAddon)
   {
     var element = document.getElementById(PREFIX_ITEM_URI + aAddon.id);
     if (aAddon.id == aAddon.xpiURL)
@@ -778,10 +780,18 @@ XPInstallDownloadManager.prototype = {
       return;
     switch (aState) {
       case nsIXPIProgressDialog.DOWNLOAD_START:
+        gInstallCount++;
+        if (gInstallCount == 1)
+          updateGlobalCommands();
+        break;
       case nsIXPIProgressDialog.DOWNLOAD_DONE:
       case nsIXPIProgressDialog.INSTALL_START:
         break;
       case nsIXPIProgressDialog.INSTALL_DONE:
+        gInstallCount--;
+        if (gInstallCount == 0)
+          updateGlobalCommands();
+
         // From nsInstall.h
         // SUCCESS        = 0
         // REBOOT_NEEDED  = 999
@@ -819,16 +829,17 @@ XPInstallDownloadManager.prototype = {
         break;
     }
   },
-  
+
   _urls: { },
   onProgress: function (aAddon, aValue, aMaxValue)
   {
     var element = this.getElementForAddon(aAddon);
-    if (!element) return;
+    if (!element)
+      return;
     var percent = Math.round((aValue / aMaxValue) * 100);
     if (percent > 1 && !(aAddon.xpiURL in this._urls))
       this._urls[aAddon.xpiURL] = true;
-    
+
     var KBProgress = parseInt(aValue/1024 + .5);
     var KBTotal = parseInt(aMaxValue/1024 + .5);
     var statusPrevious = element.getAttribute("status");
@@ -836,15 +847,12 @@ XPInstallDownloadManager.prototype = {
     if (statusCurrent != statusPrevious)
       element.setAttribute("status", statusCurrent);
   },
-  
+
   _replaceInsert: function ( text, index, value ) 
   {
-    var result = text;
-    var regExp = new RegExp( "#"+index );
-    result = result.replace( regExp, value );
-    return result;
+    return text.replace("#"+index, value);
   },
-  
+
   // aBytes     aTotalKBytes    returns:
   // x, < 1MB   y < 1MB         x of y KB
   // x, < 1MB   y >= 1MB        x KB of y MB
@@ -874,7 +882,7 @@ XPInstallDownloadManager.prototype = {
       // This is an undefined state!
       dump("*** huh?!\n");
     }
-    
+
     return format;  
   },
 
@@ -1376,6 +1384,10 @@ function updateOptionalViews() {
                       .createInstance(Components.interfaces.nsIRDFContainer);
   ctr.Init(gExtensionManager.datasource, rdfs.GetResource(RDFURI_ITEM_ROOT));
   var elements = ctr.GetElements();
+  var showLocales = false;
+  var showPlugins = false;
+  var showUpdates = false;
+  var showInstalls = false;
   while (elements.hasMoreElements()) {
     var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
     if (!showPlugins || !showLocales) {
@@ -1383,10 +1395,19 @@ function updateOptionalViews() {
       var type = ds.GetTarget(e, typeArc, true);
       if (type && type instanceof Components.interfaces.nsIRDFInt) {
         if (type.Value & nsIUpdateItem.TYPE_PLUGIN)
-          var showPlugins = true;
+          showPlugins = true;
         if (type.Value & nsIUpdateItem.TYPE_LOCALE)
-          var showLocales = true;
+          showLocales = true;
       }
+    }
+
+    var stateArc = rdfs.GetResource(PREFIX_NS_EM + "state");
+    var state = ds.GetTarget(e, stateArc, true);
+    if (state) {
+      showInstalls = true;
+      if (state instanceof Components.interfaces.nsIRDFLiteral &&
+          state.Value != "success" && state.Value != "failure")
+        gInstallCount++;
     }
 
     if (!showUpdates) {
@@ -1397,17 +1418,9 @@ function updateOptionalViews() {
         var updateable = ds.GetTarget(e, updateableArc, true);
         updateable = updateable.QueryInterface(Components.interfaces.nsIRDFLiteral);
         if (updateable.Value == "true")
-          var showUpdates = true;
+          showUpdates = true;
       }
     }
-
-    if (showInstalls)
-      continue;
-
-    var stateArc = rdfs.GetResource(PREFIX_NS_EM + "state");
-    var state = ds.GetTarget(e, stateArc, true);
-    if (state)
-      var showInstalls = true;
   }
   document.getElementById("locales-view").hidden = !showLocales;
   document.getElementById("plugins-view").hidden = !showPlugins;
@@ -1419,21 +1432,22 @@ function updateGlobalCommands() {
   var disableInstallFile = false;
   var disableUpdateCheck = true;
   var disableInstallUpdate = true;
-  var disableAppRestart = false;
+  var disableAppRestart = (gInstallCount > 0);
   if (gExtensionsView.hasAttribute("update-operation")) {
     disableInstallFile = true;
+    disableAppRestart = true;
+  }
+  else if (gView == "updates") {
+    disableInstallUpdate = false;
     disableAppRestart = true;
   }
   else {
     var children = gExtensionsView.children;
     for (var i = 0; i < children.length; ++i) {
-      var child = children[i];
-      if (disableUpdateCheck && child.getAttribute("updateable") == "true")
+      if (children[i].getAttribute("updateable") == "true") {
         disableUpdateCheck = false;
-      if (disableInstallUpdate && child.hasAttribute("availableUpdateURL"))
-        disableInstallUpdate = false;
-      if (!disableAppRestart && child.hasAttribute("state") && child.getAttribute("state") != "success")
-        disableAppRestart = true;
+        break;
+      }
     }
   }
   setElementDisabledByID("cmd_checkUpdatesAll", disableUpdateCheck);
