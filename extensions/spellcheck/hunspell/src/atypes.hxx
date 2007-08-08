@@ -60,10 +60,11 @@
 #ifndef HUNSPELL_WARNING
 #ifdef HUNSPELL_WARNING_ON
 #define HUNSPELL_WARNING fprintf
-#else
-static inline void HUNSPELL_WARNING(FILE *, const char *, ...) {}
-#endif
 #define WARNVAR warnvar
+#else
+#define HUNSPELL_WARNING(a,b,...) {}
+#define WARNVAR
+#endif
 #endif
 
 // HUNSTEM def.
