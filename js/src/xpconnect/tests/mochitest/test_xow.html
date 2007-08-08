@@ -44,6 +44,9 @@
     } catch (e) {
         ok(false, 'window.eval does not throw an exception');
     }
+
+    is(Object.prototype.toString.call(Object.__parent__),
+       '[object XPCCrossOriginWrapper]', '__parent__ returns an XOW');
     </script>
 </body>
 </html>
