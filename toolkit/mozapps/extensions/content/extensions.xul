@@ -199,6 +199,10 @@
               tooltiptextaddons="&cmd.installFileAddon.tooltip;"
               tooltiptextthemes="&cmd.installFileTheme.tooltip;"
               command="cmd_installFile"/>
+      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
+              accesskey="&cmd.installUpdatesAll.accesskey;"
+              tooltiptext="&cmd.installUpdatesAll.tooltip;"
+              command="cmd_installUpdatesAll"/>
       <button id="checkUpdatesAllButton" label="&cmd.checkUpdatesAll.label;"
               accesskey="&cmd.checkUpdatesAll.accesskey;"
               tooltiptextaddons="&cmd.checkUpdatesAllAddon.tooltip;"
@@ -214,10 +218,6 @@
              valuethemes="&getThemes.label;"
              valueextensions="&getExtensions.label;"/>
       <spacer flex="1"/>
-      <button id="installUpdatesAllButton" label="&cmd.installUpdatesAll.label;"
-              accesskey="&cmd.installUpdatesAll.accesskey;"
-              tooltiptext="&cmd.installUpdatesAll.tooltip;"
-              command="cmd_installUpdatesAll"/>
       <button id="restartAppButton" label="&cmd.restartApp2.label;"
               accesskey="&cmd.restartApp2.accesskey;"
               tooltiptext="&cmd.restartApp2.tooltip;"
