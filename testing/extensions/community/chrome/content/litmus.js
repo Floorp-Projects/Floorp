@@ -298,7 +298,7 @@
 		}));
 		
 		var callback = function(resp) {
-			alert("yay");
+			
 		};
 		
 		var errback = function(resp) {
