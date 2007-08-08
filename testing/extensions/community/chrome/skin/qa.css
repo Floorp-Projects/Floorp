@@ -49,6 +49,10 @@ tab {
   background-color: transparent;
 }
 
+/* set 140px tab spacer width here 
+for windows. Will be overriden in platform/ for other OSes */
+#qa-tab-spacer {  width: 140px;}
+
 /*-------------------------------
                PANELS
   -------------------------------*/
