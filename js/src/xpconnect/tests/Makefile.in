@@ -64,6 +64,11 @@ DIRS += mochitest \
         $(NULL)
 endif
 
+ifdef MOZ_MOCHITEST
+DIRS += mochitest \
+	$(NULL)
+endif
+
 ifdef ENABLE_TESTS
 XPCSHELL_TESTS = unit
 endif
