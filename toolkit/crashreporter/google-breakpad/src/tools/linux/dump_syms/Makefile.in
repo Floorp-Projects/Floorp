@@ -53,8 +53,8 @@ HOST_CPPSRCS = \
   $(NULL)
 
 HOST_LIBS += \
-  $(DEPTH)/toolkit/airbag/airbag/src/common/linux/$(LIB_PREFIX)host_breakpad_linux_common_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/airbag/airbag/src/common/$(LIB_PREFIX)host_breakpad_common_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/linux/$(LIB_PREFIX)host_breakpad_linux_common_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)host_breakpad_common_s.$(LIB_SUFFIX) \
   $(NULL)
 
 # force C++ linking

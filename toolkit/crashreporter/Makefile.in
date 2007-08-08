@@ -11,7 +11,7 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Mozilla Airbag integration
+# The Original Code is Mozilla Breakpad integration
 #
 # The Initial Developer of the Original Code is
 # Ted Mielczarek <ted.mielczarek@gmail.com>
@@ -55,8 +55,8 @@ DIRS = \
 	$(NULL)
 
 ifeq  ($(OS_ARCH),WINNT)
-	DIRS += airbag/src/common/windows \
-		airbag/src/client/windows \
+	DIRS += google-breakpad/src/common/windows \
+		google-breakpad/src/client/windows \
 		$(NULL)
 endif
 
@@ -64,11 +64,11 @@ ifeq ($(OS_ARCH),Darwin)
 CMMSRCS = mac_utils.mm
 
 DIRS += \
-  airbag/src/common \
-  airbag/src/common/mac \
-  airbag/src/client \
-  airbag/src/client/mac/handler \
-  airbag/src/tools/mac/dump_syms \
+  google-breakpad/src/common \
+  google-breakpad/src/common/mac \
+  google-breakpad/src/client \
+  google-breakpad/src/client/mac/handler \
+  google-breakpad/src/tools/mac/dump_syms \
   $(NULL)
 endif
 
@@ -76,17 +76,17 @@ ifeq ($(OS_ARCH),Linux)
 # there's no define for this normally
 DEFINES += -DXP_LINUX
 DIRS += \
-  airbag/src/common \
-  airbag/src/common/linux \
-  airbag/src/client \
-  airbag/src/client/linux/handler \
-  airbag/src/tools/linux/dump_syms \
+  google-breakpad/src/common \
+  google-breakpad/src/common/linux \
+  google-breakpad/src/client \
+  google-breakpad/src/client/linux/handler \
+  google-breakpad/src/tools/linux/dump_syms \
   $(NULL)
 endif
 
 DIRS += client
 
-LOCAL_INCLUDES = -I$(srcdir)/airbag/src
+LOCAL_INCLUDES = -I$(srcdir)/google-breakpad/src
 DEFINES += -DUNICODE -D_UNICODE
 
 XPIDLSRCS = \
@@ -94,11 +94,11 @@ XPIDLSRCS = \
 	$(NULL)
 
 EXPORTS = \
-	nsAirbagExceptionHandler.h \
+	nsExceptionHandler.h \
 	$(NULL)
 
 CPPSRCS = \
-	nsAirbagExceptionHandler.cpp \
+	nsExceptionHandler.cpp \
 	$(NULL)
 
 FORCE_STATIC_LIB = 1

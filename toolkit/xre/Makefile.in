@@ -85,7 +85,7 @@ ifdef NS_TRACE_MALLOC
 REQUIRES += tracemalloc
 endif
 
-ifdef MOZ_AIRBAG
+ifdef MOZ_CRASHREPORTER
 REQUIRES += crashreporter
 endif
 
@@ -192,28 +192,28 @@ SHARED_LIBRARY_LIBS += $(DEPTH)/widget/src/xremoteclient/$(LIB_PREFIX)xremote_cl
 LOCAL_INCLUDES += -I$(topsrcdir)/widget/src/xremoteclient
 endif
 
-ifdef MOZ_AIRBAG
-SHARED_LIBRARY_LIBS += $(DEPTH)/toolkit/airbag/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX)
+ifdef MOZ_CRASHREPORTER
+SHARED_LIBRARY_LIBS += $(DEPTH)/toolkit/crashreporter/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX)
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/toolkit/airbag/airbag/src/client/windows/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/airbag/airbag/src/common/windows/$(LIB_PREFIX)breakpad_windows_common_s.$(LIB_SUFFIX)
+	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/windows/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/windows/$(LIB_PREFIX)breakpad_windows_common_s.$(LIB_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH),Darwin)
 SHARED_LIBRARY_LIBS += \
-	$(DEPTH)/toolkit/airbag/airbag/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/airbag/airbag/src/client/mac/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/airbag/airbag/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/airbag/airbag/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX)
+	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/mac/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX)
 endif
 
 ifeq ($(OS_ARCH),Linux)
 SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/toolkit/airbag/airbag/src/client/linux/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/airbag/airbag/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/airbag/airbag/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/airbag/airbag/src/common/linux/$(LIB_PREFIX)breakpad_linux_common_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/linux/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/linux/$(LIB_PREFIX)breakpad_linux_common_s.$(LIB_SUFFIX) \
   $(NULL)
 endif
 endif

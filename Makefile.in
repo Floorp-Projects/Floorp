@@ -134,7 +134,7 @@ endif # WINNT
 ifeq ($(OS_ARCH),WINNT)
 # we want to copy PDB files on Windows
 MAKE_SYM_STORE_ARGS := -c
-DUMP_SYMS_BIN := $(topsrcdir)/toolkit/airbag/tools/win32/dump_syms.exe
+DUMP_SYMS_BIN := $(topsrcdir)/toolkit/crashreporter/tools/win32/dump_syms.exe
 # PDB files don't get moved to dist, so we need to scan the whole objdir
 MAKE_SYM_STORE_PATH := .
 endif
@@ -160,10 +160,10 @@ EXTRA_BUILDID := -$(MOZ_SYMBOLS_EXTRA_BUILDID)
 endif
 
 buildsymbols:
-ifdef MOZ_AIRBAG
+ifdef MOZ_CRASHREPORTER
 	echo building symbol store
 	mkdir -p $(DIST)/crashreporter-symbols/$(BUILDID)
-	$(PYTHON) $(topsrcdir)/toolkit/airbag/tools/symbolstore.py    \
+	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/symbolstore.py    \
 	  $(MAKE_SYM_STORE_ARGS) -s $(topsrcdir) $(DUMP_SYMS_BIN)     \
 	  $(DIST)/crashreporter-symbols/$(BUILDID)                    \
 	  $(MAKE_SYM_STORE_PATH) >                                    \
@@ -174,11 +174,11 @@ ifdef MOZ_AIRBAG
           zip -r9D ../crashreporter-symbols-$(BUILDID).zip .
 	mv $(DIST)/crashreporter-symbols/crashreporter-symbols-$(BUILDID).zip \
           $(topsrcdir)/../$(BUILDID)
-endif # MOZ_AIRBAG
+endif # MOZ_CRASHREPORTER
 
 uploadsymbols:
-ifdef MOZ_AIRBAG
-	$(topsrcdir)/toolkit/airbag/tools/upload_symbols.sh $(topsrcdir)/../$(BUILDID)/crashreporter-symbols-$(BUILDID).zip
+ifdef MOZ_CRASHREPORTER
+	$(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(topsrcdir)/../$(BUILDID)/crashreporter-symbols-$(BUILDID).zip
 endif
 
 ifeq ($(OS_ARCH),WINNT)
