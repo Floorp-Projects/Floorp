@@ -43,8 +43,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml">
 
-<script type="application/x-javascript" src="chrome://qa/content/tabs/qa.js" />
-<script type="application/x-javascript" src="chrome://qa/content/tabs/qmo.js" />
+
 <script type="application/x-javascript">
   window.addEventListener('load', qmo.populateFields, false)
 </script>
@@ -53,15 +52,15 @@
 <vbox pack="start">
   <label href="http://quality.mozilla.org" value="&qa.qmo.visit;" class="text-link" />
   
-  <hbox maxheight="130px" height="130px">
-	<groupbox maxheight="130px" height="130px">
+  <hbox class="box-mheight">
+	<groupbox  class="box-mheight">
 		<caption label="&qa.qmo.help;" />
-		<div style="max-height: 130px; height: 130px" xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-help">
+		<div class="box-mheight" xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-help">
 		</div>
 	</groupbox>
-	<groupbox maxheight="130px" height="130px">
+	<groupbox class="box-mheight">
 		<caption label="&qa.qmo.events;" />
-		<div style="max-height: 130px; height: 130px" xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-events">
+		<div class="box-mheight" xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-events">
 			<ul>
 			</ul>
 		</div>
@@ -69,13 +68,13 @@
   </hbox>
   <groupbox>
     <caption label="&qa.qmo.forumposts;" />
-    <div xmlns="http://www.w3.org/1999/xhtml" style="width: 290px" id="qa-qmo-forumposts">
+    <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-forumposts">
       <ul>
       </ul>
     </div>
   </groupbox>
   
-  <groupbox style="height: 200px; width:100px; overflow: auto; margin-right: 12px;">
+  <groupbox id="qa-qmo-latestbox">
     <caption label="&qa.qmo.thelatest;" />
     <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-latest">
 	

@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *  Zach Lipton <zach@zachlipton.com>
+ *  Ben Hsieh <ben.hsieh@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -32,7 +33,7 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
-* ***** END LICENSE BLOCK ***** */
+ * ***** END LICENSE BLOCK ***** */
 
 
 const Ci = Components.interfaces;
@@ -153,9 +154,21 @@ var qaTools = {
         
     },
     
-    linkTargetsToBlank : function(node) {
+    assignLinkHandlers : function(node) {
         var children = node.getElementsByTagName('a');
         for (var i = 0; i < children.length; i++)
-            children[i].setAttribute("target", "_blank");
-    }
+           children[i].addEventListener("click", qaTools.handleLink, false);
+    },
+    assignLinkHandler : function(link) {
+        link.addEventListener("click", qaTools.handleLink, false);
+    },
+    handleLink : function(event) {
+        var url = this.href;
+        var type = qaPref.getPref("browser.link.open_external", "int");
+        var where = "tab";
+        if (type == 2) where = "window";
+        
+        openUILinkIn(url, where);
+        event.preventDefault(); // prevent it from simply following the href
+    },
 };

@@ -43,8 +43,6 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns:html="http://www.w3.org/1999/xhtml">
 
-<script type="application/x-javascript" src="chrome://qa/content/tabs/qa.js" />
-<script type="application/x-javascript" src="chrome://qa/content/tabs/qmo.js" />
 <tabpanel id="qa-tab-bugzilla">
 <vbox>
   <groupbox>

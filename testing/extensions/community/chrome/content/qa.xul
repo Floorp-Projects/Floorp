@@ -36,6 +36,7 @@
 # ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://qa/skin/qa.css" type="text/css"?>
 <?xml-stylesheet href="chrome://qa/skin/platform.css" type="text/css"?>
 
@@ -64,6 +65,7 @@
   <stringbundle id="bundle_urls" src="chrome://qa/locale/urls.properties" />
 </stringbundleset>
 
+<script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js" />
 <script type="application/x-javascript" src="chrome://qa/content/MochiKit/MochiKit.js" />
 <script type="application/x-javascript" src="chrome://qa/content/litmusReporter.js" />
 <script type="application/x-javascript" src="chrome://qa/content/prefs.js" />
@@ -73,13 +75,13 @@
 
 <tabbox id="qa_tabbox">
   <tabs id="qa_tabrow">
-    <tab image="chrome://qa/skin/qmo.png" />
-    <tab label="&qa.litmus.title;" />
-    <tab label="&qa.bugzilla.title;" />
-    <tab label="&qa.chat.title;" />
-    <spacer id="qa-tab-spacer" />
-    <tab label="&qa.preferences.title;" id="qa-tabbar-prefs" />
-    <tab label="&qa.help.title;" />
+    <tab id="qa-tabbar-qmo" class="tabbrowser-tab" />
+    <tab label="&qa.litmus.title;" class="tabbrowser-tab" />
+    <tab label="&qa.bugzilla.title;" class="tabbrowser-tab" />
+    <tab label="&qa.chat.title;" class="tabbrowser-tab" />
+    <spacer id="qa-tabbar-spacer" />
+    <tab label="&qa.preferences.title;" id="qa-tabbar-prefs" class="tabbrowser-tab" />
+    <tab label="&qa.help.title;" class="tabbrowser-tab" />
   </tabs>
   <tabpanels>
     <tabpanel id="qa-tab-qmo"></tabpanel>
