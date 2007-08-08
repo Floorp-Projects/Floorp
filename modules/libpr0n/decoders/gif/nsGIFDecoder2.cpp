@@ -337,11 +337,6 @@ void nsGIFDecoder2::BeginImageFrame()
 //******************************************************************************
 void nsGIFDecoder2::EndImageFrame()
 {
-  // An image can specify a delay time before which to display
-  // subsequent images.
-  if (mGIFStruct.delay_time < MINIMUM_DELAY_TIME)
-    mGIFStruct.delay_time = MINIMUM_DELAY_TIME;
-
   mGIFStruct.images_decoded++;
 
   // If mImageFrame hasn't been initialized, call HaveDecodedRow to init it
