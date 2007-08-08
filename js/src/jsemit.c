@@ -1774,7 +1774,7 @@ EmitAtomOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
 {
     JSAtomListElement *ale;
 
-    JS_ASSERT((js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_CONST);
+    JS_ASSERT((js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_ATOM);
     ale = js_IndexAtom(cx, pn->pn_atom, &cg->atomList);
     if (!ale)
         return JS_FALSE;
@@ -1794,24 +1794,24 @@ EmitObjectOp(JSContext *cx, JSParsedObjectBox *pob, JSOp op,
 
 /*
  * What good are ARGNO_LEN and VARNO_LEN, you ask?  The answer is that, apart
- * from EmitIndexConstOp, they abstract out the detail that both are 2, and in
+ * from EmitSlotIndexOp, they abstract out the detail that both are 2, and in
  * other parts of the code there's no necessary relationship between the two.
- * The abstraction cracks here in order to share EmitIndexConstOp code among
+ * The abstraction cracks here in order to share EmitSlotIndexOp code among
  * the JSOP_DEFLOCALFUN and JSOP_GET{ARG,VAR,LOCAL}PROP cases.
  */
 JS_STATIC_ASSERT(ARGNO_LEN == 2);
 JS_STATIC_ASSERT(VARNO_LEN == 2);
 
 static JSBool
-EmitIndexConstOp(JSContext *cx, JSOp op, uintN slot, uintN index,
+EmitSlotIndexOp(JSContext *cx, JSOp op, uintN slot, uintN index,
                  JSCodeGenerator *cg)
 {
     JSOp bigSuffix;
     ptrdiff_t off;
     jsbytecode *pc;
 
-    JS_ASSERT((js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_INDEXCONST ||
-              (js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_INDEXOBJECT);
+    JS_ASSERT((js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_SLOTATOM ||
+              (js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_SLOTOBJECT);
     bigSuffix = EmitBigIndexPrefix(cx, cg, index);
     if (bigSuffix == JSOP_FALSE)
         return JS_FALSE;
@@ -2394,7 +2394,7 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
                 if (!ale)
                     return JS_FALSE;
                 atomIndex = ALE_INDEX(ale);
-                return EmitIndexConstOp(cx, op, pn2->pn_slot, atomIndex, cg);
+                return EmitSlotIndexOp(cx, op, pn2->pn_slot, atomIndex, cg);
               }
 
               default:;
@@ -3285,7 +3285,7 @@ MaybeEmitVarDecl(JSContext *cx, JSCodeGenerator *cg, JSOp prologOp,
         atomIndex = ALE_INDEX(ale);
     }
 
-    if ((js_CodeSpec[pn->pn_op].format & JOF_TYPEMASK) == JOF_CONST &&
+    if ((js_CodeSpec[pn->pn_op].format & JOF_TYPEMASK) == JOF_ATOM &&
         (!(cg->treeContext.flags & TCF_IN_FUNCTION) ||
          (cg->treeContext.flags & TCF_FUN_HEAVYWEIGHT))) {
         /* Emit a prolog bytecode to predefine the variable. */
@@ -4106,7 +4106,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 OBJ_SET_PARENT(cx, fun->object, obj);
             }
 
-            if (!EmitIndexConstOp(cx, JSOP_DEFLOCALFUN, slot, index, cg))
+            if (!EmitSlotIndexOp(cx, JSOP_DEFLOCALFUN, slot, index, cg))
                 return JS_FALSE;
         } else {
             JS_ASSERT(!cg->treeContext.topStmt);
@@ -5721,7 +5721,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             if (pn2->pn_slot >= 0) {
                 if (pn2->pn_attrs & JSPROP_READONLY) {
                     /* Incrementing a declared const: just get its value. */
-                    op = ((js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_CONST)
+                    op = ((js_CodeSpec[op].format & JOF_TYPEMASK) == JOF_ATOM)
                          ? JSOP_GETGVAR
                          : JSOP_GETVAR;
                 }

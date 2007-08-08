@@ -253,11 +253,11 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         fprintf(fp, " %u (%d)", loc + off, off);
         break;
 
-      case JOF_CONST:
+      case JOF_ATOM:
       case JOF_OBJECT:
       case JOF_REGEXP:
         index = js_GetIndexFromBytecode(script, pc, 0);
-        if (type == JOF_CONST) {
+        if (type == JOF_ATOM) {
             JS_GET_SCRIPT_ATOM(script, index, atom);
             v = ATOM_KEY(atom);
         } else {
@@ -345,11 +345,11 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
         fprintf(fp, " %u", GET_VARNO(pc));
         break;
 
-      case JOF_INDEXCONST:
-      case JOF_INDEXOBJECT:
+      case JOF_SLOTATOM:
+      case JOF_SLOTOBJECT:
         fprintf(fp, " %u", GET_VARNO(pc));
         index = js_GetIndexFromBytecode(script, pc, VARNO_LEN);
-        if (type == JOF_CONST) {
+        if (type == JOF_ATOM) {
             JS_GET_SCRIPT_ATOM(script, index, atom);
             v = ATOM_KEY(atom);
         } else {
@@ -1852,7 +1852,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 mode = JOF_MODE(format);
                 if (mode == JOF_NAME) {
                     /*
-                     * JOF_NAME does not imply JOF_CONST, so we must check for
+                     * JOF_NAME does not imply JOF_ATOM, so we must check for
                      * the QARG and QVAR format types, and translate those to
                      * JSOP_GETARG or JSOP_GETVAR appropriately, instead of to
                      * JSOP_NAME.
@@ -1931,7 +1931,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                 }
             }
             LOCAL_ASSERT(js_CodeSpec[saveop].length == oplen ||
-                         (format & JOF_TYPEMASK) == JOF_INDEXCONST);
+                         (format & JOF_TYPEMASK) == JOF_SLOTATOM);
 
             jp->dvgfence = NULL;
         }
