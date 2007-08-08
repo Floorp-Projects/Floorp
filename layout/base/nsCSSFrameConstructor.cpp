@@ -676,8 +676,10 @@ struct nsFrameItems {
   // Inserts the frame somewhere in the list
   void InsertChildAfter(nsIFrame* aChild, nsIFrame* aAfter);
 
-  // Remove the frame from the list, return PR_FALSE if not found.
-  PRBool RemoveChild(nsIFrame* aChild);
+  // Remove the frame from the list, return PR_FALSE if not found.  If
+  // aPrevSibling is given, it must have aChild as its GetNextSibling().
+  // aPrevSibling may be null to indicate that the list should be searched.
+  PRBool RemoveChild(nsIFrame* aChild, nsIFrame* aPrevSibling);
 };
 
 nsFrameItems::nsFrameItems(nsIFrame* aFrame)
@@ -729,26 +731,36 @@ nsFrameItems::InsertChildAfter(nsIFrame* aChild, nsIFrame* aAfter)
 }
 
 PRBool
-nsFrameItems::RemoveChild(nsIFrame* aFrame)
+nsFrameItems::RemoveChild(nsIFrame* aFrame, nsIFrame* aPrevSibling)
 {
   NS_PRECONDITION(aFrame, "null ptr");
-  nsIFrame* prev = nsnull;
-  nsIFrame* sib = childList;
-  for (; sib && sib != aFrame; sib = sib->GetNextSibling()) {
-    prev = sib;
-  }
-  if (!sib) {
-    return PR_FALSE;
-  }
-  if (sib == childList) {
-    childList = sib->GetNextSibling();
+
+  nsIFrame* prev;
+  if (aPrevSibling) {
+    prev = aPrevSibling;
   } else {
-    prev->SetNextSibling(sib->GetNextSibling());
+    prev = nsnull;
+    nsIFrame* sib;
+    for (sib = childList; sib && sib != aFrame; sib = sib->GetNextSibling()) {
+      prev = sib;
+    }
+    if (!sib) {
+      return PR_FALSE;
+    }
   }
-  if (sib == lastChild) {
+
+  NS_ASSERTION(!prev || prev->GetNextSibling() == aFrame,
+               "Unexpected prevsibling");
+
+  if (aFrame == childList) {
+    childList = aFrame->GetNextSibling();
+  } else {
+    prev->SetNextSibling(aFrame->GetNextSibling());
+  }
+  if (aFrame == lastChild) {
     lastChild = prev;
   }
-  sib->SetNextSibling(nsnull);
+  aFrame->SetNextSibling(nsnull);
   return PR_TRUE;
 }
 
@@ -1567,7 +1579,7 @@ AdjustFloatParentPtrs(nsIFrame*                aFrame,
       NS_ASSERTION(outOfFlowFrame->GetParent() == aOuterState.mFloatedItems.containingBlock,
                    "expected the float to be a child of the outer CB");
 
-      if (aOuterState.mFloatedItems.RemoveChild(outOfFlowFrame)) {
+      if (aOuterState.mFloatedItems.RemoveChild(outOfFlowFrame, nsnull)) {
         aState.mFloatedItems.AddChild(outOfFlowFrame);
       } else {
         NS_NOTREACHED("float wasn't in the outer state float list");
@@ -3488,6 +3500,25 @@ nsCSSFrameConstructor::AdjustParentFrame(nsFrameConstructorState&     aState,
   return NS_OK;
 }
 
+// Pull all the captions present in aItems out  into aCaptions
+static void
+PullOutCaptionFrames(nsFrameItems& aItems, nsFrameItems& aCaptions)
+{
+  nsIFrame *child = aItems.childList;
+  nsIFrame* prev = nsnull;
+  while (child) {
+    nsIFrame *nextSibling = child->GetNextSibling();
+    if (nsGkAtoms::tableCaptionFrame == child->GetType()) {
+      aItems.RemoveChild(child, prev);
+      aCaptions.AddChild(child);
+    } else {
+      prev = child;
+    }
+    child = nextSibling;
+  }
+}
+
+
 // Construct the outer, inner table frames and the children frames for the table. 
 // XXX Page break frames for pseudo table frames are not constructed to avoid the risk
 // associated with revising the pseudo frame mechanism. The long term solution
@@ -3590,15 +3621,8 @@ nsCSSFrameConstructor::ConstructTableFrame(nsFrameConstructorState& aState,
                           PR_FALSE, childItems);
 
     nsFrameItems captionItems;
-    nsIFrame *child = childItems.childList;
-    while (child) {
-      nsIFrame *nextSibling = child->GetNextSibling();
-      if (nsGkAtoms::tableCaptionFrame == child->GetType()) {
-        childItems.RemoveChild(child);
-        captionItems.AddChild(child);
-      }
-      child = nextSibling;
-    }
+    PullOutCaptionFrames(childItems, captionItems);
+
     // Set the inner table frame's initial primary list 
     aNewInnerFrame->SetInitialChildList(nsnull, childItems.childList);
 
@@ -8523,32 +8547,24 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
   for (i = aNewIndexInContainer; i < count; i++) {
     nsIFrame* newFrame = nsnull;
     nsIContent *childContent = aContainer->GetChildAt(i);
-    // lookup the table child frame type as it is much more difficult to remove a frame
-    // and all it descendants (abs. pos. for instance) than to prevent the frame creation.
-    if (nsGkAtoms::tableFrame == frameType) {
-      nsFrameItems tempItems;
-      ConstructFrame(state, childContent, parentFrame, tempItems);
-      if (tempItems.childList) {
-        if (nsGkAtoms::tableCaptionFrame == tempItems.childList->GetType()) {
-          captionItems.AddChild(tempItems.childList);
-        }
-        else {
-          frameItems.AddChild(tempItems.childList);
-        }
-        newFrame = tempItems.childList;
-      }
-    }
-    else {
-      // Construct a child frame (that does not have a table as parent)
-      ConstructFrame(state, childContent, parentFrame, frameItems);
-      newFrame = frameItems.lastChild;
-    }
+
+    ConstructFrame(state, childContent, parentFrame, frameItems);
+    newFrame = frameItems.lastChild;
 
     if (newFrame && newFrame != oldNewFrame) {
       InvalidateCanvasIfNeeded(newFrame);
       oldNewFrame = newFrame;
     }
   }
+
+  if (nsGkAtoms::tableFrame == frameType) {
+    // Pull out the captions.  Note that we don't want to do that as we go,
+    // because processing a single caption can add a whole bunch of things to
+    // the frame items due to pseudoframe processing.  So we'd have to pull
+    // captions from a list anyway; might as well do that here.
+    PullOutCaptionFrames(frameItems, captionItems);
+  }
+  
 
   // process the current pseudo frame state
   if (!state.mPseudoFrames.IsEmpty()) {
