@@ -920,7 +920,6 @@ CSSLoaderImpl::IsAlternate(const nsAString& aTitle, PRBool aHasAlternateRel)
  * CheckLoadAllowed will return success if the load is allowed,
  * failure otherwise. 
  *
- * @param aSourceURI the uri of the document or parent sheet loading the sheet
  * @param aSourcePrincipal the principal of the node or document or parent
  *                         sheet loading the sheet
  * @param aTargetURI the uri of the sheet to be loaded
@@ -928,8 +927,7 @@ CSSLoaderImpl::IsAlternate(const nsAString& aTitle, PRBool aHasAlternateRel)
  *                 owning the stylesheet (possibly indirectly, for child sheets)
  */
 nsresult
-CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
-                                nsIPrincipal* aSourcePrincipal,
+CSSLoaderImpl::CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
                                 nsIURI* aTargetURI,
                                 nsISupports* aContext)
 {
@@ -946,22 +944,22 @@ CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
     if (NS_FAILED(rv)) { // failure is normal here; don't warn
       return rv;
     }
-  }
 
-  LOG(("  Passed security check"));
+    LOG(("  Passed security check"));
 
-  if (aSourceURI) {
     // Check with content policy
 
     PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
                                    aTargetURI,
-                                   aSourceURI,
+                                   nsnull,
+                                   aSourcePrincipal,
                                    aContext,
                                    NS_LITERAL_CSTRING("text/css"),
                                    nsnull,                     //extra param
                                    &shouldLoad,
-                                   nsContentUtils::GetContentPolicy());
+                                   nsContentUtils::GetContentPolicy(),
+                                   nsContentUtils::GetSecurityManager());
 
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
       LOG(("  Load blocked by content policy"));
@@ -1772,10 +1770,6 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_INITIALIZED);
 
-  // Check whether we should even load
-  nsIURI *docURI = mDocument->GetDocumentURI();
-  if (!docURI) return NS_ERROR_FAILURE;
-
   nsIPrincipal* principal =
     aElement ? aElement->NodePrincipal() : mDocument->NodePrincipal();
 
@@ -1783,7 +1777,7 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   if (!context) {
     context = mDocument;
   }
-  nsresult rv = CheckLoadAllowed(docURI, principal, aURL, context);
+  nsresult rv = CheckLoadAllowed(principal, aURL, context);
   if (NS_FAILED(rv)) return rv;
 
   LOG(("  Passed load check"));
@@ -1865,17 +1859,12 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
   
   LOG_URI("  Child uri: '%s'", aURL);
 
-  // Check whether we should even load
-  nsCOMPtr<nsIURI> sheetURI;
-  nsresult rv = aParentSheet->GetSheetURI(getter_AddRefs(sheetURI));
-  if (NS_FAILED(rv) || !sheetURI) return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIDOMNode> owningNode;
 
   // check for an owning document: if none, don't bother walking up the parent
   // sheets
   nsCOMPtr<nsIDocument> owningDoc;
-  rv = aParentSheet->GetOwningDocument(*getter_AddRefs(owningDoc));
+  nsresult rv = aParentSheet->GetOwningDocument(*getter_AddRefs(owningDoc));
   if (NS_SUCCEEDED(rv) && owningDoc) {
     nsCOMPtr<nsIDOMStyleSheet> nextParentSheet(do_QueryInterface(aParentSheet));
     NS_ENSURE_TRUE(nextParentSheet, NS_ERROR_FAILURE); //Not a stylesheet!?
@@ -1896,7 +1885,7 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
   }
 
   nsIPrincipal* principal = aParentSheet->Principal();
-  rv = CheckLoadAllowed(sheetURI, principal, aURL, context);
+  rv = CheckLoadAllowed(principal, aURL, context);
   if (NS_FAILED(rv)) return rv;
 
   LOG(("  Passed load check"));
@@ -1984,37 +1973,34 @@ CSSLoaderImpl::LoadSheetSync(nsIURI* aURL, PRBool aAllowUnsafeRules,
 {
   LOG(("CSSLoaderImpl::LoadSheetSync"));
   return InternalLoadNonDocumentSheet(aURL, aAllowUnsafeRules, nsnull,
-                                      nsnull, aSheet, nsnull);
+                                      aSheet, nsnull);
 }
 
 NS_IMETHODIMP
 CSSLoaderImpl::LoadSheet(nsIURI* aURL,
-                         nsIURI* aOriginURI,
                          nsIPrincipal* aOriginPrincipal,
                          nsICSSLoaderObserver* aObserver,
                          nsICSSStyleSheet** aSheet)
 {
   LOG(("CSSLoaderImpl::LoadSheet(aURL, aObserver, aSheet) api call"));
   NS_PRECONDITION(aSheet, "aSheet is null");
-  return InternalLoadNonDocumentSheet(aURL, PR_FALSE, aOriginURI,
-                                      aOriginPrincipal, aSheet, aObserver);
+  return InternalLoadNonDocumentSheet(aURL, PR_FALSE, aOriginPrincipal,
+                                      aSheet, aObserver);
 }
 
 NS_IMETHODIMP
 CSSLoaderImpl::LoadSheet(nsIURI* aURL,
-                         nsIURI* aOriginURI,
                          nsIPrincipal* aOriginPrincipal,
                          nsICSSLoaderObserver* aObserver)
 {
   LOG(("CSSLoaderImpl::LoadSheet(aURL, aObserver) api call"));
-  return InternalLoadNonDocumentSheet(aURL, PR_FALSE, aOriginURI,
-                                      aOriginPrincipal, nsnull, aObserver);
+  return InternalLoadNonDocumentSheet(aURL, PR_FALSE, aOriginPrincipal,
+                                      nsnull, aObserver);
 }
 
 nsresult
 CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL, 
                                             PRBool aAllowUnsafeRules,
-                                            nsIURI* aOriginURI,
                                             nsIPrincipal* aOriginPrincipal,
                                             nsICSSStyleSheet** aSheet,
                                             nsICSSLoaderObserver* aObserver)
@@ -2034,7 +2020,7 @@ CSSLoaderImpl::InternalLoadNonDocumentSheet(nsIURI* aURL,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsresult rv = CheckLoadAllowed(aOriginURI, aOriginPrincipal, aURL, mDocument);
+  nsresult rv = CheckLoadAllowed(aOriginPrincipal, aURL, mDocument);
   if (NS_FAILED(rv)) {
     return rv;
   }

@@ -425,15 +425,16 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
     // After the security manager, the content-policy stuff gets a veto
     PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
-    nsIURI *docURI = mDocument->GetDocumentURI();
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT,
                                    scriptURI,
-                                   docURI,
+                                   nsnull,
+                                   mDocument->NodePrincipal(),
                                    aElement,
                                    NS_LossyConvertUTF16toASCII(type),
                                    nsnull,    //extra
                                    &shouldLoad,
-                                   nsContentUtils::GetContentPolicy());
+                                   nsContentUtils::GetContentPolicy(),
+                                   nsContentUtils::GetSecurityManager());
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
       if (NS_FAILED(rv) || shouldLoad != nsIContentPolicy::REJECT_TYPE) {
         return NS_ERROR_CONTENT_BLOCKED;

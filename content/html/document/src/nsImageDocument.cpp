@@ -185,16 +185,24 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 
   nsCAutoString mimeType;
   channel->GetContentType(mimeType);
-    
+
+  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
+  nsCOMPtr<nsIPrincipal> channelPrincipal;
+  if (secMan) {
+    secMan->GetChannelPrincipal(channel, getter_AddRefs(channelPrincipal));
+  }
+  
   PRInt16 decision = nsIContentPolicy::ACCEPT;
   nsresult rv = NS_CheckContentProcessPolicy(nsIContentPolicy::TYPE_IMAGE,
                                              channelURI,
                                              nsnull,
+                                             channelPrincipal,
                                              domWindow->GetFrameElementInternal(),
                                              mimeType,
                                              nsnull,
                                              &decision,
-                                             nsContentUtils::GetContentPolicy());
+                                             nsContentUtils::GetContentPolicy(),
+                                             secMan);
                                                
   if (NS_FAILED(rv) || NS_CP_REJECTED(decision)) {
     request->Cancel(NS_ERROR_CONTENT_BLOCKED);

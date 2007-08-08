@@ -6380,9 +6380,11 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     if (!context) {
         context =  mScriptGlobal;
     }
+    // XXXbz would be nice to know the loading principal here... but we don't
     rv = NS_CheckContentLoadPolicy(contentType,
                                    aURI,
                                    aReferrer,
+                                   nsnull,
                                    context,
                                    EmptyCString(), //mime guess
                                    nsnull,         //extra

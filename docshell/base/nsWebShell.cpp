@@ -220,14 +220,10 @@ CheckPingURI(nsIURI* uri, nsIContent* content)
 
   // Check with contentpolicy
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
-  nsIURI* docURI = nsnull;
-  nsIDocument* doc = content->GetOwnerDoc();
-  if (doc) {
-    docURI = doc->GetDocumentURI();
-  }
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_PING,
                                  uri,
-                                 docURI,
+                                 nsnull,
+                                 content->NodePrincipal(),
                                  content,
                                  EmptyCString(), // mime hint
                                  nsnull, //extra
