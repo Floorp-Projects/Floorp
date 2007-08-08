@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Airbag integration
+ * The Original Code is Mozilla Breakpad integration
  *
  * The Initial Developer of the Original Code is
  * Ted Mielczarek <ted.mielczarek@gmail.com>
@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAirbagExceptionHandler.h"
+#include "nsExceptionHandler.h"
 
 #if defined(XP_WIN32)
 #ifdef WIN32_LEAN_AND_MEAN
@@ -62,7 +62,7 @@
 #endif // defined(XP_WIN32)
 
 #ifndef HAVE_CPP_2BYTE_WCHAR_T
-#error "This code expects a 2 byte wchar_t.  You should --disable-airbag."
+#error "This code expects a 2 byte wchar_t.  You should --disable-crashreporter."
 #endif
 
 #include <stdlib.h>
