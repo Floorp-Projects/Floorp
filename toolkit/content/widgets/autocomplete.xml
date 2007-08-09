@@ -799,38 +799,22 @@
   <binding id="autocomplete-treebody">
     <implementation>
       <field name="mLastMoveTime">new Date()</field>
-
-      <method name="getHoverCell">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-           var row = {}; var col = {}; var obj = {};
-           // XXXbz We really want client*, but event.client* is bogus inside a
-           // popup!
-           var x = aEvent.screenX - document.documentElement.boxObject.screenX;
-           var y = aEvent.screenY - document.documentElement.boxObject.screenY;
-           this.parentNode.treeBoxObject.getCellAt(x, y, row, col, obj);
-           if (row.value >= 0)
-             return {row: row.value, column: col.value.id};
-           else
-            return null;
-        ]]></body>
-      </method>
     </implementation>
     
     <handlers>
       <handler event="mouseup" action="this.parentNode.parentNode.onPopupClick(event);"/>
 
       <handler event="mousedown"><![CDATA[
-         var rc = this.getHoverCell(event);
-         if (rc && rc.row != this.parentNode.currentIndex)
-            this.parentNode.view.selection.select(rc.row);
+         var rc = this.parentNode.treeBoxObject.getRowAt(event.clientX, event.clientY);
+         if (rc != this.parentNode.currentIndex)
+            this.parentNode.view.selection.select(rc);
       ]]></handler>
 
       <handler event="mousemove"><![CDATA[
         if (new Date() - this.mLastMoveTime > 30) {
-         var rc = this.getHoverCell(event);
-         if (rc && rc.row != this.parentNode.currentIndex)
-            this.parentNode.view.selection.select(rc.row);
+         var rc = this.parentNode.treeBoxObject.getRowAt(event.clientX, event.clientY);
+         if (rc != this.parentNode.currentIndex)
+            this.parentNode.view.selection.select(rc);
          this.mLastMoveTime = new Date();
         }
       ]]></handler>

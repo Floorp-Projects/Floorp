@@ -1607,24 +1607,13 @@
       <field name="resultsPopup">document.getBindingParent(this);</field>
 
       <field name="mLastMoveTime">Date.now()</field>
-
-      <method name="getHoverRow">
-        <parameter name="aEvent"/>
-        <body><![CDATA[
-           // XXXbz We really want client*, but event.client* is bogus inside a
-           // popup!
-           var x = aEvent.screenX - document.documentElement.boxObject.screenX;
-           var y = aEvent.screenY - document.documentElement.boxObject.screenY;
-           return this.parentNode.treeBoxObject.getRowAt(x, y);
-        ]]></body>
-      </method>
     </implementation>
     
     <handlers>
       <handler event="mouseout" action="this.resultsPopup.selectedIndex = -1;"/>
 
       <handler event="mouseup"><![CDATA[
-        var rc = this.getHoverRow(event);
+        var rc = this.parentNode.treeBoxObject.getRowAt(event.clientX, event.clientY);
         if (rc != -1) {
           this.resultsPopup.selectedIndex = rc;
           this.resultsPopup.view.handleEnter();
@@ -1633,7 +1622,7 @@
 
       <handler event="mousemove"><![CDATA[
         if (Date.now() - this.mLastMoveTime > 30) {
-          var rc = this.getHoverRow(event);
+          var rc = this.parentNode.treeBoxObject.getRowAt(event.clientX, event.clientY);
           if (rc != -1 && rc != this.resultsPopup.selectedIndex) 
             this.resultsPopup.selectedIndex = rc;
           this.mLastMoveTime = Date.now();
