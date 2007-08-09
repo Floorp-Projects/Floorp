@@ -35,6 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsWeakReference.h"
@@ -43,6 +44,7 @@
 
 class nsXBLPrototypeBinding;
 class nsObjectHashtable;
+class nsXBLDocGlobalObject;
 
 class nsXBLDocumentInfo : public nsIXBLDocumentInfo, public nsIScriptGlobalObjectOwner, public nsSupportsWeakReference
 {
@@ -82,5 +84,5 @@ private:
   // non-owning pointer to the first binding in the table
   nsXBLPrototypeBinding* mFirstBinding;
 
-  nsCOMPtr<nsIScriptGlobalObject> mGlobalObject;
+  nsRefPtr<nsXBLDocGlobalObject> mGlobalObject;
 };

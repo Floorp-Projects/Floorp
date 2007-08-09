@@ -446,7 +446,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mFireOfflineStatusChangeEventOnThaw(PR_FALSE),
     mCreatingInnerWindow(PR_FALSE),
     mIsChrome(PR_FALSE),
-    mGlobalObjectOwner(nsnull),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
@@ -1889,22 +1888,6 @@ nsGlobalWindow::SetOpenerWindow(nsIDOMWindowInternal* aOpener,
 #ifdef DEBUG
   mSetOpenerWindowCalled = PR_TRUE;
 #endif
-}
-
-void
-nsGlobalWindow::SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner)
-{
-  FORWARD_TO_OUTER_VOID(SetGlobalObjectOwner, (aOwner));
-
-  mGlobalObjectOwner = aOwner;  // Note this is supposed to be a weak ref.
-}
-
-nsIScriptGlobalObjectOwner *
-nsGlobalWindow::GetGlobalObjectOwner()
-{
-  FORWARD_TO_OUTER(GetGlobalObjectOwner, (), nsnull);
-
-  return mGlobalObjectOwner;
 }
 
 nsresult
