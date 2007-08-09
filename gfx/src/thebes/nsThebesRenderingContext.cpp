@@ -706,6 +706,8 @@ nsThebesRenderingContext::GetNativeGraphicData(GraphicDataType aType)
 #ifdef XP_WIN
     if (aType == NATIVE_WINDOWS_DC) {
         nsRefPtr<gfxASurface> surf(mThebes->CurrentSurface());
+        if (!surf || surf->CairoStatus())
+            return nsnull;
         return static_cast<gfxWindowsSurface*>(static_cast<gfxASurface*>(surf.get()))->GetDC();
     }
 #endif

@@ -69,6 +69,8 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
 {
     if (mRenderState == RENDER_STATE_INIT) {
         nsRefPtr<gfxASurface> surf = mContext->CurrentSurface(&mDeviceOffset.x, &mDeviceOffset.y);
+        if (!surf || surf->CairoStatus())
+            return nsnull;
 
         gfxMatrix m = mContext->CurrentMatrix();
         if (!m.HasNonTranslation())
