@@ -1032,7 +1032,11 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
     if (surface->backend->clone_similar == NULL)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return (cairo_int_status_t)
+	    _cairo_surface_fallback_clone_similar (surface, src,
+						   src_x, src_y,
+						   width, height,
+						   clone_out);
 
     status = surface->backend->clone_similar (surface, src, src_x, src_y,
 					      width, height, clone_out);
