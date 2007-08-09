@@ -196,12 +196,18 @@ gfxASurface::Init(cairo_surface_t* surface, PRBool existingSurface)
 gfxASurface::gfxSurfaceType
 gfxASurface::GetType() const
 {
+    if (!mSurfaceValid)
+        return (gfxSurfaceType)-1;
+
     return (gfxSurfaceType)cairo_surface_get_type(mSurface);
 }
 
 gfxASurface::gfxContentType
 gfxASurface::GetContentType() const
 {
+    if (!mSurfaceValid)
+        return (gfxContentType)-1;
+
     return (gfxContentType)cairo_surface_get_content(mSurface);
 }
 

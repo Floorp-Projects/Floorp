@@ -1116,6 +1116,8 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
 RENDER_AGAIN:
 
   HDC hdc = nativeDrawing.BeginNativeDrawing();
+  if (!hdc)
+    return NS_ERROR_FAILURE;
 
   nativeDrawing.TransformToNativeRect(tr, widgetRect);
   nativeDrawing.TransformToNativeRect(cr, clipRect);
@@ -2435,6 +2437,8 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
 RENDER_AGAIN:
 
   HDC hdc = nativeDrawing.BeginNativeDrawing();
+  if (!hdc)
+    return NS_ERROR_FAILURE;
 
   nativeDrawing.TransformToNativeRect(tr, widgetRect);
 
