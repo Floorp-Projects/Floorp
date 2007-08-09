@@ -8502,15 +8502,20 @@ nsDocShell::EnsureScriptEnvironment()
         do_GetService(kDOMScriptObjectFactoryCID);
     NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIDocShellTreeItem> parent;
-    GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
+    NS_ENSURE_TRUE(browserChrome, NS_ERROR_NOT_AVAILABLE);
 
-    nsCOMPtr<nsPIDOMWindow> pw(do_GetInterface(parent));
+    PRUint32 chromeFlags;
+    browserChrome->GetChromeFlags(&chromeFlags);
 
-    // If the parent (chrome or not) is a modal content window, make
-    // this window a modal content window as well.
+    PRBool isModalContentWindow =
+        (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL) &&
+        !(chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME);
+
+    // If our window is modal and we're not opened as chrome, make
+    // this window a modal content window.
     factory->NewScriptGlobalObject(mItemType == typeChrome,
-                                   pw && pw->IsModalContentWindow(),
+                                   isModalContentWindow,
                                    getter_AddRefs(mScriptGlobal));
     NS_ENSURE_TRUE(mScriptGlobal, NS_ERROR_FAILURE);
 
