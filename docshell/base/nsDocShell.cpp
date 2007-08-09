@@ -3531,7 +3531,6 @@ nsDocShell::Destroy()
         nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobal));
         win->SetDocShell(nsnull);
 
-        mScriptGlobal->SetGlobalObjectOwner(nsnull);
         mScriptGlobal = nsnull;
     }
 
@@ -8521,8 +8520,6 @@ nsDocShell::EnsureScriptEnvironment()
 
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobal));
     win->SetDocShell(static_cast<nsIDocShell *>(this));
-    mScriptGlobal->
-        SetGlobalObjectOwner(static_cast<nsIScriptGlobalObjectOwner *>(this));
 
     // Ensure the script object is set to run javascript - other languages
     // setup on demand.

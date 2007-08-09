@@ -253,8 +253,6 @@ public:
   // for the context is created by the context's GetNativeGlobal() method.
   virtual nsresult SetScriptContext(PRUint32 lang, nsIScriptContext *aContext);
   
-  virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
-  virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner();
   virtual void OnFinalize(PRUint32 aLangID, void *aScriptGlobal);
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
   virtual nsresult SetNewArguments(nsIArray *aArguments);
@@ -676,7 +674,6 @@ protected:
   void *                        mScriptGlobals[NS_STID_ARRAY_UBOUND];
   nsGlobalWindowObserver*       mObserver;
 
-  nsIScriptGlobalObjectOwner*   mGlobalObjectOwner; // Weak Reference
   nsCOMPtr<nsIDOMCrypto>        mCrypto;
   nsCOMPtr<nsIDOMPkcs11>        mPkcs11;
 

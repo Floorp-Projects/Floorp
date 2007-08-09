@@ -63,7 +63,7 @@ class nsXBLDocGlobalObject : public nsIScriptGlobalObject,
                              public nsIScriptObjectPrincipal
 {
 public:
-  nsXBLDocGlobalObject();
+  nsXBLDocGlobalObject(nsIScriptGlobalObjectOwner *aGlobalObjectOwner);
 
   // nsISupports interface
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -73,8 +73,6 @@ public:
   virtual nsresult SetScriptContext(PRUint32 lang_id, nsIScriptContext *aContext);
 
   virtual nsIScriptContext *GetContext();
-  virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
-  virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner();
   virtual JSObject *GetGlobalJSObject();
   virtual void OnFinalize(PRUint32 aLangID, void *aScriptGlobal);
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
@@ -88,6 +86,8 @@ public:
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXBLDocGlobalObject,
                                            nsIScriptGlobalObject)
+
+  void ClearGlobalObjectOwner();
 
 protected:
   virtual ~nsXBLDocGlobalObject();
@@ -195,9 +195,9 @@ JSClass nsXBLDocGlobalObject::gSharedGlobalClass = {
 // nsXBLDocGlobalObject
 //
 
-nsXBLDocGlobalObject::nsXBLDocGlobalObject()
+nsXBLDocGlobalObject::nsXBLDocGlobalObject(nsIScriptGlobalObjectOwner *aGlobalObjectOwner)
     : mJSObject(nsnull),
-      mGlobalObjectOwner(nsnull)
+      mGlobalObjectOwner(aGlobalObjectOwner) // weak reference
 {
 }
 
@@ -352,15 +352,9 @@ nsXBLDocGlobalObject::GetContext()
 }
 
 void
-nsXBLDocGlobalObject::SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner)
+nsXBLDocGlobalObject::ClearGlobalObjectOwner()
 {
-  mGlobalObjectOwner = aOwner; // weak reference
-}
-
-nsIScriptGlobalObjectOwner *
-nsXBLDocGlobalObject::GetGlobalObjectOwner()
-{
-  return mGlobalObjectOwner;
+  mGlobalObjectOwner = nsnull;
 }
 
 JSObject *
@@ -458,7 +452,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXBLDocumentInfo)
   if (tmp->mBindingTable) {
     tmp->mBindingTable->Enumerate(TraverseProtos, &cb);
   }
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalObject)
+  cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObject*>(tmp->mGlobalObject));
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXBLDocumentInfo)
@@ -498,7 +492,7 @@ nsXBLDocumentInfo::~nsXBLDocumentInfo()
   if (mGlobalObject) {
     // remove circular reference
     mGlobalObject->SetScriptContext(nsIProgrammingLanguage::JAVASCRIPT, nsnull);
-    mGlobalObject->SetGlobalObjectOwner(nsnull); // just in case
+    mGlobalObject->ClearGlobalObjectOwner(); // just in case
   }
   delete mBindingTable;
 }
@@ -577,13 +571,11 @@ nsIScriptGlobalObject*
 nsXBLDocumentInfo::GetScriptGlobalObject()
 {
   if (!mGlobalObject) {
-    
-    mGlobalObject = new nsXBLDocGlobalObject();
-    
-    if (!mGlobalObject)
+    nsXBLDocGlobalObject *global = new nsXBLDocGlobalObject(this);
+    if (!global)
       return nsnull;
 
-    mGlobalObject->SetGlobalObjectOwner(this); // does not refcount
+    mGlobalObject = global;
   }
 
   return mGlobalObject;

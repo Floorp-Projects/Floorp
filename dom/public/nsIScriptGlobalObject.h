@@ -102,9 +102,9 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
 
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
-{ /* {6E7EF978-47D0-47c9-9649-CDCDB1E4CCEC} */ \
-  0x6e7ef978, 0x47d0, 0x47c9, \
-  { 0x96, 0x49, 0xcd, 0xcd, 0xb1, 0xe4, 0xcc, 0xec } }
+{ /* {6afecd40-0b9a-4cfd-8c42-0f645cd91829} */ \
+  0x6afecd40, 0x0b9a, 0x4cfd, \
+  { 0x8c, 0x42, 0x0f, 0x64, 0x5c, 0xd9, 0x18, 0x29 } }
 
 /**
 +  * The global object which keeps a script context for each supported script
@@ -115,23 +115,6 @@ class nsIScriptGlobalObject : public nsISupports
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTGLOBALOBJECT_IID)
-
-
-  /**
-   * Let the script global object know who its owner is.
-   * The script global object should not addref the owner. It
-   * will be told when the owner goes away.
-   * @return NS_OK if the method is successful
-   */
-  virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner) = 0;
-
-  /**
-   * Get the owner of the script global object. The method
-   * addrefs the returned reference according to regular
-   * XPCOM rules, even though the internal reference itself
-   * is a "weak" reference.
-   */
-  virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner() = 0;
 
   /**
    * Ensure that the script global object is initialized for working with the
