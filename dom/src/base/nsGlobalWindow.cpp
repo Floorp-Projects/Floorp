@@ -6899,7 +6899,8 @@ nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
     // inner (e.g. someone is calling setTimeout() on a reference to
     // some other window).
 
-    if (callerInner->GetOuterWindow() == this) {
+    if (callerInner->GetOuterWindow() == this &&
+        callerInner->IsInnerWindow()) {
       return callerInner->SetTimeoutOrInterval(aIsInterval, aReturn);
     }
 
