@@ -98,6 +98,7 @@ public:
 class nsNPObjWrapper
 {
 public:
+  static void OnDestroy(NPObject *npobj);
   static JSObject *GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj);
 };
 

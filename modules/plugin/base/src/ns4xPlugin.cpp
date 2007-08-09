@@ -1566,6 +1566,8 @@ _releaseobject(NPObject* npobj)
   int32_t refCnt = PR_AtomicDecrement((PRInt32*)&npobj->referenceCount);
 
   if (refCnt == 0) {
+    nsNPObjWrapper::OnDestroy(npobj);
+
     if (npobj->_class && npobj->_class->deallocate) {
       npobj->_class->deallocate(npobj);
     } else {

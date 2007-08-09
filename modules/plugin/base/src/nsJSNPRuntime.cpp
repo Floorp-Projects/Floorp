@@ -1449,6 +1449,52 @@ public:
 };
 
 
+// An NPObject is going away, make sure we null out the JS object's
+// private data in case this is an NPObject that came from a plugin
+// and it's destroyed prematurely.
+
+// static
+void
+nsNPObjWrapper::OnDestroy(NPObject *npobj)
+{
+  if (!npobj) {
+    return;
+  }
+
+  if (npobj->_class == &nsJSObjWrapper::sJSObjWrapperNPClass) {
+    // npobj is one of our own, no private data to clean up here.
+
+    return;
+  }
+
+  if (!sNPObjWrappers.ops) {
+    // No hash yet (or any more), no used wrappers available.
+
+    return;
+  }
+
+  NPObjWrapperHashEntry *entry =
+    NS_STATIC_CAST(NPObjWrapperHashEntry *,
+                   PL_DHashTableOperate(&sNPObjWrappers, npobj,
+                                        PL_DHASH_LOOKUP));
+
+  if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mJSObj) {
+    // Found a live NPObject wrapper, null out its JSObjects' private
+    // data.
+
+    JSContext *cx = GetJSContext(entry->mNpp);
+
+    if (cx) {
+      ::JS_SetPrivate(cx, entry->mJSObj, nsnull);
+    }
+
+    // Remove the npobj from the hash now that it went away.
+    PL_DHashTableRawRemove(&sNPObjWrappers, entry);
+
+    OnWrapperDestroyed();
+  }
+}
+
 // Look up or create a JSObject that wraps the NPObject npobj.
 
 // static
