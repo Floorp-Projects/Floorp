@@ -18,6 +18,7 @@ Function.prototype.inherits = function(parentCtor) {
 #include ../content/list-warden.js
 #include ../content/phishing-afterload-displayer.js
 #include ../content/phishing-warden.js
+#include ../content/malware-warden.js
 #include ../content/reporter.js
 #include ../content/tr-fetcher.js
 

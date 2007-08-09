@@ -69,6 +69,14 @@ var safebrowsing = {
     var appContext = Cc["@mozilla.org/safebrowsing/application;1"]
                      .getService().wrappedJSObject;
 
+    var malwareWarden = new appContext.PROT_MalwareWarden();
+    safebrowsing.malwareWarden = malwareWarden;
+
+    // Register tables
+    malwareWarden.registerBlackTable("goog-malware-sha128");
+
+    malwareWarden.maybeToggleUpdateChecking();
+
     // Each new browser window needs its own controller. 
 
     safebrowsing.progressListener.QueryInterface(Ci.nsIWebProgressListener);
@@ -126,6 +134,9 @@ var safebrowsing = {
     }
     if (safebrowsing.phishWarden) {
       safebrowsing.phishWarden.shutdown();
+    }
+    if (safebrowsing.malwareWarden) {
+      safebrowsing.malwareWarden.shutdown();
     }
     
     window.removeEventListener("unload", safebrowsing.shutdown, false);
