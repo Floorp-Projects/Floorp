@@ -981,9 +981,6 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
            parentViewWidgetOffset.x - parentPos.x;
     ypos = screenViewLocY - presContext->DevPixelsToAppUnits(screenParentWidgetRect.y) -
            parentViewWidgetOffset.y - parentPos.y;
-
-    // once the popup is positioned on screen, it doesn't need to be positioned again
-    mShouldAutoPosition = PR_FALSE;
   }
 
   // Compute info about the screen dimensions. Because of multiple monitor systems,
