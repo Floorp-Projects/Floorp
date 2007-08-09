@@ -275,7 +275,15 @@ Test.Unit.Assertions.prototype = {
   },
   fail: function(message) {
     this.failures++;
-    this.messages.push("Failure: " + message);
+
+    var line = "";
+    try {
+      throw new Error("stack");
+    } catch(e){
+      line = (/\.html:(\d+)/.exec(e.stack || '') || ['',''])[1];
+    }   
+
+    this.messages.push("Failure: " + message + (line ? " Line #" + line : ""));
   },
   info: function(message) {
     this.messages.push("Info: " + message);
