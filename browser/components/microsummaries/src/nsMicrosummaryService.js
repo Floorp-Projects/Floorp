@@ -1,41 +1,42 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Microsummarizer.
- *
- * The Initial Developer of the Original Code is Mozilla.
- * Portions created by the Initial Developer are Copyright (C) 2006
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Myk Melez <myk@mozilla.org> (Original Author)
- *  Simon Bünzli <zeniko@gmail.com>
- *  Asaf Romano <mano@mozilla.com>
- *  Dan Mills <thunder@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Microsummarizer.
+#
+# The Initial Developer of the Original Code is Mozilla.
+# Portions created by the Initial Developer are Copyright (C) 2006
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Myk Melez <myk@mozilla.org> (Original Author)
+#  Simon Bünzli <zeniko@gmail.com>
+#  Asaf Romano <mano@mozilla.com>
+#  Dan Mills <thunder@mozilla.com>
+#  Ryan Flint <rflint@dslr.net>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -1691,6 +1692,8 @@ function MicrosummaryResource(uri) {
   this._contentType = null;
   this._isXML = false;
   this.__authFailed = false;
+  this._status = null;
+  this._method = "GET";
 
   // A function to call when we finish loading/parsing the resource.
   this._loadCallback = null;
@@ -1725,6 +1728,12 @@ MicrosummaryResource.prototype = {
   get isXML() {
     return this._isXML;
   },
+
+  get status()        { return this._status },
+  set status(aStatus) { this._status = aStatus },
+
+  get method()        { return this._method },
+  set method(aMethod) { this._method = aMethod },
 
   // Implement notification callback interfaces so we can suppress UI
   // and abort loads for bad SSL certs and HTTP authorization requests.
@@ -1933,10 +1942,16 @@ MicrosummaryResource.prototype = {
         if (this._self._loadTimer)
           this._self._loadTimer.cancel();
 
-        if (this._self._authFailed) {
+        this._self.status = event.target.status;
+
+        if (this._self._authFailed || this._self.status >= 400) {
           // Technically the request succeeded, but we treat it as a failure,
-          // since we aren't able to handle HTTP authentication.
-          LOG(this._self.uri.spec + " load failed; HTTP auth required");
+          // since we won't be able to extract anything relevant from the result.
+
+          // XXX For now HTTP is the only protocol we handle that might fail
+          // auth. This message will need to change once we support FTP, which
+          // returns 0 for all statuses.
+          LOG(this._self.uri.spec + " load failed; HTTP status: " + this._self.status);
           try     { this._self._handleError(event) }
           finally { this._self = null }
         }
@@ -1988,7 +2003,7 @@ MicrosummaryResource.prototype = {
     request.addEventListener("error", errorHandler, false);
     
     request = request.QueryInterface(Ci.nsIXMLHttpRequest);
-    request.open("GET", this.uri.spec, true);
+    request.open(this.method, this.uri.spec, true);
     request.setRequestHeader("X-Moz", "microsummary");
 
     // Register ourselves as a listener for notification callbacks so we
