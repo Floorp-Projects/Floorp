@@ -58,9 +58,10 @@ use MozAUSLib qw(CreatePartialMarFile
                  GetAUS2PlatformStrings
                  EnsureDeliverablesDir
                  ValidateToolsDirectory SubstitutePath
-                 GetSnippetDirFromChannel);
+                 GetSnippetDirFromChannel
+                 CachedHashFile);
 
-use MozBuild::Util qw(MkdirWithPath RunShellCommand DownloadFile HashFile);
+use MozBuild::Util qw(MkdirWithPath RunShellCommand DownloadFile);
 
 $Data::Dumper::Indent = 1;
 
@@ -723,7 +724,8 @@ sub CreateCompletePatchinfo {
 
                     my $hash_type = $DEFAULT_HASH_TYPE;
                     $complete_patch->{'hash_type'} = $hash_type;
-                    $complete_patch->{'hash_value'} = HashFile(file => $to_path,
+                    $complete_patch->{'hash_value'} = CachedHashFile(
+                                                       file => $to_path,
                                                        type => $hash_type);
 
                     $complete_patch->{'hash_value'} =~ s/^(\S+)\s+.*$/$1/g;
@@ -978,8 +980,9 @@ sub CreatePastReleasePatchinfo {
 
                     my $hash_type = $DEFAULT_HASH_TYPE;
                     $completePatch->{'hash_type'} = $hash_type;
-                    $completePatch->{'hash_value'} = HashFile(file => $to_path,
-                                                              type => $hash_type);
+                    $completePatch->{'hash_value'} = CachedHashFile(
+                                                      file => $to_path,
+                                                      type => $hash_type);
                     $completePatch->{'build_id'} = $patchLocaleNode->{'build_id'};
                     $completePatch->{'appv'} = $snippetToAppVersion;
                     $completePatch->{'extv'} = $patchLocaleNode->{'extv'};
@@ -1116,7 +1119,7 @@ sub CreatePartialPatchinfo {
                                                      version => $to->{'appv'},
                                                      locale => $l );
 
-                my $partialPatchHash = HashFile(file => $partial_pathname,
+                my $partialPatchHash = CachedHashFile(file => $partial_pathname,
                                                 type => $DEFAULT_HASH_TYPE);
                 my $partialPatchSize = (stat($partial_pathname))[$ST_SIZE];
 
@@ -1132,7 +1135,8 @@ sub CreatePartialPatchinfo {
                                                       version => $to->{'appv'},
                                                       locale => $l );
 
-                my $completePatchHash = HashFile(file => $complete_pathname,
+                my $completePatchHash = CachedHashFile(
+                 file => $complete_pathname,
                  type => $DEFAULT_HASH_TYPE);
 
                 my $completePatchSize = (stat($complete_pathname))[$ST_SIZE];
