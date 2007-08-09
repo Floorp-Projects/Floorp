@@ -804,7 +804,7 @@ public:
 
   nsresult Initialize();
   nsresult DoAutoreg();
-  nsresult RegisterProfileService(nsIToolkitProfileService* aProfileService);
+  nsresult RegisterProfileService();
   nsresult SetWindowCreator(nsINativeAppSupport* native);
 
 private:
@@ -892,12 +892,13 @@ static const nsCID kProfileServiceCID =
   { 0x5f5e59ce, 0x27bc, 0x47eb, { 0x9d, 0x1f, 0xb0, 0x9c, 0xa9, 0x4, 0x98, 0x36 } };
 
 nsresult
-ScopedXPCOMStartup::RegisterProfileService(nsIToolkitProfileService* aProfileService)
+ScopedXPCOMStartup::RegisterProfileService()
 {
   NS_ASSERTION(mServiceManager, "Not initialized!");
 
-  nsCOMPtr<nsIFactory> factory = do_QueryInterface(aProfileService);
-  NS_ASSERTION(factory, "Supposed to be an nsIFactory!");
+  nsCOMPtr<nsIFactory> factory;
+  NS_NewToolkitProfileFactory(getter_AddRefs(factory));
+  if (!factory) return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsIComponentRegistrar> reg (do_QueryInterface(mServiceManager));
   if (!reg) return NS_ERROR_NO_INTERFACE;
@@ -1670,8 +1671,8 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
     rv = xpcom.Initialize();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = xpcom.RegisterProfileService(aProfileSvc);
-    rv |= xpcom.DoAutoreg();
+    rv = xpcom.DoAutoreg();
+    rv |= xpcom.RegisterProfileService();
     rv |= xpcom.SetWindowCreator(aNative);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
@@ -1761,7 +1762,7 @@ ImportProfiles(nsIToolkitProfileService* aPService,
     rv = xpcom.Initialize();
     if (NS_SUCCEEDED(rv)) {
       xpcom.DoAutoreg();
-      xpcom.RegisterProfileService(aPService);
+      xpcom.RegisterProfileService();
 
 #ifdef XP_MACOSX
       SetupMacCommandLine(gRestartArgc, gRestartArgv);
@@ -2871,6 +2872,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       rv = xpcom.Initialize();
       NS_ENSURE_SUCCESS(rv, 1); 
       rv = xpcom.DoAutoreg();
+      rv |= xpcom.RegisterProfileService();
       rv |= xpcom.SetWindowCreator(nativeApp);
       NS_ENSURE_SUCCESS(rv, 1);
 
