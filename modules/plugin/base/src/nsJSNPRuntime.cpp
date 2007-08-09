@@ -1738,19 +1738,9 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
     return;
   }
 
-  JSObject* globalObj = sgo->GetGlobalJSObject();
-
-#ifdef DEBUG
-  nsIScriptContext* scx = sgo->GetContext();
-  if (scx) {
-    NS_ASSERTION((JSContext *)scx->GetNativeContext() == cx,
-                 "Unexpected JS context");
-  }
-#endif
-
   nsCOMPtr<nsISupports> supp(do_QueryInterface(element));
   nsCOMPtr<nsIXPConnectWrappedNative> holder;
-  xpc->GetWrappedNativeOfNativeObject(cx, globalObj, supp,
+  xpc->GetWrappedNativeOfNativeObject(cx, sgo->GetGlobalJSObject(), supp,
                                       NS_GET_IID(nsISupports),
                                       getter_AddRefs(holder));
   if (!holder) {
