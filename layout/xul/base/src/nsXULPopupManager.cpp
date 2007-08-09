@@ -184,6 +184,9 @@ NS_IMETHODIMP nsXULPopupManager::ShouldRollupOnMouseActivate(PRBool *aShouldRoll
 NS_IMETHODIMP
 nsXULPopupManager::GetSubmenuWidgetChain(nsISupportsArray **_retval)
 {
+  // this method is used by the widget code to determine the list of popups
+  // that are open. If a mouse click occurs outside one of these popups, the
+  // panels will roll up. If the click is inside a popup, they will not roll up
   nsresult rv = NS_NewISupportsArray(_retval);
   NS_ENSURE_SUCCESS(rv, rv);
   nsMenuChainItem* item = mCurrentMenu;
@@ -192,7 +195,13 @@ nsXULPopupManager::GetSubmenuWidgetChain(nsISupportsArray **_retval)
     item->Frame()->GetWidget(getter_AddRefs(widget));
     nsCOMPtr<nsISupports> genericWidget(do_QueryInterface(widget));
     (*_retval)->AppendElement(genericWidget);
-    item = item->GetParent();
+    // In the case when a menulist inside a panel is open, clicking in the
+    // panel should still roll up the menu, so if a different type is found,
+    // stop scanning.
+    nsMenuChainItem* parent= item->GetParent();
+    if (parent && item->Frame()->PopupType() != parent->Frame()->PopupType())
+      break;
+    item = parent;
   }
 
   return NS_OK;
