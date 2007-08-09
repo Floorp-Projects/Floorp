@@ -1686,6 +1686,16 @@ JS_GetScopeChain(JSContext *cx)
     return js_GetScopeChain(cx, fp);
 }
 
+JS_PUBLIC_API(JSObject *)
+JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
+{
+    JSObject *parent;
+
+    while ((parent = OBJ_GET_PARENT(cx, obj)) != NULL)
+        obj = parent;
+    return obj;
+}
+
 JS_PUBLIC_API(void *)
 JS_malloc(JSContext *cx, size_t nbytes)
 {

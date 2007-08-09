@@ -6874,8 +6874,55 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
 nsresult
 nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
 {
-  FORWARD_TO_INNER(SetTimeoutOrInterval, (aIsInterval, aReturn),
-                   NS_ERROR_NOT_INITIALIZED);
+  // This needs to forward to the inner window, but since the current
+  // inner may not be the inner in the calling scope, we need to treat
+  // this specially here as we don't want timeouts registered in a
+  // dying inner window to get registered and run on the current inner
+  // window. To get this right, we need to forward this call to the
+  // inner window that's calling window.setTimeout().
+
+  if (IsOuterWindow()) {
+    nsCOMPtr<nsIXPCNativeCallContext> ncc;
+    nsresult rv = nsContentUtils::XPConnect()->
+      GetCurrentNativeCallContext(getter_AddRefs(ncc));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!ncc) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    JSContext *cx = nsnull;
+
+    rv = ncc->GetJSContext(&cx);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    JSObject *scope = ::JS_GetScopeChain(cx);
+
+    if (!scope) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+    nsContentUtils::XPConnect()->
+      GetWrappedNativeOfJSObject(cx, ::JS_GetGlobalForObject(cx, scope),
+                                 getter_AddRefs(wrapper));
+    NS_ENSURE_TRUE(wrapper, NS_ERROR_NOT_AVAILABLE);
+
+    nsGlobalWindow *callerInner = FromWrapper(wrapper);
+    NS_ENSURE_TRUE(callerInner, NS_ERROR_NOT_AVAILABLE);
+
+    // If the caller and the callee share the same outer window,
+    // forward to the callee inner. Else, we forward to the current
+    // inner (e.g. someone is calling setTimeout() on a reference to
+    // some other window).
+
+    if (callerInner->GetOuterWindow() == this) {
+      return callerInner->SetTimeoutOrInterval(aIsInterval, aReturn);
+    }
+
+    FORWARD_TO_INNER(SetTimeoutOrInterval, (aIsInterval, aReturn),
+                     NS_ERROR_NOT_INITIALIZED);
+  }
 
   PRInt32 interval = 0;
   PRBool isInterval = aIsInterval;

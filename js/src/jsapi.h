@@ -644,6 +644,9 @@ JS_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
 extern JS_PUBLIC_API(JSObject *)
 JS_GetScopeChain(JSContext *cx);
 
+extern JS_PUBLIC_API(JSObject *)
+JS_GetGlobalForObject(JSContext *cx, JSObject *obj);
+
 /*
  * Macros to hide interpreter stack layout details from a JSFastNative using
  * its jsval *vp parameter. The stack layout underlying invocation can't change

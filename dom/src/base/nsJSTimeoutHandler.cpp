@@ -367,6 +367,8 @@ nsresult NS_CreateJSTimeoutHandler(nsIScriptContext *aContext,
     delete handler;
     return rv;
   }
-  return handler->QueryInterface(NS_GET_IID(nsIScriptTimeoutHandler),
-                                 reinterpret_cast<void **>(aRet));
+
+  NS_ADDREF(*aRet = handler);
+
+  return NS_OK;
 }
