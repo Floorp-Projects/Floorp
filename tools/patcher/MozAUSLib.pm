@@ -49,7 +49,7 @@ use English;
 
 use File::Spec::Functions;
 
-use MozBuild::Util qw(RunShellCommand MkdirWithPath);
+use MozBuild::Util qw(RunShellCommand MkdirWithPath HashFile);
 
 require Exporter;
 
@@ -60,6 +60,7 @@ require Exporter;
                 EnsureDeliverablesDir
                 SubstitutePath
                 GetSnippetDirFromChannel
+                CachedHashFile
                );
 
 use strict;
@@ -73,7 +74,8 @@ use vars qw($MAR_BIN $MBSDIFF_BIN $MAKE_BIN
             $TMPDIR_PREFIX 
             %BOUNCER_PLATFORMS %AUS2_PLATFORMS
             $DEFAULT_PARTIAL_MAR_OUTPUT_FILE
-            $DEFAULT_SNIPPET_BASE_DIR $DEFAULT_SNIPPET_TEST_DIR);
+            $DEFAULT_SNIPPET_BASE_DIR $DEFAULT_SNIPPET_TEST_DIR
+            $SNIPPET_CHECKSUM_HASH_CACHE);
 
 $MAR_BIN = 'dist/host/bin/mar';
 $MBSDIFF_BIN = 'dist/host/bin/mbsdiff';
@@ -99,6 +101,36 @@ $DEFAULT_PARTIAL_MAR_OUTPUT_FILE = 'partial.mar';
 
 $DEFAULT_SNIPPET_BASE_DIR = 'aus2';
 $DEFAULT_SNIPPET_TEST_DIR = $DEFAULT_SNIPPET_BASE_DIR . '.test';
+
+##
+## Global, used by CachedHashFile()
+##
+
+$SNIPPET_CHECKSUM_HASH_CACHE = {};
+
+sub CachedHashFile {
+   my %args = @_;
+
+   if (! exists($args{'file'}) || !exists($args{'type'})) {
+      die("ASSERT: CachedHashFile: null file and/or type");
+   }
+
+   # Let HashFile do all the heavy error checking lifting...
+   my $file = $args{'file'};
+   my $checksumType = $args{'type'};
+
+   if (! exists($SNIPPET_CHECKSUM_HASH_CACHE->{$file})) {
+      $SNIPPET_CHECKSUM_HASH_CACHE->{$file} = {};
+   }
+
+   if (! exists($SNIPPET_CHECKSUM_HASH_CACHE->{$file}->{$checksumType})) {
+      $SNIPPET_CHECKSUM_HASH_CACHE->{$file}->{$checksumType} = 
+       HashFile(file => $file, type => $checksumType);
+   }
+
+   return $SNIPPET_CHECKSUM_HASH_CACHE->{$file}->{$checksumType};
+
+}
 
 sub EnsureDeliverablesDir
 {
