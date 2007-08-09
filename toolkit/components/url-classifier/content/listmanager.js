@@ -357,7 +357,8 @@ PROT_ListManager.prototype.checkForUpdates = function() {
 PROT_ListManager.prototype.makeUpdateRequest_ = function(tableData) {
   var tableNames = {};
   for (var tableName in this.tablesData) {
-    tableNames[tableName] = true;
+    if (this.tablesData[tableName].needsUpdate)
+      tableNames[tableName] = true;
   }
 
   var request = "";
