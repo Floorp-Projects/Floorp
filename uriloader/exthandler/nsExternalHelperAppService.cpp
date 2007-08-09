@@ -1136,12 +1136,15 @@ nsresult nsExternalHelperAppService::GetFileTokenForPath(const PRUnichar * aPlat
 NS_IMETHODIMP nsExternalHelperAppService::ExternalProtocolHandlerExists(const char * aProtocolScheme,
                                                                         PRBool * aHandlerExists)
 {
-  // if we've got handler info in the datasource, that means that at least one
-  // web handler exists
   nsCOMPtr<nsIHandlerInfo> handlerInfo;
   nsresult rv = GetProtocolHandlerInfo(
       nsDependentCString(aProtocolScheme), getter_AddRefs(handlerInfo));
-  if (NS_SUCCEEDED(rv)) {
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // See if we have a preferred handler app for this
+  nsCOMPtr<nsIHandlerApp> preferredApp;
+  handlerInfo->GetPreferredApplicationHandler(getter_AddRefs(preferredApp));
+  if (preferredApp) {
     *aHandlerExists = PR_TRUE;
     return NS_OK;
   }
