@@ -233,18 +233,6 @@ static JSFunctionSpec sXPC_SJOW_JSClass_methods[] = {
 #define XPC_SJOW_SLOT_PRINCIPAL              4
 
 
-static JSObject *
-GetGlobalObject(JSContext *cx, JSObject *obj)
-{
-  JSObject *parent;
-
-  while ((parent = ::JS_GetParent(cx, obj))) {
-    obj = parent;
-  }
-
-  return obj;
-}
-
 // Wrap a JS value in a safe wrapper of a function wrapper if
 // needed. Note that rval must point to something rooted when calling
 // this function.
@@ -272,7 +260,7 @@ WrapJSValue(JSContext *cx, JSObject *obj, jsval val, jsval *rval)
 
     // If obj and safeObj are from the same scope, propagate cached
     // scripted functions to the new safe object.
-    if (GetGlobalObject(cx, obj) == GetGlobalObject(cx, safeObj)) {
+    if (JS_GetGlobalForObject(cx, obj) == JS_GetGlobalForObject(cx, safeObj)) {
       jsval rsval;
       if (!::JS_GetReservedSlot(cx, obj, XPC_SJOW_SLOT_SCRIPTED_GETSET,
                                 &rsval) ||
@@ -411,8 +399,8 @@ GetScriptedFunction(JSContext *cx, JSObject *obj, JSObject *unsafeObj,
   // scripted function, re-compile to make sure the scripted function
   // is properly scoped etc.
   if (JSVAL_IS_VOID(*scriptedFunVal) ||
-      GetGlobalObject(cx, unsafeObj) !=
-      GetGlobalObject(cx, JSVAL_TO_OBJECT(*scriptedFunVal))) {
+      JS_GetGlobalForObject(cx, unsafeObj) !=
+      JS_GetGlobalForObject(cx, JSVAL_TO_OBJECT(*scriptedFunVal))) {
     // Check whether we have a cached principal or not.
     jsval pv;
     if (!::JS_GetReservedSlot(cx, obj, XPC_SJOW_SLOT_PRINCIPAL, &pv)) {
@@ -438,7 +426,8 @@ GetScriptedFunction(JSContext *cx, JSObject *obj, JSObject *unsafeObj,
     }
 
     JSFunction *scriptedFun =
-      ::JS_CompileFunctionForPrincipals(cx, GetGlobalObject(cx, unsafeObj),
+      ::JS_CompileFunctionForPrincipals(cx,
+                                        JS_GetGlobalForObject(cx, unsafeObj),
                                         jsprin, nsnull, 0, nsnull,
                                         funScript.get(), funScript.Length(),
                                         "XPCSafeJSObjectWrapper.cpp",

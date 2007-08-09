@@ -1405,18 +1405,6 @@ PrintWarningOnConsole(JSContext *cx, const char *stringBundleProperty)
   }
 }
 
-static inline JSObject *
-GetGlobalJSObject(JSContext *cx, JSObject *obj)
-{
-  JSObject *tmp;
-
-  while ((tmp = ::JS_GetParent(cx, obj))) {
-    obj = tmp;
-  }
-
-  return obj;
-}
-
 static jsval
 GetInternedJSVal(JSContext *cx, const char *str)
 {
@@ -1540,7 +1528,7 @@ nsDOMClassInfo::WrapNative(JSContext *cx, JSObject *scope, nsISupports *native,
   NS_ENSURE_TRUE(sXPConnect, NS_ERROR_UNEXPECTED);
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-  nsresult rv = sXPConnect->WrapNative(cx, GetGlobalJSObject(cx, scope),
+  nsresult rv = sXPConnect->WrapNative(cx, ::JS_GetGlobalForObject(cx, scope),
                                        native, aIID, getter_AddRefs(holder));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3642,7 +3630,7 @@ nsDOMClassInfo::PostCreate(nsIXPConnectWrappedNative *wrapper,
   // LookupProperty accomplishes that.
   // XXX This shouldn't need to go through the JS engine. Instead, we should
   // be calling nsWindowSH::GlobalResolve directly.
-  JSObject *global = GetGlobalJSObject(cx, obj);
+  JSObject *global = ::JS_GetGlobalForObject(cx, obj);
   jsval val;
   if (!::JS_LookupProperty(cx, global, mData->mName, &val)) {
     return NS_ERROR_UNEXPECTED;
@@ -3725,7 +3713,7 @@ nsresult
 nsDOMClassInfo::ResolveConstructor(JSContext *cx, JSObject *obj,
                                    JSObject **objp)
 {
-  JSObject *global = GetGlobalJSObject(cx, obj);
+  JSObject *global = ::JS_GetGlobalForObject(cx, obj);
 
   jsval val;
   JSAutoRequest ar(cx);
@@ -4130,7 +4118,8 @@ nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSObject *obj,
   // global scope, do a security check to make sure that's ok.
 
   nsresult rv =
-    sSecMan->CheckPropertyAccess(cx, GetGlobalJSObject(cx, obj), "Window", id,
+    sSecMan->CheckPropertyAccess(cx, ::JS_GetGlobalForObject(cx, obj),
+                                 "Window", id,
                                  nsIXPCSecurityManager::ACCESS_GET_PROPERTY);
 
   if (NS_FAILED(rv)) {
@@ -4156,7 +4145,8 @@ nsWindowSH::SecurityCheckOnSetProp(JSContext *cx, JSObject *obj, jsval id,
   // global scope, do a security check to make sure that's ok.
 
   nsresult rv =
-    sSecMan->CheckPropertyAccess(cx, GetGlobalJSObject(cx, obj), "Window", id,
+    sSecMan->CheckPropertyAccess(cx, ::JS_GetGlobalForObject(cx, obj),
+                                 "Window", id,
                                  nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
 
   // If !NS_SUCCEEDED(rv) the security check failed. The security
@@ -6168,7 +6158,7 @@ nsWindowSH::OuterObject(nsIXPConnectWrappedNative *wrapper, JSContext * cx,
       *_retval = nsnull;
       return NS_ERROR_FAILURE;
     }
-    scope = GetGlobalJSObject(cx, scope);
+    scope = ::JS_GetGlobalForObject(cx, scope);
     jsval v;
     rv = sXPConnect->GetCrossOriginWrapperForObject(cx, scope, winObj, &v);
     *_retval = NS_SUCCEEDED(rv) ? JSVAL_TO_OBJECT(v) : nsnull;
@@ -6737,7 +6727,7 @@ nsEventReceiverSH::RegisterCompileHandler(nsIXPConnectWrappedNative *wrapper,
 
   nsresult rv;
 
-  JSObject *scope = GetGlobalJSObject(cx, obj);
+  JSObject *scope = ::JS_GetGlobalForObject(cx, obj);
 
   if (compile) {
     rv = manager->CompileScriptEventListener(script_cx, scope, piTarget, atom,
@@ -7472,7 +7462,7 @@ nsHTMLDocumentSH::DocumentOpen(JSContext *cx, JSObject *obj, uintN argc,
                                jsval *argv, jsval *rval)
 {
   if (argc > 2) {
-    JSObject *global = GetGlobalJSObject(cx, obj);
+    JSObject *global = ::JS_GetGlobalForObject(cx, obj);
 
     // DOM0 quirk that makes document.open() call window.open() if
     // called with 3 or more arguments.
@@ -7744,7 +7734,7 @@ nsHTMLDocumentSH::DocumentAllNewResolve(JSContext *cx, JSObject *obj, jsval id,
     nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(cx, obj);
 
     JSObject *tags = ::JS_NewObject(cx, &sHTMLDocumentAllTagsClass, nsnull,
-                                    GetGlobalJSObject(cx, obj));
+                                    ::JS_GetGlobalForObject(cx, obj));
     if (!tags) {
       return JS_FALSE;
     }
@@ -7888,7 +7878,7 @@ nsHTMLDocumentSH::DocumentAllHelperGetProperty(JSContext *cx, JSObject *obj,
       }
 
       JSObject *all = ::JS_NewObject(cx, &sHTMLDocumentAllClass, nsnull,
-                                     GetGlobalJSObject(cx, obj));
+                                     ::JS_GetGlobalForObject(cx, obj));
       if (!all) {
         return JS_FALSE;
       }
@@ -8080,7 +8070,7 @@ nsHTMLDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
           helper = ::JS_NewObject(cx, &sHTMLDocumentAllHelperClass,
                                   ::JS_GetPrototype(cx, obj),
-                                  GetGlobalJSObject(cx, obj));
+                                  ::JS_GetGlobalForObject(cx, obj));
 
           if (!helper) {
             return NS_ERROR_OUT_OF_MEMORY;

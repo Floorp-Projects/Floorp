@@ -680,10 +680,7 @@ XPCWrappedNativeScope::FindInJSObjectScope(XPCCallContext& ccx, JSObject* obj,
 
     // Else we'll have to look up the parent chain to get the scope
 
-    JSObject* parent;
-
-    while(nsnull != (parent = JS_GetParent(ccx, obj)))
-        obj = parent;
+    obj = JS_GetGlobalForObject(ccx, obj);
 
     // XXX We are assuming that the scope count is low enough that traversing
     // the linked list is more reasonable then doing a hashtable lookup.
