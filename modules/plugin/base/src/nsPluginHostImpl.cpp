@@ -5941,7 +5941,9 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 
         if (global)
         {
-          callbacks = do_QueryInterface(global->GetGlobalObjectOwner());
+          nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(global);
+
+          callbacks = do_QueryInterface(webNav);
         }
       }
 
