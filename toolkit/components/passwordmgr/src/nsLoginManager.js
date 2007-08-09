@@ -292,17 +292,17 @@ LoginManager.prototype = {
 
             // STATE_START is too early, doc is still the old page.
             if (!(aStateFlags & Ci.nsIWebProgressListener.STATE_TRANSFERRING))
-                return 0;
+                return;
 
             if (!this._pwmgr._remember)
-                return 0;
+                return;
 
             var domWin = aWebProgress.DOMWindow;
             var domDoc = domWin.document;
 
             // Only process things which might have HTML forms.
             if (! domDoc instanceof Ci.nsIDOMHTMLDocument)
-                return 0;
+                return;
 
             this._pwmgr.log("onStateChange accepted: req = " + (aRequest ?
                         aRequest.name : "(null)") + ", flags = " + aStateFlags);
@@ -318,7 +318,7 @@ LoginManager.prototype = {
             this._pwmgr.log("onStateChange: adding dom listeners");
             domDoc.addEventListener("DOMContentLoaded",
                                     this._domEventListener, false);
-            return 0;
+            return;
         },
 
         // stubs for the nsIWebProgressListener interfaces which we don't use.
@@ -349,16 +349,18 @@ LoginManager.prototype = {
             switch (event.type) {
                 case "DOMContentLoaded":
                     doc = event.target;
-                    return this._pwmgr._fillDocument(doc);
+                    this._pwmgr._fillDocument(doc);
+                    return;
 
                 case "DOMAutoComplete":
                 case "blur":
                     inputElement = event.target;
-                    return this._pwmgr._fillPassword(inputElement);
+                    this._pwmgr._fillPassword(inputElement);
+                    return;
 
                 default:
                     this._pwmgr.log("Oops! This event unexpected.");
-                    return 0;
+                    return;
             }
         }
     },
@@ -435,9 +437,7 @@ LoginManager.prototype = {
      */
     getAllLogins : function (count) {
         this.log("Getting a list of all logins");
-        var logins = this._storage.getAllLogins({});
-        count.value = logins.length;
-        return logins;
+        return this._storage.getAllLogins(count);
     },
 
 
@@ -463,9 +463,7 @@ LoginManager.prototype = {
      */
     getAllDisabledHosts : function (count) {
         this.log("Getting a list of all disabled hosts");
-        var hosts = this._storage.getAllDisabledHosts({});
-        count.value = hosts.length;
-        return hosts;
+        return this._storage.getAllDisabledHosts(count);
     },
 
 
@@ -479,10 +477,8 @@ LoginManager.prototype = {
         this.log("Searching for logins matching host: " + hostname +
             ", formSubmitURL: " + formSubmitURL + ", httpRealm: " + httpRealm);
 
-        var logins = this._storage.findLogins({}, hostname, formSubmitURL,
-                                              httpRealm);
-        count.value = logins.length;
-        return logins;
+        return this._storage.findLogins(count, hostname, formSubmitURL,
+                                        httpRealm);
     },
 
 
