@@ -84,3 +84,6 @@ package:
 
 install:
 	@$(MAKE) -C xulrunner/installer install
+
+sdk:
+	@$(MAKE) -C xulrunner/installer make-sdk
