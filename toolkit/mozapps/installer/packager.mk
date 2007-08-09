@@ -72,6 +72,11 @@ endif # MOZ_PKG_FORMAT
 
 PACKAGE       = $(PKG_BASENAME)$(PKG_SUFFIX)
 
+# By default, the SDK uses the same packaging type as the main bundle,
+# but on mac it is a .tar.bz2
+SDK_SUFFIX    = $(PKG_SUFFIX)
+SDK           = $(PKG_BASENAME).sdk$(SDK_SUFFIX)
+
 MAKE_PACKAGE	= $(error What is a $(MOZ_PKG_FORMAT) package format?);
 
 CREATE_FINAL_TAR = $(TAR) -c --owner=0 --group=0 --numeric-owner \
@@ -82,21 +87,25 @@ ifeq ($(MOZ_PKG_FORMAT),TAR)
 PKG_SUFFIX	= .tar
 MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_APPNAME) > $(PACKAGE)
 UNMAKE_PACKAGE	= $(UNPACK_TAR) < $(UNPACKAGE)
+MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk > $(SDK)
 endif
 ifeq ($(MOZ_PKG_FORMAT),TGZ)
 PKG_SUFFIX	= .tar.gz
 MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_APPNAME) | gzip -vf9 > $(PACKAGE)
 UNMAKE_PACKAGE	= gunzip -c $(UNPACKAGE) | $(UNPACK_TAR)
+MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk | gzip -vf9 > $(SDK)
 endif
 ifeq ($(MOZ_PKG_FORMAT),BZ2)
 PKG_SUFFIX	= .tar.bz2
 MAKE_PACKAGE 	= $(CREATE_FINAL_TAR) - $(MOZ_PKG_APPNAME) | bzip2 -vf > $(PACKAGE)
 UNMAKE_PACKAGE	= bunzip2 -c $(UNPACKAGE) | $(UNPACK_TAR)
+MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk | bzip2 -vf > $(SDK)
 endif
 ifeq ($(MOZ_PKG_FORMAT),ZIP)
 PKG_SUFFIX	= .zip
 MAKE_PACKAGE	= $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_APPNAME)
 UNMAKE_PACKAGE	= $(UNZIP) $(UNPACKAGE)
+MAKE_SDK = $(ZIP) -r9D $(SDK_BASENAME).sdk.zip $(MOZ_APP_NAME)-sdk
 endif
 ifeq ($(MOZ_PKG_FORMAT),DMG)
 ifndef _APPNAME
@@ -165,6 +174,8 @@ UNMAKE_PACKAGE	= \
   $(NULL)
 # The plst and blkx resources are skipped because they belong to each
 # individual dmg and are created by hdiutil.
+SDK_SUFFIX = .tar.bz2
+MAKE_SDK = $(CREATE_FINAL_TAR) - $(MOZ_APP_NAME)-sdk | bzip2 -vf > $(SDK)
 endif
 
 # dummy macro if we don't have PSM built
@@ -420,3 +431,24 @@ ifdef INSTALL_SDK # Here comes the hard part
 	ln -s $(idldir)/stable $(DESTDIR)$(sdkdir)/sdk/idl
 	ln -s $(idldir)/unstable $(DESTDIR)$(sdkdir)/idl
 endif # INSTALL_SDK
+
+make-sdk:: stage-package
+	@echo "Packaging SDK..."
+	$(RM) -rf $(DIST)/$(MOZ_APP_NAME)-sdk
+	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/bin
+	(cd $(DIST)/$(MOZ_PKG_APPNAME) && tar $(TAR_CREATE_FLAGS) - .) | \
+	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/bin && tar -xf -)
+	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/sdk
+	(cd $(DIST)/sdk && tar $(TAR_CREATE_FLAGS) - .) | \
+	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/sdk && tar -xf -)
+	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/include
+	(cd $(DIST)/include && tar $(TAR_CREATE_FLAGS) - .) | \
+	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/include && tar -xf -)
+	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/idl
+	(cd $(DIST)/idl && tar $(TAR_CREATE_FLAGS) - .) | \
+	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/idl && tar -xf -)
+	$(NSINSTALL) -D $(DIST)/$(MOZ_APP_NAME)-sdk/lib
+# sdk/lib is the same as sdk/sdk/lib
+	(cd $(DIST)/sdk/lib && tar $(TAR_CREATE_FLAGS) - .) | \
+	  (cd $(DIST)/$(MOZ_APP_NAME)-sdk/lib && tar -xf -)
+	cd $(DIST) && $(MAKE_SDK)
