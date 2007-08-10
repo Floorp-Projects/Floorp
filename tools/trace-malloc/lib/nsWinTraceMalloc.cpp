@@ -126,6 +126,39 @@ void __cdecl dhw_delete(void* p)
     FreeCallback(p, start, end);
 }
 
+// Note the mangled name!
+DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_vec_new, void*, __cdecl, VEC_NEW_, (size_t));
+DHWImportHooker &getVecNewHooker()
+{
+  static DHWImportHooker gVecNewHooker(NS_DEBUG_CRT, "??_U@YAPAXI@Z", (PROC) dhw_vec_new);
+  return gVecNewHooker;
+}
+
+void * __cdecl dhw_vec_new(size_t size)
+{
+    PRUint32 start = PR_IntervalNow();
+    void* result = DHW_ORIGINAL(VEC_NEW_, getVecNewHooker())(size);
+    PRUint32 end = PR_IntervalNow();
+    MallocCallback(result, size, start, end);//do we need a different one for new[]?
+    return result;
+}
+
+// Note the mangled name!
+DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_vec_delete, void, __cdecl, VEC_DELETE_, (void*));
+DHWImportHooker &getVecDeleteHooker()
+{
+  static DHWImportHooker gVecDeleteHooker(NS_DEBUG_CRT, "??_V@YAXPAX@Z", (PROC) dhw_vec_delete);
+  return gVecDeleteHooker;
+}
+
+void __cdecl dhw_vec_delete(void* p)
+{
+    PRUint32 start = PR_IntervalNow();
+    DHW_ORIGINAL(VEC_DELETE_, getVecDeleteHooker())(p);
+    PRUint32 end = PR_IntervalNow();
+    FreeCallback(p, start, end);
+}
+
 /*C Callbacks*/
 PR_IMPLEMENT(void)
 StartupHooker()
@@ -141,6 +174,8 @@ StartupHooker()
   DHWImportHooker &freehooker = getFreeHooker();
   DHWImportHooker &newhooker = getNewHooker();
   DHWImportHooker &deletehooker = getDeleteHooker();
+  DHWImportHooker &vecnewhooker = getVecNewHooker();
+  DHWImportHooker &vecdeletehooker = getVecDeleteHooker();
   printf("Startup Hooker\n");
 }
 
