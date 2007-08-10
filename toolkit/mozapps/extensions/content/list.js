@@ -212,9 +212,6 @@ function restartApp() {
   if (cancelQuit.data)
     return;
 
-  // Notify all windows that an application quit has been granted.
-  os.notifyObservers(null, "quit-application-granted", null);
-
   Components.classes["@mozilla.org/toolkit/app-startup;1"].getService(nsIAppStartup)
             .quit(nsIAppStartup.eRestart | nsIAppStartup.eAttemptQuit);
 }

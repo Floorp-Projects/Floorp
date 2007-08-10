@@ -190,6 +190,11 @@ nsAppStartup::Quit(PRUint32 aMode)
   if (mShuttingDown)
     return NS_OK;
 
+  nsCOMPtr<nsIObserverService> obsService
+    (do_GetService("@mozilla.org/observer-service;1"));
+  if (obsService)
+    obsService->NotifyObservers(nsnull, "quit-application-granted", nsnull);
+
   /* eForceQuit doesn't actually work; it can cause a subtle crash if
      there are windows open which have unload handlers which open
      new windows. Use eAttemptQuit for now. */
@@ -264,8 +269,6 @@ nsAppStartup::Quit(PRUint32 aMode)
 
     // No chance of the shutdown being cancelled from here on; tell people
     // we're shutting down for sure while all services are still available.
-    nsCOMPtr<nsIObserverService> obsService
-      (do_GetService("@mozilla.org/observer-service;1"));
     if (obsService) {
       NS_NAMED_LITERAL_STRING(shutdownStr, "shutdown");
       NS_NAMED_LITERAL_STRING(restartStr, "restart");
