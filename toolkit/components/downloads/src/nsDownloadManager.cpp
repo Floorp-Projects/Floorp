@@ -195,14 +195,91 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
     *aDoImport = PR_TRUE;
     rv = CreateTable();
     NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    // Checking the database schema now
-    PRInt32 schemaVersion;
-    rv = mDBConn->GetSchemaVersion(&schemaVersion);
-    NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+  }
 
-    if (0 == schemaVersion) {
-      NS_WARNING("Could not get downlaod's database schema version!");
+  // Checking the database schema now
+  PRInt32 schemaVersion;
+  rv = mDBConn->GetSchemaVersion(&schemaVersion);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Changing the database?  Be sure to do these two things!
+  // 1) Increment DM_SCHEMA_VERSION
+  // 2) Implement the proper downgrade/upgrade code for the current version
+
+  switch (schemaVersion) {
+  // Upgrading
+  // Every time you increment the database schema, you need to implement
+  // the upgrading code from the previous version to the new one.
+  // Also, don't forget to make a unit test to test your upgrading code!
+  case 1: // Drop a column (iconURL) from the database (bug 385875)
+    {
+      // Safely wrap this in a transaction so we don't hose the whole DB
+      mozStorageTransaction safeTransaction(mDBConn, PR_TRUE);
+
+      // Create a temporary table that will store the existing records
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE TEMPORARY TABLE moz_downloads_backup ("
+          "id INTEGER PRIMARY KEY, "
+          "name TEXT, "
+          "source TEXT, "
+          "target TEXT, "
+          "startTime INTEGER, "
+          "endTime INTEGER, "
+          "state INTEGER"
+        ")"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Insert into a temporary table
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "INSERT INTO moz_downloads_backup "
+        "SELECT id, name, source, target, startTime, endTime, state "
+        "FROM moz_downloads"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Drop the old table
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DROP TABLE moz_downloads"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Now recreate it with this schema version
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "CREATE  TABLE moz_downloads ("
+          "id INTEGER PRIMARY KEY, "
+          "name TEXT, "
+          "source TEXT, "
+          "target TEXT, "
+          "startTime INTEGER, "
+          "endTime INTEGER, "
+          "state INTEGER"
+        ")"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Insert the data back into it
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "INSERT INTO moz_downloads "
+        "SELECT id, name, source, target, startTime, endTime, state "
+        "FROM moz_downloads_backup"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // And drop our temporary table
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DROP TABLE moz_downloads_backup"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Finally, update the schemaVersion variable and the database schema
+      schemaVersion = 2;
+      rv = mDBConn->SetSchemaVersion(schemaVersion);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    // Fallthrough to the next upgrade
+
+  case DM_SCHEMA_VERSION:
+    break;
+
+  case 0:
+    {
+      NS_WARNING("Could not get download database's schema version!");
 
       // The table may still be usable - someone may have just messed with the
       // schema version, so let's just treat this like a downgrade and verify
@@ -210,115 +287,40 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
       // the table anyway.
       rv = mDBConn->SetSchemaVersion(DM_SCHEMA_VERSION);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      // setting it to a large number so we execute a downgrade.  This may
-      // seem odd, but downgrading checks to see if we have the correct
-      // columns in our table.  At this point we've established that we have
-      // a table, but no schema version, so we want to check this.
-      schemaVersion = DM_SCHEMA_VERSION + 1;
     }
+    // Fallthrough to downgrade check
 
-    if (schemaVersion != DM_SCHEMA_VERSION) {
-      // Changing the database?  Be sure to do these two things!
-      // 1) Increment DM_SCHEMA_VERSION
-      // 2) Implement the proper downgrade/upgrade code for the current version
+  // Downgrading
+  // If columns have been added to the table, we can still use the ones we
+  // understand safely.  If columns have been deleted or alterd, we just
+  // drop the table and start from scratch.  If you change how a column
+  // should be interpreted, make sure you also change its name so this
+  // check will catch it.
+  default:
+    {
+      nsCOMPtr<mozIStorageStatement> stmt;
+      rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+        "SELECT id, name, source, target, startTime, endTime, state "
+        "FROM moz_downloads"), getter_AddRefs(stmt));
+      if (NS_SUCCEEDED(rv))
+        break;
 
-      if (schemaVersion > DM_SCHEMA_VERSION) {
-        // Downgrading
-        // If columns have been added to the table, we can still use the ones we
-        // understand safely.  If columns have been deleted or alterd, we just
-        // drop the table and start from scratch.  If you change how a column
-        // should be interpreted, make sure you also change its name so this
-        // check will catch it.
+      // if the statement fails, that means all the columns were not there.
+      // First we backup the database
+      nsCOMPtr<nsIFile> backup;
+      rv = mDBConn->BackupDB(DM_DB_CORRUPT_FILENAME, nsnull,
+                             getter_AddRefs(backup));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-        nsCOMPtr<mozIStorageStatement> stmt;
-        rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-          "SELECT id, name, source, target, iconURL, startTime, endTime, state "
-          "FROM moz_downloads"), getter_AddRefs(stmt));
-        if (NS_FAILED(rv)) {
-          // if the statement fails, that means all the columns were not there.
-          // First we backup the database
-          nsCOMPtr<nsIFile> backup;
-          rv = mDBConn->BackupDB(DM_DB_CORRUPT_FILENAME, nsnull,
-                                 getter_AddRefs(backup));
-          NS_ENSURE_SUCCESS(rv, rv);
+      // Then we dump it
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "DROP TABLE moz_downloads"));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-          // Then we dump it
-          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-            "DROP TABLE moz_downloads"));
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          rv = CreateTable();
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-      } else {
-        // Upgrading
-        // Every time you increment the database schema, you need to implement
-        // the upgrading code from the previous version to the new one.
-        // Also, don't forget to make a unit test to test your upgradeing code!
-        if (schemaVersion < 2) {
-          // This version simple drops a column from the database (iconURL)
-          
-          // Safely wrap this in a transaction so we don't hose the whole DB
-          mozStorageTransaction safeTransaction(mDBConn, PR_TRUE);
-
-          // Create a temporary table that we'll store the existing records
-          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-            "CREATE TEMPORARY TABLE moz_downloads_backup ("
-              "id INTEGER PRIMARY KEY, "
-              "name TEXT, "
-              "source TEXT, "
-              "target TEXT, "
-              "startTime INTEGER, "
-              "endTime INTEGER, "
-              "state INTEGER"
-            ")"));
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          // Insert into a temporary table
-          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-            "INSERT INTO moz_downloads_backup "
-            "SELECT id, name, source, target, startTime, endTime, state "
-            "FROM moz_downloads"));
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          // drop the old table
-          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-            "DROP TABLE moz_downloads"));
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          // now recreate it with this schema version
-          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-            "CREATE  TABLE moz_downloads ("
-              "id INTEGER PRIMARY KEY, "
-              "name TEXT, "
-              "source TEXT, "
-              "target TEXT, "
-              "startTime INTEGER, "
-              "endTime INTEGER, "
-              "state INTEGER"
-            ")"));
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          // insert the data back into it
-          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-            "INSERT INTO moz_downloads "
-            "SELECT id, name, source, target, startTime, endTime, state "
-            "FROM moz_downloads_backup"));
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          // and drop our temporary table
-          rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-            "DROP TABLE moz_downloads_backup"));
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          // Finally, update the schemaVersion variable and the database schema
-          schemaVersion = 2;
-          rv = mDBConn->SetSchemaVersion(schemaVersion);
-          NS_ENSURE_SUCCESS(rv, rv);
-        } // End of schema #2 upgrade code
-      } // End of upgrading
+      rv = CreateTable();
+      NS_ENSURE_SUCCESS(rv, rv);
     }
+    break;
   }
 
   return NS_OK;
