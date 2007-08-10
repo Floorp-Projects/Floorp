@@ -53,7 +53,7 @@ MinidumpFileWriter::~MinidumpFileWriter() {
 
 bool MinidumpFileWriter::Open(const char *path) {
   assert(file_ == -1);
-  file_ = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+  file_ = open(path, O_WRONLY | O_CREAT | O_EXCL, 0600);
 
   return file_ != -1;
 }

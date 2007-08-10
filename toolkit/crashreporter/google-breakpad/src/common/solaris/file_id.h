@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2007, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,40 +27,40 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// string_conversion.h: Conversion between different UTF-8/16/32 encodings.
+// file_id.h: Return a unique identifier for a file
+//
+// Author: Alfred Peng
 
-#ifndef COMMON_STRING_CONVERSION_H__
-#define COMMON_STRING_CONVERSION_H__
+#ifndef COMMON_SOLARIS_FILE_ID_H__
+#define COMMON_SOLARIS_FILE_ID_H__
 
-#include <string>
-#include <vector>
-#include "google_breakpad/common/breakpad_types.h"
+#include <limits.h>
 
 namespace google_breakpad {
-  
-using std::vector;
 
-// Convert |in| to UTF-16 into |out|.  Use platform byte ordering.  If the
-// conversion failed, |out| will be zero length.
-void UTF8ToUTF16(const char *in, vector<u_int16_t> *out);
+class FileID {
+ public:
+  FileID(const char *path);
+  ~FileID() {};
 
-// Convert at least one character (up to a maximum of |in_length|) from |in|
-// to UTF-16 into |out|.  Return the number of characters consumed from |in|.
-// Any unused characters in |out| will be initialized to 0.  No memory will
-// be allocated by this routine.
-int UTF8ToUTF16Char(const char *in, int in_length, u_int16_t out[2]);
+  // Load the identifier for the elf file path specified in the constructor into
+  // |identifier|.  Return false if the identifier could not be created for the
+  // file.
+  // The current implementation will return the MD5 hash of the file's bytes.
+  bool ElfFileIdentifier(unsigned char identifier[16]);
 
-// Convert |in| to UTF-16 into |out|.  Use platform byte ordering.  If the
-// conversion failed, |out| will be zero length.
-void UTF32ToUTF16(const wchar_t *in, vector<u_int16_t> *out);
+  // Convert the |identifier| data to a NULL terminated string.  The string will
+  // be formatted as a MDCVInfoPDB70 struct.
+  // The |buffer| should be at least 34 bytes long to receive all of the data
+  // and termination. Shorter buffers will return false.
+  static bool ConvertIdentifierToString(const unsigned char identifier[16],
+                                        char *buffer, int buffer_length);
 
-// Convert |in| to UTF-16 into |out|.  Any unused characters in |out| will be
-// initialized to 0.  No memory will be allocated by this routine.
-void UTF32ToUTF16Char(wchar_t in, u_int16_t out[2]);
-
-// Convert |in| to UTF-8.  If |swap| is true, swap bytes before converting.
-std::string UTF16ToUTF8(const vector<u_int16_t> &in, bool swap);
+ private:
+  // Storage for the path specified
+  char path_[PATH_MAX];
+};
 
 }  // namespace google_breakpad
 
-#endif  // COMMON_STRING_CONVERSION_H__
+#endif  // COMMON_SOLARIS_FILE_ID_H__
