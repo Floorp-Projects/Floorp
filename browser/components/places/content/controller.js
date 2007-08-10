@@ -53,15 +53,6 @@ const RELOAD_ACTION_REMOVE = 2;
 // rows.
 const RELOAD_ACTION_MOVE = 3;
 
-#ifdef XP_MACOSX
-// On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
-// really just want "\n".
-const NEWLINE= "\n";
-#else
-// On other platforms, the transferable system converts "\r\n" to "\n".
-const NEWLINE = "\r\n";
-#endif
-
 /**
  * Represents an insertion point within a container where we can insert
  * items. 
@@ -1212,7 +1203,7 @@ PlacesController.prototype = {
         copiedFolders.push(node);
         
       function generateChunk(type, overrideURI) {
-        var suffix = i < (nodes.length - 1) ? "\n" : "";
+        var suffix = i < (nodes.length - 1) ? NEWLINE : "";
         var uri = overrideURI;
         
         if (PlacesUtils.nodeIsLivemarkContainer(node))
