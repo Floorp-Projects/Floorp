@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <script>
+   function doit() {
+     var newNode = document.createElement("div");
+     newNode.appendChild(document.createTextNode("Two"));
+     document.getElementById("target")
+             .insertBefore(newNode, document.getElementById("insertion"));
+   }
+  </script>
+  <style>
+   body > span { border: 3px solid blue }
+  </style>
+ </head>
+ <body onload='doit()'>
+  <span id="target"
+  ><span>One</span
+  ><span id="insertion">Three</span
+  ><div>Four</div
+  ><span>Five</span
+ ></span>
+ </body>
+</html>
