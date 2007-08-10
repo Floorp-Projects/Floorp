@@ -5550,15 +5550,14 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
       PRUint32 charIndex = transformedOffset + transformedCharsFit;
       while (charIndex > transformedOffset &&
              mTextRun->GetChar(charIndex - 1) == ' ') {
-        ++textMetrics.mClusterCount;
         --charIndex;
       }
     }
 
-    NS_ASSERTION(numJustifiableCharacters <= textMetrics.mClusterCount,
+    NS_ASSERTION(numJustifiableCharacters <= charsFit,
                  "Justifiable characters combined???");
     lineLayout.SetTextJustificationWeights(numJustifiableCharacters,
-        textMetrics.mClusterCount - numJustifiableCharacters);
+        charsFit - numJustifiableCharacters);
   }
 
   if (layoutDependentTextRun) {
