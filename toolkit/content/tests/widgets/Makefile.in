@@ -55,6 +55,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_menuchecks.xul \
 		test_popup_attribute.xul \
 		test_popup_preventdefault.xul \
+		test_scale.xul \
 		test_radio.xul \
 		test_tooltip.xul \
 		popup_shared.js \
