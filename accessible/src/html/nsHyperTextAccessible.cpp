@@ -225,24 +225,24 @@ void nsHyperTextAccessible::CacheChildren()
 }
 
 // Substring must be entirely within the same text node
-nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRInt32 aStartContentOffset,
-                                                    PRInt32 aEndContentOffset)
+nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRUint32 aStartRenderedOffset,
+                                                    PRUint32 aEndRenderedOffset)
 {
   nsIntRect screenRect;
   NS_ENSURE_TRUE(aFrame, screenRect);
 
-  PRUint32 startRenderedOFfset, endRenderedOFfset;
-  nsresult rv = ContentToRenderedOffset(aFrame, aStartContentOffset, &startRenderedOFfset);
+  PRInt32 startContentOffset, endContentOffset;
+  nsresult rv = RenderedToContentOffset(aFrame, aStartRenderedOffset, &startContentOffset);
   NS_ENSURE_SUCCESS(rv, screenRect);
-  rv = ContentToRenderedOffset(aFrame, aEndContentOffset, &endRenderedOFfset);
+  rv = RenderedToContentOffset(aFrame, aEndRenderedOffset, &endContentOffset);
   NS_ENSURE_SUCCESS(rv, screenRect);
 
   nsIFrame *frame;
-  PRInt32 startRenderedOFfsetInFrame;
+  PRInt32 startContentOffsetInFrame;
   // Get the right frame continuation -- not really a child, but a sibling of
   // the primary frame passed in
-  rv = aFrame->GetChildFrameContainingOffset(startRenderedOFfset, PR_FALSE,
-                                             &startRenderedOFfsetInFrame, &frame);
+  rv = aFrame->GetChildFrameContainingOffset(startContentOffset, PR_FALSE,
+                                             &startContentOffsetInFrame, &frame);
   NS_ENSURE_SUCCESS(rv, screenRect);
 
   nsCOMPtr<nsIPresShell> shell = GetPresShell();
@@ -260,7 +260,7 @@ nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRInt32 aS
 
   nsPresContext *context = shell->GetPresContext();
 
-  while (frame && startRenderedOFfset < endRenderedOFfset) {
+  while (frame && startContentOffset < endContentOffset) {
     // Start with this frame's screen rect, which we will 
     // shrink based on the substring we care about within it.
     // We will then add that frame to the total screenRect we
@@ -271,26 +271,26 @@ nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRInt32 aS
     PRInt32 startFrameTextOffset, endFrameTextOffset;
     frame->GetOffsets(startFrameTextOffset, endFrameTextOffset);
     PRInt32 frameTotalTextLength = endFrameTextOffset - startFrameTextOffset;
-    PRInt32 seekLength = endRenderedOFfset - startRenderedOFfset;
-    PRInt32 frameSubStringLength = PR_MIN(frameTotalTextLength - startRenderedOFfsetInFrame, seekLength);
+    PRInt32 seekLength = endContentOffset - startContentOffset;
+    PRInt32 frameSubStringLength = PR_MIN(frameTotalTextLength - startContentOffsetInFrame, seekLength);
 
     // Add the point where the string starts to the frameScreenRect
     nsPoint frameTextStartPoint;
-    rv = frame->GetPointFromOffset(context, rc, startRenderedOFfset, &frameTextStartPoint);
+    rv = frame->GetPointFromOffset(context, rc, startContentOffset, &frameTextStartPoint);
     NS_ENSURE_SUCCESS(rv, nsRect());   
     frameScreenRect.x += context->AppUnitsToDevPixels(frameTextStartPoint.x);
 
     // Use the point for the end offset to calculate the width
     nsPoint frameTextEndPoint;
-    rv = frame->GetPointFromOffset(context, rc, startRenderedOFfset + frameSubStringLength, &frameTextEndPoint);
+    rv = frame->GetPointFromOffset(context, rc, startContentOffset + frameSubStringLength, &frameTextEndPoint);
     NS_ENSURE_SUCCESS(rv, nsRect());   
     frameScreenRect.width = context->AppUnitsToDevPixels(frameTextEndPoint.x - frameTextStartPoint.x);
 
     screenRect.UnionRect(frameScreenRect, screenRect);
 
     // Get ready to loop back for next frame continuation
-    startRenderedOFfset += frameSubStringLength;
-    startRenderedOFfsetInFrame = 0;
+    startContentOffset += frameSubStringLength;
+    startContentOffsetInFrame = 0;
     frame = frame->GetNextContinuation();
   }
 
