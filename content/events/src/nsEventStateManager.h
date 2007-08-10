@@ -50,6 +50,7 @@
 #include "nsIDocument.h"
 #include "nsCOMArray.h"
 #include "nsIFrame.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIScrollableView;
 class nsIPresShell;
@@ -77,7 +78,7 @@ public:
   nsEventStateManager();
   virtual ~nsEventStateManager();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
   NS_IMETHOD Init();
@@ -154,6 +155,9 @@ public:
   {
     return sUserInputEventDepth > 0;
   }
+
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsEventStateManager,
+                                           nsIEventStateManager)
 
 protected:
   /**
