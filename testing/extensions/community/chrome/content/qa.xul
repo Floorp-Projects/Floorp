@@ -97,8 +97,5 @@
   </tabpanels>
 </tabbox>
   
-<statusbar id="qa-statusbar">
-  <statusbarpanel id="qa-statusbar-text" flex="1" />
-</statusbar>
   
 </window>
