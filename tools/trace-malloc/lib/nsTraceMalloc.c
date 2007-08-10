@@ -49,7 +49,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #ifdef XP_UNIX
 #include <unistd.h>
@@ -69,13 +68,13 @@
 #include "prinit.h"
 #include "prthread.h"
 #include "nsStackWalk.h"
+#include "nsTraceMallocCallbacks.h"
 
 #ifdef XP_WIN32
 #include <sys/timeb.h>/*for timeb*/
 #include <sys/stat.h>/*for fstat*/
 
 #include <io.h> /*for write*/
-#include "nsTraceMallocCallbacks.h"
 
 #define WRITE_FLAGS "w"
 
@@ -100,12 +99,6 @@ extern __ptr_t __libc_valloc(size_t);
 #endif /* !XP_UNIX */
 
 #ifdef XP_WIN32
-
-/* defined in nsWinTraceMalloc.cpp */
-void* dhw_orig_malloc(size_t);
-void* dhw_orig_calloc(size_t, size_t);
-void* dhw_orig_realloc(void*, size_t);
-void dhw_orig_free(void*);
 
 #define __libc_malloc(x)                dhw_orig_malloc(x)
 #define __libc_calloc(x, y)             dhw_orig_calloc(x,y)
@@ -169,13 +162,6 @@ static int tracing_enabled = 1;
             PR_Unlock(tmlock);                                                \
     PR_END_MACRO
 
-/* Used by backtrace. */
-typedef struct stack_buffer_info {
-    void **buffer;
-    size_t size;
-    size_t entries;
-} stack_buffer_info;
-
 /*
  * Thread-local storage.
  *
@@ -213,18 +199,6 @@ typedef struct stack_buffer_info {
 
 #endif
 
-typedef struct tm_thread tm_thread;
-struct tm_thread {
-    /*
-     * This counter suppresses tracing, in case any tracing code needs
-     * to malloc.
-     */
-    uint32 suppress_tracing;
-
-    /* buffer for backtrace, below */
-    stack_buffer_info backtrace_buf;
-};
-
 static TM_TLS_INDEX_TYPE tls_index;
 static tm_thread main_thread; /* 0-initialization is correct */
 
@@ -247,8 +221,8 @@ free_tm_thread(void *priv)
 }
 #endif
 
-static tm_thread *
-get_tm_thread(void)
+tm_thread *
+tm_get_thread(void)
 {
     tm_thread *t;
     tm_thread stack_tm_thread;
@@ -1062,7 +1036,7 @@ malloc(size_t size)
     tm_thread *t;
 
     if (!tracing_enabled || !PR_Initialized() ||
-        (t = get_tm_thread())->suppress_tracing != 0) {
+        (t = tm_get_thread())->suppress_tracing != 0) {
         return __libc_malloc(size);
     }
 
@@ -1119,7 +1093,7 @@ calloc(size_t count, size_t size)
      * Delaying NSPR calls until NSPR is initialized helps.
      */
     if (!tracing_enabled || !PR_Initialized() ||
-        (t = get_tm_thread())->suppress_tracing != 0) {
+        (t = tm_get_thread())->suppress_tracing != 0) {
         return __libc_calloc(count, size);
     }
 
@@ -1169,7 +1143,7 @@ realloc(__ptr_t ptr, size_t size)
     tm_thread *t;
 
     if (!tracing_enabled || !PR_Initialized() ||
-        (t = get_tm_thread())->suppress_tracing != 0) {
+        (t = tm_get_thread())->suppress_tracing != 0) {
         return __libc_realloc(ptr, size);
     }
 
@@ -1268,7 +1242,7 @@ valloc(size_t size)
     tm_thread *t;
 
     if (!tracing_enabled || !PR_Initialized() ||
-        (t = get_tm_thread())->suppress_tracing != 0) {
+        (t = tm_get_thread())->suppress_tracing != 0) {
         return __libc_valloc(size);
     }
 
@@ -1313,7 +1287,7 @@ memalign(size_t boundary, size_t size)
     tm_thread *t;
 
     if (!tracing_enabled || !PR_Initialized() ||
-        (t = get_tm_thread())->suppress_tracing != 0) {
+        (t = tm_get_thread())->suppress_tracing != 0) {
         return __libc_memalign(boundary, size);
     }
 
@@ -1369,7 +1343,7 @@ free(__ptr_t ptr)
     tm_thread *t;
 
     if (!tracing_enabled || !PR_Initialized() ||
-        (t = get_tm_thread())->suppress_tracing != 0) {
+        (t = tm_get_thread())->suppress_tracing != 0) {
         __libc_free(ptr);
         return;
     }
@@ -1661,7 +1635,7 @@ PR_IMPLEMENT(void) NS_TraceMallocShutdown()
 PR_IMPLEMENT(void) NS_TraceMallocDisable()
 {
     logfile *fp;
-    tm_thread *t = get_tm_thread();
+    tm_thread *t = tm_get_thread();
 
     t->suppress_tracing++;
     TM_ENTER_LOCK();
@@ -1674,7 +1648,7 @@ PR_IMPLEMENT(void) NS_TraceMallocDisable()
 
 PR_IMPLEMENT(void) NS_TraceMallocEnable()
 {
-    tm_thread *t = get_tm_thread();
+    tm_thread *t = tm_get_thread();
 
     t->suppress_tracing++;
     TM_ENTER_LOCK();
@@ -1687,7 +1661,7 @@ PR_IMPLEMENT(int) NS_TraceMallocChangeLogFD(int fd)
 {
     logfile *oldfp, *fp;
     struct stat sb;
-    tm_thread *t = get_tm_thread();
+    tm_thread *t = tm_get_thread();
 
     t->suppress_tracing++;
     TM_ENTER_LOCK();
@@ -1733,7 +1707,7 @@ PR_IMPLEMENT(void)
 NS_TraceMallocCloseLogFD(int fd)
 {
     logfile *fp;
-    tm_thread *t = get_tm_thread();
+    tm_thread *t = tm_get_thread();
 
     t->suppress_tracing++;
     TM_ENTER_LOCK();
@@ -1782,7 +1756,7 @@ NS_TraceMallocLogTimestamp(const char *caption)
 #ifdef XP_WIN32
     struct _timeb tb;
 #endif
-    tm_thread *t = get_tm_thread();
+    tm_thread *t = tm_get_thread();
 
     t->suppress_tracing++;
     TM_ENTER_LOCK();
@@ -1841,7 +1815,7 @@ PR_IMPLEMENT(void)
 NS_TraceStack(int skip, FILE *ofp)
 {
     callsite *site;
-    tm_thread *t = get_tm_thread();
+    tm_thread *t = tm_get_thread();
 
     site = backtrace(t, skip + 1);
     while (site) {
@@ -1872,7 +1846,7 @@ PR_IMPLEMENT(void)
 NS_TraceMallocFlushLogfiles()
 {
     logfile *fp;
-    tm_thread *t = get_tm_thread();
+    tm_thread *t = tm_get_thread();
 
     t->suppress_tracing++;
     TM_ENTER_LOCK();
@@ -1889,7 +1863,7 @@ NS_TrackAllocation(void* ptr, FILE *ofp)
 {
     PLHashEntry **hep;
     allocation *alloc;
-    tm_thread *t = get_tm_thread();
+    tm_thread *t = tm_get_thread();
 
     fprintf(ofp, "Trying to track %p\n", (void*) ptr);
     setlinebuf(ofp);
@@ -1913,14 +1887,13 @@ NS_TrackAllocation(void* ptr, FILE *ofp)
 #ifdef XP_WIN32
 
 PR_IMPLEMENT(void)
-MallocCallback(void *ptr, size_t size, PRUint32 start, PRUint32 end)
+MallocCallback(void *ptr, size_t size, PRUint32 start, PRUint32 end, tm_thread *t)
 {
     callsite *site;
     PLHashEntry *he;
     allocation *alloc;
-    tm_thread *t;
 
-    if (!tracing_enabled || (t = get_tm_thread())->suppress_tracing != 0)
+    if (!tracing_enabled || t->suppress_tracing != 0)
         return;
 
     site = backtrace(t, 2);
@@ -1948,14 +1921,13 @@ MallocCallback(void *ptr, size_t size, PRUint32 start, PRUint32 end)
 }
 
 PR_IMPLEMENT(void)
-CallocCallback(void *ptr, size_t count, size_t size, PRUint32 start, PRUint32 end)
+CallocCallback(void *ptr, size_t count, size_t size, PRUint32 start, PRUint32 end, tm_thread *t)
 {
     callsite *site;
     PLHashEntry *he;
     allocation *alloc;
-    tm_thread *t;
 
-    if (!tracing_enabled || (t = get_tm_thread())->suppress_tracing != 0)
+    if (!tracing_enabled || t->suppress_tracing != 0)
         return;
 
     site = backtrace(t, 2);
@@ -1984,16 +1956,15 @@ CallocCallback(void *ptr, size_t count, size_t size, PRUint32 start, PRUint32 en
 }
 
 PR_IMPLEMENT(void)
-ReallocCallback(void * oldptr, void *ptr, size_t size, PRUint32 start, PRUint32 end)
+ReallocCallback(void * oldptr, void *ptr, size_t size, PRUint32 start, PRUint32 end, tm_thread *t)
 {
     callsite *oldsite, *site;
     size_t oldsize;
     PLHashNumber hash;
     PLHashEntry **hep, *he;
     allocation *alloc;
-    tm_thread *t;
 
-    if (!tracing_enabled || (t = get_tm_thread())->suppress_tracing != 0)
+    if (!tracing_enabled || t->suppress_tracing != 0)
         return;
 
     site = backtrace(t, 2);
@@ -2061,14 +2032,13 @@ ReallocCallback(void * oldptr, void *ptr, size_t size, PRUint32 start, PRUint32 
 }
 
 PR_IMPLEMENT(void)
-FreeCallback(void * ptr, PRUint32 start, PRUint32 end)
+FreeCallback(void * ptr, PRUint32 start, PRUint32 end, tm_thread *t)
 {
     PLHashEntry **hep, *he;
     callsite *site;
     allocation *alloc;
-    tm_thread *t;
 
-    if (!tracing_enabled || (t = get_tm_thread())->suppress_tracing != 0)
+    if (!tracing_enabled || t->suppress_tracing != 0)
         return;
 
     t->suppress_tracing++;
