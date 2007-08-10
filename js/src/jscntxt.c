@@ -410,12 +410,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
             js_FinishRuntimeScriptState(rt);
 
         /*
-         * Free the deflated string cache, but only after the last GC has
-         * collected all unleaked strings.
-         */
-        js_FinishDeflatedStringCache(rt);
-
-        /*
          * Free unit string storage only after the last GC has completed, so
          * that js_FinalizeStringRT can detect unit strings and avoid calling
          * free on their chars storage.

@@ -767,6 +767,12 @@ JS_DestroyRuntime(JSRuntime *rt)
 
     js_FreeRuntimeScriptState(rt);
     js_FinishAtomState(rt);
+
+    /*
+     * Finish the deflated string cache after the last GC and after
+     * calling js_FinishAtomState, which finalizes strings.
+     */
+    js_FinishDeflatedStringCache(rt);
     js_FinishGC(rt);
 #ifdef JS_THREADSAFE
     if (rt->gcLock)
