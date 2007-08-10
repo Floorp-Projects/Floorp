@@ -97,47 +97,22 @@ extern __ptr_t __libc_valloc(size_t);
 #pragma GCC visibility pop
 #endif
 
-#else  /* !XP_UNIX */
-
-#define __libc_malloc(x) malloc(x)
-#define __libc_calloc(x, y) calloc(x,y)
-#define __libc_realloc(x, y) realloc(x,y)
-#define __libc_free(x) free(x)
-
-/*
- * Ok we need to load malloc, free, realloc, and calloc from the dll and store
- * the function pointers somewhere. All other dlls that link with this library
- * should have their malloc overridden to call this one.
- */
-typedef void * (__stdcall *MALLOCPROC)(size_t);
-typedef void * (__stdcall *REALLOCPROC)(void *, size_t);
-typedef void * (__stdcall *CALLOCPROC)(size_t,size_t);
-typedef void (__stdcall *FREEPROC)(void *);
-
-/*debug types*/
-#ifdef _DEBUG
-typedef void * (__stdcall *MALLOCDEBUGPROC) ( size_t, int, const char *, int);
-typedef void * (__stdcall *CALLOCDEBUGPROC) ( size_t, size_t, int, const char *, int);
-typedef void * (__stdcall *REALLOCDEBUGPROC) ( void *, size_t, int, const char *, int);
-typedef void   (__stdcall *FREEDEBUGPROC) ( void *, int);
-#endif
-
-struct AllocationFuncs
-{
-  MALLOCPROC   malloc_proc;
-  CALLOCPROC   calloc_proc;
-  REALLOCPROC  realloc_proc;
-  FREEPROC     free_proc;
-#ifdef _DEBUG
-  MALLOCDEBUGPROC   malloc_debug_proc;
-  CALLOCDEBUGPROC   calloc_debug_proc;
-  REALLOCDEBUGPROC  realloc_debug_proc;
-  FREEDEBUGPROC     free_debug_proc;
-#endif
-  int          prevent_reentry;
-}gAllocFuncs;
-
 #endif /* !XP_UNIX */
+
+#ifdef XP_WIN32
+
+/* defined in nsWinTraceMalloc.cpp */
+void* dhw_orig_malloc(size_t);
+void* dhw_orig_calloc(size_t, size_t);
+void* dhw_orig_realloc(void*, size_t);
+void dhw_orig_free(void*);
+
+#define __libc_malloc(x)                dhw_orig_malloc(x)
+#define __libc_calloc(x, y)             dhw_orig_calloc(x,y)
+#define __libc_realloc(x, y)            dhw_orig_realloc(x,y)
+#define __libc_free(x)                  dhw_orig_free(x)
+
+#endif
 
 typedef struct logfile logfile;
 

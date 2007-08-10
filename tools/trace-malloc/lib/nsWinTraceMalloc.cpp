@@ -148,3 +148,34 @@ PR_IMPLEMENT(void)
 ShutdownHooker()
 {
 }
+
+extern "C" {
+  void* dhw_orig_malloc(size_t);
+  void* dhw_orig_calloc(size_t, size_t);
+  void* dhw_orig_realloc(void*, size_t);
+  void dhw_orig_free(void*);
+}
+
+void*
+dhw_orig_malloc(size_t size)
+{
+    return DHW_ORIGINAL(MALLOC_, getMallocHooker())(size);
+}
+
+void*
+dhw_orig_calloc(size_t count, size_t size)
+{
+    return DHW_ORIGINAL(CALLOC_, getCallocHooker())(count,size);
+}
+
+void*
+dhw_orig_realloc(void* pin, size_t size)
+{
+    return DHW_ORIGINAL(REALLOC_, getReallocHooker())(pin, size);
+}
+
+void
+dhw_orig_free(void* p)
+{
+    DHW_ORIGINAL(FREE_, getFreeHooker())(p);
+}
