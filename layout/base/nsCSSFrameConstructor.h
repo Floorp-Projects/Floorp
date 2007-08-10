@@ -111,8 +111,7 @@ public:
   nsresult ContentInserted(nsIContent*            aContainer,
                            nsIContent*            aChild,
                            PRInt32                aIndexInContainer,
-                           nsILayoutHistoryState* aFrameState,
-                           PRBool                 aInReinsertContent);
+                           nsILayoutHistoryState* aFrameState);
 
   nsresult ContentRemoved(nsIContent*     aContainer,
                           nsIContent*     aChild,
@@ -754,7 +753,16 @@ private:
 
   nsresult RecreateFramesForContent(nsIContent*      aContent);
 
-  PRBool MaybeRecreateContainerForIBSplitterFrame(nsIFrame* aFrame, nsresult* aResult);
+  // If removal of aFrame from the frame tree requires reconstruction of some
+  // containing block (either of aFrame or of its parent) due to {ib} splits,
+  // recreate the relevant containing block.  The return value indicates
+  // whether this happened.  If this method returns true, *aResult is the
+  // return value of ReframeContainingBlock.  If this method returns false, the
+  // value of *aResult is no affected.  aFrame and aResult must not be null.
+  // aFrame must be the result of a GetPrimaryFrameFor() call (which means its
+  // parent is also not null).
+  PRBool MaybeRecreateContainerForIBSplitterFrame(nsIFrame* aFrame,
+                                                  nsresult* aResult);
 
   nsresult CreateContinuingOuterTableFrame(nsIPresShell*    aPresShell, 
                                            nsPresContext*  aPresContext,
@@ -838,17 +846,9 @@ private:
   PRBool AreAllKidsInline(nsIFrame* aFrameList);
 
   PRBool WipeContainingBlock(nsFrameConstructorState& aState,
-                             nsIFrame*                blockContent,
+                             nsIFrame*                aContainingBlock,
                              nsIFrame*                aFrame,
-                             nsIFrame*                aFrameList);
-
-  PRBool NeedSpecialFrameReframe(nsIContent*      aParent1,
-                                 nsIContent*      aParent2,
-                                 nsIFrame*&       aParentFrame,
-                                 nsIContent*      aChild,
-                                 PRInt32          aIndexInContainer,
-                                 nsIFrame*&       aPrevSibling,
-                                 nsIFrame*        aNextSibling);
+                             const nsFrameItems&      aFrameList);
 
   nsresult ReframeContainingBlock(nsIFrame* aFrame);
 
