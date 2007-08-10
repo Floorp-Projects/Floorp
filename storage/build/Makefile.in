@@ -59,6 +59,7 @@ REQUIRES = \
 	string \
 	js \
 	xpconnect \
+	intl \
 	$(NULL)
 
 EXPORTS = mozStorageCID.h
@@ -77,6 +78,7 @@ EXTRA_DSO_LIBS += sqlite3
 EXTRA_DSO_LDOPTS += \
 	$(LIBS_DIR) \
 	$(EXTRA_DSO_LIBS) \
+	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(MOZ_JS_LIBS) \
 	$(NULL)
