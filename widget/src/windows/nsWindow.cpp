@@ -435,6 +435,8 @@ PRUnichar* nsWindow::sIMEReconvertUnicode      = NULL;
 RECT*      nsWindow::sIMECompCharPos           = nsnull;
 PRInt32    nsWindow::sIMECaretHeight           = 0;
 
+PRBool nsWindow::sIsInEndSession = PR_FALSE;
+
 BOOL nsWindow::sIsRegistered       = FALSE;
 BOOL nsWindow::sIsPopupClassRegistered = FALSE;
 UINT nsWindow::uWM_MSIME_MOUSE     = 0; // mouse message for MSIME
@@ -1319,6 +1321,9 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 //
 LRESULT CALLBACK nsWindow::DefaultWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+  if (msg == WM_ENDSESSION && wParam == TRUE)
+    nsWindow::sIsInEndSession = PR_TRUE;
+
   //XXX nsWindow::DefaultWindowProc still ever required?
   return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 }
@@ -1598,7 +1603,11 @@ NS_METHOD nsWindow::Destroy()
     }
 #endif
 
-    VERIFY(::DestroyWindow(mWnd));
+    // bug 333907: During WM_*ENDSESSION, closing all windows
+    // will cause immediate termination of the process. This
+    // avoids closing windows during WM_ENDSESSION for a cleaner exit.
+    if (!sIsInEndSession)
+      VERIFY(::DestroyWindow(mWnd));
 
     mWnd = NULL;
     //our windows can be subclassed by
@@ -1778,7 +1787,8 @@ NS_METHOD nsWindow::Show(PRBool bState)
       }
     } else {
       if (mWindowType != eWindowType_dialog) {
-        ::ShowWindow(mWnd, SW_HIDE);
+        if (!sIsInEndSession)
+          ::ShowWindow(mWnd, SW_HIDE);
       } else {
         ::SetWindowPos(mWnd, 0, 0, 0, 0, 0, SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE |
                        SWP_NOZORDER | SWP_NOACTIVATE);
