@@ -62,6 +62,8 @@ var gAppID            = "";
 var gPref             = null;
 var gPriorityCount    = 0;
 var gInstallCount     = 0;
+var gPlugins          = null;
+var gPluginsDS        = null;
 
 const PREF_EM_CHECK_COMPATIBILITY           = "extensions.checkCompatibility";
 const PREF_EXTENSIONS_GETMORETHEMESURL      = "extensions.getMoreThemesURL";
@@ -262,6 +264,7 @@ function showView(aView) {
                       ["name", "?name"],
                       ["optionsURL", "?optionsURL"],
                       ["opType", "?opType"],
+                      ["plugin", "?plugin"],
                       ["previewImage", "?previewImage"],
                       ["satisfiesDependencies", "?satisfiesDependencies"],
                       ["type", "?type"],
@@ -510,6 +513,82 @@ function setRestartMessage(aItem)
   aItem.setAttribute("description", restartMessage);
 }
 
+function initPluginsDS()
+{
+  var phs = Components.classes["@mozilla.org/plugin/host;1"]
+                      .getService(Components.interfaces.nsIPluginHost);
+  var plugins = phs.getPluginTags({ });
+  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                      .getService(Components.interfaces.nsIRDFService);
+  var rdfCU = Components.classes["@mozilla.org/rdf/container-utils;1"]
+                        .getService(Components.interfaces.nsIRDFContainerUtils);
+  gPluginsDS = Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"]
+                         .createInstance(Components.interfaces.nsIRDFDataSource);
+  gPlugins = { };
+
+  var rootctr = rdfCU.MakeSeq(gPluginsDS, rdf.GetResource(RDFURI_ITEM_ROOT));
+  var div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  for (var i = 0; i < plugins.length; i++) {
+    var plugin = plugins[i];
+    var pluginNode = rdf.GetResource(PREFIX_ITEM_URI + plugin.filename);
+    var desc = plugin.description.replace(/<br>/g, "<br/> ");
+    try {
+      div.innerHTML = desc;
+      desc = div.textContent;
+    } catch (e) {
+      desc = plugin.description;
+    }
+    rootctr.AppendElement(pluginNode);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "name"),
+                      rdf.GetLiteral(plugin.name),
+                      true);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "addonID"),
+                      rdf.GetLiteral(plugin.filename),
+                      true);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "description"),
+                      rdf.GetLiteral(desc),
+                      true);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "isDisabled"),
+                      rdf.GetLiteral(plugin.disabled ? "true" : "false"),
+                      true);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "blocklisted"),
+                      rdf.GetLiteral(plugin.blocklisted ? "true" : "false"),
+                      true);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "compatible"),
+                      rdf.GetLiteral("true"),
+                      true);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "type"),
+                      rdf.GetIntLiteral(nsIUpdateItem.TYPE_PLUGIN),
+                      true);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "plugin"),
+                      rdf.GetLiteral("true"),
+                      true);
+    gPlugins[plugin.filename] = plugin;
+  }
+}
+
+function togglePluginDisabled(aFilename)
+{
+  var plugin = gPlugins[aFilename];
+  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                      .getService(Components.interfaces.nsIRDFService);
+  plugin.disabled = !plugin.disabled;
+  gPluginsDS.Change(rdf.GetResource(PREFIX_ITEM_URI + plugin.filename),
+                    rdf.GetResource(PREFIX_NS_EM + "isDisabled"),
+                    rdf.GetLiteral(plugin.disabled ? "false" : "true"),
+                    rdf.GetLiteral(plugin.disabled ? "true" : "false"));
+  gExtensionsViewController.onCommandUpdate();
+  gExtensionsView.selectedItem.focus();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Startup, Shutdown
 function Startup()
@@ -533,7 +612,6 @@ function Startup()
                           .QueryInterface(Components.interfaces.nsIXULRuntime);
   gInSafeMode = appInfo.inSafeMode;
   gAppID = appInfo.ID;
-  updateOptionalViews();
 
   try {
     gCheckCompat = gPref.getBoolPref(PREF_EM_CHECK_COMPATIBILITY);
@@ -545,8 +623,11 @@ function Startup()
   gExtensionsView.controllers.appendController(gExtensionsViewController);
   gExtensionsView.addEventListener("select", onAddonSelect, false);
 
+  initPluginsDS();
+  gExtensionsView.database.AddDataSource(gPluginsDS);
   gExtensionsView.database.AddDataSource(gExtensionManager.datasource);
   gExtensionsView.setAttribute("ref", RDFURI_ITEM_ROOT);
+  updateOptionalViews();
 
   var viewGroup = document.getElementById("viewGroup");
 
@@ -1317,12 +1398,12 @@ function canWriteToLocation(element)
 }
 
 function updateOptionalViews() {
-  var ds = gExtensionManager.datasource;
+  var ds = gExtensionsView.database;
   var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                    .getService(Components.interfaces.nsIRDFService);
   var ctr = Components.classes["@mozilla.org/rdf/container;1"]
                       .createInstance(Components.interfaces.nsIRDFContainer);
-  ctr.Init(gExtensionManager.datasource, rdfs.GetResource(RDFURI_ITEM_ROOT));
+  ctr.Init(ds, rdfs.GetResource(RDFURI_ITEM_ROOT));
   var elements = ctr.GetElements();
   var showLocales = false;
   var showPlugins = false;
@@ -1515,7 +1596,8 @@ var gExtensionsViewController = {
              !selectedItem.opType &&
              selectedItem.getAttribute("optionsURL") != "";
     case "cmd_about":
-      return selectedItem.opType != OP_NEEDS_INSTALL;
+      return selectedItem.opType != OP_NEEDS_INSTALL &&
+             selectedItem.getAttribute("plugin") != "true";
     case "cmd_homepage":
       return selectedItem.getAttribute("homepageURL") != "";
     case "cmd_uninstall":
@@ -1760,6 +1842,11 @@ var gExtensionsViewController = {
 
     cmd_disable: function (aSelectedItem)
     {
+      if (aSelectedItem.getAttribute("plugin") == "true") {
+        togglePluginDisabled(aSelectedItem.getAttribute("addonID"));
+        return;
+      }
+
       var id = getIDFromResourceURI(aSelectedItem.id);
       var dependentItems = gExtensionManager.getDependentItemListForID(id, false, { });
 
@@ -1793,6 +1880,11 @@ var gExtensionsViewController = {
     
     cmd_enable: function (aSelectedItem)
     {
+      if (aSelectedItem.getAttribute("plugin") == "true") {
+        togglePluginDisabled(aSelectedItem.getAttribute("addonID"));
+        return;
+      }
+
       gExtensionManager.enableItem(getIDFromResourceURI(aSelectedItem.id));
       gExtensionsViewController.onCommandUpdate();
       gExtensionsView.selectedItem.focus();
