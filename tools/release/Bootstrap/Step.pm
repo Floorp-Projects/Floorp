@@ -40,7 +40,7 @@ sub Shell {
     my $config = new Bootstrap::Config();
 
     my $logFile = exists($args{'logFile'}) ? $args{'logFile'} : 
-     catfile($config->Get(var => 'logDir'), $DEFAULT_LOGFILE);
+     catfile($config->Get(sysvar => 'logDir'), $DEFAULT_LOGFILE);
 
     if (ref($cmdArgs) ne 'ARRAY') {
         die("ASSERT: Bootstrap::Step::Shell(): cmdArgs is not an array ref\n");
