@@ -508,7 +508,8 @@ private:
                                 nsStyleContext*          aStyleContext,
                                 nsIFrame**               aNewFrame,
                                 const nsStyleDisplay*    aStyleDisplay,
-                                nsFrameItems&            aFrameItems);
+                                nsFrameItems&            aFrameItems,
+                                PRBool                   aHasPseudoParent);
 
   // ConstructSelectFrame puts the new frame in aFrameItems and
   // handles the kids of the select.
@@ -675,7 +676,8 @@ private:
                             const nsStyleDisplay*    aStyleDisplay,
                             PRBool&                  aFrameHasBeenInitialized,
                             PRBool&                  aAddedToFrameList,
-                            nsFrameItems&            aFrameItems);
+                            nsFrameItems&            aFrameItems,
+                            PRBool                   aHasPseudoParent);
 
   // A function that can be invoked to create some sort of image frame.
   typedef nsIFrame* (* ImageFrameCreatorFunc)(nsIPresShell*, nsStyleContext*);
