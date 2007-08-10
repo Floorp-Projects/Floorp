@@ -65,6 +65,7 @@ CPPSRCS		= \
 		nsUUIDGenerator.cpp \
 		nsSystemInfo.cpp \
 		nsCycleCollector.cpp \
+		nsStackWalk.cpp \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR
@@ -85,6 +86,7 @@ EXPORTS		= \
 		nsIAllocator.h \
 		nsIID.h \
 		nsISupportsObsolete.h \
+		nsStackWalk.h \
 		nsTraceRefcntImpl.h \
 		nsWeakPtr.h \
 		nsInterfaceRequestorAgg.h \
@@ -95,11 +97,6 @@ ifdef MOZ_DEBUG
 CSRCS		+= pure_api.c
 EXPORTS		+= pure.h
 endif
-CPPSRCS		+= nsStackFrameWin.cpp
-endif
-
-ifneq ($(OS_ARCH),WINNT)
-CPPSRCS		+= nsStackFrameUnix.cpp
 endif
 
 SDK_XPIDLSRCS   = \

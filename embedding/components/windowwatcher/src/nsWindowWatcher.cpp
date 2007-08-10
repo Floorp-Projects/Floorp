@@ -546,14 +546,6 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
 
   nsCOMPtr<nsIDOMChromeWindow> chromeParent(do_QueryInterface(aParent));
 
-  // If we're not called through our JS version of the API, and we got
-  // a modal option, treat the window we're opening as a modal content
-  // window.
-  if (!aCalledFromJS && argv &&
-      WinHasOption(features.get(), "modal", 0, nsnull)) {
-    windowIsModalContentDialog = PR_TRUE;
-  }
-
   // Make sure we call CalculateChromeFlags() *before* we push the
   // callee context onto the context stack so that
   // CalculateChromeFlags() sees the actual caller when doing it's
@@ -561,6 +553,11 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
   chromeFlags = CalculateChromeFlags(features.get(), featuresSpecified,
                                      aDialog, uriToLoadIsChrome,
                                      !aParent || chromeParent);
+
+  if ((chromeFlags & nsIWebBrowserChrome::CHROME_MODAL) &&
+      !(chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)) {
+    windowIsModalContentDialog = PR_TRUE;
+  }
 
   SizeSpec sizeSpec;
   CalcSizeSpec(features.get(), sizeSpec);
@@ -673,8 +670,9 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
 
         PRBool cancel = PR_FALSE;
         rv = windowCreator2->CreateChromeWindow2(parentChrome, chromeFlags,
-                               contextFlags, uriToLoad, &cancel,
-                               getter_AddRefs(newChrome));
+                                                 contextFlags, uriToLoad,
+                                                 &cancel,
+                                                 getter_AddRefs(newChrome));
         if (NS_SUCCEEDED(rv) && cancel) {
           newChrome = 0; // just in case
           rv = NS_ERROR_ABORT;
@@ -682,7 +680,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
       }
       else
         rv = mWindowCreator->CreateChromeWindow(parentChrome, chromeFlags,
-                               getter_AddRefs(newChrome));
+                                                getter_AddRefs(newChrome));
       if (newChrome) {
         /* It might be a chrome nsXULWindow, in which case it won't have
             an nsIDOMWindow (primary content shell). But in that case, it'll
@@ -729,7 +727,7 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
   }
 
   if ((aDialog || windowIsModalContentDialog) && argv) {
-    // Set the args on the new object.
+    // Set the args on the new window.
     nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_QueryInterface(*_retval));
     NS_ENSURE_TRUE(scriptGlobal, NS_ERROR_UNEXPECTED);
     rv = scriptGlobal->SetNewArguments(argv);
@@ -912,9 +910,37 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
     nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
     newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
     nsCOMPtr<nsIWebBrowserChrome> newChrome(do_GetInterface(newTreeOwner));
-    if (newChrome)
-      newChrome->ShowAsModal();
-    NS_ASSERTION(newChrome, "show modal window failed: no available chrome");
+
+    // Throw an exception here if no web browser chrome is available,
+    // we need that to show a modal window.
+    NS_ENSURE_TRUE(newChrome, NS_ERROR_NOT_AVAILABLE);
+
+    nsCOMPtr<nsPIDOMWindow> modalContentWindow;
+
+    // Dispatch dialog events etc, but we only want to do that if
+    // we're opening a modal content window (the helper classes are
+    // no-ops if given no window), for chrome dialogs we don't want to
+    // do any of that (it's done elsewhere for us).
+
+    if (windowIsModalContentDialog) {
+      modalContentWindow = do_QueryInterface(*_retval);
+    }
+
+    nsAutoWindowStateHelper windowStateHelper(modalContentWindow);
+
+    if (!windowStateHelper.DefaultEnabled()) {
+      // Default to cancel not opening the modal window.
+      NS_RELEASE(*_retval);
+
+      return NS_OK;
+    }
+
+    // Reset popup state while opening a modal dialog, and firing
+    // events about the dialog, to prevent the current state from
+    // being active the whole time a modal dialog is open.
+    nsAutoPopupStatePusher popupStatePusher(modalContentWindow, openAbused);
+
+    newChrome->ShowAsModal();
   }
 
   return NS_OK;

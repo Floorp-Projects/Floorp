@@ -199,8 +199,8 @@ DHWImportHooker::~DHWImportHooker()
                 cur->mNext = mNext;
                 break;
             }
+            PR_ASSERT(cur->mNext); //we were not in the list!       
         }
-        PR_ASSERT(cur); //we were not in the list!       
     }
 
     if(!gHooks)

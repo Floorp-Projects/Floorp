@@ -114,7 +114,21 @@ void abnormal_exit_handler(int signum)
 
 #include <unistd.h>
 #include "nsISupportsUtils.h"
-#include "nsStackFrameUnix.h"
+#include "nsStackWalk.h"
+
+extern "C" {
+
+PR_STATIC_CALLBACK(void) PrintStackFrame(void *aPC, void *aClosure)
+{
+  char buf[1024];
+  nsCodeAddressDetails details;
+
+  NS_DescribeCodeAddress(aPC, &details);
+  NS_FormatCodeAddressDetails(aPC, &details, buf, sizeof(buf));
+  fprintf(stdout, buf);
+}
+
+}
 
 void
 ah_crap_handler(int signum)
@@ -125,7 +139,7 @@ ah_crap_handler(int signum)
          signum);
 
   printf("Stack:\n");
-  DumpStackToFile(stdout);
+  NS_StackWalk(PrintStackFrame, 2, nsnull);
 
   printf("Sleeping for %d seconds.\n",_gdb_sleep_duration);
   printf("Type 'gdb %s %d' to attach your debugger to this thread.\n",

@@ -44,6 +44,7 @@
 #include "nsCRT.h"
 #include "pldhash.h"
 #include "prenv.h"
+#include "nsThreadUtils.h"
 
 #define PL_ARENA_CONST_ALIGN_MASK 3
 #include "plarena.h"
@@ -443,7 +444,7 @@ AtomImpl::~AtomImpl()
   }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(AtomImpl, nsIAtom)
+NS_IMPL_ISUPPORTS1(AtomImpl, nsIAtom)
 
 PermanentAtomImpl::PermanentAtomImpl()
   : AtomImpl()
@@ -458,11 +459,13 @@ PermanentAtomImpl::~PermanentAtomImpl()
 
 NS_IMETHODIMP_(nsrefcnt) PermanentAtomImpl::AddRef()
 {
+  NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   return 2;
 }
 
 NS_IMETHODIMP_(nsrefcnt) PermanentAtomImpl::Release()
 {
+  NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   return 1;
 }
 
@@ -552,12 +555,14 @@ AtomImpl::Equals(const nsAString& aString, PRBool* aResult)
 NS_IMETHODIMP_(nsrefcnt)
 nsStaticAtomWrapper::AddRef()
 {
+  NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   return 2;
 }
 
 NS_IMETHODIMP_(nsrefcnt)
 nsStaticAtomWrapper::Release()
 {
+  NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   return 1;
 }
 
@@ -628,6 +633,7 @@ WrapStaticAtom(const nsStaticAtom* aAtom, PRUint32 aLength)
 static inline AtomTableEntry*
 GetAtomHashEntry(const char* aString, PRUint32 aLength)
 {
+  NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   if (!gAtomTable.ops &&
       !PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
                          sizeof(AtomTableEntry), 2048)) {
@@ -643,6 +649,7 @@ GetAtomHashEntry(const char* aString, PRUint32 aLength)
 static inline AtomTableEntry*
 GetAtomHashEntry(const PRUnichar* aString, PRUint32 aLength)
 {
+  NS_ASSERTION(NS_IsMainThread(), "wrong thread");
   if (!gAtomTable.ops &&
       !PL_DHashTableInit(&gAtomTable, &AtomTableOps, 0,
                          sizeof(AtomTableEntry), 2048)) {

@@ -12,7 +12,7 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Airbag integration
+ * The Original Code is Mozilla Breakpad integration
  *
  * The Initial Developer of the Original Code is
  * Ted Mielczarek <ted.mielczarek@gmail.com>
@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsAirbagExceptionHandler_h__
-#define nsAirbagExceptionHandler_h__
+#ifndef nsExceptionHandler_h__
+#define nsExceptionHandler_h__
 
 #include "nscore.h"
 #include "nsXPCOM.h"
@@ -53,4 +53,4 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
                         const nsACString& aBuildID);
 }
 
-#endif /* nsAirbagExceptionHandler_h__ */
+#endif /* nsExceptionHandler_h__ */

@@ -118,20 +118,22 @@ private:
     nsProfileLock mLock;
 };
 
-class nsToolkitProfileService : public nsIToolkitProfileService,
-                                public nsIFactory
+class nsToolkitProfileFactory : public nsIFactory
+{
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIFACTORY
+};
+
+class nsToolkitProfileService : public nsIToolkitProfileService
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSITOOLKITPROFILESERVICE
 
-    // we implement nsIFactory because we can't be registered by location,
-    // like most ordinary components are. Instead, during startup we register
-    // our factory. Then we return our singleton-self when asked.
-    NS_DECL_NSIFACTORY
-
 private:
     friend class nsToolkitProfile;
+    friend class nsToolkitProfileFactory;
     friend nsresult NS_NewToolkitProfileService(nsIToolkitProfileService**);
 
     nsToolkitProfileService() :
@@ -148,11 +150,11 @@ private:
 
     NS_HIDDEN_(nsresult) Init();
 
-    nsCOMPtr<nsToolkitProfile> mFirst;
-    nsCOMPtr<nsToolkitProfile> mChosen;
-    nsCOMPtr<nsILocalFile>     mAppData;
-    nsCOMPtr<nsILocalFile>     mTempData;
-    nsCOMPtr<nsILocalFile>     mListFile;
+    nsRefPtr<nsToolkitProfile>  mFirst;
+    nsCOMPtr<nsIToolkitProfile> mChosen;
+    nsCOMPtr<nsILocalFile>      mAppData;
+    nsCOMPtr<nsILocalFile>      mTempData;
+    nsCOMPtr<nsILocalFile>      mListFile;
     PRBool mDirty;
     PRBool mStartWithLast;
     PRBool mStartOffline;
@@ -369,9 +371,8 @@ nsToolkitProfileLock::~nsToolkitProfileLock()
 nsToolkitProfileService*
 nsToolkitProfileService::gService = nsnull;
 
-NS_IMPL_ISUPPORTS2(nsToolkitProfileService,
-                   nsIToolkitProfileService,
-                   nsIFactory)
+NS_IMPL_ISUPPORTS1(nsToolkitProfileService,
+                   nsIToolkitProfileService)
 
 nsresult
 nsToolkitProfileService::Init()
@@ -554,8 +555,7 @@ NS_IMETHODIMP
 nsToolkitProfileService::SetSelectedProfile(nsIToolkitProfile* aProfile)
 {
     if (mChosen != aProfile) {
-        // XXXbz Why is this cast OK?
-        mChosen = static_cast<nsToolkitProfile*>(aProfile);
+        mChosen = aProfile;
         mDirty = PR_TRUE;
     }
     return NS_OK;
@@ -826,20 +826,39 @@ nsToolkitProfileService::Flush()
     return NS_OK;
 }
 
+NS_IMPL_ISUPPORTS1(nsToolkitProfileFactory, nsIFactory)
+
 NS_IMETHODIMP
-nsToolkitProfileService::CreateInstance(nsISupports* aOuter, const nsID& aIID,
+nsToolkitProfileFactory::CreateInstance(nsISupports* aOuter, const nsID& aIID,
                                         void** aResult)
 {
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
-    // return this object
-    return QueryInterface(aIID, aResult);
+    nsCOMPtr<nsIToolkitProfileService> profileService = 
+        nsToolkitProfileService::gService;
+    if (!profileService) {
+        nsresult rv = NS_NewToolkitProfileService(getter_AddRefs(profileService));
+        if (NS_FAILED(rv))
+            return rv;
+    }
+    return profileService->QueryInterface(aIID, aResult);
 }
 
 NS_IMETHODIMP
-nsToolkitProfileService::LockFactory(PRBool aVal)
+nsToolkitProfileFactory::LockFactory(PRBool aVal)
 {
+    return NS_OK;
+}
+
+nsresult
+NS_NewToolkitProfileFactory(nsIFactory* *aResult)
+{
+    *aResult = new nsToolkitProfileFactory();
+    if (!*aResult)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*aResult);
     return NS_OK;
 }
 

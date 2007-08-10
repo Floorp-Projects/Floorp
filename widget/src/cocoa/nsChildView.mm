@@ -3010,8 +3010,16 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
       [self window] != gRollupWidget->GetNativeData(NS_NATIVE_WINDOW)) {
     PRBool rollup = PR_FALSE;
     gRollupListener->ShouldRollupOnMouseWheelEvent(&rollup);
-    if (rollup)
+    if (rollup) {
       gRollupListener->Rollup();
+    } else {
+      // Don't pass this event to Gecko if we're not supposed to close the
+      // popup.  Otherwise the background window will scroll when a custom
+      // context menu or the autoscroll popup is open (and the mouse isn't
+      // over the popup) -- which doesn't seem right.  This change resolves
+      // bmo bug 344367.
+      return;
+    }
   }
   
   // It's possible for a single NSScrollWheel event to carry both useful

@@ -1019,7 +1019,7 @@ SrcNotes(JSContext *cx, JSScript *script)
             const char *bytes;
 
             atomIndex = (jsatomid) js_GetSrcNoteOffset(sn, 0);
-            atom = js_GetAtom(cx, &script->atomMap, atomIndex);
+            JS_GET_SCRIPT_ATOM(script, atomIndex, atom);
             bytes = js_AtomToPrintableString(cx, atom);
             fprintf(gOutFile, " atom %u (%s)", (uintN)atomIndex, bytes);
             break;
@@ -1267,28 +1267,6 @@ Tracing(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
-typedef struct DumpAtomArgs {
-    JSContext   *cx;
-    FILE        *fp;
-} DumpAtomArgs;
-
-static int
-DumpAtom(JSHashEntry *he, int i, void *arg)
-{
-    DumpAtomArgs *args = (DumpAtomArgs *)arg;
-    FILE *fp = args->fp;
-    JSAtom *atom = (JSAtom *)he;
-
-    fprintf(fp, "%3d %08x ", i, (uintN)he->keyHash);
-    if (ATOM_IS_STRING(atom))
-        fprintf(fp, "\"%s\"\n", js_AtomToPrintableString(args->cx, atom));
-    else if (ATOM_IS_INT(atom))
-        fprintf(fp, "%ld\n", (long)ATOM_TO_INT(atom));
-    else
-        fprintf(fp, "%.16g\n", *ATOM_TO_DOUBLE(atom));
-    return HT_ENUMERATE_NEXT;
-}
-
 static void
 DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
 {
@@ -1347,19 +1325,7 @@ DumpStats(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             JS_DumpArenaStats(stdout);
 #endif
         } else if (strcmp(bytes, "atom") == 0) {
-            DumpAtomArgs args;
-
-            fprintf(gOutFile, "\natom table contents:\n");
-            args.cx = cx;
-            args.fp = stdout;
-            JS_HashTableEnumerateEntries(cx->runtime->atomState.table,
-                                         DumpAtom,
-                                         &args);
-#ifdef HASHMETER
-            JS_HashTableDumpMeter(cx->runtime->atomState.table,
-                                  DumpAtom,
-                                  stdout);
-#endif
+            js_DumpAtoms(cx, gOutFile);
         } else if (strcmp(bytes, "global") == 0) {
             DumpScope(cx, cx->globalObject, stdout);
         } else {

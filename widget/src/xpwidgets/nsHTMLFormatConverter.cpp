@@ -36,14 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsString.h"
+#include "nsHTMLFormatConverter.h"
+
 #include "nsCRT.h"
 #include "nsISupportsArray.h"
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
-#include "nsXPIDLString.h"
 
 #include "nsITransferable.h" // for mime defs, this is BAD
 
@@ -52,39 +52,21 @@
 #include "nsIDTD.h"
 #include "nsParserCIID.h"
 #include "nsIContentSink.h"
-
-#include "nsString.h"
-#include "nsWidgetsCID.h"
-#include "nsHTMLFormatConverter.h"
 #include "nsPrimitiveHelpers.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIHTMLToTextSink.h"
 
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 
-NS_IMPL_ADDREF(nsHTMLFormatConverter)
-NS_IMPL_RELEASE(nsHTMLFormatConverter)
-NS_IMPL_QUERY_INTERFACE1(nsHTMLFormatConverter, nsIFormatConverter)
-
-
-//-------------------------------------------------------------------------
-//
-// HTMLFormatConverter constructor
-//
-//-------------------------------------------------------------------------
 nsHTMLFormatConverter::nsHTMLFormatConverter()
 {
 }
 
-//-------------------------------------------------------------------------
-//
-// HTMLFormatConverter destructor
-//
-//-------------------------------------------------------------------------
 nsHTMLFormatConverter::~nsHTMLFormatConverter()
 {
 }
 
+NS_IMPL_ISUPPORTS1(nsHTMLFormatConverter, nsIFormatConverter)
 
 //
 // GetInputDataFlavors
@@ -319,10 +301,6 @@ nsHTMLFormatConverter::ConvertFromHTMLToUnicode(const nsAutoString & aFromStr, n
 } // ConvertFromHTMLToUnicode
 
 
-/**
-  * 
-  *
-  */
 NS_IMETHODIMP
 nsHTMLFormatConverter::ConvertFromHTMLToAOLMail(const nsAutoString & aFromStr,
                                                 nsAutoString & aToStr)

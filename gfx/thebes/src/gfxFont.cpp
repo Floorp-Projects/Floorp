@@ -319,11 +319,9 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     PRInt32 advance = 0;
     PRUint32 i;
     const gfxTextRun::CompressedGlyph *charGlyphs = aTextRun->GetCharacterGlyphs();
-    PRUint32 clusterCount = 0;
     for (i = aStart; i < aEnd; ++i) {
         gfxTextRun::CompressedGlyph g = charGlyphs[i];
         if (g.IsClusterStart()) {
-            ++clusterCount;
             if (g.IsSimpleGlyph()) {
                 advance += charGlyphs[i].GetSimpleAdvance();
             } else if (g.IsComplexOrMissing()) {
@@ -352,7 +350,6 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     metrics.mDescent = fontMetrics.maxDescent*appUnitsPerDevUnit;
     metrics.mBoundingBox =
         gfxRect(0, -metrics.mAscent, floatAdvance, metrics.mAscent + metrics.mDescent);
-    metrics.mClusterCount = clusterCount;
     return metrics;
 }
 
@@ -765,10 +762,14 @@ gfxTextRun::SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
     PRUint32 changed = 0;
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
-        NS_ASSERTION(!aBreakBefore[i] ||
-                     mCharacterGlyphs[aStart + i].IsClusterStart(),
-                     "Break suggested inside cluster!");
-        changed |= mCharacterGlyphs[aStart + i].SetCanBreakBefore(aBreakBefore[i]);
+        PRBool canBreak = aBreakBefore[i];
+        if (canBreak && !mCharacterGlyphs[aStart + i].IsClusterStart()) {
+            // This can happen ... there is no guarantee that our linebreaking rules
+            // align with the platform's idea of what constitutes a cluster.
+            NS_WARNING("Break suggested inside cluster!");
+            canBreak = PR_FALSE;
+        }
+        changed |= mCharacterGlyphs[aStart + i].SetCanBreakBefore(canBreak);
     }
     return changed != 0;
 }
@@ -793,53 +794,74 @@ gfxTextRun::ComputeClusterAdvance(PRUint32 aClusterOffset)
     }
 }
 
-gfxTextRun::LigatureData
-gfxTextRun::ComputeLigatureData(PRUint32 aPartOffset, PropertyProvider *aProvider)
+static PRBool
+IsLigatureStart(gfxTextRun::CompressedGlyph aGlyph)
 {
+    return aGlyph.IsClusterStart() && !aGlyph.IsLigatureContinuation();
+}
+
+gfxTextRun::LigatureData
+gfxTextRun::ComputeLigatureData(PRUint32 aPartStart, PRUint32 aPartEnd,
+                                PropertyProvider *aProvider)
+{
+    NS_ASSERTION(aPartStart < aPartEnd, "Computing ligature data for empty range");
+    NS_ASSERTION(aPartEnd <= mCharacterCount, "Character length overflow");
+  
     LigatureData result;
-
-    PRUint32 ligStart = aPartOffset;
     CompressedGlyph *charGlyphs = mCharacterGlyphs;
-    while (charGlyphs[ligStart].IsLigatureContinuation()) {
-        do {
-            NS_ASSERTION(ligStart > 0, "Ligature at the start of the run??");
-            --ligStart;
-        } while (!charGlyphs[ligStart].IsClusterStart());
-    }
-    result.mStartOffset = ligStart;
-    result.mLigatureWidth = ComputeClusterAdvance(ligStart);
-    result.mPartClusterIndex = PR_UINT32_MAX;
 
-    PRUint32 charIndex = ligStart;
-    // Count the number of started clusters we have seen
-    PRUint32 clusterCount = 0;
-    while (charIndex < mCharacterCount) {
-        if (charIndex == aPartOffset) {
-            result.mPartClusterIndex = clusterCount;
-        }
-        if (mCharacterGlyphs[charIndex].IsClusterStart()) {
-            if (charIndex > ligStart &&
-                !mCharacterGlyphs[charIndex].IsLigatureContinuation())
-                break;
-            ++clusterCount;
-        }
-        ++charIndex;
+    PRUint32 i;
+    for (i = aPartStart; !IsLigatureStart(charGlyphs[i]); --i) {
+        NS_ASSERTION(i > 0, "Ligature at the start of the run??");
     }
-    result.mClusterCount = clusterCount;
-    result.mEndOffset = charIndex;
+    result.mLigatureStart = i;
+    for (i = aPartStart + 1; i < mCharacterCount && !IsLigatureStart(charGlyphs[i]); ++i) {
+    }
+    result.mLigatureEnd = i;
+
+    PRInt32 ligatureWidth = ComputeClusterAdvance(result.mLigatureStart);
+    // Count the number of started clusters we have seen
+    PRUint32 totalClusterCount = 0;
+    PRUint32 partClusterIndex = 0;
+    PRUint32 partClusterCount = 0;
+    for (i = result.mLigatureStart; i < result.mLigatureEnd; ++i) {
+        if (charGlyphs[i].IsClusterStart()) {
+            ++totalClusterCount;
+            if (i < aPartStart) {
+                ++partClusterIndex;
+            } else if (i < aPartEnd) {
+                ++partClusterCount;
+            }
+        }
+    }
+    result.mPartAdvance = ligatureWidth*partClusterIndex/totalClusterCount;
+    result.mPartWidth = ligatureWidth*partClusterCount/totalClusterCount;
+    result.mPartIsStartOfLigature = partClusterIndex == 0;
+    result.mPartIsEndOfLigature = partClusterIndex + partClusterCount == totalClusterCount;
 
     if (aProvider && (mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING)) {
-        PropertyProvider::Spacing spacing;
-        aProvider->GetSpacing(ligStart, 1, &spacing);
-        result.mBeforeSpacing = spacing.mBefore;
-        aProvider->GetSpacing(charIndex - 1, 1, &spacing);
-        result.mAfterSpacing = spacing.mAfter;
-    } else {
-        result.mBeforeSpacing = result.mAfterSpacing = 0;
+        gfxFont::Spacing spacing;
+        if (aPartStart == result.mLigatureStart) {
+            aProvider->GetSpacing(aPartStart, 1, &spacing);
+            result.mPartWidth += spacing.mBefore;
+        }
+        if (aPartEnd == result.mLigatureEnd) {
+            aProvider->GetSpacing(aPartEnd - 1, 1, &spacing);
+            result.mPartWidth += spacing.mAfter;
+        }
     }
 
-    NS_ASSERTION(result.mPartClusterIndex < PR_UINT32_MAX, "Didn't find cluster part???");
     return result;
+}
+
+gfxFloat
+gfxTextRun::ComputePartialLigatureWidth(PRUint32 aPartStart, PRUint32 aPartEnd,
+                                        PropertyProvider *aProvider)
+{
+    if (aPartStart >= aPartEnd)
+        return 0;
+    LigatureData data = ComputeLigatureData(aPartStart, aPartEnd, aProvider);
+    return data.mPartWidth;
 }
 
 void
@@ -906,13 +928,17 @@ gfxTextRun::GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
 PRBool
 gfxTextRun::GetAdjustedSpacingArray(PRUint32 aStart, PRUint32 aEnd,
                                     PropertyProvider *aProvider,
+                                    PRUint32 aSpacingStart, PRUint32 aSpacingEnd,
                                     nsTArray<PropertyProvider::Spacing> *aSpacing)
 {
     if (!aProvider || !(mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING))
         return PR_FALSE;
     if (!aSpacing->AppendElements(aEnd - aStart))
         return PR_FALSE;
-    GetAdjustedSpacing(aStart, aEnd, aProvider, aSpacing->Elements());
+    memset(aSpacing->Elements(), 0, sizeof(gfxFont::Spacing)*(aSpacingStart - aStart));
+    GetAdjustedSpacing(aSpacingStart, aSpacingEnd, aProvider,
+                       aSpacing->Elements() + aSpacingStart - aStart);
+    memset(aSpacing->Elements() + aSpacingEnd - aStart, 0, sizeof(gfxFont::Spacing)*(aEnd - aSpacingEnd));
     return PR_TRUE;
 }
 
@@ -924,21 +950,13 @@ gfxTextRun::ShrinkToLigatureBoundaries(PRUint32 *aStart, PRUint32 *aEnd)
   
     CompressedGlyph *charGlyphs = mCharacterGlyphs;
 
-    NS_ASSERTION(charGlyphs[*aStart].IsClusterStart(),
-                 "Started in the middle of a cluster...");
-    NS_ASSERTION(*aEnd == mCharacterCount || charGlyphs[*aEnd].IsClusterStart(),
-                 "Ended in the middle of a cluster...");
-
-    if (charGlyphs[*aStart].IsLigatureContinuation()) {
-        LigatureData data = ComputeLigatureData(*aStart, nsnull);
-        *aStart = PR_MIN(*aEnd, data.mEndOffset);
+    while (*aStart < *aEnd && !IsLigatureStart(charGlyphs[*aStart])) {
+        ++(*aStart);
     }
-    if (*aEnd < mCharacterCount && charGlyphs[*aEnd].IsLigatureContinuation()) {
-        LigatureData data = ComputeLigatureData(*aEnd, nsnull);
-        // We may be ending in the same ligature as we started in, in which case
-        // we want to make *aEnd == *aStart because the range between ligatures
-        // should be empty.
-        *aEnd = PR_MAX(*aStart, data.mStartOffset);
+    if (*aEnd < mCharacterCount) {
+        while (*aEnd > *aStart && !IsLigatureStart(charGlyphs[*aEnd])) {
+            --(*aEnd);
+        }
     }
 }
 
@@ -946,88 +964,57 @@ void
 gfxTextRun::DrawGlyphs(gfxFont *aFont, gfxContext *aContext,
                        PRBool aDrawToPath, gfxPoint *aPt,
                        PRUint32 aStart, PRUint32 aEnd,
-                       PropertyProvider *aProvider)
+                       PropertyProvider *aProvider,
+                       PRUint32 aSpacingStart, PRUint32 aSpacingEnd)
 {
     nsAutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
-    PRBool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider, &spacingBuffer);
+    PRBool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider,
+        aSpacingStart, aSpacingEnd, &spacingBuffer);
     aFont->Draw(this, aStart, aEnd, aContext, aDrawToPath, aPt,
                 haveSpacing ? spacingBuffer.Elements() : nsnull);
 }
 
-gfxFloat
-gfxTextRun::GetPartialLigatureWidth(PRUint32 aStart, PRUint32 aEnd,
-                                    PropertyProvider *aProvider)
+static void
+ClipPartialLigature(gfxTextRun *aTextRun, gfxFloat *aLeft, gfxFloat *aRight,
+                    gfxFloat aXOrigin, gfxTextRun::LigatureData *aLigature)
 {
-    if (aStart >= aEnd)
-        return 0;
-
-    LigatureData data = ComputeLigatureData(aStart, aProvider);
-    PRUint32 clusterCount = 0;
-    PRUint32 i;
-    for (i = aStart; i < aEnd; ++i) {
-        if (mCharacterGlyphs[i].IsClusterStart()) {
-            ++clusterCount;
+    if (!aLigature->mPartIsStartOfLigature) {
+        // need to clip the ligature before the part
+        if (aTextRun->IsRightToLeft()) {
+            *aRight = PR_MIN(*aRight, aXOrigin);
+        } else {
+            *aLeft = PR_MAX(*aLeft, aXOrigin);
         }
     }
-
-    gfxFloat result = gfxFloat(data.mLigatureWidth)*clusterCount/data.mClusterCount;
-    if (aStart == data.mStartOffset) {
-        result += data.mBeforeSpacing;
-    }
-    if (aEnd == data.mEndOffset) {
-        result += data.mAfterSpacing;
-    }
-    return result;
+    if (!aLigature->mPartIsEndOfLigature) {
+        // need to clip the ligature after the part
+        gfxFloat endEdge = aXOrigin + aTextRun->GetDirection()*aLigature->mPartWidth;
+        if (aTextRun->IsRightToLeft()) {
+            *aLeft = PR_MAX(*aLeft, endEdge);
+        } else {
+            *aRight = PR_MIN(*aRight, endEdge);
+        }
+    }    
 }
 
 void
-gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aOffset,
+gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aStart,
+                                PRUint32 aEnd,
                                 const gfxRect *aDirtyRect, gfxPoint *aPt,
                                 PropertyProvider *aProvider)
 {
-    NS_ASSERTION(aDirtyRect, "Cannot draw partial ligatures without a dirty rect");
-
-    if (!mCharacterGlyphs[aOffset].IsClusterStart() || !aDirtyRect)
+    if (aStart >= aEnd)
         return;
+    if (!aDirtyRect) {
+        NS_ERROR("Cannot draw partial ligatures without a dirty rect");
+        return;
+    }
 
     // Draw partial ligature. We hack this by clipping the ligature.
-    LigatureData data = ComputeLigatureData(aOffset, aProvider);
-    // Width of a cluster in the ligature, in appunits
-    gfxFloat clusterWidth = data.mLigatureWidth/data.mClusterCount;
-
-    gfxFloat direction = GetDirection();
+    LigatureData data = ComputeLigatureData(aStart, aEnd, aProvider);
     gfxFloat left = aDirtyRect->X();
     gfxFloat right = aDirtyRect->XMost();
-    // The advance to the start of this cluster in the drawn ligature, in appunits
-    gfxFloat widthBeforeCluster;
-    // Any spacing that should be included after the cluster, in appunits
-    gfxFloat afterSpace;
-    if (data.mStartOffset < aOffset) {
-        // Not the start of the ligature; need to clip the ligature before the current cluster
-        if (IsRightToLeft()) {
-            right = PR_MIN(right, aPt->x);
-        } else {
-            left = PR_MAX(left, aPt->x);
-        }
-        widthBeforeCluster = clusterWidth*data.mPartClusterIndex +
-            data.mBeforeSpacing;
-    } else {
-        // We're drawing the start of the ligature, so our cluster includes any
-        // before-spacing.
-        widthBeforeCluster = 0;
-    }
-    if (aOffset < data.mEndOffset - 1) {
-        // Not the end of the ligature; need to clip the ligature after the current cluster
-        gfxFloat endEdge = aPt->x + clusterWidth;
-        if (IsRightToLeft()) {
-            left = PR_MAX(left, endEdge);
-        } else {
-            right = PR_MIN(right, endEdge);
-        }
-        afterSpace = 0;
-    } else {
-        afterSpace = data.mAfterSpacing;
-    }
+    ClipPartialLigature(this, &left, &right, aPt->x, &data);
 
     aCtx->Save();
     aCtx->NewPath();
@@ -1039,12 +1026,13 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aOffs
                             (right - left)/mAppUnitsPerDevUnit,
                             aDirtyRect->Height()/mAppUnitsPerDevUnit), PR_TRUE);
     aCtx->Clip();
-    gfxPoint pt(aPt->x - direction*widthBeforeCluster, aPt->y);
-    DrawGlyphs(aFont, aCtx, PR_FALSE, &pt, data.mStartOffset,
-               data.mEndOffset, aProvider);
+    gfxFloat direction = GetDirection();
+    gfxPoint pt(aPt->x - direction*data.mPartAdvance, aPt->y);
+    DrawGlyphs(aFont, aCtx, PR_FALSE, &pt, data.mLigatureStart,
+               data.mLigatureEnd, aProvider, aStart, aEnd);
     aCtx->Restore();
 
-    aPt->x += direction*(clusterWidth + afterSpace);
+    aPt->x += direction*data.mPartWidth;
 }
 
 void
@@ -1054,7 +1042,6 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
 {
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
 
-    CompressedGlyph *charGlyphs = mCharacterGlyphs;
     gfxFloat direction = GetDirection();
     gfxPoint pt = aPt;
 
@@ -1063,26 +1050,14 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt,
         gfxFont *font = iter.GetGlyphRun()->mFont;
         PRUint32 start = iter.GetStringStart();
         PRUint32 end = iter.GetStringEnd();
-        NS_ASSERTION(charGlyphs[start].IsClusterStart(),
-                     "Started drawing in the middle of a cluster...");
-        NS_ASSERTION(end == mCharacterCount || charGlyphs[end].IsClusterStart(),
-                     "Ended drawing in the middle of a cluster...");
-
         PRUint32 ligatureRunStart = start;
         PRUint32 ligatureRunEnd = end;
         ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
 
-        PRUint32 i;
-        for (i = start; i < ligatureRunStart; ++i) {
-            DrawPartialLigature(font, aContext, i, aDirtyRect, &pt, aProvider);
-        }
-
+        DrawPartialLigature(font, aContext, start, ligatureRunStart, aDirtyRect, &pt, aProvider);
         DrawGlyphs(font, aContext, PR_FALSE, &pt, ligatureRunStart,
-                   ligatureRunEnd, aProvider);
-
-        for (i = ligatureRunEnd; i < end; ++i) {
-            DrawPartialLigature(font, aContext, i, aDirtyRect, &pt, aProvider);
-        }
+                   ligatureRunEnd, aProvider, ligatureRunStart, ligatureRunEnd);
+        DrawPartialLigature(font, aContext, ligatureRunEnd, end, aDirtyRect, &pt, aProvider);
     }
 
     if (aAdvanceWidth) {
@@ -1097,7 +1072,6 @@ gfxTextRun::DrawToPath(gfxContext *aContext, gfxPoint aPt,
 {
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
 
-    CompressedGlyph *charGlyphs = mCharacterGlyphs;
     gfxFloat direction = GetDirection();
     gfxPoint pt = aPt;
 
@@ -1106,16 +1080,16 @@ gfxTextRun::DrawToPath(gfxContext *aContext, gfxPoint aPt,
         gfxFont *font = iter.GetGlyphRun()->mFont;
         PRUint32 start = iter.GetStringStart();
         PRUint32 end = iter.GetStringEnd();
-        NS_ASSERTION(charGlyphs[start].IsClusterStart(),
-                     "Started drawing path in the middle of a cluster...");
-        NS_ASSERTION(!charGlyphs[start].IsLigatureContinuation(),
+        PRUint32 ligatureRunStart = start;
+        PRUint32 ligatureRunEnd = end;
+        ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
+        NS_ASSERTION(ligatureRunStart == start,
                      "Can't draw path starting inside ligature");
-        NS_ASSERTION(end == mCharacterCount || charGlyphs[end].IsClusterStart(),
-                     "Ended drawing path in the middle of a cluster...");
-        NS_ASSERTION(end == mCharacterCount || !charGlyphs[end].IsLigatureContinuation(),
+        NS_ASSERTION(ligatureRunEnd == end,
                      "Can't end drawing path inside ligature");
 
-        DrawGlyphs(font, aContext, PR_TRUE, &pt, start, end, aProvider);
+        DrawGlyphs(font, aContext, PR_TRUE, &pt, ligatureRunStart, ligatureRunEnd, aProvider,
+            ligatureRunStart, ligatureRunEnd);
     }
 
     if (aAdvanceWidth) {
@@ -1125,13 +1099,15 @@ gfxTextRun::DrawToPath(gfxContext *aContext, gfxPoint aPt,
 
 
 void
-gfxTextRun::AccumulateMetricsForRun(gfxFont *aFont, PRUint32 aStart,
-                                    PRUint32 aEnd,
+gfxTextRun::AccumulateMetricsForRun(gfxFont *aFont,
+                                    PRUint32 aStart, PRUint32 aEnd,
                                     PRBool aTight, PropertyProvider *aProvider,
+                                    PRUint32 aSpacingStart, PRUint32 aSpacingEnd,
                                     Metrics *aMetrics)
 {
     nsAutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
-    PRBool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider, &spacingBuffer);
+    PRBool haveSpacing = GetAdjustedSpacingArray(aStart, aEnd, aProvider,
+        aSpacingStart, aSpacingEnd, &spacingBuffer);
     Metrics metrics = aFont->Measure(this, aStart, aEnd, aTight,
                                      haveSpacing ? spacingBuffer.Elements() : nsnull);
  
@@ -1145,61 +1121,36 @@ gfxTextRun::AccumulateMetricsForRun(gfxFont *aFont, PRUint32 aStart,
 
 void
 gfxTextRun::AccumulatePartialLigatureMetrics(gfxFont *aFont,
-    PRUint32 aOffset, PRBool aTight, PropertyProvider *aProvider, Metrics *aMetrics)
+    PRUint32 aStart, PRUint32 aEnd, PRBool aTight,
+    PropertyProvider *aProvider, Metrics *aMetrics)
 {
-    if (!mCharacterGlyphs[aOffset].IsClusterStart())
+    if (aStart >= aEnd)
         return;
 
     // Measure partial ligature. We hack this by clipping the metrics in the
     // same way we clip the drawing.
-    LigatureData data = ComputeLigatureData(aOffset, aProvider);
+    LigatureData data = ComputeLigatureData(aStart, aEnd, aProvider);
 
     // First measure the complete ligature
     Metrics metrics;
-    AccumulateMetricsForRun(aFont, data.mStartOffset, data.mEndOffset,
-                            aTight, aProvider, &metrics);
-    gfxFloat clusterWidth = data.mLigatureWidth/data.mClusterCount;
+    AccumulateMetricsForRun(aFont, data.mLigatureStart, data.mLigatureEnd,
+                            aTight, aProvider, aStart, aEnd, &metrics);
+    
+    // Clip the bounding box to the ligature part
+    gfxFloat bboxLeft = metrics.mBoundingBox.X();
+    gfxFloat bboxRight = metrics.mBoundingBox.XMost();
+    // Where we are going to start "drawing" relative to our left baseline origin
+    gfxFloat origin = IsRightToLeft() ? metrics.mAdvanceWidth - data.mPartAdvance : 0;
+    ClipPartialLigature(this, &bboxLeft, &bboxRight, origin, &data);
+    metrics.mBoundingBox.pos.x = bboxLeft;
+    metrics.mBoundingBox.size.width = bboxRight - bboxLeft;
 
-    gfxFloat bboxStart;
-    if (IsRightToLeft()) {
-        bboxStart = metrics.mAdvanceWidth - metrics.mBoundingBox.XMost();
-    } else {
-        bboxStart = metrics.mBoundingBox.X();
-    }
-    gfxFloat bboxEnd = bboxStart + metrics.mBoundingBox.size.width;
-
-    gfxFloat widthBeforeCluster;
-    gfxFloat totalWidth = clusterWidth;
-    if (data.mStartOffset < aOffset) {
-        widthBeforeCluster =
-            clusterWidth*data.mPartClusterIndex + data.mBeforeSpacing;
-        // Not the start of the ligature; need to clip the boundingBox start
-        bboxStart = PR_MAX(bboxStart, widthBeforeCluster);
-    } else {
-        // We're at the start of the ligature, so our cluster includes any
-        // before-spacing and no clipping is required on this edge
-        widthBeforeCluster = 0;
-        totalWidth += data.mBeforeSpacing;
-    }
-    if (aOffset < data.mEndOffset) {
-        // Not the end of the ligature; need to clip the boundingBox end
-        gfxFloat endEdge = widthBeforeCluster + clusterWidth;
-        bboxEnd = PR_MIN(bboxEnd, endEdge);
-    } else {
-        totalWidth += data.mAfterSpacing;
-    }
-    bboxStart -= widthBeforeCluster;
-    bboxEnd -= widthBeforeCluster;
-    if (IsRightToLeft()) {
-        metrics.mBoundingBox.pos.x = metrics.mAdvanceWidth - bboxEnd;
-    } else {
-        metrics.mBoundingBox.pos.x = bboxStart;
-    }
-    metrics.mBoundingBox.size.width = bboxEnd - bboxStart;
-
-    // We want metrics for just one cluster of the ligature
-    metrics.mAdvanceWidth = totalWidth;
-    metrics.mClusterCount = 1;
+    // mBoundingBox is now relative to the left baseline origin for the entire
+    // ligature. Shift it left.
+    metrics.mBoundingBox.pos.x -=
+        IsRightToLeft() ? metrics.mAdvanceWidth - (data.mPartAdvance + data.mPartWidth)
+            : data.mPartAdvance;    
+    metrics.mAdvanceWidth = data.mPartWidth;
 
     if (IsRightToLeft()) {
         metrics.CombineWith(*aMetrics);
@@ -1214,28 +1165,20 @@ gfxTextRun::MeasureText(PRUint32 aStart, PRUint32 aLength,
                         PRBool aTightBoundingBox,
                         PropertyProvider *aProvider)
 {
-    CompressedGlyph *charGlyphs = mCharacterGlyphs;
-
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
-    NS_ASSERTION(aStart == mCharacterCount || charGlyphs[aStart].IsClusterStart(),
-                 "MeasureText called, not starting at cluster boundary");
-    NS_ASSERTION(aStart + aLength == mCharacterCount ||
-                 charGlyphs[aStart + aLength].IsClusterStart(),
-                 "MeasureText called, not ending at cluster boundary");
 
     Metrics accumulatedMetrics;
     GlyphRunIterator iter(this, aStart, aLength);
     while (iter.NextRun()) {
         gfxFont *font = iter.GetGlyphRun()->mFont;
-        PRUint32 ligatureRunStart = iter.GetStringStart();
-        PRUint32 ligatureRunEnd = iter.GetStringEnd();
+        PRUint32 start = iter.GetStringStart();
+        PRUint32 end = iter.GetStringEnd();
+        PRUint32 ligatureRunStart = start;
+        PRUint32 ligatureRunEnd = end;
         ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
 
-        PRUint32 i;
-        for (i = iter.GetStringStart(); i < ligatureRunStart; ++i) {
-            AccumulatePartialLigatureMetrics(font, i, aTightBoundingBox,
-                                             aProvider, &accumulatedMetrics);
-        }
+        AccumulatePartialLigatureMetrics(font, start, ligatureRunStart,
+            aTightBoundingBox, aProvider, &accumulatedMetrics);
 
         // XXX This sucks. We have to get glyph extents just so we can detect
         // glyphs outside the font box, even when aTightBoundingBox is false,
@@ -1244,12 +1187,11 @@ gfxTextRun::MeasureText(PRUint32 aStart, PRUint32 aLength,
         // advance widths.
         AccumulateMetricsForRun(font,
             ligatureRunStart, ligatureRunEnd, aTightBoundingBox, aProvider,
+            ligatureRunStart, ligatureRunEnd,
             &accumulatedMetrics);
 
-        for (i = ligatureRunEnd; i < iter.GetStringEnd(); ++i) {
-            AccumulatePartialLigatureMetrics(font, i, aTightBoundingBox,
-                                             aProvider, &accumulatedMetrics);
-        }
+        AccumulatePartialLigatureMetrics(font, ligatureRunEnd, end,
+            aTightBoundingBox, aProvider, &accumulatedMetrics);
     }
 
     return accumulatedMetrics;
@@ -1272,11 +1214,6 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
     aMaxLength = PR_MIN(aMaxLength, mCharacterCount - aStart);
 
     NS_ASSERTION(aStart + aMaxLength <= mCharacterCount, "Substring out of range");
-    NS_ASSERTION(aStart == mCharacterCount || charGlyphs[aStart].IsClusterStart(),
-                 "BreakAndMeasureText called, not starting at cluster boundary");
-    NS_ASSERTION(aStart + aMaxLength == mCharacterCount ||
-                 charGlyphs[aStart + aMaxLength].IsClusterStart(),
-                 "BreakAndMeasureText called, not ending at cluster boundary");
 
     PRUint32 bufferStart = aStart;
     PRUint32 bufferLength = PR_MIN(aMaxLength, MEASUREMENT_BUFFER_SIZE);
@@ -1373,7 +1310,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
                 charAdvance += space->mBefore + space->mAfter;
             }
         } else {
-            charAdvance += GetPartialLigatureWidth(i, i + 1, aProvider);
+            charAdvance += ComputePartialLigatureWidth(i, i + 1, aProvider);
         }
         
         advance += charAdvance;
@@ -1436,18 +1373,13 @@ gfxTextRun::GetAdvanceWidth(PRUint32 aStart, PRUint32 aLength,
     CompressedGlyph *charGlyphs = mCharacterGlyphs;
 
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Substring out of range");
-    NS_ASSERTION(aStart == mCharacterCount || charGlyphs[aStart].IsClusterStart(),
-                 "GetAdvanceWidth called, not starting at cluster boundary");
-    NS_ASSERTION(aStart + aLength == mCharacterCount ||
-                 charGlyphs[aStart + aLength].IsClusterStart(),
-                 "GetAdvanceWidth called, not ending at cluster boundary");
 
     PRUint32 ligatureRunStart = aStart;
     PRUint32 ligatureRunEnd = aStart + aLength;
     ShrinkToLigatureBoundaries(&ligatureRunStart, &ligatureRunEnd);
 
-    gfxFloat result = GetPartialLigatureWidth(aStart, ligatureRunStart, aProvider) +
-                      GetPartialLigatureWidth(ligatureRunEnd, aStart + aLength, aProvider);
+    gfxFloat result = ComputePartialLigatureWidth(aStart, ligatureRunStart, aProvider) +
+                      ComputePartialLigatureWidth(ligatureRunEnd, aStart + aLength, aProvider);
 
     // Account for all remaining spacing here. This is more efficient than
     // processing it along with the glyphs.

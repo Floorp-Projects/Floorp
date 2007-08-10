@@ -110,6 +110,11 @@ menuitem.spell-suggestion {
   min-height: 1.21em;
 }
 
+.menu-iconic-icon {
+  width: 16px;
+  height: 16px;
+}
+
 menu.menu-iconic > .menu-iconic-left,
 menuitem.menuitem-iconic > .menu-iconic-left {
   /* there's only space for 15px - make room for one more */

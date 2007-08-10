@@ -297,6 +297,7 @@ nsresult nsMenuX::AddMenu(nsIMenu * aMenu)
   PRBool enabled;
   aMenu->GetEnabled(&enabled);
   NSString *newCocoaLabelString = MenuHelpersX::CreateTruncatedCocoaLabel(label);
+  [mNativeMenuItem release];
   mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
   [mNativeMenuItem setEnabled:enabled];
   [mMacMenu addItem:mNativeMenuItem];

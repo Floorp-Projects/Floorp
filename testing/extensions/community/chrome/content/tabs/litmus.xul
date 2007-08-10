@@ -44,10 +44,6 @@
 ]>
 
 <overlay id="qa-litmus-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<script type="application/x-javascript" src="chrome://qa/content/MochiKit/MochiKit.js" />
-<script type="application/x-javascript" src="chrome://qa/content/tabs/qa.js" />
-<script type="application/x-javascript" src="chrome://qa/content/tabs/prefs.js" />
-<script type="application/x-javascript" src="chrome://qa/content/tabs/litmus.js" />
 <tabpanel id="qa-tab-litmus" onload="litmus.readStateFromPref()">
 		
 <vbox align="start" pack="start">

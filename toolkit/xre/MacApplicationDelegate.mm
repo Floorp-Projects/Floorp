@@ -273,8 +273,6 @@ static NSWindow* GetCocoaWindowForXULWindow(nsISupports *aXULWindow)
   if (abortQuit)
     return NSTerminateCancel;
 
-  obsServ->NotifyObservers(nsnull, "quit-application-granted", nsnull);
-
   nsCOMPtr<nsIAppStartup> appService =
            do_GetService("@mozilla.org/toolkit/app-startup;1");
   if (appService)

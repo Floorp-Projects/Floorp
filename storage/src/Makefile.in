@@ -66,6 +66,11 @@ CPPSRCS = \
 	mozStorageStatement.cpp \
 	mozStorageStatementWrapper.cpp \
 	mozStorageValueArray.cpp \
+	mozStorageUnicodeFunctions.cpp \
 	$(NULL)
+
+# This is the default value.  If we ever change it when compiling sqlite, we
+# will need to change it here as well.
+DEFINES += -DSQLITE_MAX_LIKE_PATTERN_LENGTH=50000
 
 include $(topsrcdir)/config/rules.mk

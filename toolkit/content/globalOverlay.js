@@ -43,7 +43,6 @@ function canQuitApplication()
       return false;
   }
   catch (ex) { }
-  os.notifyObservers(null, "quit-application-granted", null);
   return true;
 }
 

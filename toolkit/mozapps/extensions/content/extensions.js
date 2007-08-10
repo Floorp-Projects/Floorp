@@ -21,6 +21,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@mozilla.org>
 #   Robert Strong <robert.bugzilla@gmail.com>
+#   Dão Gottwald <dao@design-noir.de>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,6 +61,9 @@ var gUpdatesOnly      = false;
 var gAppID            = "";
 var gPref             = null;
 var gPriorityCount    = 0;
+var gInstallCount     = 0;
+var gPlugins          = null;
+var gPluginsDS        = null;
 
 const PREF_EM_CHECK_COMPATIBILITY           = "extensions.checkCompatibility";
 const PREF_EXTENSIONS_GETMORETHEMESURL      = "extensions.getMoreThemesURL";
@@ -260,6 +264,7 @@ function showView(aView) {
                       ["name", "?name"],
                       ["optionsURL", "?optionsURL"],
                       ["opType", "?opType"],
+                      ["plugin", "?plugin"],
                       ["previewImage", "?previewImage"],
                       ["satisfiesDependencies", "?satisfiesDependencies"],
                       ["type", "?type"],
@@ -460,66 +465,6 @@ function getIDFromResourceURI(aURI)
   return aURI;
 }
 
-function openURL(aURL)
-{
-  const nsILoadGroup = Components.interfaces.nsILoadGroup;
-  var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService(nsIIOService);
-  var uri = ios.newURI(aURL, null, null);
-
-  var protocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"]
-                              .getService(Components.interfaces.nsIExternalProtocolService);
-
-  if (!protocolSvc.isExposedProtocol(uri.scheme)) {
-    // If we're not a browser, use the external protocol service to load the URI.
-    protocolSvc.loadUrl(uri);
-  }
-  else {
-    var loadgroup = Components.classes["@mozilla.org/network/load-group;1"]
-                              .createInstance(nsILoadGroup);
-    var appstartup = Components.classes["@mozilla.org/toolkit/app-startup;1"]
-                               .getService(nsIAppStartup);
-
-    var loadListener = {
-      onStartRequest: function ll_start(aRequest, aContext) {
-        appstartup.enterLastWindowClosingSurvivalArea();
-      },
-      onStopRequest: function ll_stop(aRequest, aContext, aStatusCode) {
-        appstartup.exitLastWindowClosingSurvivalArea();
-      },
-      QueryInterface: function ll_QI(iid) {
-        if (iid.equals(Components.interfaces.nsISupports) ||
-            iid.equals(Components.interfaces.nsIRequestObserver) ||
-            iid.equals(Components.interfaces.nsISupportsWeakReference))
-          return this;
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-      }
-    }
-    loadgroup.groupObserver = loadListener;
-
-    var uriListener = {
-      onStartURIOpen: function(uri) { return false; },
-      doContent: function(ctype, preferred, request, handler) { return false; },
-      isPreferred: function(ctype, desired) { return false; },
-      canHandleContent: function(ctype, preferred, desired) { return false; },
-      loadCookie: null,
-      parentContentListener: null,
-      getInterface: function(iid) {
-        if (iid.equals(Components.interfaces.nsIURIContentListener))
-          return this;
-        if (iid.equals(nsILoadGroup))
-          return loadgroup;
-        throw Components.results.NS_ERROR_NO_INTERFACE;
-      }
-    }
-
-    var channel = ios.newChannelFromURI(uri);
-    var uriLoader = Components.classes["@mozilla.org/uriloader;1"]
-                              .getService(Components.interfaces.nsIURILoader);
-    uriLoader.openURI(channel, true, uriListener);
-  }
-}
-
 function showProgressBar() {
   var progressBox = document.getElementById("progressBox");
   var height = document.defaultView.getComputedStyle(progressBox.parentNode, "")
@@ -554,7 +499,7 @@ function noUpdatesDismiss(aEvent)
 function setRestartMessage(aItem)
 {
   var themeName = aItem.getAttribute("name");
-  var restartMessage = getExtensionString("dssSwitchAfterRestart", 
+  var restartMessage = getExtensionString("dssSwitchAfterRestart",
                                           [getBrandShortName()]);
   var children = gExtensionsView.children;
   for (var i = 0; i < children.length; ++i) {
@@ -568,9 +513,85 @@ function setRestartMessage(aItem)
   aItem.setAttribute("description", restartMessage);
 }
 
+function initPluginsDS()
+{
+  var phs = Components.classes["@mozilla.org/plugin/host;1"]
+                      .getService(Components.interfaces.nsIPluginHost);
+  var plugins = phs.getPluginTags({ });
+  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                      .getService(Components.interfaces.nsIRDFService);
+  var rdfCU = Components.classes["@mozilla.org/rdf/container-utils;1"]
+                        .getService(Components.interfaces.nsIRDFContainerUtils);
+  gPluginsDS = Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"]
+                         .createInstance(Components.interfaces.nsIRDFDataSource);
+  gPlugins = { };
+
+  var rootctr = rdfCU.MakeSeq(gPluginsDS, rdf.GetResource(RDFURI_ITEM_ROOT));
+  var div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  for (var i = 0; i < plugins.length; i++) {
+    var plugin = plugins[i];
+    var pluginNode = rdf.GetResource(PREFIX_ITEM_URI + plugin.filename);
+    var desc = plugin.description.replace(/<br>/g, "<br/> ");
+    try {
+      div.innerHTML = desc;
+      desc = div.textContent;
+    } catch (e) {
+      desc = plugin.description;
+    }
+    rootctr.AppendElement(pluginNode);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "name"),
+                      rdf.GetLiteral(plugin.name),
+                      true);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "addonID"),
+                      rdf.GetLiteral(plugin.filename),
+                      true);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "description"),
+                      rdf.GetLiteral(desc),
+                      true);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "isDisabled"),
+                      rdf.GetLiteral(plugin.disabled ? "true" : "false"),
+                      true);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "blocklisted"),
+                      rdf.GetLiteral(plugin.blocklisted ? "true" : "false"),
+                      true);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "compatible"),
+                      rdf.GetLiteral("true"),
+                      true);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "type"),
+                      rdf.GetIntLiteral(nsIUpdateItem.TYPE_PLUGIN),
+                      true);
+    gPluginsDS.Assert(pluginNode,
+                      rdf.GetResource(PREFIX_NS_EM + "plugin"),
+                      rdf.GetLiteral("true"),
+                      true);
+    gPlugins[plugin.filename] = plugin;
+  }
+}
+
+function togglePluginDisabled(aFilename)
+{
+  var plugin = gPlugins[aFilename];
+  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                      .getService(Components.interfaces.nsIRDFService);
+  plugin.disabled = !plugin.disabled;
+  gPluginsDS.Change(rdf.GetResource(PREFIX_ITEM_URI + plugin.filename),
+                    rdf.GetResource(PREFIX_NS_EM + "isDisabled"),
+                    rdf.GetLiteral(plugin.disabled ? "false" : "true"),
+                    rdf.GetLiteral(plugin.disabled ? "true" : "false"));
+  gExtensionsViewController.onCommandUpdate();
+  gExtensionsView.selectedItem.focus();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Startup, Shutdown
-function Startup() 
+function Startup()
 {
   gExtensionStrings = document.getElementById("extensionsStrings");
   gPref = Components.classes["@mozilla.org/preferences-service;1"]
@@ -582,7 +603,7 @@ function Startup()
     gDefaultTheme = defaultPref.getCharPref(PREF_GENERAL_SKINS_SELECTEDSKIN);
   }
   catch (e) { }
-  
+
   gExtensionsView = document.getElementById("extensionsView");
   gExtensionManager = Components.classes["@mozilla.org/extensions/manager;1"]
                                 .getService(nsIExtensionManager);
@@ -591,8 +612,7 @@ function Startup()
                           .QueryInterface(Components.interfaces.nsIXULRuntime);
   gInSafeMode = appInfo.inSafeMode;
   gAppID = appInfo.ID;
-  updateOptionalViews();
-  
+
   try {
     gCheckCompat = gPref.getBoolPref(PREF_EM_CHECK_COMPATIBILITY);
   } catch(e) { }
@@ -603,14 +623,17 @@ function Startup()
   gExtensionsView.controllers.appendController(gExtensionsViewController);
   gExtensionsView.addEventListener("select", onAddonSelect, false);
 
+  initPluginsDS();
+  gExtensionsView.database.AddDataSource(gPluginsDS);
   gExtensionsView.database.AddDataSource(gExtensionManager.datasource);
   gExtensionsView.setAttribute("ref", RDFURI_ITEM_ROOT);
+  updateOptionalViews();
 
   var viewGroup = document.getElementById("viewGroup");
 
   gExtensionsView.focus();
   gExtensionsViewController.onCommandUpdate(); 
-  
+
   // Now look and see if we're being opened by XPInstall
   gDownloadManager = new XPInstallDownloadManager();
   var os = Components.classes["@mozilla.org/observer-service;1"]
@@ -619,7 +642,7 @@ function Startup()
   os.addObserver(gAddonsMsgObserver, "addons-message-notification", false);
 
   gObserverIndex = gExtensionManager.addUpdateListener(gDownloadManager);
-  
+
   if (!gCheckCompat) {
     var msgText = getExtensionString("disabledCompatMsg");
     var buttonLabel = getExtensionString("enableButtonLabel");
@@ -716,8 +739,8 @@ XPInstallDownloadManager.prototype = {
   _statusFormatKBMB : null,
   _statusFormatKBKB : null,
   _statusFormatMBMB : null,
-  
-  observe: function (aSubject, aTopic, aData) 
+
+  observe: function (aSubject, aTopic, aData)
   {
     switch (aTopic) {
       case "xpinstall-download-started":
@@ -729,7 +752,7 @@ XPInstallDownloadManager.prototype = {
         break;
     }
   },
-  
+
   addDownloads: function (aParams)
   {
     var numXPInstallItems = aParams.GetInt(1);
@@ -745,7 +768,7 @@ XPInstallDownloadManager.prototype = {
         iconURL = isTheme ? "chrome://mozapps/skin/extensions/themeGeneric.png" :
                             "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
       }
-      
+
       var type = isTheme ? nsIUpdateItem.TYPE_THEME : nsIUpdateItem.TYPE_EXTENSION;
       var item = Components.classes["@mozilla.org/updates/item;1"]
                            .createInstance(Components.interfaces.nsIUpdateItem);
@@ -755,12 +778,12 @@ XPInstallDownloadManager.prototype = {
       // Advance the enumerator
       var certName = aParams.GetString(i++);
     }
-    
+
     gExtensionManager.addDownloads(items, items.length, false);
     updateGlobalCommands();
   },
-  
-  getElementForAddon: function(aAddon) 
+
+  getElementForAddon: function(aAddon)
   {
     var element = document.getElementById(PREFIX_ITEM_URI + aAddon.id);
     if (aAddon.id == aAddon.xpiURL)
@@ -778,10 +801,18 @@ XPInstallDownloadManager.prototype = {
       return;
     switch (aState) {
       case nsIXPIProgressDialog.DOWNLOAD_START:
+        gInstallCount++;
+        if (gInstallCount == 1)
+          updateGlobalCommands();
+        break;
       case nsIXPIProgressDialog.DOWNLOAD_DONE:
       case nsIXPIProgressDialog.INSTALL_START:
         break;
       case nsIXPIProgressDialog.INSTALL_DONE:
+        gInstallCount--;
+        if (gInstallCount == 0)
+          updateGlobalCommands();
+
         // From nsInstall.h
         // SUCCESS        = 0
         // REBOOT_NEEDED  = 999
@@ -819,16 +850,17 @@ XPInstallDownloadManager.prototype = {
         break;
     }
   },
-  
+
   _urls: { },
   onProgress: function (aAddon, aValue, aMaxValue)
   {
     var element = this.getElementForAddon(aAddon);
-    if (!element) return;
+    if (!element)
+      return;
     var percent = Math.round((aValue / aMaxValue) * 100);
     if (percent > 1 && !(aAddon.xpiURL in this._urls))
       this._urls[aAddon.xpiURL] = true;
-    
+
     var KBProgress = parseInt(aValue/1024 + .5);
     var KBTotal = parseInt(aMaxValue/1024 + .5);
     var statusPrevious = element.getAttribute("status");
@@ -836,15 +868,12 @@ XPInstallDownloadManager.prototype = {
     if (statusCurrent != statusPrevious)
       element.setAttribute("status", statusCurrent);
   },
-  
+
   _replaceInsert: function ( text, index, value ) 
   {
-    var result = text;
-    var regExp = new RegExp( "#"+index );
-    result = result.replace( regExp, value );
-    return result;
+    return text.replace("#"+index, value);
   },
-  
+
   // aBytes     aTotalKBytes    returns:
   // x, < 1MB   y < 1MB         x of y KB
   // x, < 1MB   y >= 1MB        x KB of y MB
@@ -874,7 +903,7 @@ XPInstallDownloadManager.prototype = {
       // This is an undefined state!
       dump("*** huh?!\n");
     }
-    
+
     return format;  
   },
 
@@ -1369,13 +1398,17 @@ function canWriteToLocation(element)
 }
 
 function updateOptionalViews() {
-  var ds = gExtensionManager.datasource;
+  var ds = gExtensionsView.database;
   var rdfs = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                    .getService(Components.interfaces.nsIRDFService);
   var ctr = Components.classes["@mozilla.org/rdf/container;1"]
                       .createInstance(Components.interfaces.nsIRDFContainer);
-  ctr.Init(gExtensionManager.datasource, rdfs.GetResource(RDFURI_ITEM_ROOT));
+  ctr.Init(ds, rdfs.GetResource(RDFURI_ITEM_ROOT));
   var elements = ctr.GetElements();
+  var showLocales = false;
+  var showPlugins = false;
+  var showUpdates = false;
+  var showInstalls = false;
   while (elements.hasMoreElements()) {
     var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
     if (!showPlugins || !showLocales) {
@@ -1383,10 +1416,19 @@ function updateOptionalViews() {
       var type = ds.GetTarget(e, typeArc, true);
       if (type && type instanceof Components.interfaces.nsIRDFInt) {
         if (type.Value & nsIUpdateItem.TYPE_PLUGIN)
-          var showPlugins = true;
+          showPlugins = true;
         if (type.Value & nsIUpdateItem.TYPE_LOCALE)
-          var showLocales = true;
+          showLocales = true;
       }
+    }
+
+    var stateArc = rdfs.GetResource(PREFIX_NS_EM + "state");
+    var state = ds.GetTarget(e, stateArc, true);
+    if (state) {
+      showInstalls = true;
+      if (state instanceof Components.interfaces.nsIRDFLiteral &&
+          state.Value != "success" && state.Value != "failure")
+        gInstallCount++;
     }
 
     if (!showUpdates) {
@@ -1397,17 +1439,9 @@ function updateOptionalViews() {
         var updateable = ds.GetTarget(e, updateableArc, true);
         updateable = updateable.QueryInterface(Components.interfaces.nsIRDFLiteral);
         if (updateable.Value == "true")
-          var showUpdates = true;
+          showUpdates = true;
       }
     }
-
-    if (showInstalls)
-      continue;
-
-    var stateArc = rdfs.GetResource(PREFIX_NS_EM + "state");
-    var state = ds.GetTarget(e, stateArc, true);
-    if (state)
-      var showInstalls = true;
   }
   document.getElementById("locales-view").hidden = !showLocales;
   document.getElementById("plugins-view").hidden = !showPlugins;
@@ -1419,21 +1453,22 @@ function updateGlobalCommands() {
   var disableInstallFile = false;
   var disableUpdateCheck = true;
   var disableInstallUpdate = true;
-  var disableAppRestart = false;
+  var disableAppRestart = (gInstallCount > 0);
   if (gExtensionsView.hasAttribute("update-operation")) {
     disableInstallFile = true;
+    disableAppRestart = true;
+  }
+  else if (gView == "updates") {
+    disableInstallUpdate = false;
     disableAppRestart = true;
   }
   else {
     var children = gExtensionsView.children;
     for (var i = 0; i < children.length; ++i) {
-      var child = children[i];
-      if (disableUpdateCheck && child.getAttribute("updateable") == "true")
+      if (children[i].getAttribute("updateable") == "true") {
         disableUpdateCheck = false;
-      if (disableInstallUpdate && child.hasAttribute("availableUpdateURL"))
-        disableInstallUpdate = false;
-      if (!disableAppRestart && child.hasAttribute("state") && child.getAttribute("state") != "success")
-        disableAppRestart = true;
+        break;
+      }
     }
   }
   setElementDisabledByID("cmd_checkUpdatesAll", disableUpdateCheck);
@@ -1508,9 +1543,6 @@ function restartApp() {
   if (cancelQuit.data)
     return;
 
-  // Notify all windows that an application quit has been granted.
-  os.notifyObservers(null, "quit-application-granted", null);
-
   Components.classes["@mozilla.org/toolkit/app-startup;1"].getService(nsIAppStartup)
             .quit(nsIAppStartup.eRestart | nsIAppStartup.eAttemptQuit);
 }
@@ -1561,7 +1593,8 @@ var gExtensionsViewController = {
              !selectedItem.opType &&
              selectedItem.getAttribute("optionsURL") != "";
     case "cmd_about":
-      return selectedItem.opType != OP_NEEDS_INSTALL;
+      return selectedItem.opType != OP_NEEDS_INSTALL &&
+             selectedItem.getAttribute("plugin") != "true";
     case "cmd_homepage":
       return selectedItem.getAttribute("homepageURL") != "";
     case "cmd_uninstall":
@@ -1806,6 +1839,11 @@ var gExtensionsViewController = {
 
     cmd_disable: function (aSelectedItem)
     {
+      if (aSelectedItem.getAttribute("plugin") == "true") {
+        togglePluginDisabled(aSelectedItem.getAttribute("addonID"));
+        return;
+      }
+
       var id = getIDFromResourceURI(aSelectedItem.id);
       var dependentItems = gExtensionManager.getDependentItemListForID(id, false, { });
 
@@ -1839,6 +1877,11 @@ var gExtensionsViewController = {
     
     cmd_enable: function (aSelectedItem)
     {
+      if (aSelectedItem.getAttribute("plugin") == "true") {
+        togglePluginDisabled(aSelectedItem.getAttribute("addonID"));
+        return;
+      }
+
       gExtensionManager.enableItem(getIDFromResourceURI(aSelectedItem.id));
       gExtensionsViewController.onCommandUpdate();
       gExtensionsView.selectedItem.focus();

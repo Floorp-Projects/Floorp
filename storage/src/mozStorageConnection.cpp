@@ -52,6 +52,7 @@
 #include "mozIStorageAggregateFunction.h"
 #include "mozIStorageFunction.h"
 
+#include "mozStorageUnicodeFunctions.h"
 #include "mozStorageConnection.h"
 #include "mozStorageService.h"
 #include "mozStorageStatement.h"
@@ -134,6 +135,13 @@ mozStorageConnection::Initialize(nsIFile *aDatabaseFile)
 
     sqlite3_trace (mDBConn, tracefunc, nsnull);
 #endif
+
+    // Hook up i18n functions
+    srv = StorageUnicodeFunctions::RegisterFunctions(mDBConn);
+    if (srv != SQLITE_OK) {
+        mDBConn = nsnull;
+        return ConvertResultCode(srv);
+    }
 
     /* Execute a dummy statement to force the db open, and to verify
      * whether it's valid or not

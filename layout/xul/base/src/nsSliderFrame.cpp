@@ -621,7 +621,7 @@ nsSliderFrame::PageUpDown(nscoord change)
   PRInt32 maxpos = GetMaxPosition(scrollbar);
 
   // get the new position and make sure it is in bounds
-  PRInt32 newpos = curpos - minpos + change * pageIncrement;
+  PRInt32 newpos = curpos + change * pageIncrement;
   if (newpos < minpos || maxpos < minpos)
     newpos = minpos;
   else if (newpos > maxpos)

@@ -376,13 +376,13 @@ gfxWindowsPlatform::FontGetCMapDataProc(nsStringHashKey::KeyType aKey,
 {
     if (aFontEntry->mFontType != TRUETYPE_FONTTYPE) {
         /* bitmap fonts suck -- just claim they support everything
-           between 0x21 and 0xFF.  All the ones on my system do...
+           between 0x20 and 0xFF.  All the ones on my system do...
            If we really wanted to test which characters in this
            range were supported we could just generate a string with
            each codepoint and do GetGlyphIndicies or similar to determine
            what is there.
         */
-        for (PRUint16 ch = 0x21; ch <= 0xFF; ch++)
+        for (PRUint16 ch = 0x20; ch <= 0xFF; ch++)
             aFontEntry->mCharacterMap.set(ch);
         return PL_DHASH_NEXT;
     }

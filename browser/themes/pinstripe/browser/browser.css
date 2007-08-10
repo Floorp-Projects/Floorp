@@ -990,16 +990,11 @@ statusbarpanel#statusbar-display {
 /* ----- GO BUTTON ----- */
 
 #go-button {
-  -moz-appearance: toolbarbutton;
-  height: 24px;
-}
-
-#go-button,
-#go-container {
   -moz-appearance: none;
   background-color: transparent;
   margin: 0;
   padding: 0;
+  height: 24px;
   border-left: 0 !important;
   min-width: 0;
   list-style-image: url("chrome://browser/skin/Go.png");

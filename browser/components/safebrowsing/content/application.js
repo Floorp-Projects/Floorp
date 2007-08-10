@@ -84,6 +84,7 @@ function PROT_Application() {
   // expose some classes
   this.PROT_Controller = PROT_Controller;
   this.PROT_PhishingWarden = PROT_PhishingWarden;
+  this.PROT_MalwareWarden = PROT_MalwareWarden;
 
   // Load data provider pref values
   gDataProvider = new PROT_DataProvider();

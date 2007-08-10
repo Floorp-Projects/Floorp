@@ -5750,7 +5750,7 @@ ExtensionManager.prototype = {
       this._ds = new ExtensionsDataSource(this);
       if (this._ds) {
         this._ds.loadExtensions();
-        this._ptr = gRDF.GetDataSource("rdf:extensions");
+        this._ptr = getContainer(this._ds, this._ds._itemRoot).DataSource;
         gRDF.RegisterDataSource(this._ptr, true);
       }
     }

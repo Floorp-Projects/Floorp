@@ -97,6 +97,7 @@ var qmo = {
 				
 				box.appendChild(fragment);
 			}
+			qaTools.assignLinkHandlers(box);
 		}
 		qaTools.fetchFeed(url, callback);
 	},
@@ -114,6 +115,7 @@ var qmo = {
 				
 				box.appendChild(fragment);
 			}
+			qaTools.assignLinkHandlers(box);
 		}
 		qaTools.fetchFeed(url, callback);
 	},
@@ -132,7 +134,7 @@ var qmo = {
 			
 			a.textContent = text;
 			a.href = links[i].url;
-			a.target = "blank_";
+			qaTools.assignLinkHandler(a);
 		}
 	},
 };

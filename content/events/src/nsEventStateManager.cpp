@@ -602,8 +602,80 @@ nsEventStateManager::Observe(nsISupports *aSubject,
   return NS_OK;
 }
 
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsEventStateManager)
 
-NS_IMPL_ISUPPORTS3(nsEventStateManager, nsIEventStateManager, nsIObserver, nsISupportsWeakReference)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsEventStateManager)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEventStateManager)
+   NS_INTERFACE_MAP_ENTRY(nsIEventStateManager)
+   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsEventStateManager, nsIEventStateManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsEventStateManager, nsIEventStateManager)
+
+PR_STATIC_CALLBACK(PRBool)
+TraverseAccessKeyContent(nsHashKey *aKey, void *aData, void* aClosure)
+{
+  nsCycleCollectionTraversalCallback *cb =
+    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
+  nsIContent *content =
+    static_cast<nsIContent*>(aData);
+
+  cb->NoteXPCOMChild(content);
+
+  return kHashEnumerateNext;
+}
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventStateManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentTargetContent);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLastMouseOverElement);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGestureDownContent);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGestureDownFrameOwner);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLastLeftMouseDownContent);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLastMiddleMouseDownContent);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLastRightMouseDownContent);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mActiveContent);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mHoverContent);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDragOverContent);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mURLTargetContent);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentFocus);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLastFocus);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLastContentFocus);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstBlurEvent);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstFocusEvent);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstMouseOverEventElement);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFirstMouseOutEventElement);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument);
+  if (tmp->mAccessKeys) {
+    tmp->mAccessKeys->Enumerate(TraverseAccessKeyContent, &cb);
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEventStateManager)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCurrentTargetContent);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLastMouseOverElement);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGestureDownContent);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGestureDownFrameOwner);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLastLeftMouseDownContent);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLastMiddleMouseDownContent);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLastRightMouseDownContent);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mActiveContent);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mHoverContent);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDragOverContent);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mURLTargetContent);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCurrentFocus);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLastFocus);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLastContentFocus);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstBlurEvent);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstFocusEvent);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstMouseOverEventElement);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFirstMouseOutEventElement);
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument);
+  delete tmp->mAccessKeys;
+  tmp->mAccessKeys = nsnull;
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 
 NS_IMETHODIMP
 nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
@@ -5073,6 +5145,9 @@ nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell,
       // First, tell the caret which selection to use
       caret->SetCaretDOMSelection(domSelection);
 
+      // Ignore user-modify status of nodes when browsing with caret
+      caret->SetIgnoreUserModify(aVisible);
+
       // In content, we need to set the caret
       // the only other case is edit fields, where they have a different frame selection from the doc's
       // in that case they'll take care of making the caret visible themselves
@@ -5112,12 +5187,19 @@ nsEventStateManager::ResetBrowseWithCaret()
   if (itemType == nsIDocShellTreeItem::typeChrome)
     return;  // Never browse with caret in chrome
 
+  nsIPresShell *presShell = mPresContext->GetPresShell();
+
   nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(shellItem));
   if (editorDocShell) {
     PRBool isEditable;
     editorDocShell->GetEditable(&isEditable);
-    if (isEditable) {
-      return;  // Reset caret visibility only if browsing, not editing
+    if (presShell && isEditable) {
+      nsCOMPtr<nsIHTMLDocument> doc =
+        do_QueryInterface(presShell->GetDocument());
+      if (!doc || doc->GetEditingState() != nsIHTMLDocument::eContentEditable) {
+        return;  // Reset caret visibility only if browsing, not editing except
+                 // for contentEditable
+      }
     }
   }
 
@@ -5126,7 +5208,6 @@ nsEventStateManager::ResetBrowseWithCaret()
 
   mBrowseWithCaret = browseWithCaret;
 
-  nsIPresShell *presShell = mPresContext->GetPresShell();
 
   // Make caret visible or not, depending on what's appropriate
   // Set caret visibility for focused document only

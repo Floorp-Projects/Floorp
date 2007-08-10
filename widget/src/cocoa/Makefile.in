@@ -162,7 +162,7 @@ $(NIB_DEST)/%: $(srcdir)/resources/MainMenu.nib/% $(NIB_DEST)
 RESOURCE = libwidget.rsrc
 RES_SRC = nsMacWidget.r
 
-export:: $(GFX_CPPSRCS) $(srcdir)/../mac/$(RES_SRC)
+export:: $(GFX_CPPSRCS) $(srcdir)/$(RES_SRC)
 	$(INSTALL) $^ .
 
 # for objdir builds, symlink the cursors dir

@@ -136,6 +136,11 @@ menulist > menupopup > menu {
   width: 16px;
 }
 
+.menu-iconic-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .menu-right {
   margin-top: 0px;
   margin-bottom: 0px;

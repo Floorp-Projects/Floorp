@@ -73,13 +73,13 @@ typedef enum JSOpLength {
  */
 #define JOF_BYTE          0       /* single bytecode, no immediates */
 #define JOF_JUMP          1       /* signed 16-bit jump offset immediate */
-#define JOF_CONST         2       /* unsigned 16-bit constant pool index */
+#define JOF_ATOM          2       /* unsigned 16-bit constant pool index */
 #define JOF_UINT16        3       /* unsigned 16-bit immediate operand */
 #define JOF_TABLESWITCH   4       /* table switch */
 #define JOF_LOOKUPSWITCH  5       /* lookup switch */
 #define JOF_QARG          6       /* quickened get/set function argument ops */
 #define JOF_QVAR          7       /* quickened get/set local variable ops */
-#define JOF_INDEXCONST    8       /* uint16 slot index + constant pool index */
+#define JOF_SLOTATOM      8       /* uint16 slot index + constant pool index */
 #define JOF_JUMPX         9       /* signed 32-bit jump offset immediate */
 #define JOF_TABLESWITCHX  10      /* extended (32-bit offset) table switch */
 #define JOF_LOOKUPSWITCHX 11      /* extended (32-bit offset) lookup switch */
@@ -88,7 +88,7 @@ typedef enum JSOpLength {
                                      atom index */
 #define JOF_LOCAL         14      /* block-local operand stack variable */
 #define JOF_OBJECT        15      /* unsigned 16-bit object pool index */
-#define JOF_INDEXOBJECT   16      /* uint16 slot index + object pool index */
+#define JOF_SLOTOBJECT    16      /* uint16 slot index + object pool index */
 #define JOF_REGEXP        17      /* unsigned 16-bit regexp pool index */
 #define JOF_INT8          18      /* int8 immediate operand */
 #define JOF_INT32         19      /* int32 immediate operand */
@@ -187,7 +187,7 @@ typedef enum JSOpLength {
 
 /*
  * A literal is indexed by a per-script atom or object maps. Most scripts
- * have relatively few literals, so the standard JOF_CONST, JOF_OBJECT and
+ * have relatively few literals, so the standard JOF_ATOM, JOF_OBJECT and
  * JOF_REGEXP formats specifies a fixed 16 bits of immediate operand index.
  * A script with more than 64K literals must wrap the bytecode into
  * JSOP_INDEXBASE and JSOP_RESETBASE pair.
