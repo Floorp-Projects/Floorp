@@ -58,3 +58,6 @@ include z-index/reftest.list
  
 # columns/
 include columns/reftest.list
+
+# image-region/
+include image-region/reftest.list
