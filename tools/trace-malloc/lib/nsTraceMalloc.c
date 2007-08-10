@@ -60,6 +60,7 @@
 #include "plhash.h"
 #include "pratom.h"
 #include "prlog.h"
+#include "prlock.h"
 #include "prmon.h"
 #include "prprf.h"
 #include "prenv.h"
@@ -296,28 +297,36 @@ static logfile   default_logfile =
 static logfile   *logfile_list = NULL;
 static logfile   **logfile_tail = &logfile_list;
 static logfile   *logfp = &default_logfile;
-static PRMonitor *tmmon = NULL;
+static PRLock    *tmlock = NULL;
 static char      *sdlogname = NULL; /* filename for shutdown leak log */
 
 /*
  * This enables/disables trace-malloc logging.
  *
  * It is separate from suppress_tracing so that we do not have to pay
- * the performance cost of repeated PR_EnterMonitor/PR_ExitMonitor and
- * PR_IntervalNow calls when trace-malloc is disabled.
+ * the performance cost of repeated PR_GetThreadPrivate calls when
+ * trace-malloc is disabled (which is not as bad as the locking we used
+ * to have).
  */
 static int tracing_enabled = 1;
 
-#define TM_ENTER_MONITOR()                                                    \
+/*
+ * This lock must be held while manipulating the calltree, the
+ * allocations table, the log, or the tmstats.
+ *
+ * Callers should not *enter* the lock without checking suppress_tracing
+ * first; otherwise they risk trying to re-enter on the same thread.
+ */
+#define TM_ENTER_LOCK()                                                       \
     PR_BEGIN_MACRO                                                            \
-        if (tmmon)                                                            \
-            PR_EnterMonitor(tmmon);                                           \
+        if (tmlock)                                                           \
+            PR_Lock(tmlock);                                                  \
     PR_END_MACRO
 
-#define TM_EXIT_MONITOR()                                                     \
+#define TM_EXIT_LOCK()                                                        \
     PR_BEGIN_MACRO                                                            \
-        if (tmmon)                                                            \
-            PR_ExitMonitor(tmmon);                                            \
+        if (tmlock)                                                           \
+            PR_Unlock(tmlock);                                                \
     PR_END_MACRO
 
 /*
@@ -391,7 +400,7 @@ get_tm_thread(void)
     tm_thread *t;
     tm_thread stack_tm_thread;
 
-    if (!tmmon) {
+    if (!tmlock) {
         return &main_thread;
     }
 
@@ -633,7 +642,7 @@ struct callsite {
     callsite    *kids;
 };
 
-/* NB: these counters are incremented and decremented only within tmmon. */
+/* NB: these counters are incremented and decremented only within tmlock. */
 static uint32 library_serial_generator = 0;
 static uint32 method_serial_generator = 0;
 static uint32 callsite_serial_generator = 0;
@@ -830,6 +839,12 @@ static callsite *calltree(int skip)
             break;
     }
 
+    /*
+     * FIXME: We should exit the lock while making some of the below
+     * calls into the system.  This will be fixed in bug 374829.
+     */
+    TM_ENTER_LOCK();
+
     depth = framenum;
     maxstack = (depth > tmstats.calltree_maxstack);
     if (maxstack)
@@ -915,7 +930,7 @@ static callsite *calltree(int skip)
                                             &lfdset_hashallocops, NULL);
                 if (!libraries) {
                     tmstats.btmalloc_failures++;
-                    return NULL;
+                    goto fail;
                 }
             }
             hash = PL_HashString(library);
@@ -938,7 +953,7 @@ static callsite *calltree(int skip)
                 }
                 if (!he) {
                     tmstats.btmalloc_failures++;
-                    return NULL;
+                    goto fail;
                 }
                 le = (lfdset_entry *) he;
             }
@@ -962,7 +977,7 @@ static callsite *calltree(int skip)
                                             &lfdset_hashallocops, NULL);
                 if (!filenames) {
                     tmstats.btmalloc_failures++;
-                    return NULL;
+                    goto fail;
                 }
             }
             hash = PL_HashString(filename);
@@ -984,7 +999,7 @@ static callsite *calltree(int skip)
                 }
                 if (!he) {
                     tmstats.btmalloc_failures++;
-                    return NULL;
+                    goto fail;
                 }
                 le = (lfdset_entry *) he;
             }
@@ -1011,7 +1026,7 @@ static callsite *calltree(int skip)
             demangledname = (char *)malloc(MAX_UNMANGLED_NAME_LEN);
             if (!_SymUnDName(symbol,demangledname,MAX_UNMANGLED_NAME_LEN)) {
                 free(demangledname);
-                return 0;
+                goto fail;
             }
             method = demangledname;
             offset = (char*)pc - (char*)(symbol->Address);
@@ -1032,7 +1047,7 @@ static callsite *calltree(int skip)
                 if (method != noname) {
                     free((void*) method);
                 }
-                return NULL;
+                goto fail;
             }
         }
         hash = PL_HashString(method);
@@ -1058,7 +1073,7 @@ static callsite *calltree(int skip)
                 if (method != noname) {
                     free((void*) method);
                 }
-                return NULL;
+                goto fail;
             }
             le = (lfdset_entry *) he;
         }
@@ -1074,7 +1089,7 @@ static callsite *calltree(int skip)
             site = malloc(sizeof(callsite));
             if (!site) {
                 tmstats.btmalloc_failures++;
-                return NULL;
+                goto fail;
             }
 
             /* Update parent and max-kids-per-parent stats. */
@@ -1117,7 +1132,13 @@ static callsite *calltree(int skip)
         depth++;
     if (depth > tmstats.calltree_maxdepth)
         tmstats.calltree_maxdepth = depth;
+
+    TM_EXIT_LOCK();
     return site;
+
+  fail:
+    TM_EXIT_LOCK();
+    return NULL;
 }
 
 #else /*XP_UNIX*/
@@ -1139,6 +1160,13 @@ static callsite *calltree(void **bp)
     uint32 filename_serial;
     uint32 linenumber;
     const char* filename;
+
+    /*
+     * FIXME bug 391749: We should really lock only the minimum amount
+     * that we need to in this function, because it makes some calls
+     * that could lock in the system's shared library loader.
+     */
+    TM_ENTER_LOCK();
 
     /* Reverse the stack frame list to avoid recursion. */
     bpup = NULL;
@@ -1211,7 +1239,7 @@ static callsite *calltree(void **bp)
         /*
          * dladdr can acquire a lock inside the shared library loader.
          * Another thread might call malloc while holding that lock
-         * (when loading a shared library).  So we have to exit tmmon
+         * (when loading a shared library).  So we have to exit tmlock
          * around this call.  For details, see
          * https://bugzilla.mozilla.org/show_bug.cgi?id=363334#c3
          *
@@ -1220,12 +1248,12 @@ static callsite *calltree(void **bp)
          * and then filling in the descriptions for any that hadn't been
          * described already.  But this is easier for now.
          */
-        TM_EXIT_MONITOR();
+        TM_EXIT_LOCK();
         ok = my_dladdr((void*) pc, &info);
-        TM_ENTER_MONITOR();
+        TM_ENTER_LOCK();
         if (ok < 0) {
             tmstats.dladdr_failures++;
-            return NULL;
+            goto fail;
         }
 
         /*
@@ -1245,7 +1273,7 @@ static callsite *calltree(void **bp)
                                             &lfdset_hashallocops, NULL);
                 if (!libraries) {
                     tmstats.btmalloc_failures++;
-                    return NULL;
+                    goto fail;
                 }
             }
             hash = PL_HashString(library);
@@ -1267,7 +1295,7 @@ static callsite *calltree(void **bp)
                 }
                 if (!he) {
                     tmstats.btmalloc_failures++;
-                    return NULL;
+                    goto fail;
                 }
                 le = (lfdset_entry *) he;
             }
@@ -1291,7 +1319,7 @@ static callsite *calltree(void **bp)
                                             &lfdset_hashallocops, NULL);
                 if (!filenames) {
                     tmstats.btmalloc_failures++;
-                    return NULL;
+                    goto fail;
                 }
             }
             hash = PL_HashString(filename);
@@ -1312,7 +1340,7 @@ static callsite *calltree(void **bp)
                 }
                 if (!he) {
                     tmstats.btmalloc_failures++;
-                    return NULL;
+                    goto fail;
                 }
                 le = (lfdset_entry *) he;
             }
@@ -1342,7 +1370,7 @@ static callsite *calltree(void **bp)
         }
         if (!method) {
             tmstats.btmalloc_failures++;
-            return NULL;
+            goto fail;
         }
 
         /* Emit an 'N' (for New method, 'M' is for malloc!) event if needed. */
@@ -1354,7 +1382,7 @@ static callsite *calltree(void **bp)
             if (!methods) {
                 tmstats.btmalloc_failures++;
                 free((void*) method);
-                return NULL;
+                goto fail;
             }
         }
         hash = PL_HashString(method);
@@ -1376,7 +1404,7 @@ static callsite *calltree(void **bp)
             if (!he) {
                 tmstats.btmalloc_failures++;
                 free((void*) method);
-                return NULL;
+                goto fail;
             }
             le = (lfdset_entry *) he;
         }
@@ -1392,7 +1420,7 @@ static callsite *calltree(void **bp)
             site = __libc_malloc(sizeof(callsite));
             if (!site) {
                 tmstats.btmalloc_failures++;
-                return NULL;
+                goto fail;
             }
 
             /* Update parent and max-kids-per-parent stats. */
@@ -1437,10 +1465,20 @@ static callsite *calltree(void **bp)
         depth++;
     if (depth > tmstats.calltree_maxdepth)
         tmstats.calltree_maxdepth = depth;
+
+    TM_EXIT_LOCK();
+
     return site;
+  fail:
+    TM_EXIT_LOCK();
+    return NULL;
 }
 
 #endif
+
+/*
+ * The caller MUST NOT be holding tmlock when calling backtrace.
+ */
 
 #ifdef XP_WIN32
 
@@ -1449,14 +1487,17 @@ backtrace(tm_thread *t, int skip)
 {
     callsite *site;
 
-    tmstats.backtrace_calls++;
     t->suppress_tracing++;
 
     site = calltree(skip);
+
+    TM_ENTER_LOCK();
+    tmstats.backtrace_calls++;
     if (!site) {
         tmstats.backtrace_failures++;
         /* PR_ASSERT(tmstats.backtrace_failures < 100); */
     }
+    TM_EXIT_LOCK();
     t->suppress_tracing--;
     return site;
 }
@@ -1472,7 +1513,6 @@ backtrace(tm_thread *t, int skip)
     PLHashEntry **hep, *he;
     int i, n;
 
-    tmstats.backtrace_calls++;
     t->suppress_tracing++;
 
     /* Stack walking code adapted from Kipp's "leaky". */
@@ -1496,10 +1536,13 @@ backtrace(tm_thread *t, int skip)
     }
 
     site = calltree(bp);
+    TM_ENTER_LOCK();
+    tmstats.backtrace_calls++;
     if (!site) {
         tmstats.backtrace_failures++;
         PR_ASSERT(tmstats.backtrace_failures < 100);
     }
+    TM_EXIT_LOCK();
     t->suppress_tracing--;
     return site;
 }
@@ -1593,29 +1636,29 @@ malloc(size_t size)
     allocation *alloc;
     tm_thread *t;
 
-    if (!tracing_enabled || !PR_Initialized()) {
+    if (!tracing_enabled || !PR_Initialized() ||
+        (t = get_tm_thread())->suppress_tracing != 0) {
         return __libc_malloc(size);
     }
-
-    t = get_tm_thread();
 
     start = PR_IntervalNow();
     ptr = __libc_malloc(size);
     end = PR_IntervalNow();
-    TM_ENTER_MONITOR();
+
+    site = backtrace(t, 1);
+
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     tmstats.malloc_calls++;
     if (!ptr) {
         tmstats.malloc_failures++;
-    } else if (t->suppress_tracing == 0) {
-        site = backtrace(t, 1);
+    } else {
         if (site)
             log_event5(logfp, TM_EVENT_MALLOC,
                        site->serial, start, end - start,
                        (uint32)NS_PTR_TO_INT32(ptr), size);
         if (get_allocations()) {
-            t->suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
-            t->suppress_tracing--;
             if (he) {
                 alloc = (allocation*) he;
                 alloc->size = size;
@@ -1623,7 +1666,9 @@ malloc(size_t size)
             }
         }
     }
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
+
     return ptr;
 }
 
@@ -1648,21 +1693,23 @@ calloc(size_t count, size_t size)
      *
      * Delaying NSPR calls until NSPR is initialized helps.
      */
-    if (!tracing_enabled || !PR_Initialized()) {
+    if (!tracing_enabled || !PR_Initialized() ||
+        (t = get_tm_thread())->suppress_tracing != 0) {
         return __libc_calloc(count, size);
     }
-
-    t = get_tm_thread();
 
     start = PR_IntervalNow();
     ptr = __libc_calloc(count, size);
     end = PR_IntervalNow();
-    TM_ENTER_MONITOR();
+
+    site = backtrace(t, 1);
+
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     tmstats.calloc_calls++;
     if (!ptr) {
         tmstats.calloc_failures++;
-    } else if (t->suppress_tracing == 0) {
-        site = backtrace(t, 1);
+    } else {
         size *= count;
         if (site) {
             log_event5(logfp, TM_EVENT_CALLOC,
@@ -1670,9 +1717,7 @@ calloc(size_t count, size_t size)
                        (uint32)NS_PTR_TO_INT32(ptr), size);
         }
         if (get_allocations()) {
-            t->suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
-            t->suppress_tracing--;
             if (he) {
                 alloc = (allocation*) he;
                 alloc->size = size;
@@ -1680,7 +1725,8 @@ calloc(size_t count, size_t size)
             }
         }
     }
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
     return ptr;
 }
 
@@ -1697,15 +1743,15 @@ realloc(__ptr_t ptr, size_t size)
     FILE *trackfp = NULL;
     tm_thread *t;
 
-    if (!tracing_enabled || !PR_Initialized()) {
+    if (!tracing_enabled || !PR_Initialized() ||
+        (t = get_tm_thread())->suppress_tracing != 0) {
         return __libc_realloc(ptr, size);
     }
 
-    t = get_tm_thread();
-
-    TM_ENTER_MONITOR();
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     tmstats.realloc_calls++;
-    if (t->suppress_tracing == 0) {
+    if (PR_TRUE) {
         oldptr = ptr;
         oldsite = NULL;
         oldsize = 0;
@@ -1729,21 +1775,24 @@ realloc(__ptr_t ptr, size_t size)
             }
         }
     }
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
 
     start = PR_IntervalNow();
     ptr = __libc_realloc(ptr, size);
     end = PR_IntervalNow();
 
-    TM_ENTER_MONITOR();
+    site = backtrace(t, 1);
+
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     if (!ptr && size) {
         /*
          * When realloc() fails, the original block is not freed or moved, so
          * we'll leave the allocation entry untouched.
          */
         tmstats.realloc_failures++;
-    } else if (t->suppress_tracing == 0) {
-        site = backtrace(t, 1);
+    } else {
         if (site) {
             log_event8(logfp, TM_EVENT_REALLOC,
                        site->serial, start, end - start,
@@ -1752,7 +1801,6 @@ realloc(__ptr_t ptr, size_t size)
                        (uint32)NS_PTR_TO_INT32(oldptr), oldsize);
         }
         if (ptr && allocations) {
-            t->suppress_tracing++;
             if (ptr != oldptr) {
                 /*
                  * If we're reallocating (not merely allocating new space by
@@ -1772,7 +1820,6 @@ realloc(__ptr_t ptr, size_t size)
                 if (!he)
                     he = PL_HashTableAdd(allocations, ptr, site);
             }
-            t->suppress_tracing--;
             if (he) {
                 alloc = (allocation*) he;
                 alloc->size = size;
@@ -1780,7 +1827,8 @@ realloc(__ptr_t ptr, size_t size)
             }
         }
     }
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
     return ptr;
 }
 
@@ -1794,29 +1842,29 @@ valloc(size_t size)
     allocation *alloc;
     tm_thread *t;
 
-    if (!tracing_enabled || !PR_Initialized()) {
+    if (!tracing_enabled || !PR_Initialized() ||
+        (t = get_tm_thread())->suppress_tracing != 0) {
         return __libc_valloc(size);
     }
-
-    t = get_tm_thread();
 
     start = PR_IntervalNow();
     ptr = __libc_valloc(size);
     end = PR_IntervalNow();
-    TM_ENTER_MONITOR();
+
+    site = backtrace(t, 1);
+
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     tmstats.malloc_calls++; /* XXX valloc_calls ? */
     if (!ptr) {
         tmstats.malloc_failures++; /* XXX valloc_failures ? */
-    } else if (t->suppress_tracing == 0) {
-        site = backtrace(t, 1);
+    } else {
         if (site)
             log_event5(logfp, TM_EVENT_MALLOC, /* XXX TM_EVENT_VALLOC? */
                        site->serial, start, end - start,
                        (uint32)NS_PTR_TO_INT32(ptr), size);
         if (get_allocations()) {
-            t->suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
-            t->suppress_tracing--;
             if (he) {
                 alloc = (allocation*) he;
                 alloc->size = size;
@@ -1824,7 +1872,8 @@ valloc(size_t size)
             }
         }
     }
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
     return ptr;
 }
 
@@ -1838,30 +1887,30 @@ memalign(size_t boundary, size_t size)
     allocation *alloc;
     tm_thread *t;
 
-    if (!tracing_enabled || !PR_Initialized()) {
+    if (!tracing_enabled || !PR_Initialized() ||
+        (t = get_tm_thread())->suppress_tracing != 0) {
         return __libc_memalign(boundary, size);
     }
-
-    t = get_tm_thread();
 
     start = PR_IntervalNow();
     ptr = __libc_memalign(boundary, size);
     end = PR_IntervalNow();
-    TM_ENTER_MONITOR();
+
+    site = backtrace(t, 1);
+
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     tmstats.malloc_calls++; /* XXX memalign_calls ? */
     if (!ptr) {
         tmstats.malloc_failures++; /* XXX memalign_failures ? */
-    } else if (t->suppress_tracing == 0) {
-        site = backtrace(t, 1);
+    } else {
         if (site) {
             log_event5(logfp, TM_EVENT_MALLOC, /* XXX TM_EVENT_MEMALIGN? */
                        site->serial, start, end - start,
                        (uint32)NS_PTR_TO_INT32(ptr), size);
         }
         if (get_allocations()) {
-            t->suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
-            t->suppress_tracing--;
             if (he) {
                 alloc = (allocation*) he;
                 alloc->size = size;
@@ -1869,7 +1918,8 @@ memalign(size_t boundary, size_t size)
             }
         }
     }
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
     return ptr;
 }
 
@@ -1893,18 +1943,18 @@ free(__ptr_t ptr)
     PRUint32 start, end;
     tm_thread *t;
 
-    if (!tracing_enabled || !PR_Initialized()) {
+    if (!tracing_enabled || !PR_Initialized() ||
+        (t = get_tm_thread())->suppress_tracing != 0) {
         __libc_free(ptr);
         return;
     }
 
-    t = get_tm_thread();
-
-    TM_ENTER_MONITOR();
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     tmstats.free_calls++;
     if (!ptr) {
         tmstats.null_free_calls++;
-    } else if (t->suppress_tracing == 0) {
+    } else {
         if (get_allocations()) {
             hep = PL_HashTableRawLookup(allocations, hash_pointer(ptr), ptr);
             he = *hep;
@@ -1924,18 +1974,21 @@ free(__ptr_t ptr)
             }
         }
     }
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
 
     start = PR_IntervalNow();
     __libc_free(ptr);
     end = PR_IntervalNow();
 
     if (size != 0) {
-        TM_ENTER_MONITOR();
+        t->suppress_tracing++;
+        TM_ENTER_LOCK();
         log_event5(logfp, TM_EVENT_FREE,
                    serial, start, end - start,
                    (uint32)NS_PTR_TO_INT32(ptr), size);
-        TM_EXIT_MONITOR();
+        TM_EXIT_LOCK();
+        t->suppress_tracing--;
     }
 }
 
@@ -1979,14 +2032,14 @@ PR_IMPLEMENT(void) NS_TraceMallocStartup(int logfd)
 
     /*
      * We only allow one thread until NS_TraceMallocStartup is called.
-     * When it is, we have to initialize tls_index before allocating tmmon
-     * since get_tm_index uses NULL-tmmon to detect tls_index being
+     * When it is, we have to initialize tls_index before allocating tmlock
+     * since get_tm_index uses NULL-tmlock to detect tls_index being
      * uninitialized.
      */
     main_thread.suppress_tracing++;
     TM_CREATE_TLS_INDEX(tls_index);
     TM_SET_TLS_DATA(tls_index, &main_thread);
-    tmmon = PR_NewMonitor();
+    tmlock = PR_NewLock();
     main_thread.suppress_tracing--;
 
 #ifdef XP_WIN32
@@ -2168,10 +2221,10 @@ PR_IMPLEMENT(void) NS_TraceMallocShutdown()
             free((void*) fp);
         }
     }
-    if (tmmon) {
-        PRMonitor *mon = tmmon;
-        tmmon = NULL;
-        PR_DestroyMonitor(mon);
+    if (tmlock) {
+        PRLock *lock = tmlock;
+        tmlock = NULL;
+        PR_DestroyLock(lock);
     }
 #ifdef XP_WIN32
     if (tracing_enabled) {
@@ -2183,38 +2236,51 @@ PR_IMPLEMENT(void) NS_TraceMallocShutdown()
 PR_IMPLEMENT(void) NS_TraceMallocDisable()
 {
     logfile *fp;
+    tm_thread *t = get_tm_thread();
 
-    TM_ENTER_MONITOR();
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     for (fp = logfile_list; fp; fp = fp->next)
         flush_logfile(fp);
     tracing_enabled = 0;
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
 }
 
 PR_IMPLEMENT(void) NS_TraceMallocEnable()
 {
-    TM_ENTER_MONITOR();
+    tm_thread *t = get_tm_thread();
+
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     tracing_enabled = 1;
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
 }
 
 PR_IMPLEMENT(int) NS_TraceMallocChangeLogFD(int fd)
 {
     logfile *oldfp, *fp;
     struct stat sb;
+    tm_thread *t = get_tm_thread();
 
-    TM_ENTER_MONITOR();
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     oldfp = logfp;
     if (oldfp->fd != fd) {
         flush_logfile(oldfp);
         fp = get_logfile(fd);
-        if (!fp)
+        if (!fp) {
+            TM_EXIT_LOCK();
+            t->suppress_tracing--;
             return -2;
+        }
         if (fd >= 0 && fstat(fd, &sb) == 0 && sb.st_size == 0)
             log_header(fd);
         logfp = fp;
     }
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
     return oldfp->fd;
 }
 
@@ -2242,8 +2308,10 @@ PR_IMPLEMENT(void)
 NS_TraceMallocCloseLogFD(int fd)
 {
     logfile *fp;
+    tm_thread *t = get_tm_thread();
 
-    TM_ENTER_MONITOR();
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
 
     fp = get_logfile(fd);
     if (fp) {
@@ -2274,7 +2342,8 @@ NS_TraceMallocCloseLogFD(int fd)
         }
     }
 
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
     close(fd);
 }
 
@@ -2288,8 +2357,10 @@ NS_TraceMallocLogTimestamp(const char *caption)
 #ifdef XP_WIN32
     struct _timeb tb;
 #endif
+    tm_thread *t = get_tm_thread();
 
-    TM_ENTER_MONITOR();
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
 
     fp = logfp;
     log_byte(fp, TM_EVENT_TIMESTAMP);
@@ -2306,7 +2377,8 @@ NS_TraceMallocLogTimestamp(const char *caption)
 #endif
     log_string(fp, caption);
 
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
 }
 
 static PRIntn
@@ -2375,13 +2447,16 @@ PR_IMPLEMENT(void)
 NS_TraceMallocFlushLogfiles()
 {
     logfile *fp;
+    tm_thread *t = get_tm_thread();
 
-    TM_ENTER_MONITOR();
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
 
     for (fp = logfile_list; fp; fp = fp->next)
         flush_logfile(fp);
 
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
 }
 
 PR_IMPLEMENT(void)
@@ -2389,11 +2464,13 @@ NS_TrackAllocation(void* ptr, FILE *ofp)
 {
     PLHashEntry **hep;
     allocation *alloc;
+    tm_thread *t = get_tm_thread();
 
     fprintf(ofp, "Trying to track %p\n", (void*) ptr);
     setlinebuf(ofp);
 
-    TM_ENTER_MONITOR();
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     if (get_allocations()) {
         hep = PL_HashTableRawLookup(allocations, hash_pointer(ptr), ptr);
         alloc = (allocation*) *hep;
@@ -2404,7 +2481,8 @@ NS_TrackAllocation(void* ptr, FILE *ofp)
             fprintf(ofp, "Not tracking %p\n", (void*) ptr);
         }
     }
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
 }
 
 #ifdef XP_WIN32
@@ -2417,32 +2495,31 @@ MallocCallback(void *ptr, size_t size, PRUint32 start, PRUint32 end)
     allocation *alloc;
     tm_thread *t;
 
-    if (!tracing_enabled)
+    if (!tracing_enabled || (t = get_tm_thread())->suppress_tracing != 0)
         return;
 
-    t = get_tm_thread();
+    site = backtrace(t, 4);
 
-    TM_ENTER_MONITOR();
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     tmstats.malloc_calls++;
     if (!ptr) {
         tmstats.malloc_failures++;
-    } else if (t->suppress_tracing == 0) {
-        site = backtrace(t, 4);
+    } else {
         if (site)
             log_event5(logfp, TM_EVENT_MALLOC,
                        site->serial, start, end - start,
                        (uint32)NS_PTR_TO_INT32(ptr), size);
         if (get_allocations()) {
-            t->suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
-            t->suppress_tracing--;
             if (he) {
                 alloc = (allocation*) he;
                 alloc->size = size;
             }
         }
     }
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
 }
 
 PR_IMPLEMENT(void)
@@ -2453,33 +2530,32 @@ CallocCallback(void *ptr, size_t count, size_t size, PRUint32 start, PRUint32 en
     allocation *alloc;
     tm_thread *t;
 
-    if (!tracing_enabled)
+    if (!tracing_enabled || (t = get_tm_thread())->suppress_tracing != 0)
         return;
 
-    t = get_tm_thread();
+    site = backtrace(t, 1);
 
-    TM_ENTER_MONITOR();
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     tmstats.calloc_calls++;
     if (!ptr) {
         tmstats.calloc_failures++;
-    } else if (t->suppress_tracing == 0) {
-        site = backtrace(t, 1);
+    } else {
         size *= count;
         if (site)
             log_event5(logfp, TM_EVENT_CALLOC,
                        site->serial, start, end - start,
                        (uint32)NS_PTR_TO_INT32(ptr), size);
         if (get_allocations()) {
-            t->suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
-            t->suppress_tracing--;
             if (he) {
                 alloc = (allocation*) he;
                 alloc->size = size;
             }
         }
     }
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
 }
 
 PR_IMPLEMENT(void)
@@ -2492,14 +2568,15 @@ ReallocCallback(void * oldptr, void *ptr, size_t size, PRUint32 start, PRUint32 
     allocation *alloc;
     tm_thread *t;
 
-    if (!tracing_enabled)
+    if (!tracing_enabled || (t = get_tm_thread())->suppress_tracing != 0)
         return;
 
-    t = get_tm_thread();
+    site = backtrace(t, 1);
 
-    TM_ENTER_MONITOR();
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     tmstats.realloc_calls++;
-    if (t->suppress_tracing == 0) {
+    if (PR_TRUE) {
         oldsite = NULL;
         oldsize = 0;
         he = NULL;
@@ -2521,8 +2598,7 @@ ReallocCallback(void * oldptr, void *ptr, size_t size, PRUint32 start, PRUint32 
          * When realloc() fails, the original block is not freed or moved, so
          * we'll leave the allocation entry untouched.
          */
-    } else if (t->suppress_tracing == 0) {
-        site = backtrace(t, 1);
+    } else {
         if (site) {
             log_event8(logfp, TM_EVENT_REALLOC,
                        site->serial, start, end - start,
@@ -2531,7 +2607,6 @@ ReallocCallback(void * oldptr, void *ptr, size_t size, PRUint32 start, PRUint32 
                        (uint32)NS_PTR_TO_INT32(oldptr), oldsize);
         }
         if (ptr && allocations) {
-            t->suppress_tracing++;
             if (ptr != oldptr) {
                 /*
                  * If we're reallocating (not allocating new space by passing
@@ -2550,14 +2625,14 @@ ReallocCallback(void * oldptr, void *ptr, size_t size, PRUint32 start, PRUint32 
                 if (!he)
                     he = PL_HashTableAdd(allocations, ptr, site);
             }
-            t->suppress_tracing--;
             if (he) {
                 alloc = (allocation*) he;
                 alloc->size = size;
             }
         }
     }
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
 }
 
 PR_IMPLEMENT(void)
@@ -2568,16 +2643,15 @@ FreeCallback(void * ptr, PRUint32 start, PRUint32 end)
     allocation *alloc;
     tm_thread *t;
 
-    if (!tracing_enabled)
+    if (!tracing_enabled || (t = get_tm_thread())->suppress_tracing != 0)
         return;
 
-    t = get_tm_thread();
-
-    TM_ENTER_MONITOR();
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
     tmstats.free_calls++;
     if (!ptr) {
         tmstats.null_free_calls++;
-    } else if (t->suppress_tracing == 0) {
+    } else {
         if (get_allocations()) {
             hep = PL_HashTableRawLookup(allocations, hash_pointer(ptr), ptr);
             he = *hep;
@@ -2593,7 +2667,8 @@ FreeCallback(void * ptr, PRUint32 start, PRUint32 end)
             }
         }
     }
-    TM_EXIT_MONITOR();
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
 }
 
 #endif /*XP_WIN32*/
