@@ -1241,40 +1241,40 @@ nsAccessibleWrap::get_states(AccessibleStates *aStates)
 
   if (states & nsIAccessibleStates::STATE_INVALID)
     *aStates |= IA2_STATE_INVALID_ENTRY;
-  else if (states & nsIAccessibleStates::STATE_REQUIRED)
+  if (states & nsIAccessibleStates::STATE_REQUIRED)
     *aStates |= IA2_STATE_REQUIRED;
 
   // The following IA2 states are not supported by Gecko
   // IA2_STATE_ARMED
-  // IA2_STATE_MANAGES_DESCENDAN
+  // IA2_STATE_MANAGES_DESCENDANTS
   // IA2_STATE_ICONIFIED
-  // IA2_STATE_INVALID
+  // IA2_STATE_INVALID // This is not a state, it is the absence of a state
 
   if (extraStates & nsIAccessibleStates::EXT_STATE_ACTIVE)
     *aStates |= IA2_STATE_ACTIVE;
-  else if (extraStates & nsIAccessibleStates::EXT_STATE_DEFUNCT)
+  if (extraStates & nsIAccessibleStates::EXT_STATE_DEFUNCT)
     *aStates |= IA2_STATE_DEFUNCT;
-  else if (extraStates & nsIAccessibleStates::EXT_STATE_EDITABLE)
+  if (extraStates & nsIAccessibleStates::EXT_STATE_EDITABLE)
     *aStates |= IA2_STATE_EDITABLE;
-  else if (extraStates & nsIAccessibleStates::EXT_STATE_HORIZONTAL)
+  if (extraStates & nsIAccessibleStates::EXT_STATE_HORIZONTAL)
     *aStates |= IA2_STATE_HORIZONTAL;
-  else if (extraStates & nsIAccessibleStates::EXT_STATE_MODAL)
+  if (extraStates & nsIAccessibleStates::EXT_STATE_MODAL)
     *aStates |= IA2_STATE_MODAL;
-  else if (extraStates & nsIAccessibleStates::EXT_STATE_MULTI_LINE)
+  if (extraStates & nsIAccessibleStates::EXT_STATE_MULTI_LINE)
     *aStates |= IA2_STATE_MULTI_LINE;
-  else if (extraStates & nsIAccessibleStates::EXT_STATE_OPAQUE)
+  if (extraStates & nsIAccessibleStates::EXT_STATE_OPAQUE)
     *aStates |= IA2_STATE_OPAQUE;
-  else if (extraStates & nsIAccessibleStates::EXT_STATE_SELECTABLE_TEXT)
+  if (extraStates & nsIAccessibleStates::EXT_STATE_SELECTABLE_TEXT)
     *aStates |= IA2_STATE_SELECTABLE_TEXT;
-  else if (extraStates & nsIAccessibleStates::EXT_STATE_SINGLE_LINE)
+  if (extraStates & nsIAccessibleStates::EXT_STATE_SINGLE_LINE)
     *aStates |= IA2_STATE_SINGLE_LINE;
-  else if (extraStates & nsIAccessibleStates::EXT_STATE_STALE)
+  if (extraStates & nsIAccessibleStates::EXT_STATE_STALE)
     *aStates |= IA2_STATE_STALE;
-  else if (extraStates & nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION)
+  if (extraStates & nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION)
     *aStates |= IA2_STATE_SUPPORTS_AUTOCOMPLETION;
-  else if (extraStates & nsIAccessibleStates::EXT_STATE_TRANSIENT)
+  if (extraStates & nsIAccessibleStates::EXT_STATE_TRANSIENT)
     *aStates |= IA2_STATE_TRANSIENT;
-  else if (extraStates & nsIAccessibleStates::EXT_STATE_VERTICAL)
+  if (extraStates & nsIAccessibleStates::EXT_STATE_VERTICAL)
     *aStates |= IA2_STATE_VERTICAL;
 
   return S_OK;
@@ -1295,6 +1295,7 @@ nsAccessibleWrap::get_localizedExtendedRole(BSTR *localizedExtendedRole)
 STDMETHODIMP
 nsAccessibleWrap::get_nExtendedStates(long *nExtendedStates)
 {
+  *nExtendedStates = 0;
   return E_NOTIMPL;
 }
 
@@ -1303,6 +1304,7 @@ nsAccessibleWrap::get_extendedStates(long maxExtendedStates,
                                      BSTR **extendedStates,
                                      long *nExtendedStates)
 {
+  *nExtendedStates = 0;
   return E_NOTIMPL;
 }
 
@@ -1311,6 +1313,7 @@ nsAccessibleWrap::get_localizedExtendedStates(long maxLocalizedExtendedStates,
                                               BSTR **localizedExtendedStates,
                                               long *nLocalizedExtendedStates)
 {
+  *nLocalizedExtendedStates = 0;
   return E_NOTIMPL;
 }
 
