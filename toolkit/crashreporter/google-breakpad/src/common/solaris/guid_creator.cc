@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2007, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,40 +27,58 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// string_conversion.h: Conversion between different UTF-8/16/32 encodings.
+// Author: Alfred Peng
 
-#ifndef COMMON_STRING_CONVERSION_H__
-#define COMMON_STRING_CONVERSION_H__
+#include <cassert>
+#include <ctime>
 
-#include <string>
-#include <vector>
-#include "google_breakpad/common/breakpad_types.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-namespace google_breakpad {
-  
-using std::vector;
+#include "common/solaris/guid_creator.h"
 
-// Convert |in| to UTF-16 into |out|.  Use platform byte ordering.  If the
-// conversion failed, |out| will be zero length.
-void UTF8ToUTF16(const char *in, vector<u_int16_t> *out);
+//
+// GUIDGenerator
+//
+// This class is used to generate random GUID.
+// Currently use random number to generate a GUID. This should be OK since
+// we don't expect crash to happen very offen.
+//
+class GUIDGenerator {
+ public:
+  GUIDGenerator() {
+    srandom(time(NULL));
+  }
 
-// Convert at least one character (up to a maximum of |in_length|) from |in|
-// to UTF-16 into |out|.  Return the number of characters consumed from |in|.
-// Any unused characters in |out| will be initialized to 0.  No memory will
-// be allocated by this routine.
-int UTF8ToUTF16Char(const char *in, int in_length, u_int16_t out[2]);
+  bool CreateGUID(GUID *guid) const {
+    guid->data1 = random();
+    guid->data2 = (u_int16_t)(random());
+    guid->data3 = (u_int16_t)(random());
+    *reinterpret_cast<u_int32_t*>(&guid->data4[0]) = random();
+    *reinterpret_cast<u_int32_t*>(&guid->data4[4]) = random();
+    return true;
+  }
+};
 
-// Convert |in| to UTF-16 into |out|.  Use platform byte ordering.  If the
-// conversion failed, |out| will be zero length.
-void UTF32ToUTF16(const wchar_t *in, vector<u_int16_t> *out);
+// Guid generator.
+const GUIDGenerator kGuidGenerator;
 
-// Convert |in| to UTF-16 into |out|.  Any unused characters in |out| will be
-// initialized to 0.  No memory will be allocated by this routine.
-void UTF32ToUTF16Char(wchar_t in, u_int16_t out[2]);
+bool CreateGUID(GUID *guid) {
+  return kGuidGenerator.CreateGUID(guid);
+};
 
-// Convert |in| to UTF-8.  If |swap| is true, swap bytes before converting.
-std::string UTF16ToUTF8(const vector<u_int16_t> &in, bool swap);
+// Parse guid to string.
+bool GUIDToString(const GUID *guid, char *buf, int buf_len) {
+  // Should allow more space the the max length of GUID.
+  assert(buf_len > kGUIDStringLength);
+  int num = snprintf(buf, buf_len, kGUIDFormatString,
+                     guid->data1, guid->data2, guid->data3,
+                     *reinterpret_cast<const u_int32_t *>(&(guid->data4[0])),
+                     *reinterpret_cast<const u_int32_t *>(&(guid->data4[4])));
+  if (num != kGUIDStringLength)
+    return false;
 
-}  // namespace google_breakpad
-
-#endif  // COMMON_STRING_CONVERSION_H__
+  buf[num] = '\0';
+  return true;
+}

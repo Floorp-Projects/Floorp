@@ -44,6 +44,13 @@
 
 #include <sys/types.h>
 
+#if defined(__SUNPRO_CC) || (defined(__GNUC__) && defined(__sun__))
+typedef uint8_t u_int8_t;
+typedef uint16_t u_int16_t;
+typedef uint32_t u_int32_t;
+typedef uint64_t u_int64_t;
+#endif
+
 #else  /* !_WIN32 */
 
 #include <WTypes.h>
