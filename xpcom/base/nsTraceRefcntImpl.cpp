@@ -48,9 +48,11 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include <math.h>
+#include "nsStackWalk.h"
 
 #if defined(_WIN32)
 #include <windows.h>
+#include "nsStackFrameWin.h" // XXX LoadLibrarySymbols no longer belongs here
 #endif
 
 #ifdef HAVE_LIBDL
@@ -825,33 +827,21 @@ static void InitTraceLog(void)
 
 #endif
 
-#if defined(_WIN32) && defined(_M_IX86) && !defined(WINCE) // WIN32 x86 stack walking code
-#include "nsStackFrameWin.h"
-NS_COM void
-nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
+extern "C" {
+
+PR_STATIC_CALLBACK(void) PrintStackFrame(char *aFrame, void *aClosure)
 {
-  DumpStackToFile(aStream);
+  FILE *stream = (FILE*)aClosure;
+  fprintf(stream, aFrame);
 }
 
-// WIN32 x86 stack walking code
-// i386 or PPC Linux stackwalking code or Solaris
-#elif (defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC) || defined(__x86_64__))) || (defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386)))
-#include "nsStackFrameUnix.h"
-NS_COM void
-nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
-{
-  DumpStackToFile(aStream);
 }
-
-#else // unsupported platform.
 
 NS_COM void
 nsTraceRefcntImpl::WalkTheStack(FILE* aStream)
 {
-	fprintf(aStream, "write me, dammit!\n");
+  NS_StackWalk(PrintStackFrame, 2, aStream);
 }
-
-#endif
 
 //----------------------------------------------------------------------
 

@@ -39,8 +39,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nscore.h"
-#include "windows.h"
-#include "stdio.h"
+#include <windows.h>
+#include <stdio.h>
 #include "nsStackFrameWin.h"
 
 // Define these as static pointers so that we can load the DLL on the
@@ -122,8 +122,8 @@ HANDLE hStackWalkMutex;
 PR_END_EXTERN_C
 
 // Routine to print an error message to standard error.
-// Will also print to an additional stream if one is supplied.
-void PrintError(char *prefix, FILE *out)
+// Will also call callback with error, if data supplied.
+void PrintError(char *prefix, WalkStackData *data)
 {
     LPVOID lpMsgBuf;
     DWORD lastErr = GetLastError();
@@ -136,9 +136,11 @@ void PrintError(char *prefix, FILE *out)
       0,
       NULL
     );
-    fprintf(stderr, "### ERROR: %s: %s", prefix, lpMsgBuf);
-    if (out)
-        fprintf(out, "### ERROR: %s: %s\n", prefix, lpMsgBuf);
+    char buf[512];
+    _snprintf(buf, sizeof(buf), "### ERROR: %s: %s", prefix, lpMsgBuf);
+    fputs(buf, stderr);
+    if (data)
+        (*data->callback)(buf, data->closure);
     LocalFree( lpMsgBuf );
 }
 
@@ -443,16 +445,17 @@ EnsureSymInitialized()
  * whose in memory address doesn't match its in-file address.
  */
 
-void
-DumpStackToFile(FILE* aStream)
+EXPORT_XPCOM_API(nsresult)
+NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
+             void *aClosure)
 {
     HANDLE myProcess = ::GetCurrentProcess();
     HANDLE myThread, walkerThread;
     DWORD walkerReturn;
-    struct DumpStackToFileData data;
+    struct WalkStackData data;
 
     if (!EnsureSymInitialized())
-        return;
+        return NS_ERROR_FAILURE;
 
     // Have to duplicate handle to get a real handle.
     ::DuplicateHandle(
@@ -463,43 +466,45 @@ DumpStackToFile(FILE* aStream)
       THREAD_ALL_ACCESS, FALSE, 0
     );
 
-    data.stream = aStream;
+    data.callback = aCallback;
+    data.skipFrames = aSkipFrames;
+    data.closure = aClosure;
     data.thread = myThread;
     data.process = myProcess;
-    walkerThread = ::CreateThread( NULL, 0, DumpStackToFileThread, (LPVOID) &data, 0, NULL ) ;
+    walkerThread = ::CreateThread( NULL, 0, WalkStackThread, (LPVOID) &data, 0, NULL ) ;
     if (walkerThread) {
         walkerReturn = ::WaitForSingleObject(walkerThread, 2000); // no timeout is never a good idea
         if (walkerReturn != WAIT_OBJECT_0) {
-            PrintError("ThreadWait", aStream);
+            PrintError("ThreadWait", &data);
         }
         CloseHandle(myThread);
     }
     else {
-        PrintError("ThreadCreate", aStream);
+        PrintError("ThreadCreate", &data);
     }
-    return;
+    return NS_OK;
 }
 
 DWORD WINAPI
-DumpStackToFileThread(LPVOID lpdata)
+WalkStackThread(LPVOID lpdata)
 {
-    struct DumpStackToFileData *data = (DumpStackToFileData *)lpdata;
+    struct WalkStackData *data = (WalkStackData *)lpdata;
     DWORD ret ;
 
     // Suspend the calling thread, dump his stack, and then resume him.
     // He's currently waiting for us to finish so now should be a good time.
     ret = ::SuspendThread( data->thread );
     if (ret == -1) {
-        PrintError("ThreadSuspend", data->stream);
+        PrintError("ThreadSuspend", data);
     }
     else {
         if (_StackWalk64)
-            DumpStackToFileMain64(data);
+            WalkStackMain64(data);
         else
-            DumpStackToFileMain(data);
+            WalkStackMain(data);
         ret = ::ResumeThread(data->thread);
         if (ret == -1) {
-            PrintError("ThreadResume", data->stream);
+            PrintError("ThreadResume", data);
         }
     }
 
@@ -507,7 +512,7 @@ DumpStackToFileThread(LPVOID lpdata)
 }
 
 void
-DumpStackToFileMain64(struct DumpStackToFileData* data)
+WalkStackMain64(struct WalkStackData* data)
 {
 #ifdef USING_WXP_VERSION
     // Get the context information for the thread. That way we will
@@ -516,17 +521,17 @@ DumpStackToFileMain64(struct DumpStackToFileData* data)
     CONTEXT context;
     HANDLE myProcess = data->process;
     HANDLE myThread = data->thread;
-    FILE* aStream = data->stream;
+    char buf[512];
     DWORD64 addr;
     STACKFRAME64 frame64;
-    int skip = 6; // skip our own stack walking frames
+    int skip = 3 + data->skipFrames; // skip our own stack walking frames
     BOOL ok;
 
     // Get a context for the specified thread.
     memset(&context, 0, sizeof(CONTEXT));
     context.ContextFlags = CONTEXT_FULL;
     if (!GetThreadContext(myThread, &context)) {
-        PrintError("GetThreadContext", aStream);
+        PrintError("GetThreadContext", data);
         return;
     }
 
@@ -545,7 +550,7 @@ DumpStackToFileMain64(struct DumpStackToFileData* data)
     frame64.AddrStack.Offset = context.SP;
     frame64.AddrFrame.Offset = context.RsBSP;
 #else
-    fprintf(aStream, "Unknown platform. No stack walking.");
+    PrintError("Unknown platform. No stack walking.", data);
     return;
 #endif
     frame64.AddrPC.Mode      = AddrModeFlat;
@@ -586,7 +591,7 @@ DumpStackToFileMain64(struct DumpStackToFileData* data)
             if (ok)
                 addr = frame64.AddrPC.Offset;
             else
-                PrintError("WalkStack64", aStream);
+                PrintError("WalkStack64", data);
 
             if (!ok || (addr == 0)) {
                 ReleaseMutex(hStackWalkMutex);  // release our lock
@@ -621,16 +626,17 @@ DumpStackToFileMain64(struct DumpStackToFileData* data)
             ReleaseMutex(hStackWalkMutex);
 
             if (ok)
-                fprintf(aStream, "%s!%s+0x%016X\n", modInfo.ModuleName, pSymbol->Name, displacement);
+                _snprintf(buf, sizeof(buf), "%s!%s+0x%016X\n", modInfo.ModuleName, pSymbol->Name, displacement);
             else
-                fprintf(aStream, "0x%016X\n", addr);
+                _snprintf(buf, sizeof(buf), "0x%016X\n", addr);
+            (*data->callback)(buf, data->closure);
 
             // Stop walking when we get to kernel32.
             if (strcmp(modInfo.ModuleName, "kernel32") == 0)
                 break;
         }
         else {
-            PrintError("LockError64", aStream);
+            PrintError("LockError64", data);
         } 
     }
     return;
@@ -639,7 +645,7 @@ DumpStackToFileMain64(struct DumpStackToFileData* data)
 
 
 void
-DumpStackToFileMain(struct DumpStackToFileData* data)
+WalkStackMain(struct WalkStackData* data)
 {
     // Get the context information for the thread. That way we will
     // know where our sp, fp, pc, etc. are and can fill in the
@@ -647,17 +653,17 @@ DumpStackToFileMain(struct DumpStackToFileData* data)
     CONTEXT context;
     HANDLE myProcess = data->process;
     HANDLE myThread = data->thread;
-    FILE* aStream = data->stream;
+    char buf[512];
     DWORD addr;
     STACKFRAME frame;
-    int skip = 2;  // skip our own stack walking frames
+    int skip = data->skipFrames; // skip our own stack walking frames
     BOOL ok;
 
     // Get a context for the specified thread.
     memset(&context, 0, sizeof(CONTEXT));
     context.ContextFlags = CONTEXT_FULL;
     if (!GetThreadContext(myThread, &context)) {
-        PrintError("GetThreadContext", aStream);
+        PrintError("GetThreadContext", data);
         return;
     }
 
@@ -671,7 +677,7 @@ DumpStackToFileMain(struct DumpStackToFileData* data)
     frame.AddrFrame.Offset = context.Ebp;
     frame.AddrFrame.Mode   = AddrModeFlat;
 #else
-    fprintf(aStream, "Unknown platform. No stack walking.");
+    PrintError("Unknown platform. No stack walking.", data);
     return;
 #endif
 
@@ -700,7 +706,7 @@ DumpStackToFileMain(struct DumpStackToFileData* data)
             if (ok)
                 addr = frame.AddrPC.Offset;
             else
-                PrintError("WalkStack", aStream);
+                PrintError("WalkStack", data);
 
             if (!ok || (addr == 0)) {
                 ReleaseMutex(hStackWalkMutex);  // release our lock
@@ -750,9 +756,10 @@ DumpStackToFileMain(struct DumpStackToFileData* data)
             ReleaseMutex(hStackWalkMutex);
 
             if (ok)
-                fprintf(aStream, "%s!%s+0x%08X\n", modInfo.ImageName, pSymbol->Name, displacement);
+                _snprintf(buf, sizeof(buf), "%s!%s+0x%08X\n", modInfo.ImageName, pSymbol->Name, displacement);
             else
-                fprintf(aStream, "0x%08X\n", (DWORD) addr);
+                _snprintf(buf, sizeof(buf), "0x%08X\n", (DWORD) addr);
+            (*data->callback)(buf, data->closure);
 
             // Stop walking when we get to kernel32.dll.
             if (strcmp(modInfo.ImageName, "kernel32.dll") == 0)
@@ -760,7 +767,7 @@ DumpStackToFileMain(struct DumpStackToFileData* data)
 
         }
         else {
-            PrintError("LockError", aStream);
+            PrintError("LockError", data);
         }
         
     }
