@@ -89,7 +89,7 @@ class nsAccessibleWrap : public nsAccessible
               role == nsIAccessibleRole::ROLE_TOGGLE_BUTTON ||
               role == nsIAccessibleRole::ROLE_SPLITBUTTON ||
               role == nsIAccessibleRole::ROLE_ENTRY ||
-              role == nsIAccessibleRole::ROLE_IMAGE);
+              role == nsIAccessibleRole::ROLE_GRAPHIC);
     }
     
     // ignored means that the accessible might still have children, but is not displayed
