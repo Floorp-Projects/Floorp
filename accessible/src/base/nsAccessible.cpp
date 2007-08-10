@@ -2168,7 +2168,7 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 
           if (role == nsIAccessibleRole::ROLE_OUTLINE)
             break;
-          if (role == nsIAccessibleRole::ROLE_OUTLINEITEM)
+          if (role == nsIAccessibleRole::ROLE_GROUPING)
             ++ groupLevel;
 
           parent->GetParent(getter_AddRefs(nextParent));
