@@ -42,6 +42,7 @@
 #include <math.h>
 #include "nscore.h"
 #include <stdio.h>
+#include "plstr.h"
 
 // On glibc 2.1, the Dl_info api defined in <dlfcn.h> is only exposed
 // if __USE_GNU is defined.  I suppose its some kind of standards
@@ -91,7 +92,6 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
              void *aClosure)
 {
   // Stack walking code courtesy Kipp's "leaky".
-  char buf[512];
 
   // Get the frame pointer
   void **bp;
@@ -110,39 +110,64 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
   for ( ; (void**)*bp > bp; bp = (void**)*bp) {
     void *pc = *(bp+1);
     if (--skip < 0) {
-      Dl_info info;
-      int ok = dladdr(pc, &info);
-      if (!ok) {
-        snprintf(buf, sizeof(buf), "UNKNOWN %p\n", pc);
-        (*aCallback)(buf, aClosure);
-        continue;
-      }
-
-      PRUint32 foff = (char*)pc - (char*)info.dli_fbase;
-
-      const char * symbol = info.dli_sname;
-      int len;
-      if (!symbol || !(len = strlen(symbol))) {
-        snprintf(buf, sizeof(buf), "UNKNOWN [%s +0x%08X]\n",
-                                   info.dli_fname, foff);
-        (*aCallback)(buf, aClosure);
-        continue;
-      }
-
-      char demangled[4096] = "\0";
-
-      DemangleSymbol(symbol, demangled, sizeof(demangled));
-
-      if (strlen(demangled)) {
-        symbol = demangled;
-        len = strlen(symbol);
-      }
-
-      PRUint32 off = (char*)pc - (char*)info.dli_saddr;
-      snprintf(buf, sizeof(buf), "%s+0x%08X [%s +0x%08X]\n",
-                                 symbol, off, info.dli_fname, foff);
-      (*aCallback)(buf, aClosure);
+      (*aCallback)(pc, aClosure);
     }
+  }
+  return NS_OK;
+}
+
+EXPORT_XPCOM_API(nsresult)
+NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
+{
+  aDetails->library[0] = '\0';
+  aDetails->loffset = 0;
+  aDetails->filename[0] = '\0';
+  aDetails->lineno = 0;
+  aDetails->function[0] = '\0';
+  aDetails->foffset = 0;
+
+  Dl_info info;
+  int ok = dladdr(aPC, &info);
+  if (!ok) {
+    return NS_OK;
+  }
+
+  PL_strncpyz(aDetails->library, info.dli_fname, sizeof(aDetails->library));
+  aDetails->loffset = (char*)aPC - (char*)info.dli_fbase;
+
+  const char * symbol = info.dli_sname;
+  int len;
+  if (!symbol || !(len = strlen(symbol))) {
+    return NS_OK;
+  }
+
+  char demangled[4096] = "\0";
+
+  DemangleSymbol(symbol, demangled, sizeof(demangled));
+
+  if (strlen(demangled)) {
+    symbol = demangled;
+    len = strlen(symbol);
+  }
+
+  PL_strncpyz(aDetails->function, symbol, sizeof(aDetails->function));
+  aDetails->foffset = (char*)aPC - (char*)info.dli_saddr;
+  return NS_OK;
+}
+
+EXPORT_XPCOM_API(nsresult)
+NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
+                            char *aBuffer, PRUint32 aBufferSize)
+{
+  if (!aDetails->library[0]) {
+    snprintf(aBuffer, aBufferSize, "UNKNOWN %p\n", aPC);
+  } else if (!aDetails->function[0]) {
+    snprintf(aBuffer, aBufferSize, "UNKNOWN [%s +0x%08lX]\n",
+                                   aDetails->library, aDetails->loffset);
+  } else {
+    snprintf(aBuffer, aBufferSize, "%s+0x%08lX [%s +0x%08lX]\n",
+                                   aDetails->function, aDetails->foffset,
+                                   aDetails->library, aDetails->loffset);
   }
   return NS_OK;
 }
@@ -253,33 +278,10 @@ load_address(void * pc, void * arg )
     if (ptr->next) {
         mutex_unlock(&lock);
     } else {
-        char buffer[4096], dembuff[4096];
-        Dl_info info;
-        const char *func = "??", *lib = "??";
+        (*args.callback)(pc, args.closure);
 
         ptr->next = newbucket(pc);
         mutex_unlock(&lock);
- 
-        if (dladdr(pc, & info)) {
-            if (info.dli_fname)
-                lib =  info.dli_fname;
-            if (info.dli_sname)
-                func = info.dli_sname;
-        }
- 
-#ifdef __GNUC__
-        DemangleSymbol(func, dembuff, sizeof(dembuff));
-#else
-        if (!demf || demf(func, dembuff, sizeof (dembuff)))
-            dembuff[0] = 0;
-#endif /*__GNUC__*/
-        if (strlen(dembuff)) {
-            func = dembuff;
-        }
-        snprintf(buffer, sizeof(buffer), "%u %s:%s+0x%x\n",
-                 ptr->next->index, lib, func,
-                 (char *)pc - (char*)info.dli_saddr);
-        (*args.callback)(buffer, args.closure);
     }
     return 0;
 }
@@ -357,4 +359,53 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     cs_operate(load_address, &args);
     return NS_OK;
 }
+
+EXPORT_XPCOM_API(nsresult)
+NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
+{
+    aDetails->library[0] = '\0';
+    aDetails->loffset = 0;
+    aDetails->filename[0] = '\0';
+    aDetails->lineno = 0;
+    aDetails->function[0] = '\0';
+    aDetails->foffset = 0;
+
+    char dembuff[4096];
+    Dl_info info;
+
+    if (dladdr(aPC, & info)) {
+        if (info.dli_fname) {
+            PL_strncpyz(aDetails->library, info.dli_fname,
+                        sizeof(aDetails->library));
+            aDetails->loffset = (char*)aPC - (char*)info.dli_fbase;
+        }
+        if (info.dli_sname) {
+            aDetails->foffset = (char*)aPC - (char*)info.dli_saddr;
+#ifdef __GNUC__
+            DemangleSymbol(func, dembuff, sizeof(dembuff));
+#else
+            if (!demf || demf(func, dembuff, sizeof (dembuff)))
+                dembuff[0] = 0;
+#endif /*__GNUC__*/
+            PL_strncpyz(aDetails->function,
+                        (dembuff[0] != '\0') ? dembuff : info.dli_sname,
+                        sizeof(aDetails->function));
+        }
+    }
+
+    return NS_OK;
+}
+
+EXPORT_XPCOM_API(nsresult)
+NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
+                            char *aBuffer, PRUint32 aBufferSize)
+{
+    snprintf(aBuffer, aBufferSize, "%p %s:%s+0x%lx\n",
+             aPC,
+             aDetails->library[0] ? aDetails->library : "??",
+             aDetails->function[0] ? aDetails->function : "??",
+             aDetails->foffset);
+    return NS_OK;
+}
+
 #endif
