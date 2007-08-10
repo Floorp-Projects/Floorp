@@ -164,25 +164,12 @@ CMMSRCS = MacApplicationDelegate.mm
 endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-STACKWALK_SRC_LCSRCS =               \
-		nsStackFrameUnix.cpp \
-		nsStackFrameUnix.h   \
-		$(NULL)
-
-STACKWALK_CPPSRCS := $(addprefix $(topsrcdir)/xpcom/base/, $(STACKWALK_SRC_LCSRCS))
-ifndef MOZ_ENABLE_LIBXUL
-CPPSRCS           += nsStackFrameUnix.cpp
-endif
 SHAREDCPPSRCS	  += nsSigHandlers.cpp
 endif
 
 GARBAGE += $(SHAREDCPPSRCS) $(wildcard *.$(OBJ_SUFFIX))
 ifeq ($(OS_ARCH),WINNT)
 GARBAGE	+= $(addprefix $(srcdir)/,$(SHAREDCPPSRCS))
-endif
-
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-GARBAGE += $(STACKWALK_SRC_LCSRCS)
 endif
 
 SHARED_LIBRARY_LIBS += ../profile/src/$(LIB_PREFIX)profile_s.$(LIB_SUFFIX)
@@ -254,7 +241,7 @@ ifdef WRAP_SYSTEM_INCLUDES
 DEFINES		+= -DWRAP_SYSTEM_INCLUDES
 endif
 
-export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDCPPSRCS)) $(STACKWALK_CPPSRCS)
+export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDCPPSRCS))
 	$(INSTALL) $^ .
 
 platform.ini: FORCE
