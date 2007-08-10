@@ -45,7 +45,7 @@ interface nsISimpleEnumerator;
 
 [ptr] native sqlite3stmtptr(struct sqlite3_stmt);
 
-[scriptable, uuid(98379cef-b1da-4731-8556-402f0e55eb9f)]
+[scriptable, uuid(80e5210f-c0da-4f37-b5f9-d9925a75612a)]
 interface mozIStorageStatement : mozIStorageValueArray {
   /**
    * Initialize this query with the given SQL statement.
@@ -150,4 +150,18 @@ interface mozIStorageStatement : mozIStorageValueArray {
   readonly attribute long state;
 
   [noscript,notxpcom] sqlite3stmtptr getNativeStatementPointer();
+
+  /**
+   * Escape a string for SQL LIKE search.
+   *
+   * @param     aValue the string to escape for SQL LIKE 
+   * @param     aEscapeChar the escape character
+   * @returns   an AString of an escaped version of aValue
+   *            (%, _ and the escape char are escaped with the escape char)
+   *            For example, we will convert "foo/bar_baz%20cheese" 
+   *            into "foo//bar/_baz/%20cheese" (if the escape char is '/').
+   * @note      consumers will have to use same escape char
+   *            when doing statements such as:   ...LIKE '?1' ESCAPE '/'...
+   */
+  AString escapeStringForLIKE(in AString aValue, in wchar aEscapeChar);
 };
