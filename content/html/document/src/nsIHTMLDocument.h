@@ -55,9 +55,8 @@ class nsIDOMHTMLBodyElement;
 class nsIScriptElement;
 
 #define NS_IHTMLDOCUMENT_IID \
-{ 0xf6aa3582, 0x67c3, 0x4f42, \
-  { 0xb6, 0xee, 0x89, 0x19, 0x24, 0x5c, 0x15, 0x89 } }
-
+{ 0x61e989a8, 0x70cd, 0x4582, \
+  { 0x84, 0x5e, 0x6e, 0x5e, 0x12, 0x55, 0x9a, 0x83 } }
 
 /**
  * HTML document extensions to nsIDocument.
@@ -140,10 +139,27 @@ public:
   virtual nsresult ChangeContentEditableCount(nsIContent *aElement,
                                               PRInt32 aChange) = 0;
 
+  enum EditingState {
+    eSettingUp = -1,
+    eOff = 0,
+    eDesignMode,
+    eContentEditable
+  };
+
   /**
    * Returns whether the document is editable.
    */
-  virtual PRBool IsEditingOn() = 0;
+  PRBool IsEditingOn()
+  {
+    return GetEditingState() == eDesignMode ||
+           GetEditingState() == eContentEditable;
+  }
+
+  /**
+   * Returns the editing state of the document (not editable, contentEditable or
+   * designMode).
+   */
+  virtual EditingState GetEditingState() = 0;
 
   /**
    * Returns the result of document.all[aID] which can either be a node

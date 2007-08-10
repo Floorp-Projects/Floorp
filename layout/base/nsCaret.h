@@ -107,6 +107,8 @@ class nsCaret : public nsICaret,
                          const nsPoint &aOffset,
                          nscolor aColor);
 
+    void SetIgnoreUserModify(PRBool aIgnoreUserModify);
+
     //nsISelectionListener interface
     NS_DECL_NSISELECTIONLISTENER
 
@@ -183,6 +185,8 @@ protected:
 
     nsFrameSelection::HINT mLastHint;        // the hint associated with the last request, see also
                                               // mLastBidiLevel below
+
+    PRPackedBool          mIgnoreUserModify;
 
 #ifdef IBMBIDI
     nsRect                mHookRect;          // directional hook on the caret

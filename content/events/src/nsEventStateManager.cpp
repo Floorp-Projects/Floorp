@@ -5073,6 +5073,9 @@ nsEventStateManager::SetContentCaretVisible(nsIPresShell* aPresShell,
       // First, tell the caret which selection to use
       caret->SetCaretDOMSelection(domSelection);
 
+      // Ignore user-modify status of nodes when browsing with caret
+      caret->SetIgnoreUserModify(aVisible);
+
       // In content, we need to set the caret
       // the only other case is edit fields, where they have a different frame selection from the doc's
       // in that case they'll take care of making the caret visible themselves
@@ -5112,12 +5115,19 @@ nsEventStateManager::ResetBrowseWithCaret()
   if (itemType == nsIDocShellTreeItem::typeChrome)
     return;  // Never browse with caret in chrome
 
+  nsIPresShell *presShell = mPresContext->GetPresShell();
+
   nsCOMPtr<nsIEditorDocShell> editorDocShell(do_QueryInterface(shellItem));
   if (editorDocShell) {
     PRBool isEditable;
     editorDocShell->GetEditable(&isEditable);
-    if (isEditable) {
-      return;  // Reset caret visibility only if browsing, not editing
+    if (presShell && isEditable) {
+      nsCOMPtr<nsIHTMLDocument> doc =
+        do_QueryInterface(presShell->GetDocument());
+      if (!doc || doc->GetEditingState() != nsIHTMLDocument::eContentEditable) {
+        return;  // Reset caret visibility only if browsing, not editing except
+                 // for contentEditable
+      }
     }
   }
 
@@ -5126,7 +5136,6 @@ nsEventStateManager::ResetBrowseWithCaret()
 
   mBrowseWithCaret = browseWithCaret;
 
-  nsIPresShell *presShell = mPresContext->GetPresShell();
 
   // Make caret visible or not, depending on what's appropriate
   // Set caret visibility for focused document only

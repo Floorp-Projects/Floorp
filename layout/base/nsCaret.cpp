@@ -88,6 +88,7 @@ nsCaret::nsCaret()
 , mShowDuringSelection(PR_FALSE)
 , mLastContentOffset(0)
 , mLastHint(nsFrameSelection::HINTLEFT)
+, mIgnoreUserModify(PR_FALSE)
 #ifdef IBMBIDI
 , mLastBidiLevel(0)
 , mKeyboardRTL(PR_FALSE)
@@ -587,7 +588,8 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
 
   // now we have a frame, check whether it's appropriate to show the caret here
   const nsStyleUserInterface* userinterface = theFrame->GetStyleUserInterface();
-  if ((userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
+  if ((!mIgnoreUserModify &&
+       userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
       (userinterface->mUserInput == NS_STYLE_USER_INPUT_NONE) ||
       (userinterface->mUserInput == NS_STYLE_USER_INPUT_DISABLED))
   {
@@ -1131,6 +1133,11 @@ nsFrameSelection* nsCaret::GetFrameSelection() {
   return frameSelection;
 }
 
+void
+nsCaret::SetIgnoreUserModify(PRBool aIgnoreUserModify)
+{
+  mIgnoreUserModify = aIgnoreUserModify;
+}
 
 //-----------------------------------------------------------------------------
 nsresult NS_NewCaret(nsICaret** aInstancePtrResult)
