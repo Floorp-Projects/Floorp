@@ -400,6 +400,8 @@ protected:
   static RECT*      sIMECompCharPos;
   static PRInt32    sIMECaretHeight;
 
+  static PRBool     sIsInEndSession;
+
   nsSize        mLastSize;
   static        nsWindow* gCurrentWindow;
   nsPoint       mLastPoint;
