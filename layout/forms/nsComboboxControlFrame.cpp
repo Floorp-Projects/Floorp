@@ -1232,7 +1232,7 @@ nsComboboxControlFrame::Destroy()
 nsIFrame*
 nsComboboxControlFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  if (nsGkAtoms::popupList == aListName) {
+  if (nsGkAtoms::selectPopupList == aListName) {
     return mPopupFrames.FirstChild();
   }
   return nsAreaFrame::GetFirstChild(aListName);
@@ -1243,7 +1243,7 @@ nsComboboxControlFrame::SetInitialChildList(nsIAtom*        aListName,
                                             nsIFrame*       aChildList)
 {
   nsresult rv = NS_OK;
-  if (nsGkAtoms::popupList == aListName) {
+  if (nsGkAtoms::selectPopupList == aListName) {
     mPopupFrames.SetFrames(aChildList);
   } else {
     rv = nsAreaFrame::SetInitialChildList(aListName, aChildList);
@@ -1275,7 +1275,7 @@ nsComboboxControlFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   }
   
   if (NS_COMBO_FRAME_POPUP_LIST_INDEX == aIndex) {
-    return nsGkAtoms::popupList;
+    return nsGkAtoms::selectPopupList;
   }
   return nsnull;
 }
