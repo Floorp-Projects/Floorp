@@ -99,10 +99,6 @@ function goQuitApplication()
     return false;
   }
   
-  // shut down cross-domain mapping (really reverts preference values)
-  if (typeof crossDomain != "undefined")
-    crossDomain.disable();
-
   const kAppStartup = '@mozilla.org/toolkit/app-startup;1';
   const kAppShell   = '@mozilla.org/appshell/appShellService;1';
   var   appService;

@@ -99,6 +99,36 @@ use constant CHROMETESTS_URL => "http://" . TEST_SERVER_HOST . CHROME_PATH;
  # (particularly after a build) takes forever.
 use constant SERVER_STARTUP_TIMEOUT => 45;
 
+
+ # Since some tests require cross-domain support in Mochitest, across ports,
+ # domains, subdomains, etc. we use a proxy autoconfig hack to map a bunch of
+ # servers onto localhost:8888.  We have to grant them the same privileges as
+ # localhost:8888 here, since the browser only knows them as the URLs they're
+ # pretending to be.
+my @servers = ("localhost:8888", # MUST be first -- see PAC pref-setting code
+               "example.org:80",
+               "test1.example.org:80",
+               "test2.example.org:80",
+               "sub1.test1.example.org:80",
+               "sub1.test2.example.org:80",
+               "sub2.test1.example.org:80",
+               "sub2.test2.example.org:80",
+               "example.org:8000",
+               "test1.example.org:8000",
+               "test2.example.org:8000",
+               "sub1.test1.example.org:8000",
+               "sub1.test2.example.org:8000",
+               "sub2.test1.example.org:8000",
+               "sub2.test2.example.org:8000",
+               "example.com:80",
+               "test1.example.com:80",
+               "test2.example.com:80",
+               "sub1.test1.example.com:80",
+               "sub1.test2.example.com:80",
+               "sub2.test1.example.com:80",
+               "sub2.test2.example.com:80");
+
+
 my $profile = "mochitesttestingprofile";
 my $profile_dir = "$FindBin::Bin/$profile";
 
@@ -367,48 +397,42 @@ user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("browser.warnOnQuit", false);
 PREFEND
 
-  #
-  # Since some tests require cross-domain support in Mochitest, across ports,
-  # domains, subdomains, etc. we have a proxying hack in cross-domain.js which
-  # maps a bunch of servers onto localhost:8888.  We have to grant them the same
-  # privileges as localhost:8888 here, since the browser only knows them as the
-  # URLs they're pretending to be.  See cross-domain.js for the other copy of
-  # this list.
-  #
-  # KEEP THESE TWO LISTS IN SYNC!
-  #
-  my @servers = ("http://localhost:8888",
-                 "http://example.org:80",
-                 "http://test1.example.org:80",
-                 "http://test2.example.org:80",
-                 "http://sub1.test1.example.org:80",
-                 "http://sub1.test2.example.org:80",
-                 "http://sub2.test1.example.org:80",
-                 "http://sub2.test2.example.org:80",
-                 "http://example.org:8000",
-                 "http://test1.example.org:8000",
-                 "http://test2.example.org:8000",
-                 "http://sub1.test1.example.org:8000",
-                 "http://sub1.test2.example.org:8000",
-                 "http://sub2.test1.example.org:8000",
-                 "http://sub2.test2.example.org:8000",
-                 "http://example.com:80",
-                 "http://test1.example.com:80",
-                 "http://test2.example.com:80",
-                 "http://sub1.test1.example.com:80",
-                 "http://sub1.test2.example.com:80",
-                 "http://sub2.test1.example.com:80",
-                 "http://sub2.test2.example.com:80");
+  # Grant God-power to all the servers on which tests can run.
   my $i = 1;
   my $server;
   foreach $server (@servers) {
     $pref_content .= <<SERVERPREFEND;
 user_pref("capability.principal.codebase.p$i.granted", "UniversalXPConnect UniversalBrowserRead UniversalBrowserWrite UniversalPreferencesRead UniversalPreferencesWrite UniversalFileRead");
-user_pref("capability.principal.codebase.p$i.id", "$server");
+user_pref("capability.principal.codebase.p$i.id", "http://$server");
 user_pref("capability.principal.codebase.p$i.subjectName", "");
 SERVERPREFEND
     $i++;
   }
+
+  # Now actually create the preference to make the proxying happen, stripping
+  # off the first server because it's the one to which we proxy all the others.
+  my $quotedServers = join(", ", map("'" . $_ . "'", @servers[1 .. $#servers]));
+
+  my $pacURL = "data:text/plain,";
+  $pacURL   .= "function FindProxyForURL(url, host)             ";
+  $pacURL   .= "{                                               ";
+  $pacURL   .= "  var servers = [$quotedServers];               ";
+  $pacURL   .= "  var regex =                                   ";
+  $pacURL   .= "    new RegExp('http://(.*?(:\\\\\\\\d+)?)/');  ";
+  $pacURL   .= "  var matches = regex.exec(url);                ";
+  $pacURL   .= "  var hostport = matches[1], port = matches[2]; ";
+  $pacURL   .= "  if (!port)                                    ";
+  $pacURL   .= "    hostport += ':80';                          ";
+  $pacURL   .= "  if (servers.indexOf(hostport) >= 0)           ";
+  $pacURL   .= "    return 'PROXY localhost:8888';              ";
+  $pacURL   .= "  return 'DIRECT';                              ";
+  $pacURL   .= "}";
+
+  $pref_content .= <<PROXYPREFEND;
+user_pref("network.proxy.type", 2);
+user_pref("network.proxy.autoconfig_url", "$pacURL");
+PROXYPREFEND
+
 
   my $chrome_content = <<CHROMEEND;
 \@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
