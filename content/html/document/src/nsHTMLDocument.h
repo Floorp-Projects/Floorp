@@ -202,9 +202,9 @@ public:
 
   nsresult ChangeContentEditableCount(nsIContent *aElement, PRInt32 aChange);
 
-  virtual PRBool IsEditingOn()
+  virtual EditingState GetEditingState()
   {
-    return mEditingState != eOff;
+    return mEditingState;
   }
 
   virtual void DisableCookieAccess()
@@ -375,12 +375,6 @@ protected:
   nsresult EditingStateChanged();
 
   PRUint32 mContentEditableCount;
-  enum EditingState {
-    eSettingUp = -1,
-    eOff = 0,
-    eDesignMode,
-    eContentEditable
-  };
   EditingState mEditingState;
   PRPackedBool mScriptsEnabled;
   PRPackedBool mPluginsEnabled;
