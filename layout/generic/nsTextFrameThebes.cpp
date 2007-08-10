@@ -1351,6 +1351,9 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
         // is going to be).
         mappedFlow->mContentEndOffset =
           PR_MAX(mappedFlow->mContentEndOffset, frame->GetContentEnd());
+        if (mCurrentFramesAllSameTextRun != frame->GetTextRun()) {
+          mCurrentFramesAllSameTextRun = nsnull;
+        }
         AccumulateRunInfo(frame);
         return;
       }
@@ -1443,12 +1446,9 @@ GetSpacingFlags(const nsStyleCoord& aStyleCoord)
 static gfxFontGroup*
 GetFontGroupForFrame(nsIFrame* aFrame)
 {
-  nsIDeviceContext* devContext = aFrame->PresContext()->DeviceContext();
-  const nsStyleFont* fontStyle = aFrame->GetStyleFont();
-  const nsStyleVisibility* visibilityStyle = aFrame->GetStyleVisibility();
   nsCOMPtr<nsIFontMetrics> metrics;
-  devContext->GetMetricsFor(fontStyle->mFont, visibilityStyle->mLangGroup,
-                            *getter_AddRefs(metrics));
+  nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(metrics));
+
   if (!metrics)
     return nsnull;
 
@@ -5553,15 +5553,14 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
       PRUint32 charIndex = transformedOffset + transformedCharsFit;
       while (charIndex > transformedOffset &&
              mTextRun->GetChar(charIndex - 1) == ' ') {
-        ++textMetrics.mClusterCount;
         --charIndex;
       }
     }
 
-    NS_ASSERTION(numJustifiableCharacters <= textMetrics.mClusterCount,
+    NS_ASSERTION(numJustifiableCharacters <= charsFit,
                  "Justifiable characters combined???");
     lineLayout.SetTextJustificationWeights(numJustifiableCharacters,
-        textMetrics.mClusterCount - numJustifiableCharacters);
+        charsFit - numJustifiableCharacters);
   }
 
   if (layoutDependentTextRun) {

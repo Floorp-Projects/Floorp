@@ -247,8 +247,8 @@
         qaTools.writeSafeHTML('qa-testcase-steps', testcase.steps_formatted);
         qaTools.writeSafeHTML('qa-testcase-expected', testcase.expected_results_formatted);
         
-        qaTools.linkTargetsToBlank($('qa-testcase-steps'));
-        qaTools.linkTargetsToBlank($('qa-testcase-expected'));
+        qaTools.assignLinkHandlers($('qa-testcase-steps'));
+        qaTools.assignLinkHandlers($('qa-testcase-expected'));
         
         litmus.checkRadioButtons();
     },
@@ -298,7 +298,7 @@
 		}));
 		
 		var callback = function(resp) {
-			alert("yay");
+			
 		};
 		
 		var errback = function(resp) {

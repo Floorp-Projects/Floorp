@@ -46,6 +46,12 @@
 
 <script type="application/x-javascript" 
 	src="chrome://chatzillaservice_qa/content/chatzilla-service.js" />
+<script type="application/x-javascript" >
+    window.addEventListener('load', function() {
+    	qaTools.assignLinkHandler($("qa-chat-imo"));
+        qaTools.assignLinkHandler($("qa-chat-irchelp"));
+    }, false);
+</script>
 
 <tabpanel id="qa-tab-chat">
 <vbox>
@@ -61,8 +67,8 @@
     <caption label="&qa.chat.howdoItitle;" />
     <div xmlns="http://www.w3.org/1999/xhtml" id="qa-qmo-forumposts">
       <ul>
-        <li><a href="&qa.chat.howdoI.imourl;" target="_blank">&qa.chat.howdoI.imo;</a></li>
-        <li><a href="&qa.chat.howdoI.irchelpurl;" target="_blank">&qa.chat.howdoI.irchelp;</a></li>
+        <li><a id="qa-chat-imo" href="&qa.chat.howdoI.imourl;" target="_blank">&qa.chat.howdoI.imo;</a></li>
+        <li><a id="qa-chat-irchelp" href="&qa.chat.howdoI.irchelpurl;" target="_blank">&qa.chat.howdoI.irchelp;</a></li>
       </ul>
     </div>
     <button style="margin-top: 12px; padding-left: 2em; padding-right: 2em;"

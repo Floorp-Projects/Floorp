@@ -302,17 +302,6 @@ XPC_XOW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   return XPC_XOW_RewrapIfNeeded(cx, obj, rval);
 }
 
-static JSObject *
-GetGlobalObject(JSContext *cx, JSObject *start)
-{
-  JSObject *next;
-  while ((next = JS_GetParent(cx, start)) != nsnull) {
-    start = next;
-  }
-
-  return start;
-}
-
 JSBool
 XPC_XOW_WrapFunction(JSContext *cx, JSObject *outerObj, JSObject *funobj,
                      jsval *rval)
@@ -330,7 +319,7 @@ XPC_XOW_WrapFunction(JSContext *cx, JSObject *outerObj, JSObject *funobj,
   JSFunction *funWrapper =
     JS_NewFunction(cx, XPC_XOW_FunctionWrapper,
                    JS_GetFunctionArity(wrappedFun), 0,
-                   GetGlobalObject(cx, outerObj),
+                   JS_GetGlobalForObject(cx, outerObj),
                    "Wrapped function");
                    // XXX JS_GetFunctionName(wrappedFun));
   if (!funWrapper) {
@@ -366,7 +355,7 @@ XPC_XOW_RewrapIfNeeded(JSContext *cx, JSObject *outerObj, jsval *vp)
     return JS_TRUE;
   }
 
-  return XPC_XOW_WrapObject(cx, GetGlobalObject(cx, outerObj), vp);
+  return XPC_XOW_WrapObject(cx, JS_GetGlobalForObject(cx, outerObj), vp);
 }
 
 JSBool
@@ -635,7 +624,7 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
 
   const char *name = JS_GET_CLASS(cx, wrappedObj)->name;
   if (XPC_XOW_ClassNeedsXOW(name)) {
-    return XPC_XOW_WrapObject(cx, GetGlobalObject(cx, obj), vp);
+    return XPC_XOW_WrapObject(cx, JS_GetGlobalForObject(cx, obj), vp);
   }
 
   return JS_TRUE;

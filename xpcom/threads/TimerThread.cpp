@@ -74,11 +74,7 @@ TimerThread::~TimerThread()
 
   mThread = nsnull;
 
-  PRInt32 n = mTimers.Count();
-  while (--n >= 0) {
-    nsTimerImpl *timer = static_cast<nsTimerImpl *>(mTimers[n]);
-    NS_RELEASE(timer);
-  }
+  NS_ASSERTION(mTimers.Count() == 0, "Timers remain in TimerThread::~TimerThread");
 }
 
 nsresult
@@ -332,7 +328,7 @@ nsresult TimerThread::AddTimer(nsTimerImpl *aTimer)
   // Add the timer to our list.
   PRInt32 i = AddTimerInternal(aTimer);
   if (i < 0)
-    return NS_ERROR_OUT_OF_MEMORY;
+    return NS_ERROR_FAILURE;
 
   // Awaken the timer thread.
   if (mCondVar && mWaiting && i == 0)
@@ -384,6 +380,9 @@ nsresult TimerThread::RemoveTimer(nsTimerImpl *aTimer)
 // This function must be called from within a lock
 PRInt32 TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
 {
+  if (mShutdown)
+    return -1;
+
   PRIntervalTime now = PR_IntervalNow();
   PRInt32 count = mTimers.Count();
   PRInt32 i = 0;

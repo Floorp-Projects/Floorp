@@ -271,8 +271,6 @@ public:
   {
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIFormSubmission
   virtual nsresult AddNameValuePair(nsIDOMHTMLElement* aSource,
                                     const nsAString& aName,
@@ -319,10 +317,6 @@ private:
   /** Whether or not we have warned about a file control not being submitted */
   PRBool mWarnedFileControl;
 };
-
-NS_IMPL_RELEASE_INHERITED(nsFSURLEncoded, nsFormSubmission)
-NS_IMPL_ADDREF_INHERITED(nsFSURLEncoded, nsFormSubmission)
-NS_IMPL_QUERY_INTERFACE_INHERITED0(nsFSURLEncoded, nsFormSubmission)
 
 nsresult
 nsFSURLEncoded::AddNameValuePair(nsIDOMHTMLElement* aSource,
@@ -611,8 +605,6 @@ public:
                         PRInt32 aBidiOptions);
   virtual ~nsFSMultipartFormData() { }
  
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIFormSubmission
   virtual nsresult AddNameValuePair(nsIDOMHTMLElement* aSource,
                                     const nsAString& aName,
@@ -691,10 +683,6 @@ private:
    */
   nsCString mBoundary;
 };
-
-NS_IMPL_RELEASE_INHERITED(nsFSMultipartFormData, nsFormSubmission)
-NS_IMPL_ADDREF_INHERITED(nsFSMultipartFormData, nsFormSubmission)
-NS_IMPL_QUERY_INTERFACE_INHERITED0(nsFSMultipartFormData, nsFormSubmission)
 
 //
 // Constructor
@@ -937,8 +925,6 @@ public:
   {
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
-
   // nsIFormSubmission
   virtual nsresult AddNameValuePair(nsIDOMHTMLElement* aSource,
                                     const nsAString& aName,
@@ -964,10 +950,6 @@ protected:
 private:
   nsString mBody;
 };
-
-NS_IMPL_RELEASE_INHERITED(nsFSTextPlain, nsFormSubmission)
-NS_IMPL_ADDREF_INHERITED(nsFSTextPlain, nsFormSubmission)
-NS_IMPL_QUERY_INTERFACE_INHERITED0(nsFSTextPlain, nsFormSubmission)
 
 nsresult
 nsFSTextPlain::AddNameValuePair(nsIDOMHTMLElement* aSource,

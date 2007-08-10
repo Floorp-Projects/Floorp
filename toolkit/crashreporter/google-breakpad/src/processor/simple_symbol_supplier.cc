@@ -110,8 +110,9 @@ SymbolSupplier::SymbolResult SimpleSymbolSupplier::GetSymbolFileAtPath(
   // name ends in .pdb, strip the .pdb.  Otherwise, add .sym to the non-.pdb
   // name.
   path.append("/");
-  string debug_file_extension =
-      debug_file_name.substr(debug_file_name.size() - 4);
+  string debug_file_extension;
+  if (debug_file_name.size() > 4)
+    debug_file_extension = debug_file_name.substr(debug_file_name.size() - 4);
   transform(debug_file_extension.begin(), debug_file_extension.end(),
             debug_file_extension.begin(), tolower);
   if (debug_file_extension == ".pdb") {

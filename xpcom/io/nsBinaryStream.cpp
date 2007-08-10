@@ -58,6 +58,9 @@
 #include "prlong.h"
 #include "nsGenericFactory.h"
 #include "nsString.h"
+#include "nsISerializable.h"
+#include "nsIClassInfo.h"
+#include "nsComponentManagerUtils.h"
 
 NS_IMPL_ISUPPORTS3(nsBinaryOutputStream, nsIObjectOutputStream, nsIBinaryOutputStream, nsIOutputStream)
 
@@ -260,15 +263,15 @@ nsBinaryOutputStream::WriteByteArray(PRUint8 *aBytes, PRUint32 aLength)
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteObject(nsISupports* aObject, PRBool aIsStrongRef)
 {
-    NS_NOTREACHED("WriteObject");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return WriteCompoundObject(aObject, NS_GET_IID(nsISupports),
+                               aIsStrongRef);
 }
 
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteSingleRefObject(nsISupports* aObject)
 {
-    NS_NOTREACHED("WriteSingleRefObject");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return WriteCompoundObject(aObject, NS_GET_IID(nsISupports),
+                               PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -276,15 +279,45 @@ nsBinaryOutputStream::WriteCompoundObject(nsISupports* aObject,
                                           const nsIID& aIID,
                                           PRBool aIsStrongRef)
 {
-    NS_NOTREACHED("WriteCompoundObject");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    // Can't deal with weak refs
+    NS_ENSURE_TRUE(aIsStrongRef, NS_ERROR_UNEXPECTED);
+    
+    nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aObject);
+    NS_ENSURE_TRUE(classInfo, NS_ERROR_NOT_AVAILABLE);
+
+    nsCOMPtr<nsISerializable> serializable = do_QueryInterface(aObject);
+    NS_ENSURE_TRUE(serializable, NS_ERROR_NOT_AVAILABLE);
+
+    nsCID cid;
+    classInfo->GetClassIDNoAlloc(&cid);
+
+    nsresult rv = WriteID(cid);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = WriteID(aIID);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return serializable->Write(this);
 }
 
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteID(const nsIID& aIID)
 {
-    NS_NOTREACHED("WriteID");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = Write32(aIID.m0);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = Write16(aIID.m1);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = Write16(aIID.m2);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (int i = 0; i < 8; ++i) {
+        rv = Write8(aIID.m3[i]);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP_(char*)
@@ -713,15 +746,44 @@ nsBinaryInputStream::ReadByteArray(PRUint32 aLength, PRUint8* *_rval)
 NS_IMETHODIMP
 nsBinaryInputStream::ReadObject(PRBool aIsStrongRef, nsISupports* *aObject)
 {
-    NS_NOTREACHED("ReadObject");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsCID cid;
+    nsIID iid;
+    nsresult rv = ReadID(&cid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = ReadID(&iid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISupports> object = do_CreateInstance(cid, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISerializable> serializable = do_QueryInterface(object);
+    NS_ENSURE_TRUE(serializable, NS_ERROR_UNEXPECTED);
+
+    rv = serializable->Read(this);
+    NS_ENSURE_SUCCESS(rv, rv);    
+
+    return object->QueryInterface(iid, reinterpret_cast<void**>(aObject));
 }
 
 NS_IMETHODIMP
 nsBinaryInputStream::ReadID(nsID *aResult)
 {
-    NS_NOTREACHED("ReadID");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = Read32(&aResult->m0);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = Read16(&aResult->m1);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = Read16(&aResult->m2);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    for (int i = 0; i < 8; ++i) {
+        rv = Read8(&aResult->m3[i]);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP_(char*)

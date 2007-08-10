@@ -227,13 +227,11 @@ EnsureLegalActivity(JSContext *cx, JSObject *obj)
     GetAppropriateSecurityManager(nsIXPCSecurityManager::HOOK_CALL_METHOD);
   nsCOMPtr<nsIScriptSecurityManager> ssm(do_QueryInterface(sm));
 
-  // A last ditch effort to allow access: if the subject principal is
-  // the system principal, then some XPCNativeWrapper-using code has
-  // passed one into other code. If that other code is chrome, then
-  // allow access.
-  PRBool isSystem;
-  nsresult rv = ssm->SubjectPrincipalIsSystem(&isSystem);
-  if (NS_SUCCEEDED(rv) && isSystem) {
+  // A last ditch effort to allow access: if the currently-running code
+  // has UniversalXPConnect privileges, then allow access.
+  PRBool isPrivileged;
+  nsresult rv = ssm->IsCapabilityEnabled("UniversalXPConnect", &isPrivileged);
+  if (NS_SUCCEEDED(rv) && isPrivileged) {
     return JS_TRUE;
   }
 

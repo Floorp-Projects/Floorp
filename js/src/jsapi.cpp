@@ -648,7 +648,7 @@ JS_GetTypeName(JSContext *cx, JSType type)
 {
     if ((uintN)type >= (uintN)JSTYPE_LIMIT)
         return NULL;
-    return js_type_strs[type];
+    return JS_TYPE_STR(type);
 }
 
 /************************************************************************/
@@ -702,6 +702,8 @@ JS_NewRuntime(uint32 maxbytes)
     JS_INIT_CLIST(&rt->watchPointList);
 
     if (!js_InitGC(rt, maxbytes))
+        goto bad;
+    if (!js_InitAtomState(rt))
         goto bad;
 #ifdef JS_THREADSAFE
     if (!js_InitThreadPrivateIndex(js_ThreadDestructorCB))
@@ -764,7 +766,13 @@ JS_DestroyRuntime(JSRuntime *rt)
 #endif
 
     js_FreeRuntimeScriptState(rt);
-    js_FinishAtomState(&rt->atomState);
+    js_FinishAtomState(rt);
+
+    /*
+     * Finish the deflated string cache after the last GC and after
+     * calling js_FinishAtomState, which finalizes strings.
+     */
+    js_FinishDeflatedStringCache(rt);
     js_FinishGC(rt);
 #ifdef JS_THREADSAFE
     if (rt->gcLock)
@@ -1662,10 +1670,36 @@ JS_GetScopeChain(JSContext *cx)
 
     fp = cx->fp;
     if (!fp) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
-        return NULL;
+        /*
+         * There is no code active on this context. In place of an actual
+         * scope chain, use the context's global object, which is set in
+         * js_InitFunctionAndObjectClasses, and which represents the default
+         * scope chain for the embedding. See also js_FindClassObject.
+         *
+         * For embeddings that use the inner and outer object hooks, the inner
+         * object represents the ultimate global object, with the outer object
+         * acting as a stand-in.
+         */
+        JSObject *obj = cx->globalObject;
+        if (!obj) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INACTIVE);
+            return NULL;
+        }
+
+        OBJ_TO_INNER_OBJECT(cx, obj);
+        return obj;
     }
     return js_GetScopeChain(cx, fp);
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_GetGlobalForObject(JSContext *cx, JSObject *obj)
+{
+    JSObject *parent;
+
+    while ((parent = OBJ_GET_PARENT(cx, obj)) != NULL)
+        obj = parent;
+    return obj;
 }
 
 JS_PUBLIC_API(void *)

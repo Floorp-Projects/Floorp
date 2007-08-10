@@ -609,6 +609,15 @@ static const size_t MDCVInfoPDB70_minsize = offsetof(MDCVInfoPDB70,
 
 #define MD_CVINFOPDB70_SIGNATURE 0x53445352  /* cvSignature = 'SDSR' */
 
+typedef struct {
+  u_int32_t data1[2];
+  u_int32_t data2;
+  u_int32_t data3;
+  u_int32_t data4;
+  u_int32_t data5[3];
+  u_int8_t extra[2];
+} MDCVInfoELF;
+
 /* In addition to the two CodeView record formats above, used for linking
  * to external pdb files, it is possible for debugging data to be carried
  * directly in the CodeView record itself.  These signature values will
@@ -990,6 +999,7 @@ typedef enum {
   MD_CPU_ARCHITECTURE_AMD64     =  9,  /* PROCESSOR_ARCHITECTURE_AMD64 */
   MD_CPU_ARCHITECTURE_X86_WIN64 = 10,
       /* PROCESSOR_ARCHITECTURE_IA32_ON_WIN64 (WoW64) */
+  MD_CPU_ARCHITECTURE_SPARC     = 0x8001, /* Breakpad-defined value for SPARC */
   MD_CPU_ARCHITECTURE_UNKNOWN   = 0xffff  /* PROCESSOR_ARCHITECTURE_UNKNOWN */
 } MDCPUArchitecture;
 
@@ -1004,7 +1014,8 @@ typedef enum {
   /* The following values are Breakpad-defined. */
   MD_OS_UNIX          = 0x8000,  /* Generic Unix-ish */
   MD_OS_MAC_OS_X      = 0x8101,  /* Mac OS X/Darwin */
-  MD_OS_LINUX         = 0x8201   /* Linux */
+  MD_OS_LINUX         = 0x8201,  /* Linux */
+  MD_OS_SOLARIS       = 0x8202   /* Solaris */
 } MDOSPlatform;
 
 

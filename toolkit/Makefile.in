@@ -51,8 +51,8 @@ DIRS	= \
 		themes \
 		$(NULL)
 
-ifdef MOZ_AIRBAG
-DIRS += airbag
+ifdef MOZ_CRASHREPORTER
+DIRS += crashreporter
 endif
 
 ifndef MINIMO

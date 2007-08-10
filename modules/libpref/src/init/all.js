@@ -521,6 +521,7 @@ pref("network.protocol-handler.external.help", false);
 pref("network.protocol-handler.external.disk", false);
 pref("network.protocol-handler.external.disks", false);
 pref("network.protocol-handler.external.afp", false);
+pref("network.protocol-handler.external.moz-icon", false);
 
 // An exposed protocol handler is one that can be used in all contexts.  A
 // non-exposed protocol handler is one that can only be used internally by the

@@ -446,7 +446,6 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mFireOfflineStatusChangeEventOnThaw(PR_FALSE),
     mCreatingInnerWindow(PR_FALSE),
     mIsChrome(PR_FALSE),
-    mGlobalObjectOwner(nsnull),
     mTimeoutInsertionPoint(nsnull),
     mTimeoutPublicIdCounter(1),
     mTimeoutFiringDepth(0),
@@ -1889,22 +1888,6 @@ nsGlobalWindow::SetOpenerWindow(nsIDOMWindowInternal* aOpener,
 #ifdef DEBUG
   mSetOpenerWindowCalled = PR_TRUE;
 #endif
-}
-
-void
-nsGlobalWindow::SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner)
-{
-  FORWARD_TO_OUTER_VOID(SetGlobalObjectOwner, (aOwner));
-
-  mGlobalObjectOwner = aOwner;  // Note this is supposed to be a weak ref.
-}
-
-nsIScriptGlobalObjectOwner *
-nsGlobalWindow::GetGlobalObjectOwner()
-{
-  FORWARD_TO_OUTER(GetGlobalObjectOwner, (), nsnull);
-
-  return mGlobalObjectOwner;
 }
 
 nsresult
@@ -5111,6 +5094,10 @@ nsGlobalWindow::GetFrameElement(nsIDOMElement** aFrameElement)
   return NS_OK;
 }
 
+// Helper for converting window.showModalDialog() options (list of ';'
+// separated name (:|=) value pairs) to a format that's parsable by
+// our normal window opening code.
+
 void
 ConvertDialogOptions(const nsAString& aOptions, nsAString& aResult)
 {
@@ -5239,11 +5226,14 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
 
   nsCOMPtr<nsIDOMWindow> dlgWin;
   nsAutoString options(NS_LITERAL_STRING("modal=1,status=1"));
-  nsAutoString dialogOptions(aOptions);
 
-  ConvertDialogOptions(dialogOptions, options);
+  ConvertDialogOptions(aOptions, options);
 
   options.AppendLiteral(",scrollbars=1,centerscreen=1,resizable=0");
+
+  // Before bringing up the window, unsuppress painting and flush
+  // pending reflows.
+  EnsureReflowFlushAndPaint();
 
   nsresult rv = OpenInternal(aURI, EmptyString(), options,
                              PR_FALSE,          // aDialog
@@ -5253,7 +5243,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                              GetPrincipal(),    // aCalleePrincipal
                              nsnull,            // aJSCallerContext
                              getter_AddRefs(dlgWin));
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv) || !dlgWin)
     return NS_OK;
 
   nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(dlgWin));
@@ -6867,8 +6857,56 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
 nsresult
 nsGlobalWindow::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
 {
-  FORWARD_TO_INNER(SetTimeoutOrInterval, (aIsInterval, aReturn),
-                   NS_ERROR_NOT_INITIALIZED);
+  // This needs to forward to the inner window, but since the current
+  // inner may not be the inner in the calling scope, we need to treat
+  // this specially here as we don't want timeouts registered in a
+  // dying inner window to get registered and run on the current inner
+  // window. To get this right, we need to forward this call to the
+  // inner window that's calling window.setTimeout().
+
+  if (IsOuterWindow()) {
+    nsCOMPtr<nsIXPCNativeCallContext> ncc;
+    nsresult rv = nsContentUtils::XPConnect()->
+      GetCurrentNativeCallContext(getter_AddRefs(ncc));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!ncc) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    JSContext *cx = nsnull;
+
+    rv = ncc->GetJSContext(&cx);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    JSObject *scope = ::JS_GetScopeChain(cx);
+
+    if (!scope) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
+    nsContentUtils::XPConnect()->
+      GetWrappedNativeOfJSObject(cx, ::JS_GetGlobalForObject(cx, scope),
+                                 getter_AddRefs(wrapper));
+    NS_ENSURE_TRUE(wrapper, NS_ERROR_NOT_AVAILABLE);
+
+    nsGlobalWindow *callerInner = FromWrapper(wrapper);
+    NS_ENSURE_TRUE(callerInner, NS_ERROR_NOT_AVAILABLE);
+
+    // If the caller and the callee share the same outer window,
+    // forward to the callee inner. Else, we forward to the current
+    // inner (e.g. someone is calling setTimeout() on a reference to
+    // some other window).
+
+    if (callerInner->GetOuterWindow() == this &&
+        callerInner->IsInnerWindow()) {
+      return callerInner->SetTimeoutOrInterval(aIsInterval, aReturn);
+    }
+
+    FORWARD_TO_INNER(SetTimeoutOrInterval, (aIsInterval, aReturn),
+                     NS_ERROR_NOT_INITIALIZED);
+  }
 
   PRInt32 interval = 0;
   PRBool isInterval = aIsInterval;

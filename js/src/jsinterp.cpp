@@ -697,7 +697,7 @@ typedef struct CallKey {
 /* Compensate for typeof null == "object" brain damage. */
 #define JSTYPE_NULL     JSTYPE_LIMIT
 #define TYPEOF(cx,v)    (JSVAL_IS_NULL(v) ? JSTYPE_NULL : JS_TypeOfValue(cx,v))
-#define TYPENAME(t)     (((t) == JSTYPE_NULL) ? js_null_str : js_type_strs[t])
+#define TYPENAME(t)     (((t) == JSTYPE_NULL) ? js_null_str : JS_TYPE_STR(t))
 #define NTYPEHIST       (JSTYPE_LIMIT + 1)
 
 typedef struct CallValue {
@@ -970,13 +970,13 @@ LogCall(JSContext *cx, jsval callee, uintN argc, jsval *argv)
         cstr = "";
         switch (TYPEOF(cx, argval)) {
           case JSTYPE_VOID:
-            cstr = js_type_strs[JSTYPE_VOID];
+            cstr = js_undefined_str;
             break;
           case JSTYPE_NULL:
             cstr = js_null_str;
             break;
           case JSTYPE_BOOLEAN:
-            cstr = js_boolean_strs[JSVAL_TO_BOOLEAN(argval)];
+            cstr = JS_BOOLEAN_STR(JSVAL_TO_BOOLEAN(argval));
             break;
           case JSTYPE_NUMBER:
             if (JSVAL_IS_INT(argval)) {

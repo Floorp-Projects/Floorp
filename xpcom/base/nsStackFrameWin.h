@@ -175,17 +175,18 @@ PRBool EnsureImageHlpInitialized();
  */
 BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aModuleInfo, PIMAGEHLP_LINE aLineInfo);
 
-struct DumpStackToFileData {
-  FILE *stream;
+struct WalkStackData {
+  NS_WalkStackCallback callback;
+  PRUint32 skipFrames;
+  void *closure;
   HANDLE thread;
   HANDLE process;
 };
 
-void PrintError(char *prefix, FILE* out);
-void DumpStackToFile(FILE* out);
-DWORD WINAPI  DumpStackToFileThread(LPVOID data);
-void DumpStackToFileMain64(struct DumpStackToFileData* data);
-void DumpStackToFileMain(struct DumpStackToFileData* data);
+void PrintError(char *prefix, WalkStackData* data);
+DWORD WINAPI  WalkStackThread(LPVOID data);
+void WalkStackMain64(struct WalkStackData* data);
+void WalkStackMain(struct WalkStackData* data);
 
 
 PR_END_EXTERN_C

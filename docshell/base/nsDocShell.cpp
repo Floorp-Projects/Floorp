@@ -3531,7 +3531,6 @@ nsDocShell::Destroy()
         nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobal));
         win->SetDocShell(nsnull);
 
-        mScriptGlobal->SetGlobalObjectOwner(nsnull);
         mScriptGlobal = nsnull;
     }
 
@@ -6380,9 +6379,21 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     if (!context) {
         context =  mScriptGlobal;
     }
+
+    // XXXbz would be nice to know the loading principal here... but we don't
+    nsCOMPtr<nsIPrincipal> loadingPrincipal;
+    if (aReferrer) {
+        nsCOMPtr<nsIScriptSecurityManager> secMan =
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = secMan->GetCodebasePrincipal(aReferrer,
+                                          getter_AddRefs(loadingPrincipal));
+    }
+    
     rv = NS_CheckContentLoadPolicy(contentType,
                                    aURI,
-                                   aReferrer,
+                                   loadingPrincipal,
                                    context,
                                    EmptyCString(), //mime guess
                                    nsnull,         //extra
@@ -8500,22 +8511,25 @@ nsDocShell::EnsureScriptEnvironment()
         do_GetService(kDOMScriptObjectFactoryCID);
     NS_ENSURE_TRUE(factory, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIDocShellTreeItem> parent;
-    GetParent(getter_AddRefs(parent));
+    nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
+    NS_ENSURE_TRUE(browserChrome, NS_ERROR_NOT_AVAILABLE);
 
-    nsCOMPtr<nsPIDOMWindow> pw(do_GetInterface(parent));
+    PRUint32 chromeFlags;
+    browserChrome->GetChromeFlags(&chromeFlags);
 
-    // If the parent (chrome or not) is a modal content window, make
-    // this window a modal content window as well.
+    PRBool isModalContentWindow =
+        (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL) &&
+        !(chromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME);
+
+    // If our window is modal and we're not opened as chrome, make
+    // this window a modal content window.
     factory->NewScriptGlobalObject(mItemType == typeChrome,
-                                   pw && pw->IsModalContentWindow(),
+                                   isModalContentWindow,
                                    getter_AddRefs(mScriptGlobal));
     NS_ENSURE_TRUE(mScriptGlobal, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(mScriptGlobal));
     win->SetDocShell(static_cast<nsIDocShell *>(this));
-    mScriptGlobal->
-        SetGlobalObjectOwner(static_cast<nsIScriptGlobalObjectOwner *>(this));
 
     // Ensure the script object is set to run javascript - other languages
     // setup on demand.

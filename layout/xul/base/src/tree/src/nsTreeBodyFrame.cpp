@@ -1206,8 +1206,8 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
     nsStyleContext* textContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecelltext);
 
     nsCOMPtr<nsIFontMetrics> fm;
-    presContext->DeviceContext()->
-      GetMetricsFor(textContext->GetStyleFont()->mFont, *getter_AddRefs(fm));
+    nsLayoutUtils::GetFontMetricsForStyleContext(textContext,
+                                                 getter_AddRefs(fm));
     nscoord height;
     fm->GetHeight(height);
 
@@ -1575,7 +1575,7 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
   nsCOMPtr<nsIRenderingContext> renderingContext;
   PresContext()->PresShell()->CreateRenderingContext(this, getter_AddRefs(renderingContext));
 
-  renderingContext->SetFont(textContext->GetStyleFont()->mFont, nsnull);
+  nsLayoutUtils::SetFontFromStyle(renderingContext, textContext);
 
   AdjustForCellText(cellText, aRowIndex, aColumn, *renderingContext, textRect);
 
@@ -1706,9 +1706,8 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, nsTreeColumn* aCol,
 
   // Get the borders and padding for the text.
   GetBorderPadding(textContext, bp);
-  
-  // Get the font style for the text and pass it to the rendering context.
-  aRenderingContext->SetFont(textContext->GetStyleFont()->mFont, nsnull);
+
+  nsLayoutUtils::SetFontFromStyle(aRenderingContext, textContext);
 
   // Get the width of the text itself
   nscoord width =
@@ -3412,8 +3411,8 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
 
   // Compute our text size.
   nsCOMPtr<nsIFontMetrics> fontMet;
-  aPresContext->DeviceContext()->
-    GetMetricsFor(textContext->GetStyleFont()->mFont, *getter_AddRefs(fontMet));
+  nsLayoutUtils::GetFontMetricsForStyleContext(textContext,
+                                               getter_AddRefs(fontMet));
 
   nscoord height, baseline;
   fontMet->GetHeight(height);

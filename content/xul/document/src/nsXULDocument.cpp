@@ -3700,7 +3700,7 @@ nsXULDocument::AddPrototypeSheets()
         nsCOMPtr<nsIURI> uri = sheets[i];
 
         nsCOMPtr<nsICSSStyleSheet> incompleteSheet;
-        rv = CSSLoader()->LoadSheet(uri, mCurrentPrototype->GetURI(),
+        rv = CSSLoader()->LoadSheet(uri,
                                     mCurrentPrototype->DocumentPrincipal(),
                                     this, getter_AddRefs(incompleteSheet));
 

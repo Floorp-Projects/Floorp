@@ -50,6 +50,15 @@ const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const POST_DATA_ANNO = "URIProperties/POSTData";
 
+#ifdef XP_MACOSX
+// On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
+// really just want "\n".
+const NEWLINE= "\n";
+#else
+// On other platforms, the transferable system converts "\r\n" to "\n".
+const NEWLINE = "\r\n";
+#endif
+
 function QI_node(aNode, aIID) {
   var result = null;
   try {
@@ -530,10 +539,10 @@ var PlacesUtils = {
         function gatherDataUrl(bNode) {
           if (self.nodeIsLivemarkContainer(bNode)) {
             var siteURI = self.livemarks.getSiteURI(bNode.itemId).spec;
-            return siteURI + "\n" + bNode.title;
+            return siteURI + NEWLINE + bNode.title;
           }
           if (self.nodeIsURI(bNode))
-            return (aOverrideURI || bNode.uri) + "\n" + bNode.title;
+            return (aOverrideURI || bNode.uri) + NEWLINE + bNode.title;
           // ignore containers and separators - items without valid URIs
           return "";
         }
@@ -553,7 +562,7 @@ var PlacesUtils = {
           var escapedTitle = htmlEscape(bNode.title);
           if (self.nodeIsLivemarkContainer(bNode)) {
             var siteURI = self.livemarks.getSiteURI(bNode.itemId).spec;
-            return "<A HREF=\"" + siteURI + "\">" + escapedTitle + "</A>\n";
+            return "<A HREF=\"" + siteURI + "\">" + escapedTitle + "</A>" + NEWLINE;
           }
           if (self.nodeIsContainer(bNode)) {
             asContainer(bNode);
@@ -561,19 +570,21 @@ var PlacesUtils = {
             if (!wasOpen)
               bNode.containerOpen = true;
 
-            var childString = "<DL><DT>" + escapedTitle + "</DT>\n";
+            var childString = "<DL><DT>" + escapedTitle + "</DT>" + NEWLINE;
             var cc = bNode.childCount;
             for (var i = 0; i < cc; ++i)
-              childString += "<DD>\n"
+              childString += "<DD>"
+                             + NEWLINE
                              + gatherDataHtml(bNode.getChild(i))
-                             + "</DD>\n";
+                             + "</DD>"
+                             + NEWLINE;
             bNode.containerOpen = wasOpen;
-            return childString + "</DL>\n";
+            return childString + "</DL>" + NEWLINE;
           }
           if (self.nodeIsURI(bNode))
-            return "<A HREF=\"" + bNode.uri + "\">" + escapedTitle + "</A>\n";
+            return "<A HREF=\"" + bNode.uri + "\">" + escapedTitle + "</A>" + NEWLINE;
           if (self.nodeIsSeparator(bNode))
-            return "<HR>\n";
+            return "<HR>" + NEWLINE;
           return "";
         }
         return gatherDataHtml(convertNode(aNode));
@@ -588,11 +599,11 @@ var PlacesUtils = {
         if (!wasOpen)
           bNode.containerOpen = true;
           
-        var childString = bNode.title + "\n";
+        var childString = bNode.title + NEWLINE;
         var cc = bNode.childCount;
         for (var i = 0; i < cc; ++i) {
           var child = bNode.getChild(i);
-          var suffix = i < (cc - 1) ? "\n" : "";
+          var suffix = i < (cc - 1) ? NEWLINE : "";
           childString += gatherDataText(child) + suffix;
         }
         bNode.containerOpen = wasOpen;

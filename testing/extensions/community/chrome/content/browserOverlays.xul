@@ -35,6 +35,8 @@
 #
 # ***** END LICENSE BLOCK ***** -->
 
+<?xml-stylesheet href="chrome://qa/skin/browserOverlays.css" type="text/css"?>
+
 <!DOCTYPE overlay [
 <!ENTITY % qaDTD SYSTEM "chrome://qa/locale/qa.dtd"> %qaDTD;
 ]>
@@ -42,38 +44,10 @@
 <overlay id="qa" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <script type="application/x-javascript" src="chrome://qa/content/MochiKit/MochiKit.js" />
+ <script type="application/x-javascript" src="chrome://qa/content/MochiKit/MochiKit.js" />
  <script type="application/x-javascript" src="chrome://qa/content/prefs.js" />
  <script type="application/x-javascript" src="chrome://qa/content/qa.js" />
  <script type="application/x-javascript" src="chrome://qa/content/notifications.js" />
- 
- <style>
- #qa-notify {
-  right: 18px;
-  bottom: 21px;
-  position: fixed;
-  border: 1px solid grey;
-  background-color: white;
-  background-image: url("logolight.png");
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-.qa-notify {
-  height: 140px;
-  width: 420px;
-}
-
-#qa-notify-box {
-  padding: 0px 6px 6px 6px;
-	display: table;
-}
-
-#qa-notify-header {
-  font-size: 1.5em;
-  font-weight: bold;
-}
-</style>
  
  <statusbar id="status-bar">
   <statusbarpanel class="statusbarpanel-iconic" id="qa-statusbar-overlay" 

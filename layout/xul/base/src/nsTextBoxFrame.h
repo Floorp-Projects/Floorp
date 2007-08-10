@@ -41,6 +41,7 @@
 #include "nsLeafBoxFrame.h"
 
 class nsAccessKeyInfo;
+class nsAsyncAccesskeyUpdate;
 
 typedef nsLeafBoxFrame nsTextBoxFrameSuper;
 class nsTextBoxFrame : public nsTextBoxFrameSuper
@@ -87,7 +88,10 @@ public:
                   nsPoint              aPt);
 
 protected:
-
+  friend class nsAsyncAccesskeyUpdate;
+  // Should be called only by nsAsyncAccesskeyUpdate.
+  // Returns PR_TRUE if accesskey was updated.
+  PRBool UpdateAccesskey(nsWeakFrame& aWeakThis);
   void UpdateAccessTitle();
   void UpdateAccessIndex();
 
@@ -125,7 +129,8 @@ private:
   nsString mAccessKey;
   nscoord mTitleWidth;
   nsAccessKeyInfo* mAccessKeyInfo;
-  PRBool mNeedsRecalc;
+  PRPackedBool mNeedsRecalc;
+  PRPackedBool mReflowCallbackPosted;
   nsSize mTextSize;
   nscoord mAscent;
 

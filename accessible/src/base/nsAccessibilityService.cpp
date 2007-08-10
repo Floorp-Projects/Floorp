@@ -1385,8 +1385,14 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     }
 
     if (tryFrame) {
-      if (frame->GetType() != nsAccessibilityAtoms::placeholderFrame &&
-          frame->GetRect().IsEmpty()) {
+      // Do not create accessible object subtrees for non-rendered table captions.
+      // This could not be done in nsTableCaptionFrame::GetAccessible() because the
+      // descendants of the table caption would still be created.
+      // By setting *aIsHidden = PR_TRUE we ensure that no descendant accessibles are created
+      if (frame->GetType() == nsAccessibilityAtoms::tableCaptionFrame &&
+         frame->GetRect().IsEmpty()) {
+        // XXX This is not the ideal place for this code, but right now there is 
+        // no better place:
         *aIsHidden = PR_TRUE;
         return NS_OK;
       }

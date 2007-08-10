@@ -77,15 +77,31 @@ static PRLogModuleInfo *gFontLog = PR_NewLogModule("winfonts");
 
 #define ROUND(x) floor((x) + 0.5)
 
-inline HDC
-GetDCFromSurface(gfxASurface *aSurface)
-{
-    if (aSurface->GetType() != gfxASurface::SurfaceTypeWin32) {
-        NS_ERROR("GetDCFromSurface: Context target is not win32!");
-        return nsnull;
+
+struct DCFromContext {
+    DCFromContext(gfxContext *aContext) {
+        nsRefPtr<gfxASurface> aSurface = aContext->CurrentSurface();
+        if (aSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
+            dc = static_cast<gfxWindowsSurface*>(aSurface.get())->GetDC();
+            needsRelease = PR_FALSE;
+        } else {
+            dc = GetDC(NULL);
+            needsRelease = PR_TRUE;
+        }
     }
-    return static_cast<gfxWindowsSurface*>(aSurface)->GetDC();
-}
+
+    ~DCFromContext() {
+        if (needsRelease)
+            ReleaseDC(NULL, dc);
+    }
+
+    operator HDC () {
+        return dc;
+    }
+
+    HDC dc;
+    PRBool needsRelease;
+};
 
 /**********************************************************************
  *
@@ -589,22 +605,16 @@ gfxWindowsFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
 }
 
 /**
- * Set the font in the DC for aContext's surface. Return the DC if we're
- * successful. If it's not a win32 surface or something goes wrong or if
- * the font is not a Truetype font (hence GetGlyphIndices may be buggy) then
- * we're not successful and return 0.
+ * Set the font in the given DC.  If something goes wrong or if the
+ * font is not a Truetype font (hence GetGlyphIndices may be buggy)
+ * then we're not successful and return PR_FALSE, otherwise PR_TRUE.
  */
-static HDC
-SetupContextFont(gfxContext *aContext, gfxWindowsFont *aFont)
+static PRBool
+SetupDCFont(HDC dc, gfxWindowsFont *aFont)
 {
-    nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
-    HDC dc = GetDCFromSurface(surf);
-    if (!dc)
-        return 0;
-
     HFONT hfont = aFont->GetHFONT();
     if (!hfont)
-        return 0;
+        return PR_FALSE;
     SelectObject(dc, hfont);
 
     /* GetGlyphIndices is buggy for bitmap and vector fonts,
@@ -612,9 +622,9 @@ SetupContextFont(gfxContext *aContext, gfxWindowsFont *aFont)
     TEXTMETRIC metrics;
     GetTextMetrics(dc, &metrics);
     if ((metrics.tmPitchAndFamily & (TMPF_TRUETYPE)) == 0)
-        return 0;
+        return PR_FALSE;
 
-    return dc;
+    return PR_TRUE;
 }
 
 static PRBool
@@ -685,8 +695,8 @@ gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun,
                                     const char *aString, PRUint32 aLength)
 {
     nsRefPtr<gfxWindowsFont> font = GetFontAt(0);
-    HDC dc = SetupContextFont(aContext, font);
-    if (dc) {
+    DCFromContext dc(aContext);
+    if (SetupDCFont(dc, font)) {
         nsAutoTArray<WCHAR,500> glyphArray;
         if (!glyphArray.AppendElements(aLength))
             return;
@@ -709,8 +719,8 @@ gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun,
                                     const PRUnichar *aString, PRUint32 aLength)
 {
     nsRefPtr<gfxWindowsFont> font = GetFontAt(0);
-    HDC dc = SetupContextFont(aContext, font);
-    if (dc) {
+    DCFromContext dc(aContext);
+    if (SetupDCFont(dc, font)) {
         nsAutoTArray<WCHAR,500> glyphArray;
         if (!glyphArray.AppendElements(aLength))
             return;
@@ -920,6 +930,11 @@ public:
             }
 
             if (rv == E_PENDING) {
+                if (shapeDC == mDC) {
+                    // we already tried this once, something failed, give up
+                    return GDI_ERROR;
+                }
+
                 SelectFont();
 
                 shapeDC = mDC;
@@ -1516,9 +1531,7 @@ void
 gfxWindowsFontGroup::InitTextRunUniscribe(gfxContext *aContext, gfxTextRun *aRun, const PRUnichar *aString,
                                           PRUint32 aLength)
 {
-    nsRefPtr<gfxASurface> surf = aContext->CurrentSurface();
-    HDC aDC = GetDCFromSurface(surf);
-    NS_ASSERTION(aDC, "No DC");
+    DCFromContext aDC(aContext);
  
     const PRBool isRTL = aRun->IsRightToLeft();
 

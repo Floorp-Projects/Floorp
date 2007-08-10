@@ -176,24 +176,6 @@ nsPrompt::Init()
 // nsPrompt::nsIPrompt
 //*****************************************************************************
 
-class nsAutoWindowStateHelper
-{
-public:
-  nsAutoWindowStateHelper(nsIDOMWindow *aWindow);
-  ~nsAutoWindowStateHelper();
-
-  PRBool DefaultEnabled()
-  {
-    return mDefaultEnabled;
-  }
-
-protected:
-  PRBool DispatchCustomEvent(const char *aEventName);
-
-  nsIDOMWindow *mWindow;
-  PRBool mDefaultEnabled;
-};
-
 nsAutoWindowStateHelper::nsAutoWindowStateHelper(nsIDOMWindow *aWindow)
   : mWindow(aWindow),
     mDefaultEnabled(DispatchCustomEvent("DOMWillOpenModalDialog"))
@@ -228,9 +210,6 @@ nsAutoWindowStateHelper::DispatchCustomEvent(const char *aEventName)
 #ifdef DEBUG
   {
     nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mWindow));
-
-    NS_ASSERTION(window->GetExtantDocument() != nsnull,
-                 "nsPrompt used too early on window object!");
   }
 #endif
 

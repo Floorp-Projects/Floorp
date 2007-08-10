@@ -452,9 +452,9 @@ bool ExceptionHandler::WriteMinidumpWithException(
   if (minidump_write_dump_) {
     HANDLE dump_file = CreateFile(next_minidump_path_c_,
                                   GENERIC_WRITE,
-                                  FILE_SHARE_WRITE,
+                                  0,  // no sharing
                                   NULL,
-                                  CREATE_ALWAYS,
+                                  CREATE_NEW,  // fail if exists
                                   FILE_ATTRIBUTE_NORMAL,
                                   NULL);
     if (dump_file != INVALID_HANDLE_VALUE) {

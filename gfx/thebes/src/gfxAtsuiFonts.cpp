@@ -431,31 +431,23 @@ SetupClusterBoundaries(gfxTextRun *aTextRun, const PRUnichar *aString)
                                                &locator);
     if (status != noErr)
         return;
-    UniCharArrayOffset breakOffset;
+    UniCharArrayOffset breakOffset = 0;
+    UCTextBreakOptions options = kUCTextBreakLeadingEdgeMask;
     PRUint32 length = aTextRun->GetLength();
-    status = UCFindTextBreak(locator, kUCTextBreakClusterMask,
-                             kUCTextBreakLeadingEdgeMask, aString, length, 0, &breakOffset);
-    if (status != noErr) {
-        UCDisposeTextBreakLocator(&locator);
-        return;
+    while (breakOffset < length) {
+        UniCharArrayOffset next;
+        status = UCFindTextBreak(locator, kUCTextBreakClusterMask, options,
+                                 aString, length, breakOffset, &next);
+        if (status != noErr)
+            break;
+        options |= kUCTextBreakIterateMask;
+        PRUint32 i;
+        for (i = breakOffset + 1; i < next; ++i) {
+            gfxTextRun::CompressedGlyph g;
+            aTextRun->SetCharacterGlyph(i, g.SetClusterContinuation());
+        }
+        breakOffset = next;
     }
-    gfxTextRun::CompressedGlyph g;
-    PRUint32 lastBreak = 1;
-    do {
-        while (lastBreak < breakOffset) {
-            aTextRun->SetCharacterGlyph(lastBreak, g.SetClusterContinuation());
-            ++lastBreak;
-        }
-        status = UCFindTextBreak(locator, kUCTextBreakClusterMask,
-                                 kUCTextBreakIterateMask|kUCTextBreakLeadingEdgeMask,
-                                 aString, length, breakOffset, &breakOffset);
-        if (status != noErr) {
-            UCDisposeTextBreakLocator(&locator);
-            return;
-        }
-        ++lastBreak;
-    } while (breakOffset < length);
-    NS_ASSERTION(breakOffset == length, "Should have found a final break");
     UCDisposeTextBreakLocator(&locator);
 }
 
