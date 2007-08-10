@@ -146,12 +146,12 @@ function testtag_scale_UI_Mouse(element, testid, horiz, reverse, pinc)
   element.value = 12;
 
   // check that clicking the mouse on the trough moves the thumb properly
-  synthesizeMouseExpectEvent(element, 6, 6, { }, element, "change", testid + "mouse on left");
+  synthesizeMouseExpectEvent(element, 10, 10, { }, element, "change", testid + "mouse on left");
   is(element.value, newval, testid + " mouse on left");
 
   var rect = element.getBoundingClientRect();
-  synthesizeMouseExpectEvent(element, rect.right - rect.left - 6,
-                             rect.bottom - rect.top - 6, { },
+  synthesizeMouseExpectEvent(element, rect.right - rect.left - 10,
+                             rect.bottom - rect.top - 10, { },
                              element, "change", testid + " mouse on right");
   is(element.value, endval, testid + " mouse on right");
 }
