@@ -763,7 +763,6 @@ nsXMLContentSink::ProcessStyleLink(nsIContent* aElement,
     PRInt16 decision = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
                                    url,
-                                   nsnull,
                                    mDocument->NodePrincipal(),
                                    aElement,
                                    type,

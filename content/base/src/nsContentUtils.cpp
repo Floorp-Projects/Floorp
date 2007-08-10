@@ -2120,7 +2120,6 @@ nsContentUtils::CanLoadImage(nsIURI* aURI, nsISupports* aContext,
 
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_IMAGE,
                                  aURI,
-                                 nsnull,
                                  aLoadingPrincipal,
                                  aContext,
                                  EmptyCString(), //mime guess
@@ -3621,7 +3620,6 @@ nsContentUtils::CheckSecurityBeforeLoad(nsIURI* aURIToLoad,
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(aContentPolicyType,
                                  aURIToLoad,
-                                 nsnull,
                                  aLoadingPrincipal,
                                  aContext,
                                  aMimeGuess,

@@ -891,7 +891,6 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
     rv =
       NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT,
                                 aURI,
-                                nsnull,
                                 doc->NodePrincipal(),
                                 static_cast<nsIImageLoadingContent*>(this),
                                 aTypeHint,

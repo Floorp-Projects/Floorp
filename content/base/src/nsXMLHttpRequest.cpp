@@ -1264,7 +1264,6 @@ nsXMLHttpRequest::OpenRequest(const nsACString& method,
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_XMLHTTPREQUEST,
                                  uri,
-                                 nsnull,
                                  (doc ? doc->NodePrincipal() : nsnull),
                                  doc,
                                  EmptyCString(), //mime guess
