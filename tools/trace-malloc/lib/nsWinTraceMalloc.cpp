@@ -140,8 +140,6 @@ int call1(char c, int i, double d, ... )
 #error "Don't know filename of MSVC debug library."
 #endif
 
-static BOOL g_lockOut = FALSE; //stop reentrancy
-
 DHW_DECLARE_FUN_TYPE_AND_PROTO(dhw_malloc, void*, __cdecl, MALLOC_, (size_t));
 
 DHWImportHooker &getMallocHooker()
@@ -155,16 +153,7 @@ void * __cdecl dhw_malloc( size_t size )
     PRUint32 start = PR_IntervalNow();
     void* result = DHW_ORIGINAL(MALLOC_, getMallocHooker())(size);
     PRUint32 end = PR_IntervalNow();
-    if (g_lockOut)
-      return result;
-    g_lockOut = TRUE;
-#ifdef VERBOSE
-    printf("* malloc called to get %d bytes. returned %#x\n", size, result);
-#endif
     MallocCallback(result, size, start, end);
-//    dumpStack(); 
-//    printf("\n");
-    g_lockOut = FALSE;
     return result;    
 }
 
@@ -181,16 +170,7 @@ void * __cdecl dhw_calloc( size_t count, size_t size )
     PRUint32 start = PR_IntervalNow();
     void* result = DHW_ORIGINAL(CALLOC_, getCallocHooker())(count,size);
     PRUint32 end = PR_IntervalNow();
-    if (g_lockOut)
-      return result;
-    g_lockOut = TRUE;
-#ifdef VERBOSE
-    printf("* calloc called to get %d many of %d bytes. returned %#x\n", count, size, result);
-#endif
     CallocCallback(result, count, size, start, end);
-//    dumpStack(); 
-//    printf("\n");
-    g_lockOut = FALSE;
     return result;    
 }
 
@@ -206,16 +186,7 @@ void __cdecl dhw_free( void* p )
     PRUint32 start = PR_IntervalNow();
     DHW_ORIGINAL(FREE_, getFreeHooker())(p);
     PRUint32 end = PR_IntervalNow();
-    if (g_lockOut)
-      return;
-    g_lockOut = TRUE;
-#ifdef VERBOSE
-    printf("* free called for %#x\n", p);
-#endif
     FreeCallback(p, start, end);
-//    dumpStack(); 
-//    printf("\n");
-    g_lockOut = FALSE;
 }
 
 
@@ -231,18 +202,7 @@ void * __cdecl dhw_realloc(void * pin, size_t size)
     PRUint32 start = PR_IntervalNow();
     void* pout = DHW_ORIGINAL(REALLOC_, getReallocHooker())(pin, size);
     PRUint32 end = PR_IntervalNow();
-    if (g_lockOut)
-      return pout;
-    g_lockOut = TRUE;
-
-#ifdef VERBOSE
-    printf("* realloc called to resize to %d. old ptr: %#x. new ptr: %#x\n", 
-           size, pin, pout);
-#endif
     ReallocCallback(pin, pout, size, start, end);
-//    dumpStack(); 
-//    printf("\n");
-    g_lockOut = FALSE;
     return pout;
 }
 
@@ -259,17 +219,7 @@ void * __cdecl dhw_new(size_t size)
     PRUint32 start = PR_IntervalNow();
     void* result = DHW_ORIGINAL(NEW_, getNewHooker())(size);
     PRUint32 end = PR_IntervalNow();
-    if (g_lockOut)
-      return result;
-    g_lockOut = TRUE;
-
-#ifdef VERBOSE
-    printf("* new called to get %d bytes. returned %#x\n", size, result);
-    dumpStack(); 
-#endif
     MallocCallback(result, size, start, end);//do we need a different one for new?
-//    printf("\n");
-    g_lockOut = FALSE;
     return result;
 }
 
@@ -286,16 +236,7 @@ void __cdecl dhw_delete(void* p)
     PRUint32 start = PR_IntervalNow();
     DHW_ORIGINAL(DELETE_, getDeleteHooker())(p);
     PRUint32 end = PR_IntervalNow();
-    if (g_lockOut)
-      return;
-    g_lockOut = TRUE;
-#ifdef VERBOSE
-    printf("* delete called for %#x\n", p);
-    dumpStack(); 
-#endif
     FreeCallback(p, start, end);
-//    printf("\n");
-    g_lockOut = FALSE;
 }
 
 
