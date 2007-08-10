@@ -1,3 +1,42 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is the Windows port of trace-malloc.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Michael Judge (original author)
+ *   L. David Baron <dbaron@dbaron.org>, Mozilla Corporation
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,10 +76,13 @@ DHWImportHooker &getMallocHooker()
 
 void * __cdecl dhw_malloc( size_t size )
 {
+    tm_thread *t = tm_get_thread();
+    ++t->suppress_tracing;
     PRUint32 start = PR_IntervalNow();
     void* result = DHW_ORIGINAL(MALLOC_, getMallocHooker())(size);
     PRUint32 end = PR_IntervalNow();
-    MallocCallback(result, size, start, end);
+    --t->suppress_tracing;
+    MallocCallback(result, size, start, end, t);
     return result;    
 }
 
@@ -54,10 +96,13 @@ DHWImportHooker &getCallocHooker()
 
 void * __cdecl dhw_calloc( size_t count, size_t size )
 {
+    tm_thread *t = tm_get_thread();
+    ++t->suppress_tracing;
     PRUint32 start = PR_IntervalNow();
     void* result = DHW_ORIGINAL(CALLOC_, getCallocHooker())(count,size);
     PRUint32 end = PR_IntervalNow();
-    CallocCallback(result, count, size, start, end);
+    --t->suppress_tracing;
+    CallocCallback(result, count, size, start, end, t);
     return result;    
 }
 
@@ -70,10 +115,13 @@ DHWImportHooker &getFreeHooker()
 
 void __cdecl dhw_free( void* p )
 {
+    tm_thread *t = tm_get_thread();
+    ++t->suppress_tracing;
     PRUint32 start = PR_IntervalNow();
     DHW_ORIGINAL(FREE_, getFreeHooker())(p);
     PRUint32 end = PR_IntervalNow();
-    FreeCallback(p, start, end);
+    --t->suppress_tracing;
+    FreeCallback(p, start, end, t);
 }
 
 
@@ -86,10 +134,13 @@ DHWImportHooker &getReallocHooker()
 
 void * __cdecl dhw_realloc(void * pin, size_t size)
 {
+    tm_thread *t = tm_get_thread();
+    ++t->suppress_tracing;
     PRUint32 start = PR_IntervalNow();
     void* pout = DHW_ORIGINAL(REALLOC_, getReallocHooker())(pin, size);
     PRUint32 end = PR_IntervalNow();
-    ReallocCallback(pin, pout, size, start, end);
+    --t->suppress_tracing;
+    ReallocCallback(pin, pout, size, start, end, t);
     return pout;
 }
 
@@ -103,10 +154,13 @@ DHWImportHooker &getNewHooker()
 
 void * __cdecl dhw_new(size_t size)
 {
+    tm_thread *t = tm_get_thread();
+    ++t->suppress_tracing;
     PRUint32 start = PR_IntervalNow();
     void* result = DHW_ORIGINAL(NEW_, getNewHooker())(size);
     PRUint32 end = PR_IntervalNow();
-    MallocCallback(result, size, start, end);//do we need a different one for new?
+    --t->suppress_tracing;
+    MallocCallback(result, size, start, end, t);//do we need a different one for new?
     return result;
 }
 
@@ -120,10 +174,13 @@ DHWImportHooker &getDeleteHooker()
 
 void __cdecl dhw_delete(void* p)
 {
+    tm_thread *t = tm_get_thread();
+    ++t->suppress_tracing;
     PRUint32 start = PR_IntervalNow();
     DHW_ORIGINAL(DELETE_, getDeleteHooker())(p);
     PRUint32 end = PR_IntervalNow();
-    FreeCallback(p, start, end);
+    --t->suppress_tracing;
+    FreeCallback(p, start, end, t);
 }
 
 // Note the mangled name!
@@ -136,10 +193,13 @@ DHWImportHooker &getVecNewHooker()
 
 void * __cdecl dhw_vec_new(size_t size)
 {
+    tm_thread *t = tm_get_thread();
+    ++t->suppress_tracing; // need to suppress since new[] calls new
     PRUint32 start = PR_IntervalNow();
     void* result = DHW_ORIGINAL(VEC_NEW_, getVecNewHooker())(size);
     PRUint32 end = PR_IntervalNow();
-    MallocCallback(result, size, start, end);//do we need a different one for new[]?
+    --t->suppress_tracing;
+    MallocCallback(result, size, start, end, t);//do we need a different one for new[]?
     return result;
 }
 
@@ -153,10 +213,13 @@ DHWImportHooker &getVecDeleteHooker()
 
 void __cdecl dhw_vec_delete(void* p)
 {
+    tm_thread *t = tm_get_thread();
+    ++t->suppress_tracing;
     PRUint32 start = PR_IntervalNow();
     DHW_ORIGINAL(VEC_DELETE_, getVecDeleteHooker())(p);
     PRUint32 end = PR_IntervalNow();
-    FreeCallback(p, start, end);
+    --t->suppress_tracing;
+    FreeCallback(p, start, end, t);
 }
 
 /*C Callbacks*/
