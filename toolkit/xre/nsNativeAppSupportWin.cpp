@@ -646,13 +646,8 @@ struct MessageWindow {
             if (wp == FALSE)
                 return TRUE;
 
-            nsCOMPtr<nsIObserverService> obsServ =
-                do_GetService("@mozilla.org/observer-service;1");
             nsCOMPtr<nsIAppStartup> appService =
                 do_GetService("@mozilla.org/toolkit/app-startup;1");
-
-            if (obsServ)
-                obsServ->NotifyObservers(nsnull, "quit-application-granted", nsnull);
 
             if (appService)
                 appService->Quit(nsIAppStartup::eForceQuit);
