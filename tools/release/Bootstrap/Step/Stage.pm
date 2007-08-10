@@ -192,7 +192,7 @@ sub Execute {
     my $product = $config->Get(var => 'product');
     my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $stageHome = $config->Get(var => 'stageHome');
     my $appName = $config->Get(var => 'appName');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
@@ -395,7 +395,7 @@ sub Verify {
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
     my $appName = $config->Get(var => 'appName');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
     my $stageHome = $config->Get(var => 'stageHome');
