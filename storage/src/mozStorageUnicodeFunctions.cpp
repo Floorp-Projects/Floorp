@@ -90,8 +90,7 @@ StorageUnicodeFunctions::caseFunction(sqlite3_context *p,
     ToLowerCase(data);
 
   // Give sqlite our result
-  sqlite3_result_text16(p, nsPromiseFlatString(data).get(), -1,
-                        SQLITE_TRANSIENT);
+  sqlite3_result_text16(p, data.get(), -1, SQLITE_TRANSIENT);
 }
 
 static int
@@ -99,7 +98,7 @@ likeCompare(nsAString::const_iterator aPatternItr,
             nsAString::const_iterator aPatternEnd,
             nsAString::const_iterator aStringItr,
             nsAString::const_iterator aStringEnd,
-            const nsAString::char_type *aEscape)
+            PRUnichar aEscape)
 {
   const PRUnichar MATCH_ALL('%');
   const PRUnichar MATCH_ONE('_');
@@ -153,7 +152,7 @@ likeCompare(nsAString::const_iterator aPatternItr,
       }
       aStringItr++;
       lastWasEscape = PR_FALSE;
-    } else if (!lastWasEscape && *aPatternItr == *aEscape) {
+    } else if (!lastWasEscape && *aPatternItr == aEscape) {
       // CASE 3
       lastWasEscape = PR_TRUE;
     } else {
@@ -189,15 +188,13 @@ StorageUnicodeFunctions::likeFunction(sqlite3_context *p,
     return;
   }
 
-  nsAutoString A(static_cast<const PRUnichar *>(sqlite3_value_text16(aArgv[1])));
-  nsAutoString B(static_cast<const PRUnichar *>(sqlite3_value_text16(aArgv[0])));
-  NS_ASSERTION(B.Length() != 0, "LIKE string must not be null!");
+  nsDependentString A(static_cast<const PRUnichar *>(sqlite3_value_text16(aArgv[1])));
+  nsDependentString B(static_cast<const PRUnichar *>(sqlite3_value_text16(aArgv[0])));
+  NS_ASSERTION(!B.IsEmpty(), "LIKE string must not be null!");
 
-  nsAutoString E;
-  if (3 == aArgc) {
-    E = static_cast<const PRUnichar *>(sqlite3_value_text16(aArgv[2]));
-    NS_ASSERTION(E.Length() == 1, "ESCAPE express must be a single character");
-  }
+  PRUnichar E;
+  if (3 == aArgc)
+    E = static_cast<const PRUnichar *>(sqlite3_value_text16(aArgv[2]))[0];
 
   nsAString::const_iterator itrString, endString;
   A.BeginReading(itrString);
@@ -206,6 +203,6 @@ StorageUnicodeFunctions::likeFunction(sqlite3_context *p,
   B.BeginReading(itrPattern);
   B.EndReading(endPattern);
   sqlite3_result_int(p, likeCompare(itrPattern, endPattern,
-                                    itrString, endString, E.get()));
+                                    itrString, endString, E));
 }
 
