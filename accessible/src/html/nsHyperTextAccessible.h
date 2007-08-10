@@ -155,7 +155,7 @@ protected:
   nsIFrame* GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset, nsAString *aText = nsnull,
                           nsIFrame **aEndFrame = nsnull, nsIntRect *aBoundsRect = nsnull);
 
-  nsIntRect GetBoundsForString(nsIFrame *aFrame, PRInt32 aStartContentOffset, PRInt32 aEndContentOffset);
+  nsIntRect GetBoundsForString(nsIFrame *aFrame, PRUint32 aStartRenderedOffset, PRUint32 aEndRenderedOffset);
 
   // Editor helpers, subclasses of nsHyperTextAccessible may have editor
   virtual void SetEditor(nsIEditor *aEditor) { return; }
