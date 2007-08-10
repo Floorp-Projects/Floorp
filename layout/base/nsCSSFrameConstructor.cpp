@@ -2295,7 +2295,8 @@ nsCSSFrameConstructor::CreateInputFrame(nsFrameConstructorState& aState,
                                         const nsStyleDisplay*    aStyleDisplay,
                                         PRBool&                  aFrameHasBeenInitialized,
                                         PRBool&                  aAddedToFrameList,
-                                        nsFrameItems&            aFrameItems)
+                                        nsFrameItems&            aFrameItems,
+                                        PRBool                   aHasPseudoParent)
 {
   // Make sure to keep IsSpecialContent in synch with this code
   
@@ -2311,11 +2312,12 @@ nsCSSFrameConstructor::CreateInputFrame(nsFrameConstructorState& aState,
     case NS_FORM_INPUT_BUTTON:
     {
       if (gUseXBLForms)
-        return NS_OK; // upddate IsSpecialContent if this becomes functional
+        return NS_OK; // update IsSpecialContent if this becomes functional
 
       nsresult rv = ConstructButtonFrame(aState, aContent, aParentFrame,
                                          aTag, aStyleContext, aFrame,
-                                         aStyleDisplay, aFrameItems);
+                                         aStyleDisplay, aFrameItems,
+                                         aHasPseudoParent);
       aAddedToFrameList = PR_TRUE;
       aFrameHasBeenInitialized = PR_TRUE;
       return rv;
@@ -4764,8 +4766,13 @@ nsCSSFrameConstructor::ConstructButtonFrame(nsFrameConstructorState& aState,
                                             nsStyleContext*          aStyleContext,
                                             nsIFrame**               aNewFrame,
                                             const nsStyleDisplay*    aStyleDisplay,
-                                            nsFrameItems&            aFrameItems)
+                                            nsFrameItems&            aFrameItems,
+                                            PRBool                   aHasPseudoParent)
 {
+  if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
+    ProcessPseudoFrames(aState, aFrameItems); 
+  }      
+
   *aNewFrame = nsnull;
   nsIFrame* buttonFrame = nsnull;
   
@@ -5330,14 +5337,18 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     triedFrame = PR_TRUE;
   }
   else if (nsGkAtoms::input == aTag) {
-    if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
-        ProcessPseudoFrames(aState, aFrameItems); 
-    }
     // Make sure to keep IsSpecialContent in synch with this code
     rv = CreateInputFrame(aState, aContent, aParentFrame,
                           aTag, aStyleContext, &newFrame,
                           display, frameHasBeenInitialized,
-                          addedToFrameList, aFrameItems);  
+                          addedToFrameList, aFrameItems,
+                          aHasPseudoParent);
+    if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty() &&
+        newFrame && !addedToFrameList) {
+      // We'll still be adding this new frame, and it's a replaced
+      // element, so process pseudo-frames now.
+      ProcessPseudoFrames(aState, aFrameItems);       
+    }
   }
   else if (nsGkAtoms::textarea == aTag) {
     if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
@@ -5468,13 +5479,9 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsFrameConstructorState& aState,
     triedFrame = PR_TRUE;
   }
   else if (nsGkAtoms::button == aTag) {
-    if (!aHasPseudoParent && !aState.mPseudoFrames.IsEmpty()) {
-      ProcessPseudoFrames(aState, aFrameItems); 
-    }
-    
     rv = ConstructButtonFrame(aState, aContent, aParentFrame,
                               aTag, aStyleContext, &newFrame,
-                              display, aFrameItems);
+                              display, aFrameItems, aHasPseudoParent);
     // the html4 button needs to act just like a 
     // regular button except contain html content
     // so it must be replaced or html outside it will
