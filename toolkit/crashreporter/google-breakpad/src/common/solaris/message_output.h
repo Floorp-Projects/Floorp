@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2007, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,40 +27,28 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// string_conversion.h: Conversion between different UTF-8/16/32 encodings.
+// Author: Alfred Peng
 
-#ifndef COMMON_STRING_CONVERSION_H__
-#define COMMON_STRING_CONVERSION_H__
-
-#include <string>
-#include <vector>
-#include "google_breakpad/common/breakpad_types.h"
+#ifndef COMMON_SOLARIS_MESSAGE_OUTPUT_H__
+#define COMMON_SOLARIS_MESSAGE_OUTPUT_H__
 
 namespace google_breakpad {
-  
-using std::vector;
 
-// Convert |in| to UTF-16 into |out|.  Use platform byte ordering.  If the
-// conversion failed, |out| will be zero length.
-void UTF8ToUTF16(const char *in, vector<u_int16_t> *out);
+const int MESSAGE_MAX = 1000;
 
-// Convert at least one character (up to a maximum of |in_length|) from |in|
-// to UTF-16 into |out|.  Return the number of characters consumed from |in|.
-// Any unused characters in |out| will be initialized to 0.  No memory will
-// be allocated by this routine.
-int UTF8ToUTF16Char(const char *in, int in_length, u_int16_t out[2]);
+// Message output macros.
+// snprintf doesn't operate heap on Solaris, while printf and fprintf do.
+// Use snprintf here to avoid heap allocation.
+#define print_message1(std, message) \
+  char buffer[MESSAGE_MAX]; \
+  int len = snprintf(buffer, MESSAGE_MAX, message); \
+  write(std, buffer, len)
 
-// Convert |in| to UTF-16 into |out|.  Use platform byte ordering.  If the
-// conversion failed, |out| will be zero length.
-void UTF32ToUTF16(const wchar_t *in, vector<u_int16_t> *out);
-
-// Convert |in| to UTF-16 into |out|.  Any unused characters in |out| will be
-// initialized to 0.  No memory will be allocated by this routine.
-void UTF32ToUTF16Char(wchar_t in, u_int16_t out[2]);
-
-// Convert |in| to UTF-8.  If |swap| is true, swap bytes before converting.
-std::string UTF16ToUTF8(const vector<u_int16_t> &in, bool swap);
+#define print_message2(std, message, para) \
+  char buffer[MESSAGE_MAX]; \
+  int len = snprintf(buffer, MESSAGE_MAX, message, para); \
+  write(std, buffer, len);
 
 }  // namespace google_breakpad
 
-#endif  // COMMON_STRING_CONVERSION_H__
+#endif  // COMMON_SOLARIS_MESSAGE_OUTPUT_H__
