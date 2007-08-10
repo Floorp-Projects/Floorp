@@ -61,3 +61,6 @@ include columns/reftest.list
 
 # image-region/
 include image-region/reftest.list
+
+# block-inside-inline splits
+include ib-split/reftest.list
