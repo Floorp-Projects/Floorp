@@ -1823,6 +1823,7 @@ DocumentViewerImpl::Show(void)
 
     base_win->GetParentWidget(&mParentWidget);
     NS_ENSURE_TRUE(mParentWidget, NS_ERROR_UNEXPECTED);
+    mParentWidget->Release(); // GetParentWidget AddRefs, but mParentWidget is weak
 
     mDeviceContext = mParentWidget->GetDeviceContext();
 
