@@ -39,10 +39,10 @@
 #ifndef jsxml_h___
 #define jsxml_h___
 
-JS_BEGIN_EXTERN_C
-
 #include "jsstddef.h"
 #include "jspubtd.h"
+
+JS_BEGIN_EXTERN_C
 
 extern const char js_AnyName_str[];
 extern const char js_AttributeName_str[];
