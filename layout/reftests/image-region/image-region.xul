@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/licenses/publicdomain/
+    -->
+<?xml-stylesheet href="image-region.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="main"
+        class="reftest-image-region">
+  <hbox id="test">
+    <image id="image1" />
+    <hbox flex="1000" />
+  </hbox>
+</window>
