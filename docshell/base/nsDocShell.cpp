@@ -6379,11 +6379,21 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     if (!context) {
         context =  mScriptGlobal;
     }
+
     // XXXbz would be nice to know the loading principal here... but we don't
+    nsCOMPtr<nsIPrincipal> loadingPrincipal;
+    if (aReferrer) {
+        nsCOMPtr<nsIScriptSecurityManager> secMan =
+            do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = secMan->GetCodebasePrincipal(aReferrer,
+                                          getter_AddRefs(loadingPrincipal));
+    }
+    
     rv = NS_CheckContentLoadPolicy(contentType,
                                    aURI,
-                                   aReferrer,
-                                   nsnull,
+                                   loadingPrincipal,
                                    context,
                                    EmptyCString(), //mime guess
                                    nsnull,         //extra

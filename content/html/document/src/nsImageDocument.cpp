@@ -195,7 +195,6 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
   PRInt16 decision = nsIContentPolicy::ACCEPT;
   nsresult rv = NS_CheckContentProcessPolicy(nsIContentPolicy::TYPE_IMAGE,
                                              channelURI,
-                                             nsnull,
                                              channelPrincipal,
                                              domWindow->GetFrameElementInternal(),
                                              mimeType,
