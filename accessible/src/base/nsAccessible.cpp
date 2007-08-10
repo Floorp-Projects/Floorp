@@ -39,64 +39,53 @@
 
 #include "nsAccessible.h"
 #include "nsAccessibleRelation.h"
-#include "nsIAccessibleDocument.h"
-#include "nsIDocument.h"
-#include "nsIDOMNSDocument.h"
-#include "nsIDOMNSHTMLElement.h"
-#include "nsIImageDocument.h"
-#include "nsIPresShell.h"
-#include "nsPresContext.h"
-#include "nsIContent.h"
-#include "nsIFrame.h"
-#include "nsIScrollableView.h"
-#include "nsIViewManager.h"
-#include "nsIWidget.h"
-#include "nsIDOMDocumentView.h"
-#include "nsIDOMAbstractView.h"
-#include "nsIDOM3Node.h"
-#include "nsPIDOMWindow.h"
-#include "nsIDOMElement.h"
-#include "nsHTMLLinkAccessible.h"
-#include "nsISelection.h"
-#include "nsISelectionController.h"
-#include "nsIServiceManager.h"
-#include "nsXPIDLString.h"
-#include "nsUnicharUtils.h"
-#include "prdtoa.h"
-#include "nsIDOMComment.h"
-#include "nsIDOMHTMLImageElement.h"
-#include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLBRElement.h"
-#include "nsIAtom.h"
-#include "nsGUIEvent.h"
-#include "nsIDocShellTreeItem.h"
+#include "nsHyperTextAccessibleWrap.h"
 
-#include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMXULSelectCntrlEl.h"
-#include "nsIDOMXULSelectCntrlItemEl.h"
-#include "nsIDOMHTMLObjectElement.h"
-#include "nsIDOMXULButtonElement.h"
-#include "nsIDOMXULCheckboxElement.h"
+#include "nsIAccessibleDocument.h"
+#include "nsIAccessibleHyperText.h"
+#include "nsAccessibleTreeWalker.h"
+
+#include "nsIDOM3Node.h"
+#include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentXBL.h"
+#include "nsIDOMDocumentTraversal.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nsIDOMHTMLFormElement.h"
+#include "nsIDOMNodeFilter.h"
+#include "nsIDOMNSDocument.h"
+#include "nsIDOMNSHTMLElement.h"
+#include "nsIDOMTreeWalker.h"
+#include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULLabelElement.h"
+#include "nsIDOMXULSelectCntrlEl.h"
+#include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsPIDOMWindow.h"
+
+#include "nsIDocument.h"
+#include "nsIContent.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
+
+#include "nsIPresShell.h"
+#include "nsPresContext.h"
+#include "nsIFrame.h"
+#include "nsIViewManager.h"
+#include "nsIDocShellTreeItem.h"
+
+#include "nsXPIDLString.h"
+#include "nsUnicharUtils.h"
+#include "prdtoa.h"
+#include "nsIAtom.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "nsIFocusController.h"
-#include "nsAccessibleTreeWalker.h"
 #include "nsIURI.h"
-#include "nsIImageLoadingContent.h"
 #include "nsITimer.h"
 #include "nsIMutableArray.h"
-#include "nsIDOMTreeWalker.h"
-#include "nsIDOMDocumentTraversal.h"
-#include "nsIDOMNodeFilter.h"
 #include "nsIObserverService.h"
+#include "nsIServiceManager.h"
 
 #ifdef NS_DEBUG
 #include "nsIFrameDebug.h"
@@ -2681,11 +2670,13 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
   case nsIAccessibleRelation::RELATION_DEFAULT_BUTTON:
     {
       if (content->IsNodeOfType(nsINode::eHTML)) {
-        nsCOMPtr<nsIForm> form;
-        while ((form = do_QueryInterface(content)) == nsnull &&
-               (content = content->GetParent()) != nsnull) /* nothing */ ;
-
-        if (form) {
+        // HTML form controls implements nsIFormControl interface.
+        nsCOMPtr<nsIFormControl> control(do_QueryInterface(content));
+        if (control) {
+          nsCOMPtr<nsIDOMHTMLFormElement> htmlform;
+          control->GetForm(getter_AddRefs(htmlform));
+          nsCOMPtr<nsIForm> form(do_QueryInterface(htmlform));
+          if (form)
             relatedNode = do_QueryInterface(form->GetDefaultSubmitElement());
         }
       }
