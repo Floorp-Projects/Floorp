@@ -284,7 +284,70 @@ nsPresContext::~nsPresContext()
   NS_IF_RELEASE(mLangGroup);
 }
 
-NS_IMPL_ISUPPORTS1(nsPresContext, nsIObserver)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsPresContext)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsPresContext)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsPresContext)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsPresContext)
+
+PR_STATIC_CALLBACK(PLDHashOperator)
+TraverseImageLoader(const void * aKey, nsCOMPtr<nsImageLoader>& aData,
+                    void* aClosure)
+{
+  nsCycleCollectionTraversalCallback *cb =
+    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
+
+  cb->NoteXPCOMChild(aData);
+
+  return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mDeviceContext); // worth bothering?
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mEventManager);
+  // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLookAndFeel); // a service
+  // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLangGroup); // an atom
+
+  tmp->mImageLoaders.Enumerate(TraverseImageLoader, &cb);
+
+  // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mTheme); // a service
+  // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mLangService); // a service
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrintSettings);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrefChangedTimer);
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsPresContext)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument);
+  NS_RELEASE(tmp->mDeviceContext); // worth bothering?
+  if (tmp->mEventManager) {
+    // unclear if these are needed, but can't hurt
+    tmp->mEventManager->NotifyDestroyPresContext(tmp);
+    tmp->mEventManager->SetPresContext(nsnull);
+
+    NS_RELEASE(tmp->mEventManager);
+  }
+
+  // NS_RELEASE(tmp->mLookAndFeel); // a service
+  // NS_RELEASE(tmp->mLangGroup); // an atom
+
+  tmp->mImageLoaders.Enumerate(destroy_loads, nsnull);
+  tmp->mImageLoaders.Clear();
+
+  // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTheme); // a service
+  // NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mLangService); // a service
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPrintSettings);
+  if (tmp->mPrefChangedTimer)
+  {
+    tmp->mPrefChangedTimer->Cancel();
+    tmp->mPrefChangedTimer = nsnull;
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 
 #define MAKE_FONT_PREF_KEY(_pref, _s0, _s1) \
  _pref.Assign(_s0); \

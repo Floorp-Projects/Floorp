@@ -60,6 +60,7 @@
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
 #include "nsInterfaceHashtable.h"
+#include "nsCycleCollectionParticipant.h"
 class nsImageLoader;
 #ifdef IBMBIDI
 class nsBidiPresUtils;
@@ -139,9 +140,10 @@ enum nsLayoutPhase {
 
 class nsPresContext : public nsIObserver {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsPresContext)
 
   enum nsPresContextType {
     eContext_Galley,       // unpaginated screen presentation
