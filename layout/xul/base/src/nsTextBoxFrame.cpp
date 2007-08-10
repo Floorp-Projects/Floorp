@@ -70,6 +70,7 @@
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
 #include "nsCSSRendering.h"
+#include "nsIReflowCallback.h"
 
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
@@ -207,6 +208,56 @@ nsTextBoxFrame::InsertSeparatorBeforeAccessKey()
   return gInsertSeparatorBeforeAccessKey;
 }
 
+class nsAsyncAccesskeyUpdate : public nsIReflowCallback
+{
+public:
+    nsAsyncAccesskeyUpdate(nsIFrame* aFrame) : mWeakFrame(aFrame)
+    {
+    }
+
+    virtual PRBool ReflowFinished()
+    {
+        PRBool shouldFlush = PR_FALSE;
+        nsTextBoxFrame* frame =
+            static_cast<nsTextBoxFrame*>(mWeakFrame.GetFrame());
+        if (frame) {
+            shouldFlush = frame->UpdateAccesskey(mWeakFrame);
+        }
+        delete this;
+        return shouldFlush;
+    }
+
+    nsWeakFrame mWeakFrame;
+};
+
+PRBool
+nsTextBoxFrame::UpdateAccesskey(nsWeakFrame& aWeakThis)
+{
+    nsAutoString accesskey;
+    nsCOMPtr<nsIDOMXULLabelElement> labelElement = do_QueryInterface(mContent);
+    if (labelElement) {
+        // Accesskey may be stored on control.
+        labelElement->GetAccessKey(accesskey);
+        NS_ENSURE_TRUE(aWeakThis.IsAlive(), PR_FALSE);
+    }
+    else {
+        mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accesskey);
+    }
+
+    mReflowCallbackPosted = PR_FALSE;
+    if (!accesskey.Equals(mAccessKey)) {
+        // Need to get clean mTitle.
+        mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, mTitle);
+        mAccessKey = accesskey;
+        UpdateAccessTitle();
+        PresContext()->PresShell()->
+            FrameNeedsReflow(this, nsIPresShell::eStyleChange,
+                             NS_FRAME_IS_DIRTY);
+        return PR_TRUE;
+    }
+    return PR_FALSE;
+}
+
 void
 nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
                                  PRBool&          aResize,
@@ -250,22 +301,14 @@ nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
         doUpdateTitle = PR_TRUE;
     }
 
-    if (aAttribute == nsnull || aAttribute == nsGkAtoms::accesskey) {
-        nsAutoString accesskey;
-        nsCOMPtr<nsIDOMXULLabelElement> labelElement = do_QueryInterface(mContent);
-        if (labelElement) {
-          labelElement->GetAccessKey(accesskey);  // Accesskey may be stored on control
-        }
-        else {
-          mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accesskey);
-        }
-        if (!accesskey.Equals(mAccessKey)) {
-            if (!doUpdateTitle) {
-                // Need to get clean mTitle and didn't already
-                mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, mTitle);
-                doUpdateTitle = PR_TRUE;
-            }
-            mAccessKey = accesskey;
+    if (!mReflowCallbackPosted &&
+        (aAttribute == nsnull || aAttribute == nsGkAtoms::accesskey)) {
+        mReflowCallbackPosted = PR_TRUE;
+        // Ensure that layout is refreshed and reflow callback called.
+        aResize = PR_TRUE;
+        nsIReflowCallback* cb = new nsAsyncAccesskeyUpdate(this);
+        if (cb) {
+            PresContext()->PresShell()->PostReflowCallback(cb);
         }
     }
 
