@@ -24,7 +24,7 @@ sub Execute {
     my $branchTag = $config->Get(var => 'branchTag');
     my $rc = int($config->Get(var => 'rc'));
     my $pullDate = $config->Get(var => 'pullDate');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
     my $tagDir = $config->Get(var => 'tagDir');
 
@@ -68,7 +68,7 @@ sub Verify {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
 
