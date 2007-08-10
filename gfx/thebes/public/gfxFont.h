@@ -312,7 +312,6 @@ public:
         RunMetrics() {
             mAdvanceWidth = mAscent = mDescent = 0.0;
             mBoundingBox = gfxRect(0,0,0,0);
-            mClusterCount = 0;
         }
 
         void CombineWith(const RunMetrics& aOtherOnRight) {
@@ -321,7 +320,6 @@ public:
             mBoundingBox =
                 mBoundingBox.Union(aOtherOnRight.mBoundingBox + gfxPoint(mAdvanceWidth, 0));
             mAdvanceWidth += aOtherOnRight.mAdvanceWidth;
-            mClusterCount += aOtherOnRight.mClusterCount;
         }
 
         // can be negative (partly due to negative spacing).
@@ -341,10 +339,6 @@ public:
         // Coordinates are relative to the baseline left origin, so typically
         // mBoundingBox.y == -mAscent
         gfxRect  mBoundingBox;
-        
-        // Count of the number of grapheme clusters. Layout needs
-        // this to compute tab offsets. For SpecialStrings, this is always 1.
-        PRInt32  mClusterCount;
     };
 
     /**
@@ -551,6 +545,11 @@ public:
  * for the case where a character has a single glyph and zero xoffset and yoffset,
  * and the glyph ID and advance are in a reasonable range so we can pack all
  * necessary data into 32 bits.
+ * 
+ * gfxTextRun methods that measure or draw substrings will associate all the
+ * glyphs in a cluster with the first character of the cluster; if that character
+ * is in the substring, the glyphs will be measured or drawn, otherwise they
+ * won't.
  */
 class THEBES_API gfxTextRun {
 public:
@@ -1098,6 +1097,22 @@ public:
 
     nsExpirationState *GetExpirationState() { return &mExpirationState; }
 
+    struct LigatureData {
+        // textrun offsets of the start and end of the containing ligature
+        PRUint32 mLigatureStart;
+        PRUint32 mLigatureEnd;
+        // appunits advance to the start of the ligature part within the ligature;
+        // never includes any spacing
+        gfxFloat mPartAdvance;
+        // appunits width of the ligature part; includes before-spacing
+        // when the part is at the start of the ligature, and after-spacing
+        // when the part is as the end of the ligature
+        gfxFloat mPartWidth;
+        
+        PRPackedBool mPartIsStartOfLigature;
+        PRPackedBool mPartIsEndOfLigature;
+    };
+
 private:
     // **** general helpers **** 
 
@@ -1107,34 +1122,36 @@ private:
     // not include any spacing. Result is in appunits.
     PRInt32 ComputeClusterAdvance(PRUint32 aClusterOffset);
 
+    void GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
+                            PropertyProvider *aProvider, PropertyProvider::Spacing *aSpacing);
+    // Spacing for characters outside the range aSpacingStart/aSpacingEnd
+    // is assumed to be zero; such characters are not passed to aProvider.
+    // This is useful to protect aProvider from being passed character indices
+    // it is not currently able to handle.
+    PRBool GetAdjustedSpacingArray(PRUint32 aStart, PRUint32 aEnd,
+                                   PropertyProvider *aProvider,
+                                   PRUint32 aSpacingStart, PRUint32 aSpacingEnd,
+                                   nsTArray<PropertyProvider::Spacing> *aSpacing);
+
     //  **** ligature helpers ****
     // (Platforms do the actual ligaturization, but we need to do a bunch of stuff
     // to handle requests that begin or end inside a ligature)
 
-    struct LigatureData {
-        PRUint32 mStartOffset;
-        PRUint32 mEndOffset;
-        PRUint32 mClusterCount;
-        PRUint32 mPartClusterIndex;
-        PRInt32  mLigatureWidth;  // appunits
-        gfxFloat mBeforeSpacing;  // appunits
-        gfxFloat mAfterSpacing;   // appunits
-    };
     // if aProvider is null then mBeforeSpacing and mAfterSpacing are set to zero
-    LigatureData ComputeLigatureData(PRUint32 aPartOffset, PropertyProvider *aProvider);
-    void GetAdjustedSpacing(PRUint32 aStart, PRUint32 aEnd,
-                            PropertyProvider *aProvider, PropertyProvider::Spacing *aSpacing);
-    PRBool GetAdjustedSpacingArray(PRUint32 aStart, PRUint32 aEnd,
-                                   PropertyProvider *aProvider,
-                                   nsTArray<PropertyProvider::Spacing> *aSpacing);
-    void DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aOffset,
-                             const gfxRect *aDirtyRect, gfxPoint *aPt,
+    LigatureData ComputeLigatureData(PRUint32 aPartStart, PRUint32 aPartEnd,
+                                     PropertyProvider *aProvider);
+    gfxFloat ComputePartialLigatureWidth(PRUint32 aPartStart, PRUint32 aPartEnd,
+                                         PropertyProvider *aProvider);
+    void DrawPartialLigature(gfxFont *aFont, gfxContext *aCtx, PRUint32 aStart,
+                             PRUint32 aEnd, const gfxRect *aDirtyRect, gfxPoint *aPt,
                              PropertyProvider *aProvider);
+    // Advance aStart to the start of the nearest ligature; back up aEnd
+    // to the nearest ligature end; may result in *aStart == *aEnd
     void ShrinkToLigatureBoundaries(PRUint32 *aStart, PRUint32 *aEnd);
     // result in appunits
     gfxFloat GetPartialLigatureWidth(PRUint32 aStart, PRUint32 aEnd, PropertyProvider *aProvider);
     void AccumulatePartialLigatureMetrics(gfxFont *aFont,
-                                          PRUint32 aOffset, PRBool aTight,
+                                          PRUint32 aStart, PRUint32 aEnd, PRBool aTight,
                                           PropertyProvider *aProvider,
                                           Metrics *aMetrics);
 
@@ -1142,12 +1159,14 @@ private:
     void AccumulateMetricsForRun(gfxFont *aFont, PRUint32 aStart,
                                  PRUint32 aEnd, PRBool aTight,
                                  PropertyProvider *aProvider,
+                                 PRUint32 aSpacingStart, PRUint32 aSpacingEnd,
                                  Metrics *aMetrics);
 
     // **** drawing helper ****
     void DrawGlyphs(gfxFont *aFont, gfxContext *aContext, PRBool aDrawToPath,
                     gfxPoint *aPt, PRUint32 aStart, PRUint32 aEnd,
-                    PropertyProvider *aProvider);
+                    PropertyProvider *aProvider,
+                    PRUint32 aSpacingStart, PRUint32 aSpacingEnd);
 
     // All our glyph data is in logical order, not visual
     nsAutoArrayPtr<CompressedGlyph>                mCharacterGlyphs;
