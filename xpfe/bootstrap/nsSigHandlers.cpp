@@ -118,9 +118,14 @@ void abnormal_exit_handler(int signum)
 
 extern "C" {
 
-PR_STATIC_CALLBACK(void) PrintStackFrame(char *aFrame, void *aClosure)
+PR_STATIC_CALLBACK(void) PrintStackFrame(void *aPC, void *aClosure)
 {
-  fprintf(stdout, aFrame);
+  char buf[1024];
+  nsCodeAddressDetails details;
+
+  NS_DescribeCodeAddress(aPC, &details);
+  NS_FormatCodeAddressDetails(aPC, &details, buf, sizeof(buf));
+  fprintf(stdout, buf);
 }
 
 }
