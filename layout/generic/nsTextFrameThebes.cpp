@@ -1197,8 +1197,6 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
   NS_ASSERTION(line != endLines && !line->IsBlock(), "Where is this frame anyway??");
   nsIFrame* child = line->mFirstChild;
   do {
-    line->SetInvalidateTextRuns(PR_FALSE);
-
     scanner.SetAtStartOfLine();
     scanner.SetCommonAncestorWithLastFrame(nsnull);
     PRInt32 i;
@@ -1960,7 +1958,7 @@ nsTextFrame::EnsureTextRun(nsIRenderingContext* aRC, nsIFrame* aLineContainer,
                            const nsLineList::iterator* aLine,
                            PRUint32* aFlowEndInTextRun)
 {
-  if (mTextRun && aLine && !(*aLine)->GetInvalidateTextRuns()) {
+  if (mTextRun) {
     if (mTextRun->GetExpirationState()->IsTracked()) {
       gTextRuns->MarkUsed(mTextRun);
     }
@@ -4960,7 +4958,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
 {
   PRUint32 flowEndInTextRun;
   gfxSkipCharsIterator iter =
-    EnsureTextRun(aRenderingContext, nsnull, aData->line, &flowEndInTextRun);
+    EnsureTextRun(aRenderingContext, nsnull, nsnull, &flowEndInTextRun);
   if (!mTextRun)
     return;
 
@@ -5058,7 +5056,7 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
 {
   PRUint32 flowEndInTextRun;
   gfxSkipCharsIterator iter =
-    EnsureTextRun(aRenderingContext, nsnull, aData->line, &flowEndInTextRun);
+    EnsureTextRun(aRenderingContext, nsnull, nsnull, &flowEndInTextRun);
   if (!mTextRun)
     return;
 
