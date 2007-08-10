@@ -193,8 +193,6 @@ NS_CP_ContentTypeName(PRUint32 contentType)
       }                                                                       \
       nsresult rv = originPrincipal->GetURI(getter_AddRefs(requestOrigin));   \
       NS_ENSURE_SUCCESS(rv, rv);                                              \
-  } else {                                                                    \
-    requestOrigin = originURI;                                                \
   }                                                                           \
   PR_END_MACRO
 
@@ -203,13 +201,13 @@ NS_CP_ContentTypeName(PRUint32 contentType)
  * the same as nsIContentPolicy::shouldLoad, except for the originPrincipal
  * parameter, which should be non-null if possible, and the last two
  * parameters, which can be used to pass in pointer to some useful services if
- * the caller already has them.  |originURI| is only used if |originPrincipal|
- * is null.
+ * the caller already has them.  The origin URI to pass to shouldLoad will be
+ * the URI of originPrincipal, unless originPrincipal is null (in which case a
+ * null origin URI will be passed).
  */
 inline nsresult
 NS_CheckContentLoadPolicy(PRUint32          contentType,
                           nsIURI           *contentLocation,
-                          nsIURI           *originURI,
                           nsIPrincipal     *originPrincipal,
                           nsISupports      *context,
                           const nsACString &mimeType,
@@ -230,13 +228,13 @@ NS_CheckContentLoadPolicy(PRUint32          contentType,
  * are the same as nsIContentPolicy::shouldLoad, except for the originPrincipal
  * parameter, which should be non-null if possible, and the last two
  * parameters, which can be used to pass in pointer to some useful services if
- * the caller already has them.  |originURI| is only used if |originPrincipal|
- * is null.
+ * the caller already has them.  The origin URI to pass to shouldLoad will be
+ * the URI of originPrincipal, unless originPrincipal is null (in which case a
+ * null origin URI will be passed).
  */
 inline nsresult
 NS_CheckContentProcessPolicy(PRUint32          contentType,
                              nsIURI           *contentLocation,
-                             nsIURI           *originURI,
                              nsIPrincipal     *originPrincipal,
                              nsISupports      *context,
                              const nsACString &mimeType,

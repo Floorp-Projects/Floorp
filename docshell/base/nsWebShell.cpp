@@ -222,7 +222,6 @@ CheckPingURI(nsIURI* uri, nsIContent* content)
   PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
   rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_PING,
                                  uri,
-                                 nsnull,
                                  content->NodePrincipal(),
                                  content,
                                  EmptyCString(), // mime hint

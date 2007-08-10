@@ -952,7 +952,6 @@ CSSLoaderImpl::CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
     PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_STYLESHEET,
                                    aTargetURI,
-                                   nsnull,
                                    aSourcePrincipal,
                                    aContext,
                                    NS_LITERAL_CSTRING("text/css"),

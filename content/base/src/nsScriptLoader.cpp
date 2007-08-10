@@ -427,7 +427,6 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_SCRIPT,
                                    scriptURI,
-                                   nsnull,
                                    mDocument->NodePrincipal(),
                                    aElement,
                                    NS_LossyConvertUTF16toASCII(type),
