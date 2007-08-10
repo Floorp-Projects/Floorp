@@ -430,9 +430,6 @@ nsHTMLScrollFrame::ReflowScrolledFrame(const ScrollReflowState& aState,
   nscoord twp = nsPresContext::CSSPixelsToAppUnits(1);
   availWidth -=  availWidth % twp;
 
-  if (!aFirstPass)
-    mInner.mScrolledFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-
   // We're forcing the padding on our scrolled frame, so let it know what that
   // padding is.
   mInner.mScrolledFrame->
@@ -2277,7 +2274,6 @@ nsXULScrollFrame::Layout(nsBoxLayoutState& aState)
   // we only need to set the rect. The inner child stays the same size.
   if (needsLayout) {
     nsBoxLayoutState resizeState(aState);
-    mInner.mScrolledFrame->AddStateBits(NS_FRAME_IS_DIRTY);
     LayoutScrollArea(resizeState, scrollAreaRect);
   }
 
