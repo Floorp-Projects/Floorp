@@ -117,13 +117,8 @@ gboolean save_yourself_cb(GnomeClient *client, gint phase,
 
 void die_cb(GnomeClient *client, gpointer user_data)
 {
-  nsCOMPtr<nsIObserverService> obsServ =
-    do_GetService("@mozilla.org/observer-service;1");
   nsCOMPtr<nsIAppStartup> appService =
     do_GetService("@mozilla.org/toolkit/app-startup;1");
-
-  if (obsServ)
-    obsServ->NotifyObservers(nsnull, "quit-application-granted", nsnull);
 
   if (appService)
     appService->Quit(nsIAppStartup::eForceQuit);

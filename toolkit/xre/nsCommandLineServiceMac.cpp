@@ -480,7 +480,6 @@ OSErr nsMacCommandLine::Quit(TAskSave askSave)
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
 
-  obsServ->NotifyObservers(nsnull, "quit-application-granted", nsnull);
   appStartup->Quit(nsIAppStartup::eAttemptQuit);
   return noErr;
 }
