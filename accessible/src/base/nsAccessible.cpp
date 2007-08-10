@@ -233,7 +233,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NO_INTERFACE;
   }
 
-  return nsAccessNode::QueryInterface(aIID, aInstancePtr);
+  return nsAccessNodeWrap::QueryInterface(aIID, aInstancePtr);
 }
 
 nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): nsAccessNodeWrap(aNode, aShell), 
