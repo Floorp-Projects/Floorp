@@ -55,17 +55,15 @@ CSRCS		= \
 		$(NULL)
 
 CPPSRCS		= \
-		nsDemangle.cpp \
 		nsTypeInfo.cpp \
 		$(NULL)
 
 EXPORTS         = nsTraceMalloc.h
 
-EXTRA_DSO_LDOPTS = $(NSPR_LIBS)
+EXTRA_DSO_LDOPTS = $(NSPR_LIBS) $(XPCOM_LIBS)
 
 ifeq ($(OS_ARCH),WINNT)
-CPPSRCS		+= nsDebugHelpWin32.cpp nsWinTraceMalloc.cpp nsStackFrameWin.cpp
-EXTRA_DSO_LDOPTS += $(XPCOM_LIBS)
+CPPSRCS		+= nsDebugHelpWin32.cpp nsWinTraceMalloc.cpp
 OS_LIBS		+= shell32.lib ole32.lib uuid.lib imagehlp.lib
 endif
 

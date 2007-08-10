@@ -48,7 +48,6 @@
 #include "prlock.h"
 #include "nscore.h"
 #include "nsDebugHelpWin32.h"
-#include "nsStackFrameWin.h"
 #else
 #error "nsDebugHelpWin32.cpp should only be built in Win32 x86 builds"
 #endif
@@ -164,7 +163,6 @@ DHWImportHooker::DHWImportHooker(const char* aModuleName,
         gLock = PR_NewLock();
     PR_Lock(gLock);
 
-    EnsureImageHlpInitialized();
     dhwEnsureImageHlpInitialized(); // for the extra ones we care about.
 
     if(!gRealGetProcAddress)

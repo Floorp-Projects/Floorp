@@ -40,6 +40,7 @@
 #include "nsStackWalk.h"
 
 #if defined(_WIN32) && defined(_M_IX86) && !defined(WINCE) // WIN32 x86 stack walking code
+
 #include "nsStackFrameWin.cpp"
 
 // WIN32 x86 stack walking code
