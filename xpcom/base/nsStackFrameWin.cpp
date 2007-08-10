@@ -42,6 +42,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include "nsStackFrameWin.h"
+#include "plstr.h"
 
 // Define these as static pointers so that we can load the DLL on the
 // fly (and not introduce a link-time dependency on it). Tip o' the
@@ -123,7 +124,7 @@ PR_END_EXTERN_C
 
 // Routine to print an error message to standard error.
 // Will also call callback with error, if data supplied.
-void PrintError(char *prefix, WalkStackData *data)
+void PrintError(char *prefix)
 {
     LPVOID lpMsgBuf;
     DWORD lastErr = GetLastError();
@@ -139,8 +140,6 @@ void PrintError(char *prefix, WalkStackData *data)
     char buf[512];
     _snprintf(buf, sizeof(buf), "### ERROR: %s: %s", prefix, lpMsgBuf);
     fputs(buf, stderr);
-    if (data)
-        (*data->callback)(buf, data->closure);
     LocalFree( lpMsgBuf );
 }
 
@@ -159,7 +158,7 @@ EnsureImageHlpInitialized()
       NULL);                      // unnamed mutex
 
     if (hStackWalkMutex == NULL) {
-        PrintError("CreateMutex", NULL);
+        PrintError("CreateMutex");
         return PR_FALSE;
     }
 
@@ -428,7 +427,7 @@ EnsureSymInitialized()
     _SymSetOptions(SYMOPT_LOAD_LINES | SYMOPT_UNDNAME);
     retStat = _SymInitialize(GetCurrentPIDorHandle(), NULL, TRUE);
     if (!retStat)
-        PrintError("SymInitialize", NULL);
+        PrintError("SymInitialize");
 
     gInitialized = retStat;
     /* XXX At some point we need to arrange to call _SymCleanup */
@@ -475,12 +474,12 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     if (walkerThread) {
         walkerReturn = ::WaitForSingleObject(walkerThread, 2000); // no timeout is never a good idea
         if (walkerReturn != WAIT_OBJECT_0) {
-            PrintError("ThreadWait", &data);
+            PrintError("ThreadWait");
         }
         CloseHandle(myThread);
     }
     else {
-        PrintError("ThreadCreate", &data);
+        PrintError("ThreadCreate");
     }
     return NS_OK;
 }
@@ -495,7 +494,7 @@ WalkStackThread(LPVOID lpdata)
     // He's currently waiting for us to finish so now should be a good time.
     ret = ::SuspendThread( data->thread );
     if (ret == -1) {
-        PrintError("ThreadSuspend", data);
+        PrintError("ThreadSuspend");
     }
     else {
         if (_StackWalk64)
@@ -504,7 +503,7 @@ WalkStackThread(LPVOID lpdata)
             WalkStackMain(data);
         ret = ::ResumeThread(data->thread);
         if (ret == -1) {
-            PrintError("ThreadResume", data);
+            PrintError("ThreadResume");
         }
     }
 
@@ -521,7 +520,6 @@ WalkStackMain64(struct WalkStackData* data)
     CONTEXT context;
     HANDLE myProcess = data->process;
     HANDLE myThread = data->thread;
-    char buf[512];
     DWORD64 addr;
     STACKFRAME64 frame64;
     int skip = 3 + data->skipFrames; // skip our own stack walking frames
@@ -531,7 +529,7 @@ WalkStackMain64(struct WalkStackData* data)
     memset(&context, 0, sizeof(CONTEXT));
     context.ContextFlags = CONTEXT_FULL;
     if (!GetThreadContext(myThread, &context)) {
-        PrintError("GetThreadContext", data);
+        PrintError("GetThreadContext");
         return;
     }
 
@@ -550,7 +548,7 @@ WalkStackMain64(struct WalkStackData* data)
     frame64.AddrStack.Offset = context.SP;
     frame64.AddrFrame.Offset = context.RsBSP;
 #else
-    PrintError("Unknown platform. No stack walking.", data);
+    PrintError("Unknown platform. No stack walking.");
     return;
 #endif
     frame64.AddrPC.Mode      = AddrModeFlat;
@@ -588,55 +586,36 @@ WalkStackMain64(struct WalkStackData* data)
               0
             );
 
+            ReleaseMutex(hStackWalkMutex);  // release our lock
+
             if (ok)
                 addr = frame64.AddrPC.Offset;
-            else
-                PrintError("WalkStack64", data);
+            else {
+                addr = 0;
+                PrintError("WalkStack64");
+            }
 
             if (!ok || (addr == 0)) {
-                ReleaseMutex(hStackWalkMutex);  // release our lock
                 break;
             }
 
             if (skip-- > 0) {
-                ReleaseMutex(hStackWalkMutex);  // release our lock
                 continue;
             }
 
-            //
-            // Attempt to load module info before we attempt to reolve the symbol.
-            // This just makes sure we get good info if available.
-            //
+            (*data->callback)((void*)addr, data->closure);
 
-            IMAGEHLP_MODULE64 modInfo;
-            modInfo.SizeOfStruct = sizeof(modInfo);
-            BOOL modInfoRes;
-            modInfoRes = SymGetModuleInfoEspecial64(myProcess, addr, &modInfo, nsnull);
-
-            ULONG64 buffer[(sizeof(SYMBOL_INFO) +
-              MAX_SYM_NAME*sizeof(TCHAR) + sizeof(ULONG64) - 1) / sizeof(ULONG64)];
-            PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
-            pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-            pSymbol->MaxNameLen = MAX_SYM_NAME;
-
-            DWORD64 displacement;
-            ok = _SymFromAddr && _SymFromAddr(myProcess, addr, &displacement, pSymbol);
-
-            // All done with debug calls so release our lock.
-            ReleaseMutex(hStackWalkMutex);
-
-            if (ok)
-                _snprintf(buf, sizeof(buf), "%s!%s+0x%016X\n", modInfo.ModuleName, pSymbol->Name, displacement);
-            else
-                _snprintf(buf, sizeof(buf), "0x%016X\n", addr);
-            (*data->callback)(buf, data->closure);
-
+#if 0
             // Stop walking when we get to kernel32.
             if (strcmp(modInfo.ModuleName, "kernel32") == 0)
                 break;
+#else
+            if (frame64.AddrReturn.Offset == 0)
+                break;
+#endif
         }
         else {
-            PrintError("LockError64", data);
+            PrintError("LockError64");
         } 
     }
     return;
@@ -653,7 +632,6 @@ WalkStackMain(struct WalkStackData* data)
     CONTEXT context;
     HANDLE myProcess = data->process;
     HANDLE myThread = data->thread;
-    char buf[512];
     DWORD addr;
     STACKFRAME frame;
     int skip = data->skipFrames; // skip our own stack walking frames
@@ -663,7 +641,7 @@ WalkStackMain(struct WalkStackData* data)
     memset(&context, 0, sizeof(CONTEXT));
     context.ContextFlags = CONTEXT_FULL;
     if (!GetThreadContext(myThread, &context)) {
-        PrintError("GetThreadContext", data);
+        PrintError("GetThreadContext");
         return;
     }
 
@@ -677,7 +655,7 @@ WalkStackMain(struct WalkStackData* data)
     frame.AddrFrame.Offset = context.Ebp;
     frame.AddrFrame.Mode   = AddrModeFlat;
 #else
-    PrintError("Unknown platform. No stack walking.", data);
+    PrintError("Unknown platform. No stack walking.");
     return;
 #endif
 
@@ -703,75 +681,175 @@ WalkStackMain(struct WalkStackData* data)
                 0                         // translate address routine
               );
 
+            ReleaseMutex(hStackWalkMutex);  // release our lock
+
             if (ok)
                 addr = frame.AddrPC.Offset;
-            else
-                PrintError("WalkStack", data);
+            else {
+                addr = 0;
+                PrintError("WalkStack");
+            }
 
             if (!ok || (addr == 0)) {
-                ReleaseMutex(hStackWalkMutex);  // release our lock
                 break;
             }
 
             if (skip-- > 0) {
-                ReleaseMutex(hStackWalkMutex);  // release the lock
                 continue;
             }
 
-            //
-            // Attempt to load module info before we attempt to resolve the symbol.
-            // This just makes sure we get good info if available.
-            //
+            (*data->callback)((void*)addr, data->closure);
 
-            IMAGEHLP_MODULE modInfo;
-            modInfo.SizeOfStruct = sizeof(modInfo);
-            BOOL modInfoRes;
-            modInfoRes = SymGetModuleInfoEspecial(myProcess, addr, &modInfo, nsnull);
-
-#ifdef USING_WXP_VERSION
-            ULONG64 buffer[(sizeof(SYMBOL_INFO) +
-              MAX_SYM_NAME*sizeof(TCHAR) + sizeof(ULONG64) - 1) / sizeof(ULONG64)];
-            PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
-            pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-            pSymbol->MaxNameLen = MAX_SYM_NAME;
-
-            DWORD64 displacement;
-
-            ok = _SymFromAddr && _SymFromAddr(myProcess, addr, &displacement, pSymbol);
-#else
-            char buf[sizeof(IMAGEHLP_SYMBOL) + 512];
-            PIMAGEHLP_SYMBOL pSymbol = (PIMAGEHLP_SYMBOL) buf;
-            pSymbol->SizeOfStruct = sizeof(buf);
-            pSymbol->MaxNameLength = 512;
-
-            DWORD displacement;
-
-            ok = _SymGetSymFromAddr(myProcess,
-                        frame.AddrPC.Offset,
-                        &displacement,
-                        pSymbol);
-#endif
-
-            // All done with debug calls so release our lock.
-            ReleaseMutex(hStackWalkMutex);
-
-            if (ok)
-                _snprintf(buf, sizeof(buf), "%s!%s+0x%08X\n", modInfo.ImageName, pSymbol->Name, displacement);
-            else
-                _snprintf(buf, sizeof(buf), "0x%08X\n", (DWORD) addr);
-            (*data->callback)(buf, data->closure);
-
+#if 0
             // Stop walking when we get to kernel32.dll.
             if (strcmp(modInfo.ImageName, "kernel32.dll") == 0)
                 break;
-
+#else
+            if (frame.AddrReturn.Offset == 0)
+                break;
+#endif
         }
         else {
-            PrintError("LockError", data);
+            PrintError("LockError");
         }
         
     }
 
     return;
 
+}
+
+EXPORT_XPCOM_API(nsresult)
+NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
+{
+    aDetails->library[0] = '\0';
+    aDetails->loffset = 0;
+    aDetails->filename[0] = '\0';
+    aDetails->lineno = 0;
+    aDetails->function[0] = '\0';
+    aDetails->foffset = 0;
+
+    HANDLE myProcess = ::GetCurrentProcess();
+    BOOL ok;
+
+    // debug routines are not threadsafe, so grab the lock.
+    DWORD dwWaitResult;
+    dwWaitResult = WaitForSingleObject(hStackWalkMutex, INFINITE);
+    if (dwWaitResult != WAIT_OBJECT_0)
+        return NS_ERROR_UNEXPECTED;
+
+#ifdef USING_WXP_VERSION
+    if (_StackWalk64) {
+        //
+        // Attempt to load module info before we attempt to resolve the symbol.
+        // This just makes sure we get good info if available.
+        //
+
+        DWORD64 addr = (DWORD64)aPC;
+        IMAGEHLP_MODULE64 modInfo;
+        modInfo.SizeOfStruct = sizeof(modInfo);
+        BOOL modInfoRes;
+        modInfoRes = SymGetModuleInfoEspecial64(myProcess, addr, &modInfo, nsnull);
+
+        if (modInfoRes) {
+            PL_strncpyz(aDetails->library, modInfo.ModuleName,
+                        sizeof(aDetails->library));
+            aDetails->loffset = (char*) aPC - (char*) modInfo.BaseOfImage;
+            // XXX We could get filename/lineno information from
+            // SymGetModuleInfoEspecial64
+        }
+
+        ULONG64 buffer[(sizeof(SYMBOL_INFO) +
+          MAX_SYM_NAME*sizeof(TCHAR) + sizeof(ULONG64) - 1) / sizeof(ULONG64)];
+        PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
+        pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+        pSymbol->MaxNameLen = MAX_SYM_NAME;
+
+        DWORD64 displacement;
+        ok = _SymFromAddr && _SymFromAddr(myProcess, addr, &displacement, pSymbol);
+
+        if (ok) {
+            PL_strncpyz(aDetails->function, pSymbol->Name,
+                        sizeof(aDetails->function));
+            aDetails->foffset = displacement;
+        }
+    } else
+#endif
+    {
+        //
+        // Attempt to load module info before we attempt to resolve the symbol.
+        // This just makes sure we get good info if available.
+        //
+
+        DWORD addr = (DWORD)aPC;
+        IMAGEHLP_MODULE modInfo;
+        modInfo.SizeOfStruct = sizeof(modInfo);
+        BOOL modInfoRes;
+        modInfoRes = SymGetModuleInfoEspecial(myProcess, addr, &modInfo, nsnull);
+
+        if (modInfoRes) {
+            PL_strncpyz(aDetails->library, modInfo.ModuleName,
+                        sizeof(aDetails->library));
+            aDetails->loffset = (char*) aPC - (char*) modInfo.BaseOfImage;
+            // XXX We could get filename/lineno information from
+            // SymGetModuleInfoEspecial
+        }
+
+#ifdef USING_WXP_VERSION
+        ULONG64 buffer[(sizeof(SYMBOL_INFO) +
+          MAX_SYM_NAME*sizeof(TCHAR) + sizeof(ULONG64) - 1) / sizeof(ULONG64)];
+        PSYMBOL_INFO pSymbol = (PSYMBOL_INFO)buffer;
+        pSymbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+        pSymbol->MaxNameLen = MAX_SYM_NAME;
+
+        DWORD64 displacement;
+
+        ok = _SymFromAddr && _SymFromAddr(myProcess, addr, &displacement, pSymbol);
+#else
+        char buf[sizeof(IMAGEHLP_SYMBOL) + 512];
+        PIMAGEHLP_SYMBOL pSymbol = (PIMAGEHLP_SYMBOL) buf;
+        pSymbol->SizeOfStruct = sizeof(buf);
+        pSymbol->MaxNameLength = 512;
+
+        DWORD displacement;
+
+        ok = _SymGetSymFromAddr(myProcess,
+                    frame.AddrPC.Offset,
+                    &displacement,
+                    pSymbol);
+#endif
+
+        if (ok) {
+            PL_strncpyz(aDetails->function, pSymbol->Name,
+                        sizeof(aDetails->function));
+            aDetails->foffset = displacement;
+        }
+    }
+
+    ReleaseMutex(hStackWalkMutex);  // release our lock
+    return NS_OK;
+}
+
+EXPORT_XPCOM_API(nsresult)
+NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
+                            char *aBuffer, PRUint32 aBufferSize)
+{
+#ifdef USING_WXP_VERSION
+    if (_StackWalk64) {
+        if (aDetails->function[0])
+            _snprintf(aBuffer, aBufferSize, "%s!%s+0x%016lX\n",
+                      aDetails->library, aDetails->function, aDetails->foffset);
+        else
+            _snprintf(aBuffer, aBufferSize, "0x%016lX\n", aPC);
+    } else {
+#endif
+        if (aDetails->function[0])
+            _snprintf(aBuffer, aBufferSize, "%s!%s+0x%08lX\n",
+                      aDetails->library, aDetails->function, aDetails->foffset);
+        else
+            _snprintf(aBuffer, aBufferSize, "0x%08lX\n", aPC);
+#ifdef USING_WXP_VERSION
+    }
+#endif
+    return NS_OK;
 }

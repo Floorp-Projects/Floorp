@@ -47,7 +47,7 @@
 PR_BEGIN_EXTERN_C
 
 typedef void
-(* PR_CALLBACK NS_WalkStackCallback)(char *aFrame, void *aClosure);
+(* PR_CALLBACK NS_WalkStackCallback)(void *aPC, void *aClosure);
 
 /**
  * Call aCallback for the C/C++ stack frames on the current thread, from
@@ -68,6 +68,60 @@ typedef void
 XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
              void *aClosure);
+
+typedef struct {
+    /*
+     * The name of the shared library or executable containing an
+     * address and the address's offset within that library, or empty
+     * string and zero if unknown.
+     */
+    char library[256];
+    unsigned long loffset;
+    /*
+     * The name of the file name and line number of the code
+     * corresponding to the address, or empty string and zero if
+     * unknown.
+     */
+    char filename[256];
+    unsigned long lineno;
+    /*
+     * The name of the function containing an address and the address's
+     * offset within that function, or empty string and zero if unknown.
+     */
+    char function[256];
+    unsigned long foffset;
+} nsCodeAddressDetails;
+
+/**
+ * For a given pointer to code, fill in the pieces of information used
+ * when printing a stack trace.
+ *
+ * @param aPC         The code address.
+ * @param aDetails    A structure to be filled in with the result.
+ */
+XPCOM_API(nsresult)
+NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails);
+
+/**
+ * Format the information about a code address in a format suitable for
+ * stack traces on the current platform.  When available, this string
+ * should contain the function name, source file, and line number.  When
+ * these are not available, library and offset should be reported, if
+ * possible.
+ *
+ * @param aPC         The code address.
+ * @param aDetails    The value filled in by NS_DescribeCodeAddress(aPC).
+ * @param aBuffer     A string to be filled in with the description.
+ *                    The string will always be null-terminated.
+ * @param aBufferSize The size, in bytes, of aBuffer, including
+ *                    room for the terminating null.  If the information
+ *                    to be printed would be larger than aBuffer, it
+ *                    will be truncated so that aBuffer[aBufferSize-1]
+ *                    is the terminating null.
+ */
+XPCOM_API(nsresult)
+NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
+                            char *aBuffer, PRUint32 aBufferSize);
 
 PR_END_EXTERN_C
 

@@ -829,10 +829,15 @@ static void InitTraceLog(void)
 
 extern "C" {
 
-PR_STATIC_CALLBACK(void) PrintStackFrame(char *aFrame, void *aClosure)
+PR_STATIC_CALLBACK(void) PrintStackFrame(void *aPC, void *aClosure)
 {
   FILE *stream = (FILE*)aClosure;
-  fprintf(stream, aFrame);
+  nsCodeAddressDetails details;
+  char buf[1024];
+
+  NS_DescribeCodeAddress(aPC, &details);
+  NS_FormatCodeAddressDetails(aPC, &details, buf, sizeof(buf));
+  fprintf(stream, buf);
 }
 
 }
