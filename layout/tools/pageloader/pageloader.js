@@ -161,7 +161,7 @@ function plInit() {
 
       content = document.getElementById('contentPageloader');
 
-      setTimeout(plLoadPage, 0);
+      setTimeout(plLoadPage, 250);
     }
   } catch(e) {
     dumpLine(e);
@@ -208,7 +208,7 @@ function plNextPage() {
   if (pageIndex < pages.length-1) {
     pageIndex++;
 
-    setTimeout(plLoadPage, 0);
+    setTimeout(plLoadPage, 250);
   } else {
     plStop(false);
   }
@@ -234,7 +234,7 @@ function plLoadHandlerCapturing(evt) {
   // set up the function for content to call
   content.contentWindow.wrappedJSObject.tpRecordTime = function (time) {
     plRecordTime(time);
-    setTimeout(plNextPage, 0);
+    setTimeout(plNextPage, 250);
   };
 }
 
@@ -292,7 +292,7 @@ function plStop(force) {
       pageIndex = 0;
       if (cycle < NUM_CYCLES-1) {
         cycle++;
-        setTimeout(plLoadPage, 0);
+        setTimeout(plLoadPage, 250);
         return;
       }
 
