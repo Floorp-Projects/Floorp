@@ -2083,6 +2083,11 @@ nsUrlClassifierDBService::Init()
     do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Force PSM to be loaded on the main thread.
+  nsCOMPtr<nsICryptoHash> hash =
+    do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Start the background thread.
   rv = NS_NewThread(&gDbBackgroundThread);
   if (NS_FAILED(rv))

@@ -150,7 +150,6 @@ class nsStringContainer;
 struct nsStringContainer_base
 {
 private:
-  void *v;
   void *d1;
   PRUint32 d2;
   void *d3;

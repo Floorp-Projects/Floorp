@@ -88,6 +88,7 @@ nsCaret::nsCaret()
 , mShowDuringSelection(PR_FALSE)
 , mLastContentOffset(0)
 , mLastHint(nsFrameSelection::HINTLEFT)
+, mIgnoreUserModify(PR_FALSE)
 #ifdef IBMBIDI
 , mLastBidiLevel(0)
 , mKeyboardRTL(PR_FALSE)
@@ -587,7 +588,8 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
 
   // now we have a frame, check whether it's appropriate to show the caret here
   const nsStyleUserInterface* userinterface = theFrame->GetStyleUserInterface();
-  if ((userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
+  if ((!mIgnoreUserModify &&
+       userinterface->mUserModify == NS_STYLE_USER_MODIFY_READ_ONLY) ||
       (userinterface->mUserInput == NS_STYLE_USER_INPUT_NONE) ||
       (userinterface->mUserInput == NS_STYLE_USER_INPUT_DISABLED))
   {
@@ -998,23 +1000,9 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
   // after we've got an RC.
   if (frameRect.height == 0)
   {
-    nsIWidget *widget = aFrame->GetWindow();
-    if (!widget)
-      return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIRenderingContext> rendContext;
-    nsresult rv = presContext->DeviceContext()->
-      CreateRenderingContext(widget, *getter_AddRefs(rendContext));
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!rendContext)
-      return NS_ERROR_UNEXPECTED;
-
-    const nsStyleFont* fontStyle = aFrame->GetStyleFont();
-    const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
-    rendContext->SetFont(fontStyle->mFont, vis->mLangGroup);
-
     nsCOMPtr<nsIFontMetrics> fm;
-    rendContext->GetFontMetrics(*getter_AddRefs(fm));
+    nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
+
     if (fm)
     {
       nscoord ascent, descent;
@@ -1145,6 +1133,11 @@ nsFrameSelection* nsCaret::GetFrameSelection() {
   return frameSelection;
 }
 
+void
+nsCaret::SetIgnoreUserModify(PRBool aIgnoreUserModify)
+{
+  mIgnoreUserModify = aIgnoreUserModify;
+}
 
 //-----------------------------------------------------------------------------
 nsresult NS_NewCaret(nsICaret** aInstancePtrResult)

@@ -191,8 +191,8 @@ extern "C" void ShowOSAlert(const char* aMessage);
 #include "jprof.h"
 #endif
 
-#ifdef MOZ_AIRBAG
-#include "nsAirbagExceptionHandler.h"
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
 #include "nsICrashReporter.h"
 #define NS_CRASHREPORTER_CONTRACTID "@mozilla.org/toolkit/crash-reporter;1"
 #endif
@@ -526,7 +526,7 @@ class nsXULAppInfo : public nsIXULAppInfo,
 #ifdef XP_WIN
                      public nsIWinAppHelper,
 #endif
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
                      public nsICrashReporter,
 #endif
                      public nsIXULRuntime
@@ -536,7 +536,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIXULAPPINFO
   NS_DECL_NSIXULRUNTIME
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
   NS_DECL_NSICRASHREPORTER
 #endif
 #ifdef XP_WIN
@@ -552,7 +552,7 @@ NS_INTERFACE_MAP_BEGIN(nsXULAppInfo)
 #ifdef XP_WIN
   NS_INTERFACE_MAP_ENTRY(nsIWinAppHelper)
 #endif
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
   NS_INTERFACE_MAP_ENTRY(nsICrashReporter)
 #endif
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIXULAppInfo, gAppData)
@@ -751,7 +751,7 @@ nsXULAppInfo::PostUpdate(nsILocalFile *aLogFile)
 }
 #endif
 
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
 NS_IMETHODIMP
 nsXULAppInfo::AnnotateCrashReport(const nsACString& key,
                                   const nsACString& data)
@@ -804,7 +804,7 @@ public:
 
   nsresult Initialize();
   nsresult DoAutoreg();
-  nsresult RegisterProfileService(nsIToolkitProfileService* aProfileService);
+  nsresult RegisterProfileService();
   nsresult SetWindowCreator(nsINativeAppSupport* native);
 
 private:
@@ -835,7 +835,7 @@ static nsModuleComponentInfo kComponents[] =
     XULAPPINFO_SERVICE_CONTRACTID,
     AppInfoConstructor
   }
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
 ,
   {
     "nsXULAppInfo",
@@ -892,12 +892,13 @@ static const nsCID kProfileServiceCID =
   { 0x5f5e59ce, 0x27bc, 0x47eb, { 0x9d, 0x1f, 0xb0, 0x9c, 0xa9, 0x4, 0x98, 0x36 } };
 
 nsresult
-ScopedXPCOMStartup::RegisterProfileService(nsIToolkitProfileService* aProfileService)
+ScopedXPCOMStartup::RegisterProfileService()
 {
   NS_ASSERTION(mServiceManager, "Not initialized!");
 
-  nsCOMPtr<nsIFactory> factory = do_QueryInterface(aProfileService);
-  NS_ASSERTION(factory, "Supposed to be an nsIFactory!");
+  nsCOMPtr<nsIFactory> factory;
+  NS_NewToolkitProfileFactory(getter_AddRefs(factory));
+  if (!factory) return NS_ERROR_OUT_OF_MEMORY;
 
   nsCOMPtr<nsIComponentRegistrar> reg (do_QueryInterface(mServiceManager));
   if (!reg) return NS_ERROR_NO_INTERFACE;
@@ -1670,8 +1671,8 @@ ShowProfileManager(nsIToolkitProfileService* aProfileSvc,
     rv = xpcom.Initialize();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = xpcom.RegisterProfileService(aProfileSvc);
-    rv |= xpcom.DoAutoreg();
+    rv = xpcom.DoAutoreg();
+    rv |= xpcom.RegisterProfileService();
     rv |= xpcom.SetWindowCreator(aNative);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
@@ -1761,7 +1762,7 @@ ImportProfiles(nsIToolkitProfileService* aPService,
     rv = xpcom.Initialize();
     if (NS_SUCCEEDED(rv)) {
       xpcom.DoAutoreg();
-      xpcom.RegisterProfileService(aPService);
+      xpcom.RegisterProfileService();
 
 #ifdef XP_MACOSX
       SetupMacCommandLine(gRestartArgc, gRestartArgv);
@@ -2239,8 +2240,8 @@ static void RestoreStateForAppInitiatedRestart()
   }
 }
 
-#ifdef MOZ_AIRBAG
-// When we first initialize airbag we don't have a profile,
+#ifdef MOZ_CRASHREPORTER
+// When we first initialize the crash reporter we don't have a profile,
 // so we set the minidump path to $TEMP.  Once we have a profile,
 // we set it to $PROFILE/minidumps, creating the directory
 // if needed.
@@ -2503,9 +2504,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
   }
 
-#ifdef MOZ_AIRBAG
-  const char* airbagEnv = PR_GetEnv("MOZ_CRASHREPORTER");
-  if (airbagEnv && *airbagEnv) {
+#ifdef MOZ_CRASHREPORTER
+  const char* crashreporterEnv = PR_GetEnv("MOZ_CRASHREPORTER");
+  if (crashreporterEnv && *crashreporterEnv) {
     appData.flags |= NS_XRE_ENABLE_CRASH_REPORTER;
   }
 
@@ -2798,7 +2799,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     //////////////////////// NOW WE HAVE A PROFILE ////////////////////////
 
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
     if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)
         MakeOrSetMinidumpPath(profD);
 #endif
@@ -2871,6 +2872,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       rv = xpcom.Initialize();
       NS_ENSURE_SUCCESS(rv, 1); 
       rv = xpcom.DoAutoreg();
+      rv |= xpcom.RegisterProfileService();
       rv |= xpcom.SetWindowCreator(nativeApp);
       NS_ENSURE_SUCCESS(rv, 1);
 
@@ -3147,7 +3149,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
       rv = LaunchChild(nativeApp, appInitiatedRestart, upgraded ? -1 : 0);
 
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
       if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)
         CrashReporter::UnsetExceptionHandler();
 #endif
@@ -3156,7 +3158,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     }
   }
 
-#ifdef MOZ_AIRBAG
+#ifdef MOZ_CRASHREPORTER
   if (appData.flags & NS_XRE_ENABLE_CRASH_REPORTER)
       CrashReporter::UnsetExceptionHandler();
 #endif

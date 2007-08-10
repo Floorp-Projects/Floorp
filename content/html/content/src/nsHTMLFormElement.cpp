@@ -296,44 +296,6 @@ protected:
   nsresult DoResolveName(const nsAString& aName, PRBool aFlushContent,
                          nsISupports** aReturn);
 
-  /**
-   * Reset the default submit element after the previous default submit control
-   * is removed.
-   *
-   * Note that this, in the worst case, needs to run through all the form's
-   * controls.
-   *
-   * @param aNotify If true, send nsIDocumentObserver notifications on the
-   *                new and previous default elements.
-   * @param aPrevDefaultInElements If true, the previous default submit element
-   *                               was in the elements list. If false, it was
-   *                               in the not-in-elements list.
-   * @param aPrevDefaultIndex The index of the previous default submit control
-   *                          in the list determined by aPrevDefaultInElements.
-   */
-  void ResetDefaultSubmitElement(PRBool aNotify,
-                                 PRBool aPrevDefaultInElements,
-                                 PRUint32 aPrevDefaultIndex);
-  
-  /**
-   * Locates the default submit control. This is defined as the first element
-   * in document order which can submit a form. Returns null if there are no
-   * submit controls.
-   *
-   * Note that this, in the worst case, needs to run through all the form's
-   * controls.
-   *
-   * @param aPrevDefaultInElements If true, the previous default submit element
-   *                               was in the elements list. If false, it was
-   *                               in the not-in-elements list.
-   * @param aPrevDefaultIndex The index of the previous default submit control
-   *                          in the list determined by aPrevDefaultInElements.
-   * @return The default submit control for the form, or null if one does
-   *         not exist.
-   */
-  nsIFormControl* FindDefaultSubmit(PRBool aPrevDefaultInElements,
-                                    PRUint32 aPrevDefaultIndex) const;
-
   //
   // Data members
   //
@@ -367,6 +329,12 @@ protected:
 
   /** The default submit element -- WEAK */
   nsIFormControl* mDefaultSubmitElement;
+
+  /** The first submit element in mElements -- WEAK */
+  nsIFormControl* mFirstSubmitInElements;
+
+  /** The first submit element in mNotInElements -- WEAK */
+  nsIFormControl* mFirstSubmitNotInElements;
 
 protected:
   /** Detection of first form to notify observers */
@@ -522,7 +490,9 @@ nsHTMLFormElement::nsHTMLFormElement(nsINodeInfo *aNodeInfo)
     mSubmitInitiatedFromUserInput(PR_FALSE),
     mPendingSubmission(nsnull),
     mSubmittingRequest(nsnull),
-    mDefaultSubmitElement(nsnull)
+    mDefaultSubmitElement(nsnull),
+    mFirstSubmitInElements(nsnull),
+    mFirstSubmitNotInElements(nsnull)
 {
 }
 
@@ -1312,30 +1282,49 @@ nsHTMLFormElement::AddElement(nsIFormControl* aChild,
  
   // Default submit element handling
   if (aChild->IsSubmitControl()) {
-    // The new child is the default submit if there was not previously
-    // a default submit element, or if the new child is before the old
-    // default submit element.
-    // To speed up parsing, the special case of a form that already
-    // has a default submit that's in the same list as the new child
-    // is ignored, since the new child then cannot be the default
-    // submit element.
-    nsIFormControl* oldControl = mDefaultSubmitElement;
-    if (!mDefaultSubmitElement ||
-        ((!lastElement ||
-          ShouldBeInElements(mDefaultSubmitElement) != childInElements) &&
-         CompareFormControlPosition(aChild, mDefaultSubmitElement, this) < 0)) {
-      mDefaultSubmitElement = aChild;
+    // Update mDefaultSubmitElement, mFirstSubmitInElements,
+    // mFirstSubmitNotInElements.
+
+    nsIFormControl** firstSubmitSlot =
+      childInElements ? &mFirstSubmitInElements : &mFirstSubmitNotInElements;
+    
+    // The new child is the new first submit in its list if the firstSubmitSlot
+    // is currently empty or if the child is before what's currently in the
+    // slot.  Note that if we already have a control in firstSubmitSlot and
+    // we're appending this element can't possibly replace what's currently in
+    // the slot.  Also note that aChild can't become the mDefaultSubmitElement
+    // unless it replaces what's in the slot.  If it _does_ replace what's in
+    // the slot, it becomes the default submit if either the default submit is
+    // what's in the slot or the child is earlier than the default submit.
+    nsIFormControl* oldDefaultSubmit = mDefaultSubmitElement;
+    if (!*firstSubmitSlot ||
+        (!lastElement &&
+         CompareFormControlPosition(aChild, *firstSubmitSlot, this) < 0)) {
+      NS_ASSERTION(*firstSubmitSlot == mDefaultSubmitElement ||
+                   mDefaultSubmitElement,
+                   "How can we have a null mDefaultSubmitElement but a "
+                   "first-submit slot in one of the lists?");
+      if (*firstSubmitSlot == mDefaultSubmitElement ||
+          CompareFormControlPosition(aChild,
+                                     mDefaultSubmitElement, this) < 0) {
+        mDefaultSubmitElement = aChild;
+      }
+      *firstSubmitSlot = aChild;
     }
+    NS_POSTCONDITION(mDefaultSubmitElement == mFirstSubmitInElements ||
+                     mDefaultSubmitElement == mFirstSubmitNotInElements,
+                     "What happened here?");
 
     // Notify that the state of the previous default submit element has changed
     // if the element which is the default submit element has changed.  The new
     // default submit element is responsible for its own ContentStatesChanged
     // call.
-    if (aNotify && oldControl != mDefaultSubmitElement) {
+    if (aNotify && oldDefaultSubmit &&
+        oldDefaultSubmit != mDefaultSubmitElement) {
       nsIDocument* document = GetCurrentDoc();
       if (document) {
         MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
-        nsCOMPtr<nsIContent> oldElement(do_QueryInterface(oldControl));
+        nsCOMPtr<nsIContent> oldElement(do_QueryInterface(oldDefaultSubmit));
         document->ContentStatesChanged(oldElement, nsnull,
                                        NS_EVENT_STATE_DEFAULT);
       }
@@ -1380,84 +1369,61 @@ nsHTMLFormElement::RemoveElement(nsIFormControl* aChild,
 
   controls.RemoveElementAt(index);
 
+  // Update our mFirstSubmit* values.
+  nsIFormControl** firstSubmitSlot =
+    childInElements ? &mFirstSubmitInElements : &mFirstSubmitNotInElements;
+  if (aChild == *firstSubmitSlot) {
+    *firstSubmitSlot = nsnull;
+
+    // We are removing the first submit in this list, find the new first submit
+    PRUint32 length = controls.Length();
+    for (PRUint32 i = index; i < length; ++i) {
+      nsIFormControl* currentControl = controls[i];
+      if (currentControl->IsSubmitControl()) {
+        *firstSubmitSlot = currentControl;
+        break;
+      }
+    }
+  }
+
   if (aChild == mDefaultSubmitElement) {
-    // We are removing the default submit, find the new default
-    ResetDefaultSubmitElement(aNotify, childInElements, index );
+    // Need to reset mDefaultSubmitElement
+    if (!mFirstSubmitNotInElements) {
+      mDefaultSubmitElement = mFirstSubmitInElements;
+    } else if (!mFirstSubmitInElements) {
+      mDefaultSubmitElement = mFirstSubmitNotInElements;
+    } else {
+      NS_ASSERTION(mFirstSubmitInElements != mFirstSubmitNotInElements,
+                   "How did that happen?");
+      // Have both; use the earlier one
+      mDefaultSubmitElement =
+        CompareFormControlPosition(mFirstSubmitInElements,
+                                   mFirstSubmitNotInElements, this) < 0 ?
+          mFirstSubmitInElements : mFirstSubmitNotInElements;
+    }
+
+    NS_POSTCONDITION(mDefaultSubmitElement == mFirstSubmitInElements ||
+                     mDefaultSubmitElement == mFirstSubmitNotInElements,
+                     "What happened here?");
+
+    // Notify about change.  Note that we don't notify on the old default
+    // submit (which is being removed) because it's either being removed from
+    // the DOM or changing attributes in a way that makes it responsible for
+    // sending its own notifications.
+    if (aNotify && mDefaultSubmitElement) {
+      NS_ASSERTION(mDefaultSubmitElement != aChild,
+                   "Notifying but elements haven't changed.");
+      nsIDocument* document = GetCurrentDoc();
+      if (document) {
+        MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
+        nsCOMPtr<nsIContent> newElement(do_QueryInterface(mDefaultSubmitElement));
+        document->ContentStatesChanged(newElement, nsnull,
+                                       NS_EVENT_STATE_DEFAULT);
+      }
+    }
   }
 
   return rv;
-}
-
-void
-nsHTMLFormElement::ResetDefaultSubmitElement(PRBool aNotify,
-                                             PRBool aPrevDefaultInElements,
-                                             PRUint32 aPrevDefaultIndex)
-{
-  nsIFormControl* oldDefaultSubmit = mDefaultSubmitElement;
-  mDefaultSubmitElement = FindDefaultSubmit(aPrevDefaultInElements,
-                                            aPrevDefaultIndex);
-
-  // Inform about change.  Note that we don't notify on the old default submit
-  // (which is being removed) because it's either being removed from the DOM or
-  // changing attributes in a way that makes it responsible for sending its own
-  // notifications.
-  if (aNotify && (oldDefaultSubmit || mDefaultSubmitElement)) {
-    NS_ASSERTION(mDefaultSubmitElement != oldDefaultSubmit,
-                 "Notifying but elements haven't changed.");
-    nsIDocument* document = GetCurrentDoc();
-    if (document) {
-      MOZ_AUTO_DOC_UPDATE(document, UPDATE_CONTENT_STATE, PR_TRUE);
-      nsCOMPtr<nsIContent> newElement(do_QueryInterface(mDefaultSubmitElement));
-      document->ContentStatesChanged(newElement, nsnull,
-                                     NS_EVENT_STATE_DEFAULT);
-    }
-  }
- }
-
-nsIFormControl*
-nsHTMLFormElement::FindDefaultSubmit(PRBool aPrevDefaultInElements,
-                                     PRUint32 aPrevDefaultIndex) const
-{
-  nsIFormControl* defaultSubmit = nsnull;
-
-  // Find the first submit control in the elements list. This list is
-  // in document order.
-  PRUint32 length = mControls->mElements.Length();
-
-  // If the previous default submit element was in the elements
-  // list, begin the search of the elements list at that index. Given
-  // that the list is sorted, the new default submit cannot be before
-  // the index of the old child as it already would've been the default submit.
-  PRUint32 i = aPrevDefaultInElements ? aPrevDefaultIndex : 0;
-  for (; i < length; ++i) {
-    nsIFormControl* currentControl = mControls->mElements[i];
-
-    if (currentControl->IsSubmitControl()) {
-      defaultSubmit = currentControl;
-      break;
-    }
-  }
-
-  // <input type=image> elements are submit controls but are not in the
-  // elements list. Search the not-in-elements list to find any submit control
-  // that is ordered in the document before any submit element found already.
-  // See the comment above for when not to start the search at the first
-  // element.
-  length = mControls->mNotInElements.Length();
-  i = !aPrevDefaultInElements ? aPrevDefaultIndex : 0;
-  for (; i < length; ++i) {
-    nsIFormControl* currControl = mControls->mNotInElements[i];
-
-    if (currControl->IsSubmitControl()) {
-      if (!defaultSubmit ||
-          CompareFormControlPosition(currControl, defaultSubmit,
-                                     NS_CONST_CAST(nsHTMLFormElement*, this)) < 0) {
-        defaultSubmit = currControl;
-      }
-      break;
-    }
-  }
-  return defaultSubmit;
 }
 
 NS_IMETHODIMP
@@ -1632,6 +1598,10 @@ nsHTMLFormElement::GetSortedControls(nsTArray<nsIFormControl*>& aControls) const
 NS_IMETHODIMP_(nsIFormControl*)
 nsHTMLFormElement::GetDefaultSubmitElement() const
 {
+  NS_PRECONDITION(mDefaultSubmitElement == mFirstSubmitInElements ||
+                  mDefaultSubmitElement == mFirstSubmitNotInElements,
+                  "What happened here?");
+  
   return mDefaultSubmitElement;
 }
 

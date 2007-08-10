@@ -76,14 +76,8 @@ LoginManagerPromptFactory.prototype = {
             this._initialized = true;
         }
 
-        if (!aIID.equals(Ci.nsIAuthPrompt2))
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-
-        var prompter = new LoginManagerPrompter();
-        prompter.init(this._pwmgr, this._promptService, aWindow);
-        prompter.QueryInterface(Ci.nsIAuthPrompt2);
-
-        return prompter;
+        return new LoginManagerPrompter(this._pwmgr, this._promptService,
+                                        aWindow).QueryInterface(aIID);
     }
 }; // end of LoginManagerPromptFactory implementation
 
@@ -103,7 +97,13 @@ LoginManagerPromptFactory.prototype = {
  * Invoked by a channel for protocol-based authentication (eg HTTP
  * Authenticate, FTP login)
  */
-function LoginManagerPrompter() {}
+function LoginManagerPrompter(pwmgr, promptService, window) {
+  this._pwmgr = pwmgr;
+  this._promptService = promptService;
+  this._window = window;
+
+  this.log("===== initialized =====");
+}
 LoginManagerPrompter.prototype = {
 
     QueryInterface : XPCOMUtils.generateQI([Ci.nsIAuthPrompt2]),
@@ -121,15 +121,6 @@ LoginManagerPrompter.prototype = {
     _window        : null,
 
     _debug         : false,
-
-
-    init : function (aPWManager, aPromptService, aWindow) {
-        this._pwmgr = aPWManager;
-        this._promptService = aPromptService;
-        this._window = aWindow;
-
-        this.log("===== initialized =====");
-    },
 
 
     /*

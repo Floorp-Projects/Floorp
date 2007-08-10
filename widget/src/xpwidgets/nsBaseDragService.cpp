@@ -79,16 +79,6 @@
 
 #define DRAGIMAGES_PREF "nglayout.enable_drag_images"
 
-NS_IMPL_ADDREF(nsBaseDragService)
-NS_IMPL_RELEASE(nsBaseDragService)
-NS_IMPL_QUERY_INTERFACE2(nsBaseDragService, nsIDragService, nsIDragSession)
-
-
-//-------------------------------------------------------------------------
-//
-// DragService constructor
-//
-//-------------------------------------------------------------------------
 nsBaseDragService::nsBaseDragService()
   : mCanDrop(PR_FALSE), mDoingDrag(PR_FALSE), mHasImage(PR_FALSE),
     mDragAction(DRAGDROP_ACTION_NONE), mTargetSize(0,0),
@@ -96,15 +86,11 @@ nsBaseDragService::nsBaseDragService()
 {
 }
 
-//-------------------------------------------------------------------------
-//
-// DragService destructor
-//
-//-------------------------------------------------------------------------
 nsBaseDragService::~nsBaseDragService()
 {
 }
 
+NS_IMPL_ISUPPORTS2(nsBaseDragService, nsIDragService, nsIDragSession)
 
 //---------------------------------------------------------
 NS_IMETHODIMP

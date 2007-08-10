@@ -36,3 +36,6 @@ printers lie about their support for BitBlt, and we end up getting
 black instead of what we want.
 
 nonfatal-assertions.patch: Make assertions non-fatal
+
+clone-similar-fallback.patch: Implement fallback for clone_similar.
+

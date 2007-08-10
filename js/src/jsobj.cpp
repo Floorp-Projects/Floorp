@@ -3962,7 +3962,7 @@ js_DefaultValue(JSContext *cx, JSObject *obj, JSType hint, jsval *vp)
                              JSDVG_SEARCH_STACK, save, str,
                              (hint == JSTYPE_VOID)
                              ? "primitive type"
-                             : js_type_strs[hint]);
+                             : JS_TYPE_STR(hint));
         return JS_FALSE;
     }
 out:

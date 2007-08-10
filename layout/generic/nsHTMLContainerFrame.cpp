@@ -94,21 +94,12 @@ private:
 
 void
 nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
-    nsIRenderingContext* aCtx, const nsRect& aDirtyRect) {
-  // REVIEW: From nsHTMLContainerFrame::PaintTextDecorationsAndChildren
-  const nsStyleFont* font = mFrame->GetStyleFont();
-  NS_ASSERTION(font->mFont.decorations == NS_FONT_DECORATION_NONE,
-               "fonts on style structs shouldn't have decorations");
-
-  // XXX This is relatively slow and shouldn't need to be used here.
-  nsCOMPtr<nsIDeviceContext> deviceContext;
-  aCtx->GetDeviceContext(*getter_AddRefs(deviceContext));
-  nsCOMPtr<nsIFontMetrics> normalFont;
-  const nsStyleVisibility* visibility = mFrame->GetStyleVisibility();
+                               nsIRenderingContext* aCtx,
+                               const nsRect& aDirtyRect)
+{
   nsCOMPtr<nsIFontMetrics> fm;
-  deviceContext->GetMetricsFor(font->mFont, visibility->mLangGroup,
-      *getter_AddRefs(fm));
-      
+  nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm));
+
   nsPoint pt = aBuilder->ToReferenceFrame(mFrame);
 
   // REVIEW: From nsHTMLContainerFrame::PaintTextDecorations

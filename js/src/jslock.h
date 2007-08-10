@@ -39,8 +39,6 @@
 #ifndef jslock_h__
 #define jslock_h__
 
-JS_BEGIN_EXTERN_C
-
 #ifdef JS_THREADSAFE
 
 #include "jstypes.h"
@@ -51,6 +49,8 @@ JS_BEGIN_EXTERN_C
 
 #include "jsprvtd.h"    /* for JSScope, etc. */
 #include "jspubtd.h"    /* for JSRuntime, etc. */
+
+JS_BEGIN_EXTERN_C
 
 #define Thin_GetWait(W) ((jsword)(W) & 0x1)
 #define Thin_SetWait(W) ((jsword)(W) | 0x1)
@@ -112,7 +112,9 @@ typedef struct JSFatLockTable {
  * to be fixed by moving JS_LOCK_SCOPE to jsscope.h, JS_LOCK_OBJ to jsobj.h,
  * and so on.
  */
+JS_END_EXTERN_C
 #include "jsscope.h"
+JS_BEGIN_EXTERN_C
 
 #define JS_LOCK_RUNTIME(rt)         js_LockRuntime(rt)
 #define JS_UNLOCK_RUNTIME(rt)       js_UnlockRuntime(rt)
@@ -211,6 +213,8 @@ extern JS_INLINE void js_Unlock(JSThinLock *tl, jsword me);
 #endif /* arch-tests */
 
 #else  /* !JS_THREADSAFE */
+
+JS_BEGIN_EXTERN_C
 
 #define JS_ATOMIC_INCREMENT(p)      (++*(p))
 #define JS_ATOMIC_DECREMENT(p)      (--*(p))

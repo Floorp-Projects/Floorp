@@ -304,6 +304,15 @@ static char      *sdlogname = NULL; /* filename for shutdown leak log */
  */
 static uint32 suppress_tracing = 0;
 
+/*
+ * This enables/disables trace-malloc logging.
+ *
+ * It is separate from suppress_tracing so that we do not have to pay
+ * the performance cost of repeated PR_EnterMonitor/PR_ExitMonitor and
+ * PR_IntervalNow calls when trace-malloc is disabled.
+ */
+static int tracing_enabled = 1;
+
 #define TM_ENTER_MONITOR()                                                    \
     PR_BEGIN_MACRO                                                            \
         if (tmmon)                                                            \
@@ -1493,7 +1502,7 @@ malloc(size_t size)
     PLHashEntry *he;
     allocation *alloc;
 
-    if (!PR_Initialized()) {
+    if (!tracing_enabled || !PR_Initialized()) {
         return __libc_malloc(size);
     }
 
@@ -1545,7 +1554,7 @@ calloc(size_t count, size_t size)
      *
      * Delaying NSPR calls until NSPR is initialized helps.
      */
-    if (!PR_Initialized()) {
+    if (!tracing_enabled || !PR_Initialized()) {
         return __libc_calloc(count, size);
     }
 
@@ -1591,7 +1600,7 @@ realloc(__ptr_t ptr, size_t size)
     allocation *alloc;
     FILE *trackfp = NULL;
 
-    if (!PR_Initialized()) {
+    if (!tracing_enabled || !PR_Initialized()) {
         return __libc_realloc(ptr, size);
     }
 
@@ -1685,7 +1694,7 @@ valloc(size_t size)
     PLHashEntry *he;
     allocation *alloc;
 
-    if (!PR_Initialized()) {
+    if (!tracing_enabled || !PR_Initialized()) {
         return __libc_valloc(size);
     }
 
@@ -1726,7 +1735,7 @@ memalign(size_t boundary, size_t size)
     PLHashEntry *he;
     allocation *alloc;
 
-    if (!PR_Initialized()) {
+    if (!tracing_enabled || !PR_Initialized()) {
         return __libc_memalign(boundary, size);
     }
 
@@ -1778,7 +1787,7 @@ free(__ptr_t ptr)
     uint32 serial = 0, size = 0;
     PRUint32 start, end;
 
-    if (!PR_Initialized()) {
+    if (!tracing_enabled || !PR_Initialized()) {
         __libc_free(ptr);
         return;
     }
@@ -1844,10 +1853,11 @@ PR_IMPLEMENT(void) NS_TraceMallocStartup(int logfd)
 {
     /* We must be running on the primordial thread. */
     PR_ASSERT(suppress_tracing == 0);
+    PR_ASSERT(tracing_enabled == 1);
     PR_ASSERT(logfp == &default_logfile);
-    suppress_tracing = (logfd < 0);
+    tracing_enabled = (logfd >= 0);
 
-    if (suppress_tracing == 0) {
+    if (tracing_enabled) {
         PR_ASSERT(logfp->simsize == 0); /* didn't overflow startup buffer */
 
         /* Log everything in logfp (aka default_logfile)'s buffer to logfd. */
@@ -1863,7 +1873,7 @@ PR_IMPLEMENT(void) NS_TraceMallocStartup(int logfd)
 
 #ifdef XP_WIN32
     /* Register listeners for win32. */
-    if (suppress_tracing == 0) {
+    if (tracing_enabled) {
         StartupHooker();
     }
 #endif
@@ -2046,7 +2056,7 @@ PR_IMPLEMENT(void) NS_TraceMallocShutdown()
         PR_DestroyMonitor(mon);
     }
 #ifdef XP_WIN32
-    if (suppress_tracing == 0) {
+    if (tracing_enabled) {
         ShutdownHooker();
     }
 #endif
@@ -2059,14 +2069,14 @@ PR_IMPLEMENT(void) NS_TraceMallocDisable()
     TM_ENTER_MONITOR();
     for (fp = logfile_list; fp; fp = fp->next)
         flush_logfile(fp);
-    suppress_tracing++;
+    tracing_enabled = 0;
     TM_EXIT_MONITOR();
 }
 
 PR_IMPLEMENT(void) NS_TraceMallocEnable()
 {
     TM_ENTER_MONITOR();
-    suppress_tracing--;
+    tracing_enabled = 1;
     TM_EXIT_MONITOR();
 }
 
@@ -2287,6 +2297,9 @@ MallocCallback(void *ptr, size_t size, PRUint32 start, PRUint32 end)
     PLHashEntry *he;
     allocation *alloc;
 
+    if (!tracing_enabled)
+        return;
+
     TM_ENTER_MONITOR();
     tmstats.malloc_calls++;
     if (!ptr) {
@@ -2316,6 +2329,9 @@ CallocCallback(void *ptr, size_t count, size_t size, PRUint32 start, PRUint32 en
     callsite *site;
     PLHashEntry *he;
     allocation *alloc;
+
+    if (!tracing_enabled)
+        return;
 
     TM_ENTER_MONITOR();
     tmstats.calloc_calls++;
@@ -2349,6 +2365,9 @@ ReallocCallback(void * oldptr, void *ptr, size_t size, PRUint32 start, PRUint32 
     PLHashNumber hash;
     PLHashEntry **hep, *he;
     allocation *alloc;
+
+    if (!tracing_enabled)
+        return;
 
     TM_ENTER_MONITOR();
     tmstats.realloc_calls++;
@@ -2419,6 +2438,9 @@ FreeCallback(void * ptr, PRUint32 start, PRUint32 end)
     PLHashEntry **hep, *he;
     callsite *site;
     allocation *alloc;
+
+    if (!tracing_enabled)
+        return;
 
     TM_ENTER_MONITOR();
     tmstats.free_calls++;

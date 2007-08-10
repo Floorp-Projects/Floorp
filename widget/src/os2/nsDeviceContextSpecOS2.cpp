@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -90,26 +91,18 @@ nsStringArray* GlobalPrinters::mGlobalPrinterList = nsnull;
 ULONG          GlobalPrinters::mGlobalNumPrinters = 0;
 //---------------
 
-/** -------------------------------------------------------
- *  Construct the nsDeviceContextSpecOS2
- *  @update   dc 12/02/98
- */
-nsDeviceContextSpecOS2 :: nsDeviceContextSpecOS2()
+nsDeviceContextSpecOS2::nsDeviceContextSpecOS2()
+  : mQueue(nsnull)
 {
-  mQueue = nsnull;
 }
 
-/** -------------------------------------------------------
- *  Destroy the nsDeviceContextSpecOS2
- *  @update   dc 2/15/98
- */
-nsDeviceContextSpecOS2 :: ~nsDeviceContextSpecOS2()
+nsDeviceContextSpecOS2::~nsDeviceContextSpecOS2()
 {
-  if( mQueue)
-     PrnClosePrinter( mQueue);
+  if (mQueue)
+    PrnClosePrinter(mQueue);
 }
 
-static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
+NS_IMPL_ISUPPORTS1(nsDeviceContextSpecOS2, nsIDeviceContextSpec)
 
 void SetupDevModeFromSettings(ULONG printer, nsIPrintSettings* aPrintSettings)
 {
@@ -218,36 +211,6 @@ nsresult nsDeviceContextSpecOS2::SetPrintSettingsFromDevMode(nsIPrintSettings* a
   DevCloseDC(hdc);  
   return NS_OK;
 }
-
-NS_IMETHODIMP nsDeviceContextSpecOS2 :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(aInstancePtr, "null out param");
-
-  if (aIID.Equals(kIDeviceContextSpecIID))
-  {
-    nsIDeviceContextSpec* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-  if (aIID.Equals(kISupportsIID))
-  {
-    nsIDeviceContextSpec* tmp = this;
-    nsISupports* tmp2 = tmp;
-    *aInstancePtr = (void*) tmp2;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  *aInstancePtr = nsnull;
-  return NS_ERROR_NO_INTERFACE;
-}
-
-NS_IMPL_ADDREF(nsDeviceContextSpecOS2)
-NS_IMPL_RELEASE(nsDeviceContextSpecOS2)
 
 NS_IMETHODIMP nsDeviceContextSpecOS2::Init(nsIWidget *aWidget,
                                            nsIPrintSettings* aPS,

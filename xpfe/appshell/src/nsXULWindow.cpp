@@ -1798,18 +1798,6 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(PRInt32 aChromeFlags,
                                    (static_cast<nsIXULWindow*>
                                                (newWindow));
 
-  nsCOMPtr<nsIDocShell> newDocShell;
-  xulWin->GetDocShell(getter_AddRefs(newDocShell));
-
-  // If we're opening a non-chrome modal window (i.e. a modal content
-  // window), tell the DOM window that it is modal.
-  nsCOMPtr<nsPIDOMWindow> domWin(do_GetInterface(newDocShell));
-
-  if (domWin && (aChromeFlags & nsIWebBrowserChrome::CHROME_MODAL) &&
-      !(aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)) {
-    domWin->SetModalContentWindow(PR_TRUE);
-  }
-
   xulWin->LockUntilChromeLoad();
 
   // Push nsnull onto the JSContext stack before we dispatch a native event.

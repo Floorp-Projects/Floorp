@@ -402,8 +402,6 @@ function testListing(metadata, response)
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/MozillaFileLogger.js"}),
         SCRIPT({type: "text/javascript",
-                 src: "/tests/SimpleTest/cross-domain.js"}),
-        SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/quit.js"}),
         SCRIPT({type: "text/javascript",
                  src: "/tests/SimpleTest/setup.js"}),

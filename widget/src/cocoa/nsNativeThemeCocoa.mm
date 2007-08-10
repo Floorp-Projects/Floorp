@@ -63,8 +63,15 @@
 #define DRAW_IN_FRAME_DEBUG 0
 #define SCROLLBARS_VISUAL_DEBUG 0
 
+// see cairo-quartz-surface.c for the complete list of these
+enum {
+  kPrivateCGCompositeSourceOver = 2
+};
+
+// private Quartz routines needed here
 extern "C" {
   CG_EXTERN void CGContextSetCTM(CGContextRef, CGAffineTransform);
+  CG_EXTERN void CGContextSetCompositeOperation (CGContextRef, int);
 }
 
 // Copied from nsLookAndFeel.h
@@ -576,8 +583,11 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
                               NSAppUnitsToIntPixels(aRect.y, p2a),
                               NSAppUnitsToIntPixels(aRect.width, p2a),
                               NSAppUnitsToIntPixels(aRect.height, p2a));
-  macRect.origin.x -= offsetX;
-  macRect.origin.y -= offsetY;
+  macRect.origin.x += offsetX;
+  macRect.origin.y += offsetY;
+
+  // 382049 - need to explicitly set the composite operation to sourceOver
+  CGContextSetCompositeOperation(cgContext, kPrivateCGCompositeSourceOver);
 
 #if 0
   fprintf(stderr, "    --> macRect %f %f %f %f\n",

@@ -425,9 +425,6 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
        interfacesBits |= 1 << MAI_INTERFACE_ACTION; 
     }
 
-    PRUint32 accRole;
-    GetRole(&accRole);
-  
     //nsIAccessibleText
     nsCOMPtr<nsIAccessibleText> accessInterfaceText;
     QueryInterface(NS_GET_IID(nsIAccessibleText),
@@ -478,15 +475,11 @@ nsAccessibleWrap::CreateMaiInterfaces(void)
 
     if (!MustPrune(this)) {  // These interfaces require children
       //nsIAccessibleHypertext
-      PRInt32 linkCount = 0;
       nsCOMPtr<nsIAccessibleHyperText> accessInterfaceHypertext;
       QueryInterface(NS_GET_IID(nsIAccessibleHyperText),
                      getter_AddRefs(accessInterfaceHypertext));
       if (accessInterfaceHypertext) {
-          nsresult rv = accessInterfaceHypertext->GetLinks(&linkCount);
-          if (NS_SUCCEEDED(rv) && (linkCount > 0)) {
-              interfacesBits |= 1 << MAI_INTERFACE_HYPERTEXT;
-          }
+          interfacesBits |= 1 << MAI_INTERFACE_HYPERTEXT;
       }
 
       //nsIAccessibleTable
@@ -912,25 +905,24 @@ refChildCB(AtkObject *aAtkObj, gint aChildIndex)
         return nsnull;
     }
 
-    nsresult rv;
     nsCOMPtr<nsIAccessible> accChild;
     nsCOMPtr<nsIAccessibleHyperText> hyperText;
     accWrap->QueryInterface(NS_GET_IID(nsIAccessibleHyperText), getter_AddRefs(hyperText));
     if (hyperText) {
         // If HyperText, then number of links matches number of children
         nsCOMPtr<nsIAccessibleHyperLink> hyperLink;
-        rv = hyperText->GetLink(aChildIndex, getter_AddRefs(hyperLink));
+        hyperText->GetLink(aChildIndex, getter_AddRefs(hyperLink));
         accChild = do_QueryInterface(hyperLink);
     }
     else {
         nsCOMPtr<nsIAccessibleText> accText;
         accWrap->QueryInterface(NS_GET_IID(nsIAccessibleText), getter_AddRefs(accText));
         if (!accText) {  // Accessible Text that is not HyperText has no children
-            rv = accWrap->GetChildAt(aChildIndex, getter_AddRefs(accChild));
+            accWrap->GetChildAt(aChildIndex, getter_AddRefs(accChild));
         }
     }
 
-    if (NS_FAILED(rv) || !accChild)
+    if (!accChild)
         return nsnull;
 
     AtkObject* childAtkObj = nsAccessibleWrap::GetAtkObject(accChild);

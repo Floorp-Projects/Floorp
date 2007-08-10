@@ -234,6 +234,9 @@ function (generatorURL)
 {
     debug("addMicrosummaryGenerator(" + generatorURL + ")");
 
+    if (!/^https?:/i.test(generatorURL))
+      return;
+
     var stringBundle = srGetStrBundle("chrome://browser/locale/sidebar/sidebar.properties");
     var titleMessage = stringBundle.GetStringFromName("addMicsumGenConfirmTitle");
     var dialogMessage = stringBundle.formatStringFromName("addMicsumGenConfirmText", [generatorURL], 1);

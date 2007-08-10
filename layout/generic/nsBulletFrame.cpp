@@ -236,7 +236,6 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
     }
   }
 
-  const nsStyleFont* myFont = GetStyleFont();
   const nsStyleColor* myColor = GetStyleColor();
 
   nsCOMPtr<nsIFontMetrics> fm;
@@ -361,7 +360,7 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
   case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
   case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
   case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
-    fm = PresContext()->GetMetricsFor(myFont->mFont);
+    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
 #ifdef IBMBIDI
     // If we can't render our numeral using the chars in the numbering
     // system, we'll be using "decimal"...
@@ -383,7 +382,7 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
 #ifdef IBMBIDI
   if (charType != eCharType_LeftToRight) {
     nsPresContext* presContext = PresContext();
-    fm = presContext->GetMetricsFor(myFont->mFont);
+    nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
     aRenderingContext.SetFont(fm);
     nscoord ascent;
     fm->GetMaxAscent(ascent);
@@ -1460,8 +1459,8 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   // match the image size).
   mIntrinsicSize.SizeTo(0, 0);
 
-  const nsStyleFont* myFont = GetStyleFont();
-  nsCOMPtr<nsIFontMetrics> fm = aCX->GetMetricsFor(myFont->mFont);
+  nsCOMPtr<nsIFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   nscoord bulletSize;
 
   nsAutoString text;

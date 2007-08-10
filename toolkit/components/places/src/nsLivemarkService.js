@@ -119,7 +119,7 @@ function LivemarkService() {
     gExpiration = Math.max(livemarkRefresh * 1000, 60000);
   } 
   catch (ex) { }
-    
+
   // [ {folderId:, folderURI:, feedURI:, loadGroup:, locked: } ];
   this._livemarks = [];
 
@@ -195,10 +195,11 @@ LivemarkService.prototype = {
     this._bms.removeFolderChildren(folderId);
   },
 
-  insertLivemarkLoadingItem: function LS_insertLivemarkLoading(bms, folderId) {
+  insertLivemarkLoadingItem: function LS_insertLivemarkLoading(bms, livemark) {
     var loadingURI = gIoService.newURI("about:livemark-loading", null, null);
-    var id = bms.insertBookmark(folderId, loadingURI, bms.DEFAULT_INDEX,
-                                this._loading);
+    if (!livemark.loadingId || livemark.loadingId == -1)
+      livemark.loadingId = bms.insertBookmark(livemark.folderId, loadingURI,
+                                              0, this._loading);
   },
 
   _updateLivemarkChildren:
@@ -223,7 +224,7 @@ LivemarkService.prototype = {
     } 
     catch (ex) {
       // This livemark has never been loaded, since it has no expire time.
-      this.insertLivemarkLoadingItem(this._bms, livemark.folderId);
+      this.insertLivemarkLoadingItem(this._bms, livemark);
     }
 
     var loadgroup;
@@ -239,6 +240,8 @@ LivemarkService.prototype = {
       var httpChannel = uriChannel.QueryInterface(Ci.nsIHttpChannel);
       httpChannel.requestMethod = "GET";
       httpChannel.setRequestHeader("X-Moz", "livebookmarks", false);
+
+      this.insertLivemarkLoadingItem(this._bms, livemark);
 
       // Stream the result to the feed parser with this listener
       var listener = new LivemarkLoadListener(livemark);
@@ -274,8 +277,10 @@ LivemarkService.prototype = {
                                        feedURI, index) {
     var livemarkID = this._createFolder(bms, folder, name, siteURI, feedURI,
                                         index);
-    this.insertLivemarkLoadingItem(bms, livemarkID);
     this._pushLivemark(livemarkID, feedURI);
+    var livemarkIndex = this._getLivemarkIndex(livemarkID);
+    var livemark = this._livemarks[livemarkIndex];
+    this.insertLivemarkLoadingItem(bms, livemark);
     
     return livemarkID;
   },
@@ -437,6 +442,7 @@ LivemarkService.prototype = {
 
 function LivemarkLoadListener(livemark) {
   this._livemark = livemark;
+  this._livemark.loadingId = -1;
   this._processor = null;
   this._isAborted = false;
   this._ttl = gExpiration;
@@ -475,15 +481,21 @@ LivemarkLoadListener.prototype = {
     // Clear out any child nodes of the livemark folder, since
     // they're about to be replaced.
     var lmService = Cc[LS_CONTRACTID].getService(Ci.nsILivemarkService);
-    this.deleteLivemarkChildren(this._livemark.folderId);
 
     // Enforce well-formedness because the existing code does
     if (!result || !result.doc || result.bozo) {
+      if (this._livemark.loadingId != -1) {
+        this._bms.removeItem(this._livemark.loadingId);
+        this._livemark.loadingId = -1;
+      }
+
       this.insertLivemarkFailedItem(this._livemark.folderId);
       this._ttl = gExpiration;
       throw Cr.NS_ERROR_FAILURE;
     }
 
+    this.deleteLivemarkChildren(this._livemark.folderId);
+    this._livemark.loadingId = -1;
     var title, href, entry;
     var feed = result.doc.QueryInterface(Ci.nsIFeed);
     // Loop through and check for a link and a title
@@ -532,8 +544,7 @@ LivemarkLoadListener.prototype = {
 
   insertLivemarkFailedItem: function LS_insertLivemarkFailed(folderId) {
     var failedURI = gIoService.newURI("about:livemark-failed", null, null);
-    var id = this._bms.insertBookmark(folderId, failedURI, this._bms.DEFAULT_INDEX,
-                                      this._failed);
+    var id = this._bms.insertBookmark(folderId, failedURI, 0, this._failed);
   },
 
   insertLivemarkChild:

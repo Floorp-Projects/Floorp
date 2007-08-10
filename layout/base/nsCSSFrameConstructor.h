@@ -51,6 +51,7 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsThreadUtils.h"
+#include "nsPageContentFrame.h"
 
 class nsIDocument;
 struct nsFrameItems;
@@ -110,8 +111,7 @@ public:
   nsresult ContentInserted(nsIContent*            aContainer,
                            nsIContent*            aChild,
                            PRInt32                aIndexInContainer,
-                           nsILayoutHistoryState* aFrameState,
-                           PRBool                 aInReinsertContent);
+                           nsILayoutHistoryState* aFrameState);
 
   nsresult ContentRemoved(nsIContent*     aContainer,
                           nsIContent*     aChild,
@@ -184,6 +184,9 @@ public:
                                  nsIFrame*       aParentFrame,
                                  nsIFrame**      aContinuingFrame,
                                  PRBool          aIsFluid = PR_TRUE);
+
+  // Copy over fixed frames from aParentFrame's prev-in-flow
+  nsresult ReplicateFixedFrames(nsPageContentFrame* aParentFrame);
 
   // Request to find the primary frame associated with a given content object.
   // This is typically called by the pres shell when there is no mapping in
@@ -504,7 +507,8 @@ private:
                                 nsStyleContext*          aStyleContext,
                                 nsIFrame**               aNewFrame,
                                 const nsStyleDisplay*    aStyleDisplay,
-                                nsFrameItems&            aFrameItems);
+                                nsFrameItems&            aFrameItems,
+                                PRBool                   aHasPseudoParent);
 
   // ConstructSelectFrame puts the new frame in aFrameItems and
   // handles the kids of the select.
@@ -671,7 +675,8 @@ private:
                             const nsStyleDisplay*    aStyleDisplay,
                             PRBool&                  aFrameHasBeenInitialized,
                             PRBool&                  aAddedToFrameList,
-                            nsFrameItems&            aFrameItems);
+                            nsFrameItems&            aFrameItems,
+                            PRBool                   aHasPseudoParent);
 
   // A function that can be invoked to create some sort of image frame.
   typedef nsIFrame* (* ImageFrameCreatorFunc)(nsIPresShell*, nsStyleContext*);
@@ -748,7 +753,16 @@ private:
 
   nsresult RecreateFramesForContent(nsIContent*      aContent);
 
-  PRBool MaybeRecreateContainerForIBSplitterFrame(nsIFrame* aFrame, nsresult* aResult);
+  // If removal of aFrame from the frame tree requires reconstruction of some
+  // containing block (either of aFrame or of its parent) due to {ib} splits,
+  // recreate the relevant containing block.  The return value indicates
+  // whether this happened.  If this method returns true, *aResult is the
+  // return value of ReframeContainingBlock.  If this method returns false, the
+  // value of *aResult is no affected.  aFrame and aResult must not be null.
+  // aFrame must be the result of a GetPrimaryFrameFor() call (which means its
+  // parent is also not null).
+  PRBool MaybeRecreateContainerForIBSplitterFrame(nsIFrame* aFrame,
+                                                  nsresult* aResult);
 
   nsresult CreateContinuingOuterTableFrame(nsIPresShell*    aPresShell, 
                                            nsPresContext*  aPresContext,
@@ -832,17 +846,9 @@ private:
   PRBool AreAllKidsInline(nsIFrame* aFrameList);
 
   PRBool WipeContainingBlock(nsFrameConstructorState& aState,
-                             nsIFrame*                blockContent,
+                             nsIFrame*                aContainingBlock,
                              nsIFrame*                aFrame,
-                             nsIFrame*                aFrameList);
-
-  PRBool NeedSpecialFrameReframe(nsIContent*      aParent1,
-                                 nsIContent*      aParent2,
-                                 nsIFrame*&       aParentFrame,
-                                 nsIContent*      aChild,
-                                 PRInt32          aIndexInContainer,
-                                 nsIFrame*&       aPrevSibling,
-                                 nsIFrame*        aNextSibling);
+                             const nsFrameItems&      aFrameList);
 
   nsresult ReframeContainingBlock(nsIFrame* aFrame);
 

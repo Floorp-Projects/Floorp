@@ -506,11 +506,7 @@ nsObjectFrame::Init(nsIContent*      aContent,
   mInstantiating = PR_FALSE;
 #endif
 
-  nsresult rv = nsObjectFrameSuper::Init(aContent, aParent, aPrevInFlow);
-  nsCOMPtr<nsIObjectLoadingContent> objContent(do_QueryInterface(mContent));
-  NS_ASSERTION(objContent, "Why not an object loading content?");
-  objContent->HasNewFrame(this);
-  return rv;
+  return nsObjectFrameSuper::Init(aContent, aParent, aPrevInFlow);
 }
 
 void
@@ -724,7 +720,6 @@ nsObjectFrame::Reflow(nsPresContext*           aPresContext,
     return NS_OK;
   }
 
-
   FixupWindow(nsSize(aMetrics.width, aMetrics.height));
 
   aStatus = NS_FRAME_COMPLETE;
@@ -776,10 +771,6 @@ nsObjectFrame::InstantiatePlugin(nsIPluginHost* aPluginHost,
     appShell->ResumeNative();
   }
 
-  // XXX having to do this sucks. it'd be better to move the code from DidReflow
-  // to FixupWindow or something.
-  PresContext()->GetPresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
   return rv;
 }
 
@@ -796,11 +787,17 @@ nsObjectFrame::FixupWindow(const nsSize& aSize)
 
   NS_ENSURE_TRUE(window, /**/);
 
-  nsPoint origin;
-  nsIView *parentWithView;
-  GetOffsetFromView(origin, &parentWithView);
-  window->x = presContext->AppUnitsToDevPixels(origin.x);
-  window->y = presContext->AppUnitsToDevPixels(origin.y);
+#ifdef XP_MACOSX
+  mInstanceOwner->FixUpPluginWindow(ePluginPaintDisable);
+#endif
+
+  PRBool windowless = (window->type == nsPluginWindowType_Drawable);
+
+  nsPoint origin = GetWindowOriginInPixels(windowless);
+
+  window->x = origin.x;
+  window->y = origin.y;
+
   window->width = presContext->AppUnitsToDevPixels(aSize.width);
   window->height = presContext->AppUnitsToDevPixels(aSize.height);
 
@@ -896,6 +893,15 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
                          const nsHTMLReflowState*  aReflowState,
                          nsDidReflowStatus         aStatus)
 {
+  // Do this check before calling the superclass, as that clears
+  // NS_FRAME_FIRST_REFLOW
+  if (aStatus == NS_FRAME_REFLOW_FINISHED &&
+      (GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+    nsCOMPtr<nsIObjectLoadingContent> objContent(do_QueryInterface(mContent));
+    NS_ASSERTION(objContent, "Why not an object loading content?");
+    objContent->HasNewFrame(this);
+  }
+
   nsresult rv = nsObjectFrameSuper::DidReflow(aPresContext, aReflowState, aStatus);
 
   // The view is created hidden; once we have reflowed it and it has been
@@ -1390,11 +1396,6 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
   FixupWindow(mRect.Size());
 
   rv = pluginHost->InstantiatePluginForChannel(aChannel, mInstanceOwner, aStreamListener);
-
-  // XXX having to do this sucks. it'd be better to move the code from DidReflow
-  // to FixupWindow.
-  PresContext()->GetPresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
 
   return rv;
 }

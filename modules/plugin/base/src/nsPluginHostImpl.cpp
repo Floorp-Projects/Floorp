@@ -3457,7 +3457,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbeddedPlugin(const char *aMimeType,
     nsresult rv =
       NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT,
                                 aURL,
-                                doc->GetDocumentURI(),
+                                doc->NodePrincipal(),
                                 elem,
                                 nsDependentCString(aMimeType ? aMimeType : ""),
                                 nsnull, //extra
@@ -5909,7 +5909,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
     PRInt16 shouldLoad = nsIContentPolicy::ACCEPT;
     rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_OBJECT_SUBREQUEST,
                                    url,
-                                   (doc ? doc->GetDocumentURI() : nsnull),
+                                   (doc ? doc->NodePrincipal() : nsnull),
                                    element,
                                    EmptyCString(), //mime guess
                                    nsnull,         //extra
@@ -5939,7 +5939,9 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 
         if (global)
         {
-          callbacks = do_QueryInterface(global->GetGlobalObjectOwner());
+          nsCOMPtr<nsIWebNavigation> webNav = do_GetInterface(global);
+
+          callbacks = do_QueryInterface(webNav);
         }
       }
 

@@ -88,6 +88,8 @@ public:
      *   gfxWindowsNativeDrawing nativeDraw(ctx, destGfxRect);
      *   do {
      *     HDC dc = nativeDraw.BeginNativeDrawing();
+     *     if (!dc)
+     *       return NS_ERROR_FAILURE;
      *
      *     RECT winRect;
      *     nativeDraw.TransformToNativeRect(rect, winRect);

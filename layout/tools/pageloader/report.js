@@ -164,7 +164,7 @@ function strPad(o, len, left) {
   return str;
 }
 
-function strPadFixed0(n, len, left) {
+function strPadFixed(n, len, left) {
   return strPad(n.toFixed(0), len, left);
 }
 

@@ -80,6 +80,7 @@ class nsIToolkitProfileService;
 class nsILocalFile;
 class nsIProfileLock;
 class nsIProfileUnlocker;
+class nsIFactory;
 
 extern nsXREDirProvider* gDirServiceProvider;
 
@@ -102,6 +103,9 @@ nsresult NS_CreateNativeAppSupport(nsINativeAppSupport* *aResult);
 
 NS_HIDDEN_(nsresult)
 NS_NewToolkitProfileService(nsIToolkitProfileService* *aResult);
+
+NS_HIDDEN_(nsresult)
+NS_NewToolkitProfileFactory(nsIFactory* *aResult);
 
 /**
  * Try to acquire exclusive access to the specified profile directory.

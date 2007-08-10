@@ -79,8 +79,6 @@ public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
     // nsIScriptGlobalObject methods
-    virtual void SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner);
-    virtual nsIScriptGlobalObjectOwner *GetGlobalObjectOwner();
     virtual void OnFinalize(PRUint32 aLangID, void *aGlobal);
     virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
     virtual nsresult SetNewArguments(nsIArray *aArguments);
@@ -97,6 +95,8 @@ public:
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULPDGlobalObject,
                                              nsIScriptGlobalObject)
 
+    void ClearGlobalObjectOwner();
+
 protected:
     virtual ~nsXULPDGlobalObject();
 
@@ -109,7 +109,7 @@ protected:
 };
 
 nsIPrincipal* nsXULPrototypeDocument::gSystemPrincipal;
-nsIScriptGlobalObject* nsXULPrototypeDocument::gSystemGlobal;
+nsXULPDGlobalObject* nsXULPrototypeDocument::gSystemGlobal;
 PRUint32 nsXULPrototypeDocument::gRefCnt;
 
 
@@ -155,7 +155,6 @@ JSClass nsXULPDGlobalObject::gSharedGlobalClass = {
 
 nsXULPrototypeDocument::nsXULPrototypeDocument()
     : mRoot(nsnull),
-      mGlobalObject(nsnull),
       mLoaded(PR_FALSE)
 {
     ++gRefCnt;
@@ -175,7 +174,7 @@ nsXULPrototypeDocument::~nsXULPrototypeDocument()
 {
     if (mGlobalObject) {
         // cleaup cycles etc.
-        mGlobalObject->SetGlobalObjectOwner(nsnull);
+        mGlobalObject->ClearGlobalObjectOwner();
     }
 
     PRUint32 count = mProcessingInstructions.Length();
@@ -198,13 +197,13 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsXULPrototypeDocument)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULPrototypeDocument)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_MEMBER(mRoot,
                                                     nsXULPrototypeElement)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mGlobalObject)
+    cb.NoteXPCOMChild(static_cast<nsIScriptGlobalObject*>(tmp->mGlobalObject));
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULPrototypeDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
-  NS_INTERFACE_MAP_ENTRY(nsISerializable)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObjectOwner)
+    NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
+    NS_INTERFACE_MAP_ENTRY(nsISerializable)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObjectOwner)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXULPrototypeDocument,
@@ -237,29 +236,27 @@ NS_NewXULPrototypeDocument(nsXULPrototypeDocument** aResult)
 // This method greatly reduces the number of nsXULPDGlobalObjects and their
 // nsIScriptContexts in apps that load many XUL documents via chrome: URLs.
 
-nsresult
-nsXULPrototypeDocument::NewXULPDGlobalObject(nsIScriptGlobalObject** aResult)
+nsXULPDGlobalObject *
+nsXULPrototypeDocument::NewXULPDGlobalObject()
 {
     // Now compare DocumentPrincipal() to gSystemPrincipal, in order to create
     // gSystemGlobal if the two pointers are equal.  Thus, gSystemGlobal
     // implies gSystemPrincipal.
-    nsCOMPtr<nsIScriptGlobalObject> global;
+    nsXULPDGlobalObject *global;
     if (DocumentPrincipal() == gSystemPrincipal) {
         if (!gSystemGlobal) {
             gSystemGlobal = new nsXULPDGlobalObject(nsnull);
             if (! gSystemGlobal)
-                return NS_ERROR_OUT_OF_MEMORY;
+                return nsnull;
             NS_ADDREF(gSystemGlobal);
         }
         global = gSystemGlobal;
     } else {
         global = new nsXULPDGlobalObject(this); // does not refcount
         if (! global)
-            return NS_ERROR_OUT_OF_MEMORY;
+            return nsnull;
     }
-    *aResult = global;
-    NS_ADDREF(*aResult);
-    return NS_OK;
+    return global;
 }
 
 //----------------------------------------------------------------------
@@ -292,8 +289,9 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     // Better safe than sorry....
     mNodeInfoManager->SetDocumentPrincipal(principal);
 
+
     // nsIScriptGlobalObject mGlobalObject
-    NewXULPDGlobalObject(getter_AddRefs(mGlobalObject));
+    mGlobalObject = NewXULPDGlobalObject();
     if (! mGlobalObject)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -603,7 +601,7 @@ nsIScriptGlobalObject*
 nsXULPrototypeDocument::GetScriptGlobalObject()
 {
     if (!mGlobalObject)
-        NewXULPDGlobalObject(getter_AddRefs(mGlobalObject));
+        mGlobalObject = NewXULPDGlobalObject();
 
     return mGlobalObject;
 }
@@ -759,25 +757,15 @@ nsXULPDGlobalObject::GetScriptGlobal(PRUint32 lang_id)
 
 
 void
-nsXULPDGlobalObject::SetGlobalObjectOwner(nsIScriptGlobalObjectOwner* aOwner)
+nsXULPDGlobalObject::ClearGlobalObjectOwner()
 {
-  if (!aOwner) {
     PRUint32 lang_ndx;
     NS_STID_FOR_INDEX(lang_ndx) {
-      if (mScriptContexts[lang_ndx]) {
-          mScriptContexts[lang_ndx]->FinalizeContext();
-          mScriptContexts[lang_ndx] = nsnull;
-      }
+        if (mScriptContexts[lang_ndx]) {
+            mScriptContexts[lang_ndx]->FinalizeContext();
+            mScriptContexts[lang_ndx] = nsnull;
+        }
     }
-  } else {
-    NS_NOTREACHED("You can only set an owner when constructing the object.");
-  }
-}
-
-nsIScriptGlobalObjectOwner *
-nsXULPDGlobalObject::GetGlobalObjectOwner()
-{
-    return mGlobalObjectOwner;
 }
 
 

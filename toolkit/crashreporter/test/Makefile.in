@@ -59,7 +59,7 @@ LIBS = \
 	$(XPCOM_GLUE_LDOPTS) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
-        $(DEPTH)/toolkit/airbag/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
+        $(DEPTH)/toolkit/crashreporter/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 MOZILLA_INTERNAL_API = 1
@@ -68,8 +68,8 @@ include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)
 LIBS += \
-	$(DEPTH)/toolkit/airbag/airbag/src/client/windows/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/airbag/airbag/src/common/windows/$(LIB_PREFIX)breakpad_windows_common_s.$(LIB_SUFFIX)
+	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/windows/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/windows/$(LIB_PREFIX)breakpad_windows_common_s.$(LIB_SUFFIX)
 LIBS += $(call expand_libname shell32)
 OS_LIBS += $(call EXPAND_LIBNAME,ole32)
 endif
@@ -77,20 +77,20 @@ endif
 ifeq ($(OS_ARCH),Darwin)
 OS_LIBS += -framework Cocoa -lcrypto
 LIBS += \
-	$(DEPTH)/toolkit/airbag/airbag/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/airbag/airbag/src/client/mac/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/airbag/airbag/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
-	$(DEPTH)/toolkit/airbag/airbag/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/mac/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
+	$(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/mac/$(LIB_PREFIX)breakpad_mac_common_s.$(LIB_SUFFIX) \
 	$(NULL)
-LOCAL_INCLUDES += -I$(srcdir) -I$(srcdir)/../airbag/src/common/mac/
+LOCAL_INCLUDES += -I$(srcdir) -I$(srcdir)/../google-breakpad/src/common/mac/
 endif
 
 ifeq ($(OS_ARCH),Linux)
 LIBS += \
-  $(DEPTH)/toolkit/airbag/airbag/src/client/linux/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/airbag/airbag/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/airbag/airbag/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
-  $(DEPTH)/toolkit/airbag/airbag/src/common/linux/$(LIB_PREFIX)breakpad_linux_common_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/linux/handler/$(LIB_PREFIX)exception_handler_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/client/$(LIB_PREFIX)minidump_file_writer_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/$(LIB_PREFIX)breakpad_common_s.$(LIB_SUFFIX) \
+  $(DEPTH)/toolkit/crashreporter/google-breakpad/src/common/linux/$(LIB_PREFIX)breakpad_linux_common_s.$(LIB_SUFFIX) \
   $(NULL)
 endif
 

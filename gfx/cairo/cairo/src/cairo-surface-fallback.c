@@ -1,3 +1,4 @@
+/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -1249,6 +1250,46 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
 
  DONE:
     _fallback_fini (&state);
+
+    return status;
+}
+
+cairo_status_t
+_cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
+				       cairo_surface_t	*src,
+				       int		 src_x,
+				       int		 src_y,
+				       int		 width,
+				       int		 height,
+				       cairo_surface_t **clone_out)
+{
+    cairo_status_t status;
+    cairo_pattern_union_t src_pattern;
+    cairo_surface_t *new_surface = NULL;
+
+    new_surface = _cairo_surface_create_similar_scratch (surface,
+							 cairo_surface_get_content (src),
+							 width, height);
+    if (new_surface->status)
+	return new_surface->status;
+
+    _cairo_pattern_init_for_surface (&src_pattern.surface, src);
+
+    status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
+				       &src_pattern.base,
+				       NULL,
+				       new_surface,
+				       src_x, src_y,
+				       0, 0,
+				       0, 0,
+				       width, height);
+
+    _cairo_pattern_fini (&src_pattern.base);
+
+    if (status == CAIRO_STATUS_SUCCESS)
+	*clone_out = new_surface;
+    else if (new_surface)
+	cairo_surface_destroy (new_surface);
 
     return status;
 }

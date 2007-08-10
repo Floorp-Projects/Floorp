@@ -48,7 +48,7 @@
 #include "nsCOMPtr.h"
 #include "nsILocalFile.h"
 
-#include "nsAirbagExceptionHandler.h"
+#include "nsExceptionHandler.h"
 #include "nsICrashReporter.h"
 
 #define mu_assert(message, test) do { if (NS_FAILED(test)) \
