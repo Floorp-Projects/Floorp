@@ -38,7 +38,7 @@ sub Execute {
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $branchTag = $config->Get(var => 'branchTag');
     my $pullDate = $config->Get(var => 'pullDate');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
 
     my $releaseTag = $productTag . '_RELEASE';
     my $rcTag = $productTag . '_RC' . $rc;
@@ -224,7 +224,7 @@ sub Verify {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
 
     # This step doesn't really do anything now, because the verification it used
     # to do (which wasn't much) is now done in the Execute() method, since the
@@ -256,7 +256,7 @@ sub CvsTag {
     my $force = exists($args{'force'}) ? $args{'force'} : 0;
 
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
 
     # only force or branch specific files, not the whole tree
     if ($force && scalar(@{$files}) <= 0) {

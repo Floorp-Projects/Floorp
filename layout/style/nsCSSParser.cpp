@@ -3333,27 +3333,27 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
   }
 
   if (eCSSToken_Symbol == tk->mType && '!' == tk->mSymbol) {
-        // Look for important ident
-        if (!GetToken(aErrorCode, PR_TRUE)) {
-          // Premature eof is not ok
-          REPORT_UNEXPECTED_EOF(PEImportantEOF);
-          ClearTempData(propID);
-          return PR_FALSE;
-        }
-        if ((eCSSToken_Ident != tk->mType) ||
-            !tk->mIdent.LowerCaseEqualsLiteral("important")) {
-          REPORT_UNEXPECTED_TOKEN(PEExpectedImportant);
-          OUTPUT_ERROR();
-          UngetToken();
-          ClearTempData(propID);
-          return PR_FALSE;
-        }
-        isImportant = PR_TRUE;
-      }
-      else {
-        // Not a !important declaration
-        UngetToken();
-      }
+    // Look for important ident
+    if (!GetToken(aErrorCode, PR_TRUE)) {
+      // Premature eof is not ok
+      REPORT_UNEXPECTED_EOF(PEImportantEOF);
+      ClearTempData(propID);
+      return PR_FALSE;
+    }
+    if ((eCSSToken_Ident != tk->mType) ||
+        !tk->mIdent.LowerCaseEqualsLiteral("important")) {
+      REPORT_UNEXPECTED_TOKEN(PEExpectedImportant);
+      OUTPUT_ERROR();
+      UngetToken();
+      ClearTempData(propID);
+      return PR_FALSE;
+    }
+    isImportant = PR_TRUE;
+  }
+  else {
+    // Not a !important declaration
+    UngetToken();
+  }
 
   // Make sure valid property declaration is terminated with either a
   // semicolon, EOF or a right-curly-brace (this last only when

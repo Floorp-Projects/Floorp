@@ -20,7 +20,7 @@ sub Execute {
 
     my $config = new Bootstrap::Config();
     my $product = $config->Get(var => 'product');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $oldVersion = $config->Get(var => 'oldVersion');
     my $version = $config->Get(var => 'version');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
@@ -126,7 +126,7 @@ sub Verify {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $version = $config->Get(var => 'version');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $verifyDir = $config->Get(var => 'verifyDir');
@@ -207,7 +207,7 @@ sub Push {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $product = $config->Get(var => 'product');
     my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
