@@ -933,13 +933,6 @@ js_compare_strings(const void *k1, const void *k2)
     return strcmp((const char *) k1, (const char *) k2) == 0;
 }
 
-/* Shared with jsatom.c to save code space. */
-extern void * JS_DLL_CALLBACK
-js_alloc_table_space(void *priv, size_t size);
-
-extern void JS_DLL_CALLBACK
-js_free_table_space(void *priv, void *item);
-
 /* NB: This struct overlays JSHashEntry -- see jshash.h, do not reorganize. */
 typedef struct ScriptFilenameEntry {
     JSHashEntry         *next;          /* hash chain linkage */
@@ -949,6 +942,18 @@ typedef struct ScriptFilenameEntry {
     JSPackedBool        mark;           /* GC mark flag */
     char                filename[3];    /* two or more bytes, NUL-terminated */
 } ScriptFilenameEntry;
+
+JS_STATIC_DLL_CALLBACK(void *)
+js_alloc_table_space(void *priv, size_t size)
+{
+    return malloc(size);
+}
+
+JS_STATIC_DLL_CALLBACK(void)
+js_free_table_space(void *priv, void *item)
+{
+    free(item);
+}
 
 JS_STATIC_DLL_CALLBACK(JSHashEntry *)
 js_alloc_sftbl_entry(void *priv, const void *key)
@@ -1497,14 +1502,18 @@ js_TraceScript(JSTracer *trc, JSScript *script)
     JSAtomMap *map;
     uintN i, length;
     JSAtom **vector;
+    jsval v;
     JSObjectArray *objarray;
 
     map = &script->atomMap;
     length = map->length;
     vector = map->vector;
     for (i = 0; i < length; i++) {
-        JS_SET_TRACING_INDEX(trc, "atomMap", i);
-        JS_CallTracer(trc, vector[i], JSTRACE_ATOM);
+        v = ATOM_KEY(vector[i]);
+        if (JSVAL_IS_TRACEABLE(v)) {
+            JS_SET_TRACING_INDEX(trc, "atomMap", i);
+            JS_CallTracer(trc, JSVAL_TO_TRACEABLE(v), JSVAL_TRACE_KIND(v));
+        }
     }
 
     if (script->objectsOffset != 0) {

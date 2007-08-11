@@ -966,9 +966,9 @@ SrcNotes(JSContext *cx, JSScript *script)
     jssrcnote *notes, *sn;
     JSSrcNoteType type;
     const char *name;
-    jsatomid atomIndex;
     uint32 index;
     JSAtom *atom;
+    JSString *str;
 
     fprintf(gOutFile, "\nSource notes:\n");
     offset = 0;
@@ -1015,20 +1015,19 @@ SrcNotes(JSContext *cx, JSScript *script)
           case SRC_LABEL:
           case SRC_LABELBRACE:
           case SRC_BREAK2LABEL:
-          case SRC_CONT2LABEL: {
-            const char *bytes;
-
-            atomIndex = (jsatomid) js_GetSrcNoteOffset(sn, 0);
-            JS_GET_SCRIPT_ATOM(script, atomIndex, atom);
-            bytes = js_AtomToPrintableString(cx, atom);
-            fprintf(gOutFile, " atom %u (%s)", (uintN)atomIndex, bytes);
+          case SRC_CONT2LABEL:
+            index = js_GetSrcNoteOffset(sn, 0);
+            JS_GET_SCRIPT_ATOM(script, index, atom);
+            JS_ASSERT(ATOM_IS_STRING(atom));
+            str = ATOM_TO_STRING(atom);
+            fprintf(gOutFile, " atom %u (", index);
+            js_FileEscapedString(gOutFile, str, 0);
+            putc(')', gOutFile);
             break;
-          }
           case SRC_FUNCDEF: {
             const char *bytes;
             JSObject *obj;
             JSFunction *fun;
-            JSString *str;
 
             index = js_GetSrcNoteOffset(sn, 0);
             JS_GET_SCRIPT_OBJECT(script, index, obj);
@@ -1273,23 +1272,35 @@ DumpScope(JSContext *cx, JSObject *obj, FILE *fp)
     uintN i;
     JSScope *scope;
     JSScopeProperty *sprop;
+    jsval v;
+    JSString *str;
 
     i = 0;
     scope = OBJ_SCOPE(obj);
     for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
         if (SCOPE_HAD_MIDDLE_DELETE(scope) && !SCOPE_HAS_PROPERTY(scope, sprop))
             continue;
-        fprintf(fp, "%3u %p", i, (void *)sprop);
-        if (JSID_IS_INT(sprop->id)) {
-            fprintf(fp, " [%ld]", (long)JSVAL_TO_INT(sprop->id));
-        } else if (JSID_IS_ATOM(sprop->id)) {
-            JSAtom *atom = JSID_TO_ATOM(sprop->id);
-            fprintf(fp, " \"%s\"", js_AtomToPrintableString(cx, atom));
-        } else {
-            jsval v = OBJECT_TO_JSVAL(JSID_TO_OBJECT(sprop->id));
-            fprintf(fp, " \"%s\"", js_ValueToPrintableString(cx, v));
-        }
+        fprintf(fp, "%3u %p ", i, (void *)sprop);
 
+        v = ID_TO_VALUE(sprop->id);
+        if (JSID_IS_INT(sprop->id)) {
+            fprintf(fp, "[%ld]", (long)JSVAL_TO_INT(v));
+        } else {
+            if (JSID_IS_ATOM(sprop->id)) {
+                str = JSVAL_TO_STRING(v);
+            } else if (JSID_IS_HIDDEN(sprop->id)) {
+                str = JSVAL_TO_STRING(v);
+                fputs("hidden ", fp);
+            } else {
+                JS_ASSERT(JSID_IS_OBJECT(sprop->id));
+                str = js_ValueToString(cx, v);
+                fputs("object ", fp);
+            }
+            if (!str)
+                fputs("<error>", fp);
+            else
+                js_FileEscapedString(fp, str, '"');
+        }
 #define DUMP_ATTR(name) if (sprop->attrs & JSPROP_##name) fputs(" " #name, fp)
         DUMP_ATTR(ENUMERATE);
         DUMP_ATTR(READONLY);

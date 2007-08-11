@@ -175,10 +175,9 @@ js_IsAboutToBeFinalized(JSContext *cx, void *thing);
 JS_STATIC_ASSERT(JSTRACE_STRING == 2);
 
 #define JSTRACE_FUNCTION    3
-#define JSTRACE_ATOM        4
-#define JSTRACE_NAMESPACE   5
-#define JSTRACE_QNAME       6
-#define JSTRACE_XML         7
+#define JSTRACE_NAMESPACE   4
+#define JSTRACE_QNAME       5
+#define JSTRACE_XML         6
 
 #if JS_HAS_XML_SUPPORT
 # define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_XML)
@@ -311,7 +310,7 @@ struct JSWeakRoots {
     JSGCThing           *newborn[GCX_NTYPES];
 
     /* Atom root for the last-looked-up atom on this context. */
-    JSAtom              *lastAtom;
+    jsval               lastAtom;
 
     /* Root for the result of the most recent js_InternalInvoke call. */
     jsval               lastInternalResult;

@@ -724,7 +724,6 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
     jsval *val;
     JSString *gsopold[2];
     JSString *gsop[2];
-    JSAtom *atom;
     JSString *idstr, *valstr, *str;
     int stackDummy;
 
@@ -855,7 +854,6 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
          * Convert id to a jsval and then to a string.  Decide early whether we
          * prefer get/set or old getter/setter syntax.
          */
-        atom = JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL;
         idstr = js_ValueToString(cx, ID_TO_VALUE(id));
         if (!idstr) {
             ok = JS_FALSE;
@@ -929,9 +927,9 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
          * If id is a string that's not an identifier, then it needs to be
          * quoted.  Also, negative integer ids must be quoted.
          */
-        if (atom
+        if (JSID_IS_ATOM(id)
             ? !idIsLexicalIdentifier
-            : (JSID_IS_OBJECT(id) || JSID_TO_INT(id) < 0)) {
+            : (!JSID_IS_INT(id) || JSID_TO_INT(id) < 0)) {
             idstr = js_QuoteString(cx, idstr, (jschar)'\'');
             if (!idstr) {
                 ok = JS_FALSE;
@@ -2884,41 +2882,12 @@ CheckForStringIndex(jsid id, const jschar *cp, const jschar *end,
     return id;
 }
 
-static JSBool
-HidePropertyName(JSContext *cx, jsid *idp)
-{
-    jsid id;
-    JSAtom *atom, *hidden;
-
-    id = *idp;
-    JS_ASSERT(JSID_IS_ATOM(id));
-
-    atom = JSID_TO_ATOM(id);
-    JS_ASSERT(!(atom->flags & ATOM_HIDDEN));
-    JS_ASSERT(ATOM_IS_STRING(atom));
-
-    hidden = js_AtomizeString(cx, ATOM_TO_STRING(atom), ATOM_HIDDEN);
-    if (!hidden)
-        return JS_FALSE;
-
-    /*
-     * Link hidden to unhidden atom to optimize call_enumerate -- this means
-     * the GC must mark a hidden atom's unhidden counterpart (see js_MarkAtom
-     * in jsgc.c).  It uses the atom's entry.value member for this linkage.
-     */
-    hidden->entry.value = atom;
-    *idp = ATOM_TO_JSID(hidden);
-    return JS_TRUE;
-}
-
 JSScopeProperty *
 js_AddHiddenProperty(JSContext *cx, JSObject *obj, jsid id,
                      JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
                      uintN attrs, uintN flags, intN shortid)
 {
-    if (!HidePropertyName(cx, &id))
-        return NULL;
-
+    id = JSID_HIDE_NAME(id);
     flags |= SPROP_IS_HIDDEN;
     return js_AddNativeProperty(cx, obj, id, getter, setter, slot, attrs,
                                 flags, shortid);
@@ -2928,8 +2897,8 @@ JSBool
 js_LookupHiddenProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                         JSProperty **propp)
 {
-    return HidePropertyName(cx, &id) &&
-           js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_HIDDEN,
+    id = JSID_HIDE_NAME(id);
+    return js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_HIDDEN,
                                       objp, propp);
 }
 
@@ -4461,7 +4430,7 @@ CheckCtorGetAccess(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     uintN attrs;
 
     atom = cx->runtime->atomState.constructorAtom;
-    JS_ASSERT(id == ATOM_KEY(atom));
+    JS_ASSERT(id == ATOM_TO_JSID(atom));
     return OBJ_CHECK_ACCESS(cx, obj, ATOM_TO_JSID(atom), JSACC_READ,
                             vp, &attrs);
 }
@@ -4473,7 +4442,7 @@ CheckCtorSetAccess(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     uintN attrs;
 
     atom = cx->runtime->atomState.constructorAtom;
-    JS_ASSERT(id == ATOM_KEY(atom));
+    JS_ASSERT(id == ATOM_TO_JSID(atom));
     return OBJ_CHECK_ACCESS(cx, obj, ATOM_TO_JSID(atom), JSACC_WRITE,
                             vp, &attrs);
 }

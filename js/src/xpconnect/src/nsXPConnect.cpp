@@ -649,17 +649,6 @@ struct ContextCallbackItem : public JSTracer
 void
 NoteJSChild(JSTracer *trc, void *thing, uint32 kind)
 {
-    if(kind == JSTRACE_ATOM)
-    {
-        JSAtom *atom = (JSAtom *)thing;
-        jsval v = ATOM_KEY(atom);
-        if(!JSVAL_IS_PRIMITIVE(v))
-        {
-            thing = JSVAL_TO_GCTHING(v);
-            kind = JSTRACE_OBJECT;
-        }
-    }
-
     if(kind == JSTRACE_OBJECT || kind == JSTRACE_NAMESPACE ||
        kind == JSTRACE_QNAME || kind == JSTRACE_XML)
     {

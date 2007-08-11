@@ -1305,7 +1305,7 @@ StdNameToAtom(JSContext *cx, JSStdName *stdn)
     if (!atom) {
         name = stdn->name;
         if (name) {
-            atom = js_Atomize(cx, name, strlen(name), ATOM_PINNED);
+            atom = js_Atomize(cx, name, strlen(name), 0);
             OFFSET_TO_ATOM(cx->runtime, offset) = atom;
         }
     }
@@ -1964,10 +1964,6 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
         name = "function";
         break;
 
-      case JSTRACE_ATOM:
-        name = "atom";
-        break;
-
 #if JS_HAS_XML_SUPPORT
       case JSTRACE_NAMESPACE:
         name = "namespace";
@@ -2028,21 +2024,8 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
             break;
           }
 
-          case JSTRACE_ATOM:
-          {
-            JSAtom *atom = (JSAtom *)thing;
-
-            if (ATOM_IS_INT(atom))
-                JS_snprintf(buf, bufsize, "%d", ATOM_TO_INT(atom));
-            else if (ATOM_IS_STRING(atom))
-                js_PutEscapedString(buf, bufsize, ATOM_TO_STRING(atom), 0);
-            else
-                JS_snprintf(buf, bufsize, "object");
-            break;
-          }
-
 #if JS_HAS_XML_SUPPORT
-          case GCX_NAMESPACE:
+          case JSTRACE_NAMESPACE:
           {
             JSXMLNamespace *ns = (JSXMLNamespace *)thing;
 
@@ -2059,7 +2042,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
             break;
           }
 
-          case GCX_QNAME:
+          case JSTRACE_QNAME:
           {
             JSXMLQName *qn = (JSXMLQName *)thing;
 
@@ -2084,7 +2067,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
             break;
           }
 
-          case GCX_XML:
+          case JSTRACE_XML:
           {
             extern const char *js_xml_class_str[];
             JSXML *xml = (JSXML *)thing;
@@ -2897,7 +2880,7 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
 JS_PUBLIC_API(JSBool)
 JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp)
 {
-    JS_ASSERT(((jsid)obj & JSID_TAGMASK) == 0);
+    JS_ASSERT(JSID_IS_OBJECT(obj));
     *idp = OBJECT_TO_JSID(obj);
     return JS_TRUE;
 }

@@ -2760,10 +2760,13 @@ js_ValueToSource(JSContext *cx, jsval v)
     return str;
 }
 
-JSHashNumber
+/*
+ * str is not necessarily a GC thing here.
+ */
+uint32
 js_HashString(JSString *str)
 {
-    JSHashNumber h;
+    uint32 h;
     const jschar *s;
     size_t n;
 
@@ -2773,31 +2776,9 @@ js_HashString(JSString *str)
     return h;
 }
 
-intN
-js_CompareStrings(JSString *str1, JSString *str2)
-{
-    size_t l1, l2, n, i;
-    const jschar *s1, *s2;
-    intN cmp;
-
-    JS_ASSERT(str1);
-    JS_ASSERT(str2);
-
-    /* Fast case: pointer equality could be a quick win. */
-    if (str1 == str2)
-        return 0;
-
-    l1 = JSSTRING_LENGTH(str1), l2 = JSSTRING_LENGTH(str2);
-    s1 = JSSTRING_CHARS(str1),  s2 = JSSTRING_CHARS(str2);
-    n = JS_MIN(l1, l2);
-    for (i = 0; i < n; i++) {
-        cmp = s1[i] - s2[i];
-        if (cmp != 0)
-            return cmp;
-    }
-    return (intN)(l1 - l2);
-}
-
+/*
+ * str is not necessarily a GC thing here.
+ */
 JSBool
 js_EqualStrings(JSString *str1, JSString *str2)
 {
@@ -2826,6 +2807,31 @@ js_EqualStrings(JSString *str1, JSString *str2)
     } while (--n != 0);
 
     return JS_TRUE;
+}
+
+intN
+js_CompareStrings(JSString *str1, JSString *str2)
+{
+    size_t l1, l2, n, i;
+    const jschar *s1, *s2;
+    intN cmp;
+
+    JS_ASSERT(str1);
+    JS_ASSERT(str2);
+
+    /* Fast case: pointer equality could be a quick win. */
+    if (str1 == str2)
+        return 0;
+
+    l1 = JSSTRING_LENGTH(str1), l2 = JSSTRING_LENGTH(str2);
+    s1 = JSSTRING_CHARS(str1),  s2 = JSSTRING_CHARS(str2);
+    n = JS_MIN(l1, l2);
+    for (i = 0; i < n; i++) {
+        cmp = s1[i] - s2[i];
+        if (cmp != 0)
+            return cmp;
+    }
+    return (intN)(l1 - l2);
 }
 
 size_t
