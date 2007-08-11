@@ -8,8 +8,6 @@ toolkit.jar:
 * content/mozapps/downloads/DownloadProgressListener.js         (downloads/content/DownloadProgressListener.js)
   content/mozapps/downloads/downloads.css                       (downloads/content/downloads.css)
 * content/mozapps/downloads/download.xml                        (downloads/content/download.xml)
-* content/mozapps/downloads/downloadProperties.xul              (downloads/content/downloadProperties.xul)
-* content/mozapps/downloads/downloadProperties.js               (downloads/content/downloadProperties.js)
 * content/mozapps/preferences/actionsshared.js                  (preferences/actionsshared.js)
 * content/mozapps/preferences/ocsp.js                           (preferences/ocsp.js)
 * content/mozapps/preferences/ocsp.xul                          (preferences/ocsp.xul)

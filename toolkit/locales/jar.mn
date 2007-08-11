@@ -70,7 +70,6 @@
 * locale/@AB_CD@/mozapps/downloads/unknownContentType.dtd         (%chrome/mozapps/downloads/unknownContentType.dtd)
   locale/@AB_CD@/mozapps/downloads/downloads.dtd                  (%chrome/mozapps/downloads/downloads.dtd)
   locale/@AB_CD@/mozapps/downloads/downloads.properties           (%chrome/mozapps/downloads/downloads.properties)
-  locale/@AB_CD@/mozapps/downloads/downloadProperties.dtd         (%chrome/mozapps/downloads/downloadProperties.dtd)
   locale/@AB_CD@/mozapps/extensions/extensions.dtd                (%chrome/mozapps/extensions/extensions.dtd)
   locale/@AB_CD@/mozapps/extensions/extensions.properties         (%chrome/mozapps/extensions/extensions.properties)
   locale/@AB_CD@/mozapps/extensions/about.dtd                     (%chrome/mozapps/extensions/about.dtd)
