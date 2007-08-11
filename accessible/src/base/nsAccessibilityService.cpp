@@ -1788,9 +1788,9 @@ NS_IMETHODIMP nsAccessibilityService::InvalidateSubtreeFor(nsIPresShell *aShell,
                                                            nsIContent *aChangeContent,
                                                            PRUint32 aEvent)
 {
-  NS_ASSERTION(aEvent == nsIAccessibleEvent::EVENT_REORDER ||
-               aEvent == nsIAccessibleEvent::EVENT_SHOW ||
-               aEvent == nsIAccessibleEvent::EVENT_HIDE,
+  NS_ASSERTION(aEvent == nsIAccessibleEvent::EVENT_ASYNCH_SIGNIFICANT_CHANGE ||
+               aEvent == nsIAccessibleEvent::EVENT_ASYNCH_SHOW ||
+               aEvent == nsIAccessibleEvent::EVENT_ASYNCH_HIDE,
                "Incorrect aEvent passed in");
 
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aShell));

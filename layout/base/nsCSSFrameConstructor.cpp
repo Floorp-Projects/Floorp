@@ -11133,10 +11133,11 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
     PRUint32 event;
     if (frame) {
       nsIFrame *newFrame = mPresShell->GetPrimaryFrameFor(aContent);
-      event = newFrame ? nsIAccessibleEvent::EVENT_REORDER : nsIAccessibleEvent::EVENT_HIDE;
+      event = newFrame ? nsIAccessibleEvent::EVENT_ASYNCH_SIGNIFICANT_CHANGE :
+                         nsIAccessibleEvent::EVENT_ASYNCH_HIDE;
     }
     else {
-      event = nsIAccessibleEvent::EVENT_SHOW;
+      event = nsIAccessibleEvent::EVENT_ASYNCH_SHOW;
     }
 
     // A significant enough change occured that this part
