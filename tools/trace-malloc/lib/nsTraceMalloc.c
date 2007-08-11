@@ -1589,7 +1589,7 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
     return argc;
 }
 
-PR_IMPLEMENT(void) NS_TraceMallocShutdown()
+PR_IMPLEMENT(void) NS_TraceMallocShutdown(void)
 {
     logfile *fp;
 
@@ -1629,7 +1629,7 @@ PR_IMPLEMENT(void) NS_TraceMallocShutdown()
 #endif
 }
 
-PR_IMPLEMENT(void) NS_TraceMallocDisable()
+PR_IMPLEMENT(void) NS_TraceMallocDisable(void)
 {
     logfile *fp;
     tm_thread *t = tm_get_thread();
@@ -1643,7 +1643,7 @@ PR_IMPLEMENT(void) NS_TraceMallocDisable()
     t->suppress_tracing--;
 }
 
-PR_IMPLEMENT(void) NS_TraceMallocEnable()
+PR_IMPLEMENT(void) NS_TraceMallocEnable(void)
 {
     tm_thread *t = tm_get_thread();
 
@@ -1853,7 +1853,7 @@ NS_TraceMallocDumpAllocations(const char *pathname)
 }
 
 PR_IMPLEMENT(void)
-NS_TraceMallocFlushLogfiles()
+NS_TraceMallocFlushLogfiles(void)
 {
     logfile *fp;
     tm_thread *t = tm_get_thread();
