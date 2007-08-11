@@ -338,20 +338,17 @@ static void log_string(logfile *fp, const char *str)
 {
     int len, rem, cnt;
 
-    len = strlen(str);
+    len = strlen(str) + 1; /* include null terminator */
     while ((rem = fp->pos + len - fp->bufsize) > 0) {
         cnt = len - rem;
-        strncpy(&fp->buf[fp->pos], str, cnt);
+        memcpy(&fp->buf[fp->pos], str, cnt);
         str += cnt;
         fp->pos += cnt;
         flush_logfile(fp);
         len = rem;
     }
-    strncpy(&fp->buf[fp->pos], str, len);
+    memcpy(&fp->buf[fp->pos], str, len);
     fp->pos += len;
-
-    /* Terminate the string. */
-    log_byte(fp, '\0');
 }
 
 static void log_filename(logfile* fp, const char* filename)
