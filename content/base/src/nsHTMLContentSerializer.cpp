@@ -93,6 +93,7 @@ nsHTMLContentSerializer::nsHTMLContentSerializer()
   mInBody(PR_FALSE),
   mAddSpace(PR_FALSE),
   mMayIgnoreLineBreakSequence(PR_FALSE),
+  mIsWholeDocument(PR_FALSE),
   mInCDATA(PR_FALSE),
   mNeedLineBreaker(PR_TRUE)
 {
@@ -112,7 +113,8 @@ nsHTMLContentSerializer::~nsHTMLContentSerializer()
 
 NS_IMETHODIMP 
 nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
-                              const char* aCharSet, PRBool aIsCopying)
+                              const char* aCharSet, PRBool aIsCopying,
+                              PRBool aIsWholeDocument)
 {
   mFlags = aFlags;
   if (!aWrapColumn) {
@@ -122,6 +124,7 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
     mMaxColumn = aWrapColumn;
   }
 
+  mIsWholeDocument = aIsWholeDocument;
   mIsCopying = aIsCopying;
   mIsFirstChildOfOL = PR_FALSE;
   mDoFormat = (mFlags & nsIDocumentEncoder::OutputFormatted) ? PR_TRUE
@@ -636,7 +639,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   // We need too skip any meta tags that set the content type
   // becase we set our own later.
-  if (name == nsGkAtoms::meta) {
+  if (mIsWholeDocument && name == nsGkAtoms::meta) {
     nsAutoString header;
     content->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
     if (header.LowerCaseEqualsLiteral("content-type")) {
@@ -738,7 +741,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     mInCDATA = PR_TRUE;
   }
 
-  if (name == nsGkAtoms::head) {
+  if (mIsWholeDocument && name == nsGkAtoms::head) {
     AppendToString(mLineBreak, aStr);
     AppendToString(NS_LITERAL_STRING("<meta http-equiv=\"content-type\""),
                    aStr);
@@ -765,7 +768,7 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   nsIAtom *name = content->Tag();
 
   // So that we don't mess up the line breaks.
-  if (name == nsGkAtoms::meta) {
+  if (mIsWholeDocument && name == nsGkAtoms::meta) {
     nsAutoString header;
     content->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
     if (header.LowerCaseEqualsLiteral("content-type")) {
