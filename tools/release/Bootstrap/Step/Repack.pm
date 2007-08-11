@@ -16,7 +16,7 @@ sub Execute {
     my $l10n_buildDir = $config->Get(sysvar => 'l10n_buildDir');
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $l10n_buildPlatform = $config->Get(sysvar => 'l10n_buildPlatform');
     my $rcTag = $productTag . '_RC' . $rc;
 
@@ -45,7 +45,7 @@ sub Verify {
     my $product = $config->Get(var => 'product');
     my $rc = $config->Get(var => 'rc');
     my $oldRc = $config->Get(var => 'oldRc');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $version = $config->Get(var => 'version');
     my $oldVersion = $config->Get(var => 'oldVersion');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
@@ -167,7 +167,7 @@ sub Push {
     my $config = new Bootstrap::Config();
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
-    my $logDir = $config->Get(var => 'logDir');  
+    my $logDir = $config->Get(sysvar => 'logDir');  
     my $sshUser = $config->Get(var => 'sshUser');
     my $sshServer = $config->Get(var => 'sshServer');
 
@@ -220,7 +220,7 @@ sub Announce {
     my $productTag = $config->Get(var => 'productTag');
     my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
 
     my $rcTag = $productTag . '_RC' . $rc;
     my $buildLog = catfile($logDir, 'repack_' . $rcTag . '-build-l10n.log');

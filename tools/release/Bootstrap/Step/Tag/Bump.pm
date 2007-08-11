@@ -29,7 +29,7 @@ sub Execute {
     my $milestone = $config->Exists(var => 'milestone') ? 
      $config->Get(var => 'milestone') : undef;
     my $appName = $config->Get(var => 'appName');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $tagDir = $config->Get(var => 'tagDir');
     my $geckoBranchTag = $config->Get(var => 'geckoBranchTag');
@@ -169,7 +169,7 @@ sub Verify {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $appName = $config->Get(var => 'appName');
     my $milestone = $config->Exists(var => 'milestone') ? 
      $config->Get(var => 'milestone') : undef;

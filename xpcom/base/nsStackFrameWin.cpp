@@ -137,9 +137,8 @@ void PrintError(char *prefix)
       0,
       NULL
     );
-    char buf[512];
-    _snprintf(buf, sizeof(buf), "### ERROR: %s: %s", prefix, lpMsgBuf);
-    fputs(buf, stderr);
+    fprintf(stderr, "### ERROR: %s: %s", prefix, lpMsgBuf);
+    fflush(stderr);
     LocalFree( lpMsgBuf );
 }
 
@@ -448,8 +447,7 @@ EXPORT_XPCOM_API(nsresult)
 NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
              void *aClosure)
 {
-    HANDLE myProcess = ::GetCurrentProcess();
-    HANDLE myThread, walkerThread;
+    HANDLE myProcess, myThread, walkerThread;
     DWORD walkerReturn;
     struct WalkStackData data;
 
@@ -457,13 +455,23 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
         return NS_ERROR_FAILURE;
 
     // Have to duplicate handle to get a real handle.
-    ::DuplicateHandle(
-      ::GetCurrentProcess(),
-      ::GetCurrentThread(),
-      ::GetCurrentProcess(),
-      &myThread,
-      THREAD_ALL_ACCESS, FALSE, 0
-    );
+    if (!::DuplicateHandle(::GetCurrentProcess(),
+                           ::GetCurrentProcess(),
+                           ::GetCurrentProcess(),
+                           &myProcess,
+                           THREAD_ALL_ACCESS, FALSE, 0)) {
+        PrintError("DuplicateHandle (process)");
+        return NS_ERROR_FAILURE;
+    }
+    if (!::DuplicateHandle(::GetCurrentProcess(),
+                           ::GetCurrentThread(),
+                           ::GetCurrentProcess(),
+                           &myThread,
+                           THREAD_ALL_ACCESS, FALSE, 0)) {
+        PrintError("DuplicateHandle (thread)");
+        ::CloseHandle(myProcess);
+        return NS_ERROR_FAILURE;
+    }
 
     data.callback = aCallback;
     data.skipFrames = aSkipFrames;
@@ -476,11 +484,13 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
         if (walkerReturn != WAIT_OBJECT_0) {
             PrintError("ThreadWait");
         }
-        CloseHandle(myThread);
+        ::CloseHandle(walkerThread);
     }
     else {
         PrintError("ThreadCreate");
     }
+    ::CloseHandle(myThread);
+    ::CloseHandle(myProcess);
     return NS_OK;
 }
 

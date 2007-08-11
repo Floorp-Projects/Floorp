@@ -23,7 +23,7 @@ sub Execute {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $configBumpDir = $config->Get(var => 'configBumpDir');
     my $version = $config->Get(var => 'version');
     my $oldVersion = $config->Get(var => 'oldVersion');
