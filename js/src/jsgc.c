@@ -2038,33 +2038,33 @@ TraceWeakRoots(JSTracer *trc, JSWeakRoots *wr)
 JS_FRIEND_API(void)
 js_TraceContext(JSTracer *trc, JSContext *acx)
 {
-    JSStackFrame *chain, *fp;
+    JSStackFrame *fp, *nextChain;
     JSStackHeader *sh;
     JSTempValueRooter *tvr;
 
     /*
-     * Iterate frame chain and dormant chains. Temporarily tack current
-     * frame onto the head of the dormant list to ease iteration.
+     * Iterate frame chain and dormant chains.
      *
      * (NB: see comment on this whole "dormant" thing in js_Execute.)
      */
-    chain = acx->fp;
-    if (chain) {
-        JS_ASSERT(!chain->dormantNext);
-        chain->dormantNext = acx->dormantFrameChain;
-    } else {
-        chain = acx->dormantFrameChain;
-    }
+    fp = acx->fp;
+    nextChain = acx->dormantFrameChain;
+    if (!fp)
+        goto next_chain;
 
-    for (fp = chain; fp; fp = chain = chain->dormantNext) {
+    /* The top frame must not be dormant. */
+    JS_ASSERT(!fp->dormantNext);
+    for (;;) {
         do {
             js_TraceStackFrame(trc, fp);
         } while ((fp = fp->down) != NULL);
-    }
 
-    /* Cleanup temporary "dormant" linkage. */
-    if (acx->fp)
-        acx->fp->dormantNext = NULL;
+      next_chain:
+        if (!nextChain)
+            break;
+        fp = nextChain;
+        nextChain = nextChain->dormantNext;
+    }
 
     /* Mark other roots-by-definition in acx. */
     if (acx->globalObject)

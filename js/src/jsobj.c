@@ -4246,34 +4246,6 @@ js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
 }
 #endif
 
-static void
-ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
-{
-    /*
-     * The decompiler may need to access the args of the function in
-     * progress rather than the one we had hoped to call.
-     * So we switch the cx->fp to the frame below us. We stick the
-     * current frame in the dormantFrameChain to protect it from gc.
-     */
-    JSStackFrame *fp = cx->fp;
-
-    if (fp->down) {
-        JS_ASSERT(!fp->dormantNext);
-        fp->dormantNext = cx->dormantFrameChain;
-        cx->dormantFrameChain = fp;
-        cx->fp = fp->down;
-    }
-
-    js_ReportIsNotFunction(cx, vp, flags);
-
-    if (fp->down) {
-        JS_ASSERT(cx->dormantFrameChain == fp);
-        cx->dormantFrameChain = fp->dormantNext;
-        fp->dormantNext = NULL;
-        cx->fp = fp;
-    }
-}
-
 #ifdef NARCISSUS
 static JSBool
 GetCurrentExecutionContext(JSContext *cx, JSObject *obj, jsval *rval)
@@ -4337,7 +4309,7 @@ js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return ok;
         }
 #endif
-        ReportIsNotFunction(cx, &argv[-2], cx->fp->flags & JSFRAME_ITERATOR);
+        js_ReportIsNotFunction(cx, &argv[-2], cx->fp->flags & JSFRAME_ITERATOR);
         return JS_FALSE;
     }
     return clasp->call(cx, obj, argc, argv, rval);
@@ -4379,7 +4351,7 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             return ok;
         }
 #endif
-        ReportIsNotFunction(cx, &argv[-2], JSV2F_CONSTRUCT);
+        js_ReportIsNotFunction(cx, &argv[-2], JSV2F_CONSTRUCT);
         return JS_FALSE;
     }
     return clasp->construct(cx, obj, argc, argv, rval);
