@@ -111,7 +111,8 @@ public:
   /**
    * Fire accessible event of the given type for the given accessible.
    */
-  static nsresult FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible);
+  static nsresult FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
+                               PRBool aIsAsynch = PR_FALSE);
 };
 
 #endif

@@ -99,19 +99,35 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     // nsPIAccessNode
     NS_IMETHOD_(nsIFrame *) GetFrame(void);
 
-    // Non-virtual
+    /**
+      * Non-virtual method to fire a delayed event after a 0 length timeout
+      *
+      * @param aEvent - the nsIAccessibleEvent event ype
+      * @param aDOMNode - DOM node the accesible event should be fired for
+      * @param aData - any additional data for the event
+      * @param aAllowDupes - set to PR_TRUE if more than one event of the same
+      *                      type is allowed. By default this is false and events
+      *                      of the same type are discarded (the last one is used)
+      * @param aIsAsyn - set to PR_TRUE if this is not being called from code
+      *                  synchronous with a DOM event
+      */
     nsresult FireDelayedToolkitEvent(PRUint32 aEvent, nsIDOMNode *aDOMNode,
-                                     void *aData, PRBool aAllowDupes = PR_FALSE);
+                                     void *aData, PRBool aAllowDupes = PR_FALSE,
+                                     PRBool aIsAsynch = PR_FALSE);
 
     /**
      * Fire accessible event in timeout.
      *
+     * @param aEvent - the event to fire
      * @param aAllowDupes - if false then delayed events of the same type and
      *                      for the same DOM node in the event queue won't
      *                      be fired.
+     * @param aIsAsych - set to PR_TRUE if this is being called from
+     *                   an event asynchronous with the DOM
      */
     nsresult FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
-                                        PRBool aAllowDupes = PR_FALSE);
+                                        PRBool aAllowDupes = PR_FALSE,
+                                        PRBool aIsAsynch = PR_FALSE);
 
     void ShutdownChildDocuments(nsIDocShellTreeItem *aStart);
 
@@ -121,7 +137,7 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     virtual nsresult RemoveEventListeners();
     void AddScrollListener();
     void RemoveScrollListener();
-    void RefreshNodes(nsIDOMNode *aStartNode, PRUint32 aChangeEvent);
+    void RefreshNodes(nsIDOMNode *aStartNode);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
     void CheckForEditor();
     virtual void SetEditor(nsIEditor *aEditor);

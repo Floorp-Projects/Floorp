@@ -37,26 +37,184 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsAccessibleEventData.h"
+#include "nsAccessibilityAtoms.h"
 #include "nsIAccessibilityService.h"
 #include "nsIAccessNode.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIEventStateManager.h"
+#include "nsIPersistentProperties2.h"
 #include "nsIServiceManager.h"
 #ifdef MOZ_XUL
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsXULTreeAccessible.h"
 #endif
 
+PRBool nsAccEvent::gLastEventFromUserInput = PR_FALSE;
+nsIDOMNode* nsAccEvent::gLastEventNodeWeak = 0;
+
 NS_IMPL_ISUPPORTS1(nsAccEvent, nsIAccessibleEvent)
 
 nsAccEvent::nsAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
-                       void *aEventData):
+                       void *aEventData, PRBool aIsAsynch):
   mEventType(aEventType), mAccessible(aAccessible), mEventData(aEventData)
 {
+  CaptureIsFromUserInput(aIsAsynch);
 }
 
 nsAccEvent::nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
-                       void *aEventData):
+                       void *aEventData, PRBool aIsAsynch):
   mEventType(aEventType), mDOMNode(aDOMNode), mEventData(aEventData)
 {
+  CaptureIsFromUserInput(aIsAsynch);
+}
+
+void nsAccEvent::GetLastEventAttributes(nsIDOMNode *aNode,
+                                        nsIPersistentProperties *aAttributes)
+{
+  if (aNode != gLastEventNodeWeak) {
+    return; // Passed-in node doesn't Change the last event's node
+  }
+  nsAutoString oldValueUnused;
+  aAttributes->SetStringProperty(NS_LITERAL_CSTRING("event-from-input"),
+                                 gLastEventFromUserInput ? NS_LITERAL_STRING("true") :
+                                                           NS_LITERAL_STRING("false"),
+                                 oldValueUnused);
+
+  nsCOMPtr<nsIContent> lastEventContent = do_QueryInterface(aNode);
+  nsIContent *loopContent = lastEventContent;
+
+  nsAutoString atomic, live, relevant, channel, busy;
+
+  while (loopContent) {
+    if (relevant.IsEmpty()) {
+      loopContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::relevant, relevant);
+    }
+    if (live.IsEmpty()) {
+      loopContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::live, live);
+    }
+    if (channel.IsEmpty()) {
+      loopContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::channel, channel);
+    }
+    if (atomic.IsEmpty()) {
+      loopContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::atomic, atomic);
+    }
+    if (busy.IsEmpty()) {
+      loopContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::busy, busy);
+    }
+    loopContent = loopContent->GetParent();
+  }
+
+  if (!relevant.IsEmpty()) {
+    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("container-relevant"), relevant, oldValueUnused);
+  }
+  if (!live.IsEmpty()) {
+    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("container-live"), live, oldValueUnused);
+  }
+  if (!channel.IsEmpty()) {
+    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("container-channel"), channel, oldValueUnused);
+  }
+  if (!atomic.IsEmpty()) {
+    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("container-atomic"), atomic, oldValueUnused);
+  }
+  if (!busy.IsEmpty()) {
+    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("container-busy"), busy, oldValueUnused);
+  }
+}
+
+nsIDOMNode* nsAccEvent::GetLastEventAtomicRegion(nsIDOMNode *aNode)
+{
+  if (aNode != gLastEventNodeWeak) {
+    return nsnull; // Passed-in node doesn't Change the last changed node
+  }
+  nsCOMPtr<nsIContent> lastEventContent = do_QueryInterface(aNode);
+  nsIContent *loopContent = lastEventContent;
+  nsAutoString atomic;
+
+  while (loopContent) {
+    loopContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::atomic, atomic);
+    if (!atomic.IsEmpty()) {
+      break;
+    }
+    loopContent = loopContent->GetParent();
+  }
+
+  nsCOMPtr<nsIDOMNode> atomicRegion;
+  if (atomic.EqualsLiteral("true")) {
+    atomicRegion = do_QueryInterface(loopContent);
+  }
+  return atomicRegion;
+}
+
+void nsAccEvent::CaptureIsFromUserInput(PRBool aIsAsynch)
+{
+  nsCOMPtr<nsIDOMNode> eventNode;
+  GetDOMNode(getter_AddRefs(eventNode));
+  if (!eventNode) {
+    NS_NOTREACHED("There should always be a DOM node for an event");
+    return;
+  }
+
+  if (aIsAsynch) {
+    // Cannot calculate, so use previous value
+    gLastEventNodeWeak = eventNode;
+  }
+  else {
+    PrepareForEvent(eventNode);
+  }
+  
+  mIsFromUserInput = gLastEventFromUserInput;
+}
+
+NS_IMETHODIMP
+nsAccEvent::GetIsFromUserInput(PRBool *aIsFromUserInput)
+{
+  *aIsFromUserInput = mIsFromUserInput;
+  return NS_OK;
+}
+
+void nsAccEvent::PrepareForEvent(nsIAccessibleEvent *aEvent)
+{
+  nsCOMPtr<nsIDOMNode> eventNode;
+  aEvent->GetDOMNode(getter_AddRefs(eventNode));
+  PRBool isFromUserInput;
+  aEvent->GetIsFromUserInput(&isFromUserInput);
+  PrepareForEvent(eventNode, isFromUserInput);
+}
+
+void nsAccEvent::PrepareForEvent(nsIDOMNode *aEventNode,
+                                 PRBool aForceIsFromUserInput)
+{
+  gLastEventNodeWeak = aEventNode;
+  if (aForceIsFromUserInput) {
+    gLastEventFromUserInput = PR_TRUE;
+    return;
+  }
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aEventNode->GetOwnerDocument(getter_AddRefs(domDoc));
+  if (!domDoc) {  // IF the node is a document itself
+    domDoc = do_QueryInterface(aEventNode);
+  }
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  if (!doc) {
+    NS_NOTREACHED("There should always be a document for an event");
+    return;
+  }
+
+  nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
+  if (!presShell) {
+    NS_NOTREACHED("Threre should always be an pres shell for an event");
+    return;
+  }
+
+  nsIEventStateManager *esm = presShell->GetPresContext()->EventStateManager();
+  if (!esm) {
+    NS_NOTREACHED("Threre should always be an ESM for an event");
+    return;
+  }
+
+  gLastEventFromUserInput = esm->IsHandlingUserInputExternal();
 }
 
 NS_IMETHODIMP
@@ -234,7 +392,8 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsAccTextChangeEvent, nsAccEvent,
 nsAccTextChangeEvent::
   nsAccTextChangeEvent(nsIAccessible *aAccessible,
                        PRInt32 aStart, PRUint32 aLength, PRBool aIsInserted):
-  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CHANGED, aAccessible, nsnull),
+  nsAccEvent(aIsInserted ? nsIAccessibleEvent::EVENT_TEXT_INSERTED : nsIAccessibleEvent::EVENT_TEXT_REMOVED,
+             aAccessible, nsnull),
   mStart(aStart), mLength(aLength), mIsInserted(aIsInserted)
 {
 }
@@ -266,14 +425,14 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsAccCaretMoveEvent, nsAccEvent,
 
 nsAccCaretMoveEvent::
   nsAccCaretMoveEvent(nsIAccessible *aAccessible, PRInt32 aCaretOffset) :
-  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aAccessible, nsnull),
+  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aAccessible, nsnull, PR_TRUE), // Currently always asynch
   mCaretOffset(aCaretOffset)
 {
 }
 
 nsAccCaretMoveEvent::
   nsAccCaretMoveEvent(nsIDOMNode *aNode) :
-  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aNode, nsnull),
+  nsAccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aNode, nsnull, PR_TRUE), // Currently always asynch
   mCaretOffset(-1)
 {
 }

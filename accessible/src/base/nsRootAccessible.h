@@ -101,7 +101,8 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     PRBool FireAccessibleFocusEvent(nsIAccessible *aFocusAccessible,
                                     nsIDOMNode *aFocusNode,
                                     nsIDOMEvent *aFocusEvent,
-                                    PRBool aForceEvent = PR_FALSE);
+                                    PRBool aForceEvent = PR_FALSE,
+                                    PRBool aIsAsynch = PR_FALSE);
 
     nsCaretAccessible *GetCaretAccessible();
 

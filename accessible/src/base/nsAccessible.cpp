@@ -2083,6 +2083,8 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
      do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
   NS_ENSURE_TRUE(attributes, NS_ERROR_OUT_OF_MEMORY);
 
+  nsAccEvent::GetLastEventAttributes(mDOMNode, attributes);
+ 
   nsresult rv = GetAttributesInternal(attributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2121,17 +2123,13 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 
     // If accessible is invisible we don't want to calculate group ARIA
     // attributes for it.
-    PRUint32 state = State(this);
-    if (state & nsIAccessibleStates::STATE_INVISIBLE)
-      return NS_OK;
-
     PRUint32 role = Role(this);
-    if (role == nsIAccessibleRole::ROLE_LISTITEM ||
+    if ((role == nsIAccessibleRole::ROLE_LISTITEM ||
         role == nsIAccessibleRole::ROLE_MENUITEM ||
         role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
         role == nsIAccessibleRole::ROLE_PAGETAB ||
-        role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
-
+        role == nsIAccessibleRole::ROLE_OUTLINEITEM) &&
+        0 == (State(this) & nsIAccessibleStates::STATE_INVISIBLE)) {
       nsCOMPtr<nsIAccessible> parent = GetParent();
       NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
 
@@ -2719,6 +2717,11 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
           relatedNode = do_QueryInterface(buttonEl);
         }
       }
+      break;
+    }
+  case nsIAccessibleRelation::RELATION_MEMBER_OF:
+    {
+      relatedNode = nsAccEvent::GetLastEventAtomicRegion(mDOMNode);
       break;
     }
   default:

@@ -1381,8 +1381,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
       do_GetService("@mozilla.org/accessibilityService;1");
     if (accService) {
       accService->InvalidateSubtreeFor(mPresShell, aFrame->GetContent(),
-                                       isVisible ? nsIAccessibleEvent::EVENT_HIDE :
-                                                   nsIAccessibleEvent::EVENT_SHOW);
+                                       isVisible ? nsIAccessibleEvent::EVENT_ASYNCH_HIDE :
+                                                   nsIAccessibleEvent::EVENT_ASYNCH_SHOW);
     }
   }
 #endif
