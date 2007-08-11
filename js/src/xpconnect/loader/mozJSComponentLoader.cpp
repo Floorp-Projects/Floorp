@@ -1315,13 +1315,14 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
+    {
     // ensure that we are being call from JS, from this method
     nsCOMPtr<nsIInterfaceInfo> info;
     rv = cc->GetCalleeInterface(getter_AddRefs(info));
     NS_ENSURE_SUCCESS(rv, rv);
-    char *name;
-    info->GetName(&name);
-    NS_ASSERTION(nsCRT::strcmp("nsIXPCComponents_Utils", name) == 0,
+    nsXPIDLCString name;
+    info->GetName(getter_Copies(name));
+    NS_ASSERTION(nsCRT::strcmp("nsIXPCComponents_Utils", name.get()) == 0,
                  "Components.utils.import must only be called from JS.");
     PRUint16 methodIndex;
     const nsXPTMethodInfo *methodInfo;
@@ -1331,6 +1332,7 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
     rv = cc->GetCalleeMethodIndex(&calleeIndex);
     NS_ASSERTION(calleeIndex == methodIndex,
                  "Components.utils.import called from another utils method.");
+    }
 #endif
 
     JSContext *cx = nsnull;
