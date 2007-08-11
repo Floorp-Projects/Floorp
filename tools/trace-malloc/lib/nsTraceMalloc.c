@@ -1829,13 +1829,26 @@ NS_TraceMallocDumpAllocations(const char *pathname)
 {
     FILE *ofp;
     int rv;
+
+    tm_thread *t = tm_get_thread();
+
+    t->suppress_tracing++;
+    TM_ENTER_LOCK();
+
     ofp = fopen(pathname, WRITE_FLAGS);
-    if (!ofp)
-        return -1;
-    if (allocations)
-        PL_HashTableEnumerateEntries(allocations, allocation_enumerator, ofp);
-    rv = ferror(ofp) ? -1 : 0;
-    fclose(ofp);
+    if (ofp) {
+        if (allocations)
+            PL_HashTableEnumerateEntries(allocations, allocation_enumerator,
+                                         ofp);
+        rv = ferror(ofp) ? -1 : 0;
+        fclose(ofp);
+    } else {
+        rv = -1;
+    }
+
+    TM_EXIT_LOCK();
+    t->suppress_tracing--;
+
     return rv;
 }
 
