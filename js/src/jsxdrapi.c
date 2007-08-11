@@ -611,7 +611,6 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
     jsval v;
     uint32 type;
     jsdouble d;
-    JSAtom *atom;
 
     if (xdr->mode == JSXDR_ENCODE) {
         v = ATOM_KEY(*atomp);
@@ -630,17 +629,12 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
     if (type == JSVAL_DOUBLE) {
         if (!XDRDoubleValue(xdr, &d))
             return JS_FALSE;
-        atom = js_AtomizeDouble(xdr->cx, d);
-    } else {
-        if (!XDRValueBody(xdr, type, &v))
-            return JS_FALSE;
-        atom = js_AtomizePrimitiveValue(xdr->cx, v);
+        *atomp = js_AtomizeDouble(xdr->cx, d);
+        return *atomp != NULL;
     }
 
-    if (!atom)
-        return JS_FALSE;
-    *atomp = atom;
-    return JS_TRUE;
+    return XDRValueBody(xdr, type, &v) &&
+           js_AtomizePrimitiveValue(xdr->cx, v, atomp);
 }
 
 extern JSBool

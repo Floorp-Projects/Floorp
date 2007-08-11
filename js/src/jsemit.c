@@ -3145,8 +3145,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
         for (pn3 = pn2->pn_head; pn3; pn3 = pn3->pn_next) {
             if (pn3->pn_type == TOK_DEFAULT)
                 continue;
-            atom = js_AtomizePrimitiveValue(cx, pn3->pn_val);
-            if (!atom)
+            if (!js_AtomizePrimitiveValue(cx, pn3->pn_val, &atom))
                 goto bad;
             ale = js_IndexAtom(cx, atom, &cg->atomList);
             if (!ale)

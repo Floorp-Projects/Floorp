@@ -565,23 +565,10 @@ CallEnumeratorNext(JSContext *cx, JSObject *iterobj, uintN flags, jsval *rval)
         }
     } else {
         /* Make rval a string for uniformity and compatibility. */
-        if (JSID_IS_ATOM(id)) {
-            *rval = ATOM_KEY(JSID_TO_ATOM(id));
-        }
-#if JS_HAS_XML_SUPPORT
-        else if (JSID_IS_OBJECT(id)) {
-            str = js_ValueToString(cx, OBJECT_JSID_TO_JSVAL(id));
-            if (!str)
-                return JS_FALSE;
-            *rval = STRING_TO_JSVAL(str);
-        }
-#endif
-        else {
-            str = js_NumberToString(cx, (jsdouble)JSID_TO_INT(id));
-            if (!str)
-                return JS_FALSE;
-            *rval = STRING_TO_JSVAL(str);
-        }
+        str = js_ValueToString(cx, ID_TO_VALUE(id));
+        if (!str)
+            return JS_FALSE;
+        *rval = STRING_TO_JSVAL(str);
     }
     return JS_TRUE;
 

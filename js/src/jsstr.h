@@ -51,7 +51,6 @@
 #include <ctype.h>
 #include "jspubtd.h"
 #include "jsprvtd.h"
-#include "jshash.h"
 
 JS_BEGIN_EXTERN_C
 
@@ -384,13 +383,19 @@ js_ValueToString(JSContext *cx, jsval v);
 extern JS_FRIEND_API(JSString *)
 js_ValueToSource(JSContext *cx, jsval v);
 
-#ifdef HT_ENUMERATE_NEXT        /* XXX don't require jshash.h */
 /*
- * Compute a hash function from str.
+ * Compute a hash function from str. The caller can call this function even if
+ * str is not a GC-allocated thing.
  */
-extern JSHashNumber
+extern uint32
 js_HashString(JSString *str);
-#endif
+
+/*
+ * Test if strings are equal. The caller can call the function even if str1
+ * or str2 are not GC-allocated things.
+ */
+extern JSBool
+js_EqualStrings(JSString *str1, JSString *str2);
 
 /*
  * Return less than, equal to, or greater than zero depending on whether
@@ -398,12 +403,6 @@ js_HashString(JSString *str);
  */
 extern intN
 js_CompareStrings(JSString *str1, JSString *str2);
-
-/*
- * Test if strings are equal.
- */
-extern JSBool
-js_EqualStrings(JSString *str1, JSString *str2);
 
 /*
  * Boyer-Moore-Horspool superlinear search for pat:patlen in text:textlen.

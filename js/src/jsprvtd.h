@@ -57,30 +57,37 @@
 #include "jspubtd.h"
 
 /* Internal identifier (jsid) macros. */
-#define JSID_ATOM                   0x0
-#define JSID_INT                    0x1
-#define JSID_OBJECT                 0x2
-#define JSID_TAGMASK                0x3
-#define JSID_TAG(id)                ((id) & JSID_TAGMASK)
-#define JSID_SETTAG(id,t)           ((id) | (t))
-#define JSID_CLRTAG(id)             ((id) & ~(jsid)JSID_TAGMASK)
 
-#define JSID_IS_ATOM(id)            (JSID_TAG(id) == JSID_ATOM)
+#define JSID_IS_ATOM(id)            JSVAL_IS_STRING((jsval)(id))
 #define JSID_TO_ATOM(id)            ((JSAtom *)(id))
-#define ATOM_TO_JSID(atom)          ((jsid)(atom))
-#define ATOM_JSID_TO_JSVAL(id)      ATOM_KEY(JSID_TO_ATOM(id))
+#define ATOM_TO_JSID(atom)          (JS_ASSERT(ATOM_IS_STRING(atom)),         \
+                                     (jsid)(atom))
 
-#define JSID_IS_INT(id)             ((id) & JSID_INT)
-#define JSID_TO_INT(id)             ((jsint)(id) >> 1)
-#define INT_TO_JSID(i)              (((jsint)(i) << 1) | JSID_INT)
-#define INT_JSID_TO_JSVAL(id)       (id)
-#define INT_JSVAL_TO_JSID(v)        (v)
+#define JSID_IS_INT(id)             JSVAL_IS_INT((jsval)(id))
+#define JSID_TO_INT(id)             JSVAL_TO_INT((jsval)(id))
+#define INT_TO_JSID(i)              ((jsid)INT_TO_JSVAL(i))
+#define INT_JSVAL_TO_JSID(v)        ((jsid)(v))
+#define INT_JSID_TO_JSVAL(id)       ((jsval)(id))
 
-#define JSID_IS_OBJECT(id)          (JSID_TAG(id) == JSID_OBJECT)
-#define JSID_TO_OBJECT(id)          ((JSObject *) JSID_CLRTAG(id))
-#define OBJECT_TO_JSID(obj)         ((jsid)(obj) | JSID_OBJECT)
-#define OBJECT_JSID_TO_JSVAL(id)    OBJECT_TO_JSVAL(JSID_CLRTAG(id))
-#define OBJECT_JSVAL_TO_JSID(v)     OBJECT_TO_JSID(JSVAL_TO_OBJECT(v))
+#define JSID_IS_OBJECT(id)          JSVAL_IS_OBJECT((jsval)(id))
+#define JSID_TO_OBJECT(id)          JSVAL_TO_OBJECT((jsval)(id))
+#define OBJECT_TO_JSID(obj)         ((jsid)OBJECT_TO_JSVAL(obj))
+#define OBJECT_JSVAL_TO_JSID(v)     ((jsid)v)
+
+/*
+ * To put a property into the hidden subspace we re-tag JSString * behind
+ * property's atom as JSVAL_BOOLEAN to get a different id. js_TraceId must
+ * properly trace such pseudo-booleans to ensure GC safety.
+ */
+#define JSID_IS_HIDDEN(id)          (JSVAL_TAG((jsval)(id)) == JSVAL_BOOLEAN)
+
+#define JSID_HIDE_NAME(id)                                                    \
+    (JS_ASSERT(JSID_IS_ATOM(id)),                                             \
+     (jsid)((jsval)(id) ^ (JSVAL_STRING ^ JSVAL_BOOLEAN)))
+
+#define JSID_UNHIDE_NAME(id)                                                  \
+    (JS_ASSERT(JSID_IS_HIDDEN(id)),                                           \
+     (jsid)((jsval)(id) ^ (JSVAL_BOOLEAN ^ JSVAL_STRING)))
 
 /* Scalar typedefs. */
 typedef uint8  jsbytecode;
