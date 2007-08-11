@@ -126,7 +126,8 @@ NS_IMPL_ISUPPORTS4(mozSanitizingHTMLSerializer,
 
 NS_IMETHODIMP 
 mozSanitizingHTMLSerializer::Init(PRUint32 aFlags, PRUint32 dummy,
-                                  const char* aCharSet, PRBool aIsCopying)
+                                  const char* aCharSet, PRBool aIsCopying,
+                                  PRBool aIsWholeDocument)
 {
   NS_ENSURE_TRUE(nsContentUtils::GetParserService(), NS_ERROR_UNEXPECTED);
 
@@ -138,7 +139,7 @@ mozSanitizingHTMLSerializer::Initialize(nsAString* aOutString,
                                         PRUint32 aFlags,
                                         const nsAString& allowedTags)
 {
-  nsresult rv = Init(aFlags, 0, nsnull, PR_FALSE);
+  nsresult rv = Init(aFlags, 0, nsnull, PR_FALSE, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX This is wrong. It violates XPCOM string ownership rules.
