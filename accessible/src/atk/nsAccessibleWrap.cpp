@@ -1120,8 +1120,10 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
     // We don't create ATK objects for nsIAccessible plain text leaves,
     // just return NS_OK in such case
     if (!atkObj) {
-        NS_ASSERTION(type == nsIAccessibleEvent::EVENT_SHOW ||
-                     type == nsIAccessibleEvent::EVENT_HIDE,
+        NS_ASSERTION(type == nsIAccessibleEvent::EVENT_ASYNCH_SHOW ||
+                     type == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
+                     type == nsIAccessibleEvent::EVENT_DOM_CREATE ||
+                     type == nsIAccessibleEvent::EVENT_DOM_DESTROY,
                      "Event other than SHOW and HIDE fired for plain text leaves");
         return NS_OK;
     }
@@ -1137,7 +1139,8 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
     case nsIAccessibleEvent::EVENT_STATE_CHANGE:
         return FireAtkStateChangeEvent(aEvent, atkObj);
 
-    case nsIAccessibleEvent::EVENT_TEXT_CHANGED:
+    case nsIAccessibleEvent::EVENT_TEXT_REMOVED:
+    case nsIAccessibleEvent::EVENT_TEXT_INSERTED:
         return FireAtkTextChangedEvent(aEvent, atkObj);
 
     case nsIAccessibleEvent::EVENT_PROPERTY_CHANGED:
@@ -1291,10 +1294,12 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
                               *(gint *)eventData);
         break;
 
-    case nsIAccessibleEvent::EVENT_SHOW:
+    case nsIAccessibleEvent::EVENT_DOM_CREATE:
+    case nsIAccessibleEvent::EVENT_ASYNCH_SHOW:
         return FireAtkShowHideEvent(aEvent, atkObj, PR_TRUE);
 
-    case nsIAccessibleEvent::EVENT_HIDE:
+    case nsIAccessibleEvent::EVENT_DOM_DESTROY:
+    case nsIAccessibleEvent::EVENT_ASYNCH_HIDE:
         return FireAtkShowHideEvent(aEvent, atkObj, PR_FALSE);
 
         /*
@@ -1417,7 +1422,7 @@ nsresult
 nsAccessibleWrap::FireAtkTextChangedEvent(nsIAccessibleEvent *aEvent,
                                           AtkObject *aObject)
 {
-    MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_CHANGED\n"));
+    MAI_LOG_DEBUG(("\n\nReceived: EVENT_TEXT_REMOVED/INSERTED\n"));
 
     nsCOMPtr<nsIAccessibleTextChangeEvent> event =
         do_QueryInterface(aEvent);
@@ -1516,9 +1521,9 @@ nsAccessibleWrap::FireAtkShowHideEvent(nsIAccessibleEvent *aEvent,
                                        AtkObject *aObject, PRBool aIsAdded)
 {
     if (aIsAdded)
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_SHOW\n"));
+        MAI_LOG_DEBUG(("\n\nReceived: Show event\n"));
     else
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_HIDE\n"));
+        MAI_LOG_DEBUG(("\n\nReceived: Hide event\n"));
 
     nsCOMPtr<nsIAccessible> accessible;
     aEvent->GetAccessible(getter_AddRefs(accessible));

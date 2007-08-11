@@ -3271,7 +3271,7 @@ void nsIPresShell::InvalidateAccessibleSubtree(nsIContent *aContent)
       do_GetService("@mozilla.org/accessibilityService;1");
     if (accService) {
       accService->InvalidateSubtreeFor(this, aContent,
-                                       nsIAccessibleEvent::EVENT_REORDER);
+                                       nsIAccessibleEvent::EVENT_ASYNCH_SIGNIFICANT_CHANGE);
     }
   }
 }

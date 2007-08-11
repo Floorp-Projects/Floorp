@@ -61,38 +61,41 @@ interface nsIDOMNode;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(18612bcb-79bd-45c1-92e9-07aded5fd0f5)]
+[scriptable, uuid(98f9e2d4-ec22-4601-b927-b9faf7a63248)]
 interface nsIAccessibleEvent : nsISupports
 {
   /**
    * An object has been created.
    */
-  const unsigned long EVENT_CREATE = 0x0001;
+  const unsigned long EVENT_DOM_CREATE = 0x0001;
 
   /**
    * An object has been destroyed.
    */
-  const unsigned long EVENT_DESTROY = 0x0002;
+  const unsigned long EVENT_DOM_DESTROY = 0x0002;
 
   /**
-   * A hidden object is shown.
+   * An object's properties or content have changed significantly so that the
+   * type of object has really changed, and therefore the accessible should be 
+   * destroyed or recreated.
    */
-  const unsigned long EVENT_SHOW = 0x0003;
+  const unsigned long EVENT_DOM_SIGNIFICANT_CHANGE = 0x0003;
 
   /**
-   * An object is hidden.
+   * A hidden object is shown -- this is a layout occurance and is thus asynchronous
    */
-  const unsigned long EVENT_HIDE = 0x0004;
+  const unsigned long EVENT_ASYNCH_SHOW = 0x0004;
 
   /**
-   * A container object has added, removed, or reordered its children.
+   * An object is hidden -- this is a layout occurance and is thus asynchronous
    */
-  const unsigned long EVENT_REORDER = 0x0005;
+  const unsigned long EVENT_ASYNCH_HIDE = 0x0005;
 
   /**
-   * An object has a new parent object.
+   * An object had a significant layout change which could affect
+   * the type of accessible object -- this is a layout occurance and is thus asynchronous
    */
-  const unsigned long EVENT_PARENT_CHANGE = 0x0006;
+  const unsigned long EVENT_ASYNCH_SIGNIFICANT_CHANGE = 0x0006;
 
   /**
    * The active descendant of a component has changed. The active descendant
@@ -498,6 +501,12 @@ interface nsIAccessibleEvent : nsISupports
    * May return null if accessible for event has been shut down
    */
   readonly attribute nsIDOMNode DOMNode;
+
+  /**
+   * Returns true if the event was caused by explicit user input,
+   * as opposed to purely originating from a timer or mouse movement
+   */
+  readonly attribute boolean isFromUserInput;
 };
 
 
