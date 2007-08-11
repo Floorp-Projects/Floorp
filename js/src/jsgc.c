@@ -263,11 +263,13 @@ static uint8 GCTypeToTraceKindMap[GCX_NTYPES] = {
 };
 
 /*
- * Ensure that GC-allocated JSFunction and JSObject would go to different
- * lists so we can easily finalize JSObject before JSFunction. See comments
- * in js_GC.
+ * Ensure that JSObject is allocated from a different GC-list rather than
+ * jsdouble and JSString so we can easily finalize JSObject before these 2
+ * types of GC things. See comments in js_GC.
  */
-JS_STATIC_ASSERT(GC_FREELIST_INDEX(sizeof(JSFunction)) !=
+JS_STATIC_ASSERT(GC_FREELIST_INDEX(sizeof(JSString)) !=
+                 GC_FREELIST_INDEX(sizeof(JSObject)));
+JS_STATIC_ASSERT(GC_FREELIST_INDEX(sizeof(jsdouble)) !=
                  GC_FREELIST_INDEX(sizeof(JSObject)));
 
 /*
@@ -1460,10 +1462,6 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
          */
         break;
 
-      case JSTRACE_ATOM:
-         js_TraceAtom(trc, (JSAtom *)thing);
-         break;
-
 #if JS_HAS_XML_SUPPORT
       case JSTRACE_NAMESPACE:
         js_TraceXMLNamespace(trc, (JSXMLNamespace *)thing);
@@ -1716,7 +1714,6 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
 {
     JSContext *cx;
     JSRuntime *rt;
-    JSAtom *atom;
     uint8 *flagp;
 
     JS_ASSERT(thing);
@@ -1732,36 +1729,6 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
     rt = cx->runtime;
     JS_ASSERT(rt->gcMarkingTracer == trc);
     JS_ASSERT(rt->gcLevel > 0);
-
-    if (kind == JSTRACE_ATOM) {
-        atom = (JSAtom *)thing;
-
-        /*
-         * Here we should workaround gcThingCallback deficiency of being able
-         * to handle only GC things, not atoms. Because of this we must call
-         * the callback on all GC things referenced by atoms. For unmarked
-         * atoms we call when tracing things reached directly from each such
-         * atom, but for already-marked atoms we have to call the callback
-         * explicitly.
-         *
-         * We do not do it currently for compatibility with XPCOM cycle
-         * collector which ignores JSString * and jsdouble * GC things that
-         * the atom can refer to.
-         *
-         * FIXME bug 386265 will remove the need to trace atoms and bug 379718
-         * may remove gcThingCallback altogether.
-         */
-        if (!(atom->flags & ATOM_MARK)) {
-            atom->flags |= ATOM_MARK;
-
-            /*
-             * Call js_TraceAtom directly to avoid an extra dispatch in
-             * JS_TraceChildren.
-             */
-            js_TraceAtom(trc, (JSAtom *)thing);
-        }
-        goto out;
-    }
 
     flagp = js_GetGCThingFlags(thing);
     JS_ASSERT(*flagp != GCF_FINAL);
@@ -2029,8 +1996,7 @@ TraceWeakRoots(JSTracer *trc, JSWeakRoots *wr)
                            gc_typenames[i]);
         }
     }
-    if (wr->lastAtom)
-        JS_CALL_TRACER(trc, wr->lastAtom, JSTRACE_ATOM, "lastAtom");
+    JS_CALL_VALUE_TRACER(trc, wr->lastAtom, "lastAtom");
     JS_SET_TRACING_NAME(trc, "lastInternalResult");
     js_CallValueTracerIfGCThing(trc, wr->lastInternalResult);
 }
@@ -2127,7 +2093,7 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
     JS_DHashTableEnumerate(&rt->gcRootsHash, gc_root_traversal, trc);
     if (rt->gcLocksHash)
         JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_traversal, trc);
-    js_TraceLockedAtoms(trc, allAtoms);
+    js_TraceAtomState(trc, allAtoms);
     js_TraceWatchPoints(trc);
     js_TraceNativeIteratorStates(trc);
 
@@ -2397,12 +2363,22 @@ restart:
      * so that any attempt to allocate a GC-thing from a finalizer will fail,
      * rather than nest badly and leave the unmarked newborn to be swept.
      *
+     * We first sweep atom state so we can use js_IsAboutToBeFinalized on
+     * JSString or jsdouble held in a hashtable to check if the hashtable
+     * entry can be freed. Note that even after the entry is freed, JSObject
+     * finalizers can continue to access the corresponding jsdouble* and
+     * JSString* assuming that they are unique. This works since the
+     * atomization API must not be called during GC.
+     */
+    js_SweepAtomState(cx);
+
+    /*
      * Here we need to ensure that JSObject instances are finalized before GC-
-     * allocated JSFunction instances so fun_finalize from jsfun.c can clear
-     * the weak pointer from the JSFunction back to the JSObject.  For that we
-     * simply finalize the list containing JSObject first since the static
-     * assert at the beginning of the file guarantees that JSFunction instances
-     * are allocated from a different list.
+     * allocated JSString and jsdouble instances so object's finalizer can
+     * access them even if they will be freed. For that we simply finalize the
+     * list containing JSObject first since the static assert at the beginning
+     * of the file guarantees that JSString and jsdouble instances are
+     * allocated from a different list.
      */
     for (i = 0; i < GC_NUM_FREELISTS; i++) {
         arenaList = &rt->gcArenaList[i == 0
@@ -2451,11 +2427,9 @@ restart:
 
     /*
      * Sweep the runtime's property tree after finalizing objects, in case any
-     * had watchpoints referencing tree nodes.  Then sweep atoms, which may be
-     * referenced from dead property ids.
+     * had watchpoints referencing tree nodes.
      */
     js_SweepScopeProperties(cx);
-    js_SweepAtomState(cx);
 
     /*
      * Sweep script filenames after sweeping functions in the generic loop

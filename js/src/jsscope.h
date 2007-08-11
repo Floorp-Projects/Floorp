@@ -348,9 +348,8 @@ js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
 extern void
 js_DestroyScope(JSContext *cx, JSScope *scope);
 
-#define ID_TO_VALUE(id) (JSID_IS_ATOM(id) ? ATOM_JSID_TO_JSVAL(id) :          \
-                         JSID_IS_OBJECT(id) ? OBJECT_JSID_TO_JSVAL(id) :      \
-                         (jsval)(id))
+#define ID_TO_VALUE(id)                                                       \
+    (JSID_IS_HIDDEN(id) ? (jsval)JSID_UNHIDE_NAME(id) : (jsval)(id))
 
 extern JS_FRIEND_API(JSScopeProperty **)
 js_SearchScope(JSScope *scope, jsid id, JSBool adding);

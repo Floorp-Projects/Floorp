@@ -1510,16 +1510,10 @@ js_ClearScope(JSContext *cx, JSScope *scope)
 void
 js_TraceId(JSTracer *trc, jsid id)
 {
-    JSObject *obj;
+    jsval v;
 
-    if (JSID_IS_ATOM(id)) {
-        JS_CALL_TRACER(trc, JSID_TO_ATOM(id), JSTRACE_ATOM, "id");
-    } else if (!JSID_IS_INT(id)) {
-        JS_ASSERT(JSID_IS_OBJECT(id));
-        obj = JSID_TO_OBJECT(id);
-        if (obj)
-            JS_CALL_OBJECT_TRACER(trc, obj, "id");
-    }
+    v = ID_TO_VALUE(id);
+    JS_CALL_VALUE_TRACER(trc, v, "id");
 }
 
 #if defined DEBUG || defined DUMP_SCOPE_STATS
@@ -1531,27 +1525,28 @@ static void
 PrintPropertyGetterOrSetter(JSTracer *trc, char *buf, size_t bufsize)
 {
     JSScopeProperty *sprop;
+    jsid id;
     size_t n;
-    const char *name;
+    const char *name, *prefix;
 
     JS_ASSERT(trc->debugPrinter == PrintPropertyGetterOrSetter);
     sprop = (JSScopeProperty *)trc->debugPrintArg;
+    id = sprop->id;
     name = trc->debugPrintIndex ? js_setter_str : js_getter_str;
-    n = strlen(name);
 
-    if (JSID_IS_ATOM(sprop->id)) {
-        JSAtom *atom = JSID_TO_ATOM(sprop->id);
-        if (atom && ATOM_IS_STRING(atom)) {
-            n = js_PutEscapedString(buf, bufsize - 1,
-                                    ATOM_TO_STRING(atom), 0);
-            buf[n++] = ' ';
-            strncpy(buf + n, name, bufsize - n);
-            buf[bufsize - 1] = '\0';
+    if (JSID_IS_ATOM(id) || JSID_IS_HIDDEN(id)) {
+        if (JSID_IS_HIDDEN(id)) {
+            id = JSID_UNHIDE_NAME(id);
+            prefix = "hidden ";
         } else {
-            JS_snprintf(buf, bufsize, "uknown %s", name);
+            prefix = "";
         }
+        n = js_PutEscapedString(buf, bufsize - 1,
+                                ATOM_TO_STRING(JSID_TO_ATOM(id)), 0);
+        if (n < bufsize - 1)
+            JS_snprintf(buf + n, bufsize - n, " %s%s", prefix, name);
     } else if (JSID_IS_INT(sprop->id)) {
-        JS_snprintf(buf, bufsize, "%d %s", JSID_TO_INT(sprop->id), name);
+        JS_snprintf(buf, bufsize, "%d %s", JSID_TO_INT(id), name);
     } else {
         JS_snprintf(buf, bufsize, "<object> %s", name);
     }
@@ -1647,22 +1642,32 @@ js_MeterPropertyTree(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
 static void
 DumpSubtree(JSContext *cx, JSScopeProperty *sprop, int level, FILE *fp)
 {
+    jsval v;
     JSString *str;
     JSScopeProperty *kids, *kid;
     PropTreeKidsChunk *chunk;
     uintN i;
 
     fprintf(fp, "%*sid ", level, "");
-    if (JSID_IS_ATOM(sprop->id)) {
-        str =  ATOM_TO_STRING(JSID_TO_ATOM(sprop->id));
-    } else if (JSID_IS_OBJECT(sprop->id)) {
-        str = js_ValueToString(cx, OBJECT_JSID_TO_JSVAL(sprop->id));
+    v = ID_TO_VALUE(sprop->id);
+    if (JSID_IS_INT(sprop->id)) {
+        fprintf(fp, "%d", JSVAL_TO_INT(v));
     } else {
-        fprintf(fp, "%d", JSVAL_TO_INT(sprop->id));
-        str = NULL;
+        if (JSID_IS_ATOM(sprop->id)) {
+            str = JSVAL_TO_STRING(v);
+        } else if (JSID_IS_HIDDEN(sprop->id)) {
+            str = JSVAL_TO_STRING(v);
+            fputs("hidden ", fp);
+        } else {
+            JSASSERT(JSID_IS_OBJECT(sprop->id));
+            str = js_ValueToString(cx, v);
+            fputs("object ", fp);
+        }
+        if (!str)
+            fputs("<error>", fp);
+        else
+            js_FileEscapedString(fp, str, '"');
     }
-    if (str)
-        js_FileEscapedString(fp, str, 0);
 
     fprintf(fp, " g/s %p/%p slot %lu attrs %x flags %x shortid %d\n",
             (void *) sprop->getter, (void *) sprop->setter,
