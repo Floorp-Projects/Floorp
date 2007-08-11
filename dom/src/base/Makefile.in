@@ -83,6 +83,7 @@ REQUIRES	= xpcom \
 		  xultmpl \
 		  jar \
 		  storage \
+		  htmlparser \
 		  $(NULL)
 
 ifdef NS_TRACE_MALLOC

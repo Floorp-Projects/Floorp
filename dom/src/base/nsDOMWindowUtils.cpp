@@ -52,6 +52,7 @@
 #include "nsIFrame.h"
 #include "nsIWidget.h"
 #include "nsGUIEvent.h"
+#include "nsIParser.h"
 
 #ifdef MOZ_ENABLE_GTK2
 #include <gdk/gdkx.h>
@@ -110,6 +111,23 @@ nsDOMWindowUtils::SetImageAnimationMode(PRUint16 aMode)
     }
   }
   return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetDocCharsetIsForced(PRBool *aIsForced)
+{
+  *aIsForced = PR_FALSE;
+
+  PRBool hasCap = PR_FALSE;
+  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled("UniversalXPConnect", &hasCap)) || !hasCap)
+    return NS_ERROR_DOM_SECURITY_ERR;
+
+  if (mWindow) {
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mWindow->GetExtantDocument()));
+    *aIsForced = doc &&
+      doc->GetDocumentCharacterSetSource() >= kCharsetFromParentForced;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
