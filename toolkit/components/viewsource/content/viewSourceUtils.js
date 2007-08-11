@@ -53,12 +53,22 @@ var gViewSourceUtils = {
   {
     // try to open a view-source window while inheriting the charset (if any)
     var charset = null;
-    if (aDocument)
+    var isForcedCharset = false;
+    if (aDocument) {
       charset = "charset=" + aDocument.characterSet;
+      try { 
+        isForcedCharset =
+          aDocument.defaultView
+                   .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                   .getInterface(Components.interfaces.nsIDOMWindowUtils)
+                   .docCharsetIsForced;
+      } catch (ex) {
+      }
+    }
     openDialog("chrome://global/content/viewSource.xul",
                "_blank",
                "all,dialog=no",
-               aURL, charset, aPageDescriptor);
+               aURL, charset, isForcedCharset, aPageDescriptor);
   },
 
   // aCallBack is a function accepting two arguments - result (true=success) and a data object

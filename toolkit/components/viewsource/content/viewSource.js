@@ -106,14 +106,16 @@ function viewSource(url)
   // Parse the 'arguments' supplied with the dialog.
   //    arg[0] - URL string.
   //    arg[1] - Charset value in the form 'charset=xxx'.
-  //    arg[2] - Page descriptor used to load content from the cache.
-  //    arg[3] - Line number to go to.
+  //    arg[2] - Whether charset was forced by the user
+  //    arg[3] - Page descriptor used to load content from the cache.
+  //    arg[4] - Line number to go to.
   //
   if ("arguments" in window) {
     var arg;
     //
     // Set the charset of the viewsource window...
     //
+    var charset;
     if (window.arguments.length >= 2) {
       arg = window.arguments[1];
 
@@ -122,10 +124,23 @@ function viewSource(url)
           var arrayArgComponents = arg.split('=');
           if (arrayArgComponents) {
             //we should "inherit" the charset menu setting in a new window
-            var docCharset = getBrowser().docShell.QueryInterface
-                               (Components.interfaces.nsIDocCharset);
-            docCharset.charset = arrayArgComponents[1];
-          } 
+            charset = arrayArgComponents[1];
+            gBrowser.markupDocumentViewer.defaultCharacterSet = charset;
+          }
+        }
+      } catch (ex) {
+        // Ignore the failure and keep processing arguments...
+      }
+    }
+    // If the document had a forced charset, set it here also
+    if (window.arguments.length >= 3) {
+      arg = window.arguments[2];
+
+      try {
+        if (arg === true) {
+          var docCharset = getBrowser().docShell.QueryInterface
+                             (Components.interfaces.nsIDocCharset);
+          docCharset.charset = charset;
         }
       } catch (ex) {
         // Ignore the failure and keep processing arguments...
@@ -134,16 +149,16 @@ function viewSource(url)
     //
     // Get any specified line to jump to.
     //
-    if (window.arguments.length >= 4) {
-      arg = window.arguments[3];
+    if (window.arguments.length >= 5) {
+      arg = window.arguments[4];
       gGoToLine = parseInt(arg);
     }
     //
     // Use the page descriptor to load the content from the cache (if
     // available).
     //
-    if (window.arguments.length >= 3) {
-      arg = window.arguments[2];
+    if (window.arguments.length >= 4) {
+      arg = window.arguments[3];
 
       try {
         if (typeof(arg) == "object" && arg != null) {
