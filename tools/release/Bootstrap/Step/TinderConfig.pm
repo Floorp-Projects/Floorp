@@ -21,7 +21,7 @@ sub Execute {
     my $version = $config->Get(var => 'version');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $product = $config->Get(var => 'product');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $branchTag = $config->Get(var => 'branchTag');
     my $osname = $config->SystemInfo(var => 'osname');
 
@@ -67,7 +67,7 @@ sub Verify {
 
     my $config = new Bootstrap::Config();
     my $branchTag = $config->Get(var => 'branchTag');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
 
     foreach my $branch ($branchTag . '_release', $branchTag . '_l10n_release') {
         $this->CheckLog(

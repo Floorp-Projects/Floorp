@@ -15,7 +15,7 @@ sub Execute {
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
     my $buildPlatform = $config->Get(sysvar => 'buildPlatform');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $rcTag = $productTag . '_RC' . $rc;
 
     my $lastBuilt = catfile($buildDir, $buildPlatform, 'last-built');
@@ -47,7 +47,7 @@ sub Verify {
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
     my $rcTag = $productTag.'_RC'.$rc;
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
 
     my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
 
@@ -74,7 +74,7 @@ sub Push {
     my $config = new Bootstrap::Config();
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $sshUser = $config->Get(var => 'sshUser');
     my $sshServer = $config->Get(var => 'sshServer');
 
@@ -127,7 +127,7 @@ sub Announce {
     my $productTag = $config->Get(var => 'productTag');
     my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
 
     my $rcTag = $productTag . '_RC' . $rc;
     my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');

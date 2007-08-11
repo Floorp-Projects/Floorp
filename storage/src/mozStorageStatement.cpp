@@ -697,3 +697,23 @@ mozStorageStatement::GetIsNull(PRUint32 aIndex, PRBool *_retval)
 
     return NS_OK;
 }
+
+/* AString escapeStringForLIKE(in AString aValue, in char aEscapeChar); */
+NS_IMETHODIMP
+mozStorageStatement::EscapeStringForLIKE(const nsAString & aValue, 
+                                         const PRUnichar aEscapeChar, 
+                                         nsAString &aEscapedString)
+{
+    const PRUnichar MATCH_ALL('%');
+    const PRUnichar MATCH_ONE('_');
+
+    aEscapedString.Truncate(0);
+
+    for (PRInt32 i = 0; i < aValue.Length(); i++) {
+        if (aValue[i] == aEscapeChar || aValue[i] == MATCH_ALL || 
+            aValue[i] == MATCH_ONE)
+            aEscapedString += aEscapeChar;
+        aEscapedString += aValue[i];
+    }
+    return NS_OK;
+}

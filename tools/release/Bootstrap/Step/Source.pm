@@ -17,7 +17,7 @@ sub Execute {
     my $productTag = $config->Get(var => 'productTag');
     my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $stageHome = $config->Get(var => 'stageHome');
 
     # create staging area
@@ -45,7 +45,7 @@ sub Verify {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
 
     my $logFile = catfile($logDir, 'source.log');
 
@@ -67,7 +67,7 @@ sub Push {
     my $product = $config->Get(var => 'product');
     my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $stageHome = $config->Get(var => 'stageHome');
 
     my $stageDir =  catfile($stageHome, $product . '-' . $version);

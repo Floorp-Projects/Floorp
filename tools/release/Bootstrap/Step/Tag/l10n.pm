@@ -28,7 +28,7 @@ sub Execute {
     my $l10n_pullDate = $config->Get(var => 'l10n_pullDate');
     my $rc = int($config->Get(var => 'rc'));
     my $appName = $config->Get(var => 'appName');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $l10nCvsroot = $config->Get(var => 'l10nCvsroot');
     my $tagDir = $config->Get(var => 'tagDir');
 
@@ -142,7 +142,7 @@ sub Verify {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
 

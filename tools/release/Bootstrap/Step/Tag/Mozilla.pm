@@ -21,7 +21,7 @@ sub Execute {
     my $config = new Bootstrap::Config();
     my $productTag = $config->Get(var => 'productTag');
     my $rc = int($config->Get(var => 'rc'));
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $tagDir = $config->Get(var => 'tagDir');
 
@@ -85,7 +85,7 @@ sub Verify {
 
     my $config = new Bootstrap::Config();
     my $productTag = $config->Get(var => 'productTag');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $rc = $config->Get(var => 'rc');
 
     my $releaseTag = $productTag . '_RELEASE';
