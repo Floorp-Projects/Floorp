@@ -24,6 +24,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@bengoodger.com> (v2.0)
 #   Blake Ross <blakeross@telocity.com>
+#   Shawn Wilsher <me@shawnwilsher.com> (v3.0)
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -63,8 +64,8 @@
         onload="Startup();" onunload="Shutdown();"
         onclose="return closeWindow(false);">
       
-  <script type="application/javascript" src="chrome://mozapps/content/downloads/DownloadProgressListener.js"/>
   <script type="application/javascript" src="chrome://mozapps/content/downloads/downloads.js"/>
+  <script type="application/javascript" src="chrome://mozapps/content/downloads/DownloadProgressListener.js"/>
   <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
   <script type="application/javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
@@ -77,12 +78,28 @@
   <commandset id="downloadsCommands"
               commandupdater="true"
               oncommandupdate="gDownloadViewController.onCommandUpdate();">
-    <command id="cmd_cleanUp" oncommand="gDownloadViewController.doCommand('cmd_cleanUp');"/>
-    <command id="cmd_remove"  oncommand="gDownloadViewController.doCommand('cmd_remove');"/>
+    <command id="cmd_cancel"
+             oncommand="gDownloadViewController.doCommand('cmd_cancel');"/>
+    <command id="cmd_open"
+             oncommand="gDownloadViewController.doCommand('cmd_open');"/>
+    <command id="cmd_pause"
+             oncommand="gDownloadViewController.doCommand('cmd_pause');"/>
+    <command id="cmd_pauseResume"
+             oncommand="gDownloadViewController.doCommand('cmd_pauseResume');"/>
+    <command id="cmd_remove"
+             oncommand="gDownloadViewController.doCommand('cmd_remove');"/>
+    <command id="cmd_resume"
+             oncommand="gDownloadViewController.doCommand('cmd_resume');"/>
+    <command id="cmd_retry"
+             oncommand="gDownloadViewController.doCommand('cmd_retry');"/>
+    <command id="cmd_show"
+             oncommand="gDownloadViewController.doCommand('cmd_show');"/>
+    <command id="cmd_showInfo"
+             oncommand="gDownloadViewController.doCommand('cmd_showInfo');"/>
   </commandset>
     
   <keyset id="downloadKeys">
-    <key id="key_cleanUp" keycode="VK_DELETE" command="cmd_cleanUp" modifiers="accel,shift"/>
+    <key id="key_pauseResume" key=" " command="cmd_pauseResume"/>
     <key id="key_remove"  keycode="VK_DELETE" command="cmd_remove"/>
     <key id="key_close"   key="&cmd.close.commandKey;"  oncommand="closeWindow(true);"    modifiers="accel"/>
 #ifdef XP_GNOME
@@ -97,20 +114,17 @@
   <vbox id="contextMenuPalette" hidden="true">
     <menuitem id="menuitem_pause" 
               label="&cmd.pause.label;" accesskey="&cmd.pause.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'pause');"/>
+              command="cmd_pause"/>
     <menuitem id="menuitem_resume" 
               label="&cmd.resume.label;" accesskey="&cmd.resume.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'resume');"/>
+              command="cmd_resume"/>
     <menuitem id="menuitem_cancel" 
               label="&cmd.cancel.label;" accesskey="&cmd.cancel.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'cancel');"/>
+              command="cmd_cancel"/>
 
     <menuitem id="menuitem_open" default="true"
               label="&cmd.open.label;" accesskey="&cmd.open.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'open');"/>
-    <menuitem id="menuitem_openWith" 
-              label="&cmd.openWith.label;" accesskey="&cmd.openWith.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'openWith');"/>
+              command="cmd_open"/>
     <menuitem id="menuitem_show"
 #ifdef XP_MACOSX
               label="&cmd.show.labelMac;"
@@ -119,46 +133,44 @@
               label="&cmd.show.label;"
               accesskey="&cmd.show.accesskey;"
 #endif
-              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'show');"/>
+              command="cmd_show"/>
 
     <menuitem id="menuitem_retry" default="true"
               label="&cmd.retry.label;" accesskey="&cmd.retry.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'retry');"/>
+              command="cmd_retry"/>
 
     <menuitem id="menuitem_remove"
               label="&cmd.remove.label;" accesskey="&cmd.remove.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'remove');"/>
-              
-    <menuseparator id="menuseparator_properties"/>              
-    <menuitem id="menuitem_properties" 
-              label="&cmd.properties.label;" accesskey="&cmd.properties.accesskey;"
-              oncommand="fireEventForElement(gDownloadsView.selectedItem, 'properties');"/>
+              command="cmd_remove"/>
   </vbox>
   
-  <popup id="downloadContextMenu" onpopupshowing="return buildContextMenu(event);"/>
+  <menupopup id="downloadContextMenu" onpopupshowing="return buildContextMenu(event);"/>
+
+  <!--Information popup-->
+  <panel id="information" orient="vertical" align="start">
+    <label id="information-title" flex="1"/>
+    <button type="image" crop="center" id="information-uri" flex="1"/>
+    <button type="image" crop="center" id="information-location" flex="1" command="cmd_show"/>
+  </panel>
 
   <richlistbox id="downloadView" flex="1" context="downloadContextMenu"
-        ondragover="nsDragAndDrop.dragOver(event, gDownloadDNDObserver);"
-        ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
+               ondragover="nsDragAndDrop.dragOver(event, gDownloadDNDObserver);"
+               ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
+    <label id="active-downloads" value="&activeDownloads.label;" hidden="true"/>
+    <label id="other-downloads" value="&completedDownloads.label;"
+           completedlabel="&completedDownloads.label;"
+           searchlabel="&searchResults.label;"/>
   </richlistbox>
-  
-  <hbox>
-    <hbox id="commandBar" flex="1">
-      <hbox align="center" flex="1" id="autodownloadInfo">
-        <label>&filesSavedTo.label;</label>
-        <toolbarbutton class="tabbable" id="saveToFolder" crop="right" flex="1"
-                       oncommand="onDownloadShowFolder();"
-                       tooltiptext="&showFolder.label;"/>
-      </hbox> 
-      <spring id="autodownloadSpring" hidden="true" flex="1"/>
-      <separator id="commandBarSeparator"/> 
-      <button id="cleanUpButton" 
-              label="&cmd.cleanUp.label;" accesskey="&cmd.cleanUp.accesskey;" tooltiptext="&cmd.cleanUp.tooltip;" 
-              command="cmd_cleanUp"/>
-    </hbox>
-    
+
+  <hbox id="search">
+    <textbox type="timed" timeout="500" id="searchbox"
+             oncommand="performSearch();"/>
+    <spacer flex="1"/>
+    <!-- TODO get advanced search working (Bug 390491)
+    <button label="Advanced Search"/>
+    -->
     <resizer id="windowResizer" dir="bottomright"/>
-  </hbox>  
+  </hbox>
 
 </window>
 

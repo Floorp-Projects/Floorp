@@ -24,6 +24,7 @@
 # Contributor(s):
 #   Ben Goodger <ben@bengoodger.com> (v2.0) 
 #   Blake Ross <blakeross@telocity.com>
+#   Shawn Wilsher <me@shawnwilsher.com> (v3.0)
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -57,25 +58,13 @@
 <bindings id="downloadBindings"
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-          xmlns:xbl="http://www.mozilla.org/xbl"
-          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+          xmlns:xbl="http://www.mozilla.org/xbl">
 
   <binding id="download-base" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
     <resources>
       <stylesheet src="chrome://mozapps/skin/downloads/downloads.css"/>
     </resources>
     <implementation>
-      <method name="fireEvent">
-        <parameter name="aEventType"/>
-        <body>
-        <![CDATA[
-          var e = document.createEvent("Events");
-          e.initEvent("download-" + aEventType, true, true);
-          
-          this.dispatchEvent(e);
-        ]]>
-        </body>
-      </method>
       <property name="paused">
         <getter>
         <![CDATA[
@@ -121,14 +110,6 @@
         ]]>
         </getter>
       </property>
-      
-      <method name="pauseResume">
-        <body>
-        <![CDATA[
-          // Do nothing.
-        ]]>
-        </body>
-      </method>
     </implementation>
   </binding>
   
@@ -137,16 +118,21 @@
       <xul:hbox flex="1">
 #ifdef SHOW_ICONS
         <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always" 
+                     xbl:inherits="src=image"/>
         </xul:vbox>
 #endif
         <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target" crop="center"/>
-          <xul:label value="&starting.label;"/>
+          <xul:label xbl:inherits="value=target,tooltiptext=target"
+                     crop="center" class="name"/>
+          <xul:progressmeter mode="normal" value="0" flex="1"
+                             anonid="progressmeter"/>
+          <xul:label value="&starting.label;" class="status"/>
+          <xul:spacer flex="1"/>
         </xul:vbox>
-        <xul:vbox pack="start">
-          <xul:label value="&cmd.cancel.label;" class="text-link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('cancel');"/>
+        <xul:vbox pack="center">
+          <xul:button class="cancel" tooltiptext="&cmd.cancel.label;"
+                      command="cmd_cancel"/>
         </xul:vbox>
       </xul:hbox>
     </content>  
@@ -154,143 +140,33 @@
   
   <binding id="download-downloading" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
-      <xul:hbox flex="1" class="downloadContentBox" xbl:inherits="animated,animated-temp">
+      <xul:hbox flex="1" class="downloadContentBox">
 #ifdef SHOW_ICONS
         <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always" 
+                     xbl:inherits="src=image"/>
         </xul:vbox>
 #endif
         <xul:vbox flex="1">
-          <xul:hbox flex="1">
+          <xul:label xbl:inherits="value=target,tooltiptext=target"
+                       crop="center" flex="2" class="name"/>
+          <xul:hbox>
             <xul:vbox flex="1">
-              <xul:label xbl:inherits="value=target" crop="center"/>
-              <xul:progressmeter anonid="progressmeter" mode="normal" value="0" flex="1"
-                                xbl:inherits="value=progress,mode=progressmode"/>
+              <xul:progressmeter mode="normal" value="0" flex="1"
+                                 anonid="progressmeter"
+                                 xbl:inherits="value=progress,mode=progressmode"/>
             </xul:vbox>
-            <xul:vbox pack="start">
-              <xul:label value="&cmd.cancel.label;" class="text-link"
-                        onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.fireEvent('cancel');"/>          
-            </xul:vbox>
-          </xul:hbox>                              
-          <xul:hbox align="center">
-            <xul:label value="&cmd.pause.label;" class="text-link"
-                       onclick="this.parentNode.parentNode.parentNode.parentNode.fireEvent('pause');"/>
-            <xul:label xbl:inherits="value=status" flex="1" crop="right"/>
-          </xul:hbox>                            
+            <xul:button class="pause" tooltiptext="&cmd.pause.label;"
+                        command="cmd_pause"/>
+            <xul:button class="cancel" tooltiptext="&cmd.cancel.label;"
+                        command="cmd_cancel"/>
+          </xul:hbox>
+          <xul:label xbl:inherits="value=status,tooltiptext=status" flex="1"
+                     crop="right" class="status"/>
+          <xul:spacer flex="1"/>
         </xul:vbox>
       </xul:hbox>
     </content>
-    <implementation>
-    
-      <!-- ANIMATE: Type Icon -->    
-      <property name="_ati_kTimeout" onget="return 50;"/>
-      <property name="_ati_kUpperBounds" onget="return 90;"/>
-      <property name="_ati_kLowerBounds" onget="return 30;"/>
-      <property name="_ati_kIncrement" onget="return 5;"/>
-      <field name="_atiStep">0</field>
-      <field name="_atiIsIncrementing">true</field>
-      <field name="_atiInterval">-1</field>
-      
-      <method name="_atiTimerCallback">
-        <parameter name="aDownload"/>
-        <parameter name="aIcon"/>
-        <body>
-        <![CDATA[
-          if (aDownload.getAttribute("state") != "0") {
-            clearInterval(aDownload._atiInterval)
-            return;
-          }
-            
-          if (aDownload._atiIsIncrementing)
-            aDownload._atiStep += aDownload._ati_kIncrement;
-          else
-            aDownload._atiStep -= aDownload._ati_kIncrement;
-
-          if (aDownload._atiStep == aDownload._ati_kUpperBounds) 
-            aDownload._atiIsIncrementing = false;
-          else if (aDownload._atiStep  == aDownload._ati_kLowerBounds)
-            aDownload._atiIsIncrementing = true;
-
-          aIcon.setAttribute("style", "opacity: 0." + aDownload._atiStep );
-        ]]>
-        </body>
-      </method>
-      <method name="_animateIcon">
-        <body>
-        <![CDATA[
-          this._atiStep = this._ati_kLowerBounds;
-          this._atiIsIncrementing = true;
-
-          var icon = document.getAnonymousElementByAttribute(this, "class", "downloadTypeIcon");
-          this._atiInterval = setInterval(this._atiTimerCallback, this._ati_kTimeout, this, icon);
-        ]]>
-        </body>
-      </method>
-      
-      <!-- ANIMATE: Download -->
-      <property name="_adl_kTimeout" onget="return 50;"/>
-      <property name="_adl_kUpperBounds" onget="return 1.00;"/>
-      <property name="_adl_kLowerBounds" onget="return 0.00;"/>
-      <property name="_adl_kIncrement" onget="return 0.05;"/>
-      <field name="_adlStep">0</field>
-      
-      <method name="_adlTimerCallback">
-        <parameter name="aDownload"/>
-        <parameter name="aContent"/>
-        <body>
-        <![CDATA[
-          if (aDownload.getAttribute("state") != "0" || 
-              aDownload._adlStep > aDownload._adl_kUpperBounds) {
-            aDownload.fireEvent('animated');
-            return;
-          }
-
-          // Don't even bother if we're going away. 
-          if (!aContent.ownerDocument)
-            return;
-            
-          aDownload._adlStep += aDownload._adl_kIncrement;
-          aContent.setAttribute("style", "opacity: " + aDownload._adlStep + "!important;");
-          
-          setTimeout(aDownload._adlTimerCallback, aDownload._adl_kTimeout, aDownload, aContent);
-        ]]>
-        </body>
-      </method>
-      <method name="_animateDownload">
-        <body>
-        <![CDATA[
-          this._adlStep = this._adl_kLowerBounds;
-
-          var box = document.getAnonymousElementByAttribute(this, "class", "downloadContentBox");
-          setTimeout(this._adlTimerCallback, this._adl_kTimeout, this, box);
-        ]]>
-        </body>
-      </method>
-      
-      <method name="_shouldDownloadAnimate">
-        <body>
-        <![CDATA[
-          return this.getAttribute("animated") != "true";
-        ]]>
-        </body>
-      </method>
-      
-      <method name="pauseResume">
-        <body>
-        <![CDATA[
-          this.fireEvent("pause");
-        ]]>
-        </body>
-      </method>
-      
-      <constructor>
-      <![CDATA[
-        // this._animateIcon();
-        if (this._shouldDownloadAnimate())
-          this._animateDownload();
-      ]]>
-      </constructor>
-    </implementation>
   </binding>
   
   <binding id="download-paused" extends="chrome://mozapps/content/downloads/download.xml#download-base">
@@ -298,38 +174,30 @@
       <xul:hbox flex="1">
 #ifdef SHOW_ICONS
         <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always"
+                     xbl:inherits="src=image"/>
         </xul:vbox>
 #endif
         <xul:vbox flex="1">
-          <xul:hbox flex="1">
+          <xul:label xbl:inherits="value=target,tooltiptext=target"
+                     crop="center" flex="2" class="name"/>
+          <xul:hbox>
             <xul:vbox flex="1">
-              <xul:label xbl:inherits="value=target" crop="center"/>
-              <xul:progressmeter anonid="progressmeter" mode="normal" value="0" flex="1"
-                                xbl:inherits="value=progress,mode=progressmode"/>
+              <xul:progressmeter mode="normal" value="0" flex="1"
+                                 anonid="progressmeter"
+                                 xbl:inherits="value=progress,mode=progressmode"/>
             </xul:vbox>
-            <xul:vbox pack="start">
-              <xul:label value="&cmd.cancel.label;" class="text-link"
-                         onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.fireEvent('cancel');"/>
-            </xul:vbox>
-          </xul:hbox>                              
-          <xul:hbox align="center">
-            <xul:label value="&cmd.resume.label;" class="text-link"
-                       onclick="this.parentNode.parentNode.parentNode.parentNode.fireEvent('resume');"/>
-            <xul:label xbl:inherits="value=status" flex="1" crop="right"/>
-          </xul:hbox>                            
+            <xul:button class="resume" tooltiptext="&cmd.resume.label;"
+                        command="cmd_resume"/>
+            <xul:button class="cancel" tooltiptext="&cmd.cancel.label;"
+                        command="cmd_cancel"/>
+          </xul:hbox>
+          <xul:label xbl:inherits="value=target,tooltiptext=target" flex="1"
+                     crop="right" class="status"/>
+          <xul:spacer flex="1"/>
         </xul:vbox>
       </xul:hbox>
     </content>
-    <implementation>
-      <method name="pauseResume">
-        <body>
-        <![CDATA[
-          this.fireEvent("resume");
-        ]]>
-        </body>
-      </method>
-    </implementation>
   </binding>
   
   <binding id="download-done" extends="chrome://mozapps/content/downloads/download.xml#download-base">
@@ -337,18 +205,23 @@
       <xul:hbox flex="1">
 #ifdef SHOW_ICONS
         <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always" 
+                     xbl:inherits="src=image"/>
         </xul:vbox>
 #endif
         <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target" crop="center"/>
-          <xul:label value="&done.label;"/>
+          <xul:label xbl:inherits="value=target,tooltiptext=target"
+                     crop="center" class="name"/>
+          <xul:spacer flex="1"/>
+          <xul:label value="&done.label;" class="status"/>
         </xul:vbox>
-        <xul:vbox pack="start">
-          <xul:label value="&cmd.open.label;" class="text-link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('open');"/>
-          <xul:label value="&cmd.remove.label;" class="text-link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
+        <xul:vbox pack="center">
+          <xul:hbox>
+            <xul:button class="open" tooltiptext="&cmd.open.label;"
+                        command="cmd_open"/>
+            <xul:button class="info" tooltiptext="&cmd.info.label;"
+                        command="cmd_showInfo" anonid="info"/>
+          </xul:hbox>
         </xul:vbox>
       </xul:hbox>
     </content>  
@@ -359,18 +232,23 @@
       <xul:hbox flex="1">
 #ifdef SHOW_ICONS
         <xul:vbox pack="start"> 
-          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always"
+                     xbl:inherits="src=image"/>
         </xul:vbox>
 #endif
         <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target" crop="center"/>
-          <xul:label value="&canceled.label;"/>
+          <xul:label xbl:inherits="value=target,tooltiptext=target"
+                     crop="center" class="name"/>
+          <xul:spacer flex="1"/>
+          <xul:label value="&canceled.label;" class="status"/>
         </xul:vbox>
-        <xul:vbox pack="start">
-          <xul:label value="&cmd.retry.label;" class="text-link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"/>
-          <xul:label value="&cmd.remove.label;" class="text-link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
+        <xul:vbox pack="center">
+          <xul:hbox>
+            <xul:button class="retry" tooltiptext="&cmd.retry.label;"
+                        command="cmd_retry"/>
+            <xul:button class="info" tooltiptext="&cmd.info.label;"
+                        command="cmd_showInfo" anonid="info"/>
+          </xul:hbox>
         </xul:vbox>
       </xul:hbox>
     </content>  
@@ -381,106 +259,24 @@
       <xul:hbox flex="1">
 #ifdef SHOW_ICONS
         <xul:vbox pack="start">
-          <xul:image class="downloadTypeIcon" validate="always" style="width: 32px; max-width: 32px; height: 32px; max-height: 32px;" xbl:inherits="src=image"/>
+          <xul:image class="downloadTypeIcon" validate="always"
+                     xbl:inherits="src=image"/>
         </xul:vbox>
 #endif
         <xul:vbox pack="start" flex="1">
-          <xul:label xbl:inherits="value=target" crop="center"/>
-          <xul:label value="&failed.label;"/>
+          <xul:label xbl:inherits="value=target,tooltiptext=target"
+                     crop="center" class="name"/>
+          <xul:spacer flex="1"/>
+          <xul:label value="&failed.label;" class="status"/>
         </xul:vbox>
         <xul:vbox pack="start">
-          <xul:label value="&cmd.retry.label;" class="text-link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('retry');"/>
-          <xul:label value="&cmd.remove.label;" class="text-link" 
-                     onclick="this.parentNode.parentNode.parentNode.fireEvent('remove');"/>
+          <xul:button class="retry" tooltiptext="&cmd.retry.label;"
+                      command="cmd_retry"/>
+          <xul:button class="info" tooltiptext="&cmd.info.label;"
+                      command="cmd_showInfo" anonid="info"/>
         </xul:vbox>
       </xul:hbox>
     </content>  
-  </binding>
-  
-  <binding id="download-view">
-    <implementation>
-      <field name="_selected">null</field>
-      <property name="selected">
-        <setter>
-        <![CDATA[
-          if (this._selected)
-            this._selected.removeAttribute("selected");
-          this._selected = val;
-          if (this._selected)
-            this._selected.setAttribute("selected", "true");
-        ]]>
-        </setter>
-        <getter>
-        <![CDATA[
-          return this._selected;
-        ]]>
-        </getter>
-      </property>
-      
-      <method name="selectionForward">
-        <parameter name="aEvent"/>
-        <body>
-        <![CDATA[
-          if (this.selected) {
-            if (this.selected.nextSibling &&
-                this.selected.nextSibling.localName == "download")
-              this.selected = this.selected.nextSibling;
-          }
-          else {
-            if (this.hasChildNodes())
-              this.selected = this.firstChild.nextSibling;
-          }
-        ]]>
-        </body>
-      </method>
-
-      <method name="selectionBackward">
-        <parameter name="aEvent"/>
-        <body>
-        <![CDATA[
-          if (this.selected) {
-            if (this.selected.previousSibling && 
-                this.selected.previousSibling.localName == "download")
-              this.selected = this.selected.previousSibling;
-          }
-          else {
-            if (this.hasChildNodes())
-              this.selected = this.lastChild;
-          }
-        ]]>
-        </body>
-      </method>
-    </implementation>
-    <handlers>
-      <handler event="focus">
-      <![CDATA[
-        this.selected = event.target;
-      ]]>
-      </handler>
-      <handler event="click">
-      <![CDATA[
-        if (event.ctrlKey) {
-          this.selected = null;
-          return;
-        }
-        
-        this.selected = event.target;
-      ]]>
-      </handler>
-      <handler event="keypress" keycode="VK_ENTER" action="if (this.selected) this.selected.fireEvent('open');"/>
-      <handler event="keypress" keycode="VK_RETURN" action="if (this.selected) this.selected.fireEvent('open');"/>
-      <handler event="keypress" keycode="VK_UP" action="this.selectionBackward(event);"/>
-      <handler event="keypress" keycode="VK_LEFT" action="this.selectionBackward(event);"/>
-      <handler event="keypress" keycode="VK_DOWN" action="this.selectionForward(event);"/>
-      <handler event="keypress" keycode="VK_RIGHT" action="this.selectionForward(event);"/>
-      <handler event="keypress" keycode="VK_UP" modifiers="meta" action="this.selected = null;"/>
-      <handler event="keypress" keycode="VK_DOWN" modifiers="meta" action="this.selected = null;"/>
-      <handler event="keypress" keycode="VK_LEFT" modifiers="meta" action="this.selected = null;"/>
-      <handler event="keypress" keycode="VK_RIGHT" modifiers="meta" action="this.selected = null;"/>
-      <handler event="keypress" keycode="VK_DELETE" action="if (this.selected) this.selected.fireEvent('remove');"/>
-      <handler event="keypress" key=" " action="if (this.selected) { this.selected.pauseResume(); }"/>
-    </handlers>
   </binding>
   
 </bindings>

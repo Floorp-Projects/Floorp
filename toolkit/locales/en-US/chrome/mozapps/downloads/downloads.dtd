@@ -3,7 +3,6 @@
 
 <!ENTITY done.label                       "Done">
 <!ENTITY canceled.label                   "Canceled">
-<!ENTITY installing.label                 "Installing...">
 
 <!ENTITY starting.label                   "Starting...">
 <!ENTITY failed.label                     "Failed">
@@ -28,8 +27,8 @@
 <!ENTITY cmd.retry.accesskey              "R">
 <!ENTITY cmd.remove.label                 "Remove">
 <!ENTITY cmd.remove.accesskey             "e">
-<!ENTITY cmd.properties.label             "Properties">
-<!ENTITY cmd.properties.accesskey         "i">
+<!ENTITY cmd.info.label                   "Information">
+<!ENTITY cmd.info.accesskey               "i">
 <!ENTITY cmd.info.commandKey              "i">
 
 <!ENTITY cmd.close.commandKey             "w">
@@ -42,5 +41,8 @@
 <!ENTITY closeWhenDone.label              "Close when downloads complete">
 <!ENTITY closeWhenDone.tooltip            "Closes the Downloads window when all files are done downloading">
 
-<!ENTITY filesSavedTo.label               "All files downloaded to:">
 <!ENTITY showFolder.label                 "Show this Folder">
+
+<!ENTITY activeDownloads.label            "Active">
+<!ENTITY completedDownloads.label         "Completed">
+<!ENTITY searchResults.label              "Search Results">

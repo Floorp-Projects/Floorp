@@ -1,101 +1,84 @@
-/* Download View */
 #downloadView {
-  margin: 0px;
+  margin: 0;
   border-bottom: 1px solid #8E8E8E;
-  padding: 0px;
-  -moz-appearance: none;
-}
-
-#downloadView .scrollbox-innerbox {
-  background: url("chrome://mozapps/skin/downloads/background-stripe.gif") #FFFFFF repeat;
-} 
-
-/* Download Manager Command Bar */
-#commandBar {
-	padding: 4px 16px 4px 0px;
-	-moz-box-align: center;
-}
-
-
-#cleanUpButton {
-  -moz-appearance: button-bevel;
-  min-width: 1px;
-  padding: 3px 6px;
-  margin: 0 10px 0 0;
-} 
-
-#commandBarSeparator {
-  display:none;
+  padding: 0;
 }
 
 /* Download View Items */
-download {
- padding: 4px 8px 4px 4px;
- height: 32px !important;
- min-height: 40px !important;
+richlistitem[type="download"] {
+  padding: 4px 8px 4px 4px;
+  min-height: 46px !important;
 }
 
-download[selected="true"] {
-    background-color: Highlight !important;
-    color: HighlightText;
-    background-image: none !important;
+richlistitem[type="download"] .name {
+  font-size: larger;
 }
 
-download[state="0"], download[state="-1"], download[state="4"] {
-  font: icon !important;
-  padding-bottom: 7px;
-  padding-top: 7px;
-  min-height: 80px !important;
-  background: url("chrome://mozapps/skin/downloads/background-gradient.gif") repeat;
-}
-
-vbox:first-child > label:last-child, hbox:last-child > label:last-child {
-  color: #666666;
-  font-size: 95%;
-}
-
-download[selected="true"] vbox:first-child > label:last-child,
-download[selected="true"] hbox:last-child > label:last-child {
-  color: HighlightText;
-}
-
-/* Download View Items, implementation */
-progressmeter {
-  margin: 6px 6px 4px 6px;
-  min-height:19px;
+richlistitem[type="download"] button {
   -moz-appearance: none;
+  min-height: 16px;
+  min-width: 16px;
+  max-height: 16px;
+  max-width: 16px;
+  padding: 0;
+  margin: 0 1px 0 1px;
 }
 
-.progress-bar {
-  background: url("chrome://mozapps/skin/downloads/progress-bar.gif") repeat-x !important;
-  border-left: 1px solid #D9D9D9 !important;
+#information {
+  -moz-appearance: none;
+  background-color: white;
+  width: 300px;
+  max-width: 300px;
 }
 
-download[state="4"] .progress-bar {
-  background: url("chrome://mozapps/skin/downloads/progress-bar-paused.gif") repeat-x !important;
+#information > button {
+  -moz-appearance: none;
+  margin: 0;
+  padding: 0;
+  width: 300px;
 }
 
-.progress-remainder {
-  background: url("chrome://mozapps/skin/downloads/progress-remainder.gif") repeat-x !important;
-  border-right: 1px solid #DEDEDE !important;
-}
-
-label {
-  border: none !important;
-}
-
-dialog label {
-	color: #000000 !important;
-	font-size: 100% !important;
-    font: icon;
-}
-
-#saveToFolder .toolbarbutton-text {
+#information > button .button-text {
+  -moz-box-flex: 1;
   text-align: left;
-  margin-left: 5px !important;
-  border: 1px solid transparent !important;
 }
 
-#saveToFolder:focus .toolbarbutton-text {
-  border: 1px solid -moz-mac-focusring !important;
+/**
+ * Images for buttons in the interface
+ */
+richlistitem[type="download"] button,
+#information-uri,
+#information-location {
+  list-style-image: url(chrome://mozapps/skin/downloads/buttons.png);
+}
+.cancel {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+.info {
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+.open {
+  -moz-image-region: rect(16px, 32px, 32px, 16px);
+}
+.pause {
+  -moz-image-region: rect(32px, 32px, 48px, 16px);
+}
+.resume {
+  -moz-image-region: rect(16px, 48px, 32px, 32px);
+}
+.retry {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+}
+
+#information-uri {
+  -moz-image-region: rect(16px, 16px, 32px, 0px);
+}
+#information-location {
+  -moz-image-region: rect(32px, 16px, 48px, 0px);
+}
+
+/* prevent flickering when changing states */
+.downloadTypeIcon {
+  min-height: 32px;
+  min-width: 32px;
 }
