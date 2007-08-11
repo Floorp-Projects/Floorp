@@ -104,7 +104,7 @@ PlacesController.prototype = {
     case "cmd_copy":
       return this._view.hasSelection;
     case "cmd_paste":
-      return this._canInsert() && this._canPaste();
+      return this._canInsert() && this._isClipboardDataPasteable();
     case "cmd_selectAll":
       if (this._view.selType != "single") {
         var result = this._view.getResult();
@@ -381,67 +381,63 @@ PlacesController.prototype = {
     }
     return false;
   },
-
+  
   /**
    * Looks at the data on the clipboard to see if it is paste-able. 
    * Paste-able data is:
    *   - in a format that the view can receive
-   * @returns true if the data is paste-able, false if the clipboard data
-   *          cannot be pasted
+   * @returns true if: - clipboard data is of a TYPE_X_MOZ_PLACE_* flavor,
+                       - clipboard data is of type TEXT_UNICODE and
+                         is a valid URI.
    */
-  _canPaste: function PC__canPaste() {
-    var types = this._view.peerDropTypes;
-    var flavors = 
-        Cc["@mozilla.org/supports-array;1"].
-        createInstance(Ci.nsISupportsArray);
-    for (var i = 0; i < types.length; ++i) {
-      var cstring = 
-          Cc["@mozilla.org/supports-cstring;1"].
-          createInstance(Ci.nsISupportsCString);
-      cstring.data = types[i];
+  _isClipboardDataPasteable: function PC__isClipboardDataPasteable() {
+    // if the clipboard contains TYPE_X_MOZ_PLACE_* data, it is definitely
+    // pasteable, with no need to unwrap all the nodes.
+    
+    var placeTypes = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
+                      PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
+                      PlacesUtils.TYPE_X_MOZ_PLACE];
+    var flavors = Cc["@mozilla.org/supports-array;1"].
+                    createInstance(Ci.nsISupportsArray);
+    for (var i = 0; i < placeTypes.length; ++i) {
+      var cstring = Cc["@mozilla.org/supports-cstring;1"].
+                      createInstance(Ci.nsISupportsCString);
+      cstring.data = placeTypes[i];
       flavors.AppendElement(cstring);
     }
-
-    var clipboard = 
-        Cc["@mozilla.org/widget/clipboard;1"].getService(Ci.nsIClipboard);
-    var hasClipboardData = clipboard.hasDataMatchingFlavors(flavors, 
+    var clipboard = Cc["@mozilla.org/widget/clipboard;1"].
+                      getService(Ci.nsIClipboard);
+    var hasPlacesData = clipboard.hasDataMatchingFlavors(flavors,
                                             Ci.nsIClipboard.kGlobalClipboard);
-    if (!hasClipboardData)
-      return false;
+    if (hasPlacesData)
+      return this._view.insertionPoint != null;
+      
+    // if the clipboard doesn't have TYPE_X_MOZ_PLACE_* data, we also allow
+    // pasting of valid "text/unicode" and "text/x-moz-url" data
+    var xferable = Cc["@mozilla.org/widget/transferable;1"].
+                     createInstance(Ci.nsITransferable);
 
-    // XXX todo
-    // see bug #387007 for an idea on how to make this more efficient
-    // right now, we are pulling data off the clipboard and using
-    // unwrapNodes() to verify it.
-
-    var xferable = 
-        Cc["@mozilla.org/widget/transferable;1"].
-        createInstance(Ci.nsITransferable);
-
-    for (var j = 0; j < types.length; ++j) {
-      xferable.addDataFlavor(types[j]);
-    }
+    xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_URL);
+    xferable.addDataFlavor(PlacesUtils.TYPE_UNICODE);
     clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
-
+    
     try {
-      // getAnyTransferData can throw if no data is available. 
+      // getAnyTransferData will throw if no data is available.
       var data = { }, type = { };
       xferable.getAnyTransferData(type, data, { });
       data = data.value.QueryInterface(Ci.nsISupportsString).data;
-      if (this._view.peerDropTypes.indexOf(type.value) == -1)
+      if (type.value != PlacesUtils.TYPE_X_MOZ_URL &&
+          type.value != PlacesUtils.TYPE_UNICODE)
         return false;
 
-      // unwrapNodes() will throw if the data blob is malformed. 
+      // unwrapNodes() will throw if the data blob is malformed.
       var unwrappedNodes = PlacesUtils.unwrapNodes(data, type.value);
       return this._view.insertionPoint != null;
     }
     catch (e) {
-      // unwrapeNodes() failed, possibly because a field that should have 
-      // contained a URI did not actually contain something that is 
-      // parse-able as a URI. 
+      // getAnyTransferData or unwrapNodes failed
       return false;
     }
-    return false;
   },
 
   /** 
