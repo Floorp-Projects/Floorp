@@ -3663,6 +3663,7 @@ nsHTMLDocument::CreateAndAddWyciwygChannel(void)
 
   // Note: we want to treat this like a "previous document" hint so that,
   // e.g. a <meta> tag in the document.write content can override it.
+  SetDocumentCharacterSetSource(kCharsetFromHintPrevDoc);
   mWyciwygChannel->SetCharsetAndSource(kCharsetFromHintPrevDoc,
                                        GetDocumentCharacterSet());
 
