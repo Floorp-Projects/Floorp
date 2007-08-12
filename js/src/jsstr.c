@@ -2423,7 +2423,7 @@ js_GetUnitString(JSContext *cx, jschar c)
     }
     return rt->unitStrings[c];
 #else
-    return js_NewStringCopyN(cx, &c, 1, 0);
+    return js_NewStringCopyN(cx, &c, 1);
 #endif
 }
 
@@ -4930,6 +4930,7 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
 #if defined(DEBUG) ||                                                         \
     defined(DUMP_CALL_TABLE) ||                                               \
     defined(DUMP_SCOPE_STATS)
+
 size_t
 js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
                         JSString *str, uint32 quote)
