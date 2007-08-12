@@ -63,7 +63,7 @@ DownloadProgressListener.prototype =
     switch (aDownload.state) {
       case Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED:
         // We'll have at least one active download now
-        gDownloadsActiveLabel.hidden = false;
+        gDownloadsActiveTitle.hidden = false;
       case Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING:
         // if dl is non-null, the download is already added to the UI, so we
         // just make sure it is where it is supposed to be
@@ -81,7 +81,7 @@ DownloadProgressListener.prototype =
                                   aDownload.percentComplete,
                                   Math.round(aDownload.startTime / 1000));
         }
-        gDownloadsView.insertBefore(dl, gDownloadsActiveLabel.nextSibling);
+        gDownloadsView.insertBefore(dl, gDownloadsActiveTitle.nextSibling);
         break;
       case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
       case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
@@ -123,11 +123,11 @@ DownloadProgressListener.prototype =
                                    aDownload.source.spec,
                                    aDownload.state,
                                    aDownload.percentComplete);
-      download = gDownloadsView.insertBefore(itm, gDownloadsActiveLabel.nextSibling);
+      download = gDownloadsView.insertBefore(itm, gDownloadsActiveTitle.nextSibling);
     }
 
     // any activity means we should have active downloads!
-    gDownloadsActiveLabel.hidden = false;
+    gDownloadsActiveTitle.hidden = false;
 
     // Update this download's progressmeter
     if (aDownload.percentComplete == -1)

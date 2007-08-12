@@ -86,3 +86,10 @@ richlistitem[type="download"] .name {
   min-height: 32px;
   min-width: 32px;
 }
+
+.title-line {
+  height: 1px;
+  background-color: ThreeDDarkShadow;
+  -moz-margin-end: 15px;
+  -moz-margin-start: 5px;
+}
