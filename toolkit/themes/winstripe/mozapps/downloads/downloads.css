@@ -15,21 +15,11 @@
 /* Download View Items */
 richlistitem[type="download"] {
   padding: 4px 8px 4px 4px;
-  min-height: 46px !important;
+  min-height: 46px;
 }
 
 richlistitem[type="download"] .name {
   font-size: larger;
-}
-
-richlistitem[type="download"] button {
-  -moz-appearance: none;
-  min-height: 16px;
-  min-width: 16px;
-  max-height: 16px;
-  max-width: 16px;
-  padding: 0;
-  margin: 0 1px 0 1px;
 }
 
 #information {
@@ -39,26 +29,32 @@ richlistitem[type="download"] button {
   max-width: 300px;
 }
 
-#information > button {
-  -moz-appearance: none;
-  margin: 0;
-  padding: 0;
-  width: 300px;
-}
-
 #information > button .button-text {
   -moz-box-flex: 1;
   text-align: left;
+  padding-left: 2px;
 }
 
-/**
- * Images for buttons in the interface
- */
-richlistitem[type="download"] button,
-#information-uri,
-#information-location {
+.mini-button {
+  -moz-appearance: none;
   list-style-image: url(chrome://mozapps/skin/downloads/buttons.png);
+  background-color: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
 }
+
+.mini-button > .button-box {
+  padding: 0 !important;
+}
+
+.mini-button > image {
+  width: 16px;
+  height: 16px;
+}
+
 .cancel {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
