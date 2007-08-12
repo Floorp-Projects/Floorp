@@ -391,8 +391,6 @@ SessionStoreService.prototype = {
     if (aWindow && aWindow.__SSi && this._windows[aWindow.__SSi])
       return;
 
-    var _this = this;
-
     // ignore non-browser windows and windows opened while shutting down
     if (aWindow.document.documentElement.getAttribute("windowtype") != "navigator:browser" ||
       this._loadState == STATE_QUITTING)
@@ -423,7 +421,7 @@ SessionStoreService.prototype = {
       
       if (this._lastSessionCrashed) {
         // restart any interrupted downloads
-        aWindow.setTimeout(function(){ _this.retryDownloads(aWindow); }, 0);
+        aWindow.setTimeout(this.retryDownloads, 0);
       }
     }
     
@@ -1626,50 +1624,42 @@ SessionStoreService.prototype = {
 
   /**
    * Restart incomplete downloads
-   * @param aWindow
-   *        Window reference
    */
-  retryDownloads: function sss_retryDownloads(aWindow) {
-    var downloadManager = Cc["@mozilla.org/download-manager;1"].
-                          getService(Ci.nsIDownloadManager);
+  retryDownloads: function sss_retryDownloads() {
     var ioService = Cc["@mozilla.org/network/io-service;1"].
                     getService(Ci.nsIIOService);
+    var dlManager = Cc["@mozilla.org/download-manager;1"].
+                    getService(Ci.nsIDownloadManager);
     
-    var database = downloadManager.DBConnection;
-    
-    var stmt = database.createStatement("SELECT source, target, id " +
-                                        "FROM moz_downloads " +
-                                        "WHERE state = ?1");
-    stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-
-    var dls = [];
-    // restart all downloads that were in progress before the crash
-    while (stmt.executeStep()) {
-      // URL being downloaded
-      var url = stmt.getUTF8String(0);
-      
-      var savedTo = stmt.getUTF8String(1);
-      var savedToURI = ioService.newURI(savedTo, null, null);
-      savedTo = savedToURI.path;
-   
-      var dl = { id: stmt.getInt64(2), url: url, savedTo: savedTo };
-      dls.push(dl);
+    function AsyncDownloadRetrier(aDlId) {
+      this._dlId = aDlId;
+      this._dlManager = dlManager;
     }
-    stmt.reset();
-
-    // We need to remove it from the database otherwise it just sits there
-    stmt = database.createStatement("DELETE FROM moz_downloads " +
-                                    "WHERE state = ?1");
+    AsyncDownloadRetrier.prototype = {
+      onStartRequest: function(aRequest, aContext) { },
+      onStopRequest: function(aRequest, aContext, aStatus) {
+        if (Components.isSuccessCode(aStatus))
+          this._dlManager.retryDownload(this._dlId);
+      }
+    };
+    
+    var stmt = dlManager.DBConnection.
+                         createStatement("SELECT id, source " +
+                                         "FROM moz_downloads " +
+                                         "WHERE state = ?1");
     stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-    stmt.execute();
 
-    for (var i = dls.length - 1; i >= 0; --i) {
+    // restart all downloads that were in progress before the crash
+    // and which are currently available through the network
+    while (stmt.executeStep()) {
+      var dlId = stmt.getInt64(0);
+      var url = stmt.getUTF8String(1);
+      
       var linkChecker = Cc["@mozilla.org/network/urichecker;1"].
                         createInstance(Ci.nsIURIChecker);
-      linkChecker.init(ioService.newURI(dls[i].url, null, null));
+      linkChecker.init(ioService.newURI(url, null, null));
       linkChecker.loadFlags = Ci.nsIRequest.LOAD_BACKGROUND;
-      linkChecker.asyncCheck(new AutoDownloader(dls[i].url, dls[i].savedTo, aWindow),
-                             null);
+      linkChecker.asyncCheck(new AsyncDownloadRetrier(dlId), null);
     }
   },
 
@@ -2046,30 +2036,6 @@ SessionStoreService.prototype = {
     }
     
     return this;
-  }
-};
-
-/* :::::::::: Asynchronous File Downloader :::::::::::::: */
-
-function AutoDownloader(aURL, aFilename, aWindow) {
-   this._URL = aURL;
-   this._filename = aFilename;
-   this._window = aWindow;
-}
-
-AutoDownloader.prototype = {
-  onStartRequest: function(aRequest, aContext) { },
-  onStopRequest: function(aRequest, aContext, aStatus) {
-    if (Components.isSuccessCode(aStatus)) {
-      var file =
-        Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-      file.initWithPath(this._filename);
-      if (file.exists()) {
-        file.remove(false);
-      }
-      
-      this._window.saveURL(this._URL, this._filename, null, true, true, null);
-    }
   }
 };
 
