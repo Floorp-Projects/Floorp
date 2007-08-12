@@ -149,8 +149,8 @@
   <!--Information popup-->
   <panel id="information" orient="vertical" align="start">
     <label id="information-title" flex="1"/>
-    <button type="image" crop="center" id="information-uri" flex="1"/>
-    <button type="image" crop="center" id="information-location" flex="1" command="cmd_show"/>
+    <button type="image" crop="center" id="information-uri" class="mini-button" flex="1"/>
+    <button type="image" crop="center" id="information-location" class="mini-button" flex="1" command="cmd_show"/>
   </panel>
 
   <richlistbox id="downloadView" flex="1" context="downloadContextMenu"

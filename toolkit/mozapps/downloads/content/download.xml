@@ -131,7 +131,7 @@
           <xul:spacer flex="1"/>
         </xul:vbox>
         <xul:vbox pack="center">
-          <xul:button class="cancel" tooltiptext="&cmd.cancel.label;"
+          <xul:button class="cancel mini-button" tooltiptext="&cmd.cancel.label;"
                       command="cmd_cancel"/>
         </xul:vbox>
       </xul:hbox>
@@ -156,9 +156,9 @@
                                  anonid="progressmeter"
                                  xbl:inherits="value=progress,mode=progressmode"/>
             </xul:vbox>
-            <xul:button class="pause" tooltiptext="&cmd.pause.label;"
+            <xul:button class="pause mini-button" tooltiptext="&cmd.pause.label;"
                         command="cmd_pause"/>
-            <xul:button class="cancel" tooltiptext="&cmd.cancel.label;"
+            <xul:button class="cancel mini-button" tooltiptext="&cmd.cancel.label;"
                         command="cmd_cancel"/>
           </xul:hbox>
           <xul:label xbl:inherits="value=status,tooltiptext=status" flex="1"
@@ -187,9 +187,9 @@
                                  anonid="progressmeter"
                                  xbl:inherits="value=progress,mode=progressmode"/>
             </xul:vbox>
-            <xul:button class="resume" tooltiptext="&cmd.resume.label;"
+            <xul:button class="resume mini-button" tooltiptext="&cmd.resume.label;"
                         command="cmd_resume"/>
-            <xul:button class="cancel" tooltiptext="&cmd.cancel.label;"
+            <xul:button class="cancel mini-button" tooltiptext="&cmd.cancel.label;"
                         command="cmd_cancel"/>
           </xul:hbox>
           <xul:label xbl:inherits="value=target,tooltiptext=target" flex="1"
@@ -217,9 +217,9 @@
         </xul:vbox>
         <xul:vbox pack="center">
           <xul:hbox>
-            <xul:button class="open" tooltiptext="&cmd.open.label;"
+            <xul:button class="open mini-button" tooltiptext="&cmd.open.label;"
                         command="cmd_open"/>
-            <xul:button class="info" tooltiptext="&cmd.info.label;"
+            <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
                         command="cmd_showInfo" anonid="info"/>
           </xul:hbox>
         </xul:vbox>
@@ -244,9 +244,9 @@
         </xul:vbox>
         <xul:vbox pack="center">
           <xul:hbox>
-            <xul:button class="retry" tooltiptext="&cmd.retry.label;"
+            <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
                         command="cmd_retry"/>
-            <xul:button class="info" tooltiptext="&cmd.info.label;"
+            <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
                         command="cmd_showInfo" anonid="info"/>
           </xul:hbox>
         </xul:vbox>
@@ -270,9 +270,9 @@
           <xul:label value="&failed.label;" class="status"/>
         </xul:vbox>
         <xul:vbox pack="start">
-          <xul:button class="retry" tooltiptext="&cmd.retry.label;"
+          <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
                       command="cmd_retry"/>
-          <xul:button class="info" tooltiptext="&cmd.info.label;"
+          <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
                       command="cmd_showInfo" anonid="info"/>
         </xul:vbox>
       </xul:hbox>
