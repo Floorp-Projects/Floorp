@@ -73,3 +73,8 @@ CSRCS = cmscnvrt.c cmserr.c cmsgamma.c cmsgmt.c cmsintrp.c cmsio1.c \
 LOCAL_INCLUDES += -I../include
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_ARCH),OS2)
+ADD_TO_DEF_FILE = sed -e '1,/^EXPORTS$$/ d' -e 's,=.*$$,,' -e 's,\ \([_c]\),_\1,' \
+		$(srcdir)/lcms.def >> $(DEF_FILE)
+endif
