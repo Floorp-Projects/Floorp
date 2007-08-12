@@ -42,6 +42,7 @@
 function DownloadProgressListener() 
 {
   var sb = document.getElementById("downloadStrings");
+  this._paused = sb.getString("paused");
   this._statusFormat = sb.getString("statusFormat2");
   this._transferSameUnits = sb.getString("transferSameUnits");
   this._transferDiffUnits = sb.getString("transferDiffUnits");
@@ -94,6 +95,11 @@ DownloadProgressListener.prototype =
         downloadCompleted(aDownload);
 
         autoRemoveAndClose(aDownload);
+        break;
+      case Ci.nsIDownloadManager.DOWNLOAD_PAUSED:
+        let transfer = dl.getAttribute("status-internal");
+        let status = this._replaceInsert(this._paused, 1, transfer);
+        dl.setAttribute("status", status);
         break;
     }
 
