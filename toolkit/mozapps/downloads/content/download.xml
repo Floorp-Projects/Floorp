@@ -192,7 +192,7 @@
             <xul:button class="cancel mini-button" tooltiptext="&cmd.cancel.label;"
                         command="cmd_cancel"/>
           </xul:hbox>
-          <xul:label xbl:inherits="value=target,tooltiptext=target" flex="1"
+          <xul:label xbl:inherits="value=status,tooltiptext=status" flex="1"
                      crop="right" class="status"/>
           <xul:spacer flex="1"/>
         </xul:vbox>
