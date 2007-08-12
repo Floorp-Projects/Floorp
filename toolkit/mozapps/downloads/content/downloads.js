@@ -237,6 +237,29 @@ function showDownload(aDownload)
   }
 }
 
+function onDownloadDblClick(aEvent)
+{
+  var item = aEvent.target;
+  if (item.getAttribute("type") == "download") {
+    var state = parseInt(item.getAttribute("state"));
+    switch (state) {
+      case Ci.nsIDownloadManager.DOWNLOAD_FINISHED:
+        gDownloadViewController.doCommand("cmd_open");
+        break;
+      case Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING:  
+        gDownloadViewController.doCommand("cmd_pause");
+        break;
+      case Ci.nsIDownloadManager.DOWNLOAD_PAUSED:
+        gDownloadViewController.doCommand("cmd_resume");
+        break;
+      case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
+      case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
+        gDownloadViewController.doCommand("cmd_retry");
+        break;
+    }
+  }
+}
+
 function openDownload(aDownload)
 {
   var f = getLocalFileFromNativePathOrUrl(aDownload.getAttribute("file"));
@@ -369,6 +392,9 @@ function Startup()
   gDownloadInfoPopup    = document.getElementById("information");
 
   buildDefaultView();
+
+  // View event listeners
+  gDownloadsView.addEventListener("dblclick", onDownloadDblClick, false);
 
   // The DownloadProgressListener (DownloadProgressListener.js) handles progress
   // notifications. 
