@@ -46,13 +46,16 @@ function DownloadProgressListener()
   this._transferSameUnits = sb.getString("transferSameUnits");
   this._transferDiffUnits = sb.getString("transferDiffUnits");
   this._transferNoTotal = sb.getString("transferNoTotal");
-  this._timeLeft = sb.getString("timeLeft");
-  this._timeLessMinute = sb.getString("timeLessMinute");
+  this._timeMinutesLeft = sb.getString("timeMinutesLeft");
+  this._timeSecondsLeft = sb.getString("timeSecondsLeft");
+  this._timeFewSeconds = sb.getString("timeFewSeconds");
   this._timeUnknown = sb.getString("timeUnknown");
   this._units = [sb.getString("bytes"),
                  sb.getString("kilobyte"),
                  sb.getString("megabyte"),
                  sb.getString("gigabyte")];
+
+  this.lastSeconds = Infinity;
 }
 
 DownloadProgressListener.prototype = 
@@ -180,12 +183,28 @@ DownloadProgressListener.prototype =
     // Update time remaining.
     let (remain) {
       if ((aDownload.speed > 0) && (aMaxTotalProgress > 0)) {
-        let minutes = Math.ceil((aMaxTotalProgress - aCurTotalProgress) /
-                                aDownload.speed / 60);
-        if (minutes > 1)
-          remain = this._replaceInsert(this._timeLeft, 1, minutes);
-        else
-          remain = this._timeLessMinute;
+        let seconds = Math.ceil((aMaxTotalProgress - aCurTotalProgress) /
+                                aDownload.speed);
+
+        // Reuse the last seconds if the new one is longer by some small amount
+        // This avoids jittering seconds, e.g., 41 40 38 40 -> 41 40 38 38
+        // However, large changes are shown, e.g., 41 38 49 -> 41 38 49
+        let (diff = seconds - this.lastSeconds) {
+          if (diff > 0 && diff <= 10)
+            seconds = this.lastSeconds;
+          else
+            this.lastSeconds = seconds;
+        }
+
+        // Be friendly in the last few seconds
+        if (seconds <= 3)
+          remain = this._timeFewSeconds;
+        // Show 2 digit seconds starting at 60; otherwise use minutes
+        else if (seconds <= 60)
+          remain = this._replaceInsert(this._timeSecondsLeft, 1, seconds);
+        else 
+          remain = this._replaceInsert(this._timeMinutesLeft, 1,
+                                       Math.ceil(seconds / 60));
       } else {
         remain = this._timeUnknown;
       }
