@@ -1262,10 +1262,10 @@ nsExternalHelperAppService::LoadURI(nsIURI *aURI,
   PRBool alwaysAsk = PR_TRUE;
   handler->GetAlwaysAskBeforeHandling(&alwaysAsk);
 
-  // if we are not supposed to warn, or we are not supposed to always ask and
+  // if we are not supposed to warn, we are not supposed to always ask, and
   // the preferred action is to use a helper app or the system default, we just
   // launch the URI.
-  if (!warn ||
+  if (!warn &&
       !alwaysAsk && (preferredAction == nsIHandlerInfo::useHelperApp ||
                      preferredAction == nsIHandlerInfo::useSystemDefault))
     return handler->LaunchWithURI(uri);
