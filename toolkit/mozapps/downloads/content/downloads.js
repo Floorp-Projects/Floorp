@@ -753,12 +753,16 @@ function buildDownloadListWithSearch(aTerms)
     // parameter if we give it '%?1%', and we can't add spaces :(
     sql += "name LIKE '%" + terms[i] + "%' ";
   }
-  sql += "ORDER BY endTime ASC";
+  sql += "AND state != ?1 " +
+         "AND state != ?2 " +
+         "ORDER BY endTime ASC";
 
   var db = gDownloadManager.DBConnection;
   var stmt = db.createStatement(sql);
 
   try {
+    stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
+    stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
     buildDownloadList(stmt, gDownloadsOtherTitle);
   } finally {
     stmt.reset();
