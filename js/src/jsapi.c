@@ -1440,10 +1440,12 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
     CHECK_REQUEST(cx);
     *resolved = JS_FALSE;
 
-    if (!JSVAL_IS_STRING(id))
-        return JS_TRUE;
-    idstr = JSVAL_TO_STRING(id);
     rt = cx->runtime;
+    JS_ASSERT(rt->state != JSRTS_DOWN);
+    if (rt->state == JSRTS_LANDING || !JSVAL_IS_STRING(id))
+        return JS_TRUE;
+
+    idstr = JSVAL_TO_STRING(id);
 
     /* Check whether we're resolving 'undefined', and define it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
