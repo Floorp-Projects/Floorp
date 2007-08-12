@@ -32,14 +32,14 @@ richlistitem[type="download"] .name {
 #information > button .button-text {
   -moz-box-flex: 1;
   text-align: left;
-  padding-left: 2px;
+  -moz-padding-start: 2px;
 }
 
 .mini-button {
   -moz-appearance: none;
   list-style-image: url(chrome://mozapps/skin/downloads/buttons.png);
   background-color: transparent;
-  border: 0;
+  border: none;
   padding: 0;
   margin: 0;
   min-width: 0;
@@ -48,11 +48,6 @@ richlistitem[type="download"] .name {
 
 .mini-button > .button-box {
   padding: 0 !important;
-}
-
-.mini-button > image {
-  width: 16px;
-  height: 16px;
 }
 
 .cancel {
