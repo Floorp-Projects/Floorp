@@ -156,10 +156,16 @@
   <richlistbox id="downloadView" flex="1" context="downloadContextMenu"
                ondragover="nsDragAndDrop.dragOver(event, gDownloadDNDObserver);"
                ondragdrop="nsDragAndDrop.drop(event, gDownloadDNDObserver);">
-    <label id="active-downloads" value="&activeDownloads.label;" hidden="true"/>
-    <label id="other-downloads" value="&completedDownloads.label;"
-           completedlabel="&completedDownloads.label;"
-           searchlabel="&searchResults.label;"/>
+    <hbox id="active-downloads-title" align="center" hidden="true">
+      <label id="active-downloads" value="&activeDownloads.label;"/>
+      <hbox class="title-line" flex="1"/>
+    </hbox>
+    <hbox id="other-downloads-title" align="center">
+      <label id="other-downloads" value="&completedDownloads.label;"
+             completedlabel="&completedDownloads.label;"
+             searchlabel="&searchResults.label;"/>
+      <hbox class="title-line" flex="1"/>
+    </hbox>
   </richlistbox>
 
   <hbox id="search">
