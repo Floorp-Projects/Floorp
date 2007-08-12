@@ -269,11 +269,13 @@
           <xul:spacer flex="1"/>
           <xul:label value="&failed.label;" class="status"/>
         </xul:vbox>
-        <xul:vbox pack="start">
-          <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
-                      command="cmd_retry"/>
-          <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
-                      command="cmd_showInfo" anonid="info"/>
+        <xul:vbox pack="center">
+          <xul:hbox>
+            <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
+                        command="cmd_retry"/>
+            <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
+                        command="cmd_showInfo" anonid="info"/>
+          </xul:hbox>
         </xul:vbox>
       </xul:hbox>
     </content>  
