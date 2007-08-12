@@ -793,6 +793,10 @@ nsDownloadManager::CancelDownload(PRUint32 aID)
   if (CompletedSuccessfully(dl->mDownloadState))
     return NS_OK;
 
+  // if the download is paused, we have to resume it so we can cancel it
+  if (dl->mPaused)
+    (void)dl->PauseResume(PR_FALSE);
+
   // Cancel using the provided object
   if (dl->mCancelable)
     dl->mCancelable->Cancel(NS_BINDING_ABORTED);
