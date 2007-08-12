@@ -154,7 +154,7 @@ my $unixish = (!($is_win32) && !($is_mac));
 sub main {
   my ($close_when_done, $appoverride, $log_path, $autorun,
       $console_level, $file_level, $help, $do_chrome, $test_path,
-      $do_browser_chrome);
+      $do_browser_chrome, %browser_env);
   GetOptions("close-when-done!"=> \$close_when_done,
              "appname:s"=> \$appoverride,
              "log-file:s" => \$log_path,
@@ -164,6 +164,7 @@ sub main {
              "chrome!" => \$do_chrome,
              "test-path:s" => \$test_path,
              "browser-chrome!" => \$do_browser_chrome,
+             "setenv=s%" => \%browser_env,
              "help!" => \$help);
 
   # if the switches include --help, exit and print directions
@@ -227,7 +228,7 @@ sub main {
     }
   }
   
-  my $test_start = runTests($url);
+  my $test_start = runTests($url, \%browser_env);
 
   if (!$do_browser_chrome) {
     shutdownServer($serverPid);
@@ -263,6 +264,7 @@ sub usage_and_exit {
   print "   [--appname=/path/to/app] \\\n";
   print "   [--log-file=/path/to/logfile] \\\n";
   print "   [--test-path=relative/path/to/tests] \\\n";
+  print "   [--setenv=VAR=value] \\\n";  
   print "   [--file-level=DEBUG|INFO|ERROR|FATAL|WARNING] \\\n";  
   print "   [--console-level=DEBUG|INFO|ERROR|FATAL|WARNING] \n\n";  
   exit(1);
@@ -560,7 +562,7 @@ sub kill_process {
  ##################
 
 sub runTests {
-  my ($test_url) = @_;
+  my ($test_url, $browser_env) = @_;
 
   # mark the start
   my $test_start = localtime();
@@ -572,6 +574,10 @@ sub runTests {
   if ($unixish) {
     $ENV{'LD_LIBRARY_PATH'} = $dist_bin;
     $ENV{'MOZILLA_FIVE_HOME'} = $dist_bin;
+  }
+
+  for my $key (keys(%{$browser_env})) {
+    $ENV{$key} = $browser_env->{$key};
   }
 
   my $profile_arg = "$profile_dir";
