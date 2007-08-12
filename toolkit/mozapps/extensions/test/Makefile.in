@@ -11,18 +11,19 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Extension Manager.
+# The Original Code is Extension Manager.
 #
-# The Initial Developer of the Original Code is Ben Goodger.
-# Portions created by the Initial Developer are Copyright (C) 2004
+# The Initial Developer of the Original Code is
+#      Dave Townsend <dtownsend@oxymoronical.com>.
+#
+# Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Ben Goodger <ben@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
 # in which case the provisions of the GPL or the LGPL are applicable instead
 # of those above. If you wish to allow use of your version of this file only
 # under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,17 +35,34 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+ADDONSRC = $(srcdir)/unit/addons
+TESTROOT = $(shell cd $(DEPTH) && pwd)/_tests/xpcshell-simple/$(MODULE)
+TESTPROFILE = $(TESTROOT)/profile
+TESTXPI = $(TESTROOT)/unit/addons
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src
+MODULE = test_extensionmanager
 
-ifdef ENABLE_TESTS
-DIRS += test
-endif
+XPCSHELL_TESTS = \
+  unit \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+libs::
+	rm -rf $(TESTXPI)
+	mkdir -p $(TESTXPI)
+	if [ -d $(ADDONSRC) ]; then \
+		for dir in $(ADDONSRC)/*; do \
+			if [ "$$dir" != "$(ADDONSRC)/CVS" ]; then \
+				base=`basename $$dir` ; \
+				cd $$dir ; \
+				zip $(TESTXPI)/$$base.xpi * ; \
+			fi \
+		done \
+	fi

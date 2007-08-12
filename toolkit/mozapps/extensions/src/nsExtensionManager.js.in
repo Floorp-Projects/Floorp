@@ -2356,6 +2356,7 @@ var Blocklist = {
     request.channel.notificationCallbacks = new BadCertHandler();
     request.overrideMimeType("text/xml");
     request.setRequestHeader("Cache-Control", "no-cache");
+    request.QueryInterface(Components.interfaces.nsIJSXMLHttpRequest);
 
     var self = this;
     request.onerror = function(event) { self.onXMLError(event); };
@@ -6222,6 +6223,7 @@ RDFItemUpdater.prototype = {
     request.channel.notificationCallbacks = new BadCertHandler();
     request.overrideMimeType("text/xml");
     request.channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
+    request.QueryInterface(Components.interfaces.nsIJSXMLHttpRequest);
 
     var self = this;
     request.onerror     = function(event) { self.onXMLError(event, aItem);    };
