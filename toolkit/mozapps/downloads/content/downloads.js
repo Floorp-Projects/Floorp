@@ -216,7 +216,9 @@ function resumeDownload(aDownload)
 function removeDownload(aDownload)
 {
   gDownloadManager.removeDownload(aDownload.getAttribute("dlid"));
+  var newIndex = Math.max(gDownloadsView.selectedIndex - 1, 0);
   gDownloadsView.removeChild(aDownload);
+  gDownloadsView.selectedIndex = newIndex;
 }
 
 function showDownload(aDownload)
