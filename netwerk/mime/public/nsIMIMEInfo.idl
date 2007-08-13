@@ -42,6 +42,7 @@ interface nsIURI;
 interface nsIFile;
 interface nsIUTF8StringEnumerator;
 interface nsIHandlerApp;
+interface nsIMutableArray;
 
 typedef long nsHandlerInfoAction;
 
@@ -49,7 +50,7 @@ typedef long nsHandlerInfoAction;
  * nsIHandlerInfo gives access to the information about how a given protocol
  * scheme or MIME-type is handled.
  */
-[scriptable, uuid(51ddc1c5-7077-4c58-a5bd-327d00777b46)]
+[scriptable, uuid(4c7f5603-cfa9-4576-a769-c3343cb0135b)]
 interface nsIHandlerInfo : nsISupports {
     /**
      * The type of this handler info.  For MIME handlers, this is the MIME type.
@@ -69,6 +70,17 @@ interface nsIHandlerInfo : nsISupports {
      * type. This is not always guaranteed to be set!!
      */
     attribute nsIHandlerApp preferredApplicationHandler;
+
+    /**
+     * Applications that can handle this content type.
+     *
+     * The list will include the preferred handler, if any.  Elements of this
+     * array are nsIHandlerApp objects, and this attribute will always reference
+     * an array, whether or not there are any possible handlers.  If there are
+     * no possible handlers, the array will contain no elements, so just check
+     * its length (nsIArray::length) to see if there are any possible handlers.
+     */
+    readonly attribute nsIMutableArray possibleApplicationHandlers;
 
     /**
      * Indicates whether a default application handler exists,
