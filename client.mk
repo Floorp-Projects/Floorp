@@ -90,7 +90,7 @@ endif
 TOPSRCDIR = $(CWD)
 endif
 
-AUTOCONF := autoconf213
+AUTOCONF := autoconf-2.13
 MKDIR := mkdir
 SH := /bin/sh
 ifndef MAKE
