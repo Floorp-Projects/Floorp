@@ -278,7 +278,7 @@ load_address(void * pc, void * arg )
     if (ptr->next) {
         mutex_unlock(&lock);
     } else {
-        (*args.callback)(pc, args.closure);
+        (args->callback)(pc, args->closure);
 
         ptr->next = newbucket(pc);
         mutex_unlock(&lock);
@@ -319,7 +319,7 @@ csgetframeptr()
 
 
 static void
-cswalkstack(struct frame *fp, int (*operate_func)(void *, void *, FILE *),
+cswalkstack(struct frame *fp, int (*operate_func)(void *, void *),
     void *usrarg)
 {
 
@@ -339,7 +339,7 @@ cswalkstack(struct frame *fp, int (*operate_func)(void *, void *, FILE *),
 
 
 static void
-cs_operate(int (*operate_func)(void *, void *, FILE *), void * usrarg)
+cs_operate(int (*operate_func)(void *, void *), void * usrarg)
 {
     cswalkstack(csgetframeptr(), operate_func, usrarg);
 }
@@ -382,9 +382,9 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
         if (info.dli_sname) {
             aDetails->foffset = (char*)aPC - (char*)info.dli_saddr;
 #ifdef __GNUC__
-            DemangleSymbol(func, dembuff, sizeof(dembuff));
+            DemangleSymbol(info.dli_sname, dembuff, sizeof(dembuff));
 #else
-            if (!demf || demf(func, dembuff, sizeof (dembuff)))
+            if (!demf || demf(info.dli_sname, dembuff, sizeof (dembuff)))
                 dembuff[0] = 0;
 #endif /*__GNUC__*/
             PL_strncpyz(aDetails->function,
