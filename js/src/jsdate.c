@@ -607,11 +607,9 @@ date_msecFromArgs(JSContext *cx, uintN argc, jsval *argv, jsdouble *rval)
 static JSBool
 date_UTC(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval argv;
     jsdouble msec_time;
 
-    argv = vp + 2;
-    if (!date_msecFromArgs(cx, argc, argv, &msec_time))
+    if (!date_msecFromArgs(cx, argc, vp + 2, &msec_time))
         return JS_FALSE;
 
     msec_time = TIMECLIP(msec_time);
