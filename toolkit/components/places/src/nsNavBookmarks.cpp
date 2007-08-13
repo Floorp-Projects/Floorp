@@ -83,8 +83,8 @@ nsNavBookmarks* nsNavBookmarks::sInstance = nsnull;
 #define READ_ONLY_ANNO NS_LITERAL_CSTRING("placesInternal/READ_ONLY")
 
 nsNavBookmarks::nsNavBookmarks()
-  : mRoot(0), mBookmarksRoot(0), mTagRoot(0), mToolbarFolder(0), mBatchLevel(0),
-    mItemCount(0), mBatchHasTransaction(PR_FALSE), mLock(nsnull)
+  : mItemCount(0), mRoot(0), mBookmarksRoot(0), mTagRoot(0), mToolbarFolder(0), mBatchLevel(0),
+    mLock(nsnull), mBatchHasTransaction(PR_FALSE)
 {
   NS_ASSERTION(!sInstance, "Multiple nsNavBookmarks instances!");
   sInstance = this;
@@ -1084,7 +1084,6 @@ nsNavBookmarks::CreateDynamicContainer(PRInt64 aParent, const nsAString &aName,
   if (aContractId.IsEmpty())
     return NS_ERROR_INVALID_ARG;
 
-  PRInt32 index = aIndex;
   return CreateContainerWithID(-1, aParent, aName, aContractId, PR_FALSE,
                                &aIndex, aNewFolder);
 }
