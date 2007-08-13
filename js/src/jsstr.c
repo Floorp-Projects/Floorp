@@ -4931,7 +4931,7 @@ Utf8ToOneUcs4Char(const uint8 *utf8Buffer, int utf8Length)
     defined(DUMP_CALL_TABLE) ||                                               \
     defined(DUMP_SCOPE_STATS)
 
-size_t
+JS_FRIEND_API(size_t)
 js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
                         JSString *str, uint32 quote)
 {
