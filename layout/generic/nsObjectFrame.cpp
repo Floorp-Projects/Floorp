@@ -122,6 +122,8 @@
 #include "nsPIPluginHost.h"
 #include "nsIPluginDocument.h"
 
+#include "nsThreadUtils.h"
+
 #ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #endif
@@ -341,6 +343,8 @@ public:
 
   nsresult Destroy();  
 
+  void PrepareToStop(PRBool aDelayedStop);
+
   //nsIEventListener interface
   nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
   
@@ -379,6 +383,11 @@ public:
   void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent);
 #endif
 
+  void SetOwner(nsObjectFrame *aOwner)
+  {
+    mOwner = aOwner;
+  }
+
 private:
   void FixUpURLS(const nsString &name, nsAString &value);
 
@@ -393,6 +402,10 @@ private:
   nsCOMPtr<nsIPluginHost>     mPluginHost;
   PRPackedBool                mContentFocused;
   PRPackedBool                mWidgetVisible;    // used on Mac to store our widget's visible state
+
+  // If true, destroy the widget on destruction. Used when plugin stop
+  // is being delayed to a safer point in time.
+  PRPackedBool                mDestroyWidget;
   PRUint16          mNumCachedAttrs;
   PRUint16          mNumCachedParams;
   char              **mCachedAttrParamNames;
@@ -516,7 +529,7 @@ nsObjectFrame::Destroy()
 
   // we need to finish with the plugin before native window is destroyed
   // doing this in the destructor is too late.
-  StopPlugin();
+  StopPluginInternal(PR_TRUE);
   
   nsObjectFrameSuper::Destroy();
 }
@@ -1368,7 +1381,7 @@ nsresult
 nsObjectFrame::PrepareInstanceOwner()
 {
   // First, have to stop any possibly running plugins.
-  StopPlugin();
+  StopPluginInternal(PR_FALSE);
 
   NS_ASSERTION(!mInstanceOwner, "Must not have an instance owner here");
 
@@ -1440,47 +1453,49 @@ nsObjectFrame::TryNotifyContentObjectWrapper()
   }
 }
 
-void
-nsObjectFrame::StopPlugin()
+class nsStopPluginRunnable : public nsRunnable
 {
-  if (mInstanceOwner != nsnull) {
-    nsCOMPtr<nsIPluginInstance> inst;
-    mInstanceOwner->GetInstance(*getter_AddRefs(inst));
-    if (inst) {
-      nsPluginWindow *win;
-      mInstanceOwner->GetWindow(win);
-      nsPluginNativeWindow *window = (nsPluginNativeWindow *)win;
-      nsCOMPtr<nsIPluginInstance> nullinst;
+public:
+  nsStopPluginRunnable(nsPluginInstanceOwner *aInstanceOwner)
+    : mInstanceOwner(aInstanceOwner)
+  {
+  }
 
-      PRBool doCache = PR_TRUE;
-      PRBool doCallSetWindowAfterDestroy = PR_FALSE;
+  NS_IMETHOD Run();
 
-      // first, determine if the plugin wants to be cached
-      inst->GetValue(nsPluginInstanceVariable_DoCacheBool, 
-                     (void *) &doCache);
-      if (!doCache) {
-        // then determine if the plugin wants Destroy to be called after
-        // Set Window.  This is for bug 50547.
-        inst->GetValue(nsPluginInstanceVariable_CallSetWindowAfterDestroyBool, 
-                       (void *) &doCallSetWindowAfterDestroy);
-        if (doCallSetWindowAfterDestroy) {
-          inst->Stop();
-          inst->Destroy();
-          
-          if (window) 
-            window->CallSetWindow(nullinst);
-          else 
-            inst->SetWindow(nsnull);
-        }
-        else {
-          if (window) 
-            window->CallSetWindow(nullinst);
-          else 
-            inst->SetWindow(nsnull);
+private:  
+  nsRefPtr<nsPluginInstanceOwner> mInstanceOwner;
+};
 
-          inst->Stop();
-          inst->Destroy();
-        }
+static void
+DoStopPlugin(nsPluginInstanceOwner *aInstanceOwner)
+{
+  nsCOMPtr<nsIPluginInstance> inst;
+  aInstanceOwner->GetInstance(*getter_AddRefs(inst));
+  if (inst) {
+    nsPluginWindow *win;
+    aInstanceOwner->GetWindow(win);
+    nsPluginNativeWindow *window = (nsPluginNativeWindow *)win;
+    nsCOMPtr<nsIPluginInstance> nullinst;
+
+    PRBool doCache = PR_TRUE;
+    PRBool doCallSetWindowAfterDestroy = PR_FALSE;
+
+    // first, determine if the plugin wants to be cached
+    inst->GetValue(nsPluginInstanceVariable_DoCacheBool, (void *)&doCache);
+    if (!doCache) {
+      // then determine if the plugin wants Destroy to be called after
+      // Set Window.  This is for bug 50547.
+      inst->GetValue(nsPluginInstanceVariable_CallSetWindowAfterDestroyBool, 
+                     (void *)&doCallSetWindowAfterDestroy);
+      if (doCallSetWindowAfterDestroy) {
+        inst->Stop();
+        inst->Destroy();
+
+        if (window) 
+          window->CallSetWindow(nullinst);
+        else 
+          inst->SetWindow(nsnull);
       }
       else {
         if (window) 
@@ -1489,21 +1504,82 @@ nsObjectFrame::StopPlugin()
           inst->SetWindow(nsnull);
 
         inst->Stop();
+        inst->Destroy();
       }
+    }
+    else {
+      if (window) 
+        window->CallSetWindow(nullinst);
+      else 
+        inst->SetWindow(nsnull);
 
-      nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(kCPluginManagerCID);
-      if (pluginHost)
-        pluginHost->StopPluginInstance(inst);
-
-      // the frame is going away along with its widget
-      // so tell the window to forget its widget too
-      if (window)
-        window->SetPluginWidget(nsnull);
+      inst->Stop();
     }
 
-    mInstanceOwner->Destroy();
-    NS_RELEASE(mInstanceOwner);
+    nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(kCPluginManagerCID);
+    if (pluginHost)
+      pluginHost->StopPluginInstance(inst);
+
+    // the frame is going away along with its widget so tell the
+    // window to forget its widget too
+    if (window)
+      window->SetPluginWidget(nsnull);
   }
+
+  aInstanceOwner->Destroy();
+}
+
+NS_IMETHODIMP
+nsStopPluginRunnable::Run()
+{
+  DoStopPlugin(mInstanceOwner);
+
+  return NS_OK;
+}
+
+void
+nsObjectFrame::StopPlugin()
+{
+  StopPluginInternal(PR_FALSE);
+}
+
+void
+nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
+{
+  if (mInstanceOwner == nsnull) {
+    return;
+  }
+
+  mInstanceOwner->PrepareToStop(aDelayedStop);
+
+#ifdef XP_WIN
+  // We only deal with delayed stopping of plugins on Win32 for now,
+  // as that's the only platform where we need to (AFAIK) and it's
+  // unclear how safe widget parenting is on other platforms.
+  if (aDelayedStop) {
+    // nsStopPluginRunnable will hold a strong reference to
+    // mInstanceOwner, and thus keep it alive as long as it needs it.
+    nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(mInstanceOwner);
+    NS_DispatchToCurrentThread(evt);
+
+    // If we're asked to do a delayed stop it means we're stopping the
+    // plugin because we're destroying the frame. In that case, tell
+    // the view to disown the widget (i.e. leave it up to us to
+    // destroy it).
+    nsIView *view = GetView();
+    if (view) {
+      view->DisownWidget();
+    }
+  } else
+#endif
+  {
+    DoStopPlugin(mInstanceOwner);
+  }
+
+  // Break relationship between frame and plugin instance owner
+  mInstanceOwner->SetOwner(nsnull);
+
+  NS_RELEASE(mInstanceOwner);
 }
 
 void
@@ -1655,6 +1731,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mNumCachedParams = 0;
   mCachedAttrParamNames = nsnull;
   mCachedAttrParamValues = nsnull;
+  mDestroyWidget = PR_FALSE;
 }
 
 nsPluginInstanceOwner::~nsPluginInstanceOwner()
@@ -3423,6 +3500,43 @@ nsPluginInstanceOwner::Destroy()
     target->RemoveEventListener(NS_LITERAL_STRING("draggesture"), listener, PR_TRUE);
   }
 
+  if (mDestroyWidget && mWidget) {
+    mWidget->Destroy();
+  }
+
+  return NS_OK;
+}
+
+/*
+ * Prepare to stop 
+ */
+void
+nsPluginInstanceOwner::PrepareToStop(PRBool aDelayedStop)
+{
+  if (!mWidget) {
+    return;
+  }
+
+#ifdef XP_WIN
+  if (aDelayedStop) {
+    // To delay stopping a plugin we need to reparent the plugin
+    // so that we can safely tear down the
+    // plugin after its frame (and view) is gone.
+
+    // Also hide and disable the widget to avoid it from appearing in
+    // odd places after reparenting it, but before it gets destroyed.
+    mWidget->Show(PR_FALSE);
+    mWidget->Enable(PR_FALSE);
+
+    // Reparent the plugins native window. This relies on the widget
+    // and plugin et al not holding any other references to its
+    // parent.
+    mWidget->SetParent(nsnull);
+
+    mDestroyWidget = PR_TRUE;
+  }
+#endif
+
   // Unregister scroll position listener
   nsIFrame* parentWithView = mOwner->GetAncestorWithView();
   nsIView* curView = parentWithView ? parentWithView->GetView() : nsnull;
@@ -3433,10 +3547,6 @@ nsPluginInstanceOwner::Destroy()
     
     curView = curView->GetParent();
   }
-
-  mOwner = nsnull; // break relationship between frame and plugin instance owner
-
-  return NS_OK;
 }
 
 // Paints are handled differently, so we just simulate an update event.
