@@ -373,7 +373,7 @@ NS_IMETHODIMP nsCaret::EraseCaret()
 {
   if (mDrawn) {
     DrawCaret(PR_TRUE);
-    if (mReadOnly) {
+    if (mReadOnly && mBlinkRate) {
       // If readonly we don't have a blink timer set, so caret won't
       // be redrawn automatically. We need to force the caret to get
       // redrawn right after the paint
@@ -399,7 +399,12 @@ NS_IMETHODIMP nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
   if (!frameSelection)
     return NS_ERROR_FAILURE;
   bidiLevel = frameSelection->GetCaretBidiLevel();
-  
+
+  // DrawAtPosition is used by consumers who want us to stay drawn where they
+  // tell us. Setting mBlinkRate to 0 tells us to not set a timer to erase
+  // ourselves, our consumer will take care of that.
+  mBlinkRate = 0;
+
   // XXX we need to do more work here to get the correct hint.
   nsresult rv = DrawAtPositionWithHint(aNode, aOffset,
                                        nsFrameSelection::HINTLEFT,

@@ -124,6 +124,7 @@ public:
    *  To avoid drawing glitches, you should call EraseCaret()
    *  after each call to DrawAtPosition().
    *
+   *  Note: This call breaks the caret's ability to blink at all.
    **/
   NS_IMETHOD DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset) = 0;
 
