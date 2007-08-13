@@ -144,11 +144,6 @@ MAKEFILES_extensions="
 extensions/Makefile
 "
 
-MAKEFILES_gc="
-gc/boehm/Makefile
-gc/boehm/leaksoup/Makefile
-"
-
 MAKEFILES_gfx="
 gfx/Makefile
 gfx/idl/Makefile
@@ -320,7 +315,6 @@ content/xml/document/public/Makefile
 content/xml/document/src/Makefile
 content/xul/Makefile
 content/xul/content/Makefile
-content/xul/content/public/Makefile
 content/xul/content/src/Makefile
 content/xul/document/Makefile
 content/xul/document/public/Makefile
@@ -565,7 +559,6 @@ widget/src/beos/Makefile
 widget/src/build/Makefile
 widget/src/gtkxtbin/Makefile
 widget/src/photon/Makefile
-widget/src/mac/Makefile
 widget/src/cocoa/Makefile
 widget/src/os2/Makefile
 widget/src/windows/Makefile
@@ -1264,7 +1257,6 @@ $MAKEFILES_composer
 $MAKEFILES_embedding
 $MAKEFILES_expat
 $MAKEFILES_extensions
-$MAKEFILES_gc
 $MAKEFILES_gfx
 $MAKEFILES_accessible
 $MAKEFILES_htmlparser
