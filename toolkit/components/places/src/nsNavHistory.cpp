@@ -240,8 +240,8 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
                                mExpire(this),
                                mBatchesInProgress(0),
-                               mAutoCompleteOnlyTyped(PR_FALSE),
-                               mExpireDays(0)
+                               mExpireDays(0),
+                               mAutoCompleteOnlyTyped(PR_FALSE)
 {
 #ifdef LAZY_ADD
   mLazyTimerSet = PR_TRUE;
