@@ -523,9 +523,9 @@ nsTextEditorDragListener::DragGesture(nsIDOMEvent* aDragEvent)
 nsresult
 nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 {
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
   if (!mCaret)
   {
-    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
     if (presShell)
     {
       mCaret = do_CreateInstance("@mozilla.org/layout/caret;1");
@@ -539,7 +539,11 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
       mCaretDrawn = PR_FALSE;
     }
   }
-  
+  else if (presShell)
+  {
+    presShell->SetCaret(mCaret);
+  }
+
   return DragOver(aDragEvent);
 }
 
