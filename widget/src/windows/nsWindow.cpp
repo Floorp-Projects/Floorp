@@ -1642,8 +1642,20 @@ NS_IMETHODIMP nsWindow::SetParent(nsIWidget *aNewParent)
 
     return NS_OK;
   }
-  NS_WARNING("Null aNewParent passed to SetParent");
-  return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIWidget> kungFuDeathGrip(this);
+
+  nsIWidget* parent = GetParent();
+
+  if (parent) {
+    parent->RemoveChild(this);
+  }
+
+  if (mWnd) {
+    ::SetParent(mWnd, nsnull);
+  }
+
+  return NS_OK;
 }
 
 
