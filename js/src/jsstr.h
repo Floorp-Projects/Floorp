@@ -527,7 +527,7 @@ js_OneUcs4ToUtf8Char(uint8 *utf8Buffer, uint32 ucs4Char);
 #define js_FileEscapedString(file, str, quote)                                \
     (JS_ASSERT(file), js_PutEscapedStringImpl(NULL, 0, file, str, quote))
 
-extern size_t
+extern JS_FRIEND_API(size_t)
 js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
                         JSString *str, uint32 quote);
 
