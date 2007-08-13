@@ -48,6 +48,7 @@
 #include "nsIServiceManager.h"
 #include "nsFrameSelection.h"
 #include "nsIFrame.h"
+#include "nsIScrollableFrame.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
 #include "nsIFontMetrics.h"
@@ -59,6 +60,7 @@
 #include "nsIRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsIView.h"
+#include "nsIScrollableView.h"
 #include "nsIViewManager.h"
 #include "nsPresContext.h"
 #include "nsILookAndFeel.h"
@@ -1031,6 +1033,34 @@ nsresult nsCaret::UpdateCaretRects(nsIFrame* aFrame, PRInt32 aFrameOffset)
 
   mCaretRect += framePos;
   mCaretRect.width = mCaretWidth;
+
+  // Clamp our position to be within our scroll frame. If we don't, then it
+  // clips us, and we don't appear at all. See bug 335560.
+  nsIFrame *scrollFrame =
+    nsLayoutUtils::GetClosestFrameOfType(aFrame, nsGkAtoms::scrollFrame);
+  if (scrollFrame)
+  {
+    // First, use the scrollFrame to get at the scrollable view that we're in.
+    nsIScrollableFrame *scrollable;
+    CallQueryInterface(scrollFrame, &scrollable);
+    nsIScrollableView *scrollView = scrollable->GetScrollableView();
+    nsIView *view;
+    scrollView->GetScrolledView(view);
+
+    // Compute the caret's coordinates in the enclosing view's coordinate
+    // space. To do so, we need to correct for both the original frame's
+    // offset from the scrollframe, and the scrollable view's offset from the
+    // scrolled frame's view.
+    nsPoint toScroll = aFrame->GetOffsetTo(scrollFrame) -
+      view->GetOffsetTo(scrollFrame->GetView());
+    nsRect caretInScroll = mCaretRect + toScroll;
+
+    // Now see if thet caret extends beyond the view's bounds. If it does,
+    // then snap it back, put it as close to the edge as it can.
+    nscoord overflow = caretInScroll.XMost() - view->GetBounds().width;
+    if (overflow > 0)
+      mCaretRect.x -= overflow;
+  }
 
   // on RTL frames the right edge of mCaretRect must be equal to framePos
   const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
