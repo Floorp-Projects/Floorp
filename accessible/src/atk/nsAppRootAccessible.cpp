@@ -43,6 +43,8 @@
 #include "nsMai.h"
 #include "nsAppRootAccessible.h"
 #include "prlink.h"
+#include "prenv.h"
+#include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
 #include "nsAutoPtr.h"
 
@@ -54,7 +56,13 @@ GType g_atk_hyperlink_impl_type = G_TYPE_INVALID;
 static PRBool sATKChecked = PR_FALSE;
 static PRLibrary *sATKLib = nsnull;
 static const char sATKLibName[] = "libatk-1.0.so.0";
-static const char sATKHyperlinkImplGetTypeSymbol[] = "atk_hyperlink_impl_get_type";
+static const char sATKHyperlinkImplGetTypeSymbol[] =
+    "atk_hyperlink_impl_get_type";
+static const char sAccEnv [] = "GNOME_ACCESSIBILITY";
+static const char sSysPrefService [] =
+    "@mozilla.org/system-preference-service;1";
+static const char sAccessibilityKey [] =
+    "config.use_system_prefs.accessibility";
 
 /* gail function pointer */
 static guint (* gail_add_global_event_listener) (GSignalEmissionHook listener,
@@ -506,28 +514,49 @@ nsApplicationAccessibleWrap::~nsApplicationAccessibleWrap()
 NS_IMETHODIMP
 nsApplicationAccessibleWrap::Init()
 {
-    // load and initialize gail library
-    nsresult rv = LoadGtkModule(sGail);
-    if (NS_SUCCEEDED(rv)) {
-        (*sGail.init)();
-    }
-    else {
-        MAI_LOG_DEBUG(("Fail to load lib: %s\n", sGail.libName));
+    // XXX following code is copied from widget/src/gtk2/nsWindow.cpp
+    // we should put it to somewhere that can be used from both modules
+    // see bug 390761
+
+    // check if accessibility enabled/disabled by environment variable
+    PRBool isGnomeATEnabled = PR_FALSE;
+    const char *envValue = PR_GetEnv(sAccEnv);
+    if (envValue) {
+        isGnomeATEnabled = atoi(envValue);
+    } else {
+        //check gconf-2 setting
+        nsresult rv;
+        nsCOMPtr<nsIPrefBranch> sysPrefService =
+            do_GetService(sSysPrefService, &rv);
+        if (NS_SUCCEEDED(rv) && sysPrefService) {
+            sysPrefService->GetBoolPref(sAccessibilityKey, &isGnomeATEnabled);
+        }
     }
 
-    MAI_LOG_DEBUG(("Mozilla Atk Implementation initializing\n"));
-    // Initialize the MAI Utility class
-    // it will overwrite gail_util
-    g_type_class_unref(g_type_class_ref(MAI_TYPE_UTIL));
+    if (isGnomeATEnabled) {
+        // load and initialize gail library
+        nsresult rv = LoadGtkModule(sGail);
+        if (NS_SUCCEEDED(rv)) {
+            (*sGail.init)();
+        }
+        else {
+            MAI_LOG_DEBUG(("Fail to load lib: %s\n", sGail.libName));
+        }
 
-    // load and initialize atk-bridge library
-    rv = LoadGtkModule(sAtkBridge);
-    if (NS_SUCCEEDED(rv)) {
-        // init atk-bridge
-        (*sAtkBridge.init)();
+        MAI_LOG_DEBUG(("Mozilla Atk Implementation initializing\n"));
+        // Initialize the MAI Utility class
+        // it will overwrite gail_util
+        g_type_class_unref(g_type_class_ref(MAI_TYPE_UTIL));
+
+        // load and initialize atk-bridge library
+        rv = LoadGtkModule(sAtkBridge);
+        if (NS_SUCCEEDED(rv)) {
+            // init atk-bridge
+            (*sAtkBridge.init)();
+        }
+        else
+            MAI_LOG_DEBUG(("Fail to load lib: %s\n", sAtkBridge.libName));
     }
-    else
-        MAI_LOG_DEBUG(("Fail to load lib: %s\n", sAtkBridge.libName));
 
     return nsApplicationAccessible::Init();
 }
