@@ -168,7 +168,7 @@ js_IsAboutToBeFinalized(JSContext *cx, void *thing);
 
 /*
  * Macro to test if a traversal is the marking phase of GC to avoid exposing
- * JSAtom and ScriptFilenameEntry to traversal implementations.
+ * ScriptFilenameEntry to traversal implementations.
  */
 #define IS_GC_MARKING_TRACER(trc) ((trc)->callback == NULL)
 
@@ -182,8 +182,14 @@ JS_STATIC_ASSERT(JSTRACE_STRING == 2);
 #if JS_HAS_XML_SUPPORT
 # define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_XML)
 #else
-# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_ATOM)
+# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_FUNCTION)
 #endif
+
+/*
+ * JS_IS_VALID_TRACE_KIND assumes that JSTRACE_FUNCTION is the last non-xml
+ * trace kind when JS_HAS_XML_SUPPORT is false.
+ */
+JS_STATIC_ASSERT(JSTRACE_FUNCTION + 1 == JSTRACE_NAMESPACE);
 
 /*
  * Trace jsval when JSVAL_IS_OBJECT(v) can be an arbitrary GC thing casted as
