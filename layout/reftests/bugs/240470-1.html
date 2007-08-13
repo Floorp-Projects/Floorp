@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<body>
+<html>
+<select id="test" size="8">
+</select>
+<script>
+  var optgroup = document.createElement("optgroup");
+  optgroup.setAttribute('label', 'An optgroup');
+  var option = document.createElement("option");
+  var optionText = document.createTextNode("An option");
+  option.appendChild(optionText);
+  var select = document.getElementById("test");
+
+  select.appendChild(optgroup);
+  optgroup.appendChild(option);
+</script>
+</body>
+</html>
