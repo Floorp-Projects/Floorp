@@ -50,11 +50,6 @@
 #include <math.h>
 #include "nsStackWalk.h"
 
-#if defined(_WIN32)
-#include <windows.h>
-#include "nsStackFrameWin.h" // XXX LoadLibrarySymbols no longer belongs here
-#endif
-
 #ifdef HAVE_LIBDL
 #include <dlfcn.h>
 #endif
@@ -882,65 +877,6 @@ nsTraceRefcntImpl::DemangleSymbol(const char * aSymbol,
 
 
 //----------------------------------------------------------------------
-
-NS_COM void
-nsTraceRefcntImpl::LoadLibrarySymbols(const char* aLibraryName,
-                                  void* aLibrayHandle)
-{
-#ifdef NS_IMPL_REFCNT_LOGGING
-#if defined(_WIN32) && defined(_M_IX86) /* Win32 x86 only */
-  if (!gInitialized)
-    InitTraceLog();
-
-  if (gAllocLog || gRefcntsLog) {
-    fprintf(stdout, "### Loading symbols for %s\n", aLibraryName);
-    fflush(stdout);
-
-    HANDLE myProcess = ::GetCurrentProcess();    
-    BOOL ok = EnsureSymInitialized();
-    if (ok) {
-      const char* baseName = aLibraryName;
-      // just get the base name of the library if a full path was given:
-      PRInt32 len = strlen(aLibraryName);
-      for (PRInt32 i = len - 1; i >= 0; i--) {
-        if (aLibraryName[i] == '\\') {
-          baseName = &aLibraryName[i + 1];
-          break;
-        }
-      }
-      DWORD baseAddr = _SymLoadModule(myProcess,
-                                     NULL,
-                                     (char*)baseName,
-                                     (char*)baseName,
-                                     0,
-                                     0);
-      ok = (baseAddr != nsnull);
-    }
-    if (!ok) {
-      LPVOID lpMsgBuf;
-      FormatMessage( 
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-        FORMAT_MESSAGE_FROM_SYSTEM | 
-        FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,
-        GetLastError(),
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-        (LPTSTR) &lpMsgBuf,
-        0,
-        NULL 
-        );
-      fprintf(stdout, "### ERROR: LoadLibrarySymbols for %s: %s\n",
-              aLibraryName, lpMsgBuf);
-      fflush(stdout);
-      LocalFree( lpMsgBuf );
-    }
-  }
-#endif
-#endif
-}
-
-//----------------------------------------------------------------------
-
 
 EXPORT_XPCOM_API(void)
 NS_LogInit()
