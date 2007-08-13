@@ -23,6 +23,7 @@
  *   Scott MacGregor <mscott@netscape.com>
  *   Christian Biesinger <cbiesinger@web.de>
  *   Dan Mosedale <dmose@mozilla.org>
+ *   Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -229,13 +230,6 @@ public:
    * mimeTypes.rdf data source
    */
   NS_HIDDEN_(PRBool) MIMETypeIsInDataSource(const char * aContentType);
-
-  /**
-   * Return the URI template for any configured web handler.  This will
-   * probably be replaced by something on nsIWebContentConverterService soon. 
-   */
-  NS_HIDDEN_(nsresult) GetProtocolHandlerInfo(const nsACString &aScheme,
-                                              nsIHandlerInfo **aHandlerInfo);
 
   virtual NS_HIDDEN_(nsresult) OSProtocolHandlerExists(const char *aScheme,
                                                        PRBool *aExists) = 0;
