@@ -451,8 +451,8 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
     DWORD walkerReturn;
     struct WalkStackData data;
 
-    if (!EnsureSymInitialized())
-        return NS_ERROR_FAILURE;
+    if (!EnsureImageHlpInitialized())
+        return PR_FALSE;
 
     // Have to duplicate handle to get a real handle.
     if (!::DuplicateHandle(::GetCurrentProcess(),
@@ -738,6 +738,9 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
     aDetails->lineno = 0;
     aDetails->function[0] = '\0';
     aDetails->foffset = 0;
+
+    if (!EnsureSymInitialized())
+        return NS_ERROR_FAILURE;
 
     HANDLE myProcess = ::GetCurrentProcess();
     BOOL ok;
