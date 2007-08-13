@@ -559,32 +559,34 @@ date_msecFromDate(jsdouble year, jsdouble mon, jsdouble mday, jsdouble hour,
     result = MakeDate(day, msec_time);
     return result;
 }
-
-/*
- * See ECMA 15.9.4.[3-10];
- */
+
+/* compute the time in msec (unclipped) from the given args */
 #define MAXARGS        7
 
 static JSBool
-date_UTC(JSContext *cx, uintN argc, jsval *vp)
+date_msecFromArgs(JSContext *cx, uintN argc, jsval *argv, jsdouble *rval)
 {
-    jsval *argv;
     uintN loop;
     jsdouble array[MAXARGS];
     jsdouble d;
+    jsdouble msec_time;
 
-    argv = vp + 2;
     for (loop = 0; loop < MAXARGS; loop++) {
         if (loop < argc) {
             if (!js_ValueToNumber(cx, argv[loop], &d))
                 return JS_FALSE;
-            /* return NaN if any arg is NaN */
+            /* return NaN if any arg is not finite */
             if (!JSDOUBLE_IS_FINITE(d)) {
-                return js_NewNumberValue(cx, d, vp);
+                *rval = *cx->runtime->jsNaN;
+                return JS_TRUE;
             }
-            array[loop] = floor(d);
+            array[loop] = js_DoubleToInteger(d);
         } else {
-            array[loop] = 0;
+            if (loop == 2) {
+                array[loop] = 1; /* Default the date argument to 1. */
+            } else {
+                array[loop] = 0;
+            }
         }
     }
 
@@ -592,16 +594,29 @@ date_UTC(JSContext *cx, uintN argc, jsval *vp)
     if (array[0] >= 0 && array[0] <= 99)
         array[0] += 1900;
 
-    /* if we got a 0 for 'date' (which is out of range)
-     * pretend it's a 1.  (So Date.UTC(1972, 5) works) */
-    if (array[2] < 1)
-        array[2] = 1;
+    msec_time = date_msecFromDate(array[0], array[1], array[2],
+                                  array[3], array[4], array[5], array[6]);
+    *rval = msec_time;
+    return JS_TRUE;
+}
 
-    d = date_msecFromDate(array[0], array[1], array[2],
-                              array[3], array[4], array[5], array[6]);
-    d = TIMECLIP(d);
+
+/*
+ * See ECMA 15.9.4.[3-10];
+ */
+static JSBool
+date_UTC(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval argv;
+    jsdouble msec_time;
 
-    return js_NewNumberValue(cx, d, vp);
+    argv = vp + 2;
+    if (!date_msecFromArgs(cx, argc, argv, &msec_time))
+        return JS_FALSE;
+
+    msec_time = TIMECLIP(msec_time);
+
+    return js_NewNumberValue(cx, msec_time, vp);
 }
 
 static JSBool
@@ -2101,48 +2116,22 @@ Date(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             *date = TIMECLIP(*date);
         }
     } else {
-        jsdouble array[MAXARGS];
-        uintN loop;
-        jsdouble double_arg;
-        jsdouble day;
+        jsdouble *date;
         jsdouble msec_time;
 
-        for (loop = 0; loop < MAXARGS; loop++) {
-            if (loop < argc) {
-                if (!js_ValueToNumber(cx, argv[loop], &double_arg))
-                    return JS_FALSE;
-                /* if any arg is NaN, make a NaN date object
-                   and return */
-                if (!JSDOUBLE_IS_FINITE(double_arg)) {
-                    date = date_constructor(cx, obj);
-                    if (!date)
-                        return JS_FALSE;
-                    *date = *cx->runtime->jsNaN;
-                    return JS_TRUE;
-                }
-                array[loop] = js_DoubleToInteger(double_arg);
-            } else {
-                if (loop == 2) {
-                    array[loop] = 1; /* Default the date argument to 1. */
-                } else {
-                    array[loop] = 0;
-                }
-            }
-        }
+        if (!date_msecFromArgs(cx, argc, argv, &msec_time))
+            return JS_FALSE;
 
         date = date_constructor(cx, obj);
         if (!date)
             return JS_FALSE;
 
-        /* adjust 2-digit years into the 20th century */
-        if (array[0] >= 0 && array[0] <= 99)
-            array[0] += 1900;
+        if (JSDOUBLE_IS_FINITE(msec_time)) {
+            msec_time = UTC(msec_time);
+            msec_time = TIMECLIP(msec_time);
+        }
 
-        day = MakeDay(array[0], array[1], array[2]);
-        msec_time = MakeTime(array[3], array[4], array[5], array[6]);
-        msec_time = MakeDate(day, msec_time);
-        msec_time = UTC(msec_time);
-        *date = TIMECLIP(msec_time);
+        *date = msec_time;
     }
     return JS_TRUE;
 }
