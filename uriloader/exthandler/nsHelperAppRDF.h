@@ -58,6 +58,8 @@
 #define NC_RDF_ROOT 			      "NC:HelperAppRoot"
 #define NC_CONTENT_NODE_PREFIX  "urn:mimetype:"
 #define NC_HANDLER_SUFFIX "handler:"
+// This should be called preferredApplication to distinguish it from the larger
+// set of possible external applications, but it's too late to change this now.
 #define NC_EXTERNALAPP_SUFFIX "externalApplication:"
 
 // for URI schemes.  We re-use NC_RDF_HANDLER as an arc from these nodes.
@@ -68,11 +70,11 @@
 #define NC_RDF_FILEEXTENSION    NC_NAMESPACE_URI"fileExtension"
 
 // handler properties
-#define NC_RDF_SAVETODISK				    NC_NAMESPACE_URI"saveToDisk"
+#define NC_RDF_SAVETODISK           NC_NAMESPACE_URI"saveToDisk"
 #define NC_RDF_USESYSTEMDEFAULT     NC_NAMESPACE_URI"useSystemDefault"
 #define NC_RDF_HANDLEINTERNAL       NC_NAMESPACE_URI"handleInternal"
 #define NC_RDF_ALWAYSASK            NC_NAMESPACE_URI"alwaysAsk"
-#define NC_RDF_EXTERNALAPPLICATION  NC_NAMESPACE_URI"externalApplication"
+#define NC_RDF_POSSIBLEAPPLICATION  NC_NAMESPACE_URI"possibleApplication"
 
 // external applications properties....
 #define NC_RDF_PRETTYNAME 			    NC_NAMESPACE_URI"prettyName"

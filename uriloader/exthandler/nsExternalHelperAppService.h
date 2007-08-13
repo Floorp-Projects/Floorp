@@ -252,6 +252,7 @@ protected:
   nsCOMPtr<nsIRDFResource> kNC_HandleInternal;
   nsCOMPtr<nsIRDFResource> kNC_PrettyName;
   nsCOMPtr<nsIRDFResource> kNC_UriTemplate;
+  nsCOMPtr<nsIRDFResource> kNC_PossibleApplication;
 #endif
 
   /**
@@ -260,9 +261,9 @@ protected:
   PRBool mDataSourceInitialized;
 
   /**
-   * Helper routines for digesting the data source and filling in a mime info
-   * object for a given content type inside that data source.
-   * The content type of the MIME Info will not be changed.
+   * Helper routines for digesting the data source and filling in a handler
+   * info object for a given content type inside that data source. The content
+   * type of the handler info object will not be changed.
    */
 #ifdef MOZ_RDF
   NS_HIDDEN_(nsresult) FillMIMEExtensionProperties(
@@ -285,6 +286,19 @@ protected:
   NS_HIDDEN_(nsresult) FillLiteralValueFromTarget(nsIRDFResource * aSource,
                                                   nsIRDFResource * aProperty,
                                                   const PRUnichar ** aLiteralValue);
+
+  /**
+   * Returns the nsIHandlerApp represented by the source node.
+   */
+  NS_HIDDEN_(nsresult) FillHandlerAppFromSource(nsIRDFResource * aSource,
+                                                nsIHandlerApp ** aHandlerApp);
+
+  /**
+   * Returns an array of nsIHandlerApp objects representing possible apps
+   * for the handler represented by the source node.
+   */
+  NS_HIDDEN_(nsresult) FillPossibleAppsFromSource(nsIRDFResource * aSource,
+                                                  nsIMutableArray * aPossibleApps);
 #endif
 
   /**
