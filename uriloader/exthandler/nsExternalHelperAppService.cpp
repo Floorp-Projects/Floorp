@@ -25,6 +25,7 @@
  *   Bill Law <law@netscape.com>
  *   Christian Biesinger <cbiesinger@web.de>
  *   Dan Mosedale <dmose@mozilla.org>
+ *   Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -1326,12 +1327,12 @@ nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsExternalHelperAppService::GetProtocolHandlerInfo(const nsACString &aScheme, 
                                                    nsIHandlerInfo **aHandlerInfo)
 {
-  // XXX before we expose this to the UI, we need sort out our strategy re
-  // the "warning" and "exposed" prefs
+  // XXX Now that we've exposed this to the UI (bug 391150), is there anything
+  // we need to do to make it compatible with the "warning" and "exposed" prefs?
 
   // XXX enterprise customers should be able to turn this support off with a
   // single master pref (maybe use one of the "exposed" prefs here?)
