@@ -70,8 +70,9 @@ const NC_USE_SYSTEM_DEFAULT = NC_NS + "useSystemDefault";
 // nsIHandlerInfo::alwaysAskBeforeHandling
 const NC_ALWAYS_ASK         = NC_NS + "alwaysAsk";
 
-// references nsIHandlerApp record
+// references nsIHandlerApp records
 const NC_PREFERRED_APP      = NC_NS + "externalApplication";
+const NC_POSSIBLE_APP       = NC_NS + "possibleApplication";
 
 // handler app ("handler") properties
 
@@ -120,6 +121,7 @@ HandlerService.prototype = {
     this._ensureRecordsForType(aHandlerInfo);
     this._storePreferredAction(aHandlerInfo);
     this._storePreferredHandler(aHandlerInfo);
+    this._storePossibleHandlers(aHandlerInfo);
     this._storeAlwaysAsk(aHandlerInfo);
 
     // Write the changes to the database immediately so we don't lose them
@@ -164,20 +166,20 @@ HandlerService.prototype = {
     switch(aHandlerInfo.preferredAction) {
       case Ci.nsIHandlerInfo.saveToDisk:
         this._setLiteral(infoID, NC_SAVE_TO_DISK, "true");
-        this._removeValue(infoID, NC_HANDLE_INTERNALLY);
-        this._removeValue(infoID, NC_USE_SYSTEM_DEFAULT);
+        this._removeTarget(infoID, NC_HANDLE_INTERNALLY);
+        this._removeTarget(infoID, NC_USE_SYSTEM_DEFAULT);
         break;
 
       case Ci.nsIHandlerInfo.handleInternally:
         this._setLiteral(infoID, NC_HANDLE_INTERNALLY, "true");
-        this._removeValue(infoID, NC_SAVE_TO_DISK);
-        this._removeValue(infoID, NC_USE_SYSTEM_DEFAULT);
+        this._removeTarget(infoID, NC_SAVE_TO_DISK);
+        this._removeTarget(infoID, NC_USE_SYSTEM_DEFAULT);
         break;
 
       case Ci.nsIHandlerInfo.useSystemDefault:
         this._setLiteral(infoID, NC_USE_SYSTEM_DEFAULT, "true");
-        this._removeValue(infoID, NC_SAVE_TO_DISK);
-        this._removeValue(infoID, NC_HANDLE_INTERNALLY);
+        this._removeTarget(infoID, NC_SAVE_TO_DISK);
+        this._removeTarget(infoID, NC_HANDLE_INTERNALLY);
         break;
 
       // This value is indicated in the datastore either by the absence of
@@ -186,9 +188,9 @@ HandlerService.prototype = {
       // of the RDF file and thus the amount of stuff we have to parse.
       case Ci.nsIHandlerInfo.useHelperApp:
       default:
-        this._removeValue(infoID, NC_SAVE_TO_DISK);
-        this._removeValue(infoID, NC_HANDLE_INTERNALLY);
-        this._removeValue(infoID, NC_USE_SYSTEM_DEFAULT);
+        this._removeTarget(infoID, NC_SAVE_TO_DISK);
+        this._removeTarget(infoID, NC_HANDLE_INTERNALLY);
+        this._removeTarget(infoID, NC_USE_SYSTEM_DEFAULT);
         break;
     }
   },
@@ -199,32 +201,104 @@ HandlerService.prototype = {
     var handler = aHandlerInfo.preferredApplicationHandler;
 
     if (handler) {
-      // First add a record for the preferred app to the datasource.  In the
-      // process we also need to remove any vestiges of an existing record, so
-      // we remove any properties that we aren't overwriting.
-      this._setLiteral(handlerID, NC_PRETTY_NAME, handler.name);
-      if (handler instanceof Ci.nsILocalHandlerApp) {
-        this._setLiteral(handlerID, NC_PATH, handler.executable.path);
-        this._removeValue(handlerID, NC_URI_TEMPLATE);
-      }
-      else {
-        handler.QueryInterface(Ci.nsIWebHandlerApp);
-        this._setLiteral(handlerID, NC_URI_TEMPLATE, handler.uriTemplate);
-        this._removeValue(handlerID, NC_PATH);
-      }
+      this._storeHandlerApp(handlerID, handler);
 
-      // Finally, make this app be the preferred app for the handler info.
-      // Note: at least some code completely ignores this setting and assumes
-      // the preferred app is the one whose URI follows the appropriate pattern.
+      // Make this app be the preferred app for the handler info.
+      //
+      // Note: nsExternalHelperAppService::FillContentHandlerProperties ignores
+      // this setting and instead identifies the preferred app as the resource
+      // whose URI follows the pattern urn:<class>:externalApplication:<type>.
+      // But the old downloadactions.js code used to set this property, so just
+      // in case there is still some code somewhere that relies on its presence,
+      // we set it here.
       this._setResource(infoID, NC_PREFERRED_APP, handlerID);
     }
     else {
       // There isn't a preferred handler.  Remove the existing record for it,
       // if any.
-      this._removeValue(handlerID, NC_PRETTY_NAME);
-      this._removeValue(handlerID, NC_PATH);
-      this._removeValue(handlerID, NC_URI_TEMPLATE);
-      this._removeValue(infoID, NC_PREFERRED_APP);
+      this._removeTarget(infoID, NC_PREFERRED_APP);
+      this._removeAssertions(handlerID);
+    }
+  },
+
+  /**
+   * Store the list of possible handler apps for the content type represented
+   * by the given handler info object.
+   *
+   * @param aHandlerInfo  {nsIHandlerInfo}  the handler info object
+   */
+  _storePossibleHandlers: function HS__storePossibleHandlers(aHandlerInfo) {
+    var infoID = this._getInfoID(aHandlerInfo);
+
+    // First, retrieve the set of handler apps currently stored for the type,
+    // keeping track of their IDs in a hash that we'll use to determine which
+    // ones are no longer valid and should be removed.
+    var currentHandlerApps = {};
+    var currentHandlerTargets = this._getTargets(infoID, NC_POSSIBLE_APP);
+    while (currentHandlerTargets.hasMoreElements()) {
+      let handlerApp = currentHandlerTargets.getNext();
+      if (handlerApp instanceof Ci.nsIRDFResource) {
+        let handlerAppID = handlerApp.Value;
+        currentHandlerApps[handlerAppID] = true;
+      }
+    }
+
+    // Next, store any new handler apps.
+    var newHandlerApps =
+      aHandlerInfo.possibleApplicationHandlers.enumerate();
+    while (newHandlerApps.hasMoreElements()) {
+      let handlerApp =
+        newHandlerApps.getNext().QueryInterface(Ci.nsIHandlerApp);
+      let handlerAppID = this._getPossibleHandlerAppID(handlerApp);
+      if (!this._hasResourceTarget(infoID, NC_POSSIBLE_APP, handlerAppID)) {
+        this._storeHandlerApp(handlerAppID, handlerApp);
+        this._addResourceTarget(infoID, NC_POSSIBLE_APP, handlerAppID);
+      }
+      delete currentHandlerApps[handlerAppID];
+    }
+
+    // Finally, remove any old handler apps that aren't being used anymore,
+    // and if those handler apps aren't being used by any other type either,
+    // then completely remove their record from the datastore so we don't
+    // leave it clogged up with information about handler apps we don't care
+    // about anymore.
+    for (let handlerAppID in currentHandlerApps) {
+      this._removeTarget(infoID, NC_POSSIBLE_APP, handlerAppID);
+      if (!this._existsResourceTarget(NC_POSSIBLE_APP, handlerAppID))
+        this._removeAssertions(handlerAppID);
+    }
+  },
+
+  /**
+   * Store the given handler app.
+   *
+   * Note: the reason this method takes the ID of the handler app in a param
+   * is that the ID is different than it usually is when the handler app
+   * in question is a preferred handler app, so this method can't just derive
+   * the ID of the handler app by calling _getPossibleHandlerAppID, its callers
+   * have to do that for it.
+   *
+   * @param aHandlerAppID {string}        the ID of the handler app to store
+   * @param aHandlerApp   {nsIHandlerApp} the handler app to store
+   */
+  _storeHandlerApp: function HS__storeHandlerApp(aHandlerAppID, aHandlerApp) {
+    aHandlerApp.QueryInterface(Ci.nsIHandlerApp);
+    this._setLiteral(aHandlerAppID, NC_PRETTY_NAME, aHandlerApp.name);
+
+    // In the case of the preferred handler, the handler ID could have been
+    // used to refer to a different kind of handler in the past (i.e. either
+    // a local hander or a web handler), so if the new handler is a local
+    // handler, then we remove any web handler properties and vice versa.
+    // This is unnecessary but harmless for possible handlers.
+
+    if (aHandlerApp instanceof Ci.nsILocalHandlerApp) {
+      this._setLiteral(aHandlerAppID, NC_PATH, aHandlerApp.executable.path);
+      this._removeTarget(aHandlerAppID, NC_URI_TEMPLATE);
+    }
+    else {
+      aHandlerApp.QueryInterface(Ci.nsIWebHandlerApp);
+      this._setLiteral(aHandlerAppID, NC_URI_TEMPLATE, aHandlerApp.uriTemplate);
+      this._removeTarget(aHandlerAppID, NC_PATH);
     }
   },
 
@@ -377,6 +451,30 @@ HandlerService.prototype = {
   },
 
   /**
+   * Return the unique identifier for a handler app record, which stores
+   * information about a possible handler for one or more content types,
+   * including its human-readable name and the path to its executable (for a
+   * local app) or its URI template (for a web app).
+   *
+   * Note: handler app IDs for preferred handlers are different.  For those,
+   * see the _getPreferredHandlerID method.
+   *
+   * @param aHandlerApp  {nsIHandlerApp}   the handler app object
+   */
+  _getPossibleHandlerAppID: function HS__getPossibleHandlerAppID(aHandlerApp) {
+    var handlerAppID = "urn:handler:";
+
+    if (aHandlerApp instanceof Ci.nsILocalHandlerApp)
+      handlerAppID += "local:" + aHandlerApp.executable.path;
+    else {
+      aHandlerApp.QueryInterface(Ci.nsIWebHandlerApp);
+      handlerAppID += "web:" + aHandlerApp.uriTemplate;
+    }
+
+    return handlerAppID;
+  },
+
+  /**
    * Get the list of types for the given class, creating the list if it doesn't
    * already exist. The class can be either CLASS_MIMEINFO or CLASS_PROTOCOLINFO
    * (i.e. the result of a call to _getClass).
@@ -523,6 +621,21 @@ HandlerService.prototype = {
   },
 
   /**
+   * Get all targets for the property of an RDF source.
+   *
+   * @param sourceURI   {string} the URI of the source
+   * @param propertyURI {string} the URI of the property
+   * 
+   * @returns {nsISimpleEnumerator} an enumerator of targets
+   */
+  _getTargets: function HS__getTargets(sourceURI, propertyURI) {
+    var source = this._rdf.GetResource(sourceURI);
+    var property = this._rdf.GetResource(propertyURI);
+
+    return this._ds.GetTargets(source, property, true);
+  },
+
+  /**
    * Set a property of an RDF source to a literal value.
    *
    * @param sourceURI   {string} the URI of the source
@@ -538,16 +651,16 @@ HandlerService.prototype = {
   },
 
   /**
-   * Set a property of an RDF source to a resource.
+   * Set a property of an RDF source to a resource target.
    *
    * @param sourceURI   {string} the URI of the source
    * @param propertyURI {string} the URI of the property
-   * @param resourceURI {string} the URI of the resource
+   * @param targetURI   {string} the URI of the target
    */
-  _setResource: function HS__setResource(sourceURI, propertyURI, resourceURI) {
+  _setResource: function HS__setResource(sourceURI, propertyURI, targetURI) {
     var source = this._rdf.GetResource(sourceURI);
     var property = this._rdf.GetResource(propertyURI);
-    var target = this._rdf.GetResource(resourceURI);
+    var target = this._rdf.GetResource(targetURI);
     
     this._setTarget(source, property, target);
   },
@@ -555,11 +668,14 @@ HandlerService.prototype = {
   /**
    * Assert an arc into the RDF datasource if there is no arc with the given
    * source and property; otherwise, if there is already an existing arc,
-   * change it to point to the given target.
+   * change it to point to the given target. _setLiteral and _setResource
+   * call this after converting their string arguments into resources
+   * and literals, and most callers should call one of those two methods
+   * instead of this one.
    *
    * @param source    {nsIRDFResource}  the source
    * @param property  {nsIRDFResource}  the property
-   * @param value     {nsIRDFNode}      the target
+   * @param target    {nsIRDFNode}      the target
    */
   _setTarget: function HS__setTarget(source, property, target) {
     if (this._ds.hasArcOut(source, property)) {
@@ -571,12 +687,71 @@ HandlerService.prototype = {
   },
 
   /**
+   * Assert that a property of an RDF source has a resource target.
+   * 
+   * The difference between this method and _setResource is that this one adds
+   * an assertion even if one already exists, which allows its callers to make
+   * sets of assertions (i.e. to set a property to multiple targets).
+   *
+   * @param sourceURI   {string} the URI of the source
+   * @param propertyURI {string} the URI of the property
+   * @param targetURI   {string} the URI of the target
+   */
+  _addResourceTarget: function HS__addResourceTarget(sourceURI, propertyURI,
+                                                     targetURI) {
+    var source = this._rdf.GetResource(sourceURI);
+    var property = this._rdf.GetResource(propertyURI);
+    var target = this._rdf.GetResource(targetURI);
+    
+    this._ds.Assert(source, property, target, true);
+  },
+
+  /**
+   * Whether or not a property of an RDF source has a given resource target.
+   * 
+   * The difference between this method and _setResource is that this one adds
+   * an assertion even if one already exists, which allows its callers to make
+   * sets of assertions (i.e. to set a property to multiple targets).
+   *
+   * @param sourceURI   {string} the URI of the source
+   * @param propertyURI {string} the URI of the property
+   * @param targetURI   {string} the URI of the target
+   *
+   * @returns {boolean} whether or not there is such an assertion
+   */
+  _hasResourceTarget: function HS__hasResourceTarget(sourceURI, propertyURI,
+                                                     targetURI) {
+    var source = this._rdf.GetResource(sourceURI);
+    var property = this._rdf.GetResource(propertyURI);
+    var target = this._rdf.GetResource(targetURI);
+
+    return this._ds.HasAssertion(source, property, target, true);
+  },
+
+  /**
+   * Whether or not there is an RDF source that has the given property set to
+   * the given resource target.
+   * 
+   * @param propertyURI {string} the URI of the property
+   * @param targetURI   {string} the URI of the target
+   *
+   * @returns {boolean} whether or not there is a source
+   */
+  _existsResourceTarget: function HS__existsResourceTarget(propertyURI,
+                                                           targetURI) {
+    var property = this._rdf.GetResource(propertyURI);
+    var target = this._rdf.GetResource(targetURI);
+
+    return this._ds.hasArcIn(target, property);
+  },
+
+  /**
    * Remove a property of an RDF source.
    *
    * @param sourceURI   {string} the URI of the source
    * @param propertyURI {string} the URI of the property
    */
-  _removeValue: function HS__removeValue(sourceURI, propertyURI) {
+  _removeTarget: function HS__removeTarget(sourceURI, propertyURI) {
     var source = this._rdf.GetResource(sourceURI);
     var property = this._rdf.GetResource(propertyURI);
 
