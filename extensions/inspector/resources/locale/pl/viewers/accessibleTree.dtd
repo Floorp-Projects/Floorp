@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    -   Alexander Surkov <surkov.alexander@gmail.com>
+   -   Marek Stępień <mstepien@aviary.pl>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +38,7 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY role.label "Role">
-<!ENTITY name.label "Name">
-<!ENTITY nodeName.label "Node Name">
+<!ENTITY role.label "Rola">
+<!ENTITY name.label "Nazwa">
+<!ENTITY nodeName.label "Nazwa węzła">
 
