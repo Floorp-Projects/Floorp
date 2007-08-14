@@ -833,6 +833,16 @@ nsSafariProfileMigrator::CopyCookies(PRBool aReplace)
 nsresult
 nsSafariProfileMigrator::CopyHistory(PRBool aReplace)
 {
+  nsresult rv;
+  nsCOMPtr<nsINavHistoryService> history = do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  return history->RunInBatchMode(this, nsnull);
+}
+ 
+NS_IMETHODIMP
+nsSafariProfileMigrator::RunBatched(nsISupports* aUserData)
+{
   nsCOMPtr<nsIProperties> fileLocator(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID));
   nsCOMPtr<nsILocalFile> safariHistoryFile;
   fileLocator->Get(NS_MAC_USER_LIB_DIR, NS_GET_IID(nsILocalFile),
