@@ -67,6 +67,8 @@ interface nsIDownload : nsISupports {
     void init(in nsIURI aSource,
               in nsILocalFile aTarget,
               in wstring aDisplayName,
+              in wstring openingWith,
+              in long long startTime,
               in nsIWebBrowserPersist aPersist);
 
     /**
@@ -102,13 +104,13 @@ interface nsIDownload : nsISupports {
     /**
      * The time a download was started.
      */
-    attribute long long startTime;
+    readonly attribute long long startTime;
     
     /**
      * Set this attribute to indicate that the download will be
      * opened with a helper application upon completion.
      */
-    attribute wstring openingWith;
+    readonly attribute wstring openingWith;
 
     /**
      * Optional; downloading information is passed to this listener and used to
@@ -121,7 +123,6 @@ interface nsIDownload : nsISupports {
      * Must be set if no persist object is specified (see above).
      */
     attribute nsIObserver observer;
-
 };
 
 %{C++
