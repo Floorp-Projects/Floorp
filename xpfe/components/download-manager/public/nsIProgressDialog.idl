@@ -40,6 +40,7 @@
 #include "nsIDownload.idl"
 
 interface nsIDOMWindow;
+interface nsIObserver;
 
 /* nsIProgressDialog
  *
@@ -62,7 +63,7 @@ interface nsIDOMWindow;
  *      not need to hold a reference to it.
  */
 
-[scriptable, uuid(80183bd3-b9e8-45a6-a2ee-1449bc0d4253)]
+[scriptable, uuid(20e790a2-76c6-462d-851a-22ab6cbbe48b)]
 interface nsIProgressDialog : nsIDownload {
    /**
     * Open the dialog
@@ -79,6 +80,15 @@ interface nsIProgressDialog : nsIDownload {
     * window, which is what download manager does.
     */
    attribute PRBool cancelDownloadOnClose;
+
+   /**
+    * Observer for this dialog. If set, receives the following topics:
+    *   oncancel - observer should cancel the transfer
+    *   onpause  - observer should suspend the transfer
+    *   onresume - observer should resume the suspended transfer
+    * For each of those, the subject will be the nsIProgressDialog.
+    */
+   attribute nsIObserver observer;
 
   /**
    * The dialog object itself.  This might be null if the dialog isn't
