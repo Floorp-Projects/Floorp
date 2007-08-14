@@ -45,82 +45,81 @@ interface nsIWebBrowserPersist;
 interface nsIWebProgressListener;
 interface nsIMIMEInfo;
 
-[scriptable, uuid(06cb92f2-1dd2-11b2-95f2-96dfdfb804a1)]
-interface nsIDownload : nsISupports {
+[scriptable, uuid(d80095a7-e81c-464c-a13f-ecb84feb969f)]
+interface nsITransfer : nsISupports {
     
     /**
-     * Initializes the download with certain properties.  This function must
+     * Initializes the transfer with certain properties.  This function must
      * be called prior to accessing any properties on this interface.
      *
-     * @param aSource The source (nsIURI) of the download.
+     * @param aSource The source URI of the transfer.
      *
-     * @param aTarget The local file to which the download is being saved.
+     * @param aTarget The target URI of the transfer.
      *
-     * @param aDisplayName The user-readable description of the download.
+     * @param aDisplayName The user-readable description of the transfer.
      *
-     * @param aMIMEInfo The MIME info associated with the download file,
+     * @param aMIMEInfo The MIME info associated with the target,
      *                  including MIME type and helper app when appropriate.
      *                  This parameter is optional.
      *
-     * @param aPersist The "persist" used to transfer the download.  If set,
-     *                 the manager will set its listener to the download item
+     * @param aPersist The "persist" used for this transfer.  If set,
+     *                 the manager will set its listener to the transfer item
      *                 and use it for cancellation.  If not set, the client
-     *                 is expected to set the download item as the listener on
+     *                 is expected to set the transfer item as the listener on
      *                 whatever transfer component is being used, and to
-     *                 set an observer on the download item that listens for
-     *                 the "oncancel" topic and cancels the download.
+     *                 set an observer on the transfer item that listens for
+     *                 the "oncancel" topic and cancels the transfer.
      */
     void init(in nsIURI aSource,
-              in nsILocalFile aTarget,
+              in nsIURI aTarget,
               in wstring aDisplayName,
               in nsIMIMEInfo aMIMEInfo,
               in long long startTime,
               in nsIWebBrowserPersist aPersist);
 
     /**
-     * The source of the download.
+     * The source of the transfer.
      */
     readonly attribute nsIURI source;
     
     /**
-     * The local file to which the download is being saved.
+     * The target of the transfer.
      */
-    readonly attribute nsILocalFile target;
+    readonly attribute nsIURI target;
  
     /**
-     * Optional. If set, it will be used for cancellation, and the download
+     * Optional. If set, it will be used for cancellation, and the transfer
      * will be set as its listener.  If not, |observer| should be set to listen
      * and respond accordingly to topics like oncancel, and the client promises
-     * to set the download item as the listener for whatever transfer component
-     * being used.
+     * to set the transfer item as the listener for whatever transfer component
+     * is being used.
      */
- 
     readonly attribute nsIWebBrowserPersist persist;
    
     /**
-     * The percentage of completion of the download.
+     * The percentage of transfer completed;
      */
     readonly attribute PRInt32 percentComplete;
 
     /**
-     * The user-readable description of the download.
+     * The user-readable description of the transfer.
      */
     attribute wstring displayName;
 
     /**
-     * The time a download was started.
+     * The time a transfer was started.
      */
     readonly attribute long long startTime;
     
     /**
-     * Optional. If set, it will contain the download's relevant MIME information.
+     * Optional. If set, it will contain the target's relevant MIME information.
      * This includes it's MIME Type, helper app, and whether that helper should be
      * executed.
      */
     readonly attribute nsIMIMEInfo MIMEInfo;
 
     /**
-     * Optional; downloading information is passed to this listener and used to
+     * Optional; transfering information is passed to this listener and used to
      * update client UI.
      */
     attribute nsIWebProgressListener listener;
@@ -130,6 +129,15 @@ interface nsIDownload : nsISupports {
      * Must be set if no persist object is specified (see above).
      */
     attribute nsIObserver observer;
+};
+
+[scriptable, uuid(b0aae798-78aa-4769-9f0e-9aef4cf9474d)]
+interface nsIDownload : nsITransfer {
+    
+    /**
+     * The target of a download is always a file on the local file system.
+     */
+    readonly attribute nsILocalFile targetFile;
 };
 
 %{C++
