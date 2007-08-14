@@ -50,7 +50,13 @@
 
 <tabpanel id="qa-tab-qmo">
 <vbox pack="start">
-  <label href="http://quality.mozilla.org" value="&qa.qmo.visit;" class="text-link" />
+  <hbox>
+    <html:a href="http://quality.mozilla.org" target="blank">
+      <image src='chrome://qa/skin/qmo-badge.png' 
+        style='max-width: 75px; max-height: 31px; margin-top: 3px; margin-left: 3px;' />
+    </html:a>
+  </hbox>
+ 
   
   <hbox class="box-mheight">
 	<groupbox  class="box-mheight">
