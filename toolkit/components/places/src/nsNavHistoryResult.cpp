@@ -3363,7 +3363,8 @@ nsNavHistoryResult::nsNavHistoryResult(nsNavHistoryContainerResultNode* aRoot) :
   mRootNode(aRoot),
   mIsHistoryObserver(PR_FALSE),
   mIsBookmarkFolderObserver(PR_FALSE),
-  mIsAllBookmarksObserver(PR_FALSE)
+  mIsAllBookmarksObserver(PR_FALSE),
+  mBatchInProgress(PR_FALSE)
 {
   mRootNode->mResult = this;
 }
@@ -3721,6 +3722,7 @@ nsNavHistoryResult::GetRoot(nsINavHistoryContainerResultNode** aRoot)
 NS_IMETHODIMP
 nsNavHistoryResult::OnBeginUpdateBatch()
 {
+  mBatchInProgress = PR_TRUE;
   ENUMERATE_HISTORY_OBSERVERS(OnBeginUpdateBatch());
   ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnBeginUpdateBatch());
   return NS_OK;
@@ -3732,6 +3734,8 @@ nsNavHistoryResult::OnBeginUpdateBatch()
 NS_IMETHODIMP
 nsNavHistoryResult::OnEndUpdateBatch()
 {
+  NS_ASSERTION(mBatchInProgress, "EndUpdateBatch without a begin");
+  mBatchInProgress = PR_FALSE;
   ENUMERATE_HISTORY_OBSERVERS(OnEndUpdateBatch());
   ENUMERATE_ALL_BOOKMARKS_OBSERVERS(OnEndUpdateBatch());
   return NS_OK;
