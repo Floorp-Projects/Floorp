@@ -45,7 +45,6 @@
 #include "nsIAccessibleHyperText.h"
 #include "nsIAccessibleEditableText.h"
 #include "nsAccessibleEventData.h"
-#include "nsIEditor.h"
 #include "nsFrameSelection.h"
 #include "nsISelectionController.h"
 
@@ -156,10 +155,6 @@ protected:
                           nsIFrame **aEndFrame = nsnull, nsIntRect *aBoundsRect = nsnull);
 
   nsIntRect GetBoundsForString(nsIFrame *aFrame, PRUint32 aStartRenderedOffset, PRUint32 aEndRenderedOffset);
-
-  // Editor helpers, subclasses of nsHyperTextAccessible may have editor
-  virtual void SetEditor(nsIEditor *aEditor) { return; }
-  virtual already_AddRefed<nsIEditor> GetEditor() { return nsnull; }
 
   // Selection helpers
   nsresult GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel);
