@@ -76,7 +76,6 @@
     },
     
     
-    /* this code is horrible in general, but i can't figure out a better way to do it */
     lastTestRunSummary : "",
     lastTestGroupSummary : "",
     lastSubgroupObject: null,    // these have to be objects to avoid the async call later.
@@ -85,6 +84,8 @@
     
     preDialogSubgroupObject: null,  // saved to be restored in case of Cancel()
     preDialogTestcaseObject: null,
+    
+    dialogActive: false,            // we want to keep controls disabled, even if the selection changes.
     
     storeSubgroup : function(subgroup) {
         litmus.lastSubgroupObject = subgroup;
@@ -101,8 +102,10 @@
         }
         litmus.preDialogueSubgroupObject = litmus.lastSubgroupObject;
         litmus.preDialogTestcaseObject = litmus.lastTestcaseObject;
+        litmus.disableAll();
+        litmus.dialogActive = true;
         var newWindow = window.openDialog('chrome://qa/content/tabs/selecttests.xul', '_blank', 'chrome,all,dialog=yes',
-                                          litmus.readStateFromPref, litmus.handleDialogCancel);
+                                          litmus.readStateFromPref, litmus.handleDialogCancel, litmus.undisableAll());
     },
     
     handleDialogCancel : function() {
@@ -127,6 +130,14 @@
         // rewrite the prefs
         litmus.writeStateToPref(litmus.lastTestRunSummary, litmus.lastTestGroupSummary,
                                 litmus.lastSubgroupObject.subgroup_id, lastTestcaseIndex);
+        
+        litmus.dialogActive = false;
+        litmus.undisableAll();
+    },
+    
+    handleDialogOK : function() {
+        litmus.dialogActive = false;
+        litmus.undisableAll();
     },
     
 	validateLogin : function(uname, passwd, callback) {
@@ -167,9 +178,10 @@
         $("qa-testrun-label").value = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testrunSummary", "char");
         $("qa-testgroup-label").value = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testgroupSummary", "char");
         litmus.currentSubgroupID = qaPref.getPref(qaPref.prefBase + ".currentTestcase.subgroupId", "int");
+        litmus.disableAll();
         
         if (litmus.currentSubgroupID != 0)
-            litmus.getSubgroup(litmus.currentSubgroupID,litmus.statePopulateFields);
+            litmus.getSubgroup(litmus.currentSubgroupID, function(subgroup) {litmus.statePopulateFields(subgroup); litmus.undisableAll();});
     },
     checkRadioButtons : function() {
         var menu = document.getElementById('testlist');
@@ -180,7 +192,6 @@
     
     prevButton : function() {
         $("testlist").selectedIndex--;
-        //litmus.selectCurrentTestCase();
     },
 	nextButton: function() {
 		// if they selected a result, then submit the result
@@ -188,26 +199,18 @@
 			litmus.submitResult();
 		}
         $("testlist").selectedIndex++;
-		//litmus.selectCurrentTestCase();
 	},
     handleSelect : function() {
         if ($("testlist").selectedIndex == -1)
             return;
-        //var menu = document.getElementById('testlist');
-        //if (menu.selectedIndex == litmus.currentTestCaseIndex || menu.selectedIndex == -1)
-          //  return; // prevent recursion or triggering by removal of elements
         
-        //litmus.currentTestCaseIndex = menu.selectedIndex;
-        litmus.selectCurrentTestCase();
-    },
-    selectCurrentTestCase : function() {
-        //var menu = document.getElementById('testlist');
-        //menu.selectedIndex = litmus.currentTestCaseIndex;
+        litmus.disableAll();
         litmus.getTestcase($("testlist").selectedItem.value, function(testcase) {
         	litmus.populateTestcase(testcase);
         	$('qa-testcase-progress').value = 
         		qaMain.bundle.getFormattedString('qa.extension.litmus.progress',
         			[$("testlist").selectedIndex+1, $("testlist").getRowCount()]);
+            litmus.undisableAll();
         });
     },
 	populatePreviewBox : function(testcases) {
@@ -257,15 +260,29 @@
 		litmus.populatePreviewBox(subgroup.testcases);
 		$('qa-subgroup-label').value = subgroup.name;
         $("testlist").selectedIndex = 0;
-        litmus.selectCurrentTestCase();
-	},
+    },
     statePopulateFields : function(subgroup) {  //TODO: there's gotta be a better way to do this...
         litmus.lastSubgroupObject = subgroup;
         litmus.populatePreviewBox(subgroup.testcases);
         $('qa-subgroup-label').value = subgroup.name;
         
         $("testlist").selectedIndex = qaPref.getPref(qaPref.prefBase + ".currentTestcase.testcaseIndex", "int");
-        litmus.selectCurrentTestCase();
+    },
+    disableAll : function() {   //
+        $("testlist").disabled = true;
+        $("qa-testcase-result").disabled = true;
+        $("qa-mainwindow-previousButton").disabled = true;
+        $("qa-mainwindow-nextButton").disabled = true;
+        
+    },
+    undisableAll : function() {
+         if(litmus.dialogActive) return;   // ignore all requests while there is a dialog open
+      
+        $("testlist").disabled = false;
+        $("qa-testcase-result").disabled = false;
+        $("qa-mainwindow-previousButton").disabled = false;
+        $("qa-mainwindow-nextButton").disabled = false;
+        
     },
 	submitResult : function() {
 		var rs;
