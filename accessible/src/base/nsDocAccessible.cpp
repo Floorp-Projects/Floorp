@@ -1006,7 +1006,7 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
       multiSelectAccessNode->GetDOMNode(getter_AddRefs(multiSelectDOMNode));
       NS_ASSERTION(multiSelectDOMNode, "A new accessible without a DOM node!");
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_WITHIN,
-                              multiSelectDOMNode, nsnull, PR_TRUE);
+                              multiSelectDOMNode, nsnull, eAllowDupes);
 
       static nsIContent::AttrValuesArray strings[] =
         {&nsAccessibilityAtoms::_empty, &nsAccessibilityAtoms::_false, nsnull};
@@ -1381,7 +1381,7 @@ nsDocAccessible::FireTextChangedEventOnDOMNodeRemoved(nsIContent *aChild,
 nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
                                                   nsIDOMNode *aDOMNode,
                                                   void *aData,
-                                                  PRBool aAllowDupes,
+                                                  EDupeEventRule aAllowDupes,
                                                   PRBool aIsAsynch)
 {
   nsCOMPtr<nsIAccessibleEvent> event =
@@ -1393,8 +1393,8 @@ nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
 
 nsresult
 nsDocAccessible::FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
-                                           PRBool aAllowDupes,
-                                           PRBool aIsAsynch)
+                                            EDupeEventRule aAllowDupes,
+                                            PRBool aIsAsynch)
 {
   PRBool isTimerStarted = PR_TRUE;
   PRInt32 numQueuedEvents = mEventsToFire.Count();
@@ -1419,7 +1419,36 @@ nsDocAccessible::FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
 
   if (numQueuedEvents == 0) {
     isTimerStarted = PR_FALSE;
-  } else if (!aAllowDupes) {
+  } else if (aAllowDupes == eCoalesceFromSameSubtree) {
+    // Especially for mutation events, we will define a duplicate event
+    // as one on the same node or on a descendant node.
+    // This prevents a flood of events when a subtree is changed.
+    for (PRInt32 index = 0; index < numQueuedEvents; index ++) {
+      nsIAccessibleEvent *accessibleEvent = mEventsToFire[index];
+      NS_ASSERTION(accessibleEvent, "Array item is not an accessible event");
+      if (!accessibleEvent) {
+        continue;
+      }
+      PRUint32 eventType;
+      accessibleEvent->GetEventType(&eventType);
+      if (eventType == newEventType) {
+        nsCOMPtr<nsIDOMNode> domNode;
+        accessibleEvent->GetDOMNode(getter_AddRefs(domNode));
+        if (newEventDOMNode == domNode || nsAccUtils::IsAncestorOf(newEventDOMNode, domNode)) {
+          mEventsToFire.RemoveObjectAt(index);
+          // The other event is the same type, but in a descendant of this
+          // event, so remove that one. The umbrella event in the ancestor
+          // is already enough
+          -- index;
+          -- numQueuedEvents;
+        }
+        else if (nsAccUtils::IsAncestorOf(domNode, newEventDOMNode)) {
+          // There is a better SHOW/HIDE event (it's in an ancestor)
+          return NS_OK;
+        }
+      }    
+    }
+  } else if (aAllowDupes == eRemoveDupes) {
     // Check for repeat events. If a redundant event exists remove
     // original and put the new event at the end of the queue
     // so it is fired after the others
@@ -1506,6 +1535,16 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
         // so use that state now when firing the event
         nsAccEvent::PrepareForEvent(accessibleEvent);
         FireAccessibleEvent(accessibleEvent);
+        // Post event processing
+        if (eventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
+            eventType == nsIAccessibleEvent::EVENT_DOM_DESTROY) {
+          // Shutdown nsIAccessNode's or nsIAccessibles for any DOM nodes in this subtree
+          nsCOMPtr<nsIDOMNode> hidingNode;
+          accessibleEvent->GetDOMNode(getter_AddRefs(hidingNode));
+          if (hidingNode) {
+            RefreshNodes(hidingNode); // Will this bite us with asynch events
+          }
+        }
       }
     }
   }
@@ -1637,7 +1676,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   nsCOMPtr<nsIAccessNode> childAccessNode;
   GetCachedAccessNode(childNode, getter_AddRefs(childAccessNode));
   nsCOMPtr<nsIAccessible> childAccessible = do_QueryInterface(childAccessNode);
-  if (!childAccessible && isHiding) {
+  if (!childAccessible && !isHiding) {
     // If not about to hide it, make sure there's an accessible so we can fire an
     // event for it
     GetAccService()->GetAccessibleFor(childNode, getter_AddRefs(childAccessible));
@@ -1668,14 +1707,16 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 #endif
 
   if (!isShowing) {
-    // Fire EVENT_HIDE or EVENT_DOM_DESTROY if previous accessible existed for node being hidden.
+    // Fire EVENT_ASYNCH_HIDE or EVENT_DOM_DESTROY if previous accessible existed for node being hidden.
     // Fire this before the accessible goes away.
     if (childAccessible) {
-      PRUint32 removalEvent = isAsynch ? nsIAccessibleEvent::EVENT_ASYNCH_HIDE : nsIAccessibleEvent::EVENT_DOM_DESTROY;
-      nsAccUtils::FireAccEvent(removalEvent, childAccessible, isAsynch);
+      PRUint32 removalEventType = isAsynch ? nsIAccessibleEvent::EVENT_ASYNCH_HIDE :
+                                  nsIAccessibleEvent::EVENT_DOM_DESTROY;
+      nsCOMPtr<nsIAccessibleEvent> removalEvent =
+        new nsAccEvent(removalEventType, childAccessible, nsnull, PR_TRUE);
+      NS_ENSURE_TRUE(removalEvent, NS_ERROR_OUT_OF_MEMORY);
+      FireDelayedAccessibleEvent(removalEvent, eCoalesceFromSameSubtree, isAsynch);
     }
-    // Shutdown nsIAccessNode's or nsIAccessibles for any DOM nodes in this subtree
-    RefreshNodes(childNode);
   }
 
   // We need to get an accessible for the mutation event's container node
@@ -1704,18 +1745,15 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     // nsIAccessibleStates::STATE_INVISIBLE for the event's accessible object.
     PRUint32 additionEvent = isAsynch ? nsIAccessibleEvent::EVENT_ASYNCH_SHOW :
                                         nsIAccessibleEvent::EVENT_DOM_CREATE;
-    if (!isAsynch) {
-      // Calculate "is from user input" while we still synchronous and have the info
-      nsAccEvent::PrepareForEvent(childNode);
-    }
-    FireDelayedToolkitEvent(additionEvent, childNode, nsnull, PR_TRUE, isAsynch);
+    FireDelayedToolkitEvent(additionEvent, childNode, nsnull,
+                            eCoalesceFromSameSubtree, isAsynch);
 
     // Check to see change occured in an ARIA menu, and fire an EVENT_MENUPOPUP_START if it did
     nsAutoString role;
     if (GetRoleAttribute(aChild, role) &&
         StringEndsWith(role, NS_LITERAL_STRING(":menu"), nsCaseInsensitiveStringComparator())) {
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
-                              childNode, nsnull, PR_TRUE, isAsynch);
+                              childNode, nsnull, eAllowDupes, isAsynch);
     }
 
     // Check to see if change occured inside an alert, and fire an EVENT_ALERT if it did
@@ -1724,7 +1762,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       if (GetRoleAttribute(ancestor, role) &&
           StringEndsWith(role, NS_LITERAL_STRING(":alert"), nsCaseInsensitiveStringComparator())) {
         nsCOMPtr<nsIDOMNode> alertNode(do_QueryInterface(ancestor));
-        FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_ALERT, alertNode, nsnull, PR_FALSE, isAsynch);
+        FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_ALERT, alertNode, nsnull,
+                                eRemoveDupes, isAsynch);
         break;
       }
       ancestor = ancestor->GetParent();
