@@ -99,6 +99,9 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     // nsPIAccessNode
     NS_IMETHOD_(nsIFrame *) GetFrame(void);
 
+    // nsIAccessibleText
+    NS_IMETHOD GetAssociatedEditor(nsIEditor **aEditor);
+
     /**
       * Non-virtual method to fire a delayed event after a 0 length timeout
       *
@@ -139,9 +142,6 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     void RemoveScrollListener();
     void RefreshNodes(nsIDOMNode *aStartNode);
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
-    void CheckForEditor();
-    virtual void SetEditor(nsIEditor *aEditor);
-    virtual already_AddRefed<nsIEditor> GetEditor() { nsIEditor *editor = mEditor; NS_IF_ADDREF(editor); return editor; }
 
     /**
      * Fires accessible events when ARIA attribute is chaned.
@@ -180,7 +180,6 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     PRUint16 mScrollPositionChangedTicks; // Used for tracking scroll events
     PRPackedBool mIsContentLoaded;
     nsCOMArray<nsIAccessibleEvent> mEventsToFire;
-    nsCOMPtr<nsIEditor> mEditor;
 
 protected:
     PRBool mIsAnchor;

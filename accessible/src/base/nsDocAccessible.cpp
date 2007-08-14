@@ -243,7 +243,8 @@ nsDocAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     }
   }
 
-  nsCOMPtr<nsIEditor> editor = GetEditor();
+  nsCOMPtr<nsIEditor> editor;
+  GetAssociatedEditor(getter_AddRefs(editor));
   if (!editor) {
     *aState |= nsIAccessibleStates::STATE_READONLY;
   }
@@ -397,37 +398,33 @@ NS_IMETHODIMP nsDocAccessible::GetDocument(nsIDOMDocument **aDOMDoc)
   return NS_ERROR_FAILURE;
 }
 
-void nsDocAccessible::SetEditor(nsIEditor* aEditor)
+NS_IMETHODIMP nsDocAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 {
-  mEditor = aEditor;
-}
+  NS_ENSURE_ARG_POINTER(aEditor);
 
-void nsDocAccessible::CheckForEditor()
-{
-  if (mEditor) {
-    return;  // Already have editor, don't need to check
-  }
-  if (!mDocument) {
-    return;  // No document -- we've been shut down
+  *aEditor = nsnull;
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
+
+  if (!mDocument->HasFlag(NODE_IS_EDITABLE)) {
+    return NS_OK; // Document not editable
   }
 
   nsCOMPtr<nsISupports> container = mDocument->GetContainer();
   nsCOMPtr<nsIEditingSession> editingSession(do_GetInterface(container));
   if (!editingSession)
-    return; // No editing session interface
+    return NS_OK; // No editing session interface
 
   nsCOMPtr<nsIEditor> editor;
-  editingSession->GetEditorForWindow(mDocument->GetWindow(),
-                                     getter_AddRefs(editor));
-  SetEditor(editor);
-  if (!editor)
-    return;
-
-  // State editable is now set, readonly is now clear
-  nsCOMPtr<nsIAccessibleStateChangeEvent> event =
-    new nsAccStateChangeEvent(this, nsIAccessibleStates::EXT_STATE_EDITABLE,
-                              PR_TRUE, PR_TRUE);
-  FireAccessibleEvent(event);
+  editingSession->GetEditorForWindow(mDocument->GetWindow(), getter_AddRefs(editor));
+  if (!editor) {
+    return NS_OK;
+  }
+  PRBool isEditable;
+  editor->GetIsDocumentEditable(&isEditable);
+  if (isEditable) {
+    NS_ADDREF(*aEditor = editor);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDocAccessible::GetCachedAccessNode(void *aUniqueID, nsIAccessNode **aAccessNode)
@@ -530,8 +527,6 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
   ShutdownChildDocuments(treeItem);
-
-  mEditor = nsnull;
 
   if (mDocLoadTimer) {
     mDocLoadTimer->Cancel();
@@ -653,14 +648,10 @@ nsresult nsDocAccessible::AddEventListeners()
   PRBool isContent = (itemType == nsIDocShellTreeItem::typeContent);
 
   if (isContent) {
-    CheckForEditor();
-
-    if (!mEditor) {
-      // We're not an editor yet, but we might become one
-      nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShellTreeItem);
-      if (commandManager) {
-        commandManager->AddCommandObserver(this, "obs_documentCreated");
-      }
+    // We're not an editor yet, but we might become one
+    nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShellTreeItem);
+    if (commandManager) {
+      commandManager->AddCommandObserver(this, "obs_documentCreated");
     }
   }
 
@@ -898,9 +889,12 @@ NS_IMETHODIMP nsDocAccessible::ScrollPositionDidChange(nsIScrollableView *aScrol
 NS_IMETHODIMP nsDocAccessible::Observe(nsISupports *aSubject, const char *aTopic,
                                        const PRUnichar *aData)
 {
-  if (!nsCRT::strcmp(aTopic,"obs_documentCreated")) {
-    CheckForEditor();
-    NS_ASSERTION(mEditor, "Should have editor if we see obs_documentCreated");
+  if (!nsCRT::strcmp(aTopic,"obs_documentCreated")) {    
+    // State editable will now be set, readonly is now clear
+    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+      new nsAccStateChangeEvent(this, nsIAccessibleStates::EXT_STATE_EDITABLE,
+                                PR_TRUE, PR_TRUE);
+    FireAccessibleEvent(event);
   }
 
   return NS_OK;
@@ -1029,6 +1023,15 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_SELECTION_ADD,
                                                   targetNode, nsnull);
     }
+  }
+
+  if (aAttribute == nsAccessibilityAtoms::contenteditable) {
+    nsCOMPtr<nsIAccessibleStateChangeEvent> editableChangeEvent =
+      new nsAccStateChangeEvent(targetNode,
+                                nsIAccessibleStates::EXT_STATE_EDITABLE,
+                                PR_TRUE);
+    FireDelayedAccessibleEvent(editableChangeEvent);
+    return;
   }
 }
 
