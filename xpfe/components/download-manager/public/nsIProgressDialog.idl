@@ -62,8 +62,8 @@ interface nsIDOMWindow;
  *      not need to hold a reference to it.
  */
 
-[scriptable, uuid(1915c4f1-ee57-4684-b46a-0d9f695403b4)]
-interface nsIProgressDialog : nsITransfer {
+[scriptable, uuid(80183bd3-b9e8-45a6-a2ee-1449bc0d4253)]
+interface nsIProgressDialog : nsIDownload {
    /**
     * Open the dialog
     *
