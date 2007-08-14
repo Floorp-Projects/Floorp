@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# $Id: fix-macosx-stack.pl,v 1.1 2007/08/14 03:25:51 dbaron%dbaron.org Exp $
+# $Id: fix-macosx-stack.pl,v 1.2 2007/08/14 04:28:51 dbaron%dbaron.org Exp $
 #
 # This script processes the output of nsTraceRefcnt's Mac OS X stack
 # walking code.  This is useful for two things:
@@ -98,6 +98,7 @@ my %nmstructs;
 sub nmstruct_for($) {
     my ($file) = @_;
     my $nmstruct;
+    my $curdir;
     unless (exists $nmstructs{$file}) {
         $nmstruct = { symbols => [], files => [], lines => [] };
 
@@ -119,7 +120,25 @@ sub nmstruct_for($) {
                 if ($ty2 eq 'SLINE') {
                     add_info($nmstruct->{lines}, $addr, hex($n2));
                 } elsif ($ty2 eq '  SOL') {
-                    add_info($nmstruct->{files}, $addr, $rest2);
+                    # We get SOL lines within the code for a source
+                    # file.  They always have file names.
+                    my $file = $rest2;
+                    if (!($file =~ /^\//)) {
+                        # resolve relative paths
+                        $file = $curdir . $file;
+                    }
+                    add_info($nmstruct->{files}, $addr, $file);
+                } elsif ($ty2 eq '   SO') {
+                    # We get SO lines at the beginning of the code for a
+                    # source file, for:
+                    #  * the directory of the compilation
+                    #  * the file
+                    #  * sometimes a blank line
+                    if ($rest2 =~ /\/$/) {
+                        $curdir = $rest2;
+                    } elsif ($rest2 ne '') {
+                        add_info($nmstruct->{files}, $addr, $rest2);
+                    }
                 }
             }
         }
@@ -163,7 +182,11 @@ sub array_lookup($$) {
 
     while ($start != $end) {
         my $test = int(($start + $end + 1) / 2); # may equal $end
-        if ($address >= $array->[$test]->[0]) {
+        # Since we're processing stack traces, and the addresses in
+        # stack traces are the instructions to return to, and we really
+        # want the instruction that made the call (the previous
+        # instruction), use > instead of >=.
+        if ($address > $array->[$test]->[0]) {
             $start = $test;
         } else {
             $end = $test - 1;
