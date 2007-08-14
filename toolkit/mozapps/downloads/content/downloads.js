@@ -765,6 +765,22 @@ function performSearch() {
   buildDownloadListWithSearch(document.getElementById("searchbox").value);
 }
 
+function onSearchboxBlur() {
+  var searchbox = document.getElementById("searchbox");
+  if (searchbox.value == "") {
+    searchbox.setAttribute("empty", "true");
+    searchbox.value = searchbox.getAttribute("defaultValue");
+  }
+}
+
+function onSearchboxFocus() {
+  var searchbox = document.getElementById("searchbox");
+  if (searchbox.hasAttribute("empty")) {
+    searchbox.value = "";
+    searchbox.removeAttribute("empty");
+  }
+}
+
 // we should be using real URLs all the time, but until 
 // bug 239948 is fully fixed, this will do...
 function getLocalFileFromNativePathOrUrl(aPathOrUrl)
