@@ -795,10 +795,6 @@ CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
       aLastRS = aLastRS->parentReflowState;
     }
     if (aLastRS != &aReflowState) {
-      // The wrapper frame should be block-level. If it isn't, how the
-      // heck did it end up wrapping this block frame?
-      NS_ASSERTION(aLastRS->frame->GetStyleDisplay()->IsBlockOutside(),
-                   "Wrapping frame should be block-level");
       // Scrollbars need to be specifically excluded, if present, because they are outside the
       // padding-edge. We need better APIs for getting the various boxes from a frame.
       nsIScrollableFrame* scrollFrame;
