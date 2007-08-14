@@ -906,16 +906,18 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
 
         DWORD64 addr = (DWORD64)aPC;
         IMAGEHLP_MODULE64 modInfo;
+        IMAGEHLP_LINE64 lineInfo;
         modInfo.SizeOfStruct = sizeof(modInfo);
         BOOL modInfoRes;
-        modInfoRes = SymGetModuleInfoEspecial64(myProcess, addr, &modInfo, nsnull);
+        modInfoRes = SymGetModuleInfoEspecial64(myProcess, addr, &modInfo, &lineInfo);
 
         if (modInfoRes) {
             PL_strncpyz(aDetails->library, modInfo.ModuleName,
                         sizeof(aDetails->library));
             aDetails->loffset = (char*) aPC - (char*) modInfo.BaseOfImage;
-            // XXX We could get filename/lineno information from
-            // SymGetModuleInfoEspecial64
+            PL_strncpyz(aDetails->filename, lineInfo.FileName,
+                        sizeof(aDetails->filename));
+            aDetails->lineno = lineInfo.LineNumber;
         }
 
         ULONG64 buffer[(sizeof(SYMBOL_INFO) +
@@ -942,16 +944,18 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
 
         DWORD addr = (DWORD)aPC;
         IMAGEHLP_MODULE modInfo;
+        IMAGEHLP_LINE lineInfo;
         modInfo.SizeOfStruct = sizeof(modInfo);
         BOOL modInfoRes;
-        modInfoRes = SymGetModuleInfoEspecial(myProcess, addr, &modInfo, nsnull);
+        modInfoRes = SymGetModuleInfoEspecial(myProcess, addr, &modInfo, &lineInfo);
 
         if (modInfoRes) {
             PL_strncpyz(aDetails->library, modInfo.ModuleName,
                         sizeof(aDetails->library));
             aDetails->loffset = (char*) aPC - (char*) modInfo.BaseOfImage;
-            // XXX We could get filename/lineno information from
-            // SymGetModuleInfoEspecial
+            PL_strncpyz(aDetails->filename, lineInfo.FileName,
+                        sizeof(aDetails->filename));
+            aDetails->lineno = lineInfo.LineNumber;
         }
 
 #ifdef USING_WXP_VERSION
@@ -996,20 +1000,33 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 #ifdef USING_WXP_VERSION
     if (_StackWalk64) {
         if (aDetails->function[0])
-            _snprintf(aBuffer, aBufferSize, "%s!%s+0x%016lX\n",
+            _snprintf(aBuffer, aBufferSize, "%s!%s+0x%016lX",
                       aDetails->library, aDetails->function, aDetails->foffset);
         else
-            _snprintf(aBuffer, aBufferSize, "0x%016lX\n", aPC);
+            _snprintf(aBuffer, aBufferSize, "0x%016lX", aPC);
     } else {
 #endif
         if (aDetails->function[0])
-            _snprintf(aBuffer, aBufferSize, "%s!%s+0x%08lX\n",
+            _snprintf(aBuffer, aBufferSize, "%s!%s+0x%08lX",
                       aDetails->library, aDetails->function, aDetails->foffset);
         else
-            _snprintf(aBuffer, aBufferSize, "0x%08lX\n", aPC);
+            _snprintf(aBuffer, aBufferSize, "0x%08lX", aPC);
 #ifdef USING_WXP_VERSION
     }
 #endif
+    aBuffer[aBufferSize - 1] = '\0';
+
+    PRUint32 len = strlen(aBuffer);
+    if (aDetails->filename[0]) {
+        _snprintf(aBuffer + len, aBufferSize - len, " (%s, line %d)\n",
+                  aDetails->filename, aDetails->lineno);
+    } else {
+        aBuffer[len] = '\n';
+        if (++len != aBufferSize)
+            aBuffer[len] = '\0';
+    }
+    aBuffer[aBufferSize - 2] = '\n';
+    aBuffer[aBufferSize - 1] = '\0';
     return NS_OK;
 }
 
