@@ -742,29 +742,19 @@ function buildDownloadListWithSearch(aTerms)
     buildDefaultView();
     return;
   }
-  var terms = aTerms.split(" ");
-  if (terms.length == 0)
-    return;
 
   var sql = "SELECT id, target, name, source, state, startTime " +
-            "FROM moz_downloads ";
-  for (var i = 0; i < terms.length; i++) {
-    if (terms[i] == "") continue;
-    sql += i == 0 ? "WHERE " : "OR ";
-    // We cannot actually bind parameter because it will not pick up the
-    // parameter if we give it '%?1%', and we can't add spaces :(
-    sql += "name LIKE '%" + terms[i] + "%' ";
-  }
-  sql += "AND state != ?1 " +
-         "AND state != ?2 " +
-         "ORDER BY endTime ASC";
+            "FROM moz_downloads WHERE name LIKE ?1 ESCAPE '/' " +
+            "AND state != ?2 AND state != ?3 ORDER BY endTime ASC";
 
   var db = gDownloadManager.DBConnection;
   var stmt = db.createStatement(sql);
 
   try {
-    stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-    stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
+    var paramForLike = stmt.escapeStringForLIKE(aTerms, '/');
+    stmt.bindStringParameter(0, "%" + paramForLike + "%");
+    stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
+    stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
     buildDownloadList(stmt, gDownloadsOtherTitle);
   } finally {
     stmt.reset();
