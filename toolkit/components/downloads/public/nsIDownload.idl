@@ -36,15 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIWebProgressListener.idl"
+#include "nsISupports.idl"
 
 interface nsIURI;
 interface nsILocalFile;
 interface nsIObserver;
 interface nsIWebBrowserPersist;
+interface nsIWebProgressListener;
 
 [scriptable, uuid(06cb92f2-1dd2-11b2-95f2-96dfdfb804a1)]
-interface nsIDownload : nsIWebProgressListener {
+interface nsIDownload : nsISupports {
     
     void init(in nsIURI aSource,
               in nsILocalFile aTarget,
