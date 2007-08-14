@@ -183,3 +183,22 @@ nsAccUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
   return pAccessible->FireAccessibleEvent(event);
 }
 
+PRBool
+nsAccUtils::IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
+                         nsIDOMNode *aPossibleDescendantNode)
+{
+  NS_ENSURE_ARG_POINTER(aPossibleAncestorNode);
+  NS_ENSURE_ARG_POINTER(aPossibleDescendantNode);
+
+  nsCOMPtr<nsIDOMNode> loopNode = aPossibleDescendantNode;
+  nsCOMPtr<nsIDOMNode> parentNode;
+  while (NS_SUCCEEDED(loopNode->GetParentNode(getter_AddRefs(parentNode))) &&
+         parentNode) {
+    if (parentNode == aPossibleAncestorNode) {
+      return PR_TRUE;
+    }
+    loopNode.swap(parentNode);
+  }
+  return PR_FALSE;
+}
+
