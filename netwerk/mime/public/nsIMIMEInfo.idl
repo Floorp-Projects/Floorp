@@ -222,8 +222,8 @@ interface nsIHandlerApp : nsISupports {
 /**
  * nsILocalHandlerApp is a local OS-level executable
  */
-[scriptable, uuid(e21f3d75-9103-490e-bfb9-1bf09cc3f103)]
-interface nsILocalHandlerApp: nsISupports {
+[scriptable, uuid(9812be73-273c-478c-8170-c3e0db08ae7c)]
+interface nsILocalHandlerApp : nsIHandlerApp {
 
     /**
      * Pointer to the executable file used to handle content
@@ -237,8 +237,8 @@ interface nsILocalHandlerApp: nsISupports {
  * we probably want to work with WhatWG to spec out and implement POST-based
  * handlers as well.
  */
-[scriptable, uuid(065cd099-2f71-4ac8-9dab-17fc079e9647)]
-interface nsIWebHandlerApp: nsISupports {
+[scriptable, uuid(7521a093-c498-45ce-b462-df7ba0d882f6)]
+interface nsIWebHandlerApp : nsIHandlerApp {
 
     /**
      * Template used to construct the URI to GET.  Template is expected to have

@@ -55,7 +55,7 @@
 #include "nsExternalProtocolHandler.h"
 #include "nsPrefetchService.h"
 #include "nsOfflineCacheUpdate.h"
-#include "nsHandlerAppImpl.h"
+#include "nsLocalHandlerApp.h"
 
 // session history
 #include "nsSHEntry.h"

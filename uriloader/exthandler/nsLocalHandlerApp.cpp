@@ -37,43 +37,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsHandlerAppImpl.h"
+#include "nsLocalHandlerApp.h"
 
 // XXX why does nsMIMEInfoImpl have a threadsafe nsISupports?  do we need one 
 // here too?
+NS_IMPL_ISUPPORTS2(nsLocalHandlerApp, nsILocalHandlerApp, nsIHandlerApp)
 
-nsHandlerAppBase::nsHandlerAppBase()
-{
-}
-
-nsHandlerAppBase::nsHandlerAppBase(const PRUnichar *aName)
-  : mName(aName)
-{
-}
-
-nsHandlerAppBase::nsHandlerAppBase(const nsAString & aName)
-  : mName(aName)
-{
-}
-
-NS_IMPL_ISUPPORTS1(nsHandlerAppBase, nsIHandlerApp)
-
-/* AString name; */
-NS_IMETHODIMP nsHandlerAppBase::GetName(nsAString & aName)
-{
-  aName.Assign(mName);
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsHandlerAppBase::SetName(const nsAString & aName)
-{
-  mName.Assign(aName);
-
-  return NS_OK;
-}
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsLocalHandlerApp, nsHandlerAppBase, nsILocalHandlerApp)
+////////////////////////////////////////////////////////////////////////////////
+//// nsIHandlerApp
 
 NS_IMETHODIMP nsLocalHandlerApp::GetName(nsAString& aName)
 {
@@ -88,6 +59,16 @@ NS_IMETHODIMP nsLocalHandlerApp::GetName(nsAString& aName)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsLocalHandlerApp::SetName(const nsAString & aName)
+{
+  mName.Assign(aName);
+
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// nsILocalHandlerApp
+
 NS_IMETHODIMP nsLocalHandlerApp::GetExecutable(nsIFile **aExecutable)
 {
   NS_IF_ADDREF(*aExecutable = mExecutable);
@@ -100,19 +81,3 @@ NS_IMETHODIMP nsLocalHandlerApp::SetExecutable(nsIFile *aExecutable)
   return NS_OK;
 }
 
-
-NS_IMPL_ISUPPORTS_INHERITED1(nsWebHandlerApp, nsHandlerAppBase,
-                             nsIWebHandlerApp)
-
-
-NS_IMETHODIMP nsWebHandlerApp::GetUriTemplate(nsACString &aUriTemplate)
-{
-  aUriTemplate.Assign(mUriTemplate);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWebHandlerApp::SetUriTemplate(const nsACString &aUriTemplate)
-{
-  mUriTemplate.Assign(aUriTemplate);
-  return NS_OK;
-}
