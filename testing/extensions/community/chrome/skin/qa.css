@@ -105,6 +105,11 @@ tabs {
   border-bottom: 3px solid #E8E5D8;
 }
 
+/* don't show outline around the middle of selected tabs */
+tab:focus > .tab-middle {
+  outline: 1px none invert !important; 
+}
+
 /*-------------------------------
                PANELS
   -------------------------------*/
