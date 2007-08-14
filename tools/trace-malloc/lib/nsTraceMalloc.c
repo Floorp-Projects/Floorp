@@ -70,17 +70,19 @@
 #include "nsStackWalk.h"
 #include "nsTraceMallocCallbacks.h"
 
-#ifdef XP_WIN32
-#include <sys/timeb.h>/*for timeb*/
-#include <sys/stat.h>/*for fstat*/
+#if defined(XP_MACOSX)
 
-#include <io.h> /*for write*/
+#include <malloc/malloc.h>
 
 #define WRITE_FLAGS "w"
 
-#endif /* WIN32 */
+#define __libc_malloc(x)                malloc(x)
+#define __libc_calloc(x, y)             calloc(x, y)
+#define __libc_realloc(x, y)            realloc(x, y)
+#define __libc_free(x)                  free(x)
 
-#ifdef XP_UNIX
+#elif defined(XP_UNIX)
+
 #define WRITE_FLAGS "w"
 
 #ifdef WRAP_SYSTEM_INCLUDES
@@ -96,9 +98,14 @@ extern __ptr_t __libc_valloc(size_t);
 #pragma GCC visibility pop
 #endif
 
-#endif /* !XP_UNIX */
+#elif defined(XP_WIN32)
 
-#ifdef XP_WIN32
+#include <sys/timeb.h>/*for timeb*/
+#include <sys/stat.h>/*for fstat*/
+
+#include <io.h> /*for write*/
+
+#define WRITE_FLAGS "w"
 
 #define __libc_malloc(x)                dhw_orig_malloc(x)
 #define __libc_calloc(x, y)             dhw_orig_calloc(x,y)
@@ -1020,7 +1027,7 @@ static PLHashTable *new_allocations(void)
 
 #define get_allocations() (allocations ? allocations : new_allocations())
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(XP_MACOSX)
 
 NS_EXTERNAL_VIS_(__ptr_t)
 malloc(size_t size)
@@ -1396,6 +1403,43 @@ cfree(void *ptr)
 
 #endif /* XP_UNIX */
 
+#ifdef XP_MACOSX
+
+/* from malloc.c in Libc */
+typedef void (malloc_logger_t)(unsigned type, unsigned arg1, unsigned arg2, unsigned arg3, unsigned result, unsigned num_hot_frames_to_skip);
+extern malloc_logger_t *malloc_logger;
+
+#define MALLOC_LOG_TYPE_ALLOCATE        2
+#define MALLOC_LOG_TYPE_DEALLOCATE      4
+#define MALLOC_LOG_TYPE_HAS_ZONE        8
+#define MALLOC_LOG_TYPE_CLEARED         64
+
+static void
+my_malloc_logger(unsigned type, unsigned arg1, unsigned arg2, unsigned arg3,
+                 unsigned result, unsigned num_hot_frames_to_skip)
+{
+    unsigned all_args[3] = { arg1, arg2, arg3 };
+    unsigned *args = all_args + ((type & MALLOC_LOG_TYPE_HAS_ZONE) ? 1 : 0);
+
+    unsigned alloc_type =
+        type & (MALLOC_LOG_TYPE_ALLOCATE | MALLOC_LOG_TYPE_DEALLOCATE);
+    tm_thread *t = tm_get_thread();
+
+    if (alloc_type == (MALLOC_LOG_TYPE_ALLOCATE | MALLOC_LOG_TYPE_DEALLOCATE)) {
+        ReallocCallback((void*)args[0], (void*)result, args[1], 0, 0, t);
+    } else if (alloc_type == MALLOC_LOG_TYPE_ALLOCATE) {
+        /*
+         * We don't get size/count information for calloc, so just use
+         * MallocCallback.
+         */
+        MallocCallback((void*)result, args[0], 0, 0, t);
+    } else if (alloc_type == MALLOC_LOG_TYPE_DEALLOCATE) {
+        FreeCallback((void*)args[0], 0, 0, t);
+    }
+}
+
+#endif
+
 static const char magic[] = NS_TRACE_MALLOC_MAGIC;
 
 static void
@@ -1443,6 +1487,9 @@ PR_IMPLEMENT(void) NS_TraceMallocStartup(int logfd)
     if (tracing_enabled) {
         StartupHooker();
     }
+#endif
+#ifdef XP_MACOSX
+    malloc_logger = my_malloc_logger;
 #endif
 }
 
@@ -1894,7 +1941,7 @@ NS_TrackAllocation(void* ptr, FILE *ofp)
     t->suppress_tracing--;
 }
 
-#ifdef XP_WIN32
+#if defined(XP_WIN32) || defined(XP_MACOSX)
 
 PR_IMPLEMENT(void)
 MallocCallback(void *ptr, size_t size, PRUint32 start, PRUint32 end, tm_thread *t)
@@ -2076,6 +2123,6 @@ FreeCallback(void * ptr, PRUint32 start, PRUint32 end, tm_thread *t)
     t->suppress_tracing--;
 }
 
-#endif /*XP_WIN32*/
+#endif /* defined(XP_WIN32) || defined(XP_MACOSX) */
 
 #endif /* NS_TRACE_MALLOC */
