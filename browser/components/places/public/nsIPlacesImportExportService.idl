@@ -49,17 +49,16 @@ interface nsILocalFile;
 interface nsIPlacesImportExportService: nsISupports
 {
   /**
-   * Loads the given bookmarks.html file and merges it with the current
-   * bookmarks hierarchy.
+   * Loads the given bookmarks.html file and replaces it with the current
+   * bookmarks hierarchy (if aIsInitialImport is true) or appends it
+   * (if aIsInitialImport is false)
    */
   void importHTMLFromFile(in nsILocalFile aFile, in boolean aIsInitialImport);
-
 
   /**
    * Loads the given bookmarks.html file and puts it in the given folder
    */
   void importHTMLFromFileToFolder(in nsILocalFile aFile, in PRInt64 aFolder, in boolean aIsInitialImport);
-
 
   /**
    * Saves the current bookmarks hierarchy to a bookmarks.html file.

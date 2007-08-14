@@ -79,6 +79,7 @@
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsAutoLock.h"
 
 // Microsecond timeout for "recent" events such as typed and bookmark following.
 // If you typed it more than this time ago, it's not recent.
@@ -239,9 +240,11 @@ nsNavHistory* nsNavHistory::gHistoryService;
 nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
                                mExpireNowTimer(nsnull),
                                mExpire(this),
-                               mBatchesInProgress(0),
                                mExpireDays(0),
-                               mAutoCompleteOnlyTyped(PR_FALSE)
+                               mAutoCompleteOnlyTyped(PR_FALSE),
+                               mBatchLevel(0),
+                               mLock(nsnull),
+                               mBatchHasTransaction(PR_FALSE)
 {
 #ifdef LAZY_ADD
   mLazyTimerSet = PR_TRUE;
@@ -260,6 +263,9 @@ nsNavHistory::~nsNavHistory()
   // in case somebody creates an extra instance of the service.
   NS_ASSERTION(gHistoryService == this, "YOU CREATED 2 COPIES OF THE HISTORY SERVICE.");
   gHistoryService = nsnull;
+
+  if (mLock)
+    PR_DestroyLock(mLock);
 }
 
 
@@ -276,6 +282,9 @@ nsNavHistory::Init()
   NS_ENSURE_SUCCESS(rv, rv);
   rv = prefService->GetBranch(PREF_BRANCH_BASE, getter_AddRefs(mPrefBranch));
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mLock = PR_NewLock();
+  NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
 
   // init db file
   rv = InitDBFile(PR_FALSE);
@@ -2428,29 +2437,33 @@ nsNavHistory::RemoveObserver(nsINavHistoryObserver* aObserver)
   return mObservers.RemoveWeakElement(aObserver);
 }
 
-
 // nsNavHistory::BeginUpdateBatch
-
+// See RunInBatchMode, mLock _must_ be set when batching
 nsresult
 nsNavHistory::BeginUpdateBatch()
 {
-  mBatchesInProgress ++;
-  if (mBatchesInProgress == 1) {
+  if (mBatchLevel++ == 0) {
+    PRBool transactionInProgress = PR_TRUE; // default to no transaction on err
+    mDBConn->GetTransactionInProgress(&transactionInProgress);
+    mBatchHasTransaction = ! transactionInProgress;
+    if (mBatchHasTransaction)
+      mDBConn->BeginTransaction();
+
     ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver,
                         OnBeginUpdateBatch())
   }
+  mozStorageTransaction transaction(mDBConn, PR_FALSE);
   return NS_OK;
 }
 
-
 // nsNavHistory::EndUpdateBatch
-
 nsresult
 nsNavHistory::EndUpdateBatch()
 {
-  if (mBatchesInProgress == 0)
-    return NS_ERROR_FAILURE;
-  if (--mBatchesInProgress == 0) {
+  if (--mBatchLevel == 0) {
+    if (mBatchHasTransaction)
+      mDBConn->CommitTransaction();
+    mBatchHasTransaction = PR_FALSE;
     ENUMERATE_WEAKARRAY(mObservers, nsINavHistoryObserver, OnEndUpdateBatch())
   }
   return NS_OK;
@@ -2458,8 +2471,12 @@ nsNavHistory::EndUpdateBatch()
 
 NS_IMETHODIMP
 nsNavHistory::RunInBatchMode(nsINavHistoryBatchCallback* aCallback,
-                             nsISupports* aUserData) {
+                             nsISupports* aUserData) 
+{
+  NS_ENSURE_STATE(mLock);
   NS_ENSURE_ARG_POINTER(aCallback);
+
+  nsAutoLock lock(mLock);
 
   UpdateBatchScoper batch(*this);
   nsresult rv = aCallback->RunBatched(aUserData);

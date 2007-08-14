@@ -195,6 +195,8 @@ public:
                                PRBool aExpand);
 
   void InvalidateTree();
+  
+  PRBool mBatchInProgress;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
