@@ -237,6 +237,7 @@ bin/components/nsContentPrefService.js
 bin/components/nsContentDispatchChooser.js
 bin/components/nsHandlerService.js
 bin/components/nsScriptableIO.js
+bin/components/nsWebHandlerApp.js
 
 ; Modules
 bin/modules/*

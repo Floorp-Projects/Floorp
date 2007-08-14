@@ -42,6 +42,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsExternalHelperAppService.h"
+#include "nsCExternalHandlerService.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIFile.h"
@@ -124,7 +125,7 @@
 #include "nsCRT.h"
 
 #include "nsMIMEInfoImpl.h"
-#include "nsHandlerAppImpl.h"
+#include "nsLocalHandlerApp.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* nsExternalHelperAppService::mLog = nsnull;
@@ -824,11 +825,13 @@ nsresult nsExternalHelperAppService::FillHandlerAppFromSource(
     const PRUnichar * uriTemplate = nsnull;
     FillLiteralValueFromTarget(aSource, kNC_UriTemplate, &uriTemplate);
     if (uriTemplate && uriTemplate[0]) {
-      nsWebHandlerApp *handlerApp(new nsWebHandlerApp(appName, 
-        NS_ConvertUTF16toUTF8(uriTemplate)));
-      if (!handlerApp) {
-          return NS_ERROR_OUT_OF_MEMORY;
-      }
+      nsCOMPtr<nsIWebHandlerApp> handlerApp =
+        do_CreateInstance(NS_WEBHANDLERAPP_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      handlerApp->SetName(nsDependentString(appName));
+      handlerApp->SetUriTemplate(NS_ConvertUTF16toUTF8(uriTemplate));
+
       NS_ADDREF(*aHandlerApp = handlerApp);
     } else {
       return NS_ERROR_FAILURE; // no path name _and_ no uri template

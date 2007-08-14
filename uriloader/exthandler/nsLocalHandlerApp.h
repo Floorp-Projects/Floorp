@@ -37,66 +37,32 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __nshandlerappimpl_h__
-#define __nshandlerappimpl_h__
+#ifndef __nsLocalHandlerAppImpl_h__
+#define __nsLocalHandlerAppImpl_h__
 
 #include "nsString.h"
 #include "nsIMIMEInfo.h"
 #include "nsIFile.h"
 
-class nsHandlerAppBase : public nsIHandlerApp
+class nsLocalHandlerApp : public nsILocalHandlerApp
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIHANDLERAPP
+  NS_DECL_NSILOCALHANDLERAPP
 
-  nsHandlerAppBase() NS_HIDDEN;
-  nsHandlerAppBase(const PRUnichar *aName) NS_HIDDEN;
-  nsHandlerAppBase(const nsAString & aName) NS_HIDDEN;
-  virtual ~nsHandlerAppBase() {}
+  nsLocalHandlerApp() { }
+
+  nsLocalHandlerApp(const PRUnichar *aName, nsIFile *aExecutable) 
+    : mName(aName), mExecutable(aExecutable) { }
+
+  nsLocalHandlerApp(const nsAString & aName, nsIFile *aExecutable) 
+    : mName(aName), mExecutable(aExecutable) { }
+  virtual ~nsLocalHandlerApp() { }
 
 protected:
   nsString mName;
-};
-
-class nsLocalHandlerApp : public nsHandlerAppBase, public nsILocalHandlerApp
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSILOCALHANDLERAPP
-  
-  nsLocalHandlerApp() {}
-
-  nsLocalHandlerApp(const PRUnichar *aName, nsIFile *aExecutable) 
-    : nsHandlerAppBase(aName), mExecutable(aExecutable) {}
-
-  nsLocalHandlerApp(const nsAString & aName, nsIFile *aExecutable) 
-    : nsHandlerAppBase(aName), mExecutable(aExecutable) {}
-
-  virtual ~nsLocalHandlerApp() {}
-
-  // overriding to keep old caching behavior (that a useful name is returned
-  // even if none was given to the constructor)
-  NS_IMETHOD GetName(nsAString & aName);
-    
-protected: 
   nsCOMPtr<nsIFile> mExecutable;
 };
 
-class nsWebHandlerApp : public nsHandlerAppBase, public nsIWebHandlerApp
-{
-  public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIWEBHANDLERAPP
-
-  nsWebHandlerApp(const PRUnichar *aName, const nsACString &aUriTemplate)
-    : nsHandlerAppBase(aName), mUriTemplate(aUriTemplate) { }
-
-  virtual ~nsWebHandlerApp() {}
-
-  protected:
-  nsCString mUriTemplate;
-      
-};
-
-#endif //  __nshandlerappimpl_h__
+#endif //  __nsLocalHandlerAppImpl_h__

@@ -53,16 +53,10 @@ function run_test() {
     }
   };
   
-  var webHandler = {
-    name: "Web Handler",
-    uriTemplate: "http://www.example.com/?%s",
-    interfaces: [Ci.nsIHandlerApp, Ci.nsIWebHandlerApp, Ci.nsISupports],
-    QueryInterface: function(iid) {
-      if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
-        throw Cr.NS_ERROR_NO_INTERFACE;
-      return this;
-    }
-  };
+  var webHandler = Cc["@mozilla.org/uriloader/web-handler-app;1"].
+                   createInstance(Ci.nsIWebHandlerApp);
+  webHandler.name = "Web Handler";
+  webHandler.uriTemplate = "http://www.example.com/?%s";
   
   var handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].
                    getService(Ci.nsIHandlerService);
