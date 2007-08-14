@@ -45,7 +45,7 @@ interface nsIWebBrowserPersist;
 interface nsIWebProgressListener;
 interface nsIMIMEInfo;
 
-[scriptable, uuid(d80095a7-e81c-464c-a13f-ecb84feb969f)]
+[scriptable, uuid(6ce8aba0-b159-411a-b14e-d1ae80b6aa9d)]
 interface nsITransfer : nsISupports {
     
     /**
@@ -95,11 +95,6 @@ interface nsITransfer : nsISupports {
      * is being used.
      */
     readonly attribute nsIWebBrowserPersist persist;
-   
-    /**
-     * The percentage of transfer completed;
-     */
-    readonly attribute PRInt32 percentComplete;
 
     /**
      * The user-readable description of the transfer.
@@ -131,13 +126,30 @@ interface nsITransfer : nsISupports {
     attribute nsIObserver observer;
 };
 
-[scriptable, uuid(b0aae798-78aa-4769-9f0e-9aef4cf9474d)]
+[scriptable, uuid(0332d825-f3dd-4f15-abaa-e2958d396a52)]
 interface nsIDownload : nsITransfer {
     
     /**
      * The target of a download is always a file on the local file system.
      */
     readonly attribute nsILocalFile targetFile;
+
+    /**
+     * The percentage of transfer completed.
+     * If the file size is unknown it'll be -1 here.
+     */
+    readonly attribute PRInt32 percentComplete;
+
+    /**
+     * The amount of kbytes downloaded so far.
+     */
+    readonly attribute PRUint64 amountTransferred;
+
+    /**
+     * The size of file in kbytes.
+     * Unknown size is represented by 0.
+     */
+    readonly attribute PRUint64 size;
 };
 
 %{C++
