@@ -154,7 +154,6 @@ interface nsIDownload : nsITransfer {
  * be stored, but which is not equal to the target file.
  *
  * INTERFACES THAT NEED TO BE IMPLEMENTED:
- *   nsISupports
  *   nsITransfer
  *   nsIDownload
  *   nsIWebProgressListener
