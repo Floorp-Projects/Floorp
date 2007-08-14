@@ -3010,7 +3010,7 @@ nsComputedDOMStyle::SetValueToCoord(nsROCSSPrimitiveValue* aValue,
       if (cx) {
         nscoord val =
           nsLayoutUtils::CharsToCoord(aCoord, cx, mStyleContextHolder);
-        aValue->SetAppUnits(PR_MAX(aMinAppUnits, val));
+        aValue->SetAppUnits(PR_MAX(aMinAppUnits, PR_MIN(val, aMaxAppUnits)));
       } else {
         // Oh, well.  Give up.
         aValue->SetAppUnits(0);
@@ -3037,6 +3037,21 @@ nsComputedDOMStyle::StyleCoordToNSCoord(const nsStyleCoord& aCoord,
   switch (aCoord.GetUnit()) {
     case eStyleUnit_Coord:
       return aCoord.GetCoordValue();
+    case eStyleUnit_Chars:
+      {
+        // Get a rendering context
+        nsCOMPtr<nsIRenderingContext> cx;
+        nsIFrame* frame = mPresShell->FrameManager()->GetRootFrame();
+        if (frame) {
+          mPresShell->CreateRenderingContext(frame, getter_AddRefs(cx));
+        }
+        if (!cx) {
+          // Return the default value, I guess
+          break;
+        }
+
+        return nsLayoutUtils::CharsToCoord(aCoord, cx, mStyleContextHolder);
+      }
     case eStyleUnit_Percent:
       {
         nscoord percentageBase;
