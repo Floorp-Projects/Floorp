@@ -1,0 +1,114 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *  Bill Law    law@netscape.com
+ */
+
+#include "nsIWebProgressListener.idl"
+
+interface nsIWebBrowserPersist;
+interface nsIDOMWindow;
+interface nsILocalFile;
+
+/* nsIProgressDialog
+ *
+ * These objects are used to display progress notifications to the user.
+ * They are displayed while files are being saved to disk, for example.
+ * 
+ * Typical usage is to:
+ *   1. Create an instance, via the component manager CreateInstance()
+ *      method.
+ *   2. Set appropriate attributes that control the display and behavior
+ *      of the dialog.
+ *   3. Open the dialog.
+ *   4. Send progress notifications to the dialog, via it's 
+ *      nsIWebProgressListener methods.
+ *   5. Close the dialog when the operation completes, or when the user
+ *      closes it manually.
+ *   6. Release the instance.  The instance will be referenced by
+ *      the dialog itself, so it won't get freed until the dialog closes.
+ *
+ * Important Note: Implementors of this interface must also implement
+ *                 nsISupportsWeakReference.
+ */
+
+[scriptable, uuid(88A478B3-AF65-440a-94DC-ED9B154D2990)]
+interface nsIProgressDialog : nsIWebProgressListener {
+   /**
+    * Open the dialog
+    *
+    * @param aParent  Parent window; optional (if null, then
+    *                 a top-level window is created)
+    * @param aPersist The stream transfer operation that the dialog is
+    *                 to show progress for.  This is optional.  If
+    *                 specified, then the progress dialog will register
+    *                 itself as the listener for that object.  Otherwise,
+    *                 it is the caller's responsibility to connect this
+    *                 object to something that sends out the web progress
+    *                 notifications.
+    */
+   void open( in nsIDOMWindow aParent, in nsIWebBrowserPersist aPersist );
+
+   /**
+    * Set starting time to use in elapsed/remaining time calculations;
+    * this is useful in cases where the download might have started
+    * prior to the dialog opening; the time is specified as
+    * milliseconds, according to the convention for the JavaScript Date 
+    * object getTime function; if not specified, this value will default
+    * to the time at which the progress dialog object is created.
+    */
+   attribute long long startTime;
+
+   /**
+    * URL of the source of the stream transfer that the dialog is 
+    * displaying the progress of.
+    */
+   attribute nsIURI source;
+
+   /**
+    * Target of the stream transfer that the dialog is
+    * displaying the progress of.
+    */
+   attribute nsILocalFile target;
+
+   /**
+    * Set this attribute to indicate that the dialog is being
+    * used to display progress prior to opening a downloaded
+    * file with a helper application.  The application string
+    * specified will appear on the dialog, unless the string
+    * is empty.  This will also cause the "keep this dialog
+    * open after download" checkbox hidden.
+    */
+   attribute wstring openingWith;
+
+   /**
+    * The web browser persist object doing the associated I/O.
+    * May be null.
+    */
+   readonly attribute nsIWebBrowserPersist operation;
+
+   /**
+    * The dialog object itself.  This might be null if the dialog isn't
+    * open yet, or has been closed.
+    */
+   readonly attribute nsIDOMWindow dialog;
+};
+
+
