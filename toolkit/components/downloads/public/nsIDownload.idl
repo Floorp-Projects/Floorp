@@ -45,7 +45,7 @@ interface nsICancelable;
 interface nsIWebProgressListener;
 interface nsIMIMEInfo;
 
-[scriptable, uuid(a60c9199-2e21-434f-a43b-ab954ea2f6b7)]
+[scriptable, uuid(07910093-d70b-4621-9888-b811f42293c3)]
 interface nsIDownload : nsITransfer {
     
     /**
@@ -95,7 +95,12 @@ interface nsIDownload : nsITransfer {
      * The time a transfer was started.
      */
     readonly attribute long long startTime;
-    
+
+    /**
+     * The speed of the transfer in bytes/sec.
+     */
+    readonly attribute double speed;
+
     /**
      * Optional. If set, it will contain the target's relevant MIME information.
      * This includes it's MIME Type, helper app, and whether that helper should be
