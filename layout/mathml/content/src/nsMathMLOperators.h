@@ -84,6 +84,7 @@ class nsMathMLOperators {
 public:
   static void AddRefTable(void);
   static void ReleaseTable(void);
+  static void CleanUp();
 
   // LookupOperator:
   // Given the string value of an operator and its form (last two bits of flags),
