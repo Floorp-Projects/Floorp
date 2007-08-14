@@ -38,6 +38,7 @@
 
 var updateFunction;
 var handleCancel;
+var handleOK;
 var sTestrunsWrapper; // an array of things that are kind of like testruns, but w/o important fields.
 					  //returned by "test_runs_by_branch_product_name="
 
@@ -48,6 +49,7 @@ function handleLoad() {
 	if (window.arguments.length > 0) {
 		updateFunction = window.arguments[0];   // parent window passes in a function to update itself with data
 		handleCancel = window.arguments[1];     // parent window passes in a function to restore state if dialog canceled
+		handleOK = window.arguments[2];         // you get the idea
 	} 
 	litmus.getTestruns(populateTestRuns);
 }
@@ -116,6 +118,7 @@ function populateSubgroups(testgroup) {
 }
 
 function OK() {
+	handleOK();
 	return true;
 }
 
