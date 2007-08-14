@@ -3887,6 +3887,12 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    idistx = 256 - distx;
 			    idisty = 256 - disty;
 			    
+                            // XXX bandaid for bug 390898
+			    x1 = MOD (x1, pict->width);
+			    x2 = MOD (x2, pict->width);
+			    y1 = MOD (y1, pict->height);
+			    y2 = MOD (y2, pict->height);
+
 			    b = bits + (y1)*stride;
 			    x_off = x1;
 			    
@@ -3953,6 +3959,12 @@ static void fbFetchTransformed(bits_image_t * pict, int x, int y, int width, uin
 			    idistx = 256 - distx;
 			    idisty = 256 - disty;
 			    
+                            // XXX bandaid for bug 390898
+			    x1 = MOD (x1, pict->width);
+			    x2 = MOD (x2, pict->width);
+			    y1 = MOD (y1, pict->height);
+			    y2 = MOD (y2, pict->height);
+
 			    b = bits + (y1)*stride;
 			    x_off = x1;
 			    
