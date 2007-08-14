@@ -43,15 +43,18 @@
 #include "nsIObserverService.h"
 #include "nsISupportsArray.h"
 #include "nsStringAPI.h"
+#include "nsINavHistoryService.h"
 
 #include <CoreFoundation/CoreFoundation.h>
 
 class nsIRDFDataSource;
 
-class nsSafariProfileMigrator : public nsIBrowserProfileMigrator
+class nsSafariProfileMigrator : public nsIBrowserProfileMigrator,
+                                public nsINavHistoryBatchCallback
 {
 public:
   NS_DECL_NSIBROWSERPROFILEMIGRATOR
+  NS_DECL_NSINAVHISTORYBATCHCALLBACK
   NS_DECL_ISUPPORTS
 
   nsSafariProfileMigrator();
