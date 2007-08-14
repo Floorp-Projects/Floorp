@@ -34,45 +34,4 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
-
-interface nsIHandlerInfo;
-interface nsISimpleEnumerator;
-
-[scriptable, uuid(18bd7cc7-04b5-46d1-ad95-386e51191eb2)]
-interface nsIHandlerService : nsISupports
-{
-  /**
-   * Retrieve a list of all handlers in the datastore.  This list is not
-   * guaranteed to be in any particular order, and callers should not assume
-   * it will remain in the same order in the future.
-   *
-   * @returns a list of all handlers in the datastore
-   */
-  nsISimpleEnumerator enumerate();
-
-  /**
-   * Save the preferred action, preferred handler, and always ask properties
-   * of the given handler info object to the datastore.  Updates an existing
-   * record or creates a new one if necessary.
-   *
-   * Note: if preferred action is undefined or invalid, then we assume
-   * the default value nsIHandlerInfo::useHelperApp.
-   *
-   * FIXME: also store any changes to the list of possible handlers
-   * (once we support possible handlers).
-   *
-   * @param aHandlerInfo  the handler info object
-   */
-  void store(in nsIHandlerInfo aHandlerInfo);
-
-  /**
-   * Remove the given handler info object from the datastore.  Deletes all
-   * records associated with the object, including the preferred handler, info,
-   * and type records plus the entry in the list of types, if they exist.
-   * Otherwise, it does nothing and does not return an error.
-   *
-   * @param aHandlerInfo  the handler info object
-   */
-  void remove(in nsIHandlerInfo aHandlerInfo);
-};
+HandlerServiceTest.destroy();
