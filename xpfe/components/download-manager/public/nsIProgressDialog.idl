@@ -26,6 +26,7 @@
 interface nsIWebBrowserPersist;
 interface nsIDOMWindow;
 interface nsILocalFile;
+interface nsIObserver;
 
 /* nsIProgressDialog
  *
@@ -44,6 +45,8 @@ interface nsILocalFile;
  *      closes it manually.
  *   6. Release the instance.  The instance will be referenced by
  *      the dialog itself, so it won't get freed until the dialog closes.
+ *      The dialog will keep the instance alive, so typically one does
+ *      not need to hold a reference to it.
  *
  * Important Note: Implementors of this interface must also implement
  *                 nsISupportsWeakReference.
@@ -97,6 +100,16 @@ interface nsIProgressDialog : nsIWebProgressListener {
     * open after download" checkbox hidden.
     */
    attribute wstring openingWith;
+
+   /**
+    * Set this attribute to the observer object that will be
+    * notified when the user presses the Cancel button.  The
+    * observer's "observe" method will be called with:
+    *   aSubject = the nsIProgressDialog
+    *   aTopic   = "oncancel"
+    *   aData    = ""
+    */
+   attribute nsIObserver observer;
 
    /**
     * The web browser persist object doing the associated I/O.
