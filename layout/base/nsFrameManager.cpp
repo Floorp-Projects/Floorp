@@ -1372,7 +1372,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
 
 #ifdef ACCESSIBILITY
   if (isAccessibilityActive &&
-      aFrame->GetStyleVisibility()->IsVisible() != isVisible) {
+      aFrame->GetStyleVisibility()->IsVisible() != isVisible &&
+      !aFrame->GetPrevContinuation()) { // Primary frames only
     // XXX Visibility does not affect descendents with visibility set
     // Work on a separate, accurate mechanism for dealing with visibility changes.
     // A significant enough change occured that this part

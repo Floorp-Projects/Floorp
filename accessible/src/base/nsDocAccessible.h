@@ -102,20 +102,25 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     // nsIAccessibleText
     NS_IMETHOD GetAssociatedEditor(nsIEditor **aEditor);
 
+    enum EDupeEventRule { eAllowDupes, eCoalesceFromSameSubtree, eRemoveDupes };
+
     /**
       * Non-virtual method to fire a delayed event after a 0 length timeout
       *
       * @param aEvent - the nsIAccessibleEvent event ype
       * @param aDOMNode - DOM node the accesible event should be fired for
       * @param aData - any additional data for the event
-      * @param aAllowDupes - set to PR_TRUE if more than one event of the same
-      *                      type is allowed. By default this is false and events
-      *                      of the same type are discarded (the last one is used)
+      * @param aAllowDupes - eAllowDupes: more than one event of the same type is allowed. 
+      *                      eCoalesceFromSameSubtree: if two events are in the same subtree,
+      *                                                only the event on ancestor is used
+      *                      eRemoveDupes (default): events of the same type are discarded
+      *                                              (the last one is used)
+      *
       * @param aIsAsyn - set to PR_TRUE if this is not being called from code
       *                  synchronous with a DOM event
       */
     nsresult FireDelayedToolkitEvent(PRUint32 aEvent, nsIDOMNode *aDOMNode,
-                                     void *aData, PRBool aAllowDupes = PR_FALSE,
+                                     void *aData, EDupeEventRule aAllowDupes = eRemoveDupes,
                                      PRBool aIsAsynch = PR_FALSE);
 
     /**
@@ -129,7 +134,7 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
      *                   an event asynchronous with the DOM
      */
     nsresult FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
-                                        PRBool aAllowDupes = PR_FALSE,
+                                        EDupeEventRule aAllowDupes = eRemoveDupes,
                                         PRBool aIsAsynch = PR_FALSE);
 
     void ShutdownChildDocuments(nsIDocShellTreeItem *aStart);
