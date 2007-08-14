@@ -141,7 +141,29 @@ interface nsIDownload : nsITransfer {
 };
 
 %{C++
+/**
+ * A component with this contract ID will be created each time a download is
+ * started, and Init will be called on it and an observer will be set.
+ *
+ * Notifications of the download progress will happen via
+ * nsIWebProgressListener.
+ *
+ * If nsIObserver is implemented, the component may get a notification with
+ * topic "temp-file" and an nsILocalFile instance as subject, which indicates
+ * the location of a temporary file; i.e. a file in which the received data will
+ * be stored, but which is not equal to the target file.
+ *
+ * INTERFACES THAT NEED TO BE IMPLEMENTED:
+ *   nsISupports
+ *   nsITransfer
+ *   nsIDownload
+ *   nsIWebProgressListener
+ *
+ * INTERFACES THAT MAY BE IMPLEMENTED:
+ *   nsIObserver
+ */
 #define NS_DOWNLOAD_CONTRACTID "@mozilla.org/download;1"
+
 // {E3FA9D0A-1DD1-11B2-BDEF-8C720B597445}
 #define NS_DOWNLOAD_CID \
     { 0xe3fa9d0a, 0x1dd1, 0x11b2, { 0xbd, 0xef, 0x8c, 0x72, 0x0b, 0x59, 0x74, 0x45 } }
