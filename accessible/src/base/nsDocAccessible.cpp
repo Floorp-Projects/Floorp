@@ -1086,6 +1086,15 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     return;
   }
 
+  if (aAttribute == nsAccessibilityAtoms::pressed) {
+    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+      new nsAccStateChangeEvent(targetNode,
+                                nsIAccessibleStates::STATE_PRESSED,
+                                PR_FALSE);
+    FireDelayedAccessibleEvent(event);
+    return;
+  }
+
   if (aAttribute == nsAccessibilityAtoms::expanded) {
     nsCOMPtr<nsIAccessibleStateChangeEvent> event =
       new nsAccStateChangeEvent(targetNode,
