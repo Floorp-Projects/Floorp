@@ -80,11 +80,14 @@ static PRLogModuleInfo *gFontLog = PR_NewLogModule("winfonts");
 
 struct DCFromContext {
     DCFromContext(gfxContext *aContext) {
+        HDC dc = NULL;
         nsRefPtr<gfxASurface> aSurface = aContext->CurrentSurface();
-        if (aSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
+        NS_ASSERTION(aSurface, "DCFromContext: null surface");
+        if (aSurface && aSurface->GetType() == gfxASurface::SurfaceTypeWin32) {
             dc = static_cast<gfxWindowsSurface*>(aSurface.get())->GetDC();
             needsRelease = PR_FALSE;
-        } else {
+        }
+        if (!dc) {
             dc = GetDC(NULL);
             needsRelease = PR_TRUE;
         }
