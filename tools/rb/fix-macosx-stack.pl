@@ -1,0 +1,222 @@
+#!/usr/bin/perl
+# vim:sw=4:ts=4:et:
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is fix-linux-stack.pl.
+#
+# The Initial Developer of the Original Code is L. David Baron.
+# Portions created by the Initial Developer are Copyright (C) 2003
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   L. David Baron <dbaron@dbaron.org> (original author)
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+# $Id: fix-macosx-stack.pl,v 1.1 2007/08/14 03:25:51 dbaron%dbaron.org Exp $
+#
+# This script processes the output of nsTraceRefcnt's Mac OS X stack
+# walking code.  This is useful for two things:
+#  (1) Getting line number information out of
+#      |nsTraceRefcntImpl::WalkTheStack|'s output in debug builds.
+#  (2) Getting function names out of |nsTraceRefcntImpl::WalkTheStack|'s
+#      output on all builds (where it mostly prints UNKNOWN because only
+#      a handful of symbols are exported from component libraries).
+#
+# Use the script by piping output containing stacks (such as raw stacks
+# or make-tree.pl balance trees) through this script.
+
+use strict;
+use IPC::Open2;
+
+sub separate_debug_file_for($) {
+    my ($file) = @_;
+    return '';
+}
+
+my %address_adjustments;
+sub address_adjustment($) {
+    my ($file) = @_;
+    unless (exists $address_adjustments{$file}) {
+        my $result = 0;
+
+        open(OTOOL, '-|', 'otool', '-l', $file);
+        while (<OTOOL>) {
+            if (/^   vmaddr (0x[0-9a-f]{8})$/) {
+                $result = hex($1);
+                last;
+            }
+        }
+        close(OTOOL);
+
+        $address_adjustments{$file} = $result;
+    }
+
+    return $address_adjustments{$file};
+}
+
+sub add_info($$$) {
+    my ($array, $address, $data) = @_;
+
+    # only remember the last item at a given address
+    pop @{$array} if ($#{$array} >= 0 && $array->[$#{$array}]->[0] == $address);
+
+    push @{$array}, [ $address, $data ];
+}
+
+sub sort_by_address() {
+    return $a->[0] <=> $b->[0];
+}
+
+# Return a reference to a hash whose {read} and {write} entries are a
+# bidirectional pipe to an addr2line process that gives symbol
+# information for a file.
+my %nmstructs;
+sub nmstruct_for($) {
+    my ($file) = @_;
+    my $nmstruct;
+    unless (exists $nmstructs{$file}) {
+        $nmstruct = { symbols => [], files => [], lines => [] };
+
+        my $debug_file = separate_debug_file_for($file);
+        $debug_file = $file if ($debug_file eq '');
+
+        open(NM, '-|', 'nm', '-an', $debug_file);
+        while (<NM>) {
+            chomp;
+            my ($addr, $ty, $rest) = ($_ =~ /^([0-9a-f ]{8}) (.) (.*)$/);
+            $addr = hex($addr);
+            if ($ty eq 't') {
+                add_info($nmstruct->{symbols}, $addr, $rest);
+            } elsif ($ty eq '-') {
+                # nm gives us stabs debugging information
+                my ($n1, $n2, $ty2, $rest2) =
+                    ($rest =~ /^([0-9a-f]{2}) ([0-9a-f]{4}) (.{5}) (.*)$/);
+                # ignore $ty2 == '  FUN'
+                if ($ty2 eq 'SLINE') {
+                    add_info($nmstruct->{lines}, $addr, hex($n2));
+                } elsif ($ty2 eq '  SOL') {
+                    add_info($nmstruct->{files}, $addr, $rest2);
+                }
+            }
+        }
+        close(NM);
+
+        # nm -n Doesn't sort across .o files.
+        @{$nmstruct->{symbols}} = sort sort_by_address @{$nmstruct->{symbols}};
+        @{$nmstruct->{lines}} = sort sort_by_address @{$nmstruct->{lines}};
+        @{$nmstruct->{files}} = sort sort_by_address @{$nmstruct->{files}};
+
+        $nmstructs{$file} = $nmstruct;
+    } else {
+        $nmstruct = $nmstructs{$file};
+    }
+    return $nmstruct;
+}
+
+my $cxxfilt_pipe;
+sub cxxfilt($) {
+    my ($sym) = @_;
+
+    unless($cxxfilt_pipe) {
+        my $pid = open2($cxxfilt_pipe->{read}, $cxxfilt_pipe->{write},
+                        'c++filt');
+    }
+    my $out = $cxxfilt_pipe->{write};
+    my $in = $cxxfilt_pipe->{read};
+    print {$out} $sym . "\n";
+    chomp(my $fixedsym = <$in>);
+    return $fixedsym;
+}
+
+# binary search the array for the address
+sub array_lookup($$) {
+    my ($array, $address) = @_;
+
+    my $start = 0;
+    my $end = $#{$array};
+
+    return [ -1 , "" ] if ($end == -1);
+
+    while ($start != $end) {
+        my $test = int(($start + $end + 1) / 2); # may equal $end
+        if ($address >= $array->[$test]->[0]) {
+            $start = $test;
+        } else {
+            $end = $test - 1;
+        }
+    }
+
+    return $array->[$start];
+}
+
+sub nm_lookup($$) {
+    my ($nmstruct, $address) = @_;
+    my $sym = array_lookup($nmstruct->{symbols}, $address);
+    return {
+             symbol => cxxfilt($sym->[1]),
+             symbol_offset => ($address - $sym->[0]),
+             file => array_lookup($nmstruct->{files}, $address)->[1],
+             line => array_lookup($nmstruct->{lines}, $address)->[1]
+           };
+}
+
+while (<>) {
+    my $line = $_;
+    if ($line =~ /^([ \|0-9-]*)(.*) ?\[([^ ]*) \+(0x[0-9A-F]{1,8})\](.*)$/) {
+        my $before = $1; # allow preservation of balance trees
+        my $badsymbol = $2;
+        my $file = $3;
+        my $address = hex($4);
+        my $after = $5; # allow preservation of counts
+
+        if (-f $file) {
+            my $nmstruct = nmstruct_for($file);
+            $address += address_adjustment($file);
+
+            my $info = nm_lookup($nmstruct, $address);
+            my $symbol = $info->{symbol};
+            my $fileandline = $info->{file} . ':' . $info->{line};
+
+            # I'm not sure if it's possible for dlsym to have gotten
+            # better information, but just in case:
+            if (my ($offset) = ($badsymbol =~ /\+0x([0-9A-F]{8})/)) { # FIXME: add $
+                if (hex($offset) < $info->{symbol_offset}) {
+                    $symbol = $badsymbol;
+                }
+            }
+
+            if ($fileandline eq ':') { $fileandline = $file; }
+            print "$before$symbol ($fileandline)$after\n";
+        } else {
+            print STDERR "Warning: File \"$file\" does not exist.\n";
+            print $line;
+        }
+
+    } else {
+        print $line;
+    }
+}
