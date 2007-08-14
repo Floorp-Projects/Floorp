@@ -47,12 +47,16 @@
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
+#include "nsPIDOMWindow.h"        
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMXULDocument.h"
+#include "nsIEditingSession.h"
+#include "nsIEditor.h"
 #include "nsIFontMetrics.h"
 #include "nsIFrame.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIPlaintextEditor.h"
 #include "nsIServiceManager.h"
 #include "nsTextFragment.h"
@@ -64,8 +68,8 @@ static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 // nsHyperTextAccessible
 // ------------
 
-NS_IMPL_ADDREF_INHERITED(nsHyperTextAccessible, nsAccessible)
-NS_IMPL_RELEASE_INHERITED(nsHyperTextAccessible, nsAccessible)
+NS_IMPL_ADDREF_INHERITED(nsHyperTextAccessible, nsAccessibleWrap)
+NS_IMPL_RELEASE_INHERITED(nsHyperTextAccessible, nsAccessibleWrap)
 
 nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
@@ -169,7 +173,8 @@ nsHyperTextAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   if (!aExtraState)
     return NS_OK;
 
-  nsCOMPtr<nsIEditor> editor = GetEditor();
+  nsCOMPtr<nsIEditor> editor;
+  GetAssociatedEditor(getter_AddRefs(editor));
   if (editor) {
     PRUint32 flags;
     editor->GetFlags(&flags);
@@ -195,8 +200,16 @@ void nsHyperTextAccessible::CacheChildren()
     return;
   }
 
+  // Special case for text entry fields, go directly to editor's root for children
   if (mAccChildCount == eChildCountUninitialized) {
-    nsCOMPtr<nsIEditor> editor = GetEditor();
+    PRUint32 role;
+    GetRole(&role);
+    if (role != nsIAccessibleRole::ROLE_ENTRY && role != nsIAccessibleRole::ROLE_PASSWORD_TEXT) {
+      nsAccessible::CacheChildren();
+      return;
+    }
+    nsCOMPtr<nsIEditor> editor;
+    GetAssociatedEditor(getter_AddRefs(editor));
     if (!editor) {
       nsAccessible::CacheChildren();
       return;
@@ -1152,7 +1165,8 @@ NS_IMETHODIMP nsHyperTextAccessible::SetTextContents(const nsAString &aText)
 NS_IMETHODIMP nsHyperTextAccessible::InsertText(const nsAString &aText, PRInt32 aPosition)
 {
   if (NS_SUCCEEDED(SetCaretOffset(aPosition))) {
-    nsCOMPtr<nsIEditor> editor = GetEditor();
+    nsCOMPtr<nsIEditor> editor;
+    GetAssociatedEditor(getter_AddRefs(editor));
     nsCOMPtr<nsIPlaintextEditor> peditor(do_QueryInterface(editor));
     return peditor ? peditor->InsertText(aText) : NS_ERROR_FAILURE;
   }
@@ -1162,7 +1176,8 @@ NS_IMETHODIMP nsHyperTextAccessible::InsertText(const nsAString &aText, PRInt32 
 
 NS_IMETHODIMP nsHyperTextAccessible::CopyText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  nsCOMPtr<nsIEditor> editor = GetEditor();
+  nsCOMPtr<nsIEditor> editor;
+  GetAssociatedEditor(getter_AddRefs(editor));
   if (editor && NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
     return editor->Copy();
 
@@ -1171,7 +1186,8 @@ NS_IMETHODIMP nsHyperTextAccessible::CopyText(PRInt32 aStartPos, PRInt32 aEndPos
 
 NS_IMETHODIMP nsHyperTextAccessible::CutText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  nsCOMPtr<nsIEditor> editor = GetEditor();
+  nsCOMPtr<nsIEditor> editor;
+  GetAssociatedEditor(getter_AddRefs(editor));
   if (editor && NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
     return editor->Cut();
 
@@ -1180,7 +1196,8 @@ NS_IMETHODIMP nsHyperTextAccessible::CutText(PRInt32 aStartPos, PRInt32 aEndPos)
 
 NS_IMETHODIMP nsHyperTextAccessible::DeleteText(PRInt32 aStartPos, PRInt32 aEndPos)
 {
-  nsCOMPtr<nsIEditor> editor = GetEditor();
+  nsCOMPtr<nsIEditor> editor;
+  GetAssociatedEditor(getter_AddRefs(editor));
   if (editor && NS_SUCCEEDED(SetSelectionRange(aStartPos, aEndPos)))
     return editor->DeleteSelection(nsIEditor::eNone);
 
@@ -1189,7 +1206,8 @@ NS_IMETHODIMP nsHyperTextAccessible::DeleteText(PRInt32 aStartPos, PRInt32 aEndP
 
 NS_IMETHODIMP nsHyperTextAccessible::PasteText(PRInt32 aPosition)
 {
-  nsCOMPtr<nsIEditor> editor = GetEditor();
+  nsCOMPtr<nsIEditor> editor;
+  GetAssociatedEditor(getter_AddRefs(editor));
   if (editor && NS_SUCCEEDED(SetCaretOffset(aPosition)))
     return editor->Paste(nsIClipboard::kGlobalClipboard);
 
@@ -1201,10 +1219,27 @@ nsHyperTextAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 {
   NS_ENSURE_ARG_POINTER(aEditor);
 
-  nsCOMPtr<nsIEditor> editor(GetEditor());
-  NS_IF_ADDREF(*aEditor = editor);
+  *aEditor = nsnull;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-  return NS_OK;
+  if (!content->HasFlag(NODE_IS_EDITABLE)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = GetDocShellTreeItemFor(mDOMNode);
+  nsCOMPtr<nsIEditingSession> editingSession(do_GetInterface(docShellTreeItem));
+  if (!editingSession)
+    return NS_OK; // No editing session interface
+
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+  NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIDocument> doc = shell->GetDocument();
+  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIEditor> editor;
+  return editingSession->GetEditorForWindow(doc->GetWindow(), aEditor);
 }
 
 /**
@@ -1276,7 +1311,8 @@ nsresult nsHyperTextAccessible::GetSelections(nsISelectionController **aSelCon, 
     *aDomSel = nsnull;
   }
   
-  nsCOMPtr<nsIEditor> editor = GetEditor();
+  nsCOMPtr<nsIEditor> editor;
+  GetAssociatedEditor(getter_AddRefs(editor));
   if (editor) {
     if (aSelCon) {
       editor->GetSelectionController(aSelCon);
