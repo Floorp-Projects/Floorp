@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# $Id: fix-macosx-stack.pl,v 1.2 2007/08/14 04:28:51 dbaron%dbaron.org Exp $
+# $Id: fix-macosx-stack.pl,v 1.3 2007/08/14 04:35:29 dbaron%dbaron.org Exp $
 #
 # This script processes the output of nsTraceRefcnt's Mac OS X stack
 # walking code.  This is useful for two things:
@@ -110,7 +110,7 @@ sub nmstruct_for($) {
             chomp;
             my ($addr, $ty, $rest) = ($_ =~ /^([0-9a-f ]{8}) (.) (.*)$/);
             $addr = hex($addr);
-            if ($ty eq 't') {
+            if ($ty eq 't' || $ty eq 'T') {
                 add_info($nmstruct->{symbols}, $addr, $rest);
             } elsif ($ty eq '-') {
                 # nm gives us stabs debugging information
