@@ -55,6 +55,14 @@ interface nsIProgressDialog : nsIDownload {
     *                 a top-level window is created)
     */
    void open( in nsIDOMWindow aParent );
+   
+   /**
+    * Whether the download should be cancelled when the progress
+    * dialog is closed using the standard OS close box.  This is
+    * useful for showing the progress dialog as an information
+    * window, which is what download manager does.
+    */
+   attribute PRBool cancelDownloadOnClose;
 
   /**
    * The dialog object itself.  This might be null if the dialog isn't
