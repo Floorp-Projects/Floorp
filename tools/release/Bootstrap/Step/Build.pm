@@ -3,6 +3,8 @@
 #
 package Bootstrap::Step::Build;
 
+use File::Temp qw(tempfile);
+
 use Bootstrap::Step;
 
 @ISA = ("Bootstrap::Step");
@@ -37,6 +39,7 @@ sub Execute {
       timeout => 36000
     );
 
+    $this->StoreBuildID();
 }
 
 sub Verify {
@@ -94,11 +97,13 @@ sub Push {
     my $candidateDir = $config->GetFtpCandidateDir(bitsUnsigned => 1);
 
     my $osFileMatch = $config->SystemInfo(var => 'osname');    
+
+    # TODO - use a more generic function for this kind of remapping
     if ($osFileMatch eq 'win32')  {
       $osFileMatch = 'win';
     } elsif ($osFileMatch eq 'macosx') {
       $osFileMatch = 'mac';
-    }    
+    }
 
     $this->Shell(
       cmd => 'ssh',
@@ -148,6 +153,56 @@ sub Announce {
     $this->SendAnnouncement(
       subject => "$product $version build step finished",
       message => "$product $version en-US build was copied to the candidates dir.\nBuild ID is $buildID\nPush Dir was $pushDir",
+    );
+}
+
+sub StoreBuildID() {
+    my $this = shift;
+
+    my $config = new Bootstrap::Config();
+    my $productTag = $config->Get(var => 'productTag');
+    my $rc = $config->Get(var => 'rc');
+    my $logDir = $config->Get(var => 'logDir');
+    my $sshUser = $config->Get(var => 'sshUser');
+    my $sshServer = $config->Get(var => 'sshServer');
+
+    my $rcTag = $productTag . '_RC' . $rc;
+    my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
+    my $pushLog  = catfile($logDir, 'build_' . $rcTag . '-push.log');
+
+    my $logParser = new MozBuild::TinderLogParse(
+        logFile => $buildLog,
+    );
+    my $pushDir = $logParser->GetPushDir();
+    if (! defined($pushDir)) {
+        die("No pushDir found in $buildLog");
+    }
+    $pushDir =~ s!^http://ftp.mozilla.org/pub/mozilla.org!/home/ftp/pub!;
+
+    # drop os-specific buildID file on FTP
+    my $buildID = $logParser->GetBuildID();
+    if (! defined($buildID)) {
+        die("No buildID found in $buildLog");
+    }
+    if (! $buildID =~ /^\d+$/) {
+        die("ASSERT: Build: build ID is not numerical: $buildID")
+    }
+
+
+    my $osFileMatch = $config->SystemInfo(var => 'osname');    
+
+    my ($bh, $buildIDTempFile) = tempfile(DIR => '.');
+    print $bh 'buildID=' . $buildID;
+    $bh->close() || 
+     die("Could not open buildID temp file $buildIDTempFile: $!");
+
+    my $buildIDFile = $osFileMatch . '_info.txt';
+    $this->Shell(
+      cmd => 'scp',
+      cmdArgs => [$buildIDTempFile, 
+                  $sshUser . '@' . $sshServer . ':' .
+                  $pushDir . '/' . $buildIDFile],
+      logFile => $pushLog,
     );
 }
 
