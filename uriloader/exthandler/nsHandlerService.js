@@ -40,6 +40,10 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 
+const CLASS_MIMEINFO        = "mimetype";
+const CLASS_PROTOCOLINFO    = "scheme";
+
+
 // namespace prefix
 const NC_NS                 = "http://home.netscape.com/NC-rdf#";
 
@@ -50,9 +54,7 @@ const NC_PROTOCOL_SCHEMES   = NC_NS + "Protocol-Schemes";
 
 // content type ("type") properties
 
-const NC_EDITABLE           = NC_NS + "editable";
-
-// nsIMIMEInfo::MIMEType
+// nsIHandlerInfo::type
 const NC_VALUE              = NC_NS + "value";
 
 // references nsIHandlerInfo record
@@ -101,6 +103,14 @@ HandlerService.prototype = {
   //**************************************************************************//
   // nsIHandlerService
 
+  enumerate: function HS_enumerate() {
+    var handlers = Cc["@mozilla.org/array;1"].
+                   createInstance(Ci.nsIMutableArray);
+    this._appendHandlers(handlers, CLASS_MIMEINFO);
+    this._appendHandlers(handlers, CLASS_PROTOCOLINFO);
+    return handlers.enumerate();
+  },
+
   store: function HS_store(aHandlerInfo) {
     // FIXME: when we switch from RDF to something with transactions (like
     // SQLite), enclose the following changes in a transaction so they all
@@ -111,6 +121,37 @@ HandlerService.prototype = {
     this._storePreferredAction(aHandlerInfo);
     this._storePreferredHandler(aHandlerInfo);
     this._storeAlwaysAsk(aHandlerInfo);
+
+    // Write the changes to the database immediately so we don't lose them
+    // if the application crashes.
+    if (this._ds instanceof Ci.nsIRDFRemoteDataSource)
+      this._ds.Flush();
+  },
+
+  remove: function HS_remove(aHandlerInfo) {
+    var preferredHandlerID = this._getPreferredHandlerID(aHandlerInfo);
+    this._removeAssertions(preferredHandlerID);
+
+    var infoID = this._getInfoID(aHandlerInfo);
+    this._removeAssertions(infoID);
+
+    var typeID = this._getTypeID(aHandlerInfo);
+    this._removeAssertions(typeID);
+
+    // Now that there's no longer a handler for this type, remove the type
+    // from the list of types for which there are known handlers.
+    var typeList = this._ensureAndGetTypeList(this._getClass(aHandlerInfo));
+    var type = this._rdf.GetResource(typeID);
+    var typeIndex = typeList.IndexOf(type);
+    if (typeIndex != -1)
+      typeList.RemoveElementAt(typeIndex, true);
+
+    // Write the changes to the database immediately so we don't lose them
+    // if the application crashes.
+    // XXX If we're removing a bunch of handlers at once, will flushing
+    // after every removal cause a significant performance hit?
+    if (this._ds instanceof Ci.nsIRDFRemoteDataSource)
+      this._ds.Flush();
   },
 
 
@@ -196,7 +237,27 @@ HandlerService.prototype = {
 
 
   //**************************************************************************//
-  // Storage Utils
+  // Convenience Getters
+
+  // MIME Service
+  __mimeSvc: null,
+  get _mimeSvc() {
+    if (!this.__mimeSvc)
+      this.__mimeSvc =
+        Cc["@mozilla.org/uriloader/external-helper-app-service;1"].
+        getService(Ci.nsIMIMEService);
+    return this.__mimeSvc;
+  },
+
+  // Protocol Service
+  __protocolSvc: null,
+  get _protocolSvc() {
+    if (!this.__protocolSvc)
+      this.__protocolSvc =
+        Cc["@mozilla.org/uriloader/external-protocol-service;1"].
+        getService(Ci.nsIExternalProtocolService);
+    return this.__protocolSvc;
+  },
 
   // RDF Service
   __rdf: null,
@@ -235,6 +296,10 @@ HandlerService.prototype = {
     return this.__ds;
   },
 
+
+  //**************************************************************************//
+  // Storage Utils
+
   /**
    * Get the string identifying whether this is a MIME or a protocol handler.
    * This string is used in the URI IDs of various RDF properties.
@@ -245,16 +310,16 @@ HandlerService.prototype = {
    */
   _getClass: function HS__getClass(aHandlerInfo) {
     if (aHandlerInfo instanceof Ci.nsIMIMEInfo)
-      return "mimetype";
+      return CLASS_MIMEINFO;
     else
-      return "scheme";
+      return CLASS_PROTOCOLINFO;
   },
 
   /**
    * Return the unique identifier for a content type record, which stores
-   * the editable and value fields plus a reference to the type's handler.
+   * the value field plus a reference to the type's handler.
    * 
-   * |urn:(mimetype|scheme):<type>|
+   * |urn:<class>:<type>|
    * 
    * XXX: should this be a property of nsIHandlerInfo?
    * 
@@ -271,7 +336,7 @@ HandlerService.prototype = {
    * the preferredAction and alwaysAsk fields plus a reference to the preferred
    * handler.  Roughly equivalent to the nsIHandlerInfo interface.
    * 
-   * |urn:(mimetype|scheme):handler:<type>|
+   * |urn:<class>:handler:<type>|
    * 
    * FIXME: the type info record should be merged into the type record,
    * since there's a one to one relationship between them, and this record
@@ -292,7 +357,7 @@ HandlerService.prototype = {
    * its human-readable name and the path to its executable (for a local app)
    * or its URI template (for a web app).
    * 
-   * |urn:(mimetype|scheme):externalApplication:<type>|
+   * |urn:<class>:externalApplication:<type>|
    *
    * XXX: should this be a property of nsIHandlerApp?
    *
@@ -312,12 +377,12 @@ HandlerService.prototype = {
   },
 
   /**
-   * Get the list of types for the given class, creating the list if it
-   * doesn't already exist.  The class can be either "mimetype" or "scheme"
+   * Get the list of types for the given class, creating the list if it doesn't
+   * already exist. The class can be either CLASS_MIMEINFO or CLASS_PROTOCOLINFO
    * (i.e. the result of a call to _getClass).
    * 
-   * |urn:(mimetype|scheme)s|
-   * |urn:(mimetype|scheme)s:root|
+   * |urn:<class>s|
+   * |urn:<class>s:root|
    * 
    * @param aClass {string} the class for which to retrieve a list of types
    *
@@ -330,8 +395,8 @@ HandlerService.prototype = {
 
     var source = this._rdf.GetResource("urn:" + aClass + "s");
     var property =
-      this._rdf.GetResource(aClass == "mimetype" ? NC_MIME_TYPES
-                                                 : NC_PROTOCOL_SCHEMES);
+      this._rdf.GetResource(aClass == CLASS_MIMEINFO ? NC_MIME_TYPES
+                                                     : NC_PROTOCOL_SCHEMES);
     var target = this._rdf.GetResource("urn:" + aClass + "s:root");
 
     // Make sure we have an arc from the source to the target.
@@ -375,7 +440,6 @@ HandlerService.prototype = {
 
     // Create a basic type record for this type.
     typeList.AppendElement(type);
-    this._setLiteral(typeID, NC_EDITABLE, "true");
     this._setLiteral(typeID, NC_VALUE, aHandlerInfo.type);
     
     // Create a basic info record for this type.
@@ -394,6 +458,68 @@ HandlerService.prototype = {
     var preferredHandlerID = this._getPreferredHandlerID(aHandlerInfo);
     this._setLiteral(preferredHandlerID, NC_PATH, "");
     this._setResource(infoID, NC_PREFERRED_APP, preferredHandlerID);
+  },
+
+  /**
+   * Append known handlers of the given class to the given array.  The class
+   * can be either CLASS_MIMEINFO or CLASS_PROTOCOLINFO.
+   *
+   * @param aHandlers   {array} the array of handlers to append to
+   * @param aClass      {string} the class for which to append handlers
+   */
+  _appendHandlers: function HS__appendHandlers(aHandlers, aClass) {
+    var typeList = this._ensureAndGetTypeList(aClass);
+    var enumerator = typeList.GetElements();
+
+    while (enumerator.hasMoreElements()) {
+      var element = enumerator.getNext();
+      
+      // This should never happen.  If it does, that means our datasource
+      // is corrupted with type list entries that point to literal values
+      // instead of resources.  If it does happen, let's just do our best
+      // to recover by ignoring this entry and moving on to the next one.
+      if (!(element instanceof Ci.nsIRDFResource))
+        continue;
+
+      // Get the value of the element's NC:value property, which contains
+      // the MIME type or scheme for which we're retrieving a handler info.
+      var type = this._getValue(element.ValueUTF8, NC_VALUE);
+      if (!type)
+        continue;
+
+      var handler;
+      if (typeList.Resource.Value == "urn:mimetypes:root")
+        handler = this._mimeSvc.getFromTypeAndExtension(type, null);
+      else
+        handler = this._protocolSvc.getProtocolHandlerInfo(type);
+
+      aHandlers.appendElement(handler, false);
+    }
+  },
+
+  /**
+   * Get the value of a property of an RDF source.
+   *
+   * @param sourceURI   {string} the URI of the source
+   * @param propertyURI {string} the URI of the property
+   * @returns           {string} the value of the property
+   */
+  _getValue: function HS__getValue(sourceURI, propertyURI) {
+    var source = this._rdf.GetResource(sourceURI);
+    var property = this._rdf.GetResource(propertyURI);
+
+    var target = this._ds.GetTarget(source, property, true);
+
+    if (!target)
+      return null;
+    
+    if (target instanceof Ci.nsIRDFResource)
+      return target.ValueUTF8;
+
+    if (target instanceof Ci.nsIRDFLiteral)
+      return target.Value;
+
+    return null;
   },
 
   /**
@@ -456,7 +582,27 @@ HandlerService.prototype = {
 
     if (this._ds.hasArcOut(source, property)) {
       var target = this._ds.GetTarget(source, property, true);
-      this._ds.Unassert(source, property, target, true);
+      this._ds.Unassert(source, property, target);
+    }
+  },
+
+ /**
+  * Remove all assertions about a given RDF source.
+  *
+  * Note: not recursive.  If some assertions point to other resources,
+  * and you want to remove assertions about those resources too, you need
+  * to do so manually.
+  *
+  * @param sourceURI {string} the URI of the source
+  */
+  _removeAssertions: function HS__removeAssertions(sourceURI) {
+    var source = this._rdf.GetResource(sourceURI);
+    var properties = this._ds.ArcLabelsOut(source);
+ 
+    while (properties.hasMoreElements()) {
+      var property = properties.getNext();
+      var target = this._ds.GetTarget(source, property, true);
+      this._ds.Unassert(source, property, target);
     }
   },
 
