@@ -302,6 +302,16 @@ public:
   nsresult BeginUpdateBatch();
   nsresult EndUpdateBatch();
 
+  // the level of nesting of batches, 0 when no batches are open
+  PRInt32 mBatchLevel;
+
+  // lock for RunInBatchMode
+  PRLock* mLock;
+
+  // true if the outermost batch has an associated transaction that should
+  // be committed when our batch level reaches 0 again.
+  PRBool mBatchHasTransaction;
+
   // better alternative to QueryStringToQueries (in nsNavHistoryQuery.cpp)
   nsresult QueryStringToQueryArray(const nsACString& aQueryString,
                                    nsCOMArray<nsNavHistoryQuery>* aQueries,
@@ -511,7 +521,6 @@ protected:
 
   // observers
   nsMaybeWeakPtrArray<nsINavHistoryObserver> mObservers;
-  PRInt32 mBatchesInProgress;
 
   // localization
   nsCOMPtr<nsIStringBundle> mBundle;
