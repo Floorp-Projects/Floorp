@@ -119,7 +119,7 @@ interface nsITransfer : nsISupports {
     readonly attribute nsIMIMEInfo MIMEInfo;
 
     /**
-     * Optional; transfering information is passed to this listener and used to
+     * Optional; transferring information is passed to this listener and used to
      * update client UI.
      */
     attribute nsIWebProgressListener listener;
