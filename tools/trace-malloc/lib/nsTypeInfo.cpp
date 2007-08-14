@@ -249,7 +249,7 @@ const char* nsGetTypeName(void* ptr)
 
 #endif
 
-#if defined(linux)
+#if defined(linux) || defined(XP_MACOSX)
 
 #define __USE_GNU
 #include <dlfcn.h>
