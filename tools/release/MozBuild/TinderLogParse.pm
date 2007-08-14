@@ -45,13 +45,21 @@ sub GetBuildID {
             $buildID =~ s/$searchString//;
 
             # remove trailing slash
-            $buildID =~ s/^\.//;
+            $buildID =~ s/\.$//;
             last;
         }
     }
 
     close FILE or die("Cannot close file $log: $!");
 
+    if (! defined($buildID)) {
+        return undef;
+    }
+    if (! $buildID =~ /^\d+$/) {
+        die("ASSERT: Build: build ID is not numerical: $buildID")
+    }
+
+    chomp($buildID);
     return $buildID;
 }
 
@@ -86,8 +94,14 @@ sub GetPushDir {
     }
 
     close FILE or die("Cannot close file $log: $!");
+ 
+    if (! defined($pushDir)) {
+        return undef;
+    }
 
     chomp($pushDir);
+    # remove empty space at end of URL
+    $pushDir =~ s/\s+$//;
 
     return $pushDir;
 }

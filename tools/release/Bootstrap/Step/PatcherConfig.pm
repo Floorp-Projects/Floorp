@@ -5,6 +5,7 @@
 package Bootstrap::Step::PatcherConfig;
 
 use Config::General;
+use File::Temp qw(tempfile);
 
 use MozBuild::Util qw(MkdirWithPath);
 
@@ -83,6 +84,9 @@ sub BumpPatcherConfig {
     my $oldRc = $config->Get(var => 'oldRc');
     my $localeInfo = $config->GetLocaleInfo();
     my $patcherConfig = $config->Get(var => 'patcherConfig');
+    my $sshUser = $config->Get(var => 'sshUser');
+    my $sshServer = $config->Get(var => 'sshServer');
+    my $logDir = $config->Get(var => 'logDir');
 
     # First, parse the file.
     my $checkedOutPatcherConfig = catfile($configBumpDir, 'patcher', 
@@ -196,11 +200,50 @@ sub BumpPatcherConfig {
     $releaseObj->{'schema'} = '1';
     $releaseObj->{'version'} = $releaseObj->{'extension-version'} = $version;
 
-    ## XXX - Dummy data for now...
-    my $linBuildId = '1234567890';
-    my $winBuildId = '1234567891';
-    my $macBuildId = '1234567892';
-    
+    my $linBuildId;
+    my $winBuildId;
+    my $macBuildId;
+
+    # grab os-specific buildID file on FTP
+    my $candidateDir = $config->GetFtpCandidateDir(bitsUnsigned => 0);
+    foreach my $os ('linux', 'macosx', 'win32') {
+        my ($bh, $buildIDTempFile) = tempfile(DIR => '.');
+        $bh->close();
+        $this->Shell(
+          cmd => 'scp',
+          cmdArgs => [$sshUser . '@' . $sshServer . ':' . 
+                      $candidateDir .'/' . $os . '_info.txt',
+                      $buildIDTempFile],
+        );
+        my $buildID;
+        open(FILE, "< $buildIDTempFile") || 
+         die("Could not open buildID temp file $buildIDTempFile: $!");
+        while (<FILE>) {
+          my ($var, $value) = split(/\s*=\s*/, $_, 2);
+          if ($var eq 'buildID') {
+              $buildID = $value;
+          }
+        }
+        close(FILE) || 
+         die("Could not close buildID temp file $buildIDTempFile: $!");
+        if (! defined($buildID)) {
+            die("Could not read buildID from temp file $buildIDTempFile: $!");
+        }
+        if (! $buildID =~ /^\d+$/) {
+            die("ASSERT: BumpPatcherConfig: $buildID is non-numerical");
+        }
+        chomp($buildID);
+        if ($os eq 'linux') {
+            $linBuildId = "$buildID";
+        } elsif ($os eq 'macosx') {
+            $macBuildId = "$buildID";
+        } elsif ($os eq 'win32') {
+            $winBuildId = "$buildID";
+        } else {
+            die("ASSERT: BumpPatcherConfig(): unknown OS $os");
+        }
+    }
+
     $releaseObj->{'platforms'} = { 'linux-i686' => $linBuildId,
                                    'win32' => $winBuildId,
                                    'mac' => $macBuildId };
