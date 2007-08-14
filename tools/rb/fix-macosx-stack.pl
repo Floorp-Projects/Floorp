@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# $Id: fix-macosx-stack.pl,v 1.3 2007/08/14 04:35:29 dbaron%dbaron.org Exp $
+# $Id: fix-macosx-stack.pl,v 1.4 2007/08/14 04:44:33 dbaron%dbaron.org Exp $
 #
 # This script processes the output of nsTraceRefcnt's Mac OS X stack
 # walking code.  This is useful for two things:
@@ -61,16 +61,22 @@ my %address_adjustments;
 sub address_adjustment($) {
     my ($file) = @_;
     unless (exists $address_adjustments{$file}) {
-        my $result = 0;
+        my $result = -1;
 
         open(OTOOL, '-|', 'otool', '-l', $file);
         while (<OTOOL>) {
-            if (/^   vmaddr (0x[0-9a-f]{8})$/) {
-                $result = hex($1);
-                last;
+            if (/^  segname __TEXT$/) {
+                if (<OTOOL> =~ /^   vmaddr (0x[0-9a-f]{8})$/) {
+                    $result = hex($1);
+                    last;
+                } else {
+                    die "Bad output from otool";
+                }
             }
         }
         close(OTOOL);
+
+        $result >= 0 || die "Bad output from otool";
 
         $address_adjustments{$file} = $result;
     }
