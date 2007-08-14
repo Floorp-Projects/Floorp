@@ -124,6 +124,27 @@ function run_test() {
 
   do_check_false(handlerInfo.alwaysAskBeforeHandling);
 
+  // Make sure the handler service's enumerate method lists all known handlers.
+  // FIXME: store and test enumeration of a protocol handler once bug 391150
+  // gets fixed and we can actually retrieve a protocol handler.
+  var handlerInfo2 = mimeSvc.getFromTypeAndExtension("nonexistent/type2", null);
+  handlerSvc.store(handlerInfo2);
+  var handlerTypes = ["nonexistent/type", "nonexistent/type2"];
+  var handlers = handlerSvc.enumerate();
+  while (handlers.hasMoreElements()) {
+    var handler = handlers.getNext().QueryInterface(Ci.nsIHandlerInfo);
+    do_check_neq(handlerTypes.indexOf(handler.type), -1);
+    handlerTypes.splice(handlerTypes.indexOf(handler.type), 1);
+  }
+  do_check_eq(handlerTypes.length, 0);
+
+  // Make sure the handler service's remove method removes a handler record.
+  handlerSvc.remove(handlerInfo2);
+  handlers = handlerSvc.enumerate();
+  while (handlers.hasMoreElements())
+    do_check_neq(handlers.getNext().QueryInterface(Ci.nsIHandlerInfo).type,
+                 handlerInfo2.type);
+
   // Make sure we can store and retrieve a handler info object with no preferred
   // handler.
   var noPreferredHandlerInfo =
