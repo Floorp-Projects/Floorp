@@ -88,3 +88,7 @@ richlistitem[type="download"] .name {
   -moz-margin-end: 15px;
   -moz-margin-start: 5px;
 }
+
+#searchbox[empty] {
+  color: GrayText;
+}

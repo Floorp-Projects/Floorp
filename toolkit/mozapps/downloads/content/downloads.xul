@@ -170,7 +170,9 @@
 
   <hbox id="search">
     <textbox type="timed" timeout="500" id="searchbox"
-             oncommand="performSearch();"/>
+             oncommand="performSearch();" empty="true"
+             value="&searchBox.label;" defaultValue="&searchBox.label;"
+             onblur="onSearchboxBlur();" onfocus="onSearchboxFocus();"/>
     <spacer flex="1"/>
     <!-- TODO get advanced search working (Bug 390491)
     <button label="Advanced Search"/>

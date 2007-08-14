@@ -46,3 +46,5 @@
 <!ENTITY activeDownloads.label            "Active">
 <!ENTITY completedDownloads.label         "Completed">
 <!ENTITY searchResults.label              "Search Results">
+
+<!ENTITY searchBox.label                  "Search...">
