@@ -300,8 +300,10 @@ nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRUint32 a
 /*
  * Gets the specified text.
  */
-nsIFrame* nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset, nsAString *aText,
-                                               nsIFrame **aEndFrame, nsIntRect *aBoundsRect)
+nsIFrame*
+nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
+                                     nsAString *aText, nsIFrame **aEndFrame,
+                                     nsIntRect *aBoundsRect)
 {
   PRInt32 startOffset = aStartOffset;
   PRInt32 endOffset = aEndOffset;
@@ -340,18 +342,23 @@ nsIFrame* nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& a
     if (!frame) {
       continue;
     }
+    nsIFrame *primaryFrame = frame;
     if (IsText(accessible)) {
-      // We only need info up to rendered offset -- that is what we're converting to content offset
+      // We only need info up to rendered offset -- that is what we're
+      // converting to content offset
       PRInt32 substringEndOffset;
       nsresult rv = frame->GetRenderedText(nsnull, &skipChars, &iter);
       PRUint32 ourRenderedStart = iter.GetSkippedOffset();
       PRInt32 ourContentStart = iter.GetOriginalOffset();
       if (NS_SUCCEEDED(rv)) {
-        substringEndOffset = iter.ConvertOriginalToSkipped(skipChars.GetOriginalCharCount() + ourContentStart) -
-                    ourRenderedStart;
+        substringEndOffset =
+          iter.ConvertOriginalToSkipped(skipChars.GetOriginalCharCount() +
+                                        ourContentStart) -
+          ourRenderedStart;
       }
       else {
-        // XXX for non-textframe text like list bullets, should go away after list bullet rewrite
+        // XXX for non-textframe text like list bullets,
+        // should go away after list bullet rewrite
         substringEndOffset = TextLength(accessible);
       }
       if (startOffset < substringEndOffset) {
@@ -360,8 +367,10 @@ nsIFrame* nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& a
           // We don't want the whole string for this accessible
           // Get out the continuing text frame with this offset
           PRInt32 outStartLineUnused;
-          PRInt32 contentOffset = iter.ConvertSkippedToOriginal(startOffset) + ourRenderedStart - ourContentStart;
-          frame->GetChildFrameContainingOffset(contentOffset, PR_TRUE, &outStartLineUnused, &frame);
+          PRInt32 contentOffset = iter.ConvertSkippedToOriginal(startOffset) +
+                                  ourRenderedStart - ourContentStart;
+          frame->GetChildFrameContainingOffset(contentOffset, PR_TRUE,
+                                               &outStartLineUnused, &frame);
           if (aEndFrame) {
             *aEndFrame = frame; // We ended in the current frame
           }
@@ -373,11 +382,13 @@ nsIFrame* nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& a
         }
         if (aText) {
           nsCOMPtr<nsPIAccessible> pAcc(do_QueryInterface(accessible));
-          pAcc->AppendTextTo(*aText, startOffset, substringEndOffset - startOffset);
+          pAcc->AppendTextTo(*aText, startOffset,
+                             substringEndOffset - startOffset);
         }
         if (aBoundsRect) {    // Caller wants the bounds of the text
-          aBoundsRect->UnionRect(*aBoundsRect, GetBoundsForString(frame, startOffset,
-                                 substringEndOffset));
+          aBoundsRect->UnionRect(*aBoundsRect,
+                                 GetBoundsForString(primaryFrame, startOffset,
+                                                    substringEndOffset));
         }
         if (!startFrame) {
           startFrame = frame;
@@ -408,7 +419,8 @@ nsIFrame* nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& a
                       kForcedNewLineChar : kEmbeddedObjectChar;
           }
           if (aBoundsRect) {
-            aBoundsRect->UnionRect(*aBoundsRect, frame->GetScreenRectExternal());
+            aBoundsRect->UnionRect(*aBoundsRect,
+                                   frame->GetScreenRectExternal());
           }
         }
         if (!startFrame) {
