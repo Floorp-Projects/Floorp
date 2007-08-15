@@ -132,7 +132,7 @@
         </xul:vbox>
         <xul:vbox pack="center">
           <xul:button class="cancel mini-button" tooltiptext="&cmd.cancel.label;"
-                      command="cmd_cancel"/>
+                      command="cmd_cancel" ondblclick="event.stopPropagation();"/>
         </xul:vbox>
       </xul:hbox>
     </content>  
@@ -157,9 +157,9 @@
                                  xbl:inherits="value=progress,mode=progressmode"/>
             </xul:vbox>
             <xul:button class="pause mini-button" tooltiptext="&cmd.pause.label;"
-                        command="cmd_pause"/>
+                        command="cmd_pause" ondblclick="event.stopPropagation();"/>
             <xul:button class="cancel mini-button" tooltiptext="&cmd.cancel.label;"
-                        command="cmd_cancel"/>
+                        command="cmd_cancel" ondblclick="event.stopPropagation();"/>
           </xul:hbox>
           <xul:label xbl:inherits="value=status,tooltiptext=status" flex="1"
                      crop="right" class="status"/>
@@ -188,9 +188,9 @@
                                  xbl:inherits="value=progress,mode=progressmode"/>
             </xul:vbox>
             <xul:button class="resume mini-button" tooltiptext="&cmd.resume.label;"
-                        command="cmd_resume"/>
+                        command="cmd_resume" ondblclick="event.stopPropagation();"/>
             <xul:button class="cancel mini-button" tooltiptext="&cmd.cancel.label;"
-                        command="cmd_cancel"/>
+                        command="cmd_cancel" ondblclick="event.stopPropagation();"/>
           </xul:hbox>
           <xul:label xbl:inherits="value=status,tooltiptext=status" flex="1"
                      crop="right" class="status"/>
@@ -218,9 +218,10 @@
         <xul:vbox pack="center">
           <xul:hbox>
             <xul:button class="open mini-button" tooltiptext="&cmd.open.label;"
-                        command="cmd_open"/>
+                        command="cmd_open" ondblclick="event.stopPropagation();"/>
             <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
-                        command="cmd_showInfo" anonid="info"/>
+                        command="cmd_showInfo" ondblclick="event.stopPropagation();"
+                        anonid="info"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
@@ -245,9 +246,10 @@
         <xul:vbox pack="center">
           <xul:hbox>
             <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
-                        command="cmd_retry"/>
+                        command="cmd_retry" ondblclick="event.stopPropagation();"/>
             <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
-                        command="cmd_showInfo" anonid="info"/>
+                        command="cmd_showInfo" ondblclick="event.stopPropagation();"
+                        anonid="info"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
@@ -272,9 +274,10 @@
         <xul:vbox pack="center">
           <xul:hbox>
             <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
-                        command="cmd_retry"/>
+                        command="cmd_retry" ondblclick="event.stopPropagation();"/>
             <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
-                        command="cmd_showInfo" anonid="info"/>
+                        command="cmd_showInfo" ondblclick="event.stopPropagation();"
+                        anonid="info"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>

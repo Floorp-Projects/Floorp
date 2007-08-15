@@ -241,7 +241,7 @@ function showDownload(aDownload)
 function onDownloadDblClick(aEvent)
 {
   var item = aEvent.target;
-  if (item.getAttribute("type") == "download") {
+  if (item.getAttribute("type") == "download" && aEvent.button == 0) {
     var state = parseInt(item.getAttribute("state"));
     switch (state) {
       case Ci.nsIDownloadManager.DOWNLOAD_FINISHED:
