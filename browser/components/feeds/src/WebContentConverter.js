@@ -176,7 +176,6 @@ var WebContentConverterRegistrar = {
   },
 
   _contentTypes: { },
-  _protocols: { },
 
   /**
    * Track auto handlers for various content types using a content-type to 
@@ -265,13 +264,23 @@ var WebContentConverterRegistrar = {
    * See nsIWebContentConverterService
    */
   removeProtocolHandler: 
-  function WCCR_removeProtocolHandler(protocol, uri) {
-    function notURI(currentURI) {
-      return currentURI != uri;
+  function WCCR_removeProtocolHandler(aProtocol, aURITemplate) {
+    var eps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].
+              getService(Ci.nsIExternalProtocolService);
+    var handlerInfo = eps.getProtocolHandlerInfo(aProtocol);
+    var handlers =  handlerInfo.possibleApplicationHandlers;
+    for (let i = 0; i < handlers.length; i++) {
+      try { // We only want to test web handlers
+        let handler = handlers.queryElementAt(i, Ci.nsIWebHandlerApp);
+        if (handler.uriTemplate == aURITemplate) {
+          handlers.removeElementAt(i);
+          var hs = Cc["@mozilla.org/uriloader/handler-service;1"].
+                   getService(Ci.nsIHandlerService);
+          hs.store(handlerInfo);
+          return;
+        }
+      } catch (e) { /* it wasn't a web handler */ }
     }
-  
-    if (protocol in this._protocols) 
-      this._protocols[protocol] = this._protocols[protocol].filter(notURI);
   },
   
   /**
@@ -324,13 +333,118 @@ var WebContentConverterRegistrar = {
     return ioService.newURI(aURL, aOriginCharset, aBaseURI);
   },
 
+  _checkAndGetURI:
+  function WCCR_checkAndGetURI(aURIString)
+  {
+    try {
+      var uri = this._makeURI(aURIString);
+    } catch (ex) {
+      // not supposed to throw according to spec
+      return; 
+    }
+ 
+    // If the uri doesn't contain '%s', it won't be a good handler
+    if (uri.spec.indexOf("%s") < 0)
+      throw NS_ERROR_DOM_SYNTAX_ERR; 
+
+    return uri;
+  },
+
+  /**
+   * Determines if a web handler is already registered.
+   *
+   * @param aProtocol
+   *        The scheme of the web handler we are checking for.
+   * @param aURITemplate
+   *        The URI template that the handler uses to handle the protocol.
+   * @return true if it is already registered, false otherwise.
+   */
+  _protocolHandlerRegistered:
+  function WCCR_protocolHandlerRegistered(aProtocol, aURITemplate) {
+    var eps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].
+              getService(Ci.nsIExternalProtocolService);
+    var handlerInfo = eps.getProtocolHandlerInfo(aProtocol);
+    var handlers =  handlerInfo.possibleApplicationHandlers;
+    for (let i = 0; i < handlers.length; i++) {
+      try { // We only want to test web handlers
+        let handler = handlers.queryElementAt(i, Ci.nsIWebHandlerApp);
+        if (handler.uriTemplate == aURITemplate)
+          return true;
+      } catch (e) { /* it wasn't a web handler */ }
+    }
+    return false;
+  },
+
   /**
    * See nsIWebContentHandlerRegistrar
    */
   registerProtocolHandler: 
-  function WCCR_registerProtocolHandler(aProtocol, aURI, aTitle, aContentWindow) {
-    // not yet implemented
-    return;
+  function WCCR_registerProtocolHandler(aProtocol, aURIString, aTitle, aContentWindow) {
+    LOG("registerProtocolHandler(" + aProtocol + "," + aURIString + "," + aTitle + ")");
+    
+    // First, check to make sure this isn't already handled internally (we don't
+    // want to let them take over, say "chrome").
+    var ios = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService);
+    var handler = ios.getProtocolHandler(aProtocol);
+    if (!(handler instanceof Ci.nsIExternalProtocolHandler)) {
+      // This is handled internally, so we don't want them to register
+      // XXX this should be a "security exception" according to spec, but that
+      // isn't defined yet.
+      throw("Permission denied to add " + aURIString + "as a protocol handler");
+    }
+ 
+    var uri = this._checkAndGetURI(aURIString);
+
+    var buttons, message;
+    if (this._protocolHandlerRegistered(aProtocol, uri.spec))
+      message = this._getFormattedString("protocolHandlerRegistered",
+                                         [aTitle, aProtocol]);
+    else {
+      // Now Ask the user and provide the proper callback
+      message = this._getFormattedString("addProtocolHandler",
+                                         [aTitle, uri.host, aProtocol]);
+      var fis = Cc["@mozilla.org/browser/favicon-service;1"].
+                getService(Ci.nsIFaviconService);
+      var notificationIcon = fis.getFaviconLinkForIcon(uri);
+      var notificationValue = "Protocol Registration: " + aProtocol;
+      var addButton = {
+        label: this._getString("addProtocolHandlerAddButton"),
+        accessKey: this._getString("addHandlerAddButtonAccesskey"),
+        protocolInfo: { protocol: aProtocol, uri: uri.spec, name: aTitle },
+
+        callback:
+        function WCCR_addProtocolHandlerButtonCallback(aNotification, aButtonInfo) {
+          var protocol = aButtonInfo.protocolInfo.protocol;
+          var uri      = aButtonInfo.protocolInfo.uri;
+          var name     = aButtonInfo.protocolInfo.name;
+
+          var handler = Cc["@mozilla.org/uriloader/web-handler-app;1"].
+                        createInstance(Ci.nsIWebHandlerApp);
+          handler.name = name;
+          handler.uriTemplate = uri;
+
+          var eps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].
+                    getService(Ci.nsIExternalProtocolService);
+          var handlerInfo = eps.getProtocolHandlerInfo(protocol);
+          handlerInfo.possibleApplicationHandlers.appendElement(handler, false);
+
+          var hs = Cc["@mozilla.org/uriloader/handler-service;1"].
+                   getService(Ci.nsIHandlerService);
+          hs.store(handlerInfo);
+        }
+      };
+      buttons = [addButton];
+    }
+
+    var browserWindow = this._getBrowserWindowForContentWindow(aContentWindow);
+    var browserElement = this._getBrowserForContentWindow(browserWindow, aContentWindow);
+    var notificationBox = browserWindow.getBrowser().getNotificationBox(browserElement);
+    notificationBox.appendNotification(message,
+                                       notificationValue,
+                                       notificationIcon,
+                                       notificationBox.PRIORITY_INFO_LOW,
+                                       buttons);
   },
 
   /**
@@ -350,16 +464,7 @@ var WebContentConverterRegistrar = {
     if (contentType != TYPE_MAYBE_FEED)
       return;
 
-    try {
-      var uri = this._makeURI(aURIString);
-    } catch (ex) {
-      // not supposed to throw according to spec
-      return; 
-    }
-    
-    // If the uri doesn't contain '%s', it won't be a good content handler
-    if (uri.spec.indexOf("%s") < 0)
-      throw NS_ERROR_DOM_SYNTAX_ERR; 
+    var uri = this._checkAndGetURI(aURIString);
             
     // For security reasons we reject non-http(s) urls (see bug Bug 354316),
     // we may need to revise this once we support more content types
