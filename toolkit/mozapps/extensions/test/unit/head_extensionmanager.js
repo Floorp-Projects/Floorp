@@ -229,6 +229,9 @@ function startupEM()
   
   if (needsRestart)
     gEM.start(null);
+
+  // Make sure extension manager datasource is initialized by requesting it
+  var dummy = gEM.datasource;
 }
 
 /**
