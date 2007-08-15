@@ -155,13 +155,17 @@ public:
   static PRInt32 TextLength(nsIAccessible *aAccessible); // Returns -1 on failure
   static PRBool IsLeaf(nsIAccessible *aAcc) { PRInt32 numChildren; aAcc->GetChildCount(&numChildren); return numChildren > 0; }
   static PRBool IsNodeRelevant(nsIDOMNode *aNode); // Is node something that could have an attached accessible
+  /**
+   * When exposing to platform accessibility APIs, should the children be pruned off?
+   */
+  static PRBool MustPrune(nsIAccessible *aAccessible);
   
   already_AddRefed<nsIAccessible> GetParent() {
     nsIAccessible *parent = nsnull;
     GetParent(&parent);
     return parent;
   }
-
+  
 protected:
   PRBool MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut, nsStateMapEntry *aStateMapEntry);
   virtual nsIFrame* GetBoundsFrame();

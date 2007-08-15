@@ -3273,3 +3273,16 @@ nsAccessible::GetAttrValue(PRUint32 aNameSpaceID, nsIAtom *aName,
   return result;
 }
 
+PRBool nsAccessible::MustPrune(nsIAccessible *aAccessible)
+{ 
+  PRUint32 role = Role(aAccessible);
+  return role == nsIAccessibleRole::ROLE_MENUITEM || 
+         role == nsIAccessibleRole::ROLE_ENTRY ||
+         role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
+         role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
+         role == nsIAccessibleRole::ROLE_TOGGLE_BUTTON ||
+         role == nsIAccessibleRole::ROLE_GRAPHIC ||
+         role == nsIAccessibleRole::ROLE_SLIDER ||
+         role == nsIAccessibleRole::ROLE_PROGRESSBAR ||
+         role == nsIAccessibleRole::ROLE_SEPARATOR;
+}
