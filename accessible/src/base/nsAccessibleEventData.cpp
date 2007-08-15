@@ -49,6 +49,9 @@
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsXULTreeAccessible.h"
 #endif
+#include "nsIContent.h"
+#include "nsIPresShell.h"
+#include "nsPresContext.h"
 
 PRBool nsAccEvent::gLastEventFromUserInput = PR_FALSE;
 nsIDOMNode* nsAccEvent::gLastEventNodeWeak = 0;
