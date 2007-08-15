@@ -247,7 +247,6 @@ bin\components\nsSafebrowsingApplication.js
 bin\components\safebrowsing.xpt
 bin\components\nsUrlClassifierListManager.js
 bin\components\nsUrlClassifierLib.js
-bin\components\nsUrlClassifierTable.js
 bin\components\url-classifier.xpt
 
 ; [Browser Chrome Files]
