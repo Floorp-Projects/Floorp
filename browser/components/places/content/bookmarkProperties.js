@@ -574,12 +574,9 @@ var BookmarkPropertiesPanel = {
                                                          this._bookmarkId);
     }
     catch(ex) {
-      // getMicrosummaries will throw an exception in at least two cases:
-      // 1. the bookmarked URI contains a scheme that the service won't
-      //    download for security reasons (currently it only handles http,
-      //    https, and file);
-      // 2. the page to which the URI refers isn't HTML or XML (the only two
-      //    content types the service knows how to summarize).
+      // getMicrosummaries will throw an exception if the page to which the URI
+      // refers isn't HTML or XML (the only two content types the service knows
+      // how to summarize).
       this._microsummaries = null;
     }
     if (this._microsummaries) {

@@ -1560,16 +1560,9 @@ MicrosummarySet.prototype = {
                                           resource.content.characterSet,
                                           null);
 
-      try {
-        const securityManager = Cc["@mozilla.org/scriptsecuritymanager;1"].
-                                getService(Ci.nsIScriptSecurityManager);
-        securityManager.checkLoadURI(resource.uri,
-                                     generatorURI,
-                                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-      }
-      catch(e) {
+      if (!/^https?$/i.test(generatorURI.scheme)) {
         LOG("can't load generator " + generatorURI.spec + " from page " +
-            resource.uri.spec + ": " + e);
+            resource.uri.spec);
         continue;
       }
 
