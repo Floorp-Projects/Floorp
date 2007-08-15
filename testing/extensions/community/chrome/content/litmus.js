@@ -40,6 +40,7 @@
  
  var litmus = {
 	baseURL : qaPref.getPref(qaPref.prefBase+".litmus.url", "char"),
+	userStats : '',
 	
 	getTestcase : function(testcase_id, callback) {
         litmus.getLitmusJson(testcase_id, callback, "testcase_id=");
@@ -152,18 +153,18 @@
 	    alert("XXX: not implemented");
 	},
 	postResultXML : function(xml, callback, errback) {
-		var req = doSimpleXMLHttpRequest(litmus.baseURL+'process_test.cgi', 
-										    { data: xml });
-		req.addErrback(errback);
-		req.addCallback(function(resp) {
+		var qs = queryString({ data: xml});
+		var fake_callback = function(resp) {
 			// only call callback() if we really had a sucuess. XML 
 			// processing errors should result in a call to errback()
-			if ((/ok/i).exec(resp.responseText)) {
+			if ((/^ok/i).exec(resp.responseText)) {
 				callback(resp);
 			} else {
 				errback(resp);
 			}
-		});
+		};
+		qaTools.httpPostRequest(litmus.baseURL+'process_test.cgi', 
+										    qs, fake_callback, errback);
 	},
     
     currentSubgroupID: null,	
@@ -182,6 +183,23 @@
         
         if (litmus.currentSubgroupID != 0)
             litmus.getSubgroup(litmus.currentSubgroupID, function(subgroup) {litmus.statePopulateFields(subgroup); litmus.undisableAll();});
+    },
+    loadStats : function() {
+    	// pull new user statistics from litmus
+    	var url = litmus.baseURL+'json.cgi?' + 'user_stats=' + qaPref.litmus.getUsername();
+    	var req = loadJSONDoc(url);
+    	req.addCallback(function(data) {
+    	  litmus.userStats = data;  
+    	  litmus.displayStats();
+    	});
+    },
+    displayStats : function() {
+    	var statbox = $('qa-litmus-stats');
+    	if (litmus.userStats != '') {
+    		var statline = qaMain.bundle.getFormattedString('qa.extension.litmus.stats', 
+    			[litmus.userStats.week, litmus.userStats.month, litmus.userStats.alltime]);
+    		statbox.value = statline;
+    	}
     },
     checkRadioButtons : function() {
         var menu = document.getElementById('testlist');
@@ -315,7 +333,11 @@
 		}));
 		
 		var callback = function(resp) {
-			
+			// increment the stat counters:
+			for (var i in litmus.userStats) {
+				litmus.userStats[i]++;
+			}
+			litmus.displayStats();
 		};
 		
 		var errback = function(resp) {
@@ -397,8 +419,10 @@ Sysconfig.prototype = {
 			
         // platform:
         if (! this.platform) {
-			if ((/^Mac/).exec(navigator.platform)) {
-				this.platform = 'Mac';
+			if ((/^MacPPC/).exec(navigator.platform)) {
+				this.platform = 'Mac (PPC)';
+			} else if ((/^MacIntel/).exec(navigator.platform)) {
+				this.platform = 'Mac (Intel)';
 			} else if ((/^Win/).exec(navigator.platform)) {
 				this.platform = 'Windows';
 			} else if ((/^Linux/).exec(navigator.platform)) {
@@ -432,7 +456,7 @@ Sysconfig.prototype = {
         	}
         } else if (this.platform == 'Linux') {
         	this.opsys = 'Linux';
-        } else if (this.platform == 'Mac') {
+        } else if (this.platform == 'Mac (PPC)' || this.platform == 'Mac (Intel)') {
         	// no way to detect the OS on mac, so just assume 
         	// it's 10.4. The user can provide the real OS in setup
         	this.opsys = 'Mac OS 10.4';
