@@ -3496,7 +3496,7 @@ nsNavHistoryResult::AddHistoryObserver(nsNavHistoryQueryResultNode* aNode)
       mIsHistoryObserver = PR_TRUE;
   }
   if (mHistoryObservers.IndexOf(aNode) != mHistoryObservers.NoIndex) {
-    NS_NOTREACHED("Attempting to register an observer twice!");
+    NS_WARNING("Attempting to register an observer twice!");
     return;
   }
   mHistoryObservers.AppendElement(aNode);
