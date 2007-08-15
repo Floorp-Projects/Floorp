@@ -561,6 +561,9 @@ protected:
   // get the nsMenuPopupFrame, if any, for the given content node
   nsMenuPopupFrame* GetPopupFrameForContent(nsIContent* aContent);
 
+  // return the topmost menu, skipping over invisible popups
+  nsMenuChainItem* GetTopVisibleMenu();
+
   // callbacks for ShowPopup and HidePopup as events may be done asynchronously
   void ShowPopupCallback(nsIContent* aPopup,
                          nsMenuPopupFrame* aPopupFrame,
