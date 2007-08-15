@@ -4,12 +4,10 @@
 
 /* Download View */
 #downloadView {
-  margin: 10px 10px 5px 10px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-appearance: none !important;
+  margin: 0;
+  border-bottom: 2px solid;
   -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
 }
 
 /* Download View Items */
