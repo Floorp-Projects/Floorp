@@ -1131,7 +1131,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   nsINavHistoryQueryOptions clone();
 };
 
-[scriptable, uuid(ac992686-b98a-40e1-b104-7b1ff8f0c016)]
+[scriptable, uuid(c5846d2c-5340-4cfb-9c0d-c15feca939ce)]
 interface nsINavHistoryService : nsISupports
 {
   /**
@@ -1328,23 +1328,12 @@ interface nsINavHistoryService : nsISupports
    * history is disabled if the browser.history_expire_days pref is 0
    */
   readonly attribute boolean historyDisabled;
-};
 
-/**
- * nsIMorkHistoryImporter is a service which handles importing old
- * history files.
- */
-[scriptable, uuid(be935aed-6929-4e44-be29-17ec89e5c8bd)]
-interface nsIMorkHistoryImporter : nsISupports
-{
   /**
    * Import the given Mork history file.
    *  @param file     The Mork history file to import
-   *  @param history  A reference to the nsINavHistoryService.  This is
-   *                  supplied since the importer is invoked during
-   *                  history service initialization.
    */
-  void importHistory(in nsIFile file, in nsINavHistoryService history);
+  void importHistory(in nsIFile file);
 };
 
 /**
