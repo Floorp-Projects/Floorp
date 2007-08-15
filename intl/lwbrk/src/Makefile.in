@@ -68,11 +68,17 @@ CPPSRCS		+= \
 		nsUniscribeBreaker.cpp \
 		$(NULL)
 else
+ifeq ($(MOZ_WIDGET_TOOLKIT), cocoa)
+CPPSRCS		+= \
+		nsCarbonBreaker.cpp \
+		$(NULL)
+else
 CPPSRCS		+= \
 	nsRuleBreaker.cpp \
 		$(NULL)
 
 CSRCS		= rulebrk.c
+endif
 endif
 endif
 
