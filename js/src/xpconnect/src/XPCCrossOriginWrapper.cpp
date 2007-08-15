@@ -324,9 +324,17 @@ WrapSameOriginProp(JSContext *cx, JSObject *outerObj, jsval *vp)
   }
 
   JSObject *wrappedObj = JSVAL_TO_OBJECT(*vp);
-  const char *name = JS_GET_CLASS(cx, wrappedObj)->name;
-  if (XPC_XOW_ClassNeedsXOW(name)) {
+  JSClass *clasp = JS_GET_CLASS(cx, wrappedObj);
+  if (XPC_XOW_ClassNeedsXOW(clasp->name)) {
     return XPC_XOW_WrapObject(cx, JS_GetGlobalForObject(cx, outerObj), vp);
+  }
+
+  // Check if wrappedObj is an XOW. If so, verify that it's from the
+  // right scope.
+  if (clasp == &sXPC_XOW_JSClass.base &&
+      JS_GetParent(cx, wrappedObj) != JS_GetParent(cx, outerObj)) {
+    *vp = OBJECT_TO_JSVAL(GetWrappedObject(cx, wrappedObj));
+    return XPC_XOW_WrapObject(cx, JS_GetParent(cx, outerObj), vp);
   }
 
   if (JS_ObjectIsFunction(cx, wrappedObj) &&
@@ -383,9 +391,10 @@ XPC_XOW_RewrapIfNeeded(JSContext *cx, JSObject *outerObj, jsval *vp)
     return XPC_XOW_WrapFunction(cx, outerObj, obj, vp);
   }
 
-  // Don't need to wrap non-C++-implemented objects.
-  // Note: This catches attempts to double-wrap cross origin wrappers.
-  if (!XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj)) {
+  if (JS_GET_CLASS(cx, obj) == &sXPC_XOW_JSClass.base &&
+      JS_GetParent(cx, outerObj) != JS_GetParent(cx, obj)) {
+    *vp = OBJECT_TO_JSVAL(GetWrappedObject(cx, obj));
+  } else if (!XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj)) {
     return JS_TRUE;
   }
 
