@@ -52,7 +52,7 @@ interface nsIDirectoryEnumerator;
  * Interface representing a location where extensions, themes etc are 
  * installed.
  */
-[scriptable, uuid(D3D4DADA-C6EB-11D9-A68F-001124787B2E)]
+[scriptable, uuid(32a74707-ec7c-af19-f4d8-d0cd8cb6a948)]
 interface nsIInstallLocation : nsISupports
 {
   /**
@@ -157,6 +157,37 @@ interface nsIInstallLocation : nsISupports
    *          Extension System, false otherwise.
    */
   boolean itemIsManagedIndependently(in AString id);
+
+  /**
+   * Stages the specified file by copying it to some location from where it
+   * can be retrieved later to complete installation.
+   *
+   * @param   file
+   *          The file to stage
+   * @param   id
+   *          The GUID of the item the file represents
+   * @returns The staged file
+   */
+  nsIFile stageFile(in nsIFile file, in AString id);
+
+  /**
+   * Returns the most recently staged package (e.g. the last XPI or JAR in a
+   * directory) for an item and removes items that do not qualify.
+   *
+   * @param   id
+   *          The ID of the staged package
+   * @returns an nsIFile if the package exists otherwise null.
+   */
+  nsIFile getStageFile(in AString id);
+
+  /**
+   * Removes a file from the stage. This cleans up the stage if there is nothing
+   * else left after the remove operation.
+   *
+   * @param   file
+   *          The file to remove.
+   */
+  void removeFile(in nsIFile file);
 };
 
 /**
