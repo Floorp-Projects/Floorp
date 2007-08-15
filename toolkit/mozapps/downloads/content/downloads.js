@@ -168,7 +168,7 @@ function autoRemoveAndClose(aDownload)
     var autoClose = pref.getBoolPref(PREF_BDM_CLOSEWHENDONE);
     var autoOpened =
       !window.opener || window.opener.location.href == window.location.href;
-    if (autoClose && autoOpened && gCanAutoClose && !gUserInteracted) {
+    if (autoClose && autoOpened && !gUserInteracted) {
       gCloseDownloadManager();
       return true;
     }
