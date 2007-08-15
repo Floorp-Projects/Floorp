@@ -120,6 +120,9 @@ function addDownload()
   var srcFile = dirSvc.get("ProfD", Ci.nsIFile);
   srcFile.append("LICENSE");
 
+  // it is part of the active downloads the moment addDownload is called
+  gDownloadCount++;
+
   var dl = dm.addDownload(nsIDownloadManager.DOWNLOAD_TYPE_DOWNLOAD,
                           createURI("http://localhost:4444/LICENSE"),
                           createURI(destFile), null, null,
@@ -128,9 +131,6 @@ function addDownload()
   // This will throw if it isn't found, and that would mean test failure, so no
   // try catch block
   var test = dm.getDownload(dl.id);
-
-  // it is part of the active downloads now, even if it hasn't started.
-  gDownloadCount++;
 
   persist.progressListener = dl.QueryInterface(Ci.nsIWebProgressListener);
   persist.saveURI(dl.source, null, null, null, null, dl.targetFile);

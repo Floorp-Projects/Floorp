@@ -85,6 +85,7 @@
           var state = parseInt(this.getAttribute("state"));
           const dl = Components.interfaces.nsIDownloadManager;
           return state == dl.DOWNLOAD_NOTSTARTED || 
+                 state == dl.DOWNLOAD_QUEUED ||
                  state == dl.DOWNLOAD_DOWNLOADING || 
                  state == dl.DOWNLOAD_PAUSED;
         ]]>
