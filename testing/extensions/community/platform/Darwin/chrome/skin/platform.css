@@ -4,3 +4,7 @@
 	background-color: #ebebeb !important;
 }
 
+groupbox * {
+	background: url("chrome://global/skin/10pct_transparent_grey.png") repeat !important;
+}
+
