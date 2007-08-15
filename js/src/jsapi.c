@@ -1305,7 +1305,7 @@ StdNameToAtom(JSContext *cx, JSStdName *stdn)
     if (!atom) {
         name = stdn->name;
         if (name) {
-            atom = js_Atomize(cx, name, strlen(name), 0);
+            atom = js_Atomize(cx, name, strlen(name), ATOM_PINNED);
             OFFSET_TO_ATOM(cx->runtime, offset) = atom;
         }
     }
