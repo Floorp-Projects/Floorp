@@ -124,6 +124,7 @@ const KEY_APP_PROFILE                 = "app-profile";
 const KEY_APP_GLOBAL                  = "app-global";
 
 const CATEGORY_INSTALL_LOCATIONS      = "extension-install-locations";
+const CATEGORY_UPDATE_PARAMS          = "extension-update-params";
 
 const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
 const PREFIX_NS_CHROME                = "http://www.mozilla.org/rdf/chrome#";
@@ -6198,7 +6199,27 @@ RDFItemUpdater.prototype = {
     dsURI = dsURI.replace(/%REQ_VERSION%/g, 1);
     dsURI = dsURI.replace(/%APP_OS%/g, gOSTarget);
     dsURI = dsURI.replace(/%APP_ABI%/g, gXPCOMABI);
-    
+
+    // Replace custom parameters (names of custom parameters must have at
+    // least 3 characters to prevent lookups for something like %D0%C8)
+    var catMan = null;
+    dsURI = dsURI.replace(/%(\w{3,})%/g, function(match, param) {
+      if (!catMan) {
+        catMan = Components.classes["@mozilla.org/categorymanager;1"]
+                           .getService(Components.interfaces.nsICategoryManager);
+      }
+
+      try {
+        var contractID = catMan.getCategoryEntry(CATEGORY_UPDATE_PARAMS, param);
+        var paramHandler = Components.classes[contractID]
+                                     .getService(Components.interfaces.nsIPropertyBag2);
+        return paramHandler.getPropertyAsAString(param);
+      }
+      catch(e) {
+        return match;
+      }
+    });
+
     // escape() does not properly encode + symbols in any embedded FVF strings.
     dsURI = dsURI.replace(/\+/g, "%2B");
 
