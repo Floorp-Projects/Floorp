@@ -99,6 +99,18 @@ function eventOccured(event)
                   (eventitem[0] == event.type && eventitem[1] == event.target.id);
     ok(matches, test.testname + " " + event.type + " fired");
 
+    var expectedState;
+    switch (event.type) {
+      case "popupshowing": expectedState = "showing"; break;
+      case "popupshown": expectedState = "open"; break;
+      case "popuphiding": expectedState = "hiding"; break;
+      case "popuphidden": expectedState = "closed"; break;
+    }
+
+    if (expectedState)
+      is(event.originalTarget.state, expectedState,
+         test.testname + " " + event.type + " state");
+
     if (matches) {
       gTestEventIndex++
       if (events.length <= gTestEventIndex)

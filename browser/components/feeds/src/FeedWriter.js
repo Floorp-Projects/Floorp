@@ -566,13 +566,13 @@ FeedWriter.prototype = {
            * selected). If we don't show the filepicker here, it will be shown
            * when clicking "Subscribe Now".
            */
-          if (this._document.getElementById("handlersMenuList")
-                  .getAttribute("open") == "true") {
-            if (!this._chooseClientApp()) {
-              // Select the (per-prefs) selected handler if no application was
-              // selected
-              this._setSelectedHandler();
-            }
+          var popupbox = this._document.getElementById("handlersMenuList")
+                             .firstChild.boxObject;
+          popupbox.QueryInterface(Components.interfaces.nsIPopupBoxObject);
+          if (popupbox.popupState == "hiding" && !this._chooseClientApp()) {
+            // Select the (per-prefs) selected handler if no application was
+            // selected
+            this._setSelectedHandler();
           }
           break;
         default:
