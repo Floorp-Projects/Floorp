@@ -202,8 +202,8 @@ interface nsINavBookmarksService : nsISupports
   const unsigned short TYPE_DYNAMIC_CONTAINER = 4;
 
   /**
-   * Inserts a child bookmark into the given folder. If this item already exists in
-   * the given folder, it will be moved to the new position.
+   * Inserts a child bookmark into the given folder.
+   *
    *  @param aParentFolder
    *         The id of the parent folder
    *  @param aURI
@@ -347,7 +347,8 @@ interface nsINavBookmarksService : nsISupports
    * profiles) to be the same item.
    *  @param   aItemId
    *           The id of the item to set the GUID of
-   *  @returns The GUID string
+   *  @param   aGUID
+   *           The GUID string
    */
   void setItemGUID(in long long aItemId, in AString aGUID);
 
@@ -413,6 +414,9 @@ interface nsINavBookmarksService : nsISupports
    * already exist, or change the index of other items accordingly, otherwise
    * the indices will become corrupted.
    *
+   * WARNING: This is API is intended for scenarios such as folder sorting,
+   *          where the caller manages the indices of *all* items in the folder.
+   *
    *  @param aItemId    The id of the item to modify
    *  @param aNewIndex  The new index
    */
@@ -438,15 +442,21 @@ interface nsINavBookmarksService : nsISupports
 
   /**
    * Checks whether a folder is marked as read-only.
-   * If this is set to true, UI should not allow the user to add, remove,
+   * If this is set to true, UI will not allow the user to add, remove,
    * or reorder children in this folder. The default for all folders is false.
+   * Note: This does not restrict API calls, only UI actions.
+   *
    * @param aFolder
    *        the item-id of the folder.
    */
   boolean getFolderReadonly(in long long aFolder);
 
   /**
-   * Sets or unsets the readonly flag from a folder
+   * Sets or unsets the readonly flag from a folder.
+   * If this is set to true, UI will not allow the user to add, remove,
+   * or reorder children in this folder. The default for all folders is false.
+   * Note: This does not restrict API calls, only UI actions.
+   *
    * @param aFolder
    *        the item-id of the folder.
    * @param aReadOnly
