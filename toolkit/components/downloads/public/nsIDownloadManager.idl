@@ -51,10 +51,11 @@ interface nsIDownloadProgressListener;
 interface nsISimpleEnumerator;
 interface mozIStorageConnection;
 
-[scriptable, uuid(0e8ded0d-c6e4-4b67-9d1e-42fe3d405491)]
+[scriptable, uuid(b0ba9b75-2aad-4293-8680-3fc66b13e546)]
 interface nsIDownloadManager : nsISupports {
   // Download States
   const short DOWNLOAD_NOTSTARTED       = -1;
+  const short DOWNLOAD_QUEUED           = 5;
   const short DOWNLOAD_DOWNLOADING      = 0;
   const short DOWNLOAD_FINISHED         = 1;
   const short DOWNLOAD_FAILED           = 2;
