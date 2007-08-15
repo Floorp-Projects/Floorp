@@ -527,3 +527,4 @@ extensions/talkback@mozilla.org/components/talkback.so
 #endif
 #endif
 components/airbag.xpt
+components/nsUrlClassifierTable.js
