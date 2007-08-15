@@ -1550,8 +1550,3 @@ nsAccessibleWrap::FireAtkShowHideEvent(nsIAccessibleEvent *aEvent,
     return NS_OK;
 }
 
-PRBool nsAccessibleWrap::MustPrune(nsIAccessible *aAccessible)
-{
-  PRUint32 role = Role(aAccessible);
-  return role == nsIAccessibleRole::ROLE_GRAPHIC;
-}
