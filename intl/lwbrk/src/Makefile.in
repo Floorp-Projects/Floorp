@@ -92,11 +92,4 @@ CXXFLAGS	+= \
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_PANGO_LIBS) \
 		$(NULL)
-
-else
-ifeq  ($(MOZ_WIDGET_TOOLKIT),windows)
-EXTRA_DSO_LDOPTS += \
-		usp10.lib \
-		$(NULL)
-endif
 endif
