@@ -41,7 +41,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(8714441F-0E24-4EB5-BE58-905F2854B4EB)]
+[scriptable, uuid(A41AF368-9F73-4D73-A058-49DD7E41F9EA)]
 interface nsIPopupBoxObject : nsISupports
 {
   /**
@@ -154,6 +154,15 @@ interface nsIPopupBoxObject : nsISupports
    * @param y vertical screen position
    */
   void openPopupAtScreen(in long x, in long y, in boolean isContextMenu);
+
+  /**
+   * Returns the state of the popup:
+   *   closed - the popup is closed
+   *   open - the popup is open
+   *   showing - the popup is in the process of being shown
+   *   hiding - the popup is in the process of being hidden
+   */
+  readonly attribute AString popupState;
 };
 
 %{C++

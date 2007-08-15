@@ -31,6 +31,9 @@
         </getter>
       </property>
 
+      <property name="state" readonly="true"
+                onget="return this.popupBoxObject.popupState"/>
+
       <method name="openPopup">
         <parameter name="aAnchorElement"/>
         <parameter name="aPosition"/>

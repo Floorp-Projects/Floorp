@@ -223,6 +223,32 @@ nsPopupBoxObject::EnableKeyboardNavigator(PRBool aEnableKeyboardNavigator)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPopupBoxObject::GetPopupState(nsAString& aState)
+{
+  aState.AssignLiteral("closed");
+
+  nsMenuPopupFrame *menuPopupFrame = GetMenuPopupFrame();
+  if (menuPopupFrame) {
+    switch (menuPopupFrame->PopupState()) {
+      case ePopupShowing:
+      case ePopupOpen:
+        aState.AssignLiteral("showing");
+        break;
+      case ePopupOpenAndVisible:
+        aState.AssignLiteral("open");
+        break;
+      case ePopupHiding:
+      case ePopupInvisible:
+        aState.AssignLiteral("hiding");
+        break;
+    }
+  }
+
+  return NS_OK;
+}
+
+
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsresult
