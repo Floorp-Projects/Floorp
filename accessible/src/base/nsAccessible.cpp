@@ -211,6 +211,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
           nsIContent::ATTR_VALUE_NO_MATCH) {
         *aInstancePtr = static_cast<nsIAccessibleSelectable*>(this);
         NS_ADDREF_THIS();
+        return NS_OK;
       }
     }
   }
@@ -219,6 +220,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     if (mRoleMapEntry && mRoleMapEntry->valueRule != eNoValue) {
       *aInstancePtr = static_cast<nsIAccessibleValue*>(this);
       NS_ADDREF_THIS();
+      return NS_OK;
     }
   }                       
 
