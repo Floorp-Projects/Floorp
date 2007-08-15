@@ -106,7 +106,7 @@
         litmus.disableAll();
         litmus.dialogActive = true;
         var newWindow = window.openDialog('chrome://qa/content/tabs/selecttests.xul', '_blank', 'chrome,all,dialog=yes',
-                                          litmus.readStateFromPref, litmus.handleDialogCancel, litmus.undisableAll());
+                                          litmus.readStateFromPref, litmus.handleDialogCancel, litmus.undisableAll);
     },
     
     handleDialogCancel : function() {
