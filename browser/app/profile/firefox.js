@@ -239,6 +239,10 @@ pref("browser.search.update.log", false);
 // Check whether we need to perform engine updates every 6 hours
 pref("browser.search.updateinterval", 6);
 
+// Whether or not microsummary and generator updates are enabled
+pref("browser.microsummary.enabled", true);
+pref("browser.microsummary.updateGenerators", true);
+
 // enable search suggestions by default
 pref("browser.search.suggest.enabled", true);
 
