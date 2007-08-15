@@ -40,7 +40,7 @@
                             xbl:inherits="orient"
                             oncommand="scrollByPixels(this.parentNode.scrollIncrement); event.stopPropagation();"/>
     </content>
-    
+
     <implementation>
       <field name="_scrollbox">
         document.getAnonymousElementByAttribute(this, "anonid", "scrollbox");
@@ -52,21 +52,56 @@
         document.getAnonymousElementByAttribute(this, "anonid", "scrollbutton-down");
       </field>
 
-      <field name="_scrollIncrement">20</field>
+      <field name="__prefBranch">null</field>
+      <property name="_prefBranch" readonly="true">
+        <getter><![CDATA[
+          if (this.__prefBranch === null) {
+            this.__prefBranch = Components.classes['@mozilla.org/preferences-service;1']
+                                          .getService(Components.interfaces.nsIPrefBranch2);
+          }
+          return this.__prefBranch;
+        ]]></getter>
+      </property>
+
+      <field name="_scrollIncrement">null</field>
+
       <property name="scrollIncrement" readonly="true">
         <getter><![CDATA[
-          if (!this._scrollIncrement) {
-            var pb2 =
-              Components.classes['@mozilla.org/preferences-service;1']
-                        .getService(Components.interfaces.nsIPrefBranch2);
+          if (this._scrollIncrement === null) {
             try {
-              this._scrollIncrement = pb2.getIntPref("toolkit.scrollbox.scrollIncrement");
+              this._scrollIncrement = this._prefBranch
+                                          .getIntPref("toolkit.scrollbox.scrollIncrement");
             }
             catch (ex) {
+              this._scrollIncrement = 20;
             }
           }
           return this._scrollIncrement;
         ]]></getter>
+      </property>
+
+      <field name="_smoothScroll">null</field>
+      <property name="smoothScroll">
+        <getter><![CDATA[
+          if (this._smoothScroll === null) {
+            if (this.hasAttribute("smoothscroll")) {
+              this._smoothScroll = (this.getAttribute("smoothscroll") == "true");
+            } else {
+              try {
+                this._smoothScroll = this._prefBranch
+                                         .getBoolPref("toolkit.scrollbox.smoothScroll");
+              }
+              catch (ex) {
+                this._smoothScroll = true;
+              }
+            }
+          }
+          return this._smoothScroll;
+        ]]></getter>
+        <setter><![CDATA[
+          this._smoothScroll = val;
+          return val;
+        ]]></setter>
       </property>
 
       <field name="_scrollBoxObject">null</field>
@@ -82,20 +117,133 @@
       </property>
 
       <field name="_isLTRScrollbox">
-        window.getComputedStyle(this._scrollbox, "").direction == "ltr";
+        document.defaultView.getComputedStyle(this._scrollbox, "").direction == "ltr";
       </field>
 
+      <field name="_autorepeatSmoothScroll">false</field>
       <method name="ensureElementIsVisible">
-        <parameter name="aElement"/>
+        <parameter name="element"/>
         <body><![CDATA[
-          this.scrollBoxObject.ensureElementIsVisible(aElement);
+          if (!this.smoothScroll || this.getAttribute("orient") == "vertical") {
+            this.scrollBoxObject.ensureElementIsVisible(element);
+            return;
+          }
+
+          var containerStart = this._scrollbox.boxObject.screenX;
+          var containerEnd = containerStart + this._scrollbox.boxObject.width;
+          var elementStart = element.boxObject.screenX;
+          var elementEnd = elementStart + element.boxObject.width;
+          var amountToScroll;
+
+          if (elementStart < containerStart) {
+            amountToScroll = elementStart - containerStart;
+          } else if (containerEnd < elementEnd) {
+            amountToScroll = elementEnd - containerEnd;
+          } else if (this._isScrolling) {
+            // decelerate if a currently-visible element is selected during the scroll
+            const STOP_DISTANCE = 15;
+            if (this._isScrolling == -1 && elementStart - STOP_DISTANCE < containerStart)
+              amountToScroll = elementStart - containerStart;
+            else if (this._isScrolling == 1 && containerEnd - STOP_DISTANCE < elementEnd)
+              amountToScroll = elementEnd - containerEnd;
+            else
+              amountToScroll = this._isScrolling * STOP_DISTANCE;
+          } else {
+            return;
+          }
+
+          this._stopSmoothScroll();
+
+          // Positive amountToScroll makes us scroll right (elements fly left), negative scrolls left.
+          var round;
+          if (amountToScroll < 0) {
+            this._isScrolling = -1;
+            round = Math.floor;
+          } else {
+            this._isScrolling = 1;
+            round = Math.ceil;
+          }
+
+          function processFrame(self) {
+            self.scrollBoxObject.scrollBy(scrollAmounts.shift(), 0);
+            if (!scrollAmounts.length) {
+              if (self._autorepeatSmoothScroll) {
+                var direction = self._isLTRScrollbox ? self._isScrolling : -self._isScrolling;
+                self._stopSmoothScroll();
+                self.scrollByIndex(direction);
+              } else
+                self._stopSmoothScroll();
+            }
+          }
+
+          // amountToScroll: total distance to scroll
+          // scrollAmount: distance to move during the particular effect frame (60ms)
+          var scrollAmount, scrollAmounts = [];
+          if (amountToScroll > 2 || amountToScroll < -2) {
+            scrollAmount = round(amountToScroll * 0.2);
+            scrollAmounts.push (scrollAmount, scrollAmount, scrollAmount);
+            amountToScroll -= 3 * scrollAmount;
+          }
+          while (this._isScrolling < 0 && amountToScroll < 0 ||
+                 this._isScrolling > 0 && amountToScroll > 0) {
+            amountToScroll -= (scrollAmount = round(amountToScroll * 0.5));
+            scrollAmounts.push(scrollAmount);
+          }
+          this._smoothScrollTimer = setInterval(processFrame, 60, this);
+          processFrame(this);
         ]]></body>
       </method>
 
       <method name="scrollByIndex">
-        <parameter name="lines"/>
+        <parameter name="index"/>
         <body><![CDATA[
-          this.scrollBoxObject.scrollByIndex(lines);
+          if (index == 0)
+            return;
+          if (this.getAttribute("orient") == "vertical") {
+            this.scrollBoxObject.scrollByIndex(index);
+            return;
+          }
+          if (!this._isLTRScrollbox)
+            index *= -1;
+          var nextElement;
+          var elements = this.hasChildNodes() ?
+                         this.childNodes :
+                         document.getBindingParent(this).childNodes;
+          var scrollBox = this.scrollBoxObject;
+          var edge = scrollBox.screenX;
+          if (index < 0) {
+            for (var i = 0; nextElement = elements[i]; i++) {
+              var x = nextElement.boxObject.screenX;
+              if (x < edge &&
+                  x + nextElement.boxObject.width + 1 >= edge)
+                break;
+            }
+          } else {
+            edge += scrollBox.width;
+            for (var i = 0; nextElement = elements[i]; i++) {
+              var x = nextElement.boxObject.screenX;
+              if (x <= edge &&
+                  x + nextElement.boxObject.width > edge)
+                break;
+            }
+          }
+          if (!nextElement)
+            return;
+
+          var targetElement;
+
+          while (index < 0 && nextElement) {
+            targetElement = nextElement;
+            nextElement = nextElement.previousSibling;
+            index++;
+          }
+          while (index > 0 && nextElement) {
+            targetElement = nextElement;
+            nextElement = nextElement.nextSibling;
+            index--;
+          }
+
+          this.ensureElementIsVisible(targetElement);
         ]]></body>
       </method>
 
@@ -112,15 +260,28 @@
         ]]></body>
       </method>
 
+      <!-- 0: idle
+           1: scrolling right
+          -1: scrolling left -->
+      <field name="_isScrolling">0</field>
+      <field name="_smoothScrollTimer">0</field>
+
+      <method name="_stopSmoothScroll">
+        <body><![CDATA[
+          clearInterval(this._smoothScrollTimer);
+          this._isScrolling = 0;
+        ]]></body>
+      </method>
+
       <method name="_updateScrollButtonsDisabledState">
         <body><![CDATA[
           var disableUpButton = false;
           var disableDownButton = false;
 
           if (this.getAttribute("orient") == "horizontal") {
-            var width = { };
+            var width = {};
             this.scrollBoxObject.getScrolledSize(width, {});
-            var xPos = { }
+            var xPos = {};
             this.scrollBoxObject.getPosition(xPos, {});
             if (xPos.value == 0) {
               // In the RTL case, this means the _last_ element in the
@@ -140,9 +301,9 @@
             }
           }
           else {  // vertical scrollbox
-            var height = { };
+            var height = {};
             this.scrollBoxObject.getScrolledSize({}, height);
-            var yPos = { }
+            var yPos = {};
             this.scrollBoxObject.getPosition({}, yPos);
             if (yPos.value == 0)
               disableUpButton = true;
@@ -155,10 +316,10 @@
 
           var event = document.createEvent("Events");
           event.initEvent("UpdatedScrollButtonsDisabledState", true, false);
-          this.dispatchEvent(event);                                            
+          this.dispatchEvent(event);
         ]]></body>
       </method>
-    </implementation>    
+    </implementation>
 
     <handlers>
       <handler event="DOMMouseScroll" action="this.scrollByIndex(event.detail); event.stopPropagation();"/>
@@ -190,10 +351,8 @@
           // See bug 341047 and comments in overflow handler as to why 
           // try..catch is needed here
           var childNodes = document.getAnonymousNodes(this._scrollbox);
-          if (childNodes && childNodes.length) {
-            if (childNodes.length > 0)
-              this.ensureElementIsVisible(childNodes[0]);
-          }
+          if (childNodes && childNodes.length)
+            this.scrollBoxObject.ensureElementIsVisible(childNodes[0]);
         }
         catch(e) {
           this._scrollButtonUp.collapsed = false;
@@ -271,11 +430,9 @@
     </content>
     <implementation implements="nsITimerCallback">
       <constructor><![CDATA[
-        var pb2 =
-          Components.classes['@mozilla.org/preferences-service;1']
-                    .getService(Components.interfaces.nsIPrefBranch2);
         try {
-          this._scrollDelay = pb2.getIntPref("toolkit.scrollbox.clickToScroll.scrollDelay");
+          this._scrollDelay = this._prefBranch
+                                  .getIntPref("toolkit.scrollbox.clickToScroll.scrollDelay");
         }
         catch (ex) {
         }
@@ -290,7 +447,7 @@
       ]]></destructor>
 
       <field name="_scrollTimer">null</field>
-      <field name="_scrollLines">0</field>
+      <field name="_scrollIndex">0</field>
       <field name="_scrollDelay">150</field>
 
       <method name="notify">
@@ -299,44 +456,42 @@
         <![CDATA[
           if (!document)
             aTimer.cancel();
-          
-          this.scrollByIndex(this._scrollLines);
-        ]]>
-        </body>
-      </method>
 
-      <method name="_setUpScrollTimer">
-        <body>
-        <![CDATA[
-          if (!this._scrollTimer) 
-            this._scrollTimer = 
-              Components.classes["@mozilla.org/timer;1"]
-                        .createInstance(Components.interfaces.nsITimer);
-          else
-             this._scrollTimer.cancel();
-
-          this._scrollTimer.initWithCallback(this, 
-                        this._scrollDelay,
-                        Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+          this.scrollByIndex(this._scrollIndex);
         ]]>
         </body>
       </method>
 
       <method name="_startScroll">
-        <parameter name="aScrollLines"/>
+        <parameter name="index"/>
         <body><![CDATA[
-          this._scrollLines = aScrollLines;
-          this.scrollByIndex(this._scrollLines);
-          this._setUpScrollTimer();
-        ]]></body>
-      </method>            
+          if (this.smoothScroll)
+            this._autorepeatSmoothScroll = true;
+          else {
+            this._scrollIndex = index;
+            if (!this._scrollTimer) 
+              this._scrollTimer = 
+                Components.classes["@mozilla.org/timer;1"]
+                          .createInstance(Components.interfaces.nsITimer);
+            else
+               this._scrollTimer.cancel();
+
+            this._scrollTimer.initWithCallback(this, 
+                          this._scrollDelay,
+                          Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+          }
+          this.scrollByIndex(index);
+        ]]>
+        </body>
+      </method>
 
       <method name="_stopScroll">
         <body><![CDATA[
           if (this._scrollTimer) 
             this._scrollTimer.cancel();
+          this._autorepeatSmoothScroll = false;
         ]]></body>
-      </method>            
+      </method>
 
     </implementation>
   </binding>
