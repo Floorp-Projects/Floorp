@@ -10,43 +10,49 @@ stage:
 	mkdir -p /builds/tags
 	mkdir -p /builds/updates/
 	mkdir -p /builds/verify/
-	# ftp
-	mkdir -p /home/ftp/pub/firefox/nightly
+	mkdir -p /builds/logs/
 	# fake key
 	mkdir -p /home/ftp/pub/firefox/releases/1.5/
 	touch /home/ftp/pub/firefox/releases/1.5/KEY
+	# ftp
+	mkdir -p /home/ftp/pub/firefox/nightly
+	chown -R cltbld:firefox /home/ftp/pub/firefox
+	chmod -R g+rwxs /home/ftp/pub/firefox
+	chmod -R o+rx /home/ftp/pub
 	# staging environment
 	mkdir -p /data/cltbld/firefox-2.0.0.4/batch1/stage
+	# download 2.0.0.3, for l10n verify
+	cd /data && wget -nv --cut-dirs=3 -np -r http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/2.0.0.3-candidates/rc1/ && mv ftp.mozilla.org/nightly/* /home/ftp/pub/firefox/nightly/ && rm -rfv ftp.mozilla.org
 
 cvsmirror: cvsmirror_mofo cvsmirror_main
 
 cvsmirror_main:
-	rsync -a --delete-after --exclude=CVSROOT/config --exclude=CVSROOT/loginfo cvs-mirror.mozilla.org::mozilla/ /builds/cvsmirror/cvsroot/
-	rsync -a --delete-after cvs-mirror.mozilla.org::l10n/ /builds/cvsmirror/l10n/
-	chgrp -R cvs /builds/cvsmirror/cvsroot /builds/cvsmirror/l10n
-	chmod -R g+rw /builds/cvsmirror/cvsroot /builds/cvsmirror/l10n
-	cvs -d /builds/cvsmirror/cvsroot rtag -d FIREFOX_2_0_0_4_RELEASE mozilla
-	cvs -d /builds/cvsmirror/cvsroot rtag -d FIREFOX_2_0_0_4_RC1 mozilla
-	cvs -d /builds/cvsmirror/cvsroot rtag -d -B FIREFOX_2_0_0_4_MINIBRANCH mozilla
-	cvs -d /builds/cvsmirror/l10n rtag -d FIREFOX_2_0_0_4_RELEASE l10n
-	cvs -d /builds/cvsmirror/l10n rtag -d FIREFOX_2_0_0_4_RC1 l10n
+	rsync -a --delete-after --exclude=CVSROOT/config --exclude=CVSROOT/loginfo cvs-mirror.mozilla.org::mozilla/ /builds/cvsmirror.clean/cvsroot/
+	rsync -a --delete-after cvs-mirror.mozilla.org::l10n/ /builds/cvsmirror.clean/l10n/
+	chgrp -R cvs /builds/cvsmirror.clean/cvsroot /builds/cvsmirror.clean/l10n
+	chmod -R g+rw /builds/cvsmirror.clean/cvsroot /builds/cvsmirror.clean/l10n
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_4_RELEASE mozilla
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_4_RC1 mozilla
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_4_RC2 mozilla
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_4_RC3 mozilla
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d -B FIREFOX_2_0_0_4_MINIBRANCH mozilla
+	cvs -d /builds/cvsmirror.clean/l10n rtag -d FIREFOX_2_0_0_4_RELEASE l10n
+	cvs -d /builds/cvsmirror.clean/l10n rtag -d FIREFOX_2_0_0_4_RC1 l10n
 
 cvsmirror_mofo:
-	mkdir -p /builds/cvsmirror/tmp/mofo
-	mkdir -p /builds/cvsmirror/mofo
-	cvs -d /builds/cvsmirror/mofo init
-	cd /builds/cvsmirror/tmp/mofo && cvs -d cltbld@cvs.mozilla.org:/mofo export -r MOZILLA_1_8_0_BRANCH talkback
-	cd /builds/cvsmirror/tmp/mofo && cvs -d cltbld@cvs.mozilla.org:/mofo export -r HEAD release
-	rm -rf /builds/cvsmirror/tmp/mofo/release/tinderbox-configs/
-	cd /builds/cvsmirror/tmp/mofo && cvs -d cltbld@cvs.mozilla.org:/mofo export -r MOZILLA_1_8_0_BRANCH_release release/tinderbox-configs/
-	cd /builds/cvsmirror/tmp/mofo/release && cvs -d /builds/cvsmirror/mofo import -d -m "import CVS snapshot" release MOZILLA_1_8_0_BRANCH_release R0_1
-	cd /builds/cvsmirror/tmp/mofo/talkback && cvs -d /builds/cvsmirror/mofo import -d -m "import CVS snapshot" talkback MOZILLA_1_8_0_BRANCH R0_1
-	rm -rf /builds/cvsmirror/tmp/mofo
-	chgrp -R cvs /builds/cvsmirror/mofo
-	chmod g+rwx /builds/cvsmirror/mofo
-	chmod -R g+rw /builds/cvsmirror/mofo
+	mkdir -p /builds/cvsmirror.clean/tmp/mofo
+	mkdir -p /builds/cvsmirror.clean/mofo
+	cvs -d /builds/cvsmirror.clean/mofo init
+	cd /builds/cvsmirror.clean/tmp/mofo && cvs -d cltbld@cvs.mozilla.org:/mofo export -r MOZILLA_1_8_BRANCH talkback
+	cd /builds/cvsmirror.clean/tmp/mofo && cvs -d cltbld@cvs.mozilla.org:/mofo export -r HEAD release
+	cd /builds/cvsmirror.clean/tmp/mofo/release && cvs -d /builds/cvsmirror/mofo import -d -m "import CVS snapshot" release MOZILLA_1_8_BRANCH_release R0_1
+	cd /builds/cvsmirror.clean/tmp/mofo/talkback && cvs -d /builds/cvsmirror/mofo import -d -m "import CVS snapshot" talkback MOZILLA_1_8_BRANCH R0_1
+	rm -rf /builds/cvsmirror.clean/tmp/mofo
+	chgrp -R cvs /builds/cvsmirror.clean/mofo
+	chmod g+rwx /builds/cvsmirror.clean/mofo
+	chmod -R g+rw /builds/cvsmirror.clean/mofo
 
-clean_stage:
+clean_stage: clean_logs
 	rm -rf /builds/config/*
 	rm -rf /builds/tags/*
 	rm -rf /builds/release/logs/*
@@ -56,11 +62,15 @@ clean_stage:
 	rm -rf /home/ftp/pub/firefox/*
 
 clean_cvsmirror: clean_cvsmirror_main clean_cvsmirror_mofo
-	rm -rf /builds/cvsmirror/*
+	rm -rf /builds/cvsmirror.clean/*
 
 clean_cvsmirror_main:
-	rm -rf /builds/cvsmirror/cvsroot/*
-	rm -rf /builds/cvsmirror/l10n/*
+	rm -rf /builds/cvsmirror.clean/cvsroot/*
+	rm -rf /builds/cvsmirror.clean/l10n/*
 
 clean_cvsmirror_mofo:
-	rm -rf /builds/cvsmirror/mofo/*
+	rm -rf /builds/cvsmirror.clean/mofo/*
+
+clean_logs:
+	rm -rf /builds/logs/*
+
