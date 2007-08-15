@@ -2991,6 +2991,9 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct,
     // XXX These restrictions are no longer present in CSS2.1.  We
     // should ensure that we support removing them before doing so,
     // though.
+    // XXXbz For example, the calls to WipeContainingBlock in the
+    // frame constructor will need to be changedif we allow
+    // block-level generated content inside inlines.
 
     if (display->mPosition != NS_STYLE_POSITION_STATIC)
       display->mPosition = NS_STYLE_POSITION_STATIC;
