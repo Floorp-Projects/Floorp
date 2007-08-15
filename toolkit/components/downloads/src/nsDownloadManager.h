@@ -170,6 +170,7 @@ protected:
   static PRBool IsInProgress(DownloadState aState) 
   {
     return aState == nsIDownloadManager::DOWNLOAD_NOTSTARTED || 
+           aState == nsIDownloadManager::DOWNLOAD_QUEUED ||
            aState == nsIDownloadManager::DOWNLOAD_DOWNLOADING || 
            aState == nsIDownloadManager::DOWNLOAD_PAUSED;
   }

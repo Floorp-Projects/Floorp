@@ -65,7 +65,7 @@ DownloadProgressListener.prototype =
   {
     var dl = getDownload(aDownload.id);
     switch (aDownload.state) {
-      case Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED:
+      case Ci.nsIDownloadManager.DOWNLOAD_QUEUED:
         // We'll have at least one active download now
         gDownloadsActiveTitle.hidden = false;
       case Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING:
