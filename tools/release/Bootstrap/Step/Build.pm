@@ -112,6 +112,27 @@ sub Push {
       logFile => $pushLog,
     );
 
+    # Make sure permissions are created on the server correctly;
+    #
+    # Note the '..' at the end of the chmod string; this is because
+    # Config::GetFtpCandidateDir() returns the full path, including the
+    # rcN directories on the end. What we really want to ensure
+    # have the correct permissions (from the mkdir call above) is the
+    # firefox/nightly/$version-candidates/ directory.
+    #
+    # XXX - This is ugly; another solution is to fix the umask on stage, or
+    # change what GetFtpCandidateDir() returns.
+
+    my $chmodArg = CvsCatfile($config->GetFtpCandidateDir(bitsUnsigned => 0), 
+     '..');
+
+    $this->Shell(
+      cmd => 'ssh',
+      cmdArgs => ['-2', '-l', $sshUser, $sshServer,
+                  'chmod 0755 ' . $chmodArg],
+      logFile => $pushLog,
+    );
+
     $this->Shell(
       cmd => 'ssh',
       cmdArgs => ['-2', '-l', $sshUser, $sshServer,
