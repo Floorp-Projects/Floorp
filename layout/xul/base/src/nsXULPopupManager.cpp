@@ -1626,13 +1626,21 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
     HandleKeyboardNavigation(theChar);
   }
   else if (theChar == NS_VK_ESCAPE) {
-    // Pressing Escape hides one level of menus only
+    // Pressing Escape hides one level of menus only. If no menu is open,
+    // check if a menubar is active and inform it that a menu closed. Even
+    // though in this latter case, a menu didn't actually close, the effect
+    // ends up being the same. Similar for the tab key below.
     nsMenuChainItem* item = GetTopVisibleMenu();
     if (item)
       HidePopup(item->Content(), PR_FALSE, PR_FALSE, PR_FALSE);
+    else if (mActiveMenuBar)
+      mActiveMenuBar->MenuClosed();
   }
   else if (theChar == NS_VK_TAB) {
-    Rollup();
+    if (mCurrentMenu)
+      Rollup();
+    else if (mActiveMenuBar)
+      mActiveMenuBar->MenuClosed();
   }
   else if (theChar == NS_VK_ENTER ||
            theChar == NS_VK_RETURN) {
