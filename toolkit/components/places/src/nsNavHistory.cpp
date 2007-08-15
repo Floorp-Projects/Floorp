@@ -39,7 +39,6 @@
 #include <stdio.h>
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
-#include "nsMorkHistoryImporter.h"
 #include "nsAnnotationService.h"
 
 #include "nsIArray.h"
@@ -388,14 +387,11 @@ nsNavHistory::Init()
   observerService->AddObserver(this, gXpcomShutdown, PR_FALSE);
 
   if (doImport) {
-    nsCOMPtr<nsIMorkHistoryImporter> importer = new nsMorkHistoryImporter();
-    NS_ENSURE_TRUE(importer, NS_ERROR_OUT_OF_MEMORY);
-
     nsCOMPtr<nsIFile> historyFile;
     rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE,
                                 getter_AddRefs(historyFile));
     if (NS_SUCCEEDED(rv) && historyFile) {
-      importer->ImportHistory(historyFile, this);
+      ImportHistory(historyFile);
     }
   }
 

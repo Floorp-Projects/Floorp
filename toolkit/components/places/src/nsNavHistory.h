@@ -87,7 +87,7 @@
 #define QUERYUPDATE_COMPLEX 2
 #define QUERYUPDATE_COMPLEX_WITH_BOOKMARKS 3
 
-class AutoCompleteIntermediateResult;
+struct AutoCompleteIntermediateResult;
 class AutoCompleteResultComparator;
 class mozIAnnotationService;
 class nsNavHistory;
