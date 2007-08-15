@@ -658,14 +658,11 @@ ClearBroadcasterMapEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 static PRBool
 CanBroadcast(PRInt32 aNameSpaceID, nsIAtom* aAttribute)
 {
-    // Don't push changes to the |id|, |ref|, |persist|, |command| or
-    // |observes| attribute.
+    // Don't push changes to the |id|, |ref|, or |persist| attribute.
     if (aNameSpaceID == kNameSpaceID_None) {
         if ((aAttribute == nsGkAtoms::id) ||
             (aAttribute == nsGkAtoms::ref) ||
-            (aAttribute == nsGkAtoms::persist) ||
-            (aAttribute == nsGkAtoms::command) ||
-            (aAttribute == nsGkAtoms::observes)) {
+            (aAttribute == nsGkAtoms::persist)) {
             return PR_FALSE;
         }
     }
@@ -3832,20 +3829,7 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
     const nsAttrName* name;
     for (i = 0; (name = aOverlayNode->GetAttrNameAt(i)); ++i) {
         // We don't want to swap IDs, they should be the same.
-        // We don't want to merge observes attributes or elements.
-        // We don't want to merge command attributes except on keys and
-        // menuitems, which don't use broadcaster hookup.
-        if (name->Equals(nsGkAtoms::id) ||
-            name->Equals(nsGkAtoms::observes) ||
-            aTargetNode->NodeInfo()->Equals(nsGkAtoms::observes,
-                                            kNameSpaceID_XUL))
-            continue;
-
-        if (name->Equals(nsGkAtoms::command) &&
-            !aTargetNode->NodeInfo()->Equals(nsGkAtoms::key,
-                                             kNameSpaceID_XUL) &&
-            !aTargetNode->NodeInfo()->Equals(nsGkAtoms::menuitem,
-                                             kNameSpaceID_XUL))
+        if (name->Equals(nsGkAtoms::id))
             continue;
 
         PRInt32 nameSpaceID = name->NamespaceID();
