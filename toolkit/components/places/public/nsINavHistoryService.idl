@@ -744,9 +744,6 @@ interface nsINavHistoryObserver : nsISupports
    * to see whether an empty string is "null" or not (it will always be an
    * empty string in either case).
    *
-   * @param aUserTitleChanged Is true if the user title was the thing that was
-   *                          changed. If false, that means the "real" page
-   *                          title was changed instead.
    */
   void onTitleChanged(in nsIURI aURI, in AString aPageTitle);
 
