@@ -6124,6 +6124,14 @@ MOZ_ARG_ENABLE_BOOL(strip,
     ENABLE_STRIP= )
 
 dnl ========================================================
+dnl = Enable stripping of libs & executables when packaging
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(install-strip,
+[  --enable-install-strip  Enable stripping of libs & executables when packaging ],
+    PKG_SKIP_STRIP= ,
+    PKG_SKIP_STRIP=1)
+
+dnl ========================================================
 dnl = --enable-elf-dynstr-gc
 dnl ========================================================
 MOZ_ARG_ENABLE_BOOL(elf-dynstr-gc,
@@ -7471,6 +7479,7 @@ AC_SUBST(MOZ_CRASHREPORTER)
 AC_SUBST(MOZ_MOCHITEST)
 
 AC_SUBST(ENABLE_STRIP)
+AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(USE_ELF_DYNSTR_GC)
 AC_SUBST(USE_PREBINDING)
 AC_SUBST(INCREMENTAL_LINKER)
