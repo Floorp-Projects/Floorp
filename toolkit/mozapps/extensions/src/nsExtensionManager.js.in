@@ -73,10 +73,6 @@ const PREF_DSS_SKIN_TO_SELECT         = "extensions.lastSelectedSkin";
 const PREF_GENERAL_SKINS_SELECTEDSKIN = "general.skins.selectedSkin";
 const PREF_EM_LOGGING_ENABLED         = "extensions.logging.enabled";
 const PREF_EM_UPDATE_INTERVAL         = "extensions.update.interval";
-const PREF_BLOCKLIST_URL              = "extensions.blocklist.url";
-const PREF_BLOCKLIST_DETAILS_URL      = "extensions.blocklist.detailsURL";
-const PREF_BLOCKLIST_ENABLED          = "extensions.blocklist.enabled";
-const PREF_BLOCKLIST_INTERVAL         = "extensions.blocklist.interval";
 const PREF_UPDATE_NOTIFYUSER          = "extensions.update.notifyUser";
 const PREF_MATCH_OS_LOCALE            = "intl.locale.matchOS";
 const PREF_SELECTED_LOCALE            = "general.useragent.locale";
@@ -91,7 +87,6 @@ const FILE_AUTOREG                    = ".autoreg";
 const FILE_INSTALL_MANIFEST           = "install.rdf";
 const FILE_CONTENTS_MANIFEST          = "contents.rdf";
 const FILE_CHROME_MANIFEST            = "chrome.manifest";
-const FILE_BLOCKLIST                  = "blocklist.xml";
 
 const UNKNOWN_XPCOM_ABI               = "unknownABI";
 
@@ -135,7 +130,6 @@ const RDFURI_INSTALL_MANIFEST_ROOT    = "urn:mozilla:install-manifest";
 const RDFURI_ITEM_ROOT                = "urn:mozilla:item:root"
 const RDFURI_DEFAULT_THEME            = "urn:mozilla:item:{972ce4c6-7e08-4474-a285-3208198ce6fd}";
 const XMLURI_PARSE_ERROR              = "http://www.mozilla.org/newlayout/xml/parsererror.xml"
-const XMLURI_BLOCKLIST                = "http://www.mozilla.org/2006/addons-blocklist";
 
 const URI_GENERIC_ICON_XPINSTALL      = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
 const URI_GENERIC_ICON_THEME          = "chrome://mozapps/skin/extensions/themeGeneric.png";
@@ -168,6 +162,7 @@ var gApp  = null;
 var gPref = null;
 var gRDF  = null;
 var gOS   = null;
+var gBlocklist            = null;
 var gXPCOMABI             = null;
 var gOSTarget             = null;
 var gConsole              = null;
@@ -2304,318 +2299,6 @@ var StartupCache = {
 };
 
 /**
- * Manages the Blocklist. The Blocklist is a representation of the contents of
- * blocklist.xml and allows us to remotely disable / re-enable blocklisted
- * items managed by the Extension Manager with an item's appDisabled property.
- */
-var Blocklist = {
-  /**
-   * Extension ID -> array of Version Ranges
-   * Each value in the version range array is a JS Object that has the
-   * following properties:
-   *   "minVersion"  The minimum version in a version range (default = 0)
-   *   "maxVersion"  The maximum version in a version range (default = *)
-   *   "targetApps"  Application ID -> array of Version Ranges
-   *                 (default = current application ID)
-   *                 Each value in the version range array is a JS Object that
-   *                 has the following properties:
-   *                   "minVersion"  The minimum version in a version range
-   *                                 (default = 0)
-   *                   "maxVersion"  The maximum version in a version range
-   *                                 (default = *)
-   */
-  entries: null,
-
-  notify: function() {
-    if (getPref("getBoolPref", PREF_BLOCKLIST_ENABLED, true) == false)
-      return;
-
-    try {
-      var dsURI = gPref.getCharPref(PREF_BLOCKLIST_URL);
-    }
-    catch (e) {
-      LOG("Blocklist::notify: The " + PREF_BLOCKLIST_URL + " preference" + 
-          " is missing!");
-      return;
-    }
-
-    dsURI = dsURI.replace(/%APP_ID%/g, gApp.ID);
-    dsURI = dsURI.replace(/%APP_VERSION%/g, gApp.version);
-    // Verify that the URI is valid
-    try {
-      var uri = newURI(dsURI);
-    }
-    catch (e) {
-      LOG("Blocklist::notify: There was an error creating the blocklist URI\r\n" + 
-          "for: " + dsURI + ", error: " + e);
-      return;
-    }
-
-    var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                            .createInstance(Components.interfaces.nsIXMLHttpRequest);
-    request.open("GET", uri.spec, true);
-    request.channel.notificationCallbacks = new BadCertHandler();
-    request.overrideMimeType("text/xml");
-    request.setRequestHeader("Cache-Control", "no-cache");
-    request.QueryInterface(Components.interfaces.nsIJSXMLHttpRequest);
-
-    var self = this;
-    request.onerror = function(event) { self.onXMLError(event); };
-    request.onload  = function(event) { self.onXMLLoad(event);  };
-    request.send(null);
-  },
-
-  onXMLLoad: function(aEvent) {
-    var request = aEvent.target;
-    try {
-      checkCert(request.channel);
-    }
-    catch (e) {
-      LOG("Blocklist::onXMLLoad: " + e);
-      return;
-    }
-    var responseXML = request.responseXML;
-    if (!responseXML || responseXML.documentElement.namespaceURI == XMLURI_PARSE_ERROR ||
-        (request.status != 200 && request.status != 0)) {
-      LOG("Blocklist::onXMLLoad: there was an error during load");
-      return;
-    }
-    var blocklistFile = getFile(KEY_PROFILEDIR, [FILE_BLOCKLIST]);
-    if (blocklistFile.exists())
-      blocklistFile.remove(false);
-    var fos = openSafeFileOutputStream(blocklistFile);
-    fos.write(request.responseText, request.responseText.length);
-    closeSafeFileOutputStream(fos);
-    this.entries = this._loadBlocklistFromFile(getFile(KEY_PROFILEDIR,
-                                                       [FILE_BLOCKLIST]));
-    var em = Components.classes["@mozilla.org/extensions/manager;1"]
-                       .getService(Components.interfaces.nsIExtensionManager);
-    em.checkForBlocklistChanges();
-  },
-
-  onXMLError: function(aEvent) {
-    try {
-      var request = aEvent.target;
-      // the following may throw (e.g. a local file or timeout)
-      var status = request.status;
-    }
-    catch (e) {
-      request = aEvent.target.channel.QueryInterface(Components.interfaces.nsIRequest);
-      status = request.status;
-    }
-    var statusText = request.statusText;
-    // When status is 0 we don't have a valid channel.
-    if (status == 0)
-      statusText = "nsIXMLHttpRequest channel unavailable";
-    LOG("Blocklist:onError: There was an error loading the blocklist file\r\n" + 
-        statusText);
-  },
-
-  /**
-   * The blocklist XML file looks something like this:
-   *
-   * <blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist">
-   *   <emItems>
-   *     <emItem id="item_1@domain">
-   *       <versionRange minVersion="1.0" maxVersion="2.0.*">
-   *         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-   *           <versionRange minVersion="1.5" maxVersion="1.5.*"/>
-   *           <versionRange minVersion="1.7" maxVersion="1.7.*"/>
-   *         </targetApplication>
-   *         <targetApplication id="toolkit@mozilla.org">
-   *           <versionRange minVersion="1.8" maxVersion="1.8.*"/>
-   *         </targetApplication>
-   *       </versionRange>
-   *       <versionRange minVersion="3.0" maxVersion="3.0.*">
-   *         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-   *           <versionRange minVersion="1.5" maxVersion="1.5.*"/>
-   *         </targetApplication>
-   *         <targetApplication id="toolkit@mozilla.org">
-   *           <versionRange minVersion="1.8" maxVersion="1.8.*"/>
-   *         </targetApplication>
-   *       </versionRange>
-   *     </emItem>
-   *     <emItem id="item_2@domain">
-   *       <versionRange minVersion="3.1" maxVersion="4.*"/>
-   *     </emItem>
-   *     <emItem id="item_3@domain">
-   *       <versionRange>
-   *         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-   *           <versionRange minVersion="1.5" maxVersion="1.5.*"/>
-   *         </targetApplication>
-   *       </versionRange>
-   *     </emItem>
-   *     <emItem id="item_4@domain">
-   *       <versionRange>
-   *         <targetApplication>
-   *           <versionRange minVersion="1.5" maxVersion="1.5.*"/>
-   *         </targetApplication>
-   *       </versionRange>
-   *     <emItem id="item_5@domain"/>
-   *   </emItems>
-   * </blocklist> 
-   */
-  _loadBlocklistFromFile: function(file) {
-    if (getPref("getBoolPref", PREF_BLOCKLIST_ENABLED, true) == false) {
-      LOG("Blocklist::_loadBlocklistFromFile: blocklist is disabled");
-      return { };
-    }
-
-    if (!file.exists()) {
-      LOG("Blocklist::_loadBlocklistFromFile: XML File does not exist");
-      return { };
-    }
-
-    var result = { };
-    var fileStream = Components.classes["@mozilla.org/network/file-input-stream;1"]
-                               .createInstance(Components.interfaces.nsIFileInputStream);
-    fileStream.init(file, MODE_RDONLY, PERMS_FILE, 0);
-    try {
-      var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
-                             .createInstance(Components.interfaces.nsIDOMParser);
-      var doc = parser.parseFromStream(fileStream, "UTF-8", file.fileSize, "text/xml");
-      if (doc.documentElement.namespaceURI != XMLURI_BLOCKLIST) {
-        LOG("Blocklist::_loadBlocklistFromFile: aborting due to incorrect " +
-            "XML Namespace.\r\nExpected: " + XMLURI_BLOCKLIST + "\r\n" +
-            "Received: " + doc.documentElement.namespaceURI);
-        return { };
-      }
-
-      const kELEMENT_NODE = Components.interfaces.nsIDOMNode.ELEMENT_NODE;
-      var itemNodes = this._getItemNodes(doc.documentElement.childNodes);
-      for (var i = 0; i < itemNodes.length; ++i) {
-        var blocklistElement = itemNodes[i];
-        if (blocklistElement.nodeType != kELEMENT_NODE ||
-            blocklistElement.localName != "emItem")
-          continue;
-
-        blocklistElement.QueryInterface(Components.interfaces.nsIDOMElement);
-        var versionNodes = blocklistElement.childNodes;
-        var id = blocklistElement.getAttribute("id");
-        result[id] = [];
-        for (var x = 0; x < versionNodes.length; ++x) {
-          var versionRangeElement = versionNodes[x];
-          if (versionRangeElement.nodeType != kELEMENT_NODE ||
-              versionRangeElement.localName != "versionRange")
-            continue;
-
-          result[id].push(new BlocklistItemData(versionRangeElement));
-        }
-        // if only the extension ID is specified block all versions of the
-        // extension for the current application.
-        if (result[id].length == 0)
-          result[id].push(new BlocklistItemData(null));
-      }
-    }
-    catch (e) {
-      LOG("Blocklist::_loadBlocklistFromFile: Error constructing blocklist " + e);
-      return { };
-    }
-    fileStream.close();
-    return result;
-  },
-
-  _getItemNodes: function(deChildNodes) {
-    const kELEMENT_NODE = Components.interfaces.nsIDOMNode.ELEMENT_NODE;
-    for (var i = 0; i < deChildNodes.length; ++i) {
-      var emItemsElement = deChildNodes[i];
-      if (emItemsElement.nodeType == kELEMENT_NODE &&
-          emItemsElement.localName == "emItems")
-        return emItemsElement.childNodes;
-    }
-    return [ ];
-  },
-
-  _ensureBlocklist: function() {
-    if (!this.entries)
-      this.entries = this._loadBlocklistFromFile(getFile(KEY_PROFILEDIR, 
-                                                         [FILE_BLOCKLIST]));
-  }
-};
-
-/**
- * Helper for constructing a blocklist.
- */
-function BlocklistItemData(versionRangeElement) {
-  var versionRange = this.getBlocklistVersionRange(versionRangeElement);
-  this.minVersion = versionRange.minVersion;
-  this.maxVersion = versionRange.maxVersion;
-  this.targetApps = { };
-  var found = false;
-
-  if (versionRangeElement) {
-    for (var i = 0; i < versionRangeElement.childNodes.length; ++i) {
-      var targetAppElement = versionRangeElement.childNodes[i];
-      if (targetAppElement.nodeType != Components.interfaces.nsIDOMNode.ELEMENT_NODE ||
-          targetAppElement.localName != "targetApplication")
-        continue;
-      found = true;
-      // default to the current application if id is not provided.
-      var appID = targetAppElement.hasAttribute("id") ? targetAppElement.getAttribute("id") : gApp.ID;
-      this.targetApps[appID] = this.getBlocklistAppVersions(targetAppElement);
-    }
-  }
-  // Default to all versions of the extension and the current application when
-  // versionRange is not defined.
-  if (!found)
-    this.targetApps[gApp.ID] = this.getBlocklistAppVersions(null);
-}
-
-BlocklistItemData.prototype = {
-/**
- * Retrieves a version range (e.g. minVersion and maxVersion) for a
- * blocklist item's targetApplication element.
- * @param   targetAppElement
- *          A targetApplication blocklist element.
- * @returns An array of JS objects with the following properties:
- *          "minVersion"  The minimum version in a version range (default = 0).
- *          "maxVersion"  The maximum version in a version range (default = *).
- */
-  getBlocklistAppVersions: function(targetAppElement) {
-    var appVersions = [ ];
-    var found = false;
-
-    if (targetAppElement) {
-      for (var i = 0; i < targetAppElement.childNodes.length; ++i) {
-        var versionRangeElement = targetAppElement.childNodes[i];
-        if (versionRangeElement.nodeType != Components.interfaces.nsIDOMNode.ELEMENT_NODE ||
-            versionRangeElement.localName != "versionRange")
-          continue;
-        found = true;
-        appVersions.push(this.getBlocklistVersionRange(versionRangeElement));
-      }
-    }
-    // return minVersion = 0 and maxVersion = * if not available
-    if (!found)
-      return [ this.getBlocklistVersionRange(null) ];
-    return appVersions;
-  },
-
-/**
- * Retrieves a version range (e.g. minVersion and maxVersion) for a blocklist
- * versionRange element.
- * @param   versionRangeElement
- *          The versionRange blocklist element.
- * @returns A JS object with the following properties:
- *          "minVersion"  The minimum version in a version range (default = 0).
- *          "maxVersion"  The maximum version in a version range (default = *).
- */
-  getBlocklistVersionRange: function(versionRangeElement) {
-    var minVersion = "0";
-    var maxVersion = "*";
-    if (!versionRangeElement)
-      return { minVersion: minVersion, maxVersion: maxVersion };
-
-    if (versionRangeElement.hasAttribute("minVersion"))
-      minVersion = versionRangeElement.getAttribute("minVersion");
-    if (versionRangeElement.hasAttribute("maxVersion"))
-      maxVersion = versionRangeElement.getAttribute("maxVersion");
-
-    return { minVersion: minVersion, maxVersion: maxVersion };
-  }
-};
-
-/**
  * Installs, manages and tracks compatibility for Extensions and Themes
  * @constructor
  */
@@ -2932,9 +2615,6 @@ ExtensionManager.prototype = {
                   .getService(Components.interfaces.nsIUpdateTimerManager);
     var interval = getPref("getIntPref", PREF_EM_UPDATE_INTERVAL, 86400); 
     tm.registerTimer("addon-background-update-timer", this, interval);
-
-    interval = getPref("getIntPref", PREF_BLOCKLIST_INTERVAL, 86400); 
-    tm.registerTimer("blocklist-background-update-timer", Blocklist, interval);
   },
   
   /**
@@ -4241,7 +3921,10 @@ ExtensionManager.prototype = {
       installData.error = INSTALLERROR_INCOMPATIBLE_VERSION;
     
     // Check if the item is blocklisted.
-    if (this.datasource.isBlocklisted(installData.id, installData.version,
+    if (!gBlocklist)
+      gBlocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
+                             .getService(Components.interfaces.nsIBlocklistService);
+    if (gBlocklist.isAddonBlocklisted(installData.id, installData.version,
                                       undefined, undefined))
       installData.error = INSTALLERROR_BLOCKLISTED;
 
@@ -6071,8 +5754,11 @@ ExtensionItemUpdater.prototype = {
         gVersionChecker.compare(appExtensionsVersion, aMaxAppVersion) > 0) 
       return false;
 
-    if (this._emDS.isBlocklisted(aLocalItem.id, aVersion,
-                                 undefined, undefined))
+    if (!gBlocklist)
+      gBlocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
+                             .getService(Components.interfaces.nsIBlocklistService);
+    if (gBlocklist.isAddonBlocklisted(aLocalItem.id, aVersion,
+                                      undefined, undefined))
       return false;
     
     return true;
@@ -6673,62 +6359,6 @@ ExtensionsDataSource.prototype = {
   },
 
   /**
-   * Determine if an item is blocklisted
-   * @param   id
-   *          The id of the item to check.
-   * @param   extVersion
-   *          The item's version.
-   * @param   appVersion
-   *          The version of the application we are checking in the blocklist.
-   *          If this parameter is undefined, the version of the running
-   *          application is used.
-   * @param   toolkitVersion
-   *          The version of the toolkit we are checking in the blocklist.
-   *          If this parameter is undefined, the version of the running
-   *          toolkit is used.
-   * @returns true if the item is compatible with this version of the 
-   *          application, false, otherwise.
-   */
-  isBlocklisted: function(id, extVersion, appVersion, toolkitVersion) {
-    if (appVersion === undefined)
-      appVersion = gApp.version;
-    if (toolkitVersion === undefined)
-      toolkitVersion = gApp.platformVersion;
-
-    var blItem = Blocklist.entries[id];
-    if (!blItem)
-      return false;
-
-    var versionChecker = getVersionChecker();
-    for (var i = 0; i < blItem.length; ++i) {
-      if (versionChecker.compare(extVersion, blItem[i].minVersion) < 0  ||
-          versionChecker.compare(extVersion, blItem[i].maxVersion) > 0)
-        continue;
-
-      var blTargetApp = blItem[i].targetApps[gApp.ID];
-      if (blTargetApp) {
-        for (var x = 0; x < blTargetApp.length; ++x) {
-          if (versionChecker.compare(appVersion, blTargetApp[x].minVersion) < 0  ||
-              versionChecker.compare(appVersion, blTargetApp[x].maxVersion) > 0)
-            continue;
-          return true;
-        }
-      }
-
-      blTargetApp = blItem[i].targetApps[TOOLKIT_ID];
-      if (!blTargetApp)
-        return false;
-      for (x = 0; x < blTargetApp.length; ++x) {
-        if (versionChecker.compare(toolkitVersion, blTargetApp[x].minVersion) < 0  ||
-            versionChecker.compare(toolkitVersion, blTargetApp[x].maxVersion) > 0)
-          continue;
-        return true;
-      }
-    }
-    return false;
-  },
-
-  /**
    * Gets a list of items that are incompatible with a specific application version.
    * @param   appID
    *          The ID of the application - XXXben unused?
@@ -6789,6 +6419,9 @@ ExtensionsDataSource.prototype = {
    */
   getBlocklistedItemList: function(appVersion, toolkitVersion, desiredType,
                                    includeAppDisabled) {
+    if (!gBlocklist)
+      gBlocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
+                             .getService(Components.interfaces.nsIBlocklistService);
     var items = [];
     var ctr = getContainer(this._inner, this._itemRoot);
     var elements = ctr.GetElements();
@@ -6802,9 +6435,9 @@ ExtensionsDataSource.prototype = {
           this.getItemProperty(id, "appDisabled") == OP_NEEDS_DISABLE))
         continue;
 
-      var extVersion = this.getItemProperty(id, "version");
+      var version = this.getItemProperty(id, "version");
       if (type != -1 && (type & desiredType) && 
-          this.isBlocklisted(id, extVersion, appVersion, toolkitVersion))
+          gBlocklist.isAddonBlocklisted(id, version, appVersion, toolkitVersion))
         items.push(this.getItemForID(id));
     }
     return items;
@@ -7737,7 +7370,6 @@ ExtensionsDataSource.prototype = {
    * Load the Extensions Datasource from disk.
    */
   loadExtensions: function() {
-    Blocklist._ensureBlocklist();
     var extensionsFile  = getFile(KEY_PROFILEDIR, [FILE_EXTENSIONS]);
     try {
       this._inner = gRDF.GetDataSourceBlocking(getURLSpecFromFile(extensionsFile));
@@ -7929,40 +7561,15 @@ ExtensionsDataSource.prototype = {
    * Get the em:blocklisted property (whether or not this item is blocklisted)
    */
   _rdfGet_blocklisted: function(item, property) {
-    Blocklist._ensureBlocklist();
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
-    var blItem = Blocklist.entries[id];
-    if (!blItem)
-      return EM_L("false");
-
-    getVersionChecker();
     var version = this.getItemProperty(id, "version");
-    var appVersion = gApp.version;
-    for (var i = 0; i < blItem.length; ++i) {
-      if (gVersionChecker.compare(version, blItem[i].minVersion) < 0  ||
-          gVersionChecker.compare(version, blItem[i].maxVersion) > 0)
-        continue;
+    if (!gBlocklist)
+      gBlocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
+                             .getService(Components.interfaces.nsIBlocklistService);
+    if (gBlocklist.isAddonBlocklisted(id, version,
+                                      undefined, undefined))
+      return EM_L("true");
 
-      var blTargetApp = blItem[i].targetApps[gApp.ID];
-      if (blTargetApp) {
-        for (var x = 0; x < blTargetApp.length; ++x) {
-          if (gVersionChecker.compare(appVersion, blTargetApp[x].minVersion) < 0  ||
-              gVersionChecker.compare(appVersion, blTargetApp[x].maxVersion) > 0)
-            continue;
-          return EM_L("true");
-        }
-      }
-
-      blTargetApp = blItem[i].targetApps[TOOLKIT_ID];
-      if (!blTargetApp)
-        return EM_L("false");
-      for (x = 0; x < blTargetApp.length; ++x) {
-        if (gVersionChecker.compare(gApp.platformVersion, blTargetApp[x].minVersion) < 0  ||
-            gVersionChecker.compare(gApp.platformVersion, blTargetApp[x].maxVersion) > 0)
-          continue;
-        return EM_L("true");
-      }
-    }
     return EM_L("false");
   }, 
   
