@@ -744,6 +744,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  * to this reg cleanup since the referenced key would be for an app that is no
  * longer installed on the system.
  *
+ * $R1 = stores the long path to $INSTDIR
  * $R2 = _KEY
  * $R3 = value returned from the outer loop's EnumRegKey
  * $R4 = value returned from the inner loop's EnumRegKey
@@ -767,9 +768,11 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       Push $R5
       Push $R6
       Push $R7
+      Push $R1
       Push $R8
       Push $R9
 
+      ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R1
       StrCpy $R6 0  ; set the counter for the outer loop to 0
 
       outerloop:
@@ -797,8 +800,9 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       ${GetParentDir}
       Pop $R9
 
-      IfFileExists "$R8" 0 +2
-      StrCmp $R9 $INSTDIR 0 innerloop
+      IfFileExists "$R8" 0 +3
+      ${${_MOZFUNC_UN}GetLongPath} "$R9" $R9
+      StrCmp "$R9" "$R1" 0 innerloop
       ClearErrors
       DeleteRegKey SHCTX "$R2\$R3\$R4"
       IfErrors innerloop
@@ -830,6 +834,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 
       Pop $R9
       Pop $R8
+      Pop $R1
       Pop $R7
       Pop $R6
       Pop $R5
@@ -877,6 +882,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  * Removes all registry keys from HKLM\Software\Windows\CurrentVersion\Uninstall
  * that reference this install location.
  *
+ * $R4 = stores the long path to $INSTDIR
  * $R5 = value returned from ReadRegStr
  * $R6 = string for the base reg key (e.g. Software\Microsoft\Windows\CurrentVersion\Uninstall)
  * $R7 = value returned from the EnumRegKey
@@ -896,7 +902,9 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       Push $R7
       Push $R6
       Push $R5
+      Push $R4
 
+      ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R4
       StrCpy $R6 "Software\Microsoft\Windows\CurrentVersion\Uninstall"
       StrCpy $R8 0
       StrCpy $R7 ""
@@ -904,18 +912,19 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       loop:
       EnumRegKey $R7 HKLM $R6 $R8
       StrCmp $R7 "" end
-      IntOp $R8 $R8 + 1
+      IntOp $R8 $R8 + 1 ; Increment the counter
       ClearErrors
       ReadRegStr $R5 HKLM "$R6\$R7" "InstallLocation"
       IfErrors loop
       Push $R5
       ${GetPathFromRegStr}
       Pop $R9
-      StrCmp $R9 $INSTDIR 0 loop
+      ${${_MOZFUNC_UN}GetLongPath} "$R9" $R9
+      StrCmp "$R9" "$R4" 0 loop
       ClearErrors
       DeleteRegKey HKLM "$R6\$R7"
       IfErrors loop
-      IntOp $R8 $R8 + 1
+      IntOp $R8 $R8 - 1 ; Decrement the counter on successful deletion
       GoTo loop
 
       end:
@@ -2205,6 +2214,140 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !define _MOZFUNC_UN "un."
 
     !insertmacro UpdateUninstallLog
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * Returns the long path for an existing file or directory. GetLongPathNameA
+ * may not be available on Win95 if Microsoft Layer for Unicode is not
+ * installed and GetFullPathName only returns a long path for the last file or
+ * directory that doesn't end with a \ in the path that it is passed. If the
+ * path does not exist on the file system this will return an empty string. To
+ * provide a consistent result trailing back-slashes are always removed.
+ *
+ * @param   _IN_PATH
+ *          The string containing the path.
+ * @param   _OUT_PATH
+ *          The register to store the long path.
+ *
+ * $R4 = counter value when the previous \ was found
+ * $R5 = directory or file name found during loop
+ * $R6 = return value from GetLongPathNameA and loop counter
+ * $R7 = long path from GetLongPathNameA and single char from path for comparison
+ * $R8 = _IN_PATH
+ * $R9 = _OUT_PATH
+ */
+!macro GetLongPath
+
+  !ifndef ${_MOZFUNC_UN}GetLongPath
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}GetLongPath "!insertmacro ${_MOZFUNC_UN}GetLongPathCall"
+
+    Function ${_MOZFUNC_UN}GetLongPath
+      Exch $R9
+      Exch 1
+      Exch $R8
+      Push $R7
+      Push $R6
+      Push $R5
+      Push $R4
+
+      ClearErrors
+
+      StrCpy $R9 ""
+      GetFullPathName $R8 "$R8"
+      IfErrors end_GetLongPath +1 ; If the path doesn't exist return an empty string.
+
+      ; Remove trailing \'s from the path.
+      StrCpy $R6 "$R8" "" -1
+      StrCmp $R6 "\" +1 +2
+      StrCpy $R9 "$R8" -1
+
+      System::Call 'kernel32::GetLongPathNameA(t r18, t .r17, i 1024)i .r16'
+      StrCmp "$R7" "" +4 +1 ; Empty string when GetLongPathNameA is not present.
+      StrCmp $R6 0 +3 +1    ; Should never equal 0 since the path exists.
+      StrCpy $R9 "$R7"
+      GoTo end_GetLongPath
+
+      ; Do it the hard way.
+      StrCpy $R4 0     ; Stores the position in the string of the last \ found.
+      StrCpy $R6 -1    ; Set the counter to -1 so it will start at 0.
+
+      loop_GetLongPath:
+      IntOp $R6 $R6 + 1      ; Increment the counter.
+      StrCpy $R7 $R8 1 $R6   ; Starting from the counter copy the next char.
+      StrCmp $R7 "" +2       ; Are there no more chars?
+      StrCmp $R7 "\" +1 -3   ; Is it a \?
+
+      ; Copy chars starting from the previously found \ to the counter.
+      StrCpy $R5 $R8 $R6 $R4
+
+      ; If this is the first \ found we want to swap R9 with R5 so a \ will
+      ; be appended to the drive letter and colon (e.g. C: will become C:\).
+      StrCmp $R4 0 +1 +3     
+      StrCpy $R9 $R5
+      StrCpy $R5 ""
+
+      GetFullPathName $R9 "$R9\$R5"
+
+      StrCmp $R7 "" end_GetLongPath ; Are there no more chars?
+
+      ; Store the counter for the current \ and prefix it for StrCpy operations.
+      StrCpy $R4 "+$R6"
+      IntOp $R6 $R6 + 1      ; Increment the counter so we skip over the \.
+      StrCpy $R8 $R8 "" $R6  ; Copy chars starting from the counter to the end.
+      StrCpy $R6 -1          ; Reset the counter to -1 so it will start over at 0.
+      GoTo loop_GetLongPath
+
+      end_GetLongPath:
+      ClearErrors
+
+      Pop $R4
+      Pop $R5
+      Pop $R6
+      Pop $R7
+      Exch $R8
+      Exch 1
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro GetLongPathCall _IN_PATH _OUT_PATH
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_IN_PATH}"
+  Push "${_OUT_PATH}"
+  Call GetLongPath
+  Pop ${_OUT_PATH}
+  !verbose pop
+!macroend
+
+!macro un.GetLongPathCall _IN_PATH _OUT_PATH
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_IN_PATH}"
+  Push "${_OUT_PATH}"
+  Call un.GetLongPath
+  Pop ${_OUT_PATH}
+  !verbose pop
+!macroend
+
+!macro un.GetLongPath
+  !ifndef un.GetLongPath
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro GetLongPath
 
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN
