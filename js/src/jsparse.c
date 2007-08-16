@@ -6653,7 +6653,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             chars = (jschar *) JS_malloc(cx, (length + 1) * sizeof(jschar));
             if (!chars)
                 return JS_FALSE;
-            str = js_NewString(cx, chars, length, 0);
+            str = js_NewString(cx, chars, length);
             if (!str) {
                 JS_free(cx, chars);
                 return JS_FALSE;
@@ -6663,7 +6663,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
             for (pn2 = pn1; pn2; pn2 = RecycleTree(pn2, tc)) {
                 str2 = ATOM_TO_STRING(pn2->pn_atom);
                 length2 = str2->length;
-                js_strncpy(chars, str2->chars, length2);
+                js_strncpy(chars, str2->u.chars, length2);
                 chars += length2;
             }
             *chars = 0;

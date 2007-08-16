@@ -2032,8 +2032,8 @@ js_NewRegExpOpt(JSContext *cx, JSTokenStream *ts,
 
     flags = 0;
     if (opt) {
-        s = JSSTRING_CHARS(opt);
-        for (i = 0, n = JSSTRING_LENGTH(opt); i < n; i++) {
+        JSSTRING_CHARS_AND_LENGTH(opt, s, n);
+        for (i = 0; i < n; i++) {
             switch (s[i]) {
               case 'g':
                 flags |= JSREG_GLOB;
@@ -3373,10 +3373,9 @@ js_ExecuteRegExp(JSContext *cx, JSRegExp *re, JSString *str, size_t *indexp,
      * and we never let cp get beyond cpend.
      */
     start = *indexp;
-    length = JSSTRING_LENGTH(str);
+    JSSTRING_CHARS_AND_LENGTH(str, cp, length);
     if (start > length)
         start = length;
-    cp = JSSTRING_CHARS(str);
     gData.cpbegin = cp;
     gData.cpend = cp + length;
     cp += start;
@@ -3914,8 +3913,7 @@ js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp)
         return JS_TRUE;
     }
 
-    source = JSSTRING_CHARS(re->source);
-    length = JSSTRING_LENGTH(re->source);
+    JSSTRING_CHARS_AND_LENGTH(re->source, source, length);
     if (length == 0) {
         source = empty_regexp_ucstr;
         length = sizeof(empty_regexp_ucstr) / sizeof(jschar) - 1;
@@ -3946,7 +3944,7 @@ js_regexp_toString(JSContext *cx, JSObject *obj, jsval *vp)
     JS_UNLOCK_OBJ(cx, obj);
     chars[length] = 0;
 
-    str = js_NewString(cx, chars, length, 0);
+    str = js_NewString(cx, chars, length);
     if (!str) {
         JS_free(cx, chars);
         return JS_FALSE;
@@ -4021,8 +4019,7 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         }
 
         /* Escape any naked slashes in the regexp source. */
-        length = JSSTRING_LENGTH(str);
-        start = JSSTRING_CHARS(str);
+        JSSTRING_CHARS_AND_LENGTH(str, start, length);
         end = start + length;
         nstart = ncp = NULL;
         for (cp = start; cp < end; cp++) {
@@ -4053,7 +4050,7 @@ regexp_compile_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             /* Don't forget to store the backstop after the new string. */
             JS_ASSERT((size_t)(ncp - nstart) == length);
             *ncp = 0;
-            str = js_NewString(cx, nstart, length, 0);
+            str = js_NewString(cx, nstart, length);
             if (!str) {
                 JS_free(cx, nstart);
                 return JS_FALSE;

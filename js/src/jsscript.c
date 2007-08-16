@@ -129,8 +129,7 @@ script_toSource(JSContext *cx, uintN argc, jsval *vp)
         str = js_QuoteString(cx, str, '\'');
         if (!str)
             return JS_FALSE;
-        s = JSSTRING_CHARS(str);
-        k = JSSTRING_LENGTH(str);
+        JSSTRING_CHARS_AND_LENGTH(str, s, k);
         n += k;
     }
 
@@ -725,8 +724,7 @@ script_thaw(JSContext *cx, uintN argc, jsval *vp)
     if (!xdr)
         return JS_FALSE;
 
-    buf = JSSTRING_CHARS(str);
-    len = JSSTRING_LENGTH(str);
+    JSSTRING_CHARS_AND_LENGTH(str, buf, len);
 #if IS_BIG_ENDIAN
   {
     jschar *from, *to;
