@@ -937,8 +937,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
             }
             *vp = STRING_TO_JSVAL(idstr);               /* local root */
         }
-        idstrchars = JSSTRING_CHARS(idstr);
-        idstrlength = JSSTRING_LENGTH(idstr);
+        JSSTRING_CHARS_AND_LENGTH(idstr, idstrchars, idstrlength);
 
         for (j = 0; j < valcnt; j++) {
             /* Convert val[j] to its canonical source form. */
@@ -948,8 +947,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                 goto error;
             }
             vp[2 + j] = STRING_TO_JSVAL(valstr);        /* local root */
-            vchars = JSSTRING_CHARS(valstr);
-            vlength = JSSTRING_LENGTH(valstr);
+            JSSTRING_CHARS_AND_LENGTH(valstr, vchars, vlength);
 
             if (vchars[0] == '#')
                 needOldStyleGetterSetter = JS_TRUE;
@@ -1131,7 +1129,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
   make_string:
-    str = js_NewString(cx, chars, nchars, 0);
+    str = js_NewString(cx, chars, nchars);
     if (!str) {
         free(chars);
         return JS_FALSE;
@@ -1170,7 +1168,7 @@ obj_toString(JSContext *cx, uintN argc, jsval *vp)
     chars[nchars++] = ']';
     chars[nchars] = 0;
 
-    str = js_NewString(cx, chars, nchars, 0);
+    str = js_NewString(cx, chars, nchars);
     if (!str) {
         JS_free(cx, chars);
         return JS_FALSE;
@@ -2844,7 +2842,7 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
         if (JSID_IS_ATOM(id)) {                                               \
             JSAtom *atom_ = JSID_TO_ATOM(id);                                 \
             JSString *str_ = ATOM_TO_STRING(atom_);                           \
-            const jschar *cp_ = str_->chars;                                  \
+            const jschar *cp_ = str_->u.chars;                                \
             JSBool negative_ = (*cp_ == '-');                                 \
             if (negative_) cp_++;                                             \
             if (JS7_ISDEC(*cp_)) {                                            \
@@ -4965,8 +4963,8 @@ void printString(JSString *str) {
     size_t i, n;
     jschar *s;
     fprintf(stderr, "string (%p) \"", (void *)str);
-    s = JSSTRING_CHARS(str);
-    for (i=0, n=JSSTRING_LENGTH(str); i < n; i++)
+    JSSTRING_CHARS_AND_LENGTH(str, s, n);
+    for (i=0; i < n; i++)
         fputc(s[i], stderr);
     fputc('"', stderr);
     fputc('\n', stderr);

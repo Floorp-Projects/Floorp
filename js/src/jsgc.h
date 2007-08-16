@@ -53,12 +53,10 @@ JS_BEGIN_EXTERN_C
 #define GCX_OBJECT              0               /* JSObject */
 #define GCX_STRING              1               /* JSString */
 #define GCX_DOUBLE              2               /* jsdouble */
-#define GCX_MUTABLE_STRING      3               /* JSString that's mutable --
-                                                   single-threaded only! */
-#define GCX_FUNCTION            4               /* JSFunction */
-#define GCX_NAMESPACE           5               /* JSXMLNamespace */
-#define GCX_QNAME               6               /* JSXMLQName */
-#define GCX_XML                 7               /* JSXML */
+#define GCX_FUNCTION            3               /* JSFunction */
+#define GCX_NAMESPACE           4               /* JSXMLNamespace */
+#define GCX_QNAME               5               /* JSXMLQName */
+#define GCX_XML                 6               /* JSXML */
 #define GCX_EXTERNAL_STRING     8               /* JSString w/ external chars */
 
 #define GCX_NTYPES_LOG2         4               /* type index bits */
@@ -71,13 +69,6 @@ JS_BEGIN_EXTERN_C
 #define GCF_SYSTEM      JS_BIT(GCX_NTYPES_LOG2 + 2)
 #define GCF_LOCKSHIFT   (GCX_NTYPES_LOG2 + 3)   /* lock bit shift */
 #define GCF_LOCK        JS_BIT(GCF_LOCKSHIFT)   /* lock request bit in API */
-
-/* Pseudo-flag that modifies GCX_STRING to make GCX_MUTABLE_STRING. */
-#define GCF_MUTABLE     2
-
-#if (GCX_STRING | GCF_MUTABLE) != GCX_MUTABLE_STRING
-# error "mutable string type index botch!"
-#endif
 
 extern JS_FRIEND_API(uint8 *)
 js_GetGCThingFlags(void *thing);

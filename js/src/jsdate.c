@@ -622,8 +622,8 @@ date_parseString(JSString *str, jsdouble *result)
 {
     jsdouble msec;
 
-    const jschar *s = JSSTRING_CHARS(str);
-    size_t limit = JSSTRING_LENGTH(str);
+    const jschar *s;
+    size_t limit;
     size_t i = 0;
     int year = -1;
     int mon = -1;
@@ -639,6 +639,7 @@ date_parseString(JSString *str, jsdouble *result)
     int temp;
     JSBool seenmonthname = JS_FALSE;
 
+    JSSTRING_CHARS_AND_LENGTH(str, s, limit);
     if (limit == 0)
         goto syntax;
     while (i < limit) {
