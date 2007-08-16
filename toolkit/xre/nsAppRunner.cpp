@@ -80,7 +80,7 @@
 #include "nsIExtensionManager.h"
 #include "nsIFastLoadService.h" // for PLATFORM_FASL_SUFFIX
 #include "nsIGenericFactory.h"
-#include "nsIIOService.h"
+#include "nsIIOService2.h"
 #include "nsIObserverService.h"
 #include "nsINativeAppSupport.h"
 #include "nsIProcess.h"
@@ -2878,8 +2878,9 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
       {
         if (startOffline) {
-          nsCOMPtr<nsIIOService> io (do_GetService("@mozilla.org/network/io-service;1"));
+          nsCOMPtr<nsIIOService2> io (do_GetService("@mozilla.org/network/io-service;1"));
           NS_ENSURE_TRUE(io, 1);
+          io->SetManageOfflineStatus(PR_FALSE);
           io->SetOffline(PR_TRUE);
         }
 
