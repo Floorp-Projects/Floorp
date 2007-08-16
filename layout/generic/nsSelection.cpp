@@ -3460,8 +3460,9 @@ nsFrameSelection::GetFirstCellNodeInRange(nsIDOMRange *aRange,
   if (NS_FAILED(result))
     return result;
 
-  nsCOMPtr<nsIContent> parentContent = do_QueryInterface(startParent);
-  nsCOMPtr<nsIContent> childContent = parentContent->GetChildAt(offset);
+  nsCOMPtr<nsINode> parentNode = do_QueryInterface(startParent);
+  NS_ENSURE_STATE(parentNode);
+  nsCOMPtr<nsIContent> childContent = parentNode->GetChildAt(offset);
   if (!childContent)
     return NS_ERROR_NULL_POINTER;
   // Don't return node if not a cell
