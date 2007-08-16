@@ -632,14 +632,14 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 
         if (flags & ATOM_TMPSTR) {
             if (flags & ATOM_NOCOPY) {
-                key = js_NewString(cx, str->chars, str->length, 0);
+                key = js_NewString(cx, str->u.chars, str->length);
                 if (!key)
                     return NULL;
 
                 /* Transfer ownership of str->chars to GC-controlled string. */
-                str->chars = NULL;
+                str->u.chars = NULL;
             } else {
-                key = js_NewStringCopyN(cx, str->chars, str->length);
+                key = js_NewStringCopyN(cx, str->u.chars, str->length);
                 if (!key)
                     return NULL;
             }
@@ -708,10 +708,9 @@ js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags)
         flags |= ATOM_NOCOPY;
     }
 
-    str.chars = chars;
-    str.length = inflatedLength;
+    JSSTRING_INIT(&str, (jschar *)chars, inflatedLength);
     atom = js_AtomizeString(cx, &str, ATOM_TMPSTR | flags);
-    if (chars != inflated && str.chars)
+    if (chars != inflated && str.u.chars)
         JS_free(cx, chars);
     return atom;
 }
@@ -721,8 +720,7 @@ js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length, uintN flags)
 {
     JSString str;
 
-    str.chars = (jschar *)chars;
-    str.length = length;
+    JSSTRING_INIT(&str, (jschar *)chars, length);
     return js_AtomizeString(cx, &str, ATOM_TMPSTR | flags);
 }
 
@@ -733,8 +731,7 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length)
     JSAtomState *state;
     JSDHashEntryHdr *hdr;
 
-    str.chars = (jschar *)chars;
-    str.length = length;
+    JSSTRING_INIT(&str, (jschar *)chars, length);
     state = &cx->runtime->atomState;
 
     JS_LOCK(&state->lock, cx);

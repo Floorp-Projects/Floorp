@@ -92,13 +92,13 @@ num_parseFloat(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
     jsdouble d;
-    const jschar *bp, *ep;
+    const jschar *bp, *end, *ep;
 
     str = js_ValueToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
-    bp = JSSTRING_CHARS(str);
-    if (!js_strtod(cx, bp, bp + JSSTRING_LENGTH(str), &ep, &d))
+    JSSTRING_CHARS_AND_END(str, bp, end);
+    if (!js_strtod(cx, bp, end, &ep, &d))
         return JS_FALSE;
     if (ep == bp) {
         *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
@@ -114,7 +114,7 @@ num_parseInt(JSContext *cx, uintN argc, jsval *vp)
     jsint radix;
     JSString *str;
     jsdouble d;
-    const jschar *bp, *ep;
+    const jschar *bp, *end, *ep;
 
     if (argc > 1) {
         if (!js_ValueToECMAInt32(cx, vp[3], &radix))
@@ -130,8 +130,8 @@ num_parseInt(JSContext *cx, uintN argc, jsval *vp)
     str = js_ValueToString(cx, vp[2]);
     if (!str)
         return JS_FALSE;
-    bp = JSSTRING_CHARS(str);
-    if (!js_strtointeger(cx, bp, bp + JSSTRING_LENGTH(str), &ep, radix, &d))
+    JSSTRING_CHARS_AND_END(str, bp, end);
+    if (!js_strtointeger(cx, bp, end, &ep, radix, &d))
         return JS_FALSE;
     if (ep == bp) {
         *vp = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
@@ -724,8 +724,7 @@ js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
          * interpreted as decimal by js_strtod and will never get passed to
          * js_strtointeger (which would interpret them as octal).
          */
-        bp = JSSTRING_CHARS(str);
-        end = bp + JSSTRING_LENGTH(str);
+        JSSTRING_CHARS_AND_END(str, bp, end);
         if ((!js_strtod(cx, bp, end, &ep, dp) ||
              js_SkipWhiteSpace(ep, end) != end) &&
              (!js_strtointeger(cx, bp, end, &ep, 0, dp) ||

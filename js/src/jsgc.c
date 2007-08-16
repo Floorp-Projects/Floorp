@@ -247,11 +247,11 @@ static uint8 GCTypeToTraceKindMap[GCX_NTYPES] = {
     JSTRACE_OBJECT,     /* GCX_OBJECT */
     JSTRACE_STRING,     /* GCX_STRING */
     JSTRACE_DOUBLE,     /* GCX_DOUBLE */
-    JSTRACE_STRING,     /* GCX_MUTABLE_STRING */
     JSTRACE_FUNCTION,   /* GCX_FUNCTION */
     JSTRACE_NAMESPACE,  /* GCX_NAMESPACE */
     JSTRACE_QNAME,      /* GCX_QNAME */
     JSTRACE_XML,        /* GCX_XML */
+    (uint8)-1,         /* unused */
     JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 0 */
     JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 1 */
     JSTRACE_STRING,     /* GCX_EXTERNAL_STRING + 2 */
@@ -561,11 +561,11 @@ static GCFinalizeOp gc_finalizers[GCX_NTYPES] = {
     (GCFinalizeOp) js_FinalizeObject,           /* GCX_OBJECT */
     (GCFinalizeOp) js_FinalizeString,           /* GCX_STRING */
     (GCFinalizeOp) js_FinalizeDouble,           /* GCX_DOUBLE */
-    (GCFinalizeOp) js_FinalizeString,           /* GCX_MUTABLE_STRING */
     (GCFinalizeOp) js_FinalizeFunction,         /* GCX_FUNCTION */
     (GCFinalizeOp) js_FinalizeXMLNamespace,     /* GCX_NAMESPACE */
     (GCFinalizeOp) js_FinalizeXMLQName,         /* GCX_QNAME */
     (GCFinalizeOp) js_FinalizeXML,              /* GCX_XML */
+    NULL,                                       /* unused */
     NULL,                                       /* GCX_EXTERNAL_STRING */
     NULL,
     NULL,

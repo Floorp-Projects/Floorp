@@ -467,8 +467,7 @@ SprintString(Sprinter *sp, JSString *str)
     size_t length, size;
     ptrdiff_t offset;
 
-    chars = JSSTRING_CHARS(str);
-    length = JSSTRING_LENGTH(str);
+    JSSTRING_CHARS_AND_LENGTH(str, chars, length);
     if (length == 0)
         return sp->offset;
 
@@ -537,8 +536,7 @@ QuoteString(Sprinter *sp, JSString *str, uint32 quote)
         return NULL;
 
     /* Loop control variables: z points at end of string sentinel. */
-    s = JSSTRING_CHARS(str);
-    z = s + JSSTRING_LENGTH(str);
+    JSSTRING_CHARS_AND_END(str, s, z);
     for (t = s; t < z; s = ++t) {
         /* Move t forward from s past un-quote-worthy characters. */
         c = *t;
