@@ -287,6 +287,20 @@ nsMIMEInfoBase::SetPreferredApplicationHandler(nsIHandlerApp * aPreferredAppHand
 }
 
 NS_IMETHODIMP
+nsMIMEInfoBase::GetPossibleApplicationHandlers(nsIMutableArray ** aPossibleAppHandlers)
+{
+  if (!mPossibleApplications)
+    mPossibleApplications = do_CreateInstance(NS_ARRAY_CONTRACTID);
+
+  if (!mPossibleApplications)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  *aPossibleAppHandlers = mPossibleApplications;
+  NS_IF_ADDREF(*aPossibleAppHandlers);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMIMEInfoBase::GetPreferredAction(nsHandlerInfoAction * aPreferredAction)
 {
   *aPreferredAction = mPreferredAction;

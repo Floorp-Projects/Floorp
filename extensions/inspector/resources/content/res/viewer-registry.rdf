@@ -96,9 +96,12 @@
                        ins:panels="bxObjectPanel bxObjPanel"
                        ins:description="Accessible Object">
         <ins:filter><![CDATA[
-          if (!linkedViewer || linkedViewer.uid != "dom" ||
-              !linkedViewer.getAccessibleNodes() ||
+          if (!linkedViewer ||
               !(object instanceof Components.interfaces.nsIDOMNode))
+            return false;
+
+          if (linkedViewer.uid != "accessibleTree" &&
+              (linkedViewer.uid != "dom" || !linkedViewer.getAccessibleNodes()))
             return false;
 
           try {
@@ -119,9 +122,33 @@
                        ins:panels="bxObjectPanel bxObjPanel"
                        ins:description="Accessible Properties">
         <ins:filter><![CDATA[
-          if (!linkedViewer || linkedViewer.uid != "dom" ||
-              !linkedViewer.getAccessibleNodes() ||
+          if (!linkedViewer ||
               !(object instanceof Components.interfaces.nsIDOMNode))
+            return false;
+
+          if (linkedViewer.uid != "accessibleTree" &&
+              (linkedViewer.uid != "dom" || !linkedViewer.getAccessibleNodes()))
+            return false;
+
+          try {
+            var accService =
+              Components.classes["@mozilla.org/accessibleRetrieval;1"]
+                        .getService(Components.interfaces.nsIAccessibleRetrieval);
+
+            return accService.getAttachedAccessibleFor(object);
+          } catch(e) {
+            return false;
+          }
+        ]]></ins:filter>
+      </rdf:Description>
+    </rdf:li>
+
+    <rdf:li>
+      <rdf:Description ins:uid="accessibleTree"
+                       ins:panels="bxDocPanel"
+                       ins:description="Accessible Tree">
+        <ins:filter><![CDATA[
+          if (!(object instanceof Components.interfaces.nsIDOMDocument))
             return false;
 
           try {

@@ -554,8 +554,9 @@ nsFileControlFrame::GetFormProperty(nsIAtom* aName, nsAString& aValue) const
                  "If we have a cached state, we better have no mTextFrame");
     if (mCachedState) {
       aValue.Assign(*mCachedState);
-    } else if (mTextContent) {
-      nsCOMPtr<nsIFileControlElement> fileControl = do_QueryInterface(mTextContent);
+    } else {
+      nsCOMPtr<nsIFileControlElement> fileControl =
+        do_QueryInterface(mContent);
       if (fileControl) {
         fileControl->GetFileName(aValue);
       }

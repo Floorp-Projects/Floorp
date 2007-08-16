@@ -47,7 +47,8 @@ MODULE = accessibility
 LIBRARY_NAME = accessibility_html_s
 LIBXUL_LIBRARY = 1
 
-REQUIRES	= content \
+REQUIRES	= composer \
+		  content \
 		  docshell \
 		  dom \
 		  editor \

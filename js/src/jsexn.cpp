@@ -636,7 +636,10 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
 #define APPEND_STRING_TO_STACK(str)                                           \
     JS_BEGIN_MACRO                                                            \
         JSString *str_ = str;                                                 \
-        size_t length_ = JSSTRING_LENGTH(str_);                               \
+        jschar *chars_;                                                       \
+        size_t length_;                                                       \
+                                                                              \
+        JSSTRING_CHARS_AND_LENGTH(str_, chars_, length_);                     \
         if (length_ > stackmax - stacklen) {                                  \
             void *ptr_;                                                       \
             if (stackmax >= STACK_LENGTH_LIMIT ||                             \
@@ -649,7 +652,7 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
                 goto bad;                                                     \
             stackbuf = (jschar *) ptr_;                                       \
         }                                                                     \
-        js_strncpy(stackbuf + stacklen, JSSTRING_CHARS(str_), length_);       \
+        js_strncpy(stackbuf + stacklen, chars_, length_);                     \
         stacklen += length_;                                                  \
     JS_END_MACRO
 
@@ -701,7 +704,7 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
     }
 
     stackbuf[stacklen] = 0;
-    str = js_NewString(cx, stackbuf, stacklen, 0);
+    str = js_NewString(cx, stackbuf, stacklen);
     if (str)
         return str;
 
@@ -847,7 +850,7 @@ exn_toString(JSContext *cx, uintN argc, jsval *vp)
         cp += message_length;
         *cp = 0;
 
-        result = js_NewString(cx, chars, length, 0);
+        result = js_NewString(cx, chars, length);
         if (!result) {
             JS_free(cx, chars);
             return JS_FALSE;
@@ -973,7 +976,7 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
 
     *cp++ = ')'; *cp++ = ')'; *cp = 0;
 
-    result = js_NewString(cx, chars, length, 0);
+    result = js_NewString(cx, chars, length);
     if (!result) {
         JS_free(cx, chars);
         return JS_FALSE;

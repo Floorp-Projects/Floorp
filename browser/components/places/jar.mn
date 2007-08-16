@@ -31,3 +31,5 @@ browser.jar:
 *   content/browser/bookmarks/sidebarUtils.js            (content/sidebarUtils.js)
 *   content/browser/places/moveBookmarks.xul             (content/moveBookmarks.xul)
 *   content/browser/places/moveBookmarks.js              (content/moveBookmarks.js)
+*   content/browser/places/editBookmarkOverlay.xul       (content/editBookmarkOverlay.xul)
+*   content/browser/places/editBookmarkOverlay.js        (content/editBookmarkOverlay.js)

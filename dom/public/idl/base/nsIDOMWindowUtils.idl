@@ -47,7 +47,7 @@
 
 interface nsIDOMElement;
 
-[scriptable, uuid(1F313394-73AB-41BF-8307-9FC5DA8A481E)]
+[scriptable, uuid(25f55fb2-a6f8-4f7f-93c3-3adafd5166bc)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -68,6 +68,12 @@ interface nsIDOMWindowUtils : nsISupports {
    * @see imgIContainer
    */
   attribute unsigned short imageAnimationMode;
+
+  /**
+   * Whether the charset of the window's current document has been forced by
+   * the user
+   */
+  readonly attribute boolean docCharsetIsForced;
 
   /**
    * Function to get metadata associated with the window's current document

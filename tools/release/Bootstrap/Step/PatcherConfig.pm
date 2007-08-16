@@ -5,6 +5,7 @@
 package Bootstrap::Step::PatcherConfig;
 
 use Config::General;
+use File::Temp qw(tempfile);
 
 use MozBuild::Util qw(MkdirWithPath);
 
@@ -83,6 +84,9 @@ sub BumpPatcherConfig {
     my $oldRc = $config->Get(var => 'oldRc');
     my $localeInfo = $config->GetLocaleInfo();
     my $patcherConfig = $config->Get(var => 'patcherConfig');
+    my $sshUser = $config->Get(var => 'sshUser');
+    my $sshServer = $config->Get(var => 'sshServer');
+    my $logDir = $config->Get(var => 'logDir');
 
     # First, parse the file.
     my $checkedOutPatcherConfig = catfile($configBumpDir, 'patcher', 
@@ -101,12 +105,18 @@ sub BumpPatcherConfig {
     my $currentUpdateObj = $appObj->{'current-update'};
 
     # Add the release we're replacing to the past-releases array, but only if
-    # it's not a respin...
+    # it's a new release; we used to determine this by looking at the rc 
+    # value, but that can be misleading because sometimes we may not get to
+    # the update step before a respin; so what we really need to compare is 
+    # whether our current version in bootstrap.cfg is in the to clause of the 
+    # patcher config file/object; we now control this via doOnetimePatcherBumps.
     #
     # More complicated than it needs to be because it handles the (uncommon)
     # case that there is no past-update yet (e.g. Firefox 3.0)
 
-    if (1 == int($rc)) {
+    my $doOnetimePatcherBumps = ($currentUpdateObj->{'to'} ne $version);
+
+    if ($doOnetimePatcherBumps) {
         my $pastUpdateObj = $appObj->{'past-update'};
         if (ref($pastUpdateObj) ne 'ARRAY') {
             my $oldSinglePastUpdateStr = $pastUpdateObj;
@@ -123,15 +133,15 @@ sub BumpPatcherConfig {
          $currentUpdateObj->{'to'}, @pastUpdateChannels));
     }
 
-
-
     # Now we can replace information in the "current-update" object; start
     # with the to/from versions, the rc channels, then the information for
     # the partial and complete update patches
     #
-    # Only bump the to/from versions if we're really a new release.
+    # Only bump the to/from versions if we're really a new release. We used
+    # to determine this by looking at the rc value, but now we use
+    # doOnetimePatcherBump 
     
-    if (1 == int($rc)) {
+    if ($doOnetimePatcherBumps) {
         $currentUpdateObj->{'to'} = $version;
         $currentUpdateObj->{'from'} = $oldVersion;
     }
@@ -196,11 +206,50 @@ sub BumpPatcherConfig {
     $releaseObj->{'schema'} = '1';
     $releaseObj->{'version'} = $releaseObj->{'extension-version'} = $version;
 
-    ## XXX - Dummy data for now...
-    my $linBuildId = '1234567890';
-    my $winBuildId = '1234567891';
-    my $macBuildId = '1234567892';
-    
+    my $linBuildId;
+    my $winBuildId;
+    my $macBuildId;
+
+    # grab os-specific buildID file on FTP
+    my $candidateDir = $config->GetFtpCandidateDir(bitsUnsigned => 0);
+    foreach my $os ('linux', 'macosx', 'win32') {
+        my ($bh, $buildIDTempFile) = tempfile(DIR => '.');
+        $bh->close();
+        $this->Shell(
+          cmd => 'scp',
+          cmdArgs => [$sshUser . '@' . $sshServer . ':' . 
+                      $candidateDir .'/' . $os . '_info.txt',
+                      $buildIDTempFile],
+        );
+        my $buildID;
+        open(FILE, "< $buildIDTempFile") || 
+         die("Could not open buildID temp file $buildIDTempFile: $!");
+        while (<FILE>) {
+          my ($var, $value) = split(/\s*=\s*/, $_, 2);
+          if ($var eq 'buildID') {
+              $buildID = $value;
+          }
+        }
+        close(FILE) || 
+         die("Could not close buildID temp file $buildIDTempFile: $!");
+        if (! defined($buildID)) {
+            die("Could not read buildID from temp file $buildIDTempFile: $!");
+        }
+        if (! $buildID =~ /^\d+$/) {
+            die("ASSERT: BumpPatcherConfig: $buildID is non-numerical");
+        }
+        chomp($buildID);
+        if ($os eq 'linux') {
+            $linBuildId = "$buildID";
+        } elsif ($os eq 'macosx') {
+            $macBuildId = "$buildID";
+        } elsif ($os eq 'win32') {
+            $winBuildId = "$buildID";
+        } else {
+            die("ASSERT: BumpPatcherConfig(): unknown OS $os");
+        }
+    }
+
     $releaseObj->{'platforms'} = { 'linux-i686' => $linBuildId,
                                    'win32' => $winBuildId,
                                    'mac' => $macBuildId };

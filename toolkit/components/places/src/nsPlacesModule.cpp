@@ -5,14 +5,12 @@
 #include "nsNavHistory.h"
 #include "nsNavBookmarks.h"
 #include "nsFaviconService.h"
-#include "nsMorkHistoryImporter.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAnnoProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAnnotationService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNavBookmarks, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFaviconService, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMorkHistoryImporter)
 
 static const nsModuleComponentInfo components[] =
 {
@@ -50,11 +48,6 @@ static const nsModuleComponentInfo components[] =
     NS_FAVICONSERVICE_CID,
     NS_FAVICONSERVICE_CONTRACTID,
     nsFaviconServiceConstructor },
-
-  { "Mork History Importer",
-    NS_MORKHISTORYIMPORTER_CID,
-    NS_MORKHISTORYIMPORTER_CONTRACTID,
-    nsMorkHistoryImporterConstructor },
 
 };
 

@@ -44,7 +44,7 @@
 
 class mozIStorageConnection;
 class nsNavHistory;
-class nsNavHistoryExpireRecord;
+struct nsNavHistoryExpireRecord;
 
 class nsNavHistoryExpire
 {

@@ -161,12 +161,8 @@ class nsXULTextFieldAccessible : public nsHyperTextAccessibleWrap
 public:
   enum { eAction_Click = 0 };
 
-  NS_DECL_ISUPPORTS_INHERITED
-
   nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
-  NS_IMETHOD Init();
-  NS_IMETHOD Shutdown();
   NS_IMETHOD GetValue(nsAString& aValue);
   NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
   NS_IMETHOD GetRole(PRUint32 *aRole);
@@ -175,14 +171,11 @@ public:
   NS_IMETHOD DoAction(PRUint8 index);
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
 
+  // nsIAccessibleEditableText
+  NS_IMETHOD GetAssociatedEditor(nsIEditor **aEditor);
+
 protected:
   already_AddRefed<nsIDOMNode> GetInputField();
-
-  // Editor helpers, subclasses of nsHyperTextAccessible may have editor
-  virtual void SetEditor(nsIEditor *aEditor);
-  virtual already_AddRefed<nsIEditor> GetEditor() { nsIEditor *editor = mEditor; NS_IF_ADDREF(editor); return editor; }
-  void CheckForEditor();
-  nsCOMPtr<nsIEditor> mEditor;
 };
 
 

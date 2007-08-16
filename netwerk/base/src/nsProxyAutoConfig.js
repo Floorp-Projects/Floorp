@@ -99,14 +99,14 @@ nsProxyAutoConfig.prototype = {
         try {
             var rval = this._sandBox.FindProxyForURL(testURI, testHost);
         } catch (e) {
-            throw new XPCSafeJSObjectWrapper(e);
+            throw XPCSafeJSObjectWrapper(e);
         }
         return rval;
     }
 }
 
 function proxyAlert(msg) {
-    msg = new XPCSafeJSObjectWrapper(msg);
+    msg = XPCSafeJSObjectWrapper(msg);
     try {
         // It would appear that the console service is threadsafe.
         var cns = Components.classes["@mozilla.org/consoleservice;1"]
@@ -128,7 +128,7 @@ function myIpAddress() {
 
 // wrapper for resolving hostnames called by PAC file
 function dnsResolve(host) {
-    host = new XPCSafeJSObjectWrapper(host);
+    host = XPCSafeJSObjectWrapper(host);
     try {
         return dns.resolve(host, 0).getNextAddrAsString();
     } catch (e) {

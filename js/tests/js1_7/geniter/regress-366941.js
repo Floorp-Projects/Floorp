@@ -93,7 +93,7 @@ function test()
 
   // syntax error in js17
   var iter2 = gen(list2);
-  expect = 'SyntaxError: invalid for/in left-hand side';
+  expect = /SyntaxError: (invalid for.in left-hand side|Left hand side of for..in loop must be an array of length 2 to accept key.value pair.)/;
   actual = '';
 
   try
@@ -108,7 +108,7 @@ function test()
     actual = ex + '';
   }
  
-  reportCompare(expect, actual, summary + ': 4');
+  reportMatch(expect, actual, summary + ': 4');
 
   exitFunc ('test');
 }

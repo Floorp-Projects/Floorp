@@ -382,25 +382,30 @@ InitGlobals()
       rv = InitOperators();
     }
   }
-  if (NS_FAILED(rv)) {
-    if (gInvariantCharArray) {
-      delete gInvariantCharArray;
-      gInvariantCharArray = nsnull;
-    }
-    if (gOperatorArray) {
-      delete[] gOperatorArray;
-      gOperatorArray = nsnull;
-    }
-    if (gStretchyOperatorArray) {
-      delete gStretchyOperatorArray;
-      gStretchyOperatorArray = nsnull;
-    }
-    if (gOperatorTable) {
-      delete gOperatorTable;
-      gOperatorTable = nsnull;
-    }
-  }
+  if (NS_FAILED(rv))
+    nsMathMLOperators::CleanUp();
   return rv;
+}
+
+void
+nsMathMLOperators::CleanUp()
+{
+  if (gInvariantCharArray) {
+    delete gInvariantCharArray;
+    gInvariantCharArray = nsnull;
+  }
+  if (gOperatorArray) {
+    delete[] gOperatorArray;
+    gOperatorArray = nsnull;
+  }
+  if (gStretchyOperatorArray) {
+    delete gStretchyOperatorArray;
+    gStretchyOperatorArray = nsnull;
+  }
+  if (gOperatorTable) {
+    delete gOperatorTable;
+    gOperatorTable = nsnull;
+  }
 }
 
 void
@@ -413,18 +418,7 @@ void
 nsMathMLOperators::ReleaseTable(void)
 {
   if (0 == --gTableRefCount) {
-    if (gOperatorArray) {
-      delete[] gOperatorArray;
-      gOperatorArray = nsnull;
-    }
-    if (gStretchyOperatorArray) {
-      delete gStretchyOperatorArray;
-      gStretchyOperatorArray = nsnull;
-    }
-    if (gOperatorTable) {
-      delete gOperatorTable;
-      gOperatorTable = nsnull;
-    }
+    CleanUp();
   }
 }
 

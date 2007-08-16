@@ -58,12 +58,6 @@
 
 #include "nsITimer.h"
 
-enum nsPopupType {
-  ePopupTypePanel,
-  ePopupTypeMenu,
-  ePopupTypeTooltip
-};
-
 // XUL popups can be in several different states. When opening a popup, the
 // state changes as follows:
 //   ePopupClosed - initial state
@@ -229,7 +223,7 @@ public:
   // FindMenuWithShortcut
   nsMenuFrame* Enter();
 
-  PRInt32 PopupType() const { return mPopupType; }
+  nsPopupType PopupType() const { return mPopupType; }
   PRBool IsMenu() { return mPopupType == ePopupTypeMenu; }
   PRBool IsOpen() { return mPopupState == ePopupOpen || mPopupState == ePopupOpenAndVisible; }
   PRBool HasOpenChanged() { return mIsOpenChanged; }

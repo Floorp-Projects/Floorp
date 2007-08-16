@@ -893,7 +893,9 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
-  mSerializer->Init(mFlags, mWrapColumn, mCharset.get(), mIsCopying);
+  
+  PRBool isWholeDocument = !(mSelection || mRange || mNode);
+  mSerializer->Init(mFlags, mWrapColumn, mCharset.get(), mIsCopying, isWholeDocument);
 
   if (mSelection) {
     nsCOMPtr<nsIDOMRange> range;

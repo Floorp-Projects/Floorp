@@ -96,6 +96,23 @@ NS_IMETHODIMP nsXULTreeAccessibleWrap::GetColumns(PRInt32 *aColumns)
   NS_ENSURE_TRUE(acc, NS_ERROR_FAILURE);
 
   rv = acc->GetChildCount(aColumns);
+
+  // The last child could be column picker. In that case, we need to minus the
+  // number of columns by 1
+  nsCOMPtr<nsIAccessible> lastChildAccessible;
+  acc->GetLastChild(getter_AddRefs(lastChildAccessible));
+  nsCOMPtr<nsIAccessNode> accessNode = do_QueryInterface(lastChildAccessible);
+  NS_ENSURE_TRUE(accessNode, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDOMNode> domNode;
+  accessNode->GetDOMNode(getter_AddRefs(domNode));
+  nsCOMPtr<nsIContent> content = do_QueryInterface(domNode);
+  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+  // it's menupopup inside column picker
+  if (content->NodeInfo()->Equals(nsAccessibilityAtoms::menupopup,
+                                  kNameSpaceID_XUL)) {
+    (*aColumns)--;
+  }
+
   return *aColumns > 0 ? rv : NS_ERROR_FAILURE;
 }
 

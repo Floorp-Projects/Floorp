@@ -46,6 +46,7 @@
 #include "nsIBrowserProfileMigrator.h"
 #include "nsIObserverService.h"
 #include "nsVoidArray.h"
+#include "nsINavHistoryService.h"
 
 class nsIFile;
 class nsICookieManager2;
@@ -56,9 +57,11 @@ class nsIPrefBranch;
 #import PSTOREC_DLL raw_interfaces_only
 using namespace PSTORECLib;
 
-class nsIEProfileMigrator : public nsIBrowserProfileMigrator {
+class nsIEProfileMigrator : public nsIBrowserProfileMigrator,
+                            public nsINavHistoryBatchCallback {
 public:
   NS_DECL_NSIBROWSERPROFILEMIGRATOR
+  NS_DECL_NSINAVHISTORYBATCHCALLBACK
   NS_DECL_ISUPPORTS
 
   nsIEProfileMigrator();

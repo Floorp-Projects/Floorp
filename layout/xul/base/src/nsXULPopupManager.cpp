@@ -170,7 +170,8 @@ NS_IMETHODIMP nsXULPopupManager::ShouldRollupOnMouseWheelEvent(PRBool *aShouldRo
 {
   // should rollup only for autocomplete widgets
   // XXXndeakin this should really be something the popup has more control over
-  *aShouldRollup = (mCurrentMenu && !mCurrentMenu->Frame()->IsMenu()); 
+  nsMenuChainItem* item = GetTopVisibleMenu();
+  *aShouldRollup = (item && !item->Frame()->IsMenu()); 
   return NS_OK;
 }
 
@@ -189,7 +190,7 @@ nsXULPopupManager::GetSubmenuWidgetChain(nsISupportsArray **_retval)
   // panels will roll up. If the click is inside a popup, they will not roll up
   nsresult rv = NS_NewISupportsArray(_retval);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsMenuChainItem* item = mCurrentMenu;
+  nsMenuChainItem* item = GetTopVisibleMenu();
   while (item) {
     nsCOMPtr<nsIWidget> widget;
     item->Frame()->GetWidget(getter_AddRefs(widget));
@@ -236,6 +237,15 @@ nsXULPopupManager::GetPopupFrameForContent(nsIContent* aContent)
 {
   return static_cast<nsMenuPopupFrame *>
                     (GetFrameOfTypeForContent(aContent, nsGkAtoms::menuPopupFrame));
+}
+
+nsMenuChainItem*
+nsXULPopupManager::GetTopVisibleMenu()
+{
+  nsMenuChainItem* item = mCurrentMenu;
+  while (item && item->Frame()->PopupState() == ePopupInvisible)
+    item = item->GetParent();
+  return item;
 }
 
 void
@@ -340,7 +350,7 @@ nsXULPopupManager::ShowMenu(nsIContent *aMenu,
   else {
     nsCOMPtr<nsIContent> popupContent = popupFrame->GetContent();
     FirePopupShowingEvent(popupContent, aMenu,
-                          popupFrame->PresContext(),
+                          popupFrame->PresContext(), popupFrame->PopupType(),
                           parentIsContextMenu, aSelectFirstItem);
   }
 }
@@ -362,7 +372,7 @@ nsXULPopupManager::ShowPopup(nsIContent* aPopup,
                               aAttributesOverride);
 
   FirePopupShowingEvent(aPopup, nsnull, popupFrame->PresContext(),
-                        aIsContextMenu, aSelectFirstItem);
+                        popupFrame->PopupType(), aIsContextMenu, aSelectFirstItem);
 }
 
 void
@@ -377,7 +387,7 @@ nsXULPopupManager::ShowPopupAtScreen(nsIContent* aPopup,
   popupFrame->InitializePopupAtScreen(aXPos, aYPos);
 
   FirePopupShowingEvent(aPopup, nsnull, popupFrame->PresContext(),
-                        aIsContextMenu, PR_FALSE);
+                        popupFrame->PopupType(), aIsContextMenu, PR_FALSE);
 }
 
 void
@@ -396,7 +406,7 @@ nsXULPopupManager::ShowPopupWithAnchorAlign(nsIContent* aPopup,
                                              aAlign, aXPos, aYPos);
 
   FirePopupShowingEvent(aPopup, nsnull, popupFrame->PresContext(),
-                        aIsContextMenu, PR_FALSE);
+                        popupFrame->PopupType(), aIsContextMenu, PR_FALSE);
 }
 
 void
@@ -409,11 +419,11 @@ nsXULPopupManager::ShowPopupCallback(nsIContent* aPopup,
   mRangeParent = nsnull;
   mRangeOffset = 0;
 
-  PRInt32 popupType = aPopupFrame->PopupType();
+  nsPopupType popupType = aPopupFrame->PopupType();
   PRBool ismenu = (popupType == ePopupTypeMenu);
 
   nsMenuChainItem* item =
-    new nsMenuChainItem(aPopupFrame, aIsContextMenu, ismenu);
+    new nsMenuChainItem(aPopupFrame, aIsContextMenu, popupType);
   if (!item)
     return;
 
@@ -503,7 +513,7 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
     item = item->GetParent();
   }
 
-  PRBool ismenu = PR_FALSE;
+  nsPopupType type = ePopupTypePanel;
   PRBool deselectMenu = PR_FALSE;
   nsCOMPtr<nsIContent> popupToHide, nextPopup, lastPopup;
   if (foundMenu) {
@@ -523,7 +533,7 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
     deselectMenu = aDeselectMenu;
     popupToHide = mCurrentMenu->Content();
     popupFrame = mCurrentMenu->Frame();
-    ismenu = mCurrentMenu->IsMenu();
+    type = popupFrame->PopupType();
 
     nsMenuChainItem* parent = mCurrentMenu->GetParent();
 
@@ -553,12 +563,12 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
     if (aAsynchronous) {
       nsCOMPtr<nsIRunnable> event =
         new nsXULPopupHidingEvent(popupToHide, nextPopup, lastPopup,
-                                  ismenu, deselectMenu);
+                                  type, deselectMenu);
         NS_DispatchToCurrentThread(event);
     }
     else {
       FirePopupHidingEvent(popupToHide, nextPopup, lastPopup,
-                           popupFrame->PresContext(), ismenu, deselectMenu);
+                           popupFrame->PresContext(), type, deselectMenu);
     }
   }
 }
@@ -568,7 +578,7 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
                                      nsMenuPopupFrame* aPopupFrame,
                                      nsIContent* aNextPopup,
                                      nsIContent* aLastPopup,
-                                     PRBool aIsMenu,
+                                     nsPopupType aPopupType,
                                      PRBool aDeselectMenu)
 {
   if (mCloseTimer) {
@@ -631,8 +641,8 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
     // is reached, or until a popup of a different type is reached. This
     // last check is needed so that a menulist inside a non-menu panel only
     // closes the menu and not the panel as well.
-    if (foundMenu && (aLastPopup || aIsMenu == foundMenu->IsMenu())) {
-      PRBool ismenu = foundMenu->IsMenu();
+    if (foundMenu &&
+        (aLastPopup || aPopupType == foundMenu->PopupType())) {
       nsCOMPtr<nsIContent> popupToHide = item->Content();
       nsMenuChainItem* parent = item->GetParent();
 
@@ -648,7 +658,8 @@ nsXULPopupManager::HidePopupCallback(nsIContent* aPopup,
         popupFrame->SetPopupState(ePopupHiding);
 
       FirePopupHidingEvent(popupToHide, nextPopup, aLastPopup,
-                           popupFrame->PresContext(), ismenu, aDeselectMenu);
+                           popupFrame->PresContext(),
+                           foundMenu->PopupType(), aDeselectMenu);
     }
   }
 }
@@ -676,7 +687,7 @@ nsXULPopupManager::HidePopupAfterDelay(nsMenuPopupFrame* aPopup)
 void
 nsXULPopupManager::HidePopupsInDocument(nsIDocument* aDocument)
 {
-  nsMenuChainItem* item = mCurrentMenu;
+  nsMenuChainItem* item = GetTopVisibleMenu();
   while (item) {
     nsMenuChainItem* parent = item->GetParent();
     if (item->Content()->GetOwnerDoc() == aDocument) {
@@ -697,6 +708,8 @@ nsXULPopupManager::HidePopupsInDocument(nsIDocument* aDocument)
     }
     item = parent;
   }
+
+  SetCaptureState(nsnull);
 }
 
 void
@@ -707,7 +720,7 @@ nsXULPopupManager::ExecuteMenu(nsIContent* aMenu, nsEvent* aEvent)
   // opens a modal dialog. The views associated with the popups needed to be
   // hidden and the accesibility events fired before the command executes, but
   // the popuphiding/popuphidden events are fired afterwards.
-  nsMenuChainItem* item = mCurrentMenu;
+  nsMenuChainItem* item = GetTopVisibleMenu();
   while (item) {
     // if it isn't a <menupopup>, don't close it automatically
     if (!item->IsMenu())
@@ -717,6 +730,8 @@ nsXULPopupManager::ExecuteMenu(nsIContent* aMenu, nsEvent* aEvent)
 
     item = next;
   }
+
+  SetCaptureState(nsnull);
 
   // Create a trusted event if the triggering event was trusted, or if
   // we're called from chrome code (since at least one of our caller
@@ -748,6 +763,7 @@ void
 nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
                                          nsIContent* aMenu,
                                          nsPresContext* aPresContext,
+                                         nsPopupType aPopupType,
                                          PRBool aIsContextMenu,
                                          PRBool aSelectFirstItem)
 {
@@ -772,6 +788,29 @@ nsXULPopupManager::FirePopupShowingEvent(nsIContent* aPopup,
   event.refPoint = mCachedMousePoint;
   nsEventDispatcher::Dispatch(aPopup, aPresContext, &event, nsnull, &status);
   mCachedMousePoint = nsPoint(0, 0);
+
+  // if a panel, blur whatever has focus so that the panel can take the focus.
+  // This is done after the popupshowing event in case that event is cancelled.
+  // Using noautofocus="true" will disable this behaviour, which is needed for
+  // the autocomplete widget as it manages focus itself.
+  if (aPopupType == ePopupTypePanel &&
+      !aPopup->AttrValueIs(kNameSpaceID_None, nsGkAtoms::noautofocus,
+                           nsGkAtoms::_true, eCaseMatters)) {
+    nsIEventStateManager* esm = presShell->GetPresContext()->EventStateManager();
+
+    // Only remove the focus if the currently focused item is ouside the
+    // popup. It isn't a big deal if the current focus is in a child popup
+    // inside the popup as that shouldn't be visible. This check ensures that
+    // a node inside the popup that is focused during a popupshowing event
+    // remains focused.
+    nsCOMPtr<nsIContent> currentFocus;
+    esm->GetFocusedContent(getter_AddRefs(currentFocus));
+    if (currentFocus &&
+        !nsContentUtils::ContentIsDescendantOf(currentFocus, aPopup)) {
+      esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+      esm->SetFocusedContent(nsnull);
+    }
+  }
 
   // it is common to append content to the menu during the popupshowing event.
   // Flush the notifications so that the frames are up to date before showing
@@ -803,7 +842,7 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
                                         nsIContent* aNextPopup,
                                         nsIContent* aLastPopup,
                                         nsPresContext *aPresContext,
-                                        PRBool aIsMenu,
+                                        nsPopupType aPopupType,
                                         PRBool aDeselectMenu)
 {
   nsCOMPtr<nsIPresShell> presShell = aPresContext->PresShell();
@@ -811,6 +850,22 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_HIDING, nsnull, nsMouseEvent::eReal);
   nsEventDispatcher::Dispatch(aPopup, aPresContext, &event, nsnull, &status);
+
+  // when a panel is closed, blur whatever has focus inside the popup
+  if (aPopupType == ePopupTypePanel &&
+      !aPopup->AttrValueIs(kNameSpaceID_None, nsGkAtoms::noautofocus,
+                           nsGkAtoms::_true, eCaseMatters)) {
+    nsIEventStateManager* esm = presShell->GetPresContext()->EventStateManager();
+
+    // Remove the focus from the focused node only if it is inside the popup.
+    nsCOMPtr<nsIContent> currentFocus;
+    esm->GetFocusedContent(getter_AddRefs(currentFocus));
+    if (currentFocus &&
+        nsContentUtils::ContentIsDescendantOf(currentFocus, aPopup)) {
+      esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+      esm->SetFocusedContent(nsnull);
+    }
+  }
 
   // get frame again in case it went away
   nsIFrame* frame = presShell->GetPrimaryFrameFor(aPopup);
@@ -826,7 +881,7 @@ nsXULPopupManager::FirePopupHidingEvent(nsIContent* aPopup,
     }
     else {
       HidePopupCallback(aPopup, popupFrame, aNextPopup, aLastPopup,
-                        aIsMenu, aDeselectMenu);
+                        aPopupType, aDeselectMenu);
     }
   }
 }
@@ -867,7 +922,7 @@ nsXULPopupManager::IsPopupOpen(nsIContent* aPopup)
 PRBool
 nsXULPopupManager::IsPopupOpenForMenuParent(nsIMenuParent* aMenuParent)
 {
-  nsMenuChainItem* item = mCurrentMenu;
+  nsMenuChainItem* item = GetTopVisibleMenu();
   while (item) {
     nsMenuPopupFrame* popup = item->Frame();
     if (popup && popup->IsOpen()) {
@@ -884,6 +939,22 @@ nsXULPopupManager::IsPopupOpenForMenuParent(nsIMenuParent* aMenuParent)
   return PR_FALSE;
 }
 
+nsIFrame*
+nsXULPopupManager::GetTopPopup(nsPopupType aType)
+{
+  if (aType == ePopupTypePanel && mPanels)
+    return mPanels->Frame();
+
+  nsMenuChainItem* item = GetTopVisibleMenu();
+  while (item) {
+    if (item->PopupType() == aType)
+      return item->Frame();
+    item = item->GetParent();
+  }
+
+  return nsnull;
+}
+
 nsTArray<nsIFrame *>
 nsXULPopupManager::GetOpenPopups()
 {
@@ -891,7 +962,8 @@ nsXULPopupManager::GetOpenPopups()
 
   nsMenuChainItem* item = mCurrentMenu;
   while (item) {
-    popups.AppendElement(static_cast<nsIFrame*>(item->Frame()));
+    if (item->Frame()->PopupState() != ePopupInvisible)
+      popups.AppendElement(static_cast<nsIFrame*>(item->Frame()));
     item = item->GetParent();
   }
 
@@ -1037,7 +1109,7 @@ nsXULPopupManager::PopupDestroyed(nsMenuPopupFrame* aPopup)
 PRBool
 nsXULPopupManager::HasContextMenu(nsMenuPopupFrame* aPopup)
 {
-  nsMenuChainItem* item = mCurrentMenu;
+  nsMenuChainItem* item = GetTopVisibleMenu();
   while (item && item->Frame() != aPopup) {
     if (item->IsContextMenu())
       return PR_TRUE;
@@ -1050,7 +1122,8 @@ nsXULPopupManager::HasContextMenu(nsMenuPopupFrame* aPopup)
 void
 nsXULPopupManager::SetCaptureState(nsIContent* aOldPopup)
 {
-  if (mCurrentMenu && aOldPopup == mCurrentMenu->Content())
+  nsMenuChainItem* item = GetTopVisibleMenu();
+  if (item && aOldPopup == item->Content())
     return;
 
   if (mWidget) {
@@ -1058,8 +1131,8 @@ nsXULPopupManager::SetCaptureState(nsIContent* aOldPopup)
     mWidget = nsnull;
   }
 
-  if (mCurrentMenu) {
-    nsMenuPopupFrame* popup = mCurrentMenu->Frame();
+  if (item) {
+    nsMenuPopupFrame* popup = item->Frame();
     nsCOMPtr<nsIWidget> widget;
     popup->GetWidget(getter_AddRefs(widget));
     if (widget) {
@@ -1076,9 +1149,10 @@ void
 nsXULPopupManager::UpdateKeyboardListeners()
 {
   nsCOMPtr<nsIDOMEventTarget> newTarget;
-  if (mCurrentMenu) {
-    if (!mCurrentMenu->IgnoreKeys())
-      newTarget = do_QueryInterface(mCurrentMenu->Content()->GetDocument());
+  nsMenuChainItem* item = GetTopVisibleMenu();
+  if (item) {
+    if (!item->IgnoreKeys())
+      newTarget = do_QueryInterface(item->Content()->GetDocument());
   }
   else if (mActiveMenuBar) {
     newTarget = do_QueryInterface(mActiveMenuBar->GetContent()->GetDocument());
@@ -1226,8 +1300,9 @@ PRBool
 nsXULPopupManager::HandleShortcutNavigation(nsIDOMKeyEvent* aKeyEvent,
                                             nsMenuPopupFrame* aFrame)
 {
-  if (!aFrame && mCurrentMenu)
-    aFrame = mCurrentMenu->Frame();
+  nsMenuChainItem* item = GetTopVisibleMenu();
+  if (!aFrame && item)
+    aFrame = item->Frame();
 
   if (aFrame) {
     PRBool action;
@@ -1266,7 +1341,7 @@ nsXULPopupManager::HandleKeyboardNavigation(PRUint32 aKeyCode)
   // navigate up through the open menus, looking for the topmost one
   // in the same hierarchy
   nsMenuChainItem* item = nsnull;
-  nsMenuChainItem* nextitem = mCurrentMenu;
+  nsMenuChainItem* nextitem = GetTopVisibleMenu();
 
   while (nextitem) {
     item = nextitem;
@@ -1608,12 +1683,21 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
     HandleKeyboardNavigation(theChar);
   }
   else if (theChar == NS_VK_ESCAPE) {
-    // Pressing Escape hides one level of menus only
-    if (mCurrentMenu)
-      HidePopup(mCurrentMenu->Content(), PR_FALSE, PR_FALSE, PR_FALSE);
+    // Pressing Escape hides one level of menus only. If no menu is open,
+    // check if a menubar is active and inform it that a menu closed. Even
+    // though in this latter case, a menu didn't actually close, the effect
+    // ends up being the same. Similar for the tab key below.
+    nsMenuChainItem* item = GetTopVisibleMenu();
+    if (item)
+      HidePopup(item->Content(), PR_FALSE, PR_FALSE, PR_FALSE);
+    else if (mActiveMenuBar)
+      mActiveMenuBar->MenuClosed();
   }
   else if (theChar == NS_VK_TAB) {
-    Rollup();
+    if (mCurrentMenu)
+      Rollup();
+    else if (mActiveMenuBar)
+      mActiveMenuBar->MenuClosed();
   }
   else if (theChar == NS_VK_ENTER ||
            theChar == NS_VK_RETURN) {
@@ -1621,8 +1705,9 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
     // Otherwise, tell the active menubar, if any, to activate the menu. The
     // Enter method will return a menu if one needs to be opened as a result.
     nsMenuFrame* menuToOpen = nsnull;
-    if (mCurrentMenu)
-      menuToOpen = mCurrentMenu->Frame()->Enter();
+    nsMenuChainItem* item = GetTopVisibleMenu();
+    if (item)
+      menuToOpen = item->Frame()->Enter();
     else if (mActiveMenuBar)
       menuToOpen = mActiveMenuBar->Enter();
     if (menuToOpen) {
@@ -1665,7 +1750,9 @@ nsXULPopupShowingEvent::Run()
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   nsPresContext* context = GetPresContextFor(mPopup);
   if (pm && context) {
-    pm->FirePopupShowingEvent(mPopup, mMenu, context,
+    // the popupshowing event should only be fired asynchronously
+    // for menus, so just use ePopupTypeMenu as the type
+    pm->FirePopupShowingEvent(mPopup, mMenu, context, ePopupTypeMenu,
                               mIsContextMenu, mSelectFirstItem);
   }
 
@@ -1679,7 +1766,7 @@ nsXULPopupHidingEvent::Run()
   nsPresContext* context = GetPresContextFor(mPopup);
   if (pm && context) {
     pm->FirePopupHidingEvent(mPopup, mNextPopup, mLastPopup,
-                             context, mIsMenu, mDeselectMenu);
+                             context, mPopupType, mDeselectMenu);
   }
 
   return NS_OK;

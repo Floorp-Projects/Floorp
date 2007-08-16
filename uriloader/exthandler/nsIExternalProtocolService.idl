@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Scott MacGregor <mscott@netscape.com>
+ *   Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -42,6 +43,7 @@
 interface nsIURI;
 interface nsIFile;
 interface nsIInterfaceRequestor;
+interface nsIHandlerInfo;
 
 /**
  * The external protocol service is used for finding and launching
@@ -52,13 +54,14 @@ interface nsIInterfaceRequestor;
  * handler for a given protocol scheme. And you can ask it to load 
  * the url using the default handler.
  */
-[scriptable, uuid(01e9ce6e-1c81-4f1a-b128-2f2526ec40e3)]
+[scriptable, uuid(7968ffa9-bb51-4b2d-aad2-8ea46c15d27f)]
 interface nsIExternalProtocolService : nsISupports
 {
   /**
    * Check whether a handler for a specific protocol exists.
    * @param aProtocolScheme The scheme from a url: http, ftp, mailto, etc.
    * @return true if we have a handler and false otherwise.
+   * XXX shouldn't aProtocolScheme be an ACString like nsIURI::scheme?
    */
   boolean externalProtocolHandlerExists(in string aProtocolScheme);
 
@@ -71,8 +74,24 @@ interface nsIExternalProtocolService : nsISupports
    * application.  For example, a non-exposed protocol would not be loaded by the
    * application in response to a link click or a X-remote openURL command.
    * Instead, it would be deferred to the system's external protocol handler.
+   * XXX shouldn't aProtocolScheme be an ACString like nsIURI::scheme?
    */
   boolean isExposedProtocol(in string aProtocolScheme);
+
+  /**
+   * Retrieve the handler for the given protocol.  If neither the application
+   * nor the OS knows about a handler for the protocol, the object this method
+   * returns will represent a default handler for unknown content.
+   * 
+   * @param aProtocolScheme the scheme from a URL: http, ftp, mailto, etc.
+   * 
+   * Note: aProtocolScheme should not include a trailing colon, which is part
+   * of the URI syntax, not part of the scheme itself (i.e. pass "mailto" not
+   * "mailto:").
+   * 
+   * @return the handler, if any; otherwise a default handler
+   */
+  nsIHandlerInfo getProtocolHandlerInfo(in ACString aProtocolScheme);
 
   /**
    * Used to load a url via an external protocol handler (if one exists)

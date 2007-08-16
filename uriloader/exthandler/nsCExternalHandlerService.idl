@@ -75,5 +75,8 @@ nsIExternalHelperAppService
 #define NS_LOCALHANDLERAPP_CONTRACTID \
 "@mozilla.org/uriloader/local-handler-app;1"
 
+#define NS_WEBHANDLERAPP_CONTRACTID \
+"@mozilla.org/uriloader/web-handler-app;1"
+
 %}
 

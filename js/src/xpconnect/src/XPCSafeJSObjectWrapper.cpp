@@ -646,6 +646,7 @@ XPC_SJOW_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_SJOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
+  NS_ASSERTION(type != JSTYPE_STRING, "toString failed us");
   return JS_TRUE;
 }
 
@@ -856,6 +857,11 @@ XPC_SJOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   obj = nsnull;
 
   if (JSVAL_IS_PRIMITIVE(argv[0])) {
+    JSStackFrame *fp = nsnull;
+    if (JS_FrameIterator(cx, &fp) && JS_IsConstructorFrame(cx, fp)) {
+      return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
+    }
+
     *rval = argv[0];
     return JS_TRUE;
   }
@@ -960,13 +966,7 @@ XPC_SJOW_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   // Function body for wrapping toString() in a scripted caller.
-#ifndef DEBUG
-  NS_NAMED_LITERAL_CSTRING(funScript,
-    "return '' + this;");
-#else
-  NS_NAMED_LITERAL_CSTRING(funScript,
-    "return '[object XPCSafeJSObjectWrapper (' + this + ')]';");
-#endif
+  NS_NAMED_LITERAL_CSTRING(funScript, "return '' + this;");
 
   jsval scriptedFunVal;
   if (!GetScriptedFunction(cx, obj, unsafeObj, XPC_SJOW_SLOT_SCRIPTED_TOSTRING,

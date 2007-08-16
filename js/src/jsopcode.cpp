@@ -467,8 +467,7 @@ SprintString(Sprinter *sp, JSString *str)
     size_t length, size;
     ptrdiff_t offset;
 
-    chars = JSSTRING_CHARS(str);
-    length = JSSTRING_LENGTH(str);
+    JSSTRING_CHARS_AND_LENGTH(str, chars, length);
     if (length == 0)
         return sp->offset;
 
@@ -537,8 +536,7 @@ QuoteString(Sprinter *sp, JSString *str, uint32 quote)
         return NULL;
 
     /* Loop control variables: z points at end of string sentinel. */
-    s = JSSTRING_CHARS(str);
-    z = s + JSSTRING_LENGTH(str);
+    JSSTRING_CHARS_AND_END(str, s, z);
     for (t = s; t < z; s = ++t) {
         /* Move t forward from s past un-quote-worthy characters. */
         c = *t;
@@ -1218,9 +1216,9 @@ GetSlotAtom(JSPrinter *jp, JSPropertyOp getter, uintN slot)
             if (sprop->getter != getter)
                 continue;
             JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
-            JS_ASSERT(JSID_IS_ATOM(sprop->id));
+            JS_ASSERT(JSID_IS_HIDDEN(sprop->id));
             if ((uintN) sprop->shortid == slot)
-                return JSID_TO_ATOM(sprop->id);
+                return JSID_TO_ATOM(JSID_UNHIDE_NAME(sprop->id));
         }
         obj = OBJ_GET_PROTO(jp->sprinter.context, obj);
     }
@@ -4776,8 +4774,9 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun)
                 continue;
             JS_ASSERT(sprop->flags & SPROP_HAS_SHORTID);
             JS_ASSERT((uint16) sprop->shortid < nargs);
-            JS_ASSERT(JSID_IS_ATOM(sprop->id));
-            params[(uint16) sprop->shortid] = JSID_TO_ATOM(sprop->id);
+            JS_ASSERT(JSID_IS_HIDDEN(sprop->id));
+            params[(uint16) sprop->shortid] =
+                JSID_TO_ATOM(JSID_UNHIDE_NAME(sprop->id));
         }
 
         pc = fun->u.i.script->main;

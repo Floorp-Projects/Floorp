@@ -1439,3 +1439,12 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 .bookmark-item[dragover-bottom="true"] {
   -moz-border-bottom-colors: #000000;
 }
+
+/* star icon */
+#star-icon {
+  list-style-image: url("chrome://browser/skin/places/starPage.png");
+}
+
+#star-icon[starred="true"] {
+  list-style-image: url("chrome://browser/skin/places/pageStarred.png");
+}

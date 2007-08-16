@@ -44,7 +44,7 @@
 ]>
 
 <overlay id="qa-litmus-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<tabpanel id="qa-tab-litmus" onload="litmus.readStateFromPref()">
+<tabpanel id="qa-tab-litmus" onload="litmus.readStateFromPref();">
 		
 <vbox align="start" pack="start">
 	<hbox align="start" pack="start">
@@ -108,6 +108,10 @@
 		 <button id="qa-mainwindow-previousButton" label="Previous" oncommand="litmus.prevButton()"/> 
 		<button id="qa-mainwindow-nextButton" label="Next (Submit)" oncommand="litmus.nextButton()"/>
 	</hbox>
+  <label id="qa-litmus-stats" value="" />
+  <script type="application/x-javascript">
+    this.addEventListener('load', litmus.loadStats, false);
+  </script>
 </vbox>
 </tabpanel>
 

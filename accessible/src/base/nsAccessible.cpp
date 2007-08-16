@@ -211,6 +211,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
           nsIContent::ATTR_VALUE_NO_MATCH) {
         *aInstancePtr = static_cast<nsIAccessibleSelectable*>(this);
         NS_ADDREF_THIS();
+        return NS_OK;
       }
     }
   }
@@ -219,6 +220,7 @@ nsresult nsAccessible::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     if (mRoleMapEntry && mRoleMapEntry->valueRule != eNoValue) {
       *aInstancePtr = static_cast<nsIAccessibleValue*>(this);
       NS_ADDREF_THIS();
+      return NS_OK;
     }
   }                       
 
@@ -2083,6 +2085,8 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
      do_CreateInstance(NS_PERSISTENTPROPERTIES_CONTRACTID);
   NS_ENSURE_TRUE(attributes, NS_ERROR_OUT_OF_MEMORY);
 
+  nsAccEvent::GetLastEventAttributes(mDOMNode, attributes);
+ 
   nsresult rv = GetAttributesInternal(attributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -2121,17 +2125,13 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 
     // If accessible is invisible we don't want to calculate group ARIA
     // attributes for it.
-    PRUint32 state = State(this);
-    if (state & nsIAccessibleStates::STATE_INVISIBLE)
-      return NS_OK;
-
     PRUint32 role = Role(this);
-    if (role == nsIAccessibleRole::ROLE_LISTITEM ||
+    if ((role == nsIAccessibleRole::ROLE_LISTITEM ||
         role == nsIAccessibleRole::ROLE_MENUITEM ||
         role == nsIAccessibleRole::ROLE_RADIOBUTTON ||
         role == nsIAccessibleRole::ROLE_PAGETAB ||
-        role == nsIAccessibleRole::ROLE_OUTLINEITEM) {
-
+        role == nsIAccessibleRole::ROLE_OUTLINEITEM) &&
+        0 == (State(this) & nsIAccessibleStates::STATE_INVISIBLE)) {
       nsCOMPtr<nsIAccessible> parent = GetParent();
       NS_ENSURE_TRUE(parent, NS_ERROR_FAILURE);
 
@@ -2721,6 +2721,11 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
       }
       break;
     }
+  case nsIAccessibleRelation::RELATION_MEMBER_OF:
+    {
+      relatedNode = nsAccEvent::GetLastEventAtomicRegion(mDOMNode);
+      break;
+    }
   default:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -3268,3 +3273,16 @@ nsAccessible::GetAttrValue(PRUint32 aNameSpaceID, nsIAtom *aName,
   return result;
 }
 
+PRBool nsAccessible::MustPrune(nsIAccessible *aAccessible)
+{ 
+  PRUint32 role = Role(aAccessible);
+  return role == nsIAccessibleRole::ROLE_MENUITEM || 
+         role == nsIAccessibleRole::ROLE_ENTRY ||
+         role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
+         role == nsIAccessibleRole::ROLE_PUSHBUTTON ||
+         role == nsIAccessibleRole::ROLE_TOGGLE_BUTTON ||
+         role == nsIAccessibleRole::ROLE_GRAPHIC ||
+         role == nsIAccessibleRole::ROLE_SLIDER ||
+         role == nsIAccessibleRole::ROLE_PROGRESSBAR ||
+         role == nsIAccessibleRole::ROLE_SEPARATOR;
+}

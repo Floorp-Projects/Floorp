@@ -1269,3 +1269,12 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-border-bottom-colors: -moz-mac-menushadow -moz-mac-menushadow ThreeDShadow  !important;
   -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight !important;
 }
+
+/* star icon */
+#star-icon {
+  list-style-image: url("chrome://browser/skin/places/starPage.png");
+}
+
+#star-icon[starred="true"] {
+  list-style-image: url("chrome://browser/skin/places/pageStarred.png");
+}

@@ -602,8 +602,7 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
         MAKE_BUSY(he);
 
         if (sep) {
-            sepstr = JSSTRING_CHARS(sep);
-            seplen = JSSTRING_LENGTH(sep);
+            JSSTRING_CHARS_AND_LENGTH(sep, sepstr, seplen);
         } else {
             sepstr = NULL;      /* indicates to use "," as separator */
             seplen = 1;
@@ -715,7 +714,7 @@ array_join_sub(JSContext *cx, JSObject *obj, enum ArrayToStringOp op,
     }
     chars[nchars] = 0;
     JS_ASSERT(growth == (size_t)-1 || (nchars + 1) * sizeof(jschar) == growth);
-    str = js_NewString(cx, chars, nchars, 0);
+    str = js_NewString(cx, chars, nchars);
     if (!str) {
         free(chars);
         return JS_FALSE;
