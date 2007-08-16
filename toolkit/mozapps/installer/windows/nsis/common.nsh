@@ -2229,6 +2229,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  * path does not exist on the file system this will return an empty string. To
  * provide a consistent result trailing back-slashes are always removed.
  *
+ * Note: 1024 used by GetLongPathNameA is the maximum NSIS string length.
+ *
  * @param   _IN_PATH
  *          The string containing the path.
  * @param   _OUT_PATH
