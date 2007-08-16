@@ -427,7 +427,8 @@ PlacesTreeView.prototype = {
   COLUMN_TYPE_LASTMODIFIED: 8,
 
   _getColumnType: function PTV__getColumnType(aColumn) {
-    switch (aColumn.id) {
+    var columnType = aColumn.id || aColumn.element.getAttribute("anonid");
+    switch (columnType) {
       case "title":
         return this.COLUMN_TYPE_TITLE;
       case "url":
@@ -876,7 +877,8 @@ PlacesTreeView.prototype = {
   },
 
   getCellProperties: function PTV_getCellProperties(aRow, aColumn, aProperties) {
-    if (aColumn.id != "title")
+    var columnType = aColumn.id || aColumn.element.getAttribute("anonid") ;
+    if (columnType != "title")
       return;
 
     this._ensureValidRow(aRow);
