@@ -103,7 +103,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsProxyObjectManager, nsIProxyObjectManager)
 nsProxyObjectManager::nsProxyObjectManager()
     : mProxyObjectMap(256, PR_FALSE)
 {
-    mProxyCreationMonitor = PR_NewMonitor();
+    mProxyCreationLock = PR_NewLock();
     mProxyClassMap.Init(256);
 }
 
@@ -111,8 +111,8 @@ nsProxyObjectManager::~nsProxyObjectManager()
 {
     mProxyClassMap.Clear();
 
-    if (mProxyCreationMonitor)
-        PR_DestroyMonitor(mProxyCreationMonitor);
+    if (mProxyCreationLock)
+        PR_DestroyLock(mProxyCreationLock);
 
     nsProxyObjectManager::mInstance = nsnull;
 }
@@ -193,28 +193,40 @@ nsProxyObjectManager::GetProxyForObject(nsIEventTarget* aTarget,
 
     nsProxyEventKey rootKey(realObj, realEQ, proxyType);
 
-    // Enter the Grand Monitor here.
-    nsAutoMonitor mon(mProxyCreationMonitor);
-
-    nsCOMPtr<nsProxyObject> root = (nsProxyObject*) mProxyObjectMap.Get(&rootKey);
-    if (!root) {
-        root = new nsProxyObject(aTarget, proxyType, realObj);
-        if (!root)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        mProxyObjectMap.Put(&rootKey, root);
+    {
+        nsAutoLock lock(mProxyCreationLock);
+                nsProxyObject *root =
+                    (nsProxyObject*) mProxyObjectMap.Get(&rootKey);
+        if (root)
+            return root->LockedFind(aIID, aProxyObject);
     }
-    return root->LockedFind(aIID, aProxyObject);
+
+    // don't lock while creating the nsProxyObject
+    nsProxyObject *newRoot = new nsProxyObject(aTarget, proxyType, realObj);
+    if (!newRoot)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // lock again, and check for a race putting into mProxyObjectMap
+    {
+        nsAutoLock lock(mProxyCreationLock);
+        nsProxyObject *root =
+            (nsProxyObject*) mProxyObjectMap.Get(&rootKey);
+        if (root) {
+            delete newRoot;
+            return root->LockedFind(aIID, aProxyObject);
+        }
+
+        mProxyObjectMap.Put(&rootKey, newRoot);
+        return newRoot->LockedFind(aIID, aProxyObject);
+    }
 }
 
 void
-nsProxyObjectManager::Remove(nsProxyObject *aProxy)
+nsProxyObjectManager::LockedRemove(nsProxyObject *aProxy)
 {
     nsCOMPtr<nsISupports> realEQ = do_QueryInterface(aProxy->GetTarget());
 
     nsProxyEventKey rootKey(aProxy->GetRealObject(), realEQ, aProxy->GetProxyType());
-
-    nsAutoMonitor mon(mProxyCreationMonitor);
 
     if (!mProxyObjectMap.Remove(&rootKey)) {
         NS_ERROR("nsProxyObject not found in global hash.");
@@ -224,29 +236,40 @@ nsProxyObjectManager::Remove(nsProxyObject *aProxy)
 nsresult
 nsProxyObjectManager::GetClass(REFNSIID aIID, nsProxyEventClass **aResult)
 {
-    nsAutoMonitor mon(mProxyCreationMonitor);
-
-    nsProxyEventClass *pec;
-    mProxyClassMap.Get(aIID, &pec);
-    if (!pec) {
-        nsIInterfaceInfoManager *iim =
-            xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
-        if (!iim)
-            return NS_ERROR_FAILURE;
-
-        nsCOMPtr<nsIInterfaceInfo> ii;
-        nsresult rv = iim->GetInfoForIID(&aIID, getter_AddRefs(ii));
-        if (NS_FAILED(rv))
-            return rv;
-
-        pec = new nsProxyEventClass(aIID, ii);
-        if (!pec)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-        if (!mProxyClassMap.Put(aIID, pec)) {
-            delete pec;
-            return NS_ERROR_OUT_OF_MEMORY;
+    {
+        nsAutoLock lock(mProxyCreationLock);
+        if (mProxyClassMap.Get(aIID, aResult)) {
+            NS_ASSERTION(*aResult, "Null data in mProxyClassMap");
+            return NS_OK;
         }
+    }
+
+    nsIInterfaceInfoManager *iim =
+        xptiInterfaceInfoManager::GetInterfaceInfoManagerNoAddRef();
+    if (!iim)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIInterfaceInfo> ii;
+    nsresult rv = iim->GetInfoForIID(&aIID, getter_AddRefs(ii));
+    if (NS_FAILED(rv))
+        return rv;
+
+    nsProxyEventClass *pec = new nsProxyEventClass(aIID, ii);
+    if (!pec)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // Re-lock to put this class into our map. Before putting, check to see
+    // if another thread raced to put before us
+    nsAutoLock lock(mProxyCreationLock);
+
+    if (mProxyClassMap.Get(aIID, aResult)) {
+        NS_ASSERTION(*aResult, "Null data in mProxyClassMap");
+        delete pec;
+    }
+
+    if (!mProxyClassMap.Put(aIID, pec)) {
+        delete pec;
+        return NS_ERROR_OUT_OF_MEMORY;
     }
 
     *aResult = pec;

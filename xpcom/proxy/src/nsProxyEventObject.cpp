@@ -67,10 +67,8 @@ nsProxyEventObject::nsProxyEventObject(nsProxyObject *aParent,
 
 nsProxyEventObject::~nsProxyEventObject()
 {
-    // This destructor is always called within the POM monitor.
+    // This destructor must *not* be called within the POM lock
     // XXX assert this!
-
-    mProxyObject->LockedRemove(this);
 
     // mRealInterface must be released before mProxyObject so that the last
     // release of the proxied object is proxied to the correct thread.
@@ -82,30 +80,41 @@ nsProxyEventObject::~nsProxyEventObject()
 // nsISupports implementation...
 //
 
-NS_IMPL_THREADSAFE_ADDREF(nsProxyEventObject)
+NS_IMETHODIMP_(nsrefcnt)
+nsProxyEventObject::AddRef()
+{
+    nsAutoLock lock(nsProxyObjectManager::GetInstance()->GetLock());
+    return LockedAddRef();
+}
+
+nsrefcnt
+nsProxyEventObject::LockedAddRef()
+{
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "nsProxyEventObject", sizeof(nsProxyEventObject));
+    return mRefCnt;
+}
 
 NS_IMETHODIMP_(nsrefcnt)
 nsProxyEventObject::Release(void)
 {
-    nsAutoMonitor mon(nsProxyObjectManager::GetInstance()->GetMonitor());
+    {
+        nsAutoLock lock(nsProxyObjectManager::GetInstance()->GetLock());
+        NS_PRECONDITION(0 != mRefCnt, "dup release");
 
-    nsrefcnt count;
-    NS_PRECONDITION(0 != mRefCnt, "dup release");
-    // Decrement atomically - in case the Proxy Object Manager has already
-    // been deleted and the monitor is unavailable...
-    count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
-    NS_LOG_RELEASE(this, count, "nsProxyEventObject");
-    if (0 == count) {
-        mRefCnt = 1; /* stabilize */
-        //
-        // Remove the proxy from the hashtable (if necessary) or its
-        // proxy chain.  This must be done inside of the proxy lock to
-        // prevent GetNewOrUsedProxy(...) from ressurecting it...
-        //
-        NS_DELETEXPCOM(this);
-        return 0;
+        --mRefCnt;
+        NS_LOG_RELEASE(this, mRefCnt, "nsProxyEventObject");
+
+        if (mRefCnt)
+            return mRefCnt;
+
+        mProxyObject->LockedRemove(this);
     }
-    return count;
+
+    // call the destructor outside of the lock so that we aren't holding the
+    // lock when we release the object
+    NS_DELETEXPCOM(this);
+    return 0;
 }
 
 NS_IMETHODIMP
