@@ -1,44 +1,46 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Extension Manager.
- *
- * The Initial Developer of the Original Code is Ben Goodger.
- * Portions created by the Initial Developer are Copyright (C) 2004
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Ben Goodger <ben@mozilla.org> (Google Inc.)
- *  Benjamin Smedberg <benjamin@smedbergs.us>
- *  Jens Bannmann <jens.b@web.de>
- *  Robert Strong <robert.bugzilla@gmail.com>
- *  Dave Townsend <dave.townsend@blueprintit.co.uk>
- *  Daniel Veditz <dveditz@mozilla.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/*
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Extension Manager.
+#
+# The Initial Developer of the Original Code is Ben Goodger.
+# Portions created by the Initial Developer are Copyright (C) 2004
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#  Ben Goodger <ben@mozilla.org> (Google Inc.)
+#  Benjamin Smedberg <benjamin@smedbergs.us>
+#  Jens Bannmann <jens.b@web.de>
+#  Robert Strong <robert.bugzilla@gmail.com>
+#  Dave Townsend <dave.townsend@blueprintit.co.uk>
+#  Daniel Veditz <dveditz@mozilla.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+*/
 
 //
 // TODO:
@@ -5642,36 +5644,35 @@ ExtensionItemUpdater.prototype = {
   _items              : [],
   _listener           : null,
   _background         : false,
-  
-  /////////////////////////////////////////////////////////////////////////////
-  // ExtensionItemUpdater
-  //
-  // When we check for updates to an item, there are two pieces of information
-  // that are returned - 1) info about the newest available version, if any,
-  // and 2) info about the currently installed version. The latter is provided
-  // primarily to inform the client of changes to the application compatibility 
-  // metadata for the current item. Depending on the situation, either 2 or 
-  // 1&2 may be what is required.
-  //
-  // Callers:
-  //  1 - nsUpdateService.js, user event
-  //      User clicked on the update icon to invoke an update check, 
-  //      user clicked on an Extension/Theme and clicked "Update". In this
-  //      case we want to update compatibility metadata about the installed
-  //      version, and look for newer versions to offer. 
-  //  2 - nsUpdateService.js, background event
-  //      Timer fired, background update is being performed. In this case
-  //      we also want to update compatibility metadata and look for newer
-  //      versions.
-  //  3 - Mismatch
-  //      User upgraded to a newer version of the app, update compatibility
-  //      metadata and look for newer versions.
-  //  4 - Install Phone Home
-  //      User installed an item that was deemed incompatible based only
-  //      on the information provided in the item's install.rdf manifest, 
-  //      we look ONLY for compatibility updates in this case to determine
-  //      whether or not the item can be installed.
-  //  
+
+  /* ExtensionItemUpdater
+#
+#    When we check for updates to an item, there are two pieces of information
+#    that are returned - 1) info about the newest available version, if any,
+#    and 2) info about the currently installed version. The latter is provided
+#    primarily to inform the client of changes to the application compatibility 
+#    metadata for the current item. Depending on the situation, either 2 or 
+#    1&2 may be what is required.
+#
+#    Callers:
+#     1 - nsUpdateService.js, user event
+#         User clicked on the update icon to invoke an update check, 
+#         user clicked on an Extension/Theme and clicked "Update". In this
+#         case we want to update compatibility metadata about the installed
+#         version, and look for newer versions to offer. 
+#     2 - nsUpdateService.js, background event
+#         Timer fired, background update is being performed. In this case
+#         we also want to update compatibility metadata and look for newer
+#         versions.
+#     3 - Mismatch
+#         User upgraded to a newer version of the app, update compatibility
+#         metadata and look for newer versions.
+#     4 - Install Phone Home
+#         User installed an item that was deemed incompatible based only
+#         on the information provided in the item's install.rdf manifest, 
+#         we look ONLY for compatibility updates in this case to determine
+#         whether or not the item can be installed.
+  */
   checkForUpdates: function(aItems, aItemCount, aUpdateCheckType, 
                             aListener) {
     this._listener = new AddonUpdateCheckListener(aListener, this._emDS);
@@ -6006,48 +6007,49 @@ RDFItemUpdater.prototype = {
   },
 
   onDatasourceLoaded: function(aDatasource, aLocalItem) {
-    ///////////////////////////////////////////////////////////////////////////    
-    // The extension update RDF file looks something like this:
-    //
-    //  <RDF:Description about="urn:mozilla:extension:{GUID}">
-    //    <em:updates>
-    //      <RDF:Seq>
-    //        <RDF:li resource="urn:mozilla:extension:{GUID}:4.9"/>
-    //        <RDF:li resource="urn:mozilla:extension:{GUID}:5.0"/>
-    //      </RDF:Seq>
-    //    </em:updates>
-    //    <!-- the version of the extension being offered -->
-    //    <em:version>5.0</em:version>
-    //    <em:updateLink>http://www.mysite.com/myext-50.xpi</em:updateLink>
-    //  </RDF:Description>
-    //
-    //  <RDF:Description about="urn:mozilla:extension:{GUID}:4.9">
-    //    <em:version>4.9</em:version>
-    //    <em:targetApplication>
-    //      <RDF:Description>
-    //        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-    //        <em:minVersion>0.9</em:minVersion>
-    //        <em:maxVersion>1.0</em:maxVersion>
-    //        <em:updateLink>http://www.mysite.com/myext-49.xpi</em:updateLink>
-    //      </RDF:Description>
-    //    </em:targetApplication>
-    //  </RDF:Description>  
-    //
-    // If we get here because the following happened:
-    // 1) User was using Firefox 0.9 with ExtensionX 0.5 (minVersion 0.8, 
-    //    maxVersion 0.9 for Firefox)
-    // 2) User upgraded Firefox to 1.0
-    // 3) |checkForMismatches| deems ExtensionX 0.5 incompatible with this
-    //    new version of Firefox on the basis of its maxVersion
-    // 4) ** We reach this point **
-    //
-    // If the version of ExtensionX (0.5) matches that provided by the 
-    // server, then this is a cue that the author updated the rdf file
-    // or central repository to say "0.5 is ALSO compatible with Firefox 1.0,
-    // no changes are necessary." In this event, the local metadata for
-    // installed ExtensionX (0.5) is freshened with the new maxVersion, 
-    // and we advance to the next item WITHOUT any download/install 
-    // updates.
+    /*
+#      The extension update RDF file looks something like this:
+#     
+#       <RDF:Description about="urn:mozilla:extension:{GUID}">
+#         <em:updates>
+#           <RDF:Seq>
+#             <RDF:li resource="urn:mozilla:extension:{GUID}:4.9"/>
+#             <RDF:li resource="urn:mozilla:extension:{GUID}:5.0"/>
+#           </RDF:Seq>
+#         </em:updates>
+#         <!-- the version of the extension being offered -->
+#         <em:version>5.0</em:version>
+#         <em:updateLink>http://www.mysite.com/myext-50.xpi</em:updateLink>
+#       </RDF:Description>
+#     
+#       <RDF:Description about="urn:mozilla:extension:{GUID}:4.9">
+#         <em:version>4.9</em:version>
+#         <em:targetApplication>
+#           <RDF:Description>
+#             <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+#             <em:minVersion>0.9</em:minVersion>
+#             <em:maxVersion>1.0</em:maxVersion>
+#             <em:updateLink>http://www.mysite.com/myext-49.xpi</em:updateLink>
+#           </RDF:Description>
+#         </em:targetApplication>
+#       </RDF:Description>  
+#     
+#      If we get here because the following happened:
+#      1) User was using Firefox 0.9 with ExtensionX 0.5 (minVersion 0.8, 
+#         maxVersion 0.9 for Firefox)
+#      2) User upgraded Firefox to 1.0
+#      3) |checkForMismatches| deems ExtensionX 0.5 incompatible with this
+#         new version of Firefox on the basis of its maxVersion
+#      4) ** We reach this point **
+#     
+#      If the version of ExtensionX (0.5) matches that provided by the 
+#      server, then this is a cue that the author updated the rdf file
+#      or central repository to say "0.5 is ALSO compatible with Firefox 1.0,
+#      no changes are necessary." In this event, the local metadata for
+#      installed ExtensionX (0.5) is freshened with the new maxVersion, 
+#      and we advance to the next item WITHOUT any download/install 
+#      updates.
+    */
     if (!aDatasource.GetAllResources().hasMoreElements()) {
       LOG("RDFItemUpdater:onDatasourceLoaded: Datasource empty.\r\n" + 
           "If you are an Extension developer and were expecting there to be\r\n" + 
