@@ -45,8 +45,8 @@ cvsmirror_mofo:
 	cvs -d /builds/cvsmirror.clean/mofo init
 	cd /builds/cvsmirror.clean/tmp/mofo && cvs -d cltbld@cvs.mozilla.org:/mofo export -r MOZILLA_1_8_BRANCH talkback
 	cd /builds/cvsmirror.clean/tmp/mofo && cvs -d cltbld@cvs.mozilla.org:/mofo export -r HEAD release
-	cd /builds/cvsmirror.clean/tmp/mofo/release && cvs -d /builds/cvsmirror/mofo import -d -m "import CVS snapshot" release MOZILLA_1_8_BRANCH_release R0_1
-	cd /builds/cvsmirror.clean/tmp/mofo/talkback && cvs -d /builds/cvsmirror/mofo import -d -m "import CVS snapshot" talkback MOZILLA_1_8_BRANCH R0_1
+	cd /builds/cvsmirror.clean/tmp/mofo/release && cvs -d /builds/cvsmirror.clean/mofo import -d -m "import CVS snapshot" release MOZILLA_1_8_BRANCH_release R0_1
+	cd /builds/cvsmirror.clean/tmp/mofo/talkback && cvs -d /builds/cvsmirror.clean/mofo import -d -m "import CVS snapshot" talkback MOZILLA_1_8_BRANCH R0_1
 	rm -rf /builds/cvsmirror.clean/tmp/mofo
 	chgrp -R cvs /builds/cvsmirror.clean/mofo
 	chmod g+rwx /builds/cvsmirror.clean/mofo
