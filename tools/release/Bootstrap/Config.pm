@@ -150,9 +150,9 @@ sub GetFtpCandidateDir {
     }
     my $bitsUnsigned = $args{'bitsUnsigned'};
 
-    my $product = $config{'product'};
-    my $version = $config{'version'};
-    my $rc = $config{'rc'};
+    my $product = $this->Get('product');
+    my $version = $this->Get('version');
+    my $rc = $this->Get('rc');
 
     my $candidateDir = CvsCatfile('/home', 'ftp', 'pub', $product, 'nightly',
                             $version . '-candidates', 'rc' . $rc ) . '/';

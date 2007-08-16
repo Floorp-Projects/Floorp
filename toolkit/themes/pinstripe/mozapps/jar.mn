@@ -1,16 +1,10 @@
 classic.jar:
 % skin mozapps classic/1.0 %skin/classic/mozapps/
 #ifndef MINIMO
-  skin/classic/mozapps/downloads/progress-bar-paused.gif          (downloads/progress-bar-paused.gif)
-  skin/classic/mozapps/downloads/progress-bar.gif                 (downloads/progress-bar.gif)
-  skin/classic/mozapps/downloads/progress-remainder.gif           (downloads/progress-remainder.gif)
-  skin/classic/mozapps/downloads/background-gradient.gif          (downloads/background-gradient.gif)
-  skin/classic/mozapps/downloads/background-stripe.gif            (downloads/background-stripe.gif)
-  skin/classic/mozapps/downloads/download-inprogress.png          (downloads/download-inprogress.png)
+  skin/classic/mozapps/downloads/buttons.png                      (downloads/buttons.png)
   skin/classic/mozapps/downloads/downloadIcon.png                 (downloads/downloadIcon.png)
   skin/classic/mozapps/downloads/downloads.css                    (downloads/downloads.css)
   skin/classic/mozapps/downloads/unknownContentType.css           (downloads/unknownContentType.css)
-  skin/classic/mozapps/downloads/downloads.xml                    (downloads/downloads.xml)
   skin/classic/mozapps/extensions/extensionItem.png               (extensions/extensionItem.png)
   skin/classic/mozapps/extensions/itemDisabledFader.png           (extensions/itemDisabledFader.png)
   skin/classic/mozapps/extensions/itemEnabledFader.png            (extensions/itemEnabledFader.png)

@@ -754,7 +754,7 @@ call_enumerate(JSContext *cx, JSObject *obj)
     JSScopeProperty *sprop, *cprop;
     JSPropertyOp getter;
     jsval *vec;
-    JSAtom *atom;
+    jsid id;
     JSProperty *prop;
 
     fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
@@ -793,12 +793,8 @@ call_enumerate(JSContext *cx, JSObject *obj)
             continue;
 
         /* Trigger reflection by looking up the unhidden atom for sprop->id. */
-        JS_ASSERT(JSID_IS_ATOM(sprop->id));
-        atom = JSID_TO_ATOM(sprop->id);
-        JS_ASSERT(atom->flags & ATOM_HIDDEN);
-        atom = (JSAtom *) atom->entry.value;
-
-        if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop))
+        id = JSID_UNHIDE_NAME(sprop->id);
+        if (!js_LookupProperty(cx, obj, id, &pobj, &prop))
             return JS_FALSE;
 
         /*
@@ -1248,24 +1244,6 @@ fun_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     }
 }
 
-static void
-fun_finalize(JSContext *cx, JSObject *obj)
-{
-    JSFunction *fun;
-
-    /* No valid function object should lack private data, but check anyway. */
-    fun = (JSFunction *) JS_GetPrivate(cx, obj);
-    if (!fun)
-        return;
-
-    /*
-     * This works because obj is finalized before JSFunction. See
-     * comments in js_GC before the finalization loop.
-     */
-    if (fun->object == obj)
-        fun->object = NULL;
-}
-
 #if JS_HAS_XDR
 
 #include "jsxdrapi.h"
@@ -1380,7 +1358,14 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                        ? JSXDR_FUNCONST
                        : JSXDR_FUNVAR;
                 userid = INT_TO_JSVAL(sprop->shortid);
-                propAtom = JSID_TO_ATOM(sprop->id);
+
+                /*
+                 * sprop->id here represents hidden names so we unhide it and
+                 * encode as an atom. During decoding we read the atom and use
+                 * js_AddHiddenProperty to reconstruct sprop with the hidden
+                 * id.
+                 */
+                propAtom = JSID_TO_ATOM(JSID_UNHIDE_NAME(sprop->id));
                 if (!JS_XDRUint32(xdr, &type) ||
                     !JS_XDRUint32(xdr, &userid) ||
                     !js_XDRCStringAtom(xdr, &propAtom)) {
@@ -1503,7 +1488,7 @@ fun_trace(JSTracer *trc, JSObject *obj)
         if (fun->object != obj)
             JS_CALL_TRACER(trc, fun->object, JSTRACE_OBJECT, "object");
         if (fun->atom)
-            JS_CALL_TRACER(trc, fun->atom, JSTRACE_ATOM, "atom");
+            JS_CALL_STRING_TRACER(trc, ATOM_TO_STRING(fun->atom), "atom");
         if (FUN_INTERPRETED(fun) && fun->u.i.script)
             js_TraceScript(trc, fun->u.i.script);
     }
@@ -1533,7 +1518,7 @@ JS_FRIEND_DATA(JSClass) js_FunctionClass = {
     JS_PropertyStub,  JS_PropertyStub,
     fun_getProperty,  JS_PropertyStub,
     fun_enumerate,    (JSResolveOp)fun_resolve,
-    fun_convert,      fun_finalize,
+    fun_convert,      JS_FinalizeStub,
     NULL,             NULL,
     NULL,             NULL,
     fun_xdrObject,    fun_hasInstance,

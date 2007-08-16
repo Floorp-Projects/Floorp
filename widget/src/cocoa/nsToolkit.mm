@@ -60,6 +60,8 @@
 
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 // defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
@@ -246,6 +248,15 @@ static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEv
 void
 nsToolkit::RegisterForAllProcessMouseEvents()
 {
+  // Don't do this for apps that (like Camino) use native context menus.
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    PRBool useNativeContextMenus;
+    nsresult rv = prefs->GetBoolPref("ui.use_native_popup_windows",
+                                     &useNativeContextMenus);
+    if (NS_SUCCEEDED(rv) && useNativeContextMenus)
+      return;
+  }
   if (!mEventMonitorHandler) {
     // Installing a handler for particular Carbon events causes the OS to post
     // equivalent Cocoa events to the browser's event stream (the one that

@@ -43,6 +43,7 @@
 #include "nsIAtom.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
+#include "nsIMutableArray.h"
 #include "nsIFile.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"
@@ -83,8 +84,9 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     NS_IMETHOD GetMacCreator(PRUint32 *aMacCreator);
     NS_IMETHOD SetMacCreator(PRUint32 aMacCreator);
     NS_IMETHOD Equals(nsIMIMEInfo *aMIMEInfo, PRBool *_retval);
-    NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredApplicationHandler);
-    NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredApplicationHandler);
+    NS_IMETHOD GetPreferredApplicationHandler(nsIHandlerApp * *aPreferredAppHandler);
+    NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredAppHandler);
+    NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleAppHandlers);
     NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription);
     NS_IMETHOD LaunchWithURI(nsIURI *aURI);
     NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction);
@@ -175,6 +177,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     nsCString              mType;
     HandlerClass           mClass;
     nsCOMPtr<nsIHandlerApp> mPreferredApplication;
+    nsCOMPtr<nsIMutableArray> mPossibleApplications;
     nsHandlerInfoAction    mPreferredAction; ///< preferred action to associate with this type
     nsString               mPreferredAppDescription;
     nsString               mDefaultAppDescription;

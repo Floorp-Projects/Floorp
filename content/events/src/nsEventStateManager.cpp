@@ -93,6 +93,7 @@
 #include "nsIContentViewer.h"
 #include "nsIPrefBranch2.h"
 #include "nsIObjectFrame.h"
+#include "nsXULPopupManager.h"
 
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
@@ -3378,12 +3379,53 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
     }
   }
 
+  // when a popup is open, we want to ensure that tab navigation occurs only
+  // within the most recently opened panel. If a popup is open, its frame will
+  // be stored in popupFrame.
+  nsIFrame* popupFrame = nsnull;
+  if (curFocusFrame) {
+    // check if the focus is currently inside a popup. Elements such as the
+    // autocomplete widget use the noautofocus attribute to allow the focus to
+    // remain outside the popup when it is opened.
+    popupFrame = nsLayoutUtils::GetClosestFrameOfType(curFocusFrame,
+                                                      nsGkAtoms::menuPopupFrame);
+  }
+  else {
+    // if there is no focus, yet a panel is open, focus the
+    // first item in the popup
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (pm) {
+      popupFrame = pm->GetTopPopup(ePopupTypePanel);
+    }
+  }
+
+  if (popupFrame) {
+    // Don't navigate outside of a popup, so pretend that the
+    // root content is the popup itself
+    rootContent = popupFrame->GetContent();
+    NS_ASSERTION(rootContent, "Popup frame doesn't have a content node");
+  }
+
   nsCOMPtr<nsIContent> nextFocus;
   nsIFrame* nextFocusFrame;
   if (aForward || !docHasFocus || selectionFrame)
     GetNextTabbableContent(rootContent, startContent, curFocusFrame,
                            aForward, ignoreTabIndex || mCurrentTabIndex < 0,
                            getter_AddRefs(nextFocus), &nextFocusFrame);
+
+  if (popupFrame && !nextFocus) {
+    // if no content was found to focus, yet we are inside a popup, try again
+    // from the beginning or end of the popup. Set the current tab index to
+    // the beginning or end.
+    mCurrentTabIndex = aForward ? 1 : 0;
+    GetNextTabbableContent(rootContent, rootContent, nsnull,
+                           aForward, ignoreTabIndex,
+                           getter_AddRefs(nextFocus), &nextFocusFrame);
+    // if the same node was found, don't change the focus
+    if (startContent == nextFocus) {
+      nextFocus = nsnull;
+    }
+  }
 
   // Clear out mCurrentTabIndex. It has a garbage value because of GetNextTabbableContent()'s side effects
   // It will be set correctly when focus is changed via ChangeFocusWith()

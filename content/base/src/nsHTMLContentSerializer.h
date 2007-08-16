@@ -58,7 +58,8 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   virtual ~nsHTMLContentSerializer();
 
   NS_IMETHOD Init(PRUint32 flags, PRUint32 aWrapColumn,
-                  const char* aCharSet, PRBool aIsCopying);
+                  const char* aCharSet, PRBool aIsCopying,
+                  PRBool aIsWholeDocument);
 
   NS_IMETHOD AppendText(nsIDOMText* aText, 
                         PRInt32 aStartOffset,
@@ -138,6 +139,10 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   // the newline character acts as the whitespace and no space is needed.
   PRPackedBool  mAddSpace;
   PRPackedBool  mMayIgnoreLineBreakSequence;
+
+  // This is to ensure that we only do meta tag fixups when dealing with
+  // whole documents.
+  PRPackedBool  mIsWholeDocument;
 
   // To keep track of First LI child of OL in selected range 
   PRPackedBool  mIsFirstChildOfOL;

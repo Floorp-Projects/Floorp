@@ -2366,8 +2366,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
     // Have the style sheet processor construct frame for the root
     // content object down
-    mFrameConstructor->ContentInserted(nsnull, root, 0,
-                                       nsnull, PR_FALSE);
+    mFrameConstructor->ContentInserted(nsnull, root, 0, nsnull);
     VERIFY_STYLE_TREE;
     MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::InitialReflow(), this=%p\n",
                         (void*)this));
@@ -3271,7 +3270,7 @@ void nsIPresShell::InvalidateAccessibleSubtree(nsIContent *aContent)
       do_GetService("@mozilla.org/accessibilityService;1");
     if (accService) {
       accService->InvalidateSubtreeFor(this, aContent,
-                                       nsIAccessibleEvent::EVENT_REORDER);
+                                       nsIAccessibleEvent::EVENT_ASYNCH_SIGNIFICANT_CHANGE);
     }
   }
 }
@@ -4539,7 +4538,7 @@ PresShell::ContentInserted(nsIDocument* aDocument,
   
   WillCauseReflow();
   mFrameConstructor->ContentInserted(aContainer, aChild,
-                                     aIndexInContainer, nsnull, PR_FALSE);
+                                     aIndexInContainer, nsnull);
   VERIFY_STYLE_TREE;
   DidCauseReflow();
 }

@@ -296,7 +296,7 @@ var transferUtils = {
   {
     switch (flavour) {
       case "text/unicode":
-        return aData;
+        return aData.replace(/^\s+|\s+$/g, "");
       case "text/x-moz-url":
         return aData.toString().split("\n")[0];
       case "application/x-moz-file":

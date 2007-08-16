@@ -265,14 +265,26 @@ IsWrapperSameOrigin(JSContext *cx, JSObject *wrappedObj)
 }
 
 static JSBool
+WrapSameOriginProp(JSContext *cx, JSObject *outerObj, jsval *vp);
+
+static JSBool
 XPC_XOW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                         jsval *rval)
 {
-  JSObject *wrappedObj;
+  JSObject *wrappedObj, *outerObj = obj;
 
-  obj = GetWrapper(cx, obj);
-  if (!obj || (wrappedObj = GetWrappedObject(cx, obj)) == nsnull) {
-    return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
+  // Allow 'this' to be either an XOW, in which case we unwrap it.
+  // We disallow invalid XOWs that have no wrapped object. Otherwise,
+  // if it isn't an XOW, then pass it through as-is.
+
+  wrappedObj = GetWrapper(cx, obj);
+  if (wrappedObj) {
+    wrappedObj = GetWrappedObject(cx, wrappedObj);
+    if (!wrappedObj) {
+      return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
+    }
+  } else {
+    wrappedObj = obj;
   }
 
   JSObject *funObj = JSVAL_TO_OBJECT(argv[-2]);
@@ -284,6 +296,11 @@ XPC_XOW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   JSFunction *fun = JS_ValueToFunction(cx, funToCall);
   if (!fun) {
     return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
+  }
+
+  nsresult rv = IsWrapperSameOrigin(cx, JSVAL_TO_OBJECT(funToCall));
+  if (NS_FAILED(rv) && rv != NS_ERROR_DOM_PROP_ACCESS_DENIED) {
+    return ThrowException(rv, cx);
   }
 
   JSNative native = JS_GetFunctionNative(cx, fun);
@@ -299,7 +316,44 @@ XPC_XOW_FunctionWrapper(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_FALSE;
   }
 
+  if (NS_SUCCEEDED(rv)) {
+    return WrapSameOriginProp(cx, outerObj, rval);
+  }
+
   return XPC_XOW_RewrapIfNeeded(cx, obj, rval);
+}
+
+static JSBool
+WrapSameOriginProp(JSContext *cx, JSObject *outerObj, jsval *vp)
+{
+  // Don't call XPC_XOW_RewrapIfNeeded for same origin properties. We only
+  // need to wrap window, document and location.
+  if (JSVAL_IS_PRIMITIVE(*vp)) {
+    return JS_TRUE;
+  }
+
+  JSObject *wrappedObj = JSVAL_TO_OBJECT(*vp);
+  JSClass *clasp = JS_GET_CLASS(cx, wrappedObj);
+  if (XPC_XOW_ClassNeedsXOW(clasp->name)) {
+    return XPC_XOW_WrapObject(cx, JS_GetGlobalForObject(cx, outerObj), vp);
+  }
+
+  // Check if wrappedObj is an XOW. If so, verify that it's from the
+  // right scope.
+  if (clasp == &sXPC_XOW_JSClass.base &&
+      JS_GetParent(cx, wrappedObj) != JS_GetParent(cx, outerObj)) {
+    *vp = OBJECT_TO_JSVAL(GetWrappedObject(cx, wrappedObj));
+    return XPC_XOW_WrapObject(cx, JS_GetParent(cx, outerObj), vp);
+  }
+
+  if (JS_ObjectIsFunction(cx, wrappedObj) &&
+      JS_GetFunctionNative(cx, reinterpret_cast<JSFunction *>
+                                               (JS_GetPrivate(cx, wrappedObj))) ==
+      XPCWrapper::sEvalNative) {
+    return XPC_XOW_WrapFunction(cx, outerObj, wrappedObj, vp);
+  }
+
+  return JS_TRUE;
 }
 
 JSBool
@@ -307,21 +361,18 @@ XPC_XOW_WrapFunction(JSContext *cx, JSObject *outerObj, JSObject *funobj,
                      jsval *rval)
 {
   jsval funobjVal = OBJECT_TO_JSVAL(funobj);
-  JSNative native = JS_GetFunctionNative(cx, JS_ValueToFunction(cx, funobjVal));
+  JSFunction *wrappedFun = reinterpret_cast<JSFunction *>(JS_GetPrivate(cx, funobj));
+  JSNative native = JS_GetFunctionNative(cx, wrappedFun);
   if (!native || native == XPC_XOW_FunctionWrapper) {
     *rval = funobjVal;
     return JS_TRUE;
   }
 
-  JSFunction *wrappedFun = JS_ValueToFunction(cx, OBJECT_TO_JSVAL(funobj));
-  NS_ASSERTION(wrappedFun, "We were told this was a function");
-
   JSFunction *funWrapper =
     JS_NewFunction(cx, XPC_XOW_FunctionWrapper,
                    JS_GetFunctionArity(wrappedFun), 0,
                    JS_GetGlobalForObject(cx, outerObj),
-                   "Wrapped function");
-                   // XXX JS_GetFunctionName(wrappedFun));
+                   JS_GetFunctionName(wrappedFun));
   if (!funWrapper) {
     return JS_FALSE;
   }
@@ -349,9 +400,10 @@ XPC_XOW_RewrapIfNeeded(JSContext *cx, JSObject *outerObj, jsval *vp)
     return XPC_XOW_WrapFunction(cx, outerObj, obj, vp);
   }
 
-  // Don't need to wrap non-C++-implemented objects.
-  // Note: This catches attempts to double-wrap cross origin wrappers.
-  if (!XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj)) {
+  if (JS_GET_CLASS(cx, obj) == &sXPC_XOW_JSClass.base &&
+      JS_GetParent(cx, outerObj) != JS_GetParent(cx, obj)) {
+    *vp = OBJECT_TO_JSVAL(GetWrappedObject(cx, obj));
+  } else if (!XPCWrappedNative::GetWrappedNativeOfJSObject(cx, obj)) {
     return JS_TRUE;
   }
 
@@ -366,6 +418,7 @@ XPC_XOW_WrapObject(JSContext *cx, JSObject *parent, jsval *vp)
   XPCWrappedNative *wn;
   if (!JSVAL_IS_OBJECT(*vp) ||
       !(wrappedObj = JSVAL_TO_OBJECT(*vp)) ||
+      JS_GET_CLASS(cx, wrappedObj) == &sXPC_XOW_JSClass.base ||
       !(wn = XPCWrappedNative::GetWrappedNativeOfJSObject(cx, wrappedObj))) {
     return JS_TRUE;
   }
@@ -515,6 +568,17 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     return JS_TRUE;
   }
 
+  // Don't do anything if we already resolved to a wrapped function in
+  // NewResolve. In practice, this means that this is a wrapped eval
+  // function.
+  jsval v = *vp;
+  if (!JSVAL_IS_PRIMITIVE(v) &&
+      JS_ObjectIsFunction(cx, JSVAL_TO_OBJECT(v)) &&
+      JS_GetFunctionNative(cx, JS_ValueToFunction(cx, v)) ==
+      XPC_XOW_FunctionWrapper) {
+    return JS_TRUE;
+  }
+
   XPCCallContext ccx(JS_CALLER, cx);
   if (!ccx.IsValid()) {
     return ThrowException(NS_ERROR_FAILURE, cx);
@@ -609,25 +673,7 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     }
   }
 
-  // Don't call XPC_XOW_RewrapIfNeeded for same origin properties. We only
-  // need to wrap window, document and location.
-  if (JSVAL_IS_PRIMITIVE(*vp)) {
-    return JS_TRUE;
-  }
-
-  wrappedObj = JSVAL_TO_OBJECT(*vp);
-  if (JS_ObjectIsFunction(cx, wrappedObj) &&
-      JS_GetFunctionNative(cx, JS_ValueToFunction(cx, *vp)) ==
-      XPCWrapper::sEvalNative) {
-    return XPC_XOW_WrapFunction(cx, obj, wrappedObj, vp);
-  }
-
-  const char *name = JS_GET_CLASS(cx, wrappedObj)->name;
-  if (XPC_XOW_ClassNeedsXOW(name)) {
-    return XPC_XOW_WrapObject(cx, JS_GetGlobalForObject(cx, obj), vp);
-  }
-
-  return JS_TRUE;
+  return WrapSameOriginProp(cx, obj, vp);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)

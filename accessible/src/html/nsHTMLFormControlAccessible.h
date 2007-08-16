@@ -102,12 +102,8 @@ class nsHTMLTextFieldAccessible : public nsHyperTextAccessibleWrap
 public:
   enum { eAction_Click = 0 };
 
-  NS_DECL_ISUPPORTS_INHERITED
-
   nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
-  NS_IMETHOD Init(); 
-  NS_IMETHOD Shutdown(); 
   NS_IMETHOD GetRole(PRUint32 *_retval); 
   NS_IMETHOD GetName(nsAString& aName); 
   NS_IMETHOD GetValue(nsAString& _retval); 
@@ -116,12 +112,8 @@ public:
   NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
   NS_IMETHOD DoAction(PRUint8 index);
 
-protected:
-  // Editor helpers, subclasses of nsHyperTextAccessible may have editor
-  virtual void SetEditor(nsIEditor *aEditor);
-  virtual already_AddRefed<nsIEditor> GetEditor() { nsIEditor *editor = mEditor; NS_IF_ADDREF(editor); return editor; }
-  void CheckForEditor();
-  nsCOMPtr<nsIEditor> mEditor;
+  // nsIAccessibleEditableText
+  NS_IMETHOD GetAssociatedEditor(nsIEditor **aEditor);
 };
 
 class nsHTMLGroupboxAccessible : public nsHyperTextAccessibleWrap

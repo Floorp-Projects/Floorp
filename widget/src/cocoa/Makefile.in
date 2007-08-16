@@ -127,8 +127,6 @@ XPIDLSRCS	+= \
 		nsPIWidgetCocoa.idl \
 		$(NULL)
 
-GFX_CPPSRCS     := $(addprefix $(topsrcdir)/gfx/src/mac/,$(GFX_LCPPSRCS))
-
 SHARED_LIBRARY_LIBS = ../xpwidgets/libxpwidgets_s.a
 
 EXTRA_DSO_LDOPTS += \
@@ -139,8 +137,6 @@ EXTRA_DSO_LDOPTS += \
 		-lthebes \
 		$(MOZ_FIX_LINK_PATHS) \
 		$(NULL)
-
-GARBAGE		+= $(GFX_LCPPSRCS)
 
 include $(topsrcdir)/config/rules.mk
 
@@ -160,10 +156,6 @@ $(NIB_DEST)/%: $(srcdir)/resources/MainMenu.nib/% $(NIB_DEST)
 	$(INSTALL) $< $(NIB_DEST)
 
 RESOURCE = libwidget.rsrc
-RES_SRC = nsMacWidget.r
-
-export:: $(GFX_CPPSRCS) $(srcdir)/$(RES_SRC)
-	$(INSTALL) $^ .
 
 # for objdir builds, symlink the cursors dir
 ABS_topsrcdir   := $(shell cd $(topsrcdir); pwd)
@@ -175,7 +167,7 @@ endif
 export::
 	$(INSTALL) $(srcdir)/cursors $(DIST)/bin/res
 
-$(RESOURCE): $(RES_SRC)
+$(RESOURCE): nsMacWidget.r
 	/Developer/Tools/Rez -i /Developer/Headers/FlatCarbon -useDF $< -o $@
 
 libs:: $(RESOURCE)

@@ -347,7 +347,9 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     metrics.mAdvanceWidth = floatAdvance;
     const PRUint32 appUnitsPerDevUnit = aTextRun->GetAppUnitsPerDevUnit();
     metrics.mAscent = fontMetrics.maxAscent*appUnitsPerDevUnit;
-    metrics.mDescent = fontMetrics.maxDescent*appUnitsPerDevUnit;
+    gfxFloat descentForUnderline =
+        NS_round(fontMetrics.underlineSize) + NS_round(metrics.mAscent - fontMetrics.underlineOffset) - metrics.mAscent;
+    metrics.mDescent = PR_MAX(fontMetrics.maxDescent, descentForUnderline)*appUnitsPerDevUnit;
     metrics.mBoundingBox =
         gfxRect(0, -metrics.mAscent, floatAdvance, metrics.mAscent + metrics.mDescent);
     return metrics;

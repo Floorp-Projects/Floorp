@@ -23,6 +23,7 @@
  *   Scott MacGregor <mscott@netscape.com>
  *   Christian Biesinger <cbiesinger@web.de>
  *   Dan Mosedale <dmose@mozilla.org>
+ *   Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -230,13 +231,6 @@ public:
    */
   NS_HIDDEN_(PRBool) MIMETypeIsInDataSource(const char * aContentType);
 
-  /**
-   * Return the URI template for any configured web handler.  This will
-   * probably be replaced by something on nsIWebContentConverterService soon. 
-   */
-  NS_HIDDEN_(nsresult) GetProtocolHandlerInfo(const nsACString &aScheme,
-                                              nsIHandlerInfo **aHandlerInfo);
-
   virtual NS_HIDDEN_(nsresult) OSProtocolHandlerExists(const char *aScheme,
                                                        PRBool *aExists) = 0;
 
@@ -258,6 +252,7 @@ protected:
   nsCOMPtr<nsIRDFResource> kNC_HandleInternal;
   nsCOMPtr<nsIRDFResource> kNC_PrettyName;
   nsCOMPtr<nsIRDFResource> kNC_UriTemplate;
+  nsCOMPtr<nsIRDFResource> kNC_PossibleApplication;
 #endif
 
   /**
@@ -266,9 +261,9 @@ protected:
   PRBool mDataSourceInitialized;
 
   /**
-   * Helper routines for digesting the data source and filling in a mime info
-   * object for a given content type inside that data source.
-   * The content type of the MIME Info will not be changed.
+   * Helper routines for digesting the data source and filling in a handler
+   * info object for a given content type inside that data source. The content
+   * type of the handler info object will not be changed.
    */
 #ifdef MOZ_RDF
   NS_HIDDEN_(nsresult) FillMIMEExtensionProperties(
@@ -291,6 +286,19 @@ protected:
   NS_HIDDEN_(nsresult) FillLiteralValueFromTarget(nsIRDFResource * aSource,
                                                   nsIRDFResource * aProperty,
                                                   const PRUnichar ** aLiteralValue);
+
+  /**
+   * Returns the nsIHandlerApp represented by the source node.
+   */
+  NS_HIDDEN_(nsresult) FillHandlerAppFromSource(nsIRDFResource * aSource,
+                                                nsIHandlerApp ** aHandlerApp);
+
+  /**
+   * Returns an array of nsIHandlerApp objects representing possible apps
+   * for the handler represented by the source node.
+   */
+  NS_HIDDEN_(nsresult) FillPossibleAppsFromSource(nsIRDFResource * aSource,
+                                                  nsIMutableArray * aPossibleApps);
 #endif
 
   /**

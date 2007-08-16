@@ -22,6 +22,8 @@
 # Contributor(s):
 #   Blake Ross <blakeross@telocity.com> (Original Author) 
 #   Ben Goodger <ben@bengoodger.com> (v2.0) 
+#   Edward Lee <edilee@gmail.com>
+#   Shawn Wilsher <me@shawnwilsher.com> (v3.0)
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,81 +39,121 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-var gStrings = [];
-const interval = 500; // Update every 500 milliseconds.
-
-function DownloadProgressListener (aDocument, aStringBundle) 
+function DownloadProgressListener() 
 {
-  this.doc = aDocument;
+  var sb = document.getElementById("downloadStrings");
+  this._paused = sb.getString("paused");
+  this._statusFormat = sb.getString("statusFormat2");
+  this._transferSameUnits = sb.getString("transferSameUnits");
+  this._transferDiffUnits = sb.getString("transferDiffUnits");
+  this._transferNoTotal = sb.getString("transferNoTotal");
+  this._timeMinutesLeft = sb.getString("timeMinutesLeft");
+  this._timeSecondsLeft = sb.getString("timeSecondsLeft");
+  this._timeFewSeconds = sb.getString("timeFewSeconds");
+  this._timeUnknown = sb.getString("timeUnknown");
+  this._units = [sb.getString("bytes"),
+                 sb.getString("kilobyte"),
+                 sb.getString("megabyte"),
+                 sb.getString("gigabyte")];
 
-  this._statusFormat = aStringBundle.getString("statusFormat2");
-  this._transferSameUnits = aStringBundle.getString("transferSameUnits");
-  this._transferDiffUnits = aStringBundle.getString("transferDiffUnits");
-  this._transferNoTotal = aStringBundle.getString("transferNoTotal");
-  this._timeLeft = aStringBundle.getString("timeLeft");
-  this._timeLessMinute = aStringBundle.getString("timeLessMinute");
-  this._timeUnknown = aStringBundle.getString("timeUnknown");
-  this._units = [aStringBundle.getString("bytes"),
-                 aStringBundle.getString("kilobyte"),
-                 aStringBundle.getString("megabyte"),
-                 aStringBundle.getString("gigabyte")];
+  this.lastSeconds = Infinity;
 }
 
 DownloadProgressListener.prototype = 
 {
-  doc: null,
-
   onDownloadStateChange: function dlPL_onDownloadStateChange(aState, aDownload)
   {
-    var downloadID = "dl" + aDownload.id;
-    var download = this.doc.getElementById(downloadID);
-    if (download)
-      download.setAttribute("state", aDownload.state);
+    var dl = getDownload(aDownload.id);
+    switch (aDownload.state) {
+      case Ci.nsIDownloadManager.DOWNLOAD_QUEUED:
+        // We'll have at least one active download now
+        gDownloadsActiveTitle.hidden = false;
+      case Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING:
+        // if dl is non-null, the download is already added to the UI, so we
+        // just make sure it is where it is supposed to be
+        if (!dl) {
+          // We have to create the download object
+          let uri = Cc["@mozilla.org/network/util;1"].
+                    getService(Ci.nsIIOService).
+                    newFileURI(aDownload.targetFile);
+          dl = createDownloadItem(aDownload.id,
+                                  uri.spec,
+                                  aDownload.displayName,
+                                  aDownload.source.spec,
+                                  aDownload.state,
+                                  "",
+                                  aDownload.percentComplete,
+                                  Math.round(aDownload.startTime / 1000));
+        }
+        gDownloadsView.insertBefore(dl, gDownloadsActiveTitle.nextSibling);
+        break;
+      case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
+      case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
+        downloadCompleted(aDownload);
+        break;
+      case Ci.nsIDownloadManager.DOWNLOAD_FINISHED:
+        downloadCompleted(aDownload);
+
+        autoRemoveAndClose(aDownload);
+        break;
+      case Ci.nsIDownloadManager.DOWNLOAD_PAUSED:
+        let transfer = dl.getAttribute("status-internal");
+        let status = this._replaceInsert(this._paused, 1, transfer);
+        dl.setAttribute("status", status);
+        break;
+    }
+
+    // autoRemoveAndClose could have already closed our window...
+    try {
+      dl.setAttribute("state", aDownload.state);
+      gDownloadViewController.onCommandUpdate();
+    } catch (e) { }
   },
 
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus, aDownload)
   {
     if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP) {
-      var downloadID = "dl" + aDownload.id;
-      var download = this.doc.getElementById(downloadID);
-      if (download)
-        download.setAttribute("status", "");
+      let dl = getDownload(aDownload.id);
+      if (dl)
+        dl.setAttribute("status", "");
     }
   },
 
   onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
                               aCurTotalProgress, aMaxTotalProgress, aDownload)
   {
-    var overallProgress = aCurTotalProgress;
-
-    var downloadID = "dl" + aDownload.id;
-    var download = this.doc.getElementById(downloadID);
-
-    // Calculate percentage.
-    var percent;
-    if (aMaxTotalProgress > 0) {
-      percent = Math.floor((overallProgress*100.0)/aMaxTotalProgress);
-      if (percent > 100)
-        percent = 100;
-
-      // Advance progress meter.
-      if (download) {
-        download.setAttribute("progress", percent);
-
-        download.setAttribute("progressmode", "normal");
-        
-        onUpdateProgress();
-      }
-    } else {
-      percent = -1;
-
-      // Progress meter should be barber-pole in this case.
-      download.setAttribute("progressmode", "undetermined");
+    var download = getDownload(aDownload.id);
+    if (!download) {
+      // d'oh - why this happens is complicated, let's just add it in
+      let uri = Cc["@mozilla.org/network/util;1"].
+                getService(Ci.nsIIOService).newFileURI(aDownload.targetFile);
+      let itm = createDownloadItem(aDownload.id, uri.spec,
+                                   aDownload.displayName,
+                                   aDownload.source.spec,
+                                   aDownload.state,
+                                   aDownload.percentComplete);
+      download = gDownloadsView.insertBefore(itm, gDownloadsActiveTitle.nextSibling);
     }
 
-    // Now that we've set the progress and the time, update the UI with 
-    // all the the pertinent information (bytes transferred, bytes total,
-    // download rate, time remaining). 
+    // any activity means we should have active downloads!
+    gDownloadsActiveTitle.hidden = false;
+
+    // Update this download's progressmeter
+    if (aDownload.percentComplete == -1)
+      download.setAttribute("progressmode", "undetermined");
+    else {
+      download.setAttribute("progressmode", "normal");
+      download.setAttribute("progress", aDownload.percentComplete);
+    }
+
+    // Dispatch ValueChange for a11y
+    var event = document.createEvent("Events");
+    event.initEvent("ValueChange", true, true);
+    document.getAnonymousElementByAttribute(download, "anonid", "progressmeter")
+            .dispatchEvent(event);
+
+    // Update the rest of the UI (bytes transferred, bytes total, download rate,
+    // time remaining). 
     let status = this._statusFormat;
 
     // Update the bytes transferred and bytes total
@@ -133,8 +175,7 @@ DownloadProgressListener.prototype =
       // Insert 1 is the download progress
       status = this._replaceInsert(status, 1, transfer);
 
-      if (download)
-        download.setAttribute("status-internal", transfer);
+      download.setAttribute("status-internal", transfer);
     }
 
     // Update the download rate
@@ -148,12 +189,28 @@ DownloadProgressListener.prototype =
     // Update time remaining.
     let (remain) {
       if ((aDownload.speed > 0) && (aMaxTotalProgress > 0)) {
-        let minutes = Math.ceil((aMaxTotalProgress - aCurTotalProgress) /
-                                aDownload.speed / 60);
-        if (minutes > 1)
-          remain = this._replaceInsert(this._timeLeft, 1, minutes);
-        else
-          remain = this._timeLessMinute;
+        let seconds = Math.ceil((aMaxTotalProgress - aCurTotalProgress) /
+                                aDownload.speed);
+
+        // Reuse the last seconds if the new one is longer by some small amount
+        // This avoids jittering seconds, e.g., 41 40 38 40 -> 41 40 38 38
+        // However, large changes are shown, e.g., 41 38 49 -> 41 38 49
+        let (diff = seconds - this.lastSeconds) {
+          if (diff > 0 && diff <= 10)
+            seconds = this.lastSeconds;
+          else
+            this.lastSeconds = seconds;
+        }
+
+        // Be friendly in the last few seconds
+        if (seconds <= 3)
+          remain = this._timeFewSeconds;
+        // Show 2 digit seconds starting at 60; otherwise use minutes
+        else if (seconds <= 60)
+          remain = this._replaceInsert(this._timeSecondsLeft, 1, seconds);
+        else 
+          remain = this._replaceInsert(this._timeMinutesLeft, 1,
+                                       Math.ceil(seconds / 60));
       } else {
         remain = this._timeUnknown;
       }
@@ -162,8 +219,10 @@ DownloadProgressListener.prototype =
       status = this._replaceInsert(status, 4, remain);
     }
     
-    if (download)
-      download.setAttribute("status", status);
+    download.setAttribute("status", status);
+
+    // Update window title
+    onUpdateProgress();
   },
   onLocationChange: function(aWebProgress, aRequest, aLocation, aDownload)
   {
@@ -178,9 +237,9 @@ DownloadProgressListener.prototype =
   {
     if (iid.equals(Components.interfaces.nsIDownloadProgressListener) ||
         iid.equals(Components.interfaces.nsISupports))
-    return this;
+      return this;
 
-    throw Components.results.NS_NOINTERFACE;
+    throw Cr.NS_NOINTERFACE;
   },
 
   _replaceInsert: function ( text, index, value ) 

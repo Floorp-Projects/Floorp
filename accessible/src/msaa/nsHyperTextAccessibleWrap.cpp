@@ -54,7 +54,8 @@ nsHyperTextAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
   PRUint32 eventType;
   aEvent->GetEventType(&eventType);
 
-  if (eventType == nsIAccessibleEvent::EVENT_TEXT_CHANGED) {
+  if (eventType == nsIAccessibleEvent::EVENT_TEXT_REMOVED ||
+      eventType == nsIAccessibleEvent::EVENT_TEXT_INSERTED) {
     nsCOMPtr<nsIAccessible> accessible;
     aEvent->GetAccessible(getter_AddRefs(accessible));
     if (accessible) {

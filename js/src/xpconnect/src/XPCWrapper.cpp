@@ -140,58 +140,56 @@ XPCWrapper::NewResolve(JSContext *cx, JSObject *wrapperObj,
                        JSObject *innerObj, jsval id, uintN flags,
                        JSObject **objp, JSBool preserveVal)
 {
-  jschar *chars = nsnull;
-  size_t length;
-  JSBool hasProp, ok;
   jsval v = JSVAL_VOID;
 
-  if (JSVAL_IS_STRING(id)) {
-    JSString *str = JSVAL_TO_STRING(id);
-
-    chars = ::JS_GetStringChars(str);
-    length = ::JS_GetStringLength(str);
-
-    ok = ::JS_HasUCProperty(cx, innerObj, chars, length, &hasProp);
-    if (preserveVal && ok && hasProp) {
-      ok = ::JS_LookupUCProperty(cx, innerObj, chars, length, &v);
-    }
-  } else if (JSVAL_IS_INT(id)) {
-    ok = ::JS_HasElement(cx, innerObj, JSVAL_TO_INT(id), &hasProp);
-    if (preserveVal && ok && hasProp) {
-      ok = ::JS_LookupElement(cx, innerObj, JSVAL_TO_INT(id), &v);
-    }
-  } else {
-    // FIXME: https://bugzilla.mozilla.org/show_bug.cgi?id=381662
-    // A non-string and non-int id is being resolved. We don't deal
-    // with those yet, return early.
-
-    return ThrowException(NS_ERROR_INVALID_ARG, cx);
+  jsid interned_id;
+  if (!::JS_ValueToId(cx, id, &interned_id)) {
+    return JS_FALSE;
   }
 
-  if (!ok || !hasProp) {
-    // An error occured, or the property was not found. Return
-    // early. This is safe even in the case of a set operation since
-    // if the property doesn't exist there's no chance of a setter
-    // being called or any other code being run as a result of the
-    // set.
+  JSProperty *prop;
+  JSObject *innerObjp;
+  if (!OBJ_LOOKUP_PROPERTY(cx, innerObj, interned_id, &innerObjp, &prop)) {
+    return JS_FALSE;
+  }
 
-    return ok;
+  if (!prop) {
+    // Nothing to define.
+    return JS_TRUE;
+  }
+
+  JSBool isXOW = (JS_GET_CLASS(cx, wrapperObj) == &sXPC_XOW_JSClass.base);
+  if (preserveVal || isXOW) {
+    JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
+    if (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(innerObjp))) {
+      v = OBJ_GET_SLOT(cx, innerObjp, sprop->slot);
+    }
+  }
+
+  OBJ_DROP_PROPERTY(cx, innerObjp, prop);
+
+  // Hack alert: we only do this for same-origin calls on XOWs: we want
+  // to preserve 'eval' function wrapper on the wrapper object itself
+  // to preserve eval's identity.
+  if (!preserveVal && isXOW && !JSVAL_IS_PRIMITIVE(v)) {
+    JSObject *obj = JSVAL_TO_OBJECT(v);
+    if (JS_ObjectIsFunction(cx, obj)) {
+      JSFunction *fun = reinterpret_cast<JSFunction *>(JS_GetPrivate(cx, obj));
+      if (JS_GetFunctionNative(cx, fun) == sEvalNative &&
+          !WrapFunction(cx, wrapperObj, obj, &v, JS_FALSE)) {
+        return JS_FALSE;
+      }
+    }
   }
 
   jsval oldSlotVal;
   if (!::JS_GetReservedSlot(cx, wrapperObj, sResolvingSlot, &oldSlotVal) ||
-      !::JS_SetReservedSlot(cx, wrapperObj, sResolvingSlot,
-                            BOOLEAN_TO_JSVAL(JS_TRUE))) {
+      !::JS_SetReservedSlot(cx, wrapperObj, sResolvingSlot, JSVAL_TRUE)) {
     return JS_FALSE;
   }
 
-  if (chars) {
-    ok = ::JS_DefineUCProperty(cx, wrapperObj, chars, length, v,
-                               nsnull, nsnull, JSPROP_ENUMERATE);
-  } else {
-    ok = ::JS_DefineElement(cx, wrapperObj, JSVAL_TO_INT(id), v,
-                            nsnull, nsnull, JSPROP_ENUMERATE);
-  }
+  JSBool ok = OBJ_DEFINE_PROPERTY(cx, wrapperObj, interned_id, v, nsnull,
+                                  nsnull, JSPROP_ENUMERATE, nsnull);
 
   if (ok && (ok = ::JS_SetReservedSlot(cx, wrapperObj, sResolvingSlot,
                                        oldSlotVal))) {

@@ -406,7 +406,8 @@ function FilterPrefs()
   if (substring) {
     gPrefView = [];
     if (!rex)
-      rex = RegExp(substring.replace(/([^* \w])/g, "\\$1").replace(/[*]/g, ".*"), "i");
+      rex = RegExp(substring.replace(/([^* \w])/g, "\\$1").replace(/^\*+/, "")
+                            .replace(/\*+/g, ".*"), "i");
     for (var i = 0; i < gPrefArray.length; ++i)
       if (rex.test(gPrefArray[i].prefCol + ";" + gPrefArray[i].valueCol))
         gPrefView.push(gPrefArray[i]);

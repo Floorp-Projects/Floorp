@@ -12,7 +12,7 @@
  * the License for the specific language governing rights and
  * limitations under the License.
  *
- * The Original Code is the Places Tagging Service
+ * The Original Code is the Places Tagging Service.
  *
  * The Initial Developer of the Original Code is
  * Mozilla Corporation.
@@ -20,7 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Asaf Romano <mano@mozilla.com>
+ *   Asaf Romano <mano@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -40,16 +40,16 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-const TAGS_CLASSID = Components.ID("{6a059068-1630-11dc-8314-0800200c9a66}");
-const TAGS_CLASSNAME = "Places Tagging Service";
-const TAGS_CONTRACTID = "@mozilla.org/browser/tagging-service;1";
-
-const TAG_CONTAINER_ICON_URI = "chrome://mozapps/skin/places/tagContainerIcon.png"
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const NH_CONTRACTID = "@mozilla.org/browser/nav-history-service;1";
 const BMS_CONTRACTID = "@mozilla.org/browser/nav-bookmarks-service;1";
 const IO_CONTRACTID = "@mozilla.org/network/io-service;1";
+const ANNO_CONTRACTID = "@mozilla.org/browser/annotation-service;1";
 const FAV_CONTRACTID = "@mozilla.org/browser/favicon-service;1";
+const OBSS_CONTRACTID = "@mozilla.org/observer-service;1";
+
+const TAG_CONTAINER_ICON_URI = "chrome://mozapps/skin/places/tagContainerIcon.png"
 
 var gIoService = Cc[IO_CONTRACTID].getService(Ci.nsIIOService);
 
@@ -57,20 +57,6 @@ var gIoService = Cc[IO_CONTRACTID].getService(Ci.nsIIOService);
  * The Places Tagging Service
  */
 function TaggingService() {
-  this._tags = [];
-  
-  var options = this._history.getNewQueryOptions();
-  var query = this._history.getNewQuery();
-  query.setFolders([this._bms.tagRoot], 1);
-  var result = this._history.executeQuery(query, options);
-  var rootNode = result.root;
-  rootNode.containerOpen = true;
-
-  var cc = rootNode.childCount;
-  for (var i=0; i < cc; i++) {
-    var child = rootNode.getChild(i);
-    this._tags.push({ itemId: child.itemId, name: child.title });
-  }
 }
 
 TaggingService.prototype = {
@@ -86,24 +72,49 @@ TaggingService.prototype = {
     return this.__history;
   },
 
-  // nsISupports
-  QueryInterface: function TS_QueryInterface(iid) {
-    if (iid.equals(Ci.nsITaggingService) ||
-        iid.equals(Ci.nsISupports))
-      return this;
-    throw Cr.NO_INTERFACE;
+  get _annos() {
+    if (!this.__annos)
+      this.__annos =  Cc[ANNO_CONTRACTID].getService(Ci.nsIAnnotationService);
+    return this.__annos;
   },
 
+  get _tagsResult() {
+    if (!this.__tagsResult) {
+      var options = this._history.getNewQueryOptions();
+      var query = this._history.getNewQuery();
+      query.setFolders([this._bms.tagRoot], 1);
+      this.__tagsResult = this._history.executeQuery(query, options);
+      this.__tagsResult.root.containerOpen = true;
+
+      // we need to null out the result on shutdown
+      var observerSvc = Cc[OBSS_CONTRACTID].getService(Ci.nsIObserverService);
+      observerSvc.addObserver(this, "xpcom-shutdown", false);
+    }
+    return this.__tagsResult;
+  },
+
+  // Feed XPCOMUtils
+  classDescription: "Places Tagging Service",
+  contractID: "@mozilla.org/browser/tagging-service;1",
+  classID: Components.ID("{6a059068-1630-11dc-8314-0800200c9a66}"),
+
+  // nsISupports
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITaggingService,
+                                         Ci.nsIObserver]),
+
   /**
-   * If there's no tag with the given name, -1 is returned.
+   * If there's no tag with the given name, null is returned;
    */
-  _getTagIndex: function TS__getTagIndex(aName) {
-    for (var i=0; i < this._tags.length; i++) {
-      if (this._tags[i].name == aName)
-        return i;
+  _getTagNode: function TS__getTagIndex(aName) {
+    var root = this._tagsResult.root;
+    var cc = root.childCount;
+    for (var i=0; i < cc; i++) {
+      var child = root.getChild(i);
+      if (child.title == aName)
+        return child;
     }
 
-    return -1;
+    return null;
   },
 
   get _tagContainerIcon() {
@@ -116,7 +127,7 @@ TaggingService.prototype = {
   },
 
   /**
-   * Creates a tag container under the tags-root with the given name
+   * Creates a tag container under the tags-root with the given name.
    *
    * @param aName
    *        the name for the new container.
@@ -125,7 +136,6 @@ TaggingService.prototype = {
   _createTag: function TS__createTag(aName) {
     var id = this._bms.createFolder(this._bms.tagRoot, aName,
                                     this._bms.DEFAULT_INDEX);
-    this._tags.push({ itemId: id, name: aName});
 
     // Set the favicon
     var faviconService = Cc[FAV_CONTRACTID].getService(Ci.nsIFaviconService);
@@ -164,22 +174,22 @@ TaggingService.prototype = {
   },
 
   // nsITaggingService
-  tagURI: function TS_tagURI(aURI, aTags, aCount) {
-    if (!aURI)
+  tagURI: function TS_tagURI(aURI, aTags) {
+    if (!aURI || !aTags)
       throw Cr.NS_ERROR_INVALID_ARG;
 
     for (var i=0; i < aTags.length; i++) {
       if (aTags[i].length == 0)
         throw Cr.NS_ERROR_INVALID_ARG;
 
-      var tagIndex = this._getTagIndex(aTags[i]);
-      if (tagIndex == -1) {
+      var tagNode = this._getTagNode(aTags[i]);
+      if (!tagNode) {
         var tagId = this._createTag(aTags[i]);
         this._bms.insertBookmark(tagId, aURI, this._bms.DEFAULT_INDEX, "");
       }
       else {
-        var tagId = this._tags[tagIndex].itemId;
-        if (!this._isURITaggedInternal(aURI, tagId, {}))
+        var tagId = tagNode.itemId;
+        if (!this._isURITaggedInternal(aURI, tagNode.itemId, {}))
           this._bms.insertBookmark(tagId, aURI, this._bms.DEFAULT_INDEX, "");
       }
     }
@@ -188,38 +198,41 @@ TaggingService.prototype = {
   /**
    * Removes the tag container from the tags-root if the given tag is empty.
    *
-   * @param aTagIndex
-   *        the index of a tag element under the _tags array
+   * @param aTagId
+   *        the item-id of the tag element under the tags root
    */
-  _removeTagAtIndexIfEmpty: function TS__removeTagAtIndexIfEmpty(aTagIndex) {
+  _removeTagIfEmpty: function TS__removeTagIfEmpty(aTagId) {
     var options = this._history.getNewQueryOptions();
     var query = this._history.getNewQuery();
-    query.setFolders([this._tags[aTagIndex].itemId], 1);
+    query.setFolders([aTagId], 1);
     var result = this._history.executeQuery(query, options);
     var rootNode = result.root;
     rootNode.containerOpen = true;
-    if (rootNode.childCount == 0) {
-      this._bms.removeFolder(this._tags[aTagIndex].itemId);
-      this._tags.splice(aTagIndex, 1);
-    }
+    if (rootNode.childCount == 0)
+      this._bms.removeFolder(aTagId);
   },
 
   // nsITaggingService
-  untagURI: function TS_untagURI(aURI, aTags, aCount) {
+  untagURI: function TS_untagURI(aURI, aTags) {
     if (!aURI)
       throw Cr.NS_ERROR_INVALID_ARG;
+
+    if (!aTags) {
+      // see IDL.
+      // XXXmano: write a perf-sensitive version of this code path...
+      aTags = this.getTagsForURI(aURI);
+    }
 
     for (var i=0; i < aTags.length; i++) {
       if (aTags[i].length == 0)
         throw Cr.NS_ERROR_INVALID_ARG;
 
-      var tagIndex = this._getTagIndex(aTags[i]);
-      if (tagIndex != -1) {
+      var tagNode = this._getTagNode(aTags[i]);
+      if (tagNode) {
         var itemId = { };
-        if (this._isURITaggedInternal(aURI, this._tags[tagIndex].itemId,
-                                      itemId)) {
+        if (this._isURITaggedInternal(aURI, tagNode.itemId, itemId)) {
           this._bms.removeItem(itemId.value);
-          this._removeTagAtIndexIfEmpty(tagIndex);
+          this._removeTagIfEmpty(tagNode.itemId);
         }
       }
     }
@@ -231,18 +244,14 @@ TaggingService.prototype = {
       throw Cr.NS_ERROR_INVALID_ARG;
 
     var uris = [];
-    var tagIndex = this._getTagIndex(aTag);
-    if (tagIndex != -1) {
-      var tagId = this._tags[tagIndex].itemId;
-      var options = this._history.getNewQueryOptions();
-      var query = this._history.getNewQuery();
-      query.setFolders([tagId], 1);
-      var result = this._history.executeQuery(query, options);
-      var rootNode = result.root;
-      rootNode.containerOpen = true;
-      var cc = rootNode.childCount;
+    var tagNode = this._getTagNode(aTag);
+    if (tagNode) {
+      tagNode.QueryInterface(Ci.nsINavHistoryContainerResultNode);
+      tagNode.containerOpen = true;
+      var cc = tagNode.childCount;
       for (var i=0; i < cc; i++)
-        uris.push(gIoService.newURI(rootNode.getChild(i).uri, null, null));
+        uris.push(gIoService.newURI(tagNode.getChild(i).uri, null, null));
+      tagNode.containerOpen = false;
     }
     return uris;
   },
@@ -253,72 +262,49 @@ TaggingService.prototype = {
       throw Cr.NS_ERROR_INVALID_ARG;
 
     var tags = [];
-
     var bookmarkIds = this._bms.getBookmarkIdsForURI(aURI, {});
+    var root = this._tagsResult.root;
+    var cc = root.childCount;
     for (var i=0; i < bookmarkIds.length; i++) {
       var parent = this._bms.getFolderIdForItem(bookmarkIds[i]);
-      for (var j=0; j < this._tags.length; j++) {
-        if (this._tags[j].itemId == parent)
-          tags.push(this._tags[j].name);
+      for (var j=0; j < cc; j++) {
+        var child = root.getChild(j);
+        if (child.itemId == parent)
+          tags.push(child.title);
       }
     }
 
     // sort the tag list
     tags.sort();
     return tags;
-  }
-};
-
-var gModule = {
-  registerSelf: function(componentManager, fileSpec, location, type) {
-    componentManager = componentManager.QueryInterface(Ci.nsIComponentRegistrar);
-    
-    for (var key in this._objects) {
-      var obj = this._objects[key];
-      componentManager.registerFactoryLocation(obj.CID,
-                                               obj.className,
-                                               obj.contractID,
-                                               fileSpec,
-                                               location,
-                                               type);
-    }
-  },
-  
-  unregisterSelf: function(componentManager, fileSpec, location) {},
-
-  getClassObject: function(componentManager, cid, iid) {
-    if (!iid.equals(Components.interfaces.nsIFactory))
-      throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  
-    for (var key in this._objects) {
-      if (cid.equals(this._objects[key].CID))
-        return this._objects[key].factory;
-    }
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-  
-  _objects: {
-    service: {
-      CID        : TAGS_CLASSID,
-      contractID : TAGS_CONTRACTID,
-      className  : TAGS_CLASSNAME,
-      factory    : TaggingServiceFactory = {
-                     createInstance: function(aOuter, aIID) {
-                       if (aOuter != null)
-                         throw Cr.NS_ERROR_NO_AGGREGATION;
-                       var svc = new TaggingService();
-                      return svc.QueryInterface(aIID);
-                     }
-                   }
-    }
   },
 
-  canUnload: function(componentManager) {
-    return true;
+  // nsITaggingService
+  get allTags() {
+    var tags = [];
+    var root = this._tagsResult.root;
+    var cc = root.childCount;
+    for (var j=0; j < cc; j++) {
+      var child = root.getChild(j);
+      tags.push(child.title);
+    }
+
+    // sort the tag list
+    tags.sort();
+    return tags;
+  },
+
+  // nsIObserver
+  observe: function TS_observe(subject, topic, data) {
+    if (topic == "xpcom-shutdown") {
+      this.__tagsResult.root.containerOpen = false;
+      this.__tagsResult = null;
+      var observerSvc = Cc[OBSS_CONTRACTID].getService(Ci.nsIObserverService);
+      observerSvc.removeObserver(this, "xpcom-shutdown");
+    }
   }
 };
 
 function NSGetModule(compMgr, fileSpec) {
-  return gModule;
+  return XPCOMUtils.generateModule([TaggingService]);
 }

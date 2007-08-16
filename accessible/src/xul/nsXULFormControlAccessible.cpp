@@ -50,6 +50,7 @@
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULTextboxElement.h"
+#include "nsIEditor.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsITextControlFrame.h"
@@ -763,21 +764,6 @@ nsXULTextFieldAccessible::nsXULTextFieldAccessible(nsIDOMNode* aNode, nsIWeakRef
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsXULTextFieldAccessible, nsHyperTextAccessible,
-                             nsIAccessibleText)
-
-NS_IMETHODIMP nsXULTextFieldAccessible::Init()
-{
-  CheckForEditor();
-  return nsHyperTextAccessibleWrap::Init();
-}
-
-NS_IMETHODIMP nsXULTextFieldAccessible::Shutdown()
-{
-  mEditor = nsnull;
-  return nsHyperTextAccessibleWrap::Shutdown();
-}
-
 NS_IMETHODIMP nsXULTextFieldAccessible::GetValue(nsAString& aValue)
 {
   PRUint32 state;
@@ -935,22 +921,11 @@ nsXULTextFieldAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChild
   return NS_OK;
 }
 
-void nsXULTextFieldAccessible::SetEditor(nsIEditor* aEditor)
+NS_IMETHODIMP nsXULTextFieldAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 {
-  mEditor = aEditor;
-}
-
-void nsXULTextFieldAccessible::CheckForEditor()
-{
+  *aEditor = nsnull;
   nsCOMPtr<nsIDOMNode> inputField = GetInputField();
   nsCOMPtr<nsIDOMNSEditableElement> editableElt(do_QueryInterface(inputField));
-  if (!editableElt) {
-    return;
-  }
-
-  nsCOMPtr<nsIEditor> editor;
-  nsresult rv = editableElt->GetEditor(getter_AddRefs(editor));
-  if (NS_SUCCEEDED(rv)) {
-    SetEditor(editor);
-  }
+  NS_ENSURE_TRUE(editableElt, NS_ERROR_FAILURE);
+  return editableElt->GetEditor(aEditor);
 }

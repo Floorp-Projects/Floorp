@@ -740,6 +740,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   dl->mID = id;
 
   rv = AddToCurrentDownloads(dl);
+  (void)dl->SetState(nsIDownloadManager::DOWNLOAD_QUEUED);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ADDREF(*aDownload = dl);
@@ -793,6 +794,10 @@ nsDownloadManager::CancelDownload(PRUint32 aID)
   if (CompletedSuccessfully(dl->mDownloadState))
     return NS_OK;
 
+  // if the download is paused, we have to resume it so we can cancel it
+  if (dl->mPaused)
+    (void)dl->PauseResume(PR_FALSE);
+
   // Cancel using the provided object
   if (dl->mCancelable)
     dl->mCancelable->Cancel(NS_BINDING_ABORTED);
@@ -838,8 +843,6 @@ nsDownloadManager::RetryDownload(PRUint32 aID)
   dl->mDownloadManager = this;
 
   dl->SetStartTime(PR_Now());
-  rv = dl->SetState(nsIDownloadManager::DOWNLOAD_NOTSTARTED);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIWebBrowserPersist> wbp =
     do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1", &rv);
@@ -851,12 +854,28 @@ nsDownloadManager::RetryDownload(PRUint32 aID)
 
   rv = wbp->SetPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_REPLACE_EXISTING_FILES |
                             nsIWebBrowserPersist::PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    dl->mCancelable = nsnull;
+    (void)wbp->SetProgressListener(nsnull);
+    return rv;
+  }
 
   rv = AddToCurrentDownloads(dl);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    dl->mCancelable = nsnull;
+    (void)wbp->SetProgressListener(nsnull);
+    return rv;
+  }
+  (void)dl->SetState(nsIDownloadManager::DOWNLOAD_QUEUED);
 
-  return wbp->SaveURI(dl->mSource, nsnull, nsnull, nsnull, nsnull, dl->mTarget);
+  rv = wbp->SaveURI(dl->mSource, nsnull, nsnull, nsnull, nsnull, dl->mTarget);
+  if (NS_FAILED(rv)) {
+    dl->mCancelable = nsnull;
+    (void)wbp->SetProgressListener(nsnull);
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1333,7 +1352,7 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
   if (!mRequest)
     mRequest = aRequest; // used for pause/resume
 
-  if (mDownloadState == nsIDownloadManager::DOWNLOAD_NOTSTARTED) {
+  if (mDownloadState == nsIDownloadManager::DOWNLOAD_QUEUED) {
     nsresult rv = SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
     NS_ENSURE_SUCCESS(rv, rv);
     mDownloadManager->mObserverService->NotifyObservers(this, "dl-start", nsnull);

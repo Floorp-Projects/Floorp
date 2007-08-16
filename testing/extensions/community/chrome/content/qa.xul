@@ -84,7 +84,7 @@
     <tab label="&qa.preferences.title;" id="qa-tabbar-prefs" class="tabbrowser-tab" />
     <tab label="&qa.help.title;" class="tabbrowser-tab" />
   </tabs>
-  <tabpanels>
+  <tabpanels id="qa_tabpanels">
     <tabpanel id="qa-tab-qmo"></tabpanel>
     <tabpanel id="qa-tab-litmus"></tabpanel>
     <tabpanel id="qa-tab-bugzilla"></tabpanel>

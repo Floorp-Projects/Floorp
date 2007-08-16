@@ -74,7 +74,7 @@ var observer = {
   },
   onVisit: function(aURI, aVisitID, aTime, aSessionID, aReferringID, aTransitionType) {
   },
-  onTitleChanged: function(aURI, aPageTitle, aUserTitle, aUserTitleChanged) {
+  onTitleChanged: function(aURI, aPageTitle) {
   },
   onDeleteURI: function(aURI) {
   },

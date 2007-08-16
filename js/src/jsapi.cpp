@@ -1440,10 +1440,12 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsval id,
     CHECK_REQUEST(cx);
     *resolved = JS_FALSE;
 
-    if (!JSVAL_IS_STRING(id))
-        return JS_TRUE;
-    idstr = JSVAL_TO_STRING(id);
     rt = cx->runtime;
+    JS_ASSERT(rt->state != JSRTS_DOWN);
+    if (rt->state == JSRTS_LANDING || !JSVAL_IS_STRING(id))
+        return JS_TRUE;
+
+    idstr = JSVAL_TO_STRING(id);
 
     /* Check whether we're resolving 'undefined', and define it if so. */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
@@ -1964,10 +1966,6 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
         name = "function";
         break;
 
-      case JSTRACE_ATOM:
-        name = "atom";
-        break;
-
 #if JS_HAS_XML_SUPPORT
       case JSTRACE_NAMESPACE:
         name = "namespace";
@@ -2028,21 +2026,8 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
             break;
           }
 
-          case JSTRACE_ATOM:
-          {
-            JSAtom *atom = (JSAtom *)thing;
-
-            if (ATOM_IS_INT(atom))
-                JS_snprintf(buf, bufsize, "%d", ATOM_TO_INT(atom));
-            else if (ATOM_IS_STRING(atom))
-                js_PutEscapedString(buf, bufsize, ATOM_TO_STRING(atom), 0);
-            else
-                JS_snprintf(buf, bufsize, "object");
-            break;
-          }
-
 #if JS_HAS_XML_SUPPORT
-          case GCX_NAMESPACE:
+          case JSTRACE_NAMESPACE:
           {
             JSXMLNamespace *ns = (JSXMLNamespace *)thing;
 
@@ -2059,7 +2044,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
             break;
           }
 
-          case GCX_QNAME:
+          case JSTRACE_QNAME:
           {
             JSXMLQName *qn = (JSXMLQName *)thing;
 
@@ -2084,7 +2069,7 @@ JS_PrintTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc,
             break;
           }
 
-          case GCX_XML:
+          case JSTRACE_XML:
           {
             extern const char *js_xml_class_str[];
             JSXML *xml = (JSXML *)thing;
@@ -2530,8 +2515,7 @@ JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
     str = (JSString *) js_NewGCThing(cx, (uintN) type, sizeof(JSString));
     if (!str)
         return NULL;
-    str->length = length;
-    str->chars = chars;
+    JSSTRING_INIT(str, chars, length);
     return str;
 }
 
@@ -2542,7 +2526,7 @@ JS_GetExternalStringGCType(JSRuntime *rt, JSString *str)
 
     if (type >= GCX_EXTERNAL_STRING)
         return (intN)type;
-    JS_ASSERT(type == GCX_STRING || type == GCX_MUTABLE_STRING);
+    JS_ASSERT(type == GCX_STRING);
     return -1;
 }
 
@@ -2897,7 +2881,7 @@ JS_GetConstructor(JSContext *cx, JSObject *proto)
 JS_PUBLIC_API(JSBool)
 JS_GetObjectId(JSContext *cx, JSObject *obj, jsid *idp)
 {
-    JS_ASSERT(((jsid)obj & JSID_TAGMASK) == 0);
+    JS_ASSERT(JSID_IS_OBJECT(obj));
     *idp = OBJECT_TO_JSID(obj);
     return JS_TRUE;
 }
@@ -5043,7 +5027,7 @@ JS_NewString(JSContext *cx, char *bytes, size_t nbytes)
         return NULL;
 
     /* Free chars (but not bytes, which caller frees on error) if we fail. */
-    str = js_NewString(cx, chars, length, 0);
+    str = js_NewString(cx, chars, length);
     if (!str) {
         JS_free(cx, chars);
         return NULL;
@@ -5065,7 +5049,7 @@ JS_NewStringCopyN(JSContext *cx, const char *s, size_t n)
     js = js_InflateString(cx, s, &n);
     if (!js)
         return NULL;
-    str = js_NewString(cx, js, n, 0);
+    str = js_NewString(cx, js, n);
     if (!str)
         JS_free(cx, js);
     return str;
@@ -5085,7 +5069,7 @@ JS_NewStringCopyZ(JSContext *cx, const char *s)
     js = js_InflateString(cx, s, &n);
     if (!js)
         return NULL;
-    str = js_NewString(cx, js, n, 0);
+    str = js_NewString(cx, js, n);
     if (!str)
         JS_free(cx, js);
     return str;
@@ -5107,7 +5091,7 @@ JS_PUBLIC_API(JSString *)
 JS_NewUCString(JSContext *cx, jschar *chars, size_t length)
 {
     CHECK_REQUEST(cx);
-    return js_NewString(cx, chars, length, 0);
+    return js_NewString(cx, chars, length);
 }
 
 JS_PUBLIC_API(JSString *)
@@ -5177,15 +5161,17 @@ JS_GetStringChars(JSString *str)
         size = (n + 1) * sizeof(jschar);
         s = (jschar *) malloc(size);
         if (s) {
-            js_strncpy(s, JSSTRDEP_CHARS(str), n);
+            memcpy(s, JSSTRDEP_CHARS(str), n * sizeof *s);
             s[n] = 0;
-            str->length = n;
-            str->chars = s;
+            JSSTRING_INIT(str, s, n);
+        } else {
+            s = JSSTRDEP_CHARS(str);
         }
+    } else {
+        JSSTRING_CLEAR_MUTABLE(str);
+        s = str->u.chars;
     }
-
-    *js_GetGCThingFlags(str) &= ~GCF_MUTABLE;
-    return JSSTRING_CHARS(str);
+    return s;
 }
 
 JS_PUBLIC_API(size_t)
@@ -5203,8 +5189,14 @@ JS_CompareStrings(JSString *str1, JSString *str2)
 JS_PUBLIC_API(JSString *)
 JS_NewGrowableString(JSContext *cx, jschar *chars, size_t length)
 {
+    JSString *str;
+
     CHECK_REQUEST(cx);
-    return js_NewString(cx, chars, length, GCF_MUTABLE);
+    str = js_NewString(cx, chars, length);
+    if (!str)
+        return str;
+    JSSTRING_SET_MUTABLE(str);
+    return str;
 }
 
 JS_PUBLIC_API(JSString *)
@@ -5233,11 +5225,7 @@ JS_PUBLIC_API(JSBool)
 JS_MakeStringImmutable(JSContext *cx, JSString *str)
 {
     CHECK_REQUEST(cx);
-    if (!js_UndependString(cx, str))
-        return JS_FALSE;
-
-    *js_GetGCThingFlags(str) &= ~GCF_MUTABLE;
-    return JS_TRUE;
+    return js_MakeStringImmutable(cx, str);
 }
 
 JS_PUBLIC_API(JSBool)

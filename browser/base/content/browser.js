@@ -1017,6 +1017,7 @@ function delayedStartup()
 
   initBookmarksToolbar();
   PlacesUtils.bookmarks.addObserver(gBookmarksObserver, false);
+  PlacesStarButton.init();
 
   // called when we go into full screen, even if it is
   // initiated by a web page script
@@ -1157,6 +1158,7 @@ function BrowserShutdown()
   }
 
   PlacesUtils.bookmarks.removeObserver(gBookmarksObserver);
+  PlacesStarButton.uninit();
 
   try {
     gPrefService.removeObserver(gAutoHideTabbarPrefListener.domain,
@@ -1658,21 +1660,15 @@ function BrowserCloseTabOrWindow()
   }
 #endif
 
-  if (gBrowser.tabContainer.childNodes.length > 1) {
-    // Just close up a tab.
+  if (gBrowser.tabContainer.childNodes.length > 1 ||
+      window.toolbar.visible && !gPrefService.getBoolPref("browser.tabs.autoHide")) {
+    // Just close the tab (and focus the address bar if it was the last one).
+    var isLastTab = gBrowser.tabContainer.childNodes.length == 1;
     gBrowser.removeCurrentTab();
-    return;
-  }
-#ifndef XP_MACOSX
-  if (window.toolbar.visible &&
-      !gPrefService.getBoolPref("browser.tabs.autoHide")) {
-    // Replace the remaining tab with a blank one and focus the address bar
-    gBrowser.removeCurrentTab();
-    if (gURLBar)
+    if (isLastTab && gURLBar)
       setTimeout(function() { gURLBar.focus(); }, 0);
     return;
   }
-#endif
 
   closeWindow(true);
 }
@@ -3525,6 +3521,9 @@ nsBrowserStatusHandler.prototype =
           gURLBar.value = userTypedValue;
           SetPageProxyState("invalid");
         }
+
+        // Update starring UI
+        PlacesStarButton.updateState(aLocationURI);
       }
     }
     UpdateBackForwardCommands(gBrowser.webNavigation);

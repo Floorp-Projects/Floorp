@@ -502,7 +502,7 @@ nsIEProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIEProfileMigrator
-NS_IMPL_ISUPPORTS1(nsIEProfileMigrator, nsIBrowserProfileMigrator);
+NS_IMPL_ISUPPORTS2(nsIEProfileMigrator, nsIBrowserProfileMigrator, nsINavHistoryBatchCallback);
 
 nsIEProfileMigrator::nsIEProfileMigrator() 
 {
@@ -515,6 +515,16 @@ nsIEProfileMigrator::~nsIEProfileMigrator()
 
 nsresult
 nsIEProfileMigrator::CopyHistory(PRBool aReplace) 
+{
+  nsresult rv;
+  nsCOMPtr<nsINavHistoryService> history = do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return history->RunInBatchMode(this, nsnull);
+}
+
+NS_IMETHODIMP
+nsIEProfileMigrator::RunBatched(nsISupports* aUserData)
 {
   nsCOMPtr<nsIBrowserHistory> hist(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
   nsCOMPtr<nsIIOService> ios(do_GetService(NS_IOSERVICE_CONTRACTID));

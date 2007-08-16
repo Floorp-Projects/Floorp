@@ -157,10 +157,9 @@ js_IsIdentifier(JSString *str)
     size_t length;
     jschar c, *chars, *end;
 
-    length = JSSTRING_LENGTH(str);
+    JSSTRING_CHARS_AND_LENGTH(str, chars, length);
     if (length == 0)
         return JS_FALSE;
-    chars = JSSTRING_CHARS(str);
     c = *chars;
     if (!JS_ISIDSTART(c))
         return JS_FALSE;
