@@ -105,12 +105,18 @@ sub BumpPatcherConfig {
     my $currentUpdateObj = $appObj->{'current-update'};
 
     # Add the release we're replacing to the past-releases array, but only if
-    # it's not a respin...
+    # it's a new release; we used to determine this by looking at the rc 
+    # value, but that can be misleading because sometimes we may not get to
+    # the update step before a respin; so what we really need to compare is 
+    # whether our current version in bootstrap.cfg is in the to clause of the 
+    # patcher config file/object; we now control this via doOnetimePatcherBumps.
     #
     # More complicated than it needs to be because it handles the (uncommon)
     # case that there is no past-update yet (e.g. Firefox 3.0)
 
-    if (1 == int($rc)) {
+    my $doOnetimePatcherBumps = ($currentUpdateObj->{'to'} ne $version);
+
+    if ($doOnetimePatcherBumps) {
         my $pastUpdateObj = $appObj->{'past-update'};
         if (ref($pastUpdateObj) ne 'ARRAY') {
             my $oldSinglePastUpdateStr = $pastUpdateObj;
@@ -127,15 +133,15 @@ sub BumpPatcherConfig {
          $currentUpdateObj->{'to'}, @pastUpdateChannels));
     }
 
-
-
     # Now we can replace information in the "current-update" object; start
     # with the to/from versions, the rc channels, then the information for
     # the partial and complete update patches
     #
-    # Only bump the to/from versions if we're really a new release.
+    # Only bump the to/from versions if we're really a new release. We used
+    # to determine this by looking at the rc value, but now we use
+    # doOnetimePatcherBump 
     
-    if (1 == int($rc)) {
+    if ($doOnetimePatcherBumps) {
         $currentUpdateObj->{'to'} = $version;
         $currentUpdateObj->{'from'} = $oldVersion;
     }
