@@ -206,7 +206,7 @@ PRInt32
 nsAccessibleWrap::GetUnignoredChildCount(PRBool aDeepCount)
 {
   // if we're flat, we have no children.
-  if (IsFlat())
+  if (MustPrune(this))
     return 0;
   
   PRInt32 childCount = 0;
@@ -222,7 +222,7 @@ nsAccessibleWrap::GetUnignoredChildCount(PRBool aDeepCount)
       ++childCount;
       
     // if it's flat, we don't care to inspect its children.
-    if (childWrap->IsFlat())
+    if (MustPrune(childWrap))
       continue;
     
     if (aDeepCount) {
@@ -253,14 +253,14 @@ nsAccessibleWrap::GetUnignoredChildren(nsTArray<nsRefPtr<nsAccessibleWrap> > &aC
   nsCOMPtr<nsIAccessible> curAcc;
   
   // we're flat; there are no children.
-  if (IsFlat())
+  if (MustPrune(this))
     return;
   
   while (NextChild(curAcc)) {
     nsAccessibleWrap *childWrap = static_cast<nsAccessibleWrap*>((nsIAccessible*)curAcc.get());
     if (childWrap->IsIgnored()) {
       // element is ignored, so try adding its children as substitutes, if it has any.
-      if (!childWrap->IsFlat()) {
+      if (!MustPrune(childWrap)) {
         nsTArray<nsRefPtr<nsAccessibleWrap> > children;
         childWrap->GetUnignoredChildren(children);
         if (!children.IsEmpty()) {
