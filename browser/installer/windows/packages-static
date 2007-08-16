@@ -211,6 +211,7 @@ bin\components\nsSearchSuggestions.js
 bin\components\nsSidebar.js
 bin\components\nsXmlRpcClient.js
 bin\components\nsExtensionManager.js
+bin\components\nsBlocklistService.js
 bin\components\nsUpdateService.js
 bin\components\nsMicrosummaryService.js
 bin\components\nsPlacesTransactionsService.js
