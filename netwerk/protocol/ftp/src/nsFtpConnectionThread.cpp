@@ -95,7 +95,8 @@ nsFtpState::nsFtpState()
     , mRetryPass(PR_FALSE)
     , mInternalError(NS_OK)
     , mPort(21)
-    , mIPv6Checked(PR_FALSE)
+    , mAddressChecked(PR_FALSE)
+    , mServerIsIPv6(PR_FALSE)
     , mControlStatus(NS_OK)
 {
     LOG_ALWAYS(("FTP:(%x) nsFtpState created", this));
@@ -1228,11 +1229,9 @@ nsresult
 nsFtpState::S_pasv() {
     nsresult rv;
 
-    if (mIPv6Checked == PR_FALSE) {
-        NS_ASSERTION(mIPv6ServerAddress.get() == nsnull, "already initialized");
-
-        // Find IPv6 socket address, if server is IPv6
-        mIPv6Checked = PR_TRUE;
+    if (!mAddressChecked) {
+        // Find socket address
+        mAddressChecked = PR_TRUE;
         nsITransport *controlSocket = mControlConnection->Transport();
         if (!controlSocket)
             return FTP_ERROR;
@@ -1241,20 +1240,16 @@ nsFtpState::S_pasv() {
         if (sTrans) {
             PRNetAddr addr;
             rv = sTrans->GetPeerAddr(&addr);
-            if (NS_SUCCEEDED(rv) && addr.raw.family == PR_AF_INET6 &&
-                        !PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped)) {
-                const size_t size = 100;
-                mIPv6ServerAddress = new char[size];
-                if (mIPv6ServerAddress &&
-                            PR_NetAddrToString(&addr, mIPv6ServerAddress,
-                                               size) != PR_SUCCESS)
-                    mIPv6ServerAddress = nsnull;
+            if (NS_SUCCEEDED(rv)) {
+                mServerIsIPv6 = addr.raw.family == PR_AF_INET6 &&
+                                !PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped);
+                PR_NetAddrToString(&addr, mServerAddress, sizeof(mServerAddress));
             }
         }
     }
 
     const char *string;
-    if (mIPv6ServerAddress) {
+    if (mServerIsIPv6) {
         string = "EPSV" CRLF;
     } else {
         string = "PASV" CRLF;
@@ -1278,12 +1273,8 @@ nsFtpState::R_pasv() {
     char *ptr = response;
 
     // Make sure to ignore the address in the PASV response (bug 370559)
-    nsCAutoString host;
-    rv = mChannel->URI()->GetAsciiHost(host);
-    if (NS_FAILED(rv))
-        return FTP_ERROR;
 
-    if (mIPv6ServerAddress) {
+    if (mServerIsIPv6) {
         // The returned string is of the form
         // text (|||ppp|)
         // Where '|' can be any single character
@@ -1343,9 +1334,6 @@ nsFtpState::R_pasv() {
         port = ((PRInt32) (p0<<8)) + p1;
     }
 
-    const char* hostStr =
-            mIPv6ServerAddress ? mIPv6ServerAddress : host.get();
-
     PRBool newDataConn = PR_TRUE;
     if (mDataTransport) {
         // Reuse this connection only if its still alive, and the port
@@ -1376,14 +1364,14 @@ nsFtpState::R_pasv() {
             do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
         
         nsCOMPtr<nsISocketTransport> strans;
-        rv =  sts->CreateTransport(nsnull, 0, nsDependentCString(hostStr),
+        rv =  sts->CreateTransport(nsnull, 0, nsDependentCString(mServerAddress),
                                    port, mChannel->ProxyInfo(),
                                    getter_AddRefs(strans)); // the data socket
         if (NS_FAILED(rv))
             return FTP_ERROR;
         mDataTransport = strans;
         
-        LOG(("FTP:(%x) created DT (%s:%x)\n", this, hostStr, port));
+        LOG(("FTP:(%x) created DT (%s:%x)\n", this, mServerAddress, port));
         
         // hook ourself up as a proxy for status notifications
         rv = mDataTransport->SetEventSink(this, NS_GetCurrentThread());
@@ -1678,8 +1666,8 @@ nsFtpState::KillControlConnection()
 {
     mControlReadCarryOverBuf.Truncate(0);
 
-    mIPv6Checked = PR_FALSE;
-    mIPv6ServerAddress = nsnull;
+    mAddressChecked = PR_FALSE;
+    mServerIsIPv6 = PR_FALSE;
 
     // if everything went okay, save the connection. 
     // FIX: need a better way to determine if we can cache the connections.
