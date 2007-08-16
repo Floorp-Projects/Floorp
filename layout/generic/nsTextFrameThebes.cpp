@@ -245,7 +245,8 @@ public:
   // if this returns PR_FALSE, we don't need to draw underline.
   PRBool GetIMEUnderline(PRInt32  aIndex,
                          nscolor* aLineColor,
-                         float*   aRelativeSize);
+                         float*   aRelativeSize,
+                         PRUint8* aStyle);
 
   nsPresContext* PresContext() { return mPresContext; }
 
@@ -274,13 +275,14 @@ protected:
   nscolor mFrameBackgroundColor;
 
   // IME selection colors and underline info
-  struct nsIMEColor {
+  struct nsIMEStyle {
     PRBool mInit;
     nscolor mTextColor;
     nscolor mBGColor;
     nscolor mUnderlineColor;
+    PRUint8 mUnderlineStyle;
   };
-  nsIMEColor mIMEColor[4];
+  nsIMEStyle mIMEStyle[4];
   // indices
   float mIMEUnderlineRelativeSize;
 
@@ -288,8 +290,8 @@ protected:
   void InitCommonColors();
   PRBool InitSelectionColors();
 
-  nsIMEColor* GetIMEColor(PRInt32 aIndex);
-  void InitIMEColor(PRInt32 aIndex);
+  nsIMEStyle* GetIMEStyle(PRInt32 aIndex);
+  void InitIMEStyle(PRInt32 aIndex);
 
   PRBool EnsureSufficientContrast(nscolor *aForeColor, nscolor *aBackColor);
 
@@ -2883,7 +2885,7 @@ nsTextPaintStyle::nsTextPaintStyle(nsTextFrame* aFrame)
     mInitSelectionColors(PR_FALSE)
 {
   for (int i = 0; i < 4; i++)
-    mIMEColor[i].mInit = PR_FALSE;
+    mIMEStyle[i].mInit = PR_FALSE;
   mIMEUnderlineRelativeSize = -1.0f;
 }
 
@@ -2946,27 +2948,30 @@ nsTextPaintStyle::GetIMESelectionColors(PRInt32  aIndex,
   NS_ASSERTION(aBackColor, "aBackColor is null");
   NS_ASSERTION(aIndex >= 0 && aIndex < 4, "Index out of range");
 
-  nsIMEColor* IMEColor = GetIMEColor(aIndex);
-  *aForeColor = IMEColor->mTextColor;
-  *aBackColor = IMEColor->mBGColor;
+  nsIMEStyle* IMEStyle = GetIMEStyle(aIndex);
+  *aForeColor = IMEStyle->mTextColor;
+  *aBackColor = IMEStyle->mBGColor;
 }
 
 PRBool
 nsTextPaintStyle::GetIMEUnderline(PRInt32  aIndex,
                                   nscolor* aLineColor,
-                                  float*   aRelativeSize)
+                                  float*   aRelativeSize,
+                                  PRUint8* aStyle)
 {
   NS_ASSERTION(aLineColor, "aLineColor is null");
   NS_ASSERTION(aRelativeSize, "aRelativeSize is null");
   NS_ASSERTION(aIndex >= 0 && aIndex < 4, "Index out of range");
 
-  nsIMEColor* IMEColor = GetIMEColor(aIndex);
-  if (IMEColor->mUnderlineColor == NS_TRANSPARENT ||
+  nsIMEStyle* IMEStyle = GetIMEStyle(aIndex);
+  if (IMEStyle->mUnderlineStyle == NS_STYLE_BORDER_STYLE_NONE ||
+      IMEStyle->mUnderlineColor == NS_TRANSPARENT ||
       mIMEUnderlineRelativeSize <= 0.0f)
     return PR_FALSE;
 
-  *aLineColor = IMEColor->mUnderlineColor;
+  *aLineColor = IMEStyle->mUnderlineColor;
   *aRelativeSize = mIMEUnderlineRelativeSize;
+  *aStyle = IMEStyle->mUnderlineStyle;
   return PR_TRUE;
 }
 
@@ -3090,45 +3095,60 @@ nsTextPaintStyle::InitSelectionColors()
   return PR_TRUE;
 }
 
-nsTextPaintStyle::nsIMEColor*
-nsTextPaintStyle::GetIMEColor(PRInt32 aIndex)
+nsTextPaintStyle::nsIMEStyle*
+nsTextPaintStyle::GetIMEStyle(PRInt32 aIndex)
 {
-  InitIMEColor(aIndex);
-  return &mIMEColor[aIndex];
+  InitIMEStyle(aIndex);
+  return &mIMEStyle[aIndex];
 }
 
-struct ColorIDTriple {
+struct StyleIDs {
   nsILookAndFeel::nsColorID mForeground, mBackground, mLine;
+  nsILookAndFeel::nsMetricID mLineStyle;
 };
-static ColorIDTriple IMEColorIDs[] = {
+static StyleIDs IMEStyleIDs[] = {
   { nsILookAndFeel::eColor_IMERawInputForeground,
     nsILookAndFeel::eColor_IMERawInputBackground,
-    nsILookAndFeel::eColor_IMERawInputUnderline },
+    nsILookAndFeel::eColor_IMERawInputUnderline,
+    nsILookAndFeel::eMetric_IMERawInputUnderlineStyle },
   { nsILookAndFeel::eColor_IMESelectedRawTextForeground,
     nsILookAndFeel::eColor_IMESelectedRawTextBackground,
-    nsILookAndFeel::eColor_IMESelectedRawTextUnderline },
+    nsILookAndFeel::eColor_IMESelectedRawTextUnderline,
+    nsILookAndFeel::eMetric_IMESelectedRawTextUnderlineStyle },
   { nsILookAndFeel::eColor_IMEConvertedTextForeground,
     nsILookAndFeel::eColor_IMEConvertedTextBackground,
-    nsILookAndFeel::eColor_IMEConvertedTextUnderline },
+    nsILookAndFeel::eColor_IMEConvertedTextUnderline,
+    nsILookAndFeel::eMetric_IMEConvertedTextUnderlineStyle },
   { nsILookAndFeel::eColor_IMESelectedConvertedTextForeground,
     nsILookAndFeel::eColor_IMESelectedConvertedTextBackground,
-    nsILookAndFeel::eColor_IMESelectedConvertedTextUnderline }
+    nsILookAndFeel::eColor_IMESelectedConvertedTextUnderline,
+    nsILookAndFeel::eMetric_IMESelectedConvertedTextUnderline }
+};
+
+static PRUint8 sUnderlineStyles[] = {
+  NS_STYLE_BORDER_STYLE_NONE,   // NS_UNDERLINE_STYLE_NONE   0
+  NS_STYLE_BORDER_STYLE_DOTTED, // NS_UNDERLINE_STYLE_DOTTED 1
+  NS_STYLE_BORDER_STYLE_DASHED, // NS_UNDERLINE_STYLE_DASHED 2
+  NS_STYLE_BORDER_STYLE_SOLID,  // NS_UNDERLINE_STYLE_SOLID  3
+  NS_STYLE_BORDER_STYLE_DOUBLE  // NS_UNDERLINE_STYLE_DOUBLE 4
 };
 
 void
-nsTextPaintStyle::InitIMEColor(PRInt32 aIndex)
+nsTextPaintStyle::InitIMEStyle(PRInt32 aIndex)
 {
-  nsIMEColor* IMEColor = &mIMEColor[aIndex];
-  if (IMEColor->mInit)
+  nsIMEStyle* IMEStyle = &mIMEStyle[aIndex];
+  if (IMEStyle->mInit)
     return;
 
-  ColorIDTriple* colorIDs = &IMEColorIDs[aIndex];
+  StyleIDs* styleIDs = &IMEStyleIDs[aIndex];
 
   nsILookAndFeel* look = mPresContext->LookAndFeel();
   nscolor foreColor, backColor, lineColor;
-  look->GetColor(colorIDs->mForeground, foreColor);
-  look->GetColor(colorIDs->mBackground, backColor);
-  look->GetColor(colorIDs->mLine, lineColor);
+  PRInt32 lineStyle;
+  look->GetColor(styleIDs->mForeground, foreColor);
+  look->GetColor(styleIDs->mBackground, backColor);
+  look->GetColor(styleIDs->mLine, lineColor);
+  look->GetMetric(styleIDs->mLineStyle, lineStyle);
 
   // Convert special color to actual color
   NS_ASSERTION(foreColor != NS_TRANSPARENT,
@@ -3145,10 +3165,14 @@ nsTextPaintStyle::InitIMEColor(PRInt32 aIndex)
 
   lineColor = GetResolvedForeColor(lineColor, foreColor, backColor);
 
-  IMEColor->mTextColor       = foreColor;
-  IMEColor->mBGColor         = backColor;
-  IMEColor->mUnderlineColor  = lineColor;
-  IMEColor->mInit            = PR_TRUE;
+  if (!NS_IS_VALID_UNDERLINE_STYLE(lineStyle))
+    lineStyle = NS_UNDERLINE_STYLE_SOLID;
+
+  IMEStyle->mTextColor       = foreColor;
+  IMEStyle->mBGColor         = backColor;
+  IMEStyle->mUnderlineColor  = lineColor;
+  IMEStyle->mUnderlineStyle  = sUnderlineStyles[lineStyle];
+  IMEStyle->mInit            = PR_TRUE;
 
   if (mIMEUnderlineRelativeSize == -1.0f) {
     look->GetMetric(nsILookAndFeel::eMetricFloat_IMEUnderlineRelativeSize,
@@ -3164,6 +3188,7 @@ inline nscolor Get40PercentColor(nscolor aForeColor, nscolor aBackColor)
                               NS_GET_G(aForeColor),
                               NS_GET_B(aForeColor),
                               (PRUint8)(255 * 0.4f));
+  // Don't use true alpha color for readability.
   return NS_ComposeColors(aBackColor, foreColor);
 }
 
@@ -3814,7 +3839,8 @@ static void DrawIMEUnderline(gfxContext* aContext, PRInt32 aIndex,
 {
   nscolor color;
   float relativeSize;
-  if (!aTextPaintStyle.GetIMEUnderline(aIndex, &color, &relativeSize))
+  PRUint8 style;
+  if (!aTextPaintStyle.GetIMEUnderline(aIndex, &color, &relativeSize, &style))
     return;
 
   gfxFloat actualSize = relativeSize * aSize;
@@ -3822,7 +3848,7 @@ static void DrawIMEUnderline(gfxContext* aContext, PRInt32 aIndex,
   gfxPoint pt(aPt.x + 1.0, aPt.y);
   nsCSSRendering::PaintDecorationLine(
     aContext, color, pt, gfxSize(width, actualSize), aAscent, aOffset, aSize,
-    NS_STYLE_TEXT_DECORATION_UNDERLINE, NS_STYLE_BORDER_STYLE_SOLID, aIsRTL);
+    NS_STYLE_TEXT_DECORATION_UNDERLINE, style, aIsRTL);
 }
 
 /**
