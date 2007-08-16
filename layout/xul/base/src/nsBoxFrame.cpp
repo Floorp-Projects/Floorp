@@ -1190,19 +1190,15 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
   }
   else if (aAttribute == nsGkAtoms::ordinal) {
     nsBoxLayoutState state(PresContext());
-
-    nsIFrame* frameToMove = this;
-    if (GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
-      PresContext()->PresShell()->GetPlaceholderFrameFor(this,
-                                                            &frameToMove);
-      NS_ASSERTION(frameToMove, "Out of flow without placeholder?");
-    }
-    
-    nsIBox* parent = frameToMove->GetParentBox();
+    nsIBox* parent = GetParentBox();
     // If our parent is not a box, there's not much we can do... but in that
     // case our ordinal doesn't matter anyway, so that's ok.
-    if (parent) {
-      parent->RelayoutChildAtOrdinal(state, frameToMove);
+    // Also don't bother with popup frames since they are kept on the 
+    // nsGkAtoms::popupList and RelayoutChildAtOrdinal() only handles
+    // principal children.
+    if (parent && !(GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+        GetStyleDisplay()->mDisplay != NS_STYLE_DISPLAY_POPUP) {
+      parent->RelayoutChildAtOrdinal(state, this);
       // XXXldb Should this instead be a tree change on the child or parent?
       PresContext()->PresShell()->
         FrameNeedsReflow(parent, nsIPresShell::eStyleChange,
