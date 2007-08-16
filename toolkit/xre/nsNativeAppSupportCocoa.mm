@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Steven Michaud <smichaud@pobox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,7 +38,8 @@
 
 #include "nsString.h"
 
-#include <Carbon/Carbon.h>
+#import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
 
 #include "nsCOMPtr.h"
 #include "nsNativeAppSupportBase.h"
@@ -58,15 +60,13 @@
 
 #include "nsXPFEComponentsCID.h"
 
-static Boolean VersGreaterThan4(const FSSpec *fSpec);
-
 const OSType kNSCreator = 'MOSS';
 const OSType kMozCreator = 'MOZZ';
 const SInt16 kNSCanRunStrArrayID = 1000;
 const SInt16 kAnotherVersionStrIndex = 1;
 
 nsresult
-GetNativeWindowPointerFromDOMWindow(nsIDOMWindowInternal *window, WindowRef *nativeWindow);
+GetNativeWindowPointerFromDOMWindow(nsIDOMWindowInternal *window, NSWindow **nativeWindow);
 
 const SInt16 kNSOSVersErrsStrArrayID = 1001;
 
@@ -79,10 +79,10 @@ enum {
         eCarbonLibVersTooOldExplanationIndex
      };
 
-class nsNativeAppSupportMac : public nsNativeAppSupportBase
+class nsNativeAppSupportCocoa : public nsNativeAppSupportBase
 {
 public:
-  nsNativeAppSupportMac() :
+  nsNativeAppSupportCocoa() :
     mCanShowUI(PR_FALSE) { }
 
   NS_IMETHOD Start(PRBool* aRetVal);
@@ -95,54 +95,28 @@ private:
 };
 
 NS_IMETHODIMP
-nsNativeAppSupportMac::Enable()
+nsNativeAppSupportCocoa::Enable()
 {
   mCanShowUI = PR_TRUE;
   return NS_OK;
 }
 
 /* boolean start (); */
-NS_IMETHODIMP nsNativeAppSupportMac::Start(PRBool *_retval)
+NS_IMETHODIMP nsNativeAppSupportCocoa::Start(PRBool *_retval)
 {
-  Str255 str1;
-  Str255 str2;
-  SInt16 outItemHit;
   long response = 0;
   OSErr err = ::Gestalt (gestaltSystemVersion, &response);
+  response &= 0xFFFF; // The system version is in the low order word
 
-  // If we're running under Mac OS X check for at least Mac OS X 10.3
-  // If that fails display a StandardAlert giving the user the option
-  // to continue running the app or quitting
-  if ((err != noErr) || response < 0x00001030)
+  // Check for at least Mac OS X 10.4, and if that fails return PR_FALSE,
+  // which will make the browser quit.  In principle we could display an
+  // alert here.  But the alert's message and buttons would require custom
+  // localization.  So (for now at least) we just log an English message
+  // to the console before quitting.
+  if ((err != noErr) || response < 0x00001040)
   {
-    // put up error dialog
-    Str255 continueButtonLabel;
-    Str255 quitButtonLabel;
-    ::GetIndString(str1, kNSOSVersErrsStrArrayID, eOSXVersTooOldErrIndex);
-    ::GetIndString(str2, kNSOSVersErrsStrArrayID, eOSXVersTooOldExplanationIndex);
-    ::GetIndString(continueButtonLabel, kNSOSVersErrsStrArrayID, eContinueButtonTextIndex);
-    ::GetIndString(quitButtonLabel, kNSOSVersErrsStrArrayID, eQuitButtonTextIndex);
-    if (StrLength(str1) && StrLength(str1) && StrLength(continueButtonLabel) && StrLength(quitButtonLabel))
-    {
-      AlertStdAlertParamRec pRec;
-      
-      pRec.movable      = nil;
-      pRec.filterProc 	= nil;
-      pRec.defaultText  = continueButtonLabel;
-      pRec.cancelText   = quitButtonLabel;
-      pRec.otherText    = nil;
-      pRec.helpButton   = nil;
-      pRec.defaultButton = kAlertStdAlertOKButton;
-      pRec.cancelButton  = kAlertStdAlertCancelButton;
-      pRec.position      = 0;
-      
-      ::StandardAlert(kAlertNoteAlert, str1, str2, &pRec, &outItemHit);
-      if (outItemHit == kAlertStdAlertCancelButton)
-        return PR_FALSE;
-    }
-    else {
-      return PR_FALSE;
-    }
+    NSLog(@"Requires Mac OS X version 10.4 or newer");
+    return PR_FALSE;
   }
 
   *_retval = PR_TRUE;
@@ -150,12 +124,12 @@ NS_IMETHODIMP nsNativeAppSupportMac::Start(PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsNativeAppSupportMac::ReOpen()
+nsNativeAppSupportCocoa::ReOpen()
 {
   if (!mCanShowUI)
     return NS_ERROR_FAILURE;
 
-  PRBool haveUncollapsed = PR_FALSE;
+  PRBool haveNonMiniaturized = PR_FALSE;
   PRBool haveOpenWindows = PR_FALSE;
   PRBool done = PR_FALSE;
   
@@ -176,8 +150,8 @@ nsNativeAppSupportMac::ReOpen()
       nsCOMPtr<nsISupports> nextWindow = nsnull;
       windowList->GetNext(getter_AddRefs(nextWindow));
       nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(nextWindow));
-		  if (!baseWindow)
-		  {
+      if (!baseWindow)
+      {
         windowList->HasMoreElements(&more);
         continue;
       }
@@ -193,34 +167,31 @@ nsNativeAppSupportMac::ReOpen()
         windowList->HasMoreElements(&more);
         continue;
       }
-      WindowRef windowRef = (WindowRef)widget->GetNativeData(NS_NATIVE_DISPLAY);
-      if (!::IsWindowCollapsed(windowRef))
-      {
-        haveUncollapsed = PR_TRUE;
+      NSWindow *cocoaWindow = (NSWindow*)widget->GetNativeData(NS_NATIVE_WINDOW);
+      if (![cocoaWindow isMiniaturized]) {
+        haveNonMiniaturized = PR_TRUE;
         break;  //have un-minimized windows, nothing to do
       } 
       windowList->HasMoreElements(&more);
     } // end while
         
-    if (!haveUncollapsed)
+    if (!haveNonMiniaturized)
     {
-      //uncollapse the most recenty used window
+      // Deminiaturize the most recenty used window
       nsCOMPtr<nsIDOMWindowInternal> mru = nsnull;
       wm->GetMostRecentWindow(nsnull, getter_AddRefs(mru));
             
       if (mru) 
       {        
-        WindowRef mruRef = nil;
-        GetNativeWindowPointerFromDOMWindow(mru, &mruRef);
-        if (mruRef)
-        {
-          ::CollapseWindow(mruRef, FALSE);
-          ::SelectWindow(mruRef);
+        NSWindow *cocoaMru = nil;
+        GetNativeWindowPointerFromDOMWindow(mru, &cocoaMru);
+        if (cocoaMru) {
+          [cocoaMru deminiaturize:nil];
           done = PR_TRUE;
         }
       }
       
-    } // end if have uncollapsed 
+    } // end if have non miniaturized
     
     if (!haveOpenWindows && !done)
     {
@@ -244,7 +215,7 @@ nsNativeAppSupportMac::ReOpen()
 }
 
 nsresult
-GetNativeWindowPointerFromDOMWindow(nsIDOMWindowInternal *a_window, WindowRef *a_nativeWindow)
+GetNativeWindowPointerFromDOMWindow(nsIDOMWindowInternal *a_window, NSWindow **a_nativeWindow)
 {
     *a_nativeWindow = nil;
     if (!a_window) return NS_ERROR_INVALID_ARG;
@@ -264,7 +235,7 @@ GetNativeWindowPointerFromDOMWindow(nsIDOMWindowInternal *a_window, WindowRef *a
           mruBaseWindow->GetMainWidget(getter_AddRefs(mruWidget));
           if (mruWidget)
           {
-            *a_nativeWindow = (WindowRef)mruWidget->GetNativeData(NS_NATIVE_DISPLAY);
+            *a_nativeWindow = (NSWindow*)mruWidget->GetNativeData(NS_NATIVE_WINDOW);
           }
         }
       }
@@ -274,12 +245,12 @@ GetNativeWindowPointerFromDOMWindow(nsIDOMWindowInternal *a_window, WindowRef *a
 
 #pragma mark -
 
-// Create and return an instance of class nsNativeAppSupportMac.
+// Create and return an instance of class nsNativeAppSupportCocoa.
 nsresult NS_CreateNativeAppSupport(nsINativeAppSupport**aResult)
 {
-  *aResult = new nsNativeAppSupportMac;
+  *aResult = new nsNativeAppSupportCocoa;
   if (!*aResult) return NS_ERROR_OUT_OF_MEMORY;
 
-  NS_ADDREF( *aResult );
+  NS_ADDREF(*aResult);
   return NS_OK;
 }

@@ -133,8 +133,8 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS += nsNativeAppSupportWin.cpp
 DEFINES += -DWIN32_LEAN_AND_MEAN
 else
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-CPPSRCS += nsNativeAppSupportMac.cpp
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS = nsNativeAppSupportCocoa.mm
 else
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS += nsNativeAppSupportOS2.cpp
@@ -160,7 +160,7 @@ OS_CXXFLAGS += -fexceptions
 SHARED_LIBRARY_LIBS += $(DEPTH)/xpfe/bootstrap/appleevents/$(LIB_PREFIX)appleevents_s.$(LIB_SUFFIX)
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-CMMSRCS = MacApplicationDelegate.mm
+CMMSRCS += MacApplicationDelegate.mm
 endif
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
