@@ -617,6 +617,8 @@ var PlacesStarButton = {
 
   _starred: false,
   _batching: false,
+  _overlayLoaded: false,
+  _overlayLoading: false,
 
   updateState: function PSB_updateState() {
     var uri = getBrowser().currentURI;
@@ -655,6 +657,33 @@ var PlacesStarButton = {
   },
 
   showBookmarkPagePopup: function PSB_showBookmarkPagePopup(aBrowser) {
+    // Performance: load the overlay the first time the panel is opened
+    // (see bug 392443).
+    if (this._overlayLoading)
+      return;
+
+    if (this._overlayLoaded) {
+      this._doShowBookmarkPagePopup(aBrowser);
+      return;
+    }
+
+    var loadObserver = {
+      _self: this,
+      _browser: aBrowser,
+      observe: function (aSubject, aTopic, aData) {
+        // scripts within the overlay are compiled after this is called :(
+        setTimeout(function(aSelf) {
+          aSelf._self._overlayLoading = false;
+          aSelf._self._overlayLoaded = true;
+          aSelf._self._doShowBookmarkPagePopup(aSelf._browser);
+        }, 0, this);
+      }
+    };
+    this._overlayLoading = true;
+    document.loadOverlay("chrome://browser/content/places/editBookmarkOverlay.xul", loadObserver);
+  },
+
+  _doShowBookmarkPagePopup: function PSB__doShowBookmarkPagePopup(aBrowser) {
     const bms = PlacesUtils.bookmarks;
 
     var dockTo = document.getElementById("star-icon");
