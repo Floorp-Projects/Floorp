@@ -27,6 +27,7 @@
     locale/browser/sessionstore.properties         (%chrome/browser/sessionstore.properties)
     locale/browser/places/places.dtd               (%chrome/browser/places/places.dtd)
     locale/browser/places/places.properties        (%chrome/browser/places/places.properties)
+    locale/browser/places/editBookmarkOverlay.dtd  (%chrome/browser/places/editBookmarkOverlay.dtd)
     locale/browser/places/bookmarkProperties.dtd   (%chrome/browser/places/bookmarkProperties.dtd)
     locale/browser/places/bookmarkProperties.properties (%chrome/browser/places/bookmarkProperties.properties)
     locale/browser/preferences/selectBookmark.dtd  (%chrome/browser/preferences/selectBookmark.dtd)

@@ -53,6 +53,7 @@
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+<?xul-overlay href="chrome://browser/content/places/editBookmarkOverlay.xul"?>
 
 # All DTD information is stored in a separate file so that it can be shared by
 # hiddenWindow.xul.
@@ -99,6 +100,11 @@
     <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
     <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete" noautofocus="true"/>
+
+    <panel id="editBookmarkPanel"
+           position="after_end">
+      <vbox id="editBookmarkPanelContent" flex="1"/>
+    </panel>
 
     <popup id="toolbar-context-menu"
            onpopupshowing="onViewToolbarsPopupShowing(event);">
@@ -249,6 +255,7 @@
                        level="safe"
                        onclick="goDoCommand('safebrowsing-show-warning')" />
 #endif
+                <image id="star-icon" onclick="if (event.button == 0) PlacesStarButton.onClick(event);"/>
               </hbox>
             </textbox>
             <stack id="go-button-stack">
