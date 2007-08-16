@@ -2698,39 +2698,25 @@ nsComputedDOMStyle::GetRelativeOffset(PRUint8 aSide, nsIDOMCSSValue** aValue)
   nsStyleCoord coord;
   PRInt32 sign = 1;
   positionData->mOffset.Get(aSide, coord);
-  if (coord.GetUnit() != eStyleUnit_Coord &&
-      coord.GetUnit() != eStyleUnit_Percent) {
+
+  NS_ASSERTION(coord.GetUnit() == eStyleUnit_Coord ||
+               coord.GetUnit() == eStyleUnit_Percent ||
+               coord.GetUnit() == eStyleUnit_Chars ||
+               coord.GetUnit() == eStyleUnit_Auto,
+               "Unexpected unit");
+  
+  if (coord.GetUnit() == eStyleUnit_Auto) {
     positionData->mOffset.Get(NS_OPPOSITE_SIDE(aSide), coord);
     sign = -1;
   }
-  nsIFrame* container = nsnull;
-  switch(coord.GetUnit()) {
-    case eStyleUnit_Coord:
-      val->SetAppUnits(sign * coord.GetCoordValue());
-      break;
-    case eStyleUnit_Percent:
-      container = GetContainingBlockFor(mFrame);
-      if (container) {
-        nsSize size = container->GetContentRect().Size();
-        if (aSide == NS_SIDE_LEFT || aSide == NS_SIDE_RIGHT) {
-          val->SetAppUnits(sign * coord.GetPercentValue() * size.width);
-        } else {
-          val->SetAppUnits(sign * coord.GetPercentValue() * size.height);
-        }
-      } else {
-        // XXX no containing block.
-        val->SetAppUnits(0);
-      }
-      break;
-    default:
-      NS_ERROR("Unexpected left/right/top/bottom unit");
-      // Fall through
-    case eStyleUnit_Auto:
-      // In this case, both this side and the opposite side are auto.
-      // The computed offset is 0.
-      val->SetAppUnits(0);
-      break;
+  PercentageBaseGetter baseGetter;
+  if (aSide == NS_SIDE_LEFT || aSide == NS_SIDE_RIGHT) {
+    baseGetter = &nsComputedDOMStyle::GetCBContentWidth;
+  } else {
+    baseGetter = &nsComputedDOMStyle::GetCBContentHeight;
   }
+
+  val->SetAppUnits(sign * StyleCoordToNSCoord(coord, baseGetter, 0));
 
   return CallQueryInterface(val, aValue);
 }
