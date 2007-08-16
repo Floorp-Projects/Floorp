@@ -110,6 +110,14 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] =
     eMetric_AlertNotificationOrigin, PR_FALSE, nsLookAndFeelTypeInt, 0 },
   { "ui.scrollToClick",
     eMetric_ScrollToClick, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.IMERawInputUnderlineStyle",
+    eMetric_IMERawInputUnderlineStyle, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.IMESelectedRawTextUnderlineStyle",
+    eMetric_IMESelectedRawTextUnderlineStyle, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.IMEConvertedTextUnderlineStyle",
+    eMetric_IMEConvertedTextUnderlineStyle, PR_FALSE, nsLookAndFeelTypeInt, 0 },
+  { "ui.IMESelectedConvertedTextUnderlineStyle",
+    eMetric_IMESelectedConvertedTextUnderline, PR_FALSE, nsLookAndFeelTypeInt, 0 },
 };
 
 nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] =

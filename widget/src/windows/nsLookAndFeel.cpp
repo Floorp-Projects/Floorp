@@ -539,6 +539,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         break;
 #endif
 
+    case eMetric_IMERawInputUnderlineStyle:
+    case eMetric_IMEConvertedTextUnderlineStyle:
+        aMetric = NS_UNDERLINE_STYLE_DASHED;
+        break;
+    case eMetric_IMESelectedRawTextUnderlineStyle:
+    case eMetric_IMESelectedConvertedTextUnderline:
+        aMetric = NS_UNDERLINE_STYLE_NONE;
+        break;
     default:
         aMetric = 0;
         res = NS_ERROR_FAILURE;
