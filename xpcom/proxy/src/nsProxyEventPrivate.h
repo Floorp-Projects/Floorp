@@ -114,7 +114,15 @@ public:
     nsIEventTarget*     GetTarget() const { return mTarget; }
     PRInt32             GetProxyType() const { return mProxyType; }
 
+    // these are the equivalents of AddRef/Release, but must be called
+    // while holding the global POM lock
+    nsrefcnt LockedAddRef();
+    nsrefcnt LockedRelease();
+
+    // LockedFind should be called holding the POM lock. It will
+    // temporarily unlock the lock during execution.
     nsresult LockedFind(REFNSIID iid, void **aResult);
+
     void LockedRemove(nsProxyEventObject* aObject);
 
     friend class nsProxyObjectManager;
@@ -176,6 +184,8 @@ public:
                        already_AddRefed<nsISomeInterface> aRealInterface,
                        nsresult *rv);
 
+    // AddRef, but you must be holding the global POM lock
+    nsrefcnt LockedAddRef();
     friend class nsProxyObject;
 
 private:
@@ -278,9 +288,9 @@ public:
 
     nsresult GetClass(REFNSIID aIID, nsProxyEventClass **aResult);
 
-    void Remove(nsProxyObject* aProxy);
+    void LockedRemove(nsProxyObject* aProxy);
 
-    PRMonitor*   GetMonitor() const { return mProxyCreationMonitor; }
+    PRLock* GetLock() const { return mProxyCreationLock; }
 
 #ifdef PR_LOGGING
     static PRLogModuleInfo *sLog;
@@ -292,7 +302,7 @@ private:
     static nsProxyObjectManager* mInstance;
     nsHashtable  mProxyObjectMap;
     nsClassHashtable<nsIDHashKey, nsProxyEventClass> mProxyClassMap;
-    PRMonitor   *mProxyCreationMonitor;
+    PRLock *mProxyCreationLock;
 };
 
 #define NS_XPCOMPROXY_CLASSNAME "nsProxyObjectManager"
