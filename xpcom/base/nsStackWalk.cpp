@@ -1032,7 +1032,7 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 
 // WIN32 x86 stack walking code
 // i386 or PPC Linux stackwalking code or Solaris
-#elif (defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC) || defined(__x86_64__))) || (defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386)))
+#elif (defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC) || defined(__x86_64__))) || (defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386))) || (defined(XP_MACOSX) && (defined(__ppc__) || defined(__i386)))
 
 #include <stdlib.h>
 #include <string.h>
@@ -1049,7 +1049,7 @@ NS_FormatCodeAddressDetails(void *aPC, const nsCodeAddressDetails *aDetails,
 #define __USE_GNU
 #endif
 
-#ifdef HAVE_LIBDL
+#if defined(HAVE_LIBDL) || defined(XP_MACOSX)
 #include <dlfcn.h>
 #endif
 
@@ -1081,7 +1081,7 @@ void DemangleSymbol(const char * aSymbol,
 }
 
 
-#if defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC) || defined(__x86_64__)) // i386 or PPC Linux stackwalking code
+#if (defined(linux) && defined(__GNUC__) && (defined(__i386) || defined(PPC) || defined(__x86_64__))) || (defined(XP_MACOSX) && (defined(__i386) || defined(__ppc__))) // i386 or PPC Linux stackwalking code
 
 
 EXPORT_XPCOM_API(nsresult)
@@ -1105,7 +1105,11 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
 
   int skip = aSkipFrames;
   for ( ; (void**)*bp > bp; bp = (void**)*bp) {
+#if defined(__ppc__) && defined(XP_MACOSX) // other PPC platforms?
+    void *pc = *(bp+2);
+#else
     void *pc = *(bp+1);
+#endif
     if (--skip < 0) {
       (*aCallback)(pc, aClosure);
     }
