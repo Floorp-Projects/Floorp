@@ -100,23 +100,22 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
   nsCOMPtr<nsIChangeObserver> obs = do_QueryInterface(static_cast<nsIChangeObserver*>(this));
   mManager->Register(mContent, obs); // does not addref this
   
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mContent->GetCurrentDoc()));
+
   // if we have a command associated with this menu item, register for changes
   // to the command DOM node
-  nsAutoString ourCommand;
-  mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, ourCommand);
-  if (!ourCommand.IsEmpty()) {
-    nsIDocument* currDoc = mContent->GetCurrentDoc();
-    if (currDoc) {
-      nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(currDoc));
-      if (domDoc) {
-        // get the command DOM element
-        nsCOMPtr<nsIDOMElement> commandElt;
-        domDoc->GetElementById(ourCommand, getter_AddRefs(commandElt));
-        if (commandElt) {
-          mCommandContent = do_QueryInterface(commandElt);
-          // register to observe the command DOM element
-          mManager->Register(mCommandContent, obs); // does not addref this
-        }
+  if (domDoc) {
+    nsAutoString ourCommand;
+    mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, ourCommand);
+
+    if (!ourCommand.IsEmpty()) {
+      nsCOMPtr<nsIDOMElement> commandElement;
+      domDoc->GetElementById(ourCommand, getter_AddRefs(commandElement));
+
+      if (commandElement) {
+        mCommandContent = do_QueryInterface(commandElement);
+        // register to observe the command DOM element
+        mManager->Register(mCommandContent, obs); // does not addref this
       }
     }
   }
@@ -141,6 +140,33 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
     [newCocoaLabelString release];
     
     [mNativeMenuItem setEnabled:(BOOL)mEnabled];
+
+    SetChecked(mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
+                                     nsWidgetAtoms::_true, eCaseMatters));
+
+    // Set key shortcut and modifiers
+    if (domDoc) {
+      nsAutoString keyValue;
+      mContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyValue);
+
+      if (!keyValue.IsEmpty()) {
+        nsCOMPtr<nsIDOMElement> keyElement;
+        domDoc->GetElementById(keyValue, getter_AddRefs(keyElement));
+
+        if (keyElement) {
+          nsCOMPtr<nsIContent> keyContent(do_QueryInterface(keyElement));
+          nsAutoString keyChar(NS_LITERAL_STRING(" "));
+          keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
+          if (!keyChar.EqualsLiteral(" ")) 
+            SetShortcutChar(keyChar);
+    
+          nsAutoString modifiersStr;
+          keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
+          PRUint8 modifiers = MenuHelpersX::GeckoModifiersForNodeAttribute(modifiersStr);
+          SetModifiers(modifiers);
+        }
+      }
+    }
   }
 
   mIcon = new nsMenuItemIconX(static_cast<nsIMenuItem*>(this), mMenuParent, mContent, mNativeMenuItem);
