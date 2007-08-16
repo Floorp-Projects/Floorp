@@ -136,7 +136,7 @@ JSObject *
 GetWrapper(JSContext *cx, JSObject *obj)
 {
   while (JS_GET_CLASS(cx, obj) != &sXPC_XOW_JSClass.base) {
-    obj = JS_GetParent(cx, obj);
+    obj = JS_GetPrototype(cx, obj);
     if (!obj) {
       break;
     }
@@ -577,6 +577,11 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
       JS_GetFunctionNative(cx, JS_ValueToFunction(cx, v)) ==
       XPC_XOW_FunctionWrapper) {
     return JS_TRUE;
+  }
+
+  obj = GetWrapper(cx, obj);
+  if (!obj) {
+    return ThrowException(NS_ERROR_ILLEGAL_VALUE, cx);
   }
 
   XPCCallContext ccx(JS_CALLER, cx);
