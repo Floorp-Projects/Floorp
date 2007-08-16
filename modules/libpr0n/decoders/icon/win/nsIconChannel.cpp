@@ -209,10 +209,8 @@ nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 *
   nsCOMPtr<nsIFile> file;
   rv = fileURL->GetFile(getter_AddRefs(file));
   if (NS_FAILED(rv) || !file) return NS_OK;
-  
-  *aLocalFile = file;
-  NS_IF_ADDREF(*aLocalFile);
-  return NS_OK;
+
+  return file->Clone(aLocalFile);
 }
 
 NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
@@ -289,7 +287,13 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
  
   if (localFile)
   {
+    rv = localFile->Normalize();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     localFile->GetNativePath(filePath);
+    if (filePath.Length() < 2 || filePath[1] != ':')
+      return NS_ERROR_MALFORMED_URI; // UNC
+
     if (filePath.Last() == ':')
       filePath.Append('\\');
     else {
