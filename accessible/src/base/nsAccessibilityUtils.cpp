@@ -168,7 +168,8 @@ nsAccUtils::HasListener(nsIContent *aContent, const nsAString& aEventType)
 }
 
 nsresult
-nsAccUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible)
+nsAccUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
+                         PRBool aIsAsynch)
 {
   NS_ENSURE_ARG(aAccessible);
 
@@ -176,9 +177,28 @@ nsAccUtils::FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible)
   NS_ASSERTION(pAccessible, "Accessible doesn't implement nsPIAccessible");
 
   nsCOMPtr<nsIAccessibleEvent> event =
-    new nsAccEvent(aEventType, aAccessible, nsnull);
+    new nsAccEvent(aEventType, aAccessible, nsnull, aIsAsynch);
   NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
 
   return pAccessible->FireAccessibleEvent(event);
+}
+
+PRBool
+nsAccUtils::IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
+                         nsIDOMNode *aPossibleDescendantNode)
+{
+  NS_ENSURE_ARG_POINTER(aPossibleAncestorNode);
+  NS_ENSURE_ARG_POINTER(aPossibleDescendantNode);
+
+  nsCOMPtr<nsIDOMNode> loopNode = aPossibleDescendantNode;
+  nsCOMPtr<nsIDOMNode> parentNode;
+  while (NS_SUCCEEDED(loopNode->GetParentNode(getter_AddRefs(parentNode))) &&
+         parentNode) {
+    if (parentNode == aPossibleAncestorNode) {
+      return PR_TRUE;
+    }
+    loopNode.swap(parentNode);
+  }
+  return PR_FALSE;
 }
 

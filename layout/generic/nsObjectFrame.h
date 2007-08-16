@@ -113,6 +113,13 @@ public:
   virtual void TryNotifyContentObjectWrapper();
   virtual void StopPlugin();
 
+  /*
+   * Stop a plugin instance. If aDelayedStop is true, the plugin will
+   * be stopped at a later point when it's safe to do so (i.e. not
+   * while destroying the frame tree). Delayed stopping is only
+   * implemented on Win32 for now.
+   */
+  void StopPluginInternal(PRBool aDelayedStop);
 
   /* fail on any requests to get a cursor from us because plugins set their own! see bug 118877 */
   NS_IMETHOD GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor) 

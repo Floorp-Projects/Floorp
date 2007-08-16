@@ -48,6 +48,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLLegendElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIEditor.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsISelectionController.h"
@@ -372,21 +373,6 @@ nsHyperTextAccessibleWrap(aNode, aShell)
 {
 }
 
-NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLTextFieldAccessible, nsHyperTextAccessibleWrap,
-                             nsIAccessibleText)
-
-NS_IMETHODIMP nsHTMLTextFieldAccessible::Init()
-{
-  CheckForEditor();
-  return nsHyperTextAccessibleWrap::Init();
-}
-
-NS_IMETHODIMP nsHTMLTextFieldAccessible::Shutdown()
-{
-  mEditor = nsnull;
-  return nsHyperTextAccessibleWrap::Shutdown();
-}
-
 NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *aRole)
 {
   *aRole = nsIAccessibleRole::ROLE_ENTRY;
@@ -542,17 +528,11 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::DoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-void nsHTMLTextFieldAccessible::SetEditor(nsIEditor* aEditor)
+NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAssociatedEditor(nsIEditor **aEditor)
 {
-  mEditor = aEditor;
-}
-
-void nsHTMLTextFieldAccessible::CheckForEditor()
-{
+  *aEditor = nsnull;
   nsCOMPtr<nsIDOMNSEditableElement> editableElt(do_QueryInterface(mDOMNode));
-  if (!editableElt) {
-    return;
-  }
+  NS_ENSURE_TRUE(editableElt, NS_ERROR_FAILURE);
 
   // nsGenericHTMLElement::GetEditor has a security check.
   // Make sure we're not restricted by the permissions of
@@ -562,16 +542,15 @@ void nsHTMLTextFieldAccessible::CheckForEditor()
   PRBool pushed = stack && NS_SUCCEEDED(stack->Push(nsnull));
 
   nsCOMPtr<nsIEditor> editor;
-  nsresult rv = editableElt->GetEditor(getter_AddRefs(editor));
-  if (NS_SUCCEEDED(rv)) {
-    SetEditor(editor);
-  }
+  nsresult rv = editableElt->GetEditor(aEditor);
 
   if (pushed) {
     JSContext* cx;
     stack->Pop(&cx);
     NS_ASSERTION(!cx, "context should be null");
   }
+
+  return rv;
 }
 
 // --- groupbox  -----

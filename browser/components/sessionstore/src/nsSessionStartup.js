@@ -276,7 +276,7 @@ SessionStartup.prototype = {
         var ssStringBundle = this._getStringBundle("chrome://browser/locale/sessionstore.properties");
         var restoreTitle = ssStringBundle.formatStringFromName("restoredTitle", [brandShortName], 1);
         var restoreText = ssStringBundle.formatStringFromName("restoredMsg", [brandShortName], 1);
-        var buttonTitle = ssStringBundle.GetStringFromName("buttonTitle");
+        var okTitle = ssStringBundle.GetStringFromName("okTitle");
         var cancelTitle = ssStringBundle.GetStringFromName("cancelTitle");
 
         var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
@@ -288,7 +288,7 @@ SessionStartup.prototype = {
                     promptService.BUTTON_POS_0_DEFAULT;
         
         var buttonChoice = promptService.confirmEx(null, restoreTitle, restoreText, 
-                                          flags, buttonTitle, cancelTitle, null, 
+                                          flags, okTitle, cancelTitle, null, 
                                           null, {});
         recover = (buttonChoice == 0);
       }

@@ -150,7 +150,8 @@ class Dumper:
     get an instance of a subclass."""
     def __init__(self, dump_syms, symbol_path,
                  archs=None, srcdir=None, copy_debug=False, vcsinfo=False):
-        self.dump_syms = dump_syms
+        # popen likes absolute paths, at least on windows
+        self.dump_syms = os.path.abspath(dump_syms)
         self.symbol_path = symbol_path
         if archs is None:
             # makes the loop logic simpler

@@ -724,7 +724,6 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
     jsval *val;
     JSString *gsopold[2];
     JSString *gsop[2];
-    JSAtom *atom;
     JSString *idstr, *valstr, *str;
     int stackDummy;
 
@@ -855,7 +854,6 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
          * Convert id to a jsval and then to a string.  Decide early whether we
          * prefer get/set or old getter/setter syntax.
          */
-        atom = JSID_IS_ATOM(id) ? JSID_TO_ATOM(id) : NULL;
         idstr = js_ValueToString(cx, ID_TO_VALUE(id));
         if (!idstr) {
             ok = JS_FALSE;
@@ -929,9 +927,9 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
          * If id is a string that's not an identifier, then it needs to be
          * quoted.  Also, negative integer ids must be quoted.
          */
-        if (atom
+        if (JSID_IS_ATOM(id)
             ? !idIsLexicalIdentifier
-            : (JSID_IS_OBJECT(id) || JSID_TO_INT(id) < 0)) {
+            : (!JSID_IS_INT(id) || JSID_TO_INT(id) < 0)) {
             idstr = js_QuoteString(cx, idstr, (jschar)'\'');
             if (!idstr) {
                 ok = JS_FALSE;
@@ -939,8 +937,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
             }
             *vp = STRING_TO_JSVAL(idstr);               /* local root */
         }
-        idstrchars = JSSTRING_CHARS(idstr);
-        idstrlength = JSSTRING_LENGTH(idstr);
+        JSSTRING_CHARS_AND_LENGTH(idstr, idstrchars, idstrlength);
 
         for (j = 0; j < valcnt; j++) {
             /* Convert val[j] to its canonical source form. */
@@ -950,8 +947,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                 goto error;
             }
             vp[2 + j] = STRING_TO_JSVAL(valstr);        /* local root */
-            vchars = JSSTRING_CHARS(valstr);
-            vlength = JSSTRING_LENGTH(valstr);
+            JSSTRING_CHARS_AND_LENGTH(valstr, vchars, vlength);
 
             if (vchars[0] == '#')
                 needOldStyleGetterSetter = JS_TRUE;
@@ -1133,7 +1129,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
   make_string:
-    str = js_NewString(cx, chars, nchars, 0);
+    str = js_NewString(cx, chars, nchars);
     if (!str) {
         free(chars);
         return JS_FALSE;
@@ -1172,7 +1168,7 @@ obj_toString(JSContext *cx, uintN argc, jsval *vp)
     chars[nchars++] = ']';
     chars[nchars] = 0;
 
-    str = js_NewString(cx, chars, nchars, 0);
+    str = js_NewString(cx, chars, nchars);
     if (!str) {
         JS_free(cx, chars);
         return JS_FALSE;
@@ -2846,7 +2842,7 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
         if (JSID_IS_ATOM(id)) {                                               \
             JSAtom *atom_ = JSID_TO_ATOM(id);                                 \
             JSString *str_ = ATOM_TO_STRING(atom_);                           \
-            const jschar *cp_ = str_->chars;                                  \
+            const jschar *cp_ = str_->u.chars;                                \
             JSBool negative_ = (*cp_ == '-');                                 \
             if (negative_) cp_++;                                             \
             if (JS7_ISDEC(*cp_)) {                                            \
@@ -2884,41 +2880,12 @@ CheckForStringIndex(jsid id, const jschar *cp, const jschar *end,
     return id;
 }
 
-static JSBool
-HidePropertyName(JSContext *cx, jsid *idp)
-{
-    jsid id;
-    JSAtom *atom, *hidden;
-
-    id = *idp;
-    JS_ASSERT(JSID_IS_ATOM(id));
-
-    atom = JSID_TO_ATOM(id);
-    JS_ASSERT(!(atom->flags & ATOM_HIDDEN));
-    JS_ASSERT(ATOM_IS_STRING(atom));
-
-    hidden = js_AtomizeString(cx, ATOM_TO_STRING(atom), ATOM_HIDDEN);
-    if (!hidden)
-        return JS_FALSE;
-
-    /*
-     * Link hidden to unhidden atom to optimize call_enumerate -- this means
-     * the GC must mark a hidden atom's unhidden counterpart (see js_MarkAtom
-     * in jsgc.c).  It uses the atom's entry.value member for this linkage.
-     */
-    hidden->entry.value = atom;
-    *idp = ATOM_TO_JSID(hidden);
-    return JS_TRUE;
-}
-
 JSScopeProperty *
 js_AddHiddenProperty(JSContext *cx, JSObject *obj, jsid id,
                      JSPropertyOp getter, JSPropertyOp setter, uint32 slot,
                      uintN attrs, uintN flags, intN shortid)
 {
-    if (!HidePropertyName(cx, &id))
-        return NULL;
-
+    id = JSID_HIDE_NAME(id);
     flags |= SPROP_IS_HIDDEN;
     return js_AddNativeProperty(cx, obj, id, getter, setter, slot, attrs,
                                 flags, shortid);
@@ -2928,8 +2895,8 @@ JSBool
 js_LookupHiddenProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
                         JSProperty **propp)
 {
-    return HidePropertyName(cx, &id) &&
-           js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_HIDDEN,
+    id = JSID_HIDE_NAME(id);
+    return js_LookupPropertyWithFlags(cx, obj, id, JSRESOLVE_HIDDEN,
                                       objp, propp);
 }
 
@@ -4246,34 +4213,6 @@ js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
 }
 #endif
 
-static void
-ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
-{
-    /*
-     * The decompiler may need to access the args of the function in
-     * progress rather than the one we had hoped to call.
-     * So we switch the cx->fp to the frame below us. We stick the
-     * current frame in the dormantFrameChain to protect it from gc.
-     */
-    JSStackFrame *fp = cx->fp;
-
-    if (fp->down) {
-        JS_ASSERT(!fp->dormantNext);
-        fp->dormantNext = cx->dormantFrameChain;
-        cx->dormantFrameChain = fp;
-        cx->fp = fp->down;
-    }
-
-    js_ReportIsNotFunction(cx, vp, flags);
-
-    if (fp->down) {
-        JS_ASSERT(cx->dormantFrameChain == fp);
-        cx->dormantFrameChain = fp->dormantNext;
-        fp->dormantNext = NULL;
-        cx->fp = fp;
-    }
-}
-
 #ifdef NARCISSUS
 static JSBool
 GetCurrentExecutionContext(JSContext *cx, JSObject *obj, jsval *rval)
@@ -4337,7 +4276,7 @@ js_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             return ok;
         }
 #endif
-        ReportIsNotFunction(cx, &argv[-2], cx->fp->flags & JSFRAME_ITERATOR);
+        js_ReportIsNotFunction(cx, &argv[-2], cx->fp->flags & JSFRAME_ITERATOR);
         return JS_FALSE;
     }
     return clasp->call(cx, obj, argc, argv, rval);
@@ -4379,7 +4318,7 @@ js_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             return ok;
         }
 #endif
-        ReportIsNotFunction(cx, &argv[-2], JSV2F_CONSTRUCT);
+        js_ReportIsNotFunction(cx, &argv[-2], JSV2F_CONSTRUCT);
         return JS_FALSE;
     }
     return clasp->construct(cx, obj, argc, argv, rval);
@@ -4489,7 +4428,7 @@ CheckCtorGetAccess(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     uintN attrs;
 
     atom = cx->runtime->atomState.constructorAtom;
-    JS_ASSERT(id == ATOM_KEY(atom));
+    JS_ASSERT(id == ATOM_TO_JSID(atom));
     return OBJ_CHECK_ACCESS(cx, obj, ATOM_TO_JSID(atom), JSACC_READ,
                             vp, &attrs);
 }
@@ -4501,7 +4440,7 @@ CheckCtorSetAccess(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     uintN attrs;
 
     atom = cx->runtime->atomState.constructorAtom;
-    JS_ASSERT(id == ATOM_KEY(atom));
+    JS_ASSERT(id == ATOM_TO_JSID(atom));
     return OBJ_CHECK_ACCESS(cx, obj, ATOM_TO_JSID(atom), JSACC_WRITE,
                             vp, &attrs);
 }
@@ -5024,8 +4963,8 @@ void printString(JSString *str) {
     size_t i, n;
     jschar *s;
     fprintf(stderr, "string (%p) \"", (void *)str);
-    s = JSSTRING_CHARS(str);
-    for (i=0, n=JSSTRING_LENGTH(str); i < n; i++)
+    JSSTRING_CHARS_AND_LENGTH(str, s, n);
+    for (i=0; i < n; i++)
         fputc(s[i], stderr);
     fputc('"', stderr);
     fputc('\n', stderr);

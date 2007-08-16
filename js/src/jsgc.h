@@ -53,12 +53,10 @@ JS_BEGIN_EXTERN_C
 #define GCX_OBJECT              0               /* JSObject */
 #define GCX_STRING              1               /* JSString */
 #define GCX_DOUBLE              2               /* jsdouble */
-#define GCX_MUTABLE_STRING      3               /* JSString that's mutable --
-                                                   single-threaded only! */
-#define GCX_FUNCTION            4               /* JSFunction */
-#define GCX_NAMESPACE           5               /* JSXMLNamespace */
-#define GCX_QNAME               6               /* JSXMLQName */
-#define GCX_XML                 7               /* JSXML */
+#define GCX_FUNCTION            3               /* JSFunction */
+#define GCX_NAMESPACE           4               /* JSXMLNamespace */
+#define GCX_QNAME               5               /* JSXMLQName */
+#define GCX_XML                 6               /* JSXML */
 #define GCX_EXTERNAL_STRING     8               /* JSString w/ external chars */
 
 #define GCX_NTYPES_LOG2         4               /* type index bits */
@@ -71,13 +69,6 @@ JS_BEGIN_EXTERN_C
 #define GCF_SYSTEM      JS_BIT(GCX_NTYPES_LOG2 + 2)
 #define GCF_LOCKSHIFT   (GCX_NTYPES_LOG2 + 3)   /* lock bit shift */
 #define GCF_LOCK        JS_BIT(GCF_LOCKSHIFT)   /* lock request bit in API */
-
-/* Pseudo-flag that modifies GCX_STRING to make GCX_MUTABLE_STRING. */
-#define GCF_MUTABLE     2
-
-#if (GCX_STRING | GCF_MUTABLE) != GCX_MUTABLE_STRING
-# error "mutable string type index botch!"
-#endif
 
 extern JS_FRIEND_API(uint8 *)
 js_GetGCThingFlags(void *thing);
@@ -168,23 +159,28 @@ js_IsAboutToBeFinalized(JSContext *cx, void *thing);
 
 /*
  * Macro to test if a traversal is the marking phase of GC to avoid exposing
- * JSAtom and ScriptFilenameEntry to traversal implementations.
+ * ScriptFilenameEntry to traversal implementations.
  */
 #define IS_GC_MARKING_TRACER(trc) ((trc)->callback == NULL)
 
 JS_STATIC_ASSERT(JSTRACE_STRING == 2);
 
 #define JSTRACE_FUNCTION    3
-#define JSTRACE_ATOM        4
-#define JSTRACE_NAMESPACE   5
-#define JSTRACE_QNAME       6
-#define JSTRACE_XML         7
+#define JSTRACE_NAMESPACE   4
+#define JSTRACE_QNAME       5
+#define JSTRACE_XML         6
 
 #if JS_HAS_XML_SUPPORT
 # define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_XML)
 #else
-# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_ATOM)
+# define JS_IS_VALID_TRACE_KIND(kind) ((uint32)(kind) <= JSTRACE_FUNCTION)
 #endif
+
+/*
+ * JS_IS_VALID_TRACE_KIND assumes that JSTRACE_FUNCTION is the last non-xml
+ * trace kind when JS_HAS_XML_SUPPORT is false.
+ */
+JS_STATIC_ASSERT(JSTRACE_FUNCTION + 1 == JSTRACE_NAMESPACE);
 
 /*
  * Trace jsval when JSVAL_IS_OBJECT(v) can be an arbitrary GC thing casted as
@@ -311,7 +307,7 @@ struct JSWeakRoots {
     JSGCThing           *newborn[GCX_NTYPES];
 
     /* Atom root for the last-looked-up atom on this context. */
-    JSAtom              *lastAtom;
+    jsval               lastAtom;
 
     /* Root for the result of the most recent js_InternalInvoke call. */
     jsval               lastInternalResult;

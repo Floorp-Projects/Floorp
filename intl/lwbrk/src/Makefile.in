@@ -63,11 +63,23 @@ CPPSRCS		+= \
 		nsPangoBreaker.cpp \
 		$(NULL)
 else
+ifeq  ($(MOZ_WIDGET_TOOLKIT),windows)
 CPPSRCS		+= \
-		nsRuleBreaker.cpp \
+		nsUniscribeBreaker.cpp \
+		$(NULL)
+else
+ifeq ($(MOZ_WIDGET_TOOLKIT), cocoa)
+CPPSRCS		+= \
+		nsCarbonBreaker.cpp \
+		$(NULL)
+else
+CPPSRCS		+= \
+	nsRuleBreaker.cpp \
 		$(NULL)
 
 CSRCS		= rulebrk.c
+endif
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -81,4 +93,3 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_PANGO_LIBS) \
 		$(NULL)
 endif
-

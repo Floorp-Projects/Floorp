@@ -395,12 +395,12 @@ var MigrationWizard = {
     this._listItems("migratingItems");
     setTimeout(this.onMigratingMigrate, 0, this);
   },
-  
+
   onMigratingMigrate: function (aOuter)
   {
     aOuter._migrator.migrate(aOuter._itemsFlags, aOuter._autoMigrate, aOuter._selectedProfile);
   },
-
+  
   _listItems: function (aID)
   {
     var items = document.getElementById(aID);

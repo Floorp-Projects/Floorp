@@ -534,7 +534,7 @@ qname_toString(JSContext *cx, uintN argc, jsval *vp)
         *chars = '@';
         js_strncpy(chars + 1, JSSTRING_CHARS(str), length);
         chars[++length] = 0;
-        str = js_NewString(cx, chars, length, 0);
+        str = js_NewString(cx, chars, length);
         if (!str) {
             JS_free(cx, chars);
             return JS_FALSE;
@@ -1402,8 +1402,7 @@ ParseNodeToQName(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
 
     JS_ASSERT(pn->pn_arity == PN_NULLARY);
     str = ATOM_TO_STRING(pn->pn_atom);
-    length = JSSTRING_LENGTH(str);
-    start = JSSTRING_CHARS(str);
+    JSSTRING_CHARS_AND_LENGTH(str, start, length);
     JS_ASSERT(length != 0 && *start != '@');
     JS_ASSERT(length != 1 || *start != '*');
 
@@ -1489,8 +1488,8 @@ ChompXMLWhitespace(JSContext *cx, JSString *str)
     const jschar *cp, *start, *end;
     jschar c;
 
-    length = JSSTRING_LENGTH(str);
-    for (cp = start = JSSTRING_CHARS(str), end = cp + length; cp < end; cp++) {
+    JSSTRING_CHARS_AND_LENGTH(str, start, length);
+    for (cp = start, end = cp + length; cp < end; cp++) {
         c = *cp;
         if (!JS_ISXMLSPACE(c))
             break;
@@ -1676,8 +1675,7 @@ ParseNodeToXML(JSContext *cx, JSParseNode *pn, JSXMLArray *inScopeNSes,
             if (pn2->pn_type != TOK_XMLATTR)
                 goto syntax;
 
-            length = JSSTRING_LENGTH(str);
-            chars = JSSTRING_CHARS(str);
+            JSSTRING_CHARS_AND_LENGTH(str, chars, length);
             if (length >= 5 &&
                 IS_XMLNS_CHARS(chars) &&
                 (length == 5 || chars[5] == ':')) {
@@ -2289,7 +2287,7 @@ MakeXMLSpecialString(JSContext *cx, JSStringBuffer *sb,
     js_strncpy(bp, suffix, suffixlength);
     bp[suffixlength] = 0;
 
-    str = js_NewString(cx, base, newlength, 0);
+    str = js_NewString(cx, base, newlength);
     if (!str)
         free(base);
     return str;
@@ -2364,8 +2362,9 @@ EscapeElementValue(JSContext *cx, JSStringBuffer *sb, JSString *str)
     const jschar *cp, *start, *end;
     jschar c;
 
-    length = newlength = JSSTRING_LENGTH(str);
-    for (cp = start = JSSTRING_CHARS(str), end = cp + length; cp < end; cp++) {
+    JSSTRING_CHARS_AND_LENGTH(str, start, length);
+    newlength = length;
+    for (cp = start, end = cp + length; cp < end; cp++) {
         c = *cp;
         if (c == '<' || c == '>')
             newlength += 3;
@@ -2399,7 +2398,7 @@ EscapeElementValue(JSContext *cx, JSStringBuffer *sb, JSString *str)
                 js_AppendChar(sb, c);
         }
         JS_ASSERT(STRING_BUFFER_OK(sb));
-        str = js_NewString(cx, sb->base, STRING_BUFFER_OFFSET(sb), 0);
+        str = js_NewString(cx, sb->base, STRING_BUFFER_OFFSET(sb));
         if (!str)
             js_FinishStringBuffer(sb);
     }
@@ -2417,8 +2416,9 @@ EscapeAttributeValue(JSContext *cx, JSStringBuffer *sb, JSString *str)
     const jschar *cp, *start, *end;
     jschar c;
 
-    length = newlength = JSSTRING_LENGTH(str);
-    for (cp = start = JSSTRING_CHARS(str), end = cp + length; cp < end; cp++) {
+    JSSTRING_CHARS_AND_LENGTH(str, start, length);
+    newlength = length;
+    for (cp = start, end = cp + length; cp < end; cp++) {
         c = *cp;
         if (c == '"')
             newlength += 5;
@@ -2460,7 +2460,7 @@ EscapeAttributeValue(JSContext *cx, JSStringBuffer *sb, JSString *str)
                 js_AppendChar(sb, c);
         }
         JS_ASSERT(STRING_BUFFER_OK(sb));
-        str = js_NewString(cx, sb->base, STRING_BUFFER_OFFSET(sb), 0);
+        str = js_NewString(cx, sb->base, STRING_BUFFER_OFFSET(sb));
         if (!str)
             js_FinishStringBuffer(sb);
     }
@@ -2579,8 +2579,8 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
      * ".../there.is.only.xul", "xbl" given ".../xbl", and "xbl2" given any
      * likely URI of the form ".../xbl2/2005".
      */
-    start = JSSTRING_CHARS(uri);
-    cp = end = start + JSSTRING_LENGTH(uri);
+    JSSTRING_CHARS_AND_END(uri, start, end);
+    cp = end;
     while (--cp > start) {
         if (*cp == '.' || *cp == '/' || *cp == ':') {
             ++cp;
@@ -2654,7 +2654,7 @@ GeneratePrefix(JSContext *cx, JSString *uri, JSXMLArray *decls)
         offset = PTRDIFF(cp, start, jschar);
         prefix = js_NewDependentString(cx, uri, offset, length);
     } else {
-        prefix = js_NewString(cx, bp, newlength, 0);
+        prefix = js_NewString(cx, bp, newlength);
         if (!prefix)
             JS_free(cx, bp);
     }
@@ -2752,7 +2752,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
             return NULL;
         }
 
-        str = js_NewString(cx, sb.base, STRING_BUFFER_OFFSET(&sb), 0);
+        str = js_NewString(cx, sb.base, STRING_BUFFER_OFFSET(&sb));
       list_out:
         if (!str && STRING_BUFFER_OK(&sb))
             js_FinishStringBuffer(&sb);
@@ -3025,7 +3025,7 @@ XMLToXMLString(JSContext *cx, JSXML *xml, const JSXMLArray *ancestorNSes,
         goto out;
     }
 
-    str = js_NewString(cx, sb.base, STRING_BUFFER_OFFSET(&sb), 0);
+    str = js_NewString(cx, sb.base, STRING_BUFFER_OFFSET(&sb));
 out:
     js_LeaveLocalRootScopeWithResult(cx, STRING_TO_JSVAL(str));
     if (!str && STRING_BUFFER_OK(&sb))
@@ -7875,39 +7875,38 @@ JSString *
 js_AddAttributePart(JSContext *cx, JSBool isName, JSString *str, JSString *str2)
 {
     size_t len, len2, newlen;
-    jschar *chars;
+    jschar *chars, *chars2;
 
-    if (JSSTRING_IS_DEPENDENT(str) ||
-        !(*js_GetGCThingFlags(str) & GCF_MUTABLE)) {
-        str = js_NewStringCopyN(cx, JSSTRING_CHARS(str), JSSTRING_LENGTH(str));
+    JSSTRING_CHARS_AND_LENGTH(str, chars, len);
+    if (!JSSTRING_IS_MUTABLE(str)) {
+        str = js_NewStringCopyN(cx, chars, len);
         if (!str)
             return NULL;
+        chars = str->u.chars;
+    } else {
+        /*
+         * Reallocating str (because we know it has no other references)
+         * requires purging any deflated string cached for it.
+         */
+        js_PurgeDeflatedStringCache(cx->runtime, str);
     }
 
-    len = str->length;
-    len2 = JSSTRING_LENGTH(str2);
+    JSSTRING_CHARS_AND_LENGTH(str2, chars2, len2);
     newlen = (isName) ? len + 1 + len2 : len + 2 + len2 + 1;
-    chars = (jschar *) JS_realloc(cx, str->chars, (newlen+1) * sizeof(jschar));
+    chars = (jschar *) JS_realloc(cx, chars, (newlen+1) * sizeof(jschar));
     if (!chars)
         return NULL;
 
-    /*
-     * Reallocating str (because we know it has no other references) requires
-     * purging any deflated string cached for it.
-     */
-    js_PurgeDeflatedStringCache(cx->runtime, str);
-
-    str->chars = chars;
-    str->length = newlen;
+    JSSTRING_INIT(str, chars, newlen);
     chars += len;
     if (isName) {
         *chars++ = ' ';
-        js_strncpy(chars, JSSTRING_CHARS(str2), len2);
+        js_strncpy(chars, chars2, len2);
         chars += len2;
     } else {
         *chars++ = '=';
         *chars++ = '"';
-        js_strncpy(chars, JSSTRING_CHARS(str2), len2);
+        js_strncpy(chars, chars2, len2);
         chars += len2;
         *chars++ = '"';
     }

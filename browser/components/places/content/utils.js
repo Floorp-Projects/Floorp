@@ -159,6 +159,16 @@ var PlacesUtils = {
     return this._microsummaries;
   },
 
+  /**
+   * The Places Tagging Service
+   */
+  get tagging() {
+    if (!this._tagging)
+      this._tagging = Cc["@mozilla.org/browser/tagging-service;1"].
+                      getService(Ci.nsITaggingService);
+    return this._tagging;
+  },
+
   _RDF: null,
   get RDF() {
     if (!this._RDF)
@@ -1349,15 +1359,16 @@ var PlacesUtils = {
   setAnnotationsForURI: function PU_setAnnotationsForURI(aURI, aAnnos) {
     var annosvc = this.annotations;
     aAnnos.forEach(function(anno) {
+      var flags = ("flags" in anno) ? anno.flags : 0;
+      var expires = ("expires" in anno) ?
+        anno.expires : Ci.nsIAnnotationService.EXPIRE_NEVER;
       if (anno.type == annosvc.TYPE_BINARY) {
         annosvc.setPageAnnotationBinary(aURI, anno.name, anno.value,
                                         anno.value.length, anno.mimeType,
-                                        anno.flags, anno.expires);
+                                        flags, expires);
       }
-      else {
-        annosvc.setPageAnnotation(aURI, anno.name, anno.value,
-                                  anno.flags, anno.expires);
-      }
+      else
+        annosvc.setPageAnnotation(aURI, anno.name, anno.value, flags, expires);
     });
   },
 
@@ -1373,14 +1384,17 @@ var PlacesUtils = {
   setAnnotationsForItem: function PU_setAnnotationsForItem(aItemId, aAnnos) {
     var annosvc = this.annotations;
     aAnnos.forEach(function(anno) {
+      var flags = ("flags" in anno) ? anno.flags : 0;
+      var expires = ("expires" in anno) ?
+        anno.expires : Ci.nsIAnnotationService.EXPIRE_NEVER;
       if (anno.type == annosvc.TYPE_BINARY) {
         annosvc.setItemAnnotationBinary(aItemId, anno.name, anno.value,
                                         anno.value.length, anno.mimeType,
-                                        anno.flags, anno.expires);
+                                        flags, expires);
       }
       else {
-        annosvc.setItemAnnotation(aItemId, anno.name, anno.value,
-                                  anno.flags, anno.expires);
+        annosvc.setItemAnnotation(aItemId, anno.name, anno.value, flags,
+                                  expires);
       }
     });
   },
@@ -1439,6 +1453,13 @@ var PlacesUtils = {
     return this._toolbarFolderId;
   },
 
+  get tagRootId() {
+    if (!("_tagRootId" in this))
+      this._tagRootId = this.bookmarks.tagRoot;
+
+    return this._tagRootId;
+  },
+
   /**
    * Set the POST data associated with a URI, if any.
    * Used by POST keywords.
@@ -1464,6 +1485,19 @@ var PlacesUtils = {
       return annos.getPageAnnotation(aURI, POST_DATA_ANNO);
 
     return null;
+  },
+
+  /**
+   * Retrieve the description of an item
+   * @param aItemId
+   *        item identifier
+   * @returns the description of the given item, or an empty string if it is
+   * not set.
+   */
+  getItemDescription: function PU_getItemDescription(aItemId) {
+    if (this.annotations.itemHasAnnotation(aItemId, DESCRIPTION_ANNO))
+      return this.annotations.getItemAnnotation(aItemId, DESCRIPTION_ANNO);
+    return "";
   },
 
   /**

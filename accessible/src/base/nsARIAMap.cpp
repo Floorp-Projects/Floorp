@@ -157,9 +157,6 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
             {"selected", kBoolState, nsIAccessibleStates::STATE_SELECTED | nsIAccessibleStates::STATE_SELECTABLE},
             {"selected", "false", nsIAccessibleStates::STATE_SELECTABLE},
             {"readonly", kBoolState, nsIAccessibleStates::STATE_READONLY}, kEndEntry},
-  {"secret", nsIAccessibleRole::ROLE_PASSWORD_TEXT, eNameLabelOrTitle, eNoValue, nsIAccessibleStates::STATE_PROTECTED,
-            // Manually map EXT_STATE_SINGLE_LINE and EXT_STATE_MULTI_LINE FROM aaa:multiline
-            {"disabled", kBoolState, nsIAccessibleStates::STATE_UNAVAILABLE}, kEndEntry},
   {"section", nsIAccessibleRole::ROLE_SECTION, eNameLabelOrTitle, eNoValue, kNoReqStates, kEndEntry},
   {"separator", nsIAccessibleRole::ROLE_SEPARATOR, eNameLabelOrTitle, eNoValue, kNoReqStates, kEndEntry},
   {"slider", nsIAccessibleRole::ROLE_SLIDER, eNameLabelOrTitle, eHasValueMinMax, kNoReqStates,
@@ -175,6 +172,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
   {"tabpanel", nsIAccessibleRole::ROLE_PROPERTYPAGE, eNameLabelOrTitle, eNoValue, kNoReqStates, kEndEntry},
   {"textbox", nsIAccessibleRole::ROLE_ENTRY, eNameLabelOrTitle, eNoValue, kNoReqStates,
             // Manually map EXT_STATE_SINGLE_LINE and EXT_STATE_MULTI_LINE FROM aaa:multiline
+            {"secret", kBoolState, nsIAccessibleStates::STATE_PROTECTED},
             {"disabled", kBoolState, nsIAccessibleStates::STATE_UNAVAILABLE},
             {"readonly", kBoolState, nsIAccessibleStates::STATE_READONLY}, kEndEntry},
   {"toolbar", nsIAccessibleRole::ROLE_TOOLBAR, eNameLabelOrTitle, eNoValue, kNoReqStates,

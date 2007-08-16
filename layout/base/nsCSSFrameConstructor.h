@@ -111,8 +111,7 @@ public:
   nsresult ContentInserted(nsIContent*            aContainer,
                            nsIContent*            aChild,
                            PRInt32                aIndexInContainer,
-                           nsILayoutHistoryState* aFrameState,
-                           PRBool                 aInReinsertContent);
+                           nsILayoutHistoryState* aFrameState);
 
   nsresult ContentRemoved(nsIContent*     aContainer,
                           nsIContent*     aChild,
@@ -305,10 +304,13 @@ private:
                                      nsIAtom*                 aPseudoElement,
                                      nsIFrame**               aResult);
 
-  nsresult AppendFrames(const nsFrameConstructorState& aState,
+  // This method can change aFrameList: it can chop off the end and
+  // put it in a special sibling of aParentFrame.  It can also change
+  // aState by moving some floats out of it.
+  nsresult AppendFrames(nsFrameConstructorState&       aState,
                         nsIContent*                    aContainer,
                         nsIFrame*                      aParentFrame,
-                        nsIFrame*                      aFrameList,
+                        nsFrameItems&                  aFrameList,
                         nsIFrame*                      aAfterFrame);
 
   // BEGIN TABLE SECTION
@@ -754,7 +756,16 @@ private:
 
   nsresult RecreateFramesForContent(nsIContent*      aContent);
 
-  PRBool MaybeRecreateContainerForIBSplitterFrame(nsIFrame* aFrame, nsresult* aResult);
+  // If removal of aFrame from the frame tree requires reconstruction of some
+  // containing block (either of aFrame or of its parent) due to {ib} splits,
+  // recreate the relevant containing block.  The return value indicates
+  // whether this happened.  If this method returns true, *aResult is the
+  // return value of ReframeContainingBlock.  If this method returns false, the
+  // value of *aResult is no affected.  aFrame and aResult must not be null.
+  // aFrame must be the result of a GetPrimaryFrameFor() call (which means its
+  // parent is also not null).
+  PRBool MaybeRecreateContainerForIBSplitterFrame(nsIFrame* aFrame,
+                                                  nsresult* aResult);
 
   nsresult CreateContinuingOuterTableFrame(nsIPresShell*    aPresShell, 
                                            nsPresContext*  aPresContext,
@@ -828,6 +839,34 @@ private:
                            PRBool                   aIsPositioned,
                            nsIFrame*                aNewFrame);
 
+  /**
+   * Move an already-constructed framelist into the inline frame at
+   * the tail end of an {ib} split.  Creates said inline if it doesn't
+   * already exist.
+   *
+   * @param aState the frame construction state we're using right now.
+   * @param aExistingEndFrame if non-null, the already-existing end frame.
+   * @param aIsPositioned Whether the end frame should be positioned.
+   * @param aContent the content node for this {ib} split.
+   * @param aStyleContext the style context to use for the new frame
+   * @param aFramesToMove The frame list to move over
+   * @param aBlockPart the block part of the {ib} split.
+   * @param aTargetState if non-null, the target state to pass to
+   *        MoveChildrenTo for float reparenting.
+   * XXXbz test float reparenting?
+   *
+   * @note aIsPositioned, aContent, aStyleContext, are
+   *       only used if aExistingEndFrame is null.
+   */
+  nsIFrame* MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
+                                     nsIFrame* aExistingEndFrame,
+                                     PRBool aIsPositioned,
+                                     nsIContent* aContent,
+                                     nsStyleContext* aStyleContext,
+                                     nsIFrame* aFramesToMove,
+                                     nsIFrame* aBlockPart,
+                                     nsFrameConstructorState* aTargetState);
+
   nsresult ProcessInlineChildren(nsFrameConstructorState& aState,
                                  nsIContent*              aContent,
                                  nsIFrame*                aFrame,
@@ -837,18 +876,19 @@ private:
 
   PRBool AreAllKidsInline(nsIFrame* aFrameList);
 
+  // Determine whether we need to wipe out what we just did and start over
+  // because we're doing something like adding block kids to an inline frame
+  // (and therefore need an {ib} split).  If aIsAppend is true, aPrevSibling is
+  // ignored.  Otherwise it may be used to determine whether to reframe when
+  // inserting into the block of an {ib} split.
+  // @return PR_TRUE if we reconstructed the containing block, PR_FALSE
+  // otherwise
   PRBool WipeContainingBlock(nsFrameConstructorState& aState,
-                             nsIFrame*                blockContent,
+                             nsIFrame*                aContainingBlock,
                              nsIFrame*                aFrame,
-                             nsIFrame*                aFrameList);
-
-  PRBool NeedSpecialFrameReframe(nsIContent*      aParent1,
-                                 nsIContent*      aParent2,
-                                 nsIFrame*&       aParentFrame,
-                                 nsIContent*      aChild,
-                                 PRInt32          aIndexInContainer,
-                                 nsIFrame*&       aPrevSibling,
-                                 nsIFrame*        aNextSibling);
+                             const nsFrameItems&      aFrameList,
+                             PRBool                   aIsAppend,
+                             nsIFrame*                aPrevSibling);
 
   nsresult ReframeContainingBlock(nsIFrame* aFrame);
 

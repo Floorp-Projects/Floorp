@@ -46,6 +46,7 @@
 #include "jsconfig.h"
 #include "jstypes.h"
 #include "jshash.h" /* Added by JSIFY */
+#include "jsdhash.h"
 #include "jsapi.h"
 #include "jsprvtd.h"
 #include "jspubtd.h"
@@ -56,28 +57,16 @@
 
 JS_BEGIN_EXTERN_C
 
-#define ATOM_PINNED     0x01            /* atom is pinned against GC */
-#define ATOM_INTERNED   0x02            /* pinned variant for JS_Intern* API */
-#define ATOM_MARK       0x04            /* atom is reachable via GC */
-#define ATOM_HIDDEN     0x08            /* atom is in special hidden subspace */
-#define ATOM_NOCOPY     0x40            /* don't copy atom string bytes */
-#define ATOM_TMPSTR     0x80            /* internal, to avoid extra string */
+#define ATOM_PINNED     0x1       /* atom is pinned against GC */
+#define ATOM_INTERNED   0x2       /* pinned variant for JS_Intern* API */
+#define ATOM_NOCOPY     0x4       /* don't copy atom string bytes */
+#define ATOM_TMPSTR     0x8       /* internal, to avoid extra string */
 
-struct JSAtom {
-    JSHashEntry         entry;          /* key is jsval or unhidden atom
-                                           if ATOM_HIDDEN */
-    uint32              flags;          /* pinned, interned, and mark flags */
-};
-
-#define ATOM_KEY(atom)            ((jsval)(atom)->entry.key)
-#define ATOM_IS_INT(atom)         JSVAL_IS_INT(ATOM_KEY(atom))
-#define ATOM_TO_INT(atom)         JSVAL_TO_INT(ATOM_KEY(atom))
+#define ATOM_KEY(atom)            ((jsval)(atom))
 #define ATOM_IS_DOUBLE(atom)      JSVAL_IS_DOUBLE(ATOM_KEY(atom))
 #define ATOM_TO_DOUBLE(atom)      JSVAL_TO_DOUBLE(ATOM_KEY(atom))
 #define ATOM_IS_STRING(atom)      JSVAL_IS_STRING(ATOM_KEY(atom))
 #define ATOM_TO_STRING(atom)      JSVAL_TO_STRING(ATOM_KEY(atom))
-#define ATOM_IS_BOOLEAN(atom)     JSVAL_IS_BOOLEAN(ATOM_KEY(atom))
-#define ATOM_TO_BOOLEAN(atom)     JSVAL_TO_BOOLEAN(ATOM_KEY(atom))
 
 JS_STATIC_ASSERT(sizeof(JSHashNumber) == 4);
 JS_STATIC_ASSERT(sizeof(JSAtom *) == JS_BYTES_PER_WORD);
@@ -156,8 +145,8 @@ struct JSAtomMap {
 };
 
 struct JSAtomState {
-    JSHashTable         *table;         /* hash table containing all atoms */
-
+    JSDHashTable        stringAtoms;    /* hash table with shared strings */
+    JSDHashTable        doubleAtoms;    /* hash table with shared doubles */
     uint32              tablegen;       /* number of atoms mutations to
                                            optimize hashing */
 #ifdef JS_THREADSAFE
@@ -274,6 +263,9 @@ struct JSAtomState {
 #define LAZY_ATOM_OFFSET_START  offsetof(JSAtomState, lazy)
 #define ATOM_OFFSET_LIMIT       (sizeof(JSAtomState))
 
+#define COMMON_ATOMS_START(state)                                             \
+    (JSAtom **)((uint8 *)(state) + ATOM_OFFSET_START)
+
 /* Start and limit offsets should correspond to atoms. */
 JS_STATIC_ASSERT(ATOM_OFFSET_START % sizeof(JSAtom *) == 0);
 JS_STATIC_ASSERT(ATOM_OFFSET_LIMIT % sizeof(JSAtom *) == 0);
@@ -379,10 +371,7 @@ js_FinishAtomState(JSRuntime *rt);
  */
 
 extern void
-js_TraceAtom(JSTracer *trc, JSAtom *atom);
-
-extern void
-js_TraceLockedAtoms(JSTracer *trc, JSBool allAtoms);
+js_TraceAtomState(JSTracer *trc, JSBool allAtoms);
 
 extern void
 js_SweepAtomState(JSContext *cx);
@@ -423,8 +412,8 @@ js_GetExistingStringAtom(JSContext *cx, const jschar *chars, size_t length);
 /*
  * This variant handles all primitive values.
  */
-extern JSAtom *
-js_AtomizePrimitiveValue(JSContext *cx, jsval v);
+JSBool
+js_AtomizePrimitiveValue(JSContext *cx, jsval v, JSAtom **atomp);
 
 /*
  * Convert v to an atomized string.

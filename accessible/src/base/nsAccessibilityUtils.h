@@ -111,7 +111,18 @@ public:
   /**
    * Fire accessible event of the given type for the given accessible.
    */
-  static nsresult FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible);
+  static nsresult FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
+                               PRBool aIsAsynch = PR_FALSE);
+
+  /**
+   * Is the first passed in node an ancestor of the second?
+   * Note: A node is not considered to be the ancestor of itself.
+   * @aPossibleAncestorNode -- node to test for ancestor-ness of aPossibleDescendantNode
+   * @aPossibleDescendantNode -- node to test for descendant-ness of aPossibleAncestorNode
+   * @return PR_TRUE if aPossibleAncestorNode is an ancestor of aPossibleDescendantNode
+   */
+  static PRBool IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
+                             nsIDOMNode *aPossibleDescendantNode);
 };
 
 #endif

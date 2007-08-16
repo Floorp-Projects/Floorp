@@ -49,7 +49,8 @@ var HandlerServiceTest = {
   get _dirSvc() {
     if (!this.__dirSvc)
       this.__dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-                      getService(Ci.nsIProperties);
+                      getService(Ci.nsIProperties).
+                      QueryInterface(Ci.nsIDirectoryService);
     return this.__dirSvc;
   },
 
@@ -71,6 +72,33 @@ var HandlerServiceTest = {
     if (!this.interfaces.some( function(v) { return iid.equals(v) } ))
       throw Cr.NS_ERROR_NO_INTERFACE;
     return this;
+  },
+
+
+  //**************************************************************************//
+  // Initialization & Destruction
+  
+  init: function HandlerServiceTest_init() {
+    // Register ourselves as a directory provider for the datasource file
+    // if there isn't one registered already.
+    try        { this._dirSvc.get("UMimTyp", Ci.nsIFile) }
+    catch (ex) { this._dirSvc.registerProvider(this) }
+
+    // Delete the existing datasource file, if any, so we start from scratch.
+    // We also do this after finishing the tests, so there shouldn't be an old
+    // file lying around, but just in case we delete it here as well.
+    this._deleteDatasourceFile();
+
+    // Turn on logging so we can troubleshoot problems with the tests.
+    var prefBranch = Cc["@mozilla.org/preferences-service;1"].
+                     getService(Ci.nsIPrefBranch);
+    prefBranch.setBoolPref("browser.contentHandling.log", true);
+  },
+
+  destroy: function HandlerServiceTest_destroy() {
+    // Delete the existing datasource file, if any, so we don't leave test files
+    // lying around and we start from scratch the next time.
+    this._deleteDatasourceFile();
   },
 
 
@@ -102,23 +130,12 @@ var HandlerServiceTest = {
   // Utilities
 
   /**
-   * Get the datasource file, registering ourselves as a provider of the file
-   * if necessary.
+   * Delete the datasource file.
    */
-  getDatasourceFile: function HandlerServiceTest_getDatasourceFile() {
-    var datasourceFile;
-
-    try {
-      datasourceFile = this._dirSvc.get("UMimTyp", Ci.nsIFile);
-    }
-    catch (e) {}
-
-    if (!datasourceFile) {
-      this._dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(this);
-      datasourceFile = this._dirSvc.get("UMimTyp", Ci.nsIFile);
-    }
-
-    return datasourceFile;
+  _deleteDatasourceFile: function HandlerServiceTest__deleteDatasourceFile() {
+    var file = this._dirSvc.get("UMimTyp", Ci.nsIFile);
+    if (file.exists())
+      file.remove(false);
   },
 
   /**
@@ -168,9 +185,4 @@ var HandlerServiceTest = {
 
 };
 
-HandlerServiceTest.getDatasourceFile();
-
-// Turn on logging so we can troubleshoot problems with the tests.
-var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                 getService(Ci.nsIPrefBranch);
-prefBranch.setBoolPref("browser.contentHandling.log", true);
+HandlerServiceTest.init();

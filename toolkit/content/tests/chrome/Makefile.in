@@ -56,8 +56,14 @@ _TEST_FILES = 	bug288254_window.xul \
 		test_bug331215.xul \
 		test_popup_preventdefault_chrome.xul \
 		window_popup_preventdefault_chrome.xul \
+		test_largemenu.xul \
 		window_largemenu.xul \
 		$(NULL)
+
+ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+_TEST_FILES += test_panel_focus.xul \
+               window_panel_focus.xul
+endif
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

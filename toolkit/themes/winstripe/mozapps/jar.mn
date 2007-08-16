@@ -1,15 +1,10 @@
 classic.jar:
 % skin mozapps classic/1.0 %skin/classic/mozapps/
 #ifndef MINIMO
+        skin/classic/mozapps/downloads/buttons.png                    (downloads/buttons.png)
         skin/classic/mozapps/downloads/downloadIcon.png               (downloads/downloadIcon.png)
-        skin/classic/mozapps/downloads/downloadCleanup.png            (downloads/downloadCleanup.png)
-        skin/classic/mozapps/downloads/downloadCleanupDisabled.png    (downloads/downloadCleanupDisabled.png)
         skin/classic/mozapps/downloads/downloads.css                  (downloads/downloads.css)
-        skin/classic/mozapps/downloads/downloads.xml                  (downloads/downloads.xml)
-        skin/classic/mozapps/downloads/downloadsBG.png                (downloads/downloadsBG.png)
-        skin/classic/mozapps/downloads/downloadSelected.png           (downloads/downloadSelected.png)
         skin/classic/mozapps/downloads/unknownContentType.css         (downloads/unknownContentType.css)
-        skin/classic/mozapps/downloads/viewFader.png                  (downloads/viewFader.png)
         skin/classic/mozapps/extensions/about.css                     (extensions/about.css)
         skin/classic/mozapps/extensions/actionbuttons.png             (extensions/actionbuttons.png)
         skin/classic/mozapps/extensions/extensions.css                (extensions/extensions.css)

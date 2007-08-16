@@ -16,12 +16,12 @@
  * The Original Code is Places Tagging Service unit test code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation
+ * Mozilla Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Asaf Romano <mano@mozilla.com>
+ *   Asaf Romano <mano@mozilla.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -78,8 +78,8 @@ function run_test() {
   var uri2 = uri("https://bar.tld/");
 
   // this also tests that the multiple folders are not created for the same tag
-  tagssvc.tagURI(uri1, ["tag 1"], 1);
-  tagssvc.tagURI(uri2, ["tag 1"], 1);
+  tagssvc.tagURI(uri1, ["tag 1"]);
+  tagssvc.tagURI(uri2, ["tag 1"]);
   do_check_eq(tagRoot.childCount, 1);
 
   var tag1node = tagRoot.getChild(0)
@@ -89,12 +89,12 @@ function run_test() {
   do_check_eq(tag1node.childCount, 2);
 
   // Tagging the same url twice with the same tag should be a no-op
-  tagssvc.tagURI(uri1, ["tag 1"], 1);
+  tagssvc.tagURI(uri1, ["tag 1"]);
   do_check_eq(tag1node.childCount, 2);
 
   // the former should be ignored.
   do_check_eq(tagRoot.childCount, 1);
-  tagssvc.tagURI(uri1, ["tag 1", "tag 2"], 2);
+  tagssvc.tagURI(uri1, ["tag 1", "tag 2"]);
   do_check_eq(tagRoot.childCount, 2);
 
   // test getTagsForURI
@@ -112,10 +112,16 @@ function run_test() {
   do_check_true(tag1uris[0].equals(uri1));
   do_check_true(tag1uris[1].equals(uri2));
 
-  tagssvc.untagURI(uri1, ["tag 1"], 1);
+  // test allTags attribute
+  var allTags = tagssvc.allTags;
+  do_check_eq(allTags.length, 2);
+  do_check_eq(allTags[0], "tag 1");
+  do_check_eq(allTags[1], "tag 2");
+
+  tagssvc.untagURI(uri1, ["tag 1"]);
   do_check_eq(tag1node.childCount, 1);
 
   // removing the last uri from a tag should remove the tag-container
-  tagssvc.untagURI(uri2, ["tag 1"], 1);
+  tagssvc.untagURI(uri2, ["tag 1"]);
   do_check_eq(tagRoot.childCount, 1);
 }

@@ -112,6 +112,7 @@
         if (!popup) {
           popup = document.createElement("panel");
           popup.setAttribute("type", "autocomplete");
+          popup.setAttribute("noautofocus", "true");
           
           var popupset = document.getAnonymousElementByAttribute(this, "anonid", "popupset");
           popupset.appendChild(popup);

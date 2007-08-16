@@ -218,6 +218,7 @@ bin/components/nsSidebar.js
 ; bin/components/nsUpdateNotifier.js not needed for firefox
 bin/components/nsXmlRpcClient.js
 bin/components/nsExtensionManager.js
+bin/components/nsBlocklistService.js
 bin/components/nsUpdateService.js
 bin/components/pluginGlue.js
 bin/components/extensions.xpt
@@ -236,6 +237,8 @@ bin/components/nsDefaultCLH.js
 bin/components/nsContentPrefService.js
 bin/components/nsContentDispatchChooser.js
 bin/components/nsHandlerService.js
+bin/components/nsScriptableIO.js
+bin/components/nsWebHandlerApp.js
 
 ; Modules
 bin/modules/*
@@ -245,7 +248,6 @@ bin/components/nsSafebrowsingApplication.js
 bin/components/safebrowsing.xpt
 bin/components/nsUrlClassifierListManager.js
 bin/components/nsUrlClassifierLib.js
-bin/components/nsUrlClassifierTable.js
 bin/components/url-classifier.xpt
 
 ; Kerberos NegotiateAuth
