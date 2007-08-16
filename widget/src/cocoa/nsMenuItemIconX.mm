@@ -63,8 +63,6 @@
 #include "imgIRequest.h"
 #include "gfxIImageFrame.h"
 #include "nsIImage.h"
-#include "nsMenuX.h"
-
 
 static const PRUint32 kIconWidth = 16;
 static const PRUint32 kIconHeight = 16;
@@ -122,11 +120,6 @@ nsMenuItemIconX::SetupIcon()
                                                   &mMenuItemIndex);
     if (NS_FAILED(rv)) return rv;
   }
-
-  // If our native menu item isn't filled in, it's because this icon is for
-  // a submenu that wasn't given its native menu item until later.
-  if (!mNativeMenuItem)
-    mNativeMenuItem = (static_cast<nsMenuX*>(mMenu))->GetNativeMenuItem();
 
   // Still don't have one, then something is wrong, get out of here.
   if (!mNativeMenuItem) {
