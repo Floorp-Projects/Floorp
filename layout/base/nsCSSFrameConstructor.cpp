@@ -10965,25 +10965,6 @@ nsCSSFrameConstructor::MaybeRecreateContainerForIBSplitterFrame(nsIFrame* aFrame
     return PR_FALSE;
   }
 
-
-  // If aFrame is an inline, then it cannot possibly have caused the splitting.
-  // If the frame is being reconstructed and being changed to a block, the
-  // ContentInserted call will handle the containing block reframe.  So in this
-  // case, try to be conservative about whether we need to reframe.  The only
-  // case when it's needed is if the inline is the only child of the tail end
-  // of an {ib} split, because the splitting code doesn't produce this tail end
-  // if it would have no kids.  If that ever changes, this code should change.
-  if (IsInlineOutside(aFrame) &&
-      (
-       // Not a kid of the third part of the IB split
-       GetSpecialSibling(parent) || !IsInlineOutside(parent) ||
-       // Or not the only child
-       aFrame->GetLastContinuation()->GetNextSibling() ||
-       aFrame != parent->GetFirstContinuation()->GetFirstChild(nsnull)
-      )) {
-     return PR_FALSE;
-  }
-
 #ifdef DEBUG
   if (gNoisyContentUpdates || 1) {
     printf("nsCSSFrameConstructor::MaybeRecreateContainerForIBSplitterFrame: "
