@@ -284,16 +284,16 @@ function showView(aView) {
   var showContinue = false;
   switch (aView) {
     case "extensions":
-      var types = [ [ ["type", nsIUpdateItem.TYPE_EXTENSION, "Integer" ] ] ];
+      var types = [ [ ["type", nsIUpdateItem.TYPE_EXTENSION, "Integer"] ] ];
       break;
     case "themes":
-      types = [ [ ["type", nsIUpdateItem.TYPE_THEME, "Integer" ] ] ];
+      types = [ [ ["type", nsIUpdateItem.TYPE_THEME, "Integer"] ] ];
       break;
     case "locales":
-      types = [ [ ["type", nsIUpdateItem.TYPE_LOCALE, "Integer" ] ] ];
+      types = [ [ ["type", nsIUpdateItem.TYPE_LOCALE, "Integer"] ] ];
       break;
     case "plugins":
-      types = [ [ ["type", nsIUpdateItem.TYPE_PLUGIN, "Integer" ] ] ];
+      types = [ [ ["plugin", "true", null] ] ];
       break;
     case "updates":
       document.getElementById("updates-view").hidden = false;
@@ -319,7 +319,7 @@ function showView(aView) {
                       ["version", "?version"],
                       ["typeName", "update"] ];
       types = [ [ ["availableUpdateVersion", "?availableUpdateVersion", null],
-                  [ "updateable", "true", null ] ] ];
+                  ["updateable", "true", null] ] ];
       break;
     case "installs":
       document.getElementById("installs-view").hidden = false;
@@ -357,7 +357,7 @@ function showView(aView) {
                       ["version", "?version"],
                       ["newVersion", "?newVersion"],
                       ["typeName", "install"] ];
-      types = [ [ ["state", "?state", null ] ] ];
+      types = [ [ ["state", "?state", null] ] ];
       break;
   }
 
@@ -562,10 +562,6 @@ function initPluginsDS()
     gPluginsDS.Assert(pluginNode,
                       rdf.GetResource(PREFIX_NS_EM + "compatible"),
                       rdf.GetLiteral("true"),
-                      true);
-    gPluginsDS.Assert(pluginNode,
-                      rdf.GetResource(PREFIX_NS_EM + "type"),
-                      rdf.GetIntLiteral(nsIUpdateItem.TYPE_PLUGIN),
                       true);
     gPluginsDS.Assert(pluginNode,
                       rdf.GetResource(PREFIX_NS_EM + "plugin"),
@@ -1097,7 +1093,7 @@ var gAddonContextMenus = ["menuitem_useTheme", "menuitem_options", "menuitem_hom
                           "menuitem_enable", "menuitem_disable"];
 var gUpdateContextMenus = ["menuitem_homepage", "menuitem_about", "menuseparator_1",
                            "menuitem_installUpdate", "menuitem_includeUpdate"];
-// For browsers don't display context menuitems that can open a browser window.
+// For Firefox don't display context menuitems that can open a browser window.
 var gUpdateContextMenusNoBrowser = ["menuitem_installUpdate", "menuitem_includeUpdate"];
 var gInstallContextMenus = ["menuitem_homepage", "menuitem_about"];
 
@@ -1170,6 +1166,9 @@ function buildContextMenu(aEvent)
     document.getElementById("menuitem_disable_clone").hidden = canEnable;
     document.getElementById("menuitem_useTheme_clone").hidden = true;
     document.getElementById("menuitem_options_clone").hidden = true;
+    document.getElementById("menuitem_about_clone").hidden = true;
+    document.getElementById("menuitem_uninstall_clone").hidden = true;
+    document.getElementById("menuitem_checkUpdate_clone").hidden = true;
     break;
   case "updates":
     var includeUpdate = document.getAnonymousElementByAttribute(selectedItem, "anonid", "includeUpdate");
@@ -1406,17 +1405,14 @@ function updateOptionalViews() {
   ctr.Init(ds, rdfs.GetResource(RDFURI_ITEM_ROOT));
   var elements = ctr.GetElements();
   var showLocales = false;
-  var showPlugins = false;
   var showUpdates = false;
   var showInstalls = false;
   while (elements.hasMoreElements()) {
     var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-    if (!showPlugins || !showLocales) {
+    if (!showLocales) {
       var typeArc = rdfs.GetResource(PREFIX_NS_EM + "type");
       var type = ds.GetTarget(e, typeArc, true);
       if (type && type instanceof Components.interfaces.nsIRDFInt) {
-        if (type.Value & nsIUpdateItem.TYPE_PLUGIN)
-          showPlugins = true;
         if (type.Value & nsIUpdateItem.TYPE_LOCALE)
           showLocales = true;
       }
@@ -1444,7 +1440,6 @@ function updateOptionalViews() {
     }
   }
   document.getElementById("locales-view").hidden = !showLocales;
-  document.getElementById("plugins-view").hidden = !showPlugins;
   document.getElementById("updates-view").hidden = !showUpdates;
   document.getElementById("installs-view").hidden = !showInstalls;
 }

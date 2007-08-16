@@ -3106,8 +3106,7 @@ ExtensionManager.prototype = {
     // manifests, and are still valid, we need to manually create the flat
     // manifest files.
     var extensions = this._getActiveItems(nsIUpdateItem.TYPE_EXTENSION +
-                                          nsIUpdateItem.TYPE_LOCALE +
-                                          nsIUpdateItem.TYPE_PLUGIN);
+                                          nsIUpdateItem.TYPE_LOCALE);
     for (var i = 0; i < extensions.length; ++i) {
       var e = extensions[i];
       var itemLocation = e.location.getItemLocation(e.id);
@@ -3735,8 +3734,7 @@ ExtensionManager.prototype = {
     // To do this we obtain a list of active extensions and themes and write 
     // these to the extensions.ini file in the profile directory.
     var validExtensions = this._getActiveItems(nsIUpdateItem.TYPE_EXTENSION +
-                                               nsIUpdateItem.TYPE_LOCALE +
-                                               nsIUpdateItem.TYPE_PLUGIN);
+                                               nsIUpdateItem.TYPE_LOCALE);
     var validThemes     = this._getActiveItems(nsIUpdateItem.TYPE_THEME);
 
     var extensionsLocationsFile = getFile(KEY_PROFILEDIR, [FILE_EXTENSION_MANIFEST]);
