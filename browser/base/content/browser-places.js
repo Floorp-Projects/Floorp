@@ -592,3 +592,141 @@ var PlacesMenuDNDController = {
   _dragSupported: true
 #endif
 };
+
+var PlacesStarButton = {
+  init: function PSB_init() {
+    PlacesUtils.bookmarks.addObserver(this, false);
+  },
+
+  uninit: function PSB_uninit() {
+    PlacesUtils.bookmarks.removeObserver(this);
+  },
+
+  QueryInterface: function PSB_QueryInterface(aIID) {
+    if (aIID.equals(Ci.nsIDOMEventListener) ||
+        aIID.equals(Ci.nsINavBookmarkObserver) ||
+        aIID.equals(Ci.nsISupports))
+      return this;
+
+    throw Cr.NS_NOINTERFACE;
+  },
+
+  get panel() {
+    return document.getElementById("editBookmarkPanel");
+  },
+
+  _starred: false,
+  _batching: false,
+
+  updateState: function PSB_updateState() {
+    var uri = getBrowser().currentURI;
+    this._starred = uri && PlacesUtils.bookmarks.isBookmarked(uri);
+    if (this._starred)
+      document.getElementById("star-icon").setAttribute("starred", "true");
+    else
+      document.getElementById("star-icon").removeAttribute("starred");
+  },
+
+  _star: function PSB_star(aBrowser) {
+    var uri = aBrowser.currentURI;
+    if (!uri)
+      throw "No URL";
+
+    var title = PlacesUtils.history.getPageTitle(uri);
+
+    var descAnno = {
+      name: DESCRIPTION_ANNO,
+      value: PlacesUtils.getDescriptionFromDocument(aBrowser.contentDocument)
+    };
+    var txn = PlacesUtils.ptm.createItem(uri, PlacesUtils.placesRootId, -1,
+                                         title, null, [descAnno]);
+    PlacesUtils.ptm.commitTransaction(txn);
+  },
+
+  // nsIDOMEventListener
+  handleEvent: function PSB_handleEvent(aEvent) {
+    if (aEvent.originalTarget != this.panel)
+      return;
+
+    // This only happens for auto-hide. When the panel is closed from within
+    // itself, doneCallback removes the listener and only then hides the popup
+    gAddBookmarksPanel.saveItem();
+    gAddBookmarksPanel.uninitPanel();
+  },
+
+  showBookmarkPagePopup: function PSB_showBookmarkPagePopup(aBrowser) {
+    const bms = PlacesUtils.bookmarks;
+
+    var dockTo = document.getElementById("star-icon");
+    if (!dockTo)
+      dockTo = getBrowser();
+
+    var panel = this.panel;
+    panel.showPopup(dockTo, -1, -1, "popup", "bottomright", "topright");
+
+    var uri = aBrowser.currentURI;
+
+    var itemId = -1;
+    var bmkIds = bms.getBookmarkIdsForURI(uri, {});
+    for each (var bk in bmkIds) {
+      // Find the first folder which isn't a tag container
+      var folder = bms.getFolderIdForItem(bk);
+      if (folder == PlacesUtils.placesRootId ||
+          bms.getFolderIdForItem(folder) != PlacesUtils.tagRootId) {
+        itemId = bk;
+        break;
+      }
+    }
+    if (itemId == -1) {
+      // if we're called before the URI is bookmarked, or if the remaining
+      // items for this url are under tag containers, star the page first
+      itemId = this._star(aBrowser);
+    }
+    gAddBookmarksPanel.initPanel(itemId, PlacesUtils.tm, this.doneCallback,
+                                 { hiddenRows: "description" });
+    panel.addEventListener("popuphiding", this, false);
+  },
+
+  onClick: function PSB_onClick(aEvent) {
+    if (this._starred)
+      this.showBookmarkPagePopup(getBrowser());
+    else
+      this._star(getBrowser());
+  },
+
+  doneCallback: function PSB_doneCallback(aSavedChanges) {
+    var panel = PlacesStarButton.panel;
+    panel.removeEventListener("popuphiding", PlacesStarButton, false);
+    gAddBookmarksPanel.uninitPanel();
+    panel.hidePopup();
+  },
+
+  // nsINavBookmarkObserver  
+  onBeginUpdateBatch: function PSB_onBeginUpdateBatch() {
+    this._batching = true;
+  },
+
+  onEndUpdateBatch: function PSB_onEndUpdateBatch() {
+    this.updateState();
+    this._batching = false;
+  },
+  
+  onItemAdded: function PSB_onItemAdded(aItemId, aFolder, aIndex) {
+    if (!this._batching && !this._starred)
+      this.updateState();
+  },
+
+  onItemRemoved: function PSB_onItemRemoved(aItemId, aFolder, aIndex) {
+    if (!this._batching)
+      this.updateState();
+  },
+
+  onItemChanged: function PSB_onItemChanged(aItemId, aProperty,
+                                            aIsAnnotationProperty, aValue) {
+    if (!this._batching && aProperty == "uri")
+      this.updateState();
+  },
+
+  onItemVisited: function() { },
+  onItemMoved: function() { }
+};
