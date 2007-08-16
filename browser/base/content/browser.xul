@@ -98,7 +98,7 @@
            onclick="checkForMiddleClick(this, event);"/>
     <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
-    <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete"/>
+    <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete" noautofocus="true"/>
 
     <popup id="toolbar-context-menu"
            onpopupshowing="onViewToolbarsPopupShowing(event);">

@@ -76,6 +76,12 @@ class nsMenuBarFrame;
 class nsIMenuParent;
 class nsIDOMKeyEvent;
 
+enum nsPopupType {
+  ePopupTypePanel,
+  ePopupTypeMenu,
+  ePopupTypeTooltip
+};
+
 /**
  * nsNavigationDirection: an enum expressing navigation through the menus in
  * terms which are independent of the directionality of the chrome. The
@@ -153,7 +159,7 @@ class nsMenuChainItem
 {
 private:
   nsMenuPopupFrame* mFrame; // the popup frame
-  PRPackedBool mIsMenu; // true if the popup is a menu, false for a panel
+  nsPopupType mPopupType; // the popup type of the frame
   PRPackedBool mIsContext; // true for context menus
   PRPackedBool mOnMenuBar; // true if the menu is on a menu bar
   PRPackedBool mIgnoreKeys; // true if keyboard listeners should not be used
@@ -162,12 +168,12 @@ private:
   nsMenuChainItem* mChild;
 
 public:
-  nsMenuChainItem(nsMenuPopupFrame* aFrame, PRBool aIsContext, PRBool aIsMenu)
+  nsMenuChainItem(nsMenuPopupFrame* aFrame, PRBool aIsContext, nsPopupType aPopupType)
     : mFrame(aFrame),
-      mIsMenu(aIsMenu),
+      mPopupType(aPopupType),
       mIsContext(aIsContext),
       mOnMenuBar(PR_FALSE),
-      mIgnoreKeys(!aIsMenu), // always ignore keys on non-menus
+      mIgnoreKeys(aPopupType != ePopupTypeMenu), // always ignore keys on non-menus
       mParent(nsnull),
       mChild(nsnull)
   {
@@ -182,7 +188,8 @@ public:
 
   nsIContent* Content();
   nsMenuPopupFrame* Frame() { return mFrame; }
-  PRBool IsMenu() { return mIsMenu; }
+  nsPopupType PopupType() { return mPopupType; }
+  PRBool IsMenu() { return mPopupType == ePopupTypeMenu; }
   PRBool IsContextMenu() { return mIsContext; }
   PRBool IgnoreKeys() { return mIgnoreKeys; }
   PRBool IsOnMenuBar() { return mOnMenuBar; }
@@ -235,12 +242,12 @@ public:
   nsXULPopupHidingEvent(nsIContent *aPopup,
                         nsIContent* aNextPopup,
                         nsIContent* aLastPopup,
-                        PRBool aIsMenu,
+                        nsPopupType aPopupType,
                         PRBool aDeselectMenu)
     : mPopup(aPopup),
       mNextPopup(aNextPopup),
       mLastPopup(aLastPopup),
-      mIsMenu(aIsMenu),
+      mPopupType(aPopupType),
       mDeselectMenu(aDeselectMenu)
   {
     NS_ASSERTION(aPopup, "null popup supplied to nsXULPopupHidingEvent constructor");
@@ -253,7 +260,7 @@ private:
   nsCOMPtr<nsIContent> mPopup;
   nsCOMPtr<nsIContent> mNextPopup;
   nsCOMPtr<nsIContent> mLastPopup;
-  PRBool mIsMenu;
+  nsPopupType mPopupType;
   PRBool mDeselectMenu;
 };
 
@@ -464,6 +471,12 @@ public:
   PRBool IsPopupOpenForMenuParent(nsIMenuParent* aMenuParent);
 
   /**
+   * Return the frame for the topmost open popup of a given type, or null if
+   * no popup of that type is open.
+   */
+  nsIFrame* GetTopPopup(nsPopupType aType);
+
+  /**
    * Return an array of all the open popup frames for menus, in order from
    * top to bottom.
    */
@@ -573,7 +586,7 @@ protected:
                          nsMenuPopupFrame* aPopupFrame,
                          nsIContent* aNextPopup,
                          nsIContent* aLastPopup,
-                         PRBool aIsMenu,
+                         nsPopupType aPopupType,
                          PRBool aDeselectMenu);
 
   /**
@@ -585,12 +598,14 @@ protected:
    * aMenu - should be set to the parent menu if this is a popup associated
    *         with a menu. Otherwise, should be null.
    * aPresContext - the prescontext 
+   * aPopupType - the popup frame's PopupType
    * aIsContextMenu - true for context menus
    * aSelectFirstItem - true to select the first item in the menu
    */
   void FirePopupShowingEvent(nsIContent* aPopup,
                              nsIContent* aMenu,
                              nsPresContext* aPresContext,
+                             nsPopupType aPopupType,
                              PRBool aIsContextMenu,
                              PRBool aSelectFirstItem);
 
@@ -598,9 +613,10 @@ protected:
    * Fire a popuphiding event and then hide the popup. This will be called
    * recursively if aNextPopup and aLastPopup are set in order to hide a chain
    * of open menus. If these are not set, only one popup is closed. However,
-   * if aIsMenu is true, yet the next popup is not a menu, then this ends the
-   * closing of popups. This allows a menulist inside a non-menu to close up
-   * the menu but not close up the panel it is contained within.
+   * if the popup type indicates a menu, yet the next popup is not a menu,
+   * then this ends the closing of popups. This allows a menulist inside a
+   * non-menu to close up the menu but not close up the panel it is contained
+   * within.
    *
    * The caller must keep a strong reference to aPopup, aNextPopup and aLastPopup.
    *
@@ -608,14 +624,14 @@ protected:
    * aNextPopup - the next popup to hide
    * aLastPopup - the last popup in the chain to hide
    * aPresContext - nsPresContext for the popup's frame
-   * aIsMenu - true if aPopup is a menu. 
+   * aPopupType - the PopupType of the frame. 
    * aDeselectMenu - true to unhighlight the menu when hiding it
    */
   void FirePopupHidingEvent(nsIContent* aPopup,
                             nsIContent* aNextPopup,
                             nsIContent* aLastPopup,
                             nsPresContext *aPresContext,
-                            PRBool aIsMenu,
+                            nsPopupType aPopupType,
                             PRBool aDeselectMenu);
 
   /**
