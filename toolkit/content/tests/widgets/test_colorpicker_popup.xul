@@ -99,6 +99,8 @@ function goNext()
     return;
   }
 
+  gCp.focus();
+
   var phase = phases[gTestPhase];
   switch (phase) {
     case "mouse click":
