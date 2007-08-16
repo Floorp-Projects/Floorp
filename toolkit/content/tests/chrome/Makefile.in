@@ -58,6 +58,8 @@ _TEST_FILES = 	bug288254_window.xul \
 		window_popup_preventdefault_chrome.xul \
 		test_largemenu.xul \
 		window_largemenu.xul \
+		test_panel_focus.xul \
+		window_panel_focus.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
