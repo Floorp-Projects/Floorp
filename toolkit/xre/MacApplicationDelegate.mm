@@ -90,12 +90,10 @@ SetupMacApplicationDelegate()
 // The method that NSApplication calls upon a request to reopen, such as when
 // the Dock icon is clicked and no windows are open.
 
+// A "visible" window may be miniaturized, so we can't skip
+// nsCocoaNativeReOpen() if 'flag' is 'true'.
 - (BOOL)applicationShouldHandleReopen:(NSApplication*)theApp hasVisibleWindows:(BOOL)flag
 {
-  // If there are windows already, nothing to do.
-  if (flag)
-    return NO;
- 
   nsCOMPtr<nsINativeAppSupport> nas = do_CreateInstance(NS_NATIVEAPPSUPPORT_CONTRACTID);
   NS_ENSURE_TRUE(nas, NO);
 
