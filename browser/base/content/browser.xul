@@ -53,7 +53,6 @@
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
-<?xul-overlay href="chrome://browser/content/places/editBookmarkOverlay.xul"?>
 
 # All DTD information is stored in a separate file so that it can be shared by
 # hiddenWindow.xul.
