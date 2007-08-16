@@ -89,7 +89,10 @@ extern nsISupportsArray *gDraggedTransferables;
 
 PRBool nsTSMManager::sIsIMEEnabled = PR_TRUE;
 PRBool nsTSMManager::sIsRomanKeyboardsOnly = PR_FALSE;
+PRBool nsTSMManager::sIgnoreCommit = PR_FALSE;
 NSView<mozView>* nsTSMManager::sComposingView = nsnull;
+TSMDocumentID nsTSMManager::sDocumentID = nsnull;
+NSString* nsTSMManager::sComposingString = nsnull;
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 static NSView* sLastViewEntered = nil;
@@ -3549,15 +3552,21 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (!mGeckoChild)
     return;
 
+  id arp = [[NSAutoreleasePool alloc] init];
+
   if (![insertString isKindOfClass:[NSAttributedString class]])
     insertString = [[[NSAttributedString alloc] initWithString:insertString] autorelease];
 
   NSString *tmpStr = [insertString string];
   unsigned int len = [tmpStr length];
+  if (!nsTSMManager::IsComposing() && len == 0) {
+    [arp release];
+    return; // nothing to do
+  }
   PRUnichar buffer[MAX_BUFFER_SIZE];
   PRUnichar *bufPtr = (len >= MAX_BUFFER_SIZE) ? new PRUnichar[len + 1] : buffer;
   [tmpStr getCharacters: bufPtr];
-  bufPtr[len] = (PRUnichar)'\0';
+  bufPtr[len] = PRUnichar('\0');
 
   if (len == 1 && !nsTSMManager::IsComposing()) {
     // dispatch keypress event with char instead of textEvent
@@ -3588,7 +3597,14 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
       nsTSMManager::StartComposing(self);
     }
 
-    // dispatch textevent (is this redundant?)
+    if (nsTSMManager::IgnoreCommit()) {
+      tmpStr = [tmpStr init];
+      len = 0;
+      bufPtr[0] = PRUnichar('\0');
+      insertString =
+        [[[NSAttributedString alloc] initWithString:tmpStr] autorelease];
+    }
+    // dispatch textevent
     [self sendTextEvent:bufPtr attributedString:insertString
                                selectedRange:NSMakeRange(0, len)
                                markedRange:mMarkedRange
@@ -3602,6 +3618,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
   if (bufPtr != buffer)
     delete[] bufPtr;
+
+  [arp release];
 }
 
 
@@ -3636,6 +3654,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   NSLog(@" aString = '%@'", aString);
 #endif
 
+  id arp = [[NSAutoreleasePool alloc] init];
+
   if (![aString isKindOfClass:[NSAttributedString class]])
     aString = [[[NSAttributedString alloc] initWithString:aString] autorelease];
 
@@ -3647,13 +3667,13 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   PRUnichar buffer[MAX_BUFFER_SIZE];
   PRUnichar *bufPtr = (len >= MAX_BUFFER_SIZE) ? new PRUnichar[len + 1] : buffer;
   [tmpStr getCharacters: bufPtr];
-  bufPtr[len] = (PRUnichar)'\0';
+  bufPtr[len] = PRUnichar('\0');
 
 #if DEBUG_IME 
   printf("****in setMarkedText, len = %d, text = ", len);
   PRUint32 n = 0;
   PRUint32 maxlen = len > 12 ? 12 : len;
-  for (PRUnichar *a = bufPtr; (*a != (PRUnichar)'\0') && n<maxlen; a++, n++) printf((*a&0xff80) ? "\\u%4X" : "%c", *a); 
+  for (PRUnichar *a = bufPtr; (*a != PRUnichar('\0')) && n<maxlen; a++, n++) printf((*a&0xff80) ? "\\u%4X" : "%c", *a); 
   printf("\n");
 #endif
 
@@ -3665,16 +3685,20 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     nsTSMManager::StartComposing(self);
   }
 
+  nsTSMManager::UpdateComposing(tmpStr);
+
   [self sendTextEvent:bufPtr attributedString:aString
                              selectedRange:selRange
                              markedRange:mMarkedRange
                              doCommit:NO];
 
   if (nsTSMManager::IsComposing() && len == 0)
-    [self unmarkText];
+    nsTSMManager::CommitIME();
   
   if (bufPtr != buffer)
     delete[] bufPtr;
+
+  [arp release];
 }
 
 
@@ -3685,13 +3709,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   NSLog(@" markedRange   = %d, %d", mMarkedRange.location, mMarkedRange.length);
   NSLog(@" selectedRange = %d, %d", mSelectedRange.location, mSelectedRange.length);
 #endif
-
-  mSelectedRange = mMarkedRange = NSMakeRange(NSNotFound, 0);
-  if (nsTSMManager::IsComposing()) {
-    [self sendCompositionEvent: NS_COMPOSITION_END];
-    // brade: do we need to send an end composition event?
-    nsTSMManager::EndComposing();
-  }
+  nsTSMManager::CommitIME();
 }
 
 
@@ -3998,6 +4016,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 // nil -- otherwise the keyboard focus can end up in the wrong NSView.
 - (BOOL)resignFirstResponder
 {
+  nsTSMManager::CommitIME();
+
   if (mGeckoChild)
     [self sendFocusEvent:NS_LOSTFOCUS];
 
@@ -4030,6 +4050,8 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 {
   if (!mGeckoChild)
     return;
+
+  nsTSMManager::CommitIME();
 
   [self sendFocusEvent:NS_DEACTIVATE];
   [self sendFocusEvent:NS_LOSTFOCUS];
@@ -4403,6 +4425,15 @@ nsTSMManager::StartComposing(NSView<mozView>* aComposingView)
   if (sComposingView && sComposingView != sComposingView)
     CommitIME();
   sComposingView = aComposingView;
+  sDocumentID = ::TSMGetActiveDocument();
+}
+
+
+void
+nsTSMManager::UpdateComposing(NSString* aComposingString)
+{
+  sComposingString = aComposingString;
+  [sComposingString retain];
 }
 
 
@@ -4410,6 +4441,11 @@ void
 nsTSMManager::EndComposing()
 {
   sComposingView = nsnull;
+  if (sComposingString) {
+    [sComposingString release];
+    sComposingString = nsnull;
+  }
+  sDocumentID = nsnull;
 }
 
 
@@ -4446,33 +4482,48 @@ nsTSMManager::SetRomanKeyboardsOnly(PRBool aRomanOnly)
 
 
 void
+nsTSMManager::KillComposing()
+{
+  // Force commit the current composition
+  // XXX Don't use NSInputManager. Because it cannot control the non-forcused
+  // input manager, therefore, on deactivating a window, it does not work fine.
+  NS_ASSERTION(sDocumentID, "The TSMDocumentID is null");
+  ::FixTSMDocument(sDocumentID);
+}
+
+
+void
 nsTSMManager::CommitIME()
 {
-  if (!sComposingView)
+  if (!IsComposing())
     return;
-
-  NSInputManager *currentIM = [NSInputManager currentInputManager];
-
-  // commit the current text
-  [currentIM unmarkText];
-
-  // and clear the input manager's string
-  [currentIM markedTextAbandoned:sComposingView];
-
-  EndComposing();
+  KillComposing();
+  if (!IsComposing())
+    return;
+  // If the composing transaction is still there, KillComposing only kills the
+  // composing in TSM. We also need to kill the our composing transaction too.
+  NSAttributedString* str =
+    [[NSAttributedString alloc] initWithString:sComposingString];
+  [sComposingView insertText:str];
+  [str release];
 }
 
 
 void
 nsTSMManager::CancelIME()
 {
-  if (!sComposingView)
+  if (!IsComposing())
     return;
-
-  NSInputManager *currentIM = [NSInputManager currentInputManager];
-
-  // clear the input manager's string
-  [currentIM markedTextAbandoned:sComposingView];
-
-  EndComposing();
+  // For canceling the current composing, we need to ignore the param of
+  // insertText. But this code is ugly...
+  sIgnoreCommit = PR_TRUE;
+  KillComposing();
+  sIgnoreCommit = PR_FALSE;
+  if (!IsComposing())
+    return;
+  // If the composing transaction is still there, KillComposing only kills the
+  // composing in TSM. We also need to kill the our composing transaction too.
+  NSAttributedString* str = [[NSAttributedString alloc] initWithString:@""];
+  [sComposingView insertText:str];
+  [str release];
 }
