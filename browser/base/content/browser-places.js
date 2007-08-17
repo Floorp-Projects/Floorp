@@ -22,6 +22,7 @@
  *   Ben Goodger <beng@google.com>
  *   Annie Sullivan <annie.sullivan@gmail.com>
  *   Joe Hughes <joe@retrovirus.com>
+ *   Asaf Romano <mano@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,6 +39,145 @@
  * ***** END LICENSE BLOCK ***** */
 
 var PlacesCommandHook = {
+  // nsISupports
+  QueryInterface: function PCH_QueryInterface(aIID) {
+    if (aIID.equals(Ci.nsIDOMEventListener) ||
+        aIID.equals(Ci.nsISupports))
+      return this;
+
+    throw Cr.NS_NOINTERFACE;
+  },
+
+  // Edit-bookmark panel
+  get panel() {
+    return document.getElementById("editBookmarkPanel");
+  },
+
+  // nsIDOMEventListener
+  handleEvent: function PCH_handleEvent(aEvent) {
+    if (aEvent.originalTarget != this.panel)
+      return;
+
+    // This only happens for auto-hide. When the panel is closed from within
+    // itself, doneCallback removes the listener and only then hides the popup
+    gAddBookmarksPanel.saveItem();
+    gAddBookmarksPanel.uninitPanel();
+  },
+
+  _overlayLoaded: false,
+  _overlayLoading: false,
+  showEditBookmarkPopup:
+  function PCH_showEditBookmarkPopup(aItemId, aAnchorElement, aPosition) {
+    // Performance: load the overlay the first time the panel is opened
+    // (see bug 392443).
+    if (this._overlayLoading)
+      return;
+
+    if (this._overlayLoaded) {
+      this._doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition);
+      return;
+    }
+
+    var loadObserver = {
+      _self: this,
+      _itemId: aItemId,
+      _anchorElement: aAnchorElement,
+      _position: aPosition,
+      observe: function (aSubject, aTopic, aData) {
+        // scripts within the overlay are compiled after this is called :(
+        setTimeout(function(aSelf) {
+          aSelf._self._overlayLoading = false;
+          aSelf._self._overlayLoaded = true;
+          aSelf._self._doShowEditBookmarkPanel(aItemId, aSelf._anchorElement,
+                                               aSelf._position);
+        }, 0, this);
+      }
+    };
+    this._overlayLoading = true;
+    document.loadOverlay("chrome://browser/content/places/editBookmarkOverlay.xul",
+                         loadObserver);
+  },
+
+  _doShowEditBookmarkPanel:
+  function PCH__doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition) {
+    var panel = this.panel;
+    panel.openPopup(aAnchorElement, aPosition, -1, -1);
+
+    gAddBookmarksPanel.initPanel(aItemId, PlacesUtils.tm, this.doneCallback,
+                                 { hiddenRows: "description" });
+    panel.addEventListener("popuphiding", this, false);
+  },
+
+  doneCallback: function PCH_doneCallback(aSavedChanges) {
+    var panel = PlacesCommandHook.panel;
+    panel.removeEventListener("popuphiding", PlacesCommandHook, false);
+    gAddBookmarksPanel.uninitPanel();
+    panel.hidePopup();
+  },
+
+  /**
+   * Adds a bookmark to the page loaded in the given browser
+   *
+   * @param aBrowser
+   *        a <browser> element
+   * @param [optional] aShowEditUI
+   *        whether or not to show the edit-bookmark UI for the bookmark item
+   * @param [optional] aAnchorElement
+   *        required if aShowEditUI is set, see popup's openPopup.
+   * @param [optional] aPosition
+   *        required if aShowEditUI is set, see popup's openPopup.
+   */  
+  bookmarkPage: function PCH_bookmarkPage(aBrowser, aShowEditUI,
+                                          aAnchorElement, aPosition) {
+    var uri = aBrowser.currentURI;
+
+    var itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
+    if (itemId == -1) {
+      // Copied over from addBookmarkForBrowser:
+      // Bug 52536: We obtain the URL and title from the nsIWebNavigation
+      // associated with a <browser/> rather than from a DOMWindow.
+      // This is because when a full page plugin is loaded, there is
+      // no DOMWindow (?) but information about the loaded document
+      // may still be obtained from the webNavigation.
+      var webNav = aBrowser.webNavigation;
+      var url = webNav.currentURI;
+      var title;
+      var description;
+      try {
+        title = webNav.document.title;
+        description = PlacesUtils.getDescriptionFromDocument(webNav.document);
+      }
+      catch (e) { }
+
+      var descAnno = { name: DESCRIPTION_ANNO, value: description };
+      var txn = PlacesUtils.ptm.createItem(uri, PlacesUtils.placesRootId, -1,
+                                           title, null, [descAnno]);
+      PlacesUtils.ptm.commitTransaction(txn);
+      if (aShowEditUI)
+        itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
+    }
+
+    if (aShowEditUI)
+      this.showEditBookmarkPopup(itemId, aAnchorElement, aPosition);
+  },
+
+  /**
+   * Adds a bookmark to the page loaded in the current tab. 
+   */
+  bookmarkCurrentPage: function PCH_bookmarkCurrentPage(aShowEditUI) {
+    // dock the panel to the star icon if it is visible, otherwise dock
+    // it to the content area
+    var starIcon = document.getElementById("star-icon");
+    if (starIcon && isElementVisible(starIcon)) {
+      this.bookmarkPage(getBrowser().selectedBrowser, aShowEditUI, starIcon,
+                        "after_end");
+    }
+    else {
+      this.bookmarkPage(getBrowser().selectedBrowser, aShowEditUI, getBrowser(),
+                        "overlap");
+    }
+  },
+
   /**
    * Adds a bookmark to the page targeted by a link.
    * @param   url
@@ -46,45 +186,17 @@ var PlacesCommandHook = {
    *          The link text
    */
   bookmarkLink: function PCH_bookmarkLink(url, title) {
-    var ios = 
-        Cc["@mozilla.org/network/io-service;1"].
-        getService(Ci.nsIIOService);
-    var linkURI = ios.newURI(url, null, null);
-
-    PlacesUtils.showMinimalAddBookmarkUI(linkURI, title);
-  },
-
-  /**
-   * Adds a bookmark to the page loaded in the given browser 
-   * @param aBrowser
-   *        a <browser> element
-   */
-  bookmarkPage: function PCH_bookmarkPage(aBrowser) {
-    // Copied over from addBookmarkForBrowser:
-    // Bug 52536: We obtain the URL and title from the nsIWebNavigation
-    // associated with a <browser/> rather than from a DOMWindow.
-    // This is because when a full page plugin is loaded, there is
-    // no DOMWindow (?) but information about the loaded document
-    // may still be obtained from the webNavigation.
-    var webNav = aBrowser.webNavigation;
-    var url = webNav.currentURI;
-    var title;
-    var description;
-    try {
-      title = webNav.document.title;
-      description = PlacesUtils.getDescriptionFromDocument(webNav.document);
+    var linkURI = IO.newURI(url)
+    var itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
+    if (itemId == -1) {
+      var txn = PlacesUtils.ptm.createItem(linkURI, PlacesUtils.placesRootId, -1,
+                                           title);
+      PlacesUtils.ptm.commitTransaction(txn);
+      itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
     }
-    catch (e) { }
-    PlacesUtils.showMinimalAddBookmarkUI(url, title, description);
-  },
 
-  /**
-   * Adds a bookmark to the page loaded in the current tab. 
-   */
-  bookmarkCurrentPage: function PCH_bookmarkCurrentPage() {
-    this.bookmarkPage(getBrowser().selectedBrowser);
+    PlacesCommandHook.showEditBookmarkPopup(itemId, getBrowser(), "overlap");
   },
-
 
   /**
    * This function returns a list of nsIURI objects characterizing the
@@ -603,131 +715,31 @@ var PlacesStarButton = {
   },
 
   QueryInterface: function PSB_QueryInterface(aIID) {
-    if (aIID.equals(Ci.nsIDOMEventListener) ||
-        aIID.equals(Ci.nsINavBookmarkObserver) ||
+    if (aIID.equals(Ci.nsINavBookmarkObserver) ||
         aIID.equals(Ci.nsISupports))
       return this;
 
     throw Cr.NS_NOINTERFACE;
   },
 
-  get panel() {
-    return document.getElementById("editBookmarkPanel");
-  },
-
   _starred: false,
   _batching: false,
-  _overlayLoaded: false,
-  _overlayLoading: false,
 
   updateState: function PSB_updateState() {
+    var starIcon = document.getElementById("star-icon");
+    if (!starIcon)
+      return;
+
     var uri = getBrowser().currentURI;
     this._starred = uri && PlacesUtils.bookmarks.isBookmarked(uri);
     if (this._starred)
-      document.getElementById("star-icon").setAttribute("starred", "true");
+      starIcon.setAttribute("starred", "true");
     else
-      document.getElementById("star-icon").removeAttribute("starred");
-  },
-
-  _star: function PSB_star(aBrowser) {
-    var uri = aBrowser.currentURI;
-    if (!uri)
-      throw "No URL";
-
-    var title = PlacesUtils.history.getPageTitle(uri);
-
-    var descAnno = {
-      name: DESCRIPTION_ANNO,
-      value: PlacesUtils.getDescriptionFromDocument(aBrowser.contentDocument)
-    };
-    var txn = PlacesUtils.ptm.createItem(uri, PlacesUtils.placesRootId, -1,
-                                         title, null, [descAnno]);
-    PlacesUtils.ptm.commitTransaction(txn);
-  },
-
-  // nsIDOMEventListener
-  handleEvent: function PSB_handleEvent(aEvent) {
-    if (aEvent.originalTarget != this.panel)
-      return;
-
-    // This only happens for auto-hide. When the panel is closed from within
-    // itself, doneCallback removes the listener and only then hides the popup
-    gAddBookmarksPanel.saveItem();
-    gAddBookmarksPanel.uninitPanel();
-  },
-
-  showBookmarkPagePopup: function PSB_showBookmarkPagePopup(aBrowser) {
-    // Performance: load the overlay the first time the panel is opened
-    // (see bug 392443).
-    if (this._overlayLoading)
-      return;
-
-    if (this._overlayLoaded) {
-      this._doShowBookmarkPagePopup(aBrowser);
-      return;
-    }
-
-    var loadObserver = {
-      _self: this,
-      _browser: aBrowser,
-      observe: function (aSubject, aTopic, aData) {
-        // scripts within the overlay are compiled after this is called :(
-        setTimeout(function(aSelf) {
-          aSelf._self._overlayLoading = false;
-          aSelf._self._overlayLoaded = true;
-          aSelf._self._doShowBookmarkPagePopup(aSelf._browser);
-        }, 0, this);
-      }
-    };
-    this._overlayLoading = true;
-    document.loadOverlay("chrome://browser/content/places/editBookmarkOverlay.xul", loadObserver);
-  },
-
-  _doShowBookmarkPagePopup: function PSB__doShowBookmarkPagePopup(aBrowser) {
-    const bms = PlacesUtils.bookmarks;
-
-    var dockTo = document.getElementById("star-icon");
-    if (!dockTo)
-      dockTo = getBrowser();
-
-    var panel = this.panel;
-    panel.showPopup(dockTo, -1, -1, "popup", "bottomright", "topright");
-
-    var uri = aBrowser.currentURI;
-
-    var itemId = -1;
-    var bmkIds = bms.getBookmarkIdsForURI(uri, {});
-    for each (var bk in bmkIds) {
-      // Find the first folder which isn't a tag container
-      var folder = bms.getFolderIdForItem(bk);
-      if (folder == PlacesUtils.placesRootId ||
-          bms.getFolderIdForItem(folder) != PlacesUtils.tagRootId) {
-        itemId = bk;
-        break;
-      }
-    }
-    if (itemId == -1) {
-      // if we're called before the URI is bookmarked, or if the remaining
-      // items for this url are under tag containers, star the page first
-      itemId = this._star(aBrowser);
-    }
-    gAddBookmarksPanel.initPanel(itemId, PlacesUtils.tm, this.doneCallback,
-                                 { hiddenRows: "description" });
-    panel.addEventListener("popuphiding", this, false);
+      starIcon.removeAttribute("starred");
   },
 
   onClick: function PSB_onClick(aEvent) {
-    if (this._starred)
-      this.showBookmarkPagePopup(getBrowser());
-    else
-      this._star(getBrowser());
-  },
-
-  doneCallback: function PSB_doneCallback(aSavedChanges) {
-    var panel = PlacesStarButton.panel;
-    panel.removeEventListener("popuphiding", PlacesStarButton, false);
-    gAddBookmarksPanel.uninitPanel();
-    panel.hidePopup();
+    PlacesCommandHook.bookmarkCurrentPage(this._starred);
   },
 
   // nsINavBookmarkObserver  

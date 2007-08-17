@@ -1501,6 +1501,24 @@ var PlacesUtils = {
   },
 
   /**
+   * Get the most recently added/modified bookmark for a URL, excluding items
+   * under tag containers. -1 is returned if no item is found.
+   */
+  getMostRecentBookmarkForURI:
+  function PU_getMostRecentBookmarkForURI(aURI) {
+    var bmkIds = this.bookmarks.getBookmarkIdsForURI(aURI, {});
+    for each (var bk in bmkIds) {
+      // Find the first folder which isn't a tag container
+      var folder = this.bookmarks.getFolderIdForItem(bk);
+      if (folder == this.placesRootId ||
+        this.bookmarks.getFolderIdForItem(folder) != this.tagRootId) {
+        return bk;
+      }
+    }
+    return -1;
+  },
+
+  /**
    * Converts a JavaScript object into a JSON string
    * (see http://www.json.org/ for the full grammar).
    *

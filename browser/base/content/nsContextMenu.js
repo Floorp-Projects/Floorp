@@ -1120,18 +1120,39 @@ nsContextMenu.prototype = {
   },
 
   bookmarkThisPage: function CM_bookmarkThisPage() {
-    PlacesCommandHook.bookmarkPage(this.browser);
+    // workaround bug 392512
+    setTimeout(function(aSelf) {
+      PlacesCommandHook.bookmarkPage(aSelf.browser, true, aSelf.browser,
+                                     "overlap"); }, 0, this);
   },
 
   bookmarkLink: function CM_bookmarkLink() {
-    PlacesCommandHook.bookmarkLink(this.linkURL, this.linkText());
+    // workaround bug 392512
+    setTimeout(function(aSelf) {
+      PlacesCommandHook.bookmarkLink(aSelf.linkURL, aSelf.linkText());
+    }, 0, this);
   },
 
   addBookmarkForFrame: function CM_addBookmarkForFrame() {
     var doc = this.target.ownerDocument;
-    var uri = this.target.ownerDocument.documentURIObject;
-    var description = PlacesUtils.getDescriptionFromDocument(doc);
-    PlacesUtils.showAddBookmarkUI(uri, doc.title, description);
+    var uri = doc.documentURIObject;
+
+    var itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
+    if (itemId == -1) {
+      var title = doc.title;
+      var description = PlacesUtils.getDescriptionFromDocument(doc);
+
+      var descAnno = { name: DESCRIPTION_ANNO, value: description };
+      var txn = PlacesUtils.ptm.createItem(uri, PlacesUtils.placesRootId, -1,
+                                           title, null, [descAnno]);
+      PlacesUtils.ptm.commitTransaction(txn);
+      itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
+    }
+
+    // workaround bug 392512
+    setTimeout(function(aSelf) {
+      PlacesCommandHook.showEditBookmarkPopup(itemId, aSelf.browser, "overlap");
+    }, 0, this);
   },
 
   savePageAs: function CM_savePageAs() {
