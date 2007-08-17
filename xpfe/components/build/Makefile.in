@@ -96,18 +96,26 @@ endif
 
 # Suite specific includes
 ifdef MOZ_SUITE
-REQUIRES += history downloadmanager
+REQUIRES += downloadmanager
 
 SHARED_LIBRARY_LIBS += \
 	../download-manager/src/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \
-	../history/src/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 	../related/src/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
 	$(NULL)
 LOCAL_INCLUDES += \
 	-I$(srcdir)/../download-manager/src \
-	-I$(srcdir)/../history/src       \
 	-I$(srcdir)/../related/src       \
 	$(NULL)
+
+ifndef MOZ_PLACES
+REQUIRES += history
+SHARED_LIBRARY_LIBS += \
+	../history/src/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
+	$(NULL)
+LOCAL_INCLUDES += \
+	-I$(srcdir)/../history/src       \
+	$(NULL)
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += \
