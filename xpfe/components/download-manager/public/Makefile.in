@@ -46,6 +46,9 @@ MODULE    = downloadmanager
 
 XPIDLSRCS = nsIDownloadManager.idl \
             nsIDownloadProgressListener.idl \
+            nsIDownload.idl \
+            nsIProgressDialog.idl \
+            $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
