@@ -77,6 +77,44 @@ if (!profileDir) {
   dirSvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 }
 
+var XULAppInfo = {
+  vendor: "Mozilla",
+  name: "PlacesTest",
+  ID: "{230de50e-4cd1-11dc-8314-0800200c9a66}",
+  version: "1",
+  appBuildID: "2007010101",
+  platformVersion: "",
+  platformBuildID: "2007010101",
+  inSafeMode: false,
+  logConsoleErrors: true,
+  OS: "XPCShell",
+  XPCOMABI: "noarch-spidermonkey",
+
+  QueryInterface: function QueryInterface(iid) {
+    if (iid.equals(Ci.nsIXULAppInfo) ||
+        iid.equals(Ci.nsIXULRuntime) ||
+        iid.equals(Ci.nsISupports))
+      return this;
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  }
+};
+
+var XULAppInfoFactory = {
+  createInstance: function (outer, iid) {
+    if (outer != null)
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    return XULAppInfo.QueryInterface(iid);
+  }
+};
+
+var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
+registrar.registerFactory(Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}"),
+                          "XULAppInfo", "@mozilla.org/xre/app-info;1",
+                          XULAppInfoFactory);
+
+var updateSvc = Cc["@mozilla.org/updates/update-service;1"].
+                getService(Ci.nsISupports);
+
 var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
 function uri(spec) {
