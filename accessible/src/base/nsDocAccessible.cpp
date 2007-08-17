@@ -1511,7 +1511,7 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
         nsCOMPtr<nsIAccessibleText> accessibleText = do_QueryInterface(accessible);
         PRInt32 caretOffset;
         if (accessibleText && NS_SUCCEEDED(accessibleText->GetCaretOffset(&caretOffset))) {
-#ifdef DEBUG
+#ifdef DEBUG_A11Y
           PRUnichar chAtOffset;
           accessibleText->GetCharacterAtOffset(caretOffset, &chAtOffset);
           printf("\nCaret moved to %d with char %c", caretOffset, chAtOffset);
