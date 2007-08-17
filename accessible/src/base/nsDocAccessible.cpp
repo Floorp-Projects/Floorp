@@ -1222,9 +1222,7 @@ nsDocAccessible::FireTextChangedEventOnDOMCharacterDataModified(nsIContent *aCon
 
   nsCOMPtr<nsIAccessible> accessible;
   nsresult rv = GetAccessibleInParentChain(node, getter_AddRefs(accessible));
-  nsCOMPtr<nsIAccessibleHyperText> hyperTextIface =
-    do_QueryInterface(accessible);
-  if (NS_FAILED(rv) || !hyperTextIface)
+  if (NS_FAILED(rv) || !accessible)
     return;
 
   nsRefPtr<nsHyperTextAccessible> textAccessible;
@@ -1273,9 +1271,7 @@ nsDocAccessible::FireTextChangedEventOnDOMNodeInserted(nsIContent *aChild,
 
   nsCOMPtr<nsIAccessible> accessible;
   nsresult rv = GetAccessibleInParentChain(node, getter_AddRefs(accessible));
-  nsCOMPtr<nsIAccessibleHyperText> hyperTextIface =
-    do_QueryInterface(accessible);
-  if (NS_FAILED(rv) || !hyperTextIface)
+  if (NS_FAILED(rv) || !accessible)
     return;
 
   nsRefPtr<nsHyperTextAccessible> textAccessible;
@@ -1333,9 +1329,7 @@ nsDocAccessible::FireTextChangedEventOnDOMNodeRemoved(nsIContent *aChild,
 
   nsCOMPtr<nsIAccessible> accessible;
   nsresult rv = GetAccessibleInParentChain(node, getter_AddRefs(accessible));
-  nsCOMPtr<nsIAccessibleHyperText> hyperTextIface =
-    do_QueryInterface(accessible);
-  if (NS_FAILED(rv) || !hyperTextIface)
+  if (NS_FAILED(rv) || !accessible)
     return;
 
   nsRefPtr<nsHyperTextAccessible> textAccessible;
