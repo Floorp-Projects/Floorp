@@ -100,8 +100,7 @@
 
     <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete" noautofocus="true"/>
 
-    <panel id="editBookmarkPanel"
-           position="after_end">
+    <panel id="editBookmarkPanel">
       <vbox id="editBookmarkPanelContent" flex="1"/>
     </panel>
 
