@@ -5797,7 +5797,9 @@ MOZ_ARG_ENABLE_BOOL(places,
     MOZ_PLACES= )
 if test -n "$MOZ_PLACES"; then
     AC_DEFINE(MOZ_PLACES)
-    MOZ_MORK=
+    if test -z "$MOZ_MAIL_NEWS"; then
+      MOZ_MORK=
+    fi
     MOZ_MORKREADER=1
 else
   if test "$MOZ_BUILD_APP" = "browser"; then
