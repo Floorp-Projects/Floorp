@@ -53,6 +53,8 @@ const NS_ERROR_DOM_BAD_URI = NS_ERROR_MODULE_DOM + 1012;
 
 // How often to check for microsummaries that need updating, in milliseconds.
 const CHECK_INTERVAL = 15 * 1000; // 15 seconds
+// How often to check for generator updates, in seconds
+const GENERATOR_INTERVAL = 7 * 86400; // 1 week
 
 const MICSUM_NS = new Namespace("http://www.mozilla.org/microsummaries/0.1");
 const XSLT_NS = new Namespace("http://www.w3.org/1999/XSL/Transform");
@@ -166,7 +168,7 @@ MicrosummaryService.prototype = {
         break;
       case "nsPref:changed":
         if (data == "enabled")
-          this._initTimer();
+          this._initTimers();
         break;
     }
   },
@@ -174,11 +176,11 @@ MicrosummaryService.prototype = {
   _init: function MSS__init() {
     this._obs.addObserver(this, "xpcom-shutdown", true);
     this._branch.addObserver("", this, true);
-    this._initTimer();
+    this._initTimers();
     this._cacheLocalGenerators();
   },
 
-  _initTimer: function MSS__initTimer() {
+  _initTimers: function MSS__initTimers() {
     if (this._timer)
       this._timer.cancel();
 
@@ -194,6 +196,18 @@ MicrosummaryService.prototype = {
     this._timer.initWithCallback(callback,
                                  CHECK_INTERVAL,
                                  this._timer.TYPE_REPEATING_SLACK);
+
+    // Setup a cross-session timer to periodically check for generator updates.
+    var updateManager = Cc["@mozilla.org/updates/timer-manager;1"].
+                        getService(Ci.nsIUpdateTimerManager);
+    var interval = getPref("browser.microsummary.generatorUpdateInterval",
+                           GENERATOR_INTERVAL);
+    var updateCallback = {
+      _svc: this,
+      notify: function(timer) { this._svc._updateGenerators() }
+    };
+    updateManager.registerTimer("microsummary-generator-update-timer",
+                                updateCallback, interval);
   },
   
   _destroy: function MSS__destroy() {
@@ -228,7 +242,17 @@ MicrosummaryService.prototype = {
       }
     }
   },
-  
+
+  _updateGenerators: function MSS__updateGenerators() {
+    var generators = this._localGenerators;
+    var update = getPref("browser.microsummary.updateGenerators", true);
+    if (!generators || !update)
+      return;
+
+    for (let uri in generators)
+      generators[uri].update();
+  },
+
   _updateMicrosummary: function MSS__updateMicrosummary(bookmarkID, microsummary) {
     var title = this._getTitle(bookmarkID);
 
@@ -325,12 +349,6 @@ MicrosummaryService.prototype = {
     if (!resource.isXML)
       throw(resource.uri.spec + " microsummary generator loaded, but not XML");
 
-    // Fix the generator's ID if it was installed before we started using URNs
-    // to uniquely identify generators.
-    // XXX This code can go away after Fx2 beta2, when enough users will have
-    // upgraded from earlier versions to make bug 346822 no longer significant.
-    this._fixGeneratorID(resource.content, resource.uri);
-
     var generator = new MicrosummaryGenerator(null, resource.uri);
     generator.initFromXML(resource.content);
 
@@ -343,52 +361,6 @@ MicrosummaryService.prototype = {
     LOG("loaded local microsummary generator\n" +
         "  file: " + generator.localURI.spec + "\n" +
         "    ID: " + generator.uri.spec);
-  },
-
-  /**
-   * Fix the ID of a local generator that was installed before we started
-   * using URNs to uniquely identify local generators.
-   *
-   * @param   xmlDefinition
-   *          an nsIDOMDocument XML document defining the generator
-   * @param   localURI
-   *          an nsIURI file URI to the generator's local file
-   * 
-   */
-  _fixGeneratorID: function MSS__fixGeneratorID(xmlDefinition, localURI) {
-    var generatorNode = xmlDefinition.getElementsByTagNameNS(MICSUM_NS, "generator")[0];
-
-    if (!generatorNode)
-      return;
-
-    // Don't fix generators that have already been fixed or were installed
-    // after we switched to identifying generators by URN.
-    if (generatorNode.hasAttribute("uri"))
-      return;
-
-    // Don't fix generators that don't have any ID at all (we fall back to
-    // the local URI in these cases, which is useful for developers during
-    // the process of developing generators).
-    if (!generatorNode.hasAttribute("sourceURI"))
-      return;
-
-    var oldURI = generatorNode.getAttribute("sourceURI");
-    var newURI = "urn:source:" + oldURI;
-
-    LOG("fixing generator with old-style ID\n" +
-        "  old ID: " + oldURI + "\n" +
-        "  new ID: " + newURI);
-
-    // Update the XML definition to reflect the change.
-    generatorNode.setAttribute("uri", newURI);
-
-    // Save the updated XML definition to the local file.
-    var file = localURI.QueryInterface(Ci.nsIFileURL).file.clone();
-    this._saveGeneratorXML(xmlDefinition, file);
-
-    // Update bookmarks in the bookmarks datastore that are using
-    // this microsummary generator to reflect the change.
-    this._changeField(FIELD_MICSUM_GEN_URI, oldURI, newURI);
   },
 
   // nsIMicrosummaryService
@@ -458,29 +430,24 @@ MicrosummaryService.prototype = {
     var generator = this._localGenerators[generatorID];
 
     var topic;
-    var file;
-    if (generator) {
-      // This generator is already installed.  Save it in the existing file
-      // (i.e. update the existing generator with the newly downloaded XML).
-      file = generator.localURI.QueryInterface(Ci.nsIFileURL).file.clone();
+    if (generator)
       topic = "microsummary-generator-updated";
-    }
     else {
       // This generator is not already installed.  Save it as a new file.
+      topic = "microsummary-generator-installed";
       var generatorName = rootNode.getAttribute("name");
       var fileName = sanitizeName(generatorName) + ".xml";
-      file = this._dirs.get("UsrMicsumGens", Ci.nsIFile);
+      var file = this._dirs.get("UsrMicsumGens", Ci.nsIFile);
       file.append(fileName);
       file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, PERMS_FILE);
       generator = new MicrosummaryGenerator(null, this._ios.newFileURI(file));
       this._localGenerators[generatorID] = generator;
-      topic = "microsummary-generator-installed";
     }
  
     // Initialize (or reinitialize) the generator from its XML definition,
     // the save the definition to the generator's file.
     generator.initFromXML(xmlDefinition);
-    this._saveGeneratorXML(xmlDefinition, file);
+    generator.saveXMLToFile(xmlDefinition);
 
     LOG("installed generator " + generatorID);
 
@@ -488,37 +455,6 @@ MicrosummaryService.prototype = {
 
     return generator;
   },
-
-  /**
-   * Save a generator's XML definition to a local file.
-   *
-   * @param   xmlDefinition
-   *          an nsIDOMDocument XML document defining the generator
-   * @param   file
-   *          an nsIFile file representing the generator's local file
-   * 
-   */
-  _saveGeneratorXML: function MSS_saveGeneratorXML(xmlDefinition, file) {
-    LOG("saving definition to " + file.path);
-
-    // Write the generator XML to the local file.
-    var outputStream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
-                       createInstance(Ci.nsIFileOutputStream);
-    var localFile = file.QueryInterface(Ci.nsILocalFile);
-    outputStream.init(localFile, (MODE_WRONLY | MODE_TRUNCATE | MODE_CREATE),
-                      PERMS_FILE, 0);
-    var serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
-                     createInstance(Ci.nsIDOMSerializer);
-    serializer.serializeToStream(xmlDefinition, outputStream, null);
-    if (outputStream instanceof Ci.nsISafeOutputStream) {
-      try       { outputStream.finish() }
-      catch (e) { outputStream.close()  }
-    }
-    else
-      outputStream.close();
-  },
-
-
 
   /**
    * Get the set of microsummaries available for a given page.  The set
@@ -1327,11 +1263,10 @@ MicrosummaryGenerator.prototype = {
 
     this._name = generatorNode.getAttribute("name");
 
-    // If this is a local generator (i.e. it has a local URI), then we have
-    // to retrieve its URI from the "uri" attribute of its generator tag.
-    if (this.localURI && generatorNode.hasAttribute("uri")) {
+    // We have to retrieve the URI from local generators via the "uri" attribute
+    // of its generator tag.
+    if (this.localURI && generatorNode.hasAttribute("uri"))
       this._uri = this._ios.newURI(generatorNode.getAttribute("uri"), null, null);
-    }
 
     function getFirstChildByTagName(tagName, parentNode, namespace) {
       var nodeList = parentNode.getElementsByTagNameNS(namespace, tagName);
@@ -1461,6 +1396,100 @@ MicrosummaryGenerator.prototype = {
     // XXX When we support HTML microsummaries we'll need to do something
     // more sophisticated than just returning the text content of the fragment.
     return fragment.textContent;
+  },
+
+  saveXMLToFile: function MSD_saveXMLToFile(xmlDefinition) {
+    var file = this.localURI.QueryInterface(Ci.nsIFileURL).file.clone();
+
+    LOG("saving definition to " + file.path);
+
+    // Write the generator XML to the local file.
+    var outputStream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
+                       createInstance(Ci.nsIFileOutputStream);
+    var localFile = file.QueryInterface(Ci.nsILocalFile);
+    outputStream.init(localFile, (MODE_WRONLY | MODE_TRUNCATE | MODE_CREATE),
+                      PERMS_FILE, 0);
+    var serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
+                     createInstance(Ci.nsIDOMSerializer);
+    serializer.serializeToStream(xmlDefinition, outputStream, null);
+    if (outputStream instanceof Ci.nsISafeOutputStream) {
+      try       { outputStream.finish() }
+      catch (e) { outputStream.close()  }
+    }
+    else
+      outputStream.close();
+  },
+
+  update: function MSD_update() {
+    // Update this generator if it was downloaded from a remote source and has
+    // been modified since we last downloaded it.
+    var genURI = this.uri;
+    if (genURI && /^urn:source:/i.test(genURI.spec)) {
+      let genURL = genURI.spec.replace(/^urn:source:/, "");
+      genURI = this._ios.newURI(genURL, null, null);
+    }
+
+    // Only continue if we have a valid remote URI
+    if (!genURI || !/^https?/.test(genURI.scheme)) {
+      LOG("generator did not have valid URI; skipping update: " + genURI.spec);
+      return;
+    }
+
+    // We use a HEAD request to check if the generator has been modified since
+    // the last time we downloaded it. If it has, we move to _preformUpdate() to
+    // actually download and save the new generator.
+    var t = this;
+    var loadCallback = function(resource) {
+      if (resource.status != 304)
+        t._performUpdate(genURI);
+      else
+        LOG("generator is already up to date: " + genURI.spec);
+      resource.destroy();
+    };
+    var errorCallback = function(resource) {
+      resource.destroy();
+    };
+
+    var file = this.localURI.QueryInterface(Ci.nsIFileURL).file.clone();
+    var lastmod = new Date(file.lastModifiedTime);
+    LOG("updating generator: " + genURI.spec);
+    var resource = new MicrosummaryResource(genURI);
+    resource.lastMod = lastmod.toUTCString();
+    resource.method = "HEAD";
+    resource.load(loadCallback, errorCallback);
+  },
+
+  _performUpdate: function MSD__performUpdate(uri) {
+    var t = this;
+    var loadCallback = function(resource) {
+      try     { t._handleUpdateLoad(resource) }
+      finally { resource.destroy() }
+    };
+    var errorCallback = function(resource) {
+      resource.destroy();
+    };
+
+    var resource = new MicrosummaryResource(uri);
+    resource.load(loadCallback, errorCallback);
+  },
+
+  _handleUpdateLoad: function MSD__handleUpdateLoad(resource) {
+    if (!resource.isXML)
+      throw("update failed, downloaded resource is not XML: " + this.uri.spec);
+
+    // Preserve the generator's ID.
+    // XXX Check for redirects and update the URI if it changes.
+    var generatorID = this.uri.spec;
+    resource.content.documentElement.setAttribute("uri", generatorID);
+
+    // Reinitialize this generator with the newly downloaded XML and save to disk.
+    this.initFromXML(resource.content);
+    this.saveXMLToFile(resource.content);
+
+    // Let observers know we've updated this generator
+    var obs = Cc["@mozilla.org/observer-service;1"].
+              getService(Ci.nsIObserverService);
+    obs.notifyObservers(this, "microsummary-generator-updated", null);
   }
 };
 
@@ -1687,6 +1716,7 @@ function MicrosummaryResource(uri) {
   this.__authFailed = false;
   this._status = null;
   this._method = "GET";
+  this._lastMod = null;
 
   // A function to call when we finish loading/parsing the resource.
   this._loadCallback = null;
@@ -1727,6 +1757,9 @@ MicrosummaryResource.prototype = {
 
   get method()        { return this._method },
   set method(aMethod) { this._method = aMethod },
+
+  get lastMod()     { return this._lastMod },
+  set lastMod(aMod) { this._lastMod = aMod },
 
   // Implement notification callback interfaces so we can suppress UI
   // and abort loads for bad SSL certs and HTTP authorization requests.
@@ -1998,6 +2031,8 @@ MicrosummaryResource.prototype = {
     request = request.QueryInterface(Ci.nsIXMLHttpRequest);
     request.open(this.method, this.uri.spec, true);
     request.setRequestHeader("X-Moz", "microsummary");
+    if (this.lastMod)
+      request.setRequestHeader("If-Modified-Since", this.lastMod);
 
     // Register ourselves as a listener for notification callbacks so we
     // can handle authorization requests and SSL issues like cert mismatches.
