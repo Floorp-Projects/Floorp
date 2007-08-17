@@ -376,3 +376,5 @@ bin/extensions/inspector@mozilla.org/components/inspector-cmdline.js
 bin/extensions/inspector@mozilla.org/chrome.manifest
 bin/extensions/inspector@mozilla.org/chrome/inspector.jar
 bin/extensions/inspector@mozilla.org/defaults/preferences/inspector.js
+bin/extensions/inspector@mozilla.org/platform/Linux/chrome/icons/default/winInspectorMain.xpm
+bin/extensions/inspector@mozilla.org/platform/Linux/chrome/icons/default/winInspectorMain16.xpm
