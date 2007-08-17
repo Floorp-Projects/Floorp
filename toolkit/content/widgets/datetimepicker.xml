@@ -1231,10 +1231,10 @@
                        onup="this.parentNode._increaseOrDecrease(1);"
                        ondown="this.parentNode._increaseOrDecrease(-1);"/>
       <xul:dropmarker class="datepicker-dropmarker" xbl:inherits="disabled"/>
-      <xul:menupopup>
+      <xul:panel onpopupshown="this.firstChild.focus();">
         <xul:datepicker anonid="grid" type="grid" class="datepicker-popupgrid"
                         xbl:inherits="disabled,readonly,firstdayofweek"/>
-      </xul:menupopup>
+      </xul:panel>
     </content>
     <implementation>
       <constructor>
