@@ -7060,7 +7060,7 @@ MOZ_NATIVE_LCMS= )
 if test -z "$MOZ_NATIVE_LCMS"
 then
     LCMS_CFLAGS=
-    if test "$OS_ARCH" = "WINNT"; then
+    if test "$_WIN32_MSVC"; then
         if test -z "$BUILD_STATIC_LIBS" -a -z "$MOZ_ENABLE_LIBXUL"; then
             LCMS_CFLAGS=-DLCMS_DLL
         fi
