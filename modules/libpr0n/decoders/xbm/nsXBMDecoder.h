@@ -90,6 +90,7 @@ private:
 
     PRPackedBool mIsCursor;
     PRPackedBool mIsX10; // X10 flavor XBM?
+    PRPackedBool mHasNoAlpha;
 
     enum {
         RECV_HEADER,

@@ -134,12 +134,6 @@ public:
     virtual gfxFontGroup *CreateFontGroup(const nsAString& aFamilies,
                                           const gfxFontStyle *aStyle) = 0;
 
-    /* Returns PR_TRUE if the given block of ARGB32 data really has alpha, otherwise PR_FALSE */
-    static PRBool DoesARGBImageDataHaveAlpha(PRUint8* data,
-                                             PRUint32 width,
-                                             PRUint32 height,
-                                             PRUint32 stride);
-
     void GetPrefFonts(const char *aLangGroup, nsString& array, PRBool aAppendUnicode = PR_TRUE);
 
     /**

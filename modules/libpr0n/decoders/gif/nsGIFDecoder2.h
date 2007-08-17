@@ -102,6 +102,7 @@ private:
   PRUint8 mCurrentPass;
   PRUint8 mLastFlushedPass;
   PRPackedBool mGIFOpen;
+  PRPackedBool mFrameHasNoAlpha;
 
   gif_struct mGIFStruct;
 };
