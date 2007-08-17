@@ -170,6 +170,7 @@ CPPSRCS		+= \
 endif
 
 RESOURCES_HTML = \
+		$(srcdir)/folder.png \
 		$(srcdir)/gopher-audio.gif \
 		$(srcdir)/gopher-binary.gif \
 		$(srcdir)/gopher-find.gif \
