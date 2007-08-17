@@ -196,8 +196,6 @@ STDMETHODIMP nsTextAccessibleWrap::scrollToSubstring(
 }
 
 nsIFrame* nsTextAccessibleWrap::GetPointFromOffset(nsIFrame *aContainingFrame, 
-                                                   nsPresContext *aPresContext,
-                                                   nsIRenderingContext *aRendContext,
                                                    PRInt32 aOffset, 
                                                    PRBool aPreferNext, 
                                                    nsPoint& aOutPoint)
@@ -209,7 +207,7 @@ nsIFrame* nsTextAccessibleWrap::GetPointFromOffset(nsIFrame *aContainingFrame,
     return nsnull;
   }
 
-  textFrame->GetPointFromOffset(aPresContext, aRendContext, aOffset, &aOutPoint);
+  textFrame->GetPointFromOffset(aOffset, &aOutPoint);
 
   return textFrame;
 }
@@ -229,14 +227,10 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
 
   nsIWidget *widget = frame->GetWindow();
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIRenderingContext> rendContext(getter_AddRefs(widget->GetRenderingContext()));
   
   nsPoint startPoint, endPoint;
-  nsIFrame *startFrame = GetPointFromOffset(frame, presContext, rendContext, 
-                                            aStartOffset, PR_TRUE, startPoint);
-  nsIFrame *endFrame = GetPointFromOffset(frame, presContext, rendContext, 
-                                          aEndOffset, PR_FALSE, endPoint);
+  nsIFrame *startFrame = GetPointFromOffset(frame, aStartOffset, PR_TRUE, startPoint);
+  nsIFrame *endFrame = GetPointFromOffset(frame, aEndOffset, PR_FALSE, endPoint);
   if (!startFrame || !endFrame) {
     return E_FAIL;
   }

@@ -403,9 +403,7 @@ public:
   
   virtual void AdjustOffsetsForBidi(PRInt32 start, PRInt32 end);
   
-  NS_IMETHOD GetPointFromOffset(nsPresContext*         inPresContext,
-                                nsIRenderingContext*    inRendContext,
-                                PRInt32                 inOffset,
+  NS_IMETHOD GetPointFromOffset(PRInt32                 inOffset,
                                 nsPoint*                outPoint);
   
   NS_IMETHOD  GetChildFrameContainingOffset(PRInt32     inContentOffset,
@@ -4522,12 +4520,10 @@ nsTextFrame::SetSelected(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTextFrame::GetPointFromOffset(nsPresContext* aPresContext,
-                                nsIRenderingContext* inRendContext,
-                                PRInt32 inOffset,
+nsTextFrame::GetPointFromOffset(PRInt32 inOffset,
                                 nsPoint* outPoint)
 {
-  if (!aPresContext || !inRendContext || !outPoint)
+  if (!outPoint)
     return NS_ERROR_NULL_POINTER;
 
   outPoint->x = 0;
