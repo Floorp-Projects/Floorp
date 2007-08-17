@@ -1060,13 +1060,11 @@ protected:
   // the range
   nsRect ClipListToRange(nsDisplayListBuilder *aBuilder,
                          nsDisplayList* aList,
-                         nsIRange* aRange,
-                         nsIRenderingContext* aRenderingContext);
+                         nsIRange* aRange);
 
   // create a RangePaintInfo for the range aRange containing the
   // display list needed to paint the range to a surface
   RangePaintInfo* CreateRangePaintInfo(nsIDOMRange* aRange,
-                                       nsIRenderingContext* aRenderingContext,
                                        nsRect& aSurfaceRect);
 
   /*
@@ -4808,8 +4806,7 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
 nsRect
 PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
                            nsDisplayList* aList,
-                           nsIRange* aRange,
-                           nsIRenderingContext* aRenderingContext)
+                           nsIRange* aRange)
 {
   // iterate though the display items and add up the bounding boxes of each.
   // This will allow the total area of the frames within the range to be
@@ -4846,10 +4843,8 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
             // determine the location of the start and end edges of the range.
             nsPoint startPoint, endPoint;
             nsPresContext* presContext = GetPresContext();
-            frame->GetPointFromOffset(presContext, aRenderingContext,
-                                      hilightStart, &startPoint);
-            frame->GetPointFromOffset(presContext, aRenderingContext,
-                                      hilightEnd, &endPoint);
+            frame->GetPointFromOffset(hilightStart, &startPoint);
+            frame->GetPointFromOffset(hilightEnd, &endPoint);
 
             // the clip rectangle is determined by taking the the start and
             // end points of the range, offset from the reference frame.
@@ -4887,7 +4882,7 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
       // if the item is a list, iterate over it as well
       if (sublist)
         surfaceRect.UnionRect(surfaceRect,
-          ClipListToRange(aBuilder, sublist, aRange, aRenderingContext));
+          ClipListToRange(aBuilder, sublist, aRange));
     }
     else {
       // otherwise, just delete the item and don't readd it to the list
@@ -4903,7 +4898,6 @@ PresShell::ClipListToRange(nsDisplayListBuilder *aBuilder,
 
 RangePaintInfo*
 PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
-                                nsIRenderingContext* aRenderingContext,
                                 nsRect& aSurfaceRect)
 {
   RangePaintInfo* info = nsnull;
@@ -4957,8 +4951,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
                                                     ancestorRect, &info->mList);
   info->mBuilder.LeavePresShell(ancestorFrame, ancestorRect);
 
-  nsRect rangeRect = ClipListToRange(&info->mBuilder, &info->mList,
-                                     range, aRenderingContext);
+  nsRect rangeRect = ClipListToRange(&info->mBuilder, &info->mList, range);
 
   // determine the offset of the reference frame for the display list
   // to the root frame. This will allow the coordinates used when painting
@@ -5093,11 +5086,6 @@ PresShell::RenderNode(nsIDOMNode* aNode,
                       nsPoint& aPoint,
                       nsRect* aScreenRect)
 {
-  // create a temporary rendering context for text measuring
-  nsCOMPtr<nsIRenderingContext> tmprc;
-  nsresult rv = CreateRenderingContext(GetRootFrame(), getter_AddRefs(tmprc));
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
   // area will hold the size of the surface needed to draw the node, measured
   // from the root frame.
   nsRect area;
@@ -5107,7 +5095,7 @@ PresShell::RenderNode(nsIDOMNode* aNode,
   NS_NewRange(getter_AddRefs(range));
   range->SelectNode(aNode);
 
-  RangePaintInfo* info = CreateRangePaintInfo(range, tmprc, area);
+  RangePaintInfo* info = CreateRangePaintInfo(range, area);
   if (info && !rangeItems.AppendElement(info)) {
     delete info;
     return nsnull;
@@ -5141,11 +5129,6 @@ PresShell::RenderSelection(nsISelection* aSelection,
                            nsPoint& aPoint,
                            nsRect* aScreenRect)
 {
-  // create a temporary rendering context for text measuring
-  nsCOMPtr<nsIRenderingContext> tmprc;
-  nsresult rv = CreateRenderingContext(GetRootFrame(), getter_AddRefs(tmprc));
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
   // area will hold the size of the surface needed to draw the selection,
   // measured from the root frame.
   nsRect area;
@@ -5163,7 +5146,7 @@ PresShell::RenderSelection(nsISelection* aSelection,
     nsCOMPtr<nsIDOMRange> range;
     aSelection->GetRangeAt(r, getter_AddRefs(range));
 
-    RangePaintInfo* info = CreateRangePaintInfo(range, tmprc, area);
+    RangePaintInfo* info = CreateRangePaintInfo(range, area);
     if (info && !rangeItems.AppendElement(info)) {
       delete info;
       return nsnull;
