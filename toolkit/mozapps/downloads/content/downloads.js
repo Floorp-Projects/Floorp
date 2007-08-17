@@ -47,6 +47,8 @@
 const PREF_BDM_CLOSEWHENDONE = "browser.download.manager.closeWhenDone";
 const PREF_BDM_ALERTONEXEOPEN = "browser.download.manager.alertOnEXEOpen";
 const PREF_BDM_RETENTION = "browser.download.manager.retention";
+const PREF_BDM_DISPLAYEDHISTORYDAYS =
+  "browser.download.manager.displayedHistoryDays";
 
 const nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
                                            "nsILocalFile", "initWithPath");
@@ -606,7 +608,11 @@ function openExternal(aFile)
 function buildDefaultView()
 {
   buildActiveDownloadsList();
-  buildDownloadListWithTime(Date.now() - 24 * 3600 * 1000 * 7); // One week
+
+  let pref = Cc["@mozilla.org/preferences-service;1"].
+             getService(Ci.nsIPrefBranch);
+  let days = pref.getIntPref(PREF_BDM_DISPLAYEDHISTORYDAYS);
+  buildDownloadListWithTime(Date.now() - days * 24 * 60 * 60 * 1000);
 
   // select the first visible download item, if any
   var children = gDownloadsView.children;
