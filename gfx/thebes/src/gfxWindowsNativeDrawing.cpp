@@ -123,8 +123,12 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
             if (mTransformType == TRANSLATION_ONLY || !(mNativeDrawFlags & CAN_AXIS_ALIGNED_SCALE)) {
                 mScale = gfxSize(1.0, 1.0);
 
-                mTempSurfaceSize.width = (PRInt32) NS_ceil(mNativeRect.size.width);
-                mTempSurfaceSize.height = (PRInt32) NS_ceil(mNativeRect.size.height);
+                // Add 1 to the surface size; it's guaranteed to not be incorrect,
+                // and it fixes bug 382458
+                // There's probably a better fix, but I haven't figured out
+                // the root cause of the problem.
+                mTempSurfaceSize.width = (PRInt32) NS_ceil(mNativeRect.size.width + 1);
+                mTempSurfaceSize.height = (PRInt32) NS_ceil(mNativeRect.size.height + 1);
             } else {
                 // figure out the scale factors
                 mScale = m.ScaleFactors(PR_TRUE);
@@ -136,8 +140,9 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
                 mWorldTransform.eDx  = 0.0f;
                 mWorldTransform.eDy  = 0.0f;
 
-                mTempSurfaceSize.width = (PRInt32) NS_ceil(mNativeRect.size.width * mScale.width);
-                mTempSurfaceSize.height = (PRInt32) NS_ceil(mNativeRect.size.height * mScale.height);
+                // See comment above about "+1"
+                mTempSurfaceSize.width = (PRInt32) NS_ceil(mNativeRect.size.width * mScale.width + 1);
+                mTempSurfaceSize.height = (PRInt32) NS_ceil(mNativeRect.size.height * mScale.height + 1);
             }
         }
     }
