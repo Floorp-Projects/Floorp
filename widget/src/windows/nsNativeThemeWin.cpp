@@ -58,6 +58,7 @@
 #include "nsIMenuFrame.h"
 #include "nsWidgetAtoms.h"
 #include <malloc.h>
+#include "nsWindow.h"
 
 #include "gfxPlatform.h"
 #include "gfxContext.h"
@@ -110,6 +111,10 @@
 #define SP_TRACKENDVERT    7
 #define SP_GRIPPERHOR      8
 #define SP_GRIPPERVERT     9
+
+// Vista only; implict hover state.
+// BASE + 0 = UP, + 1 = DOWN, etc.
+#define SP_BUTTON_IMPLICIT_HOVER_BASE   17
 
 // Scale constants
 #define TKP_TRACK          1
@@ -741,10 +746,14 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
         aState += TS_DISABLED;
       else {
         PRInt32 eventState = GetContentState(aFrame, aWidgetType);
+        nsIFrame *parent = aFrame->GetParent();
+        PRInt32 parentState = GetContentState(parent, parent->GetStyleDisplay()->mAppearance);
         if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
           aState += TS_ACTIVE;
         else if (eventState & NS_EVENT_STATE_HOVER)
           aState += TS_HOVER;
+        else if (parentState & NS_EVENT_STATE_HOVER)
+          aState = (aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP) + SP_BUTTON_IMPLICIT_HOVER_BASE;
         else
           aState += TS_NORMAL;
       }
@@ -1546,8 +1555,6 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
 {
   // Some widget types just never change state.
   if (aWidgetType == NS_THEME_TOOLBOX || aWidgetType == NS_THEME_TOOLBAR ||
-      aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL || 
-      aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL || 
       aWidgetType == NS_THEME_STATUSBAR || aWidgetType == NS_THEME_STATUSBAR_PANEL ||
       aWidgetType == NS_THEME_STATUSBAR_RESIZER_PANEL ||
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
@@ -1557,6 +1564,14 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
       aWidgetType == NS_THEME_TOOLTIP ||
       aWidgetType == NS_THEME_TAB_PANELS ||
       aWidgetType == NS_THEME_TAB_PANEL) {
+    *aShouldRepaint = PR_FALSE;
+    return NS_OK;
+  }
+
+  // On Vista, the scrollbar buttons need to change state when the track has/doesn't have hover
+  if (GetWindowsVersion() < VISTA_VERSION &&
+      (aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL || 
+      aWidgetType == NS_THEME_SCROLLBAR_TRACK_HORIZONTAL)) {
     *aShouldRepaint = PR_FALSE;
     return NS_OK;
   }
