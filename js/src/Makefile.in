@@ -299,7 +299,7 @@ ifndef GNU_CC
 _COMPILE_CFLAGS  = $(patsubst -O%,-O1,$(COMPILE_CFLAGS))
 jsapi.o jsxdrapi.o jsarena.o jsarray.o jsatom.o jsemit.o jsfun.o jsinterp.o jsregexp.o jsparse.o jsopcode.o jsscript.o: %.o: %.c Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO)
+	@$(MAKE_DEPS_AUTO_CC)
 	$(CC) -o $@ -c $(_COMPILE_CFLAGS) $<
 endif
 endif
@@ -309,11 +309,11 @@ endif
 ifeq ($(OS_ARCH),AIX)
 jsatom.o: jsatom.c Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO)
+	@$(MAKE_DEPS_AUTO_CC)
 	$(CC) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
 jsdtoa.o: jsdtoa.c Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO)
+	@$(MAKE_DEPS_AUTO_CC)
 	$(CC) -o $@ -c $(filter-out $(MOZ_OPTIMIZE_FLAGS), $(COMPILE_CFLAGS)) $<
 endif
 
