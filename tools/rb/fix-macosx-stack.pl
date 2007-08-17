@@ -36,7 +36,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# $Id: fix-macosx-stack.pl,v 1.5 2007/08/14 05:06:05 dbaron%dbaron.org Exp $
+# $Id: fix-macosx-stack.pl,v 1.6 2007/08/17 06:26:09 dbaron%dbaron.org Exp $
 #
 # This script processes the output of nsTraceRefcnt's Mac OS X stack
 # walking code.  This is useful for two things:
@@ -118,9 +118,8 @@ sub nmstruct_for($) {
             $addr = hex($addr);
             if ($ty eq 't' || $ty eq 'T') {
                 my $sym = $rest;
-                if ($ty eq 'T' && substr($sym, 0, 1) eq '_' &&
-                                  substr($sym, 1, 1) ne '_') {
-                    # Public symbols have an extra leading _
+                if (substr($sym, 0, 1) eq '_') {
+                    # symbols on Mac have an extra leading _
                     $sym = substr($sym, 1);
                 }
                 add_info($nmstruct->{symbols}, $addr, $sym);
@@ -174,7 +173,8 @@ sub cxxfilt($) {
 
     unless($cxxfilt_pipe) {
         my $pid = open2($cxxfilt_pipe->{read}, $cxxfilt_pipe->{write},
-                        'c++filt');
+                        'c++filt', '--no-strip-underscores',
+                                   '--format', 'gnu-v3');
     }
     my $out = $cxxfilt_pipe->{write};
     my $in = $cxxfilt_pipe->{read};
