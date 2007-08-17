@@ -423,7 +423,8 @@ var gContextMenus = [
   ["menuitem_open", "menuitem_show", "menuitem_remove"],
   ["menuitem_retry", "menuitem_remove"],
   ["menuitem_retry", "menuitem_remove"],
-  ["menuitem_resume", "menuitem_cancel"]
+  ["menuitem_resume", "menuitem_cancel"],
+  ["menuitem_cancel"]
 ];
 
 function buildContextMenu(aEvent)
