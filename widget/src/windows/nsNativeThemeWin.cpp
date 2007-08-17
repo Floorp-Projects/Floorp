@@ -1399,7 +1399,7 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
         break;
     case NS_THEME_MENUCHECKBOX:
     case NS_THEME_MENURADIO:
-        right = 11;
+        right = 8;
         left = 0;
         break;
     case NS_THEME_MENUITEMTEXT:
