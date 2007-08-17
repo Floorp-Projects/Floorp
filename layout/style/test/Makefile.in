@@ -88,6 +88,7 @@ _TEST_FILES =	test_bug74880.html \
 		test_inherit_computation.html \
 		test_initial_storage.html \
 		test_initial_computation.html \
+		test_parse_rule.html \
 		test_property_database.html \
 		test_property_syntax_errors.html \
 		test_style_struct_copy_constructors.html \
