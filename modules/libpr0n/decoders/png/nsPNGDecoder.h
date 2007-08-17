@@ -93,6 +93,7 @@ public:
   PRUint8 apngFlags;
   PRUint8 mChannels;
   PRPackedBool mError;
+  PRPackedBool mFrameHasNoAlpha;
 };
 
 #endif // nsPNGDecoder_h__

@@ -606,3 +606,16 @@ nsThebesImage::ShouldUseImageSurfaces()
 
     return PR_FALSE;
 }
+
+// A hint from the image decoders that this image has no alpha, even
+// though we created is ARGB32.  This changes our format to RGB24,
+// which in turn will cause us to Optimize() to RGB24.  Has no effect
+// after Optimize() is called, though in all cases it will be just a
+// performance win -- the pixels are still correct and have the A byte
+// set to 0xff.
+void
+nsThebesImage::SetHasNoAlpha()
+{
+    if (mFormat == gfxASurface::ImageFormatARGB32)
+        mFormat = gfxASurface::ImageFormatRGB24;
+}

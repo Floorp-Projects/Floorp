@@ -258,9 +258,22 @@ public:
    */
   NS_IMETHOD UnlockImagePixels(PRBool aMaskPixels) = 0;
 
-#ifdef MOZ_CAIRO_GFX
+  /**
+   * GetSurface
+   * Return the Thebes gfxASurface in aSurface.
+   *
+   * aSurface will be AddRef'd (as with most getters), so
+   * getter_AddRefs should be used.
+   */
   NS_IMETHOD GetSurface(gfxASurface **aSurface) = 0;
-#endif
+
+  /**
+   * SetHasNoAlpha
+   *
+   * Hint to the image that all the pixels are fully opaque, even if
+   * the original format requested a 1-bit or 8-bit alpha mask
+   */
+  virtual void SetHasNoAlpha() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIImage, NS_IIMAGE_IID)
