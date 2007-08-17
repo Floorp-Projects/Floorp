@@ -76,6 +76,7 @@ DownloadProgressListener.prototype =
           let uri = Cc["@mozilla.org/network/util;1"].
                     getService(Ci.nsIIOService).
                     newFileURI(aDownload.targetFile);
+          let referrer = aDownload.referrer;
           dl = createDownloadItem(aDownload.id,
                                   uri.spec,
                                   aDownload.displayName,
@@ -83,7 +84,8 @@ DownloadProgressListener.prototype =
                                   aDownload.state,
                                   "",
                                   aDownload.percentComplete,
-                                  Math.round(aDownload.startTime / 1000));
+                                  Math.round(aDownload.startTime / 1000),
+                                  referrer ? referrer.spec : null);
         }
         gDownloadsView.insertBefore(dl, gDownloadsActiveTitle.nextSibling);
         break;
@@ -127,11 +129,13 @@ DownloadProgressListener.prototype =
       // d'oh - why this happens is complicated, let's just add it in
       let uri = Cc["@mozilla.org/network/util;1"].
                 getService(Ci.nsIIOService).newFileURI(aDownload.targetFile);
+      let referrer = aDownload.referrer;
       let itm = createDownloadItem(aDownload.id, uri.spec,
                                    aDownload.displayName,
                                    aDownload.source.spec,
                                    aDownload.state,
-                                   aDownload.percentComplete);
+                                   aDownload.percentComplete,
+                                   referrer ? referrer.spec : null);
       download = gDownloadsView.insertBefore(itm, gDownloadsActiveTitle.nextSibling);
     }
 

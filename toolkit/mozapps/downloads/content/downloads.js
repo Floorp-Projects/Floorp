@@ -82,7 +82,7 @@ function fireEventForElement(aElement, aEventType)
 }
 
 function createDownloadItem(aID, aFile, aTarget, aURI, aState,
-                            aStatus, aProgress, aStartTime)
+                            aStatus, aProgress, aStartTime, aReferrer)
 {
   var dl = document.createElement("richlistitem");
   dl.setAttribute("type", "download");
@@ -101,7 +101,10 @@ function createDownloadItem(aID, aFile, aTarget, aURI, aState,
               getService(Ci.nsIIOService);
   var file = ioSvc.newURI(aFile, null, null).QueryInterface(Ci.nsIFileURL).file;
   dl.setAttribute("path", file.nativePath || file.path);
-  
+
+  if (aReferrer)
+    dl.setAttribute("referrer", aReferrer);
+
   return dl;
 }
 
@@ -301,6 +304,17 @@ function openDownload(aDownload)
   }
 }
 
+function openReferrer(aDownload)
+{
+  var uriString;
+  if (aDownload.hasAttribute("referrer"))
+    uriString = aDownload.getAttribute("referrer");
+  else
+    uriString = aDownload.getAttribute("uri");
+
+  openURL(uriString);
+}
+
 function showDownloadInfo(aDownload)
 {
   gUserInteracted = true;
@@ -323,7 +337,11 @@ function showDownloadInfo(aDownload)
                                    dateStarted.getMinutes(), 0);
   popupTitle.setAttribute("value", dateStarted);
   // Add proper uri and path
-  var uri = aDownload.getAttribute("uri");
+  var uri = "beltzner";
+  if (aDownload.hasAttribute("referrer"))
+    uri = aDownload.getAttribute("referrer");
+  else
+    uri = aDownload.getAttribute("uri");
   uriLabel.label = uri;
   uriLabel.setAttribute("tooltiptext", uri);
   var path = aDownload.getAttribute("path");
@@ -517,6 +535,7 @@ var gDownloadViewController = {
         return dl.inProgress || dl.paused;
       case "cmd_resume":
         return dl.paused;
+      case "cmd_openReferrer":
       case "cmd_remove":
       case "cmd_retry":
         return dl.removable;
@@ -553,6 +572,9 @@ var gDownloadViewController = {
     },
     cmd_open: function(aSelectedItem) {
       openDownload(aSelectedItem);
+    },
+    cmd_openReferrer: function(aSelectedItem) {
+      openReferrer(aSelectedItem);
     },
     cmd_pause: function(aSelectedItem) {
       pauseDownload(aSelectedItem);
@@ -626,7 +648,7 @@ function buildDefaultView()
  * @param aStmt
  *        The compiled SQL statement to build with.  This needs to have the
  *        following columns in this order to work properly:
- *        id, target, name, source, state, startTime
+ *        id, target, name, source, state, startTime, referrer
  *        This statement should be ordered on the endTime ASC so that the end
  *        result is a list of downloads with their end time's descending.
  * @param aRef
@@ -654,7 +676,8 @@ function buildDownloadList(aStmt, aRef)
     let dl = createDownloadItem(id, aStmt.getString(1),
                                 aStmt.getString(2), aStmt.getString(3),
                                 state, "", percentComplete,
-                                Math.round(aStmt.getInt64(5) / 1000));
+                                Math.round(aStmt.getInt64(5) / 1000),
+                                aStmt.getString(6));
     gDownloadsView.insertBefore(dl, aRef.nextSibling);
   }
 }
@@ -674,7 +697,8 @@ function buildActiveDownloadsList()
   var stmt = gActiveDownloadsQuery;
   if (!stmt) {
     stmt = gActiveDownloadsQuery =
-      db.createStatement("SELECT id, target, name, source, state, startTime " +
+      db.createStatement("SELECT id, target, name, source, state, startTime, " +
+                         "referrer " +
                          "FROM moz_downloads " +
                          "WHERE state = ?1 " +
                          "OR state = ?2 " +
@@ -706,7 +730,8 @@ function buildDownloadListWithTime(aTime)
   var stmt = gDownloadListWithTimeQuery;
   if (!stmt) {
     stmt = gDownloadListWithTimeQuery =
-      db.createStatement("SELECT id, target, name, source, state, startTime " +
+      db.createStatement("SELECT id, target, name, source, state, startTime, " +
+                         "referrer " +
                          "FROM moz_downloads " +
                          "WHERE startTime >= ?1 " +
                          "AND (state = ?2 " +
@@ -750,7 +775,7 @@ function buildDownloadListWithSearch(aTerms)
     return;
   }
 
-  var sql = "SELECT id, target, name, source, state, startTime " +
+  var sql = "SELECT id, target, name, source, state, startTime, referrer " +
             "FROM moz_downloads WHERE name LIKE ?1 ESCAPE '/' " +
             "AND state != ?2 AND state != ?3 ORDER BY endTime ASC";
 

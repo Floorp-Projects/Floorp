@@ -56,7 +56,6 @@
 #include "nsString.h"
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIProgressDialog.h"
 #include "nsIMIMEInfo.h"
 #include "nsITimer.h"
 #include "mozIStorageConnection.h"
@@ -70,7 +69,6 @@
 typedef PRInt16 DownloadState;
 typedef PRInt16 DownloadType;
 
-class nsXPIProgressListener;
 class nsDownload;
 
 class nsDownloadManager : public nsIDownloadManager,
@@ -231,9 +229,9 @@ private:
   nsString mDisplayName;
 
   nsCOMPtr<nsIURI> mSource;
+  nsCOMPtr<nsIURI> mReferrer;
   nsCOMPtr<nsICancelable> mCancelable;
   nsCOMPtr<nsIRequest> mRequest;
-  nsCOMPtr<nsIProgressDialog> mDialog;
   nsCOMPtr<nsILocalFile> mTempFile;
   nsCOMPtr<nsIMIMEInfo> mMIMEInfo;
   

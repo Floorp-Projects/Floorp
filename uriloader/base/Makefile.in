@@ -80,7 +80,6 @@ XPIDLSRCS = 							\
 				nsIContentHandler.idl 		\
 				nsIURILoader.idl	 	\
 				nsCURILoader.idl		\
-				nsIDownload.idl   \
 				nsITransfer.idl \
 				nsIDocumentLoader.idl		\
 				nsIWebProgressListener2.idl \
