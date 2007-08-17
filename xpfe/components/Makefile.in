@@ -88,7 +88,6 @@ DIRS += \
         related \
         autocomplete \
         download-manager \
-        history \
         sidebar \
         $(NULL)
 ifndef MOZ_XUL_APP
@@ -99,6 +98,9 @@ DIRS += \
         alerts \
         extensions \
         $(NULL)
+endif
+ifndef MOZ_PLACES
+DIRS += history
 endif
 endif
 endif
