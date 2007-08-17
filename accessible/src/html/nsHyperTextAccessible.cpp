@@ -75,12 +75,6 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
 {
   *aInstancePtr = nsnull;
 
-  if (aIID.Equals(NS_GET_IID(nsHyperTextAccessible))) {
-    *aInstancePtr = static_cast<nsHyperTextAccessible*>(this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(mDOMNode));
   if (mDOMNode && !xulDoc) {
     // We need XUL doc check for now because for now nsDocAccessible must
@@ -88,6 +82,12 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
     // to get support for these interfaces.
     // However at some point we may push <body> to implement the interfaces and
     // return nsDocAccessible to inherit from nsAccessibleWrap.
+
+    if (aIID.Equals(NS_GET_IID(nsHyperTextAccessible))) {
+      *aInstancePtr = static_cast<nsHyperTextAccessible*>(this);
+      NS_ADDREF_THIS();
+      return NS_OK;
+    }
 
     PRUint32 role = Role(this);
     if (aIID.Equals(NS_GET_IID(nsIAccessibleText))) {
