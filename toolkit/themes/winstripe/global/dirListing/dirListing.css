@@ -1,0 +1,110 @@
+:root {
+  background-color: -moz-dialog;
+  color: -moz-dialogtext;
+  font: message-box;
+}
+
+body {
+  border: 1px solid ThreeDShadow;
+  -moz-border-radius: 10px;
+  padding: 3em;
+  min-width: 13em;
+  max-width: 52em;
+  margin: 4em auto;
+  background-color: -moz-field;
+  color: -moz-fieldtext;
+}
+
+h1 {
+  font-size: 160%;
+  margin: 0 0 .6em;
+  border-bottom: 1px solid ThreeDLightShadow;
+  font-weight: normal;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+p {
+  font-size: 110%;
+}
+
+#UI_goUp {
+  margin-top: 0;
+  float: left;
+}
+
+#UI_showHidden {
+  margin-top: 0;
+  float: right;
+}
+
+#UI_showHidden:not(:hover) {
+  color: graytext;
+}
+
+table {
+  clear: both;
+  width: 90%;
+  margin: 0 auto;
+}
+
+thead {
+  font-size: 130%;
+}
+
+th {
+  font-weight: normal;
+}
+
+th:first-child ,
+th:first-child + th {
+  padding-right: 2em;
+}
+
+table[order] th:hover {
+  text-decoration: underline;
+}
+
+tbody > tr:not(:hover) > td:not(:first-child) {
+  color: graytext;
+}
+
+/* let 'Size' and 'Last Modified' take only as much space as they need and 'Name' all the rest */
+td:first-child + td ,
+td:first-child + td + td ,
+td:last-child {
+  width: 0;
+}
+
+.up ,
+.dir ,
+.symlink ,
+.file {
+  padding: 0 .5em;
+  margin-left: 20px;
+}
+
+.up::before ,
+.dir::before ,
+.file > img {
+  margin-right: 4px;
+  margin-left: -20px;
+  opacity: .6;
+  vertical-align: middle;
+}
+
+.up::before {
+  content: url(chrome://global/skin/dirListing/up.png);
+}
+
+.up:hover::before ,
+tr:hover > td > a::before ,
+tr:hover > td > .file > img {
+  opacity: 1;
+}
