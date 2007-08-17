@@ -1110,7 +1110,24 @@ ifdef MOZ_POST_DSO_LIB_COMMAND
 endif
 
 ifdef MOZ_AUTO_DEPS
-ifndef COMPILER_DEPEND
+ifdef COMPILER_DEPEND
+ifeq (__SunOS,$(GNU_CC)_$(GNU_CXX)_$(OS_ARCH))
+_MDDEPFILE = $(MDDEPDIR)/$(@F).pp
+
+define MAKE_DEPS_AUTO_CC
+if test -d $(@D); then \
+	echo "Building deps for $< using Sun Studio cc"; \
+	$(CC) $(COMPILE_CFLAGS) -xM  $< >$(_MDDEPFILE) ; \
+fi
+endef
+define MAKE_DEPS_AUTO_CXX
+if test -d $(@D); then \
+	echo "Building deps for $< using Sun Studio CC"; \
+	$(CXX) $(COMPILE_CXXFLAGS) -xM $< >$(_MDDEPFILE) ; \
+fi
+endef
+endif # Sun Studio on Solaris
+else # COMPILER_DEPEND
 #
 # Generate dependencies on the fly
 #
@@ -1137,7 +1154,11 @@ if test -d $(@D); then \
 fi
 endef
 endif # WINNT
-endif # !COMPILER_DEPEND
+
+MAKE_DEPS_AUTO_CC = $(MAKE_DEPS_AUTO)
+MAKE_DEPS_AUTO_CXX = $(MAKE_DEPS_AUTO)
+
+endif # COMPILER_DEPEND
 
 endif # MOZ_AUTO_DEPS
 
@@ -1164,12 +1185,12 @@ host_%.$(OBJ_SUFFIX): %.mm Makefile Makefile.in
 
 %: %.c Makefile Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO)
+	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(CFLAGS) $(LDFLAGS) $(OUTOPTION)$@ $(_VPATH_SRCS)
 
 %.$(OBJ_SUFFIX): %.c Makefile Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO)
+	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 
 moc_%.cpp: %.h Makefile Makefile.in
@@ -1188,7 +1209,7 @@ endif
 	$(AS) -o $@ $(ASFLAGS) -c $<
 
 %: %.cpp Makefile Makefile.in
-	@$(MAKE_DEPS_AUTO)
+	@$(MAKE_DEPS_AUTO_CXX)
 	$(CCC) $(OUTOPTION)$@ $(CXXFLAGS) $(_VPATH_SRCS) $(LDFLAGS)
 
 #
@@ -1196,12 +1217,12 @@ endif
 #
 %.$(OBJ_SUFFIX): %.cc Makefile Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO)
+	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 
 %.$(OBJ_SUFFIX): %.cpp Makefile Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO)
+	@$(MAKE_DEPS_AUTO_CXX)
 ifdef STRICT_CPLUSPLUS_SUFFIX
 	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > t_$*.cc
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
@@ -1212,12 +1233,12 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 
 $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm Makefile Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO)
+	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 
 $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.m Makefile Makefile.in
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO)
+	@$(MAKE_DEPS_AUTO_CC)
 	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
 
 %.s: %.cpp

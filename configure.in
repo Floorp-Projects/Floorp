@@ -6669,6 +6669,10 @@ MOZ_ARG_DISABLE_BOOL(md,
   [dnl Default is to turn on -MD if using GNU-compatible compilers
    if test "$GNU_CC" -a "$GNU_CXX" -a "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "WINCE"; then
      _cpp_md_flag=1
+   fi
+  dnl Default is to use -xM if using Sun Studio on Solaris
+   if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+     _cpp_md_flag=1
    fi])
 if test "$_cpp_md_flag"; then
   COMPILER_DEPEND=1
@@ -6676,6 +6680,10 @@ if test "$_cpp_md_flag"; then
     _DEPEND_CFLAGS='$(subst =, ,$(filter-out %/.pp,-MM=-MD=-MF=$(MDDEPDIR)/$(*F).pp))'
   else
     _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(*F).pp)'
+  fi
+  dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
+  if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+    _DEPEND_CFLAGS=
   fi
 else
   COMPILER_DEPEND=
