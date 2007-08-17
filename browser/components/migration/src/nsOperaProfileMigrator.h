@@ -45,6 +45,7 @@
 #include "nsISupportsArray.h"
 #include "nsStringAPI.h"
 #include "nsVoidArray.h"
+#include "nsINavHistoryService.h"
 
 class nsICookieManager2;
 class nsILineInputStream;
@@ -55,10 +56,12 @@ class nsIPrefBranch;
 class nsINavBookmarksService;
 class nsIRDFResource;
 
-class nsOperaProfileMigrator : public nsIBrowserProfileMigrator
+class nsOperaProfileMigrator : public nsIBrowserProfileMigrator,
+                               public nsINavHistoryBatchCallback
 {
 public:
   NS_DECL_NSIBROWSERPROFILEMIGRATOR
+  NS_DECL_NSINAVHISTORYBATCHCALLBACK
   NS_DECL_ISUPPORTS
 
   nsOperaProfileMigrator();
