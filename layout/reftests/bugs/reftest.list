@@ -269,6 +269,7 @@ fails == 368504-2.html 368504-2-ref.html # bug 368504
 == 368651-1.html 368651-1-ref.html
 == 369975-1.html 369975-1.html
 == 369882.xul 369882-ref.xul
+== 370353-1.html 370353-1-ref.html
 == 370422-1.html 370422-1-ref.html
 == 370525-1.html 370525-1-ref.html
 != 370525-1.html 370525-1-notref.html
