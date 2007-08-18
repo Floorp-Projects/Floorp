@@ -640,6 +640,18 @@ var BookmarkPropertiesPanel = {
     namePicker.setAttribute("droppable", "true");
   },
 
+  onError: function BPP_onError(aMicrosummary) {
+    var namePicker = this._element("namePicker");
+    var childNodes = namePicker.menupopup.childNodes;
+
+    // 0: user-entered item; 1: separator
+    for (var i = 2; i < childNodes.length; i++) {
+      if (childNodes[i].microsummary == aMicrosummary &&
+          aMicrosummary.needsRemoval)
+          namePicker.menupopup.removeChild(childNodes[i]);
+    }
+  },
+
   onDialogUnload: function BPP_onDialogUnload() {
     if (this._microsummaries)
       this._microsummaries.removeObserver(this);

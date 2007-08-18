@@ -803,6 +803,11 @@ MicrosummaryService.prototype = {
           this._bookmarkID = null;
           microsummary.removeObserver(this);
         }
+      },
+
+      onError: function MSS_observer_onError(microsummary) {
+        if (microsummary.needsRemoval)
+          this._svc.removeMicrosummary(this._bookmarkID);
       }
     };
 
@@ -843,6 +848,7 @@ function Microsummary(aPageURI, aGenerator) {
   this._content = null;
   this._pageContent = null;
   this._updateInterval = null;
+  this._needsRemoval = false;
 }
 
 Microsummary.prototype = {
@@ -926,6 +932,8 @@ Microsummary.prototype = {
   get updateInterval()         { return this._updateInterval; },
   set updateInterval(newValue) { return this._updateInterval = newValue; },
 
+  get needsRemoval() { return this._needsRemoval; },
+
   // nsIMicrosummary
 
   addObserver: function MS_addObserver(observer) {
@@ -956,6 +964,20 @@ Microsummary.prototype = {
 
     var t = this;
 
+    // We use a common error callback here to flag this microsummary for removal
+    // if either the generator or page content have gone permanently missing.
+    var errorCallback = function MS_errorCallback(resource) {
+      if (resource.status == 410) {
+        t._needsRemoval = true;
+        LOG("server indicated " + resource.uri.spec + " is gone. flagging for removal");
+      }
+
+      resource.destroy();
+
+      for (let i = 0; i < t._observers.length; i++)
+        t._observers[i].onError(t);
+    };
+
     // If we don't have the generator, download it now.  After it downloads,
     // we'll re-call this method to continue updating the microsummary.
     if (!this.generator.loaded) {
@@ -980,7 +1002,7 @@ Microsummary.prototype = {
           finally { resource.destroy() }
         };
       var resource = new MicrosummaryResource(this.generator.uri);
-      resource.load(generatorCallback);
+      resource.load(generatorCallback, errorCallback);
       return;
     }
 
@@ -994,7 +1016,7 @@ Microsummary.prototype = {
           finally { resource.destroy() }
         };
       var resource = new MicrosummaryResource(this.pageURI);
-      resource.load(pageCallback);
+      resource.load(pageCallback, errorCallback);
       return;
     }
 
@@ -1525,6 +1547,11 @@ MicrosummarySet.prototype = {
   onContentLoaded: function MSSet_onContentLoaded(microsummary) {
     for ( var i = 0; i < this._observers.length; i++ )
       this._observers[i].onContentLoaded(microsummary);
+  },
+
+  onError: function MSSet_onError(microsummary) {
+    for ( var i = 0; i < this._observers.length; i++ )
+      this._observers[i].onError(microsummary);
   },
 
   // nsIMicrosummarySet
@@ -2082,10 +2109,10 @@ MicrosummaryResource.prototype = {
       this._loadCallback(this);
     }
   },
-  
+
   _handleError: function MSR__handleError(event) {
     // Call the error callback, then destroy ourselves to prevent memory leaks.
-    try     { if (this._errorCallback) this._errorCallback() }
+    try     { if (this._errorCallback) this._errorCallback(this) } 
     finally { this.destroy() }
   },
 
