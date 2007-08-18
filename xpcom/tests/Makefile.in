@@ -92,6 +92,12 @@ CPPSRCS += \
 		$(NULL)
 endif
 
+ifndef MOZILLA_INTERNAL_API
+CPPSRCS += \
+		TestStringAPI.cpp \
+		$(NULL)
+endif
+
 #CPPSRCS		+= TimerTest.cpp
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
