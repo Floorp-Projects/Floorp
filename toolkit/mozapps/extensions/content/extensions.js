@@ -524,12 +524,45 @@ function initPluginsDS()
                         .getService(Components.interfaces.nsIRDFContainerUtils);
   gPluginsDS = Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"]
                          .createInstance(Components.interfaces.nsIRDFDataSource);
+  var rootctr = rdfCU.MakeSeq(gPluginsDS, rdf.GetResource(RDFURI_ITEM_ROOT));
   gPlugins = { };
 
-  var rootctr = rdfCU.MakeSeq(gPluginsDS, rdf.GetResource(RDFURI_ITEM_ROOT));
-  var div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  // Case insensitive sort
+  function compare(a, b) {
+    if (a.name.toLowerCase() < b.name.toLowerCase())
+      return -1;
+    if (a.name.toLowerCase() > b.name.toLowerCase())
+      return 1;
+    return 0;
+  }
+  plugins.sort(compare);
+
   for (var i = 0; i < plugins.length; i++) {
     var plugin = plugins[i];
+    var name = plugin.name;
+    if (!(name in gPlugins)) {
+      // Removes all html markup in a plugin's description
+      var desc = plugin.description.replace(/<\/?[a-z][^>]*>/gi, " ");
+      var homepageURL = null;
+      // Some plugins (e.g. QuickTime) add an anchor to their description to
+      // provide a link to the plugin's homepage in about:plugins. This can be
+      // used to provide access to a plugins homepage in the add-ons mgr.
+      if (/<A\s+HREF=[^>]*>/i.test(plugin.description))
+        homepageURL = /<A\s+HREF=["']?([^>"'\s]*)/i.exec(plugin.description)[1];
+
+      gPlugins[name] = { name        : name,
+                         filename    : plugin.filename,
+                         description : desc,
+                         homepageURL : homepageURL,
+                         disabled    : plugin.disabled,
+                         blocklisted : plugin.blocklisted,
+                         plugins     : [] };
+    }
+    gPlugins[name].plugins.push(plugin);
+  }
+
+  for (var pluginName in gPlugins) {
+    plugin = gPlugins[pluginName];
     var pluginNode = rdf.GetResource(PREFIX_ITEM_URI + plugin.filename);
     var desc = plugin.description.replace(/<br>/g, "<br/> ");
     try {
@@ -549,8 +582,13 @@ function initPluginsDS()
                       true);
     gPluginsDS.Assert(pluginNode,
                       rdf.GetResource(PREFIX_NS_EM + "description"),
-                      rdf.GetLiteral(desc),
+                      rdf.GetLiteral(plugin.description),
                       true);
+    if (plugin.homepageURL)
+      gPluginsDS.Assert(pluginNode,
+                        rdf.GetResource(PREFIX_NS_EM + "homepageURL"),
+                        rdf.GetLiteral(plugin.homepageURL),
+                        true);
     gPluginsDS.Assert(pluginNode,
                       rdf.GetResource(PREFIX_NS_EM + "isDisabled"),
                       rdf.GetLiteral(plugin.disabled ? "true" : "false"),
@@ -567,16 +605,17 @@ function initPluginsDS()
                       rdf.GetResource(PREFIX_NS_EM + "plugin"),
                       rdf.GetLiteral("true"),
                       true);
-    gPlugins[plugin.filename] = plugin;
   }
 }
 
-function togglePluginDisabled(aFilename)
+function togglePluginDisabled(aName)
 {
-  var plugin = gPlugins[aFilename];
+  var plugin = gPlugins[aName];
+  plugin.disabled = !plugin.disabled;
+  for (var i = 0; i < plugin.plugins.length; ++i)
+    plugin.plugins[i].disabled = plugin.disabled;
   var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                       .getService(Components.interfaces.nsIRDFService);
-  plugin.disabled = !plugin.disabled;
   gPluginsDS.Change(rdf.GetResource(PREFIX_ITEM_URI + plugin.filename),
                     rdf.GetResource(PREFIX_NS_EM + "isDisabled"),
                     rdf.GetLiteral(plugin.disabled ? "false" : "true"),
@@ -1835,7 +1874,7 @@ var gExtensionsViewController = {
     cmd_disable: function (aSelectedItem)
     {
       if (aSelectedItem.getAttribute("plugin") == "true") {
-        togglePluginDisabled(aSelectedItem.getAttribute("addonID"));
+        togglePluginDisabled(aSelectedItem.getAttribute("name"));
         return;
       }
 
@@ -1873,7 +1912,7 @@ var gExtensionsViewController = {
     cmd_enable: function (aSelectedItem)
     {
       if (aSelectedItem.getAttribute("plugin") == "true") {
-        togglePluginDisabled(aSelectedItem.getAttribute("addonID"));
+        togglePluginDisabled(aSelectedItem.getAttribute("name"));
         return;
       }
 
