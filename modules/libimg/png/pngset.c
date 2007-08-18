@@ -1082,9 +1082,9 @@ png_ensure_fcTL_is_valid(png_structp png_ptr,
     png_uint_16 delay_num, png_uint_16 delay_den,
     png_byte dispose_op, png_byte blend_op)
 {
-    if (width > png_ptr->first_frame_width || 
-        height > png_ptr->first_frame_height)
-        png_error(png_ptr, "width and/or height for a frame greater than"
+    if (width + x_offset > png_ptr->first_frame_width || 
+        height + y_offset > png_ptr->first_frame_height)
+        png_error(png_ptr, "dimensions of a frame are greater than"
                            "the ones in IHDR");
     if (width > PNG_UINT_31_MAX)
         png_error(png_ptr, "invalid width in fcTL (> 2^31-1)");
