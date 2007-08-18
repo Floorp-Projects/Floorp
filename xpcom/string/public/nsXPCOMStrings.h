@@ -60,6 +60,8 @@
 # define NS_StringSetData                 NS_StringSetData_P
 # define NS_StringSetDataRange            NS_StringSetDataRange_P
 # define NS_StringCopy                    NS_StringCopy_P
+# define NS_StringSetIsVoid               NS_StringSetIsVoid_P
+# define NS_StringGetIsVoid               NS_StringGetIsVoid_P
 # define NS_CStringContainerInit          NS_CStringContainerInit_P
 # define NS_CStringContainerInit2         NS_CStringContainerInit2_P
 # define NS_CStringContainerFinish        NS_CStringContainerFinish_P
@@ -69,6 +71,8 @@
 # define NS_CStringSetData                NS_CStringSetData_P
 # define NS_CStringSetDataRange           NS_CStringSetDataRange_P
 # define NS_CStringCopy                   NS_CStringCopy_P
+# define NS_CStringSetIsVoid              NS_CStringSetIsVoid_P
+# define NS_CStringGetIsVoid              NS_CStringGetIsVoid_P
 # define NS_CStringToUTF16                NS_CStringToUTF16_P
 # define NS_UTF16ToCString                NS_UTF16ToCString_P
 #endif
@@ -444,6 +448,24 @@ NS_StringCutData(nsAString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength)
   return NS_StringSetDataRange(aStr, aCutOffset, aCutLength, nsnull, 0);
 }
 
+/**
+ * NS_StringSetIsVoid
+ *
+ * This function marks a string as being a "void string".  Any data in the
+ * string will be lost.
+ */
+XPCOM_API(void)
+NS_StringSetIsVoid(nsAString& aStr, const PRBool aIsVoid);
+
+/**
+ * NS_StringGetIsVoid
+ *
+ * This function provides a way to test if a string is a "void string", as
+ * marked by NS_StringSetIsVoid.
+ */
+XPCOM_API(PRBool)
+NS_StringGetIsVoid(const nsAString& aStr);
+
 /* ------------------------------------------------------------------------- */
 
 /**
@@ -748,6 +770,24 @@ NS_CStringCutData(nsACString &aStr, PRUint32 aCutOffset, PRUint32 aCutLength)
 {
   return NS_CStringSetDataRange(aStr, aCutOffset, aCutLength, nsnull, 0);
 }
+
+/**
+ * NS_CStringSetIsVoid
+ *
+ * This function marks a string as being a "void string".  Any data in the
+ * string will be lost.
+ */
+XPCOM_API(void)
+NS_CStringSetIsVoid(nsACString& aStr, const PRBool aIsVoid);
+
+/**
+ * NS_CStringGetIsVoid
+ *
+ * This function provides a way to test if a string is a "void string", as
+ * marked by NS_CStringSetIsVoid.
+ */
+XPCOM_API(PRBool)
+NS_CStringGetIsVoid(const nsACString& aStr);
 
 /* ------------------------------------------------------------------------- */
 
