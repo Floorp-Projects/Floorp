@@ -183,7 +183,7 @@ sub StoreBuildID() {
     my $config = new Bootstrap::Config();
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
     my $sshUser = $config->Get(var => 'sshUser');
     my $sshServer = $config->Get(var => 'sshServer');
 
