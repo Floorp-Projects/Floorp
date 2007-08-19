@@ -668,7 +668,7 @@ const gXPInstallObserver = {
       var shell = aSubject.QueryInterface(Components.interfaces.nsIDocShell);
       browser = this._getBrowser(shell);
       if (browser) {
-        var host = browser.docShell.QueryInterface(Components.interfaces.nsIWebNavigation).currentURI.host;
+        var host = aData;
         var brandShortName = brandBundle.getString("brandShortName");
         var notificationName, messageString, buttons;
         if (!gPrefService.getBoolPref("xpinstall.enabled")) {
@@ -693,9 +693,6 @@ const gXPInstallObserver = {
           }
         }
         else {
-          // XXXben - use regular software install warnings for now until we can
-          // properly differentiate themes. It's likely in fact that themes won't
-          // be blocked so this code path will only be reached for extensions.
           notificationName = "xpinstall"
           messageString = browserBundle.getFormattedString("xpinstallPromptWarning",
                                                            [brandShortName, host]);
@@ -704,7 +701,7 @@ const gXPInstallObserver = {
             label: browserBundle.getString("xpinstallPromptWarningButton"),
             accessKey: browserBundle.getString("xpinstallPromptWarningButton.accesskey"),
             popup: null,
-            callback: function() { return xpinstallEditPermissions(shell); }
+            callback: function() { return xpinstallEditPermissions(shell, host); }
           }];
         }
 
@@ -721,16 +718,15 @@ const gXPInstallObserver = {
   }
 };
 
-function xpinstallEditPermissions(aDocShell)
+function xpinstallEditPermissions(aDocShell, aHost)
 {
   var browser = gXPInstallObserver._getBrowser(aDocShell);
   if (browser) {
     var bundlePreferences = document.getElementById("bundle_preferences");
-    var webNav = aDocShell.QueryInterface(Components.interfaces.nsIWebNavigation);
     var params = { blockVisible   : false,
                    sessionVisible : false,
                    allowVisible   : true,
-                   prefilledHost  : webNav.currentURI.host,
+                   prefilledHost  : aHost,
                    permissionType : "install",
                    windowTitle    : bundlePreferences.getString("addons_permissions_title"),
                    introText      : bundlePreferences.getString("addonspermissionstext") };
