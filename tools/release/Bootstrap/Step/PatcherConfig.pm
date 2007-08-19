@@ -86,7 +86,7 @@ sub BumpPatcherConfig {
     my $patcherConfig = $config->Get(var => 'patcherConfig');
     my $sshUser = $config->Get(var => 'sshUser');
     my $sshServer = $config->Get(var => 'sshServer');
-    my $logDir = $config->Get(var => 'logDir');
+    my $logDir = $config->Get(sysvar => 'logDir');
 
     # First, parse the file.
     my $checkedOutPatcherConfig = catfile($configBumpDir, 'patcher', 
