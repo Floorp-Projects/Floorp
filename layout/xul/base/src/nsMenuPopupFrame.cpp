@@ -861,18 +861,20 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame)
   if (!aAnchorFrame) {
     if (mAnchorContent) {
       nsCOMPtr<nsIDocument> document = mAnchorContent->GetDocument();
-      nsIPresShell *shell = document->GetPrimaryShell();
-      if (!shell)
-        return NS_ERROR_FAILURE;
-      
-      aAnchorFrame = shell->GetPrimaryFrameFor(mAnchorContent);
-    }
-    else {
-      aAnchorFrame = presContext->PresShell()->FrameManager()->GetRootFrame();
+      if (document) {
+        nsIPresShell *shell = document->GetPrimaryShell();
+        if (!shell)
+          return NS_ERROR_FAILURE;
+
+        aAnchorFrame = shell->GetPrimaryFrameFor(mAnchorContent);
+      }
     }
 
-    if (!aAnchorFrame)
-      return NS_OK;
+    if (!aAnchorFrame) {
+      aAnchorFrame = presContext->PresShell()->FrameManager()->GetRootFrame();
+      if (!aAnchorFrame)
+        return NS_OK;
+    }
   }
 
   if (aAnchorFrame->GetContent()) {
