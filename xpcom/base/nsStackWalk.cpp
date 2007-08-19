@@ -283,7 +283,8 @@ void PrintError(char *prefix)
       0,
       NULL
     );
-    fprintf(stderr, "### ERROR: %s: %s", prefix, lpMsgBuf);
+    fprintf(stderr, "### ERROR: %s: %s",
+                    prefix, lpMsgBuf ? lpMsgBuf : "(null)\n");
     fflush(stderr);
     LocalFree( lpMsgBuf );
 }
@@ -635,7 +636,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
                            ::GetCurrentProcess(),
                            ::GetCurrentProcess(),
                            &myProcess,
-                           THREAD_ALL_ACCESS, FALSE, 0)) {
+                           PROCESS_ALL_ACCESS, FALSE, 0)) {
         PrintError("DuplicateHandle (process)");
         return NS_ERROR_FAILURE;
     }
@@ -695,6 +696,8 @@ static BOOL CALLBACK callbackEspecial(
        : (addr <= aModuleBase && addr >= (aModuleBase - aModuleSize))
         ) {
         retval = _SymLoadModule(GetCurrentProcess(), NULL, aModuleName, NULL, aModuleBase, aModuleSize);
+        if (!retval)
+            PrintError("SymLoadModule");
     }
 
     return retval;
@@ -725,6 +728,8 @@ static BOOL CALLBACK callbackEspecial64(
        : (addr <= aModuleBase && addr >= (aModuleBase - aModuleSize))
         ) {
         retval = _SymLoadModule64(GetCurrentProcess(), NULL, aModuleName, NULL, aModuleBase, aModuleSize);
+        if (!retval)
+            PrintError("SymLoadModule64");
     }
 
     return retval;
@@ -767,7 +772,7 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
          * Not loaded, here's the magic.
          * Go through all the modules.
          */
-        enumRes = _EnumerateLoadedModules(aProcess, (PENUMLOADED_MODULES_CALLBACK)callbackEspecial, (PVOID)&aAddr);
+        enumRes = _EnumerateLoadedModules(aProcess, callbackEspecial, (PVOID)&aAddr);
         if (FALSE != enumRes)
         {
             /*
@@ -775,6 +780,8 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
              * If it fails, then well, we have other problems.
              */
             retval = _SymGetModuleInfo(aProcess, aAddr, aModuleInfo);
+            if (!retval)
+                PrintError("SymGetModuleInfo");
         }
     }
 
@@ -817,7 +824,7 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE
          * Not loaded, here's the magic.
          * Go through all the modules.
          */
-        enumRes = _EnumerateLoadedModules64(aProcess, (PENUMLOADED_MODULES_CALLBACK64)callbackEspecial64, (PVOID)&aAddr);
+        enumRes = _EnumerateLoadedModules64(aProcess, callbackEspecial64, (PVOID)&aAddr);
         if (FALSE != enumRes)
         {
             /*
@@ -825,6 +832,8 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE
              * If it fails, then well, we have other problems.
              */
             retval = _SymGetModuleInfo64(aProcess, aAddr, aModuleInfo);
+            if (!retval)
+                PrintError("SymGetModuleInfo64");
         }
     }
 
