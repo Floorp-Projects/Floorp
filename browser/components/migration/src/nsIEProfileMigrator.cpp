@@ -1894,6 +1894,8 @@ nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
       NS_SUCCEEDED(regKey->Open(nsIWindowsRegKey::ROOT_KEY_CURRENT_USER,
                                 key, nsIWindowsRegKey::ACCESS_READ))) {
     nsAutoString buf; 
+
+    PRUint32 proxyType = 0;
     // If there's an autoconfig URL specified in the registry at all, 
     // it is being used. 
     if (NS_SUCCEEDED(regKey->
@@ -1901,14 +1903,18 @@ nsIEProfileMigrator::CopyProxyPreferences(nsIPrefBranch* aPrefs)
       // make this future-proof (MS IE will support IDN eventually and
       // 'URL' will contain more than ASCII characters)
       SetUnicharPref("network.proxy.autoconfig_url", buf, aPrefs);
-      aPrefs->SetIntPref("network.proxy.type", 2);
+      proxyType = 2;
     }
 
     // ProxyEnable
     PRUint32 enabled;
     if (NS_SUCCEEDED(regKey->
-                     ReadIntValue(NS_LITERAL_STRING("ProxyEnable"), &enabled)))
-      aPrefs->SetIntPref("network.proxy.type", (enabled & 0x1) ? 1 : 0); 
+                     ReadIntValue(NS_LITERAL_STRING("ProxyEnable"), &enabled))) {
+      if (enabled & 0x1)
+        proxyType = 1;
+    }
+    
+    aPrefs->SetIntPref("network.proxy.type", proxyType); 
     
     if (NS_SUCCEEDED(regKey->
                      ReadStringValue(NS_LITERAL_STRING("ProxyOverride"), buf)))
