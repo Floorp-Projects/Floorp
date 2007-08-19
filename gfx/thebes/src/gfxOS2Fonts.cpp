@@ -55,7 +55,7 @@
 gfxOS2Font::gfxOS2Font(const nsAString &aName, const gfxFontStyle *aFontStyle)
     : gfxFont(aName, aFontStyle),
       mFontFace(nsnull), mScaledFont(nsnull),
-      mMetrics(nsnull)
+      mMetrics(nsnull), mAdjustedSize(0)
 {
 #ifdef DEBUG_thebes_2
     printf("gfxOS2Font[%#x]::gfxOS2Font(\"%s\", aFontStyle)\n",
@@ -107,44 +107,65 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
     if (!mMetrics) {
         mMetrics = new gfxFont::Metrics;
 
-        FT_UInt gid;
+        mMetrics->emHeight = GetStyle()->size;
+
+        FT_UInt gid; // glyph ID
         FT_Face face = cairo_ft_scaled_font_lock_face(CairoScaledFont());
 
-        // properties of 'x', also use its width as average width
-        gid = FT_Get_Char_Index(face, 'x'); // select the glyph
-        FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT); // load it into the slot
-        mMetrics->xHeight = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->glyph->metrics.height);
-        mMetrics->aveCharWidth = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->glyph->metrics.width);
         // properties of space
         gid = FT_Get_Char_Index(face, ' ');
-        FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT);
+        // load glyph into glyph slot, use no_scale to get font units
+        FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
         // face->glyph->metrics.width doesn't work for spaces, use advance.x instead
-        // spaces are always too narrow, unless I multiply by some extra factor
         mMetrics->spaceWidth = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->glyph->advance.x);
         // save the space glyph
         mSpaceGlyph = gid;
 
+        // properties of 'x', also use its width as average width
+        gid = FT_Get_Char_Index(face, 'x'); // select the glyph
+        if (gid) {
+            FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
+            mMetrics->xHeight = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->glyph->metrics.height);
+            mMetrics->aveCharWidth = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->glyph->metrics.width);
+        } else {
+            // this font doesn't have an 'x'...
+            // fake these metrics using a fraction of the font size
+            mMetrics->xHeight = mMetrics->emHeight * 0.5;
+            mMetrics->aveCharWidth = mMetrics->emHeight * 0.5;
+        }
+
+        // compute an adjusted size if we need to
+        if (mAdjustedSize == 0 && GetStyle()->sizeAdjust != 0) {
+            gfxFloat aspect = mMetrics->xHeight / GetStyle()->size;
+            mAdjustedSize = GetStyle()->GetAdjustedSize(aspect);
+            mMetrics->emHeight = mAdjustedSize;
+        }
+
         // now load the OS/2 TrueType table to load access some more properties
         TT_OS2 *os2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, ft_sfnt_os2);
-        if (os2 && os2->version !=  0xFFFF) { // should be there if not old Mac font
+        if (os2 && os2->version != 0xFFFF) { // should be there if not old Mac font
+            // if we are here we can improve the avgCharWidth
+            mMetrics->aveCharWidth = CONVERT_DESIGN_UNITS_TO_PIXELS_X(os2->xAvgCharWidth);
+
             mMetrics->superscriptOffset = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(os2->ySuperscriptYOffset);
             mMetrics->superscriptOffset = PR_MAX(1, mMetrics->superscriptOffset);
             // some fonts have the incorrect sign (from gfxPangoFonts)
-            mMetrics->subscriptOffset   = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(os2->ySubscriptYOffset);
+            mMetrics->subscriptOffset   = fabs(CONVERT_DESIGN_UNITS_TO_PIXELS_Y(os2->ySubscriptYOffset));
             mMetrics->subscriptOffset   = PR_MAX(1, fabs(mMetrics->subscriptOffset));
+            mMetrics->strikeoutOffset   = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(os2->yStrikeoutPosition);
+            mMetrics->strikeoutSize     = PR_MAX(1, CONVERT_DESIGN_UNITS_TO_PIXELS_Y(os2->yStrikeoutSize));
         } else {
-            mMetrics->superscriptOffset = mMetrics->xHeight;
-            mMetrics->subscriptOffset   = mMetrics->xHeight;
+            // use fractions of emHeight instead of xHeight for these to be more robust
+            mMetrics->superscriptOffset = mMetrics->emHeight * 0.5;
+            mMetrics->subscriptOffset   = mMetrics->emHeight * 0.2;
+            mMetrics->strikeoutOffset   = mMetrics->emHeight * 0.3;
+            mMetrics->strikeoutSize     = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_thickness);
         }
-        // could access these via os2 table, but copy behavior from gfxPangoFonts
-        mMetrics->strikeoutOffset = mMetrics->xHeight / 2.0;
-        mMetrics->strikeoutSize   = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_thickness);
         // seems that underlineOffset really has to be negative
         mMetrics->underlineOffset = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_position);
-        mMetrics->underlineSize   = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_thickness);
+        mMetrics->underlineSize   = PR_MAX(1, CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_thickness));
 
         // descents are negative in FT but Thebes wants them positive
-        mMetrics->emHeight        = face->size->metrics.y_ppem;
         mMetrics->emAscent        = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->ascender);
         mMetrics->emDescent       = -CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->descender);
         mMetrics->maxHeight       = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->height);
@@ -269,7 +290,8 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         FcPatternAddInteger(fcPattern, FC_SLANT, fcProperty);
 
         // add the size we want
-        FcPatternAddDouble(fcPattern, FC_PIXEL_SIZE, mStyle.size);
+        FcPatternAddDouble(fcPattern, FC_PIXEL_SIZE,
+                           mAdjustedSize ? mAdjustedSize : mStyle.size);
 
         // finally find a matching font
         FcResult fcRes;
@@ -312,7 +334,7 @@ cairo_scaled_font_t *gfxOS2Font::CairoScaledFont()
                (unsigned)this, NS_LossyConvertUTF16toASCII(mName).get(), mStyle.size);
 #endif
 
-        double size = mStyle.size;
+        double size = mAdjustedSize ? mAdjustedSize : mStyle.size;
         cairo_matrix_t fontMatrix;
         cairo_matrix_init_scale(&fontMatrix, size, size);
         cairo_font_options_t *fontOptions = cairo_font_options_create();
