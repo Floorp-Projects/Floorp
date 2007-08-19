@@ -82,18 +82,6 @@ gfxOS2Font::~gfxOS2Font()
     mMetrics = nsnull;
 }
 
-// rounding and truncation functions for a Freetype floating point number
-// (FT26Dot6) stored in a 32bit integer with high 26 bits for the integer
-// part and low 6 bits for the fractional part.
-#define MOZ_FT_ROUND(x) (((x) + 32) & ~63) // 63 = 2^6 - 1
-#define MOZ_FT_TRUNC(x) ((x) >> 6)
-#define CONVERT_DESIGN_UNITS_TO_PIXELS(v, s) \
-        MOZ_FT_TRUNC(MOZ_FT_ROUND(FT_MulFix((v), (s))))
-#define CONVERT_DESIGN_UNITS_TO_PIXELS_X(v) \
-        CONVERT_DESIGN_UNITS_TO_PIXELS(v, face->size->metrics.x_scale)
-#define CONVERT_DESIGN_UNITS_TO_PIXELS_Y(v) \
-        CONVERT_DESIGN_UNITS_TO_PIXELS(v, face->size->metrics.y_scale)
-
 // gfxOS2Font::GetMetrics()
 // return the metrics of the current font using the gfxFont metrics structure.
 // If the metrics are not available yet, compute them using the FreeType
@@ -112,12 +100,16 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         FT_UInt gid; // glyph ID
         FT_Face face = cairo_ft_scaled_font_lock_face(CairoScaledFont());
 
+        double emUnit = 1.0 * face->units_per_EM;
+        double xScale = face->size->metrics.x_ppem / emUnit;
+        double yScale = face->size->metrics.y_ppem / emUnit;
+
         // properties of space
         gid = FT_Get_Char_Index(face, ' ');
         // load glyph into glyph slot, use no_scale to get font units
         FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
         // face->glyph->metrics.width doesn't work for spaces, use advance.x instead
-        mMetrics->spaceWidth = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->glyph->advance.x);
+        mMetrics->spaceWidth = face->glyph->advance.x * xScale;
         // save the space glyph
         mSpaceGlyph = gid;
 
@@ -125,8 +117,8 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         gid = FT_Get_Char_Index(face, 'x'); // select the glyph
         if (gid) {
             FT_Load_Glyph(face, gid, FT_LOAD_NO_SCALE);
-            mMetrics->xHeight = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->glyph->metrics.height);
-            mMetrics->aveCharWidth = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->glyph->metrics.width);
+            mMetrics->xHeight = face->glyph->metrics.height * yScale;
+            mMetrics->aveCharWidth = face->glyph->metrics.width * yScale;
         } else {
             // this font doesn't have an 'x'...
             // fake these metrics using a fraction of the font size
@@ -145,33 +137,33 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         TT_OS2 *os2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, ft_sfnt_os2);
         if (os2 && os2->version != 0xFFFF) { // should be there if not old Mac font
             // if we are here we can improve the avgCharWidth
-            mMetrics->aveCharWidth = CONVERT_DESIGN_UNITS_TO_PIXELS_X(os2->xAvgCharWidth);
+            mMetrics->aveCharWidth = os2->xAvgCharWidth * xScale;
 
-            mMetrics->superscriptOffset = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(os2->ySuperscriptYOffset);
+            mMetrics->superscriptOffset = os2->ySuperscriptYOffset * yScale;
             mMetrics->superscriptOffset = PR_MAX(1, mMetrics->superscriptOffset);
             // some fonts have the incorrect sign (from gfxPangoFonts)
-            mMetrics->subscriptOffset   = fabs(CONVERT_DESIGN_UNITS_TO_PIXELS_Y(os2->ySubscriptYOffset));
+            mMetrics->subscriptOffset   = fabs(os2->ySubscriptYOffset * yScale);
             mMetrics->subscriptOffset   = PR_MAX(1, fabs(mMetrics->subscriptOffset));
-            mMetrics->strikeoutOffset   = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(os2->yStrikeoutPosition);
-            mMetrics->strikeoutSize     = PR_MAX(1, CONVERT_DESIGN_UNITS_TO_PIXELS_Y(os2->yStrikeoutSize));
+            mMetrics->strikeoutOffset   = os2->yStrikeoutPosition * yScale;
+            mMetrics->strikeoutSize     = PR_MAX(1, os2->yStrikeoutSize * yScale);
         } else {
             // use fractions of emHeight instead of xHeight for these to be more robust
             mMetrics->superscriptOffset = mMetrics->emHeight * 0.5;
             mMetrics->subscriptOffset   = mMetrics->emHeight * 0.2;
             mMetrics->strikeoutOffset   = mMetrics->emHeight * 0.3;
-            mMetrics->strikeoutSize     = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_thickness);
+            mMetrics->strikeoutSize     = face->underline_thickness * yScale;
         }
         // seems that underlineOffset really has to be negative
-        mMetrics->underlineOffset = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_position);
-        mMetrics->underlineSize   = PR_MAX(1, CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_thickness));
+        mMetrics->underlineOffset = face->underline_position * yScale;
+        mMetrics->underlineSize   = PR_MAX(1, face->underline_thickness * yScale);
 
         // descents are negative in FT but Thebes wants them positive
-        mMetrics->emAscent        = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->ascender);
-        mMetrics->emDescent       = -CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->descender);
-        mMetrics->maxHeight       = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->height);
-        mMetrics->maxAscent       = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->bbox.yMax);
-        mMetrics->maxDescent      = -CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->bbox.yMin);
-        mMetrics->maxAdvance      = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->max_advance_width);
+        mMetrics->emAscent        = face->ascender * yScale;
+        mMetrics->emDescent       = -face->descender * yScale;
+        mMetrics->maxHeight       = face->height * yScale;
+        mMetrics->maxAscent       = face->bbox.yMax * yScale;
+        mMetrics->maxDescent      = -face->bbox.yMin * yScale;
+        mMetrics->maxAdvance      = face->max_advance_width * xScale;
         // leading are not available directly (only for WinFNTs)
         double lineHeight = mMetrics->maxAscent + mMetrics->maxDescent;
         if (lineHeight > mMetrics->emHeight) {
@@ -577,7 +569,7 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
                 advance = -1; // trigger the missing glyphs case below
             } else {
                 FT_Load_Glyph(face, gid, FT_LOAD_DEFAULT); // load glyph into the slot
-                advance = MOZ_FT_TRUNC(face->glyph->advance.x) * appUnitsPerDevUnit;
+                advance = (face->glyph->advance.x >> 6) * appUnitsPerDevUnit;
             }
 #ifdef DEBUG_thebes_2
             printf(" gid=%d, advance=%d (%s)\n", gid, advance,
