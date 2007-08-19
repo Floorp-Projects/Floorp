@@ -314,16 +314,6 @@
                oncommand="PlacesSearchBox.search(this.value);" 
                onreset="PlacesOrganizer.onPlaceSelected(false); return true;" 
                collection="bookmarks">
-        <button type="menu" class="filterList" id="filterList_history">
-          <menupopup>
-            <menuitem label="&search.allBookmarks.label;"
-                      accesskey="&search.allBookmarks.accesskey;"
-                      type="radio" name="collection" value="all" 
-                      checked="true" default="true"/>
-            <menuitem label="&search.collection.label;" accesskey="&search.collection.accesskey;"
-                      type="radio" name="collection" value="collection"/>
-          </menupopup>
-        </button>
       </textbox>
       <spacer flex="1"/>
       <toolbarbutton id="toolbarGroupOff" type="radio" group="grouping" 
