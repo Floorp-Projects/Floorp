@@ -134,7 +134,7 @@ endif # WINNT
 ifeq ($(OS_ARCH),WINNT)
 # we want to copy PDB files on Windows
 MAKE_SYM_STORE_ARGS := -c
-DUMP_SYMS_BIN := $(topsrcdir)/toolkit/crashreporter/tools/win32/dump_syms.exe
+DUMP_SYMS_BIN ?= $(topsrcdir)/toolkit/crashreporter/tools/win32/dump_syms.exe
 # PDB files don't get moved to dist, so we need to scan the whole objdir
 MAKE_SYM_STORE_PATH := .
 endif
@@ -147,11 +147,11 @@ else
 MAKE_SYM_STORE_ARGS := -a $(OS_TEST) --vcs-info
 MAKE_SYM_STORE_PATH := $(DIST)/bin
 endif
-DUMP_SYMS_BIN := $(DIST)/host/bin/dump_syms
+DUMP_SYMS_BIN ?= $(DIST)/host/bin/dump_syms
 endif
 ifeq ($(OS_ARCH),Linux)
 MAKE_SYM_STORE_ARGS := --vcs-info
-DUMP_SYMS_BIN := $(DIST)/host/bin/dump_syms
+DUMP_SYMS_BIN ?= $(DIST)/host/bin/dump_syms
 MAKE_SYM_STORE_PATH := $(DIST)/bin
 endif
 
