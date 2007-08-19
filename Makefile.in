@@ -193,4 +193,8 @@ deliver: splitsymbols rebase signnss
 
 endif # WINNT
 
+ifneq (,$(wildcard $(DIST)/bin/application.ini))
 BUILDID = $(shell $(PYTHON) $(srcdir)/config/printconfigsetting.py $(DIST)/bin/application.ini App BuildID)
+else
+BUILDID = $(shell $(PYTHON) $(srcdir)/config/printconfigsetting.py $(DIST)/bin/platform.ini Build BuildID)
+endif
