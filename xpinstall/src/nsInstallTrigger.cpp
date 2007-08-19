@@ -193,6 +193,10 @@ nsInstallTrigger::HandleContent(const char * aContentType,
     // We have what we need to start an XPInstall, now figure out if we are
     // going to honor this request based on PermissionManager settings
     PRBool enabled = PR_FALSE;
+    // Keep the host so that it can be sent to the
+    // xpinstall-install-blocked observers to display the host to be
+    // whitelisted
+    nsCAutoString host;
 
     if ( useReferrer )
     {
@@ -205,6 +209,7 @@ nsInstallTrigger::HandleContent(const char * aContentType,
         // site is one which is allowed to annoy the user with modal dialogs.
 
         enabled = AllowInstall( referringURI );
+        referringURI->GetHost(host);
     }
     else
     {
@@ -241,6 +246,7 @@ nsInstallTrigger::HandleContent(const char * aContentType,
         // trusted sites.
 
         enabled = AllowInstall( uri );
+        uri->GetHost(host);
     }
 
 
@@ -257,8 +263,8 @@ nsInstallTrigger::HandleContent(const char * aContentType,
         nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
         if (os) {
             os->NotifyObservers(win->GetDocShell(),
-                                "xpinstall-install-blocked", 
-                                NS_LITERAL_STRING("install-chrome").get());
+                                "xpinstall-install-blocked",
+                                NS_ConvertUTF8toUTF16(host).get());
         }
         rv = NS_ERROR_ABORT;
     }
