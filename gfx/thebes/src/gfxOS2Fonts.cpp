@@ -106,7 +106,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
 #endif
     if (!mMetrics) {
         mMetrics = new gfxFont::Metrics;
-    
+
         FT_UInt gid;
         FT_Face face = cairo_ft_scaled_font_lock_face(CairoScaledFont());
 
@@ -123,7 +123,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         mMetrics->spaceWidth = CONVERT_DESIGN_UNITS_TO_PIXELS_X(face->glyph->advance.x);
         // save the space glyph
         mSpaceGlyph = gid;
-    
+
         // now load the OS/2 TrueType table to load access some more properties
         TT_OS2 *os2 = (TT_OS2 *)FT_Get_Sfnt_Table(face, ft_sfnt_os2);
         if (os2 && os2->version !=  0xFFFF) { // should be there if not old Mac font
@@ -142,7 +142,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         // seems that underlineOffset really has to be negative
         mMetrics->underlineOffset = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_position);
         mMetrics->underlineSize   = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->underline_thickness);
-    
+
         // descents are negative in FT but Thebes wants them positive
         mMetrics->emHeight        = face->size->metrics.y_ppem;
         mMetrics->emAscent        = CONVERT_DESIGN_UNITS_TO_PIXELS_Y(face->ascender);
@@ -159,29 +159,29 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
             mMetrics->internalLeading = 0;
         }
         mMetrics->externalLeading = 0; // normal value for OS/2 fonts, too
-    
+
 #ifdef DEBUG_thebes_1
         printf("gfxOS2Font[%#x]::GetMetrics():\n"
-               "  %s\n"
-               "  emHeight=%f==%f=gfxFont::mStyle.size\n"
-               "  maxHeight=%f\n"
-               "  xHeight=%f\n"
-               "  aveCharWidth=%f==xWidth\n"
-               "  spaceWidth=%f\n"
-               "  others: %f %f   %f %f   %f %f\n      %f %f %f   %f %f %f\n      %f %f\n",
+               "  %s (%s)\n"
+               "  emHeight=%f == %f=gfxFont::mStyle.size == %f=adjSz\n"
+               "  maxHeight=%f  xHeight=%f\n"
+               "  aveCharWidth=%f==xWidth  spaceWidth=%f\n"
+               "  supOff=%f SubOff=%f   strOff=%f strSz=%f\n"
+               "  undOff=%f undSz=%f    intLead=%f extLead=%f\n"
+               "  emAsc=%f emDesc=%f maxH=%f\n"
+               "  maxAsc=%f maxDes=%f maxAdv=%f\n",
                (unsigned)this,
                NS_LossyConvertUTF16toASCII(mName).get(),
-               mMetrics->emHeight, mStyle.size,
-               mMetrics->maxHeight,
-               mMetrics->xHeight,
-               mMetrics->aveCharWidth,
-               mMetrics->spaceWidth,
+               os2 && os2->version != 0xFFFF ? "has OS/2 table" : "no OS/2 table!",
+               mMetrics->emHeight, mStyle.size, mAdjustedSize,
+               mMetrics->maxHeight, mMetrics->xHeight,
+               mMetrics->aveCharWidth, mMetrics->spaceWidth,
                mMetrics->superscriptOffset, mMetrics->subscriptOffset,
                mMetrics->strikeoutOffset, mMetrics->strikeoutSize,
                mMetrics->underlineOffset, mMetrics->underlineSize,
+               mMetrics->internalLeading, mMetrics->externalLeading,
                mMetrics->emAscent, mMetrics->emDescent, mMetrics->maxHeight,
-               mMetrics->maxAscent, mMetrics->maxDescent, mMetrics->maxAdvance,
-               mMetrics->internalLeading, mMetrics->externalLeading
+               mMetrics->maxAscent, mMetrics->maxDescent, mMetrics->maxAdvance
               );
 #endif
         cairo_ft_scaled_font_unlock_face(CairoScaledFont());
@@ -236,7 +236,7 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         //    400              80
         //    700             200
         PRInt16 fcW = 40 * weight - 80; // match gfxFont weight to base FC weight
-        // find the correct weight in the list 
+        // find the correct weight in the list
         PRInt8 i = 0;
         while (i < nFcWeight && fcWeight[i] < fcW) {
             i++;
@@ -408,25 +408,24 @@ static PRInt32 AppendDirectionalIndicatorUTF8(PRBool aIsRTL, nsACString& aString
 gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLength,
                                          const Parameters* aParams, PRUint32 aFlags)
 {
-#ifdef DEBUG_thebes_2
-    printf("gfxOS2FontGroup[%#x]::MakeTextRun(PRUnichar aString, %d, %#x, %d)\n",
-           (unsigned)this, /*(const char*)aString,*/ aLength, (unsigned)aParams, aFlags);
-#endif
     gfxTextRun *textRun = new gfxTextRun(aParams, aString, aLength, this, aFlags);
     if (!textRun)
         return nsnull;
 
     textRun->RecordSurrogates(aString);
-    
+
     nsCAutoString utf8;
     PRInt32 headerLen = AppendDirectionalIndicatorUTF8(textRun->IsRightToLeft(), utf8);
     AppendUTF16toUTF8(Substring(aString, aString + aLength), utf8);
-    InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen);
 
 #ifdef DEBUG_thebes_2
-    printf("gfxOS2FontGroup[%#x]::MakeTextRun(PRUnichar aString, %d, %#x) is done: %#x\n",
-           (unsigned)this, /*(const char*)aString,*/ aLength, (unsigned)aParams, (unsigned)textRun);
+    NS_ConvertUTF8toUTF16 u16(utf8);
+    printf("gfxOS2FontGroup[%#x]::MakeTextRun(PRUnichar %s, %d, %#x, %d)\n",
+           (unsigned)this, NS_LossyConvertUTF16toASCII(u16).get(), aLength, (unsigned)aParams, aFlags);
 #endif
+
+    InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen);
+
     return textRun;
 }
 
@@ -434,8 +433,10 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLengt
                                          const Parameters* aParams, PRUint32 aFlags)
 {
 #ifdef DEBUG_thebes_2
-    printf("gfxOS2FontGroup[%#x]::MakeTextRun(PRUint8 aString, %d, %#x, %d)\n",
-           (unsigned)this, /*(const char*)aString,*/ aLength, (unsigned)aParams, aFlags);
+    const char *cStr = reinterpret_cast<const char *>(aString);
+    NS_ConvertASCIItoUTF16 us(cStr, aLength);
+    printf("gfxOS2FontGroup[%#x]::MakeTextRun(PRUint8 %s, %d, %#x, %d)\n",
+           (unsigned)this, NS_LossyConvertUTF16toASCII(us).get(), aLength, (unsigned)aParams, aFlags);
 #endif
     NS_ASSERTION(aFlags & TEXT_IS_8BIT, "8bit should have been set");
     gfxTextRun *textRun = new gfxTextRun(aParams, aString, aLength, this, aFlags);
@@ -459,10 +460,6 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLengt
         InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen);
     }
 
-#ifdef DEBUG_thebes_2
-    printf("gfxOS2FontGroup[%#x]::MakeTextRun(PRUint8 aString, %d, %#x) is done: %#x\n",
-           (unsigned)this, /*(const char*)aString,*/ aLength, (unsigned)aParams, (unsigned)textRun);
-#endif
     return textRun;
 }
 
@@ -504,12 +501,12 @@ PRUint32 getUTF8CharAndNext(const PRUint8 *aString, PRUint8 *aLength)
     }
     if ((aString[0] >> 4) == 14) { // three leading ones -> three bytes
         *aLength = 3;
-        return ((aString[0] & 0x1F) << 12) + ((aString[1] & 0x3F) << 6) + 
+        return ((aString[0] & 0x1F) << 12) + ((aString[1] & 0x3F) << 6) +
                (aString[2] & 0x3F);
     }
     if ((aString[0] >> 4) == 15) { // four leading ones -> four bytes
         *aLength = 4;
-        return ((aString[0] & 0x1F) << 18) + ((aString[1] & 0x3F) << 12) + 
+        return ((aString[0] & 0x1F) << 18) + ((aString[1] & 0x3F) << 12) +
                ((aString[2] & 0x3F) <<  6) + (aString[3] & 0x3F);
     }
     return aString[0];
@@ -521,6 +518,11 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
 #ifdef DEBUG_thebes_2
     printf("gfxOS2FontGroup::CreateGlyphRunsFT(%#x, _aUTF8_, %d)\n",
            (unsigned)aTextRun, /*aUTF8,*/ aUTF8Length);
+    for (PRUint32 i = 0; i < FontListLength(); i++) {
+        gfxOS2Font *font = GetFontAt(i);
+        printf("  i=%d, name=%s, size=%f\n", i, NS_LossyConvertUTF16toASCII(font->GetName()).get(),
+               font->GetStyle()->size);
+    }
 #endif
     const PRUint8 *p = aUTF8;
     gfxOS2Font *font = GetFontAt(0);
@@ -537,7 +539,7 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
         PRUint32 ch = getUTF8CharAndNext(p, &chLen);
         p += chLen; // move to next char
 #ifdef DEBUG_thebes_2
-        printf("\'%c\' (%d):", (char)ch, ch);
+        printf("\'%c\' (%d, %#x, %s):", (char)ch, ch, ch, ch >=0x10000 ? "non-BMP!" : "BMP");
 #endif
 
         if (ch == 0) {
@@ -559,7 +561,7 @@ void gfxOS2FontGroup::CreateGlyphRunsFT(gfxTextRun *aTextRun, const PRUint8 *aUT
             printf(" gid=%d, advance=%d (%s)\n", gid, advance,
                    NS_LossyConvertUTF16toASCII(font->GetName()).get());
 #endif
-            
+
             if (advance >= 0 &&
                 gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
                 gfxTextRun::CompressedGlyph::IsSimpleGlyphID(gid))
