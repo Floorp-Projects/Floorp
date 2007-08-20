@@ -67,35 +67,10 @@
     <command id="cmd_close" oncommand="closeWindow(true)"/>
   </commandset>
 
-  <broadcaster id="Console:clear" label="&clear.label;" 
-               accesskey="&clear.accesskey;"
-               oncommand="clearConsole();"/>
-  <broadcaster id="Console:sortAscend" label="&sortFirst.label;" 
-               accesskey="&sortFirst.accesskey;"
-               oncommand="changeSortOrder('forward');"/>
-  <broadcaster id="Console:sortDescend" label="&sortLast.label;"
-               accesskey="&sortLast.accesskey;"
-               oncommand="changeSortOrder('reverse');"/>
-
-  <broadcasterset id="ModeBroadcasters">
-    <broadcaster id="Console:modeAll" 
-                 label="&all.label;" accesskey="&all.accesskey;"
-                 oncommand="changeMode('All');"/>
-    <broadcaster id="Console:modeErrors"
-                 label="&errors.label;" accesskey="&errors.accesskey;"
-                 oncommand="changeMode('Errors');"/>
-    <broadcaster id="Console:modeWarnings"
-                 label="&warnings.label;" accesskey="&warnings.accesskey;"
-                 oncommand="changeMode('Warnings');"/>
-    <broadcaster id="Console:modeMessages"
-                 label="&messages.label;" accesskey="&messages.accesskey;"
-                 oncommand="changeMode('Messages');"/>
-  </broadcasterset>
-
   <keyset id="consoleKeys">
     <key id="key_close" key="&closeCmd.commandkey;" modifiers="accel"
          command="cmd_close"/>
-    <key keycode="VK_ESCAPE" command="cmd_close"/>
+    <key id="key_close2" keycode="VK_ESCAPE" command="cmd_close"/>
     <key id="key_focus1" key="&focus1.commandkey;" modifiers="accel"
          oncommand="gTextBoxEval.focus()"/>
     <key id="key_focus2" key="&focus2.commandkey;" modifiers="alt"
@@ -104,21 +79,35 @@
 
   <popupset id="ContextMenus">
     <popup id="ConsoleContext">
-      <menuitem type="radio" observes="Console:sortAscend"/>
-      <menuitem type="radio" observes="Console:sortDescend"/>
+      <menuitem type="radio" id="Console:sortAscend"
+                label="&sortFirst.label;" accesskey="&sortFirst.accesskey;"
+                oncommand="changeSortOrder('forward');"/>
+      <menuitem type="radio" id="Console:sortDescend"
+                label="&sortLast.label;" accesskey="&sortLast.accesskey;"
+                oncommand="changeSortOrder('reverse');"/>
       <menuseparator/>
-      <menuitem id="menu_copy_cm" command="cmd_copy" label="&copyCmd.label;" accesskey="&copyCmd.accesskey;"/>
+      <menuitem id="menu_copy_cm" command="cmd_copy"
+                label="&copyCmd.label;" accesskey="&copyCmd.accesskey;"/>
     </popup>
   </popupset>
   
   <toolbox id="console-toolbox">
     <toolbar class="chromeclass-toolbar" id="ToolbarMode">
-      <toolbarbutton type="radio" group="mode" observes="Console:modeAll"/>
-      <toolbarbutton type="radio" group="mode" observes="Console:modeErrors"/>
-      <toolbarbutton type="radio" group="mode" observes="Console:modeWarnings"/>
-      <toolbarbutton type="radio" group="mode" observes="Console:modeMessages"/>
+      <toolbarbutton type="radio" group="mode" id="Console:modeAll" 
+                     label="&all.label;" accesskey="&all.accesskey;"
+                     oncommand="changeMode('All');"/>
+      <toolbarbutton type="radio" group="mode" id="Console:modeErrors"
+                     label="&errors.label;" accesskey="&errors.accesskey;"
+                     oncommand="changeMode('Errors');"/>
+      <toolbarbutton type="radio" group="mode" id="Console:modeWarnings"
+                     label="&warnings.label;" accesskey="&warnings.accesskey;"
+                     oncommand="changeMode('Warnings');"/>
+      <toolbarbutton type="radio" group="mode" id="Console:modeMessages"
+                   label="&messages.label;" accesskey="&messages.accesskey;"
+                   oncommand="changeMode('Messages');"/>
       <toolbarseparator/>
-      <toolbarbutton observes="Console:clear"/>
+      <toolbarbutton id="Console:clear" oncommand="clearConsole();"
+                     label="&clear.label;" accesskey="&clear.accesskey;"/>
     </toolbar>
   
     <toolbar class="chromeclass-toolbar" id="ToolbarEval" align="center">
