@@ -62,11 +62,11 @@ pref("security.ssl3.rsa_null_md5", false);
 pref("security.default_personal_cert",   "Select Automatically");
 pref("security.ask_for_password",        0);
 pref("security.password_lifetime",       30);
-pref("security.warn_entering_secure",    true);
+pref("security.warn_entering_secure",    false);
 pref("security.warn_entering_weak",      true);
-pref("security.warn_leaving_secure",     true);
+pref("security.warn_leaving_secure",     false);
 pref("security.warn_viewing_mixed",      true);
-pref("security.warn_submit_insecure",    true);
+pref("security.warn_submit_insecure",    false);
 
 pref("security.OCSP.enabled", 1);
 pref("security.OCSP.require", false);
