@@ -6,6 +6,7 @@ package Bootstrap::Step::Build;
 use File::Temp qw(tempfile);
 
 use Bootstrap::Step;
+use Bootstrap::Util qw(CvsCatfile);
 
 @ISA = ("Bootstrap::Step");
 
