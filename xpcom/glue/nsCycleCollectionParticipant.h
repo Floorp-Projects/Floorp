@@ -167,12 +167,28 @@ public:
 
 #define NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(_class)                        \
   NS_INTERFACE_MAP_BEGIN(_class)                                               \
-    NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(_class)                            \
-    NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION_ISUPPORTS(_class)
+    NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(_class)
 
 #define NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(_class)              \
   NS_INTERFACE_MAP_BEGIN(_class)                                               \
     NS_INTERFACE_MAP_ENTRY_CYCLE_COLLECTION(_class)
+
+#define NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(_class)  \
+  if (rv == NS_OK) return rv; \
+  nsISupports* foundInterface; \
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(_class)
+
+#define NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(_class)            \
+  NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)    \
+  {                                                                           \
+    NS_PRECONDITION(aInstancePtr, "null out param");                          \
+                                                                              \
+    if ( aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant)) ) {       \
+      *aInstancePtr = &NS_CYCLE_COLLECTION_NAME(_class);                      \
+      return NS_OK;                                                           \
+    }                                                                         \
+    nsresult rv;
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Helpers for implementing nsCycleCollectionParticipant::Unlink

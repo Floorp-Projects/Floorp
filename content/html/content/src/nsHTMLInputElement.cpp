@@ -403,19 +403,19 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLInputElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLInputElement
-NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(nsHTMLInputElement,
-                                       nsGenericHTMLFormElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLInputElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLInputElement)
-  NS_INTERFACE_MAP_ENTRY(nsITextControlElement)
-  NS_INTERFACE_MAP_ENTRY(nsIFileControlElement)
-  NS_INTERFACE_MAP_ENTRY(nsIRadioControlElement)
-  NS_INTERFACE_MAP_ENTRY(nsIPhonetic)
-  NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIImageLoadingContent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSEditableElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLInputElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLInputElement,
+                                        nsGenericHTMLFormElement)
+  NS_INTERFACE_TABLE_INHERITED9(nsHTMLInputElement,
+                                nsIDOMHTMLInputElement,
+                                nsIDOMNSHTMLInputElement,
+                                nsITextControlElement,
+                                nsIFileControlElement,
+                                nsIRadioControlElement,
+                                nsIPhonetic,
+                                imgIDecoderObserver,
+                                nsIImageLoadingContent,
+                                nsIDOMNSEditableElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLInputElement)
 
 
 // nsIDOMNode
@@ -2960,13 +2960,7 @@ public:
   NS_IMETHOD Visit(nsIFormControl* aRadio, PRBool* aStop) = 0;
 };
 
-NS_IMPL_ADDREF(nsRadioVisitor)
-NS_IMPL_RELEASE(nsRadioVisitor)
-
-NS_INTERFACE_MAP_BEGIN(nsRadioVisitor)
-  NS_INTERFACE_MAP_ENTRY(nsIRadioVisitor)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS1(nsRadioVisitor, nsIRadioVisitor)
 
 
 //

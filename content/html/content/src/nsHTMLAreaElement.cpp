@@ -136,13 +136,13 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLAreaElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLAreaElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLAreaElement, nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLAreaElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAreaElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAreaElement2)
-  NS_INTERFACE_MAP_ENTRY(nsILink)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLAreaElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLAreaElement, nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED4(nsHTMLAreaElement,
+                                nsIDOMHTMLAreaElement,
+                                nsIDOMNSHTMLAreaElement,
+                                nsIDOMNSHTMLAreaElement2,
+                                nsILink)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAreaElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLAreaElement)

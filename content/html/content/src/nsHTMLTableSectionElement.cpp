@@ -107,11 +107,11 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLTableSectionElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLTableSectionElement
-NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(nsHTMLTableSectionElement,
-                                       nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLTableSectionElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLTableSectionElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLTableSectionElement,
+                                        nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(nsHTMLTableSectionElement,
+                                nsIDOMHTMLTableSectionElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLTableSectionElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLTableSectionElement)

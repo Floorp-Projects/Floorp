@@ -1076,14 +1076,7 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
 // nsISupports stuff
 //
 
-NS_IMPL_ADDREF(nsFormSubmission)
-NS_IMPL_RELEASE(nsFormSubmission)
-
-NS_INTERFACE_MAP_BEGIN(nsFormSubmission)
-  NS_INTERFACE_MAP_ENTRY(nsIFormSubmission)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
+NS_IMPL_ISUPPORTS1(nsFormSubmission, nsIFormSubmission)
 
 // JBK moved from nsFormFrame - bug 34297
 // submission

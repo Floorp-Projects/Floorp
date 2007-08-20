@@ -53,8 +53,6 @@
 #include "nsIObjectLoadingContent.h"
 #include "nsIRunnable.h"
 
-#include "nsWeakReference.h"
-
 struct nsAsyncInstantiateEvent;
 class  AutoNotifier;
 class  AutoFallback;
@@ -84,9 +82,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
                              , public nsIObjectLoadingContent
                              , public nsIInterfaceRequestor
                              , public nsIChannelEventSink
-                             // Plugins code wants a weak reference to
-                             // notification callbacks
-                             , public nsSupportsWeakReference
 {
   friend class AutoNotifier;
   friend class AutoFallback;

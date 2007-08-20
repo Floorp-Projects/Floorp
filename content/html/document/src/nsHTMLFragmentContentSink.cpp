@@ -223,16 +223,10 @@ nsHTMLFragmentContentSink::~nsHTMLFragmentContentSink()
   }
 }
 
-NS_IMPL_ADDREF(nsHTMLFragmentContentSink)
-NS_IMPL_RELEASE(nsHTMLFragmentContentSink)
-
-NS_INTERFACE_MAP_BEGIN(nsHTMLFragmentContentSink)
-  NS_INTERFACE_MAP_ENTRY(nsIFragmentContentSink)
-  NS_INTERFACE_MAP_ENTRY(nsIHTMLContentSink)
-  NS_INTERFACE_MAP_ENTRY(nsIContentSink)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFragmentContentSink)
-NS_INTERFACE_MAP_END
-
+NS_IMPL_ISUPPORTS3(nsHTMLFragmentContentSink,
+                   nsIFragmentContentSink,
+                   nsIHTMLContentSink,
+                   nsIContentSink)
 
 NS_IMETHODIMP 
 nsHTMLFragmentContentSink::WillBuildModel(void)
