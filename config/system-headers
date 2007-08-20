@@ -65,10 +65,10 @@ bstring.h
 builtin.h
 Button.h
 byteswap.h
-#if MOZ_ENABLE_LIBXUL!=1
+#ifndef MOZ_ENABLE_LIBXUL
 #define WRAP_CAIRO_HEADERS
 #endif
-#if MOZ_TREE_CAIRO!=1
+#ifndef MOZ_TREE_CAIRO
 #define WRAP_CAIRO_HEADERS
 #endif
 #ifdef WRAP_CAIRO_HEADERS
@@ -290,7 +290,7 @@ JavaVM/jni.h
 JManager.h
 JNIEnvTests.h
 jni.h
-#if MOZ_NATIVE_JPEG==1
+#ifdef MOZ_NATIVE_JPEG
 jpeglib.h
 #endif
 JVMManagerTests.h
@@ -931,21 +931,29 @@ plstr.h
 plarenas.h
 plarena.h
 plhash.h
-#if MOZ_NATIVE_PNG==1
+#ifdef MOZ_NATIVE_PNG
 png.h
 #endif
-#if MOZ_NATIVE_ZLIB==1
+#ifdef MOZ_NATIVE_ZLIB
 zlib.h
 #endif
-#if MOZ_ENABLE_LIBXUL!=1
-#if BUILD_STATIC_LIBS!=1
+#ifndef MOZ_ENABLE_LIBXUL
+#ifndef BUILD_STATIC_LIBS
 #define WRAP_LCMS_HEADERS
 #endif
 #endif
-#if MOZ_NATIVE_LCMS==1
+#ifdef MOZ_NATIVE_LCMS
 #define WRAP_LCMS_HEADERS
 #endif
 #ifdef WRAP_LCMS_HEADERS
 icc34.h
 lcms.h
+#endif
+#ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
+libsn/sn.h
+libsn/sn-common.h
+libsn/sn-launchee.h
+libsn/sn-launcher.h
+libsn/sn-monitor.h
+libsn/sn-util.h
 #endif
