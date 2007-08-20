@@ -944,8 +944,8 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
   // Check for dangerous headers
   if (mState & XML_HTTP_REQUEST_USE_XSITE_AC) {
     const char *kCrossOriginSafeHeaders[] = {
-      "Cache-Control", "Content-Language", "Content-Type", "Expires",
-      "Last-Modified", "Pragma"
+      "cache-control", "content-language", "content-type", "expires",
+      "last-modified", "pragma"
     };
     PRBool safeHeader = PR_FALSE;
     PRUint32 i;
