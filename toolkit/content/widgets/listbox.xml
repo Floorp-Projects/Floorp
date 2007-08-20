@@ -99,8 +99,9 @@
     insertItemAt(aIndex, aLabel, aValue)
 
     /** Scroll up/down one page
-     * @param aDirection - specifies scrolling direction, should be either -1
-                           or 1 */
+     * @param aDirection - specifies scrolling direction, should be either -1 or 1
+     * @return the number of elements the selection scrolled
+     */
     scrollOnePage(aDirection)
 
     /** Fire "select" event */
@@ -334,12 +335,15 @@
           // Don't use clearSelection() because it causes a lot of noise
           // with respect to selection removed notifications used by the
           // accessibility API support.
+          var userSelecting = this._userSelecting;
+          this._userSelecting = false; // that's US automatically unselecting
           for (; currentItem; currentItem = this.getNextItem(currentItem, 1))
             this.removeItemFromSelection(currentItem);
 
           for (currentItem = this.getItemAtIndex(0); currentItem != aStartItem;
                currentItem = this.getNextItem(currentItem, 1))
             this.removeItemFromSelection(currentItem);
+          this._userSelecting = userSelecting;
 
           this._suppressOnSelect = suppressSelect;
 
@@ -478,8 +482,13 @@
             newIndex = numItems - 1;
 
           var newItem = this.getItemAtIndex(newIndex);
+          // make sure that the item is actually visible/selectable
+          if (this._userSelecting && newItem && !this._canUserSelect(newItem))
+            newItem =
+              aOffset > 0 ? this.getNextItem(newItem, 1) || this.getPreviousItem(newItem, 1) :
+                            this.getPreviousItem(newItem, 1) || this.getNextItem(newItem, 1);
           if (newItem) {
-            this.ensureIndexIsVisible(newIndex);
+            this.ensureIndexIsVisible(this.getIndexOfItem(newItem));
             if (aIsSelectingRange)
               this.selectItemRange(null, newItem);
             else if (aIsSelecting)
@@ -500,7 +509,8 @@
           while (aStartItem) {
             aStartItem = aStartItem.nextSibling;
             if (aStartItem && aStartItem instanceof
-                Components.interfaces.nsIDOMXULSelectControlItemElement) {
+                Components.interfaces.nsIDOMXULSelectControlItemElement &&
+                (!this._userSelecting || this._canUserSelect(aStartItem))) {
               --aDelta;
               if (aDelta == 0)
                 return aStartItem;
@@ -518,13 +528,36 @@
           while (aStartItem) {
             aStartItem = aStartItem.previousSibling;
             if (aStartItem && aStartItem instanceof
-                Components.interfaces.nsIDOMXULSelectControlItemElement) {
+                Components.interfaces.nsIDOMXULSelectControlItemElement &&
+                (!this._userSelecting || this._canUserSelect(aStartItem))) {
               --aDelta;
               if (aDelta == 0)
                 return aStartItem;
             }
           }
           return null;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_moveByOffsetFromUserEvent">
+        <parameter name="aOffset"/>
+        <parameter name="aEvent"/>
+        <body>
+        <![CDATA[
+          this._userSelecting = true;
+          this.moveByOffset(aOffset, !aEvent.ctrlKey, aEvent.shiftKey);
+          this._userSelecting = false;
+        ]]>
+        </body>
+      </method>
+
+      <method name="_canUserSelect">
+        <parameter name="aItem"/>
+        <body>
+        <![CDATA[
+          var style = document.defaultView.getComputedStyle(aItem, "");
+          return style.display != "none" && style.visibility == "visible";
         ]]>
         </body>
       </method>
@@ -538,6 +571,7 @@
       </method>
 
       <field name="_suppressOnSelect">false</field>
+      <field name="_userSelecting">false</field>
       <field name="_selectTimeout">null</field>
       <field name="_currentItem">null</field>
       <field name="_selectionStart">null</field>
@@ -545,22 +579,22 @@
 
     <handlers>
       <handler event="keypress" keycode="VK_UP" modifiers="control shift any"
-               action="moveByOffset(-1, !event.ctrlKey, event.shiftKey);"
+               action="this._moveByOffsetFromUserEvent(-1, event);"
                phase="target" preventdefault="true"/>
       <handler event="keypress" keycode="VK_DOWN" modifiers="control shift any"
-               action="moveByOffset(1, !event.ctrlKey, event.shiftKey);"
+               action="this._moveByOffsetFromUserEvent(1, event);"
                phase="target" preventdefault="true"/>
       <handler event="keypress" keycode="VK_HOME" modifiers="control shift any"
-               action="moveByOffset(-this.currentIndex, !event.ctrlKey, event.shiftKey);"
+               action="this._moveByOffsetFromUserEvent(-this.currentIndex, event);"
                phase="target" preventdefault="true"/>
       <handler event="keypress" keycode="VK_END" modifiers="control shift any"
-               action="moveByOffset(this.getRowCount() - this.currentIndex - 1, !event.ctrlKey, event.shiftKey);"
+               action="this._moveByOffsetFromUserEvent(this.getRowCount() - this.currentIndex - 1, event);"
                phase="target" preventdefault="true"/>
       <handler event="keypress" keycode="VK_PAGE_UP" modifiers="control shift any"
-               action="moveByOffset(this.scrollOnePage(-1), !event.ctrlKey, event.shiftKey);"
+               action="this._moveByOffsetFromUserEvent(this.scrollOnePage(-1), event);"
                phase="target" preventdefault="true"/>
       <handler event="keypress" keycode="VK_PAGE_DOWN" modifiers="control shift any"
-               action="moveByOffset(this.scrollOnePage(1), !event.ctrlKey, event.shiftKey);"
+               action="this._moveByOffsetFromUserEvent(this.scrollOnePage(1), event);"
                phase="target" preventdefault="true"/>
       <handler event="keypress" key=" " modifiers="control" phase="target">
       <![CDATA[
@@ -606,6 +640,8 @@
         for (var i = 0; i < rowCount; i++) {
           var k = (start + i) % rowCount;
           var listitem = this.getItemAtIndex(k);
+          if (!this._canUserSelect(listitem))
+            continue;
           // allow richlistitems to specify the string being searched for
           var searchText = "searchLabel" in listitem ? listitem.searchLabel :
                            listitem.getAttribute("label"); // (see also bug 250123)
@@ -770,14 +806,24 @@
         <body>      
           <![CDATA[
             var pageOffset = this.getNumberOfVisibleRows() * direction;
+            // skip over invisible elements - the user won't care about them
+            for (var i = 0; i != pageOffset; i += direction) {
+              var item = this.getItemAtIndex(this.currentIndex + i);
+              if (item && !this._canUserSelect(item))
+                pageOffset += direction;
+            }
             var newTop = this.getIndexOfFirstVisibleRow() + pageOffset;
             if (direction == 1) {
-              var maxTop = this.getRowCount() - pageOffset;
-              if (newTop >= maxTop && maxTop > this.currentIndex) {
-                newTop = maxTop;
+              var maxTop = this.getRowCount() - this.getNumberOfVisibleRows();
+              for (i = this.getRowCount(); i >= 0 && i > maxTop; i--) {
+                item = this.getItemAtIndex(i);
+                if (item && !this._canUserSelect(item))
+                  maxTop--;
               }
+              if (newTop >= maxTop)
+                newTop = maxTop;
             }
-            else if (newTop < 0)
+            if (newTop < 0)
               newTop = 0;
             this.scrollToIndex(newTop);
             return pageOffset;          
@@ -924,6 +970,7 @@
         var control = this.control;
         if (!control || control.disabled)
           return;
+        control._userSelecting = true;
         if (control.selType != "multiple") {
           control.selectItem(this);
         }
@@ -945,6 +992,7 @@
           // doesn't de- and reselect this item if it is selected
           control.selectItemRange(this, this);
         }
+        control._userSelecting = false;
       ]]>
       </handler>
     </handlers>
