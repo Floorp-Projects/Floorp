@@ -216,9 +216,11 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsGenericHTMLElementTearoff,
 NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsGenericHTMLElementTearoff,
                                            nsIDOMNSHTMLElement)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGenericHTMLElementTearoff)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMElementCSSInlineStyle)
+NS_INTERFACE_TABLE_HEAD(nsGenericHTMLElementTearoff)
+  NS_INTERFACE_TABLE_INHERITED2(nsGenericHTMLElementTearoff,
+                                nsIDOMNSHTMLElement,
+                                nsIDOMElementCSSInlineStyle)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsGenericHTMLElementTearoff)
 NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 
 
@@ -230,40 +232,23 @@ nsGenericHTMLElement::DOMQueryInterface(nsIDOMHTMLElement *aElement,
 {
   NS_PRECONDITION(aInstancePtr, "null out param");
 
-  nsISupports *inst = nsnull;
+  nsresult rv = NS_ERROR_FAILURE;
 
-  if (aIID.Equals(NS_GET_IID(nsIDOMNode))) {
-    inst = static_cast<nsIDOMNode *>(aElement);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMElement))) {
-    inst = static_cast<nsIDOMElement *>(aElement);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMHTMLElement))) {
-    inst = static_cast<nsIDOMHTMLElement *>(aElement);
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMNSHTMLElement))) {
-    inst = static_cast<nsIDOMNSHTMLElement *>
-                      (new nsGenericHTMLElementTearoff(this));
-    if (NS_UNLIKELY(!inst)) {
-      *aInstancePtr = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  } else if (aIID.Equals(NS_GET_IID(nsIDOMElementCSSInlineStyle))) {
-    inst = static_cast<nsIDOMElementCSSInlineStyle *>
-                      (new nsGenericHTMLElementTearoff(this));
-    if (NS_UNLIKELY(!inst)) {
-      *aInstancePtr = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  } else {
-    *aInstancePtr = nsnull;
-    return NS_ERROR_NO_INTERFACE;
-  }
+  NS_INTERFACE_TABLE_BEGIN
+    NS_INTERFACE_TABLE_ENTRY(nsIDOMHTMLElement, nsIDOMNode)
+    NS_INTERFACE_TABLE_ENTRY(nsIDOMHTMLElement, nsIDOMElement)
+    NS_INTERFACE_TABLE_ENTRY(nsIDOMHTMLElement, nsIDOMHTMLElement)
+  NS_INTERFACE_TABLE_END_WITH_PTR(aElement)
 
-  NS_ADDREF(inst);
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMNSHTMLElement,
+                                 new nsGenericHTMLElementTearoff(this))
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIDOMElementCSSInlineStyle,
+                                 new nsGenericHTMLElementTearoff(this))
+  NS_INTERFACE_MAP_END
 
-  *aInstancePtr = inst;
-
-  return NS_OK;
-}
-
+// No closing bracket, becuase NS_INTERFACE_MAP_END does that for us.
+    
 nsresult
 nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
 {
@@ -2537,10 +2522,9 @@ nsGenericHTMLFormElement::~nsGenericHTMLFormElement()
   SetForm(nsnull, PR_TRUE, PR_FALSE);
 }
 
-NS_INTERFACE_MAP_BEGIN(nsGenericHTMLFormElement)
-  NS_INTERFACE_MAP_ENTRY(nsIFormControl)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
-
+NS_IMPL_QUERY_INTERFACE_INHERITED1(nsGenericHTMLFormElement,
+                                   nsGenericHTMLElement,
+                                   nsIFormControl)
 
 PRBool
 nsGenericHTMLFormElement::IsNodeOfType(PRUint32 aFlags) const
@@ -2929,9 +2913,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsGenericHTMLFrameElement,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFrameLoader)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsGenericHTMLFrameElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFrameElement)
-  NS_INTERFACE_MAP_ENTRY(nsIFrameLoaderOwner)
+NS_INTERFACE_TABLE_HEAD(nsGenericHTMLFrameElement)
+  NS_INTERFACE_TABLE_INHERITED2(nsGenericHTMLFrameElement,
+                                nsIDOMNSHTMLFrameElement,
+                                nsIFrameLoaderOwner)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsGenericHTMLFrameElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
 nsresult

@@ -383,10 +383,12 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLDocument, nsDocument)
 
 
 // QueryInterface implementation for nsHTMLDocument
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIHTMLDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLDocument)
+NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLDocument)
+  NS_INTERFACE_TABLE_INHERITED3(nsHTMLDocument,
+                                nsIHTMLDocument,
+                                nsIDOMHTMLDocument,
+                                nsIDOMNSHTMLDocument)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsDocument)
 
