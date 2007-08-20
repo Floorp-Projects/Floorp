@@ -304,7 +304,7 @@ nsURIChecker::SetLoadFlags(nsLoadFlags aLoadFlags)
 }
 
 //-----------------------------------------------------------------------------
-// nsIRequestObserever methods:
+// nsIRequestObserver methods:
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
