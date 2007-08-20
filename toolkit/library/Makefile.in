@@ -166,7 +166,10 @@ GARBAGE += \
 endif
 else
 ifdef NS_TRACE_MALLOC
+# In libxul builds, tracemalloc is part of libxul instead.
+ifndef MOZ_ENABLE_LIBXUL
 EXTRA_DSO_LIBS += tracemalloc
+endif
 endif
 endif
 
