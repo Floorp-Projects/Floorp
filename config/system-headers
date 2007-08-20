@@ -65,10 +65,10 @@ bstring.h
 builtin.h
 Button.h
 byteswap.h
-#ifndef MOZ_ENABLE_LIBXUL
+#if MOZ_ENABLE_LIBXUL!=1
 #define WRAP_CAIRO_HEADERS
 #endif
-#ifndef MOZ_TREE_CAIRO
+#if MOZ_TREE_CAIRO!=1
 #define WRAP_CAIRO_HEADERS
 #endif
 #ifdef WRAP_CAIRO_HEADERS
@@ -290,7 +290,7 @@ JavaVM/jni.h
 JManager.h
 JNIEnvTests.h
 jni.h
-#ifdef MOZ_NATIVE_JPEG
+#if MOZ_NATIVE_JPEG==1
 jpeglib.h
 #endif
 JVMManagerTests.h
@@ -931,18 +931,18 @@ plstr.h
 plarenas.h
 plarena.h
 plhash.h
-#ifdef MOZ_NATIVE_PNG
+#if MOZ_NATIVE_PNG==1
 png.h
 #endif
-#ifdef MOZ_NATIVE_ZLIB
+#if MOZ_NATIVE_ZLIB==1
 zlib.h
 #endif
-#ifndef MOZ_ENABLE_LIBXUL
-#ifndef BUILD_STATIC_LIBS
+#if MOZ_ENABLE_LIBXUL!=1
+#if BUILD_STATIC_LIBS!=1
 #define WRAP_LCMS_HEADERS
 #endif
 #endif
-#ifdef MOZ_NATIVE_LCMS
+#if MOZ_NATIVE_LCMS==1
 #define WRAP_LCMS_HEADERS
 #endif
 #ifdef WRAP_LCMS_HEADERS
