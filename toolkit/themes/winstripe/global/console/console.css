@@ -171,52 +171,52 @@ toolbar#ToolbarMode toolbarbutton {
   padding: 4px !important;
 }
 
-toolbarbutton[observes="Console:modeAll"] {
+#Console\:modeAll {
   -moz-image-region: rect(0px 24px 24px 0px);
 }
 
-toolbarbutton[observes="Console:modeAll"] {
+#Console\:modeAll {
   -moz-image-region: rect(0px 24px 24px 0px);
 }
 
-toolbarbutton[observes="Console:modeAll"]:hover,
-toolbarbutton[observes="Console:modeAll"][checked="true"] {
+#Console\:modeAll:hover,
+#Console\:modeAll[checked="true"] {
   -moz-image-region: rect(24px 24px 48px 0px);
 }
 
-toolbarbutton[observes="Console:modeErrors"] {
+#Console\:modeErrors {
   -moz-image-region: rect(0px 96px 24px 72px);
 }
 
-toolbarbutton[observes="Console:modeErrors"]:hover,
-toolbarbutton[observes="Console:modeErrors"][checked="true"] {
+#Console\:modeErrors:hover,
+#Console\:modeErrors[checked="true"] {
   -moz-image-region: rect(24px 96px 48px 72px);
 }
 
-toolbarbutton[observes="Console:modeWarnings"] {
+#Console\:modeWarnings {
   -moz-image-region: rect(0px 72px 24px 48px);
 }
 
-toolbarbutton[observes="Console:modeWarnings"]:hover,
-toolbarbutton[observes="Console:modeWarnings"][checked="true"] {
+#Console\:modeWarnings:hover,
+#Console\:modeWarnings[checked="true"] {
   -moz-image-region: rect(24px 72px 48px 48px);
 }
 
-toolbarbutton[observes="Console:modeMessages"] {
+#Console\:modeMessages {
   -moz-image-region: rect(0px 48px 24px 24px);
 }
 
-toolbarbutton[observes="Console:modeMessages"]:hover,
-toolbarbutton[observes="Console:modeMessages"][checked="true"] {
+#Console\:modeMessages:hover,
+#Console\:modeMessages[checked="true"] {
   -moz-image-region: rect(24px 48px 48px 24px);
 }
 
-toolbarbutton[observes="Console:clear"] {
+#Console\:clear {
   -moz-image-region: rect(0px 120px 24px 96px);
 }
 
-toolbarbutton[observes="Console:clear"]:hover,
-toolbarbutton[observes="Console:clear"][checked="true"] {
+#Console\:clear:hover,
+#Console\:clear[checked="true"] {
   -moz-image-region: rect(24px 120px 48px 96px);
 }
 
