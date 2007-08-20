@@ -27,10 +27,9 @@ these performance tests:
     the page_load_test/ directory into htdocs/ directory of Apache (found on most systems
     at c:\Program Files\Apache Software Foundation\Apache2.2\htdocs)
     
-  * Syck YAML Parser
-  	You'll need to download and install Syck from http://whytheluckystiff.net/syck/
-  	Install the binary (a standard install) and the Python extension: 
-  	  cd ext/python/ && python setup.py build && sudo python setup.py install
+  * PyYAML YAML Parser
+  	You'll need to download and install PyYAML from http://pyyaml.org/wiki/PyYAML
+        (or via your OS's package installation system on Linux).
 
   1. Make sure the prerequisites, above, are installed.
   2. Copy this entire directory and all subdirectories onto your local disk
