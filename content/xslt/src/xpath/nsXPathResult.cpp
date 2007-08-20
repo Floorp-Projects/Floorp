@@ -41,6 +41,7 @@
 #include "txNodeSet.h"
 #include "nsDOMError.h"
 #include "nsIContent.h"
+#include "nsIAttribute.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMDocument.h"
@@ -204,7 +205,8 @@ nsXPathResult::NodeWillBeDestroyed(const nsINode* aNode)
 {
     // Set to null to avoid unregistring unnecessarily
     mDocument = nsnull;
-    Invalidate();
+    Invalidate(aNode->IsNodeOfType(nsINode::eCONTENT) ?
+               static_cast<const nsIContent*>(aNode) : nsnull);
 }
 
 void
@@ -212,7 +214,7 @@ nsXPathResult::CharacterDataChanged(nsIDocument* aDocument,
                                     nsIContent *aContent,
                                     CharacterDataChangeInfo* aInfo)
 {
-    Invalidate();
+    Invalidate(aContent);
 }
 
 void
@@ -223,7 +225,7 @@ nsXPathResult::AttributeChanged(nsIDocument* aDocument,
                                 PRInt32 aModType,
                                 PRUint32 aStateMask)
 {
-    Invalidate();
+    Invalidate(aContent);
 }
 
 void
@@ -231,7 +233,7 @@ nsXPathResult::ContentAppended(nsIDocument* aDocument,
                                nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer)
 {
-    Invalidate();
+    Invalidate(aContainer);
 }
 
 void
@@ -240,7 +242,7 @@ nsXPathResult::ContentInserted(nsIDocument* aDocument,
                                nsIContent* aChild,
                                PRInt32 aIndexInContainer)
 {
-    Invalidate();
+    Invalidate(aContainer);
 }
 
 void
@@ -249,13 +251,15 @@ nsXPathResult::ContentRemoved(nsIDocument* aDocument,
                               nsIContent* aChild,
                               PRInt32 aIndexInContainer)
 {
-    Invalidate();
+    Invalidate(aContainer);
 }
 
 nsresult
-nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType)
+nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType,
+                             nsINode* aContextNode)
 {
     mResultType = aResultType;
+    mContextNode = do_GetWeakReference(aContextNode);
 
     if ((isSnapshot() || isIterator() || isNode()) &&
         aExprResult->getResultType() != txAExprResult::NODESET) {
@@ -303,8 +307,31 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType)
 }
 
 void
-nsXPathResult::Invalidate()
+nsXPathResult::Invalidate(const nsIContent* aChangeRoot)
 {
+    nsCOMPtr<nsINode> contextNode = do_QueryReferent(mContextNode);
+    if (contextNode && aChangeRoot && aChangeRoot->GetBindingParent()) {
+        // If context node is in anonymous content, changes to
+        // non-anonymous content need to invalidate the XPathResult. If
+        // the changes are happening in a different anonymous trees, no
+        // invalidation should happen.
+        nsIContent* ctxBindingParent = nsnull;
+        if (contextNode->IsNodeOfType(nsINode::eCONTENT)) {
+            ctxBindingParent =
+                static_cast<nsIContent*>(contextNode.get())
+                    ->GetBindingParent();
+        } else if (contextNode->IsNodeOfType(nsINode::eATTRIBUTE)) {
+            nsIContent* parent =
+              static_cast<nsIAttribute*>(contextNode.get())->GetContent();
+            if (parent) {
+                ctxBindingParent = parent->GetBindingParent();
+            }
+        }
+        if (ctxBindingParent != aChangeRoot->GetBindingParent()) {
+          return;
+        }
+    }
+
     if (mDocument) {
         mDocument->RemoveMutationObserver(this);
         mDocument = nsnull;
@@ -343,7 +370,9 @@ nsXPathResult::Clone(nsIXPathResult **aResult)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    nsresult rv = result->SetExprResult(mResult.get(), mResultType);
+    nsCOMPtr<nsINode> contextNode = do_QueryReferent(mContextNode);
+    nsresult rv = result->SetExprResult(mResult.get(), mResultType,
+                                        contextNode);
     NS_ENSURE_SUCCESS(rv, rv);
 
     result.swap(*aResult);
