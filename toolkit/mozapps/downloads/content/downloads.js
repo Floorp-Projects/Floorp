@@ -96,16 +96,19 @@ function createDownloadItem(aID, aFile, aTarget, aURI, aState,
   dl.setAttribute("status", aStatus);
   dl.setAttribute("progress", aProgress);
   dl.setAttribute("startTime", aStartTime);
-
-  var ioSvc = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-  var file = ioSvc.newURI(aFile, null, null).QueryInterface(Ci.nsIFileURL).file;
-  dl.setAttribute("path", file.nativePath || file.path);
-
   if (aReferrer)
     dl.setAttribute("referrer", aReferrer);
 
-  return dl;
+  try {
+    var file = getLocalFileFromNativePathOrUrl(aFile);
+    dl.setAttribute("path", file.nativePath || file.path);
+    return dl;
+  }
+  catch (ex) {
+    // aFile might not be a file: url or a valid native path
+    // see bug #392386 for details
+  }
+  return null;
 }
 
 function getDownload(aID)
@@ -678,7 +681,8 @@ function buildDownloadList(aStmt, aRef)
                                 state, "", percentComplete,
                                 Math.round(aStmt.getInt64(5) / 1000),
                                 aStmt.getString(6));
-    gDownloadsView.insertBefore(dl, aRef.nextSibling);
+    if (dl)
+      gDownloadsView.insertBefore(dl, aRef.nextSibling);
   }
 }
 
@@ -815,10 +819,13 @@ function onSearchboxFocus() {
 
 // we should be using real URLs all the time, but until 
 // bug 239948 is fully fixed, this will do...
+//
+// note, this will thrown an exception if the native path
+// is not valid (for example a native Windows path on a Mac)
+// see bug #392386 for details
 function getLocalFileFromNativePathOrUrl(aPathOrUrl)
 {
   if (aPathOrUrl.substring(0,7) == "file://") {
-
     // if this is a URL, get the file from that
     let ioSvc = Cc["@mozilla.org/network/io-service;1"].
                 getService(Ci.nsIIOService);
@@ -827,9 +834,7 @@ function getLocalFileFromNativePathOrUrl(aPathOrUrl)
     const fileUrl = ioSvc.newURI(aPathOrUrl, null, null).
                     QueryInterface(Ci.nsIFileURL);
     return fileUrl.file.clone().QueryInterface(Ci.nsILocalFile);
-
   } else {
-
     // if it's a pathname, create the nsILocalFile directly
     var f = new nsLocalFile(aPathOrUrl);
 
