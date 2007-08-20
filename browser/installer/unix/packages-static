@@ -356,6 +356,14 @@ bin/chrome/pipnss.jar
 bin/chrome/pippki.jar
 bin/chrome/pippki.manifest
 
+; for Solaris SPARC
+bin/libfreebl_32fpu_3.chk
+bin/libfreebl_32fpu_3.so
+bin/libfreebl_32int_3.chk
+bin/libfreebl_32int_3.so
+bin/libfreebl_32int64_3.chk
+bin/libfreebl_32int64_3.so
+
 ; [Updater]
 ;
 bin/updater
