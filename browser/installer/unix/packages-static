@@ -118,6 +118,7 @@ bin/components/intl.xpt
 bin/components/jar.xpt
 bin/components/jsconsole.xpt
 bin/components/libjsd.so
+bin/components/libimgicon.so
 bin/components/jsdservice.xpt
 bin/components/layout_base.xpt
 bin/components/layout_printing.xpt
