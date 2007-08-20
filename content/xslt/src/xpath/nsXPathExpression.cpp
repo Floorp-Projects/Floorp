@@ -88,7 +88,8 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
                                        nsISupports *aInResult,
                                        nsISupports **aResult)
 {
-    NS_ENSURE_ARG(aContextNode);
+    nsCOMPtr<nsINode> context = do_QueryInterface(aContextNode);
+    NS_ENSURE_ARG(context);
 
     if (aContextPosition > aContextSize)
         return NS_ERROR_FAILURE;
@@ -177,7 +178,7 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
         xpathResult = new nsXPathResult();
         NS_ENSURE_TRUE(xpathResult, NS_ERROR_OUT_OF_MEMORY);
     }
-    rv = xpathResult->SetExprResult(exprResult, resultType);
+    rv = xpathResult->SetExprResult(exprResult, resultType, context);
     NS_ENSURE_SUCCESS(rv, rv);
 
     return CallQueryInterface(xpathResult, aResult);
