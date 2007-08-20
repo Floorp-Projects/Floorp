@@ -1868,8 +1868,12 @@ nsNavHistory::AddVisit(nsIURI* aURI, PRTime aTime, PRInt64 aReferringVisit,
     // is shown does not depend on whether you got to it through a redirect.
     // Rather, we want to hide pages that do not themselves redirect somewhere
     // else, which is what the redirect flag means.
+    //
+    // note, we want to unhide any hidden pages that the user explicitly types
+    // (aTransitionType == TRANSITION_TYPED) so that they will appear in
+    // the history UI (sidebar, history menu, url bar autocomplete, etc)
     hidden = oldHiddenState;
-    if (hidden && ! aIsRedirect &&
+    if (hidden && (!aIsRedirect || aTransitionType == TRANSITION_TYPED) &&
         aTransitionType != nsINavHistoryService::TRANSITION_EMBED)
       hidden = PR_FALSE; // unhide
 
