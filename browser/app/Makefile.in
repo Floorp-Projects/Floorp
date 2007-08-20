@@ -154,7 +154,10 @@ include $(topsrcdir)/config/config.mk
 ifndef BUILD_STATIC_LIBS
 
 ifdef NS_TRACE_MALLOC
+# when libxul is enabled, trace-malloc is part of it
+ifndef MOZ_ENABLE_LIBXUL
 EXTRA_DSO_LIBS += tracemalloc
+endif
 endif
 
 else
