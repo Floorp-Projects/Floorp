@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xbl="http://www.mozilla.org/xbl">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=319374
+-->
+<head>
+  <title>Test for Bug 319374</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <xbl:bindings>                                  
+    <xbl:binding id="test">
+      <xbl:content>
+        <span attr="attribute"><span></span></span><span> anon text </span><br/>
+      </xbl:content>
+    </xbl:binding>
+  </xbl:bindings>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=319374">Mozilla Bug 319374</a>
+<p id="display"></p>
+<div id="content"><span style="-moz-binding: url(#test)"/><span style="-moz-binding: url(#test)"/><span style="-moz-binding: url(#test)"/></div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+/** Test for Bug 319374 **/
+
+  function testChangesInAnonymousTree() {
+    // Test 1: Make sure that modifying anonymous content doesn't 
+    //         cause non-anonymous XPath result to throw exceptions..
+    var counter = 0;
+    var error = null;
+    try {
+      var xp = new XPathEvaluator();
+      var result = xp.evaluate("*",
+                               document.getElementById('content'),
+                               null,
+                               Components.interfaces.nsIDOMXPathResult.
+                                 UNORDERED_NODE_ITERATOR_TYPE,
+                               null);
+      var res = null;
+      while (res = result.iterateNext()) {
+        ++counter; 
+        var anon = document.getAnonymousNodes(res);
+        anon[0].removeChild(anon[0].firstChild); // Removing a child node
+        anon[0].removeAttribute("attr1"); // Removing an attribute
+        anon[1].firstChild.data = "anon text changed" // Modifying text data
+      }
+    } catch (e) {
+      error = e;
+    }
+    ok(!error, error);
+    ok(counter == 3, "XPathEvaluator should have found 3 elements.")
+
+    // Test 2: If the context node is in anonymous content, changing some
+    //         other anonymous tree shouldn't cause XPath result to throw.
+    var anonAttr1 =
+      document.getAnonymousNodes(document.getElementById('content').
+        firstChild)[0].getAttributeNode('attr');
+    var anonAttr2 =
+      document.getAnonymousNodes(document.getElementById('content').
+        lastChild)[0].getAttributeNode('attr');
+    var resultAttr = null;
+    try {
+      var xp2 = xp.evaluate(".",
+                            anonAttr1,
+                            null,
+                            Components.interfaces.nsIDOMXPathResult.
+                              UNORDERED_NODE_ITERATOR_TYPE,
+                            null);
+      // Attribute changing in a different anonymous tree.
+      anonAttr2.value = "foo";
+      resultAttr = xp2.iterateNext();
+      ok(resultAttr == anonAttr1, "XPathEvaluator returned wrong attribute!")
+    } catch (e) {
+      ok(false, e);
+    }
+
+    // Test 3: If the anonymous tree in which context node is in is modified,
+    //         XPath result should throw when iterateNext() is called.
+    resultAttr = null;
+    try {
+      var xp3 = xp.evaluate(".",
+                            anonAttr1,
+                            null,
+                            Components.interfaces.nsIDOMXPathResult.
+                              UNORDERED_NODE_ITERATOR_TYPE,
+                            null);
+      // Attribute changing in the same anonymous tree.
+      anonAttr1.ownerElement.setAttribute("foo", "bar");
+      resultAttr = xp3.iterateNext();
+      ok(resultAttr == anonAttr1,
+         "XPathEvaluator should have thrown an exception!")
+    } catch (e) {
+      ok(true, e);
+    }
+
+    SimpleTest.finish();
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(testChangesInAnonymousTree);
+]]>
+</script>
+</pre>
+</body>
+</html>
+
