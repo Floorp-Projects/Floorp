@@ -80,7 +80,13 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
+ifdef MOZ_ENABLE_LIBXUL
+ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+EXTRA_DSO_LIBS	= xul
+endif
+else
 EXTRA_DSO_LIBS	= tracemalloc
+endif
 
 LIBS		+= \
 		$(LIBS_DIR) \
@@ -90,6 +96,12 @@ LIBS		+= \
 		$(XPCOM_GLUE_LDOPTS) \
 		$(NSPR_LIBS) \
 		$(NULL)
+
+ifdef MOZ_ENABLE_LIBXUL
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+LIBS += $(DIST)/bin/XUL
+endif
+endif
 
 ifdef HAVE_BOUTELL_GD
 ifeq ($(OS_ARCH),WINNT)
