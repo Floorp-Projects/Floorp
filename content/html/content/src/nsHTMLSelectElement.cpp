@@ -534,14 +534,14 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLSelectElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLSelectElement
-NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(nsHTMLSelectElement,
-                                       nsGenericHTMLFormElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLSelectElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLSelectElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSXBLFormControl)
-  NS_INTERFACE_MAP_ENTRY(nsISelectElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLSelectElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLSelectElement,
+                                        nsGenericHTMLFormElement)
+  NS_INTERFACE_TABLE_INHERITED4(nsHTMLSelectElement,
+                                nsIDOMHTMLSelectElement,
+                                nsIDOMNSHTMLSelectElement,
+                                nsIDOMNSXBLFormControl,
+                                nsISelectElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLSelectElement)
 
 
 // nsIDOMHTMLSelectElement
@@ -2247,11 +2247,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 // nsISupports
 
 // QueryInterface implementation for nsHTMLOptionCollection
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsHTMLOptionCollection)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLOptionsCollection)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLOptionCollection)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMNSHTMLOptionCollection)
+NS_INTERFACE_TABLE_HEAD(nsHTMLOptionCollection)
+  NS_INTERFACE_TABLE3(nsHTMLOptionCollection,
+                      nsIDOMNSHTMLOptionCollection,
+                      nsIDOMHTMLOptionsCollection,
+                      nsIDOMHTMLCollection)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsHTMLOptionCollection)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLOptionsCollection)
 NS_INTERFACE_MAP_END
 

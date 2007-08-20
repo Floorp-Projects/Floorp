@@ -97,11 +97,11 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLParagraphElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLParagraphElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLParagraphElement,
-                                    nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLParagraphElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLParagraphElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLParagraphElement,
+                                     nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(nsHTMLParagraphElement,
+                                nsIDOMHTMLParagraphElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLParagraphElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLParagraphElement)

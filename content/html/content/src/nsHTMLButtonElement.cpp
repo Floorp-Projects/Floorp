@@ -161,12 +161,12 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLButtonElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLButtonElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLButtonElement,
-                                    nsGenericHTMLFormElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLButtonElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLButtonElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLButtonElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLButtonElement,
+                                     nsGenericHTMLFormElement)
+  NS_INTERFACE_TABLE_INHERITED2(nsHTMLButtonElement,
+                                nsIDOMHTMLButtonElement,
+                                nsIDOMNSHTMLButtonElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLButtonElement)
 
 // nsIDOMHTMLButtonElement
 

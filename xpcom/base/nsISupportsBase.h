@@ -80,7 +80,8 @@ public:
    * receive the result.
    * @return <b>NS_OK</b> if the interface is supported by the associated
    * instance, <b>NS_NOINTERFACE</b> if it is not.
-   * <b>NS_ERROR_INVALID_POINTER</b> if <i>aInstancePtr</i> is <b>NULL</b>.
+   *
+   * aInstancePtr must not be null.
    */
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) = 0;
   /**
