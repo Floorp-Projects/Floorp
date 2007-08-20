@@ -57,8 +57,10 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 # This is going to be a framework named "XUL", not an ordinary library named
 # "libxul.dylib"
 LIBRARY_NAME=XUL
-DLL_PREFIX=
-DLL_SUFFIX=
+# Setting MAKE_FRAMEWORK makes DLL_PREFIX and DLL_SUFFIX be ignored when
+# setting SHARED_LIBRARY; we need to leave DLL_PREFIX and DLL_SUFFIX
+# as-is so that dependencies of the form -ltracemalloc still work.
+MAKE_FRAMEWORK=1
 endif
 
 REQUIRES = \
