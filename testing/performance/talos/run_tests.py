@@ -49,7 +49,7 @@ __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 
 
 import time
-import syck
+import yaml
 import sys
 import urllib 
 import tempfile
@@ -99,27 +99,23 @@ def test_file(filename):
   
   # Read in the profile info from the YAML config file
   config_file = open(filename, 'r')
-  # some versions of syck take a file, while others take a string
-  try:
-    yaml = syck.load(config_file)
-  except:
-    yaml = syck.load("".join(config_file.readlines()))
+  yaml_config = yaml.load(config_file)
   config_file.close()
-  for item in yaml:
+  for item in yaml_config:
     if item == 'title':
-      title = yaml[item]
+      title = yaml_config[item]
     elif item == 'filename':
-      filename_prefix = yaml[item]
+      filename_prefix = yaml_config[item]
     elif item == 'testdate':
-      testdate = yaml[item]
+      testdate = yaml_config[item]
     else:
-      new_config = [yaml[item]['preferences'],
-                    yaml[item]['extensions'],
-                    yaml[item]['firefox'],
-                    yaml[item]['branch'],
-                    yaml[item]['branchid'],
-                    yaml[item]['profile_path'],
-                    yaml[item]['env']]
+      new_config = [yaml_config[item]['preferences'],
+                    yaml_config[item]['extensions'],
+                    yaml_config[item]['firefox'],
+                    yaml_config[item]['branch'],
+                    yaml_config[item]['branchid'],
+                    yaml_config[item]['profile_path'],
+                    yaml_config[item]['env']]
       test_configs.append(new_config)
       test_names.append(item)
   config_file.close()
