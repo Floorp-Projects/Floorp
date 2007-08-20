@@ -1577,10 +1577,17 @@ nsBlockFrame::PropagateFloatDamage(nsBlockReflowState& aState,
                                    nsLineBox* aLine,
                                    nscoord aDeltaY)
 {
-  NS_PRECONDITION(!aLine->IsDirty(), "should never be called on dirty lines");
+  nsSpaceManager *spaceManager = aState.mReflowState.mSpaceManager;
+  NS_ASSERTION((aState.mReflowState.parentReflowState &&
+                aState.mReflowState.parentReflowState->mSpaceManager == spaceManager) ||
+                aState.mReflowState.mBlockDelta == 0, "Bad block delta passed in");
+
+  // Check to see if there are any floats; if there aren't, there can't
+  // be any float damage
+  if (!spaceManager->HasAnyFloats())
+    return;
 
   // Check the damage region recorded in the float damage.
-  nsSpaceManager *spaceManager = aState.mReflowState.mSpaceManager;
   if (spaceManager->HasFloatDamage()) {
     nscoord lineYA = aLine->mBounds.y + aDeltaY;
     nscoord lineYB = lineYA + aLine->mBounds.height;
@@ -1590,39 +1597,32 @@ nsBlockFrame::PropagateFloatDamage(nsBlockReflowState& aState,
     }
   }
 
-  if (aDeltaY) {
-    // Cases we need to find:
-    //
-    // 1. the line was impacted by a float and now isn't
-    // 2. the line wasn't impacted by a float and now is
-    // 3. the line is impacted by a float both before and after and 
-    //    the float has changed position relative to the line (or it's
-    //    a different float).  (XXXPerf we don't currently
-    //    check whether the float changed size.  We currently just
-    //    mark blocks dirty and ignore any possibility of damage to
-    //    inlines by it being a different float with a different
-    //    size.)
-    //
-    //    XXXPerf: An optimization: if the line was and is completely
-    //    impacted by a float and the float hasn't changed size,
-    //    then we don't need to mark the line dirty.
-    aState.GetAvailableSpace(aLine->mBounds.y + aDeltaY, PR_FALSE);
-    PRBool wasImpactedByFloat = aLine->IsImpactedByFloat();
-    PRBool isImpactedByFloat = aState.IsImpactedByFloat();
+  // Check if the line is moving relative to the space manager
+  if (aDeltaY + aState.mReflowState.mBlockDelta != 0) {
+    if (aLine->IsBlock()) {
+      // Unconditionally reflow sliding blocks; we only really need to reflow
+      // if there's a float impacting this block, but the current space manager
+      // makes it difficult to check that.  Therefore, we let the child block
+      // decide what it needs to reflow.
+      aLine->MarkDirty();
+    } else {
+      // Note that this check will become incorrect once bug 25888 is fixed
+      // because we are only checking the top of the line
+      aState.GetAvailableSpace(aLine->mBounds.y + aDeltaY, PR_FALSE);
+      PRBool wasImpactedByFloat = aLine->IsImpactedByFloat();
+      PRBool isImpactedByFloat = aState.IsImpactedByFloat();
+
 #ifdef REALLY_NOISY_REFLOW
     printf("nsBlockFrame::PropagateFloatDamage %p was = %d, is=%d\n", 
        this, wasImpactedByFloat, isImpactedByFloat);
 #endif
-    // Mark the line dirty if:
-    //  1. It used to be impacted by a float and now isn't, or vice
-    //     versa.
-    //  2. It is impacted by a float and it is a block, which means
-    //     that more or less of the line could be impacted than was in
-    //     the past.  (XXXPerf This could be optimized further, since
-    //     we're marking the whole line dirty.)
-    if ((wasImpactedByFloat != isImpactedByFloat) ||
-        (isImpactedByFloat && aLine->IsBlock())) {
-      aLine->MarkDirty();
+
+      // Mark the line dirty if it was or is affected by a float
+      // We actually only really need to reflow if the amount of impact
+      // changes, but that's not straightforward to check
+      if (wasImpactedByFloat || isImpactedByFloat) {
+        aLine->MarkDirty();
+      }
     }
   }
 }
@@ -2919,7 +2919,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     nsReflowStatus frameReflowStatus = NS_FRAME_COMPLETE;
     rv = brc.ReflowBlock(availSpace, applyTopMargin, aState.mPrevBottomMargin,
                          clearance, aState.IsAdjacentWithTop(), computedOffsets,
-                         blockHtmlRS, frameReflowStatus);
+                         aLine.get(), blockHtmlRS, frameReflowStatus);
 
     // If this was a second-pass reflow and the block's vertical position
     // changed, invalidates from the first pass might have happened in the
@@ -5484,7 +5484,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
                       // on a frame property anyawy
     rv = brc.ReflowBlock(availSpace, PR_TRUE, margin,
                          0, isAdjacentWithTop,
-                         offsets, floatRS,
+                         offsets, nsnull, floatRS,
                          aReflowStatus);
   } while (NS_SUCCEEDED(rv) && clearanceFrame);
 
@@ -5526,7 +5526,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
   }
 
   // Capture the margin information for the caller
-  const nsMargin& m = brc.GetMargin();
+  const nsMargin& m = floatRS.mComputedMargin;
   aFloatMargin.top = brc.GetTopMargin();
   aFloatMargin.right = m.right;
   // Only last in flows get a bottom margin
