@@ -265,6 +265,7 @@ nsProxyObjectManager::GetClass(REFNSIID aIID, nsProxyEventClass **aResult)
     if (mProxyClassMap.Get(aIID, aResult)) {
         NS_ASSERTION(*aResult, "Null data in mProxyClassMap");
         delete pec;
+        return NS_OK;
     }
 
     if (!mProxyClassMap.Put(aIID, pec)) {
