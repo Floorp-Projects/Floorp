@@ -364,6 +364,12 @@ static void Output(PRBool isError, const char *fmt, ... )
   va_end(ap);
 }
 
+enum RemoteResult {
+  REMOTE_NOT_FOUND  = 0,
+  REMOTE_FOUND      = 1,
+  REMOTE_ARG_BAD    = 2
+};
+
 enum ArgResult {
   ARG_NONE  = 0,
   ARG_FOUND = 1,
@@ -1224,7 +1230,7 @@ HandleRemoteArgument(const char* remote, const char* aDesktopStartupID)
   return 0;
 }
 
-static PRBool
+static RemoteResult
 RemoteCommandLine(const char* aDesktopStartupID)
 {
   nsresult rv;
@@ -1238,7 +1244,7 @@ RemoteCommandLine(const char* aDesktopStartupID)
   ar = CheckArg("a", PR_TRUE, &temp);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -a requires an application name\n");
-    return PR_FALSE;
+    return REMOTE_ARG_BAD;
   } else if (ar == ARG_FOUND) {
     program.Assign(temp);
   }
@@ -1246,13 +1252,13 @@ RemoteCommandLine(const char* aDesktopStartupID)
   ar = CheckArg("u", PR_TRUE, &username);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -u requires a username\n");
-    return PR_FALSE;
+    return REMOTE_ARG_BAD;
   }
 
   XRemoteClient client;
   rv = client.Init();
   if (NS_FAILED(rv))
-    return PR_FALSE;
+    return REMOTE_NOT_FOUND;
  
   nsXPIDLCString response;
   PRBool success = PR_FALSE;
@@ -1261,9 +1267,9 @@ RemoteCommandLine(const char* aDesktopStartupID)
                               getter_Copies(response), &success);
   // did the command fail?
   if (NS_FAILED(rv) || !success)
-    return PR_FALSE;
+    return REMOTE_NOT_FOUND;
 
-  return PR_TRUE;
+  return REMOTE_FOUND;
 }
 #endif // MOZ_ENABLE_XREMOTE
 
@@ -2754,8 +2760,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     if (!PR_GetEnv("MOZ_NO_REMOTE")) {
       // Try to remote the entire command line. If this fails, start up normally.
-      if (RemoteCommandLine(desktopStartupIDPtr))
+      RemoteResult rr = RemoteCommandLine(desktopStartupIDPtr);
+      if (rr == REMOTE_FOUND)
         return 0;
+      else if (rr == REMOTE_ARG_BAD)
+        return 1;
     }
 #endif
 
