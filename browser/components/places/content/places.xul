@@ -381,6 +381,9 @@
               <treecol label="&col.title.label;" id="title" flex="5" primary="true" 
                        persist="width hidden ordinal sortActive sortDirection"/>
               <splitter class="tree-splitter"/>
+              <treecol label="&col.tags.label;" id="tags" flex="2"
+                       persist="width hidden ordinal sortActive sortDirection"/>
+              <splitter class="tree-splitter"/>
               <treecol label="&col.url.label;" id="url" flex="5" 
                        persist="width hidden ordinal sortActive sortDirection"/>
               <splitter class="tree-splitter"/>
