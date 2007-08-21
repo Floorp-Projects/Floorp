@@ -79,8 +79,8 @@ sub Push {
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
-    my $sshUser = $config->Get(var => 'sshUser');
-    my $sshServer = $config->Get(var => 'sshServer');
+    my $stagingUser = $config->Get(var => 'stagingUser');
+    my $stagingServer = $config->Get(var => 'stagingServer');
 
     my $rcTag = $productTag . '_RC' . $rc;
     my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
@@ -108,7 +108,7 @@ sub Push {
 
     $this->Shell(
       cmd => 'ssh',
-      cmdArgs => ['-2', '-l', $sshUser, $sshServer,
+      cmdArgs => ['-2', '-l', $stagingUser, $stagingServer,
                   'mkdir -p ' . $candidateDir],
       logFile => $pushLog,
     );
@@ -129,14 +129,14 @@ sub Push {
 
     $this->Shell(
       cmd => 'ssh',
-      cmdArgs => ['-2', '-l', $sshUser, $sshServer,
+      cmdArgs => ['-2', '-l', $stagingUser, $stagingServer,
                   'chmod 0755 ' . $chmodArg],
       logFile => $pushLog,
     );
 
     $this->Shell(
       cmd => 'ssh',
-      cmdArgs => ['-2', '-l', $sshUser, $sshServer,
+      cmdArgs => ['-2', '-l', $stagingUser, $stagingServer,
                   'rsync', '-av', 
                   '--include=*' . $osFileMatch . '*',
                   '--exclude=*', 
@@ -185,8 +185,6 @@ sub StoreBuildID() {
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
-    my $sshUser = $config->Get(var => 'sshUser');
-    my $sshServer = $config->Get(var => 'sshServer');
 
     my $rcTag = $productTag . '_RC' . $rc;
     my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
@@ -222,7 +220,7 @@ sub StoreBuildID() {
     $this->Shell(
       cmd => 'scp',
       cmdArgs => [$buildIDTempFile, 
-                  $sshUser . '@' . $sshServer . ':' .
+                  $stagingUser . '@' . $stagingServer . ':' .
                   $pushDir . '/' . $buildIDFile],
       logFile => $pushLog,
     );

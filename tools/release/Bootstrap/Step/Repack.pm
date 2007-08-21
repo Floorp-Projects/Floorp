@@ -50,6 +50,7 @@ sub Verify {
     my $oldVersion = $config->Get(var => 'oldVersion');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $verifyDir = $config->Get(var => 'verifyDir');
+    my $stagingServer = $config->Get(var => 'stagingServer');
 
     my $rcTag = $productTag.'_RC'.$rc;
 
@@ -82,7 +83,7 @@ sub Verify {
                   '--include=*.exe',
                   '--include=*.tar.gz',
                   '--exclude=*',
-                  'stage.mozilla.org:/home/ftp/pub/' . $product
+                  $stagingServer . ':/home/ftp/pub/' . $product
                   . '/nightly/' . $version . '-candidates/rc' . $rc . '/*',
                   $product . '-' . $version . '-rc' . $rc . '/',
                  ],
@@ -101,7 +102,7 @@ sub Verify {
                   '--include=*.exe',
                   '--include=*.tar.gz',
                   '--exclude=*',
-                  'stage.mozilla.org:/home/ftp/pub/' . $product
+                  $stagingServer . ':/home/ftp/pub/' . $product
                   . '/nightly/' . $oldVersion . '-candidates/rc' 
                   . $oldRc . '/*',
                   $product . '-' . $oldVersion . '-rc' . $oldRc . '/',
@@ -168,8 +169,8 @@ sub Push {
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');  
-    my $sshUser = $config->Get(var => 'sshUser');
-    my $sshServer = $config->Get(var => 'sshServer');
+    my $stagingUser = $config->Get(var => 'stagingUser');
+    my $stagingServer = $config->Get(var => 'stagingServer');
 
     my $rcTag = $productTag . '_RC' . $rc;
     my $buildLog = catfile($logDir, 'repack_' . $rcTag . '-build-l10n.log');
@@ -195,14 +196,14 @@ sub Push {
 
     $this->Shell(
       cmd => 'ssh',
-      cmdArgs => ['-2', '-l', $sshUser, $sshServer,
+      cmdArgs => ['-2', '-l', $stagingUser, $stagingServer,
                   'mkdir -p ' . $candidateDir],
       logFile => $pushLog,
     );
 
     $this->Shell(
       cmd => 'ssh',
-      cmdArgs => ['-2', '-l', $sshUser, $sshServer,
+      cmdArgs => ['-2', '-l', $stagingUser, $stagingServer,
                   'rsync', '-av',
                   '--include=*' . $osFileMatch . '*',
                   '--include=*.xpi',
