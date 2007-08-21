@@ -88,6 +88,7 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     NS_IMETHOD SetPreferredApplicationHandler(nsIHandlerApp * aPreferredAppHandler);
     NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleAppHandlers);
     NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription);
+    NS_IMETHOD LaunchWithFile(nsIFile *aFile);
     NS_IMETHOD LaunchWithURI(nsIURI *aURI);
     NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction);
     NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction);
