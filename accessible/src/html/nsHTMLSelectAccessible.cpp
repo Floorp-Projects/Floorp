@@ -1034,7 +1034,9 @@ nsHTMLComboboxAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   nsIFrame *frame = GetBoundsFrame();
   nsIComboboxControlFrame *comboFrame = nsnull;
-  frame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
+  if (frame) {
+    frame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
+  }
 
   if (comboFrame && comboFrame->IsDroppedDown()) {
     *aState |= nsIAccessibleStates::STATE_EXPANDED;
@@ -1339,6 +1341,7 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::GetName(nsAString& aName)
   *     STATE_PRESSED
   *     STATE_FOCUSED
   *     STATE_FOCUSABLE
+  *     STATE_INVISIBLE
   */
 NS_IMETHODIMP
 nsHTMLComboboxButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
@@ -1348,16 +1351,20 @@ nsHTMLComboboxButtonAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsIFrame *boundsFrame = GetBoundsFrame();
-  nsIComboboxControlFrame* comboFrame;
-  boundsFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
-  if (!comboFrame)
-    return NS_ERROR_FAILURE;
+  nsIComboboxControlFrame* comboFrame = nsnull;
+  if (boundsFrame)
+    boundsFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
 
-  if (comboFrame->IsDroppedDown())
-    *aState |= nsIAccessibleStates::STATE_PRESSED;
-
-  *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
-
+  if (!comboFrame) {
+    *aState |= nsIAccessibleStates::STATE_INVISIBLE;
+  }
+  else {
+    *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
+    if (comboFrame->IsDroppedDown()) {
+      *aState |= nsIAccessibleStates::STATE_PRESSED;
+    }
+  }
+ 
   return NS_OK;
 }
 #endif
@@ -1402,7 +1409,8 @@ nsHTMLComboboxListAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   nsIFrame *boundsFrame = GetBoundsFrame();
   nsIComboboxControlFrame* comboFrame = nsnull;
-  boundsFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
+  if (boundsFrame)
+    boundsFrame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame), (void**)&comboFrame);
 
   if (comboFrame && comboFrame->IsDroppedDown())
     *aState |= nsIAccessibleStates::STATE_FLOATING;
