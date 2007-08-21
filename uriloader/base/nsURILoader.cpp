@@ -277,62 +277,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest *request, nsISupport
     return NS_OK;
   }
 
-  if (httpChannel && mContentType.IsEmpty()) {
-    // This is our initial dispatch, and this is an HTTP channel.  Check for
-    // the text/plain mess.
-    nsCAutoString contentTypeHdr;
-    httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Type"),
-                                   contentTypeHdr);
-    nsCAutoString contentType;
-    httpChannel->GetContentType(contentType);
-    
-    // Make sure to do a case-sensitive exact match comparison here.  Apache
-    // 1.x just sends text/plain for "unknown", while Apache 2.x sends
-    // text/plain with a ISO-8859-1 charset.  Debian's Apache version, just to
-    // be different, sends text/plain with iso-8859-1 charset.  Don't do
-    // general case-insensitive comparison, since we really want to apply this
-    // crap as rarely as we can.
-    if (contentType.EqualsLiteral("text/plain") &&
-        (contentTypeHdr.EqualsLiteral("text/plain") ||
-         contentTypeHdr.Equals(
-             NS_LITERAL_CSTRING("text/plain; charset=ISO-8859-1")) ||
-         contentTypeHdr.Equals(
-             NS_LITERAL_CSTRING("text/plain; charset=iso-8859-1")))) {
-      // Check whether we have content-encoding.  If we do, don't try to detect
-      // the type, since that will lead to the content being automatically
-      // decompressed....
-      nsCAutoString contentEncoding;
-      httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Encoding"),
-                                     contentEncoding);
-      if (contentEncoding.IsEmpty()) {
-        // OK, this is initial dispatch of an HTTP response and its Content-Type
-        // header is exactly "text/plain".  We need to check whether this is
-        // really text....  Note that some of our listeners will actually
-        // accept all types, including the APPLICATION_MAYBE_TEXT internal
-        // type, so we need to call ConvertData here manually instead of
-        // relying on DispatchContent to do it.
-        LOG(("  Possibly bogus text/plain; trying to sniff for real type"));
-        rv = ConvertData(request, m_contentListener,
-                         NS_LITERAL_CSTRING(APPLICATION_MAYBE_TEXT),
-                         NS_LITERAL_CSTRING("*/*"));
-        if (NS_FAILED(rv)) {
-          // We failed to convert.  Just go ahead and handle as the original
-          // type.  If ConvertData happened to set our m_targetStreamListener,
-          // we don't want it!
-          m_targetStreamListener = nsnull;
-        }
-        else {
-          LOG((APPLICATION_MAYBE_TEXT " converter taking over now"));
-        }
-      }
-    }
-  }
-
-  // If we sniffed text/plain above, m_targetStreamListener may already be
-  // non-null.
-  if (!m_targetStreamListener) {
-    rv = DispatchContent(request, aCtxt);
-  }
+  rv = DispatchContent(request, aCtxt);
 
   LOG(("  After dispatch, m_targetStreamListener: 0x%p, rv: 0x%08X", m_targetStreamListener.get(), rv));
 
