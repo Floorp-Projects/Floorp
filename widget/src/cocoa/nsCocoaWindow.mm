@@ -688,7 +688,7 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
     
     // the point we have is in Gecko coordinates (origin top-left). Convert
     // it to Cocoa ones (origin bottom-left).
-    NSPoint coord = {aX, CocoaScreenCoordsHeight() - aY};
+    NSPoint coord = {aX, FlippedScreenY(aY)};
 
     //printf("final coords %f %f\n", coord.x, coord.y);
     //printf("- window coords before %f %f\n", [mWindow frame].origin.x, [mWindow frame].origin.y);
