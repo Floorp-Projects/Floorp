@@ -2920,7 +2920,40 @@ else
 
 	LDFLAGS="$_SAVE_LDFLAGS"
 
+    dnl ========================================================
+    dnl = Check for freetype2 and its functionality
+    dnl ========================================================
     AC_CHECK_FT2(6.1.0, [_HAVE_FREETYPE2=1], [_HAVE_FREETYPE2=])
+
+    if test "$_HAVE_FREETYPE2"; then
+    	_SAVE_LIBS="$LIBS"
+    	_SAVE_CFLAGS="$CFLAGS"
+    	LIBS="$LIBS $FT2_LIBS"
+    	CFLAGS="$CFLAGS $FT2_CFLAGS"
+
+        AC_CACHE_CHECK(for FT_Bitmap_Size.y_ppem,
+            ac_cv_member_FT_Bitmap_Size_y_ppem,
+            [AC_TRY_COMPILE([#include <ft2build.h>
+                             #include FT_FREETYPE_H],
+                            [FT_Bitmap_Size s;
+                             if (sizeof s.y_ppem) return 0;
+                             return 1],
+                            ac_cv_member_FT_Bitmap_Size_y_ppem=yes,
+                            ac_cv_member_FT_Bitmap_Size_y_ppem=no)])
+        if test "$ac_cv_member_FT_Bitmap_Size_y_ppem" = yes; then
+            HAVE_FT_BITMAP_SIZE_Y_PPEM=1
+        else
+            HAVE_FT_BITMAP_SIZE_Y_PPEM=0
+        fi
+        AC_DEFINE_UNQUOTED(HAVE_FT_BITMAP_SIZE_Y_PPEM,
+                           $HAVE_FT_BITMAP_SIZE_Y_PPEM,
+                           [FT_Bitmap_Size structure includes y_ppem field])
+
+        AC_CHECK_FUNCS(FT_GlyphSlot_Embolden FT_Load_Sfnt_Table FT_Select_Size)
+
+    	LIBS="$_SAVE_LIBS"
+    	CFLAGS="$_SAVE_CFLAGS"
+    fi
 
 fi # $no_x
 
