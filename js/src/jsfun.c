@@ -1368,7 +1368,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
                 propAtom = JSID_TO_ATOM(JSID_UNHIDE_NAME(sprop->id));
                 if (!JS_XDRUint32(xdr, &type) ||
                     !JS_XDRUint32(xdr, &userid) ||
-                    !js_XDRCStringAtom(xdr, &propAtom)) {
+                    !js_XDRStringAtom(xdr, &propAtom)) {
                     if (mark)
                         JS_ARENA_RELEASE(&cx->tempPool, mark);
                     goto bad;
@@ -1384,7 +1384,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
 
                 if (!JS_XDRUint32(xdr, &type) ||
                     !JS_XDRUint32(xdr, &userid) ||
-                    !js_XDRCStringAtom(xdr, &propAtom)) {
+                    !js_XDRStringAtom(xdr, &propAtom)) {
                     goto bad;
                 }
                 JS_ASSERT(type == JSXDR_FUNARG || type == JSXDR_FUNVAR ||

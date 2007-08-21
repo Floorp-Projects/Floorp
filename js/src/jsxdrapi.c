@@ -675,56 +675,6 @@ js_XDRStringAtom(JSXDRState *xdr, JSAtom **atomp)
     return JS_TRUE;
 }
 
-/*
- * FIXME: This performs lossy conversion and we need to switch to
- * js_XDRStringAtom while allowing to read older XDR files. See bug 325202.
- */
-JSBool
-js_XDRCStringAtom(JSXDRState *xdr, JSAtom **atomp)
-{
-    JSString *str;
-    char *bytes;
-    JSBool ok;
-    uint32 nbytes;
-    JSAtom *atom;
-    JSContext *cx;
-    void *mark;
-
-    if (xdr->mode == JSXDR_ENCODE) {
-        JS_ASSERT(ATOM_IS_STRING(*atomp));
-        str = ATOM_TO_STRING(*atomp);
-        bytes = js_DeflateString(xdr->cx,
-                                 JSSTRING_CHARS(str),
-                                 JSSTRING_LENGTH(str));
-        if (!bytes)
-            return JS_FALSE;
-        ok = JS_XDRCString(xdr, &bytes);
-        JS_free(xdr->cx, bytes);
-        return ok;
-    }
-
-    /*
-     * Inline JS_XDRCString when decoding not to malloc temporary buffer
-     * just to free it after atomization. See bug 321985.
-     */
-    if (!JS_XDRUint32(xdr, &nbytes))
-        return JS_FALSE;
-    atom = NULL;
-    cx = xdr->cx;
-    mark = JS_ARENA_MARK(&cx->tempPool);
-    JS_ARENA_ALLOCATE_CAST(bytes, char *, &cx->tempPool,
-                           nbytes * sizeof *bytes);
-    if (!bytes)
-        JS_ReportOutOfMemory(cx);
-    else if (JS_XDRBytes(xdr, bytes, nbytes))
-        atom = js_Atomize(cx, bytes, nbytes, 0);
-    JS_ARENA_RELEASE(&cx->tempPool, mark);
-    if (!atom)
-        return JS_FALSE;
-    *atomp = atom;
-    return JS_TRUE;
-}
-
 JS_PUBLIC_API(JSBool)
 JS_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 {

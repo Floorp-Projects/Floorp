@@ -4648,7 +4648,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
      */
     if (!JS_XDRUint32(xdr, &classDef))
         return JS_FALSE;
-    if (classDef == 1 && !js_XDRCStringAtom(xdr, &atom))
+    if (classDef == 1 && !js_XDRStringAtom(xdr, &atom))
         return JS_FALSE;
 
     if (!JS_XDRUint32(xdr, &classId))
