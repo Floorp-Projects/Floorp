@@ -91,6 +91,7 @@ DownloadProgressListener.prototype =
         break;
       case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
       case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
+      case Ci.nsIDownloadManager.DOWNLOAD_BLOCKED:
         downloadCompleted(aDownload);
         break;
       case Ci.nsIDownloadManager.DOWNLOAD_FINISHED:

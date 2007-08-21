@@ -98,6 +98,7 @@
           const dl = Components.interfaces.nsIDownloadManager;
           return state == dl.DOWNLOAD_FINISHED || 
                  state == dl.DOWNLOAD_CANCELED || 
+                 state == dl.DOWNLOAD_BLOCKED || 
                  state == dl.DOWNLOAD_FAILED;
         ]]>
         </getter>
@@ -107,7 +108,9 @@
         <![CDATA[
           var state = parseInt(this.getAttribute("state"));
           var dl = Components.interfaces.nsIDownloadManager;
-          return state == dl.DOWNLOAD_CANCELED || state == dl.DOWNLOAD_FAILED;
+          return state == dl.DOWNLOAD_CANCELED || 
+                 state == dl.DOWNLOAD_BLOCKED || 
+                 state == dl.DOWNLOAD_FAILED;
         ]]>
         </getter>
       </property>
@@ -284,5 +287,31 @@
       </xul:hbox>
     </content>  
   </binding>
-  
+
+  <binding id="download-blocked" extends="chrome://mozapps/content/downloads/download.xml#download-base">
+    <content>
+      <xul:hbox flex="1">
+#ifdef SHOW_ICONS
+        <xul:vbox pack="start">
+          <xul:image class="downloadTypeIcon blockedIcon"/>
+        </xul:vbox>
+#endif
+        <xul:vbox pack="start" flex="1">
+          <xul:label xbl:inherits="value=target,tooltiptext=target"
+                     crop="center" class="name"/>
+          <xul:spacer flex="1"/>
+          <xul:label value="&blocked.label;" class="status"/>
+        </xul:vbox>
+        <xul:vbox pack="center">
+          <xul:hbox>
+            <xul:button class="retry mini-button" tooltiptext="&cmd.retry.label;"
+                        command="cmd_retry" ondblclick="event.stopPropagation();"/>
+            <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
+                        command="cmd_showInfo" ondblclick="event.stopPropagation();"
+                        anonid="info"/>
+          </xul:hbox>
+        </xul:vbox>
+      </xul:hbox>
+    </content>
+  </binding>
 </bindings>

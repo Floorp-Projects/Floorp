@@ -851,6 +851,7 @@ nsDownloadManager::RetryDownload(PRUint32 aID)
 
   // if our download is not canceled or failed, we should fail
   if (dl->mDownloadState != nsIDownloadManager::DOWNLOAD_FAILED &&
+      dl->mDownloadState != nsIDownloadManager::DOWNLOAD_BLOCKED &&
       dl->mDownloadState != nsIDownloadManager::DOWNLOAD_CANCELED)
     return NS_ERROR_FAILURE;
 
@@ -918,16 +919,18 @@ nsDownloadManager::CleanUp()
 {
   DownloadState states[] = { nsIDownloadManager::DOWNLOAD_FINISHED,
                              nsIDownloadManager::DOWNLOAD_FAILED,
-                             nsIDownloadManager::DOWNLOAD_CANCELED };
+                             nsIDownloadManager::DOWNLOAD_CANCELED,
+                             nsIDownloadManager::DOWNLOAD_BLOCKED };
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "DELETE FROM moz_downloads "
     "WHERE state = ?1 "
     "OR state = ?2 "
-    "OR state = ?3"), getter_AddRefs(stmt));
+    "OR state = ?3 "
+    "OR state = ?4"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
-  for (PRUint32 i = 0; i < 3; ++i) {
+  for (PRUint32 i = 0; i < 4; ++i) {
     rv = stmt->BindInt32Parameter(i, states[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -942,7 +945,8 @@ nsDownloadManager::GetCanCleanUp(PRBool *aResult)
 
   DownloadState states[] = { nsIDownloadManager::DOWNLOAD_FINISHED,
                              nsIDownloadManager::DOWNLOAD_FAILED,
-                             nsIDownloadManager::DOWNLOAD_CANCELED };
+                             nsIDownloadManager::DOWNLOAD_CANCELED,
+                             nsIDownloadManager::DOWNLOAD_BLOCKED };
 
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
@@ -950,9 +954,10 @@ nsDownloadManager::GetCanCleanUp(PRBool *aResult)
     "FROM moz_downloads "
     "WHERE state = ?1 "
     "OR state = ?2 "
-    "OR state = ?3"), getter_AddRefs(stmt));
+    "OR state = ?3 "
+    "OR state = ?4"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
-  for (PRUint32 i = 0; i < 3; ++i) {
+  for (PRUint32 i = 0; i < 4; ++i) {
     rv = stmt->BindInt32Parameter(i, states[i]);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -1527,7 +1532,31 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
   // that will close and call CancelDownload if it was the last open window.
   nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
-  if (aStateFlags & STATE_STOP) {
+  if (aStateFlags & STATE_START) {
+    nsresult rv;
+    nsCOMPtr<nsIHttpChannel> channel = do_QueryInterface(aRequest, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      PRUint32 status;
+      rv = channel->GetResponseStatus(&status);
+      // HTTP 450 - Blocked by parental control proxies
+      if (NS_SUCCEEDED(rv) && status == 450) {
+
+        // Cancel using the provided object
+        if (mCancelable)
+          (void)mCancelable->Cancel(NS_BINDING_ABORTED);
+
+        // Fail the download - DOWNLOAD_BLOCKED
+        mDownloadManager->FinishDownload(this, 
+                                         nsIDownloadManager::DOWNLOAD_BLOCKED,
+                                         "dl-blocked");
+
+        mDownloadManager->NotifyListenersOnStateChange(aWebProgress, aRequest,
+                                                       aStateFlags, aStatus, this);
+
+        return UpdateDB();
+      }
+    }
+  } else if (aStateFlags & STATE_STOP) {
     if (nsDownloadManager::IsInFinalStage(mDownloadState)) {
       // Set file size at the end of a tranfer (for unknown transfer amounts)
       if (mMaxBytes == LL_MAXUINT)
@@ -1580,40 +1609,39 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
           }
         }
       }
-    }
-
 #ifdef XP_WIN
-    PRBool addToRecentDocs = PR_TRUE;
-    if (pref)
-      pref->GetBoolPref(PREF_BDM_ADDTORECENTDOCS, &addToRecentDocs);
+      PRBool addToRecentDocs = PR_TRUE;
+      if (pref)
+        pref->GetBoolPref(PREF_BDM_ADDTORECENTDOCS, &addToRecentDocs);
 
-    if (addToRecentDocs) {
-      LPSHELLFOLDER lpShellFolder = NULL;
+      if (addToRecentDocs) {
+        LPSHELLFOLDER lpShellFolder = NULL;
 
-      if (SUCCEEDED(::SHGetDesktopFolder(&lpShellFolder))) {
-        nsresult rv;
-        nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget, &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
+        if (SUCCEEDED(::SHGetDesktopFolder(&lpShellFolder))) {
+          nsresult rv;
+          nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget, &rv);
+          NS_ENSURE_SUCCESS(rv, rv);
 
-        nsCOMPtr<nsIFile> file;
-        rv = fileURL->GetFile(getter_AddRefs(file));
-        NS_ENSURE_SUCCESS(rv, rv);
+          nsCOMPtr<nsIFile> file;
+          rv = fileURL->GetFile(getter_AddRefs(file));
+          NS_ENSURE_SUCCESS(rv, rv);
         
-        nsAutoString path;
-        rv = file->GetPath(path);
-        NS_ENSURE_SUCCESS(rv, rv);
+          nsAutoString path;
+          rv = file->GetPath(path);
+          NS_ENSURE_SUCCESS(rv, rv);
 
-        PRUnichar *filePath = ToNewUnicode(path);
-        LPITEMIDLIST lpItemIDList = NULL;
-        if (SUCCEEDED(lpShellFolder->ParseDisplayName(NULL, NULL, filePath, NULL, &lpItemIDList, NULL))) {
-          ::SHAddToRecentDocs(SHARD_PIDL, lpItemIDList);
-          ::CoTaskMemFree(lpItemIDList);
+          PRUnichar *filePath = ToNewUnicode(path);
+          LPITEMIDLIST lpItemIDList = NULL;
+          if (SUCCEEDED(lpShellFolder->ParseDisplayName(NULL, NULL, filePath, NULL, &lpItemIDList, NULL))) {
+            ::SHAddToRecentDocs(SHARD_PIDL, lpItemIDList);
+            ::CoTaskMemFree(lpItemIDList);
+          }
+          nsMemory::Free(filePath);
+          lpShellFolder->Release();
         }
-        nsMemory::Free(filePath);
-        lpShellFolder->Release();
       }
-    }
 #endif
+    }
 
     // Now remove the download if the user's retention policy is "Remove when Done"
     if (mDownloadManager->GetRetentionBehavior() == 0)

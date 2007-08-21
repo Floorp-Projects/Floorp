@@ -7,6 +7,9 @@
 <!ENTITY starting.label                   "Starting...">
 <!ENTITY failed.label                     "Failed">
 
+<!-- 'Parental Controls' label should be capitalized -->
+<!ENTITY blocked.label                    "Blocked by Parental Controls">
+
 <!ENTITY downloads.title                  "Downloads">
 
 <!ENTITY cmd.pause.label                  "Pause">
