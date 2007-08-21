@@ -46,6 +46,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
 #include "nsNetCID.h"
+#include "nsNetError.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
@@ -101,11 +102,27 @@ nsDataHandler::NewURI(const nsACString &aSpec,
                       nsIURI **result) {
     nsresult rv;
 
+    nsCString spec(aSpec);
+    nsCAutoString contentType, contentCharset, dataBuffer;
+    PRBool base64;
+    rv = ParseURI(spec, contentType, contentCharset, base64, dataBuffer);
+    if (NS_FAILED(rv))
+        return rv;
+
+    // Strip whitespace unless this is text, where whitespace is important
+    // Don't strip escaped whitespace though (bug 391951)
+    if (base64 || (strncmp(contentType.get(),"text/",5) != 0 &&
+                   contentType.Find("xml") == kNotFound)) {
+        // it's ascii encoded binary, don't let any spaces in
+        spec.StripWhitespace();
+    }
+ 
+
     nsIURI* url;
     rv = CallCreateInstance(kSimpleURICID, &url);
     if (NS_FAILED(rv)) return rv;
 
-    rv = url->SetSpec(aSpec);
+    rv = url->SetSpec(spec);
     if (NS_FAILED(rv)) {
         NS_RELEASE(url);
         return rv;
@@ -116,8 +133,7 @@ nsDataHandler::NewURI(const nsACString &aSpec,
 }
 
 NS_IMETHODIMP
-nsDataHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
-{
+nsDataHandler::NewChannel(nsIURI* uri, nsIChannel* *result) {
     NS_ENSURE_ARG_POINTER(uri);
     nsDataChannel* channel = new nsDataChannel(uri);
     if (!channel)
@@ -135,9 +151,77 @@ nsDataHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 }
 
 NS_IMETHODIMP 
-nsDataHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
-{
+nsDataHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval) {
     // don't override anything.  
     *_retval = PR_FALSE;
+    return NS_OK;
+}
+
+nsresult
+nsDataHandler::ParseURI(nsCString& spec,
+                        nsCString& contentType,
+                        nsCString& contentCharset,
+                        PRBool&    isBase64,
+                        nsCString& dataBuffer) {
+    isBase64 = PR_FALSE;
+
+    // move past "data:"
+    char *buffer = (char *) strstr(spec.BeginWriting(), "data:");
+    if (!buffer) {
+        // malformed uri
+        return NS_ERROR_MALFORMED_URI;
+    }
+    buffer += 5;
+
+    // First, find the start of the data
+    char *comma = strchr(buffer, ',');
+    if (!comma)
+        return NS_ERROR_MALFORMED_URI;
+
+    *comma = '\0';
+
+    // determine if the data is base64 encoded.
+    char *base64 = strstr(buffer, ";base64");
+    if (base64) {
+        isBase64 = PR_TRUE;
+        *base64 = '\0';
+    }
+
+    if (comma == buffer) {
+        // nothing but data
+        contentType.AssignLiteral("text/plain");
+        contentCharset.AssignLiteral("US-ASCII");
+    } else {
+        // everything else is content type
+        char *semiColon = (char *) strchr(buffer, ';');
+        if (semiColon)
+            *semiColon = '\0';
+        
+        if (semiColon == buffer || base64 == buffer) {
+            // there is no content type, but there are other parameters
+            contentType.AssignLiteral("text/plain");
+        } else {
+            contentType = buffer;
+            ToLowerCase(contentType);
+        }
+
+        if (semiColon) {
+            char *charset = PL_strcasestr(semiColon + 1, "charset=");
+            if (charset)
+                contentCharset = charset + sizeof("charset=") - 1;
+
+            *semiColon = ';';
+        }
+    }
+
+    *comma = ',';
+    if (isBase64)
+        *base64 = ';';
+
+    contentType.StripWhitespace();
+    contentCharset.StripWhitespace();
+
+    dataBuffer.Assign(comma + 1);
+
     return NS_OK;
 }
