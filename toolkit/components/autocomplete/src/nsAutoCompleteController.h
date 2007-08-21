@@ -52,6 +52,7 @@
 #include "nsITimer.h"
 #include "nsIRollupListener.h"
 #include "nsIWidget.h"
+#include "nsTArray.h"
 
 class nsAutoCompleteController : public nsIAutoCompleteController,
                                  public nsIAutoCompleteObserver,
@@ -75,7 +76,6 @@ protected:
   nsresult ClosePopup();
 
   nsresult StartSearch();
-  nsresult StopSearch();
   
   nsresult StartSearchTimer();
   nsresult ClearSearchTimer();
@@ -102,6 +102,7 @@ protected:
   
   nsCOMPtr<nsISupportsArray> mSearches;
   nsCOMPtr<nsISupportsArray> mResults;
+  nsTArray<PRUint32> mMatchCounts;
   
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsITreeSelection> mSelection;
@@ -118,6 +119,7 @@ protected:
   PRUint16 mSearchStatus;
   PRUint32 mRowCount;
   PRUint32 mSearchesOngoing;
+  PRBool mFirstSearchResult;
 };
 
 #endif /* __nsAutoCompleteController__ */
