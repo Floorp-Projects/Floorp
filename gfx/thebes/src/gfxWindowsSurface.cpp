@@ -119,16 +119,6 @@ already_AddRefed<gfxWindowsSurface>
 gfxWindowsSurface::OptimizeToDDB(HDC dc, const gfxIntSize& size, gfxImageFormat format)
 {
     gfxImageFormat realFormat = format;
-    if (realFormat == ImageFormatARGB32) {
-        cairo_surface_t *isurf = cairo_win32_surface_get_image(CairoSurface());
-        if (isurf && !gfxPlatform::DoesARGBImageDataHaveAlpha(cairo_image_surface_get_data(isurf),
-                                                              cairo_image_surface_get_width(isurf),
-                                                              cairo_image_surface_get_height(isurf),
-                                                              cairo_image_surface_get_stride(isurf)))
-        {
-            realFormat = ImageFormatRGB24;
-        }
-    }
 
     if (realFormat != ImageFormatRGB24)
         return nsnull;

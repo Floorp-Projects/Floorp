@@ -283,7 +283,8 @@ void PrintError(char *prefix)
       0,
       NULL
     );
-    fprintf(stderr, "### ERROR: %s: %s", prefix, lpMsgBuf);
+    fprintf(stderr, "### ERROR: %s: %s",
+                    prefix, lpMsgBuf ? lpMsgBuf : "(null)\n");
     fflush(stderr);
     LocalFree( lpMsgBuf );
 }
@@ -635,7 +636,7 @@ NS_StackWalk(NS_WalkStackCallback aCallback, PRUint32 aSkipFrames,
                            ::GetCurrentProcess(),
                            ::GetCurrentProcess(),
                            &myProcess,
-                           THREAD_ALL_ACCESS, FALSE, 0)) {
+                           PROCESS_ALL_ACCESS, FALSE, 0)) {
         PrintError("DuplicateHandle (process)");
         return NS_ERROR_FAILURE;
     }
@@ -695,6 +696,8 @@ static BOOL CALLBACK callbackEspecial(
        : (addr <= aModuleBase && addr >= (aModuleBase - aModuleSize))
         ) {
         retval = _SymLoadModule(GetCurrentProcess(), NULL, aModuleName, NULL, aModuleBase, aModuleSize);
+        if (!retval)
+            PrintError("SymLoadModule");
     }
 
     return retval;
@@ -725,6 +728,8 @@ static BOOL CALLBACK callbackEspecial64(
        : (addr <= aModuleBase && addr >= (aModuleBase - aModuleSize))
         ) {
         retval = _SymLoadModule64(GetCurrentProcess(), NULL, aModuleName, NULL, aModuleBase, aModuleSize);
+        if (!retval)
+            PrintError("SymLoadModule64");
     }
 
     return retval;
@@ -767,7 +772,7 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
          * Not loaded, here's the magic.
          * Go through all the modules.
          */
-        enumRes = _EnumerateLoadedModules(aProcess, (PENUMLOADED_MODULES_CALLBACK)callbackEspecial, (PVOID)&aAddr);
+        enumRes = _EnumerateLoadedModules(aProcess, callbackEspecial, (PVOID)&aAddr);
         if (FALSE != enumRes)
         {
             /*
@@ -775,6 +780,8 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
              * If it fails, then well, we have other problems.
              */
             retval = _SymGetModuleInfo(aProcess, aAddr, aModuleInfo);
+            if (!retval)
+                PrintError("SymGetModuleInfo");
         }
     }
 
@@ -791,6 +798,21 @@ BOOL SymGetModuleInfoEspecial(HANDLE aProcess, DWORD aAddr, PIMAGEHLP_MODULE aMo
     return retval;
 }
 
+// New members were added to IMAGEHLP_MODULE64 (that show up in the
+// Platform SDK that ships with VC8, but not the Platform SDK that ships
+// with VC7.1, i.e., between DbgHelp 6.0 and 6.1), but we don't need to
+// use them, and it's useful to be able to function correctly with the
+// older library.  (Stock Windows XP SP2 seems to ship with dbghelp.dll
+// version 5.1.)  Since Platform SDK version need not correspond to
+// compiler version, and the version number in debughlp.h was NOT bumped
+// when these changes were made, ifdef based on a constant that was
+// added between these versions.
+#ifdef SSRVOPT_SETCONTEXT
+#define NS_IMAGEHLP_MODULE64_SIZE (((offsetof(IMAGEHLP_MODULE64, LoadedPdbName) + sizeof(DWORD64) - 1) / sizeof(DWORD64)) * sizeof(DWORD64))
+#else
+#define NS_IMAGEHLP_MODULE64_SIZE sizeof(IMAGEHLP_MODULE64)
+#endif
+
 #ifdef USING_WXP_VERSION
 BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE64 aModuleInfo, PIMAGEHLP_LINE64 aLineInfo)
 {
@@ -799,7 +821,7 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE
     /*
      * Init the vars if we have em.
      */
-    aModuleInfo->SizeOfStruct = sizeof(IMAGEHLP_MODULE64);
+    aModuleInfo->SizeOfStruct = NS_IMAGEHLP_MODULE64_SIZE;
     if (nsnull != aLineInfo) {
         aLineInfo->SizeOfStruct = sizeof(IMAGEHLP_LINE64);
     }
@@ -817,7 +839,7 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE
          * Not loaded, here's the magic.
          * Go through all the modules.
          */
-        enumRes = _EnumerateLoadedModules64(aProcess, (PENUMLOADED_MODULES_CALLBACK64)callbackEspecial64, (PVOID)&aAddr);
+        enumRes = _EnumerateLoadedModules64(aProcess, callbackEspecial64, (PVOID)&aAddr);
         if (FALSE != enumRes)
         {
             /*
@@ -825,6 +847,8 @@ BOOL SymGetModuleInfoEspecial64(HANDLE aProcess, DWORD64 aAddr, PIMAGEHLP_MODULE
              * If it fails, then well, we have other problems.
              */
             retval = _SymGetModuleInfo64(aProcess, aAddr, aModuleInfo);
+            if (!retval)
+                PrintError("SymGetModuleInfo64");
         }
     }
 
@@ -907,7 +931,6 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
         DWORD64 addr = (DWORD64)aPC;
         IMAGEHLP_MODULE64 modInfo;
         IMAGEHLP_LINE64 lineInfo;
-        modInfo.SizeOfStruct = sizeof(modInfo);
         BOOL modInfoRes;
         modInfoRes = SymGetModuleInfoEspecial64(myProcess, addr, &modInfo, &lineInfo);
 
@@ -945,7 +968,6 @@ NS_DescribeCodeAddress(void *aPC, nsCodeAddressDetails *aDetails)
         DWORD addr = (DWORD)aPC;
         IMAGEHLP_MODULE modInfo;
         IMAGEHLP_LINE lineInfo;
-        modInfo.SizeOfStruct = sizeof(modInfo);
         BOOL modInfoRes;
         modInfoRes = SymGetModuleInfoEspecial(myProcess, addr, &modInfo, &lineInfo);
 

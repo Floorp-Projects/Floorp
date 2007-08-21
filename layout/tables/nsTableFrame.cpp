@@ -1845,6 +1845,7 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
 
   PRBool haveDesiredHeight = PR_FALSE;
   PRBool reflowedChildren  = PR_FALSE;
+  SetHaveReflowedColGroups(PR_FALSE);
 
   if (aReflowState.ComputedHeight() != NS_UNCONSTRAINEDSIZE ||
       // Also check mVResize, to handle the first Reflow preceding a
@@ -3061,13 +3062,15 @@ nsTableFrame::ReflowColGroups(nsIRenderingContext *aRenderingContext)
     nsPresContext *presContext = PresContext();
     for (nsIFrame* kidFrame = mColGroups.FirstChild(); kidFrame;
          kidFrame = kidFrame->GetNextSibling()) {
-      // The column groups don't care about dimensions or reflow states.
-      nsHTMLReflowState kidReflowState(presContext, kidFrame,
+      if (NS_SUBTREE_DIRTY(kidFrame)) {
+        // The column groups don't care about dimensions or reflow states.
+        nsHTMLReflowState kidReflowState(presContext, kidFrame,
                                        aRenderingContext, nsSize(0,0));
-      nsReflowStatus cgStatus;
-      ReflowChild(kidFrame, presContext, kidMet, kidReflowState, 0, 0, 0,
-                  cgStatus);
-      FinishReflowChild(kidFrame, presContext, nsnull, kidMet, 0, 0, 0);
+        nsReflowStatus cgStatus;
+        ReflowChild(kidFrame, presContext, kidMet, kidReflowState, 0, 0, 0,
+                    cgStatus);
+        FinishReflowChild(kidFrame, presContext, nsnull, kidMet, 0, 0, 0);
+      }
     }
     SetHaveReflowedColGroups(PR_TRUE);
   }

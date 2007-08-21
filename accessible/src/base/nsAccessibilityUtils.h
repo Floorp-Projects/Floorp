@@ -117,12 +117,21 @@ public:
   /**
    * Is the first passed in node an ancestor of the second?
    * Note: A node is not considered to be the ancestor of itself.
-   * @aPossibleAncestorNode -- node to test for ancestor-ness of aPossibleDescendantNode
-   * @aPossibleDescendantNode -- node to test for descendant-ness of aPossibleAncestorNode
+   * @param aPossibleAncestorNode -- node to test for ancestor-ness of aPossibleDescendantNode
+   * @param aPossibleDescendantNode -- node to test for descendant-ness of aPossibleAncestorNode
    * @return PR_TRUE if aPossibleAncestorNode is an ancestor of aPossibleDescendantNode
    */
-  static PRBool IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
-                             nsIDOMNode *aPossibleDescendantNode);
+   static PRBool IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
+                              nsIDOMNode *aPossibleDescendantNode);
+
+   /**
+    * If an ancestor in this document exists with the given role, return it
+    * @param aDescendant Descendant to start search with
+    * @param aRole Role to find matching ancestor for
+    * @return The ancestor accessible with the given role, or nsnull if no match is found
+    */
+   static already_AddRefed<nsIAccessible>
+     GetAncestorWithRole(nsIAccessible *aDescendant, PRUint32 aRole);
 };
 
 #endif

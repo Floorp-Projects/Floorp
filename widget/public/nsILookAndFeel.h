@@ -233,7 +233,16 @@ public:
      * only do so if the scrollbar is clicked using the middle mouse button or
      * if shift is pressed when the scrollbar is clicked.
      */
-    eMetric_ScrollToClick
+    eMetric_ScrollToClick,
+
+    /**
+     * IME underline styles, the values should be NS_DECORATION_LINE_STYLE_*.
+     * They are defined below.
+     */
+    eMetric_IMERawInputUnderlineStyle,
+    eMetric_IMESelectedRawTextUnderlineStyle,
+    eMetric_IMEConvertedTextUnderlineStyle,
+    eMetric_IMESelectedConvertedTextUnderline
   } nsMetricID;
 
   enum {
@@ -330,6 +339,19 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsILookAndFeel, NS_ILOOKANDFEEL_IID)
 #define NS_IS_IME_SPECIAL_COLOR(c) ((c) == NS_TRANSPARENT || \
                                     (c) == NS_SAME_AS_FOREGROUND_COLOR || \
                                     (c) == NS_40PERCENT_FOREGROUND_COLOR)
+
+// -------------------------------------------------
+//  Underline styles for eMetric_IME*UnderlineStyle
+// -------------------------------------------------
+
+#define NS_UNDERLINE_STYLE_NONE   0
+#define NS_UNDERLINE_STYLE_DOTTED 1
+#define NS_UNDERLINE_STYLE_DASHED 2
+#define NS_UNDERLINE_STYLE_SOLID  3
+#define NS_UNDERLINE_STYLE_DOUBLE 4
+
+#define NS_IS_VALID_UNDERLINE_STYLE(s) \
+  (NS_UNDERLINE_STYLE_NONE <= (s) && (s) <= NS_UNDERLINE_STYLE_DOUBLE)
 
 // ------------------------------------------
 //  Bits for eMetric_AlertNotificationOrigin

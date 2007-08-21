@@ -386,11 +386,6 @@ public:
 private:
   /* Computational (nil) surfaces */
   static gfxASurface *mThebesComputationalSurface;
-
-  /*
-   * Get an nsStyleFont from an nsIContent
-   */
-  static const nsStyleFont* GetStyleFontForContent(nsIContent *aContent);
 };
 
 #endif

@@ -172,24 +172,18 @@ function run_test() {
   // anno should still be there
   do_check_eq(annosvc.getPageAnnotation(testURI, testAnnoName), testAnnoVal);
   do_check_eq(annosvc.getItemAnnotation(bookmark, testAnnoName), testAnnoVal);
+  annosvc.removeItemAnnotation(bookmark, testAnnoName);
 
   /*
   test anno expiration (expire with history)
   */
   histsvc.addVisit(testURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
-  annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WITH_HISTORY);
   histsvc.removeAllPages();
   try {
     annosvc.getPageAnnotation(testURI, testAnnoName);
     do_throw("page still had expire_with_history anno");
   } catch(ex) {}
-  try {
-    annosvc.getItemAnnotation(bookmark, testAnnoName);
-  } catch(ex) {
-    do_throw("bookmark lost it's expire_with_history anno when history was cleared!");
-  }
-  annosvc.removeItemAnnotation(bookmark, testAnnoName);
 
   /*
   test anno expiration (days)

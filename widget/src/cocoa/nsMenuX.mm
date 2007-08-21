@@ -161,6 +161,16 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
   if (menubar && mMenuContent->GetChildCount() == 0)
     mVisible = PR_FALSE;
 
+  // XXXjag simply use mIsEnabled?
+  SetEnabled(!mMenuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
+                                        nsWidgetAtoms::_true, eCaseMatters));
+
+  NSString *newCocoaLabelString = MenuHelpersX::CreateTruncatedCocoaLabel(mLabel);
+  mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
+  [newCocoaLabelString release];
+
+  [mNativeMenuItem setEnabled:(BOOL)mIsEnabled];
+
   // We call MenuConstruct here because keyboard commands are dependent upon
   // native menu items being created. If we only call MenuConstruct when a menu
   // is actually selected, then we can't access keyboard commands until the
@@ -169,7 +179,7 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
   MenuConstruct(fake, nsnull, nsnull, nsnull);
   
   if (menu)
-    mIcon = new nsMenuItemIconX(static_cast<nsIMenu*>(this), menu, mMenuContent, nsnull);
+    mIcon = new nsMenuItemIconX(static_cast<nsIMenu*>(this), menu, mMenuContent, mNativeMenuItem);
 
   return NS_OK;
 }
@@ -292,20 +302,14 @@ nsresult nsMenuX::AddMenu(nsIMenu * aMenu)
   }
 
   // We have to add a menu item and then associate the menu with it
-  nsAutoString label;
-  aMenu->GetLabel(label);
-  PRBool enabled;
-  aMenu->GetEnabled(&enabled);
-  NSString *newCocoaLabelString = MenuHelpersX::CreateTruncatedCocoaLabel(label);
-  [mNativeMenuItem release];
-  mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
-  [mNativeMenuItem setEnabled:enabled];
-  [mMacMenu addItem:mNativeMenuItem];
-  [newCocoaLabelString release];
+  NSMenuItem* newNativeMenuItem = (static_cast<nsMenuX*>(aMenu))->GetNativeMenuItem();
+  if (!newNativeMenuItem)
+    return NS_ERROR_FAILURE;
+  [mMacMenu addItem:newNativeMenuItem];
   
   NSMenu* childMenu;
   if (aMenu->GetNativeData((void**)&childMenu) == NS_OK)
-    [mNativeMenuItem setSubmenu:childMenu];
+    [newNativeMenuItem setSubmenu:childMenu];
 
   return NS_OK;
 }
@@ -659,42 +663,6 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent)
   pnsMenuItem->Create(this, menuitemName, PR_FALSE, itemType, mManager,
                       docShell, inMenuItemContent);
 
-  // Set key shortcut and modifiers
-
-  nsAutoString keyValue;
-  inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyValue);
-
-  // Try to find the key node. Get the document so we can do |GetElementByID|
-  nsCOMPtr<nsIDOMDocument> domDocument =
-    do_QueryInterface(inMenuItemContent->GetDocument());
-  if (!domDocument)
-    return;
-
-  nsCOMPtr<nsIDOMElement> keyElement;
-  if (!keyValue.IsEmpty())
-    domDocument->GetElementById(keyValue, getter_AddRefs(keyElement));
-  if (keyElement) {
-    nsCOMPtr<nsIContent> keyContent (do_QueryInterface(keyElement));
-    nsAutoString keyChar(NS_LITERAL_STRING(" "));
-    keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::key, keyChar);
-    if (!keyChar.EqualsLiteral(" ")) 
-      pnsMenuItem->SetShortcutChar(keyChar);
-    
-    nsAutoString modifiersStr;
-    keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
-    char* str = ToNewCString(modifiersStr);
-    PRUint8 modifiers = MenuHelpersX::GeckoModifiersForNodeAttribute(str);
-    nsMemory::Free(str);
-    
-    pnsMenuItem->SetModifiers(modifiers);
-  }
-
-  if (inMenuItemContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
-                                     nsWidgetAtoms::_true, eCaseMatters))
-    pnsMenuItem->SetChecked(PR_TRUE);
-  else
-    pnsMenuItem->SetChecked(PR_FALSE);
-
   AddMenuItem(pnsMenuItem);
 
   // This needs to happen after the nsIMenuItem object is inserted into
@@ -720,13 +688,6 @@ void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
     return;
   pnsMenu->Create(reinterpret_cast<nsISupports*>(this), menuName, EmptyString(), mManager, docShell, inMenuContent);
 
-  // set if it's enabled or disabled
-  if (inMenuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
-                                 nsWidgetAtoms::_true, eCaseMatters))
-    pnsMenu->SetEnabled(PR_FALSE);
-  else
-    pnsMenu->SetEnabled(PR_TRUE);
-
   AddMenu(pnsMenu);
 
   // This needs to happen after the nsIMenu object is inserted into
@@ -737,6 +698,7 @@ void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
 
 void nsMenuX::LoadSeparator(nsIContent* inSeparatorContent) 
 {
+  // See bug 375011.
   // Currently we don't create nsIMenuItem objects for separators so we can't
   // track changes in their hidden/collapsed attributes. If it is hidden now it
   // is hidden forever.

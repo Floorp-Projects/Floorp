@@ -119,6 +119,8 @@ void nsPNGDecoder::CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
   
   if (mObserver)
     mObserver->OnStartFrame(nsnull, mFrame);
+
+  mFrameHasNoAlpha = PR_TRUE;
 }
 
 // set timeout and frame disposal method for the current frame
@@ -648,6 +650,7 @@ row_callback(png_structp png_ptr, png_bytep new_row,
     PRUint32 imageDataLength, bpr = width * sizeof(PRUint32);
     decoder->mFrame->GetImageData(&imageData, &imageDataLength);
     PRUint32 *cptr32 = (PRUint32*)(imageData + (row_num*bpr));
+    PRBool rowHasNoAlpha = PR_TRUE;
 
     if (decoder->mTransform) {
       if (decoder->mCMSLine) {
@@ -679,6 +682,8 @@ row_callback(png_structp png_ptr, png_bytep new_row,
       {
         for (PRUint32 x=iwidth; x>0; --x) {
           *cptr32++ = GFX_PACKED_PIXEL(line[3]?0xFF:0x00, line[0], line[1], line[2]);
+          if (line[3] == 0)
+            rowHasNoAlpha = PR_FALSE;
           line += 4;
         }
       }
@@ -688,11 +693,16 @@ row_callback(png_structp png_ptr, png_bytep new_row,
       {
         for (PRUint32 x=width; x>0; --x) {
           *cptr32++ = GFX_PACKED_PIXEL(line[3], line[0], line[1], line[2]);
+          if (line[3] != 0xff)
+            rowHasNoAlpha = PR_FALSE;
           line += 4;
         }
       }
       break;
     }
+
+    if (!rowHasNoAlpha)
+      decoder->mFrameHasNoAlpha = PR_FALSE;
 
     nsIntRect r(0, row_num, width, 1);
     nsCOMPtr<nsIImage> img(do_GetInterface(decoder->mFrame));
@@ -714,6 +724,10 @@ frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
   if (!(decoder->apngFlags & FRAME_HIDDEN)) {
     PRInt32 timeout;
     decoder->mFrame->GetTimeout(&timeout);
+    if (decoder->mFrameHasNoAlpha) {
+      nsCOMPtr<nsIImage> img(do_GetInterface(decoder->mFrame));
+      img->SetHasNoAlpha();
+    }
     decoder->mImage->EndFrameDecode(frame_num, timeout);
     decoder->mObserver->OnStopFrame(nsnull, decoder->mFrame);
   }
@@ -753,6 +767,10 @@ end_callback(png_structp png_ptr, png_infop info_ptr)
   if (!(decoder->apngFlags & FRAME_HIDDEN)) {
     PRInt32 timeout;
     decoder->mFrame->GetTimeout(&timeout);
+    if (decoder->mFrameHasNoAlpha) {
+      nsCOMPtr<nsIImage> img(do_GetInterface(decoder->mFrame));
+      img->SetHasNoAlpha();
+    }
     decoder->mImage->EndFrameDecode(decoder->mPNG->num_frames_read, timeout);
   }
   

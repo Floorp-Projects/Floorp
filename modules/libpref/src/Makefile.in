@@ -106,6 +106,6 @@ GARBAGE		+= $(addprefix $(DIST)/bin/defaults/pref/, \
 ifeq ($(OS_ARCH), OS2)
 nsPrefService.$(OBJ_SUFFIX): nsPrefService.cpp
 	$(REPORT_BUILD)
-	@$(MAKE_DEPS_AUTO)
+	@$(MAKE_DEPS_AUTO_CXX)
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS:-O2=-O1) $(_VPATH_SRCS)
 endif

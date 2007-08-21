@@ -383,11 +383,13 @@ NS_IMPL_ADDREF_INHERITED(nsHTMLScriptElement, nsGenericElement)
 NS_IMPL_RELEASE_INHERITED(nsHTMLScriptElement, nsGenericElement)
 
 // QueryInterface implementation for nsHTMLScriptElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLScriptElement, nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLScriptElement)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptLoaderObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIScriptElement)
-  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLScriptElement, nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED4(nsHTMLScriptElement,
+                                nsIDOMHTMLScriptElement,
+                                nsIScriptLoaderObserver,
+                                nsIScriptElement,
+                                nsIMutationObserver)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
   if (mScriptEventHandler && aIID.Equals(NS_GET_IID(nsIScriptEventHandler)))
     foundInterface = static_cast<nsIScriptEventHandler*>
                                 (mScriptEventHandler);

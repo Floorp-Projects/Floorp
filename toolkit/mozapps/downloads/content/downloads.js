@@ -47,6 +47,8 @@
 const PREF_BDM_CLOSEWHENDONE = "browser.download.manager.closeWhenDone";
 const PREF_BDM_ALERTONEXEOPEN = "browser.download.manager.alertOnEXEOpen";
 const PREF_BDM_RETENTION = "browser.download.manager.retention";
+const PREF_BDM_DISPLAYEDHISTORYDAYS =
+  "browser.download.manager.displayedHistoryDays";
 
 const nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
                                            "nsILocalFile", "initWithPath");
@@ -80,7 +82,7 @@ function fireEventForElement(aElement, aEventType)
 }
 
 function createDownloadItem(aID, aFile, aTarget, aURI, aState,
-                            aStatus, aProgress, aStartTime)
+                            aStatus, aProgress, aStartTime, aReferrer)
 {
   var dl = document.createElement("richlistitem");
   dl.setAttribute("type", "download");
@@ -94,13 +96,19 @@ function createDownloadItem(aID, aFile, aTarget, aURI, aState,
   dl.setAttribute("status", aStatus);
   dl.setAttribute("progress", aProgress);
   dl.setAttribute("startTime", aStartTime);
+  if (aReferrer)
+    dl.setAttribute("referrer", aReferrer);
 
-  var ioSvc = Cc["@mozilla.org/network/io-service;1"].
-              getService(Ci.nsIIOService);
-  var file = ioSvc.newURI(aFile, null, null).QueryInterface(Ci.nsIFileURL).file;
-  dl.setAttribute("path", file.nativePath || file.path);
-  
-  return dl;
+  try {
+    var file = getLocalFileFromNativePathOrUrl(aFile);
+    dl.setAttribute("path", file.nativePath || file.path);
+    return dl;
+  }
+  catch (ex) {
+    // aFile might not be a file: url or a valid native path
+    // see bug #392386 for details
+  }
+  return null;
 }
 
 function getDownload(aID)
@@ -254,6 +262,7 @@ function onDownloadDblClick(aEvent)
         gDownloadViewController.doCommand("cmd_resume");
         break;
       case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
+      case Ci.nsIDownloadManager.DOWNLOAD_BLOCKED:
       case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
         gDownloadViewController.doCommand("cmd_retry");
         break;
@@ -299,6 +308,17 @@ function openDownload(aDownload)
   }
 }
 
+function openReferrer(aDownload)
+{
+  var uriString;
+  if (aDownload.hasAttribute("referrer"))
+    uriString = aDownload.getAttribute("referrer");
+  else
+    uriString = aDownload.getAttribute("uri");
+
+  openURL(uriString);
+}
+
 function showDownloadInfo(aDownload)
 {
   gUserInteracted = true;
@@ -321,7 +341,11 @@ function showDownloadInfo(aDownload)
                                    dateStarted.getMinutes(), 0);
   popupTitle.setAttribute("value", dateStarted);
   // Add proper uri and path
-  var uri = aDownload.getAttribute("uri");
+  var uri = "beltzner";
+  if (aDownload.hasAttribute("referrer"))
+    uri = aDownload.getAttribute("referrer");
+  else
+    uri = aDownload.getAttribute("uri");
   uriLabel.label = uri;
   uriLabel.setAttribute("tooltiptext", uri);
   var path = aDownload.getAttribute("path");
@@ -418,12 +442,21 @@ function Shutdown()
 
 ///////////////////////////////////////////////////////////////////////////////
 // View Context Menus
-var gContextMenus = [ 
+var gContextMenus = [
+  // DOWNLOAD_DOWNLOADING
   ["menuitem_pause", "menuitem_cancel"],
+  // DOWNLOAD_FINISHED
   ["menuitem_open", "menuitem_show", "menuitem_remove"],
+  // DOWNLOAD_FAILED
   ["menuitem_retry", "menuitem_remove"],
+  // DOWNLOAD_CANCELED
   ["menuitem_retry", "menuitem_remove"],
-  ["menuitem_resume", "menuitem_cancel"]
+  // DOWNLOAD_PAUSED
+  ["menuitem_resume", "menuitem_cancel"],
+  // DOWNLOAD_QUEUED
+  ["menuitem_cancel"],
+  // DOWNLOAD_BLOCKED
+  ["menuitem_retry", "menuitem_remove"]
 ];
 
 function buildContextMenu(aEvent)
@@ -514,6 +547,7 @@ var gDownloadViewController = {
         return dl.inProgress || dl.paused;
       case "cmd_resume":
         return dl.paused;
+      case "cmd_openReferrer":
       case "cmd_remove":
       case "cmd_retry":
         return dl.removable;
@@ -550,6 +584,9 @@ var gDownloadViewController = {
     },
     cmd_open: function(aSelectedItem) {
       openDownload(aSelectedItem);
+    },
+    cmd_openReferrer: function(aSelectedItem) {
+      openReferrer(aSelectedItem);
     },
     cmd_pause: function(aSelectedItem) {
       pauseDownload(aSelectedItem);
@@ -605,7 +642,11 @@ function openExternal(aFile)
 function buildDefaultView()
 {
   buildActiveDownloadsList();
-  buildDownloadListWithTime(Date.now() - 24 * 3600 * 1000 * 7); // One week
+
+  let pref = Cc["@mozilla.org/preferences-service;1"].
+             getService(Ci.nsIPrefBranch);
+  let days = pref.getIntPref(PREF_BDM_DISPLAYEDHISTORYDAYS);
+  buildDownloadListWithTime(Date.now() - days * 24 * 60 * 60 * 1000);
 
   // select the first visible download item, if any
   var children = gDownloadsView.children;
@@ -619,7 +660,7 @@ function buildDefaultView()
  * @param aStmt
  *        The compiled SQL statement to build with.  This needs to have the
  *        following columns in this order to work properly:
- *        id, target, name, source, state, startTime
+ *        id, target, name, source, state, startTime, referrer
  *        This statement should be ordered on the endTime ASC so that the end
  *        result is a list of downloads with their end time's descending.
  * @param aRef
@@ -647,8 +688,10 @@ function buildDownloadList(aStmt, aRef)
     let dl = createDownloadItem(id, aStmt.getString(1),
                                 aStmt.getString(2), aStmt.getString(3),
                                 state, "", percentComplete,
-                                Math.round(aStmt.getInt64(5) / 1000));
-    gDownloadsView.insertBefore(dl, aRef.nextSibling);
+                                Math.round(aStmt.getInt64(5) / 1000),
+                                aStmt.getString(6));
+    if (dl)
+      gDownloadsView.insertBefore(dl, aRef.nextSibling);
   }
 }
 
@@ -667,7 +710,8 @@ function buildActiveDownloadsList()
   var stmt = gActiveDownloadsQuery;
   if (!stmt) {
     stmt = gActiveDownloadsQuery =
-      db.createStatement("SELECT id, target, name, source, state, startTime " +
+      db.createStatement("SELECT id, target, name, source, state, startTime, " +
+                         "referrer " +
                          "FROM moz_downloads " +
                          "WHERE state = ?1 " +
                          "OR state = ?2 " +
@@ -699,12 +743,14 @@ function buildDownloadListWithTime(aTime)
   var stmt = gDownloadListWithTimeQuery;
   if (!stmt) {
     stmt = gDownloadListWithTimeQuery =
-      db.createStatement("SELECT id, target, name, source, state, startTime " +
+      db.createStatement("SELECT id, target, name, source, state, startTime, " +
+                         "referrer " +
                          "FROM moz_downloads " +
                          "WHERE startTime >= ?1 " +
                          "AND (state = ?2 " +
                          "OR state = ?3 " +
-                         "OR state = ?4) " +
+                         "OR state = ?4 " +
+                         "OR state = ?5) " +
                          "ORDER BY endTime ASC");
   }
 
@@ -713,6 +759,7 @@ function buildDownloadListWithTime(aTime)
     stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_FINISHED);
     stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_FAILED);
     stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_CANCELED);
+    stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_BLOCKED);
     buildDownloadList(stmt, gDownloadsOtherTitle);
   } finally {
     stmt.reset();
@@ -743,7 +790,7 @@ function buildDownloadListWithSearch(aTerms)
     return;
   }
 
-  var sql = "SELECT id, target, name, source, state, startTime " +
+  var sql = "SELECT id, target, name, source, state, startTime, referrer " +
             "FROM moz_downloads WHERE name LIKE ?1 ESCAPE '/' " +
             "AND state != ?2 AND state != ?3 ORDER BY endTime ASC";
 
@@ -783,10 +830,13 @@ function onSearchboxFocus() {
 
 // we should be using real URLs all the time, but until 
 // bug 239948 is fully fixed, this will do...
+//
+// note, this will thrown an exception if the native path
+// is not valid (for example a native Windows path on a Mac)
+// see bug #392386 for details
 function getLocalFileFromNativePathOrUrl(aPathOrUrl)
 {
   if (aPathOrUrl.substring(0,7) == "file://") {
-
     // if this is a URL, get the file from that
     let ioSvc = Cc["@mozilla.org/network/io-service;1"].
                 getService(Ci.nsIIOService);
@@ -795,9 +845,7 @@ function getLocalFileFromNativePathOrUrl(aPathOrUrl)
     const fileUrl = ioSvc.newURI(aPathOrUrl, null, null).
                     QueryInterface(Ci.nsIFileURL);
     return fileUrl.file.clone().QueryInterface(Ci.nsILocalFile);
-
   } else {
-
     // if it's a pathname, create the nsILocalFile directly
     var f = new nsLocalFile(aPathOrUrl);
 

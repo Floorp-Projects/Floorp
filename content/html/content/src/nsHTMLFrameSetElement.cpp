@@ -138,12 +138,12 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLFrameSetElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLFrameSetElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLFrameSetElement,
-                                    nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFrameSetElement)
-  NS_INTERFACE_MAP_ENTRY(nsIFrameSetElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFrameSetElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLFrameSetElement,
+                                      nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED2(nsHTMLFrameSetElement,
+                                nsIDOMHTMLFrameSetElement,
+                                nsIFrameSetElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFrameSetElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLFrameSetElement)

@@ -86,8 +86,9 @@
     <command id="cmd_findPrevious"
              oncommand="gFindBar.onFindAgainCommand(true);"
              observes="isImage"/>
+    <!-- work-around bug 392512 -->
     <command id="Browser:AddBookmarkAs" 
-             oncommand="PlacesCommandHook.bookmarkCurrentPage();"/>
+             oncommand="setTimeout(function() { PlacesCommandHook.bookmarkCurrentPage(true); }, 0);"/>
     <!-- The command is disabled for the hidden window. Otherwise its enabled
          state is handled by the BookmarkAllTabsHandler object. -->
     <command id="Browser:BookmarkAllTabs"

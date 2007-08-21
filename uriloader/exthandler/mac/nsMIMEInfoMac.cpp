@@ -47,11 +47,70 @@
 #include "nsIInternetConfigService.h"
 
 NS_IMETHODIMP
+nsMIMEInfoMac::LaunchWithFile(nsIFile *aFile)
+{
+  nsCOMPtr<nsIFile> application;
+  nsresult rv;
+
+  NS_ASSERTION(mClass == eMIMEInfo, "only MIME infos are currently allowed"
+               "to pass content by value");
+  
+  if (mPreferredAction == useHelperApp) {
+
+    // we don't yet support passing content by value (rather than reference)
+    // to web apps.  at some point, we will probably want to.  
+    nsCOMPtr<nsILocalHandlerApp> localHandlerApp =
+        do_QueryInterface(mPreferredApplication, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = localHandlerApp->GetExecutable(getter_AddRefs(application));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+  } else if (mPreferredAction == useSystemDefault) {
+    application = mDefaultApplication;
+  }
+  else
+    return NS_ERROR_INVALID_ARG;
+
+  // if we've already got an app, just QI so we have the launchWithDoc method
+  nsCOMPtr<nsILocalFileMac> app;
+  if (application) {
+    app = do_QueryInterface(application, &rv);
+    if (NS_FAILED(rv)) return rv;
+  } else {
+    // otherwise ask LaunchServices for an app directly
+    nsCOMPtr<nsILocalFileMac> tempFile = do_QueryInterface(aFile, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    FSRef tempFileRef;
+    tempFile->GetFSRef(&tempFileRef);
+
+    FSRef appFSRef;
+    if (::LSGetApplicationForItem(&tempFileRef, kLSRolesAll, &appFSRef, nsnull) == noErr)
+    {
+      app = (do_CreateInstance("@mozilla.org/file/local;1"));
+      if (!app) return NS_ERROR_FAILURE;
+      app->InitWithFSRef(&appFSRef);
+    } else {
+      return NS_ERROR_FAILURE;
+    }
+  }
+  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aFile);
+  return app->LaunchWithDoc(localFile, PR_FALSE); 
+}
+
+NS_IMETHODIMP
 nsMIMEInfoMac::LaunchWithURI(nsIURI* aURI)
 {
   nsCOMPtr<nsIFile> application;
   nsresult rv;
-  
+
+  // for now, this is only being called with protocol handlers; that
+  // will change once we get to more general registerContentHandler
+  // support
+  NS_ASSERTION(mClass == eProtocolInfo,
+               "nsMIMEInfoBase should be a protocol handler");
+
   if (mPreferredAction == useHelperApp) {
 
     // check for and launch with web handler app
@@ -68,66 +127,18 @@ nsMIMEInfoMac::LaunchWithURI(nsIURI* aURI)
     
     rv = localHandlerApp->GetExecutable(getter_AddRefs(application));
     NS_ENSURE_SUCCESS(rv, rv);
-    
-  } else if (mPreferredAction == useSystemDefault) {
 
-    // because nsMIMEInfoMac isn't yet set up with mDefaultApplication
-    // in the protocol handler case, we need to do it another way for now
-    // (which is fine, but this code would be a little more readable if we
-    // could fall through this case).
-    if (mClass == eProtocolInfo) {
-      return LoadUriInternal(aURI);      
-    }
-
-    application = mDefaultApplication;
-  }
-  else
-    return NS_ERROR_INVALID_ARG;
-
-
-  // get the nsILocalFile version of the doc to launch with
-  nsCOMPtr<nsILocalFile> docToLoad;
-  rv = GetLocalFileFromURI(aURI, getter_AddRefs(docToLoad));
-  if (NS_FAILED(rv)) {
-
-    // If we don't have a file, we must be a protocol handler
-    NS_ASSERTION(mClass == eProtocolInfo, 
-                 "nsMIMEInfoMac should be a protocol handler");
-
-    // so pass the entire URI to the handler.
+    // pass the entire URI to the handler.
     nsCAutoString spec;
     aURI->GetSpec(spec);
     return OpenApplicationWithURI(application, spec);
-  }
-
-  // note that the file pointed to by docToLoad could possibly have originated
-  // as a file: URI if we're in some non-browser application.
+  } 
   
-  // if we've already got an app, just QI so we have the launchWithDoc method
-  nsCOMPtr<nsILocalFileMac> app;
-  if (application) {
-    app = do_QueryInterface(application, &rv);
-    if (NS_FAILED(rv)) return rv;
-  } else {
-    // otherwise ask LaunchServices for an app directly
-    nsCOMPtr<nsILocalFileMac> tempFile = do_QueryInterface(docToLoad, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    FSRef tempFileRef;
-    tempFile->GetFSRef(&tempFileRef);
-
-    FSRef appFSRef;
-    if (::LSGetApplicationForItem(&tempFileRef, kLSRolesAll, &appFSRef, nsnull) == noErr)
-    {
-      app = (do_CreateInstance("@mozilla.org/file/local;1"));
-      if (!app) return NS_ERROR_FAILURE;
-      app->InitWithFSRef(&appFSRef);
-    } else {
-      return NS_ERROR_FAILURE;
-    }
+  if (mPreferredAction == useSystemDefault) {
+    return LoadUriInternal(aURI);
   }
   
-  return app->LaunchWithDoc(docToLoad, PR_FALSE); 
+  return NS_ERROR_INVALID_ARG;
 }
 
 nsresult 

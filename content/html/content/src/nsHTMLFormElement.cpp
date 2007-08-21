@@ -75,7 +75,6 @@
 #include "nsIWebProgress.h"
 #include "nsIDocShell.h"
 #include "nsIWebProgressListener.h"
-#include "nsWeakReference.h"
 
 // radio buttons
 #include "nsIDOMHTMLInputElement.h"
@@ -129,7 +128,6 @@ private:
 // nsHTMLFormElement
 
 class nsHTMLFormElement : public nsGenericHTMLElement,
-                          public nsSupportsWeakReference,
                           public nsIDOMHTMLFormElement,
                           public nsIDOMNSHTMLFormElement,
                           public nsIWebProgressListener,
@@ -552,15 +550,15 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLFormElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLFormElement
-NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(nsHTMLFormElement, nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLFormElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFormElement)
-  NS_INTERFACE_MAP_ENTRY(nsIForm)
-  NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-  NS_INTERFACE_MAP_ENTRY(nsIRadioGroupContainer)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFormElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(nsHTMLFormElement,
+                                        nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED5(nsHTMLFormElement,
+                                nsIDOMHTMLFormElement,
+                                nsIDOMNSHTMLFormElement,
+                                nsIForm,
+                                nsIWebProgressListener,
+                                nsIRadioGroupContainer)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLFormElement)
 
 
 // nsIDOMHTMLFormElement
@@ -2016,10 +2014,11 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFormControlList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // XPConnect interface list for nsFormControlList
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormControlList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFormControlList)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMHTMLCollection)
+NS_INTERFACE_TABLE_HEAD(nsFormControlList)
+  NS_INTERFACE_TABLE2(nsFormControlList,
+                      nsIDOMHTMLCollection,
+                      nsIDOMNSHTMLFormControlList)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsFormControlList)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLFormControlCollection)
 NS_INTERFACE_MAP_END
 

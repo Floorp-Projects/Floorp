@@ -345,13 +345,55 @@ nsMIMEInfoBase::GetLocalFileFromURI(nsIURI *aURI, nsILocalFile **aFile)
   return CallQueryInterface(file, aFile);
 }
 
+NS_IMETHODIMP
+nsMIMEInfoBase::LaunchWithFile(nsIFile* aFile)
+{
+  nsresult rv;
+
+  // it doesn't make any sense to call this on protocol handlers
+  NS_ASSERTION(mClass == eMIMEInfo,
+               "nsMIMEInfoBase should have mClass == eMIMEInfo");
+
+  if (mPreferredAction == useSystemDefault) {
+    return LaunchDefaultWithFile(aFile);
+  }
+
+  if (mPreferredAction == useHelperApp) {
+    if (!mPreferredApplication)
+      return NS_ERROR_FILE_NOT_FOUND;
+
+    // at the moment, we only know how to hand files off to local handlers
+    nsCOMPtr<nsILocalHandlerApp> localHandler = 
+      do_QueryInterface(mPreferredApplication, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIFile> executable;
+    rv = localHandler->GetExecutable(getter_AddRefs(executable));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCAutoString path;
+    aFile->GetNativePath(path);
+    return LaunchWithIProcess(executable, path);
+  }
+
+  return NS_ERROR_INVALID_ARG;
+}
 
 NS_IMETHODIMP
 nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI)
 {
-  nsCOMPtr<nsILocalFile> docToLoad;
   nsresult rv;
-  
+
+  // for now, this is only being called with protocol handlers; that
+  // will change once we get to more general registerContentHandler
+  // support
+  NS_ASSERTION(mClass == eProtocolInfo,
+               "nsMIMEInfoBase should be a protocol handler");
+
+  if (mPreferredAction == useSystemDefault) {
+    return LoadUriInternal(aURI);
+  }
+
   if (mPreferredAction == useHelperApp) {
     if (!mPreferredApplication)
       return NS_ERROR_FILE_NOT_FOUND;
@@ -372,36 +414,11 @@ nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI)
     rv = localHandler->GetExecutable(getter_AddRefs(executable));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // get the nsILocalFile version of the doc to launch with
-    rv = GetLocalFileFromURI(aURI, getter_AddRefs(docToLoad));
-    if (NS_FAILED(rv)) {
-
-      // If we don't have a file, we must be a protocol handler        
-      NS_ASSERTION(mClass == eProtocolInfo,
-                   "nsMIMEInfoBase should be a protocol handler");
-
-      // so pass the entire URI to the handler.
-      nsCAutoString spec;
-      aURI->GetSpec(spec);
-      return LaunchWithIProcess(executable, spec);
-    }
-
-    // note that the file pointed to by docToLoad could possibly have
-    // originated as a file: URI if we're in some non-browser application.
-
-    nsCAutoString path;
-    docToLoad->GetNativePath(path);
-    return LaunchWithIProcess(executable, path);
-  }
-  else if (mPreferredAction == useSystemDefault) {
-    if (mClass == eProtocolInfo)
-      return LoadUriInternal(aURI);
-
-    rv = GetLocalFileFromURI(aURI, getter_AddRefs(docToLoad));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return LaunchDefaultWithFile(docToLoad);
-  }
+    // pass the entire URI to the handler.
+    nsCAutoString spec;
+    aURI->GetSpec(spec);
+    return LaunchWithIProcess(executable, spec);
+  } 
 
   return NS_ERROR_INVALID_ARG;
 }

@@ -204,7 +204,7 @@ static NSPoint ConvertCGGlobalToCocoaScreen(CGPoint aPoint)
 {
   NSPoint cocoaPoint;
   cocoaPoint.x = aPoint.x;
-  cocoaPoint.y = CocoaScreenCoordsHeight() - aPoint.y;
+  cocoaPoint.y = FlippedScreenY(aPoint.y);
   return cocoaPoint;
 }
 

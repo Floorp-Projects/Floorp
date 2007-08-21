@@ -93,10 +93,10 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLHeadingElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLHeadingElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLHeadingElement, nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLHeadingElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLHeadingElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLHeadingElement,
+                                     nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED1(nsHTMLHeadingElement, nsIDOMHTMLHeadingElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLHeadingElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLHeadingElement)

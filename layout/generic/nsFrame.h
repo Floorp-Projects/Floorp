@@ -189,9 +189,7 @@ public:
   NS_IMETHOD  GetCursor(const nsPoint&    aPoint,
                         nsIFrame::Cursor& aCursor);
 
-  NS_IMETHOD  GetPointFromOffset(nsPresContext*        inPresContext,
-                                 nsIRenderingContext*   inRendContext,
-                                 PRInt32                inOffset,
+  NS_IMETHOD  GetPointFromOffset(PRInt32                inOffset,
                                  nsPoint*               outPoint);
 
   NS_IMETHOD  GetChildFrameContainingOffset(PRInt32     inContentOffset,

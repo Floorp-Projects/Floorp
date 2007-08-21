@@ -64,8 +64,8 @@ namespace MenuHelpersX
 {
   nsEventStatus DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
                                   nsIContent* aTargetContent);
-  NSString* CreateTruncatedCocoaLabel(nsString itemLabel);
-  PRUint8 GeckoModifiersForNodeAttribute(char* modifiersAttribute);
+  NSString* CreateTruncatedCocoaLabel(const nsString& itemLabel);
+  PRUint8 GeckoModifiersForNodeAttribute(const nsString& modifiersAttribute);
   unsigned int MacModifiersForGeckoModifiers(PRUint8 geckoModifiers);
 }
 

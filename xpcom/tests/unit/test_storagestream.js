@@ -59,18 +59,7 @@ function test1()
   ss.init(1024, 1024, null);
 
   var out = ss.getOutputStream(0);
-  try
-  {
-    var threw = false;
-    var inp2 = ss.newInputStream(0);
-  }
-  catch (e)
-  {
-    threw = e.result == Cr.NS_ERROR_NOT_INITIALIZED;
-  }
-  if (!threw)
-    do_throw("must write to a storagestream before creating an " +
-             "inputstream for it, even if just .write('', 0)");
+  var inp2 = ss.newInputStream(0);
 }
 
 /**

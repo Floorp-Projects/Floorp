@@ -212,8 +212,8 @@ sub Push {
     my $version = $config->Get(var => 'version');
     my $rc = $config->Get(var => 'rc');
     my $oldVersion = $config->Get(var => 'oldVersion');
-    my $sshUser = $config->Get(var => 'sshUser');
-    my $sshServer = $config->Get(var => 'sshServer');
+    my $stagingUser = $config->Get(var => 'stagingUser');
+    my $stagingServer = $config->Get(var => 'stagingServer');
     my $ausUser = $config->Get(var => 'ausUser');
     my $ausServer = $config->Get(var => 'ausServer');
     my $updateDir = $config->Get(var => 'updateDir');
@@ -232,7 +232,7 @@ sub Push {
                  '--exclude=*',
                  catfile('ftp', $product, 'nightly', $version . '-candidates', 
                           'rc' . $rc) . '/',
-                 $sshUser . '@' . $sshServer . ':' . $candidateDir],
+                 $stagingUser . '@' . $stagingServer . ':' . $candidateDir],
      dir => $fullUpdateDir,
      logFile => $pushLog,
    );

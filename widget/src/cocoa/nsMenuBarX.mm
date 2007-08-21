@@ -608,9 +608,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString
       // now grab the key equivalent modifiers
       nsAutoString modifiersStr;
       keyContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::modifiers, modifiersStr);
-      char* str = ToNewCString(modifiersStr);
-      PRUint8 geckoModifiers = MenuHelpersX::GeckoModifiersForNodeAttribute(str);
-      nsMemory::Free(str);
+      PRUint8 geckoModifiers = MenuHelpersX::GeckoModifiersForNodeAttribute(modifiersStr);
       macKeyModifiers = MenuHelpersX::MacModifiersForGeckoModifiers(geckoModifiers);
     }
   }
@@ -1072,7 +1070,7 @@ MenuHelpersX::DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
   return status;
 }
 
-NSString* MenuHelpersX::CreateTruncatedCocoaLabel(nsString itemLabel)
+NSString* MenuHelpersX::CreateTruncatedCocoaLabel(const nsString& itemLabel)
 {
   // ::TruncateThemeText() doesn't take the number of characters to truncate to, it takes a pixel with
   // to fit the string in. Ugh. I talked it over with sfraser and we couldn't come up with an 
@@ -1084,11 +1082,12 @@ NSString* MenuHelpersX::CreateTruncatedCocoaLabel(nsString itemLabel)
   return label; // caller releases
 }
 
-PRUint8 MenuHelpersX::GeckoModifiersForNodeAttribute(char* modifiersAttribute)
+PRUint8 MenuHelpersX::GeckoModifiersForNodeAttribute(const nsString& modifiersAttribute)
 {
   PRUint8 modifiers = knsMenuItemNoModifier;
+  char* str = ToNewCString(modifiersAttribute);
   char* newStr;
-  char* token = nsCRT::strtok(modifiersAttribute, ", \t", &newStr);
+  char* token = nsCRT::strtok(str, ", \t", &newStr);
   while (token != NULL) {
     if (PL_strcmp(token, "shift") == 0)
       modifiers |= knsMenuItemShiftModifier;
@@ -1102,7 +1101,8 @@ PRUint8 MenuHelpersX::GeckoModifiersForNodeAttribute(char* modifiersAttribute)
     }
     token = nsCRT::strtok(newStr, ", \t", &newStr);
   }
-  
+  nsMemory::Free(str);
+
   return modifiers;
 }
 

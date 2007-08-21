@@ -2036,6 +2036,9 @@ nsAccessible::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
 
 NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
 {
+  NS_ENSURE_ARG_POINTER(aRole);
+  *aRole = nsIAccessibleRole::ROLE_NOTHING;
+
   if (mRoleMapEntry) {
     *aRole = mRoleMapEntry->role;
 
@@ -2473,6 +2476,7 @@ nsAccessible::GetKeyBindings(PRUint8 aActionIndex,
 /* unsigned long getRole (); */
 NS_IMETHODIMP nsAccessible::GetRole(PRUint32 *aRole)
 {
+  NS_ENSURE_ARG_POINTER(aRole);
   *aRole = nsIAccessibleRole::ROLE_NOTHING;
   return NS_OK;
 }
