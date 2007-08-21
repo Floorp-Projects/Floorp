@@ -963,6 +963,16 @@ nsOperaCookieMigrator::ReadHeader()
 nsresult
 nsOperaProfileMigrator::CopyHistory(PRBool aReplace)
 {
+  nsresult rv;
+  nsCOMPtr<nsINavHistoryService> history = do_GetService(NS_NAVHISTORYSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  return history->RunInBatchMode(this, nsnull);
+}
+ 
+NS_IMETHODIMP
+nsOperaProfileMigrator::RunBatched(nsISupports* aUserData)
+{
   nsCOMPtr<nsIBrowserHistory> hist(do_GetService(NS_GLOBALHISTORY2_CONTRACTID));
 
   nsCOMPtr<nsIFile> temp;

@@ -82,6 +82,8 @@
              oncommand="gDownloadViewController.doCommand('cmd_cancel');"/>
     <command id="cmd_open"
              oncommand="gDownloadViewController.doCommand('cmd_open');"/>
+    <command id="cmd_openReferrer"
+             oncommand="gDownloadViewController.doCommand('cmd_openReferrer');"/>
     <command id="cmd_pause"
              oncommand="gDownloadViewController.doCommand('cmd_pause');"/>
     <command id="cmd_pauseResume"
@@ -149,7 +151,8 @@
   <!--Information popup-->
   <panel id="information" orient="vertical" align="start">
     <label id="information-title" flex="1"/>
-    <button type="image" crop="center" id="information-uri" class="mini-button" flex="1"/>
+    <button type="image" crop="center" id="information-uri" class="mini-button"
+            flex="1" command="cmd_openReferrer"/>
     <button type="image" crop="center" id="information-location" class="mini-button" flex="1" command="cmd_show"/>
   </panel>
 

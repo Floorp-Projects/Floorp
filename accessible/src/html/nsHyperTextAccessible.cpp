@@ -75,12 +75,6 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
 {
   *aInstancePtr = nsnull;
 
-  if (aIID.Equals(NS_GET_IID(nsHyperTextAccessible))) {
-    *aInstancePtr = static_cast<nsHyperTextAccessible*>(this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
   nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(mDOMNode));
   if (mDOMNode && !xulDoc) {
     // We need XUL doc check for now because for now nsDocAccessible must
@@ -89,11 +83,20 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
     // However at some point we may push <body> to implement the interfaces and
     // return nsDocAccessible to inherit from nsAccessibleWrap.
 
+    if (aIID.Equals(NS_GET_IID(nsHyperTextAccessible))) {
+      *aInstancePtr = static_cast<nsHyperTextAccessible*>(this);
+      NS_ADDREF_THIS();
+      return NS_OK;
+    }
+
     PRUint32 role = Role(this);
+    if (role == nsIAccessibleRole::ROLE_GRAPHIC ||
+        role == nsIAccessibleRole::ROLE_IMAGE_MAP ||
+        role == nsIAccessibleRole::ROLE_TEXT_LEAF) {
+      return nsAccessible::QueryInterface(aIID, aInstancePtr);
+    }
+
     if (aIID.Equals(NS_GET_IID(nsIAccessibleText))) {
-      if (role == nsIAccessibleRole::ROLE_TEXT_LEAF) {
-        return NS_ERROR_NO_INTERFACE;
-      }
       *aInstancePtr = static_cast<nsIAccessibleText*>(this);
       NS_ADDREF_THIS();
       return NS_OK;
@@ -101,8 +104,7 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
 
     if (aIID.Equals(NS_GET_IID(nsIAccessibleHyperText))) {
       if (role == nsIAccessibleRole::ROLE_ENTRY ||
-          role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
-          role == nsIAccessibleRole::ROLE_TEXT_LEAF) {
+          role == nsIAccessibleRole::ROLE_PASSWORD_TEXT) {
         return NS_ERROR_NO_INTERFACE;
       }
       *aInstancePtr = static_cast<nsIAccessibleHyperText*>(this);
@@ -111,9 +113,6 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
     }
 
     if (aIID.Equals(NS_GET_IID(nsIAccessibleEditableText))) {
-      if (role == nsIAccessibleRole::ROLE_TEXT_LEAF) {
-        return NS_ERROR_NO_INTERFACE;
-      }
       *aInstancePtr = static_cast<nsIAccessibleEditableText*>(this);
       NS_ADDREF_THIS();
       return NS_OK;
@@ -289,13 +288,13 @@ nsIntRect nsHyperTextAccessible::GetBoundsForString(nsIFrame *aFrame, PRUint32 a
 
     // Add the point where the string starts to the frameScreenRect
     nsPoint frameTextStartPoint;
-    rv = frame->GetPointFromOffset(context, rc, startContentOffset, &frameTextStartPoint);
+    rv = frame->GetPointFromOffset(startContentOffset, &frameTextStartPoint);
     NS_ENSURE_SUCCESS(rv, nsRect());   
     frameScreenRect.x += context->AppUnitsToDevPixels(frameTextStartPoint.x);
 
     // Use the point for the end offset to calculate the width
     nsPoint frameTextEndPoint;
-    rv = frame->GetPointFromOffset(context, rc, startContentOffset + frameSubStringLength, &frameTextEndPoint);
+    rv = frame->GetPointFromOffset(startContentOffset + frameSubStringLength, &frameTextEndPoint);
     NS_ENSURE_SUCCESS(rv, nsRect());   
     frameScreenRect.width = context->AppUnitsToDevPixels(frameTextEndPoint.x - frameTextStartPoint.x);
 
@@ -1041,8 +1040,10 @@ nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY,
 
   while (NextChild(accessible)) {
     nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
-    nsIFrame *frame = accessNode->GetFrame();
-    NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+    nsIFrame *primaryFrame = accessNode->GetFrame();
+    NS_ENSURE_TRUE(primaryFrame, NS_ERROR_FAILURE);
+
+    nsIFrame *frame = primaryFrame;
     while (frame) {
       nsIContent *content = frame->GetContent();
       NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
@@ -1056,7 +1057,9 @@ nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY,
             return NS_OK; // Not found, will return -1
           }
           PRUint32 addToOffset;
-          nsresult rv = ContentToRenderedOffset(frame, contentOffsets.offset, &addToOffset);
+          nsresult rv = ContentToRenderedOffset(primaryFrame,
+                                                contentOffsets.offset,
+                                                &addToOffset);
           NS_ENSURE_SUCCESS(rv, rv);
           offset += addToOffset;
         }

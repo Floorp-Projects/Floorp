@@ -213,6 +213,7 @@ pref("browser.download.manager.closeWhenDone", false);
 pref("browser.download.manager.openDelay", 0);
 pref("browser.download.manager.focusWhenStarting", false);
 pref("browser.download.manager.flashCount", 2);
+pref("browser.download.manager.displayedHistoryDays", 7);
 
 // search engines URL
 pref("browser.search.searchEnginesURL",      "https://%LOCALE%.add-ons.mozilla.com/%LOCALE%/firefox/%VERSION%/search-engines/");
@@ -417,11 +418,11 @@ pref("network.protocol-handler.expose.snews", false);
 pref("network.protocol-handler.expose.nntp", false);
 
 // Default security warning dialogs to show once.
-pref("security.warn_entering_secure.show_once", true);
+pref("security.warn_entering_secure.show_once", false);
 pref("security.warn_entering_weak.show_once", true);
-pref("security.warn_leaving_secure.show_once", true);
+pref("security.warn_leaving_secure.show_once", false);
 pref("security.warn_viewing_mixed.show_once", true);
-pref("security.warn_submit_insecure.show_once", true);
+pref("security.warn_submit_insecure.show_once", false);
 
 pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.timeout", 5000);

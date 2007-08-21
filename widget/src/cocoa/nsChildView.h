@@ -148,6 +148,7 @@ class nsTSMManager {
 public:
   static PRBool IsComposing() { return sComposingView ? PR_TRUE : PR_FALSE; }
   static PRBool IsIMEEnabled() { return sIsIMEEnabled; }
+  static PRBool IgnoreCommit() { return sIgnoreCommit; }
 
   // Note that we cannot get the actual state in TSM. But we can trust this
   // value. Because nsIMEStateManager reset this at every focus changing.
@@ -156,6 +157,7 @@ public:
   static PRBool GetIMEOpenState();
 
   static void StartComposing(NSView<mozView>* aComposingView);
+  static void UpdateComposing(NSString* aComposingString);
   static void EndComposing();
   static void EnableIME(PRBool aEnable);
   static void SetIMEOpenState(PRBool aOpen);
@@ -166,7 +168,12 @@ public:
 private:
   static PRBool sIsIMEEnabled;
   static PRBool sIsRomanKeyboardsOnly;
+  static PRBool sIgnoreCommit;
   static NSView<mozView>* sComposingView;
+  static TSMDocumentID sDocumentID;
+  static NSString* sComposingString;
+
+  static void KillComposing();
 };
 
 //-------------------------------------------------------------------------

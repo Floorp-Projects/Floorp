@@ -118,6 +118,7 @@ bin/components/intl.xpt
 bin/components/jar.xpt
 bin/components/jsconsole.xpt
 bin/components/libjsd.so
+bin/components/libimgicon.so
 bin/components/jsdservice.xpt
 bin/components/layout_base.xpt
 bin/components/layout_printing.xpt
@@ -355,6 +356,14 @@ bin/chrome/pipnss.jar
 bin/chrome/pippki.jar
 bin/chrome/pippki.manifest
 
+; for Solaris SPARC
+bin/libfreebl_32fpu_3.chk
+bin/libfreebl_32fpu_3.so
+bin/libfreebl_32int_3.chk
+bin/libfreebl_32int_3.so
+bin/libfreebl_32int64_3.chk
+bin/libfreebl_32int64_3.so
+
 ; [Updater]
 ;
 bin/updater
@@ -376,3 +385,5 @@ bin/extensions/inspector@mozilla.org/components/inspector-cmdline.js
 bin/extensions/inspector@mozilla.org/chrome.manifest
 bin/extensions/inspector@mozilla.org/chrome/inspector.jar
 bin/extensions/inspector@mozilla.org/defaults/preferences/inspector.js
+bin/extensions/inspector@mozilla.org/platform/Linux/chrome/icons/default/winInspectorMain.xpm
+bin/extensions/inspector@mozilla.org/platform/Linux/chrome/icons/default/winInspectorMain16.xpm

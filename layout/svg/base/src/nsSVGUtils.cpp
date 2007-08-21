@@ -469,67 +469,44 @@ NS_SVGEnabled()
   return gSVGEnabled;
 }
 
-const nsStyleFont*
-nsSVGUtils::GetStyleFontForContent(nsIContent* aContent)
+static nsIFrame*
+GetFrameForContent(nsIContent* aContent)
 {
+  if (!aContent)
+    return nsnull;
+
   nsIDocument *doc = aContent->GetCurrentDoc();
+  if (!doc)
+    return nsnull;
 
-  if (doc) {
-    nsIFrame* frame = nsGenericElement::GetPrimaryFrameFor(aContent, doc);
-    if (frame) {
-      return frame->GetStyleContext()->GetStyleFont();
-    }
-  }
-
-  return nsnull;
+  return nsGenericElement::GetPrimaryFrameFor(aContent, doc);
 }
 
 float
 nsSVGUtils::GetFontSize(nsIContent *aContent)
 {
-  if (!aContent) {
-    NS_WARNING("no element in GetFontSize()");
+  nsIFrame* frame = GetFrameForContent(aContent);
+  if (!frame) {
+    NS_WARNING("no frame in GetFontSize()");
     return 1.0f;
   }
 
-  nsPresContext *presContext = nsContentUtils::GetContextForContent(aContent);
-  if (!presContext) {
-    NS_WARNING("no context in GetFontSize()");
-    return 1.0f;
-  }
-
-  const nsStyleFont* fontData = GetStyleFontForContent(aContent);
-  if (!fontData) {
-    NS_WARNING("no StyleFont in GetFontSize()");
-    return 1.0f;
-  }
-
-  return (float)nsPresContext::AppUnitsToFloatCSSPixels(fontData->mSize) /
-                presContext->TextZoom();
+  return nsPresContext::AppUnitsToFloatCSSPixels(frame->GetStyleFont()->mSize) /
+         frame->PresContext()->TextZoom();
 }
 
 float
 nsSVGUtils::GetFontXHeight(nsIContent *aContent)
 {
-  if (!aContent) {
-    NS_WARNING("no element in GetFontXHeight()");
+  nsIFrame* frame = GetFrameForContent(aContent);
+  if (!frame) {
+    NS_WARNING("no frame in GetFontXHeight()");
     return 1.0f;
   }
 
-  nsPresContext *presContext = nsContentUtils::GetContextForContent(aContent);
-  if (!presContext) {
-    NS_WARNING("no context in GetFontXHeight()");
-    return 1.0f;
-  }
+  nsCOMPtr<nsIFontMetrics> fontMetrics;
+  nsLayoutUtils::GetFontMetricsForFrame(frame, getter_AddRefs(fontMetrics));
 
-  const nsStyleFont* fontData = GetStyleFontForContent(aContent);
-  if (!fontData) {
-    NS_WARNING("no StyleFont in GetFontXHeight()");
-    return 1.0f;
-  }
-
-  nsCOMPtr<nsIFontMetrics> fontMetrics = presContext->
-                                         GetMetricsFor(fontData->mFont);
   if (!fontMetrics) {
     NS_WARNING("no FontMetrics in GetFontXHeight()");
     return 1.0f;
@@ -537,8 +514,8 @@ nsSVGUtils::GetFontXHeight(nsIContent *aContent)
 
   nscoord xHeight;
   fontMetrics->GetXHeight(xHeight);
-  return (float)nsPresContext::AppUnitsToFloatCSSPixels(xHeight) /
-                presContext->TextZoom();
+  return nsPresContext::AppUnitsToFloatCSSPixels(xHeight) /
+         frame->PresContext()->TextZoom();
 }
 
 void

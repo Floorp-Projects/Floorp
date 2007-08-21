@@ -368,16 +368,7 @@ nsIFrame* nsAccessNode::GetFrame()
     return nsnull;  
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  while (content) {
-    nsIFrame* frame = shell->GetPrimaryFrameFor(content);
-    if (frame) {
-      return frame;
-    }
-    nsCOMPtr<nsIContent> tempContent = content->GetParent();
-    content = tempContent;
-  }
-
-  return nsnull;
+  return content ? shell->GetPrimaryFrameFor(content) : nsnull;
 }
 
 NS_IMETHODIMP

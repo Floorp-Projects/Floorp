@@ -44,6 +44,8 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsContentPolicyUtils.h"
+#include "nsIPropertyBag2.h"
 
 class nsPluginDocument : public nsMediaDocument,
                          public nsIPluginDocument
@@ -52,7 +54,7 @@ public:
   nsPluginDocument();
   virtual ~nsPluginDocument();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPLUGINDOCUMENT
 
   virtual nsresult StartDocumentLoad(const char*         aCommand,
@@ -143,13 +145,10 @@ nsPluginDocument::~nsPluginDocument()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(nsPluginDocument, nsMediaDocument)
-NS_IMPL_RELEASE_INHERITED(nsPluginDocument, nsMediaDocument)
-
-NS_INTERFACE_MAP_BEGIN(nsPluginDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIPluginDocument)
-NS_INTERFACE_MAP_END_INHERITING(nsMediaDocument)
-
+// XXXbz shouldn't this participate in cycle collection?  It's got
+// mPluginContent!
+NS_IMPL_ISUPPORTS_INHERITED1(nsPluginDocument, nsMediaDocument,
+                             nsIPluginDocument)
 
 void
 nsPluginDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)

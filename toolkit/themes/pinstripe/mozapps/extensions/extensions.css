@@ -185,12 +185,13 @@ richlistitem[opType="needs-disable"] .disableHide {
   display: none;
 }
 
+richlistitem[plugin] .themeButton,
+richlistitem[plugin] .optionsButton,
+richlistitem[plugin] .uninstallButton,
 richlistitem[type="2"] .themeButton,
 richlistitem[type="8"] .themeButton,
-richlistitem[type="16"] .themeButton,
 richlistitem[type="4"] .optionsButton,
 richlistitem[type="8"] .optionsButton,
-richlistitem[type="16"] .optionsButton,
 richlistitem[type="4"] .disableShow,
 richlistitem[type="4"] .disableHide {
   display: none;

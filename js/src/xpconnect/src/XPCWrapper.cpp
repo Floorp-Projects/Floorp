@@ -159,13 +159,12 @@ XPCWrapper::NewResolve(JSContext *cx, JSObject *wrapperObj,
   }
 
   JSBool isXOW = (JS_GET_CLASS(cx, wrapperObj) == &sXPC_XOW_JSClass.base);
-  if (preserveVal || isXOW) {
-    JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
-    if (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(innerObjp))) {
-      v = OBJ_GET_SLOT(cx, innerObjp, sprop->slot);
-    }
+  JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
+  uintN attrs = sprop->attrs;
+  if ((preserveVal || isXOW) &&
+      SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(innerObjp))) {
+    v = OBJ_GET_SLOT(cx, innerObjp, sprop->slot);
   }
-
   OBJ_DROP_PROPERTY(cx, innerObjp, prop);
 
   // Hack alert: we only do this for same-origin calls on XOWs: we want
@@ -189,7 +188,7 @@ XPCWrapper::NewResolve(JSContext *cx, JSObject *wrapperObj,
   }
 
   JSBool ok = OBJ_DEFINE_PROPERTY(cx, wrapperObj, interned_id, v, nsnull,
-                                  nsnull, JSPROP_ENUMERATE, nsnull);
+                                  nsnull, (attrs & JSPROP_ENUMERATE), nsnull);
 
   if (ok && (ok = ::JS_SetReservedSlot(cx, wrapperObj, sResolvingSlot,
                                        oldSlotVal))) {

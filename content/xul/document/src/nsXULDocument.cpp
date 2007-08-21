@@ -658,11 +658,14 @@ ClearBroadcasterMapEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 static PRBool
 CanBroadcast(PRInt32 aNameSpaceID, nsIAtom* aAttribute)
 {
-    // Don't push changes to the |id|, |ref|, or |persist| attribute.
+    // Don't push changes to the |id|, |ref|, |persist|, |command| or
+    // |observes| attribute.
     if (aNameSpaceID == kNameSpaceID_None) {
         if ((aAttribute == nsGkAtoms::id) ||
             (aAttribute == nsGkAtoms::ref) ||
-            (aAttribute == nsGkAtoms::persist)) {
+            (aAttribute == nsGkAtoms::persist) ||
+            (aAttribute == nsGkAtoms::command) ||
+            (aAttribute == nsGkAtoms::observes)) {
             return PR_FALSE;
         }
     }
@@ -3831,6 +3834,25 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         // We don't want to swap IDs, they should be the same.
         if (name->Equals(nsGkAtoms::id))
             continue;
+
+        // In certain cases merging command or observes is unsafe, so don't.
+        if (!aNotify) {
+            if (aTargetNode->NodeInfo()->Equals(nsGkAtoms::observes,
+                                                kNameSpaceID_XUL))
+                continue;
+
+            if (name->Equals(nsGkAtoms::observes) &&
+                aTargetNode->HasAttr(kNameSpaceID_None, nsGkAtoms::observes))
+                continue;
+
+            if (name->Equals(nsGkAtoms::command) &&
+                aTargetNode->HasAttr(kNameSpaceID_None, nsGkAtoms::command) &&
+                !aTargetNode->NodeInfo()->Equals(nsGkAtoms::key,
+                                                 kNameSpaceID_XUL) &&
+                !aTargetNode->NodeInfo()->Equals(nsGkAtoms::menuitem,
+                                                 kNameSpaceID_XUL))
+                continue;
+        }
 
         PRInt32 nameSpaceID = name->NamespaceID();
         nsIAtom* attr = name->LocalName();

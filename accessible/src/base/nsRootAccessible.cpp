@@ -105,8 +105,7 @@ NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsDocAccessible)
 // construction 
 //-----------------------------------------------------
 nsRootAccessible::nsRootAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
-  nsDocAccessibleWrap(aDOMNode, aShell),
-  mIsInDHTMLMenu(PR_FALSE)
+  nsDocAccessibleWrap(aDOMNode, aShell)
 {
 }
 
@@ -480,18 +479,25 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
 
   PRUint32 role = Role(finalFocusAccessible);
   if (role == nsIAccessibleRole::ROLE_MENUITEM) {
-    if (!mIsInDHTMLMenu) {  // Entering menus
+    if (!mCurrentARIAMenubar) {  // Entering menus
       PRUint32 naturalRole; // The natural role is the role that this type of element normally has
       finalFocusAccessible->GetRole(&naturalRole);
       if (role != naturalRole) { // Must be a DHTML menuitem
-         nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_START, this);
-         mIsInDHTMLMenu = nsIAccessibleRole::ROLE_MENUITEM;
+        mCurrentARIAMenubar =
+          nsAccUtils::GetAncestorWithRole(finalFocusAccessible, nsIAccessibleRole::ROLE_MENUBAR);
+        if (mCurrentARIAMenubar) {
+          nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_START, mCurrentARIAMenubar);
+        }
       }
     }
   }
-  else if (mIsInDHTMLMenu) {
-    nsAccUtils::FireAccEvent(nsIAccessibleEvent::EVENT_MENU_END, this);
-    mIsInDHTMLMenu = PR_FALSE;
+  else if (mCurrentARIAMenubar) {
+    nsCOMPtr<nsIAccessibleEvent> menuEndEvent =
+      new nsAccEvent(nsIAccessibleEvent::EVENT_MENU_END, mCurrentARIAMenubar, nsnull, PR_FALSE);
+    if (menuEndEvent) {
+      FireDelayedAccessibleEvent(menuEndEvent, eAllowDupes, PR_FALSE);
+    }
+    mCurrentARIAMenubar = nsnull;
   }
 
   NS_IF_RELEASE(gLastFocusedNode);
@@ -898,6 +904,8 @@ NS_IMETHODIMP nsRootAccessible::Shutdown()
   if (!mWeakShell) {
     return NS_OK;  // Already shutdown
   }
+  mCurrentARIAMenubar = nsnull;
+
   if (mFireFocusTimer) {
     mFireFocusTimer->Cancel();
     mFireFocusTimer = nsnull;

@@ -80,8 +80,6 @@ public:
   ImageListener(nsImageDocument* aDocument);
   virtual ~ImageListener();
 
-  NS_DECL_ISUPPORTS
-
   NS_DECL_NSIREQUESTOBSERVER
 };
 
@@ -94,7 +92,7 @@ public:
   nsImageDocument();
   virtual ~nsImageDocument();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   virtual nsresult Init();
 
@@ -147,12 +145,6 @@ protected:
   PRPackedBool                  mShouldResize;
   PRPackedBool                  mFirstResize;
 };
-
-NS_IMPL_ADDREF_INHERITED(ImageListener, nsMediaDocumentStreamListener)
-NS_IMPL_RELEASE_INHERITED(ImageListener, nsMediaDocumentStreamListener)
-
-NS_INTERFACE_MAP_BEGIN(ImageListener)
-NS_INTERFACE_MAP_END_INHERITING(nsMediaDocumentStreamListener)
 
 ImageListener::ImageListener(nsImageDocument* aDocument)
   : nsMediaDocumentStreamListener(aDocument)
@@ -269,14 +261,18 @@ nsImageDocument::~nsImageDocument()
 {
 }
 
+// XXXbz shouldn't this participate in cycle collection?  It's got
+// mImageContent!
 NS_IMPL_ADDREF_INHERITED(nsImageDocument, nsMediaDocument)
 NS_IMPL_RELEASE_INHERITED(nsImageDocument, nsMediaDocument)
 
-NS_INTERFACE_MAP_BEGIN(nsImageDocument)
-  NS_INTERFACE_MAP_ENTRY(nsIImageDocument)
-  NS_INTERFACE_MAP_ENTRY(imgIDecoderObserver)
-  NS_INTERFACE_MAP_ENTRY(imgIContainerObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+NS_INTERFACE_TABLE_HEAD(nsImageDocument)
+  NS_INTERFACE_TABLE4(nsImageDocument,
+                      nsIImageDocument,
+                      imgIDecoderObserver,
+                      imgIContainerObserver,
+                      nsIDOMEventListener)
+  NS_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ImageDocument)
 NS_INTERFACE_MAP_END_INHERITING(nsMediaDocument)
 

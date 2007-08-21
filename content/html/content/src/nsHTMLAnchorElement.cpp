@@ -154,13 +154,13 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLAnchorElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLAnchorElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLAnchorElement, nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLAnchorElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAnchorElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLAnchorElement2)
-  NS_INTERFACE_MAP_ENTRY(nsILink)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLAnchorElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLAnchorElement, nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED4(nsHTMLAnchorElement,
+                                nsIDOMHTMLAnchorElement,
+                                nsIDOMNSHTMLAnchorElement,
+                                nsIDOMNSHTMLAnchorElement2,
+                                nsILink)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAnchorElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLAnchorElement)

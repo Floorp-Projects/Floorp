@@ -57,7 +57,12 @@
 #ifndef _HASHMGR_HXX_
 #define _HASHMGR_HXX_
 
+#ifndef MOZILLA_CLIENT
 #include <cstdio>
+#else
+#include <stdio.h>
+#endif
+
 #include "htypes.hxx"
 
 enum flag { FLAG_CHAR, FLAG_LONG, FLAG_NUM, FLAG_UNI };

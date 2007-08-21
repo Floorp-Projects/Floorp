@@ -125,7 +125,7 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     already_AddRefed<nsIDocShellTreeItem>
            GetContentDocShell(nsIDocShellTreeItem *aStart);
     nsRefPtr<nsCaretAccessible> mCaretAccessible;
-    PRPackedBool mIsInDHTMLMenu;
+    nsCOMPtr<nsIAccessible> mCurrentARIAMenubar;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsRootAccessible, NS_ROOTACCESSIBLE_IMPL_CID)

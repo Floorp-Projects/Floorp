@@ -112,6 +112,15 @@ public:
     return Length() == 0;
   }
 
+  NS_HIDDEN_(void) SetIsVoid(PRBool val)
+  {
+    NS_StringSetIsVoid(*this, val);
+  }
+  NS_HIDDEN_(PRBool) IsVoid() const
+  {
+    return NS_StringGetIsVoid(*this);
+  }
+
   NS_HIDDEN_(void) Assign(const self_type& aString)
   {
     NS_StringCopy(*this, aString);
@@ -385,6 +394,15 @@ public:
   NS_HIDDEN_(PRBool) IsEmpty() const
   {
     return Length() == 0;
+  }
+
+  NS_HIDDEN_(void) SetIsVoid(PRBool val)
+  {
+    NS_CStringSetIsVoid(*this, val);
+  }
+  NS_HIDDEN_(PRBool) IsVoid() const
+  {
+    return NS_CStringGetIsVoid(*this);
   }
 
   NS_HIDDEN_(void) Assign(const self_type& aString)

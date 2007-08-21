@@ -168,10 +168,6 @@ public:
     InitOffsets(aContainingBlockWidth);
   }
 
-  void InitOffsets(nscoord aContainingBlockWidth,
-                   const nsMargin *aBorder = nsnull,
-                   const nsMargin *aPadding = nsnull);
-
   // Destructor for usedPaddingProperty
   static void DestroyMarginFunc(void*    aFrame,
                                 nsIAtom* aPropertyName,
@@ -188,6 +184,10 @@ private:
   void ComputePadding(nscoord aContainingBlockWidth);
 
 protected:
+
+  void InitOffsets(nscoord aContainingBlockWidth,
+                   const nsMargin *aBorder = nsnull,
+                   const nsMargin *aPadding = nsnull);
 
   /*
    * Convert nsStyleCoord to nscoord when percentages depend on the
@@ -259,6 +259,16 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
 
   // pointer to the space manager associated with this area
   nsSpaceManager* mSpaceManager;
+
+  // The amount the in-flow position of the block is moving vertically relative
+  // to its previous in-flow position (i.e. the amount the line containing the
+  // block is moving).
+  // This should be zero for anything which is not a block outside, and it
+  // should be zero for anything which has a non-block parent.
+  // The intended use of this value is to allow the accurate determination
+  // of the potential impact of a float
+  // This takes on an arbitrary value the first time a block is reflowed
+  nscoord mBlockDelta;
 
   // LineLayout object (only for inline reflow; set to NULL otherwise)
   nsLineLayout*    mLineLayout;
@@ -416,15 +426,11 @@ public:
   static nscoord CalcLineHeight(nsStyleContext* aStyleContext,
                                 nsIDeviceContext* aDeviceContext);
 
-  void InitFrameType();
 
   void ComputeContainingBlockRectangle(nsPresContext*          aPresContext,
                                        const nsHTMLReflowState* aContainingBlockRS,
                                        nscoord&                 aContainingBlockWidth,
                                        nscoord&                 aContainingBlockHeight);
-
-  void CalculateBlockSideMargins(nscoord aAvailWidth,
-                                 nscoord aComputedWidth);
 
   /**
    * Apply the mComputed(Min/Max)(Width/Height) values to the content
@@ -457,7 +463,7 @@ public:
   void SetTruncated(const nsHTMLReflowMetrics& aMetrics, nsReflowStatus* aStatus) const;
 
 protected:
-
+  void InitFrameType();
   void InitCBReflowState();
   void InitResizeFlags(nsPresContext* aPresContext);
 
@@ -501,6 +507,8 @@ protected:
                                          nscoord* aInsideBoxSizing,
                                          nscoord* aOutsideBoxSizing);
 
+  void CalculateBlockSideMargins(nscoord aAvailWidth,
+                                 nscoord aComputedWidth);
 };
 
 #endif /* nsHTMLReflowState_h___ */

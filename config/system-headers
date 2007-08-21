@@ -199,6 +199,7 @@ frame/req.h
 freetype/freetype.h
 freetype/ftcache.h
 freetype/ftglyph.h
+freetype/ftsynth.h
 freetype/ftoutln.h
 freetype/ttnameid.h
 freetype/tttables.h
@@ -948,4 +949,12 @@ zlib.h
 #ifdef WRAP_LCMS_HEADERS
 icc34.h
 lcms.h
+#endif
+#ifdef MOZ_ENABLE_STARTUP_NOTIFICATION
+libsn/sn.h
+libsn/sn-common.h
+libsn/sn-launchee.h
+libsn/sn-launcher.h
+libsn/sn-monitor.h
+libsn/sn-util.h
 #endif

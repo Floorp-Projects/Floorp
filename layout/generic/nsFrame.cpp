@@ -4280,7 +4280,7 @@ nsFrame::GetSelected(PRBool *aSelected) const
 }
 
 NS_IMETHODIMP
-nsFrame::GetPointFromOffset(nsPresContext* inPresContext, nsIRenderingContext* inRendContext, PRInt32 inOffset, nsPoint* outPoint)
+nsFrame::GetPointFromOffset(PRInt32 inOffset, nsPoint* outPoint)
 {
   NS_PRECONDITION(outPoint != nsnull, "Null parameter");
   nsPoint bottomLeft(0, 0);

@@ -411,6 +411,9 @@ nsAnnotationService::SetItemAnnotation(PRInt64 aItemId,
 {
   NS_ENSURE_ARG(aValue);
 
+  if (aExpiration == EXPIRE_WITH_HISTORY)
+    return NS_ERROR_INVALID_ARG;
+
   PRUint16 dataType;
   nsresult rv = aValue->GetDataType(&dataType);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -505,6 +508,9 @@ nsAnnotationService::SetItemAnnotationString(PRInt64 aItemId,
                                              PRInt32 aFlags,
                                              PRUint16 aExpiration)
 {
+  if (aExpiration == EXPIRE_WITH_HISTORY)
+    return NS_ERROR_INVALID_ARG;
+
   nsresult rv = SetAnnotationStringInternal(aItemId, PR_TRUE, aName, aValue,
                                             aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -578,6 +584,9 @@ nsAnnotationService::SetItemAnnotationInt32(PRInt64 aItemId,
                                             PRInt32 aFlags,
                                             PRUint16 aExpiration)
 {
+  if (aExpiration == EXPIRE_WITH_HISTORY)
+    return NS_ERROR_INVALID_ARG;
+
   nsresult rv = SetAnnotationInt32Internal(aItemId, PR_TRUE, aName, aValue,
                                            aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -651,6 +660,9 @@ nsAnnotationService::SetItemAnnotationInt64(PRInt64 aItemId,
                                             PRInt32 aFlags,
                                             PRUint16 aExpiration)
 {
+  if (aExpiration == EXPIRE_WITH_HISTORY)
+    return NS_ERROR_INVALID_ARG;
+
   nsresult rv = SetAnnotationInt64Internal(aItemId, PR_TRUE, aName, aValue,
                                            aFlags, aExpiration);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -724,6 +736,9 @@ nsAnnotationService::SetItemAnnotationDouble(PRInt64 aItemId,
                                              PRInt32 aFlags,
                                              PRUint16 aExpiration)
 {
+  if (aExpiration == EXPIRE_WITH_HISTORY)
+    return NS_ERROR_INVALID_ARG;
+
   nsresult rv = SetAnnotationDoubleInternal(aItemId, PR_TRUE, aName, aValue,
                                             aFlags, aExpiration);                      
   NS_ENSURE_SUCCESS(rv, rv);
@@ -804,6 +819,9 @@ nsAnnotationService::SetItemAnnotationBinary(PRInt64 aItemId,
                                              PRInt32 aFlags,
                                              PRUint16 aExpiration)
 {
+  if (aExpiration == EXPIRE_WITH_HISTORY)
+    return NS_ERROR_INVALID_ARG;
+
   nsresult rv = SetAnnotationBinaryInternal(aItemId, PR_TRUE, aName, aData,
                                             aDataLen, aMimeType, aFlags,
                                             aExpiration);

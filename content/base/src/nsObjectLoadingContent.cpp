@@ -75,6 +75,7 @@
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsPresShellIterator.h"
+#include "nsMimeTypes.h"
 
 // Concrete classes
 #include "nsFrameLoader.h"
@@ -373,8 +374,24 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
   // change the order of the declarations!
   AutoFallback fallback(this, &rv);
 
-  rv = chan->GetContentType(mContentType);
+  nsCString channelType;
+  rv = chan->GetContentType(channelType);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (channelType.EqualsASCII(APPLICATION_GUESS_FROM_EXT)) {
+    channelType = APPLICATION_OCTET_STREAM;
+    chan->SetContentType(channelType);
+  }
+  
+  if (mContentType.IsEmpty() ||
+      !channelType.EqualsASCII(APPLICATION_OCTET_STREAM)) {
+    mContentType = channelType;
+  } else {
+    // Set the type we'll use for dispatch on the channel.  Otherwise we could
+    // end up trying to dispatch to a nsFrameLoader, which will complain that
+    // it couldn't find a way to handle application/octet-stream
+    chan->SetContentType(mContentType);
+  }
 
   // Now find out what type the content is
   // UnloadContent will set our type to null; need to be sure to only set it to
@@ -1071,7 +1088,8 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
 
   nsCOMPtr<nsILoadGroup> group = doc->GetDocumentLoadGroup();
   nsCOMPtr<nsIChannel> chan;
-  rv = NS_NewChannel(getter_AddRefs(chan), aURI, nsnull, group, this);
+  rv = NS_NewChannel(getter_AddRefs(chan), aURI, nsnull, group, this,
+                     nsIChannel::LOAD_CALL_CONTENT_SNIFFERS);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Referrer

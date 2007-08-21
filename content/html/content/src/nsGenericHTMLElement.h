@@ -1063,7 +1063,8 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
  * QueryInterface() implementation helper macros
  */
 
-#define NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(_class, _base, _base_if) \
+#define NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGOUS_HEAD(_class, _base,          \
+                                                      _base_if)               \
   NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)    \
   {                                                                           \
     NS_PRECONDITION(aInstancePtr, "null out param");                          \
@@ -1079,27 +1080,16 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
                            aInstancePtr);                                     \
                                                                               \
     if (NS_SUCCEEDED(rv))                                                     \
-      return rv;                                                              \
-                                                                              \
-    nsISupports *foundInterface = nsnull;
+      return rv;
 
 
-#define NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(_class, _base)                    \
-  NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(_class, _base,                 \
-                                               nsIDOMHTMLElement)
+#define NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(_class, _base)                   \
+  NS_HTML_CONTENT_INTERFACE_TABLE_AMBIGOUS_HEAD(_class, _base,                \
+                                                nsIDOMHTMLElement)
 
-#define NS_HTML_CONTENT_CC_INTERFACE_MAP_AMBIGUOUS_BEGIN(_class, _base,       \
-                                                        _base_if)             \
-  NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)    \
-  {                                                                           \
-    NS_PRECONDITION(aInstancePtr, "null out param");                          \
-                                                                              \
-    if ( aIID.Equals(NS_GET_IID(nsXPCOMCycleCollectionParticipant)) ) {       \
-      *aInstancePtr = &NS_CYCLE_COLLECTION_NAME(_class);                      \
-      return NS_OK;                                                           \
-    }                                                                         \
-                                                                              \
-    nsresult rv;                                                              \
+#define NS_HTML_CONTENT_CC_INTERFACE_TABLE_AMBIGUOUS_HEAD(_class, _base,      \
+                                                          _base_if)           \
+  NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(_class)                  \
                                                                               \
     rv = _base::QueryInterface(aIID, aInstancePtr);                           \
                                                                               \
@@ -1110,13 +1100,11 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
                            aInstancePtr);                                     \
                                                                               \
     if (NS_SUCCEEDED(rv))                                                     \
-      return rv;                                                              \
-                                                                              \
-    nsISupports *foundInterface = nsnull;
+      return rv;
 
-#define NS_HTML_CONTENT_CC_INTERFACE_MAP_BEGIN(_class, _base)                 \
-  NS_HTML_CONTENT_CC_INTERFACE_MAP_AMBIGUOUS_BEGIN(_class, _base,             \
-                                                   nsIDOMHTMLElement)
+#define NS_HTML_CONTENT_CC_INTERFACE_TABLE_HEAD(_class, _base)                \
+  NS_HTML_CONTENT_CC_INTERFACE_TABLE_AMBIGUOUS_HEAD(_class, _base,            \
+                                                    nsIDOMHTMLElement)
 
 #define NS_HTML_CONTENT_INTERFACE_MAP_END                                     \
     {                                                                         \
@@ -1130,6 +1118,10 @@ NS_NewHTML##_elementName##Element(nsINodeInfo *aNodeInfo, PRBool aFromParser)\
     return NS_OK;                                                             \
   }
 
+#define NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(_class)                \
+    NS_INTERFACE_TABLE_TO_MAP_SEGUE                                           \
+    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(_class)                          \
+  NS_HTML_CONTENT_INTERFACE_MAP_END
 
 #define NS_INTERFACE_MAP_ENTRY_IF_TAG(_interface, _tag)                       \
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(_interface,                              \

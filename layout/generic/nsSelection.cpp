@@ -6931,19 +6931,6 @@ nsTypedSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, n
   aPoint->y = 0;
 
   //
-  // Retrieve the device context. We need one to create
-  // a rendering context.
-  //
-
-  nsIPresShell *shell = mFrameSelection->GetShell();
-  if (!shell)
-    return NS_ERROR_NULL_POINTER;
-
-  nsPresContext *presContext = shell->GetPresContext();
-  if (!presContext)
-    return NS_ERROR_NULL_POINTER;
-  
-  //
   // Now get the closest view with a widget so we can create
   // a rendering context.
   //
@@ -6968,27 +6955,10 @@ nsTypedSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, n
     return NS_ERROR_FAILURE;
 
   //
-  // Create a rendering context. This context is used by text frames
-  // to calculate text widths so it can figure out where the point is
-  // in the frame.
-  //
-
-  nsCOMPtr<nsIRenderingContext> rendContext;
-
-  rv = presContext->DeviceContext()->
-    CreateRenderingContext(closestView, *getter_AddRefs(rendContext));
-  
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (!rendContext)
-    return NS_ERROR_NULL_POINTER;
-
-  //
   // Now get the point and return!
   //
 
-  rv = aFrame->GetPointFromOffset(presContext, rendContext, aContentOffset, aPoint);
+  rv = aFrame->GetPointFromOffset(aContentOffset, aPoint);
 
   return rv;
 }

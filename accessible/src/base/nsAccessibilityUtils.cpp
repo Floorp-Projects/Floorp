@@ -202,3 +202,24 @@ nsAccUtils::IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
   return PR_FALSE;
 }
 
+already_AddRefed<nsIAccessible>
+nsAccUtils::GetAncestorWithRole(nsIAccessible *aDescendant, PRUint32 aRole)
+{
+  nsCOMPtr<nsIAccessible> parentAccessible = aDescendant, testRoleAccessible;
+  while (NS_SUCCEEDED(parentAccessible->GetParent(getter_AddRefs(testRoleAccessible))) &&
+         testRoleAccessible) {
+    PRUint32 testRole;
+    testRoleAccessible->GetFinalRole(&testRole);
+    if (testRole == aRole) {
+      nsIAccessible *returnAccessible = testRoleAccessible;
+      NS_ADDREF(returnAccessible);
+      return returnAccessible;
+    }
+    nsCOMPtr<nsIAccessibleDocument> docAccessible = do_QueryInterface(testRoleAccessible);
+    if (docAccessible) {
+      break;
+    }
+    parentAccessible.swap(testRoleAccessible);
+  }
+  return nsnull;
+}

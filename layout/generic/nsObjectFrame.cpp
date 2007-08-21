@@ -828,6 +828,71 @@ nsObjectFrame::FixupWindow(const nsSize& aSize)
 #endif
 }
 
+void
+nsObjectFrame::CallSetWindow()
+{
+  nsPluginWindow *win = nsnull;
+ 
+  nsresult rv;
+  nsCOMPtr<nsIPluginInstance> pi; 
+  if (!mInstanceOwner ||
+      NS_FAILED(rv = mInstanceOwner->GetInstance(*getter_AddRefs(pi))) ||
+      !pi ||
+      NS_FAILED(rv = mInstanceOwner->GetWindow(win)) || 
+      !win)
+    return;
+
+  nsPluginNativeWindow *window = (nsPluginNativeWindow *)win;
+
+#ifdef XP_MACOSX
+  mInstanceOwner->FixUpPluginWindow(ePluginPaintDisable);
+#endif
+
+  if (IsHidden())
+    return;
+
+  PRBool windowless = (window->type == nsPluginWindowType_Drawable);
+
+  nsPoint origin = GetWindowOriginInPixels(windowless);
+
+  window->x = origin.x;
+  window->y = origin.y;
+
+  // refresh the plugin port as well
+#ifdef MOZ_X11
+  if(windowless) {
+    // There is no plugin port window but there are some extra fields to
+    // fill in.
+    nsIWidget* widget = GetWindow();
+    if (widget) {
+      NPSetWindowCallbackStruct* ws_info = 
+        static_cast<NPSetWindowCallbackStruct*>(window->ws_info);
+      ws_info->display =
+        static_cast<Display*>(widget->GetNativeData(NS_NATIVE_DISPLAY));
+#ifdef MOZ_WIDGET_GTK2
+      GdkWindow* gdkWindow =
+        static_cast<GdkWindow*>(widget->GetNativeData(NS_NATIVE_WINDOW));
+      GdkColormap* gdkColormap = gdk_drawable_get_colormap(gdkWindow);
+      ws_info->colormap = gdk_x11_colormap_get_xcolormap(gdkColormap);
+      GdkVisual* gdkVisual = gdk_colormap_get_visual(gdkColormap);
+      ws_info->visual = gdk_x11_visual_get_xvisual(gdkVisual);
+      ws_info->depth = gdkVisual->depth;
+#endif
+    }
+  }
+  else
+#endif
+  {
+    window->window = mInstanceOwner->GetPluginPort();
+  }
+
+  // this will call pi->SetWindow and take care of window subclassing
+  // if needed, see bug 132759.
+  window->CallSetWindow(pi);
+
+  mInstanceOwner->ReleasePluginPort((nsPluginPort *)window->window);
+}
+
 PRBool
 nsObjectFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
 {
@@ -922,74 +987,15 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
   if (aStatus != NS_FRAME_REFLOW_FINISHED) 
     return rv;
 
-  PRBool bHidden = IsHidden();
-
   if (HasView()) {
     nsIView* view = GetView();
     nsIViewManager* vm = view->GetViewManager();
     if (vm)
-      vm->SetViewVisibility(view, bHidden ? nsViewVisibility_kHide : nsViewVisibility_kShow);
+      vm->SetViewVisibility(view, IsHidden() ? nsViewVisibility_kHide : nsViewVisibility_kShow);
   }
 
-  nsPluginWindow *win = nsnull;
- 
-  nsCOMPtr<nsIPluginInstance> pi; 
-  if (!mInstanceOwner ||
-      NS_FAILED(rv = mInstanceOwner->GetInstance(*getter_AddRefs(pi))) ||
-      !pi ||
-      NS_FAILED(rv = mInstanceOwner->GetWindow(win)) || 
-      !win)
-    return rv;
-
-  nsPluginNativeWindow *window = (nsPluginNativeWindow *)win;
-
-#ifdef XP_MACOSX
-  mInstanceOwner->FixUpPluginWindow(ePluginPaintDisable);
-#endif
-
-  if (bHidden)
-    return rv;
-
-  PRBool windowless = (window->type == nsPluginWindowType_Drawable);
-
-  nsPoint origin = GetWindowOriginInPixels(windowless);
-
-  window->x = origin.x;
-  window->y = origin.y;
-
-  // refresh the plugin port as well
-#ifdef MOZ_X11
-  if(windowless) {
-    // There is no plugin port window but there are some extra fields to
-    // fill in.
-    nsIWidget* widget = GetWindow();
-    if (widget) {
-      NPSetWindowCallbackStruct* ws_info = 
-        static_cast<NPSetWindowCallbackStruct*>(window->ws_info);
-      ws_info->display =
-        static_cast<Display*>(widget->GetNativeData(NS_NATIVE_DISPLAY));
-#ifdef MOZ_WIDGET_GTK2
-      GdkWindow* gdkWindow =
-        static_cast<GdkWindow*>(widget->GetNativeData(NS_NATIVE_WINDOW));
-      GdkColormap* gdkColormap = gdk_drawable_get_colormap(gdkWindow);
-      ws_info->colormap = gdk_x11_colormap_get_xcolormap(gdkColormap);
-      GdkVisual* gdkVisual = gdk_colormap_get_visual(gdkColormap);
-      ws_info->visual = gdk_x11_visual_get_xvisual(gdkVisual);
-      ws_info->depth = gdkVisual->depth;
-#endif
-    }
-  }
-  else
-#endif
-  {
-    window->window = mInstanceOwner->GetPluginPort();
-  }
-
-  // this will call pi->SetWindow and take care of window subclassing
-  // if needed, see bug 132759.
-  window->CallSetWindow(pi);
-
-  mInstanceOwner->ReleasePluginPort((nsPluginPort *)window->window);
+  // WMP10 needs an additional SetWindow call here (bug 391261)
+  CallSetWindow();
 
   return rv;
 }
@@ -1434,6 +1440,7 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
   // finish up
   if (NS_SUCCEEDED(rv)) {
     TryNotifyContentObjectWrapper();
+    CallSetWindow();
   }
 
   return rv;

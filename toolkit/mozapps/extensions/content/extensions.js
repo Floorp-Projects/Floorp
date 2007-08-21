@@ -284,16 +284,16 @@ function showView(aView) {
   var showContinue = false;
   switch (aView) {
     case "extensions":
-      var types = [ [ ["type", nsIUpdateItem.TYPE_EXTENSION, "Integer" ] ] ];
+      var types = [ [ ["type", nsIUpdateItem.TYPE_EXTENSION, "Integer"] ] ];
       break;
     case "themes":
-      types = [ [ ["type", nsIUpdateItem.TYPE_THEME, "Integer" ] ] ];
+      types = [ [ ["type", nsIUpdateItem.TYPE_THEME, "Integer"] ] ];
       break;
     case "locales":
-      types = [ [ ["type", nsIUpdateItem.TYPE_LOCALE, "Integer" ] ] ];
+      types = [ [ ["type", nsIUpdateItem.TYPE_LOCALE, "Integer"] ] ];
       break;
     case "plugins":
-      types = [ [ ["type", nsIUpdateItem.TYPE_PLUGIN, "Integer" ] ] ];
+      types = [ [ ["plugin", "true", null] ] ];
       break;
     case "updates":
       document.getElementById("updates-view").hidden = false;
@@ -319,7 +319,7 @@ function showView(aView) {
                       ["version", "?version"],
                       ["typeName", "update"] ];
       types = [ [ ["availableUpdateVersion", "?availableUpdateVersion", null],
-                  [ "updateable", "true", null ] ] ];
+                  ["updateable", "true", null] ] ];
       break;
     case "installs":
       document.getElementById("installs-view").hidden = false;
@@ -357,7 +357,7 @@ function showView(aView) {
                       ["version", "?version"],
                       ["newVersion", "?newVersion"],
                       ["typeName", "install"] ];
-      types = [ [ ["state", "?state", null ] ] ];
+      types = [ [ ["state", "?state", null] ] ];
       break;
   }
 
@@ -524,12 +524,45 @@ function initPluginsDS()
                         .getService(Components.interfaces.nsIRDFContainerUtils);
   gPluginsDS = Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"]
                          .createInstance(Components.interfaces.nsIRDFDataSource);
+  var rootctr = rdfCU.MakeSeq(gPluginsDS, rdf.GetResource(RDFURI_ITEM_ROOT));
   gPlugins = { };
 
-  var rootctr = rdfCU.MakeSeq(gPluginsDS, rdf.GetResource(RDFURI_ITEM_ROOT));
-  var div = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  // Case insensitive sort
+  function compare(a, b) {
+    if (a.name.toLowerCase() < b.name.toLowerCase())
+      return -1;
+    if (a.name.toLowerCase() > b.name.toLowerCase())
+      return 1;
+    return 0;
+  }
+  plugins.sort(compare);
+
   for (var i = 0; i < plugins.length; i++) {
     var plugin = plugins[i];
+    var name = plugin.name;
+    if (!(name in gPlugins)) {
+      // Removes all html markup in a plugin's description
+      var desc = plugin.description.replace(/<\/?[a-z][^>]*>/gi, " ");
+      var homepageURL = null;
+      // Some plugins (e.g. QuickTime) add an anchor to their description to
+      // provide a link to the plugin's homepage in about:plugins. This can be
+      // used to provide access to a plugins homepage in the add-ons mgr.
+      if (/<A\s+HREF=[^>]*>/i.test(plugin.description))
+        homepageURL = /<A\s+HREF=["']?([^>"'\s]*)/i.exec(plugin.description)[1];
+
+      gPlugins[name] = { name        : name,
+                         filename    : plugin.filename,
+                         description : desc,
+                         homepageURL : homepageURL,
+                         disabled    : plugin.disabled,
+                         blocklisted : plugin.blocklisted,
+                         plugins     : [] };
+    }
+    gPlugins[name].plugins.push(plugin);
+  }
+
+  for (var pluginName in gPlugins) {
+    plugin = gPlugins[pluginName];
     var pluginNode = rdf.GetResource(PREFIX_ITEM_URI + plugin.filename);
     var desc = plugin.description.replace(/<br>/g, "<br/> ");
     try {
@@ -549,8 +582,13 @@ function initPluginsDS()
                       true);
     gPluginsDS.Assert(pluginNode,
                       rdf.GetResource(PREFIX_NS_EM + "description"),
-                      rdf.GetLiteral(desc),
+                      rdf.GetLiteral(plugin.description),
                       true);
+    if (plugin.homepageURL)
+      gPluginsDS.Assert(pluginNode,
+                        rdf.GetResource(PREFIX_NS_EM + "homepageURL"),
+                        rdf.GetLiteral(plugin.homepageURL),
+                        true);
     gPluginsDS.Assert(pluginNode,
                       rdf.GetResource(PREFIX_NS_EM + "isDisabled"),
                       rdf.GetLiteral(plugin.disabled ? "true" : "false"),
@@ -564,23 +602,20 @@ function initPluginsDS()
                       rdf.GetLiteral("true"),
                       true);
     gPluginsDS.Assert(pluginNode,
-                      rdf.GetResource(PREFIX_NS_EM + "type"),
-                      rdf.GetIntLiteral(nsIUpdateItem.TYPE_PLUGIN),
-                      true);
-    gPluginsDS.Assert(pluginNode,
                       rdf.GetResource(PREFIX_NS_EM + "plugin"),
                       rdf.GetLiteral("true"),
                       true);
-    gPlugins[plugin.filename] = plugin;
   }
 }
 
-function togglePluginDisabled(aFilename)
+function togglePluginDisabled(aName)
 {
-  var plugin = gPlugins[aFilename];
+  var plugin = gPlugins[aName];
+  plugin.disabled = !plugin.disabled;
+  for (var i = 0; i < plugin.plugins.length; ++i)
+    plugin.plugins[i].disabled = plugin.disabled;
   var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                       .getService(Components.interfaces.nsIRDFService);
-  plugin.disabled = !plugin.disabled;
   gPluginsDS.Change(rdf.GetResource(PREFIX_ITEM_URI + plugin.filename),
                     rdf.GetResource(PREFIX_NS_EM + "isDisabled"),
                     rdf.GetLiteral(plugin.disabled ? "false" : "true"),
@@ -1097,7 +1132,7 @@ var gAddonContextMenus = ["menuitem_useTheme", "menuitem_options", "menuitem_hom
                           "menuitem_enable", "menuitem_disable"];
 var gUpdateContextMenus = ["menuitem_homepage", "menuitem_about", "menuseparator_1",
                            "menuitem_installUpdate", "menuitem_includeUpdate"];
-// For browsers don't display context menuitems that can open a browser window.
+// For Firefox don't display context menuitems that can open a browser window.
 var gUpdateContextMenusNoBrowser = ["menuitem_installUpdate", "menuitem_includeUpdate"];
 var gInstallContextMenus = ["menuitem_homepage", "menuitem_about"];
 
@@ -1170,6 +1205,9 @@ function buildContextMenu(aEvent)
     document.getElementById("menuitem_disable_clone").hidden = canEnable;
     document.getElementById("menuitem_useTheme_clone").hidden = true;
     document.getElementById("menuitem_options_clone").hidden = true;
+    document.getElementById("menuitem_about_clone").hidden = true;
+    document.getElementById("menuitem_uninstall_clone").hidden = true;
+    document.getElementById("menuitem_checkUpdate_clone").hidden = true;
     break;
   case "updates":
     var includeUpdate = document.getAnonymousElementByAttribute(selectedItem, "anonid", "includeUpdate");
@@ -1406,17 +1444,14 @@ function updateOptionalViews() {
   ctr.Init(ds, rdfs.GetResource(RDFURI_ITEM_ROOT));
   var elements = ctr.GetElements();
   var showLocales = false;
-  var showPlugins = false;
   var showUpdates = false;
   var showInstalls = false;
   while (elements.hasMoreElements()) {
     var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-    if (!showPlugins || !showLocales) {
+    if (!showLocales) {
       var typeArc = rdfs.GetResource(PREFIX_NS_EM + "type");
       var type = ds.GetTarget(e, typeArc, true);
       if (type && type instanceof Components.interfaces.nsIRDFInt) {
-        if (type.Value & nsIUpdateItem.TYPE_PLUGIN)
-          showPlugins = true;
         if (type.Value & nsIUpdateItem.TYPE_LOCALE)
           showLocales = true;
       }
@@ -1444,7 +1479,6 @@ function updateOptionalViews() {
     }
   }
   document.getElementById("locales-view").hidden = !showLocales;
-  document.getElementById("plugins-view").hidden = !showPlugins;
   document.getElementById("updates-view").hidden = !showUpdates;
   document.getElementById("installs-view").hidden = !showInstalls;
 }
@@ -1840,7 +1874,7 @@ var gExtensionsViewController = {
     cmd_disable: function (aSelectedItem)
     {
       if (aSelectedItem.getAttribute("plugin") == "true") {
-        togglePluginDisabled(aSelectedItem.getAttribute("addonID"));
+        togglePluginDisabled(aSelectedItem.getAttribute("name"));
         return;
       }
 
@@ -1878,7 +1912,7 @@ var gExtensionsViewController = {
     cmd_enable: function (aSelectedItem)
     {
       if (aSelectedItem.getAttribute("plugin") == "true") {
-        togglePluginDisabled(aSelectedItem.getAttribute("addonID"));
+        togglePluginDisabled(aSelectedItem.getAttribute("name"));
         return;
       }
 

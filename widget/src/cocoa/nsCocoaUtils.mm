@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Josh Aas <josh@mozilla.com>
  *   Sylvain Pasche <sylvain.pasche@gmail.com>
+ *   Stuart Morgan <stuart.morgan@alumni.case.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,33 +40,30 @@
 
 #include "nsCocoaUtils.h"
 
-// Returns the height (from lowest 'y' to highest 'y', regardless of sign) of
-// the global coordinate system that includes all NSScreen objects.
-float CocoaScreenCoordsHeight()
+// Returns the height of the primary screen (the one with the menu bar, which
+// is documented to be the first in the |screens| array).
+float MenuBarScreenHeight()
 {
-  float globalLowestY = 0;
-  float globalHighestY = 0;
-  NSArray *allScreens = [NSScreen screens];
-  for (unsigned i = 0; i < [allScreens count]; ++i) {
-    NSScreen *aScreen = (NSScreen*) [allScreens objectAtIndex:i];
-    NSRect screenFrame = [aScreen frame];
-    float screenLowestY = screenFrame.origin.y;
-    float screenHighestY = screenFrame.origin.y + screenFrame.size.height;
-    if (screenLowestY < globalLowestY)
-      globalLowestY = screenLowestY;
-    if (screenHighestY > globalHighestY)
-      globalHighestY = screenHighestY;
-  }
-  return globalHighestY - globalLowestY;
+  NSArray* allScreens = [NSScreen screens];
+  if ([allScreens count])
+    return [[allScreens objectAtIndex:0] frame].size.height;
+  else
+    return 0; // If there are no screens, there's not much we can say.
+}
+
+
+float FlippedScreenY(float y)
+{
+  return MenuBarScreenHeight() - y;
 }
 
 
 NSRect geckoRectToCocoaRect(const nsRect &geckoRect)
 {
-  // We only need to change the Y coordinate by starting with the screen
+  // We only need to change the Y coordinate by starting with the primary screen
   // height, subtracting the gecko Y coordinate, and subtracting the height.
   return NSMakeRect(geckoRect.x,
-                    CocoaScreenCoordsHeight() - geckoRect.y - geckoRect.height,
+                    MenuBarScreenHeight() - (geckoRect.y + geckoRect.height),
                     geckoRect.width,
                     geckoRect.height);
 }
@@ -73,11 +71,11 @@ NSRect geckoRectToCocoaRect(const nsRect &geckoRect)
 
 nsRect cocoaRectToGeckoRect(const NSRect &cocoaRect)
 {
-  // We only need to change the Y coordinate by starting with the screen
+  // We only need to change the Y coordinate by starting with the primary screen
   // height and subtracting both the cocoa y origin and the height of the
   // cocoa rect.
   return nsRect((nscoord)cocoaRect.origin.x,
-                (nscoord)(CocoaScreenCoordsHeight() - (cocoaRect.origin.y + cocoaRect.size.height)),
+                (nscoord)(MenuBarScreenHeight() - (cocoaRect.origin.y + cocoaRect.size.height)),
                 (nscoord)cocoaRect.size.width,
                 (nscoord)cocoaRect.size.height);
 }

@@ -2554,6 +2554,51 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
   return NS_OK;
 }
 
+static PRUint8* Data32BitTo1Bit(PRUint8* aImageData,
+                                PRUint32 aImageBytesPerRow,
+                                PRUint32 aWidth, PRUint32 aHeight)
+{
+  // We need (aWidth + 7) / 8 bytes plus zero-padding up to a multiple of
+  // 4 bytes for each row (HBITMAP requirement). Bug 353553.
+  PRUint32 outBpr = ((aWidth + 31) / 8) & ~3;
+  
+  PRUint8* outData = new PRUint8[outBpr * aHeight];
+  if (!outData)
+    return NULL;
+
+  PRUint8 *outRow = outData,
+          *imageRow = aImageData;
+
+  for (PRUint32 curRow = 0; curRow < aHeight; curRow++) {
+    PRUint8 *irow = imageRow;
+    PRUint8 *nextOutRow = outRow + outBpr;
+    PRUint8 alphaPixels = 0;
+    PRUint8 offset = 7;
+
+    for (PRUint32 curCol = 0; curCol < aWidth; curCol++) {
+      if (imageRow[3] > 0)
+        alphaPixels |= (1 << offset);
+      imageRow += 4;
+        
+      if (offset == 0) {
+        *outRow++ = alphaPixels;
+        offset = 7;
+        alphaPixels = 0;
+      } else {
+        offset--;
+      }
+    }
+    if (offset != 7)
+      *outRow++ = alphaPixels;
+
+    imageRow = irow + aImageBytesPerRow;
+    while (outRow != nextOutRow)
+      *outRow++ = 0; // padding
+  }
+
+  return outData;
+}
+
 // static
 PRUint8* nsWindow::Data8BitTo1Bit(PRUint8* aAlphaData,
                                   PRUint32 aAlphaBytesPerRow,
@@ -2823,20 +2868,28 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
       }
     }
   }
-  HBITMAP bmp = DataToBitmap(bottomUpData, width, height, 32);
-
-  free(bottomUpData);
-
   frame->UnlockImageData();
+
+  PRUint8* a1data = Data32BitTo1Bit(bottomUpData, bpr, width, height);
+  if (!a1data) {
+    free(bottomUpData);
+    return NS_ERROR_FAILURE;
+  }
+
+  HBITMAP bmp = DataToBitmap(bottomUpData, width, height, 32);
+  HBITMAP mbmp = DataToBitmap(a1data, width, height, 1);
+  free(bottomUpData);
+  delete[] a1data;
 
   ICONINFO info = {0};
   info.fIcon = FALSE;
   info.xHotspot = aHotspotX;
   info.yHotspot = aHotspotY;
-  info.hbmMask = bmp;
+  info.hbmMask = mbmp;
   info.hbmColor = bmp;
   
   HCURSOR cursor = ::CreateIconIndirect(&info);
+  ::DeleteObject(mbmp);
   ::DeleteObject(bmp);
   if (cursor == NULL) {
     return NS_ERROR_FAILURE;

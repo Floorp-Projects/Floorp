@@ -90,6 +90,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
                                      const nsSize&        aAvailableSpace)
   : nsCSSOffsetState(aFrame, aRenderingContext)
   , mReflowDepth(0)
+  , mBlockDelta(0)
 {
   NS_PRECONDITION(aPresContext, "no pres context");
   NS_PRECONDITION(aRenderingContext, "no rendering context");
@@ -134,6 +135,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*           aPresContext,
   : nsCSSOffsetState(aFrame, aParentReflowState.rendContext)
   , mReflowDepth(aParentReflowState.mReflowDepth + 1)
   , mFlags(aParentReflowState.mFlags)
+  , mBlockDelta(0)
 {
   NS_PRECONDITION(aPresContext, "no pres context");
   NS_PRECONDITION(aFrame, "no frame");
