@@ -200,7 +200,6 @@ class nsCSSScanner {
 protected:
   PRInt32 Read(nsresult& aErrorCode);
   PRInt32 Peek(nsresult& aErrorCode);
-  void Unread();
   void Pushback(PRUnichar aChar);
   PRBool LookAhead(nsresult& aErrorCode, PRUnichar aChar);
   PRBool EatWhiteSpace(nsresult& aErrorCode);
