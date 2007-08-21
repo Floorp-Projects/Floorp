@@ -1390,6 +1390,8 @@ nsDocAccessible::FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
                                             EDupeEventRule aAllowDupes,
                                             PRBool aIsAsynch)
 {
+  NS_ENSURE_TRUE(aEvent, NS_ERROR_FAILURE);
+
   PRBool isTimerStarted = PR_TRUE;
   PRInt32 numQueuedEvents = mEventsToFire.Count();
   if (!mFireEventTimer) {
