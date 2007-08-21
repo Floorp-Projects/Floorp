@@ -9,7 +9,7 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == clipPath-basic-01.svg pass.svg # bug 37
 == foreignObject-move-repaint-01.svg pass.svg
 == foreignObject-overflow-01.svg pass.svg
 == getElementById-a-element-01.svg pass.svg
-fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == inline-in-xul-basic-01.xul pass.svg
+fails == inline-in-xul-basic-01.xul pass.svg
 == nested-viewBox-01.svg pass.svg
 fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == opacity-and-gradient-01.svg pass.svg # bug 379610
 == opacity-and-pattern-01.svg pass.svg
