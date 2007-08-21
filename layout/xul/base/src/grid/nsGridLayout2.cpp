@@ -44,6 +44,7 @@
 
 #include "nsGridLayout2.h"
 #include "nsGridRowGroupLayout.h"
+#include "nsGridRow.h"
 #include "nsBox.h"
 #include "nsIScrollableFrame.h"
 #include "nsSprocketLayout.h"
@@ -245,6 +246,16 @@ nsGridLayout2::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSize)
   }
 
   return rv;
+}
+
+PRInt32
+nsGridLayout2::BuildRows(nsIBox* aBox, nsGridRow* aRows)
+{
+  if (aBox) {
+    aRows[0].Init(aBox, PR_TRUE);
+    return 1;
+  }
+  return 0;
 }
 
 nsMargin
