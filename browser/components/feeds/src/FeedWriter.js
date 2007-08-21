@@ -847,6 +847,12 @@ FeedWriter.prototype = {
    * See nsIFeedWriter
    */
   close: function FW_close() {
+    this._document
+        .getElementById("handlersMenuPopup")
+        .removeEventListener("command", this, false);
+    this._document
+        .getElementById("subscribeButton")
+        .removeEventListener("command", this, false);
     this._document = null;
     this._window = null;
     var prefs =   
@@ -857,7 +863,11 @@ FeedWriter.prototype = {
     prefs.removeObserver(PREF_SELECTED_WEB, this);
     prefs.removeObserver(PREF_SELECTED_APP, this);
     this._removeFeedFromCache();
-
+    this.__faviconService = null;
+    this.__bundle = null;
+    this._selectedApplicationItemWrapped = null;
+    this._defaultSystemReaderItemWrapped = null;
+    this._FeedURI = null;
     var historySvc = Cc[NH_CONTRACTID].getService(Ci.nsINavHistoryService);
     historySvc.removeObserver(this);
   },
