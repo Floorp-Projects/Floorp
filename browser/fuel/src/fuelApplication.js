@@ -67,7 +67,7 @@ Console.prototype = {
       var wWatch = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
                              .getService(Ci.nsIWindowWatcher);
       wWatch.openWindow(null, "chrome://global/content/console.xul", "_blank",
-                        "chrome,dialog=no,all", cmdLine);
+                        "chrome,dialog=no,all", null);
     } else {
       // console was already open
       console.focus();
