@@ -301,7 +301,6 @@ nsresult NS_NewStreamConv(nsStreamConverterService **aStreamConv);
 #define MULTI_MIXED                  "?from=multipart/mixed&to=*/*"
 #define MULTI_BYTERANGES             "?from=multipart/byteranges&to=*/*"
 #define UNKNOWN_CONTENT              "?from=" UNKNOWN_CONTENT_TYPE "&to=*/*"
-#define MAYBE_TEXT                   "?from=" APPLICATION_MAYBE_TEXT "&to=*/*"
 #define GZIP_TO_UNCOMPRESSED         "?from=gzip&to=uncompressed"
 #define XGZIP_TO_UNCOMPRESSED        "?from=x-gzip&to=uncompressed"
 #define COMPRESS_TO_UNCOMPRESSED     "?from=compress&to=uncompressed"
@@ -321,7 +320,6 @@ static const char *const sStreamConverterArray[] = {
     MULTI_MIXED,
     MULTI_BYTERANGES,
     UNKNOWN_CONTENT,
-    MAYBE_TEXT,
     GZIP_TO_UNCOMPRESSED,
     XGZIP_TO_UNCOMPRESSED,
     COMPRESS_TO_UNCOMPRESSED,
@@ -855,8 +853,9 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
 
     { "Binary Detector",
       NS_BINARYDETECTOR_CID,
-      NS_ISTREAMCONVERTER_KEY MAYBE_TEXT,
-      CreateNewBinaryDetectorFactory
+      NS_BINARYDETECTOR_CONTRACTID,
+      CreateNewBinaryDetectorFactory,
+      nsBinaryDetector::Register
     },
 
     { "HttpCompressConverter", 
