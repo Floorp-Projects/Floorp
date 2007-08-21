@@ -213,7 +213,7 @@ ConvertGeckoRectToMacRect(const nsRect& aRect, Rect& outMacRect)
 static inline void
 FlipCocoaScreenCoordinate (NSPoint &inPoint)
 {  
-  inPoint.y = CocoaScreenCoordsHeight() - inPoint.y;
+  inPoint.y = FlippedScreenY(inPoint.y);
 }
   
 
