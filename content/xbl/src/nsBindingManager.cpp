@@ -843,26 +843,25 @@ nsBindingManager::ProcessAttachedQueue()
   mAttachedStack.Compact();
 }
 
+// Keep bindings and bound elements alive while executing detached handlers.
+struct BindingTableReadClosure
+{
+  nsCOMArray<nsIContent> mBoundElements;
+  nsBindingList          mBindings;
+};
+
 PR_STATIC_CALLBACK(PLDHashOperator)
 AccumulateBindingsToDetach(nsISupports *aKey, nsXBLBinding *aBinding,
-                           void* aVoidArray)
-{
-  nsVoidArray* arr = static_cast<nsVoidArray*>(aVoidArray);
-  // Hold an owning reference to this binding, just in case
-  if (arr->AppendElement(aBinding))
-    NS_ADDREF(aBinding);
+                           void* aClosure)
+ {
+  BindingTableReadClosure* closure =
+    static_cast<BindingTableReadClosure*>(aClosure);
+  if (aBinding && closure->mBindings.AppendElement(aBinding)) {
+    if (!closure->mBoundElements.AppendObject(aBinding->GetBoundElement())) {
+      closure->mBindings.RemoveElementAt(closure->mBindings.Length() - 1);
+    }
+  }
   return PL_DHASH_NEXT;
-}
-
-PR_STATIC_CALLBACK(PRBool)
-ExecuteDetachedHandler(void* aBinding, void* aClosure)
-{
-  NS_PRECONDITION(aBinding, "Null binding in list?");
-  nsXBLBinding* binding = static_cast<nsXBLBinding*>(aBinding);
-  binding->ExecuteDetachedHandler();
-  // Drop our ref to the binding now
-  NS_RELEASE(binding);
-  return PR_TRUE;
 }
 
 void
@@ -870,9 +869,12 @@ nsBindingManager::ExecuteDetachedHandlers()
 {
   // Walk our hashtable of bindings.
   if (mBindingTable.IsInitialized()) {
-    nsVoidArray bindingsToDetach;
-    mBindingTable.EnumerateRead(AccumulateBindingsToDetach, &bindingsToDetach);
-    bindingsToDetach.EnumerateForwards(ExecuteDetachedHandler, nsnull);
+    BindingTableReadClosure closure;
+    mBindingTable.EnumerateRead(AccumulateBindingsToDetach, &closure);
+    PRUint32 i, count = closure.mBindings.Length();
+    for (i = 0; i < count; ++i) {
+      closure.mBindings[i]->ExecuteDetachedHandler();
+    }
   }
 }
 
