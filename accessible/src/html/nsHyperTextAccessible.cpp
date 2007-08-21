@@ -1040,8 +1040,10 @@ nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY,
 
   while (NextChild(accessible)) {
     nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
-    nsIFrame *frame = accessNode->GetFrame();
-    NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
+    nsIFrame *primaryFrame = accessNode->GetFrame();
+    NS_ENSURE_TRUE(primaryFrame, NS_ERROR_FAILURE);
+
+    nsIFrame *frame = primaryFrame;
     while (frame) {
       nsIContent *content = frame->GetContent();
       NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
@@ -1055,7 +1057,9 @@ nsHyperTextAccessible::GetOffsetAtPoint(PRInt32 aX, PRInt32 aY,
             return NS_OK; // Not found, will return -1
           }
           PRUint32 addToOffset;
-          nsresult rv = ContentToRenderedOffset(frame, contentOffsets.offset, &addToOffset);
+          nsresult rv = ContentToRenderedOffset(primaryFrame,
+                                                contentOffsets.offset,
+                                                &addToOffset);
           NS_ENSURE_SUCCESS(rv, rv);
           offset += addToOffset;
         }
