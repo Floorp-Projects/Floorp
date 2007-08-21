@@ -52,6 +52,7 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIWindowWatcher.h"
 #include "nsIWindowMediator.h"
 #include "nsIPromptService.h"
@@ -66,8 +67,8 @@
 #include "mozStorageHelper.h"
 #include "nsIMutableArray.h"
 #include "nsIAlertsService.h"
-#include "nsIHttpChannel.h"
 #include "nsIPropertyBag2.h"
+#include "nsIHttpChannel.h"
 
 #ifdef XP_WIN
 #include <shlobj.h>
@@ -705,6 +706,180 @@ NS_IMETHODIMP
 nsDownloadManager::GetActiveDownloads(nsISimpleEnumerator **aResult)
 {
   return NS_NewArrayEnumerator(aResult, mCurrentDownloads);
+}
+
+NS_IMETHODIMP
+nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
+{
+  nsCOMPtr<nsILocalFile> downloadDir;
+
+  nsresult rv;
+  nsCOMPtr<nsIProperties> dirService =
+     do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // OSX:
+  // Safari download folder or Desktop/Downloads
+  // Vista:
+  // Downloads
+  // XP/2K:
+  // Desktop/Downloads
+  // Linux:
+  // Home/Downloads
+
+  nsXPIDLString folderName;
+  mBundle->GetStringFromName(NS_LITERAL_STRING("downloadsFolder").get(),
+                             getter_Copies(folderName));
+
+#if defined (XP_MACOSX)
+  nsCOMPtr<nsILocalFile> desktopDir;
+  rv = dirService->Get(NS_OSX_DEFAULT_DOWNLOAD_DIR,
+                       NS_GET_IID(nsILocalFile),
+                       getter_AddRefs(downloadDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = dirService->Get(NS_OSX_USER_DESKTOP_DIR,
+                       NS_GET_IID(nsILocalFile),
+                       getter_AddRefs(desktopDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Check to see if we have the desktop or the Safari downloads folder
+  PRBool equals;
+  rv = downloadDir->Equals(desktopDir, &equals);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (equals) {
+    rv = downloadDir->Append(folderName);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+#elif defined (XP_WIN)
+  rv = dirService->Get(NS_WIN_DEFAULT_DOWNLOAD_DIR,
+                       NS_GET_IID(nsILocalFile),
+                       getter_AddRefs(downloadDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Check the os version
+  #define NS_SYSTEMINFO_CONTRACTID "@mozilla.org/system-info;1"
+  nsCOMPtr<nsIPropertyBag2> infoService =
+     do_GetService(NS_SYSTEMINFO_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 version;
+  NS_NAMED_LITERAL_STRING(osVersion, "version");
+  rv = infoService->GetPropertyAsInt32(osVersion, &version);
+  if (version < 6) { // XP/2K
+    rv = downloadDir->Append(folderName);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+#else
+  rv = dirService->Get(NS_OS_HOME_DIR,
+                       NS_GET_IID(nsILocalFile),
+                       getter_AddRefs(downloadDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = downloadDir->Append(folderName);
+  NS_ENSURE_SUCCESS(rv, rv);
+#endif
+
+  NS_ADDREF(*aResult = downloadDir);
+
+  return NS_OK;
+}
+
+#define NS_BRANCH_DOWNLOAD     "browser.download."
+#define NS_PREF_FOLDERLIST     "folderList"
+#define NS_PREF_DIR            "dir"
+
+NS_IMETHODIMP
+nsDownloadManager::GetUserDownloadsDirectory(nsILocalFile **aResult)
+{
+  nsresult rv;
+  nsCOMPtr<nsIProperties> dirService =
+     do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrefService> prefService =
+     do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefService->GetBranch(NS_BRANCH_DOWNLOAD, 
+                              getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 val;
+  rv = prefBranch->GetIntPref(NS_PREF_FOLDERLIST,
+                              &val);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool bRes = PR_FALSE;
+
+  switch(val) {
+    case 0: // Desktop
+      {
+        nsCOMPtr<nsILocalFile> downloadDir;
+        nsCOMPtr<nsIProperties> dirService =
+           do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = dirService->Get(NS_OS_DESKTOP_DIR,
+                             NS_GET_IID(nsILocalFile),
+                             getter_AddRefs(downloadDir));
+        NS_ENSURE_SUCCESS(rv, rv);
+        NS_ADDREF(*aResult = downloadDir);
+        return NS_OK;
+      }
+      break;
+    case 1: // Downloads
+      {
+        rv = GetDefaultDownloadsDirectory(aResult); // refup
+        NS_ENSURE_SUCCESS(rv, rv);
+        (*aResult)->Exists(&bRes);
+        if (!bRes) {
+          rv = (*aResult)->Create(nsIFile::DIRECTORY_TYPE, 755);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
+        return NS_OK;
+      }
+      break;
+    case 2: // Custom
+      {
+        nsCOMPtr<nsISupportsString> customDirectory;
+        prefBranch->GetComplexValue(NS_PREF_DIR, 
+                                    NS_GET_IID(nsISupportsString),
+                                    getter_AddRefs(customDirectory));
+        if (customDirectory) {
+          nsCOMPtr<nsILocalFile> aFile = 
+            do_CreateInstance("@mozilla.org/file/local;1", &rv);
+          NS_ENSURE_SUCCESS(rv, rv);
+          nsAutoString dir;
+          customDirectory->GetData(dir);
+          rv = aFile->InitWithNativePath(NS_ConvertUTF16toUTF8(dir));
+          NS_ENSURE_SUCCESS(rv, rv);
+          aFile->Exists(&bRes);
+          if (bRes) {
+            NS_ADDREF(*aResult = aFile);
+            return NS_OK;
+          }
+          rv = aFile->Create(nsIFile::DIRECTORY_TYPE, 755);
+          NS_ENSURE_SUCCESS(rv, rv);
+          if (bRes) {
+            NS_ADDREF(*aResult = aFile);
+            return NS_OK;
+          }
+        }
+        rv = GetDefaultDownloadsDirectory(aResult); // refup
+        NS_ENSURE_SUCCESS(rv, rv);
+        (*aResult)->Exists(&bRes);
+        if (!bRes) {
+          rv = (*aResult)->Create(nsIFile::DIRECTORY_TYPE, 755);
+          NS_ENSURE_SUCCESS(rv, rv);
+          // Update dir pref
+          prefBranch->SetComplexValue(NS_PREF_DIR,
+                                      NS_GET_IID(nsILocalFile),
+                                      *aResult);
+        }
+        return NS_OK;
+      }
+      break;
+  }
+  return NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP

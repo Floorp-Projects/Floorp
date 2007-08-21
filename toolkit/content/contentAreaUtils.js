@@ -451,79 +451,35 @@ function getTargetFile(aFpP, aSkipPrompt)
 
   const nsILocalFile = Components.interfaces.nsILocalFile;
 
-  // ben 07/31/2003:
-  // |browser.download.defaultFolder| holds the default download folder for 
-  // all files when the user has elected to have all files automatically
-  // download to a folder. The values of |defaultFolder| can be either their
-  // desktop, their downloads folder (My Documents\My Downloads) or some other
-  // location of their choosing (which is mapped to |browser.download.dir|
-  // This pref is _unset_ when the user has elected to be asked about where
-  // to place every download - this will force the prompt to ask the user
-  // where to put saved files. 
-  var dir = null;
+  // For information on download folder preferences, see
+  // mozilla/browser/components/preferences/main.js
+  
   var useDownloadDir = prefs.getBoolPref("useDownloadDir");
+  var dir = null;
   
-  function getSpecialFolderKey(aFolderType) 
-  {
-    if (aFolderType == "Desktop")
-      return "Desk";
-    
-    if (aFolderType != "Downloads")
-      throw "ASSERTION FAILED: folder type should be 'Desktop' or 'Downloads'";
-    
-#ifdef XP_WIN
-    return "Pers";
-#else
-#ifdef XP_MACOSX
-    return "UsrDocs";
-#else
-    return "Home";
-#endif
-#endif
-  }
-  
-  function getDownloadsFolder(aFolder)
-  {
-    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
-                                .getService(Components.interfaces.nsIProperties);
-    
-    var dir = fileLocator.get(getSpecialFolderKey(aFolder), Components.interfaces.nsILocalFile);
-    
-    var bundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                           .getService(Components.interfaces.nsIStringBundleService);
-    bundle = bundle.createBundle("chrome://mozapps/locale/downloads/unknownContentType.properties");
-    
-    var description = bundle.GetStringFromName("myDownloads");
-    if (aFolder != "Desktop")
-      dir.append(description);
-    
-    return dir;
-  }
-  
-  switch (prefs.getIntPref("folderList")) {
-  case 0:
-    dir = getDownloadsFolder("Desktop")
-    break;
-  case 1:
-    dir = getDownloadsFolder("Downloads");
-    break;
-  case 2:
-    dir = prefs.getComplexValue("dir", nsILocalFile);
-    break;
-  }
-  
-  if (!aSkipPrompt || !useDownloadDir || !dir) {
-    // If we're asking the user where to save the file, root the Save As...
-    // dialog on they place they last picked. 
-    try {
-      dir = prefs.getComplexValue("lastDir", nsILocalFile);
+  try {
+    // On prompt operations, default to lastDir, on direct to folder
+    // downloads, default to the user's configured download folder.
+    // (right-click save image vs. drag-and-drop into download manager)
+    var lastDir = prefs.getComplexValue("lastDir", nsILocalFile);
+    var dnldMgr = Components.classes["@mozilla.org/download-manager;1"]
+                            .getService(Components.interfaces.nsIDownloadManager);
+    if (!aSkipPrompt) {
+      dir = lastDir;
+    } else {
+      dir = dnldMgr.userDownloadsDirectory;
     }
-    catch (e) {
-      // No default download location. Default to desktop. 
+  } catch (ex) {
+  }
+
+  if (!aSkipPrompt || !useDownloadDir || !dir || (dir && !dir.exists())) {
+    // If we're asking the user where to save the file, root the Save As...
+    // dialog on the place they last picked.
+    if (!dir || (dir && !dir.exists())) {
+      // Default to desktop.
       var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
                                   .getService(Components.interfaces.nsIProperties);
-      
-      dir = fileLocator.get(getSpecialFolderKey("Desktop"), nsILocalFile);
+      dir = fileLocator.get("Desk", nsILocalFile);
     }
 
     var fp = makeFilePicker();
@@ -548,7 +504,7 @@ function getTargetFile(aFpP, aSkipPrompt)
       catch (e) {
       }
     }
-  
+
     if (fp.show() == Components.interfaces.nsIFilePicker.returnCancel || !fp.file)
       return false;
     
