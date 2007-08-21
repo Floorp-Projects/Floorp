@@ -90,10 +90,13 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
     }
 
     PRUint32 role = Role(this);
+    if (role == nsIAccessibleRole::ROLE_GRAPHIC ||
+        role == nsIAccessibleRole::ROLE_IMAGE_MAP ||
+        role == nsIAccessibleRole::ROLE_TEXT_LEAF) {
+      return nsAccessible::QueryInterface(aIID, aInstancePtr);
+    }
+
     if (aIID.Equals(NS_GET_IID(nsIAccessibleText))) {
-      if (role == nsIAccessibleRole::ROLE_TEXT_LEAF) {
-        return NS_ERROR_NO_INTERFACE;
-      }
       *aInstancePtr = static_cast<nsIAccessibleText*>(this);
       NS_ADDREF_THIS();
       return NS_OK;
@@ -101,8 +104,7 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
 
     if (aIID.Equals(NS_GET_IID(nsIAccessibleHyperText))) {
       if (role == nsIAccessibleRole::ROLE_ENTRY ||
-          role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
-          role == nsIAccessibleRole::ROLE_TEXT_LEAF) {
+          role == nsIAccessibleRole::ROLE_PASSWORD_TEXT) {
         return NS_ERROR_NO_INTERFACE;
       }
       *aInstancePtr = static_cast<nsIAccessibleHyperText*>(this);
@@ -111,9 +113,6 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
     }
 
     if (aIID.Equals(NS_GET_IID(nsIAccessibleEditableText))) {
-      if (role == nsIAccessibleRole::ROLE_TEXT_LEAF) {
-        return NS_ERROR_NO_INTERFACE;
-      }
       *aInstancePtr = static_cast<nsIAccessibleEditableText*>(this);
       NS_ADDREF_THIS();
       return NS_OK;
