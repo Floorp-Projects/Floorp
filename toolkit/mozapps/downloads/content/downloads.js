@@ -262,6 +262,7 @@ function onDownloadDblClick(aEvent)
         gDownloadViewController.doCommand("cmd_resume");
         break;
       case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
+      case Ci.nsIDownloadManager.DOWNLOAD_BLOCKED:
       case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
         gDownloadViewController.doCommand("cmd_retry");
         break;
@@ -441,13 +442,21 @@ function Shutdown()
 
 ///////////////////////////////////////////////////////////////////////////////
 // View Context Menus
-var gContextMenus = [ 
+var gContextMenus = [
+  // DOWNLOAD_DOWNLOADING
   ["menuitem_pause", "menuitem_cancel"],
+  // DOWNLOAD_FINISHED
   ["menuitem_open", "menuitem_show", "menuitem_remove"],
+  // DOWNLOAD_FAILED
   ["menuitem_retry", "menuitem_remove"],
+  // DOWNLOAD_CANCELED
   ["menuitem_retry", "menuitem_remove"],
+  // DOWNLOAD_PAUSED
   ["menuitem_resume", "menuitem_cancel"],
-  ["menuitem_cancel"]
+  // DOWNLOAD_QUEUED
+  ["menuitem_cancel"],
+  // DOWNLOAD_BLOCKED
+  ["menuitem_retry", "menuitem_remove"]
 ];
 
 function buildContextMenu(aEvent)
@@ -740,7 +749,8 @@ function buildDownloadListWithTime(aTime)
                          "WHERE startTime >= ?1 " +
                          "AND (state = ?2 " +
                          "OR state = ?3 " +
-                         "OR state = ?4) " +
+                         "OR state = ?4 " +
+                         "OR state = ?5) " +
                          "ORDER BY endTime ASC");
   }
 
@@ -749,6 +759,7 @@ function buildDownloadListWithTime(aTime)
     stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_FINISHED);
     stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_FAILED);
     stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_CANCELED);
+    stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_BLOCKED);
     buildDownloadList(stmt, gDownloadsOtherTitle);
   } finally {
     stmt.reset();

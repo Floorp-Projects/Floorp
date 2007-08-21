@@ -77,6 +77,10 @@ richlistitem[type="download"] button,
   -moz-image-region: rect(32px, 16px, 48px, 0px);
 }
 
+.blockedIcon {
+  list-style-image: url(chrome://global/skin/icons/Error.png);
+}
+
 /* prevent flickering when changing states */
 .downloadTypeIcon {
   min-height: 32px;
