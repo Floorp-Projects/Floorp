@@ -132,6 +132,7 @@ FeedConverter.prototype = {
   _releaseHandles: function FC__releaseHandles() {
     this._listener = null;
     this._request = null;
+    this._processor = null;
   },
   
   /**
