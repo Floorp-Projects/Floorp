@@ -58,7 +58,7 @@ interface nsIAutoCompleteSearch : nsISupports
                    in nsIAutoCompleteObserver listener);
 
   /*
-   * Stop an asynchronous search that is in progress
+   * Stop all searches that are in progress
    */
   void stopSearch();
 };
