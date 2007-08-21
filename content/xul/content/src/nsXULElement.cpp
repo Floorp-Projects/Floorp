@@ -2234,6 +2234,10 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
     if (!doc || doc->GetRootContent() != this)
       return NS_ERROR_UNEXPECTED;
 
+    // only top level chrome documents can hide the window chrome
+    if (doc->GetParentDocument())
+      return NS_OK;
+
     nsIPresShell *shell = doc->GetPrimaryShell();
 
     if (shell) {
@@ -2242,7 +2246,7 @@ nsXULElement::HideWindowChrome(PRBool aShouldHide)
 
         nsPresContext *presContext = shell->GetPresContext();
 
-        if (frame && presContext) {
+        if (frame && presContext && presContext->IsChrome()) {
             nsIView* view = frame->GetClosestView();
 
             if (view) {
