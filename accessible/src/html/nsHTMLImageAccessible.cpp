@@ -144,10 +144,8 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetName(nsAString& aName)
 /* wstring getRole (); */
 NS_IMETHODIMP nsHTMLImageAccessible::GetRole(PRUint32 *_retval)
 {
-  PRInt32 numChildren;
-  GetChildCount(&numChildren);
-  *_retval = (numChildren > 0) ? nsIAccessibleRole::ROLE_IMAGE_MAP :
-                                 nsIAccessibleRole::ROLE_GRAPHIC;
+  *_retval = mMapElement ? nsIAccessibleRole::ROLE_IMAGE_MAP :
+                           nsIAccessibleRole::ROLE_GRAPHIC;
   return NS_OK;
 }
 
