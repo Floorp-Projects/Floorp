@@ -4377,7 +4377,11 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
   IsSafeToFlush(isSafeToFlush);
 
   NS_ASSERTION(!isSafeToFlush || mViewManager, "Must have view manager");
-  if (isSafeToFlush && mViewManager) {
+  // Make sure the view manager stays alive while batching view updates.
+  // XXX FIXME: If viewmanager hierarchy is modified while we're in update
+  //            batch... We need to address that somehow.  See bug 369165.
+  nsCOMPtr<nsIViewManager> viewManager = mViewManager;
+  if (isSafeToFlush && viewManager) {
     // Processing pending notifications can kill us, and some callers only
     // hold weak refs when calling FlushPendingNotifications().  :(
     nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
@@ -4385,27 +4389,15 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
     // Style reresolves not in conjunction with reflows can't cause
     // painting or geometry changes, so don't bother with view update
     // batching if we only have style reresolve
-    mViewManager->BeginUpdateViewBatch();
+    viewManager->BeginUpdateViewBatch();
 
     if (aType & Flush_StyleReresolves) {
       mFrameConstructor->ProcessPendingRestyles();
-      if (mIsDestroying) {
-        // We no longer have a view manager and all that.
-        // XXX FIXME: Except we're in the middle of a view update batch...  We
-        // need to address that somehow.  See bug 369165.
-        return NS_OK;
-      }
     }
 
-    if (aType & Flush_OnlyReflow) {
+    if (aType & Flush_OnlyReflow && !mIsDestroying) {
       mFrameConstructor->RecalcQuotesAndCounters();
       ProcessReflowCommands(PR_FALSE);
-      if (mIsDestroying) {
-        // We no longer have a view manager and all that.
-        // XXX FIXME: Except we're in the middle of a view update batch...  We
-        // need to address that somehow.  See bug 369165.
-        return NS_OK;
-      }
     }
 
     PRUint32 updateFlags = NS_VMREFRESH_NO_SYNC;
@@ -4420,7 +4412,7 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
       // at the end of this view batch.
       updateFlags = NS_VMREFRESH_DEFERRED;
     }
-    mViewManager->EndUpdateViewBatch(updateFlags);
+    viewManager->EndUpdateViewBatch(updateFlags);
   }
 
   return NS_OK;
