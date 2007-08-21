@@ -1533,7 +1533,7 @@ js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, jsval *vp)
         }
         if (outer == obj) {
             *vp = JSVAL_TRUE;
-        } else if (OBJ_IS_NATIVE(obj2) && OBJ_GET_CLASS(cx, obj2) == clasp) {
+        } else if (OBJ_IS_NATIVE(obj2) && OBJ_GET_CLASS(cx, obj) == clasp) {
             /*
              * The combination of JSPROP_SHARED and JSPROP_PERMANENT in a
              * delegated property makes that property appear to be direct in
