@@ -134,6 +134,10 @@ endif # WINNT
 ifeq ($(OS_ARCH),WINNT)
 # we want to copy PDB files on Windows
 MAKE_SYM_STORE_ARGS := -c
+ifeq (,$(CYGWIN_WRAPPER))
+# this doesn't work with Cygwin Python
+MAKE_SYM_STORE_ARGS += --vcs-info
+endif
 DUMP_SYMS_BIN ?= $(topsrcdir)/toolkit/crashreporter/tools/win32/dump_syms.exe
 # PDB files don't get moved to dist, so we need to scan the whole objdir
 MAKE_SYM_STORE_PATH := .
