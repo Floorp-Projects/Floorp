@@ -49,6 +49,9 @@
 #include "prmem.h"
 #include "nsCRT.h"
 #include "nsplugindefs.h"
+#include "nsThreadUtils.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
@@ -146,6 +149,8 @@ nsIWidget         * gRollupWidget   = nsnull;
 + (BOOL)mouseEventIsOverRollupWidget:(NSEvent *)anEvent;
 
 - (void)maybeInitContextMenuTracking;
+
+- (nsChildView *)getGeckoChild;
 
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
@@ -2485,6 +2490,52 @@ NSEvent* globalDragEvent = nil;
 }
 
 
+- (nsChildView *)getGeckoChild
+{
+  return mGeckoChild;
+}
+
+
+// Browsers that use non-native context menus (e.g. Cocoa widgets Firefox as
+// opposed to Camino) need to postpone generating a context menu until after
+// the previous one (if one exists) has had a chance to close.  The reason why
+// is that, as of the fix for bmo bug 279703, non-native context menus are
+// hidden asynchronously (after a call to gRollupListener->Rollup()), using an
+// nsXULPopupHidingEvent.  If we don't asynchronously generate non-native
+// context menus, only the first control-click or right-click in a window will
+// display a context menu.  This change resolves bmo bug 389542.
+class nsNonNativeContextMenuEvent : public nsRunnable {
+  public:
+    nsNonNativeContextMenuEvent(ChildView *baseView, NSEvent *triggerEvent) {
+      mBaseView = [baseView retain];
+      mTriggerEvent = [triggerEvent retain];
+    }
+
+    virtual ~nsNonNativeContextMenuEvent() {
+      [mBaseView release];
+      [mTriggerEvent release];
+    }
+
+    NS_IMETHOD Run() {
+      if (!mBaseView || !mTriggerEvent)
+        return NS_ERROR_FAILURE;
+      nsChildView *geckoChild = [mBaseView getGeckoChild];
+      if (!geckoChild)
+        return NS_ERROR_FAILURE;
+      nsMouseEvent geckoEvent(PR_TRUE, NS_CONTEXTMENU, nsnull, nsMouseEvent::eReal);
+      [mBaseView convertCocoaMouseEvent:mTriggerEvent toGeckoEvent:&geckoEvent];
+      geckoEvent.button = nsMouseEvent::eRightButton;
+      geckoChild->DispatchMouseEvent(geckoEvent);
+      [mBaseView maybeInitContextMenuTracking];
+      return NS_OK;
+    }
+
+  private:
+    ChildView *mBaseView;
+    NSEvent *mTriggerEvent;
+};
+
+
 - (void)mouseDown:(NSEvent *)theEvent
 {
   // Make sure this view is not in the rollup widget. The fastest way to do this
@@ -2543,18 +2594,6 @@ NSEvent* globalDragEvent = nil;
   geckoEvent.nativeMsg = &macEvent;
 
   mGeckoChild->DispatchMouseEvent(geckoEvent);
-
-  // if this is a right button click (either actual right click or ctrl-click) send
-  // a context menu event
-  if (geckoEvent.button == nsMouseEvent::eRightButton) {
-    nsMouseEvent geckoCMEvent(PR_TRUE, NS_CONTEXTMENU, nsnull, nsMouseEvent::eReal);
-    [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoCMEvent];
-    geckoCMEvent.nativeMsg = &macEvent;
-    geckoCMEvent.isControl = ((modifierFlags & NSControlKeyMask) != 0);
-    mGeckoChild->DispatchMouseEvent(geckoCMEvent);
-    // Initialize menu tracking if using custom context menus.
-    [self maybeInitContextMenuTracking];
-  }
 
   // XXX maybe call markedTextSelectionChanged:client: here?
 }
@@ -3038,18 +3077,42 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 {
   if (!mGeckoChild || [self isPluginView])
     return nil;
+
+  // Roll up a non-native context menu if one is open and we're not it.  We do
+  // this check here (as well as in mouseDown: and rightMouseDown:) because
+  // sometimes menuForEvent: is called before the associated mouse-down
+  // method is called.
+  if (gRollupWidget) {
+    NSWindow *ourNativeWindow = [self nativeWindow];
+    NSWindow *rollupNativeWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+    if (ourNativeWindow != rollupNativeWindow) {
+      // roll up any popups
+      if (gRollupListener != nsnull)
+        gRollupListener->Rollup();
+    }
+  }
   
   [mLastMenuForEventEvent release];
   mLastMenuForEventEvent = [theEvent retain];
   
-  // Fire the context menu event into Gecko.
-  nsMouseEvent geckoEvent(PR_TRUE, NS_CONTEXTMENU, nsnull, nsMouseEvent::eReal);
-  [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.button = nsMouseEvent::eRightButton;
-  mGeckoChild->DispatchMouseEvent(geckoEvent);
-
-  // Initialize menu tracking if using custom context menus.
-  [self maybeInitContextMenuTracking];
+  // If we're running in a browser that (like Camino) uses native context
+  // menus, fire a context menu event into Gecko here.  Otherwise (if we're
+  // using non-native context menus) we need to open the context menu
+  // asynchronously.
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    PRBool useNativeContextMenus;
+    nsresult rv = prefs->GetBoolPref("ui.use_native_popup_windows", &useNativeContextMenus);
+    if (NS_SUCCEEDED(rv) && useNativeContextMenus) {
+      nsMouseEvent geckoEvent(PR_TRUE, NS_CONTEXTMENU, nsnull, nsMouseEvent::eReal);
+      [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
+      geckoEvent.button = nsMouseEvent::eRightButton;
+      mGeckoChild->DispatchMouseEvent(geckoEvent);
+    } else {
+      nsIRunnable *contextMenuEvent = new nsNonNativeContextMenuEvent(self, theEvent);
+      NS_DispatchToCurrentThread(contextMenuEvent);
+    }
+  }
   
   // Go up our view chain to fetch the correct menu to return.
   return [self contextMenu];
