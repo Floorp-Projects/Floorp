@@ -199,6 +199,7 @@ frame/req.h
 freetype/freetype.h
 freetype/ftcache.h
 freetype/ftglyph.h
+freetype/ftsynth.h
 freetype/ftoutln.h
 freetype/ttnameid.h
 freetype/tttables.h
