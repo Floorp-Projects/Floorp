@@ -99,9 +99,14 @@ interface nsIHandlerInfo : nsISupports {
      * Launches the application with the specified URI, in a way that
      * depends on the value of preferredAction. preferredAction must be
      * useHelperApp or useSystemDefault.
+     *  
+     * @note Only the URI scheme is used to determine how to launch.  This is
+     * essentially a pass-by-value operation.  This means that in the case of
+     * a file: URI, the handler that is registered for file: will be launched
+     * and our code will not make any decision based on the content-type or
+     * extension, though the invoked file: handler is free to do so. 
      *
-     * @param aURI The URI to launch this application with; this may or may
-     *              not be a local file.
+     * @param aURI The URI to launch this application with
      *
      * @throw NS_ERROR_INVALID_ARG if action is not valid for this function.
      * Other exceptions may be thrown.
@@ -142,7 +147,7 @@ interface nsIHandlerInfo : nsISupports {
  * MIMEInfo objects are generally retrieved from the MIME Service
  * @see nsIMIMEService
  */
-[scriptable, uuid(ba01eb13-c2fd-4652-94f8-b33c61e6d77e)]
+[scriptable, uuid(a4011016-81a1-47d9-b01e-19a2272ae89b)]
 interface nsIMIMEInfo : nsIHandlerInfo {
     /**
      * Gives you an array of file types associated with this type.
@@ -200,6 +205,18 @@ interface nsIMIMEInfo : nsIHandlerInfo {
      * @returns PR_TRUE if the two are considered equal
      */
     boolean equals(in nsIMIMEInfo aMIMEInfo);
+
+    /**
+     * Launches the application with the specified file, in a way that
+     * depends on the value of preferredAction. preferredAction must be
+     * useHelperApp or useSystemDefault.
+     *
+     * @param aFile The file to launch this application with.
+     *
+     * @throw NS_ERROR_INVALID_ARG if action is not valid for this function.
+     * Other exceptions may be thrown.
+     */
+    void launchWithFile(in nsIFile aFile);
 };
 
 /**
