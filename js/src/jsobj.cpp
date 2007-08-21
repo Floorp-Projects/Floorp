@@ -1520,15 +1520,20 @@ js_HasOwnPropertyHelper(JSContext *cx, JSLookupPropOp lookup, jsval *vp)
     } else {
         JSClass *clasp;
         JSExtendedClass *xclasp;
+        JSObject *outer;
 
-        clasp = OBJ_GET_CLASS(cx, obj);
-        xclasp = (clasp->flags & JSCLASS_IS_EXTENDED)
-                 ? (JSExtendedClass *)clasp
-                 : NULL;
-        if (xclasp && xclasp->outerObject &&
-            xclasp->outerObject(cx, obj2) == obj) {
+        clasp = OBJ_GET_CLASS(cx, obj2);
+        if (!(clasp->flags & JSCLASS_IS_EXTENDED) ||
+            !(xclasp = (JSExtendedClass *) clasp)->outerObject) {
+            outer = NULL;
+        } else {
+            outer = xclasp->outerObject(cx, obj2);
+            if (!outer)
+                return JS_FALSE;
+        }
+        if (outer == obj) {
             *vp = JSVAL_TRUE;
-        } else if (OBJ_IS_NATIVE(obj2) && OBJ_GET_CLASS(cx, obj2) == clasp) {
+        } else if (OBJ_IS_NATIVE(obj2) && OBJ_GET_CLASS(cx, obj) == clasp) {
             /*
              * The combination of JSPROP_SHARED and JSPROP_PERMANENT in a
              * delegated property makes that property appear to be direct in

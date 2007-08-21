@@ -273,6 +273,7 @@ res\entityTables\transliterate.properties
 res\fonts\fontEncoding.properties
 
 ; needed for ftp:// dir listings etc
+res\html\folder.png
 res\html\gopher-audio.gif
 res\html\gopher-binary.gif
 res\html\gopher-find.gif

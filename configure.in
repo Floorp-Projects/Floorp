@@ -2920,7 +2920,40 @@ else
 
 	LDFLAGS="$_SAVE_LDFLAGS"
 
+    dnl ========================================================
+    dnl = Check for freetype2 and its functionality
+    dnl ========================================================
     AC_CHECK_FT2(6.1.0, [_HAVE_FREETYPE2=1], [_HAVE_FREETYPE2=])
+
+    if test "$_HAVE_FREETYPE2"; then
+    	_SAVE_LIBS="$LIBS"
+    	_SAVE_CFLAGS="$CFLAGS"
+    	LIBS="$LIBS $FT2_LIBS"
+    	CFLAGS="$CFLAGS $FT2_CFLAGS"
+
+        AC_CACHE_CHECK(for FT_Bitmap_Size.y_ppem,
+            ac_cv_member_FT_Bitmap_Size_y_ppem,
+            [AC_TRY_COMPILE([#include <ft2build.h>
+                             #include FT_FREETYPE_H],
+                            [FT_Bitmap_Size s;
+                             if (sizeof s.y_ppem) return 0;
+                             return 1],
+                            ac_cv_member_FT_Bitmap_Size_y_ppem=yes,
+                            ac_cv_member_FT_Bitmap_Size_y_ppem=no)])
+        if test "$ac_cv_member_FT_Bitmap_Size_y_ppem" = yes; then
+            HAVE_FT_BITMAP_SIZE_Y_PPEM=1
+        else
+            HAVE_FT_BITMAP_SIZE_Y_PPEM=0
+        fi
+        AC_DEFINE_UNQUOTED(HAVE_FT_BITMAP_SIZE_Y_PPEM,
+                           $HAVE_FT_BITMAP_SIZE_Y_PPEM,
+                           [FT_Bitmap_Size structure includes y_ppem field])
+
+        AC_CHECK_FUNCS(FT_GlyphSlot_Embolden FT_Load_Sfnt_Table FT_Select_Size)
+
+    	LIBS="$_SAVE_LIBS"
+    	CFLAGS="$_SAVE_CFLAGS"
+    fi
 
 fi # $no_x
 
@@ -5769,7 +5802,9 @@ MOZ_ARG_ENABLE_BOOL(places,
     MOZ_PLACES= )
 if test -n "$MOZ_PLACES"; then
     AC_DEFINE(MOZ_PLACES)
-    MOZ_MORK=
+    if test -z "$MOZ_MAIL_NEWS"; then
+      MOZ_MORK=
+    fi
     MOZ_MORKREADER=1
 else
   if test "$MOZ_BUILD_APP" = "browser"; then
@@ -6639,6 +6674,10 @@ MOZ_ARG_DISABLE_BOOL(md,
   [dnl Default is to turn on -MD if using GNU-compatible compilers
    if test "$GNU_CC" -a "$GNU_CXX" -a "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "WINCE"; then
      _cpp_md_flag=1
+   fi
+  dnl Default is to use -xM if using Sun Studio on Solaris
+   if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+     _cpp_md_flag=1
    fi])
 if test "$_cpp_md_flag"; then
   COMPILER_DEPEND=1
@@ -6646,6 +6685,10 @@ if test "$_cpp_md_flag"; then
     _DEPEND_CFLAGS='$(subst =, ,$(filter-out %/.pp,-MM=-MD=-MF=$(MDDEPDIR)/$(*F).pp))'
   else
     _DEPEND_CFLAGS='$(filter-out %/.pp,-Wp,-MD,$(MDDEPDIR)/$(*F).pp)'
+  fi
+  dnl Sun Studio on Solaris use -xM instead of -MD, see config/rules.mk
+  if test -z "$GNU_CC" && test -z "$GNU_CXX" && test "$OS_ARCH" = "SunOS"; then
+    _DEPEND_CFLAGS=
   fi
 else
   COMPILER_DEPEND=
@@ -7030,7 +7073,7 @@ MOZ_NATIVE_LCMS= )
 if test -z "$MOZ_NATIVE_LCMS"
 then
     LCMS_CFLAGS=
-    if test "$OS_ARCH" = "WINNT"; then
+    if test "$_WIN32_MSVC"; then
         if test -z "$BUILD_STATIC_LIBS" -a -z "$MOZ_ENABLE_LIBXUL"; then
             LCMS_CFLAGS=-DLCMS_DLL
         fi

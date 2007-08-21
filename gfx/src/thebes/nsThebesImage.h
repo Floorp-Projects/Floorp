@@ -103,6 +103,8 @@ public:
         return mImageSurface;
     }
 
+    void SetHasNoAlpha();
+
 protected:
     static PRBool AllowedImageSize(PRInt32 aWidth, PRInt32 aHeight) {
         NS_ASSERTION(aWidth > 0, "invalid image width");

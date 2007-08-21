@@ -102,10 +102,10 @@ struct nsMargin;
 typedef class nsIFrame nsIBox;
 
 // IID for the nsIFrame interface 
-// 4c0cfb5b-864d-46c5-ad78-b1b4de35a4c3
+// 39681dd7-5db6-4e38-b84c-5d9a163c987a
 #define NS_IFRAME_IID \
-{ 0x4c0cfb5b, 0x864d, 0x46c5, \
-  { 0xad, 0x78, 0xb1, 0xb4, 0xde, 0x35, 0xa4, 0xc3 } }
+{ 0x39681dd7, 0x5db6, 0x4e38, \
+  { 0xb8, 0x4c, 0x5d, 0x9a, 0x16, 0x3c, 0x98, 0x7a } }
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
@@ -991,9 +991,7 @@ public:
    * the content. This point should be on the baseline of text with
    * the correct horizontal offset
    */
-  NS_IMETHOD  GetPointFromOffset(nsPresContext*          inPresContext,
-                                 nsIRenderingContext*     inRendContext,
-                                 PRInt32                  inOffset,
+  NS_IMETHOD  GetPointFromOffset(PRInt32                  inOffset,
                                  nsPoint*                 outPoint) = 0;
   
   /**

@@ -551,4 +551,3 @@ NS_IMETHODIMP gfxImageFrame::GetInterface(const nsIID & aIID, void * *result)
 
   return NS_NOINTERFACE;
 }
- 

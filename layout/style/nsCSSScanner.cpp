@@ -747,94 +747,92 @@ PRBool nsCSSScanner::NextURL(nsresult& aErrorCode, nsCSSToken& aToken)
   if (ch < 0) {
     return PR_FALSE;
   }
-  if (ch < 256) {
-    PRUint8* lexTable = gLexTable;
+  PRUint8* lexTable = gLexTable;
 
-    // STRING
-    if ((ch == '"') || (ch == '\'')) {
-      return ParseString(aErrorCode, ch, aToken);
-    }
+  // STRING
+  if ((ch == '"') || (ch == '\'')) {
+    return ParseString(aErrorCode, ch, aToken);
+  }
 
-    // WS
-    if ((lexTable[ch] & IS_WHITESPACE) != 0) {
-      aToken.mType = eCSSToken_WhiteSpace;
-      aToken.mIdent.Assign(PRUnichar(ch));
-      (void) EatWhiteSpace(aErrorCode);
-      return PR_TRUE;
-    }
-    if (ch == '/') {
-      PRInt32 nextChar = Peek(aErrorCode);
-      if (nextChar == '*') {
-        (void) Read(aErrorCode);
+  // WS
+  if (ch < 256 && (lexTable[ch] & IS_WHITESPACE) != 0) {
+    aToken.mType = eCSSToken_WhiteSpace;
+    aToken.mIdent.Assign(PRUnichar(ch));
+    (void) EatWhiteSpace(aErrorCode);
+    return PR_TRUE;
+  }
+  if (ch == '/') {
+    PRInt32 nextChar = Peek(aErrorCode);
+    if (nextChar == '*') {
+      (void) Read(aErrorCode);
 #if 0
-        // If we change our storage data structures such that comments are
-        // stored (for Editor), we should reenable this code, condition it
-        // on being in editor mode, and apply glazou's patch from bug
-        // 60290.
-        aToken.mIdent.SetCapacity(2);
-        aToken.mIdent.Assign(PRUnichar(ch));
-        aToken.mIdent.Append(PRUnichar(nextChar));
-        return ParseCComment(aErrorCode, aToken);
+      // If we change our storage data structures such that comments are
+      // stored (for Editor), we should reenable this code, condition it
+      // on being in editor mode, and apply glazou's patch from bug
+      // 60290.
+      aToken.mIdent.SetCapacity(2);
+      aToken.mIdent.Assign(PRUnichar(ch));
+      aToken.mIdent.Append(PRUnichar(nextChar));
+      return ParseCComment(aErrorCode, aToken);
 #endif
-        return SkipCComment(aErrorCode) && Next(aErrorCode, aToken);
+      return SkipCComment(aErrorCode) && Next(aErrorCode, aToken);
+    }
+  }
+
+  // Process a url lexical token. A CSS1 url token can contain
+  // characters beyond identifier characters (e.g. '/', ':', etc.)
+  // Because of this the normal rules for tokenizing the input don't
+  // apply very well. To simplify the parser and relax some of the
+  // requirements on the scanner we parse url's here. If we find a
+  // malformed URL then we emit a token of type "InvalidURL" so that
+  // the CSS1 parser can ignore the invalid input. We attempt to eat
+  // the right amount of input data when an invalid URL is presented.
+
+  aToken.mType = eCSSToken_InvalidURL;
+  nsString& ident = aToken.mIdent;
+  ident.SetLength(0);
+
+  if (ch == ')') {
+    Pushback(ch);
+    // empty url spec; just get out of here
+    aToken.mType = eCSSToken_URL;
+  } else {
+    // start of a non-quoted url
+    Pushback(ch);
+    PRBool ok = PR_TRUE;
+    for (;;) {
+      ch = Read(aErrorCode);
+      if (ch < 0) break;
+      if (ch == CSS_ESCAPE) {
+        ParseAndAppendEscape(aErrorCode, ident);
+      } else if ((ch == '"') || (ch == '\'') || (ch == '(')) {
+        // This is an invalid URL spec
+        ok = PR_FALSE;
+      } else if ((256 > ch) && ((gLexTable[ch] & IS_WHITESPACE) != 0)) {
+        // Whitespace is allowed at the end of the URL
+        (void) EatWhiteSpace(aErrorCode);
+        if (LookAhead(aErrorCode, ')')) {
+          Pushback(')');  // leave the closing symbol
+          // done!
+          break;
+        }
+        // Whitespace is followed by something other than a
+        // ")". This is an invalid url spec.
+        ok = PR_FALSE;
+      } else if (ch == ')') {
+        Unread();
+        // All done
+        break;
+      } else {
+        // A regular url character.
+        ident.Append(PRUnichar(ch));
       }
     }
 
-    // Process a url lexical token. A CSS1 url token can contain
-    // characters beyond identifier characters (e.g. '/', ':', etc.)
-    // Because of this the normal rules for tokenizing the input don't
-    // apply very well. To simplify the parser and relax some of the
-    // requirements on the scanner we parse url's here. If we find a
-    // malformed URL then we emit a token of type "InvalidURL" so that
-    // the CSS1 parser can ignore the invalid input. We attempt to eat
-    // the right amount of input data when an invalid URL is presented.
-
-    aToken.mType = eCSSToken_InvalidURL;
-    nsString& ident = aToken.mIdent;
-    ident.SetLength(0);
-
-    if (ch == ')') {
-      Pushback(ch);
-      // empty url spec; just get out of here
+    // If the result of the above scanning is ok then change the token
+    // type to a useful one.
+    if (ok) {
       aToken.mType = eCSSToken_URL;
-    } else {
-      // start of a non-quoted url
-      Pushback(ch);
-      PRBool ok = PR_TRUE;
-      for (;;) {
-        ch = Read(aErrorCode);
-        if (ch < 0) break;
-        if (ch == CSS_ESCAPE) {
-          ParseAndAppendEscape(aErrorCode, ident);
-        } else if ((ch == '"') || (ch == '\'') || (ch == '(')) {
-          // This is an invalid URL spec
-          ok = PR_FALSE;
-        } else if ((256 > ch) && ((gLexTable[ch] & IS_WHITESPACE) != 0)) {
-          // Whitespace is allowed at the end of the URL
-          (void) EatWhiteSpace(aErrorCode);
-          if (LookAhead(aErrorCode, ')')) {
-            Pushback(')');  // leave the closing symbol
-            // done!
-            break;
-          }
-          // Whitespace is followed by something other than a
-          // ")". This is an invalid url spec.
-          ok = PR_FALSE;
-        } else if (ch == ')') {
-          Unread();
-          // All done
-          break;
-        } else {
-          // A regular url character.
-          ident.Append(PRUnichar(ch));
-        }
-      }
-
-      // If the result of the above scanning is ok then change the token
-      // type to a useful one.
-      if (ok) {
-        aToken.mType = eCSSToken_URL;
-      }
     }
   }
   return PR_TRUE;

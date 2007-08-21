@@ -124,7 +124,7 @@ protected:
    */
   nsIContent* GetSelect();
 
-  PRPackedBool mIsInitialized;
+  PRPackedBool mSelectedChanged;
   PRPackedBool mIsSelected;
 };
 
@@ -154,7 +154,7 @@ NS_NewHTMLOptionElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
 
 nsHTMLOptionElement::nsHTMLOptionElement(nsINodeInfo *aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
-    mIsInitialized(PR_FALSE),
+    mSelectedChanged(PR_FALSE),
     mIsSelected(PR_FALSE)
 {
 }
@@ -171,13 +171,14 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLOptionElement, nsGenericElement)
 
 
 // QueryInterface implementation for nsHTMLOptionElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLOptionElement, nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLOptionElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLOptionElement)
-  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
-  NS_INTERFACE_MAP_ENTRY(nsIOptionElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLOptionElement)
-NS_HTML_CONTENT_INTERFACE_MAP_END
+NS_HTML_CONTENT_INTERFACE_TABLE_HEAD(nsHTMLOptionElement,
+                                     nsGenericHTMLElement)
+  NS_INTERFACE_TABLE_INHERITED4(nsHTMLOptionElement,
+                                nsIDOMHTMLOptionElement,
+                                nsIDOMNSHTMLOptionElement,
+                                nsIJSNativeInitializer,
+                                nsIOptionElement)
+NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLOptionElement)
 
 
 NS_IMPL_ELEMENT_CLONE(nsHTMLOptionElement)
@@ -201,7 +202,7 @@ nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP
 nsHTMLOptionElement::SetSelectedInternal(PRBool aValue, PRBool aNotify)
 {
-  mIsInitialized = PR_TRUE;
+  mSelectedChanged = PR_TRUE;
   mIsSelected = aValue;
 
   if (aNotify) {
@@ -240,19 +241,9 @@ nsHTMLOptionElement::GetSelected(PRBool* aValue)
   NS_ENSURE_ARG_POINTER(aValue);
   *aValue = PR_FALSE;
 
-  // If it's not initialized, initialize it.
-  if (!mIsInitialized) {
-    mIsInitialized = PR_TRUE;
-    PRBool selected;
-    GetDefaultSelected(&selected);
-    // This does not need to be SetSelected (which sets selected in the select)
-    // because we *will* be initialized when we are placed into a select.  Plus
-    // it seems like that's just inviting an infinite loop.
-    // We can pass |aNotify == PR_FALSE| since |GetSelected| is called
-    // from |nsHTMLSelectElement::InsertOptionsIntoList|, which is
-    // guaranteed to be called before frames are created for the
-    // content.
-    SetSelectedInternal(selected, PR_FALSE);
+  // If we haven't been explictly selected or deselected, use our default value
+  if (!mSelectedChanged) {
+    return GetDefaultSelected(aValue);
   }
 
   *aValue = mIsSelected;

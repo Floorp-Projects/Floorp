@@ -468,8 +468,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsPIDOMEventTarget* aTarget,
   } else {
     scriptTarget = aTarget;
   }
-  // XXX - apparently we should not be using the global as the scope - what
-  // should we use?  See bug 339649, which is trying to find out!
+
   void *scope = boundGlobal->GetScriptGlobal(stID);
 
   PRUint32 argCount;

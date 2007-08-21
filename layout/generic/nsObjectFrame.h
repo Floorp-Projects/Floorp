@@ -166,6 +166,11 @@ protected:
    */
   void FixupWindow(const nsSize& aSize);
 
+  /**
+   * Sets up the plugin window and calls SetWindow on the plugin.
+   */
+  void CallSetWindow();
+
   PRBool IsFocusable(PRInt32 *aTabIndex = nsnull, PRBool aWithMouse = PR_FALSE);
 
   // check attributes and optionally CSS to see if we should display anything

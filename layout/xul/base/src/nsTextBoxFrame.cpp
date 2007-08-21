@@ -237,6 +237,11 @@ nsTextBoxFrame::UpdateAccesskey(nsWeakFrame& aWeakThis)
     nsCOMPtr<nsIDOMXULLabelElement> labelElement = do_QueryInterface(mContent);
     if (labelElement) {
         // Accesskey may be stored on control.
+        // Because this method is called by the reflow callback, current context
+        // may not be the right one. Pushing the context of mContent so that
+        // if nsIDOMXULLabelElement is implemented in XBL, we don't get a
+        // security exception.
+        nsCxPusher cx(mContent);
         labelElement->GetAccessKey(accesskey);
         NS_ENSURE_TRUE(aWeakThis.IsAlive(), PR_FALSE);
     }

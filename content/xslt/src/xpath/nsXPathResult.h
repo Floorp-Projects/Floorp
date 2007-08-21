@@ -45,17 +45,19 @@
 #include "nsStubMutationObserver.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
+#include "nsWeakPtr.h"
 
-// {15b9b301-2012-11d6-a7f2-e6d0a678995c}
+// {662f2c9a-c7cd-4cab-9349-e733df5a838c}
 #define NS_IXPATHRESULT_IID \
-{ 0x15b9b301, 0x2012, 0x11d6, {0xa7, 0xf2, 0xe6, 0xd0, 0xa6, 0x78, 0x99, 0x5c }}
+{ 0x662f2c9a, 0xc7cd, 0x4cab, {0x93, 0x49, 0xe7, 0x33, 0xdf, 0x5a, 0x83, 0x8c }}
 
 class nsIXPathResult : public nsISupports
 {
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPATHRESULT_IID)
     virtual nsresult SetExprResult(txAExprResult *aExprResult,
-                                   PRUint16 aResultType) = 0;
+                                   PRUint16 aResultType,
+                                   nsINode* aContextNode) = 0;
     virtual nsresult GetExprResult(txAExprResult **aExprResult) = 0;
     virtual nsresult Clone(nsIXPathResult **aResult) = 0;
 };
@@ -112,7 +114,8 @@ public:
     NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
     // nsIXPathResult interface
-    nsresult SetExprResult(txAExprResult *aExprResult, PRUint16 aResultType);
+    nsresult SetExprResult(txAExprResult *aExprResult, PRUint16 aResultType,
+                           nsINode* aContextNode);
     nsresult GetExprResult(txAExprResult **aExprResult);
     nsresult Clone(nsIXPathResult **aResult);
 
@@ -133,12 +136,13 @@ private:
                mResultType == ANY_UNORDERED_NODE_TYPE;
     }
 
-    void Invalidate();
+    void Invalidate(const nsIContent* aChangeRoot);
 
     txResultHolder mResult;
     nsCOMPtr<nsIDocument> mDocument;
     PRUint32 mCurrentPos;
     PRUint16 mResultType;
+    nsWeakPtr mContextNode;
     PRPackedBool mInvalidIteratorState;
 };
 

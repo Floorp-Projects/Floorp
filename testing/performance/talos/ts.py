@@ -137,7 +137,7 @@ def RunStartupTests(profile_configs, num_runs):
     profile_dir = ffprofile.CreateTempProfileDir(config[5],
                                                  config[0],
                                                  config[1])
-    utils.debug("temp profile dir created")
+    utils.debug("temp profile dir " + profile_dir + " created")
     # Run Firefox once with new profile so initializing it doesn't
     # cause a performance hit, and the second Firefox that gets
     # created is properly terminated.

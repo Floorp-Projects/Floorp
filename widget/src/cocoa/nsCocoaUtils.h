@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Josh Aas <josh@mozilla.com>
  *   Sylvain Pasche <sylvain.pasche@gmail.com>
+ *   Stuart Morgan <stuart.morgan@alumni.case.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,15 +45,17 @@
 
 #include "nsRect.h"
 
-// Returns the height (from lowest 'y' to highest 'y', regardless of sign) of
-// the global coordinate system that includes all NSScreen objects.
-float CocoaScreenCoordsHeight();
+//
+// Returns the given y coordinate, which must be in screen coordinates,
+// flipped from Gecko to Cocoa or Cocoa to Gecko.
+//
+float FlippedScreenY(float y);
 
 /*
  * Gecko rects (nsRect) contain an origin (x,y) in a coordinate
- * system with (0,0) in the top-left of the screen. Cocoa rects
- * (NSRect) contain an origin (x,y) in a coordinate system with
- * (0,0) in the bottom-left of the screen. Both nsRect and NSRect
+ * system with (0,0) in the top-left of the primary screen. Cocoa rects
+ * (NSRect) contain an origin (x,y) in a coordinate system with (0,0)
+ * in the bottom-left of the primary screen. Both nsRect and NSRect
  * contain width/height info, with no difference in their use.
  */
 NSRect geckoRectToCocoaRect(const nsRect &geckoRect);

@@ -189,6 +189,18 @@ NS_StringCopy(nsAString &aDest, const nsAString &aSrc)
   return NS_OK; // XXX report errors
 }
 
+XPCOM_API(void)
+NS_StringSetIsVoid(nsAString &aStr, const PRBool aIsVoid)
+{
+  aStr.SetIsVoid(aIsVoid);
+}
+
+XPCOM_API(PRBool)
+NS_StringGetIsVoid(const nsAString &aStr)
+{
+  return aStr.IsVoid();
+}
+
 /* ------------------------------------------------------------------------- */
 
 XPCOM_API(nsresult)
@@ -334,6 +346,18 @@ NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
 {
   aDest.Assign(aSrc);
   return NS_OK; // XXX report errors
+}
+
+XPCOM_API(void)
+NS_CStringSetIsVoid(nsACString &aStr, const PRBool aIsVoid)
+{
+  aStr.SetIsVoid(aIsVoid);
+}
+
+XPCOM_API(PRBool)
+NS_CStringGetIsVoid(const nsACString &aStr)
+{
+  return aStr.IsVoid();
 }
 
 /* ------------------------------------------------------------------------- */

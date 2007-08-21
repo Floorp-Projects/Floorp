@@ -1222,9 +1222,7 @@ nsDocAccessible::FireTextChangedEventOnDOMCharacterDataModified(nsIContent *aCon
 
   nsCOMPtr<nsIAccessible> accessible;
   nsresult rv = GetAccessibleInParentChain(node, getter_AddRefs(accessible));
-  nsCOMPtr<nsIAccessibleHyperText> hyperTextIface =
-    do_QueryInterface(accessible);
-  if (NS_FAILED(rv) || !hyperTextIface)
+  if (NS_FAILED(rv) || !accessible)
     return;
 
   nsRefPtr<nsHyperTextAccessible> textAccessible;
@@ -1273,9 +1271,7 @@ nsDocAccessible::FireTextChangedEventOnDOMNodeInserted(nsIContent *aChild,
 
   nsCOMPtr<nsIAccessible> accessible;
   nsresult rv = GetAccessibleInParentChain(node, getter_AddRefs(accessible));
-  nsCOMPtr<nsIAccessibleHyperText> hyperTextIface =
-    do_QueryInterface(accessible);
-  if (NS_FAILED(rv) || !hyperTextIface)
+  if (NS_FAILED(rv) || !accessible)
     return;
 
   nsRefPtr<nsHyperTextAccessible> textAccessible;
@@ -1333,9 +1329,7 @@ nsDocAccessible::FireTextChangedEventOnDOMNodeRemoved(nsIContent *aChild,
 
   nsCOMPtr<nsIAccessible> accessible;
   nsresult rv = GetAccessibleInParentChain(node, getter_AddRefs(accessible));
-  nsCOMPtr<nsIAccessibleHyperText> hyperTextIface =
-    do_QueryInterface(accessible);
-  if (NS_FAILED(rv) || !hyperTextIface)
+  if (NS_FAILED(rv) || !accessible)
     return;
 
   nsRefPtr<nsHyperTextAccessible> textAccessible;
@@ -1396,6 +1390,8 @@ nsDocAccessible::FireDelayedAccessibleEvent(nsIAccessibleEvent *aEvent,
                                             EDupeEventRule aAllowDupes,
                                             PRBool aIsAsynch)
 {
+  NS_ENSURE_TRUE(aEvent, NS_ERROR_FAILURE);
+
   PRBool isTimerStarted = PR_TRUE;
   PRInt32 numQueuedEvents = mEventsToFire.Count();
   if (!mFireEventTimer) {
@@ -1511,7 +1507,7 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
         nsCOMPtr<nsIAccessibleText> accessibleText = do_QueryInterface(accessible);
         PRInt32 caretOffset;
         if (accessibleText && NS_SUCCEEDED(accessibleText->GetCaretOffset(&caretOffset))) {
-#ifdef DEBUG
+#ifdef DEBUG_A11Y
           PRUnichar chAtOffset;
           accessibleText->GetCharacterAtOffset(caretOffset, &chAtOffset);
           printf("\nCaret moved to %d with char %c", caretOffset, chAtOffset);

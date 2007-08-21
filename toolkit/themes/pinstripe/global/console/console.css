@@ -178,38 +178,38 @@ toolbar#ToolbarMode toolbarbutton {
   -moz-box-orient: vertical;
 }
 
-toolbarbutton[observes="Console:modeWarnings"] {
+#Console\:modeWarnings {
   -moz-image-region: rect(0px, 24px, 24px, 0px);
 }
-toolbarbutton[observes="Console:modeWarnings"]:hover:active {
+#Console\:modeWarnings:hover:active {
   -moz-image-region: rect(24px, 24px, 48px, 0px);
 }
 
-toolbarbutton[observes="Console:modeMessages"] {
+#Console\:modeMessages {
   -moz-image-region: rect(0px, 48px, 24px, 24px);
 }
-toolbarbutton[observes="Console:modeMessages"]:hover:active {
+#Console\:modeMessages:hover:active {
   -moz-image-region: rect(24px, 48px, 48px, 24px);
 }
 
-toolbarbutton[observes="Console:modeErrors"] {
+#Console\:modeErrors {
   -moz-image-region: rect(0px, 72px, 24px, 48px);
 }
-toolbarbutton[observes="Console:modeErrors"]:hover:active {
+#Console\:modeErrors:hover:active {
   -moz-image-region: rect(24px, 72px, 48px, 48px);
 }
 
-toolbarbutton[observes="Console:modeAll"] {
+#Console\:modeAll {
   -moz-image-region: rect(0px, 96px, 24px, 72px);
 }
-toolbarbutton[observes="Console:modeAll"]:hover:active {
+#Console\:modeAll:hover:active {
   -moz-image-region: rect(24px, 96px, 48px, 72px);
 }
 
-toolbarbutton[observes="Console:clear"] {
+#Console\:clear {
   -moz-image-region: rect(0px, 120px, 24px, 96px);
 }
-toolbarbutton[observes="Console:clear"]:hover:active {
+#Console\:clear:hover:active {
   -moz-image-region: rect(24px, 120px, 48px, 96px);
 }
 

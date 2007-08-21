@@ -49,7 +49,7 @@ function run_test()
   var stmt = null;
 
   // check schema version
-  do_check_eq(2, dbConn.schemaVersion);
+  do_check_true(dbConn.schemaVersion >= 2);
 
   // Check that the column no longer exists
   try {

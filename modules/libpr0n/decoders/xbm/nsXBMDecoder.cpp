@@ -47,18 +47,13 @@
 
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
+#include "nsIImage.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 #include "imgILoad.h"
 
 #include "nsIProperties.h"
 #include "nsISupportsPrimitives.h"
-
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
-#define GFXFORMAT gfxIFormats::BGR_A1
-#else
-#define USE_RGB
-#define GFXFORMAT gfxIFormats::RGB_A1
-#endif
 
 NS_IMPL_ISUPPORTS1(nsXBMDecoder, imgIDecoder)
 
@@ -92,12 +87,18 @@ NS_IMETHODIMP nsXBMDecoder::Init(imgILoad *aLoad)
 
     mCurRow = mBufSize = mWidth = mHeight = 0;
     mState = RECV_HEADER;
+    mHasNoAlpha = PR_TRUE;
 
     return NS_OK;
 }
 
 NS_IMETHODIMP nsXBMDecoder::Close()
 {
+    if (mHasNoAlpha) {
+        nsCOMPtr<nsIImage> img(do_GetInterface(mFrame));
+        img->SetHasNoAlpha();
+    }
+
     mObserver->OnStopContainer(nsnull, mImage);
     mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
     mObserver = nsnull;
@@ -185,7 +186,7 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
         mImage->Init(mWidth, mHeight, mObserver);
         mObserver->OnStartContainer(nsnull, mImage);
 
-        nsresult rv = mFrame->Init(0, 0, mWidth, mHeight, GFXFORMAT, 24);
+        nsresult rv = mFrame->Init(0, 0, mWidth, mHeight, gfxIFormats::RGB_A1, 24);
         if (NS_FAILED(rv))
             return rv;
 
@@ -240,6 +241,7 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
         PRUint32 abpr;
         mFrame->GetAlphaBytesPerRow(&abpr);
         PRBool hiByte = PR_TRUE;
+        PRBool chunkHasNoAlpha = PR_TRUE;
 
         do {
             PRUint32 pixel = strtoul(mPos, &endPtr, 0);
@@ -273,6 +275,8 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
             for (int i = 0; i < alphas; i++) {
                 const PRUint8 val = ((pixel & (1 << i)) >> i) ? 255 : 0;
                 *ar++ = (val << 24) | 0;
+                if (val == 0)
+                    chunkHasNoAlpha = PR_FALSE;
             }
 
             mCurCol = PR_MIN(mCurCol + 8, mWidth);
@@ -297,6 +301,9 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
             if (*mPos == ',')
                 mPos++;
         } while ((mState == RECV_DATA) && *mPos);
+
+        if (!chunkHasNoAlpha)
+            mHasNoAlpha = PR_FALSE;
     }
 
     return NS_OK;
