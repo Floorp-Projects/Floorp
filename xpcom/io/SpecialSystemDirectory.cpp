@@ -453,8 +453,16 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         case Win_Downloads:
         {
             // Defined in KnownFolders.h.
-            GUID folderid_downloads = {0x374de290, 0x123f, 0x4565, {0x91, 0x64, 0x39, 0xc4, 0x92, 0x5e, 0x46, 0x7b}};
-            return GetKnownFolder(&folderid_downloads, aFile);
+            GUID folderid_downloads = {0x374de290, 0x123f, 0x4565, {0x91, 0x64,
+                                       0x39, 0xc4, 0x92, 0x5e, 0x46, 0x7b}};
+            nsresult rv = GetKnownFolder(&folderid_downloads, aFile);
+            // On WinXP and 2k, there is no downloads folder, default
+            // to 'Desktop'.
+            if(NS_ERROR_FAILURE == rv)
+            {
+              rv = GetWindowsFolder(CSIDL_DESKTOP, aFile);
+            }
+            return rv;
         }
 
         case Win_Controls:
