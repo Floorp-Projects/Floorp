@@ -20,7 +20,7 @@ linux_l10n_buildDir  = /builds/tinderbox/Fx-Mozilla1.8-l10n-Release
 mac_l10n_buildDir    = /builds/tinderbox/Fx-Mozilla1.8-l10n-Release
 win32_l10n_buildDir  = /cygdrive/c/builds/tinderbox/Fx-Mozilla1.8-l10n-Release
 # Absolute path to store bootstrap's logs
-logDir          = /home/buildslave/console1/AutomationTest/build/logs
+logDir          = /builds/logs
 mozillaCvsroot  = /builds/cvsmirror/cvsroot
 l10nCvsroot     = /builds/cvsmirror/l10n
 mofoCvsroot     = /builds/cvsmirror/mofo
@@ -48,11 +48,15 @@ blat            = /cygdrive/d/moztools/bin/blat.exe
 sendmail        = /usr/lib/sendmail
 # dump Log output to stdout
 dumpLogs        = 1
-# username and server to push builds
-sshUser         = buildslave
-sshServer       = localhost
 # username and server to push update snippets to
-ausUser         = buildslave
+ausUser         = cltbld
 ausServer       = localhost
 # Tinderbox server tree that clients should report to
 buildTree       = MozillaTest
+# where QA updates/builds go
+stagingUser     = cltbld
+stagingServer   = stage.mozilla.org
+# where beta updates/builds go
+ftpServer       = ftp.mozilla.org
+# where release updates/builds go
+bouncerServer   = download.mozilla.org

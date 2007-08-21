@@ -30,6 +30,9 @@ sub Execute {
     my $oldVersion = $config->Get(var => 'oldVersion');
     my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
     my $patcherConfig = $config->Get(var => 'patcherConfig');
+    my $stagingServer = $config->Get(var => 'stagingServer');
+    my $ftpServer = $config->Get(var => 'ftpServer');
+    my $bouncerServer = $config->Get(var => 'bouncerServer');
 
     # Create patcher config area in the config bump area.
     if (not -d $configBumpDir) {
@@ -84,8 +87,10 @@ sub BumpPatcherConfig {
     my $oldRc = $config->Get(var => 'oldRc');
     my $localeInfo = $config->GetLocaleInfo();
     my $patcherConfig = $config->Get(var => 'patcherConfig');
-    my $sshUser = $config->Get(var => 'sshUser');
-    my $sshServer = $config->Get(var => 'sshServer');
+    my $stagingUser = $config->Get(var => 'stagingUser');
+    my $stagingServer = $config->Get(var => 'stagingServer');
+    my $ftpServer = $config->Get(var => 'ftpServer');
+    my $bouncerServer = $config->Get(var => 'bouncerServer');
     my $logDir = $config->Get(sysvar => 'logDir');
 
     # First, parse the file.
@@ -154,7 +159,7 @@ sub BumpPatcherConfig {
     my $rcStr = 'rc' . $rc;
 
     my $partialUpdate = {};
-    $partialUpdate->{'url'} = 'http://download.mozilla.org/?product=' .
+    $partialUpdate->{'url'} = 'http://' . $bouncerServer . '/?product=' .
                               $product. '-' . $version . '-partial-' . 
                               $oldVersion .
                              '&os=%bouncer-platform%&lang=%locale%';
@@ -165,12 +170,12 @@ sub BumpPatcherConfig {
                                '.%locale%.%platform%.partial.mar');
 
     $partialUpdate->{'betatest-url'} =
-     'http://stage.mozilla.org/pub/mozilla.org/' . $product. '/nightly/' . 
+     'http://' . $stagingServer. '/pub/mozilla.org/' . $product. '/nightly/' . 
      $version . '-candidates/' . $rcStr . '/' . $product . '-' . $oldVersion . 
      '-' . $version . '.%locale%.%platform%.partial.mar';
 
     $partialUpdate->{'beta-url'} =
-     'http://ftp.mozilla.org/pub/mozilla.org/' . $product. '/nightly/' . 
+     'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' . 
      $version . '-candidates/' . $rcStr . '/' . $product . '-' . $oldVersion . 
      '-' . $version . '.%locale%.%platform%.partial.mar';
 
@@ -178,7 +183,7 @@ sub BumpPatcherConfig {
 
     # Now the same thing, only complete update
     my $completeUpdate = {};
-    $completeUpdate->{'url'} = 'http://download.mozilla.org/?product=' .
+    $completeUpdate->{'url'} = 'http://' . $bouncerServer . '/?product=' .
      $product . '-' . $version . 
      '-complete&os=%bouncer-platform%&lang=%locale%';
 
@@ -187,12 +192,12 @@ sub BumpPatcherConfig {
      '.%locale%.%platform%.complete.mar');
 
     $completeUpdate->{'betatest-url'} = 
-     'http://stage.mozilla.org/pub/mozilla.org/' . $product. '/nightly/' .
+     'http://' . $stagingServer . '/pub/mozilla.org/' . $product. '/nightly/' .
      $version . '-candidates/' . $rcStr .  '/' . $product . '-' . $version .
      '.%locale%.%platform%.complete.mar';
 
     $completeUpdate->{'beta-url'} = 
-     'http://ftp.mozilla.org/pub/mozilla.org/' . $product. '/nightly/' .
+     'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' .
      $version . '-candidates/' . $rcStr .  '/' . $product . '-' . $version .
      '.%locale%.%platform%.complete.mar';
 
@@ -217,7 +222,7 @@ sub BumpPatcherConfig {
         $bh->close();
         $this->Shell(
           cmd => 'scp',
-          cmdArgs => [$sshUser . '@' . $sshServer . ':' . 
+          cmdArgs => [$stagingUser . '@' . $stagingServer . ':' . 
                       $candidateDir .'/' . $os . '_info.txt',
                       $buildIDTempFile],
         );
@@ -257,7 +262,7 @@ sub BumpPatcherConfig {
     $releaseObj->{'locales'} = join(' ', sort (keys(%{$localeInfo})));
 
     $releaseObj->{'completemarurl'} = 
-     'http://stage.mozilla.org/pub/mozilla.org/' . $product. '/nightly/' .
+     'http://' . $stagingServer . '/pub/mozilla.org/' . $product. '/nightly/' .
      $version . '-candidates/' . $rcStr . '/' . $product . '-'. $version .
      '.%locale%.%platform%.complete.mar',
 
