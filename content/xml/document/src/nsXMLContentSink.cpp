@@ -1579,13 +1579,13 @@ nsXMLContentSink::FlushPendingNotifications(mozFlushType aType)
   // Only flush tags if we're not doing the notification ourselves
   // (since we aren't reentrant)
   if (!mInNotification) {
-    if (aType & Flush_SinkNotifications) {
+    if (aType >= Flush_ContentAndNotify) {
       FlushTags();
     }
     else {
       FlushText();
     }
-    if (aType & Flush_OnlyReflow) {
+    if (aType >= Flush_Layout) {
       // Make sure that layout has started so that the reflow flush
       // will actually happen.
       MaybeStartLayout(PR_TRUE);
