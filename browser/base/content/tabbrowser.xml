@@ -1821,6 +1821,7 @@
             this.mTabContainer.childNodes[i]._tPos = i;
           }
           this.mCurrentTab.selected = true;
+          this.mTabContainer.mTabstrip.scrollBoxObject.ensureElementIsVisible(this.mCurrentTab);
 
           var evt = document.createEvent("UIEvents");
           evt.initUIEvent("TabMove", true, false, window, oldPosition);
