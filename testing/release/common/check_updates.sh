@@ -3,17 +3,18 @@ check_updates () {
   update_platform=$1
   source_package=$2
   target_package=$3
+  locale=$4
 
   # cleanup
   rm -rf source/*
   rm -rf target/*
 
-  unpack_build $update_platform source "$source_package" 
+  unpack_build $update_platform source "$source_package" $locale
   if [ "$?" != "0" ]; then
     echo "FAILED: cannot unpack_build $update_platform source $source_package"
     return 1
   fi
-  unpack_build $update_platform target "$target_package" 
+  unpack_build $update_platform target "$target_package" $locale 
   if [ "$?" != "0" ]; then
     echo "FAILED: cannot unpack_build $update_platform target $target_package"
     return 1
