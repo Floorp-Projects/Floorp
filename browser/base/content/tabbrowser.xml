@@ -2452,7 +2452,8 @@
       </xul:arrowscrollbox>
       <xul:hbox class="tabs-alltabs-box" align="center" pack="end" 
                 anonid="alltabs-box">
-        <xul:toolbarbutton class="tabs-alltabs-button" type="menu">
+        <xul:toolbarbutton class="tabs-alltabs-button" type="menu" tooltip="_child">
+          <xul:tooltip anonid="alltabs-tooltip" label="&listAllTabs.label;"/>
           <xul:menupopup class="tabs-alltabs-popup"
                          anonid="alltabs-popup" 
                          position="after_end"/>
@@ -2648,6 +2649,11 @@
         document.getAnonymousElementByAttribute(this, 
                                                 "anonid", "alltabs-box");
       </field>
+      
+      <field name="mAllTabsTooltip">
+        document.getAnonymousElementByAttribute(this, 
+                                                "anonid", "alltabs-tooltip");
+      </field>
 
       <field name="mFlashTimer">null</field>
       <field name="mFlashStage">0</field>
@@ -2705,6 +2711,11 @@
     </implementation>
     <handlers>
       <handler event="TabSelect" action="this._handleTabSelect();"/>
+      <handler event="popupshowing"><![CDATA[
+        if (event.originalTarget == this.mAllTabsTooltip &&
+            document.tooltipNode.parentNode == this.mAllTabsPopup)
+          event.preventDefault();
+      ]]></handler>
     </handlers>
   </binding>
 
