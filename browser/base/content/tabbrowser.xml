@@ -326,7 +326,7 @@
                 if (!this.mBlank) {
                   this.mTab.setAttribute("busy", "true");
                   this.mTabBrowser.updateIcon(this.mTab);
-                  this.mTab.label = this.mTabBrowser.mStringBundle.getString("tabs.loading");
+                  this.mTabBrowser.setTabTitleLoading(this.mTab);
 
                   if (this.mTabBrowser.mCurrentTab == this.mTab)
                     this.mTabBrowser.mIsBusy = true;
@@ -850,6 +850,16 @@
         </body>
       </method>
 
+      <method name="setTabTitleLoading">
+        <parameter name="aTab"/>
+        <body>
+          <![CDATA[
+            aTab.label = this.mStringBundle.getString("tabs.loading");
+            aTab.setAttribute("crop", "end");
+          ]]>
+        </body>
+      </method>
+
       <method name="setTabTitle">
         <parameter name="aTab"/>
         <body>
@@ -925,8 +935,16 @@
             // Get the first tab all hooked up with a title listener and popup blocking listener.
             this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
 
-            this.setTabTitle(this.mCurrentTab);
-            this.setIcon(this.mCurrentTab, this.mCurrentBrowser.mIconURL);
+            var throbberElement = document.getElementById("navigator-throbber");
+            if (throbberElement && throbberElement.hasAttribute("busy")) {
+              this.mCurrentTab.setAttribute("busy", "true");
+              this.mIsBusy = true;
+              this.setTabTitleLoading(this.mCurrentTab);
+              this.updateIcon(this.mCurrentTab);
+            } else {
+              this.setTabTitle(this.mCurrentTab);
+              this.setIcon(this.mCurrentTab, this.mCurrentBrowser.mIconURL);
+            }
 
             var filter;
             if (this.mTabFilters.length > 0) {
