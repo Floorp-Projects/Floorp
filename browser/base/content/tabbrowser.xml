@@ -1674,11 +1674,6 @@
         <body>
           <![CDATA[
             if (aDragSession.sourceNode) {
-              if (!aDragSession.canDrop) {
-                this.mTabDropIndicatorBar.setAttribute('dragging','false');
-                return;
-              }
-
               var tabStrip = this.mTabContainer.mTabstrip;
 
               // autoscroll the tab strip if we drag over the scroll
@@ -1704,7 +1699,8 @@
 
               var ib = this.mTabDropIndicatorBar;
               var ind = ib.firstChild;
-              ib.setAttribute('dragging','true');
+              ib.setAttribute('dragging',
+                 aDragSession.canDrop ? 'true' : 'false');
 
               var tabStripBoxObject = tabStrip.scrollBoxObject;
               var halfIndWidth = Math.floor((ind.boxObject.width + 1) / 2);
