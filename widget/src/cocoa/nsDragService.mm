@@ -210,8 +210,9 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
     }
   }
 
-  NSImage* image = [NSImage alloc];
+  NSImage* image = [[NSImage alloc] initWithSize:NSMakeSize((float)width, (float)height)];
   [image addRepresentation:imageRep];
+  [imageRep release];
 
   return [image autorelease];
 }
