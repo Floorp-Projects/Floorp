@@ -1686,7 +1686,9 @@
                 pixelsToScroll = tabStrip.scrollIncrement * -1;
                 tabStrip.scrollByPixels(pixelsToScroll);
               }
-              else if (targetAnonid == "scrollbutton-down") {
+              else if (targetAnonid == "scrollbutton-down" || 
+                       (targetAnonid == "alltabs-button" && 
+                        this.mTabContainer.getAttribute("overflow") == "true")) {
                 pixelsToScroll = tabStrip.scrollIncrement;
                 tabStrip.scrollByPixels(pixelsToScroll);
               }
@@ -2483,7 +2485,8 @@
              see bugs #346307 and #346035 
         -->
         <xul:hbox style="position: relative;">
-          <xul:toolbarbutton class="tabs-alltabs-button" type="menu">
+          <xul:toolbarbutton class="tabs-alltabs-button" type="menu"
+                             anonid="alltabs-button">
             <xul:menupopup class="tabs-alltabs-popup"
                            anonid="alltabs-popup" 
                            position="after_end"/>
