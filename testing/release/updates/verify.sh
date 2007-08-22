@@ -128,7 +128,7 @@ do
         fi
         source_file=`basename "$from_path"`
         target_file=`basename "$to_path"`
-        check_updates "$platform" "downloads/$source_file" "downloads/$target_file"
+        check_updates "$platform" "downloads/$source_file" "downloads/$target_file" $locale
         err=$?
         if [ "$err" != "0" ]; then
           echo "WARN: check_update returned non-zero exit code for $platform downloads/$source_file vs. downloads/$target_file: $err"
