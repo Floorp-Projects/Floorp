@@ -2548,11 +2548,8 @@
           }
 
           this.firstChild.minWidth = this.mTabMinWidth;
-          this._updateDisableBackgroundClose();
           this.adjustTabstrip();
 
-          pb2.addObserver("browser.tabs.disableBackgroundClose", 
-                          this._prefObserver, true);
           pb2.addObserver("browser.tabs.closeButtons", 
                           this._prefObserver, true);
 
@@ -2602,23 +2599,6 @@
         document.getAnonymousElementByAttribute(this, "anonid", "tabstrip-closebutton");
       </field>
 
-      <method name="_updateDisableBackgroundClose">
-        <body><![CDATA[
-          var prefs =
-              Components.classes['@mozilla.org/preferences-service;1'].
-              getService(Components.interfaces.nsIPrefBranch);
-          try {
-            if (prefs.getBoolPref("browser.tabs.disableBackgroundClose"))
-              this.setAttribute("disablebackgroundclose", "true");
-            else
-              this.removeAttribute("disablebackgroundclose");
-          }
-          catch (e) {
-            this.setAttribute("disablebackgroundclose", "true");
-          }
-        ]]></body>
-      </method>
-
       <field name="_prefObserver">({
         tabbox: this,
   
@@ -2626,9 +2606,6 @@
         {
           if (topic == "nsPref:changed") {
             switch (data) {
-            case "browser.tabs.disableBackgroundClose":
-              this.tabbox._updateDisableBackgroundClose();
-              break;
             case "browser.tabs.closeButtons":
               var pb2 =
                   Components.classes['@mozilla.org/preferences-service;1'].
@@ -3013,7 +2990,6 @@
         <xul:image class="tab-icon" xbl:inherits="validate,src=image"/>
         <xul:label class="tab-text" xbl:inherits="value=label,accesskey,crop,disabled" flex="1"/>
       </xul:hbox>
-      <xul:image anonid="close-button-placeholder" class="tab-close-button-placeholder"/>
       <xul:toolbarbutton anonid="close-button" tabindex="-1" class="tab-close-button"/>
     </content>
 
