@@ -1104,6 +1104,8 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
   aLineContainer->QueryInterface(kBlockFrameCID, (void**)&block);
 
   if (!block) {
+    NS_ASSERTION(!aLineContainer->GetPrevInFlow() && !aLineContainer->GetNextInFlow(),
+                 "Breakable non-block line containers not supported");
     // Just loop through all the children of the linecontainer ... it's really
     // just one line
     scanner.SetAtStartOfLine();
@@ -1151,20 +1153,17 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
   // but we discard them instead of assigning them to frames.
   // This is a little awkward because we traverse lines in the reverse direction
   // but we traverse the frames in each line in the forward direction.
-  nsBlockFrame::line_iterator firstLine = block->begin_lines();
+  nsBlockInFlowLineIterator backIterator(block, line, PR_FALSE);
   nsTextFrame* stopAtFrame = aForFrame;
   nsTextFrame* nextLineFirstTextFrame = nsnull;
   PRBool seenTextRunBoundaryOnLaterLine = PR_FALSE;
   PRBool mayBeginInTextRun = PR_TRUE;
+  PRBool inOverflow = PR_FALSE;
   while (PR_TRUE) {
-    if (line == firstLine) {
-      mayBeginInTextRun = PR_FALSE;
-      break;
-    }
-    --line;
-    PRBool prevLineIsBlock = line->IsBlock();
-    ++line;
-    if (prevLineIsBlock) {
+    line = backIterator.GetLine();
+    block = backIterator.GetContainer();
+    inOverflow = backIterator.GetInOverflow();
+    if (!backIterator.Prev() || backIterator.GetLine()->IsBlock()) {
       mayBeginInTextRun = PR_FALSE;
       break;
     }
@@ -1200,7 +1199,6 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
     if (state.mFirstTextFrame) {
       nextLineFirstTextFrame = state.mFirstTextFrame;
     }
-    --line;
   }
   scanner.SetSkipIncompleteTextRuns(mayBeginInTextRun);
 
@@ -1208,19 +1206,20 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
   // text frames will be accumulated into textRunFrames as we go. When a
   // text run boundary is required we flush textRunFrames ((re)building their
   // gfxTextRuns as necessary).
-  nsBlockFrame::line_iterator endLines = block->end_lines();
-  NS_ASSERTION(line != endLines && !line->IsBlock(), "Where is this frame anyway??");
-  nsIFrame* child = line->mFirstChild;
+  nsBlockInFlowLineIterator forwardIterator(block, line, inOverflow);
   do {
+    line = forwardIterator.GetLine();
+    if (line->IsBlock())
+      break;
     scanner.SetAtStartOfLine();
     scanner.SetCommonAncestorWithLastFrame(nsnull);
+    nsIFrame* child = line->mFirstChild;
     PRInt32 i;
     for (i = line->GetChildCount() - 1; i >= 0; --i) {
       scanner.ScanFrame(child);
       child = child->GetNextSibling();
     }
-    ++line;
-  } while (line != endLines && !line->IsBlock());
+  } while (forwardIterator.Next());
 
   // Set mStartOfLine so FlushFrames knows its textrun ends a line
   scanner.SetAtStartOfLine();
