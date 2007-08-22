@@ -965,6 +965,11 @@ statusbarpanel#statusbar-display {
   height: 16px;
 }
 
+.autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteValue) {
+  width: 16px;
+  height: 16px;
+}
+
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
   color: #555566;
 }
