@@ -2653,7 +2653,7 @@
           this.adjustTabstrip();
 
           pb2.addObserver("browser.tabs.closeButtons", 
-                          this._prefObserver, true);
+                          this._prefObserver, false);
 
           var self = this;
           function onResize() {
@@ -2680,6 +2680,11 @@
 
       <destructor>
         <![CDATA[
+          var pb2 =
+              Components.classes['@mozilla.org/preferences-service;1'].
+              getService(Components.interfaces.nsIPrefBranch2);
+          pb2.removeObserver("browser.tabs.closeButtons", this._prefObserver);
+
           // Release timer to avoid reference cycles.
           if (this._animateTimer) {
             this._animateTimer.cancel();
@@ -2709,20 +2714,17 @@
           if (topic == "nsPref:changed") {
             switch (data) {
             case "browser.tabs.closeButtons":
-              var pb2 =
-                  Components.classes['@mozilla.org/preferences-service;1'].
-                  getService(Components.interfaces.nsIPrefBranch2);
-              this.tabbox.mCloseButtons = pb2.getIntPref("browser.tabs.closeButtons");
+              subject.QueryInterface(Components.interfaces.nsIPrefBranch);
+              this.tabbox.mCloseButtons = subject.getIntPref("browser.tabs.closeButtons");
               this.tabbox.adjustTabstrip();
               break;
             }
           }
         },
   
-        QueryInterface : function(aIID)
+        QueryInterface: function(aIID)
         {
           if (aIID.equals(Components.interfaces.nsIObserver) ||
-              aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
               aIID.equals(Components.interfaces.nsISupports))
             return this;
           throw Components.results.NS_NOINTERFACE;
