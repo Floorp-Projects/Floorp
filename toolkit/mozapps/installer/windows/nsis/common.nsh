@@ -819,8 +819,9 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       ${GetParentDir}
       Pop $R9
 
-      IfFileExists "$R8" 0 +2
-      StrCmp $R9 $INSTDIR 0 outerloop
+      IfFileExists "$R8" 0 +3
+      ${${_MOZFUNC_UN}GetLongPath} "$R9" $R9
+      StrCmp "$R9" "$R1" 0 outerloop
       ClearErrors
       DeleteRegKey SHCTX "$R2\$R3"
       IfErrors outerloop
