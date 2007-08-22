@@ -1096,6 +1096,10 @@
         </body>
       </method>
 
+      <property name="pageReport"
+                onget="return this.mCurrentBrowser.pageReport;"
+                readonly="true"/>
+
       <property name="currentURI"
                 onget="return this.mCurrentBrowser.currentURI;"
                 readonly="true"/>
