@@ -106,7 +106,7 @@
             <xul:tab selected="true" validate="never"
                      onerror="this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image'));
                               this.removeAttribute('image');"
-                     maxwidth="250" width="0" minwidth="30" flex="100"
+                     maxwidth="250" width="0" minwidth="140" flex="100"
                      class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
           </xul:tabs>
         </xul:hbox>
@@ -1083,6 +1083,10 @@
             if (!this.mTabbedMode)
               this.enterTabbedMode();
 
+            // if we're adding tabs, we're past interrupt mode, ditch the owner
+            if (this.mCurrentTab.owner)
+              this.mCurrentTab.owner = null;
+
             var t = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                              "tab");
 
@@ -1095,13 +1099,17 @@
 
             t.setAttribute("crop", "end");
             t.maxWidth = 250;
-            t.minWidth = 30;
+            t.minWidth = 140;
             t.width = 0;
             t.setAttribute("flex", "100");
             t.setAttribute("validate", "never");
             t.setAttribute("onerror", "this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image')); this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
+            
             this.mTabContainer.appendChild(t);
+            // invalidate cache, because mTabContainer is about to change
+            this._browsers = null; 
+
             // If this new tab is owned by another, assert that relationship
             if (aOwner !== undefined && aOwner !== null) {
               t.owner = aOwner;
@@ -1177,6 +1185,13 @@
               }
               b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
             }
+
+            // Dispatch a new tab notification.  We do this once we're
+            // entirely done, so that things are in a consistent state
+            // even if the event listener opens or closes tabs.
+            var evt = document.createEvent("Events");
+            evt.initEvent("TabOpen", true, false);
+            t.dispatchEvent(evt);
 
             return t;
           ]]>
@@ -1291,6 +1306,14 @@
             if (ds.contentViewer && !ds.contentViewer.permitUnload())
               return;
 
+            // We're committed to closing the tab now.  
+            // Dispatch a notification.
+            // We dispatch it before any teardown so that event listeners can
+            // inspect the tab that's about to close.
+            var evt = document.createEvent("Events");
+            evt.initEvent("TabClose", true, false);
+            aTab.dispatchEvent(evt);
+
             if (l == 1) {
               // add a new blank tab to replace the one being closed
               // (this ensures that the remaining tab is as good as new)
@@ -1358,6 +1381,8 @@
 
             // Remove the tab
             this.mTabContainer.removeChild(oldTab);
+            // invalidate cache, because mTabContainer is about to change
+            this._browsers = null; 
             this.mPanelContainer.removeChild(oldBrowser.parentNode);
 
             // Find the tab to select
@@ -1432,8 +1457,8 @@
         <body>
           <![CDATA[
             if (aEvent.button == 0 &&
-                // Only capture clicks on tabbox.xml's <spacer>
-                aEvent.originalTarget.localName == "spacer") {
+                aEvent.originalTarget.localName == "box") {
+              // xxx this needs to check that we're in the empty area of the tabstrip
               var e = document.createEvent("Events");
               e.initEvent("NewTab", true, true);
               this.dispatchEvent(e);
@@ -1581,30 +1606,114 @@
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-            if (aDragSession.canDrop && aDragSession.sourceNode &&
-                aDragSession.sourceNode.parentNode == this.mTabContainer) {
+            if (aDragSession.canDrop && aDragSession.sourceNode) {
+              // autoscroll the tab strip if we drag over the autorepeat
+              // buttons, even if we aren't dragging a tab, but then
+              // return to avoid drawing the drop indicator
+              var isTabDrag = (aDragSession.sourceNode.parentNode == this.mTabContainer);
+              var pixelsToScroll = 0;
+              var tabStrip = this.mTabContainer.mTabstrip;
+              if (aEvent.originalTarget.localName == "autorepeatbutton") {
+                if (aEvent.originalTarget.getAttribute("class") == 
+                    "autorepeatbutton-up")
+                  pixelsToScroll = tabStrip.scrollIncrement * -1;
+                else
+                  pixelsToScroll = tabStrip.scrollIncrement;
+                tabStrip.scrollByPixels(pixelsToScroll);
+              }
+
+              if (!isTabDrag)
+                return;
+
               var newIndex = this.getNewIndex(aEvent);
 
               var ib = this.mTabDropIndicatorBar;
               var ind = ib.firstChild;
               ib.setAttribute('dragging','true');
 
-              if (window.getComputedStyle(this.parentNode, null).direction == "ltr") {
+              var tabStripBoxObject = tabStrip.scrollBoxObject;
+              var halfIndWidth = Math.floor((ind.boxObject.width + 1) / 2);
+              if (window.getComputedStyle(this.parentNode, null)
+                        .direction == "ltr") {
+                var newMarginLeft;
+                var minMarginLeft = tabStripBoxObject.x - halfIndWidth;
+                // make sure we don't place the tab drop indicator past the
+                // edge, or the containing box will flex and stretch
+                // the tab drop indicator bar, which will flex the url bar.  
+                // XXX todo
+                // just use first value if you can figure out how to get
+                // the tab drop indicator to crop instead of flex and stretch
+                // the tab drop indicator bar.
+                var maxMarginLeft = Math.min(
+                  (minMarginLeft + tabStripBoxObject.width), 
+                  (ib.boxObject.x + ib.boxObject.width - ind.boxObject.width));
+
+                // if we are scrolling, put the drop indicator at the edge
+                // so that it doesn't jump while scrolling
+                if (pixelsToScroll > 0)
+                  newMarginLeft = maxMarginLeft;
+                else if (pixelsToScroll < 0)
+                  newMarginLeft = minMarginLeft;
+                else {
                 if (newIndex == this.mTabs.length) {
-                  ind.style.marginLeft = this.mTabs[newIndex-1].boxObject.x +
-                                         this.mTabs[newIndex-1].boxObject.width - this.boxObject.x - 7 + 'px';
+                    newMarginLeft = this.mTabs[newIndex-1].boxObject.screenX +
+                                    this.mTabs[newIndex-1].boxObject.width - 
+                                    this.boxObject.screenX - halfIndWidth;
                 } else {
-                  ind.style.marginLeft = this.mTabs[newIndex].boxObject.x - this.boxObject.x - 7 + 'px';
+                    newMarginLeft = this.mTabs[newIndex].boxObject.screenX - 
+                                    this.boxObject.screenX - halfIndWidth;
                 }
+
+                  // ensure we never place the drop indicator beyond
+                  // our limits
+                  if (newMarginLeft < minMarginLeft)
+                    newMarginLeft = minMarginLeft;
+                  else if (newMarginLeft > maxMarginLeft)
+                    newMarginLeft = maxMarginLeft;
+                }
+                ind.style.marginLeft = newMarginLeft + 'px';
               } else {
+                var newMarginRight;
+                var minMarginRight = tabStripBoxObject.x - halfIndWidth;
+                // make sure we don't place the tab drop indicator past the
+                // edge, or the containing box will flex and stretch
+                // the tab drop indicator bar, which will flex the url bar.  
+                // XXX todo
+                // just use first value if you can figure out how to get
+                // the tab drop indicator to crop instead of flex and stretch
+                // the tab drop indicator bar.
+                var maxMarginRight = Math.min(
+                  (minMarginRight + tabStripBoxObject.width), 
+                  (ib.boxObject.x + ib.boxObject.width - ind.boxObject.width));
+
+                // if we are scrolling, put the drop indicator at the edge
+                // so that it doesn't jump while scrolling
+                if (pixelsToScroll > 0)
+                  newMarginRight = maxMarginRight;
+                else if (pixelsToScroll < 0)
+                  newMarginRight = minMarginRight;
+                else {
                 if (newIndex == this.mTabs.length) {
-                  ind.style.marginRight = this.boxObject.width + this.boxObject.x -
-                                          this.mTabs[newIndex-1].boxObject.x + 'px';
+                    newMarginRight = this.boxObject.width + 
+                                     this.boxObject.screenX -
+                                     this.mTabs[newIndex-1].boxObject.screenX -
+                                     halfIndWidth;
                 } else {
-                  ind.style.marginRight = this.boxObject.width + this.boxObject.x -
-                                          this.mTabs[newIndex].boxObject.x -
-                                          this.mTabs[newIndex].boxObject.width + 'px';
+                    newMarginRight = this.boxObject.width + 
+                                     this.boxObject.screenX -
+                                     this.mTabs[newIndex].boxObject.screenX -
+                                     this.mTabs[newIndex].boxObject.width -
+                                     halfIndWidth;
+                  }
+
+                  // ensure we never place the drop indicator beyond
+                  // our limits
+                  if (newMarginRight < minMarginRight)
+                    newMarginRight = minMarginRight;
+                  else if (newMarginRight > maxMarginRight)
+                    newMarginRight = maxMarginRight;
                 }
+                ind.style.marginRight = newMarginRight + 'px';
               }
             }
           ]]>
@@ -1696,15 +1805,24 @@
           this.mTabFilters.splice(aIndex, 0, this.mTabFilters.splice(aTab._tPos, 1)[0]);
           this.mTabListeners.splice(aIndex, 0, this.mTabListeners.splice(aTab._tPos, 1)[0]);
 
+          var oldPosition = aTab._tPos;
+
           aIndex = aIndex < aTab._tPos ? aIndex: aIndex+1;
           this.mCurrentTab.selected = false;
           this.mTabContainer.insertBefore(aTab, this.mTabContainer.childNodes[aIndex]);
+          // invalidate cache, because mTabContainer is about to change
+          this._browsers = null;
 
           var i;
           for (i = 0; i < this.mTabContainer.childNodes.length; i++) {
             this.mTabContainer.childNodes[i]._tPos = i;
           }
           this.mCurrentTab.selected = true;
+
+          var evt = document.createEvent("UIEvents");
+          evt.initUIEvent("TabMove", true, false, window, oldPosition);
+          aTab.dispatchEvent(evt);
+
           return aTab;
         ]]>
         </body>
@@ -1717,11 +1835,11 @@
             var i;
             if (window.getComputedStyle(this.parentNode, null).direction == "ltr") {
               for (i = aEvent.target.localName == "tab" ? aEvent.target._tPos : 0; i < this.mTabs.length; i++)
-                if (aEvent.clientX < this.mTabs[i].boxObject.x + this.mTabs[i].boxObject.width / 2)
+                if (aEvent.screenX < this.mTabs[i].boxObject.screenX + this.mTabs[i].boxObject.width / 2) 
                   return i;
             } else {
                for (i = aEvent.target.localName == "tab" ? aEvent.target._tPos : 0; i < this.mTabs.length; i++)
-                if (aEvent.clientX > this.mTabs[i].boxObject.x + this.mTabs[i].boxObject.width / 2)
+                if (aEvent.screenX > this.mTabs[i].boxObject.screenX + this.mTabs[i].boxObject.width / 2)
                   return i;
             }
 
@@ -2264,9 +2382,13 @@
   <binding id="tabbrowser-tabs"
            extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
-      <xul:hbox flex="1" style="min-width: 1px;">
+      <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1" style="min-width: 1px;" clicktoscroll="true">
         <children includes="tab"/>
-        <xul:spacer class="tabs-right" flex="1"/>
+      </xul:arrowscrollbox>
+      <xul:hbox class="tabs-closebutton-box" align="center" pack="end" anonid="tabstrip-closebutton">
+        <xul:toolbarbutton ondblclick="event.stopPropagation();"
+                           class="close-button tabs-closebutton"
+                           oncommand="this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.removeCurrentTab()"/>
       </xul:hbox>
     </content>
     <implementation>
@@ -2276,19 +2398,31 @@
             getService(Components.interfaces.nsIPrefBranch2);
         try {
           this.mTabClipWidth = pb2.getIntPref("browser.tabs.tabClipWidth");
+          this.mCloseButtons = pb2.getIntPref("browser.tabs.closeButtons");
         }
         catch (e) {
         }
 
         this._updateDisableBackgroundClose();
+        this.adjustTabstrip(false);
+
         pb2.addObserver("browser.tabs.disableBackgroundClose", this._prefObserver, true);
+        pb2.addObserver("browser.tabs.closeButtons", this._prefObserver, true);
 
         var self = this;
         function onResize() {
-          self.adjustCloseButtons(1);
+          self.adjustTabstrip(false);
         }
         window.addEventListener("resize", onResize, false);
       </constructor>
+
+      <field name="mTabstrip">
+        document.getAnonymousElementByAttribute(this, "anonid", "arrowscrollbox");
+      </field>
+
+      <field name="mTabstripClosebutton">
+        document.getAnonymousElementByAttribute(this, "anonid", "tabstrip-closebutton");
+      </field>
 
       <method name="_updateDisableBackgroundClose">
         <body><![CDATA[
@@ -2306,13 +2440,26 @@
           }
         ]]></body>
       </method>
+
       <field name="_prefObserver">({
         tabbox: this,
   
         observe: function(subject, topic, data)
         {
-          if (topic == "nsPref:changed")
-            this.tabbox._updateDisableBackgroundClose();
+          if (topic == "nsPref:changed") {
+            switch (data) {
+            case "browser.tabs.disableBackgroundClose":
+              this._updateDisableBackgroundClose();
+              break;
+            case "browser.tabs.closeButtons":
+              var pb2 =
+                  Components.classes['@mozilla.org/preferences-service;1'].
+                  getService(Components.interfaces.nsIPrefBranch2);
+              this.mCloseButtons = pb2.getIntPref("browser.tabs.closeButtons");
+              this.adjustTabstrip(false);
+              break;
+            }
+          }
         },
   
         QueryInterface : function(aIID)
@@ -2325,44 +2472,97 @@
         }
         });
       </field>
-      <field name="mTabClipWidth">140</field>
-      <method name="adjustCloseButtons">
-        <parameter name="aNumTabs"/>
-        <body><![CDATA[
-          // aNumTabs is the number of tabs that need to be present to cause
-          // the close button on the last visible tab to disappear when the
-          // pref for "always show the tab bar, even when only one tab is open"
-          // is set.
-          // When tabs are being removed from the tab strip, and the number of
-          // open tabs approaches 1 (i.e. when the number of open tabs is 2
-          // and one is removed), we need to set an attribute on the tabstrip
-          // that will cause the close button on the last item to be hidden.
-          // When tabs are being added to the tab strip - the number of open
-          // tabs is increasing (i.e. the number of open tabs is 1 and one is
-          // added) then we need to remove the attribute on the tab strip which
-          // will cause the close button to be shown on all tabs.
-          try {
-            if (this.childNodes.length == aNumTabs)
-              this.setAttribute("singlechild", "true");
-            else
-              this.removeAttribute("singlechild");
+      <field name="mTabClipWidth">130</field>
+      <field name="mCloseButtons">1</field>
 
+      <method name="adjustTabstrip">
+        <parameter name="aRemovingTab"/>
+        <body><![CDATA[
+          // modes for tabstrip
+          // 0 - activetab  = close button on active tab only
+          // 1 - alltabs    = close buttons on all tabs
+          // 2 - noclose    = no close buttons at all
+          // 3 - closeatend = close button at the end of the tabstrip
+          switch (this.mCloseButtons) {
+          case 0:
+            // TabClose fires before the tab closes, so if we have two tabs
+            // and we're removing the tab we should go to no closebutton
+            if ((aRemovingTab && this.childNodes.length == 2) ||
+                this.childNodes.length == 1)
+              this.setAttribute("closebuttons", "noclose");
+            else
+              this.setAttribute("closebuttons", "activetab");
+            break;
+          case 1:
+            try {
+              // if we have only one tab, hide the closebutton
+              if ((aRemovingTab && this.childNodes.length == 2) ||
+                  this.childNodes.length == 1)
+                this.setAttribute("closebuttons", "noclose");
+              else {
             var width = this.firstChild.boxObject.width;
             // 0 width is an invalid value and indicates an item without display,
             // so ignore.
             if (width > this.mTabClipWidth || width == 0)
-              this.removeAttribute("tiny");
+                  this.setAttribute("closebuttons", "alltabs");
             else
-              this.setAttribute("tiny", "true");
+                  this.setAttribute("closebuttons", "activetab");
+              }
           }
           catch (e) {
           }
+            break;
+          case 2:
+          case 3:
+            this.setAttribute("closebuttons", "noclose");
+            break;
+          }
+          this.mTabstripClosebutton.collapsed = this.mCloseButtons != 3;
+          if (aRemovingTab) {
+            // if we're at the end of the tabstrip, we need to ensure 
+            // that we stay completely scrolled to the end
+            // this is a hack to determine if that's where we are already
+            var tabWidth = this.firstChild.boxObject.width;
+            var scrollPos = {};
+            this.mTabstrip.scrollBoxObject.getPosition(scrollPos, {});
+            if (scrollPos.value + this.mTabstrip.boxObject.width > tabWidth * (this.childNodes.length - 1))
+              this.mTabstrip.scrollByPixels(-1 * this.firstChild.boxObject.width);
+          }
+        ]]></body>
+      </method>
+        
+      <field name="_mPrefs">null</field>
+      <property name="mPrefs" readonly="true">
+        <getter>
+        <![CDATA[
+          if (!this._mPrefs) {
+            this._mPrefs =
+              Components.classes['@mozilla.org/preferences-service;1'].
+              getService(Components.interfaces.nsIPrefBranch2);
+          }
+          return this._mPrefs;
+        ]]>
+        </getter>
+      </property>
+        
+      <method name="_handleTabSelect">
+        <body><![CDATA[
+          this.mTabstrip.scrollBoxObject.ensureElementIsVisible(this.selectedItem);
+        ]]></body>
+      </method>
+        
+      <method name="_handleUnderflow">
+        <body><![CDATA[
+          this.mTabstrip.scrollBoxObject.scrollBy(-2400, 0);
         ]]></body>
       </method>
     </implementation>
+
     <handlers>
-      <handler event="DOMNodeInserted" action="this.adjustCloseButtons(1);"/>
-      <handler event="DOMNodeRemoved" action="this.adjustCloseButtons(2);"/>
+      <handler event="TabOpen"   action="this.adjustTabstrip(false);"/>
+      <handler event="TabClose"  action="this.adjustTabstrip(true);"/>
+      <handler event="TabSelect" action="this._handleTabSelect()"/>
+      <handler event="underflow" action="this._handleUnderflow()"/>
     </handlers>
   </binding>
 
