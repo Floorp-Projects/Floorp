@@ -65,6 +65,7 @@ REQUIRES	= xpcom \
 		  webshell \
 		  docshell \
 		  gfx \
+		  thebes \
 		  widget \
 		  xuldoc \
 		  txtsvc \

@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  webshell \
 		  gfx \
+		  thebes \
 		  layout \
 		  content \
 		  dom \

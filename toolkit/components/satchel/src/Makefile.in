@@ -59,6 +59,7 @@ REQUIRES =	\
 		layout \
 		docshell \
 		gfx \
+		thebes \
 		necko \
 		widget \
 		content \

@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  lwbrk \
 		  gfx \
+		  thebes \
 		  widget \
 		  unicharutil \
 		  $(NULL)

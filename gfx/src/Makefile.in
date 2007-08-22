@@ -59,6 +59,7 @@ REQUIRES	= xpcom \
 		  view \
 		  pref \
 		  unicharutil \
+		  thebes \
 		  $(NULL)
 
 DIRS        = shared
