@@ -2937,7 +2937,7 @@
   <binding id="tabbrowser-close-tab-button"
            extends="chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image">
     <handlers>
-      <handler event="click"><![CDATA[
+      <handler event="click" button="0"><![CDATA[
         var bindingParent = document.getBindingParent(this);
         if (bindingParent) {
           var tabbedBrowser = document.getBindingParent(bindingParent);
@@ -2975,7 +2975,7 @@
             tabbedBrowser.removeCurrentTab();
         }
       ]]></handler>
-      <handler event="dblclick" phase="capturing">
+      <handler event="dblclick" button="0" phase="capturing">
         // for the one-close-button case
         event.stopPropagation();
       </handler>
