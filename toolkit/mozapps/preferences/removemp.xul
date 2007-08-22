@@ -34,7 +34,7 @@
 
     <hbox align="center">
       <label control="password" value="&setPassword.oldPassword.label;"/> 
-      <textbox id="password" type="password" disabled="true"
+      <textbox id="password" type="password"
                oninput="gRemovePasswordDialog.validateInput();"
                xhtml2:role="textfield" aaa:describedby="warnings"/>
     </hbox>
