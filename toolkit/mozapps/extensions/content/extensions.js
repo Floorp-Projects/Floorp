@@ -300,8 +300,10 @@ function showView(aView) {
       showInstallFile = false;
       showCheckUpdatesAll = false;
       showInstallUpdatesAll = true;
-      if (gUpdatesOnly)
+      if (gUpdatesOnly) {
         showSkip = true;
+        showRestartApp = false;
+      }
       bindingList = [ ["aboutURL", "?aboutURL"],
                       ["availableUpdateURL", "?availableUpdateURL"],
                       ["availableUpdateVersion", "?availableUpdateVersion"],
