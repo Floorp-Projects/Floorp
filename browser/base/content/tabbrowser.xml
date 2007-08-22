@@ -1833,12 +1833,12 @@
                                   this.boxObject.screenX - halfIndWidth;
               }
 
-                // ensure we never place the drop indicator beyond
-                // our limits
-                if (newMarginLeft < minMarginLeft)
-                  newMarginLeft = minMarginLeft;
-                else if (newMarginLeft > maxMarginLeft)
-                  newMarginLeft = maxMarginLeft;
+              // ensure we never place the drop indicator beyond
+              // our limits
+              if (newMarginLeft < minMarginLeft)
+                newMarginLeft = minMarginLeft;
+              else if (newMarginLeft > maxMarginLeft)
+                newMarginLeft = maxMarginLeft;
               }
               ind.style.marginLeft = newMarginLeft + 'px';
             } else {
@@ -1863,17 +1863,17 @@
               else if (pixelsToScroll < 0)
                 newMarginRight = minMarginRight;
               else {
-              if (newIndex == this.mTabs.length) {
-                  newMarginRight = this.boxObject.width + 
-                                   this.boxObject.screenX -
-                                   this.mTabs[newIndex-1].boxObject.screenX -
-                                   halfIndWidth;
-              } else {
-                  newMarginRight = this.boxObject.width + 
-                                   this.boxObject.screenX -
-                                   this.mTabs[newIndex].boxObject.screenX -
-                                   this.mTabs[newIndex].boxObject.width -
-                                   halfIndWidth;
+                if (newIndex == this.mTabs.length) {
+                    newMarginRight = this.boxObject.width + 
+                                     this.boxObject.screenX -
+                                     this.mTabs[newIndex-1].boxObject.screenX -
+                                     halfIndWidth;
+                } else {
+                    newMarginRight = this.boxObject.width + 
+                                     this.boxObject.screenX -
+                                     this.mTabs[newIndex].boxObject.screenX -
+                                     this.mTabs[newIndex].boxObject.width -
+                                     halfIndWidth;
                 }
 
                 // ensure we never place the drop indicator beyond
@@ -1960,6 +1960,13 @@
                 return;
             }
             this.mTabDropIndicatorBar.setAttribute('dragging','false');
+
+            // FIXME: bug 390979 - we need to reset the horizontal margins on the
+            // tab-drop indicator here to avoid impacting tabbar resizing. This
+            // shouldn't be necessary once we can collapse the indicator.
+            var dropIndicator = this.mTabDropIndicatorBar.firstChild;
+            dropIndicator.style.marginRight = "0px";
+            dropIndicator.style.marginLeft = "0px";
           ]]>
         </body>
       </method>
