@@ -1275,7 +1275,7 @@
             if (!aAll)
               --tabsToClose;
 
-            var messageKey = (tabsToClose == 1) ? "tabs.closeWarningOne" : "tabs.closeWarningMultiple";
+            var messageKey = (tabsToClose == 1) ? "tabs.closeWarningOneTab" : "tabs.closeWarningMultipleTabs";
             var closeKey = (tabsToClose == 1) ? "tabs.closeButtonOne" : "tabs.closeButtonMultiple";
             // focus the window before prompting.
             // this will raise any minimized window, which will
