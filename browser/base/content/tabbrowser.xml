@@ -1635,7 +1635,7 @@
               if (aEvent.shiftKey)
                 bgLoad = !bgLoad;
 
-              if (aEvent.originalTarget.localName != "tab") {
+              if (document.getBindingParent(aEvent.originalTarget).localName != "tab") {
                 // We're adding a new tab.
                 this.loadOneTab(getShortcutOrURI(url), null, null, null, bgLoad);
               }
