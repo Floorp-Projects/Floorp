@@ -42,58 +42,11 @@
 /**
  * Autocomplete algorithm:
  *
- * Scoring
- * -------
- * Generally ordering is by visit count. We given boosts to items that have
- * been bookmarked or typed into the address bar (as opposed to clicked links).
- * The penalties below for schemes and prefix matches also apply. We also
- * prefer paths (URLs ending in '/') and try to have shorter ones generally
- * appear first. The results are then presented in descending numeric order
- * using this score.
- *
- * Database queries
- * ----------------
- * It is tempting to do a select for "url LIKE user_input" but this is a very
- * slow query since it is brute-force over all URLs in histroy. We can,
- * however, do very efficient queries using < and > for strings. These
- * operators use the index over the URL column.
- *
- * Therefore, we try to prepend any prefixes that should be considered and
- * query for them individually. Therefore, we execute several very efficient
- * queries, score the results, and sort it.
- *
- * To limit the amount of searching we do, we ask the database to order the
- * results based on visit count for us and give us on the top N results.
- * These results will be in approximate order of score. As long as each query
- * has more results than the user is likely to see, they will not notice the
- * effects of this.
- *
- * First see if any specs match that from the beginning
- * ----------------------------------------------------
- * - If it matches the beginning of a known prefix prefix, exclude that prefix
- *   when querying. We would therefore exclude "http://" and "https://" if you type
- *   "ht". But match any other schemes that begin with "ht" (probably none).
- *
- * - Penalize all results. Most people don't type the scheme and don't want
- *   matches like this. This will make "file://" links go below
- *   "http://www.fido.com/". If one is typing the scheme "file:" for example, by
- *   the time you type the colon it won't match anything else (like "http://file:")
- *   and the penalty won't have any effect on the ordering (it will be applied to
- *   all results).
- *
- * Try different known prefixes
- * ----------------------------
- * - Prepend each prefix, running a query. If the concatenated string is itself a
- *   prefix of another known prefix (ie input is "w" and we prepend "http://", it
- *   will be a prefix of "http://www."), select out that known prefix. In this
- *   case we'll query for everything starting with "http://w" except things
- *   starting with "http://www."
- *
- * - For each selected out prefix above, run a query but apply prefix match
- *   penalty to the results. This way you'll still get "http://www." results
- *   if you type "w", but they will generally be lower than "http://wookie.net/"
- *   For your favorite few sites with many visits, you might still get matches
- *   for "www" first, which is probably what you want for your favorite sites.
+ * The current algorithm searches history from now backwards to the oldest
+ * visit in chunks of time (AUTOCOMPLETE_SEARCH_CHUNK).  We currently
+ * do SQL LIKE searches of the search term in the url and title
+ * within in each chunk of time.  the results are ordered by visit_count 
+ * (and then visit_date), giving us poor man's "frecency".
  */
 
 #include "nsNavHistory.h"
@@ -107,157 +60,24 @@
 #include "mozStorageCID.h"
 #include "mozStorageHelper.h"
 #include "nsFaviconService.h"
+#include "nsUnicharUtils.h"
 
 #define NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID \
   "@mozilla.org/autocomplete/simple-result;1"
 
-// Size of visit count boost to give to URLs which are sites or paths
-#define AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST 5
-
-// Boost to give to URLs which have been typed
-#define AUTOCOMPLETE_TYPED_BOOST 5
-
-// Boost to give to URLs which are bookmarked
-#define AUTOCOMPLETE_BOOKMARKED_BOOST 5
-
-// Penalty to add to sites that match a prefix. For example, if I type "w"
-// we will complte on "http://www.w..." like normal. We we will also complete
-// on "http://w" which will match almost every site, but will have this penalty
-// applied so they will come later. We want a pretty big penalty so that you'll
-// only get "www" beating domain names that start with w for your very favorite
-// sites.
-#define AUTOCOMPLETE_MATCHES_PREFIX_PENALTY (-50)
-
-// Penalty applied to matches that don't have prefixes applied. See
-// discussion above.
-#define AUTOCOMPLETE_MATCHES_SCHEME_PENALTY (-20)
-
-// Number of results we will consider for each prefix. Each prefix lookup is
-// done separately. Typically, we will only match one prefix, so this should be
-// a sufficient number to give "enough" autocomplete matches per prefix. The
-// total number of results that could ever be returned is this times the number
-// of prefixes. This should be as small as is reasonable to make it faster.
-#define AUTOCOMPLETE_MAX_PER_PREFIX 50
-
-// This is the maximum results we'll return for a "typed" search (usually
-// happens in response to clicking the down arrow next to the URL).
+// This is the maximum results we'll return for a "typed" search
+// This happens in response to clicking the down arrow next to the URL.
 #define AUTOCOMPLETE_MAX_PER_TYPED 100
 
-PRInt32 ComputeAutoCompletePriority(const nsAString& aUrl, PRInt32 aVisitCount,
-                                    PRBool aWasTyped, PRBool aIsBookmarked);
-nsresult NormalizeAutocompleteInput(const nsAString& aInput,
-                                    nsString& aOutput);
-
-// nsIAutoCompleteSearch *******************************************************
-
-
-// AutoCompleteIntermediateResult/Set
-//
-//    This class holds intermediate autocomplete results so that they can be
-//    sorted. This list is then handed off to a result using FillResult. The
-//    major reason for this is so that we can use nsArray's sorting functions,
-//    not use COM, yet have well-defined lifetimes for the objects. This uses
-//    a void array, but makes sure to delete the objects on desctruction.
-
-struct AutoCompleteIntermediateResult
-{
-  AutoCompleteIntermediateResult(const nsString& aUrl, const nsString& aTitle,
-                                 const nsString& aImage,
-                                 PRInt32 aVisitCount, PRInt32 aPriority) :
-    url(aUrl), title(aTitle), image(aImage), 
-    visitCount(aVisitCount), priority(aPriority) {}
-  nsString url;
-  nsString title;
-  nsString image;
-  PRInt32 visitCount;
-  PRInt32 priority;
-};
-
-
-// AutoCompleteResultComparator
-
-class AutoCompleteResultComparator
-{
-public:
-  AutoCompleteResultComparator(nsNavHistory* history) : mHistory(history) {}
-
-  PRBool Equals(const AutoCompleteIntermediateResult& a,
-                const AutoCompleteIntermediateResult& b) const {
-    // Don't need an equals, this call will be optimized out when it
-    // is used by nsQuickSortComparator above
-    return PR_FALSE;
-  }
-  PRBool LessThan(const AutoCompleteIntermediateResult& match1,
-                  const AutoCompleteIntermediateResult& match2) const {
-    // we actually compare GREATER than here, since we want the array to be in
-    // most relevant (highest priority value) first
-
-    // In most cases the priorities will be different and we just use them
-    if (match1.priority != match2.priority)
-    {
-      return match1.priority > match2.priority;
-    }
-    else
-    {
-      // secondary sorting gives priority to site names and paths (ending in a /)
-      PRBool isPath1 = PR_FALSE, isPath2 = PR_FALSE;
-      if (!match1.url.IsEmpty())
-        isPath1 = (match1.url.Last() == PRUnichar('/'));
-      if (!match2.url.IsEmpty())
-        isPath2 = (match2.url.Last() == PRUnichar('/'));
-
-      if (isPath1 && !isPath2) return PR_FALSE; // match1->url is a website/path, match2->url isn't
-      if (!isPath1 && isPath2) return PR_TRUE;  // match1->url isn't a website/path, match2->url is
-
-      // find the prefixes so we can sort by the stuff after the prefixes
-      PRInt32 prefix1 = mHistory->AutoCompleteGetPrefixLength(match1.url);
-      PRInt32 prefix2 = mHistory->AutoCompleteGetPrefixLength(match2.url);
-
-      // Compare non-prefixed urls using the current locale string compare. This will sort
-      // things alphabetically (ignoring common prefixes). For example, "http://www.abc.com/"
-      // will come before "ftp://ftp.xyz.com"
-      PRInt32 ret = 0;
-      mHistory->mCollation->CompareString(
-          nsICollation::kCollationCaseInSensitive,
-          Substring(match1.url, prefix1), Substring(match2.url, prefix2),
-          &ret);
-      if (ret != 0)
-        return ret > 0;
-
-      // sort http://xyz.com before http://www.xyz.com
-      return prefix1 > prefix2;
-    }
-    return PR_FALSE;
-  }
-protected:
-  nsNavHistory* mHistory;
-};
-
-
 // nsNavHistory::InitAutoComplete
-
 nsresult
 nsNavHistory::InitAutoComplete()
 {
   nsresult rv = CreateAutoCompleteQuery();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  AutoCompletePrefix* ok;
-
-  // These are the prefixes we check for implicitly. Prefixes with a
-  // host portion (like "www.") get their second level flag set.
-  ok = mAutoCompletePrefixes.AppendElement(AutoCompletePrefix(NS_LITERAL_STRING("http://"), PR_FALSE));
-  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
-  ok = mAutoCompletePrefixes.AppendElement(AutoCompletePrefix(NS_LITERAL_STRING("http://www."), PR_TRUE));
-  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
-  ok = mAutoCompletePrefixes.AppendElement(AutoCompletePrefix(NS_LITERAL_STRING("ftp://"), PR_FALSE));
-  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
-  ok = mAutoCompletePrefixes.AppendElement(AutoCompletePrefix(NS_LITERAL_STRING("ftp://ftp."), PR_TRUE));
-  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
-  ok = mAutoCompletePrefixes.AppendElement(AutoCompletePrefix(NS_LITERAL_STRING("https://"), PR_FALSE));
-  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
-  ok = mAutoCompletePrefixes.AppendElement(AutoCompletePrefix(NS_LITERAL_STRING("https://www."), PR_TRUE));
-  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
+  if (!mCurrentResultURLs.Init(128))
+    return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }
@@ -271,34 +91,120 @@ nsNavHistory::InitAutoComplete()
 nsresult
 nsNavHistory::CreateAutoCompleteQuery()
 {
-  nsCString sql;
-  if (mAutoCompleteOnlyTyped) {
-    sql = NS_LITERAL_CSTRING(
-        "SELECT p.url, p.title, p.visit_count, p.typed, "
-          "(SELECT b.fk FROM moz_bookmarks b WHERE b.fk = p.id), f.url "
-        "FROM moz_places p "
-        "LEFT OUTER JOIN moz_favicons f ON p.favicon_id = f.id "
-        "WHERE p.url >= ?1 AND p.url < ?2 "
-        "AND p.typed = 1 "
-        "ORDER BY p.visit_count DESC "
-        "LIMIT ");
-  } else {
-    sql = NS_LITERAL_CSTRING(
-        "SELECT p.url, p.title, p.visit_count, p.typed, "
-          "(SELECT b.fk FROM moz_bookmarks b WHERE b.fk = p.id), f.url "
-        "FROM moz_places p "
-        "LEFT OUTER JOIN moz_favicons f ON p.favicon_id = f.id "
-        "WHERE p.url >= ?1 AND p.url < ?2 "
-        "AND (p.hidden <> 1 OR p.typed = 1) "
-        "ORDER BY p.visit_count DESC "
-        "LIMIT ");
-  }
-  sql.AppendInt(AUTOCOMPLETE_MAX_PER_PREFIX);
-  nsresult rv = mDBConn->CreateStatement(sql,
-      getter_AddRefs(mDBAutoCompleteQuery));
-  return rv;
+  nsCString sql = NS_LITERAL_CSTRING(
+    "SELECT h.url, h.title, f.url, b.id "
+    "FROM moz_places h "
+    "JOIN moz_historyvisits v ON h.id = v.place_id "
+    "LEFT OUTER JOIN moz_bookmarks b ON b.fk = h.id "
+    "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
+    "WHERE v.visit_date >= ?1 AND v.visit_date <= ?2 AND h.hidden <> 1 AND "
+    " v.visit_type <> 0 AND v.visit_type <> 4 AND ");
+
+  if (mAutoCompleteOnlyTyped)
+    sql += NS_LITERAL_CSTRING("h.typed = 1 AND ");
+
+  sql += NS_LITERAL_CSTRING(
+    "(h.title LIKE ?3 ESCAPE '/' OR h.url LIKE ?3 ESCAPE '/') "
+    "GROUP BY h.id ORDER BY h.visit_count DESC, MAX(v.visit_date) DESC ");
+
+  return mDBConn->CreateStatement(sql, getter_AddRefs(mDBAutoCompleteQuery));
 }
 
+// nsNavHistory::StartAutoCompleteTimer
+
+nsresult
+nsNavHistory::StartAutoCompleteTimer(PRUint32 aMilliseconds)
+{
+  nsresult rv;
+
+  if (!mAutoCompleteTimer) {
+    mAutoCompleteTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
+  rv = mAutoCompleteTimer->InitWithFuncCallback(AutoCompleteTimerCallback, this,
+                                                aMilliseconds,
+                                                nsITimer::TYPE_ONE_SHOT);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
+
+// search in day chunks.  too big, and the UI will be unresponsive
+// as we will be off searching the database.
+// too short, and because of AUTOCOMPLETE_SEARCH_TIMEOUT
+// results won't come back in fast enough to feel snappy.
+// because we sort within chunks by visit_count (then visit_date)
+// choose 4 days so that Friday's searches are in the first chunk
+// and those will affect Monday's results
+#define AUTOCOMPLETE_SEARCH_CHUNK (USECS_PER_DAY * 4)
+
+// wait this many milliseconds between searches
+// too short, and the UI will be unresponsive
+// as we will be off searching the database.
+// too big, and results won't come back in fast enough to feel snappy.
+#define AUTOCOMPLETE_SEARCH_TIMEOUT 100
+
+// nsNavHistory::AutoCompleteTimerCallback
+
+void // static
+nsNavHistory::AutoCompleteTimerCallback(nsITimer* aTimer, void* aClosure)
+{
+  nsNavHistory* history = static_cast<nsNavHistory*>(aClosure);
+  (void)history->PerformAutoComplete();
+}
+
+nsresult 
+nsNavHistory::PerformAutoComplete()
+{
+  // if there is no listener, our search has been stopped
+  if (!mCurrentListener)
+    return NS_OK;
+
+  mCurrentResult->SetSearchString(mCurrentSearchString);
+  PRBool moreChunksToSearch = PR_FALSE;
+
+  nsresult rv;
+  // results will be put into mCurrentResult  
+  if (mCurrentSearchString.IsEmpty())
+    rv = AutoCompleteTypedSearch();
+  else {
+    rv = AutoCompleteFullHistorySearch();
+    moreChunksToSearch = (mCurrentChunkEndTime >= mCurrentOldestVisit);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  // Determine the result of the search
+  PRUint32 count;
+  mCurrentResult->GetMatchCount(&count); 
+
+  if (count > 0) {
+    mCurrentResult->SetSearchResult(moreChunksToSearch ?
+      nsIAutoCompleteResult::RESULT_SUCCESS_ONGOING :
+      nsIAutoCompleteResult::RESULT_SUCCESS);
+    mCurrentResult->SetDefaultIndex(0);
+  } else {
+    mCurrentResult->SetSearchResult(moreChunksToSearch ?
+      nsIAutoCompleteResult::RESULT_NOMATCH_ONGOING :
+      nsIAutoCompleteResult::RESULT_NOMATCH);
+    mCurrentResult->SetDefaultIndex(-1);
+  }
+
+  rv = mCurrentResult->SetListener(this);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mCurrentListener->OnSearchResult(this, mCurrentResult);
+ 
+  // if we're not done searching, adjust our end time and 
+  // search the next earlier chunk of time
+  if (moreChunksToSearch) {
+    mCurrentChunkEndTime -= AUTOCOMPLETE_SEARCH_CHUNK;
+    rv = StartAutoCompleteTimer(AUTOCOMPLETE_SEARCH_TIMEOUT);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return rv;
+}
 
 // nsNavHistory::StartSearch
 //
@@ -309,56 +215,100 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
                           nsIAutoCompleteResult *aPreviousResult,
                           nsIAutoCompleteObserver *aListener)
 {
+  NS_ENSURE_ARG_POINTER(aListener);
+  mCurrentSearchString = aSearchString;
+  // remove whitespace, see bug #392141 for details
+  mCurrentSearchString.Trim(" \r\n\t\b");
+  mCurrentListener = aListener;
   nsresult rv;
 
-  NS_ENSURE_ARG_POINTER(aListener);
+  // determine if we can start by searching through the previous search results.
+  // if we can't, we need to reset mCurrentChunkEndTime and mCurrentOldestVisit.
+  // if we can, we will search through our previous search results and then resume 
+  // searching using the previous mCurrentChunkEndTime and mCurrentOldestVisit values.
+  PRBool searchPrevious = PR_FALSE;
+  if (aPreviousResult) {
+    PRUint32 matchCount = 0;
+    aPreviousResult->GetMatchCount(&matchCount);
+    nsAutoString prevSearchString;
+    aPreviousResult->GetSearchString(prevSearchString);
 
-  nsCOMPtr<nsIAutoCompleteSimpleResult> result =
-      do_CreateInstance(NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  result->SetSearchString(aSearchString);
-
-  // Performance: We can improve performance for refinements of a previous
-  // result by filtering the old result with the new string. However, since
-  // our results are not a full match of history, we'll need to requery if
-  // any of the subresults returned the maximum number of elements (i.e. we
-  // didn't load all of them).
-  //
-  // Timing measurements show that the performance of this is actually very
-  // good for specific queries. Thus, the times where we can do the
-  // optimization (when there are few results) are exactly the times when
-  // we don't have to. As a result, we keep it this much simpler way.
-  if (aSearchString.IsEmpty()) {
-    rv = AutoCompleteTypedSearch(result);
-  } else {
-    rv = AutoCompleteFullHistorySearch(aSearchString, result);
+    // if search string begins with the previous search string, it's a go
+    searchPrevious = Substring(mCurrentSearchString, 0,
+                       prevSearchString.Length()).Equals(prevSearchString);
   }
-  NS_ENSURE_SUCCESS(rv, rv);
+  else {
+    // reset to mCurrentChunkEndTime 
+    mCurrentChunkEndTime = PR_Now();
 
-  // Determine the result of the search
-  PRUint32 count;
-  result->GetMatchCount(&count);
-  if (count > 0) {
-    result->SetSearchResult(nsIAutoCompleteResult::RESULT_SUCCESS);
-    result->SetDefaultIndex(0);
-  } else {
-    result->SetSearchResult(nsIAutoCompleteResult::RESULT_NOMATCH);
-    result->SetDefaultIndex(-1);
+    // determine our earliest visit
+    nsCOMPtr<mozIStorageStatement> dbSelectStatement;
+    rv = mDBConn->CreateStatement(
+      NS_LITERAL_CSTRING("SELECT MIN(visit_date) id FROM moz_historyvisits WHERE visit_type <> 4 AND visit_type <> 0"),
+      getter_AddRefs(dbSelectStatement));
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool hasMinVisit;
+    rv = dbSelectStatement->ExecuteStep(&hasMinVisit);
+    NS_ENSURE_SUCCESS(rv, rv);
+  
+    if (hasMinVisit) {
+      rv = dbSelectStatement->GetInt64(0, &mCurrentOldestVisit);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+      // if we have no visits, use a reasonable value
+      mCurrentOldestVisit = PR_Now() - USECS_PER_DAY;
+    }
   }
 
-  rv = result->SetListener(this);
+  mCurrentResult = do_CreateInstance(NS_AUTOCOMPLETESIMPLERESULT_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aListener->OnSearchResult(this, result);
+  mCurrentResultURLs.Clear();
+
+  // Search through the previous result
+  if (searchPrevious) {
+    PRUint32 matchCount;
+    aPreviousResult->GetMatchCount(&matchCount);
+    for (PRInt32 i = 0; i < matchCount; i++) {
+      nsAutoString url, title;
+      aPreviousResult->GetValueAt(i, url);
+      aPreviousResult->GetCommentAt(i, title);
+
+      PRBool isMatch = CaseInsensitiveFindInReadable(mCurrentSearchString, url);
+      if (!isMatch)
+        isMatch = CaseInsensitiveFindInReadable(mCurrentSearchString, title);
+
+      if (isMatch) {
+        nsAutoString image, style;
+        aPreviousResult->GetImageAt(i, image);
+        aPreviousResult->GetStyleAt(i, style);
+ 
+        mCurrentResultURLs.Put(url, PR_TRUE);
+
+        rv = mCurrentResult->AppendMatch(url, title, image, style);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+  }
+
+  // fire right away, we already waited to start searching
+  rv = StartAutoCompleteTimer(0);
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
-
 
 // nsNavHistory::StopSearch
 
 NS_IMETHODIMP
 nsNavHistory::StopSearch()
 {
+  if (mAutoCompleteTimer)
+    mAutoCompleteTimer->Cancel();
+
+  mCurrentSearchString.Truncate();
+  mCurrentListener = nsnull;
+
   return NS_OK;
 }
 
@@ -371,169 +321,104 @@ nsNavHistory::StopSearch()
 //    is no URL information to use. The ordering just comes out of the DB by
 //    visit count (primary) and time since last visited (secondary).
 
-nsresult nsNavHistory::AutoCompleteTypedSearch(
-                                            nsIAutoCompleteSimpleResult* result)
+nsresult nsNavHistory::AutoCompleteTypedSearch()
 {
-  // need to get more than the required minimum number since some will be dupes
   nsCOMPtr<mozIStorageStatement> dbSelectStatement;
+
   nsCString sql = NS_LITERAL_CSTRING(
-      "SELECT h.url, title, f.url "
-      "FROM moz_historyvisits v JOIN moz_places h ON v.place_id = h.id "
-      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id " 
-      "WHERE h.typed = 1 ORDER BY visit_date DESC LIMIT ");
-  sql.AppendInt(AUTOCOMPLETE_MAX_PER_TYPED * 3);
-  nsresult rv = mDBConn->CreateStatement(sql, getter_AddRefs(dbSelectStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // prevent duplicates
-  nsDataHashtable<nsStringHashKey, PRInt32> urls;
-  if (! urls.Init(500))
-    return NS_ERROR_OUT_OF_MEMORY;
-
+    "SELECT h.url, h.title, f.url, b.id "
+    "FROM moz_places h "
+    "LEFT OUTER JOIN moz_bookmarks b ON b.fk = h.id "
+    "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
+    "JOIN moz_historyvisits v ON h.id = v.place_id WHERE (h.id IN "
+    "(SELECT DISTINCT h.id from moz_historyvisits v, moz_places h WHERE "
+    "v.place_id = h.id AND h.typed = 1 AND v.visit_type <> 0 AND v.visit_type <> 4 "
+    "ORDER BY v.visit_date DESC LIMIT ");
+  sql.AppendInt(AUTOCOMPLETE_MAX_PER_TYPED);
+  sql += NS_LITERAL_CSTRING(")) GROUP BY h.id ORDER BY MAX(v.visit_date) DESC");  
+  
   nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
   NS_ENSURE_TRUE(faviconService, NS_ERROR_OUT_OF_MEMORY);
 
-  PRInt32 dummy;
-  PRInt32 count = 0;
+  nsresult rv = mDBConn->CreateStatement(sql, getter_AddRefs(dbSelectStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
   PRBool hasMore = PR_FALSE;
-  while (count < AUTOCOMPLETE_MAX_PER_TYPED &&
-         NS_SUCCEEDED(dbSelectStatement->ExecuteStep(&hasMore)) && hasMore) {
-    nsAutoString entryURL, entryTitle, entryImage;
-    dbSelectStatement->GetString(0, entryURL);
-    dbSelectStatement->GetString(1, entryTitle);
-    dbSelectStatement->GetString(2, entryImage);
+  while (NS_SUCCEEDED(dbSelectStatement->ExecuteStep(&hasMore)) && hasMore) {
+    nsAutoString entryURL, entryTitle, entryFavicon;
+    dbSelectStatement->GetString(kAutoCompleteIndex_URL, entryURL);
+    dbSelectStatement->GetString(kAutoCompleteIndex_Title, entryTitle);
+    dbSelectStatement->GetString(kAutoCompleteIndex_FaviconURL, entryFavicon);
+    PRInt64 itemId = 0;
+    dbSelectStatement->GetInt64(kAutoCompleteIndex_ItemId, &itemId);
 
-    if (! urls.Get(entryURL, &dummy)) {
-      // new item
-      nsCAutoString faviconSpec;
-      faviconService->GetFaviconSpecForIconString(
-        NS_ConvertUTF16toUTF8(entryImage), faviconSpec);
-      rv = result->AppendMatch(entryURL, entryTitle, 
-        NS_ConvertUTF8toUTF16(faviconSpec), NS_LITERAL_STRING("favicon"));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      urls.Put(entryURL, 1);
-      count ++;
-    }
-  }
-
+    nsCAutoString imageSpec;
+    faviconService->GetFaviconSpecForIconString(
+      NS_ConvertUTF16toUTF8(entryFavicon), imageSpec);
+    rv = mCurrentResult->AppendMatch(entryURL, entryTitle, 
+      NS_ConvertUTF8toUTF16(imageSpec), itemId ? NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon"));
+    NS_ENSURE_SUCCESS(rv, rv);
+  } 
   return NS_OK;
 }
 
 
 // nsNavHistory::AutoCompleteFullHistorySearch
 //
-//    A brute-force search of the entire history. This matches the given input
-//    with every possible history entry, and sorts them by likelihood.
+// Search history for visits that have a url or title that contains mCurrentSearchString
+// and are within our current chunk of time:
+// between (mCurrentChunkEndTime - AUTOCOMPLETE_SEARCH_CHUNK) and (mCurrentChunkEndTime)
 //
-//    This may be slow for people on slow computers with large histories.
 
 nsresult
-nsNavHistory::AutoCompleteFullHistorySearch(const nsAString& aSearchString,
-                                            nsIAutoCompleteSimpleResult* aResult)
+nsNavHistory::AutoCompleteFullHistorySearch()
 {
-  nsString searchString;
-  nsresult rv = NormalizeAutocompleteInput(aSearchString, searchString);
-  if (NS_FAILED(rv))
-    return NS_OK; // no matches for invalid input
+  mozStorageStatementScoper scope(mDBAutoCompleteQuery);
 
-  nsTArray<AutoCompleteIntermediateResult> matches;
+  nsresult rv = mDBAutoCompleteQuery->BindInt64Parameter(0, mCurrentChunkEndTime - AUTOCOMPLETE_SEARCH_CHUNK);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // Try a query using this search string and every prefix. Keep track of
-  // known prefixes that the input matches for exclusion later
-  PRUint32 i;
-  const nsTArray<PRInt32> emptyArray;
-  nsTArray<PRInt32> firstLevelMatches;
-  nsTArray<PRInt32> secondLevelMatches;
-  for (i = 0; i < mAutoCompletePrefixes.Length(); i ++) {
-    if (StringBeginsWith(mAutoCompletePrefixes[i].prefix, searchString)) {
-      if (mAutoCompletePrefixes[i].secondLevel)
-        secondLevelMatches.AppendElement(i);
-      else
-        firstLevelMatches.AppendElement(i);
-    }
+  rv = mDBAutoCompleteQuery->BindInt64Parameter(1, mCurrentChunkEndTime);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // current string to search for
-    nsString cur = mAutoCompletePrefixes[i].prefix + searchString;
+  nsString escapedSearchString;
+  rv = mDBAutoCompleteQuery->EscapeStringForLIKE(mCurrentSearchString, PRUnichar('/'), escapedSearchString);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-    // see if the concatenated string itself matches any prefixes
-    nsTArray<PRInt32> curPrefixMatches;
-    for (PRUint32 prefix = 0; prefix < mAutoCompletePrefixes.Length(); prefix ++) {
-      if (StringBeginsWith(mAutoCompletePrefixes[prefix].prefix, cur))
-        curPrefixMatches.AppendElement(prefix);
-    }
-
-    // search for the current string, excluding those matching prefixes
-    AutoCompleteQueryOnePrefix(cur, curPrefixMatches, 0, &matches);
-
-    // search for each of those matching prefixes, applying the prefix penalty
-    for (PRUint32 match = 0; match < curPrefixMatches.Length(); match ++) {
-      AutoCompleteQueryOnePrefix(mAutoCompletePrefixes[curPrefixMatches[match]].prefix,
-                                 emptyArray, AUTOCOMPLETE_MATCHES_PREFIX_PENALTY,
-                                 &matches);
-    }
-  }
-
-  // Now try searching with no prefix
-  if (firstLevelMatches.Length() > 0) {
-    // This will get all matches that DON'T match any prefix. For example, if
-    // the user types "http://w" we will match "http://westinghouse.com" but
-    // not "http://www.something".
-    AutoCompleteQueryOnePrefix(searchString,
-                               firstLevelMatches, 0, &matches);
-  } else if (secondLevelMatches.Length() > 0) {
-    // if there are no first level matches (i.e. "http://") then we fall back on
-    // second level matches. Here, we assume that a first level match implies
-    // a second level match as well, so we only have to check when there are no
-    // first level matches.
-    AutoCompleteQueryOnePrefix(searchString,
-                               secondLevelMatches, 0, &matches);
-
-    // now we try to fill in matches of the prefix. For example, if you type
-    // "http://w" we will still match against "http://www." but with a penalty.
-    // We only do this for second level prefixes.
-    for (PRUint32 match = 0; match < secondLevelMatches.Length(); match ++) {
-      AutoCompleteQueryOnePrefix(mAutoCompletePrefixes[secondLevelMatches[match]].prefix,
-                                 emptyArray, AUTOCOMPLETE_MATCHES_SCHEME_PENALTY,
-                                 &matches);
-    }
-  } else {
-    // Input matched no prefix, try to query for all URLs beinning with this
-    // exact input.
-    AutoCompleteQueryOnePrefix(searchString, emptyArray,
-                               AUTOCOMPLETE_MATCHES_SCHEME_PENALTY, &matches);
-  }
+  // prepend and append with % for "contains"
+  rv = mDBAutoCompleteQuery->BindStringParameter(2, NS_LITERAL_STRING("%") + escapedSearchString + NS_LITERAL_STRING("%"));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsFaviconService* faviconService = nsFaviconService::GetFaviconService();
   NS_ENSURE_TRUE(faviconService, NS_ERROR_OUT_OF_MEMORY);
 
-  // fill into result
-  if (matches.Length() > 0) {
-    // sort according to priorities
-    AutoCompleteResultComparator comparator(this);
-    matches.Sort(comparator);
+  PRBool hasMore = PR_FALSE;
 
-    nsCAutoString faviconSpec;
-    faviconService->GetFaviconSpecForIconString(
-      NS_ConvertUTF16toUTF8(matches[0].image), faviconSpec);
-    rv = aResult->AppendMatch(matches[0].url, matches[0].title, 
-                              NS_ConvertUTF8toUTF16(faviconSpec), 
-                              NS_LITERAL_STRING("favicon"));
-    NS_ENSURE_SUCCESS(rv, rv);
+  // Determine the result of the search
+  while (NS_SUCCEEDED(mDBAutoCompleteQuery->ExecuteStep(&hasMore)) && hasMore) {
+    nsAutoString entryURL, entryTitle, entryFavicon;
+    mDBAutoCompleteQuery->GetString(kAutoCompleteIndex_URL, entryURL);
+    mDBAutoCompleteQuery->GetString(kAutoCompleteIndex_Title, entryTitle);
+    mDBAutoCompleteQuery->GetString(kAutoCompleteIndex_FaviconURL, entryFavicon);
+    PRInt64 itemId = 0;
+    mDBAutoCompleteQuery->GetInt64(kAutoCompleteIndex_ItemId, &itemId);
 
-    for (i = 1; i < matches.Length(); i ++) {
-      // only add ones that are NOT the same as the previous one. It's possible
-      // to get duplicates from the queries.
-      if (!matches[i].url.Equals(matches[i-1].url)) {
-        faviconService->GetFaviconSpecForIconString(
-          NS_ConvertUTF16toUTF8(matches[i].image), faviconSpec);
-        rv = aResult->AppendMatch(matches[i].url, matches[i].title, 
-                                  NS_ConvertUTF8toUTF16(faviconSpec),  
-                                  NS_LITERAL_STRING("favicon"));
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+    PRBool dummy;
+    // prevent duplicates.  this can happen when chunking as we
+    // may have already seen this URL from an earlier chunk of time
+    if (!mCurrentResultURLs.Get(entryURL, &dummy)) {
+      // new item, append to our results and put it in our hash table.
+      nsCAutoString faviconSpec;
+      faviconService->GetFaviconSpecForIconString(
+        NS_ConvertUTF16toUTF8(entryFavicon), faviconSpec);
+      rv = mCurrentResult->AppendMatch(entryURL, entryTitle, 
+        NS_ConvertUTF8toUTF16(faviconSpec), itemId ? NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      mCurrentResultURLs.Put(entryURL, PR_TRUE);
     }
   }
+
   return NS_OK;
 }
 
@@ -553,180 +438,6 @@ nsNavHistory::OnValueRemoved(nsIAutoCompleteSimpleResult* aResult,
 
   rv = RemovePage(uri);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
-// nsNavHistory::AutoCompleteQueryOnePrefix
-//
-//    The values in aExcludePrefixes are indices into mAutoCompletePrefixes
-//    of prefixes to exclude during this query. For example, if I type
-//    "ht" this function will be called to match everything starting with
-//    "ht" EXCEPT "http://" and "https://".
-
-nsresult
-nsNavHistory::AutoCompleteQueryOnePrefix(const nsString& aSearchString,
-    const nsTArray<PRInt32>& aExcludePrefixes,
-    PRInt32 aPriorityDelta,
-    nsTArray<AutoCompleteIntermediateResult>* aResult)
-{
-  // All URL queries are in UTF-8. Compute the beginning (inclusive) and
-  // ending (exclusive) of the range of URLs to include when compared
-  // using strcmp (which is what sqlite does).
-  nsCAutoString beginQuery = NS_ConvertUTF16toUTF8(aSearchString);
-  if (beginQuery.IsEmpty())
-    return NS_OK;
-  nsCAutoString endQuery = beginQuery;
-  unsigned char maxChar[6] = { 0xfd, 0xbf, 0xbf, 0xbf, 0xbf, 0xbf };
-  endQuery.Append(reinterpret_cast<const char*>(maxChar), 6);
-
-  nsTArray<nsCString> ranges;
-  if (aExcludePrefixes.Length() > 0) {
-    // we've been requested to include holes in our range, sort these ranges
-    ranges.AppendElement(beginQuery);
-    for (PRUint32 i = 0; i < aExcludePrefixes.Length(); i ++) {
-      nsCAutoString thisPrefix = NS_ConvertUTF16toUTF8(
-          mAutoCompletePrefixes[aExcludePrefixes[i]].prefix);
-      ranges.AppendElement(thisPrefix);
-      thisPrefix.Append(reinterpret_cast<const char*>(maxChar), 6);
-      ranges.AppendElement(thisPrefix);
-    }
-    ranges.AppendElement(endQuery);
-    ranges.Sort();
-  } else {
-    // simple range with no holes
-    ranges.AppendElement(beginQuery);
-    ranges.AppendElement(endQuery);
-  }
-
-  NS_ASSERTION(ranges.Length() % 2 == 0, "Ranges should be pairs!");
-
-  // The nested select expands to nonzero when the item is bookmarked.
-  // It might be nice to also select hidden bookmarks (unvisited) but that
-  // made this statement more complicated and should be an unusual case.
-  nsresult rv;
-  for (PRUint32 range = 0; range < ranges.Length() - 1; range += 2) {
-    mozStorageStatementScoper scoper(mDBAutoCompleteQuery);
-
-    rv = mDBAutoCompleteQuery->BindUTF8StringParameter(0, ranges[range]);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mDBAutoCompleteQuery->BindUTF8StringParameter(1, ranges[range + 1]);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool hasMore;
-    nsAutoString url, title, image;
-    while (NS_SUCCEEDED(mDBAutoCompleteQuery->ExecuteStep(&hasMore)) && hasMore) {
-      mDBAutoCompleteQuery->GetString(0, url);
-      mDBAutoCompleteQuery->GetString(1, title);
-      PRInt32 visitCount = mDBAutoCompleteQuery->AsInt32(2);
-      PRInt32 priority = ComputeAutoCompletePriority(url, visitCount,
-          mDBAutoCompleteQuery->AsInt32(3) > 0,
-          mDBAutoCompleteQuery->AsInt32(4) > 0) + aPriorityDelta;
-      mDBAutoCompleteQuery->GetString(5, image);
-      aResult->AppendElement(AutoCompleteIntermediateResult(
-          url, title, image, visitCount, priority));
-    }
-  }
-  return NS_OK;
-}
-
-
-// nsNavHistory::AutoCompleteGetPrefixLength
-
-PRInt32
-nsNavHistory::AutoCompleteGetPrefixLength(const nsString& aSpec)
-{
-  for (PRUint32 i = 0; i < mAutoCompletePrefixes.Length(); ++i) {
-    if (StringBeginsWith(aSpec, mAutoCompletePrefixes[i].prefix))
-      return mAutoCompletePrefixes[i].prefix.Length();
-  }
-  return 0; // no prefix
-}
-
-
-// ComputeAutoCompletePriority
-//
-//    Favor websites and webpaths more than webpages by boosting
-//    their visit counts.  This assumes that URLs have been normalized,
-//    appending a trailing '/'.
-//
-//    We use addition to boost the visit count rather than multiplication
-//    since we want URLs with large visit counts to remain pretty much
-//    in raw visit count order - we assume the user has visited these urls
-//    often for a reason and there shouldn't be a problem with putting them
-//    high in the autocomplete list regardless of whether they are sites/
-//    paths or pages.  However for URLs visited only a few times, sites
-//    & paths should be presented before pages since they are generally
-//    more likely to be visited again.
-
-PRInt32
-ComputeAutoCompletePriority(const nsAString& aUrl, PRInt32 aVisitCount,
-                            PRBool aWasTyped, PRBool aIsBookmarked)
-{
-  PRInt32 aPriority = aVisitCount;
-
-  if (!aUrl.IsEmpty()) {
-    // url is a site/path if it has a trailing slash
-    if (aUrl.Last() == PRUnichar('/'))
-      aPriority += AUTOCOMPLETE_NONPAGE_VISIT_COUNT_BOOST;
-  }
-
-  if (aWasTyped)
-    aPriority += AUTOCOMPLETE_TYPED_BOOST;
-  if (aIsBookmarked)
-    aPriority += AUTOCOMPLETE_BOOKMARKED_BOOST;
-
-  return aPriority;
-}
-
-
-// NormalizeAutocompleteInput
-
-nsresult NormalizeAutocompleteInput(const nsAString& aInput,
-                                    nsString& aOutput)
-{
-  nsresult rv;
-
-  if (aInput.IsEmpty()) {
-    aOutput.Truncate();
-    return NS_OK;
-  }
-  nsCAutoString input = NS_ConvertUTF16toUTF8(aInput);
-
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), input);
-  PRBool isSchemeAdded = PR_FALSE;
-  if (NS_FAILED(rv)) {
-    // it may have failed because there is no scheme, prepend one
-    isSchemeAdded = PR_TRUE;
-    input = NS_LITERAL_CSTRING("http://") + input;
-
-    rv = NS_NewURI(getter_AddRefs(uri), input);
-    if (NS_FAILED(rv))
-      return rv; // still not valid, can't autocomplete this URL
-  }
-
-  nsCAutoString spec;
-  rv = uri->GetSpec(spec);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (spec.IsEmpty())
-    return NS_OK; // should never happen but we assume it's not empty below, so check
-
-  aOutput = NS_ConvertUTF8toUTF16(spec);
-
-  // trim the "http://" scheme if we added it
-  if (isSchemeAdded) {
-    NS_ASSERTION(aOutput.Length() > 7, "String impossibly short");
-    aOutput = Substring(aOutput, 7);
-  }
-
-  // it may have appended a slash, get rid of it
-  // example: input was "http://www.mozil" the URI spec will be
-  // "http://www.mozil/" which is obviously wrong to complete against.
-  // However, it won't always append a slash, for example, for the input
-  // "http://www.mozilla.org/supp"
-  if (input[input.Length() - 1] != '/' && aOutput[aOutput.Length() - 1] == '/')
-    aOutput.Truncate(aOutput.Length() - 1);
 
   return NS_OK;
 }

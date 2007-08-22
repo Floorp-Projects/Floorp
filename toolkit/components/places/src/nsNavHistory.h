@@ -362,11 +362,6 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBGetURLPageInfoFull; // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetIdPageInfo;     // kGetInfoIndex_* results
   nsCOMPtr<mozIStorageStatement> mDBGetIdPageInfoFull; // kGetInfoIndex_* results
-  nsCOMPtr<mozIStorageStatement> mDBFullAutoComplete; // kAutoCompleteIndex_* results, 1 arg (max # results)
-  static const PRInt32 kAutoCompleteIndex_URL;
-  static const PRInt32 kAutoCompleteIndex_Title;
-  static const PRInt32 kAutoCompleteIndex_VisitCount;
-  static const PRInt32 kAutoCompleteIndex_Typed;
 
   nsCOMPtr<mozIStorageStatement> mDBRecentVisitOfURL; // converts URL into most recent visit ID/session ID
   nsCOMPtr<mozIStorageStatement> mDBInsertVisit; // used by AddVisit
@@ -560,49 +555,31 @@ protected:
   //
   // AutoComplete stuff
   //
-  struct AutoCompletePrefix
-  {
-    AutoCompletePrefix(const nsAString& aPrefix, PRBool aSecondLevel) :
-      prefix(aPrefix), secondLevel(aSecondLevel) {}
-
-    // The prefix, for example, "http://" or "https://www."
-    nsString prefix;
-
-    // Set when this prefix contains a spec AND a host. For example,
-    // "http://www." is a second level prefix, but "http://" is not. This
-    // flag is used to exclude matches. For example, if I type "http://w"
-    // I probably want it to autocomplete to sites beginning with w and
-    // NOT every "www" site I've ever visited.
-    PRBool secondLevel;
-  };
-  nsTArray<AutoCompletePrefix> mAutoCompletePrefixes;
-
-  nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery;
+  static const PRInt32 kAutoCompleteIndex_URL;
+  static const PRInt32 kAutoCompleteIndex_Title;
+  static const PRInt32 kAutoCompleteIndex_FaviconURL;
+  static const PRInt32 kAutoCompleteIndex_ItemId;
+  nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery; //  kAutoCompleteIndex_* results
   nsresult InitAutoComplete();
   nsresult CreateAutoCompleteQuery();
-  PRInt32 mAutoCompleteMaxCount;
-  PRInt32 mExpireDays;
   PRBool mAutoCompleteOnlyTyped;
+  nsCOMPtr<nsITimer> mAutoCompleteTimer;
 
-  // Used to describe what prefixes shouldn't be cut from
-  // history urls when doing an autocomplete url comparison.
-  struct AutoCompleteExclude {
-    // these are indices into mIgnoreSchemes and mIgnoreHostnames, or -1
-    PRInt32 schemePrefix;
-    PRInt32 hostnamePrefix;
+  nsString mCurrentSearchString;
+  nsCOMPtr<nsIAutoCompleteObserver> mCurrentListener;
+  nsCOMPtr<nsIAutoCompleteSimpleResult> mCurrentResult;
+  nsDataHashtable<nsStringHashKey, PRBool> mCurrentResultURLs;
+  PRTime mCurrentChunkEndTime;
+  PRTime mCurrentOldestVisit;
 
-    // this is the offset of the character immediately after the prefix
-    PRInt32 postPrefixOffset;
-  };
+  nsresult AutoCompleteTypedSearch();
+  nsresult AutoCompleteFullHistorySearch();
 
-  nsresult AutoCompleteTypedSearch(nsIAutoCompleteSimpleResult* result);
-  nsresult AutoCompleteFullHistorySearch(const nsAString& aSearchString,
-                                         nsIAutoCompleteSimpleResult* result);
-  nsresult AutoCompleteQueryOnePrefix(const nsString& aSearchString,
-                                      const nsTArray<PRInt32>& aExcludePrefixes,
-                                      PRInt32 aPriorityDelta,
-                                      nsTArray<AutoCompleteIntermediateResult>* aResult);
-  PRInt32 AutoCompleteGetPrefixLength(const nsString& aSpec);
+  nsresult PerformAutoComplete();
+  nsresult StartAutoCompleteTimer(PRUint32 aMilliseconds);
+  static void AutoCompleteTimerCallback(nsITimer* aTimer, void* aClosure);
+
+  PRInt32 mExpireDays;
 
   // in nsNavHistoryQuery.cpp
   nsresult TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
