@@ -394,6 +394,13 @@
               }
             },
 
+            setIcon : function(aURI)
+            {
+              this.mIcon = aURI;
+              if (!this.mTab.hasAttribute("busy"))
+                this.mTab.setAttribute("image", aURI);
+            },
+
             QueryInterface : function(aIID)
             {
               if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
@@ -785,7 +792,7 @@
             }
 
             if (listener)
-              listener.mIcon = href;
+              listener.setIcon(href);
 
             if (tabBrowser.mProgressListeners) {
               var targetBrowser = tabBrowser.getBrowserAtIndex(browserIndex);
