@@ -385,6 +385,9 @@
         <body>
           <![CDATA[
             var newBrowser = this.mPanelContainer.childNodes[this.mPanelContainer.selectedIndex];
+            if (this.mCurrentBrowser == newBrowser)
+              return;
+
             if (this.mCurrentBrowser)
               this.mCurrentBrowser.setAttribute("type", "content");
             
@@ -815,12 +818,9 @@
             this.mPanelContainer.removeChild(oldBrowser);
 
             this.selectedTab = this.mTabContainer.childNodes[newIndex];
+            this.mPanelContainer.selectedIndex = newIndex;
 
-            if (newIndex == index) {
-              // No select event is going to fire.  We need to just call updateCurrentBrowser()
-              // by hand.
-              this.updateCurrentBrowser();
-            }
+            this.updateCurrentBrowser();
           ]]>
         </body>
       </method>
