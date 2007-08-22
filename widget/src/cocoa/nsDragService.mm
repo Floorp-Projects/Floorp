@@ -156,7 +156,7 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
   }
 
   if (NS_FAILED(rv) || !surface)
-    return nsnull;
+    return nil;
 
   PRUint32 width = aDragRect->width;
   PRUint32 height = aDragRect->height;
@@ -164,11 +164,11 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
   nsRefPtr<gfxImageSurface> imgSurface = new gfxImageSurface(
     gfxIntSize(width, height), gfxImageSurface::ImageFormatARGB32);
   if (!imgSurface)
-    return nsnull;
+    return nil;
 
   nsRefPtr<gfxContext> context = new gfxContext(imgSurface);
   if (!context)
-    return nsnull;
+    return nil;
 
   context->SetOperator(gfxContext::OPERATOR_SOURCE);
   context->SetSource(surface);
@@ -192,16 +192,17 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
   for (PRUint32 i = 0; i < height; ++i) {
     PRUint8* src = (PRUint8 *)imageData + i * stride;
     for (PRUint32 j = 0; j < width; ++j) {
-      // reduce transparency overall by multipying by a factor
+      // Reduce transparency overall by multipying by a factor. Remember, Alpha
+      // is premultipled here. Also, Quartz likes RGBA, so do that translation as well.
 #ifdef IS_BIG_ENDIAN
-      dest[0] = src[1];
-      dest[1] = src[2];
-      dest[2] = src[3];
+      dest[0] = PRUint8(src[1] * DRAG_TRANSLUCENCY);
+      dest[1] = PRUint8(src[2] * DRAG_TRANSLUCENCY);
+      dest[2] = PRUint8(src[3] * DRAG_TRANSLUCENCY);
       dest[3] = PRUint8(src[0] * DRAG_TRANSLUCENCY);
 #else
-      dest[0] = src[2];
-      dest[1] = src[1];
-      dest[2] = src[0];
+      dest[0] = PRUint8(src[2] * DRAG_TRANSLUCENCY);
+      dest[1] = PRUint8(src[1] * DRAG_TRANSLUCENCY);
+      dest[2] = PRUint8(src[0] * DRAG_TRANSLUCENCY);
       dest[3] = PRUint8(src[3] * DRAG_TRANSLUCENCY);
 #endif
       src += 4;
