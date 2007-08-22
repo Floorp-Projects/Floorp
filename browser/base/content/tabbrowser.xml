@@ -108,7 +108,7 @@
             <xul:tab selected="true" validate="never"
                      onerror="this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image'));
                               this.removeAttribute('image');"
-                     maxwidth="250" width="0" minwidth="125" flex="100"
+                     maxwidth="250" width="0" minwidth="100" flex="100"
                      class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
           </xul:tabs>
         </xul:hbox>
@@ -2575,7 +2575,7 @@
         }
         });
       </field>
-      <field name="mTabMinWidth">60</field>
+      <field name="mTabMinWidth">100</field>
       <field name="mTabClipWidth">140</field>
       <field name="mCloseButtons">1</field>
 
