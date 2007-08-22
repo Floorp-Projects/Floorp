@@ -29,6 +29,7 @@
    -   Seth Spitzer <sspitzer@mozilla.org>
    -   Simon Bünzli <zeniko@gmail.com>
    -   Michael Ventnor <ventnor.bugzilla@yahoo.com.au>
+   -   Mark Pilgrim <pilgrim@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -286,6 +287,15 @@
               this.mTotalProgress = aMaxTotalProgress ? aCurTotalProgress / aMaxTotalProgress : 0;
             },
 
+            onProgressChange64 : function (aWebProgress, aRequest,
+                                         aCurSelfProgress, aMaxSelfProgress,
+                                         aCurTotalProgress, aMaxTotalProgress)
+            {
+              return this.onProgressChange(aWebProgress, aRequest,
+                aCurSelfProgress, aMaxSelfProgress, aCurTotalProgress,
+                aMaxTotalProgress);
+            },
+
             onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
             {
               if (!aRequest)
@@ -431,9 +441,23 @@
               }
             },
 
+             onRefreshAttempted : function(aWebProgress, aURI, aDelay, aSameURI)
+             {
+               var allowRefresh = true;
+               for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
+                 var p = this.mTabBrowser.mProgressListeners[i];
+                 if (p && "onRefreshAttempted" in p) {
+                   if (!p.onRefreshAttempted(aWebProgress, aURI, aDelay, aSameURI))
+                     allowRefresh = false;
+                 }
+               }
+               return allowRefresh;
+             },
+ 
             QueryInterface : function(aIID)
             {
               if (aIID.equals(Components.interfaces.nsIWebProgressListener) ||
+                  aIID.equals(Components.interfaces.nsIWebProgressListener2) ||
                   aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
                   aIID.equals(Components.interfaces.nsISupports))
                 return this;
