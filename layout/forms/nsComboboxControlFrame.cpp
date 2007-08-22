@@ -916,6 +916,8 @@ nsComboboxControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
 NS_IMETHODIMP
 nsComboboxControlFrame::OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
+  RedisplayText(aNewIndex);
+  
   nsISelectControlFrame* listFrame = nsnull;
   NS_ASSERTION(mDropdownFrame, "No dropdown frame!");
 
