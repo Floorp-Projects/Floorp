@@ -2581,7 +2581,8 @@
   <binding id="tabbrowser-tabs"
            extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
-      <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1" style="min-width: 1px;" class="tabbrowser-arrowscrollbox">
+      <xul:arrowscrollbox anonid="arrowscrollbox" class="tabbrowser-arrowscrollbox" flex="1"
+                          xbl:inherits="smoothscroll" orient="horizontal" style="min-width: 1px;">
         <children includes="tab"/>
       </xul:arrowscrollbox>
       <xul:stack align="center" pack="end" class="tabs-alltabs-stack">
@@ -2631,18 +2632,7 @@
           pb2.addObserver("browser.tabs.closeButtons", 
                           this._prefObserver, false);
 
-          var self = this;
-          function onResize() {
-            var width = self.mTabstrip.boxObject.width;
-            if (width != self.mTabstripWidth) {
-              self.adjustTabstrip();
-              self.mTabstrip.scrollByIndex(1);
-              self.mTabstrip.scrollBoxObject
-                            .ensureElementIsVisible(self.selectedItem);
-              self.mTabstripWidth = width;
-            }
-          }
-          window.addEventListener("resize", onResize, false);
+          window.addEventListener("resize", this, false);
 
           // Listen to overflow/underflow events on the tabstrip,
           // we cannot put these as xbl handlers on the entire binding because
@@ -2757,8 +2747,7 @@
         
       <method name="_handleTabSelect">
         <body><![CDATA[
-          this.mTabstrip.scrollBoxObject
-                        .ensureElementIsVisible(this.selectedItem);
+          this.mTabstrip.ensureElementIsVisible(this.selectedItem);
         ]]></body>
       </method>
 
@@ -2773,6 +2762,16 @@
               break;
             case "underflow":
               this.removeAttribute("overflow");
+              break;
+            case "resize":
+              var width = this.mTabstrip.boxObject.width;
+              if (width != this.mTabstripWidth) {
+                this.adjustTabstrip();
+                // XXX without this line the tab bar won't budge
+                this.mTabstrip.scrollByPixels(1);
+                this._handleTabSelect();
+                this.mTabstripWidth = width;
+              }
               break;
           }
         ]]></body>
