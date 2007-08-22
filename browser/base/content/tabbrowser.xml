@@ -686,7 +686,12 @@
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
             b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
-            b.setAttribute("autocompleteenabled", this.getAttribute("autocompleteenabled"));
+            
+            // To avoid unnecessary string compares on pageload in <browser>, only set the
+            // autocomplete attribute if autocomplete is actually enabled, so we can
+            // just test with |hasAttribute| in <browser>'s load handler. 
+            if (this.getAttribute("autocompleteenabled") == "true")
+              b.setAttribute("autocompleteenabled", "true");
             
             this.mPanelContainer.appendChild(b);
 
@@ -1104,16 +1109,24 @@
       <method name="attachFormFill">
         <body><![CDATA[
           var browsers = this.mPanelContainer.childNodes;
-          for (var i = 0; i < browsers.length; ++i)
-            browsers[i].attachFormFill();
+          for (var i = 0; i < browsers.length; ++i) {
+            var cb = browsers[i];
+            // We can do stuff like this here because we aren't called on every
+            // page load, like <browser>'s |attachFormFill| method is. 
+            cb.setAttribute("autocompleteenabled", "true");
+            cb.attachFormFill();
+          }
         ]]></body>
       </method>
 
       <method name="detachFormFill">
         <body><![CDATA[
           var browsers = this.mPanelContainer.childNodes;
-          for (var i = 0; i < browsers.length; ++i)
-            browsers[i].detachFormFill();
+          for (var i = 0; i < browsers.length; ++i) {
+            var cb = browsers[i];
+            cb.removeAttribute("autocompleteenabled");
+            cb.detachFormFill();
+          }
         ]]></body>
       </method>
 
