@@ -2494,7 +2494,7 @@
         <xul:toolbarbutton class="close-button tabs-closebutton"/>
       </xul:hbox>
     </content>
-    <implementation implements="nsITimerCallback">
+    <implementation implements="nsITimerCallback, nsIDOMEventListener">
       <constructor>
         <![CDATA[
           var pb2 =
@@ -2530,6 +2530,14 @@
             }
           }
           window.addEventListener("resize", onResize, false);
+
+          // Listen to overflow/underflow events on the tabstrip,
+          // we cannot put these as xbl handlers on the entire binding because
+          // they would also get called for the all-tabs popup scrollbox.
+          // Also, we can't rely on event.target becuase these are all
+          // anonymous nodes.
+          this.mTabstrip.addEventListener("overflow", this, false);
+          this.mTabstrip.addEventListener("underflow", this, false);
         ]]>
       </constructor>
 
@@ -2540,6 +2548,9 @@
             this._animateTimer.cancel();
             this._animateTimer = null;
           }
+
+          this.mTabstrip.removeEventListener("overflow", this, false);
+          this.mTabstrip.removeEventListener("underflow", this, false);
         ]]>
       </destructor>
 
@@ -2670,7 +2681,20 @@
                         .ensureElementIsVisible(this.selectedItem);
         ]]></body>
       </method>
-        
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          switch (aEvent.type) {
+            case "overflow":
+              this.setAttribute("overflow", "true");
+              break;
+            case "underflow":
+              this.removeAttribute("overflow");
+          }
+        ]]></body>
+      </method>
+
       <field name="mAllTabsPopup">
         document.getAnonymousElementByAttribute(this, 
                                                 "anonid", "alltabs-popup");
