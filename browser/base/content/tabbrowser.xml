@@ -713,7 +713,7 @@
 
             function setFocus(element) {
               document.commandDispatcher.suppressFocusScroll = true;
-              Components.lookupMethod(element, "focus").call(element);
+              element.focus();
               document.commandDispatcher.suppressFocusScroll = false;
             }
 
@@ -741,12 +741,6 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
-            // mechanism for reading properties of the underlying XPCOM object
-            // (ignoring potential getters/setters added by malicious content)
-            var safeGetProperty = function(obj, propname) {
-              return Components.lookupMethod(obj, propname).call(obj);
-            };
-
             var tabBrowser = this.parentNode.parentNode;
             if (!tabBrowser.mPrefs.getBoolPref("browser.chrome.site_icons"))
               return;
@@ -779,13 +773,11 @@
               Components.classes["@mozilla.org/network/io-service;1"]
                         .getService(Components.interfaces.nsIIOService);
 
-            const targetDoc = safeGetProperty(event.target, "ownerDocument");
+            const targetDoc = event.target.ownerDocument;
             // Make a URI out of our href.
-            var docCharset = safeGetProperty(targetDoc, "characterSet");
-            var uri = ioService.newURI(href, docCharset, null);
+            var uri = ioService.newURI(href, targetDoc.characterSet, null);
 
-            var origURIStr = safeGetProperty(targetDoc, "documentURI");
-            var origURI = ioService.newURI(origURIStr, docCharset, null);
+            var origURI = ioService.newURI(targetDoc.documentURI, targetDoc.characterSet, null);
 
             const nsIScriptSecMan =
               Components.interfaces.nsIScriptSecurityManager;
@@ -800,7 +792,7 @@
             // Security says okay, now ask content policy
             if (contentPolicy.shouldLoad(nsIContentPolicy.TYPE_IMAGE,
                                          uri, origURI, event.target,
-                                         safeGetProperty(event.target, "type"),
+                                         event.target.type,
                                          null) != nsIContentPolicy.ACCEPT)
               return;
 
@@ -861,8 +853,7 @@
                 // Let's try to unescape it using a character set
                 // in case the URI is not ASCII.
                 try {
-                  var characterSet = Components.lookupMethod(browser.contentDocument, 'characterSet')
-                                               .call(browser.contentDocument);
+                  var characterSet = browser.contentDocument.characterSet;
                   const textToSubURI = Components.classes["@mozilla.org/intl/texttosuburi;1"]
                                                  .getService(Components.interfaces.nsITextToSubURI);
                   title = textToSubURI.unEscapeNonAsciiURI(characterSet, title);
