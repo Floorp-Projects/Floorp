@@ -406,10 +406,13 @@ nsNavHistoryExpire::EraseVisits(mozIStorageConnection* aConnection,
   nsCAutoString deletedVisitIds;
   for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
     // Do not add comma separator for the first entry
-    if(! deletedVisitIds.IsEmpty())
+    if (! deletedVisitIds.IsEmpty())
       deletedVisitIds.AppendLiteral(", ");
     deletedVisitIds.AppendInt(aRecords[i].visitID);
   }
+
+  if (deletedVisitIds.IsEmpty())
+    return NS_OK;
 
   return aConnection->ExecuteSimpleSQL(
     NS_LITERAL_CSTRING("DELETE FROM moz_historyvisits WHERE id IN (") +
@@ -438,11 +441,14 @@ nsNavHistoryExpire::EraseHistory(mozIStorageConnection* aConnection,
         StringBeginsWith(aRecords[i].uri, NS_LITERAL_CSTRING("place:")))
       continue;
     // Do not add comma separator for the first entry
-    if(! deletedPlaceIds.IsEmpty() )
+    if (! deletedPlaceIds.IsEmpty())
       deletedPlaceIds.AppendLiteral(", ");
     deletedPlaceIds.AppendInt(aRecords[i].placeID);
     aRecords[i].erased = PR_TRUE;
   }
+
+  if (deletedPlaceIds.IsEmpty())
+    return NS_OK;
 
   return aConnection->ExecuteSimpleSQL(
     NS_LITERAL_CSTRING("DELETE FROM moz_places WHERE id IN (") +
@@ -466,10 +472,13 @@ nsNavHistoryExpire::EraseFavicons(mozIStorageConnection* aConnection,
     if (! aRecords[i].erased || aRecords[i].faviconID == 0)
       continue;
     // Do not add comma separator for the first entry
-    if(! deletedFaviconIds.IsEmpty() )
+    if (! deletedFaviconIds.IsEmpty())
       deletedFaviconIds.AppendLiteral(", ");
     deletedFaviconIds.AppendInt(aRecords[i].faviconID);
   }
+
+  if (deletedFaviconIds.IsEmpty())
+    return NS_OK;
 
   // delete only if id is not referenced in moz_places
   return aConnection->ExecuteSimpleSQL(
