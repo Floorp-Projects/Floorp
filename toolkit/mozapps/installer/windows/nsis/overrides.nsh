@@ -4,19 +4,36 @@
 !ifndef OVERRIDES_INCLUDED
 !define OVERRIDES_INCLUDED
 
-!include TextFunc.nsh
-!include FileFunc.nsh
-
 ; Modified version of Locate from the NSIS File Functions Header v3.2
 ; This version has the calls to SetDetailsPrint and DetailsPrint commented out.
 ; See <NSIS App Dir>/include/FileFunc.nsh for more information
-!macro LocateNoDetails
-  !ifndef ${_FILEFUNC_UN}LocateNoDetails
-    !verbose push
-    !verbose ${_FILEFUNC_VERBOSE}
-    !define ${_FILEFUNC_UN}LocateNoDetails `!insertmacro ${_FILEFUNC_UN}LocateNoDetailsCall`
 
-    Function ${_FILEFUNC_UN}LocateNoDetails
+!verbose push
+!verbose 3
+!ifndef _OVERRIDEFUNC_VERBOSE
+  !define _OVERRIDEFUNC_VERBOSE 3
+!endif
+!verbose ${_OVERRIDEFUNC_VERBOSE}
+!define OVERRIDEFUNC_VERBOSE "!insertmacro OVERRIDEFUNC_VERBOSE"
+!define _OVERRIDEFUNC_UN
+!define _OVERRIDEFUNC_S
+!verbose pop
+
+!macro OVERRIDEFUNC_VERBOSE _VERBOSE
+  !verbose push
+  !verbose 3
+  !undef _OVERRIDEFUNC_VERBOSE
+  !define _OVERRIDEFUNC_VERBOSE ${_VERBOSE}
+  !verbose pop
+!macroend
+
+!macro LocateNoDetails
+  !ifndef ${_OVERRIDEFUNC_UN}LocateNoDetails
+    !verbose push
+    !verbose ${_OVERRIDEFUNC_VERBOSE}
+    !define ${_OVERRIDEFUNC_UN}LocateNoDetails `!insertmacro ${_OVERRIDEFUNC_UN}LocateNoDetailsCall`
+
+    Function ${_OVERRIDEFUNC_UN}LocateNoDetails
       Exch $2
       Exch
       Exch $1
@@ -298,7 +315,7 @@
 
 !macro LocateNoDetailsCall _PATH _OPTIONS _FUNC
   !verbose push
-  !verbose ${_FILEFUNC_VERBOSE}
+  !verbose ${_OVERRIDEFUNC_VERBOSE}
   Push $0
   Push `${_PATH}`
   Push `${_OPTIONS}`
@@ -311,7 +328,7 @@
 
 !macro un.LocateNoDetailsCall _PATH _OPTIONS _FUNC
   !verbose push
-  !verbose ${_FILEFUNC_VERBOSE}
+  !verbose ${_OVERRIDEFUNC_VERBOSE}
   Push $0
   Push `${_PATH}`
   Push `${_OPTIONS}`
@@ -325,14 +342,14 @@
 !macro un.LocateNoDetails
   !ifndef un.LocateNoDetails
     !verbose push
-    !verbose ${_FILEFUNC_VERBOSE}
-    !undef _FILEFUNC_UN
-    !define _FILEFUNC_UN `un.`
+    !verbose ${_OVERRIDEFUNC_VERBOSE}
+    !undef _OVERRIDEFUNC_UN
+    !define _OVERRIDEFUNC_UN `un.`
 
     !insertmacro LocateNoDetails
 
-    !undef _FILEFUNC_UN
-    !define _FILEFUNC_UN
+    !undef _OVERRIDEFUNC_UN
+    !define _OVERRIDEFUNC_UN
     !verbose pop
   !endif
 !macroend
@@ -341,12 +358,12 @@
 ; This version has the calls to SetDetailsPrint and DetailsPrint commented out.
 ; See <NSIS App Dir>/include/TextFunc.nsh for more information
 !macro TextCompareNoDetails
-  !ifndef ${_TEXTFUNC_UN}TextCompareNoDetails${_TEXTFUNC_S}
+  !ifndef ${_OVERRIDEFUNC_UN}TextCompareNoDetails${_OVERRIDEFUNC_S}
     !verbose push
-    !verbose ${_TEXTFUNC_VERBOSE}
-    !define ${_TEXTFUNC_UN}TextCompareNoDetails${_TEXTFUNC_S} `!insertmacro ${_TEXTFUNC_UN}TextCompareNoDetails${_TEXTFUNC_S}Call`
+    !verbose ${_OVERRIDEFUNC_VERBOSE}
+    !define ${_OVERRIDEFUNC_UN}TextCompareNoDetails${_OVERRIDEFUNC_S} `!insertmacro ${_OVERRIDEFUNC_UN}TextCompareNoDetails${_OVERRIDEFUNC_S}Call`
 
-    Function ${_TEXTFUNC_UN}TextCompareNoDetails${_TEXTFUNC_S}
+    Function ${_OVERRIDEFUNC_UN}TextCompareNoDetails${_OVERRIDEFUNC_S}
       Exch $3
       Exch
       Exch $2
@@ -383,31 +400,31 @@
       StrCpy $8 0
 
       nextline:
-      StrCmp${_TEXTFUNC_S} $4 '' fast
+      StrCmp${_OVERRIDEFUNC_S} $4 '' fast
       IntOp $8 $8 + 1
       FileRead $4 $9
       IfErrors 0 +4
       FileClose $4
       StrCpy $4 ''
-      StrCmp${_TEXTFUNC_S} $5 '' end
+      StrCmp${_OVERRIDEFUNC_S} $5 '' end
       StrCmp $2 'FastDiff' fast
       StrCmp $2 'FastEqual' fast slow
 
       fast:
-      StrCmp${_TEXTFUNC_S} $5 '' call
+      StrCmp${_OVERRIDEFUNC_S} $5 '' call
       IntOp $6 $6 + 1
       FileRead $5 $7
       IfErrors 0 +5
       FileClose $5
       StrCpy $5 ''
-      StrCmp${_TEXTFUNC_S} $4 '' end
+      StrCmp${_OVERRIDEFUNC_S} $4 '' end
       StrCmp $2 'FastDiff' call close
       StrCmp $2 'FastDiff' 0 +2
-      StrCmp${_TEXTFUNC_S} $7 $9 nextline call
-      StrCmp${_TEXTFUNC_S} $7 $9 call nextline
+      StrCmp${_OVERRIDEFUNC_S} $7 $9 nextline call
+      StrCmp${_OVERRIDEFUNC_S} $7 $9 call nextline
 
       slow:
-      StrCmp${_TEXTFUNC_S} $4 '' close
+      StrCmp${_OVERRIDEFUNC_S} $4 '' close
       StrCpy $6 ''
 ;      DetailPrint '$8. $9'
       FileSeek $5 0
@@ -417,9 +434,9 @@
       IfErrors 0 +2
       StrCmp $2 'SlowDiff' call nextline
       StrCmp $2 'SlowDiff' 0 +2
-      StrCmp${_TEXTFUNC_S} $7 $9 nextline slownext
+      StrCmp${_OVERRIDEFUNC_S} $7 $9 nextline slownext
       IntOp $6 $6 + 1
-      StrCmp${_TEXTFUNC_S} $7 $9 0 slownext
+      StrCmp${_OVERRIDEFUNC_S} $7 $9 0 slownext
 
       call:
       Push $2
@@ -471,21 +488,21 @@
 !macro TextCompareNoDetailsS
   !ifndef TextCompareNoDetailsS
     !verbose push
-    !verbose ${_TEXTFUNC_VERBOSE}
-    !undef _TEXTFUNC_S
-    !define _TEXTFUNC_S `S`
+    !verbose ${_OVERRIDEFUNC_VERBOSE}
+    !undef _OVERRIDEFUNC_S
+    !define _OVERRIDEFUNC_S `S`
 
     !insertmacro TextCompareNoDetails
 
-    !undef _TEXTFUNC_S
-    !define _TEXTFUNC_S
+    !undef _OVERRIDEFUNC_S
+    !define _OVERRIDEFUNC_S
     !verbose pop
   !endif
 !macroend
 
 !macro TextCompareNoDetailsCall _FILE1 _FILE2 _OPTION _FUNC
   !verbose push
-  !verbose ${_TEXTFUNC_VERBOSE}
+  !verbose ${_OVERRIDEFUNC_VERBOSE}
   Push $0
   Push `${_FILE1}`
   Push `${_FILE2}`
@@ -499,7 +516,7 @@
 
 !macro TextCompareNoDetailsSCall _FILE1 _FILE2 _OPTION _FUNC
   !verbose push
-  !verbose ${_TEXTFUNC_VERBOSE}
+  !verbose ${_OVERRIDEFUNC_VERBOSE}
   Push $0
   Push `${_FILE1}`
   Push `${_FILE2}`
@@ -513,7 +530,7 @@
 
 !macro un.TextCompareNoDetailsCall _FILE1 _FILE2 _OPTION _FUNC
   !verbose push
-  !verbose ${_TEXTFUNC_VERBOSE}
+  !verbose ${_OVERRIDEFUNC_VERBOSE}
   Push $0
   Push `${_FILE1}`
   Push `${_FILE2}`
@@ -527,7 +544,7 @@
 
 !macro un.TextCompareNoDetailsSCall _FILE1 _FILE2 _OPTION _FUNC
   !verbose push
-  !verbose ${_TEXTFUNC_VERBOSE}
+  !verbose ${_OVERRIDEFUNC_VERBOSE}
   Push $0
   Push `${_FILE1}`
   Push `${_FILE2}`
@@ -542,14 +559,14 @@
 !macro un.TextCompareNoDetails
   !ifndef un.TextCompareNoDetails
     !verbose push
-    !verbose ${_TEXTFUNC_VERBOSE}
-    !undef _TEXTFUNC_UN
-    !define _TEXTFUNC_UN `un.`
+    !verbose ${_OVERRIDEFUNC_VERBOSE}
+    !undef _OVERRIDEFUNC_UN
+    !define _OVERRIDEFUNC_UN `un.`
 
     !insertmacro TextCompareNoDetails
 
-    !undef _TEXTFUNC_UN
-    !define _TEXTFUNC_UN
+    !undef _OVERRIDEFUNC_UN
+    !define _OVERRIDEFUNC_UN
     !verbose pop
   !endif
 !macroend
@@ -557,18 +574,18 @@
 !macro un.TextCompareNoDetailsS
   !ifndef un.TextCompareNoDetailsS
     !verbose push
-    !verbose ${_TEXTFUNC_VERBOSE}
-    !undef _TEXTFUNC_UN
-    !define _TEXTFUNC_UN `un.`
-    !undef _TEXTFUNC_S
-    !define _TEXTFUNC_S `S`
+    !verbose ${_OVERRIDEFUNC_VERBOSE}
+    !undef _OVERRIDEFUNC_UN
+    !define _OVERRIDEFUNC_UN `un.`
+    !undef _OVERRIDEFUNC_S
+    !define _OVERRIDEFUNC_S `S`
 
     !insertmacro TextCompareNoDetails
 
-    !undef _TEXTFUNC_UN
-    !define _TEXTFUNC_UN
-    !undef _TEXTFUNC_S
-    !define _TEXTFUNC_S
+    !undef _OVERRIDEFUNC_UN
+    !define _OVERRIDEFUNC_UN
+    !undef _OVERRIDEFUNC_S
+    !define _OVERRIDEFUNC_S
     !verbose pop
   !endif
 !macroend
