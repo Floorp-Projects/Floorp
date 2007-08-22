@@ -1277,6 +1277,12 @@
 
             var messageKey = (tabsToClose == 1) ? "tabs.closeWarningOne" : "tabs.closeWarningMultiple";
             var closeKey = (tabsToClose == 1) ? "tabs.closeButtonOne" : "tabs.closeButtonMultiple";
+            // focus the window before prompting.
+            // this will raise any minimized window, which will
+            // make it obvious which window the prompt is for and will
+            // solve the problem of windows "obscuring" the prompt.
+            // see bug #350299 for more details
+            window.focus();
             var buttonPressed = promptService.confirmEx(window,
                                                         bundle.getString('tabs.closeWarningTitle'),
                                                         bundle.getFormattedString(messageKey, [tabsToClose]),
