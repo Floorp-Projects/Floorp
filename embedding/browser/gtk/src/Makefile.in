@@ -86,6 +86,7 @@ REQUIRES	= xpcom \
 		  widget \
 		  dom \
 		  gfx \
+		  thebes \
 		  intl \
 		  imglib2 \
 		  layout \
