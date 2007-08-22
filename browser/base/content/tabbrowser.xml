@@ -80,7 +80,6 @@
           <xul:tabs class="tabbrowser-tabs" closebutton="true" flex="1"
                     setfocus="false"
                     onclick="this.parentNode.parentNode.parentNode.onTabClick(event);"
-                    onmousedown="this.parentNode.parentNode.parentNode.updateContextTab(event);"
                     ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode.parentNode);
                                 event.stopPropagation();"
                     ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode.parentNode);
@@ -165,7 +164,7 @@
             mTab: aTab,
             mBrowser: aBrowser,
             mBlank: aStartsBlank,
-            mIcon: "", 
+            mIcon: "",
 
             onProgressChange : function (aWebProgress, aRequest,
                                          aCurSelfProgress, aMaxSelfProgress,
@@ -385,32 +384,20 @@
             var docTitle;
             if (this.docShell.contentViewer)
               docTitle = this.contentTitle;
-            
-	    if (!docTitle)
-	      docTitle = this.ownerDocument.documentElement.getAttribute("titledefault");
 
-	    var modifier = this.ownerDocument.documentElement.getAttribute("titlemodifier");
+            if (!docTitle)
+              docTitle = this.ownerDocument.documentElement.getAttribute("titledefault");
+
+            var modifier = this.ownerDocument.documentElement.getAttribute("titlemodifier");
             if (docTitle) {
               newTitle += this.ownerDocument.documentElement.getAttribute("titlepreface");
               newTitle += docTitle;
-	      var sep = this.ownerDocument.documentElement.getAttribute("titlemenuseparator");
-	      if (modifier)
-	        newTitle += sep;
+              var sep = this.ownerDocument.documentElement.getAttribute("titlemenuseparator");
+              if (modifier)
+                newTitle += sep;
             }
             newTitle += modifier;
             window.title = newTitle;
-          ]]>
-        </body>
-      </method>
-
-      <method name="updateContextTab">
-        <parameter name="aEvent"/>
-        <body>
-          <![CDATA[
-            if (aEvent.originalTarget.localName == "tab")
-              this.mContextTab = aEvent.originalTarget;
-            else
-              this.mContextTab = document.popupNode;
           ]]>
         </body>
       </method>
@@ -419,6 +406,7 @@
         <parameter name="aPopupMenu"/>
         <body>
           <![CDATA[
+            this.mContextTab = document.popupNode;
             var disabled = this.mPanelContainer.childNodes.length == 1;
             var menuItems = aPopupMenu.getElementsByAttribute("tbattr", "tabbrowser-multiple");
             for (var i = 0; i < menuItems.length; i++)
