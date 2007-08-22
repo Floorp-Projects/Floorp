@@ -1876,11 +1876,15 @@
             // Don't let untrusted events mess with tabs.
             return;
           }
-  
+
+          if (('shiftKey' in aEvent && aEvent.shiftKey) ||
+              ('altKey' in aEvent && aEvent.altKey))
+            return;
 #ifdef XP_MACOSX
           if ('metaKey' in aEvent && aEvent.metaKey) {
 #else
-          if ('ctrlKey' in aEvent && aEvent.ctrlKey) {
+          if (('ctrlKey' in aEvent && aEvent.ctrlKey) &&
+              !('metaKey' in aEvent && aEvent.metaKey)) {
             if (aEvent.keyCode == KeyEvent.DOM_VK_F4 && 
                 this.tabbrowser.mTabBox.handleCtrlPageUpDown) {
               this.tabbrowser.removeCurrentTab();
@@ -1906,8 +1910,12 @@
                   this.tabbrowser.moveTabToEnd();
                   break;
                 default:
-                  break;
+                  // Stop the keypress event for the above keyboard 
+                  // shortcuts only.
+                  return;
               }
+              aEvent.stopPropagation();
+              aEvent.preventDefault();
             }
           }
         }
