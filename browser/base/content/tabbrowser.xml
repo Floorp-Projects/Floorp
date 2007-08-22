@@ -2270,7 +2270,7 @@
         <xul:spacer class="tabs-right" flex="1"/>
       </xul:hbox>
     </content>
-    <implementation implements="nsIObserver">
+    <implementation>
       <constructor>
         var pb2 =
             Components.classes['@mozilla.org/preferences-service;1'].
@@ -2282,7 +2282,7 @@
         }
 
         this._updateDisableBackgroundClose();
-        pb2.addObserver("browser.tabs.disableBackgroundClose", this, true);
+        pb2.addObserver("browser.tabs.disableBackgroundClose", this._prefObserver, true);
 
         var self = this;
         function onResize() {
@@ -2307,15 +2307,25 @@
           }
         ]]></body>
       </method>
-      <method name="observe">
-        <parameter name="subject"/>
-        <parameter name="topic"/>
-        <parameter name="data"/>
-        <body><![CDATA[
+      <field name="_prefObserver">({
+        tabbox: this,
+  
+        observe: function(subject, topic, data)
+        {
           if (topic == "nsPref:changed")
-            this._updateDisableBackgroundClose();
-        ]]></body>
-      </method>
+            this.tabbox._updateDisableBackgroundClose();
+        },
+  
+        QueryInterface : function(aIID)
+        {
+          if (aIID.equals(Components.interfaces.nsIObserver) ||
+              aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+              aIID.equals(Components.interfaces.nsISupports))
+            return this;
+          throw Components.results.NS_NOINTERFACE;
+        }
+        });
+      </field>
       <field name="mTabClipWidth">140</field>
       <method name="adjustCloseButtons">
         <parameter name="aNumTabs"/>
