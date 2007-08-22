@@ -62,6 +62,13 @@
             <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1" style="min-width: 1px;" clicktoscroll="true">
               <children/>
             </xul:arrowscrollbox>
+            <xul:hbox class="tabs-alltabs-box" pack="end" align="center"
+                      anonid="alltabs-box">
+              <xul:toolbarbutton class="tabs-alltabs-button" type="menu">
+                <xul:menupopup class="tabs-alltabs-popup"
+                  anonid="alltabs-popup" position="after_end"/>
+              </xul:toolbarbutton>
+            </xul:hbox>
             <xul:hbox class="tabs-closebutton-box" align="center" pack="end" anonid="tabstrip-closebutton">
               <xul:toolbarbutton class="close-button tabs-closebutton"/>
             </xul:hbox>
