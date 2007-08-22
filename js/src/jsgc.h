@@ -142,6 +142,12 @@ struct JSGCThing {
 #define GC_FREELIST_NBYTES(i)   (((i) + 1) * sizeof(JSGCThing))
 #define GC_FREELIST_INDEX(n)    (((n) / sizeof(JSGCThing)) - 1)
 
+/*
+ * Allocates a new GC thing of the given size. After a successful allocation
+ * the caller must fully initialize the thing before calling any function that
+ * can potentially trigger GC. This will ensure that GC tracing never sees junk
+ * values stored in the partially initialized thing.
+ */
 extern void *
 js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes);
 
