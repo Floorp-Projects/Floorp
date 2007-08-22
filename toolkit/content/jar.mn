@@ -64,7 +64,6 @@ toolkit.jar:
 *+ content/global/bindings/spinbuttons.xml     (widgets/spinbuttons.xml)
 *+ content/global/bindings/stringbundle.xml    (widgets/stringbundle.xml)
 *+ content/global/bindings/tabbox.xml          (widgets/tabbox.xml)
-*+ content/global/bindings/tabbrowser.xml      (widgets/tabbrowser.xml)
 *+ content/global/bindings/text.xml            (widgets/text.xml)
 *+ content/global/bindings/textbox.xml         (widgets/textbox.xml)
 *+ content/global/bindings/toolbar.xml         (widgets/toolbar.xml)

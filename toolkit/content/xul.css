@@ -149,10 +149,6 @@ browser {
   -moz-binding: url("chrome://global/content/bindings/browser.xml#browser");
 }
 
-tabbrowser {
-  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser");
-}
-
 editor {
   -moz-binding: url("chrome://global/content/bindings/editor.xml#editor");
 }
@@ -617,44 +613,10 @@ tab {
   -moz-box-pack: center;
 }
 
-.tabbrowser-tabs {
-  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tabs");
-}
-
-.tabbrowser-arrowscrollbox {
-  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-arrowscrollbox");
-}
-
-.tabbrowser-tabs > .tabbrowser-tab {
-  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tab");
-}
-
-.tabbrowser-tabs > .tabbrowser-tab > .tab-close-button,
-.tabbrowser-tabs .tabs-closebutton-box > .tabs-closebutton {
-  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-close-tab-button");
-}
-
-.tab-close-button {
-  display: none;
-}
-
-.tabbrowser-tabs:not([closebuttons="noclose"]):not([closebuttons="closeatend"]) > .tabbrowser-tab[selected="true"] > .tab-close-button {
-  display: -moz-box;
-}
-
-.tabbrowser-tabs[closebuttons="alltabs"] > .tabbrowser-tab > .tab-close-button {
-  display: -moz-box;
-}
-
 tabpanels {
   -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabpanels");
   display: -moz-deck;
 }
-
-.tabs-alltabs-popup {
-  -moz-binding: url("chrome://global/content/bindings/tabbrowser.xml#tabbrowser-alltabs-popup");
-}
-
 
 /********** progressmeter **********/
 
