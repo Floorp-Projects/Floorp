@@ -55,6 +55,7 @@ const HTTP_BAD_GATEWAY           = 502;
 const HTTP_SERVICE_UNAVAILABLE   = 503;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/JSON.jsm");
 
 /**
  * SuggestAutoCompleteResult contains the results returned by the Suggest
@@ -522,21 +523,7 @@ SuggestAutoComplete.prototype = {
 
     this._clearServerErrors();
 
-    // This is a modified version of Crockford's JSON sanitizer, obtained
-    // from http://www.json.org/js.html.
-    // This should use built-in functions once bug 340987 is fixed.
-    const JSON_STRING = /^("(\\.|[^"\\\n\r])*?"|[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t])+?$/;
-    var sandbox = new Cu.Sandbox(this._suggestURI.prePath);
-    function parseJSON(aString) {
-      try {
-        if (JSON_STRING.test(aString))
-          return Cu.evalInSandbox("(" + aString + ")", sandbox);
-      } catch (e) {}
-
-      return [];
-    };
-
-    var serverResults = parseJSON(responseText);
+    var serverResults = JSON.fromString(responseText);
     var searchString = serverResults[0] || "";
     var results = serverResults[1] || [];
 
