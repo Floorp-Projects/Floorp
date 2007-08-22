@@ -1222,6 +1222,20 @@ nsFrameSelection::MoveCaret(PRUint32          aKeycode,
                             PRBool            aContinueSelection,
                             nsSelectionAmount aAmount)
 {
+  {
+    // Make sure that if our presshell gets Destroy() called when we
+    // flush we don't die.
+    nsRefPtr<nsFrameSelection> kungFuDeathGrip(this);
+
+    // Flush out layout, since we need it to be up to date to do caret
+    // positioning.
+    mShell->FlushPendingNotifications(Flush_Layout);
+
+    if (!mShell) {
+      return NS_OK;
+    }
+  }
+    
   nsPresContext *context = mShell->GetPresContext();
   if (!context)
     return NS_ERROR_FAILURE;
