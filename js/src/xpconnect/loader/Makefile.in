@@ -56,7 +56,7 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= mozJSComponentLoader.cpp mozJSSubScriptLoader.cpp
 
-EXTRA_JS_MODULES = XPCOMUtils.jsm
+EXTRA_JS_MODULES = XPCOMUtils.jsm JSON.jsm
 
 include $(topsrcdir)/config/rules.mk
 
