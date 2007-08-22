@@ -968,7 +968,7 @@
             // can occur when "browser.tabs.loadInBackground" is false and presshell is not ready
             if (!bgLoad) {
               function selectNewForegroundTab(browser, tab) {
-                this.selectedTab = tab;
+                browser.selectedTab = tab;
               }
               setTimeout(selectNewForegroundTab, 0, getBrowser(), tab);
             }
