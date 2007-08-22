@@ -250,7 +250,7 @@ PR_STATIC_CALLBACK(int) CSSErrorsPrefChanged(const char *aPref, void *aClosure)
 }
 
 void nsCSSScanner::Init(nsIUnicharInputStream* aInput, 
-                        const PRUnichar * aBuffer, PRInt32 aCount, 
+                        const PRUnichar * aBuffer, PRUint32 aCount, 
                         nsIURI* aURI, PRUint32 aLineNumber)
 {
   NS_PRECONDITION(!mInputStream, "Should not have an existing input stream!");
@@ -473,16 +473,13 @@ PRInt32 nsCSSScanner::Read(nsresult& aErrorCode)
   if (0 < mPushbackCount) {
     rv = PRInt32(mPushback[--mPushbackCount]);
   } else {
-    if (mCount < 0) {
-      return -1;
-    }
     if (mOffset == mCount) {
       mOffset = 0;
       if (!mInputStream) {
         mCount = 0;
         return -1;
       }
-      aErrorCode = mInputStream->Read(mBuffer, CSS_BUFFER_SIZE, (PRUint32*)&mCount);
+      aErrorCode = mInputStream->Read(mBuffer, CSS_BUFFER_SIZE, &mCount);
       if (NS_FAILED(aErrorCode) || mCount == 0) {
         mCount = 0;
         return -1;
