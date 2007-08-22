@@ -492,8 +492,11 @@
               }
             }
 
-            function setFocus(element) {
-               Components.lookupMethod(element, "focus").call(element);
+            if (document.commandDispatcher.focusedElement && 
+                document.commandDispatcher.focusedElement.parentNode == 
+                this.mCurrentTab.parentNode) {
+              // The focus is on a tab in the same tab panel
+              return;  // If focus was on a tab, switching tabs focuses the new tab
             }
             
             var whatToFocus = window.content;
@@ -510,10 +513,14 @@
               whatToFocus = newBrowser.focusedWindow;
             }
 
-            document.commandDispatcher.suppressFocusScroll = true;
+            function setFocus(element) {
+              document.commandDispatcher.suppressFocusScroll = true;
+              Components.lookupMethod(element, "focus").call(element);
+              document.commandDispatcher.suppressFocusScroll = false;
+            }
+
             // Use setTimeout to avoid focus outline ghosting.
             setTimeout(setFocus, 0, whatToFocus);
-            document.commandDispatcher.suppressFocusScroll = false;    
           ]]>
         </body>
       </method>
