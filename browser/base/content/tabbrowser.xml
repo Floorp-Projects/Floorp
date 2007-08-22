@@ -780,11 +780,11 @@
             else
               this.mTabContainer.selectedItem = aTab;
 
-            while (this.mTabContainer.lastChild != aTab)
-              this.removeTab(this.mTabContainer.lastChild);
-
-            while (aTab.previousSibling)
-              this.removeTab(aTab.previousSibling);
+            var childNodes = this.mTabContainer.childNodes;
+            for (var i = childNodes.length - 1; i >= 0; --i) {
+              if (childNodes[i] != aTab)
+                this.removeTab(childNodes[i]);
+            }
           ]]>
         </body>
       </method>
@@ -811,6 +811,11 @@
               this.setStripVisibilityTo(false);
               return;
             }
+
+            var ds = this.getBrowserForTab(aTab).docShell;
+
+            if (ds.contentViewer && !ds.contentViewer.permitUnload())
+              return;
 
             if (l == 2) {
               var autohide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
@@ -970,6 +975,12 @@
         ]]>
         </body>
       </method>
+
+      <property name="tabContainer">
+        <getter>
+          return this.mTabContainer;
+        </getter>
+      </property>
 
       <property name="selectedTab">
         <getter>
