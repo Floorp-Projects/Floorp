@@ -355,12 +355,15 @@
 	    if (!docTitle)
 	      docTitle = this.ownerDocument.documentElement.getAttribute("titledefault");
 
+	    var modifier = this.ownerDocument.documentElement.getAttribute("titlemodifier");
             if (docTitle) {
               newTitle += this.ownerDocument.documentElement.getAttribute("titlepreface");
               newTitle += docTitle;
-              newTitle += this.ownerDocument.documentElement.getAttribute("titlemenuseparator");
+	      var sep = this.ownerDocument.documentElement.getAttribute("titlemenuseparator");
+	      if (modifier)
+	        newTitle += sep;
             }
-            newTitle += this.ownerDocument.documentElement.getAttribute("titlemodifier");
+            newTitle += modifier;
             window.title = newTitle;
           ]]>
         </body>
