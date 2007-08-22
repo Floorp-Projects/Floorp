@@ -1719,6 +1719,35 @@ nsTextControlFrame::GetMinWidth(nsIRenderingContext* aRenderingContext)
   return result;
 }
 
+nsSize
+nsTextControlFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+                                    nsSize aCBSize, nscoord aAvailableWidth,
+                                    nsSize aMargin, nsSize aBorder,
+                                    nsSize aPadding, PRBool aShrinkWrap)
+{
+  nsSize autoSize;
+  nsresult rv = CalcIntrinsicSize(aRenderingContext, autoSize);
+  if (NS_FAILED(rv)) {
+    // What now?
+    autoSize.SizeTo(0, 0);
+  }
+#ifdef DEBUG
+  // Note: Ancestor ComputeAutoSize only computes a width if we're auto-width
+  else if (GetStylePosition()->mWidth.GetUnit() == eStyleUnit_Auto) {
+    nsSize ancestorAutoSize =
+      nsStackFrame::ComputeAutoSize(aRenderingContext,
+                                    aCBSize, aAvailableWidth,
+                                    aMargin, aBorder,
+                                    aPadding, aShrinkWrap);
+    NS_ASSERTION(ancestorAutoSize.width == autoSize.width,
+                 "Incorrect size computed by ComputeAutoSize?");
+  }
+#endif
+  
+  return autoSize;
+}
+
+
 // We inherit our GetPrefWidth from nsBoxFrame
 
 NS_IMETHODIMP
