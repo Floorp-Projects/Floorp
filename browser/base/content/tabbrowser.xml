@@ -706,6 +706,7 @@
         <parameter name="aURI"/>
         <parameter name="aReferrerURI"/>
         <parameter name="aCharset"/>
+        <parameter name="aPostData"/>
         <body>
           <![CDATA[
             var blank = (aURI == "about:blank");
@@ -762,9 +763,12 @@
             this.mTabListeners[position] = tabListener;
             this.mTabFilters[position] = filter;
 
-            if (!blank)
+            if (!blank) {
+              if (aPostData === undefined)
+                aPostData = null;
               b.loadURIWithFlags(aURI, nsIWebNavigation.LOAD_FLAGS_NONE,
-                                 aReferrerURI, null, null);
+                                 aReferrerURI, aPostData, null);
+            }
 
             return t;
           ]]>
