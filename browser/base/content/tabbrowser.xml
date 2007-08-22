@@ -1161,6 +1161,7 @@
 
             // see comment above destroy above
             oldBrowser.focusedWindow = null;
+            oldBrowser.focusedElement = null;
             }
           ]]>
         </body>
