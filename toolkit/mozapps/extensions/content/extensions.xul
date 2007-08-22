@@ -208,10 +208,6 @@
               tooltiptextaddons="&cmd.checkUpdatesAllAddon.tooltip;"
               tooltiptextthemes="&cmd.checkUpdatesAllTheme.tooltip;"
               command="cmd_checkUpdatesAll"/>
-      <button id="skipDialogButton" label="&cmd.skip.label;"
-              accesskey="&cmd.skip.accesskey;"
-              tooltiptext="&cmd.skip.tooltip;"
-              command="cmd_close"/>
       <spacer flex="1"/>
       <label id="getMore" class="text-link"
              onclick="openURL(this.getAttribute('getMoreURL'));"
@@ -226,6 +222,10 @@
               accesskey="&cmd.continue.accesskey;"
               tooltiptext="&cmd.continue.tooltip;"
               command="cmd_continue"/>
+      <button id="skipDialogButton" label="&cmd.skip.label;"
+              accesskey="&cmd.skip.accesskey;"
+              tooltiptext="&cmd.skip.tooltip;"
+              command="cmd_close"/>
     </hbox>
     <hbox id="resizerBox" style="min-width:1px;">
       <spacer flex="1"/>
