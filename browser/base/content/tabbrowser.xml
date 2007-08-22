@@ -688,8 +688,6 @@
 
             // Update the URL bar.
             var loc = this.mCurrentBrowser.currentURI;
-            if (!loc)
-              loc = ({ spec: "" });
 
             var webProgress = this.mCurrentBrowser.webProgress;
             var securityUI = this.mCurrentBrowser.securityUI;
@@ -912,7 +910,7 @@
           <![CDATA[
             var browser = this.getBrowserForTab(aTab);
             var crop = "end";
-            var title = browser.contentDocument.title;
+            var title = browser.contentTitle;
 
             if (!title) {
               if (browser.currentURI.spec) {
