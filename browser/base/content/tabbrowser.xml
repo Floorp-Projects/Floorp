@@ -1639,7 +1639,8 @@
               if (window.getComputedStyle(this.parentNode, null)
                         .direction == "ltr") {
                 var newMarginLeft;
-                var minMarginLeft = tabStripBoxObject.x - halfIndWidth;
+                var minMarginLeft = tabStripBoxObject.x - halfIndWidth -
+                                    ib.boxObject.x;
                 // make sure we don't place the tab drop indicator past the
                 // edge, or the containing box will flex and stretch
                 // the tab drop indicator bar, which will flex the url bar.  
@@ -1677,7 +1678,8 @@
                 ind.style.marginLeft = newMarginLeft + 'px';
               } else {
                 var newMarginRight;
-                var minMarginRight = tabStripBoxObject.x - halfIndWidth;
+                var minMarginRight = tabStripBoxObject.x - halfIndWidth -
+                                     ib.boxObject.x;
                 // make sure we don't place the tab drop indicator past the
                 // edge, or the containing box will flex and stretch
                 // the tab drop indicator bar, which will flex the url bar.  
