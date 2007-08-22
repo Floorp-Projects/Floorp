@@ -2388,7 +2388,7 @@
       <xul:hbox class="tabs-closebutton-box" align="center" pack="end" anonid="tabstrip-closebutton">
         <xul:toolbarbutton ondblclick="event.stopPropagation();"
                            class="close-button tabs-closebutton"
-                           oncommand="this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.removeCurrentTab()"/>
+                           oncommand="this.parentNode.parentNode.parentNode.parentNode.parentNode.removeCurrentTab()"/>
       </xul:hbox>
     </content>
     <implementation>
@@ -2449,14 +2449,14 @@
           if (topic == "nsPref:changed") {
             switch (data) {
             case "browser.tabs.disableBackgroundClose":
-              this._updateDisableBackgroundClose();
+              this.tabbox._updateDisableBackgroundClose();
               break;
             case "browser.tabs.closeButtons":
               var pb2 =
                   Components.classes['@mozilla.org/preferences-service;1'].
                   getService(Components.interfaces.nsIPrefBranch2);
-              this.mCloseButtons = pb2.getIntPref("browser.tabs.closeButtons");
-              this.adjustTabstrip(false);
+              this.tabbox.mCloseButtons = pb2.getIntPref("browser.tabs.closeButtons");
+              this.tabbox.adjustTabstrip(false);
               break;
             }
           }
