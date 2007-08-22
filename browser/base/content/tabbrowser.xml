@@ -2733,33 +2733,62 @@
   -->
   <binding id="tabbrowser-alltabs-popup"
            extends="chrome://global/content/bindings/popup.xml#popup">
-    <implementation>
-      <field name="_allTabsMenuItemCommandHandler" readonly="true">
-      <![CDATA[({
-        mOuter: this,
-        handleEvent: function handleEvent(aEvent) {
-          if (!aEvent.isTrusted) {
-            // Don't let untrusted events mess with tabs.
-            return;
-          }
-
+    <implementation implements="nsIDOMEventListener">
+      <method name="_menuItemOnCommand">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
           // note, the tab may not be valid (if after we built the popup
           // the tab was closed.  but selectedItem setter handles that
           // gracefully.
-          var tabcontainer = document.getBindingParent(this.mOuter);
+          var tabcontainer = document.getBindingParent(this);
           tabcontainer.selectedItem = aEvent.target.tab;
-        }
-      })]]>
-      </field>
+        ]]></body>
+      </method>
+
+      <method name="_tabOnAttrModified">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var menuItem = aEvent.target.mCorrespondingMenuitem;
+          if (menuItem) {
+            var attrName = aEvent.attrName;
+            switch (attrName) {
+              case "label":
+              case "crop":
+              case "busy":
+              case "image":
+                if (aEvent.attrChange == aEvent.REMOVAL)
+                  menuItem.removeAttribute(attrName);
+                else
+                  menuItem.setAttribute(attrName, aEvent.newValue);
+            }
+          }
+        ]]></body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (!aEvent.isTrusted)
+            return;
+
+          switch (aEvent.type) {
+            case "command":
+              this._menuItemOnCommand(aEvent);
+              break;
+            case "DOMAttrModified":
+              this._tabOnAttrModified(aEvent);
+          }
+        ]]></body>
+      </method>
 
       <method name="_onHidingAllTabsPopup">
         <body><![CDATA[
           // clear out the menu popup and remove the listeners
           while (this.hasChildNodes()) {
             var menuItem = this.lastChild;
-            menuItem.removeEventListener("command", 
-                                         this._allTabsMenuItemCommandHandler, 
-                                         false);
+            menuItem.removeEventListener("command", this, false);
+            menuItem.tab.removeEventListener("DOMAttrModified", this, false);
+            menuItem.tab.mCorrespondingMenuitem = null;
             this.removeChild(menuItem);
           }
         ]]></body>
@@ -2781,21 +2810,25 @@
               menuItem.setAttribute("selected", "true");
             menuItem.setAttribute("class", "menuitem-iconic alltabs-item");
 
-            // XXX todo
-            // what if uri, image/favicon, title change 
-            // while this popup is open?
-            // mano warns:  "be careful of leaks when addressing this."
             menuItem.setAttribute("label", curTab.label);
+            menuItem.setAttribute("crop", curTab.getAttribute("crop"));
             menuItem.setAttribute("image", curTab.getAttribute("image"));
-            var URI = curTab.linkedBrowser.currentURI.spec;
+            if (curTab.hasAttribute("busy"))
+              menuItem.setAttribute("busy", curTab.getAttribute("busy"));
+
             // XXX todo
             // statustext not working yet, since I don't have a menubar
             // reuse the menubar statustext logic
+            var URI = curTab.linkedBrowser.currentURI.spec;
             menuItem.setAttribute("statustext", URI);
+
+            // Keep some attributes of the menuitem in sync with its
+            // corresponding tab (e.g. the tab label)
+            curTab.mCorrespondingMenuitem = menuItem;
+            curTab.addEventListener("DOMAttrModified", this, false);
+
             menuItem.tab = curTab;
-            menuItem.addEventListener("command", 
-                                      this._allTabsMenuItemCommandHandler, 
-                                      false);
+            menuItem.addEventListener("command", this, false);
             this.appendChild(menuItem);
           }
         ]]></body>
@@ -2872,6 +2905,7 @@
 
     <implementation>
       <field name="mOverCloseButton">false</field>
+      <field name="mCorrespondingMenuitem">null</field>
     </implementation>
 
     <handlers>
