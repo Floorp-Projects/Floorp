@@ -1500,13 +1500,13 @@
                   ind.style.marginLeft = this.mTabs[newIndex].boxObject.x - this.boxObject.x - 7 + 'px';
                 }
               } else {
-                if (newIndex == gBrowser.mTabs.length) {
-                  ind.style.marginRight = gBrowser.boxObject.width + gBrowser.boxObject.x -
-                                          gBrowser.mTabs[newIndex-1].boxObject.x + 'px';
-              } else {
-                  ind.style.marginRight = gBrowser.boxObject.width + gBrowser.boxObject.x -
-                                          gBrowser.mTabs[newIndex].boxObject.x -
-                                          gBrowser.mTabs[newIndex].boxObject.width + 'px';
+                if (newIndex == this.mTabs.length) {
+                  ind.style.marginRight = this.boxObject.width + this.boxObject.x -
+                                          this.mTabs[newIndex-1].boxObject.x + 'px';
+                } else {
+                  ind.style.marginRight = this.boxObject.width + this.boxObject.x -
+                                          this.mTabs[newIndex].boxObject.x -
+                                          this.mTabs[newIndex].boxObject.width + 'px';
                 }
               }
             }
