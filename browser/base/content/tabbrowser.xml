@@ -1622,7 +1622,7 @@
         </body>
       </method>
 
-      <property name="tabContainer">
+      <property name="tabContainer" readonly="true">
         <getter>
           return this.mTabContainer;
         </getter>
@@ -2810,6 +2810,25 @@
   <binding id="tabbrowser-alltabs-popup"
            extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation implements="nsIDOMEventListener">
+      <field name="_xulWindow">
+        null
+      </field>
+
+      <constructor><![CDATA[
+        // We cannot cache the XULBrowserWindow object itself since it might
+        // be set after this binding is constructed.
+        try {
+          this._xulWindow = 
+            window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                  .getInterface(Components.interfaces.nsIWebNavigation)
+                  .QueryInterface(Components.interfaces.nsIDocShellTreeItem)
+                  .treeOwner
+                  .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                  .getInterface(Components.interfaces.nsIXULWindow);
+        }
+        catch(ex) { }
+      ]]></constructor>
+
       <method name="_menuItemOnCommand">
         <parameter name="aEvent"/>
         <body><![CDATA[
@@ -2896,12 +2915,6 @@
             if (curTab.hasAttribute("busy"))
               menuItem.setAttribute("busy", curTab.getAttribute("busy"));
 
-            // XXX todo
-            // statustext not working yet, since I don't have a menubar
-            // reuse the menubar statustext logic
-            var URI = curTab.linkedBrowser.currentURI.spec;
-            menuItem.setAttribute("statustext", URI);
-
             // Keep some attributes of the menuitem in sync with its
             // corresponding tab (e.g. the tab label)
             curTab.mCorrespondingMenuitem = menuItem;
@@ -2913,16 +2926,43 @@
           }
         ]]></body>
       </method>
+
+      <method name="_onMenuItemActive">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (!this._xulWindow || !this._xulWindow.XULBrowserWindow)
+            return;
+
+          var tab = aEvent.target.tab;
+          if (tab) {
+            var statusText = tab.linkedBrowser.currentURI.spec;
+            if (statusText == "about:blank") {
+              // XXXhack: Passing a space here (and not "")
+              // to make sure the the browser implementation would
+              // still consider it a hovered link.
+              statusText = " ";
+            }
+
+            this._xulWindow.XULBrowserWindow.setOverLink(statusText, null);
+          }
+        ]]></body>
+      </method>
+
+      <method name="_onMenuItemInactive">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (!this._xulWindow || !this._xulWindow.XULBrowserWindow)
+            return;
+
+          this._xulWindow.XULBrowserWindow.setOverLink("", null);
+        ]]></body>
+      </method>
     </implementation>
     <handlers>
-      <handler event="popupshowing"><![CDATA[
-        if (event.target == this)
-          this._onShowingAllTabsPopup();
-      ]]></handler>
-      <handler event="popuphiding"><![CDATA[
-        if (event.target == this)
-          this._onHidingAllTabsPopup();
-      ]]></handler>
+      <handler event="popupshowing" action="this._onShowingAllTabsPopup();"/>
+      <handler event="popuphiding" action="this._onHidingAllTabsPopup();"/>
+      <handler event="DOMMenuItemActive" action="this._onMenuItemActive(event);"/>
+      <handler event="DOMMenuItemInactive" action="this._onMenuItemInactive(event);"/>
     </handlers>
   </binding>
 
