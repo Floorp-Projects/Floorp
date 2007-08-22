@@ -227,6 +227,10 @@
             message.docShell = aDocShell;
             message.closeButton = aShowCloseButton;
             aBrowser.isShowingMessage = true;
+            // Fire event for accessibility APIs
+            var event = document.createEvent("Events");
+            event.initEvent("AlertActive", true, true);
+            message.dispatchEvent(event);
           ]]>
         </body>
       </method>
