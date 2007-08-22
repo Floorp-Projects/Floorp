@@ -64,8 +64,7 @@
             </xul:arrowscrollbox>
             <xul:hbox class="tabs-alltabs-box" pack="end" align="center"
                       anonid="alltabs-box">
-              <xul:toolbarbutton class="tabs-alltabs-button" type="menu" tooltip="_child">
-                <xul:tooltip anonid="alltabs-tooltip" label="&listAllTabs.label;"/>
+              <xul:toolbarbutton class="tabs-alltabs-button" type="menu">
                 <xul:menupopup class="tabs-alltabs-popup"
                   anonid="alltabs-popup" position="after_end"/>
               </xul:toolbarbutton>
