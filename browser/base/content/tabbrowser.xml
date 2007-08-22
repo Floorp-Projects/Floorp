@@ -198,6 +198,9 @@
       <field name="_blockDblClick">
         false
       </field>
+      <field name="_autoScrollPopup">
+        null
+      </field>
 
       <method name="getBrowserAtIndex">
         <parameter name="aIndex"/>
@@ -1217,6 +1220,7 @@
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
             if (this.hasAttribute("autocompletepopup"))
               b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
+            b.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
 
             // Add the Message and the Browser to the box
             var notificationbox = document.createElementNS(
@@ -2452,6 +2456,11 @@
           this.mTabContainer.childNodes[0].linkedPanel = uniqueId;
           this.mTabContainer.childNodes[0]._tPos = 0;
           this.mTabContainer.childNodes[0].linkedBrowser = this.mPanelContainer.childNodes[0].firstChild;
+
+          // set up the shared autoscroll popup
+          this._autoScrollPopup = this.mCurrentBrowser._createAutoScrollPopup();
+          this.appendChild(this._autoScrollPopup);
+          this.mCurrentBrowser.setAttribute("autoscrollpopup", this._autoScrollPopup.id);
         ]]>
       </constructor>
 
