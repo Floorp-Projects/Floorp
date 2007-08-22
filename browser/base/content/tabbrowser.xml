@@ -587,7 +587,6 @@
             var crop = "end";
             var titleViaGetter = browser.contentDocument.__proto__.__lookupGetter__('title').call(browser.contentDocument);
             var title;
-
             if (titleViaGetter)
               title = titleViaGetter
             else if (browser.currentURI.spec && browser.currentURI.spec != "about:blank") {
