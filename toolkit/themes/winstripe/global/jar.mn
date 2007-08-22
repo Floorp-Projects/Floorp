@@ -3,7 +3,6 @@ classic.jar:
         skin/classic/global/about.css
         skin/classic/global/arrow.css
         skin/classic/global/autocomplete.css
-        skin/classic/global/browser.css
         skin/classic/global/button.css
         skin/classic/global/checkbox.css
         skin/classic/global/colorpicker.css
@@ -68,12 +67,6 @@ classic.jar:
         skin/classic/global/dirListing/remote.png                   (dirListing/remote.png)
         skin/classic/global/dirListing/up.png                       (dirListing/up.png)
         skin/classic/global/Filepicker.png                          (filepicker/Filepicker.png)
-	skin/classic/global/icons/alltabs-box-overflow-end-bkgnd-hover.png (icons/alltabs-box-overflow-end-bkgnd-hover.png)
-	skin/classic/global/icons/alltabs-box-overflow-start-bkgnd-hover.png (icons/alltabs-box-overflow-start-bkgnd-hover.png)
-	skin/classic/global/icons/alltabs-box-overflow-end-bkgnd.png   (icons/alltabs-box-overflow-end-bkgnd.png)
-    skin/classic/global/icons/alltabs-box-overflow-start-bkgnd-animate.png   (icons/alltabs-box-overflow-start-bkgnd-animate.png)
-	skin/classic/global/icons/alltabs-box-overflow-end-bkgnd-animate.png   (icons/alltabs-box-overflow-end-bkgnd-animate.png)
-	skin/classic/global/icons/alltabs-box-overflow-start-bkgnd.png (icons/alltabs-box-overflow-start-bkgnd.png)
         skin/classic/global/icons/autocomplete-dropmark-arrow.png   (icons/autocomplete-dropmark-arrow.png)
         skin/classic/global/icons/autocomplete-dropmark-bkgnd.png   (icons/autocomplete-dropmark-bkgnd.png)
         skin/classic/global/icons/autocomplete-dropmark-bkgnd-mid-top.png    (icons/autocomplete-dropmark-bkgnd-mid-top.png)
@@ -83,7 +76,6 @@ classic.jar:
         skin/classic/global/icons/blacklist_large.png               (icons/blacklist_large.png)
         skin/classic/global/icons/Close.gif                         (icons/Close.gif)
         skin/classic/global/icons/close.png                         (icons/close.png)
-        skin/classic/global/icons/alltabs.png                       (icons/alltabs.png)
         skin/classic/global/icons/Error.png                         (icons/Error.png)
         skin/classic/global/icons/find.png                          (icons/find.png)
         skin/classic/global/icons/folder-item.png                   (icons/folder-item.png)
@@ -94,24 +86,6 @@ classic.jar:
         skin/classic/global/icons/Landscape.png                     (icons/Landscape.png)
         skin/classic/global/icons/Question.png                      (icons/Question.png)        
         skin/classic/global/icons/Restore.gif                       (icons/Restore.gif)
-	skin/classic/global/icons/tab-arrow-end.png                 (icons/tab-arrow-end.png)
-	skin/classic/global/icons/tab-arrow-start.png               (icons/tab-arrow-start.png)
-	skin/classic/global/icons/tab-arrow-end-bkgnd-hover.png     (icons/tab-arrow-end-bkgnd-hover.png)
-	skin/classic/global/icons/tab-arrow-end-bkgnd-disabled.png  (icons/tab-arrow-end-bkgnd-disabled.png)
-	skin/classic/global/icons/tab-arrow-end-bkgnd-enabled.png   (icons/tab-arrow-end-bkgnd-enabled.png)
-	skin/classic/global/icons/tab-arrow-end-bkgnd-animate.png   (icons/tab-arrow-end-bkgnd-animate.png)
-	skin/classic/global/icons/tab-arrow-start-bkgnd-hover.png   (icons/tab-arrow-start-bkgnd-hover.png)
-	skin/classic/global/icons/tab-arrow-start-bkgnd-disabled.png (icons/tab-arrow-start-bkgnd-disabled.png)
-	skin/classic/global/icons/tab-arrow-start-bkgnd-enabled.png (icons/tab-arrow-start-bkgnd-enabled.png)
-	skin/classic/global/icons/tab-arrow-start-bkgnd-animate.png (icons/tab-arrow-start-bkgnd-animate.png)
-	skin/classic/global/icons/tab-left.png                      (icons/tab-left.png)
-	skin/classic/global/icons/tab-middle.png                    (icons/tab-middle.png)
-	skin/classic/global/icons/tab-right.png                     (icons/tab-right.png)
-	skin/classic/global/icons/tab-left-bkgnd.png                (icons/tab-left-bkgnd.png)
-	skin/classic/global/icons/tab-middle-bkgnd.png              (icons/tab-middle-bkgnd.png)
-	skin/classic/global/icons/tab-right-bkgnd.png               (icons/tab-right-bkgnd.png)
-        skin/classic/global/icons/tabstrip-bottom.png               (icons/tabstrip-bottom.png)
-	skin/classic/global/icons/tabbrowser-tabs-bkgnd.png         (icons/tabbrowser-tabs-bkgnd.png)
         skin/classic/global/icons/Warning.png                       (icons/Warning.png)
         skin/classic/global/icons/warning-large.png                 (icons/warning-large.png)
         skin/classic/global/icons/wrap.png                          (icons/wrap.png)
@@ -134,7 +108,6 @@ classic.jar:
         skin/classic/global/splitter/grip-hrz-before.gif            (splitter/grip-hrz-before.gif)
         skin/classic/global/splitter/grip-vrt-after.gif             (splitter/grip-vrt-after.gif)
         skin/classic/global/splitter/grip-vrt-before.gif            (splitter/grip-vrt-before.gif)
-        skin/classic/global/tabDragDrop/tabDragIndicator.png        (tabDragDrop/tabDragIndicator.png)
         skin/classic/global/toolbar/chevron.gif                     (toolbar/chevron.gif)
         skin/classic/global/toolbar/chevron-rtl.gif                 (toolbar/chevron-rtl.gif)
         skin/classic/global/toolbar/Lighten.png                     (toolbar/Lighten.png)

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <!DOCTYPE bindings [
-<!ENTITY % tabBrowserDTD SYSTEM "chrome://global/locale/tabbrowser.dtd" >
+<!ENTITY % tabBrowserDTD SYSTEM "chrome://browser/locale/tabbrowser.dtd" >
 %tabBrowserDTD;
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
 %globalDTD;
@@ -12,7 +12,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="tabbrowser-tab" extends="chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tab">
+  <binding id="tabbrowser-tab" extends="chrome://browser/content/tabbrowser.xml#tabbrowser-tab">
     <content chromedir="&locale.dir;"
              closetabtext="&closeTab.label;">
       <xul:hbox class="tab-image-left" xbl:inherits="selected"/>
@@ -27,9 +27,9 @@
         <xul:hbox class="tab-image-right" xbl:inherits="selected"/>
     </content>
   </binding>
-  
+
    <binding id="tabbrowser-tabs"  
-            extends="chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tabs">
+            extends="chrome://browser/content/tabbrowser.xml#tabbrowser-tabs">
     <content>
       <xul:stack flex="1" class="tabs-stack">
         <xul:vbox>

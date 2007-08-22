@@ -41,8 +41,6 @@
 + locale/@AB_CD@/global/printProgress.dtd               (%chrome/global/printProgress.dtd)
 + locale/@AB_CD@/global/regionNames.properties          (%chrome/global/regionNames.properties)
 + locale/@AB_CD@/global/dialog.properties               (%chrome/global/dialog.properties)
-+ locale/@AB_CD@/global/tabbrowser.dtd                  (%chrome/global/tabbrowser.dtd)
-+ locale/@AB_CD@/global/tabbrowser.properties           (%chrome/global/tabbrowser.properties)
 + locale/@AB_CD@/global/tree.dtd                        (%chrome/global/tree.dtd)
 + locale/@AB_CD@/global/textcontext.dtd                 (%chrome/global/textcontext.dtd)
 + locale/@AB_CD@/global/viewSource.dtd                  (%chrome/global/viewSource.dtd)

@@ -28,3 +28,42 @@ menuitem.spell-suggestion {
 window[sizemode="maximized"] #content .notification-inner {
   border-right: 0px !important;
 }
+
+tabbrowser {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser");
+}
+
+.tabbrowser-tabs {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tabs");
+}
+
+.tabbrowser-arrowscrollbox {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-arrowscrollbox");
+}
+
+.tabs-alltabs-popup {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-alltabs-popup");
+}
+
+.tabbrowser-tabs > .tabbrowser-tab {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-tab");
+}
+
+.tabbrowser-tabs > .tabbrowser-tab > .tab-close-button,
+.tabbrowser-tabs .tabs-closebutton-box > .tabs-closebutton {
+  -moz-binding: url("chrome://browser/content/tabbrowser.xml#tabbrowser-close-tab-button");
+}
+
+.tab-close-button {
+  display: none;
+}
+
+.tabbrowser-tabs:not([closebuttons="noclose"]):not([closebuttons="closeatend"]) > .tabbrowser-tab[selected="true"] > .tab-close-button {
+  display: -moz-box;
+}
+
+.tabbrowser-tabs[closebuttons="alltabs"] > .tabbrowser-tab > .tab-close-button {
+  display: -moz-box;
+}
+
+
