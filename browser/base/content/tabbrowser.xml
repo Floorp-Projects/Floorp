@@ -90,14 +90,14 @@
                                 while (node.localName != 'tabbrowser')
                                   node = node.parentNode;
                                 node.removeCurrentTab();">
-            <xul:tab validate="never" 
+            <xul:tab selected="true" validate="never"
                      onerror="this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image'));
                               this.removeAttribute('image');"
                      maxwidth="250" width="0" minwidth="30" flex="100"
                      class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
           </xul:tabs>
         </xul:hbox>
-        <xul:tabpanels flex="1" class="plain">
+        <xul:tabpanels flex="1" class="plain" selectedIndex="0">
           <xul:vbox flex="1">
             <xul:browsermessage hidden="true" type="top"/>
             <xul:browser flex="1" type="content-primary" message="true" disablehistory="true" xbl:inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu,autocompletepopup"/>
@@ -920,7 +920,7 @@
             b.setAttribute("contextmenu", this.getAttribute("contentcontextmenu"));
             b.setAttribute("tooltip", this.getAttribute("contenttooltip"));
             b.setAttribute("autocompletepopup", this.getAttribute("autocompletepopup"));
-            
+
             // Add the Message and the Browser to the box            
             var vbox = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                                 "vbox"); 
