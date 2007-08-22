@@ -2767,18 +2767,13 @@
             this.setAttribute("closebuttons", "activetab");
             break;
           case 1:
-            try {
-              var width = this.firstChild.boxObject.width;
-              // 0 width is an invalid value and indicates
-              // an item without display, so ignore.
-              if (width > this.mTabClipWidth || width == 0)
-                this.setAttribute("closebuttons", "alltabs");
-              else
-                this.setAttribute("closebuttons", "activetab");
-            }
-            catch (e) {
-              // XXXzeniko what error are we catching here?
-            }
+            var width = this.firstChild.boxObject.width;
+            // 0 width is an invalid value and indicates
+            // an item without display, so ignore.
+            if (width > this.mTabClipWidth || width == 0)
+              this.setAttribute("closebuttons", "alltabs");
+            else
+              this.setAttribute("closebuttons", "activetab");
             break;
           case 2:
           case 3:
