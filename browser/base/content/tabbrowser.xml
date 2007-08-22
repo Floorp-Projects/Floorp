@@ -995,7 +995,7 @@
             var owner = aLoadInBackground ? null : this.selectedTab;
             var tab = this.addTab(aURI, aReferrerURI, aCharset, aPostData, owner,
                                   aAllowThirdPartyFixup);
-            var bgLoad = (typeof(aLoadInBackground) != "undefined") ? aLoadInBackground :
+            var bgLoad = (aLoadInBackground != null) ? aLoadInBackground :
                          this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
             // Set newly selected tab after quick timeout, otherwise hideous focus problems
             // can occur when "browser.tabs.loadInBackground" is false and presshell is not ready
