@@ -139,7 +139,7 @@ class nsCSSScanner {
   // when the line number is unknown.
   // Either aInput or (aBuffer and aCount) must be set.
   void Init(nsIUnicharInputStream* aInput, 
-            const PRUnichar *aBuffer, PRInt32 aCount, 
+            const PRUnichar *aBuffer, PRUint32 aCount,
             nsIURI* aURI, PRUint32 aLineNumber);
   void Close();
 
@@ -225,8 +225,8 @@ protected:
   PRUnichar mBuffer[CSS_BUFFER_SIZE];
 
   const PRUnichar *mReadPointer;
-  PRInt32 mOffset;
-  PRInt32 mCount;
+  PRUint32 mOffset;
+  PRUint32 mCount;
   PRUnichar* mPushback;
   PRInt32 mPushbackCount;
   PRInt32 mPushbackSize;
