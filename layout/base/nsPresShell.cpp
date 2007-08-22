@@ -4377,7 +4377,7 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
   return DoFlushPendingNotifications(aType, PR_FALSE);
 }
 
-NS_IMETHODIMP
+nsresult
 PresShell::DoFlushPendingNotifications(mozFlushType aType,
                                        PRBool aInterruptibleReflow)
 {
