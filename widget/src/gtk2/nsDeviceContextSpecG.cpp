@@ -394,12 +394,13 @@ nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecGTK,
                    nsIDeviceContextSpec)
 
-//#define USE_PDF 1
 #include "gfxPDFSurface.h"
 #include "gfxPSSurface.h"
 #include "nsUnitConversion.h"
 NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurface)
 {
+  *aSurface = nsnull;
+
   const char *path;
   GetPath(&path);
 
@@ -425,15 +426,20 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   if (NS_FAILED(rv))
     return rv;
 
-#ifdef USE_PDF
-  gfxPDFSurface *surface = new gfxPDFSurface(stream, gfxSize(width, height));
-#else
-  gfxPSSurface *surface = new gfxPSSurface(stream, gfxSize(width, height));
-#endif
-//  surface->SetDPI(600, 600);
-  
-  *aSurface = surface;
-  NS_ADDREF(*aSurface);
+  PRInt16 format;
+  mPrintSettings->GetOutputFormat(&format);
+
+  nsRefPtr<gfxASurface> surface;
+  if (nsIPrintSettings::kOutputFormatPDF == format) {
+    surface = new gfxPDFSurface(stream, gfxSize(width, height));
+  } else {
+    surface = new gfxPSSurface(stream, gfxSize(width, height));
+  }
+
+  if (!surface)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  surface.swap(*aSurface);
 
   return NS_OK;
 }
