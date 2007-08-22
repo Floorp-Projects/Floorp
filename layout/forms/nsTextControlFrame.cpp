@@ -2696,14 +2696,19 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
       flags &= ~(nsIPlaintextEditor::eEditorReadonlyMask);
       editor->SetFlags(flags);
 
+      // Also don't enforce max-length here
+      PRInt32 savedMaxLength;
+      plaintextEditor->GetMaxTextLength(&savedMaxLength);
+      plaintextEditor->SetMaxTextLength(-1);
+
       if (currentValue.Length() < 1)
         editor->DeleteSelection(nsIEditor::eNone);
       else {
-        nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(editor);
-        if (textEditor)
-          textEditor->InsertText(currentValue);
+        if (plaintextEditor)
+          plaintextEditor->InsertText(currentValue);
       }
 
+      plaintextEditor->SetMaxTextLength(savedMaxLength);
       editor->SetFlags(savedFlags);
       if (selPriv)
         selPriv->EndBatchChanges();
