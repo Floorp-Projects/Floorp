@@ -23,6 +23,7 @@
    - Contributor(s):
    -   David Hyatt <hyatt@netscape.com> (Original Author of <tabbrowser>)
    -   Mike Connor <mconnor@steelgryphon.com>
+   -   Peter Parente <parente@cs.unc.edu>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -222,6 +223,7 @@
         <parameter name="aIconURL"/>
         <parameter name="aMessage"/>
         <parameter name="aButtonLabel"/>
+        <parameter name="aButtonAccesskey"/>
         <parameter name="aDocShell"/>
         <parameter name="aSource"/>
         <parameter name="aPopup"/>
@@ -233,6 +235,7 @@
             message.image = aIconURL;
             message.text = aMessage;
             message.buttonText = aButtonLabel;
+            message.buttonAccesskey = aButtonAccesskey;
             message.hidden = false;
             if (aSource) {
               message.source = aSource;
