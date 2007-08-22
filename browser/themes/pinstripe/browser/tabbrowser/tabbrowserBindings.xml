@@ -59,9 +59,13 @@
             <xul:stack>
               <xul:spacer class="tabs-left"/>
             </xul:stack>
-            <xul:hbox flex="1" style="min-width: 1px;">
+            <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1" style="min-width: 1px;">
               <children/>
-              <xul:spacer class="tabs-right" flex="1"/>
+            </xul:arrowscrollbox>
+            <xul:hbox class="tabs-closebutton-box" align="center" pack="end" anonid="tabstrip-closebutton">
+              <xul:toolbarbutton ondblclick="event.stopPropagation();"
+                           class="close-button tabs-closebutton"
+                           oncommand="this.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.removeCurrentTab()"/>
             </xul:hbox>
           </xul:hbox>
           <xul:spacer class="tabs-bottom-spacer"/>
