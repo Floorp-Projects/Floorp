@@ -1536,23 +1536,26 @@
 
               this.dragDropSecurityCheck(aEvent, aDragSession, url);
 
+              var bgLoad = true;
+              try {
+                bgLoad = this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
+              }
+              catch (e) { }
+
+              if (aEvent.shiftKey)
+                bgLoad = !bgLoad;
+
               if (aEvent.originalTarget.localName != "tab") {
                 // We're adding a new tab.
-                var bgLoad = true;
-                try {
-                  bgLoad = this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
-                }
-                catch (e) { }
-    
-                if (aEvent.shiftKey)
-                  bgLoad = !bgLoad;
-
                 this.loadOneTab(getShortcutOrURI(url), null, null, null, bgLoad);
               }
               else {
                 // Load in an existing tab.
                 var tab = aEvent.originalTarget;
                 this.getBrowserForTab(tab).loadURI(getShortcutOrURI(url));
+
+                if (this.mCurrentTab != tab && !bgLoad)
+                  this.selectedTab = tab;
               }
             }
           ]]>
