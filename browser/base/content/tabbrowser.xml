@@ -46,7 +46,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!DOCTYPE bindings [
-<!ENTITY % tabBrowserDTD SYSTEM "chrome://global/locale/tabbrowser.dtd" >
+<!ENTITY % tabBrowserDTD SYSTEM "chrome://browser/locale/tabbrowser.dtd" >
 %tabBrowserDTD;
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
 %globalDTD;
@@ -59,11 +59,11 @@
 
   <binding id="tabbrowser">
     <resources>
-      <stylesheet src="chrome://global/skin/browser.css"/>
+      <stylesheet src="chrome://browser/skin/browser.css"/>
     </resources>
 
     <content>
-      <xul:stringbundle anonid="tbstringbundle" src="chrome://global/locale/tabbrowser.properties"/>
+      <xul:stringbundle anonid="tbstringbundle" src="chrome://browser/locale/tabbrowser.properties"/>
       <xul:tabbox anonid="tabbox" flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
                   onselect="if (!('updateCurrentBrowser' in this.parentNode) || event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
         <xul:hbox class="tab-drop-indicator-bar">

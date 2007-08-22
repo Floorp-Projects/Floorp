@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <!DOCTYPE bindings [
-<!ENTITY % tabBrowserDTD SYSTEM "chrome://global/locale/tabbrowser.dtd" >
+<!ENTITY % tabBrowserDTD SYSTEM "chrome://browser/locale/tabbrowser.dtd" >
 %tabBrowserDTD;
 <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
 %globalDTD;
@@ -12,50 +12,7 @@
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    xmlns:xbl="http://www.mozilla.org/xbl">
 
-  <binding id="radio"
-           extends="chrome://global/content/bindings/radio.xml#radio">
-    <content>
-      <xul:hbox class="radio-check-box1" xbl:inherits="selected,checked,disabled">
-        <xul:hbox class="radio-check-box2" flex="1">
-          <xul:image class="radio-check" xbl:inherits="selected,checked,disabled"/>
-        </xul:hbox>
-      </xul:hbox>
-      <xul:hbox class="radio-label-box" flex="1">
-        <xul:image class="radio-icon" xbl:inherits="src"/>
-        <xul:label class="radio-label" xbl:inherits="xbl:text=label,accesskey,crop" flex="1"/>
-      </xul:hbox>
-    </content>
-  </binding>
-
-  <binding id="radio-with-spacing"
-           extends="chrome://global/skin/globalBindings.xml#radio">
-
-    <content>
-      <xul:hbox class="radio-spacer-box">
-        <xul:hbox class="radio-check-box1" xbl:inherits="selected,checked,disabled">
-          <xul:hbox class="radio-check-box2" flex="1">
-            <xul:image class="radio-check" xbl:inherits="selected,checked,disabled"/>
-          </xul:hbox>
-        </xul:hbox>
-      </xul:hbox>
-      <xul:hbox class="radio-label-center-box" flex="1">
-        <xul:hbox class="radio-label-box" flex="1">
-          <xul:image class="radio-icon" xbl:inherits="src"/>
-          <xul:label class="radio-label" xbl:inherits="xbl:text=label,accesskey,crop" flex="1"/>
-        </xul:hbox>
-      </xul:hbox>
-    </content>
-  </binding>
-
-  <binding id="toolbarpaletteitem-spacer" extends="chrome://global/content/bindings/toolbar.xml#toolbarpaletteitem">
-    <content>
-      <xul:spacer class="spacer-left"/>
-      <children/>
-      <xul:spacer class="spacer-right"/>
-    </content>
-  </binding>
-
-  <binding id="tabbrowser-tab" extends="chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tab">
+  <binding id="tabbrowser-tab" extends="chrome://browser/content/tabbrowser.xml#tabbrowser-tab">
     <content chromedir="&locale.dir;"
              closetabtext="&closeTab.label;">
       <xul:hbox class="tab-image-left" xbl:inherits="selected"/>
@@ -70,9 +27,9 @@
         <xul:hbox class="tab-image-right" xbl:inherits="selected"/>
     </content>
   </binding>
-  
+
    <binding id="tabbrowser-tabs"  
-            extends="chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tabs">
+            extends="chrome://browser/content/tabbrowser.xml#tabbrowser-tabs">
     <content>
       <xul:stack flex="1" class="tabs-stack">
         <xul:vbox>
@@ -111,26 +68,6 @@
           </xul:hbox>
           <xul:spacer class="tabs-bottom-spacer"/>
         </xul:vbox>
-      </xul:stack>
-    </content>
-  </binding>
-
-  <binding id="history-dropmarker"
-           extends="chrome://global/content/bindings/autocomplete.xml#history-dropmarker">
-    <content>
-      <xul:stack class="history-dropmarker-stack">
-        <xul:vbox class="autocomplete-dropmarker-bkgnd-box">
-          <xul:image class="autocomplete-dropmarker-bkgnd-top autocomplete-dropmarker-bkgnd"/>
-          <xul:vbox flex="1" class="autocomplete-dropmarker-inner-box">
-            <xul:image flex="1" class="autocomplete-dropmarker-bkgnd-mid-top autocomplete-dropmarker-bkgnd"/>
-            <xul:image flex="1" class="autocomplete-dropmarker-bkgnd-mid-bottom autocomplete-dropmarker-bkgnd"/>
-          </xul:vbox>
-          <xul:image class="autocomplete-dropmarker-bkgnd-bottom autocomplete-dropmarker-bkgnd"/>
-        </xul:vbox>
-
-        <xul:hbox align="center" class="dropmarker-image-container">
-          <xul:image class="dropmarker-image"/>
-        </xul:hbox>
       </xul:stack>
     </content>
   </binding>
