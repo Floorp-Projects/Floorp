@@ -1341,16 +1341,8 @@
             }
             setTimeout(_delayedUpdate, 0, this.mTabContainer);
 
-            // We're committed to closing the tab now.  
-            // Dispatch a notification.
-            // We dispatch it before any teardown so that event listeners can
-            // inspect the tab that's about to close.
-            var evt = document.createEvent("Events");
-            evt.initEvent("TabClose", true, false);
-            aTab.dispatchEvent(evt);
-
             if (l == 1) {
-              // add a new blank tab to replace the one being closed
+              // add a new blank tab to replace the one we're about to close
               // (this ensures that the remaining tab is as good as new)
               this.addTab("about:blank");
               l++;
@@ -1361,6 +1353,14 @@
               if (autohide || tabStripHide)
                 this.setStripVisibilityTo(false);
             }
+
+            // We're committed to closing the tab now.  
+            // Dispatch a notification.
+            // We dispatch it before any teardown so that event listeners can
+            // inspect the tab that's about to close.
+            var evt = document.createEvent("Events");
+            evt.initEvent("TabClose", true, false);
+            aTab.dispatchEvent(evt);
 
             var index = -1;
             if (this.mCurrentTab == aTab)
