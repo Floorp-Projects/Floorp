@@ -2683,14 +2683,14 @@
 
       <field name="_animateTimer">null</field>
       <field name="_animateStep">-1</field>
-      <field name="_animateDelay">50</field>
+      <field name="_animateDelay">25</field>
       <field name="_animatePercents">
-	[0.50, 0.60, 0.70, 0.80, 0.90,
-	 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00,
-	 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00,
-	 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00,
-	 0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65, 0.60, 0.55, 0.50,
-	 0.45, 0.40, 0.35, 0.30, 0.25, 0.20, 0.15, 0.10, 0.05, 0.00]
+       [1.00, 0.85, 0.80, 0.75, 0.71, 0.68, 0.65, 0.62, 0.59, 0.57,
+        0.54, 0.52, 0.50, 0.47, 0.45, 0.44, 0.42, 0.40, 0.38, 0.37,
+        0.35, 0.34, 0.32, 0.31, 0.30, 0.29, 0.28, 0.27, 0.26, 0.25,
+        0.24, 0.23, 0.23, 0.22, 0.22, 0.21, 0.21, 0.21, 0.20, 0.20,
+        0.20, 0.20, 0.20, 0.20, 0.20, 0.20, 0.19, 0.19, 0.19, 0.18,
+        0.18, 0.17, 0.17, 0.16, 0.15, 0.14, 0.13, 0.11, 0.09, 0.06]
       </field>
 
       <method name="_stopAnimation">
@@ -2708,10 +2708,6 @@
       <method name="_notifyBackgroundTab">
         <parameter name="aTab"/>
         <body><![CDATA[
-          // if we are already animating, don't do it again
-          if (this._animateStep != -1)
-            return;
-      
           var tsbo = this.mTabstrip.scrollBoxObject;
           var tsboStart = tsbo.screenX;
           var tsboEnd = tsboStart + tsbo.width;
