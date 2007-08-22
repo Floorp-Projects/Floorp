@@ -1515,7 +1515,7 @@ gfxFontGroup *nsCanvasRenderingContext2D::GetCurrentFontStyle()
     if(!mFontGroup)
     {
         nsString style;
-        style.AssignLiteral("12pt sans serif");
+        style.AssignLiteral("12pt sans-serif");
         nsresult res = SetMozTextStyle(style);
         NS_ASSERTION(res == NS_OK, "Default canvas font is invalid");
     }
