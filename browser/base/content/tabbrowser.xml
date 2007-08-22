@@ -2138,10 +2138,6 @@
       })]]>
       </field>
 
-      <property name="canFindAgain"
-                onget="return this.mCurrentBrowser.canFindAgain;"
-                readonly="true"/>
-
       <property name="userTypedClear"
                 onget="return this.mCurrentBrowser.userTypedClear;"
                 onset="return this.mCurrentBrowser.userTypedClear = val;"/>
