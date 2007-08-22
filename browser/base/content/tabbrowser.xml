@@ -2494,7 +2494,7 @@
       <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1" style="min-width: 1px;" clicktoscroll="true">
         <children includes="tab"/>
       </xul:arrowscrollbox>
-      <xul:stack align="center" pack="end">
+      <xul:stack align="center" pack="end" class="scrollbutton-down-stack">
         <!-- XXXsspitzer hack
              this extra hbox with position: relative
              is needed to work around two bugs.
