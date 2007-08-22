@@ -1057,7 +1057,6 @@
             
           const pref = "browser.tabs.warnOnClose";
           var shouldPrompt = this.mPrefs.getBoolPref(pref);
-          var reallyClose = true;            
 
           if (shouldPrompt) {
             var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
