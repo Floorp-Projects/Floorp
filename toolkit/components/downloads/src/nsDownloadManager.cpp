@@ -72,6 +72,7 @@
 
 #ifdef XP_WIN
 #include <shlobj.h>
+#include "nsDownloadScanner.h"
 #endif
 
 static PRBool gStoppingDownloads = PR_FALSE;
@@ -122,6 +123,9 @@ nsDownloadManager::GetSingleton()
 
 nsDownloadManager::~nsDownloadManager()
 {
+#ifdef XP_WIN
+  delete mScanner;
+#endif
   gDownloadManagerService = nsnull;
 }
 
@@ -141,28 +145,13 @@ nsDownloadManager::CancelAllDownloads()
   return rv;
 }
 
-nsresult
-nsDownloadManager::FinishDownload(nsDownload *aDownload, DownloadState aState,
-                                  const char *aTopic) {
-  // We don't want to lose access to the download's member variables
-  nsRefPtr<nsDownload> kungFuDeathGrip = aDownload;
-
+void
+nsDownloadManager::CompleteDownload(nsDownload *aDownload)
+{
   // we've stopped, so break the cycle we created at download start
   aDownload->mCancelable = nsnull;
 
-  // This has to be done in this exact order to not mess up our invariants
-  // 1) when the state changed listener is dispatched, it must no longer be
-  //    an active download.
-  // 2) when the observer is dispatched, the same conditions for 1 must be
-  //    true as well as the state being up to date.
   (void)mCurrentDownloads.RemoveObject(aDownload);
-
-  nsresult rv = aDownload->SetState(aState);
-  if (NS_FAILED(rv)) return rv;
-  
-  (void)mObserverService->NotifyObservers(aDownload, aTopic, nsnull);
-
-  return NS_OK;
 }
 
 nsresult
@@ -573,6 +562,17 @@ nsDownloadManager::Init()
                                    getter_AddRefs(mBundle));
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef XP_WIN
+  mScanner = new nsDownloadScanner();
+  if (!mScanner)
+    return NS_ERROR_OUT_OF_MEMORY;
+  rv = mScanner->Init();
+  if (NS_FAILED(rv)) {
+    delete mScanner;
+    mScanner = nsnull;
+  }
+#endif
+
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_downloads "
     "SET startTime = ?1, endTime = ?2, state = ?3, referrer = ?4 "
@@ -689,6 +689,12 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
   // Addrefing and returning
   NS_ADDREF(*retVal = dl);
   return NS_OK;
+}
+
+void
+nsDownloadManager::SendEvent(nsDownload *aDownload, const char *aTopic)
+{
+  (void)mObserverService->NotifyObservers(aDownload, aTopic, nsnull);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1010,8 +1016,7 @@ nsDownloadManager::CancelDownload(PRUint32 aID)
       dl->mTempFile->Remove(PR_FALSE);
   }
 
-  nsresult rv = FinishDownload(dl, nsIDownloadManager::DOWNLOAD_CANCELED,
-                               "dl-cancel");
+  nsresult rv = dl->SetState(nsIDownloadManager::DOWNLOAD_CANCELED);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -1507,13 +1512,150 @@ nsDownload::SetState(DownloadState aState)
   PRInt16 oldState = mDownloadState;
   mDownloadState = aState;
 
+  nsresult rv;
+
+  nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+  // We don't want to lose access to our member variables
+  nsRefPtr<nsDownload> kungFuDeathGrip = this;
+
+  // When the state changed listener is dispatched, queries to the database and
+  // the download manager api should reflect what the nsIDownload object would
+  // return. So, if a download is done (finished, canceled, etc.), it should
+  // first be removed from the current downloads.  We will also have to update
+  // the database *before* notifying listeners.  At this point, you can safely
+  // dispatch to the observers as well.
+  switch (aState) {
+    case nsIDownloadManager::DOWNLOAD_BLOCKED:
+    case nsIDownloadManager::DOWNLOAD_CANCELED:
+      mDownloadManager->CompleteDownload(this);
+      break;
+#ifdef XP_WIN
+    case nsIDownloadManager::DOWNLOAD_SCANNING:
+    {
+      nsresult rv = mDownloadManager->mScanner ? mDownloadManager->mScanner->ScanDownload(this) : NS_ERROR_NOT_INITIALIZED;
+      // If we failed, then fall through to 'download finished'
+      if (NS_SUCCEEDED(rv))
+        break;
+      mDownloadState = aState = nsIDownloadManager::DOWNLOAD_FINISHED;
+    }
+#endif
+    case nsIDownloadManager::DOWNLOAD_FINISHED:
+    {
+      mDownloadManager->CompleteDownload(this);
+
+      // Master pref to control this function. 
+      PRBool showTaskbarAlert = PR_TRUE;
+      if (pref)
+        pref->GetBoolPref(PREF_BDM_SHOWALERTONCOMPLETE, &showTaskbarAlert);
+
+      if (showTaskbarAlert) {
+        PRInt32 alertInterval = 2000;
+        if (pref)
+          pref->GetIntPref(PREF_BDM_SHOWALERTINTERVAL, &alertInterval);
+
+        PRInt64 alertIntervalUSec = alertInterval * PR_USEC_PER_MSEC;
+        PRInt64 goat = PR_Now() - mStartTime;
+        showTaskbarAlert = goat > alertIntervalUSec;
+       
+        PRInt32 size = mDownloadManager->mCurrentDownloads.Count();
+        if (showTaskbarAlert && size == 0) {
+          nsCOMPtr<nsIAlertsService> alerts =
+            do_GetService("@mozilla.org/alerts-service;1");
+          if (alerts) {
+              nsXPIDLString title, message;
+
+              mDownloadManager->mBundle->GetStringFromName(
+                  NS_LITERAL_STRING("downloadsCompleteTitle").get(),
+                  getter_Copies(title));
+              mDownloadManager->mBundle->GetStringFromName(
+                  NS_LITERAL_STRING("downloadsCompleteMsg").get(),
+                  getter_Copies(message));
+
+              PRBool removeWhenDone =
+                mDownloadManager->GetRetentionBehavior() == 0;
+
+
+              // If downloads are automatically removed per the user's
+              // retention policy, there's no reason to make the text clickable
+              // because if it is, they'll click open the download manager and
+              // the items they downloaded will have been removed. 
+              alerts->ShowAlertNotification(
+                  NS_LITERAL_STRING(DOWNLOAD_MANAGER_ALERT_ICON), title,
+                  message, !removeWhenDone, EmptyString(), mDownloadManager);
+            }
+        }
+      }
+#ifdef XP_WIN
+      PRBool addToRecentDocs = PR_TRUE;
+      if (pref)
+        pref->GetBoolPref(PREF_BDM_ADDTORECENTDOCS, &addToRecentDocs);
+
+      if (addToRecentDocs) {
+        LPSHELLFOLDER lpShellFolder = NULL;
+
+        if (SUCCEEDED(::SHGetDesktopFolder(&lpShellFolder))) {
+          nsresult rv;
+          nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget, &rv);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          nsCOMPtr<nsIFile> file;
+          rv = fileURL->GetFile(getter_AddRefs(file));
+          NS_ENSURE_SUCCESS(rv, rv);
+          
+          nsAutoString path;
+          rv = file->GetPath(path);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          PRUnichar *filePath = ToNewUnicode(path);
+          LPITEMIDLIST lpItemIDList = NULL;
+          if (SUCCEEDED(lpShellFolder->ParseDisplayName(NULL, NULL, filePath,
+                  NULL, &lpItemIDList, NULL))) {
+            ::SHAddToRecentDocs(SHARD_PIDL, lpItemIDList);
+            ::CoTaskMemFree(lpItemIDList);
+          }
+          nsMemory::Free(filePath);
+          lpShellFolder->Release();
+        }
+      }
+#endif
+
+      // Now remove the download if the user's retention policy is "Remove when Done"
+      if (mDownloadManager->GetRetentionBehavior() == 0)
+        mDownloadManager->RemoveDownload(mID);
+
+    }
+    break;
+  default:
+    break;
+  }
+  
   // Before notifying the listener, we must update the database so that calls
   // to it work out properly.
-  nsresult rv = UpdateDB();
+  rv = UpdateDB();
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   mDownloadManager->NotifyListenersOnDownloadStateChange(oldState, this);
 
+  switch (mDownloadState) {
+    case nsIDownloadManager::DOWNLOAD_DOWNLOADING:
+      mDownloadManager->SendEvent(this, "dl-start");
+      break;
+    case nsIDownloadManager::DOWNLOAD_FAILED:
+      mDownloadManager->SendEvent(this, "dl-failed");
+      break;
+    case nsIDownloadManager::DOWNLOAD_SCANNING:
+      mDownloadManager->SendEvent(this, "dl-scanning");
+      break;
+    case nsIDownloadManager::DOWNLOAD_FINISHED:
+      mDownloadManager->SendEvent(this, "dl-done");
+      break;
+    case nsIDownloadManager::DOWNLOAD_BLOCKED:
+      mDownloadManager->SendEvent(this, "dl-blocked");
+      break;
+    default:
+      break;
+  }
   return NS_OK;
 }
 
@@ -1577,7 +1719,6 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
     // Update the state and the database
     rv = SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
     NS_ENSURE_SUCCESS(rv, rv);
-    mDownloadManager->mObserverService->NotifyObservers(this, "dl-start", nsnull);
   }
 
   // filter notifications since they come in so frequently
@@ -1661,9 +1802,7 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
     // We don't want to lose access to our member variables
     nsRefPtr<nsDownload> kungFuDeathGrip = this;
 
-    (void)mDownloadManager->FinishDownload(this,
-                                           nsIDownloadManager::DOWNLOAD_FAILED,
-                                           "dl-failed");
+    (void)SetState(nsIDownloadManager::DOWNLOAD_FAILED);
 
     // Get title for alert.
     nsXPIDLString title;
@@ -1705,7 +1844,6 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
   
   // We need to update mDownloadState before updating the dialog, because
   // that will close and call CancelDownload if it was the last open window.
-  nsCOMPtr<nsIPrefBranch> pref = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
   if (aStateFlags & STATE_START) {
     nsresult rv;
@@ -1721,9 +1859,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
           (void)mCancelable->Cancel(NS_BINDING_ABORTED);
 
         // Fail the download - DOWNLOAD_BLOCKED
-        mDownloadManager->FinishDownload(this, 
-                                         nsIDownloadManager::DOWNLOAD_BLOCKED,
-                                         "dl-blocked");
+        (void)SetState(nsIDownloadManager::DOWNLOAD_BLOCKED);
 
         mDownloadManager->NotifyListenersOnStateChange(aWebProgress, aRequest,
                                                        aStateFlags, aStatus, this);
@@ -1733,7 +1869,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
     }
   } else if (aStateFlags & STATE_STOP) {
     if (nsDownloadManager::IsInFinalStage(mDownloadState)) {
-      // Set file size at the end of a tranfer (for unknown transfer amounts)
+      // Set file size at the end of a transfer (for unknown transfer amounts)
       if (mMaxBytes == LL_MAXUINT)
         mMaxBytes = mCurrBytes;
 
@@ -1745,88 +1881,17 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
 
       mPercentComplete = 100;
 
-      (void)mDownloadManager->FinishDownload(this,
-                                             nsIDownloadManager::DOWNLOAD_FINISHED,
-                                             "dl-done");
-
-      // Master pref to control this function. 
-      PRBool showTaskbarAlert = PR_TRUE;
-      if (pref)
-        pref->GetBoolPref(PREF_BDM_SHOWALERTONCOMPLETE, &showTaskbarAlert);
-
-      if (showTaskbarAlert) {
-        PRInt32 alertInterval = -1;
-        pref->GetIntPref(PREF_BDM_SHOWALERTINTERVAL, &alertInterval);
-
-        PRInt64 alertIntervalUSec = alertInterval * PR_USEC_PER_MSEC;
-        PRInt64 goat = PR_Now() - mStartTime;
-        showTaskbarAlert = goat > alertIntervalUSec;
-       
-        PRInt32 size = mDownloadManager->mCurrentDownloads.Count();
-        if (showTaskbarAlert && size == 0) {
-          nsCOMPtr<nsIAlertsService> alerts =
-            do_GetService("@mozilla.org/alerts-service;1");
-        if (alerts) {
-            nsXPIDLString title, message;
-
-            mDownloadManager->mBundle->GetStringFromName(NS_LITERAL_STRING("downloadsCompleteTitle").get(), getter_Copies(title));
-            mDownloadManager->mBundle->GetStringFromName(NS_LITERAL_STRING("downloadsCompleteMsg").get(), getter_Copies(message));
-
-            PRBool removeWhenDone = mDownloadManager->GetRetentionBehavior() == 0;
-
-
-            // If downloads are automatically removed per the user's retention policy, 
-            // there's no reason to make the text clickable because if it is, they'll
-            // click open the download manager and the items they downloaded will have
-            // been removed. 
-            alerts->ShowAlertNotification(NS_LITERAL_STRING(DOWNLOAD_MANAGER_ALERT_ICON), title, message, !removeWhenDone, 
-                                          EmptyString(), mDownloadManager);
-          }
-        }
-      }
 #ifdef XP_WIN
-      PRBool addToRecentDocs = PR_TRUE;
-      if (pref)
-        pref->GetBoolPref(PREF_BDM_ADDTORECENTDOCS, &addToRecentDocs);
-
-      if (addToRecentDocs) {
-        LPSHELLFOLDER lpShellFolder = NULL;
-
-        if (SUCCEEDED(::SHGetDesktopFolder(&lpShellFolder))) {
-          nsresult rv;
-          nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget, &rv);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          nsCOMPtr<nsIFile> file;
-          rv = fileURL->GetFile(getter_AddRefs(file));
-          NS_ENSURE_SUCCESS(rv, rv);
-        
-          nsAutoString path;
-          rv = file->GetPath(path);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          PRUnichar *filePath = ToNewUnicode(path);
-          LPITEMIDLIST lpItemIDList = NULL;
-          if (SUCCEEDED(lpShellFolder->ParseDisplayName(NULL, NULL, filePath, NULL, &lpItemIDList, NULL))) {
-            ::SHAddToRecentDocs(SHARD_PIDL, lpItemIDList);
-            ::CoTaskMemFree(lpItemIDList);
-          }
-          nsMemory::Free(filePath);
-          lpShellFolder->Release();
-        }
-      }
+      (void)SetState(nsIDownloadManager::DOWNLOAD_SCANNING);
+#else
+      (void)SetState(nsIDownloadManager::DOWNLOAD_FINISHED);
 #endif
     }
-
-    // Now remove the download if the user's retention policy is "Remove when Done"
-    if (mDownloadManager->GetRetentionBehavior() == 0)
-      mDownloadManager->RemoveDownload(mID);
   }
 
   mDownloadManager->NotifyListenersOnStateChange(aWebProgress, aRequest,
                                                  aStateFlags, aStatus, this);
-
-  return UpdateDB();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
