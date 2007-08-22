@@ -2991,7 +2991,7 @@
         <xul:label class="tab-text" xbl:inherits="value=label,accesskey,crop,disabled" flex="1"/>
       </xul:hbox>
       <xul:image anonid="close-button-placeholder" class="tab-close-button-placeholder"/>
-      <xul:toolbarbutton anonid="close-button" class="tab-close-button"/>
+      <xul:toolbarbutton anonid="close-button" tabindex="-1" class="tab-close-button"/>
     </content>
 
     <implementation>
