@@ -143,11 +143,11 @@
                 preference="pref.privacy.disable_button.view_passwords_exceptions"/>
       </hbox>
       <hbox id="masterPasswordBox">
-        <checkbox id="useMasterPassword" flex="1" disabled="true"
+        <checkbox id="useMasterPassword" flex="1"
                   oncommand="gSecurityPane.updateMasterPasswordButton();"
                   label="&useMasterPassword.label;"
                   accesskey="&useMasterPassword.accesskey;"/>
-        <button id="changeMasterPassword" disabled="true"
+        <button id="changeMasterPassword"
                 label="&changeMasterPassword.label;"
                 accesskey="&changeMasterPassword.accesskey;"
                 oncommand="gSecurityPane.changeMasterPassword();"/>
