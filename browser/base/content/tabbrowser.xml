@@ -1925,6 +1925,7 @@
           var i;
           for (i = 0; i < this.mTabContainer.childNodes.length; i++) {
             this.mTabContainer.childNodes[i]._tPos = i;
+            this.mTabContainer.childNodes[i].selected = false;
           }
           this.mCurrentTab.selected = true;
           this.mTabContainer.mTabstrip.scrollBoxObject.ensureElementIsVisible(this.mCurrentTab);
