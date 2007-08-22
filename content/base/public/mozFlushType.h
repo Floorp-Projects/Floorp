@@ -42,21 +42,14 @@
  * decide what to flush.
  */
 enum mozFlushType {
-  Flush_Content           = 0x1,   /* flush the content model construction */
-  Flush_SinkNotifications = 0x2,   /* flush the frame model construction */
-  Flush_StyleReresolves   = 0x4,   /* flush style reresolution */
-  Flush_OnlyReflow        = 0x8,   /* flush reflows */
-  Flush_OnlyPaint         = 0x10,  /* flush painting */
-  Flush_ContentAndNotify  = (Flush_Content | Flush_SinkNotifications),
-  Flush_Frames            = (Flush_Content | Flush_SinkNotifications |
-                             Flush_StyleReresolves),
-  Flush_Style             = (Flush_Content | Flush_SinkNotifications |
-                             Flush_StyleReresolves),
-  Flush_Layout            = (Flush_Content | Flush_SinkNotifications |
-                             Flush_StyleReresolves | Flush_OnlyReflow),
-  Flush_Display           = (Flush_Content | Flush_SinkNotifications |
-                             Flush_StyleReresolves | Flush_OnlyReflow |
-                             Flush_OnlyPaint)
+  Flush_Content          = 1, /* flush the content model construction */
+  Flush_ContentAndNotify = 2, /* As above, plus flush the frame model
+                                 construction and other nsIMutationObserver
+                                 notifications. */
+  Flush_Style            = 3, /* As above, plus flush style reresolution */
+  Flush_Frames           = Flush_Style,
+  Flush_Layout           = 4, /* As above, plus flush reflow */
+  Flush_Display          = 5  /* As above, plus flush painting */
 };
 
 #endif /* mozFlushType_h___ */

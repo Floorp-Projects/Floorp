@@ -2738,15 +2738,6 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     }
 #endif
 
-    // XXX - Are we cover up a problem here???
-    // Why aren't they getting flushed each time?
-    // because this isn't needed for Gfx
-    if (IsInDropDownMode()) {
-      // Don't flush anything but reflows lest it destroy us
-      PresContext()->PresShell()->
-        GetDocument()->FlushPendingNotifications(Flush_OnlyReflow);
-    }
-
     // Make sure the SelectArea frame gets painted
     Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
 

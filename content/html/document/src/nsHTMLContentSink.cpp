@@ -3199,13 +3199,13 @@ HTMLContentSink::FlushPendingNotifications(mozFlushType aType)
   // Only flush tags if we're not doing the notification ourselves
   // (since we aren't reentrant)
   if (mCurrentContext && !mInNotification) {
-    if (aType & Flush_SinkNotifications) {
+    if (aType >= Flush_ContentAndNotify) {
       mCurrentContext->FlushTags();
     }
     else {
       mCurrentContext->FlushText();
     }
-    if (aType & Flush_OnlyReflow) {
+    if (aType >= Flush_Layout) {
       // Make sure that layout has started so that the reflow flush
       // will actually happen.
       StartLayout(PR_TRUE);
