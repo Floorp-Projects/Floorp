@@ -1652,10 +1652,13 @@
               else {
                 // Load in an existing tab.
                 var tab = aEvent.target;
-                this.getBrowserForTab(tab).loadURI(getShortcutOrURI(url));
-
-                if (this.mCurrentTab != tab && !bgLoad)
-                  this.selectedTab = tab;
+                try {
+                  this.getBrowserForTab(tab).loadURI(getShortcutOrURI(url));
+                  if (this.mCurrentTab != tab && !bgLoad)
+                    this.selectedTab = tab;
+                } catch(ex) {
+                  // Just ignore invalid urls
+                }
               }
             }
           ]]>
