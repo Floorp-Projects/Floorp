@@ -1,6 +1,9 @@
 ################################################################################
 # Modified versions of macros provided by NSIS
 
+!ifndef OVERRIDES_INCLUDED
+!define OVERRIDES_INCLUDED
+
 ; Modified version of Locate from the NSIS File Functions Header v3.2
 ; This version has the calls to SetDetailsPrint and DetailsPrint commented out.
 ; See <NSIS App Dir>/include/FileFunc.nsh for more information
@@ -566,3 +569,5 @@
     !verbose pop
   !endif
 !macroend
+
+!endif
