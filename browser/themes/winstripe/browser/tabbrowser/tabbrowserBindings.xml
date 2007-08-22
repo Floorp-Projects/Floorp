@@ -71,21 +71,6 @@
     </content>
   </binding>
   
-  <binding id="tabs" extends="chrome://global/content/bindings/tabbox.xml#tabs">
-    <content>
-      <xul:spacer class="tab-border-top-left-cap"/>
-      <xul:spacer class="tab-border-top-left"/>
-      <children/>
-      <xul:stack flex="1">
-        <xul:spacer class="tab-border-top-right"/>
-        <xul:hbox class="tabs-misc-dec" align="center">
-          <xul:spacer flex="1"/>
-        </xul:hbox>
-      </xul:stack>
-      <xul:spacer class="tab-border-top-right-cap"/>
-    </content>
-  </binding>
-  
    <binding id="tabbrowser-tabs"  
             extends="chrome://global/content/bindings/tabbrowser.xml#tabbrowser-tabs">
     <content>
