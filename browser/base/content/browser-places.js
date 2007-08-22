@@ -58,10 +58,7 @@ var PlacesCommandHook = {
     if (aEvent.originalTarget != this.panel)
       return;
 
-    // This only happens for auto-hide. When the panel is closed from within
-    // itself, doneCallback removes the listener and only then hides the popup
-    gAddBookmarksPanel.saveItem();
-    gAddBookmarksPanel.uninitPanel();
+    gEditItemOverlay.uninitPanel(true);
   },
 
   _overlayLoaded: false,
@@ -96,23 +93,15 @@ var PlacesCommandHook = {
     this._overlayLoading = true;
     document.loadOverlay("chrome://browser/content/places/editBookmarkOverlay.xul",
                          loadObserver);
+    this.panel.addEventListener("popuphiding", this, false);
   },
 
   _doShowEditBookmarkPanel:
   function PCH__doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition) {
-    var panel = this.panel;
-    panel.openPopup(aAnchorElement, aPosition, -1, -1);
+    this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
 
-    gAddBookmarksPanel.initPanel(aItemId, PlacesUtils.tm, this.doneCallback,
-                                 { hiddenRows: "description" });
-    panel.addEventListener("popuphiding", this, false);
-  },
-
-  doneCallback: function PCH_doneCallback(aSavedChanges) {
-    var panel = PlacesCommandHook.panel;
-    panel.removeEventListener("popuphiding", PlacesCommandHook, false);
-    gAddBookmarksPanel.uninitPanel();
-    panel.hidePopup();
+    gEditItemOverlay.initPanel(aItemId,
+                               { hiddenRows: ["description", "location"] });
   },
 
   /**
@@ -289,6 +278,19 @@ var PlacesCommandHook = {
 
       organizer.focus();
     }
+  },
+
+  doneButtonOnCommand: function PCH_doneButtonOnCommand() {
+    this.panel.hidePopup();
+  },
+
+  deleteButtonOnCommand: function PCH_deleteButtonCommand() {
+    PlacesUtils.bookmarks.removeItem(gEditItemOverlay.itemId);
+
+    // remove all tags for the associated url
+    PlacesUtils.tagging.untagURI(gEditItemOverlay._uri, null);
+
+    this.panel.hidePopup();
   }
 };
 
