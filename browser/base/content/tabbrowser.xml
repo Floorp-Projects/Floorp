@@ -774,12 +774,7 @@
                           .getService(Components.interfaces.nsIWindowWatcher);
               if (ww.activeWindow == window) {
                 cmdDispatcher.suppressFocusScroll = true;
-                try {
-                  aElement.focus();
-                }
-                catch(ex) {
-                  dump("XXX focus() failed, see bug #348183: ex = " + ex + "\n");
-                }
+                aElement.focus();
                 cmdDispatcher.suppressFocusScroll = false;
               }
               else {
