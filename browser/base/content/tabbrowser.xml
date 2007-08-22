@@ -1710,10 +1710,7 @@
 
           aIndex = aIndex < aTab._tPos ? aIndex: aIndex+1;
           this.mCurrentTab.selected = false;
-          if (this.mTabContainer.childNodes.length == aIndex)
-            this.mTabContainer.appendChild(aTab);
-          else
-            this.mTabContainer.insertBefore(aTab, this.mTabContainer.childNodes[aIndex]);
+          this.mTabContainer.insertBefore(aTab, this.mTabContainer.childNodes[aIndex]);
 
           var i;
           for (i = 0; i < this.mTabContainer.childNodes.length; i++) {
