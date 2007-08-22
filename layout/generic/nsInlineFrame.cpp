@@ -560,7 +560,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     fm->GetMaxAscent(aMetrics.ascent);
     fm->GetHeight(aMetrics.height);
     // Include the text-decoration lines to the height.
-    // Currently, only undeline is overflowable.
+    // Currently, only underline is overflowable.
     nscoord offset, size;
     fm->GetUnderline(offset, size);
     nscoord ascentAndUnderline =

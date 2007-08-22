@@ -81,6 +81,7 @@ REQUIRES = 	\
 		content \
 		find \
 		gfx \
+		thebes \
 		locale \
 		unicharutil \
 		xuldoc \

@@ -54,6 +54,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  widget \
 		  gfx \
+		  thebes \
 		  layout \
 		  content \
 		  dom \

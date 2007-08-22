@@ -22,7 +22,7 @@
  *
  * Contributor(s):
  *   Steve Clark <buster@netscape.com>
- *   Håkan Waara <hwaara@chello.se>
+ *   HÃ¥kan Waara <hwaara@chello.se>
  *   Dan Rosen <dr@netscape.com>
  *   Daniel Glazman <glazman@netscape.com>
  *   Mats Palmgren <mats.palmgren@bredband.net>
@@ -4771,11 +4771,10 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
     builder.LeavePresShell(rootFrame, rect);
 
     if (NS_SUCCEEDED(rv)) {
-      nscoord appUnitsPerDevPixel = mPresContext->AppUnitsPerDevPixel();
       // Ensure that r.x,r.y gets drawn at (0,0)
       aThebesContext->Save();
-      aThebesContext->Translate(gfxPoint(-NSAppUnitsToFloatPixels(rect.x,appUnitsPerDevPixel),
-                                         -NSAppUnitsToFloatPixels(rect.y,appUnitsPerDevPixel)));
+      aThebesContext->Translate(gfxPoint(-mPresContext->AppUnitsToGfxUnits(rect.x),
+                                         -mPresContext->AppUnitsToGfxUnits(rect.y)));
 
       nsIDeviceContext* devCtx = mPresContext->DeviceContext();
       nsCOMPtr<nsIRenderingContext> rc;

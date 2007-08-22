@@ -51,6 +51,7 @@ REQUIRES	= xpcom \
 		  js \
 		  dom \
 		  gfx \
+		  thebes \
 		  layout \
 		  widget \
 		  necko \

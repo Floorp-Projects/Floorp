@@ -5779,14 +5779,17 @@ nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
     PRBool isRTL = visibility->mDirection == NS_STYLE_DIRECTION_RTL;
     nsRefPtr<gfxContext> ctx = (gfxContext*)
       aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-    gfxFloat a2p = 1.0 / PresContext()->AppUnitsPerDevPixel();
-    gfxPoint pt((start + aPt.x) * a2p, (aLine->mBounds.y + aPt.y) * a2p);
-    gfxSize size(width * a2p, aSize * a2p);
-    nsCSSRendering::PaintDecorationLine(ctx, aColor, pt, size,
-                                        aLine->GetAscent() * a2p, aOffset * a2p,
-                                        aSize * a2p, aDecoration,
-                                        NS_STYLE_BORDER_STYLE_SOLID,
-                                        isRTL);
+    PRInt32 app = PresContext()->AppUnitsPerDevPixel();
+    gfxPoint pt(PresContext()->AppUnitsToGfxUnits(start + aPt.x),
+                PresContext()->AppUnitsToGfxUnits(aLine->mBounds.y + aPt.y));
+    gfxSize size(PresContext()->AppUnitsToGfxUnits(width),
+                 PresContext()->AppUnitsToGfxUnits(aSize));
+    nsCSSRendering::PaintDecorationLine(
+      ctx, aColor, pt, size,
+      PresContext()->AppUnitsToGfxUnits(aLine->GetAscent()),
+      PresContext()->AppUnitsToGfxUnits(aOffset),
+      PresContext()->AppUnitsToGfxUnits(aSize),
+      aDecoration, NS_STYLE_BORDER_STYLE_SOLID, isRTL);
   }
 }
 
