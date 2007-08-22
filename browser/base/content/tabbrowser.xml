@@ -2705,6 +2705,8 @@
           switch (aEvent.type) {
             case "overflow":
               this.setAttribute("overflow", "true");
+              this.mTabstrip.scrollBoxObject
+                            .ensureElementIsVisible(this.selectedItem);
               break;
             case "underflow":
               this.removeAttribute("overflow");
