@@ -2963,9 +2963,6 @@
       <method name="_menuItemOnCommand">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          // note, the tab may not be valid (if after we built the popup
-          // the tab was closed.  but selectedItem setter handles that
-          // gracefully.
           var tabcontainer = document.getBindingParent(this);
           tabcontainer.selectedItem = aEvent.target.tab;
         ]]></body>
@@ -3020,6 +3017,28 @@
             case "TabOpen":
               this._createTabMenuItem(aEvent.originalTarget);
               break;
+            case "scroll":
+              this._updateTabsVisibilityStatus();
+              break;
+          }
+        ]]></body>
+      </method>
+
+      <method name="_updateTabsVisibilityStatus">
+        <body><![CDATA[
+          var tabContainer = document.getBindingParent(this);
+          // We don't want menu item decoration unless there is overflow.
+          if (tabContainer.getAttribute("overflow") != "true")
+            return;
+
+          var tabstripBO = tabContainer.mTabstrip.scrollBoxObject;
+          for (var i = 0; i < this.childNodes.length; i++) {
+            var curTabBO = this.childNodes[i].tab.boxObject;
+            if (curTabBO.screenX >= tabstripBO.screenX &&
+                curTabBO.screenX + curTabBO.width <= tabstripBO.screenX + tabstripBO.width)
+              this.childNodes[i].setAttribute("tabIsVisible", "true"); 
+            else
+              this.childNodes[i].removeAttribute("tabIsVisible");
           }
         ]]></body>
       </method>
@@ -3066,6 +3085,7 @@
         // Listen for changes in the tab bar.
         var tabbrowser = document.getBindingParent(tabcontainer);
         tabbrowser.addEventListener("TabOpen", this, false);
+        tabcontainer.mTabstrip.addEventListener("scroll", this, false);
 
         // if an animation is in progress and the user
         // clicks on the "all tabs" button, stop the animation
@@ -3074,6 +3094,7 @@
         for (var i = 0; i < tabs.length; i++) {
           this._createTabMenuItem(tabs[i]);
         }
+        this._updateTabsVisibilityStatus();
       ]]></handler>
 
       <handler event="popuphiding">
@@ -3087,8 +3108,9 @@
           menuItem.tab.mCorrespondingMenuitem = null;
           this.removeChild(menuItem);
         }
-        var tabbrowser = document.getBindingParent(document.getBindingParent(this));
-        tabbrowser.removeEventListener("TabOpen", this, false);
+        var tabcontainer = document.getBindingParent(this);
+        tabcontainer.mTabstrip.removeEventListener("scroll", this, false);
+        document.getBindingParent(tabcontainer).removeEventListener("TabOpen", this, false);
       ]]></handler>
 
       <handler event="DOMMenuItemActive">
