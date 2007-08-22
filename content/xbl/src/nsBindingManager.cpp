@@ -263,14 +263,16 @@ AddObjectEntry(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
 // helper routine for looking up an existing entry. Note that the
 // return result is NOT addreffed
 static nsISupports*
-LookupObject(PLDHashTable& table, nsISupports* aKey)
+LookupObject(PLDHashTable& table, nsIContent* aKey)
 {
-  ObjectEntry *entry =
-    static_cast<ObjectEntry*>
-               (PL_DHashTableOperate(&table, aKey, PL_DHASH_LOOKUP));
+  if (aKey && aKey->HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    ObjectEntry *entry =
+      static_cast<ObjectEntry*>
+                 (PL_DHashTableOperate(&table, aKey, PL_DHASH_LOOKUP));
 
-  if (PL_DHASH_ENTRY_IS_BUSY(entry))
-    return entry->GetValue();
+    if (PL_DHASH_ENTRY_IS_BUSY(entry))
+      return entry->GetValue();
+  }
 
   return nsnull;
 }
