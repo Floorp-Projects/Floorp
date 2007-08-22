@@ -695,7 +695,15 @@
                 // Clear focus outline before we draw on top of it.
                 // Only blur the focused element if it isn't a tab, 
                 // to avoid breaking keyboard tab navigation
-                this.mCurrentBrowser.focusedElement.blur();
+                var elem = this.mCurrentBrowser.focusedElement;
+                if (elem instanceof HTMLElement || elem instanceof XULElement) {
+                  elem.blur();
+                }
+                else {
+                  var content = elem.ownerDocument.defaultView;
+                  if (content instanceof Components.interfaces.nsIInterfaceRequestor)
+                    content.getInterface(Components.interfaces.nsIDOMWindowUtils).focus(null);
+                }
               }
               this.mCurrentBrowser.setAttribute("type", "content-targetable");
             }
@@ -801,7 +809,16 @@
                         .getService(Components.interfaces.nsIWindowWatcher);
             if (ww.activeWindow == window) {
               cmdDispatcher.suppressFocusScroll = true;
-              whatToFocus.focus();
+              if (whatToFocus instanceof HTMLElement ||
+                  whatToFocus instanceof XULElement ||
+                  whatToFocus instanceof Window) {
+                whatToFocus.focus();
+              }
+              else if (whatToFocus instanceof Node) {
+                var content = window.content;
+                if (content instanceof Components.interfaces.nsIInterfaceRequestor)
+                  content.getInterface(Components.interfaces.nsIDOMWindowUtils).focus(whatToFocus);
+              }
               cmdDispatcher.suppressFocusScroll = false;
             }
             else {
