@@ -2166,7 +2166,7 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
-            event.preventBubble();
+            event.stopPropagation();
             var tn = document.tooltipNode;
             if (tn.localName != "tab")
               return false; // Not a tab, so cancel the tooltip
