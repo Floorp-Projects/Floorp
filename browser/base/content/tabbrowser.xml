@@ -266,11 +266,12 @@
         <parameter name="aTopBottom"/>
         <body>
           <![CDATA[
+            var browser = aBrowser || this.mCurrentBrowser;
             if (aTopBottom != "both")
-              this.getMessageForBrowser(aBrowser, aTopBottom).hidden = true;
+              this.getMessageForBrowser(browser, aTopBottom).hidden = true;
             else {
-              this.getMessageForBrowser(aBrowser, "top").hidden = true;
-              this.getMessageForBrowser(aBrowser, "bottom").hidden = true;
+              this.getMessageForBrowser(browser, "top").hidden = true;
+              this.getMessageForBrowser(browser, "bottom").hidden = true;
             }
           ]]>
         </body>
