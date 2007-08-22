@@ -1455,7 +1455,7 @@
             var oldTab = aTab;
 
             // clean up the before/afterselected attributes before removing the tab
-            oldTab.selected = false;
+            oldTab._selected = false;
 
             // Remove this tab as the owner of any other tabs, since it's going away.
             for (i = 0; i < this.mTabContainer.childNodes.length; ++i) {
@@ -1531,7 +1531,7 @@
               this.mTabContainer.childNodes[i]._tPos = i;
             }
             this.mTabBox.selectedPanel = this.getBrowserForTab(this.mCurrentTab).parentNode;
-            this.mCurrentTab.selected = true;
+            this.mCurrentTab._selected = true;
 
             this.updateCurrentBrowser();
 
@@ -1967,7 +1967,7 @@
           var oldPosition = aTab._tPos;
 
           aIndex = aIndex < aTab._tPos ? aIndex: aIndex+1;
-          this.mCurrentTab.selected = false;
+          this.mCurrentTab._selected = false;
           // use .item() instead of [] because dragging to the end of the strip goes out of
           // bounds: .item() returns null (so it acts like appendChild), but [] throws
           this.mTabContainer.insertBefore(aTab, this.mTabContainer.childNodes.item(aIndex));
@@ -1977,9 +1977,9 @@
           var i;
           for (i = 0; i < this.mTabContainer.childNodes.length; i++) {
             this.mTabContainer.childNodes[i]._tPos = i;
-            this.mTabContainer.childNodes[i].selected = false;
+            this.mTabContainer.childNodes[i]._selected = false;
           }
-          this.mCurrentTab.selected = true;
+          this.mCurrentTab._selected = true;
           this.mTabContainer.mTabstrip.scrollBoxObject.ensureElementIsVisible(this.mCurrentTab);
 
           var evt = document.createEvent("UIEvents");
