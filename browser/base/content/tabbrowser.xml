@@ -1759,128 +1759,127 @@
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-            if (aDragSession.sourceNode) {
-              var tabStrip = this.mTabContainer.mTabstrip;
+            var tabStrip = this.mTabContainer.mTabstrip;
 
-              // autoscroll the tab strip if we drag over the scroll
-              // buttons, even if we aren't dragging a tab, but then
-              // return to avoid drawing the drop indicator
-              var pixelsToScroll = 0;
+            // autoscroll the tab strip if we drag over the scroll
+            // buttons, even if we aren't dragging a tab, but then
+            // return to avoid drawing the drop indicator
+            var pixelsToScroll = 0;
 
-              var targetAnonid = aEvent.originalTarget.getAttribute("anonid");
-              if (targetAnonid == "scrollbutton-up") {
-                pixelsToScroll = tabStrip.scrollIncrement * -1;
-                tabStrip.scrollByPixels(pixelsToScroll);
-              }
-              else if (targetAnonid == "scrollbutton-down" || 
-                       (targetAnonid == "alltabs-button" && 
-                        this.mTabContainer.getAttribute("overflow") == "true")) {
-                pixelsToScroll = tabStrip.scrollIncrement;
-                tabStrip.scrollByPixels(pixelsToScroll);
-              }
+            var targetAnonid = aEvent.originalTarget.getAttribute("anonid");
+            if (targetAnonid == "scrollbutton-up") {
+              pixelsToScroll = tabStrip.scrollIncrement * -1;
+              tabStrip.scrollByPixels(pixelsToScroll);
+            }
+            else if (targetAnonid == "scrollbutton-down" || 
+                     (targetAnonid == "alltabs-button" && 
+                      this.mTabContainer.getAttribute("overflow") == "true")) {
+              pixelsToScroll = tabStrip.scrollIncrement;
+              tabStrip.scrollByPixels(pixelsToScroll);
+            }
 
-              var isTabDrag = (aDragSession.sourceNode.parentNode == this.mTabContainer);
-              if (!isTabDrag && aEvent.target.localName == "tab") {
-                if (!this.mDragTime) 
-                  this.mDragTime = Date.now();
-                if (Date.now() >= this.mDragTime + this.mDragOverDelay)
-                  this.mTabContainer.selectedItem = aEvent.target;
-                return;
-              }
+            var isTabDrag = (aDragSession.sourceNode && 
+                             aDragSession.sourceNode.parentNode == this.mTabContainer);
+            if (!isTabDrag && aEvent.target.localName == "tab") {
+              if (!this.mDragTime) 
+                this.mDragTime = Date.now();
+              if (Date.now() >= this.mDragTime + this.mDragOverDelay)
+                this.mTabContainer.selectedItem = aEvent.target;
+              return;
+            }
 
-              var newIndex = this.getNewIndex(aEvent);
+            var newIndex = this.getNewIndex(aEvent);
 
-              var ib = this.mTabDropIndicatorBar;
-              var ind = ib.firstChild;
-              ib.setAttribute('dragging',
-                 aDragSession.canDrop ? 'true' : 'false');
+            var ib = this.mTabDropIndicatorBar;
+            var ind = ib.firstChild;
+            ib.setAttribute('dragging',
+               aDragSession.canDrop ? 'true' : 'false');
 
-              var tabStripBoxObject = tabStrip.scrollBoxObject;
-              var halfIndWidth = Math.floor((ind.boxObject.width + 1) / 2);
-              if (window.getComputedStyle(this.parentNode, null)
-                        .direction == "ltr") {
-                var newMarginLeft;
-                var minMarginLeft = tabStripBoxObject.x - halfIndWidth -
-                                    ib.boxObject.x;
-                // make sure we don't place the tab drop indicator past the
-                // edge, or the containing box will flex and stretch
-                // the tab drop indicator bar, which will flex the url bar.  
-                // XXX todo
-                // just use first value if you can figure out how to get
-                // the tab drop indicator to crop instead of flex and stretch
-                // the tab drop indicator bar.
-                var maxMarginLeft = Math.min(
-                  (minMarginLeft + tabStripBoxObject.width), 
-                  (ib.boxObject.x + ib.boxObject.width - ind.boxObject.width));
+            var tabStripBoxObject = tabStrip.scrollBoxObject;
+            var halfIndWidth = Math.floor((ind.boxObject.width + 1) / 2);
+            if (window.getComputedStyle(this.parentNode, null)
+                      .direction == "ltr") {
+              var newMarginLeft;
+              var minMarginLeft = tabStripBoxObject.x - halfIndWidth -
+                                  ib.boxObject.x;
+              // make sure we don't place the tab drop indicator past the
+              // edge, or the containing box will flex and stretch
+              // the tab drop indicator bar, which will flex the url bar.  
+              // XXX todo
+              // just use first value if you can figure out how to get
+              // the tab drop indicator to crop instead of flex and stretch
+              // the tab drop indicator bar.
+              var maxMarginLeft = Math.min(
+                (minMarginLeft + tabStripBoxObject.width), 
+                (ib.boxObject.x + ib.boxObject.width - ind.boxObject.width));
 
-                // if we are scrolling, put the drop indicator at the edge
-                // so that it doesn't jump while scrolling
-                if (pixelsToScroll > 0)
-                  newMarginLeft = maxMarginLeft;
-                else if (pixelsToScroll < 0)
-                  newMarginLeft = minMarginLeft;
-                else {
-                if (newIndex == this.mTabs.length) {
-                    newMarginLeft = this.mTabs[newIndex-1].boxObject.screenX +
-                                    this.mTabs[newIndex-1].boxObject.width - 
-                                    this.boxObject.screenX - halfIndWidth;
-                } else {
-                    newMarginLeft = this.mTabs[newIndex].boxObject.screenX - 
-                                    this.boxObject.screenX - halfIndWidth;
-                }
-
-                  // ensure we never place the drop indicator beyond
-                  // our limits
-                  if (newMarginLeft < minMarginLeft)
-                    newMarginLeft = minMarginLeft;
-                  else if (newMarginLeft > maxMarginLeft)
-                    newMarginLeft = maxMarginLeft;
-                }
-                ind.style.marginLeft = newMarginLeft + 'px';
+              // if we are scrolling, put the drop indicator at the edge
+              // so that it doesn't jump while scrolling
+              if (pixelsToScroll > 0)
+                newMarginLeft = maxMarginLeft;
+              else if (pixelsToScroll < 0)
+                newMarginLeft = minMarginLeft;
+              else {
+              if (newIndex == this.mTabs.length) {
+                  newMarginLeft = this.mTabs[newIndex-1].boxObject.screenX +
+                                  this.mTabs[newIndex-1].boxObject.width - 
+                                  this.boxObject.screenX - halfIndWidth;
               } else {
-                var newMarginRight;
-                var minMarginRight = tabStripBoxObject.x - halfIndWidth -
-                                     ib.boxObject.x;
-                // make sure we don't place the tab drop indicator past the
-                // edge, or the containing box will flex and stretch
-                // the tab drop indicator bar, which will flex the url bar.  
-                // XXX todo
-                // just use first value if you can figure out how to get
-                // the tab drop indicator to crop instead of flex and stretch
-                // the tab drop indicator bar.
-                var maxMarginRight = Math.min(
-                  (minMarginRight + tabStripBoxObject.width), 
-                  (ib.boxObject.x + ib.boxObject.width - ind.boxObject.width));
-
-                // if we are scrolling, put the drop indicator at the edge
-                // so that it doesn't jump while scrolling
-                if (pixelsToScroll > 0)
-                  newMarginRight = maxMarginRight;
-                else if (pixelsToScroll < 0)
-                  newMarginRight = minMarginRight;
-                else {
-                if (newIndex == this.mTabs.length) {
-                    newMarginRight = this.boxObject.width + 
-                                     this.boxObject.screenX -
-                                     this.mTabs[newIndex-1].boxObject.screenX -
-                                     halfIndWidth;
-                } else {
-                    newMarginRight = this.boxObject.width + 
-                                     this.boxObject.screenX -
-                                     this.mTabs[newIndex].boxObject.screenX -
-                                     this.mTabs[newIndex].boxObject.width -
-                                     halfIndWidth;
-                  }
-
-                  // ensure we never place the drop indicator beyond
-                  // our limits
-                  if (newMarginRight < minMarginRight)
-                    newMarginRight = minMarginRight;
-                  else if (newMarginRight > maxMarginRight)
-                    newMarginRight = maxMarginRight;
-                }
-                ind.style.marginRight = newMarginRight + 'px';
+                  newMarginLeft = this.mTabs[newIndex].boxObject.screenX - 
+                                  this.boxObject.screenX - halfIndWidth;
               }
+
+                // ensure we never place the drop indicator beyond
+                // our limits
+                if (newMarginLeft < minMarginLeft)
+                  newMarginLeft = minMarginLeft;
+                else if (newMarginLeft > maxMarginLeft)
+                  newMarginLeft = maxMarginLeft;
+              }
+              ind.style.marginLeft = newMarginLeft + 'px';
+            } else {
+              var newMarginRight;
+              var minMarginRight = tabStripBoxObject.x - halfIndWidth -
+                                   ib.boxObject.x;
+              // make sure we don't place the tab drop indicator past the
+              // edge, or the containing box will flex and stretch
+              // the tab drop indicator bar, which will flex the url bar.  
+              // XXX todo
+              // just use first value if you can figure out how to get
+              // the tab drop indicator to crop instead of flex and stretch
+              // the tab drop indicator bar.
+              var maxMarginRight = Math.min(
+                (minMarginRight + tabStripBoxObject.width), 
+                (ib.boxObject.x + ib.boxObject.width - ind.boxObject.width));
+
+              // if we are scrolling, put the drop indicator at the edge
+              // so that it doesn't jump while scrolling
+              if (pixelsToScroll > 0)
+                newMarginRight = maxMarginRight;
+              else if (pixelsToScroll < 0)
+                newMarginRight = minMarginRight;
+              else {
+              if (newIndex == this.mTabs.length) {
+                  newMarginRight = this.boxObject.width + 
+                                   this.boxObject.screenX -
+                                   this.mTabs[newIndex-1].boxObject.screenX -
+                                   halfIndWidth;
+              } else {
+                  newMarginRight = this.boxObject.width + 
+                                   this.boxObject.screenX -
+                                   this.mTabs[newIndex].boxObject.screenX -
+                                   this.mTabs[newIndex].boxObject.width -
+                                   halfIndWidth;
+                }
+
+                // ensure we never place the drop indicator beyond
+                // our limits
+                if (newMarginRight < minMarginRight)
+                  newMarginRight = minMarginRight;
+                else if (newMarginRight > maxMarginRight)
+                  newMarginRight = maxMarginRight;
+              }
+              ind.style.marginRight = newMarginRight + 'px';
             }
           ]]>
         </body>
