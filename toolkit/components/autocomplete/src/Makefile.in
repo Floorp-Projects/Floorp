@@ -61,6 +61,7 @@ REQUIRES =	xpcom \
 		content \
 		view \
 		gfx \
+		thebes \
 		locale \
 		necko \
 	 	$(NULL)

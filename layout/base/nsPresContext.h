@@ -61,6 +61,8 @@
 #include "nsIDocument.h"
 #include "nsInterfaceHashtable.h"
 #include "nsCycleCollectionParticipant.h"
+// XXX we need only gfxTypes.h, but we cannot include it directly.
+#include "gfxPoint.h"
 class nsImageLoader;
 #ifdef IBMBIDI
 class nsBidiPresUtils;
@@ -496,6 +498,9 @@ public:
   { return NSAppUnitsToFloatPixels(aAppUnits,
                                    nsIDeviceContext::AppUnitsPerCSSPixel()); }
 
+  static gfxFloat AppUnitsToGfxCSSPixels(nscoord aAppUnits)
+  { return nsIDeviceContext::AppUnitsToGfxCSSPixels(aAppUnits); }
+
   nscoord DevPixelsToAppUnits(PRInt32 aPixels) const
   { return NSIntPixelsToAppUnits(aPixels,
                                  mDeviceContext->AppUnitsPerDevPixel()); }
@@ -503,6 +508,9 @@ public:
   PRInt32 AppUnitsToDevPixels(nscoord aAppUnits) const
   { return NSAppUnitsToIntPixels(aAppUnits,
                                  mDeviceContext->AppUnitsPerDevPixel()); }
+
+  gfxFloat AppUnitsToGfxUnits(nscoord aAppUnits) const
+  { return mDeviceContext->AppUnitsToGfxUnits(aAppUnits); }
 
   nscoord TwipsToAppUnits(PRInt32 aTwips) const
   { return NSToCoordRound(NS_TWIPS_TO_INCHES(aTwips) *

@@ -452,14 +452,14 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
 
     nsRefPtr<gfxContext> ctx = (gfxContext*)
       aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-    gfxFloat a2p = 1.0 / presContext->AppUnitsPerDevPixel();
-    gfxPoint pt(textRect.x * a2p, textRect.y * a2p);
-    gfxFloat width = textRect.width * a2p;
-    gfxFloat baselinePixel = baseline * a2p;
+    gfxPoint pt(presContext->AppUnitsToGfxUnits(textRect.x),
+                presContext->AppUnitsToGfxUnits(textRect.y));
+    gfxFloat width = presContext->AppUnitsToGfxUnits(textRect.width);
+    gfxFloat baselinePixel = presContext->AppUnitsToGfxUnits(baseline);
     if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
       fontMet->GetUnderline(offset, size);
-      gfxFloat offsetPixel = offset * a2p;
-      gfxFloat sizePixel = size * a2p;
+      gfxFloat offsetPixel = presContext->AppUnitsToGfxUnits(offset);
+      gfxFloat sizePixel = presContext->AppUnitsToGfxUnits(size);
       if (decorations & NS_FONT_DECORATION_OVERLINE) {
         nsCSSRendering::PaintDecorationLine(ctx, overColor,
                                             pt, gfxSize(width, sizePixel),
@@ -481,8 +481,8 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
     }
     if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
       fontMet->GetStrikeout(offset, size);
-      gfxFloat offsetPixel = offset * a2p;
-      gfxFloat sizePixel = size * a2p;
+      gfxFloat offsetPixel = presContext->AppUnitsToGfxUnits(offset);
+      gfxFloat sizePixel = presContext->AppUnitsToGfxUnits(size);
       nsCSSRendering::PaintDecorationLine(ctx, underColor,
                                           pt, gfxSize(width, sizePixel),
                                           baselinePixel, offsetPixel,

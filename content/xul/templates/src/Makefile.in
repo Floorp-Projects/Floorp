@@ -52,6 +52,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  caps \
 		  gfx \
+		  thebes \
 		  layout \
 		  content \
 		  pref \

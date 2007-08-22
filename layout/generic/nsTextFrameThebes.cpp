@@ -3716,10 +3716,11 @@ FillClippedRect(gfxContext* aCtx, nsPresContext* aPresContext,
 {
   gfxRect r = aRect.Intersect(aDirtyRect);
   // For now, we need to put this in pixel coordinates
-  float t2p = 1.0f / aPresContext->AppUnitsPerDevPixel();
+  PRInt32 app = aPresContext->AppUnitsPerDevPixel();
   aCtx->NewPath();
   // pixel-snap
-  aCtx->Rectangle(gfxRect(r.X()*t2p, r.Y()*t2p, r.Width()*t2p, r.Height()*t2p), PR_TRUE);
+  aCtx->Rectangle(gfxRect(r.X() / app, r.Y() / app,
+                          r.Width() / app, r.Height() / app), PR_TRUE);
   aCtx->SetColor(gfxRGBA(aColor));
   aCtx->Fill();
 }
@@ -3790,12 +3791,12 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
     return;
 
   gfxFont::Metrics fontMetrics = GetFontMetrics(aProvider.GetFontGroup());
-  gfxFloat a2p = 1.0 / aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
+  PRInt32 app = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
 
   // XXX aFramePt is in AppUnits, shouldn't it be nsFloatPoint?
-  gfxPoint pt(aFramePt.x * a2p, aFramePt.y * a2p);
-  gfxSize size(GetRect().width * a2p, 0);
-  gfxFloat ascent = mAscent * a2p;
+  gfxPoint pt(aFramePt.x / app, aFramePt.y / app);
+  gfxSize size(GetRect().width / app, 0);
+  gfxFloat ascent = mAscent / app;
 
   if (decorations & NS_FONT_DECORATION_OVERLINE) {
     size.height = fontMetrics.underlineSize;
@@ -4174,13 +4175,13 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     gfxFloat advance = hyphenWidth +
       mTextRun->GetAdvanceWidth(offset, length, &aProvider);
     if (type == aSelectionType) {
-      gfxFloat a2p = 1.0 / aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
+      PRInt32 app = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
       // XXX aTextBaselinePt is in AppUnits, shouldn't it be nsFloatPoint?
-      gfxPoint pt((aTextBaselinePt.x + xOffset) * a2p,
-                  (aTextBaselinePt.y - mAscent) * a2p);
-      gfxFloat width = PR_ABS(advance) * a2p;
+      gfxPoint pt((aTextBaselinePt.x + xOffset) / app,
+                  (aTextBaselinePt.y - mAscent) / app);
+      gfxFloat width = PR_ABS(advance) / app;
       DrawSelectionDecorations(aCtx, aSelectionType, aTextPaintStyle,
-                               pt, width, mAscent * a2p, decorationMetrics,
+                               pt, width, mAscent / app, decorationMetrics,
                                mTextRun->IsRightToLeft());
     }
     iterator.UpdateWithAdvance(advance);

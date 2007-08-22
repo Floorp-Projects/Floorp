@@ -2141,11 +2141,10 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   // of the image)
   gfxRect pxSrc;
   if (aSourceRect) {
-    PRInt32 p2a = nsIDeviceContext::AppUnitsPerCSSPixel();
-    pxSrc.pos.x = NSAppUnitsToFloatPixels(aSourceRect->x, p2a);
-    pxSrc.pos.y = NSAppUnitsToFloatPixels(aSourceRect->y, p2a);
-    pxSrc.size.width = NSAppUnitsToFloatPixels(aSourceRect->width, p2a);
-    pxSrc.size.height = NSAppUnitsToFloatPixels(aSourceRect->height, p2a);
+    pxSrc.pos.x = nsIDeviceContext::AppUnitsToGfxCSSPixels(aSourceRect->x);
+    pxSrc.pos.y = nsIDeviceContext::AppUnitsToGfxCSSPixels(aSourceRect->y);
+    pxSrc.size.width = nsIDeviceContext::AppUnitsToGfxCSSPixels(aSourceRect->width);
+    pxSrc.size.height = nsIDeviceContext::AppUnitsToGfxCSSPixels(aSourceRect->height);
   } else {
     pxSrc.pos.x = pxSrc.pos.y = 0.0;
     PRInt32 w = 0, h = 0;
@@ -2157,7 +2156,6 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
 
   nsCOMPtr<nsIDeviceContext> dc;
   aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
-  PRInt32 d2a = dc->AppUnitsPerDevPixel();
 
   nsRefPtr<gfxContext> ctx = static_cast<gfxContext*>
                                         (aRenderingContext->GetNativeGraphicData(
@@ -2170,10 +2168,10 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   // pixel, but then convert back to gfxFloats for the rest of the math.
   gfxRect pxDest;
   {
-    pxDest.pos.x = NSAppUnitsToFloatPixels(aDestRect.x, d2a);
-    pxDest.pos.y = NSAppUnitsToFloatPixels(aDestRect.y, d2a);
-    pxDest.size.width = NSAppUnitsToFloatPixels(aDestRect.width, d2a);
-    pxDest.size.height = NSAppUnitsToFloatPixels(aDestRect.height, d2a);
+    pxDest.pos.x = dc->AppUnitsToGfxUnits(aDestRect.x);
+    pxDest.pos.y = dc->AppUnitsToGfxUnits(aDestRect.y);
+    pxDest.size.width = dc->AppUnitsToGfxUnits(aDestRect.width);
+    pxDest.size.height = dc->AppUnitsToGfxUnits(aDestRect.height);
     if (ctx->UserToDevicePixelSnapped(pxDest))
       pxDest = ctx->DeviceToUser(pxDest);
   }
@@ -2184,10 +2182,10 @@ nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
   // been intersected with, and we should be rounding those consistently.)
   gfxRect pxDirty;
   {
-    pxDirty.pos.x = NSAppUnitsToFloatPixels(dirtyRect.x, d2a);
-    pxDirty.pos.y = NSAppUnitsToFloatPixels(dirtyRect.y, d2a);
-    pxDirty.size.width = NSAppUnitsToFloatPixels(dirtyRect.width, d2a);
-    pxDirty.size.height = NSAppUnitsToFloatPixels(dirtyRect.height, d2a);
+    pxDirty.pos.x = dc->AppUnitsToGfxUnits(dirtyRect.x);
+    pxDirty.pos.y = dc->AppUnitsToGfxUnits(dirtyRect.y);
+    pxDirty.size.width = dc->AppUnitsToGfxUnits(dirtyRect.width);
+    pxDirty.size.height = dc->AppUnitsToGfxUnits(dirtyRect.height);
     if (ctx->UserToDevicePixelSnapped(pxDirty))
       pxDirty = ctx->DeviceToUser(pxDirty);
   }

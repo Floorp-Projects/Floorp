@@ -55,6 +55,7 @@ REQUIRES	= xpcom \
 		  docshell \
 		  dom \
 		  gfx \
+		  thebes \
 		  content \
 		  necko \
 		  layout \
