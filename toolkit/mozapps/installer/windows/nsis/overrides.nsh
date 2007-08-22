@@ -4,6 +4,9 @@
 !ifndef OVERRIDES_INCLUDED
 !define OVERRIDES_INCLUDED
 
+!include TextFunc.nsh
+!include FileFunc.nsh
+
 ; Modified version of Locate from the NSIS File Functions Header v3.2
 ; This version has the calls to SetDetailsPrint and DetailsPrint commented out.
 ; See <NSIS App Dir>/include/FileFunc.nsh for more information
