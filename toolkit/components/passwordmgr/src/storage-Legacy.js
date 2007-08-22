@@ -206,11 +206,21 @@ LoginManagerStorage_legacy.prototype = {
             throw "No logins found for hostname (" + key + ")";
 
         // The specified login isn't encrypted, so we need to ensure
-        // the logins we're comparing with are decrypted.
-        this._decryptLogins(logins);
-
+        // the logins we're comparing with are decrypted. We decrypt one entry
+        // at a time, lest _decryptLogins return fewer entries and screw up
+        // indicies between the two.
         for (var i = 0; i < logins.length; i++) {
-            if (logins[i].equals(login)) {
+
+            var [[decryptedLogin], userCanceled] =
+                        this._decryptLogins([logins[i]]);
+
+            if (userCanceled)
+                return;
+
+            if (!decryptedLogin)
+                continue;
+
+            if (decryptedLogin.equals(login)) {
                 logins.splice(i, 1); // delete that login from array.
                 break;
                 // Note that if there are duplicate entries, they'll
@@ -703,16 +713,16 @@ LoginManagerStorage_legacy.prototype = {
         var result = [], userCanceled = false;
 
         for each (var login in logins) {
-            if (!login.username)
-                [login.username, userCanceled] =
-                    this._decrypt(login.wrappedJSObject.encryptedUsername);
+            var username, password;
+
+            [username, userCanceled] =
+                this._decrypt(login.wrappedJSObject.encryptedUsername);
 
             if (userCanceled)
                 break;
 
-            if (!login.password)
-                [login.password, userCanceled] =
-                    this._decrypt(login.wrappedJSObject.encryptedPassword);
+            [password, userCanceled] =
+                this._decrypt(login.wrappedJSObject.encryptedPassword);
 
             // Probably can't hit this case, but for completeness...
             if (userCanceled)
@@ -720,8 +730,15 @@ LoginManagerStorage_legacy.prototype = {
 
             // If decryption failed (corrupt entry?) skip it.
             // XXX remove it from the original list entirely?
-            if (!login.username || !login.password)
+            if (!username || !password)
                 continue;
+
+            // We could set the decrypted values on a copy of the object, to
+            // try to prevent the decrypted values from sitting around in
+            // memory if they're not needed. But thanks to GC that's happening
+            // anyway, so meh.
+            login.username = username;
+            login.password = password;
 
             // Force any old mime64-obscured entries to be reencrypted.
             if (login.wrappedJSObject.encryptedUsername &&
