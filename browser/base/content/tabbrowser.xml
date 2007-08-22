@@ -1607,21 +1607,24 @@
         <body>
           <![CDATA[
             if (aDragSession.canDrop && aDragSession.sourceNode) {
-              // autoscroll the tab strip if we drag over the autorepeat
+              var tabStrip = this.mTabContainer.mTabstrip;
+
+              // autoscroll the tab strip if we drag over the scroll
               // buttons, even if we aren't dragging a tab, but then
               // return to avoid drawing the drop indicator
-              var isTabDrag = (aDragSession.sourceNode.parentNode == this.mTabContainer);
               var pixelsToScroll = 0;
-              var tabStrip = this.mTabContainer.mTabstrip;
-              if (aEvent.originalTarget.localName == "autorepeatbutton") {
-                if (aEvent.originalTarget.getAttribute("class") == 
-                    "autorepeatbutton-up")
-                  pixelsToScroll = tabStrip.scrollIncrement * -1;
-                else
-                  pixelsToScroll = tabStrip.scrollIncrement;
+
+              var targetAnonid = aEvent.originalTarget.getAttribute("anonid");
+              if (targetAnonid == "scrollbutton-up") {
+                pixelsToScroll = tabStrip.scrollIncrement * -1;
+                tabStrip.scrollByPixels(pixelsToScroll);
+              }
+              else if (targetAnonid == "scrollbutton-down") {
+                pixelsToScroll = tabStrip.scrollIncrement;
                 tabStrip.scrollByPixels(pixelsToScroll);
               }
 
+              var isTabDrag = (aDragSession.sourceNode.parentNode == this.mTabContainer);
               if (!isTabDrag)
                 return;
 
