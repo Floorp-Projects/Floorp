@@ -1656,7 +1656,8 @@
         <parameter name="aDragSession"/>
         <body>
           <![CDATA[
-            if (aDragSession.sourceNode.parentNode == this.mTabContainer &&
+            if (aDragSession.sourceNode &&
+                aDragSession.sourceNode.parentNode == this.mTabContainer &&
                 (aEvent.screenX >= aDragSession.sourceNode.boxObject.screenX &&
                  aEvent.screenX <= (aDragSession.sourceNode.boxObject.screenX +
                                     aDragSession.sourceNode.boxObject.width)))
