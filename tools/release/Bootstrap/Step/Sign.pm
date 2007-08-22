@@ -1,5 +1,5 @@
 #
-# Sign step. Applies digital signatures to builds.
+# Sign step. Wait for signed builds to appear.
 # 
 package Bootstrap::Step::Sign;
 use Bootstrap::Step;
@@ -10,25 +10,27 @@ sub Execute {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(sysvar => 'logDir');
+    my $rc = $config->Get(var => 'rc');
 
-    $this->Shell(
-      cmd => 'echo',
-      cmdArgs => ['sign'],
-      logFile => catfile($logDir, 'sign.log'),
-    );
+    my $signedDir = $config->GetFtpCandidateDir(bitsUnsigned => 0);
+
+    while (! -f catfile($signedDir . 'win32_signing_rc' . $rc . '.log')) {
+        sleep(10);
+    }
 }
 
-sub Verify {
+sub Verify {}
+
+sub Announce {
     my $this = shift;
 
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(sysvar => 'logDir');
+    my $product = $config->Get(var => 'product');
+    my $version = $config->Get(var => 'version');
 
-    $this->Shell(
-      cmd => 'echo',
-      cmdArgs => ['Verify sign'],
-      logFile => catfile($logDir, 'sign_verify.log'),
+    $this->SendAnnouncement(
+      subject => "$product $version sign step finished",
+      message => "$product $version win32 builds have been signed and copied to the candidates dir.",
     );
 }
 
