@@ -956,7 +956,7 @@
             this.mTabbedMode = true; // Welcome to multi-tabbed mode.
 
             // Get the first tab all hooked up with a title listener and popup blocking listener.
-            this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
+            this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, true);
 
             var throbberElement = document.getElementById("navigator-throbber");
             if (throbberElement && throbberElement.hasAttribute("busy")) {
@@ -1128,7 +1128,7 @@
             b.setAttribute("flex", "1");
             this.mPanelContainer.appendChild(notificationbox);
 
-            b.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
+            b.addEventListener("DOMTitleChanged", this.onTitleChanged, true);
 
             if (this.mStrip.collapsed)
               this.setStripVisibilityTo(true);
@@ -1314,7 +1314,7 @@
             this.mTabListeners.splice(index, 1);
 
             // Remove our title change and blocking listeners
-            oldBrowser.removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
+            oldBrowser.removeEventListener("DOMTitleChanged", this.onTitleChanged, true);
 
             // We are no longer the primary content area.
             oldBrowser.setAttribute("type", "content-targetable");
@@ -2179,7 +2179,7 @@
             this.mTabFilters[i].removeProgressListener(this.mTabListeners[i]);
             this.mTabFilters[i] = null;
             this.mTabListeners[i] = null;
-            this.getBrowserAtIndex(i).removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
+            this.getBrowserAtIndex(i).removeEventListener("DOMTitleChanged", this.onTitleChanged, true);
           }
           document.removeEventListener("keypress", this._keyEventHandler, false);
         ]]>
@@ -2187,9 +2187,9 @@
     </implementation>
 
     <handlers>
-      <handler event="DOMLinkAdded" action="this.onLinkAdded(event);"/>
+      <handler event="DOMLinkAdded" phase="capturing" action="this.onLinkAdded(event);"/>
 
-      <handler event="DOMWindowClose">
+      <handler event="DOMWindowClose" phase="capturing">
         <![CDATA[
           if (!event.isTrusted)
             return;
@@ -2218,7 +2218,7 @@
           }
         ]]>
       </handler>
-      <handler event="DOMWillOpenModalDialog">
+      <handler event="DOMWillOpenModalDialog" phase="capturing">
         <![CDATA[
           if (!event.isTrusted)
             return;
@@ -2238,7 +2238,7 @@
           }
         ]]>
       </handler>
-      <handler event="DOMModalDialogClosed">
+      <handler event="DOMModalDialogClosed" phase="capturing">
         <![CDATA[
           if (!event.isTrusted)
             return;
