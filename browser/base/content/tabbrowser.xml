@@ -370,6 +370,9 @@
                   aWebProgress.isLoadingDocument)
                 this.mTabBrowser.setIcon(this.mTab, null);
 
+              // changing location, clear out the missing plugins list
+              this.mTab.missingPlugins = null;
+
               if (!this.mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
