@@ -1572,8 +1572,10 @@
 	    return;
 	  }
 
+#ifndef XP_MACOSX
           if (aEvent.ctrlKey && aEvent.keyCode == KeyEvent.DOM_VK_F4 && this.tabbrowser.mTabBox.handleCtrlPageUpDown)
             this.tabbrowser.removeCurrentTab();
+#endif
         }
       })]]>
       </field>      
