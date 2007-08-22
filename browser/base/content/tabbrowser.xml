@@ -155,7 +155,7 @@
         null
       </field>
       <field name="mProgressListeners">
-        null
+        new Array()
       </field>
       <field name="mTabListeners">
         new Array()
@@ -940,12 +940,10 @@
             }
 
             // Remove all our progress listeners from the active browser's filter.
-            if (this.mProgressListeners) {
-              for (var i = 0; i < this.mProgressListeners.length; i++) {
-                var p = this.mProgressListeners[i];
-                if (p)
-                  filter.removeProgressListener(p);
-              }
+            for (var i = 0; i < this.mProgressListeners.length; i++) {
+              var p = this.mProgressListeners[i];
+              if (p)
+                filter.removeProgressListener(p);
             }
 
             // Wire up a progress listener to our filter.
@@ -1314,18 +1312,6 @@
         <parameter name="aMask"/>
         <body>
           <![CDATA[
-            if (!this.mProgressListeners) {
-              this.mProgressListeners = [];
-              var autoHide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
-              var forceHide = this.mPrefs.getBoolPref("browser.tabs.forceHide");
-              var tabStripHide = !window.toolbar.visible;
-              if (!autoHide && !forceHide && !tabStripHide)
-                this.setStripVisibilityTo(true);
-
-              // Hook up a listener for <link>s.
-              this.mPanelContainer.addEventListener("DOMLinkAdded", this.onLinkAdded, false);
-            }
-
             if (!this.mTabbedMode && this.mProgressListeners.length == 1) {
               // If we are adding a 2nd progress listener, we need to enter tabbed mode
               // because the browser status filter can only handle one progress listener.
@@ -1358,7 +1344,6 @@
         <parameter name="aListener"/>
         <body>
           <![CDATA[
-            if (!this.mProgressListeners) return;
             for (var i = 0; i < this.mProgressListeners.length; i++) {
               if (this.mProgressListeners[i] == aListener) {
                 this.mProgressListeners.splice(i, 1);
@@ -2010,6 +1995,14 @@
           this.mTabContainer.childNodes[0].linkedPanel = uniqueId;
           this.mTabContainer.childNodes[0]._tPos = 0;
           this.mTabContainer.childNodes[0].linkedBrowser = this.mPanelContainer.childNodes[0].firstChild.nextSibling;
+
+          var autoHide = this.mPrefs.getBoolPref("browser.tabs.autoHide");
+          var forceHide = this.mPrefs.getBoolPref("browser.tabs.forceHide");
+          if (!autoHide && !forceHide)
+            this.setStripVisibilityTo(true);
+
+          // Hook up a listener for <link>s.
+          this.mPanelContainer.addEventListener("DOMLinkAdded", this.onLinkAdded, false);
         ]]>
       </constructor>
 
