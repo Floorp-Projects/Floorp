@@ -28,6 +28,7 @@
    -   Asaf Romano <mozilla.mano@sent.com>
    -   Seth Spitzer <sspitzer@mozilla.org>
    -   Simon Bünzli <zeniko@gmail.com>
+   -   Michael Ventnor <ventnor.bugzilla@yahoo.com.au>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -2959,12 +2960,22 @@
               case "crop":
               case "busy":
               case "image":
+              case "selected":
                 if (aEvent.attrChange == aEvent.REMOVAL)
                   menuItem.removeAttribute(attrName);
                 else
                   menuItem.setAttribute(attrName, aEvent.newValue);
             }
           }
+        ]]></body>
+      </method>
+
+      <method name="_tabOnTabClose">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var menuItem = aEvent.target.mCorrespondingMenuitem;
+          if (menuItem)
+            this.removeChild(menuItem);
         ]]></body>
       </method>
 
@@ -2980,7 +2991,45 @@
               break;
             case "DOMAttrModified":
               this._tabOnAttrModified(aEvent);
+              break;
+            case "TabClose":
+              this._tabOnTabClose(aEvent);
+              break;
+            case "TabOpen":
+              this._createTabMenuItem(aEvent.originalTarget);
+              break;
           }
+        ]]></body>
+      </method>
+
+      <method name="_createTabMenuItem">
+        <parameter name="aTab"/>
+        <body><![CDATA[
+          var menuItem = document.createElementNS(
+            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 
+            "menuitem");
+
+          menuItem.setAttribute("class", "menuitem-iconic alltabs-item");
+
+          menuItem.setAttribute("label", aTab.label);
+          menuItem.setAttribute("crop", aTab.getAttribute("crop"));
+          menuItem.setAttribute("image", aTab.getAttribute("image"));
+
+          if (aTab.hasAttribute("busy"))
+            menuItem.setAttribute("busy", aTab.getAttribute("busy"));
+          if (aTab.selected)
+            menuItem.setAttribute("selected", "true");
+
+          // Keep some attributes of the menuitem in sync with its
+          // corresponding tab (e.g. the tab label)
+          aTab.mCorrespondingMenuitem = menuItem;
+          aTab.addEventListener("DOMAttrModified", this, false);
+          aTab.addEventListener("TabClose", this, false);
+          menuItem.tab = aTab;
+          menuItem.addEventListener("command", this, false);
+
+          this.appendChild(menuItem);
+          return menuItem;
         ]]></body>
       </method>
     </implementation>
@@ -2992,34 +3041,16 @@
         var tabcontainer = document.getBindingParent(this);
         var tabs = tabcontainer.childNodes;
 
+        // Listen for changes in the tab bar.
+        var tabbrowser = document.getBindingParent(tabcontainer);
+        tabbrowser.addEventListener("TabOpen", this, false);
+
         // if an animation is in progress and the user
         // clicks on the "all tabs" button, stop the animation
         tabcontainer._stopAnimation();
 
         for (var i = 0; i < tabs.length; i++) {
-          var menuItem = document.createElementNS(
-            "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", 
-            "menuitem");
-          var curTab = tabs[i];
-
-          if (curTab.selected)
-            menuItem.setAttribute("selected", "true");
-          menuItem.setAttribute("class", "menuitem-iconic alltabs-item");
-
-          menuItem.setAttribute("label", curTab.label);
-          menuItem.setAttribute("crop", curTab.getAttribute("crop"));
-          menuItem.setAttribute("image", curTab.getAttribute("image"));
-          if (curTab.hasAttribute("busy"))
-            menuItem.setAttribute("busy", curTab.getAttribute("busy"));
-
-          // Keep some attributes of the menuitem in sync with its
-          // corresponding tab (e.g. the tab label)
-          curTab.mCorrespondingMenuitem = menuItem;
-          curTab.addEventListener("DOMAttrModified", this, false);
-
-          menuItem.tab = curTab;
-          menuItem.addEventListener("command", this, false);
-          this.appendChild(menuItem);
+          this._createTabMenuItem(tabs[i]);
         }
       ]]></handler>
 
@@ -3030,9 +3061,12 @@
           var menuItem = this.lastChild;
           menuItem.removeEventListener("command", this, false);
           menuItem.tab.removeEventListener("DOMAttrModified", this, false);
+          menuItem.tab.removeEventListener("TabClose", this, false);
           menuItem.tab.mCorrespondingMenuitem = null;
           this.removeChild(menuItem);
         }
+        var tabbrowser = document.getBindingParent(document.getBindingParent(this));
+        tabbrowser.removeEventListener("TabOpen", this, false);
       ]]></handler>
 
       <handler event="DOMMenuItemActive">
