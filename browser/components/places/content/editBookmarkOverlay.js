@@ -36,9 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 const LAST_USED_ANNO = "bookmarkPropertiesDialog/lastUsed";
+const STATIC_TITLE_ANNO = "bookmarks/staticTitle";
 const MAX_FOLDER_ITEM_IN_MENU_LIST = 5;
 
-var gAddBookmarksPanel = {
+var gEditItemOverlay = {
   /**
    * The Microsummary Service for displaying microsummaries.
    */
@@ -55,20 +56,17 @@ var gAddBookmarksPanel = {
   _itemType: -1,
   _microsummaries: null,
   _doneCallback: null,
-  _currentTags: [],
   _hiddenRows: [],
+  _observersAdded: false,
+
+  get itemId() {
+    return this._itemId;
+  },
 
   /**
    * Determines the initial data for the item edited or added by this dialog
    */
-  _determineInfo: function ABP__determineInfo(aInfo) {
-    const bms = PlacesUtils.bookmarks;
-    this._itemType = bms.getItemType(this._itemId);
-    if (this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK)
-      this._currentTags = PlacesUtils.tagging.getTagsForURI(this._uri);
-    else
-      this._currentTags.splice(0);
-
+  _determineInfo: function EIO__determineInfo(aInfo) {
     // hidden rows
     if (aInfo && aInfo.hiddenRows)
       this._hiddenRows = aInfo.hiddenRows;
@@ -76,42 +74,56 @@ var gAddBookmarksPanel = {
       this._hiddenRows.splice(0);
   },
 
-  _showHideRows: function EBP__showHideRows() {
+  _showHideRows: function EIO__showHideRows() {
+    var isBookmark = this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK;
     this._element("nameRow").hidden = this._hiddenRows.indexOf("name") != -1;
     this._element("folderRow").hidden =
       this._hiddenRows.indexOf("folderPicker") != -1;
-    this._element("tagsRow").hidden = this._hiddenRows.indexOf("tags") != -1 ||
-      this._itemType != Ci.nsINavBookmarksService.TYPE_BOOKMARK;
+    this._element("tagsRow").hidden =
+      this._hiddenRows.indexOf("tags") != -1 || !isBookmark;
     this._element("descriptionRow").hidden =
       this._hiddenRows.indexOf("description") != -1;
+    this._element("locationRow").hidden =
+      this._hiddenRows.indexOf("location") != -1 || !isBookmark;
   },
 
   /**
    * Initialize the panel
    */
-  initPanel: function ABP_initPanel(aItemId, aTm, aDoneCallback, aInfo) {
+  initPanel: function EIO_initPanel(aItemId, aInfo) {
     this._folderMenuList = this._element("folderMenuList");
     this._folderTree = this._element("folderTree");
-    this._tm = aTm;
     this._itemId = aItemId;
-    this._uri = PlacesUtils.bookmarks.getBookmarkURI(this._itemId);
-    this._doneCallback = aDoneCallback;
+    this._itemType = PlacesUtils.bookmarks.getItemType(this._itemId);
     this._determineInfo(aInfo);
+
+    if (this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK) {
+      this._uri = PlacesUtils.bookmarks.getBookmarkURI(this._itemId);
+      // tags field
+      this._element("tagsField").value =
+        PlacesUtils.tagging.getTagsForURI(this._uri).join(", ");
+
+      this._element("locationField").value = this._uri.spec;
+    }
 
     // folder picker
     this._initFolderMenuList();
-    
+
     // name picker
     this._initNamePicker();
-
-    // tags field
-    this._element("tagsField").value = this._currentTags.join(", ");
 
     // description field
     this._element("descriptionField").value =
       PlacesUtils.getItemDescription(this._itemId);
 
     this._showHideRows();
+
+    // observe changes
+    if (!this._observersAdded) {
+      PlacesUtils.bookmarks.addObserver(this, false);
+      window.addEventListener("unload", this, false);
+      this._observersAdded = true;
+    }
   },
 
   /**
@@ -123,7 +135,7 @@ var gAddBookmarksPanel = {
    * @return the new menu item.
    */
   _appendFolderItemToMenupopup:
-  function BPP__appendFolderItemToMenuList(aMenupopup, aFolderId) {
+  function EIO__appendFolderItemToMenuList(aMenupopup, aFolderId) {
     // First make sure the folders-separator is visible
     this._element("foldersSeparator").hidden = false;
 
@@ -136,7 +148,7 @@ var gAddBookmarksPanel = {
     return folderMenuItem;
   },
 
-  _initFolderMenuList: function BPP__initFolderMenuList() {
+  _initFolderMenuList: function EIO__initFolderMenuList() {
     // clean up first
     var menupopup = this._folderMenuList.menupopup;
     while (menupopup.childNodes.length > 4)
@@ -184,21 +196,22 @@ var gAddBookmarksPanel = {
     this._element("foldersSeparator").hidden = (menupopup.childNodes.length <= 4);
   },
 
-  QueryInterface: function BPP_QueryInterface(aIID) {
+  QueryInterface: function EIO_QueryInterface(aIID) {
     if (aIID.equals(Ci.nsIMicrosummaryObserver) ||
         aIID.equals(Ci.nsIDOMEventListener) ||
+        aIID.equals(Ci.nsINavBookmarkObserver) ||
         aIID.eqauls(Ci.nsISupports))
       return this;
 
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
-  _element: function BPP__element(aID) {
+  _element: function EIO__element(aID) {
     return document.getElementById("editBMPanel_" + aID);
   },
 
   _createMicrosummaryMenuItem:
-  function BPP__createMicrosummaryMenuItem(aMicrosummary) {
+  function EIO__createMicrosummaryMenuItem(aMicrosummary) {
     var menuItem = document.createElement("menuitem");
 
     // Store a reference to the microsummary in the menu item, so we know
@@ -226,22 +239,34 @@ var gAddBookmarksPanel = {
     return menuItem;
   },
 
-  _initNamePicker: function ABP_initNamePicker() {
+  _getItemStaticTitle: function EIO__getItemStaticTitle() {
+    const annos = PlacesUtils.annotations;
+    if (annos.itemHasAnnotation(this._itemId, STATIC_TITLE_ANNO))
+      return annos.getItemAnnotation(this._itemId, STATIC_TITLE_ANNO);
+    return PlacesUtils.bookmarks.getItemTitle(this._itemId);
+  },
+
+  _initNamePicker: function EIO_initNamePicker() {
     var userEnteredNameField = this._element("userEnteredName");
     var namePicker = this._element("namePicker");
     var droppable = false;
 
-    userEnteredNameField.label =
-      PlacesUtils.bookmarks.getItemTitle(this._itemId);
+    userEnteredNameField.label = this._getItemStaticTitle();
 
     // clean up old entries
     var menupopup = namePicker.menupopup;
     while (menupopup.childNodes.length > 2)
       menupopup.removeChild(menupopup.lastChild);
 
+    if (this._microsummaries) {
+      this._microsummaries.removeObserver(this);
+      this._microsummaries = null;
+    }
+
     var itemToSelect = userEnteredNameField;
     try {
-      this._microsummaries = this._mss.getMicrosummaries(this._uri, -1);
+      if (this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK)
+        this._microsummaries = this._mss.getMicrosummaries(this._uri, -1);
     }
     catch(ex) {
       // getMicrosummaries will throw an exception in at least two cases:
@@ -262,6 +287,9 @@ var gAddBookmarksPanel = {
           var microsummary = enumerator.getNext()
                                        .QueryInterface(Ci.nsIMicrosummary);
           var menuItem = this._createMicrosummaryMenuItem(microsummary);
+          if (this._mss.isMicrosummary(this._itemId, microsummary))
+            itemToSelect = menuItem;
+
           menupopup.appendChild(menuItem);
         }
       }
@@ -278,7 +306,7 @@ var gAddBookmarksPanel = {
   },
 
   // nsIMicrosummaryObserver
-  onContentLoaded: function ABP_onContentLoaded(aMicrosummary) {
+  onContentLoaded: function EIO_onContentLoaded(aMicrosummary) {
     var namePicker = this._element("namePicker");
     var childNodes = namePicker.menupopup.childNodes;
 
@@ -302,7 +330,7 @@ var gAddBookmarksPanel = {
     }
   },
 
-  onElementAppended: function BPP_onElementAppended(aMicrosummary) {
+  onElementAppended: function EIO_onElementAppended(aMicrosummary) {
     var namePicker = this._element("namePicker");
     namePicker.menupopup
               .appendChild(this._createMicrosummaryMenuItem(aMicrosummary));
@@ -311,52 +339,46 @@ var gAddBookmarksPanel = {
     namePicker.setAttribute("droppable", "true");
   },
 
-  uninitPanel: function ABP_uninitPanel() {
-    if (this._microsummaries)
+  uninitPanel: function EIO_uninitPanel(aHideCollapsibleElements) {
+    if (aHideCollapsibleElements) {
+      // hide the folder tree if it was previously visible
+      if (!this._folderTree.collapsed)
+        this.toggleFolderTreeVisibility();
+
+      // hide the tag selector if it was previously visible
+      var tagsSelector = this._element("tagsSelector");
+      if (!tagsSelector.collapsed)
+        tagsSelector.collapsed = true;
+    }
+
+    if (this._observersAdded) {
+      PlacesUtils.bookmarks.removeObserver(this);
+      this._observersAdded = false;
+    }
+    if (this._microsummaries) {
       this._microsummaries.removeObserver(this);
-
-    // hide the folder tree if it was previously visible
-    if (!this._folderTree.collapsed)
-      this.toggleFolderTreeVisibility();
-
-    // hide the tag selector if it was previously visible
-    var tagsSelector = this._element("tagsSelector");
-    if (!tagsSelector.collapsed)
-      tagsSelector.collapsed = true;
+      this._microsummaries = null;
+    }
+    this._itemId = -1;
   },
 
-  saveItem: function ABP_saveItem() {
-    var container = this._getFolderIdFromMenuList();
-    const bms = PlacesUtils.bookmarks;
-    const ptm = PlacesUtils.ptm;
-    var txns = [];
+  onTagsFieldBlur: function EIO_onTagsFieldBlur() {
+    this._updateTags();
+  },
 
-    // container
-    if (bms.getFolderIdForItem(this._itemId) != container)
-      txns.push(ptm.moveItem(this._itemId, container, -1));
-
-    // title
-    var newTitle = this._element("userEnteredName").label;
-    if (bms.getItemTitle(this._itemId) != newTitle)
-      txns.push(ptm.editItemTitle(this._itemId, newTitle));
-
-    // description
-    var newDescription = this._element("descriptionField").value;
-    if (newDescription != PlacesUtils.getItemDescription(this._itemId))
-      txns.push(ptm.editItemDescription(this._itemId, newDescription));
-
-    // Tags, NOT YET UNDOABLE
+  _updateTags: function EIO__updateTags() {
+    var currentTags = PlacesUtils.tagging.getTagsForURI(this._uri);
     var tags = this._getTagsArrayFromTagField();
-    if (tags.length > 0 || this._currentTags.length > 0) {
+    if (tags.length > 0 || currentTags.length > 0) {
       var tagsToRemove = [];
       var tagsToAdd = [];
       var t;
-      for each (t in this._currentTags) {
+      for each (t in currentTags) {
         if (tags.indexOf(t) == -1)
           tagsToRemove.push(t);
       }
       for each (t in tags) {
-        if (this._currentTags.indexOf(t) == -1)
+        if (currentTags.indexOf(t) == -1)
           tagsToAdd.push(t);
       }
 
@@ -365,23 +387,75 @@ var gAddBookmarksPanel = {
       if (tagsToRemove.length > 0)
         PlacesUtils.tagging.untagURI(this._uri, tagsToRemove);
     }
+  },
 
-    if (txns.length > 0) {
-      // Mark the containing folder as recently-used if it isn't the
-      // "All Bookmarks" root
-      if (container != PlacesUtils.placesRootId)
-        this._markFolderAsRecentlyUsed(container);
+  onNamePickerInput: function EIO_onNamePickerInput() {
+    var title = this._element("namePicker").value;
+    this._element("userEnteredName").label = title;
+  },
+
+  onNamePickerChange: function EIO_onNamePickerChange() {
+    var namePicker = this._element("namePicker")
+    var txns = [];
+    const ptm = PlacesUtils.ptm;
+
+    // Here we update either the item title or its cached static title
+    var newTitle = this._element("userEnteredName").label;
+    if (this._getItemStaticTitle() != newTitle) {
+      if (PlacesUtils.microsummaries.hasMicrosummary(this._itemId)) {
+        // Note: this implicitly also takes care of the microsummary->static
+        // title case, the removeMicorosummary method in the service will set
+        // the item-title to the value of this annotation.
+        //
+        // XXXmano: use a transaction
+        PlacesUtils.setAnnotationsForItem(this._itemId,
+                                          [{name: STATIC_TITLE_ANNO,
+                                            value: newTitle}]);
+      }
+      else
+        txns.push(ptm.editItemTitle(this._itemId, newTitle));
     }
 
-    if (txns.length > 0)
-      ptm.commitTransaction(ptm.aggregateTransactions("Edit Item", txns));
+    var newMicrosummary = namePicker.selectedItem.microsummary;
+
+    // Only add a microsummary update to the transaction if the microsummary
+    // has actually changed, i.e. the user selected no microsummary, but the
+    // bookmark previously had one, or the user selected a microsummary which
+    // is not the one the bookmark previously had
+    if ((newMicrosummary == null && this._mss.hasMicrosummary(this._itemId)) ||
+        (newMicrosummary != null &&
+         !this._mss.isMicrosummary(this._itemId, newMicrosummary))) {
+      txns.push(ptm.editBookmarkMicrosummary(this._itemId, newMicrosummary));
+    }
+
+    var aggregate = ptm.aggregateTransactions("Edit Item Title", txns);
+    ptm.commitTransaction(aggregate);
   },
 
-  onNamePickerInput: function ABP_onNamePickerInput() {
-    this._element("userEnteredName").label = this._element("namePicker").value;
+  onDescriptionFieldBlur: function EIO_onDescriptionFieldInput() {
+    var description = this._element("descriptionField").value;
+    if (description != PlacesUtils.getItemDescription(this._itemId)) {
+      var txn = PlacesUtils.ptm
+                           .editItemDescription(this._itemId, description);
+      PlacesUtils.ptm.commitTransaction(txn);
+    }
   },
 
-  toggleFolderTreeVisibility: function ABP_toggleFolderTreeVisibility() {
+  onLocationFieldBlur: function EIO_onLocationFieldBlur() {
+    // XXXmano: uri fixup
+    var uri;
+    try {
+      uri = IO.newURI(this._element("locationField").value);
+    }
+    catch(ex) { return; }
+
+    if (!this._uri.equals(uri)) {
+      var txn = PlacesUtils.ptm.editBookmarkURI(this._itemId, uri);
+      PlacesUtils.ptm.commitTransaction(txn);
+    }
+  },
+
+  toggleFolderTreeVisibility: function EIO_toggleFolderTreeVisibility() {
     var expander = this._element("foldersExpander");
     if (!this._folderTree.collapsed) {
       expander.className = "expander-down";
@@ -402,7 +476,7 @@ var gAddBookmarksPanel = {
   },
 
   _getFolderIdFromMenuList:
-  function BPP__getFolderIdFromMenuList() {
+  function EIO__getFolderIdFromMenuList() {
     var selectedItem = this._folderMenuList.selectedItem
     switch (selectedItem.id) {
       case "editBMPanel_placesRootItem":
@@ -431,7 +505,7 @@ var gAddBookmarksPanel = {
    *        true.
    */
   _getFolderMenuItem:
-  function BPP__getFolderMenuItem(aFolderId, aCheckStaticFolderItems) {
+  function EIO__getFolderMenuItem(aFolderId, aCheckStaticFolderItems) {
     var menupopup = this._folderMenuList.menupopup;
 
     // 0: All Bookmarks, 1: Bookmarks root, 2: toolbar folder, 3: separator
@@ -444,9 +518,9 @@ var gAddBookmarksPanel = {
       if (aFolderId == PlacesUtils.placesRootId)
         return this._element("placesRootItem");
       if (aFolderId == PlacesUtils.bookmarksRootId)
-        return this._element("bmRootItem")
+        return this._element("bmRootItem");
       if (aFolderId == PlacesUtils.toolbarFolderId)
-        return this._element("toolbarFolderItem")
+        return this._element("toolbarFolderItem");
     }
 
     // 3 special folders + separator + folder-items-count limit
@@ -456,14 +530,29 @@ var gAddBookmarksPanel = {
     return this._appendFolderItemToMenupopup(menupopup, aFolderId);
   },
 
-  onMenuListFolderSelect: function BPP_onMenuListFolderSelect(aEvent) {
-    if (this._folderTree.hidden)
-      return;
+  onFolderMenuListCommand: function EIO_onFolderMenuListCommand(aEvent) {
+    var container = this._getFolderIdFromMenuList();
 
-    this._folderTree.selectFolders([this._getFolderIdFromMenuList()]);
+    // Move the item
+    if (PlacesUtils.bookmarks.getFolderIdForItem(this._itemId) != container) {
+      var txn = PlacesUtils.ptm.moveItem(this._itemId, container, -1);
+      PlacesUtils.ptm.commitTransaction(txn);
+
+      // Mark the containing folder as recently-used if it isn't the
+      // "All Bookmarks" root
+      if (container != PlacesUtils.placesRootId)
+        this._markFolderAsRecentlyUsed(container);
+    }
+
+    // Update folder-tree selection
+    if (isElementVisible(this._folderTree)) {
+      var selectedNode = this._folderTree.selectedNode;
+      if (selectedNode.itemId != container)
+        this._folderTree.selectFolders([container]);
+    }
   },
 
-  onFolderTreeSelect: function BPP_onFolderTreeSelect() {
+  onFolderTreeSelect: function EIO_onFolderTreeSelect() {
     var selectedNode = this._folderTree.selectedNode;
     if (!selectedNode)
       return;
@@ -473,17 +562,18 @@ var gAddBookmarksPanel = {
     // already selected
     var oldSelectedItem = this._folderMenuList.selectedItem;
     if ((oldSelectedItem.id == "editBMPanel_toolbarFolderItem" &&
-         folderId == PlacesUtils.bookmarks.toolbarFolder) ||
+         folderId == PlacesUtils.toolbarFolderId) ||
         (oldSelectedItem.id == "editBMPanel_bmRootItem" &&
-         folderId == PlacesUtils.bookmarks.bookmarksRoot))
+         folderId == PlacesUtils.bookmarksRootId))
       return;
 
     var folderItem = this._getFolderMenuItem(folderId, false);
     this._folderMenuList.selectedItem = folderItem;
+    folderItem.doCommand();
   },
 
   _markFolderAsRecentlyUsed:
-  function ABP__markFolderAsRecentlyUsed(aFolderId) {
+  function EIO__markFolderAsRecentlyUsed(aFolderId) {
     // We'll figure out when/if to expire the annotation if it turns out
     // we keep this recently-used-folders implementation
     PlacesUtils.annotations
@@ -492,47 +582,34 @@ var gAddBookmarksPanel = {
                                   Ci.nsIAnnotationService.EXPIRE_NEVER);
   },
 
-  accept: function ABP_accept() {
-    this.saveItem();
-    if (typeof(this._doneCallback) == "function")
-      this._doneCallback();
+  _rebuildTagsSelectorList: function EIO__rebuildTagsSelectorList() {
+    var tagsSelector = this._element("tagsSelector");
+
+    while (tagsSelector.hasChildNodes())
+      tagsSelector.removeChild(tagsSelector.lastChild);
+
+    var tagsInField = this._getTagsArrayFromTagField();
+    var allTags = PlacesUtils.tagging.allTags;
+    for each (var tag in allTags) {
+      var elt = document.createElement("listitem");
+      elt.setAttribute("type", "checkbox");
+      elt.setAttribute("label", tag);
+      if (tagsInField.indexOf(tag) != -1)
+        elt.setAttribute("checked", "true");
+
+      tagsSelector.appendChild(elt);
+    }
   },
 
-  deleteAndClose: function ABP_deleteAndClose() {
-    // remove the item
-    if (this._itemId != -1)
-      PlacesUtils.bookmarks.removeItem(this._itemId);
-
-    // remove all tags for the associated url
-    PlacesUtils.tagging.untagURI(this._uri, null);
-
-    if (typeof(this._doneCallback) == "function")
-      this._doneCallback();
-  },
-
-  toggleTagsSelector: function ABP_toggleTagsSelector() {
+  toggleTagsSelector: function EIO_toggleTagsSelector() {
     var tagsSelector = this._element("tagsSelector");
     var expander = this._element("tagsSelectorExpander");
-    if (tagsSelector.collapsed) {
+    if (!isElementVisible(tagsSelector)) {
       expander.className = "expander-down";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextdown"));
 
-      // rebuild the tag list
-      while (tagsSelector.hasChildNodes())
-        tagsSelector.removeChild(tagsSelector.lastChild);
-
-      var tagsInField = this._getTagsArrayFromTagField();
-      var allTags = PlacesUtils.tagging.allTags;
-      for each (var tag in allTags) {
-        var elt = document.createElement("listitem");
-        elt.setAttribute("type", "checkbox");
-        elt.setAttribute("label", tag);
-        if (tagsInField.indexOf(tag) != -1)
-          elt.setAttribute("checked", "true");
-
-        tagsSelector.appendChild(elt);
-      }
+      this._rebuildTagsSelectorList();
 
       // This is a no-op if we've added the listener.
       tagsSelector.addEventListener("CheckboxStateChange", this, false);
@@ -546,7 +623,7 @@ var gAddBookmarksPanel = {
     tagsSelector.collapsed = !tagsSelector.collapsed;
   },
 
-  _getTagsArrayFromTagField: function() {
+  _getTagsArrayFromTagField: function EIO__getTagsArrayFromTagField() {
     // we don't require the leading space (after each comma)
     var tags = this._element("tagsField").value.split(",");
     for (var i=0; i < tags.length; i++) {
@@ -563,8 +640,9 @@ var gAddBookmarksPanel = {
   },
 
   // nsIDOMEventListener
-  handleEvent: function ABP_nsIDOMEventListener(aEvent) {
-    if (aEvent.type == "CheckboxStateChange") {
+  handleEvent: function EIO_nsIDOMEventListener(aEvent) {
+    switch (aEvent.type) {
+    case "CheckboxStateChange":
       // Update the tags field when items are checked/unchecked in the listbox
       var tags = this._getTagsArrayFromTagField();
 
@@ -576,6 +654,68 @@ var gAddBookmarksPanel = {
           tags.splice(indexOfItem, 1);
       }
       this._element("tagsField").value = tags.join(", ");
+      this._updateTags();
+      break;
+    case "unload":
+      this.uninitPanel(false);
+      break;
     }
-  }
+  },
+
+  // nsINavBookmarkObserver
+  onItemChanged: function EIO_onItemChanged(aItemId, aProperty,
+                                            aIsAnnotationProperty, aValue) {
+    if (this._itemId != aItemId)
+      return;
+
+    switch (aProperty) {
+    case "title":
+      if (PlacesUtils.annotations.itemHasAnnotation(this._itemId,
+                                                    STATIC_TITLE_ANNO))
+        return;  // onContentLoaded updates microsummary-items
+
+      var userEnteredNameField = this._element("userEnteredName");
+      if (userEnteredNameField.value != aValue) {
+          userEnteredNameField.value = aValue;
+        var namePicker = this._element("namePicker");
+        if (namePicker.selectedItem == userEnteredNameField)
+          namePicker.label = aValue;
+      }
+      break;
+    case "uri":
+      var locationField = this._element("locationField");
+      if (locationField.value != aValue) {
+        locationField.value = aValue;
+        this._uri = IO.newURI(aValue);
+        this._initNamePicker(); // for microsummaries
+        this._element("tagsField").value =
+          PlacesUtils.tagging.getTagsForURI(this._uri).join(", ");
+        this._rebuildTagsSelectorList();
+      }
+      break;
+    case DESCRIPTION_ANNO:
+      this._element("descriptionField").value =
+        PlacesUtils.annotations.getItemDescription(this._itemId);
+      break;
+    }
+  },
+
+  onItemMoved: function EIO_onItemMoved(aItemId, aOldParent, aOldIndex,
+                                        aNewParent, aNewIndex) {
+    if (aItemId != this._itemId ||
+        aNewParent == this._getFolderIdFromMenuList())
+      return;
+
+    var folderItem = this._getFolderMenuItem(aNewParent, false);
+
+    // just setting selectItem _does not_ trigger oncommand, so we don't
+    // recurse
+    this._folderMenuList.selectedItem = folderItem;
+  },
+
+  onBeginUpdateBatch: function() { },
+  onEndUpdateBatch: function() { },
+  onItemAdded: function() { },
+  onItemRemoved: function() { },
+  onItemVisited: function() { },
 };

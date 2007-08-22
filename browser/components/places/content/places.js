@@ -325,6 +325,24 @@ var PlacesOrganizer = {
         statusText = selectedNode.uri;
     }
     document.getElementById("status").label = statusText;
+  },
+
+  onContentTreeSelect: function PO_onContentTreeSelect() {
+    var contentTree = document.getElementById("placeContent");
+    var deck = document.getElementById("infoDeck");
+    this.updateStatusBarForView(contentTree);
+    if (contentTree.hasSingleSelection) {
+      var selectedNode = contentTree.selectedNode;
+      if (selectedNode.itemId != -1 &&
+          !PlacesUtils.nodeIsSeparator(selectedNode)) {
+        gEditItemOverlay.initPanel(selectedNode.itemId,
+                                   { hiddenRows: ["folderPicker"] });
+        deck.selectedIndex = 1;
+        return;
+      }
+    }
+    gEditItemOverlay.uninitPanel();
+    deck.selectedIndex = 0;
   }
 };
 

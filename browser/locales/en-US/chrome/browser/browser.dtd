@@ -348,3 +348,5 @@
 <!ENTITY spellAddDictionaries.label "Add dictionaries...">
 <!ENTITY spellAddDictionaries.accesskey "A">
 
+<!ENTITY editBookmark.done.label                      "Done">
+<!ENTITY editBookmark.delete.label                    "Delete">
