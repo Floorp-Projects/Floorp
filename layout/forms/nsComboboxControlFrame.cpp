@@ -418,10 +418,9 @@ nsComboboxControlFrame::ShowList(nsPresContext* aPresContext, PRBool aShowList)
     mListControlFrame->CaptureMouseEvents(PR_TRUE);
   }
 
-  // Don't flush anything but reflows lest it destroy us
-  shell->GetDocument()->FlushPendingNotifications(Flush_OnlyReflow);
+  // XXXbz so why do we need to flush here, exactly?
+  shell->GetDocument()->FlushPendingNotifications(Flush_Layout);
   if (!weakFrame.IsAlive()) {
-    NS_ERROR("Flush_OnlyReflow destroyed the frame");
     return PR_FALSE;
   }
 
