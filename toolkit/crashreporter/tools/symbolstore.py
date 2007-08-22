@@ -113,13 +113,17 @@ def GetVCSFilename(file, srcdir):
             if srcdir is not None:
                 # strip the base path off
                 # but we actually want the last dir in srcdir
-                # also, we want forward slashes on win32 paths
                 file = os.path.normpath(file)
-                file = file.replace(srcdir, "", 1)
+                # the lower() is to handle win32+vc8, where
+                # the source filenames come out all lowercase,
+                # but the srcdir can be mixed case
+                if file.lower().startswith(srcdir.lower()):
+                    file = file[len(srcdir):]
                 (head, tail) = os.path.split(srcdir)
                 if tail == "":
                     tail = os.path.basename(head)
                 file = tail + file
+            # we want forward slashes on win32 paths
             file = file.replace("\\", "/")
             return "cvs:%s:%s:%s" % (root, file, rev)
     file = file.replace("\\", "/")
