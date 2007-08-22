@@ -1038,10 +1038,12 @@
         <parameter name="aCharset"/>
         <parameter name="aPostData"/>
         <parameter name="aLoadInBackground"/>
+        <parameter name="aAllowThirdPartyFixup"/>
         <body>
           <![CDATA[
             var owner = aLoadInBackground ? null : this.selectedTab;
-            var tab = this.addTab(aURI, aReferrerURI, aCharset, aPostData, owner);
+            var tab = this.addTab(aURI, aReferrerURI, aCharset, aPostData, owner,
+                                  aAllowThirdPartyFixup);
             var bgLoad = (typeof(aLoadInBackground) != "undefined") ? aLoadInBackground :
                          this.mPrefs.getBoolPref("browser.tabs.loadInBackground");
             // Set newly selected tab after quick timeout, otherwise hideous focus problems
@@ -1080,7 +1082,7 @@
           if (aReplace)
             this.loadURI(aURIs[0], null, null);
           else
-            firstTabAdded = gBrowser.addTab(aURIs[0], null, null, null, owner);
+            firstTabAdded = gBrowser.addTab(aURIs[0], null, null, null, owner, false);
 
           for (var i = 1; i < aURIs.length; ++i)
             gBrowser.addTab(aURIs[i]);
@@ -1101,6 +1103,7 @@
         <parameter name="aCharset"/>
         <parameter name="aPostData"/>
         <parameter name="aOwner"/>
+        <parameter name="aAllowThirdPartyFixup"/>
         <body>
           <![CDATA[
             if (!this.mTabbedMode)
@@ -1194,8 +1197,12 @@
 
               if (aPostData === undefined)
                 aPostData = null;
-              b.loadURIWithFlags(aURI, Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE,
-                                 aReferrerURI, aCharset, aPostData);
+              const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
+              var flags = nsIWebNavigation.LOAD_FLAGS_NONE;
+              if (aAllowThirdPartyFixup) {
+                flags = nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
+              }
+              b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
             }
 
             return t;
@@ -1663,7 +1670,7 @@
 
               if (document.getBindingParent(aEvent.originalTarget).localName != "tab") {
                 // We're adding a new tab.
-                this.loadOneTab(getShortcutOrURI(url), null, null, null, bgLoad);
+                this.loadOneTab(getShortcutOrURI(url), null, null, null, bgLoad, false);
               }
               else {
                 // Load in an existing tab.
