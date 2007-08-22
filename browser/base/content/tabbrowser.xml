@@ -1216,7 +1216,7 @@
 
             // |setTimeout| here to ensure we're post reflow
             var _delayedUpdate = function(aTabContainer) {
-              aTabContainer.adjustTabstrip(false);
+              aTabContainer.adjustTabstrip();
 
               if (aTabContainer.selectedItem != t)
                 aTabContainer._notifyBackgroundTab(t);
@@ -1352,7 +1352,7 @@
 
             // see notes in addTab
             var _delayedUpdate = function(aTabContainer) {
-              aTabContainer.adjustTabstrip(true);
+              aTabContainer.adjustTabstrip();
               aTabContainer.mTabstrip._updateScrollButtonsDisabledState();
             }
             setTimeout(_delayedUpdate, 0, this.mTabContainer);
@@ -1435,6 +1435,26 @@
             // invalidate cache, because mTabContainer is about to change
             this._browsers = null; 
             this.mPanelContainer.removeChild(oldBrowser.parentNode);
+
+            try {
+              // if we're at the right side (and not the logical end,
+              // which is why this works for both LTR and RTL)
+              // of the tabstrip, we need to ensure that we stay 
+              // completely scrolled to the right side
+              var tabStrip = this.mTabContainer.mTabstrip;
+              var scrollPos = {};
+              tabStrip.scrollBoxObject.getPosition(scrollPos, {});
+              var scrolledSize = {};
+              tabStrip.scrollBoxObject.getScrolledSize(scrolledSize, {});
+
+              if (scrollPos.value + tabStrip.boxObject.width >= 
+                  scrolledSize.value) {
+                tabStrip.scrollByPixels(-1 * this.mTabContainer.firstChild
+                                                 .boxObject.width);
+              }
+            }
+            catch (ex) {
+            }
 
             // Find the tab to select
             var newIndex = -1;
@@ -2514,7 +2534,7 @@
 
           this.firstChild.minWidth = this.mTabMinWidth;
           this._updateDisableBackgroundClose();
-          this.adjustTabstrip(false);
+          this.adjustTabstrip();
 
           pb2.addObserver("browser.tabs.disableBackgroundClose", 
                           this._prefObserver, true);
@@ -2525,7 +2545,7 @@
           function onResize() {
             var width = self.mTabstrip.boxObject.width;
             if (width != self.mTabstripWidth) {
-              self.adjustTabstrip(false);
+              self.adjustTabstrip();
               self.mTabstrip.scrollByIndex(1);
               self.mTabstrip.scrollBoxObject
                             .ensureElementIsVisible(self.selectedItem);
@@ -2599,7 +2619,7 @@
                   Components.classes['@mozilla.org/preferences-service;1'].
                   getService(Components.interfaces.nsIPrefBranch2);
               this.tabbox.mCloseButtons = pb2.getIntPref("browser.tabs.closeButtons");
-              this.tabbox.adjustTabstrip(false);
+              this.tabbox.adjustTabstrip();
               break;
             }
           }
@@ -2620,7 +2640,6 @@
       <field name="mCloseButtons">1</field>
 
       <method name="adjustTabstrip">
-        <parameter name="aRemovingTab"/>
         <body><![CDATA[
           // modes for tabstrip
           // 0 - activetab  = close button on active tab only
@@ -2651,16 +2670,6 @@
             break;
           }
           this.mTabstripClosebutton.collapsed = this.mCloseButtons != 3;
-          if (aRemovingTab) {
-            // if we're at the end of the tabstrip, we need to ensure 
-            // that we stay completely scrolled to the end
-            // this is a hack to determine if that's where we are already
-            var tabWidth = this.firstChild.boxObject.width;
-            var scrollPos = {};
-            this.mTabstrip.scrollBoxObject.getPosition(scrollPos, {});
-            if (scrollPos.value + this.mTabstrip.boxObject.width > tabWidth * (this.childNodes.length - 1))
-              this.mTabstrip.scrollByPixels(-1 * this.firstChild.boxObject.width);
-          }
         ]]></body>
       </method>
         
