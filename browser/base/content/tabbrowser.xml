@@ -1194,10 +1194,7 @@
               if (aAllowThirdPartyFixup) {
                 flags = nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
               }
-              // loadURIWithFlags throws for unknown schemes
-              try {
-                b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
-              } catch (ex) {}
+              b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
             }
 
             this.mTabContainer.adjustTabstrip(false);
