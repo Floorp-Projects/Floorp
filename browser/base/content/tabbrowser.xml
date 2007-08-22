@@ -1150,7 +1150,7 @@
               t.setAttribute("label", aURI);
 
             t.setAttribute("crop", "end");
-            t.maxWidth = 250;
+            t.maxWidth = this.mTabContainer.mTabMaxWidth;
             t.minWidth = this.mTabContainer.mTabMinWidth;
             t.width = 0;
             t.setAttribute("flex", "100");
@@ -2663,13 +2663,23 @@
 
           try {
             this.mTabMinWidth = pb2.getIntPref("browser.tabs.tabMinWidth");
-            this.mTabClipWidth = pb2.getIntPref("browser.tabs.tabClipWidth");
-            this.mCloseButtons = pb2.getIntPref("browser.tabs.closeButtons");
+          } catch (e) {
           }
-          catch (e) {
+          try {
+            this.mTabMaxWidth = pb2.getIntPref("browser.tabs.tabMaxWidth");
+          } catch (e) {
+          }
+          try {
+            this.mTabClipWidth = pb2.getIntPref("browser.tabs.tabClipWidth");
+          } catch (e) {
+          }
+          try {
+            this.mCloseButtons = pb2.getIntPref("browser.tabs.closeButtons");
+          } catch (e) {
           }
 
           this.firstChild.minWidth = this.mTabMinWidth;
+          this.firstChild.maxWidth = this.mTabMaxWidth;
           this.adjustTabstrip();
 
           pb2.addObserver("browser.tabs.closeButtons", 
@@ -2752,6 +2762,7 @@
         });
       </field>
       <field name="mTabMinWidth">100</field>
+      <field name="mTabMaxWidth">250</field>
       <field name="mTabClipWidth">140</field>
       <field name="mCloseButtons">1</field>
 
