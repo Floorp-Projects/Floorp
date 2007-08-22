@@ -67,6 +67,12 @@ Exch 1   ; exchange the top of the stack with 2 below the top of the stack
 Exch $R9 ; exchange the new $R9 value with the top of the stack
 */
 
+!include TextFunc.nsh
+!include FileFunc.nsh
+
+; NSIS provided macros that we have overridden.
+!include overrides.nsh
+
 ; Modified version of the following MUI macros to support Mozilla localization.
 ; MUI_LANGUAGE
 ; MUI_LANGUAGEFILE_BEGIN
@@ -645,6 +651,9 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  */
 !macro CheckDiskSpace
 
+  !insertmacro ${_MOZFUNC_UN}GetRoot
+  !insertmacro ${_MOZFUNC_UN}DriveSpace
+
   !ifndef ${_MOZFUNC_UN}CheckDiskSpace
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
@@ -674,8 +683,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       SectionGetSize 2 $R5
       IntOp $R8 $R8 + $R5
 
-      ${GetRoot} "$INSTDIR" $R4
-      ${DriveSpace} "$R4" "/D=F /S=K" $R3
+      ${${_MOZFUNC_UN}GetRoot} "$INSTDIR" $R4
+      ${${_MOZFUNC_UN}DriveSpace} "$R4" "/D=F /S=K" $R3
 
       System::Int64Op $R3 > $R8
       Pop $R2
@@ -723,6 +732,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN "un."
 
+    !insertmacro GetRoot
+    !insertmacro DriveSpace
     !insertmacro CheckDiskSpace
 
     !undef _MOZFUNC_UN
@@ -755,6 +766,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  * $R9 = value returned popped from the stack for GetParentDir macro
  */
 !macro RegCleanMain
+
+  !insertmacro ${_MOZFUNC_UN}GetLongPath
 
   !ifndef ${_MOZFUNC_UN}RegCleanMain
     !verbose push
@@ -871,6 +884,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN "un."
 
+    !insertmacro GetLongPath
     !insertmacro RegCleanMain
 
     !undef _MOZFUNC_UN
@@ -891,6 +905,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  * $R9 = value returned from the stack from the GetPathFromRegStr macro
  */
 !macro RegCleanUninstall
+
+  !insertmacro ${_MOZFUNC_UN}GetLongPath
 
   !ifndef ${_MOZFUNC_UN}RegCleanUninstall
     !verbose push
@@ -963,6 +979,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN "un."
 
+    !insertmacro GetLongPath
     !insertmacro RegCleanUninstall
 
     !undef _MOZFUNC_UN
@@ -1658,6 +1675,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  */
 !macro GetSingleInstallPath
 
+  !insertmacro ${_MOZFUNC_UN}GetParent
+
   !ifndef ${_MOZFUNC_UN}GetSingleInstallPath
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
@@ -1737,6 +1756,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN "un."
 
+    !insertmacro GetParent
     !insertmacro GetSingleInstallPath
 
     !undef _MOZFUNC_UN
@@ -2100,13 +2120,16 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 /**
  * Updates the uninstall.log with new files added by software update.
  *
- * Requires FileJoin, LineFind, TextCompare, and TrimNewLines.
- *
  * IMPORTANT! The LineFind docs claim that it uses all registers except $R0-$R3.
  *            Though it appears that this is not true all registers besides
  *            $R0-$R3 may be overwritten so protect yourself!
  */
 !macro UpdateUninstallLog
+
+  !insertmacro ${_MOZFUNC_UN}FileJoin
+  !insertmacro ${_MOZFUNC_UN}LineFind
+  !insertmacro ${_MOZFUNC_UN}TextCompareNoDetails
+  !insertmacro ${_MOZFUNC_UN}TrimNewLines
 
   !ifndef ${_MOZFUNC_UN}UpdateUninstallLog
     !verbose push
@@ -2129,7 +2152,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 
       GetTempFileName $R2 "$R3"
       FileOpen $R1 $R2 w
-      ${${_MOZFUNC_UN}TextCompare} "$R3\uninstall.update" "$R3\uninstall.log" "SlowDiff" "${_MOZFUNC_UN}CreateUpdateDiff"
+      ${${_MOZFUNC_UN}TextCompareNoDetails} "$R3\uninstall.update" "$R3\uninstall.log" "SlowDiff" "${_MOZFUNC_UN}CreateUpdateDiff"
       FileClose $R1
 
       IfErrors +2 0
@@ -2214,6 +2237,10 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN "un."
 
+    !insertmacro FileJoin
+    !insertmacro LineFind
+    !insertmacro TextCompareNoDetails
+    !insertmacro TrimNewLines
     !insertmacro UpdateUninstallLog
 
     !undef _MOZFUNC_UN
