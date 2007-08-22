@@ -147,7 +147,7 @@ opts, optlist = cp.parse_args(sys.argv[1:])
 #
 # Set up Logging
 #
-logging.basicConfig(level=(logging.INFO + 10*(opts.q - opts.v)))
+logging.basicConfig(level=(logging.WARNING + 10*(opts.q - opts.v)))
 # Add a handler to store the output
 h = LogHandler()
 logging.getLogger('').addHandler(h)

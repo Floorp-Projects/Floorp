@@ -63,15 +63,16 @@ logging.basicConfig(level=(logging.WARNING - (options.v - options.q)*10))
 
 # import Paths loaded all-locales for both browser and mail, we overwrite
 # that with our settings before calling into CompareLocales
-Paths.locales = {options.application: args, 'toolkit': args}
+locales = {options.application: args}
 
 # actually compare the localizations
-res = CompareLocales.compare()
+res = CompareLocales.compare(testLocales=locales)
 
 # helper class to merge all the lists into more consice
 # dicts
 class Separator:
-  def __init__(self):
+  def __init__(self, apps):
+    self.components = Paths.Components(apps)
     pass
   def getDetails(self, res, locale):
     dic = {}
@@ -86,7 +87,7 @@ class Separator:
     counts = dict([(mod,0) for mod in res['tested']])
     counts['total'] = len(res[name])
     for mod, path, key in res[name]:
-      counts[Paths.components[mod]] +=1
+      counts[self.components[mod]] +=1
       if mod not in  dic[name]:
         dic[name][mod] = {path:[key]}
         continue
@@ -102,14 +103,14 @@ class Separator:
     counts = dict([(mod,0) for mod in res['tested']])
     counts['total'] = len(res[name])
     for mod, path in res[name]:
-      counts[Paths.components[mod]] +=1
+      counts[self.components[mod]] +=1
       if mod not in dic[name]:
         dic[name][mod] = [path]
       else:
         dic[name][mod].append(path)
     res[name] = counts
 
-s = Separator()
+s = Separator([options.application])
 
 # pretty print results for all localizations
 for loc in args:

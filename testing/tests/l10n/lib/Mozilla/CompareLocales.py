@@ -116,16 +116,37 @@ class FileCollector:
   def iterateFiles(self, mod, locale):
     return FileCollector.Iter(Paths.get_base_path(mod, locale))
 
-def collectFiles(aComparer):
-  'returns new files, files to compare, files to remove'
+def collectFiles(aComparer, apps = None, locales = None):
+  '''
+  returns new files, files to compare, files to remove
+  apps or locales need to be given, apps is a list, locales is a
+  hash mapping applications to languages.
+  If apps is given, it will look up all-locales for all apps for the
+  languages to test.
+  'toolkit' is added to the list of modules, too.
+  '''
+  if not apps and not locales:
+    raise RuntimeError, "collectFiles needs either apps or locales"
+  if apps and locales:
+    raise RuntimeError, "You don't want to give both apps or locales"
+  if locales:
+    apps = locales.keys()
+    # add toolkit, with all of the languages of all apps
+    all = set()
+    for locs in locales.values():
+      all.update(locs)
+    locales['toolkit'] = list(all)
+  else:
+    locales = Paths.allLocales(apps)
+  modules = Paths.Modules(apps)
   en = FileCollector()
   l10n = FileCollector()
-  for cat in Paths.locales.keys():
-    logging.debug(" testing " + cat+ " on " + str(Paths.modules))
-    aComparer.notifyLocales(cat, Paths.locales[cat])
-    for mod in Paths.modules[cat]:
+  for cat in modules.keys():
+    logging.debug(" testing " + cat+ " on " + str(modules))
+    aComparer.notifyLocales(cat, locales[cat])
+    for mod in modules[cat]:
       en_fls = en.getFiles(mod, 'en-US')
-      for loc in Paths.locales[cat]:
+      for loc in locales[cat]:
         fls = dict(en_fls) # create copy for modification
         for l_fl, l_path in l10n.iterateFiles(mod, loc):
           if fls.has_key(l_fl):
@@ -180,10 +201,10 @@ class CompareCollector:
       self.files[aLocale]['obsoleteFiles'].append((aModule, aLeaf))
     pass
 
-def compare(testLocales=[]):
+def compare(apps=None, testLocales=None):
   result = {}
   c = CompareCollector()
-  collectFiles(c)
+  collectFiles(c, apps=apps, locales=testLocales)
   key = re.compile('[kK]ey')
   for fl, locales in c.cl.iteritems():
     (mod,path) = fl
