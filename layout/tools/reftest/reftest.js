@@ -51,7 +51,7 @@ const NS_SCRIPTSECURITYMANAGER_CONTRACTID =
 const NS_REFTESTHELPER_CONTRACTID =
           "@mozilla.org/reftest-helper;1";
 
-const LOAD_FAILURE_TIMEOUT = 10000; // ms
+const LOAD_FAILURE_TIMEOUT = 30000; // ms
 
 var gBrowser;
 var gCanvas1, gCanvas2;
