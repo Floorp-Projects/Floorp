@@ -1173,10 +1173,10 @@ nsAutoCompleteController::ProcessResult(PRInt32 aSearchIndex, nsIAutoCompleteRes
     --mSearchesOngoing;
   }
 
-  
   PRUint32 oldMatchCount = 0;
   PRUint32 matchCount = 0;
-  aResult->GetMatchCount(&matchCount);
+  if (aResult)
+    aResult->GetMatchCount(&matchCount);
 
   PRInt32 oldIndex = mResults->IndexOf(aResult);
   if (oldIndex == -1) {
