@@ -2468,14 +2468,28 @@
       <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1" style="min-width: 1px;" clicktoscroll="true">
         <children includes="tab"/>
       </xul:arrowscrollbox>
-      <xul:hbox class="tabs-alltabs-box" align="center" pack="end" 
-                anonid="alltabs-box">
-        <xul:toolbarbutton class="tabs-alltabs-button" type="menu">
-          <xul:menupopup class="tabs-alltabs-popup"
-                         anonid="alltabs-popup" 
-                         position="after_end"/>
+      <xul:stack align="center" pack="end">
+        <!-- XXXsspitzer hack
+             this extra hbox with position: relative
+             is needed to work around two bugs.
+             see bugs #346307 and #346035 
+        -->
+        <xul:hbox style="position: relative;">
+          <xul:hbox flex="1" class="tabs-alltabs-box" anonid="alltabs-box"/>
+        </xul:hbox>
+        <!-- XXXsspitzer hack
+             this extra hbox with position: relative
+             is needed to work around two bugs.
+             see bugs #346307 and #346035 
+        -->
+        <xul:hbox style="position: relative;">
+          <xul:toolbarbutton class="tabs-alltabs-button" type="menu">
+            <xul:menupopup class="tabs-alltabs-popup"
+                           anonid="alltabs-popup" 
+                           position="after_end"/>
         </xul:toolbarbutton>
-      </xul:hbox>
+        </xul:hbox>
+      </xul:stack>
       <xul:hbox class="tabs-closebutton-box" align="center" pack="end" anonid="tabstrip-closebutton">
         <xul:toolbarbutton class="close-button tabs-closebutton"/>
       </xul:hbox>
@@ -2522,9 +2536,9 @@
       <destructor>
         <![CDATA[
           // Release timer to avoid reference cycles.
-          if (this.mFlashTimer) {
-            this.mFlashTimer.cancel();
-            this.mFlashTimer = null;
+          if (this._animateTimer) {
+            this._animateTimer.cancel();
+            this._animateTimer = null;
           }
         ]]>
       </destructor>
@@ -2667,17 +2681,37 @@
                                                 "anonid", "alltabs-box");
       </field>
 
-      <field name="mFlashTimer">null</field>
-      <field name="mFlashStage">0</field>
-      <field name="mFlashStart">6</field>
-      <field name="mFlashDelay">150</field>
+      <field name="_animateTimer">null</field>
+      <field name="_animateStep">-1</field>
+      <field name="_animateDelay">50</field>
+      <field name="_animatePercents">
+	[0.50, 0.60, 0.70, 0.80, 0.90,
+	 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00,
+	 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00,
+	 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00,
+	 0.95, 0.90, 0.85, 0.80, 0.75, 0.70, 0.65, 0.60, 0.55, 0.50,
+	 0.45, 0.40, 0.35, 0.30, 0.25, 0.20, 0.15, 0.10, 0.05, 0.00]
+      </field>
 
+      <method name="_stopAnimation">
+        <body><![CDATA[
+          if (this._animateStep != -1) {
+            if (this._animateTimer)
+              this._animateTimer.cancel();
+
+            this._animateStep = -1;
+            this.mAllTabsBox.style.opacity = 0.0;
+          }
+        ]]></body>
+      </method>
+      
       <method name="_notifyBackgroundTab">
         <parameter name="aTab"/>
         <body><![CDATA[
-          if (this.mFlashStage)
+          // if we are already animating, don't do it again
+          if (this._animateStep != -1)
             return;
-
+      
           var tsbo = this.mTabstrip.scrollBoxObject;
           var tsboStart = tsbo.screenX;
           var tsboEnd = tsboStart + tsbo.width;
@@ -2689,17 +2723,17 @@
           // only start the flash timer if the new tab (which was loaded in
           // the background) is not completely visible
           if (tsboStart > ctboStart || ctboEnd > tsboEnd) {
-            this.mFlashStage = this.mFlashStart;
+            this._animateStep = 0;
 
-            if (!this.mFlashTimer) 
-              this.mFlashTimer =
+            if (!this._animateTimer) 
+              this._animateTimer =
                 Components.classes["@mozilla.org/timer;1"]
                           .createInstance(Components.interfaces.nsITimer);
             else
-               this.mFlashTimer.cancel();
+               this._animateTimer.cancel();
 
-            this.mFlashTimer.initWithCallback(this,
-                         this.mFlashDelay,
+            this._animateTimer.initWithCallback(this,
+                         this._animateDelay,
                          Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
           }
         ]]></body>
@@ -2711,13 +2745,13 @@
           if (!document)
             aTimer.cancel();
 
-          this.mFlashStage--;
+          var percent = this._animatePercents[this._animateStep];
+          this.mAllTabsBox.style.opacity = percent;
 
-          this.mAllTabsBox.setAttribute("flash",
-            (this.mFlashStage % 2) ? "true" : "false");
-
-          if (!this.mFlashStage)
-            aTimer.cancel();
+          if (this._animateStep < (this._animatePercents.length - 1))
+            this._animateStep++;
+          else
+            this._stopAnimation();
         ]]></body>
       </method>
     </implementation>
@@ -2801,6 +2835,10 @@
           // set up the menu popup
           var tabcontainer = document.getBindingParent(this);
           var tabs = tabcontainer.childNodes;
+
+          // if an animation is in progress and the user
+          // clicks on the "all tabs" button, stop the animation
+          tabcontainer._stopAnimation();
 
           for (var i = 0; i < tabs.length; i++) {
             var menuItem = document.createElementNS(
