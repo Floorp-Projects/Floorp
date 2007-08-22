@@ -62,7 +62,9 @@
                     flex="1"
                     editable="true"
                     droppable="false"
-                    oninput="gAddBookmarksPanel.onNamePickerInput();">
+                    oninput="gEditItemOverlay.onNamePickerInput();"
+                    onblur="gEditItemOverlay.onNamePickerChange();"
+                    oncommand="gEditItemOverlay.onNamePickerChange();">
             <menupopup>
               <menuitem id="editBMPanel_userEnteredName"/>
               <menuitem disabled="true">
@@ -72,12 +74,18 @@
             </menupopup>
           </menulist>
         </row>
+        <row align="center" id="editBMPanel_locationRow">
+          <label value="&editBookmarkOverlay.location.label;"
+                 contorl="editBMPanel_locationField"/>
+          <textbox id="editBMPanel_locationField"
+                   onblur="gEditItemOverlay.onLocationFieldBlur();"/>
+        </row>
         <row align="center" id="editBMPanel_folderRow">
           <label value="&editBookmarkOverlay.folder.label;"
                  control="editBMPanel_folderMenuList"/>
           <menulist id="editBMPanel_folderMenuList"
                     class="folder-icon"
-                    oncommand="gAddBookmarksPanel.onMenuListFolderSelect();">
+                    oncommand="gEditItemOverlay.onFolderMenuListCommand();">
             <menupopup>
               <!-- Static item for special folders -->
               <menuitem id="editBMPanel_placesRootItem"
@@ -97,14 +105,14 @@
                   tooltiptext="&editBookmarkOverlay.foldersExpanderDown.tooltip;"
                   tooltiptextdown="&editBookmarkOverlay.foldersExpanderDown.tooltip;"
                   tooltiptextup="&editBookmarkOverlay.expanderUp.tooltip;"
-                  oncommand="gAddBookmarksPanel.toggleFolderTreeVisibility();"/>
+                  oncommand="gEditItemOverlay.toggleFolderTreeVisibility();"/>
         </row>
         <tree id="editBMPanel_folderTree"
               class="placesTree"
               type="places"
               height="150"
               collapsed="true"
-              onselect="gAddBookmarksPanel.onFolderTreeSelect();"
+              onselect="gEditItemOverlay.onFolderTreeSelect();"
               showRoot="true"
               place="place:folder=2&amp;group=3&amp;excludeItems=1&amp;excludeQueries=1&amp;excludeReadOnlyFolders=1"
               hidecolumnpicker="true">
@@ -116,13 +124,14 @@
         <row align="center" id="editBMPanel_tagsRow">
           <label value="&editBookmarkOverlay.tags.label;"
                  control="tagsField"/>
-          <textbox id="editBMPanel_tagsField"/>
+          <textbox id="editBMPanel_tagsField"
+                   onblur="gEditItemOverlay.onTagsFieldBlur();"/>
           <button id="editBMPanel_tagsSelectorExpander"
                   class="expander-down"
                   tooltiptext="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
                   tooltiptextdown="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
                   tooltiptextup="&editBookmarkOverlay.expanderUp.tooltip;"
-                  oncommand="gAddBookmarksPanel.toggleTagsSelector();"/>
+                  oncommand="gEditItemOverlay.toggleTagsSelector();"/>
         </row>
 
         <!-- XXX: Temporary workaround -->
@@ -133,18 +142,10 @@
         <row id="editBMPanel_descriptionRow" align="center">
           <label value="&editBookmarkOverlay.description.label;"
                  control="editBMPanel_descriptionField"/>
-          <textbox id="editBMPanel_descriptionField"/>
+          <textbox id="editBMPanel_descriptionField"
+                   onblur="gEditItemOverlay.onDescriptionFieldBlur();"/>
         </row>
       </rows>
     </grid>
-
-    <hbox>
-      <spacer flex="1"/>
-      <button label="&editBookmarkOverlay.delete.label;"
-              oncommand="gAddBookmarksPanel.deleteAndClose();"/>
-      <button label="&editBookmarkOverlay.ok.label;"
-              default="true"
-              oncommand="gAddBookmarksPanel.accept();"/>
-    </hbox>
   </vbox>
 </overlay>
