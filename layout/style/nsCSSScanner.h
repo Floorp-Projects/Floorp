@@ -198,6 +198,7 @@ class nsCSSScanner {
   }
   
 protected:
+  PRBool EnsureData(nsresult& aErrorCode);
   PRInt32 Read(nsresult& aErrorCode);
   PRInt32 Peek(nsresult& aErrorCode);
   void Pushback(PRUnichar aChar);
@@ -230,7 +231,6 @@ protected:
   PRUnichar* mPushback;
   PRInt32 mPushbackCount;
   PRInt32 mPushbackSize;
-  PRInt32 mLastRead;
   PRUnichar mLocalPushback[4];
 
   PRUint32 mLineNumber;
