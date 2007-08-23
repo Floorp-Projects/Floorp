@@ -126,10 +126,6 @@ function searchHistory(aInput)
   }
   else {
     switch (gHistoryGrouping) {
-      case "site":
-        resultType = NHQO.RESULTS_AS_URI;
-        sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
-        break; 
       case "visited":
         resultType = NHQO.RESULTS_AS_URI;
         sortingMode = NHQO.SORT_BY_VISITCOUNT_DESCENDING;
@@ -138,10 +134,11 @@ function searchHistory(aInput)
         resultType = NHQO.RESULTS_AS_URI;
         sortingMode = NHQO.SORT_BY_DATE_DESCENDING;
         break; 
-      case "dayandsite":
-        resultType = NHQO.RESULTS_AS_VISIT;
+      case "dayandsite":  // fall through
         groups.push(NHQO.GROUP_BY_DAY);
+      case "site":
         groups.push(NHQO.GROUP_BY_HOST);
+        resultType = NHQO.RESULTS_AS_VISIT;
         sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
         break;
       default:
