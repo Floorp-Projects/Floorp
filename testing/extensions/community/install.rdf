@@ -8,7 +8,7 @@
                    em:maxVersion="3.0a9" />
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
                    em:id="{667e9f3d-0096-4d2b-b171-9a96afbabe20}"
-                   em:version="0.1.3"
+                   em:version="0.1.4"
                    em:type="2"
                    em:name="Mozilla Quality Extension"
                    em:description="The QA tool"
