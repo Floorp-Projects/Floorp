@@ -1604,8 +1604,10 @@ nsXULPopupManager::IsValidMenuItem(nsPresContext* aPresContext,
 nsresult
 nsXULPopupManager::KeyUp(nsIDOMEvent* aKeyEvent)
 {
-  aKeyEvent->StopPropagation();
-  aKeyEvent->PreventDefault();
+  if (mCurrentMenu) {
+    aKeyEvent->StopPropagation();
+    aKeyEvent->PreventDefault();
+  }
 
   return NS_OK; // I am consuming event
 }
@@ -1613,6 +1615,10 @@ nsXULPopupManager::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsXULPopupManager::KeyDown(nsIDOMEvent* aKeyEvent)
 {
+  // don't do anything if a menu isn't open
+  if (!mCurrentMenu)
+    return NS_OK;
+
   PRInt32 menuAccessKey = -1;
 
   // If the key just pressed is the access key (usually Alt),
@@ -1726,8 +1732,12 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
     HandleShortcutNavigation(keyEvent, nsnull);
   }
 
-  aKeyEvent->StopPropagation();
-  aKeyEvent->PreventDefault();
+  if (mCurrentMenu) {
+    // if a menu is open, it consumes the key event
+    aKeyEvent->StopPropagation();
+    aKeyEvent->PreventDefault();
+  }
+
   return NS_OK; // I am consuming event
 }
 
