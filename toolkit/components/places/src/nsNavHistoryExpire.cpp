@@ -86,9 +86,9 @@ struct nsNavHistoryExpireRecord {
 #define MAX_SEQUENTIAL_RUNS 1
 
 // Expiration policy amounts (in microseconds)
-const PRTime EXPIRATION_POLICY_DAYS = (7 * 86400 * PR_MSEC_PER_SEC);
-const PRTime EXPIRATION_POLICY_WEEKS = (30 * 86400 * PR_MSEC_PER_SEC);
-const PRTime EXPIRATION_POLICY_MONTHS = ((PRTime)180 * 86400 * PR_MSEC_PER_SEC);
+const PRTime EXPIRATION_POLICY_DAYS = ((PRTime)7 * 86400 * PR_USEC_PER_SEC);
+const PRTime EXPIRATION_POLICY_WEEKS = ((PRTime)30 * 86400 * PR_USEC_PER_SEC);
+const PRTime EXPIRATION_POLICY_MONTHS = ((PRTime)180 * 86400 * PR_USEC_PER_SEC);
 
 // nsNavHistoryExpire::nsNavHistoryExpire
 //
