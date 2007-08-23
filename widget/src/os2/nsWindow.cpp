@@ -1525,7 +1525,8 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
             Invalidate(PR_FALSE);
 
 #if DEBUG_sobotka
-   printf("+++++++++++Resized 0x%lx at %ld, %ld to %d x %d (%d,%d)\n", mWnd, ptl.x, ptl.y, w, h, aX, aY);
+      printf("+++++++++++Resized 0x%lx at %ld, %ld to %d x %d (%d,%d)\n",
+             mWnd, ptl.x, ptl.y, w, h, aX, aY);
 #endif
 
    }
