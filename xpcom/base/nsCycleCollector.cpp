@@ -444,6 +444,7 @@ struct PtrInfo
 #ifdef DEBUG_CC
     size_t mBytes;
     char *mName;
+    PRUint32 mLangID;
 
     // For finding roots in ExplainLiveExpectedGarbage (when there are
     // missing calls to suspect or failures to unlink).
@@ -454,7 +455,9 @@ struct PtrInfo
     ReversedEdge* mReversedEdges; // linked list
 #endif
 
-    PtrInfo(void *aPointer, nsCycleCollectionParticipant *aParticipant)
+    PtrInfo(void *aPointer, nsCycleCollectionParticipant *aParticipant
+            IF_DEBUG_CC_PARAM(PRUint32 aLangID)
+            )
         : mPointer(aPointer),
           mParticipant(aParticipant),
           mColor(grey),
@@ -466,6 +469,7 @@ struct PtrInfo
 #ifdef DEBUG_CC
         , mBytes(0),
           mName(nsnull),
+          mLangID(aLangID),
           mSCCIndex(0),
           mReversedEdges(nsnull)
 #endif
@@ -529,7 +533,9 @@ public:
             NS_ASSERTION(aPool.mBlocks == nsnull && aPool.mLast == nsnull,
                          "pool not empty");
         }
-        PtrInfo *Add(void *aPointer, nsCycleCollectionParticipant *aParticipant)
+        PtrInfo *Add(void *aPointer, nsCycleCollectionParticipant *aParticipant
+                     IF_DEBUG_CC_PARAM(PRUint32 aLangID)
+                    )
         {
             if (mNext == mBlockEnd) {
                 Block *block;
@@ -539,7 +545,9 @@ public:
                 mBlockEnd = block->mEntries + BlockSize;
                 mNextBlock = &block->mNext;
             }
-            return new (mNext++) PtrInfo(aPointer, aParticipant);
+            return new (mNext++) PtrInfo(aPointer, aParticipant
+                                         IF_DEBUG_CC_PARAM(aLangID)
+                                        );
         }
     private:
         Block **mNextBlock;
@@ -818,6 +826,10 @@ struct nsCycleCollectionXPCOMRuntime :
     }
 
     inline nsCycleCollectionParticipant *ToParticipant(void *p);
+
+#ifdef DEBUG_CC
+    virtual void PrintAllReferencesTo(void *p) {}
+#endif
 };
 
 struct nsCycleCollector
@@ -1104,7 +1116,17 @@ public:
 
     PRUint32 Count() const { return mPtrToNodeMap.entryCount; }
 
+#ifdef DEBUG_CC
+    PtrInfo* AddNode(void *s, nsCycleCollectionParticipant *aParticipant,
+                     PRUint32 aLangID);
+#else
     PtrInfo* AddNode(void *s, nsCycleCollectionParticipant *aParticipant);
+    PtrInfo* AddNode(void *s, nsCycleCollectionParticipant *aParticipant,
+                     PRUint32 aLangID)
+    {
+        AddNode(s, aParticipant);
+    }
+#endif
     void Traverse(PtrInfo* aPtrInfo);
 
 private:
@@ -1138,13 +1160,17 @@ GCGraphBuilder::~GCGraphBuilder()
 }
 
 PtrInfo*
-GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant)
+GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant
+                        IF_DEBUG_CC_PARAM(PRUint32 aLangID)
+                       )
 {
     PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, s, PL_DHASH_ADD));
     PtrInfo *result;
     if (!e->mNode) {
         // New entry.
-        result = mNodeBuilder.Add(s, aParticipant);
+        result = mNodeBuilder.Add(s, aParticipant
+                                  IF_DEBUG_CC_PARAM(aLangID)
+                                 );
         if (!result) {
             PL_DHashTableRawRemove(&mPtrToNodeMap, e);
             return nsnull;
@@ -1215,7 +1241,7 @@ GCGraphBuilder::NoteXPCOMChild(nsISupports *child)
     nsXPCOMCycleCollectionParticipant *cp;
     ToParticipant(child, &cp);
     if (cp) {
-        PtrInfo *childPi = AddNode(child, cp);
+        PtrInfo *childPi = AddNode(child, cp, nsIProgrammingLanguage::CPLUSPLUS);
         if (!childPi)
             return;
         mEdgeBuilder.Add(childPi);
@@ -1232,7 +1258,7 @@ GCGraphBuilder::NoteNativeChild(void *child,
 
     NS_ASSERTION(participant, "Need a nsCycleCollectionParticipant!");
 
-    PtrInfo *childPi = AddNode(child, participant);
+    PtrInfo *childPi = AddNode(child, participant, nsIProgrammingLanguage::CPLUSPLUS);
     if (!childPi)
         return;
     mEdgeBuilder.Add(childPi);
@@ -1254,7 +1280,7 @@ GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child)
     if (!cp)
         return;
 
-    PtrInfo *childPi = AddNode(child, cp);
+    PtrInfo *childPi = AddNode(child, cp, langID);
     if (!childPi)
         return;
     mEdgeBuilder.Add(childPi);
@@ -1283,7 +1309,8 @@ nsCycleCollector::MarkRoots(GCGraph &graph)
         nsXPCOMCycleCollectionParticipant *cp;
         ToParticipant(s, &cp);
         if (cp) {
-            PtrInfo *pinfo = builder.AddNode(canonicalize(s), cp);
+            PtrInfo *pinfo = builder.AddNode(canonicalize(s), cp,
+                                             nsIProgrammingLanguage::CPLUSPLUS);
             if (pinfo)
                 pinfo->mWasPurple = PR_TRUE;
         }
@@ -2314,6 +2341,7 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                         printf("  %s %p\n",
                                e->mTarget->mName, e->mTarget->mPointer);
                     }
+                    mRuntimes[pi->mLangID]->PrintAllReferencesTo(pi->mPointer);
                 }
             }
 
