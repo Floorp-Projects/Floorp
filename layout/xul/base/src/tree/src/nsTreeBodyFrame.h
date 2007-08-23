@@ -475,6 +475,9 @@ protected: // Data Members
   // Cached row count.
   PRInt32 mRowCount;
 
+  // The row the mouse is hovering over.
+  PRInt32 mMouseOverRow;
+
   class Slots {
     public:
       Slots()
