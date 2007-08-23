@@ -149,9 +149,6 @@
 	    });
 	    qaTools.httpPostRequest(litmus.baseURL+'json.cgi', qs, callback);
 	},
-	createAccount : function() {
-	    alert("XXX: not implemented");
-	},
 	postResultXML : function(xml, callback, errback) {
 		var qs = queryString({ data: xml});
 		var fake_callback = function(resp) {
