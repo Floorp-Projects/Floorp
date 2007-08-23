@@ -55,6 +55,10 @@ struct nsCycleCollectionLanguageRuntime
     virtual nsCycleCollectionParticipant *ToParticipant(void *p) = 0;
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p) = 0;
+
+    // Call suspectCurrent on any extra pointers that will help build a
+    // larger object graph for debugging.
+    virtual void SuspectExtraPointers() = 0;
 #endif
 };
 
