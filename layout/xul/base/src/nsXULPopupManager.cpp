@@ -517,29 +517,44 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
   PRBool deselectMenu = PR_FALSE;
   nsCOMPtr<nsIContent> popupToHide, nextPopup, lastPopup;
   if (foundMenu) {
-    // at this point, item will be set to the found item in the list. If item
-    // is the topmost menu, the one to remove, then there are no other
-    // popups to hide. If item is not the topmost menu, then there are
+    // at this point, foundMenu will be set to the found item in the list. If
+    // foundMenu is the topmost menu, the one to remove, then there are no other
+    // popups to hide. If foundMenu is not the topmost menu, then there may be
     // open submenus below it. In this case, we need to make sure that those
-    // submenus are closed up first. To do this, we start at mCurrentMenu and
-    // close that popup. In synchronous mode, the FirePopupHidingEvent method
-    // will be called which in turn calls HidePopupCallback to close up the
-    // next popup in the chain. These two methods will be called in sequence
-    // recursively to close up all the necessary popups. In asynchronous mode,
-    // a similar process occurs except that the FirePopupHidingEvent method is
-    // called asynchrounsly. In either case, nextPopup is set to the content
-    // node of the next popup to close, and lastPopup is set to the last popup
-    // in the chain to close, which will be aPopup.
+    // submenus are closed up first. To do this, we scan up the menu list to
+    // find the topmost popup with only menus between it and foundMenu and
+    // close that menu first. In synchronous mode, the FirePopupHidingEvent
+    // method will be called which in turn calls HidePopupCallback to close up
+    // the next popup in the chain. These two methods will be called in
+    // sequence recursively to close up all the necessary popups. In
+    // asynchronous mode, a similar process occurs except that the
+    // FirePopupHidingEvent method is called asynchrounsly. In either case,
+    // nextPopup is set to the content node of the next popup to close, and
+    // lastPopup is set to the last popup in the chain to close, which will be
+    // aPopup, or null to close up all menus.
+
+    nsMenuChainItem* topMenu = foundMenu;
+    // Use IsMenu to ensure that foundMenu is a menu and scan down the child
+    // list until a non-menu is found. If foundMenu isn't a menu at all, don't
+    // scan and just close up this menu.
+    if (foundMenu->IsMenu()) {
+      item = topMenu->GetChild();
+      while (item && item->IsMenu()) {
+        topMenu = item;
+        item = item->GetChild();
+      }
+    }
+    
     deselectMenu = aDeselectMenu;
-    popupToHide = mCurrentMenu->Content();
-    popupFrame = mCurrentMenu->Frame();
+    popupToHide = topMenu->Content();
+    popupFrame = topMenu->Frame();
     type = popupFrame->PopupType();
 
-    nsMenuChainItem* parent = mCurrentMenu->GetParent();
+    nsMenuChainItem* parent = topMenu->GetParent();
 
     // close up another popup if there is one, and we are either hiding the
     // entire chain or the item to hide isn't the topmost popup.
-    if (parent && (aHideChain || mCurrentMenu != item))
+    if (parent && (aHideChain || topMenu != foundMenu))
       nextPopup = parent->Content();
 
     lastPopup = aHideChain ? nsnull : aPopup;
@@ -1794,8 +1809,21 @@ nsXULMenuCommandEvent::Run()
   // associated view manager on exit from this function.
   // See bug 54233.
   // XXXndeakin is this still needed?
+
+  nsCOMPtr<nsIContent> popup;
   nsMenuFrame* menuFrame = pm->GetMenuFrameForContent(mMenu);
   if (menuFrame) {
+    // Find the popup that the menu is inside. Below, this popup will
+    // need to be hidden.
+    nsIFrame* popupFrame = menuFrame->GetParent();
+    while (popupFrame) {
+      if (popupFrame->GetType() == nsGkAtoms::menuPopupFrame) {
+        popup = popupFrame->GetContent();
+        break;
+      }
+      popupFrame = popupFrame->GetParent();
+    }
+
     nsPresContext* presContext = menuFrame->PresContext();
     nsCOMPtr<nsIViewManager> kungFuDeathGrip = presContext->GetViewManager();
     nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
@@ -1814,7 +1842,8 @@ nsXULMenuCommandEvent::Run()
     shell->HandleDOMEventWithTarget(mMenu, &commandEvent, &status);
   }
 
-  pm->Rollup();
+  if (popup)
+    pm->HidePopup(popup, PR_TRUE, PR_TRUE, PR_TRUE);
 
   return NS_OK;
 }
