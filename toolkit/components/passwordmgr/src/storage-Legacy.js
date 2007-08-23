@@ -324,32 +324,12 @@ LoginManagerStorage_legacy.prototype = {
      *
      */
     findLogins : function (count, hostname, formSubmitURL, httpRealm) {
-        var hostLogins = this._logins[hostname];
-        if (hostLogins == null) {
-            count.value = 0;
-            return [];
-        }
+        var userCanceled;
 
-        var result = [], userCanceled;
-
-        for each (var login in hostLogins) {
-
-            // If looking for an HTTP login, make sure the httpRealms match.
-            if (httpRealm != login.httpRealm)
-                continue;
-
-            // If looking for a form login, make sure the action URLs match 
-            // ...unless the stored login is blank (not null), which means
-            // login was stored before we started keeping the action URL.
-            if (formSubmitURL != login.formSubmitURL &&
-                login.formSubmitURL != "")
-                continue;
-
-            result.push(login);
-        }
+        var logins = this._searchLogins(hostname, formSubmitURL, httpRealm);
 
         // Decrypt entries found for the caller.
-        [result, userCanceled] = this._decryptLogins(result);
+        [logins, userCanceled] = this._decryptLogins(logins);
 
         // We want to throw in this case, so that the Login Manager
         // knows to stop processing forms on the page so the user isn't
@@ -357,8 +337,19 @@ LoginManagerStorage_legacy.prototype = {
         if (userCanceled)
             throw "User canceled Master Password entry";
 
-        count.value = result.length; // needed for XPCOM
-        return result;
+        count.value = logins.length; // needed for XPCOM
+        return logins;
+    },
+
+    
+    /*
+     * countLogins
+     *
+     */
+    countLogins : function (hostname, formSubmitURL, httpRealm) {
+        var logins = this._searchLogins(hostname, formSubmitURL, httpRealm);
+
+        return logins.length;
     },
 
 
@@ -367,6 +358,54 @@ LoginManagerStorage_legacy.prototype = {
     /* ==================== Internal Methods ==================== */
 
 
+
+
+    /*
+     * _searchLogins
+     *
+     */
+    _searchLogins : function (hostname, formSubmitURL, httpRealm) {
+        var hostLogins = this._logins[hostname];
+        if (hostLogins == null)
+            return [];
+
+        var result = [], userCanceled;
+
+        for each (var login in hostLogins) {
+
+            // If search arg is null, skip login unless it doesn't specify a
+            // httpRealm (ie, it's also null). If the seach arg is an empty
+            // string, always match.
+            if (httpRealm == null) {
+                if (login.httpRealm != null)
+                    continue;
+            } else if (httpRealm != "") {
+                // Make sure the realms match. If search arg is null,
+                // only match if login doesn't specify a realm (is null)
+                if (httpRealm != login.httpRealm)
+                    continue;
+            }
+
+            // If search arg is null, skip login unless it doesn't specify a
+            // action URL (ie, it's also null). If the seach arg is an empty
+            // string, always match.
+            if (formSubmitURL == null) {
+                if (login.formSubmitURL != null)
+                    continue;
+            } else if (formSubmitURL != "") {
+                // If the stored login is blank (not null), that means the
+                // login was stored before we started keeping the action
+                // URL, so always match. Unless the search g
+                if (login.formSubmitURL != "" &&
+                    formSubmitURL != login.formSubmitURL)
+                    continue;
+            }
+
+            result.push(login);
+        }
+
+        return result;
+    },
 
 
     /*
@@ -547,7 +586,11 @@ LoginManagerStorage_legacy.prototype = {
 
                 // Line is the action URL
                 case STATE.ACTIONURL:
-                    entry.formSubmitURL = line.value;
+                    var formSubmitURL = line.value;
+                    if (!formSubmitURL && entry.httpRealm)
+                        entry.formSubmitURL = null;
+                    else
+                        entry.formSubmitURL = formSubmitURL;
                     processEntry = true;
                     parseState = STATE.USERFIELD;
                     break;

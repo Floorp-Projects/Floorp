@@ -470,8 +470,7 @@ LoginManager.prototype = {
     /*
      * findLogins
      *
-     * Search the known logins for entries matching the specified criteria
-     * for a protocol login (eg HTTP Auth).
+     * Search for the known logins for entries matching the specified criteria.
      */
     findLogins : function (count, hostname, formSubmitURL, httpRealm) {
         this.log("Searching for logins matching host: " + hostname +
@@ -479,6 +478,20 @@ LoginManager.prototype = {
 
         return this._storage.findLogins(count, hostname, formSubmitURL,
                                         httpRealm);
+    },
+
+
+    /*
+     * countLogins
+     *
+     * Search for the known logins for entries matching the specified criteria,
+     * returns only the count.
+     */
+    countLogins : function (hostname, formSubmitURL, httpRealm) {
+        this.log("Counting logins matching host: " + hostname +
+            ", formSubmitURL: " + formSubmitURL + ", httpRealm: " + httpRealm);
+
+        return this._storage.countLogins(hostname, formSubmitURL, httpRealm);
     },
 
 
