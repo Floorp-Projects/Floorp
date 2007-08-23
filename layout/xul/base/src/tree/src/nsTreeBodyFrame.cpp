@@ -160,6 +160,7 @@ nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aCont
  mReflowCallbackPosted(PR_FALSE),
  mUpdateBatchNest(0),
  mRowCount(0),
+ mMouseOverRow(-1),
  mSlots(nsnull)
 {
   mColumns = new nsTreeColumns(nsnull);
@@ -1898,9 +1899,12 @@ nsTreeBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol)
     mScratchArray->AppendElement(nsGkAtoms::dragSession);
 
   if (aRowIndex != -1) {
+    if (aRowIndex == mMouseOverRow)
+      mScratchArray->AppendElement(nsGkAtoms::hover);
+  
     nsCOMPtr<nsITreeSelection> selection;
     mView->GetSelection(getter_AddRefs(selection));
-  
+
     if (selection) {
       // selected
       PRBool isSelected;
@@ -2483,7 +2487,27 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
                              nsGUIEvent* aEvent,
                              nsEventStatus* aEventStatus)
 {
-  if (aEvent->message == NS_DRAGDROP_ENTER) {
+  if (aEvent->message == NS_MOUSE_ENTER_SYNTH || aEvent->message == NS_MOUSE_MOVE) {
+    nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, this);
+    PRInt32 xTwips = pt.x - mInnerBox.x;
+    PRInt32 yTwips = pt.y - mInnerBox.y;
+    PRInt32 newrow = GetRowAt(xTwips, yTwips);
+    if (mMouseOverRow != newrow) {
+      // redraw the old and the new row
+      if (mMouseOverRow != -1)
+        InvalidateRow(mMouseOverRow);
+      mMouseOverRow = newrow;
+      if (mMouseOverRow != -1)
+        InvalidateRow(mMouseOverRow);
+    }
+  }
+  else if (aEvent->message == NS_MOUSE_EXIT_SYNTH) {
+    if (mMouseOverRow != -1) {
+      InvalidateRow(mMouseOverRow);
+      mMouseOverRow = -1;
+    }
+  }
+  else if (aEvent->message == NS_DRAGDROP_ENTER) {
     if (!mSlots)
       mSlots = new Slots();
 
