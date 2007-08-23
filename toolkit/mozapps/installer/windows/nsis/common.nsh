@@ -67,11 +67,15 @@ Exch 1   ; exchange the top of the stack with 2 below the top of the stack
 Exch $R9 ; exchange the new $R9 value with the top of the stack
 */
 
-# Commented out until the Thunderbird, Seamonkey, and Calendar Tinderboxes
-# have been updated to MozillaBuild which includes an updated version of
-# NSIS
-# !include TextFunc.nsh
-# !include FileFunc.nsh
+; When including a file provided by NSIS check if its verbose macro is defined
+; to prevent loading the file a second time.
+!ifmacrondef TEXTFUNC_VERBOSE
+!include TextFunc.nsh
+!endif
+
+!ifmacrondef FILEFUNC_VERBOSE
+!include FileFunc.nsh
+!endif
 
 ; NSIS provided macros that we have overridden.
 !include overrides.nsh

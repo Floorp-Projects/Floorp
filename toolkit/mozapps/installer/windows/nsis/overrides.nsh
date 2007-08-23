@@ -4,11 +4,15 @@
 !ifndef OVERRIDES_INCLUDED
 !define OVERRIDES_INCLUDED
 
-# Commented out until the Thunderbird, Seamonkey, and Calendar Tinderboxes
-# have been updated to MozillaBuild which includes an updated version of
-# NSIS
-# !include TextFunc.nsh
-# !include FileFunc.nsh
+; When including a file check if its verbose macro is defined to prevent
+; loading the file a second time.
+!ifmacrondef TEXTFUNC_VERBOSE
+!include TextFunc.nsh
+!endif
+
+!ifmacrondef FILEFUNC_VERBOSE
+!include FileFunc.nsh
+!endif
 
 ; Modified version of Locate from the NSIS File Functions Header v3.2
 ; This version has the calls to SetDetailsPrint and DetailsPrint commented out.
