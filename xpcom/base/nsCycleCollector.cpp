@@ -1127,7 +1127,7 @@ public:
     PtrInfo* AddNode(void *s, nsCycleCollectionParticipant *aParticipant,
                      PRUint32 aLangID)
     {
-        AddNode(s, aParticipant);
+        return AddNode(s, aParticipant);
     }
 #endif
     void Traverse(PtrInfo* aPtrInfo);
