@@ -56,7 +56,7 @@ interface nsIDOMDOMStringList;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(2d8c1b1b-7a3f-4962-8a88-81ca019c11e9)]
+[scriptable, uuid(56c34b1a-d390-44f4-89c3-6935c0e4e3fa)]
 interface nsIAccessibleRetrieval : nsISupports
 {
   /**
@@ -141,21 +141,30 @@ interface nsIAccessibleRetrieval : nsISupports
     *         an accessible does not already exist for this DOM node.
     */
   nsIAccessible getCachedAccessible(in nsIDOMNode aNode, in nsIWeakReference aShell);
-  
+
    /**
     * Returns accessible role as a string.
     *
     * @param aRole - the accessible role constants.
     */
   AString getStringRole(in unsigned long aRole);
-  
+
    /**
     * Returns list which contains accessible states as a strings.
     *
     * @param aStates - accessible states.
     * @param aExtraStates - accessible extra states.
     */
-  nsIDOMDOMStringList getStringStates(in unsigned long aStates, in unsigned long aExtraStates);
+  nsIDOMDOMStringList getStringStates(in unsigned long aStates,
+                                      in unsigned long aExtraStates);
+
+  /**
+   * Get the type of accessible event as a string.
+   *
+   * @param aEventType - the accessible event type constant
+   * @return - accessible event type presented as human readable string
+   */
+  AString getStringEventType(in unsigned long aEventType);
 };
 
 
