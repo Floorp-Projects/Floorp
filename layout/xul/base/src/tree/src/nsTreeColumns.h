@@ -62,17 +62,17 @@ public:
 
 protected:
   nsIFrame* GetFrame();
-  nsIFrame* GetFrame(nsIFrame* aBodyFrame);
+  nsIFrame* GetFrame(nsTreeBodyFrame* aBodyFrame);
 
   /**
    * Returns a rect with x and width taken from the frame's rect and specified
    * y and height. May fail in case there's no frame for the column.
    */
-  nsresult GetRect(nsIFrame* aBodyFrame, nscoord aY, nscoord aHeight,
+  nsresult GetRect(nsTreeBodyFrame* aBodyFrame, nscoord aY, nscoord aHeight,
                    nsRect* aResult);
 
-  nsresult GetXInTwips(nsIFrame* aBodyFrame, nscoord* aResult);
-  nsresult GetWidthInTwips(nsIFrame* aBodyFrame, nscoord* aResult);
+  nsresult GetXInTwips(nsTreeBodyFrame* aBodyFrame, nscoord* aResult);
+  nsresult GetWidthInTwips(nsTreeBodyFrame* aBodyFrame, nscoord* aResult);
 
   void SetColumns(nsTreeColumns* aColumns) { mColumns = aColumns; }
 

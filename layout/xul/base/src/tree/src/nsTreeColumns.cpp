@@ -48,8 +48,7 @@
 #include "nsIDOMClassInfo.h"
 #include "nsINodeInfo.h"
 #include "nsContentUtils.h"
-
-static NS_DEFINE_CID(kTreeColumnImplCID, NS_TREECOLUMN_IMPL_CID);
+#include "nsTreeBodyFrame.h"
 
 // Column class that caches all the info about our column.
 nsTreeColumn::nsTreeColumn(nsTreeColumns* aColumns, nsIContent* aContent)
@@ -88,7 +87,7 @@ NS_IMPL_ADDREF(nsTreeColumn)
 NS_IMPL_RELEASE(nsTreeColumn)
 
 nsIFrame*
-nsTreeColumn::GetFrame(nsIFrame* aBodyFrame)
+nsTreeColumn::GetFrame(nsTreeBodyFrame* aBodyFrame)
 {
   NS_PRECONDITION(aBodyFrame, "null frame?");
 
@@ -114,7 +113,7 @@ nsTreeColumn::GetFrame()
 }
 
 nsresult
-nsTreeColumn::GetRect(nsIFrame* aBodyFrame, nscoord aY, nscoord aHeight, nsRect* aResult)
+nsTreeColumn::GetRect(nsTreeBodyFrame* aBodyFrame, nscoord aY, nscoord aHeight, nsRect* aResult)
 {
   nsIFrame* frame = GetFrame(aBodyFrame);
   if (!frame) {
@@ -125,11 +124,13 @@ nsTreeColumn::GetRect(nsIFrame* aBodyFrame, nscoord aY, nscoord aHeight, nsRect*
   *aResult = frame->GetRect();
   aResult->y = aY;
   aResult->height = aHeight;
+  if (!GetNext())
+    aResult->width += aBodyFrame->mAdjustWidth;
   return NS_OK;
 }
 
 nsresult
-nsTreeColumn::GetXInTwips(nsIFrame* aBodyFrame, nscoord* aResult)
+nsTreeColumn::GetXInTwips(nsTreeBodyFrame* aBodyFrame, nscoord* aResult)
 {
   nsIFrame* frame = GetFrame(aBodyFrame);
   if (!frame) {
@@ -141,7 +142,7 @@ nsTreeColumn::GetXInTwips(nsIFrame* aBodyFrame, nscoord* aResult)
 }
 
 nsresult
-nsTreeColumn::GetWidthInTwips(nsIFrame* aBodyFrame, nscoord* aResult)
+nsTreeColumn::GetWidthInTwips(nsTreeBodyFrame* aBodyFrame, nscoord* aResult)
 {
   nsIFrame* frame = GetFrame(aBodyFrame);
   if (!frame) {
@@ -149,6 +150,8 @@ nsTreeColumn::GetWidthInTwips(nsIFrame* aBodyFrame, nscoord* aResult)
     return NS_ERROR_FAILURE;
   }
   *aResult = frame->GetRect().width;
+  if (!GetNext())
+    *aResult += aBodyFrame->mAdjustWidth;
   return NS_OK;
 }
 
