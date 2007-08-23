@@ -101,12 +101,8 @@
 #include "resource.h"
 #include <commctrl.h>
 #include "prtime.h"
-#ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxWindowsSurface.h"
-#else
-#include "nsIRenderingContextWin.h"
-#endif
 #include "nsIImage.h"
 
 #ifdef ACCESSIBILITY
@@ -786,9 +782,7 @@ nsWindow::nsWindow() : nsBaseWidget()
 #ifdef MOZ_XUL
   mIsTranslucent      = PR_FALSE;
   mIsTopTranslucent   = PR_FALSE;
-#ifdef MOZ_CAIRO_GFX
   mTranslucentSurface = nsnull;
-#endif
   mMemoryDC           = NULL;
   mMemoryBitmap       = NULL;
   mMemoryBits         = NULL;
@@ -2600,84 +2594,6 @@ static PRUint8* Data32BitTo1Bit(PRUint8* aImageData,
 }
 
 // static
-PRUint8* nsWindow::Data8BitTo1Bit(PRUint8* aAlphaData,
-                                  PRUint32 aAlphaBytesPerRow,
-                                  PRUint32 aWidth, PRUint32 aHeight)
-{
-  // We need (aWidth + 7) / 8 bytes plus zero-padding up to a multiple of
-  // 4 bytes for each row (HBITMAP requirement). Bug 353553.
-  PRUint32 outBpr = ((aWidth + 31) / 8) & ~3;
-  
-  PRUint8* outData = new PRUint8[outBpr * aHeight];
-  if (!outData)
-    return NULL;
-
-  PRUint8 *outRow = outData,
-          *alphaRow = aAlphaData;
-
-  for (PRUint32 curRow = 0; curRow < aHeight; curRow++) {
-    PRUint8 *arow = alphaRow;
-    PRUint8 *nextOutRow = outRow + outBpr;
-    PRUint8 alphaPixels = 0;
-    PRUint8 offset = 7;
-
-    for (PRUint32 curCol = 0; curCol < aWidth; curCol++) {
-      if (*alphaRow++ > 0)
-        alphaPixels |= (1 << offset);
-        
-      if (offset == 0) {
-        *outRow++ = alphaPixels;
-        offset = 7;
-        alphaPixels = 0;
-      } else {
-        offset--;
-      }
-    }
-    if (offset != 7)
-      *outRow++ = alphaPixels;
-
-    alphaRow = arow + aAlphaBytesPerRow;
-    while (outRow != nextOutRow)
-      *outRow++ = 0; // padding
-  }
-
-  return outData;
-}
-
-// static
-PRUint8* nsWindow::DataToAData(PRUint8* aImageData, PRUint32 aImageBytesPerRow,
-                               PRUint8* aAlphaData, PRUint32 aAlphaBytesPerRow,
-                               PRUint32 aWidth, PRUint32 aHeight)
-{
-  // We will have 32 bpp, so bytes per row will be 4 * w
-  PRUint32 outBpr = aWidth * 4;
-
-  // Avoid overflows
-  if (aWidth > 0xfff || aHeight > 0xfff)
-    return NULL;
-
-  PRUint8* outData = new PRUint8[outBpr * aHeight];
-  if (!outData)
-    return NULL;
-
-  PRUint8 *outRow = outData,
-          *imageRow = aImageData,
-          *alphaRow = aAlphaData;
-  for (PRUint32 curRow = 0; curRow < aHeight; curRow++) {
-    PRUint8 *irow = imageRow, *arow = alphaRow;
-    for (PRUint32 curCol = 0; curCol < aWidth; curCol++) {
-      *outRow++ = *imageRow++; // B
-      *outRow++ = *imageRow++; // G
-      *outRow++ = *imageRow++; // R
-      *outRow++ = *alphaRow++; // A
-    }
-    imageRow = irow + aImageBytesPerRow;
-    alphaRow = arow + aAlphaBytesPerRow;
-  }
-  return outData;
-}
-
-// static
 HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
                                PRUint32 aWidth,
                                PRUint32 aHeight,
@@ -2769,38 +2685,6 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
   return bmp;
 }
 
-// static
-HBITMAP nsWindow::CreateOpaqueAlphaChannel(PRUint32 aWidth, PRUint32 aHeight)
-{
-  // Make up an opaque alpha channel.
-  // We need (aWidth + 7) / 8 bytes plus zero-padding up to a multiple of
-  // 4 bytes for each row (HBITMAP requirement). Bug 353553.
-  PRUint32 nonPaddedBytesPerRow = (aWidth + 7) / 8;
-  PRUint32 abpr = (nonPaddedBytesPerRow + 3) & ~3;
-  PRUint32 bufferSize = abpr * aHeight;
-  PRUint8* opaque = (PRUint8*)malloc(bufferSize);
-  if (!opaque)
-    return NULL;
-
-  memset(opaque, 0xff, bufferSize);
-
-  // If we have row padding, set it to zero.
-  if (nonPaddedBytesPerRow != abpr) {
-    PRUint8* p = opaque;
-    PRUint8* end = opaque + bufferSize;
-    while (p != end) {
-      PRUint8* nextRow = p + abpr;
-      p += nonPaddedBytesPerRow;
-      while (p != nextRow)
-        *p++ = 0; // padding
-    }
-  }
-
-  HBITMAP hAlpha = DataToBitmap(opaque, aWidth, aHeight, 1);
-  free(opaque);
-  return hAlpha;
-}
-
 NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
                                   PRUint32 aHotspotX, PRUint32 aHotspotY)
 {
@@ -2826,7 +2710,6 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
   if (width > 128 || height > 128)
     return NS_ERROR_NOT_AVAILABLE;
 
-#ifdef MOZ_CAIRO_GFX
   PRUint32 bpr;
   gfx_format format;
   frame->GetImageBytesPerRow(&bpr);
@@ -2905,134 +2788,6 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
   if (gHCursor != NULL)
     ::DestroyIcon(gHCursor);
   gHCursor = cursor;
-
-#else
-
-  gfx_format format;
-  nsresult rv = frame->GetFormat(&format);
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (format != gfxIFormats::BGR_A1 && format != gfxIFormats::BGR_A8 &&
-      format != gfxIFormats::BGR)
-    return NS_ERROR_UNEXPECTED;
-
-  // On Win2k with nVidia video drivers 71.84 at 32 bit color, cursors that 
-  // have 8 bit alpha are truncated to 64x64.  Skip cursors larger than that.
-  // This is redundant with checks above, but we'll leave it in as a reminder
-  // in case we start accepting larger cursors again
-  if (IsWin2k() && (format == gfxIFormats::BGR_A8) &&
-      (width > 64 || height > 64))
-    return NS_ERROR_FAILURE;
-
-  PRUint32 bpr;
-  rv = frame->GetImageBytesPerRow(&bpr);
-  if (NS_FAILED(rv))
-    return rv;
-
-  frame->LockImageData();
-  PRUint32 dataLen;
-  PRUint8* data;
-  rv = frame->GetImageData(&data, &dataLen);
-  if (NS_FAILED(rv)) {
-    frame->UnlockImageData();
-    return rv;
-  }
-
-  HBITMAP hBMP = NULL;
-  if (format != gfxIFormats::BGR_A8) {
-    hBMP = DataToBitmap(data, width, height, 24);
-    if (hBMP == NULL) {
-      frame->UnlockImageData();
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-  HBITMAP hAlpha = NULL;
-  if (format == gfxIFormats::BGR) {
-    hAlpha = CreateOpaqueAlphaChannel(width, height);
-  } else {
-    PRUint32 abpr;
-    rv = frame->GetAlphaBytesPerRow(&abpr);
-    if (NS_FAILED(rv)) {
-      frame->UnlockImageData();
-      if (hBMP != NULL)
-        ::DeleteObject(hBMP);
-      return rv;
-    }
-
-    PRUint8* adata;
-    frame->LockAlphaData();
-    rv = frame->GetAlphaData(&adata, &dataLen);
-    if (NS_FAILED(rv)) {
-      if (hBMP != NULL)
-        ::DeleteObject(hBMP);
-      frame->UnlockImageData();
-      frame->UnlockAlphaData();
-      return rv;
-    }
-
-    if (format == gfxIFormats::BGR_A8) {
-      // Convert BGR_A8 to BGRA.  
-      // Some platforms (or video cards?) on 32bit color mode will ignore
-      // hAlpha. For them, we could speed up things by creating an opaque alpha
-      // channel, but since we don't know how to determine whether hAlpha is
-      // ignored, create a proper 1 bit alpha channel to supplement the RGBA.
-      // Plus, on non-32bit color and possibly other platforms, the alpha
-      // of RGBA is ignored.
-      PRUint8* bgra8data = DataToAData(data, bpr, adata, abpr, width, height);
-      if (bgra8data) {
-        hBMP = DataToBitmap(bgra8data, width, height, 32);
-        if (hBMP != NULL) {
-          PRUint8* a1data = Data8BitTo1Bit(adata, abpr, width, height);
-          if (a1data) {
-            hAlpha = DataToBitmap(a1data, width, height, 1);
-            delete [] a1data;
-          }
-        }
-        delete [] bgra8data;
-      }
-    } else {
-      hAlpha = DataToBitmap(adata, width, height, 1);
-    }
-
-    frame->UnlockAlphaData();
-  }
-  frame->UnlockImageData();
-  if (hBMP == NULL) {
-    return NS_ERROR_FAILURE;
-  }
-  if (hAlpha == NULL) {
-    ::DeleteObject(hBMP);
-    return NS_ERROR_FAILURE;
-  }
-
-  ICONINFO info = {0};
-  info.fIcon = FALSE;
-  info.xHotspot = aHotspotX;
-  info.yHotspot = aHotspotY;
-  info.hbmMask = hAlpha;
-  info.hbmColor = hBMP;
-  
-  HCURSOR cursor = ::CreateIconIndirect(&info);
-  ::DeleteObject(hBMP);
-  ::DeleteObject(hAlpha);
-  if (cursor == NULL) {
-    return NS_ERROR_FAILURE;
-  }
-
-  mCursor = nsCursor(-1);
-  ::SetCursor(cursor);
-
-  NS_IF_RELEASE(gCursorImgContainer);
-  gCursorImgContainer = aCursor;
-  NS_ADDREF(gCursorImgContainer);
-
-  if (gHCursor != NULL)
-    ::DestroyIcon(gHCursor);
-  gHCursor = cursor;
-
-#endif
 
   return NS_OK;
 }
@@ -4465,12 +4220,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       break;
 
     case WM_PAINT:
-#ifdef MOZ_CAIRO_GFX
       *aRetValue = (int) OnPaint();
       result = PR_TRUE;
-#else
-      result = OnPaint();
-#endif
       break;
 
 #ifndef WINCE
@@ -5950,7 +5701,6 @@ PRBool nsWindow::OnPaint(HDC aDC)
                            (PRInt32) mWnd);
 #endif // NS_DEBUG
 
-#ifdef MOZ_CAIRO_GFX
 #ifdef MOZ_XUL
       nsRefPtr<gfxASurface> targetSurface;
       if (mIsTranslucent) {
@@ -6007,43 +5757,6 @@ PRBool nsWindow::OnPaint(HDC aDC)
         thebesContext->SetOperator(gfxContext::OPERATOR_SOURCE);
         thebesContext->Paint();
       }
-#endif
-
-#else
-      /* Non-cairo GFX */
-      if (NS_SUCCEEDED(CallCreateInstance(kRenderingContextCID, &event.renderingContext)))
-      {
-        nsIRenderingContextWin *winrc;
-        if (NS_SUCCEEDED(CallQueryInterface(event.renderingContext, &winrc)))
-        {
-          nsIDrawingSurface* surf;
-
-          //i know all of this seems a little backwards. i'll fix it, i swear. MMP
-
-          if (NS_OK == winrc->CreateDrawingSurface(hDC, surf))
-          {
-            event.renderingContext->Init(mContext, surf);
-            result = DispatchWindowEvent(&event, eventStatus);
-            event.renderingContext->DestroyDrawingSurface(surf);
-
-#ifdef MOZ_XUL
-            if (mIsTranslucent)
-            {
-              // Data from offscreen drawing surface was copied to memory bitmap of transparent
-              // bitmap. Now it can be read from memory bitmap to apply alpha channel and after
-              // that displayed on the screen.
-              UpdateTranslucentWindow();
-            }
-#endif
-          }
-
-          NS_RELEASE(winrc);
-        }
-
-        NS_RELEASE(event.renderingContext);
-      }
-      else
-        result = PR_FALSE;
 #endif
 
       NS_RELEASE(event.widget);
@@ -8223,7 +7936,6 @@ nsWindow* nsWindow::GetTopLevelWindow()
   }
 }
 
-#ifdef MOZ_CAIRO_GFX
 gfxASurface *nsWindow::GetThebesSurface()
 {
   if (mPaintDC)
@@ -8231,98 +7943,15 @@ gfxASurface *nsWindow::GetThebesSurface()
 
   return (new gfxWindowsSurface(mWnd));
 }
-#endif
 
 void nsWindow::ResizeTranslucentWindow(PRInt32 aNewWidth, PRInt32 aNewHeight, PRBool force)
 {
   if (!force && aNewWidth == mBounds.width && aNewHeight == mBounds.height)
     return;
 
-#ifdef MOZ_CAIRO_GFX
   mTranslucentSurface = new gfxWindowsSurface(gfxIntSize(aNewWidth, aNewHeight), gfxASurface::ImageFormatARGB32);
   mMemoryDC = mTranslucentSurface->GetDC();
   mMemoryBitmap = NULL;
-#else
-  // resize the alpha mask
-  PRUint8* pBits;
-
-  if (aNewWidth > 0 && aNewHeight > 0)
-  {
-    pBits = new PRUint8 [aNewWidth * aNewHeight];
-
-    if (pBits && mAlphaMask)
-    {
-      PRInt32 copyWidth, copyHeight;
-      PRInt32 growWidth, growHeight;
-
-      if (aNewWidth > mBounds.width)
-      {
-        copyWidth = mBounds.width;
-        growWidth = aNewWidth - mBounds.width;
-      } else
-      {
-        copyWidth = aNewWidth;
-        growWidth = 0;
-      }
-
-      if (aNewHeight > mBounds.height)
-      {
-        copyHeight = mBounds.height;
-        growHeight = aNewHeight - mBounds.height;
-      } else
-      {
-        copyHeight = aNewHeight;
-        growHeight = 0;
-      }
-
-      PRUint8* pSrc = mAlphaMask;
-      PRUint8* pDest = pBits;
-
-      for (PRInt32 cy = 0 ; cy < copyHeight ; cy++)
-      {
-        memcpy(pDest, pSrc, copyWidth);
-        memset(pDest + copyWidth, 255, growWidth);
-        pSrc += mBounds.width;
-        pDest += aNewWidth;
-      }
-
-      for (PRInt32 gy = 0 ; gy < growHeight ; gy++)
-      {
-        memset(pDest, 255, aNewWidth);
-        pDest += aNewWidth;
-      }
-    }
-  } else
-    pBits = nsnull;
-
-  delete [] mAlphaMask;
-  mAlphaMask = pBits;
-
-  if (!mMemoryDC)
-    mMemoryDC = ::CreateCompatibleDC(NULL);
-
-  // Always use at least 24-bit bitmaps regardless of the device context.
-  int depth = ::GetDeviceCaps(mMemoryDC, BITSPIXEL);
-  if (depth < 24)
-    depth = 24;
-
-  // resize the memory bitmap
-  BITMAPINFO bi = { 0 };
-  bi.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
-  bi.bmiHeader.biWidth = aNewWidth;
-  bi.bmiHeader.biHeight = -aNewHeight;
-  bi.bmiHeader.biPlanes = 1;
-  bi.bmiHeader.biBitCount = depth;
-  bi.bmiHeader.biCompression = BI_RGB;
-
-  mMemoryBitmap = ::CreateDIBSection(mMemoryDC, &bi, DIB_RGB_COLORS, (void**)&mMemoryBits, NULL, 0);
-
-  if (mMemoryBitmap)
-  {
-    HGDIOBJ oldBitmap = ::SelectObject(mMemoryDC, mMemoryBitmap);
-    ::DeleteObject(oldBitmap);
-  }
-#endif
 }
 
 NS_IMETHODIMP nsWindow::GetWindowTranslucency(PRBool& aTranslucent)
@@ -8412,15 +8041,7 @@ nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTranslucent)
   if (aTranslucent) {
     ResizeTranslucentWindow(mBounds.width, mBounds.height, PR_TRUE);
   } else {
-#ifdef MOZ_CAIRO_GFX
     mTranslucentSurface = nsnull;
-#else
-    if (mMemoryDC)
-      ::DeleteDC(mMemoryDC);
-    if (mMemoryBitmap)
-      ::DeleteObject(mMemoryBitmap);
-#endif
-
     mMemoryDC = NULL;
     mMemoryBitmap = NULL;
   }
@@ -8430,35 +8051,7 @@ nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTranslucent)
 
 void nsWindow::UpdateTranslucentWindowAlphaInner(const nsRect& aRect, PRUint8* aAlphas)
 {
-#ifdef MOZ_CAIRO_GFX
-  NS_ERROR("nsWindow::UpdateTranslucentWindowAlphaInner called, when it sholdn't be!");
-#else
-  NS_ASSERTION(mIsTranslucent, "Window is not transparent");
-  NS_ASSERTION(aRect.x >= 0 && aRect.y >= 0 &&
-               aRect.XMost() <= mBounds.width && aRect.YMost() <= mBounds.height,
-               "Rect is out of window bounds");
-
-  PRBool transparencyMaskChanged = PR_FALSE;
-
-  if (!aRect.IsEmpty())
-  {
-    PRUint8* pSrcRow = aAlphas;
-    PRUint8* pDestRow = mAlphaMask + aRect.y * mBounds.width + aRect.x;
-
-    for (PRInt32 y = 0 ; y < aRect.height ; y++)
-    {
-      memcpy(pDestRow, pSrcRow, aRect.width);
-
-      pSrcRow += aRect.width;
-      pDestRow += mBounds.width;
-    }
-  }
-
-  // Windows 2000 and newer versions support layered windows which allow to implement
-  // full 256 level alpha translucency.
-  // The real screen update is performed in OnPaint() handler only after rendered
-  // bits from offscreen drawing surface are copied back to memory bitmap.
-#endif
+  NS_ERROR("nsWindow::UpdateTranslucentWindowAlphaInner called, when it shouldn't be!");
 }
 
 nsresult nsWindow::UpdateTranslucentWindow()
@@ -8466,116 +8059,20 @@ nsresult nsWindow::UpdateTranslucentWindow()
   if (mBounds.IsEmpty())
     return NS_OK;
 
-  nsresult rv = NS_ERROR_FAILURE;
-
   ::GdiFlush();
 
-  HDC hMemoryDC;
-  PRBool needConversion;
+  BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
+  SIZE winSize = { mBounds.width, mBounds.height };
+  POINT srcPos = { 0, 0 };
+  HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
+  RECT winRect;
+  ::GetWindowRect(hWnd, &winRect);
 
-#ifdef MOZ_CAIRO_GFX
+  // perform the alpha blend
+  if (!::UpdateLayeredWindow(hWnd, NULL, (POINT*)&winRect, &winSize, mMemoryDC, &srcPos, 0, &bf, ULW_ALPHA))
+    return NS_ERROR_FAILURE;
 
-  hMemoryDC = mMemoryDC;
-  needConversion = PR_FALSE;
-
-  rv = NS_OK;
-
-#else
-
-  HBITMAP hAlphaBitmap;
-  int depth = ::GetDeviceCaps(mMemoryDC, BITSPIXEL);
-  if (depth < 24)
-    depth = 24;
-
-  needConversion = (depth == 24);
-
-  if (needConversion)
-  {
-    hMemoryDC = ::CreateCompatibleDC(NULL);
-
-    if (hMemoryDC)
-    {
-      // Memory bitmap with alpha channel
-      BITMAPINFO bi = { 0 };
-      bi.bmiHeader.biSize = sizeof (BITMAPINFOHEADER);
-      bi.bmiHeader.biWidth = mBounds.width;
-      bi.bmiHeader.biHeight = -mBounds.height;
-      bi.bmiHeader.biPlanes = 1;
-      bi.bmiHeader.biBitCount = 32;
-      bi.bmiHeader.biCompression = BI_RGB;
-
-      PRUint8* pBits32 = nsnull;
-      hAlphaBitmap = ::CreateDIBSection(hMemoryDC, &bi, DIB_RGB_COLORS, (void**)&pBits32, NULL, 0);
-      
-      if (hAlphaBitmap)
-      {
-        HGDIOBJ oldBitmap = ::SelectObject(hMemoryDC, hAlphaBitmap);
-
-        PRUint8* pPixel32 = pBits32;
-        PRUint8* pAlpha = mAlphaMask;
-        PRUint32 rasWidth = RASWIDTH(mBounds.width, 24);
-
-        for (PRInt32 y = 0 ; y < mBounds.height ; y++)
-        {
-          PRUint8* pPixel = mMemoryBits + y * rasWidth;
-
-          for (PRInt32 x = 0 ; x < mBounds.width ; x++)
-          {
-            *pPixel32++ = *pPixel++;
-            *pPixel32++ = *pPixel++;
-            *pPixel32++ = *pPixel++;
-            *pPixel32++ = *pAlpha++;
-          }
-        }
-
-        rv = NS_OK;
-      }
-    }
-  } else
-  {
-    hMemoryDC = mMemoryDC;
-
-    if (hMemoryDC)
-    {
-      PRUint8* pPixel = mMemoryBits + 3;    // Point to alpha component of pixel
-      PRUint8* pAlpha = mAlphaMask;
-      PRInt32 pixels = mBounds.width * mBounds.height;
-
-      for (PRInt32 cnt = 0 ; cnt < pixels ; cnt++)
-      {
-        *pPixel = *pAlpha++;
-        pPixel += 4;
-      }
-
-      rv = NS_OK;
-    }
-  }
-#endif /* MOZ_CAIRO_GFX */
-
-  if (rv == NS_OK)
-  {
-    BLENDFUNCTION bf = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
-    SIZE winSize = { mBounds.width, mBounds.height };
-    POINT srcPos = { 0, 0 };
-    HWND hWnd = GetTopLevelHWND(mWnd, PR_TRUE);
-    RECT winRect;
-    ::GetWindowRect(hWnd, &winRect);
-
-    // perform the alpha blend
-    if (!::UpdateLayeredWindow(hWnd, NULL, (POINT*)&winRect, &winSize, hMemoryDC, &srcPos, 0, &bf, ULW_ALPHA))
-      rv = NS_ERROR_FAILURE;
-  }
-
-
-  if (needConversion)
-  {
-#ifndef MOZ_CAIRO_GFX
-    ::DeleteObject(hAlphaBitmap);
-#endif
-    ::DeleteDC(hMemoryDC);
-  }
-
-  return rv;
+  return NS_OK;
 }
 
 #endif
