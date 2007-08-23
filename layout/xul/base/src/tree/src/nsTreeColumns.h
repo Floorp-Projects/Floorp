@@ -45,6 +45,7 @@
 #include "nsIContent.h"
 #include "nsIFrame.h"
 
+class nsTreeBodyFrame;
 class nsTreeColumns;
 
 // This class is our column info.  We use it to iterate our columns and to obtain
