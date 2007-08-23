@@ -843,8 +843,13 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
 
     CERTCertificate *serverCert = SSL_PeerCertificate(fd);
     if (serverCert) {
-      status->mServerCert = new nsNSSCertificate(serverCert);
+      nsRefPtr<nsNSSCertificate> nssc = new nsNSSCertificate(serverCert);
       CERT_DestroyCertificate(serverCert);
+      serverCert = nsnull;
+      infoObject->SetCert(nssc);
+      if (!status->mServerCert) {
+        status->mServerCert = nssc;
+      }
     }
 
     status->mKeyLength = keyLength;

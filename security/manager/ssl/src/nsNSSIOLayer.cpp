@@ -231,11 +231,12 @@ void nsNSSSocketInfo::destructorSafeDestroyNSSReference()
   }
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsNSSSocketInfo,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsNSSSocketInfo,
                               nsITransportSecurityInfo,
                               nsISSLSocketControl,
                               nsIInterfaceRequestor,
-                              nsISSLStatusProvider)
+                              nsISSLStatusProvider,
+                              nsIIdentityInfo)
 
 nsresult
 nsNSSSocketInfo::GetHandshakePending(PRBool *aHandshakePending)
@@ -501,6 +502,23 @@ nsresult nsNSSSocketInfo::GetFileDescPtr(PRFileDesc** aFilePtr)
 nsresult nsNSSSocketInfo::SetFileDescPtr(PRFileDesc* aFilePtr)
 {
   mFd = aFilePtr;
+  return NS_OK;
+}
+
+nsresult nsNSSSocketInfo::GetCert(nsNSSCertificate** _result)
+{
+  NS_ENSURE_ARG_POINTER(_result);
+
+  *_result = mCert;
+  NS_IF_ADDREF(*_result);
+
+  return NS_OK;
+}
+
+nsresult nsNSSSocketInfo::SetCert(nsNSSCertificate *aCert)
+{
+  mCert = aCert;
+
   return NS_OK;
 }
 
