@@ -241,8 +241,39 @@ JS_STATIC_ASSERT(ATOM_ENTRY_FLAG_MASK < JSVAL_ALIGN);
 #define CLEAR_ATOM_ENTRY_FLAGS(entry, flags)                                  \
     ((void)((entry)->keyAndFlags &= ~(jsuword)(flags)))
 
-static const JSDHashTableOps DoubleHashOps;
-static const JSDHashTableOps StringHashOps;
+JS_STATIC_DLL_CALLBACK(JSDHashNumber)
+HashDouble(JSDHashTable *table, const void *key);
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+MatchDouble(JSDHashTable *table, const JSDHashEntryHdr *hdr, const void *key);
+
+JS_STATIC_DLL_CALLBACK(JSDHashNumber)
+HashString(JSDHashTable *table, const void *key);
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+MatchString(JSDHashTable *table, const JSDHashEntryHdr *hdr, const void *key);
+
+static const JSDHashTableOps DoubleHashOps = {
+    JS_DHashAllocTable,
+    JS_DHashFreeTable,
+    HashDouble,
+    MatchDouble,
+    JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub,
+    JS_DHashFinalizeStub,
+    NULL
+};
+
+static const JSDHashTableOps StringHashOps = {
+    JS_DHashAllocTable,
+    JS_DHashFreeTable,
+    HashString,
+    MatchString,
+    JS_DHashMoveEntryStub,
+    JS_DHashClearEntryStub,
+    JS_DHashFinalizeStub,
+    NULL
+};
 
 #define IS_DOUBLE_TABLE(table)      ((table)->ops == &DoubleHashOps)
 #define IS_STRING_TABLE(table)      ((table)->ops == &StringHashOps)
@@ -313,28 +344,6 @@ MatchString(JSDHashTable *table, const JSDHashEntryHdr *hdr, const void *key)
     }
     return js_EqualStrings((JSString *)ATOM_ENTRY_KEY(entry), (JSString *)key);
 }
-
-static const JSDHashTableOps DoubleHashOps = {
-    JS_DHashAllocTable,
-    JS_DHashFreeTable,
-    HashDouble,
-    MatchDouble,
-    JS_DHashMoveEntryStub,
-    JS_DHashClearEntryStub,
-    JS_DHashFinalizeStub,
-    NULL
-};
-
-static const JSDHashTableOps StringHashOps = {
-    JS_DHashAllocTable,
-    JS_DHashFreeTable,
-    HashString,
-    MatchString,
-    JS_DHashMoveEntryStub,
-    JS_DHashClearEntryStub,
-    JS_DHashFinalizeStub,
-    NULL
-};
 
 /*
  * For a browser build from 2007-08-09 after the browser starts up there are
