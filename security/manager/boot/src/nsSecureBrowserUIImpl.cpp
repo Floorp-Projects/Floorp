@@ -65,12 +65,14 @@
 #include "nsPIDOMWindow.h"
 #include "nsIContent.h"
 #include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIFileChannel.h"
 #include "nsIWyciwygChannel.h"
 #include "nsIFTPChannel.h"
 #include "nsITransportSecurityInfo.h"
+#include "nsIIdentityInfo.h"
 #include "nsIURI.h"
 #include "nsISecurityEventSink.h"
 #include "nsIPrompt.h"
@@ -139,6 +141,7 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
 {
   mTransferringRequests.ops = nsnull;
   mNewToplevelSecurityState = STATE_IS_INSECURE;
+  mNewToplevelIsEV = PR_FALSE;
   mNewToplevelSecurityStateKnown = PR_TRUE;
   ResetStateTracking();
   
@@ -429,9 +432,10 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest *aRequest)
 {
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
 
-  if (!channel) {
-    mNewToplevelSecurityState = nsIWebProgressListener::STATE_IS_INSECURE;
-  } else {
+  mNewToplevelSecurityState = nsIWebProgressListener::STATE_IS_INSECURE;
+  mNewToplevelIsEV = PR_FALSE;
+
+  if (channel) {
     mNewToplevelSecurityState = GetSecurityStateFromChannel(channel);
 
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
@@ -451,6 +455,13 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest *aRequest)
       nsCOMPtr<nsITransportSecurityInfo> secInfo(do_QueryInterface(info));
       if (secInfo) {
         secInfo->GetShortSecurityDescription(getter_Copies(mInfoTooltip));
+      }
+
+      nsCOMPtr<nsIIdentityInfo> idinfo = do_QueryInterface(info);
+      if (idinfo) {
+        PRBool aTemp;
+        if (NS_SUCCEEDED(idinfo->GetIsExtendedValidation(&aTemp)))
+          mNewToplevelIsEV = aTemp;
       }
     }
   }
@@ -1138,6 +1149,9 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
            ("SecureUI:%p: UpdateSecurityState: calling OnSecurityChange\n", this
             ));
+
+    if (mNewToplevelIsEV)
+      newState |= nsIWebProgressListener::STATE_IDENTITY_EV_TOPLEVEL;
 
     mToplevelEventSink->OnSecurityChange(aRequest, newState);
   }
