@@ -453,6 +453,7 @@ struct PtrInfo
     // For finding roots in ExplainLiveExpectedGarbage (when nodes
     // expected to be garbage are black).
     ReversedEdge* mReversedEdges; // linked list
+    PtrInfo* mShortestPathToExpectedGarbage;
 #endif
 
     PtrInfo(void *aPointer, nsCycleCollectionParticipant *aParticipant
@@ -471,7 +472,8 @@ struct PtrInfo
           mName(nsnull),
           mLangID(aLangID),
           mSCCIndex(0),
-          mReversedEdges(nsnull)
+          mReversedEdges(nsnull),
+          mShortestPathToExpectedGarbage(nsnull)
 #endif
     {
     }
@@ -2315,10 +2317,13 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
 
             nsDeque queue; // for breadth-first search
             NodePool::Enumerator etor_roots(graph.mNodes);
-            for (PRUint32 i = suspectCurrentCount; i < graph.mRootCount; ++i) {
+            for (PRUint32 i = 0; i < graph.mRootCount; ++i) {
                 PtrInfo *root_pi = etor_roots.GetNext();
-                root_pi->mSCCIndex = INDEX_REACHED;
-                queue.Push(root_pi);
+                if (i >= suspectCurrentCount) {
+                    root_pi->mSCCIndex = INDEX_REACHED;
+                    root_pi->mShortestPathToExpectedGarbage = root_pi;
+                    queue.Push(root_pi);
+                }
             }
 
             while (queue.GetSize() > 0) {
@@ -2326,7 +2331,10 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                 for (ReversedEdge *e = pi->mReversedEdges; e; e = e->mNext) {
                     if (e->mTarget->mSCCIndex == INDEX_UNREACHED) {
                         e->mTarget->mSCCIndex = INDEX_REACHED;
-                        queue.Push(e->mTarget);
+                        PtrInfo *target = e->mTarget;
+                        if (!target->mShortestPathToExpectedGarbage)
+                            target->mShortestPathToExpectedGarbage = pi;
+                        queue.Push(target);
                     }
                 }
 
@@ -2337,11 +2345,19 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                            pi->mName, pi->mPointer,
                            pi->mRefCount - pi->mInternalRefs,
                            pi->mRefCount, pi->mInternalRefs);
+
+                    printf("  An object expected to be garbage could be "
+                           "reached from it by the path:\n");
+                    for (PtrInfo *path = pi, *prev = nsnull; prev != path;
+                         prev = path,
+                         path = path->mShortestPathToExpectedGarbage)
+                        printf("    %s %p\n", path->mName, path->mPointer);
+
                     printf("  The %d known references to it were from:\n",
                            pi->mInternalRefs);
                     for (ReversedEdge *e = pi->mReversedEdges;
                          e; e = e->mNext) {
-                        printf("  %s %p\n",
+                        printf("    %s %p\n",
                                e->mTarget->mName, e->mTarget->mPointer);
                     }
                     mRuntimes[pi->mLangID]->PrintAllReferencesTo(pi->mPointer);
