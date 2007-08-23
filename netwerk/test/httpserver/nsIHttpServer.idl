@@ -272,13 +272,13 @@ interface nsIHttpRequestMetadata : nsIPropertyBag
   boolean hasHeader(in string fieldName);
 
   /**
-   * An nsISimpleEnumerator over the names of the headers in this request.  The
-   * header field names in the enumerator may not necessarily have the same case
-   * as they do in the request itself.
+   * An nsISimpleEnumerator of nsISupportsStrings over the names of the headers
+   * in this request.  The header field names in the enumerator may not
+   * necessarily have the same case as they do in the request itself.
    */
   readonly attribute nsISimpleEnumerator headers;
 
-  // XXX should expose body of request here!
+  // XXX expose request body here!
 };
 
 
