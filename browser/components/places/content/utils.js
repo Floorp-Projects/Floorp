@@ -1449,10 +1449,7 @@ var PlacesUtils = {
   },
 
   get toolbarFolderId() {
-    if (!("_toolbarFolderId" in this))
-      this._toolbarFolderId = this.bookmarks.toolbarFolder;
-
-    return this._toolbarFolderId;
+    return this.bookmarks.toolbarFolder;
   },
 
   get tagRootId() {
