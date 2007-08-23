@@ -829,6 +829,7 @@ struct nsCycleCollectionXPCOMRuntime :
 
 #ifdef DEBUG_CC
     virtual void PrintAllReferencesTo(void *p) {}
+    virtual void SuspectExtraPointers() {}
 #endif
 };
 
@@ -2253,8 +2254,10 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
     mBuf.Empty();
 
     for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
-        if (mRuntimes[i])
+        if (mRuntimes[i]) {
             mRuntimes[i]->BeginCycleCollection();
+            mRuntimes[i]->SuspectExtraPointers();
+        }
     }
 
     mCollectionInProgress = PR_TRUE;

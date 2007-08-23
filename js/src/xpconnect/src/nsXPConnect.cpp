@@ -634,6 +634,27 @@ nsXPConnect::PrintAllReferencesTo(void *p)
                 0x7fffffff, nsnull);
 #endif
 }
+
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+SuspectWrappedJS(JSDHashTable *table, JSDHashEntryHdr *hdr,
+                 uint32 number, void *arg)
+{
+    for (nsXPCWrappedJS* wrapper = ((JSObject2WrappedJSMap::Entry*)hdr)->value;
+         wrapper; wrapper = wrapper->GetNextWrapper())
+        if (wrapper->IsValid() && !wrapper->IsSubjectToFinalization())
+            nsCycleCollector_suspectCurrent(
+                NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Upcast(wrapper));
+    return JS_DHASH_NEXT;
+}
+
+void
+nsXPConnect::SuspectExtraPointers()
+{
+    // FIXME: We should really just call suspectCurrent on all the roots
+    // in the runtime, or even all the objects in the runtime, except we
+    // can't call suspectCurrent on JS objects.
+    GetRuntime(this)->GetWrappedJSMap()->Enumerate(SuspectWrappedJS, nsnull);
+}
 #endif
 
 NS_IMETHODIMP
