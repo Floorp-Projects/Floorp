@@ -490,28 +490,6 @@ protected:
   static imgIContainer* gCursorImgContainer;
 
   /**
-   * Create a 1 bit mask out of a 8 bit alpha layer.
-   *
-   * @param aAlphaData        8 bit alpha data
-   * @param aAlphaBytesPerRow How many bytes one row of data is
-   * @param aWidth            Width of the alpha data, in pixels
-   * @param aHeight           Height of the alpha data, in pixels
-   *
-   * @return 1 bit mask.  Must be delete[]d. On failure, NULL will be returned.
-   */
-  static PRUint8* Data8BitTo1Bit(PRUint8* aAlphaData, PRUint32 aAlphaBytesPerRow,
-                                 PRUint32 aWidth, PRUint32 aHeight);
-
-  /**
-   * Combine the given image data with a separate alpha channel to image data
-   * with the alpha channel interleaved with the image data (BGRA).
-   *
-   * @return BGRA data. Must be delete[]d. On failure, NULL will be returned.
-   */
-  static PRUint8* DataToAData(PRUint8* aImageData, PRUint32 aImageBytesPerRow,
-                              PRUint8* aAlphaData, PRUint32 aAlphaBytesPerRow,
-                              PRUint32 aWidth, PRUint32 aHeight);
-  /**
    * Convert the given image data to a HBITMAP. If the requested depth is
    * 32 bit and the OS supports translucency, a bitmap with an alpha channel
    * will be returned.
@@ -530,16 +508,6 @@ protected:
                               PRUint32 aWidth,
                               PRUint32 aHeight,
                               PRUint32 aDepth);
-
-  /**
-   * Create a bitmap representing an opaque alpha channel (filled with 0xff).
-   * @param aWidth  Desired with of the bitmap
-   * @param aHeight Desired height of the bitmap
-   * @return        The bitmap. Caller should call DeleteObject when done with
-   *                the bitmap. On failure, NULL will be returned.
-   */
-  static HBITMAP CreateOpaqueAlphaChannel(PRUint32 aWidth, PRUint32 aHeight);
-
 
 #ifdef ACCESSIBILITY
   static BOOL gIsAccessibilityOn;
