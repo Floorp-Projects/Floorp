@@ -492,6 +492,9 @@ public:
     virtual nsresult BeginCycleCollection();
     virtual nsresult FinishCycleCollection();
     virtual nsCycleCollectionParticipant *ToParticipant(void *p);
+#ifdef DEBUG_CC
+    virtual void PrintAllReferencesTo(void *p);
+#endif
 
     JSObjectRefcounts* GetJSObjectRefcounts() {return mObjRefcounts;}
 #ifndef XPCONNECT_STANDALONE
