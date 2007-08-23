@@ -45,7 +45,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEvent.h"
-#include "nsIPrivateDOMEVent.h"
+#include "nsIPrivateDOMEvent.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsUtils.h"
