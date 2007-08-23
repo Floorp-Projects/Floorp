@@ -319,10 +319,7 @@ function realmHasPasswords(location) {
   var realm = makeURI(location).prePath;
   var passwordManager = Components.classes["@mozilla.org/login-manager;1"]
                                   .getService(Components.interfaces.nsILoginManager);
-  var passwords = passwordManager.getAllLogins({});
-
-  // XXX untested
-  return passwords.some(function (login) { return (login.hostname == realm); });
+  return passwordManager.countLogins(realm, "", "");
 }
 
 /**
