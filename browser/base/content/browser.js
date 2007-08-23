@@ -99,6 +99,7 @@ var gProgressCollapseTimer = null;
 var gPrefService = null;
 var appCore = null;
 var gBrowser = null;
+var gNavToolbox = null;
 var gSidebarCommand = "";
 
 // Global variable that holds the nsContextMenu instance.
@@ -1029,8 +1030,7 @@ function delayedStartup()
 
   SetPageProxyState("invalid");
 
-  var toolbox = document.getElementById("navigator-toolbox");
-  toolbox.customizeDone = BrowserToolboxCustomizeDone;
+  getNavToolbox().customizeDone = BrowserToolboxCustomizeDone;
 
   // Set up Sanitize Item
   gSanitizeListener = new SanitizeListener();
@@ -2279,19 +2279,22 @@ function toggleAffectedChrome(aHide)
   //   (*) menubar
   //   (*) navigation bar
   //   (*) bookmarks toolbar
+  //   (*) tabstrip
   //   (*) browser messages
   //   (*) sidebar
   //   (*) find bar
   //   (*) statusbar
 
-  var navToolbox = document.getElementById("navigator-toolbox");
-  navToolbox.hidden = aHide;
+  getNavToolbox().hidden = aHide;
   if (aHide)
   {
     gChromeState = {};
     var sidebar = document.getElementById("sidebar-box");
     gChromeState.sidebarOpen = !sidebar.hidden;
     gSidebarCommand = sidebar.getAttribute("sidebarcommand");
+
+    gChromeState.hadTabStrip = gBrowser.getStripVisibility();
+    gBrowser.setStripVisibilityTo(false);
 
     var notificationBox = gBrowser.getNotificationBox();
     gChromeState.notificationsOpen = !notificationBox.notificationsHidden;
@@ -2305,6 +2308,10 @@ function toggleAffectedChrome(aHide)
     gFindBar.close();
   }
   else {
+    if (gChromeState.hadTabStrip) {
+      gBrowser.setStripVisibilityTo(true);
+    }
+
     if (gChromeState.notificationsOpen) {
       gBrowser.getNotificationBox().notificationsHidden = aHide;
     }
@@ -2331,6 +2338,11 @@ function onExitPrintPreview()
 {
   // restore chrome to original state
   toggleAffectedChrome(false);
+}
+
+function getPPBrowser()
+{
+  return document.getElementById("content");
 }
 
 function getMarkupDocumentViewer()
@@ -3049,7 +3061,7 @@ function BrowserCustomizeToolbar()
   window.openDialog("chrome://global/content/customizeToolbar.xul",
                     "CustomizeToolbar",
                     "chrome,all,dependent",
-                    document.getElementById("navigator-toolbox"));
+                    getNavToolbox());
 #endif
 }
 
@@ -3173,7 +3185,7 @@ var FullScreen =
       }
     }
 
-    var toolbox = document.getElementById("navigator-toolbox");
+    var toolbox = getNavToolbox();
     if (aShow)
       toolbox.removeAttribute("inFullscreen");
     else
@@ -3872,7 +3884,7 @@ function onViewToolbarsPopupShowing(aEvent)
 
   var firstMenuItem = popup.firstChild;
 
-  var toolbox = document.getElementById("navigator-toolbox");
+  var toolbox = getNavToolbox();
   for (i = 0; i < toolbox.childNodes.length; ++i) {
     var toolbar = toolbox.childNodes[i];
     var toolbarName = toolbar.getAttribute("toolbarname");
@@ -3894,7 +3906,7 @@ function onViewToolbarsPopupShowing(aEvent)
 
 function onViewToolbarCommand(aEvent)
 {
-  var toolbox = document.getElementById("navigator-toolbox");
+  var toolbox = getNavToolbox();
   var index = aEvent.originalTarget.getAttribute("toolbarindex");
   var toolbar = toolbox.childNodes[index];
 
@@ -4386,12 +4398,18 @@ var contentAreaDNDObserver = {
 
 };
 
-// For extensions
 function getBrowser()
 {
   if (!gBrowser)
     gBrowser = document.getElementById("content");
   return gBrowser;
+}
+
+function getNavToolbox()
+{
+  if (!gNavToolbox)
+    gNavToolbox = document.getElementById("navigator-toolbox");
+  return gNavToolbox;
 }
 
 function MultiplexHandler(event)
