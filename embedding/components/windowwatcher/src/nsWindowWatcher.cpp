@@ -45,6 +45,7 @@
 #include "nsCRT.h"
 #include "nsNetUtil.h"
 #include "nsPrompt.h"
+#include "nsPromptservice.h"
 #include "nsWWJSUtils.h"
 #include "plstr.h"
 
