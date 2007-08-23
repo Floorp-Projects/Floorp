@@ -401,60 +401,6 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 7" Bottom "117"
 !macroend
 
-!macro createSummaryINI
-  WriteINIStr "$PLUGINSDIR\summary.ini" "Settings" NumFields "5"
-
-  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 1" Type   "label"
-  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 1" Text   "$(OPTIONAL_COMPONENTS_LABEL)"
-  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 1" Left   "0"
-  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 1" Right  "-1"
-  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 1" Top    "5"
-  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 1" Bottom "15"
-
-  StrCpy $R1 2
-  ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Type   "checkbox"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Text   "$(DOMI_TITLE)"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Left   "15"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Top    "20"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Bottom "30"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" State  "1"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Flags  "GROUP"
-    IntOp $R1 $R1 + 1
-  ${EndIf}
-
-  ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Type   "checkbox"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Text   "$(QFA_TITLE)"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Left   "15"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Top    "55"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Bottom "65"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" State  "1"
-    IntOp $R1 $R1 + 1
-  ${EndIf}
-
-  ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Type   "label"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Text   "$(DOMI_TEXT)"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Left   "30"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Top    "32"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Bottom "52"
-    IntOp $R1 $R1 + 1
-  ${EndIf}
-
-  ${If} ${FileExists} "$EXEDIR\optional\extensions\talkback@mozilla.org"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Type   "label"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Text   "$(QFA_TEXT)"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Left   "30"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Right  "-1"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Top    "67"
-    WriteINIStr "$PLUGINSDIR\summary.ini" "Field $R1" Bottom "87"
-  ${EndIf}
-!macroend
-
 !macro GetParentDir
   Exch $R0
   Push $R1
