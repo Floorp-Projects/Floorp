@@ -1490,14 +1490,17 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
                       PRInt32 h,
                       PRBool   aRepaint)
 {
-  //   NS_ASSERTION((w >=0 ), "Negative width passed to nsWindow::Resize");
-  //   NS_ASSERTION((h >=0 ), "Negative height passed to nsWindow::Resize");
-
-   // Set cached value for lightweight and printing
-   mBounds.x      = aX;
-   mBounds.y      = aY;
-   mBounds.width  = w;
-   mBounds.height = h;
+   // For mWnd & eWindowType_child set the cached values upfront, see bug 286555.
+   // For other mWnd types we defer transfer of values to mBounds to
+   // SetWindowPos(), see bug 391421.
+   if( !mWnd || mWindowType == eWindowType_child) 
+   {
+      // Set cached value for lightweight and printing
+      mBounds.x      = aX ;
+      mBounds.y      = aY ;
+      mBounds.width  = w  ;
+      mBounds.height = h  ;
+   }
 
    // WinSetWindowPos() appears not to require a msgq
    if( mWnd)
