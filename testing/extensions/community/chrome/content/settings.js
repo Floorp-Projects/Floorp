@@ -43,7 +43,7 @@ var qaPrefsWindow = {
 		
 		// user is switching to the prefs tab:
 		if ($('qa_tabrow').selectedItem == $('qa-tabbar-prefs')) {
-			qaPrefsWindow.loadPrefsWindow();
+            qaPrefsWindow.loadPrefsWindow();
 		}
 		
 		// user is switching away from the prefs tab:
@@ -116,8 +116,15 @@ var qaPrefsWindow = {
 		litmus.validateLogin(uname, passwd, callback);
 		return false; // not ready to close yet
 	},
+	loadUsernameAndPassword : function() {
+		var uname = document.getElementById('qa-preferences-litmus-username');
+		var passwd = document.getElementById('qa-preferences-litmus-password');
+		
+		uname.value = qaPref.litmus.getUsername();
+		passwd.value = qaPref.litmus.getPassword();
+	},
 	createAccount : function() {
-		litmus.createAccount();
+		window.openDialog("chrome://qa/content/accountcreate.xul", "_blank", "chrome,all,dialog=yes", qaPrefsWindow.loadUsernameAndPassword);
 	},
 };
 
@@ -143,6 +150,7 @@ var qaSetup = {
 		document.getElementById('qa-setup-createaccount-iframe').src = 
 			litmus.baseURL+'extension.cgi?createAccount=1';
 	},
+	
 	accountSetting : function(yesno) {
 		var accountyes = document.getElementById('qa-setup-accountyes');
 		var accountno = document.getElementById('qa-setup-accountno');
@@ -262,7 +270,6 @@ document.getElementById("bundle_qa").getString("qa.extension.prefs.loadingMsg");
 						$('qa-setup-platform').selectedItem.label, 'char');
 		}
 		if (! sysconfig.opsys == $('qa-setup-opsys').selectedItem.label) {
-			alert("setting pref");
 			qaPref.setPref(qaPref.prefBase+'.sysconfig.opsys', 
 						$('qa-setup-opsys').selectedItem.label, 'char');
 		}
