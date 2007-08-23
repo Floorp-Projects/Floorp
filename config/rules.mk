@@ -1144,7 +1144,7 @@ if test -d $(@D); then \
 	touch $(_MDDEPFILE) && \
 	$(MKDEPEND) -o'.$(OBJ_SUFFIX)' -f$(_MDDEPFILE) $(DEFINES) $(ACDEFINES) $(INCLUDES) $< >/dev/null 2>&1 && \
 	mv $(_MDDEPFILE) $(_MDDEPFILE).old && \
-	cat $(_MDDEPFILE).old | sed -e "s|^$(srcdir)/||" -e "s|^$(win_srcdir)/||" > $(_MDDEPFILE) && rm -f $(_MDDEPFILE).old ; \
+	cat $(_MDDEPFILE).old | sed -e "s|^$(srcdir)[^ ]*/||" -e "s|^$(win_srcdir)[^ ]*/||" > $(_MDDEPFILE) && rm -f $(_MDDEPFILE).old ; \
 fi
 endef
 else
@@ -1903,7 +1903,7 @@ define MAKE_DEPS_NOAUTO
 	set -e ; \
 	touch $@ && \
 	$(MKDEPEND) -w1024 -o'.$(OBJ_SUFFIX)' -f$@ $(DEFINES) $(ACDEFINES) $(INCLUDES) $(srcdir)/$(<F) >/dev/null 2>&1 && \
-	mv $@ $@.old && cat $@.old | sed "s|^$(srcdir)/||g" > $@ && rm -f $@.old
+	mv $@ $@.old && cat $@.old | sed "s|^$(srcdir)[^ ]*/||g" > $@ && rm -f $@.old
 endef
 else
 define MAKE_DEPS_NOAUTO
