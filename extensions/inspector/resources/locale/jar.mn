@@ -7,6 +7,7 @@ inspector.jar:
   locale/@AB_CD@/inspector/prefs.dtd                    (@AB_CD@/prefs.dtd)
   locale/@AB_CD@/inspector/editing.dtd                  (@AB_CD@/editing.dtd)
   locale/@AB_CD@/inspector/tasksOverlay.dtd             (@AB_CD@/tasksOverlay.dtd)
+* locale/@AB_CD@/inspector/viewers/accessibleEvents.dtd (@AB_CD@/viewers/accessibleEvents.dtd)
 * locale/@AB_CD@/inspector/viewers/accessibleProps.dtd  (@AB_CD@/viewers/accessibleProps.dtd)
 * locale/@AB_CD@/inspector/viewers/accessibleTree.dtd   (@AB_CD@/viewers/accessibleTree.dtd)
 * locale/@AB_CD@/inspector/viewers/dom.dtd              (@AB_CD@/viewers/dom.dtd)
