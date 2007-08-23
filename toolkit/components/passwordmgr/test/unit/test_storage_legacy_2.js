@@ -198,6 +198,14 @@ LoginTest.initStorage(storage, OUTDIR, "output-05.txt", null, null);
 testdesc = "Verify output-05.txt";
 LoginTest.checkStorageData(storage, [], [dummyuser1, dummyuser2, dummyuser3]);
 
+// count dummyhost2 logins
+do_check_eq(2, storage.countLogins("http://dummyhost2.mozilla.org", "", ""));
+// count dummyhost logins
+do_check_eq(1, storage.countLogins("http://dummyhost.mozilla.org",  "", ""));
+
+// count dummyhost2 logins w/ specific formSubmitURL
+do_check_eq(2, storage.countLogins("http://dummyhost2.mozilla.org", "http://cgi.site.com", ""));
+
 /* ========== 10 ========== */
 testnum++;
 

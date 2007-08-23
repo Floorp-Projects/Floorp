@@ -202,4 +202,26 @@ interface nsILoginManagerStorage : nsISupports {
     void findLogins(out unsigned long count, in AString aHostname,
                     in AString aActionURL,   in AString aHttpRealm,
                     [retval, array, size_is(count)] out nsILoginInfo logins);
+
+
+   /**
+    * Search for logins matching the specified criteria, as with
+    * findLogins(). This interface only returns the number of matching
+    * logins (and not the logins themselves), which allows a caller to
+    * check for logins without causing the user to be prompted for a master
+    * password to decrypt the logins.
+    *
+    * @param aHostname
+    *        The hostname to restrict searches to.
+    * @param aActionURL
+    *        The URL to which a form login will be submitted. To match any
+    *        form login, specify an empty string. To not match any form
+    *        login, specify null.
+    * @param aHttpRealm
+    *        The HTTP Realm for which the login applies. To match logins for
+    *        any realm, specify an empty string. To not match logins for any
+    *        realm, specify null.
+    */
+   unsigned long countLogins(in AString aHostname, in AString aActionURL,
+                             in AString aHttpRealm);
 };
