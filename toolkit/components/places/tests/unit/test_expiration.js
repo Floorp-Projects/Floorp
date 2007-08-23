@@ -199,8 +199,8 @@ function run_test() {
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_DAYS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_DAYS);
 
-  // set dateAdded to 7 days ago
-  var expirationDate = (Date.now() - (7 * 86400 * 1000)) * 1000;
+  // set dateAdded to 8 days ago
+  var expirationDate = (Date.now() - (8 * 86400 * 1000)) * 1000;
   dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate);
   dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
 
@@ -236,11 +236,40 @@ function run_test() {
     do_throw("bookmark still had days anno");
   } catch(ex) {}
 
-  // test anno expiration (weeks)
+  // test anno expiration (days) removes annos annos 6 days old
+  histsvc.addVisit(testURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_DAYS);
+  annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_DAYS);
+  // these annotations should remain as they are only 6 days old
+  var expirationDate = (Date.now() - (6 * 86400 * 1000)) * 1000;
+  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
+
+  // add a uri and then remove it, to trigger expiration
+  histsvc.addVisit(triggerURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  bhist.removePage(triggerURI);
+
+  // test for unexpired annos
+  try {
+    do_check_eq(annosvc.getPageAnnotation(testURI, testAnnoName), testAnnoVal);
+  } catch(ex) {
+    do_throw("anno < 7 days old was expired!");
+  }
+  annosvc.removePageAnnotation(testURI, testAnnoName);
+  try {
+    do_check_eq(annosvc.getItemAnnotation(bookmark, testAnnoName), testAnnoVal);
+  } catch(ex) {
+    do_throw("item anno < 7 days old was expired!");
+  }
+  annosvc.removeItemAnnotation(bookmark, testAnnoName);
+
+
+  // test anno expiration (weeks) removes annos 31 days old
   histsvc.addVisit(testURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
-  var expirationDate = (Date.now() - (30 * 86400 * 1000)) * 1000;
+  // these annotations should not remain as they are 31 days old
+  var expirationDate = (Date.now() - (31 * 86400 * 1000)) * 1000;
   dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate);
   dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
   // these annotations should remain
@@ -274,10 +303,37 @@ function run_test() {
     do_throw("bookmark still had weeks anno");
   } catch(ex) {}
 
-  // test anno expiration (months)
+  // test anno expiration (weeks) does not remove annos 29 days old
+  histsvc.addVisit(testURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
+  annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_WEEKS);
+  // these annotations should remain as they are only 29 days old
+  var expirationDate = (Date.now() - (29 * 86400 * 1000)) * 1000;
+  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
+
+  // add a uri and then remove it, to trigger expiration
+  histsvc.addVisit(triggerURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  bhist.removePage(triggerURI);
+
+  // test for unexpired annos
+  try {
+    do_check_eq(annosvc.getPageAnnotation(testURI, testAnnoName), testAnnoVal);
+  } catch(ex) {
+    do_throw("anno < 30 days old was expired!");
+  }
+  annosvc.removePageAnnotation(testURI, testAnnoName);
+  try {
+    do_check_eq(annosvc.getItemAnnotation(bookmark, testAnnoName), testAnnoVal);
+  } catch(ex) {
+    do_throw("item anno < 30 days old was expired!");
+  }
+  annosvc.removeItemAnnotation(bookmark, testAnnoName);
+
+  // test anno expiration (months) removes annos 181 days old
   annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
   annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
-  var expirationDate = (Date.now() - (180 * 86400 * 1000)) * 1000;
+  var expirationDate = (Date.now() - (181 * 86400 * 1000)) * 1000;
   dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate);
   dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
   // these annotations should remain
@@ -310,6 +366,33 @@ function run_test() {
     annosvc.getItemAnnotation(bookmark, testAnnoName);
     do_throw("bookmark still had months anno");
   } catch(ex) {}
+
+  // test anno expiration (months) does not remove annos 179 days old
+  histsvc.addVisit(testURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  annosvc.setPageAnnotation(testURI, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
+  annosvc.setItemAnnotation(bookmark, testAnnoName, testAnnoVal, 0, annosvc.EXPIRE_MONTHS);
+  // these annotations should remain as they are only 179 days old
+  var expirationDate = (Date.now() - (179 * 86400 * 1000)) * 1000;
+  dbConnection.executeSimpleSQL("UPDATE moz_annos SET dateAdded = " + expirationDate);
+  dbConnection.executeSimpleSQL("UPDATE moz_items_annos SET dateAdded = " + expirationDate);
+
+  // add a uri and then remove it, to trigger expiration
+  histsvc.addVisit(triggerURI, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  bhist.removePage(triggerURI);
+
+  // test for unexpired annos
+  try {
+    do_check_eq(annosvc.getPageAnnotation(testURI, testAnnoName), testAnnoVal);
+  } catch(ex) {
+    do_throw("anno < 180 days old was expired!");
+  }
+  annosvc.removePageAnnotation(testURI, testAnnoName);
+  try {
+    do_check_eq(annosvc.getItemAnnotation(bookmark, testAnnoName), testAnnoVal);
+  } catch(ex) {
+    do_throw("item anno < 180 days old was expired!");
+  }
+  annosvc.removeItemAnnotation(bookmark, testAnnoName);
 
   // test anno expiration (session)
   // XXX requires app restart
