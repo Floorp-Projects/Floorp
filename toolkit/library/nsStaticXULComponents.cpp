@@ -250,6 +250,12 @@
 #define SPELLCHECK_MODULE
 #endif
 
+#ifdef MOZ_XMLEXTRAS
+#define XMLEXTRAS_MODULE MODULE(nsXMLExtrasModule)
+#else
+#define XMLEXTRAS_MODULE
+#endif
+
 #define XUL_MODULES                          \
     MODULE(xpconnect)                        \
     MATHML_MODULES                           \
@@ -273,7 +279,6 @@
     ICON_MODULE                              \
     PLUGINS_MODULES                          \
     MODULE(nsLayoutModule)                   \
-    MODULE(nsXMLExtrasModule)                \
     WEBSERVICES_MODULES                      \
     MODULE(docshell_provider)                \
     MODULE(embedcomponents)                  \
@@ -299,6 +304,7 @@
     MODULE(NSS)                              \
     SYSTEMPREF_MODULES                       \
     SPELLCHECK_MODULE                        \
+    XMLEXTRAS_MODULE                         \
     LAYOUT_DEBUG_MODULE                      \
     /* end of list */
 
