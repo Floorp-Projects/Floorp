@@ -114,7 +114,6 @@ COMPONENT_LIBS += \
 	htmlpars \
 	imglib2 \
 	gklayout \
-	xmlextras \
 	docshell \
 	embedcomponents \
 	webbrwsr \
@@ -127,6 +126,12 @@ COMPONENT_LIBS += \
 	pipnss \
 	$(NULL)
 
+ifdef MOZ_XMLEXTRAS
+COMPONENT_LIBS += \
+	xmlextras \
+	$(NULL)
+endif
+  
 ifdef MOZ_PLUGINS
 DEFINES += -DMOZ_PLUGINS
 COMPONENT_LIBS += \
