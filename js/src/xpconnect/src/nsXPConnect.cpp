@@ -621,6 +621,21 @@ nsXPConnect::Root(void *p)
     return NS_OK;
 }
 
+#ifdef DEBUG_CC
+void
+nsXPConnect::PrintAllReferencesTo(void *p)
+{
+#ifdef DEBUG
+    if(!mCycleCollectionContext) {
+        NS_NOTREACHED("no context");
+        return;
+    }
+    JS_DumpHeap(*mCycleCollectionContext, stdout, nsnull, 0, p,
+                0x7fffffff, nsnull);
+#endif
+}
+#endif
+
 NS_IMETHODIMP
 nsXPConnect::Unlink(void *p)
 {
