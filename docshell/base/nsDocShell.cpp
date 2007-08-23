@@ -5037,6 +5037,12 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal)
     (void) FirePageHideNotification(!mSavingOldViewer);
   }
 
+  // Now make sure we don't think we're in the middle of firing unload after
+  // this point.  This will make us fire unload when the about:blank document
+  // unloads... but that's ok, more or less.  Would be nice if it fired load
+  // too, of course.
+  mFiredUnloadEvent = PR_FALSE;
+
   // one helper factory, please
   nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID));
   if (!catMan)
