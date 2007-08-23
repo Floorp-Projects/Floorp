@@ -68,6 +68,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_datepicker.xul \
 		test_timepicker.xul \
 		xul_selectcontrol.js \
+		test_panelfrommenu.xul \
 		test_hiddenitems.xul \
 		test_hiddenpaging.xul \
 		$(NULL)
