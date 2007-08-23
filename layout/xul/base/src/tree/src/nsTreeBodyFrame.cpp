@@ -149,6 +149,7 @@ nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell, nsStyleContext* aCont
  mTopRowIndex(0), 
  mHorzPosition(0),
  mHorzWidth(0),
+ mAdjustWidth(0),
  mRowHeight(0),
  mIndentation(0),
  mStringWidth(-1),
@@ -773,6 +774,7 @@ FindScrollParts(nsIFrame* aCurrFrame, nsTreeBodyFrame::ScrollParts* aResult)
     nsIScrollableFrame* f;
     CallQueryInterface(aCurrFrame, &f);
     if (f) {
+      aResult->mColumnsFrame = aCurrFrame;
       aResult->mColumnsScrollableView = f->GetScrollableView();
     }
   }
@@ -805,7 +807,7 @@ FindScrollParts(nsIFrame* aCurrFrame, nsTreeBodyFrame::ScrollParts* aResult)
 nsTreeBodyFrame::ScrollParts nsTreeBodyFrame::GetScrollParts()
 {
   nsPresContext* presContext = PresContext();
-  ScrollParts result = { nsnull, nsnull, nsnull, nsnull, nsnull };
+  ScrollParts result = { nsnull, nsnull, nsnull, nsnull, nsnull, nsnull };
   nsIContent* baseElement = GetBaseElement();
   nsIFrame* treeFrame =
     baseElement ? presContext->PresShell()->GetPrimaryFrameFor(baseElement) : nsnull;
@@ -865,8 +867,8 @@ nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts)
     verticalOverflowChanged = PR_TRUE;
   }
 
-  if (aParts.mColumnsScrollableView) {
-    nsRect bounds = aParts.mColumnsScrollableView->View()->GetBounds();
+  if (aParts.mColumnsFrame) {
+    nsRect bounds = aParts.mColumnsFrame->GetRect();
     if (bounds.width != 0) {
       /* Ignore overflows that are less than half a pixel. Yes these happen
          all over the place when flex boxes are compressed real small. 
@@ -929,9 +931,9 @@ nsTreeBodyFrame::InvalidateScrollbars(const ScrollParts& aParts)
     ENSURE_TRUE(weakFrame.IsAlive());
   }
 
-  if (aParts.mHScrollbar && aParts.mColumnsScrollableView) {
+  if (aParts.mHScrollbar && aParts.mColumnsFrame) {
     // And now Horizontal scrollbar
-    nsRect bounds = aParts.mColumnsScrollableView->View()->GetBounds();
+    nsRect bounds = aParts.mColumnsFrame->GetRect();
     nsAutoString maxposStr;
 
     maxposStr.AppendInt(mHorzWidth > bounds.width ? mHorzWidth - bounds.width : 0);
@@ -2438,11 +2440,14 @@ nsTreeBodyFrame::CalcHorzWidth(const ScrollParts& aParts)
   }
 
   // If no horz scrolling periphery is present, then just
-  // return the width of the main box
+  // return the width of the columns
   if (width == 0) {
-    CalcInnerBox();
-    width = mInnerBox.width;
+    width = aParts.mColumnsFrame->GetRect().width;
   }
+
+  // Compute the adjustment to the last column. This varies depending on the
+  // visibility of the columnpicker and the scrollbar.
+  mAdjustWidth = mRect.width - aParts.mColumnsFrame->GetRect().width;
 
   return width;
 }
@@ -3768,6 +3773,9 @@ NS_IMETHODIMP nsTreeBodyFrame::EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn* 
   rv = col->GetWidthInTwips(this, &columnWidth);
   if(NS_FAILED(rv)) return rv;
 
+  if (!col->GetNext())
+    columnWidth -= mAdjustWidth; // this is one case we don't want to adjust
+
   // If the start of the column is before the
   // start of the horizontal view, then scroll
   if (columnPos < mHorzPosition)
@@ -3950,7 +3958,7 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition
   if (aPosition < 0 || aPosition > mHorzWidth)
     return NS_OK;
 
-  nsRect bounds = aParts.mColumnsScrollableView->View()->GetBounds();
+  nsRect bounds = aParts.mColumnsFrame->GetRect();
   if (aPosition > (mHorzWidth - bounds.width)) 
     aPosition = mHorzWidth - bounds.width;
 
