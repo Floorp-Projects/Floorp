@@ -21,6 +21,15 @@ Login Manager test: initialization.
 netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
 
 
+// Enable debug pref (for console output)
+if (false) {
+    var prefs = Components.classes["@mozilla.org/preferences-service;1"].
+                        getService(Components.interfaces.nsIPrefService);
+    prefs = prefs.getBranch("signon.");
+    prefs.setBoolPref("debug", true);
+}
+
+
 // Get the pwmgr service
 var Cc_pwmgr = Components.classes["@mozilla.org/login-manager;1"];
 ok(Cc_pwmgr != null, "Access Cc[@mozilla.org/login-manager;1]");
