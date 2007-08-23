@@ -343,7 +343,7 @@
                                   .getService(Components.interfaces.nsILocaleService);
             var stringBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"]
                                   .getService(Components.interfaces.nsIStringBundleService);
-            var bundleURL = "chrome://global/locale/tabbrowser.properties";
+            var bundleURL = "chrome://global/locale/browser.properties";
             this._mStrBundle = stringBundleService.createBundle(bundleURL, localeService.getApplicationLocale());
           }
           return this._mStrBundle;
