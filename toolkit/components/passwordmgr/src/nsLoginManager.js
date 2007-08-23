@@ -1241,10 +1241,10 @@ function UserAutoCompleteResult (aSearchString, matchingLogins) {
         var userA = a.username.toLowerCase();
         var userB = b.username.toLowerCase();
 
-        if (a < b)
+        if (userA < userB)
             return -1;
 
-        if (b > a)
+        if (userB > userA)
             return  1;
 
         return 0;
@@ -1297,7 +1297,8 @@ UserAutoCompleteResult.prototype = {
         if (index < 0 || index >= this.logins.length)
             throw "Index out of range.";
 
-        var removedLogin = this.logins.splice(index, 1);
+        var [removedLogin] = this.logins.splice(index, 1);
+
         this.matchCount--;
         if (this.defaultIndex > this.logins.length)
             this.defaultIndex--;
