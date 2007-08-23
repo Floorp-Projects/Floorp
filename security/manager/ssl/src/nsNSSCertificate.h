@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -49,6 +50,8 @@
 #include "nsISMimeCert.h"
 #include "nsNSSShutDown.h"
 #include "nsISimpleEnumerator.h"
+#include "nsISerializable.h"
+#include "nsIClassInfo.h"
 
 #include "nsNSSCertHeader.h"
 
@@ -60,6 +63,8 @@ class nsNSSCertificate : public nsIX509Cert,
                          public nsIX509Cert2,
                          public nsIX509Cert3,
                          public nsISMimeCert,
+                         public nsISerializable,
+                         public nsIClassInfo,
                          public nsNSSShutDownObject
 {
 public:
@@ -68,8 +73,11 @@ public:
   NS_DECL_NSIX509CERT2
   NS_DECL_NSIX509CERT3
   NS_DECL_NSISMIMECERT
+  NS_DECL_NSISERIALIZABLE
+  NS_DECL_NSICLASSINFO
 
   nsNSSCertificate(CERTCertificate *cert);
+  nsNSSCertificate();
   /* from a request? */
   virtual ~nsNSSCertificate();
   nsresult FormatUIStrings(const nsAutoString &nickname, nsAutoString &nickWithSerial, nsAutoString &details);
@@ -88,6 +96,7 @@ private:
   nsresult GetSortableDate(PRTime aTime, nsAString &_aSortableDate);
   virtual void virtualDestroyNSSReference();
   void destructorSafeDestroyNSSReference();
+  PRBool InitFromDER(char* certDER, int derLen);  // return false on failure
 };
 
 class nsNSSCertList: public nsIX509CertList
@@ -127,7 +136,11 @@ private:
                                   (dest)[2] = (((src) >>  8) & 0xff); \
                                   (dest)[3] = ((src) & 0xff); 
 
-
-
+#define NS_X509CERT_CID { /* 660a3226-915c-4ffb-bb20-8985a632df05 */   \
+    0x660a3226,                                                        \
+    0x915c,                                                            \
+    0x4ffb,                                                            \
+    { 0xbb, 0x20, 0x89, 0x85, 0xa6, 0x32, 0xdf, 0x05 }                 \
+  }
 
 #endif /* _NS_NSSCERTIFICATE_H_ */
