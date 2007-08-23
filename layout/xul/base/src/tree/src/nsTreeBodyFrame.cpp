@@ -2722,11 +2722,11 @@ nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
     PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
   }
-  #ifdef DEBUG
+#ifdef DEBUG
   PRInt32 rowCount = mRowCount;
-  mView->GetRowCount(&mRowCount);
-  NS_ASSERTION(mRowCount == rowCount, "row count changed unexpectedly");
-  #endif
+  mView->GetRowCount(&rowCount);
+  NS_WARN_IF_FALSE(mRowCount == rowCount, "row count changed unexpectedly");
+#endif
 
   // Loop through our columns and paint them (e.g., for sorting).  This is only
   // relevant when painting backgrounds, since columns contain no content.  Content
