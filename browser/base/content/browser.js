@@ -2342,7 +2342,7 @@ function onExitPrintPreview()
 
 function getPPBrowser()
 {
-  return document.getElementById("content");
+  return getBrowser();
 }
 
 function getMarkupDocumentViewer()
