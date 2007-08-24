@@ -60,7 +60,24 @@
  *    // [optional] custom factory (an object implementing nsIFactory). If not
  *    // provided, the default factory is used, which returns
  *    // |(new MyComponent()).QueryInterface(iid)| in its createInstance().
- *    _xpcom_factory: { ... }
+ *    _xpcom_factory: { ... },
+ *
+ *    // [optional] an array of categories to register this component in.
+ *    _xpcom_categories: [{
+ *      // Each object in the array specifies the parameters to pass to
+ *      // nsICategoryManager.addCategoryEntry(). 'true' is passed for
+ *      // both aPersist and aReplace params.
+ *      category: "some-category",
+ *      // optional, defaults to the object's classDescription
+ *      entry: "entry name",
+ *      // optional, defaults to the object's contractID (unless
+ *      // 'service' is specified)
+ *      value: "...",
+ *      // optional, defaults to false. When set to true, and only if 'value'
+ *      // is not specified, the concatenation of the string "service," and the
+ *      // object's contractID is passed as aValue parameter of addCategoryEntry.
+ *      service: true
+ *    }],
  *
  *    // QueryInterface implementation, e.g. using the generateQI helper
  *    QueryInterface: XPCOMUtils.generateQI(
@@ -129,6 +146,7 @@ var XPCOMUtils = {
         className:    component.prototype.classDescription,
         contractID:   component.prototype.contractID,
         factory:      this._getFactory(component),
+        categories:   component.prototype._xpcom_categories
       });
     }
 
@@ -149,6 +167,7 @@ var XPCOMUtils = {
         var componentCount = 0;
         debug("*** registering " + fileSpec.leafName + ": [ ");
         compMgr.QueryInterface(Ci.nsIComponentRegistrar);
+
         for each (let classDesc in classes) {
           debug((componentCount++ ? ", " : "") + classDesc.className);
           compMgr.registerFactoryLocation(classDesc.cid,
@@ -157,6 +176,17 @@ var XPCOMUtils = {
                                           fileSpec,
                                           location,
                                           type);
+          if (classDesc.categories) {
+            let catMan = XPCOMUtils.categoryManager;
+            for each (let cat in classDesc.categories) {
+              let defaultValue = (cat.service ? "service," : "") +
+                                 classDesc.contractID;
+              catMan.addCategoryEntry(cat.category,
+                                      cat.entry || classDesc.className,
+                                      cat.value || defaultValue,
+                                      true, true);
+            }
+          }
         }
 
         if (postRegister)
@@ -173,6 +203,13 @@ var XPCOMUtils = {
 
         for each (let classDesc in classes) {
           debug((componentCount++ ? ", " : "") + classDesc.className);
+          if (classDesc.categories) {
+            let catMan = XPCOMUtils.categoryManager;
+            for each (let cat in classDesc.categories) {
+              catMan.deleteCategoryEntry(cat.category,
+                                         cat.entry || classDesc.className);
+            }
+          }
           compMgr.unregisterFactoryLocation(classDesc.cid, fileSpec);
         }
         debug(" ]\n");
