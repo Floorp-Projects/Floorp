@@ -80,10 +80,7 @@ Var fhUninstallLog
 !insertmacro WordReplace
 !insertmacro GetSize
 !insertmacro GetParameters
-!insertmacro GetParent
 !insertmacro GetOptions
-!insertmacro GetRoot
-!insertmacro DriveSpace
 
 ; NSIS provided macros that we have overridden
 !include overrides.nsh
@@ -99,18 +96,18 @@ Var fhUninstallLog
 
 VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
 
-!insertmacro GetLongPath
-!insertmacro RegCleanMain
-!insertmacro RegCleanUninstall
-!insertmacro CloseApp
-!insertmacro WriteRegStr2
-!insertmacro WriteRegDWORD2
-!insertmacro CreateRegKey
+!insertmacro AddHandlerValues
 !insertmacro CanWriteToInstallDir
 !insertmacro CheckDiskSpace
 !insertmacro CleanVirtualStore
-!insertmacro AddHandlerValues
+!insertmacro CloseApp
+!insertmacro CreateRegKey
+!insertmacro GetLongPath
 !insertmacro GetSingleInstallPath
+!insertmacro RegCleanMain
+!insertmacro RegCleanUninstall
+!insertmacro WriteRegStr2
+!insertmacro WriteRegDWORD2
 
 !include shared.nsh
 

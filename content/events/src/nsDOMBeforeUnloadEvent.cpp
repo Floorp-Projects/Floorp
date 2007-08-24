@@ -59,6 +59,11 @@ nsDOMBeforeUnloadEvent::nsDOMBeforeUnloadEvent(nsPresContext* aPresContext,
 
 nsDOMBeforeUnloadEvent::~nsDOMBeforeUnloadEvent() 
 {
+  if (mEventIsInternal &&
+      mEvent->eventStructType == NS_BEFORE_PAGE_UNLOAD_EVENT) {
+      delete static_cast<nsBeforePageUnloadEvent*>(mEvent);
+      mEvent = nsnull;
+  }
 }
 
 NS_IMPL_ADDREF_INHERITED(nsDOMBeforeUnloadEvent, nsDOMEvent)

@@ -3034,6 +3034,16 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
         return PR_TRUE;
       }
     }
+
+    if (aNode->IsNodeOfType(nsINode::eCONTENT)) {
+      nsIContent* content = static_cast<nsIContent*>(aNode);
+      nsIContent* insertionParent =
+        doc->BindingManager()->GetInsertionParent(content);
+      if (insertionParent) {
+        aNode = insertionParent;
+        continue;
+      }
+    }
     aNode = aNode->GetNodeParent();
   }
 

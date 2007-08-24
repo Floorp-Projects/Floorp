@@ -148,7 +148,6 @@ NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleCo
 nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
     : nsSVGOuterSVGFrameBase(aContext),
       mRedrawSuspendCount(0),
-      mNeedsReflow(PR_FALSE),
       mViewportInitialized(PR_FALSE)
 {
 }
@@ -510,16 +509,12 @@ nsSVGOuterSVGFrame::UnsuspendRedraw()
 #ifdef DEBUG
 //  printf("unsuspend redraw (count=%d)\n", mRedrawSuspendCount);
 #endif
+
+  NS_ASSERTION(mRedrawSuspendCount >=0, "unbalanced suspend count!");
+
   if (--mRedrawSuspendCount > 0)
     return NS_OK;
-  
-  NS_ASSERTION(mRedrawSuspendCount >=0, "unbalanced suspend count!");
-  
-  // If we need to reflow, do so before we update any of our
-  // children. Reflows are likely to affect the display of children:
-  if (mNeedsReflow)
-    InitiateReflow();
-  
+
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame=nsnull;
@@ -600,20 +595,6 @@ nsSVGOuterSVGFrame::GetCanvasTM()
 
 //----------------------------------------------------------------------
 // Implementation helpers
-
-void nsSVGOuterSVGFrame::InitiateReflow()
-{
-  mNeedsReflow = PR_FALSE;
-  
-  nsIPresShell* presShell = PresContext()->PresShell();
-  presShell->FrameNeedsReflow(this, nsIPresShell::eStyleChange,
-                              NS_FRAME_IS_DIRTY);
-  // XXXbz why is this synchronously flushing reflows, exactly?  If it
-  // needs to, why is it not using the presshell's reflow batching
-  // instead of hacking its own?
-  presShell->FlushPendingNotifications(Flush_OnlyReflow);  
-}
-
 
 void
 nsSVGOuterSVGFrame::CalculateAvailableSpace(nsRect *maxRect,

@@ -272,6 +272,25 @@ function onExitPP()
   toolbox.hidden = false;
 }
 
+function getPPBrowser()
+{
+  return document.getElementById("content");
+}
+
+function getNavToolbox()
+{
+  return document.getElementById("appcontent");
+}
+
+function getWebNavigation()
+{
+  try {
+    return gBrowser.webNavigation;
+  } catch (e) {
+    return null;
+  }
+}
+
 function ViewSourceGoToLine()
 {
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]

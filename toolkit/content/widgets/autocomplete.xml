@@ -511,9 +511,8 @@
 
       <handler event="contextmenu" phase="capturing"
                action="this.closePopup();"/>
-
     </handlers>
-  </binding> 
+  </binding>
 
   <binding id="autocomplete-result-popup" extends="chrome://global/content/bindings/popup.xml#popup">
     <resources>
@@ -776,7 +775,10 @@
         this.mPopupOpen = true;
       ]]></handler>
 
-      <handler event="popuphiding">
+      <handler event="popuphiding"><![CDATA[
+        var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
+        controller.stopSearch();
+
         this.mPopupOpen = false;
 
         // Reset the maxRows property to the cached "normal" value, and reset
@@ -784,7 +786,7 @@
         // when the popupshowing handler runs.
         this.mInput.maxRows = this._normalMaxRows;
         this._normalMaxRows = -1;
-      </handler>
+      ]]></handler>
     </handlers>
   </binding>
 

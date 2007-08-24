@@ -55,6 +55,7 @@ REQUIRES	= xpcom \
 		  js \
 		  docshell \
 		  gfx \
+		  thebes \
 		  layout \
 		  content \
 		  widget \

@@ -125,8 +125,6 @@ public:
   virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM();
 
 protected:
-  // implementation helpers:
-  void InitiateReflow();
 
   void CalculateAvailableSpace(nsRect *maxRect, nsRect *preferredRect,
                                nsPresContext* aPresContext,
@@ -140,7 +138,6 @@ protected:
   nsCOMPtr<nsIDOMSVGPoint>  mCurrentTranslate;
   nsCOMPtr<nsIDOMSVGNumber> mCurrentScale;
 
-  PRPackedBool mNeedsReflow;
   PRPackedBool mViewportInitialized;
 };
 

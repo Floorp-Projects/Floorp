@@ -146,6 +146,10 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 336736-1.html 336736-1-ref.html # somet
 == 339289-1.html 339289-1-ref.html
 == 341043-1a.html 341043-1-ref.html
 != 341043-1b.html 341043-1-ref.html
+== 345267-1a.html 345267-1-ref.html
+== 345267-1b.html 345267-1-ref.html
+== 345267-1c.html 345267-1-ref.html
+== 345267-1d.html 345267-1-ref.html
 == 346774-1a.html 346774-1-ref.html
 == 346774-1b.html 346774-1-ref.html
 == 346774-1c.html 346774-1-ref.html
@@ -341,6 +345,8 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 379316-2.html 379316-2-ref.html # bug 
 == 384576-1.html 384576-1-ref.html
 == 384762-1.html about:blank
 == 384876-1.html 384876-1-ref.html
+== 385870-1.html 385870-1-ref.html
+== 385870-2.html 385870-2-ref.html
 == 386014-1a.html 386014-1-ref.html
 == 386014-1b.html 386014-1-ref.html
 == 386014-1c.html 386014-1-ref.html

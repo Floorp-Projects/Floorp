@@ -425,6 +425,7 @@ PlacesTreeView.prototype = {
   COLUMN_TYPE_DESCRIPTION: 6,
   COLUMN_TYPE_DATEADDED: 7,
   COLUMN_TYPE_LASTMODIFIED: 8,
+  COLUMN_TYPE_TAGS: 9,
 
   _getColumnType: function PTV__getColumnType(aColumn) {
     var columnType = aColumn.id || aColumn.element.getAttribute("anonid");
@@ -445,6 +446,8 @@ PlacesTreeView.prototype = {
         return this.COLUMN_TYPE_DATEADDED;
       case "lastModified":
         return this.COLUMN_TYPE_LASTMODIFIED;
+      case "tags":
+        return this.COLUMN_TYPE_TAGS;
     }
     return this.COLUMN_TYPE_UNKNOWN;
   },
@@ -1020,6 +1023,14 @@ PlacesTreeView.prototype = {
         if (PlacesUtils.nodeIsSeparator(node))
           return "";
         return node.title || PlacesUtils.getString("noTitle");
+      case this.COLUMN_TYPE_TAGS:
+        if (PlacesUtils.nodeIsURI(node)) {
+          var tagsvc = PlacesUtils.tagging;
+          var uri = PlacesUtils._uri(node.uri);
+          var tags = tagsvc.getTagsForURI(uri, {});
+          return tags.join(", ");
+        }
+        return "";
       case this.COLUMN_TYPE_URI:
         if (PlacesUtils.nodeIsURI(node))
           return node.uri;
@@ -1104,6 +1115,10 @@ PlacesTreeView.prototype = {
   cycleHeader: function PTV_cycleHeader(aColumn) {
     if (!this._result)
       throw Cr.NS_ERROR_UNEXPECTED;
+
+    // Currently cannot sort by tags
+    if (aColumn.id == "tags")
+      return;
 
     this._enumerateObservers("onCycleHeader", [aColumn]);
 

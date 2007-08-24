@@ -221,12 +221,12 @@ function getMostRecentBrowserWindow() {
   var win = wm.getMostRecentWindow("navigator:browser", true);
 
   // if we're lucky, this isn't a popup, and we can just return this
-  if (win && !win.toolbar.visible) {
+  if (win && win.document.documentElement.getAttribute("chromehidden")) {
     var windowList = wm.getEnumerator("navigator:browser", true);
     // this is oldest to newest, so this gets a bit ugly
     while (windowList.hasMoreElements()) {
       var nextWin = windowList.getNext();
-      if (nextWin.toolbar.visible)
+      if (!nextWin.document.documentElement.getAttribute("chromehidden"))
         win = nextWin;
     }
   }
@@ -236,7 +236,7 @@ function getMostRecentBrowserWindow() {
     return null;
 
   var win = windowList.getNext();
-  while (!win.toolbar.visible) {
+  while (win.document.documentElement.getAttribute("chromehidden")) {
     if (!windowList.hasMoreElements()) 
       return null;
 

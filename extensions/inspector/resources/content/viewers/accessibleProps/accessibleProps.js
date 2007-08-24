@@ -43,6 +43,16 @@
 var viewer;
 
 ///////////////////////////////////////////////////////////////////////////////
+//// Global Constants
+
+const kAccessibleRetrievalCID = "@mozilla.org/accessibleRetrieval;1";
+
+const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
+const nsIAccessible = Components.interfaces.nsIAccessible;
+
+const nsIPropertyElement = Components.interfaces.nsIPropertyElement;
+
+///////////////////////////////////////////////////////////////////////////////
 //// Initialization/Destruction
 
 window.addEventListener("load", AccessiblePropsViewer_initialize, false);
@@ -59,8 +69,8 @@ function AccessiblePropsViewer()
 {
   this.mURL = window.location;
   this.mObsMan = new ObserverManager(this);
-  this.mAccService = Components.classes["@mozilla.org/accessibleRetrieval;1"]
-                      .getService(Components.interfaces.nsIAccessibleRetrieval);
+  this.mAccService = XPCU.getService(kAccessibleRetrievalCID,
+                                     nsIAccessibleRetrieval);
 }
 
 AccessiblePropsViewer.prototype =
@@ -116,7 +126,11 @@ AccessiblePropsViewer.prototype =
     this.clearView();
 
     try {
-      this.mAccSubject = this.mAccService.getAccessibleFor(this.mSubject);
+      this.mAccSubject = this.mSubject.getUserData("accessible");
+      if (this.mAccSubject)
+        XPCU.QI(this.mAccSubject, nsIAccessible);
+      else
+        this.mAccSubject = this.mAccService.getAccessibleFor(this.mSubject);
     } catch(e) {
       dump("Failed to get accessible object for node.");
       return;
@@ -148,7 +162,7 @@ AccessiblePropsViewer.prototype =
 
   addAccessibleAttribute: function addAccessibleAttribute(aElement)
   {
-    var prop = aElement.QueryInterface(Components.interfaces.nsIPropertyElement);
+    var prop = XPCU.QI(aElement, nsIPropertyElement);
 
     var trAttrBody = document.getElementById("trAttrBody");
 

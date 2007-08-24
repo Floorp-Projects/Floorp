@@ -207,9 +207,33 @@ nsAppStartup::Quit(PRUint32 aMode)
   if (!mRestart) 
     mRestart = aMode & eRestart;
 
-  if (ferocity == eConsiderQuit && mConsiderQuitStopper == 0) {
-    // attempt quit if the last window has been unregistered/closed
-    ferocity = eAttemptQuit;
+  // If we're considering quitting, we will only do so if:
+  if (ferocity == eConsiderQuit) {
+    if (mConsiderQuitStopper == 0) {
+      // there are no windows...
+      ferocity = eAttemptQuit;
+    }
+#ifdef XP_MACOSX
+    else if (mConsiderQuitStopper == 1) {
+      // ... or there is only a hiddenWindow left, and it's useless:
+      nsCOMPtr<nsIAppShellService> appShell
+        (do_GetService(NS_APPSHELLSERVICE_CONTRACTID));
+
+      // Failure shouldn't be fatal, but will abort quit attempt:
+      if (!appShell)
+        return NS_OK;
+
+      PRBool usefulHiddenWindow;
+      appShell->GetApplicationProvidedHiddenWindow(&usefulHiddenWindow);
+      nsCOMPtr<nsIXULWindow> hiddenWindow;
+      appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
+      // If the one window is useful, we won't quit:
+      if (!hiddenWindow || usefulHiddenWindow)
+        return NS_OK;
+
+      ferocity = eAttemptQuit;
+    }
+#endif
   }
 
   /* Currently ferocity can never have the value of eForceQuit here.
@@ -369,8 +393,13 @@ nsAppStartup::ExitLastWindowClosingSurvivalArea(void)
   NS_ASSERTION(mConsiderQuitStopper > 0, "consider quit stopper out of bounds");
   --mConsiderQuitStopper;
 
-  if (!mShuttingDown && mRunning && mConsiderQuitStopper == 0)
-    Quit(eAttemptQuit);
+#ifdef XP_MACOSX
+  if (!mShuttingDown && mRunning && (mConsiderQuitStopper <= 1))
+    Quit(eConsiderQuit);
+#else
+  if (!mShuttingDown && mRunning && (mConsiderQuitStopper == 0))
+    Quit(eConsiderQuit);
+#endif
 
   return NS_OK;
 }

@@ -657,23 +657,21 @@ void nsXULMenupopupAccessible::GenerateMenu(nsIDOMNode *aNode)
   }
 }
 
-NS_IMETHODIMP nsXULMenupopupAccessible::GetName(nsAString& _retval)
+NS_IMETHODIMP
+nsXULMenupopupAccessible::GetName(nsAString& aName)
 {
-  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
-  NS_ASSERTION(element, "No element for popup node!");
+  aName.Truncate();
 
-  while (element) {
-    element->GetAttribute(NS_LITERAL_STRING("label"), _retval);
-    if (!_retval.IsEmpty())
-      return NS_OK;
-    nsCOMPtr<nsIDOMNode> parentNode, node(do_QueryInterface(element));
-    if (!node)
-      return NS_ERROR_FAILURE;
-    node->GetParentNode(getter_AddRefs(parentNode));
-    element = do_QueryInterface(parentNode);
+  if (!mDOMNode)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  while (content && aName.IsEmpty()) {
+    content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::label, aName);
+    content = content->GetParent();
   }
 
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsXULMenupopupAccessible::GetRole(PRUint32 *aRole)

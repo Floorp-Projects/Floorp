@@ -1,4 +1,5 @@
 <!ENTITY editBookmarkOverlay.name.label                      "Name:">
+<!ENTITY editBookmarkOverlay.location.label                  "Location:">
 <!ENTITY editBookmarkOverlay.liveTitlesSeparator.label       "Live Titles">
 <!ENTITY editBookmarkOverlay.folder.label                    "Folder:">
 <!ENTITY editBookmarkOverlay.allBookmarksFolderItem.label    "All Bookmarks">
@@ -9,5 +10,3 @@
 <!ENTITY editBookmarkOverlay.tags.label                      "Tags">
 <!ENTITY editBookmarkOverlay.description.label               "Description:">
 <!ENTITY editBookmarkOverlay.tagsExpanderDown.tooltip        "Show all tags">
-<!ENTITY editBookmarkOverlay.ok.label                        "OK">
-<!ENTITY editBookmarkOverlay.delete.label                    "Delete">

@@ -41,11 +41,6 @@ do_import_script("netwerk/test/httpserver/httpd.js");
 // if these tests fail, we'll want the debug output
 DEBUG = true;
 
-// XPCOM constructor shorthands
-const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
-                             "nsIBinaryInputStream",
-                             "setInputStream");
-
 
 /**
  * Constructs a new nsHttpServer instance.  This function is intended to

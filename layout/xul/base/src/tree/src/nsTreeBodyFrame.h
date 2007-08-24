@@ -123,12 +123,14 @@ public:
   NS_IMETHOD DidSetStyleContext();
 
   friend nsIFrame* NS_NewTreeBodyFrame(nsIPresShell* aPresShell);
+  friend class nsTreeColumn;
 
   struct ScrollParts {
     nsIScrollbarFrame* mVScrollbar;
     nsIContent*        mVScrollbarContent;
     nsIScrollbarFrame* mHScrollbar;
     nsIContent*        mHScrollbarContent;
+    nsIFrame*          mColumnsFrame;
     nsIScrollableView* mColumnsScrollableView;
   };
 
@@ -444,6 +446,9 @@ protected: // Data Members
   // Our desired horizontal width (the width for which we actually have tree
   // columns).
   nscoord mHorzWidth;
+  // The amount by which to adjust the width of the last cell.
+  // This depends on whether or not the columnpicker and scrollbars are present.
+  nscoord mAdjustWidth;
 
   // Cached heights and indent info.
   nsRect mInnerBox;
@@ -469,6 +474,9 @@ protected: // Data Members
 
   // Cached row count.
   PRInt32 mRowCount;
+
+  // The row the mouse is hovering over.
+  PRInt32 mMouseOverRow;
 
   class Slots {
     public:

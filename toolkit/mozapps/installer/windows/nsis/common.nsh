@@ -67,6 +67,19 @@ Exch 1   ; exchange the top of the stack with 2 below the top of the stack
 Exch $R9 ; exchange the new $R9 value with the top of the stack
 */
 
+; When including a file provided by NSIS check if its verbose macro is defined
+; to prevent loading the file a second time.
+!ifmacrondef TEXTFUNC_VERBOSE
+!include TextFunc.nsh
+!endif
+
+!ifmacrondef FILEFUNC_VERBOSE
+!include FileFunc.nsh
+!endif
+
+; NSIS provided macros that we have overridden.
+!include overrides.nsh
+
 ; Modified version of the following MUI macros to support Mozilla localization.
 ; MUI_LANGUAGE
 ; MUI_LANGUAGEFILE_BEGIN
@@ -645,6 +658,9 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  */
 !macro CheckDiskSpace
 
+  !insertmacro ${_MOZFUNC_UN}GetRoot
+  !insertmacro ${_MOZFUNC_UN}DriveSpace
+
   !ifndef ${_MOZFUNC_UN}CheckDiskSpace
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
@@ -674,8 +690,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       SectionGetSize 2 $R5
       IntOp $R8 $R8 + $R5
 
-      ${GetRoot} "$INSTDIR" $R4
-      ${DriveSpace} "$R4" "/D=F /S=K" $R3
+      ${${_MOZFUNC_UN}GetRoot} "$INSTDIR" $R4
+      ${${_MOZFUNC_UN}DriveSpace} "$R4" "/D=F /S=K" $R3
 
       System::Int64Op $R3 > $R8
       Pop $R2
@@ -723,6 +739,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN "un."
 
+    !insertmacro GetRoot
+    !insertmacro DriveSpace
     !insertmacro CheckDiskSpace
 
     !undef _MOZFUNC_UN
@@ -735,6 +753,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  * Removes registry keys that reference this install location and for paths that
  * no longer exist. This uses SHCTX to determine the registry hive so you must
  * call SetShellVarContext first.
+ *
  * @param   _KEY
  *          The registry subkey (typically this will be Software\Mozilla).
  *
@@ -745,16 +764,20 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  * longer installed on the system.
  *
  * $R1 = stores the long path to $INSTDIR
- * $R2 = _KEY
+ * $R2 = value returned from the stack from the GetParent and GetLongPath macros
  * $R3 = value returned from the outer loop's EnumRegKey
  * $R4 = value returned from the inner loop's EnumRegKey
  * $R5 = value returned from ReadRegStr
  * $R6 = counter for the outer loop's EnumRegKey
  * $R7 = counter for the inner loop's EnumRegKey
- * $R8 = value returned popped from the stack for GetPathFromRegStr macro
- * $R9 = value returned popped from the stack for GetParentDir macro
+ * $R8 = value returned from the stack from the RemoveQuotesFromPath macro
+ * $R9 = _KEY
  */
 !macro RegCleanMain
+
+  !insertmacro ${_MOZFUNC_UN}GetLongPath
+  !insertmacro ${_MOZFUNC_UN}GetParent
+  !insertmacro ${_MOZFUNC_UN}RemoveQuotesFromPath
 
   !ifndef ${_MOZFUNC_UN}RegCleanMain
     !verbose push
@@ -762,67 +785,61 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !define ${_MOZFUNC_UN}RegCleanMain "!insertmacro ${_MOZFUNC_UN}RegCleanMainCall"
 
     Function ${_MOZFUNC_UN}RegCleanMain
-      Exch $R2
-      Push $R3
-      Push $R4
-      Push $R5
-      Push $R6
-      Push $R7
-      Push $R1
+      Exch $R9
       Push $R8
-      Push $R9
+      Push $R7
+      Push $R6
+      Push $R5
+      Push $R4
+      Push $R3
+      Push $R2
+      Push $R1
 
       ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R1
       StrCpy $R6 0  ; set the counter for the outer loop to 0
 
       outerloop:
-      EnumRegKey $R3 SHCTX $R2 $R6
+      EnumRegKey $R3 SHCTX $R9 $R6
       StrCmp $R3 "" end  ; if empty there are no more keys to enumerate
       IntOp $R6 $R6 + 1  ; increment the outer loop's counter
       ClearErrors
-      ReadRegStr $R5 SHCTX "$R2\$R3\bin" "PathToExe"
+      ReadRegStr $R5 SHCTX "$R9\$R3\bin" "PathToExe"
       IfErrors 0 outercontinue
       StrCpy $R7 0  ; set the counter for the inner loop to 0
 
       innerloop:
-      EnumRegKey $R4 SHCTX "$R2\$R3" $R7
+      EnumRegKey $R4 SHCTX "$R9\$R3" $R7
       StrCmp $R4 "" outerloop  ; if empty there are no more keys to enumerate
       IntOp $R7 $R7 + 1  ; increment the inner loop's counter
       ClearErrors
-      ReadRegStr $R5 SHCTX "$R2\$R3\$R4\Main" "PathToExe"
+      ReadRegStr $R5 SHCTX "$R9\$R3\$R4\Main" "PathToExe"
       IfErrors innerloop
 
-      Push $R5
-      ${GetPathFromRegStr}
-      Pop $R8
+      ${${_MOZFUNC_UN}RemoveQuotesFromPath} "$R5" $R8
 
-      Push $R5
-      ${GetParentDir}
-      Pop $R9
+      IfFileExists "$R8" +1 +4
+      ${${_MOZFUNC_UN}GetParent} "$R8" $R2
+      ${${_MOZFUNC_UN}GetLongPath} "$R2" $R2
+      StrCmp "$R2" "$R1" +1 innerloop
 
-      IfFileExists "$R8" 0 +3
-      ${${_MOZFUNC_UN}GetLongPath} "$R9" $R9
-      StrCmp "$R9" "$R1" 0 innerloop
       ClearErrors
-      DeleteRegKey SHCTX "$R2\$R3\$R4"
+      DeleteRegKey SHCTX "$R9\$R3\$R4"
       IfErrors innerloop
       IntOp $R7 $R7 - 1 ; decrement the inner loop's counter when the key is deleted successfully.
       ClearErrors
-      DeleteRegKey /ifempty SHCTX "$R2\$R3"
+      DeleteRegKey /ifempty SHCTX "$R9\$R3"
       IfErrors innerloop outerdecrement
 
       outercontinue:
-      Push $R5
-      ${GetPathFromRegStr}
-      Pop $R8
-      Push $R5
-      ${GetParentDir}
-      Pop $R9
+      ${${_MOZFUNC_UN}RemoveQuotesFromPath} "$R5" $R8
 
-      IfFileExists "$R8" 0 +2
-      StrCmp $R9 $INSTDIR 0 outerloop
+      IfFileExists "$R8" 0 +4
+      ${${_MOZFUNC_UN}GetParent} "$R8" $R2
+      ${${_MOZFUNC_UN}GetLongPath} "$R2" $R2
+      StrCmp "$R2" "$R1" 0 outerloop
+
       ClearErrors
-      DeleteRegKey SHCTX "$R2\$R3"
+      DeleteRegKey SHCTX "$R9\$R3"
       IfErrors outerloop
 
       outerdecrement:
@@ -832,15 +849,15 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       end:
       ClearErrors
 
-      Pop $R9
-      Pop $R8
       Pop $R1
-      Pop $R7
-      Pop $R6
-      Pop $R5
-      Pop $R4
+      Pop $R2
       Pop $R3
-      Exch $R2
+      Pop $R4
+      Pop $R5
+      Pop $R6
+      Pop $R7
+      Pop $R8
+      Exch $R9
     FunctionEnd
 
     !verbose pop
@@ -870,6 +887,9 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN "un."
 
+    !insertmacro GetLongPath
+    !insertmacro GetParent
+    !insertmacro RemoveQuotesFromPath
     !insertmacro RegCleanMain
 
     !undef _MOZFUNC_UN
@@ -887,9 +907,12 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  * $R6 = string for the base reg key (e.g. Software\Microsoft\Windows\CurrentVersion\Uninstall)
  * $R7 = value returned from the EnumRegKey
  * $R8 = counter for the EnumRegKey
- * $R9 = value returned from the stack from the GetPathFromRegStr macro
+ * $R9 = value returned from the stack from the RemoveQuotesFromPath and GetLongPath macros
  */
 !macro RegCleanUninstall
+
+  !insertmacro ${_MOZFUNC_UN}GetLongPath
+  !insertmacro ${_MOZFUNC_UN}RemoveQuotesFromPath
 
   !ifndef ${_MOZFUNC_UN}RegCleanUninstall
     !verbose push
@@ -906,8 +929,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 
       ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R4
       StrCpy $R6 "Software\Microsoft\Windows\CurrentVersion\Uninstall"
-      StrCpy $R8 0
       StrCpy $R7 ""
+      StrCpy $R8 0
 
       loop:
       EnumRegKey $R7 HKLM $R6 $R8
@@ -916,9 +939,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       ClearErrors
       ReadRegStr $R5 HKLM "$R6\$R7" "InstallLocation"
       IfErrors loop
-      Push $R5
-      ${GetPathFromRegStr}
-      Pop $R9
+      ${${_MOZFUNC_UN}RemoveQuotesFromPath} "$R5" $R9
       ${${_MOZFUNC_UN}GetLongPath} "$R9" $R9
       StrCmp "$R9" "$R4" 0 loop
       ClearErrors
@@ -930,6 +951,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       end:
       ClearErrors
 
+      Pop $R4
       Pop $R5
       Pop $R6
       Pop $R7
@@ -962,6 +984,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN "un."
 
+    !insertmacro GetLongPath
+    !insertmacro RemoveQuotesFromPath
     !insertmacro RegCleanUninstall
 
     !undef _MOZFUNC_UN
@@ -1546,6 +1570,9 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  */
 !macro GetSecondInstallPath
 
+  !insertmacro ${_MOZFUNC_UN}GetLongPath
+  !insertmacro ${_MOZFUNC_UN}GetParent
+
   !ifndef ${_MOZFUNC_UN}GetSecondInstallPath
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
@@ -1569,16 +1596,13 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       ClearErrors
       ReadRegStr $R5 SHCTX "$R3\$R4\bin" "PathToExe"
       IfErrors loop
-      Push $R5
-      ${GetPathFromRegStr}
-      Pop $R7
-      Push $R5
-      ${GetParentDir}
-      Pop $R8
 
-      IfFileExists "$R7" 0 +5
-      StrCmp $R8 $INSTDIR +4 0
-      StrCmp "$R8\${FileMainEXE}" "$R7" 0 +3
+      ${${_MOZFUNC_UN}RemoveQuotesFromPath} "$R5" $R7
+
+      IfFileExists "$R7" +1 +6
+      ${${_MOZFUNC_UN}GetParent} "$R7" $R8
+      StrCmp $R8 $INSTDIR +4 +1
+      StrCmp "$R8\${FileMainEXE}" "$R7" +1 +3
       StrCpy $R9 "$R7"
       GoTo end
 
@@ -1625,6 +1649,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN "un."
 
+    !insertmacro GetLongPath
+    !insertmacro GetParent
     !insertmacro GetSecondInstallPath
 
     !undef _MOZFUNC_UN
@@ -1656,6 +1682,9 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
  * $R9 = _RESULT
  */
 !macro GetSingleInstallPath
+
+  !insertmacro ${_MOZFUNC_UN}GetLongPath
+  !insertmacro ${_MOZFUNC_UN}GetParent
 
   !ifndef ${_MOZFUNC_UN}GetSingleInstallPath
     !verbose push
@@ -1736,6 +1765,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN "un."
 
+    !insertmacro GetLongPath
+    !insertmacro GetParent
     !insertmacro GetSingleInstallPath
 
     !undef _MOZFUNC_UN
@@ -1892,9 +1923,6 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 * exist. It is up to the caller to pass in a string of one of the forms noted
 * above and to verify existence if necessary.
 *
-* IMPORTANT! $R9 will be overwritten by this macro with the return value so
-*            protect yourself!
-*
 * Examples:
 * In:  C:\PROGRA~1\MOZILL~1\FIREFOX.EXE -url "%1" -requestPending
 * In:  C:\PROGRA~1\MOZILL~1\FIREFOX.EXE,0
@@ -1908,15 +1936,15 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 * In:  "C:\Program Files\Mozilla Firefox\firefox.exe"
 * Out: C:\Program Files\Mozilla Firefox\firefox.exe
 *
-* @param   _STRING
-*          The string containing the path
-* @param   _RESULT
+* @param   _IN_PATH
+*          The string containing the path.
+* @param   _OUT_PATH
 *          The register to store the path to.
 *
 * $R6 = counter for the outer loop's EnumRegKey
 * $R7 = value returned from ReadRegStr
-* $R8 = _STRING
-* $R9 = _RESULT
+* $R8 = _IN_PATH
+* $R9 = _OUT_PATH
 */
 !macro GetPathFromString
 
@@ -1926,6 +1954,8 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !define ${_MOZFUNC_UN}GetPathFromString "!insertmacro ${_MOZFUNC_UN}GetPathFromStringCall"
 
     Function ${_MOZFUNC_UN}GetPathFromString
+      Exch $R9
+      Exch 1
       Exch $R8
       Push $R7
       Push $R6
@@ -1971,28 +2001,31 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
       Pop $R6
       Pop $R7
       Exch $R8
-      Push $R9
+      Exch 1
+      Exch $R9
     FunctionEnd
 
     !verbose pop
   !endif
 !macroend
 
-!macro GetPathFromStringCall _STRING _RESULT
+!macro GetPathFromStringCall _IN_PATH _OUT_PATH
   !verbose push
   !verbose ${_MOZFUNC_VERBOSE}
-  Push "${_STRING}"
+  Push "${_IN_PATH}"
+  Push "${_OUT_PATH}"
   Call GetPathFromString
-  Pop ${_RESULT}
+  Pop ${_OUT_PATH}
   !verbose pop
 !macroend
 
-!macro un.GetPathFromStringCall _STRING _RESULT
+!macro un.GetPathFromStringCall _IN_PATH _OUT_PATH
   !verbose push
   !verbose ${_MOZFUNC_VERBOSE}
-  Push "${_STRING}"
+  Push "${_IN_PATH}"
+  Push "${_OUT_PATH}"
   Call un.GetPathFromString
-  Pop ${_RESULT}
+  Pop ${_OUT_PATH}
   !verbose pop
 !macroend
 
@@ -2004,6 +2037,86 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !define _MOZFUNC_UN "un."
 
     !insertmacro GetPathFromString
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * Removes the quotes from each end of a string if present.
+ *
+ * @param   _IN_PATH
+ *          The string containing the path.
+ * @param   _OUT_PATH
+ *          The register to store the long path.
+ *
+ * $R7 = 
+ * $R8 = _IN_PATH
+ * $R9 = _OUT_PATH
+ */
+!macro RemoveQuotesFromPath
+
+  !ifndef ${_MOZFUNC_UN}RemoveQuotesFromPath
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}RemoveQuotesFromPath "!insertmacro ${_MOZFUNC_UN}RemoveQuotesFromPathCall"
+
+    Function ${_MOZFUNC_UN}RemoveQuotesFromPath
+      Exch $R9
+      Exch 1
+      Exch $R8
+      Push $R7
+
+      StrCpy $R9 "$R8"
+
+      StrCpy $R7 "$R9" 1
+      StrCmp $R7 "$\"" +1 +2
+      StrCpy $R9 "$R9" "" 1
+
+      StrCpy $R7 "$R9" "" -1
+      StrCmp $R7 "$\"" +1 +2
+      StrCpy $R9 "$R9" -1
+
+      Pop $R7
+      Exch $R8
+      Exch 1
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro RemoveQuotesFromPathCall _IN_PATH _OUT_PATH
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_IN_PATH}"
+  Push "${_OUT_PATH}"
+  Call RemoveQuotesFromPath
+  Pop ${_OUT_PATH}
+  !verbose pop
+!macroend
+
+!macro un.RemoveQuotesFromPathCall _IN_PATH _OUT_PATH
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_IN_PATH}"
+  Push "${_OUT_PATH}"
+  Call un.RemoveQuotesFromPath
+  Pop ${_OUT_PATH}
+  !verbose pop
+!macroend
+
+!macro un.RemoveQuotesFromPath
+  !ifndef un.RemoveQuotesFromPath
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro RemoveQuotesFromPath
 
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN
@@ -2099,13 +2212,16 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 /**
  * Updates the uninstall.log with new files added by software update.
  *
- * Requires FileJoin, LineFind, TextCompare, and TrimNewLines.
- *
  * IMPORTANT! The LineFind docs claim that it uses all registers except $R0-$R3.
  *            Though it appears that this is not true all registers besides
  *            $R0-$R3 may be overwritten so protect yourself!
  */
 !macro UpdateUninstallLog
+
+  !insertmacro ${_MOZFUNC_UN}FileJoin
+  !insertmacro ${_MOZFUNC_UN}LineFind
+  !insertmacro ${_MOZFUNC_UN}TextCompareNoDetails
+  !insertmacro ${_MOZFUNC_UN}TrimNewLines
 
   !ifndef ${_MOZFUNC_UN}UpdateUninstallLog
     !verbose push
@@ -2128,7 +2244,7 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
 
       GetTempFileName $R2 "$R3"
       FileOpen $R1 $R2 w
-      ${${_MOZFUNC_UN}TextCompare} "$R3\uninstall.update" "$R3\uninstall.log" "SlowDiff" "${_MOZFUNC_UN}CreateUpdateDiff"
+      ${${_MOZFUNC_UN}TextCompareNoDetails} "$R3\uninstall.update" "$R3\uninstall.log" "SlowDiff" "${_MOZFUNC_UN}CreateUpdateDiff"
       FileClose $R1
 
       IfErrors +2 0
@@ -2213,6 +2329,10 @@ Exch $R9 ; exchange the new $R9 value with the top of the stack
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN "un."
 
+    !insertmacro FileJoin
+    !insertmacro LineFind
+    !insertmacro TextCompareNoDetails
+    !insertmacro TrimNewLines
     !insertmacro UpdateUninstallLog
 
     !undef _MOZFUNC_UN

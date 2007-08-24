@@ -721,20 +721,36 @@ nsXULTreeitemAccessible::GetAttributesInternal(nsIPersistentProperties *aAttribu
   rv = view->GetLevel(mRow, &level);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 lvl = -1;
-  PRInt32 startIndex = mRow;
-  for (;startIndex - 1 > 0 &&
-        NS_SUCCEEDED(view->GetLevel(startIndex - 1, &lvl)) && lvl != level;
-        startIndex--);
+  PRInt32 topCount = 1;
+  for (PRInt32 index = mRow - 1; index >= 0; index--) {
+    PRInt32 lvl = -1;
+    if (NS_SUCCEEDED(view->GetLevel(index, &lvl))) {
+      if (lvl < level)
+        break;
 
-  lvl = -1;
-  PRInt32 endIndex = mRow;
-  for (;endIndex - 1 > 0 &&
-        NS_SUCCEEDED(view->GetLevel(endIndex - 1, &lvl)) && lvl != level;
-        endIndex--);
+      if (lvl == level)
+        topCount++;
+    }
+  }
 
-  PRInt32 setSize = endIndex - startIndex + 1;
-  PRInt32 posInSet = mRow - startIndex + 1;
+  PRInt32 rowCount = 0;
+  rv = view->GetRowCount(&rowCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 bottomCount = 0;
+  for (PRInt32 index = mRow + 1; index < rowCount; index++) {
+    PRInt32 lvl = -1;
+    if (NS_SUCCEEDED(view->GetLevel(index, &lvl))) {
+      if (lvl < level)
+        break;
+
+      if (lvl == level)
+        bottomCount++;
+    }
+  }
+
+  PRInt32 setSize = topCount + bottomCount;
+  PRInt32 posInSet = topCount;
 
   // set the group attributes
   nsAccUtils::SetAccGroupAttrs(aAttributes, level + 1, posInSet, setSize);

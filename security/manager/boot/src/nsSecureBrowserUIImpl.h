@@ -110,6 +110,7 @@ protected:
 
   void ResetStateTracking();
   PRUint32 mNewToplevelSecurityState;
+  PRPackedBool mNewToplevelIsEV;
   PRPackedBool mNewToplevelSecurityStateKnown;
   PRPackedBool mIsViewSource;
 

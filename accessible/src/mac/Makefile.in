@@ -51,6 +51,7 @@ REQUIRES	= content \
 		  dom \
 		  editor \
 		  gfx \
+		  thebes \
 		  intl \
 		  locale \
 		  string \

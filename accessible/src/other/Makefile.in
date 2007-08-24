@@ -50,6 +50,7 @@ REQUIRES	= content \
 		  dom \
 		  editor \
 		  gfx \
+		  thebes \
 		  htmlparser \
 		  intl \
 		  layout \

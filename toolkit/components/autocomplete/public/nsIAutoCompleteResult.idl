@@ -37,7 +37,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(78c49e44-4613-48c4-b502-29df82231222)]
+[scriptable, uuid(d2fcba9a-3f5c-40fc-a9fc-4adc87dc61ef)]
 interface nsIAutoCompleteResult : nsISupports
 {
   /**
@@ -45,9 +45,18 @@ interface nsIAutoCompleteResult : nsISupports
    */
   const unsigned short RESULT_IGNORED = 1; /* indicates invalid searchString */
   const unsigned short RESULT_FAILURE = 2; /* indicates failure */
-  const unsigned short RESULT_NOMATCH = 3; /* indicates success with no matches */
-  const unsigned short RESULT_SUCCESS = 4; /* indicates success with matches */
-
+  const unsigned short RESULT_NOMATCH = 3; /* indicates success with no matches
+                                              and that the search is complete */
+  const unsigned short RESULT_SUCCESS = 4; /* indicates success with matches
+                                              and that the search is complete */
+  const unsigned short RESULT_NOMATCH_ONGOING = 5; /* indicates success 
+                                                      with no matches
+                                                      and that the search 
+                                                      is still ongoing */
+  const unsigned short RESULT_SUCCESS_ONGOING = 6; /* indicates success 
+                                                      with matches
+                                                      and that the search 
+                                                      is still ongoing */
   /**
    * The original search string
    */

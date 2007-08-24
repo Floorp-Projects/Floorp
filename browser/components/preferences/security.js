@@ -361,8 +361,8 @@ var gSecurityPane = {
   {
     var noMP = !this._masterPasswordSet();
 
-    //var button = document.getElementById("changeMasterPassword");
-    //button.disabled = noMP;
+    var button = document.getElementById("changeMasterPassword");
+    button.disabled = noMP;
 
     var checkbox = document.getElementById("useMasterPassword");
     checkbox.checked = !noMP;
