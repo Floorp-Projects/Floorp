@@ -115,9 +115,6 @@ NS_IMETHODIMP gfxImageFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
 
   case gfxIFormats::BGRA:
   case gfxIFormats::RGBA:
-#ifdef DEBUG
-    printf("we can't do this with the old image code\n");
-#endif
     maskReq = nsMaskRequirements_kNeeds8Bit;
     break;
 
