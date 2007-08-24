@@ -1447,7 +1447,7 @@ nsWebBrowserPersist::GetDocEncoderContentType(nsIDOMDocument *aDocument, const P
     {
         // Check if there is an encoder for the desired content type
         nsCAutoString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
-        contractID.AppendWithConversion(contentType);
+        AppendUTF16toUTF8(contentType, contractID);
 
         nsCOMPtr<nsIComponentRegistrar> registrar;
         NS_GetComponentRegistrar(getter_AddRefs(registrar));
@@ -2891,10 +2891,6 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
             nodeAsFrame->GetContentDocument(getter_AddRefs(content));
             if (content)
             {
-                nsXPIDLString ext;
-                GetDocumentExtension(content, getter_Copies(ext));
-                data->mSubFrameExt.AssignLiteral(".");
-                data->mSubFrameExt.Append(ext);
                 SaveSubframeContent(content, data);
             }
         }
@@ -2914,10 +2910,6 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
             nodeAsIFrame->GetContentDocument(getter_AddRefs(content));
             if (content)
             {
-                nsXPIDLString ext;
-                GetDocumentExtension(content, getter_Copies(ext));
-                data->mSubFrameExt.AssignLiteral(".");
-                data->mSubFrameExt.Append(ext);
                 SaveSubframeContent(content, data);
             }
         }
@@ -3270,13 +3262,7 @@ nsWebBrowserPersist::StoreURI(
     const char *aURI, PRBool aNeedsPersisting, URIData **aData)
 {
     NS_ENSURE_ARG_POINTER(aURI);
-    if (aData)
-    {
-        *aData = nsnull;
-    }
 
-    // Test if this URI should be persisted. By default
-    // we should assume the URI  is persistable.
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewURI(getter_AddRefs(uri),
                             nsDependentCString(aURI),
@@ -3284,10 +3270,25 @@ nsWebBrowserPersist::StoreURI(
                             mCurrentBaseURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    return StoreURI(uri, aNeedsPersisting, aData);
+}
+
+nsresult
+nsWebBrowserPersist::StoreURI(
+    nsIURI *aURI, PRBool aNeedsPersisting, URIData **aData)
+{
+    NS_ENSURE_ARG_POINTER(aURI);
+    if (aData)
+    {
+        *aData = nsnull;
+    }
+
+    // Test if this URI should be persisted. By default
+    // we should assume the URI  is persistable.
     PRBool doNotPersistURI;
-    rv = NS_URIChainHasFlags(uri,
-                             nsIProtocolHandler::URI_NON_PERSISTABLE,
-                             &doNotPersistURI);
+    nsresult rv = NS_URIChainHasFlags(aURI,
+                                      nsIProtocolHandler::URI_NON_PERSISTABLE,
+                                      &doNotPersistURI);
     if (NS_FAILED(rv))
     {
         doNotPersistURI = PR_FALSE;
@@ -3299,7 +3300,7 @@ nsWebBrowserPersist::StoreURI(
     }
 
     URIData *data = nsnull;
-    MakeAndStoreLocalFilenameInURIMap(uri, aNeedsPersisting, &data);
+    MakeAndStoreLocalFilenameInURIMap(aURI, aNeedsPersisting, &data);
     if (aData)
     {
         *aData = data;
@@ -3518,12 +3519,68 @@ nsWebBrowserPersist::StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet)
     return NS_OK;
 }
 
+PRBool
+nsWebBrowserPersist::DocumentEncoderExists(const PRUnichar *aContentType)
+{
+    // Check if there is an encoder for the desired content type.
+    nsCAutoString contractID(NS_DOC_ENCODER_CONTRACTID_BASE);
+    AppendUTF16toUTF8(aContentType, contractID);
+
+    nsCOMPtr<nsIComponentRegistrar> registrar;
+    NS_GetComponentRegistrar(getter_AddRefs(registrar));
+    if (registrar)
+    {
+        PRBool result;
+        nsresult rv = registrar->IsContractIDRegistered(contractID.get(),
+                                                        &result);
+        if (NS_SUCCEEDED(rv) && result)
+        {
+            return PR_TRUE;
+        }
+    }
+    return PR_FALSE;
+}
+
 nsresult
 nsWebBrowserPersist::SaveSubframeContent(
     nsIDOMDocument *aFrameContent, URIData *aData)
 {
     NS_ENSURE_ARG_POINTER(aData);
-    nsresult rv;
+
+    // Extract the content type for the frame's contents.
+    nsCOMPtr<nsIDocument> frameDoc(do_QueryInterface(aFrameContent));
+    NS_ENSURE_STATE(frameDoc);
+
+    nsAutoString contentType;
+    nsresult rv = frameDoc->GetContentType(contentType);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsXPIDLString ext;
+    GetExtensionForContentType(contentType.get(), getter_Copies(ext));
+
+    // We must always have an extension so we will try to re-assign
+    // the original extension if GetExtensionForContentType fails.
+    if (ext.IsEmpty())
+    {
+        nsCOMPtr<nsIURL> url(do_QueryInterface(frameDoc->GetDocumentURI(),
+                                               &rv));
+        nsCAutoString extension;
+        if (NS_SUCCEEDED(rv))
+        {
+            url->GetFileExtension(extension);
+        }
+        else
+        {
+            extension.AssignLiteral("htm");
+        }
+        aData->mSubFrameExt.Assign(PRUnichar('.'));
+        AppendUTF8toUTF16(extension, aData->mSubFrameExt);
+    }
+    else
+    {
+        aData->mSubFrameExt.Assign(PRUnichar('.'));
+        aData->mSubFrameExt.Append(ext);
+    }
 
     nsString filenameWithExt = aData->mFilename;
     filenameWithExt.Append(aData->mSubFrameExt);
@@ -3553,7 +3610,17 @@ nsWebBrowserPersist::SaveSubframeContent(
     NS_ENSURE_SUCCESS(rv, rv);
 
     mCurrentThingsToPersist++;
-    rv = SaveDocumentInternal(aFrameContent, frameURI, frameDataURI);
+
+    // We shouldn't use SaveDocumentInternal for the contents
+    // of frames that are not documents, e.g. images.
+    if (DocumentEncoderExists(contentType.get()))
+    {
+        rv = SaveDocumentInternal(aFrameContent, frameURI, frameDataURI);
+    }
+    else
+    {
+        rv = StoreURI(frameDoc->GetDocumentURI());
+    }
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Store the updated uri to the frame
