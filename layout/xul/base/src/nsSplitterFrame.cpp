@@ -734,10 +734,13 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   // get our index
   nsPresContext* outerPresContext = mOuter->PresContext();
   nscoord childIndex = nsFrameNavigator::IndexOf(outerPresContext, mParentBox, mOuter);
-  PRInt32 childCount = nsFrameNavigator::CountFrames(outerPresContext, mParentBox);
+  // if it's 0 then stop right here.
+  if (childIndex == 0)
+    return NS_OK;
 
-  // if it's 0 or the last index then stop right here.
-  if (childIndex == 0 || childIndex == childCount - 1)
+  PRInt32 childCount = nsFrameNavigator::CountFrames(outerPresContext, mParentBox);
+  // if it's the last index then we need to allow for resizeafter="grow"
+  if (childIndex == childCount - 1 && GetResizeAfter() != Grow)
     return NS_OK;
 
   nsCOMPtr<nsIRenderingContext> rc;
