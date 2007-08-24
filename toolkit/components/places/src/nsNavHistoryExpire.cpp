@@ -153,11 +153,13 @@ void
 nsNavHistoryExpire::OnDeleteURI()
 {
   mozIStorageConnection* connection = mHistory->GetStorageConnection();
-  if (! connection) {
+  if (!connection) {
     NS_NOTREACHED("No connection");
     return;
   }
-  ExpireAnnotations(connection);
+  nsresult rv = ExpireAnnotations(connection);
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireAnnotations failed.");
 }
 
 // nsNavHistoryExpire::OnQuit
@@ -168,7 +170,7 @@ void
 nsNavHistoryExpire::OnQuit()
 {
   mozIStorageConnection* connection = mHistory->GetStorageConnection();
-  if (! connection) {
+  if (!connection) {
     NS_NOTREACHED("No connection");
     return;
   }
@@ -178,12 +180,20 @@ nsNavHistoryExpire::OnQuit()
     mTimer->Cancel();
 
   // Handle degenerate runs:
-  ExpireForDegenerateRuns();
+  nsresult rv = ExpireForDegenerateRuns();
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireForDegenerateRuns failed.");
 
   // vacuum up dangling items
-  ExpireHistoryParanoid(connection);
-  ExpireFaviconsParanoid(connection);
-  ExpireAnnotationsParanoid(connection);
+  rv = ExpireHistoryParanoid(connection);
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireHistoryParanoid failed.");
+  rv = ExpireFaviconsParanoid(connection);
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireFaviconsParanoid failed.");
+  rv = ExpireAnnotationsParanoid(connection);
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireAnnotationsParanoid failed.");
 }
 
 
@@ -201,11 +211,21 @@ nsNavHistoryExpire::ClearHistory()
   mozIStorageConnection* connection = mHistory->GetStorageConnection();
   NS_ENSURE_TRUE(connection, NS_ERROR_OUT_OF_MEMORY);
 
-  ExpireItems(0, &keepGoing);
+  nsresult rv = ExpireItems(0, &keepGoing);
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireItems failed.");
 
-  ExpireHistoryParanoid(connection);
-  ExpireFaviconsParanoid(connection);
-  ExpireAnnotationsParanoid(connection);
+  rv = ExpireHistoryParanoid(connection);
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireHistoryParanoid failed.");
+
+  rv = ExpireFaviconsParanoid(connection);
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireFaviconsParanoid failed.");
+
+  rv = ExpireAnnotationsParanoid(connection);
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireAnnotationsParanoid failed.");
 
   ENUMERATE_WEAKARRAY(mHistory->mObservers, nsINavHistoryObserver,
                       OnClearHistory())
@@ -236,7 +256,9 @@ nsNavHistoryExpire::DoPartialExpiration()
 
   // expire history items
   PRBool keepGoing;
-  ExpireItems(EXPIRATION_COUNT_PER_RUN, &keepGoing);
+  nsresult rv = ExpireItems(EXPIRATION_COUNT_PER_RUN, &keepGoing);
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireItems failed.");
 
   if (keepGoing && mSequentialRuns < MAX_SEQUENTIAL_RUNS)
     StartTimer(SUBSEQUENT_EXIPRATION_TIMEOUT);
@@ -320,11 +342,18 @@ nsNavHistoryExpire::ExpireItems(PRUint32 aNumToExpire, PRBool* aKeepGoing)
   }
 
   // don't worry about errors here, it doesn't affect our ability to continue
-  EraseFavicons(connection, expiredVisits);
-  EraseAnnotations(connection, expiredVisits);
+  rv = EraseFavicons(connection, expiredVisits);
+  if (NS_FAILED(rv))
+    NS_WARNING("EraseFavicons failed.");
+
+  rv = EraseAnnotations(connection, expiredVisits);
+  if (NS_FAILED(rv))
+    NS_WARNING("EraseAnnotations failed.");
 
   // expire annotations by policy
-  ExpireAnnotations(connection);
+  rv = ExpireAnnotations(connection);
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireAnnotations failed.");
 
   rv = transaction.Commit();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -424,7 +453,8 @@ nsNavHistoryExpire::EraseVisits(mozIStorageConnection* aConnection,
 // nsNavHistoryExpire::EraseHistory
 //
 //    This erases records in moz_places when there are no more visits.
-//    We need to be careful not to delete bookmarks and place:URIs.
+//    We need to be careful not to delete bookmarks, place:URIs and
+//    URIs with EXPIRE_NEVER annotations.
 //
 //    This will modify the input by setting the erased flag on each of the
 //    array elements according to whether the history item was erased or not.
@@ -455,7 +485,12 @@ nsNavHistoryExpire::EraseHistory(mozIStorageConnection* aConnection,
     deletedPlaceIds +
     NS_LITERAL_CSTRING(") AND id IN (SELECT h.id FROM moz_places h "
       "LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
-      "WHERE v.id IS NULL)"));
+      "WHERE v.id IS NULL) "
+      "AND id NOT IN (SELECT h.id FROM moz_places h "
+      "JOIN moz_annos a ON h.id = a.place_id "
+      "WHERE a.expiration = ") +
+    nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER) +
+    NS_LITERAL_CSTRING(")"));
 }
 
 
@@ -614,19 +649,18 @@ nsNavHistoryExpire::ExpireHistoryParanoid(mozIStorageConnection* aConnection)
 {
   // delete history entries with no visits that are not bookmarked
   // also never delete any "place:" URIs (see function header comment)
-  nsCOMPtr<mozIStorageStatement> deleteStatement;
-  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_places WHERE id IN (SELECT h.id FROM moz_places h "
+  nsresult rv = aConnection->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("DELETE FROM moz_places "
+      "WHERE id IN (SELECT h.id FROM moz_places h "
       "LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
       "LEFT OUTER JOIN moz_bookmarks b ON h.id = b.fk "
+      "LEFT OUTER JOIN moz_annos a ON h.id = a.place_id "
       "WHERE v.id IS NULL "
-      "AND b.type = ?1 AND b.fk IS NULL "
-      "AND SUBSTR(h.url,0,6) <> 'place:')"),
-    getter_AddRefs(deleteStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = deleteStatement->BindInt32Parameter(0, nsINavBookmarksService::TYPE_BOOKMARK);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = deleteStatement->Execute();
+      "AND b.id IS NULL "
+      "AND a.expiration = ") +
+      nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER) +
+      NS_LITERAL_CSTRING(" AND a.id IS NULL "
+      "AND SUBSTR(h.url,0,6) <> 'place:')"));
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
@@ -639,11 +673,13 @@ nsNavHistoryExpire::ExpireHistoryParanoid(mozIStorageConnection* aConnection)
 nsresult
 nsNavHistoryExpire::ExpireFaviconsParanoid(mozIStorageConnection* aConnection)
 {
-  return aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
     "DELETE FROM moz_favicons WHERE id IN "
     "(SELECT f.id FROM moz_favicons f "
      "LEFT OUTER JOIN moz_places h ON f.id = h.favicon_id "
      "WHERE h.favicon_id IS NULL)"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  return rv;
 }
 
 
@@ -718,7 +754,9 @@ nsNavHistoryExpire::ExpireForDegenerateRuns()
   // This run looks suspicious, try to expire up to the number of items
   // we may have missed this session.
   PRBool keepGoing;
-  ExpireItems(mAddCount - mExpiredItems, &keepGoing);
+  nsresult rv = ExpireItems(mAddCount - mExpiredItems, &keepGoing);
+  if (NS_FAILED(rv))
+    NS_WARNING("ExpireItems failed.");
   return PR_TRUE;
 }
 
