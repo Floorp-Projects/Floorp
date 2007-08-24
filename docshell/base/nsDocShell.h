@@ -512,6 +512,9 @@ protected:
     PRPackedBool               mAllowAuth;
     PRPackedBool               mAllowKeywordFixup;
 
+    // This boolean is set to true right before we fire pagehide and generally
+    // unset when we embed a new content viewer.  While it's true no navigation
+    // is allowed in this docshell.
     PRPackedBool               mFiredUnloadEvent;
 
     // this flag is for bug #21358. a docshell may load many urls
