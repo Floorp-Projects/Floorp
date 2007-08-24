@@ -41,7 +41,6 @@
 #ifndef nsLayoutUtils_h__
 #define nsLayoutUtils_h__
 
-class nsIFrame;
 class nsIFormControlFrame;
 class nsPresContext;
 class nsIContent;
@@ -58,6 +57,7 @@ class nsIFontMetrics;
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
 #include "nsIView.h"
+#include "nsIFrame.h"
 
 class nsBlockFrame;
 
@@ -547,6 +547,18 @@ public:
   static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
                                  nsIRenderingContext* aRenderingContext,
                                  nsIFrame* aFrame,
+                                 nscoord& aResult)
+  {
+    return GetAbsoluteCoord(aStyle, aRenderingContext,
+                            aFrame->GetStyleContext(), aResult);
+  }
+
+  /**
+   * Same as above but doesn't need a frame
+   */
+  static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
+                                 nsIRenderingContext* aRenderingContext,
+                                 nsStyleContext* aStyleContext,
                                  nscoord& aResult);
   /**
    * Get the contribution of aFrame to its containing block's intrinsic
