@@ -492,7 +492,7 @@ gfxWindowsFontGroup::gfxWindowsFontGroup(const nsAString& aFamilies, const gfxFo
 {
     ForEachFont(AddFontEntryToArray, &mFontEntries);
 
-    if (mFonts.Length() == 0) {
+    if (mFontEntries.Length() == 0) {
         // Should append default GUI font if there are no available fonts.
         HGDIOBJ hGDI = ::GetStockObject(DEFAULT_GUI_FONT);
         LOGFONTW logFont;
