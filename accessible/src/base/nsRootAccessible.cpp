@@ -469,6 +469,9 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
       // For activedescendant, the ARIA spec does not require that the user agent
       // checks whether finalFocusNode is actually a descendant of the element with
       // the activedescendant attribute.
+      if (!finalFocusAccessible) {
+        return PR_FALSE;
+      }
     }
   }
 
