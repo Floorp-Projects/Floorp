@@ -798,6 +798,8 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   mDeviceContext = aDeviceContext;
   NS_ADDREF(mDeviceContext);
 
+  mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
+
   if (!mImageLoaders.Init())
     return NS_ERROR_OUT_OF_MEMORY;
   
@@ -1145,8 +1147,8 @@ nsPresContext::GetDefaultFontExternal(PRUint8 aFontID) const
 void
 nsPresContext::SetFullZoom(float aZoom)
 {
-  float oldWidth = mVisibleArea.width * mFullZoom;
-  float oldHeight = mVisibleArea.height * mFullZoom;
+  float oldWidth = mVisibleArea.width / float(mCurAppUnitsPerDevPixel);
+  float oldHeight = mVisibleArea.height / float(mCurAppUnitsPerDevPixel);
   if (!mShell) {
     return;
   }
@@ -1155,9 +1157,10 @@ nsPresContext::SetFullZoom(float aZoom)
   }
   if (mFullZoom != aZoom) {
     mFullZoom = aZoom;
-    GetViewManager()->SetWindowDimensions(oldWidth / aZoom, oldHeight / aZoom);
+    GetViewManager()->SetWindowDimensions(oldWidth * AppUnitsPerDevPixel(), oldHeight * AppUnitsPerDevPixel());
     ClearStyleDataAndReflow();
   }
+  mCurAppUnitsPerDevPixel = AppUnitsPerDevPixel();
 }
 
 imgIRequest*
