@@ -1215,7 +1215,7 @@ public:
                 if (langGroup) {
                     PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: %s (%s)", langGroup, gScriptToText[primaryId].value));
 
-                    nsTArray<nsRefPtr<FontEntry> > fonts;
+                    nsAutoTArray<nsRefPtr<FontEntry>, 5> fonts;
                     this->GetPrefFonts(langGroup, fonts);
                     selectedFont = WhichFontSupportsChar(fonts, ch);
                 }
@@ -1227,7 +1227,7 @@ public:
                     if (PR_LOG_TEST(gFontLog, PR_LOG_DEBUG))
                         PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: CJK"));
 
-                    nsTArray<nsRefPtr<FontEntry> > fonts;
+                    nsAutoTArray<nsRefPtr<FontEntry>, 15> fonts;
                     this->GetCJKPrefFonts(fonts);
                     selectedFont = WhichFontSupportsChar(fonts, ch);
                 } else {
@@ -1235,7 +1235,7 @@ public:
                     if (langGroup) {
                         PR_LOG(gFontLog, PR_LOG_DEBUG, (" - Trying to find fonts for: %s", langGroup));
 
-                        nsTArray<nsRefPtr<FontEntry> > fonts;
+                        nsAutoTArray<nsRefPtr<FontEntry>, 5> fonts;
                         this->GetPrefFonts(langGroup, fonts);
                         selectedFont = WhichFontSupportsChar(fonts, ch);
                     }
@@ -1346,13 +1346,19 @@ private:
 
     void GetPrefFonts(const char *aLangGroup, nsTArray<nsRefPtr<FontEntry> >& array) {
         NS_ASSERTION(aLangGroup, "aLangGroup is null");
-        gfxPlatform *platform = gfxPlatform::GetPlatform();
-        nsString fonts;
-        platform->GetPrefFonts(aLangGroup, fonts);
-        if (fonts.IsEmpty())
-            return;
-        gfxFontGroup::ForEachFont(fonts, nsDependentCString(aLangGroup),
-                                  AddFontEntryToArray, &array);
+        gfxWindowsPlatform *platform = gfxWindowsPlatform::GetPlatform();
+        nsAutoTArray<nsRefPtr<FontEntry>, 5> fonts;
+        if (!platform->GetPrefFontEntries(aLangGroup, &fonts)) {
+            nsString fontString;
+            platform->GetPrefFonts(aLangGroup, fontString);
+            if (fontString.IsEmpty())
+                return;
+            gfxFontGroup::ForEachFont(fontString, nsDependentCString(aLangGroup),
+                                      AddFontEntryToArray, &fonts);
+
+            platform->SetPrefFontEntries(aLangGroup, fonts);
+        }
+        array.AppendElements(fonts);
     }
 
     void GetCJKPrefFonts(nsTArray<nsRefPtr<FontEntry> >& array) {
