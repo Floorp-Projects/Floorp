@@ -45,6 +45,7 @@
 #include "nsIDOMNode.h"
 #include "nsIPersistentProperties2.h"
 #include "nsIContent.h"
+#include "nsIFrame.h"
 
 class nsAccUtils
 {
@@ -124,7 +125,7 @@ public:
    static PRBool IsAncestorOf(nsIDOMNode *aPossibleAncestorNode,
                               nsIDOMNode *aPossibleDescendantNode);
 
-   /**
+  /**
     * If an ancestor in this document exists with the given role, return it
     * @param aDescendant Descendant to start search with
     * @param aRole Role to find matching ancestor for
@@ -132,6 +133,31 @@ public:
     */
    static already_AddRefed<nsIAccessible>
      GetAncestorWithRole(nsIAccessible *aDescendant, PRUint32 aRole);
+
+  /**
+   * Helper method to scroll range into view, used for implementation of
+   * nsIAccessibleText::scrollSubstringTo().
+   *
+   * @param aFrame        the frame for accessible the range belongs to.
+   * @param aStartNode    start node of a range
+   * @param aStartOffset  an offset inside the start node
+   * @param aEndNode      end node of a range
+   * @param aEndOffset    an offset inside the end node
+   * @param aScrollType   the place a range should be scrolled to
+   */
+  static nsresult ScrollSubstringTo(nsIFrame *aFrame,
+                                    nsIDOMNode *aStartNode, PRInt32 aStartIndex,
+                                    nsIDOMNode *aEndNode, PRInt32 aEndIndex,
+                                    PRUint32 aScrollType);
+
+  /**
+   * Converts scroll type constant defined in nsIAccessibleScrollType to
+   * vertical and horizontal percents.
+   */
+  static void ConvertScrollTypeToPercents(PRUint32 aScrollType,
+                                          PRInt16 *aVPercent,
+                                          PRInt16 *aHPercent);
 };
 
 #endif
+

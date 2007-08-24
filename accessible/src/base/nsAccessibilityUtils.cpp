@@ -38,12 +38,21 @@
 
 #include "nsAccessibilityUtils.h"
 
+#include "nsIAccessibleTypes.h"
 #include "nsPIAccessible.h"
 #include "nsAccessibleEventData.h"
 
+#include "nsIDOMRange.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIEventListenerManager.h"
+#include "nsISelection2.h"
+#include "nsISelectionController.h"
+
+#include "nsContentCID.h"
+#include "nsComponentManagerUtils.h"
+
+static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 void
 nsAccUtils::GetAccAttr(nsIPersistentProperties *aAttributes, nsIAtom *aAttrName,
@@ -223,3 +232,82 @@ nsAccUtils::GetAncestorWithRole(nsIAccessible *aDescendant, PRUint32 aRole)
   }
   return nsnull;
 }
+
+nsresult
+nsAccUtils::ScrollSubstringTo(nsIFrame *aFrame,
+                              nsIDOMNode *aStartNode, PRInt32 aStartIndex,
+                              nsIDOMNode *aEndNode, PRInt32 aEndIndex,
+                              PRUint32 aScrollType)
+{
+  if (!aFrame || !aStartNode || !aEndNode)
+    return NS_ERROR_FAILURE;
+
+  nsPresContext *presContext = aFrame->PresContext();
+
+  nsCOMPtr<nsIDOMRange> scrollToRange = do_CreateInstance(kRangeCID);
+  NS_ENSURE_TRUE(scrollToRange, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsISelectionController> selCon;
+  aFrame->GetSelectionController(presContext, getter_AddRefs(selCon));
+  NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
+
+  scrollToRange->SetStart(aStartNode, aStartIndex);
+  scrollToRange->SetEnd(aEndNode, aEndIndex);
+
+  nsCOMPtr<nsISelection> selection1;
+  selCon->GetSelection(nsISelectionController::SELECTION_ACCESSIBILITY,
+                       getter_AddRefs(selection1));
+
+  nsCOMPtr<nsISelection2> selection(do_QueryInterface(selection1));
+  if (selection) {
+    selection->RemoveAllRanges();
+    selection->AddRange(scrollToRange);
+
+    PRInt16 vPercent, hPercent;
+    ConvertScrollTypeToPercents(aScrollType, &vPercent, &hPercent);
+    selection->ScrollIntoView(nsISelectionController::SELECTION_ANCHOR_REGION,
+                              PR_TRUE, vPercent, hPercent);
+
+    selection->CollapseToStart();
+  }
+
+  return NS_OK;
+}
+
+void
+nsAccUtils::ConvertScrollTypeToPercents(PRUint32 aScrollType,
+                                        PRInt16 *aVPercent,
+                                        PRInt16 *aHPercent)
+{
+  switch (aScrollType)
+  {
+    case nsIAccessibleScrollType::SCROLL_TYPE_TOP_LEFT:
+      *aVPercent = NS_PRESSHELL_SCROLL_TOP;
+      *aHPercent = NS_PRESSHELL_SCROLL_LEFT;
+      break;
+    case nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_RIGHT:
+      *aVPercent = NS_PRESSHELL_SCROLL_BOTTOM;
+      *aHPercent = NS_PRESSHELL_SCROLL_RIGHT;
+      break;
+    case nsIAccessibleScrollType::SCROLL_TYPE_TOP_EDGE:
+      *aVPercent = NS_PRESSHELL_SCROLL_TOP;
+      *aHPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
+      break;
+    case nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_EDGE:
+      *aVPercent = NS_PRESSHELL_SCROLL_BOTTOM;
+      *aHPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
+      break;
+    case nsIAccessibleScrollType::SCROLL_TYPE_LEFT_EDGE:
+      *aVPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
+      *aHPercent = NS_PRESSHELL_SCROLL_LEFT;
+      break;
+    case nsIAccessibleScrollType::SCROLL_TYPE_RIGHT_EDGE:
+      *aVPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
+      *aHPercent = NS_PRESSHELL_SCROLL_RIGHT;
+      break;
+    default:
+      *aVPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
+      *aHPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
+  }
+}
+
