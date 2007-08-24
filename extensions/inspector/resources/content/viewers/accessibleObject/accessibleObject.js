@@ -43,22 +43,30 @@
 *   chrome://inspector/content/jsutil/events/ObserverManager.js
 ****************************************************************/
 
-//////////// global variables /////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//// Global Variables
 
 var viewer;
 var bundle;
 var accService;
 
-//////////// global constants ////////////////////
-//////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+//// Global Constants
+
+const kAccessibleRetrievalCID = "@mozilla.org/accessibleRetrieval;1";
+
+const nsIAccessibleRetrieval = Components.interfaces.nsIAccessibleRetrieval;
+const nsIAccessible = Components.interfaces.nsIAccessible;
+
+///////////////////////////////////////////////////////////////////////////////
+//// Initialization/Destruction
 
 window.addEventListener("load", AccessibleObjectViewer_initialize, false);
 
 function AccessibleObjectViewer_initialize()
 {
   bundle = document.getElementById("inspector-bundle");
-  accService = Components.classes['@mozilla.org/accessibleRetrieval;1']
-                         .getService(Components.interfaces.nsIAccessibleRetrieval);
+  accService = XPCU.getService(kAccessibleRetrievalCID, nsIAccessibleRetrieval);
 
   viewer = new JSObjectViewer();
 
@@ -76,7 +84,11 @@ function AccessibleObjectViewer_initialize()
     {
       var accObject = null;
       try {
-        accObject = accService.getAccessibleFor(aObject);
+        accObject = aObject.getUserData("accessible");
+        if (accObject)
+          XPCU.QI(accObject, nsIAccessible);
+        else
+          accObject = accService.getAccessibleFor(aObject);
       } catch(e) {
         dump("Failed to get accessible object for node.");
       }

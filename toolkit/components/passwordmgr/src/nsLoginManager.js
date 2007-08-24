@@ -470,8 +470,7 @@ LoginManager.prototype = {
     /*
      * findLogins
      *
-     * Search the known logins for entries matching the specified criteria
-     * for a protocol login (eg HTTP Auth).
+     * Search for the known logins for entries matching the specified criteria.
      */
     findLogins : function (count, hostname, formSubmitURL, httpRealm) {
         this.log("Searching for logins matching host: " + hostname +
@@ -479,6 +478,20 @@ LoginManager.prototype = {
 
         return this._storage.findLogins(count, hostname, formSubmitURL,
                                         httpRealm);
+    },
+
+
+    /*
+     * countLogins
+     *
+     * Search for the known logins for entries matching the specified criteria,
+     * returns only the count.
+     */
+    countLogins : function (hostname, formSubmitURL, httpRealm) {
+        this.log("Counting logins matching host: " + hostname +
+            ", formSubmitURL: " + formSubmitURL + ", httpRealm: " + httpRealm);
+
+        return this._storage.countLogins(hostname, formSubmitURL, httpRealm);
     },
 
 
@@ -1228,10 +1241,10 @@ function UserAutoCompleteResult (aSearchString, matchingLogins) {
         var userA = a.username.toLowerCase();
         var userB = b.username.toLowerCase();
 
-        if (a < b)
+        if (userA < userB)
             return -1;
 
-        if (b > a)
+        if (userB > userA)
             return  1;
 
         return 0;
@@ -1284,7 +1297,8 @@ UserAutoCompleteResult.prototype = {
         if (index < 0 || index >= this.logins.length)
             throw "Index out of range.";
 
-        var removedLogin = this.logins.splice(index, 1);
+        var [removedLogin] = this.logins.splice(index, 1);
+
         this.matchCount--;
         if (this.defaultIndex > this.logins.length)
             this.defaultIndex--;

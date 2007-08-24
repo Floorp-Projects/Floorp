@@ -52,6 +52,7 @@ endif
 REQUIRES	= xpcom \
 		  string \
 		  gfx \
+		  thebes \
 		  layout \
 		  content \
 		  widget \

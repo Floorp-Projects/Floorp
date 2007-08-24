@@ -1040,6 +1040,20 @@ nsAccessibilityService::GetStringStates(PRUint32 aStates, PRUint32 aExtraStates,
   return NS_OK;
 }
 
+// nsIAccessibleRetrieval::getStringEventType()
+NS_IMETHODIMP
+nsAccessibilityService::GetStringEventType(PRUint32 aEventType,
+                                           nsAString& aString)
+{
+  if ( aEventType >= NS_ARRAY_LENGTH(kEventTypeNames)) {
+    aString.AssignLiteral("unknown");
+    return NS_OK;
+  }
+
+  CopyUTF8toUTF16(kEventTypeNames[aEventType], aString);
+  return NS_OK;
+}
+
 /**
   * GetAccessibleFor - get an nsIAccessible from a DOM node
   */

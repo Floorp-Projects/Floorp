@@ -95,6 +95,7 @@ CPPSRCS = 				\
   nsSmartCardEvent.cpp \
   nsStreamCipher.cpp \
   nsKeyModule.cpp \
+  nsIdentityChecking.cpp \
 	$(NULL)
 
 ifdef MOZ_XUL

@@ -51,8 +51,11 @@
 #include "nsISSLSocketControl.h"
 #include "nsISSLStatus.h"
 #include "nsISSLStatusProvider.h"
+#include "nsIIdentityInfo.h"
 #include "nsXPIDLString.h"
 #include "nsNSSShutDown.h"
+#include "nsAutoPtr.h"
+#include "nsNSSCertificate.h"
 
 class nsIChannel;
 class nsSSLThread;
@@ -123,6 +126,7 @@ class nsNSSSocketInfo : public nsITransportSecurityInfo,
                         public nsISSLSocketControl,
                         public nsIInterfaceRequestor,
                         public nsISSLStatusProvider,
+                        public nsIIdentityInfo,
                         public nsNSSShutDownObject,
                         public nsOnPK11LogoutCancelObject
 {
@@ -135,6 +139,7 @@ public:
   NS_DECL_NSISSLSOCKETCONTROL
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSISSLSTATUSPROVIDER
+  NS_DECL_NSIIDENTITYINFO
 
   nsresult SetSecurityState(PRUint32 aState);
   nsresult SetShortSecurityDescription(const PRUnichar *aText);
@@ -154,6 +159,9 @@ public:
 
   nsresult GetPort(PRInt32 *aPort);
   nsresult SetPort(PRInt32 aPort);
+
+  nsresult GetCert(nsNSSCertificate** _result);
+  nsresult SetCert(nsNSSCertificate *aCert);
 
   void SetCanceled(PRBool aCanceled);
   PRBool GetCanceled();
@@ -187,6 +195,7 @@ public:
 protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   PRFileDesc* mFd;
+  nsRefPtr<nsNSSCertificate> mCert;
   enum { 
     blocking_state_unknown, is_nonblocking_socket, is_blocking_socket 
   } mBlockingState;

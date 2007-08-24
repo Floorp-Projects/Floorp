@@ -914,8 +914,10 @@ nsresult nsURILoader::OpenChannel(nsIChannel* channel,
         rv = nsDocLoader::AddDocLoaderAsChildOfRoot(newDocLoader);
         if (NS_FAILED(rv))
           return rv;
-        listener->SetLoadCookie(nsDocLoader::GetAsSupports(newDocLoader));
+        cookie = nsDocLoader::GetAsSupports(newDocLoader);
+        listener->SetLoadCookie(cookie);
       }
+      loadGroup = do_GetInterface(cookie);
     }
   }
 

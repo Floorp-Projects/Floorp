@@ -80,12 +80,12 @@
         </row>
         <row>
           <label control="pw1" value="&setPassword.newPassword.label;"/> 
-          <textbox id="pw1" type="password" disabled="true"
+          <textbox id="pw1" type="password" 
                    oninput="setPasswordStrength(); checkPasswords();"/> 
         </row>
         <row>
           <label control="pw2" value="&setPassword.reenterPassword.label;"/> 
-          <textbox id="pw2" type="password" disabled="true" oninput="checkPasswords();"/>  
+          <textbox id="pw2" type="password" oninput="checkPasswords();"/>  
         </row>
       </rows>
     </grid>

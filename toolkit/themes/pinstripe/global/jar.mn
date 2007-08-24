@@ -6,15 +6,8 @@ classic.jar:
 +  skin/classic/global/50pct_transparent_grey.png
 +  skin/classic/global/50pct_transparent_white.png
 +  skin/classic/global/about.css                                      (../../winstripe/global/about.css)
-+  skin/classic/global/activetab-left.png
-+  skin/classic/global/activetab-middle.png
-+  skin/classic/global/activetab-right.png
 +  skin/classic/global/arrow.css
-+  skin/classic/global/alltabs-box-bkgnd.png
-+  skin/classic/global/alltabs-box-overflow-bkgnd.png
-+  skin/classic/global/alltabs-box-overflow-bkgnd-animate.png
 +  skin/classic/global/autocomplete.css
-*+  skin/classic/global/browser.css
 +  skin/classic/global/button.css
 +  skin/classic/global/checkbox.css
 +  skin/classic/global/closetab.png
@@ -27,11 +20,7 @@ classic.jar:
 +  skin/classic/global/formatting.css
 +  skin/classic/global/findBar.css
 +  skin/classic/global/global.css
-+  skin/classic/global/globalBindings.xml
 +  skin/classic/global/groupbox.css
-+  skin/classic/global/inactive-icon-black.png
-+  skin/classic/global/inactivetab-icon-black.png
-+  skin/classic/global/inactivetab-icon-grey.png
 +  skin/classic/global/linkTree.css
 +  skin/classic/global/listbox_highlight.png
 +  skin/classic/global/listbox.css
@@ -54,24 +43,7 @@ classic.jar:
 +  skin/classic/global/scrollbox.css
 +  skin/classic/global/spinbuttons.css
 +  skin/classic/global/splitter.css
-+  skin/classic/global/tab-arrow-start.png
-+  skin/classic/global/tab-arrow-start-bkgnd.png
-+  skin/classic/global/tab-arrow-start-bkgnd-animate.png
-+  skin/classic/global/tab-arrow-end.png
-+  skin/classic/global/tab-arrow-end-bkgnd.png
-+  skin/classic/global/tab-arrow-end-bkgnd-animate.png
-+  skin/classic/global/tab-left.png
-+  skin/classic/global/tab-middle.png
-+  skin/classic/global/tab-right.png
-+  skin/classic/global/tab-left-bkgnd.png
-+  skin/classic/global/tab-middle-bkgnd.png
-+  skin/classic/global/tab-right-bkgnd.png
-+  skin/classic/global/tab-left-hover.png
-+  skin/classic/global/tab-middle-hover.png
-+  skin/classic/global/tab-right-hover.png
 +  skin/classic/global/tabbox.css
-+  skin/classic/global/tabbrowser-tabs-bkgnd.png
-+  skin/classic/global/tabs-bottom-bg.png
 +  skin/classic/global/textbox.css
 +  skin/classic/global/datetimepicker.css
 +  skin/classic/global/toolbar.css
@@ -175,7 +147,6 @@ classic.jar:
 +  skin/classic/global/splitter/grip-hrz-before.gif                   (splitter/grip-hrz-before.gif)
 +  skin/classic/global/splitter/grip-vrt-after.gif                    (splitter/grip-vrt-after.gif)
 +  skin/classic/global/splitter/grip-vrt-before.gif                   (splitter/grip-vrt-before.gif)
-+  skin/classic/global/tabDragDrop/tabDragIndicator.png               (tabDragDrop/tabDragIndicator.png)
 +  skin/classic/global/toolbar/Lighten.png                            (toolbar/Lighten.png)
 +  skin/classic/global/toolbar/dropmark-nav.png                       (toolbar/dropmark-nav.png)
 +  skin/classic/global/toolbar/dropmark-nav-small.png                 (toolbar/dropmark-nav-small.png)

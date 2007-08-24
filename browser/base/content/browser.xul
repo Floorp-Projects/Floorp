@@ -75,7 +75,7 @@
 # so that they can be shared by macBrowserOverlay.xul.
 #include global-scripts.inc
 <script type="application/x-javascript" src="chrome://browser/content/nsContextMenu.js"/>
-  
+
 #ifdef MOZ_SAFE_BROWSING
 <script type="application/x-javascript" src="chrome://browser/content/safebrowsing/sb-loader.js"/>
 #endif
@@ -100,8 +100,16 @@
 
     <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete" noautofocus="true"/>
 
-    <panel id="editBookmarkPanel">
+    <panel id="editBookmarkPanel" orient="vertical">
       <vbox id="editBookmarkPanelContent" flex="1"/>
+      <hbox flex="1">
+        <spacer flex="1"/>
+        <button label="&editBookmark.delete.label;"
+                oncommand="PlacesCommandHook.deleteButtonOnCommand();"/>
+        <button label="&editBookmark.done.label;"
+                default="true"
+                oncommand="PlacesCommandHook.doneButtonOnCommand();"/>
+      </hbox>
     </panel>
 
     <popup id="toolbar-context-menu"

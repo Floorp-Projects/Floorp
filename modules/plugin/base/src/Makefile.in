@@ -66,6 +66,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  dom \
 		  gfx \
+		  thebes \
 		  content \
 		  widget \
 		  mimetype \

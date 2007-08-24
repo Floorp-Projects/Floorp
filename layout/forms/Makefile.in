@@ -42,6 +42,12 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS = $(NULL)
+
+ifdef MOZ_MOCHITEST
+DIRS		+= test
+endif
+
 MODULE		= layout
 LIBRARY_NAME	= gkforms_s
 LIBXUL_LIBRARY	= 1

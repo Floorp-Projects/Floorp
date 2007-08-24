@@ -41,7 +41,7 @@
 
 interface nsIAutoCompleteInput;
 
-[scriptable, uuid(b865d5cf-2ce1-4a5b-bb99-3d8a71df5ee9)]
+[scriptable, uuid(bb4d04f6-997b-437a-9216-7a3dbbd848d0)]
 interface nsIAutoCompleteController : nsISupports
 {
   /*
@@ -51,7 +51,7 @@ interface nsIAutoCompleteController : nsISupports
   const unsigned short STATUS_SEARCHING = 2;
   const unsigned short STATUS_COMPLETE_NO_MATCH = 3;
   const unsigned short STATUS_COMPLETE_MATCH = 4;
-  
+
   /*
    * The input widget that is currently being controlled.
    */
@@ -71,6 +71,11 @@ interface nsIAutoCompleteController : nsISupports
    * Start a search on a string, assuming the input property is already set.
    */
   void startSearch(in AString searchString);
+
+  /* 
+   * Stop all asynchronous searches
+   */
+  void stopSearch();
 
   /*
    * Notify the controller that the user has changed text in the textbox.  This includes all

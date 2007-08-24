@@ -46,6 +46,8 @@ var Ci = Components.interfaces;
 var Cc = Components.classes;
 var Cr = Components.results;
 
+Components.utils.import("resource://gre/modules/JSON.jsm");
+
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const POST_DATA_ANNO = "URIProperties/POSTData";
@@ -543,7 +545,7 @@ var PlacesUtils = {
           } 
           return node;
         }
-        return this.toJSONString(gatherDataPlace(convertNode(aNode)));
+        return JSON.toString(gatherDataPlace(convertNode(aNode)));
 
       case this.TYPE_X_MOZ_URL:
         function gatherDataUrl(bNode) {
@@ -756,7 +758,7 @@ var PlacesUtils = {
       case this.TYPE_X_MOZ_PLACE:
       case this.TYPE_X_MOZ_PLACE_SEPARATOR:
       case this.TYPE_X_MOZ_PLACE_CONTAINER:
-        nodes = this.parseJSON("[" + blob + "]");
+        nodes = JSON.fromString("[" + blob + "]");
         break;
       case this.TYPE_X_MOZ_URL:
         var parts = blob.split("\n");
@@ -1447,10 +1449,7 @@ var PlacesUtils = {
   },
 
   get toolbarFolderId() {
-    if (!("_toolbarFolderId" in this))
-      this._toolbarFolderId = this.bookmarks.toolbarFolder;
-
-    return this._toolbarFolderId;
+    return this.bookmarks.toolbarFolder;
   },
 
   get tagRootId() {
@@ -1516,113 +1515,6 @@ var PlacesUtils = {
       }
     }
     return -1;
-  },
-
-  /**
-   * Converts a JavaScript object into a JSON string
-   * (see http://www.json.org/ for the full grammar).
-   *
-   * The inverse operation consists of eval("(" + JSON_string + ")");
-   * and should be provably safe.
-   *
-   * @param aJSObject is the object to be converted
-   * @return the object's JSON representation
-   */
-  toJSONString: function PU_toJSONString(aJSObject) {
-    // these characters have a special escape notation
-    const charMap = { "\b": "\\b", "\t": "\\t", "\n": "\\n", "\f": "\\f",
-                      "\r": "\\r", '"': '\\"', "\\": "\\\\" };
-    // we use a single string builder for efficiency reasons
-    var parts = [];
-    
-    // this recursive function walks through all objects and appends their
-    // JSON representation to the string builder
-    function jsonIfy(aObj) {
-      if (typeof aObj == "boolean") {
-        parts.push(aObj ? "true" : "false");
-      }
-      else if (typeof aObj == "number" && isFinite(aObj)) {
-        // there is no representation for infinite numbers or for NaN!
-        parts.push(aObj.toString());
-      }
-      else if (typeof aObj == "string") {
-        aObj = aObj.replace(/[\\"\x00-\x1F\u0080-\uFFFF]/g, function($0) {
-          // use the special escape notation if one exists, otherwise
-          // produce a general unicode escape sequence
-          return charMap[$0] ||
-            "\\u" + ("0000" + $0.charCodeAt(0).toString(16)).slice(-4);
-        });
-        parts.push('"' + aObj + '"');
-      }
-      else if (aObj == null) {
-        parts.push("null");
-      }
-      else if (aObj instanceof Array) {
-        parts.push("[");
-        for (var i = 0; i < aObj.length; i++) {
-          jsonIfy(aObj[i]);
-          parts.push(",");
-        }
-        if (parts[parts.length - 1] == ",")
-          parts.pop(); // drop the trailing colon
-        parts.push("]");
-      }
-      else if (typeof aObj == "object") {
-        parts.push("{");
-        for (var key in aObj) {
-          jsonIfy(key.toString());
-          parts.push(":");
-          jsonIfy(aObj[key]);
-          parts.push(",");
-        }
-        if (parts[parts.length - 1] == ",")
-          parts.pop(); // drop the trailing colon
-        parts.push("}");
-      }
-      else {
-        throw new Error("No JSON representation for this object!");
-      }
-    } // end of jsonIfy definition
-    jsonIfy(aJSObject);
-    
-    var newJSONString = parts.join(" ");
-    // sanity check - so that API consumers can just eval this string
-    if (/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/.test(
-      newJSONString.replace(/"(\\.|[^"\\])*"/g, "")
-    ))
-      throw new Error("JSON conversion failed unexpectedly!");
-    
-    return newJSONString;
-  },
-  
-  /**
-   * Converts a JSON string into a JavaScript object
-   * (see http://www.json.org/ for the full grammar).
-   *
-   * @param jsonText is the object to be converted
-   * @return a JS Object
-   */
-  parseJSON: function parseJSON(jsonText) {
-    var m = {
-        '\b': '\\b',
-        '\t': '\\t',
-        '\n': '\\n',
-        '\f': '\\f',
-        '\r': '\\r',
-        '"' : '\\"',
-        '\\': '\\\\'
-    };
-    
-    var EVAL_SANDBOX = new Components.utils.Sandbox("about:blank");
-    
-    if (/^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]*$/.test(jsonText.
-                    replace(/\\./g, '@').
-                    replace(/"[^"\\\n\r]*"/g, ''))) {
-      var j = Components.utils.evalInSandbox(jsonText, EVAL_SANDBOX);
-      return j;
-    }
-    else
-      throw new SyntaxError('parseJSON');
   }
 };
 

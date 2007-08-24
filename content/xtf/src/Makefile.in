@@ -50,6 +50,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  widget \
 		  gfx \
+		  thebes \
 		  dom \
 		  js \
 		  locale \

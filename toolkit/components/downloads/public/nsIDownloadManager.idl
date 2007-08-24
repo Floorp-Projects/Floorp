@@ -51,17 +51,18 @@ interface nsIDownloadProgressListener;
 interface nsISimpleEnumerator;
 interface mozIStorageConnection;
 
-[scriptable, uuid(a44925cb-186a-4e57-846e-8f9504b9f675)]
+[scriptable, uuid(b23d291f-2893-48ea-abda-ba9c9fe69c95)]
 interface nsIDownloadManager : nsISupports {
   // Download States
   const short DOWNLOAD_NOTSTARTED       = -1;
-  const short DOWNLOAD_QUEUED           = 5;
   const short DOWNLOAD_DOWNLOADING      = 0;
   const short DOWNLOAD_FINISHED         = 1;
   const short DOWNLOAD_FAILED           = 2;
   const short DOWNLOAD_CANCELED         = 3;
   const short DOWNLOAD_PAUSED           = 4;
+  const short DOWNLOAD_QUEUED           = 5;
   const short DOWNLOAD_BLOCKED          = 6;
+  const short DOWNLOAD_SCANNING         = 7;
 
   const short DOWNLOAD_TYPE_DOWNLOAD    = 0;
 
@@ -210,6 +211,33 @@ interface nsIDownloadManager : nsISupports {
    * Removes a listener from the download manager.
    */
   void removeListener(in nsIDownloadProgressListener aListener);
+
+  /**
+   * Returns the platform default downloads directory.
+   */
+  readonly attribute nsILocalFile defaultDownloadsDirectory;
+
+  /**
+   * Returns the user configured downloads directory. 
+   * The path is dependent on two user configurable prefs
+   * set in preferences:
+   *
+   * browser.download.folderList
+   *   Indicates the location users wish to save downloaded 
+   *   files too.  
+   *   Values: 
+   *     0 - The desktop is the default download location. 
+   *     1 - The system's downloads folder is the default download location. 
+   *     2 - The default download location is elsewhere as specified in  
+   *         browser.download.dir. If invalid, userDownloadsDirectory
+   *         will fallback on defaultDownloadsDirectory.
+   *
+   * browser.download.dir - 
+   *   A local path the user may have selected at some point 
+   *   where downloaded files are saved. The use of which is
+   *   enabled when folderList equals 2. 
+   */
+  readonly attribute nsILocalFile userDownloadsDirectory;
 };
 
 

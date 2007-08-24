@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Open panel from menuitem"
+  onload="setTimeout(runTests, 0);"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
+
+<!--
+  This test does the following:
+   1. Opens the menu, causing the popupshown event to fire, which will call menuOpened.
+   2. Keyboard events are fired to cause the first item on the menu to be executed.
+   3. The command event handler for the first menuitem opens the panel.
+   4. As a menuitem was executed, the menu will roll up, hiding it.
+   5. The popuphidden event for the menu calls menuClosed which tests the popup states.
+   6. The panelOpened function tests the popup states again and hides the popup.
+   7. Once the panel's popuphidden event fires, the tests are complete.
+  -->
+
+<menu id="menu" onpopupshown="menuOpened()" onpopuphidden="menuClosed();">
+  <menupopup>
+    <menuitem id="i1" label="One" oncommand="$('panel').openPopup($('menu'), 'after_start');"/>
+    <menuitem id="i2" label="Two"/>
+  </menupopup>
+</menu>
+
+<panel id="panel" onpopupshown="panelOpened()" onpopuphidden="SimpleTest.finish()">
+  <textbox/>
+</panel>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function runTests()
+{
+  var menu = $("menu");
+  menu.open = true;
+}
+
+function menuOpened()
+{
+  synthesizeKey("VK_DOWN", { });
+  synthesizeKey("VK_ENTER", { });
+}
+
+function menuClosed()
+{
+  // the panel will be open at this point, but the popupshown event
+  // still needs to fire
+  is($("panel").state, "open", "panel is open after menu hide");
+  is($("menu").firstChild.state, "closed", "menu is closed after menu hide");
+}
+
+function panelOpened()
+{
+  is($("panel").state, "open", "panel is open");
+  is($("menu").firstChild.state, "closed", "menu is closed");
+  $("panel").hidePopup();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

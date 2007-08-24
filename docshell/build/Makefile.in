@@ -62,6 +62,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  nkcache \
 		  gfx \
+		  thebes \
 		  content \
 		  layout \
 		  webshell \

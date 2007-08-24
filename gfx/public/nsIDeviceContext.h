@@ -44,6 +44,8 @@
 #include "nsRect.h"
 #include "nsIWidget.h"
 #include "nsIRenderingContext.h"
+// XXX we need only gfxTypes.h, but we cannot include it directly.
+#include "gfxPoint.h"
 
 class nsIView;
 class nsIFontMetrics;
@@ -166,10 +168,10 @@ const PRUint8 kUseAltDCFor_CREATERC_PAINT  = 0x04; // Use when creating Renderin
 const PRUint8 kUseAltDCFor_SURFACE_DIM     = 0x08; // Use it for getting the Surface Dimensions
 #endif
 
-// 7353cfdf-964f-4c20-8729-b11729cc0000
+// 4dd372b6-ef19-4995-a7ac-ba3efd3f656f
 #define NS_IDEVICE_CONTEXT_IID   \
-{ 0x7353cfdf, 0x964f, 0x4c20, \
- { 0x87, 0x29, 0xb1, 0x17, 0x29, 0xcc, 0x00, 0x00 } }
+{ 0x4dd372b6, 0xef19, 0x4995, \
+ { 0xa7, 0xac, 0xba, 0x3e, 0xfd, 0x3f, 0x65, 0x6f } }
 
 //a cross platform way of specifying a native palette handle
 typedef void * nsPalette;
@@ -281,10 +283,22 @@ public:
   static PRInt32 AppUnitsPerCSSPixel() { return 60; }
 
   /**
+   * Convert app units to CSS pixels which is used in gfx/thebes.
+   */
+  static gfxFloat AppUnitsToGfxCSSPixels(nscoord aAppUnits)
+  { return gfxFloat(aAppUnits) / AppUnitsPerCSSPixel(); }
+
+  /**
    * Gets the number of app units in one device pixel; this number is usually
    * a factor of AppUnitsPerCSSPixel(), although that is not guaranteed.
    */
   PRInt32 AppUnitsPerDevPixel() const { return mAppUnitsPerDevPixel; }
+
+  /**
+   * Convert app units to device pixels which is used in gfx/thebes.
+   */
+  gfxFloat AppUnitsToGfxUnits(nscoord aAppUnits) const
+  { return gfxFloat(aAppUnits) / AppUnitsPerDevPixel(); }
 
   /**
    * Gets the number of app units in one inch; this is the device's DPI

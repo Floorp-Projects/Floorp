@@ -21,10 +21,10 @@ my @allSteps = (
     'Build',
     'Source',
     'Repack',
+    'Sign',
     'PatcherConfig',
     'Updates',
     'Stage',
-    'Sign',
 );
 
 my %config;

@@ -25,6 +25,8 @@
     locale/browser/setDesktopBackground.dtd        (%chrome/browser/setDesktopBackground.dtd)
     locale/browser/shellservice.properties         (%chrome/browser/shellservice.properties)
     locale/browser/sessionstore.properties         (%chrome/browser/sessionstore.properties)
+    locale/browser/tabbrowser.dtd                  (%chrome/browser/tabbrowser.dtd)
+    locale/browser/tabbrowser.properties           (%chrome/browser/tabbrowser.properties)
     locale/browser/places/places.dtd               (%chrome/browser/places/places.dtd)
     locale/browser/places/places.properties        (%chrome/browser/places/places.properties)
     locale/browser/places/editBookmarkOverlay.dtd  (%chrome/browser/places/editBookmarkOverlay.dtd)

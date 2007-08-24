@@ -516,7 +516,7 @@ nsSafariProfileMigrator::SetDownloadFolder(void* aTransform, nsIPrefBranch* aBra
   PRBool equals;
   downloadFolder->Equals(desktopFolder, &equals);
   aBranch->SetIntPref("browser.download.folderList", equals ? 0 : 2);
-  aBranch->SetComplexValue("browser.download.defaultFolder",
+  aBranch->SetComplexValue("browser.download.dir",
                            NS_GET_IID(nsILocalFile), downloadFolder);
 
   return NS_OK;

@@ -38,6 +38,10 @@
 #ifndef nsCycleCollector_h__
 #define nsCycleCollector_h__
 
+// NOTE: If you use header files to define DEBUG_CC, you must do so here
+// *and* in nsCycleCollectionParticipant.h
+//#define DEBUG_CC
+
 class nsISupports;
 class nsCycleCollectionParticipant;
 
@@ -49,6 +53,13 @@ struct nsCycleCollectionLanguageRuntime
     virtual nsresult BeginCycleCollection() = 0;
     virtual nsresult FinishCycleCollection() = 0;
     virtual nsCycleCollectionParticipant *ToParticipant(void *p) = 0;
+#ifdef DEBUG_CC
+    virtual void PrintAllReferencesTo(void *p) = 0;
+
+    // Call suspectCurrent on any extra pointers that will help build a
+    // larger object graph for debugging.
+    virtual void SuspectExtraPointers() = 0;
+#endif
 };
 
 // PRBool nsCycleCollector_suspect(nsISupports *n);

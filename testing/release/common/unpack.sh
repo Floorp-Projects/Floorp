@@ -3,6 +3,7 @@ unpack_build () {
     unpack_platform="$1"
     dir_name="$2"
     pkg_file="$3"
+    locale=$4
 
     mkdir -p $dir_name
     pushd $dir_name > /dev/null
@@ -29,6 +30,7 @@ unpack_build () {
               do
                 unzip -o $file > /dev/null
               done
+              unzip -o ${locale}.xpi > /dev/null
             fi
             ;;
         linux-i686|linux|Linux_x86-gcc|Linux_x86-gcc3)

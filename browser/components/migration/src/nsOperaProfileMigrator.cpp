@@ -314,7 +314,7 @@ nsOperaProfileMigrator::GetSourceHomePageURL(nsACString& aResult)
 
 static
 nsOperaProfileMigrator::PrefTransform gTransforms[] = {
-  { "User Prefs", "Download Directory", _OPM(STRING), "browser.download.defaultFolder", _OPM(SetFile), PR_FALSE, -1 },
+  { "User Prefs", "Download Directory", _OPM(STRING), "browser.download.dir", _OPM(SetFile), PR_FALSE, -1 },
   { nsnull, "Enable Cookies", _OPM(INT), "network.cookie.cookieBehavior", _OPM(SetCookieBehavior), PR_FALSE, -1 },
   { nsnull, "Accept Cookies Session Only", _OPM(BOOL), "network.cookie.enableForCurrentSessionOnly", _OPM(SetBool), PR_FALSE, -1 },
   { nsnull, "Allow script to resize window", _OPM(BOOL), "dom.disable_window_move_resize", _OPM(SetBool), PR_FALSE, -1 },

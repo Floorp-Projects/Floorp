@@ -230,6 +230,18 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_SECURE_MED      = 0x00010000;
   const unsigned long STATE_SECURE_LOW      = 0x00020000;
 
+  /**
+    * State bits for EV == Extended Validation == High Assurance
+    *
+    * These flags describe the level of identity verification
+    * in a call to the onSecurityChange method. 
+    *
+    * STATE_IDENTITY_EV_TOPLEVEL
+    *   The topmost document uses an EV cert.
+    *   NOTE: Available since Gecko 1.9
+    */
+
+  const unsigned long STATE_IDENTITY_EV_TOPLEVEL    = 0x00100000;
 
   /**
    * Notification indicating the state has changed for one of the requests

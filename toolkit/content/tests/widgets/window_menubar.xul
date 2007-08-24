@@ -1,8 +1,11 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
+<!-- the condition in the focus event handler is because pressing Tab
+     unfocuses and refocuses the window on Windows -->
+
 <window title="Popup Tests"
-  onfocus="runTests()"
+  onfocus="if(gTestIndex == -1) runTests()"
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -492,6 +495,49 @@ var popupTests = [
     checkClosed("editmenu", testname);
   }
 },
+{
+  testname: "F10 to activate menubar for tab deactivation",
+  events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ],
+  test: function() { synthesizeKey("VK_F10", { }); },
+},
+{
+  testname: "Deactivate menubar with tab key",
+  events: [ "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu" ],
+  test: function() { synthesizeKey("VK_TAB", { }); },
+},
+{
+  testname: "F10 to activate menubar for escape deactivation",
+  events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ],
+  test: function() { synthesizeKey("VK_F10", { }); },
+},
+{
+  testname: "Deactivate menubar with escape key",
+  events: [ "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu" ],
+  test: function() { synthesizeKey("VK_ESCAPE", { }); },
+},
+{
+  testname: "F10 to activate menubar for f10 deactivation",
+  events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ],
+  test: function() { synthesizeKey("VK_F10", { }); },
+},
+{
+  testname: "Deactivate menubar with f10 key",
+  events: [ "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu"  ],
+  test: function() { synthesizeKey("VK_F10", { }); },
+},
+{
+  testname: "F10 to activate menubar for alt deactivation",
+  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
+  events: [ "DOMMenuBarActive menubar", "DOMMenuItemActive filemenu" ],
+  test: function() { synthesizeKey("VK_F10", { }); },
+},
+{
+  testname: "Deactivate menubar with alt key",
+  condition: function() { return (navigator.platform.indexOf("Win") == 0) },
+  events: [ "DOMMenuBarInactive menubar", "DOMMenuItemInactive filemenu"  ],
+  test: function() { synthesizeKey("VK_ALT", { }); },
+}
+
 ];
 
 ]]>

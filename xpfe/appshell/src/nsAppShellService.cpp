@@ -84,7 +84,8 @@ class nsIAppShell;
 
 nsAppShellService::nsAppShellService() : 
   mXPCOMShuttingDown(PR_FALSE),
-  mModalWindowCount(0)
+  mModalWindowCount(0),
+  mApplicationProvidedHiddenWindow(PR_FALSE)
 {
   nsCOMPtr<nsIObserverService> obs
     (do_GetService("@mozilla.org/observer-service;1"));
@@ -162,6 +163,7 @@ nsAppShellService::CreateHiddenWindow(nsIAppShell* aAppShell)
   nsXPIDLCString prefVal;
   rv = prefBranch->GetCharPref("browser.hiddenWindowChromeURL", getter_Copies(prefVal));
   const char* hiddenWindowURL = prefVal.get() ? prefVal.get() : DEFAULT_HIDDENWINDOW_URL;
+  mApplicationProvidedHiddenWindow = prefVal.get() ? PR_TRUE : PR_FALSE;
 #else
   static const char hiddenWindowURL[] = DEFAULT_HIDDENWINDOW_URL;
   PRUint32    chromeMask =  nsIWebBrowserChrome::CHROME_ALL;
@@ -444,6 +446,13 @@ nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindowInternal **aWindow,
         rv = NS_ERROR_NULL_POINTER;
     }
     return rv;
+}
+
+NS_IMETHODIMP
+nsAppShellService::GetApplicationProvidedHiddenWindow(PRBool* aAPHW)
+{
+    *aAPHW = mApplicationProvidedHiddenWindow;
+    return NS_OK;
 }
 
 /*

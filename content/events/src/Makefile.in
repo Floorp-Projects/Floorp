@@ -51,6 +51,7 @@ REQUIRES	= xpcom \
 		  js \
 		  locale \
 		  gfx \
+		  thebes \
 		  layout \
 		  widget \
 		  caps \

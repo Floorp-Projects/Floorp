@@ -5061,6 +5061,77 @@ nsBlockFrame::TryAllLines(nsLineList::iterator* aIterator,
   }
 }
 
+nsBlockInFlowLineIterator::nsBlockInFlowLineIterator(nsBlockFrame* aFrame,
+    line_iterator& aLine, PRBool aInOverflow)
+  : mFrame(aFrame), mLine(aLine), mInOverflowLines(nsnull)
+{
+  if (aInOverflow) {
+    mInOverflowLines = aFrame->GetOverflowLines();
+    NS_ASSERTION(mInOverflowLines, "How can we be in overflow if there isn't any?");
+  }
+}
+
+PRBool
+nsBlockInFlowLineIterator::Next()
+{
+  ++mLine;
+  line_iterator end = mInOverflowLines ? mInOverflowLines->end() : mFrame->end_lines();
+  if (mLine != end)
+    return PR_TRUE;
+  PRBool currentlyInOverflowLines = mInOverflowLines != nsnull;
+  while (PR_TRUE) {
+    if (currentlyInOverflowLines) {
+      mFrame = static_cast<nsBlockFrame*>(mFrame->GetNextInFlow());
+      if (!mFrame)
+        return PR_FALSE;
+      mInOverflowLines = nsnull;
+      mLine = mFrame->begin_lines();
+      if (mLine != mFrame->end_lines())
+        return PR_TRUE;
+    } else {
+      mInOverflowLines = mFrame->GetOverflowLines();
+      if (mInOverflowLines) {
+        mLine = mInOverflowLines->begin();
+        NS_ASSERTION(mLine != mInOverflowLines->end(), "empty overflow line list?");
+        return PR_TRUE;
+      }
+    }
+    currentlyInOverflowLines = !currentlyInOverflowLines;
+  }
+}
+
+PRBool
+nsBlockInFlowLineIterator::Prev()
+{
+  line_iterator begin = mInOverflowLines ? mInOverflowLines->begin() : mFrame->begin_lines();
+  if (mLine != begin) {
+    --mLine;
+    return PR_TRUE;
+  }
+  PRBool currentlyInOverflowLines = mInOverflowLines != nsnull;
+  while (PR_TRUE) {
+    if (currentlyInOverflowLines) {
+      mLine = mFrame->end_lines();
+      if (mLine != mFrame->begin_lines()) {
+        --mLine;
+        return PR_TRUE;
+      }
+    } else {
+      mFrame = static_cast<nsBlockFrame*>(mFrame->GetPrevInFlow());
+      if (!mFrame)
+        return PR_FALSE;
+      mInOverflowLines = mFrame->GetOverflowLines();
+      if (mInOverflowLines) {
+        mLine = mInOverflowLines->end();
+        NS_ASSERTION(mLine != mInOverflowLines->begin(), "empty overflow line list?");
+        --mLine;
+        return PR_TRUE;
+      }
+    }
+    currentlyInOverflowLines = !currentlyInOverflowLines;
+  }
+}
+
 static nsresult RemoveBlockChild(nsIFrame* aFrame, PRBool aDestroyFrames)
 {
   if (!aFrame)
@@ -5708,14 +5779,17 @@ nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
     PRBool isRTL = visibility->mDirection == NS_STYLE_DIRECTION_RTL;
     nsRefPtr<gfxContext> ctx = (gfxContext*)
       aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-    gfxFloat a2p = 1.0 / PresContext()->AppUnitsPerDevPixel();
-    gfxPoint pt((start + aPt.x) * a2p, (aLine->mBounds.y + aPt.y) * a2p);
-    gfxSize size(width * a2p, aSize * a2p);
-    nsCSSRendering::PaintDecorationLine(ctx, aColor, pt, size,
-                                        aLine->GetAscent() * a2p, aOffset * a2p,
-                                        aSize * a2p, aDecoration,
-                                        NS_STYLE_BORDER_STYLE_SOLID,
-                                        isRTL);
+    PRInt32 app = PresContext()->AppUnitsPerDevPixel();
+    gfxPoint pt(PresContext()->AppUnitsToGfxUnits(start + aPt.x),
+                PresContext()->AppUnitsToGfxUnits(aLine->mBounds.y + aPt.y));
+    gfxSize size(PresContext()->AppUnitsToGfxUnits(width),
+                 PresContext()->AppUnitsToGfxUnits(aSize));
+    nsCSSRendering::PaintDecorationLine(
+      ctx, aColor, pt, size,
+      PresContext()->AppUnitsToGfxUnits(aLine->GetAscent()),
+      PresContext()->AppUnitsToGfxUnits(aOffset),
+      PresContext()->AppUnitsToGfxUnits(aSize),
+      aDecoration, NS_STYLE_BORDER_STYLE_SOLID, isRTL);
   }
 }
 

@@ -214,12 +214,15 @@ nsHTMLContainerFrame::PaintTextDecorationLine(
   nscoord innerWidth = mRect.width - bp.left - bp.right;
   nsRefPtr<gfxContext> ctx = (gfxContext*)
     aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-  gfxFloat a2p = 1.0 / PresContext()->AppUnitsPerDevPixel();
-  gfxPoint pt((bp.left + aPt.x) * a2p, (bp.top + aPt.y) * a2p);
-  gfxSize size(innerWidth * a2p, aSize * a2p);
-  nsCSSRendering::PaintDecorationLine(ctx, aColor, pt, size, aAscent * a2p,
-                                      aOffset * a2p, aSize * a2p, aDecoration,
-                                      NS_STYLE_BORDER_STYLE_SOLID, isRTL);
+  gfxPoint pt(PresContext()->AppUnitsToGfxUnits(bp.left + aPt.x),
+              PresContext()->AppUnitsToGfxUnits(bp.top + aPt.y));
+  gfxSize size(PresContext()->AppUnitsToGfxUnits(innerWidth),
+               PresContext()->AppUnitsToGfxUnits(aSize));
+  nsCSSRendering::PaintDecorationLine(
+    ctx, aColor, pt, size, PresContext()->AppUnitsToGfxUnits(aAscent),
+    PresContext()->AppUnitsToGfxUnits(aOffset),
+    PresContext()->AppUnitsToGfxUnits(aSize),
+    aDecoration, NS_STYLE_BORDER_STYLE_SOLID, isRTL);
 }
 
 void

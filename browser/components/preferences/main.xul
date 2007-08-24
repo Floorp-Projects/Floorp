@@ -91,7 +91,6 @@
                   name="browser.download.dir"
                   type="file"
                   onchange="gMainPane.readDownloadDirPref();"/>
-      <preference id="browser.download.downloadDir"       name="browser.download.downloadDir"       type="file"/>
       <preference id="browser.download.folderList"        name="browser.download.folderList"        type="int"/>
 
       <!-- SYSTEM DEFAULTS -->
@@ -177,8 +176,8 @@
           <filefield id="downloadFolder" flex="1"
                      preference="browser.download.folderList"
                      preference-editable="true"
-                     onsyncfrompreference="return gMainPane.readDownloadDirPref();"
-                     onsynctopreference="return gMainPane.writeFolderList()"/>
+                     onsyncfrompreference="return gMainPane.displayDownloadDirPref();"
+                     onsynctopreference="return gMainPane.getFolderListPref()"/>
           <button id="chooseFolder" oncommand="gMainPane.chooseFolder();"
 #ifdef XP_MACOSX
                   accesskey="&chooseFolderMac.accesskey;"
@@ -188,7 +187,7 @@
                   label="&chooseFolderWin.label;"
 #endif
                   preference="browser.download.folderList"
-                  onsynctopreference="return gMainPane.writeFolderList();"/>
+                  onsynctopreference="return gMainPane.getFolderListPref();"/>
         </hbox>
         <radio id="alwaysAsk" value="false"
                label="&alwaysAsk.label;"

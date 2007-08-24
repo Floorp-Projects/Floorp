@@ -389,7 +389,9 @@ inAccTreeView.prototype.getDOMNodeFor =
 function getDOMNodeFor(aAccessible)
 {
   var accessNode = XPCU.QI(aAccessible, nsIAccessNode);
-  return accessNode.DOMNode;
+  var DOMNode = accessNode.DOMNode;
+  DOMNode.setUserData("accessible", aAccessible, null);
+  return DOMNode;
 }
 
 /**

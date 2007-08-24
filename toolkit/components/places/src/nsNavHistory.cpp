@@ -221,8 +221,8 @@ const PRInt32 nsNavHistory::kGetInfoIndex_ItemLastModified = 10;
 
 const PRInt32 nsNavHistory::kAutoCompleteIndex_URL = 0;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_Title = 1;
-const PRInt32 nsNavHistory::kAutoCompleteIndex_VisitCount = 2;
-const PRInt32 nsNavHistory::kAutoCompleteIndex_Typed = 3;
+const PRInt32 nsNavHistory::kAutoCompleteIndex_FaviconURL = 2;
+const PRInt32 nsNavHistory::kAutoCompleteIndex_ItemId = 3;
 
 static nsDataHashtable<nsCStringHashKey, int>* gTldTypes;
 static const char* gQuitApplicationMessage = "quit-application";
@@ -258,6 +258,11 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
 
 nsNavHistory::~nsNavHistory()
 {
+  if (mAutoCompleteTimer) {
+    mAutoCompleteTimer->Cancel();
+    mAutoCompleteTimer = nsnull;
+  }
+
   // remove the static reference to the service. Check to make sure its us
   // in case somebody creates an extra instance of the service.
   NS_ASSERTION(gHistoryService == this, "YOU CREATED 2 COPIES OF THE HISTORY SERVICE.");
@@ -760,18 +765,6 @@ nsNavHistory::InitStatements()
       "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
       "WHERE h.id = ?1"),
     getter_AddRefs(mDBGetIdPageInfoFull));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // mDBFullAutoComplete
-  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT h.url, h.title, h.visit_count, h.typed "
-      "FROM moz_places h "
-      "JOIN moz_historyvisits v ON h.id = v.place_id "
-      "WHERE h.hidden <> 1 "
-      "GROUP BY h.id "
-      "ORDER BY h.visit_count "
-      "LIMIT ?1"),
-    getter_AddRefs(mDBFullAutoComplete));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // mDBRecentVisitOfURL

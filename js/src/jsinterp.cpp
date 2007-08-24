@@ -2005,16 +2005,6 @@ InternNonIntElementId(JSContext *cx, JSObject *obj, jsval idval, jsid *idp)
     return JS_TRUE;
 }
 
-#ifndef MAX_INTERP_LEVEL
-#if defined(XP_OS2)
-#define MAX_INTERP_LEVEL 250
-#else
-#define MAX_INTERP_LEVEL 1000
-#endif
-#endif
-
-#define MAX_INLINE_CALL_COUNT 1000
-
 /*
  * Threaded interpretation via computed goto appears to be well-supported by
  * GCC 3 and higher.  IBM's C compiler when run with the right options (e.g.,
@@ -3931,14 +3921,6 @@ interrupt:
                     jsval *rvp;
                     JSInlineFrame *newifp;
                     JSInterpreterHook hook;
-
-                    /* Restrict recursion of lightweight functions. */
-                    if (inlineCallCount == MAX_INLINE_CALL_COUNT) {
-                        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                             JSMSG_OVER_RECURSED);
-                        ok = JS_FALSE;
-                        goto out;
-                    }
 
                     /* Compute the total number of stack slots needed by fun. */
                     nframeslots = JS_HOWMANY(sizeof(JSInlineFrame),

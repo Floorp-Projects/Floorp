@@ -87,26 +87,37 @@ nsUnknownContentTypeDialog.prototype = {
     show: function(aLauncher, aContext, aReason)  {
       this.mLauncher = aLauncher;
       this.mContext  = aContext;
-      // Display the dialog using the Window Watcher interface.
-      
-      var ir = aContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-      var dwi = ir.getInterface(Components.interfaces.nsIDOMWindowInternal);
-      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                .getService(Components.interfaces.nsIWindowWatcher);
-      this.mDialog = ww.openWindow(dwi,
-                                   "chrome://mozapps/content/downloads/unknownContentType.xul",
-                                   null,
-                                   "chrome,centerscreen,titlebar,dialog=yes,dependent",
-                                   null);
-      // Hook this object to the dialog.
-      this.mDialog.dialog = this;
-      
-      // Hook up utility functions. 
-      this.getSpecialFolderKey = this.mDialog.getSpecialFolderKey;
-      
-      // Watch for error notifications.
-      this.progressListener.helperAppDlg = this;
-      this.mLauncher.setWebProgressListener(this.progressListener);
+
+      const nsITimer = Components.interfaces.nsITimer;
+      this._timer = Components.classes["@mozilla.org/timer;1"]
+                              .createInstance(nsITimer);
+      this._timer.initWithCallback(this, 0, nsITimer.TYPE_ONE_SHOT);
+    },
+
+    // When opening from new tab, if tab closes while dialog is opening,
+    // (which is a race condition on the XUL file being cached and the timer
+    // in nsExternalHelperAppService), the dialog gets a blur and doesn't
+    // activate the OK button.  So we wait a bit before doing opening it.
+    reallyShow: function() {
+        var ir = this.mContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+        var dwi = ir.getInterface(Components.interfaces.nsIDOMWindowInternal);
+        var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                           .getService(Components.interfaces.nsIWindowWatcher);
+        this.mDialog = ww.openWindow(dwi,
+                                     "chrome://mozapps/content/downloads/unknownContentType.xul",
+                                     null,
+                                     "chrome,centerscreen,titlebar,dialog=yes,dependent",
+                                     null);
+
+        // Hook this object to the dialog.
+        this.mDialog.dialog = this;
+
+        // Hook up utility functions.
+        this.getSpecialFolderKey = this.mDialog.getSpecialFolderKey;
+
+        // Watch for error notifications.
+        this.progressListener.helperAppDlg = this;
+        this.mLauncher.setWebProgressListener(this.progressListener);
     },
 
     // promptForSaveToFile:  Display file picker dialog and return selected file.
@@ -121,134 +132,86 @@ nsUnknownContentTypeDialog.prototype = {
     // Note - this function is called without a dialog, so it cannot access any part
     // of the dialog XUL as other functions on this object do. 
     promptForSaveToFile: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension) {
-      var result = "";
+      var result = null;
       
       this.mLauncher = aLauncher;
 
-      // If the user is always downloading to the same location, the default download
-      // folder is stored in preferences. If a value is found stored, use that 
-      // automatically and don't ask via a dialog. 
+      // Check to see if the user wishes to auto save to the default download
+      // folder without prompting.
       var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
       var autodownload = prefs.getBoolPref("browser.download.useDownloadDir");
+      
       if (autodownload) {
-        function getSpecialFolderKey(aFolderType) 
-        {
-          if (aFolderType == "Desktop")
-            return "Desk";
-        
-          if (aFolderType != "Downloads")
-            throw "ASSERTION FAILED: folder type should be 'Desktop' or 'Downloads'";
-        
-#ifdef XP_WIN
-          return "Pers";
-#else
-#ifdef XP_MACOSX
-          return "UsrDocs";
-#else
-          return "Home";
-#endif
-#endif
-        }
-        
-        function getDownloadsFolder(aFolder)
-        {
-          var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-
-          var dir = fileLocator.get(getSpecialFolderKey(aFolder), Components.interfaces.nsILocalFile);
-          
-          var bundle = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
-          bundle = bundle.createBundle("chrome://mozapps/locale/downloads/unknownContentType.properties");
-
-          var description = bundle.GetStringFromName("myDownloads");
-          if (aFolder != "Desktop")
-            dir.append(description);
-            
-          return dir;
-        }
-
-        var defaultFolder = null;
-        switch (prefs.getIntPref("browser.download.folderList")) {
-        case 0:
-          defaultFolder = getDownloadsFolder("Desktop");
-          break;
-        case 1:
-          defaultFolder = getDownloadsFolder("Downloads");
-          break;
-        case 2:
-          defaultFolder = prefs.getComplexValue("browser.download.dir", Components.interfaces.nsILocalFile);
-          break;
-        }
-        
+        // Retrieve the user's default download directory
+        var dnldMgr = Components.classes["@mozilla.org/download-manager;1"]
+                                .getService(Components.interfaces.nsIDownloadManager);
+        var defaultFolder = dnldMgr.userDownloadsDirectory;
         result = this.validateLeafName(defaultFolder, aDefaultFile, aSuggestedFileExtension);
       }
       
-      if (!result) {
-        // Use file picker to show dialog.
-        var nsIFilePicker = Components.interfaces.nsIFilePicker;
-        var picker = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+      // Check to make sure we have a valid directory, otherwise, prompt
+      if (result)
+        return result;
+      
+      // Use file picker to show dialog.
+      var nsIFilePicker = Components.interfaces.nsIFilePicker;
+      var picker = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
 
-        var bundle = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
-        bundle = bundle.createBundle("chrome://mozapps/locale/downloads/unknownContentType.properties");
+      var bundle = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
+      bundle = bundle.createBundle("chrome://mozapps/locale/downloads/unknownContentType.properties");
 
-        var windowTitle = bundle.GetStringFromName("saveDialogTitle");
-        var parent = aContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowInternal);
-        picker.init(parent, windowTitle, nsIFilePicker.modeSave);
-        picker.defaultString = aDefaultFile;
+      var windowTitle = bundle.GetStringFromName("saveDialogTitle");
+      var parent = aContext.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowInternal);
+      picker.init(parent, windowTitle, nsIFilePicker.modeSave);
+      picker.defaultString = aDefaultFile;
 
-        if (aSuggestedFileExtension) {
-          // aSuggestedFileExtension includes the period, so strip it
-          picker.defaultExtension = aSuggestedFileExtension.substring(1);
-        } 
-        else {
-          try {
-            picker.defaultExtension = this.mLauncher.MIMEInfo.primaryExtension;
-          } 
-          catch (ex) { }
-        }
-
-        var wildCardExtension = "*";
-        if (aSuggestedFileExtension) {
-          wildCardExtension += aSuggestedFileExtension;
-          picker.appendFilter(this.mLauncher.MIMEInfo.description, wildCardExtension);
-        }
-
-        picker.appendFilters( nsIFilePicker.filterAll );
-
-        // Pull in the user's preferences and get the default download directory.
-        var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+      if (aSuggestedFileExtension) {
+        // aSuggestedFileExtension includes the period, so strip it
+        picker.defaultExtension = aSuggestedFileExtension.substring(1);
+      } 
+      else {
         try {
-          var startDir = prefs.getComplexValue("browser.download.dir", Components.interfaces.nsILocalFile);
-          if (startDir.exists()) {
-            picker.displayDirectory = startDir;
-          }
+          picker.defaultExtension = this.mLauncher.MIMEInfo.primaryExtension;
         } 
-        catch(exception) { }
+        catch (ex) { }
+      }
 
-        var dlgResult = picker.show();
+      var wildCardExtension = "*";
+      if (aSuggestedFileExtension) {
+        wildCardExtension += aSuggestedFileExtension;
+        picker.appendFilter(this.mLauncher.MIMEInfo.description, wildCardExtension);
+      }
 
-        if (dlgResult == nsIFilePicker.returnCancel) {
-          // null result means user cancelled.
-          return null;
+      picker.appendFilters( nsIFilePicker.filterAll );
+
+      // Get the default download directory from download manager
+      var dnldMgr = Components.classes["@mozilla.org/download-manager;1"]
+                              .getService(Components.interfaces.nsIDownloadManager);
+      var startDir = dnldMgr.defaultDownloadsDirectory;
+      picker.displayDirectory = startDir;
+
+      if (picker.show() == nsIFilePicker.returnCancel) {
+        // null result means user cancelled.
+        return null;
+      }
+
+      // Be sure to save the directory the user chose through the Save As... 
+      // dialog  as the new browser.download.dir since the old one
+      // didn't exist.
+      result = picker.file;
+
+      if (result) {
+        try {
+          // Remove the file so that it's not there when we ensure non-existence later;
+          // this is safe because for the file to exist, the user would have had to
+          // confirm that he wanted the file overwritten.
+          if (result.exists())
+            result.remove(false);
         }
-
-
-        // Be sure to save the directory the user chose through the Save As... 
-        // dialog  as the new browser.download.dir
-        result = picker.file;
-
-        if (result) {
-          try {
-            // Remove the file so that it's not there when we ensure non-existence later;
-            // this is safe because for the file to exist, the user would have had to
-            // confirm that he wanted the file overwritten.
-            if (result.exists())
-              result.remove(false);
-          }
-          catch (e) { }
-          var newDir = result.parent;
-          prefs.setComplexValue("browser.download.dir", Components.interfaces.nsILocalFile, newDir);
-          result = this.validateLeafName(newDir, result.leafName, null);
-        }
+        catch (e) { }
+        var newDir = result.parent;
+        prefs.setComplexValue("browser.download.dir", Components.interfaces.nsILocalFile, newDir);
+        result = this.validateLeafName(newDir, result.leafName, null);
       }
       return result;
     },
@@ -502,17 +465,24 @@ nsUnknownContentTypeDialog.prototype = {
                               .createInstance(nsITimer);
       this._timer.initWithCallback(this, 250, nsITimer.TYPE_ONE_SHOT);
     },
-    
+
     _timer: null,
     notify: function (aTimer) {
-      try { // The user may have already canceled the dialog.
-        if (!this._blurred)
-          this.mDialog.document.documentElement.getButton('accept').disabled = false;
-      } catch (ex) {}
-      this._delayExpired = true;
-      this._timer = null; // the timer won't release us, so we have to release it
+      if (!this.mDialog) {
+        this.reallyShow();
+      } else {
+        // The user may have already canceled the dialog.
+        try {
+          if (!this._blurred) {
+            this.mDialog.document.documentElement.getButton("accept").disabled = false;
+          }
+        } catch (ex) {}
+        this._delayExpired = true;
+      }
+      // The timer won't release us, so we have to release it.
+      this._timer = null;
     },
-    
+
     postShowCallback: function () {
       this.mDialog.sizeToContent();
 

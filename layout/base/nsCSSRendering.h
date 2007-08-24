@@ -201,7 +201,7 @@ public:
 
   /**
    * Function for painting the decoration lines for the text.
-   * NOTE: aPt, aLineSize, aAscent, aOffset and aReferredHeight are non-rounded
+   * NOTE: aPt, aLineSize, aAscent, aOffset and aPreferredHeight are non-rounded
    *       device pixels, not app units.
    *   input:
    *     @param aGfxContext

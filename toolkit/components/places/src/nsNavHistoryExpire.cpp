@@ -86,9 +86,9 @@ struct nsNavHistoryExpireRecord {
 #define MAX_SEQUENTIAL_RUNS 1
 
 // Expiration policy amounts (in microseconds)
-const PRTime EXPIRATION_POLICY_DAYS = (7 * 86400 * PR_MSEC_PER_SEC);
-const PRTime EXPIRATION_POLICY_WEEKS = (30 * 86400 * PR_MSEC_PER_SEC);
-const PRTime EXPIRATION_POLICY_MONTHS = ((PRTime)180 * 86400 * PR_MSEC_PER_SEC);
+const PRTime EXPIRATION_POLICY_DAYS = ((PRTime)7 * 86400 * PR_USEC_PER_SEC);
+const PRTime EXPIRATION_POLICY_WEEKS = ((PRTime)30 * 86400 * PR_USEC_PER_SEC);
+const PRTime EXPIRATION_POLICY_MONTHS = ((PRTime)180 * 86400 * PR_USEC_PER_SEC);
 
 // nsNavHistoryExpire::nsNavHistoryExpire
 //
@@ -402,18 +402,22 @@ nsresult
 nsNavHistoryExpire::EraseVisits(mozIStorageConnection* aConnection,
     const nsTArray<nsNavHistoryExpireRecord>& aRecords)
 {
-  nsCOMPtr<mozIStorageStatement> deleteStatement;
-  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_historyvisits WHERE id = ?1"),
-    getter_AddRefs(deleteStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-  PRUint32 i;
-  for (i = 0; i < aRecords.Length(); i ++) {
-    deleteStatement->BindInt64Parameter(0, aRecords[i].visitID);
-    rv = deleteStatement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
+  // build a comma separated string of visit ids to delete
+  nsCAutoString deletedVisitIds;
+  for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
+    // Do not add comma separator for the first entry
+    if (! deletedVisitIds.IsEmpty())
+      deletedVisitIds.AppendLiteral(", ");
+    deletedVisitIds.AppendInt(aRecords[i].visitID);
   }
-  return NS_OK;
+
+  if (deletedVisitIds.IsEmpty())
+    return NS_OK;
+
+  return aConnection->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("DELETE FROM moz_historyvisits WHERE id IN (") +
+    deletedVisitIds +
+    NS_LITERAL_CSTRING(")"));
 }
 
 
@@ -429,37 +433,29 @@ nsresult
 nsNavHistoryExpire::EraseHistory(mozIStorageConnection* aConnection,
     nsTArray<nsNavHistoryExpireRecord>& aRecords)
 {
-  nsCOMPtr<mozIStorageStatement> deleteStatement;
-  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_places WHERE id = ?1"),
-    getter_AddRefs(deleteStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageStatement> selectStatement;
-  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT place_id FROM moz_historyvisits WHERE place_id = ?1"),
-    getter_AddRefs(selectStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  // build a comma separated string of place ids to delete
+  nsCAutoString deletedPlaceIds;
   for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
-    if (aRecords[i].bookmarked)
-      continue; // don't delete bookmarked entries
-    if (StringBeginsWith(aRecords[i].uri, NS_LITERAL_CSTRING("place:")))
-      continue; // don't delete "place" URIs
-
-    // check that there are no visits
-    rv = selectStatement->BindInt64Parameter(0, aRecords[i].placeID);
-    NS_ENSURE_SUCCESS(rv, rv);
-    PRBool hasVisit = PR_FALSE;
-    rv = selectStatement->ExecuteStep(&hasVisit);
-    selectStatement->Reset();
-    if (hasVisit) continue;
-
+    // IF bookmarked entries OR "place" URIs do not delete
+    if (aRecords[i].bookmarked ||
+        StringBeginsWith(aRecords[i].uri, NS_LITERAL_CSTRING("place:")))
+      continue;
+    // Do not add comma separator for the first entry
+    if (! deletedPlaceIds.IsEmpty())
+      deletedPlaceIds.AppendLiteral(", ");
+    deletedPlaceIds.AppendInt(aRecords[i].placeID);
     aRecords[i].erased = PR_TRUE;
-    rv = deleteStatement->BindInt64Parameter(0, aRecords[i].placeID);
-    rv = deleteStatement->Execute();
   }
-  return NS_OK;
+
+  if (deletedPlaceIds.IsEmpty())
+    return NS_OK;
+
+  return aConnection->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("DELETE FROM moz_places WHERE id IN (") +
+    deletedPlaceIds +
+    NS_LITERAL_CSTRING(") AND id IN (SELECT h.id FROM moz_places h "
+      "LEFT OUTER JOIN moz_historyvisits v ON h.id = v.place_id "
+      "WHERE v.id IS NULL)"));
 }
 
 
@@ -469,41 +465,29 @@ nsresult
 nsNavHistoryExpire::EraseFavicons(mozIStorageConnection* aConnection,
     const nsTArray<nsNavHistoryExpireRecord>& aRecords)
 {
-  // see if this favicon still has an entry
-  nsCOMPtr<mozIStorageStatement> selectStatement;
-  nsresult rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT id FROM moz_places where favicon_id = ?1"),
-    getter_AddRefs(selectStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // delete a favicon
-  nsCOMPtr<mozIStorageStatement> deleteStatement;
-  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "DELETE FROM moz_favicons WHERE id = ?1"),
-    getter_AddRefs(deleteStatement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  // build a comma separated string of favicon ids to delete
+  nsCAutoString deletedFaviconIds;
   for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
-    if (! aRecords[i].erased)
-      continue; // main entry not expired
-    if (aRecords[i].faviconID == 0)
-      continue; // no favicon
-    selectStatement->BindInt64Parameter(0, aRecords[i].faviconID);
-
-    // see if there are any history entries and skip if so
-    PRBool hasEntry;
-    if (NS_SUCCEEDED(selectStatement->ExecuteStep(&hasEntry)) && hasEntry) {
-      selectStatement->Reset();
-      continue; // favicon still referenced
-    }
-    selectStatement->Reset();
-
-    // delete the favicon, ignoring errors. We could have the same favicon
-    // referenced twice in our list, and we'd try to delete it twice.
-    deleteStatement->BindInt64Parameter(0, aRecords[i].faviconID);
-    deleteStatement->Execute();
+    // IF main entry not expired OR no favicon DO NOT DELETE
+    if (! aRecords[i].erased || aRecords[i].faviconID == 0)
+      continue;
+    // Do not add comma separator for the first entry
+    if (! deletedFaviconIds.IsEmpty())
+      deletedFaviconIds.AppendLiteral(", ");
+    deletedFaviconIds.AppendInt(aRecords[i].faviconID);
   }
-  return NS_OK;
+
+  if (deletedFaviconIds.IsEmpty())
+    return NS_OK;
+
+  // delete only if id is not referenced in moz_places
+  return aConnection->ExecuteSimpleSQL(
+    NS_LITERAL_CSTRING("DELETE FROM moz_favicons WHERE id IN (") +
+    deletedFaviconIds +
+    NS_LITERAL_CSTRING(") AND id IN "
+      "(SELECT f.id FROM moz_favicons f "
+      "LEFT OUTER JOIN moz_places h ON f.id = h.favicon_id "
+      "WHERE h.favicon_id IS NULL)"));
 }
 
 

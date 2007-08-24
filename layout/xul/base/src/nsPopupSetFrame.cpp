@@ -213,6 +213,13 @@ nsPopupSetFrame::DoLayout(nsBoxLayoutState& aState)
 
       // layout the child
       popupChild->Layout(aState);
+      // if the width or height changed, readjust the popup position. This is a
+      // special case for tooltips where the preferred height doesn't include the
+      // real height for its inline element, but does once it is laid out.
+      // This is bug 228673 which doesn't have a simple fix.
+      if (popupChild->GetRect().width > bounds.width ||
+          popupChild->GetRect().height > bounds.height)
+        popupChild->SetPopupPosition(nsnull);
       popupChild->AdjustView();
     }
 
