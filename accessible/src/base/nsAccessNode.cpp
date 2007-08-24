@@ -426,35 +426,8 @@ nsAccessNode::ScrollTo(PRUint32 aScrollType)
   nsCOMPtr<nsIContent> content = frame->GetContent();
   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
-  PRInt32 vPercent, hPercent;
-  switch (aScrollType)
-  {
-    case nsIAccessibleScrollType::SCROLL_TYPE_TOP_LEFT:
-      vPercent = NS_PRESSHELL_SCROLL_TOP;
-      hPercent = NS_PRESSHELL_SCROLL_LEFT;
-      break;
-    case nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_RIGHT:
-      vPercent = NS_PRESSHELL_SCROLL_BOTTOM;
-      hPercent = NS_PRESSHELL_SCROLL_RIGHT;
-      break;
-    case nsIAccessibleScrollType::SCROLL_TYPE_TOP_EDGE:
-      vPercent = NS_PRESSHELL_SCROLL_TOP;
-      hPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
-      break;
-    case nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_EDGE:
-      vPercent = NS_PRESSHELL_SCROLL_BOTTOM;
-      hPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
-      break;
-    case nsIAccessibleScrollType::SCROLL_TYPE_LEFT_EDGE:
-      vPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
-      hPercent = NS_PRESSHELL_SCROLL_LEFT;
-      break;
-    case nsIAccessibleScrollType::SCROLL_TYPE_RIGHT_EDGE:
-      vPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
-      hPercent = NS_PRESSHELL_SCROLL_RIGHT;
-      break;
-  }
-
+  PRInt16 vPercent, hPercent;
+  nsAccUtils::ConvertScrollTypeToPercents(aScrollType, &vPercent, &hPercent);
   return shell->ScrollContentIntoView(content, vPercent, hPercent);
 }
 

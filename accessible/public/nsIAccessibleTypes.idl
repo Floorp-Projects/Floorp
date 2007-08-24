@@ -80,6 +80,12 @@ interface nsIAccessibleScrollType : nsISupports
    * window (or as close as possible).
    */
   const unsigned long SCROLL_TYPE_RIGHT_EDGE = 0x05;
+
+  /**
+   * Scroll an object the minimum amount necessary in order for the entire
+   * frame to be visible (if possible).
+   */
+  const unsigned long SCROLL_TYPE_ANYWHERE = 0x06;
 };
 
 
@@ -106,3 +112,4 @@ interface nsIAccessibleCoordinateType : nsISupports
    */
   const unsigned long COORDTYPE_PARENT_RELATIVE = 0x02;
 };
+
