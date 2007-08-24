@@ -287,9 +287,6 @@ function runTest(testNum) {
         doKey("return");
         checkForm("zzzuser4", "zzzpass4");
 
-// XXX temp bandaid: bail out now to avoid linux test failure.
-SimpleTest.finish();
-return;
         // Trigger autocomplete popup
         restoreForm();
         doKey("down");
@@ -318,12 +315,13 @@ return;
     case 50:
         // Delete the first entry (of 4), "tempuser1"
         doKey("down");
-        // XXX Just "delete", and on Mac also shift-backspace?
         var numLogins;
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
         is(numLogins, 4, "Correct number of logins before deleting one");
 
-        doKey("back_space", shiftModifier);
+        // On OS X, shift-backspace and shift-delete work, just delete does not.
+        // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
+        doKey("delete", shiftModifier);
 
         checkForm("zzzuser4", ""); // why does a value get set here?
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
@@ -351,7 +349,7 @@ return;
         // Delete the second entry (of 3), "testuser3"
         doKey("down");
         doKey("down");
-        doKey("back_space", shiftModifier);
+        doKey("delete", shiftModifier);
         checkForm("testuser2", ""); // XXX why does a value get set here?
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
         is(numLogins, 2, "Correct number of logins after deleting one");
@@ -378,7 +376,7 @@ return;
         // Delete the last entry (of 2), "zzzuser4"
         doKey("down");
         doKey("down");
-        doKey("back_space", shiftModifier);
+        doKey("delete", shiftModifier);
         checkForm("testuser2", ""); // XXX why does a value get set here?
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
         is(numLogins, 1, "Correct number of logins after deleting one");
@@ -404,7 +402,7 @@ return;
     case 56:
         // Delete the only remaining entry, "testuser2"
         doKey("down");
-        doKey("back_space", shiftModifier);
+        doKey("delete", shiftModifier);
         //doKey("return");
         checkForm("", "");
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
