@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsLayoutUtils.h"
-#include "nsIFrame.h"
 #include "nsIFontMetrics.h"
 #include "nsIFormControlFrame.h"
 #include "nsPresContext.h"
@@ -1254,7 +1253,7 @@ static nscoord AddPercents(nsLayoutUtils::IntrinsicWidthType aType,
 /* static */ PRBool
 nsLayoutUtils::GetAbsoluteCoord(const nsStyleCoord& aStyle,
                                 nsIRenderingContext* aRenderingContext,
-                                nsIFrame* aFrame,
+                                nsStyleContext* aStyleContext,
                                 nscoord& aResult)
 {
   nsStyleUnit unit = aStyle.GetUnit();
@@ -1264,7 +1263,7 @@ nsLayoutUtils::GetAbsoluteCoord(const nsStyleCoord& aStyle,
   }
   if (eStyleUnit_Chars == unit) {
     aResult = nsLayoutUtils::CharsToCoord(aStyle, aRenderingContext,
-                                          aFrame->GetStyleContext());
+                                          aStyleContext);
     return PR_TRUE;
   }
   return PR_FALSE;
