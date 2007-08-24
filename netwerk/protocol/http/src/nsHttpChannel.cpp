@@ -801,6 +801,7 @@ nsHttpChannel::ProcessResponse()
         // So if a server does that and sends 200 instead of 206 that we
         // expect, notify our caller.
         if (mResuming) {
+            LOG(("Server ignored our Range header, cancelling [this=%p]\n", this));
             Cancel(NS_ERROR_NOT_RESUMABLE);
             rv = CallOnStartRequest();
             break;
@@ -858,6 +859,8 @@ nsHttpChannel::ProcessResponse()
     case 412: // Precondition failed
     case 416: // Invalid range
         if (mResuming) {
+            LOG(("Resuming and got %i status, aborting [this=%p]\n",
+                 httpStatus, this));
             Cancel(NS_ERROR_ENTITY_CHANGED);
             rv = CallOnStartRequest();
             break;
@@ -923,8 +926,11 @@ nsHttpChannel::ProcessNormal()
         }
         // If we were passed an entity id, verify it's equal to the server's
         else if (!mEntityID.IsEmpty()) {
-            if (!mEntityID.Equals(id))
+            if (!mEntityID.Equals(id)) {
+                LOG(("Entity mismatch, expected '%s', got '%s', aborting [this=%p]",
+                     mEntityID.get(), id.get(), this));
                 Cancel(NS_ERROR_ENTITY_CHANGED);
+            }
         }
     }
 
@@ -4677,6 +4683,8 @@ NS_IMETHODIMP
 nsHttpChannel::ResumeAt(PRUint64 aStartPos,
                         const nsACString& aEntityID)
 {
+    LOG(("nsHttpChannel::ResumeAt [this=%p startPos=%llu id='%s']\n",
+         this, aStartPos, PromiseFlatCString(aEntityID).get()));
     mEntityID = aEntityID;
     mStartPos = aStartPos;
     mResuming = PR_TRUE;
