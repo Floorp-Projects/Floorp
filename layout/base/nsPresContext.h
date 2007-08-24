@@ -773,6 +773,7 @@ protected:
 
   float                 mTextZoom;      // Text zoom, defaults to 1.0
   float                 mFullZoom;      // Page zoom, defaults to 1.0
+  PRInt32               mCurAppUnitsPerDevPixel;
   PRInt32               mAutoQualityMinFontSizePixelsPref;
 
 #ifdef IBMBIDI
