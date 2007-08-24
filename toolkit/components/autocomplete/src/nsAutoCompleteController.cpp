@@ -183,7 +183,6 @@ nsAutoCompleteController::StartSearch(const nsAString &aSearchString)
 { 
   mSearchString = aSearchString;
   StartSearchTimer();
-
   return NS_OK;
 }
 
@@ -1029,7 +1028,11 @@ nsAutoCompleteController::StopSearch()
       mSearches->GetElementAt(i, getter_AddRefs(search));
       search->StopSearch();
     }
-  }
+    mSearchesOngoing = 0;
+    // since we were searching, but now we've stopped,
+    // we need to call PostSearchCleanup()
+    PostSearchCleanup();
+  } 
   return NS_OK;
 }
 
@@ -1227,17 +1230,15 @@ nsAutoCompleteController::ProcessResult(PRInt32 aSearchIndex, nsIAutoCompleteRes
   else
     ClosePopup();
 
-  // if the user hit enter but we still have searches ongoing,
-  // stop the searches, otherwise enter won't be handled
-  // by PostSearchCleanup() until the ongoing searches finish.
-  if (mEnterAfterSearch && mSearchesOngoing) {
-    StopSearch();
-    mSearchesOngoing = 0;  
-  }
-
-  // If this is the last search to return, cleanup
-  if (mSearchesOngoing == 0)
+  if (mSearchesOngoing == 0) {
+    // If this is the last search to return, cleanup
     PostSearchCleanup();
+  }
+  else if (mEnterAfterSearch) {
+    // since we still have searches ongoing (mSearchesOngoing != 0)
+    // and the user has hit enter, stop the searches
+    StopSearch();
+  }
 
   return NS_OK;
 }
