@@ -62,13 +62,9 @@ Var TmpVal
 !include WordFunc.nsh
 !include MUI.nsh
 
-!insertmacro FileJoin
 !insertmacro GetOptions
 !insertmacro GetParameters
-!insertmacro LineFind
 !insertmacro StrFilter
-!insertmacro TextCompare
-!insertmacro TrimNewLines
 !insertmacro WordFind
 !insertmacro WordReplace
 

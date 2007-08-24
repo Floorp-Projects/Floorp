@@ -250,7 +250,7 @@ PR_STATIC_CALLBACK(int) CSSErrorsPrefChanged(const char *aPref, void *aClosure)
 }
 
 void nsCSSScanner::Init(nsIUnicharInputStream* aInput, 
-                        const PRUnichar * aBuffer, PRInt32 aCount, 
+                        const PRUnichar * aBuffer, PRUint32 aCount, 
                         nsIURI* aURI, PRUint32 aLineNumber)
 {
   NS_PRECONDITION(!mInputStream, "Should not have an existing input stream!");
@@ -288,7 +288,6 @@ void nsCSSScanner::Init(nsIUnicharInputStream* aInput,
   // Reset variables that we use to keep track of our progress through the input
   mOffset = 0;
   mPushbackCount = 0;
-  mLastRead = 0;
 
 #ifdef CSS_REPORT_PARSE_ERRORS
   mColNumber = 0;
@@ -466,6 +465,24 @@ void nsCSSScanner::Close()
 #define TAB_STOP_WIDTH 8
 #endif
 
+PRBool nsCSSScanner::EnsureData(nsresult& aErrorCode)
+{
+  if (mOffset < mCount)
+    return PR_TRUE;
+
+  if (mInputStream) {
+    mOffset = 0;
+    aErrorCode = mInputStream->Read(mBuffer, CSS_BUFFER_SIZE, &mCount);
+    if (NS_FAILED(aErrorCode) || mCount == 0) {
+      mCount = 0;
+      return PR_FALSE;
+    }
+    return PR_TRUE;
+  }
+
+  return PR_FALSE;
+}
+
 // Returns -1 on error or eof
 PRInt32 nsCSSScanner::Read(nsresult& aErrorCode)
 {
@@ -473,23 +490,21 @@ PRInt32 nsCSSScanner::Read(nsresult& aErrorCode)
   if (0 < mPushbackCount) {
     rv = PRInt32(mPushback[--mPushbackCount]);
   } else {
-    if (mCount < 0) {
+    if (mOffset == mCount && !EnsureData(aErrorCode)) {
       return -1;
     }
-    if (mOffset == mCount) {
-      mOffset = 0;
-      if (!mInputStream) {
-        mCount = 0;
-        return -1;
-      }
-      aErrorCode = mInputStream->Read(mBuffer, CSS_BUFFER_SIZE, (PRUint32*)&mCount);
-      if (NS_FAILED(aErrorCode) || mCount == 0) {
-        mCount = 0;
-        return -1;
-      }
-    }
     rv = PRInt32(mReadPointer[mOffset++]);
-    if (((rv == '\n') && (mLastRead != '\r')) || (rv == '\r')) {
+    // There are four types of newlines in CSS: "\r", "\n", "\r\n", and "\f".
+    // To simplify dealing with newlines, they are all normalized to "\n" here
+    if (rv == '\r') {
+      if (EnsureData(aErrorCode) && mReadPointer[mOffset] == '\n') {
+        mOffset++;
+      }
+      rv = '\n';
+    } else if (rv == '\f') {
+      rv = '\n';
+    }
+    if (rv == '\n') {
       // 0 is a magical line number meaning that we don't know (i.e., script)
       if (mLineNumber != 0)
         ++mLineNumber;
@@ -506,7 +521,6 @@ PRInt32 nsCSSScanner::Read(nsresult& aErrorCode)
     }
 #endif
   }
-  mLastRead = rv;
 //printf("Read => %x\n", rv);
   return rv;
 }
@@ -514,9 +528,7 @@ PRInt32 nsCSSScanner::Read(nsresult& aErrorCode)
 PRInt32 nsCSSScanner::Peek(nsresult& aErrorCode)
 {
   if (0 == mPushbackCount) {
-    PRInt32 savedLastRead = mLastRead;
     PRInt32 ch = Read(aErrorCode);
-    mLastRead = savedLastRead;
     if (ch < 0) {
       return -1;
     }
@@ -525,13 +537,6 @@ PRInt32 nsCSSScanner::Peek(nsresult& aErrorCode)
   }
 //printf("Peek => %x\n", mLookAhead);
   return PRInt32(mPushback[mPushbackCount - 1]);
-}
-
-void nsCSSScanner::Unread()
-{
-  NS_PRECONDITION((mLastRead >= 0), "double pushback");
-  Pushback(PRUnichar(mLastRead));
-  mLastRead = -1;
 }
 
 void nsCSSScanner::Pushback(PRUnichar aChar)
@@ -560,7 +565,7 @@ PRBool nsCSSScanner::LookAhead(nsresult& aErrorCode, PRUnichar aChar)
   if (ch == aChar) {
     return PR_TRUE;
   }
-  Unread();
+  Pushback(ch);
   return PR_FALSE;
 }
 
@@ -572,11 +577,11 @@ PRBool nsCSSScanner::EatWhiteSpace(nsresult& aErrorCode)
     if (ch < 0) {
       break;
     }
-    if ((ch == ' ') || (ch == '\n') || (ch == '\r') || (ch == '\t')) {
+    if ((ch == ' ') || (ch == '\n') || (ch == '\t')) {
       eaten = PR_TRUE;
       continue;
     }
-    Unread();
+    Pushback(ch);
     break;
   }
   return eaten;
@@ -589,16 +594,10 @@ PRBool nsCSSScanner::EatNewline(nsresult& aErrorCode)
     return PR_FALSE;
   }
   PRBool eaten = PR_FALSE;
-  if (ch == '\r') {
-    eaten = PR_TRUE;
-    ch = Peek(aErrorCode);
-    if (ch == '\n') {
-      (void) Read(aErrorCode);
-    }
-  } else if (ch == '\n') {
+  if (ch == '\n') {
     eaten = PR_TRUE;
   } else {
-    Unread();
+    Pushback(ch);
   }
   return eaten;
 }
@@ -820,7 +819,7 @@ PRBool nsCSSScanner::NextURL(nsresult& aErrorCode, nsCSSToken& aToken)
         // ")". This is an invalid url spec.
         ok = PR_FALSE;
       } else if (ch == ')') {
-        Unread();
+        Pushback(ch);
         // All done
         break;
       } else {
@@ -858,7 +857,7 @@ nsCSSScanner::ParseAndAppendEscape(nsresult& aErrorCode, nsString& aOutput)
         break;
       }
       if (ch >= 256 || (lexTable[ch] & (IS_HEX_DIGIT | IS_WHITESPACE)) == 0) {
-        Unread();
+        Pushback(ch);
         break;
       } else if ((lexTable[ch] & IS_HEX_DIGIT) != 0) {
         if ((lexTable[ch] & IS_DIGIT) != 0) {
@@ -872,10 +871,6 @@ nsCSSScanner::ParseAndAppendEscape(nsresult& aErrorCode, nsString& aOutput)
       } else {
         NS_ASSERTION((lexTable[ch] & IS_WHITESPACE) != 0, "bad control flow");
         // single space ends escape
-        if (ch == '\r' && Peek(aErrorCode) == '\n') {
-          // if CR/LF, eat LF too
-          Read(aErrorCode);
-        }
         break;
       }
     }
@@ -884,13 +879,6 @@ nsCSSScanner::ParseAndAppendEscape(nsresult& aErrorCode, nsString& aOutput)
       if ((0 <= ch) && (ch <= 255) && 
           ((lexTable[ch] & IS_WHITESPACE) != 0)) {
         ch = Read(aErrorCode);
-        // special case: if trailing whitespace is CR/LF, eat both chars (not part of spec, but should be)
-        if (ch == '\r') {
-          ch = Peek(aErrorCode);
-          if (ch == '\n') {
-            ch = Read(aErrorCode);
-          }
-        }
       }
     }
     NS_ASSERTION(rv >= 0, "How did rv become negative?");
@@ -936,7 +924,7 @@ PRBool nsCSSScanner::GatherIdent(nsresult& aErrorCode, PRInt32 aChar,
     } else if ((aChar > 255) || ((gLexTable[aChar] & IS_IDENT) != 0)) {
       aIdent.Append(PRUnichar(aChar));
     } else {
-      Unread();
+      Pushback(aChar);
       break;
     }
   }
@@ -963,7 +951,7 @@ PRBool nsCSSScanner::ParseRef(nsresult& aErrorCode,
   }
 
   // No ident chars after the '#'.  Just unread |ch| and get out of here.
-  Unread();
+  Pushback(ch);
   return PR_TRUE;
 }
 
@@ -1039,7 +1027,7 @@ PRBool nsCSSScanner::ParseNumber(nsresult& aErrorCode, PRInt32 c,
       ident.SetLength(0);
     } else {
       // Put back character that stopped numeric scan
-      Unread();
+      Pushback(c);
       if (!gotDot) {
         aToken.mInteger = ident.ToInteger(&ec);
         aToken.mIntegerValid = PR_TRUE;

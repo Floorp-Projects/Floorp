@@ -78,6 +78,10 @@ calling server.stop() before the host application closes to ensure that all
 requests have completed.  Things probably aren't going to break too horribly if
 you don't do this, but better safe than sorry.
 
+MozJSHTTP makes no effort to time out requests, beyond any the socket itself
+might or might not provide.  I don't believe it provides any by default, but
+I haven't verified this.
+
 To be clear: the guarantee that nsIHttpServer.stop says implementations should
 make when possible (that .stop returns only when all pending requests have been
 serviced) cannot be made in a 1.8 environment; it can be made in a 1.9

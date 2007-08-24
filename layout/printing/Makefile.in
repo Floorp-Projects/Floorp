@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  dom \
 		  widget \
 		  gfx \
+		  thebes \
 		  view \
 		  necko \
 		  webshell \

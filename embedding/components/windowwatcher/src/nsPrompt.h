@@ -79,30 +79,6 @@ protected:
   nsCOMPtr<nsIPromptService2>   mPromptService2;
 };
 
-
-/**
- * Helper class for dealing with notifications around opening modal
- * windows.
- */
-class nsAutoWindowStateHelper
-{
-public:
-  nsAutoWindowStateHelper(nsIDOMWindow *aWindow);
-  ~nsAutoWindowStateHelper();
-
-  PRBool DefaultEnabled()
-  {
-    return mDefaultEnabled;
-  }
-
-protected:
-  PRBool DispatchCustomEvent(const char *aEventName);
-
-  nsIDOMWindow *mWindow;
-  PRBool mDefaultEnabled;
-};
-
-
 /**
  * A class that wraps an nsIAuthPrompt so that it can be used as an
  * nsIAuthPrompt2.

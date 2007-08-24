@@ -1104,6 +1104,8 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
   aLineContainer->QueryInterface(kBlockFrameCID, (void**)&block);
 
   if (!block) {
+    NS_ASSERTION(!aLineContainer->GetPrevInFlow() && !aLineContainer->GetNextInFlow(),
+                 "Breakable non-block line containers not supported");
     // Just loop through all the children of the linecontainer ... it's really
     // just one line
     scanner.SetAtStartOfLine();
@@ -1151,20 +1153,17 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
   // but we discard them instead of assigning them to frames.
   // This is a little awkward because we traverse lines in the reverse direction
   // but we traverse the frames in each line in the forward direction.
-  nsBlockFrame::line_iterator firstLine = block->begin_lines();
+  nsBlockInFlowLineIterator backIterator(block, line, PR_FALSE);
   nsTextFrame* stopAtFrame = aForFrame;
   nsTextFrame* nextLineFirstTextFrame = nsnull;
   PRBool seenTextRunBoundaryOnLaterLine = PR_FALSE;
   PRBool mayBeginInTextRun = PR_TRUE;
+  PRBool inOverflow = PR_FALSE;
   while (PR_TRUE) {
-    if (line == firstLine) {
-      mayBeginInTextRun = PR_FALSE;
-      break;
-    }
-    --line;
-    PRBool prevLineIsBlock = line->IsBlock();
-    ++line;
-    if (prevLineIsBlock) {
+    line = backIterator.GetLine();
+    block = backIterator.GetContainer();
+    inOverflow = backIterator.GetInOverflow();
+    if (!backIterator.Prev() || backIterator.GetLine()->IsBlock()) {
       mayBeginInTextRun = PR_FALSE;
       break;
     }
@@ -1200,7 +1199,6 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
     if (state.mFirstTextFrame) {
       nextLineFirstTextFrame = state.mFirstTextFrame;
     }
-    --line;
   }
   scanner.SetSkipIncompleteTextRuns(mayBeginInTextRun);
 
@@ -1208,19 +1206,20 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
   // text frames will be accumulated into textRunFrames as we go. When a
   // text run boundary is required we flush textRunFrames ((re)building their
   // gfxTextRuns as necessary).
-  nsBlockFrame::line_iterator endLines = block->end_lines();
-  NS_ASSERTION(line != endLines && !line->IsBlock(), "Where is this frame anyway??");
-  nsIFrame* child = line->mFirstChild;
+  nsBlockInFlowLineIterator forwardIterator(block, line, inOverflow);
   do {
+    line = forwardIterator.GetLine();
+    if (line->IsBlock())
+      break;
     scanner.SetAtStartOfLine();
     scanner.SetCommonAncestorWithLastFrame(nsnull);
+    nsIFrame* child = line->mFirstChild;
     PRInt32 i;
     for (i = line->GetChildCount() - 1; i >= 0; --i) {
       scanner.ScanFrame(child);
       child = child->GetNextSibling();
     }
-    ++line;
-  } while (line != endLines && !line->IsBlock());
+  } while (forwardIterator.Next());
 
   // Set mStartOfLine so FlushFrames knows its textrun ends a line
   scanner.SetAtStartOfLine();
@@ -3717,10 +3716,11 @@ FillClippedRect(gfxContext* aCtx, nsPresContext* aPresContext,
 {
   gfxRect r = aRect.Intersect(aDirtyRect);
   // For now, we need to put this in pixel coordinates
-  float t2p = 1.0f / aPresContext->AppUnitsPerDevPixel();
+  PRInt32 app = aPresContext->AppUnitsPerDevPixel();
   aCtx->NewPath();
   // pixel-snap
-  aCtx->Rectangle(gfxRect(r.X()*t2p, r.Y()*t2p, r.Width()*t2p, r.Height()*t2p), PR_TRUE);
+  aCtx->Rectangle(gfxRect(r.X() / app, r.Y() / app,
+                          r.Width() / app, r.Height() / app), PR_TRUE);
   aCtx->SetColor(gfxRGBA(aColor));
   aCtx->Fill();
 }
@@ -3791,12 +3791,12 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
     return;
 
   gfxFont::Metrics fontMetrics = GetFontMetrics(aProvider.GetFontGroup());
-  gfxFloat a2p = 1.0 / aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
+  PRInt32 app = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
 
   // XXX aFramePt is in AppUnits, shouldn't it be nsFloatPoint?
-  gfxPoint pt(aFramePt.x * a2p, aFramePt.y * a2p);
-  gfxSize size(GetRect().width * a2p, 0);
-  gfxFloat ascent = mAscent * a2p;
+  gfxPoint pt(aFramePt.x / app, aFramePt.y / app);
+  gfxSize size(GetRect().width / app, 0);
+  gfxFloat ascent = mAscent / app;
 
   if (decorations & NS_FONT_DECORATION_OVERLINE) {
     size.height = fontMetrics.underlineSize;
@@ -4175,13 +4175,13 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
     gfxFloat advance = hyphenWidth +
       mTextRun->GetAdvanceWidth(offset, length, &aProvider);
     if (type == aSelectionType) {
-      gfxFloat a2p = 1.0 / aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
+      PRInt32 app = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
       // XXX aTextBaselinePt is in AppUnits, shouldn't it be nsFloatPoint?
-      gfxPoint pt((aTextBaselinePt.x + xOffset) * a2p,
-                  (aTextBaselinePt.y - mAscent) * a2p);
-      gfxFloat width = PR_ABS(advance) * a2p;
+      gfxPoint pt((aTextBaselinePt.x + xOffset) / app,
+                  (aTextBaselinePt.y - mAscent) / app);
+      gfxFloat width = PR_ABS(advance) / app;
       DrawSelectionDecorations(aCtx, aSelectionType, aTextPaintStyle,
-                               pt, width, mAscent * a2p, decorationMetrics,
+                               pt, width, mAscent / app, decorationMetrics,
                                mTextRun->IsRightToLeft());
     }
     iterator.UpdateWithAdvance(advance);

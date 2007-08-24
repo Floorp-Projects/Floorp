@@ -170,6 +170,7 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsSecretDecoderRing)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsPK11TokenDB)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsPKCS11ModuleDB)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(PR_FALSE, PSMContentListener, init)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsNSSCertificate)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsNSSCertificateDB)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsNSSCertCache)
 #ifdef MOZ_XUL
@@ -298,6 +299,13 @@ static const nsModuleComponentInfo components[] =
     PSMContentListenerConstructor
   },
 
+  {
+    "X509 Certificate",
+    NS_X509CERT_CID,
+    nsnull,
+    nsNSSCertificateConstructor
+  },
+  
   {
     "X509 Certificate Database",
     NS_X509CERTDB_CID,

@@ -444,6 +444,7 @@ struct PtrInfo
 #ifdef DEBUG_CC
     size_t mBytes;
     char *mName;
+    PRUint32 mLangID;
 
     // For finding roots in ExplainLiveExpectedGarbage (when there are
     // missing calls to suspect or failures to unlink).
@@ -452,9 +453,12 @@ struct PtrInfo
     // For finding roots in ExplainLiveExpectedGarbage (when nodes
     // expected to be garbage are black).
     ReversedEdge* mReversedEdges; // linked list
+    PtrInfo* mShortestPathToExpectedGarbage;
 #endif
 
-    PtrInfo(void *aPointer, nsCycleCollectionParticipant *aParticipant)
+    PtrInfo(void *aPointer, nsCycleCollectionParticipant *aParticipant
+            IF_DEBUG_CC_PARAM(PRUint32 aLangID)
+            )
         : mPointer(aPointer),
           mParticipant(aParticipant),
           mColor(grey),
@@ -466,8 +470,10 @@ struct PtrInfo
 #ifdef DEBUG_CC
         , mBytes(0),
           mName(nsnull),
+          mLangID(aLangID),
           mSCCIndex(0),
-          mReversedEdges(nsnull)
+          mReversedEdges(nsnull),
+          mShortestPathToExpectedGarbage(nsnull)
 #endif
     {
     }
@@ -529,7 +535,9 @@ public:
             NS_ASSERTION(aPool.mBlocks == nsnull && aPool.mLast == nsnull,
                          "pool not empty");
         }
-        PtrInfo *Add(void *aPointer, nsCycleCollectionParticipant *aParticipant)
+        PtrInfo *Add(void *aPointer, nsCycleCollectionParticipant *aParticipant
+                     IF_DEBUG_CC_PARAM(PRUint32 aLangID)
+                    )
         {
             if (mNext == mBlockEnd) {
                 Block *block;
@@ -539,7 +547,9 @@ public:
                 mBlockEnd = block->mEntries + BlockSize;
                 mNextBlock = &block->mNext;
             }
-            return new (mNext++) PtrInfo(aPointer, aParticipant);
+            return new (mNext++) PtrInfo(aPointer, aParticipant
+                                         IF_DEBUG_CC_PARAM(aLangID)
+                                        );
         }
     private:
         Block **mNextBlock;
@@ -818,6 +828,11 @@ struct nsCycleCollectionXPCOMRuntime :
     }
 
     inline nsCycleCollectionParticipant *ToParticipant(void *p);
+
+#ifdef DEBUG_CC
+    virtual void PrintAllReferencesTo(void *p) {}
+    virtual void SuspectExtraPointers() {}
+#endif
 };
 
 struct nsCycleCollector
@@ -1104,7 +1119,17 @@ public:
 
     PRUint32 Count() const { return mPtrToNodeMap.entryCount; }
 
+#ifdef DEBUG_CC
+    PtrInfo* AddNode(void *s, nsCycleCollectionParticipant *aParticipant,
+                     PRUint32 aLangID);
+#else
     PtrInfo* AddNode(void *s, nsCycleCollectionParticipant *aParticipant);
+    PtrInfo* AddNode(void *s, nsCycleCollectionParticipant *aParticipant,
+                     PRUint32 aLangID)
+    {
+        return AddNode(s, aParticipant);
+    }
+#endif
     void Traverse(PtrInfo* aPtrInfo);
 
 private:
@@ -1138,13 +1163,17 @@ GCGraphBuilder::~GCGraphBuilder()
 }
 
 PtrInfo*
-GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant)
+GCGraphBuilder::AddNode(void *s, nsCycleCollectionParticipant *aParticipant
+                        IF_DEBUG_CC_PARAM(PRUint32 aLangID)
+                       )
 {
     PtrToNodeEntry *e = static_cast<PtrToNodeEntry*>(PL_DHashTableOperate(&mPtrToNodeMap, s, PL_DHASH_ADD));
     PtrInfo *result;
     if (!e->mNode) {
         // New entry.
-        result = mNodeBuilder.Add(s, aParticipant);
+        result = mNodeBuilder.Add(s, aParticipant
+                                  IF_DEBUG_CC_PARAM(aLangID)
+                                 );
         if (!result) {
             PL_DHashTableRawRemove(&mPtrToNodeMap, e);
             return nsnull;
@@ -1215,7 +1244,7 @@ GCGraphBuilder::NoteXPCOMChild(nsISupports *child)
     nsXPCOMCycleCollectionParticipant *cp;
     ToParticipant(child, &cp);
     if (cp) {
-        PtrInfo *childPi = AddNode(child, cp);
+        PtrInfo *childPi = AddNode(child, cp, nsIProgrammingLanguage::CPLUSPLUS);
         if (!childPi)
             return;
         mEdgeBuilder.Add(childPi);
@@ -1232,7 +1261,7 @@ GCGraphBuilder::NoteNativeChild(void *child,
 
     NS_ASSERTION(participant, "Need a nsCycleCollectionParticipant!");
 
-    PtrInfo *childPi = AddNode(child, participant);
+    PtrInfo *childPi = AddNode(child, participant, nsIProgrammingLanguage::CPLUSPLUS);
     if (!childPi)
         return;
     mEdgeBuilder.Add(childPi);
@@ -1254,7 +1283,7 @@ GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child)
     if (!cp)
         return;
 
-    PtrInfo *childPi = AddNode(child, cp);
+    PtrInfo *childPi = AddNode(child, cp, langID);
     if (!childPi)
         return;
     mEdgeBuilder.Add(childPi);
@@ -1283,7 +1312,8 @@ nsCycleCollector::MarkRoots(GCGraph &graph)
         nsXPCOMCycleCollectionParticipant *cp;
         ToParticipant(s, &cp);
         if (cp) {
-            PtrInfo *pinfo = builder.AddNode(canonicalize(s), cp);
+            PtrInfo *pinfo = builder.AddNode(canonicalize(s), cp,
+                                             nsIProgrammingLanguage::CPLUSPLUS);
             if (pinfo)
                 pinfo->mWasPurple = PR_TRUE;
         }
@@ -2226,8 +2256,10 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
     mBuf.Empty();
 
     for (PRUint32 i = 0; i <= nsIProgrammingLanguage::MAX; ++i) {
-        if (mRuntimes[i])
+        if (mRuntimes[i]) {
             mRuntimes[i]->BeginCycleCollection();
+            mRuntimes[i]->SuspectExtraPointers();
+        }
     }
 
     mCollectionInProgress = PR_TRUE;
@@ -2285,10 +2317,13 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
 
             nsDeque queue; // for breadth-first search
             NodePool::Enumerator etor_roots(graph.mNodes);
-            for (PRUint32 i = suspectCurrentCount; i < graph.mRootCount; ++i) {
+            for (PRUint32 i = 0; i < graph.mRootCount; ++i) {
                 PtrInfo *root_pi = etor_roots.GetNext();
-                root_pi->mSCCIndex = INDEX_REACHED;
-                queue.Push(root_pi);
+                if (i >= suspectCurrentCount) {
+                    root_pi->mSCCIndex = INDEX_REACHED;
+                    root_pi->mShortestPathToExpectedGarbage = root_pi;
+                    queue.Push(root_pi);
+                }
             }
 
             while (queue.GetSize() > 0) {
@@ -2296,7 +2331,10 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                 for (ReversedEdge *e = pi->mReversedEdges; e; e = e->mNext) {
                     if (e->mTarget->mSCCIndex == INDEX_UNREACHED) {
                         e->mTarget->mSCCIndex = INDEX_REACHED;
-                        queue.Push(e->mTarget);
+                        PtrInfo *target = e->mTarget;
+                        if (!target->mShortestPathToExpectedGarbage)
+                            target->mShortestPathToExpectedGarbage = pi;
+                        queue.Push(target);
                     }
                 }
 
@@ -2307,13 +2345,22 @@ nsCycleCollector::ExplainLiveExpectedGarbage()
                            pi->mName, pi->mPointer,
                            pi->mRefCount - pi->mInternalRefs,
                            pi->mRefCount, pi->mInternalRefs);
+
+                    printf("  An object expected to be garbage could be "
+                           "reached from it by the path:\n");
+                    for (PtrInfo *path = pi, *prev = nsnull; prev != path;
+                         prev = path,
+                         path = path->mShortestPathToExpectedGarbage)
+                        printf("    %s %p\n", path->mName, path->mPointer);
+
                     printf("  The %d known references to it were from:\n",
                            pi->mInternalRefs);
                     for (ReversedEdge *e = pi->mReversedEdges;
                          e; e = e->mNext) {
-                        printf("  %s %p\n",
+                        printf("    %s %p\n",
                                e->mTarget->mName, e->mTarget->mPointer);
                     }
+                    mRuntimes[pi->mLangID]->PrintAllReferencesTo(pi->mPointer);
                 }
             }
 

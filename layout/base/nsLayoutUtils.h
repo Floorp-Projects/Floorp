@@ -660,10 +660,10 @@ public:
 
   /**
    * Draw a single image.
-   *   @param aImage            The image.
    *   @param aRenderingContext Where to draw the image, set up with an
    *                            appropriate scale and transform for drawing in
    *                            app units (aDestRect).
+   *   @param aImage            The image.
    *   @param aDestRect         Where to draw the image (app units).
    *   @param aDirtyRect        Draw only within this region (rounded to the
    *                            nearest pixel); the intersection of

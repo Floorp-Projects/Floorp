@@ -21,10 +21,6 @@ var test_array = [
 
 // Utility functions
 
-var BinaryInputStream =
-          Components.Constructor("@mozilla.org/binaryinputstream;1",
-                                 "nsIBinaryInputStream", "setInputStream");
-
 function makeChan(url) {
   var ios = Cc["@mozilla.org/network/io-service;1"]
               .getService(Ci.nsIIOService);

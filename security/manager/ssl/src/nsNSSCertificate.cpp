@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -68,6 +69,9 @@
 #include "nsUnicharUtils.h"
 #include "nsThreadUtils.h"
 #include "nsCertVerificationThread.h"
+#include "nsIObjectOutputStream.h"
+#include "nsIObjectInputStream.h"
+#include "nsIProgrammingLanguage.h"
 
 #include "nspr.h"
 extern "C" {
@@ -105,24 +109,37 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsNSSCertificate, nsIX509Cert,
 nsNSSCertificate*
 nsNSSCertificate::ConstructFromDER(char *certDER, int derLen)
 {
+  nsNSSCertificate* newObject = new nsNSSCertificate();
+  if (!newObject->InitFromDER(certDER, derLen)) {
+    delete newObject;
+    newObject = nsnull;
+  }
+
+  return newObject;
+}
+
+PRBool
+nsNSSCertificate::InitFromDER(char *certDER, int derLen)
+{
   nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return PR_FALSE;
 
   if (!certDER || !derLen)
-    return nsnull;
+    return PR_FALSE;
 
   CERTCertificate *aCert = CERT_DecodeCertFromPackage(certDER, derLen);
   
   if (!aCert)
-    return nsnull;
+    return PR_FALSE;
 
   if(aCert->dbhandle == nsnull)
   {
     aCert->dbhandle = CERT_GetDefaultCertDB();
   }
 
-  nsNSSCertificate *newObject = new nsNSSCertificate(aCert);
-  CERT_DestroyCertificate(aCert);
-  return newObject;
+  mCert = aCert;
+  return PR_TRUE;
 }
 
 nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) : 
@@ -136,6 +153,13 @@ nsNSSCertificate::nsNSSCertificate(CERTCertificate *cert) :
 
   if (cert) 
     mCert = CERT_DupCertificate(cert);
+}
+
+nsNSSCertificate::nsNSSCertificate() : 
+  mCert(nsnull),
+  mPermDelete(PR_FALSE),
+  mCertType(CERT_TYPE_NOT_YET_INITIALIZED)
+{
 }
 
 nsNSSCertificate::~nsNSSCertificate()
@@ -1468,5 +1492,102 @@ nsNSSCertListEnumerator::GetNext(nsISupports **_retval)
   NS_ADDREF(*_retval);
 
   CERT_RemoveCertListNode(node);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::Write(nsIObjectOutputStream* aStream)
+{
+  NS_ENSURE_STATE(mCert);
+  nsresult rv = aStream->Write32(mCert->derCert.len);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  
+  return aStream->WriteByteArray(mCert->derCert.data, mCert->derCert.len);
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::Read(nsIObjectInputStream* aStream)
+{
+  NS_ENSURE_STATE(!mCert);
+  
+  PRUint32 len;
+  nsresult rv = aStream->Read32(&len);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsXPIDLCString str;
+  rv = aStream->ReadBytes(len, getter_Copies(str));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!InitFromDER(const_cast<char*>(str.get()), len)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetInterfaces(PRUint32 *count, nsIID * **array)
+{
+  *count = 0;
+  *array = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
+{
+  *_retval = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetContractID(char * *aContractID)
+{
+  *aContractID = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetClassDescription(char * *aClassDescription)
+{
+  *aClassDescription = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetClassID(nsCID * *aClassID)
+{
+  *aClassID = (nsCID*) nsMemory::Alloc(sizeof(nsCID));
+  if (!*aClassID)
+    return NS_ERROR_OUT_OF_MEMORY;
+  return GetClassIDNoAlloc(*aClassID);
+}
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetImplementationLanguage(PRUint32 *aImplementationLanguage)
+{
+  *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetFlags(PRUint32 *aFlags)
+{
+  *aFlags = nsIClassInfo::THREADSAFE;
+  return NS_OK;
+}
+
+static NS_DEFINE_CID(kNSSCertificateCID, NS_X509CERT_CID);
+
+NS_IMETHODIMP 
+nsNSSCertificate::GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
+{
+  *aClassIDNoAlloc = kNSSCertificateCID;
   return NS_OK;
 }

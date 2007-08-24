@@ -1022,7 +1022,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
             // XXXbz do we need to notify other view observers for viewmanagers
             // in our tree?
             // Make sure to not send WillPaint notifications while scrolling
-            nsViewManager* rootVM = RootViewManager();
+            nsRefPtr<nsViewManager> rootVM = RootViewManager();
 
             nsIWidget *widget = mRootView->GetWidget();
             PRBool translucentWindow = PR_FALSE;

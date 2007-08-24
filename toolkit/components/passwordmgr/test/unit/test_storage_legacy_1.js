@@ -112,6 +112,14 @@ testdesc = "Initialize with signons-05.txt (0 disabled, 1 login)";
 
 LoginTest.initStorage(storage, INDIR, "signons-05.txt");
 LoginTest.checkStorageData(storage, [], [testuser1]);
+// counting logins matching host
+do_check_eq(1, storage.countLogins("http://dummyhost.mozilla.org", "",    null));
+// counting logins matching host (login has blank actionURL)
+do_check_eq(1, storage.countLogins("http://dummyhost.mozilla.org", "foo", null));
+// counting logins (don't match form login for HTTP search)
+do_check_eq(0, storage.countLogins("http://dummyhost.mozilla.org", null,    ""));
+// counting logins (don't match a bogus hostname)
+do_check_eq(0, storage.countLogins("blah", "", ""));
 
 
 /* ========== 9 ========== */
@@ -128,6 +136,14 @@ testdesc = "Initialize with signons-07.txt (0 disabled, 2 logins on same host)";
 
 LoginTest.initStorage(storage, INDIR, "signons-07.txt");
 LoginTest.checkStorageData(storage, [], [testuser1, testuser2]);
+// counting logins matching host
+do_check_eq(2, storage.countLogins("http://dummyhost.mozilla.org", "", null));
+// counting logins matching host (login has blank actionURL)
+do_check_eq(2, storage.countLogins("http://dummyhost.mozilla.org", "foo", null));
+// counting logins (don't match form login for HTTP search)
+do_check_eq(0, storage.countLogins("http://dummyhost.mozilla.org", null, ""));
+// counting logins (don't match a bogus hostname)
+do_check_eq(0, storage.countLogins("blah", "", ""));
 
 
 /* ========== 11 ========== */
@@ -150,6 +166,10 @@ for (i = 1; i <= 500; i++) {
 }
 LoginTest.checkStorageData(storage, disabledHosts, logins);
 
+// counting all logins for dummyhost
+do_check_eq(500, storage.countLogins("http://dummyhost.site.org", "", ""));
+// counting all logins for dummyhost-1
+do_check_eq(1, storage.countLogins("http://dummyhost-1.site.org", "", ""));
 
 } catch (e) {
     throw "FAILED in test #" + testnum + " -- " + testdesc + ": " + e;

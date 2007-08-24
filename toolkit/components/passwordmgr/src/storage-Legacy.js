@@ -206,11 +206,21 @@ LoginManagerStorage_legacy.prototype = {
             throw "No logins found for hostname (" + key + ")";
 
         // The specified login isn't encrypted, so we need to ensure
-        // the logins we're comparing with are decrypted.
-        this._decryptLogins(logins);
-
+        // the logins we're comparing with are decrypted. We decrypt one entry
+        // at a time, lest _decryptLogins return fewer entries and screw up
+        // indicies between the two.
         for (var i = 0; i < logins.length; i++) {
-            if (logins[i].equals(login)) {
+
+            var [[decryptedLogin], userCanceled] =
+                        this._decryptLogins([logins[i]]);
+
+            if (userCanceled)
+                return;
+
+            if (!decryptedLogin)
+                continue;
+
+            if (decryptedLogin.equals(login)) {
                 logins.splice(i, 1); // delete that login from array.
                 break;
                 // Note that if there are duplicate entries, they'll
@@ -314,32 +324,12 @@ LoginManagerStorage_legacy.prototype = {
      *
      */
     findLogins : function (count, hostname, formSubmitURL, httpRealm) {
-        var hostLogins = this._logins[hostname];
-        if (hostLogins == null) {
-            count.value = 0;
-            return [];
-        }
+        var userCanceled;
 
-        var result = [], userCanceled;
-
-        for each (var login in hostLogins) {
-
-            // If looking for an HTTP login, make sure the httpRealms match.
-            if (httpRealm != login.httpRealm)
-                continue;
-
-            // If looking for a form login, make sure the action URLs match 
-            // ...unless the stored login is blank (not null), which means
-            // login was stored before we started keeping the action URL.
-            if (formSubmitURL != login.formSubmitURL &&
-                login.formSubmitURL != "")
-                continue;
-
-            result.push(login);
-        }
+        var logins = this._searchLogins(hostname, formSubmitURL, httpRealm);
 
         // Decrypt entries found for the caller.
-        [result, userCanceled] = this._decryptLogins(result);
+        [logins, userCanceled] = this._decryptLogins(logins);
 
         // We want to throw in this case, so that the Login Manager
         // knows to stop processing forms on the page so the user isn't
@@ -347,8 +337,19 @@ LoginManagerStorage_legacy.prototype = {
         if (userCanceled)
             throw "User canceled Master Password entry";
 
-        count.value = result.length; // needed for XPCOM
-        return result;
+        count.value = logins.length; // needed for XPCOM
+        return logins;
+    },
+
+    
+    /*
+     * countLogins
+     *
+     */
+    countLogins : function (hostname, formSubmitURL, httpRealm) {
+        var logins = this._searchLogins(hostname, formSubmitURL, httpRealm);
+
+        return logins.length;
     },
 
 
@@ -357,6 +358,54 @@ LoginManagerStorage_legacy.prototype = {
     /* ==================== Internal Methods ==================== */
 
 
+
+
+    /*
+     * _searchLogins
+     *
+     */
+    _searchLogins : function (hostname, formSubmitURL, httpRealm) {
+        var hostLogins = this._logins[hostname];
+        if (hostLogins == null)
+            return [];
+
+        var result = [], userCanceled;
+
+        for each (var login in hostLogins) {
+
+            // If search arg is null, skip login unless it doesn't specify a
+            // httpRealm (ie, it's also null). If the seach arg is an empty
+            // string, always match.
+            if (httpRealm == null) {
+                if (login.httpRealm != null)
+                    continue;
+            } else if (httpRealm != "") {
+                // Make sure the realms match. If search arg is null,
+                // only match if login doesn't specify a realm (is null)
+                if (httpRealm != login.httpRealm)
+                    continue;
+            }
+
+            // If search arg is null, skip login unless it doesn't specify a
+            // action URL (ie, it's also null). If the seach arg is an empty
+            // string, always match.
+            if (formSubmitURL == null) {
+                if (login.formSubmitURL != null)
+                    continue;
+            } else if (formSubmitURL != "") {
+                // If the stored login is blank (not null), that means the
+                // login was stored before we started keeping the action
+                // URL, so always match. Unless the search g
+                if (login.formSubmitURL != "" &&
+                    formSubmitURL != login.formSubmitURL)
+                    continue;
+            }
+
+            result.push(login);
+        }
+
+        return result;
+    },
 
 
     /*
@@ -537,7 +586,11 @@ LoginManagerStorage_legacy.prototype = {
 
                 // Line is the action URL
                 case STATE.ACTIONURL:
-                    entry.formSubmitURL = line.value;
+                    var formSubmitURL = line.value;
+                    if (!formSubmitURL && entry.httpRealm)
+                        entry.formSubmitURL = null;
+                    else
+                        entry.formSubmitURL = formSubmitURL;
                     processEntry = true;
                     parseState = STATE.USERFIELD;
                     break;
@@ -703,16 +756,16 @@ LoginManagerStorage_legacy.prototype = {
         var result = [], userCanceled = false;
 
         for each (var login in logins) {
-            if (!login.username)
-                [login.username, userCanceled] =
-                    this._decrypt(login.wrappedJSObject.encryptedUsername);
+            var username, password;
+
+            [username, userCanceled] =
+                this._decrypt(login.wrappedJSObject.encryptedUsername);
 
             if (userCanceled)
                 break;
 
-            if (!login.password)
-                [login.password, userCanceled] =
-                    this._decrypt(login.wrappedJSObject.encryptedPassword);
+            [password, userCanceled] =
+                this._decrypt(login.wrappedJSObject.encryptedPassword);
 
             // Probably can't hit this case, but for completeness...
             if (userCanceled)
@@ -720,8 +773,15 @@ LoginManagerStorage_legacy.prototype = {
 
             // If decryption failed (corrupt entry?) skip it.
             // XXX remove it from the original list entirely?
-            if (!login.username || !login.password)
+            if (!username || !password)
                 continue;
+
+            // We could set the decrypted values on a copy of the object, to
+            // try to prevent the decrypted values from sitting around in
+            // memory if they're not needed. But thanks to GC that's happening
+            // anyway, so meh.
+            login.username = username;
+            login.password = password;
 
             // Force any old mime64-obscured entries to be reencrypted.
             if (login.wrappedJSObject.encryptedUsername &&

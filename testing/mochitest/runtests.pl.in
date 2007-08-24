@@ -315,7 +315,7 @@ sub winPathFromDir {
   my ($volume,$directories,$file) =
     File::Spec->splitpath(substr($path, $matchlen), 1);
   my @dirs = File::Spec->splitdir( $directories );
-  return $bestmatch . join "\\", @dirs;
+  return $bestmatch . "\\" . join "\\", @dirs;
 }
 
  ##################

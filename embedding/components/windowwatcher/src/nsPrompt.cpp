@@ -46,11 +46,6 @@
 #include "nsIStringBundle.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMDocumentEvent.h"
-#include "nsIDOMEventTarget.h"
-#include "nsIDOMEvent.h"
-#include "nsIPrivateDOMEvent.h"
 #include "nsEmbedCID.h"
 #include "nsNetCID.h"
 #include "nsPIDOMWindow.h"
@@ -176,80 +171,10 @@ nsPrompt::Init()
 // nsPrompt::nsIPrompt
 //*****************************************************************************
 
-nsAutoWindowStateHelper::nsAutoWindowStateHelper(nsIDOMWindow *aWindow)
-  : mWindow(aWindow),
-    mDefaultEnabled(DispatchCustomEvent("DOMWillOpenModalDialog"))
-{
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWindow));
-
-  if (window) {
-    window->EnterModalState();
-  }
-}
-
-nsAutoWindowStateHelper::~nsAutoWindowStateHelper()
-{
-  nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mWindow));
-
-  if (window) {
-    window->LeaveModalState();
-  }
-
-  if (mDefaultEnabled) {
-    DispatchCustomEvent("DOMModalDialogClosed");
-  }
-}
-
-PRBool
-nsAutoWindowStateHelper::DispatchCustomEvent(const char *aEventName)
-{
-  if (!mWindow) {
-    return PR_TRUE;
-  }
-
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mWindow));
-  }
-#endif
-
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  mWindow->GetDocument(getter_AddRefs(domdoc));
-
-  nsCOMPtr<nsIDOMDocumentEvent> docevent(do_QueryInterface(domdoc));
-  nsCOMPtr<nsIDOMEvent> event;
-
-  PRBool defaultActionEnabled = PR_TRUE;
-
-  if (docevent) {
-    docevent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
-
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(event));
-    if (privateEvent) {
-      event->InitEvent(NS_ConvertASCIItoUTF16(aEventName), PR_TRUE, PR_TRUE);
-
-      privateEvent->SetTrusted(PR_TRUE);
-
-      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(mWindow));
-
-      target->DispatchEvent(event, &defaultActionEnabled);
-    }
-  }
-
-  return defaultActionEnabled;
-}
-
-
 NS_IMETHODIMP
 nsPrompt::Alert(const PRUnichar* dialogTitle, 
                 const PRUnichar* text)
 {
-  nsAutoWindowStateHelper windowStateHelper(mParent);
-
-  if (!windowStateHelper.DefaultEnabled()) {
-    return NS_OK;
-  }
-
   return mPromptService->Alert(mParent, dialogTitle, text);
 }
 
@@ -259,13 +184,6 @@ nsPrompt::AlertCheck(const PRUnichar* dialogTitle,
                      const PRUnichar* checkMsg,
                      PRBool *checkValue)
 {
-  nsAutoWindowStateHelper windowStateHelper(mParent);
-
-  if (!windowStateHelper.DefaultEnabled()) {
-    // checkValue is an inout parameter, so we don't have to set it
-    return NS_OK;
-  }
-
   return mPromptService->AlertCheck(mParent, dialogTitle, text, checkMsg,
                                     checkValue);
 }
@@ -275,14 +193,6 @@ nsPrompt::Confirm(const PRUnichar* dialogTitle,
                   const PRUnichar* text,
                   PRBool *_retval)
 {
-  nsAutoWindowStateHelper windowStateHelper(mParent);
-
-  if (!windowStateHelper.DefaultEnabled()) {
-    // Default to cancel
-    *_retval = PR_FALSE;
-    return NS_OK;
-  }
-
   return mPromptService->Confirm(mParent, dialogTitle, text, _retval);
 }
 
@@ -293,14 +203,6 @@ nsPrompt::ConfirmCheck(const PRUnichar* dialogTitle,
                        PRBool *checkValue,
                        PRBool *_retval)
 {
-  nsAutoWindowStateHelper windowStateHelper(mParent);
-
-  if (!windowStateHelper.DefaultEnabled()) {
-    // Default to cancel. checkValue is an inout parameter, so we don't have to set it
-    *_retval = PR_FALSE;
-    return NS_OK;
-  }
-
   return mPromptService->ConfirmCheck(mParent, dialogTitle, text, checkMsg,
                                       checkValue, _retval);
 }
@@ -316,16 +218,6 @@ nsPrompt::ConfirmEx(const PRUnichar *dialogTitle,
                     PRBool *checkValue,
                     PRInt32 *buttonPressed)
 {
-  nsAutoWindowStateHelper windowStateHelper(mParent);
-
-  if (!windowStateHelper.DefaultEnabled()) {
-    // Return 1 to match what happens when the dialog is closed by the window
-    // manager (This is indeed independent of what the default button is).
-    // checkValue is an inout parameter, so we don't have to set it.
-    *buttonPressed = 1;
-    return NS_OK;
-  }
-
   return mPromptService->ConfirmEx(mParent, dialogTitle, text, buttonFlags,
                                    button0Title, button1Title, button2Title,
                                    checkMsg, checkValue, buttonPressed);
@@ -339,15 +231,6 @@ nsPrompt::Prompt(const PRUnichar *dialogTitle,
                  PRBool *checkValue,
                  PRBool *_retval)
 {
-  nsAutoWindowStateHelper windowStateHelper(mParent);
-
-  if (!windowStateHelper.DefaultEnabled()) {
-    // Default to cancel. answer and checkValue are inout parameters, so we
-    // don't have to set them.
-    *_retval = PR_FALSE;
-    return NS_OK;
-  }
-
   return mPromptService->Prompt(mParent, dialogTitle, text, answer, checkMsg,
                                 checkValue, _retval);
 }
@@ -361,15 +244,6 @@ nsPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
                                     PRBool *checkValue,
                                     PRBool *_retval)
 {
-  nsAutoWindowStateHelper windowStateHelper(mParent);
-
-  if (!windowStateHelper.DefaultEnabled()) {
-    // Default to cancel. username, password and checkValue are inout
-    // parameters, so we don't have to set them.
-    *_retval = PR_FALSE;
-    return NS_OK;
-  }
-
   return mPromptService->PromptUsernameAndPassword(mParent, dialogTitle, text,
                                                    username, password,
                                                    checkMsg, checkValue,
@@ -384,15 +258,6 @@ nsPrompt::PromptPassword(const PRUnichar *dialogTitle,
                          PRBool *checkValue,
                          PRBool *_retval)
 {
-  nsAutoWindowStateHelper windowStateHelper(mParent);
-
-  if (!windowStateHelper.DefaultEnabled()) {
-    // Default to cancel. password and checkValue are inout parameters, so we
-    // don't have to touch them.
-    *_retval = PR_FALSE;
-    return NS_OK;
-  }
-
   return mPromptService->PromptPassword(mParent, dialogTitle, text, password,
                                         checkMsg, checkValue, _retval);
 }
@@ -405,15 +270,6 @@ nsPrompt::Select(const PRUnichar *dialogTitle,
                  PRInt32 *outSelection,
                  PRBool *_retval)
 {
-  nsAutoWindowStateHelper windowStateHelper(mParent);
-
-  if (!windowStateHelper.DefaultEnabled()) {
-    // Default to cancel and item 0
-    *outSelection = 0;
-    *_retval = PR_FALSE;
-    return NS_OK;
-  }
-
   return mPromptService->Select(mParent, dialogTitle, inMsg, inCount, inList,
                                 outSelection, _retval);
 }
@@ -433,15 +289,6 @@ nsPrompt::Prompt(const PRUnichar* dialogTitle,
                  PRUnichar* *result,
                  PRBool *_retval)
 {
-  nsAutoWindowStateHelper windowStateHelper(mParent);
-
-  if (!windowStateHelper.DefaultEnabled()) {
-    // Default to cancel
-    *result = nsnull;
-    *_retval = PR_FALSE;
-    return NS_OK;
-  }
-
   // Ignore passwordRealm and savePassword
   if (defaultText) {
     *result = ToNewUnicode(nsDependentString(defaultText));
@@ -464,16 +311,6 @@ nsPrompt::PromptUsernameAndPassword(const PRUnichar* dialogTitle,
                                     PRUnichar* *pwd,
                                     PRBool *_retval)
 {
-  nsAutoWindowStateHelper windowStateHelper(mParent);
-
-  if (!windowStateHelper.DefaultEnabled()) {
-    // Default to cancel
-    *user = nsnull;
-    *pwd = nsnull;
-    *_retval = PR_FALSE;
-    return NS_OK;
-  }
-
   // Ignore passwordRealm and savePassword
   return mPromptService->PromptUsernameAndPassword(mParent, dialogTitle, text,
                                                    user, pwd, nsnull, nsnull,
@@ -488,15 +325,6 @@ nsPrompt::PromptPassword(const PRUnichar* dialogTitle,
                          PRUnichar* *pwd,
                          PRBool *_retval)
 {
-  nsAutoWindowStateHelper windowStateHelper(mParent);
-
-  if (!windowStateHelper.DefaultEnabled()) {
-    // Default to cancel
-    *pwd = nsnull;
-    *_retval = PR_FALSE;
-    return NS_OK;
-  }
-
   // Ignore passwordRealm and savePassword
   return mPromptService->PromptPassword(mParent, dialogTitle, text, pwd,
                                         nsnull, nsnull, _retval);
@@ -507,14 +335,6 @@ nsPrompt::PromptAuth(nsIChannel* aChannel,
                      nsIAuthInformation* aAuthInfo,
                      PRBool* retval)
 {
-  nsAutoWindowStateHelper windowStateHelper(mParent);
-
-  if (!windowStateHelper.DefaultEnabled()) {
-    // Default to cancel
-    *retval = PR_FALSE;
-    return NS_OK;
-  }
-
   if (mPromptService2) {
     return mPromptService2->PromptAuth(mParent, aChannel,
                                        aLevel, aAuthInfo,
@@ -533,13 +353,6 @@ nsPrompt::AsyncPromptAuth(nsIChannel* aChannel,
                           nsIAuthInformation* aAuthInfo,
                           nsICancelable** retval)
 {
-  nsAutoWindowStateHelper windowStateHelper(mParent);
-
-  if (!windowStateHelper.DefaultEnabled()) {
-    // XXX what to do?
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   if (mPromptService2) {
     return mPromptService2->AsyncPromptAuth(mParent, aChannel,
                                             aCallback, aContext,

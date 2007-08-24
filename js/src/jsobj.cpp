@@ -2465,14 +2465,12 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     if (!obj)
         return NULL;
 
-    obj->dslots = NULL;
-
     /*
-     * Root obj to prevent it from being collected out from under this call to
-     * js_NewObject. There's a possibilty of GC under the objectHook call-out
-     * further below.
+     * Initialize all JSObject fields before doing any operation that can
+     * potentially trigger GC.
      */
-    JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
+    obj->map = NULL;
+    obj->dslots = NULL;
 
     /* Set the proto, parent, and class properties. */
     STOBJ_SET_PROTO(obj, proto);
@@ -2482,6 +2480,13 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     /* Initialize the remaining fixed slots. */
     for (i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
         obj->fslots[i] = JSVAL_VOID;
+
+    /*
+     * Root obj to prevent it from being collected out from under this call to
+     * js_NewObject. There's a possibilty of GC under the objectHook call-out
+     * further below.
+     */
+    JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
 
     /*
      * Share proto's map only if it has the same JSObjectOps, and only if
@@ -4648,7 +4653,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
      */
     if (!JS_XDRUint32(xdr, &classDef))
         return JS_FALSE;
-    if (classDef == 1 && !js_XDRCStringAtom(xdr, &atom))
+    if (classDef == 1 && !js_XDRStringAtom(xdr, &atom))
         return JS_FALSE;
 
     if (!JS_XDRUint32(xdr, &classId))

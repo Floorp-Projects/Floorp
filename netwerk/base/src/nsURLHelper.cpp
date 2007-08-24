@@ -50,6 +50,7 @@
 #include "nsNetCID.h"
 #include "netCore.h"
 #include "prprf.h"
+#include "prnetdb.h"
 
 //----------------------------------------------------------------------------
 // Init/Shutdown
@@ -887,12 +888,18 @@ net_IsValidHostName(const nsCSubstring &host)
     const char *end = host.EndReading();
     // ctrl-chars and  !\"#%&'()*,/;<=>?@\\^{|}\x7f
     // if one of these chars is found return false
-    return net_FindCharInSet(host.BeginReading(), end, 
-                             "\x01\x02\x03\x04\x05\x06\x07\x08"
-                             "\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10"
-                             "\x11\x12\x13\x14\x15\x16\x17\x18"
-                             "\x19\x1a\x1b\x1c\x1d\x1e\x1f\x20"
-                             "\x21\x22\x23\x25\x26\x27\x28\x29"
-                             "\x2a\x2c\x2f\x3b\x3c\x3d\x3e"
-                             "\x3f\x40\x5c\x5e\x7b\x7c\x7e\x7f") == end;
+    if (net_FindCharInSet(host.BeginReading(), end, 
+                          "\x01\x02\x03\x04\x05\x06\x07\x08"
+                          "\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10"
+                          "\x11\x12\x13\x14\x15\x16\x17\x18"
+                          "\x19\x1a\x1b\x1c\x1d\x1e\x1f\x20"
+                          "\x21\x22\x23\x25\x26\x27\x28\x29"
+                          "\x2a\x2c\x2f\x3b\x3c\x3d\x3e"
+                          "\x3f\x40\x5c\x5e\x7b\x7c\x7e\x7f") == end)
+        return PR_TRUE;
+
+    // Might be a valid IPv6 link-local address containing a percent sign
+    nsCAutoString strhost(host);
+    PRNetAddr addr;
+    return PR_StringToNetAddr(strhost.get(), &addr) == PR_SUCCESS;
 }

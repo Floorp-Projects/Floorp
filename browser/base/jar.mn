@@ -37,6 +37,7 @@ browser.jar:
 *       content/browser/safeMode.js                   (content/safeMode.js)
 *       content/browser/safeMode.xul                  (content/safeMode.xul)
 *       content/browser/sanitize.js                   (content/sanitize.js)
+*       content/browser/tabbrowser.xml                (content/tabbrowser.xml)
 *       content/browser/sanitize.xul                  (content/sanitize.xul)
 *       content/browser/urlbarBindings.xml            (content/urlbarBindings.xml)
 *       content/browser/utilityOverlay.js             (content/utilityOverlay.js)

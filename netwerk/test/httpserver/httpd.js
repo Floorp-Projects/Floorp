@@ -81,6 +81,13 @@ function HttpError(code, description)
   this.code = code;
   this.description = description;
 }
+HttpError.prototype =
+{
+  toString: function()
+  {
+    return this.code + " " + this.description;
+  }
+};
 
 /**
  * Errors thrown to trigger specific HTTP server responses.
@@ -158,12 +165,30 @@ function dumpn(str)
     dump(str + "\n");
 }
 
+/** Dumps the current JS stack if DEBUG. */
+function dumpStack()
+{
+  // peel off the frames for dumpStack() and Error()
+  var stack = new Error().stack.split(/\n/).slice(2);
+  stack.forEach(dumpn);
+}
+
+
+/** The XPCOM thread manager. */
+var gThreadManager = null;
+
 
 /**
  * JavaScript constructors for commonly-used classes; precreating these is a
  * speedup over doing the same from base principles.  See the docs at
  * http://developer.mozilla.org/en/docs/Components.Constructor for details.
  */
+const ServerSocket = CC("@mozilla.org/network/server-socket;1",
+                        "nsIServerSocket",
+                        "init");
+const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
+                             "nsIBinaryInputStream",
+                             "setInputStream");
 const Pipe = CC("@mozilla.org/pipe;1",
                 "nsIPipe",
                 "init");
@@ -173,6 +198,9 @@ const FileInputStream = CC("@mozilla.org/network/file-input-stream;1",
 const StreamCopier = CC("@mozilla.org/network/async-stream-copier;1",
                         "nsIAsyncStreamCopier",
                         "init");
+const Pump = CC("@mozilla.org/network/input-stream-pump;1",
+                "nsIInputStreamPump",
+                "init");
 const ConverterInputStream = CC("@mozilla.org/intl/converter-input-stream;1",
                                 "nsIConverterInputStream",
                                 "init");
@@ -185,10 +213,10 @@ const SupportsString = CC("@mozilla.org/supports-string;1",
 /**
  * Returns the RFC 822/1123 representation of a date.
  *
- * @param date
+ * @param date : Number
  *   the date, in milliseconds from midnight (00:00:00), January 1, 1970 GMT
- * @returns
- *   the string specifying the given date
+ * @returns string
+ *   the representation of the given date
  */
 function toDateString(date)
 {
@@ -213,9 +241,9 @@ function toDateString(date)
    * Processes a date and returns the encoded UTC time as a string according to
    * the format specified in RFC 2616.
    *
-   * @param date
-   *   the date as a JavaScript Date object
-   * @returns
+   * @param date : Date
+   *   the date to process
+   * @returns string
    *   a string of the form "HH:MM:SS", ranging from "00:00:00" to "23:59:59"
    */
   function toTime(date)
@@ -238,9 +266,9 @@ function toDateString(date)
    * Processes a date and returns the encoded UTC date as a string according to
    * the date1 format specified in RFC 2616.
    *
-   * @param date
-   *   the date as a JavaScript Date object
-   * @returns
+   * @param date : Date
+   *   the date to process
+   * @returns string
    *   a string of the form "HH:MM:SS", ranging from "00:00:00" to "23:59:59"
    */
   function toDate1(date)
@@ -267,7 +295,7 @@ function toDateString(date)
 /**
  * Prints out a human-readable representation of the object o and its fields,
  * omitting those whose names begin with "_" if showMembers != true (to ignore
- * hidden properties exposed via getters/setters).
+ * "private" properties exposed via getters/setters).
  */
 function printObj(o, showMembers)
 {
@@ -289,6 +317,9 @@ function printObj(o, showMembers)
  */
 function nsHttpServer()
 {
+  if (!gThreadManager)
+    gThreadManager = Cc["@mozilla.org/thread-manager;1"].getService();
+
   /** The port on which this server listens. */
   this._port = undefined;
 
@@ -314,28 +345,51 @@ nsHttpServer.prototype =
   // NSISERVERSOCKETLISTENER
 
   /**
-   * This function signals that a new connection has been accepted.  It is the
-   * method through which all requests must be handled, and by the end of this
-   * method any and all response requests must be sent.
+   * Processes an incoming request coming in on the given socket and contained
+   * in the given transport.
    *
+   * @param socket : nsIServerSocket
+   *   the socket through which the request was served
+   * @param trans : nsISocketTransport
+   *   the transport for the request/response
    * @see nsIServerSocketListener.onSocketAccepted
    */
-  onSocketAccepted: function(serverSocket, trans)
+  onSocketAccepted: function(socket, trans)
   {
+    dumpn("*** onSocketAccepted(socket=" + socket + ", trans=" + trans + ") " +
+          "on thread " + gThreadManager.currentThread +
+          " (main is " + gThreadManager.mainThread + ")");
+
     dumpn(">>> new connection on " + trans.host + ":" + trans.port);
 
-    var input = trans.openInputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
+    const SEGMENT_SIZE = 8192;
+    const SEGMENT_COUNT = 1024;
+    var input = trans.openInputStream(0, SEGMENT_SIZE, SEGMENT_COUNT)
+                     .QueryInterface(Ci.nsIAsyncInputStream);
     var output = trans.openOutputStream(Ci.nsITransport.OPEN_BLOCKING, 0, 0);
 
-    this._processConnection(serverSocket.port, input, output);
+    var conn = new Connection(input, output, this, socket.port);
+    var reader = new RequestReader(conn);
+
+    // XXX add request timeout functionality here!
+
+    // Note: must use main thread here, or we might get a GC that will cause
+    //       threadsafety assertions.  We really need to fix XPConnect so that
+    //       you can actually do things in multi-threaded JS.  :-(
+    input.asyncWait(reader, 0, 0, gThreadManager.mainThread);
   },
 
   /**
    * Called when the socket associated with this is closed.
    *
+   * @param socket : nsIServerSocket
+   *   the socket being closed
+   * @param status : nsresult
+   *   the reason the socket stopped listening (NS_BINDING_ABORTED if the server
+   *   was stopped using nsIHttpServer.stop)
    * @see nsIServerSocketListener.onStopListening
    */
-  onStopListening: function(serverSocket, status)
+  onStopListening: function(socket, status)
   {
     dumpn(">>> shutting down server");
     this._socketClosed = true;
@@ -354,11 +408,9 @@ nsHttpServer.prototype =
     this._port = port;
     this._doQuit = this._socketClosed = false;
 
-    var socket = Cc["@mozilla.org/network/server-socket;1"]
-                   .createInstance(Ci.nsIServerSocket);
-    socket.init(this._port,
-                true,       // loopback only
-                -1);        // default number of pending connections
+    var socket = new ServerSocket(this._port,
+                                  true, // loopback only
+                                  -1);  // default number of pending connections
 
     dumpn(">>> listening on port " + socket.port);
     socket.asyncListen(this);
@@ -378,18 +430,10 @@ nsHttpServer.prototype =
     this._socket = null;
     this._doQuit = false;
 
-    // spin an event loop and wait for the socket-close notification, if we can;
-    // this is only possible in Mozilla 1.9 code, but in situations where
-    // nothing really horrible happens at shutdown, nothing bad will happen in
-    // Mozilla 1.8-based code (and we want to support that)
-    if ("@mozilla.org/thread-manager;1" in Cc)
-    {
-      var thr = Cc["@mozilla.org/thread-manager;1"]
-                  .getService()
-                  .currentThread;
-      while (!this._socketClosed || this._handler.hasPendingRequests())
-        thr.processNextEvent(true);
-    }
+    // spin an event loop and wait for the socket-close notification
+    var thr = gThreadManager.currentThread;
+    while (!this._socketClosed || this._handler.hasPendingRequests())
+      thr.processNextEvent(true);
   },
 
   //
@@ -460,6 +504,7 @@ nsHttpServer.prototype =
     throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
+
   // NON-XPCOM PUBLIC API
 
   /**
@@ -471,75 +516,33 @@ nsHttpServer.prototype =
   {
     return this._socketClosed && !this._handler.hasPendingRequests();
   },
+
   
   // PRIVATE IMPLEMENTATION
 
   /**
-   * Processes an incoming request in inStream served through the given port and
-   * writes the response to outStream.
+   * Closes the passed-in connection.
    *
-   * @param port
-   *   the port on which the request was served
-   * @param inStream
-   *   an nsIInputStream containing the incoming request
-   * @param outStream
-   *   the nsIOutputStream to which the response should be written
+   * @param connection : Connection
+   *   the connection to close
    */
-  _processConnection: function(port, inStream, outStream)
-  {
-    try
-    {
-      var metadata = new RequestMetadata(port);
-      metadata.init(inStream);
-
-      inStream.close();
-
-      this._handler.handleRequest(outStream, metadata);
-    }
-    catch (e)
-    {
-      dumpn(">>> internal error, shutting down server: " + e);
-      dumpn("*** stack trace: " + e.stack);
-
-      inStream.close(); // in case we failed before then
-
-      this._doQuit = true;
-      this._endConnection(this._handler, outStream);
-    }
-
-    // stream cleanup, etc. happens in _endConnection below -- called from
-    // stream copier observer when all data has been copied
-  },
-
-  /**
-   * Closes the passed-in output stream and (if necessary) shuts down this
-   * server.
-   *
-   * @param handler
-   *   the request handler which handled the request
-   * @param outStream
-   *   the nsIOutputStream for the processed request which must be closed
-   */
-  _endConnection: function(handler, outStream)
+  _endConnection: function(connection)
   {
     //
     // Order is important below: we must decrement handler._pendingRequests
-    // BEFORE calling this.stop(), if needed, because this.stop() returns only
-    // when the server socket's closed AND all pending requests are complete,
-    // which clearly isn't (and never will be) the case if it were the other way
-    // around
+    // BEFORE calling this.stop(), if needed, in connection.destroy().
+    // this.stop() returns only when the server socket's closed AND all pending
+    // requests are complete, which clearly isn't (and never will be) the case
+    // if it were the other way around.
     //
 
-    outStream.close();  // inputstream already closed after processing
-    handler._pendingRequests--;
+    connection.close();
 
-    // handle possible server quit -- note that this doesn't affect extant open
-    // connections and pending requests: nsIServerSocket.close is specified not
-    // to affect open connections, and nsIHttpServer.stop attempts to do its
-    // best to return only when the server socket is closed and all pending
-    // requests have been served
-    if (this._doQuit)
-      this.stop();
+    NS_ASSERT(this == connection.server);
+
+    this._handler._pendingRequests--;
+
+    connection.destroy();
   },
 
   /**
@@ -548,6 +551,7 @@ nsHttpServer.prototype =
   _requestQuit: function()
   {
     dumpn(">>> requesting a quit");
+    dumpStack();
     this._doQuit = true;
   }
 
@@ -555,28 +559,705 @@ nsHttpServer.prototype =
 
 
 /**
+ * Represents a connection to the server (and possibly in the future the thread
+ * on which the connection is processed).
+ *
+ * @param input : nsIInputStream
+ *   stream from which incoming data on the connection is read
+ * @param output : nsIOutputStream
+ *   stream to write data out the connection
+ * @param server : nsHttpServer
+ *   the server handling the connection
+ * @param port : int
+ *   the port on which the server is running
+ */
+function Connection(input, output, server, port)
+{
+  /** Stream of incoming data. */
+  this.input = input;
+
+  /** Stream for outgoing data. */
+  this.output = output;
+
+  /** The server associated with this request. */
+  this.server = server;
+
+  /** The port on which the server is running. */
+  this.port = port;
+  
+  /** State variables for debugging. */
+  this._closed = this._processed = false;
+}
+Connection.prototype =
+{
+  /** Closes this connection's input/output streams. */
+  close: function()
+  {
+    this.input.close();
+    this.output.close();
+    this._closed = true;
+  },
+
+  /**
+   * Initiates processing of this connection, using the data in the given
+   * request.
+   *
+   * @param request : Request
+   *   the request which should be processed
+   */
+  process: function(request)
+  {
+    NS_ASSERT(!this._closed && !this._processed);
+
+    this._processed = true;
+
+    this.server._handler.handleResponse(this, request);
+  },
+
+  /**
+   * Initiates processing of this connection, generating a response with the
+   * given HTTP error code.
+   *
+   * @param code : uint
+   *   an HTTP code, so in the range [0, 1000)
+   * @param metadata : Request
+   *   incomplete data about the incoming request (since there were errors
+   *   during its processing
+   */
+  processError: function(code, metadata)
+  {
+    NS_ASSERT(!this._closed && !this._processed);
+
+    this._processed = true;
+
+    this.server._handler.handleError(code, this, metadata);
+  },
+
+  /** Ends this connection, destroying the resources it uses. */
+  end: function()
+  {
+    this.server._endConnection(this);
+  },
+
+  /** Destroys resources used by this. */
+  destroy: function()
+  {
+    if (!this._closed)
+      this.close();
+
+    // If an error triggered a server shutdown, act on it now
+    var server = this.server;
+    if (server._doQuit)
+      server.stop();
+  }
+};
+
+
+
+/** Returns an array of count bytes from the given input stream. */
+function readBytes(inputStream, count)
+{
+  return new BinaryInputStream(inputStream).readByteArray(count);
+}
+
+
+
+/** Request reader processing states; see RequestReader for details. */
+const READER_INITIAL    = 0;
+const READER_IN_HEADERS = 1;
+const READER_IN_BODY    = 2;
+
+
+/**
+ * Reads incoming request data asynchronously, does any necessary preprocessing,
+ * and forwards it to the request handler.  Processing occurs in three states:
+ *
+ *   READER_INITIAL             Haven't read the entire request line yet
+ *   READER_IN_HEADERS          Reading headers in the request
+ *   READER_IN_BODY             Finished reading all request headers (when body
+ *                              support's added, will be reading the body)
+ *
+ * During the first two stages, initial metadata about the request is gathered
+ * into a Request object.  Once the status line and headers have been processed,
+ * we create a Response and hand it off to the ServerHandler to be given to the
+ * appropriate request handler.
+ *
+ * XXX we should set up a stream to provide lazy access to the request body
+ *
+ * @param connection : Connection
+ *   the connection for the request being read
+ */
+function RequestReader(connection)
+{
+  /** Connection metadata for this request. */
+  this._connection = connection;
+
+  /**
+   * A container providing line-by-line access to the raw bytes that make up the
+   * data which has been read from the connection but has not yet been acted
+   * upon (by passing it to the request handler or by extracting request
+   * metadata from it).
+   */
+  this._data = new LineData();
+
+  /** The current state of parsing the incoming request. */
+  this._state = READER_INITIAL;
+
+  /** Metadata constructed from the incoming request for the request handler. */
+  this._metadata = new Request(connection.port);
+
+  /**
+   * Used to preserve state if we run out of line data midway through a
+   * multi-line header.  _lastHeaderName stores the name of the header, while
+   * _lastHeaderValue stores the value we've seen so far for the header.
+   *
+   * These fields are always either both undefined or both strings.
+   */
+  this._lastHeaderName = this._lastHeaderValue = undefined;
+}
+RequestReader.prototype =
+{
+  // NSIINPUTSTREAMCALLBACK
+
+  /**
+   * Called when more data from the incoming request is available.  This method
+   * then reads the available data from input and deals with that data as
+   * necessary, depending upon the syntax of already-downloaded data.
+   *
+   * @param input : nsIAsyncInputStream
+   *   the stream of incoming data from the connection
+   */
+  onInputStreamReady: function(input)
+  {
+    dumpn("*** onInputStreamReady(input=" + input + ") on thread " +
+          gThreadManager.currentThread + " (main is " +
+          gThreadManager.mainThread + ")");
+    dumpn("*** this._state == " + this._state);
+
+    var count = input.available();
+
+    // Handle cases where we get more data after a request error has been
+    // discovered but *before* we can close the connection.
+    if (!this._data)
+      return;
+
+    var moreAvailable = false;
+
+    switch (this._state)
+    {
+      case READER_INITIAL:
+        moreAvailable = this._processRequestLine(input, count);
+        break;
+
+      case READER_IN_HEADERS:
+        moreAvailable = this._processHeaders(input, count);
+        break;
+
+      case READER_IN_BODY:
+        // XXX handle the request body!  until then, just stop reading
+        break;
+
+      default:
+        NS_ASSERT(false);
+    }
+
+    if (moreAvailable)
+      input.asyncWait(this, 0, 0, gThreadManager.currentThread);
+  },
+
+  //
+  // see nsISupports.QueryInterface
+  //
+  QueryInterface: function(aIID)
+  {
+    if (aIID.equals(Ci.nsIInputStreamCallback) ||
+        aIID.equals(Ci.nsISupports))
+      return this;
+
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  },
+
+
+  // PRIVATE API
+
+  /**
+   * Reads count bytes from input and processes unprocessed, downloaded data as
+   * a request line.
+   *
+   * @param input : nsIInputStream
+   *   stream from which count bytes of data must be read
+   * @param count : PRUint32
+   *   the number of bytes of data which must be read from input
+   * @returns boolean
+   *   true if more data must be read from the request, false otherwise
+   */
+  _processRequestLine: function(input, count)
+  {
+    NS_ASSERT(this._state == READER_INITIAL);
+
+    var data = this._data;
+    data.appendBytes(readBytes(input, count));
+
+
+    // servers SHOULD ignore any empty line(s) received where a Request-Line
+    // is expected (section 4.1)
+    var line = {};
+    var readSuccess;
+    while ((readSuccess = data.readLine(line)) && line.value == "")
+      dumpn("*** ignoring beginning blank line...");
+
+    // if we don't have a full line, wait until we do
+    if (!readSuccess)
+      return true;
+
+    // we have the first non-blank line
+    try
+    {
+      this._parseRequestLine(line.value);
+
+      // do we have more header data to read?
+      if (!this._parseHeaders())
+        return true;
+
+      // headers complete, do a data check and then forward to the handler
+      this._validateRequest();
+      return this._handleResponse();
+    }
+    catch (e)
+    {
+      this._handleError(e);
+      return false;
+    }
+  },
+
+  /**
+   * Reads data from input and processes it, assuming it is either at the
+   * beginning or in the middle of processing request headers.
+   *
+   * @param input : nsIInputStream
+   *   stream from which count bytes of data must be read
+   * @param count : PRUint32
+   *   the number of bytes of data which must be read from input
+   * @returns boolean
+   *   true if more data must be read from the request, false otherwise
+   */
+  _processHeaders: function(input, count)
+  {
+    NS_ASSERT(this._state == READER_IN_HEADERS);
+
+    // XXX things to fix here:
+    //
+    // - need to support RFC 2047-encoded non-US-ASCII characters
+    // - really support absolute URLs (requires telling the server all its
+    //   hostnames, beyond just localhost:port or 127.0.0.1:port)
+
+    this._data.appendBytes(readBytes(input, count));
+
+    try
+    {
+      // do we have all the headers?
+      if (!this._parseHeaders())
+        return true;
+
+      // we have all the headers, continue with the body
+      this._validateRequest();
+      return this._handleResponse();
+    }
+    catch (e)
+    {
+      this._handleError(e);
+      return false;
+    }
+  },
+
+  /**
+   * Does various post-header checks on the data in this request.
+   *
+   * @throws : HttpError
+   *   if the request was malformed in some way
+   */
+  _validateRequest: function()
+  {
+    NS_ASSERT(this._state == READER_IN_BODY);
+
+    dumpn("*** _validateRequest");
+
+    var metadata = this._metadata;
+    var headers = metadata._headers;
+
+    var isHttp11 = metadata._httpVersion.equals(nsHttpVersion.HTTP_1_1);
+
+    // 19.6.1.1 -- servers MUST report 400 to HTTP/1.1 requests w/o Host header
+    if (isHttp11 && !headers.hasHeader("Host"))
+      throw HTTP_400;
+  },
+
+  /**
+   * Handles responses in case of error, either in the server or in the request.
+   *
+   * @param e
+   *   the specific error encountered, which is an HttpError in the case where
+   *   the request is in some way invalid or cannot be fulfilled; if this isn't
+   *   an HttpError we're going to be paranoid and shut down, because that
+   *   shouldn't happen, ever
+   */
+  _handleError: function(e)
+  {
+    var server = this._connection.server;
+    if (e instanceof HttpError)
+    {
+      var code = e.code;
+    }
+    else
+    {
+      // no idea what happened -- be paranoid and shut down
+      code = 500;
+      server._requestQuit();
+    }
+
+    // make attempted reuse of data an error
+    this._data = null;
+
+    this._connection.processError(code, this._metadata);
+  },
+
+  /**
+   * Now that we've read the request line and headers, we can actually hand off
+   * the request to be handled.
+   *
+   * This method is called once per request, after the request line and all
+   * headers have been received.
+   *
+   * @returns boolean
+   *   true if more data must be read, false otherwise
+   */
+  _handleResponse: function()
+  {
+    NS_ASSERT(this._state == READER_IN_BODY);
+
+    // XXX set up a stream for data in the request body here
+
+    // We don't need the line-based data any more, so make attempted reuse an
+    // error.
+    this._data = null;
+
+    this._connection.process(this._metadata);
+
+    return false;
+  },
+
+
+  // PARSING
+
+  /**
+   * Parses the request line for the HTTP request associated with this.
+   *
+   * @param line : string
+   *   the request line
+   */
+  _parseRequestLine: function(line)
+  {
+    NS_ASSERT(this._state == READER_INITIAL);
+
+    dumpn("*** _parseRequestLine('" + line + "')");
+
+    var metadata = this._metadata;
+
+    // clients and servers SHOULD accept any amount of SP or HT characters
+    // between fields, even though only a single SP is required (section 19.3)
+    var request = line.split(/[ \t]+/);
+    if (!request || request.length != 3)
+      throw HTTP_400;
+
+    metadata._method = request[0];
+
+    // get the HTTP version
+    var ver = request[2];
+    var match = ver.match(/^HTTP\/(\d+\.\d+)$/);
+    if (!match)
+      throw HTTP_400;
+
+    // determine HTTP version
+    try
+    {
+      metadata._httpVersion = new nsHttpVersion(match[1]);
+      if (!metadata._httpVersion.equals(nsHttpVersion.HTTP_1_0) &&
+          !metadata._httpVersion.equals(nsHttpVersion.HTTP_1_1))
+        throw "unsupported HTTP version";
+    }
+    catch (e)
+    {
+      // we support HTTP/1.0 and HTTP/1.1 only
+      throw HTTP_501;
+    }
+
+
+    var fullPath = request[1];
+
+    if (fullPath.charAt(0) != "/")
+    {
+      // XXX we don't really support absolute URIs yet -- a MUST for HTTP/1.1;
+      //     for now just get the path and use that, ignoring hostport
+      try
+      {
+        var uri = Cc["@mozilla.org/network/io-service;1"]
+                    .getService(Ci.nsIIOService)
+                    .newURI(fullPath, null, null);
+        fullPath = uri.path;
+      }
+      catch (e) { /* invalid URI */ }
+      if (fullPath.charAt(0) != "/")
+      {
+        this.errorCode = 400;
+        return;
+      }
+    }
+
+    var splitter = fullPath.indexOf("?");
+    if (splitter < 0)
+    {
+      // _queryString already set in ctor
+      metadata._path = fullPath;
+    }
+    else
+    {
+      metadata._path = fullPath.substring(0, splitter);
+      metadata._queryString = fullPath.substring(splitter + 1);
+    }
+
+    // our work here is finished
+    this._state = READER_IN_HEADERS;
+  },
+
+  /**
+   * Parses all available HTTP headers in this until the header-ending CRLFCRLF,
+   * adding them to the store of headers in the request.
+   *
+   * @throws
+   *   HTTP_400 if the headers are malformed
+   * @returns boolean
+   *   true if all headers have now been processed, false otherwise
+   */
+  _parseHeaders: function()
+  {
+    NS_ASSERT(this._state == READER_IN_HEADERS);
+
+    dumpn("*** _parseHeaders");
+
+    var data = this._data;
+
+    var headers = this._metadata._headers;
+    var lastName = this._lastHeaderName;
+    var lastVal = this._lastHeaderValue;
+
+    var line = {};
+    while (true)
+    {
+      NS_ASSERT(!((lastVal === undefined) ^ (lastName === undefined)),
+                lastName === undefined ?
+                  "lastVal without lastName?  lastVal: '" + lastVal + "'" :
+                  "lastName without lastVal?  lastName: '" + lastName + "'");
+
+      if (!data.readLine(line))
+      {
+        // save any data we have from the header we might still be processing
+        this._lastHeaderName = lastName;
+        this._lastHeaderValue = lastVal;
+        return false;
+      }
+
+      var lineText = line.value;
+      var firstChar = lineText.charAt(0);
+
+      // blank line means end of headers
+      if (lineText == "")
+      {
+        // we're finished with the previous header
+        if (lastName)
+        {
+          try
+          {
+            headers.setHeader(lastName, lastVal, true);
+          }
+          catch (e)
+          {
+            dumpn("*** e == " + e);
+            throw HTTP_400;
+          }
+        }
+        else
+        {
+          // no headers in request -- valid for HTTP/1.0 requests
+        }
+
+        // either way, we're done processing headers
+        this._state = READER_IN_BODY;
+        return true;
+      }
+      else if (firstChar == " " || firstChar == "\t")
+      {
+        // multi-line header if we've already seen a header line
+        if (!lastName)
+        {
+          // we don't have a header to continue!
+          throw HTTP_400;
+        }
+
+        // append this line's text to the value; starts with SP/HT, so no need
+        // for separating whitespace
+        lastVal += lineText;
+      }
+      else
+      {
+        // we have a new header, so set the old one (if one existed)
+        if (lastName)
+        {
+          try
+          {
+            headers.setHeader(lastName, lastVal, true);
+          }
+          catch (e)
+          {
+            dumpn("*** e == " + e);
+            throw HTTP_400;
+          }
+        }
+
+        var colon = lineText.indexOf(":"); // first colon must be splitter
+        if (colon < 1)
+        {
+          // no colon or missing header field-name
+          throw HTTP_400;
+        }
+
+        // set header name, value (to be set in the next loop, usually)
+        lastName = lineText.substring(0, colon);
+        lastVal = lineText.substring(colon + 1);
+      } // empty, continuation, start of header
+    } // while (true)
+  }
+};
+
+
+/** The character codes for CR and LF. */
+const CR = 0x0D, LF = 0x0A;
+
+/**
+ * Calculates the number of characters before the first CRLF pair in array, or
+ * -1 if the array contains no CRLF pair.
+ *
+ * @param array : Array
+ *   an array of numbers in the range [0, 256), each representing a single
+ *   character; the first CRLF is the lowest index i where
+ *   |array[i] == "\r".charCodeAt(0)| and |array[i+1] == "\n".charCodeAt(0)|,
+ *   if such an |i| exists, and -1 otherwise
+ * @returns int
+ *   the index of the first CRLF if any were present, -1 otherwise
+ */
+function findCRLF(array)
+{
+  for (var i = array.indexOf(CR); i >= 0; i = array.indexOf(CR, i + 1))
+  {
+    if (array[i + 1] == LF)
+      return i;
+  }
+  return -1;
+}
+
+
+/**
+ * A container which provides line-by-line access to the arrays of bytes with
+ * which it is seeded.
+ */
+function LineData()
+{
+  /** An array of queued bytes from which to get line-based characters. */
+  this._data = [];
+}
+LineData.prototype =
+{
+  /**
+   * Appends the bytes in the given array to the internal data cache maintained
+   * by this.
+   */
+  appendBytes: function(bytes)
+  {
+    Array.prototype.push.apply(this._data, bytes);
+  },
+
+  /**
+   * Removes and returns a line of data, delimited by CRLF, from this.
+   *
+   * @param out
+   *   an object whose "value" property will be set to the first line of text
+   *   present in this, sans CRLF, if this contains a full CRLF-delimited line
+   *   of text; if this doesn't contain enough data, the value of the property
+   *   is undefined
+   * @returns boolean
+   *   true if a full line of data could be read from the data in this, false
+   *   otherwise
+   */
+  readLine: function(out)
+  {
+    var data = this._data;
+    var length = findCRLF(data);
+    if (length < 0)
+      return false;
+
+    //
+    // We have the index of the CR, so remove all the characters, including
+    // CRLF, from the array with splice, and convert the removed array into the
+    // corresponding string, from which we then strip the trailing CRLF.
+    //
+    // Getting the line in this matter acknowledges that substring is an O(1)
+    // operation in SpiderMonkey because strings are immutable, whereas two
+    // splices, both from the beginning of the data, are less likely to be as
+    // cheap as a single splice plus two extra character conversions.
+    //
+    var line = String.fromCharCode.apply(null, data.splice(0, length + 2));
+    out.value = line.substring(0, length);
+
+    return true;
+  },
+
+  /**
+   * Retrieve any bytes we may have overread from the request's postdata.  After
+   * this method is called, this must not be used in any way.
+   *
+   * @returns Array
+   *   the bytes read past the CRLFCRLF at the end of request headers
+   */
+  purge: function()
+  {
+    var data = this._data;
+    this._data = null;
+    return data;
+  }
+};
+
+
+
+/**
  * Gets a content-type for the given file, as best as it is possible to do so.
  *
- * @param file
+ * @param file : nsIFile
  *   the nsIFile for which to get a file type
- * @returns
+ * @returns string
  *   the best content-type which can be determined for the file
  */
 function getTypeFromFile(file)
 {
   try
   {
-    var type = Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
-                 .getService(Ci.nsIMIMEService)
-                 .getTypeFromFile(file);
+    return Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
+             .getService(Ci.nsIMIMEService)
+             .getTypeFromFile(file);
   }
   catch (e)
   {
-    type = "application/octet-stream";
+    return "application/octet-stream";
   }
-  return type;
 }
-
 
 
 /**
@@ -797,17 +1478,17 @@ function maybeAddHeaders(file, metadata, response)
  * support for HTTP error pages for various codes and fallback to HTTP 500 if
  * those codes fail for any reason.
  *
- * @param srv
- *   the nsHttpServer in which this handler is being used
+ * @param server : nsHttpServer
+ *   the server in which this handler is being used
  */
-function ServerHandler(srv)
+function ServerHandler(server)
 {
   // FIELDS
 
   /**
    * The nsHttpServer instance associated with this handler.
    */
-  this._server = srv;
+  this._server = server;
 
   /**
    * A variable used to ensure that all requests are fully complete before the
@@ -831,7 +1512,7 @@ function ServerHandler(srv)
    * Custom request handlers for the server in which this resides.  Path-handler
    * pairs are stored as property-value pairs in this property.
    *
-   * @see also ServerHandler.prototype._defaultPaths
+   * @see ServerHandler.prototype._defaultPaths
    */
   this._overridePaths = {};
 
@@ -840,13 +1521,13 @@ function ServerHandler(srv)
    * resides.  Path-handler pairs are stored as property-value pairs in this
    * property.
    *
-   * @see also ServerHandler.prototype._defaultErrors
+   * @see ServerHandler.prototype._defaultErrors
    */
   this._overrideErrors = {};
 
   /**
-   * Init our default handler for directories. The handler used to
-   * serve directories when no index file is present.
+   * The default handler for requests for directories, used to serve directories
+   * when no index file is present.
    */
   this._indexHandler = defaultIndexHandler;
 }
@@ -856,25 +1537,18 @@ ServerHandler.prototype =
 
   /**
    * Handles a request to this server, responding to the request appropriately
-   * and initiating server shutdown if necessary.  If the request metadata
-   * specifies an error code, the appropriate error response will be sent.
+   * and initiating server shutdown if necessary.
    *
-   * @param outStream
-   *   an nsIOutputStream to which a response should be written
-   * @param metadata
+   * This method never throws an exception.
+   *
+   * @param connection : Connection
+   *   the connection for this request
+   * @param metadata : Request
    *   request metadata as generated from the initial request
    */
-  handleRequest: function(outStream, metadata)
+  handleResponse: function(connection, metadata)
   {
     var response = new Response();
-
-    // handle any existing error codes
-    if (metadata.errorCode)
-    {
-      dumpn("*** errorCode == " + metadata.errorCode);
-      this._handleError(metadata, response);
-      return this._end(response, outStream);
-    }
 
     var path = metadata.path;
     dumpn("*** path == " + path);
@@ -894,8 +1568,12 @@ ServerHandler.prototype =
       {
         response.recycle();
 
-        if (!(e instanceof HttpError) || e.code != 404)
+        if (!(e instanceof HttpError))
           throw HTTP_500;
+        if (e.code != 404)
+          throw e;
+
+        dumpn("*** default: " + (path in this._defaultPaths));
 
         if (path in this._defaultPaths)
           this._defaultPaths[path](metadata, response);
@@ -903,36 +1581,40 @@ ServerHandler.prototype =
           throw HTTP_404;
       }
     }
-    catch (e2)
+    catch (e)
     {
-      if (!(e2 instanceof HttpError))
+      var errorCode = "internal";
+
+      try
       {
-        dumpn("*** internal error: e2 == " + e2);
-        throw e2;
+        if (!(e instanceof HttpError))
+          throw e;
+
+        errorCode = e.code;
+        dumpn("*** errorCode == " + errorCode);
+
+        response.recycle();
+
+        this._handleError(errorCode, metadata, response);
       }
+      catch (e2)
+      {
+        dumpn("*** error handling " + errorCode + " error: " +
+              "e2 == " + e2 + ", shutting down server");
 
-      var errorCode = e2.code;
-      dumpn("*** errorCode == " + errorCode);
-
-      response.recycle();
-
-      metadata.errorCode = errorCode;
-      this._handleError(metadata, response);
+        response.destroy();
+        connection.close();
+        connection.server.stop();
+        return;
+      }
     }
 
-    return this._end(response, outStream);
+    this._end(response, connection);
   },
 
-  /**
-   * Associates a file with a server path so that it is returned by future
-   * requests to that path.
-   *
-   * @param path
-   *   the path on the server, which must begin with a "/"
-   * @param file
-   *   the nsILocalFile representing the file to be served; must not be a
-   *   directory
-   */
+  //
+  // see nsIHttpServer.registerFile
+  //
   registerFile: function(path, file)
   {
     dumpn("*** registering '" + path + "' as mapping to " + file.path);
@@ -945,18 +1627,7 @@ ServerHandler.prototype =
           throw HTTP_404;
 
         response.setStatusLine(metadata.httpVersion, 200, "OK");
-
-        try
-        {
-          this._writeFileResponse(file, response);
-        }
-        catch (e)
-        {
-          // something happened -- but the calling code should handle the error
-          // and clean up the response
-          throw e;
-        }
-
+        this._writeFileResponse(file, response);
         maybeAddHeaders(file, metadata, response);
       };
   },
@@ -1028,12 +1699,26 @@ ServerHandler.prototype =
     this._indexHandler = handler;
   },
 
+  // NON-XPCOM PUBLIC API
+
   /**
-   * Set or remove a handler in an ojbect with a key.
-   * If handler is null, the key will be deleted.
+   * Returns true if this handler is in the middle of handling any current
+   * requests; this must be false before the server in which this is used may be
+   * safely shut down.
+   */
+  hasPendingRequests: function()
+  {
+    return this._pendingRequests > 0;
+  },
+
+
+  // PRIVATE API
+
+  /**
+   * Sets or remove (if handler is null) a handler in an object with a key.
    *
    * @param handler
-   *   A function or an nsIHttpRequestHandler object.
+   *   a handler, either function or an nsIHttpRequestHandler
    * @param dict
    *   The object to attach the handler to.
    * @param key
@@ -1051,26 +1736,14 @@ ServerHandler.prototype =
   },
 
   /**
-   * Returns true if this handler is in the middle of handling any current
-   * requests; this must be false before the server in which this is used may be
-   * safely shut down.
-   */
-  hasPendingRequests: function()
-  {
-    return this._pendingRequests > 0;
-  },
-
-  // PRIVATE API
-
-  /**
    * Handles a request which maps to a file in the local filesystem (if a base
    * path has already been set; otherwise the 404 error is thrown).
    *
-   * @param metadata
-   *   request-related data as a RequestMetadata object
-   * @param response
-   *   an uninitialized Response to the given request which must be initialized
-   *   by a request handler
+   * @param metadata : Request
+   *   metadata for the incoming request
+   * @param response : Response
+   *   an uninitialized Response to the given request, to be initialized by a
+   *   request handler
    * @throws HTTP_###
    *   if an HTTP error occurred (usually HTTP_404); note that in this case the
    *   calling code must handle cleanup of the response by calling .destroy()
@@ -1078,54 +1751,47 @@ ServerHandler.prototype =
    */
   _handleDefault: function(metadata, response)
   {
-    try
+    response.setStatusLine(metadata.httpVersion, 200, "OK");
+
+    var path = metadata.path;
+    NS_ASSERT(path.charAt(0) == "/", "invalid path: <" + path + ">");
+
+    // determine the actual on-disk file; this requires finding the deepest
+    // path-to-directory mapping in the requested URL
+    var file = this._getFileForPath(path);
+
+    // the "file" might be a directory, in which case we either serve the
+    // contained index.html or make the index handler write the response
+    if (file.exists() && file.isDirectory())
     {
-      response.setStatusLine(metadata.httpVersion, 200, "OK");
-
-      var path = metadata.path;
-      NS_ASSERT(path.charAt(0) == "/");
-
-      // determine the actual on-disk file; this requires finding the deepest
-      // path-to-directory mapping in the requested URL
-      var file = this._getFileForPath(path);
-
-      // the "file" might be a directory, in which case we either serve the
-      // contained index.html or make the index handler write the response
-      if (file.exists() && file.isDirectory())
+      file.append("index.html"); // make configurable?
+      if (!file.exists() || file.isDirectory())
       {
-        file.append("index.html"); // make configurable?
-        if (!file.exists() || file.isDirectory())
-        {
-          metadata._bag.setPropertyAsInterface("directory", file.parent);
-          this._indexHandler(metadata, response);
-          return;
-        }
+        metadata._ensurePropertyBag();
+        metadata._bag.setPropertyAsInterface("directory", file.parent);
+        this._indexHandler(metadata, response);
+        return;
       }
-
-      // alternately, the file might not exist
-      if (!file.exists())
-        throw HTTP_404;
-
-      // finally...
-      dumpn("*** handling '" + path + "' as mapping to " + file.path);
-      this._writeFileResponse(file, response);
-
-      maybeAddHeaders(file, metadata, response);
     }
-    catch (e)
-    {
-      // something failed, but make the calling code handle Response cleanup
-      throw e;
-    }
+
+    // alternately, the file might not exist
+    if (!file.exists())
+      throw HTTP_404;
+
+    // finally...
+    dumpn("*** handling '" + path + "' as mapping to " + file.path);
+    this._writeFileResponse(file, response);
+
+    maybeAddHeaders(file, metadata, response);
   },
 
   /**
    * Writes an HTTP response for the given file, including setting headers for
    * file metadata.
    *
-   * @param file
+   * @param file : nsILocalFile
    *   the file which is to be sent in the response
-   * @param response
+   * @param response : Response
    *   the response to which the file should be written
    */
   _writeFileResponse: function(file, response)
@@ -1152,13 +1818,14 @@ ServerHandler.prototype =
    * all registered path->directory mappings and any paths which are explicitly
    * overridden.
    *
-   * @returns
-   *   the nsILocalFile which is to be sent as the response to a request for
-   *   path
+   * @param path : string
+   *   the server path for which a file should be retrieved, e.g. "/foo/bar"
    * @throws HttpError
    *   when the correct action is the corresponding HTTP error (i.e., because no
    *   mapping was found for a directory in path, the referenced file doesn't
    *   exist, etc.)
+   * @returns nsILocalFile
+   *   the file to be sent as the response to a request for the path
    */
   _getFileForPath: function(path)
   {
@@ -1238,26 +1905,54 @@ ServerHandler.prototype =
   },
 
   /**
+   * Writes the error page for the given HTTP error code over the given
+   * connection.
+   *
+   * @param errorCode : uint
+   *   the HTTP error code to be used
+   * @param connection : Connection
+   *   the connection on which the error occurred
+   */
+  handleError: function(errorCode, connection)
+  {
+    var response = new Response();
+
+    dumpn("*** error in request: " + errorCode);
+
+    try
+    {
+      this._handleError(errorCode, new Request(connection.port), response);
+      this._end(response, connection);
+    }
+    catch (e)
+    {
+      connection.close();
+      connection.server.stop();
+    }
+  }, 
+
+  /**
    * Handles a request which generates the given error code, using the
    * user-defined error handler if one has been set, gracefully falling back to
    * the x00 status code if the code has no handler, and failing to status code
    * 500 if all else fails.
    *
-   * @param metadata
+   * @param errorCode : uint
+   *   the HTTP error which is to be returned
+   * @param metadata : Request
    *   metadata for the request, which will often be incomplete since this is an
-   *   error -- must have its .errorCode set for the desired error
-   * @param response
+   *   error
+   * @param response : Response
    *   an uninitialized Response should be initialized when this method
    *   completes with information which represents the desired error code in the
    *   ideal case or a fallback code in abnormal circumstances (i.e., 500 is a
    *   fallback for 505, per HTTP specs)
    */
-  _handleError: function(metadata, response)
+  _handleError: function(errorCode, metadata, response)
   {
     if (!metadata)
       throw Cr.NS_ERROR_NULL_POINTER;
 
-    var errorCode = metadata.errorCode;
     var errorX00 = errorCode - (errorCode % 100);
 
     try
@@ -1324,167 +2019,182 @@ ServerHandler.prototype =
    * those headers and data, sends them to the HTTP client, and halts further
    * processing.  It will also send a quit message to the server if necessary.
    *
-   * @param response
-   *   a Response object representing the desired response
-   * @param outStream
-   *   a stream to which the response should be written
+   * This method never throws an exception.
+   *
+   * @param response : Response
+   *   the desired response
+   * @param connection : Connection
+   *   the connection associated with the given response
    * @note
    *   after completion, response must be considered "dead", and none of its
    *   methods or properties may be accessed
    */
-  _end:  function(response, outStream)
+  _end:  function(response, connection)
   {
+    // post-processing
+    response.setHeader("Connection", "close", false);
+    response.setHeader("Server", "MozJSHTTP", false);
+    response.setHeader("Date", toDateString(Date.now()), false);
+
+    var bodyStream = response.bodyInputStream;
+
+    // XXX suckage time!
+    //
+    // If the body of the response has had no data written to it (or has never
+    // been accessed -- same deal internally since we'll create one if we have
+    // to access bodyInputStream but have neither an input stream nor an
+    // output stream), the in-tree implementation of nsIPipe is such that
+    // when we try to close the pipe's output stream with no data in it, this
+    // is interpreted as an error and closing the output stream also closes
+    // the input stream.  .available then throws, so we catch and deal as best
+    // as we can.
+    //
+    // Unfortunately, the easy alternative (substitute a storage stream for a
+    // pipe) also doesn't work.  There's no problem writing zero bytes to the
+    // output end of the stream, but then attempting to get an input stream to
+    // read fails because the seek position must be strictly less than the
+    // buffer size.
+    //
+    // Much as I'd like the zero-byte body to be a mostly-unimportant problem,
+    // there are some HTTP responses such as 304 Not Modified which MUST have
+    // zero-byte bodies, so this *is* a necessary hack.
     try
     {
-      // post-processing
-      response.setHeader("Connection", "close", false);
-      response.setHeader("Server", "MozJSHTTP", false);
-      response.setHeader("Date", toDateString(Date.now()), false);
-
-      var bodyStream = response.bodyInputStream
-                               .QueryInterface(Ci.nsIInputStream);
-
-      // XXX suckage time!
-      //
-      // If the body of the response has had no data written to it (or has never
-      // been accessed -- same deal internally since we'll create one if we have
-      // to access bodyInputStream but have neither an input stream nor an
-      // output stream), the in-tree implementation of nsIPipe is such that
-      // when we try to close the pipe's output stream with no data in it, this
-      // is interpreted as an error and closing the output stream also closes
-      // the input stream.  .available then throws, so we catch and deal as best
-      // as we can.
-      //
-      // Unfortunately, the easy alternative (substitute a storage stream for a
-      // pipe) also doesn't work.  There's no problem writing zero bytes to the
-      // output end of the stream, but then attempting to get an input stream to
-      // read fails because the seek position must be strictly less than the
-      // buffer size.
-      //
-      // Much as I'd like the zero-byte body to be a mostly-unimportant problem,
-      // there are some HTTP responses such as 304 Not Modified which MUST have
-      // zero-byte bodies, so this *is* a necessary hack.
-      try
-      {
-        var available = bodyStream.available();
-      }
-      catch (e)
-      {
-        available = 0;
-      }
-
-      response.setHeader("Content-Length", available.toString(), false);
-
-
-      // construct and send response
-
-      // request-line
-      var preamble = "HTTP/" + response.httpVersion + " " +
-                     response.httpCode + " " +
-                     response.httpDescription + "\r\n";
-
-      // headers
-      var head = response.headers;
-      var headEnum = head.enumerator;
-      while (headEnum.hasMoreElements())
-      {
-        var fieldName = headEnum.getNext()
-                                .QueryInterface(Ci.nsISupportsString)
-                                .data;
-        preamble += fieldName + ": " + head.getHeader(fieldName) + "\r\n";
-      }
-
-      // end request-line/headers
-      preamble += "\r\n";
-      outStream.write(preamble, preamble.length);
-
-
-      // In certain situations, it's possible for us to have a race between
-      // the copy observer's onStopRequest and the listener for a channel
-      // opened to this server.  Since we include a Content-Length header with
-      // every response, if the channel snarfs up all the data we promise,
-      // calls onStopRequest on the listener (and the server is shut down
-      // by that listener, causing the script to finish executing), and then
-      // tries to call onStopRequest on the copyObserver, we'll call into a
-      // scope with no Components and cause assertions *and* fail to close the
-      // connection properly.  To combat this, during server shutdown we delay
-      // full shutdown until any pending requests are fully copied using this
-      // property on the server handler.  We increment before (possibly)
-      // starting the copy observer and decrement when the copy completes,
-      // ensuring that all copies complete before the server fully shuts down.
-      //
-      // We do this for every request primarily to simplify maintenance of this
-      // property (and also because it's less fragile when we can remove the
-      // zero-sized body hack used above).
-      this._pendingRequests++;
-
-      // If we have a body, send it -- if we don't, then don't bother with a
-      // heavyweight async copy which doesn't need to happen and just do
-      // response post-processing (usually handled by the copy observer)
-      // directly
-      if (available != 0)
-      {
-        // local references for use in the copy observer
-        var server = this._server;
-        var handler = this;
-
-        /**
-         * Observer of the copying of data from the body stream generated by a
-         * request handler to the output stream for the server socket.  It
-         * handles all post-request-writing cleanup details, such as closing
-         * open streams and shutting down the server in case of errors.
-         */
-        var copyObserver =
-          {
-            onStartRequest: function(request, context) { /* don't care */ },
-
-            /**
-             * Called when the async stream copy completes.  This is place where
-             * final cleanup should occur, including stream closures and
-             * response destruction.  Note that errors which are detected here
-             * should still shut down the server, for safety.
-             */
-            onStopRequest: function(request, context, statusCode)
-            {
-              // if something bad happened during the copy, be paranoid
-              if (!Components.isSuccessCode(statusCode))
-                server._requestQuit();
-
-              // we're completely finished with this response
-              response.destroy();
-
-              server._endConnection(handler, outStream);
-            },
-
-            QueryInterface: function(aIID)
-            {
-              if (aIID.equals(Ci.nsIRequestObserver) ||
-                  aIID.equals(Ci.nsISupports))
-                return this;
-
-              throw Cr.NS_ERROR_NO_INTERFACE;
-            }
-          };
-
-
-        // body -- written async, because pipes deadlock if we do
-        // |outStream.writeFrom(bodyStream, bodyStream.available());|
-        var copier = new StreamCopier(bodyStream, outStream, null,
-                                      true, true, 8192);
-        copier.asyncCopy(copyObserver, null);
-      }
-      else
-      {
-        // finished with the response -- destroy
-        response.destroy();
-        this._server._endConnection(this, outStream);
-      }
+      var available = bodyStream.available();
     }
     catch (e)
     {
-      // something bad happened -- throw and make calling code deal with the
-      // response given to us
-      throw e;
+      available = 0;
+    }
+
+    response.setHeader("Content-Length", available.toString(), false);
+
+
+    // construct and send response
+
+    // request-line
+    var preamble = "HTTP/" + response.httpVersion + " " +
+                   response.httpCode + " " +
+                   response.httpDescription + "\r\n";
+
+    // headers
+    var head = response.headers;
+    var headEnum = head.enumerator;
+    while (headEnum.hasMoreElements())
+    {
+      var fieldName = headEnum.getNext()
+                              .QueryInterface(Ci.nsISupportsString)
+                              .data;
+      preamble += fieldName + ": " + head.getHeader(fieldName) + "\r\n";
+    }
+
+    // end request-line/headers
+    preamble += "\r\n";
+
+    var outStream = connection.output;
+    try
+    {
+      outStream.write(preamble, preamble.length);
+    }
+    catch (e)
+    {
+      // Connection closed already?  Even if not, failure to write the response
+      // means we probably will fail later anyway, so in the interests of
+      // avoiding exceptions we'll (possibly) close the connection and return.
+      response.destroy();
+      connection.close();
+      return;
+    }
+
+    // In certain situations, it's possible for us to have a race between
+    // the copy observer's onStopRequest and the listener for a channel
+    // opened to this server.  Since we include a Content-Length header with
+    // every response, if the channel snarfs up all the data we promise,
+    // calls onStopRequest on the listener (and the server is shut down
+    // by that listener, causing the script to finish executing), and then
+    // tries to call onStopRequest on the copyObserver, we'll call into a
+    // scope with no Components and cause assertions *and* fail to close the
+    // connection properly.  To combat this, during server shutdown we delay
+    // full shutdown until any pending requests are fully copied using this
+    // property on the server handler.  We increment before (possibly)
+    // starting the copy observer and decrement when the copy completes,
+    // ensuring that all copies complete before the server fully shuts down.
+    //
+    // We do this for every request primarily to simplify maintenance of this
+    // property (and also because it's less fragile when we can remove the
+    // zero-sized body hack used above).
+    this._pendingRequests++;
+
+    var server = this._server;
+
+    // If we have a body, send it -- if we don't, then don't bother with a
+    // heavyweight async copy which doesn't need to happen and just do
+    // response post-processing (usually handled by the copy observer)
+    // directly
+    if (available != 0)
+    {
+      /**
+       * Observer of the copying of data from the body stream generated by a
+       * request handler to the output stream for the server socket.  It
+       * handles all post-request-writing cleanup details, such as closing
+       * open streams and shutting down the server in case of errors.
+       */
+      var copyObserver =
+        {
+          onStartRequest: function(request, context) { /* don't care */ },
+
+          /**
+           * Called when the async stream copy completes.  This is place where
+           * final cleanup should occur, including stream closures and
+           * response destruction.  Note that errors which are detected here
+           * should still shut down the server, for safety.
+           */
+          onStopRequest: function(request, cx, statusCode)
+          {
+            // statusCode can indicate user-triggered failures (e.g. if the user
+            // closes the connection during the copy, which would cause a status
+            // of NS_ERROR_NET_RESET), so don't treat its value being an error
+            // code as catastrophic.  I can create this situation when running
+            // Mochitests in a debug build by clicking the Stop button during
+            // test execution, but it's not exactly a surefire way to reproduce
+            // the problem.
+            if (!Components.isSuccessCode(statusCode))
+            {
+              dumpn("*** WARNING: non-success statusCode in onStopRequest: " +
+                    statusCode);
+            }
+
+            // we're completely finished with this response
+            response.destroy();
+
+            connection.end();
+          },
+
+          QueryInterface: function(aIID)
+          {
+            if (aIID.equals(Ci.nsIRequestObserver) ||
+                aIID.equals(Ci.nsISupports))
+              return this;
+
+            throw Cr.NS_ERROR_NO_INTERFACE;
+          }
+        };
+
+
+      //
+      // Now write out the body, async since we might be serving this to
+      // ourselves on the same thread, and writing too much data would deadlock.
+      //
+      var copier = new StreamCopier(bodyStream, outStream,
+                                    null,
+                                    true, true, 8192);
+      copier.asyncCopy(copyObserver, null);
+    }
+    else
+    {
+      // finished with the response -- destroy
+      response.destroy();
+      this._server._endConnection(connection);
     }
   },
 
@@ -1617,7 +2327,7 @@ ServerHandler.prototype =
       if (metadata.queryString)
         body +=  "?" + metadata.queryString;
         
-      body += " HTTP/" + metadata.httpVersion + "\n";
+      body += " HTTP/" + metadata.httpVersion + "\r\n";
 
       var headEnum = metadata.headers;
       while (headEnum.hasMoreElements())
@@ -1625,7 +2335,7 @@ ServerHandler.prototype =
         var fieldName = headEnum.getNext()
                                 .QueryInterface(Ci.nsISupportsString)
                                 .data;
-        body += fieldName + ": " + metadata.getHeader(fieldName) + "\n";
+        body += fieldName + ": " + metadata.getHeader(fieldName) + "\r\n";
       }
 
       response.bodyOutputStream.write(body, body.length);
@@ -1649,6 +2359,11 @@ FileMap.prototype =
   /**
    * Maps key to a clone of the nsILocalFile value if value is non-null;
    * otherwise, removes any extant mapping for key.
+   *
+   * @param key : string
+   *   string to which a clone of value is mapped
+   * @param value : nsILocalFile
+   *   the file to map to key, or null to remove a mapping
    */
   put: function(key, value)
   {
@@ -1661,6 +2376,11 @@ FileMap.prototype =
   /**
    * Returns a clone of the nsILocalFile mapped to key, or null if no such
    * mapping exists.
+   *
+   * @param key : string
+   *   key to which the returned file maps
+   * @returns nsILocalFile
+   *   a clone of the mapped file, or null if no mapping exists
    */
   get: function(key)
   {
@@ -1704,9 +2424,9 @@ const IS_TOKEN_ARRAY =
 /**
  * Determines whether the given character code is a CTL.
  *
- * @param code
+ * @param code : uint
  *   the character code
- * @returns
+ * @returns boolean
  *   true if code is a CTL, false otherwise
  */
 function isCTL(code)
@@ -2003,7 +2723,7 @@ const headerUtils =
    *
    * @throws NS_ERROR_INVALID_ARG
    *   if fieldName does not match the field-name production in RFC 2616
-   * @returns
+   * @returns string
    *   fieldName converted to lowercase if it is a valid header, for characters
    *   where case conversion is possible
    */
@@ -2030,11 +2750,11 @@ const headerUtils =
    * part of the HTTP protocol), normalizes the value if it is, and
    * returns the normalized value.
    *
-   * @param fieldValue
+   * @param fieldValue : string
    *   a value to be normalized as an HTTP header field value
    * @throws NS_ERROR_INVALID_ARG
    *   if fieldValue does not match the field-value production in RFC 2616
-   * @returns
+   * @returns string
    *   fieldValue as a normalized HTTP header field value
    */
   normalizeFieldValue: function(fieldValue)
@@ -2078,9 +2798,9 @@ const headerUtils =
  * Converts the given string into a string which is safe for use in an HTML
  * context.
  *
- * @param str
+ * @param str : string
  *   the string to make HTML-safe
- * @returns
+ * @returns string
  *   an HTML-safe version of str
  */
 function htmlEscape(str)
@@ -2108,24 +2828,18 @@ function nsHttpVersion(versionString)
   if (!matches)
     throw "Not a valid HTTP version!";
 
+  /** The major version number of this, as a number. */
   this.major = parseInt(matches[1], 10);
+
+  /** The minor version number of this, as a number. */
   this.minor = parseInt(matches[2], 10);
+
   if (isNaN(this.major) || isNaN(this.minor) ||
       this.major < 0    || this.minor < 0)
     throw "Not a valid HTTP version!";
 }
 nsHttpVersion.prototype =
 {
-  /**
-   * The major version number of this, as a number
-   */
-  major: undefined,
-
-  /**
-   * The minor version number of this, as a number.
-   */
-  minor: undefined,
-
   /**
    * Returns the standard string representation of the HTTP version represented
    * by this (e.g., "1.1").
@@ -2138,6 +2852,9 @@ nsHttpVersion.prototype =
   /**
    * Returns true if this represents the same HTTP version as otherVersion,
    * false otherwise.
+   *
+   * @param otherVersion : nsHttpVersion
+   *   the version to compare against this
    */
   equals: function (otherVersion)
   {
@@ -2180,9 +2897,9 @@ nsHttpHeaders.prototype =
   /**
    * Sets the header represented by name and value in this.
    *
-   * @param name
+   * @param name : string
    *   the header name
-   * @param value
+   * @param value : string
    *   the header value
    * @throws NS_ERROR_INVALID_ARG
    *   if name or value is not a valid header component
@@ -2201,14 +2918,14 @@ nsHttpHeaders.prototype =
   /**
    * Returns the value for the header specified by this.
    *
-   * @returns
-   *   the field value for the given header, possibly with non-semantic changes
-   *   (i.e., leading/trailing whitespace stripped, whitespace runs replaced
-   *   with spaces, etc.) at the option of the implementation
    * @throws NS_ERROR_INVALID_ARG
    *   if fieldName does not constitute a valid header field name
    * @throws NS_ERROR_NOT_AVAILABLE
    *   if the given header does not exist in this
+   * @returns string
+   *   the field value for the given header, possibly with non-semantic changes
+   *   (i.e., leading/trailing whitespace stripped, whitespace runs replaced
+   *   with spaces, etc.) at the option of the implementation
    */
   getHeader: function(fieldName)
   {
@@ -2224,10 +2941,12 @@ nsHttpHeaders.prototype =
    * Returns true if a header with the given field name exists in this, false
    * otherwise.
    *
-   * @param fieldName
+   * @param fieldName : string
    *   the field name whose existence is to be determined in this
    * @throws NS_ERROR_INVALID_ARG
    *   if fieldName does not constitute a valid header field name
+   * @returns boolean
+   *   true if the header's present, false otherwise
    */
   hasHeader: function(fieldName)
   {
@@ -2259,8 +2978,8 @@ nsHttpHeaders.prototype =
 /**
  * Constructs an nsISimpleEnumerator for the given array of items.
  *
- * @param items
- *   the array of items, which must all implement nsISupports
+ * @param items : Array
+ *   the items, which must all implement nsISupports
  */
 function nsSimpleEnumerator(items)
 {
@@ -2292,22 +3011,19 @@ nsSimpleEnumerator.prototype =
 
 
 /**
- * Parses a server request into a set of metadata, so far as is possible.  Any
- * detected errors will result in this.errorCode being set to an HTTP error code
- * value.  Users MUST check this value after creation and any external
- * initialization of RequestMetadata objects to ensure that errors are handled
- * correctly.
+ * A representation of the data in an HTTP request.
  *
- * @param port
+ * @param port : uint
  *   the port on which the server receiving this request runs
  */
-function RequestMetadata(port)
+function Request(port)
 {
   this._method = "";
   this._path = "";
   this._queryString = "";
   this._host = "";
   this._port = port;
+  this._host = "localhost"; // XXX or from environment or server itself?
 
   /**
    * The headers in this request.
@@ -2315,20 +3031,13 @@ function RequestMetadata(port)
   this._headers = new nsHttpHeaders();
 
   /**
-   * For the addition of ad-hoc properties and new functionality
-   * without having to tweak nsIHttpRequestMetadata every time.
+   * For the addition of ad-hoc properties and new functionality without having
+   * to change nsIHttpRequestMetadata every time; currently lazily created,
+   * as its only use is in directory listings.
    */
-  this._bag = new WritablePropertyBag();
-
-  /**
-   * The numeric HTTP error, if any, associated with this request.  This value
-   * may be set by the constructor but is usually only set by the handler after
-   * this has been constructed.  After this has been initialized, this value
-   * MUST be checked for errors.
-   */
-  this.errorCode = 0;
+  this._bag = null;
 }
-RequestMetadata.prototype =
+Request.prototype =
 {
   // SERVER METADATA
 
@@ -2413,6 +3122,7 @@ RequestMetadata.prototype =
   //
   get enumerator()
   {
+    this._ensurePropertyBag();
     return this._bag.enumerator;
   },
 
@@ -2421,262 +3131,15 @@ RequestMetadata.prototype =
   //
   getProperty: function(name) 
   {
+    this._ensurePropertyBag();
     return this._bag.getProperty(name);
   },
-
-  // ENTITY
-
-  /**
-   * An input stream which contains the body of this request.
-   */
-  get bodyStream()
+  
+  /** Ensures a property bag has been created for ad-hoc behaviors. */
+  _ensurePropertyBag: function()
   {
-    // we want this once we do real request processing -- expose externally when
-    // we do this
-    return null;
-  },
-
-  // PUBLIC CONSTRUCTION API
-
-  /**
-   * The HTTP error code which should be the result of this request.  It must be
-   * checked whenever other API documentation says it should be checked.
-   */
-  errorCode: 0,
-
-  // INITIALIZATION
-  init: function(input)
-  {
-    // XXX this is incredibly un-RFC2616 in every possible way:
-    //
-    // - accepts non-CRLF line endings
-    // - no real testing for non-US-ASCII text and throwing in that case
-    // - handles POSTs by displaying the URL and throwing away the request
-    //   entity
-    // - need to support RFC 2047-encoded non-US-ASCII characters
-    // - really support absolute URLs (requires telling the server its hostname,
-    //   beyond just localhost:port and 127.0.0.1:port), not just pretend we
-    //   serve every request that's given to us regardless of the server
-    //   hostname and port
-    // - etc.
-
-    // read the input line by line; the first line either tells us the requested
-    // path or is empty, in which case the second line contains the path
-    var lis = new ConverterInputStream(input, "ISO-8859-1", 1024, 0xFFFD);
-    lis.QueryInterface(Ci.nsIUnicharLineInputStream);
-
-
-    this._parseRequestLine(lis);
-    if (this.errorCode)
-      return;
-
-    this._parseHeaders(lis);
-    if (this.errorCode)
-      return;
-
-    // XXX need to put body transmitted with this request into an input stream!
-
-    // 19.6.1.1 -- servers MUST report 400 to HTTP/1.1 requests w/o Host header
-    if (!this._headers.hasHeader("Host") &&
-        this._httpVersion.equals(nsHttpVersion.HTTP_1_1))
-    {
-      this.errorCode = 400;
-      return;
-    }
-
-    // XXX set this based on Host or the request URI?
-    this._host = "localhost";
-  },
-
-  // PRIVATE API
-
-  /**
-   * Parses the request line for the HTTP request in the given input stream.  On
-   * completion this.errorCode must be checked to determine whether any errors
-   * occurred during header parsing.
-   *
-   * @param lis
-   *   an nsIUnicharLineInputStream from which to parse HTTP headers
-   */
-  _parseRequestLine: function(lis)
-  {
-    // servers SHOULD ignore any empty line(s) received where a Request-Line
-    // is expected (section 4.1)
-    var line = {};
-    while (lis.readLine(line) && line.value == "")
-      dumpn("*** ignoring beginning blank line...");
-
-    // clients and servers SHOULD accept any amount of SP or HT characters
-    // between fields, even though only a single SP is required (section 19.3)
-    var request = line.value.split(/[ \t]+/);
-    if (!request || request.length != 3)
-    {
-      this.errorCode = 400;
-      return;
-    }
-
-    this._method = request[0];
-
-    // check the HTTP version
-    var ver = request[2];
-    var match = ver.match(/^HTTP\/(\d+\.\d+)$/);
-    if (!match)
-    {
-      this.errorCode = 400;
-      return;
-    }
-
-    // reject unrecognized methods
-    if (request[0] != "GET" && request[0] != "POST")
-    {
-      this.errorCode = 501;
-      return;
-    }
-
-    // determine HTTP version
-    try
-    {
-      this._httpVersion = new nsHttpVersion(match[1]);
-      if (!this._httpVersion.equals(nsHttpVersion.HTTP_1_0) &&
-          !this._httpVersion.equals(nsHttpVersion.HTTP_1_1))
-        throw "unsupported HTTP version";
-    }
-    catch (e)
-    {
-      // we support HTTP/1.0 and HTTP/1.1 only
-      this.errorCode = 501;
-      return;
-    }
-
-    var fullPath = request[1];
-
-    if (fullPath.charAt(0) != "/")
-    {
-      // XXX we don't support absolute URIs yet -- a MUST for HTTP/1.1;
-      //     for now just get the path and use that, ignoring hostport
-      try
-      {
-        var uri = Cc["@mozilla.org/network/io-service;1"]
-                    .getService(Ci.nsIIOService)
-                    .newURI(fullPath, null, null);
-        fullPath = uri.path;
-      }
-      catch (e) { /* invalid URI */ }
-      if (fullPath.charAt(0) != "/")
-      {
-        this.errorCode = 400;
-        return;
-      }
-    }
-
-    var splitter = fullPath.indexOf("?");
-    if (splitter < 0)
-    {
-      // _queryString already set in ctor
-      this._path = fullPath;
-    }
-    else
-    {
-      this._path = fullPath.substring(0, splitter);
-      this._queryString = fullPath.substring(splitter + 1);
-    }
-  },
-
-  /**
-   * Parses all available HTTP headers from the given input stream.  On
-   * completion, this.errorCode must be checked to determine whether any errors
-   * occurred during header parsing.
-   *
-   * @param lis
-   *   the nsIUnicharLineInputStream from which to parse HTTP headers
-   */
-  _parseHeaders: function(lis)
-  {
-    var headers = this._headers;
-    var lastName, lastVal;
-
-    var line = {};
-    while (true)
-    {
-      NS_ASSERT((lastVal === undefined && lastName === undefined) ||
-                (lastVal !== undefined && lastName !== undefined),
-                lastName === undefined ?
-                  "lastVal without lastName?  lastVal: '" + lastVal + "'" :
-                  "lastName without lastVal?  lastName: '" + lastName + "'");
-
-      lis.readLine(line);
-      var lineText = line.value;
-      var firstChar = lineText.charAt(0);
-
-      // blank line means end of headers
-      if (lineText == "")
-      {
-        // we're finished with the previous header
-        if (lastName)
-        {
-          try
-          {
-            headers.setHeader(lastName, lastVal, true);
-          }
-          catch (e)
-          {
-            dumpn("*** e == " + e);
-            this.errorCode = 400;
-            return;
-          }
-        }
-        else
-        {
-          // no headers in request -- valid for HTTP/1.0 requests
-        }
-
-        // either way, we're done processing headers
-        break;
-      }
-      else if (firstChar == " " || firstChar == "\t")
-      {
-        // multi-line header if we've seen a header line
-        if (!lastName)
-        {
-          // we don't have a header to continue!
-          this.errorCode = 400;
-          return;
-        }
-
-        // append this line's text to the value; starts with SP/HT, so no need
-        // for separating whitespace
-        lastVal += lineText;
-      }
-      else
-      {
-        // we have a new header, so set the old one (if one existed)
-        if (lastName)
-        {
-          try
-          {
-            headers.setHeader(lastName, lastVal, true);
-          }
-          catch (e)
-          {
-            dumpn("*** e == " + e);
-            this.errorCode = 400;
-            return;
-          }
-        }
-
-        var colon = lineText.indexOf(":"); // first colon must be splitter
-        if (colon < 1)
-        {
-          // no colon or missing header field-name
-          this.errorCode = 400;
-          return;
-        }
-
-        // set header name, value (to be set in the next loop, usually)
-        lastName = lineText.substring(0, colon);
-        lastVal = lineText.substring(colon + 1);
-      } // empty, continuation, start of header
-    } // while (true)
+    if (!this._bag)
+      this._bag = new WritablePropertyBag();
   }
 };
 
@@ -2826,9 +3289,7 @@ function server(port, basePath)
     srv.registerDirectory("/", lp);
   srv.start(port);
 
-  var thread = Cc["@mozilla.org/thread-manager;1"]
-                 .getService()
-                 .currentThread;
+  var thread = gThreadManager.currentThread;
   while (!srv.isStopped())
     thread.processNextEvent(true);
 

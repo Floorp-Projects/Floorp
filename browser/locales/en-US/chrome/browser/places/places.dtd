@@ -197,6 +197,8 @@
 
 <!ENTITY col.title.label
   "Name">
+<!ENTITY col.tags.label
+  "Tags">
 <!ENTITY col.url.label
   "Location">
 <!ENTITY col.lastvisit.label

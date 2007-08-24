@@ -22,7 +22,7 @@
  *
  * Contributor(s):
  *   Steve Clark <buster@netscape.com>
- *   Håkan Waara <hwaara@chello.se>
+ *   HÃ¥kan Waara <hwaara@chello.se>
  *   Dan Rosen <dr@netscape.com>
  *   Daniel Glazman <glazman@netscape.com>
  *   Mats Palmgren <mats.palmgren@bredband.net>
@@ -1098,6 +1098,11 @@ protected:
 
   // Utility method to restore the root scrollframe state
   void RestoreRootScrollPosition();
+
+  // Method to handle actually flushing.  This allows the caller to control
+  // whether the reflow flush (if any) should be interruptible.
+  nsresult DoFlushPendingNotifications(mozFlushType aType,
+                                       PRBool aInterruptibleReflow);
 
   nsICSSStyleSheet*         mPrefStyleSheet; // mStyleSet owns it but we maintain a ref, may be null
 #ifdef DEBUG
@@ -4369,15 +4374,24 @@ PresShell::IsSafeToFlush(PRBool& aIsSafeToFlush)
 NS_IMETHODIMP 
 PresShell::FlushPendingNotifications(mozFlushType aType)
 {
-  NS_ASSERTION(aType & (Flush_StyleReresolves | Flush_OnlyReflow |
-                        Flush_OnlyPaint),
-               "Why did we get called?");
+  return DoFlushPendingNotifications(aType, PR_FALSE);
+}
+
+nsresult
+PresShell::DoFlushPendingNotifications(mozFlushType aType,
+                                       PRBool aInterruptibleReflow)
+{
+  NS_ASSERTION(aType >= Flush_Frames, "Why did we get called?");
   
   PRBool isSafeToFlush;
   IsSafeToFlush(isSafeToFlush);
 
   NS_ASSERTION(!isSafeToFlush || mViewManager, "Must have view manager");
-  if (isSafeToFlush && mViewManager) {
+  // Make sure the view manager stays alive while batching view updates.
+  // XXX FIXME: If viewmanager hierarchy is modified while we're in update
+  //            batch... We need to address that somehow.  See bug 369165.
+  nsCOMPtr<nsIViewManager> viewManager = mViewManager;
+  if (isSafeToFlush && viewManager) {
     // Processing pending notifications can kill us, and some callers only
     // hold weak refs when calling FlushPendingNotifications().  :(
     nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
@@ -4385,42 +4399,28 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
     // Style reresolves not in conjunction with reflows can't cause
     // painting or geometry changes, so don't bother with view update
     // batching if we only have style reresolve
-    mViewManager->BeginUpdateViewBatch();
+    viewManager->BeginUpdateViewBatch();
 
-    if (aType & Flush_StyleReresolves) {
-      mFrameConstructor->ProcessPendingRestyles();
-      if (mIsDestroying) {
-        // We no longer have a view manager and all that.
-        // XXX FIXME: Except we're in the middle of a view update batch...  We
-        // need to address that somehow.  See bug 369165.
-        return NS_OK;
-      }
-    }
+    mFrameConstructor->ProcessPendingRestyles();
 
-    if (aType & Flush_OnlyReflow) {
+    if (aType >= Flush_Layout && !mIsDestroying) {
       mFrameConstructor->RecalcQuotesAndCounters();
-      ProcessReflowCommands(PR_FALSE);
-      if (mIsDestroying) {
-        // We no longer have a view manager and all that.
-        // XXX FIXME: Except we're in the middle of a view update batch...  We
-        // need to address that somehow.  See bug 369165.
-        return NS_OK;
-      }
+      ProcessReflowCommands(aInterruptibleReflow);
     }
 
     PRUint32 updateFlags = NS_VMREFRESH_NO_SYNC;
-    if (aType & Flush_OnlyPaint) {
+    if (aType >= Flush_Display) {
       // Flushing paints, so perform the invalidates and drawing
       // immediately
       updateFlags = NS_VMREFRESH_IMMEDIATE;
     }
-    else if (!(aType & Flush_OnlyReflow)) {
+    else if (aType < Flush_Layout) {
       // Not flushing reflows, so do deferred invalidates.  This will keep us
       // from possibly flushing out reflows due to invalidates being processed
       // at the end of this view batch.
       updateFlags = NS_VMREFRESH_DEFERRED;
     }
-    mViewManager->EndUpdateViewBatch(updateFlags);
+    viewManager->EndUpdateViewBatch(updateFlags);
   }
 
   return NS_OK;
@@ -4771,11 +4771,10 @@ PresShell::RenderDocument(const nsRect& aRect, PRBool aUntrusted,
     builder.LeavePresShell(rootFrame, rect);
 
     if (NS_SUCCEEDED(rv)) {
-      nscoord appUnitsPerDevPixel = mPresContext->AppUnitsPerDevPixel();
       // Ensure that r.x,r.y gets drawn at (0,0)
       aThebesContext->Save();
-      aThebesContext->Translate(gfxPoint(-NSAppUnitsToFloatPixels(rect.x,appUnitsPerDevPixel),
-                                         -NSAppUnitsToFloatPixels(rect.y,appUnitsPerDevPixel)));
+      aThebesContext->Translate(gfxPoint(-mPresContext->AppUnitsToGfxUnits(rect.x),
+                                         -mPresContext->AppUnitsToGfxUnits(rect.y)));
 
       nsIDeviceContext* devCtx = mPresContext->DeviceContext();
       nsCOMPtr<nsIRenderingContext> rc;
@@ -5794,12 +5793,7 @@ PresShell::WillPaint()
   // reflow being interspersed.  Note that we _do_ allow this to be
   // interruptible; if we can't do all the reflows it's better to flicker a bit
   // than to freeze up.
-  // XXXbz this update batch may not be strictly necessary, but it's good form.
-  // XXXbz should we be flushing out style changes here?  Probably not, I'd say.
-  NS_ASSERTION(mViewManager, "Something weird is going on");
-  mViewManager->BeginUpdateViewBatch();
-  ProcessReflowCommands(PR_TRUE);
-  mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+  DoFlushPendingNotifications(Flush_Layout, PR_TRUE);
 }
 
 nsresult
@@ -5937,9 +5931,8 @@ PresShell::ReflowEvent::Run() {
     // Set a kung fu death grip on the view manager associated with the pres shell
     // before processing that pres shell's reflow commands.  Fixes bug 54868.
     nsCOMPtr<nsIViewManager> viewManager = ps->GetViewManager();
-    viewManager->BeginUpdateViewBatch();
-    ps->ProcessReflowCommands(PR_TRUE);
-    viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+
+    ps->DoFlushPendingNotifications(Flush_Layout, PR_TRUE);
 
     // Now, explicitly release the pres shell before the view manager
     ps = nsnull;

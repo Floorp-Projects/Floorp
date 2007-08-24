@@ -255,6 +255,8 @@ nsMenuBarFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent)
 {
   PRUint32 charCode;
   aKeyEvent->GetCharCode(&charCode);
+  if (!charCode) // no character was pressed so just return  
+    return nsnull;
 
   // Enumerate over our list of frames.
   nsIFrame* immediateParent = nsnull;

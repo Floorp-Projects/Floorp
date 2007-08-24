@@ -52,6 +52,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
+const Cu = Components.utils;
 
 const CID = Components.ID("{5280606b-2510-4fe0-97ef-9b5a22eafe6b}");
 const CONTRACT_ID = "@mozilla.org/browser/sessionstore;1";
@@ -100,7 +101,10 @@ const CAPABILITIES = [
 ];
 
 // sandbox to evaluate JavaScript code from non-trustable sources
-var EVAL_SANDBOX = new Components.utils.Sandbox("about:blank");
+var EVAL_SANDBOX = new Cu.Sandbox("about:blank");
+
+// module for JSON conversion (needed for the nsISessionStore API)
+Cu.import("resource://gre/modules/JSON.jsm");
 
 function debug(aMsg) {
   aMsg = ("SessionStore: " + aMsg).replace(/\S{80}/g, "$&\n");
@@ -1618,7 +1622,7 @@ SessionStoreService.prototype = {
       try {
         cookieManager.add(cookie.host, cookie.path || "", cookie.name || "", cookie.value, !!cookie.secure, !!cookie.httponly, true, "expiry" in cookie ? cookie.expiry : MAX_EXPIRY);
       }
-      catch (ex) { Components.utils.reportError(ex); } // don't let a single cookie stop recovering
+      catch (ex) { Cu.reportError(ex); } // don't let a single cookie stop recovering
     }
   },
 
@@ -1909,12 +1913,12 @@ SessionStoreService.prototype = {
    * safe eval'ing
    */
   _safeEval: function sss_safeEval(aStr) {
-    return Components.utils.evalInSandbox(aStr, EVAL_SANDBOX);
+    return Cu.evalInSandbox(aStr, EVAL_SANDBOX);
   },
 
   /**
    * Converts a JavaScript object into a JSON string
-   * (see http://www.json.org/ for the full grammar).
+   * (see http://www.json.org/ for more information).
    *
    * The inverse operation consists of eval("(" + JSON_string + ")");
    * and should be provably safe.
@@ -1923,73 +1927,13 @@ SessionStoreService.prototype = {
    * @return the object's JSON representation
    */
   _toJSONString: function sss_toJSONString(aJSObject) {
-    // these characters have a special escape notation
-    const charMap = { "\b": "\\b", "\t": "\\t", "\n": "\\n", "\f": "\\f",
-                      "\r": "\\r", '"': '\\"', "\\": "\\\\" };
-    // we use a single string builder for efficiency reasons
-    var parts = [];
+    var str = JSON.toString(aJSObject, ["_tab", "_hosts"] /* keys to drop */);
     
-    // this recursive function walks through all objects and appends their
-    // JSON representation to the string builder
-    function jsonIfy(aObj) {
-      if (typeof aObj == "boolean") {
-        parts.push(aObj ? "true" : "false");
-      }
-      else if (typeof aObj == "number" && isFinite(aObj)) {
-        // there is no representation for infinite numbers or for NaN!
-        parts.push(aObj.toString());
-      }
-      else if (typeof aObj == "string") {
-        aObj = aObj.replace(/[\\"\x00-\x1F\u0080-\uFFFF]/g, function($0) {
-          // use the special escape notation if one exists, otherwise
-          // produce a general unicode escape sequence
-          return charMap[$0] ||
-            "\\u" + ("0000" + $0.charCodeAt(0).toString(16)).slice(-4);
-        });
-        parts.push('"' + aObj + '"')
-      }
-      else if (aObj == null) {
-        parts.push("null");
-      }
-      else if (aObj instanceof Array || aObj instanceof EVAL_SANDBOX.Array) {
-        parts.push("[");
-        for (var i = 0; i < aObj.length; i++) {
-          jsonIfy(aObj[i]);
-          parts.push(",");
-        }
-        if (parts[parts.length - 1] == ",")
-          parts.pop(); // drop the trailing colon
-        parts.push("]");
-      }
-      else if (typeof aObj == "object") {
-        parts.push("{");
-        for (var key in aObj) {
-          if (key == "_tab")
-            continue; // XXXzeniko we might even want to drop all private members
-          
-          jsonIfy(key.toString());
-          parts.push(":");
-          jsonIfy(aObj[key]);
-          parts.push(",");
-        }
-        if (parts[parts.length - 1] == ",")
-          parts.pop(); // drop the trailing colon
-        parts.push("}");
-      }
-      else {
-        throw new Error("No JSON representation for this object!");
-      }
-    }
-    jsonIfy(aJSObject);
-    
-    var newJSONString = parts.join(" ");
     // sanity check - so that API consumers can just eval this string
-    if (/[^,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]/.test(
-      newJSONString.replace(/"(\\.|[^"\\])*"/g, "")
-    ))
+    if (!JSON.isMostlyHarmless(str))
       throw new Error("JSON conversion failed unexpectedly!");
     
-    return newJSONString;
+    return str;
   },
 
 /* ........ Storage API .............. */

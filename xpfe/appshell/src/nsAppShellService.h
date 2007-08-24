@@ -76,6 +76,7 @@ protected:
   nsRefPtr<nsWebShellWindow>  mHiddenWindow;
   PRPackedBool                mXPCOMShuttingDown;
   PRUint16                    mModalWindowCount;
+  PRPackedBool                mApplicationProvidedHiddenWindow;
 };
 
 #endif
