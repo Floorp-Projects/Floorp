@@ -605,9 +605,9 @@ var gEditItemOverlay = {
     var tagsSelector = this._element("tagsSelector");
     var expander = this._element("tagsSelectorExpander");
     if (!isElementVisible(tagsSelector)) {
-      expander.className = "expander-down";
+      expander.className = "expander-up";
       expander.setAttribute("tooltiptext",
-                            expander.getAttribute("tooltiptextdown"));
+                            expander.getAttribute("tooltiptextup"));
 
       this._rebuildTagsSelectorList();
 
