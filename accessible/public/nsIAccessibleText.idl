@@ -45,7 +45,7 @@ typedef long nsAccessibleTextBoundary;
 
 interface nsIAccessible;
 
-[scriptable, uuid(17389a66-5cc5-4550-80e0-49e7b63990a4)]
+[scriptable, uuid(948419b2-53f6-4a74-bb69-1345faf3e8e8)]
 interface nsIAccessibleText : nsISupports
 {
   const nsAccessibleTextBoundary BOUNDARY_CHAR = 0;
@@ -167,6 +167,20 @@ interface nsIAccessibleText : nsISupports
   void addSelection (in long startOffset, in long endOffset);
 
   void removeSelection (in long selectionNum);
+
+
+  /**
+   * Makes a specific part of string visible on screen.
+   *
+   * @param aStartIndex - 0-based character offset.
+   * @param aEndIndex - 0-based character offset - the offset of the
+   *                        character just past the last character of the
+   *                        string.
+   * @param aScrollType - defines how to scroll (see nsIAccessibleScrollType for
+   *                      available constants).
+   */
+  void scrollSubstringTo(in long aStartIndex, in long aEndIndex,
+                         in unsigned long aScrollType);
 };
 
 /*

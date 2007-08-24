@@ -360,29 +360,8 @@ CAccessibleText::scrollSubstringTo(long aStartIndex, long aEndIndex,
 {
   GET_NSIACCESSIBLETEXT
 
-  nsCOMPtr<nsIAccessible> accessible;
-  PRInt32 startOffset = 0, endOffset = 0;
-
-  // XXX: aEndIndex isn't used.
-  textAcc->GetAttributeRange(aStartIndex, &startOffset, &endOffset,
-                             getter_AddRefs(accessible));
-  if (!accessible)
-    return E_FAIL;
-
-  nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(accessible));
-  if (!winAccessNode)
-    return E_FAIL;
-
-  void **instancePtr = 0;
-  winAccessNode->QueryNativeInterface(IID_IAccessible2, instancePtr);
-  if (!instancePtr)
-    return E_FAIL;
-
-  IAccessible2 *pAccessible2 = static_cast<IAccessible2*>(*instancePtr);
-  HRESULT hr = pAccessible2->scrollTo(aScrollType);
-  pAccessible2->Release();
-
-  return hr;
+  nsresult rv = textAcc->ScrollSubstringTo(aStartIndex, aEndIndex, aScrollType);
+  return NS_FAILED(rv) ? E_FAIL : S_OK;
 }
 
 STDMETHODIMP

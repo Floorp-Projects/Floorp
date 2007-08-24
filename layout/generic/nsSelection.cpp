@@ -215,7 +215,9 @@ public:
   // aDoFlush only matters if aIsSynchronous is true.  If not, we'll just flush
   // when the scroll event fires so we make sure to scroll to the right place.
   nsresult      ScrollIntoView(SelectionRegion aRegion, PRBool aIsSynchronous,
-                               PRBool aDoFlush);
+                               PRBool aDoFlush,
+                               PRInt16 aVPercent = NS_PRESSHELL_SCROLL_ANYWHERE,
+                               PRInt16 aHPercent = NS_PRESSHELL_SCROLL_ANYWHERE);
   nsresult      AddItem(nsIDOMRange *aRange);
   nsresult      RemoveItem(nsIDOMRange *aRange);
   nsresult      Clear(nsPresContext* aPresContext);
@@ -7298,9 +7300,18 @@ nsTypedSelection::PostScrollSelectionIntoViewEvent(SelectionRegion aRegion)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTypedSelection::ScrollIntoView(SelectionRegion aRegion, PRBool aIsSynchronous,
+                                 PRInt16 aVPercent, PRInt16 aHPercent)
+{
+  return ScrollIntoView(aRegion, aIsSynchronous, PR_FALSE,
+                        aVPercent, aHPercent);
+}
+
 nsresult
 nsTypedSelection::ScrollIntoView(SelectionRegion aRegion,
-                                 PRBool aIsSynchronous, PRBool aDoFlush)
+                                 PRBool aIsSynchronous, PRBool aDoFlush,
+                                 PRInt16 aVPercent, PRInt16 aHPercent)
 {
   nsresult result;
   if (!mFrameSelection)
@@ -7358,7 +7369,8 @@ nsTypedSelection::ScrollIntoView(SelectionRegion aRegion,
     if (!scrollableView)
       return NS_OK;
 
-    result = ScrollRectIntoView(scrollableView, rect, NS_PRESSHELL_SCROLL_ANYWHERE, NS_PRESSHELL_SCROLL_ANYWHERE, PR_TRUE);
+    result = ScrollRectIntoView(scrollableView, rect, aVPercent, aHPercent,
+                                PR_TRUE);
   }
   return result;
 }
