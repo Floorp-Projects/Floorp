@@ -120,6 +120,7 @@
       <handler event="keypress" keycode="VK_END" modifiers="shift" command="cmd_selectEndLine" />
       <handler event="keypress" keycode="VK_UP" modifiers="shift" command="cmd_selectLinePrevious" />
       <handler event="keypress" keycode="VK_DOWN" modifiers="shift" command="cmd_selectLineNext" />
+      <handler event="keypress" key="y" modifiers="accel" command="cmd_redo"/>
     </handlers>
   </binding>
 
