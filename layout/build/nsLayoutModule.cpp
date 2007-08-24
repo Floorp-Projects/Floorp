@@ -96,9 +96,6 @@
 #include "nsSyncLoadService.h"
 #include "nsBox.h"
 #include "nsIFrameTraversal.h"
-#ifndef MOZ_CAIRO_GFX
-#include "nsISelectionImageService.h"
-#endif
 #include "nsLayoutCID.h"
 #include "nsILanguageAtomService.h"
 #include "nsStyleSheetService.h"
@@ -398,10 +395,6 @@ nsresult NS_NewCanvasRenderingContext2D(nsIDOMCanvasRenderingContext2D** aResult
 
 nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult);
 
-#ifndef MOZ_CAIRO_GFX
-nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult);
-#endif
-
 nsresult NS_NewSelection(nsFrameSelection** aResult);
 nsresult NS_NewDomSelection(nsISelection** aResult);
 nsresult NS_NewDocumentViewer(nsIDocumentViewer** aResult);
@@ -464,11 +457,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(inCSSValueSearch)
 NS_GENERIC_FACTORY_CONSTRUCTOR(inDOMUtils)
 #endif
 
-#ifndef MOZ_CAIRO_GFX
-MAKE_CTOR(CreateSelectionImageService,  nsISelectionImageService,NS_NewSelectionImageService)
-#endif
-MAKE_CTOR(CreateCaret,                  nsICaret,               NS_NewCaret)
-
+MAKE_CTOR(CreateCaret,                    nsICaret,                    NS_NewCaret)
 MAKE_CTOR(CreateNameSpaceManager,         nsINameSpaceManager,         NS_GetNameSpaceManager)
 MAKE_CTOR(CreateEventListenerManager,     nsIEventListenerManager,     NS_NewEventListenerManager)
 MAKE_CTOR(CreateDOMEventGroup,            nsIDOMEventGroup,            NS_NewDOMEventGroup)
@@ -485,7 +474,7 @@ MAKE_CTOR(CreateImageDocument,            nsIDocument,                 NS_NewIma
 MAKE_CTOR(CreateCSSParser,                nsICSSParser,                NS_NewCSSParser)
 MAKE_CTOR(CreateCSSLoader,                nsICSSLoader,                NS_NewCSSLoader)
 MAKE_CTOR(CreateDOMSelection,             nsISelection,                NS_NewDomSelection)
-MAKE_CTOR(CreateSelection,                nsFrameSelection,                 NS_NewSelection)
+MAKE_CTOR(CreateSelection,                nsFrameSelection,            NS_NewSelection)
 MAKE_CTOR(CreateRange,                    nsIDOMRange,                 NS_NewRange)
 MAKE_CTOR(CreateRangeUtils,               nsIRangeUtils,               NS_NewRangeUtils)
 MAKE_CTOR(CreateContentIterator,          nsIContentIterator,          NS_NewContentIterator)
@@ -803,13 +792,6 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_FRAMETRAVERSAL_CID,
     nsnull,
     CreateNewFrameTraversal },
-
-#ifndef MOZ_CAIRO_GFX
-  { "selection image storage",
-    NS_SELECTIONIMAGESERVICE_CID,
-    nsnull,
-    CreateSelectionImageService },
-#endif
 
   { "caret",
     NS_CARET_CID,
