@@ -45,6 +45,7 @@
 #include "nsContentUtils.h"
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
+#include "nsIParser.h"
 
 
 PRLogModuleInfo * gWyciwygLog = nsnull;
@@ -56,6 +57,8 @@ PRLogModuleInfo * gWyciwygLog = nsnull;
 nsWyciwygChannel::nsWyciwygChannel()
   : mStatus(NS_OK),
     mIsPending(PR_FALSE),
+    mCharsetSet(PR_FALSE),
+    mCharsetSource(kCharsetUninitialized),
     mContentLength(-1),
     mLoadFlags(LOAD_NORMAL)
 {
@@ -347,6 +350,14 @@ nsWyciwygChannel::WriteToCacheEntry(const nsAString &aData)
     mCacheEntry->SetSecurityInfo(mSecurityInfo);
   }
 
+  if (mCharsetSet) {
+    mCacheEntry->SetMetaDataElement("charset", mCharset.get());
+
+    nsCAutoString source;
+    source.AppendInt(mCharsetSource);
+    mCacheEntry->SetMetaDataElement("charset-source", source.get());
+  }
+  
   PRUint32 out;
   if (!mCacheOutputStream) {
     // Get the outputstream from the cache entry.
@@ -395,20 +406,10 @@ nsWyciwygChannel::SetCharsetAndSource(PRInt32 aSource,
 {
   NS_ENSURE_ARG(!aCharset.IsEmpty());
 
-  if (!mCacheEntry) {
-    nsCAutoString spec;
-    nsresult rv = mURI->GetAsciiSpec(spec);
-    if (NS_FAILED(rv)) return rv;
-    rv = OpenCacheEntry(spec, nsICache::ACCESS_WRITE);
-    if (NS_FAILED(rv)) return rv;
-  }
+  mCharsetSet = PR_TRUE;
+  mCharsetSource = aSource;
+  mCharset = aCharset;
 
-  mCacheEntry->SetMetaDataElement("charset",
-                                  PromiseFlatCString(aCharset).get());
-  nsCAutoString source;
-  source.AppendInt(aSource);
-  mCacheEntry->SetMetaDataElement("charset-source", source.get());
-  
   return NS_OK;
 }
 
