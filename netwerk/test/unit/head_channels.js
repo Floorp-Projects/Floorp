@@ -21,6 +21,8 @@ function read_stream(stream, count) {
   return data.join('');
 }
 
+const CL_EXPECT_FAILURE = 0x1;
+
 /**
  * A stream listener that calls a callback function with a specified
  * context and the received data when the channel is loaded.
@@ -29,14 +31,16 @@ function read_stream(stream, count) {
  *   void closure(in nsIRequest request, in ACString data, in JSObject context);
  *
  * This listener makes sure that various parts of the channel API are
- * implemented correctly and that the channel's status is a success code.
+ * implemented correctly and that the channel's status is a success code
+ * (you can pass CL_EXPECT_FAILURE as flags to allow a failure code)
  *
  * Note that it also requires a valid content length on the channel and
  * is thus not fully generic.
  */
-function ChannelListener(closure, ctx) {
+function ChannelListener(closure, ctx, flags) {
   this._closure = closure;
   this._closurectx = ctx;
+  this._flags = flags;
 }
 ChannelListener.prototype = {
   _closure: null,
@@ -72,6 +76,8 @@ ChannelListener.prototype = {
       do_throw("onDataAvailable after onStopRequest event!");
     if (!request.isPending())
       do_throw("request reports itself as not pending from onStartRequest!");
+    if (this._flags & CL_EXPECT_FAILURE)
+      do_throw("Got data despite expecting a failure");
 
     this._buffer = this._buffer.concat(read_stream(stream, count));
   },
@@ -82,13 +88,17 @@ ChannelListener.prototype = {
     if (this._got_onstoprequest)
       do_throw("Got second onStopRequest event!");
     this._got_onstoprequest = true;
-    if (!Components.isSuccessCode(status))
+    var success = Components.isSuccessCode(status);
+    if ((this._flags & CL_EXPECT_FAILURE) && success)
+      do_throw("Should have failed to load URL (status is " + status.toString(16) + ")");
+    else if (!(this._flags & CL_EXPECT_FAILURE) && !success)
       do_throw("Failed to load URL: " + status.toString(16));
     if (status != request.status)
       do_throw("request.status does not match status arg to onStopRequest!");
     if (request.isPending())
       do_throw("request reports itself as pending from onStopRequest!");
-    if (this._contentLen != -1 && this._buffer.length != this._contentLen)
+    if (!(this._flags & CL_EXPECT_FAILURE) &&
+        this._contentLen != -1 && this._buffer.length != this._contentLen)
       do_throw("did not read nsIChannel.contentLength number of bytes!");
 
     this._closure(request, this._buffer, this._closurectx);
