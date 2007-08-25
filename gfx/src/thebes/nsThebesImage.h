@@ -75,8 +75,6 @@ public:
     NS_IMETHOD Draw(nsIRenderingContext &aContext,
                     const gfxRect &aSourceRect,
                     const gfxRect &aDestRect);
-    NS_IMETHOD DrawToImage(nsIImage* aDstImage,
-                           PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
 
     nsresult ThebesDrawTile(gfxContext *thebesContext,
                             nsIDeviceContext* dx,
