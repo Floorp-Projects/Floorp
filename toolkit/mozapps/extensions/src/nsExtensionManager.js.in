@@ -4663,6 +4663,8 @@ ExtensionManager.prototype = {
         this._updateManifests(false);
       }
       else {
+        if (opType == OP_NEEDS_UPGRADE)
+          ds.setItemProperty(id, "newVersion", null);
         this._setOp(id, OP_NEEDS_UNINSTALL);
         var type = ds.getItemProperty(id, "type");
         var restartRequired = this.installRequiresRestart(id, type);
@@ -4681,6 +4683,53 @@ ExtensionManager.prototype = {
     this._notifyAction(id, EM_ITEM_UNINSTALLED);
   },
 
+  /* See nsIExtensionManager.idl */
+  cancelInstallItem: function(id) {
+    var ds = this.datasource;
+    var opType = ds.getItemProperty(id, "opType");
+    if (opType != OP_NEEDS_UPGRADE && opType != OP_NEEDS_INSTALL)
+      return;
+
+    ds.updateDownloadState(PREFIX_ITEM_URI + id, null);
+    var installLocation = this.getInstallLocation(id);
+    // Removes any staged xpis for this item.
+    var stageFile = installLocation.getStageFile(id);
+    if (stageFile)
+      installLocation.removeFile(stageFile);
+    // Addons with an opType of OP_NEEDS_INSTALL only have a staged xpi file
+    // and just need to be removed completely from the ds.
+    if (opType == OP_NEEDS_INSTALL) {
+      ds.removeItemMetadata(id);
+      ds.removeItemFromContainer(id);
+      ds.updateVisibleList(id, null, true);
+      StartupCache.clearEntry(installLocation, id);
+      this._updateManifests(false);
+      this._notifyAction(id, EM_ITEM_CANCEL);
+    }
+    else {
+      // Clear upgrade information and reset any request to enable/disable.
+      ds.setItemProperty(id, EM_R("newVersion"), null);
+      var appDisabled = ds.getItemProperty(id, "appDisabled");
+      var userDisabled = ds.getItemProperty(id, "userDisabled");
+      if (appDisabled == "true" || appDisabled == OP_NONE && userDisabled == OP_NONE) {
+        this._setOp(id, OP_NONE);
+        this._notifyAction(id, EM_ITEM_CANCEL);
+      }
+      else if (appDisabled == OP_NEEDS_DISABLE || userDisabled == OP_NEEDS_DISABLE) {
+        this._setOp(id, OP_NEEDS_DISABLE);
+        this._notifyAction(id, EM_ITEM_DISABLED);
+      }
+      else if (appDisabled == OP_NEEDS_ENABLE || userDisabled == OP_NEEDS_ENABLE) {
+        this._setOp(id, OP_NEEDS_ENABLE);
+        this._notifyAction(id, EM_ITEM_ENABLED);
+      }
+      else {
+        this._setOp(id, OP_NONE);
+        this._notifyAction(id, EM_ITEM_CANCEL);
+      }
+    }
+  },
+  
   /**
    * Cancels a pending uninstall of an item
    * @param   id

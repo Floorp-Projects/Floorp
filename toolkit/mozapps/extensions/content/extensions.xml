@@ -274,6 +274,12 @@
             <xul:button class="uninstallShow cancelUninstallButton" label="&cancel.label;"
                         accesskey="&cancel.accesskey;" tooltiptext="&cmd.cancelUninstall.tooltip;"
                         command="cmd_cancelUninstall"/>
+            <xul:button class="installShow cancelInstallButton" label="&cancelInstall.label;"
+                        accesskey="&cancelInstall.accesskey;" tooltiptext="&cmd.cancelInstall.tooltip;"
+                        command="cmd_cancelInstall"/>
+            <xul:button class="upgradeShow cancelUpgradeButton" label="&cancelUpgrade.label;"
+                        accesskey="&cancelUpgrade.accesskey;" tooltiptext="&cmd.cancelUpgrade.tooltip;"
+                        command="cmd_cancelUpgrade"/>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>

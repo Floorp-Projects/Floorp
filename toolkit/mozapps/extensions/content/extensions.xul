@@ -93,6 +93,8 @@
     <command id="cmd_homepage"/>
     <command id="cmd_uninstall"/>
     <command id="cmd_cancelUninstall"/>
+    <command id="cmd_cancelInstall"/>
+    <command id="cmd_cancelUpgrade"/>
     <command id="cmd_checkUpdate"/>
     <command id="cmd_includeUpdate"/>
     <command id="cmd_installUpdate"/>
@@ -128,6 +130,10 @@
               label="&cmd.uninstall.label;" accesskey="&cmd.uninstall2.accesskey;"/>
     <menuitem id="menuitem_cancelUninstall" command="cmd_cancelUninstall"
               label="&cmd.cancelUninstall.label;" accesskey="&cmd.cancelUninstall.accesskey;"/>
+    <menuitem id="menuitem_cancelInstall" command="cmd_cancelInstall"
+              label="&cmd.cancelInstall.label;" accesskey="&cmd.cancelInstall.accesskey;"/>
+    <menuitem id="menuitem_cancelUpgrade" command="cmd_cancelUpgrade"
+              label="&cmd.cancelUpgrade.label;" accesskey="&cmd.cancelUpgrade.accesskey;"/>
     <menuitem id="menuitem_checkUpdate" command="cmd_checkUpdate"
               label="&cmd.checkUpdate.label;" accesskey="&cmd.checkUpdate.accesskey;"/>
     <menuitem id="menuitem_enable" command="cmd_enable"

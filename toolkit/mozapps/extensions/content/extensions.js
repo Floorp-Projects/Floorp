@@ -1130,7 +1130,8 @@ function onAddonSelect(aEvent)
 // View Context Menus
 var gAddonContextMenus = ["menuitem_useTheme", "menuitem_options", "menuitem_homepage",
                           "menuitem_about",  "menuseparator_1", "menuitem_uninstall",
-                          "menuitem_cancelUninstall", "menuitem_checkUpdate",
+                          "menuitem_cancelUninstall", "menuitem_cancelInstall",
+                          "menuitem_cancelUpgrade", "menuitem_checkUpdate",
                           "menuitem_enable", "menuitem_disable"];
 var gUpdateContextMenus = ["menuitem_homepage", "menuitem_about", "menuseparator_1",
                            "menuitem_installUpdate", "menuitem_includeUpdate"];
@@ -1174,11 +1175,17 @@ function buildContextMenu(aEvent)
   var name = selectedItem ? selectedItem.getAttribute("name") : "";
   menuitem_about.setAttribute("label", getExtensionString("aboutAddon", [name]));
 
-  // When performing update or install tasks we don't support uninstall
+  /* When an update or install is pending allow canceling the update or install
+     and don't allow uninstall. When an uninstall is pending allow canceling the
+     uninstall.*/
   if (gView != "updates" && gView != "installs") {
     var canEnable = gExtensionsViewController.isCommandEnabled("cmd_cancelUninstall");
     document.getElementById("menuitem_cancelUninstall_clone").hidden = !canEnable;
-    document.getElementById("menuitem_uninstall_clone").hidden = canEnable;
+    var canCancelInstall = gExtensionsViewController.isCommandEnabled("cmd_cancelInstall");
+    document.getElementById("menuitem_cancelInstall_clone").hidden = !canCancelInstall;
+    var canCancelUpgrade = gExtensionsViewController.isCommandEnabled("cmd_cancelUpgrade");
+    document.getElementById("menuitem_cancelUpgrade_clone").hidden = !canCancelUpgrade;
+    document.getElementById("menuitem_uninstall_clone").hidden = canEnable || canCancelInstall || canCancelUpgrade;
   }
 
   switch (gView) {
@@ -1200,16 +1207,16 @@ function buildContextMenu(aEvent)
     document.getElementById("menuitem_options_clone").hidden = true;
     document.getElementById("menuitem_disable_clone").hidden = true;
     break;
-  case "locales":
   case "plugins":
+    document.getElementById("menuitem_about_clone").hidden = true;
+    document.getElementById("menuitem_uninstall_clone").hidden = true;
+    document.getElementById("menuitem_checkUpdate_clone").hidden = true;
+  case "locales":
     canEnable = gExtensionsViewController.isCommandEnabled("cmd_reallyEnable");
     document.getElementById("menuitem_enable_clone").hidden = !canEnable;
     document.getElementById("menuitem_disable_clone").hidden = canEnable;
     document.getElementById("menuitem_useTheme_clone").hidden = true;
     document.getElementById("menuitem_options_clone").hidden = true;
-    document.getElementById("menuitem_about_clone").hidden = true;
-    document.getElementById("menuitem_uninstall_clone").hidden = true;
-    document.getElementById("menuitem_checkUpdate_clone").hidden = true;
     break;
   case "updates":
     var includeUpdate = document.getAnonymousElementByAttribute(selectedItem, "anonid", "includeUpdate");
@@ -1597,6 +1604,27 @@ function closeEM() {
   closeWindow(true);
 }
 
+function confirmOperation(aName, aTitle, aQueryMsg, aAcceptBtn, aCancelBtn,
+                          aWarnMsg, aDependantItems) {
+  var params = {
+    message2: getExtensionString(aQueryMsg, [aName]),
+    title: getExtensionString(aTitle, [aName]),
+    buttons: {
+      accept: { label: getExtensionString(aAcceptBtn) },
+      cancel: { label: getExtensionString(aCancelBtn), focused: true }
+    }
+  }
+  if (aDependantItems.length > 0)
+    params.message1 = getExtensionString(aWarnMsg, [aName]);
+  var names = [];
+  for (var i = 0; i < aDependantItems.length; ++i)
+    names.push(aDependantItems[i].name + " " + aDependantItems[i].version);
+
+  window.openDialog("chrome://mozapps/content/extensions/list.xul", "", 
+                    "titlebar,modal,centerscreen", names, params);
+  return params.result == "accept";
+}
+
 var gExtensionsViewController = {
   supportsCommand: function (aCommand)
   {
@@ -1643,6 +1671,10 @@ var gExtensionsViewController = {
              !gExtensionsView.hasAttribute("update-operation");
     case "cmd_cancelUninstall":
       return selectedItem.opType == OP_NEEDS_UNINSTALL;
+    case "cmd_cancelInstall":
+      return selectedItem.opType == OP_NEEDS_INSTALL;
+    case "cmd_cancelUpgrade":
+      return selectedItem.opType == OP_NEEDS_UPGRADE;
     case "cmd_checkUpdate":
       return selectedItem.getAttribute("updateable") != "false" &&
              !gExtensionsView.hasAttribute("update-operation");
@@ -1829,24 +1861,10 @@ var gExtensionsViewController = {
       var name = aSelectedItem.getAttribute("name");
       var id = getIDFromResourceURI(aSelectedItem.id);
       var dependentItems = gExtensionManager.getDependentItemListForID(id, true, { });
-      var params = {
-        message2: getExtensionString("uninstallQueryMessage", [name]),
-        title: getExtensionString("uninstallTitle", [name]),
-        buttons: {
-          accept: { label: getExtensionString("uninstallButton"),
-                    focused: true },
-          cancel: { label: getExtensionString("cancelButton") }
-        }
-      }
-      if (dependentItems.length > 0)
-        params.message1 = getExtensionString("uninstallWarnDependMsg", [name]);
-      var names = [];
-      for (var i = 0; i < dependentItems.length; ++i)
-        names.push(dependentItems[i].name + " " + dependentItems[i].version);
-
-      window.openDialog("chrome://mozapps/content/extensions/list.xul", "", 
-                        "titlebar,modal,centerscreen", names, params);
-      if (params.result != "accept") 
+      var result = confirmOperation(name, "uninstallTitle", "uninstallQueryMessage",
+                                    "uninstallButton", "cancelButton",
+                                    "uninstallWarnDependMsg", dependentItems);
+      if (!result)
         return;
 
       if (aSelectedItem.type == nsIUpdateItem.TYPE_THEME) {
@@ -1876,6 +1894,39 @@ var gExtensionsViewController = {
       updateOptionalViews();
     },
 
+    cmd_cancelInstall: function (aSelectedItem)
+    {
+      var name = aSelectedItem.getAttribute("name");
+      var result = false;
+      // Confirm cancelling the operation
+      switch (aSelectedItem.opType)
+      {
+        case OP_NEEDS_INSTALL:
+          result = confirmOperation(name, "cancelInstallTitle", "cancelInstallQueryMessage",
+                                    "cancelInstallButton", "cancelCancelInstallButton",
+                                    null, []);
+          break;
+        case OP_NEEDS_UPGRADE:
+          result = confirmOperation(name, "cancelUpgradeTitle", "cancelUpgradeQueryMessage",
+                                    "cancelUpgradeButton", "cancelCancelUpgradeButton",
+                                    null, []);
+          break;
+      }
+      if (!result)
+        return;
+
+      gExtensionManager.cancelInstallItem(getIDFromResourceURI(aSelectedItem.id));
+      gExtensionsViewController.onCommandUpdate();
+      updateGlobalCommands();
+      gExtensionsView.selectedItem.focus();
+      updateOptionalViews();
+    },
+
+    cmd_cancelUpgrade: function (aSelectedItem)
+    {
+      this.cmd_cancelInstall(aSelectedItem);
+    },
+
     cmd_disable: function (aSelectedItem)
     {
       if (aSelectedItem.getAttribute("plugin") == "true") {
@@ -1888,24 +1939,10 @@ var gExtensionsViewController = {
 
       if (dependentItems.length > 0) {
         var name = aSelectedItem.getAttribute("name");
-        var message = getExtensionString("disableWarningDependMessage", [name]);
-        var params = {
-          message1: message,
-          message2: getExtensionString("disableQueryMessage", [name]),
-          title: getExtensionString("disableTitle", [name]),
-          buttons: {
-            accept: { label: getExtensionString("disableButton"),
-                      focused: true },
-            cancel: { label: getExtensionString("cancelButton") }
-          }
-        }
-        var names = [];
-        for (var i = 0; i < dependentItems.length; ++i)
-          names.push(dependentItems[i].name + " " + dependentItems[i].version);
-
-        window.openDialog("chrome://mozapps/content/extensions/list.xul", "", 
-                          "titlebar,modal,centerscreen", names, params);
-        if (params.result != "accept") 
+        var result = confirmOperation(name, "disableTitle", "disableQueryMessage",
+                                      "disableButton", "cancelButton",
+                                      "disableWarningDependMessage", dependentItems);
+        if (!result)
           return;
       }
       gExtensionManager.disableItem(id);
