@@ -57,7 +57,7 @@ native nsRectRef(nsIntRect &);
  * @author Stuart Parmenter <pavlov@netscape.com>
  * @version 0.1
  */
-[scriptable, uuid(f6d00ee7-defc-4101-b2dc-e72cf4c37c3c)]
+[scriptable, uuid(2502c898-73bd-4da5-8fae-21cf7a492f64)]
 interface gfxIImageFrame : nsISupports
 {
   /**
@@ -187,15 +187,6 @@ interface gfxIImageFrame : nsISupports
 
 
   /* GIF Specific methods.  These should be in a different class or interface. */
-
-  /**
-   * Blit this frame into another frame. Used for GIF animation compositing
-   */
-  void drawTo(in gfxIImageFrame aDst,
-              in PRInt32 aDX,
-              in PRInt32 aDY,
-              in PRInt32 aDWidth,
-              in PRInt32 aDHeight);
 
   /**
    * Represents the number of milliseconds until the next frame should be displayed.
