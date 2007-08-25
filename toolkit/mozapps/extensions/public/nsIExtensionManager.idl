@@ -197,7 +197,7 @@ interface nsIInstallLocation : nsISupports
  * XXXben - Some of this stuff should go into a management-ey interface, 
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(c2aef3c3-8ce1-4470-94e4-1167e5ca8928)]
+[scriptable, uuid(f5c34a77-3487-4b70-a65a-6727fa066324)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -405,6 +405,14 @@ interface nsIExtensionManager : nsISupports
    *          The ID of an item to move an item to.
    */
   void moveToIndexOf(in AString movingID, in AString destinationID);
+
+  /**
+   * Cancels a pending install or upgrade of an item. If the item does
+   * not have a pending install or upgrade then this will do nothing.
+   * @param   id
+   *          The ID of the item.
+   */
+  void cancelInstallItem(in AString id);
 
   /**
    * Cancels a pending uninstall of an item

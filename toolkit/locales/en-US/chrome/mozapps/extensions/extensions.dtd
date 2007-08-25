@@ -67,12 +67,22 @@
 <!ENTITY cmd.cancelUninstall.label        "Cancel Uninstall">
 <!ENTITY cmd.cancelUninstall.accesskey    "C">
 <!ENTITY cmd.cancelUninstall.tooltip      "Cancel the uninstall of this Add-on">
+<!ENTITY cmd.cancelInstall.label          "Cancel Install">
+<!ENTITY cmd.cancelInstall.accesskey      "C">
+<!ENTITY cmd.cancelInstall.tooltip        "Cancel the install of this Add-on">
+<!ENTITY cmd.cancelUpgrade.label          "Cancel Upgrade">
+<!ENTITY cmd.cancelUpgrade.accesskey      "C">
+<!ENTITY cmd.cancelUpgrade.tooltip        "Cancel the upgrade of this Add-on">
 <!ENTITY cmd.installUpdate.label          "Install Update">
 <!ENTITY cmd.installUpdate.accesskey      "I">
 <!ENTITY cmd.installUpdate.tooltip        "Install an update for this Add-on">
 <!-- The selected add-on's cancel action button label -->
 <!ENTITY cancel.label                     "Cancel">
 <!ENTITY cancel.accesskey                 "C">
+<!ENTITY cancelInstall.label              "Cancel">
+<!ENTITY cancelInstall.accesskey          "C">
+<!ENTITY cancelUpgrade.label              "Cancel">
+<!ENTITY cancelUpgrade.accesskey          "C">
 
 <!-- Only displayed in the selected Add-on's context menu -->
 <!ENTITY cmd.homepage.label               "Visit Home Page">
