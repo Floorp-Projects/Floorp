@@ -178,7 +178,8 @@ gfxWindowsFont::CairoScaledFont()
         cairo_font_options_destroy(fontOptions);
     }
 
-    NS_ASSERTION(mScaledFont || mAdjustedSize == 0.0,
+    NS_ASSERTION(mAdjustedSize == 0.0 ||
+                 cairo_scaled_font_status(mScaledFont) == CAIRO_STATUS_SUCCESS,
                  "Failed to make scaled font");
 
     return mScaledFont;
@@ -438,11 +439,13 @@ PRBool
 gfxWindowsFont::SetupCairoFont(cairo_t *aCR)
 {
     cairo_scaled_font_t *scaledFont = CairoScaledFont();
-    if (NS_LIKELY(scaledFont)) {
-        cairo_set_scaled_font(aCR, scaledFont);
-        return PR_TRUE;
+    if (cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
+        // Don't cairo_set_scaled_font as that would propagate the error to
+        // the cairo_t, precluding any further drawing.
+        return PR_FALSE;
     }
-    return PR_FALSE;
+    cairo_set_scaled_font(aCR, scaledFont);
+    return PR_TRUE;
 }
 
 /**********************************************************************
@@ -1130,8 +1133,7 @@ public:
         if (mCurrentFont != aFont) {
             mCurrentFont = aFont;
             cairo_scaled_font_t *scaledFont = mCurrentFont->CairoScaledFont();
-            if (scaledFont)
-                cairo_win32_scaled_font_done_font(scaledFont);
+            cairo_win32_scaled_font_done_font(scaledFont);
             mFontSelected = PR_FALSE;
         }
     }
@@ -1149,8 +1151,7 @@ public:
         cairo_set_font_face(cr, mCurrentFont->CairoFontFace());
         cairo_set_font_size(cr, mCurrentFont->GetAdjustedSize());
         cairo_scaled_font_t *scaledFont = mCurrentFont->CairoScaledFont();
-        if (scaledFont)
-            cairo_win32_scaled_font_select_font(scaledFont, mDC);
+        cairo_win32_scaled_font_select_font(scaledFont, mDC);
 
         mFontSelected = PR_TRUE;
     }

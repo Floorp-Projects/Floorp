@@ -99,6 +99,8 @@ gfxAtsuiFont::gfxAtsuiFont(ATSUFontID fontID,
     cairo_font_options_t *fontOptions = cairo_font_options_create();
     mScaledFont = cairo_scaled_font_create(mFontFace, &sizeMatrix, &ctm, fontOptions);
     cairo_font_options_destroy(fontOptions);
+    NS_ASSERTION(cairo_scaled_font_status(mScaledFont) == CAIRO_STATUS_SUCCESS,
+                 "Failed to create scaled font");
 }
 
 void
@@ -227,11 +229,13 @@ PRBool
 gfxAtsuiFont::SetupCairoFont(cairo_t *aCR)
 {
     cairo_scaled_font_t *scaledFont = CairoScaledFont();
-    if (NS_LIKELY(scaledFont)) {
-        cairo_set_scaled_font(aCR, scaledFont);
-        return PR_TRUE;
+    if (cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
+        // Don't cairo_set_scaled_font as that would propagate the error to
+        // the cairo_t, precluding any further drawing.
+        return PR_FALSE;
     }
-    return PR_FALSE;
+    cairo_set_scaled_font(aCR, scaledFont);
+    return PR_TRUE;
 }
 
 nsString
@@ -712,7 +716,7 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
             ++regularGlyphCount;
             displayGlyph = glyph;
         }
-        if (i > 0 && aRun->IsRightToLeft() != (offset < aGlyphs[i - 1].originalOffset)) {
+        if (i > 0 && aRun->IsRightToLeft() != (offset < aGlyphs[i - 1].originalOffset)) { // XXXkt allow == in RTL
             inOrder = PR_FALSE;
         }
     }
