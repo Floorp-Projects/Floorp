@@ -57,7 +57,7 @@ PRLogModuleInfo * gWyciwygLog = nsnull;
 nsWyciwygChannel::nsWyciwygChannel()
   : mStatus(NS_OK),
     mIsPending(PR_FALSE),
-    mCharsetSet(PR_FALSE),
+    mNeedToWriteCharset(PR_FALSE),
     mCharsetSource(kCharsetUninitialized),
     mContentLength(-1),
     mLoadFlags(LOAD_NORMAL)
@@ -350,12 +350,9 @@ nsWyciwygChannel::WriteToCacheEntry(const nsAString &aData)
     mCacheEntry->SetSecurityInfo(mSecurityInfo);
   }
 
-  if (mCharsetSet) {
-    mCacheEntry->SetMetaDataElement("charset", mCharset.get());
-
-    nsCAutoString source;
-    source.AppendInt(mCharsetSource);
-    mCacheEntry->SetMetaDataElement("charset-source", source.get());
+  if (mNeedToWriteCharset) {
+    WriteCharsetAndSourceToCache(mCharsetSource, mCharset);
+    mNeedToWriteCharset = PR_FALSE;
   }
   
   PRUint32 out;
@@ -406,9 +403,13 @@ nsWyciwygChannel::SetCharsetAndSource(PRInt32 aSource,
 {
   NS_ENSURE_ARG(!aCharset.IsEmpty());
 
-  mCharsetSet = PR_TRUE;
-  mCharsetSource = aSource;
-  mCharset = aCharset;
+  if (mCacheEntry) {
+    WriteCharsetAndSourceToCache(aSource, PromiseFlatCString(aCharset));
+  } else {
+    mNeedToWriteCharset = PR_TRUE;
+    mCharsetSource = aSource;
+    mCharset = aCharset;
+  }
 
   return NS_OK;
 }
@@ -636,6 +637,19 @@ nsWyciwygChannel::ReadFromCache()
 
   // Pump the cache data downstream
   return mPump->AsyncRead(this, nsnull);
+}
+
+void
+nsWyciwygChannel::WriteCharsetAndSourceToCache(PRInt32 aSource,
+                                               const nsCString& aCharset)
+{
+  NS_PRECONDITION(mCacheEntry, "Better have cache entry!");
+  
+  mCacheEntry->SetMetaDataElement("charset", aCharset.get());
+
+  nsCAutoString source;
+  source.AppendInt(aSource);
+  mCacheEntry->SetMetaDataElement("charset-source", source.get());
 }
 
 // vim: ts=2 sw=2
