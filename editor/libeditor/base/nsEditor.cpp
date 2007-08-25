@@ -4789,10 +4789,6 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
     return NS_ERROR_NULL_POINTER;
   *aTxn = nsnull;
 
-#ifdef DEBUG_akkana
-  NS_ASSERTION(aAction != eNextWord && aAction != ePreviousWord && aAction != eToEndOfLine, "CreateTxnForDeleteSelection: unsupported action!");
-#endif
-
   nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mSelConWeak);
   if (!selCon) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsISelection> selection;
@@ -4827,18 +4823,23 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
           range->GetCollapsed(&isCollapsed);
           if (!isCollapsed)
           {
-            DeleteRangeTxn *txn;
-            result = TransactionFactory::GetNewTransaction(DeleteRangeTxn::GetCID(), (EditTxn **)&txn);
+            nsRefPtr<EditTxn> editTxn;
+            result =
+              TransactionFactory::GetNewTransaction(DeleteRangeTxn::GetCID(),
+                                                    getter_AddRefs(editTxn));
+            nsRefPtr<DeleteRangeTxn> txn =
+              static_cast<DeleteRangeTxn*>(editTxn.get());
             if (NS_SUCCEEDED(result) && txn)
             {
               txn->Init(this, range, &mRangeUpdater);
               (*aTxn)->AppendChild(txn);
-              NS_RELEASE(txn);
             }
             else
               result = NS_ERROR_OUT_OF_MEMORY;
           }
-          else
+          // Same with range as with selection; if it is collapsed and action
+          // is eNone, do nothing.
+          else if (aAction != eNone)
           { // we have an insertion point.  delete the thing in front of it or behind it, depending on aAction
             result = CreateTxnForDeleteInsertionPoint(range, aAction, *aTxn, aNode, aOffset, aLength);
           }
@@ -5022,14 +5023,14 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
   {
     if (nodeAsText)
     { // we have text, so delete a char at the proper offset
-      DeleteTextTxn *txn;
-      result = CreateTxnForDeleteCharacter(nodeAsText, offset, aAction, &txn);
+      nsRefPtr<DeleteTextTxn> txn;
+      result = CreateTxnForDeleteCharacter(nodeAsText, offset, aAction,
+                                           getter_AddRefs(txn));
       if (NS_SUCCEEDED(result)) {
         aTxn->AppendChild(txn);
         NS_ADDREF(*aNode = node);
         *aOffset = txn->GetOffset();
         *aLength = txn->GetNumCharsToDelete();
-        NS_RELEASE(txn);
       }
     }
     else
@@ -5055,25 +5056,25 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
           {
             selectedNodeAsText->GetLength(&position);
           }
-          DeleteTextTxn *delTextTxn;
+          nsRefPtr<DeleteTextTxn> delTextTxn;
           result = CreateTxnForDeleteCharacter(selectedNodeAsText, position,
-                                               aAction, &delTextTxn);
+                                               aAction,
+                                               getter_AddRefs(delTextTxn));
           if (NS_FAILED(result))  { return result; }
           if (!delTextTxn) { return NS_ERROR_NULL_POINTER; }
           aTxn->AppendChild(delTextTxn);
           NS_ADDREF(*aNode = selectedNode);
           *aOffset = delTextTxn->GetOffset();
           *aLength = delTextTxn->GetNumCharsToDelete();
-          NS_RELEASE(delTextTxn);
         }
         else
         {
-          DeleteElementTxn *delElementTxn;
-          result = CreateTxnForDeleteElement(selectedNode, &delElementTxn);
+          nsRefPtr<DeleteElementTxn> delElementTxn;
+          result = CreateTxnForDeleteElement(selectedNode,
+                                             getter_AddRefs(delElementTxn));
           if (NS_FAILED(result))  { return result; }
           if (!delElementTxn) { return NS_ERROR_NULL_POINTER; }
           aTxn->AppendChild(delElementTxn);
-          NS_RELEASE(delElementTxn);
           NS_ADDREF(*aNode = selectedNode);
         }
       }
