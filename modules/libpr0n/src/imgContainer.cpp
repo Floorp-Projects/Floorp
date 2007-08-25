@@ -663,8 +663,7 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
       CopyFrameImage(aPrevFrame, mAnim->compositingFrame);
     } else {
       ClearFrame(mAnim->compositingFrame);
-      aPrevFrame->DrawTo(mAnim->compositingFrame, prevFrameRect.x, prevFrameRect.y,
-                         prevFrameRect.width, prevFrameRect.height);
+      DrawFrameTo(aPrevFrame, mAnim->compositingFrame, prevFrameRect);
       needToBlankComposite = PR_FALSE;
     }
   }
@@ -721,8 +720,7 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
   }
 
   // blit next frame into it's correct spot
-  aNextFrame->DrawTo(mAnim->compositingFrame, nextFrameRect.x, nextFrameRect.y,
-                     nextFrameRect.width, nextFrameRect.height);
+  DrawFrameTo(aNextFrame, mAnim->compositingFrame, nextFrameRect);
   // Set timeout of CompositeFrame to timeout of frame we just composed
   // Bug 177948
   PRInt32 timeout;
@@ -795,7 +793,7 @@ void imgContainer::ClearFrame(gfxIImageFrame *aFrame, nsIntRect &aRect)
 // Whether we succeed or fail will not cause a crash, and there's not much
 // we can do about a failure, so there we don't return a nsresult
 PRBool imgContainer::CopyFrameImage(gfxIImageFrame *aSrcFrame,
-                                       gfxIImageFrame *aDstFrame)
+                                    gfxIImageFrame *aDstFrame)
 {
   PRUint8* aDataSrc;
   PRUint8* aDataDest;
@@ -819,10 +817,7 @@ PRBool imgContainer::CopyFrameImage(gfxIImageFrame *aSrcFrame,
   aDstFrame->UnlockImageData();
 
   // Tell the image that it's data has been updated
-  nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(aDstFrame));
-  if (!ireq)
-    return PR_FALSE;
-  nsCOMPtr<nsIImage> img(do_GetInterface(ireq));
+  nsCOMPtr<nsIImage> img(do_GetInterface(aDstFrame));
   if (!img)
     return PR_FALSE;
   nsIntRect r;
@@ -831,6 +826,41 @@ PRBool imgContainer::CopyFrameImage(gfxIImageFrame *aSrcFrame,
 
   return PR_TRUE;
 }
+
+//******************************************************************************
+nsresult imgContainer::DrawFrameTo(gfxIImageFrame *aSrc,
+                                   gfxIImageFrame *aDst, 
+                                   nsIntRect& aDstRect)
+{
+  if (!aSrc || !aDst)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIImage> srcImg(do_GetInterface(aSrc));
+  nsRefPtr<gfxASurface> srcSurf;
+  srcImg->GetSurface(getter_AddRefs(srcSurf));
+
+  nsCOMPtr<nsIImage> dstImg(do_GetInterface(aDst));
+  nsRefPtr<gfxASurface> dstSurf;
+  dstImg->GetSurface(getter_AddRefs(dstSurf));
+
+  gfxContext dst(dstSurf);
+  dst.NewPath();
+  // We don't use PixelSnappedRectangleAndSetPattern because if
+  // these coords aren't already pixel aligned, we've lost
+  // before we've even begun.
+  dst.Translate(gfxPoint(aDstRect.x, aDstRect.y));
+  dst.Rectangle(gfxRect(0, 0, aDstRect.width, aDstRect.height), PR_TRUE);
+
+  nsIntRect srcRect;
+  aSrc->GetRect(srcRect);
+  dst.Scale(double(aDstRect.width) / srcRect.width, 
+            double(aDstRect.height) / srcRect.height);
+  dst.SetSource(srcSurf);
+  dst.Paint();
+
+  return NS_OK;
+}
+
 
 /********* Methods to implement lazy allocation of nsIProperties object *************/
 NS_IMETHODIMP imgContainer::Get(const char *prop, const nsIID & iid, void * *result)
