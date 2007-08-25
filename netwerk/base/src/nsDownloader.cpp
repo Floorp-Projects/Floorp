@@ -75,7 +75,10 @@ nsDownloader::~nsDownloader()
         // release the sink first since it may still hold an open file
         // descriptor to mLocation.  this needs to happen before the
         // file can be removed otherwise the Remove call will fail.
-        mSink = 0;
+        if (mSink) {
+            mSink->Close();
+            mSink = nsnull;
+        }
 
         nsresult rv = mLocation->Remove(PR_FALSE);
         if (NS_FAILED(rv))
@@ -151,6 +154,10 @@ nsDownloader::OnStopRequest(nsIRequest  *request,
                 caching->GetCacheToken(getter_AddRefs(mCacheToken));
             }
         }
+    }
+    else if (mSink) {
+        mSink->Close();
+        mSink = nsnull;
     }
 
     mObserver->OnDownloadComplete(this, request, ctxt, status, mLocation);
