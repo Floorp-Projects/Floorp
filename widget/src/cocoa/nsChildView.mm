@@ -1560,18 +1560,6 @@ NS_IMETHODIMP nsChildView::GetAttention(PRInt32 aCycleCount)
 }
 
 
-NS_IMETHODIMP nsChildView::SetAnimatedResize(PRUint16 aAnimation)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP nsChildView::GetAnimatedResize(PRUint16* aAnimation)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
 #pragma mark -
 
 
