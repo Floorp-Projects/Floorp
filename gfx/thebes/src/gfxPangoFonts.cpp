@@ -473,8 +473,9 @@ gfxPangoFont::GetCharSize(char aChar, gfxSize& aInkSize, gfxSize& aLogSize,
     PangoAnalysis analysis;
     // Initialize new fields, gravity and flags in pango 1.16
     // (or padding in 1.14).
-    // See bug #378700 for why we are using memset instead of { 0 }
-    // aggregate initialization.
+    // Use memset instead of { 0 } aggregate initialization or placement new
+    // default initialization so that padding (which may have meaning in other
+    // versions) is initialized.
     memset(&analysis, 0, sizeof(analysis));
     analysis.font = GetPangoFont();
     analysis.language = pango_language_from_string("en");
@@ -924,22 +925,23 @@ gfxPangoFont::SetupCairoFont(cairo_t *aCR)
         // Need to validate that its CTM is OK
         cairo_matrix_t fontCTM;
         cairo_scaled_font_get_ctm(mCairoFont, &fontCTM);
-        if (fontCTM.xx == currentCTM.xx && fontCTM.yy == currentCTM.yy &&
-            fontCTM.xy == currentCTM.xy && fontCTM.yx == currentCTM.yx) {
-            cairo_set_scaled_font(aCR, mCairoFont);
-            return PR_TRUE;
+        if (fontCTM.xx != currentCTM.xx || fontCTM.yy != currentCTM.yy ||
+            fontCTM.xy != currentCTM.xy || fontCTM.yx != currentCTM.yx) {
+            // Just recreate it from scratch, simplest way
+            cairo_scaled_font_destroy(mCairoFont);
+            mCairoFont = nsnull;
         }
-
-        // Just recreate it from scratch, simplest way
-        cairo_scaled_font_destroy(mCairoFont);
     }
-
-    mCairoFont = CreateScaledFont(aCR, &currentCTM, GetPangoFont());
-    if (NS_LIKELY(mCairoFont)) {
-        cairo_set_scaled_font(aCR, mCairoFont);
-        return PR_TRUE;
+    if (!mCairoFont) {
+        mCairoFont = CreateScaledFont(aCR, &currentCTM, GetPangoFont());
     }
-    return PR_FALSE;
+    if (cairo_scaled_font_status(mCairoFont) != CAIRO_STATUS_SUCCESS) {
+        // Don't cairo_set_scaled_font as that would propagate the error to
+        // the cairo_t, precluding any further drawing.
+        return PR_FALSE;
+    }
+    cairo_set_scaled_font(aCR, mCairoFont);
+    return PR_TRUE;
 }
 
 static void
