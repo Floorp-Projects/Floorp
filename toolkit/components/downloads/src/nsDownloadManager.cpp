@@ -1528,6 +1528,7 @@ nsDownload::SetState(DownloadState aState)
   switch (aState) {
     case nsIDownloadManager::DOWNLOAD_BLOCKED:
     case nsIDownloadManager::DOWNLOAD_CANCELED:
+    case nsIDownloadManager::DOWNLOAD_FAILED:
       mDownloadManager->CompleteDownload(this);
       break;
 #ifdef XP_WIN
