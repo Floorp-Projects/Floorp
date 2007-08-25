@@ -186,7 +186,7 @@ interface nsINetUtil : nsISupports
    * Expands URL escape sequences
    *
    * @param aStr the URL to be unescaped
-   * @param aFlags only ESCAPE_URL_ONLY_NONASCII, ESCAPE_URL_SKIP_CONTROL and 
+   * @param aFlags only ESCAPE_URL_ONLY_NONASCII and ESCAPE_URL_SKIP_CONTROL
    *               are recognized.  If |aFlags| is 0 all escape sequences are 
    *               unescaped
    * @return unescaped string
