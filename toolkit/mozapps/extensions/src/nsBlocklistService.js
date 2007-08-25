@@ -43,6 +43,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 const kELEMENT_NODE                   = Ci.nsIDOMNode.ELEMENT_NODE;
 const TOOLKIT_ID                      = "toolkit@mozilla.org"
 const KEY_PROFILEDIR                  = "ProfD";
@@ -62,10 +64,6 @@ const MODE_TRUNCATE = 0x20;
 
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
-
-const CID = Components.ID("{66354bc9-7ed1-4692-ae1d-8da97d6b205e}");
-const CONTRACT_ID = "@mozilla.org/extensions/blocklist;1"
-const CLASS_NAME = "Blocklist Service";
 
 var gApp = null;
 var gPref = null;
@@ -558,14 +556,16 @@ Blocklist.prototype = {
     phs.getPluginTags({ }).forEach(this._checkPlugin, this);
   },
 
-  QueryInterface: function(aIID) {
-    if (!aIID.equals(Ci.nsIObserver) &&
-        !aIID.equals(Ci.nsIBlocklistService) &&
-        !aIID.equals(Ci.nsITimerCallback) &&
-        !aIID.equals(Ci.nsISupports))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
+  classDescription: "Blocklist Service",
+  contractID: "@mozilla.org/extensions/blocklist;1",
+  classID: Components.ID("{66354bc9-7ed1-4692-ae1d-8da97d6b205e}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsIBlocklistService,
+                                         Ci.nsITimerCallback]),
+  _xpcom_categories: [{
+    category: "app-startup",
+    service: true
+  }]
 };
 
 /**
@@ -650,47 +650,6 @@ BlocklistItemData.prototype = {
   }
 };
 
-const BlocklistFactory = {
-  createInstance: function(aOuter, aIID) {
-    if (aOuter != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-
-    return (new Blocklist()).QueryInterface(aIID);
-  }
-};
-
-const gModule = {
-  registerSelf: function(aCompMgr, aFileSpec, aLocation, aType) {
-    aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
-    aCompMgr.registerFactoryLocation(CID, CLASS_NAME, CONTRACT_ID,
-                                     aFileSpec, aLocation, aType);
-
-    var catMan = Cc["@mozilla.org/categorymanager;1"].
-                 getService(Ci.nsICategoryManager);
-    catMan.addCategoryEntry("app-startup", CLASS_NAME, "service," + CONTRACT_ID, true, true);
-  },
-
-  unregisterSelf: function(aCompMgr, aLocation, aType) {
-    aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
-    aCompMgr.unregisterFactoryLocation(CID, aLocation);
-
-    var catMan = Cc["@mozilla.org/categorymanager;1"].
-                 getService(Ci.nsICategoryManager);
-    catMan.deleteCategoryEntry("app-startup", "service," + CONTRACT_ID, true);
-  },
-
-  getClassObject: function(aCompMgr, aCID, aIID) {
-    if (aCID.equals(CID))
-      return BlocklistFactory;
-
-    throw Cr.NS_ERROR_NOT_REGISTERED;
-  },
-
-  canUnload: function(aCompMgr) {
-    return true;
-  }
-};
-
 function NSGetModule(aCompMgr, aFileSpec) {
-  return gModule;
+  return XPCOMUtils.generateModule([Blocklist]);
 }
