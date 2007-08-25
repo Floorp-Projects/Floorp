@@ -86,10 +86,13 @@ toolbar[mode="text"] .toolbarbutton-text {
 /* ::::: toolbar decorations ::::: */
 
 toolbarseparator {
-  margin : 2px 0.2em;
-  border-right : 1px solid ThreeDHighlight;
-  border-left : 1px solid ThreeDShadow;
-  width : 2px;
+  -moz-appearance: separator;
+  border-top: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  -moz-border-left-colors  : transparent transparent ThreeDShadow;
+  -moz-border-right-colors : transparent transparent ThreeDHighlight;
 }
 
 toolbarspacer {
