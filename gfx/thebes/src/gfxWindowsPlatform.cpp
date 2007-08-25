@@ -70,6 +70,8 @@
 int PR_CALLBACK
 gfxWindowsPlatform::PrefChangedCallback(const char *aPrefName, void *closure)
 {
+    // XXX this could be made to only clear out the cache for the prefs that were changed
+    // but it probably isn't that big a deal.
     gfxWindowsPlatform *plat = static_cast<gfxWindowsPlatform *>(closure);
     plat->mPrefFonts.Clear();
     return 0;
@@ -87,6 +89,7 @@ gfxWindowsPlatform::gfxWindowsPlatform()
     nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
     pref->RegisterCallback("font.", PrefChangedCallback, this);
     pref->RegisterCallback("font.name-list.", PrefChangedCallback, this);
+    pref->RegisterCallback("intl.accept_languages", PrefChangedCallback, this);
     // don't bother unregistering.  We'll get shutdown after the pref service
 }
 
