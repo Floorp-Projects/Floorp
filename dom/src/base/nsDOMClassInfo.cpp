@@ -4463,7 +4463,9 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 #endif
 
-  if (win->IsOuterWindow() && !ObjectIsNativeWrapper(cx, obj)) {
+  JSObject *realObj;
+  wrapper->GetJSObject(&realObj);
+  if (win->IsOuterWindow() && obj == realObj) {
     // XXXjst: Do security checks here when we remove the security
     // checks on the inner window.
 
@@ -4542,7 +4544,9 @@ nsWindowSH::AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 #endif
 
-  if (win->IsOuterWindow() && !ObjectIsNativeWrapper(cx, obj) ) {
+  JSObject *realObj;
+  wrapper->GetJSObject(&realObj);
+  if (win->IsOuterWindow() && obj == realObj) {
     // XXXjst: Do security checks here when we remove the security
     // checks on the inner window.
 
@@ -5571,7 +5575,9 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     }
 
     JSObject *innerObj;
-    if (!ObjectIsNativeWrapper(cx, obj) &&
+    JSObject *realObj;
+    wrapper->GetJSObject(&realObj);
+    if (realObj == obj &&
         innerWin && (innerObj = innerWin->GetGlobalJSObject())) {
 #ifdef DEBUG_SH_FORWARDING
       printf(" --- Forwarding resolve to inner window %p\n", (void *)innerWin);
