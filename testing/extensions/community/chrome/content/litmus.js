@@ -106,7 +106,7 @@
         litmus.disableAll();
         litmus.dialogActive = true;
         var newWindow = window.openDialog('chrome://qa/content/tabs/selecttests.xul', '_blank', 'chrome,all,dialog=yes',
-                                          litmus.readStateFromPref, litmus.handleDialogCancel, litmus.undisableAll);
+                                          litmus.readStateFromPref, litmus.handleDialogCancel, litmus.handleDialogOK);
     },
     
     handleDialogCancel : function() {
@@ -361,7 +361,7 @@ function Sysconfig(aProduct, aPlatform, aOpsys, aBranch, aBuildid, aLocale) {
  
 Sysconfig.prototype = {
 	product: null,
-	platorm: null,
+	platform: null,
 	opsys: null,
 	branch: null,
 	buildid: null,
