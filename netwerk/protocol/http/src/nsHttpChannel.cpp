@@ -856,16 +856,6 @@ nsHttpChannel::ProcessResponse()
             rv = ProcessNormal();
         }
         break;
-    case 412: // Precondition failed
-    case 416: // Invalid range
-        if (mResuming) {
-            LOG(("Resuming and got %i status, aborting [this=%p]\n",
-                 httpStatus, this));
-            Cancel(NS_ERROR_ENTITY_CHANGED);
-            rv = CallOnStartRequest();
-            break;
-        }
-        // fall through
     default:
         rv = ProcessNormal();
         break;
@@ -923,6 +913,13 @@ nsHttpChannel::ProcessNormal()
         if (NS_FAILED(rv)) {
             // If creating an entity id is not possible -> error
             Cancel(NS_ERROR_NOT_RESUMABLE);
+        }
+        else if (mResponseHead->Status() != 206) {
+            // Probably 404 Not Found, 412 Precondition Failed or
+            // 416 Invalid Range -> error
+            LOG(("Unexpected response status while resuming, aborting [this=%p]\n",
+                 this));
+            Cancel(NS_ERROR_ENTITY_CHANGED);
         }
         // If we were passed an entity id, verify it's equal to the server's
         else if (!mEntityID.IsEmpty()) {
