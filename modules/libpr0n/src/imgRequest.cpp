@@ -76,7 +76,6 @@ NS_IMPL_ISUPPORTS6(imgRequest, imgILoad,
                    nsISupportsWeakReference)
 
 imgRequest::imgRequest() : 
-  mObservers(0),
   mLoading(PR_FALSE), mProcessing(PR_FALSE), mHadLastPart(PR_FALSE),
   mNetworkStatus(0), mImageStatus(imgIRequest::STATUS_NONE), mState(0),
   mCacheId(0), mValidator(nsnull), mIsMultiPartChannel(PR_FALSE)
