@@ -85,7 +85,10 @@ protected:
     nsresult OpenCacheEntry(const nsACString & aCacheKey, nsCacheAccessMode aWriteAccess, PRBool * aDelayFlag = nsnull);
        
     nsresult                            mStatus;
-    PRBool                              mIsPending;
+    PRPackedBool                        mIsPending;
+    PRPackedBool                        mCharsetSet;
+    PRInt32                             mCharsetSource;
+    nsCString                           mCharset;
     PRInt32                             mContentLength;
     PRUint32                            mLoadFlags;
     nsCOMPtr<nsIURI>                    mURI;
