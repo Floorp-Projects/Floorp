@@ -414,7 +414,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
 
   nsresult rv = NS_ERROR_FAILURE;
 #ifndef MOZ_ENABLE_POSTSCRIPT
-  nsPrintJobFactoryGTK::CreatePrintJob(this, mPrintJob);
+  rv = nsPrintJobFactoryGTK::CreatePrintJob(this, mPrintJob);
 #endif
   if (NS_FAILED(rv))
     return rv;
