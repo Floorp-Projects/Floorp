@@ -1271,8 +1271,8 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
   font-weight: bold;
 }
 
-.tabbrowser-tab[selected="true"] > .tab-image-middle > .tab-text {
-  opacity: 1.0 !important;
+.tabbrowser-tab[selected="true"] > .tab-image-middle > .tab-icon {
+  cursor: -moz-grab;
 }
 
 .tabbrowser-tab > .tab-image-left {
@@ -1432,13 +1432,11 @@ tabpanels {
 .tab-close-button:hover,
 .tabbrowser-tab[selected="true"] > .tab-close-button:hover {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
-  opacity: 1.0;
 }
 
 .tab-close-button:hover:active,
 .tabbrowser-tab[selected="true"] > .tab-close-button:hover:active {
   -moz-image-region: rect(0px, 48px, 16px, 32px);
-  opacity: 1.0;
 }
 
 .tabbrowser-tab > .tab-close-button {
