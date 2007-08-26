@@ -35,9 +35,6 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifdef DEBUG_smontagu
-#define DEBUG_pavlov
-#endif
 
 //#define FORCE_UNISCRIBE 1
 #define FORCE_PR_LOG
@@ -919,12 +916,26 @@ public:
 
         const PRUnichar *str = mAlternativeString ? mAlternativeString : mRangeString;
 
+        SCRIPT_ANALYSIS sa = mScriptItem->a;
+        sa.fLogicalOrder = PR_TRUE;
+        /*
+          fLinkBefore and fLinkAfter in the SCRIPT_ANALYSIS structure refer to
+          the whole item, so if the current range begins after the beginning
+          of the item or ends before the end of the item, we need to override
+          them here.
+          This assumes that we won't split an item into ranges between two
+          characters that need to be shaped together.
+        */
+        if (mRangeString > mItemString)
+            sa.fLinkBefore = PR_FALSE;
+        if (mRangeString + mRangeLength < mItemString + mItemLength)
+            sa.fLinkAfter = PR_FALSE;
+
         while (PR_TRUE) {
-            mScriptItem->a.fLogicalOrder = PR_TRUE;
 
             rv = ScriptShape(shapeDC, mCurrentFont->ScriptCache(),
                              str, mRangeLength,
-                             mMaxGlyphs, &mScriptItem->a,
+                             mMaxGlyphs, &sa,
                              mGlyphs, mClusters,
                              mAttr, &mNumGlyphs);
 
