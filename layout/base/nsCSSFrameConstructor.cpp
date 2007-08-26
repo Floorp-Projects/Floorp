@@ -10982,7 +10982,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForIBSplitterFrame(nsIFrame* aFrame
   }
 
 #ifdef DEBUG
-  if (gNoisyContentUpdates || 1) {
+  if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::MaybeRecreateContainerForIBSplitterFrame: "
            "frame=");
     nsFrame::ListTag(stdout, parent);
