@@ -180,15 +180,13 @@ private:
 
     nsIThread  *mThread;
     PRFileDesc *mThreadEvent;
-    PRLock     *mThreadEventLock;
-                            // protects mThreadEvent, which may change
+                            // protected by mLock.  mThreadEvent may change
                             // if the old pollable event is broken.  only
-                            // one thread may change mThreadEvent; that
-                            // thread needs to lock mThreadEventLock only
-                            // when it changes mThreadEvent.  other threads
-                            // don't change mThreadEvent; they need to lock
-                            // mThreadEventLock whenever they access
-                            // mThreadEvent. 
+                            // the socket thread may change mThreadEvent;
+                            // it needs to lock mLock only when it changes
+                            // mThreadEvent.  other threads don't change
+                            // mThreadEvent; they need to lock mLock
+                            // whenever they access mThreadEvent.
     PRBool      mAutodialEnabled;
                             // pref to control autodial code
 
