@@ -2501,8 +2501,9 @@
                          xbl:inherits="orient"
                          anonid="scrollbutton-up"
                          onmousedown="_startScroll(-1);"
+                         onmouseover="_continueScroll(-1);"
                          onmouseup="_stopScroll();"
-                         onmouseout="_stopScroll();"
+                         onmouseout="_pauseScroll();"
                          chromedir="&locale.dir;"/>
       <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1" anonid="scrollbox">
         <children/>
@@ -2516,8 +2517,9 @@
                            xbl:inherits="orient"
                            anonid="scrollbutton-down"
                            onmousedown="_startScroll(1);"
+                           onmouseover="_continueScroll(1);"
                            onmouseup="_stopScroll();"
-                           onmouseout="_stopScroll();"
+                           onmouseout="_pauseScroll();"
                            chromedir="&locale.dir;"/>
       </xul:stack>
     </content>
