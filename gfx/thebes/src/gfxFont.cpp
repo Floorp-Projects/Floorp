@@ -1489,8 +1489,23 @@ gfxTextRun::AddGlyphRun(gfxFont *aFont, PRUint32 aUTF16Offset, PRBool aForceNewR
 void
 gfxTextRun::SortGlyphRuns()
 {
+    if (mGlyphRuns.Length() <= 1)
+        return;
+
+    nsTArray<GlyphRun> runs(mGlyphRuns);
     GlyphRunOffsetComparator comp;
-    mGlyphRuns.Sort(comp);
+    runs.Sort(comp);
+
+    // Now copy back, coalescing adjacent glyph runs that have the same font
+    mGlyphRuns.Clear();
+    PRUint32 i;
+    for (i = 0; i < runs.Length(); ++i) {
+        // a GlyphRun with the same font as the previous GlyphRun can just
+        // be skipped; the last GlyphRun will cover its character range.
+        if (i == 0 || runs[i].mFont != runs[i - 1].mFont) {
+            mGlyphRuns.AppendElement(runs[i]);
+        }
+    }
 }
 
 PRUint32
@@ -1653,8 +1668,15 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, PRUint32 aStart,
     }
 
     GlyphRunIterator iter(aSource, aStart, aLength);
+#ifdef DEBUG
+    gfxFont *lastFont = nsnull;
+#endif
     while (iter.NextRun()) {
         gfxFont *font = iter.GetGlyphRun()->mFont;
+        NS_ASSERTION(font != lastFont, "Glyphruns not coalesced?");
+#ifdef DEBUG
+        lastFont = font;
+#endif
         PRUint32 start = iter.GetStringStart();
         PRUint32 end = iter.GetStringEnd();
         NS_ASSERTION(aSource->IsClusterStart(start),
