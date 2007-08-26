@@ -414,8 +414,9 @@
                          xbl:inherits="orient"
                          anonid="scrollbutton-up"
                          onmousedown="_startScroll(-1);"
+                         onmouseover="_continueScroll(-1);"
                          onmouseup="_stopScroll();"
-                         onmouseout="_stopScroll();"
+                         onmouseout="_pauseScroll();"
                          chromedir="&locale.dir;"/>
       <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1" anonid="scrollbox">
         <children/>
@@ -424,11 +425,12 @@
                          xbl:inherits="orient"
                          anonid="scrollbutton-down"
                          onmousedown="_startScroll(1);"
+                         onmouseover="_continueScroll(1);"
                          onmouseup="_stopScroll();"
-                         onmouseout="_stopScroll();"
+                         onmouseout="_pauseScroll();"
                          chromedir="&locale.dir;"/>
     </content>
-    <implementation implements="nsITimerCallback">
+    <implementation implements="nsITimerCallback, nsIDOMEventListener">
       <constructor><![CDATA[
         try {
           this._scrollDelay = this._prefBranch
@@ -446,7 +448,6 @@
         }
       ]]></destructor>
 
-      <field name="_scrollTimer">null</field>
       <field name="_scrollIndex">0</field>
       <field name="_scrollDelay">150</field>
 
@@ -481,6 +482,7 @@
                           Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
           }
           this.scrollByIndex(index);
+          this._mousedown = true;
         ]]>
         </body>
       </method>
@@ -490,6 +492,38 @@
           if (this._scrollTimer) 
             this._scrollTimer.cancel();
           this._autorepeatSmoothScroll = false;
+          this._mousedown = false;
+        ]]></body>
+      </method>
+
+      <method name="_pauseScroll">
+        <body><![CDATA[
+          if (this._mousedown) {
+            this._stopScroll();
+            this._mousedown = true;
+            document.addEventListener("mouseup", this, false);
+            document.addEventListener("blur", this, true);
+          }
+        ]]></body>
+      </method>
+
+      <method name="_continueScroll">
+        <parameter name="index"/>
+        <body><![CDATA[
+          if (this._mousedown)
+            this._startScroll(index);
+        ]]></body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.type == "mouseup" ||
+              aEvent.type == "blur" && aEvent.target == document) {
+            this._mousedown = false;
+            document.removeEventListener("mouseup", this, false);
+            document.removeEventListener("blur", this, true);
+          }
         ]]></body>
       </method>
 
