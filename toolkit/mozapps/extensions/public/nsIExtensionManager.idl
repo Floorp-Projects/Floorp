@@ -311,7 +311,8 @@ interface nsIExtensionManager : nsISupports
    * Gets a nsIUpdateItem for the item with the specified id.
    * @param   id
    *          The GUID of the item to construct a nsIUpdateItem for.
-   * @returns The nsIUpdateItem representing the item.
+   * @returns The nsIUpdateItem representing the item or null if the item does
+   *          not exist.
    */
   nsIUpdateItem getItemForID(in AString id);
 
