@@ -1755,7 +1755,7 @@ var gExtensionsViewController = {
         // Update the view
         setRestartMessage(aSelectedItem);
       }
-      // Flush preferece change to disk
+      // Flush preference change to disk
       gPref.QueryInterface(Components.interfaces.nsIPrefService)
            .savePrefFile(null);
       
