@@ -809,7 +809,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     // Truncate long names to not stretch the table
     //XXX this should be left to the stylesheet (bug 391471)
     nsString escapedShort;
-    if (description.Length() > 31) {
+    if (description.Length() > 46) {
         nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
         nsCOMPtr<nsIURI> uri;
         rv = channel->GetURI(getter_AddRefs(uri));
@@ -819,13 +819,22 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         PRBool isSchemeGopher = PR_FALSE;
         if (!(NS_SUCCEEDED(uri->SchemeIs("gopher", &isSchemeGopher)) && isSchemeGopher)) {
             //XXX this potentially truncates after a combining char (bug 391472)
+            nsXPIDLString descriptionAffix;
+            descriptionAffix.Assign(description);
+            descriptionAffix.Cut(0, descriptionAffix.Length() - 15);
+            if (NS_IS_LOW_SURROGATE(descriptionAffix.First()))
+                descriptionAffix.Cut(0, 1);
             description.Truncate(30);
             if (NS_IS_HIGH_SURROGATE(description.Last()))
-                description.Truncate(description.Length()-1);
+                description.Truncate(description.Length() - 1);
 
             escapedShort.Adopt(nsEscapeHTML2(description.get(), description.Length()));
             // add HORIZONTAL ELLIPSIS (U+2026)
             escapedShort.AppendLiteral("&#8230;");
+            nsString tmp;
+            tmp.Adopt(nsEscapeHTML2(descriptionAffix.get(), descriptionAffix.Length()));
+            escapedShort.Append(tmp);
+
             pushBuffer.AppendLiteral(" title=\"");
             pushBuffer.Append(escaped);
             pushBuffer.AppendLiteral("\"");
