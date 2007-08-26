@@ -64,7 +64,6 @@
       </property>
 
       <field name="_scrollIncrement">null</field>
-
       <property name="scrollIncrement" readonly="true">
         <getter><![CDATA[
           if (this._scrollIncrement === null) {
@@ -406,6 +405,7 @@
       <xul:toolbarbutton class="scrollbutton-up" collapsed="true"
                          xbl:inherits="orient"
                          anonid="scrollbutton-up"
+                         onclick="_distanceScroll(event);"
                          onmousedown="_startScroll(-1);"
                          onmouseover="_continueScroll(-1);"
                          onmouseup="_stopScroll();"
@@ -417,6 +417,7 @@
       <xul:toolbarbutton class="scrollbutton-down" collapsed="true"
                          xbl:inherits="orient"
                          anonid="scrollbutton-down"
+                         onclick="_distanceScroll(event);"
                          onmousedown="_startScroll(1);"
                          onmouseover="_continueScroll(1);"
                          onmouseup="_stopScroll();"
@@ -521,6 +522,69 @@
             document.removeEventListener("mouseup", this, false);
             document.removeEventListener("blur", this, true);
           }
+        ]]></body>
+      </method>
+
+      <method name="_distanceScroll">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (this.getAttribute("orient") == "vertical" ||
+              aEvent.detail < 2 || aEvent.detail > 3)
+            return;
+
+          var scrollLeft = (aEvent.originalTarget == this._scrollButtonUp);
+          if (!this._isLTRScrollbox)
+            scrollLeft = !scrollLeft;
+          var targetElement;
+          var elements = this.hasChildNodes() ?
+                         this.childNodes :
+                         document.getBindingParent(this).childNodes;
+
+          if (aEvent.detail == 2) {
+            // scroll by the width of the scrollbox; make sure that the next
+            // partly-offscreen element will become fully visible.
+            var scrollBox = this.scrollBoxObject;
+            var edge = scrollBox.screenX;
+            if (scrollLeft) {
+              for (var i = 0; targetElement = elements[i]; i++) {
+                var x = targetElement.boxObject.screenX;
+                if (x < edge &&
+                    x + targetElement.boxObject.width + 1 >= edge)
+                  break;
+              }
+              if (!targetElement)
+                return;
+              edge = targetElement.boxObject.screenX +
+                     targetElement.boxObject.width - scrollBox.width;
+              while ((targetElement = targetElement.previousSibling))
+                if (targetElement.boxObject.screenX < edge)
+                  break;
+              if (targetElement)
+                targetElement = targetElement.nextSibling;
+            } else {
+              edge += scrollBox.width;
+              for (var i = 0; targetElement = elements[i]; i++) {
+                var x = targetElement.boxObject.screenX;
+                if (x <= edge &&
+                    x + targetElement.boxObject.width > edge)
+                  break;
+              }
+              if (!targetElement)
+                return;
+              edge = targetElement.boxObject.screenX + scrollBox.width;
+              while ((targetElement = targetElement.nextSibling))
+                if (targetElement.boxObject.screenX + targetElement.boxObject.width > edge)
+                  break;
+              if (targetElement)
+                targetElement = targetElement.previousSibling;
+            }
+          }
+
+          if (!targetElement)
+            // scroll to the first resp. last element
+            targetElement = scrollLeft ? elements[0] : elements[elements.length - 1];
+
+          this.ensureElementIsVisible(targetElement);
         ]]></body>
       </method>
 
