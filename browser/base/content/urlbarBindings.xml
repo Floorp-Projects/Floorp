@@ -504,7 +504,8 @@
 
   </binding>
 
-  <binding id="urlbar-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-result-popup">
+  <binding id="urlbar-result-popup"
+           extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-result-popup">
     <implementation>
       <method name="onPopupClick">
         <parameter name="aEvent"/>

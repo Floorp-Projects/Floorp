@@ -98,7 +98,9 @@
            onclick="checkForMiddleClick(this, event);"/>
     <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
-    <panel type="autocomplete" chromedir="&locale.dir;" id="PopupAutoComplete" noautofocus="true"/>
+    <panel type="autocomplete" chromedir="&locale.dir;" id="UrlbarAutoComplete" noautofocus="true"/>
+    <panel type="autocomplete" chromedir="&locale.dir;" id="SearchAutoComplete" noautofocus="true"/>
+    <panel type="autocomplete" chromedir="&locale.dir;" id="ContentAutoComplete" noautofocus="true"/>
 
     <panel id="editBookmarkPanel" orient="vertical">
       <vbox id="editBookmarkPanelContent" flex="1"/>
@@ -220,7 +222,7 @@
                      chromedir="&locale.dir;"
                      type="autocomplete"
                      autocompletesearch="history" 
-                     autocompletepopup="PopupAutoComplete"
+                     autocompletepopup="UrlbarAutoComplete"
                      completeselectedindex="true"
                      tabscrolling="true"
                      showcommentcolumn="true"
@@ -300,7 +302,8 @@
       <toolbaritem id="search-container" title="&searchItem.title;" 
                    align="center" class="chromeclass-toolbar-additional"
                    flex="100" persist="width">
-        <searchbar id="searchbar" flex="1" chromedir="&locale.dir;"/>
+        <searchbar id="searchbar" flex="1" chromedir="&locale.dir;"
+                   autocompletepopup="SearchAutoComplete"/>
       </toolbaritem>
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
@@ -430,7 +433,7 @@
                     flex="1" contenttooltip="aHTMLTooltip"
                     contentcontextmenu="contentAreaContextMenu"
                     onnewtab="BrowserOpenTab();"
-                    autocompletepopup="PopupAutoComplete"
+                    autocompletepopup="ContentAutoComplete"
                     ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);"
                     onclick="return contentAreaClick(event, false);"/>
       </vbox>
