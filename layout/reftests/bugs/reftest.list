@@ -364,6 +364,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 379316-2.html 379316-2-ref.html # bug 
 != 389924-1a.html about:blank
 == 390318-1a.html 390318-1-ref.html
 == 390318-1b.html 390318-1-ref.html
+fails-if(MOZ_WIDGET_TOOLKIT!="windows") == 391045.html 391045-ref.html # windows-specific bug
 == 391140-1.html 391140-1-ref.html
 == 391909-1.html 391909-1-ref.html
 == 391994-1.html 391994-1-ref.html
