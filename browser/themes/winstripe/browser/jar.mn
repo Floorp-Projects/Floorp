@@ -71,6 +71,8 @@ classic.jar:
         skin/classic/browser/tabbrowser/alltabs-box-overflow-start-bkgnd.png         (tabbrowser/alltabs-box-overflow-start-bkgnd.png)
         skin/classic/browser/tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png (tabbrowser/alltabs-box-overflow-start-bkgnd-animate.png)        
         skin/classic/browser/tabbrowser/alltabs-box-overflow-start-bkgnd-hover.png   (tabbrowser/alltabs-box-overflow-start-bkgnd-hover.png)
+        skin/classic/browser/tabbrowser/close-bkgnd.png                    (tabbrowser/close-bkgnd.png)
+        skin/classic/browser/tabbrowser/close-bkgnd-rtl.png                (tabbrowser/close-bkgnd-rtl.png)
         skin/classic/browser/tabbrowser/tab-arrow-end.png                  (tabbrowser/tab-arrow-end.png)
         skin/classic/browser/tabbrowser/tab-arrow-end-bkgnd-animate.png    (tabbrowser/tab-arrow-end-bkgnd-animate.png)
         skin/classic/browser/tabbrowser/tab-arrow-end-bkgnd-disabled.png   (tabbrowser/tab-arrow-end-bkgnd-disabled.png)

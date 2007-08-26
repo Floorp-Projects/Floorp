@@ -1463,6 +1463,24 @@ tabpanels {
 }
 
 /**
+ * Tabstrip close button
+ */
+
+.tabs-closebutton-box > .tabs-closebutton {
+  padding-top: 5px;
+  -moz-padding-end: 1px;
+  padding-bottom: 3px;
+  -moz-padding-start: 2px;
+  background-image: url("chrome://browser/skin/tabbrowser/close-bkgnd.png");
+  background-color: -moz-dialog;
+}
+
+.tabs-closebutton-box[chromedir="rtl"] > .tabs-closebutton {
+  background-image: url("chrome://browser/skin/tabbrowser/close-bkgnd-rtl.png");
+  background-position: top right;
+}
+
+/**
  * Tab Scrollbox Arrow Buttons
  */
 
