@@ -270,8 +270,6 @@ NS_IMETHODIMP gfxImageFrame::GetImageData(PRUint8 **aData, PRUint32 *length)
   if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  NS_ASSERTION(mMutable, "trying to get data on an immutable frame");
-
   *aData = mImage->GetBits();
   *length = mImage->GetLineStride() * mSize.height;
 
