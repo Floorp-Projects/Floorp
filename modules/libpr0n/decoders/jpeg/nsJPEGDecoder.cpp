@@ -555,6 +555,8 @@ nsJPEGDecoder::OutputScanlines()
   const PRUint32 top = mInfo.output_scanline;
   PRBool rv = PR_TRUE;
 
+  mFrame->LockImageData();
+  
   // we're thebes. we can write stuff directly to the data
   PRUint8 *imageData;
   PRUint32 imageDataLength;
@@ -605,7 +607,9 @@ nsJPEGDecoder::OutputScanlines()
       img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
       mObserver->OnDataAvailable(nsnull, mFrame, &r);
   }
-
+  
+  mFrame->UnlockImageData();
+  
   return rv;
 }
 

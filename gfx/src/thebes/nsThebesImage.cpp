@@ -319,6 +319,10 @@ nsThebesImage::UnlockImagePixels(PRBool aMaskPixels)
     if (aMaskPixels)
         return NS_ERROR_NOT_IMPLEMENTED;
     if (mImageSurface && mOptSurface) {
+        nsRefPtr<gfxContext> context = new gfxContext(mOptSurface);
+        context->SetOperator(gfxContext::OPERATOR_SOURCE);
+        context->SetSource(mImageSurface);
+        context->Paint();
         // Don't need the pixel data anymore
         mImageSurface = nsnull;
     }
