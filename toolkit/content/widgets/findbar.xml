@@ -26,6 +26,7 @@
    -     Ben Basson <contact@cusser.net>
    -     Jason Barnabe <jason_barnabe@fastmail.fm>
    -     Asaf Romano <mano@mozilla.com>
+   -     Ehsan Akhgari <ehsan.akhgari@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -894,6 +895,21 @@
       </method>
 
       <!--
+        - Returns true if |aMimeType| is text-based, or false otherwise.
+        -
+        - @param aMimeType
+        -        The MIME type to check.
+        -->
+      <method name="_mimeTypeIsTextBased">
+        <parameter name="aMimeType"/>
+        <body><![CDATA[
+          return /^text\/|\+xml$/.test(aMimeType) ||
+                 aMimeType == "application/x-javascript" ||
+                 aMimeType == "application/xml";
+        ]]></body>
+      </method>
+
+      <!--
         - Returns whether FAYT can be used for the given event in
         - the current content state.
         -->
@@ -903,6 +919,11 @@
           if (aEvent.ctrlKey || aEvent.altKey || aEvent.metaKey ||
               aEvent.getPreventDefault())
             return false;
+
+          var win = document.commandDispatcher.focusedWindow;
+          if (win)
+            if (!this._mimeTypeIsTextBased(win.document.contentType))
+              return false;
 
           var elt = document.commandDispatcher.focusedElement;
           if (elt) {
@@ -930,7 +951,6 @@
           if (url == "about:blank" || url == "about:config")
             return false;
 
-          var win = document.commandDispatcher.focusedWindow;
           if (win) {
             try {
               var editingSession = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
