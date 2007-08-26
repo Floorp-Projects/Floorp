@@ -243,6 +243,9 @@ TextRunWordCache::LookupWord(gfxTextRun *aTextRun, gfxFont *aFirstFont,
     if (fontEntry->mTextRun) {
         existingEntry = fontEntry;
     } else {
+#ifdef DEBUG
+        ++aTextRun->mCachedWords;
+#endif
         PR_LOG(gWordCacheLog, PR_LOG_DEBUG, ("%p(%d-%d,%d): added using font", aTextRun, aStart, aEnd - aStart, aHash));
         key.mFontOrGroup = aTextRun->GetFontGroup();
         CacheHashEntry *groupEntry = mCache.GetEntry(key);
@@ -368,7 +371,10 @@ TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
     nsAutoPtr<gfxTextRun> textRun;
     textRun = new gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags);
     if (!textRun || !textRun->GetCharacterGlyphs())
-        return nsnull;   
+        return nsnull;
+#ifdef DEBUG
+    textRun->mCachedWords = 0;
+#endif
 
     gfxFont *font = aFontGroup->GetFontAt(0);
     nsresult rv = textRun->AddGlyphRun(font, 0);
@@ -442,6 +448,9 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
     textRun = new gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags);
     if (!textRun || !textRun->GetCharacterGlyphs())
         return nsnull;
+#ifdef DEBUG
+    textRun->mCachedWords = 0;
+#endif
 
     gfxFont *font = aFontGroup->GetFontAt(0);
     nsresult rv = textRun->AddGlyphRun(font, 0);
@@ -519,6 +528,9 @@ TextRunWordCache::RemoveWord(gfxTextRun *aTextRun, PRUint32 aStart,
         // XXX would like to use RawRemoveEntry here plus some extra method
         // that conditionally shrinks the hashtable
         mCache.RemoveEntry(key);
+#ifdef DEBUG
+        --aTextRun->mCachedWords;
+#endif
         PR_LOG(gWordCacheLog, PR_LOG_DEBUG, ("%p(%d-%d,%d): removed using %s",
             aTextRun, aStart, length, aHash,
             key.mFontOrGroup == aTextRun->GetFontGroup() ? "fontgroup" : "font"));
@@ -543,6 +555,10 @@ TextRunWordCache::RemoveTextRun(gfxTextRun *aTextRun)
         }
     }
     RemoveWord(aTextRun, wordStart, i, hash);
+#ifdef DEBUG
+    NS_ASSERTION(aTextRun->mCachedWords == 0,
+                 "Textrun was not completely removed from the cache!");
+#endif
 }
 
 static PRBool
