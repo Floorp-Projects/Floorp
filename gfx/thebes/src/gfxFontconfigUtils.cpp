@@ -78,7 +78,9 @@ gfxFontconfigUtils::GetFontList(const nsACString& aLangGroup,
     for (PRInt32 i = 0; i < fonts->Count(); ++i)
          aListOfFonts.AppendString(NS_ConvertUTF8toUTF16(*fonts->CStringAt(i)));
 
-    PRInt32 serif = 0, sansSerif = 0, monospace = 0, nGenerics;
+    aListOfFonts.Sort();
+
+    PRInt32 serif = 0, sansSerif = 0, monospace = 0;
 
     // Fontconfig supports 3 generic fonts, "serif", "sans-serif", and
     // "monospace", slightly different from CSS's 5.
@@ -95,16 +97,16 @@ gfxFontconfigUtils::GetFontList(const nsACString& aLangGroup,
         serif = sansSerif = 1;
     else
         NS_NOTREACHED("unexpected CSS generic font family");
-    nGenerics = serif + sansSerif + monospace;
 
-    if (serif)
-        aListOfFonts.AppendString(NS_LITERAL_STRING("serif"));
-    if (sansSerif)
-        aListOfFonts.AppendString(NS_LITERAL_STRING("sans-serif"));
+    // The first in the list becomes the default in
+    // gFontsDialog.readFontSelection() if the preference-selected font is not
+    // available, so put system configured defaults first.
     if (monospace)
-        aListOfFonts.AppendString(NS_LITERAL_STRING("monospace"));
-
-    aListOfFonts.Sort();
+        aListOfFonts.InsertStringAt(NS_LITERAL_STRING("monospace"), 0);
+    if (sansSerif)
+        aListOfFonts.InsertStringAt(NS_LITERAL_STRING("sans-serif"), 0);
+    if (serif)
+        aListOfFonts.InsertStringAt(NS_LITERAL_STRING("serif"), 0);
 
     return NS_OK;
 }
