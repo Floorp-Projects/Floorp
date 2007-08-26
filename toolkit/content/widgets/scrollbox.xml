@@ -120,7 +120,6 @@
         document.defaultView.getComputedStyle(this._scrollbox, "").direction == "ltr";
       </field>
 
-      <field name="_autorepeatSmoothScroll">false</field>
       <method name="ensureElementIsVisible">
         <parameter name="element"/>
         <body><![CDATA[
@@ -166,14 +165,8 @@
 
           function processFrame(self) {
             self.scrollBoxObject.scrollBy(scrollAmounts.shift(), 0);
-            if (!scrollAmounts.length) {
-              if (self._autorepeatSmoothScroll) {
-                var direction = self._isLTRScrollbox ? self._isScrolling : -self._isScrolling;
-                self._stopSmoothScroll();
-                self.scrollByIndex(direction);
-              } else
-                self._stopSmoothScroll();
-            }
+            if (!scrollAmounts.length)
+              self._stopSmoothScroll();
           }
 
           // amountToScroll: total distance to scroll
@@ -458,7 +451,10 @@
           if (!document)
             aTimer.cancel();
 
-          this.scrollByIndex(this._scrollIndex);
+          if (this.smoothScroll)
+            this.scrollByPixels(25 * this._scrollIndex);
+          else
+            this.scrollBoxObject.scrollByIndex(this._scrollIndex);
         ]]>
         </body>
       </method>
@@ -466,22 +462,19 @@
       <method name="_startScroll">
         <parameter name="index"/>
         <body><![CDATA[
-          if (this.smoothScroll)
-            this._autorepeatSmoothScroll = true;
-          else {
-            this._scrollIndex = index;
-            if (!this._scrollTimer) 
-              this._scrollTimer = 
-                Components.classes["@mozilla.org/timer;1"]
-                          .createInstance(Components.interfaces.nsITimer);
-            else
-               this._scrollTimer.cancel();
+          this._scrollIndex = index;
+          var scrollDelay = this.smoothScroll ? 60 : this._scrollDelay;
+          if (!this._scrollTimer)
+            this._scrollTimer =
+              Components.classes["@mozilla.org/timer;1"]
+                        .createInstance(Components.interfaces.nsITimer);
+          else
+             this._scrollTimer.cancel();
 
-            this._scrollTimer.initWithCallback(this, 
-                          this._scrollDelay,
-                          Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
-          }
-          this.scrollByIndex(index);
+          this._scrollTimer.initWithCallback(this,
+                        scrollDelay,
+                        Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+          this.notify(this._scrollTimer);
           this._mousedown = true;
         ]]>
         </body>
@@ -489,10 +482,14 @@
 
       <method name="_stopScroll">
         <body><![CDATA[
-          if (this._scrollTimer) 
+          if (this._scrollTimer)
             this._scrollTimer.cancel();
-          this._autorepeatSmoothScroll = false;
           this._mousedown = false;
+          if (!this._scrollIndex || !this.smoothScroll)
+            return;
+
+          this.scrollByIndex(this._scrollIndex);
+          this._scrollIndex = 0;
         ]]></body>
       </method>
 
