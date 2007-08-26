@@ -60,12 +60,9 @@
 #include "nsTransform2D.h"
 #include "nsGfxCIID.h"
 #include "prtime.h"
-// #include "nsTooltipManager.h"
 #include "nsISupportsArray.h"
 #include "nsIMenuBar.h"
-//#include "nsIMenuItem.h"
 #include "nsHashtable.h"
-//#include "nsMenu.h"
 #include "nsDragService.h"
 #include "nsILocalFile.h"
 #include "nsNetUtil.h"
@@ -77,7 +74,7 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 
-//~~~ windowless plugin support
+// windowless plugin support
 #include "nsplugindefs.h"
 
 #include "nsITimer.h"
@@ -163,7 +160,7 @@ static PRBool gIsDBCS = PR_FALSE;
 static PRUint32 gLastInputEventTime = 0;
 
 #ifdef DEBUG_FOCUS
-  int currentWindowIdentifier = 0;
+int currentWindowIdentifier = 0;
 #endif
 
 //-------------------------------------------------------------------------
@@ -308,8 +305,7 @@ nsWindow::~nsWindow()
     mWindowState |= nsWindowState_eDoingDelete;
     mWindowState &= ~(nsWindowState_eLive|nsWindowState_ePrecreate|
                       nsWindowState_eInCreate);
-//    if( mWnd)
-      Destroy();
+    Destroy();
   }
 
 }
@@ -329,7 +325,6 @@ NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
   } else {
     WinSetCapture( HWND_DESKTOP, NULLHANDLE);
   }
-//  mIsInMouseCapture = aCapture;
   return NS_OK;
 }
 
@@ -910,11 +905,6 @@ void nsWindow::RealDoCreate( HWND              hwndP,
                              nsWidgetInitData *aInitData,
                              HWND              hwndOwner)
 {
-
-  // XXXX TEST HACK to get rid of window bunnies
-  //  if (!(aRect.height > 1) && !(aRect.width > 1))
-  //    return;
-
    // Set up parent data - don't addref to avoid circularity
    mParent = aParent;
 
@@ -2282,7 +2272,6 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     return NULL;
 }
 
-//~~~
 void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
 {
   switch(aDataType)
@@ -2652,15 +2641,6 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
            result = DispatchWindowEvent(&event);
            NS_RELEASE(event.widget);
         }
-#if 0
-        case WM_INITMENU:
-          result = OnActivateMenu( HWNDFROMMP(mp2), TRUE);
-          break;
-
-        case WM_MENUEND:
-          result = OnActivateMenu( HWNDFROMMP(mp2), FALSE);
-          break;
-#endif
 
         case WM_CONTROL: // remember this is resent to the orginator...
           result = OnControl( mp1, mp2);
@@ -3399,7 +3379,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
 
   nsPluginEvent pluginEvent;
 
-  switch (aEventType)//~~~
+  switch (aEventType)
   {
     case NS_MOUSE_BUTTON_DOWN:
       switch (aButton) {
@@ -3464,84 +3444,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
 
   // call the event callback 
   if (nsnull != mEventCallback) {
-
     result = DispatchWindowEvent(&event);
-
-#if 0  // OS2TODO
-    if (aEventType == NS_MOUSE_MOVE) {
-
-      // if we are not in mouse capture mode (mouse down and hold)
-      // then use "this" window
-      // if we are in mouse capture, then all events are being directed
-      // back to the nsWindow doing the capture. So therefore, the detection
-      // of whether we are in a new nsWindow is wrong. Meaning this MOUSE_MOVE
-      // event hold the captured windows pointer not the one the mouse is over.
-      //
-      // So we use "WindowFromPoint" to find what window we are over and 
-      // set that window into the mouse trailer timer.
-      if (!mIsInMouseCapture) {
-        MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
-        MouseTrailer::SetMouseTrailerWindow(this);
-        mouseTrailer->CreateTimer();
-      } else {
-        POINT mp;
-        DWORD pos = ::GetMessagePos();
-        mp.x      = LOWORD(pos);
-        mp.y      = HIWORD(pos);
-
-        // OK, now find out if we are still inside
-        // the captured native window
-        POINT cpos;
-        cpos.x = LOWORD(pos);
-        cpos.y = HIWORD(pos);
-
-        nsWindow * someWindow = NULL;
-        HWND hWnd = ::WindowFromPoint(mp);
-        if (hWnd != NULL) {
-          ::ScreenToClient(hWnd, &cpos);
-          RECT r;
-          VERIFY(::GetWindowRect(hWnd, &r));
-          if (cpos.x >= r.left && cpos.x <= r.right &&
-              cpos.y >= r.top && cpos.y <= r.bottom) {
-            // yes we are so we should be able to get a valid window
-            // although, strangley enough when we are on the frame part of the
-            // window we get right here when in capture mode
-            // but this window won't match the capture mode window so
-            // we are ok
-            someWindow = (nsWindow*)::GetWindowLong(hWnd, GWL_USERDATA);
-          } 
-        }
-        // only set the window into the mouse trailer if we have a good window
-        if (nsnull != someWindow)  {
-          MouseTrailer * mouseTrailer = MouseTrailer::GetMouseTrailer(0);
-          MouseTrailer::SetMouseTrailerWindow(someWindow);
-          mouseTrailer->CreateTimer();
-        }
-      }
-
-      nsRect rect;
-      GetBounds(rect);
-      rect.x = 0;
-      rect.y = 0;
-
-      if (rect.Contains(event.refPoint.x, event.refPoint.y)) {
-        if (gCurrentWindow == NULL || gCurrentWindow != this) {
-          if ((nsnull != gCurrentWindow) && (!gCurrentWindow->mIsDestroying)) {
-            MouseTrailer::IgnoreNextCycle();
-            gCurrentWindow->DispatchMouseEvent(NS_MOUSE_EXIT, gCurrentWindow->GetLastPoint());
-          }
-          gCurrentWindow = this;
-          if (!mIsDestroying) {
-            gCurrentWindow->DispatchMouseEvent(NS_MOUSE_ENTER);
-          }
-        }
-      } 
-    } else if (aEventType == NS_MOUSE_EXIT) {
-      if (gCurrentWindow == this) {
-        gCurrentWindow = nsnull;
-      }
-    }
-#endif //OS2TODO
 
     // Release the widget with NS_IF_RELEASE() just in case
     // the context menu key code in nsEventListenerManager::HandleEvent()
@@ -3560,10 +3463,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
           if (gCurrentWindow == NULL || gCurrentWindow != this) {
             gCurrentWindow = this;
           }
-        } else {
-          //printf("Mouse exit");
         }
-
       } break;
 
       case NS_MOUSE_BUTTON_DOWN:
@@ -3572,7 +3472,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, MPARAM mp1, MPARAM mp2,
 
       case NS_MOUSE_BUTTON_UP:
         result = ConvertStatus(mMouseListener->MouseReleased(event));
-//        result = ConvertStatus(mMouseListener->MouseClicked(event));
         break;
 
       case NS_MOUSE_CLICK:
@@ -3606,7 +3505,7 @@ PRBool nsWindow::DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocu
 
     nsPluginEvent pluginEvent;
 
-    switch (aEventType)//~~~
+    switch (aEventType)
     {
       case NS_GOTFOCUS:
         pluginEvent.event = WM_SETFOCUS;
