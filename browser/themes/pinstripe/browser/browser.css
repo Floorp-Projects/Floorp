@@ -1247,6 +1247,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   -moz-user-focus: normal;
 }
 
+.tabbrowser-tab[selected="true"] > .tab-image-middle > .tab-icon {
+  cursor: -moz-grab;
+}
+
 .tabbrowser-tab > .tab-image-middle > .tab-text {
   border: 1.4pt solid transparent;
 }
