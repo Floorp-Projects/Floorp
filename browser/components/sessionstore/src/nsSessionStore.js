@@ -100,9 +100,6 @@ const CAPABILITIES = [
   "Subframes", "Plugins", "Javascript", "MetaRedirects", "Images"
 ];
 
-// sandbox to evaluate JavaScript code from non-trustable sources
-var EVAL_SANDBOX = new Cu.Sandbox("about:blank");
-
 // module for JSON conversion (needed for the nsISessionStore API)
 Cu.import("resource://gre/modules/JSON.jsm");
 
@@ -1913,7 +1910,7 @@ SessionStoreService.prototype = {
    * safe eval'ing
    */
   _safeEval: function sss_safeEval(aStr) {
-    return Cu.evalInSandbox(aStr, EVAL_SANDBOX);
+    return Cu.evalInSandbox(aStr, new Cu.Sandbox("about:blank"));
   },
 
   /**
