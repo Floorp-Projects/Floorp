@@ -527,10 +527,7 @@ Extensions.prototype = {
   },
   
   has : function exts_has(aId) {
-    // getItemForID never returns null for a non-existent id, so we
-    // check the type of the returned update item, which should be
-    // greater than 1 for a valid extension.
-    return !!(this._extmgr.getItemForID(aId).type);
+    return this._extmgr.getItemForID(aId) != null;
   },
   
   get : function exts_get(aId) {

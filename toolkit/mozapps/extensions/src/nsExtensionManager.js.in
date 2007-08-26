@@ -6561,6 +6561,9 @@ ExtensionsDataSource.prototype = {
    * @returns The nsIUpdateItem for the id.
    */  
   getItemForID: function(id) {
+    if (!this.visibleItems[id])
+      return null;
+
     var r = getResourceForID(id);
     if (!r)
       return null;
