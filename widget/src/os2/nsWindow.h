@@ -195,13 +195,6 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
    NS_IMETHOD              ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy);
 
-#if 0 // Handled by XP code now
-   // Tooltips
-   NS_IMETHOD SetTooltips( PRUint32 aNumberOfTips, nsRect *aTooltipAreas[]);   
-   NS_IMETHOD RemoveTooltips();
-   NS_IMETHOD UpdateTooltips( nsRect* aNewTips[]);
-#endif
-
    // Get a HWND or a HPS.
    virtual void  *GetNativeData( PRUint32 aDataType);
    virtual void   FreeNativeData( void *aDatum, PRUint32 aDataType);
@@ -260,8 +253,6 @@ protected:
    virtual PRBool OnVScroll( MPARAM mp1, MPARAM mp2);
    virtual PRBool OnHScroll( MPARAM mp1, MPARAM mp2);
    virtual PRBool OnControl( MPARAM mp1, MPARAM mp2);
-//   virtual PRBool OnMenuClick( USHORT aCmd);
-//   virtual PRBool OnActivateMenu( HWND aMenu, BOOL aActivate);
    // called after param has been set...
    virtual PRBool OnPresParamChanged( MPARAM mp1, MPARAM mp2);
    virtual PRBool OnDragDropMsg(ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &mr);
