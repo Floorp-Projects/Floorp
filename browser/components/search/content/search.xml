@@ -90,7 +90,6 @@
                        anonid="searchbar-textbox"
                        type="autocomplete"
                        flex="1"
-                       autocompletepopup="PopupAutoComplete"
                        autocompletesearch="search-autocomplete"
                        autocompletesearchparam="searchbar-history"
                        timeout="250"
@@ -98,7 +97,7 @@
                        completeselectedindex="true"
                        showcommentcolumn="true"
                        tabscrolling="true"
-                       xbl:inherits="disabled,disableautocomplete,searchengine,src">
+                       xbl:inherits="disabled,disableautocomplete,autocompletepopup,searchengine,src">
           </xul:textbox>
         </xul:hbox>
 
@@ -838,5 +837,36 @@
       </xul:stack>
       <children/>
     </content>
+  </binding>
+
+  <binding id="searchbar-result-popup"
+           extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-result-popup">
+    <implementation>
+      <method name="onPopupClick">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          var controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
+
+          // default action on unmodified left-click
+          if (aEvent.button == 0 && !aEvent.shiftKey && !aEvent.ctrlKey &&
+              !aEvent.altKey && !aEvent.metaKey) {
+            controller.handleEnter();
+          }
+          // completely ignore right-clicks
+          else if (aEvent.button != 2) {
+            // handle search bar click
+            var search = controller.getValueAt(this.tree.view.selection.currentIndex);
+            var textbox = this.mInput;
+
+            // close the autocomplete popup and copy the selected value to the search box
+            this.closePopup();
+            textbox.value = search;
+            // open the search results according to the clicking subtlety
+            var where = whereToOpenLink(aEvent, false, true);
+            textbox._getParentSearchbar().doSearch(search, where);
+          }
+        ]]></body>
+      </method>
+    </implementation>
   </binding>
 </bindings>

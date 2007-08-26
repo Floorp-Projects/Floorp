@@ -1,5 +1,10 @@
+/* ::::: search bar ::::: */
 searchbar {
   -moz-binding: url("chrome://browser/content/search/search.xml#searchbar");
+}
+
+#SearchAutoComplete {
+  -moz-binding: url("chrome://browser/content/search/search.xml#searchbar-result-popup");
 }
 
 /* ::::: location bar ::::: */
@@ -7,7 +12,7 @@ searchbar {
   -moz-binding: url(chrome://browser/content/urlbarBindings.xml#urlbar);
 }
 
-#PopupAutoComplete {
+#UrlbarAutoComplete {
   -moz-binding: url("chrome://browser/content/urlbarBindings.xml#urlbar-result-popup");
 }
 
