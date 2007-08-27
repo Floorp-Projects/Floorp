@@ -48,6 +48,8 @@ base + "#a {color: rgb\n(255, 0, 0)}",
 "@threedee {maroon url('asdf\n) ra('asdf\n);} " + base,
 "div[title='zxcv weeqweqeweasd\\D\\A a']{color:green}",
 "div[title~='weeqweqeweasd\\D\\A a']{color:green}",
+base + "#a\\\n{color:red}",
+base + "#a\v{color:red}",
 
 // CSS1 section 7.1
 "#a {color: green; rotation: 70deg;}",
@@ -127,6 +129,7 @@ base + "#a {color: rgb(255.0, 0, 0)}",
 todo: {"@import 'data:text/css,#a{color:green}'" : 1,
        "@import 'data:text/css,#a{color:green}" : 1,
        "div[title~='weeqweqeweasd\\D\\A a']{color:green}" : 1,
+       "div {color:green}#a\\\n{color:red}" : 1
       }
 },
 
@@ -162,6 +165,14 @@ base + "#a {border-width: 0; border-width: 0.0px medium}",
 "#a::before {content: 'This is \\00000a '}",
 "#a::before {content: 'This is \\\n\\00000a '}",
 "#a::before {content: 'This is \\\015\012\\00000a '}",
+"#a::before {content: 'This is \\\015\\00000a '}",
+"#a::before {content: 'This is \\\f\\00000a '}",
+"#a::before {content: 'This is\\20\f\\a'}",
+"#a::before {content: 'This is\\20\r\\a'}",
+"#a::before {content: 'This is\\20\n\\a'}",
+"#a::before {content: 'This is\\20\r\n\\a'}",
+base + "#a::before {content: 'FAIL \f\\a'}",
+base + "#a::before {content: 'FAIL \\\n\r\\a'}",
 "#a:before {content: 'This is \\a'}",
 
 base + "#a:: before {content: 'FAIL'}",
@@ -179,7 +190,19 @@ todo: {"#a::before {content: 'This is \\a" : 1}
 "#a {background: url() blue}",
 "#a {background: url(怀) blue}",
 ], prop: "backgroundColor", pseudo: ""
-}
+},
+
+// A one-off test I couldn't come up with a better way to do
+{ base : base = "div {border-style: dotted}",
+  tests : [
+// Sanity-check to make sure this test will work
+// This test requires a color name that starts with a "-"
+base + "#a {border: dotted 0 -moz-menuhover}",
+// The actual test: check that 0-moz-menuhover get parsed as an unknown dimension
+// rather than a separate identifier
+base + "#a {border: solid 0-moz-menuhover}",
+], prop: "borderLeftStyle", pseudo: ""
+},
 
 ];
 
