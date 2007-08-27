@@ -58,7 +58,7 @@ interface nsIPrintSession;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(89c06ccb-6d41-4846-a8e2-63bfa7bd3157)]
+[scriptable, uuid(b1b5e3cc-a52c-4325-a7f6-e1ac6fac19a5)]
 
 interface nsIPrintSettings : nsISupports
 {
@@ -75,12 +75,12 @@ interface nsIPrintSettings : nsISupports
   const unsigned long kInitSaveBGColors       = 0x00000080;
   const unsigned long kInitSaveBGImages       = 0x00000100;
   const unsigned long kInitSavePaperSize      = 0x00000200;
-  const unsigned long kInitSavePaperName      = 0x00000400;
-  const unsigned long kInitSavePaperSizeUnit  = 0x00000800;
-  const unsigned long kInitSavePaperSizeType  = 0x00001000;
+  /* Flag 0x00000400 is unused */
+  /* Flag 0x00000800 is unused */
+  /* Flag 0x00001000 is unused */
   const unsigned long kInitSavePaperData      = 0x00002000;
-  const unsigned long kInitSavePaperWidth     = 0x00004000;
-  const unsigned long kInitSavePaperHeight    = 0x00008000;
+  /* Flag 0x00004000 is unused */
+  /* Flag 0x00008000 is unused */
 
   const unsigned long kInitSaveReversed       = 0x00010000;
   const unsigned long kInitSaveInColor        = 0x00020000;
@@ -250,7 +250,6 @@ interface nsIPrintSettings : nsISupports
 
   attribute boolean printReversed;
   attribute boolean printInColor;  /* a false means grayscale */
-  attribute long    paperSize;     /*  see page size consts */
   attribute long    orientation;   /*  see orientation consts */
   attribute wstring printCommand;
   attribute long    numCopies;
