@@ -204,9 +204,7 @@ public:
   // laid out, so that the view can be shown.
   void AdjustView();
 
-  void GetViewOffset(nsIView* aView, nsPoint& aPoint);
-  nsIView* GetRootViewForPopup(nsIFrame* aStartFrame,
-                               PRBool aStopAtViewManagerRoot);
+  nsIView* GetRootViewForPopup(nsIFrame* aStartFrame);
 
   // set the position of the popup either relative to the anchor aAnchorFrame
   // (or the frame for mAnchorContent if aAnchorFrame is null) or at a specific
