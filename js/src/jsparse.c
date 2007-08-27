@@ -879,8 +879,10 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     JSObject *funobj;
     JSParseNode *pn;
 
-    JS_INIT_ARENA_POOL(&codePool, "code", 1024, sizeof(jsbytecode));
-    JS_INIT_ARENA_POOL(&notePool, "note", 1024, sizeof(jssrcnote));
+    JS_INIT_ARENA_POOL(&codePool, "code", 1024, sizeof(jsbytecode),
+                       &cx->scriptStackQuota);
+    JS_INIT_ARENA_POOL(&notePool, "note", 1024, sizeof(jssrcnote),
+                       &cx->scriptStackQuota);
     js_InitParseContext(cx, &pc);
     JS_ASSERT(!ts->parseContext);
     ts->parseContext = &pc;

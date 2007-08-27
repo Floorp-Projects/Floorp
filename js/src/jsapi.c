@@ -2540,6 +2540,12 @@ JS_SetThreadStackLimit(JSContext *cx, jsuword limitAddr)
     cx->stackLimit = limitAddr;
 }
 
+JS_PUBLIC_API(void)
+JS_SetScriptStackQuota(JSContext *cx, size_t quota)
+{
+    cx->scriptStackQuota = quota;
+}
+
 /************************************************************************/
 
 JS_PUBLIC_API(void)
@@ -4334,8 +4340,10 @@ CompileTokenStream(JSContext *cx, JSObject *obj, JSTokenStream *ts,
     JSScript *script;
 
     eof = JS_FALSE;
-    JS_INIT_ARENA_POOL(&codePool, "code", 1024, sizeof(jsbytecode));
-    JS_INIT_ARENA_POOL(&notePool, "note", 1024, sizeof(jssrcnote));
+    JS_INIT_ARENA_POOL(&codePool, "code", 1024, sizeof(jsbytecode),
+                       &cx->scriptStackQuota);
+    JS_INIT_ARENA_POOL(&notePool, "note", 1024, sizeof(jssrcnote),
+                       &cx->scriptStackQuota);
     js_InitParseContext(cx, &pc);
     JS_ASSERT(!ts->parseContext);
     ts->parseContext = &pc;
