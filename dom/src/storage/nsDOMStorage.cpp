@@ -163,8 +163,10 @@ nsDOMStorageManager::Shutdown()
   NS_IF_RELEASE(gStorageManager);
   gStorageManager = nsnull;
 
+#ifdef MOZ_STORAGE
   delete nsDOMStorage::gStorageDB;
   nsDOMStorage::gStorageDB = nsnull;
+#endif
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
