@@ -7966,7 +7966,7 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
         break;
       }
 
-      SetFrameIsSpecial(parentFrame, newInlineSibling);
+      SetFrameIsSpecial(parentFrame->GetFirstContinuation(), newInlineSibling);
       
       // We had to create a frame for this new inline sibling.  Figure out
       // the right parentage for it.
