@@ -1053,8 +1053,8 @@ var ViewMenu = {
       }
       else if (type == "checkbox") {
         menuitem.setAttribute("type", "checkbox");
-        // Cannot uncheck the primary column. 
-        if (column.primary)
+        // Cannot uncheck the primary column.
+        if (column.getAttribute("primary") == "true")
           menuitem.setAttribute("disabled", "true");
         // Items for visible columns are checked. 
         if (!column.hidden)
