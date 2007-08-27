@@ -306,7 +306,7 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
     {
       nsCOMPtr<mozIStorageStatement> stmt;
       rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT id, name, source, target, startTime, endTime, state "
+        "SELECT id, name, source, target, startTime, endTime, state, referrer "
         "FROM moz_downloads"), getter_AddRefs(stmt));
       if (NS_SUCCEEDED(rv))
         break;
