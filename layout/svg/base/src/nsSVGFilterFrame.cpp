@@ -42,7 +42,6 @@
 #include "nsISVGFilter.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMSVGAnimatedInteger.h"
-#include "nsIDOMSVGAnimatedEnum.h"
 #include "nsSVGUtils.h"
 #include "nsSVGFilterElement.h"
 #include "nsSVGFilterInstance.h"
@@ -153,10 +152,10 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
   tmpWidth = &filter->mLengthAttributes[nsSVGFilterElement::WIDTH];
   tmpHeight = &filter->mLengthAttributes[nsSVGFilterElement::HEIGHT];
 
-  PRUint16 units;
-  filter->mFilterUnits->GetAnimVal(&units);
+  PRUint16 units =
+    filter->mEnumAttributes[nsSVGFilterElement::FILTERUNITS].GetAnimValue();
 
-  if (units == nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX) {
+  if (units == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     if (!bbox)
       return NS_OK;
 
@@ -241,8 +240,9 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
   aTarget->PaintSVG(&tmpState, nsnull);
 
-  PRUint16 primitiveUnits;
-  filter->mPrimitiveUnits->GetAnimVal(&primitiveUnits);
+  PRUint16 primitiveUnits =
+    filter->mEnumAttributes[nsSVGFilterElement::PRIMITIVEUNITS].GetAnimValue();
+
   nsSVGFilterInstance instance(target, bbox,
                                x, y, width, height,
                                filterRes.width, filterRes.height,
@@ -336,10 +336,8 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget)
 
   nsSVGFilterElement *filter = static_cast<nsSVGFilterElement*>(mContent);
 
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> units;
-  filter->GetFilterUnits(getter_AddRefs(units));
-  PRUint16 type;
-  units->GetAnimVal(&type);
+  PRUint16 type =
+    filter->mEnumAttributes[nsSVGFilterElement::FILTERUNITS].GetAnimValue();
 
   float x, y, width, height;
   nsCOMPtr<nsIDOMSVGRect> bbox;
@@ -358,7 +356,7 @@ nsSVGFilterFrame::GetInvalidationRegion(nsIFrame *aTarget)
   tmpWidth = &filter->mLengthAttributes[nsSVGFilterElement::WIDTH];
   tmpHeight = &filter->mLengthAttributes[nsSVGFilterElement::HEIGHT];
 
-  if (type == nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX) {
+  if (type == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     if (!bbox)
       return nsRect();
 
@@ -425,7 +423,7 @@ float
 nsSVGFilterInstance::GetPrimitiveLength(nsSVGLength2 *aLength)
 {
   float value;
-  if (mPrimitiveUnits == nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX)
+  if (mPrimitiveUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX)
     value = nsSVGUtils::ObjectSpace(mTargetBBox, aLength);
   else
     value = nsSVGUtils::UserSpace(mTarget, aLength);
@@ -459,8 +457,7 @@ nsSVGFilterInstance::GetFilterSubregion(
 
   float x, y, width, height;
 
-  if (mPrimitiveUnits == 
-      nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX) {
+  if (mPrimitiveUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     x      = nsSVGUtils::ObjectSpace(mTargetBBox, tmpX);
     y      = nsSVGUtils::ObjectSpace(mTargetBBox, tmpY);
     width  = nsSVGUtils::ObjectSpace(mTargetBBox, tmpWidth);

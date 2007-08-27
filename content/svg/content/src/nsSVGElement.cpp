@@ -67,7 +67,15 @@
 #include "nsSVGUtils.h"
 #include "nsSVGLength2.h"
 #include "nsSVGNumber2.h"
+#include "nsSVGEnum.h"
+#include "nsIDOMSVGUnitTypes.h"
 #include <stdarg.h>
+
+nsSVGEnumMapping nsSVGElement::sSVGUnitTypesMap[] = {
+  {&nsGkAtoms::userSpaceOnUse, nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE},
+  {&nsGkAtoms::objectBoundingBox, nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX},
+  {nsnull, 0}
+};
 
 nsSVGElement::nsSVGElement(nsINodeInfo *aNodeInfo)
   : nsSVGElementBase(aNodeInfo), mSuppressNotification(PR_FALSE)
@@ -94,6 +102,12 @@ nsSVGElement::Init()
 
   for (i = 0; i < numberInfo.mNumberCount; i++) {
     numberInfo.mNumbers[i].Init(i, numberInfo.mNumberInfo[i].mDefaultValue);
+  }
+
+  EnumAttributesInfo enumInfo = GetEnumInfo();
+
+  for (i = 0; i < enumInfo.mEnumCount; i++) {
+    enumInfo.mEnums[i].Init(i, enumInfo.mEnumInfo[i].mDefaultValue);
   }
 
   return NS_OK;
@@ -207,35 +221,43 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
   }
 
   if (aNamespaceID == kNameSpaceID_None) {
+    nsresult rv;
+    PRBool foundMatch = PR_FALSE;
+
     // Check for nsSVGLength2 attribute
     LengthAttributesInfo lengthInfo = GetLengthInfo();
-    PRUint32 i;
-    for (i = 0; i < lengthInfo.mLengthCount; i++) {
+    for (PRUint32 i = 0; i < lengthInfo.mLengthCount && !foundMatch; i++) {
       if (aAttribute == *lengthInfo.mLengthInfo[i].mName) {
-        nsresult rv = lengthInfo.mLengths[i].SetBaseValueString(aValue, this,
-                                                                PR_FALSE);
-        if (NS_FAILED(rv)) {
-          ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
-          return PR_FALSE;
-        }
-        aResult.SetTo(aValue);
-        return PR_TRUE;
+        rv = lengthInfo.mLengths[i].SetBaseValueString(aValue, this, PR_FALSE);
+        foundMatch = PR_TRUE;
       }
     }
 
     // Check for nsSVGNumber2 attribute
     NumberAttributesInfo numberInfo = GetNumberInfo();
-    for (i = 0; i < numberInfo.mNumberCount; i++) {
+    for (PRUint32 i = 0; i < numberInfo.mNumberCount && !foundMatch; i++) {
       if (aAttribute == *numberInfo.mNumberInfo[i].mName) {
-        nsresult rv = numberInfo.mNumbers[i].SetBaseValueString(aValue, this,
-                                                                PR_FALSE);
-        if (NS_FAILED(rv)) {
-          ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
-          return PR_FALSE;
-        }
-        aResult.SetTo(aValue);
-        return PR_TRUE;
+        rv = numberInfo.mNumbers[i].SetBaseValueString(aValue, this, PR_FALSE);
+        foundMatch = PR_TRUE;
       }
+    }
+
+    // Check for nsSVGEnum attribute
+    EnumAttributesInfo enumInfo = GetEnumInfo();
+    for (PRUint32 i = 0; i < enumInfo.mEnumCount && !foundMatch; i++) {
+      if (aAttribute == *enumInfo.mEnumInfo[i].mName) {
+        rv = enumInfo.mEnums[i].SetBaseValueString(aValue, this, PR_FALSE);
+        foundMatch = PR_TRUE;
+      }
+    }
+
+    if (foundMatch) {
+      if (NS_FAILED(rv)) {
+        ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
+        return PR_FALSE;
+      }
+      aResult.SetTo(aValue);
+      return PR_TRUE;
     }
   }
 
@@ -281,6 +303,17 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         if (aName == *numInfo.mNumberInfo[i].mName) {
           numInfo.mNumbers[i].Init(i, numInfo.mNumberInfo[i].mDefaultValue);
           DidChangeNumber(i, PR_FALSE);
+          break;
+        }
+      }
+
+      // Check if this is a number attribute going away
+      EnumAttributesInfo enumInfo = GetEnumInfo();
+
+      for (i = 0; i < enumInfo.mEnumCount; i++) {
+        if (aName == *enumInfo.mEnumInfo[i].mName) {
+          enumInfo.mEnums[i].Init(i, enumInfo.mEnumInfo[i].mDefaultValue);
+          DidChangeEnum(i, PR_FALSE);
           break;
         }
       }
@@ -863,6 +896,32 @@ nsSVGElement::GetAnimatedNumberValues(float *aFirst, ...)
     f = va_arg(args, float*);
   }
   va_end(args);
+}
+
+nsSVGElement::EnumAttributesInfo
+nsSVGElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(nsnull, nsnull, 0);
+}
+
+void
+nsSVGElement::DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  if (!aDoSetAttr)
+    return;
+
+  EnumAttributesInfo info = GetEnumInfo();
+
+  NS_ASSERTION(info.mEnumCount > 0,
+               "DidChangeNumber on element with no number attribs");
+
+  NS_ASSERTION(aAttrEnum < info.mEnumCount, "aAttrEnum out of range");
+
+  nsAutoString newStr;
+  info.mEnums[aAttrEnum].GetBaseValueString(newStr, this);
+
+  SetAttr(kNameSpaceID_None, *info.mEnumInfo[aAttrEnum].mName,
+          newStr, PR_TRUE);
 }
 
 nsresult

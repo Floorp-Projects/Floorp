@@ -58,11 +58,6 @@ interface nsIDOMSVGFilterElement
     nsIDOMSVGStylable,
 */
 { 
-    // These constants are taken from SVGUnitTypes
-    const unsigned short SVG_FUNITS_UNKNOWN           = 0;
-    const unsigned short SVG_FUNITS_OBJECTBOUNDINGBOX = 1;
-    const unsigned short SVG_FUNITS_USERSPACEONUSE    = 2;
-
     readonly attribute nsIDOMSVGAnimatedEnumeration filterUnits;
     readonly attribute nsIDOMSVGAnimatedEnumeration primitiveUnits;
     readonly attribute nsIDOMSVGAnimatedLength      x;

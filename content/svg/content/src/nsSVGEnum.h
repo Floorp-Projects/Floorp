@@ -14,17 +14,15 @@
  *
  * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is
- * IBM Corporation
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Tim Rowley <tor@cs.brown.edu> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -39,25 +37,67 @@
 #ifndef __NS_SVGENUM_H__
 #define __NS_SVGENUM_H__
 
-#include "nsISVGEnum.h"
-#include "nsAString.h"
-#include "nsIAtom.h"
+#include "nsIDOMSVGAnimatedEnum.h"
+#include "nsSVGElement.h"
+#include "nsDOMError.h"
+
+typedef PRUint8 nsSVGEnumValue;
 
 struct nsSVGEnumMapping {
-    nsIAtom **key;
-    PRUint16 val;
+  nsIAtom **mKey;
+  nsSVGEnumValue mVal;
 };
 
-nsresult
-NS_NewSVGEnum(nsISVGEnum** result,
-              PRUint16 value,
-              struct nsSVGEnumMapping *mapping);
+class nsSVGEnum
+{
+public:
+  void Init(PRUint8 aAttrEnum, PRUint16 aValue) {
+    mAnimVal = mBaseVal = static_cast<PRUint8>(aValue);
+    mAttrEnum = aAttrEnum;
+  }
 
-nsresult
-NS_NewSVGEnum(nsISVGEnum** result,
-              const nsAString &value,
-              struct nsSVGEnumMapping *mapping);
+  nsresult SetBaseValueString(const nsAString& aValue,
+                              nsSVGElement *aSVGElement,
+                              PRBool aDoSetAttr);
+  void GetBaseValueString(nsAString& aValue,
+                          nsSVGElement *aSVGElement);
 
-#endif //__NS_SVGENUM_H__
+  void SetBaseValue(PRUint16 aValue,
+                    nsSVGElement *aSVGElement,
+                    PRBool aDoSetAttr);
 
+  PRUint16 GetBaseValue()
+    { return mBaseVal; }
+  PRUint16 GetAnimValue()
+    { return mAnimVal; }
 
+  nsresult ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
+                             nsSVGElement* aSVGElement);
+
+private:
+  nsSVGEnumValue mAnimVal;
+  nsSVGEnumValue mBaseVal;
+  PRUint8 mAttrEnum; // element specified tracking for attribute
+
+  nsSVGEnumMapping *GetMapping(nsSVGElement *aSVGElement);
+
+  struct DOMAnimatedEnum : public nsIDOMSVGAnimatedEnumeration
+  {
+    NS_DECL_ISUPPORTS
+
+    DOMAnimatedEnum(nsSVGEnum* aVal, nsSVGElement *aSVGElement)
+      : mVal(aVal), mSVGElement(aSVGElement) {}
+
+    nsSVGEnum *mVal; // kept alive because it belongs to content
+    nsRefPtr<nsSVGElement> mSVGElement;
+
+    NS_IMETHOD GetBaseVal(PRUint16* aResult)
+      { *aResult = mVal->GetBaseValue(); return NS_OK; }
+    NS_IMETHOD SetBaseVal(PRUint16 aValue)
+      { mVal->SetBaseValue(aValue, mSVGElement, PR_TRUE); return NS_OK; }
+    NS_IMETHOD GetAnimVal(PRUint16* aResult)
+      { *aResult = mVal->GetAnimValue(); return NS_OK; }
+  };
+};
+
+#endif //__NS_SVGENUM2_H__

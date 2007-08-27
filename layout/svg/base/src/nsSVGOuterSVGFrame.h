@@ -41,7 +41,6 @@
 
 #include "nsSVGContainerFrame.h"
 #include "nsISVGSVGFrame.h"
-#include "nsISVGEnum.h"
 #include "nsIDOMSVGPoint.h"
 #include "nsIDOMSVGNumber.h"
 
@@ -134,7 +133,6 @@ protected:
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
 
   // zoom and pan
-  nsCOMPtr<nsISVGEnum>      mZoomAndPan;
   nsCOMPtr<nsIDOMSVGPoint>  mCurrentTranslate;
   nsCOMPtr<nsIDOMSVGNumber> mCurrentScale;
 
