@@ -49,7 +49,7 @@ interface nsIAutoCompleteSearch : nsISupports
    *
    * @param searchString - The string to search for
    * @param searchParam - An extra parameter
-   * @param previousResult - A previous result to use for faster searchinig
+   * @param previousResult - A previous result to use for faster searching
    * @param listener - A listener to notify when the search is complete
    */
   void startSearch(in AString searchString,
