@@ -1208,6 +1208,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mFrameState(aHistoryState),
     mPseudoFrames()
 {
+  MOZ_COUNT_CTOR(nsFrameConstructorState);
 }
 
 nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
@@ -1228,6 +1229,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mFirstLineStyle(PR_FALSE),
     mPseudoFrames()
 {
+  MOZ_COUNT_CTOR(nsFrameConstructorState);
   mFrameState = aPresShell->GetDocument()->GetLayoutHistoryState();
 }
 
@@ -1241,6 +1243,7 @@ nsFrameConstructorState::~nsFrameConstructorState()
   // for abs-pos and fixed-pos items whose containing blocks are outside the floats.
   // Then put abs-pos frames in, because they can contain placeholders for fixed-pos
   // items whose containing block is outside the abs-pos frames. 
+  MOZ_COUNT_DTOR(nsFrameConstructorState);
   ProcessFrameInsertions(mFloatedItems, nsGkAtoms::floatList);
   ProcessFrameInsertions(mAbsoluteItems, nsGkAtoms::absoluteList);
   ProcessFrameInsertions(mFixedItems, nsGkAtoms::fixedList);
@@ -7933,6 +7936,16 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
     NS_ASSERTION(firstTrailingInline, "How did that happen?");
     nsIFrame* parentFrame = aParentFrame;
 
+    // As we go up the tree creating trailing inlines, we have to move floats
+    // up to ancestor blocks.  This means that at any given time we'll be
+    // working with two frame constructor states, and aState is one of the two
+    // only at the first step.  Create some space to do this so we don't have
+    // to allocate as we go.
+    char stateBuf[2 * sizeof(nsFrameConstructorState)];
+    nsFrameConstructorState* sourceState = &aState;
+    nsFrameConstructorState* targetState =
+      reinterpret_cast<nsFrameConstructorState*>(stateBuf);
+
     // Now we loop, because it might be the case that the parent of our special
     // block is another special block, and that we're at the very end of it,
     // and in that case if we create a new special inline we'll have to create
@@ -7957,15 +7970,32 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
       nsIFrame* stateParent =
         inlineSibling ? inlineSibling->GetParent() : parentFrame->GetParent();
 
-      nsFrameConstructorState
-        targetState(mPresShell, mFixedContainingBlock,
-                    GetAbsoluteContainingBlock(stateParent),
-                    GetFloatContainingBlock(stateParent));
+      new (targetState)
+        nsFrameConstructorState(mPresShell, mFixedContainingBlock,
+                                GetAbsoluteContainingBlock(stateParent),
+                                GetFloatContainingBlock(stateParent));
       nsIFrame* newInlineSibling =
-        MoveFramesToEndOfIBSplit(aState, inlineSibling,
+        MoveFramesToEndOfIBSplit(*sourceState, inlineSibling,
                                  isPositioned, content,
                                  styleContext, firstTrailingInline,
-                                 parentFrame, &targetState);
+                                 parentFrame, targetState);
+
+      if (sourceState == &aState) {
+        NS_ASSERTION(targetState ==
+                       reinterpret_cast<nsFrameConstructorState*>(stateBuf),
+                     "Bogus target state?");
+        // Set sourceState to the value targetState should have next.
+        sourceState = targetState + 1;
+      } else {
+        // Go ahead and process whatever insertions we didn't move out
+        sourceState->~nsFrameConstructorState();
+      }
+
+      // We're done with the source state.  The target becomes the new source,
+      // and we point the target pointer to the available memory.
+      nsFrameConstructorState* temp = sourceState;
+      sourceState = targetState;
+      targetState = temp;;
 
       if (inlineSibling) {
         // we're all set -- we just moved things to a frame that was already
@@ -7996,6 +8026,9 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
         firstTrailingInline = newInlineSibling;
       }      
     } while (firstTrailingInline);
+
+    // Process the float insertions on the last target state we had.
+    sourceState->~nsFrameConstructorState();
   }
     
   if (!aFrameList.childList) {
