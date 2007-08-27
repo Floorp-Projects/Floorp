@@ -14,13 +14,11 @@
  *
  * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is
- * IBM Corporation
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * The Initial Developer of the Original Code is IBM Corporation
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Tim Rowley <tor@cs.brown.edu> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,137 +35,41 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsSVGEnum.h"
-#include "nsSVGValue.h"
-#include "nsISVGValueUtils.h"
-#include "nsWeakReference.h"
 #include "nsIAtom.h"
+#include "nsSVGElement.h"
 
-////////////////////////////////////////////////////////////////////////
-// nsSVGEnum class
+NS_IMPL_ADDREF(nsSVGEnum::DOMAnimatedEnum)
+NS_IMPL_RELEASE(nsSVGEnum::DOMAnimatedEnum)
 
-class nsSVGEnum : public nsISVGEnum,
-                  public nsSVGValue
-{
-protected:
-  friend nsresult NS_NewSVGEnum(nsISVGEnum** result,
-                                PRUint16 value,
-                                nsSVGEnumMapping *mapping);
-    
-  friend nsresult NS_NewSVGEnum(nsISVGEnum** result,
-                                const nsAString &value,
-                                nsSVGEnumMapping *mapping);
-  
-  nsSVGEnum(PRUint16 value, nsSVGEnumMapping *mapping);
-  nsSVGEnum(nsSVGEnumMapping *mapping);
-  virtual ~nsSVGEnum();
-
-public:
-  // nsISupports interface:
-  NS_DECL_ISUPPORTS
-
-  // nsISVGEnum interface:
-  NS_IMETHOD GetIntegerValue(PRUint16 &value);
-  NS_IMETHOD SetIntegerValue(PRUint16 value);
-  
-  // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAString& aValue);
-  NS_IMETHOD GetValueString(nsAString& aValue);
-  
-#ifdef DEBUG_scooter
-  void Print_mapping();
-#endif
-  
-protected:
-  PRUint16 mValue;
-  nsSVGEnumMapping *mMapping;
-};
-
-
-//----------------------------------------------------------------------
-// Implementation
-
-#ifdef DEBUG_scooter
-void nsSVGEnum::Print_mapping()
-{
-  nsSVGEnumMapping *tmp = mMapping;
-  nsAutoString aStr;
-  printf("Print_mapping: mMapping = 0x%x\n", tmp);
-  while (tmp->key) {
-    (*tmp->key)->ToString(aStr);
-    printf ("Print_mapping: %s (%d)\n", NS_ConvertUTF16toUTF8(aStr).get(), tmp->val);
-    tmp++;
-  }
-}
-#endif
-
-nsresult
-NS_NewSVGEnum(nsISVGEnum** result,
-              PRUint16 value,
-              nsSVGEnumMapping *mapping)
-{
-  NS_ASSERTION(mapping, "no mapping");
-  nsSVGEnum *pe = new nsSVGEnum(value, mapping);
-  if (!pe) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(pe);
-  *result = pe;
-  return NS_OK;
-}
-
-nsresult
-NS_NewSVGEnum(nsISVGEnum** result,
-              const nsAString &value,
-              nsSVGEnumMapping *mapping)
-{
-  NS_ASSERTION(mapping, "no mapping");
-  *result = nsnull;
-  nsSVGEnum *pe = new nsSVGEnum(0, mapping);
-  if (!pe) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(pe);
-  if (NS_FAILED(pe->SetValueString(value))) {
-    NS_RELEASE(pe);
-    return NS_ERROR_FAILURE;
-  }
-  *result = pe;
-  return NS_OK;
-}  
-
-
-nsSVGEnum::nsSVGEnum(PRUint16 value,
-                     nsSVGEnumMapping *mapping)
-    : mValue(value), mMapping(mapping)
-{
-}
-
-nsSVGEnum::~nsSVGEnum()
-{
-}
-
-//----------------------------------------------------------------------
-// nsISupports methods:
-
-NS_IMPL_ADDREF(nsSVGEnum)
-NS_IMPL_RELEASE(nsSVGEnum)
-
-NS_INTERFACE_MAP_BEGIN(nsSVGEnum)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValue)
-  NS_INTERFACE_MAP_ENTRY(nsISVGEnum)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISVGValue)
+NS_INTERFACE_MAP_BEGIN(nsSVGEnum::DOMAnimatedEnum)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedEnumeration)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimatedEnumeration)
 NS_INTERFACE_MAP_END
 
-//----------------------------------------------------------------------
-// nsISVGValue methods:
-NS_IMETHODIMP
-nsSVGEnum::SetValueString(const nsAString& aValue)
+nsSVGEnumMapping *
+nsSVGEnum::GetMapping(nsSVGElement *aSVGElement)
+{
+  nsSVGElement::EnumAttributesInfo info = aSVGElement->GetEnumInfo();
+
+  NS_ASSERTION(info.mEnumCount > 0 && mAttrEnum < info.mEnumCount,
+               "mapping request for a non-attrib enum");
+
+  return info.mEnumInfo[mAttrEnum].mMapping;
+}
+
+nsresult
+nsSVGEnum::SetBaseValueString(const nsAString& aValue,
+                              nsSVGElement *aSVGElement,
+                              PRBool aDoSetAttr)
 {
   nsCOMPtr<nsIAtom> valAtom = do_GetAtom(aValue);
 
-  nsSVGEnumMapping *tmp = mMapping;
+  nsSVGEnumMapping *tmp = GetMapping(aSVGElement);
 
-  while (tmp->key) {
-    if (valAtom == *(tmp->key)) {
-      WillModify();
-      mValue = tmp->val;
-      DidModify();
+  while (tmp && tmp->mKey) {
+    if (valAtom == *(tmp->mKey)) {
+      mBaseVal = mAnimVal = tmp->mVal;
       return NS_OK;
     }
     tmp++;
@@ -178,39 +80,38 @@ nsSVGEnum::SetValueString(const nsAString& aValue)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsSVGEnum::GetValueString(nsAString& aValue)
+void
+nsSVGEnum::GetBaseValueString(nsAString& aValue, nsSVGElement *aSVGElement)
 {
-  nsSVGEnumMapping *tmp = mMapping;
+  nsSVGEnumMapping *tmp = GetMapping(aSVGElement);
 
-  while (tmp->key) {
-    if (mValue == tmp->val) {
-      (*tmp->key)->ToString(aValue);
-      return NS_OK;
+  while (tmp && tmp->mKey) {
+    if (mBaseVal == tmp->mVal) {
+      (*tmp->mKey)->ToString(aValue);
+      return;
     }
     tmp++;
   }
   NS_ERROR("unknown enumeration value");
-  return NS_ERROR_FAILURE;
 }
 
-//----------------------------------------------------------------------
-// nsISVGEnum methods:
-
-NS_IMETHODIMP
-nsSVGEnum::GetIntegerValue(PRUint16& aValue)
+void
+nsSVGEnum::SetBaseValue(PRUint16 aValue,
+                        nsSVGElement *aSVGElement,
+                        PRBool aDoSetAttr)
 {
-  aValue = mValue;
+  mAnimVal = mBaseVal = static_cast<PRUint8>(aValue);
+  aSVGElement->DidChangeEnum(mAttrEnum, aDoSetAttr);
+}
+
+nsresult
+nsSVGEnum::ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,
+                             nsSVGElement *aSVGElement)
+{
+  *aResult = new DOMAnimatedEnum(this, aSVGElement);
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsSVGEnum::SetIntegerValue(PRUint16 aValue)
-{
-  WillModify();
-  mValue = aValue;
-  DidModify();
-  return NS_OK;
-}
-
-
