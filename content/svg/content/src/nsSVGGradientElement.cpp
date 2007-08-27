@@ -38,8 +38,6 @@
 
 #include "nsSVGTransformList.h"
 #include "nsSVGAnimatedTransformList.h"
-#include "nsSVGEnum.h"
-#include "nsSVGAnimatedEnumeration.h"
 #include "nsIDOMSVGAnimatedEnum.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsIDOMSVGGradientElement.h"
@@ -51,6 +49,25 @@
 
 //--------------------- Gradients------------------------
 
+nsSVGEnumMapping nsSVGGradientElement::sSpreadMethodMap[] = {
+  {&nsGkAtoms::pad, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD},
+  {&nsGkAtoms::reflect, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REFLECT},
+  {&nsGkAtoms::repeat, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REPEAT},
+  {nsnull, 0}
+};
+
+nsSVGElement::EnumInfo nsSVGGradientElement::sEnumInfo[2] =
+{
+  { &nsGkAtoms::gradientUnits,
+    sSVGUnitTypesMap,
+    nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
+  },
+  { &nsGkAtoms::spreadMethod,
+    sSpreadMethodMap,
+    nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD
+  }
+};
+
 //----------------------------------------------------------------------
 // nsISupports methods
 
@@ -59,6 +76,7 @@ NS_IMPL_RELEASE_INHERITED(nsSVGGradientElement,nsSVGGradientElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGGradientElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGURIReference)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGUnitTypes)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGGradientElementBase)
 
 //----------------------------------------------------------------------
@@ -75,33 +93,7 @@ nsSVGGradientElement::Init()
   nsresult rv = nsSVGGradientElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // Define enumeration mappings
-  static struct nsSVGEnumMapping gUnitMap[] = {
-        {&nsGkAtoms::objectBoundingBox, nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX},
-        {&nsGkAtoms::userSpaceOnUse, nsIDOMSVGGradientElement::SVG_GRUNITS_USERSPACEONUSE},
-        {nsnull, 0}
-  };
-
-  static struct nsSVGEnumMapping gSpreadMap[] = {
-        {&nsGkAtoms::pad, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD},
-        {&nsGkAtoms::reflect, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REFLECT},
-        {&nsGkAtoms::repeat, nsIDOMSVGGradientElement::SVG_SPREADMETHOD_REPEAT},
-        {nsnull, 0}
-  };
-
   // Create mapped attributes
-
-  // DOM property: gradientUnits ,  #IMPLIED attrib: gradientUnits
-  {
-    nsCOMPtr<nsISVGEnum> units;
-    rv = NS_NewSVGEnum(getter_AddRefs(units),
-                       nsIDOMSVGGradientElement::SVG_GRUNITS_OBJECTBOUNDINGBOX, gUnitMap);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mGradientUnits), units);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::gradientUnits, mGradientUnits);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
 
   // DOM property: gradientTransform ,  #IMPLIED attrib: gradientTransform
   {
@@ -112,18 +104,6 @@ nsSVGGradientElement::Init()
                                         transformList);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = AddMappedSVGValue(nsGkAtoms::gradientTransform, mGradientTransform);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: spreadMethod ,  #IMPLIED  attrib: spreadMethod
-  {
-    nsCOMPtr<nsISVGEnum> spread;
-    rv = NS_NewSVGEnum(getter_AddRefs(spread), 
-                       nsIDOMSVGGradientElement::SVG_SPREADMETHOD_PAD, gSpreadMap );
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mSpreadMethod), spread);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::spreadMethod, mSpreadMethod);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -140,15 +120,20 @@ nsSVGGradientElement::Init()
   return NS_OK;
 }
 
+nsSVGElement::EnumAttributesInfo
+nsSVGGradientElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            NS_ARRAY_LENGTH(sEnumInfo));
+}
+
 //----------------------------------------------------------------------
 // nsIDOMSVGGradientElement methods
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration gradientUnits; */
 NS_IMETHODIMP nsSVGGradientElement::GetGradientUnits(nsIDOMSVGAnimatedEnumeration * *aGradientUnits)
 {
-  *aGradientUnits = mGradientUnits;
-  NS_IF_ADDREF(*aGradientUnits);
-  return NS_OK;
+  return mEnumAttributes[GRADIENTUNITS].ToDOMAnimatedEnum(aGradientUnits, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedTransformList gradientTransform; */
@@ -162,9 +147,7 @@ NS_IMETHODIMP nsSVGGradientElement::GetGradientTransform(nsIDOMSVGAnimatedTransf
 /* readonly attribute nsIDOMSVGAnimatedEnumeration spreadMethod; */
 NS_IMETHODIMP nsSVGGradientElement::GetSpreadMethod(nsIDOMSVGAnimatedEnumeration * *aSpreadMethod)
 {
-  *aSpreadMethod = mSpreadMethod;
-  NS_IF_ADDREF(*aSpreadMethod);
-  return NS_OK;
+  return mEnumAttributes[SPREADMETHOD].ToDOMAnimatedEnum(aSpreadMethod, this);
 }
 
 //----------------------------------------------------------------------

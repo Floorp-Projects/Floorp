@@ -57,6 +57,8 @@
 class nsSVGSVGElement;
 class nsSVGLength2;
 class nsSVGNumber2;
+class nsSVGEnum;
+struct nsSVGEnumMapping;
 
 typedef nsStyledElement nsSVGElementBase;
 
@@ -116,6 +118,7 @@ public:
 
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);
@@ -179,6 +182,26 @@ public:
       {}
   };
 
+  struct EnumInfo {
+    nsIAtom**         mName;
+    nsSVGEnumMapping* mMapping;
+    PRUint16          mDefaultValue;
+  };
+
+  struct EnumAttributesInfo {
+    nsSVGEnum* mEnums;
+    EnumInfo*  mEnumInfo;
+    PRUint32   mEnumCount;
+
+    EnumAttributesInfo(nsSVGEnum *aEnums,
+                       EnumInfo *aEnumInfo,
+                       PRUint32 aEnumCount) :
+      mEnums(aEnums), mEnumInfo(aEnumInfo), mEnumCount(aEnumCount)
+      {}
+  };
+
+  virtual EnumAttributesInfo GetEnumInfo();
+
 protected:
   virtual LengthAttributesInfo GetLengthInfo();
   virtual NumberAttributesInfo GetNumberInfo();
@@ -186,6 +209,9 @@ protected:
   static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
                                               nsIAtom* aAttribute,
                                               const nsAString& aValue);
+
+  static nsSVGEnumMapping sSVGUnitTypesMap[];
+
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
   nsAttrAndChildArray mMappedAttributes;
 

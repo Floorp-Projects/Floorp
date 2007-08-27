@@ -69,12 +69,6 @@ interface nsIDOMSVGGradientElement
   const unsigned short SVG_SPREADMETHOD_PAD     = 1;
   const unsigned short SVG_SPREADMETHOD_REFLECT = 2;
   const unsigned short SVG_SPREADMETHOD_REPEAT  = 3;
-  // Extended to provide enumerations for gradientUnits
-  // These constants are taken from SVGUnitTypes
-  const unsigned short SVG_GRUNITS_UNKNOWN = 0;
-  const unsigned short SVG_GRUNITS_OBJECTBOUNDINGBOX = 1;
-  const unsigned short SVG_GRUNITS_USERSPACEONUSE = 2;
-
 
   readonly attribute nsIDOMSVGAnimatedEnumeration gradientUnits;
   readonly attribute nsIDOMSVGAnimatedTransformList gradientTransform;

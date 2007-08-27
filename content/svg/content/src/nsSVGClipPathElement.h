@@ -39,12 +39,14 @@
 
 #include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGClipPathElement.h"
-#include "nsSVGAnimatedEnumeration.h"
+#include "nsIDOMSVGUnitTypes.h"
+#include "nsSVGEnum.h"
 
 typedef nsSVGGraphicElement nsSVGClipPathElementBase;
 
 class nsSVGClipPathElement : public nsSVGClipPathElementBase,
-                             public nsIDOMSVGClipPathElement
+                             public nsIDOMSVGClipPathElement,
+                             public nsIDOMSVGUnitTypes
 {
   friend class nsSVGClipPathFrame;
 
@@ -52,7 +54,6 @@ protected:
   friend nsresult NS_NewSVGClipPathElement(nsIContent **aResult,
                                            nsINodeInfo *aNodeInfo);
   nsSVGClipPathElement(nsINodeInfo *aNodeInfo);
-  nsresult Init();
 
 public:
   // interfaces:
@@ -70,8 +71,11 @@ public:
 protected:
 
   // nsIDOMSVGClipPathElement values
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mClipPathUnits;
+  enum { CLIPPATHUNITS };
+  nsSVGEnum mEnumAttributes[1];
+  static EnumInfo sEnumInfo[1];
 
+  virtual EnumAttributesInfo GetEnumInfo();
 };
 
 #endif
