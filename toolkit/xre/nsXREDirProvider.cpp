@@ -551,6 +551,10 @@ LoadAppBundlesIntoArray(nsIFile* aXULAppDir,
   dir->AppendNative(NS_LITERAL_CSTRING("distribution"));
   dir->AppendNative(NS_LITERAL_CSTRING("bundles"));
 
+  PRBool exists;
+  if (NS_FAILED(dir->Exists(&exists)) || !exists)
+    return;
+
   nsCOMPtr<nsISimpleEnumerator> e;
   rv = dir->GetDirectoryEntries(getter_AddRefs(e));
   if (NS_FAILED(rv))
@@ -573,7 +577,6 @@ LoadAppBundlesIntoArray(nsIFile* aXULAppDir,
       ++a;
     }
     
-    PRBool exists;
     rv = subdir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && exists)
       aDirectories.AppendObject(subdir);
