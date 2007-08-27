@@ -1950,7 +1950,7 @@ js_InitPropertyTree(JSRuntime *rt)
         return JS_FALSE;
     }
     JS_INIT_ARENA_POOL(&rt->propertyArenaPool, "properties",
-                       256 * sizeof(JSScopeProperty), sizeof(void *));
+                       256 * sizeof(JSScopeProperty), sizeof(void *), NULL);
     return JS_TRUE;
 }
 

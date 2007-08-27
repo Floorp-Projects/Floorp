@@ -673,7 +673,7 @@ JS_NEW_PRINTER(JSContext *cx, const char *name, uintN indent, JSBool pretty)
     if (!jp)
         return NULL;
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
-    JS_INIT_ARENA_POOL(&jp->pool, name, 256, 1);
+    JS_INIT_ARENA_POOL(&jp->pool, name, 256, 1, &cx->scriptStackQuota);
     jp->indent = indent & ~JS_IN_GROUP_CONTEXT;
     jp->pretty = pretty;
     jp->grouped = (indent & JS_IN_GROUP_CONTEXT) != 0;
