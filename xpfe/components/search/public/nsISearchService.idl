@@ -52,14 +52,14 @@ interface nsILocalSearchService : nsISupports
 {
 };
 
-[scriptable, uuid(6bd1d803-1c67-11d3-9820-ed1b357eb3c4)]
+[scriptable, uuid(a0d28a88-702e-49bd-bee2-929562688ae1)]
 interface nsIInternetSearchService : nsISupports
 {
   // constants set in the whichButtons out param of GetInternetSearchURL() 
   const unsigned short kHaveNext = 1;
   const unsigned short kHavePrev = 2;
 
-  string      GetInternetSearchURL(in string searchEngineURI, in wstring searchStr, in short direction, in unsigned short pageNumber, out unsigned short whichButtons);
+  wstring   GetInternetSearchURL(in string searchEngineURI, in wstring searchStr, in short direction, in unsigned short pageNumber, out unsigned short whichButtons);
   void      RememberLastSearchText(in wstring escapedSearchStr);
   boolean      FindInternetSearchResults(in string url);
   void      Stop();
