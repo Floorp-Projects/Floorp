@@ -45,7 +45,6 @@
 #include "jsapi.h"
 
 #include "nsIJSContextStack.h"
-#include "nsIDirectoryEnumerator.h"
 #include "nsILocalFile.h"
 #include "nsIObserverService.h"
 #include "nsIProfileChangeStatus.h"
@@ -475,6 +474,7 @@ LoadDirsIntoArray(nsIFile* aComponentsList, const char* aSection,
   while (PR_TRUE);
 }
 
+
 static void
 LoadAppPlatformDirIntoArray(nsIFile* aXULAppDir,
                   const char *const* aAppendList,
@@ -538,53 +538,6 @@ LoadAppPlatformDirIntoArray(nsIFile* aXULAppDir,
 #endif
 }
 
-static void
-LoadAppBundlesIntoArray(nsIFile* aXULAppDir,
-                        const char *const* aAppendList,
-                        nsCOMArray<nsIFile>& aDirectories)
-{
-  nsCOMPtr<nsIFile> dir;
-  nsresult rv = aXULAppDir->Clone(getter_AddRefs(dir));
-  if (NS_FAILED(rv))
-    return;
-
-  dir->AppendNative(NS_LITERAL_CSTRING("distribution"));
-  dir->AppendNative(NS_LITERAL_CSTRING("bundles"));
-
-  PRBool exists;
-  if (NS_FAILED(dir->Exists(&exists)) || !exists)
-    return;
-
-  nsCOMPtr<nsISimpleEnumerator> e;
-  rv = dir->GetDirectoryEntries(getter_AddRefs(e));
-  if (NS_FAILED(rv))
-    return;
-
-  nsCOMPtr<nsIDirectoryEnumerator> files = do_QueryInterface(e);
-  if (!files)
-    return;
-
-  nsCOMPtr<nsIFile> file;
-  while (NS_SUCCEEDED(files->GetNextFile(getter_AddRefs(file))) && file) {
-    nsCOMPtr<nsIFile> subdir;
-    file->Clone(getter_AddRefs(subdir));
-    if (!subdir)
-      break;
-
-    const char* const* a = aAppendList;
-    while (*a) {
-      subdir->AppendNative(nsDependentCString(*a));
-      ++a;
-    }
-    
-    rv = subdir->Exists(&exists);
-    if (NS_SUCCEEDED(rv) && exists)
-      aDirectories.AppendObject(subdir);
-
-    LoadAppPlatformDirIntoArray(file, aAppendList, aDirectories);
-  }
-}
-
 static const char *const kAppendChromeManifests[] =
   { "chrome.manifest", nsnull };
 
@@ -641,14 +594,9 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
   if (!strcmp(aProperty, XRE_EXTENSIONS_DIR_LIST)) {
     nsCOMArray<nsIFile> directories;
     
-    static const char *const kAppendNothing[] = { nsnull };
-
-    if (mXULAppDir) {
-      LoadAppPlatformDirIntoArray(mXULAppDir, kAppendNothing, directories);
-      LoadAppBundlesIntoArray(mXULAppDir, kAppendNothing, directories);
-    }
-
     if (mProfileDir && !gSafeMode) {
+      static const char *const kAppendNothing[] = { nsnull };
+
       LoadDirsIntoArray(profileFile, "ExtensionDirs",
                         kAppendNothing, directories);
     }
@@ -668,7 +616,6 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
         directories.AppendObject(file);
 
        LoadAppPlatformDirIntoArray(mXULAppDir, kAppendCompDir, directories);
-       LoadAppBundlesIntoArray(mXULAppDir, kAppendCompDir, directories);
     }
 
     if (mProfileDir && !gSafeMode) {
@@ -692,7 +639,6 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
         directories.AppendObject(file);
 
        LoadAppPlatformDirIntoArray(mXULAppDir, kAppendPrefDir, directories);
-       LoadAppBundlesIntoArray(mXULAppDir, kAppendPrefDir, directories);
     }
     
     if (mProfileDir) {
@@ -733,8 +679,6 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
 
       LoadAppPlatformDirIntoArray(mXULAppDir, kAppendChromeManifests,
                                   manifests);
-      LoadAppBundlesIntoArray(mXULAppDir, kAppendChromeManifests,
-                              manifests);
     }
 
     if (mProfileDir && !gSafeMode) {
@@ -769,7 +713,6 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
         directories.AppendObject(file);
 
       LoadAppPlatformDirIntoArray(mXULAppDir, kAppendChromeDir, directories);
-      LoadAppBundlesIntoArray(mXULAppDir, kAppendChromeDir, directories);
     }
 
     if (mProfileDir && !gSafeMode) {
@@ -794,7 +737,6 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
         directories.AppendObject(file);
 
       LoadAppPlatformDirIntoArray(mXULAppDir, kAppendPlugins, directories);
-      LoadAppBundlesIntoArray(mXULAppDir, kAppendPlugins, directories);
     }
 
     if (mProfileDir && !gSafeMode) {
