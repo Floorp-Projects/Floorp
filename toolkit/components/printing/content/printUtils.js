@@ -279,9 +279,8 @@ var PrintUtils = {
     webBrowserPrint.exitPrintPreview(); 
 
     // remove the print preview toolbar
-    var navToolbox = getNavToolbox();
     var printPreviewTB = document.getElementById("print-preview-toolbar");
-    navToolbox.parentNode.removeChild(printPreviewTB);
+    getNavToolbox().parentNode.removeChild(printPreviewTB);
 
     var contentWindow = aWindow || window.content;
     contentWindow.focus();
