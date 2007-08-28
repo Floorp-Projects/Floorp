@@ -766,6 +766,7 @@ nsXULPDGlobalObject::ClearGlobalObjectOwner()
             mScriptContexts[lang_ndx] = nsnull;
         }
     }
+    mGlobalObjectOwner = nsnull;
 }
 
 
