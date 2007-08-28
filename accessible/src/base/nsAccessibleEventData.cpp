@@ -394,11 +394,16 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsAccTextChangeEvent, nsAccEvent,
 
 nsAccTextChangeEvent::
   nsAccTextChangeEvent(nsIAccessible *aAccessible,
-                       PRInt32 aStart, PRUint32 aLength, PRBool aIsInserted):
+                       PRInt32 aStart, PRUint32 aLength, PRBool aIsInserted, PRBool aIsAsynch):
   nsAccEvent(aIsInserted ? nsIAccessibleEvent::EVENT_TEXT_INSERTED : nsIAccessibleEvent::EVENT_TEXT_REMOVED,
-             aAccessible, nsnull),
+             aAccessible, nsnull, aIsAsynch),
   mStart(aStart), mLength(aLength), mIsInserted(aIsInserted)
 {
+  nsCOMPtr<nsIAccessibleText> textAccessible = do_QueryInterface(aAccessible);
+  NS_ASSERTION(textAccessible, "Should not be firing test change event for non-text accessible!!!");
+  if (textAccessible) {
+    textAccessible->GetText(aStart, aStart + aLength, mModifiedText);
+  }
 }
 
 NS_IMETHODIMP
@@ -419,6 +424,13 @@ NS_IMETHODIMP
 nsAccTextChangeEvent::IsInserted(PRBool *aIsInserted)
 {
   *aIsInserted = mIsInserted;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAccTextChangeEvent::GetModifiedText(nsAString& aModifiedText)
+{
+  aModifiedText = mModifiedText;
   return NS_OK;
 }
 

@@ -101,6 +101,9 @@ public:
     *
     * @param aNode - the node to look for
     * @param aNodeOffset - the offset to look for
+    *                      if -1 just look directly for the node
+    *                      if >=0 and aNode is text, this represents a char offset
+    *                      if >=0 and aNode is not text, this represents a child node offset
     * @param aResultOffset - the character offset into the current
     *                        nsHyperTextAccessible
     * @param aFinalAccessible [optional] - returns the accessible child which

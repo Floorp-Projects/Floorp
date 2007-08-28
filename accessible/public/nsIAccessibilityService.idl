@@ -98,8 +98,8 @@ interface nsIAccessibilityService : nsIAccessibleRetrieval
    *                           EVENT_HIDE (destroy or hide)
    */
   void invalidateSubtreeFor(in nsIPresShell aPresShell,
-                                       in nsIContent aChangedContent,
-                                       in PRUint32 aEvent);
+                            in nsIContent aChangedContent,
+                            in PRUint32 aEvent);
 };
 
 
