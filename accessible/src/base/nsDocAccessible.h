@@ -170,11 +170,11 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
      * @param aIsInserting, is aChangeNode being created or shown (vs. removed or hidden)
      */
     already_AddRefed<nsIAccessibleTextChangeEvent>
-    nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessible,
-                                                  nsIDOMNode *aChangeNode,
-                                                  nsIAccessible *aAccessibleForNode,
-                                                  PRBool aIsInserting,
-                                                  PRBool aIsAsynch);
+    CreateTextChangeEventForNode(nsIAccessible *aContainerAccessible,
+                                 nsIDOMNode *aChangeNode,
+                                 nsIAccessible *aAccessibleForNode,
+                                 PRBool aIsInserting,
+                                 PRBool aIsAsynch);
 
     nsAccessNodeHashtable mAccessNodeCache;
     void *mWnd;
