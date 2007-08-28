@@ -166,7 +166,10 @@ nsCSSValue& nsCSSValue::operator=(const nsCSSValue& aCopy)
 PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
 {
   if (mUnit == aOther.mUnit) {
-    if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Attr)) {
+    if (mUnit <= eCSSUnit_System_Font) {
+      return PR_TRUE;
+    }
+    else if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Attr)) {
       return (NS_strcmp(GetBufferValue(mValue.mString),
                         GetBufferValue(aOther.mValue.mString)) == 0);
     }
