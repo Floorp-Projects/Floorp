@@ -95,7 +95,6 @@ NS_IMPL_ISUPPORTS1(nsNativeThemeCocoa, nsITheme)
 
 nsNativeThemeCocoa::nsNativeThemeCocoa()
 {
-  sListboxBGTransparent = PR_TRUE;
 }
 
 nsNativeThemeCocoa::~nsNativeThemeCocoa()
@@ -1335,8 +1334,6 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
 
   switch (aWidgetType) {
     case NS_THEME_LISTBOX:
-      return PR_TRUE; // we always want listboxes themed, non-themed ones look wrong
-      break;
 
     case NS_THEME_DIALOG:
     case NS_THEME_WINDOW:
