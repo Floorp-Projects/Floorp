@@ -6605,7 +6605,7 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
                 for ( ;trapIndex<band1.mCount; trapIndex++)
                 {
                   PRBool match = (trap1[trapIndex].EqualGeometry(trap2[trapIndex])) && 
-                    ((trap1[trapIndex].mFrame!=nsull) == (trap2[trapIndex].mFrame!=nsnull));
+                    trap1[trapIndex].mState == trap2[trapIndex].mState;
                   if (!match)
                   {
                     LogVerifyMessage(k1, k2, "band.mTrapezoids of space managers differs\n");
@@ -6630,7 +6630,7 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
                 for ( ; trapIndex<band1.mCount; trapIndex++)
                 {
                   PRBool match = (trap1[trapIndex].EqualGeometry(trap2[trapIndex])) && 
-                    ((trap1[trapIndex].mFrame!=nsull) == (trap2[trapIndex].mFrame!=nsnull));
+                    trap1[trapIndex].mState == trap2[trapIndex].mState;
                   if (!match)
                   {
                     LogVerifyMessage(k1, k2, "band.mTrapezoids of space managers differs\n");
