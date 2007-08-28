@@ -258,6 +258,14 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
     drawRect.size.width -= frameOutset * 2;
     drawRect.size.height -= frameOutset * 2;
   }
+  else if (inKind == kHIThemeFrameListBox) {
+    SInt32 frameOutset = 0;
+    ::GetThemeMetric(kThemeMetricListBoxFrameOutset, &frameOutset);
+    drawRect.origin.x += frameOutset;
+    drawRect.origin.y += frameOutset;
+    drawRect.size.width -= frameOutset * 2;
+    drawRect.size.height -= frameOutset * 2;
+  }
 
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.8);
