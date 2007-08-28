@@ -1149,9 +1149,6 @@ void nsDocAccessible::ContentAppended(nsIDocument *aDocument,
   PRUint32 childCount = aContainer->GetChildCount();
   for (PRUint32 index = aNewIndexInContainer; index < childCount; index ++) {
     nsCOMPtr<nsIContent> child(aContainer->GetChildAt(index));
-
-    FireTextChangedEventOnDOMNodeInserted(child, aContainer, index);
-
     // InvalidateCacheSubtree will not fire the EVENT_SHOW for the new node
     // unless an accessible can be created for the passed in node, which it
     // can't do unless the node is visible. The right thing happens there so
@@ -1184,8 +1181,6 @@ void
 nsDocAccessible::ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
                                  nsIContent* aChild, PRInt32 aIndexInContainer)
 {
-  FireTextChangedEventOnDOMNodeInserted(aChild, aContainer, aIndexInContainer);
-
   // InvalidateCacheSubtree will not fire the EVENT_SHOW for the new node
   // unless an accessible can be created for the passed in node, which it
   // can't do unless the node is visible. The right thing happens there so
@@ -1197,10 +1192,11 @@ void
 nsDocAccessible::ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
                                 nsIContent* aChild, PRInt32 aIndexInContainer)
 {
-  FireTextChangedEventOnDOMNodeRemoved(aChild, aContainer, aIndexInContainer);
-
   // Invalidate the subtree of the removed element.
-  InvalidateCacheSubtree(aChild, nsIAccessibleEvent::EVENT_DOM_DESTROY);
+  // InvalidateCacheSubtree(aChild, nsIAccessibleEvent::EVENT_DOM_DESTROY);
+  // This is no longer needed, we get our notifications directly from content
+  // *before* the frame for the content is destroyed, or any other side effects occur.
+  // That allows us to correctly calculate the TEXT_REMOVED event if there is one.
 }
 
 void
@@ -1256,122 +1252,82 @@ nsDocAccessible::FireTextChangedEventOnDOMCharacterDataModified(nsIContent *aCon
   }
 }
 
-void
-nsDocAccessible::FireTextChangedEventOnDOMNodeInserted(nsIContent *aChild,
-                                                       nsIContent *aContainer,
-                                                       PRInt32 aIndexInContainer)
+already_AddRefed<nsIAccessibleTextChangeEvent>
+nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessible,
+                                              nsIDOMNode *aChangeNode,
+                                              nsIAccessible *aAccessibleForChangeNode,
+                                              PRBool aIsInserting,
+                                              PRBool aIsAsynch)
 {
-  if (!mIsContentLoaded || !mDocument) {
-    return;
+  nsRefPtr<nsHyperTextAccessible> textAccessible;
+  aContainerAccessible->QueryInterface(NS_GET_IID(nsHyperTextAccessible),
+                                       getter_AddRefs(textAccessible));
+  if (!textAccessible) {
+    return nsnull;
   }
 
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aChild));
-  if (!node)
-    return;
+  PRInt32 offset;
+  PRInt32 length = 0;
+  nsCOMPtr<nsIAccessible> changeAccessible;
+  nsresult rv = textAccessible->DOMPointToHypertextOffset(aChangeNode, -1, &offset,
+                                                          getter_AddRefs(changeAccessible));
+  NS_ENSURE_SUCCESS(rv, nsnull);
 
-  nsCOMPtr<nsIAccessible> accessible;
-  nsresult rv = GetAccessibleInParentChain(node, getter_AddRefs(accessible));
-  if (NS_FAILED(rv) || !accessible)
-    return;
-
-  nsRefPtr<nsHyperTextAccessible> textAccessible;
-  rv = accessible->QueryInterface(NS_GET_IID(nsHyperTextAccessible),
-                                  getter_AddRefs(textAccessible));
-  if (NS_FAILED(rv) || !textAccessible)
-    return;
-
-  PRUint32 length = 1;
-  if (aChild && aChild->IsNodeOfType(nsINode::eTEXT)) {
-    length = aChild->TextLength();
-    if (!length)
-      return;
-  } else {
-    // Don't fire event for the first html:br in an editor.
-    nsCOMPtr<nsIEditor> editor;
-    textAccessible->GetAssociatedEditor(getter_AddRefs(editor));
-    if (editor) {
-      PRBool isEmpty = PR_FALSE;
-      editor->GetDocumentIsEmpty(&isEmpty);
-      if (isEmpty)
-        return;
+  if (!aAccessibleForChangeNode) {
+    // A span-level object or something else without an accessible is being removed, where
+    // it has no accessible but it has descendant content which is aggregated as text
+    // into the parent hypertext.
+    // In this case, accessibleToBeRemoved may just be the first
+    // accessible that is removed, which affects the text in the hypertext container
+    if (!changeAccessible) {
+      return nsnull; // No descendant content that represents any text in the hypertext parent
+    }
+    nsCOMPtr<nsIAccessible> child = changeAccessible;
+    while (PR_TRUE) {
+      nsCOMPtr<nsIAccessNode> childAccessNode =
+        do_QueryInterface(changeAccessible);
+      nsCOMPtr<nsIDOMNode> childNode;
+      childAccessNode->GetDOMNode(getter_AddRefs(childNode));
+      if (!nsAccUtils::IsAncestorOf(aChangeNode, childNode)) {
+        break;  // We only want accessibles with DOM nodes as children of this node
+      }
+      length += TextLength(child);
+      child->GetNextSibling(getter_AddRefs(changeAccessible));
+      if (!changeAccessible) {
+        break;
+      }
+      child.swap(changeAccessible);
+    }
+  }
+  else {
+    NS_ASSERTION(changeAccessible == aAccessibleForChangeNode,
+                 "Hypertext is reporting a different accessible for this node");
+    length = TextLength(aAccessibleForChangeNode);
+    if (Role(aAccessibleForChangeNode) == nsIAccessibleRole::ROLE_WHITESPACE) {  // newline
+      // Don't fire event for the first html:br in an editor.
+      nsCOMPtr<nsIEditor> editor;
+      textAccessible->GetAssociatedEditor(getter_AddRefs(editor));
+      if (editor) {
+        PRBool isEmpty = PR_FALSE;
+        editor->GetDocumentIsEmpty(&isEmpty);
+        if (isEmpty) {
+          return nsnull;
+        }
+      }
     }
   }
 
-  nsCOMPtr<nsIDOMNode> parentNode(do_QueryInterface(aContainer));
-  if (!parentNode)
-    return;
-
-  PRInt32 offset = 0;
-  rv = textAccessible->DOMPointToHypertextOffset(parentNode, aIndexInContainer, &offset);
-  if (NS_FAILED(rv))
-    return;
-
-  nsCOMPtr<nsIAccessibleTextChangeEvent> event =
-    new nsAccTextChangeEvent(accessible, offset, length, PR_TRUE);
-  if (!event)
-    return;
-
-  textAccessible->FireAccessibleEvent(event);
-}
-
-void
-nsDocAccessible::FireTextChangedEventOnDOMNodeRemoved(nsIContent *aChild,
-                                                      nsIContent *aContainer,
-                                                      PRInt32 aIndexInContainer)
-{
-  if (!mIsContentLoaded || !mDocument) {
-    return;
+  if (length <= 0) {
+    return nsnull;
   }
 
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aChild));
-  if (!node)
-    return;
+  nsIAccessibleTextChangeEvent *event =
+    new nsAccTextChangeEvent(aContainerAccessible, offset, length, aIsInserting, aIsAsynch);
+  NS_IF_ADDREF(event);
 
-  nsCOMPtr<nsIAccessible> accessible;
-  nsresult rv = GetAccessibleInParentChain(node, getter_AddRefs(accessible));
-  if (NS_FAILED(rv) || !accessible)
-    return;
-
-  nsRefPtr<nsHyperTextAccessible> textAccessible;
-  rv = accessible->QueryInterface(NS_GET_IID(nsHyperTextAccessible),
-                                  getter_AddRefs(textAccessible));
-  if (NS_FAILED(rv) || !textAccessible)
-    return;
-
-  PRUint32 length = 1;
-  if (aChild && aChild->IsNodeOfType(nsINode::eTEXT)) {
-    length = aChild->TextLength();
-    if (!length)
-      return;
-  } else {
-    // Don't fire event for the last html:br in an editor.
-    nsCOMPtr<nsIEditor> editor;
-    textAccessible->GetAssociatedEditor(getter_AddRefs(editor));
-    if (editor) {
-      PRBool isEmpty = PR_FALSE;
-      editor->GetDocumentIsEmpty(&isEmpty);
-      if (isEmpty)
-        return;
-    }
-  }
-
-  nsCOMPtr<nsIDOMNode> parentNode(do_QueryInterface(aContainer));
-  if (!parentNode)
-    return;
-
-  PRInt32 offset = 0;
-  rv = textAccessible->DOMPointToHypertextOffset(parentNode, aIndexInContainer, &offset);
-  if (NS_FAILED(rv))
-    return;
-
-  nsCOMPtr<nsIAccessibleTextChangeEvent> event =
-    new nsAccTextChangeEvent(accessible, offset, length, PR_FALSE);
-  if (!event)
-    return;
-
-  textAccessible->FireAccessibleEvent(event);
+  return event;
 }
-
+  
 nsresult nsDocAccessible::FireDelayedToolkitEvent(PRUint32 aEvent,
                                                   nsIDOMNode *aDOMNode,
                                                   void *aData,
@@ -1492,9 +1448,38 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
 
     nsCOMPtr<nsIAccessible> accessible;
     accessibleEvent->GetAccessible(getter_AddRefs(accessible));
+
+    PRUint32 eventType;
+    accessibleEvent->GetEventType(&eventType);
+    if (eventType == nsIAccessibleEvent::EVENT_DOM_CREATE || 
+        eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
+      // Also fire text changes if the node being created could affect the text in an nsIAccessibleText parent.
+      // When a node is being made visible or is inserted, the text in an ancestor hyper text will gain characters
+      // At this point we now have the frame and accessible for this node if there is one. That is why we
+      // wait to fire this here, instead of in InvalidateCacheSubtree(), where we wouldn't be able to calculate
+      // the offset, length and text for the text change.
+      nsCOMPtr<nsIDOMNode> domNode;
+      accessibleEvent->GetDOMNode(getter_AddRefs(domNode));
+      if (domNode && domNode != mDOMNode) {
+        nsCOMPtr<nsIAccessible> containerAccessible;
+        GetAccessibleInParentChain(domNode, getter_AddRefs(containerAccessible));
+        nsCOMPtr<nsIAccessibleTextChangeEvent> textChangeEvent =
+          CreateTextChangeEventForNode(containerAccessible, domNode, accessible, PR_TRUE, PR_TRUE);
+        if (textChangeEvent) {
+          PRBool isFromUserInput;
+          accessibleEvent->GetIsFromUserInput(&isFromUserInput);
+          nsCOMPtr<nsIDOMNode> hyperTextNode;
+          textChangeEvent->GetDOMNode(getter_AddRefs(hyperTextNode));
+          nsAccEvent::PrepareForEvent(hyperTextNode, isFromUserInput);
+          // XXX Queue them up and merge the text change events
+          // XXX We need a way to ignore SplitNode and JoinNode() when they
+          // do not affect the text within the hypertext
+          FireAccessibleEvent(textChangeEvent);
+        }
+      }
+    }
+
     if (accessible) {
-      PRUint32 eventType;
-      accessibleEvent->GetEventType(&eventType);
       if (eventType == nsIAccessibleEvent::EVENT_INTERNAL_LOAD) {
         nsCOMPtr<nsPIAccessibleDocument> docAccessible =
           do_QueryInterface(accessible);
@@ -1534,6 +1519,14 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
         // Post event processing
         if (eventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
             eventType == nsIAccessibleEvent::EVENT_DOM_DESTROY) {
+          // Invalidate children
+          nsCOMPtr<nsIAccessible> containerAccessible;
+          accessible->GetParent(getter_AddRefs(containerAccessible));
+          nsCOMPtr<nsPIAccessible> privateContainerAccessible =
+            do_QueryInterface(containerAccessible);
+          if (privateContainerAccessible) {
+            privateContainerAccessible->InvalidateChildren();
+          }
           // Shutdown nsIAccessNode's or nsIAccessibles for any DOM nodes in this subtree
           nsCOMPtr<nsIDOMNode> hidingNode;
           accessibleEvent->GetDOMNode(getter_AddRefs(hidingNode));
@@ -1702,6 +1695,12 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   }
 #endif
 
+  nsCOMPtr<nsIAccessible> containerAccessible;
+  GetAccessibleInParentChain(childNode, getter_AddRefs(containerAccessible));
+  if (!containerAccessible) {
+    containerAccessible = this;
+  }
+
   if (!isShowing) {
     // Fire EVENT_ASYNCH_HIDE or EVENT_DOM_DESTROY if previous accessible existed for node being hidden.
     // Fire this before the accessible goes away.
@@ -1713,6 +1712,19 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
       NS_ENSURE_TRUE(removalEvent, NS_ERROR_OUT_OF_MEMORY);
       FireDelayedAccessibleEvent(removalEvent, eCoalesceFromSameSubtree, isAsynch);
     }
+    if (childNode != mDOMNode) { // Fire text change unless the node being removed is for this doc
+      // When a node is hidden or removed, the text in an ancestor hyper text will lose characters
+      // At this point we still have the frame and accessible for this node if there was one
+      // XXX Collate events when a range is deleted
+      // XXX We need a way to ignore SplitNode and JoinNode() when they
+      // do not affect the text within the hypertext
+      nsCOMPtr<nsIAccessibleTextChangeEvent> textChangeEvent =
+        CreateTextChangeEventForNode(containerAccessible, childNode, childAccessible,
+                                     PR_FALSE, isAsynch);
+      if (textChangeEvent) {
+        FireAccessibleEvent(textChangeEvent);
+      }
+    }
   }
 
   // We need to get an accessible for the mutation event's container node
@@ -1722,18 +1734,12 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   // We're guaranteed success, because we will eventually end up at the doc accessible,
   // and there is always one of those.
 
-  nsCOMPtr<nsIAccessible> containerAccessible;
-  GetAccessibleInParentChain(childNode, getter_AddRefs(containerAccessible));
-  if (!containerAccessible) {
-    containerAccessible = this;
-  }
-  nsCOMPtr<nsPIAccessible> privateContainerAccessible =
-    do_QueryInterface(containerAccessible);
-  if (privateContainerAccessible) {
-    privateContainerAccessible->InvalidateChildren();
-  }
-
   if (aChild && !isHiding) {
+    nsCOMPtr<nsPIAccessible> privateContainerAccessible =
+      do_QueryInterface(containerAccessible);
+    if (privateContainerAccessible) {
+      privateContainerAccessible->InvalidateChildren();
+    }
     // Fire EVENT_SHOW, EVENT_MENUPOPUP_START for newly visible content.
     // Fire after a short timer, because we want to make sure the view has been
     // updated to make this accessible content visible. If we don't wait,

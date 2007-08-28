@@ -107,7 +107,7 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     /**
       * Non-virtual method to fire a delayed event after a 0 length timeout
       *
-      * @param aEvent - the nsIAccessibleEvent event ype
+      * @param aEvent - the nsIAccessibleEvent event type
       * @param aDOMNode - DOM node the accesible event should be fired for
       * @param aData - any additional data for the event
       * @param aAllowDupes - eAllowDupes: more than one event of the same type is allowed. 
@@ -161,21 +161,20 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
      */
     void FireTextChangedEventOnDOMCharacterDataModified(nsIContent *aContent,
                                                         CharacterDataChangeInfo* aInfo);
-    /**
-     * Fire text changed event for the inserted element if it is inside a text
-     * accessible.
-     */
-    void FireTextChangedEventOnDOMNodeInserted(nsIContent *aChild,
-                                               nsIContent *aContainer,
-                                               PRInt32 aIndexInContainer);
 
     /**
-     * Fire text changed event for the removed element if it is inside a text
-     * accessible.
+     * Create a text change event for a changed node
+     * @param aContainerAccessible, the first accessible in the container
+     * @param aChangeNode, the node that is being inserted or removed, or shown/hidden
+     * @param aAccessibleForChangeNode, the accessible for that node, or nsnull if none exists
+     * @param aIsInserting, is aChangeNode being created or shown (vs. removed or hidden)
      */
-    void FireTextChangedEventOnDOMNodeRemoved(nsIContent *aChild,
-                                              nsIContent *aContainer,
-                                              PRInt32 aIndexInContainer);
+    already_AddRefed<nsIAccessibleTextChangeEvent>
+    nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessible,
+                                                  nsIDOMNode *aChangeNode,
+                                                  nsIAccessible *aAccessibleForNode,
+                                                  PRBool aIsInserting,
+                                                  PRBool aIsAsynch);
 
     nsAccessNodeHashtable mAccessNodeCache;
     void *mWnd;
