@@ -48,6 +48,7 @@
 #include "nsISelectElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsEventDispatcher.h"
+#include "nsHTMLSelectElement.h"
 
 /**
  * The implementation of &lt;optgroup&gt;
@@ -174,23 +175,23 @@ nsHTMLOptGroupElement::InsertChildAt(nsIContent* aKid,
                                      PRUint32 aIndex,
                                      PRBool aNotify)
 {
-  nsCOMPtr<nsISelectElement> sel = do_QueryInterface(GetSelect());
-  if (sel) {
-    sel->WillAddOptions(aKid, this, aIndex);
+  nsSafeOptionListMutation safeMutation(GetSelect(), this, aKid, aIndex);
+  nsresult rv = nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify);
+  if (NS_FAILED(rv)) {
+    safeMutation.MutationFailed();
   }
-
-  return nsGenericHTMLElement::InsertChildAt(aKid, aIndex, aNotify);
+  return rv;
 }
 
 nsresult
 nsHTMLOptGroupElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 {
-  nsCOMPtr<nsISelectElement> sel = do_QueryInterface(GetSelect());
-  if (sel) {
-    sel->WillRemoveOptions(this, aIndex);
+  nsSafeOptionListMutation safeMutation(GetSelect(), this, nsnull, aIndex);
+  nsresult rv = nsGenericHTMLElement::RemoveChildAt(aIndex, aNotify);
+  if (NS_FAILED(rv)) {
+    safeMutation.MutationFailed();
   }
-
-  return nsGenericHTMLElement::RemoveChildAt(aIndex, aNotify);
+  return rv;
 }
 
 PRInt32
