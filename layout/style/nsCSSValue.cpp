@@ -154,11 +154,6 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   }
 }
 
-nsCSSValue::~nsCSSValue()
-{
-  Reset();
-}
-
 nsCSSValue& nsCSSValue::operator=(const nsCSSValue& aCopy)
 {
   if (this != &aCopy) {
@@ -239,6 +234,20 @@ nscoord nsCSSValue::GetLengthTwips() const
     }
   }
   return 0;
+}
+
+void nsCSSValue::DoReset()
+{
+  if (eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Attr) {
+    mValue.mString->Release();
+  } else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Counters) {
+    mValue.mArray->Release();
+  } else if (eCSSUnit_URL == mUnit) {
+    mValue.mURL->Release();
+  } else if (eCSSUnit_Image == mUnit) {
+    mValue.mImage->Release();
+  }
+  mUnit = eCSSUnit_Null;
 }
 
 void nsCSSValue::SetIntValue(PRInt32 aValue, nsCSSUnit aUnit)
