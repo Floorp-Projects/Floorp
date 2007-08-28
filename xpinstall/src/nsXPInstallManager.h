@@ -56,6 +56,8 @@
 #include "nsIChromeRegistry.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIObserver.h"
+#include "nsIBadCertListener.h"
+#include "nsIChannelEventSink.h"
 
 #include "nsISoftwareUpdate.h"
 
@@ -83,6 +85,8 @@ class nsXPInstallManager : public nsIXPIListener,
                            public nsIProgressEventSink,
                            public nsIInterfaceRequestor,
                            public nsPICertNotification,
+                           public nsIBadCertListener,
+                           public nsIChannelEventSink,
                            public nsSupportsWeakReference
 {
     public:
@@ -99,6 +103,8 @@ class nsXPInstallManager : public nsIXPIListener,
         NS_DECL_NSIREQUESTOBSERVER
         NS_DECL_NSIINTERFACEREQUESTOR
         NS_DECL_NSPICERTNOTIFICATION
+        NS_DECL_NSIBADCERTLISTENER
+        NS_DECL_NSICHANNELEVENTSINK
 
         NS_IMETHOD InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo* aTrigger, PRUint32 aChromeType );
 
@@ -114,6 +120,7 @@ class nsXPInstallManager : public nsIXPIListener,
         PRBool      TimeToUpdate(PRTime now);
         PRBool      VerifyHash(nsXPITriggerItem* aItem);
         PRInt32     GetIndexFromURL(const PRUnichar* aUrl);
+        nsresult    CheckCert(nsIChannel* aChannel);
 
         nsXPITriggerInfo*   mTriggers;
         nsXPITriggerItem*   mItem;
@@ -127,6 +134,7 @@ class nsXPInstallManager : public nsIXPIListener,
         PRBool              mCancelled;
         PRBool              mSelectChrome;
         PRBool              mNeedsShutdown;
+        PRBool              mFromChrome;
   
         nsCOMPtr<nsIXPIProgressDialog>  mDlg;
         nsCOMPtr<nsISoftwareUpdate>     mInstallSvc;
