@@ -1214,6 +1214,7 @@ if test "$GNU_CC"; then
         # Don't allow undefined symbols in libraries
         DSO_LDOPTS="$DSO_LDOPTS -Wl,-z,defs"
     fi
+    WARNINGS_AS_ERRORS='-Werror'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
     _MOZ_RTTI_FLAGS_ON=${_COMPILER_PREFIX}-frtti
@@ -1734,6 +1735,7 @@ case "$target" in
     HOST_AR='lib -OUT:$@'
     HOST_RANLIB='echo ranlib'
         
+    WARNINGS_AS_ERRORS='/WX'
 	MOZ_OPTIMIZE_FLAGS='-O1'
     AR_FLAGS='-NOLOGO -OUT:"$@"'
     ASM_SUFFIX=asm
@@ -1759,7 +1761,6 @@ case "$target" in
     MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
     MOZ_FIX_LINK_PATHS=
     MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
-    MOZ_OPTIMIZE_FLAGS='-O1'
     MOZ_XPCOM_OBSOLETE_LIBS='$(LIBXUL_DIST)/lib/xpcom_compat.lib'
     OBJ_SUFFIX=obj
     RANLIB='echo not_ranlib'
@@ -1851,6 +1852,7 @@ case "$target" in
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
         MOZ_DEBUG_FLAGS='-Zi'
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
+        WARNINGS_AS_ERRORS='/WX'
     	MOZ_OPTIMIZE_FLAGS='-O1'
         MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
         MOZ_FIX_LINK_PATHS=
@@ -2042,6 +2044,7 @@ case "$target" in
 	AC_DEFINE(_QNX_SOURCE)
 	AC_DEFINE(_i386)
 	OS_TARGET=NTO
+	WARNINGS_AS_ERRORS=''
 	MOZ_OPTIMIZE_FLAGS="-O"
 	MOZ_DEBUG_FLAGS="-gstabs"
 	USE_PTHREADS=1
@@ -2136,6 +2139,7 @@ case "$target" in
         IMPLIB='emximp -o'
         FILTER='emxexp -o'
         LDFLAGS='-Zmap'
+        WARNINGS_AS_ERRORS='-Werror'
         MOZ_DEBUG_FLAGS="-g -fno-inline"
         MOZ_OPTIMIZE_FLAGS="-O2 -s"
         MOZ_OPTIMIZE_LDFLAGS="-Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
@@ -2181,6 +2185,7 @@ case "$target" in
         CFLAGS="/Q /qlibansi /Gm+ /Su4 /Mp /Tl9"
         CXXFLAGS="/Q /qlibansi /Gm+ /Su4 /Mp /Tl9 /Gx+"
         MOZ_DEBUG_FLAGS="/Ti+"
+        WARNINGS_AS_ERRORS='/WX'
         MOZ_OPTIMIZE_FLAGS="/O+ /Gl+ /G5 /qarch=pentium"
         LDFLAGS="/NOL /M"
         MOZ_DEBUG_LDFLAGS="/DE"
@@ -2279,6 +2284,7 @@ dnl the qsort routine under solaris is faulty
                        ,
                        [LDFLAGS=$_SAVE_LDFLAGS])
        fi
+       WARNINGS_AS_ERRORS='-Werror'
        MOZ_OPTIMIZE_FLAGS="-xO4"
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $@ -o $@'
        MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) -G -z muldefs -h $@ -o $@'
@@ -7455,6 +7461,7 @@ AC_SUBST(MOZ_DEBUG_ENABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_DISABLE_DEFS)
 AC_SUBST(MOZ_DEBUG_FLAGS)
 AC_SUBST(MOZ_DEBUG_LDFLAGS)
+AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST(MOZ_DBGRINFO_MODULES)
 AC_SUBST(MOZ_EXTENSIONS)
 AC_SUBST(MOZ_IMG_DECODERS)
