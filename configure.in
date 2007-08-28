@@ -1735,7 +1735,7 @@ case "$target" in
     HOST_AR='lib -OUT:$@'
     HOST_RANLIB='echo ranlib'
         
-    WARNINGS_AS_ERRORS='/WX'
+    WARNINGS_AS_ERRORS='-WX'
 	MOZ_OPTIMIZE_FLAGS='-O1'
     AR_FLAGS='-NOLOGO -OUT:"$@"'
     ASM_SUFFIX=asm
@@ -1852,7 +1852,7 @@ case "$target" in
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
         MOZ_DEBUG_FLAGS='-Zi'
         MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
-        WARNINGS_AS_ERRORS='/WX'
+        WARNINGS_AS_ERRORS='-WX'
     	MOZ_OPTIMIZE_FLAGS='-O1'
         MOZ_JS_LIBS='$(LIBXUL_DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
         MOZ_FIX_LINK_PATHS=
@@ -2185,7 +2185,7 @@ case "$target" in
         CFLAGS="/Q /qlibansi /Gm+ /Su4 /Mp /Tl9"
         CXXFLAGS="/Q /qlibansi /Gm+ /Su4 /Mp /Tl9 /Gx+"
         MOZ_DEBUG_FLAGS="/Ti+"
-        WARNINGS_AS_ERRORS='/WX'
+        WARNINGS_AS_ERRORS='-WX'
         MOZ_OPTIMIZE_FLAGS="/O+ /Gl+ /G5 /qarch=pentium"
         LDFLAGS="/NOL /M"
         MOZ_DEBUG_LDFLAGS="/DE"
