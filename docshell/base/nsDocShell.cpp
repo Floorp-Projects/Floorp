@@ -5433,9 +5433,12 @@ nsDocShell::RestoreFromHistory()
 
     nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV(do_QueryInterface(mContentViewer));
     nsCOMPtr<nsIMarkupDocumentViewer> newMUDV(do_QueryInterface(viewer));
-    float zoom = 1.0;
-    if (oldMUDV && newMUDV)
-        oldMUDV->GetTextZoom(&zoom);
+    float textZoom = 1.0f;
+    float pageZoom = 1.0f;
+    if (oldMUDV && newMUDV) {
+        oldMUDV->GetTextZoom(&textZoom);
+        oldMUDV->GetFullZoom(&pageZoom);
+    }
 
     // Protect against mLSHE going away via a load triggered from
     // pagehide or unload.
@@ -5614,8 +5617,10 @@ nsDocShell::RestoreFromHistory()
         FavorPerformanceHint(PR_TRUE, NS_EVENT_STARVATION_DELAY_HINT);
 
 
-    if (oldMUDV && newMUDV)
-        newMUDV->SetTextZoom(zoom);
+    if (oldMUDV && newMUDV) {
+        newMUDV->SetTextZoom(textZoom);
+        newMUDV->SetFullZoom(pageZoom);
+    }
 
     nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
     if (document) {
@@ -5947,6 +5952,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     PRInt32 hintCharsetSource;
     nsCAutoString prevDocCharset;
     float textZoom;
+    float pageZoom;
     PRBool styleDisabled;
     // |newMUDV| also serves as a flag to set the data from the above vars
     nsCOMPtr<nsIMarkupDocumentViewer> newMUDV;
@@ -5995,6 +6001,9 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
                                   NS_ERROR_FAILURE);
                 NS_ENSURE_SUCCESS(oldMUDV->
                                   GetTextZoom(&textZoom),
+                                  NS_ERROR_FAILURE);
+                NS_ENSURE_SUCCESS(oldMUDV->
+                                  GetFullZoom(&pageZoom),
                                   NS_ERROR_FAILURE);
                 NS_ENSURE_SUCCESS(oldMUDV->
                                   GetAuthorStyleDisabled(&styleDisabled),
@@ -6129,6 +6138,8 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
         NS_ENSURE_SUCCESS(newMUDV->SetPrevDocCharacterSet(prevDocCharset),
                           NS_ERROR_FAILURE);
         NS_ENSURE_SUCCESS(newMUDV->SetTextZoom(textZoom),
+                          NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(newMUDV->SetFullZoom(pageZoom),
                           NS_ERROR_FAILURE);
         NS_ENSURE_SUCCESS(newMUDV->SetAuthorStyleDisabled(styleDisabled),
                           NS_ERROR_FAILURE);
