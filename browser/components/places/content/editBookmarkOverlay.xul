@@ -74,12 +74,14 @@
             </menupopup>
           </menulist>
         </row>
+
         <row align="center" id="editBMPanel_locationRow">
           <label value="&editBookmarkOverlay.location.label;"
                  contorl="editBMPanel_locationField"/>
           <textbox id="editBMPanel_locationField"
                    onblur="gEditItemOverlay.onLocationFieldBlur();"/>
         </row>
+
         <row align="center" id="editBMPanel_folderRow">
           <label value="&editBookmarkOverlay.folder.label;"
                  control="editBMPanel_folderMenuList"/>
@@ -107,6 +109,7 @@
                   tooltiptextup="&editBookmarkOverlay.expanderUp.tooltip;"
                   oncommand="gEditItemOverlay.toggleFolderTreeVisibility();"/>
         </row>
+
         <tree id="editBMPanel_folderTree"
               class="placesTree"
               type="places"
@@ -121,6 +124,7 @@
           </treecols>
           <treechildren flex="1"/>
         </tree>
+
         <row align="center" id="editBMPanel_tagsRow">
           <label value="&editBookmarkOverlay.tags.label;"
                  control="tagsField"/>
@@ -134,10 +138,7 @@
                   oncommand="gEditItemOverlay.toggleTagsSelector();"/>
         </row>
 
-        <!-- XXX: Temporary workaround -->
-        </rows></grid>
         <listbox id="editBMPanel_tagsSelector" height="150" collapsed="true"/>
-        <grid flex="1"><columns><column/><column flex="1"/></columns><rows>
 
         <row id="editBMPanel_descriptionRow" align="center">
           <label value="&editBookmarkOverlay.description.label;"

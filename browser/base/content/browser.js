@@ -284,10 +284,9 @@ function BookmarkThisTab()
   if (tab.localName != "tab")
     tab = getBrowser().mCurrentTab;
 
-  setTimeout(function() { // workaround bug 392512
-    PlacesCommandHook.bookmarkPage(tab.linkedBrowser, true, getBrowser(),
-                                   "overlap")
-  }, 0);
+  PlacesCommandHook.bookmarkPage(tab.linkedBrowser,
+                                 PlacesUtils.bookmarksRootId,
+                                 true, getBrowser(), "overlap");
 }
 
 /**
