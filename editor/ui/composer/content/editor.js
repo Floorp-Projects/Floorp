@@ -96,12 +96,6 @@ const kEditorToolbarPrefs = "editor.toolbars.showbutton.";
 const kUseCssPref         = "editor.use_css";
 const kCRInParagraphsPref = "editor.CR_creates_new_p";
 
-function getEngineWebBrowserPrint()
-{
-  return content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsIWebBrowserPrint);
-}
-
 function ShowHideToolbarSeparators(toolbar) {
   var childNodes = toolbar.childNodes;
   var separator = null;

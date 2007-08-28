@@ -86,7 +86,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/publishprefs.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 
   <popupset id="editorContentContextSet"/>
