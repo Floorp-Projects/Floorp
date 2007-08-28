@@ -137,10 +137,6 @@ public:
     : mUnit(aUnit)
   {
     NS_ASSERTION(aUnit <= eCSSUnit_System_Font, "not a valueless unit");
-    if (aUnit > eCSSUnit_System_Font) {
-      mUnit = eCSSUnit_Null;
-    }
-    mValue.mInt = 0;
   }
 
   nsCSSValue(PRInt32 aValue, nsCSSUnit aUnit) NS_HIDDEN;
@@ -151,7 +147,7 @@ public:
   explicit nsCSSValue(URL* aValue) NS_HIDDEN;
   explicit nsCSSValue(Image* aValue) NS_HIDDEN;
   nsCSSValue(const nsCSSValue& aCopy) NS_HIDDEN;
-  NS_CONSTRUCTOR_FASTCALL ~nsCSSValue() NS_HIDDEN;
+  ~nsCSSValue() { Reset(); }
 
   NS_HIDDEN_(nsCSSValue&)  operator=(const nsCSSValue& aCopy);
   NS_HIDDEN_(PRBool)      operator==(const nsCSSValue& aOther) const;
@@ -258,19 +254,13 @@ public:
 
   NS_HIDDEN_(void)  Reset()  // sets to null
   {
-    if (eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Attr) {
-      mValue.mString->Release();
-    } else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Counters) {
-      mValue.mArray->Release();
-    } else if (eCSSUnit_URL == mUnit) {
-      mValue.mURL->Release();
-    } else if (eCSSUnit_Image == mUnit) {
-      mValue.mImage->Release();
-    }
-    mUnit = eCSSUnit_Null;
-    mValue.mInt = 0;
+    if (mUnit != eCSSUnit_Null)
+      DoReset();
   }
+private:
+  NS_HIDDEN_(void)  DoReset();
 
+public:
   NS_HIDDEN_(void)  SetIntValue(PRInt32 aValue, nsCSSUnit aUnit);
   NS_HIDDEN_(void)  SetPercentValue(float aValue);
   NS_HIDDEN_(void)  SetFloatValue(float aValue, nsCSSUnit aUnit);
