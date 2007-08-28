@@ -90,7 +90,7 @@
       <preference id="browser.download.dir"
                   name="browser.download.dir"
                   type="file"
-                  onchange="gMainPane.readDownloadDirPref();"/>
+                  onchange="gMainPane.displayDownloadDirPref();"/>
       <preference id="browser.download.folderList"        name="browser.download.folderList"        type="int"/>
 
       <!-- SYSTEM DEFAULTS -->
