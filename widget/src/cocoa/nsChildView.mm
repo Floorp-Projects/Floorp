@@ -4094,6 +4094,9 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
   if (isMozWindow)
     [[self window] setSuppressMakeKeyFront:NO];
+
+  // invalidate so that things with a different appearance in background windows will redraw
+  mGeckoChild->Invalidate(PR_FALSE);
 }
 
 
@@ -4106,6 +4109,9 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
 
   [self sendFocusEvent:NS_DEACTIVATE];
   [self sendFocusEvent:NS_LOSTFOCUS];
+
+  // invalidate so that things with a different appearance in background windows will redraw
+  mGeckoChild->Invalidate(PR_FALSE);
 }
 
 
