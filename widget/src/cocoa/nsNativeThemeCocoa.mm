@@ -1376,9 +1376,18 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
   if (aPresContext && !aPresContext->PresShell()->IsThemeSupportEnabled())
     return PR_FALSE;
 
-  PRBool retVal = PR_FALSE;
+  // if this is a dropdown button in a combobox the answer is always no
+  if (aWidgetType == NS_THEME_DROPDOWN_BUTTON) {
+    nsIFrame* parentFrame = aFrame->GetParent();
+    if (parentFrame && (parentFrame->GetType() == nsWidgetAtoms::comboboxControlFrame))
+      return PR_FALSE;
+  }
 
   switch (aWidgetType) {
+    case NS_THEME_LISTBOX:
+      return PR_TRUE; // we always want listboxes themed, non-themed ones look wrong
+      break;
+
     case NS_THEME_DIALOG:
     case NS_THEME_WINDOW:
     case NS_THEME_MENUPOPUP:
@@ -1435,19 +1444,15 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
-      retVal = PR_TRUE;
-      break;
 
-    case NS_THEME_LISTBOX:
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
     case NS_THEME_DROPDOWN_TEXT:
-      // Support listboxes and dropdowns regardless of styling,
-      // since non-themed ones look totally wrong.
-      return PR_TRUE;
+      return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
+      break;
   }
 
-  return retVal ? !IsWidgetStyled(aPresContext, aFrame, aWidgetType) : PR_FALSE;
+  return PR_FALSE;
 }
 
 
