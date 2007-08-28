@@ -1,5 +1,5 @@
 <!-- Note: due to bug 143065, the only remaining accesskeys available to be used
-     in the Advanced pane are: "b", "j", "q", "z" -->
+     in the Advanced pane are: "j", "q", "z" -->
 
 <!ENTITY generalTab.label                "General">
 
@@ -10,7 +10,7 @@
 <!ENTITY searchStartTyping.label         "Search for text when I start typing">
 <!ENTITY searchStartTyping.accesskey     "x">
 <!ENTITY blockAutoRefresh.label          "Warn me when web sites try to redirect or reload the page">
-<!ENTITY blockAutoRefresh.accesskey      "r">
+<!ENTITY blockAutoRefresh.accesskey      "b">
 
 <!ENTITY browsing.label                  "Browsing">
 
