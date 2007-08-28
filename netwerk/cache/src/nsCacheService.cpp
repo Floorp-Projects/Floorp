@@ -1384,6 +1384,9 @@ nsCacheService::OpenCacheEntry(nsCacheSession *           session,
     if (result)
         *result = nsnull;
 
+    if (!gService->mInitialized)
+        return NS_ERROR_NOT_INITIALIZED;
+
     nsCacheRequest * request = nsnull;
 
     nsCacheServiceAutoLock lock;
