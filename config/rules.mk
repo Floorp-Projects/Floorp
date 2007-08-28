@@ -1069,12 +1069,10 @@ endif # NO_LD_ARCHIVE_FLAGS
 	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 ifdef MSMANIFEST_TOOL
-ifdef EMBED_MANIFEST_AT
 	@if test -f $@.manifest; then \
-		mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;$(EMBED_MANIFEST_AT); \
+		mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;2; \
 		rm -f $@.manifest; \
 	fi
-endif   # embed manifest
 endif	# MSVC with manifest tool
 endif	# WINNT && !GCC
 ifeq ($(OS_ARCH),Darwin)
