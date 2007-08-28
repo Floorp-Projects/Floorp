@@ -92,34 +92,33 @@ protected:
   nsresult GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont);
 
   // HITheme drawing routines
-  void DrawFrame(CGContextRef context, HIThemeFrameKind inKind,
-                 const HIRect& inBoxRect, PRBool inIsDisabled,
-                 PRInt32 inState);
+  void DrawFrame (CGContextRef context, HIThemeFrameKind inKind,
+                  const HIRect& inBoxRect, PRBool inIsDisabled,
+                  PRInt32 inState);
   void DrawProgress(CGContextRef context, const HIRect& inBoxRect,
                     PRBool inIsIndeterminate, PRBool inIsHorizontal,
-                    PRInt32 inValue, nsIFrame* aFrame);
-  void DrawTab(CGContextRef context, const HIRect& inBoxRect,
-               PRBool inIsDisabled, PRBool inIsFrontmost,
-               PRBool inIsHorizontal, PRBool inTabBottom,
-               PRInt32 inState, nsIFrame* aFrame);
-  void DrawTabPanel(CGContextRef context, const HIRect& inBoxRect, nsIFrame* aFrame);
-  void DrawScale(CGContextRef context, const HIRect& inBoxRect,
-                 PRBool inIsDisabled, PRInt32 inState,
-                 PRBool inDirection, PRBool inIsReverse,
-                 PRInt32 inCurrentValue, PRInt32 inMinValue,
-                 PRInt32 inMaxValue, nsIFrame* aFrame);
-  void DrawButton(CGContextRef context, ThemeButtonKind inKind,
-                  const HIRect& inBoxRect, PRBool inIsDefault, 
-                  PRBool inDisabled, ThemeButtonValue inValue,
-                  ThemeButtonAdornment inAdornment, PRInt32 inState,
-                  nsIFrame* aFrame);
-  void DrawSpinButtons(CGContextRef context, ThemeButtonKind inKind,
-                       const HIRect& inBoxRect, PRBool inDisabled,
-                       ThemeDrawState inDrawState, ThemeButtonAdornment inAdornment,
-                       PRInt32 inState, nsIFrame* aFrame);
-  void DrawCheckboxRadio(CGContextRef context, ThemeButtonKind inKind,
-                         const HIRect& inBoxRect, PRBool inChecked, 
-                         PRBool inDisabled, PRInt32 inState, nsIFrame* aFrame);
+                    PRInt32 inValue);
+  void DrawTab (CGContextRef context, const HIRect& inBoxRect,
+                PRBool inIsDisabled, PRBool inIsFrontmost, 
+                PRBool inIsHorizontal, PRBool inTabBottom,
+                PRInt32 inState);
+  void DrawTabPanel (CGContextRef context, const HIRect& inBoxRect);
+  void DrawScale (CGContextRef context, const HIRect& inBoxRect,
+                  PRBool inIsDisabled, PRInt32 inState,
+                  PRBool inDirection, PRBool inIsReverse,
+                  PRInt32 inCurrentValue,
+                  PRInt32 inMinValue, PRInt32 inMaxValue);
+  void DrawButton (CGContextRef context, ThemeButtonKind inKind,
+                   const HIRect& inBoxRect, PRBool inIsDefault, 
+                   PRBool inDisabled, ThemeButtonValue inValue,
+                   ThemeButtonAdornment inAdornment, PRInt32 inState);
+  void DrawSpinButtons (CGContextRef context, ThemeButtonKind inKind,
+                        const HIRect& inBoxRect,
+                        PRBool inDisabled, ThemeDrawState inDrawState,
+                        ThemeButtonAdornment inAdornment, PRInt32 inState);
+  void DrawCheckboxRadio (CGContextRef context, ThemeButtonKind inKind,
+                          const HIRect& inBoxRect, PRBool inChecked, 
+                          PRBool inDisabled, PRInt32 inState);
   // Scrollbars
   void DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame);
   void GetScrollbarPressStates (nsIFrame *aFrame, PRInt32 aButtonStates[]);
