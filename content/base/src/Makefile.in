@@ -82,6 +82,7 @@ REQUIRES	= xpcom \
 		  util \
 		  appshell \
 		  shistory \
+		  accessibility \
 		  $(NULL)
 
 EXPORTS		= \

@@ -526,7 +526,6 @@ nsresult nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode* aNode, PRI
   NS_ENSURE_ARG_POINTER(aHyperTextOffset);
   *aHyperTextOffset = 0;
   NS_ENSURE_ARG_POINTER(aNode);
-  NS_ENSURE_TRUE(aNodeOffset >= 0, NS_ERROR_INVALID_ARG);
   if (aFinalAccessible) {
     *aFinalAccessible = nsnull;
   }
@@ -536,7 +535,10 @@ nsresult nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode* aNode, PRI
 
   unsigned short nodeType;
   aNode->GetNodeType(&nodeType);
-  if (nodeType == nsIDOMNode::TEXT_NODE) {
+  if (aNodeOffset == -1) {
+    findNode = aNode;
+  }
+  else if (nodeType == nsIDOMNode::TEXT_NODE) {
     // For text nodes, aNodeOffset comes in as a character offset
     // Text offset will be added at the end, if we find the offset in this hypertext
     // We want the "skipped" offset into the text (rendered text without the extra whitespace)
@@ -618,6 +620,7 @@ nsresult nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode* aNode, PRI
       NS_ADDREF(*aFinalAccessible = childAccessible);
     }
   }
+
   return NS_OK;
 }
 

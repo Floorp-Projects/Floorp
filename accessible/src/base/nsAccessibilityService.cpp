@@ -1804,11 +1804,14 @@ NS_IMETHODIMP nsAccessibilityService::InvalidateSubtreeFor(nsIPresShell *aShell,
 {
   NS_ASSERTION(aEvent == nsIAccessibleEvent::EVENT_ASYNCH_SIGNIFICANT_CHANGE ||
                aEvent == nsIAccessibleEvent::EVENT_ASYNCH_SHOW ||
-               aEvent == nsIAccessibleEvent::EVENT_ASYNCH_HIDE,
+               aEvent == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
+               aEvent == nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE ||
+               aEvent == nsIAccessibleEvent::EVENT_DOM_CREATE ||
+               aEvent == nsIAccessibleEvent::EVENT_DOM_DESTROY,
                "Incorrect aEvent passed in");
 
+  NS_ENSURE_ARG_POINTER(aShell);
   nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(aShell));
-  NS_ASSERTION(aShell, "No pres shell in call to InvalidateSubtreeFor");
   nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
     nsAccessNode::GetDocAccessibleFor(weakShell);
   nsCOMPtr<nsPIAccessibleDocument> privateAccessibleDoc =
