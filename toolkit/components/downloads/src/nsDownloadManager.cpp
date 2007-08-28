@@ -842,29 +842,20 @@ nsDownloadManager::GetUserDownloadsDirectory(nsILocalFile **aResult)
       break;
     case 2: // Custom
       {
-        nsCOMPtr<nsISupportsString> customDirectory;
+        nsCOMPtr<nsILocalFile> customDirectory;
         prefBranch->GetComplexValue(NS_PREF_DIR, 
-                                    NS_GET_IID(nsISupportsString),
+                                    NS_GET_IID(nsILocalFile),
                                     getter_AddRefs(customDirectory));
         if (customDirectory) {
-          nsCOMPtr<nsILocalFile> aFile = 
-            do_CreateInstance("@mozilla.org/file/local;1", &rv);
-          NS_ENSURE_SUCCESS(rv, rv);
-          nsAutoString dir;
-          customDirectory->GetData(dir);
-          rv = aFile->InitWithNativePath(NS_ConvertUTF16toUTF8(dir));
-          NS_ENSURE_SUCCESS(rv, rv);
-          aFile->Exists(&bRes);
+          customDirectory->Exists(&bRes);
           if (bRes) {
-            NS_ADDREF(*aResult = aFile);
+            NS_ADDREF(*aResult = customDirectory);
             return NS_OK;
           }
-          rv = aFile->Create(nsIFile::DIRECTORY_TYPE, 755);
+          rv = customDirectory->Create(nsIFile::DIRECTORY_TYPE, 755);
           NS_ENSURE_SUCCESS(rv, rv);
-          if (bRes) {
-            NS_ADDREF(*aResult = aFile);
-            return NS_OK;
-          }
+          NS_ADDREF(*aResult = customDirectory);
+          return NS_OK;
         }
         rv = GetDefaultDownloadsDirectory(aResult); // refup
         NS_ENSURE_SUCCESS(rv, rv);
