@@ -76,6 +76,10 @@ ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += nsDownloadScanner.cpp
 endif
 
+EXTRA_COMPONENTS = \
+  nsDownloadManagerUI.js \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
