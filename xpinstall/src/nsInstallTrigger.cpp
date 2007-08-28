@@ -209,7 +209,8 @@ nsInstallTrigger::HandleContent(const char * aContentType,
         // site is one which is allowed to annoy the user with modal dialogs.
 
         enabled = AllowInstall( referringURI );
-        referringURI->GetHost(host);
+        if (referringURI)
+            referringURI->GetHost(host);
     }
     else
     {
