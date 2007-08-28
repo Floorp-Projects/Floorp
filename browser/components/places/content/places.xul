@@ -378,7 +378,7 @@
                 onclick="PlacesOrganizer.onTreeClick(event);"
                 onselect="PlacesOrganizer.updateStatusBarForView(this);">
             <treecols id="placeContentColumns">
-              <treecol label="&col.title.label;" id="title" flex="5" primary="true" 
+              <treecol label="&col.name.label;" id="title" flex="5" primary="true" 
                        persist="width hidden ordinal sortActive sortDirection"/>
               <splitter class="tree-splitter"/>
               <treecol label="&col.tags.label;" id="tags" flex="2"

@@ -195,7 +195,7 @@
 <!ENTITY cmd.personalToolbarFolder.menuAccesskey
          "b">
 
-<!ENTITY col.title.label
+<!ENTITY col.name.label
   "Name">
 <!ENTITY col.tags.label
   "Tags">
