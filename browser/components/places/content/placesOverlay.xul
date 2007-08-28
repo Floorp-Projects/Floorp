@@ -155,7 +155,7 @@
                label="&cutCmd.label;"
                accesskey="&cutCmd.accesskey;" 
                selection="separator|link|folder|mixed"
-               forcehideselection="livemark/bookmarkFeedURI"/>
+               forcehideselection="livemarkChild"/>
     <menuitem id="placesContext_copy"
               command="cmd_copy"
               label="&copyCmd.label;"
@@ -172,7 +172,7 @@
               label="&deleteCmd.label;"
               accesskey="&deleteCmd.accesskey;"
               selection="host|separator|link|folder|day"
-              forcehideselection="livemark/bookmarkFeedURI"/>
+              forcehideselection="livemarkChild"/>
     <menuseparator id="placesContext_deleteSeparator"/>
     <menuitem id="placesContext_reload"
               command="placesCmd_reload"
@@ -195,7 +195,7 @@
               label="&cmd.properties.label;" 
               accesskey="&cmd.properties.accesskey;"
               selection="bookmark|folder"
-              forcehideselection="livemark/bookmarkFeedURI"/>
+              forcehideselection="livemarkChild"/>
   </popup>
 
 </overlay>

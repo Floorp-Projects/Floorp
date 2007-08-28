@@ -390,10 +390,10 @@ var PlacesUtils = {
   },
 
  /**
-  * Determines whether a ResultNode is a remote container registered by the
+  * Determines whether a result node is a remote container registered by the
   * livemark service.
   * @param aNode
-  *        A NavHistory Result Node
+  *        A result Node
   * @returns true if the node is a livemark container item
   */
   nodeIsLivemarkContainer: function PU_nodeIsLivemarkContainer(aNode) {
@@ -402,19 +402,13 @@ var PlacesUtils = {
   },
 
  /**
-  * Determines whether a ResultNode is a live-bookmark item
+  * Determines whether a result node is a live-bookmark item
   * @param aNode
-  *        A NavHistory Result Node
+  *        A result node
   * @returns true if the node is a livemark container item
   */
   nodeIsLivemarkItem: function PU_nodeIsLivemarkItem(aNode) {
-    if (this.nodeIsBookmark(aNode)) {
-      if (this.annotations
-              .itemHasAnnotation(aNode.itemId, "livemark/bookmarkFeedURI"))
-        return true;
-    }
-
-    return false;
+    return aNode.parent && this.nodeIsLivemarkContainer(aNode.parent);
   },
 
   /**
