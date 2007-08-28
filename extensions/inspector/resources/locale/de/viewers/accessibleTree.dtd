@@ -15,12 +15,12 @@
    - The Original Code is DOM Inspector.
    -
    - The Initial Developer of the Original Code is
-   - Netscape Communications Corporation.
-   - Portions created by the Initial Developer are Copyright (C) 2003
+   - Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2007
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   Shawn Wilsher <me@shawnwilsher.com>
+   -   Alexander Surkov <surkov.alexander@gmail.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,29 +37,7 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY nodeName.label "Knoten-Name:">
-<!ENTITY localName.label "Lokaler Name:">
-<!ENTITY namespaceURI.label "Namespace-URI:">
-<!ENTITY nodeType.label "Knoten-Typ:">
-<!ENTITY nodeValue.label "Knoten-Wert:">
+<!ENTITY role.label "Rolle">
+<!ENTITY name.label "Name">
+<!ENTITY nodeName.label "Knoten-Name">
 
-<!ENTITY namespaceTitle.null.label "null">
-<!ENTITY namespaceTitle.default.label "Dokumentstandard">
-<!ENTITY namespaceTitle.custom.label "Benutzerdefiniert">
-
-<!-- LOCALIZATION NOTE: The following entities are names of W3C specifications.
-                        Please consult http://www.w3.org/Consortium/Translation/
-                        for appropriate translation or leave unchanged. -->
-<!ENTITY namespaceTitle.XMLNS.label "XMLNS">
-<!ENTITY namespaceTitle.XML.label "XML">
-<!ENTITY namespaceTitle.XHTML.label "XHTML">
-<!ENTITY namespaceTitle.XLink.label "XLink">
-<!ENTITY namespaceTitle.XSLT.label "XSLT">
-<!ENTITY namespaceTitle.XBL.label "XBL">
-<!ENTITY namespaceTitle.MathML.label "MathML">
-<!ENTITY namespaceTitle.RDF.label "RDF">
-<!ENTITY namespaceTitle.XUL.label "XUL">
-<!ENTITY namespaceTitle.SVG.label "SVG">
-<!ENTITY namespaceTitle.XMLEvents.label "XML-Ereignisse">
-<!ENTITY namespaceTitle.WAIRoles.label "WAI-Rollen">
-<!ENTITY namespaceTitle.WAIProperties.label "WAI-Eigenschaften">
