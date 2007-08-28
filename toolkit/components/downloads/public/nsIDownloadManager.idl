@@ -41,7 +41,6 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMWindow;
 interface nsIURI;
 interface nsILocalFile;
 interface nsIDownload;
@@ -51,7 +50,7 @@ interface nsIDownloadProgressListener;
 interface nsISimpleEnumerator;
 interface mozIStorageConnection;
 
-[scriptable, uuid(b23d291f-2893-48ea-abda-ba9c9fe69c95)]
+[scriptable, uuid(05ed1d45-0aff-4ba0-9e2c-a9ef20383048)]
 interface nsIDownloadManager : nsISupports {
   // Download States
   const short DOWNLOAD_NOTSTARTED       = -1;
@@ -164,17 +163,6 @@ interface nsIDownloadManager : nsISupports {
    *           nsIDownloadManager::DOWNLOAD_FAILED
    */
   void retryDownload(in unsigned long aID);
-
-  /** 
-   * Opens the Download Manager front end, selecting the specified download.
-   * 
-   * @param aParent   The parent, or opener, of the front end (optional).
-   * @param aID The unique ID of the download to be selected.
-   * @see nsIWindowWatcher::openWindow for behavior of null aParent.
-   * @throws NS_ERROR_FAILURE if the Download Manager does not know about the
-   *         download.
-   */
-  void open(in nsIDOMWindow aParent, in unsigned long aID);
 
   /**
    * The database connection to the downloads database.

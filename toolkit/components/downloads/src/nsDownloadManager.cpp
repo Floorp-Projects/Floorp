@@ -69,6 +69,7 @@
 #include "nsIAlertsService.h"
 #include "nsIPropertyBag2.h"
 #include "nsIHttpChannel.h"
+#include "nsIDownloadManagerUI.h"
 
 #ifdef XP_WIN
 #include <shlobj.h>
@@ -77,17 +78,12 @@
 
 static PRBool gStoppingDownloads = PR_FALSE;
 
-#define DOWNLOAD_MANAGER_FE_URL "chrome://mozapps/content/downloads/downloads.xul"
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://mozapps/locale/downloads/downloads.properties"
 #define DOWNLOAD_MANAGER_ALERT_ICON "chrome://mozapps/skin/downloads/downloadIcon.png"
 #define PREF_BDM_SHOWALERTONCOMPLETE "browser.download.manager.showAlertOnComplete"
 #define PREF_BDM_SHOWALERTINTERVAL "browser.download.manager.showAlertInterval"
 #define PREF_BDM_RETENTION "browser.download.manager.retention"
-#define PREF_BDM_OPENDELAY "browser.download.manager.openDelay"
-#define PREF_BDM_SHOWWHENSTARTING "browser.download.manager.showWhenStarting"
-#define PREF_BDM_FOCUSWHENSTARTING "browser.download.manager.focusWhenStarting"
 #define PREF_BDM_CLOSEWHENDONE "browser.download.manager.closeWhenDone"
-#define PREF_BDM_FLASHCOUNT "browser.download.manager.flashCount"
 #define PREF_BDM_ADDTORECENTDOCS "browser.download.manager.addToRecentDocs"
 
 static const PRInt64 gUpdateInterval = 400 * PR_USEC_PER_MSEC;
@@ -1179,130 +1175,6 @@ nsDownloadManager::PauseResumeDownload(PRUint32 aID, PRBool aPause)
 }
 
 NS_IMETHODIMP
-nsDownloadManager::Open(nsIDOMWindow* aParent, PRUint32 aID)
-{
-  // try to get an active download
-  nsRefPtr<nsDownload> dl = FindDownload(aID);
-  if (!dl) {
-    // try to get a finished download from the database
-    (void)GetDownloadFromDB(aID, getter_AddRefs(dl));
-    if (!dl) return NS_ERROR_FAILURE;
-  }
-
-  TimerParams* params = new TimerParams();
-  NS_ENSURE_TRUE(params, NS_ERROR_OUT_OF_MEMORY);
-
-  params->parent = aParent;
-  params->download = dl;
-
-  PRInt32 delay = 0;
-  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (pref)
-    pref->GetIntPref(PREF_BDM_OPENDELAY, &delay);
-
-  // Look for an existing Download Manager window, if we find one we just 
-  // tell it that a new download has begun (we don't focus, that's 
-  // annoying), otherwise we need to open the window. We do this on a timer 
-  // so that we can see if the download has already completed, if so, don't 
-  // bother opening the window. 
-  mDMOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
-  return mDMOpenTimer->InitWithFuncCallback(OpenTimerCallback, 
-                                       (void*)params, delay, 
-                                       nsITimer::TYPE_ONE_SHOT);
-}
-
-void
-nsDownloadManager::OpenTimerCallback(nsITimer* aTimer, void* aClosure)
-{
-  TimerParams* params = static_cast<TimerParams*>(aClosure);
-  
-  PRInt32 complete;
-  params->download->GetPercentComplete(&complete);
-  
-  PRBool closeDM = PR_FALSE;
-  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (pref)
-    pref->GetBoolPref(PREF_BDM_CLOSEWHENDONE, &closeDM);
-
-  // Check closeWhenDone pref before opening download manager
-  if (!closeDM || complete < 100) {
-    PRBool focusDM = PR_FALSE;
-    PRBool showDM = PR_TRUE;
-    PRInt32 flashCount = -1;
-
-    if (pref) {
-      pref->GetBoolPref(PREF_BDM_FOCUSWHENSTARTING, &focusDM);
-
-      // We only flash the download manager if the user has the download manager show
-      pref->GetBoolPref(PREF_BDM_SHOWWHENSTARTING, &showDM);
-      if (showDM) 
-        pref->GetIntPref(PREF_BDM_FLASHCOUNT, &flashCount);
-      else
-        flashCount = 0;
-    }
-
-    nsDownloadManager::OpenDownloadManager(focusDM, flashCount,
-                                           params->download, params->parent);
-  }
-
-  delete params;
-}
-
-nsresult
-nsDownloadManager::OpenDownloadManager(PRBool aShouldFocus,
-                                       PRInt32 aFlashCount,
-                                       nsIDownload *aDownload,
-                                       nsIDOMWindow *aParent)
-{
-  nsresult rv;
-  nsCOMPtr<nsIWindowMediator> wm =
-    do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDOMWindowInternal> recentWindow;
-  wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(),
-                          getter_AddRefs(recentWindow));
-  if (recentWindow) {
-    if (aShouldFocus) {
-      recentWindow->Focus();
-    } else {
-      nsCOMPtr<nsIDOMChromeWindow> chromeWindow(do_QueryInterface(recentWindow));
-      chromeWindow->GetAttentionWithCycleCount(aFlashCount);
-    }
-  } else {
-    // If we ever have the capability to display the UI of third party dl
-    // managers, we'll open their UI here instead.
-    nsCOMPtr<nsIWindowWatcher> ww =
-      do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // pass the datasource to the window
-    nsCOMPtr<nsIMutableArray> params =
-      do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDownloadManager> dlMgr =
-      do_GetService("@mozilla.org/download-manager;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<mozIStorageConnection> DBConn;
-    (void)dlMgr->GetDBConnection(getter_AddRefs(DBConn));
-
-    params->AppendElement(DBConn, PR_FALSE);
-    params->AppendElement(aDownload, PR_FALSE);
-    
-    nsCOMPtr<nsIDOMWindow> newWindow;
-    rv = ww->OpenWindow(aParent,
-                        DOWNLOAD_MANAGER_FE_URL,
-                        "_blank",
-                        "chrome,dialog=no,resizable",
-                        params,
-                        getter_AddRefs(newWindow));
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
 nsDownloadManager::GetDBConnection(mozIStorageConnection **aDBConn)
 {
   NS_ADDREF(*aDBConn = mDBConn);
@@ -1419,15 +1291,10 @@ nsDownloadManager::Observe(nsISupports *aSubject,
                            NS_LITERAL_STRING("offlineCancelDownloadsAlertMsg").get(),
                            NS_LITERAL_STRING("dontGoOfflineButton").get());
   } else if (strcmp(aTopic, "alertclickcallback") == 0) {
-    // Attempt to locate a browser window to parent the download manager to
-    nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID);
-    nsCOMPtr<nsIDOMWindowInternal> browserWindow;
-    if (wm) {
-      wm->GetMostRecentWindow(NS_LITERAL_STRING("navigator:browser").get(),
-                              getter_AddRefs(browserWindow));
-    }
-
-    return OpenDownloadManager(PR_TRUE, -1, nsnull, browserWindow);
+    nsCOMPtr<nsIDownloadManagerUI> dmui =
+      do_GetService("@mozilla.org/download-manager-ui;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return dmui->Show(nsnull, 0);
   }
 
   return NS_OK;
