@@ -106,6 +106,8 @@ public:
     NS_IMETHOD AddSeparator();
     NS_IMETHOD GetItemCount(PRUint32 &aCount);
     NS_IMETHOD GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem);
+    NS_IMETHOD GetVisibleItemCount(PRUint32 &aCount);
+    NS_IMETHOD GetVisibleItemAt(const PRUint32 aPos, nsISupports *& aMenuItem);
     NS_IMETHOD InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem);
     NS_IMETHOD RemoveItem(const PRUint32 aPos);
     NS_IMETHOD RemoveAll();
@@ -149,7 +151,7 @@ protected:
 protected:
     nsString                    mLabel;
     nsCOMArray<nsISupports>     mMenuItemsArray;
-    nsCOMArray<nsISupports>     mHiddenMenuItemsArray;
+    PRUint32                    mVisibleItemsCount;     // caching number of visible items in mMenuItemsArray
 
     nsISupports*                mParent;                // weak, my parent owns me
     nsIChangeManager*           mManager;               // weak ref, it will outlive us [menubar]
