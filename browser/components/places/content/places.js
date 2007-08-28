@@ -1036,7 +1036,10 @@ var ViewMenu = {
       menuitem.setAttribute("column", column.id);
       var label = column.getAttribute("label");
       if (propertyPrefix) {
-        var menuitemPrefix = propertyPrefix + column.id;
+        var menuitemPrefix = propertyPrefix;
+        // for string properties, use "name" as the id, instead of "title"
+        // see bug #386287 for details
+        menuitemPrefix += (column.id == "title" ? "name" : column.id);
         label = PlacesUtils.getString(menuitemPrefix + ".label");
         var accesskey = PlacesUtils.getString(menuitemPrefix + ".accesskey");
         menuitem.setAttribute("accesskey", accesskey);
