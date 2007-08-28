@@ -445,6 +445,7 @@ PlacesController.prototype = {
    * rules:
    *    "link"              node is a URI
    *    "bookmark"          node is a bookamrk
+   *    "livemarkChild"     node is a child of a livemark
    *    "folder"            node is a folder
    *    "query"             node is a query
    *    "dynamiccontainer"  node is a dynamic container
@@ -506,6 +507,9 @@ PlacesController.prototype = {
             var mss = PlacesUtils.microsummaries;
             if (mss.hasMicrosummary(node.itemId))
               nodeData["microsummary"] = true;
+            else if (node.parent &&
+                     PlacesUtils.nodeIsLivemarkContainer(node.parent))
+              nodeData["livemarkChild"] = true;
           }
           break;
         case Ci.nsINavHistoryResultNode.RESULT_TYPE_DAY:

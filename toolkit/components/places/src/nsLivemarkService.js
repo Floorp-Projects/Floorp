@@ -66,7 +66,6 @@ const DEFAULT_FAIL_MSG = "Live Bookmark feed failed to load.";
 const LMANNO_FEEDURI = "livemark/feedURI";
 const LMANNO_SITEURI = "livemark/siteURI";
 const LMANNO_EXPIRATION = "livemark/expiration";
-const LMANNO_BMANNO = "livemark/bookmarkFeedURI";
 
 const PS_CONTRACTID = "@mozilla.org/preferences-service;1";
 const NH_CONTRACTID = "@mozilla.org/browser/nav-history-service;1";
@@ -551,8 +550,6 @@ LivemarkLoadListener.prototype = {
   function LS_insertLivemarkChild(folderId, uri, title) {
     var id = this._bms.insertBookmark(folderId, uri, this._bms.DEFAULT_INDEX,
                                       title);
-    this._ans.setItemAnnotation(id, LMANNO_BMANNO, uri.spec, 0,
-                                this._ans.EXPIRE_NEVER);
   },
 
   /**
