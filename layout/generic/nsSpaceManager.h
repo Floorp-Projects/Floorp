@@ -49,10 +49,10 @@
 #include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsRect.h"
+#include "nsVoidArray.h"
 
 class nsIPresShell;
 class nsIFrame;
-class nsVoidArray;
 struct nsSize;
 struct nsHTMLReflowState;
 class nsPresContext;
@@ -69,16 +69,10 @@ class nsPresContext;
  * </ul>
  */
 struct nsBandTrapezoid {
-  enum State {Available, Occupied, OccupiedMultiple};
-
   nscoord   mTopY, mBottomY;            // top and bottom y-coordinates
   nscoord   mTopLeftX, mBottomLeftX;    // left edge x-coordinates
   nscoord   mTopRightX, mBottomRightX;  // right edge x-coordinates
-  State     mState;                     // state of the space
-  union {
-    nsIFrame*          mFrame;  // single frame occupying the space
-    const nsVoidArray* mFrames; // list of frames occupying the space
-  };
+  const nsSmallVoidArray* mFrames; // list of frames occupying the space
 
   // Get the height of the trapezoid
   nscoord GetHeight() const {return mBottomY - mTopY;}
@@ -88,9 +82,6 @@ struct nsBandTrapezoid {
 
   // Set the trapezoid from a rectangle
   inline void operator=(const nsRect& aRect);
-
-  // Do these trapezoids have the same geometry, frame, and state?
-  inline PRBool Equals(const nsBandTrapezoid& aTrap) const;
 
   // Do these trapezoids have the same geometry?
   inline PRBool EqualGeometry(const nsBandTrapezoid& aTrap) const;
@@ -102,7 +93,7 @@ struct nsBandTrapezoid {
       mBottomLeftX(0),
       mTopRightX(0),
       mBottomRightX(0),
-      mFrame(nsnull)
+      mFrames(nsnull)
   {
   }
 };
@@ -124,20 +115,6 @@ inline void nsBandTrapezoid::operator=(const nsRect& aRect)
   mTopRightX = mBottomRightX = aRect.XMost();
   mTopY = aRect.y;
   mBottomY = aRect.YMost();
-}
-
-inline PRBool nsBandTrapezoid::Equals(const nsBandTrapezoid& aTrap) const
-{
-  return (
-    mTopLeftX == aTrap.mTopLeftX &&
-    mBottomLeftX == aTrap.mBottomLeftX &&
-    mTopRightX == aTrap.mTopRightX &&
-    mBottomRightX == aTrap.mBottomRightX &&
-    mTopY == aTrap.mTopY &&
-    mBottomY == aTrap.mBottomY &&
-    mState == aTrap.mState &&
-    mFrame == aTrap.mFrame    
-  );
 }
 
 inline PRBool nsBandTrapezoid::EqualGeometry(const nsBandTrapezoid& aTrap) const
@@ -377,18 +354,14 @@ public:
   struct BandRect : PRCListStr {
     nscoord   mLeft, mTop;
     nscoord   mRight, mBottom;
-    PRInt32   mNumFrames;    // number of frames occupying this rect
-    union {
-      nsIFrame*    mFrame;   // single frame occupying the space
-      nsVoidArray* mFrames;  // list of frames occupying the space
-    };
+    nsSmallVoidArray mFrames;  // list of frames occupying the space
 
     BandRect(nscoord aLeft, nscoord aTop,
              nscoord aRight, nscoord aBottom,
-             nsIFrame*);
+             nsIFrame* aFrame);
     BandRect(nscoord aLeft, nscoord aTop,
              nscoord aRight, nscoord aBottom,
-             nsVoidArray*);
+             nsSmallVoidArray& frames);
     ~BandRect();
 
     // List operations
@@ -414,8 +387,15 @@ public:
 
     // Accessor functions
     PRBool  IsOccupiedBy(const nsIFrame*) const;
-    void    AddFrame(const nsIFrame*);
-    void    RemoveFrame(const nsIFrame*);
+    void    AddFrame(const nsIFrame* aFrame) {
+      mFrames.AppendElement((void*)aFrame);
+    }
+    void    RemoveFrame(const nsIFrame* aFrame) {
+      mFrames.RemoveElement((void*)aFrame);
+    }
+    nsIFrame * FrameAt(PRInt32 index) {
+      return static_cast<nsIFrame*>(mFrames.FastElementAt(index));
+    }
     PRBool  HasSameFrameList(const BandRect* aBandRect) const;
     PRInt32 Length() const;
   };
