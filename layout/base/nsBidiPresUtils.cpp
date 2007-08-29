@@ -112,10 +112,10 @@ IsBidiSplittable(nsIFrame* aFrame) {
 }
 
 static nsresult
-SplitInlineAncestors(nsPresContext* aPresContext,
-                      nsIFrame*     aFrame)
+SplitInlineAncestors(nsIFrame*     aFrame)
 {
-  nsIPresShell *presShell = aPresContext->PresShell();
+  nsPresContext *presContext = aFrame->PresContext();
+  nsIPresShell *presShell = presContext->PresShell();
   nsIFrame* frame = aFrame;
   nsIFrame* parent = aFrame->GetParent();
   nsIFrame* newFrame = aFrame->GetNextSibling();
@@ -126,7 +126,7 @@ SplitInlineAncestors(nsPresContext* aPresContext,
     NS_ASSERTION(grandparent, "Couldn't get parent's parent in nsBidiPresUtils::SplitInlineAncestors");
     
     nsresult rv = presShell->FrameConstructor()->
-      CreateContinuingFrame(aPresContext, parent, grandparent, &newParent, PR_FALSE);
+      CreateContinuingFrame(presContext, parent, grandparent, &newParent, PR_FALSE);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -139,7 +139,7 @@ SplitInlineAncestors(nsPresContext* aPresContext,
     }
 
     // Reparent views as necessary
-    rv = nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, newFrame, parent, newParent);
+    rv = nsHTMLContainerFrame::ReparentFrameViewList(presContext, newFrame, parent, newParent);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -159,8 +159,7 @@ SplitInlineAncestors(nsPresContext* aPresContext,
 }
 
 static nsresult
-CreateBidiContinuation(nsPresContext* aPresContext,
-                       nsIFrame*       aFrame,
+CreateBidiContinuation(nsIFrame*       aFrame,
                        nsIFrame**      aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
@@ -168,14 +167,15 @@ CreateBidiContinuation(nsPresContext* aPresContext,
 
   *aNewFrame = nsnull;
 
-  nsIPresShell *presShell = aPresContext->PresShell();
+  nsPresContext *presContext = aFrame->PresContext();
+  nsIPresShell *presShell = presContext->PresShell();
   NS_ASSERTION(presShell, "PresShell must be set on PresContext before calling nsBidiPresUtils::CreateBidiContinuation");
 
   nsIFrame* parent = aFrame->GetParent();
   NS_ASSERTION(parent, "Couldn't get frame parent in nsBidiPresUtils::CreateBidiContinuation");
   
   nsresult rv = presShell->FrameConstructor()->
-    CreateContinuingFrame(aPresContext, aFrame, parent, aNewFrame, PR_FALSE);
+    CreateContinuingFrame(presContext, aFrame, parent, aNewFrame, PR_FALSE);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -187,7 +187,7 @@ CreateBidiContinuation(nsPresContext* aPresContext,
   }
   
   // Split inline ancestor frames
-  rv = SplitInlineAncestors(aPresContext, aFrame);
+  rv = SplitInlineAncestors(aFrame);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -253,15 +253,15 @@ AdvanceLineIteratorToFrame(nsIFrame* aFrame,
  *  EnsureBidiContinuation() in previous reflows into fluid continuations.
  */
 nsresult
-nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
-                         nsBlockFrame*   aBlockFrame,
+nsBidiPresUtils::Resolve(nsBlockFrame*   aBlockFrame,
                          nsIFrame*       aFirstChild,
                          PRBool          aIsVisualFormControl)
 {
   mLogicalFrames.Clear();
   mContentToFrameIndex.Clear();
   
-  nsIPresShell* shell = aPresContext->PresShell();
+  nsPresContext *presContext = aBlockFrame->PresContext();
+  nsIPresShell* shell = presContext->PresShell();
   nsStyleContext* styleContext = aBlockFrame->GetStyleContext();
 
   // handle bidi-override being set on the block itself before calling
@@ -283,7 +283,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
       mLogicalFrames.AppendElement(directionalFrame);
     }
   }
-  mSuccess = InitLogicalArray(aPresContext, aFirstChild, nsnull, PR_TRUE);
+  InitLogicalArray(aFirstChild);
 
   if (text->mUnicodeBidi == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
     nsIFrame* directionalFrame = NS_NewDirectionalFrame(shell, styleContext, kPDF);
@@ -291,11 +291,8 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
       mLogicalFrames.AppendElement(directionalFrame);
     }
   }
-  if (NS_FAILED(mSuccess) ) {
-    return mSuccess;
-  }
 
-  CreateBlockBuffer(aPresContext);
+  CreateBlockBuffer();
 
   PRInt32 bufferLength = mBuffer.Length();
 
@@ -319,7 +316,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
   if (aIsVisualFormControl) {
     isVisual = PR_FALSE;
   } else {
-    isVisual = aPresContext->IsVisualMode();
+    isVisual = presContext->IsVisualMode();
   }
   mSuccess = mBidiEngine->CountRuns(&runCount);
   if (NS_FAILED(mSuccess) ) {
@@ -343,7 +340,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
   const nsTextFragment*    fragment;
   nsIAtom*                 frameType = nsnull;
 
-  nsPropertyTable *propTable = aPresContext->PropertyTable();
+  nsPropertyTable *propTable = presContext->PropertyTable();
 
   nsBlockFrame::line_iterator line = aBlockFrame->begin_lines();
   nsBlockFrame::line_iterator endLines = aBlockFrame->end_lines();
@@ -414,8 +411,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
         // IBMBIDI - Egypt - End
 
         if ( (runLength > 0) && (runLength < fragmentLength) ) {
-          if (!EnsureBidiContinuation(aPresContext, frame,
-                                      &nextBidi, frameIndex) ) {
+          if (!EnsureBidiContinuation(frame, &nextBidi, frameIndex) ) {
             break;
           }
           if (lineNeedsUpdate) {
@@ -434,8 +430,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
           PRInt32 newIndex = 0;
           mContentToFrameIndex.Get(content, &newIndex);
           if (newIndex > frameIndex) {
-            RemoveBidiContinuation(aPresContext, frame,
-                                   frameIndex, newIndex, temp);
+            RemoveBidiContinuation(frame, frameIndex, newIndex, temp);
             if (lineNeedsUpdate) {
               if (AdvanceLineIteratorToFrame(frame, aBlockFrame, line,
                                              prevFrame, endLines)) {
@@ -470,7 +465,7 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
         parent = child->GetParent();
       }
       if (parent && IsBidiSplittable(parent))
-        SplitInlineAncestors(aPresContext, child);
+        SplitInlineAncestors(child);
     }
   } // for
   return mSuccess;
@@ -483,27 +478,20 @@ PRBool IsBidiLeaf(nsIFrame* aFrame) {
     || !aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer);
 }
 
-nsresult
-nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
-                                  nsIFrame*       aCurrentFrame,
-                                  nsIFrame*       aNextInFlow,
-                                  PRBool          aAddMarkers)
+void
+nsBidiPresUtils::InitLogicalArray(nsIFrame*       aCurrentFrame)
 {
-  nsresult              res = NS_OK;
-
-  nsIPresShell* shell = aPresContext->PresShell();
+  nsIPresShell* shell = aCurrentFrame->PresContext()->PresShell();
   nsStyleContext* styleContext;
 
-  for (nsIFrame* childFrame = aCurrentFrame;
-       childFrame && childFrame != aNextInFlow;
+  for (nsIFrame* childFrame = aCurrentFrame; childFrame;
        childFrame = childFrame->GetNextSibling()) {
 
     nsIFrame* frame = (nsGkAtoms::placeholderFrame == childFrame->GetType()) ?
       nsPlaceholderFrame::GetRealFrameFor(childFrame) : childFrame;
 
     PRUnichar ch = 0;
-    if (aAddMarkers &&
-        frame->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
+    if (frame->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
       const nsStyleVisibility* vis = frame->GetStyleVisibility();
       const nsStyleTextReset* text = frame->GetStyleTextReset();
       switch (text->mUnicodeBidi) {
@@ -555,7 +543,7 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
     }
     else {
       nsIFrame* kid = frame->GetFirstChild(nsnull);
-      res = InitLogicalArray(aPresContext, kid, aNextInFlow, aAddMarkers);
+      InitLogicalArray(kid);
     }
 
     // If the element is attributed by dir, indicate direction pop (add PDF frame)
@@ -568,11 +556,10 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
       }
     }
   } // for
-  return res;       
 }
 
 void
-nsBidiPresUtils::CreateBlockBuffer(nsPresContext* aPresContext)
+nsBidiPresUtils::CreateBlockBuffer()
 {
   mBuffer.SetLength(0);
 
@@ -616,9 +603,7 @@ nsBidiPresUtils::CreateBlockBuffer(nsPresContext* aPresContext)
 }
 
 void
-nsBidiPresUtils::ReorderFrames(nsPresContext*       aPresContext,
-                               nsIRenderingContext* aRendContext,
-                               nsIFrame*            aFirstFrameOnLine,
+nsBidiPresUtils::ReorderFrames(nsIFrame*            aFirstFrameOnLine,
                                PRInt32              aNumFramesOnLine)
 {
   // If this line consists of a line frame, reorder the line frame's children.
@@ -636,7 +621,7 @@ nsBidiPresUtils::ReorderFrames(nsPresContext*       aPresContext,
   PRBool isReordered;
   PRBool hasRTLFrames;
   Reorder(isReordered, hasRTLFrames);
-  RepositionInlineFrames(aPresContext, aRendContext, aFirstFrameOnLine, isReordered);
+  RepositionInlineFrames(aFirstFrameOnLine);
 }
 
 nsresult
@@ -903,10 +888,7 @@ nsBidiPresUtils::InitContinuationStates(nsIFrame*              aFrame,
 }
 
 void
-nsBidiPresUtils::RepositionInlineFrames(nsPresContext*       aPresContext,
-                                        nsIRenderingContext* aRendContext,
-                                        nsIFrame*            aFirstChild,
-                                        PRBool               aReordered) const
+nsBidiPresUtils::RepositionInlineFrames(nsIFrame* aFirstChild) const
 {
   nsMargin margin;
   const nsStyleVisibility* vis = aFirstChild->GetStyleVisibility();
@@ -1026,8 +1008,7 @@ nsBidiPresUtils::GetFrameToLeftOf(const nsIFrame*  aFrame,
 }
 
 PRBool
-nsBidiPresUtils::EnsureBidiContinuation(nsPresContext* aPresContext,
-                                        nsIFrame*       aFrame,
+nsBidiPresUtils::EnsureBidiContinuation(nsIFrame*       aFrame,
                                         nsIFrame**      aNewFrame,
                                         PRInt32&        aFrameIndex)
 {
@@ -1059,7 +1040,7 @@ nsBidiPresUtils::EnsureBidiContinuation(nsPresContext* aPresContext,
   }
   
   if (!*aNewFrame) {
-    mSuccess = CreateBidiContinuation(aPresContext, aFrame, aNewFrame);
+    mSuccess = CreateBidiContinuation(aFrame, aNewFrame);
     if (NS_FAILED(mSuccess) ) {
       return PR_FALSE;
     }
@@ -1069,8 +1050,7 @@ nsBidiPresUtils::EnsureBidiContinuation(nsPresContext* aPresContext,
 }
 
 void
-nsBidiPresUtils::RemoveBidiContinuation(nsPresContext* aPresContext,
-                                        nsIFrame*       aFrame,
+nsBidiPresUtils::RemoveBidiContinuation(nsIFrame*       aFrame,
                                         PRInt32         aFirstIndex,
                                         PRInt32         aLastIndex,
                                         PRInt32&        aOffset) const
