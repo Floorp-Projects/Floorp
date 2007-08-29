@@ -617,7 +617,8 @@ nsXULMenupopupAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 
   if (!isActive)
     *aState |= (nsIAccessibleStates::STATE_OFFSCREEN |
-                nsIAccessibleStates::STATE_INVISIBLE);
+                nsIAccessibleStates::STATE_INVISIBLE |
+                nsIAccessibleStates::STATE_COLLAPSED);
 
   return NS_OK;
 }
