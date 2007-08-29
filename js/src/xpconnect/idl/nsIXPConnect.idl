@@ -675,6 +675,17 @@ interface nsIXPConnect : nsISupports
     void flagSystemFilenamePrefix(in string aFilenamePrefix);
 
     /**
+     * Get a native pointer of type aIID from aJSObject if the object
+     * is a wrapped native or a wrapped JS object, but never create a
+     * new wrapper, only use existing ones.
+     */
+    void
+    getNativeOfJSObject(in JSContextPtr aJSContext,
+                        in JSObjectPtr  aJSObj,
+                        in nsIIDRef     aIID,
+                        [iid_is(aIID),retval] out nsQIResult result);
+
+    /**
      * Restore an old prototype for wrapped natives of type
      * aClassInfo. This should be used only when restoring an old
      * scope into a state close to where it was prior to
