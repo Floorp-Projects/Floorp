@@ -51,6 +51,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsInlineFrame.h"
+#include "nsPlaceholderFrame.h"
 
 static NS_DEFINE_IID(kInlineFrameCID, NS_INLINE_FRAME_CID);
 
@@ -194,7 +195,7 @@ CreateBidiContinuation(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-static void
+static PRBool
 AdvanceLineIteratorToFrame(nsIFrame* aFrame,
                            nsIFrame* aBlockFrame,
                            nsBlockFrame::line_iterator& aLine,
@@ -205,6 +206,8 @@ AdvanceLineIteratorToFrame(nsIFrame* aFrame,
   nsIFrame* child = aFrame;
   nsIFrame* parent = child->GetParent();
   while (parent && parent != aBlockFrame) {
+    if (parent->GetStyleDisplay()->IsBlockOutside())
+      return PR_FALSE;
     child = parent;
     parent = child->GetParent();
   }
@@ -215,6 +218,7 @@ AdvanceLineIteratorToFrame(nsIFrame* aFrame,
   }
   aPrevFrame = child;
   NS_ASSERTION (aLine != aEndLines, "frame not found on any line");
+  return PR_TRUE;
 }
 
 /*
@@ -415,8 +419,10 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
             break;
           }
           if (lineNeedsUpdate) {
-            AdvanceLineIteratorToFrame(frame, aBlockFrame, line, prevFrame, endLines);
-            lineNeedsUpdate = PR_FALSE;
+            if (AdvanceLineIteratorToFrame(frame, aBlockFrame, line,
+                                           prevFrame, endLines)) {
+              lineNeedsUpdate = PR_FALSE;
+            }
           }
           line->MarkDirty();
           frame->AdjustOffsetsForBidi(contentOffset, contentOffset + runLength);
@@ -431,8 +437,10 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
             RemoveBidiContinuation(aPresContext, frame,
                                    frameIndex, newIndex, temp);
             if (lineNeedsUpdate) {
-              AdvanceLineIteratorToFrame(frame, aBlockFrame, line, prevFrame, endLines);
-              lineNeedsUpdate = PR_FALSE;
+              if (AdvanceLineIteratorToFrame(frame, aBlockFrame, line,
+                                             prevFrame, endLines)) {
+                lineNeedsUpdate = PR_FALSE;
+              }
             }
             line->MarkDirty();
             runLength -= temp;
@@ -471,11 +479,8 @@ nsBidiPresUtils::Resolve(nsPresContext* aPresContext,
 // Should this frame be treated as a leaf (e.g. when building mLogicalArray)?
 PRBool IsBidiLeaf(nsIFrame* aFrame) {
   nsIFrame* kid = aFrame->GetFirstChild(nsnull);
-  // Need the IsBlockLevel() check because nsFirstLetterFrame is
-  // always of type eBidiInlineContainer, even if it's floating.
   return !kid
-    || !aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer)
-    || aFrame->GetStyleDisplay()->IsBlockOutside();
+    || !aFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer);
 }
 
 nsresult
@@ -484,15 +489,17 @@ nsBidiPresUtils::InitLogicalArray(nsPresContext* aPresContext,
                                   nsIFrame*       aNextInFlow,
                                   PRBool          aAddMarkers)
 {
-  nsIFrame*             frame;
   nsresult              res = NS_OK;
 
   nsIPresShell* shell = aPresContext->PresShell();
   nsStyleContext* styleContext;
 
-  for (frame = aCurrentFrame;
-       frame && frame != aNextInFlow;
-       frame = frame->GetNextSibling()) {
+  for (nsIFrame* childFrame = aCurrentFrame;
+       childFrame && childFrame != aNextInFlow;
+       childFrame = childFrame->GetNextSibling()) {
+
+    nsIFrame* frame = (nsGkAtoms::placeholderFrame == childFrame->GetType()) ?
+      nsPlaceholderFrame::GetRealFrameFor(childFrame) : childFrame;
 
     PRUnichar ch = 0;
     if (aAddMarkers &&
