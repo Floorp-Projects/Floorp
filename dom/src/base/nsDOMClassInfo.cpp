@@ -8984,15 +8984,20 @@ nsHTMLPluginObjElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper,
   nsCOMPtr<nsIPluginInstanceInternal> plugin_internal =
     do_QueryInterface(pi);
 
+#ifdef OJI
   nsCOMPtr<nsIJVMPluginInstance> java_plugin_instance =
     do_QueryInterface(pi);
+#endif
 
   JSObject *proto = ::JS_GetPrototype(cx, obj);
 
   if (pi && (!plugin_internal ||
              (!proto || strcmp(JS_GET_CLASS(cx, proto)->name,
-                               NPRUNTIME_JSCLASS_NAME) != 0)) &&
-      !java_plugin_instance) {
+                               NPRUNTIME_JSCLASS_NAME) != 0))
+#ifdef OJI
+      && !java_plugin_instance
+#endif
+      ) {
     // This is not an NPRuntime plugin or Java plugin, continue on...
 
     JSString *str = JSVAL_TO_STRING(id);
