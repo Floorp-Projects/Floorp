@@ -135,11 +135,11 @@ function getFile(key, pathArray) {
 }
 
 /**
- * Opens a safe file output stream for writing. 
+ * Opens a safe file output stream for writing.
  * @param   file
  *          The file to write to.
  * @param   modeFlags
- *          (optional) File open flags. Can be undefined. 
+ *          (optional) File open flags. Can be undefined.
  * @returns nsIFileOutputStream to write to.
  */
 function openSafeFileOutputStream(file, modeFlags) {
@@ -147,7 +147,7 @@ function openSafeFileOutputStream(file, modeFlags) {
             createInstance(Ci.nsIFileOutputStream);
   if (modeFlags === undefined)
     modeFlags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
-  if (!file.exists()) 
+  if (!file.exists())
     file.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
   fos.init(file, modeFlags, PERMS_FILE, 0);
   return fos;
@@ -192,8 +192,8 @@ function Blocklist() {
   gVersionChecker = Cc["@mozilla.org/xpcom/version-comparator;1"].
                     getService(Ci.nsIVersionComparator);
   gConsole = Cc["@mozilla.org/consoleservice;1"].
-             getService(Ci.nsIConsoleService);  
-  
+             getService(Ci.nsIConsoleService);
+
   gOS = Cc["@mozilla.org/observer-service;1"].
         getService(Ci.nsIObserverService);
   gOS.addObserver(this, "xpcom-shutdown", false);
@@ -295,7 +295,7 @@ Blocklist.prototype = {
       var dsURI = gPref.getCharPref(PREF_BLOCKLIST_URL);
     }
     catch (e) {
-      LOG("Blocklist::notify: The " + PREF_BLOCKLIST_URL + " preference" + 
+      LOG("Blocklist::notify: The " + PREF_BLOCKLIST_URL + " preference" +
           " is missing!");
       return;
     }
@@ -307,7 +307,7 @@ Blocklist.prototype = {
       var uri = newURI(dsURI);
     }
     catch (e) {
-      LOG("Blocklist::notify: There was an error creating the blocklist URI\r\n" + 
+      LOG("Blocklist::notify: There was an error creating the blocklist URI\r\n" +
           "for: " + dsURI + ", error: " + e);
       return;
     }
@@ -384,7 +384,7 @@ Blocklist.prototype = {
 #              <versionRange minVersion="1.7" maxVersion="1.7.*"/>
 #            </targetApplication>
 #            <targetApplication id="toolkit@mozilla.org">
-#              <versionRange minVersion="1.8" maxVersion="1.8.*"/>
+#              <versionRange minVersion="1.9" maxVersion="1.9.*"/>
 #            </targetApplication>
 #          </versionRange>
 #          <versionRange minVersion="3.0" maxVersion="3.0.*">
@@ -392,7 +392,7 @@ Blocklist.prototype = {
 #              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
 #            </targetApplication>
 #            <targetApplication id="toolkit@mozilla.org">
-#              <versionRange minVersion="1.8" maxVersion="1.8.*"/>
+#              <versionRange minVersion="1.9" maxVersion="1.9.*"/>
 #            </targetApplication>
 #          </versionRange>
 #        </emItem>
@@ -421,7 +421,7 @@ Blocklist.prototype = {
 #          <match name="description" exp="1[.]2[.]3"/>
 #        </pluginItem>
 #      </pluginItems>
-#    </blocklist> 
+#    </blocklist>
    */
 
   _loadBlocklistFromFile: function(file) {
