@@ -498,8 +498,8 @@ STDMETHODIMP nsAccessibleWrap::get_accState(
   if (!xpAccessible)
     return E_FAIL;
 
-  PRUint32 state = 0, extraState;
-  if (NS_FAILED(xpAccessible->GetFinalState(&state, &extraState)))
+  PRUint32 state = 0;
+  if (NS_FAILED(xpAccessible->GetFinalState(&state, nsnull)))
     return E_FAIL;
 
   pvarState->lVal = state;
