@@ -179,6 +179,27 @@ enum {
  MOUSE_SCROLL_PIXELS
 };
 
+struct AccessKeyInfo {
+  PRUint32 mAccessKey;
+  nsIContent* mTarget;
+
+  AccessKeyInfo(nsIContent* aTarget) : mAccessKey(0), mTarget(aTarget) {}
+};
+
+static PRIntn PR_CALLBACK
+FindTargetForAccessKey(nsHashKey *aKey, void *aData, void* aClosure)
+{
+  AccessKeyInfo* info = static_cast<AccessKeyInfo*>(aClosure);
+  nsIContent* aTarget = static_cast<nsIContent*>(aData);
+
+  if (aTarget == info->mTarget) {
+    info->mAccessKey = aKey->HashCode();
+    return kHashEnumerateStop;
+  }
+
+  return kHashEnumerateNext;
+}
+
 // mask values for ui.key.chromeAccess and ui.key.contentAccess
 #define NS_MODIFIER_SHIFT    1
 #define NS_MODIFIER_CONTROL  2
@@ -4659,6 +4680,8 @@ nsEventStateManager::RegisterAccessKey(nsIContent* aContent, PRUint32 aKey)
     PRUint32 accKey = (IS_IN_BMP(aKey)) ? ToLowerCase((PRUnichar)aKey) : aKey;
 
     nsVoidKey key(NS_INT32_TO_PTR(accKey));
+    NS_ASSERTION(key.HashCode() == accKey,
+                 "nsHashKey::HashCode() doesn't return an accesskey");
 
 #ifdef DEBUG_jag
     nsCOMPtr<nsIContent> oldContent = dont_AddRef(static_cast<nsIContent*>(mAccessKeys->Get(&key)));
@@ -4691,6 +4714,24 @@ nsEventStateManager::UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey)
 
     mAccessKeys->Remove(&key);
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventStateManager::GetRegisteredAccessKey(nsIContent* aContent,
+                                            PRUint32* aKey)
+{
+  NS_ENSURE_ARG(aContent);
+  NS_ENSURE_ARG_POINTER(aKey);
+  *aKey = 0;
+
+  if (!mAccessKeys)
+    return NS_OK;
+
+  AccessKeyInfo info(aContent);
+  mAccessKeys->Enumerate(FindTargetForAccessKey, &info);
+
+  *aKey = info.mAccessKey;
   return NS_OK;
 }
 

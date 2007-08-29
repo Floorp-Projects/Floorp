@@ -54,8 +54,8 @@ class imgIContainer;
  */
 // {fb7516ff-2f01-4893-84e8-e4b282813023}
 #define NS_IEVENTSTATEMANAGER_IID \
-{ 0xfb7516ff, 0x2f01, 0x4893, \
-  { 0x84, 0xe8, 0xe4, 0xb2, 0x82, 0x81, 0x30, 0x23 } }
+{ 0x522d12ec, 0xde51, 0x4635, \
+  { 0xb0, 0x10, 0x4, 0x2a, 0x6d, 0x5, 0xa0, 0x3e } }
 
 #define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_FOCUS_EVENT(event))
 
@@ -132,8 +132,32 @@ public:
   NS_IMETHOD ChangeFocusWith(nsIContent *aFocusContent, EFocusedWithType aFocusedWith) = 0;
 
   // Access Key Registration
+
+  /**
+   * Register accesskey on the given element. When accesskey is activated then
+   * the element will be notified via nsIContent::PerformAccesskey() method.
+   *
+   * @param  aContent  the given element
+   * @param  aKey      accesskey
+   */
   NS_IMETHOD RegisterAccessKey(nsIContent* aContent, PRUint32 aKey) = 0;
+
+  /**
+   * Unregister accesskey for the given element.
+   *
+   * @param  aContent  the given element
+   * @param  aKey      accesskey
+   */
   NS_IMETHOD UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey) = 0;
+
+  /**
+   * Get accesskey registered on the given element or 0 if there is none.
+   *
+   * @param  aContent  the given element
+   * @param  aKey      registered accesskey
+   * @return           NS_OK
+   */
+  NS_IMETHOD GetRegisteredAccessKey(nsIContent* aContent, PRUint32* aKey) = 0;
 
   NS_IMETHOD SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
                        PRBool aHaveHotspot, float aHotspotX, float aHotspotY,
