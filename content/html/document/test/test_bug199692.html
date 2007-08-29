@@ -95,7 +95,7 @@ width: 200px !important;
         // content
         var c = $('content');
         x = c.offsetLeft + c.clientWidth/2, y = c.offsetTop;
-        todo(doc.pt(x,y).id, c.id, "Point to right of #txt should be #content");
+        ok(doc.pt(x,y) === c, "Point to right of #txt should be #content");
         
         // hidden
         c = $('hidden');
