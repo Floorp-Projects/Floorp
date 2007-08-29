@@ -88,6 +88,11 @@ typedef wchar_t XP_CHAR;
 #define XP_PATH_MAX 4096
 // "<reporter path>" "<minidump path>"
 #define CMDLINE_SIZE ((XP_PATH_MAX * 2) + 6)
+#ifdef _USE_32BIT_TIME_T
+#define XP_TTOA(time, buffer, base) ltoa(time, buffer, base)
+#else
+#define XP_TTOA(time, buffer, base) _i64toa(time, buffer, base)
+#endif
 #else
 typedef char XP_CHAR;
 #define TO_NEW_XP_CHAR(x) ToNewUTF8String(x)
@@ -97,6 +102,7 @@ typedef char XP_CHAR;
 #define PATH_SEPARATOR "/"
 #define XP_PATH_SEPARATOR "/"
 #define XP_PATH_MAX PATH_MAX
+#define XP_TTOA(time, buffer, base) sprintf(buffer, "%ld", time)
 #endif // XP_WIN32
 
 static const XP_CHAR dumpFileExtension[] = {'.', 'd', 'm', 'p',
@@ -113,6 +119,19 @@ static bool doReport = true;
 
 // if this is true, we pass the exception on to the OS crash reporter
 static bool showOSCrashReporter = false;
+
+// The time of the last recorded crash, as a time_t value.
+static time_t lastCrashTime = 0;
+// The pathname of a file to store the crash time in
+static XP_CHAR lastCrashTimeFilename[XP_PATH_MAX] = {0};
+
+// these are just here for readability
+static const char kCrashTimeParameter[] = "CrashTime=";
+static const int kCrashTimeParameterLen = sizeof(kCrashTimeParameter)-1;
+
+static const char kTimeSinceLastCrashParameter[] = "SecondsSinceLastCrash=";
+static const int kTimeSinceLastCrashParameterLen =
+                                     sizeof(kTimeSinceLastCrashParameter)-1;
 
 // this holds additional data sent via the API
 static nsDataHashtable<nsCStringHashKey,nsCString>* crashReporterAPIData_Hash;
@@ -157,7 +176,46 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
   p = Concat(p, minidump_id, &size);
   Concat(p, extraFileExtension, &size);
 
-#ifdef XP_WIN32
+  // calculate time since last crash (if possible), and store
+  // the time of this crash.
+  time_t crashTime = time(NULL);
+  time_t timeSinceLastCrash = 0;
+  // stringified versions of the above
+  char crashTimeString[32];
+  int crashTimeStringLen = 0;
+  char timeSinceLastCrashString[32];
+  int timeSinceLastCrashStringLen = 0;
+
+  XP_TTOA(crashTime, crashTimeString, 10);
+  crashTimeStringLen = strlen(crashTimeString);
+  if (lastCrashTime != 0) {
+    timeSinceLastCrash = crashTime - lastCrashTime;
+    XP_TTOA(timeSinceLastCrash, timeSinceLastCrashString, 10);
+    timeSinceLastCrashStringLen = strlen(timeSinceLastCrashString);
+  }
+  // write crash time to file
+  if (lastCrashTimeFilename[0] != 0) {
+#if defined(XP_WIN32)
+    HANDLE hFile = CreateFile(lastCrashTimeFilename, GENERIC_WRITE, 0,
+                              NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,
+                              NULL);
+    if(hFile != INVALID_HANDLE_VALUE) {
+      DWORD nBytes;
+      WriteFile(hFile, crashTimeString, crashTimeStringLen, &nBytes, NULL);
+      CloseHandle(hFile);
+    }
+#elif defined(XP_UNIX)
+    int fd = open(lastCrashTimeFilename,
+                  O_WRONLY | O_CREAT | O_TRUNC,
+                  0600);
+    if (fd != -1) {
+      write(fd, crashTimeString, crashTimeStringLen);
+      close(fd);
+    }
+#endif
+  }
+  
+#if defined(XP_WIN32)
   XP_CHAR cmdLine[CMDLINE_SIZE];
   size = CMDLINE_SIZE;
   p = Concat(cmdLine, L"\"", &size);
@@ -175,6 +233,17 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
       DWORD nBytes;
       WriteFile(hFile, crashReporterAPIData->get(),
                 crashReporterAPIData->Length(), &nBytes, NULL);
+      WriteFile(hFile, kCrashTimeParameter, kCrashTimeParameterLen,
+                &nBytes, NULL);
+      WriteFile(hFile, crashTimeString, crashTimeStringLen, &nBytes, NULL);
+      WriteFile(hFile, "\n", 1, &nBytes, NULL);
+      if (timeSinceLastCrash != 0) {
+        WriteFile(hFile, kTimeSinceLastCrashParameter,
+                  kTimeSinceLastCrashParameterLen, &nBytes, NULL);
+        WriteFile(hFile, timeSinceLastCrashString, timeSinceLastCrashStringLen,
+                  &nBytes, NULL);
+        WriteFile(hFile, "\n", 1, &nBytes, NULL);
+      }
       CloseHandle(hFile);
     }
   }
@@ -209,6 +278,14 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
     if (fd != -1) {
       // not much we can do in case of error
       write(fd, crashReporterAPIData->get(), crashReporterAPIData->Length());
+      write(fd, kCrashTimeParameter, kCrashTimeParameterLen);
+      write(fd, crashTimeString, crashTimeStringLen);
+      write(fd, "\n", 1);
+      if (timeSinceLastCrash != 0) {
+        write(fd, kTimeSinceLastCrashParameter,kTimeSinceLastCrashParameterLen);
+        write(fd, timeSinceLastCrashString, timeSinceLastCrashStringLen);
+        write(fd, "\n", 1);
+      }
       close (fd);
     }
   }
@@ -400,7 +477,7 @@ typedef nsresult (*InitDataFunc)(nsACString&);
 // does not exist, create it and initialize its contents
 // by calling aInitFunc for the data.
 static nsresult 
-GetOrInit(nsILocalFile* aDir, const nsAString& filename,
+GetOrInit(nsIFile* aDir, const nsAString& filename,
           nsACString& aContents, InitDataFunc aInitFunc)
 {
   PRBool exists;
@@ -416,10 +493,16 @@ GetOrInit(nsILocalFile* aDir, const nsAString& filename,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!exists) {
-    // get the initial value and write it to the file
-    rv = aInitFunc(aContents);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = WriteDataToFile(dataFile, aContents);
+    if (aInitFunc) {
+      // get the initial value and write it to the file
+      rv = aInitFunc(aContents);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = WriteDataToFile(dataFile, aContents);
+    }
+    else {
+      // didn't pass in an init func
+      rv = NS_ERROR_FAILURE;
+    }
   }
   else {
     // just get the file's contents
@@ -479,26 +562,68 @@ InitInstallTime(nsACString& aInstallTime)
   return NS_OK;
 }
 
-// Annotate the crash report with a Unique User ID.
-// TODO: also add time since install, and time since last crash.
-// (bug 376720 and bug 376721)
+// Annotate the crash report with a Unique User ID and time
+// since install.  Also do some prep work for recording
+// time since last crash, which must be calculated at
+// crash time.
 // If any piece of data doesn't exist, initialize it first.
 nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
                         const nsACString& aBuildID)
 {
-  nsresult rv = aAppDataDirectory->Append(NS_LITERAL_STRING("Crash Reports"));
+  
+  nsCOMPtr<nsIFile> dataDirectory;
+  nsresult rv = aAppDataDirectory->Clone(getter_AddRefs(dataDirectory));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = dataDirectory->Append(NS_LITERAL_STRING("Crash Reports"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCAutoString data;
-  if(NS_SUCCEEDED(GetOrInit(aAppDataDirectory, NS_LITERAL_STRING("UserID"),
+  if(NS_SUCCEEDED(GetOrInit(dataDirectory, NS_LITERAL_STRING("UserID"),
                             data, InitUserID)))
     AnnotateCrashReport(NS_LITERAL_CSTRING("UserID"), data);
 
-  if(NS_SUCCEEDED(GetOrInit(aAppDataDirectory,
+  if(NS_SUCCEEDED(GetOrInit(dataDirectory,
                             NS_LITERAL_STRING("InstallTime") +
                             NS_ConvertASCIItoUTF16(aBuildID),
                             data, InitInstallTime)))
     AnnotateCrashReport(NS_LITERAL_CSTRING("InstallTime"), data);
+
+  // this is a little different, since we can't init it with anything,
+  // since it's stored at crash time, and we can't annotate the
+  // crash report with the stored value, since we really want
+  // (now - LastCrash), so we just get a value if it exists,
+  // and store it in a time_t value.
+  if(NS_SUCCEEDED(GetOrInit(dataDirectory, NS_LITERAL_STRING("LastCrash"),
+                            data, NULL))) {
+    lastCrashTime = (time_t)atol(data.get());
+    
+  }
+
+  // not really the best place to init this, but I have the path I need here
+  nsCOMPtr<nsIFile> lastCrashFile;
+  rv = dataDirectory->Clone(getter_AddRefs(lastCrashFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = lastCrashFile->Append(NS_LITERAL_STRING("LastCrash"));
+  NS_ENSURE_SUCCESS(rv, rv);
+  memset(lastCrashTimeFilename, 0, sizeof(lastCrashTimeFilename));
+
+#if defined(XP_WIN32)
+  nsAutoString filename;
+  rv = lastCrashFile->GetPath(filename);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (filename.Length() < XP_PATH_MAX)
+    wcsncpy(lastCrashTimeFilename, filename.get(), filename.Length());
+#else
+  nsCAutoString filename;
+  rv = lastCrashFile->GetNativePath(filename);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (filename.Length() < XP_PATH_MAX)
+    strncpy(lastCrashTimeFilename, filename.get(), filename.Length());
+#endif
 
   return NS_OK;
 }
