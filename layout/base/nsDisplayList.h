@@ -205,6 +205,11 @@ public:
   void SetPaintAllFrames() { mPaintAllFrames = PR_TRUE; }
   PRBool GetPaintAllFrames() { return mPaintAllFrames; }
   /**
+   * Allows callers to selectively override the regular paint suppression checks,
+   * so that methods like GetFrameForPoint work when painting is suppressed.
+   */
+  void IgnorePaintSuppression() { mIsBackgroundOnly = PR_FALSE; }
+  /**
    * Display the caret if needed.
    */
   nsresult DisplayCaret(nsIFrame* aFrame, const nsRect& aDirtyRect,

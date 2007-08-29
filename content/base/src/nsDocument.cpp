@@ -77,6 +77,8 @@
 #include "nsIDOMProcessingInstruction.h"
 #include "nsDOMString.h"
 #include "nsNodeUtils.h"
+#include "nsLayoutUtils.h" // for GetFrameForPoint
+#include "nsIFrame.h"
 
 #include "nsRange.h"
 #include "nsIDOMText.h"
@@ -1648,6 +1650,60 @@ nsDocument::GetActiveElement(nsIDOMElement **aElement)
 
   // If we couldn't get a BODY, return the root element.
   return GetDocumentElement(aElement);
+}
+
+NS_IMETHODIMP
+nsDocument::ElementFromPoint(PRInt32 aX, PRInt32 aY, nsIDOMElement** aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+  // As per the the spec, we return null if either coord is negative
+  if (aX < 0 || aY < 0)
+    return NS_OK;
+
+  nscoord x = nsPresContext::CSSPixelsToAppUnits(aX);
+  nscoord y = nsPresContext::CSSPixelsToAppUnits(aY);
+  nsPoint pt(x, y);
+
+  // Make sure the layout information we get is up-to-date, and
+  // ensure we get a root frame (for everything but XUL)
+  FlushPendingNotifications(Flush_Layout);
+
+  nsIPresShell *ps = GetPrimaryShell();
+  NS_ENSURE_STATE(ps);
+  nsIFrame *rootFrame = ps->GetRootFrame();
+
+  // XUL docs, unlike HTML, have no frame tree until everything's done loading
+  if (!rootFrame)
+    return NS_OK; // return null to premature XUL callers as a reminder to wait
+
+  nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, pt, PR_TRUE);
+  if (!ptFrame)
+    return NS_OK;
+
+  nsIContent* ptContent = ptFrame->GetContent();
+  NS_ENSURE_STATE(ptContent);
+
+  // If the content is in a subdocument, try to get the element from |this| doc
+  nsIDocument *currentDoc = ptContent->GetCurrentDoc();
+  if (currentDoc && (currentDoc != this)) {
+    *aReturn = CheckAncestryAndGetFrame(currentDoc).get();
+    return NS_OK;
+  }
+
+  // If we have an anonymous element (such as an internal div from a textbox),
+  // or a node that isn't an element (such as a text frame node),
+  // replace it with the first non-anonymous parent node of type element.
+  while (ptContent &&
+         !ptContent->IsNodeOfType(nsINode::eELEMENT) ||
+         ptContent->GetBindingParent() ||
+         ptContent->IsNativeAnonymous()) {
+    ptContent = ptContent->GetParent();
+  }
+ 
+  if (ptContent)
+    CallQueryInterface(ptContent, aReturn);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
