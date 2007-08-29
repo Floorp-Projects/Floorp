@@ -993,7 +993,7 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
   return isVisible;
 }
 
-NS_IMETHODIMP
+nsresult
 nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   *aState = 0;
@@ -1049,45 +1049,6 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   }
   if (isOffscreen) {
     *aState |= nsIAccessibleStates::STATE_OFFSCREEN;
-  }
-
-  if (!aExtraState)
-    return NS_OK;
-
-  PRUint32 state = *aState;
-  nsresult rv = GetARIAState(&state);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsIFrame *frame = GetFrame();
-  if (frame) {
-    const nsStyleDisplay* display = frame->GetStyleDisplay();
-    if (display && display->mOpacity == 1.0f &&
-        !(state & nsIAccessibleStates::STATE_INVISIBLE)) {
-      *aExtraState |= nsIAccessibleStates::EXT_STATE_OPAQUE;
-    }
-
-    const nsStyleXUL *xulStyle = frame->GetStyleXUL();
-    if (xulStyle) {
-      // In XUL all boxes are either vertical or horizontal
-      if (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL) {
-        *aExtraState |= nsIAccessibleStates::EXT_STATE_VERTICAL;
-      }
-      else {
-        *aExtraState |= nsIAccessibleStates::EXT_STATE_HORIZONTAL;
-      }
-    }
-  }
-
-  // XXX We can remove this hack once we support RDF-based role & state maps
-  if (mRoleMapEntry && (mRoleMapEntry->role == nsIAccessibleRole::ROLE_ENTRY ||
-      mRoleMapEntry->role == nsIAccessibleRole::ROLE_PASSWORD_TEXT)) {
-    if (content->AttrValueIs(kNameSpaceID_WAIProperties , nsAccessibilityAtoms::multiline,
-                             nsAccessibilityAtoms::_true, eCaseMatters)) {
-      *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
-    }
-    else {
-      *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
-    }
   }
 
   return NS_OK;
@@ -2048,7 +2009,7 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
     if (*aRole == nsIAccessibleRole::ROLE_ENTRY) {
       nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
       if (content && 
-          content->AttrValueIs(kNameSpaceID_WAIProperties , nsAccessibilityAtoms::secret,
+          content->AttrValueIs(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::secret,
                                nsAccessibilityAtoms::_true, eCaseMatters)) {
         // For entry field with aaa:secret="true"
         *aRole = nsIAccessibleRole::ROLE_PASSWORD_TEXT;
@@ -2305,6 +2266,39 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
         // COLLAPSED from EXPANDABLE && !EXPANDED
         *aExtraState &= ~nsIAccessibleStates::STATE_COLLAPSED;
       } 
+    }
+    nsIFrame *frame = GetFrame();
+    if (frame) {
+      const nsStyleDisplay* display = frame->GetStyleDisplay();
+      if (display && display->mOpacity == 1.0f &&
+          !(*aState & nsIAccessibleStates::STATE_INVISIBLE)) {
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_OPAQUE;
+      }
+
+      const nsStyleXUL *xulStyle = frame->GetStyleXUL();
+      if (xulStyle) {
+        // In XUL all boxes are either vertical or horizontal
+        if (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL) {
+          *aExtraState |= nsIAccessibleStates::EXT_STATE_VERTICAL;
+        }
+        else {
+          *aExtraState |= nsIAccessibleStates::EXT_STATE_HORIZONTAL;
+        }
+      }
+    }
+
+    // XXX We can remove this hack once we support RDF-based role & state maps
+    if (mRoleMapEntry && (mRoleMapEntry->role == nsIAccessibleRole::ROLE_ENTRY ||
+        mRoleMapEntry->role == nsIAccessibleRole::ROLE_PASSWORD_TEXT)) {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+      NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+      if (content->AttrValueIs(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::multiline,
+                               nsAccessibilityAtoms::_true, eCaseMatters)) {
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
+      }
+      else {
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+      }
     }
   }
 
