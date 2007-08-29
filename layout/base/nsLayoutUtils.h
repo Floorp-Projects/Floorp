@@ -378,8 +378,11 @@ public:
    * frame under the point aPt that receives a mouse event at that location,
    * or nsnull if there is no such frame.
    * @param aPt the point, relative to the frame origin
+   * @param aShouldIgnoreSuppression a boolean to control if the display
+   * list builder should ignore paint suppression or not
    */
-  static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt);
+  static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
+                                    PRBool aShouldIgnoreSuppression = PR_FALSE);
 
   /**
    * Given aFrame, the root frame of a stacking context, paint it and its

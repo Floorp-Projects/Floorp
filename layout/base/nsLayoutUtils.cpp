@@ -745,12 +745,15 @@ static PRBool gDumpRepaintRegionForCopy = PR_FALSE;
 #endif
 
 nsIFrame*
-nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt)
+nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
+                                PRBool aShouldIgnoreSuppression)
 {
   nsDisplayListBuilder builder(aFrame, PR_TRUE, PR_FALSE);
   nsDisplayList list;
   nsRect target(aPt, nsSize(1, 1));
 
+  if (aShouldIgnoreSuppression)
+    builder.IgnorePaintSuppression();
   builder.EnterPresShell(aFrame, target);
 
   nsresult rv =
