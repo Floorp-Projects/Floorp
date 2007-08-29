@@ -77,9 +77,9 @@ interface nsIUpdatePatch : nsISupports
    * this file is not corrupt.
    */
   attribute AString hashValue;
-  
+
   /**
-   * The size of this file, in bytes. 
+   * The size of this file, in bytes.
    */
   attribute unsigned long size;
 
@@ -91,7 +91,7 @@ interface nsIUpdatePatch : nsISupports
   /**
    * true if this patch is currently selected as the patch to be downloaded and
    * installed for this update transaction, false if another patch from this
-   * update has been selected. 
+   * update has been selected.
    */
   attribute boolean selected;
 
@@ -108,13 +108,13 @@ interface nsIUpdatePatch : nsISupports
  * An interface that describes an object representing an available update to
  * the current application - this update may have several available patches
  * from which one must be selected to download and install, for example we
- * might select a binary difference patch first and attempt to apply that, 
+ * might select a binary difference patch first and attempt to apply that,
  * then if the application process fails fall back to downloading a complete
  * file-replace patch. This object also contains information about the update
- * that the front end and other application services can use to learn more 
+ * that the front end and other application services can use to learn more
  * about what is going on.
  */
-[scriptable, uuid(8e5822a6-c5d4-4537-be0a-9c95ba13ea2f)]
+[scriptable, uuid(9d6a388b-2e0c-4d0e-9a60-5c9739a7ada5)]
 interface nsIUpdate : nsISupports
 {
   /**
@@ -130,13 +130,18 @@ interface nsIUpdate : nsISupports
   attribute AString name;
 
   /**
-   * The Application version of this update. 
+   * The Application version of this update.
    */
   attribute AString version;
 
   /**
-   * The Addon version of this update. Used by the Extension System to track 
-   * compatibility of installed addons with this update. 
+   * The Toolkit version of this update.
+   */
+  attribute AString platformVersion;
+
+  /**
+   * The Addon version of this update. Used by the Extension System to track
+   * compatibility of installed addons with this update.
    */
   attribute AString extensionVersion;
 
@@ -144,12 +149,12 @@ interface nsIUpdate : nsISupports
    * The Build ID of this update. Used to determine a particular build, down
    * to the hour, minute and second of its creation. This allows the system
    * to differentiate between several nightly builds with the same |version|
-   * for example. 
+   * for example.
    */
   attribute AString buildID;
 
   /**
-   * The URL to a page which offers details about the content of this 
+   * The URL to a page which offers details about the content of this
    * update. Ideally, this page is not the release notes but some other page
    * that summarizes the differences between this update and the previous,
    * which also links to the release notes.
@@ -159,7 +164,7 @@ interface nsIUpdate : nsISupports
   /**
    * The URL to a HTML fragment that contains a license for this update. If
    * this is specified, the user is shown the license file after they choose
-   * to install the update and they must agree to it before the download 
+   * to install the update and they must agree to it before the download
    * commences.
    */
   attribute AString licenseURL;
@@ -182,9 +187,9 @@ interface nsIUpdate : nsISupports
   attribute boolean isCompleteUpdate;
 
   /**
-   * Whether or not the update is a security update or not. If this is true, 
-   * then we present more serious sounding user interface messages to the 
-   * user. 
+   * Whether or not the update is a security update or not. If this is true,
+   * then we present more serious sounding user interface messages to the
+   * user.
    */
   attribute boolean isSecurityUpdate;
 
@@ -229,7 +234,7 @@ interface nsIUpdate : nsISupports
   readonly attribute unsigned long patchCount;
 
   /**
-   * Retrieves a patch. 
+   * Retrieves a patch.
    * @param   index
    *          The index of the patch to retrieve.
    * @returns The nsIUpdatePatch at the specified index.
@@ -248,7 +253,7 @@ interface nsIUpdate : nsISupports
 /**
  * An interface describing an object that listens to the progress of an update
  * check operation. This object is notified as the check continues, finishes
- * and if it has an error. 
+ * and if it has an error.
  */
 [scriptable, uuid(8cbceb6e-8e27-46f2-8808-444c6499f836)]
 interface nsIUpdateCheckListener : nsISupports
@@ -263,12 +268,12 @@ interface nsIUpdateCheckListener : nsISupports
    * @param   totalSize
    *          The total number of bytes that have to be downloaded
    */
-  void onProgress(in nsIXMLHttpRequest request, 
+  void onProgress(in nsIXMLHttpRequest request,
                   in unsigned long position,
                   in unsigned long totalSize);
 
   /**
-   * The update check was completed. 
+   * The update check was completed.
    * @param   request
    *          The nsIXMLHttpRequest handling the update check.
    * @param   updates
@@ -276,16 +281,16 @@ interface nsIUpdateCheckListener : nsISupports
    * @param   updateCount
    *          The size of the |updates| array.
    */
-  void onCheckComplete(in nsIXMLHttpRequest request, 
+  void onCheckComplete(in nsIXMLHttpRequest request,
                        [array, size_is(updateCount)] in nsIUpdate updates,
                        in unsigned long updateCount);
 
   /**
-   * An error occurred while loading the remote update service file. 
+   * An error occurred while loading the remote update service file.
    * @param   request
    *          The nsIXMLHttpRequest handling the update check.
    * @param   update
-   *          A nsIUpdate object that contains details about the 
+   *          A nsIUpdate object that contains details about the
    *          error in its |statusText| property.
    */
   void onError(in nsIXMLHttpRequest request,
@@ -304,7 +309,7 @@ interface nsIUpdateChecker : nsISupports
    *          An object implementing nsIUpdateCheckListener which is notified
    *          of the results of an update check.
    * @param   force
-   *          Forces the checker to check for updates, regardless of the 
+   *          Forces the checker to check for updates, regardless of the
    *          current value of the user's update settings. This is used by
    *          any piece of UI that offers the user the imperative option to
    *          check for updates now, regardless of their update settings.
@@ -316,7 +321,7 @@ interface nsIUpdateChecker : nsISupports
   /**
    * Constants for the |stopChecking| function that tell the Checker how long
    * to stop checking:
-   * 
+   *
    * CURRENT_CHECK:     Stops the current (active) check only
    * CURRENT_SESSION:   Stops all checking for the current session
    * ANY_CHECKS:        Stops all checking, any session from now on
@@ -336,7 +341,7 @@ interface nsIUpdateChecker : nsISupports
 
 /**
  * An interface describing a global application service that handles performing
- * background update checks and provides utilities for selecting and 
+ * background update checks and provides utilities for selecting and
  * downloading update patches.
  */
 [scriptable, uuid(9849c4bf-5197-4d22-baa8-e3b44a1703d2)]
@@ -358,8 +363,8 @@ interface nsIApplicationUpdateService : nsISupports
                          in unsigned long updateCount);
 
   /**
-   * Adds a listener that receives progress and state information about the 
-   * update that is currently being downloaded, e.g. to update a user 
+   * Adds a listener that receives progress and state information about the
+   * update that is currently being downloaded, e.g. to update a user
    * interface.
    * @param   listener
    *          An object implementing nsIRequestObserver and optionally
@@ -370,14 +375,14 @@ interface nsIApplicationUpdateService : nsISupports
 
   /**
    * Removes a listener that is receiving progress and state information
-   * about the update that is currently being downloaded. 
+   * about the update that is currently being downloaded.
    * @param   listener
    *          The listener object to remove.
    */
   void removeDownloadListener(in nsIRequestObserver listener);
 
   /**
-   * 
+   *
    */
   AString downloadUpdate(in nsIUpdate update, in boolean background);
 
@@ -393,7 +398,7 @@ interface nsIApplicationUpdateService : nsISupports
 
   /**
    * Whether or not the Update Service can download and install updates.
-   * This is a function of whether or not the current user has access 
+   * This is a function of whether or not the current user has access
    * privileges to the install directory.
    */
   readonly attribute boolean canUpdate;
@@ -401,7 +406,7 @@ interface nsIApplicationUpdateService : nsISupports
 
 /**
  * An interface describing a global application service that maintains a list
- * of updates previously performed as well as the current active update. 
+ * of updates previously performed as well as the current active update.
  */
 [scriptable, uuid(fede66a9-9f96-4507-a22a-775ee885577e)]
 interface nsIUpdateManager : nsISupports
@@ -415,7 +420,7 @@ interface nsIUpdateManager : nsISupports
   nsIUpdate getUpdateAt(in long index);
 
   /**
-   * Gets the total number of updates in the history list. 
+   * Gets the total number of updates in the history list.
    */
   readonly attribute long updateCount;
 
@@ -425,14 +430,14 @@ interface nsIUpdateManager : nsISupports
   attribute nsIUpdate activeUpdate;
 
   /**
-   * Saves all updates to disk. 
+   * Saves all updates to disk.
    */
   void saveUpdates();
 };
 
 /**
- * An interface describing an object that can show various kinds of Update 
- * notification UI to the user. 
+ * An interface describing an object that can show various kinds of Update
+ * notification UI to the user.
  */
 [scriptable, uuid(22b00276-ec23-4034-a764-395da539b4be)]
 interface nsIUpdatePrompt : nsISupports
@@ -484,15 +489,15 @@ interface nsIUpdatePrompt : nsISupports
 };
 
 /**
- * An interface describing a global application service that allows long 
+ * An interface describing a global application service that allows long
  * duration (e.g. 1-7 or more days, weeks or months) timers to be registered
- * and then fired. 
+ * and then fired.
  */
 [scriptable, uuid(0765c92c-6145-4253-9db4-594d8023087e)]
 interface nsIUpdateTimerManager : nsISupports
 {
   /**
-   * Register an interval with the timer manager. The timer manager 
+   * Register an interval with the timer manager. The timer manager
    * periodically checks to see if the interval has expired and if it has
    * calls the specified callback. This is persistent across application
    * restarts and can handle intervals of long durations.
@@ -504,7 +509,7 @@ interface nsIUpdateTimerManager : nsISupports
    * @param   interval
    *          The length of time, in seconds, of the interval
    */
-  void registerTimer(in AString id, 
-                     in nsITimerCallback callback, 
+  void registerTimer(in AString id,
+                     in nsITimerCallback callback,
                      in unsigned long interval);
 };
