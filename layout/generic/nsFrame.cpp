@@ -4817,11 +4817,13 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
         nsIFrame *lastFrame;
         result = it->CheckLineOrder(thisLine, &isReordered, &firstFrame, &lastFrame);
         baseFrame = endOfLine ? lastFrame : firstFrame;
-        nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(baseFrame);
-        // If the direction of the frame on the edge is opposite to that of the line,
-        // we'll need to drill down to its opposite end, so reverse endOfLine.
-        if ((embeddingLevel & 1) == !lineIsRTL)
-          endOfLine = !endOfLine;
+        if (baseFrame) {
+          nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(baseFrame);
+          // If the direction of the frame on the edge is opposite to that of the line,
+          // we'll need to drill down to its opposite end, so reverse endOfLine.
+          if ((embeddingLevel & 1) == !lineIsRTL)
+            endOfLine = !endOfLine;
+        }
       } else
 #endif
       {
