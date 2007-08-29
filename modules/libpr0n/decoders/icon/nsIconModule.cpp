@@ -39,6 +39,8 @@
 
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
+#include "nsICategoryManager.h"
+#include "nsServiceManagerUtils.h"
 
 #ifdef USE_ICON_DECODER
 #include "nsIconDecoder.h"
@@ -58,13 +60,47 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsIconDecoder)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIconProtocolHandler)
 
+#ifdef USE_ICON_DECODER
+static const char gIconMimeType[] = "image/icon";
+
+static NS_METHOD IconDecoderRegisterProc(nsIComponentManager *aCompMgr,
+                                   nsIFile *aPath,
+                                   const char *registryLocation,
+                                   const char *componentType,
+                                   const nsModuleComponentInfo *info) {
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  catMan->AddCategoryEntry("Gecko-Content-Viewers", gIconMimeType,
+                           "@mozilla.org/content/document-loader-factory;1",
+                           PR_TRUE, PR_TRUE, nsnull);
+  return NS_OK;
+}
+
+static NS_METHOD IconDecoderUnregisterProc(nsIComponentManager *aCompMgr,
+                                     nsIFile *aPath,
+                                     const char *registryLocation,
+                                     const nsModuleComponentInfo *info) {
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+  catMan->DeleteCategoryEntry("Gecko-Content-Viewers", gIconMimeType, PR_TRUE);
+  return NS_OK;
+}
+
+#endif
+
 static const nsModuleComponentInfo components[] =
 {
 #ifdef USE_ICON_DECODER
   { "icon decoder",
     NS_ICONDECODER_CID,
     "@mozilla.org/image/decoder;2?type=image/icon",
-    nsIconDecoderConstructor, },
+    nsIconDecoderConstructor,
+    IconDecoderRegisterProc,
+    IconDecoderUnregisterProc, },
 #endif
 
    { "Icon Protocol Handler",      
