@@ -46,7 +46,7 @@ include $(topsrcdir)/config/rules.mk
 
 # Add this back when this test passes again; it seems to fail right now when
 # run inside an iframe, oddly, but not when run at top-level.
-#		test_bug199692.html \
+#		test_bug199692.html 
 _TEST_FILES = 	test_bug1682.html \
 		test_bug1823.html \
 		bug199692-nested.html \
