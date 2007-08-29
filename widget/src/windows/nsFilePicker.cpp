@@ -141,12 +141,23 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
   NS_NAMED_LITERAL_STRING(htmExt, "html");
   nsAutoString initialDir;
   if (mDisplayDirectory)
-    mDisplayDirectory->GetPath(initialDir);
+  {
+    PRBool exists;
+    // checking this up front seems to behave much better than
+    // just trying to open  a file picker on a non-existent directory.
+    mDisplayDirectory->Exists(&exists);
+    if (exists)
+      mDisplayDirectory->GetPath(initialDir);
+  }
 
   // If no display directory, re-use the last one.
   if(initialDir.IsEmpty()) {
     // Allocate copy of last used dir.
     initialDir = mLastUsedUnicodeDirectory;
+    // defaulting to cwd instead of whatever the file picker defaults to
+    // is a lot faster if that default dir doesn't exist.
+    if (initialDir.IsEmpty())
+      initialDir = NS_LITERAL_STRING(".");
   }
 
   mUnicodeFile.Truncate();
