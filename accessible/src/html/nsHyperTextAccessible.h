@@ -131,17 +131,23 @@ protected:
                          nsAString & aText);
 
   /**
-    * Used by GetPosAndText to move backward/forward from a given point by word/line/etc.
-    * @param aPresShell, the current presshell we're moving in
-    * @param aFromFrame, the starting frame we're moving from
-    * @param aFromOffset, the starting offset we're moving from
-    * @param aAmount, how much are we moving (word/line/etc.) ?
-    * @param aDirection, forward or backward?
-    * @param aNeedsStart, for word and line cases, are we basing this on the start or end?
-    * @return, the resulting offset into this hypertext
+    * Used by GetTextHelper() to move backward/forward from a given point
+    * by word/line/etc.
+    *
+    * @param  aPresShell       the current presshell we're moving in
+    * @param  aFromFrame       the starting frame we're moving from
+    * @param  aFromOffset      the starting offset we're moving from
+    * @param  aFromAccessible  the starting accessible we're moving from
+    * @param  aAmount          how much are we moving (word/line/etc.) ?
+    * @param  aDirection       forward or backward?
+    * @param  aNeedsStart      for word and line cases, are we basing this on
+    *                          the start or end?
+    * @return                  the resulting offset into this hypertext
     */
-  PRInt32 GetRelativeOffset(nsIPresShell *aPresShell, nsIFrame *aFromFrame, PRInt32 aFromOffset,
-                            nsSelectionAmount aAmount, nsDirection aDirection, PRBool aNeedsStart);
+  PRInt32 GetRelativeOffset(nsIPresShell *aPresShell, nsIFrame *aFromFrame,
+                            PRInt32 aFromOffset, nsIAccessible *aFromAccessible,
+                            nsSelectionAmount aAmount, nsDirection aDirection,
+                            PRBool aNeedsStart);
 
   /**
     * Provides information for substring that is defined by the given start
