@@ -2501,7 +2501,7 @@ NS_IMETHODIMP nsEditor::ScrollSelectionIntoView(PRBool aScrollToAnchor)
       // If the editor is relying on asynchronous reflows, we have
       // to use asynchronous requests to scroll, so that the scrolling happens
       // after reflow requests are processed.
-
+      // XXXbz why not just always do async scroll?
       syncScroll = !(flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask);
     }
 
@@ -4356,9 +4356,14 @@ nsresult nsEditor::EndUpdateViewBatch()
 
       // If we're doing async updates, use NS_VMREFRESH_DEFERRED here, so that
       // the reflows we caused will get processed before the invalidates.
-      if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask)
+      if (flags & nsIPlaintextEditor::eEditorUseAsyncUpdatesMask) {
         updateFlag = NS_VMREFRESH_DEFERRED;
-
+      } else {
+        // Flush out layout.  Need to do this because if we have no invalidates
+        // to flush the viewmanager code won't flush our reflow here, and we
+        // have selection code that does sync caret scrolling in this case.
+        presShell->FlushPendingNotifications(Flush_Layout);
+      }
       mViewManager->EndUpdateViewBatch(updateFlag);
     }
 
