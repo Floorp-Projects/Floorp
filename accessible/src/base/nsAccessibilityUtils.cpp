@@ -46,6 +46,9 @@
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIEventListenerManager.h"
+#include "nsIPresShell.h"
+#include "nsPresContext.h"
+#include "nsIEventStateManager.h"
 #include "nsISelection2.h"
 #include "nsISelectionController.h"
 
@@ -174,6 +177,39 @@ nsAccUtils::HasListener(nsIContent *aContent, const nsAString& aEventType)
   aContent->GetListenerManager(PR_FALSE, getter_AddRefs(listenerManager));
 
   return listenerManager && listenerManager->HasListenersFor(aEventType);  
+}
+
+PRUint32
+nsAccUtils::GetAccessKeyFor(nsIContent *aContent)
+{
+  if (!aContent)
+    return 0;
+
+  // Accesskeys are registered by @accesskey attribute only. At first check
+  // whether it is presented on the given element to avoid the slow
+  // nsIEventStateManager::GetRegisteredAccessKey() method.
+  if (!aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::accesskey))
+    return 0;
+
+  nsCOMPtr<nsIDocument> doc = aContent->GetOwnerDoc();
+  if (!doc)
+    return 0;
+
+  nsCOMPtr<nsIPresShell> presShell = doc->GetPrimaryShell();
+  if (!presShell)
+    return 0;
+
+  nsPresContext *presContext = presShell->GetPresContext();
+  if (!presContext)
+    return 0;
+
+  nsIEventStateManager *esm = presContext->EventStateManager();
+  if (!esm)
+    return 0;
+
+  PRUint32 key = 0;
+  esm->GetRegisteredAccessKey(aContent, &key);
+  return key;
 }
 
 nsresult

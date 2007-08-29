@@ -349,7 +349,7 @@ NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
 // returns the accesskey modifier mask used in the given node's context
 // (i.e. chrome or content), or 0 if an error occurs
 static PRInt32
-GetAccessModifierMask(nsIDOMElement* aDOMNode)
+GetAccessModifierMask(nsIContent* aContent)
 {
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -370,8 +370,7 @@ GetAccessModifierMask(nsIDOMElement* aDOMNode)
   }
 
   // get the docShell to this DOMNode, return 0 on failure
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
-  nsCOMPtr<nsIDocument> document = content->GetCurrentDoc();
+  nsCOMPtr<nsIDocument> document = aContent->GetCurrentDoc();
   if (!document)
     return 0;
   nsCOMPtr<nsISupports> container = document->GetContainer();
@@ -398,47 +397,49 @@ GetAccessModifierMask(nsIDOMElement* aDOMNode)
   return NS_SUCCEEDED(rv) ? accessModifierMask : 0;
 }
 
-NS_IMETHODIMP nsAccessible::GetKeyboardShortcut(nsAString& _retval)
+NS_IMETHODIMP
+nsAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
 {
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
-  if (elt) {
-    nsAutoString accesskey;
-    elt->GetAttribute(NS_LITERAL_STRING("accesskey"), accesskey);
-    if (accesskey.IsEmpty()) {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(elt);
-      nsIContent *labelContent = GetLabelContent(content);
-      if (labelContent) {
-        labelContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::accesskey, accesskey);
-      }
-      if (accesskey.IsEmpty()) {
-        return NS_ERROR_FAILURE;
-      }
-    }
+  aAccessKey.Truncate();
 
-    // append the modifiers in reverse order
-    // (result: Control+Alt+Shift+Meta+<key>)
-    nsAutoString propertyKey;
-    PRInt32 modifierMask = GetAccessModifierMask(elt);
-    if (modifierMask & NS_MODIFIER_META) {
-      propertyKey.AssignLiteral("VK_META");
-      nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
-    }
-    if (modifierMask & NS_MODIFIER_SHIFT) {
-      propertyKey.AssignLiteral("VK_SHIFT");
-      nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
-    }
-    if (modifierMask & NS_MODIFIER_ALT) {
-      propertyKey.AssignLiteral("VK_ALT");
-      nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
-    }
-    if (modifierMask & NS_MODIFIER_CONTROL) {
-      propertyKey.AssignLiteral("VK_CONTROL");
-      nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
-    }
-    _retval= accesskey;
-    return NS_OK;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content)
+    return NS_ERROR_FAILURE;
+
+  PRUint32 key = nsAccUtils::GetAccessKeyFor(content);
+  if (!key) {
+    nsCOMPtr<nsIContent> labelContent(GetLabelContent(content));
+    if (labelContent)
+      key = nsAccUtils::GetAccessKeyFor(labelContent);
   }
-  return NS_ERROR_FAILURE;
+
+  if (!key)
+    return NS_OK;
+
+  nsAutoString accesskey(key);
+
+  // Append the modifiers in reverse order, result: Control+Alt+Shift+Meta+<key>
+  nsAutoString propertyKey;
+  PRInt32 modifierMask = GetAccessModifierMask(content);
+  if (modifierMask & NS_MODIFIER_META) {
+    propertyKey.AssignLiteral("VK_META");
+    nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
+  }
+  if (modifierMask & NS_MODIFIER_SHIFT) {
+    propertyKey.AssignLiteral("VK_SHIFT");
+    nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
+  }
+  if (modifierMask & NS_MODIFIER_ALT) {
+    propertyKey.AssignLiteral("VK_ALT");
+    nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
+  }
+  if (modifierMask & NS_MODIFIER_CONTROL) {
+    propertyKey.AssignLiteral("VK_CONTROL");
+    nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
+  }
+
+  aAccessKey = accesskey;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAccessible::SetParent(nsIAccessible *aParent)

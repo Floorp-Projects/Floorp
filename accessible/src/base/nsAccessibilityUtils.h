@@ -110,6 +110,14 @@ public:
   static PRBool HasListener(nsIContent *aContent, const nsAString& aEventType);
 
   /**
+   * Return an accesskey registered on the given element by
+   * nsIEventStateManager or 0 if there is no registered accesskey.
+   *
+   * @param aContent - the given element.
+   */
+  static PRUint32 GetAccessKeyFor(nsIContent *aContent);
+
+  /**
    * Fire accessible event of the given type for the given accessible.
    */
   static nsresult FireAccEvent(PRUint32 aEventType, nsIAccessible *aAccessible,
