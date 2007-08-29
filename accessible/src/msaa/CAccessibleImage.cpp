@@ -82,8 +82,9 @@ CAccessibleImage::get_description(BSTR *aDescription)
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  return ::SysReAllocStringLen(aDescription, description.get(),
-                               description.Length());
+  INT result = ::SysReAllocStringLen(aDescription, description.get(),
+                                     description.Length());
+  return result ? NS_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
