@@ -2547,9 +2547,11 @@ PropertyProvider::GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
   // We need to visit skipped characters so that we can detect SHY
   run.SetVisitSkipped();
 
+  PRInt32 prevTrailingCharOffset = run.GetPos().GetOriginalOffset() - 1;
   PRBool allowHyphenBreakBeforeNextChar =
-    run.GetPos().GetOriginalOffset() > mStart.GetOriginalOffset() &&
-    mFrag->CharAt(run.GetPos().GetOriginalOffset() - 1) == CH_SHY;
+    prevTrailingCharOffset >= mStart.GetOriginalOffset() &&
+    prevTrailingCharOffset < mStart.GetOriginalOffset() + mLength &&
+    mFrag->CharAt(prevTrailingCharOffset) == CH_SHY;
 
   while (run.NextRun()) {
     NS_ASSERTION(run.GetRunLength() > 0, "Shouldn't return zero-length runs");
