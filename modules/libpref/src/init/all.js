@@ -645,6 +645,7 @@ pref("network.IDN.whitelist.kr", true);
 pref("network.IDN.whitelist.li", true);
 pref("network.IDN.whitelist.lt", true);
 pref("network.IDN.whitelist.no", true);
+pref("network.IDN.whitelist.pl", true);
 pref("network.IDN.whitelist.se", true);
 pref("network.IDN.whitelist.sh", true);
 pref("network.IDN.whitelist.th", true);
