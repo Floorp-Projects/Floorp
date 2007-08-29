@@ -127,7 +127,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
 
 static JSClass sNPObjectJSWrapperClass =
   {
-    "NPObject JS wrapper class",
+    NPRUNTIME_JSCLASS_NAME,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE,
     NPObjWrapper_AddProperty, NPObjWrapper_DelProperty,
     NPObjWrapper_GetProperty, NPObjWrapper_SetProperty,
