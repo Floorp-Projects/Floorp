@@ -211,7 +211,8 @@ CAccessibleText::get_text(long aStartOffset, long aEndOffset, BSTR *aText)
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  return ::SysReAllocStringLen(aText, text.get(), text.Length());
+  INT result = ::SysReAllocStringLen(aText, text.get(), text.Length());
+  return result ? NS_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
@@ -244,7 +245,8 @@ CAccessibleText::get_textBeforeOffset(long aOffset,
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  return ::SysReAllocStringLen(aText, text.get(), text.Length());
+  INT result = ::SysReAllocStringLen(aText, text.get(), text.Length());
+  return result ? NS_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
@@ -277,7 +279,8 @@ CAccessibleText::get_textAfterOffset(long aOffset,
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  return ::SysReAllocStringLen(aText, text.get(), text.Length());
+  INT result = ::SysReAllocStringLen(aText, text.get(), text.Length());
+  return result ? NS_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
@@ -310,7 +313,8 @@ CAccessibleText::get_textAtOffset(long aOffset,
   *aStartOffset = startOffset;
   *aEndOffset = endOffset;
 
-  return ::SysReAllocStringLen(aText, text.get(), text.Length());
+  INT result = ::SysReAllocStringLen(aText, text.get(), text.Length());
+  return result ? NS_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
@@ -425,7 +429,8 @@ CAccessibleText::GetModifiedText(PRBool aGetInsertedText,
   aText->start = startOffset;
   aText->end = endOffset;
 
-  return ::SysReAllocStringLen(&(aText->text), text.get(), text.Length());
+  INT result = ::SysReAllocStringLen(&(aText->text), text.get(), text.Length());
+  return result ? NS_OK : E_OUTOFMEMORY;
 }
 
 nsAccessibleTextBoundary
