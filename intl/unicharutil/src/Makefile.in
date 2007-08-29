@@ -57,6 +57,7 @@ EXPORTS = cattable.h
 
 CPPSRCS		= \
 		nsCaseConversionImp2.cpp \
+		nsCategoryImp.cpp \
 		nsHankakuToZenkaku.cpp \
 		nsEntityConverter.cpp \
 		nsSaveAsCharset.cpp \
