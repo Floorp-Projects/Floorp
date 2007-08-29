@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
-<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 
 <window title="Panel Focus Tests"
   onload="setTimeout(showPanel, 0)"
@@ -43,6 +43,9 @@ var gButtonBlur = 0;
 
 function showPanel()
 {
+  // click on the document so that the window has focus
+  synthesizeMouse(document.documentElement, 1, 1, { });
+
   // focus the button
   synthesizeKeyExpectEvent("VK_TAB", { }, $("b1"), "focus", "button focus");
   // tabbing again should skip the popup
