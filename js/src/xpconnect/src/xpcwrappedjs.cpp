@@ -417,6 +417,68 @@ return_wrapper:
     return NS_OK;
 }
 
+// static
+nsresult
+nsXPCWrappedJS::GetUsedOnly(XPCCallContext& ccx,
+                            JSObject* aJSObj,
+                            REFNSIID aIID,
+                            nsISupports* aOuter,
+                            nsXPCWrappedJS** wrapperResult)
+{
+    JSObject2WrappedJSMap* map;
+    JSBool hasProp;
+    JSObject* rootJSObj;
+    nsXPCWrappedJS* root;
+    nsXPCWrappedJS* wrapper = nsnull;
+    nsXPCWrappedJSClass *clazz = nsnull;
+    XPCJSRuntime* rt = ccx.GetRuntime();
+
+    map = rt->GetWrappedJSMap();
+    if(!map)
+    {
+        NS_ASSERTION(map,"bad map");
+        return NS_ERROR_FAILURE;
+    }
+
+    nsXPCWrappedJSClass::GetNewOrUsed(ccx, aIID, &clazz);
+    if(!clazz)
+        return NS_ERROR_FAILURE;
+
+    // GetRootJSObject will attempt to call a QueryInterface function on
+    // aJSObj. If QueryInterface doesn't exist on the object then a strict
+    // warning will be emitted, so check to make sure that the QueryInterface
+    // function exists before proceeding.
+    if(JS_HasProperty(ccx.GetJSContext(), aJSObj,
+                      rt->GetStringName(XPCJSRuntime::IDX_QUERY_INTERFACE),
+                      &hasProp) && hasProp)
+        rootJSObj = clazz->GetRootJSObject(ccx, aJSObj);
+    else
+        rootJSObj = aJSObj;
+
+    NS_RELEASE(clazz);
+
+    if(!rootJSObj)
+        return NS_ERROR_FAILURE;
+
+    // look for the root wrapper
+    {   // scoped lock
+        XPCAutoLock lock(rt->GetMapLock());
+        root = map->Find(rootJSObj);
+    }
+
+    if(root)
+    {
+        if((nsnull != (wrapper = root->Find(aIID))) ||
+           (nsnull != (wrapper = root->FindInherited(aIID))))
+        {
+            NS_ADDREF(wrapper);
+        }
+    }
+
+    *wrapperResult = wrapper;
+    return NS_OK;
+}
+
 nsXPCWrappedJS::nsXPCWrappedJS(XPCCallContext& ccx,
                                JSObject* aJSObj,
                                nsXPCWrappedJSClass* aClass,
