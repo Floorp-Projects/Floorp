@@ -157,7 +157,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     // defaulting to cwd instead of whatever the file picker defaults to
     // is a lot faster if that default dir doesn't exist.
     if (initialDir.IsEmpty())
-      initialDir = NS_LITERAL_STRING(".");
+      initialDir.AssignLiteral(".");
   }
 
   mUnicodeFile.Truncate();
