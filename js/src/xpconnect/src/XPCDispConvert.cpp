@@ -331,6 +331,7 @@ JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
                 obj, 
                 &NSID_IDISPATCH,
                 nsnull, 
+                PR_TRUE, 
                 &err))
             {
                 // Avoid cleaning up garbage
