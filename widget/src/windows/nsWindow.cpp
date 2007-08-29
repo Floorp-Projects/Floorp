@@ -4661,16 +4661,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #endif
 
     case WM_SETFOCUS:
-      {
-        nsWindow* topWindow = GetNSWindowPtr(::GetAncestor(mWnd, GA_ROOT));
-
-        result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
-        
-        if ((HWND)wParam == NULL || 
-            (topWindow && topWindow->mWnd != ::GetAncestor((HWND)wParam, GA_ROOT))) {
-          result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
-        }
-      }  
+      result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
+      if (gJustGotActivate) {
+        gJustGotActivate = PR_FALSE;
+        gJustGotDeactivate = PR_FALSE;
+        result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
+      }
 
 #ifdef ACCESSIBILITY
       if (nsWindow::gIsAccessibilityOn) {
