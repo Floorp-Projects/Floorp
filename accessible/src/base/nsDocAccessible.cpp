@@ -1138,11 +1138,9 @@ void nsDocAccessible::ContentAppended(nsIDocument *aDocument,
                                       nsIContent* aContainer,
                                       PRInt32 aNewIndexInContainer)
 {
-  if (!mIsContentLoaded || !mDocument) {
-    if (mAccessNodeCache.Count() <= 1) {
-      // See comments in nsDocAccessible::InvalidateCacheSubtree
-      InvalidateChildren();
-    }
+  if ((!mIsContentLoaded || !mDocument) && mAccessNodeCache.Count() <= 1) {
+    // See comments in nsDocAccessible::InvalidateCacheSubtree
+    InvalidateChildren();
     return;
   }
 
