@@ -85,14 +85,8 @@ class NS_COM_GLUE nsTArray_base {
 #endif
 
   protected:
-#ifndef NS_BUILD_REFCNT_LOGGING
-    nsTArray_base()
-      : mHdr(&sEmptyHdr) {
-    }
-#else
     nsTArray_base();
     ~nsTArray_base();  
-#endif // NS_BUILD_REFCNT_LOGGING
 
     // Resize the storage if necessary to achieve the requested capacity.
     // @param capacity     The requested number of array elements.
