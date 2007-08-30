@@ -723,8 +723,11 @@ nsSeamonkeyProfileMigrator::CopyPasswords(PRBool aReplace)
 nsresult
 nsSeamonkeyProfileMigrator::CopyBookmarks(PRBool aReplace)
 {
-  if (aReplace)
+  if (aReplace) {
+    nsresult rv = InitializeBookmarks(mTargetProfile);
+    NS_ENSURE_SUCCESS(rv, rv);
     return CopyFile(FILE_NAME_BOOKMARKS, FILE_NAME_BOOKMARKS);
+  }
   return ImportNetscapeBookmarks(FILE_NAME_BOOKMARKS, 
                                  NS_LITERAL_STRING("sourceNameSeamonkey").get());
 }

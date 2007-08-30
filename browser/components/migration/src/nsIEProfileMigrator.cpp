@@ -1199,6 +1199,12 @@ nsIEProfileMigrator::CopyFavorites(PRBool aReplace) {
     bms->CreateFolder(root, importedIEFavsTitle, -1, &folder);
   }
   else {
+    // Initialize the default bookmarks
+    nsCOMPtr<nsIFile> profile;
+    GetProfilePath(nsnull, profile);
+    rv = InitializeBookmarks(profile);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Locate the Links toolbar folder, we want to replace the Personal Toolbar content with 
     // Favorites in this folder. 
     nsCOMPtr<nsIWindowsRegKey> regKey = 
@@ -1419,9 +1425,6 @@ nsIEProfileMigrator::ParseFavoritesFolder(nsIFile* aDirectory,
       PRInt64 folder;
       if (bookmarkName.Equals(aPersonalToolbarFolderName)) {
         aBookmarksService->GetToolbarFolder(&folder);
-        // If we're here, it means the user's doing a _replace_ import which means
-        // clear out the content of this folder, and replace it with the new content
-        aBookmarksService->RemoveFolderChildren(folder);
       }
       else {
         rv = aBookmarksService->CreateFolder(aParentFolder,
