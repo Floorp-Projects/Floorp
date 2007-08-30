@@ -6239,9 +6239,7 @@ RDFItemUpdater.prototype = {
 
   /**
    * Parses the Firefox 1.0RC1+ update manifest format looking for new versions
-   * of updated compatibility information about the given add-on. Returns an
-   * nsIUpdateItem holding the update's information if a valid update is found
-   * or null if not.
+   * of updated compatibility information about the given add-on.
    * @param   aDataSource
    *          The update manifest's datasource
    * @param   aLocalItem
@@ -6249,6 +6247,8 @@ RDFItemUpdater.prototype = {
    * @param   aUpdateCheckType
    *          The type of update check being performed. See the constants in
    *          nsIExtensionManager
+   * @returns An nsIUpdateItem holding the update's information if a valid
+   *          update is found or null if not.
    */
   _parseV20UpdateInfo: function(aDataSource, aLocalItem, aUpdateCheckType) {
     var extensionRes  = gRDF.GetResource(getItemPrefix(aLocalItem.type) + aLocalItem.id);
@@ -6303,8 +6303,7 @@ RDFItemUpdater.prototype = {
 
   /**
    * Parses a single version's update entry looking for the best matching
-   * targetApplication entry. Returns an nsIUpdateItem holding the update's
-   * information if a valid update is found or null if not.
+   * targetApplication entry.
    * @param   aDataSource
    *          The update manifest's datasource
    * @param   aUpdateResource
@@ -6317,6 +6316,8 @@ RDFItemUpdater.prototype = {
    * @param   aUpdateCheckType
    *          The type of update check being performed. See the constants in
    *          nsIExtensionManager
+   * @returns An nsIUpdateItem holding the update's information if a valid
+   *          update is found or null if not.
    */
   _parseV20Update: function(aDataSource, aUpdateResource, aLocalItem, aNewestVersionFound, aUpdateCheckType) {
     var version = this._getPropertyFromResource(aDataSource, aUpdateResource,
