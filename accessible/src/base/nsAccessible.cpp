@@ -2244,8 +2244,7 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Apply ARIA states to be sure accessible states will be overriden.
-  rv = GetARIAState(aState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  *aState |= GetARIAState();
 
   // Set additional states which presence depends on another states.
   if (aExtraState) {
@@ -2305,48 +2304,47 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-nsresult
-nsAccessible::GetARIAState(PRUint32 *aState)
+PRUint32
+nsAccessible::GetARIAState()
 {
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE; // Node already shut down
-  }
-
   // Test for universal states first
   nsIContent *content = GetRoleContent(mDOMNode);
-  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE); // Node already shut down
+  if (!content) {
+    return 0;
+  }
 
+  PRUint32 ariaState = 0;
   PRUint32 index = 0;
   while (nsARIAMap::gWAIUnivStateMap[index].attributeName != nsnull) {
-    MappedAttrState(content, aState, &nsARIAMap::gWAIUnivStateMap[index]);
+    MappedAttrState(content, &ariaState, &nsARIAMap::gWAIUnivStateMap[index]);
     ++ index;
   }
 
   if (!mRoleMapEntry)
-    return NS_OK;
+    return ariaState;
 
   // Once DHTML role is used, we're only readonly if DHTML readonly used
-  (*aState) &= ~nsIAccessibleStates::STATE_READONLY;
+  ariaState &= ~nsIAccessibleStates::STATE_READONLY;
 
-  if ((*aState) & nsIAccessibleStates::STATE_UNAVAILABLE) {
+  if (ariaState & nsIAccessibleStates::STATE_UNAVAILABLE) {
     // Disabled elements are not selectable or focusable, even if disabled
     // via DHTML accessibility disabled property
-    (*aState) &= ~(nsIAccessibleStates::STATE_SELECTABLE |
+    ariaState &= ~(nsIAccessibleStates::STATE_SELECTABLE |
                    nsIAccessibleStates::STATE_FOCUSABLE);
   }
 
-  (*aState) |= mRoleMapEntry->state;
-  if (MappedAttrState(content, aState, &mRoleMapEntry->attributeMap1) &&
-      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap2) &&
-      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap3) &&
-      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap4) &&
-      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap5) &&
-      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap6) &&
-      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap7)) {
-    MappedAttrState(content, aState, &mRoleMapEntry->attributeMap8);
+  ariaState |= mRoleMapEntry->state;
+  if (MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap1) &&
+      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap2) &&
+      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap3) &&
+      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap4) &&
+      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap5) &&
+      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap6) &&
+      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap7)) {
+    MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap8);
   }
 
-  return NS_OK;
+  return ariaState;
 }
 
 // Not implemented by this class
