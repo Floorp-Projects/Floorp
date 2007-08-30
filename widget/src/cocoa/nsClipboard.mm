@@ -38,9 +38,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsClipboard.h"
-#include "nsIClipboardOwner.h"
 #include "nsString.h"
-#include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
@@ -342,41 +340,47 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       if ((stride % 4 != 0) || (height < 1) || (width < 1))
         continue;
 
-      PRUint32* imageData = (PRUint32*)image->GetBits();
+      // Create a CGImageRef with the bits from the image, taking into account
+      // the alpha ordering and endianness of the machine so we don't have to
+      // touch the bits ourselves.
+      CGDataProviderRef dataProvider = CGDataProviderCreateWithData(NULL,
+                                                                    image->GetBits(),
+                                                                    stride * height,
+                                                                    NULL);
+      CGColorSpaceRef colorSpace = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
+      CGImageRef imageRef = CGImageCreate(width,
+                                          height,
+                                          8,
+                                          32,
+                                          stride,
+                                          colorSpace,
+                                          kCGBitmapByteOrder32Host | kCGImageAlphaFirst,
+                                          dataProvider,
+                                          NULL,
+                                          0,
+                                          kCGRenderingIntentDefault);
+      CGDataProviderRelease(dataProvider);
 
-      PRUint32* reorderedData = (PRUint32*)malloc(height * stride);
-      if (!reorderedData)
+      // Convert the CGImageRef to TIFF data.
+      CFMutableDataRef tiffData = CFDataCreateMutable(kCFAllocatorDefault, 0);
+      CGImageDestinationRef destRef = CGImageDestinationCreateWithData(tiffData,
+                                                                       (CFStringRef)@"public.tiff",
+                                                                       1,
+                                                                       nil);
+      CGImageDestinationAddImage(destRef, imageRef, nil);
+      CGImageDestinationFinalize(destRef);
+
+      CGColorSpaceRelease(colorSpace);
+      CGImageRelease(imageRef);
+      CFRelease(destRef);
+
+      if (NS_FAILED(image->UnlockImagePixels(PR_FALSE))) {
+        CFRelease(tiffData);
         continue;
-
-      // We have to reorder data to have alpha last because only Tiger can handle
-      // alpha being first.
-      PRUint32 imageLength = ((stride * height) / 4);
-      for (PRUint32 i = 0; i < imageLength; i++) {
-        PRUint32 pixel = imageData[i];
-        reorderedData[i] = CFSwapInt32HostToBig((pixel << 8) | (pixel >> 24));
       }
 
-      PRUint8* planes[2];
-      planes[0] = (PRUint8*)reorderedData;
-      planes[1] = nsnull;
-      NSBitmapImageRep* imageRep = [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:planes
-                                                                           pixelsWide:width
-                                                                           pixelsHigh:height
-                                                                        bitsPerSample:8
-                                                                      samplesPerPixel:4
-                                                                             hasAlpha:YES
-                                                                             isPlanar:NO
-                                                                       colorSpaceName:NSDeviceRGBColorSpace
-                                                                          bytesPerRow:stride
-                                                                         bitsPerPixel:32];
-      NSData* tiffData = [imageRep TIFFRepresentationUsingCompression:NSTIFFCompressionNone factor:1.0];
-      [imageRep release];
-      free(reorderedData);
-
-      if (NS_FAILED(image->UnlockImagePixels(PR_FALSE)))
-        continue;
-
-      [pasteboardOutputDict setObject:tiffData forKey:NSTIFFPboardType];
+      [pasteboardOutputDict setObject:(NSMutableData*)tiffData forKey:NSTIFFPboardType];
+      CFRelease(tiffData);
     }
     else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
       [pasteboardOutputDict setObject:[NSArray arrayWithObject:@""] forKey:NSFilesPromisePboardType];      
