@@ -93,6 +93,14 @@ nsSVGGFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
 }
 
 already_AddRefed<nsIDOMSVGMatrix>
+nsSVGGFrame::GetOverrideCTM()
+{
+  nsIDOMSVGMatrix *matrix = mOverrideCTM.get();
+  NS_IF_ADDREF(matrix);
+  return matrix;
+}
+
+already_AddRefed<nsIDOMSVGMatrix>
 nsSVGGFrame::GetCanvasTM()
 {
   if (!mPropagateTransform) {

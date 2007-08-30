@@ -113,6 +113,7 @@ protected:
   NS_IMETHOD NotifyRedrawUnsuspended();
   NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD SetOverrideCTM(nsIDOMSVGMatrix *aCTM);
+  virtual already_AddRefed<nsIDOMSVGMatrix> GetOverrideCTM();
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   NS_IMETHOD_(PRBool) IsDisplayContainer() { return PR_FALSE; }
   NS_IMETHOD_(PRBool) HasValidCoveredRect() { return PR_TRUE; }
