@@ -116,6 +116,14 @@ nsSVGTSpanFrame::SetOverrideCTM(nsIDOMSVGMatrix *aCTM)
   return NS_OK;
 }
 
+already_AddRefed<nsIDOMSVGMatrix>
+nsSVGTSpanFrame::GetOverrideCTM()
+{
+  nsIDOMSVGMatrix *matrix = mOverrideCTM.get();
+  NS_IF_ADDREF(matrix);
+  return matrix;
+}
+
 //----------------------------------------------------------------------
 // nsSVGContainerFrame methods:
 

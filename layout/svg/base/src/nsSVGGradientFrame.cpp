@@ -269,10 +269,13 @@ nsSVGGradientFrame::GetGradientTransform(nsSVGGeometryFrame *aSource)
     }
     nsCOMPtr<nsIDOMSVGRect> rect;
     if (frame) {
+      nsCOMPtr<nsIDOMSVGMatrix> matrix = frame->GetOverrideCTM();
       frame->SetMatrixPropagation(PR_FALSE);
+      frame->SetOverrideCTM(nsnull);
       frame->NotifyCanvasTMChanged(PR_TRUE);
       frame->GetBBox(getter_AddRefs(rect));
       frame->SetMatrixPropagation(PR_TRUE);
+      frame->SetOverrideCTM(matrix);
       frame->NotifyCanvasTMChanged(PR_TRUE);
     }
     if (rect) {
