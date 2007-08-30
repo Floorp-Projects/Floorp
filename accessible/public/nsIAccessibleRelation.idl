@@ -57,6 +57,9 @@ interface nsIAccessibleRelation : nsISupports
    */
   const unsigned long RELATION_CONTROLLED_BY = 0x01;
 
+  // First relation
+  const unsigned long RELATION_FIRST = RELATION_CONTROLLED_BY;
+
   /**
    * This object is interactive and controls some attribute of a target object.
    */
@@ -134,6 +137,9 @@ interface nsIAccessibleRelation : nsISupports
    * This object is describes the target object.
    */
   const unsigned long RELATION_DESCRIPTION_FOR = 0x0f;
+
+  // Last relation that is standard to desktop accessibility APIs
+  const unsigned long RELATION_LAST = RELATION_DESCRIPTION_FOR;
 
   /**
    * Part of a form/dialog with a related default button. It is used for

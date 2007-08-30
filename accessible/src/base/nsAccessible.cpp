@@ -2786,11 +2786,11 @@ nsAccessible::GetRelations(nsIArray **aRelations)
   nsCOMPtr<nsIMutableArray> relations = do_CreateInstance(NS_ARRAY_CONTRACTID);
   NS_ENSURE_TRUE(relations, NS_ERROR_OUT_OF_MEMORY);
 
-  // Latest nsIAccessibleRelation is RELATION_DESCRIPTION_FOR (0xof)
-  for (PRUint32 relType = 0; relType < 0x0f; ++relType) {
+  for (PRUint32 relType = nsIAccessibleRelation::RELATION_FIRST;
+       relType < nsIAccessibleRelation::RELATION_LAST;
+       ++relType) {
     nsCOMPtr<nsIAccessible> accessible;
-    nsresult rv = GetAccessibleRelated(relType, getter_AddRefs(accessible));
-    NS_ENSURE_SUCCESS(rv, rv);
+    GetAccessibleRelated(relType, getter_AddRefs(accessible));
 
     if (accessible) {
       nsCOMPtr<nsIAccessibleRelation> relation =
