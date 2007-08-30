@@ -74,19 +74,6 @@ NS_GetSVGClipPathElement(nsIURI *aURI, nsIContent *aContent)
   return nsnull;
 }
 
-NS_IMETHODIMP
-nsSVGClipPathFrame::InitSVG()
-{
-  nsresult rv = nsSVGClipPathFrameBase::InitSVG();
-  if (NS_FAILED(rv))
-    return rv;
-
-  mClipParentMatrix = NULL;
-  mInUse = PR_FALSE;
-
-  return NS_OK;
-}
-
 nsresult
 nsSVGClipPathFrame::ClipPaint(nsSVGRenderState* aContext,
                               nsISVGChildFrame* aParent,

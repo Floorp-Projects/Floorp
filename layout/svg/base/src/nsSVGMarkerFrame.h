@@ -53,10 +53,12 @@ protected:
   friend nsIFrame*
   NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
-  NS_IMETHOD InitSVG();
-
 public:
-  nsSVGMarkerFrame(nsStyleContext* aContext) : nsSVGMarkerFrameBase(aContext) {}
+  nsSVGMarkerFrame(nsStyleContext* aContext) :
+    nsSVGMarkerFrameBase(aContext),
+    mMarkedFrame(nsnull),
+    mInUse(PR_FALSE),
+    mInUse2(PR_FALSE) {}
 
   /**
    * Get the "type" of the frame

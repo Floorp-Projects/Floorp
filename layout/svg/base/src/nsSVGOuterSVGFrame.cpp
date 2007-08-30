@@ -153,8 +153,12 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
 }
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::InitSVG()
+nsSVGOuterSVGFrame::Init(nsIContent* aContent,
+                         nsIFrame* aParent,
+                         nsIFrame* aPrevInFlow)
 {
+  nsresult rv = nsSVGOuterSVGFrameBase::Init(aContent, aParent, aPrevInFlow);
+
   nsIDocument* doc = mContent->GetCurrentDoc();
   if (doc) {
     // we only care about our content's zoom and pan values if it's the root element
@@ -173,7 +177,7 @@ nsSVGOuterSVGFrame::InitSVG()
 
   AddStateBits(NS_STATE_IS_OUTER_SVG);
 
-  return NS_OK;
+  return rv;
 }
 
 //----------------------------------------------------------------------

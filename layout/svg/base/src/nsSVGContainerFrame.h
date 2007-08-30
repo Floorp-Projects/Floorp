@@ -56,8 +56,6 @@ protected:
     return nsSVGContainerFrameBase::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
   }
 
-  NS_IMETHOD InitSVG();
-  
 public:
   nsSVGContainerFrame(nsStyleContext* aContext) :
     nsSVGContainerFrameBase(aContext) {}
@@ -80,9 +78,6 @@ public:
 class nsSVGDisplayContainerFrame : public nsSVGContainerFrame,
                                    public nsISVGChildFrame
 {
-protected:
-  NS_IMETHOD InitSVG();
-
 public:
   nsSVGDisplayContainerFrame(nsStyleContext* aContext) :
     nsSVGContainerFrame(aContext) {}
@@ -101,6 +96,9 @@ public:
                           nsIFrame*       aFrameList);
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIFrame*        aPrevInFlow);
 
   // nsISVGChildFrame interface:
   NS_IMETHOD PaintSVG(nsSVGRenderState* aContext, nsRect *aDirtyRect);
