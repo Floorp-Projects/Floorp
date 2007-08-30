@@ -69,7 +69,6 @@ nsSpaceManager::BandList::BandList()
   : nsSpaceManager::BandRect(NSCOORD_MIN, NSCOORD_MIN, NSCOORD_MIN, NSCOORD_MIN, (nsIFrame*)nsnull)
 {
   PR_INIT_CLIST(this);
-  mNumFrames = 0;
 }
 
 void
@@ -276,8 +275,7 @@ nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
         aBandData.mCount += 2 * aBand->Length() + 2;  // estimate the number needed
         return NS_ERROR_FAILURE;
       }
-      trapezoid->mState = nsBandTrapezoid::Available;
-      trapezoid->mFrame = nsnull;
+      trapezoid->mFrames = nsnull;
 
       // Assign the trapezoid a rectangular shape. The trapezoid must be in the
       // local coordinate space, so convert the current left coordinate
@@ -294,14 +292,8 @@ nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
       aBandData.mCount += 2 * aBand->Length() + 1;  // estimate the number needed
       return NS_ERROR_FAILURE;
     }
-    if (1 == aBand->mNumFrames) {
-      trapezoid->mState = nsBandTrapezoid::Occupied;
-      trapezoid->mFrame = aBand->mFrame;
-    } else {
-      NS_ASSERTION(aBand->mNumFrames > 1, "unexpected frame count");
-      trapezoid->mState = nsBandTrapezoid::OccupiedMultiple;
-      trapezoid->mFrames = aBand->mFrames;
-    }
+    NS_ASSERTION(aBand->mFrames.Count() > 0, "unexpected frame count");
+    trapezoid->mFrames = &aBand->mFrames;
 
     nscoord x = aBand->mLeft;
     // The first band can straddle the clip rect
@@ -333,8 +325,7 @@ nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
       aBandData.mCount++;
       return NS_ERROR_FAILURE;
     }
-    trapezoid->mState = nsBandTrapezoid::Available;
-    trapezoid->mFrame = nsnull;
+    trapezoid->mFrames = nsnull;
 
     // Assign the trapezoid a rectangular shape. The trapezoid must be in the
     // local coordinate space, so convert the current left coordinate
@@ -366,8 +357,7 @@ nsSpaceManager::GetBandData(nscoord       aYOffset,
     // All the requested space is available
     aBandData.mCount = 1;
     aBandData.mTrapezoids[0] = nsRect(0, aYOffset, aMaxSize.width, maxHeight);
-    aBandData.mTrapezoids[0].mState = nsBandTrapezoid::Available;
-    aBandData.mTrapezoids[0].mFrame = nsnull;
+    aBandData.mTrapezoids[0].mFrames = nsnull;
   } else {
     // Find the first band that contains the y-offset or is below the y-offset
     BandRect* band = GuessBandWithTopAbove(y);
@@ -380,8 +370,7 @@ nsSpaceManager::GetBandData(nscoord       aYOffset,
         aBandData.mCount = 1;
         aBandData.mTrapezoids[0] =
           nsRect(0, aYOffset, aMaxSize.width, PR_MIN(band->mTop - y, maxHeight));
-        aBandData.mTrapezoids[0].mState = nsBandTrapezoid::Available;
-        aBandData.mTrapezoids[0].mFrame = nsnull;
+        aBandData.mTrapezoids[0].mFrames = nsnull;
         break;
       } else if (y < band->mBottom) {
         // The band contains the y-offset. Return a list of available and
@@ -584,7 +573,7 @@ nsSpaceManager::AddRectToBand(BandRect* aBand, BandRect* aBandRect)
 {
   NS_PRECONDITION((aBand->mTop == aBandRect->mTop) &&
                   (aBand->mBottom == aBandRect->mBottom), "bad band");
-  NS_PRECONDITION(1 == aBandRect->mNumFrames, "shared band rect");
+  NS_PRECONDITION(1 == aBandRect->mFrames.Count(), "shared band rect");
   nscoord topOfBand = aBand->mTop;
 
   // Figure out where in the band horizontally to insert the rect
@@ -651,7 +640,7 @@ nsSpaceManager::AddRectToBand(BandRect* aBand, BandRect* aBandRect)
         }
 
         // Mark the existing rect as shared
-        aBand->AddFrame(aBandRect->mFrame);
+        aBand->AddFrame(aBandRect->FrameAt(0));
         return;
       }
     }
@@ -701,12 +690,12 @@ nsSpaceManager::AddRectToBand(BandRect* aBand, BandRect* aBandRect)
       aBand->InsertAfter(r1);
 
       // Mark the overlap as being shared
-      aBand->AddFrame(aBandRect->mFrame);
+      aBand->AddFrame(aBandRect->FrameAt(0));
       return;
 
     } else {
       // Indicate the frames share the existing rect
-      aBand->AddFrame(aBandRect->mFrame);
+      aBand->AddFrame(aBandRect->FrameAt(0));
 
       if (aBand->mRight == aBandRect->mRight) {
         // The new and existing rect have the same right edge. We're all done,
@@ -789,7 +778,7 @@ nsSpaceManager::InsertBandRect(BandRect* aBandRect)
       // the part that's above the band
       BandRect* bandRect1 = new BandRect(aBandRect->mLeft, aBandRect->mTop,
                                          aBandRect->mRight, band->mTop,
-                                         aBandRect->mFrame);
+                                         aBandRect->mFrames);
 
       // Insert bandRect1 as a new band
       band->InsertBefore(bandRect1);
@@ -835,7 +824,7 @@ nsSpaceManager::InsertBandRect(BandRect* aBandRect)
       // the rect, creating a new rect for the part that overlaps the band
       BandRect* bandRect1 = new BandRect(aBandRect->mLeft, aBandRect->mTop,
                                          aBandRect->mRight, band->mBottom,
-                                         aBandRect->mFrame);
+                                         aBandRect->mFrames);
 
       // Add bandRect1 to the band
       AddRectToBand(band, bandRect1);
@@ -952,9 +941,9 @@ nsSpaceManager::RemoveRegion(nsIFrame* aFrame)
           // Remember that we found a matching rect in this band
           foundMatchingRect = PR_TRUE;
 
-          if (rect->mNumFrames > 1) {
+          if (rect->mFrames.Count() > 1) {
             // The band rect is occupied by more than one frame
-            rect->RemoveFrame(aFrame);
+            rect->mFrames.RemoveElement(aFrame);
 
             // Remember that this rect was being shared by more than one frame
             // including aFrame
@@ -1156,33 +1145,19 @@ nsSpaceManager::List(FILE* out)
   else {
     BandRect* band = mBandList.Head();
     do {
-      fprintf(out, "  left=%d top=%d right=%d bottom=%d numFrames=%d",
-              band->mLeft, band->mTop, band->mRight, band->mBottom,
-              band->mNumFrames);
-      if (1 == band->mNumFrames) {
-        nsIFrameDebug*  frameDebug;
+      PRInt32 const n = band->mFrames.Count();
+      fprintf(out, "  left=%d top=%d right=%d bottom=%d count=%d frames=",
+              band->mLeft, band->mTop, band->mRight, band->mBottom, n);
 
-        if (NS_SUCCEEDED(band->mFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
-          frameDebug->GetFrameName(tmp);
-          fprintf(out, " frame=");
-          fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
-          fprintf(out, "@%p", band->mFrame);
-        }
-      }
-      else if (1 < band->mNumFrames) {
-        fprintf(out, "\n    ");
-        nsVoidArray* a = band->mFrames;
-        PRInt32 i, n = a->Count();
-        for (i = 0; i < n; i++) {
-          nsIFrame* frame = (nsIFrame*) a->ElementAt(i);
-          if (frame) {
-            nsIFrameDebug*  frameDebug;
+      for (PRInt32 i = 0; i < n; i++) {
+        nsIFrame* frame = (nsIFrame*)band->mFrames.FastElementAt(i);
+        if (frame) {
+          nsIFrameDebug*  frameDebug;
 
-            if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
-              frameDebug->GetFrameName(tmp);
-              fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
-              fprintf(out, "@%p ", frame);
-            }
+		  if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
+            frameDebug->GetFrameName(tmp);
+            fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
+            fprintf(out, "@%p ", frame);
           }
         }
       }
@@ -1387,32 +1362,26 @@ nsSpaceManager::BandRect::BandRect(nscoord    aLeft,
   mTop = aTop;
   mRight = aRight;
   mBottom = aBottom;
-  mFrame = aFrame;
-  mNumFrames = 1;
+  AddFrame(aFrame);
 }
 
 nsSpaceManager::BandRect::BandRect(nscoord      aLeft,
                                    nscoord      aTop,
                                    nscoord      aRight,
                                    nscoord      aBottom,
-                                   nsVoidArray* aFrames)
+                                   nsSmallVoidArray& aFrames)
 {
   MOZ_COUNT_CTOR(BandRect);
   mLeft = aLeft;
   mTop = aTop;
   mRight = aRight;
   mBottom = aBottom;
-  mFrames = new nsVoidArray;
-  mFrames->operator=(*aFrames);
-  mNumFrames = mFrames->Count();
+  mFrames = aFrames;
 }
 
 nsSpaceManager::BandRect::~BandRect()
 {
   MOZ_COUNT_DTOR(BandRect);
-  if (mNumFrames > 1) {
-    delete mFrames;
-  }
 }
 
 nsSpaceManager::BandRect*
@@ -1421,13 +1390,7 @@ nsSpaceManager::BandRect::SplitVertically(nscoord aBottom)
   NS_PRECONDITION((aBottom > mTop) && (aBottom < mBottom), "bad argument");
 
   // Create a new band rect for the bottom part
-  BandRect* bottomBandRect;
-                                            
-  if (mNumFrames > 1) {
-    bottomBandRect = new BandRect(mLeft, aBottom, mRight, mBottom, mFrames);
-  } else {
-    bottomBandRect = new BandRect(mLeft, aBottom, mRight, mBottom, mFrame);
-  }
+  BandRect* bottomBandRect = new BandRect(mLeft, aBottom, mRight, mBottom, mFrames);
                                            
   // This band rect becomes the top part, so adjust the bottom edge
   mBottom = aBottom;
@@ -1440,13 +1403,7 @@ nsSpaceManager::BandRect::SplitHorizontally(nscoord aRight)
   NS_PRECONDITION((aRight > mLeft) && (aRight < mRight), "bad argument");
   
   // Create a new band rect for the right part
-  BandRect* rightBandRect;
-                                            
-  if (mNumFrames > 1) {
-    rightBandRect = new BandRect(aRight, mTop, mRight, mBottom, mFrames);
-  } else {
-    rightBandRect = new BandRect(aRight, mTop, mRight, mBottom, mFrame);
-  }
+  BandRect* rightBandRect = new BandRect(aRight, mTop, mRight, mBottom, mFrames);
                                            
   // This band rect becomes the left part, so adjust the right edge
   mRight = aRight;
@@ -1454,85 +1411,23 @@ nsSpaceManager::BandRect::SplitHorizontally(nscoord aRight)
 }
 
 PRBool
-nsSpaceManager::BandRect::IsOccupiedBy(const nsIFrame* aFrame) const
-{
-  PRBool  result;
-
-  if (1 == mNumFrames) {
-    result = (mFrame == aFrame);
-  } else {
-    PRInt32 count = mFrames->Count();
-
-    result = PR_FALSE;
-    for (PRInt32 i = 0; i < count; i++) {
-      nsIFrame* f = (nsIFrame*)mFrames->ElementAt(i);
-
-      if (f == aFrame) {
-        result = PR_TRUE;
-        break;
-      }
-    }
-  }
-
-  return result;
-}
-
-void
-nsSpaceManager::BandRect::AddFrame(const nsIFrame* aFrame)
-{
-  if (1 == mNumFrames) {
-    nsIFrame* f = mFrame;
-    mFrames = new nsVoidArray;
-    mFrames->AppendElement(f);
-  }
-
-  mNumFrames++;
-  mFrames->AppendElement((void*)aFrame);
-  NS_POSTCONDITION(mFrames->Count() == mNumFrames, "bad frame count");
-}
-
-void
-nsSpaceManager::BandRect::RemoveFrame(const nsIFrame* aFrame)
-{
-  NS_PRECONDITION(mNumFrames > 1, "only one frame");
-  mFrames->RemoveElement((void*)aFrame);
-  mNumFrames--;
-
-  if (1 == mNumFrames) {
-    nsIFrame* f = (nsIFrame*)mFrames->ElementAt(0);
-
-    delete mFrames;
-    mFrame = f;
-  }
-}
-
-PRBool
 nsSpaceManager::BandRect::HasSameFrameList(const BandRect* aBandRect) const
 {
-  PRBool  result;
+  const PRInt32 count = mFrames.Count();
 
   // Check whether they're occupied by the same number of frames
-  if (mNumFrames != aBandRect->mNumFrames) {
-    result = PR_FALSE;
-  } else if (1 == mNumFrames) {
-    result = (mFrame == aBandRect->mFrame);
-  } else {
-    result = PR_TRUE;
-
-    // For each frame occupying this band rect check whether it also occupies
-    // aBandRect
-    PRInt32 count = mFrames->Count();
-    for (PRInt32 i = 0; i < count; i++) {
-      nsIFrame* f = (nsIFrame*)mFrames->ElementAt(i);
-
-      if (-1 == aBandRect->mFrames->IndexOf(f)) {
-        result = PR_FALSE;
-        break;
-      }
+  if (count != aBandRect->mFrames.Count()) {
+    return PR_FALSE;
+  }
+  // For each frame occupying this band rect check whether it also occupies
+  // aBandRect
+  for (PRInt32 i = 0; i < count; i++) {
+    if (-1 == aBandRect->mFrames.IndexOf(mFrames.FastElementAt(i))) {
+      return PR_FALSE;
     }
   }
 
-  return result;
+  return PR_TRUE;
 }
 
 /**
