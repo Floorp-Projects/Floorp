@@ -56,7 +56,6 @@ class nsSVGOuterSVGFrame : public nsSVGOuterSVGFrameBase,
   NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 protected:
   nsSVGOuterSVGFrame(nsStyleContext* aContext);
-  NS_IMETHOD InitSVG();
 
    // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -87,6 +86,10 @@ public:
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
+
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIFrame*        aPrevInFlow);
 
   /**
    * Get the "type" of the frame

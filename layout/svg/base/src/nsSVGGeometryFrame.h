@@ -57,7 +57,6 @@ class nsSVGGeometryFrame : public nsSVGGeometryFrameBase,
 {
 protected:
   nsSVGGeometryFrame(nsStyleContext *aContext) : nsSVGGeometryFrameBase(aContext) {}
-  NS_IMETHOD InitSVG();
 
 public:
   // nsIFrame interface:

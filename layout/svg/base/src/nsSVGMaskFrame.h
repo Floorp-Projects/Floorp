@@ -49,9 +49,10 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase
   friend nsIFrame*
   NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
 
-  NS_IMETHOD InitSVG();
-
-  nsSVGMaskFrame(nsStyleContext* aContext) : nsSVGMaskFrameBase(aContext) {}
+  nsSVGMaskFrame(nsStyleContext* aContext) :
+    nsSVGMaskFrameBase(aContext),
+    mMaskParentMatrix(nsnull),
+    mInUse(PR_FALSE) {}
 
  public:
   // nsSVGMaskFrame method:

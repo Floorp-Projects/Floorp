@@ -68,19 +68,6 @@ NS_GetSVGFilterElement(nsIURI *aURI, nsIContent *aContent)
   return nsnull;
 }
 
-NS_IMETHODIMP
-nsSVGFilterFrame::InitSVG()
-{
-  nsresult rv = nsSVGFilterFrameBase::InitSVG();
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsCOMPtr<nsIDOMSVGFilterElement> filter = do_QueryInterface(mContent);
-  NS_ASSERTION(filter, "wrong content element");
-
-  return NS_OK;
-}
-
 void
 nsSVGFilterFrame::FilterFailCleanup(nsSVGRenderState *aContext,
                                     nsISVGChildFrame *aTarget)
