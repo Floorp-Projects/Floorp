@@ -4647,7 +4647,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
           nsContentUtils::GetBoolPref("layout.word_select.eat_space_to_next_word");
       }
       
-      // sawBeforeType means "we already saw characters of the type
+      // mSawBeforeType means "we already saw characters of the type
       // before the boundary we're looking for". Examples:
       // 1. If we're moving forward, looking for a word beginning (i.e. a boundary
       //    between whitespace and non-whitespace), then eatingWS==PR_TRUE means
@@ -4655,15 +4655,14 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       // 2. If we're moving backward, looking for a word beginning (i.e. a boundary
       //    between non-whitespace and whitespace), then eatingWS==PR_TRUE means
       //    "we already saw some non-whitespace".
-      PRBool sawBeforeType = PR_FALSE;
-
+      PeekWordState state;
       PRBool done = PR_FALSE;
       while (!done) {
         PRBool movingInFrameDirection =
           IsMovingInFrameDirection(current, aPos->mDirection, aPos->mVisual);
         
-        done = current->PeekOffsetWord(movingInFrameDirection, wordSelectEatSpace, aPos->mIsKeyboardSelect,
-                                       &offset, &sawBeforeType);
+        done = current->PeekOffsetWord(movingInFrameDirection, wordSelectEatSpace,
+                                       aPos->mIsKeyboardSelect, &offset, &state);
         
         if (!done) {
           nsIFrame* nextFrame;
@@ -4676,14 +4675,14 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
           // We can't jump lines if we're looking for whitespace following
           // non-whitespace, and we already encountered non-whitespace.
           if (NS_FAILED(result) ||
-              jumpedLine && !wordSelectEatSpace && sawBeforeType) {
+              jumpedLine && !wordSelectEatSpace && state.mSawBeforeType) {
             done = PR_TRUE;
           } else {
             current = nextFrame;
             offset = nextFrameOffset;
             // Jumping a line is equivalent to encountering whitespace
             if (wordSelectEatSpace && jumpedLine)
-              sawBeforeType = PR_TRUE;
+              state.SetSawBeforeType();
           }
         }
       }
@@ -4889,7 +4888,7 @@ nsFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
 
 PRBool
 nsFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
-                        PRInt32* aOffset, PRBool* aSawBeforeType)
+                        PRInt32* aOffset, PeekWordState* aState)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   PRInt32 startOffset = *aOffset;
@@ -4898,14 +4897,39 @@ nsFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsK
   if (aForward == (startOffset == 0)) {
     // We're before the frame and moving forward, or after it and moving backwards.
     // If we're looking for non-whitespace, we found it (without skipping this frame).
-    if (aWordSelectEatSpace && *aSawBeforeType)
-      return PR_TRUE;
+    if (!aState->mAtStart) {
+      if (aState->mLastCharWasPunctuation) {
+        // We're not punctuation, so this is a punctuation boundary.
+        if (BreakWordBetweenPunctuation(aForward, aIsKeyboardSelect))
+          return PR_TRUE;
+      } else {
+        // This is not a punctuation boundary.
+        if (aWordSelectEatSpace && aState->mSawBeforeType)
+          return PR_TRUE;
+      }
+    }
     // Otherwise skip to the other side and note that we encountered non-whitespace.
     *aOffset = 1 - startOffset;
+    aState->Update(PR_FALSE);
     if (!aWordSelectEatSpace)
-      *aSawBeforeType = PR_TRUE;
+      aState->SetSawBeforeType();
   }
   return PR_FALSE;
+}
+
+PRBool
+nsFrame::BreakWordBetweenPunctuation(PRBool aAfterPunct, PRBool aIsKeyboardSelect)
+{
+  if (!nsContentUtils::GetBoolPref("layout.word_select.stop_at_punctuation")) {
+    // When this pref is false, we never stop at a punctuation boundary.
+    return PR_FALSE;
+  }
+  if (!aIsKeyboardSelect) {
+    // mouse caret movement (e.g. word selection) always stops at every punctuation boundary
+    return PR_TRUE;
+  }
+  // keyboard caret movement stops after punctuation, not before it
+  return aAfterPunct;
 }
 
 NS_IMETHODIMP
