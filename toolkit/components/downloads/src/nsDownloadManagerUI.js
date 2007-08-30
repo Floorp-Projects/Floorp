@@ -101,7 +101,7 @@ nsDownloadManagerUI.prototype = {
                 getService(Ci.nsIPrefBranch);
     var flashCount = prefs.getIntPref(PREF_FLASH_COUNT);
 
-    var win = this.recentWindow.QueryInteface(Ci.nsIDOMChromeWindow);
+    var win = this.recentWindow.QueryInterface(Ci.nsIDOMChromeWindow);
     win.getAttentionWithCycleCount(flashCount);
   },
 
