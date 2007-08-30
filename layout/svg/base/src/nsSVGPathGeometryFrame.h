@@ -53,8 +53,9 @@ class nsSVGMarkerProperty;
 
 typedef nsSVGGeometryFrame nsSVGPathGeometryFrameBase;
 
-#define HITTEST_MASK_FILL 1
-#define HITTEST_MASK_STROKE 2
+#define HITTEST_MASK_FILL        0x01
+#define HITTEST_MASK_STROKE      0x02
+#define HITTEST_MASK_FORCE_TEST  0x04
 
 class nsSVGPathGeometryFrame : public nsSVGPathGeometryFrameBase,
                                public nsISVGChildFrame
