@@ -200,12 +200,16 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
                            nsReflowStatus&          aStatus)
 {
   if (!aReflowState.ShouldReflowAllKids()) {
-    // We're not the target of the incremental reflow, so just bail.
-    // This means that something happened to one of our descendants
-    // (excluding those inside svg:foreignObject, since
-    // nsSVGForeignObjectFrame is a reflow root).
+    // We're not the target of the incremental reflow, so just bail. We get
+    // here when our containing block has changed size (e.g. when the browser
+    // window is resized). We could in principal also get here if something
+    // happened to one of our descendants, but since nsSVGForeignObjectFrame is
+    // a reflow root, and since no other SVG elements participate in CSS
+    // layout, that currently should never happen.
     aDesiredSize.width = mRect.width;
     aDesiredSize.height = mRect.height;
+    aDesiredSize.mOverflowArea.SetRect(0, 0, mRect.width, mRect.height);
+    FinishAndStoreOverflow(&aDesiredSize);
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
   }
@@ -247,6 +251,11 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
     nsPresContext::CSSPixelsToAppUnits(svgElem->mViewportHeight);
 
   // XXX add in CSS borders ??
+
+  // Make sure we scroll if we're too big:
+  // XXX Use the bounding box of our descendants? (See bug 353460 comment 14.)
+  aDesiredSize.mOverflowArea.SetRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+  FinishAndStoreOverflow(&aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
