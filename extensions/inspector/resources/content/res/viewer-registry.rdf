@@ -150,18 +150,8 @@
                        ins:panels="bxDocPanel"
                        ins:description="Accessible Events">
         <ins:filter><![CDATA[
-          if (!(object instanceof Components.interfaces.nsIDOMDocument))
-            return false;
-
-          try {
-            var accService =
-              Components.classes["@mozilla.org/accessibleRetrieval;1"]
-                        .getService(Components.interfaces.nsIAccessibleRetrieval);
-
-            return accService.getAttachedAccessibleFor(object);
-          } catch(e) {
-            return false;
-          }
+          return object instanceof Components.interfaces.nsIDOMDocument &&
+            "@mozilla.org/accessibleRetrieval;1" in Components.classes;
         ]]></ins:filter>
       </rdf:Description>
     </rdf:li>
@@ -171,18 +161,8 @@
                        ins:panels="bxDocPanel"
                        ins:description="Accessible Tree">
         <ins:filter><![CDATA[
-          if (!(object instanceof Components.interfaces.nsIDOMDocument))
-            return false;
-
-          try {
-            var accService =
-              Components.classes["@mozilla.org/accessibleRetrieval;1"]
-                        .getService(Components.interfaces.nsIAccessibleRetrieval);
-
-            return accService.getAttachedAccessibleFor(object);
-          } catch(e) {
-            return false;
-          }
+          return object instanceof Components.interfaces.nsIDOMDocument &&
+            "@mozilla.org/accessibleRetrieval;1" in Components.classes;
         ]]></ins:filter>
       </rdf:Description>
     </rdf:li>
