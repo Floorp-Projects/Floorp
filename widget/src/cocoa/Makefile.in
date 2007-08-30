@@ -136,6 +136,7 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
 		-lthebes \
 		$(MOZ_FIX_LINK_PATHS) \
+		$(LCMS_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
