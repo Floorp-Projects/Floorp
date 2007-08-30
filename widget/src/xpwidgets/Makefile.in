@@ -61,6 +61,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  view \
 		  windowwatcher \
+		  lcms \
 		  $(NULL)
 
 ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
