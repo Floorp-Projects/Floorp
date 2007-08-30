@@ -54,11 +54,17 @@ interface nsIFile;
  * creating prepared statements, executing SQL, and examining database
  * errors.
  */
-[scriptable, uuid(9f36de9d-6471-4249-afed-1ee7760e325c)]
+[scriptable, uuid(e42f0655-cdc3-47c6-824a-cdb88c731cb9)]
 interface mozIStorageConnection : nsISupports {
   /*
    * Initialization and status
    */
+  
+  /**
+   * Closes a database connection.  C++ callers should simply set the database
+   * variable to NULL.
+   */
+   void close();
 
   /**
    * whether the database is open or not

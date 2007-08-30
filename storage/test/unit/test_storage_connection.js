@@ -39,14 +39,25 @@
 
 const BACKUP_FILE_NAME = "test_storage.sqlite.backup";
 
-function test_connectionReady()
+function test_connectionReady_open()
 {
-  // there doesn't seem to be a way for the connection to not be ready
+  // there doesn't seem to be a way for the connection to not be ready (unless
+  // we close it with mozIStorageConnection::Close(), but we don't for this).
   // It can only fail if GetPath fails on the database file, or if we run out
   // of memory trying to use an in-memory database
 
   var msc = getOpenedDatabase();
   do_check_true(msc.connectionReady);
+}
+
+function test_connectionReady_closed()
+{
+  // This also tests mozIStorageConnection::Close()
+
+  var msc = getOpenedDatabase();
+  msc.close();
+  do_check_false(msc.connectionReady);
+  gDBConn = null; // this is so later tests don't start to fail.
 }
 
 function test_databaseFile()
@@ -211,7 +222,8 @@ function test_backup_new_folder()
   parentDir.remove(true);
 }
 
-var tests = [test_connectionReady, test_databaseFile,
+var tests = [test_connectionReady_open, test_connectionReady_closed,
+             test_databaseFile,
              test_tableExists_not_created, test_indexExists_not_created,
              test_createTable_not_created, test_indexExists_created,
              test_createTable_already_created, test_lastInsertRowID,
