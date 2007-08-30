@@ -162,7 +162,7 @@
                 accesskey="&closeWhenDone.accesskey;" class="indent"
                 preference="browser.download.manager.closeWhenDone"/>
 
-      <separator/>
+      <separator class="thin"/>
 
       <radiogroup id="saveWhere"
                   preference="browser.download.useDownloadDir"
@@ -203,7 +203,7 @@
       <hbox id="checkDefaultBox" align="center" flex="1">      
         <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
                   label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault.accesskey;"
-                  flex="1" style="height: &alwaysCheckDefault.height;"/>
+                  flex="1"/>
         <button id="checkDefaultButton"
                 label="&checkNow.label;" accesskey="&checkNow.accesskey;"
                 oncommand="gMainPane.checkNow()"
@@ -211,6 +211,21 @@
       </hbox>
     </groupbox>
 #endif
+    <groupbox id="addonsMgrGroup" orient="horizontal">
+      <caption label="&addonsMgr.label;"/>
+
+      <hbox align="center" flex="1">
+        <description control="manageAddons"
+#ifdef XP_WIN
+                     flex="1">&manageAddonsDesc.label;</description>
+#else
+                     flex="1">&manageAddonsDescUnix.label;</description>
+#endif
+        <button id="manageAddons" label="&manageAddons.label;"
+                accesskey="&manageAddons.accesskey;"
+                oncommand="gMainPane.showAddonsMgr();"/>
+      </hbox>
+    </groupbox>
 
   </prefpane>
 
