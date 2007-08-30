@@ -44,7 +44,7 @@
 #include "nspr.h"
 #include "pldhash.h"
 #include "nscore.h"
-#include "nsIAtom.h"
+#include "nsString.h"
 
 class nsICacheMetaDataVisitor;
 
@@ -74,7 +74,7 @@ private:
     struct MetaElement
     {
         struct MetaElement * mNext;
-        nsCOMPtr<nsIAtom>    mKey;
+        nsCString            mKey;
         char                 mValue[1]; // actually, bigger than 1
 
         // MetaElement and mValue are allocated together via:
