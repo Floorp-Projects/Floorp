@@ -3695,9 +3695,8 @@ nsBrowserStatusHandler.prototype =
 
     var securityUI = gBrowser.securityUI;
     this.securityButton.setAttribute("tooltiptext", securityUI.tooltipText);
-    var lockIcon = document.getElementById("lock-icon");
-    if (lockIcon)
-      lockIcon.setAttribute("tooltiptext", securityUI.tooltipText);
+    
+    getIdentityHandler().checkIdentity(aWebProgress, aRequest, aState);
   },
 
   // simulate all change notifications after switching tabs
@@ -5576,4 +5575,174 @@ function showToolbars() {
     goButtonStack.removeAttribute("hidden");
   
   return false; // Dismiss the notification message
+}
+
+/**
+ * Utility class to handle manipulations of the identity indicators in the UI
+ */
+function IdentityHandler() {}
+
+IdentityHandler.prototype = {
+
+  // Mode strings used to control CSS display
+  IDENTITY_MODE_IDENTIFIED       : "verifiedIdentity", // High-quality identity information
+  IDENTITY_MODE_DOMAIN_VERIFIED  : "verifiedDomain",   // Minimal SSL CA-signed domain verification
+  IDENTITY_MODE_UNKNOWN          : "unknownIdentity",  // No trusted identity information
+
+  /**
+   * Handler for mouseclicks on the "Tell me more about this website" link text
+   * in the "identity-popup" panel.
+   */
+  handleMoreInfoClick : function(event) {
+    if (event.button == 0) {
+      displaySecurityInfo();
+      event.stopPropagation();
+    }   
+  },
+  
+  /**
+   * Determine the identity of the page being displayed by examining its SSL cert
+   * (if available) and, if necessary, update the UI to reflect this.  Intended to
+   * be called by an nsIWebProgressListener.
+   *
+   * @param nsIWebProgress webProgress
+   * @param nsIRequest request
+   * @param PRUint32 state
+   */
+  checkIdentity : function(webProgress, request, state) {
+
+    if (state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
+      this.setMode(this.IDENTITY_MODE_IDENTIFIED);
+    else if (state & Components.interfaces.nsIWebProgressListener.STATE_SECURE_HIGH)
+      this.setMode(this.IDENTITY_MODE_DOMAIN_VERIFIED);
+    else
+      this.setMode(this.IDENTITY_MODE_UNKNOWN);
+  },
+  
+  /**
+   * Update the UI to reflect the specified mode, which should be one of the
+   * IDENTITY_MODE_* constants.
+   */
+  setMode : function(newMode) {
+    document.getElementById("identity-popup").className = newMode;
+    document.getElementById("identity-box").className = newMode;
+    document.getElementById("identity-popup-content-box").className = newMode;
+    this.setMessages(newMode);
+  },
+  
+  /**
+   * Set up the title and content messages for the identity message bubble, based
+   * on the specified mode.
+   *
+   * @param newMode The newly set identity mode.  Should be one of the IDENTITY_MODE_* constants.
+   */
+  setMessages : function(newMode) {
+      
+    var stringBundle = document.getElementById("bundle_browser");
+    var brandShortName = document.getElementById("bundle_brand").getString("brandShortName");
+  
+    // Initialize the optional strings to empty values
+    var supplemental = "";
+    var verifier = "";
+    var icon_label = "";
+      
+    if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
+      var title = stringBundle.getString("identity.domainverified.title");
+      var encryption_label = stringBundle.getString("identity.encrypted");
+      var status = gBrowser.securityUI
+                           .QueryInterface(Components.interfaces.nsISSLStatusProvider)
+                           .SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
+      var cert = status.serverCert;
+
+      // It would be sort of nice to use the CN= field in the cert, since that's
+      // typically what we want here, but thanks to x509 certs being extensible,
+      // it's not the only place you have to check, there can be more than one domain,
+      // et cetera, ad nauseum.  We know the cert is valid for location.host, so
+      // let's just use that, it's what the status bar does too.
+      var body = icon_label = gBrowser.contentWindow.location.host;
+      var caOrg = cert.issuerOrganization || cert.issuerCommonName;      
+      verifier = stringBundle.getFormattedString("identity.identified.verifier",
+                                                 [caOrg]);
+      var tooltip = verifier;      
+      supplemental = stringBundle.getString("identity.domainverified.supplemental");      
+    }
+    else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
+      title = stringBundle.getString("identity.identified.title");
+      encryption_label = stringBundle.getString("identity.encrypted");
+  
+      // If it's identified, then we can populate the dialog with credentials
+      status = gBrowser.securityUI
+                       .QueryInterface(Components.interfaces.nsISSLStatusProvider)
+                       .SSLStatus.QueryInterface(Components.interfaces.nsISSLStatus);
+      cert = status.serverCert;
+
+      // Pull the basics out with fallback options in case common
+      // (optional) fields are left blank
+      body = cert.organization || cert.commonName;
+      caOrg = cert.issuerOrganization || cert.issuerCommonName;        
+      verifier = stringBundle.getFormattedString("identity.identified.verifier",
+                                                 [caOrg]);
+      tooltip = verifier;
+            
+      // Now try to extract out supplemental location fields and append
+      // them, where available.  subjectName is a comma-delimited list of
+      // key=value pairs.
+      if (cert.subjectName) {
+        var subjectNameFields = {};
+        cert.subjectName.split(",").forEach(function(v) {
+          var field = v.split("=");
+          this[field[0]] = field[1];
+        }, subjectNameFields);
+
+        if (subjectNameFields.L) // City
+          supplemental += subjectNameFields.L + "\n";
+                
+        if (subjectNameFields.ST && subjectNameFields.C) // State and Country
+          supplemental += stringBundle.getFormattedString("identity.identified.state_and_country",
+                                                          [subjectNameFields.ST,
+                                                          subjectNameFields.C]);
+        else if (subjectNameFields.ST) // State only
+          supplemental += subjectNameFields.ST;
+        else if (subjectNameFields.C) // Country only
+          supplemental += subjectNameFields.C;
+              
+        // Include country code in top-level label, if we have one
+        if (subjectNameFields.C)
+          icon_label = stringBundle.getFormattedString("identity.identified.title_with_country",
+                                                       [body, subjectNameFields.C]);
+        else
+          icon_label = body;
+      }
+    }
+    else {
+      encryption_label = stringBundle.getString("identity.unencrypted");
+      title = stringBundle.getString("identity.unknown.title");
+      body = stringBundle.getFormattedString("identity.unknown.body", [brandShortName], 1);
+      tooltip = body;
+    }
+    
+    // Push the appropriate strings out to the UI
+    document.getElementById("identity-popup-title").value = title;
+    document.getElementById("identity-popup-content").textContent = body;
+    document.getElementById("identity-popup-content-supplemental")
+            .textContent = supplemental;
+    document.getElementById("identity-popup-content-verifier")
+            .textContent = verifier;
+    document.getElementById("identity-box").tooltipText = tooltip;
+    document.getElementById("identity-icon-label").value = icon_label;
+    document.getElementById("identity-popup-encryption-label")
+            .textContent = encryption_label;
+  }
+};
+
+var gIdentityHandler; 
+
+/**
+ * Returns the singleton instance of the identity handler class.  Should always be
+ * used instead of referencing the global variable directly or creating new instances
+ */
+function getIdentityHandler() {
+  if (!gIdentityHandler)
+    gIdentityHandler = new IdentityHandler();
+  return gIdentityHandler;    
 }
