@@ -55,6 +55,7 @@
 class nsIWidget;
 class nsIDocument;
 class nsIDOMNode;
+class nsIDocShell;
 
 extern "C" MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
 

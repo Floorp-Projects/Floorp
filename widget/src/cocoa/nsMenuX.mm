@@ -135,7 +135,6 @@ NS_IMETHODIMP
 nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
                 nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode)
 {
-  mDocShellWeakRef = do_GetWeakReference(aShell);
   mMenuContent = aNode;
 
   // register this menu to be notified when changes are made to our content object
@@ -503,13 +502,7 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
       if (mNeedsRebuild)
         RemoveAll();
 
-      nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
-      if (!docShell) {
-        NS_ERROR("No doc shell");
-        return nsEventStatus_eConsumeNoDefault;
-      }
-
-      MenuConstruct(aMenuEvent, nsnull, nsnull, docShell);
+      MenuConstruct(aMenuEvent, nsnull, nsnull, nsnull);
       mConstructed = true;
     }
 
@@ -719,13 +712,9 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent)
     case 1: itemType = nsIMenuItem::eRadio; break;
   }
 
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
-  if (!docShell)
-    return;
-
   // Create the item.
   pnsMenuItem->Create(this, menuitemName, PR_FALSE, itemType, mManager,
-                      docShell, inMenuItemContent);
+                      nsnull, inMenuItemContent);
 
   AddMenuItem(pnsMenuItem);
 
@@ -746,11 +735,7 @@ void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
   if (!pnsMenu)
     return;
 
-  // Call Create
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
-  if (!docShell)
-    return;
-  pnsMenu->Create(reinterpret_cast<nsISupports*>(this), menuName, EmptyString(), mManager, docShell, inMenuContent);
+  pnsMenu->Create(reinterpret_cast<nsISupports*>(this), menuName, EmptyString(), mManager, nsnull, inMenuContent);
 
   AddMenu(pnsMenu);
 
@@ -781,12 +766,6 @@ PRBool nsMenuX::OnCreate()
   
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
-
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
-  if (!docShell) {
-    NS_ERROR("No doc shell");
-    return PR_FALSE;
-  }
   
   nsresult rv = NS_OK;
   nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
@@ -862,12 +841,6 @@ PRBool nsMenuX::OnCreated()
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
 
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
-  if (!docShell) {
-    NS_ERROR("No doc shell");
-    return PR_FALSE;
-  }
-
   nsresult rv = NS_OK;
   nsIContent* dispatchTo = popupContent ? popupContent : mMenuContent;
   rv = dispatchTo->DispatchDOMEvent(&event, nsnull, nsnull, &status);
@@ -888,12 +861,6 @@ PRBool nsMenuX::OnDestroy()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_HIDING, nsnull,
                      nsMouseEvent::eReal);
-  
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
-  if (!docShell) {
-    NS_WARNING("No doc shell so can't run the OnDestroy");
-    return PR_FALSE;
-  }
 
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
@@ -916,12 +883,6 @@ PRBool nsMenuX::OnDestroyed()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event(PR_TRUE, NS_XUL_POPUP_HIDDEN, nsnull,
                      nsMouseEvent::eReal);
-  
-  nsCOMPtr<nsIDocShell>  docShell = do_QueryReferent(mDocShellWeakRef);
-  if (!docShell) {
-    NS_WARNING("No doc shell so can't run the OnDestroy");
-    return PR_FALSE;
-  }
 
   nsCOMPtr<nsIContent> popupContent;
   GetMenuPopupContent(getter_AddRefs(popupContent));
