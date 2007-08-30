@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIDocumentViewer.h"
 #include "nsIContent.h"
 
 #include "nsMenuBarX.h"  // for MenuHelpers namespace
@@ -54,6 +53,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMDocumentEvent.h"
+#include "nsIDocShell.h"
 
 #include "nsMenuItemIconX.h"
 #include "nsGUIEvent.h"
@@ -91,7 +91,6 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
 {
   mContent = aNode;      // addref
   mMenuParent = aParent; // weak
-  mDocShellWeakRef = do_GetWeakReference(aShell);
   
   mMenuType = aItemType;
   
@@ -320,10 +319,6 @@ NS_METHOD nsMenuItemX::DoCommand()
     SetChecked(!mIsChecked);
     /* the AttributeChanged code will update all the internal state */
   }
-
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
-  if (!docShell)
-    return nsEventStatus_eConsumeNoDefault;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);

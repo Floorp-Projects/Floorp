@@ -50,6 +50,7 @@
 #import <Cocoa/Cocoa.h>
 
 class nsIMenu;
+class nsIDocShell;
 class nsMenuItemIconX;
 
 /**
@@ -116,7 +117,6 @@ protected:
 
   nsCOMPtr<nsIMenuListener> mXULCommandListener;
   
-  nsWeakPtr                 mDocShellWeakRef;     // weak ref to docshell
   nsCOMPtr<nsIContent>      mContent;
   nsCOMPtr<nsIContent>      mCommandContent;
   nsRefPtr<nsMenuItemIconX> mIcon;
