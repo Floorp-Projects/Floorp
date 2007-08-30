@@ -105,7 +105,8 @@ interface mozIStorageStatement : mozIStorageValueArray {
   void reset();
 
   /**
-   * Bind the given value to the parameter at aParamIndex.
+   * Bind the given value to the parameter at aParamIndex. Index 0
+   * denotes the first numbered argument or ?1.
    */
   void bindUTF8StringParameter(in unsigned long aParamIndex,
                                in AUTF8String aValue);
