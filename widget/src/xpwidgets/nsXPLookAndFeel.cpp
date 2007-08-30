@@ -46,6 +46,9 @@
 #include "nsCRT.h"
 #include "nsFont.h"
 
+#include "gfxPlatform.h"
+#include "lcms.h"
+
 #ifdef DEBUG
 #include "nsSize.h"
 #endif
@@ -542,6 +545,18 @@ nsXPLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   }
 
   if (NS_SUCCEEDED(NativeGetColor(aID, aColor))) {
+    if (gfxPlatform::IsCMSEnabled()) {
+      cmsHTRANSFORM transform = gfxPlatform::GetCMSInverseRGBTransform();
+      if (transform) {
+        PRUint8 color[3];
+        color[0] = NS_GET_R(aColor);
+        color[1] = NS_GET_G(aColor);
+        color[2] = NS_GET_B(aColor);
+        cmsDoTransform(transform, color, color, 1);
+        aColor = NS_RGB(color[0], color[1], color[2]);
+      }
+    }
+
     CACHE_COLOR(aID, aColor);
     return NS_OK;
   }

@@ -152,6 +152,11 @@ public:
     static cmsHTRANSFORM GetCMSRGBTransform();
 
     /**
+     * Return output -> sRGB device transform.
+     */
+    static cmsHTRANSFORM GetCMSInverseRGBTransform();
+
+    /**
      * Return sRGBA -> output device transform.
      */
     static cmsHTRANSFORM GetCMSRGBATransform();
