@@ -329,7 +329,7 @@ nsSVGPathGeometryFrame::GetFrameForPointSVG(float x, float y, nsIFrame** hit)
   *hit = nsnull;
 
   PRUint16 mask = GetHittestMask();
-  if (!mask || !mRect.Contains(x, y))
+  if (!mask || (!(mask & HITTEST_MASK_FORCE_TEST) && !mRect.Contains(x, y)))
     return NS_OK;
 
   PRBool isHit = PR_FALSE;
@@ -691,18 +691,20 @@ nsSVGPathGeometryFrame::GetHittestMask()
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLEFILL:
       if (GetStyleVisibility()->IsVisible()) {
-        mask |= HITTEST_MASK_FILL;
+        mask |= HITTEST_MASK_FILL | HITTEST_MASK_FORCE_TEST;
       }
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLESTROKE:
       if (GetStyleVisibility()->IsVisible()) {
-        mask |= HITTEST_MASK_STROKE;
+        mask |= HITTEST_MASK_STROKE | HITTEST_MASK_FORCE_TEST;
       }
       break;
     case NS_STYLE_POINTER_EVENTS_VISIBLE:
       if (GetStyleVisibility()->IsVisible()) {
-        mask |= HITTEST_MASK_FILL;
-        mask |= HITTEST_MASK_STROKE;
+        mask |=
+          HITTEST_MASK_FILL |
+          HITTEST_MASK_STROKE |
+          HITTEST_MASK_FORCE_TEST;
       }
       break;
     case NS_STYLE_POINTER_EVENTS_PAINTED:
@@ -712,14 +714,16 @@ nsSVGPathGeometryFrame::GetHittestMask()
         mask |= HITTEST_MASK_STROKE;
       break;
     case NS_STYLE_POINTER_EVENTS_FILL:
-      mask |= HITTEST_MASK_FILL;
+      mask |= HITTEST_MASK_FILL | HITTEST_MASK_FORCE_TEST;
       break;
     case NS_STYLE_POINTER_EVENTS_STROKE:
-      mask |= HITTEST_MASK_STROKE;
+      mask |= HITTEST_MASK_STROKE | HITTEST_MASK_FORCE_TEST;
       break;
     case NS_STYLE_POINTER_EVENTS_ALL:
-      mask |= HITTEST_MASK_FILL;
-      mask |= HITTEST_MASK_STROKE;
+      mask |=
+        HITTEST_MASK_FILL |
+        HITTEST_MASK_STROKE |
+        HITTEST_MASK_FORCE_TEST;
       break;
     default:
       NS_ERROR("not reached");
