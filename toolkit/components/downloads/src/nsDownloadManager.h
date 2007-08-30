@@ -97,6 +97,7 @@ protected:
   nsresult InitDB(PRBool *aDoImport);
   nsresult CreateTable();
   nsresult ImportDownloadHistory();
+  nsresult RestoreDatabaseState();
   nsresult GetDownloadFromDB(PRUint32 aID, nsDownload **retVal);
 
   inline nsresult AddToCurrentDownloads(nsDownload *aDl)

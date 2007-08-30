@@ -1627,41 +1627,9 @@ SessionStoreService.prototype = {
    * Restart incomplete downloads
    */
   retryDownloads: function sss_retryDownloads() {
-    var ioService = Cc["@mozilla.org/network/io-service;1"].
-                    getService(Ci.nsIIOService);
+    // The download manager cleans up after itself when it is created.
     var dlManager = Cc["@mozilla.org/download-manager;1"].
                     getService(Ci.nsIDownloadManager);
-    
-    function AsyncDownloadRetrier(aDlId) {
-      this._dlId = aDlId;
-      this._dlManager = dlManager;
-    }
-    AsyncDownloadRetrier.prototype = {
-      onStartRequest: function(aRequest, aContext) { },
-      onStopRequest: function(aRequest, aContext, aStatus) {
-        if (Components.isSuccessCode(aStatus))
-          this._dlManager.retryDownload(this._dlId);
-      }
-    };
-    
-    var stmt = dlManager.DBConnection.
-                         createStatement("SELECT id, source " +
-                                         "FROM moz_downloads " +
-                                         "WHERE state = ?1");
-    stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
-
-    // restart all downloads that were in progress before the crash
-    // and which are currently available through the network
-    while (stmt.executeStep()) {
-      var dlId = stmt.getInt64(0);
-      var url = stmt.getUTF8String(1);
-      
-      var linkChecker = Cc["@mozilla.org/network/urichecker;1"].
-                        createInstance(Ci.nsIURIChecker);
-      linkChecker.init(ioService.newURI(url, null, null));
-      linkChecker.loadFlags = Ci.nsIRequest.LOAD_BACKGROUND;
-      linkChecker.asyncCheck(new AsyncDownloadRetrier(dlId), null);
-    }
   },
 
 /* ........ Disk Access .............. */
