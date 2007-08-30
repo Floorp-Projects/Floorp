@@ -72,6 +72,7 @@ function run_test() {
   httpserver = new nsHttpServer();
   httpserver.registerPathHandler("/auth", authHandler);
   httpserver.registerPathHandler("/range", rangeHandler);
+  httpserver.registerPathHandler("/redir", redirHandler);
 
   var entityID;
 
@@ -142,6 +143,39 @@ function run_test() {
 
   function test_404(request, data, ctx) {
     do_check_eq(request.status, NS_ERROR_ENTITY_CHANGED);
+    do_check_eq(request.nsIHttpChannel.responseStatus, 404);
+
+    // 416 Requested Range Not Satisfiable
+    var chan = make_channel("http://localhost:4444/range");
+    chan.nsIResumableChannel.resumeAt(1000, entityID);
+    chan.asyncOpen(new ChannelListener(test_416, null, CL_EXPECT_FAILURE), null);
+  }
+
+  function test_416(request, data, ctx) {
+    do_check_eq(request.status, NS_ERROR_ENTITY_CHANGED);
+    do_check_eq(request.nsIHttpChannel.responseStatus, 416);
+
+    // Redirect + successful resume
+    var chan = make_channel("http://localhost:4444/redir");
+    chan.nsIHttpChannel.setRequestHeader("X-Redir-To", "http://localhost:4444/range", false);
+    chan.nsIResumableChannel.resumeAt(1, entityID);
+    chan.asyncOpen(new ChannelListener(test_redir_resume, null), null);
+  }
+
+  function test_redir_resume(request, data, ctx) {
+    do_check_true(request.nsIHttpChannel.requestSucceeded);
+    do_check_eq(data, rangeBody.substring(1));
+    do_check_eq(request.nsIHttpChannel.responseStatus, 206);
+
+    // Redirect + failed resume
+    var chan = make_channel("http://localhost:4444/redir");
+    chan.nsIHttpChannel.setRequestHeader("X-Redir-To", "http://localhost:4444/", false);
+    chan.nsIResumableChannel.resumeAt(1, entityID);
+    chan.asyncOpen(new ChannelListener(test_redir_noresume, null, CL_EXPECT_FAILURE), null);
+  }
+
+  function test_redir_noresume(request, data, ctx) {
+    do_check_eq(request.status, NS_ERROR_NOT_RESUMABLE);
 
     httpserver.stop();
     do_test_finished();
@@ -226,5 +260,13 @@ function rangeHandler(metadata, response) {
   response.bodyOutputStream.write(body, body.length);
 }
 
+// /redir
+function redirHandler(metadata, response) {
+  response.setStatusLine(metadata.httpVersion, 302, "Found");
+  response.setHeader("Content-Type", "text/html", false);
+  response.setHeader("Location", metadata.getHeader("X-Redir-To"));
+  var body = "redirect\r\n";
+  response.bodyOutputStream.write(body, body.length);
+}
 
 
