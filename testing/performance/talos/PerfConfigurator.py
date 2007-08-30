@@ -7,7 +7,7 @@ Created by Rob Campbell on 2007-03-02.
 Modified by Rob Campbell on 2007-05-30
 Modified by Rob Campbell on 2007-06-26 - added -i buildid option
 Modified by Rob Campbell on 2007-07-06 - added -d testDate option
-Modified by Rob Campbell on 2007-08-22 - fixed errors in main()
+Modified by Ben Hearsum on 2007-08-22 - bugfixes, cleanup, support for multiple platforms
 """
 
 import sys
@@ -15,10 +15,21 @@ import getopt
 import re
 import time
 from datetime import datetime
+from os import path
 
 executablePath = "C:\\cygwin\\tmp\\test\\"
 configFilePath = "C:\\mozilla\\testing\\performance\\talos\\"
-masterIniSubpath = 'firefox\\extensions\\talkback@mozilla.org\\components\\master.ini'
+
+# TODO: maybe this should be searched for?
+# For Windows
+#masterIniSubpath = path.join("firefox", "extensions", "talkback@mozilla.org",
+#                             "components", "master.ini")
+# For Linux
+masterIniSubpath = path.join("firefox", "components", "talkback", "master.ini")
+# For OS X
+# masterIniSubpath = path.join("*.app", "Contents", "MacOS", "extensions",
+#                              "talkback@mozilla.org", "components",
+#                              "talkback", "master.ini"
 defaultTitle = "qm-pxp01"
 
 help_message = '''
@@ -55,9 +66,10 @@ class PerfConfigurator:
         return currentDateTime.strftime("%Y%m%d_%H%M")
     
     def _getCurrentBuildId(self):
-        master = open(self.exePath + masterIniSubpath)
+        master = open(path.join(self.exePath, masterIniSubpath))
         if not master:
-            raise Configuration("Unable to open " + self.exePath + masterIniSubpath)
+            raise Configuration("Unable to open " 
+              + path.join(self.exePath, masterIniSubpath))
         masterContents = master.readlines()
         master.close()
         reBuildid = re.compile('BuildID\s*=\s*"(\d{10})"')
@@ -65,14 +77,15 @@ class PerfConfigurator:
             match = re.match(reBuildid, line)
             if match:
                 return match.group(1)
-        raise Configuration("BuildID not found in " + self.exePath + masterIniSubpath)
+        raise Configuration("BuildID not found in " 
+          + path.join(self.exePath, masterIniSubpath))
     
     def _getTimeFromBuildId(self):
         buildIdTime = time.strptime(self.buildid, "%Y%m%d%H")
         return time.strftime("%a, %d %b %Y %H:%M:%S GMT", buildIdTime)
     
     def writeConfigFile(self):
-        configFile = open(self.configPath + "sample.config")
+        configFile = open(path.join(self.configPath, "sample.config"))
         self.currentDate = self._getCurrentDateString()
         if not self.buildid:
             self.buildid = self._getCurrentBuildId()
@@ -85,7 +98,7 @@ class PerfConfigurator:
         for line in config:
             newline = line
             if 'firefox:' in line:
-                newline = '  firefox: ' + self.exePath + 'firefox\\firefox.exe'
+                newline = '  firefox: ' + self.exePath
             if 'testtitle' in line:
                 newline = line.replace('testtitle', self.title)
                 if self.testDateFromBuildId:
@@ -137,9 +150,9 @@ def main(argv=None):
     output = ""
     title = defaultTitle
     branch = ""
-    buildid = ""
     testDate = False
     verbose = False
+    buildid = ""
     
     if argv is None:
         argv = sys.argv
@@ -195,3 +208,5 @@ def main(argv=None):
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
