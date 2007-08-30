@@ -61,29 +61,13 @@ nsSVGGeometryFrame::Destroy()
 }
 
 NS_IMETHODIMP
-nsSVGGeometryFrame::InitSVG()
-{
-  AddStateBits(mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsSVGGeometryFrame::Init(nsIContent* aContent,
                          nsIFrame* aParent,
                          nsIFrame* aPrevInFlow)
 {
-  mContent = aContent;
-  NS_IF_ADDREF(mContent);
-  mParent = aParent;
-
-  if (mContent) {
-    mContent->SetMayHaveFrame(PR_TRUE);
-  }
-
-  InitSVG();
-  DidSetStyleContext();
-
-  return NS_OK;
+  AddStateBits(aParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
+  nsresult rv = nsSVGGeometryFrameBase::Init(aContent, aParent, aPrevInFlow);
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -65,23 +65,6 @@ NS_GetSVGMaskElement(nsIURI *aURI, nsIContent *aContent)
   return nsnull;
 }
 
-NS_IMETHODIMP
-nsSVGMaskFrame::InitSVG()
-{
-  nsresult rv = nsSVGMaskFrameBase::InitSVG();
-  if (NS_FAILED(rv))
-    return rv;
-
-  mMaskParentMatrix = nsnull;
-  mInUse = PR_FALSE;
-
-  nsCOMPtr<nsIDOMSVGMaskElement> mask = do_QueryInterface(mContent);
-  NS_ASSERTION(mask, "wrong content element");
-
-  return NS_OK;
-}
-
-
 already_AddRefed<gfxPattern>
 nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
                                  nsISVGChildFrame* aParent,
