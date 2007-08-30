@@ -444,6 +444,25 @@ var gMainPane = {
         return 0;
       break;
     }
+  },
+
+  /**
+   * Displays the Add-ons Manager.
+   */
+  showAddonsMgr: function ()
+  {
+    const EMTYPE = "Extension:Manager";
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    var theEM = wm.getMostRecentWindow(EMTYPE);
+    if (theEM) {
+      theEM.focus();
+      return;
+    }
+
+    const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
+    const EMFEATURES = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
+    window.openDialog(EMURL, "", EMFEATURES);
   }
 
 #ifdef HAVE_SHELL_SERVICE
