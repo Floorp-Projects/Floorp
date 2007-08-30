@@ -53,6 +53,7 @@
 
 class nsIMenuBar;
 class nsIMenuListener;
+class nsIDocShell;
 class nsMenuX;
 class nsMenuItemIconX;
 
@@ -155,7 +156,6 @@ protected:
 
     nsISupports*                mParent;                // weak, my parent owns me
     nsIChangeManager*           mManager;               // weak ref, it will outlive us [menubar]
-    nsWeakPtr                   mDocShellWeakRef;       // weak ref to docshell
     nsCOMPtr<nsIContent>        mMenuContent;           // the |menu| tag, strong ref
     nsCOMPtr<nsIMenuListener>   mListener;              // strong ref
     nsRefPtr<nsMenuItemIconX>   mIcon;

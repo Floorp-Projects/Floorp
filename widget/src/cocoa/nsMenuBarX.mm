@@ -134,6 +134,7 @@ nsMenuBarX::~nsMenuBarX()
   [mRootMenu release];
 }
 
+
 nsEventStatus 
 nsMenuBarX::MenuItemSelected(const nsMenuEvent &aMenuEvent)
 {
@@ -238,16 +239,14 @@ nsMenuBarX::RegisterAsDocumentObserver(nsIDocShell* inDocShell)
   // also get pointer to doc, just in case docshell goes away
   // we can still remove ourself as doc observer directly from doc
   mDocument = doc;
-} // RegisterAsDocumentObesrver
+}
 
 
-//
 // AquifyMenuBar
 //
 // Do what's necessary to conform to the Aqua guidelines for menus. Initially, this
 // means removing 'Quit' from the file menu and 'Preferences' from the edit menu, along
 // with their various separators (if present).
-//
 void
 nsMenuBarX::AquifyMenuBar()
 {
@@ -278,16 +277,12 @@ nsMenuBarX::AquifyMenuBar()
     HideItem(domDoc, NS_LITERAL_STRING("menu_mac_hide_others"), nsnull);
     HideItem(domDoc, NS_LITERAL_STRING("menu_mac_show_all"), nsnull);
   }
-} // AquifyMenuBar
+}
 
 
-//
-// InstallCommandEventHandler
-//
 // Grab our window and install an event handler to handle command events which are
 // used to drive the action when the user chooses an item from a menu. We have to install
 // it on the window because the menubar isn't in the event chain for a menu command event.
-//
 OSStatus
 nsMenuBarX::InstallCommandEventHandler()
 {
@@ -301,14 +296,10 @@ nsMenuBarX::InstallCommandEventHandler()
      NS_ASSERTION(err == noErr, "Uh oh, command handler not installed");
    }
    return err;
-} // InstallCommandEventHandler
+}
 
 
-//
-// CommandEventHandler
-//
 // Processes Command carbon events from enabling/selecting of items in the menu.
-//
 pascal OSStatus
 nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData)
 {
@@ -384,15 +375,11 @@ nsMenuBarX::CommandEventHandler(EventHandlerCallRef inHandlerChain, EventRef inE
   } // switch on commandID
   
   return handled;
-} // CommandEventHandler
+}
 
 
-//
-// ExecuteCommand
-//
 // Execute the menu item by sending a command message to the 
 // DOM node specified in |inDispatchTo|.
-//
 nsEventStatus
 nsMenuBarX::ExecuteCommand(nsIContent* inDispatchTo)
 {
@@ -403,13 +390,9 @@ nsMenuBarX::ExecuteCommand(nsIContent* inDispatchTo)
 } // ExecuteCommand
 
 
-//
-// HideItem
-//
 // Hide the item in the menu by setting the 'hidden' attribute. Returns it in |outHiddenNode| so
 // the caller can hang onto it if they so choose. It is acceptable to pass nsull
 // for |outHiddenNode| if the caller doesn't care about the hidden node.
-//
 void
 nsMenuBarX::HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsIContent** outHiddenNode)
 {
@@ -423,7 +406,7 @@ nsMenuBarX::HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsIContent**
       NS_IF_ADDREF(*outHiddenNode);
     }
   }
-} // HideItem
+}
 
 
 nsEventStatus
@@ -470,7 +453,7 @@ nsMenuBarX::MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
         if (pnsMenu) {
           pnsMenu->Create(static_cast<nsIMenuBar*>(this), menuName, menuAccessKey, 
                           static_cast<nsIChangeManager *>(this), 
-                          reinterpret_cast<nsIDocShell*>(aDocShell), menu);
+                          nsnull, menu);
           
           // Make nsMenu a child of nsMenuBar. nsMenuBar takes ownership.
           AddMenu(pnsMenu);
@@ -631,11 +614,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsIMenu* inMenu, const nsAString
 }
 
 
-//
-// CreateApplicationMenu
-//
-// build the Application menu shared by all menu bars.
-//
+// build the Application menu shared by all menu bars
 nsresult
 nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
 {
@@ -786,14 +765,13 @@ nsMenuBarX::CreateApplicationMenu(nsIMenu* inMenu)
 }
 
 
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsMenuBarX::GetMenuCount(PRUint32 &aCount)
 {
   aCount = mMenusArray.Count();
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsMenuBarX::GetMenuAt(const PRUint32 aCount, nsIMenu *& aMenu)
 { 
   aMenu = NULL;
@@ -804,13 +782,13 @@ NS_IMETHODIMP nsMenuBarX::GetMenuAt(const PRUint32 aCount, nsIMenu *& aMenu)
   return CallQueryInterface(menu, &aMenu); // addref
 }
 
-//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsMenuBarX::InsertMenuAt(const PRUint32 aCount, nsIMenu *& aMenu)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsMenuBarX::RemoveMenu(const PRUint32 aCount)
 {
   mMenusArray.RemoveObjectAt(aCount);
@@ -818,26 +796,26 @@ NS_IMETHODIMP nsMenuBarX::RemoveMenu(const PRUint32 aCount)
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsMenuBarX::RemoveAll()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsMenuBarX::GetNativeData(void *& aData)
 {
   aData = (void *) mRootMenu;
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsMenuBarX::SetNativeData(void* aData)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-//-------------------------------------------------------------------------
+
 NS_IMETHODIMP nsMenuBarX::Paint()
 {
   // swap in the shared Application menu
@@ -877,6 +855,7 @@ nsMenuBarX::CharacterDataChanged(nsIDocument * aDocument,
 {
 }
 
+
 void
 nsMenuBarX::ContentAppended(nsIDocument * aDocument, nsIContent  * aContainer,
                             PRInt32 aNewIndexInContainer)
@@ -897,6 +876,7 @@ nsMenuBarX::ContentAppended(nsIDocument * aDocument, nsIContent  * aContainer,
   }
 }
 
+
 void
 nsMenuBarX::NodeWillBeDestroyed(const nsINode * aNode)
 {
@@ -915,6 +895,7 @@ nsMenuBarX::AttributeChanged(nsIDocument * aDocument, nsIContent * aContent,
   if (obs)
     obs->AttributeChanged(aDocument, aNameSpaceID, aContent, aAttribute);
 }
+
 
 void
 nsMenuBarX::ContentRemoved(nsIDocument * aDocument, nsIContent * aContainer,
@@ -940,6 +921,7 @@ nsMenuBarX::ContentRemoved(nsIDocument * aDocument, nsIContent * aContainer,
   }
 }
 
+
 void
 nsMenuBarX::ContentInserted(nsIDocument * aDocument, nsIContent * aContainer,
                              nsIContent * aChild, PRInt32 aIndexInContainer)
@@ -959,6 +941,7 @@ nsMenuBarX::ContentInserted(nsIDocument * aDocument, nsIContent * aContainer,
     }
   }
 }
+
 
 void
 nsMenuBarX::ParentChainChanged(nsIContent *aContent)
@@ -1009,12 +992,8 @@ nsMenuBarX::Lookup(nsIContent *aContent, nsIChangeObserver **_retval)
 //
 
 
-//
-// Register
-//
 // Given a menu item, creates a unique 4-character command ID and
 // maps it to the item. Returns the id for use by the client.
-//
 NS_IMETHODIMP
 nsMenuBarX::Register(nsIMenuItem* inMenuItem, PRUint32* outCommandID)
 {
@@ -1035,12 +1014,8 @@ nsMenuBarX::Register(nsIMenuItem* inMenuItem, PRUint32* outCommandID)
 }
 
 
-// 
-// Unregister
-//
 // Removes the mapping between the given 4-character command ID
 // and its associated menu item.
-//
 NS_IMETHODIMP
 nsMenuBarX::Unregister(PRUint32 inCommandID)
 {
@@ -1055,11 +1030,7 @@ MenuHelpersX::DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
                                 nsIContent* aTargetContent)
 {
   NS_PRECONDITION(aTargetContent, "null ptr");
-  
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(aDocShellWeakRef);
-  if (!docShell)
-    return nsEventStatus_eConsumeNoDefault;
-  
+
   nsEventStatus status = nsEventStatus_eConsumeNoDefault;
   nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
   
@@ -1069,6 +1040,7 @@ MenuHelpersX::DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
   aTargetContent->DispatchDOMEvent(&event, nsnull, nsnull, &status);
   return status;
 }
+
 
 NSString* MenuHelpersX::CreateTruncatedCocoaLabel(const nsString& itemLabel)
 {
@@ -1081,6 +1053,7 @@ NSString* MenuHelpersX::CreateTruncatedCocoaLabel(const nsString& itemLabel)
   ::TruncateThemeText((CFMutableStringRef)label, kThemeMenuItemFont, kThemeStateActive, kMaxItemPixelWidth, truncMiddle, NULL);
   return label; // caller releases
 }
+
 
 PRUint8 MenuHelpersX::GeckoModifiersForNodeAttribute(const nsString& modifiersAttribute)
 {
@@ -1106,6 +1079,7 @@ PRUint8 MenuHelpersX::GeckoModifiersForNodeAttribute(const nsString& modifiersAt
   return modifiers;
 }
 
+
 unsigned int MenuHelpersX::MacModifiersForGeckoModifiers(PRUint8 geckoModifiers)
 {
   unsigned int macModifiers = 0;
@@ -1122,7 +1096,11 @@ unsigned int MenuHelpersX::MacModifiersForGeckoModifiers(PRUint8 geckoModifiers)
   return macModifiers;
 }
 
+
+//
 // Objective-C class used as action target for menu items
+//
+
 
 @implementation NativeMenuItemTarget
 
