@@ -1052,7 +1052,7 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
   PRInt64 root;
   rv = bms->GetBookmarksRoot(&root);
   NS_ENSURE_SUCCESS(rv, rv);
-  PRInt64 parentFolder;
+  PRInt64 parentFolder = root;
 
   nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
   nsCOMPtr<nsIStringBundle> bundle;
@@ -1076,7 +1076,6 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
     GetProfilePath(nsnull, profile);
     rv = InitializeBookmarks(profile);
     NS_ENSURE_SUCCESS(rv, rv);
-    parentFolder = root;
   }
 
 #if defined(XP_WIN) || (defined(XP_UNIX) && !defined(XP_MACOSX))
