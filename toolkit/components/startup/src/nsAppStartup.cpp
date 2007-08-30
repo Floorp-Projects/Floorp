@@ -203,10 +203,6 @@ nsAppStartup::Quit(PRUint32 aMode)
     // it will be treated the same as eAttemptQuit, below
   }
 
-  mShuttingDown = PR_TRUE;
-  if (!mRestart) 
-    mRestart = aMode & eRestart;
-
   // If we're considering quitting, we will only do so if:
   if (ferocity == eConsiderQuit) {
     if (mConsiderQuitStopper == 0) {
@@ -235,6 +231,10 @@ nsAppStartup::Quit(PRUint32 aMode)
     }
 #endif
   }
+
+  mShuttingDown = PR_TRUE;
+  if (!mRestart) 
+      mRestart = aMode & eRestart;
 
   /* Currently ferocity can never have the value of eForceQuit here.
      That's temporary (in an unscheduled kind of way) and logically
