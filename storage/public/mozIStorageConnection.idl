@@ -107,7 +107,8 @@ interface mozIStorageConnection : nsISupports {
   /**
    * Create a mozIStorageStatement for the given SQL expression.  The
    * expression may use ? to indicate sequential numbered arguments,
-   * or :name and $var to indicate named arguments.
+   * ?1, ?2 etc. to indicate specific numbered arguments or :name and 
+   * $var to indicate named arguments.
    *
    * @param aSQLStatement  The SQL statement to execute
    *
