@@ -1071,8 +1071,13 @@ nsOperaProfileMigrator::CopyBookmarks(PRBool aReplace)
     bms->CreateFolder(parentFolder, importedOperaHotlistTitle,
                       nsINavBookmarksService::DEFAULT_INDEX, &parentFolder);
   }
-  else
+  else {
+    nsCOMPtr<nsIFile> profile;
+    GetProfilePath(nsnull, profile);
+    rv = InitializeBookmarks(profile);
+    NS_ENSURE_SUCCESS(rv, rv);
     parentFolder = root;
+  }
 
 #if defined(XP_WIN) || (defined(XP_UNIX) && !defined(XP_MACOSX))
   printf("*** about to copy smart keywords\n");
