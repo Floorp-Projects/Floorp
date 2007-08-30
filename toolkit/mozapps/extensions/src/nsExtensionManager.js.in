@@ -5848,11 +5848,11 @@ ExtensionItemUpdater.prototype = {
     var min = aRemoteItem.minAppVersion;
     var max = aRemoteItem.maxAppVersion;
     // Check if the update will only run on a newer version of the application.
-    if (min && gVersionChecker.compare(appExtensionsVersion, min) < 0)
+    if (!min || gVersionChecker.compare(appExtensionsVersion, min) < 0)
       return false;
 
     // Check if the update will only run on an older version of the application.
-    if (max && gVersionChecker.compare(appExtensionsVersion, max) > 0)
+    if (!max || gVersionChecker.compare(appExtensionsVersion, max) > 0)
       return false;
 
     if (!gBlocklist)
@@ -6167,14 +6167,6 @@ RDFItemUpdater.prototype = {
     }
 
     // Parse the response RDF
-    function UpdateData() {};
-    UpdateData.prototype = { version: "0.0", updateLink: null, updateHash: null,
-                             minVersion: "0.0", maxVersion: "0.0",
-                             appID: null, found: false };
-
-    var versionUpdate = new UpdateData();
-    var newestUpdate  = new UpdateData();
-
     var newerItem, sameItem;
 
     // Firefox 1.0PR+ update.rdf format
@@ -6183,61 +6175,31 @@ RDFItemUpdater.prototype = {
       // mode... see comment by ExtensionItemUpdater_checkForUpdates
       // about how we do this in all cases but Install Phone Home - which
       // only needs to do a version check.
-      this._parseV20UpdateInfo(aDatasource, aLocalItem, newestUpdate,
-                               nsIExtensionManager.UPDATE_CHECK_NEWVERSION);
+      newerItem = this._parseV20UpdateInfo(aDatasource, aLocalItem,
+                                           nsIExtensionManager.UPDATE_CHECK_NEWVERSION);
 
-      if (newestUpdate.found) {
-        newerItem = makeItem(aLocalItem.id,
-                             newestUpdate.version,
-                             aLocalItem.installLocationKey,
-                             newestUpdate.minVersion,
-                             newestUpdate.maxVersion,
-                             aLocalItem.name,
-                             newestUpdate.updateLink,
-                             newestUpdate.updateHash,
-                             "", /* Icon URL */
-                             "", /* RDF Update URL */
-                             aLocalItem.type,
-                             newestUpdate.appID);
+      if (newerItem) {
         ++this._updater._updateCount;
+        LOG("RDFItemUpdater:onDatasourceLoaded: Found a newer version of this item:\r\n" +
+            newerItem.objectSource);
       }
     }
 
     // Now look for updated version compatibility metadata for the currently
     // installed version...
-    this._parseV20UpdateInfo(aDatasource, aLocalItem, versionUpdate,
-                             nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY);
+    sameItem = this._parseV20UpdateInfo(aDatasource, aLocalItem,
+                                        nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY);
 
-    if (versionUpdate.found) {
-      // Local version exactly matches the "Version Update" remote version,
-      // Apply changes into local datasource.
-      sameItem = makeItem(aLocalItem.id,
-                          versionUpdate.version,
-                          aLocalItem.installLocationKey,
-                          versionUpdate.minVersion,
-                          versionUpdate.maxVersion,
-                          aLocalItem.name,
-                          "", /* XPI Update URL */
-                          "", /* XPI Update Hash */
-                          "", /* Icon URL */
-                          "", /* RDF Update URL */
-                          aLocalItem.type,
-                          versionUpdate.appID);
+    if (sameItem) {
       // Install-time updates are not written to the DS because there is no
       // entry yet, EM just uses the notifications to ascertain (by hand)
       // whether or not there is a remote maxVersion tweak that makes the
       // item being installed compatible.
       if (!this._updater._applyVersionUpdates(aLocalItem, sameItem))
         sameItem = null;
-    }
-
-    if (newerItem) {
-      LOG("RDFItemUpdater:onDatasourceLoaded: Found a newer version of this item:\r\n" +
-          newerItem.objectSource);
-    }
-    if (sameItem) {
-      LOG("RDFItemUpdater:onDatasourceLoaded: Found info about the installed\r\n" +
-          "version of this item: " + sameItem.objectSource);
+      else
+        LOG("RDFItemUpdater:onDatasourceLoaded: Found info about the installed\r\n" +
+            "version of this item: " + sameItem.objectSource);
     }
     var item = null, status = nsIAddonUpdateCheckListener.STATUS_NONE;
     if (this._updateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION
@@ -6275,8 +6237,20 @@ RDFItemUpdater.prototype = {
     return rv;
   },
 
-  // Parses Firefox 1.0RC1+ update.rdf format
-  _parseV20UpdateInfo: function(aDataSource, aLocalItem, aUpdateData, aUpdateCheckType) {
+  /**
+   * Parses the Firefox 1.0RC1+ update manifest format looking for new versions
+   * of updated compatibility information about the given add-on. Returns an
+   * nsIUpdateItem holding the update's information if a valid update is found
+   * or null if not.
+   * @param   aDataSource
+   *          The update manifest's datasource
+   * @param   aLocalItem
+   *          The nsIUpdateItem representing the add-on being checked for updates.
+   * @param   aUpdateCheckType
+   *          The type of update check being performed. See the constants in
+   *          nsIExtensionManager
+   */
+  _parseV20UpdateInfo: function(aDataSource, aLocalItem, aUpdateCheckType) {
     var extensionRes  = gRDF.GetResource(getItemPrefix(aLocalItem.type) + aLocalItem.id);
 
     var updatesArc = gRDF.GetResource(EM_NS("updates"));
@@ -6295,60 +6269,98 @@ RDFItemUpdater.prototype = {
           " 1. Your RDF File is correct - e.g. check that there is a top level\r\n" +
           "    RDF Resource with a URI urn:mozilla:extension:{GUID}, and that\r\n" +
           "    the <em:updates> listed all have matching GUIDs.");
-      return;
+      return null;
     }
+
+    // Track the newest update found
+    var updatedItem = null;
 
     var cu = Components.classes["@mozilla.org/rdf/container-utils;1"]
                        .getService(Components.interfaces.nsIRDFContainerUtils);
     if (cu.IsContainer(aDataSource, updates)) {
       var ctr = getContainer(aDataSource, updates);
 
-      // Initial target version is the currently installed version
-      aUpdateData.version = aLocalItem.version;
-
       var versions = ctr.GetElements();
       while (versions.hasMoreElements()) {
         // There are two different methodologies for collecting version
-        // information depending on whether or not we've bene invoked in
+        // information depending on whether or not we've been invoked in
         // "version updates only" mode or "version+newest" mode.
         var version = versions.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        this._parseV20Update(aDataSource, version, aLocalItem, aUpdateData, aUpdateCheckType);
-        if (aUpdateCheckType && aUpdateData.found)
-          break;
+        var foundItem = this._parseV20Update(aDataSource, version, aLocalItem,
+                                             updatedItem ? updatedItem.version : aLocalItem.version,
+                                             aUpdateCheckType);
+        if (foundItem) {
+          // When not checking for new versions we can bail out on the first
+          // result.
+          if (aUpdateCheckType)
+            return foundItem;
+          updatedItem = foundItem;
+        }
       }
     }
+    return updatedItem;
   },
 
-  _parseV20Update: function(aDataSource, aUpdateResource, aLocalItem, aUpdateData, aUpdateCheckType) {
+  /**
+   * Parses a single version's update entry looking for the best matching
+   * targetApplication entry. Returns an nsIUpdateItem holding the update's
+   * information if a valid update is found or null if not.
+   * @param   aDataSource
+   *          The update manifest's datasource
+   * @param   aUpdateResource
+   *          The nsIRDFResource of the update entry.
+   * @param   aLocalItem
+   *          The nsIUpdateItem representing the add-on being checked for updates.
+   * @param   aNewestVersionFound
+   *          When checking for new versions holds the newest version of this
+   *          add-on that we know about. Otherwise holds the current version.
+   * @param   aUpdateCheckType
+   *          The type of update check being performed. See the constants in
+   *          nsIExtensionManager
+   */
+  _parseV20Update: function(aDataSource, aUpdateResource, aLocalItem, aNewestVersionFound, aUpdateCheckType) {
     var version = this._getPropertyFromResource(aDataSource, aUpdateResource,
                                                 "version", aLocalItem);
+    /* If we are looking for new versions then test whether this discovered
+     * version is greater than any previously found update. Otherwise check
+     * if this update is for the same version as we have installed. */
+    var result = gVersionChecker.compare(version, aNewestVersionFound);
+    if (aUpdateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION ? result <= 0 : result != 0)
+      return null;
+
     var taArc = gRDF.GetResource(EM_NS("targetApplication"));
     var targetApps = aDataSource.GetTargets(aUpdateResource, taArc, true);
+    
+    // Track the best update we have found so far
+    var newestUpdateItem = null;
     while (targetApps.hasMoreElements()) {
       var targetApp = targetApps.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
       var appID = this._getPropertyFromResource(aDataSource, targetApp, "id", aLocalItem);
       if (appID != this._updater._appID && appID != TOOLKIT_ID)
         continue;
 
-      /* If we are looking for new versions then test whether this discovered
-       * version is larger than any previously found update. Otherwise check
-       * if this update is for the same version as we have installed. */
-      var result = gVersionChecker.compare(version, aUpdateData.version);
-      if (aUpdateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION ? result > 0 : result == 0) {
-        aUpdateData.appID = appID;
-        aUpdateData.version = version;
-        aUpdateData.minVersion = this._getPropertyFromResource(aDataSource, targetApp, "minVersion", aLocalItem);
-        aUpdateData.maxVersion = this._getPropertyFromResource(aDataSource, targetApp, "maxVersion", aLocalItem);
-        aUpdateData.updateLink = this._getPropertyFromResource(aDataSource, targetApp, "updateLink", aLocalItem);
-        aUpdateData.updateHash = this._getPropertyFromResource(aDataSource, targetApp, "updateHash", aLocalItem);
+      var updatedItem = makeItem(aLocalItem.id,
+                                 version,
+                                 aLocalItem.installLocationKey,
+                                 this._getPropertyFromResource(aDataSource, targetApp, "minVersion", aLocalItem),
+                                 this._getPropertyFromResource(aDataSource, targetApp, "maxVersion", aLocalItem),
+                                 aLocalItem.name,
+                                 this._getPropertyFromResource(aDataSource, targetApp, "updateLink", aLocalItem),
+                                 this._getPropertyFromResource(aDataSource, targetApp, "updateHash", aLocalItem),
+                                 "", /* Icon URL */
+                                 "", /* RDF Update URL */
+                                 aLocalItem.type,
+                                 appID);
 
-        aUpdateData.found = this._updater._isValidUpdate(aLocalItem, aUpdateData);
+      if (this._updater._isValidUpdate(aLocalItem, updatedItem)) {
         if (appID == this._updater._appID) {
           // App takes precedence over toolkit.  If we found the app, bail out.
-          return;
+          return updatedItem;
         }
+        newestUpdateItem = updatedItem;
       }
     }
+    return newestUpdateItem;
   }
 };
 
