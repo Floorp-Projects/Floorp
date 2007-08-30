@@ -899,7 +899,7 @@ nsresult
 nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
 {
   // If "aReplace" is true, merge into the root level of bookmarks. Otherwise, create
-  // a folder called "Imported IE Favorites" and place all the Bookmarks there.
+  // a folder called "Imported Safari Favorites" and place all the Bookmarks there.
   nsresult rv;
 
   nsCOMPtr<nsINavBookmarksService> bms(do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv));
@@ -930,7 +930,11 @@ nsSafariProfileMigrator::CopyBookmarks(PRBool aReplace)
                       &folder);
   }
   else {
-    // In non-replace mode we are merging at the top level.
+    nsCOMPtr<nsIFile> profile;
+    GetProfilePath(nsnull, profile);
+    rv = InitializeBookmarks(profile);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // In replace mode we are merging at the top level.
     folder = root;
   }
 
