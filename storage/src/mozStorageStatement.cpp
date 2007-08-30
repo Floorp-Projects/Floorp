@@ -146,6 +146,41 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
         mColumnNames.AppendCString(nsDependentCString(name));
     }
 
+#ifdef DEBUG
+    // We want to try and test for LIKE and that consumers are using
+    // escapeStringForLIKE instead of just trusting user input.  The idea to
+    // check to see if they are binding a parameter after like instead of just
+    // using a string.  We only do this in debug builds because it's expensive!
+    const nsCaseInsensitiveCStringComparator c;
+    nsACString::const_iterator start, end, e;
+    aSQLStatement.BeginReading(start);
+    aSQLStatement.EndReading(end);
+    e = end;
+    while (FindInReadable(NS_LITERAL_CSTRING(" LIKE"), start, e, c)) {
+        // We have a LIKE in here, so we perform our tests
+        // FindInReadable moves the iterator, so we have to get a new one for
+        // each test we perform.
+        nsACString::const_iterator s1, s2, s3;
+        s1 = s2 = s3 = start;
+
+        if (!(FindInReadable(NS_LITERAL_CSTRING(" LIKE ?"), s1, end, c) ||
+              FindInReadable(NS_LITERAL_CSTRING(" LIKE :"), s2, end, c) ||
+              FindInReadable(NS_LITERAL_CSTRING(" LIKE @"), s3, end, c))) {
+            // At this point, we didn't find a LIKE statement followed by ?, :,
+            // or @, all of which are valid characters for binding a parameter.
+            // We will warn the consumer that they may not be safely using LIKE.
+            NS_WARNING("Unsafe use of LIKE detected!  Please ensure that you "
+                       "are using mozIStorageConnection::escapeStringForLIKE "
+                       "and that you are binding that result to the statement "
+                       "to prevent SQL injection attacks.");
+        }
+
+        // resetting start and e
+        start = e;
+        e = end;
+    }
+#endif
+
     // doing a sqlite3_prepare sets up the execution engine
     // for that statement; doing a create_function after that
     // results in badness, because there's a selected statement.
