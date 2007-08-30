@@ -559,18 +559,6 @@ var BookmarksMenuDropHandler = {
  * Toolbar and Bookmarks Menu.
  */
 var PlacesMenuDNDController = {
-  
-  /**
-   * Attach a special context menu hiding listener that ensures that popups 
-   * are properly closed after a context menu is hidden. See bug 332845 for 
-   * why we have to do this.
-   */
-  init: function PMDC_init() {
-    var placesContext = document.getElementById("placesContext");
-    var self = this;
-    placesContext.addEventListener("popuphidden", function () { self._closePopups() }, false);
-  },
-
   _springLoadDelay: 350, // milliseconds
 
   /**

@@ -82,6 +82,14 @@ enum nsPopupType {
   ePopupTypeTooltip
 };
 
+// when a menu command is executed, the closemenu attribute may be used
+// to define how the menu should be closed up
+enum CloseMenuMode {
+  CloseMenuMode_Auto, // close up the chain of menus, default value
+  CloseMenuMode_None, // don't close up any menus
+  CloseMenuMode_Single // close up only the menu the command is inside
+};
+
 /**
  * nsNavigationDirection: an enum expressing navigation through the menus in
  * terms which are independent of the directionality of the chrome. The
@@ -274,14 +282,16 @@ public:
                         PRBool aControl,
                         PRBool aAlt,
                         PRBool aMeta,
-                        PRBool aUserInput)
+                        PRBool aUserInput,
+                        CloseMenuMode aCloseMenuMode)
     : mMenu(aMenu),
       mIsTrusted(aIsTrusted),
       mShift(aShift),
       mControl(aControl),
       mAlt(aAlt),
       mMeta(aMeta),
-      mUserInput(aUserInput)
+      mUserInput(aUserInput),
+      mCloseMenuMode(aCloseMenuMode)
   {
     NS_ASSERTION(aMenu, "null menu supplied to nsXULMenuCommandEvent constructor");
   }
@@ -296,6 +306,7 @@ private:
   PRBool mAlt;
   PRBool mMeta;
   PRBool mUserInput;
+  CloseMenuMode mCloseMenuMode;
 };
 
 class nsXULPopupManager : public nsIDOMKeyListener,

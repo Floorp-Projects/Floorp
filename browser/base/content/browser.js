@@ -1012,8 +1012,6 @@ function delayedStartup()
   // add bookmark options to context menu for tabs
   addBookmarkMenuitems();
 
-  PlacesMenuDNDController.init();
-
   initBookmarksToolbar();
   PlacesUtils.bookmarks.addObserver(gBookmarksObserver, false);
   PlacesStarButton.init();
