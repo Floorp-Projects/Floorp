@@ -67,11 +67,9 @@ nsCacheMetaData::GetElement(const char * key)
     // We assume the number of meta data elements will be very small, so
     // we keep it real simple.  Singly-linked list, linearly searched.
 
-    nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(key);
-
     MetaElement * elem = mData;
     while (elem) {
-        if (elem->mKey == keyAtom)
+        if (elem->mKey.EqualsASCII(key))
             return elem->mValue;
         elem = elem->mNext;
     }
@@ -83,17 +81,13 @@ nsresult
 nsCacheMetaData::SetElement(const char * key,
                             const char * value)
 {
-    nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(key);
-    if (!keyAtom)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     PRUint32 keySize = strlen(key);
     PRUint32 valueSize = value ? strlen(value) : 0;
 
     // find and remove or update old meta data element
     MetaElement * elem = mData, * last = nsnull;
     while (elem) {
-        if (elem->mKey == keyAtom) {
+        if (elem->mKey.Equals(key)) {
             // Get length of old value
             PRUint32 oldValueLen = strlen(elem->mValue);
             if (valueSize == oldValueLen) {
@@ -120,7 +114,7 @@ nsCacheMetaData::SetElement(const char * key,
         elem = new (value, valueSize) MetaElement;
         if (!elem)
             return NS_ERROR_OUT_OF_MEMORY;
-        elem->mKey = keyAtom;
+        elem->mKey.Assign(key);
 
         // insert after last or as first element...
         if (last) {
@@ -142,8 +136,6 @@ nsCacheMetaData::SetElement(const char * key,
 nsresult
 nsCacheMetaData::FlattenMetaData(char * buffer, PRUint32 bufSize)
 {
-    const char *key;
-
     if (mMetaSize > bufSize) {
         NS_ERROR("buffer size too small for meta data.");
         return NS_ERROR_OUT_OF_MEMORY;
@@ -151,10 +143,8 @@ nsCacheMetaData::FlattenMetaData(char * buffer, PRUint32 bufSize)
 
     MetaElement * elem = mData;
     while (elem) {
-        elem->mKey->GetUTF8String(&key);
-
-        PRUint32 keySize = 1 + strlen(key);
-        memcpy(buffer, key, keySize);
+        PRUint32 keySize = 1 + elem->mKey.Length();
+        memcpy(buffer, elem->mKey.get(), keySize);
         buffer += keySize;
 
         PRUint32 valSize = 1 + strlen(elem->mValue);
@@ -179,15 +169,11 @@ nsCacheMetaData::UnflattenMetaData(const char * data, PRUint32 size)
         PRUint32 keySize = strlen(key);
         data += 1 + keySize;
         if (data < limit) {
-            nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(key);
-            if (!keyAtom)
-                return NS_ERROR_OUT_OF_MEMORY;
-
             PRUint32 valueSize = strlen(data);
             MetaElement *elem = new (data, valueSize) MetaElement;
             if (!elem)
                  return NS_ERROR_OUT_OF_MEMORY;
-            elem->mKey = keyAtom;
+            elem->mKey.Assign(key);
 
             // insert after last or as first element...
             if (last) {
@@ -212,14 +198,10 @@ nsCacheMetaData::UnflattenMetaData(const char * data, PRUint32 size)
 nsresult
 nsCacheMetaData::VisitElements(nsICacheMetaDataVisitor * visitor)
 {
-    const char *key;
-
     MetaElement * elem = mData;
     while (elem) {
-        elem->mKey->GetUTF8String(&key);
-
         PRBool keepGoing;
-        nsresult rv = visitor->VisitMetaDataElement(key, elem->mValue, &keepGoing);
+        nsresult rv = visitor->VisitMetaDataElement(elem->mKey.get(), elem->mValue, &keepGoing);
 
         if (NS_FAILED(rv) || !keepGoing)
             break;
