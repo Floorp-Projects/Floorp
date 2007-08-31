@@ -105,6 +105,7 @@
 #include "nsIObserver.h"
 #include "nsDocShellLoadTypes.h"
 #include "nsPIDOMEventTarget.h"
+#include "nsIURIClassifier.h"
 
 class nsIScrollableView;
 
@@ -139,6 +140,26 @@ public:
     
 protected:
     virtual ~nsRefreshTimer();
+};
+
+class nsClassifierCallback : public nsIURIClassifierCallback
+                           , public nsIRunnable
+{
+public:
+    nsClassifierCallback() {}
+    ~nsClassifierCallback() {}
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIURICLASSIFIERCALLBACK
+    NS_DECL_NSIRUNNABLE
+
+    void SetChannel(nsIChannel * aChannel)
+        { mChannel = aChannel; }
+
+    void Cancel();
+private:
+    nsCOMPtr<nsIChannel> mChannel;
+    nsCOMPtr<nsIChannel> mSuspendedChannel;
 };
 
 //*****************************************************************************
@@ -260,6 +281,12 @@ protected:
                                   nsIChannel * aChannel);
     virtual nsresult DoChannelLoad(nsIChannel * aChannel,
                                    nsIURILoader * aURILoader);
+
+    // Check the channel load against the URI classifier service (if it
+    // exists).  The channel will be suspended until the classification is
+    // complete.
+    nsresult CheckClassifier(nsIChannel *aChannel);
+
     NS_IMETHOD ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
                               PRUint32 aLoadType, nscoord *cx, nscoord *cy);
 
@@ -379,6 +406,7 @@ protected:
     NS_IMETHOD LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
                              const PRUnichar *aPage,
                              const PRUnichar *aDescription,
+                             const char *aCSSClass,
                              nsIChannel* aFailedChannel);
     PRBool IsNavigationAllowed(PRBool aDisplayPrintErrorDialog = PR_TRUE);
     PRBool IsPrintingOrPP(PRBool aDisplayErrorDialog = PR_TRUE);
@@ -611,6 +639,9 @@ protected:
 
     // Secure browser UI object
     nsCOMPtr<nsISecureBrowserUI> mSecurityUI;
+
+    // Suspends/resumes channels based on the URI classifier.
+    nsRefPtr<nsClassifierCallback> mClassifier;
 
     // WEAK REFERENCES BELOW HERE.
     // Note these are intentionally not addrefd.  Doing so will create a cycle.
