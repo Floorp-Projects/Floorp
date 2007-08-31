@@ -2424,6 +2424,7 @@ ExtensionManager.prototype = {
     case "quit-application":
       gOS.removeObserver(this, "profile-after-change");
       gOS.removeObserver(this, "quit-application");
+      break;
     case "xpcom-shutdown":
       this._shutdown();
       break;
