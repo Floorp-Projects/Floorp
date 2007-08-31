@@ -5380,6 +5380,9 @@ HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
   for (var i = 0; i < undoItems.length; i++) {
     var m = undoPopup.appendChild(document.createElement("menuitem"));
     m.setAttribute("label", undoItems[i].title);
+    if (undoItems[i].image)
+      m.setAttribute("image", undoItems[i].image);
+    m.setAttribute("class", "menuitem-iconic bookmark-item");
     m.setAttribute("value", i);
     m.setAttribute("oncommand", "undoCloseTab(" + i + ");");
     m.addEventListener("click", undoCloseMiddleClick, false);
