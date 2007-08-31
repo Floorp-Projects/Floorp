@@ -533,7 +533,8 @@ function removeDirRecursive(dir) {
 function LOG(string) {
   if (gLoggingEnabled) {
     dump("*** " + string + "\n");
-    gConsole.logStringMessage(string);
+    if (gConsole)
+      gConsole.logStringMessage(string);
   }
 }
 
@@ -2409,6 +2410,7 @@ ExtensionManager.prototype = {
     switch (topic) {
     case "app-startup":
       gOS.addObserver(this, "profile-after-change", false);
+      gOS.addObserver(this, "quit-application", false);
       break;
     case "profile-after-change":
       this._profileSelected();
@@ -2419,6 +2421,9 @@ ExtensionManager.prototype = {
     case "offline-requested":
       this._confirmCancelDownloadsOnOffline(subject);
       break;
+    case "quit-application":
+      gOS.removeObserver(this, "profile-after-change");
+      gOS.removeObserver(this, "quit-application");
     case "xpcom-shutdown":
       this._shutdown();
       break;
@@ -2532,7 +2537,6 @@ ExtensionManager.prototype = {
    */
   _shutdown: function() {
     gOS.removeObserver(this, "xpcom-shutdown");
-    gOS.removeObserver(this, "profile-after-change");
 
     // Release strongly held services.
     gOS = null;
