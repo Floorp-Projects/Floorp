@@ -78,19 +78,7 @@ mozStorageConnection::mozStorageConnection(mozIStorageService* aService)
 
 mozStorageConnection::~mozStorageConnection()
 {
-    if (mDBConn) {
-        if (mProgressHandler)
-          sqlite3_progress_handler(mDBConn, 0, NULL, NULL);
-        int srv = sqlite3_close (mDBConn);
-        if (srv != SQLITE_OK)
-            NS_WARNING("sqlite3_close failed. There are probably outstanding statements!");
-
-        // make sure it really got closed
-        ((mozStorageService*)(mStorageService.get()))->FlushAsyncIO();
-
-        // Release all functions
-        mFunctions.EnumerateRead(s_ReleaseFuncEnum, NULL);
-    }
+    (void)Close();
 }
 
 #ifdef PR_LOGGING
@@ -182,6 +170,28 @@ mozStorageConnection::Initialize(nsIFile *aDatabaseFile)
 /**
  ** Core status/initialization
  **/
+
+NS_IMETHODIMP
+mozStorageConnection::Close()
+{
+    if (!mDBConn)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    if (mProgressHandler)
+        sqlite3_progress_handler(mDBConn, 0, NULL, NULL);
+    int srv = sqlite3_close(mDBConn);
+    if (srv != SQLITE_OK)
+        NS_WARNING("sqlite3_close failed. There are probably outstanding statements!");
+
+    // make sure it really got closed
+    ((mozStorageService*)(mStorageService.get()))->FlushAsyncIO();
+
+    // Release all functions
+    mFunctions.EnumerateRead(s_ReleaseFuncEnum, NULL);
+
+    mDBConn = NULL;
+    return ConvertResultCode(srv);
+}
 
 NS_IMETHODIMP
 mozStorageConnection::GetConnectionReady(PRBool *aConnectionReady)

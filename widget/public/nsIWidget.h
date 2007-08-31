@@ -95,11 +95,11 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// B3F10C8D-4C07-4B1E-A1CD-B38696426205
-#define NS_IWIDGET_IID \
-{ 0xB3F10C8D, 0x4C07, 0x4B1E, \
-  { 0xA1, 0xCD, 0xB3, 0x86, 0x96, 0x42, 0x62, 0x05 } }
+// f60fa720-a9bc-4fd3-b863-812496fa85e6
 
+#define NS_IWIDGET_IID \
+{ 0xf60fa720, 0xa9bc, 0x4fd3, \
+  { 0xb8, 0x63, 0x81, 0x24, 0x96, 0xfa, 0x85, 0xe6 } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and api's. This is necessary
@@ -1015,24 +1015,6 @@ class nsIWidget : public nsISupports {
      * Get the Thebes surface associated with this widget.
      */
     virtual gfxASurface *GetThebesSurface() = 0;
-
-    /**
-     * Set a flag that makes any window resizes use native window animation.
-     * Ignored on any OS that doesn't support native animation.
-     *
-     * @param aAnimate Whether or not you want resizes to be animated.
-     * @return NS_ERROR_NOT_IMPLEMENTED if not implemented on widget or platform
-     */
-    NS_IMETHOD SetAnimatedResize(PRUint16 aAnimation) = 0;
-
-    /**
-     * Get a flag that controls native window animation.
-     * Ignored on any OS that doesn't support native animation.
-     *
-     * @param aAnimate Whether or not resizes are animated.
-     * @return NS_ERROR_NOT_IMPLEMENTED if not implemented on widget or platform
-     */
-    NS_IMETHOD GetAnimatedResize(PRUint16* aAnimation) = 0;
 
 protected:
     // keep the list of children.  We also keep track of our siblings.

@@ -120,6 +120,7 @@ XPIDLSRCS	= \
 		nsIDOMSVGTransformable.idl \
 		nsIDOMSVGTSpanElement.idl \
 		nsIDOMSVGURIReference.idl \
+		nsIDOMSVGUnitTypes.idl \
 		nsIDOMSVGUseElement.idl \
 		nsIDOMSVGViewSpec.idl \
 		nsIDOMSVGZoomAndPan.idl \

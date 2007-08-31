@@ -2443,15 +2443,15 @@ nsTreeBodyFrame::CalcHorzWidth(const ScrollParts& aParts)
       width = 0;
   }
 
-  // If no horz scrolling periphery is present, then just
-  // return the width of the columns
+  // If no horz scrolling periphery is present, then just return our width
   if (width == 0) {
-    width = aParts.mColumnsFrame->GetRect().width;
+    mAdjustWidth = 0;
+    width = mRect.width;
+  } else {
+    // Compute the adjustment to the last column. This varies depending on the
+    // visibility of the columnpicker and the scrollbar.
+    mAdjustWidth = mRect.width - aParts.mColumnsFrame->GetRect().width;
   }
-
-  // Compute the adjustment to the last column. This varies depending on the
-  // visibility of the columnpicker and the scrollbar.
-  mAdjustWidth = mRect.width - aParts.mColumnsFrame->GetRect().width;
 
   return width;
 }

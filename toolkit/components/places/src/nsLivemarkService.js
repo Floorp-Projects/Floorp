@@ -66,7 +66,6 @@ const DEFAULT_FAIL_MSG = "Live Bookmark feed failed to load.";
 const LMANNO_FEEDURI = "livemark/feedURI";
 const LMANNO_SITEURI = "livemark/siteURI";
 const LMANNO_EXPIRATION = "livemark/expiration";
-const LMANNO_BMANNO = "livemark/bookmarkFeedURI";
 
 const PS_CONTRACTID = "@mozilla.org/preferences-service;1";
 const NH_CONTRACTID = "@mozilla.org/browser/nav-history-service;1";
@@ -79,6 +78,7 @@ const FAV_CONTRACTID = "@mozilla.org/browser/favicon-service;1";
 const LG_CONTRACTID = "@mozilla.org/network/load-group;1";
 const FP_CONTRACTID = "@mozilla.org/feed-processor;1";
 const SEC_CONTRACTID = "@mozilla.org/scriptsecuritymanager;1";
+const IS_CONTRACTID = "@mozilla.org/widget/idleservice;1";
 const SEC_FLAGS = Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL;
 
 // Check every hour by default
@@ -86,6 +86,9 @@ var gExpiration = 3600000;
 
 // Check every 10 minutes on error
 const ERROR_EXPIRATION = 600000;
+
+// Don't check when the user is idle for longer than half an hour:
+const IDLE_TIMELIMIT = 1800000;
 
 var gIoService = Cc[IO_CONTRACTID].getService(Ci.nsIIOService);
 var gStringBundle;
@@ -131,6 +134,9 @@ function LivemarkService() {
                                   true /*only once*/);
   new G_Alarm(BindToObject(this._fireTimer, this), LIVEMARK_TIMEOUT, 
               true /* repeat */);
+
+  if (IS_CONTRACTID in Cc)
+    this._idleService = Cc[IS_CONTRACTID].getService(Ci.nsIIdleService);
 
   // this is giving a reentrant getService warning in XPCShell. bug 194568.
   this._ans = Cc[AS_CONTRACTID].getService(Ci.nsIAnnotationService);
@@ -221,7 +227,20 @@ LivemarkService.prototype = {
         livemark.locked = false;
         return;
       }
-    } 
+
+      // Check the user idle time. If the user isn't using their computer, don't
+      // bother updating - save the internet some bandwidth. If we can't
+      // get the idle time, assume the user isn't idle.
+      var idleTime = 0;
+      try {
+        idleTime = this._idleService.idleTime;
+      } catch (ex) { /* We don't care */ }
+      if (idleTime > IDLE_TIMELIMIT)
+      {
+        livemark.locked = false;
+        return;
+      }
+    }
     catch (ex) {
       // This livemark has never been loaded, since it has no expire time.
       this.insertLivemarkLoadingItem(this._bms, livemark);
@@ -551,8 +570,6 @@ LivemarkLoadListener.prototype = {
   function LS_insertLivemarkChild(folderId, uri, title) {
     var id = this._bms.insertBookmark(folderId, uri, this._bms.DEFAULT_INDEX,
                                       title);
-    this._ans.setItemAnnotation(id, LMANNO_BMANNO, uri.spec, 0,
-                                this._ans.EXPIRE_NEVER);
   },
 
   /**

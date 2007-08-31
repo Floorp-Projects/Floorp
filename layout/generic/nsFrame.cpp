@@ -106,9 +106,6 @@
 
 // For triple-click pref
 #include "nsIServiceManager.h"
-#ifndef MOZ_CAIRO_GFX
-#include "nsISelectionImageService.h"
-#endif
 #include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "gfxIImageFrame.h"
@@ -123,11 +120,8 @@
 #include "nsBlockFrame.h"
 #include "nsDisplayList.h"
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
-#endif
 
-static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 static NS_DEFINE_CID(kWidgetCID, NS_CHILD_CID);
 
@@ -284,153 +278,6 @@ nsIFrameDebug::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIn
 }
 #endif
 // end nsIFrameDebug
-
-#ifndef MOZ_CAIRO_GFX
-// frame image selection drawing service implementation
-class SelectionImageService : public nsISelectionImageService
-{
-public:
-  SelectionImageService();
-  virtual ~SelectionImageService();
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISELECTIONIMAGESERVICE
-private:
-  nsresult CreateImage(nscolor aImageColor, imgIContainer *aContainer);
-  nsCOMPtr<imgIContainer> mContainer;
-  nsCOMPtr<imgIContainer> mDisabledContainer;
-};
-
-NS_IMPL_ISUPPORTS1(SelectionImageService, nsISelectionImageService)
-
-SelectionImageService::SelectionImageService()
-{
-}
-
-SelectionImageService::~SelectionImageService()
-{
-}
-
-NS_IMETHODIMP
-SelectionImageService::GetImage(PRInt16 aSelectionValue, imgIContainer **aContainer)
-{
-  *aContainer = nsnull;
-
-  nsCOMPtr<imgIContainer>* container = &mContainer;
-  nsILookAndFeel::nsColorID colorID;
-  if (aSelectionValue == nsISelectionController::SELECTION_ON) {
-    colorID = nsILookAndFeel::eColor_TextSelectBackground;
-  } else if (aSelectionValue == nsISelectionController::SELECTION_ATTENTION) {
-    colorID = nsILookAndFeel::eColor_TextSelectBackgroundAttention;
-  } else {
-    container = &mDisabledContainer;
-    colorID = nsILookAndFeel::eColor_TextSelectBackgroundDisabled;
-  }
-
-  if (!*container) {
-    nsresult result;
-    *container = do_CreateInstance("@mozilla.org/image/container;1", &result);
-    if (NS_FAILED(result))
-      return result;
-
-    nscolor color = NS_RGB(255, 255, 255);
-    nsCOMPtr<nsILookAndFeel> look = do_GetService(kLookAndFeelCID);
-    if (look)
-      look->GetColor(colorID, color);
-    CreateImage(color, *container);
-  }
-
-  *aContainer = *container; 
-  NS_ADDREF(*aContainer);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SelectionImageService::Reset()
-{
-  mContainer = 0;
-  mDisabledContainer = 0;
-  return NS_OK;
-}
-
-#define SEL_IMAGE_WIDTH 32
-#define SEL_IMAGE_HEIGHT 32
-#define SEL_ALPHA_AMOUNT 128
-
-nsresult
-SelectionImageService::CreateImage(nscolor aImageColor, imgIContainer *aContainer)
-{
-  if (aContainer)
-  {
-    nsresult result = aContainer->Init(SEL_IMAGE_WIDTH,SEL_IMAGE_HEIGHT,nsnull);
-    if (NS_SUCCEEDED(result))
-    {
-      nsCOMPtr<gfxIImageFrame> image = do_CreateInstance("@mozilla.org/gfx/image/frame;2",&result);
-      if (NS_SUCCEEDED(result) && image)
-      {
-        image->Init(0, 0, SEL_IMAGE_WIDTH, SEL_IMAGE_HEIGHT, gfxIFormats::RGB_A8, 24);
-        aContainer->AppendFrame(image);
-
-        PRUint32 bpr, abpr;
-        image->GetImageBytesPerRow(&bpr);
-        image->GetAlphaBytesPerRow(&abpr);
-
-        //it's better to temporarily go after heap than put big data on stack
-        unsigned char *row_data = (unsigned char *)malloc(bpr);
-        if (!row_data)
-          return NS_ERROR_OUT_OF_MEMORY;
-        unsigned char *alpha = (unsigned char *)malloc(abpr);
-        if (!alpha)
-        {
-          free (row_data);
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-        unsigned char *data = row_data;
-
-        PRInt16 i;
-        for (i = 0; i < SEL_IMAGE_WIDTH; i++)
-        {
-#if defined(XP_WIN) || defined(XP_OS2)
-          *data++ = NS_GET_B(aImageColor);
-          *data++ = NS_GET_G(aImageColor);
-          *data++ = NS_GET_R(aImageColor);
-#else
-#if defined(XP_MAC) || defined(XP_MACOSX)
-          *data++ = 0;
-#endif
-          *data++ = NS_GET_R(aImageColor);
-          *data++ = NS_GET_G(aImageColor);
-          *data++ = NS_GET_B(aImageColor);
-#endif
-        }
-
-        memset((void *)alpha, SEL_ALPHA_AMOUNT, abpr);
-
-        for (i = 0; i < SEL_IMAGE_HEIGHT; i++)
-        {
-          image->SetAlphaData(alpha, abpr, i*abpr);
-          image->SetImageData(row_data,  bpr, i*bpr);
-        }
-        free(row_data);
-        free(alpha);
-        return NS_OK;
-      }
-    } 
-  }
-  return NS_ERROR_FAILURE;
-}
-
-
-nsresult NS_NewSelectionImageService(nsISelectionImageService** aResult)
-{
-  *aResult = new SelectionImageService;
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-#endif /* MOZ_CAIRO_GFX */
-
-//end selection service
 
 void
 nsWeakFrame::Init(nsIFrame* aFrame)
@@ -910,22 +757,6 @@ private:
 void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
      nsIRenderingContext* aCtx, const nsRect& aDirtyRect)
 {
-#ifndef MOZ_CAIRO_GFX
-  nsCOMPtr<nsISelectionImageService> imageService
-      = do_GetService(kSelectionImageService);
-  if (!imageService)
-    return;
-
-
-  nsCOMPtr<imgIContainer> container;
-  imageService->GetImage(mSelectionValue, getter_AddRefs(container));
-  if (!container)
-    return;
-  
-  nsRect rect(aBuilder->ToReferenceFrame(mFrame), mFrame->GetSize());
-  rect.IntersectRect(rect, aDirtyRect);
-  aCtx->DrawTile(container, 0, 0, &rect);
-#else
   nscolor color = NS_RGB(255, 255, 255);
   
   nsILookAndFeel::nsColorID colorID;
@@ -955,7 +786,6 @@ void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
   ctx->NewPath();
   ctx->Rectangle(gfxRect(rect.x, rect.y, rect.width, rect.height), PR_TRUE);
   ctx->Fill();
-#endif
 }
 
 /********************************************************
@@ -4817,7 +4647,7 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
           nsContentUtils::GetBoolPref("layout.word_select.eat_space_to_next_word");
       }
       
-      // sawBeforeType means "we already saw characters of the type
+      // mSawBeforeType means "we already saw characters of the type
       // before the boundary we're looking for". Examples:
       // 1. If we're moving forward, looking for a word beginning (i.e. a boundary
       //    between whitespace and non-whitespace), then eatingWS==PR_TRUE means
@@ -4825,15 +4655,14 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
       // 2. If we're moving backward, looking for a word beginning (i.e. a boundary
       //    between non-whitespace and whitespace), then eatingWS==PR_TRUE means
       //    "we already saw some non-whitespace".
-      PRBool sawBeforeType = PR_FALSE;
-
+      PeekWordState state;
       PRBool done = PR_FALSE;
       while (!done) {
         PRBool movingInFrameDirection =
           IsMovingInFrameDirection(current, aPos->mDirection, aPos->mVisual);
         
-        done = current->PeekOffsetWord(movingInFrameDirection, wordSelectEatSpace, aPos->mIsKeyboardSelect,
-                                       &offset, &sawBeforeType);
+        done = current->PeekOffsetWord(movingInFrameDirection, wordSelectEatSpace,
+                                       aPos->mIsKeyboardSelect, &offset, &state);
         
         if (!done) {
           nsIFrame* nextFrame;
@@ -4846,14 +4675,14 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
           // We can't jump lines if we're looking for whitespace following
           // non-whitespace, and we already encountered non-whitespace.
           if (NS_FAILED(result) ||
-              jumpedLine && !wordSelectEatSpace && sawBeforeType) {
+              jumpedLine && !wordSelectEatSpace && state.mSawBeforeType) {
             done = PR_TRUE;
           } else {
             current = nextFrame;
             offset = nextFrameOffset;
             // Jumping a line is equivalent to encountering whitespace
             if (wordSelectEatSpace && jumpedLine)
-              sawBeforeType = PR_TRUE;
+              state.SetSawBeforeType();
           }
         }
       }
@@ -4987,11 +4816,13 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
         nsIFrame *lastFrame;
         result = it->CheckLineOrder(thisLine, &isReordered, &firstFrame, &lastFrame);
         baseFrame = endOfLine ? lastFrame : firstFrame;
-        nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(baseFrame);
-        // If the direction of the frame on the edge is opposite to that of the line,
-        // we'll need to drill down to its opposite end, so reverse endOfLine.
-        if ((embeddingLevel & 1) == !lineIsRTL)
-          endOfLine = !endOfLine;
+        if (baseFrame) {
+          nsBidiLevel embeddingLevel = nsBidiPresUtils::GetFrameEmbeddingLevel(baseFrame);
+          // If the direction of the frame on the edge is opposite to that of the line,
+          // we'll need to drill down to its opposite end, so reverse endOfLine.
+          if ((embeddingLevel & 1) == !lineIsRTL)
+            endOfLine = !endOfLine;
+        }
       } else
 #endif
       {
@@ -5057,7 +4888,7 @@ nsFrame::PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset)
 
 PRBool
 nsFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
-                        PRInt32* aOffset, PRBool* aSawBeforeType)
+                        PRInt32* aOffset, PeekWordState* aState)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   PRInt32 startOffset = *aOffset;
@@ -5066,14 +4897,39 @@ nsFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsK
   if (aForward == (startOffset == 0)) {
     // We're before the frame and moving forward, or after it and moving backwards.
     // If we're looking for non-whitespace, we found it (without skipping this frame).
-    if (aWordSelectEatSpace && *aSawBeforeType)
-      return PR_TRUE;
+    if (!aState->mAtStart) {
+      if (aState->mLastCharWasPunctuation) {
+        // We're not punctuation, so this is a punctuation boundary.
+        if (BreakWordBetweenPunctuation(aForward, aIsKeyboardSelect))
+          return PR_TRUE;
+      } else {
+        // This is not a punctuation boundary.
+        if (aWordSelectEatSpace && aState->mSawBeforeType)
+          return PR_TRUE;
+      }
+    }
     // Otherwise skip to the other side and note that we encountered non-whitespace.
     *aOffset = 1 - startOffset;
+    aState->Update(PR_FALSE);
     if (!aWordSelectEatSpace)
-      *aSawBeforeType = PR_TRUE;
+      aState->SetSawBeforeType();
   }
   return PR_FALSE;
+}
+
+PRBool
+nsFrame::BreakWordBetweenPunctuation(PRBool aAfterPunct, PRBool aIsKeyboardSelect)
+{
+  if (!nsContentUtils::GetBoolPref("layout.word_select.stop_at_punctuation")) {
+    // When this pref is false, we never stop at a punctuation boundary.
+    return PR_FALSE;
+  }
+  if (!aIsKeyboardSelect) {
+    // mouse caret movement (e.g. word selection) always stops at every punctuation boundary
+    return PR_TRUE;
+  }
+  // keyboard caret movement stops after punctuation, not before it
+  return aAfterPunct;
 }
 
 NS_IMETHODIMP

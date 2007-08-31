@@ -419,12 +419,16 @@ public:
    * value will be >= 0.
    */
   static nscoord CalcLineHeight(nsIRenderingContext* aRenderingContext,
-                                nsIFrame* aFrame);
+                                nsIFrame* aFrame)
+  {
+    return CalcLineHeight(aRenderingContext, aFrame->GetStyleContext());
+  }
+  
   /**
-   * Same as above, but doesn't need quite as much info.
+   * Same as above, but doesn't need a frame.
    */
-  static nscoord CalcLineHeight(nsStyleContext* aStyleContext,
-                                nsIDeviceContext* aDeviceContext);
+  static nscoord CalcLineHeight(nsIRenderingContext* aRenderingContext,
+                                nsStyleContext* aStyleContext);
 
 
   void ComputeContainingBlockRectangle(nsPresContext*          aPresContext,

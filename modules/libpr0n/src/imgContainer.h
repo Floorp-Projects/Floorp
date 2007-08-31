@@ -271,6 +271,17 @@ private:
   static PRBool CopyFrameImage(gfxIImageFrame *aSrcFrame,
                                gfxIImageFrame *aDstFrame);
   
+  /** Draws one gfxIImageFrame's image to into another,
+   * at the position specified by aRect
+   *
+   * @param aSrcFrame  Frame providing the source image
+   * @param aDstFrame  Frame where the image is drawn into
+   * @param aRect      The position and size to draw the image
+   */
+  static nsresult DrawFrameTo(gfxIImageFrame *aSrcFrame,
+                              gfxIImageFrame *aDstFrame,
+                              nsIntRect& aRect);
+
   nsIntSize                  mSize;
   
   //! All the <gfxIImageFrame>s of the PNG

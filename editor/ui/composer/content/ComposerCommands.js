@@ -2307,7 +2307,7 @@ var nsPrintCommand =
     // In editor.js
     FinishHTMLSource();
     try {
-      NSPrint();
+      PrintUtils.print();
     } catch (e) {}
   }
 };
@@ -2327,7 +2327,7 @@ var nsPrintSetupCommand =
   {
     // In editor.js
     FinishHTMLSource();
-    NSPrintSetup();
+    PrintUtils.showPageSetup();
   }
 };
 

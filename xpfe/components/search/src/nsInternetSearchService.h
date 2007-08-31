@@ -39,7 +39,7 @@
 #define nsinternetsearchdatasource__h____
 
 #include "nsCOMPtr.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsISearchService.h"
 #include "nsIRDFDataSource.h"
 #include "nsIStreamListener.h"
@@ -143,7 +143,6 @@ protected:
   PRBool    isSearchURI(nsIRDFResource* aResource);
   PRBool    isSearchCategoryURI(nsIRDFResource* aResource);
   PRBool    isSearchCategoryEngineURI(nsIRDFResource* aResource);
-  PRBool    isSearchCategoryEngineBasenameURI(nsIRDFNode *aResource);
   PRBool    isSearchCommand(nsIRDFResource* aResource);
   nsresult  resolveSearchCategoryEngineURI(nsIRDFResource *source, nsIRDFResource **trueEngine);
   nsresult  BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkRequest);

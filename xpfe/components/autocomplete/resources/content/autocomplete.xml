@@ -907,7 +907,7 @@
           this.mNeedToComplete = true;
           var str = this.value;
           this.currentSearchString = str;
-          this.resultsPopup.selectedIndex = -1;
+          this.resultsPopup.clearSelection();
           this.removeAttribute("noMatchesFound");
           
           this.mAutoCompleteTimer = setTimeout(this.callListener, this.timeout, this, "startLookup");
@@ -1479,6 +1479,12 @@
         ]]></body>
       </method>
 
+      <method name="clearSelection">
+        <body>
+          this.view.selection.clearSelection();
+        </body>
+      </method>
+
       <method name="selectBy">
         <parameter name="aReverse"/>
         <parameter name="aPage"/>
@@ -1532,14 +1538,14 @@
 
       <property name="selectedIndex">
         <getter>
-          if (!this.view || !this.view.selection || !this.view.selection.count)
+          if (!this.view || !this.view.selection.count)
             return -1;
           var start = {}, end = {};
           this.view.selection.getRangeAt(0, start, end);
           return start.value;
         </getter>
-        <setter><![CDATA[
-          if (this.view && this.view.selection) {
+        <setter>
+          if (this.view) {
             this.view.selection.select(val);
             if (val >= 0) {
               this.view.selection.currentIndex = -1;
@@ -1547,7 +1553,7 @@
             }
           }
           return val;
-        ]]></setter>
+        </setter>
       </property>
 
       <property name="popupOpen" onget="return !!this.input;" readonly="true"/>
@@ -1595,7 +1601,7 @@
       <handler event="popuphiding">
         if (this.textbox)
           this.textbox.mMenuOpen = false;
-        this.selectedIndex = -1;
+        this.clearSelection();
         this.input = null;
       </handler>
 

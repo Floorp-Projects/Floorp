@@ -38,7 +38,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMSVGClipPathElement.h"
 #include "nsSVGClipPathFrame.h"
-#include "nsIDOMSVGAnimatedEnum.h"
 #include "nsGkAtoms.h"
 #include "nsSVGUtils.h"
 #include "nsSVGClipPathElement.h"
@@ -73,19 +72,6 @@ NS_GetSVGClipPathElement(nsIURI *aURI, nsIContent *aContent)
     return content;
 
   return nsnull;
-}
-
-NS_IMETHODIMP
-nsSVGClipPathFrame::InitSVG()
-{
-  nsresult rv = nsSVGClipPathFrameBase::InitSVG();
-  if (NS_FAILED(rv))
-    return rv;
-
-  mClipParentMatrix = NULL;
-  mInUse = PR_FALSE;
-
-  return NS_OK;
 }
 
 nsresult
@@ -211,11 +197,11 @@ nsSVGClipPathFrame::GetCanvasTM()
     canvasTM = mClipParentMatrix;
 
   /* object bounding box? */
-  PRUint16 units;
-  clipPath->mClipPathUnits->GetAnimVal(&units);
-  
+  PRUint16 units =
+    clipPath->mEnumAttributes[nsSVGClipPathElement::CLIPPATHUNITS].GetAnimValue();
+
   if (mClipParent &&
-      units == nsIDOMSVGClipPathElement::SVG_CPUNITS_OBJECTBOUNDINGBOX) {
+      units == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     nsCOMPtr<nsIDOMSVGRect> rect;
     nsresult rv = mClipParent->GetBBox(getter_AddRefs(rect));
 

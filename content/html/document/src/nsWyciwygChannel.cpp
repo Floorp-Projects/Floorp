@@ -45,6 +45,7 @@
 #include "nsContentUtils.h"
 #include "nsICacheService.h"
 #include "nsICacheSession.h"
+#include "nsIParser.h"
 
 
 PRLogModuleInfo * gWyciwygLog = nsnull;
@@ -56,6 +57,8 @@ PRLogModuleInfo * gWyciwygLog = nsnull;
 nsWyciwygChannel::nsWyciwygChannel()
   : mStatus(NS_OK),
     mIsPending(PR_FALSE),
+    mNeedToWriteCharset(PR_FALSE),
+    mCharsetSource(kCharsetUninitialized),
     mContentLength(-1),
     mLoadFlags(LOAD_NORMAL)
 {
@@ -347,6 +350,11 @@ nsWyciwygChannel::WriteToCacheEntry(const nsAString &aData)
     mCacheEntry->SetSecurityInfo(mSecurityInfo);
   }
 
+  if (mNeedToWriteCharset) {
+    WriteCharsetAndSourceToCache(mCharsetSource, mCharset);
+    mNeedToWriteCharset = PR_FALSE;
+  }
+  
   PRUint32 out;
   if (!mCacheOutputStream) {
     // Get the outputstream from the cache entry.
@@ -395,20 +403,14 @@ nsWyciwygChannel::SetCharsetAndSource(PRInt32 aSource,
 {
   NS_ENSURE_ARG(!aCharset.IsEmpty());
 
-  if (!mCacheEntry) {
-    nsCAutoString spec;
-    nsresult rv = mURI->GetAsciiSpec(spec);
-    if (NS_FAILED(rv)) return rv;
-    rv = OpenCacheEntry(spec, nsICache::ACCESS_WRITE);
-    if (NS_FAILED(rv)) return rv;
+  if (mCacheEntry) {
+    WriteCharsetAndSourceToCache(aSource, PromiseFlatCString(aCharset));
+  } else {
+    mNeedToWriteCharset = PR_TRUE;
+    mCharsetSource = aSource;
+    mCharset = aCharset;
   }
 
-  mCacheEntry->SetMetaDataElement("charset",
-                                  PromiseFlatCString(aCharset).get());
-  nsCAutoString source;
-  source.AppendInt(aSource);
-  mCacheEntry->SetMetaDataElement("charset-source", source.get());
-  
   return NS_OK;
 }
 
@@ -635,6 +637,19 @@ nsWyciwygChannel::ReadFromCache()
 
   // Pump the cache data downstream
   return mPump->AsyncRead(this, nsnull);
+}
+
+void
+nsWyciwygChannel::WriteCharsetAndSourceToCache(PRInt32 aSource,
+                                               const nsCString& aCharset)
+{
+  NS_PRECONDITION(mCacheEntry, "Better have cache entry!");
+  
+  mCacheEntry->SetMetaDataElement("charset", aCharset.get());
+
+  nsCAutoString source;
+  source.AppendInt(aSource);
+  mCacheEntry->SetMetaDataElement("charset-source", source.get());
 }
 
 // vim: ts=2 sw=2

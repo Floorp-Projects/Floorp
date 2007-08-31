@@ -63,7 +63,6 @@ PRThread                 *gSocketThread           = nsnull;
 nsSocketTransportService::nsSocketTransportService()
     : mThread(nsnull)
     , mThreadEvent(nsnull)
-    , mThreadEventLock(PR_NewLock())
     , mAutodialEnabled(PR_FALSE)
     , mLock(PR_NewLock())
     , mInitialized(PR_FALSE)
@@ -89,9 +88,6 @@ nsSocketTransportService::~nsSocketTransportService()
     if (mLock)
         PR_DestroyLock(mLock);
     
-    if (mThreadEventLock)
-        PR_DestroyLock(mThreadEventLock);
-
     if (mThreadEvent)
         PR_DestroyPollableEvent(mThreadEvent);
 
@@ -355,7 +351,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsSocketTransportService,
 NS_IMETHODIMP
 nsSocketTransportService::Init()
 {
-    NS_ENSURE_TRUE(mThreadEventLock && mLock, NS_ERROR_OUT_OF_MEMORY);
+    NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
 
     if (!NS_IsMainThread()) {
         NS_ERROR("wrong thread");
@@ -413,11 +409,9 @@ nsSocketTransportService::Shutdown()
         // signal the socket thread to shutdown
         mShuttingDown = PR_TRUE;
 
-        PR_Lock(mThreadEventLock);
         if (mThreadEvent)
             PR_SetPollableEvent(mThreadEvent);
         // else wait for Poll timeout
-        PR_Unlock(mThreadEventLock);
     }
 
     // join with thread
@@ -473,10 +467,9 @@ nsSocketTransportService::SetAutodialEnabled(PRBool value)
 NS_IMETHODIMP
 nsSocketTransportService::OnDispatchedEvent(nsIThreadInternal *thread)
 {
-    PR_Lock(mThreadEventLock);
+    nsAutoLock lock(mLock);
     if (mThreadEvent)
         PR_SetPollableEvent(mThreadEvent);
-    PR_Unlock(mThreadEventLock);
     return NS_OK;
 }
 
@@ -665,10 +658,11 @@ nsSocketTransportService::DoPollIteration(PRBool wait)
                 // wakes up from hibernation.  We try to create a
                 // new pollable event.  If that fails, we fall back
                 // on "busy wait".
-                PR_Lock(mThreadEventLock);
-                PR_DestroyPollableEvent(mThreadEvent);
-                mThreadEvent = PR_NewPollableEvent();
-                PR_Unlock(mThreadEventLock);
+                {
+                    nsAutoLock lock(mLock);
+                    PR_DestroyPollableEvent(mThreadEvent);
+                    mThreadEvent = PR_NewPollableEvent();
+                }
                 if (!mThreadEvent) {
                     NS_WARNING("running socket transport thread without "
                                "a pollable event");

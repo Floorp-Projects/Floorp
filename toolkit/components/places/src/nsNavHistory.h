@@ -589,6 +589,10 @@ protected:
   // creates supplemental indexes that we'd like to not bother with
   // updating during import.
   nsresult CreateLookupIndexes();
+
+  nsresult PerformVacuumIfIdle();
+  nsCOMPtr<nsITimer> mVacuumTimer;
+  static void VacuumTimerCallback(nsITimer* aTimer, void* aClosure);
 };
 
 /**

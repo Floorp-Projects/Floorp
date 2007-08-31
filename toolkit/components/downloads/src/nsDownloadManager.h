@@ -57,7 +57,6 @@
 #include "nsIStringBundle.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIMIMEInfo.h"
-#include "nsITimer.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "nsISupportsArray.h"
@@ -95,13 +94,10 @@ private:
 #endif
 
 protected:
-  struct TimerParams {
-    nsRefPtr<nsDownload> download;
-    nsCOMPtr<nsIDOMWindow> parent;
-  };
   nsresult InitDB(PRBool *aDoImport);
   nsresult CreateTable();
   nsresult ImportDownloadHistory();
+  nsresult RestoreDatabaseState();
   nsresult GetDownloadFromDB(PRUint32 aID, nsDownload **retVal);
 
   inline nsresult AddToCurrentDownloads(nsDownload *aDl)
@@ -161,11 +157,6 @@ protected:
                                   const PRUnichar* aCancelMessageSingle,
                                   const PRUnichar* aDontCancelButton);
 
-  static void OpenTimerCallback(nsITimer* aTimer, void* aClosure);
-  static nsresult OpenDownloadManager(PRBool aShouldFocus, PRInt32 aFlashCount,
-                                      nsIDownload* aDownload,
-                                      nsIDOMWindow* aParent);
-
   PRInt32  GetRetentionBehavior();
 
   static PRBool IsInFinalStage(DownloadState aState)
@@ -190,7 +181,6 @@ protected:
 private:
   nsCOMArray<nsIDownloadProgressListener> mListeners;
   nsCOMPtr<nsIStringBundle> mBundle;
-  nsCOMPtr<nsITimer> mDMOpenTimer;
   nsCOMPtr<mozIStorageConnection> mDBConn;
   nsCOMArray<nsDownload> mCurrentDownloads;
   nsCOMPtr<nsIObserverService> mObserverService;

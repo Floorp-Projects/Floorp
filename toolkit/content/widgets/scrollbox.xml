@@ -64,7 +64,6 @@
       </property>
 
       <field name="_scrollIncrement">null</field>
-
       <property name="scrollIncrement" readonly="true">
         <getter><![CDATA[
           if (this._scrollIncrement === null) {
@@ -120,7 +119,6 @@
         document.defaultView.getComputedStyle(this._scrollbox, "").direction == "ltr";
       </field>
 
-      <field name="_autorepeatSmoothScroll">false</field>
       <method name="ensureElementIsVisible">
         <parameter name="element"/>
         <body><![CDATA[
@@ -166,14 +164,8 @@
 
           function processFrame(self) {
             self.scrollBoxObject.scrollBy(scrollAmounts.shift(), 0);
-            if (!scrollAmounts.length) {
-              if (self._autorepeatSmoothScroll) {
-                var direction = self._isLTRScrollbox ? self._isScrolling : -self._isScrolling;
-                self._stopSmoothScroll();
-                self.scrollByIndex(direction);
-              } else
-                self._stopSmoothScroll();
-            }
+            if (!scrollAmounts.length)
+              self._stopSmoothScroll();
           }
 
           // amountToScroll: total distance to scroll
@@ -413,9 +405,11 @@
       <xul:toolbarbutton class="scrollbutton-up" collapsed="true"
                          xbl:inherits="orient"
                          anonid="scrollbutton-up"
+                         onclick="_distanceScroll(event);"
                          onmousedown="_startScroll(-1);"
+                         onmouseover="_continueScroll(-1);"
                          onmouseup="_stopScroll();"
-                         onmouseout="_stopScroll();"
+                         onmouseout="_pauseScroll();"
                          chromedir="&locale.dir;"/>
       <xul:scrollbox xbl:inherits="orient,align,pack,dir" flex="1" anonid="scrollbox">
         <children/>
@@ -423,12 +417,14 @@
       <xul:toolbarbutton class="scrollbutton-down" collapsed="true"
                          xbl:inherits="orient"
                          anonid="scrollbutton-down"
+                         onclick="_distanceScroll(event);"
                          onmousedown="_startScroll(1);"
+                         onmouseover="_continueScroll(1);"
                          onmouseup="_stopScroll();"
-                         onmouseout="_stopScroll();"
+                         onmouseout="_pauseScroll();"
                          chromedir="&locale.dir;"/>
     </content>
-    <implementation implements="nsITimerCallback">
+    <implementation implements="nsITimerCallback, nsIDOMEventListener">
       <constructor><![CDATA[
         try {
           this._scrollDelay = this._prefBranch
@@ -446,7 +442,6 @@
         }
       ]]></destructor>
 
-      <field name="_scrollTimer">null</field>
       <field name="_scrollIndex">0</field>
       <field name="_scrollDelay">150</field>
 
@@ -457,7 +452,10 @@
           if (!document)
             aTimer.cancel();
 
-          this.scrollByIndex(this._scrollIndex);
+          if (this.smoothScroll)
+            this.scrollByPixels(25 * this._scrollIndex);
+          else
+            this.scrollBoxObject.scrollByIndex(this._scrollIndex);
         ]]>
         </body>
       </method>
@@ -465,31 +463,128 @@
       <method name="_startScroll">
         <parameter name="index"/>
         <body><![CDATA[
-          if (this.smoothScroll)
-            this._autorepeatSmoothScroll = true;
-          else {
-            this._scrollIndex = index;
-            if (!this._scrollTimer) 
-              this._scrollTimer = 
-                Components.classes["@mozilla.org/timer;1"]
-                          .createInstance(Components.interfaces.nsITimer);
-            else
-               this._scrollTimer.cancel();
+          this._scrollIndex = index;
+          var scrollDelay = this.smoothScroll ? 60 : this._scrollDelay;
+          if (!this._scrollTimer)
+            this._scrollTimer =
+              Components.classes["@mozilla.org/timer;1"]
+                        .createInstance(Components.interfaces.nsITimer);
+          else
+             this._scrollTimer.cancel();
 
-            this._scrollTimer.initWithCallback(this, 
-                          this._scrollDelay,
-                          Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
-          }
-          this.scrollByIndex(index);
+          this._scrollTimer.initWithCallback(this,
+                        scrollDelay,
+                        Components.interfaces.nsITimer.TYPE_REPEATING_SLACK);
+          this.notify(this._scrollTimer);
+          this._mousedown = true;
         ]]>
         </body>
       </method>
 
       <method name="_stopScroll">
         <body><![CDATA[
-          if (this._scrollTimer) 
+          if (this._scrollTimer)
             this._scrollTimer.cancel();
-          this._autorepeatSmoothScroll = false;
+          this._mousedown = false;
+          if (!this._scrollIndex || !this.smoothScroll)
+            return;
+
+          this.scrollByIndex(this._scrollIndex);
+          this._scrollIndex = 0;
+        ]]></body>
+      </method>
+
+      <method name="_pauseScroll">
+        <body><![CDATA[
+          if (this._mousedown) {
+            this._stopScroll();
+            this._mousedown = true;
+            document.addEventListener("mouseup", this, false);
+            document.addEventListener("blur", this, true);
+          }
+        ]]></body>
+      </method>
+
+      <method name="_continueScroll">
+        <parameter name="index"/>
+        <body><![CDATA[
+          if (this._mousedown)
+            this._startScroll(index);
+        ]]></body>
+      </method>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (aEvent.type == "mouseup" ||
+              aEvent.type == "blur" && aEvent.target == document) {
+            this._mousedown = false;
+            document.removeEventListener("mouseup", this, false);
+            document.removeEventListener("blur", this, true);
+          }
+        ]]></body>
+      </method>
+
+      <method name="_distanceScroll">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (this.getAttribute("orient") == "vertical" ||
+              aEvent.detail < 2 || aEvent.detail > 3)
+            return;
+
+          var scrollLeft = (aEvent.originalTarget == this._scrollButtonUp);
+          if (!this._isLTRScrollbox)
+            scrollLeft = !scrollLeft;
+          var targetElement;
+          var elements = this.hasChildNodes() ?
+                         this.childNodes :
+                         document.getBindingParent(this).childNodes;
+
+          if (aEvent.detail == 2) {
+            // scroll by the width of the scrollbox; make sure that the next
+            // partly-offscreen element will become fully visible.
+            var scrollBox = this.scrollBoxObject;
+            var edge = scrollBox.screenX;
+            if (scrollLeft) {
+              for (var i = 0; targetElement = elements[i]; i++) {
+                var x = targetElement.boxObject.screenX;
+                if (x < edge &&
+                    x + targetElement.boxObject.width + 1 >= edge)
+                  break;
+              }
+              if (!targetElement)
+                return;
+              edge = targetElement.boxObject.screenX +
+                     targetElement.boxObject.width - scrollBox.width;
+              while ((targetElement = targetElement.previousSibling))
+                if (targetElement.boxObject.screenX < edge)
+                  break;
+              if (targetElement)
+                targetElement = targetElement.nextSibling;
+            } else {
+              edge += scrollBox.width;
+              for (var i = 0; targetElement = elements[i]; i++) {
+                var x = targetElement.boxObject.screenX;
+                if (x <= edge &&
+                    x + targetElement.boxObject.width > edge)
+                  break;
+              }
+              if (!targetElement)
+                return;
+              edge = targetElement.boxObject.screenX + scrollBox.width;
+              while ((targetElement = targetElement.nextSibling))
+                if (targetElement.boxObject.screenX + targetElement.boxObject.width > edge)
+                  break;
+              if (targetElement)
+                targetElement = targetElement.previousSibling;
+            }
+          }
+
+          if (!targetElement)
+            // scroll to the first resp. last element
+            targetElement = scrollLeft ? elements[0] : elements[elements.length - 1];
+
+          this.ensureElementIsVisible(targetElement);
         ]]></body>
       </method>
 

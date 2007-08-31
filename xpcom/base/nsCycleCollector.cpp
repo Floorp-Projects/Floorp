@@ -1876,15 +1876,15 @@ public:
         return mSuppressThisNode;
     }
 
-    void DescribeNode(nsrefcnt refCount, size_t objSz, const char *objName)
+    NS_METHOD_(void) DescribeNode(nsrefcnt refCount, size_t objSz, const char *objName)
     {
         mSuppressThisNode = (PL_strstr(sSuppressionList, objName) != nsnull);
     }
 
-    void NoteXPCOMChild(nsISupports *child) {}
-    void NoteScriptChild(PRUint32 langID, void *child) {}
-    void NoteNativeChild(void *child,
-                         nsCycleCollectionParticipant *participant) {}
+    NS_METHOD_(void) NoteXPCOMChild(nsISupports *child) {}
+    NS_METHOD_(void) NoteScriptChild(PRUint32 langID, void *child) {}
+    NS_METHOD_(void) NoteNativeChild(void *child,
+                                     nsCycleCollectionParticipant *participant) {}
 };
 
 char *Suppressor::sSuppressionList = nsnull;

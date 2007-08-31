@@ -55,6 +55,7 @@
 class nsIWidget;
 class nsIDocument;
 class nsIDOMNode;
+class nsIDocShell;
 
 extern "C" MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
 
@@ -76,6 +77,7 @@ namespace MenuHelpersX
 }
 -(IBAction)menuItemHit:(id)sender;
 @end
+
 
 //
 // Native Mac menu bar wrapper

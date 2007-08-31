@@ -60,7 +60,6 @@ nsPrintSettings::nsPrintSettings() :
   mPrintOptions(0L),
   mPrintReversed(PR_FALSE),
   mPrintInColor(PR_TRUE),
-  mPaperSize(kLetterPaperSize),
   mOrientation(kPortraitOrientation),
   mPrintToFile(PR_FALSE),
   mPrintFrameType(kFramesAsIs),
@@ -141,19 +140,6 @@ NS_IMETHODIMP nsPrintSettings::GetPrintInColor(PRBool *aPrintInColor)
 NS_IMETHODIMP nsPrintSettings::SetPrintInColor(PRBool aPrintInColor)
 {
   mPrintInColor = aPrintInColor;
-  return NS_OK;
-}
-
-/* attribute short paperSize; */
-NS_IMETHODIMP nsPrintSettings::GetPaperSize(PRInt32 *aPaperSize)
-{
-  //NS_ENSURE_ARG_POINTER(aPaperSize);
-  *aPaperSize = mPaperSize;
-  return NS_OK;
-}
-NS_IMETHODIMP nsPrintSettings::SetPaperSize(PRInt32 aPaperSize)
-{
-  mPaperSize = aPaperSize;
   return NS_OK;
 }
 

@@ -339,13 +339,26 @@ nsFormFillController::SetMaxRows(PRUint32 aMaxRows)
 }
 
 NS_IMETHODIMP
-nsFormFillController::GetShowCommentColumn(PRUint32 *aShowCommentColumn)
+nsFormFillController::GetShowImageColumn(PRBool *aShowImageColumn)
+{
+  *aShowImageColumn = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFormFillController::SetShowImageColumn(PRBool aShowImageColumn)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsFormFillController::GetShowCommentColumn(PRBool *aShowCommentColumn)
 {
   *aShowCommentColumn = PR_FALSE;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFormFillController::SetShowCommentColumn(PRUint32 aShowCommentColumn)
+NS_IMETHODIMP nsFormFillController::SetShowCommentColumn(PRBool aShowCommentColumn)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -117,6 +117,16 @@ public:
   T*          get()             const  { return mBufferPtr; }
   PRInt32     GetElemCapacity() const  { return mCurElemCapacity;  }
 
+  T& operator[](PRUint32 i)
+  {
+    return mBufferPtr[i];
+  }
+
+  const T& operator[](PRUint32 i) const
+  {
+    return mBufferPtr[i];
+  }
+
 protected:
 
   T             *mBufferPtr;

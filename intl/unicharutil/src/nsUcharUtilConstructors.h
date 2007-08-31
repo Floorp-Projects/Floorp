@@ -40,6 +40,7 @@
 
 #include "nsUnicharUtilCIID.h"
 #include "nsCaseConversionImp2.h"
+#include "nsCategoryImp.h"
 #include "nsHankakuToZenkakuCID.h"
 #include "nsTextTransformFactory.h"
 #include "nsICaseConversion.h"
@@ -82,6 +83,8 @@ UNICHARUTIL_MAKE_CTOR(HankakuToZenkaku)
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCaseConversionImp2,
                                          nsCaseConversionImp2::GetInstance)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsCategoryImp,
+                                         nsCategoryImp::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEntityConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSaveAsCharset)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeNormalizer)

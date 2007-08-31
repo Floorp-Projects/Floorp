@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIDocumentViewer.h"
 #include "nsIContent.h"
 
 #include "nsMenuBarX.h"  // for MenuHelpers namespace
@@ -54,6 +53,7 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMDocumentEvent.h"
+#include "nsIDocShell.h"
 
 #include "nsMenuItemIconX.h"
 #include "nsGUIEvent.h"
@@ -91,7 +91,6 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
 {
   mContent = aNode;      // addref
   mMenuParent = aParent; // weak
-  mDocShellWeakRef = do_GetWeakReference(aShell);
   
   mMenuType = aItemType;
   
@@ -174,6 +173,7 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
   return NS_OK;
 }
 
+
 NS_METHOD
 nsMenuItemX::GetLabel(nsString &aText)
 {
@@ -252,9 +252,11 @@ NS_METHOD nsMenuItemX::IsSeparator(PRBool & aIsSep)
 }
 
 
-//-------------------------------------------------------------------------
+//
 // nsIMenuListener interface
-//-------------------------------------------------------------------------
+//
+
+
 nsEventStatus nsMenuItemX::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
   // this is all handled by Carbon Events
@@ -268,9 +270,11 @@ nsEventStatus nsMenuItemX::MenuSelected(const nsMenuEvent & aMenuEvent)
 }
 
 
-//-------------------------------------------------------------------------
+//
 // nsIMenuListener interface
-//-------------------------------------------------------------------------
+//
+
+
 nsEventStatus nsMenuItemX::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
     return nsEventStatus_eIgnore;
@@ -306,10 +310,8 @@ nsEventStatus nsMenuItemX::SetRebuild(PRBool aNeedsRebuild)
 }
 
 
-/**
-* Executes the "cached" JavaScript Command 
-* @return NS_OK if the command was executed properly, otherwise an error code
-*/
+// Executes the "cached" javaScript command.
+// Returns NS_OK if the command was executed properly, otherwise an error code.
 NS_METHOD nsMenuItemX::DoCommand()
 {
   // flip "checked" state if we're a checkbox menu, or an un-checked radio menu
@@ -320,10 +322,6 @@ NS_METHOD nsMenuItemX::DoCommand()
     SetChecked(!mIsChecked);
     /* the AttributeChanged code will update all the internal state */
   }
-
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
-  if (!docShell)
-    return nsEventStatus_eConsumeNoDefault;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
@@ -416,12 +414,9 @@ NS_METHOD nsMenuItemX::GetShortcutChar(nsString &aText)
   return NS_OK;
 }
 
-//
-// UncheckRadioSiblings
-//
-// walk the sibling list looking for nodes with the same name and
+
+// Walk the sibling list looking for nodes with the same name and
 // uncheck them all.
-//
 void
 nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
 {
@@ -446,8 +441,8 @@ nsMenuItemX::UncheckRadioSiblings(nsIContent* inCheckedContent)
           sibling->SetAttr(kNameSpaceID_None, nsWidgetAtoms::checked, NS_LITERAL_STRING("false"), PR_TRUE);
       }
     }    
-  } // for each sibling
-} // UncheckRadioSiblings
+  }
+}
 
 
 //
@@ -514,7 +509,7 @@ nsMenuItemX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIC
   }
   
   return NS_OK;
-} // AttributeChanged
+}
 
 
 NS_IMETHODIMP
@@ -528,7 +523,7 @@ nsMenuItemX::ContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 
   nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
   listener->SetRebuild(PR_TRUE);
   return NS_OK;
-} // ContentRemoved
+}
 
 
 NS_IMETHODIMP
@@ -537,7 +532,7 @@ nsMenuItemX::ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32
   nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mMenuParent);
   listener->SetRebuild(PR_TRUE);
   return NS_OK;
-} // ContentInserted
+}
 
 
 NS_IMETHODIMP

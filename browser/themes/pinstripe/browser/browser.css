@@ -977,6 +977,23 @@ statusbarpanel#statusbar-display {
   height: 16px;
 }
 
+#treecolAutoCompleteImage {
+ max-width : 36px; 
+ padding-end: 18px;
+}
+
+.autocomplete-treebody::-moz-tree-image(favicon, treecolAutoCompleteImage) {
+  list-style-image: url("chrome://browser/skin/places/starPage.png");
+  width: 16px;
+  height: 16px;
+}
+
+.autocomplete-treebody::-moz-tree-image(bookmark, treecolAutoCompleteImage) {
+  list-style-image: url("chrome://browser/skin/places/pageStarred.png");
+  width: 16px;
+  height: 16px;
+}
+
 .autocomplete-treebody::-moz-tree-cell-text(treecolAutoCompleteComment) {
   color: #555566;
 }
@@ -1035,6 +1052,26 @@ toolbarpaletteitem:not([place="toolbar"]) .search-go-button {
 
 #go-button > .toolbarbutton-icon {
   padding: 0px;
+}
+
+/* STAR BUTTON */
+#star-button {
+  list-style-image: url("chrome://browser/skin/places/starPage.png");
+  margin: 0;
+  padding: 0;
+  max-width: 0;
+  height: 24px;
+}
+
+#star-button > .toolbarbutton-icon {
+  padding: 2px 2px 2px 0;
+  border: 1px solid #A3A3A3;
+  border-left: 0;
+  background: url("chrome://global/skin/10pct_transparent_grey.png") repeat;
+}
+
+#star-button[starred="true"] {
+  list-style-image: url("chrome://browser/skin/places/pageStarred.png");
 }
 
 /* ----- SIDEBAR ELEMENTS ----- */
@@ -1245,6 +1282,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-tab[selected="true"] {
   -moz-user-focus: normal;
+}
+
+.tabbrowser-tab[selected="true"] > .tab-image-middle > .tab-icon {
+  cursor: -moz-grab;
 }
 
 .tabbrowser-tab > .tab-image-middle > .tab-text {
@@ -1662,13 +1703,3 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight !important;
 }
 
-/* star icon */
-#star-icon {
-  list-style-image: url("chrome://browser/skin/places/starPage.png");
-  width: 16px;
-  height: 16px;
-}
-
-#star-icon[starred="true"] {
-  list-style-image: url("chrome://browser/skin/places/pageStarred.png");
-}

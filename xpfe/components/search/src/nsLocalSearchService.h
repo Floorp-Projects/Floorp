@@ -38,10 +38,10 @@
 #ifndef localsearchdb___h_____
 #define localsearchdb___h_____
 
-#include "nsISupportsArray.h"
+#include "nsIMutableArray.h"
 #include "nsCOMPtr.h"
 #include "nsIRDFDataSource.h"
-#include "nsString.h"
+#include "nsStringAPI.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
 #include "nsISearchService.h"
@@ -94,7 +94,7 @@ protected:
     
     NS_METHOD   parseDate(const nsAString& aDate, PRInt64* aResult);
     
-	NS_METHOD	parseFindURL(nsIRDFResource *u, nsISupportsArray *array);
+	NS_METHOD	parseFindURL(nsIRDFResource *u, nsIMutableArray *array);
 
 public:
 	LocalSearchDataSource(void);

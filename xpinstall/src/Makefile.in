@@ -88,6 +88,8 @@ REQUIRES	= xpcom \
 		  chrome \
 		  extensions \
 		  embed_base \
+		  pipnss \
+		  pipboot \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
 
@@ -122,6 +124,7 @@ CPPSRCS		= \
 		nsJSFileSpecObj.cpp \
 		nsInstallLogComment.cpp \
 		nsInstallBitwise.cpp \
+		nsXPIInstallInfo.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

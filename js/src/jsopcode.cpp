@@ -418,19 +418,22 @@ static JSBool
 SprintEnsureBuffer(Sprinter *sp, size_t len)
 {
     ptrdiff_t nb;
+    char *base;
 
     nb = (sp->offset + len + 1) - sp->size;
     if (nb < 0)
         return JS_TRUE;
-    if (!sp->base) {
-        JS_ARENA_ALLOCATE_CAST(sp->base, char *, sp->pool, nb);
+    base = sp->base;
+    if (!base) {
+        JS_ARENA_ALLOCATE_CAST(base, char *, sp->pool, nb);
     } else {
-        JS_ARENA_GROW_CAST(sp->base, char *, sp->pool, sp->size, nb);
+        JS_ARENA_GROW_CAST(base, char *, sp->pool, sp->size, nb);
     }
-    if (!sp->base) {
+    if (!base) {
         JS_ReportOutOfMemory(sp->context);
         return JS_FALSE;
     }
+    sp->base = base;
     sp->size += nb;
     return JS_TRUE;
 }
@@ -670,7 +673,7 @@ JS_NEW_PRINTER(JSContext *cx, const char *name, uintN indent, JSBool pretty)
     if (!jp)
         return NULL;
     INIT_SPRINTER(cx, &jp->sprinter, &jp->pool, 0);
-    JS_INIT_ARENA_POOL(&jp->pool, name, 256, 1);
+    JS_INIT_ARENA_POOL(&jp->pool, name, 256, 1, &cx->scriptStackQuota);
     jp->indent = indent & ~JS_IN_GROUP_CONTEXT;
     jp->pretty = pretty;
     jp->grouped = (indent & JS_IN_GROUP_CONTEXT) != 0;

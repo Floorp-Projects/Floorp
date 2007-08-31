@@ -36,7 +36,6 @@
 
 #include "nsIDocument.h"
 #include "nsSVGMaskFrame.h"
-#include "nsIDOMSVGAnimatedEnum.h"
 #include "nsSVGContainerFrame.h"
 #include "nsSVGMaskElement.h"
 #include "nsIDOMSVGMatrix.h"
@@ -65,23 +64,6 @@ NS_GetSVGMaskElement(nsIURI *aURI, nsIContent *aContent)
 
   return nsnull;
 }
-
-NS_IMETHODIMP
-nsSVGMaskFrame::InitSVG()
-{
-  nsresult rv = nsSVGMaskFrameBase::InitSVG();
-  if (NS_FAILED(rv))
-    return rv;
-
-  mMaskParentMatrix = nsnull;
-  mInUse = PR_FALSE;
-
-  nsCOMPtr<nsIDOMSVGMaskElement> mask = do_QueryInterface(mContent);
-  NS_ASSERTION(mask, "wrong content element");
-
-  return NS_OK;
-}
-
 
 already_AddRefed<gfxPattern>
 nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
@@ -117,10 +99,10 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
     tmpWidth = &mask->mLengthAttributes[nsSVGMaskElement::WIDTH];
     tmpHeight = &mask->mLengthAttributes[nsSVGMaskElement::HEIGHT];
 
-    PRUint16 units;
-    mask->mMaskUnits->GetAnimVal(&units);
+    PRUint16 units =
+      mask->mEnumAttributes[nsSVGMaskElement::MASKUNITS].GetAnimValue();
 
-    if (units == nsIDOMSVGMaskElement::SVG_MUNITS_OBJECTBOUNDINGBOX) {
+    if (units == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
 
       aParent->SetMatrixPropagation(PR_FALSE);
       aParent->NotifyCanvasTMChanged(PR_TRUE);
@@ -257,11 +239,11 @@ nsSVGMaskFrame::GetCanvasTM()
   /* object bounding box? */
   nsSVGMaskElement *mask = static_cast<nsSVGMaskElement*>(mContent);
 
-  PRUint16 contentUnits;
-  mask->mMaskContentUnits->GetAnimVal(&contentUnits);
+  PRUint16 contentUnits =
+    mask->mEnumAttributes[nsSVGMaskElement::MASKCONTENTUNITS].GetAnimValue();
 
   if (mMaskParent &&
-      contentUnits == nsIDOMSVGMaskElement::SVG_MUNITS_OBJECTBOUNDINGBOX) {
+      contentUnits == nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     nsCOMPtr<nsIDOMSVGRect> rect;
     nsresult rv = mMaskParent->GetBBox(getter_AddRefs(rect));
 

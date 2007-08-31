@@ -53,12 +53,48 @@ var PlacesCommandHook = {
     return document.getElementById("editBookmarkPanel");
   },
 
+  // list of command elements (by id) to disable when the panel is opened
+  _blockedCommands: ["cmd_close", "cmd_closeWindow"],
+
+  _blockCommands: function PCH__blockCommands() {
+    for each(var key in this._blockedCommands) {
+      var elt = document.getElementById(key);
+      if (elt.getAttribute("disabled") == "true")
+        elt.setAttribute("wasDisabled", "true");
+      else {
+        elt.setAttribute("wasDisabled", "false");
+        elt.setAttribute("disabled", "true");
+      }
+    }
+  },
+
+  _restoreCommandsState: function PCH__restoreCommandsState() {
+    for each(var key in this._blockedCommands) {
+      var elt = document.getElementById(key);
+      if (elt.getAttribute("wasDisabled") != "true")
+        elt.removeAttribute("disabled");
+      elt.removeAttribute("wasDisabled");
+    }
+  },
+
   // nsIDOMEventListener
   handleEvent: function PCH_handleEvent(aEvent) {
-    if (aEvent.originalTarget != this.panel)
-      return;
-
-    gEditItemOverlay.uninitPanel(true);
+    switch (aEvent.type) {
+      case "popuphiding":
+        if (aEvent.originalTarget == this.panel) {
+          gEditItemOverlay.uninitPanel(true);
+          this._restoreCommandsState();
+        }
+        break;
+      case "keypress":
+        if (aEvent.keyCode == KeyEvent.DOM_VK_ESCAPE ||
+            aEvent.keyCode == KeyEvent.DOM_VK_RETURN) {
+          // focus the content area and hide the panel
+          window.content.focus();
+          this.panel.hidePopup();
+        }
+        break;
+    }
   },
 
   _overlayLoaded: false,
@@ -98,17 +134,27 @@ var PlacesCommandHook = {
 
   _doShowEditBookmarkPanel:
   function PCH__doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition) {
+    this.panel.addEventListener("keypress", this, true);
+    this._blockCommands(); // un-done in the popuphiding handler
     this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
 
     gEditItemOverlay.initPanel(aItemId,
                                { hiddenRows: ["description", "location"] });
+    setTimeout(function() {
+                 var namePicker = document.getElementById("editBMPanel_namePicker");
+                 namePicker.focus();
+                 namePicker.editor.selectAll();
+              }, 0);
   },
 
   /**
-   * Adds a bookmark to the page loaded in the given browser
+   * Adds a bookmark to the page loaded in the given browser.
    *
    * @param aBrowser
-   *        a <browser> element
+   *        a <browser> element.
+   * @param [optional] aParent
+   *        The folder in which to create a new bookmark if the page loaded in
+   *        aBrowser isn't bookmarked yet, defaults to the places root.
    * @param [optional] aShowEditUI
    *        whether or not to show the edit-bookmark UI for the bookmark item
    * @param [optional] aAnchorElement
@@ -116,10 +162,9 @@ var PlacesCommandHook = {
    * @param [optional] aPosition
    *        required if aShowEditUI is set, see popup's openPopup.
    */  
-  bookmarkPage: function PCH_bookmarkPage(aBrowser, aShowEditUI,
+  bookmarkPage: function PCH_bookmarkPage(aBrowser, aParent, aShowEditUI,
                                           aAnchorElement, aPosition) {
     var uri = aBrowser.currentURI;
-
     var itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     if (itemId == -1) {
       // Copied over from addBookmarkForBrowser:
@@ -138,8 +183,9 @@ var PlacesCommandHook = {
       }
       catch (e) { }
 
+      var parent = aParent != undefined ? aParent : PlacesUtils.placesRootId;
       var descAnno = { name: DESCRIPTION_ANNO, value: description };
-      var txn = PlacesUtils.ptm.createItem(uri, PlacesUtils.placesRootId, -1,
+      var txn = PlacesUtils.ptm.createItem(uri, parent, -1,
                                            title, null, [descAnno]);
       PlacesUtils.ptm.commitTransaction(txn);
       if (aShowEditUI)
@@ -153,33 +199,36 @@ var PlacesCommandHook = {
   /**
    * Adds a bookmark to the page loaded in the current tab. 
    */
-  bookmarkCurrentPage: function PCH_bookmarkCurrentPage(aShowEditUI) {
+  bookmarkCurrentPage: function PCH_bookmarkCurrentPage(aShowEditUI, aParent) {
     // dock the panel to the star icon if it is visible, otherwise dock
     // it to the content area
-    var starIcon = document.getElementById("star-icon");
+    var starIcon = document.getElementById("star-button");
     if (starIcon && isElementVisible(starIcon)) {
-      this.bookmarkPage(getBrowser().selectedBrowser, aShowEditUI, starIcon,
-                        "after_end");
+      var dockTo = document.getElementById("go-button-bottom");
+      this.bookmarkPage(getBrowser().selectedBrowser, aParent, aShowEditUI,
+                        dockTo, "after_start");
     }
     else {
-      this.bookmarkPage(getBrowser().selectedBrowser, aShowEditUI, getBrowser(),
-                        "overlap");
+      this.bookmarkPage(getBrowser().selectedBrowser, aParent, aShowEditUI,
+                        getBrowser(), "overlap");
     }
   },
 
   /**
    * Adds a bookmark to the page targeted by a link.
-   * @param   url
-   *          The address of the link target
-   * @param   title
-   *          The link text
+   * @param aParent
+   *        The folder in which to create a new bookmark if aURL isn't
+   *        bookmarked.
+   * @param aURL (string)
+   *        the address of the link target
+   * @param aTitle
+   *        The link text
    */
-  bookmarkLink: function PCH_bookmarkLink(url, title) {
-    var linkURI = IO.newURI(url)
+  bookmarkLink: function PCH_bookmarkLink(aParent, aURL, aTitle) {
+    var linkURI = IO.newURI(aURL)
     var itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
     if (itemId == -1) {
-      var txn = PlacesUtils.ptm.createItem(linkURI, PlacesUtils.placesRootId, -1,
-                                           title);
+      var txn = PlacesUtils.ptm.createItem(linkURI, aParent, -1, aTitle);
       PlacesUtils.ptm.commitTransaction(txn);
       itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
     }
@@ -553,18 +602,6 @@ var BookmarksMenuDropHandler = {
  * Toolbar and Bookmarks Menu.
  */
 var PlacesMenuDNDController = {
-  
-  /**
-   * Attach a special context menu hiding listener that ensures that popups 
-   * are properly closed after a context menu is hidden. See bug 332845 for 
-   * why we have to do this.
-   */
-  init: function PMDC_init() {
-    var placesContext = document.getElementById("placesContext");
-    var self = this;
-    placesContext.addEventListener("popuphidden", function () { self._closePopups() }, false);
-  },
-
   _springLoadDelay: 350, // milliseconds
 
   /**
@@ -728,12 +765,12 @@ var PlacesStarButton = {
   _batching: false,
 
   updateState: function PSB_updateState() {
-    var starIcon = document.getElementById("star-icon");
+    var starIcon = document.getElementById("star-button");
     if (!starIcon)
       return;
 
     var uri = getBrowser().currentURI;
-    this._starred = uri && PlacesUtils.bookmarks.isBookmarked(uri);
+    this._starred = uri && (PlacesUtils.getMostRecentBookmarkForURI(uri) != -1);
     if (this._starred)
       starIcon.setAttribute("starred", "true");
     else

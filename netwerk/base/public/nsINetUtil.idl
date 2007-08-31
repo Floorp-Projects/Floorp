@@ -161,7 +161,7 @@ interface nsINetUtil : nsISupports
 
   /** 
    * Skip graphic octets (0x20-0x7E) when escaping
-   * Skips all ascii octets when unescaping 
+   * Skips all ASCII octets (0x00-0x7F) when unescaping 
    */
   const unsigned long ESCAPE_URL_ONLY_NONASCII = 1 << 12;
 
@@ -186,7 +186,7 @@ interface nsINetUtil : nsISupports
    * Expands URL escape sequences
    *
    * @param aStr the URL to be unescaped
-   * @param aFlags only ESCAPE_URL_ONLY_NONASCII, ESCAPE_URL_SKIP_CONTROL and 
+   * @param aFlags only ESCAPE_URL_ONLY_NONASCII and ESCAPE_URL_SKIP_CONTROL
    *               are recognized.  If |aFlags| is 0 all escape sequences are 
    *               unescaped
    * @return unescaped string

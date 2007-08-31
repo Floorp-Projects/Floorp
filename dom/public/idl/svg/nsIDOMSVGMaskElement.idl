@@ -59,11 +59,6 @@ interface nsIDOMSVGMaskElement
        
 */
 { 
-    // These constants are taken from SVGUnitTypes
-    const unsigned short SVG_MUNITS_UNKNOWN           = 0;
-    const unsigned short SVG_MUNITS_OBJECTBOUNDINGBOX = 1;
-    const unsigned short SVG_MUNITS_USERSPACEONUSE    = 2;
-
     readonly attribute nsIDOMSVGAnimatedEnumeration maskUnits;
     readonly attribute nsIDOMSVGAnimatedEnumeration maskContentUnits;
     readonly attribute nsIDOMSVGAnimatedLength      x;

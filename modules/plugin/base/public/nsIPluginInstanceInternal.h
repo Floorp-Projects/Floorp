@@ -42,6 +42,8 @@
 struct JSObject;
 struct JSContext;
 
+#define NPRUNTIME_JSCLASS_NAME "NPObject JS wrapper class"
+
 #define NS_IPLUGININSTANCEINTERNAL_IID \
   { 0x301f13ed, 0x50f2, 0x4ed2, \
     { 0x83, 0x0d, 0x78, 0x36, 0x1d, 0x01, 0x76, 0xaf }}

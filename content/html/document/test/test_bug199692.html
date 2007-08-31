@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=199692
+-->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Test for Bug 199692</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style type="text/css">
+#content * {
+  border: 2px solid black;
+  margin: 2px;
+  clear: both;
+  height: 20px;
+  overflow: hidden; 
+}
+
+#txt, #static, #fixed, #absolute, #relative, #hidden, #float, #empty, #static, #relative {
+width: 200px !important;
+}
+
+  </style>
+  
+</head>
+<!-- Elements are styled in such a way that they don't overlap visually unless they also overlap structurally. -->
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=199692">Mozilla Bug 199692</a>
+
+<div id="content" style="width: 500px; background-color: #ccc;">
+
+<!-- element containing text -->
+<div id="txt" style="height: 30px;">txt</div>
+
+<!-- element not containing text -->
+<div id="empty" style="border: 2px solid blue;"></div>
+
+<!-- element with only whitespace -->
+<p id="whitespace" style="border: 2px solid magenta;"> </p>
+
+<!-- position: static -->
+<span id="static" style="position: static; border-color: green;">static</span>
+
+<!-- floated element -->
+<div id="float" style="border-color: red; float: right;">float</div>
+
+<!-- position: fixed -->
+<span id="fixed" style="position: fixed; top: 500px; left: 100px; border: 3px solid yellow;">fixed</span>
+
+<!-- position: absolute -->
+<span id="absolute" style="position: absolute; top: 550px; left: 150px; border-color: orange;">abs</span>
+
+<!-- position: relative -->
+<div id="relative" style="position: relative; top: 200px; border-color: teal;">rel</div>
+
+<!-- visibility: hidden -->
+<div id="hidden-wrapper" style="border: 1px dashed teal;">
+    <div id="hidden" style="opacity: 0.5; background-color: blue; visibility:hidden;">hidden</div>
+</div>
+
+<!-- iframe (within iframe) -->
+<iframe id="our-iframe" src="bug199692-nested.html" style="height: 100px;"></iframe>
+
+<input type="textbox" id="textbox" value="textbox"></input>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/** Test for Bug 199692 **/
+
+    SimpleTest.waitForExplicitFinish();
+  
+    ok('elementFromPoint' in document, "document.elementFromPoint() must exist");
+    var elts = ["txt", "empty", "whitespace", "static", "fixed", "absolute",
+                "relative", "float", "textbox"];
+
+    var doc = document;
+    doc.pt = doc.elementFromPoint; // for shorter lines
+    is(doc.pt(-1, 0), null, "Negative coordinates should return null");
+    
+    function testPoints() {
+        
+        for(var i in elts) {
+            var id = elts[i];
+            var elt = $(id);
+            // The upper left corner of an element (with a moderate offset) will usually contain text,
+            // and the upper right corner usually won't.
+            var x = elt.offsetLeft, y = elt.offsetTop, w = elt.scrollWidth, h = elt.scrollHeight;
+            var d = 5;
+            is(doc.pt(x+d,y+d).id, id, "("+(x+d)+","+(y+d)+") IDs should match (upper left corner of "+id+")");
+            is(doc.pt(x+w-d, y+h-d).id, id, "("+(x+w-d)+","+(y+h-d)+") IDs should match (lower right corner of "+id+")");
+        }
+        // content
+        var c = $('content');
+        x = c.offsetLeft + c.clientWidth/2, y = c.offsetTop;
+        todo(doc.pt(x,y) === c, "Point to right of #txt should be #content");
+        
+        // hidden
+        c = $('hidden');
+        x = c.offsetLeft; y = c.offsetTop;
+        is(doc.pt(x,y).id, 'hidden-wrapper', "Hit testing should bypass hidden elements.");
+        
+        // iframe nested
+        var iframe = $("our-iframe");
+        x = iframe.offsetLeft, y = iframe.offsetTop;
+        is(doc.pt(x+20, y+20).id, "our-iframe", "Element from nested iframe returned is from calling document");
+        // iframe, doubly nested
+        is(doc.pt(x+60, y+60).id, "our-iframe", "Element from doubly nested iframe returned is from calling document");
+        
+        SimpleTest.finish();
+    }
+    
+    addLoadEvent(testPoints);
+</script>
+</pre>
+</body>
+</html>
+

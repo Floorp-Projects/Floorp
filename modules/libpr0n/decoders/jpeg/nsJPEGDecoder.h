@@ -106,8 +106,6 @@ public:
   decoder_error_mgr mErr;
   jstate mState;
 
-  JSAMPARRAY mSamples;
-
   PRUint32 mBytesToSkip;
 
   JOCTET *mBuffer;

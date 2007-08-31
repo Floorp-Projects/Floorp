@@ -62,9 +62,9 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetName(nsAString& aName)
 NS_IMETHODIMP nsHTMLTextAccessible::GetRole(PRUint32 *aRole)
 {
   nsIFrame *frame = GetFrame();
-  NS_ENSURE_TRUE(frame, NS_ERROR_NULL_POINTER);
-
-  if (frame->IsGeneratedContentFrame()) {
+  // Don't return on null frame -- we still return a role
+  // after accessible is shutdown/DEFUNCT
+  if (frame && frame->IsGeneratedContentFrame()) {
     *aRole = nsIAccessibleRole::ROLE_STATICTEXT;
     return NS_OK;
   }

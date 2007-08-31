@@ -84,27 +84,23 @@ nsSVGContainerFrame::RemoveFrame(nsIAtom* aListName,
 }
 
 NS_IMETHODIMP
-nsSVGContainerFrame::InitSVG()
+nsSVGContainerFrame::Init(nsIContent* aContent,
+                          nsIFrame* aParent,
+                          nsIFrame* aPrevInFlow)
 {
   AddStateBits(NS_STATE_SVG_NONDISPLAY_CHILD);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGContainerFrame::Init(nsIContent* aContent,
-			  nsIFrame* aParent,
-			  nsIFrame* aPrevInFlow)
-{
   nsresult rv = nsSVGContainerFrameBase::Init(aContent, aParent, aPrevInFlow);
-  InitSVG();
   return rv;
 }
 
 NS_IMETHODIMP
-nsSVGDisplayContainerFrame::InitSVG()
+nsSVGDisplayContainerFrame::Init(nsIContent* aContent,
+                                 nsIFrame* aParent,
+                                 nsIFrame* aPrevInFlow)
 {
-  AddStateBits(mParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
-  return NS_OK;
+  AddStateBits(aParent->GetStateBits() & NS_STATE_SVG_NONDISPLAY_CHILD);
+  nsresult rv = nsSVGContainerFrameBase::Init(aContent, aParent, aPrevInFlow);
+  return rv;
 }
 
 void

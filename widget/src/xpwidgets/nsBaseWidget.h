@@ -131,8 +131,6 @@ public:
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
   NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
   NS_IMETHOD              SetIcon(const nsAString &anIconSpec);
-  NS_IMETHOD              SetAnimatedResize(PRUint16 aAnimation);
-  NS_IMETHOD              GetAnimatedResize(PRUint16* aAnimation);
   virtual void            ConvertToDeviceCoordinates(nscoord  &aX,nscoord &aY) {}
   virtual void            FreeNativeData(void * data, PRUint32 aDataType) {}//~~~
 

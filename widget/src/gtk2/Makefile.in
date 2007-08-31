@@ -129,6 +129,7 @@ EXTRA_DSO_LDOPTS += \
 		$(XLIBS) \
 		$(MOZ_GTK2_LIBS) \
 		-lthebes \
+		$(LCMS_LIBS) \
 		$(NULL)
 
 EXPORTS		= \

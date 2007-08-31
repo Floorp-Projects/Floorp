@@ -303,12 +303,15 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     status = _cairo_scaled_font_init (&f->base, font_face,
 				      font_matrix, ctm, options,
 				      &cairo_win32_scaled_font_backend);
-
-    if (status == CAIRO_STATUS_SUCCESS)
-	status = _cairo_win32_scaled_font_set_metrics (f);
-
     if (status) {
-	cairo_scaled_font_destroy (&f->base);
+	free (f);
+	return NULL;
+    }
+
+    status = _cairo_win32_scaled_font_set_metrics (f);
+    if (status) {
+	_cairo_scaled_font_fini (f);
+	free (f);
 	return NULL;
     }
 

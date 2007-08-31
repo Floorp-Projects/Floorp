@@ -72,7 +72,8 @@ mozStorageStatementRowValueArray::GetNumEntries(PRUint32 *aLength)
 NS_IMETHODIMP
 mozStorageStatementRowValueArray::GetTypeOfIndex(PRUint32 aIndex, PRInt32 *_retval)
 {
-    NS_ASSERTION (aIndex < mNumEntries, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mNumEntries)
+        return NS_ERROR_ILLEGAL_VALUE;
 
     int t = sqlite3_column_type (mSqliteStatement, aIndex);
     switch (t) {
@@ -102,7 +103,8 @@ mozStorageStatementRowValueArray::GetTypeOfIndex(PRUint32 aIndex, PRInt32 *_retv
 NS_IMETHODIMP
 mozStorageStatementRowValueArray::GetInt32(PRUint32 aIndex, PRInt32 *_retval)
 {
-    NS_ASSERTION (aIndex < mNumEntries, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mNumEntries)
+        return NS_ERROR_ILLEGAL_VALUE;
 
     *_retval = sqlite3_column_int (mSqliteStatement, aIndex);
 
@@ -112,7 +114,8 @@ mozStorageStatementRowValueArray::GetInt32(PRUint32 aIndex, PRInt32 *_retval)
 NS_IMETHODIMP
 mozStorageStatementRowValueArray::GetInt64(PRUint32 aIndex, PRInt64 *_retval)
 {
-    NS_ASSERTION (aIndex < mNumEntries, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mNumEntries)
+        return NS_ERROR_ILLEGAL_VALUE;
 
     *_retval = sqlite3_column_int64 (mSqliteStatement, aIndex);
 
@@ -122,7 +125,8 @@ mozStorageStatementRowValueArray::GetInt64(PRUint32 aIndex, PRInt64 *_retval)
 NS_IMETHODIMP
 mozStorageStatementRowValueArray::GetDouble(PRUint32 aIndex, double *_retval)
 {
-    NS_ASSERTION (aIndex < mNumEntries, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mNumEntries)
+        return NS_ERROR_ILLEGAL_VALUE;
 
     *_retval = sqlite3_column_double (mSqliteStatement, aIndex);
 
@@ -132,8 +136,7 @@ mozStorageStatementRowValueArray::GetDouble(PRUint32 aIndex, double *_retval)
 NS_IMETHODIMP
 mozStorageStatementRowValueArray::GetUTF8String(PRUint32 aIndex, nsACString &_retval)
 {
-    NS_ASSERTION (aIndex < mNumEntries, "aIndex out of range");
-
+    // GetTypeOfIndex will check aIndex for us, so we don't have to.
     PRInt32 type;
     nsresult rv = GetTypeOfIndex (aIndex, &type);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -152,8 +155,7 @@ mozStorageStatementRowValueArray::GetUTF8String(PRUint32 aIndex, nsACString &_re
 NS_IMETHODIMP
 mozStorageStatementRowValueArray::GetString(PRUint32 aIndex, nsAString & _retval)
 {
-    NS_ASSERTION (aIndex < mNumEntries, "aIndex out of range");
-
+    // GetTypeOfIndex will check aIndex for us, so we don't have to.
     PRInt32 type;
     nsresult rv = GetTypeOfIndex (aIndex, &type);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -172,7 +174,8 @@ mozStorageStatementRowValueArray::GetString(PRUint32 aIndex, nsAString & _retval
 NS_IMETHODIMP
 mozStorageStatementRowValueArray::GetBlob(PRUint32 aIndex, PRUint32 *aDataSize, PRUint8 **aData)
 {
-    NS_ASSERTION (aIndex < mNumEntries, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mNumEntries)
+        return NS_ERROR_ILLEGAL_VALUE;
 
     int blobsize = sqlite3_column_bytes (mSqliteStatement, aIndex);
     const void *blob = sqlite3_column_blob (mSqliteStatement, aIndex);
@@ -190,10 +193,10 @@ mozStorageStatementRowValueArray::GetBlob(PRUint32 aIndex, PRUint32 *aDataSize, 
 NS_IMETHODIMP
 mozStorageStatementRowValueArray::GetIsNull(PRUint32 aIndex, PRBool *_retval)
 {
+    // GetTypeOfIndex will check aIndex for us, so we don't have to.
     PRInt32 t;
     nsresult rv = GetTypeOfIndex (aIndex, &t);
-    if (NS_FAILED(rv))
-        return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (t == VALUE_TYPE_NULL)
         *_retval = PR_TRUE;
@@ -266,7 +269,8 @@ mozStorageArgvValueArray::GetNumEntries(PRUint32 *aLength)
 NS_IMETHODIMP
 mozStorageArgvValueArray::GetTypeOfIndex(PRUint32 aIndex, PRInt32 *_retval)
 {
-    NS_ASSERTION (aIndex < mArgc, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mArgc)
+        return NS_ERROR_ILLEGAL_VALUE;
 
     int t = sqlite3_value_type (mArgv[aIndex]);
     switch (t) {
@@ -296,7 +300,8 @@ mozStorageArgvValueArray::GetTypeOfIndex(PRUint32 aIndex, PRInt32 *_retval)
 NS_IMETHODIMP
 mozStorageArgvValueArray::GetInt32(PRUint32 aIndex, PRInt32 *_retval)
 {
-    NS_ASSERTION (aIndex < mArgc, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mArgc)
+        return NS_ERROR_ILLEGAL_VALUE;
 
     *_retval = sqlite3_value_int (mArgv[aIndex]);
 
@@ -306,7 +311,8 @@ mozStorageArgvValueArray::GetInt32(PRUint32 aIndex, PRInt32 *_retval)
 NS_IMETHODIMP
 mozStorageArgvValueArray::GetInt64(PRUint32 aIndex, PRInt64 *_retval)
 {
-    NS_ASSERTION (aIndex < mArgc, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mArgc)
+        return NS_ERROR_ILLEGAL_VALUE;
 
     *_retval = sqlite3_value_int64 (mArgv[aIndex]);
 
@@ -316,7 +322,8 @@ mozStorageArgvValueArray::GetInt64(PRUint32 aIndex, PRInt64 *_retval)
 NS_IMETHODIMP
 mozStorageArgvValueArray::GetDouble(PRUint32 aIndex, double *_retval)
 {
-    NS_ASSERTION (aIndex < mArgc, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mArgc)
+        return NS_ERROR_ILLEGAL_VALUE;
 
     *_retval = sqlite3_value_double (mArgv[aIndex]);
 
@@ -326,7 +333,8 @@ mozStorageArgvValueArray::GetDouble(PRUint32 aIndex, double *_retval)
 NS_IMETHODIMP
 mozStorageArgvValueArray::GetUTF8String(PRUint32 aIndex, nsACString & _retval)
 {
-    NS_ASSERTION (aIndex < mArgc, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mArgc)
+        return NS_ERROR_ILLEGAL_VALUE;
 
     if (sqlite3_value_type (mArgv[aIndex]) == SQLITE_NULL) {
         // null columns get IsVoid set to distinguish them from empty strings
@@ -343,7 +351,8 @@ mozStorageArgvValueArray::GetUTF8String(PRUint32 aIndex, nsACString & _retval)
 NS_IMETHODIMP
 mozStorageArgvValueArray::GetString(PRUint32 aIndex, nsAString & _retval)
 {
-    NS_ASSERTION (aIndex < mArgc, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mArgc)
+        return NS_ERROR_ILLEGAL_VALUE;
 
     if (sqlite3_value_type (mArgv[aIndex]) == SQLITE_NULL) {
         // null columns get IsVoid set to distinguish them from empty strings
@@ -360,7 +369,8 @@ mozStorageArgvValueArray::GetString(PRUint32 aIndex, nsAString & _retval)
 NS_IMETHODIMP
 mozStorageArgvValueArray::GetBlob(PRUint32 aIndex, PRUint32 *aDataSize, PRUint8 **aData)
 {
-    NS_ASSERTION (aIndex < mArgc, "aIndex out of range");
+    if (aIndex < 0 || aIndex >= mArgc)
+        return NS_ERROR_ILLEGAL_VALUE;
 
     int blobsize = sqlite3_value_bytes (mArgv[aIndex]);
     const void *blob = sqlite3_value_blob (mArgv[aIndex]);
@@ -379,10 +389,10 @@ mozStorageArgvValueArray::GetBlob(PRUint32 aIndex, PRUint32 *aDataSize, PRUint8 
 NS_IMETHODIMP
 mozStorageArgvValueArray::GetIsNull(PRUint32 aIndex, PRBool *_retval)
 {
+    // GetTypeOfIndex will check aIndex for us, so we don't have to.
     PRInt32 t;
     nsresult rv = GetTypeOfIndex (aIndex, &t);
-    if (NS_FAILED(rv))
-        return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
 
     if (t == VALUE_TYPE_NULL)
         *_retval = PR_TRUE;

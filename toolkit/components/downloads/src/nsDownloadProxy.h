@@ -44,9 +44,11 @@
 #include "nsIPrefService.h"
 #include "nsIMIMEInfo.h"
 #include "nsIFileURL.h"
+#include "nsIDownloadManagerUI.h"
 
 #define PREF_BDM_SHOWWHENSTARTING "browser.download.manager.showWhenStarting"
 #define PREF_BDM_USEWINDOW "browser.download.manager.useWindow"
+#define PREF_BDM_FOCUSWHENSTARTING "browser.download.manager.focusWhenStarting"
 
 class nsDownloadProxy : public nsITransfer
 {
@@ -89,7 +91,22 @@ public:
       PRUint32 id;
       mInner->GetId(&id);
 
-      return dm->Open(nsnull, id);
+      nsCOMPtr<nsIDownloadManagerUI> dmui =
+        do_GetService("@mozilla.org/download-manager-ui;1", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRBool visible;
+      rv = dmui->GetVisible(&visible);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRBool focus = PR_TRUE;
+      if (branch)
+        (void)branch->GetBoolPref(PREF_BDM_FOCUSWHENSTARTING, &focus);
+
+      if (visible && !focus)
+        return dmui->GetAttention();
+
+      return dmui->Show(nsnull, id);
     }
     return rv;
   }

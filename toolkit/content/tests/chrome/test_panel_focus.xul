@@ -12,6 +12,8 @@
           src="chrome://mochikit/content/MochiKit/packed.js"/>
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
 <script>
 // use a chrome window for this test as the focus in content windows can be
@@ -20,6 +22,10 @@
 SimpleTest.waitForExplicitFinish();
 function runTest()
 {
+  // move the mouse so any tooltips that might be open go away, otherwise this
+  // test can fail on Mac
+  synthesizeMouse(document.documentElement, 1, 1, { type: "mousemove" });
+
   window.open("window_panel_focus.xul", "_new", "chrome,width=600,height=600");
 }
 </script>

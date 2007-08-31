@@ -41,7 +41,6 @@
 #ifndef nsLayoutUtils_h__
 #define nsLayoutUtils_h__
 
-class nsIFrame;
 class nsIFormControlFrame;
 class nsPresContext;
 class nsIContent;
@@ -58,6 +57,7 @@ class nsIFontMetrics;
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
 #include "nsIView.h"
+#include "nsIFrame.h"
 
 class nsBlockFrame;
 
@@ -378,8 +378,11 @@ public:
    * frame under the point aPt that receives a mouse event at that location,
    * or nsnull if there is no such frame.
    * @param aPt the point, relative to the frame origin
+   * @param aShouldIgnoreSuppression a boolean to control if the display
+   * list builder should ignore paint suppression or not
    */
-  static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt);
+  static nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
+                                    PRBool aShouldIgnoreSuppression = PR_FALSE);
 
   /**
    * Given aFrame, the root frame of a stacking context, paint it and its
@@ -547,6 +550,18 @@ public:
   static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
                                  nsIRenderingContext* aRenderingContext,
                                  nsIFrame* aFrame,
+                                 nscoord& aResult)
+  {
+    return GetAbsoluteCoord(aStyle, aRenderingContext,
+                            aFrame->GetStyleContext(), aResult);
+  }
+
+  /**
+   * Same as above but doesn't need a frame
+   */
+  static PRBool GetAbsoluteCoord(const nsStyleCoord& aStyle,
+                                 nsIRenderingContext* aRenderingContext,
+                                 nsStyleContext* aStyleContext,
                                  nscoord& aResult);
   /**
    * Get the contribution of aFrame to its containing block's intrinsic

@@ -763,8 +763,8 @@ nsToolkitProfileService::Flush()
         ++pCount;
 
     PRUint32 length;
+    nsAutoArrayPtr<char> buffer (new char[100+MAXPATHLEN*pCount]);
 
-    char* buffer = (char*) malloc(100 + MAXPATHLEN * pCount);
     NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
 
     char *end = buffer;

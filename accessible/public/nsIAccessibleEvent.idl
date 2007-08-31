@@ -553,6 +553,11 @@ interface nsIAccessibleTextChangeEvent : nsIAccessibleEvent
    * Returns true if text was inserted, otherwise false.
    */
   boolean isInserted();
+
+  /**
+   * The inserted or removed text
+   */
+  readonly attribute DOMString modifiedText;
 };
 
 [scriptable, uuid(b9076dce-4cd3-4e3d-a7f6-7f33a7f40c31)]

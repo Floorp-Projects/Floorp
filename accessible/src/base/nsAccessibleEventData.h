@@ -46,6 +46,8 @@
 #include "nsIAccessible.h"
 #include "nsIAccessibleDocument.h"
 #include "nsIDOMNode.h"
+#include "nsString.h"
+
 class nsIPresShell;
 
 class nsAccEvent: public nsIAccessibleEvent
@@ -128,8 +130,8 @@ class nsAccTextChangeEvent: public nsAccEvent,
                             public nsIAccessibleTextChangeEvent
 {
 public:
-  nsAccTextChangeEvent(nsIAccessible *aAccessible,
-                       PRInt32 aStart, PRUint32 aLength, PRBool aIsInserted);
+  nsAccTextChangeEvent(nsIAccessible *aAccessible, PRInt32 aStart, PRUint32 aLength,
+                       PRBool aIsInserted, PRBool aIsAsynch = PR_FALSE);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_NSIACCESSIBLEEVENT(nsAccEvent::)
@@ -139,6 +141,7 @@ private:
   PRInt32 mStart;
   PRUint32 mLength;
   PRBool mIsInserted;
+  nsString mModifiedText;
 };
 
 class nsAccCaretMoveEvent: public nsAccEvent,

@@ -73,7 +73,6 @@ CPPSRCS		= \
 		nsSVGAngle.cpp \
 		nsSVGAnimatedAngle.cpp \
 		nsSVGAnimatedBoolean.cpp \
-		nsSVGAnimatedEnumeration.cpp \
 		nsSVGAnimatedInteger.cpp \
 		nsSVGAnimatedLengthList.cpp \
 		nsSVGAnimatedNumberList.cpp \
@@ -163,7 +162,6 @@ EXPORTS =  			\
 	nsSVGRect.h                \
 	nsSVGPoint.h               \
 	nsSVGMatrix.h              \
-	nsISVGEnum.h               \
 	$(NULL)
 
 
