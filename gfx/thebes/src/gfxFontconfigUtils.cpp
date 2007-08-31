@@ -445,13 +445,14 @@ gfxFontconfigUtils::IsExistingFont(const nsACString &aFontName)
     if (!fs)
         goto end;
 
-    result = fs->nfont;
-    NS_ASSERTION(result == 0 || result == 1, "What's this case?");
-
-    if (result > 0)
+    // There can be more than one matching set of family names: see bug 393819.
+    if (fs->nfont > 0) {
         mAliasForSingleFont.AppendCString(aFontName);
-    else
+        result = 1;
+    } else {
         mNonExistingFonts.AppendCString(aFontName);
+        result = 0;
+    }
 
   end:
     if (pat)
