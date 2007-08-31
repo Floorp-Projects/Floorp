@@ -85,6 +85,7 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsCURILoader.h"
+#include "nsURILoader.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsEscape.h"
 #include "nsIPlatformCharset.h"
@@ -123,6 +124,8 @@
 #include "nsITimer.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentPolicyUtils.h"
+
+#include "nsIURIClassifier.h"
 
 #ifdef NS_DEBUG
 /**
@@ -1191,6 +1194,7 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
              aStatus == NS_ERROR_UNKNOWN_SOCKET_TYPE ||
              aStatus == NS_ERROR_NET_INTERRUPT ||
              aStatus == NS_ERROR_NET_RESET ||
+             aStatus == NS_ERROR_MALWARE_URI ||
              NS_ERROR_GET_MODULE(aStatus) == NS_ERROR_MODULE_SECURITY) {
       DisplayLoadError(aStatus, url, nsnull, channel);
     }

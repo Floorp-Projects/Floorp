@@ -58,6 +58,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsCURILoader.h"
+#include "nsURILoader.h"
 #include "nsDocShellCID.h"
 #include "nsLayoutCID.h"
 #include "nsDOMCID.h"
@@ -105,6 +106,7 @@
 #include "nsIViewManager.h"
 #include "nsIScrollableView.h"
 #include "nsIScriptChannel.h"
+#include "nsIURIClassifier.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -2840,6 +2842,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     PRUint32 formatStrCount = 0;
     nsresult rv = NS_OK;
     nsAutoString messageStr;
+    nsCAutoString cssClass;
 
     // Turn the error code into a human readable error message.
     if (NS_ERROR_UNKNOWN_PROTOCOL == aError) {
@@ -2980,6 +2983,15 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
             // Bad Content Encoding.
             error.AssignLiteral("contentEncodingError");
             break;
+        case NS_ERROR_MALWARE_URI:
+            nsCAutoString host;
+            aURI->GetHost(host);
+            CopyUTF8toUTF16(host, formatStrs[0]);
+            formatStrCount = 1;
+
+            error.AssignLiteral("malwareBlocked");
+            cssClass.AssignLiteral("blacklist");
+            break;
         }
     }
 
@@ -3021,7 +3033,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
     if (mUseErrorPages && aURI && aFailedChannel) {
         // Display an error page
         LoadErrorPage(aURI, aURL, error.get(), messageStr.get(),
-                      aFailedChannel);
+                      cssClass.get(), aFailedChannel);
     } 
     else
     {
@@ -3046,6 +3058,7 @@ NS_IMETHODIMP
 nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
                           const PRUnichar *aErrorType,
                           const PRUnichar *aDescription,
+                          const char *aCSSClass,
                           nsIChannel* aFailedChannel)
 {
 #if defined(PR_LOGGING) && defined(DEBUG)
@@ -3110,12 +3123,17 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     char *escapedCharset = nsEscape(charset.get(), url_Path);
     char *escapedError = nsEscape(NS_ConvertUTF16toUTF8(aErrorType).get(), url_Path);
     char *escapedDescription = nsEscape(NS_ConvertUTF16toUTF8(aDescription).get(), url_Path);
+    char *escapedCSSClass = nsEscape(aCSSClass, url_Path);
 
     nsCString errorPageUrl("about:neterror?e=");
 
     errorPageUrl.AppendASCII(escapedError);
     errorPageUrl.AppendLiteral("&u=");
     errorPageUrl.AppendASCII(escapedUrl);
+    if (escapedCSSClass && escapedCSSClass[0]) {
+        errorPageUrl.AppendASCII("&s=");
+        errorPageUrl.AppendASCII(escapedCSSClass);
+    }
     errorPageUrl.AppendLiteral("&c=");
     errorPageUrl.AppendASCII(escapedCharset);
     errorPageUrl.AppendLiteral("&d=");
@@ -3125,6 +3143,7 @@ nsDocShell::LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL,
     nsMemory::Free(escapedError);
     nsMemory::Free(escapedUrl);
     nsMemory::Free(escapedCharset);
+    nsMemory::Free(escapedCSSClass);
 
     nsCOMPtr<nsIURI> errorPageURI;
     nsresult rv = NS_NewURI(getter_AddRefs(errorPageURI), errorPageUrl);
@@ -3220,6 +3239,11 @@ nsDocShell::Stop(PRUint32 aStopFlags)
             SuspendRefreshURIs();
             mSavedRefreshURIList.swap(mRefreshURIList);
             mRefreshURIList = nsnull;
+        }
+
+        if (mClassifier) {
+            mClassifier->Cancel();
+            mClassifier = nsnull;
         }
 
         // XXXbz We could also pass |this| to nsIURILoader::Stop.  That will
@@ -4831,6 +4855,17 @@ nsDocShell::OnRedirectStateChange(nsIChannel* aOldChannel,
     if (!(aStateFlags & STATE_IS_DOCUMENT))
         return; // not a toplevel document
 
+    // If this load is being checked by the URI classifier, we need to
+    // query the classifier again for the new URI.
+    if (mClassifier) {
+        mClassifier->SetChannel(aNewChannel);
+
+        // we call the nsClassifierCallback:Run() from the main loop to
+        // give the channel a chance to AsyncOpen() the channel before
+        // we suspend it.
+        NS_DispatchToCurrentThread(mClassifier);
+    }
+
     nsCOMPtr<nsIGlobalHistory3> history3(do_QueryInterface(mGlobalHistory));
     nsresult result = NS_ERROR_NOT_IMPLEMENTED;
     if (history3) {
@@ -4880,6 +4915,10 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
     // during this load handler.
     //
     nsCOMPtr<nsIDocShell> kungFuDeathGrip(this);
+
+    // We're done with the URI classifier for this channel
+    mClassifier = nsnull;
+
     //
     // Notify the ContentViewer that the Document has finished loading...
     //
@@ -7244,8 +7283,34 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
     rv = aURILoader->OpenURI(aChannel,
                              (mLoadType == LOAD_LINK),
                              this);
-    
-    return rv;
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = CheckClassifier(aChannel);
+    if (NS_FAILED(rv)) {
+        aChannel->Cancel(rv);
+        return rv;
+    }
+
+    return NS_OK;
+}
+
+nsresult
+nsDocShell::CheckClassifier(nsIChannel *aChannel)
+{
+    nsRefPtr<nsClassifierCallback> classifier = new nsClassifierCallback();
+    if (!classifier) return NS_ERROR_OUT_OF_MEMORY;
+
+    classifier->SetChannel(aChannel);
+    nsresult rv = classifier->Run();
+    if (rv == NS_ERROR_FACTORY_NOT_REGISTERED) {
+        // no URI classifier, ignore this
+        return NS_OK;
+    }
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mClassifier = classifier;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -8992,4 +9057,126 @@ nsDocShell::IsAboutBlank(nsIURI* aURI)
     aURI->GetSpec(str);
     return str.EqualsLiteral("about:blank");
 }
-                                     
+
+//*****************************************************************************
+// nsClassifierCallback
+//*****************************************************************************
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsClassifierCallback,
+                              nsIURIClassifierCallback,
+                              nsIRunnable)
+
+NS_IMETHODIMP
+nsClassifierCallback::Run()
+{
+    if (!mChannel) {
+        return NS_OK;
+    }
+
+    NS_ASSERTION(!mSuspendedChannel,
+                 "nsClassifierCallback::Run() called while a "
+                 "channel is still suspended.");
+
+    nsCOMPtr<nsIChannel> channel;
+    channel.swap(mChannel);
+
+    // Don't bother to run the classifier on a load that has already failed.
+    // (this might happen after a redirect)
+    PRUint32 status;
+    channel->GetStatus(&status);
+    if (NS_FAILED(status))
+        return NS_OK;
+
+    // Don't bother to run the classifier on a load that's coming from the
+    // cache and doesn't need validaton.
+    nsCOMPtr<nsICachingChannel> cachingChannel = do_QueryInterface(channel);
+    if (cachingChannel) {
+        PRBool fromCache;
+        if (NS_SUCCEEDED(cachingChannel->IsFromCache(&fromCache)) &&
+            fromCache) {
+            return NS_OK;
+        }
+    }
+
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = channel->GetURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Don't bother checking certain types of URIs.
+    PRBool hasFlags;
+    rv = NS_URIChainHasFlags(uri,
+                             nsIProtocolHandler::URI_DANGEROUS_TO_LOAD,
+                             &hasFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (hasFlags) return NS_OK;
+
+    rv = NS_URIChainHasFlags(uri,
+                             nsIProtocolHandler::URI_IS_LOCAL_FILE,
+                             &hasFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (hasFlags) return NS_OK;
+
+    rv = NS_URIChainHasFlags(uri,
+                             nsIProtocolHandler::URI_IS_UI_RESOURCE,
+                             &hasFlags);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (hasFlags) return NS_OK;
+
+    nsCOMPtr<nsIURIClassifier> uriClassifier =
+        do_GetService(NS_URICLASSIFIERSERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool expectCallback;
+    rv = uriClassifier->Classify(uri, this, &expectCallback);
+    if (NS_FAILED(rv)) return rv;
+
+    if (expectCallback) {
+        // Suspend the channel, it will be resumed when we get the classifier
+        // callback.
+        rv = channel->Suspend();
+        NS_ENSURE_SUCCESS(rv, rv);
+        mSuspendedChannel = channel;
+
+        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
+               ("nsClassifierCallback[%p]: suspended channel %p",
+                this, mSuspendedChannel.get()));
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsClassifierCallback::OnClassifyComplete(nsresult aErrorCode)
+{
+    if (mSuspendedChannel) {
+        if (NS_FAILED(aErrorCode)) {
+            PR_LOG(gDocShellLog, PR_LOG_DEBUG,
+                   ("nsClassifierCallback[%p]: cancelling channel %p with error code: %d",
+                    this, mSuspendedChannel.get(), aErrorCode));
+            mSuspendedChannel->Cancel(aErrorCode);
+        }
+        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
+               ("nsClassifierCallback[%p]: resuming channel %p from OnClassifyComplete",
+                this, mSuspendedChannel.get()));
+        mSuspendedChannel->Resume();
+        mSuspendedChannel = nsnull;
+    }
+
+    return NS_OK;
+}
+
+void
+nsClassifierCallback::Cancel()
+{
+    if (mSuspendedChannel) {
+        PR_LOG(gDocShellLog, PR_LOG_DEBUG,
+               ("nsClassifierCallback[%p]: resuming channel %p from Cancel()",
+                this, mSuspendedChannel.get()));
+        mSuspendedChannel->Resume();
+        mSuspendedChannel = nsnull;
+    }
+
+    if (mChannel) {
+        mChannel = nsnull;
+    }
+}
