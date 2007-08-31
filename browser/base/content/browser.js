@@ -1223,8 +1223,9 @@ function BrowserShutdown()
 }
 
 #ifdef XP_MACOSX
-// nonBrowserWindowStartup() and nonBrowserWindowDelayedStartup() are used for
-// non-browser windows in macBrowserOverlay
+// nonBrowserWindowStartup(), nonBrowserWindowDelayedStartup(), and
+// nonBrowserWindowShutdown() are used for non-browser windows in
+// macBrowserOverlay
 function nonBrowserWindowStartup()
 {
   // Disable inappropriate commands / submenus
@@ -1272,6 +1273,12 @@ function nonBrowserWindowDelayedStartup()
 
   // Set up Sanitize Item
   gSanitizeListener = new SanitizeListener();
+}
+
+function nonBrowserWindowShutdown()
+{
+  if (gSanitizeListener)
+    gSanitizeListener.shutdown();
 }
 #endif
 
