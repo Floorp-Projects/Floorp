@@ -240,6 +240,12 @@ sub Execute {
     }
 
     # Copy the PUBLIC KEY file from the cvs repo.
+    my $batch1Dir = catfile($stageDir, 'batch1');
+    if (not -d $batch1Dir) {
+        MkdirWithPath(dir => $batch1Dir) 
+          or die "Cannot create $batch1Dir: $!";
+        $this->Log(msg => "Created directory $batch1Dir");
+    }
     $this->Shell(
       cmd => 'cvs',
       cmdArgs => [ '-d', $mofoCvsroot, 
@@ -247,7 +253,7 @@ sub Execute {
                    CvsCatfile('release', 'keys', 'pgp',
                               'PUBLIC-KEY')],
       logFile => catfile($logDir, 'stage_publickey_checkout.log'),
-      dir => catfile($stageDir, 'batch1'),
+      dir => $batch1Dir
     );
     $this->Shell(
       cmd => 'cvs',
@@ -293,7 +299,7 @@ sub Execute {
       cmd => 'rsync',
       cmdArgs => ['-av', 'prestage/', 'prestage-trimmed/'],
       logFile => catfile($logDir, 'stage_collect_trimmed.log'),
-      dir => catfile($stageDir, 'batch1'),
+      dir => $batch1Dir
     );
 
     # Remove unknown/unrecognized directories from the -candidates dir; after
@@ -364,7 +370,7 @@ sub Execute {
       cmd => 'rsync',
       cmdArgs => ['-av', 'stage-unsigned/', 'stage-signed/'],
       logFile => catfile($logDir, 'stage_unsigned_to_sign.log'),
-      dir => catfile($stageDir, 'batch1'),
+      dir => $batch1Dir
     );
 
 
@@ -377,7 +383,7 @@ sub Execute {
       cmd => 'rsync',
       cmdArgs => ['-av', 'prestage-trimmed/', 'mar/'],
       logFile => catfile($logDir, 'stage_trimmed_to_mars.log'),
-      dir => catfile($stageDir, 'batch1'),
+      dir => $batch1Dir
     );
 
     $this->{'leaveOnlyMarsDirDeleteList'} = [];
