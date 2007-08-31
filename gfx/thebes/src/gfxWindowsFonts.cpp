@@ -1457,9 +1457,9 @@ private:
 
 #define AVERAGE_ITEM_LENGTH 40
 
-    nsAutoBuffer<WORD, (1.5 * AVERAGE_ITEM_LENGTH) + 16> mGlyphs;
+    nsAutoBuffer<WORD, PRUint32(1.5 * AVERAGE_ITEM_LENGTH) + 16> mGlyphs;
     nsAutoBuffer<WORD, AVERAGE_ITEM_LENGTH + 1> mClusters;
-    nsAutoBuffer<SCRIPT_VISATTR, (1.5 * AVERAGE_ITEM_LENGTH) + 16> mAttr;
+    nsAutoBuffer<SCRIPT_VISATTR, PRUint32(1.5 * AVERAGE_ITEM_LENGTH) + 16> mAttr;
  
     nsAutoBuffer<GOFFSET, 2 * AVERAGE_ITEM_LENGTH> mOffsets;
     nsAutoBuffer<int, 2 * AVERAGE_ITEM_LENGTH> mAdvances;
