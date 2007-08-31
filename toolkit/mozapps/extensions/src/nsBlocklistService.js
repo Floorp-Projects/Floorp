@@ -240,6 +240,7 @@ Blocklist.prototype = {
       gOS.removeObserver(this, "plugins-list-updated");
       gOS.removeObserver(this, "profile-after-change");
       gOS.removeObserver(this, "quit-application");
+      break;
     case "xpcom-shutdown":
       gOS.removeObserver(this, "xpcom-shutdown");
       gOS = null;
