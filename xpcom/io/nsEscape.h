@@ -122,7 +122,7 @@ enum EscapeMask {
   esc_OnlyASCII      = PR_BIT(11), /* causes non-ascii octets to be skipped */
   esc_OnlyNonASCII   = PR_BIT(12), /* causes _graphic_ ascii octets (0x20-0x7E) 
                                     * to be skipped when escaping. causes all
-                                    * ascii octets to be skipped when unescaping */
+                                    * ascii octets (<= 0x7F) to be skipped when unescaping */
   esc_AlwaysCopy     = PR_BIT(13), /* copy input to result buf even if escaping is unnecessary */
   esc_Colon          = PR_BIT(14), /* forces escape of colon */
   esc_SkipControl    = PR_BIT(15)  /* skips C0 and DEL from unescaping */
