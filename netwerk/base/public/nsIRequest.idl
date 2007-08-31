@@ -83,6 +83,13 @@ interface nsIRequest : nsISupports
      * be passed.  The error passed in will become the value of the 
      * status attribute.
      *
+     * Implementations must not send any notifications (e.g. via
+     * nsIRequestObserver) synchronously from this function. Similarly,
+     * removal from the load group (if any) must also happen asynchronously.
+     *
+     * Requests that use nsIStreamListener must not call onDataAvailable
+     * anymore after cancel has been called.
+     *
      * @param aStatus the reason for canceling this request.
      *
      * NOTE: most nsIRequest implementations expect aStatus to be a
@@ -96,7 +103,10 @@ interface nsIRequest : nsISupports
      * Suspends the current request.  This may have the effect of closing
      * any underlying transport (in order to free up resources), although
      * any open streams remain logically opened and will continue delivering
-     * data when the transport is resumed. 
+     * data when the transport is resumed.
+     *
+     * Calling cancel() on a suspended request must not send any
+     * notifications (such as onstopRequest) until the request is resumed.
      *
      * NOTE: some implementations are unable to immediately suspend, and
      * may continue to deliver events already posted to an event queue. In
