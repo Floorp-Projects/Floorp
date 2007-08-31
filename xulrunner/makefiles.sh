@@ -1,5 +1,4 @@
 #! /bin/sh
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -13,11 +12,12 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is mozilla.org code.
+# The Original Code is the the Mozilla build system
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 1999
+# Ben Turner <mozilla@songbirdnest.com>
+#
+# Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -36,55 +36,12 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# allmakefiles.sh - List of all makefiles.
-#   Appends the list of makefiles to the variable, MAKEFILES.
-#   There is no need to rerun autoconf after adding makefiles.
-#   You only need to run configure.
-
-MAKEFILES=""
-
-# add_makefiles - Shell function to add makefiles to MAKEFILES
-add_makefiles() {
-  MAKEFILES="$MAKEFILES $*"
-}
-
-if [ "$srcdir" = "" ]; then
-  srcdir=.
-fi
-
-#
-# Common makefiles used by everyone
-#
 add_makefiles "
-Makefile
-build/Makefile
-build/unix/Makefile
-config/Makefile
-config/autoconf.mk
-config/mkdepend/Makefile
-config/doxygen.cfg
-extensions/Makefile
+xulrunner/Makefile
+xulrunner/app/Makefile
+xulrunner/app/profile/Makefile
+xulrunner/app/profile/chrome/Makefile
+xulrunner/app/profile/extensions/Makefile
+xulrunner/installer/Makefile
+xulrunner/installer/mac/Makefile
 "
-
-#
-# Application-specific makefiles
-#
-if test -f "${srcdir}/${MOZ_BUILD_APP}/makefiles.sh"; then
-  . "${srcdir}/${MOZ_BUILD_APP}/makefiles.sh"
-fi
-
-#
-# Extension makefiles
-#
-for extension in $MOZ_EXTENSIONS; do
-  if [ -f "${srcdir}/extensions/${extension}/makefiles.sh" ]; then
-    . "${srcdir}/extensions/${extension}/makefiles.sh"
-  fi
-done
-
-#
-# Toolkit makefiles
-#
-if test -z "$LIBXUL_SDK"; then
-  . "${srcdir}/toolkit/toolkit-makefiles.sh"
-fi
