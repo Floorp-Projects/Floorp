@@ -37,6 +37,7 @@
 
 #include "jsapi.h"
 #include "nscore.h"
+#include "nsAutoPtr.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -52,6 +53,7 @@
 #include "nsInstallTrigger.h"
 #include "nsXPITriggerInfo.h"
 #include "nsDOMJSUtils.h"
+#include "nsXPIInstallInfo.h"
 
 #include "nsIComponentManager.h"
 #include "nsNetUtil.h"
@@ -238,21 +240,9 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   if (scriptContext)
     globalObject = scriptContext->GetGlobalObject();
 
-  PRBool enabled = PR_FALSE;
-  nativeThis->UpdateEnabled(globalObject, XPI_WHITELIST, &enabled);
-  if (!enabled || !globalObject)
-  {
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObject));
-    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-    if (os)
-    {
-      os->NotifyObservers(win->GetDocShell(), "xpinstall-install-blocked", 
-                          NS_LITERAL_STRING("install").get());
-    }
-    return JS_TRUE;
-  }
-
-
+  if (!globalObject)
+      return JS_TRUE;
+  
   nsCOMPtr<nsIScriptSecurityManager> secman(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
   if (!secman)
   {
@@ -394,10 +384,36 @@ InstallTriggerGlobalInstall(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
     // pass on only if good stuff found
     if (!abortLoad && trigger->Size() > 0)
     {
-        PRBool result;
-        nativeThis->Install(globalObject, trigger, &result);
-        *rval = BOOLEAN_TO_JSVAL(result);
-        return JS_TRUE;
+        nsCOMPtr<nsIURI> checkuri;
+        nsresult rv = nativeThis->GetOriginatingURI(globalObject,
+                                                    getter_AddRefs(checkuri));
+        if (NS_SUCCEEDED(rv))
+        {
+            nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(globalObject));
+            nsCOMPtr<nsIXPIInstallInfo> installInfo =
+                new nsXPIInstallInfo(win, checkuri, trigger, 0);
+            if (installInfo)
+            {
+                // installInfo now owns triggers
+                PRBool enabled = PR_FALSE;
+                nativeThis->UpdateEnabled(checkuri, XPI_WHITELIST, &enabled);
+                if (!enabled)
+                {
+                    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+                    if (os)
+                        os->NotifyObservers(installInfo,
+                                            "xpinstall-install-blocked", 
+                                            nsnull);
+                }
+                else
+                {
+                    PRBool result;
+                    nativeThis->StartInstall(installInfo, &result);
+                    *rval = BOOLEAN_TO_JSVAL(result);
+                }
+                return JS_TRUE;
+            }
+        }
     }
     // didn't pass it on so we must delete trigger
     delete trigger;
@@ -434,21 +450,9 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
   if (scriptContext)
       globalObject = scriptContext->GetGlobalObject();
 
-  PRBool enabled = PR_FALSE;
-  nativeThis->UpdateEnabled(globalObject, XPI_WHITELIST, &enabled);
-  if (!enabled || !globalObject)
-  {
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObject));
-    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-    if (os)
-    {
-      os->NotifyObservers(win->GetDocShell(), "xpinstall-install-blocked", 
-                          NS_LITERAL_STRING("install").get());
-    }
-    return JS_TRUE;
-  }
-
-
+  if (!globalObject)
+      return JS_TRUE;
+  
   // get window.location to construct relative URLs
   nsCOMPtr<nsIURI> baseURL;
   JSObject* global = JS_GetGlobalObject(cx);
@@ -484,13 +488,46 @@ InstallTriggerGlobalInstallChrome(JSContext *cx, JSObject *obj, uintN argc, jsva
     if ( chromeType & CHROME_ALL )
     {
         // there's at least one known chrome type
-        nsXPITriggerItem* item = new nsXPITriggerItem(name.get(),
-                                                      sourceURL.get(), 
-                                                      nsnull);
-
-        PRBool nativeRet = PR_FALSE;
-        nativeThis->InstallChrome(globalObject, chromeType, item, &nativeRet);
-        *rval = BOOLEAN_TO_JSVAL(nativeRet);
+        nsCOMPtr<nsIURI> checkuri;
+        nsresult rv = nativeThis->GetOriginatingURI(globalObject,
+                                                    getter_AddRefs(checkuri));
+        if (NS_SUCCEEDED(rv))
+        {
+            nsAutoPtr<nsXPITriggerInfo> trigger(new nsXPITriggerInfo());
+            nsAutoPtr<nsXPITriggerItem> item(new nsXPITriggerItem(name.get(),
+                                                                  sourceURL.get(),
+                                                                  nsnull));
+            if (trigger && item)
+            {
+                // trigger will free item when complete
+                trigger->Add(item.forget());
+                nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(globalObject));
+                nsCOMPtr<nsIXPIInstallInfo> installInfo =
+                    new nsXPIInstallInfo(win, checkuri, trigger, chromeType);
+                if (installInfo)
+                {
+                    // installInfo owns trigger now
+                    trigger.forget();
+                    PRBool enabled = PR_FALSE;
+                    nativeThis->UpdateEnabled(checkuri, XPI_WHITELIST,
+                                              &enabled);
+                    if (!enabled)
+                    {
+                        nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+                        if (os)
+                            os->NotifyObservers(installInfo,
+                                                "xpinstall-install-blocked", 
+                                                nsnull);
+                    }
+                    else
+                    {
+                        PRBool nativeRet = PR_FALSE;
+                        nativeThis->StartInstall(installInfo, &nativeRet);
+                        *rval = BOOLEAN_TO_JSVAL(nativeRet);
+                    }
+                }
+            }
+        }
     }
   }
   return JS_TRUE;
@@ -512,26 +549,14 @@ InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc
 
   *rval = JSVAL_FALSE;
 
-  // make sure XPInstall is enabled, return if not
   nsIScriptGlobalObject *globalObject = nsnull;
   nsIScriptContext *scriptContext = GetScriptContextFromJSContext(cx);
   if (scriptContext)
       globalObject = scriptContext->GetGlobalObject();
 
-  PRBool enabled = PR_FALSE;
-  nativeThis->UpdateEnabled(globalObject, XPI_WHITELIST, &enabled);
-  if (!enabled || !globalObject)
-  {
-    nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObject));
-    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-    if (os)
-    {
-      os->NotifyObservers(win->GetDocShell(), "xpinstall-install-blocked", 
-                          NS_LITERAL_STRING("install").get());
-    }
-    return JS_TRUE;
-  }
-
+  if (!globalObject)
+      return JS_TRUE;
+  
   // get window.location to construct relative URLs
   nsCOMPtr<nsIURI> baseURL;
   JSObject* global = JS_GetGlobalObject(cx);
@@ -569,9 +594,42 @@ InstallTriggerGlobalStartSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc
         return JS_FALSE;
     }
 
-    if(NS_OK == nativeThis->StartSoftwareUpdate(globalObject, xpiURL, flags, &nativeRet))
+    nsCOMPtr<nsIURI> checkuri;
+    rv = nativeThis->GetOriginatingURI(globalObject, getter_AddRefs(checkuri));
+    if (NS_SUCCEEDED(rv))
     {
-        *rval = BOOLEAN_TO_JSVAL(nativeRet);
+        nsAutoPtr<nsXPITriggerInfo> trigger(new nsXPITriggerInfo());
+        nsAutoPtr<nsXPITriggerItem> item(new nsXPITriggerItem(0,
+                                                              xpiURL.get(),
+                                                              nsnull));
+        if (trigger && item)
+        {
+            // trigger will free item when complete
+            trigger->Add(item.forget());
+            nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(globalObject));
+            nsCOMPtr<nsIXPIInstallInfo> installInfo =
+                                new nsXPIInstallInfo(win, checkuri, trigger, 0);
+            if (installInfo)
+            {
+                // From here trigger is owned by installInfo until passed on to nsXPInstallManager
+                trigger.forget();
+                PRBool enabled = PR_FALSE;
+                nativeThis->UpdateEnabled(checkuri, XPI_WHITELIST, &enabled);
+                if (!enabled)
+                {
+                    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+                    if (os)
+                        os->NotifyObservers(installInfo,
+                                            "xpinstall-install-blocked",
+                                            nsnull);
+                }
+                else
+                {
+                    nativeThis->StartInstall(installInfo, &nativeRet);
+                    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+                }
+            }
+        }
     }
   }
   else
