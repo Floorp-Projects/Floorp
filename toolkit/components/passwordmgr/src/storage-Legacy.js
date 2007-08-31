@@ -208,7 +208,7 @@ LoginManagerStorage_legacy.prototype = {
         // The specified login isn't encrypted, so we need to ensure
         // the logins we're comparing with are decrypted. We decrypt one entry
         // at a time, lest _decryptLogins return fewer entries and screw up
-        // indicies between the two.
+        // indices between the two.
         for (var i = 0; i < logins.length; i++) {
 
             var [[decryptedLogin], userCanceled] =
@@ -374,7 +374,7 @@ LoginManagerStorage_legacy.prototype = {
         for each (var login in hostLogins) {
 
             // If search arg is null, skip login unless it doesn't specify a
-            // httpRealm (ie, it's also null). If the seach arg is an empty
+            // httpRealm (ie, it's also null). If the search arg is an empty
             // string, always match.
             if (httpRealm == null) {
                 if (login.httpRealm != null)
@@ -387,7 +387,7 @@ LoginManagerStorage_legacy.prototype = {
             }
 
             // If search arg is null, skip login unless it doesn't specify a
-            // action URL (ie, it's also null). If the seach arg is an empty
+            // action URL (ie, it's also null). If the search arg is an empty
             // string, always match.
             if (formSubmitURL == null) {
                 if (login.formSubmitURL != null)
