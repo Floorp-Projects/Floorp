@@ -78,6 +78,7 @@ namespace MenuHelpersX
 -(IBAction)menuItemHit:(id)sender;
 @end
 
+
 //
 // Native Mac menu bar wrapper
 //

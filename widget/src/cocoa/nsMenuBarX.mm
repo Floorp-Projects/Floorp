@@ -242,8 +242,6 @@ nsMenuBarX::RegisterAsDocumentObserver(nsIDocShell* inDocShell)
 }
 
 
-// AquifyMenuBar
-//
 // Do what's necessary to conform to the Aqua guidelines for menus. Initially, this
 // means removing 'Quit' from the file menu and 'Preferences' from the edit menu, along
 // with their various separators (if present).
@@ -845,8 +843,8 @@ NS_IMETHODIMP nsMenuBarX::Paint()
 
 //
 // nsIMutationObserver
-// this is needed for menubar changes
 //
+
 
 void
 nsMenuBarX::CharacterDataChanged(nsIDocument * aDocument,
@@ -948,6 +946,7 @@ nsMenuBarX::ParentChainChanged(nsIContent *aContent)
 {
 }
 
+
 //
 // nsIChangeManager
 //
@@ -955,6 +954,7 @@ nsMenuBarX::ParentChainChanged(nsIContent *aContent)
 // is bounded by the lifetime of the menubar. No need to add any more strong refs to the
 // picture because the containment hierarchy already uses strong refs.
 //
+
 
 NS_IMETHODIMP
 nsMenuBarX::Register(nsIContent *aContent, nsIChangeObserver *aMenuObject)
