@@ -196,6 +196,7 @@ sub Execute {
     my $stageHome = $config->Get(var => 'stageHome');
     my $appName = $config->Get(var => 'appName');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
+    my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
     my $releaseTag = $config->Get(var => 'productTag') . '_RELEASE';
  
     ## Prepare the staging directory for the release.
@@ -238,11 +239,26 @@ sub Execute {
         $this->Log(msg => "Changed group of $fullDir to $product");
     }
 
-    # TODO - should have a standard "master" copy somewhere else
-    # Copy the KEY file from the previous release directory.
-    my $keyFile = catfile('/home', 'ftp', 'pub', $product, 'releases', '1.5',
-                          'KEY');
-    copy($keyFile, $skelDir) or die("Could not copy $keyFile to $skelDir: $!");
+    # Copy the PUBLIC KEY file from the cvs repo.
+    $this->Shell(
+      cmd => 'cvs',
+      cmdArgs => [ '-d', $mofoCvsroot, 
+                   'co', '-d', 'key-checkout',
+                   CvsCatfile('release', 'keys', 'pgp',
+                              'PUBLIC-KEY')],
+      logFile => catfile($logDir, 'stage_publickey_checkout.log'),
+      dir => catfile($stageDir, 'batch1'),
+    );
+    $this->Shell(
+      cmd => 'cvs',
+      cmdArgs => [ 'status' ],
+      logFile => catfile($logDir, 'stage_publickey_checkout.log'),
+      dir => catfile($stageDir, 'batch1', 'key-checkout'),
+    );
+
+    my $keyFile = catfile($stageDir, 'batch1', 'key-checkout', 'PUBLIC-KEY');
+    my $keyFileDest = catfile($skelDir, 'KEY');
+    copy($keyFile, $keyFileDest) or die("Could not copy $keyFile to $keyFileDest: $!");
 
     ## Prepare the merging directory.
     $this->Shell(
