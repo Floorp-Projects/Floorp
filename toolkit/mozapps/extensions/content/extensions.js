@@ -817,6 +817,7 @@ XPInstallDownloadManager.prototype = {
     }
 
     gExtensionManager.addDownloads(items, items.length, false);
+    updateOptionalViews();
     updateGlobalCommands();
   },
 
@@ -833,15 +834,8 @@ XPInstallDownloadManager.prototype = {
   onStateChange: function (aAddon, aState, aValue)
   {
     const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
-    var element = this.getElementForAddon(aAddon);
-    if (!element && aState != nsIXPIProgressDialog.DIALOG_CLOSE)
-      return;
     switch (aState) {
       case nsIXPIProgressDialog.DOWNLOAD_START:
-        gInstallCount++;
-        if (gInstallCount == 1)
-          updateGlobalCommands();
-        break;
       case nsIXPIProgressDialog.DOWNLOAD_DONE:
       case nsIXPIProgressDialog.INSTALL_START:
         break;
@@ -1455,6 +1449,7 @@ function updateOptionalViews() {
   var showLocales = false;
   var showUpdates = false;
   var showInstalls = false;
+  gInstallCount = 0;
   while (elements.hasMoreElements()) {
     var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
     if (!showLocales) {
@@ -1570,6 +1565,7 @@ function installUpdatesAll() {
     showView("installs");
     // Remove the updates view if there are no add-ons left to update
     updateOptionalViews();
+    updateGlobalCommands();
   }
 }
 
@@ -1845,9 +1841,9 @@ var gExtensionsViewController = {
       showView("installs");
       var item = gExtensionManager.getItemForID(getIDFromResourceURI(aSelectedItem.id));
       gExtensionManager.addDownloads([item], 1, true);
-      updateGlobalCommands();
       // Remove the updates view if there are no add-ons left to update
       updateOptionalViews();
+      updateGlobalCommands();
     },
 
     cmd_includeUpdate: function (aSelectedItem)

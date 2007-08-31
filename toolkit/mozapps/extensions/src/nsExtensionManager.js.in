@@ -5384,7 +5384,6 @@ ExtensionManager.prototype = {
 
       var txnID = Math.round(Math.random() * 100);
       txn.addDownload(currItem, txnID);
-      this._transactions.push(txn);
       urls.push(currItem.xpiURL);
       hashes.push(currItem.xpiHash ? currItem.xpiHash : null);
       // if this is an update remove the update metadata to prevent it from
@@ -5400,6 +5399,7 @@ ExtensionManager.prototype = {
       var id = fromChrome ? PREFIX_ITEM_URI + currItem.id : currItem.xpiURL;
       ds.updateDownloadState(id, "waiting");
     }
+    this._transactions.push(txn);
 
     if (fromChrome) {
       // Initiate an install from chrome
@@ -5485,7 +5485,6 @@ ExtensionManager.prototype = {
       for (var i = 0; i < this._transactions.length; ++i) {
         if (this._transactions[i].id == transaction.id) {
           this._transactions.splice(i, 1);
-          delete transaction;
           // Remove the observers when all transactions have completed.
           if (this._transactions.length == 0) {
             gOS.removeObserver(this, "offline-requested");
