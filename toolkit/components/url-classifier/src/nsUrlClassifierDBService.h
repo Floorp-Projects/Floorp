@@ -45,12 +45,14 @@
 #include "nsID.h"
 #include "nsIObserver.h"
 #include "nsIUrlClassifierDBService.h"
+#include "nsIURIClassifier.h"
 
 class nsUrlClassifierDBServiceWorker;
 
 // This is a proxy class that just creates a background thread and delagates
 // calls to the background thread.
 class nsUrlClassifierDBService : public nsIUrlClassifierDBService,
+                                 public nsIURIClassifier,
                                  public nsIObserver
 {
 public:
@@ -69,11 +71,16 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERDBSERVICE
+  NS_DECL_NSIURICLASSIFIER
   NS_DECL_NSIOBSERVER
 
 private:
   // No subclassing
   ~nsUrlClassifierDBService();
+
+  nsresult LookupURI(nsIURI* uri,
+                     nsIUrlClassifierCallback* c,
+                     PRBool needsProxy);
 
   // Disallow copy constructor
   nsUrlClassifierDBService(nsUrlClassifierDBService&);
@@ -85,6 +92,10 @@ private:
   nsresult Shutdown();
   
   nsCOMPtr<nsUrlClassifierDBServiceWorker> mWorker;
+
+  // TRUE if the nsURIClassifier implementation should check for malware
+  // uris on document loads.
+  PRBool mCheckMalware;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsUrlClassifierDBService, NS_URLCLASSIFIERDBSERVICE_CID)

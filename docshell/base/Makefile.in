@@ -113,6 +113,7 @@ XPIDLSRCS	= \
 		nsIURIFixup.idl			\
 		nsIEditorDocShell.idl		\
 		nsIWebPageDescriptor.idl	\
+		nsIURIClassifier.idl		\
 		$(NULL)
 
 EXPORTS		= nsDocShellLoadTypes.h
