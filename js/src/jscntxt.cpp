@@ -229,6 +229,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
 #if JS_STACK_GROWTH_DIRECTION > 0
     cx->stackLimit = (jsuword)-1;
 #endif
+    cx->scriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
 #ifdef JS_THREADSAFE
     JS_INIT_CLIST(&cx->threadLinks);
     js_SetContextThread(cx);
@@ -259,8 +260,10 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
      * done by js_DestroyContext).
      */
     cx->version = JSVERSION_DEFAULT;
-    JS_INIT_ARENA_POOL(&cx->stackPool, "stack", stackChunkSize, sizeof(jsval));
-    JS_INIT_ARENA_POOL(&cx->tempPool, "temp", 1024, sizeof(jsdouble));
+    JS_INIT_ARENA_POOL(&cx->stackPool, "stack", stackChunkSize, sizeof(jsval),
+                       &cx->scriptStackQuota);
+    JS_INIT_ARENA_POOL(&cx->tempPool, "temp", 1024, sizeof(jsdouble),
+                       &cx->scriptStackQuota);
 
     if (!js_InitRegExpStatics(cx, &cx->regExpStatics)) {
         js_DestroyContext(cx, JSDCM_NEW_FAILED);

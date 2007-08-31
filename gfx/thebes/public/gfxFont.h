@@ -1113,6 +1113,11 @@ public:
         PRPackedBool mPartIsEndOfLigature;
     };
 
+#ifdef DEBUG
+    // number of entries referencing this textrun in the gfxTextRunWordCache
+    PRUint32 mCachedWords;
+#endif
+
 private:
     // **** general helpers **** 
 

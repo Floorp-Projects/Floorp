@@ -908,7 +908,6 @@ protected:
   void     SetFinalSize(PRInt32 aX, PRInt32 aY);
   void     DeleteRefToAnonymousNode(nsIDOMNode * aNode);
   void     SetResizeIncrements(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt32 aH, PRBool aPreserveRatio);
-  void     SetInfoIncrements(PRInt8 aX, PRInt8 aY);
 
   /* ABSOLUTE POSITIONING */
 

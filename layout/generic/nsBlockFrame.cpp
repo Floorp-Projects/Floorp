@@ -3945,9 +3945,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       nsBidiPresUtils* bidiUtils = aState.mPresContext->GetBidiUtils();
 
       if (bidiUtils && bidiUtils->IsSuccessful() ) {
-        bidiUtils->ReorderFrames(aState.mPresContext,
-                                 aState.mReflowState.rendContext,
-                                 aLine->mFirstChild, aLine->GetChildCount());
+        bidiUtils->ReorderFrames(aLine->mFirstChild, aLine->GetChildCount());
       } // bidiUtils
     } // not visual mode
   } // bidi enabled
@@ -6611,8 +6609,7 @@ nsBlockFrame::ResolveBidi()
   if (!bidiUtils)
     return NS_OK;
 
-  return bidiUtils->Resolve(presContext, this,
-                            mLines.front()->mFirstChild,
+  return bidiUtils->Resolve(this, mLines.front()->mFirstChild,
                             IsVisualFormControl(presContext));
 }
 

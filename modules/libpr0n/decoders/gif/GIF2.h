@@ -94,16 +94,14 @@ typedef struct gif_struct {
     int ipass;                  /* Interlace pass; Ranges 1-4 if interlaced. */
     PRUintn rows_remaining;        /* Rows remaining to be output */
     PRUintn irow;                  /* Current output row, starting at zero */
-    PRUint8 *rowbuf;              /* Single scanline temporary buffer */
-    PRUint8 *rowend;              /* Pointer to end of rowbuf */
-    PRUint8 *rowp;                /* Current output pointer */
+    PRUint32 *rowp;                 /* Current output pointer */
 
     /* Parameters for image frame currently being decoded*/
     PRUintn x_offset, y_offset;    /* With respect to "screen" origin */
     PRUintn height, width;
     int tpixel;                 /* Index of transparent pixel */
     PRInt32 disposal_method;    /* Restore to background, leave in place, etc.*/
-    PRUint8 *local_colormap;    /* Per-image colormap */
+    PRUint32 *local_colormap;   /* Per-image colormap */
     int local_colormap_size;    /* Size of local colormap array. */
     PRUint32 delay_time;        /* Display time, in milliseconds,
                                    for this image in a multi-image GIF */
@@ -112,7 +110,7 @@ typedef struct gif_struct {
     int version;                /* Either 89 for GIF89 or 87 for GIF87 */
     PRUintn screen_width;       /* Logical screen width & height */
     PRUintn screen_height;
-    int global_colormap_size;   /* Size of global colormap array. */
+    PRUint32 global_colormap_size;  /* Size of global colormap array. */
     int images_decoded;         /* Counts images for multi-part GIFs */
     int loop_count;             /* Netscape specific extension block to control
                                    the number of animation loops a GIF renders. */
@@ -120,11 +118,10 @@ typedef struct gif_struct {
     PRPackedBool progressive_display;    /* If TRUE, do Haeberli interlace hack */
     PRPackedBool interlaced;             /* TRUE, if scanlines arrive interlaced order */
     PRPackedBool is_transparent;         /* TRUE, if tpixel is valid */
-    PRPackedBool is_local_colormap_defined;
 
     PRUint16  prefix[MAX_BITS];          /* LZW decoding tables */
     PRUint8   hold[MAX_HOLD_SIZE];       /* Accumulation buffer */
-    PRUint8   global_colormap[3*MAX_COLORS];   /* Default colormap if local not supplied, 3 bytes for each color  */
+    PRUint32  global_colormap[MAX_COLORS];   /* Default colormap if local not supplied */
     PRUint8   suffix[MAX_BITS];          /* LZW decoding tables */
     PRUint8   stack[MAX_BITS];           /* Base of LZW decoder stack */
 

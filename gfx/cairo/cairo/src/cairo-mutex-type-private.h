@@ -144,6 +144,17 @@ CAIRO_BEGIN_DECLS
 
 #if CAIRO_NO_MUTEX
 
+/* No mutex at all */
+
+  typedef int cairo_mutex_t;
+
+# define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
+# define CAIRO_MUTEX_LOCK(mutex) CAIRO_MUTEX_NOOP
+# define CAIRO_MUTEX_UNLOCK(mutex) CAIRO_MUTEX_NOOP
+# define CAIRO_MUTEX_NIL_INITIALIZER 0
+
+#elif CAIRO_POOR_MAN_MUTEX
+
 /* A poor man's mutex */
 
   typedef int cairo_mutex_t;

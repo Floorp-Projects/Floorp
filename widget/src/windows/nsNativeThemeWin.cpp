@@ -85,6 +85,9 @@
 #define TKP_FOCUSED   4
 #define TKP_DISABLED  5
 
+// Toolbar constants
+#define TP_SEPARATOR 5
+
 // Toolbarbutton constants
 #define TB_CHECKED       5
 #define TB_HOVER_CHECKED 6
@@ -461,7 +464,8 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       return mRebarTheme;
     }
     case NS_THEME_TOOLBAR:
-    case NS_THEME_TOOLBAR_BUTTON: {
+    case NS_THEME_TOOLBAR_BUTTON:
+    case NS_THEME_TOOLBAR_SEPARATOR: {
       if (!mToolbarTheme)
         mToolbarTheme = openTheme(NULL, L"Toolbar");
       return mToolbarTheme;
@@ -732,6 +736,11 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
           aState = TS_NORMAL;
       }
      
+      return NS_OK;
+    }
+    case NS_THEME_TOOLBAR_SEPARATOR: {
+      aPart = TP_SEPARATOR;
+      aState = TS_NORMAL;
       return NS_OK;
     }
     case NS_THEME_SCROLLBAR_BUTTON_UP:
@@ -1312,7 +1321,8 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
       aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL ||
       aWidgetType == NS_THEME_MENUITEM || aWidgetType == NS_THEME_CHECKMENUITEM ||
       aWidgetType == NS_THEME_RADIOMENUITEM || aWidgetType == NS_THEME_MENUPOPUP ||
-      aWidgetType == NS_THEME_MENUIMAGE || aWidgetType == NS_THEME_MENUITEMTEXT)
+      aWidgetType == NS_THEME_MENUIMAGE || aWidgetType == NS_THEME_MENUITEMTEXT ||
+      aWidgetType == NS_THEME_TOOLBAR_SEPARATOR)
     return NS_OK; // Don't worry about it.
 
   if (!getThemeContentRect)
@@ -1513,6 +1523,12 @@ nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* 
       aWidgetType == NS_THEME_SCALE_THUMB_VERTICAL) {
       *aIsOverridable = PR_FALSE;
   }
+  else if (aWidgetType == NS_THEME_TOOLBAR_SEPARATOR) {
+    // that's 2px left margin, 2px right margin and 2px separator
+    // (the margin is drawn as part of the separator, though)
+    aResult->width = 6;
+    return NS_OK;
+  }
 
   PRInt32 part, state;
   nsresult rv = GetThemePartAndState(aFrame, aWidgetType, part, state);
@@ -1563,7 +1579,8 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
       aWidgetType == NS_THEME_PROGRESSBAR_VERTICAL ||
       aWidgetType == NS_THEME_TOOLTIP ||
       aWidgetType == NS_THEME_TAB_PANELS ||
-      aWidgetType == NS_THEME_TAB_PANEL) {
+      aWidgetType == NS_THEME_TAB_PANEL ||
+      aWidgetType == NS_THEME_TOOLBAR_SEPARATOR) {
     *aShouldRepaint = PR_FALSE;
     return NS_OK;
   }

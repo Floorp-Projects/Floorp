@@ -205,6 +205,7 @@ bin\components\nsSetDefaultBrowser.js
 bin\components\nsTryToClose.js
 bin\components\nsDictionary.js
 bin\components\nsHelperAppDlg.js
+bin\components\nsDownloadManagerUI.js
 bin\components\nsProxyAutoConfig.js
 bin\components\nsSearchService.js
 bin\components\nsSearchSuggestions.js

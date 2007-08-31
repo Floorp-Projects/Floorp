@@ -95,7 +95,7 @@ interface nsIChannel : nsIRequest
      * callbacks do not supply the requested interface.
      * 
      * Interfaces commonly requested include: nsIProgressEventSink, nsIPrompt,
-     * and nsIAuthPrompt.
+     * and nsIAuthPrompt/nsIAuthPrompt2.
      *
      * When the channel is done, it must not continue holding references to
      * this object.
@@ -191,6 +191,9 @@ interface nsIChannel : nsIRequest
      * If asyncOpen returns successfully, the channel is responsible for
      * keeping itself alive until it has called onStopRequest on aListener or
      * called onChannelRedirect.
+     *
+     * Implementations are allowed to synchronously add themselves to the
+     * associated load group (if any).
      *
      * NOTE: Implementations should throw NS_ERROR_ALREADY_OPENED if the
      * channel is reopened.

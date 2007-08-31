@@ -81,7 +81,7 @@
   
   <!ENTITY pseudoClasses.title "Pseudo-Klassen">
 
-  <!ENTITY findNodes.title "Nodes suchen">
+  <!ENTITY findNodes.title "Knoten suchen">
   <!ENTITY findNodesById.label "ID">
   <!ENTITY findNodesByTag.label "Tag">
   <!ENTITY findNodesByAttr.label "Attr">
@@ -107,8 +107,8 @@
   <!ENTITY mnEditInsertFirstChild.label "Als erstes &quot;Kind&quot;">
   <!ENTITY mnEditInsertLastChild.label "Als letztes &quot;Kind&quot;">
 
-  <!ENTITY insertNode.title "Node einfgen">
-  <!ENTITY nodeType.label "Node-Typ:">
+  <!ENTITY insertNode.title "Knoten einfügen">
+  <!ENTITY nodeType.label "Knoten-Typ:">
   <!ENTITY nodeType.element.label "Element">
   <!ENTITY nodeType.text.label "Text">
   <!ENTITY namespaceURI.label "Namespace-URI:">

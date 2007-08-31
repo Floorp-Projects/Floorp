@@ -39,6 +39,7 @@
 
 #include "nsSVGStylableElement.h"
 #include "nsSVGLength2.h"
+#include "nsIFrame.h"
 
 class nsSVGFilterResource;
 class nsIDOMSVGAnimatedString;
@@ -51,16 +52,13 @@ class nsSVGFE : public nsSVGFEBase
   friend class nsSVGFilterInstance;
 
 protected:
-  nsSVGFE(nsINodeInfo *aNodeInfo);
+  nsSVGFE(nsINodeInfo *aNodeInfo) : nsSVGFEBase(aNodeInfo) {}
   nsresult Init();
 
   PRBool ScanDualValueAttribute(const nsAString& aValue, nsIAtom* aAttribute,
                                 nsSVGNumber2* aNum1, nsSVGNumber2* aNum2,
                                 NumberInfo* aInfo1, NumberInfo* aInfo2,
                                 nsAttrValue& aResult);
-
-  nsSVGFilterInstance::ColorModel
-  GetColorModel(nsSVGFilterInstance::ColorModel::AlphaChannel aAlphaChannel);
 
   struct ScaleInfo {
     nsRefPtr<gfxImageSurface> mRealSource;
@@ -82,11 +80,35 @@ protected:
 
 
 public:
+  nsSVGFilterInstance::ColorModel
+  GetColorModel(nsIDOMSVGAnimatedString* aIn) {
+    return nsSVGFilterInstance::ColorModel (
+          (OperatesOnSRGB(aIn) ?
+             nsSVGFilterInstance::ColorModel::SRGB :
+             nsSVGFilterInstance::ColorModel::LINEAR_RGB),
+          (OperatesOnPremultipledAlpha() ?
+             nsSVGFilterInstance::ColorModel::PREMULTIPLIED :
+             nsSVGFilterInstance::ColorModel::UNPREMULTIPLIED));
+  }
+
+  // See http://www.w3.org/TR/SVG/filters.html#FilterPrimitiveSubRegion
+  virtual PRBool SubregionIsUnionOfRegions() { return PR_TRUE; }
+
   // interfaces:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMSVGFILTERPRIMITIVESTANDARDATTRIBUTES
 
 protected:
+  virtual PRBool OperatesOnPremultipledAlpha() { return PR_TRUE; }
+
+  virtual PRBool OperatesOnSRGB(nsIDOMSVGAnimatedString*) {
+    nsIFrame* frame = GetPrimaryFrame();
+    if (!frame) return PR_FALSE;
+
+    nsStyleContext* style = frame->GetStyleContext();
+    return style->GetStyleSVG()->mColorInterpolationFilters ==
+             NS_STYLE_COLOR_INTERPOLATION_SRGB;
+  }
 
   // nsSVGElement specializations:
   virtual LengthAttributesInfo GetLengthInfo();

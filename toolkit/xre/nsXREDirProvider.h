@@ -43,6 +43,9 @@
 #include "nsIProfileMigrator.h"
 #include "nsILocalFile.h"
 
+#include "nsCOMPtr.h"
+#include "nsCOMArray.h"
+
 class nsXREDirProvider : public nsIDirectoryServiceProvider2,
                          public nsIProfileStartup
 {
@@ -116,12 +119,21 @@ protected:
   static nsresult EnsureDirectoryExists(nsIFile* aDirectory);
   void EnsureProfileFileExists(nsIFile* aFile);
 
+  // Calculate all bundle directories, including distribution bundles,
+  // extensions, and themes
+  void LoadBundleDirectories();
+  void LoadAppBundleDirs();
+  void Append(nsIFile* aDirectory);
+
   nsCOMPtr<nsIDirectoryServiceProvider> mAppProvider;
   nsCOMPtr<nsILocalFile> mGREDir;
   nsCOMPtr<nsIFile>      mXULAppDir;
   nsCOMPtr<nsIFile>      mProfileDir;
   nsCOMPtr<nsIFile>      mProfileLocalDir;
-  PRBool                 mProfileNotified;
+  PRPackedBool           mProfileNotified;
+  PRPackedBool           mExtensionsLoaded;
+  nsCOMArray<nsIFile>    mExtensionDirectories;
+  nsCOMArray<nsIFile>    mThemeDirectories;
 };
 
 #endif

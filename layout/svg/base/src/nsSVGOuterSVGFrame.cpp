@@ -153,14 +153,17 @@ nsSVGOuterSVGFrame::nsSVGOuterSVGFrame(nsStyleContext* aContext)
 }
 
 NS_IMETHODIMP
-nsSVGOuterSVGFrame::InitSVG()
+nsSVGOuterSVGFrame::Init(nsIContent* aContent,
+                         nsIFrame* aParent,
+                         nsIFrame* aPrevInFlow)
 {
+  nsresult rv = nsSVGOuterSVGFrameBase::Init(aContent, aParent, aPrevInFlow);
+
   nsIDocument* doc = mContent->GetCurrentDoc();
   if (doc) {
     // we only care about our content's zoom and pan values if it's the root element
     if (doc->GetRootContent() == mContent) {
       nsSVGSVGElement *SVGElement = static_cast<nsSVGSVGElement*>(mContent);
-      SVGElement->GetZoomAndPanEnum(getter_AddRefs(mZoomAndPan));
       SVGElement->GetCurrentTranslate(getter_AddRefs(mCurrentTranslate));
       SVGElement->GetCurrentScaleNumber(getter_AddRefs(mCurrentScale));
     }
@@ -174,7 +177,7 @@ nsSVGOuterSVGFrame::InitSVG()
 
   AddStateBits(NS_STATE_IS_OUTER_SVG);
 
-  return NS_OK;
+  return rv;
 }
 
 //----------------------------------------------------------------------
@@ -197,12 +200,16 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
                            nsReflowStatus&          aStatus)
 {
   if (!aReflowState.ShouldReflowAllKids()) {
-    // We're not the target of the incremental reflow, so just bail.
-    // This means that something happened to one of our descendants
-    // (excluding those inside svg:foreignObject, since
-    // nsSVGForeignObjectFrame is a reflow root).
+    // We're not the target of the incremental reflow, so just bail. We get
+    // here when our containing block has changed size (e.g. when the browser
+    // window is resized). We could in principal also get here if something
+    // happened to one of our descendants, but since nsSVGForeignObjectFrame is
+    // a reflow root, and since no other SVG elements participate in CSS
+    // layout, that currently should never happen.
     aDesiredSize.width = mRect.width;
     aDesiredSize.height = mRect.height;
+    aDesiredSize.mOverflowArea.SetRect(0, 0, mRect.width, mRect.height);
+    FinishAndStoreOverflow(&aDesiredSize);
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
   }
@@ -244,6 +251,11 @@ nsSVGOuterSVGFrame::Reflow(nsPresContext*          aPresContext,
     nsPresContext::CSSPixelsToAppUnits(svgElem->mViewportHeight);
 
   // XXX add in CSS borders ??
+
+  // Make sure we scroll if we're too big:
+  // XXX Use the bounding box of our descendants? (See bug 353460 comment 14.)
+  aDesiredSize.mOverflowArea.SetRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+  FinishAndStoreOverflow(&aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -568,24 +580,23 @@ nsSVGOuterSVGFrame::GetCanvasTM()
     nsSVGSVGElement *svgElement = static_cast<nsSVGSVGElement*>(mContent);
     svgElement->GetViewboxToViewportTransform(getter_AddRefs(mCanvasTM));
 
-    if (mZoomAndPan) {
-      // our content is the document element so we must premultiply the values
-      // of it's currentScale and currentTranslate properties
-      PRUint16 val;
-      mZoomAndPan->GetIntegerValue(val);
-      if (val == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY) {
-        nsCOMPtr<nsIDOMSVGMatrix> zoomPanMatrix;
-        nsCOMPtr<nsIDOMSVGMatrix> temp;
-        float scale, x, y;
-        mCurrentScale->GetValue(&scale);
-        mCurrentTranslate->GetX(&x);
-        mCurrentTranslate->GetY(&y);
-        svgElement->CreateSVGMatrix(getter_AddRefs(zoomPanMatrix));
-        zoomPanMatrix->Translate(x, y, getter_AddRefs(temp));
-        temp->Scale(scale, getter_AddRefs(zoomPanMatrix));
-        zoomPanMatrix->Multiply(mCanvasTM, getter_AddRefs(temp));
-        temp.swap(mCanvasTM);
-      }
+    // our content is the document element so we must premultiply the values
+    // of its currentScale and currentTranslate properties
+    if (mCurrentScale &&
+        mCurrentTranslate &&
+        svgElement->mEnumAttributes[nsSVGSVGElement::ZOOMANDPAN].GetAnimValue()
+        == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY) {
+      nsCOMPtr<nsIDOMSVGMatrix> zoomPanMatrix;
+      nsCOMPtr<nsIDOMSVGMatrix> temp;
+      float scale, x, y;
+      mCurrentScale->GetValue(&scale);
+      mCurrentTranslate->GetX(&x);
+      mCurrentTranslate->GetY(&y);
+      svgElement->CreateSVGMatrix(getter_AddRefs(zoomPanMatrix));
+      zoomPanMatrix->Translate(x, y, getter_AddRefs(temp));
+      temp->Scale(scale, getter_AddRefs(zoomPanMatrix));
+      zoomPanMatrix->Multiply(mCanvasTM, getter_AddRefs(temp));
+      temp.swap(mCanvasTM);
     }
   }
   nsIDOMSVGMatrix* retval = mCanvasTM.get();

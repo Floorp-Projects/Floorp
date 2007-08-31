@@ -58,6 +58,9 @@ _TEST_FILES = 	bug288254_window.xul \
 		window_popup_preventdefault_chrome.xul \
 		test_largemenu.xul \
 		window_largemenu.xul \
+		test_popup_anchor.xul \
+		window_popup_anchor.xul \
+		frame_popup_anchor.xul \
 		$(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

@@ -284,10 +284,9 @@ function BookmarkThisTab()
   if (tab.localName != "tab")
     tab = getBrowser().mCurrentTab;
 
-  setTimeout(function() { // workaround bug 392512
-    PlacesCommandHook.bookmarkPage(tab.linkedBrowser, true, getBrowser(),
-                                   "overlap")
-  }, 0);
+  PlacesCommandHook.bookmarkPage(tab.linkedBrowser,
+                                 PlacesUtils.bookmarksRootId,
+                                 true, getBrowser(), "overlap");
 }
 
 /**
@@ -663,13 +662,16 @@ const gXPInstallObserver = {
   {
     var brandBundle = document.getElementById("bundle_brand");
     var browserBundle = document.getElementById("bundle_browser");
-    var browser, webNav, wm;
     switch (aTopic) {
     case "xpinstall-install-blocked":
-      var shell = aSubject.QueryInterface(Components.interfaces.nsIDocShell);
-      browser = this._getBrowser(shell);
+      var installInfo = aSubject.QueryInterface(Components.interfaces.nsIXPIInstallInfo);
+      var win = installInfo.originatingWindow;
+      var shell = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                     .getInterface(Components.interfaces.nsIWebNavigation)
+                     .QueryInterface(Components.interfaces.nsIDocShell);
+      var browser = this._getBrowser(shell);
       if (browser) {
-        var host = aData;
+        var host = installInfo.originatingURI.host;
         var brandShortName = brandBundle.getString("brandShortName");
         var notificationName, messageString, buttons;
         if (!gPrefService.getBoolPref("xpinstall.enabled")) {
@@ -699,10 +701,15 @@ const gXPInstallObserver = {
                                                            [brandShortName, host]);
 
           buttons = [{
-            label: browserBundle.getString("xpinstallPromptWarningButton"),
-            accessKey: browserBundle.getString("xpinstallPromptWarningButton.accesskey"),
+            label: browserBundle.getString("xpinstallPromptAllowButton"),
+            accessKey: browserBundle.getString("xpinstallPromptAllowButton.accesskey"),
             popup: null,
-            callback: function() { return xpinstallEditPermissions(shell, host); }
+            callback: function() {
+              var mgr = Components.classes["@mozilla.org/xpinstall/install-manager;1"]
+                                  .createInstance(Components.interfaces.nsIXPInstallManager);
+              mgr.initManagerWithInstallInfo(installInfo);
+              return false;
+            }
           }];
         }
 
@@ -718,34 +725,6 @@ const gXPInstallObserver = {
     }
   }
 };
-
-function xpinstallEditPermissions(aDocShell, aHost)
-{
-  var browser = gXPInstallObserver._getBrowser(aDocShell);
-  if (browser) {
-    var bundlePreferences = document.getElementById("bundle_preferences");
-    var params = { blockVisible   : false,
-                   sessionVisible : false,
-                   allowVisible   : true,
-                   prefilledHost  : aHost,
-                   permissionType : "install",
-                   windowTitle    : bundlePreferences.getString("addons_permissions_title"),
-                   introText      : bundlePreferences.getString("addonspermissionstext") };
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                   .getService(Components.interfaces.nsIWindowMediator);
-    var existingWindow = wm.getMostRecentWindow("Browser:Permissions");
-    if (existingWindow) {
-      existingWindow.initWithParams(params);
-      existingWindow.focus();
-    }
-    else
-      window.openDialog("chrome://browser/content/preferences/permissions.xul",
-                        "_blank", "resizable,dialog=no,centerscreen", params);
-    return false;
-  }
-
-  return true;
-}
 
 function BrowserStartup()
 {
@@ -1013,8 +992,6 @@ function delayedStartup()
   // add bookmark options to context menu for tabs
   addBookmarkMenuitems();
 
-  PlacesMenuDNDController.init();
-
   initBookmarksToolbar();
   PlacesUtils.bookmarks.addObserver(gBookmarksObserver, false);
   PlacesStarButton.init();
@@ -1226,8 +1203,9 @@ function BrowserShutdown()
 }
 
 #ifdef XP_MACOSX
-// nonBrowserWindowStartup() and nonBrowserWindowDelayedStartup() are used for
-// non-browser windows in macBrowserOverlay
+// nonBrowserWindowStartup(), nonBrowserWindowDelayedStartup(), and
+// nonBrowserWindowShutdown() are used for non-browser windows in
+// macBrowserOverlay
 function nonBrowserWindowStartup()
 {
   // Disable inappropriate commands / submenus
@@ -1275,6 +1253,12 @@ function nonBrowserWindowDelayedStartup()
 
   // Set up Sanitize Item
   gSanitizeListener = new SanitizeListener();
+}
+
+function nonBrowserWindowShutdown()
+{
+  if (gSanitizeListener)
+    gSanitizeListener.shutdown();
 }
 #endif
 

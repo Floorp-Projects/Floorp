@@ -381,8 +381,10 @@ function onUpdateProgress()
   while (dls.hasMoreElements()) {
     let dl = dls.getNext();
     dl.QueryInterface(Ci.nsIDownload);
-    mean += dl.amountTransferred;
-    base += dl.size;
+    if (dl.percentComplete < 100 && dl.size > 0) {
+      mean += dl.amountTransferred;
+      base += dl.size;
+    }
     numActiveDownloads++;
   }
 

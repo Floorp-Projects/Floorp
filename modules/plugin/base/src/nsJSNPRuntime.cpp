@@ -127,7 +127,7 @@ CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
 
 static JSClass sNPObjectJSWrapperClass =
   {
-    "NPObject JS wrapper class",
+    NPRUNTIME_JSCLASS_NAME,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE | JSCLASS_NEW_ENUMERATE,
     NPObjWrapper_AddProperty, NPObjWrapper_DelProperty,
     NPObjWrapper_GetProperty, NPObjWrapper_SetProperty,
@@ -951,9 +951,9 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JSObject *obj)
 
   nsJSObjWrapperKey key(obj, npp);
 
-  JSObjWrapperHashEntry *entry =
-    static_cast<JSObjWrapperHashEntry *>
-               (PL_DHashTableOperate(&sJSObjWrappers, &key, PL_DHASH_ADD));
+  JSObjWrapperHashEntry *entry = static_cast<JSObjWrapperHashEntry *>
+    (PL_DHashTableOperate(&sJSObjWrappers, &key, PL_DHASH_ADD));
+
   if (!entry) {
     // Out of memory.
     return nsnull;
@@ -1473,10 +1473,8 @@ nsNPObjWrapper::OnDestroy(NPObject *npobj)
     return;
   }
 
-  NPObjWrapperHashEntry *entry =
-    NS_STATIC_CAST(NPObjWrapperHashEntry *,
-                   PL_DHashTableOperate(&sNPObjWrappers, npobj,
-                                        PL_DHASH_LOOKUP));
+  NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>
+    (PL_DHashTableOperate(&sNPObjWrappers, npobj, PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mJSObj) {
     // Found a live NPObject wrapper, null out its JSObjects' private
@@ -1530,10 +1528,9 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
     }
   }
 
-  NPObjWrapperHashEntry *entry =
-    static_cast<NPObjWrapperHashEntry *>
-               (PL_DHashTableOperate(&sNPObjWrappers, npobj,
-                                        PL_DHASH_ADD));
+  NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>
+    (PL_DHashTableOperate(&sNPObjWrappers, npobj, PL_DHASH_ADD));
+
   if (!entry) {
     // Out of memory
     JS_ReportOutOfMemory(cx);
@@ -1558,7 +1555,7 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
   if (!obj) {
     // OOM? Remove the stale entry from the hash.
 
-    PL_DHashTableRawRemove(&sJSObjWrappers, entry);
+    PL_DHashTableRawRemove(&sNPObjWrappers, entry);
 
     return nsnull;
   }
@@ -1567,13 +1564,8 @@ nsNPObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, NPObject *npobj)
 
   entry->mJSObj = obj;
 
-  if (!::JS_SetPrivate(cx, obj, npobj)) {
-    NS_ERROR("Error setting private NPObject data in JS wrapper!");
-
-    PL_DHashTableRawRemove(&sJSObjWrappers, entry);
-
-    return nsnull;
-  }
+  // JS_SetPrivate() never fails.
+  ::JS_SetPrivate(cx, obj, npobj);
 
   // The new JSObject now holds on to npobj
   _retainobject(npobj);
@@ -1780,12 +1772,8 @@ LookupNPP(NPObject *npobj)
     return nsnull;
   }
 
-
-
-  NPObjWrapperHashEntry *entry =
-    static_cast<NPObjWrapperHashEntry *>
-               (PL_DHashTableOperate(&sNPObjWrappers, npobj,
-                                        PL_DHASH_ADD));
+  NPObjWrapperHashEntry *entry = static_cast<NPObjWrapperHashEntry *>
+    (PL_DHashTableOperate(&sNPObjWrappers, npobj, PL_DHASH_ADD));
 
   if (PL_DHASH_ENTRY_IS_FREE(entry)) {
     return nsnull;

@@ -44,10 +44,11 @@
 #include "nsLocalSearchService.h"
 #include "nscore.h"
 #include "nsIServiceManager.h"
+#include "nsServiceManagerUtils.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsEnumeratorUtils.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
+#include "nsArrayEnumerator.h"
 #include "nsUnicharUtils.h"
 #include "plhash.h"
 #include "plstr.h"
@@ -59,7 +60,7 @@
 #include "nsIRDFObserver.h"
 #include "nsRDFCID.h"
 #include "rdf.h"
-#include "nsCRT.h"
+#include "nsCRTGlue.h"
 
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kTextToSubURICID,             NS_TEXTTOSUBURI_CID);
@@ -166,7 +167,8 @@ LocalSearchDataSource::GetURI(char **uri)
 	if (! uri)
 		return NS_ERROR_NULL_POINTER;
 
-	if ((*uri = nsCRT::strdup("rdf:localsearch")) == nsnull)
+	*uri = ToNewCString(NS_LITERAL_CSTRING("rdf:localsearch"));
+	if (! *uri)
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	return NS_OK;
@@ -305,7 +307,8 @@ LocalSearchDataSource::parseResourceIntoFindTokens(nsIRDFResource *u, findTokenP
 		return(NS_ERROR_OUT_OF_MEMORY);
 
 	/* parse ID, build up token list */
-	if ((token = nsCRT::strtok(id, "&", &newstr)) != NULL)
+	newstr = id;
+	if ((token = NS_strtok("&", &newstr)) != NULL)
 	{
 		while (token != NULL)
 		{
@@ -332,12 +335,12 @@ LocalSearchDataSource::parseResourceIntoFindTokens(nsIRDFResource *u, findTokenP
 				    }
 				    else
 				    {
-				        CopyASCIItoUTF16(value, tokens[loop].value);
+				        CopyASCIItoUTF16(nsDependentCString(value), tokens[loop].value);
     			    }
 					break;
 				}
 			}
-			token = nsCRT::strtok(newstr, "&", &newstr);
+			token = NS_strtok("&", &newstr);
 		}
 	}
 	PL_strfree(id);
@@ -365,50 +368,32 @@ LocalSearchDataSource::doMatch(nsIRDFLiteral *literal,
 
         if (matchMethod.EqualsLiteral("contains"))
 	{
-            if (FindInReadable(matchText, value,
-                               nsCaseInsensitiveStringComparator()))
+            if (-1 != value.Find(matchText, CaseInsensitiveCompare))
                 found = PR_TRUE;
 	}
         else if (matchMethod.EqualsLiteral("startswith"))
 	{
-            nsAString::const_iterator start, realstart, end;
-            value.BeginReading(start);
-            value.EndReading(end);
-            realstart = start;
-            
-            if (FindInReadable(matchText, start, end,
-                               nsCaseInsensitiveStringComparator()) &&
-                start == realstart)
-                
+            if (StringBeginsWith(value, matchText, CaseInsensitiveCompare))
                 found = PR_TRUE;
 	}
         else if (matchMethod.EqualsLiteral("endswith"))
 	{
-            nsAString::const_iterator start, end, realend;
-            value.BeginReading(start);
-            value.EndReading(end);
-            realend = end;
-
-            if (RFindInReadable(matchText, start, end,
-                                nsCaseInsensitiveStringComparator()) &&
-                end == realend)
-                
+            if (StringEndsWith(value, matchText, CaseInsensitiveCompare))
                 found = PR_TRUE;
 	}
         else if (matchMethod.EqualsLiteral("is"))
 	{
-            if (value.Equals(matchText, nsCaseInsensitiveStringComparator()))
+            if (value.Equals(matchText, CaseInsensitiveCompare))
                 found = PR_TRUE;
 	}
         else if (matchMethod.EqualsLiteral("isnot"))
 	{
-            if (!value.Equals(matchText, nsCaseInsensitiveStringComparator()))
+            if (!value.Equals(matchText, CaseInsensitiveCompare))
                 found = PR_TRUE;
 	}
         else if (matchMethod.EqualsLiteral("doesntcontain"))
 	{
-            if (!FindInReadable(matchText, value,
-                                nsCaseInsensitiveStringComparator()))
+            if (-1 == value.Find(matchText, CaseInsensitiveCompare))
                 found = PR_TRUE;
 	}
         return(found);
@@ -445,9 +430,8 @@ LocalSearchDataSource::doIntMatch(nsIRDFInt *aInt,
     rv = aInt->GetValue(&val);
     if (NS_FAILED(rv)) return PR_FALSE;
     
-    PRInt32 error=0;
-    PRInt32 matchVal = matchText.ToInteger(&error);
-    if (error != 0) return PR_FALSE;
+    PRInt32 matchVal = matchText.ToInteger(&rv);
+    if (NS_FAILED(rv)) return PR_FALSE;
     
     if (matchMethod.EqualsLiteral("is"))
         found = (val == matchVal);
@@ -499,7 +483,7 @@ LocalSearchDataSource::dateMatches(nsIRDFDate *aDate,
 
 
 NS_METHOD
-LocalSearchDataSource::parseFindURL(nsIRDFResource *u, nsISupportsArray *array)
+LocalSearchDataSource::parseFindURL(nsIRDFResource *u, nsIMutableArray *array)
 {
   findTokenStruct		tokens[5];
   nsresult rv;
@@ -590,7 +574,7 @@ LocalSearchDataSource::parseFindURL(nsIRDFResource *u, nsISupportsArray *array)
     found = matchNode(value, tokens[2].value, tokens[3].value);
 
     if (found)
-      array->AppendElement(source);
+      array->AppendElement(source, PR_FALSE);
    }
 
   if (rv == NS_RDF_CURSOR_EMPTY)
@@ -626,8 +610,8 @@ NS_METHOD
 LocalSearchDataSource::getFindResults(nsIRDFResource *source, nsISimpleEnumerator** aResult)
 {
 	nsresult			rv;
-	nsCOMPtr<nsISupportsArray>	nameArray;
-	rv = NS_NewISupportsArray( getter_AddRefs(nameArray) );
+	nsCOMPtr<nsIMutableArray>	nameArray;
+	nameArray = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
 	rv = parseFindURL(source, nameArray);
@@ -854,12 +838,12 @@ LocalSearchDataSource::ArcLabelsOut(nsIRDFResource *source,
 
 	if (isFindURI(source))
 	{
-		nsCOMPtr<nsISupportsArray> array;
-		rv = NS_NewISupportsArray( getter_AddRefs(array) );
+		nsCOMPtr<nsIMutableArray> array;
+		array = do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
 		if (NS_FAILED(rv)) return rv;
 
-		array->AppendElement(kNC_Child);
-		array->AppendElement(kNC_pulse);
+		array->AppendElement(kNC_Child, PR_FALSE);
+		array->AppendElement(kNC_pulse, PR_FALSE);
 
                 return NS_NewArrayEnumerator(labels, array);
 	}

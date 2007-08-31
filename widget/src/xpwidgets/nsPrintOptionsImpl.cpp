@@ -86,8 +86,6 @@ static const char kPrintFooterStrCenter[] = "print_footercenter";
 static const char kPrintFooterStrRight[]  = "print_footerright";
 
 // Additional Prefs
-static const char kPrintPaperSize[]     = "print_paper_size"; // deprecated
-
 static const char kPrintReversed[]      = "print_reversed";
 static const char kPrintInColor[]       = "print_in_color";
 static const char kPrintPaperName[]     = "print_paper_name";
@@ -302,6 +300,40 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
     )                                                   \
   )
 
+  // Paper size prefs are read as a group
+  if (aFlags & nsIPrintSettings::kInitSavePaperSize) {
+    PRInt32 sizeUnit, sizeType;
+    double width, height;
+
+    PRBool success = GETINTPREF(kPrintPaperSizeUnit, &sizeUnit)
+                  && GETINTPREF(kPrintPaperSizeType, &sizeType)
+                  && GETDBLPREF(kPrintPaperWidth, width)
+                  && GETDBLPREF(kPrintPaperHeight, height)
+                  && GETSTRPREF(kPrintPaperName, str);
+
+    // Bug 315687: Sanity check paper size to avoid paper size values in
+    // mm when the size unit flag is inches. The value 100 is arbitrary
+    // and can be changed.
+    if (success) {
+      success = (sizeUnit == nsIPrintSettings::kPaperSizeInches)
+             && (width < 100.0)
+             && (height < 100.0);
+    }
+
+    if (success) {
+      aPS->SetPaperSizeUnit(sizeUnit);
+      DUMP_INT(kReadStr, kPrintPaperSizeUnit, sizeUnit);
+      aPS->SetPaperSizeType(sizeType);
+      DUMP_INT(kReadStr, kPrintPaperSizeType, sizeType);
+      aPS->SetPaperWidth(width);
+      DUMP_DBL(kReadStr, kPrintPaperWidth, width);
+      aPS->SetPaperHeight(height);
+      DUMP_DBL(kReadStr, kPrintPaperHeight, height);
+      aPS->SetPaperName(str.get());
+      DUMP_STR(kReadStr, kPrintPaperName, str.get());
+    }
+  }
+
   if (aFlags & nsIPrintSettings::kInitSaveOddEvenPages) {
   if (GETBOOLPREF(kPrintEvenPages, &b)) {
     aPS->SetPrintOptions(nsIPrintSettings::kPrintEvenPages, b);
@@ -372,13 +404,6 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
     }
   }
 
-  if (aFlags & nsIPrintSettings::kInitSavePaperSize) {
-    if (GETINTPREF(kPrintPaperSize, &iVal)) { // this has been deprecated
-      aPS->SetPaperSize(iVal);
-      DUMP_INT(kReadStr, kPrintPaperSize, iVal);
-    }
-  }
-
   if (aFlags & nsIPrintSettings::kInitSaveReversed) {
     if (GETBOOLPREF(kPrintReversed, &b)) {
       aPS->SetPrintReversed(b);
@@ -393,13 +418,6 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
     }
   }
 
-  if (aFlags & nsIPrintSettings::kInitSavePaperName) {
-    if (GETSTRPREF(kPrintPaperName, str)) {
-      aPS->SetPaperName(str.get());
-      DUMP_STR(kReadStr, kPrintPaperName, str.get());
-    }
-  }
-
   if (aFlags & nsIPrintSettings::kInitSavePlexName) {
     if (GETSTRPREF(kPrintPlexName, str)) {
       aPS->SetPlexName(str.get());
@@ -407,38 +425,10 @@ nsPrintOptions::ReadPrefs(nsIPrintSettings* aPS, const nsAString& aPrinterName,
     }
   }
 
-  if (aFlags & nsIPrintSettings::kInitSavePaperSizeUnit) {
-    if (GETINTPREF(kPrintPaperSizeUnit, &iVal)) {
-      aPS->SetPaperSizeUnit(iVal);
-      DUMP_INT(kReadStr, kPrintPaperSizeUnit, iVal);
-    }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSavePaperSizeType) {
-    if (GETINTPREF(kPrintPaperSizeType, &iVal)) {
-      aPS->SetPaperSizeType(iVal);
-      DUMP_INT(kReadStr, kPrintPaperSizeType, iVal);
-    }
-  }
-
   if (aFlags & nsIPrintSettings::kInitSavePaperData) {
     if (GETINTPREF(kPrintPaperData, &iVal)) {
       aPS->SetPaperData(iVal);
       DUMP_INT(kReadStr, kPrintPaperData, iVal);
-    }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSavePaperWidth) {
-    if (GETDBLPREF(kPrintPaperWidth, dbl)) {
-      aPS->SetPaperWidth(dbl);
-      DUMP_DBL(kReadStr, kPrintPaperWidth, dbl);
-    }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSavePaperHeight) {
-    if (GETDBLPREF(kPrintPaperHeight, dbl)) {
-      aPS->SetPaperHeight(dbl);
-      DUMP_DBL(kReadStr, kPrintPaperHeight, dbl);
     }
   }
 
@@ -547,6 +537,34 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
     }
   }
 
+  // Paper size prefs are saved as a group
+  if (aFlags & nsIPrintSettings::kInitSavePaperSize) {
+    PRInt16 sizeUnit, sizeType;
+    double width, height;
+    PRUnichar *name;
+ 
+    if (
+      NS_SUCCEEDED(aPS->GetPaperSizeUnit(&sizeUnit)) &&
+      NS_SUCCEEDED(aPS->GetPaperSizeType(&sizeType)) &&
+      NS_SUCCEEDED(aPS->GetPaperWidth(&width)) &&
+      NS_SUCCEEDED(aPS->GetPaperHeight(&height)) &&
+      NS_SUCCEEDED(aPS->GetPaperName(&name))
+    ) {
+      DUMP_INT(kWriteStr, kPrintPaperSizeUnit, sizeUnit);
+      mPrefBranch->SetIntPref(GetPrefName(kPrintPaperSizeUnit, aPrinterName),
+                              PRInt32(sizeUnit));
+      DUMP_INT(kWriteStr, kPrintPaperSizeType, sizeType);
+      mPrefBranch->SetIntPref(GetPrefName(kPrintPaperSizeType, aPrinterName),
+                              PRInt32(sizeType));
+      DUMP_DBL(kWriteStr, kPrintPaperWidth, width);
+      WritePrefDouble(GetPrefName(kPrintPaperWidth, aPrinterName), width);
+      DUMP_DBL(kWriteStr, kPrintPaperHeight, height);
+      WritePrefDouble(GetPrefName(kPrintPaperHeight, aPrinterName), height);
+      DUMP_STR(kWriteStr, kPrintPaperName, name);
+      WritePrefString(name, GetPrefName(kPrintPaperName, aPrinterName));
+    }
+  }
+
   PRBool     b;
   PRUnichar* uStr;
   PRInt32    iVal;
@@ -627,14 +645,6 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
     }
   }
 
-  if (aFlags & nsIPrintSettings::kInitSavePaperSize) {
-    if (NS_SUCCEEDED(aPS->GetPaperSize(&iVal))) {
-      DUMP_INT(kWriteStr, kPrintPaperSize, iVal);
-      mPrefBranch->SetIntPref(GetPrefName(kPrintPaperSize, aPrinterName), iVal);
-      // this has been deprecated
-    }
-  }
-
   if (aFlags & nsIPrintSettings::kInitSaveReversed) {
     if (NS_SUCCEEDED(aPS->GetPrintReversed(&b))) {
       DUMP_BOOL(kWriteStr, kPrintReversed, b);
@@ -649,33 +659,10 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
     }
   }
 
-  if (aFlags & nsIPrintSettings::kInitSavePaperName) {
-    if (NS_SUCCEEDED(aPS->GetPaperName(&uStr))) {
-      DUMP_STR(kWriteStr, kPrintPaperName, uStr);
-      WritePrefString(uStr, GetPrefName(kPrintPaperName, aPrinterName));
-    }
-  }
-
   if (aFlags & nsIPrintSettings::kInitSavePlexName) {
     if (NS_SUCCEEDED(aPS->GetPlexName(&uStr))) {
       DUMP_STR(kWriteStr, kPrintPlexName, uStr);
       WritePrefString(uStr, GetPrefName(kPrintPlexName, aPrinterName));
-    }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSavePaperSizeUnit) {
-    if (NS_SUCCEEDED(aPS->GetPaperSizeUnit(&iVal16))) {
-      DUMP_INT(kWriteStr, kPrintPaperSizeUnit, iVal16);
-      mPrefBranch->SetIntPref(GetPrefName(kPrintPaperSizeUnit, aPrinterName),
-                              PRInt32(iVal16));
-    }
-  }
- 
-  if (aFlags & nsIPrintSettings::kInitSavePaperSizeType) {
-    if (NS_SUCCEEDED(aPS->GetPaperSizeType(&iVal16))) {
-      DUMP_INT(kWriteStr, kPrintPaperSizeType, iVal16);
-      mPrefBranch->SetIntPref(GetPrefName(kPrintPaperSizeType, aPrinterName),
-                              PRInt32(iVal16));
     }
   }
 
@@ -684,20 +671,6 @@ nsPrintOptions::WritePrefs(nsIPrintSettings *aPS, const nsAString& aPrinterName,
       DUMP_INT(kWriteStr, kPrintPaperData, iVal16);
       mPrefBranch->SetIntPref(GetPrefName(kPrintPaperData, aPrinterName),
                               PRInt32(iVal16));
-    }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSavePaperWidth) {
-    if (NS_SUCCEEDED(aPS->GetPaperWidth(&dbl))) {
-      DUMP_DBL(kWriteStr, kPrintPaperWidth, dbl);
-      WritePrefDouble(GetPrefName(kPrintPaperWidth, aPrinterName), dbl);
-    }
-  }
-
-  if (aFlags & nsIPrintSettings::kInitSavePaperHeight) {
-    if (NS_SUCCEEDED(aPS->GetPaperHeight(&dbl))) {
-      DUMP_DBL(kWriteStr, kPrintPaperHeight, dbl);
-      WritePrefDouble(GetPrefName(kPrintPaperHeight, aPrinterName), dbl);
     }
   }
 
@@ -1244,7 +1217,6 @@ Tester::Tester()
     ps->SetPaperSizeUnit(nsIPrintSettings::kPaperSizeMillimeters);
     ps->SetPrintReversed(PR_TRUE);
     ps->SetPrintInColor(PR_TRUE);
-    ps->SetPaperSize(5);
     ps->SetOrientation(nsIPrintSettings::kLandscapeOrientation);
     ps->SetPrintCommand(NS_ConvertUTF8toUTF16("Command").get());
     ps->SetNumCopies(2);
@@ -1270,13 +1242,8 @@ Tester::Tester()
       {kPrintBGImages, nsIPrintSettings::kInitSaveBGImages},
       {kPrintShrinkToFit, nsIPrintSettings::kInitSaveShrinkToFit},
       {kPrintPaperSize, nsIPrintSettings::kInitSavePaperSize},
-      {kPrintPaperName, nsIPrintSettings::kInitSavePaperName},
       {kPrintPlexName, nsIPrintSettings::kInitSavePlexName},
-      {kPrintPaperSizeUnit, nsIPrintSettings::kInitSavePaperSizeUnit},
-      {kPrintPaperSizeType, nsIPrintSettings::kInitSavePaperSizeType},
       {kPrintPaperData, nsIPrintSettings::kInitSavePaperData},
-      {kPrintPaperWidth, nsIPrintSettings::kInitSavePaperWidth},
-      {kPrintPaperHeight, nsIPrintSettings::kInitSavePaperHeight},
       {kPrintReversed, nsIPrintSettings::kInitSaveReversed},
       {kPrintInColor, nsIPrintSettings::kInitSaveInColor},
       {kPrintColorspace, nsIPrintSettings::kInitSaveColorspace},

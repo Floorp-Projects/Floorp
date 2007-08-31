@@ -151,6 +151,10 @@
                 onset="this.setAttribute('showcommentcolumn', val); return val;"
                 onget="return this.getAttribute('showcommentcolumn') == 'true';"/>
 
+      <property name="showImageColumn"
+                onset="this.setAttribute('showimagecolumn', val); return val;"
+                onget="return this.getAttribute('showimagecolumn') == 'true';"/>
+
       <property name="timeout"
                 onset="this.setAttribute('timeout', val); return val;"
                 onget="return parseInt(this.getAttribute('timeout')) || 50;"/>
@@ -533,7 +537,8 @@
       <field name="mInput">null</field>
       <field name="mPopupOpen">false</field>
       <field name="mShowCommentCol">false</field>
-      
+      <field name="mShowImageCol">false</field>
+
       <constructor><![CDATA[
         this.setAttribute("ignorekeys", "true");
       ]]></constructor>
@@ -576,7 +581,8 @@
             this.invalidate();
             
             this.showCommentColumn = this.mInput.showCommentColumn;
-            
+            this.showImageColumn = this.mInput.showImageColumn;
+
             this.setAttribute("width", aWidth < 100 ? 100 : aWidth);
 
             document.popupNode = null;
@@ -674,7 +680,7 @@
                 onget="return this.mShowCommentColumn;">
         <setter><![CDATA[
           if (!val && this.mShowCommentColumn) {
-            // reset the flex on the value column and add the comment column
+            // reset the flex on the value column and remove the comment column
             document.getElementById("treecolAutoCompleteValue").setAttribute("flex", 1);
             this.removeColumn("treecolAutoCompleteComment");
           } else if (val && !this.mShowCommentColumn) {
@@ -685,6 +691,23 @@
           this.mShowCommentColumn = val;
           return val;
         ]]></setter>
+      </property>
+
+      <property name="showImageColumn"
+                onget="return this.mShowImageColumn;">
+        <setter>
+          <![CDATA[
+          if (!val && this.mShowImageColumn) {
+            // remove the image column
+            this.removeColumn("treecolAutoCompleteImage");
+          } else if (val && !this.mShowImageColumn) {
+            // add the image column
+            this.addColumn({id: "treecolAutoCompleteImage", flex: 1});
+          }
+          this.mShowImageColumn = val;
+          return val;
+        ]]>
+        </setter>
       </property>
 
       <method name="addColumn">

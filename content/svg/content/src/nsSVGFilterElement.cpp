@@ -37,10 +37,8 @@
 #include "nsGkAtoms.h"
 #include "nsSVGLength.h"
 #include "nsCOMPtr.h"
-#include "nsSVGAnimatedEnumeration.h"
 #include "nsSVGAnimatedInteger.h"
 #include "nsSVGAnimatedString.h"
-#include "nsSVGEnum.h"
 #include "nsSVGFilterElement.h"
 
 nsSVGElement::LengthInfo nsSVGFilterElement::sLengthInfo[4] =
@@ -49,6 +47,18 @@ nsSVGElement::LengthInfo nsSVGFilterElement::sLengthInfo[4] =
   { &nsGkAtoms::y, -10, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
   { &nsGkAtoms::width, 120, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
   { &nsGkAtoms::height, 120, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
+};
+
+nsSVGElement::EnumInfo nsSVGFilterElement::sEnumInfo[2] =
+{
+  { &nsGkAtoms::filterUnits,
+    sSVGUnitTypesMap,
+    nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
+  },
+  { &nsGkAtoms::primitiveUnits,
+    sSVGUnitTypesMap,
+    nsIDOMSVGUnitTypes::SVG_UNIT_TYPE_USERSPACEONUSE
+  }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Filter)
@@ -82,38 +92,7 @@ nsSVGFilterElement::Init()
   nsresult rv = nsSVGFilterElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // Define enumeration mappings
-  static struct nsSVGEnumMapping gUnitMap[] = {
-        {&nsGkAtoms::objectBoundingBox, nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX},
-        {&nsGkAtoms::userSpaceOnUse, nsIDOMSVGFilterElement::SVG_FUNITS_USERSPACEONUSE},
-        {nsnull, 0}
-  };
-
   // Create mapped properties:
-
-  // DOM property: filterUnits ,  #IMPLIED attrib: filterUnits
-  {
-    nsCOMPtr<nsISVGEnum> units;
-    rv = NS_NewSVGEnum(getter_AddRefs(units),
-                       nsIDOMSVGFilterElement::SVG_FUNITS_OBJECTBOUNDINGBOX, gUnitMap);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mFilterUnits), units);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::filterUnits, mFilterUnits);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: primitiveUnits ,  #IMPLIED attrib: primitiveUnits
-  {
-    nsCOMPtr<nsISVGEnum> units;
-    rv = NS_NewSVGEnum(getter_AddRefs(units),
-                       nsIDOMSVGFilterElement::SVG_FUNITS_USERSPACEONUSE, gUnitMap);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedEnumeration(getter_AddRefs(mPrimitiveUnits), units);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::primitiveUnits, mPrimitiveUnits);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
 
   // DOM property: filterResX , #IMPLIED attrib: filterRes
   {
@@ -178,17 +157,13 @@ NS_IMETHODIMP nsSVGFilterElement::GetHeight(nsIDOMSVGAnimatedLength * *aHeight)
 /* readonly attribute nsIDOMSVGAnimatedEnumeration filterUnits; */
 NS_IMETHODIMP nsSVGFilterElement::GetFilterUnits(nsIDOMSVGAnimatedEnumeration * *aUnits)
 {
-  *aUnits = mFilterUnits;
-  NS_IF_ADDREF(*aUnits);
-  return NS_OK;
+  return mEnumAttributes[FILTERUNITS].ToDOMAnimatedEnum(aUnits, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration primitiveUnits; */
 NS_IMETHODIMP nsSVGFilterElement::GetPrimitiveUnits(nsIDOMSVGAnimatedEnumeration * *aUnits)
 {
-  *aUnits = mPrimitiveUnits;
-  NS_IF_ADDREF(*aUnits);
-  return NS_OK;
+  return mEnumAttributes[PRIMITIVEUNITS].ToDOMAnimatedEnum(aUnits, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration filterResY; */
@@ -288,4 +263,11 @@ nsSVGFilterElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
+}
+
+nsSVGElement::EnumAttributesInfo
+nsSVGFilterElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            NS_ARRAY_LENGTH(sEnumInfo));
 }

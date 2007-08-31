@@ -405,11 +405,7 @@ function onAccept()
   saveToPrefs = gPrefs.getBoolPref("print.save_print_settings");
 
   if (saveToPrefs && printService != null) {
-    var flags = gPrintSetInterface.kInitSavePaperSizeType  | 
-                gPrintSetInterface.kInitSavePaperSizeUnit  |
-                gPrintSetInterface.kInitSavePaperWidth     | 
-                gPrintSetInterface.kInitSavePaperHeight    |
-                gPrintSetInterface.kInitSavePaperName      | 
+    var flags = gPrintSetInterface.kInitSavePaperSize      | 
                 gPrintSetInterface.kInitSaveColorSpace     |
                 gPrintSetInterface.kInitSaveInColor        |
                 gPrintSetInterface.kInitSaveResolutionName |

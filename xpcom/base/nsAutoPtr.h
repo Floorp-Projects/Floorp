@@ -1032,6 +1032,16 @@ class nsRefPtr
           mRawPtr = temp;
         }
 
+      already_AddRefed<T>
+      forget()
+          // return the value of mRawPtr and null out mRawPtr. Useful for
+          // already_AddRefed return values.
+        {
+          T* temp = 0;
+          swap(temp);
+          return temp;
+        }
+
       T*
       get() const
           /*

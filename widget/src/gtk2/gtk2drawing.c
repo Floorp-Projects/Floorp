@@ -616,17 +616,7 @@ moz_gtk_toggle_paint(GdkDrawable* drawable, GdkRectangle* rect,
     style = w->style;
     TSOffsetStyleGCs(style, x, y);
 
-    /* Some themes check the widget state themselves. */
-    if (state->focused)
-        GTK_WIDGET_SET_FLAGS(w, GTK_HAS_FOCUS);
-    else
-        GTK_WIDGET_UNSET_FLAGS(w, GTK_HAS_FOCUS);
-
-    if (state_type != GTK_STATE_INSENSITIVE)
-         GTK_WIDGET_SET_FLAGS(w, GTK_SENSITIVE);
-    else
-         GTK_WIDGET_UNSET_FLAGS(w, GTK_SENSITIVE);
-
+    gtk_widget_set_sensitive(w, !state->disabled);
     GTK_TOGGLE_BUTTON(w)->active = selected;
       
     if (isradio) {
@@ -1005,26 +995,34 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
     x = rect->x;
     y = rect->y;
 
+    if (state->focused && !state->disabled) {
+         /* This will get us the lit borders that focused textboxes enjoy on some themes. */
+        GTK_WIDGET_SET_FLAGS(gEntryWidget, GTK_HAS_FOCUS);
+
+        if (!interior_focus) {
+            /* Indent the border a little bit if we have exterior focus 
+               (this is what GTK does to draw native entries) */
+            x += focus_width;
+            y += focus_width;
+            width -= 2 * focus_width;
+            height -= 2 * focus_width;
+        }
+    }
+
     TSOffsetStyleGCs(style, x, y);
     gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
                      cliprect, gEntryWidget, "entry", x, y, width, height);
-  
 
-    if (state->focused && !interior_focus) {
-        x += focus_width;
-        y += focus_width;
-        width -= 2 * focus_width;
-        height -= 2 * focus_width;
+    if (state->focused && !state->disabled) {
+        if (!interior_focus) {
+            TSOffsetStyleGCs(style, rect->x, rect->y);
+            gtk_paint_focus(style, drawable,  GTK_STATE_NORMAL, cliprect,
+                            gEntryWidget, "entry",
+                            rect->x, rect->y, rect->width, rect->height);
+        }
 
-        TSOffsetStyleGCs(style, x, y);
-        gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
-                         cliprect, gEntryWidget, "entry",
-                         x, y, width, height);
-
-        TSOffsetStyleGCs(style, rect->x, rect->y);
-        gtk_paint_focus(style, drawable,  GTK_STATE_NORMAL, cliprect,
-                        gEntryWidget, "entry",
-                        rect->x, rect->y, rect->width, rect->height);
+        /* Now unset the focus flag. We don't want other entries to look like they're focused too! */
+        GTK_WIDGET_UNSET_FLAGS(gEntryWidget, GTK_HAS_FOCUS);
     }
 
     return MOZ_GTK_SUCCESS;

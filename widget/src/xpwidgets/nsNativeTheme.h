@@ -158,7 +158,6 @@ class nsNativeTheme
   static nsMargin                  sListboxBorderSize;
   static PRUint8                   sListboxBorderStyle;
   static nsILookAndFeel::nsColorID sListboxBorderColorID;
-  static PRBool                    sListboxBGTransparent;
   static nsILookAndFeel::nsColorID sListboxBGColorID;
   static nsILookAndFeel::nsColorID sListboxDisabledBGColorID;
   // comboboxes

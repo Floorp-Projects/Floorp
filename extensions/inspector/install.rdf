@@ -43,10 +43,19 @@
         <em:maxVersion>@SEAMONKEY_VERSION@</em:maxVersion>
       </Description>
     </em:targetApplication>
-    
+
+    <em:targetApplication>
+      <!-- Toolkit -->
+      <Description>
+        <em:id>toolkit@mozilla.org</em:id>
+        <em:minVersion>1.9a1</em:minVersion>
+        <em:maxVersion>@EXTENSION_VERSION@</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+
     <!-- EXTENSION AUTHORS!
          DO NOT COPY THIS PROPERTY INTO YOUR INSTALL RDF FILES
-         It will cause users not to be informed of incompatibilities 
+         It will cause users not to be informed of incompatibilities
          with your extension when they are updated with Software Update
          and your extension will become unavailable to them!
          -->

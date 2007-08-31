@@ -689,8 +689,11 @@ struct JSContext {
     JSPackedBool        throwing;           /* is there a pending exception? */
     jsval               exception;          /* most-recently-thrown exception */
 
-    /* Limit pointer for checking stack consumption during recursion. */
+    /* Limit pointer for checking native stack consumption during recursion. */
     jsuword             stackLimit;
+
+    /* Quota on the size of arenas used to compile and execute scripts. */
+    size_t              scriptStackQuota;
 
     /* Data shared by threads in an address space. */
     JSRuntime           *runtime;

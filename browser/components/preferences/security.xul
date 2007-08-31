@@ -163,18 +163,17 @@
     </groupbox>
 
     <!-- Warning Messages -->
-    <groupbox id="warningMessagesGroup">
-      <caption label="&warnings.label;"/>
+    <hbox class="bottomBox">
+      <groupbox id="warningMessagesGroup" orient="horizontal" flex="1">
+        <caption label="&warnings.label;"/>
 
-      <hbox id="chooseWarningsBox" align="center">
         <description control="warningSettings" flex="1">&chooseWarnings.label;</description>
         <button id="warningSettings"
                 label="&warningSettings.label;"
                 accesskey="&warningSettings.accesskey;"
                 oncommand="gSecurityPane.showWarningMessageSettings();"/>
-      </hbox>
-      <separator/>
-    </groupbox>
+      </groupbox>
+    </hbox>
 
   </prefpane>
 

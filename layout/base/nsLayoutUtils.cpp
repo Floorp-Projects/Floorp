@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsLayoutUtils.h"
-#include "nsIFrame.h"
 #include "nsIFontMetrics.h"
 #include "nsIFormControlFrame.h"
 #include "nsPresContext.h"
@@ -746,12 +745,15 @@ static PRBool gDumpRepaintRegionForCopy = PR_FALSE;
 #endif
 
 nsIFrame*
-nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt)
+nsLayoutUtils::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt,
+                                PRBool aShouldIgnoreSuppression)
 {
   nsDisplayListBuilder builder(aFrame, PR_TRUE, PR_FALSE);
   nsDisplayList list;
   nsRect target(aPt, nsSize(1, 1));
 
+  if (aShouldIgnoreSuppression)
+    builder.IgnorePaintSuppression();
   builder.EnterPresShell(aFrame, target);
 
   nsresult rv =
@@ -1254,7 +1256,7 @@ static nscoord AddPercents(nsLayoutUtils::IntrinsicWidthType aType,
 /* static */ PRBool
 nsLayoutUtils::GetAbsoluteCoord(const nsStyleCoord& aStyle,
                                 nsIRenderingContext* aRenderingContext,
-                                nsIFrame* aFrame,
+                                nsStyleContext* aStyleContext,
                                 nscoord& aResult)
 {
   nsStyleUnit unit = aStyle.GetUnit();
@@ -1264,7 +1266,7 @@ nsLayoutUtils::GetAbsoluteCoord(const nsStyleCoord& aStyle,
   }
   if (eStyleUnit_Chars == unit) {
     aResult = nsLayoutUtils::CharsToCoord(aStyle, aRenderingContext,
-                                          aFrame->GetStyleContext());
+                                          aStyleContext);
     return PR_TRUE;
   }
   return PR_FALSE;

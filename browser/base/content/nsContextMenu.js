@@ -627,8 +627,10 @@ nsContextMenu.prototype = {
 
   // Open frame in a new tab.
   openFrameInTab: function() {
-    openNewTabWith(this.target.ownerDocument.location.href,
-                   null, null, null, false);
+    var doc = this.target.ownerDocument;
+    var frameURL = doc.documentURIObject.spec;
+
+    openNewTabWith(frameURL, null, null, null, false, makeURI(doc.referrer));
   },
 
   // Reload clicked-in frame.
@@ -638,19 +640,20 @@ nsContextMenu.prototype = {
 
   // Open clicked-in frame in its own window.
   openFrame: function() {
-    openNewWindowWith(this.target.ownerDocument.location.href,
-                      null, null, false);
+    var doc = this.target.ownerDocument;
+    var frameURL = doc.documentURIObject.spec;
+
+    openNewWindowWith(frameURL, null, null, false, makeURI(doc.referrer));
   },
 
   // Open clicked-in frame in the same window.
   showOnlyThisFrame: function() {
-    var frameURL = this.target.ownerDocument.location.href;
+    var doc = this.target.ownerDocument;
+    var frameURL = doc.documentURIObject.spec;
 
-    try {
-      urlSecurityCheck(frameURL, this.browser.contentPrincipal,
-                       Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-      this.browser.loadURI(frameURL);
-    } catch(e) {}
+    urlSecurityCheck(frameURL, this.browser.contentPrincipal,
+                     Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+    this.browser.loadURI(frameURL, makeURI(doc.referrer));
   },
 
   // View Partial Source
@@ -1120,17 +1123,13 @@ nsContextMenu.prototype = {
   },
 
   bookmarkThisPage: function CM_bookmarkThisPage() {
-    // workaround bug 392512
-    setTimeout(function(aSelf) {
-      PlacesCommandHook.bookmarkPage(aSelf.browser, true, aSelf.browser,
-                                     "overlap"); }, 0, this);
+    PlacesCommandHook.bookmarkPage(this.browser, PlacesUtils.bookmarksRootId,
+                                   true, this.browser, "overlap");
   },
 
   bookmarkLink: function CM_bookmarkLink() {
-    // workaround bug 392512
-    setTimeout(function(aSelf) {
-      PlacesCommandHook.bookmarkLink(aSelf.linkURL, aSelf.linkText());
-    }, 0, this);
+    PlacesCommandHook.bookmarkLink(PlacesUtils.bookmarksRootId, this.linkURL,
+                                   this.linkText());
   },
 
   addBookmarkForFrame: function CM_addBookmarkForFrame() {
@@ -1143,16 +1142,13 @@ nsContextMenu.prototype = {
       var description = PlacesUtils.getDescriptionFromDocument(doc);
 
       var descAnno = { name: DESCRIPTION_ANNO, value: description };
-      var txn = PlacesUtils.ptm.createItem(uri, PlacesUtils.placesRootId, -1,
+      var txn = PlacesUtils.ptm.createItem(uri, PlacesUtils.bookmarksRootId, -1,
                                            title, null, [descAnno]);
       PlacesUtils.ptm.commitTransaction(txn);
       itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     }
 
-    // workaround bug 392512
-    setTimeout(function(aSelf) {
-      PlacesCommandHook.showEditBookmarkPopup(itemId, aSelf.browser, "overlap");
-    }, 0, this);
+    PlacesCommandHook.showEditBookmarkPopup(itemId, this.browser, "overlap");
   },
 
   savePageAs: function CM_savePageAs() {

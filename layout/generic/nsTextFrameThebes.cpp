@@ -82,6 +82,8 @@
 #include "nsTextFrameTextRunCache.h"
 #include "nsExpirationTracker.h"
 #include "nsICaseConversion.h"
+#include "nsIUGenCategory.h"
+#include "nsUnicharUtilCIID.h"
 
 #include "nsTextFragment.h"
 #include "nsGkAtoms.h"
@@ -392,7 +394,7 @@ public:
   virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
   virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);
   virtual PRBool PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
-                                PRInt32* aOffset, PRBool* aSawBeforeType);
+                                PRInt32* aOffset, PeekWordState* aState);
 
   NS_IMETHOD CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
   
@@ -2547,9 +2549,11 @@ PropertyProvider::GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
   // We need to visit skipped characters so that we can detect SHY
   run.SetVisitSkipped();
 
+  PRInt32 prevTrailingCharOffset = run.GetPos().GetOriginalOffset() - 1;
   PRBool allowHyphenBreakBeforeNextChar =
-    run.GetPos().GetOriginalOffset() > mStart.GetOriginalOffset() &&
-    mFrag->CharAt(run.GetPos().GetOriginalOffset() - 1) == CH_SHY;
+    prevTrailingCharOffset >= mStart.GetOriginalOffset() &&
+    prevTrailingCharOffset < mStart.GetOriginalOffset() + mLength &&
+    mFrag->CharAt(prevTrailingCharOffset) == CH_SHY;
 
   while (run.NextRun()) {
     NS_ASSERTION(run.GetRunLength() > 0, "Shouldn't return zero-length runs");
@@ -4667,6 +4671,7 @@ public:
   PRInt32 GetBeforeOffset();
 
 private:
+  nsCOMPtr<nsIUGenCategory>   mCategories;
   gfxSkipCharsIterator        mIterator;
   const nsTextFragment*       mFrag;
   nsTextFrame*                mTextFrame;
@@ -4740,7 +4745,10 @@ PRBool
 ClusterIterator::IsPunctuation()
 {
   NS_ASSERTION(mCharIndex >= 0, "No cluster selected");
-  return nsTextFrameUtils::IsPunctuationMark(mFrag->CharAt(mCharIndex));
+  if (!mCategories)
+    return PR_FALSE;
+  nsIUGenCategory::nsUGenCategory c = mCategories->Get(mFrag->CharAt(mCharIndex));
+  return c == nsIUGenCategory::kPunctuation || c == nsIUGenCategory::kSymbol;
 }
 
 PRBool
@@ -4808,26 +4816,32 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, PRInt32 aPosition,
   }
   mIterator.SetOriginalOffset(aPosition);
 
+  mCategories = do_GetService(NS_UNICHARCATEGORY_CONTRACTID);
+  
   mFrag = aTextFrame->GetContent()->GetText();
   mTrimmed = aTextFrame->GetTrimmedOffsets(mFrag, PR_TRUE);
 
   PRInt32 textLen = aTextFrame->GetContentLength();
-  if (!mWordBreaks.AppendElements(textLen)) {
+  if (!mWordBreaks.AppendElements(textLen + 1)) {
     mDirection = 0; // signal failure
     return;
   }
-  memset(mWordBreaks.Elements(), PR_FALSE, textLen);
+  memset(mWordBreaks.Elements(), PR_FALSE, textLen + 1);
   nsAutoString text;
   mFrag->AppendTo(text, aTextFrame->GetContentOffset(), textLen);
   nsIWordBreaker* wordBreaker = nsContentUtils::WordBreaker();
   PRInt32 i = 0;
-  while ((i = wordBreaker->NextWord(text.get(), textLen, i)) >= 0)
+  while ((i = wordBreaker->NextWord(text.get(), textLen, i)) >= 0) {
     mWordBreaks[i] = PR_TRUE;
+  }
+  // XXX this never allows word breaks at the start or end of the frame, but to fix
+  // this we would need to rewrite word-break detection to use the text from
+  // textruns or something. Not a regression, at least.
 }
 
 PRBool
 nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
-                            PRInt32* aOffset, PRBool* aSawBeforeType)
+                            PRInt32* aOffset, PeekWordState* aState)
 {
   PRInt32 contentLength = GetContentLength();
   NS_ASSERTION (aOffset && *aOffset <= contentLength, "aOffset out of range");
@@ -4844,24 +4858,25 @@ nsTextFrame::PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool 
   if (!cIter.NextCluster())
     return PR_FALSE;
   
-  PRBool stopAfterPunctuation =
-	  nsContentUtils::GetBoolPref("layout.word_select.stop_at_punctuation");
-  PRBool stopBeforePunctuation = stopAfterPunctuation && !aIsKeyboardSelect;
   do {
-    if (aWordSelectEatSpace == cIter.IsWhitespace() && !*aSawBeforeType) {
-      *aSawBeforeType = PR_TRUE;
+    PRBool isPunctuation = cIter.IsPunctuation();
+    if (aWordSelectEatSpace == cIter.IsWhitespace() && !aState->mSawBeforeType) {
+      aState->SetSawBeforeType();
+      aState->Update(isPunctuation);
       continue;
     }
-    if (cIter.GetBeforeOffset() != offset &&
-        (cIter.IsPunctuation() ? stopBeforePunctuation
-                               : cIter.HaveWordBreakBefore() && *aSawBeforeType)) {
-      *aOffset = cIter.GetBeforeOffset() - mContentOffset;
-      return PR_TRUE;
+    // See if we can break before the current cluster
+    if (!aState->mAtStart) {
+      PRBool canBreak = isPunctuation != aState->mLastCharWasPunctuation
+        ? BreakWordBetweenPunctuation(aForward ? aState->mLastCharWasPunctuation : isPunctuation,
+                                      aIsKeyboardSelect)
+        : cIter.HaveWordBreakBefore() && aState->mSawBeforeType;
+      if (canBreak) {
+        *aOffset = cIter.GetBeforeOffset() - mContentOffset;
+        return PR_TRUE;
+      }
     }
-    if (stopAfterPunctuation && cIter.IsPunctuation()) {
-      *aOffset = cIter.GetAfterOffset() - mContentOffset;
-      return PR_TRUE;
-    }
+    aState->Update(isPunctuation);
   } while (cIter.NextCluster());
 
   *aOffset = cIter.GetAfterOffset() - mContentOffset;
@@ -6027,6 +6042,13 @@ nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)
 {
   AddStateBits(NS_FRAME_IS_BIDI);
 
+  /*
+   * After Bidi resolution we may need to reassign text runs.
+   * This is called during bidi resolution from the block container, so we
+   * shouldn't be holding a local reference to a textrun anywhere.
+   */
+  ClearTextRun();
+
   nsTextFrame* prev = static_cast<nsTextFrame*>(GetPrevInFlow());
   if (prev) {
     // the bidi resolver can be very evil when columns/pages are involved. Don't
@@ -6034,13 +6056,10 @@ nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)
     PRInt32 prevOffset = prev->GetContentOffset();
     aStart = PR_MAX(aStart, prevOffset);
     aEnd = PR_MAX(aEnd, prevOffset);
+    prev->ClearTextRun();
   }
   if (mContentOffset != aStart) {
     mContentOffset = aStart;
-    ClearTextRun();
-    if (prev) {
-      prev->ClearTextRun();
-    }
   }
 
   SetLength(aEnd - aStart);

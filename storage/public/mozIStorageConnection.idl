@@ -54,11 +54,17 @@ interface nsIFile;
  * creating prepared statements, executing SQL, and examining database
  * errors.
  */
-[scriptable, uuid(9f36de9d-6471-4249-afed-1ee7760e325c)]
+[scriptable, uuid(e42f0655-cdc3-47c6-824a-cdb88c731cb9)]
 interface mozIStorageConnection : nsISupports {
   /*
    * Initialization and status
    */
+  
+  /**
+   * Closes a database connection.  C++ callers should simply set the database
+   * variable to NULL.
+   */
+   void close();
 
   /**
    * whether the database is open or not
@@ -101,7 +107,8 @@ interface mozIStorageConnection : nsISupports {
   /**
    * Create a mozIStorageStatement for the given SQL expression.  The
    * expression may use ? to indicate sequential numbered arguments,
-   * or :name and $var to indicate named arguments.
+   * ?1, ?2 etc. to indicate specific numbered arguments or :name and 
+   * $var to indicate named arguments.
    *
    * @param aSQLStatement  The SQL statement to execute
    *

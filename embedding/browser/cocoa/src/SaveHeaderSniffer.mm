@@ -397,7 +397,7 @@ nsresult nsHeaderSniffer::InitiateDownload(nsISupports* inSourceData, nsString& 
                         nsIWebBrowserPersist::ENCODE_FLAGS_ABSOLUTE_LINKS |
                         nsIWebBrowserPersist::ENCODE_FLAGS_NOFRAMES_CONTENT;
     }
-    rv = webPersist->SaveDocument(domDoc, destFile, filesFolder, mContentType.get(), encodingFlags, 80);
+    rv = webPersist->SaveDocument(domDoc, destFile, filesFolder, null, encodingFlags, 80);
   }
   
   return rv;

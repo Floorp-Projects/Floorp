@@ -390,10 +390,10 @@ var PlacesUtils = {
   },
 
  /**
-  * Determines whether a ResultNode is a remote container registered by the
+  * Determines whether a result node is a remote container registered by the
   * livemark service.
   * @param aNode
-  *        A NavHistory Result Node
+  *        A result Node
   * @returns true if the node is a livemark container item
   */
   nodeIsLivemarkContainer: function PU_nodeIsLivemarkContainer(aNode) {
@@ -402,19 +402,13 @@ var PlacesUtils = {
   },
 
  /**
-  * Determines whether a ResultNode is a live-bookmark item
+  * Determines whether a result node is a live-bookmark item
   * @param aNode
-  *        A NavHistory Result Node
+  *        A result node
   * @returns true if the node is a livemark container item
   */
   nodeIsLivemarkItem: function PU_nodeIsLivemarkItem(aNode) {
-    if (this.nodeIsBookmark(aNode)) {
-      if (this.annotations
-              .itemHasAnnotation(aNode.itemId, "livemark/bookmarkFeedURI"))
-        return true;
-    }
-
-    return false;
+    return aNode.parent && this.nodeIsLivemarkContainer(aNode.parent);
   },
 
   /**
@@ -1501,7 +1495,7 @@ var PlacesUtils = {
 
   /**
    * Get the most recently added/modified bookmark for a URL, excluding items
-   * under tag containers. -1 is returned if no item is found.
+   * under tag or livemark containers. -1 is returned if no item is found.
    */
   getMostRecentBookmarkForURI:
   function PU_getMostRecentBookmarkForURI(aURI) {
@@ -1509,10 +1503,12 @@ var PlacesUtils = {
     for each (var bk in bmkIds) {
       // Find the first folder which isn't a tag container
       var folder = this.bookmarks.getFolderIdForItem(bk);
-      if (folder == this.placesRootId ||
-        this.bookmarks.getFolderIdForItem(folder) != this.tagRootId) {
+      if (folder == this.placesRootId)
         return bk;
-      }
+      var parent = this.bookmarks.getFolderIdForItem(folder)
+      if (parent != this.tagRootId &&
+          !this.annotations.itemHasAnnotation(parent, "livemark/feedURI"))
+        return bk;
     }
     return -1;
   }

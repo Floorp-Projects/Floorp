@@ -39,20 +39,14 @@
 // NOTE: alphabetically ordered
 #include "nsTextAccessibleWrap.h"
 #include "ISimpleDOMText_i.c"
-#include "nsContentCID.h"
 #include "nsIAccessibleDocument.h"
-#include "nsIDOMRange.h"
 #include "nsIFontMetrics.h"
 #include "nsIFrame.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIRenderingContext.h"
-#include "nsISelection.h"
-#include "nsISelectionController.h"
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
-
-static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 // --------------------------------------------------------
 // nsTextAccessibleWrap Accessible
@@ -158,41 +152,14 @@ STDMETHODIMP nsTextAccessibleWrap::get_unclippedSubstringBounds(
 }
 
 
-STDMETHODIMP nsTextAccessibleWrap::scrollToSubstring( 
+STDMETHODIMP nsTextAccessibleWrap::scrollToSubstring(
     /* [in] */ unsigned int aStartIndex,
     /* [in] */ unsigned int aEndIndex)
 {
-  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
-  nsIFrame *frame = GetFrame();
-
-  if (!frame || !presShell) {
-    return E_FAIL;  // This accessible has been shut down
-  }
-
-  nsPresContext *presContext = presShell->GetPresContext();
-  nsCOMPtr<nsIDOMRange> scrollToRange = do_CreateInstance(kRangeCID);
-  nsCOMPtr<nsISelectionController> selCon;
-  frame->GetSelectionController(presContext, getter_AddRefs(selCon));
-  if (!presContext || !scrollToRange || !selCon) {
-    return E_FAIL;
-  }
-
-  scrollToRange->SetStart(mDOMNode, aStartIndex);
-  scrollToRange->SetEnd(mDOMNode, aEndIndex);
-  nsCOMPtr<nsISelection> domSel;
-  selCon->GetSelection(nsISelectionController::SELECTION_ACCESSIBILITY, 
-                       getter_AddRefs(domSel));
-  if (domSel) {
-    domSel->RemoveAllRanges();
-    domSel->AddRange(scrollToRange);
-
-    selCon->ScrollSelectionIntoView(nsISelectionController::SELECTION_ACCESSIBILITY, 
-      nsISelectionController::SELECTION_ANCHOR_REGION, PR_TRUE);
-
-    domSel->CollapseToStart();
-  }
-
-  return S_OK;
+  nsresult rv = nsAccUtils::ScrollSubstringTo(GetFrame(), mDOMNode, aStartIndex,
+                                              mDOMNode, aEndIndex,
+                                              nsIAccessibleScrollType::SCROLL_TYPE_ANYWHERE);
+  return NS_FAILED(rv) ? E_FAIL : S_OK;
 }
 
 nsIFrame* nsTextAccessibleWrap::GetPointFromOffset(nsIFrame *aContainingFrame, 

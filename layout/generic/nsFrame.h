@@ -248,7 +248,13 @@ public:
   virtual PRBool PeekOffsetNoAmount(PRBool aForward, PRInt32* aOffset);
   virtual PRBool PeekOffsetCharacter(PRBool aForward, PRInt32* aOffset);
   virtual PRBool PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
-                                PRInt32* aOffset, PRBool* aSawBeforeType);
+                                PRInt32* aOffset, PeekWordState *aState);
+  /**
+   * Check whether we should break at a boundary between punctuation and
+   * non-punctuation.
+   * @param aAfterPunct true when this point is logically *after* punctuation.
+   */
+  PRBool BreakWordBetweenPunctuation(PRBool aAfterPunct, PRBool aIsKeyboardSelect);
   
   NS_IMETHOD  CheckVisibility(nsPresContext* aContext, PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aRecurse, PRBool *aFinished, PRBool *_retval);
 

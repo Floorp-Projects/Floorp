@@ -100,18 +100,22 @@ nsTreeWalker::~nsTreeWalker()
 }
 
 /*
- * nsISupports stuff
+ * nsISupports and cycle collection stuff
  */
 
+NS_IMPL_CYCLE_COLLECTION_3(nsTreeWalker, mFilter, mCurrentNode, mRoot)
+
 // QueryInterface implementation for nsTreeWalker
-NS_INTERFACE_MAP_BEGIN(nsTreeWalker)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTreeWalker)
     NS_INTERFACE_MAP_ENTRY(nsIDOMTreeWalker)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMTreeWalker)
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(TreeWalker)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(nsTreeWalker)
-NS_IMPL_RELEASE(nsTreeWalker)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTreeWalker)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTreeWalker)
+
+
 
 /*
  * nsIDOMTreeWalker Getters/Setters

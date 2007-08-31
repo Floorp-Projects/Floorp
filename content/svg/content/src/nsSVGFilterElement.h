@@ -40,13 +40,16 @@
 #include "nsSVGGraphicElement.h"
 #include "nsIDOMSVGFilterElement.h"
 #include "nsIDOMSVGURIReference.h"
+#include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGLength2.h"
+#include "nsSVGEnum.h"
 
 typedef nsSVGGraphicElement nsSVGFilterElementBase;
 
 class nsSVGFilterElement : public nsSVGFilterElementBase,
                            public nsIDOMSVGFilterElement,
-                           public nsIDOMSVGURIReference
+                           public nsIDOMSVGURIReference,
+                           public nsIDOMSVGUnitTypes
 {
   friend class nsSVGFilterFrame;
 
@@ -83,13 +86,16 @@ public:
 protected:
 
   virtual LengthAttributesInfo GetLengthInfo();
-  
+  virtual EnumAttributesInfo GetEnumInfo();
+
   enum { X, Y, WIDTH, HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mFilterUnits;
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mPrimitiveUnits;
+  enum { FILTERUNITS, PRIMITIVEUNITS };
+  nsSVGEnum mEnumAttributes[2];
+  static EnumInfo sEnumInfo[2];
+
   nsCOMPtr<nsIDOMSVGAnimatedInteger> mFilterResX;
   nsCOMPtr<nsIDOMSVGAnimatedInteger> mFilterResY;
   nsCOMPtr<nsIDOMSVGAnimatedString> mHref;

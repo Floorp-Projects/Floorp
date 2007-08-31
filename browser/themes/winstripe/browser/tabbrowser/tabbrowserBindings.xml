@@ -62,7 +62,8 @@
                                anonid="alltabs-popup" position="after_end"/>
               </xul:toolbarbutton>
             </xul:stack>
-            <xul:hbox class="tabs-closebutton-box" align="center" pack="end" anonid="tabstrip-closebutton">
+            <xul:hbox anonid="tabstrip-closebutton" class="tabs-closebutton-box"
+                      align="center" pack="end" chromedir="&locale.dir;">
               <xul:toolbarbutton class="close-button tabs-closebutton"/>
             </xul:hbox>
           </xul:hbox>

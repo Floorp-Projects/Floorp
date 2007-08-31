@@ -221,14 +221,20 @@
 
           this._protocol.setAttribute("value", this._uri.scheme + "://");
           this._protocolHidden = this._hideProtocols.indexOf(this._uri.scheme) > -1;
-          this._subDomain.removeAttribute("value");
-          this._port.removeAttribute("value");
 
           var host = this._uri.host;
           if (host) {
-            //XXX Bug 386727: Disabled for now due to perf/leak regressions
-            //XXX workaround for bug 364129
-            if (0 && !/^[.0-9]+$/.test(host)) {
+            var subdomain;
+            var port = (this._uri.port > -1) ? ":" + this._uri.port : "";
+            if (this._uri.hostPort[0] == "[") {
+              // IPv6 address
+              subdomain = "[";
+              port = "]" + port;
+            }
+            else if (0 && !/^[.0-9]+$/.test(host)) {
+              //XXX subdomain detection disabled (bug 386727)
+              //XXX subdomain detection disabled for IP addresses (bug 364129)
+
               // getEffectiveTLDLength might convert our host and return a misleading length.
               // To avoid this, pass the ASCII host, count the dots of its effective TLD
               // and use that number to operate on our actual host.
@@ -241,16 +247,19 @@
                                         .split(".").length - 1;
               if (cSubdomain > 0) {
                 host = domainSegments;
-                var subdomain = host.splice(0, cSubdomain);
-                this._subDomain.setAttribute("value", subdomain.join(".") + ".");
+                subdomain = host.splice(0, cSubdomain).join(".") + ".";
                 host = host.join(".");
               }
+            } else {
+              subdomain = "";
             }
+            this._subDomain.setAttribute("value", subdomain);
             this._domain.setAttribute("value", host);
-            if (this._uri.port > -1)
-              this._port.setAttribute("value", ":" + this._uri.port);
+            this._port.setAttribute("value", port);
           } else {
+            this._subDomain.removeAttribute("value");
             this._domain.removeAttribute("value");
+            this._port.removeAttribute("value");
           }
 
           var path = this._uri.path;
@@ -429,7 +438,7 @@
           if (aEvent.type == "mousedown" &&
               aEvent.button == 0 && aEvent.detail == 2 &&
               this.doubleClickSelectsAll) {
-            this.inputField.select();
+            this.editor.selectAll();
             aEvent.preventDefault();
           }
         ]]></body>

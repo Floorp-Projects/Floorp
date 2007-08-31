@@ -527,10 +527,7 @@ Extensions.prototype = {
   },
   
   has : function exts_has(aId) {
-    // getItemForID never returns null for a non-existent id, so we
-    // check the type of the returned update item, which should be
-    // greater than 1 for a valid extension.
-    return !!(this._extmgr.getItemForID(aId).type);
+    return this._extmgr.getItemForID(aId) != null;
   },
   
   get : function exts_get(aId) {
@@ -1103,12 +1100,26 @@ BookmarkFolder.prototype = {
   },
 
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBookmarkFolder, Ci.nsINavBookmarkObserver])
-}; 
+};
 
+//=================================================
+// Factory - Treat Application as a singleton
+// XXX This is required, because we're registered for the 'JavaScript global
+// privileged property' category, whose handler always calls createInstance.
+// See bug 386535.
+var gSingleton = null;
+var ApplicationFactory = {
+  createInstance: function af_ci(aOuter, aIID) {
+    if (aOuter != null)
+      throw Components.results.NS_ERROR_NO_AGGREGATION;
 
-const CLASS_ID = Components.ID("fe74cf80-aa2d-11db-abbd-0800200c9a66");
-const CLASS_NAME = "Application wrapper";
-const CONTRACT_ID = "@mozilla.org/fuel/application;1";
+    if (gSingleton == null) {
+      gSingleton = new Application();
+    }
+
+    return gSingleton.QueryInterface(aIID);
+  }
+};
 
 //=================================================
 // Application constructor
@@ -1135,6 +1146,23 @@ function Application() {
 //=================================================
 // Application implementation
 Application.prototype = {
+  // for nsIClassInfo + XPCOMUtils
+  classDescription: "Application",
+  classID:          Components.ID("fe74cf80-aa2d-11db-abbd-0800200c9a66"),
+  contractID:       "@mozilla.org/fuel/application;1",
+
+  // redefine the default factory for XPCOMUtils
+  _xpcom_factory: ApplicationFactory,
+
+  // get this contractID registered for certain categories via XPCOMUtils
+  _xpcom_categories: [
+    // make Application a startup observer
+    { category: "app-startup", service: true },
+
+    // add Application as a global property for easy access
+    { category: "JavaScript global privileged property" }
+  ],
+
   get id() {
     return this._info.ID;
   },
@@ -1194,9 +1222,6 @@ Application.prototype = {
   },
 
   // for nsIClassInfo
-  classDescription : "Application",
-  classID : CLASS_ID,
-  contractID : CONTRACT_ID,
   flags : Ci.nsIClassInfo.SINGLETON,
   implementationLanguage : Ci.nsIProgrammingLanguage.JAVASCRIPT,
 
@@ -1267,61 +1292,7 @@ Application.prototype = {
   }
 };
 
-//=================================================
-// Factory - Treat Application as a singleton
-var gSingleton = null;
-var ApplicationFactory = {
-  createInstance: function af_ci(aOuter, aIID) {
-    if (aOuter != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-      
-    if (gSingleton == null) {
-      gSingleton = new Application();
-    }
-
-    return gSingleton.QueryInterface(aIID);
-  }
-};
-
-//=================================================
-// Module
-var ApplicationModule = {
-  registerSelf: function am_rs(aCompMgr, aFileSpec, aLocation, aType) {
-    aCompMgr = aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
-    aCompMgr.registerFactoryLocation(CLASS_ID, CLASS_NAME, CONTRACT_ID, aFileSpec, aLocation, aType);
-    
-    var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
-                                    .getService(Ci.nsICategoryManager);
-    // make Application a startup observer
-    categoryManager.addCategoryEntry("app-startup", CLASS_NAME, "service," + CONTRACT_ID, true, true);
-
-    // add Application as a global property for easy access
-    categoryManager.addCategoryEntry("JavaScript global privileged property", "Application", CONTRACT_ID, true, true);
-  },
-
-  unregisterSelf: function am_us(aCompMgr, aLocation, aType) {
-    aCompMgr = aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
-    aCompMgr.unregisterFactoryLocation(CLASS_ID, aLocation);        
-
-    // cleanup categories
-    var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
-                                    .getService(Ci.nsICategoryManager);
-    categoryManager.deleteCategoryEntry("app-startup", "service," + CONTRACT_ID, true);
-    categoryManager.deleteCategoryEntry("JavaScript global property", CONTRACT_ID, true);
-  },
-  
-  getClassObject: function am_gco(aCompMgr, aCID, aIID) {
-    if (!aIID.equals(Ci.nsIFactory))
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
-    if (aCID.equals(CLASS_ID))
-      return ApplicationFactory;
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-
-  canUnload: function am_cu(aCompMgr) { return true; }
-};
-
 //module initialization
-function NSGetModule(aCompMgr, aFileSpec) { return ApplicationModule; }
+function NSGetModule(aCompMgr, aFileSpec) {
+  return XPCOMUtils.generateModule([Application]);
+}

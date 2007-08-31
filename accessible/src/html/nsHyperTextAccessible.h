@@ -101,6 +101,9 @@ public:
     *
     * @param aNode - the node to look for
     * @param aNodeOffset - the offset to look for
+    *                      if -1 just look directly for the node
+    *                      if >=0 and aNode is text, this represents a char offset
+    *                      if >=0 and aNode is not text, this represents a child node offset
     * @param aResultOffset - the character offset into the current
     *                        nsHyperTextAccessible
     * @param aFinalAccessible [optional] - returns the accessible child which
@@ -128,31 +131,55 @@ protected:
                          nsAString & aText);
 
   /**
-    * Used by GetPosAndText to move backward/forward from a given point by word/line/etc.
-    * @param aPresShell, the current presshell we're moving in
-    * @param aFromFrame, the starting frame we're moving from
-    * @param aFromOffset, the starting offset we're moving from
-    * @param aAmount, how much are we moving (word/line/etc.) ?
-    * @param aDirection, forward or backward?
-    * @param aNeedsStart, for word and line cases, are we basing this on the start or end?
-    * @return, the resulting offset into this hypertext
+    * Used by GetTextHelper() to move backward/forward from a given point
+    * by word/line/etc.
+    *
+    * @param  aPresShell       the current presshell we're moving in
+    * @param  aFromFrame       the starting frame we're moving from
+    * @param  aFromOffset      the starting offset we're moving from
+    * @param  aFromAccessible  the starting accessible we're moving from
+    * @param  aAmount          how much are we moving (word/line/etc.) ?
+    * @param  aDirection       forward or backward?
+    * @param  aNeedsStart      for word and line cases, are we basing this on
+    *                          the start or end?
+    * @return                  the resulting offset into this hypertext
     */
-  PRInt32 GetRelativeOffset(nsIPresShell *aPresShell, nsIFrame *aFromFrame, PRInt32 aFromOffset,
-                            nsSelectionAmount aAmount, nsDirection aDirection, PRBool aNeedsStart);
+  PRInt32 GetRelativeOffset(nsIPresShell *aPresShell, nsIFrame *aFromFrame,
+                            PRInt32 aFromOffset, nsIAccessible *aFromAccessible,
+                            nsSelectionAmount aAmount, nsDirection aDirection,
+                            PRBool aNeedsStart);
+
   /**
-    * Given a start offset and end offset, get substring information. Different info is returned depending
-    * on what optional paramters are provided.
-    * @param aStartOffset, the start offset into the hyper text. This is also an out parameter used to return
-    *                      the offset into the start frame's rendered text content (start frame is the @return)
-    * @param aEndHyperOffset, the endoffset into the hyper text. This is also an out parameter used to return
-    *                    the offset into the end frame's rendered text content
-    * @param aText (optional), return the substring's text
-    * @param aEndFrame (optional), return the end frame for this substring
-    * @param aBoundsRect (optional), return the bounds rectangle for this substring
-    * @return the start frame for this substring
+    * Provides information for substring that is defined by the given start
+    * and end offsets for this hyper text.
+    *
+    * @param  aStartOffset  [inout] the start offset into the hyper text. This
+    *                       is also an out parameter used to return the offset
+    *                       into the start frame's rendered text content
+    *                       (start frame is the @return)
+    *
+    * @param  aEndOffset    [inout] the end offset into the hyper text. This is
+    *                       also an out parameter used to return
+    *                       the offset into the end frame's rendered
+    *                       text content.
+    *
+    * @param  aText         [out, optional] return the substring's text
+    * @param  aEndFrame     [out, optional] return the end frame for this
+    *                       substring
+    * @param  aBoundsRect   [out, optional] return the bounds rectangle for this
+    *                       substring
+    * @param  aStartAcc     [out, optional] return the start accessible for this
+    *                       substring
+    * @param  aEndAcc       [out, optional] return the end accessible for this
+    *                       substring
+    * @return               the start frame for this substring
     */
-  nsIFrame* GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset, nsAString *aText = nsnull,
-                          nsIFrame **aEndFrame = nsnull, nsIntRect *aBoundsRect = nsnull);
+  nsIFrame* GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
+                          nsAString *aText = nsnull,
+                          nsIFrame **aEndFrame = nsnull,
+                          nsIntRect *aBoundsRect = nsnull,
+                          nsIAccessible **aStartAcc = nsnull,
+                          nsIAccessible **aEndAcc = nsnull);
 
   nsIntRect GetBoundsForString(nsIFrame *aFrame, PRUint32 aStartRenderedOffset, PRUint32 aEndRenderedOffset);
 

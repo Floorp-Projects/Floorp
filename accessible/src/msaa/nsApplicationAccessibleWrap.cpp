@@ -81,7 +81,8 @@ nsApplicationAccessibleWrap::get_appName(BSTR *aName)
     return E_FAIL;
 
   NS_ConvertUTF8toUTF16 name(cname);
-  return ::SysReAllocStringLen(aName, name.get(), name.Length());
+  INT result = ::SysReAllocStringLen(aName, name.get(), name.Length());
+  return result ? NS_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
@@ -97,7 +98,8 @@ nsApplicationAccessibleWrap::get_appVersion(BSTR *aVersion)
     return E_FAIL;
 
   NS_ConvertUTF8toUTF16 version(cversion);
-  return ::SysReAllocStringLen(aVersion, version.get(), version.Length());
+  INT result = ::SysReAllocStringLen(aVersion, version.get(), version.Length());
+  return result ? NS_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
@@ -119,7 +121,8 @@ nsApplicationAccessibleWrap::get_toolkitVersion(BSTR *aVersion)
     return E_FAIL;
 
   NS_ConvertUTF8toUTF16 version(cversion);
-  return ::SysReAllocStringLen(aVersion, version.get(), version.Length());
+  INT result = ::SysReAllocStringLen(aVersion, version.get(), version.Length());
+  return result ? NS_OK : E_OUTOFMEMORY;
 }
 
 // nsApplicationAccessibleWrap

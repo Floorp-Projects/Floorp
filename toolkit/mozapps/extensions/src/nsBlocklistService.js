@@ -43,6 +43,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
 const kELEMENT_NODE                   = Ci.nsIDOMNode.ELEMENT_NODE;
 const TOOLKIT_ID                      = "toolkit@mozilla.org"
 const KEY_PROFILEDIR                  = "ProfD";
@@ -63,10 +65,6 @@ const MODE_TRUNCATE = 0x20;
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
-const CID = Components.ID("{66354bc9-7ed1-4692-ae1d-8da97d6b205e}");
-const CONTRACT_ID = "@mozilla.org/extensions/blocklist;1"
-const CLASS_NAME = "Blocklist Service";
-
 var gApp = null;
 var gPref = null;
 var gOS = null;
@@ -85,7 +83,8 @@ var gLoggingEnabled = null;
 function LOG(string) {
   if (gLoggingEnabled) {
     dump("*** " + string + "\n");
-    gConsole.logStringMessage(string);
+    if (gConsole)
+      gConsole.logStringMessage(string);
   }
 }
 
@@ -137,11 +136,11 @@ function getFile(key, pathArray) {
 }
 
 /**
- * Opens a safe file output stream for writing. 
+ * Opens a safe file output stream for writing.
  * @param   file
  *          The file to write to.
  * @param   modeFlags
- *          (optional) File open flags. Can be undefined. 
+ *          (optional) File open flags. Can be undefined.
  * @returns nsIFileOutputStream to write to.
  */
 function openSafeFileOutputStream(file, modeFlags) {
@@ -149,7 +148,7 @@ function openSafeFileOutputStream(file, modeFlags) {
             createInstance(Ci.nsIFileOutputStream);
   if (modeFlags === undefined)
     modeFlags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
-  if (!file.exists()) 
+  if (!file.exists())
     file.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
   fos.init(file, modeFlags, PERMS_FILE, 0);
   return fos;
@@ -194,8 +193,8 @@ function Blocklist() {
   gVersionChecker = Cc["@mozilla.org/xpcom/version-comparator;1"].
                     getService(Ci.nsIVersionComparator);
   gConsole = Cc["@mozilla.org/consoleservice;1"].
-             getService(Ci.nsIConsoleService);  
-  
+             getService(Ci.nsIConsoleService);
+
   gOS = Cc["@mozilla.org/observer-service;1"].
         getService(Ci.nsIObserverService);
   gOS.addObserver(this, "xpcom-shutdown", false);
@@ -225,6 +224,7 @@ Blocklist.prototype = {
     case "app-startup":
       gOS.addObserver(this, "plugins-list-updated", false);
       gOS.addObserver(this, "profile-after-change", false);
+      gOS.addObserver(this, "quit-application", false);
       break;
     case "profile-after-change":
       gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
@@ -236,10 +236,13 @@ Blocklist.prototype = {
     case "plugins-list-updated":
       this._checkPluginsList();
       break;
+    case "quit-application":
+      gOS.removeObserver(this, "plugins-list-updated");
+      gOS.removeObserver(this, "profile-after-change");
+      gOS.removeObserver(this, "quit-application");
+      break;
     case "xpcom-shutdown":
       gOS.removeObserver(this, "xpcom-shutdown");
-      gOS.removeObserver(this, "profile-after-change");
-      gOS.removeObserver(this, "plugins-list-updated");
       gOS = null;
       gPref = null;
       gConsole = null;
@@ -297,7 +300,7 @@ Blocklist.prototype = {
       var dsURI = gPref.getCharPref(PREF_BLOCKLIST_URL);
     }
     catch (e) {
-      LOG("Blocklist::notify: The " + PREF_BLOCKLIST_URL + " preference" + 
+      LOG("Blocklist::notify: The " + PREF_BLOCKLIST_URL + " preference" +
           " is missing!");
       return;
     }
@@ -309,7 +312,7 @@ Blocklist.prototype = {
       var uri = newURI(dsURI);
     }
     catch (e) {
-      LOG("Blocklist::notify: There was an error creating the blocklist URI\r\n" + 
+      LOG("Blocklist::notify: There was an error creating the blocklist URI\r\n" +
           "for: " + dsURI + ", error: " + e);
       return;
     }
@@ -386,7 +389,7 @@ Blocklist.prototype = {
 #              <versionRange minVersion="1.7" maxVersion="1.7.*"/>
 #            </targetApplication>
 #            <targetApplication id="toolkit@mozilla.org">
-#              <versionRange minVersion="1.8" maxVersion="1.8.*"/>
+#              <versionRange minVersion="1.9" maxVersion="1.9.*"/>
 #            </targetApplication>
 #          </versionRange>
 #          <versionRange minVersion="3.0" maxVersion="3.0.*">
@@ -394,7 +397,7 @@ Blocklist.prototype = {
 #              <versionRange minVersion="1.5" maxVersion="1.5.*"/>
 #            </targetApplication>
 #            <targetApplication id="toolkit@mozilla.org">
-#              <versionRange minVersion="1.8" maxVersion="1.8.*"/>
+#              <versionRange minVersion="1.9" maxVersion="1.9.*"/>
 #            </targetApplication>
 #          </versionRange>
 #        </emItem>
@@ -423,7 +426,7 @@ Blocklist.prototype = {
 #          <match name="description" exp="1[.]2[.]3"/>
 #        </pluginItem>
 #      </pluginItems>
-#    </blocklist> 
+#    </blocklist>
    */
 
   _loadBlocklistFromFile: function(file) {
@@ -558,14 +561,16 @@ Blocklist.prototype = {
     phs.getPluginTags({ }).forEach(this._checkPlugin, this);
   },
 
-  QueryInterface: function(aIID) {
-    if (!aIID.equals(Ci.nsIObserver) &&
-        !aIID.equals(Ci.nsIBlocklistService) &&
-        !aIID.equals(Ci.nsITimerCallback) &&
-        !aIID.equals(Ci.nsISupports))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
+  classDescription: "Blocklist Service",
+  contractID: "@mozilla.org/extensions/blocklist;1",
+  classID: Components.ID("{66354bc9-7ed1-4692-ae1d-8da97d6b205e}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsIBlocklistService,
+                                         Ci.nsITimerCallback]),
+  _xpcom_categories: [{
+    category: "app-startup",
+    service: true
+  }]
 };
 
 /**
@@ -650,47 +655,6 @@ BlocklistItemData.prototype = {
   }
 };
 
-const BlocklistFactory = {
-  createInstance: function(aOuter, aIID) {
-    if (aOuter != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-
-    return (new Blocklist()).QueryInterface(aIID);
-  }
-};
-
-const gModule = {
-  registerSelf: function(aCompMgr, aFileSpec, aLocation, aType) {
-    aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
-    aCompMgr.registerFactoryLocation(CID, CLASS_NAME, CONTRACT_ID,
-                                     aFileSpec, aLocation, aType);
-
-    var catMan = Cc["@mozilla.org/categorymanager;1"].
-                 getService(Ci.nsICategoryManager);
-    catMan.addCategoryEntry("app-startup", CLASS_NAME, "service," + CONTRACT_ID, true, true);
-  },
-
-  unregisterSelf: function(aCompMgr, aLocation, aType) {
-    aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
-    aCompMgr.unregisterFactoryLocation(CID, aLocation);
-
-    var catMan = Cc["@mozilla.org/categorymanager;1"].
-                 getService(Ci.nsICategoryManager);
-    catMan.deleteCategoryEntry("app-startup", "service," + CONTRACT_ID, true);
-  },
-
-  getClassObject: function(aCompMgr, aCID, aIID) {
-    if (aCID.equals(CID))
-      return BlocklistFactory;
-
-    throw Cr.NS_ERROR_NOT_REGISTERED;
-  },
-
-  canUnload: function(aCompMgr) {
-    return true;
-  }
-};
-
 function NSGetModule(aCompMgr, aFileSpec) {
-  return gModule;
+  return XPCOMUtils.generateModule([Blocklist]);
 }

@@ -361,7 +361,9 @@ nsMenuItemIconX::ShouldLoadSync(nsIURI* aURI)
 }
 
 
+//
 // imgIContainerObserver
+//
 
 
 NS_IMETHODIMP
@@ -373,7 +375,9 @@ nsMenuItemIconX::FrameChanged(imgIContainer*  aContainer,
 }
 
 
+//
 // imgIDecoderObserver
+//
 
 
 NS_IMETHODIMP

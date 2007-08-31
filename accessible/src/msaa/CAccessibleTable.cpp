@@ -159,7 +159,8 @@ CAccessibleTable::get_columnDescription(long aColumn, BSTR *aDescription)
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  return ::SysReAllocStringLen(aDescription, descr.get(), descr.Length());
+  INT result = ::SysReAllocStringLen(aDescription, descr.get(), descr.Length());
+  return result ? NS_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP
@@ -329,7 +330,8 @@ CAccessibleTable::get_rowDescription(long aRow, BSTR *aDescription)
   if (NS_FAILED(rv))
     return E_FAIL;
 
-  return ::SysReAllocStringLen(aDescription, descr.get(), descr.Length());
+  INT result = ::SysReAllocStringLen(aDescription, descr.get(), descr.Length());
+  return result ? NS_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP

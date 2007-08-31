@@ -41,6 +41,7 @@
 #include "nsIDOMSVGMarkerElement.h"
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsSVGLength2.h"
+#include "nsSVGEnum.h"
 
 typedef nsSVGGraphicElement nsSVGMarkerElementBase;
 
@@ -75,6 +76,8 @@ public:
   // nsIContent interface
   NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
 
+  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                const nsAString* aValue, PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 
@@ -94,13 +97,21 @@ protected:
   void SetParentCoordCtxProvider(nsSVGSVGElement *aContext);
 
   virtual LengthAttributesInfo GetLengthInfo();
- 
+  virtual EnumAttributesInfo GetEnumInfo();
+
   enum { REFX, REFY, MARKERWIDTH, MARKERHEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
+  enum { MARKERUNITS };
+  nsSVGEnum mEnumAttributes[1];
+  static nsSVGEnumMapping sUnitsMap[];
+  static EnumInfo sEnumInfo[1];
+
+  // this needs to be handled seperately because its a derived enum
+  nsSVGEnum mOrientType;
+
   nsSVGSVGElement                       *mCoordCtx;
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mMarkerUnits;
   nsCOMPtr<nsIDOMSVGAnimatedAngle>       mOrient;
 
   nsCOMPtr<nsIDOMSVGAnimatedRect>        mViewBox;
