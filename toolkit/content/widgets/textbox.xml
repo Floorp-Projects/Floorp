@@ -157,7 +157,7 @@
             else if (this.mIgnoreFocus)
               this.mIgnoreFocus = false;
             else if (this.clickSelectsAll)
-              this.inputField.select();
+              this.editor.selectAll();
 
             this.setAttribute("focused", "true");
           }
@@ -185,7 +185,7 @@
         <![CDATA[
           if (!this.mIgnoreClick && this.clickSelectsAll &&
               this.inputField.selectionStart == this.inputField.selectionEnd)
-            this.inputField.select();
+            this.editor.selectAll();
         ]]>
       </handler>
     </handlers>
@@ -371,8 +371,7 @@
                              getService(CI.mozIJSSubScriptLoader);
               loader.loadSubScript("chrome://global/content/inlineSpellCheckUI.js", this);
               if ("InlineSpellCheckerUI" in this)
-                this.InlineSpellCheckerUI.init(
-                  textbox.inputField.QueryInterface(CI.nsIDOMNSEditableElement).editor);
+                this.InlineSpellCheckerUI.init(textbox.editor);
             } catch(ex) { }
           }
 
