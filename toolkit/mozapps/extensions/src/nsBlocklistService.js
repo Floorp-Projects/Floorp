@@ -83,7 +83,8 @@ var gLoggingEnabled = null;
 function LOG(string) {
   if (gLoggingEnabled) {
     dump("*** " + string + "\n");
-    gConsole.logStringMessage(string);
+    if (gConsole)
+      gConsole.logStringMessage(string);
   }
 }
 
@@ -223,6 +224,7 @@ Blocklist.prototype = {
     case "app-startup":
       gOS.addObserver(this, "plugins-list-updated", false);
       gOS.addObserver(this, "profile-after-change", false);
+      gOS.addObserver(this, "quit-application", false);
       break;
     case "profile-after-change":
       gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
@@ -234,10 +236,12 @@ Blocklist.prototype = {
     case "plugins-list-updated":
       this._checkPluginsList();
       break;
+    case "quit-application":
+      gOS.removeObserver(this, "plugins-list-updated");
+      gOS.removeObserver(this, "profile-after-change");
+      gOS.removeObserver(this, "quit-application");
     case "xpcom-shutdown":
       gOS.removeObserver(this, "xpcom-shutdown");
-      gOS.removeObserver(this, "profile-after-change");
-      gOS.removeObserver(this, "plugins-list-updated");
       gOS = null;
       gPref = null;
       gConsole = null;
