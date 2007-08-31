@@ -390,6 +390,9 @@ nsHttpChannel::DoNotifyListener()
         mListener = 0;
         mListenerContext = 0;
     }
+    // We have to make sure to drop the reference to the callbacks too
+    mCallbacks = nsnull;
+    mProgressSink = nsnull;
 }
 
 void
@@ -2419,6 +2422,9 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     // disconnect from our listener
     mListener = 0;
     mListenerContext = 0;
+    // and from our callbacks
+    mCallbacks = nsnull;
+    mProgressSink = nsnull;
     return NS_OK;
 }
 
