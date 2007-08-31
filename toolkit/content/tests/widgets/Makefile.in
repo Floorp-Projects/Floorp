@@ -69,6 +69,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_progressmeter.xul \
 		test_datepicker.xul \
 		test_timepicker.xul \
+		test_textbox_number.xul \
 		xul_selectcontrol.js \
 		test_panelfrommenu.xul \
 		test_hiddenitems.xul \
