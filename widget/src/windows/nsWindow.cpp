@@ -79,15 +79,13 @@
 #include <windows.h>
 #include <process.h>
 
-#ifndef WINCE
-// mmsystem.h is needed to build with WIN32_LEAN_AND_MEAN
-#include <mmsystem.h>
-#endif
-
 #ifdef WINCE
 #include "aygshell.h"
 #include "imm.h"
 #include "tpcshell.h"
+#else
+// mmsystem.h is needed to build with WIN32_LEAN_AND_MEAN
+#include <mmsystem.h>
 #endif
 
 
@@ -332,11 +330,6 @@ static PRBool IsCursorTranslucencySupported() {
   return isSupported;
 }
 
-
-static PRBool IsWin2k()
-{
-  return GetWindowsVersion() == WIN2K_VERSION;
-}
 
 PRInt32 GetWindowsVersion()
 {
@@ -755,14 +748,10 @@ void nsWindow::GlobalMsgWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
 // nsWindow constructor
 //
 //-------------------------------------------------------------------------
-#ifdef ACCESSIBILITY
 nsWindow::nsWindow() : nsBaseWidget()
-#else
-nsWindow::nsWindow() : nsBaseWidget()
-#endif
 {
   mWnd                = 0;
-  mPaintDC                 = 0;
+  mPaintDC            = 0;
   mPrevWndProc        = NULL;
   mBackground         = ::GetSysColor(COLOR_BTNFACE);
   mBrush              = ::CreateSolidBrush(NSRGB_2_COLOREF(mBackground));
@@ -1320,10 +1309,6 @@ LRESULT CALLBACK nsWindow::DefaultWindowProc(HWND hWnd, UINT msg, WPARAM wParam,
 
   //XXX nsWindow::DefaultWindowProc still ever required?
   return ::DefWindowProcW(hWnd, msg, wParam, lParam);
-}
-
-static BOOL CALLBACK DummyDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-  return FALSE;
 }
 
 //WINOLEAPI oleStatus;
@@ -4676,16 +4661,12 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 #endif
 
     case WM_SETFOCUS:
-      {
-        nsWindow* topWindow = GetNSWindowPtr(::GetAncestor(mWnd, GA_ROOT));
-
-        result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
-        
-        if ((HWND)wParam == NULL || 
-            (topWindow && topWindow->mWnd != ::GetAncestor((HWND)wParam, GA_ROOT))) {
-          result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
-        }
-      }  
+      result = DispatchFocus(NS_GOTFOCUS, PR_TRUE);
+      if (gJustGotActivate) {
+        gJustGotActivate = PR_FALSE;
+        gJustGotDeactivate = PR_FALSE;
+        result = DispatchFocus(NS_ACTIVATE, PR_TRUE);
+      }
 
 #ifdef ACCESSIBILITY
       if (nsWindow::gIsAccessibilityOn) {
@@ -7968,13 +7949,6 @@ NS_IMETHODIMP nsWindow::SetWindowTranslucency(PRBool aTranslucent)
   return rv;
 }
 
-NS_IMETHODIMP nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas)
-{
-  GetTopLevelWindow()->UpdateTranslucentWindowAlphaInner(aRect, aAlphas);
-
-  return NS_OK;
-}
-
 nsresult nsWindow::SetWindowTranslucencyInner(PRBool aTranslucent)
 {
   if (aTranslucent == mIsTranslucent)
@@ -8047,11 +8021,6 @@ nsresult nsWindow::SetupTranslucentWindowMemoryBitmap(PRBool aTranslucent)
   }
 
   return NS_OK;
-}
-
-void nsWindow::UpdateTranslucentWindowAlphaInner(const nsRect& aRect, PRUint8* aAlphas)
-{
-  NS_ERROR("nsWindow::UpdateTranslucentWindowAlphaInner called, when it shouldn't be!");
 }
 
 nsresult nsWindow::UpdateTranslucentWindow()

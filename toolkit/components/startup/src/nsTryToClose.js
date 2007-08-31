@@ -39,12 +39,9 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-const CID = Components.ID("{b69155f4-a8bf-453d-8653-91d1456e1d3d}");
-const CONTRACT_ID = "@mozilla.org/appshell/trytoclose;1"
-const CLASS_NAME = "tryToClose Service";
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function TryToClose() {
-}
+function TryToClose() {}
 
 TryToClose.prototype = {
   observe: function (aSubject, aTopic, aData) {
@@ -70,56 +67,14 @@ TryToClose.prototype = {
     }
   },
 
-  QueryInterface: function(aIID) {
-    if (!aIID.equals(Ci.nsIObserver) &&
-        !aIID.equals(Ci.nsISupportsWeakReference) && 
-        !aIID.equals(Ci.nsISupports))
-      throw Cr.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
-};
-
-const TryToCloseFactory = {
-  createInstance: function(aOuter, aIID) {
-    if (aOuter != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    
-    return (new TryToClose()).QueryInterface(aIID);
-  }
-};
-
-const TryToCloseModule = {
-  registerSelf: function(aCompMgr, aFileSpec, aLocation, aType) {
-    aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
-    aCompMgr.registerFactoryLocation(CID, CLASS_NAME, CONTRACT_ID,
-                                     aFileSpec, aLocation, aType);
-
-    var catMan = Cc["@mozilla.org/categorymanager;1"].
-                 getService(Ci.nsICategoryManager);
-    catMan.addCategoryEntry("app-startup", CLASS_NAME, "service," + CONTRACT_ID, true, true);
-  },
-
-  unregisterSelf: function(aCompMgr, aLocation, aType) {
-    aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
-    aCompMgr.unregisterFactoryLocation(CID, aLocation);
-
-    var catMan = Cc["@mozilla.org/categorymanager;1"].
-                 getService(Ci.nsICategoryManager);
-    catMan.deleteCategoryEntry( "app-startup", "service," + CONTRACT_ID, true);
-  },
-
-  getClassObject: function(aCompMgr, aCID, aIID) {
-    if (aCID.equals(CID))
-      return TryToCloseFactory;
-    
-    throw Cr.NS_ERROR_NOT_REGISTERED;
-  },
-
-  canUnload: function(aCompMgr) {
-    return true;
-  }
+  classDescription: "tryToClose Service",
+  contractID: "@mozilla.org/appshell/trytoclose;1",
+  classID: Components.ID("{b69155f4-a8bf-453d-8653-91d1456e1d3d}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference]),
+  _xpcom_categories: [{ category: "app-startup", service: true }]
 };
 
 function NSGetModule(aCompMgr, aFileSpec) {
-  return TryToCloseModule;
+  return XPCOMUtils.generateModule([TryToClose]);
 }

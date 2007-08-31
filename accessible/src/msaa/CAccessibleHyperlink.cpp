@@ -135,8 +135,9 @@ CAccessibleHyperlink::get_anchorTarget(long aIndex, VARIANT *aAnchorTarget)
   AppendUTF8toUTF16(path, stringURI);
 
   aAnchorTarget->vt = VT_BSTR;
-  return ::SysReAllocStringLen(&aAnchorTarget->bstrVal, stringURI.get(),
-                               stringURI.Length());
+  INT result = ::SysReAllocStringLen(&aAnchorTarget->bstrVal, stringURI.get(),
+                                     stringURI.Length());
+  return result ? NS_OK : E_OUTOFMEMORY;
 }
 
 STDMETHODIMP

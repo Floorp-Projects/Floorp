@@ -519,13 +519,6 @@ nsHTMLEditor::HideShadowAndInfo()
     mResizingInfo->SetAttribute(NS_LITERAL_STRING("class"), NS_LITERAL_STRING("hidden"));
 }
 
-void
-nsHTMLEditor::SetInfoIncrements(PRInt8 aX, PRInt8 aY)
-{
-  mInfoXIncrement = aX;
-  mInfoYIncrement = aY;
-}
-
 nsresult
 nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
 {
@@ -565,35 +558,27 @@ nsHTMLEditor::StartResizing(nsIDOMElement *aHandle)
   aHandle->GetAttribute(NS_LITERAL_STRING("anonlocation"), locationStr);
   if (locationStr.Equals(kTopLeft)) {
     SetResizeIncrements(1, 1, -1, -1, preserveRatio);
-    SetInfoIncrements(20, 20);
   }
   else if (locationStr.Equals(kTop)) {
     SetResizeIncrements(0, 1, 0, -1, PR_FALSE);
-    SetInfoIncrements(0, 20);
   }
   else if (locationStr.Equals(kTopRight)) {
     SetResizeIncrements(0, 1, 1, -1, preserveRatio);
-    SetInfoIncrements(-20, 20);
   }
   else if (locationStr.Equals(kLeft)) {
     SetResizeIncrements(1, 0, -1, 0, PR_FALSE);
-    SetInfoIncrements(20, 20);
   }
   else if (locationStr.Equals(kRight)) {
     SetResizeIncrements(0, 0, 1, 0, PR_FALSE);
-    SetInfoIncrements(-20, 0);
   }
   else if (locationStr.Equals(kBottomLeft)) {
     SetResizeIncrements(1, 0, -1, 1, preserveRatio);
-    SetInfoIncrements(20, -20);
   }
   else if (locationStr.Equals(kBottom)) {
     SetResizeIncrements(0, 0, 0, 1, PR_FALSE);
-    SetInfoIncrements(0, -20);
   }
   else if (locationStr.Equals(kBottomRight)) {
     SetResizeIncrements(0, 0, 1, 1, preserveRatio);
-    SetInfoIncrements(-20, -20);
   }
 
   // make the shadow appear
@@ -696,62 +681,12 @@ nsHTMLEditor::SetResizingInfoPosition(PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt3
   nsCOMPtr<nsIDOMDocument> domdoc;
   nsEditor::GetDocument(getter_AddRefs(domdoc));
 
-  nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
-  if (!doc)
-    return NS_ERROR_UNEXPECTED;
-
-  // get the root content
-  nsCOMPtr<nsIDOMNSHTMLElement> nsElement = do_QueryInterface(doc->GetRootContent());
-  if (!nsElement) {return NS_ERROR_NULL_POINTER; }
-
-  // let's get the size of the document
-  PRInt32 w, h;
-  nsElement->GetOffsetWidth(&w);
-  nsElement->GetOffsetHeight(&h);
-  
-  if (mInfoXIncrement < 0)
-    aX = w - aX ;
-  if (mInfoYIncrement < 0)
-    aY = h - aY;
-
-  NS_NAMED_LITERAL_STRING(rightStr, "right");
   NS_NAMED_LITERAL_STRING(leftStr, "left");
   NS_NAMED_LITERAL_STRING(topStr, "top");
-  NS_NAMED_LITERAL_STRING(bottomStr, "bottom");
-  mHTMLCSSUtils->SetCSSPropertyPixels(mResizingInfo,
-                                      (mInfoXIncrement < 0) ? rightStr : leftStr,
-                                      aX + PR_ABS(mInfoXIncrement));
-  mHTMLCSSUtils->SetCSSPropertyPixels(mResizingInfo,
-                                      (mInfoYIncrement < 0) ? bottomStr : topStr,
-                                      aY + PR_ABS(mInfoYIncrement));
-
-  mHTMLCSSUtils->RemoveCSSProperty(mResizingInfo,
-                                   (mInfoXIncrement >= 0) ? rightStr  : leftStr);
-  mHTMLCSSUtils->RemoveCSSProperty(mResizingInfo,
-                                   (mInfoYIncrement >= 0) ? bottomStr  : topStr);
-
-  // let's make sure the info box does not go beyond the limits of the viewport
-  nsAutoString value;
-  float f;
-  nsCOMPtr<nsIAtom> unit;
-  if (mInfoXIncrement < 0) {
-    mHTMLCSSUtils->GetComputedProperty(mResizingInfo, nsEditProperty::cssLeft, value);
-    mHTMLCSSUtils->ParseLength(value, &f, getter_AddRefs(unit));
-    if (f <= 0) {
-      mHTMLCSSUtils->SetCSSPropertyPixels(mResizingInfo, leftStr, 0);
-      mHTMLCSSUtils->RemoveCSSProperty(mResizingInfo,
-                                       rightStr);
-    }
-  }
-  if (mInfoYIncrement < 0) {
-    mHTMLCSSUtils->GetComputedProperty(mResizingInfo, nsEditProperty::cssTop, value);
-    mHTMLCSSUtils->ParseLength(value, &f, getter_AddRefs(unit));
-    if (f <= 0) {
-      mHTMLCSSUtils->SetCSSPropertyPixels(mResizingInfo, topStr, 0);
-      mHTMLCSSUtils->RemoveCSSProperty(mResizingInfo,
-                                       bottomStr);
-    }
-  }
+  mHTMLCSSUtils->SetCSSPropertyPixels(mResizingInfo, leftStr,
+                                      aX + mInfoXIncrement);
+  mHTMLCSSUtils->SetCSSPropertyPixels(mResizingInfo, topStr,
+                                      aY + mInfoYIncrement);
 
   nsCOMPtr<nsIDOMNode> textInfo;
   nsresult res = mResizingInfo->GetFirstChild(getter_AddRefs(textInfo));

@@ -43,6 +43,7 @@
 #include "nsIDOMInstallTriggerGlobal.h"
 
 #include "nscore.h"
+#include "nsAutoPtr.h"
 #include "netCore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
@@ -69,7 +70,7 @@
 #include "nsIContentHandler.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"
-
+#include "nsXPIInstallInfo.h"
 
 
 nsInstallTrigger::nsInstallTrigger()
@@ -190,13 +191,7 @@ nsInstallTrigger::HandleContent(const char * aContentType,
         return NS_ERROR_INVALID_ARG;
 
 
-    // We have what we need to start an XPInstall, now figure out if we are
-    // going to honor this request based on PermissionManager settings
-    PRBool enabled = PR_FALSE;
-    // Keep the host so that it can be sent to the
-    // xpinstall-install-blocked observers to display the host to be
-    // whitelisted
-    nsCAutoString host;
+    nsCOMPtr<nsIURI> checkuri;
 
     if ( useReferrer )
     {
@@ -207,9 +202,8 @@ nsInstallTrigger::HandleContent(const char * aContentType,
         // they trust the actual source when they get the install confirmation
         // dialog. The decision we're making here is whether the triggering
         // site is one which is allowed to annoy the user with modal dialogs.
-
-        enabled = AllowInstall( referringURI );
-        referringURI->GetHost(host);
+        
+        checkuri = referringURI;
     }
     else
     {
@@ -245,31 +239,39 @@ nsInstallTrigger::HandleContent(const char * aContentType,
         // controls) and will require community policing of the default
         // trusted sites.
 
-        enabled = AllowInstall( uri );
-        uri->GetHost(host);
+        checkuri = uri;
     }
 
-
-    if ( enabled )
+    nsAutoPtr<nsXPITriggerInfo> trigger(new nsXPITriggerInfo());
+    nsAutoPtr<nsXPITriggerItem> item(new nsXPITriggerItem(0, NS_ConvertUTF8toUTF16(urispec).get(),
+                                                          nsnull));
+    if (trigger && item)
     {
-        rv = StartSoftwareUpdate( globalObject,
-                                  NS_ConvertUTF8toUTF16(urispec),
-                                  0,
-                                  &enabled);
-    }
-    else
-    {
-        nsCOMPtr<nsPIDOMWindow> win(do_QueryInterface(globalObject));
-        nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-        if (os) {
-            os->NotifyObservers(win->GetDocShell(),
-                                "xpinstall-install-blocked",
-                                NS_ConvertUTF8toUTF16(host).get());
+        // trigger will own the item now
+        trigger->Add(item.forget());
+        nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(globalObject));
+        nsCOMPtr<nsIXPIInstallInfo> installInfo =
+                              new nsXPIInstallInfo(win, checkuri, trigger, 0);
+        if (installInfo)
+        {
+            // From here trigger is owned by installInfo until passed on to nsXPInstallManager
+            trigger.forget();
+            if (AllowInstall(checkuri))
+            {
+                return StartInstall(installInfo, nsnull);
+            }
+            else
+            {
+                nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+                if (os)
+                    os->NotifyObservers(installInfo,
+                                        "xpinstall-install-blocked",
+                                        nsnull);
+                return NS_ERROR_ABORT;
+            }
         }
-        rv = NS_ERROR_ABORT;
     }
-    
-    return rv;
+    return NS_ERROR_OUT_OF_MEMORY;
 }
 
 
@@ -384,7 +386,36 @@ nsInstallTrigger::AllowInstall(nsIURI* aLaunchURI)
 
 
 NS_IMETHODIMP
+nsInstallTrigger::GetOriginatingURI(nsIScriptGlobalObject* aGlobalObject, nsIURI * *aUri)
+{
+    NS_ENSURE_ARG_POINTER(aGlobalObject);
+
+    *aUri = nsnull;
+    
+    // find the current site
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(aGlobalObject));
+    if ( window )
+    {
+        window->GetDocument(getter_AddRefs(domdoc));
+        nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
+        if ( doc )
+            NS_ADDREF(*aUri = doc->GetDocumentURI());
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsInstallTrigger::UpdateEnabled(nsIScriptGlobalObject* aGlobalObject, PRBool aUseWhitelist, PRBool* aReturn)
+{
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = GetOriginatingURI(aGlobalObject, getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+    return UpdateEnabled(uri, aUseWhitelist, aReturn);
+}
+
+NS_IMETHODIMP
+nsInstallTrigger::UpdateEnabled(nsIURI* aURI, PRBool aUseWhitelist, PRBool* aReturn)
 {
     // disallow unless we successfully find otherwise
     *aReturn = PR_FALSE;
@@ -396,27 +427,34 @@ nsInstallTrigger::UpdateEnabled(nsIScriptGlobalObject* aGlobalObject, PRBool aUs
         if (prefBranch)
             prefBranch->GetBoolPref( XPINSTALL_ENABLE_PREF, aReturn);
     }
-    else
+    else if (aURI)
     {
-        NS_ENSURE_ARG_POINTER(aGlobalObject);
-
-        // find the current site
-        nsCOMPtr<nsIDOMDocument> domdoc;
-        nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(aGlobalObject));
-        if ( window )
-        {
-            window->GetDocument(getter_AddRefs(domdoc));
-            nsCOMPtr<nsIDocument> doc(do_QueryInterface(domdoc));
-            if ( doc )
-            {
-                *aReturn = AllowInstall( doc->GetDocumentURI() );
-            }
-        }
+        *aReturn = AllowInstall(aURI);
     }
 
     return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsInstallTrigger::StartInstall(nsIXPIInstallInfo* aInstallInfo, PRBool* aReturn)
+{
+    if (aReturn)
+        *aReturn = PR_FALSE;
+    
+    nsXPInstallManager *mgr = new nsXPInstallManager();
+    if (mgr)
+    {
+        nsresult rv = mgr->InitManagerWithInstallInfo(aInstallInfo);
+        if (NS_SUCCEEDED(rv) && aReturn)
+            *aReturn = PR_TRUE;
+        return rv;
+    }
+    else
+    {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+}
 
 NS_IMETHODIMP
 nsInstallTrigger::Install(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo* aTrigger, PRBool* aReturn)
@@ -428,8 +466,9 @@ nsInstallTrigger::Install(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo
     nsXPInstallManager *mgr = new nsXPInstallManager();
     if (mgr)
     {
+        nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(aGlobalObject));
         // The Install manager will delete itself when done
-        rv = mgr->InitManager( aGlobalObject, aTrigger, 0 );
+        rv = mgr->InitManager( win, aTrigger, 0 );
         if (NS_SUCCEEDED(rv))
             *aReturn = PR_TRUE;
     }
@@ -463,15 +502,21 @@ nsInstallTrigger::InstallChrome(nsIScriptGlobalObject* aGlobalObject, PRUint32 a
         {
             trigger->Add( aItem );
 
+            nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(aGlobalObject));
             // The Install manager will delete itself when done
-            rv = mgr->InitManager( aGlobalObject, trigger, aType );
+            rv = mgr->InitManager( win, trigger, aType );
             *aReturn = PR_TRUE;
         }
         else
         {
             rv = NS_ERROR_OUT_OF_MEMORY;
             delete mgr;
+            delete aItem;
         }
+    }
+    else
+    {
+        delete aItem;
     }
 
     return NS_OK;
@@ -495,8 +540,9 @@ nsInstallTrigger::StartSoftwareUpdate(nsIScriptGlobalObject* aGlobalObject, cons
             if (item)
             {
                 trigger->Add( item );
+                nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(aGlobalObject));
                 // The Install manager will delete itself when done
-                rv = mgr->InitManager(aGlobalObject, trigger, 0 );
+                rv = mgr->InitManager(win, trigger, 0 );
                 *aReturn = PR_TRUE;
             }
             else

@@ -2110,14 +2110,31 @@ protected:
    *         as a word on its own.
    * @param  aOffset [in/out] At what offset into the frame to start looking.
    *         on output - what offset was reached (whether or not we found a place to stop).
-   * @param  aSawBeforeType [in/out] Did we encounter a character of the pre-boundary type
-   *         (whitespace if aWordSelectEatSpace is true, non-whitespace otherwise).
+   * @param  aState [in/out] the state that is carried from frame to frame
    * @return PR_TRUE: An appropriate offset was found within this frame,
    *         and is given by aOffset.
    *         PR_FALSE: Not found within this frame, need to try the next frame.
    */
+  struct PeekWordState {
+    // true when we're still at the start of the search, i.e., we can't return
+    // this point as a valid offset!
+    PRPackedBool mAtStart;
+    // true when we've encountered at least one character of the pre-boundary type
+    // (whitespace if aWordSelectEatSpace is true, non-whitespace otherwise)
+    PRPackedBool mSawBeforeType;
+    // true when the last character encountered was punctuation
+    PRPackedBool mLastCharWasPunctuation;
+
+    PeekWordState() : mAtStart(PR_TRUE), mSawBeforeType(PR_FALSE),
+        mLastCharWasPunctuation(PR_FALSE) {}
+    void SetSawBeforeType() { mSawBeforeType = PR_TRUE; }
+    void Update(PRBool aAfterPunctuation) {
+      mLastCharWasPunctuation = aAfterPunctuation;
+      mAtStart = PR_FALSE;
+    }
+  };
   virtual PRBool PeekOffsetWord(PRBool aForward, PRBool aWordSelectEatSpace, PRBool aIsKeyboardSelect,
-                                PRInt32* aOffset, PRBool* aSawBeforeType) = 0;
+                                PRInt32* aOffset, PeekWordState* aState) = 0;
 
   /**
    * Search for the first paragraph boundary before or after the given position

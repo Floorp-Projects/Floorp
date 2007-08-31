@@ -39,3 +39,12 @@ nonfatal-assertions.patch: Make assertions non-fatal
 
 clone-similar-fallback.patch: Implement fallback for clone_similar.
 
+scaled-font-create-deadlock.patch: the "poor man's mutex" that is provided
+for CAIRO_NO_MUTEX will deadlock if a recursive mutex lock occurs.
+It's also just a bunch of useless assignments for applications that makes
+all cairo calls from a single thread.  An example of where a deadlock occurs
+is the cairo_scaled_font_destroy() call from win32_scaled_font_create(),
+which is a bug, but it illustrates the dangers of that "poor man's mutex".
+The patch makes all mutex operations do nothing under CAIRO_NO_MUTEX and
+it fixes the bug in win32_scaled_font_create().
+See  https://bugzilla.mozilla.org/show_bug.cgi?id=378716

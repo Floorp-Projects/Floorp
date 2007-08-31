@@ -37,10 +37,10 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY nodeName.label "Node-Name:">
+<!ENTITY nodeName.label "Knoten-Name:">
 <!ENTITY localName.label "Lokaler Name:">
 <!ENTITY namespaceURI.label "Namespace-URI:">
-<!ENTITY nodeType.label "Node-Typ:">
+<!ENTITY nodeType.label "Knoten-Typ:">
 <!ENTITY nodeValue.label "Knoten-Wert:">
 
 <!ENTITY namespaceTitle.null.label "null">

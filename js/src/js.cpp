@@ -98,8 +98,10 @@ size_t gStackChunkSize = 8192;
 
 /* Assume that we can not use more than 5e5 bytes of C stack by default. */
 static size_t gMaxStackSize = 500000;
-
 static jsuword gStackBase;
+
+static size_t gScriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
+
 int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
 FILE *gErrFile = NULL;
@@ -1750,6 +1752,21 @@ StringsAreUTF8(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
 }
 
+static JSBool
+StackQuota(JSContext *cx, uintN argc, jsval *vp)
+{
+    uint32 n;
+
+    if (argc == 0)
+        return JS_NewNumberValue(cx, (double) gScriptStackQuota, vp);
+    if (!JS_ValueToECMAUint32(cx, JS_ARGV(cx, vp)[0], &n))
+        return JS_FALSE;
+    gScriptStackQuota = n;
+    JS_SetScriptStackQuota(cx, gScriptStackQuota);
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    return JS_TRUE;
+}
+
 static const char* badUTF8 = "...\xC0...";
 static const char* bigUTF8 = "...\xFB\xBF\xBF\xBF\xBF...";
 static const jschar badSurrogate[] = { 'A', 'B', 'C', 0xDEEE, 'D', 'E', 0 };
@@ -2222,6 +2239,7 @@ static JSFunctionSpec shell_functions[] = {
     JS_FS("untrap",         Untrap,         2,0,0),
     JS_FS("line2pc",        LineToPC,       0,0,0),
     JS_FS("pc2line",        PCToLine,       0,0,0),
+    JS_FN("stackQuota",     StackQuota,     0,0,0,0),
     JS_FS("stringsAreUTF8", StringsAreUTF8, 0,0,0),
     JS_FS("testUTF8",       TestUTF8,       1,0,0),
     JS_FS("throwError",     ThrowError,     0,0,0),
@@ -2269,6 +2287,7 @@ static char *shell_help_messages[] = {
     "untrap(fun[, pc])      Remove a trap",
     "line2pc([fun,] line)   Map line number to PC",
     "pc2line(fun[, pc])     Map PC to line number",
+    "stackQuota([number])   Query/set script stack quota",
     "stringsAreUTF8()       Check if strings are UTF-8 encoded",
     "testUTF8(mode)         Perform UTF-8 tests (modes are 1 to 4)",
     "throwError()           Throw an error from JS_ReportError",
@@ -3122,6 +3141,17 @@ snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 #endif /* NARCISSUS */
 
+JSBool
+ContextCallback(JSContext *cx, uintN contextOp)
+{
+    if (contextOp == JSCONTEXT_NEW) {
+        JS_SetErrorReporter(cx, my_ErrorReporter);
+        JS_SetVersion(cx, JSVERSION_LATEST);
+        JS_SetScriptStackQuota(cx, gScriptStackQuota);
+    }
+    return JS_TRUE;
+}
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -3157,12 +3187,11 @@ main(int argc, char **argv, char **envp)
     rt = JS_NewRuntime(64L * 1024L * 1024L);
     if (!rt)
         return 1;
+    JS_SetContextCallback(rt, ContextCallback);
 
     cx = JS_NewContext(rt, gStackChunkSize);
     if (!cx)
         return 1;
-    JS_SetErrorReporter(cx, my_ErrorReporter);
-    JS_SetVersion(cx, JSVERSION_LATEST);
 
 #ifdef JS_THREADSAFE
     JS_BeginRequest(cx);

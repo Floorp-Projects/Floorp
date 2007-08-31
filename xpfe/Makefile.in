@@ -50,10 +50,6 @@ ifndef MOZ_SUNBIRD
 DIRS += browser
 endif
 
-ifdef MOZ_THUNDERBIRD
-DIRS += communicator
-endif
-
 ifndef MOZ_XUL_APP
 DIRS += global communicator
 endif

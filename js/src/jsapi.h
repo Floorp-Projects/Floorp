@@ -1162,6 +1162,21 @@ JS_GetExternalStringGCType(JSRuntime *rt, JSString *str);
 extern JS_PUBLIC_API(void)
 JS_SetThreadStackLimit(JSContext *cx, jsuword limitAddr);
 
+/*
+ * Set the quota on the number of bytes that stack-like data structures can
+ * use when the runtime compiles and executes scripts. These structures
+ * consume heap space, so JS_SetThreadStackLimit does not bound their size.
+ * The default quota is 32MB which is quite generous.
+ *
+ * The function must be called before any script compilation or execution API
+ * calls, i.e. either immediately after JS_NewContext or from JSCONTEXT_NEW
+ * context callback.
+ */
+extern JS_PUBLIC_API(void)
+JS_SetScriptStackQuota(JSContext *cx, size_t quota);
+
+#define JS_DEFAULT_SCRIPT_STACK_QUOTA   ((size_t) 0x2000000)
+
 /************************************************************************/
 
 /*

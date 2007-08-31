@@ -1,0 +1,88 @@
+Index: gfx/cairo/cairo/src/cairo-mutex-type-private.h
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairo-mutex-type-private.h,v
+retrieving revision 1.6
+diff -p -u -1 -2 -r1.6 cairo-mutex-type-private.h
+--- gfx/cairo/cairo/src/cairo-mutex-type-private.h	24 Jul 2007 17:43:30 -0000	1.6
++++ gfx/cairo/cairo/src/cairo-mutex-type-private.h	29 Aug 2007 17:53:58 -0000
+@@ -135,24 +135,35 @@ CAIRO_BEGIN_DECLS
+  *   So, if for any reason finalizing static mutex'es is not needed
+  *   (eg. you never call CAIRO_MUTEX_FINALIZE), then
+  *   #define CAIRO_MUTEX_FINALIZE() CAIRO_MUTEX_NOOP
+  *
+  * - That is all.  If for any reason you think the above API is
+  *   not enough to implement cairo_mutex_t on your system, please
+  *   stop and write to the cairo mailing list about it.  DO NOT
+  *   poke around cairo-mutex-private.h for possible solutions.
+  */
+ 
+ #if CAIRO_NO_MUTEX
+ 
++/* No mutex at all */
++
++  typedef int cairo_mutex_t;
++
++# define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
++# define CAIRO_MUTEX_LOCK(mutex) CAIRO_MUTEX_NOOP
++# define CAIRO_MUTEX_UNLOCK(mutex) CAIRO_MUTEX_NOOP
++# define CAIRO_MUTEX_NIL_INITIALIZER 0
++
++#elif CAIRO_POOR_MAN_MUTEX
++
+ /* A poor man's mutex */
+ 
+   typedef int cairo_mutex_t;
+ 
+ # define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
+ # define CAIRO_MUTEX_LOCK(mutex) do { while (mutex) ; (mutex) = 1; } while (0)
+ # define CAIRO_MUTEX_UNLOCK(mutex) (mutex) = 0
+ # define CAIRO_MUTEX_NIL_INITIALIZER 0
+ 
+ #elif HAVE_PTHREAD_H /*******************************************************/
+ 
+ # include <pthread.h>
+Index: gfx/cairo/cairo/src/cairo-win32-font.c
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairo-win32-font.c,v
+retrieving revision 1.33
+diff -p -u -1 -2 -r1.33 cairo-win32-font.c
+--- gfx/cairo/cairo/src/cairo-win32-font.c	2 Aug 2007 07:00:32 -0000	1.33
++++ gfx/cairo/cairo/src/cairo-win32-font.c	29 Aug 2007 17:53:58 -0000
+@@ -294,30 +294,33 @@ _win32_scaled_font_create (LOGFONTW     
+          */
+         f->scaled_hfont = face_hfont;
+     }
+     /* don't delete the hfont if we're using the one passed in to us */
+     f->delete_scaled_hfont = !f->scaled_hfont;
+ 
+     cairo_matrix_multiply (&scale, font_matrix, ctm);
+     _compute_transform (f, &scale);
+ 
+     status = _cairo_scaled_font_init (&f->base, font_face,
+ 				      font_matrix, ctm, options,
+ 				      &cairo_win32_scaled_font_backend);
++    if (status) {
++	free (f);
++	return NULL;
++    }
+ 
+-    if (status == CAIRO_STATUS_SUCCESS)
+-	status = _cairo_win32_scaled_font_set_metrics (f);
+-
++    status = _cairo_win32_scaled_font_set_metrics (f);
+     if (status) {
+-	cairo_scaled_font_destroy (&f->base);
++	_cairo_scaled_font_fini (f);
++	free (f);
+ 	return NULL;
+     }
+ 
+     return &f->base;
+ }
+ 
+ static cairo_status_t
+ _win32_scaled_font_set_world_transform (cairo_win32_scaled_font_t *scaled_font,
+ 					HDC                        hdc)
+ {
+     XFORM xform;
+ 

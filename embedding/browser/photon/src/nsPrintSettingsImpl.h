@@ -92,7 +92,6 @@ protected:
 
   PRBool        mPrintReversed;
   PRBool        mPrintInColor; // a false means grayscale
-  PRInt32       mPaperSize;    // see page size consts
   PRInt32       mOrientation;  // see orientation consts
   nsString      mPrintCommand;
   PRBool        mPrintToFile;

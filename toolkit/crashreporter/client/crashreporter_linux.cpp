@@ -43,6 +43,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <dlfcn.h>
 
 #include <algorithm>
 #include <cctype>
@@ -84,6 +85,11 @@ static string gDumpFile;
 static StringTable gQueryParameters;
 static string gSendURL;
 static vector<string> gRestartArgs;
+
+// handle from dlopen'ing libgnome
+static void* gnomeLib = NULL;
+// handle from dlopen'ing libgnomeui
+static void* gnomeuiLib = NULL;
 
 static const char kIniFile[] = "crashreporter.ini";
 
@@ -274,6 +280,35 @@ static void EmailChanged(GtkEditable* editable, gpointer userData)
   ShowReportInfo();
 }
 
+typedef struct _GnomeProgram GnomeProgram;
+typedef struct _GnomeModuleInfo GnomeModuleInfo;
+typedef GnomeProgram * (*_gnome_program_init_fn)(const char *, const char *,
+                                                 const GnomeModuleInfo *, int,
+                                                 char **, const char *, ...);
+typedef const GnomeModuleInfo * (*_libgnomeui_module_info_get_fn)();
+
+static void TryInitGnome()
+{
+  gnomeLib = dlopen("libgnome-2.so.0", RTLD_LAZY);
+  if (!gnomeLib)
+    return;
+
+  gnomeuiLib = dlopen("libgnomeui-2.so.0", RTLD_LAZY);
+  if (!gnomeuiLib)
+    return;
+ 
+  _gnome_program_init_fn gnome_program_init =
+    (_gnome_program_init_fn)(dlsym(gnomeLib, "gnome_program_init"));
+  _libgnomeui_module_info_get_fn libgnomeui_module_info_get =
+    (_libgnomeui_module_info_get_fn)(dlsym(gnomeuiLib, "libgnomeui_module_info_get"));
+
+  if (gnome_program_init && libgnomeui_module_info_get) {
+    gnome_program_init("crashreporter", "1.0", libgnomeui_module_info_get(),
+                       gArgc, gArgv, NULL);
+  }
+
+}
+
 /* === Crashreporter UI Functions === */
 
 bool UIInit()
@@ -285,6 +320,7 @@ bool UIInit()
 
   if (gtk_init_check(&gArgc, &gArgv)) {
     gInitialized = true;
+    TryInitGnome();
     return true;
   }
 
@@ -293,6 +329,10 @@ bool UIInit()
 
 void UIShutdown()
 {
+  if (gnomeLib)
+    dlclose(gnomeLib);
+  if (gnomeuiLib)
+    dlclose(gnomeuiLib);
 }
 
 void UIShowDefaultUI()

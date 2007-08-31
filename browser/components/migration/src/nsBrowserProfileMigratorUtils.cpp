@@ -59,6 +59,8 @@
 
 #define MIGRATION_BUNDLE "chrome://browser/locale/migration/migration.properties"
 
+#define BOOKMARKS_FILE_NAME NS_LITERAL_STRING("bookmarks.html")
+
 void SetUnicharPref(const char* aPref, const nsAString& aValue,
                     nsIPrefBranch* aPrefs)
 {
@@ -217,11 +219,25 @@ AnnotatePersonalToolbarFolder(nsIFile* aSourceBookmarksFile,
 
 nsresult
 ImportBookmarksHTML(nsIFile* aBookmarksFile, 
+                    PRBool aImportIntoRoot,
+                    PRBool aOverwriteDefaults,
                     const PRUnichar* aImportSourceNameKey)
 {
   nsresult rv;
 
-  // Look for the localized name of the bookmarks toolbar
+  nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(aBookmarksFile));
+  NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPlacesImportExportService> importer = do_GetService(NS_PLACESIMPORTEXPORTSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Import file directly into the bookmarks root folder.
+  if (aImportIntoRoot) {
+    rv = importer->ImportHTMLFromFile(localFile, aOverwriteDefaults);
+    NS_ENSURE_SUCCESS(rv, rv);
+    return NS_OK;
+  }
+
+  // Get the source application name.
   nsCOMPtr<nsIStringBundleService> bundleService =
     do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -239,7 +255,7 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
                                sourceNameStrings, 1, 
                                getter_Copies(importedBookmarksTitle));
 
-  // Get the bookmarks service
+  // Get the bookmarks service.
   nsCOMPtr<nsINavBookmarksService> bms =
     do_GetService(NS_NAVBOOKMARKSSERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -254,9 +270,17 @@ ImportBookmarksHTML(nsIFile* aBookmarksFile,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Import the bookmarks into the folder.
-  nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(aBookmarksFile));
-  NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIPlacesImportExportService> importer = do_GetService(NS_PLACESIMPORTEXPORTSERVICE_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
   return importer->ImportHTMLFromFileToFolder(localFile, folder, PR_FALSE);
+}
+
+nsresult
+InitializeBookmarks(nsIFile* aTargetProfile)
+{
+  nsCOMPtr<nsIFile> bookmarksFile;
+  aTargetProfile->Clone(getter_AddRefs(bookmarksFile));
+  bookmarksFile->Append(BOOKMARKS_FILE_NAME);
+  
+  nsresult rv = ImportBookmarksHTML(bookmarksFile, PR_TRUE, PR_TRUE, EmptyString().get());
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
 }

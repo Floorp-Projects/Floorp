@@ -95,7 +95,6 @@ NS_IMPL_ISUPPORTS1(nsNativeThemeCocoa, nsITheme)
 
 nsNativeThemeCocoa::nsNativeThemeCocoa()
 {
-  sListboxBGTransparent = PR_TRUE;
 }
 
 nsNativeThemeCocoa::~nsNativeThemeCocoa()
@@ -254,6 +253,14 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
   if (inKind == kHIThemeFrameTextFieldSquare) {
     SInt32 frameOutset = 0;
     ::GetThemeMetric(kThemeMetricEditTextFrameOutset, &frameOutset);
+    drawRect.origin.x += frameOutset;
+    drawRect.origin.y += frameOutset;
+    drawRect.size.width -= frameOutset * 2;
+    drawRect.size.height -= frameOutset * 2;
+  }
+  else if (inKind == kHIThemeFrameListBox) {
+    SInt32 frameOutset = 0;
+    ::GetThemeMetric(kThemeMetricListBoxFrameOutset, &frameOutset);
     drawRect.origin.x += frameOutset;
     drawRect.origin.y += frameOutset;
     drawRect.size.width -= frameOutset * 2;
@@ -1326,9 +1333,16 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
   if (aPresContext && !aPresContext->PresShell()->IsThemeSupportEnabled())
     return PR_FALSE;
 
-  PRBool retVal = PR_FALSE;
+  // if this is a dropdown button in a combobox the answer is always no
+  if (aWidgetType == NS_THEME_DROPDOWN_BUTTON) {
+    nsIFrame* parentFrame = aFrame->GetParent();
+    if (parentFrame && (parentFrame->GetType() == nsWidgetAtoms::comboboxControlFrame))
+      return PR_FALSE;
+  }
 
   switch (aWidgetType) {
+    case NS_THEME_LISTBOX:
+
     case NS_THEME_DIALOG:
     case NS_THEME_WINDOW:
     case NS_THEME_MENUPOPUP:
@@ -1385,19 +1399,15 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
-      retVal = PR_TRUE;
-      break;
 
-    case NS_THEME_LISTBOX:
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
     case NS_THEME_DROPDOWN_TEXT:
-      // Support listboxes and dropdowns regardless of styling,
-      // since non-themed ones look totally wrong.
-      return PR_TRUE;
+      return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
+      break;
   }
 
-  return retVal ? !IsWidgetStyled(aPresContext, aFrame, aWidgetType) : PR_FALSE;
+  return PR_FALSE;
 }
 
 

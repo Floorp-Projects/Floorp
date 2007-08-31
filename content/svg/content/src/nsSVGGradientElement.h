@@ -39,18 +39,20 @@
 #ifndef __NS_SVGGRADIENTELEMENT_H__
 #define __NS_SVGGRADIENTELEMENT_H__
 
-#include "nsIDOMSVGAnimatedEnum.h"
 #include "nsIDOMSVGURIReference.h"
 #include "nsIDOMSVGGradientElement.h"
+#include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGStylableElement.h"
 #include "nsSVGLength2.h"
+#include "nsSVGEnum.h"
 
 //--------------------- Gradients------------------------
 
 typedef nsSVGStylableElement nsSVGGradientElementBase;
 
 class nsSVGGradientElement : public nsSVGGradientElementBase,
-                             public nsIDOMSVGURIReference
+                             public nsIDOMSVGURIReference,
+                             public nsIDOMSVGUnitTypes
 {
   friend class nsSVGGradientFrame;
 
@@ -72,11 +74,16 @@ public:
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
-  
+
   // nsIDOMSVGGradientElement values
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mGradientUnits;
   nsCOMPtr<nsIDOMSVGAnimatedTransformList> mGradientTransform;
-  nsCOMPtr<nsIDOMSVGAnimatedEnumeration> mSpreadMethod;
+
+  enum { GRADIENTUNITS, SPREADMETHOD };
+  nsSVGEnum mEnumAttributes[2];
+  static nsSVGEnumMapping sSpreadMethodMap[];
+  static EnumInfo sEnumInfo[2];
+
+  virtual EnumAttributesInfo GetEnumInfo();
 
   // nsIDOMSVGURIReference properties
   nsCOMPtr<nsIDOMSVGAnimatedString> mHref;

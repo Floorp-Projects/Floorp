@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-NSPR_CO_TAG = 'NSPR_HEAD_20070713'
+NSPR_CO_TAG = 'NSPR_HEAD_20070820'
 NSS_CO_TAG  = 'NSS_3_12_ALPHA1B'
 
 NSPR_DIRS = ('nsprpub',)

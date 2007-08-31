@@ -348,7 +348,7 @@ var gEditItemOverlay = {
       // hide the tag selector if it was previously visible
       var tagsSelector = this._element("tagsSelector");
       if (!tagsSelector.collapsed)
-        tagsSelector.collapsed = true;
+        this._toggleTagsSelector();
     }
 
     if (this._observersAdded) {
@@ -547,7 +547,7 @@ var gEditItemOverlay = {
     // Update folder-tree selection
     if (isElementVisible(this._folderTree)) {
       var selectedNode = this._folderTree.selectedNode;
-      if (selectedNode.itemId != container)
+      if (!selectedNode || selectedNode.itemId != container)
         this._folderTree.selectFolders([container]);
     }
   },
@@ -558,13 +558,7 @@ var gEditItemOverlay = {
       return;
 
     var folderId = selectedNode.itemId;
-    // Don't set the selected item if the static item for the folder is
-    // already selected
-    var oldSelectedItem = this._folderMenuList.selectedItem;
-    if ((oldSelectedItem.id == "editBMPanel_toolbarFolderItem" &&
-         folderId == PlacesUtils.toolbarFolderId) ||
-        (oldSelectedItem.id == "editBMPanel_bmRootItem" &&
-         folderId == PlacesUtils.bookmarksRootId))
+    if (this._getFolderIdFromMenuList() == folderId)
       return;
 
     var folderItem = this._getFolderMenuItem(folderId, false);
@@ -605,9 +599,9 @@ var gEditItemOverlay = {
     var tagsSelector = this._element("tagsSelector");
     var expander = this._element("tagsSelectorExpander");
     if (!isElementVisible(tagsSelector)) {
-      expander.className = "expander-down";
+      expander.className = "expander-up";
       expander.setAttribute("tooltiptext",
-                            expander.getAttribute("tooltiptextdown"));
+                            expander.getAttribute("tooltiptextup"));
 
       this._rebuildTagsSelectorList();
 

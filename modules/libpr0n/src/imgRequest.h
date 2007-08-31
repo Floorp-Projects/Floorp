@@ -154,7 +154,7 @@ private:
   nsCOMPtr<imgIDecoder> mDecoder;
   nsCOMPtr<nsIProperties> mProperties;
 
-  nsVoidArray mObservers;
+  nsAutoVoidArray mObservers;
 
   PRPackedBool mLoading;
   PRPackedBool mProcessing;

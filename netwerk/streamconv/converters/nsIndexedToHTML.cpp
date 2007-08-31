@@ -290,6 +290,9 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                          "  text-align: left;\n"
                          "  white-space: nowrap;\n"
                          "}\n"
+                         "th > a {\n"
+                         "  color: inherit;\n"
+                         "}\n"
                          "table[order] th {\n"
                          "  cursor: pointer;\n"
                          "}\n"
@@ -369,18 +372,26 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                              "var gTable, gOrderBy, gTBody, gRows, gUI_showHidden;\n"
                              "document.addEventListener(\"DOMContentLoaded\", function() {\n"
                              "  gTable = document.getElementsByTagName(\"table\")[0];\n"
+                             "  gTBody = gTable.tBodies[0];\n"
+                             "  if (gTBody.rows.length < 2)\n"
+                             "    return;\n"
                              "  gUI_showHidden = document.getElementById(\"UI_showHidden\");\n"
                              "  var headCells = gTable.tHead.rows[0].cells,\n"
                              "      hiddenObjects = false;\n"
                              "  function rowAction(i) {\n"
-                             "    return function() {\n"
+                             "    return function(event) {\n"
+                             "      event.preventDefault();\n"
                              "      orderBy(i);\n"
                              "    }\n"
                              "  }\n"
-                             "  for (var i = headCells.length - 1; i >= 0; i--)\n"
-                             "    headCells[i].addEventListener(\"click\", rowAction(i), false);\n"
+                             "  for (var i = headCells.length - 1; i >= 0; i--) {\n"
+                             "    var anchor = document.createElement(\"a\");\n"
+                             "    anchor.href = \"\";\n"
+                             "    anchor.appendChild(headCells[i].firstChild);\n"
+                             "    headCells[i].appendChild(anchor);\n"
+                             "    headCells[i].addEventListener(\"click\", rowAction(i), true);\n"
+                             "  }\n"
                              "  gOrderBy = gTable.getAttribute(\"order-by\");\n"
-                             "  gTBody = gTable.tBodies[0];\n"
                              "  gRows = [];\n"
                              "  for (var row, i = gTBody.rows.length - 1; i >= 0; i--) {\n"
                              "    row = gTBody.rows[i];\n"
@@ -798,7 +809,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     // Truncate long names to not stretch the table
     //XXX this should be left to the stylesheet (bug 391471)
     nsString escapedShort;
-    if (description.Length() > 31) {
+    if (description.Length() > 46) {
         nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
         nsCOMPtr<nsIURI> uri;
         rv = channel->GetURI(getter_AddRefs(uri));
@@ -808,13 +819,22 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         PRBool isSchemeGopher = PR_FALSE;
         if (!(NS_SUCCEEDED(uri->SchemeIs("gopher", &isSchemeGopher)) && isSchemeGopher)) {
             //XXX this potentially truncates after a combining char (bug 391472)
+            nsXPIDLString descriptionAffix;
+            descriptionAffix.Assign(description);
+            descriptionAffix.Cut(0, descriptionAffix.Length() - 15);
+            if (NS_IS_LOW_SURROGATE(descriptionAffix.First()))
+                descriptionAffix.Cut(0, 1);
             description.Truncate(30);
             if (NS_IS_HIGH_SURROGATE(description.Last()))
-                description.Truncate(description.Length()-1);
+                description.Truncate(description.Length() - 1);
 
             escapedShort.Adopt(nsEscapeHTML2(description.get(), description.Length()));
             // add HORIZONTAL ELLIPSIS (U+2026)
             escapedShort.AppendLiteral("&#8230;");
+            nsString tmp;
+            tmp.Adopt(nsEscapeHTML2(descriptionAffix.get(), descriptionAffix.Length()));
+            escapedShort.Append(tmp);
+
             pushBuffer.AppendLiteral(" title=\"");
             pushBuffer.Append(escaped);
             pushBuffer.AppendLiteral("\"");

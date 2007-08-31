@@ -59,7 +59,6 @@
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsISVGValueUtils.h"
 #include "nsDOMError.h"
-#include "nsSVGEnum.h"
 #include "nsISVGChildFrame.h"
 #include "nsGUIEvent.h"
 #include "nsSVGUtils.h"
@@ -71,6 +70,20 @@ nsSVGElement::LengthInfo nsSVGSVGElement::sLengthInfo[4] =
   { &nsGkAtoms::y, 0, nsIDOMSVGLength::SVG_LENGTHTYPE_NUMBER, nsSVGUtils::Y },
   { &nsGkAtoms::width, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
   { &nsGkAtoms::height, 100, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
+};
+
+nsSVGEnumMapping nsSVGSVGElement::sZoomAndPanMap[] = {
+  {&nsGkAtoms::disable, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_DISABLE},
+  {&nsGkAtoms::magnify, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY},
+  {nsnull, 0}
+};
+
+nsSVGElement::EnumInfo nsSVGSVGElement::sEnumInfo[1] =
+{
+  { &nsGkAtoms::zoomAndPan,
+    sZoomAndPanMap,
+    nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY
+  }
 };
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(SVG)
@@ -150,24 +163,6 @@ nsSVGSVGElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = AddMappedSVGValue(nsGkAtoms::preserveAspectRatio,
                            mPreserveAspectRatio);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-  
-  // nsIDOMSVGZoomAndPan attribute ------:
-
-  // Define enumeration mappings
-  static struct nsSVGEnumMapping zoomMap[] = {
-        {&nsGkAtoms::disable, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_DISABLE},
-        {&nsGkAtoms::magnify, nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY},
-        {nsnull, 0}
-  };
-
-  // DOM property: zoomAndPan ,  #IMPLIED attrib: zoomAndPan
-  {
-    rv = NS_NewSVGEnum(getter_AddRefs(mZoomAndPan),
-                       nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY, zoomMap);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::zoomAndPan, mZoomAndPan);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -959,15 +954,18 @@ nsSVGSVGElement::GetTransformToElement(nsIDOMSVGElement *element,
 NS_IMETHODIMP
 nsSVGSVGElement::GetZoomAndPan(PRUint16 *aZoomAndPan)
 {
-  return mZoomAndPan->GetIntegerValue(*aZoomAndPan);
+  *aZoomAndPan = mEnumAttributes[ZOOMANDPAN].GetAnimValue();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSVGSVGElement::SetZoomAndPan(PRUint16 aZoomAndPan)
 {
   if (aZoomAndPan == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_DISABLE ||
-      aZoomAndPan == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY)
-    return mZoomAndPan->SetIntegerValue(aZoomAndPan);
+      aZoomAndPan == nsIDOMSVGZoomAndPan::SVG_ZOOMANDPAN_MAGNIFY) {
+    mEnumAttributes[ZOOMANDPAN].SetBaseValue(aZoomAndPan, this, PR_TRUE);
+    return NS_OK;
+  }
 
   return NS_ERROR_DOM_SVG_INVALID_VALUE_ERR;
 }
@@ -979,14 +977,6 @@ NS_IMETHODIMP
 nsSVGSVGElement::GetCurrentScaleNumber(nsIDOMSVGNumber **aResult)
 {
   *aResult = mCurrentScale;
-  NS_ADDREF(*aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGSVGElement::GetZoomAndPanEnum(nsISVGEnum **aResult)
-{
-  *aResult = mZoomAndPan;
   NS_ADDREF(*aResult);
   return NS_OK;
 }
@@ -1444,4 +1434,19 @@ nsSVGSVGElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
+}
+
+void
+nsSVGSVGElement::DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  nsSVGSVGElementBase::DidChangeEnum(aAttrEnum, aDoSetAttr);
+
+  InvalidateTransformNotifyFrame();
+}
+
+nsSVGElement::EnumAttributesInfo
+nsSVGSVGElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            NS_ARRAY_LENGTH(sEnumInfo));
 }

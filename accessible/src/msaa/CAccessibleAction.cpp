@@ -110,8 +110,10 @@ CAccessibleAction::get_description(long aActionIndex, BSTR *aDescription)
     return E_FAIL;
 
   if (!description.IsVoid()) {
-    return ::SysReAllocStringLen(aDescription, description.get(),
-                                 description.Length());
+    INT result = ::SysReAllocStringLen(aDescription, description.get(),
+                                       description.Length());
+    if (!result)
+      return E_OUTOFMEMORY;
   }
 
   return S_OK;
@@ -152,10 +154,10 @@ CAccessibleAction::get_keyBinding(long aActionIndex, long aNumMaxBinding,
   for (PRUint32 i = 0; i < numBinding; i++) {
     nsAutoString key;
     keys->Item(i, key);
-    HRESULT hr = ::SysReAllocStringLen(aKeyBinding[i], key.get(),
+    INT result = ::SysReAllocStringLen(aKeyBinding[i], key.get(),
                                        key.Length());
-    if (FAILED(hr))
-      return hr;
+    if (!result)
+      return E_OUTOFMEMORY;
   }
 
   return S_OK;
@@ -175,8 +177,11 @@ CAccessibleAction::get_name(long aActionIndex, BSTR *aName)
   if (NS_FAILED(acc->GetActionName(index, name)))
     return E_FAIL;
 
-  if (!name.IsVoid())
-    return ::SysReAllocStringLen(aName, name.get(), name.Length());
+  if (!name.IsVoid()) {
+    INT result = ::SysReAllocStringLen(aName, name.get(), name.Length());
+    if (!result)
+      return E_OUTOFMEMORY;
+  }
 
   return S_OK;
 }

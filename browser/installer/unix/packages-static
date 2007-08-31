@@ -211,6 +211,7 @@ bin/components/nsTryToClose.js
 bin/components/nsDictionary.js
 bin/components/nsFilePicker.js
 bin/components/nsHelperAppDlg.js
+bin/components/nsDownloadManagerUI.js
 bin/components/nsInterfaceInfoToIDL.js
 ; bin/components/nsProgressDialog.js   not needed for firefox
 bin/components/nsProxyAutoConfig.js

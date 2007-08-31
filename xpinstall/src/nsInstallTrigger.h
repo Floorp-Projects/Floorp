@@ -47,7 +47,10 @@ class nsInstallTrigger: public nsIScriptObjectOwner,
         NS_IMETHOD    GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
         NS_IMETHOD    SetScriptObject(void* aScriptObject);
 
+        NS_IMETHOD    GetOriginatingURI(nsIScriptGlobalObject* aGlobalObject, nsIURI * *aUri);
         NS_IMETHOD    UpdateEnabled(nsIScriptGlobalObject* aGlobalObject, PRBool aUseWhitelist, PRBool* aReturn);
+        NS_IMETHOD    UpdateEnabled(nsIURI* aURI, PRBool aUseWhitelist, PRBool* aReturn);
+        NS_IMETHOD    StartInstall(nsIXPIInstallInfo* aInstallInfo, PRBool* aReturn);
         NS_IMETHOD    Install(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo *aInfo, PRBool* aReturn);
         NS_IMETHOD    InstallChrome(nsIScriptGlobalObject* aGlobalObject, PRUint32 aType, nsXPITriggerItem* aItem, PRBool* aReturn);
         NS_IMETHOD    StartSoftwareUpdate(nsIScriptGlobalObject* aGlobalObject, const nsString& aURL, PRInt32 aFlags, PRInt32* aReturn);

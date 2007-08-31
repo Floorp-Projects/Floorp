@@ -72,6 +72,7 @@ gfxPlatform *gPlatform = nsnull;
 int gGlitzState = -1;
 static cmsHPROFILE gCMSOutputProfile = nsnull;
 static cmsHTRANSFORM gCMSRGBTransform = nsnull;
+static cmsHTRANSFORM gCMSInverseRGBTransform = nsnull;
 static cmsHTRANSFORM gCMSRGBATransform = nsnull;
 
 gfxPlatform*
@@ -355,6 +356,25 @@ gfxPlatform::GetCMSRGBTransform()
     }
 
     return gCMSRGBTransform;
+}
+
+cmsHTRANSFORM
+gfxPlatform::GetCMSInverseRGBTransform()
+{
+    if (!gCMSInverseRGBTransform) {
+        cmsHPROFILE inProfile, outProfile;
+        inProfile = GetCMSOutputProfile();
+        outProfile = cmsCreate_sRGBProfile();
+
+        if (!inProfile || !outProfile)
+            return nsnull;
+
+        gCMSInverseRGBTransform = cmsCreateTransform(inProfile, TYPE_RGB_8,
+                                                     outProfile, TYPE_RGB_8,
+                                                     INTENT_PERCEPTUAL, 0);
+    }
+
+    return gCMSInverseRGBTransform;
 }
 
 cmsHTRANSFORM

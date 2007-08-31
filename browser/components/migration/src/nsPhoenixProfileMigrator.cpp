@@ -423,6 +423,7 @@ nsPhoenixProfileMigrator::CopyPasswords(PRBool aReplace)
 nsresult
 nsPhoenixProfileMigrator::CopyBookmarks(PRBool aReplace)
 {
+  // This overwrites the defaults. This might be ok in this instance.
   return aReplace ? CopyFile(FILE_NAME_BOOKMARKS, FILE_NAME_BOOKMARKS) : NS_OK;
 }
 

@@ -41,18 +41,21 @@
 # SYMBOL_SERVER_USER    : username on that host
 # SYMBOL_SERVER_PATH    : path on that host to put symbols in
 #
-# And will use the following optional environment variable if set:
+# And will use the following optional environment variables if set:
 # SYMBOL_SERVER_SSH_KEY : path to a ssh private key to use
+# SYMBOL_SERVER_PORT    : port to use for ssh
 #
 set -e
 
 : ${SYMBOL_SERVER_HOST?} ${SYMBOL_SERVER_USER?} ${SYMBOL_SERVER_PATH?} ${1?"You must specify a symbol archive to upload"}
 archive=`basename $1`
 echo "Transferring symbols... $1"
-scp -v ${SYMBOL_SERVER_SSH_KEY:+-i "$SYMBOL_SERVER_SSH_KEY"} $1 \
+scp -v ${SYMBOL_SERVER_PORT:+-P $SYMBOL_SERVER_PORT} \
+  ${SYMBOL_SERVER_SSH_KEY:+-i "$SYMBOL_SERVER_SSH_KEY"} $1 \
   ${SYMBOL_SERVER_USER}@${SYMBOL_SERVER_HOST}:${SYMBOL_SERVER_PATH}/
 echo "Unpacking symbols on remote host..."
-ssh -2 ${SYMBOL_SERVER_SSH_KEY:+-i "$SYMBOL_SERVER_SSH_KEY"} \
+ssh -2 ${SYMBOL_SERVER_PORT:+-p $SYMBOL_SERVER_PORT} \
+  ${SYMBOL_SERVER_SSH_KEY:+-i "$SYMBOL_SERVER_SSH_KEY"} \
   -l ${SYMBOL_SERVER_USER} ${SYMBOL_SERVER_HOST} \
   "set -e;
    umask 0022;

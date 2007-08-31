@@ -440,6 +440,28 @@ GetFieldSetAreaFrame(nsIFrame* aFieldsetFrame)
 }
 
 //----------------------------------------------------------------------
+
+static PRBool
+IsInlineOutside(nsIFrame* aFrame)
+{
+  return aFrame->GetStyleDisplay()->IsInlineOutside();
+}
+
+/**
+ * True if aFrame is an actual inline frame in the sense of non-replaced
+ * display:inline CSS boxes.  In other words, it can be affected by {ib}
+ * splitting and can contain first-letter frames.  Basically, this is either an
+ * inline frame (positioned or otherwise) or an line frame (this last because
+ * it can contain first-letter and because inserting blocks in the middle of it
+ * needs to terminate it).
+ */
+static PRBool
+IsInlineFrame(const nsIFrame* aFrame)
+{
+  return aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
+}
+
+//----------------------------------------------------------------------
 //
 // When inline frames get weird and have block frames in them, we
 // annotate them to help us respond to incremental content changes
@@ -460,6 +482,20 @@ static nsIFrame* GetSpecialSibling(nsIFrame* aFrame)
   void* value = aFrame->GetProperty(nsGkAtoms::IBSplitSpecialSibling);
 
   return static_cast<nsIFrame*>(value);
+}
+
+static nsIFrame*
+GetIBSplitSpecialPrevSibling(nsIFrame* aFrame)
+{
+  NS_PRECONDITION(IsFrameSpecial(aFrame) && !IsInlineFrame(aFrame),
+                  "Shouldn't call this");
+  
+  // We only store the "special sibling" annotation with the first
+  // frame in the continuation chain. Walk back to find that frame now.  
+  return
+    static_cast<nsIFrame*>
+    (aFrame->GetFirstContinuation()->
+       GetProperty(nsGkAtoms::IBSplitSpecialPrevSibling));
 }
 
 static nsIFrame*
@@ -530,28 +566,6 @@ GetIBContainingBlockFor(nsIFrame* aFrame)
 
 //----------------------------------------------------------------------
 
-static PRBool
-IsInlineOutside(nsIFrame* aFrame)
-{
-  return aFrame->GetStyleDisplay()->IsInlineOutside();
-}
-
-/**
- * True if aFrame is an actual inline frame in the sense of non-replaced
- * display:inline CSS boxes.  In other words, it can be affected by {ib}
- * splitting and can contain first-letter frames.  Basically, this is either an
- * inline frame (positioned or otherwise) or an line frame (this last because
- * it can contain first-letter and because inserting blocks in the middle of it
- * needs to terminate it).
- */
-static PRBool
-IsInlineFrame(const nsIFrame* aFrame)
-{
-  return aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
-}
-
-//----------------------------------------------------------------------
-
 // Block/inline frame construction logic. We maintain a few invariants here:
 //
 // 1. Block frames contain block and inline frames.
@@ -600,13 +614,11 @@ FindLastBlock(nsIFrame* aKid)
  * (if the real parent has NS_FRAME_IS_SPECIAL).
  */
 inline void
-MarkIBSpecialPrevSibling(nsPresContext* aPresContext,
-                         nsIFrame *aAnonymousFrame,
+MarkIBSpecialPrevSibling(nsIFrame *aAnonymousFrame,
                          nsIFrame *aSpecialParent)
 {
-  aPresContext->PropertyTable()->SetProperty(aAnonymousFrame,
-                                      nsGkAtoms::IBSplitSpecialPrevSibling,
-                                             aSpecialParent, nsnull, nsnull);
+  aAnonymousFrame->SetProperty(nsGkAtoms::IBSplitSpecialPrevSibling,
+                               aSpecialParent, nsnull, nsnull);
 }
 
 // -----------------------------------------------------------
@@ -1196,6 +1208,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell*          aPresShe
     mFrameState(aHistoryState),
     mPseudoFrames()
 {
+  MOZ_COUNT_CTOR(nsFrameConstructorState);
 }
 
 nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
@@ -1216,6 +1229,7 @@ nsFrameConstructorState::nsFrameConstructorState(nsIPresShell* aPresShell,
     mFirstLineStyle(PR_FALSE),
     mPseudoFrames()
 {
+  MOZ_COUNT_CTOR(nsFrameConstructorState);
   mFrameState = aPresShell->GetDocument()->GetLayoutHistoryState();
 }
 
@@ -1229,6 +1243,7 @@ nsFrameConstructorState::~nsFrameConstructorState()
   // for abs-pos and fixed-pos items whose containing blocks are outside the floats.
   // Then put abs-pos frames in, because they can contain placeholders for fixed-pos
   // items whose containing block is outside the abs-pos frames. 
+  MOZ_COUNT_DTOR(nsFrameConstructorState);
   ProcessFrameInsertions(mFloatedItems, nsGkAtoms::floatList);
   ProcessFrameInsertions(mAbsoluteItems, nsGkAtoms::absoluteList);
   ProcessFrameInsertions(mFixedItems, nsGkAtoms::fixedList);
@@ -7921,6 +7936,16 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
     NS_ASSERTION(firstTrailingInline, "How did that happen?");
     nsIFrame* parentFrame = aParentFrame;
 
+    // As we go up the tree creating trailing inlines, we have to move floats
+    // up to ancestor blocks.  This means that at any given time we'll be
+    // working with two frame constructor states, and aState is one of the two
+    // only at the first step.  Create some space to do this so we don't have
+    // to allocate as we go.
+    char stateBuf[2 * sizeof(nsFrameConstructorState)];
+    nsFrameConstructorState* sourceState = &aState;
+    nsFrameConstructorState* targetState =
+      reinterpret_cast<nsFrameConstructorState*>(stateBuf);
+
     // Now we loop, because it might be the case that the parent of our special
     // block is another special block, and that we're at the very end of it,
     // and in that case if we create a new special inline we'll have to create
@@ -7933,11 +7958,7 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
       nsIContent* content = nsnull;
       nsStyleContext* styleContext = nsnull;
       if (!inlineSibling) {
-        nsIFrame* firstInline =
-          static_cast<nsIFrame*>
-                     (aState.mPresContext->PropertyTable()->
-                      GetProperty(parentFrame->GetFirstContinuation(),
-                                  nsGkAtoms::IBSplitSpecialPrevSibling));
+        nsIFrame* firstInline = GetIBSplitSpecialPrevSibling(parentFrame);
         NS_ASSERTION(firstInline, "How did that happen?");
 
         content = firstInline->GetContent();
@@ -7949,15 +7970,32 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
       nsIFrame* stateParent =
         inlineSibling ? inlineSibling->GetParent() : parentFrame->GetParent();
 
-      nsFrameConstructorState
-        targetState(mPresShell, mFixedContainingBlock,
-                    GetAbsoluteContainingBlock(stateParent),
-                    GetFloatContainingBlock(stateParent));
+      new (targetState)
+        nsFrameConstructorState(mPresShell, mFixedContainingBlock,
+                                GetAbsoluteContainingBlock(stateParent),
+                                GetFloatContainingBlock(stateParent));
       nsIFrame* newInlineSibling =
-        MoveFramesToEndOfIBSplit(aState, inlineSibling,
+        MoveFramesToEndOfIBSplit(*sourceState, inlineSibling,
                                  isPositioned, content,
                                  styleContext, firstTrailingInline,
-                                 parentFrame, &targetState);
+                                 parentFrame, targetState);
+
+      if (sourceState == &aState) {
+        NS_ASSERTION(targetState ==
+                       reinterpret_cast<nsFrameConstructorState*>(stateBuf),
+                     "Bogus target state?");
+        // Set sourceState to the value targetState should have next.
+        sourceState = targetState + 1;
+      } else {
+        // Go ahead and process whatever insertions we didn't move out
+        sourceState->~nsFrameConstructorState();
+      }
+
+      // We're done with the source state.  The target becomes the new source,
+      // and we point the target pointer to the available memory.
+      nsFrameConstructorState* temp = sourceState;
+      sourceState = targetState;
+      targetState = temp;;
 
       if (inlineSibling) {
         // we're all set -- we just moved things to a frame that was already
@@ -7966,7 +8004,7 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
         break;
       }
 
-      SetFrameIsSpecial(parentFrame, newInlineSibling);
+      SetFrameIsSpecial(parentFrame->GetFirstContinuation(), newInlineSibling);
       
       // We had to create a frame for this new inline sibling.  Figure out
       // the right parentage for it.
@@ -7988,6 +8026,9 @@ nsCSSFrameConstructor::AppendFrames(nsFrameConstructorState&       aState,
         firstTrailingInline = newInlineSibling;
       }      
     } while (firstTrailingInline);
+
+    // Process the float insertions on the last target state we had.
+    sourceState->~nsFrameConstructorState();
   }
     
   if (!aFrameList.childList) {
@@ -10982,7 +11023,7 @@ nsCSSFrameConstructor::MaybeRecreateContainerForIBSplitterFrame(nsIFrame* aFrame
   }
 
 #ifdef DEBUG
-  if (gNoisyContentUpdates || 1) {
+  if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::MaybeRecreateContainerForIBSplitterFrame: "
            "frame=");
     nsFrame::ListTag(stdout, parent);
@@ -12447,7 +12488,7 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // reframed instead.
   SetFrameIsSpecial(aNewFrame, blockFrame);
   SetFrameIsSpecial(blockFrame, inlineFrame);
-  MarkIBSpecialPrevSibling(aState.mPresContext, blockFrame, aNewFrame);
+  MarkIBSpecialPrevSibling(blockFrame, aNewFrame);
 
 #ifdef DEBUG
   if (gNoisyInlineConstruction) {
@@ -12652,8 +12693,27 @@ nsCSSFrameConstructor::WipeContainingBlock(nsFrameConstructorState& aState,
     // aFrame is the block in an {ib} split.  Check that we're not
     // messing up either end of it.
     if (aIsAppend) {
-      // Will be handled in AppendFrames()
-      return PR_FALSE;
+      // Will be handled in AppendFrames(), unless we have floats that we can't
+      // move out because there might be no float containing block to move them
+      // into.
+      if (!aState.mFloatedItems.childList) {
+        return PR_FALSE;
+      }
+
+      // Walk up until we get a float containing block that's not part of an
+      // {ib} split, since otherwise we might have to ship floats out of it
+      // too.
+      nsIFrame* floatContainer = aFrame;
+      do {
+        floatContainer =
+          GetFloatContainingBlock(GetIBSplitSpecialPrevSibling(floatContainer));
+        if (!floatContainer) {
+          break;
+        }
+        if (!IsFrameSpecial(floatContainer)) {
+          return PR_FALSE;
+        }
+      } while (1);
     }
     
     if (aPrevSibling && !aPrevSibling->GetNextSibling()) {

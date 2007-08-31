@@ -21,6 +21,7 @@
  * Contributor(s):
  *  Ben Goodger <ben@mozilla.org> (Google Inc.)
  *  Robert Strong <robert.bugzilla@gmail.com>
+ *  Alexander J. Vincent <ajvincent@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -49,7 +50,7 @@ interface nsISimpleEnumerator;
 interface nsIDirectoryEnumerator;
 
 /**
- * Interface representing a location where extensions, themes etc are 
+ * Interface representing a location where extensions, themes etc are
  * installed.
  */
 [scriptable, uuid(32a74707-ec7c-af19-f4d8-d0cd8cb6a948)]
@@ -59,7 +60,7 @@ interface nsIInstallLocation : nsISupports
    * The string identifier of this Install Location
    */
   readonly attribute AString name;
-  
+
   /**
    * An enumeration of nsIFiles for:
    * - locations that contain items
@@ -72,8 +73,8 @@ interface nsIInstallLocation : nsISupports
   /**
    * The file system location where items live. Items can be dropped in
    * at this location. Can be null for Install Locations that don't have
-   * a file system presence. 
-   * Note: This is a clone of the actual location which the caller can 
+   * a file system presence.
+   * Note: This is a clone of the actual location which the caller can
    *       modify freely.
    */
   readonly attribute nsIFile location;
@@ -82,14 +83,14 @@ interface nsIInstallLocation : nsISupports
    * Whether or not this Install Location is on an area of the file system
    * that could be restricted on a restricted-access account, regardless
    * of whether or not the location is restricted with the current user
-   * privileges. 
+   * privileges.
    */
   readonly attribute boolean restricted;
 
   /**
    * Whether or not the user can write to the Install Location with the
    * current access privileges. This is different from restricted because
-   * it's not whether or not the location *might* be restricted, it's 
+   * it's not whether or not the location *might* be restricted, it's
    * whether or not it actually *is* restricted right now.
    */
   readonly attribute boolean canAccess;
@@ -97,7 +98,7 @@ interface nsIInstallLocation : nsISupports
   /**
    * Constants representing priority of some default Install Locations.
    * XXXben - priority ranking of user-level items vs. global-level items
-   *          here is debatable. Should app-system-global trump 
+   *          here is debatable. Should app-system-global trump
    *          xre-system-user?
    * You should not use the exact values here, you should offset from
    * these values each time you create a new Install Location. Offsetting
@@ -109,17 +110,17 @@ interface nsIInstallLocation : nsISupports
   const unsigned long PRIORITY_XRE_SYSTEM_USER    = 100;
   const unsigned long PRIORITY_APP_SYSTEM_GLOBAL  = 1000;
   const unsigned long PRIORITY_XRE_SYSTEM_GLOBAL  = 10000;
-    
+
   /**
-   * The priority level of this Install Location in loading. 
+   * The priority level of this Install Location in loading.
    */
   readonly attribute long priority;
-  
+
   /**
    * Gets the directory that contains an item.
    * @param   id
    *          The GUID of the item.
-   * @returns The location of the item. 
+   * @returns The location of the item.
    */
   nsIFile getItemLocation(in AString id);
 
@@ -192,12 +193,12 @@ interface nsIInstallLocation : nsISupports
 
 /**
  * Interface representing a system for the installation and management of
- * Extensions, Themes etc. 
+ * Extensions, Themes etc.
  *
- * XXXben - Some of this stuff should go into a management-ey interface, 
+ * XXXben - Some of this stuff should go into a management-ey interface,
  *          some into an app-startup-ey interface.
  */
-[scriptable, uuid(c2aef3c3-8ce1-4470-94e4-1167e5ca8928)]
+[scriptable, uuid(feccf1ac-df58-43c1-bef0-b86dc768b906)]
 interface nsIExtensionManager : nsISupports
 {
   /**
@@ -206,21 +207,21 @@ interface nsIExtensionManager : nsISupports
   const unsigned long UPDATE_CHECK_NEWVERSION    = 0;
   const unsigned long UPDATE_CHECK_COMPATIBILITY = 1;
   const unsigned long UPDATE_SYNC_COMPATIBILITY  = 2;
-  
+
   /**
    * Starts the Extension Manager, checking for item changes, additions and
    * removals, and finishing pending operations.
    * @param   commandLine
    *          The command line the application was started with.
    * @returns true if the application has rewritten the extensions.ini file
-   *          and needs to restart to register components/chrome etc, 
+   *          and needs to restart to register components/chrome etc,
    *          false otherwise
    */
   boolean start(in nsICommandLine commandLine);
 
-  /** 
+  /**
    * Determines if there are incompatible items installed (and offers to
-   * upgrade them to newer versions if available, via a UI). 
+   * upgrade them to newer versions if available, via a UI).
    * @returns true if there were incompatible items that were disabled
    *          and the application needs to restart to re-register components,
    *          chrome etc, false otherwise.
@@ -231,7 +232,7 @@ interface nsIExtensionManager : nsISupports
    * Handle command line flags, e.g. -install-global-[extension|theme]
    * @param   cmdLine
    *          the command line the application was started with
-   * XXXben - move this off this API - currently it is only used for 
+   * XXXben - move this off this API - currently it is only used for
    *          global installation, and the apprunner can do this directly
    *          with |installItemFromFile|
    */
@@ -251,12 +252,12 @@ interface nsIExtensionManager : nsISupports
   readonly attribute nsISimpleEnumerator installLocations;
 
   /**
-   * Installs an item from a XPI/JAR file into the location specified. 
+   * Installs an item from a XPI/JAR file into the location specified.
    * @param   xpiFile
    *          The source file to install from. This function stages a copy
-   *          of this file for persistence across potential application 
+   *          of this file for persistence across potential application
    *          restarts, you are responsible for removing the file you pass
-   *          in. 
+   *          in.
    * @param   installLocationKey
    *          The name identifier of an Install Location to install into.
    */
@@ -300,10 +301,12 @@ interface nsIExtensionManager : nsISupports
    *          installed version and synchronize the values.
    * @param   listener
    *          An nsIAddonUpdateCheckListener object which will be notified during
-   *          the update check process. 
+   *          the update check process.
+   *
+   * @throws  NS_ERROR_ILLEGAL_VALUE if any item is invalid, or if itemCount == 0.
    */
    void update([array, size_is(itemCount)] in nsIUpdateItem items,
-               in unsigned long itemCount, 
+               in unsigned long itemCount,
                in unsigned long updateCheckType,
                in nsIAddonUpdateCheckListener listener);
 
@@ -311,12 +314,13 @@ interface nsIExtensionManager : nsISupports
    * Gets a nsIUpdateItem for the item with the specified id.
    * @param   id
    *          The GUID of the item to construct a nsIUpdateItem for.
-   * @returns The nsIUpdateItem representing the item.
+   * @returns The nsIUpdateItem representing the item or null if the item does
+   *          not exist.
    */
   nsIUpdateItem getItemForID(in AString id);
 
   /**
-   * Retrieves a list of visible nsIUpdateItems of items matching the 
+   * Retrieves a list of visible nsIUpdateItems of items matching the
    * specified type.
    * @param   type
    *          The type of item to return.
@@ -324,7 +328,7 @@ interface nsIExtensionManager : nsISupports
    *          The XPCJS reference to the number of items returned.
    * @returns An array of nsIUpdateItems matching the id/type filter.
    *
-   * XXXben - it would be good if this function took an optional 
+   * XXXben - it would be good if this function took an optional
    *          install location.
    */
   void getItemList(in unsigned long type, out unsigned long itemCount,
@@ -335,19 +339,22 @@ interface nsIExtensionManager : nsISupports
    * with the supplied parameters.
    * @param   id
    *          The id of the application to check compatibility against
-   * @param   version
+   * @param   appVersion
    *          The version of the application to check compatibility against
+   * @param   platformVersion
+   *          The version of the toolkit to check compatibility against
    * @param   type
    *          The type of item to return
    * @param   includeDisabled
-   *          true if disabled items should be included in the result set, 
+   *          true if disabled items should be included in the result set,
    *          false otherwise
    * @param   countRef
    *          The XPCJS reference to the number of items returned.
    * @returns An array of incompatible nsIUpdateItems.
    */
-  void getIncompatibleItemList(in AString id, 
-                               in AString version,
+  void getIncompatibleItemList(in AString id,
+                               in AString appVersion,
+                               in AString platformVersion,
                                in unsigned long type,
                                in boolean includeDisabled,
                                out unsigned long itemCount,
@@ -355,7 +362,7 @@ interface nsIExtensionManager : nsISupports
 
   /**
    * The Extensions Datasource
-   * XXXben - the datasource should be registered with the RDF system, so it 
+   * XXXben - the datasource should be registered with the RDF system, so it
    *          can be accessed via rdf:extensions, and not exposed through the API
    *          like this.
    */
@@ -370,6 +377,8 @@ interface nsIExtensionManager : nsISupports
    * @param   fromChrome
    *          true when called from chrome
    *          false when not called from chrome (e.g. web page)
+   *
+   * @throws  NS_ERROR_ILLEGAL_VALUE if any item is invalid, or if itemCount == 0.
    */
   void addDownloads([array, size_is(itemCount)] in nsIUpdateItem items,
                     in unsigned long itemCount, in boolean fromChrome);
@@ -386,7 +395,7 @@ interface nsIExtensionManager : nsISupports
    * and install progress.
    * @param   listener
    *          The listener to add
-   * @returns the index of the added listen in the listener list. 
+   * @returns the index of the added listen in the listener list.
    */
   long addUpdateListener(in nsIAddonUpdateListener listener);
 
@@ -405,6 +414,14 @@ interface nsIExtensionManager : nsISupports
    *          The ID of an item to move an item to.
    */
   void moveToIndexOf(in AString movingID, in AString destinationID);
+
+  /**
+   * Cancels a pending install or upgrade of an item. If the item does
+   * not have a pending install or upgrade then this will do nothing.
+   * @param   id
+   *          The ID of the item.
+   */
+  void cancelInstallItem(in AString id);
 
   /**
    * Cancels a pending uninstall of an item
@@ -456,12 +473,12 @@ interface nsIExtensionManager : nsISupports
 };
 
 /**
- * An item managed by the Extension System. Contains metadata that describes 
+ * An item managed by the Extension System. Contains metadata that describes
  * the item.
  * XXXben work in progress, the name of this interface will change after the
  *        update system is complete, probably to nsIAddon
  */
-[scriptable, uuid(7f952767-427f-402b-8114-f80c95d1980d)]
+[scriptable, uuid(a15390e0-2ad6-422c-9596-94f95286c16f)]
 interface nsIUpdateItem : nsISupports
 {
   /**
@@ -475,7 +492,7 @@ interface nsIUpdateItem : nsISupports
   readonly attribute AString  version;
 
   /**
-   * The minimum version of the application that this item works with, 
+   * The minimum version of the application that this item works with,
    * in FVF format.
    */
   readonly attribute AString  minAppVersion;
@@ -517,7 +534,7 @@ interface nsIUpdateItem : nsISupports
    * The URL of the update RDF file for this item.
    */
   readonly attribute AString  updateRDF;
-  
+
   const unsigned long TYPE_APP         = 0x01;
   const unsigned long TYPE_EXTENSION   = 0x02;
   const unsigned long TYPE_THEME       = 0x04;
@@ -532,13 +549,22 @@ interface nsIUpdateItem : nsISupports
   readonly attribute long type;
 
   /**
+   * The target application ID used for checking compatibility for this item.
+   *
+   * @note Add-ons can specify a targetApplication id of toolkit@mozilla.org in
+   *       their install manifest for compatibility with all apps using a
+   *       specific release of the toolkit.
+   */
+  readonly attribute AString  targetAppID;
+
+  /**
    * Initializes this Item object.
    */
-  void init(in AString id, in AString version, 
-            in AString installLocationKey, in AString minAppVersion, 
+  void init(in AString id, in AString version,
+            in AString installLocationKey, in AString minAppVersion,
             in AString maxAppVersion, in AString name,
             in AString downloadURL, in AString xpiHash, in AString iconURL,
-            in AString updateURL, in long type);
+            in AString updateURL, in long type, in AString targetAppID);
 
   /**
    * Returns a JS Object source representing an nsIUpdateItem.
@@ -547,7 +573,7 @@ interface nsIUpdateItem : nsISupports
 };
 
 /**
- * Interface for handling download and install progress notifications for 
+ * Interface for handling download and install progress notifications for
  * addons.
  */
 [scriptable, uuid(bb86037c-98c1-4c22-8e03-1e4c9fc89a8e)]
@@ -573,7 +599,7 @@ interface nsIAddonUpdateListener : nsISupports
    * @param   maxValue
    *          The maximum value |value| can reach
    */
-  void onProgress(in nsIUpdateItem addon, in unsigned long value, 
+  void onProgress(in nsIUpdateItem addon, in unsigned long value,
                   in unsigned long maxValue);
 };
 
@@ -591,7 +617,7 @@ interface nsIAddonUpdateCheckListener : nsISupports
   const unsigned long STATUS_NONE = 0;
   const unsigned long STATUS_UPDATE = 1;
   const unsigned long STATUS_VERSIONINFO = 2;
-  const unsigned long STATUS_DATA_FOUND = 
+  const unsigned long STATUS_DATA_FOUND =
     STATUS_UPDATE + STATUS_VERSIONINFO;
   const unsigned long STATUS_FAILURE = 4;
   const unsigned long STATUS_NO_UPDATE = 8;
@@ -613,6 +639,8 @@ interface nsIAddonUpdateCheckListener : nsISupports
    * Update for an individual addon has begun
    * @param   addon
    *          A nsIUpdateItem object representing the addon being updated
+   *
+   * @throws  NS_ERROR_ILLEGAL_VALUE if the addon is invalid.
    */
   void onAddonUpdateStarted(in nsIUpdateItem addon);
 
@@ -622,6 +650,8 @@ interface nsIAddonUpdateCheckListener : nsISupports
    *          A nsIUpdateItem object representing the addon being updated
    * @param   status
    *          The success or failure code of the update operation
+   *
+   * @throws  NS_ERROR_ILLEGAL_VALUE if the addon is invalid.
    */
   void onAddonUpdateEnded(in nsIUpdateItem addon, in long status);
 };
@@ -637,8 +667,8 @@ interface nsIAddonUpdateCheckListener : nsISupports
  */
 #define NS_INSTALL_LOCATION_APPPROFILE NS_LITERAL_STRING("app-profile")
 
-/** 
- * The category that contains a list of contract-ids to Install Location 
+/**
+ * The category that contains a list of contract-ids to Install Location
  * services.
  */
 #define CATEGORY_INSTALL_LOCATIONS "extension-install-locations"
@@ -657,4 +687,3 @@ interface nsIAddonUpdateCheckListener : nsISupports
 #define EM_ITEM_CANCEL      "item-cancel-action"
 
 %}
-

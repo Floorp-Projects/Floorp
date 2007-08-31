@@ -349,7 +349,7 @@ NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
 // returns the accesskey modifier mask used in the given node's context
 // (i.e. chrome or content), or 0 if an error occurs
 static PRInt32
-GetAccessModifierMask(nsIDOMElement* aDOMNode)
+GetAccessModifierMask(nsIContent* aContent)
 {
   nsCOMPtr<nsIPrefBranch> prefBranch =
     do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -370,8 +370,7 @@ GetAccessModifierMask(nsIDOMElement* aDOMNode)
   }
 
   // get the docShell to this DOMNode, return 0 on failure
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
-  nsCOMPtr<nsIDocument> document = content->GetCurrentDoc();
+  nsCOMPtr<nsIDocument> document = aContent->GetCurrentDoc();
   if (!document)
     return 0;
   nsCOMPtr<nsISupports> container = document->GetContainer();
@@ -398,47 +397,49 @@ GetAccessModifierMask(nsIDOMElement* aDOMNode)
   return NS_SUCCEEDED(rv) ? accessModifierMask : 0;
 }
 
-NS_IMETHODIMP nsAccessible::GetKeyboardShortcut(nsAString& _retval)
+NS_IMETHODIMP
+nsAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
 {
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
-  if (elt) {
-    nsAutoString accesskey;
-    elt->GetAttribute(NS_LITERAL_STRING("accesskey"), accesskey);
-    if (accesskey.IsEmpty()) {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(elt);
-      nsIContent *labelContent = GetLabelContent(content);
-      if (labelContent) {
-        labelContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::accesskey, accesskey);
-      }
-      if (accesskey.IsEmpty()) {
-        return NS_ERROR_FAILURE;
-      }
-    }
+  aAccessKey.Truncate();
 
-    // append the modifiers in reverse order
-    // (result: Control+Alt+Shift+Meta+<key>)
-    nsAutoString propertyKey;
-    PRInt32 modifierMask = GetAccessModifierMask(elt);
-    if (modifierMask & NS_MODIFIER_META) {
-      propertyKey.AssignLiteral("VK_META");
-      nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
-    }
-    if (modifierMask & NS_MODIFIER_SHIFT) {
-      propertyKey.AssignLiteral("VK_SHIFT");
-      nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
-    }
-    if (modifierMask & NS_MODIFIER_ALT) {
-      propertyKey.AssignLiteral("VK_ALT");
-      nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
-    }
-    if (modifierMask & NS_MODIFIER_CONTROL) {
-      propertyKey.AssignLiteral("VK_CONTROL");
-      nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
-    }
-    _retval= accesskey;
-    return NS_OK;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  if (!content)
+    return NS_ERROR_FAILURE;
+
+  PRUint32 key = nsAccUtils::GetAccessKeyFor(content);
+  if (!key) {
+    nsCOMPtr<nsIContent> labelContent(GetLabelContent(content));
+    if (labelContent)
+      key = nsAccUtils::GetAccessKeyFor(labelContent);
   }
-  return NS_ERROR_FAILURE;
+
+  if (!key)
+    return NS_OK;
+
+  nsAutoString accesskey(key);
+
+  // Append the modifiers in reverse order, result: Control+Alt+Shift+Meta+<key>
+  nsAutoString propertyKey;
+  PRInt32 modifierMask = GetAccessModifierMask(content);
+  if (modifierMask & NS_MODIFIER_META) {
+    propertyKey.AssignLiteral("VK_META");
+    nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
+  }
+  if (modifierMask & NS_MODIFIER_SHIFT) {
+    propertyKey.AssignLiteral("VK_SHIFT");
+    nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
+  }
+  if (modifierMask & NS_MODIFIER_ALT) {
+    propertyKey.AssignLiteral("VK_ALT");
+    nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
+  }
+  if (modifierMask & NS_MODIFIER_CONTROL) {
+    propertyKey.AssignLiteral("VK_CONTROL");
+    nsAccessible::GetFullKeyName(propertyKey, accesskey, accesskey);
+  }
+
+  aAccessKey = accesskey;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAccessible::SetParent(nsIAccessible *aParent)
@@ -992,7 +993,7 @@ PRBool nsAccessible::IsVisible(PRBool *aIsOffscreen)
   return isVisible;
 }
 
-NS_IMETHODIMP
+nsresult
 nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
 {
   *aState = 0;
@@ -1048,45 +1049,6 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   }
   if (isOffscreen) {
     *aState |= nsIAccessibleStates::STATE_OFFSCREEN;
-  }
-
-  if (!aExtraState)
-    return NS_OK;
-
-  PRUint32 state = *aState;
-  nsresult rv = GetARIAState(&state);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsIFrame *frame = GetFrame();
-  if (frame) {
-    const nsStyleDisplay* display = frame->GetStyleDisplay();
-    if (display && display->mOpacity == 1.0f &&
-        !(state & nsIAccessibleStates::STATE_INVISIBLE)) {
-      *aExtraState |= nsIAccessibleStates::EXT_STATE_OPAQUE;
-    }
-
-    const nsStyleXUL *xulStyle = frame->GetStyleXUL();
-    if (xulStyle) {
-      // In XUL all boxes are either vertical or horizontal
-      if (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL) {
-        *aExtraState |= nsIAccessibleStates::EXT_STATE_VERTICAL;
-      }
-      else {
-        *aExtraState |= nsIAccessibleStates::EXT_STATE_HORIZONTAL;
-      }
-    }
-  }
-
-  // XXX We can remove this hack once we support RDF-based role & state maps
-  if (mRoleMapEntry && (mRoleMapEntry->role == nsIAccessibleRole::ROLE_ENTRY ||
-      mRoleMapEntry->role == nsIAccessibleRole::ROLE_PASSWORD_TEXT)) {
-    if (content->AttrValueIs(kNameSpaceID_WAIProperties , nsAccessibilityAtoms::multiline,
-                             nsAccessibilityAtoms::_true, eCaseMatters)) {
-      *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
-    }
-    else {
-      *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
-    }
   }
 
   return NS_OK;
@@ -2047,7 +2009,7 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
     if (*aRole == nsIAccessibleRole::ROLE_ENTRY) {
       nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
       if (content && 
-          content->AttrValueIs(kNameSpaceID_WAIProperties , nsAccessibilityAtoms::secret,
+          content->AttrValueIs(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::secret,
                                nsAccessibilityAtoms::_true, eCaseMatters)) {
         // For entry field with aaa:secret="true"
         *aRole = nsIAccessibleRole::ROLE_PASSWORD_TEXT;
@@ -2282,8 +2244,7 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Apply ARIA states to be sure accessible states will be overriden.
-  rv = GetARIAState(aState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  *aState |= GetARIAState();
 
   // Set additional states which presence depends on another states.
   if (aExtraState) {
@@ -2305,53 +2266,85 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
         *aExtraState &= ~nsIAccessibleStates::STATE_COLLAPSED;
       } 
     }
+    nsIFrame *frame = GetFrame();
+    if (frame) {
+      const nsStyleDisplay* display = frame->GetStyleDisplay();
+      if (display && display->mOpacity == 1.0f &&
+          !(*aState & nsIAccessibleStates::STATE_INVISIBLE)) {
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_OPAQUE;
+      }
+
+      const nsStyleXUL *xulStyle = frame->GetStyleXUL();
+      if (xulStyle) {
+        // In XUL all boxes are either vertical or horizontal
+        if (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL) {
+          *aExtraState |= nsIAccessibleStates::EXT_STATE_VERTICAL;
+        }
+        else {
+          *aExtraState |= nsIAccessibleStates::EXT_STATE_HORIZONTAL;
+        }
+      }
+    }
+
+    // XXX We can remove this hack once we support RDF-based role & state maps
+    if (mRoleMapEntry && (mRoleMapEntry->role == nsIAccessibleRole::ROLE_ENTRY ||
+        mRoleMapEntry->role == nsIAccessibleRole::ROLE_PASSWORD_TEXT)) {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+      NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
+      if (content->AttrValueIs(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::multiline,
+                               nsAccessibilityAtoms::_true, eCaseMatters)) {
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
+      }
+      else {
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+      }
+    }
   }
 
   return NS_OK;
 }
 
-nsresult
-nsAccessible::GetARIAState(PRUint32 *aState)
+PRUint32
+nsAccessible::GetARIAState()
 {
-  if (!mDOMNode) {
-    return NS_ERROR_FAILURE; // Node already shut down
-  }
-
   // Test for universal states first
   nsIContent *content = GetRoleContent(mDOMNode);
-  NS_ENSURE_TRUE(content, NS_ERROR_FAILURE); // Node already shut down
+  if (!content) {
+    return 0;
+  }
 
+  PRUint32 ariaState = 0;
   PRUint32 index = 0;
   while (nsARIAMap::gWAIUnivStateMap[index].attributeName != nsnull) {
-    MappedAttrState(content, aState, &nsARIAMap::gWAIUnivStateMap[index]);
+    MappedAttrState(content, &ariaState, &nsARIAMap::gWAIUnivStateMap[index]);
     ++ index;
   }
 
   if (!mRoleMapEntry)
-    return NS_OK;
+    return ariaState;
 
   // Once DHTML role is used, we're only readonly if DHTML readonly used
-  (*aState) &= ~nsIAccessibleStates::STATE_READONLY;
+  ariaState &= ~nsIAccessibleStates::STATE_READONLY;
 
-  if ((*aState) & nsIAccessibleStates::STATE_UNAVAILABLE) {
+  if (ariaState & nsIAccessibleStates::STATE_UNAVAILABLE) {
     // Disabled elements are not selectable or focusable, even if disabled
     // via DHTML accessibility disabled property
-    (*aState) &= ~(nsIAccessibleStates::STATE_SELECTABLE |
+    ariaState &= ~(nsIAccessibleStates::STATE_SELECTABLE |
                    nsIAccessibleStates::STATE_FOCUSABLE);
   }
 
-  (*aState) |= mRoleMapEntry->state;
-  if (MappedAttrState(content, aState, &mRoleMapEntry->attributeMap1) &&
-      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap2) &&
-      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap3) &&
-      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap4) &&
-      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap5) &&
-      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap6) &&
-      MappedAttrState(content, aState, &mRoleMapEntry->attributeMap7)) {
-    MappedAttrState(content, aState, &mRoleMapEntry->attributeMap8);
+  ariaState |= mRoleMapEntry->state;
+  if (MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap1) &&
+      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap2) &&
+      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap3) &&
+      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap4) &&
+      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap5) &&
+      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap6) &&
+      MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap7)) {
+    MappedAttrState(content, &ariaState, &mRoleMapEntry->attributeMap8);
   }
 
-  return NS_OK;
+  return ariaState;
 }
 
 // Not implemented by this class
@@ -2793,11 +2786,11 @@ nsAccessible::GetRelations(nsIArray **aRelations)
   nsCOMPtr<nsIMutableArray> relations = do_CreateInstance(NS_ARRAY_CONTRACTID);
   NS_ENSURE_TRUE(relations, NS_ERROR_OUT_OF_MEMORY);
 
-  // Latest nsIAccessibleRelation is RELATION_DESCRIPTION_FOR (0xof)
-  for (PRUint32 relType = 0; relType < 0x0f; ++relType) {
+  for (PRUint32 relType = nsIAccessibleRelation::RELATION_FIRST;
+       relType < nsIAccessibleRelation::RELATION_LAST;
+       ++relType) {
     nsCOMPtr<nsIAccessible> accessible;
-    nsresult rv = GetAccessibleRelated(relType, getter_AddRefs(accessible));
-    NS_ENSURE_SUCCESS(rv, rv);
+    GetAccessibleRelated(relType, getter_AddRefs(accessible));
 
     if (accessible) {
       nsCOMPtr<nsIAccessibleRelation> relation =

@@ -79,21 +79,14 @@ REQUIRES	= xpcom \
 		  accessibility \
 		  shistory \
 		  caps \
+		  thebes \
+		  cairo \
 		  $(NULL)
 
-ifdef MOZ_ENABLE_CAIRO_GFX
-REQUIRES += thebes cairo
-endif
 
 XPIDLSRCS	= \
 		nsIStyleSheetService.idl	\
 		$(NULL)
-
-ifndef MOZ_ENABLE_CAIRO_GFX
-XPIDLSRCS	+= \
-		nsISelectionImageService.idl	\
-		$(NULL)
-endif
 
 EXPORTS		= \
 		nsBidi.h \
@@ -183,8 +176,6 @@ LOCAL_INCLUDES += \
         -I$(srcdir)/../svg/base/src
 endif
 
-ifdef MOZ_ENABLE_CAIRO_GFX
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS)
-endif
 
 DEFINES += -D_IMPL_NS_LAYOUT

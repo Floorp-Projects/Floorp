@@ -330,13 +330,7 @@ main(int argc, char **argv)
       return 1;
     }
 
-    NS_ASSERTION(!appData->directory, "Parsed app directory?");
-
-    // chop "application.ini" off the path again
-    lastSlash = strrchr(iniPath, PATH_SEPARATOR_CHAR);
-    *lastSlash = '\0';
-    NS_NewNativeLocalFile(nsDependentCString(iniPath), PR_FALSE,
-                          &appData->directory);
+    NS_ASSERTION(appData->directory, "Failed to get app directory.");
 
     if (!appData->xreDirectory) {
       // chop "libxul.so" off the GRE path

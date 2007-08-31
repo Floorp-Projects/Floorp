@@ -127,6 +127,7 @@ public:
   // Access Key Registration
   NS_IMETHOD RegisterAccessKey(nsIContent* aContent, PRUint32 aKey);
   NS_IMETHOD UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey);
+  NS_IMETHOD GetRegisteredAccessKey(nsIContent* aContent, PRUint32* aKey);
 
   NS_IMETHOD SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
                        PRBool aHaveHotspot, float aHotspotX, float aHotspotY,

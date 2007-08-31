@@ -51,11 +51,10 @@ class nsIContent;
 class nsIMenuCommandDispatcher;
 
 
-// {FC5BCA9C-4494-4C0F-BEFD-CB31BEBA1531}
+// a0aa02c5-5549-4228-8514-1083c6e8aa5d
 #define NS_IMENU_IID \
-{ 0xFC5BCA9C, 0x4494, 0x4C0F, \
-  { 0xBE, 0xFD, 0xCB, 0x31, 0xBE, 0xBA, 0x15, 0x31 } }
-
+{ 0xa0aa02c5, 0x5549, 0x4228, \
+  { 0x85, 0x14, 0x10, 0x83, 0xc6, 0xe8, 0xaa, 0x5d } }
 
 /**
  * Menu widget
@@ -129,15 +128,29 @@ class nsIMenu : public nsISupports {
     NS_IMETHOD AddSeparator() = 0;
 
    /**
-    * Returns the number of menu items
+    * Returns the number of visible menu items
     * This includes separators. It does not include hidden items.
+    *
+    */
+    NS_IMETHOD GetVisibleItemCount(PRUint32 &aCount) = 0;
+
+   /**
+    * Returns a Menu or Menu Item at a specified Index.
+    * This includes separators. It does not include hidden items.
+    *
+    */
+    NS_IMETHOD GetVisibleItemAt(const PRUint32 aPos, nsISupports *& aMenuItem) = 0;
+
+   /**
+    * Returns the number of menu items
+    * This includes separators. It -does- include hidden items.
     *
     */
     NS_IMETHOD GetItemCount(PRUint32 &aCount) = 0;
 
    /**
     * Returns a Menu or Menu Item at a specified Index.
-    * This includes separators. It does not include hidden items.
+    * This includes separators. It -does- include hidden items.
     *
     */
     NS_IMETHOD GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem) = 0;

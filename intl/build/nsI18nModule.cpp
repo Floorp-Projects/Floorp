@@ -69,6 +69,8 @@ static nsModuleComponentInfo components[] =
  // unicharutil
   { "Unichar Utility", NS_UNICHARUTIL_CID, 
       NS_UNICHARUTIL_CONTRACTID, nsCaseConversionImp2Constructor},
+  { "Unichar Category Table", NS_UNICHARCATEGORY_CID, 
+      NS_UNICHARCATEGORY_CONTRACTID, nsCategoryImpConstructor},
   { "Unicode To Entity Converter", NS_ENTITYCONVERTER_CID, 
       NS_ENTITYCONVERTER_CONTRACTID, nsEntityConverterConstructor },
   { "Unicode To Charset Converter", NS_SAVEASCHARSET_CID, 

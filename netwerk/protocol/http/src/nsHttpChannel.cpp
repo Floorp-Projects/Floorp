@@ -390,6 +390,9 @@ nsHttpChannel::DoNotifyListener()
         mListener = 0;
         mListenerContext = 0;
     }
+    // We have to make sure to drop the reference to the callbacks too
+    mCallbacks = nsnull;
+    mProgressSink = nsnull;
 }
 
 void
@@ -801,6 +804,7 @@ nsHttpChannel::ProcessResponse()
         // So if a server does that and sends 200 instead of 206 that we
         // expect, notify our caller.
         if (mResuming) {
+            LOG(("Server ignored our Range header, cancelling [this=%p]\n", this));
             Cancel(NS_ERROR_NOT_RESUMABLE);
             rv = CallOnStartRequest();
             break;
@@ -855,14 +859,6 @@ nsHttpChannel::ProcessResponse()
             rv = ProcessNormal();
         }
         break;
-    case 412: // Precondition failed
-    case 416: // Invalid range
-        if (mResuming) {
-            Cancel(NS_ERROR_ENTITY_CHANGED);
-            rv = CallOnStartRequest();
-            break;
-        }
-        // fall through
     default:
         rv = ProcessNormal();
         break;
@@ -921,10 +917,20 @@ nsHttpChannel::ProcessNormal()
             // If creating an entity id is not possible -> error
             Cancel(NS_ERROR_NOT_RESUMABLE);
         }
+        else if (mResponseHead->Status() != 206) {
+            // Probably 404 Not Found, 412 Precondition Failed or
+            // 416 Invalid Range -> error
+            LOG(("Unexpected response status while resuming, aborting [this=%p]\n",
+                 this));
+            Cancel(NS_ERROR_ENTITY_CHANGED);
+        }
         // If we were passed an entity id, verify it's equal to the server's
         else if (!mEntityID.IsEmpty()) {
-            if (!mEntityID.Equals(id))
+            if (!mEntityID.Equals(id)) {
+                LOG(("Entity mismatch, expected '%s', got '%s', aborting [this=%p]",
+                     mEntityID.get(), id.get(), this));
                 Cancel(NS_ERROR_ENTITY_CHANGED);
+            }
         }
     }
 
@@ -2416,6 +2422,9 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     // disconnect from our listener
     mListener = 0;
     mListenerContext = 0;
+    // and from our callbacks
+    mCallbacks = nsnull;
+    mProgressSink = nsnull;
     return NS_OK;
 }
 
@@ -4677,6 +4686,8 @@ NS_IMETHODIMP
 nsHttpChannel::ResumeAt(PRUint64 aStartPos,
                         const nsACString& aEntityID)
 {
+    LOG(("nsHttpChannel::ResumeAt [this=%p startPos=%llu id='%s']\n",
+         this, aStartPos, PromiseFlatCString(aEntityID).get()));
     mEntityID = aEntityID;
     mStartPos = aStartPos;
     mResuming = PR_TRUE;

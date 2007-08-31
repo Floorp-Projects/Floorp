@@ -82,7 +82,6 @@ class nsSVGImageFrame : public nsSVGPathGeometryFrame
 protected:
   nsSVGImageFrame(nsStyleContext* aContext) : nsSVGPathGeometryFrame(aContext) {}
   virtual ~nsSVGImageFrame();
-  NS_IMETHOD InitSVG();
 
 public:
   // nsISVGChildFrame interface:
@@ -101,6 +100,9 @@ public:
   NS_IMETHOD  AttributeChanged(PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
+  NS_IMETHOD Init(nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIFrame*        aPrevInFlow);
 
   /**
    * Get the "type" of the frame
@@ -155,9 +157,11 @@ nsSVGImageFrame::~nsSVGImageFrame()
 }
 
 NS_IMETHODIMP
-nsSVGImageFrame::InitSVG()
+nsSVGImageFrame::Init(nsIContent* aContent,
+                      nsIFrame* aParent,
+                      nsIFrame* aPrevInFlow)
 {
-  nsresult rv = nsSVGPathGeometryFrame::InitSVG();
+  nsresult rv = nsSVGPathGeometryFrame::Init(aContent, aParent, aPrevInFlow);
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIDOMSVGImageElement> Rect = do_QueryInterface(mContent);

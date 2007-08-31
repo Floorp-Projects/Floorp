@@ -319,6 +319,10 @@ nsThebesImage::UnlockImagePixels(PRBool aMaskPixels)
     if (aMaskPixels)
         return NS_ERROR_NOT_IMPLEMENTED;
     if (mImageSurface && mOptSurface) {
+        nsRefPtr<gfxContext> context = new gfxContext(mOptSurface);
+        context->SetOperator(gfxContext::OPERATOR_SOURCE);
+        context->SetSource(mImageSurface);
+        context->Paint();
         // Don't need the pixel data anymore
         mImageSurface = nsnull;
     }
@@ -558,28 +562,6 @@ nsThebesImage::ThebesDrawTile(gfxContext *thebesContext,
     thebesContext->Fill();
 
     thebesContext->SetColor(gfxRGBA(0,0,0,0));
-
-    return NS_OK;
-}
-
-/* This is only used by the GIF decoder, via gfxImageFrame::DrawTo */
-NS_IMETHODIMP
-nsThebesImage::DrawToImage(nsIImage* aDstImage, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
-{
-    nsThebesImage *dstThebesImage = static_cast<nsThebesImage*>(aDstImage);
-
-    nsRefPtr<gfxContext> dst = new gfxContext(dstThebesImage->ThebesSurface());
-
-    dst->NewPath();
-    // We don't use PixelSnappedRectangleAndSetPattern because if
-    // these coords aren't already pixel aligned, we've lost
-    // before we've even begun.
-    dst->Translate(gfxPoint(aDX, aDY));
-    dst->Rectangle(gfxRect(0, 0, aDWidth, aDHeight), PR_TRUE);
-    dst->Scale(double(aDWidth)/mWidth, double(aDHeight)/mHeight);
-
-    dst->SetSource(ThebesSurface());
-    dst->Paint();
 
     return NS_OK;
 }

@@ -83,8 +83,6 @@ nsJPEGDecoder::nsJPEGDecoder()
   mState = JPEG_HEADER;
   mReading = PR_TRUE;
 
-  mSamples = nsnull;
-
   mBytesToSkip = 0;
   memset(&mInfo, 0, sizeof(jpeg_decompress_struct));
   memset(&mSourceMgr, 0, sizeof(mSourceMgr));
@@ -419,22 +417,6 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     }      
 
     mObserver->OnStartFrame(nsnull, mFrame);
-
-    /*
-     * Make a one-row-high sample array that will go away
-     * when done with image. Always make it big enough to
-     * hold an RGB row.  Since this uses the IJG memory
-     * manager, it must be allocated before the call to
-     * jpeg_start_compress().
-     */
-    /* 
-     * From: http://apodeline.free.fr/DOC/libjpeg/libjpeg-2.html#ss2.3 :
-     * PLEASE NOTE THAT RGB DATA IS THREE SAMPLES PER PIXEL, GRAYSCALE ONLY ONE
-     */
-    mSamples = (*mInfo.mem->alloc_sarray)((j_common_ptr) &mInfo,
-                                          JPOOL_IMAGE,
-                                          mInfo.output_width * 3, 1);
-
     mState = JPEG_START_DECOMPRESS;
   }
 
@@ -573,6 +555,8 @@ nsJPEGDecoder::OutputScanlines()
   const PRUint32 top = mInfo.output_scanline;
   PRBool rv = PR_TRUE;
 
+  mFrame->LockImageData();
+  
   // we're thebes. we can write stuff directly to the data
   PRUint8 *imageData;
   PRUint32 imageDataLength;
@@ -580,42 +564,40 @@ nsJPEGDecoder::OutputScanlines()
 
   while ((mInfo.output_scanline < mInfo.output_height)) {
       /* Request one scanline.  Returns 0 or 1 scanlines. */    
-      if (jpeg_read_scanlines(&mInfo, mSamples, 1) != 1) {
+      PRUint32 *imageRow = ((PRUint32*)imageData) +
+                           (mInfo.output_scanline * mInfo.output_width);
+
+      /* Use the Cairo image buffer as scanline buffer */
+      JSAMPROW sampleRow = (JSAMPROW)imageRow;
+      if (!mTransform || mInfo.out_color_space != JCS_GRAYSCALE) {
+        /* Put the pixels at end of row to enable in-place expansion */
+        sampleRow += mInfo.output_width;
+      }
+
+      if (jpeg_read_scanlines(&mInfo, &sampleRow, 1) != 1) {
         rv = PR_FALSE; /* suspend */
         break;
       }
 
       if (mTransform) {
+        JSAMPROW source = sampleRow;
         if (mInfo.out_color_space == JCS_GRAYSCALE) {
-          /* move gray data to end of mSample array so
-             cmsDoTransform can do in-place transform */
-          memcpy(mSamples[0] + 2 * mInfo.output_width,
-                 mSamples[0],
-                 mInfo.output_width);
-          cmsDoTransform(mTransform,
-                         mSamples[0] + 2 * mInfo.output_width, mSamples[0],
-                         mInfo.output_width);
-        } else
-          cmsDoTransform(mTransform,
-                         mSamples[0], mSamples[0],
-                         mInfo.output_width);
+          /* Convert from the 1byte grey pixels at begin of row 
+             to the 3byte RGB byte pixels at 'end' of row */
+          sampleRow += mInfo.output_width;
+        }
+        cmsDoTransform(mTransform, source, sampleRow, mInfo.output_width);
       } else if (gfxPlatform::IsCMSEnabled()) {
         /* No embedded ICC profile - treat as sRGB */
         cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBTransform();
         if (transform) {
-          cmsDoTransform(transform,
-                         mSamples[0], mSamples[0],
-                         mInfo.output_width);
+          cmsDoTransform(transform, sampleRow, sampleRow, mInfo.output_width);
         }
       }
 
-      // offset is in Cairo pixels (PRUint32)
-      PRUint32 offset = (mInfo.output_scanline - 1) * mInfo.output_width;
-      PRUint32 *ptrOutputBuf = ((PRUint32*)imageData) + offset;
-      JSAMPLE *j1 = mSamples[0];
       for (PRUint32 i=mInfo.output_width; i>0; --i) {
-        *ptrOutputBuf++ = GFX_PACKED_PIXEL(0xFF, j1[0], j1[1], j1[2]);
-        j1+=3;
+        *imageRow++ = GFX_PACKED_PIXEL(0xFF, sampleRow[0], sampleRow[1], sampleRow[2]);
+        sampleRow += 3;
       }
   }
 
@@ -625,7 +607,9 @@ nsJPEGDecoder::OutputScanlines()
       img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
       mObserver->OnDataAvailable(nsnull, mFrame, &r);
   }
-
+  
+  mFrame->UnlockImageData();
+  
   return rv;
 }
 

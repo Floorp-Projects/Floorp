@@ -196,6 +196,7 @@ sub Execute {
     my $stageHome = $config->Get(var => 'stageHome');
     my $appName = $config->Get(var => 'appName');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
+    my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
     my $releaseTag = $config->Get(var => 'productTag') . '_RELEASE';
  
     ## Prepare the staging directory for the release.
@@ -238,11 +239,32 @@ sub Execute {
         $this->Log(msg => "Changed group of $fullDir to $product");
     }
 
-    # TODO - should have a standard "master" copy somewhere else
-    # Copy the KEY file from the previous release directory.
-    my $keyFile = catfile('/home', 'ftp', 'pub', $product, 'releases', '1.5',
-                          'KEY');
-    copy($keyFile, $skelDir) or die("Could not copy $keyFile to $skelDir: $!");
+    # Copy the PUBLIC KEY file from the cvs repo.
+    my $batch1Dir = catfile($stageDir, 'batch1');
+    if (not -d $batch1Dir) {
+        MkdirWithPath(dir => $batch1Dir) 
+          or die "Cannot create $batch1Dir: $!";
+        $this->Log(msg => "Created directory $batch1Dir");
+    }
+    $this->Shell(
+      cmd => 'cvs',
+      cmdArgs => [ '-d', $mofoCvsroot, 
+                   'co', '-d', 'key-checkout',
+                   CvsCatfile('release', 'keys', 'pgp',
+                              'PUBLIC-KEY')],
+      logFile => catfile($logDir, 'stage_publickey_checkout.log'),
+      dir => $batch1Dir
+    );
+    $this->Shell(
+      cmd => 'cvs',
+      cmdArgs => [ 'status' ],
+      logFile => catfile($logDir, 'stage_publickey_checkout.log'),
+      dir => catfile($stageDir, 'batch1', 'key-checkout'),
+    );
+
+    my $keyFile = catfile($stageDir, 'batch1', 'key-checkout', 'PUBLIC-KEY');
+    my $keyFileDest = catfile($skelDir, 'KEY');
+    copy($keyFile, $keyFileDest) or die("Could not copy $keyFile to $keyFileDest: $!");
 
     ## Prepare the merging directory.
     $this->Shell(
@@ -277,7 +299,7 @@ sub Execute {
       cmd => 'rsync',
       cmdArgs => ['-av', 'prestage/', 'prestage-trimmed/'],
       logFile => catfile($logDir, 'stage_collect_trimmed.log'),
-      dir => catfile($stageDir, 'batch1'),
+      dir => $batch1Dir
     );
 
     # Remove unknown/unrecognized directories from the -candidates dir; after
@@ -348,7 +370,7 @@ sub Execute {
       cmd => 'rsync',
       cmdArgs => ['-av', 'stage-unsigned/', 'stage-signed/'],
       logFile => catfile($logDir, 'stage_unsigned_to_sign.log'),
-      dir => catfile($stageDir, 'batch1'),
+      dir => $batch1Dir
     );
 
 
@@ -361,7 +383,7 @@ sub Execute {
       cmd => 'rsync',
       cmdArgs => ['-av', 'prestage-trimmed/', 'mar/'],
       logFile => catfile($logDir, 'stage_trimmed_to_mars.log'),
-      dir => catfile($stageDir, 'batch1'),
+      dir => $batch1Dir
     );
 
     $this->{'leaveOnlyMarsDirDeleteList'} = [];

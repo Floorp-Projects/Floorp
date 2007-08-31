@@ -115,9 +115,6 @@ NS_IMETHODIMP gfxImageFrame::Init(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt3
 
   case gfxIFormats::BGRA:
   case gfxIFormats::RGBA:
-#ifdef DEBUG
-    printf("we can't do this with the old image code\n");
-#endif
     maskReq = nsMaskRequirements_kNeeds8Bit;
     break;
 
@@ -272,8 +269,6 @@ NS_IMETHODIMP gfxImageFrame::GetImageData(PRUint8 **aData, PRUint32 *length)
 {
   if (!mInitialized)
     return NS_ERROR_NOT_INITIALIZED;
-
-  NS_ASSERTION(mMutable, "trying to get data on an immutable frame");
 
   *aData = mImage->GetBits();
   *length = mImage->GetLineStride() * mSize.height;
@@ -448,21 +443,6 @@ NS_IMETHODIMP gfxImageFrame::UnlockAlphaData()
 
   return mImage->UnlockImagePixels(PR_TRUE);
 }
-
-
-
-
-
-/* void drawTo */
-NS_IMETHODIMP gfxImageFrame::DrawTo(gfxIImageFrame* aDst, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
-{
-  if (!mInitialized)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  nsCOMPtr<nsIImage> img(do_GetInterface(aDst));
-  return mImage->DrawToImage(img, aDX, aDY, aDWidth, aDHeight);
-}
-
 
 /* attribute long timeout; */
 NS_IMETHODIMP gfxImageFrame::GetTimeout(PRInt32 *aTimeout)

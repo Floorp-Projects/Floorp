@@ -96,12 +96,6 @@ const kEditorToolbarPrefs = "editor.toolbars.showbutton.";
 const kUseCssPref         = "editor.use_css";
 const kCRInParagraphsPref = "editor.CR_creates_new_p";
 
-function getEngineWebBrowserPrint()
-{
-  return content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsIWebBrowserPrint);
-}
-
 function ShowHideToolbarSeparators(toolbar) {
   var childNodes = toolbar.childNodes;
   var separator = null;
@@ -839,14 +833,6 @@ function CheckAndSaveDocument(command, allowDontSave)
 }
 
 // --------------------------- File menu ---------------------------
-
-function EditorNewPlaintext()
-{
-  window.openDialog( "chrome://editor/content/TextEditorAppShell.xul",
-                     "_blank",
-                     "chrome,dialog=no,all",
-                     "about:blank");
-}
 
 // Check for changes to document and allow saving before closing
 // This is hooked up to the OS's window close widget (e.g., "X" for Windows)

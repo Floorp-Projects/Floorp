@@ -180,11 +180,11 @@ var gMainPane = {
    * browser.download.useDownloadDir - bool
    *   True if downloads are saved with no save-as UI shown, false if
    *   the user should always be asked where to save a file.
-   * browser.download.dir - str path
-   *   A local path the user may have selected for downloaded files to be
+   * browser.download.dir - local file handle
+   *   A local folder the user may have selected for downloaded files to be
    *   saved. Migration of other browser settings may also set this path.
-   *   This path is enabled when folderList is equals 2.
-   * browser.download.lastDir - str path
+   *   This folder is enabled when folderList equals 2.
+   * browser.download.lastDir - local file handle
    *   May contain the last folder path accessed when the user browsed
    *   via the file save-as dialog. (see contentAreaUtils.js)
    * browser.download.folderList - int
@@ -444,6 +444,25 @@ var gMainPane = {
         return 0;
       break;
     }
+  },
+
+  /**
+   * Displays the Add-ons Manager.
+   */
+  showAddonsMgr: function ()
+  {
+    const EMTYPE = "Extension:Manager";
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    var theEM = wm.getMostRecentWindow(EMTYPE);
+    if (theEM) {
+      theEM.focus();
+      return;
+    }
+
+    const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
+    const EMFEATURES = "chrome,menubar,extra-chrome,toolbar,dialog=no,resizable";
+    window.openDialog(EMURL, "", EMFEATURES);
   }
 
 #ifdef HAVE_SHELL_SERVICE

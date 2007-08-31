@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Daniel Veditz <dveditz@netscape.com>
+ *   Dave Townsend <dtownsend@oxymoronical.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -80,6 +81,10 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIObserverService.h"
 
+#include "nsISSLStatusProvider.h"
+#include "nsISSLStatus.h"
+#include "nsIX509Cert.h"
+
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
@@ -110,7 +115,7 @@ inline PRBool nsXPInstallManager::TimeToUpdate(PRTime now)
 nsXPInstallManager::nsXPInstallManager()
   : mTriggers(0), mItem(0), mNextItem(0), mNumJars(0), mChromeType(NOT_CHROME),
     mContentLength(0), mDialogOpen(PR_FALSE), mCancelled(PR_FALSE),
-    mSelectChrome(PR_FALSE), mNeedsShutdown(PR_FALSE)
+    mSelectChrome(PR_FALSE), mNeedsShutdown(PR_FALSE), mFromChrome(PR_FALSE)
 {
     // we need to own ourself because we have a longer
     // lifetime than the scriptlet that created us.
@@ -132,7 +137,7 @@ nsXPInstallManager::~nsXPInstallManager()
 }
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS9( nsXPInstallManager,
+NS_IMPL_THREADSAFE_ISUPPORTS11(nsXPInstallManager,
                                nsIXPIListener,
                                nsIXPIDialogService,
                                nsIXPInstallManager,
@@ -141,6 +146,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS9( nsXPInstallManager,
                                nsIProgressEventSink,
                                nsIInterfaceRequestor,
                                nsPICertNotification,
+                               nsIBadCertListener,
+                               nsIChannelEventSink,
                                nsISupportsWeakReference)
 
 NS_IMETHODIMP
@@ -197,19 +204,46 @@ nsXPInstallManager::InitManagerWithHashes(const PRUnichar **aURLs,
         return rv;
     }
 
+    mFromChrome = PR_TRUE;
+    
     rv = Observe(aListener, XPI_PROGRESS_TOPIC, NS_LITERAL_STRING("open").get());
     if (NS_FAILED(rv))
         Shutdown();
     return rv;
 }
 
+NS_IMETHODIMP
+nsXPInstallManager::InitManagerWithInstallInfo(nsIXPIInstallInfo* aInstallInfo)
+{
+    nsXPITriggerInfo* triggers;
+    nsresult rv = aInstallInfo->GetTriggerInfo(&triggers);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMWindowInternal> win;
+    rv = aInstallInfo->GetOriginatingWindow(getter_AddRefs(win));
+    if (NS_SUCCEEDED(rv))
+    {
+        PRUint32 type;
+        rv = aInstallInfo->GetChromeType(&type);
+        if (NS_SUCCEEDED(rv))
+        {
+            // Passing ownership onto InitManager which will free when necessary
+            aInstallInfo->SetTriggerInfo(nsnull);
+            return InitManager(win, triggers, type);
+        }
+    }
+
+    NS_RELEASE_THIS();
+    return rv;
+}
 
 NS_IMETHODIMP
-nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo* aTriggers, PRUint32 aChromeType)
+nsXPInstallManager::InitManager(nsIDOMWindowInternal* aParentWindow, nsXPITriggerInfo* aTriggers, PRUint32 aChromeType)
 {
     if ( !aTriggers || aTriggers->Size() == 0 )
     {
         NS_WARNING("XPInstallManager called with no trigger info!");
+        delete aTriggers;
         NS_RELEASE_THIS();
         return NS_ERROR_INVALID_POINTER;
     }
@@ -220,7 +254,7 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
     mChromeType = aChromeType;
     mNeedsShutdown = PR_TRUE;
 
-    mParentWindow = do_QueryInterface(aGlobalObject);
+    mParentWindow = aParentWindow;
 
     // Start downloading initial chunks looking for signatures,
     mOutstandingCertLoads = mTriggers->Size();
@@ -975,7 +1009,51 @@ nsXPInstallManager::GetDestinationFile(nsString& url, nsILocalFile* *file)
     return rv;
 }
 
-
+nsresult
+nsXPInstallManager::CheckCert(nsIChannel* aChannel)
+{
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = aChannel->GetOriginalURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCAutoString scheme;
+    rv = uri->GetScheme(scheme);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!scheme.Equals(NS_LITERAL_CSTRING("https")))
+        return NS_OK;
+    
+    nsCOMPtr<nsISupports> security;
+    rv = aChannel->GetSecurityInfo(getter_AddRefs(security));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsISSLStatusProvider> statusProvider(do_QueryInterface(security));
+    NS_ENSURE_TRUE(statusProvider, NS_ERROR_FAILURE);
+    
+    rv = statusProvider->GetSSLStatus(getter_AddRefs(security));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsISSLStatus> status(do_QueryInterface(security));
+    NS_ENSURE_TRUE(status, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIX509Cert> cert;
+    rv = status->GetServerCert(getter_AddRefs(cert));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsCOMPtr<nsIX509Cert> issuer;
+    rv = cert->GetIssuer(getter_AddRefs(issuer));
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRBool equal;
+    while (issuer && NS_SUCCEEDED(cert->Equals(issuer, &equal)) && !equal) {
+        cert = issuer;
+        rv = cert->GetIssuer(getter_AddRefs(issuer));
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+    
+    if (issuer) {
+        nsAutoString tokenName;
+        rv = issuer->GetTokenName(tokenName);
+        NS_ENSURE_SUCCESS(rv ,rv);
+        if (tokenName.Equals(NS_LITERAL_STRING("Builtin Object Token")))
+            return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
 nsXPInstallManager::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
@@ -986,6 +1064,11 @@ nsXPInstallManager::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
     // download failures.
     nsCOMPtr<nsIHttpChannel> httpChan = do_QueryInterface(request);
     if (httpChan) {
+        // If we were chrome lauched check the certificate on the request
+        if (mFromChrome && NS_FAILED(CheckCert(httpChan))) {
+            request->Cancel(NS_BINDING_ABORTED);
+            return NS_OK;
+        }
         PRBool succeeded;
         if (NS_SUCCEEDED(httpChan->GetRequestSucceeded(&succeeded)) && !succeeded) {
             // HTTP response is not a 2xx!
@@ -1168,7 +1251,50 @@ nsXPInstallManager::GetInterface(const nsIID & eventSinkIID, void* *_retval)
         *_retval = p;
         return NS_OK;
     }
+    else if (eventSinkIID.Equals(NS_GET_IID(nsIBadCertListener))) {
+        // If we aren't chrome triggered fall back to the default dialogs
+        if (!mFromChrome)
+            return NS_ERROR_NO_INTERFACE;
+    }
     return QueryInterface(eventSinkIID, (void**)_retval);
+}
+
+// nsIChannelEventSink method
+NS_IMETHODIMP
+nsXPInstallManager::OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newChannel, PRUint32 flags)
+{
+    // Chrome triggered installs need to have their certificates checked
+    if (mFromChrome)
+        return CheckCert(oldChannel);
+    return NS_OK;
+}
+
+// nsIBadCertListener methods
+NS_IMETHODIMP
+nsXPInstallManager::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo, nsIX509Cert *cert, PRInt16 *certAddType, PRBool *_retval)
+{
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPInstallManager::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo, const nsACString & targetURL, nsIX509Cert *cert, PRBool *_retval)
+{
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPInstallManager::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo, nsIX509Cert *cert, PRBool *_retval)
+{
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPInstallManager::NotifyCrlNextupdate(nsIInterfaceRequestor *socketInfo, const nsACString & targetURL, nsIX509Cert *cert)
+{
+    return NS_OK;
 }
 
 // IXPIListener methods

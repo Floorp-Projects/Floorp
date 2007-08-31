@@ -43,7 +43,6 @@
 
 nsTArray_base::Header nsTArray_base::sEmptyHdr = { 0, 0, 0 };
 
-#ifdef NS_BUILD_REFCNT_LOGGING
 nsTArray_base::nsTArray_base()
   : mHdr(&sEmptyHdr) {
   MOZ_COUNT_CTOR(nsTArray_base);
@@ -52,7 +51,6 @@ nsTArray_base::nsTArray_base()
 nsTArray_base::~nsTArray_base() {
   MOZ_COUNT_DTOR(nsTArray_base);
 }
-#endif // NS_BUILD_REFCNT_LOGGING
 
 PRBool
 nsTArray_base::EnsureCapacity(size_type capacity, size_type elemSize) {

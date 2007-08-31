@@ -89,28 +89,24 @@ nsHyperTextAccessibleWrap::GetModifiedText(PRBool aGetInsertedText,
 
   if (!gTextEvent)
     return NS_OK;
+    
+  PRBool isInserted;
+  gTextEvent->IsInserted(&isInserted);
+  if (aGetInsertedText != isInserted)
+    return NS_OK;
 
   nsCOMPtr<nsIAccessible> targetAcc;
   gTextEvent->GetAccessible(getter_AddRefs(targetAcc));
   if (targetAcc != this)
     return NS_OK;
 
-  PRBool isInserted;
-  gTextEvent->IsInserted(&isInserted);
-
-  if (aGetInsertedText != isInserted)
-    return NS_OK;
-
-  nsAutoString text;
   PRInt32 offset;
   PRUint32 length;
 
   gTextEvent->GetStart(&offset);
   gTextEvent->GetLength(&length);
-  GetText(offset, offset + length, aText);
   *aStartOffset = offset;
   *aEndOffset = offset + length;
-
-  return NS_OK;
+  return gTextEvent->GetModifiedText(aText);
 }
 

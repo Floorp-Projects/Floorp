@@ -124,9 +124,7 @@
 
 #include "nsThreadUtils.h"
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
-#endif
 
 // accessibility support
 #ifdef ACCESSIBILITY
@@ -1228,8 +1226,6 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
        * to tell the plugin where it is, we dispatch a NPWindow through
        * |HandleEvent| to tell the plugin when its window moved
        */
-
-#ifdef MOZ_CAIRO_GFX
       nsRefPtr<gfxContext> ctx = (gfxContext*)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
       gfxMatrix ctxMatrix = ctx->CurrentMatrix();
       if (ctxMatrix.HasNonTranslation()) {
@@ -1259,11 +1255,6 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       POINT origViewportOrigin;
       GetViewportOrgEx(hdc, &origViewportOrigin);
       SetViewportOrgEx(hdc, origViewportOrigin.x + (int) xoff, origViewportOrigin.y + (int) yoff, NULL);
-#else
-      nsTransform2D* rcTransform;
-      aRenderingContext.GetCurrentTransform(rcTransform);
-      rcTransform->GetTranslationCoord(&origin.x, &origin.y);
-#endif
 
       if ((window->x != origin.x) || (window->y != origin.y)) {
         window->x = origin.x;
@@ -1322,11 +1313,8 @@ nsObjectFrame::PaintPlugin(nsIRenderingContext& aRenderingContext,
       // frame origin and plugin origin are not the same
       mInstanceOwner->Paint(aDirtyRect, hdc);
 
-#ifdef MOZ_CAIRO_GFX
       RestoreDC(hdc, -1);
-
       surf->MarkDirty();
-#endif
     }
   }
 #endif

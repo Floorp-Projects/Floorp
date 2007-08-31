@@ -42,23 +42,11 @@
 
 <!ENTITY mnSearch.label "Suchen">
 <!ENTITY mnSearch.accesskey "S">
-  <!ENTITY mnSearchPlugins.label "Erweiterungen">
-  <!ENTITY mnSearchPlugins.accesskey "E">
-    <!ENTITY cmdRunSearch.label "Ausführen...">
-    <!ENTITY cmdRunSearch.accesskey "A">
 
 <!ENTITY mnView.label "Ansicht">
 <!ENTITY mnView.accesskey "A">
   <!ENTITY cmdToggleBrowser.label "Browser">
   <!ENTITY cmdToggleSearch.label "Suchergebnisse">
-
-<!ENTITY cmdViewSearchItem.label "Ansicht...">
-<!ENTITY cmdEditSearchItem.label "Bearbeiten...">
-<!ENTITY cmdCopySearchItemLine.label "Zeile kopieren">
-<!ENTITY cmdCopySearchItemAll.label "Alles Kopieren">
-<!ENTITY cmdSaveSearchItemText.label "Sichern...">
-<!ENTITY cmdClearSearch.label "Leeren">
-<!ENTITY cmdHideSearchItems.label "Verstecken">
 
 <!ENTITY browserPanel.label "Browser">
 

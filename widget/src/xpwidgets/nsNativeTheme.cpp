@@ -69,7 +69,6 @@ nsILookAndFeel::nsColorID nsNativeTheme::sTextfieldDisabledBGColorID = nsILookAn
 nsMargin                  nsNativeTheme::sListboxBorderSize(2, 2, 2, 2);
 PRUint8                   nsNativeTheme::sListboxBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
 nsILookAndFeel::nsColorID nsNativeTheme::sListboxBorderColorID = nsILookAndFeel::eColor_threedface;
-PRBool                    nsNativeTheme::sListboxBGTransparent = PR_FALSE;
 nsILookAndFeel::nsColorID nsNativeTheme::sListboxBGColorID = nsILookAndFeel::eColor__moz_field;
 nsILookAndFeel::nsColorID nsNativeTheme::sListboxDisabledBGColorID = nsILookAndFeel::eColor_threedface;
 
@@ -256,13 +255,10 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
         defaultBorderStyle = sListboxBorderStyle;
         ConvertBorderToAppUnits(aPresContext, sListboxBorderSize, defaultBorderSize);
         lookAndFeel->GetColor(sListboxBorderColorID, defaultBorderColor);
-        defaultBGTransparent = sListboxBGTransparent;
-        if (!defaultBGTransparent) {
-          if (IsDisabled(aFrame))
-            lookAndFeel->GetColor(sListboxDisabledBGColorID, defaultBGColor);
-          else
-            lookAndFeel->GetColor(sListboxBGColorID, defaultBGColor);
-        }
+        if (IsDisabled(aFrame))
+          lookAndFeel->GetColor(sListboxDisabledBGColorID, defaultBGColor);
+        else
+          lookAndFeel->GetColor(sListboxBGColorID, defaultBGColor);
         break;
 
       case NS_THEME_DROPDOWN:

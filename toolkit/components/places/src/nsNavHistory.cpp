@@ -79,6 +79,7 @@
 #include "mozStorageHelper.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsAutoLock.h"
+#include "nsIIdleService.h"
 
 // Microsecond timeout for "recent" events such as typed and bookmark following.
 // If you typed it more than this time ago, it's not recent.
@@ -143,6 +144,11 @@
 #define MAX_LAZY_TIMER_DEFERMENTS 2
 
 #endif // LAZY_ADD
+
+// 15 minutes = 900 seconds = 900000 milliseconds
+#define VACUUM_IDLE_TIME_IN_MSECS (900000)
+// check every 5 minutes
+#define VACUUM_TIMER_TIMEOUT (300 * PR_MSEC_PER_SEC)
 
 NS_IMPL_ADDREF(nsNavHistory)
 NS_IMPL_RELEASE(nsNavHistory)
@@ -258,11 +264,6 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
 
 nsNavHistory::~nsNavHistory()
 {
-  if (mAutoCompleteTimer) {
-    mAutoCompleteTimer->Cancel();
-    mAutoCompleteTimer = nsnull;
-  }
-
   // remove the static reference to the service. Check to make sure its us
   // in case somebody creates an extra instance of the service.
   NS_ASSERTION(gHistoryService == this, "YOU CREATED 2 COPIES OF THE HISTORY SERVICE.");
@@ -498,6 +499,22 @@ nsNavHistory::InitDB(PRBool *aDoImport)
   nsresult rv;
   PRBool tableExists;
   *aDoImport = PR_FALSE;
+
+  // Set the database up for incremental vacuuming.
+  // if the database was created before we started doing 
+  // incremental vacuuming, this will have no effect.
+  rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("PRAGMA auto_vacuum=2"));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mVacuumTimer) {
+    mVacuumTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mVacuumTimer->InitWithFuncCallback(VacuumTimerCallback, this,
+                                            VACUUM_TIMER_TIMEOUT,
+                                            nsITimer::TYPE_REPEATING_SLACK);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // Set the database page size. This will only have any effect on empty files,
   // so must be done before anything else. If the file already exists, we'll
@@ -3296,6 +3313,57 @@ nsNavHistory::AddDocumentRedirect(nsIChannel *aOldChannel,
   return NS_OK;
 }
 
+nsresult 
+nsNavHistory::PerformVacuumIfIdle()
+{
+  nsresult rv;
+  nsCOMPtr<nsIIdleService> idleService =
+    do_GetService("@mozilla.org/widget/idleservice;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRUint32 idleTime;
+  rv = idleService->GetIdleTime(&idleTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // if we've been idle for more than VACUUM_IDLE_TIME_IN_MSECS
+  // incrementally vacuum
+  if (idleTime > VACUUM_IDLE_TIME_IN_MSECS) {
+    PRInt32 vacuum;
+    nsCOMPtr<mozIStorageStatement> statement;
+    rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING("PRAGMA auto_vacuum"),
+                                  getter_AddRefs(statement));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasResult;
+    rv = statement->ExecuteStep(&hasResult);
+    NS_ENSURE_SUCCESS(rv, rv);
+    NS_ENSURE_TRUE(hasResult, NS_ERROR_FAILURE);
+    vacuum = statement->AsInt32(0);
+
+    // if our database was created with incremental_vacuum, 
+    // do incremental vacuuming
+    if (vacuum == 2) {
+      rv = mDBConn->ExecuteSimpleSQL(
+        NS_LITERAL_CSTRING("PRAGMA incremental_vacuum;"));
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else {
+#if 0
+      // Currently commented out because compression is very slow
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM;"));
+      NS_ENSURE_SUCCESS(rv, rv);
+#endif
+    }
+  }
+  return NS_OK;
+}
+
+void // static
+nsNavHistory::VacuumTimerCallback(nsITimer* aTimer, void* aClosure)
+{
+  nsNavHistory* history = static_cast<nsNavHistory*>(aClosure);
+  (void)history->PerformVacuumIfIdle();
+}
 
 // nsIObserver *****************************************************************
 
@@ -3304,6 +3372,14 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
                     const PRUnichar *aData)
 {
   if (nsCRT::strcmp(aTopic, gQuitApplicationMessage) == 0) {
+    if (mVacuumTimer) {
+      mVacuumTimer->Cancel();
+      mVacuumTimer = nsnull;
+    }
+    if (mAutoCompleteTimer) {
+      mAutoCompleteTimer->Cancel();
+      mAutoCompleteTimer = nsnull;
+    }
     if (gTldTypes) {
       delete gTldTypes;
       gTldTypes = nsnull;

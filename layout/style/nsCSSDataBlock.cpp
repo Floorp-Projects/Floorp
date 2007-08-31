@@ -615,23 +615,42 @@ nsCSSExpandedDataBlock::DoExpand(nsCSSCompressedDataBlock *aBlock,
         switch (nsCSSProps::kTypeTable[iProp]) {
             case eCSSType_Value: {
                 const nsCSSValue* val = ValueAtCursor(cursor);
+                nsCSSValue* dest = static_cast<nsCSSValue*>(prop);
                 NS_ASSERTION(val->GetUnit() != eCSSUnit_Null, "oops");
-                memcpy(prop, val, sizeof(nsCSSValue));
+                NS_ASSERTION(dest->GetUnit() == eCSSUnit_Null,
+                             "expanding into non-empty block");
+#ifdef NS_BUILD_REFCNT_LOGGING
+                dest->~nsCSSValue();
+#endif
+                memcpy(dest, val, sizeof(nsCSSValue));
                 cursor += CDBValueStorage_advance;
             } break;
 
             case eCSSType_Rect: {
                 const nsCSSRect* val = RectAtCursor(cursor);
+                nsCSSRect* dest = static_cast<nsCSSRect*>(prop);
                 NS_ASSERTION(val->HasValue(), "oops");
-                memcpy(prop, val, sizeof(nsCSSRect));
+                NS_ASSERTION(!dest->HasValue(),
+                             "expanding into non-empty block");
+#ifdef NS_BUILD_REFCNT_LOGGING
+                dest->~nsCSSRect();
+#endif
+                memcpy(dest, val, sizeof(nsCSSRect));
                 cursor += CDBRectStorage_advance;
             } break;
 
             case eCSSType_ValuePair: {
                 const nsCSSValuePair* val = ValuePairAtCursor(cursor);
+                nsCSSValuePair* dest = static_cast<nsCSSValuePair*>(prop);
                 NS_ASSERTION(val->mXValue.GetUnit() != eCSSUnit_Null ||
                              val->mYValue.GetUnit() != eCSSUnit_Null, "oops");
-                memcpy(prop, val, sizeof(nsCSSValuePair));
+                NS_ASSERTION(dest->mXValue.GetUnit() == eCSSUnit_Null &&
+                             dest->mYValue.GetUnit() == eCSSUnit_Null,
+                             "expanding into non-empty block");
+#ifdef NS_BUILD_REFCNT_LOGGING
+                dest->~nsCSSValuePair();
+#endif
+                memcpy(dest, val, sizeof(nsCSSValuePair));
                 cursor += CDBValuePairStorage_advance;
             } break;
 
@@ -639,8 +658,10 @@ nsCSSExpandedDataBlock::DoExpand(nsCSSCompressedDataBlock *aBlock,
             case eCSSType_CounterData:
             case eCSSType_Quotes: {
                 void* val = PointerAtCursor(cursor);
+                void** dest = static_cast<void**>(prop);
                 NS_ASSERTION(val, "oops");
-                *static_cast<void**>(prop) = val;
+                NS_ASSERTION(!*dest, "expanding into non-empty block");
+                *dest = val;
                 cursor += CDBPointerStorage_advance;
             } break;
         }
