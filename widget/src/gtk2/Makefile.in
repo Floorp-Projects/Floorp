@@ -108,15 +108,10 @@ CPPSRCS		= \
 		nsPrintOptionsGTK.cpp \
 		nsImageToPixbuf.cpp \
 		nsAccessibilityHelper.cpp \
-		nsIdleServiceGTK.cpp \
-		$(NULL)
-
-ifdef MOZ_ENABLE_POSTSCRIPT
-CPPSRCS        += \
 		nsPrintJobFactoryGTK.cpp \
 		nsPrintJobGTK.cpp \
-	  $(NULL)
-endif
+		nsIdleServiceGTK.cpp \
+		$(NULL)
 
 # build our subdirs, too
 ifdef ACCESSIBILITY
