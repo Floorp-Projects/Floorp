@@ -224,6 +224,7 @@
                      completeselectedindex="true"
                      tabscrolling="true"
                      showcommentcolumn="true"
+                     showimagecolumn="true" 
                      enablehistory="true"
                      maxrows="10"
                      newlines="stripsurroundingwhitespace"
