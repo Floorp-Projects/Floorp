@@ -438,7 +438,7 @@
           if (aEvent.type == "mousedown" &&
               aEvent.button == 0 && aEvent.detail == 2 &&
               this.doubleClickSelectsAll) {
-            this.inputField.select();
+            this.editor.selectAll();
             aEvent.preventDefault();
           }
         ]]></body>
