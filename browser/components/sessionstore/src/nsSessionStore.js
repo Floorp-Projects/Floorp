@@ -553,6 +553,7 @@ SessionStoreService.prototype = {
       this._windows[aWindow.__SSi]._closedTabs.unshift({
         state: tabState,
         title: aTab.getAttribute("label"),
+        image: aTab.getAttribute("image"),
         pos: aTab._tPos
       });
       var length = this._windows[aWindow.__SSi]._closedTabs.length;
