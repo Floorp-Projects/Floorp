@@ -9136,7 +9136,7 @@ nsClassifierCallback::Run()
         rv = channel->Suspend();
         NS_ENSURE_SUCCESS(rv, rv);
         mSuspendedChannel = channel;
-#if defined(PR_LOGGING) && defined(DEBUG)
+#ifdef DEBUG
         PR_LOG(gDocShellLog, PR_LOG_DEBUG,
                ("nsClassifierCallback[%p]: suspended channel %p",
                 this, mSuspendedChannel.get()));
@@ -9151,14 +9151,14 @@ nsClassifierCallback::OnClassifyComplete(nsresult aErrorCode)
 {
     if (mSuspendedChannel) {
         if (NS_FAILED(aErrorCode)) {
-#if defined(PR_LOGGING) && defined(DEBUG)
+#ifdef DEBUG
             PR_LOG(gDocShellLog, PR_LOG_DEBUG,
                    ("nsClassifierCallback[%p]: cancelling channel %p with error code: %d",
                     this, mSuspendedChannel.get(), aErrorCode));
-            mSuspendedChannel->Cancel(aErrorCode);
 #endif
+            mSuspendedChannel->Cancel(aErrorCode);
         }
-#if defined(PR_LOGGING) && defined(DEBUG)
+#ifdef DEBUG
         PR_LOG(gDocShellLog, PR_LOG_DEBUG,
                ("nsClassifierCallback[%p]: resuming channel %p from OnClassifyComplete",
                 this, mSuspendedChannel.get()));
@@ -9174,7 +9174,7 @@ void
 nsClassifierCallback::Cancel()
 {
     if (mSuspendedChannel) {
-#if defined(PR_LOGGING) && defined(DEBUG)
+#ifdef DEBUG
         PR_LOG(gDocShellLog, PR_LOG_DEBUG,
                ("nsClassifierCallback[%p]: resuming channel %p from Cancel()",
                 this, mSuspendedChannel.get()));
