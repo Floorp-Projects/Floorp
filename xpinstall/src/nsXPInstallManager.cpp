@@ -212,13 +212,38 @@ nsXPInstallManager::InitManagerWithHashes(const PRUnichar **aURLs,
     return rv;
 }
 
+NS_IMETHODIMP
+nsXPInstallManager::InitManagerWithInstallInfo(nsIXPIInstallInfo* aInstallInfo)
+{
+    nsXPITriggerInfo* triggers;
+    nsresult rv = aInstallInfo->GetTriggerInfo(&triggers);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIDOMWindowInternal> win;
+    rv = aInstallInfo->GetOriginatingWindow(getter_AddRefs(win));
+    if (NS_SUCCEEDED(rv))
+    {
+        PRUint32 type;
+        rv = aInstallInfo->GetChromeType(&type);
+        if (NS_SUCCEEDED(rv))
+        {
+            // Passing ownership onto InitManager which will free when necessary
+            aInstallInfo->SetTriggerInfo(nsnull);
+            return InitManager(win, triggers, type);
+        }
+    }
+
+    NS_RELEASE_THIS();
+    return rv;
+}
 
 NS_IMETHODIMP
-nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo* aTriggers, PRUint32 aChromeType)
+nsXPInstallManager::InitManager(nsIDOMWindowInternal* aParentWindow, nsXPITriggerInfo* aTriggers, PRUint32 aChromeType)
 {
     if ( !aTriggers || aTriggers->Size() == 0 )
     {
         NS_WARNING("XPInstallManager called with no trigger info!");
+        delete aTriggers;
         NS_RELEASE_THIS();
         return NS_ERROR_INVALID_POINTER;
     }
@@ -229,7 +254,7 @@ nsXPInstallManager::InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITrigg
     mChromeType = aChromeType;
     mNeedsShutdown = PR_TRUE;
 
-    mParentWindow = do_QueryInterface(aGlobalObject);
+    mParentWindow = aParentWindow;
 
     // Start downloading initial chunks looking for signatures,
     mOutstandingCertLoads = mTriggers->Size();

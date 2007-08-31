@@ -124,6 +124,7 @@ CPPSRCS		= \
 		nsJSFileSpecObj.cpp \
 		nsInstallLogComment.cpp \
 		nsInstallBitwise.cpp \
+		nsXPIInstallInfo.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
