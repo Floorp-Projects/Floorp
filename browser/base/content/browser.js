@@ -3471,7 +3471,17 @@ nsBrowserStatusHandler.prototype =
       if (newIndexOfHash != -1)
         newSpec = newSpec.substr(0, newSpec.indexOf("#"));
       if (newSpec != oldSpec) {
-        gBrowser.getNotificationBox(selectedBrowser).removeAllNotifications(true);
+        // Remove all the notifications, except for those which want to
+        // persist across the first location change.
+        var nBox = gBrowser.getNotificationBox(selectedBrowser);
+        for (var n = nBox.allNotifications.length - 1; n >= 0; n--) {
+          var notify = nBox.allNotifications[n];
+          if (notify.ignoreFirstLocationChange)
+            notify.ignoreFirstLocationChange = false;
+          else if (!notify.ignoreLocationChangeTimeout ||
+            (Date.now() / 1000) > notify.ignoreLocationChangeTimeout)
+            nBox.removeNotification(notify);
+        }
       }
     }
     selectedBrowser.lastURI = aLocationURI;
