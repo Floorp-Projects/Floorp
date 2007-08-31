@@ -211,10 +211,10 @@
       </hbox>
     </groupbox>
 #endif
-    <groupbox id="addonsMgrGroup" orient="horizontal">
-      <caption label="&addonsMgr.label;"/>
+    <hbox class="bottomBox">
+      <groupbox id="addonsMgrGroup" orient="horizontal" flex="1">
+        <caption label="&addonsMgr.label;"/>
 
-      <hbox align="center" flex="1">
         <description control="manageAddons"
 #ifdef XP_WIN
                      flex="1">&manageAddonsDesc.label;</description>
@@ -224,8 +224,8 @@
         <button id="manageAddons" label="&manageAddons.label;"
                 accesskey="&manageAddons.accesskey;"
                 oncommand="gMainPane.showAddonsMgr();"/>
-      </hbox>
-    </groupbox>
+      </groupbox>
+    </hbox>
 
   </prefpane>
 

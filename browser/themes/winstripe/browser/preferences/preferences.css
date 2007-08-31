@@ -264,3 +264,9 @@ filefield[disabled="true"] .fileFieldIcon {
 #chooseClientAppCell {
   -moz-padding-end: 12px;
 }
+
+/* bottom-most box containing a groupbox in a prefpane. Prevents the bottom
+   of the groupbox from being cutoff */
+.bottomBox {
+  padding-bottom: 2px;
+}
