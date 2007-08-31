@@ -58,6 +58,7 @@
 #include "nsIObserver.h"
 #include "nsIBadCertListener.h"
 #include "nsIChannelEventSink.h"
+#include "nsIXPIInstallInfo.h"
 
 #include "nsISoftwareUpdate.h"
 
@@ -106,7 +107,7 @@ class nsXPInstallManager : public nsIXPIListener,
         NS_DECL_NSIBADCERTLISTENER
         NS_DECL_NSICHANNELEVENTSINK
 
-        NS_IMETHOD InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo* aTrigger, PRUint32 aChromeType );
+        NS_IMETHOD InitManager(nsIDOMWindowInternal* aParentWindow, nsXPITriggerInfo* aTrigger, PRUint32 aChromeType );
 
     private:
         nsresult    InitManagerInternal();

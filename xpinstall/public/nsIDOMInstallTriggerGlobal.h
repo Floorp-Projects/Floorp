@@ -42,11 +42,12 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 #include "nsXPITriggerInfo.h"
+#include "nsIXPIInstallInfo.h"
 
 
 #define NS_IDOMINSTALLTRIGGERGLOBAL_IID \
- { 0x18c2f987, 0xb09f, 0x11d2, \
-  {0xbc, 0xde, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53}}
+ { 0xe8c7941c, 0xaaa0, 0x4faf, \
+  {0x83, 0xe8, 0x01, 0xbe, 0x8b, 0xbe, 0x8a, 0x57}}
 
 class nsIDOMInstallTriggerGlobal : public nsISupports {
 public:
@@ -60,7 +61,13 @@ public:
     EQUAL = 0
   };
 
+  NS_IMETHOD    GetOriginatingURI(nsIScriptGlobalObject* aGlobalObject, nsIURI * *aUri)=0;
+
   NS_IMETHOD    UpdateEnabled(nsIScriptGlobalObject* aGlobalObject, PRBool aUseWhitelist, PRBool* aReturn)=0;
+
+  NS_IMETHOD    UpdateEnabled(nsIURI* aURI, PRBool aUseWhitelist, PRBool* aReturn)=0;
+
+  NS_IMETHOD    StartInstall(nsIXPIInstallInfo* aInstallInfo, PRBool* aReturn)=0;
 
   NS_IMETHOD    Install(nsIScriptGlobalObject* globalObject, nsXPITriggerInfo* aInfo, PRBool* aReturn)=0;
 
