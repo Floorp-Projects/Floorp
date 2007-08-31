@@ -412,10 +412,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
 
   DO_PR_DEBUG_LOG(("\"%s\", %f, %f\n", path, width, height));
 
-  nsresult rv = NS_ERROR_FAILURE;
-#ifdef MOZ_ENABLE_POSTSCRIPT
-  rv = nsPrintJobFactoryGTK::CreatePrintJob(this, mPrintJob);
-#endif
+  nsresult rv = nsPrintJobFactoryGTK::CreatePrintJob(this, mPrintJob);
   if (NS_FAILED(rv))
     return rv;
 
