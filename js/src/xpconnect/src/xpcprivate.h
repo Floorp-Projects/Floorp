@@ -2356,12 +2356,6 @@ public:
                  REFNSIID aIID,
                  nsISupports* aOuter,
                  nsXPCWrappedJS** wrapper);
-    static nsresult
-    GetUsedOnly(XPCCallContext& ccx,
-                JSObject* aJSObj,
-                REFNSIID aIID,
-                nsISupports* aOuter,
-                nsXPCWrappedJS** wrapperResult);
 
     nsISomeInterface* GetXPTCStub() { return mXPTCStub; }
     JSObject* GetJSObject() const {return mJSObj;}
@@ -2537,7 +2531,6 @@ public:
                                            void** dest, JSObject* src,
                                            const nsID* iid,
                                            nsISupports* aOuter,
-                                           PRBool allowCreateNew,
                                            nsresult* pErr);
 
     /**
