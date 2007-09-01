@@ -640,7 +640,14 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
 
        LoadAppPlatformDirIntoArray(mXULAppDir, kAppendPrefDir, directories);
     }
-    
+
+    rv = NS_NewArrayEnumerator(aResult, directories);
+  }
+  else if (!strcmp(aProperty, NS_EXT_PREFS_DEFAULTS_DIR_LIST)) {
+    static const char *const kAppendPrefDir[] = { "defaults", "preferences", nsnull };
+    nsCOMArray<nsIFile> directories;
+    PRBool exists;
+
     if (mProfileDir) {
       nsCOMPtr<nsIFile> overrideFile;
       mProfileDir->Clone(getter_AddRefs(overrideFile));
