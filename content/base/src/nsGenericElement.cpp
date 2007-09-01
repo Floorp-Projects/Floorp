@@ -2265,10 +2265,6 @@ nsGenericElement::DispatchDOMEvent(nsEvent* aEvent,
 nsIAtom*
 nsGenericElement::GetID() const
 {
-  if (!HasFlag(NODE_MAY_HAVE_ID)) {
-    return nsnull;
-  }
-
   nsIAtom* IDName = GetIDAttributeName();
   if (IDName) {
     const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(IDName);
@@ -2291,9 +2287,6 @@ nsGenericElement::GetID() const
       }
     }
   }
-
-  nsINode* node = const_cast<nsINode*>(static_cast<const nsINode*>(this));
-  node->UnsetFlags(NODE_MAY_HAVE_ID);
   return nsnull;
 }
 
@@ -3687,7 +3680,6 @@ nsGenericElement::ParseAttribute(PRInt32 aNamespaceID,
 {
   if (aNamespaceID == kNameSpaceID_None &&
       aAttribute == GetIDAttributeName() && !aValue.IsEmpty()) {
-    SetFlags(NODE_MAY_HAVE_ID);
     // Store id as an atom.  id="" means that the element has no id,
     // not that it has an emptystring as the id.
     aResult.ParseAtom(aValue);
