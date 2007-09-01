@@ -3223,10 +3223,10 @@ nsDocShell::Reload(PRUint32 aReloadFlags)
 NS_IMETHODIMP
 nsDocShell::Stop(PRUint32 aStopFlags)
 {
-    if (nsIWebNavigation::STOP_CONTENT & aStopFlags) {
-        // Revoke any pending event related to content viewer restoration
-        mRestorePresentationEvent.Revoke();
+    // Revoke any pending event related to content viewer restoration
+    mRestorePresentationEvent.Revoke();
 
+    if (nsIWebNavigation::STOP_CONTENT & aStopFlags) {
         // Stop the document loading
         if (mContentViewer)
             mContentViewer->Stop();
