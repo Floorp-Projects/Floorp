@@ -73,15 +73,7 @@ nsStyledElement::GetIDAttributeName() const
 const nsAttrValue*
 nsStyledElement::GetClasses() const
 {
-  if (!HasFlag(NODE_MAY_HAVE_CLASS)) {
-    return nsnull;
-  }
-  const nsAttrValue* clazz = mAttrsAndChildren.GetAttr(nsGkAtoms::_class);
-  if (!clazz) {
-    nsINode* node = const_cast<nsINode*>(static_cast<const nsINode*>(this));
-    node->UnsetFlags(NODE_MAY_HAVE_CLASS);
-  }
-  return clazz;
+  return mAttrsAndChildren.GetAttr(nsGkAtoms::_class);
 }
 
 PRBool
@@ -90,12 +82,10 @@ nsStyledElement::ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::style) {
-      SetFlags(NODE_MAY_HAVE_STYLE);
       ParseStyleAttribute(this, aValue, aResult);
       return PR_TRUE;
     }
     if (aAttribute == nsGkAtoms::_class) {
-      SetFlags(NODE_MAY_HAVE_CLASS);
 #ifdef MOZ_SVG
       NS_ASSERTION(!nsCOMPtr<nsIDOMSVGStylable>(do_QueryInterface(this)),
                    "SVG code should have handled this 'class' attribute!");
@@ -112,7 +102,6 @@ nsStyledElement::ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsStyledElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
 {
-  SetFlags(NODE_MAY_HAVE_STYLE);
   PRBool modification = PR_FALSE;
   nsAutoString oldValueStr;
 
@@ -146,16 +135,12 @@ nsStyledElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
 nsICSSStyleRule*
 nsStyledElement::GetInlineStyleRule()
 {
-  if (!HasFlag(NODE_MAY_HAVE_STYLE)) {
-    return nsnull;
-  }
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
 
   if (attrVal && attrVal->Type() == nsAttrValue::eCSSStyleRule) {
     return attrVal->GetCSSStyleRuleValue();
   }
 
-  UnsetFlags(NODE_MAY_HAVE_STYLE);
   return nsnull;
 }
 
@@ -211,9 +196,6 @@ nsStyledElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 nsresult
 nsStyledElement::ReparseStyleAttribute()
 {
-  if (!HasFlag(NODE_MAY_HAVE_STYLE)) {
-    return NS_OK;
-  }
   const nsAttrValue* oldVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
   
   if (oldVal && oldVal->Type() != nsAttrValue::eCSSStyleRule) {
