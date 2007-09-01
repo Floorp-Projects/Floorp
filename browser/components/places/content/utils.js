@@ -1502,11 +1502,11 @@ var PlacesUtils = {
     var bmkIds = this.bookmarks.getBookmarkIdsForURI(aURI, {});
     for each (var bk in bmkIds) {
       // Find the first folder which isn't a tag container
-      var folder = this.bookmarks.getFolderIdForItem(bk);
-      if (folder == this.placesRootId)
+      var parent = this.bookmarks.getFolderIdForItem(bk);
+      if (parent == this.placesRootId)
         return bk;
-      var parent = this.bookmarks.getFolderIdForItem(folder)
-      if (parent != this.tagRootId &&
+      var grandparent = this.bookmarks.getFolderIdForItem(parent);
+      if (grandparent != this.tagRootId &&
           !this.annotations.itemHasAnnotation(parent, "livemark/feedURI"))
         return bk;
     }
