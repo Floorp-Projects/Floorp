@@ -1894,14 +1894,19 @@ nsNavHistoryQueryResultNode::nsNavHistoryQueryResultNode(
 //
 //    Whoever made us may want non-expanding queries. However, we always
 //    expand when we are the root node, or else asking for non-expanding
-//    queries would be useless.
+//    queries would be useless. A query node is not expandable if excludeItems=1
+//    or expandQueries=0.
 
 PRBool
 nsNavHistoryQueryResultNode::CanExpand()
 {
   nsNavHistoryQueryOptions* options = GetGeneratingOptions();
-  if (options && options->ExpandQueries())
-    return PR_TRUE;
+  if (options) {
+    if (options->ExcludeItems())
+      return PR_FALSE;
+    if (options->ExpandQueries())
+      return PR_TRUE;
+  }
   if (mResult && mResult->mRootNode == this)
     return PR_TRUE;
   return PR_FALSE;
@@ -1939,11 +1944,11 @@ nsNavHistoryQueryResultNode::OnRemoving()
 nsresult
 nsNavHistoryQueryResultNode::OpenContainer()
 {
-  NS_ASSERTION(! mExpanded, "Container must be expanded to close it");
+  NS_ASSERTION(!mExpanded, "Container must be closed to open it");
   mExpanded = PR_TRUE;
-  if (! CanExpand())
+  if (!CanExpand())
     return NS_OK;
-  if (! mContentsValid) {
+  if (!mContentsValid) {
     nsresult rv = FillChildren();
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -2568,7 +2573,7 @@ nsNavHistoryQueryResultNode::OnItemChanged(PRInt64 aItemId,
   if (mLiveUpdate == QUERYUPDATE_COMPLEX_WITH_BOOKMARKS)
     return Refresh();
   else
-    NS_NOTREACHED("history observers should not get OnItemChanged, but should get the corresponding history notifications instead");
+    NS_WARNING("history observers should not get OnItemChanged, but should get the corresponding history notifications instead");
   return NS_OK;
 }
 
@@ -3050,8 +3055,21 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
   nsresult rv = bookmarks->GetItemType(aItemId, &itemType);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // check for query URIs, which are bookmarks, but treated as containers
+  // in results and views.
+  PRBool isQuery = PR_FALSE;
+  if (itemType == nsINavBookmarksService::TYPE_BOOKMARK) {
+    nsCOMPtr<nsIURI> itemURI;
+    rv = bookmarks->GetBookmarkURI(aItemId, getter_AddRefs(itemURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCAutoString itemURISpec;
+    rv = itemURI->GetSpec(itemURISpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+    isQuery = IsQueryURI(itemURISpec);
+  }
+
   if (itemType != nsINavBookmarksService::TYPE_FOLDER &&
-      mOptions->ExcludeItems()) {
+      !isQuery && mOptions->ExcludeItems()) {
     // don't update items when we aren't displaying them, but we still need
     // to adjust bookmark indices to account for the insertion
     ReindexRange(aIndex, PR_INT32_MAX, 1);
@@ -3517,7 +3535,7 @@ nsNavHistoryResult::AddAllBookmarksObserver(nsNavHistoryQueryResultNode* aNode)
     mIsAllBookmarksObserver = PR_TRUE;
   }
   if (mAllBookmarksObservers.IndexOf(aNode) != mAllBookmarksObservers.NoIndex) {
-    NS_NOTREACHED("Attempting to register an observer twice!");
+    NS_WARNING("Attempting to register an observer twice!");
     return;
   }
   mAllBookmarksObservers.AppendElement(aNode);

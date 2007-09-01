@@ -86,7 +86,8 @@
              oncommand="PlacesOrganizer.exportBookmarks();"/>
     <command id="OrganizerCommand_import"
              oncommand="PlacesOrganizer.importBookmarks();"/>
-    <command id="OrganizerCommand_search:save"/>
+    <command id="OrganizerCommand_search:save"
+             oncommand="PlacesOrganizer.saveSearch();"/>
     <command id="OrganizerCommand_search:moreCriteria"
              oncommand="PlacesQueryBuilder.addRow();"/>
   </commandset>
