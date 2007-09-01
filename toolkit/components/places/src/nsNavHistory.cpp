@@ -229,6 +229,7 @@ const PRInt32 nsNavHistory::kAutoCompleteIndex_URL = 0;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_Title = 1;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_FaviconURL = 2;
 const PRInt32 nsNavHistory::kAutoCompleteIndex_ItemId = 3;
+const PRInt32 nsNavHistory::kAutoCompleteIndex_ParentId = 4;
 
 static nsDataHashtable<nsCStringHashKey, int>* gTldTypes;
 static const char* gQuitApplicationMessage = "quit-application";
