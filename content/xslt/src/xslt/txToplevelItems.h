@@ -51,8 +51,13 @@ class Expr;
 class txToplevelItem
 {
 public:
+    txToplevelItem()
+    {
+        MOZ_COUNT_CTOR(txToplevelItem);
+    }
     virtual ~txToplevelItem()
     {
+        MOZ_COUNT_DTOR(txToplevelItem);
     }
 
     enum type {
