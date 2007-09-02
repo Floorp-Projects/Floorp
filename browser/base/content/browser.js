@@ -3183,6 +3183,20 @@ var FullScreen =
   }
 };
 
+/**
+ * Returns true if |aMimeType| is text-based, false otherwise.
+ *
+ * @param aMimeType
+ *        The MIME type to check.
+ */
+function mimeTypeIsTextBased(aMimeType)
+{
+  return /^text\/|\+xml$/.test(aMimeType) ||
+         aMimeType == "application/x-javascript" ||
+         aMimeType == "application/xml" ||
+         aMimeType == "mozilla.application/cached-xul";
+}
+
 function nsBrowserStatusHandler()
 {
   this.init();
@@ -3281,14 +3295,6 @@ nsBrowserStatusHandler.prototype =
     }
   },
   
-  mimeTypeIsTextBased : function(contentType)
-  {
-    return /^text\/|\+xml$/.test(contentType) ||
-           contentType == "application/x-javascript" ||
-           contentType == "application/xml" ||
-           contentType == "mozilla.application/cached-xul";
-  },
-
   onLinkIconAvailable : function(aBrowser)
   {
     if (gProxyFavIcon &&
@@ -3408,7 +3414,7 @@ nsBrowserStatusHandler.prototype =
           this.setDefaultStatus(msg);
 
           // Disable menu entries for images, enable otherwise
-          if (content.document && this.mimeTypeIsTextBased(content.document.contentType))
+          if (content.document && mimeTypeIsTextBased(content.document.contentType))
             this.isImage.removeAttribute('disabled');
           else
             this.isImage.setAttribute('disabled', 'true');
@@ -3487,7 +3493,7 @@ nsBrowserStatusHandler.prototype =
     selectedBrowser.lastURI = aLocationURI;
 
     // Disable menu entries for images, enable otherwise
-    if (content.document && this.mimeTypeIsTextBased(content.document.contentType))
+    if (content.document && mimeTypeIsTextBased(content.document.contentType))
       this.isImage.removeAttribute('disabled');
     else
       this.isImage.setAttribute('disabled', 'true');
