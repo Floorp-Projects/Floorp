@@ -103,6 +103,9 @@
   <keyset id="downloadKeys">
     <key id="key_pauseResume" key=" " command="cmd_pauseResume"/>
     <key id="key_remove"  keycode="VK_DELETE" command="cmd_remove"/>
+#ifdef XP_MACOSX
+    <key id="key_remove2" keycode="VK_BACK" command="cmd_remove"/>
+#endif
     <key id="key_close"   key="&cmd.close.commandKey;"  oncommand="closeWindow(true);"    modifiers="accel"/>
 #ifdef XP_GNOME
     <key id="key_close2"  key="&cmd.close2Unix.commandKey;" oncommand="closeWindow(true);" modifiers="accel"/>
