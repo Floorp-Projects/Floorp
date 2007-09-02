@@ -518,32 +518,13 @@
           }
           // completely ignore right-clicks
           else if (aEvent.button != 2) {
-            if (gURLBar && this.mInput == gURLBar) {
-              // handle address bar click
-              var url = controller.getValueAt(this.tree.view.selection.currentIndex);
+            var url = controller.getValueAt(this.tree.view.selection.currentIndex);
 
-              // close the autocomplete popup and revert the entered address
-              this.closePopup();
-              controller.handleEscape();
-              // respect the usual clicking subtleties
-              openUILink(url, aEvent);
-            }
-            else if (this.mInput._getParentSearchbar) {
-              // handle search bar click
-              var search = controller.getValueAt(this.tree.view.selection.currentIndex);
-              var textbox = this.mInput;
-
-              // close the autocomplete popup and copy the selected value to the search box
-              this.closePopup();
-              textbox.value = search;
-              // open the search results according to the clicking subtlety
-              var where = whereToOpenLink(aEvent, false, true);
-              textbox._getParentSearchbar().doSearch(search, where);
-            }
-            else {
-              // everybody else (i.e. browser content) gets unmodified behavior
-              controller.handleEnter();
-            }
+            // close the autocomplete popup and revert the entered address
+            this.closePopup();
+            controller.handleEscape();
+            // respect the usual clicking subtleties
+            openUILink(url, aEvent);
           }
         ]]></body>
       </method>
