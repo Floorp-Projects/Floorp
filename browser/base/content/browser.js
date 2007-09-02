@@ -238,7 +238,7 @@ function SetClickAndHoldHandlers()
                           false);
     aElm.addEventListener("mouseout",
                           MayStopClickAndHoldTimer,
-                          false);  
+                          false);
     
     // don't propagate onclick and oncommand events after
     // click-and-hold opened the drop-down menu
