@@ -274,7 +274,10 @@ function ConfirmDelete()
   }
   
   selectedProfile.remove(deleteFiles);
-  selectedItem.parentNode.removeChild(selectedItem);
+  profileList.removeChild(selectedItem);
+  if (profileList.firstChild != undefined) {
+    profileList.selectItem(profileList.firstChild);
+  }
 
   return true;
 }
