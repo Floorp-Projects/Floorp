@@ -390,7 +390,7 @@ sub Execute {
     find(sub { return $this->LeaveOnlyUpdateMarsCallback(); },
      catfile($stageDir, 'batch1', 'mar'));
 
-    foreach my $delDir (@{$this->{'leaveOnlyUpdateMarsDirDeleteList'}}) {
+    foreach my $delDir (@{$this->{'leaveOnlyMarsDirDeleteList'}}) {
         if (-e $delDir && -d $delDir) {
             $this->Log(msg => "rmtree() ing $delDir");
             if (rmtree($delDir, 1, 1) <= 0) {
@@ -403,12 +403,6 @@ sub Execute {
                       catfile($stageDir, 'batch1', 'mar')
                       );
 
-    $this->Shell(
-      cmd => catfile($stageHome, 'bin', 'groom-files'),
-      cmdArgs => ['--short=' . $version, '.'],
-      logFile => catfile($logDir, 'stage_groom_files_updates.log'),
-      dir => catfile($stageDir, 'batch1', 'mar'),
-    );
 }
 
 sub Verify {
