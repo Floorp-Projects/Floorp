@@ -32,6 +32,7 @@ classic.jar:
   skin/classic/browser/feeds/feedIcon16.png                 (feeds/feedIcon16.png)
   skin/classic/browser/setDesktopBackground.css
   skin/classic/browser/monitor.png
+  skin/classic/browser/monitor_16-10.png
   skin/classic/browser/places/places.css                    (places/places.css)
   skin/classic/browser/places/query.png                     (places/query.png)
   skin/classic/browser/places/livemarkItem.png              (places/livemarkItem.png)

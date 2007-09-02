@@ -40,6 +40,7 @@ classic.jar:
         skin/classic/browser/Search-provider-mid-bottom.png
         skin/classic/browser/setDesktopBackground.css
         skin/classic/browser/monitor.png
+        skin/classic/browser/monitor_16-10.png
         skin/classic/browser/feeds/feedIcon.png                 (feeds/feedIcon.png)
         skin/classic/browser/feeds/feedIcon16.png               (feeds/feedIcon16.png)
         skin/classic/browser/feeds/subscribe.css                (feeds/subscribe.css)
