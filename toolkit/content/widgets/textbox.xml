@@ -359,11 +359,11 @@
             this._spellCheckInitialized = true;
 
             const CI = Components.interfaces;
-            if (!document instanceof CI.nsIDOMXULDocument)
+            if (!(document instanceof CI.nsIDOMXULDocument))
               return null;
 
             var textbox = document.getBindingParent(this);
-            if (!textbox || !textbox instanceof CI.nsIDOMXULTextBoxElement)
+            if (!textbox || !(textbox instanceof CI.nsIDOMXULTextBoxElement))
               return null;
 
             try {
