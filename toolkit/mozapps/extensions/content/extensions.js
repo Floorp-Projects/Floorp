@@ -1014,8 +1014,7 @@ UpdateCheckListener.prototype = {
     const nsIAUCL = Components.interfaces.nsIAddonUpdateCheckListener;
     switch (status) {
     case nsIAUCL.STATUS_UPDATE:
-      var updatedVersion = element.getAttribute("availableUpdateVersion");
-      var statusMsg = getExtensionString("updateAvailableMsg", [updatedVersion]);
+      var statusMsg = getExtensionString("updateAvailableMsg", [addon.version]);
       this._updateFound = true;
       break;
     case nsIAUCL.STATUS_VERSIONINFO:
