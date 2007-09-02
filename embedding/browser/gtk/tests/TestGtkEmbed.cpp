@@ -255,7 +255,9 @@ main(int argc, char **argv)
   gtk_signal_connect(GTK_OBJECT(single), "new_window_orphan",
 		     GTK_SIGNAL_FUNC(new_window_orphan_cb), NULL);
 
+  gtk_moz_embed_push_startup();
   gtk_main();
+  gtk_moz_embed_pop_startup();
 }
 
 static TestGtkBrowser *
