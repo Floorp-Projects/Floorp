@@ -119,34 +119,6 @@ PlacesController.prototype = {
     case "placesCmd_open:window":
     case "placesCmd_open:tab":
       return this._view.selectedURINode;
-    case "placesCmd_open:tabs":
-      // We can open multiple links if the current selection is either:
-      //  a) a single folder which contains at least one link
-      //  b) multiple links
-      var node = this._view.selectedNode;
-      if (!node)
-        return false;
-
-      if (this._view.hasSingleSelection && PlacesUtils.nodeIsFolder(node)) {
-        var contents = PlacesUtils.getFolderContents(node.itemId, false, false).root;
-        for (var i = 0; i < contents.childCount; ++i) {
-          var child = contents.getChild(i);
-          if (PlacesUtils.nodeIsURI(child))
-            return true;
-        }
-      }
-      else {
-        var oneLinkIsSelected = false;
-        var nodes = this._view.getSelectionNodes();
-        for (var i = 0; i < nodes.length; ++i) {
-          if (PlacesUtils.nodeIsURI(nodes[i])) {
-            if (oneLinkIsSelected)
-              return true;
-            oneLinkIsSelected = true;
-          }
-        }
-      }
-      return false;
     case "placesCmd_new:folder":
     case "placesCmd_new:livemark":
       return this._canInsert() &&
@@ -274,9 +246,6 @@ PlacesController.prototype = {
       break;
     case "placesCmd_open:tab":
       this.openSelectedNodeIn("tab");
-      break;
-    case "placesCmd_open:tabs":
-      this.openLinksInTabs();
       break;
     case "placesCmd_new:folder":
       this.newItem("folder");
@@ -670,6 +639,21 @@ PlacesController.prototype = {
       }
     }
 
+    // Set Open Folder/Links In Tabs items enabled state if they're visible
+    if (anyVisible) {
+      var openContainerInTabsItem = document.getElementById("placesContext_openContainer:tabs");
+      if (!openContainerInTabsItem.hidden) {
+        openContainerInTabsItem.disabled =
+          PlacesUtils.getURLsForContainerNode(this._view.selectedNode)
+                     .length == 0;
+      }
+      else {
+        // see selectiontype rule in the overlay
+        var openLinksInTabsItem = document.getElementById("placesContext_openLinks:tabs");
+        openLinksInTabsItem.disabled = openLinksInTabsItem.hidden;
+      }
+    }
+
     return anyVisible;
   },
 
@@ -829,103 +813,13 @@ PlacesController.prototype = {
 
   /**
    * Opens the links in the selected folder, or the selected links in new tabs. 
-   * XXXben this needs to handle the case when there are no open browser windows
-   * XXXben this function is really long, should be split apart. The codepaths 
-   *        seem different between load folder in tabs and load selection in
-   *        tabs, too. 
-   * See: https://bugzilla.mozilla.org/show_bug.cgi?id=331908
    */
-  openLinksInTabs: function PC_openLinksInTabs() {
+  openSelectionInTabs: function PC_openLinksInTabs(aEvent) {
     var node = this._view.selectedNode;
-    if (this._view.hasSingleSelection && PlacesUtils.nodeIsFolder(node)) {
-      // Check prefs to see whether to open over existing tabs.
-      var doReplace = getBoolPref("browser.tabs.loadFolderAndReplace");
-      var loadInBackground = getBoolPref("browser.tabs.loadBookmarksInBackground");
-      // Get the start index to open tabs at
-
-      // XXX todo: no-browser-window-case
-      var browserWindow = getTopWin();
-      var browser = browserWindow.getBrowser();
-      var tabPanels = browser.browsers;
-      var tabCount = tabPanels.length;
-      var firstIndex;
-      // If browser.tabs.loadFolderAndReplace pref is set, load over all the
-      // tabs starting with the first one.
-      if (doReplace)
-        firstIndex = 0;
-      // If the pref is not set, only load over the blank tabs at the end, if any.
-      else {
-        for (firstIndex = tabCount - 1; firstIndex >= 0; --firstIndex) {
-          var br = browser.browsers[firstIndex];
-          if (br.currentURI.spec != "about:blank" ||
-              br.webProgress.isLoadingDocument)
-            break;
-        }
-        ++firstIndex;
-      }
-
-      // Open each uri in the folder in a tab.
-      var index = firstIndex;
-      var urlsToOpen = [];
-      var contents = PlacesUtils.getFolderContents(node.itemId, false, false).root;
-      for (var i = 0; i < contents.childCount; ++i) {
-        var child = contents.getChild(i);
-        if (PlacesUtils.nodeIsURI(child))
-          urlsToOpen.push(child.uri);
-      }
-
-      if (!this._confirmOpenTabs(urlsToOpen.length))
-        return;
-
-      for (var i = 0; i < urlsToOpen.length; ++i) {
-        if (index < tabCount)
-          tabPanels[index].loadURI(urlsToOpen[i]);
-        // Otherwise, create a new tab to load the uri into.
-        else
-          browser.addTab(urlsToOpen[i]);
-        ++index;
-      }
-
-      // If no bookmarks were loaded, just bail.
-      if (index == firstIndex)
-        return;
-
-      // focus the first tab if prefs say to
-      if (!loadInBackground || doReplace) {
-        // Select the first tab in the group.
-        // Set newly selected tab after quick timeout, otherwise hideous focus problems
-        // can occur because new presshell is not ready to handle events
-        function selectNewForegroundTab(browser, tab) {
-          browser.selectedTab = tab;
-        }
-        var tabs = browser.mTabContainer.childNodes;
-        setTimeout(selectNewForegroundTab, 0, browser, tabs[firstIndex]);
-      }
-
-      // Close any remaining open tabs that are left over.
-      // (Always skipped when we append tabs)
-      for (var i = tabCount - 1; i >= index; --i)
-        browser.removeTab(tabs[i]);
-
-      // and focus the content
-      browserWindow.content.focus();
-    }
-    else {
-      var urlsToOpen = [];
-      var nodes = this._view.getSelectionNodes();
-
-      for (var i = 0; i < nodes.length; ++i) {
-        if (PlacesUtils.nodeIsURI(nodes[i]))
-          urlsToOpen.push(nodes[i].uri);
-      }
-
-      if (!this._confirmOpenTabs(urlsToOpen.length))
-        return;
-
-      for (var i = 0; i < urlsToOpen.length; ++i) {
-        getTopWin().openNewTabWith(urlsToOpen[i], null, null);
-      }
-    }
+    if (this._view.hasSingleSelection && PlacesUtils.nodeIsContainer(node))
+      PlacesUtils.openContainerNodeInTabs(this._view.selectedNode, aEvent);
+    else
+      PlacesUtils.openURINodesInTabs(this._view.getSelectionNodes(), aEvent);
   },
 
   /**
@@ -1488,7 +1382,6 @@ function goUpdatePlacesCommands() {
   goUpdateCommand("placesCmd_open");
   goUpdateCommand("placesCmd_open:window");
   goUpdateCommand("placesCmd_open:tab");
-  goUpdateCommand("placesCmd_open:tabs");
   goUpdateCommand("placesCmd_new:folder");
   goUpdateCommand("placesCmd_new:bookmark");
   goUpdateCommand("placesCmd_new:livemark");

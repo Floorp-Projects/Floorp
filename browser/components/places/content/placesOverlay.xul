@@ -71,8 +71,7 @@
              oncommand="goDoCommand('placesCmd_open:window');"/>
     <command id="placesCmd_open:tab"
              oncommand="goDoCommand('placesCmd_open:tab');"/>
-    <command id="placesCmd_open:tabs"
-             oncommand="goDoCommand('placesCmd_open:tabs');"/>
+
     <command id="placesCmd_new:bookmark"
              oncommand="goDoCommand('placesCmd_new:bookmark');"/>
     <command id="placesCmd_new:livemark"
@@ -121,14 +120,18 @@
               accesskey="&cmd.open_tab.accesskey;"
               selectiontype="single"
               selection="link"/>
-    <menuitem id="placesContext_openFolder:tabs"
-              command="placesCmd_open:tabs"
+    <menuitem id="placesContext_openContainer:tabs"
+              oncommand="var view = PlacesUtils.getViewForNode(document.popupNode);
+                         view.controller.openSelectionInTabs(event);"
+              onclick="checkForMiddleClick(this, event);"
               label="&cmd.open_all_in_tabs.label;"
               accesskey="&cmd.open_all_in_tabs.accesskey;"
               selectiontype="single"
-              selection="folder"/>
+              selection="folder|host|query"/>
     <menuitem id="placesContext_openLinks:tabs"
-              command="placesCmd_open:tabs"
+              oncommand="var view = PlacesUtils.getViewForNode(document.popupNode);
+                         view.controller.openSelectionInTabs(event);"
+              onclick="checkForMiddleClick(this, event);"
               label="&cmd.open_all_in_tabs.label;"
               accesskey="&cmd.open_all_in_tabs.accesskey;"
               selectiontype="multiple"

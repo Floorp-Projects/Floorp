@@ -387,10 +387,10 @@ var BookmarksEventHandler = {
     var view = PlacesUtils.getViewForNode(target);
     if (PlacesUtils.nodeIsFolder(view.selectedNode)) {
       // Don't open the root folder in tabs when the empty area on the toolbar
-      // is middle-clicked or when a non-bookmark item in a bookmarks menupopup
-      // middle-clicked.
+      // is middle-clicked or when a non-bookmark item except for Open in Tabs)
+      // in a bookmarks menupopup is middle-clicked.
       if (!view.controller.rootNodeIsSelected())
-        view.controller.openLinksInTabs();
+        view.controller.openSelectionInTabs(aEvent);
     }
     else
       this.onCommand(aEvent);
@@ -430,12 +430,10 @@ var BookmarksEventHandler = {
     // load all the menuitems in tabs.
 
     var target = aEvent.originalTarget;
-    if (target.hasAttribute("openInTabs"))
-      PlacesUtils.getViewForNode(target).controller.openLinksInTabs();
-    else if (target.hasAttribute("siteURI"))
+    if (target.hasAttribute("siteURI"))
       openUILink(target.getAttribute("siteURI"), aEvent);
     // If this is a normal bookmark, just load the bookmark's URI.
-    else
+    else if (!target.hasAttribute("openInTabs"))
       PlacesUtils.getViewForNode(target)
                  .controller
                  .openSelectedNodeWithEvent(aEvent);
@@ -498,6 +496,9 @@ var BookmarksEventHandler = {
         if (hasMultipleEntries) {
           var openInTabs = document.createElement("menuitem");
           openInTabs.setAttribute("openInTabs", "true");
+          openInTabs.setAttribute("onclick", "checkForMiddleClick(this, event)");
+          openInTabs.setAttribute("oncommand",
+                                  "PlacesUtils.openContainerNodeInTabs(this.parentNode.getResultNode(), event);");
           openInTabs.setAttribute("label",
                      gNavigatorBundle.getString("menuOpenAllInTabs.label"));
           target.appendChild(openInTabs);
