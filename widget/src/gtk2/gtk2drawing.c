@@ -406,25 +406,8 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
     gtk_widget_set_state(widget, button_state);
 
-    /*
-     * XXX fix this code when we have default state working.
-    if (state->isDefault) {
-        TSOffsetStyleGCs(style, x, y);
-        gtk_paint_box(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
-                      cliprect, widget, "buttondefault", x, y, width, height);
-    }
-
-    if (state->canDefault) {
-        x += XTHICKNESS(style);
-        y += YTHICKNESS(style);
-
-        width -= 2 * x + default_spacing;
-        height -= 2 * y + default_spacing;
-
-        x += (1 + default_spacing) / 2;
-        y += (1 + default_spacing) / 2;
-    }
-    */
+    if (state->isDefault)
+        GTK_WIDGET_SET_FLAGS(widget, GTK_HAS_DEFAULT);
 
     if (!interior_focus && state->focused) {
         x += focus_width + focus_pad;
@@ -463,6 +446,7 @@ moz_gtk_button_paint(GdkDrawable* drawable, GdkRectangle* rect,
                         widget, "button", x, y, width, height);
     }
 
+    GTK_WIDGET_UNSET_FLAGS(widget, GTK_HAS_DEFAULT);
     return MOZ_GTK_SUCCESS;
 }
 
