@@ -338,7 +338,7 @@ function loadPageInfo()
   onLoadPermission();
 
   /* Call registered overlay init functions */
-  onLoadRegistry.map(function(func) { func(); });
+  onLoadRegistry.forEach(function(func) { func(); });
 }
 
 function resetPageInfo()
@@ -363,7 +363,7 @@ function resetPageInfo()
     feedListbox.removeChild(feedListbox.firstChild);
 
   /* Call registered overlay reset functions */
-  onResetRegistry.map(function(func) { func(); });
+  onResetRegistry.forEach(function(func) { func(); });
 
   /* And let's rebuild the data */
   loadPageInfo();
@@ -378,7 +378,7 @@ function onUnloadPageInfo()
   }
 
   /* Call registered overlay unload functions */
-  onUnloadRegistry.map(function(func) { func(); });
+  onUnloadRegistry.forEach(function(func) { func(); });
 }
 
 function doHelpButton()
@@ -524,13 +524,13 @@ function processFrames()
 {
   if (gFrameList.length) {
     var doc = gFrameList[0];
-    onProcessFrame.map(function(func) { func(doc); });
+    onProcessFrame.forEach(function(func) { func(doc); });
     var iterator = doc.createTreeWalker(doc, NodeFilter.SHOW_ELEMENT, grabAll, true);
     gFrameList.shift();
     setTimeout(doGrab, 16, iterator);
   }
   else
-    onFinished.map(function(func) { func(); });
+    onFinished.forEach(function(func) { func(); });
 }
 
 function doGrab(iterator)
@@ -629,7 +629,7 @@ function grabAll(elem)
   else if (elem instanceof HTMLEmbedElement)
     addImage(elem.src, gStrings.mediaEmbed, "", elem, false);
 
-  onProcessElement.map(function(func) { func(elem); });
+  onProcessElement.forEach(function(func) { func(elem); });
 
   return NodeFilter.FILTER_ACCEPT;
 }
