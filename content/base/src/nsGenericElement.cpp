@@ -674,12 +674,15 @@ nsNode3Tearoff::IsDefaultNamespace(const nsAString& aNamespaceURI,
 //----------------------------------------------------------------------
 
 
+NS_IMPL_CYCLE_COLLECTION_1(nsNSElementTearoff, mContent)
+
 NS_INTERFACE_MAP_BEGIN(nsNSElementTearoff)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSElement)
+  NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsNSElementTearoff)
 NS_INTERFACE_MAP_END_AGGREGATED(mContent)
 
-NS_IMPL_ADDREF(nsNSElementTearoff)
-NS_IMPL_RELEASE(nsNSElementTearoff)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNSElementTearoff)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsNSElementTearoff)
 
 NS_IMETHODIMP
 nsNSElementTearoff::GetElementsByClassName(const nsAString& aClasses,
