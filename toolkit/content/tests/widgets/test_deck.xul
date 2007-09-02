@@ -8,11 +8,11 @@
         onload="setTimeout(test_deck, 0);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" 
-          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+          src="/MochiKit/packed.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+          src="/tests/SimpleTest/SimpleTest.js"></script>      
   <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+          src="/tests/SimpleTest/EventUtils.js"></script>      
 
 <deck id="deck1" style="padding-top: 5px; padding-bottom: 12px;">
   <button id="d1b1" label="Button One"/>
