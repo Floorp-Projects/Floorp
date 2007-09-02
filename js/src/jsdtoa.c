@@ -2350,8 +2350,13 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
                 *s++ = '0' + (char)L;
                 if (d < eps)
                     goto ret1;
-                if (1. - d < eps)
+                if (1. - d < eps) {
+#ifdef DEBUG
+                    /* Clear d to avoid precision warning. */
+                    d = 0;
+#endif
                     goto bump_up;
+                }
                 if (++i >= ilim)
                     break;
                 eps *= 10.;
@@ -2367,8 +2372,13 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
                 d -= L;
                 *s++ = '0' + (char)L;
                 if (i == ilim) {
-                    if (d > 0.5 + eps)
+                    if (d > 0.5 + eps) {
+#ifdef DEBUG
+                        /* Clear d to avoid precision warning. */
+                        d = 0;
+#endif
                         goto bump_up;
+                    }
                     else if (d < 0.5 - eps) {
                         while(*--s == '0') ;
                         s++;
