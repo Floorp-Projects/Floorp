@@ -75,12 +75,12 @@
 #endif
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 #ifdef USE_WIN_TITLE_STYLE
-            style="&prefWindow.styleWin;">
+            style="&prefWin.styleWin;">
 #else
 #ifdef XP_MACOSX
             style="&prefWindow.styleMac;">
 #else
-            style="&prefWindow.styleGNOME;">
+            style="&prefWin.styleGNOME;">
 #endif
 #endif
   
