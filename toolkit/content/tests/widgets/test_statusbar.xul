@@ -8,11 +8,11 @@
         onload="setTimeout(test_statusbar, 0);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" 
-          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+          src="/MochiKit/packed.js"></script>
   <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+          src="/SimpleTest/SimpleTest.js"></script>      
   <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+          src="/SimpleTest/EventUtils.js"></script>      
 
 <statusbar>
   <statusbarpanel id="panel" label="OK" image="happy.png"/>
