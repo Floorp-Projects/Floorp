@@ -148,8 +148,8 @@ nsEffectiveTLDService::GetEffectiveTLDLength(const nsACString &aHostname,
         *effTLDLength = end - prevDomain;
         break;
 
-      } else if (entry->IsNormal() || !nextDot) {
-        // specific match, or we've hit the top domain level
+      } else if (entry->IsNormal()) {
+        // specific match
         *effTLDLength = end - currDomain;
         break;
 
