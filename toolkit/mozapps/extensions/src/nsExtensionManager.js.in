@@ -60,6 +60,7 @@ const nsIURL                          = Components.interfaces.nsIURL
 const nsIDirectoryEnumerator          = Components.interfaces.nsIDirectoryEnumerator;
 
 const PREF_EM_CHECK_COMPATIBILITY     = "extensions.checkCompatibility";
+const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
 const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";
 const PREF_UPDATE_COUNT               = "extensions.update.count";
 const PREF_UPDATE_DEFAULT_URL         = "extensions.update.url";
@@ -151,6 +152,7 @@ const INSTALLERROR_INCOMPATIBLE_VERSION  = -3;
 const INSTALLERROR_PHONED_HOME           = -4;
 const INSTALLERROR_INCOMPATIBLE_PLATFORM = -5;
 const INSTALLERROR_BLOCKLISTED           = -6;
+const INSTALLERROR_INSECURE_UPDATE       = -7;
 
 const MODE_RDONLY   = 0x01;
 const MODE_WRONLY   = 0x02;
@@ -173,6 +175,7 @@ var gInstallManifestRoot  = null;
 var gVersionChecker       = null;
 var gLoggingEnabled       = null;
 var gCheckCompatibility   = true;
+var gCheckUpdateSecurity  = true;
 var gLocale               = "en-US";
 
 /**
@@ -315,10 +318,12 @@ function getResourceForID(id) {
  * ...
  */
 function makeItem(id, version, locationKey, minVersion, maxVersion, name,
-                  updateURL, updateHash, iconURL, updateRDF, type, targetAppID) {
+                  updateURL, updateHash, iconURL, updateRDF, updateKey, type, 
+                  targetAppID) {
   var item = new UpdateItem();
   item.init(id, version, locationKey, minVersion, maxVersion, name,
-            updateURL, updateHash, iconURL, updateRDF, type, targetAppID);
+            updateURL, updateHash, iconURL, updateRDF, updateKey, type,
+            targetAppID);
   return item;
 }
 
@@ -2431,8 +2436,9 @@ ExtensionManager.prototype = {
     case "nsPref:changed":
       if (data == PREF_EM_LOGGING_ENABLED)
         this._loggingToggled();
-      else if (data == PREF_EM_CHECK_COMPATIBILITY)
-        this._checkCompatToggled();
+      else if (data == PREF_EM_CHECK_COMPATIBILITY ||
+               data == PREF_EM_CHECK_UPDATE_SECURITY)
+        this._updateAppDisabledState();
       else if ((data == PREF_MATCH_OS_LOCALE) || (data == PREF_SELECTED_LOCALE))
         this._updateLocale();
       break;
@@ -2465,11 +2471,12 @@ ExtensionManager.prototype = {
   },
 
   /**
-   * Enables or disables extensions that are incompatible depending upon the pref
-   * setting for compatibility checking.
+   * When a preference is toggled that affects whether an item is usable or not
+   * we must app-enable or app-disable the item based on the new settings.
    */
-  _checkCompatToggled: function() {
+  _updateAppDisabledState: function() {
     gCheckCompatibility = getPref("getBoolPref", PREF_EM_CHECK_COMPATIBILITY, true);
+    gCheckUpdateSecurity = getPref("getBoolPref", PREF_EM_CHECK_UPDATE_SECURITY, true);
     var ds = this.datasource;
 
     // Enumerate all items
@@ -2506,6 +2513,7 @@ ExtensionManager.prototype = {
     }
     gLoggingEnabled = getPref("getBoolPref", PREF_EM_LOGGING_ENABLED, false);
     gCheckCompatibility = getPref("getBoolPref", PREF_EM_CHECK_COMPATIBILITY, true);
+    gCheckUpdateSecurity = getPref("getBoolPref", PREF_EM_CHECK_UPDATE_SECURITY, true);
     gPref.addObserver("extensions.", this, false);
     gPref.addObserver(PREF_MATCH_OS_LOCALE, this, false);
     gPref.addObserver(PREF_SELECTED_LOCALE, this, false);
@@ -2751,6 +2759,7 @@ ExtensionManager.prototype = {
                       "", /* XPI Update Hash */
                       getManifestProperty(installManifest, "iconURL"),
                       getManifestProperty(installManifest, "updateURL"),
+                      getManifestProperty(installManifest, "updateKey"),
                       installData.type,
                       targetAppInfo ? targetAppInfo.appID : gApp.ID);
     }
@@ -2802,6 +2811,11 @@ ExtensionManager.prototype = {
           callback(installManifest, installData.id, location, installData.type);
           em._appDisableItem(id);
         }
+        else if (installData.error == INSTALLERROR_INSECURE_UPDATE) {
+          LOG("... success, item installed but does not provide updates securely");
+          callback(installManifest, installData.id, location, installData.type);
+          em._appDisableItem(id);
+        }
         else if (installData.error == INSTALLERROR_BLOCKLISTED) {
           LOG("... success, item installed but is blocklisted");
           callback(installManifest, installData.id, location, installData.type);
@@ -2820,8 +2834,6 @@ ExtensionManager.prototype = {
               return "Invalid GUID";
             case INSTALLERROR_INVALID_VERSION:
               return "Invalid Version";
-            case INSTALLERROR_INCOMPATIBLE_VERSION:
-              return "Incompatible Version";
             case INSTALLERROR_INCOMPATIBLE_PLATFORM:
               return "Incompatible Platform";
             }
@@ -3475,8 +3487,22 @@ ExtensionManager.prototype = {
       }
       else if (allAppManaged)
         allAppManaged = false;
-      // appDisabled is determined by an item being compatible,
-      // satisfying its dependencies, and not being blocklisted
+
+      if (ds.getItemProperty(id, "providesUpdatesSecurely") == "false") {
+        /* It's possible the previous version did not understand updateKeys so
+         * check if we can import one for this addon from it's manifest. */
+        var location = this.getInstallLocation(id);
+        var installRDF = location.getItemFile(id, FILE_INSTALL_MANIFEST);
+        if (installRDF.exists()) {
+          var metadataDS = getInstallManifest(installRDF);
+          var literal = metadataDS.GetTarget(gInstallManifestRoot, EM_R("updateKey"), true);
+          if (literal && literal instanceof Components.interfaces.nsIRDFLiteral)
+            ds.setItemProperty(id, EM_R("updateKey"), literal);
+        }
+      }
+
+      // appDisabled is determined by an item being compatible, using secure
+      // updates, satisfying its dependencies, and not being blocklisted
       if (this._isUsableItem(id)) {
         if (ds.getItemProperty(id, "appDisabled"))
           ds.setItemProperty(id, EM_R("appDisabled"), null);
@@ -3853,6 +3879,8 @@ ExtensionManager.prototype = {
    *                     INSTALLERROR_INCOMPATIBLE_PLATFORM
    *                       error, item is not compatible with the operating
    *                       system or ABI the application was built for.
+   *                     INSTALLERROR_INSECURE_UPDATE
+   *                       error, item has no secure method of providing updates
    *                     INSTALLERROR_BLOCKLISTED
    *                       error, item is blocklisted
    */
@@ -3863,6 +3891,8 @@ ExtensionManager.prototype = {
                         type        : 0,
                         error       : INSTALLERROR_SUCCESS,
                         targetApps  : [],
+                        updateURL   : "",
+                        updateKey   : "",
                         currentApp  : null };
 
     // Fetch properties from the Install Manifest
@@ -3871,6 +3901,7 @@ ExtensionManager.prototype = {
     installData.name     = getManifestProperty(installManifest, "name");
     installData.type     = getAddonTypeFromInstallManifest(installManifest);
     installData.updateURL= getManifestProperty(installManifest, "updateURL");
+    installData.updateKey= getManifestProperty(installManifest, "updateKey");
 
     /**
      * Reads a property off a Target Application resource
@@ -3948,12 +3979,23 @@ ExtensionManager.prototype = {
       installData.error = INSTALLERROR_INVALID_GUID;
       return installData;
     }
-
-    // Check the target application range specified by the extension metadata.
+    
+    // Check that the add-on provides a secure update method.
+    if (gCheckUpdateSecurity &&
+        installData.updateURL &&
+        installData.updateURL.substring(0, 6) != "https:" &&
+        !installData.updateKey) {
+      installData.error = INSTALLERROR_INSECURE_UPDATE;
+      return installData;
+    }
+      
+    // Check that the target application range allows compatibility with the app
     if (gCheckCompatibility &&
-        !this.datasource.isCompatible(installManifest, gInstallManifestRoot, undefined))
+        !this.datasource.isCompatible(installManifest, gInstallManifestRoot, undefined)) {
       installData.error = INSTALLERROR_INCOMPATIBLE_VERSION;
-
+      return installData;
+    }
+    
     // Check if the item is blocklisted.
     if (!gBlocklist)
       gBlocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
@@ -4192,6 +4234,7 @@ ExtensionManager.prototype = {
                             "", /* XPI Update Hash */
                             "", /* Icon URL */
                             installData.updateURL || "",
+                            installData.updateKey || "",
                             installData.type,
                             installData.currentApp.id);
         em.update([item], 1, nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY, this);
@@ -4414,6 +4457,14 @@ ExtensionManager.prototype = {
       LOG("Blocklisted Item: Item: \"" + installData.id + "\" version " +
           installData.version + " was not installed.");
       showBlocklistMessage([installData], true);
+      break;
+    case INSTALLERROR_INSECURE_UPDATE:
+      LOG("No secure updates: Item: \"" + installData.id + "\" version " + 
+          installData.version + " was not installed.");
+      var bundle = BundleManager.getBundle(URI_EXTENSIONS_PROPERTIES);
+      showMessage("incompatibleTitle", 
+                  [bundle.GetStringFromName("type-" + installData.type)], 
+                  "insecureUpdateMessage", [installData.name]);
       break;
     default:
       break;
@@ -5064,9 +5115,23 @@ ExtensionManager.prototype = {
    */
   _isUsableItem: function(id) {
     var ds = this.datasource;
-    return ((!gCheckCompatibility || ds.getItemProperty(id, "compatible") == "true") &&
-            ds.getItemProperty(id, "blocklisted") == "false" &&
-            ds.getItemProperty(id, "satisfiesDependencies") == "true");
+    /* If we're not compatibility checking or if the item is compatible
+     * and if it isn't blocklisted and has all dependencies satisfied then
+     * proceed to the security check */
+    if ((!gCheckCompatibility || ds.getItemProperty(id, "compatible") == "true") &&
+        ds.getItemProperty(id, "blocklisted") == "false" &&
+        ds.getItemProperty(id, "satisfiesDependencies") == "true") {
+
+      // appManaged items aren't updated so no need to check update security.
+      if (ds.getItemProperty(id, "appManaged") == "true")
+        return true;
+
+      /* If we are not ignoring update security then check that the item has
+       * a secure update mechanism */
+      return (!gCheckUpdateSecurity ||
+              ds.getItemProperty(id, "providesUpdatesSecurely") == "true");
+    }
+    return false;
   },
 
   /**
@@ -6164,11 +6229,54 @@ RDFItemUpdater.prototype = {
           "doesn't give up much in the way of information when the load fails.\r\n" +
           "\r\nTry checking that: \r\n" +
           " 1. Your remote RDF file exists at the location.\r\n" +
-          " 2. Your RDF file is valid XML (starts with <?xml version=\"1.0?\">\r\n" +
+          " 2. Your RDF file is valid XML (starts with <?xml version=\"1.0\"?>\r\n" +
           "    and loads in Firefox displaying pretty printed like other XML documents\r\n" +
           " 3. Your server is sending the data in the correct MIME\r\n" +
           "    type (text/xml)");
+    }      
+
+    // If we have an update key then the update manifest must be signed
+    if (aLocalItem.updateKey) {
+      var extensionRes = gRDF.GetResource(getItemPrefix(aLocalItem.type) + aLocalItem.id);
+      LOG(extensionRes.Value);
+      var signature = this._getPropertyFromResource(aDatasource, extensionRes, "signature", null);
+      if (signature) {
+        var serializer = new RDFSerializer();
+        try {
+          var updateString = serializer.serializeResource(aDatasource, extensionRes);
+          var verifier = Components.classes["@mozilla.org/security/datasignatureverifier;1"]
+                                   .getService(Components.interfaces.nsIDataSignatureVerifier);
+          try {
+            if (!verifier.verifyData(updateString, signature, aLocalItem.updateKey)) {
+              LOG("RDFItemUpdater:onDatasourceLoaded: Update manifest for " +
+                  aLocalItem.id + " failed signature check.");
+              this._updater.checkForDone(aLocalItem, nsIAddonUpdateCheckListener.STATUS_FAILURE);
+              return;
+            }
+          }
+          catch (e) {
+            LOG("RDFItemUpdater:onDatasourceLoaded: Failed to verify signature for " +
+                aLocalItem.id + ". This indicates a malformed update key or signature.");
+            this._updater.checkForDone(aLocalItem, nsIAddonUpdateCheckListener.STATUS_FAILURE);
+            return;
+          }
+        }
+        catch (e) {
+          LOG("RDFItemUpdater:onDatasourceLoaded: Failed to generate signature " +
+              "string for " + aLocalItem.id + ". Serializer threw " + e);
+          this._updater.checkForDone(aLocalItem, nsIAddonUpdateCheckListener.STATUS_FAILURE);
+          return;
+        }
+      }
+      else {
+        LOG("RDFItemUpdater:onDatasourceLoaded: Update manifest for " +
+            aLocalItem.id + " did not contain a signature.");
+        this._updater.checkForDone(aLocalItem, nsIAddonUpdateCheckListener.STATUS_FAILURE);
+        return;
+      }
     }
+    /* If there is no updateKey either the update was over SSL, or it is an old
+     * addon that we are allowing a grace update. */
 
     // Parse the response RDF
     var newerItem, sameItem;
@@ -6344,16 +6452,37 @@ RDFItemUpdater.prototype = {
       if (appID != this._updater._appID && appID != TOOLKIT_ID)
         continue;
 
+      var updateLink = this._getPropertyFromResource(aDataSource, targetApp, "updateLink", aLocalItem);
+      var updateHash = this._getPropertyFromResource(aDataSource, targetApp, "updateHash", aLocalItem);
+      if (aUpdateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION) {
+        // New version information is useless without a link to get it from
+        if (!updateLink)
+          continue;
+
+        /* If the update link is non-ssl and we do not have a hash or the hash
+         * is of an insecure nature then we must ignore this update. Bypass
+         * this if not checking update security. Currently we only consider
+         * the sha hashing algorithms as secure. */
+        if (gCheckUpdateSecurity && updateLink.substring(0, 6) != "https:" && 
+            (!updateHash || updateHash.substring(0, 3) != "sha")) {
+          LOG("RDFItemUpdater:_parseV20Update: Update for " + aLocalItem.id +
+              " at " + updateLink + " ignored because it is insecure. updateLink " +
+              " must be a https url or an updateHash must be specified.");
+          continue;
+        }
+      }
+
       var updatedItem = makeItem(aLocalItem.id,
                                  version,
                                  aLocalItem.installLocationKey,
                                  this._getPropertyFromResource(aDataSource, targetApp, "minVersion", aLocalItem),
                                  this._getPropertyFromResource(aDataSource, targetApp, "maxVersion", aLocalItem),
                                  aLocalItem.name,
-                                 this._getPropertyFromResource(aDataSource, targetApp, "updateLink", aLocalItem),
-                                 this._getPropertyFromResource(aDataSource, targetApp, "updateHash", aLocalItem),
+                                 updateLink,
+                                 updateHash,
                                  "", /* Icon URL */
                                  "", /* RDF Update URL */
+                                 "", /* Update Key */
                                  aLocalItem.type,
                                  appID);
 
@@ -6368,6 +6497,158 @@ RDFItemUpdater.prototype = {
     return newestUpdateItem;
   }
 };
+
+/**
+ * A serialisation method for RDF data that produces an identical string
+ * provided that the RDF assertions match.
+ * The serialisation is not complete, only assertions stemming from a given
+ * resource are included, multiple references to the same resource are not
+ * permitted, and the RDF prolog and epilog are not included.
+ * RDF Blob and Date literals are not supported.
+ */
+function RDFSerializer()
+{
+  this.cUtils = Components.classes["@mozilla.org/rdf/container-utils;1"]
+                          .getService(Components.interfaces.nsIRDFContainerUtils);
+  this.resources = [];
+}
+
+RDFSerializer.prototype = {
+  INDENT: "  ",      // The indent used for pretty-printing
+  resources: null,   // Array of the resources that have been found
+  
+  /**
+   * Escapes characters from a string that should not appear in XML.
+   * @param string     The string to be escaped
+   * @returns a string with all characters invalid in XML character data
+   *          converted to entity references.
+   */
+  escapeEntities: function(string)
+  {
+    string = string.replace(/&/g, "&amp;");
+    string = string.replace(/</g, "&lt;");
+    string = string.replace(/>/g, "&gt;");
+    string = string.replace(/"/g, "&quot;");
+    return string;
+  },
+  
+  /**
+   * Serializes all the elements of an RDF container.
+   * @param ds         The datasource holding the data
+   * @param container  The RDF container to output the child elements of
+   * @param indent     The current level of indent for pretty-printing
+   * @returns a string containing the serialized elements.
+   */
+  serializeContainerItems: function(ds, container, indent)
+  {
+    var result = "";
+    var items = container.GetElements();
+    while (items.hasMoreElements()) {
+      var item = items.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      result += indent + "<RDF:li>\n"
+      result += this.serializeResource(ds, item, indent + this.INDENT);
+      result += indent + "</RDF:li>\n"
+    }
+    return result;
+  },
+  
+  /**
+   * Serializes all em:* (see EM_NS) properties of an RDF resource except for
+   * the em:signature property. As this serialization is to be compared against
+   * the manifest signature it cannot contain the em:signature property itself.
+   * @param ds         The datasource holding the data
+   * @param resource   The RDF resource to output the properties of
+   * @param indent     The current level of indent for pretty-printing
+   * @returns a string containing the serialized properties.
+   */
+  serializeResourceProperties: function(ds, resource, indent)
+  {
+    var result = "";
+    var items = [];
+    var arcs = ds.ArcLabelsOut(resource);
+    while (arcs.hasMoreElements()) {
+      var arc = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      if (arc.ValueUTF8.substring(0, PREFIX_NS_EM.length) != PREFIX_NS_EM)
+        continue;
+      var prop = arc.ValueUTF8.substring(PREFIX_NS_EM.length);
+      if (prop == "signature")
+        continue;
+  
+      var targets = ds.GetTargets(resource, arc, true);
+      while (targets.hasMoreElements()) {
+        var target = targets.getNext();
+        if (target instanceof Components.interfaces.nsIRDFResource) {
+          var item = indent + "<em:" + prop + ">\n";
+          item += this.serializeResource(ds, target, indent + this.INDENT);
+          item += indent + "</em:" + prop + ">\n";
+          items.push(item);
+        }
+        else if (target instanceof Components.interfaces.nsIRDFLiteral) {
+          items.push(indent + "<em:" + prop + ">" + this.escapeEntities(target.Value) + "</em:" + prop + ">\n");
+        }
+        else if (target instanceof Components.interfaces.nsIRDFInt) {
+          items.push(indent + "<em:" + prop + " NC:parseType=\"Integer\">" + target.Value + "</em:" + prop + ">\n");
+        }
+        else {
+          throw new Error("Cannot serialize unknown literal type");
+        }
+      }
+    }
+    items.sort();
+    result += items.join("");
+    return result;
+  },
+  
+  /**
+   * Recursively serializes an RDF resource and all resources it links to.
+   * This will only output EM_NS properties and will ignore any em:signature
+   * property.
+   * @param ds         The datasource holding the data
+   * @param resource   The RDF resource to serialize
+   * @param indent     The current level of indent for pretty-printing.
+   *                   Leave undefined for no indent
+   * @returns a string containing the serialized resource.
+   * @throws if the RDF data contains multiple references to the same resource.
+   */
+  serializeResource: function(ds, resource, indent)
+  {
+    if (this.resources.indexOf(resource) != -1 ) {
+      // We cannot output multiple references to the same resource.
+      throw new Error("Cannot serialize multiple references to "+resource.Value);
+    }
+    if (indent === undefined)
+      indent = "";
+    
+    this.resources.push(resource);
+    var container = null;
+    var type = "Description";
+    if (this.cUtils.IsSeq(ds, resource)) {
+      type = "Seq";
+      container = this.cUtils.MakeSeq(ds, resource);
+    }
+    else if (this.cUtils.IsAlt(ds, resource)) {
+      type = "Alt";
+      container = this.cUtils.MakeAlt(ds, resource);
+    }
+    else if (this.cUtils.IsBag(ds, resource)) {
+      type = "Bag";
+      container = this.cUtils.MakeBag(ds, resource);
+    }
+  
+    var result = indent + "<RDF:" + type;
+    if (!gRDF.IsAnonymousResource(resource))
+      result += " about=\"" + this.escapeEntities(resource.ValueUTF8) + "\"";
+    result += ">\n";
+  
+    if (container)
+      result += this.serializeContainerItems(ds, container, indent + this.INDENT);
+      
+    result += this.serializeResourceProperties(ds, resource, indent + this.INDENT);
+  
+    result += indent + "</RDF:" + type + ">\n";
+    return result;
+  }
+}
 
 /**
  * A Datasource that holds Extensions.
@@ -6669,6 +6950,7 @@ ExtensionsDataSource.prototype = {
                     updateHash ? updateHash : "",
                     this.getItemProperty(id, "iconURL"),
                     this.getItemProperty(id, "updateURL"),
+                    this.getItemProperty(id, "updateKey"),
                     this.getItemProperty(id, "type"),
                     targetAppInfo ? targetAppInfo.appID : gApp.ID);
   },
@@ -7122,7 +7404,7 @@ ExtensionsDataSource.prototype = {
     // Copy the assertions over from the source datasource.
     // Assert properties with single values
     var singleProps = ["version", "updateURL", "updateService", "optionsURL",
-                       "aboutURL", "iconURL", "internalName"];
+                       "aboutURL", "iconURL", "internalName", "updateKey"];
 
     // Items installed into restricted Install Locations can also be locked
     // (can't be removed or disabled), and hidden (not shown in the UI)
@@ -7738,6 +8020,19 @@ ExtensionsDataSource.prototype = {
   },
 
   /**
+   * Get the providesUpdatesSecurely property (whether or not this item has a
+   * secure update mechanism)
+   */
+  _rdfGet_providesUpdatesSecurely: function(item, property) {
+    var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
+    if (this.getItemProperty(id, "updateKey") ||
+        !this.getItemProperty(id, "updateURL") ||
+        this.getItemProperty(id, "updateURL").substring(0, 6) == "https:")
+      return EM_L("true");
+    return EM_L("false");
+  },
+
+  /**
    * Get the em:blocklisted property (whether or not this item is blocklisted)
    */
   _rdfGet_blocklisted: function(item, property) {
@@ -8192,7 +8487,7 @@ UpdateItem.prototype = {
    * See nsIUpdateService.idl
    */
   init: function(id, version, installLocationKey, minAppVersion, maxAppVersion,
-                 name, downloadURL, xpiHash, iconURL, updateURL, type,
+                 name, downloadURL, xpiHash, iconURL, updateURL, updateKey, type,
                  targetAppID) {
     this._id                  = id;
     this._version             = version;
@@ -8204,6 +8499,7 @@ UpdateItem.prototype = {
     this._xpiHash             = xpiHash;
     this._iconURL             = iconURL;
     this._updateURL           = updateURL;
+    this._updateKey           = updateKey;
     this._type                = type;
     this._targetAppID         = targetAppID;
   },
@@ -8221,6 +8517,7 @@ UpdateItem.prototype = {
   get xpiHash()           { return this._xpiHash;           },
   get iconURL()           { return this._iconURL            },
   get updateRDF()         { return this._updateURL;         },
+  get updateKey()         { return this._updateKey;         },
   get type()              { return this._type;              },
   get targetAppID()       { return this._targetAppID;       },
 
@@ -8238,6 +8535,7 @@ UpdateItem.prototype = {
              xpiHash            : this._xpiHash,
              iconURL            : this._iconURL,
              updateRDF          : this._updateURL,
+             updateKey          : this._updateKey,
              type               : this._type,
              targetAppID        : this._targetAppID
            }.toSource();

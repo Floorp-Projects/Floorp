@@ -478,7 +478,7 @@ interface nsIExtensionManager : nsISupports
  * XXXben work in progress, the name of this interface will change after the
  *        update system is complete, probably to nsIAddon
  */
-[scriptable, uuid(a15390e0-2ad6-422c-9596-94f95286c16f)]
+[scriptable, uuid(f559f340-5160-420f-abc8-19b251708e7e)]
 interface nsIUpdateItem : nsISupports
 {
   /**
@@ -535,6 +535,12 @@ interface nsIUpdateItem : nsISupports
    */
   readonly attribute AString  updateRDF;
 
+  /**
+   * The public key to verify updates for this item. This must be the public
+   * part of the key that was used to sign update manifests for this add-on.
+   */
+  readonly attribute AString  updateKey;
+  
   const unsigned long TYPE_APP         = 0x01;
   const unsigned long TYPE_EXTENSION   = 0x02;
   const unsigned long TYPE_THEME       = 0x04;
@@ -564,7 +570,8 @@ interface nsIUpdateItem : nsISupports
             in AString installLocationKey, in AString minAppVersion,
             in AString maxAppVersion, in AString name,
             in AString downloadURL, in AString xpiHash, in AString iconURL,
-            in AString updateURL, in long type, in AString targetAppID);
+            in AString updateURL, in AString updateKey, in long type,
+            in AString targetAppID);
 
   /**
    * Returns a JS Object source representing an nsIUpdateItem.

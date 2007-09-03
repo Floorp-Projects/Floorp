@@ -57,6 +57,7 @@ var gDownloadManager  = null;
 var gObserverIndex    = -1;
 var gInSafeMode       = false;
 var gCheckCompat      = true;
+var gCheckUpdateSecurity = true;
 var gUpdatesOnly      = false;
 var gAppID            = "";
 var gPref             = null;
@@ -66,6 +67,7 @@ var gPlugins          = null;
 var gPluginsDS        = null;
 
 const PREF_EM_CHECK_COMPATIBILITY           = "extensions.checkCompatibility";
+const PREF_EM_CHECK_UPDATE_SECURITY         = "extensions.checkUpdateSecurity";
 const PREF_EXTENSIONS_GETMORETHEMESURL      = "extensions.getMoreThemesURL";
 const PREF_EXTENSIONS_GETMOREEXTENSIONSURL  = "extensions.getMoreExtensionsURL";
 const PREF_EXTENSIONS_DSS_ENABLED           = "extensions.dss.enabled";
@@ -267,6 +269,7 @@ function showView(aView) {
                       ["plugin", "?plugin"],
                       ["previewImage", "?previewImage"],
                       ["satisfiesDependencies", "?satisfiesDependencies"],
+                      ["providesUpdatesSecurely", "?providesUpdatesSecurely"],
                       ["type", "?type"],
                       ["updateable", "?updateable"],
                       ["updateURL", "?updateURL"],
@@ -316,6 +319,7 @@ function showView(aView) {
                       ["opType", "?opType"],
                       ["previewImage", "?previewImage"],
                       ["satisfiesDependencies", "?satisfiesDependencies"],
+                      ["providesUpdatesSecurely", "?providesUpdatesSecurely"],
                       ["type", "?type"],
                       ["updateURL", "?updateURL"],
                       ["version", "?version"],
@@ -654,6 +658,10 @@ function Startup()
     gCheckCompat = gPref.getBoolPref(PREF_EM_CHECK_COMPATIBILITY);
   } catch(e) { }
 
+  try {
+    gCheckUpdateSecurity = gPref.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY);
+  } catch(e) { }
+
   // Sort on startup and anytime an add-on is installed or upgraded.
   gExtensionManager.sortTypeByProperty(nsIUpdateItem.TYPE_ADDON, "name", true);
   // Extension Command Updating is handled by a command controller.
@@ -688,6 +696,23 @@ function Startup()
     showMessage("chrome://mozapps/skin/extensions/question.png",
                 msgText, buttonLabel, buttonAccesskey,
                 true, notifyData);
+  }
+  if (!gCheckUpdateSecurity) {
+    var defaultCheckSecurity = true;
+    try {
+      defaultCheckSecurity = defaultPref.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY);
+    } catch (e) { }
+
+    // App has update security checking enabled by default so show warning
+    if (defaultCheckSecurity) {
+      var msgText = getExtensionString("disabledUpdateSecurityMsg");
+      var buttonLabel = getExtensionString("enableButtonLabel");
+      var buttonAccesskey = getExtensionString("enableButtonAccesskey");
+      var notifyData = "addons-enable-updatesecurity";
+      showMessage("chrome://mozapps/skin/extensions/question.png",
+                  msgText, buttonLabel, buttonAccesskey,
+                  true, notifyData);
+    }
   }
   if (gInSafeMode) {
     showMessage("chrome://mozapps/skin/extensions/question.png",
@@ -809,7 +834,7 @@ XPInstallDownloadManager.prototype = {
       var type = isTheme ? nsIUpdateItem.TYPE_THEME : nsIUpdateItem.TYPE_EXTENSION;
       var item = Components.classes["@mozilla.org/updates/item;1"]
                            .createInstance(Components.interfaces.nsIUpdateItem);
-      item.init(url, " ", "app-profile", "", "", displayName, url, "", iconURL, "", type, "");
+      item.init(url, " ", "app-profile", "", "", displayName, url, "", iconURL, "", "", type, "");
       items.push(item);
 
       // Advance the enumerator
@@ -1368,6 +1393,10 @@ const gAddonsMsgObserver = {
       gPref.clearUserPref(PREF_EM_CHECK_COMPATIBILITY);
       gCheckCompat = true;
       break;
+    case "addons-enable-updatesecurity":
+      gPref.clearUserPref(PREF_EM_CHECK_UPDATE_SECURITY);
+      gCheckUpdateSecurity = true;
+      break;
     case "addons-no-updates":
       var children = gExtensionsView.children;
       for (var i = 0; i < children.length; ++i) {
@@ -1690,6 +1719,7 @@ var gExtensionsViewController = {
              (!selectedItem.opType ||
              selectedItem.opType == "needs-disable")) &&
              !selectedItem.isBlocklisted &&
+             (!gCheckUpdateSecurity || selectedItem.providesUpdatesSecurely) &&
              (!gCheckCompat || selectedItem.isCompatible) &&
              selectedItem.satisfiesDependencies &&
              !gExtensionsView.hasAttribute("update-operation");

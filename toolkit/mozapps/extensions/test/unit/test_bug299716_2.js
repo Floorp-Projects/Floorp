@@ -36,6 +36,9 @@
  * ***** END LICENSE BLOCK *****
  */
 
+// Disables security checking our updates which haven't been signed
+gPrefs.setBoolPref("extensions.checkUpdateSecurity", false);
+
 // Update check listener.
 const checkListener = {
   // nsIAddonUpdateCheckListener
