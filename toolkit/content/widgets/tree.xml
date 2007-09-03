@@ -164,7 +164,7 @@
         <parameter name="aBefore"/>
         <body><![CDATA[
           this._ensureColumnOrder();
-          
+
           var i;
           var cols = [];
           var col = this.columns.getColumnFor(aColBefore);
@@ -178,7 +178,7 @@
             aColMove.ordinal = cols[0].ordinal;
             for (i = 0; i < cols.length; ++i)
               cols[i].ordinal += 2;
-          } else {
+          } else if (aColBefore.ordinal != aColMove.ordinal) {
             if (!aBefore)
               cols.push(aColBefore);
             for (col = col.getPrevious(); col.element != aColMove;
