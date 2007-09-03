@@ -43,6 +43,10 @@
 #include "nsIProcess.h"
 #include "nsILocalFile.h"
 #include "nsIFileURL.h"
+#include "nsEscape.h"
+#include "nsNetUtil.h"
+#include "nsIURILoader.h"
+#include "nsCURILoader.h"
 
 // nsISupports methods
 NS_IMPL_THREADSAFE_ADDREF(nsMIMEInfoBase)
@@ -380,7 +384,8 @@ nsMIMEInfoBase::LaunchWithFile(nsIFile* aFile)
 }
 
 NS_IMETHODIMP
-nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI)
+nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI,
+                              nsIInterfaceRequestor* aWindowContext)
 {
   nsresult rv;
 
@@ -402,7 +407,7 @@ nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI)
     nsCOMPtr<nsIWebHandlerApp> webHandler = 
       do_QueryInterface(mPreferredApplication, &rv);
     if (NS_SUCCEEDED(rv)) {
-      return LaunchWithWebHandler(webHandler, aURI);         
+      return LaunchWithWebHandler(webHandler, aURI, aWindowContext);         
     }
 
     // ok, we must have a local handler app
@@ -456,10 +461,66 @@ nsMIMEInfoBase::LaunchWithIProcess(nsIFile* aApp, const nsCString& aArg)
 
 /* static */
 nsresult
-nsMIMEInfoBase::LaunchWithWebHandler(nsIWebHandlerApp *aApp, nsIURI *aURI) 
+nsMIMEInfoBase::LaunchWithWebHandler(nsIWebHandlerApp *aApp, nsIURI *aURI,
+                                     nsIInterfaceRequestor *aWindowContext) 
 {
-  // we'll be implementing this Real Soon Now!
-  return NS_ERROR_NOT_IMPLEMENTED;
+  
+  nsCAutoString uriTemplate;
+  nsresult rv = aApp->GetUriTemplate(uriTemplate);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // get the URI spec so we can escape it for insertion into the template 
+  nsCAutoString uriSpecToHandle;
+  rv = aURI->GetSpec(uriSpecToHandle);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // XXX need to strip passwd & username from URI to handle, as per the
+  // WhatWG HTML5 draft.  nsSimpleURL, which is what we're going to get,
+  // can't do this directly.  Ideally, we'd fix nsStandardURL to make it
+  // possible to turn off all of its quirks handling, and use that...
+
+  // XXX this doesn't exactly match how the HTML5 draft is requesting us to
+  // escape; at the very least, it should be escaping @ signs, and there
+  // may well be more issues (bug 382019).
+  nsCAutoString escapedUriSpecToHandle;
+  NS_EscapeURL(uriSpecToHandle, esc_Minimal | esc_Forced | esc_Colon,
+               escapedUriSpecToHandle);
+
+  // XXX note that this replace all occurrences of %s with the URL to be
+  // handled, instead of just the first, as specified by the current draft
+  // of the spec.  Bug 394476 filed to track this.
+  uriTemplate.ReplaceSubstring(NS_LITERAL_CSTRING("%s"),
+                               escapedUriSpecToHandle);
+
+  // convert spec to URI; no original charset needed since there's no way
+  // to communicate that information to any handler
+  nsCOMPtr<nsIURI> uriToSend;
+  rv = NS_NewURI(getter_AddRefs(uriToSend), uriTemplate);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // create a channel
+  nsCOMPtr<nsIChannel> newChannel;
+  rv = NS_NewChannel(getter_AddRefs(newChannel), uriToSend, nsnull, nsnull,
+                     nsnull, nsIChannel::LOAD_DOCUMENT_URI);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // load the URI
+  nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID, 
+                                                   &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // XXX ideally, aIsContentPreferred (the second param) should really be
+  // passed in from above.  Practically, PR_TRUE is probably a reasonable
+  // default since browsers don't care much, and link click is likely to be
+  // the more interesting case for non-browser apps.  See 
+  // <https://bugzilla.mozilla.org/show_bug.cgi?id=392957#c9> for details.
+  return uriLoader->OpenURI(newChannel, PR_TRUE, aWindowContext);
 }
 
 // nsMIMEInfoImpl implementation

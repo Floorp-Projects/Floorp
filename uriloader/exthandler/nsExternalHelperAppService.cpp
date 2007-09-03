@@ -124,7 +124,6 @@
 
 #include "nsCRT.h"
 
-#include "nsMIMEInfoImpl.h"
 #include "nsLocalHandlerApp.h"
 
 #ifdef PR_LOGGING
@@ -1339,7 +1338,7 @@ nsExternalHelperAppService::LoadURI(nsIURI *aURI,
   if (!warn &&
       !alwaysAsk && (preferredAction == nsIHandlerInfo::useHelperApp ||
                      preferredAction == nsIHandlerInfo::useSystemDefault))
-    return handler->LaunchWithURI(uri);
+    return handler->LaunchWithURI(uri, aWindowContext);
   
   nsCOMPtr<nsIContentDispatchChooser> chooser =
     do_CreateInstance("@mozilla.org/content-dispatch-chooser;1", &rv);
@@ -1407,10 +1406,6 @@ nsExternalHelperAppService::GetProtocolHandlerInfo(const nsACString &aScheme,
   // XXX enterprise customers should be able to turn this support off with a
   // single master pref (maybe use one of the "exposed" prefs here?)
 
-  // nsIMIMEInfo is a superset of nsIHandlerInfo.  Furthermore, nsMimeInfoImpl
-  // and subclasses have lots of good platform specific-knowledge of local
-  // applications which we might need later.  For now, just use nsMIMEInfoImpl
-  // instead of implementating a separate nsIHandlerInfo object.
   PRBool exists;
   *aHandlerInfo = GetProtocolInfoFromOS(aScheme, &exists).get();
   if (!(*aHandlerInfo)) {
