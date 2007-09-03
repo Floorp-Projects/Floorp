@@ -262,7 +262,7 @@ LoginManager.prototype = {
             var domDoc = domWin.document;
 
             // Only process things which might have HTML forms.
-            if (! domDoc instanceof Ci.nsIDOMHTMLDocument)
+            if (!(domDoc instanceof Ci.nsIDOMHTMLDocument))
                 return;
 
             this._pwmgr.log("onStateChange accepted: req = " + (aRequest ?
