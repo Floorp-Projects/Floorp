@@ -96,7 +96,8 @@ CPPSRCS = 				\
   nsStreamCipher.cpp \
   nsKeyModule.cpp \
   nsIdentityChecking.cpp \
-	$(NULL)
+  nsDataSignatureVerifier.cpp \
+  $(NULL)
 
 ifdef MOZ_XUL
 CPPSRCS += nsCertTree.cpp
