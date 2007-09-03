@@ -100,7 +100,8 @@ nsMIMEInfoMac::LaunchWithFile(nsIFile *aFile)
 }
 
 NS_IMETHODIMP
-nsMIMEInfoMac::LaunchWithURI(nsIURI* aURI)
+nsMIMEInfoMac::LaunchWithURI(nsIURI* aURI,
+                             nsIInterfaceRequestor* aWindowContext)
 {
   nsCOMPtr<nsIFile> application;
   nsresult rv;
@@ -117,7 +118,7 @@ nsMIMEInfoMac::LaunchWithURI(nsIURI* aURI)
     nsCOMPtr<nsIWebHandlerApp> webHandlerApp =
       do_QueryInterface(mPreferredApplication, &rv);
     if (NS_SUCCEEDED(rv)) {
-      return LaunchWithWebHandler(webHandlerApp, aURI);         
+      return LaunchWithWebHandler(webHandlerApp, aURI, aWindowContext);         
     }
 
     // otherwise, get the application executable from the handler
