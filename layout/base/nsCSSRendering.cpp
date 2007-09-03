@@ -4437,7 +4437,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
 
   // round to device pixels for suppressing the AA.
   gfxFloat x = NS_round(aPt.x);
-  gfxFloat y = NS_round(aPt.y + aAscent - offset);
+  gfxFloat y = NS_round(aPt.y + aAscent) - NS_round(offset);
   gfxFloat width = NS_round(aLineSize.width);
   gfxFloat height = NS_round(aLineSize.height);
   // The y position should be set to the middle of the line.
