@@ -109,7 +109,7 @@ class nsIntervalSet;
  */
 
 // see nsHTMLParts.h for the public block state bits
-#define NS_BLOCK_NEEDS_BIDI_RESOLUTION      0x00100000
+#define NS_BLOCK_NEEDS_BIDI_RESOLUTION      0x00100000 
 #define NS_BLOCK_HAS_LINE_CURSOR            0x01000000
 #define NS_BLOCK_HAS_OVERFLOW_LINES         0x02000000
 #define NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS  0x04000000

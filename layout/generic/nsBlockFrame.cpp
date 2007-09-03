@@ -6593,7 +6593,7 @@ nsBlockFrame::BlockNeedsSpaceManager(nsIFrame* aBlock)
   return (aBlock->GetStateBits() & NS_BLOCK_SPACE_MGR) ||
     (parent && !parent->IsFloatContainingBlock());
 }
-
+ 
 #ifdef IBMBIDI
 nsresult
 nsBlockFrame::ResolveBidi()
