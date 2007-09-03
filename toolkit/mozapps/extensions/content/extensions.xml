@@ -129,6 +129,7 @@
       <property name="isCompatible" onget="return this.getAttribute('compatible') == 'true';"/>
       <property name="isBlocklisted" onget="return this.getAttribute('blocklisted') == 'true';"/>
       <property name="isDisabled" onget="return this.getAttribute('isDisabled') == 'true';"/>
+      <property name="providesUpdatesSecurely" onget="return this.getAttribute('providesUpdatesSecurely') == 'true';"/>
       <property name="satisfiesDependencies" onget="return this.getAttribute('satisfiesDependencies') == 'true';"/>
       <property name="opType">
         <getter>
@@ -238,6 +239,9 @@
             </xul:hbox>
             <xul:hbox flex="1" class="incompatibleBox attention">
               <xul:label anonid="incompatibleLabel" crop="end"/>
+            </xul:hbox>
+            <xul:hbox flex="1" class="insecureUpdateBox attention">
+              <xul:label value="&insecureUpdate.label;" crop="end"/>
             </xul:hbox>
             <xul:hbox flex="1" class="needsDependenciesBox attention">
               <xul:label value="&needsDependencies.label;" crop="end"/>

@@ -99,6 +99,7 @@
 <!ENTITY includeUpdate.tooltip            "Include this Add-on when installing the updates">
 
 <!-- Status Messsages -->
+<!ENTITY insecureUpdate.label             "Does not provide secure updates.">
 <!ENTITY needsDependencies.label          "Requires additional items.">
 <!ENTITY blocklisted.label                "Disabled for your protection.">
 <!ENTITY toBeDisabled.label               "This add-on will be disabled when &brandShortName; is restarted.">
