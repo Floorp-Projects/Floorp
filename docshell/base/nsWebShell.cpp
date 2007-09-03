@@ -818,7 +818,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
         PRBool isExposed;
         nsresult rv = extProtService->IsExposedProtocol(scheme.get(), &isExposed);
         if (NS_SUCCEEDED(rv) && !isExposed) {
-          return extProtService->LoadUrl(aURI);
+          return extProtService->LoadURI(aURI, this); 
         }
       }
     }
