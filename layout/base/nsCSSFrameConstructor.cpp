@@ -1647,12 +1647,13 @@ static void
 MoveChildrenTo(nsFrameManager*          aFrameManager,
                nsIFrame*                aNewParent,
                nsIFrame*                aFrameList,
+               nsIFrame*                aFrameListEnd,
                nsFrameConstructorState* aState,
                nsFrameConstructorState* aOuterState)
 {
   PRBool setHasChildWithView = PR_FALSE;
 
-  while (aFrameList) {
+  while (aFrameList && aFrameList != aFrameListEnd) {
     if (!setHasChildWithView
         && (aFrameList->GetStateBits() & (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW))) {
       setHasChildWithView = PR_TRUE;
@@ -12465,7 +12466,8 @@ nsCSSFrameConstructor::ConstructInline(nsFrameConstructorState& aState,
   // parent block of the inline, but its parent pointer will be the anonymous
   // block we create...  AdjustFloatParentPtrs() deals with this by moving the
   // float from the outer state |aState| to the inner |state|.
-  MoveChildrenTo(state.mFrameManager, blockFrame, list2, &state, &aState);
+  MoveChildrenTo(state.mFrameManager, blockFrame, list2, nsnull, &state,
+                 &aState);
 
   // list3's frames belong to another inline frame
   nsIFrame* inlineFrame = nsnull;
@@ -12553,7 +12555,8 @@ nsCSSFrameConstructor::MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
   }
 
   // Reparent (cheaply) the frames in list3
-  if (!inlineFrame->GetFirstChild(nsnull) &&
+  nsIFrame* existingFirstChild = inlineFrame->GetFirstChild(nsnull);
+  if (!existingFirstChild &&
       (inlineFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
     inlineFrame->SetInitialChildList(nsnull, aFramesToMove);
   } else {
@@ -12561,7 +12564,7 @@ nsCSSFrameConstructor::MoveFramesToEndOfIBSplit(nsFrameConstructorState& aState,
   }
   nsFrameConstructorState* startState = aTargetState ? &aState : nsnull;
   MoveChildrenTo(aState.mFrameManager, inlineFrame, aFramesToMove,
-                 aTargetState, startState);
+                 existingFirstChild, aTargetState, startState);
   SetFrameIsSpecial(inlineFrame, nsnull);
   return inlineFrame;
 }
