@@ -185,12 +185,27 @@ LoginManagerStorage_legacy.prototype = {
         var key = login.hostname;
 
         // If first entry for key, create an Array to hold it's logins.
-        if (!this._logins[key])
+        var rollback;
+        if (!this._logins[key]) {
             this._logins[key] = [];
+            rollback = null;
+        } else {
+            rollback = this._logins[key].concat(); // clone array
+        }
 
         this._logins[key].push(login);
 
-        this._writeFile();
+        var ok = this._writeFile();
+
+        // If we failed, don't keep the added login in memory.
+        if (!ok) {
+            if (rollback)
+                this._logins[key] = rollback;
+            else
+                delete this._logins[key];
+
+            throw "Couldn't write to file, login not added.";
+        }
     },
 
 
@@ -205,6 +220,8 @@ LoginManagerStorage_legacy.prototype = {
         if (!logins)
             throw "No logins found for hostname (" + key + ")";
 
+        var rollback = this._logins[key].concat(); // clone array
+
         // The specified login isn't encrypted, so we need to ensure
         // the logins we're comparing with are decrypted. We decrypt one entry
         // at a time, lest _decryptLogins return fewer entries and screw up
@@ -215,7 +232,7 @@ LoginManagerStorage_legacy.prototype = {
                         this._decryptLogins([logins[i]]);
 
             if (userCanceled)
-                return;
+                throw "User canceled master password entry, login not removed.";
 
             if (!decryptedLogin)
                 continue;
@@ -228,11 +245,17 @@ LoginManagerStorage_legacy.prototype = {
             }
         }
 
-        // Did we delete all the logins for this host?
+        // Did we delete the last login for this host?
         if (logins.length == 0)
             delete this._logins[key];
 
-        this._writeFile();
+        var ok = this._writeFile();
+
+        // If we failed, don't actually remove the login.
+        if (!ok) {
+            this._logins[key] = rollback;
+            throw "Couldn't write to file, login not removed.";
+        }
     },
 
 
@@ -617,6 +640,9 @@ LoginManagerStorage_legacy.prototype = {
     /*
      * _writeFile
      *
+     * Returns true if the operation was successfully completed, or false
+     * if there was an error (probably the user refusing to enter a
+     * master password if prompted).
      */
     _writeFile : function () {
         function writeLine(data) {
@@ -724,7 +750,7 @@ LoginManagerStorage_legacy.prototype = {
                 this.log("User canceled Master Password, aborting write.");
                 // .close will cause an abort w/o modifying original file
                 outputStream.close();
-                return;
+                return false;
             }
 
             // write end-of-host marker
@@ -734,6 +760,7 @@ LoginManagerStorage_legacy.prototype = {
         // [if there were no hosts, no end-of-host marker (".") needed]
 
         outputStream.finish();
+        return true;
     },
 
 
@@ -825,7 +852,9 @@ LoginManagerStorage_legacy.prototype = {
             cipherText = this._decoderRing.encryptString(plainOctet);
         } catch (e) {
             this.log("Failed to encrypt string. (" + e.name + ")");
-            if (e.result == Components.results.NS_ERROR_NOT_AVAILABLE)
+            // If the user clicks Cancel, we get NS_ERROR_FAILURE.
+            // (unlike decrypting, which gets NS_ERROR_NOT_AVAILABLE).
+            if (e.result == Components.results.NS_ERROR_FAILURE)
                 userCanceled = true;
         }
 
