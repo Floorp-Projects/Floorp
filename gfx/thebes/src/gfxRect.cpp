@@ -37,7 +37,7 @@
 
 #include "gfxRect.h"
 
-#include "nsMathUtils.h"
+#include <math.h>
 
 gfxRect
 gfxRect::Intersect(const gfxRect& aRect) const
@@ -76,10 +76,10 @@ gfxRect::Union(const gfxRect& aRect) const
 void
 gfxRect::Round()
 {
-    gfxFloat x0 = NS_round(X());
-    gfxFloat y0 = NS_round(Y());
-    gfxFloat x1 = NS_round(XMost());
-    gfxFloat y1 = NS_round(YMost());
+    gfxFloat x0 = floor(X() + 0.5);
+    gfxFloat y0 = floor(Y() + 0.5);
+    gfxFloat x1 = floor(XMost() + 0.5);
+    gfxFloat y1 = floor(YMost() + 0.5);
 
     pos.x = x0;
     pos.y = y0;
