@@ -49,6 +49,7 @@ _TEST_FILES = 	test_bug323656.html \
 		bug344830_testembed.svg \
 		test_bug382429.html \
 		test_bug384527.html \
+		test_bug385751.html \
 		test_bug391747.html \
 		$(NULL)
 
