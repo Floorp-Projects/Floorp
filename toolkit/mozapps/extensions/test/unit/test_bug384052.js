@@ -80,7 +80,7 @@ function run_test()
 
   var item = Cc["@mozilla.org/updates/item;1"].createInstance(Ci.nsIUpdateItem);
   item.init("test@mozilla.org", "1.0", "app-profile", "0.0", "100.0", "Test extension",
-            null, null, "", null, item.TYPE_EXTENSION, "xpcshell@tests.mozilla.org");
+            null, null, "", null, null, item.TYPE_EXTENSION, "xpcshell@tests.mozilla.org");
 
   gExpectedURL = gTestURL.replace(/%ITEM_ID%/, item.id)
                          .replace(/%CUSTOM1%/, "custom_parameter_1")
