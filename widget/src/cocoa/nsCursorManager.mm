@@ -65,7 +65,7 @@ static nsCursorManager *gInstance;
 /*! @method     createNSCursor:
     @abstract   Creates the appropriate cursor implementation from the arguments.
     @discussion Creates a native Mac cursor, using NSCursor.
-    @param      aPantherCursor selector indicating the NSCursor cursor to create
+    @param      aCursor selector indicating the NSCursor cursor to create
     @result     the Mac native implementation of the cursor
 */
 + (nsMacCursor *) createNSCursor: (SEL) aCursor;
