@@ -3173,7 +3173,7 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
       // Then the nsLineLayout object was shrunk to 156 bytes by
       // removing some internal buffers.  Given that it is so much
       // smaller, the complexity of 2 different ways of allocating
-      // no longer makes sense.  Now we always allocate on the stack
+      // no longer makes sense.  Now we always allocate on the stack.
       nsLineLayout lineLayout(aState.mPresContext,
                               aState.mReflowState.mSpaceManager,
                               &aState.mReflowState, &aLine);
