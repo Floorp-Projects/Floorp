@@ -611,6 +611,7 @@ nsBlockFrame::MarkIntrinsicWidthsDirty()
   nsBlockFrame* dirtyBlock = NS_STATIC_CAST(nsBlockFrame*, GetFirstContinuation());
   dirtyBlock->mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
   dirtyBlock->mPrefWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
+  dirtyBlock->AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
 
   nsBlockFrameSuper::MarkIntrinsicWidthsDirty();
 }
@@ -635,10 +636,10 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   AutoNoisyIndenter indent(gNoisyIntrinsic);
 #endif
 
+  ResolveBidi();
   InlineMinWidthData data;
   for (nsBlockFrame* curFrame = this; curFrame;
        curFrame = NS_STATIC_CAST(nsBlockFrame*, curFrame->GetNextContinuation())) {
-    curFrame->ResolveBidi();
     for (line_iterator line = curFrame->begin_lines(), line_end = curFrame->end_lines();
       line != line_end; ++line)
     {
@@ -706,10 +707,10 @@ nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   AutoNoisyIndenter indent(gNoisyIntrinsic);
 #endif
 
+  ResolveBidi();
   InlinePrefWidthData data;
   for (nsBlockFrame* curFrame = this; curFrame;
        curFrame = NS_STATIC_CAST(nsBlockFrame*, curFrame->GetNextContinuation())) {
-    curFrame->ResolveBidi();
     for (line_iterator line = curFrame->begin_lines(), line_end = curFrame->end_lines();
          line != line_end; ++line)
     {
@@ -6175,6 +6176,9 @@ nsBlockFrame::Init(nsIContent*      aContent,
 
   nsresult rv = nsBlockFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
+  if (!aPrevInFlow)
+    AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
+
   return rv;
 }
 
@@ -6590,27 +6594,40 @@ nsBlockFrame::BlockNeedsSpaceManager(nsIFrame* aBlock)
     (parent && !parent->IsFloatContainingBlock());
 }
 
-// XXX keep the text-run data in the first-in-flow of the block
-
 #ifdef IBMBIDI
 nsresult
 nsBlockFrame::ResolveBidi()
 {
+  NS_ASSERTION(!GetPrevInFlow(),
+               "ResolveBidi called on non-first continuation");
+
+  if (!(GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION))
+    return NS_OK;
+ 
+  RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
+
   nsPresContext* presContext = PresContext();
   if (!presContext->BidiEnabled()) {
     return NS_OK;
   }
 
-  if (mLines.empty()) {
-    return NS_OK;
-  }
-
   nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
   if (!bidiUtils)
-    return NS_OK;
+    return NS_ERROR_NULL_POINTER;
 
-  return bidiUtils->Resolve(this, mLines.front()->mFirstChild,
-                            IsVisualFormControl(presContext));
+  for (nsBlockFrame* curFrame = this;
+       curFrame; curFrame = NS_STATIC_CAST(nsBlockFrame*,
+                                           curFrame->GetNextContinuation())) {
+    if (!curFrame->mLines.empty()) {
+      nsresult rv = bidiUtils->Resolve(curFrame,
+                                       curFrame->mLines.front()->mFirstChild,
+                                       IsVisualFormControl(presContext));
+      if (NS_FAILED(rv))
+        return rv;
+    }
+  }
+
+  return NS_OK;
 }
 
 PRBool
