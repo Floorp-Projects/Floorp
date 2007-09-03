@@ -446,18 +446,16 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
 
     nscoord offset;
     nscoord size;
-    nscoord ascent;
-    fontMet->GetMaxAscent(ascent);
+    nscoord baseline;
+    fontMet->GetMaxAscent(baseline);
     PRBool isRTL = vis->mDirection == NS_STYLE_DIRECTION_RTL;
 
-    nscoord baseline =
-      presContext->RoundAppUnitsToNearestDevPixels(textRect.y + ascent);
     nsRefPtr<gfxContext> ctx = (gfxContext*)
       aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
     gfxPoint pt(presContext->AppUnitsToGfxUnits(textRect.x),
                 presContext->AppUnitsToGfxUnits(textRect.y));
     gfxFloat width = presContext->AppUnitsToGfxUnits(textRect.width);
-    gfxFloat ascentPixel = presContext->AppUnitsToGfxUnits(ascent);
+    gfxFloat baselinePixel = presContext->AppUnitsToGfxUnits(baseline);
     if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
       fontMet->GetUnderline(offset, size);
       gfxFloat offsetPixel = presContext->AppUnitsToGfxUnits(offset);
@@ -465,7 +463,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
       if (decorations & NS_FONT_DECORATION_OVERLINE) {
         nsCSSRendering::PaintDecorationLine(ctx, overColor,
                                             pt, gfxSize(width, sizePixel),
-                                            ascentPixel, ascentPixel,
+                                            baselinePixel, baselinePixel,
                                             sizePixel,
                                             NS_STYLE_TEXT_DECORATION_OVERLINE,
                                             NS_STYLE_BORDER_STYLE_SOLID,
@@ -474,7 +472,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
       if (decorations & NS_FONT_DECORATION_UNDERLINE) {
         nsCSSRendering::PaintDecorationLine(ctx, underColor,
                                             pt, gfxSize(width, sizePixel),
-                                            ascentPixel, offsetPixel,
+                                            baselinePixel, offsetPixel,
                                             sizePixel,
                                             NS_STYLE_TEXT_DECORATION_UNDERLINE,
                                             NS_STYLE_BORDER_STYLE_SOLID,
@@ -487,7 +485,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
       gfxFloat sizePixel = presContext->AppUnitsToGfxUnits(size);
       nsCSSRendering::PaintDecorationLine(ctx, underColor,
                                           pt, gfxSize(width, sizePixel),
-                                          ascentPixel, offsetPixel,
+                                          baselinePixel, offsetPixel,
                                           sizePixel,
                                           NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
                                           NS_STYLE_BORDER_STYLE_SOLID,
@@ -517,7 +515,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
            posResolve.logicalIndex = mAccessKeyInfo->mAccesskeyIndex;
            rv = bidiUtils->RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
                                       presContext, aRenderingContext,
-                                      textRect.x, baseline,
+                                      textRect.x, textRect.y + baseline,
                                       &posResolve,
                                       1);
            mAccessKeyInfo->mBeforeWidth = posResolve.visualLeftTwips;
@@ -526,7 +524,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
         {
            rv = bidiUtils->RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
                                       presContext, aRenderingContext,
-                                      textRect.x, baseline);
+                                      textRect.x, textRect.y + baseline);
         }
       }
     }
@@ -546,7 +544,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
                mAccessKeyInfo->mBeforeWidth = 0;
        }
 
-       aRenderingContext.DrawString(mCroppedTitle, textRect.x, baseline);
+       aRenderingContext.DrawString(mCroppedTitle, textRect.x, textRect.y + baseline);
     }
 
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
