@@ -181,7 +181,7 @@ def send_to_graph(title, date, browser_config, results):
           except ValueError:
             print 'WARNING: value error for median in tp'
             val = 0
-          tmpf.write(result_format % (val, res, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", page))
+          tmpf.write(result_format % (val, res + '_loadtime', tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", page))
           i += 1
     tmpf.flush()
     tmpf.close()
