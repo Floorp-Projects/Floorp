@@ -40,6 +40,7 @@
 #   Michael Ventnor <ventnors_dogs234@yahoo.com.au>
 #   Simon Bünzli <zeniko@gmail.com>
 #   Gijs Kruitbosch <gijskruitbosch@gmail.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -59,6 +60,7 @@ function nsContextMenu(aXulMenu, aBrowser) {
   this.target            = null;
   this.browser           = null;
   this.menu              = null;
+  this.isFrameImage      = false;
   this.onTextInput       = false;
   this.onKeywordField    = false;
   this.onImage           = false;
@@ -96,6 +98,8 @@ nsContextMenu.prototype = {
   initMenu: function CM_initMenu(aPopup, aBrowser) {
     this.menu = aPopup;
     this.browser = aBrowser;
+
+    this.isFrameImage = document.getElementById("isFrameImage");
 
     // Get contextual info.
     this.setTarget(document.popupNode, document.popupRangeParent,
@@ -212,6 +216,14 @@ nsContextMenu.prototype = {
                   this.onTextInput && this.onKeywordField);
     this.showItem("frame", this.inFrame);
     this.showItem("frame-sep", this.inFrame);
+
+    // Hide menu entries for images, show otherwise
+    if (this.inFrame) {
+      if (mimeTypeIsTextBased(this.target.ownerDocument.contentType))
+        this.isFrameImage.removeAttribute('hidden');
+      else
+        this.isFrameImage.setAttribute('hidden', 'true');
+    }
 
     // BiDi UI
     this.showItem("context-sep-bidi", top.gBidiUI);

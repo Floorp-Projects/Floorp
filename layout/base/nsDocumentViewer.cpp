@@ -374,6 +374,7 @@ private:
   nsresult GetDocumentSelection(nsISelection **aSelection);
 
   nsresult GetClipboardEventTarget(nsIDOMNode **aEventTarget);
+  nsresult FireClipboardEvent(PRUint32 msg, PRBool* aPreventDefault);
 
 #ifdef NS_PRINTING
   // Called when the DocViewer is notified that the state
@@ -2317,26 +2318,10 @@ NS_IMETHODIMP DocumentViewerImpl::SelectAll()
 
 NS_IMETHODIMP DocumentViewerImpl::CopySelection()
 {
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
-
-  // Fire the copy event.
-  nsresult rv;
-  nsCOMPtr<nsIDOMNode> eventTarget;
-  rv = GetClipboardEventTarget(getter_AddRefs(eventTarget));
-  // On failure to get event target, just forget about it and don't fire.
-  if (NS_SUCCEEDED(rv)) {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent evt(PR_TRUE, NS_COPY);
-    nsEventDispatcher::Dispatch(eventTarget, mPresContext, &evt, nsnull,
-                                &status);
-    // if event handler return'd false (PreventDefault)
-    if (status == nsEventStatus_eConsumeNoDefault)
-      // Skip default behavior, return OK.
-      return NS_OK;
-    // It's possible the oncopy handler closed the window.
-    if (!mPresShell)
-      return NS_OK;
-  }
+  PRBool preventDefault;
+  nsresult rv = FireClipboardEvent(NS_COPY, &preventDefault);
+  if (NS_FAILED(rv) || preventDefault)
+    return rv;
 
   return mPresShell->DoCopy();
 }
@@ -2389,36 +2374,54 @@ nsresult DocumentViewerImpl::GetClipboardEventTarget(nsIDOMNode** aEventTarget)
   return nsCopySupport::GetClipboardEventTarget(sel, aEventTarget);
 }
 
+nsresult DocumentViewerImpl::FireClipboardEvent(PRUint32 msg,
+                                                PRBool* aPreventDefault)
+{
+  *aPreventDefault = PR_FALSE;
+
+  NS_ENSURE_TRUE(mPresContext, NS_ERROR_NOT_INITIALIZED);
+  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
+
+  // It seems to be unsafe to fire an event handler during reflow (bug 393696)
+  PRBool isReflowing = PR_TRUE;
+  nsresult rv = mPresShell->IsReflowLocked(&isReflowing);
+  if (NS_FAILED(rv) || isReflowing)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMNode> eventTarget;
+  rv = GetClipboardEventTarget(getter_AddRefs(eventTarget));
+  if (NS_FAILED(rv))
+    // On failure to get event target, just forget about it and don't fire.
+    return NS_OK;
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsEvent evt(PR_TRUE, msg);
+  nsEventDispatcher::Dispatch(eventTarget, mPresContext, &evt, nsnull,
+                              &status);
+  // if event handler return'd false (PreventDefault)
+  if (status == nsEventStatus_eConsumeNoDefault)
+    *aPreventDefault = PR_TRUE;
+
+  // Ensure that the calling function can use mPresShell -- if the event
+  // handler closed this window, mPresShell will be gone.
+  NS_ENSURE_STATE(mPresShell);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP DocumentViewerImpl::GetCopyable(PRBool *aCopyable)
 {
   NS_ENSURE_ARG_POINTER(aCopyable);
   *aCopyable = PR_FALSE;
 
-  NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_INITIALIZED);
-
-  // Fire the beforecopy event.  If the event handler requests to prevent
-  // default behavior, set *aCopyable = true.  (IE-style behavior)
-  nsCOMPtr<nsIDOMNode> eventTarget;
-  nsresult rv = GetClipboardEventTarget(getter_AddRefs(eventTarget));
-  // On failure to get event target, just forget about it and don't fire.
-  if (NS_SUCCEEDED(rv)) {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent evt(PR_TRUE, NS_BEFORECOPY);
-    nsEventDispatcher::Dispatch(eventTarget, mPresContext, &evt, nsnull,
-                                &status);
-    // if event handler return'd false (PreventDefault)
-    if (status == nsEventStatus_eConsumeNoDefault) {
-      *aCopyable = PR_TRUE;
-      return NS_OK;
-    }
-    // It's possible the onbeforecopy handler closed the window.
-    if (!mPresShell)
-      return NS_OK;
-  }
+  nsresult rv = FireClipboardEvent(NS_BEFORECOPY, aCopyable);
+  if (NS_FAILED(rv) || *aCopyable)
+    return rv;
 
   nsCOMPtr<nsISelection> selection;
   rv = mPresShell->GetSelectionForCopy(getter_AddRefs(selection));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv))
+    return rv;
 
   PRBool isCollapsed;
   selection->GetIsCollapsed(&isCollapsed);
@@ -2429,21 +2432,10 @@ NS_IMETHODIMP DocumentViewerImpl::GetCopyable(PRBool *aCopyable)
 
 NS_IMETHODIMP DocumentViewerImpl::CutSelection()
 {
-  NS_ENSURE_TRUE(mPresContext, NS_ERROR_NOT_INITIALIZED);
-
-  // Fire the cut event.
-  nsresult rv;
-  nsCOMPtr<nsIDOMNode> eventTarget;
-  rv = GetClipboardEventTarget(getter_AddRefs(eventTarget));
-  // On failure to get event target, just forget about it and don't fire.
-  if (NS_SUCCEEDED(rv)) {
-    nsEvent evt(PR_TRUE, NS_CUT);
-    nsEventDispatcher::Dispatch(eventTarget, mPresContext, &evt);
-    // should skip default behavior here if event handler returns false, but
-    // there is no default behavior to worry about.
-  }
-
-  return NS_OK;
+  // preventDefault's value is ignored because cut from the document has no
+  // default behaviour.
+  PRBool preventDefault;
+  return FireClipboardEvent(NS_CUT, &preventDefault);
 }
 
 NS_IMETHODIMP DocumentViewerImpl::GetCutable(PRBool *aCutable)
@@ -2451,46 +2443,17 @@ NS_IMETHODIMP DocumentViewerImpl::GetCutable(PRBool *aCutable)
   NS_ENSURE_ARG_POINTER(aCutable);
   *aCutable = PR_FALSE;
 
-  NS_ENSURE_TRUE(mPresContext, NS_ERROR_NOT_INITIALIZED);
-
-  // Fire the beforecut event.  If the event handler requests to prevent
-  // default behavior, set *aCutable = true.  (IE-style behavior)
-  nsCOMPtr<nsIDOMNode> eventTarget;
-  nsresult rv = GetClipboardEventTarget(getter_AddRefs(eventTarget));
-  // On failure to get event target, just forget about it and don't fire.
-  if (NS_SUCCEEDED(rv)) {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent evt(PR_TRUE, NS_BEFORECUT);
-    nsEventDispatcher::Dispatch(eventTarget, mPresContext, &evt, nsnull,
-                                &status);
-    // if event handler return'd false (PreventDefault)
-    if (status == nsEventStatus_eConsumeNoDefault) {
-      *aCutable = PR_TRUE;
-      return NS_OK;
-    }
-  }
-
-  *aCutable = PR_FALSE;  // mm, will this ever be called for an editable document?
-  return NS_OK;
+  // If event handler requests to prevent default behavior, enable
+  // the cut command -- pass aCutable in as aPreventDefault.
+  return FireClipboardEvent(NS_BEFORECUT, aCutable);
 }
 
 NS_IMETHODIMP DocumentViewerImpl::Paste()
 {
-  NS_ENSURE_TRUE(mPresContext, NS_ERROR_NOT_INITIALIZED);
-
-  // Fire the paste event.
-  nsresult rv;
-  nsCOMPtr<nsIDOMNode> eventTarget;
-  rv = GetClipboardEventTarget(getter_AddRefs(eventTarget));
-  // On failure to get event target, just forget about it and don't fire.
-  if (NS_SUCCEEDED(rv)) {
-    nsEvent evt(PR_TRUE, NS_PASTE);
-    nsEventDispatcher::Dispatch(eventTarget, mPresContext, &evt);
-    // should skip default behavior here if event handler returns false, but
-    // there is no default behavior to worry about.
-  }
-
-  return NS_OK;
+  // preventDefault's value is ignored because paste into the document has no
+  // default behaviour.
+  PRBool preventDefault;
+  return FireClipboardEvent(NS_PASTE, &preventDefault);
 }
 
 NS_IMETHODIMP DocumentViewerImpl::GetPasteable(PRBool *aPasteable)
@@ -2498,27 +2461,9 @@ NS_IMETHODIMP DocumentViewerImpl::GetPasteable(PRBool *aPasteable)
   NS_ENSURE_ARG_POINTER(aPasteable);
   *aPasteable = PR_FALSE;
 
-  NS_ENSURE_TRUE(mPresContext, NS_ERROR_NOT_INITIALIZED);
-
-  // Fire the beforepaste event.  If the event handler requests to prevent
-  // default behavior, set *aPasteable = true.  (IE-style behavior)
-  nsCOMPtr<nsIDOMNode> eventTarget;
-  nsresult rv = GetClipboardEventTarget(getter_AddRefs(eventTarget));
-  // On failure to get event target, just forget about it and don't fire.
-  if (NS_SUCCEEDED(rv)) {
-    nsEventStatus status = nsEventStatus_eIgnore;
-    nsEvent evt(PR_TRUE, NS_BEFOREPASTE);
-    nsEventDispatcher::Dispatch(eventTarget, mPresContext, &evt, nsnull,
-                                &status);
-    // if event handler return'd false (PreventDefault)
-    if (status == nsEventStatus_eConsumeNoDefault) {
-      *aPasteable = PR_TRUE;
-      return NS_OK;
-    }
-  }
-
-  *aPasteable = PR_FALSE;
-  return NS_OK;
+  // If event handler requests to prevent default behavior, enable
+  // the paste command -- pass aPasteable in as aPreventDefault.
+  return FireClipboardEvent(NS_BEFOREPASTE, aPasteable);
 }
 
 /* AString getContents (in string mimeType, in boolean selectionOnly); */

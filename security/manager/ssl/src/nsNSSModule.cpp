@@ -71,6 +71,7 @@
 #include "nsNTLMAuthModule.h"
 #include "nsStreamCipher.h"
 #include "nsKeyModule.h"
+#include "nsDataSignatureVerifier.h"
 
 // We must ensure that the nsNSSComponent has been loaded before
 // creating any other components.
@@ -190,6 +191,7 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsCryptoHash)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsStreamCipher)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsKeyObject)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsKeyObjectFactory)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsDataSignatureVerifier)
 
 static NS_METHOD RegisterPSMContentListeners(
                       nsIComponentManager *aCompMgr,
@@ -445,6 +447,13 @@ static const nsModuleComponentInfo components[] =
     NS_KEYMODULEOBJECTFACTORY_CID,
     NS_KEYMODULEOBJECTFACTORY_CONTRACTID,
     nsKeyObjectFactoryConstructor
+  },
+
+  {
+    "Signature Verifier",
+    NS_DATASIGNATUREVERIFIER_CID,
+    NS_DATASIGNATUREVERIFIER_CONTRACTID,
+    nsDataSignatureVerifierConstructor
   }
 };
 

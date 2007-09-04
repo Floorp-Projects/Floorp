@@ -122,7 +122,7 @@ public:
                                mExcludeItems(PR_FALSE),
                                mExcludeQueries(PR_FALSE),
                                mExcludeReadOnlyFolders(PR_FALSE),
-                               mExpandQueries(PR_FALSE),
+                               mExpandQueries(PR_TRUE),
                                mIncludeHidden(PR_FALSE),
                                mShowSessions(PR_FALSE),
                                mMaxResults(0),

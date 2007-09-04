@@ -483,6 +483,13 @@ bool UIGetSettingsPath(const string& vendor,
   // all application preferences directories live alongside one another in
   // ~/Library/Application Support/
   destPath = [destPath stringByAppendingPathComponent: NSSTR(product)];
+  // Thunderbird stores its profile in ~/Library/Thunderbird,
+  // but we're going to put stuff in ~/Library/Application Support/Thunderbird
+  // anyway, so we have to ensure that path exists.
+  string tempPath = [destPath UTF8String];
+  if (!UIEnsurePathExists(tempPath))
+    return false;
+
   destPath = [destPath stringByAppendingPathComponent: @"Crash Reports"];
 
   settingsPath = [destPath UTF8String];

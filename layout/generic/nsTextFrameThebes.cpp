@@ -466,7 +466,9 @@ public:
                  const nsRect& aDirtyRect);
   // helper: paint quirks-mode CSS text decorations
   void PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
-                            const gfxPoint& aFramePt, nsTextPaintStyle& aTextStyle,
+                            const gfxPoint& aFramePt,
+                            const gfxPoint& aTextBaselinePt,
+                            nsTextPaintStyle& aTextStyle,
                             PropertyProvider& aProvider);
   // helper: paint text frame when we're impacted by at least one selection.
   // Return PR_FALSE if the text was not painted and we should continue with
@@ -3732,6 +3734,7 @@ FillClippedRect(gfxContext* aCtx, nsPresContext* aPresContext,
 void 
 nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
                                   const gfxPoint& aFramePt,
+                                  const gfxPoint& aTextBaselinePt,
                                   nsTextPaintStyle& aTextPaintStyle,
                                   PropertyProvider& aProvider)
 {
@@ -3798,7 +3801,7 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
   PRInt32 app = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
 
   // XXX aFramePt is in AppUnits, shouldn't it be nsFloatPoint?
-  gfxPoint pt(aFramePt.x / app, aFramePt.y / app);
+  gfxPoint pt(aFramePt.x / app, (aTextBaselinePt.y - mAscent) / app);
   gfxSize size(GetRect().width / app, 0);
   gfxFloat ascent = mAscent / app;
 
@@ -4174,15 +4177,15 @@ nsTextFrame::PaintTextSelectionDecorations(gfxContext* aCtx,
                              aProvider, mTextRun);
   gfxFloat xOffset, hyphenWidth;
   PRUint32 offset, length;
+  PRInt32 app = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
+  // XXX aTextBaselinePt is in AppUnits, shouldn't it be nsFloatPoint?
+  gfxPoint pt(0.0, (aTextBaselinePt.y - mAscent) / app);
   SelectionType type;
   while (iterator.GetNextSegment(&xOffset, &offset, &length, &hyphenWidth, &type)) {
     gfxFloat advance = hyphenWidth +
       mTextRun->GetAdvanceWidth(offset, length, &aProvider);
     if (type == aSelectionType) {
-      PRInt32 app = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
-      // XXX aTextBaselinePt is in AppUnits, shouldn't it be nsFloatPoint?
-      gfxPoint pt((aTextBaselinePt.x + xOffset) / app,
-                  (aTextBaselinePt.y - mAscent) / app);
+      pt.x = (aTextBaselinePt.x + xOffset) / app;
       gfxFloat width = PR_ABS(advance) / app;
       DrawSelectionDecorations(aCtx, aSelectionType, aTextPaintStyle,
                                pt, width, mAscent / app, decorationMetrics,
@@ -4205,7 +4208,8 @@ nsTextFrame::PaintTextWithSelection(gfxContext* aCtx,
   SelectionType allTypes;
   PaintTextWithSelectionColors(aCtx, aFramePt, aTextBaselinePt, aDirtyRect,
                                aProvider, aTextPaintStyle, details, &allTypes);
-  PaintTextDecorations(aCtx, aDirtyRect, aFramePt, aTextPaintStyle, aProvider);
+  PaintTextDecorations(aCtx, aDirtyRect, aFramePt, aTextBaselinePt,
+                       aTextPaintStyle, aProvider);
   PRInt32 i;
   // Iterate through just the selection types that paint decorations and
   // paint decorations for any that actually occur in this frame. Paint
@@ -4297,7 +4301,8 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
                           0, hyphenTextRun->GetLength(), &dirtyRect, nsnull, nsnull);
     }
   }
-  PaintTextDecorations(ctx, dirtyRect, framePt, textPaintStyle, provider);
+  PaintTextDecorations(ctx, dirtyRect, framePt, textBaselinePt,
+                       textPaintStyle, provider);
 }
 
 PRInt16
@@ -5603,20 +5608,9 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     // This is corrected for in nsLineLayout::TrimWhiteSpaceIn.
     PRInt32 numJustifiableCharacters =
       provider.ComputeJustifiableCharacters(offset, charsFit);
-    // Currently canTrimTrailingWhitespace is always true here
-    // because of the !textStyle->WhiteSpaceIsSignificant() test,
-    // but that could change...
-    if (canTrimTrailingWhitespace) {
-      // Count trimmed spaces and add them to the cluster count
-      PRUint32 charIndex = transformedOffset + transformedCharsFit;
-      while (charIndex > transformedOffset &&
-             mTextRun->GetChar(charIndex - 1) == ' ') {
-        --charIndex;
-      }
-    }
 
     NS_ASSERTION(numJustifiableCharacters <= charsFit,
-                 "Justifiable characters combined???");
+                 "Bad justifiable character count");
     lineLayout.SetTextJustificationWeights(numJustifiableCharacters,
         charsFit - numJustifiableCharacters);
   }

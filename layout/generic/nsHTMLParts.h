@@ -68,7 +68,7 @@ class nsIChannel;
 #define NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET   0x40000000
 // These are the bits that get inherited from a block frame to its
 // next-in-flows and are not private to blocks
-#define NS_BLOCK_FLAGS_MASK                 0xF0F00000
+#define NS_BLOCK_FLAGS_MASK                 0xF0E00000 
 
 // Factory methods for creating html layout objects
 

@@ -96,6 +96,7 @@
 #define NS_APP_PREFS_50_DIR                     "PrefD"         // Directory which contains user prefs       
 #define NS_APP_PREFS_50_FILE                    "PrefF"
 #define NS_APP_PREFS_DEFAULTS_DIR_LIST          "PrefDL"
+#define NS_EXT_PREFS_DEFAULTS_DIR_LIST          "ExtPrefDL"
 #define NS_APP_PREFS_OVERRIDE_DIR               "PrefDOverride" // Directory for per-profile defaults
         
 #define NS_APP_USER_PROFILE_50_DIR              "ProfD"

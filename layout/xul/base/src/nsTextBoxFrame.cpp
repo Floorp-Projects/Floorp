@@ -142,7 +142,8 @@ nsTextBoxFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 nsTextBoxFrame::nsTextBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
-  nsLeafBoxFrame(aShell, aContext), mCropType(CropRight),mAccessKeyInfo(nsnull)
+  nsLeafBoxFrame(aShell, aContext), mCropType(CropRight), mAccessKeyInfo(nsnull),
+  mNeedsReflowCallback(PR_FALSE)
 {
     mState |= NS_STATE_NEED_LAYOUT;
     MarkIntrinsicWidthsDirty();
@@ -249,7 +250,6 @@ nsTextBoxFrame::UpdateAccesskey(nsWeakFrame& aWeakThis)
         mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accesskey);
     }
 
-    mReflowCallbackPosted = PR_FALSE;
     if (!accesskey.Equals(mAccessKey)) {
         // Need to get clean mTitle.
         mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, mTitle);
@@ -306,15 +306,10 @@ nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
         doUpdateTitle = PR_TRUE;
     }
 
-    if (!mReflowCallbackPosted &&
-        (aAttribute == nsnull || aAttribute == nsGkAtoms::accesskey)) {
-        mReflowCallbackPosted = PR_TRUE;
+    if (aAttribute == nsnull || aAttribute == nsGkAtoms::accesskey) {
+        mNeedsReflowCallback = PR_TRUE;
         // Ensure that layout is refreshed and reflow callback called.
         aResize = PR_TRUE;
-        nsIReflowCallback* cb = new nsAsyncAccesskeyUpdate(this);
-        if (cb) {
-            PresContext()->PresShell()->PostReflowCallback(cb);
-        }
     }
 
     if (doUpdateTitle) {
@@ -446,16 +441,18 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
 
     nscoord offset;
     nscoord size;
-    nscoord baseline;
-    fontMet->GetMaxAscent(baseline);
+    nscoord ascent;
+    fontMet->GetMaxAscent(ascent);
     PRBool isRTL = vis->mDirection == NS_STYLE_DIRECTION_RTL;
 
+    nscoord baseline =
+      presContext->RoundAppUnitsToNearestDevPixels(textRect.y + ascent);
     nsRefPtr<gfxContext> ctx = (gfxContext*)
       aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
     gfxPoint pt(presContext->AppUnitsToGfxUnits(textRect.x),
                 presContext->AppUnitsToGfxUnits(textRect.y));
     gfxFloat width = presContext->AppUnitsToGfxUnits(textRect.width);
-    gfxFloat baselinePixel = presContext->AppUnitsToGfxUnits(baseline);
+    gfxFloat ascentPixel = presContext->AppUnitsToGfxUnits(ascent);
     if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
       fontMet->GetUnderline(offset, size);
       gfxFloat offsetPixel = presContext->AppUnitsToGfxUnits(offset);
@@ -463,7 +460,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
       if (decorations & NS_FONT_DECORATION_OVERLINE) {
         nsCSSRendering::PaintDecorationLine(ctx, overColor,
                                             pt, gfxSize(width, sizePixel),
-                                            baselinePixel, baselinePixel,
+                                            ascentPixel, ascentPixel,
                                             sizePixel,
                                             NS_STYLE_TEXT_DECORATION_OVERLINE,
                                             NS_STYLE_BORDER_STYLE_SOLID,
@@ -472,7 +469,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
       if (decorations & NS_FONT_DECORATION_UNDERLINE) {
         nsCSSRendering::PaintDecorationLine(ctx, underColor,
                                             pt, gfxSize(width, sizePixel),
-                                            baselinePixel, offsetPixel,
+                                            ascentPixel, offsetPixel,
                                             sizePixel,
                                             NS_STYLE_TEXT_DECORATION_UNDERLINE,
                                             NS_STYLE_BORDER_STYLE_SOLID,
@@ -485,7 +482,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
       gfxFloat sizePixel = presContext->AppUnitsToGfxUnits(size);
       nsCSSRendering::PaintDecorationLine(ctx, underColor,
                                           pt, gfxSize(width, sizePixel),
-                                          baselinePixel, offsetPixel,
+                                          ascentPixel, offsetPixel,
                                           sizePixel,
                                           NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
                                           NS_STYLE_BORDER_STYLE_SOLID,
@@ -515,7 +512,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
            posResolve.logicalIndex = mAccessKeyInfo->mAccesskeyIndex;
            rv = bidiUtils->RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
                                       presContext, aRenderingContext,
-                                      textRect.x, textRect.y + baseline,
+                                      textRect.x, baseline,
                                       &posResolve,
                                       1);
            mAccessKeyInfo->mBeforeWidth = posResolve.visualLeftTwips;
@@ -524,7 +521,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
         {
            rv = bidiUtils->RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
                                       presContext, aRenderingContext,
-                                      textRect.x, textRect.y + baseline);
+                                      textRect.x, baseline);
         }
       }
     }
@@ -544,7 +541,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
                mAccessKeyInfo->mBeforeWidth = 0;
        }
 
-       aRenderingContext.DrawString(mCroppedTitle, textRect.x, textRect.y + baseline);
+       aRenderingContext.DrawString(mCroppedTitle, textRect.x, baseline);
     }
 
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
@@ -889,6 +886,14 @@ nsTextBoxFrame::UpdateAccessIndex()
 NS_IMETHODIMP
 nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
 {
+    if (mNeedsReflowCallback) {
+        nsIReflowCallback* cb = new nsAsyncAccesskeyUpdate(this);
+        if (cb) {
+            PresContext()->PresShell()->PostReflowCallback(cb);
+        }
+        mNeedsReflowCallback = PR_FALSE;
+    }
+
     mState |= NS_STATE_NEED_LAYOUT;
 
     return nsLeafBoxFrame::DoLayout(aBoxLayoutState);

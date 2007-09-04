@@ -12,9 +12,11 @@ LIBXUL_LIBRARY = 1
 FORCE_STATIC_LIB = 1
 
 
-REQUIRES = necko \
+REQUIRES = docshell \
+           necko \
            storage \
            string \
+           uriloader \
            xpcom \
            $(ZLIB_REQUIRES) \
            $(NULL)

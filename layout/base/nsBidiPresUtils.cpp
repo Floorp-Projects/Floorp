@@ -487,8 +487,17 @@ nsBidiPresUtils::InitLogicalArray(nsIFrame*       aCurrentFrame)
   for (nsIFrame* childFrame = aCurrentFrame; childFrame;
        childFrame = childFrame->GetNextSibling()) {
 
-    nsIFrame* frame = (nsGkAtoms::placeholderFrame == childFrame->GetType()) ?
-      nsPlaceholderFrame::GetRealFrameFor(childFrame) : childFrame;
+    // If the real frame for a placeholder is an inline container, we need to
+    // drill down into it and include its contents in Bidi resolution. If it
+    // isn't an inline container, we just use the placeholder.
+    nsIFrame* frame = childFrame;
+    if (nsGkAtoms::placeholderFrame == childFrame->GetType()) {
+      nsIFrame* realFrame =
+        nsPlaceholderFrame::GetRealFrameForPlaceholder(childFrame);
+      if (realFrame->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {
+        frame = realFrame;
+      }
+    }
 
     PRUnichar ch = 0;
     if (frame->IsFrameOfType(nsIFrame::eBidiInlineContainer)) {

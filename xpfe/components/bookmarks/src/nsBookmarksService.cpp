@@ -527,6 +527,7 @@ static const char kNewSearchFolderEquals[]        = "NEW_SEARCH_FOLDER=\"";
 static const char kPersonalToolbarFolderEquals[]  = "PERSONAL_TOOLBAR_FOLDER=\"";
 
 static const char kNameEquals[]            = "NAME=\"";
+static const char kNameEqualsLC[]          = "name=\"";
 static const char kHREFEquals[]            = "HREF=\"";
 static const char kTargetEquals[]          = "TARGET=\"";
 static const char kAddDateEquals[]         = "ADD_DATE=\"";
@@ -748,7 +749,7 @@ BookmarkParser::DecodeBuffer(nsString &line, char *buf, PRUint32 aLength)
     }
     else
     {
-        line.AppendWithConversion(buf, aLength);
+        CopyASCIItoUTF16(buf, line);
     }
     return NS_OK;
 }
@@ -977,8 +978,7 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
     start += (sizeof(kHTTPEquivEquals) - 1);
     // ...and find the next so we can chop the HTTP-EQUIV attribute
     PRInt32 end = aLine.FindChar(PRUnichar('"'), start);
-    nsAutoString    httpEquiv;
-    aLine.Mid(httpEquiv, start, end - start);
+    nsAutoString httpEquiv(Substring(aLine, start, end - start));
 
     // if HTTP-EQUIV isn't "Content-Type", just ignore the META tag
     if (!httpEquiv.LowerCaseEqualsLiteral("content-type"))
@@ -992,16 +992,16 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
     start += (sizeof(kContentEquals) - 1);
     // ...and find the next so we can chop the CONTENT attribute
     end = aLine.FindChar(PRUnichar('"'), start);
-    nsAutoString    content;
-    aLine.Mid(content, start, end - start);
+    nsAutoString content(Substring(aLine, start, end - start));
 
     // look for the charset value
     start = content.Find(kCharsetEquals, PR_TRUE);
     NS_ASSERTION(start >= 0, "no 'charset=' string: how'd we get here?");
     if (start < 0)  return NS_ERROR_UNEXPECTED;
     start += (sizeof(kCharsetEquals)-1);
-    nsCAutoString    charset;
-    charset.AssignWithConversion(Substring(content, start, content.Length() - start));
+
+    NS_LossyConvertUTF16toASCII charset(Substring(content, start,
+                                                  content.Length() - start));
     if (charset.Length() < 1)   return NS_ERROR_UNEXPECTED;
 
     // found a charset, now try and get a decoder from it to Unicode
@@ -1093,19 +1093,18 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
 
         PRBool  fieldFound = PR_FALSE;
 
-        nsAutoString id;
-        id.AssignWithConversion(kIDEquals);
+        NS_ConvertASCIItoUTF16 id(kIDEquals);
         for (BookmarkField *field = fields; field->mName; ++field)
         {
-            nsAutoString name;
-            name.AssignWithConversion(field->mName);
+            NS_ConvertASCIItoUTF16 name(field->mName);
             if (mIsImportOperation && name.Equals(id)) 
                 // For import operations, we don't want to save the unique identifier for folders,
                 // because this can cause bugs like 74969 (importing duplicate bookmark folder 
                 // hierachy causes bookmarks file to grow infinitely).
                 continue;
   
-            if (aLine.Find(field->mName, PR_TRUE, attrStart, 1) == attrStart)
+            if (Substring(aLine, attrStart,
+                          name.Length()).Equals(name, CaseInsensitiveCompare))
             {
                 attrStart += strlen(field->mName);
 
@@ -1114,8 +1113,8 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
                 if (termQuote > attrStart)
                 {
                     // process data
-                    nsAutoString    data;
-                    aLine.Mid(data, attrStart, termQuote-attrStart);
+                    nsAutoString data(Substring(aLine, attrStart,
+                                                termQuote - attrStart));
 
                     attrStart = termQuote + 1;
                     fieldFound = PR_TRUE;
@@ -1227,8 +1226,8 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
 
             if (nameEnd > attrStart)
             {
-                nsAutoString    name;
-                aLine.Mid(name, attrStart, nameEnd-attrStart);
+                nsAutoString name(Substring(aLine, attrStart,
+                                            nameEnd - attrStart));
                 if (!name.IsEmpty())
                 {
                     Unescape(name);
@@ -1287,10 +1286,7 @@ BookmarkParser::ParseResource(nsIRDFResource *arc, nsString& url, nsIRDFNode** a
         static const char kEscape22[] = "%22";
         PRInt32 offset;
         while ((offset = url.Find(kEscape22)) >= 0)
-        {
-            url.SetCharAt('\"',offset);
-            url.Cut(offset + 1, sizeof(kEscape22) - 2);
-        }
+            url.Replace(offset, sizeof(kEscape22) - 1, '\"');
 
         // XXX At this point, the URL may be relative. 4.5 called into
         // netlib to make an absolute URL, and there was some magic
@@ -1300,9 +1296,7 @@ BookmarkParser::ParseResource(nsIRDFResource *arc, nsString& url, nsIRDFNode** a
         // hack fix for bug # 21175:
         // if we don't have a protocol scheme, add "http://" as a default scheme
         if (url.FindChar(PRUnichar(':')) < 0)
-        {
-            url.Assign(NS_LITERAL_STRING("http://") + url);
-        }
+            url.Insert(NS_LITERAL_STRING("http://"), 0);
     }
 
     nsresult                    rv;
@@ -1326,9 +1320,9 @@ BookmarkParser::ParseLiteral(nsIRDFResource *arc, nsString& aValue, nsIRDFNode**
     {
         if (gCharsetAlias)
         {
-            nsCAutoString charset; charset.AssignWithConversion(aValue);
+            NS_LossyConvertUTF16toASCII charset(aValue);
             gCharsetAlias->GetPreferred(charset, charset);
-            aValue.AssignWithConversion(charset.get());
+            CopyASCIItoUTF16(charset, aValue);
         }
     }
     else if (arc == kWEB_LastPingETag)
@@ -1359,15 +1353,16 @@ BookmarkParser::ParseDate(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aR
         PRInt32 err;
         theDate = aValue.ToInteger(&err); // ignored.
     }
-    if (theDate == 0)   return NS_RDF_NO_VALUE;
+    if (theDate == 0)
+      return NS_RDF_NO_VALUE;
 
+    nsresult rv;
     // convert from seconds to microseconds (PRTime)
     PRInt64     dateVal, temp, million;
     LL_I2L(temp, theDate);
     LL_I2L(million, PR_USEC_PER_SEC);
     LL_MUL(dateVal, temp, million);
 
-    nsresult                rv;
     nsCOMPtr<nsIRDFDate>    result;
     if (NS_FAILED(rv = gRDF->GetDateLiteral(dateVal, getter_AddRefs(result))))
     {
@@ -1432,14 +1427,15 @@ BookmarkParser::ParseBookmarkSeparator(const nsString &aLine, const nsCOMPtr<nsI
         while(NS_IsAsciiWhitespace(aLine[attrStart]))
             ++attrStart;
 
-        if (aLine.Find(kNameEquals, PR_TRUE, attrStart, 1) == attrStart) {
-            attrStart += sizeof(kNameEquals) - 1;
+        if (Substring(aLine, attrStart, sizeof(kNameEqualsLC) - 1)
+              .LowerCaseEqualsLiteral(kNameEqualsLC)) {
+            attrStart += sizeof(kNameEqualsLC) - 1;
 
             // skip to terminating quote of string
             PRInt32 termQuote = aLine.FindChar(PRUnichar('\"'), attrStart);
             if (termQuote > attrStart) {
-                nsAutoString name;
-                aLine.Mid(name, attrStart, termQuote - attrStart);
+                nsAutoString name(Substring(aLine, attrStart,
+                                            termQuote - attrStart));
                 attrStart = termQuote + 1;
                 if (!name.IsEmpty()) {
                     nsCOMPtr<nsIRDFLiteral> nameLiteral;
@@ -1781,8 +1777,7 @@ nsresult
 nsBookmarksService::getLocaleString(const char *key, nsString &str)
 {
     PRUnichar   *keyUni = nsnull;
-    nsAutoString    keyStr;
-    keyStr.AssignWithConversion(key);
+    NS_ConvertASCIItoUTF16 keyStr(key);
 
     nsresult    rv = NS_RDF_NO_VALUE;
     if (mBundle && (NS_SUCCEEDED(rv = mBundle->GetStringFromName(keyStr.get(), &keyUni)))
@@ -1849,16 +1844,14 @@ nsBookmarksService::ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool 
     PRInt32     slashOffset;
     if ((slashOffset = schedule.FindChar(PRUnichar('|'))) >= 0)
     {
-        nsAutoString    daySection;
-        schedule.Left(daySection, slashOffset);
+        nsAutoString daySection(StringHead(schedule, slashOffset));
         schedule.Cut(0, slashOffset+1);
         if (daySection.Find(dayNum) >= 0)
         {
             // ok, we should be checking today.  Within hour range?
             if ((slashOffset = schedule.FindChar(PRUnichar('|'))) >= 0)
             {
-                nsAutoString    hourRange;
-                schedule.Left(hourRange, slashOffset);
+                nsAutoString hourRange(StringHead(schedule, slashOffset));
                 schedule.Cut(0, slashOffset+1);
 
                 // now have the "hour-range" segment of the string
@@ -1866,30 +1859,27 @@ nsBookmarksService::ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool 
                 PRInt32     dashOffset;
                 if ((dashOffset = hourRange.FindChar(PRUnichar('-'))) >= 1)
                 {
-                    nsAutoString    startStr, endStr;
+                    nsAutoString startStr(StringHead(hourRange, dashOffset));
+                    nsAutoString endStr(Substring(hourRange, dashOffset + 1));
 
-                    hourRange.Right(endStr, hourRange.Length() - dashOffset - 1);
-                    hourRange.Left(startStr, dashOffset);
-
-                    PRInt32     errorCode2 = 0;
-                    startHour = startStr.ToInteger(&errorCode2);
-                    if (errorCode2) startHour = -1;
-                    endHour = endStr.ToInteger(&errorCode2);
-                    if (errorCode2) endHour = -1;
+                    PRInt32 rv2 = 0;
+                    startHour = startStr.ToInteger(&rv2);
+                    if (rv2) startHour = -1;
+                    endHour = endStr.ToInteger(&rv2);
+                    if (rv2) endHour = -1;
                     
                     if ((startHour >=0) && (endHour >=0))
                     {
                         if ((slashOffset = schedule.FindChar(PRUnichar('|'))) >= 0)
                         {
-                            nsAutoString    durationStr;
-                            schedule.Left(durationStr, slashOffset);
+                            nsAutoString durationStr(StringHead(schedule,
+                                                                slashOffset));
                             schedule.Cut(0, slashOffset+1);
 
                             // get duration
-                            PRInt32     errorCode = 0;
-                            duration = durationStr.ToInteger(&errorCode);
-                            if (errorCode)  duration = -1;
-                            
+                            duration = durationStr.ToInteger(&rv2);
+                            if (rv2) duration = -1;
+
                             // what's left is the notification options
                             notificationMethod = schedule;
                         }
@@ -4107,7 +4097,7 @@ nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
     // if we have a new icon URL, save it away into our internal graph
     if (iconURL)
     {
-        path.AssignWithConversion(iconURL);
+        LossyCopyUTF16toASCII(iconURL, path);
 
         nsCOMPtr<nsIRDFLiteral> iconLiteral;
         if (NS_FAILED(rv = gRDF->GetLiteral(iconURL, getter_AddRefs(iconLiteral))))
@@ -4137,7 +4127,8 @@ nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
         {
             const PRUnichar *uni = nsnull;
             tempLiteral->GetValueConst(&uni);
-            if (uni)    path.AssignWithConversion(uni);
+            if (uni)
+                LossyCopyUTF16toASCII(uni, path);
         }
     }
 
@@ -4205,8 +4196,7 @@ nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
     }
 
     // ok, have a cached icon entry, so return the URL's associated favicon
-    nsAutoString litStr;
-    litStr.AssignWithConversion(path.get());
+    NS_ConvertASCIItoUTF16 litStr(path);
     nsCOMPtr<nsIRDFLiteral> literal;
     if (NS_FAILED(rv = gRDF->GetLiteral(litStr.get(), getter_AddRefs(literal))))
     {
@@ -5532,7 +5522,6 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                 }
 
                 nsCOMPtr<nsIRDFNode>    nameNode;
-                nsAutoString        nameString;
                 nsCAutoString       name;
                 rv = ds->GetTarget(child, kNC_Name, PR_TRUE, getter_AddRefs(nameNode));
                 if (NS_SUCCEEDED(rv) && nameNode)
@@ -5543,8 +5532,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                         const PRUnichar *title = nsnull;
                         if (NS_SUCCEEDED(rv = nameLiteral->GetValueConst(&title)))
                         {
-                            nameString = title;
-                            AppendUTF16toUTF8(nameString, name);
+                            CopyUTF16toUTF8(title, name);
                         }
                     }
                 }
@@ -5810,9 +5798,8 @@ nsBookmarksService::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
     {
         const char  *p = nsnull;
         if (NS_SUCCEEDED(rv = resource->GetValueConst( &p )) && (p))
-        {
-            aResult.AssignWithConversion(p);
-        }
+            CopyASCIItoUTF16(nsDependentCString(p), aResult);
+
         NS_RELEASE(resource);
     }
     else if (NS_SUCCEEDED(rv = aNode->QueryInterface(NS_GET_IID(nsIRDFDate), (void**) &dateLiteral)))

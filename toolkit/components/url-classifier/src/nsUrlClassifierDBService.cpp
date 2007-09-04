@@ -38,6 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "mozIStorageService.h"
 #include "mozIStorageConnection.h"
@@ -50,11 +51,15 @@
 #include "nsICryptoHash.h"
 #include "nsIDirectoryService.h"
 #include "nsIObserverService.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranch2.h"
+#include "nsIPrefService.h"
 #include "nsIProperties.h"
 #include "nsIProxyObjectManager.h"
 #include "nsToolkitCompsCID.h"
 #include "nsIUrlClassifierUtils.h"
 #include "nsUrlClassifierDBService.h"
+#include "nsURILoader.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsVoidArray.h"
@@ -118,6 +123,10 @@ static const PRLogModuleInfo *gUrlClassifierDbServiceLog = nsnull;
 #define MAX_CHUNK_SIZE (1024 * 1024)
 
 #define KEY_LENGTH 16
+
+// Prefs for implementing nsIURIClassifier to block page loads
+#define CHECK_MALWARE_PREF      "browser.safebrowsing.malware.enabled"
+#define CHECK_MALWARE_DEFAULT   PR_FALSE
 
 // Singleton instance.
 static nsUrlClassifierDBService* sUrlClassifierDBService;
@@ -2029,10 +2038,54 @@ nsUrlClassifierDBServiceWorker::MaybeCreateTables(mozIStorageConnection* connect
 }
 
 // -------------------------------------------------------------------------
+// Helper class for nsIURIClassifier implementation, translates table names
+// to nsIURIClassifier enums.
+
+class nsUrlClassifierClassifyCallback : public nsIUrlClassifierCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIURLCLASSIFIERCALLBACK
+
+  nsUrlClassifierClassifyCallback(nsIURIClassifierCallback *c)
+    : mCallback(c)
+    {}
+
+private:
+  nsCOMPtr<nsIURIClassifierCallback> mCallback;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsUrlClassifierClassifyCallback,
+                              nsIUrlClassifierCallback)
+
+NS_IMETHODIMP
+nsUrlClassifierClassifyCallback::HandleEvent(const nsACString& tables)
+{
+  // XXX: we should probably have the wardens tell the service which table
+  // names match with which classification.  For now the table names give
+  // enough information.
+  nsresult response = NS_OK;
+
+  nsACString::const_iterator begin, end;
+
+  tables.BeginReading(begin);
+  tables.EndReading(end);
+  if (FindInReadable(NS_LITERAL_CSTRING("-malware-"), begin, end)) {
+    response = NS_ERROR_MALWARE_URI;
+  }
+
+  mCallback->OnClassifyComplete(response);
+
+  return NS_OK;
+}
+
+
+// -------------------------------------------------------------------------
 // Proxy class implementation
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsUrlClassifierDBService,
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsUrlClassifierDBService,
                               nsIUrlClassifierDBService,
+                              nsIURIClassifier,
                               nsIObserver)
 
 /* static */ nsUrlClassifierDBService*
@@ -2058,6 +2111,7 @@ nsUrlClassifierDBService::GetInstance()
 
 
 nsUrlClassifierDBService::nsUrlClassifierDBService()
+ : mCheckMalware(CHECK_MALWARE_DEFAULT)
 {
 }
 
@@ -2088,6 +2142,17 @@ nsUrlClassifierDBService::Init()
     do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Should we check document loads for malware URIs?
+  nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+
+  if (prefs) {
+    PRBool tmpbool;
+    rv = prefs->GetBoolPref(CHECK_MALWARE_PREF, &tmpbool);
+    mCheckMalware = NS_SUCCEEDED(rv) ? tmpbool : CHECK_MALWARE_DEFAULT;
+
+    prefs->AddObserver(CHECK_MALWARE_PREF, this, PR_FALSE);
+  }
+
   // Start the background thread.
   rv = NS_NewThread(&gDbBackgroundThread);
   if (NS_FAILED(rv))
@@ -2115,7 +2180,27 @@ nsUrlClassifierDBService::Init()
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
+nsUrlClassifierDBService::Classify(nsIURI *uri,
+                                   nsIURIClassifierCallback* c,
+                                   PRBool* result)
+{
+  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
+
+  if (!mCheckMalware) {
+    *result = PR_FALSE;
+    return NS_OK;
+  }
+
+  nsRefPtr<nsUrlClassifierClassifyCallback> callback =
+    new nsUrlClassifierClassifyCallback(c);
+  if (!callback) return NS_ERROR_OUT_OF_MEMORY;
+
+  *result = PR_TRUE;
+  return LookupURI(uri, callback, PR_TRUE);
+}
+
+NS_IMETHODIMP
 nsUrlClassifierDBService::Lookup(const nsACString& spec,
                                  nsIUrlClassifierCallback* c,
                                  PRBool needsProxy)
@@ -2132,11 +2217,21 @@ nsUrlClassifierDBService::Lookup(const nsACString& spec,
     return NS_ERROR_FAILURE;
   }
 
+  return LookupURI(uri, c, needsProxy);
+}
+
+nsresult
+nsUrlClassifierDBService::LookupURI(nsIURI* uri,
+                                    nsIUrlClassifierCallback* c,
+                                    PRBool needsProxy)
+{
+  NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
+
   nsCAutoString key;
   // Canonicalize the url
   nsCOMPtr<nsIUrlClassifierUtils> utilsService =
     do_GetService(NS_URLCLASSIFIERUTILS_CONTRACTID);
-  rv = utilsService->GetKeyForURI(uri, key);
+  nsresult rv = utilsService->GetKeyForURI(uri, key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIUrlClassifierCallback> proxyCallback;
@@ -2278,11 +2373,21 @@ NS_IMETHODIMP
 nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
                                   const PRUnichar *aData)
 {
-  NS_ASSERTION(strcmp(aTopic, "profile-before-change") == 0 ||
-               strcmp(aTopic, "xpcom-shutdown-threads") == 0,
-               "Unexpected observer topic");
-
-  Shutdown();
+  if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    nsresult rv;
+    nsCOMPtr<nsIPrefBranch> prefs(do_QueryInterface(aSubject, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_LITERAL_STRING(CHECK_MALWARE_PREF).Equals(aData)) {
+      PRBool tmpbool;
+      rv = prefs->GetBoolPref(CHECK_MALWARE_PREF, &tmpbool);
+      mCheckMalware = NS_SUCCEEDED(rv) ? tmpbool : CHECK_MALWARE_DEFAULT;
+    }
+  } else if (!strcmp(aTopic, "profile-before-change") ||
+             !strcmp(aTopic, "xpcom-shutdown-threads")) {
+    Shutdown();
+  } else {
+    return NS_ERROR_UNEXPECTED;
+  }
 
   return NS_OK;
 }
@@ -2295,6 +2400,11 @@ nsUrlClassifierDBService::Shutdown()
 
   if (!gDbBackgroundThread)
     return NS_OK;
+
+  nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    prefs->RemoveObserver(CHECK_MALWARE_PREF, this);
+  }
 
   nsresult rv;
   // First close the db connection.

@@ -155,7 +155,7 @@ interface nsILoginManager : nsISupports {
      *        the array's .length property, and supply an dummy object for
      *        this out param. For example: |findLogins({}, hostname, ...)|
      * @param aHostname
-     *        The hostname to restict searches to. When looking for form
+     *        The hostname to restrict searches to. When looking for form
      *        logins, this argument should be in origin URL format, without
      *        a pathname. For example: "http://www.site.com". For protocol
      *        logins (http//ftp), it should be the hostname with a port

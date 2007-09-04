@@ -51,10 +51,9 @@
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #include "nsStringEnumerator.h"
-#ifdef MOZ_CAIRO_GFX
+
 #include "gfxPDFSurface.h"
 #include "gfxWindowsSurface.h"
-#endif
 
 #include "nsIFileStreams.h"
 #include "nsUnitConversion.h"
@@ -181,11 +180,9 @@ nsDeviceContextSpecWin::nsDeviceContextSpecWin()
 
 
 //----------------------------------------------------------------------------------
-#ifdef MOZ_CAIRO_GFX
+
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecWin, nsIDeviceContextSpec)
-#else
-NS_IMPL_ISUPPORTS2(nsDeviceContextSpecWin, nsIDeviceContextSpec, nsISupportsVoid)
-#endif
+
 nsDeviceContextSpecWin::~nsDeviceContextSpecWin()
 {
   SetDeviceName(nsnull);
@@ -515,7 +512,6 @@ static void CleanAndCopyString(char*& aStr, char* aNewStr)
   }
 }
 
-#ifdef MOZ_CAIRO_GFX
 NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface)
 {
   NS_ASSERTION(mDevMode, "DevMode can't be NULL here");
@@ -564,24 +560,6 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
   *surface = nsnull;
   return NS_ERROR_FAILURE;
 }
-
-#else
-
-// nsISupportsVoid impl stuff. goes away when we turn on cairo.
-NS_IMETHODIMP nsDeviceContextSpecWin::GetData(void **data)
-{
-  NS_ASSERTION(mDevMode, "DevMode can't be NULL here");
-
-  if (mDevMode) {
-    HDC dc = ::CreateDC(mDriverName, mDeviceName, NULL, mDevMode);
-    *data = (void*)dc;
-
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-#endif
 
 //----------------------------------------------------------------------------------
 void nsDeviceContextSpecWin::SetDeviceName(char* aDeviceName)

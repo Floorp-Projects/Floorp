@@ -1435,67 +1435,12 @@ nsLocalFile::CopySingleFile(nsIFile *sourceFile, nsIFile *destParent,
     if (!move)
         copyOK = ::CopyFileW(filePath.get(), destPath.get(), PR_TRUE);
     else
-    {
-        // What we have to do is check to see if the destPath exists.  If it
-        // does, we have to move it out of the say so that MoveFile will
-        // succeed.  However, we don't want to just remove it since MoveFile
-        // can fail leaving us without a file.
+        copyOK = ::MoveFileExW(filePath.get(), destPath.get(),
+                               MOVEFILE_REPLACE_EXISTING |
+                               MOVEFILE_COPY_ALLOWED |
+                               MOVEFILE_WRITE_THROUGH);
 
-        nsAutoString backup;
-        PRFileInfo64 fileInfo64;
-        if (NS_SUCCEEDED(GetFileInfo(destPath, &fileInfo64)))
-        {
-
-            // the file exists.  Check to make sure it is not a directory,
-            // then move it out of the way.
-            if (fileInfo64.type == PR_FILE_FILE)
-            {
-                backup.Append(destPath);
-                backup.Append(L".moztmp");
-
-                // we are about to remove the .moztmp file,
-                // so attempt to make sure the file is writable
-                // (meaning:  the "read only" attribute is not set)
-                // _wchmod can silently fail (return -1) if 
-                // the file doesn't exist but that's ok, because 
-                // _wremove() will also silently fail if the file
-                // doesn't exist.
-               (void)_wchmod(backup.get(), _S_IREAD | _S_IWRITE);
-
-                // remove any existing backup file that we may already have.
-                // maybe we should be doing some kind of unique naming here,
-                // but why bother.
-               (void)_wremove(backup.get());
-
-                // move destination file to backup file
-                copyOK = ::MoveFileW(destPath.get(), backup.get());
-                if (!copyOK)
-                {
-                    // I guess we can't do the backup copy, so return.
-                    rv = ConvertWinError(GetLastError());
-                    return rv;
-                }
-            }
-        }
-        // move source file to destination file
-        copyOK = ::MoveFileW(filePath.get(), destPath.get());
-
-        if (!backup.IsEmpty())
-        {
-            if (copyOK)
-            {
-                // remove the backup copy.
-                _wremove(backup.get());
-            }
-            else
-            {
-                // restore backup
-                int backupOk = ::MoveFileW(backup.get(), destPath.get());
-                NS_ASSERTION(backupOk, "move backup failed");
-            }
-        }
-    }
-    if (!copyOK)  // CopyFile and MoveFile returns non-zero if succeeds (backward if you ask me).
+    if (!copyOK)  // CopyFile and MoveFileEx return zero at failure.
         rv = ConvertWinError(GetLastError());
 
     return rv;
@@ -2346,7 +2291,7 @@ nsLocalFile::IsExecutable(PRBool *_retval)
             *p +=  (*p >= L'A' && *p <= L'Z') ? 'a' - 'A' : 0; 
         
         // Search for any of the set of executable extensions.
-        const char * const executableExts[] = {
+        static const char * const executableExts[] = {
             "ad",
             "ade",         // access project extension
             "adp",
@@ -2418,10 +2363,10 @@ nsLocalFile::IsExecutable(PRBool *_retval)
             "ws",
             "wsc",
             "wsf",
-            "wsh",
-            0 };
-        for ( int i = 0; executableExts[i]; i++ ) {
-            if ( Substring(path, dotIdx + 1).EqualsASCII(executableExts[i])) {
+            "wsh"};
+        nsDependentSubstring ext = Substring(path, dotIdx + 1);
+        for ( int i = 0; i < NS_ARRAY_LENGTH(executableExts); i++ ) {
+            if ( ext.EqualsASCII(executableExts[i])) {
                 // Found a match.  Set result and quit.
                 *_retval = PR_TRUE;
                 break;

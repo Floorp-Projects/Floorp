@@ -192,10 +192,6 @@ var PlacesOrganizer = {
     // Items are only excluded on the left pane
     var options = node.queryOptions.clone();
     options.excludeItems = false;
-    // Unset excludeQueries so incremental update is enabled for the content
-    // pane.
-    // XXXmano: remove that once we unset excludeQueries for the left pane.
-    options.excludeQueries = false;
 
     this._content.load(queries, 
                        OptionsFilter.filter(queries, options, null));
@@ -343,6 +339,57 @@ var PlacesOrganizer = {
     }
     gEditItemOverlay.uninitPanel();
     deck.selectedIndex = 0;
+  },
+
+  /**
+   * Save the current search (or advanced query) to the bookmarks root.
+   */
+  saveSearch: function PP_saveSearch() {
+    // Get the place: uri for the query.
+    // If the advanced query builder is showing, use that.
+    var queries = [];
+    var options = this.getCurrentOptions();
+    options.excludeQueries = true;
+    var advancedSearch = document.getElementById("advancedSearch");
+    if (!advancedSearch.collapsed) {
+      queries = PlacesQueryBuilder.queries;
+    }
+    // If not, use the value of the search box.
+    else if (PlacesSearchBox.value && PlacesSearchBox.value.length > 0) {
+      var query = PlacesUtils.history.getNewQuery();
+      query.searchTerms = PlacesSearchBox.value;
+      queries.push(query);
+    }
+    // if there is no query, do nothing.
+    else {
+      // XXX should probably have a dialog here to explain that the user needs to search first.
+     return;
+    }
+    var placeSpec = PlacesUtils.history.queriesToQueryString(queries,
+                                                             queries.length,
+                                                             options);
+    var placeURI = IO.newURI(placeSpec);
+
+    // Prompt the user for a name for the query.
+    // XXX - using prompt service for now; will need to make
+    // a real dialog and localize when we're sure this is the UI we want.
+    var title = PlacesUtils.getString("saveSearch.title");
+    var inputLabel = PlacesUtils.getString("saveSearch.inputLabel");
+    var defaultText = PlacesUtils.getString("saveSearch.defaultText");
+
+    var prompts = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                    getService(Ci.nsIPromptService);
+    var check = {value: false};
+    var input = {value: defaultText};
+    var save = prompts.prompt(null, title, inputLabel, input, null, check);
+
+    // Don't add the query if the user cancels or clears the seach name.
+    if (!save || input.value == "")
+     return;
+
+    // Add the place: uri as a bookmark under the places root.
+    var txn = PlacesUtils.ptm.createItem(placeURI, PlacesUtils.bookmarks.bookmarksRoot, PlacesUtils.bookmarks.DEFAULT_INDEX, input.value);
+    PlacesUtils.ptm.commitTransaction(txn);
   }
 };
 
@@ -384,8 +431,10 @@ var PlacesSearchBox = {
       PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
       break;
     case "bookmarks":
-      if (filterString != "")
+      if (filterString) {
         content.applyFilter(filterString, true);
+        PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
+      }
       else
         PlacesOrganizer.onPlaceSelected();
       break;
@@ -445,6 +494,8 @@ var PlacesSearchBox = {
   },
   set filterCollection(collectionName) {
     this.searchFilter.setAttribute("collection", collectionName);
+    if (this.searchFilter.value)
+      return; // don't overwrite pre-existing search terms
     var newGrayText = null;
     if (collectionName == "collection")
       newGrayText = PlacesOrganizer._places.selectedNode.title;
@@ -483,6 +534,9 @@ var PlacesSearchBox = {
  * Functions and data for advanced query builder
  */
 var PlacesQueryBuilder = {
+
+  queries: [],
+  queryOptions: null,
 
   _numRows: 0,
 
@@ -906,7 +960,7 @@ var PlacesQueryBuilder = {
   doSearch: function PQB_doSearch() {
     // Create the individual queries.
     var queryType = document.getElementById("advancedSearchType").selectedItem.value;
-    var queries = [];
+    this.queries = [];
     if (queryType == "and")
       queries.push(PlacesUtils.history.getNewQuery());
     var updated = 0;
@@ -922,7 +976,7 @@ var PlacesQueryBuilder = {
         // If they're being OR-ed, add a separate query for each row.
         var query;
         if (queryType == "and")
-          query = queries[0];
+          query = this.queries[0];
         else
           query = PlacesUtils.history.getNewQuery();
         
@@ -930,15 +984,15 @@ var PlacesQueryBuilder = {
         this._queryBuilders[querySubject](query, prefix);
         
         if (queryType == "or")
-          queries.push(query);
+          this.queries.push(query);
           
         ++updated;
       }
     }
     
     // Make sure we're getting uri results, not visits
-    var options = PlacesOrganizer.getCurrentOptions();
-    options.resultType = options.RESULT_TYPE_URI;
+    this.options = PlacesOrganizer.getCurrentOptions();
+    this.options.resultType = options.RESULT_TYPE_URI;
 
     // XXXben - find some public way of doing this!
     PlacesOrganizer._content.load(queries, 

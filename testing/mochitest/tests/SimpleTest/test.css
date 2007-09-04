@@ -25,4 +25,5 @@
 	border-width: 2px;
 	border-style: solid;
 	width: 20em;
+       display: table;
 }

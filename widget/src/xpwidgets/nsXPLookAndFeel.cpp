@@ -431,6 +431,29 @@ nsXPLookAndFeel::~nsXPLookAndFeel()
 {
 }
 
+PRBool
+nsXPLookAndFeel::IsSpecialColor(const nsColorID aID, nscolor &aColor)
+{
+  switch (aID) {
+    case eColor_TextSelectForeground:
+      return (aColor == NS_DONT_CHANGE_COLOR);
+    case eColor_IMESelectedRawTextBackground:
+    case eColor_IMESelectedConvertedTextBackground:
+    case eColor_IMERawInputBackground:
+    case eColor_IMEConvertedTextBackground:
+    case eColor_IMESelectedRawTextForeground:
+    case eColor_IMESelectedConvertedTextForeground:
+    case eColor_IMERawInputForeground:
+    case eColor_IMEConvertedTextForeground:
+    case eColor_IMERawInputUnderline:
+    case eColor_IMEConvertedTextUnderline:
+    case eColor_IMESelectedRawTextUnderline:
+    case eColor_IMESelectedConvertedTextUnderline:
+      return NS_IS_IME_SPECIAL_COLOR(aColor);
+  }
+  return PR_FALSE;
+}
+
 //
 // All these routines will return NS_OK if they have a value,
 // in which case the nsLookAndFeel should use that value;
@@ -545,7 +568,7 @@ nsXPLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   }
 
   if (NS_SUCCEEDED(NativeGetColor(aID, aColor))) {
-    if (gfxPlatform::IsCMSEnabled()) {
+    if (gfxPlatform::IsCMSEnabled() && !IsSpecialColor(aID, aColor)) {
       cmsHTRANSFORM transform = gfxPlatform::GetCMSInverseRGBTransform();
       if (transform) {
         PRUint8 color[3];

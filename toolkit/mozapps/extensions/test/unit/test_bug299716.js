@@ -50,6 +50,9 @@ var env = Components.classes["@mozilla.org/process/environment;1"]
                     .getService(Components.interfaces.nsIEnvironment);
 env.set("XPCOM_DEBUG_BREAK", "stack");
 
+// Disables security checking our updates which haven't been signed
+gPrefs.setBoolPref("extensions.checkUpdateSecurity", false);
+
 // This allows the EM to attempt to display errors to the user without failing.
 var promptService = {
   // nsIPromptService
@@ -300,6 +303,7 @@ var next_test = function() {};
 
 function do_check_item(aItem, aVersion, aAddonsEntry) {
   if (aAddonsEntry.installed) {
+    do_check_neq(aItem, null);
     do_check_eq(aItem.version, aVersion);
   } else {
     do_check_eq(aItem, null);

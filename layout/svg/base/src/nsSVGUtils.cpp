@@ -1359,9 +1359,8 @@ gfxASurface *
 nsSVGUtils::GetThebesComputationalSurface()
 {
   if (!mThebesComputationalSurface) {
-    nsRefPtr<gfxASurface> surface =
-      gfxPlatform::GetPlatform()->CreateOffscreenSurface(gfxIntSize(1, 1),
-                                                         gfxASurface::ImageFormatARGB32);
+    nsRefPtr<gfxImageSurface> surface =
+      new gfxImageSurface(gfxIntSize(1, 1), gfxASurface::ImageFormatARGB32);
     NS_ASSERTION(surface && !surface->CairoStatus(),
                  "Could not create offscreen surface");
     mThebesComputationalSurface = surface;

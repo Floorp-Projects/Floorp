@@ -141,13 +141,6 @@
             <textbox id="ifl_expires" readonly="true" class="plain"/>
           </row>
 
-          <row align="center" id="policyField" hidden="true">
-            <hbox align="center" pack="end">
-              <label value="&props.policy.label;"/>
-            </hbox>
-            <textbox id="ifl_policy" readonly="true" class="plain"/>
-          </row>
-
         </rows>
       </grid>
     </vbox>

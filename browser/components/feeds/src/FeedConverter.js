@@ -247,8 +247,9 @@ FeedConverter.prototype = {
    */
   onDataAvailable: function FC_onDataAvailable(request, context, inputStream, 
                                                sourceOffset, count) {
-    this._processor.onDataAvailable(request, context, inputStream,
-                                    sourceOffset, count);
+    if (this._processor)
+      this._processor.onDataAvailable(request, context, inputStream,
+                                      sourceOffset, count);
   },
   
   /**
@@ -291,7 +292,8 @@ FeedConverter.prototype = {
    * See nsIRequestObserver.idl
    */
   onStopRequest: function FC_onStopReqeust(request, context, status) {
-    this._processor.onStopRequest(request, context, status);
+    if (this._processor)
+      this._processor.onStopRequest(request, context, status);
   },
   
   /**
