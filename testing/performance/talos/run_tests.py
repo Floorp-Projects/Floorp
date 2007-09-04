@@ -61,8 +61,7 @@ socket.setdefaulttimeout(480)
 import utils
 import config
 import post_file
-import tp
-import ts
+import ttest
 
 def shortNames(name):
   if name == "tp_loadtime":
@@ -84,137 +83,128 @@ def process_Request(post):
         str += line.split(":")[3] + ":" + shortNames(line.split(":")[1]) + ":" + line.split(":")[2] + '\n'
   return str
 
-def test_file(filename):
-  """Runs the Ts and Tp tests on the given config file and generates a report.
-  
-  Args:
-    filename: the name of the file to run the tests on
-  """
-  
-  test_configs = []
-  test_names = []
-  title = ''
-  filename_prefix = ''
-  testdate = ''
-  
-  # Read in the profile info from the YAML config file
-  config_file = open(filename, 'r')
-  yaml_config = yaml.load(config_file)
-  config_file.close()
-  for item in yaml_config:
-    if item == 'title':
-      title = yaml_config[item]
-    elif item == 'filename':
-      filename_prefix = yaml_config[item]
-    elif item == 'testdate':
-      testdate = yaml_config[item]
-    else:
-      new_config = [yaml_config[item]['preferences'],
-                    yaml_config[item]['extensions'],
-                    yaml_config[item]['firefox'],
-                    yaml_config[item]['branch'],
-                    yaml_config[item]['branchid'],
-                    yaml_config[item]['profile_path'],
-                    yaml_config[item]['env']]
-      test_configs.append(new_config)
-      test_names.append(item)
-  config_file.close()
-
-  print test_configs
-  sys.stdout.flush()
-  if (testdate != ''):
-    date = int(time.mktime(time.strptime(testdate, '%a, %d %b %Y %H:%M:%S GMT')))
-  else:
-    date = int(time.time()) #TODO get this into own file
-  print "using testdate: %d" % date
-  print "actual date: %d" % int(time.time())
- 
-
-  # Run startup time test
-  ts_times = ts.RunStartupTests(test_configs,
-                                config.TS_NUM_RUNS)
-
-  print "finished ts"
-  sys.stdout.flush()
-  for ts_set in ts_times:
-    if len(ts_set) == 0:
-	print "FAIL:no ts results, build failed to run:BAD BUILD"
-	sys.exit(0)
-
-  (res, r_strings, tp_times, tp_counters) = tp.RunPltTests(test_configs,
-                                           config.TP_NUM_CYCLES,
-                                           config.COUNTERS,
-                                           config.TP_RESOLUTION)
-
-  print "finished tp"
-  sys.stdout.flush()
-
-  if not res:
-    print "FAIL:tp did not run to completion"
-    print "FAIL:" + r_strings[0]
-    sys.exit(0)
-
-  #TODO: place this in its own file
-  #send results to the graph server
-  # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
-  tbox = title
-  url_format = "http://%s/%s"
-  link_format= "<a href = \"%s\">%s</a>"
-  #value, testname, tbox, timeval, date, branch, branchid, type, data
-  result_format = "%.2f,%s,%s,%d,%d,%s,%s,%s,%s,\n"
-  result_format2 = "%.2f,%s,%s,%d,%d,%s,%s,%s,\n"
-  filename = tempfile.mktemp()
-  tmpf = open(filename, "w")
-
-  testname = "ts"
-  print "formating results for: ts"
-  print "# of values: %d" % len(ts_times)
-  for index in range(len(ts_times)):
-    i = 0
-    for tstime in ts_times[index]:
-      tmpf.write(result_format % (float(tstime), testname, tbox, i, date, test_configs[index][3], test_configs[index][4], "discrete", "ms"))
-      i = i+1
-
-  testname = "tp"
-  for index in range(len(r_strings)):
-    r_strings[index].strip('\n')
-    page_results = r_strings[index].splitlines()
-    i = 0
-    print "formating results for: loadtime"
-    print "# of values: %d" % len(page_results)
-    for mypage in page_results[3:]:
-      r = mypage.split(';')
-      tmpf.write(result_format % (float(r[2]), testname + "_loadtime", tbox, i, date, test_configs[index][3], test_configs[index][4], "discrete", r[1]))
-      i = i+1
-
-  for index in range(len(tp_counters)):
-    for count_type in config.COUNTERS:
+def send_to_csv(results):
+  import csv
+  for res in results:
+    browser_dump, counter_dump = results[res]
+    writer = csv.writer(open(config.CSV_FILE + '_' +  res, "wb"))
+    if res == 'ts':
       i = 0
-      print "formating results for: " + count_type
-      print "# of values: %d" % len(tp_counters[index][count_type])
-      for value in tp_counters[index][count_type]:
-        tmpf.write(result_format2 % (float(value), testname + "_" + count_type.replace("%", "Percent"), tbox, i, date, test_configs[index][3], test_configs[index][4], "discrete"))
-        i = i+1
+      writer.writerow(['i', 'val'])
+      for val in browser_dump:
+        writer.writerow([i, val])
+        i += 1
+    if (res.find('tp') > -1) or (res == 'tdhmtl'):
+      writer.writerow(['i', 'page', 'median', 'mean', 'min' , 'max', 'runs'])
+      for bd in browser_dump:
+        bd.rstrip('\n')
+        page_results = bd.splitlines()
+        i = 0
+        for mypage in page_results[2:]:
+          r = mypage.split(';')
+          if r[1].find('/') > -1 :
+             page = r[1].split('/')[1]
+          else:
+             page = r[1]
+          writer.writerow([i, page, r[2], r[3], r[4], r[5], '|'.join(r[6:])])
+          i += 1
+    for cd in counter_dump:
+      for count_type in cd:
+        writer = csv.writer(open(config.CSV_FILE + '_' + res + '_' + count_type, "wb"))
+        writer.writerow(['i', 'value'])
+        i = 0
+        for val in cd[count_type]:
+          writer.writerow([i, val])
+          i += 1
 
-
-  print "finished formating results"
-  tmpf.flush()
-  tmpf.close()
+def post_chunk(id, filename):
   tmpf = open(filename, "r")
   file_data = tmpf.read()
   while True:
     try:
-      ret = post_file.post_multipart(config.RESULTS_SERVER, config.RESULTS_LINK, [("key", "value")], [("filename", filename, file_data)
-   ])
+      ret = post_file.post_multipart(config.RESULTS_SERVER, config.RESULTS_LINK, [("key", "value")], [("filename", filename, file_data)])
     except IOError:
-      print "IOError"
+      print "FAIL: IOError on sending data to the graph server"
     else:
       break
-  print "completed sending results"
   links = process_Request(ret)
-  tmpf.close()
-  os.remove(filename)
+  utils.debug(id + ": sent results")
+  return links
 
+def chunk_list(val_list):
+  """ 
+    divide up a list into manageable chunks
+    currently set at length 500 
+    this is for a failure on mac os x with python 2.4.4 
+  """
+  chunks = []
+  end = 500
+  while (val_list != []):
+    chunks.append(val_list[0:end])
+    val_list = val_list[end:len(val_list)]
+  return chunks
+
+def send_to_graph(title, date, browser_config, results):
+  tbox = title
+  url_format = "http://%s/%s"
+  link_format= "<a href = \"%s\">%s</a>"
+  #value, testname, tbox, timeval, date, branch, buildid, type, data
+  result_format = "%.2f,%s,%s,%d,%d,%s,%s,%s,%s,\n"
+  result_format2 = "%.2f,%s,%s,%d,%d,%s,%s,%s,\n"
+  links = ''
+
+  for res in results:
+    filename = tempfile.mktemp()
+    tmpf = open(filename, "w")
+    browser_dump, counter_dump = results[res]
+    filename = tempfile.mktemp()
+    tmpf = open(filename, "w")
+    if res == 'ts':
+       i = 0
+       for val in browser_dump:
+         tmpf.write(result_format % (float(val), res, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", "ms"))
+         i += 1
+    if (res.find('tp') > -1)  or (res == 'tdhtml'):
+       # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
+      for bd in browser_dump:
+        bd.rstrip('\n')
+        page_results = bd.splitlines()
+        i = 0
+        for mypage in page_results[2:]:
+          r = mypage.split(';')
+          if r[1].find('/') > -1 :
+             page = r[1].split('/')[1]
+          else:
+             page = r[1]
+          try:
+            val = float(r[2])
+          except ValueError:
+            print 'WARNING: value error for median in tp'
+            val = 0
+          tmpf.write(result_format % (val, res, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", page))
+          i += 1
+    tmpf.flush()
+    tmpf.close()
+    links += post_chunk(res, filename)
+    os.remove(filename)
+    for cd in counter_dump:
+      for count_type in cd:
+        val_list = cd[count_type]
+        chunks = chunk_list(val_list)
+        chunk_link = ''
+        for chunk in chunks:
+          filename = tempfile.mktemp()
+          tmpf = open(filename, "w")
+          i = 0
+          for val in chunk:
+              tmpf.write(result_format2 % (float(val), res + "_" + count_type.replace("%", "Percent"), tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete"))
+              i += 1
+          tmpf.flush()
+          tmpf.close()
+          chunk_link = post_chunk('%s_%s (%d values)' % (res, count_type, len(chunk)), filename)
+          os.remove(filename)
+        links += chunk_link
+    
   lines = links.split('\n')
   for line in lines:
     if line == "":
@@ -228,6 +218,61 @@ def test_file(filename):
     url = url_format % (config.RESULTS_SERVER, values[0],)
     link = link_format % (url, linkName,)
     print "RETURN: " + link
+
+def test_file(filename):
+  """Runs the Ts and Tp tests on the given config file and generates a report.
+  
+  Args:
+    filename: the name of the file to run the tests on
+  """
+  
+  browser_config = []
+  tests = []
+  title = ''
+  testdate = ''
+  results = {}
+  
+  # Read in the profile info from the YAML config file
+  config_file = open(filename, 'r')
+  yaml_config = yaml.load(config_file)
+  config_file.close()
+  for item in yaml_config:
+    if item == 'title':
+      title = yaml_config[item]
+    elif item == 'testdate':
+      testdate = yaml_config[item]
+  browser_config = {'preferences'  : yaml_config['preferences'],
+                    'extensions'   : yaml_config['extensions'],
+                    'firefox'      : yaml_config['firefox'],
+                    'branch'       : yaml_config['branch'],
+                    'buildid'      : yaml_config['buildid'],
+                    'profile_path' : yaml_config['profile_path'],
+                    'env'          : yaml_config['env'],
+                    'dirs'         : yaml_config['dirs']}
+  tests = yaml_config['tests']
+  config_file.close()
+  if (testdate != ''):
+    date = int(time.mktime(time.strptime(testdate, '%a, %d %b %Y %H:%M:%S GMT')))
+  else:
+    date = int(time.time()) #TODO get this into own file
+  utils.debug("using testdate: %d" % date)
+  utils.debug("actual date: %d" % int(time.time()))
+
+  for test in tests:
+    print "Running test: " + test
+    res, browser_dump, counter_dump = ttest.runTest(browser_config, tests[test])
+    if not res:
+      print 'FAIL: failure to complete test: ' + test
+      sys.exit(0)
+    results[test] = [browser_dump, counter_dump]
+    print "Completed test: " + test
+
+  #process the results
+  if config.TO_GRAPH_SERVER:
+    #send results to the graph server
+    send_to_graph(title, date, browser_config, results)
+  if config.TO_CSV:
+    send_to_csv(results)
   
 if __name__=='__main__':
 

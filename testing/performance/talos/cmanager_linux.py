@@ -193,7 +193,7 @@ class CounterManager(threading.Thread):
       self.runThread = True
       self.start()
     except:
-      raise
+      print 'WARNING: problem starting counter monitor'
 
   def stopMonitor(self):
     """Stops the monitor"""
