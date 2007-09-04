@@ -49,14 +49,11 @@ NS_GetComplexLineBreaks(const PRUnichar* aText, PRUint32 aLength,
 {
   NS_ASSERTION(aText, "aText shouldn't be null");
 
+  memset(aBreakBefore, PR_FALSE, aLength * sizeof(PRPackedBool));
+
   nsAutoTArray<PangoLogAttr, 2000> attrBuffer;
   if (!attrBuffer.AppendElements(aLength + 1))
-  {
-    // out of memory, behave as if there were no complex line breaker
-    for (PRUint32 i = 0; i < aLength; ++i) {
-      aBreakBefore[i] = PR_FALSE;
-    }
-  }
+    return;
 
   NS_ConvertUTF16toUTF8 aUTF8(aText, aLength);
 
