@@ -111,13 +111,13 @@ richlistitem[selected="true"] {
   color: -moz-DialogText;
 }
 
-richlistbox[focused] richlistitem[selected="true"] {
+richlistbox:focus richlistitem[selected="true"] {
   background-image: url("chrome://mozapps/skin/extensions/itemEnabledFader.png");
   background-color: Highlight;
   color: HighlightText;
 }
 
-richlistbox[focused] richlistitem[selected="true"][isDisabled="true"] {
+richlistbox:focus richlistitem[selected="true"][isDisabled="true"] {
   background-image: url("chrome://mozapps/skin/extensions/itemDisabledFader.png");
 }
 

@@ -151,8 +151,7 @@
 
   <stack id="topStackBar">
     <radiogroup id="viewGroup" xhtml2:role="wairole:list" persist="last-selected"
-                class="viewSelector chromeclass-toolbar" orient="horizontal"
-                onkeypress="onViewGroupKeypress();" onclick="onViewGroupClick();">
+                class="viewSelector chromeclass-toolbar" orient="horizontal">
       <radio id="extensions-view" label="&extensions.label;" oncommand="showView('extensions');" persist="last-selected"/>
       <radio id="themes-view" label="&themes.label;" oncommand="showView('themes');" persist="last-selected"/>
       <radio id="locales-view" label="&locales.label;" oncommand="showView('locales');" persist="last-selected"/>
