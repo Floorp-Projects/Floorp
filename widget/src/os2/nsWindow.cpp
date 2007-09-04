@@ -1889,9 +1889,11 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
   if (NS_FAILED(rv))
     return rv;
 
-  // only 24-bit images with 0, 1, or 8-bit alpha data are supported
-  if (format != gfxIFormats::BGR_A1 && format != gfxIFormats::BGR_A8 &&
-      format != gfxIFormats::BGR)
+  // only 24-bit images with 0, 1, or 8-bit alpha data are supported.
+  // These are all the formats used in Cairo, and all map to the RGB24 resp. ARGB32 Cairo formats.
+  if (format != gfxIFormats::BGR_A1 && format != gfxIFormats::RGB_A1 &&
+      format != gfxIFormats::BGR_A8 && format != gfxIFormats::RGB_A8 &&
+      format != gfxIFormats::BGR && format != gfxIFormats::RGB)
     return NS_ERROR_UNEXPECTED;
 
   frame->LockImageData();
@@ -1904,42 +1906,19 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
   }
 
   // create the color bitmap
-  HBITMAP hBmp = 0;
-  hBmp = DataToBitmap(data, width, height, 24);
-  frame->UnlockImageData();
+  HBITMAP hBmp = CreateBitmapRGB(data, width, height);
   if (!hBmp)
     return NS_ERROR_FAILURE;
 
-  // create a transparency mask from the alpha data;
-  HBITMAP hAlpha = 0;
-
-  // image has no alpha data - make the pointer opaque
-  if (format == gfxIFormats::BGR) {
-    hAlpha = CreateTransparencyMask(format, 0, width, height);
-    if (!hAlpha) {
-      GpiDeleteBitmap(hBmp);
-      return NS_ERROR_FAILURE;
-    }
+  // create a transparency mask from the alpha bytes
+  HBITMAP hAlpha = CreateTransparencyMask(format, data, width, height);
+  if (!hAlpha) {
+    GpiDeleteBitmap(hBmp);
+    return NS_ERROR_FAILURE;
   }
-  // image has either 1 or 8 bits of alpha data
-  else {
-    PRUint8* adata;
-    frame->LockAlphaData();
-    rv = frame->GetAlphaData(&adata, &dataLen);
-    if (NS_FAILED(rv)) {
-      GpiDeleteBitmap(hBmp);
-      frame->UnlockAlphaData();
-      return rv;
-    }
 
-    // create the bitmap
-    hAlpha = CreateTransparencyMask(format, adata, width, height);
-    frame->UnlockAlphaData();
-    if (!hAlpha) {
-      GpiDeleteBitmap(hBmp);
-      return NS_ERROR_FAILURE;
-    }
-  }
+  // Unlock image data after both processing colors and alpha data
+  frame->UnlockImageData();
 
   POINTERINFO info = {0};
   info.fPointer = TRUE;
@@ -2020,6 +1999,40 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData, PRUint32 aWidth,
 
 //-------------------------------------------------------------------------
 
+// create a RGB24 bitmap from Cairo image data
+
+HBITMAP nsWindow::CreateBitmapRGB(PRUint8* aImageData,
+                                  PRUint32 aWidth,
+                                  PRUint32 aHeight)
+{
+  // calc width in bytes, rounding up to a dword boundary
+  const PRUint32 bpr = ALIGNEDBPR(aWidth, 24);
+  PRUint8* bmp = (PRUint8*)malloc(bpr * aHeight);
+  if (!bmp)
+    return NULL;
+
+  PRUint32* pSrc = (PRUint32*)aImageData;
+  for (PRUint32 row = aHeight; row > 0; --row) {
+    PRUint8* pDst = bmp + bpr * (row - 1);
+
+    for (PRUint32 col = aWidth; col > 0; --col) {
+      // In Cairo a color is encoded as ARGB in a DWORD
+      // stored in machine endianess.
+      PRUint32 color = *pSrc++;
+      *pDst++ = color;       // Blue
+      *pDst++ = color >> 8;  // Green
+      *pDst++ = color >> 16; // Red
+    }
+  }
+
+  // create the bitmap
+  HBITMAP hAlpha = DataToBitmap(bmp, aWidth, aHeight, 24);
+
+  // free the buffer, then return the bitmap
+  free(bmp);
+  return hAlpha;
+}
+
 // create a monochrome AND/XOR bitmap from 0, 1, or 8-bit alpha data
 
 HBITMAP nsWindow::CreateTransparencyMask(gfx_format format,
@@ -2031,64 +2044,38 @@ HBITMAP nsWindow::CreateTransparencyMask(gfx_format format,
   PRUint32 abpr = ALIGNEDBPR(aWidth, 1);
   PRUint32 cbData = abpr * aHeight;
 
-  // alloc space to hold both the AND & XOR bitmaps
-  PRUint8* mono = (PRUint8*)malloc(cbData * 2);
+  // alloc and clear space to hold both the AND & XOR bitmaps
+  PRUint8* mono = (PRUint8*)calloc(cbData, 2);
   if (!mono)
     return NULL;
 
-  // init the XOR bitmap to produce either black or transparent pixels
-  memset(mono, 0x00, cbData);
-
   switch (format) {
-
-    // make the AND mask opaque
-    case gfxIFormats::BGR:
-      memset(&mono[cbData], 0x00, cbData);
-      break;
-
-    // make the AND mask the inverse of the 1-bit alpha data
-    case gfxIFormats::BGR_A1: {
-      PRUint32* pSrc = (PRUint32*)aImageData;
-      PRUint32* pAnd = (PRUint32*)&mono[cbData];
-
-      for (PRUint32 dataNdx = 0; dataNdx < cbData; dataNdx += 4)
-        *pAnd++ = ~(*pSrc++);
-
-      break;
-    }
+    // gfxIFormats::BGR and case gfxIFormats::RGB are already
+    // taken care of by initializing XOR and AND masks to zero
 
     // make the AND mask the inverse of the 8-bit alpha data
+    case gfxIFormats::BGR_A1:
+    case gfxIFormats::RGB_A1:
+    case gfxIFormats::RGB_A8:
     case gfxIFormats::BGR_A8: {
-      PRUint8*  pSrc = aImageData;
-      PRUint32* pAnd = (PRUint32*)&mono[cbData];
-
-      // if aWidth isn't a multiple of 4, the input contains byte padding;
-      // if aWidth isn't a multiple of 32, the output contains bit padding
-      for (PRUint32 dataNdx = 0; dataNdx < cbData; dataNdx += 4) {
-        PRUint32 dst = 0;
-        PRUint32 colNdx = 0;
-
-        // construct an output dword, then save
-        for (PRUint32 byteNdx = 0; byteNdx < 4; byteNdx++) {
-          PRUint32 mask = 0x80 << (byteNdx * 8);
-
-          // construct an output byte from 8 input bytes
-          for (PRUint32 bitNdx = 0; bitNdx < 8; bitNdx++) {
-            if (*pSrc++ < 128)
-              dst |= mask;
-            mask >>= 1;
-
-            // at the end of a row, skip over any padding in the
-            // input, then break out of the byte & dword loops
-            if (++colNdx >= aWidth) {
-              pSrc += (4 - (aWidth & 3)) & 3;
-              break;
-            }
+      PRInt32* pSrc = (PRInt32*)aImageData;
+      for (PRUint32 row = aHeight; row > 0; --row) {
+        // Point to the right row in the AND mask
+        PRUint8* pDst = mono + cbData + abpr * (row - 1);
+        PRUint8 mask = 0x80;
+        for (PRUint32 col = aWidth; col > 0; --col) {
+          // Use sign bit to test for transparency, as alpha byte is highest byte
+          // Positive means, alpha < 128, so consider as transparent and set the AND mask
+          if (*pSrc++ >= 0) {
+            *pDst |= mask;
           }
-          if (colNdx >= aWidth)
-            break;
+
+          mask >>= 1;
+          if (!mask) {
+            pDst++;
+            mask = 0x80;
+          }
         }
-        *pAnd++ = dst;
       }
 
       break;
