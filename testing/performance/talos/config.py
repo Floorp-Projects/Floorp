@@ -38,58 +38,16 @@
 """A list of constants containing the paths to programs and files
    needed by the performance testing scripts.
 """
-
 __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
 
-BROWSER_HEIGHT = 768
-BROWSER_WIDTH = 1024
+"""The path to the file url to load when initializing/collecting information from the browser"""
+INIT_URL = 'file:///c:/mozilla/testing/performance/talos/getInfo.html'
 
-"""For some reason, can only get output from dump() in Firefox if
-   it's run through cygwin bash.  So here's the path to cygwin.
-"""
-CYGWIN = r'c:\cygwin\bin\bash.exe -c'
-
-"""The tinderbox scripts run sync between Ts runs, so we do, too."""
-SYNC = r'c:\cygwin\bin\sync'
-
-"""The path to the base profile directory to use for testing.  For the page
-   load test to work, this profile should have its hostperm.1 file set to allow
-   urls with scheme:file to open in new windows, and the preference to open
-   new windows in a tab should be off.
-"""
-BASE_PROFILE_DIR = r'C:\talos\base_profile'
-
-"""The path to the file url to load when initializing a new profile"""
-INIT_URL = 'file:///c:/talos/initialize.html'
-
-"""The path to the file url to load when collecting information from the browser"""
-INFO_URL = 'file:///c:/talos/getInfo.html'
-
-"""The path to the file url to load for startup test (Ts)"""
-TS_URL = 'file:///c:/talos/startup_test/startup_test.html?begin='
-
-"""Number of times to run startup test (Ts)"""
-TS_NUM_RUNS = 20
-
-"""The path to the file url to load for page load test (Tp)"""
-TP_URL = 'http://localhost/page_load_test/framecycler.html'
-
-"""Number of times the page load test (Tp) loads each page in the test."""
-TP_NUM_CYCLES = 5
-
-"""Resolution of counter sample data for page load test (Tp), in seconds
-   (For example, if TP_RESOLUTION=1, sample counters every 1 second"""
-TP_RESOLUTION = 1
-  
-"""Run page load test.
-   For possible values of counters argument on Windows, see
-   http://technet2.microsoft.com/WindowsServer/en/Library/86b5d116-6fb3-427b-af8c-9077162125fe1033.mspx?mfr=true
-   Possible values on Linux and Mac:
-     'Private Bytes', '% Processor Time', 'RSS'
-"""
-COUNTERS = ['Private Bytes', 'Working Set', '% Processor Time']
-
+"""Dump results locally to csv"""
+TO_CSV = 0
+CSV_FILE = r'c:\mozilla\testing\performance\talos\output\out'
 """URL for the results server"""
+TO_GRAPH_SERVER = 1
 RESULTS_SERVER = 'graphserver.url.here'
 RESULTS_LINK = '/bulk.cgi'
 

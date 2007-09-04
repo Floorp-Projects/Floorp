@@ -46,7 +46,7 @@
     var startupTime = now - begin;
 	document.write('\n\nStartup time = ' + startupTime + ' ms<br>');
     if (window.dump) {
-      dump('__startuptime,' + startupTime + '\n\n');
+      dump('__start_report' + startupTime + '__end_report\n\n');
     }
     window.close();
 ">
