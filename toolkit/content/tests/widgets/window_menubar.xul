@@ -147,8 +147,8 @@ var popupTests = [
     var elist = [
       // the file menu gets deactivated, the file menu gets hidden, then
       // the edit menu is activated
-      "DOMMenuItemInactive filemenu", "popuphiding filepopup",
-      "popuphidden filepopup", "DOMMenuItemActive editmenu",
+      "DOMMenuItemInactive filemenu", "DOMMenuItemActive editmenu",
+      "popuphiding filepopup", "popuphidden filepopup",
       // the popupshowing event gets fired when showing the edit menu.
       // The item from the file menu doesn't get deactivated until the
       // next item needs to be selected
