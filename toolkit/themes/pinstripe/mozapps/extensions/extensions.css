@@ -1,14 +1,6 @@
-#extensionManager {
-  background-color: ThreeDFace;
-}
-
 #extensionsBox {
   padding: 5px 10px 0 10px;
   min-width:1px;
-}
-
-#getMore {
-  text-align: right;
 }
 
 #resizerBox {
@@ -54,12 +46,12 @@ richlistitem[selected="true"] {
   color: -moz-DialogText;
 }
 
-richlistbox:focus richlistitem[selected="true"] {
+#extensionsView:focus > richlistitem[selected="true"] {
   background-color: Highlight;
   color: HighlightText;
 }
 
-richlistbox:focus richlistitem[selected="true"][isDisabled="true"] {
+#extensionsView:focus > richlistitem[selected="true"][isDisabled="true"] {
   background-image: url("chrome://mozapps/skin/extensions/itemDisabledFader.png");
 }
 
@@ -73,10 +65,6 @@ richlistitem[selected="true"]:not([opType]) .descriptionCrop {
 
 .addonName {
   font-weight: bold;
-}
-
-.addonIcon {
-  -moz-margin-end: 2px; 
 }
 
 .previewText {
@@ -93,38 +81,29 @@ richlistitem[selected="true"]:not([opType]) .descriptionCrop {
 }
 
 .addonIcon {
+  -moz-margin-end: 2px;
   width: 32px;
   max-width: 32px;
   height: 32px;
   max-height: 32px;
 }
 
-richlistitem .updateBadge,
-richlistitem .notifyBadge {
+.updateBadge,
+.notifyBadge {
   width: 16px;
   height: 16px;
+  margin-bottom: -3px;
   list-style-image: url("chrome://mozapps/skin/extensions/notifyBadges.png");
 }
 
-richlistitem .updateBadge {
+.updateBadge {
+  -moz-margin-end: -2px;
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
-richlistitem .notifyBadge {
-  -moz-image-region: rect(0px 48px 16px 32px);
-}
-
-richlistitem .updateBadge,
-richlistitem .notifyBadge {
-  margin-bottom: -3px;
-}
-
-richlistitem .updateBadge {
-  -moz-margin-end: -2px;
-}
-
-richlistitem .notifyBadge {
+.notifyBadge {
   -moz-margin-start: -2px;
+  -moz-image-region: rect(0px 48px 16px 32px);
 }
 
 .updateBadge,
@@ -142,66 +121,28 @@ richlistitem[satisfiesDependencies="false"] .notifyBadge {
   display: -moz-box;
 }
 
-
-/* Selected Add-on buttons */
+/* Selected Add-on buttons
+   See content/extensions.css to hide / display buttons */
 .selectedButtons {
   margin-top: 4px;
   min-height: 2.1em;
 }
 
-.selectedButtons button {
+.selectedButtons > button {
   margin-top: 0;
   margin-bottom: 0;
 }
 
-.optionsButton, .useThemeButton {
+.enableButton,
+.disableButton,
+.optionsButton,
+.useThemeButton {
   -moz-margin-end: 0;
 }
 
-.enableButton, .disableButton {
-  -moz-margin-start: 5px;
-  -moz-margin-end: 0;
-}
-
+.enableButton, .disableButton,
 .uninstallButton, .cancelUninstallButton {
   -moz-margin-start: 5px;
-}
-
-.enableHide,
-.uninstallShow,
-.installShow,
-.upgradeShow,
-richlistitem[isDisabled="true"] .disableHide {
-  display: none;
-}
-
-richlistitem[opType="needs-uninstall"] .uninstallShow,
-richlistitem[opType="needs-install"] .installShow,
-richlistitem[opType="needs-upgrade"] .upgradeShow,
-richlistitem[opType="needs-enable"] .enableShow,
-richlistitem[opType="needs-disable"] .disableShow,
-richlistitem[isDisabled="true"] .disableShow {
-  display: -moz-box;
-}
-
-richlistitem[opType="needs-uninstall"] .uninstallHide,
-richlistitem[opType="needs-install"] .uninstallHide,
-richlistitem[opType="needs-upgrade"] .uninstallHide,
-richlistitem[opType="needs-enable"] .enableHide,
-richlistitem[opType="needs-disable"] .disableHide {
-  display: none;
-}
-
-richlistitem[plugin] .themeButton,
-richlistitem[plugin] .optionsButton,
-richlistitem[plugin] .uninstallButton,
-richlistitem[type="2"] .themeButton,
-richlistitem[type="8"] .themeButton,
-richlistitem[type="4"] .optionsButton,
-richlistitem[type="8"] .optionsButton,
-richlistitem[type="4"] .disableShow,
-richlistitem[type="4"] .disableHide {
-  display: none;
 }
 
 /* Selected Add-on status messages and images */
@@ -233,7 +174,7 @@ richlistitem[loading="true"] .updateBadge {
   list-style-image: url("chrome://global/skin/icons/loading_16.gif");
 }
 
-.selectedStatusMsgs hbox {
+.selectedStatusMsgs > hbox {
   margin-top: 2px;
   margin-bottom: 2px;
 }
@@ -245,17 +186,6 @@ richlistitem[loading="true"] .updateBadge {
 .selectedStatusMsgs label.text-link {
   font-weight: normal;
   border: none;
-}
-
-.needsInstall, .needsUninstall, .needsEnable, .needsDisable {
-  display: none;
-}
-
-richlistitem[opType="needs-install"] .needsInstall,
-richlistitem[opType="needs-uninstall"] .needsUninstall,
-richlistitem[opType="needs-enable"] .needsEnable,
-richlistitem[opType="needs-disable"] .needsDisable {
-  display: -moz-box;
 }
 
 richlistitem[opType="needs-uninstall"] .notifyBadge {
