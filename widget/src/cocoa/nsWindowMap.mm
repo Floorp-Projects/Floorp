@@ -140,36 +140,79 @@
   [super dealloc];
 }
 
+// As best I can tell, if the notification's object has a corresponding
+// top-level widget (an nsCocoaWindow object), it has a delegate (set in
+// nsCocoaWindow::StandardCreate()) that responds to sendFocusEvent:, and
+// otherwise not (Camino doesn't use top-level widgets (nsCocoaWindow
+// objects) -- only child widgets (nsChildView objects)).
+//
+// If we're using top-level widgets, we need to send them both kinds of
+// focus event (NS_GOTFOCUS and NS_ACTIVATE, which by convention are sent in
+// that order) -- otherwise text input can (under unusual circumstances) stop
+// working in the currently focused child widget (see bmo bug 354768).
+//
+// When we send focus events to a top-level widget, they get propagated
+// (via nsWebShellWindow::HandleEvent(), indirectly) to a child widget (an
+// nsChildView object) -- so in principle we shouldn't have to send them to
+// child widgets here.  But I've found that, unless I also send at least an
+// NS_GOTFOCUS event directly to the currently focused child widget, it's
+// easy to get blinking I-bar cursors in multiple text input fields
+// (particularly if one of them is the Google search box).  On other platforms
+// (e.g. Windows and GTK2), NS_ACTIVATE events are only sent (directly) to
+// top-level widgets -- so we do the same here.  Not sending them directly
+// to child widgets also avoids "win is null" assertions on debug builds
+// (see bug 354768 comments 55 and 58).
 - (void)windowBecameKey:(NSNotification*)inNotification
 {
   NSWindow* window = (NSWindow*)[inNotification object];
-  id firstResponder = [window firstResponder];
-  if ([firstResponder isKindOfClass:[ChildView class]]) {
-    [firstResponder viewsWindowDidBecomeKey];
-  }
-  else {
-    id delegate = [window delegate];
-    if ([delegate respondsToSelector:@selector(sendFocusEvent:)]) {
-      [delegate sendFocusEvent:NS_GOTFOCUS];
-      [delegate sendFocusEvent:NS_ACTIVATE];
+  id delegate = [window delegate];
+  if (delegate && [delegate respondsToSelector:@selector(sendFocusEvent:)]) {
+    [delegate sendFocusEvent:NS_GOTFOCUS];
+    [delegate sendFocusEvent:NS_ACTIVATE];
+    id firstResponder = [window firstResponder];
+    if ([firstResponder isKindOfClass:[ChildView class]]) {
+      BOOL isMozWindow = [window respondsToSelector:@selector(setSuppressMakeKeyFront:)];
+      if (isMozWindow)
+        [window setSuppressMakeKeyFront:YES];
+      [firstResponder sendFocusEvent:NS_GOTFOCUS];
+      if (isMozWindow)
+        [window setSuppressMakeKeyFront:NO];
     }
+  } else {
+    id firstResponder = [window firstResponder];
+    if ([firstResponder isKindOfClass:[ChildView class]])
+      [firstResponder viewsWindowDidBecomeKey];
   }
 }
 
+// See comments above windowBecameKey:
+//
+// If we're using top-level widgets (nsCocoaWindow objects), we send them
+// NS_DEACTIVATE events (which propagate to child widgets (nsChildView
+// objects) via nsWebShellWindow::HandleEvent()).  Sending NS_LOSTFOCUS
+// events to top-level widgets currently has no effect (nsWebShellWindow::
+// HandleEvent(), which processes focus events sent to top-level widgets,
+// doesn't have a section for NS_LOSTFOCUS).  But on general principles we
+// send them anyway.
+//
+// On other platforms (e.g. Windows and GTK2), NS_DEACTIVATE events are only
+// sent (directly) to top-level widgets.  And (as noted above) these events
+// propagate to child widgets when they're sent to top-level widgets.  But if
+// we don't send them again, blinking I-bar cursors can appear in multiple
+// text input fields.  Since we also need to send NS_LOSTFOCUS events and
+// call nsTSMManager::CommitIME(), we just always call through to ChildView
+// viewsWindowDidResignKey (whether or not we're using top-level widgets).
 - (void)windowResignedKey:(NSNotification*)inNotification
 {
   NSWindow* window = (NSWindow*)[inNotification object];
+  id delegate = [window delegate];
+  if (delegate && [delegate respondsToSelector:@selector(sendFocusEvent:)]) {
+    [delegate sendFocusEvent:NS_DEACTIVATE];
+    [delegate sendFocusEvent:NS_LOSTFOCUS];
+  }
   id firstResponder = [window firstResponder];
-  if ([firstResponder isKindOfClass:[ChildView class]]) {
+  if ([firstResponder isKindOfClass:[ChildView class]])
     [firstResponder viewsWindowDidResignKey];
-  }
-  else {
-    id delegate = [window delegate];
-    if ([delegate respondsToSelector:@selector(sendFocusEvent:)]) {
-      [delegate sendFocusEvent:NS_LOSTFOCUS];
-      [delegate sendFocusEvent:NS_DEACTIVATE];
-    }
-  }
 }
 
 - (void)windowWillClose:(NSNotification*)inNotification
