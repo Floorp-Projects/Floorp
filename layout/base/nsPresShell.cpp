@@ -4401,7 +4401,14 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
     // batching if we only have style reresolve
     viewManager->BeginUpdateViewBatch();
 
-    mFrameConstructor->ProcessPendingRestyles();
+    // Force flushing of any pending content notifications that might have
+    // queued up while our event was pending.  That will ensure that we don't
+    // construct frames for content right now that's still waiting to be
+    // notified on,
+    mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
+    if (!mIsDestroying) {
+      mFrameConstructor->ProcessPendingRestyles();
+    }
 
     if (aType >= Flush_Layout && !mIsDestroying) {
       mFrameConstructor->RecalcQuotesAndCounters();
