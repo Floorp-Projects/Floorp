@@ -722,42 +722,10 @@ function showIncompatibleError(installData) {
   var params = [extensionStrings.GetStringFromName("type-" + installData.type)];
   var title = extensionStrings.formatStringFromName("incompatibleTitle",
                                                     params, params.length);
-  var message;
-  var targetAppData = installData.currentApp;
-
-  var targetAppName;
-  var targetVersion;
-  if (targetAppData &&
-      (targetAppData.id == TOOLKIT_ID)) {
-    targetAppName = BundleManager.toolkitName;
-    targetVersion = gApp.platformVersion;
-  } else {
-    targetAppName = BundleManager.appName;
-    targetVersion = gApp.version;
-  }
-
-  if (!targetAppData) {
-    params = [installData.name, installData.version, targetAppName];
-    message = extensionStrings.formatStringFromName("incompatibleMessageNoApp",
-                                                    params, params.length);
-  }
-  else if (targetAppData.minVersion == targetAppData.maxVersion) {
-    // If the min target app version and the max target app version are the same, don't show
-    // a message like, "Foo is only compatible with Firefox versions 0.7 to 0.7", rather just
-    // show, "Foo is only compatible with Firefox 0.7"
-    params = [installData.name, installData.version, targetAppName, targetVersion,
-              installData.name, installData.version, targetAppName,
-              targetAppData.minVersion];
-    message = extensionStrings.formatStringFromName("incompatibleMsgSingleAppVersion",
-                                                    params, params.length);
-  }
-  else {
-    params = [installData.name, installData.version, targetAppName, targetVersion,
-              installData.name, installData.version, targetAppName,
-              targetAppData.minVersion, targetAppData.maxVersion];
-    message = extensionStrings.formatStringFromName("incompatibleMsg", params, params.length);
-  }
-
+  params = [installData.name, installData.version, BundleManager.appName,
+            gApp.version];
+  var message = extensionStrings.formatStringFromName("incompatibleMessage",
+                                                      params, params.length);
   var ps = Cc["@mozilla.org/embedcomp/prompt-service;1"].
            getService(Ci.nsIPromptService);
   ps.alert(null, title, message);
@@ -868,44 +836,6 @@ function extractRDFFileToTempDir(zipFile, fileName, suppressErrors) {
     }
   }
   return file;
-}
-
-/**
- * Show a message to the user informing them they are installing an old non-EM
- * style Theme, and that these are not supported.
- * @param   installManifest
- *          The Old-Style Contents Manifest datasource representing the theme.
- */
-function showOldThemeError(contentsManifest) {
-  var extensionStrings = BundleManager.getBundle(URI_EXTENSIONS_PROPERTIES);
-  var params = [extensionStrings.GetStringFromName("theme")];
-  var title = extensionStrings.formatStringFromName("incompatibleTitle",
-                                                    params, params.length);
-  var appVersion = extensionStrings.GetStringFromName("incompatibleOlder");
-
-  try {
-    var ctr = getContainer(contentsManifest,
-                           gRDF.GetResource("urn:mozilla:skin:root"));
-    var elts = ctr.GetElements();
-    var nameArc = gRDF.GetResource(CHROME_NS("displayName"));
-    while (elts.hasMoreElements()) {
-      var elt = elts.getNext().QueryInterface(Ci.nsIRDFResource);
-      themeName = stringData(contentsManifest.GetTarget(elt, nameArc, true));
-      if (themeName)
-        break;
-    }
-  }
-  catch (e) {
-    themeName = extensionStrings.GetStringFromName("incompatibleThemeName");
-  }
-
-  params = [themeName, "", BundleManager.appName, gApp.version, themeName, "",
-            BundleManager.appName, appVersion];
-  var message = extensionStrings.formatStringFromName("incompatibleMsgSingleAppVersion",
-                                                      params, params.length);
-  var ps = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-           getService(Ci.nsIPromptService);
-  ps.alert(null, title, message);
 }
 
 /**
@@ -1638,10 +1568,27 @@ Installer.prototype = {
         }
 
         if (!installer.metadataDS && installer._type == nsIUpdateItem.TYPE_THEME) {
+          var themeName = extensionStrings.GetStringFromName("incompatibleThemeName");
           if (contentsManifestFile && contentsManifestFile.exists()) {
             var contentsManifest = gRDF.GetDataSourceBlocking(getURLSpecFromFile(contentsManifestFile));
-            showOldThemeError(contentsManifest);
+            try {
+              var ctr = getContainer(contentsManifest,
+                                     gRDF.GetResource("urn:mozilla:skin:root"));
+              var elts = ctr.GetElements();
+              var nameArc = gRDF.GetResource(CHROME_NS("displayName"));
+              while (elts.hasMoreElements()) {
+                var elt = elts.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+                themeName = stringData(contentsManifest.GetTarget(elt, nameArc, true));
+                if (themeName)
+                  break;
+              }
+            }
+            catch (e) {
+              themeName = extensionStrings.GetStringFromName("incompatibleThemeName");
+            }
           }
+          showIncompatibleError({ name: themeName, version: "",
+                                  type: nsIUpdateItem.TYPE_THEME });
           LOG("Theme JAR file: " + jarFile.leafName + " contains an Old-Style " +
               "Theme that is not compatible with this version of the software.");
           throw new Error("Old Theme"); // let the safe-op clean up
@@ -4305,6 +4252,10 @@ ExtensionManager.prototype = {
         else {
           em.datasource.removeDownload(this._xpi.path);
           showIncompatibleError(installData);
+          LOG("Add-on " + installData.id + " is incompatible with " +
+              BundleManager.appName + " " + gApp.version + ", Toolkit " +
+              gApp.platformVersion + ". Remote compatibility check did not " +
+              "resolve this.");
           // We are responsible for cleaning up this file!
           InstallLocations.get(aInstallLocationKey).removeFile(this._xpi);
         }
@@ -4356,6 +4307,9 @@ ExtensionManager.prototype = {
         //        app that can handle this item, if so just stage and don't show
         //        this error!
         showIncompatibleError(installData);
+        LOG("Add-on " + installData.id + " is incompatible with " +
+            BundleManager.appName + " " + gApp.version + ", Toolkit " +
+            gApp.platformVersion + ". Remote compatibility check was not performed.");
       }
       break;
     case INSTALLERROR_SUCCESS:
