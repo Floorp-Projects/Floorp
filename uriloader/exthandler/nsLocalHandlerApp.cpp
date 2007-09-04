@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Dan Mosedale <dmose@mozilla.org>
+ *   Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -65,6 +66,31 @@ NS_IMETHODIMP nsLocalHandlerApp::SetName(const nsAString & aName)
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsLocalHandlerApp::Equals(nsIHandlerApp *aHandlerApp, PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(aHandlerApp);
+
+  // If the handler app isn't a local handler app, then it's not the same app.
+  nsCOMPtr <nsILocalHandlerApp> localHandlerApp = do_QueryInterface(aHandlerApp);
+  if (!localHandlerApp) {
+    *_retval = PR_FALSE;
+    return NS_OK;
+  }
+
+  // If either handler app doesn't have an executable, then they aren't
+  // the same app.
+  nsCOMPtr<nsIFile> executable;
+  nsresult rv = localHandlerApp->GetExecutable(getter_AddRefs(executable));
+  if (NS_FAILED(rv) || !executable || !mExecutable) {
+    *_retval = PR_FALSE;
+    return NS_OK;
+  }
+
+  return executable->Equals(mExecutable, _retval);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsILocalHandlerApp

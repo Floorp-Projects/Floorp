@@ -56,6 +56,10 @@ const NC_PROTOCOL_SCHEMES   = NC_NS + "Protocol-Schemes";
 
 // nsIHandlerInfo::type
 const NC_VALUE              = NC_NS + "value";
+const NC_DESCRIPTION        = NC_NS + "description";
+
+// additional extensions
+const NC_FILE_EXTENSIONS    = NC_NS + "fileExtensions";
 
 // references nsIHandlerInfo record
 const NC_HANDLER_INFO       = NC_NS + "handlerProp";
@@ -89,7 +93,9 @@ const NC_URI_TEMPLATE       = NC_NS + "uriTemplate";
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 
-function HandlerService() {}
+function HandlerService() {
+  this._init();
+}
 
 HandlerService.prototype = {
   //**************************************************************************//
@@ -102,6 +108,49 @@ HandlerService.prototype = {
 
 
   //**************************************************************************//
+  // Initialization & Destruction
+  
+  _init: function HS__init() {
+    // Observe profile-before-change so we can switch to the datasource
+    // in the new profile when the user changes profiles.
+    this._observerSvc.addObserver(this, "profile-before-change", false);
+
+    // Observe xpcom-shutdown so we can remove these observers
+    // when the application shuts down.
+    this._observerSvc.addObserver(this, "xpcom-shutdown", false);
+  },
+
+  _destroy: function HS__destroy() {
+    this._observerSvc.removeObserver(this, "profile-before-change");
+    this._observerSvc.removeObserver(this, "xpcom-shutdown");
+
+    // XXX Should we also null references to all the services that get stored
+    // by our memoizing getters in the Convenience Getters section?
+  },
+
+  _onProfileChange: function HS__onProfileChange() {
+    // Lose our reference to the datasource so we reacquire it
+    // from the new profile the next time we need it.
+    this.__ds = null;
+  },
+
+
+  //**************************************************************************//
+  // nsIObserver
+  
+  observe: function HS__observe(subject, topic, data) {
+    switch(topic) {
+      case "profile-before-change":
+        this._onProfileChange();
+        break;
+      case "xpcom-shutdown":
+        this._destroy();
+        break;
+    }
+  },
+
+
+  //**************************************************************************//
   // nsIHandlerService
 
   enumerate: function HS_enumerate() {
@@ -110,6 +159,60 @@ HandlerService.prototype = {
     this._appendHandlers(handlers, CLASS_MIMEINFO);
     this._appendHandlers(handlers, CLASS_PROTOCOLINFO);
     return handlers.enumerate();
+  },
+
+  fillHandlerInfo: function HS_fillHandlerInfo(aHandlerInfo, aOverrideType) {
+    var type = aOverrideType || aHandlerInfo.type;
+    var typeID = this._getTypeID(this._getClass(aHandlerInfo), type);
+
+    // Determine whether or not information about this handler is available
+    // in the datastore by looking for its "value" property, which stores its
+    // type and should always be present.
+    if (!this._hasValue(typeID, NC_VALUE))
+      throw Cr.NS_ERROR_NOT_AVAILABLE;
+
+    // Retrieve the human-readable description of the type.
+    if (this._hasValue(typeID, NC_DESCRIPTION))
+      aHandlerInfo.description = this._getValue(typeID, NC_DESCRIPTION);
+
+    // Note: for historical reasons, we don't actually check that the type
+    // record has a "handlerProp" property referencing the info record.  It's
+    // unclear whether or not we should start doing this check; perhaps some
+    // legacy datasources don't have such references.
+    var infoID = this._getInfoID(this._getClass(aHandlerInfo), type);
+
+    aHandlerInfo.preferredAction = this._retrievePreferredAction(infoID);
+
+    var preferredHandlerID =
+      this._getPreferredHandlerID(this._getClass(aHandlerInfo), type);
+
+    // Retrieve the preferred handler.
+    // Note: for historical reasons, we don't actually check that the info
+    // record has an "externalApplication" property referencing the preferred
+    // handler record.  It's unclear whether or not we should start doing
+    // this check; perhaps some legacy datasources don't have such references.
+    aHandlerInfo.preferredApplicationHandler =
+      this._retrieveHandlerApp(preferredHandlerID);
+
+    // Fill the array of possible handlers with the ones in the datastore.
+    this._fillPossibleHandlers(infoID,
+                               aHandlerInfo.possibleApplicationHandlers,
+                               aHandlerInfo.preferredApplicationHandler);
+
+    // Retrieve the "always ask" flag.
+    // Note: we only set the flag to false if we are absolutely sure the user
+    // does not want to be asked.  Any sort of bogus data should mean we ask.
+    // So there must be an "alwaysAsk" property in the datastore for the handler
+    // info object, and it must be set to "false", in order for us not to ask.
+    aHandlerInfo.alwaysAskBeforeHandling =
+      !this._hasValue(infoID, NC_ALWAYS_ASK) ||
+      this._getValue(infoID, NC_ALWAYS_ASK) != "false";
+
+    // If the object represents a MIME type handler, then also retrieve
+    // any file extensions.
+    if (aHandlerInfo instanceof Ci.nsIMIMEInfo)
+      for each (let fileExtension in this._retrieveFileExtensions(typeID))
+        aHandlerInfo.appendExtension(fileExtension);
   },
 
   store: function HS_store(aHandlerInfo) {
@@ -130,14 +233,20 @@ HandlerService.prototype = {
       this._ds.Flush();
   },
 
+  exists: function HS_exists(aHandlerInfo) {
+    var typeID = this._getTypeID(this._getClass(aHandlerInfo), aHandlerInfo.type);
+    return this._hasLiteralAssertion(typeID, NC_VALUE, aHandlerInfo.type);
+  },
+
   remove: function HS_remove(aHandlerInfo) {
-    var preferredHandlerID = this._getPreferredHandlerID(aHandlerInfo);
+    var preferredHandlerID =
+      this._getPreferredHandlerID(this._getClass(aHandlerInfo), aHandlerInfo.type);
     this._removeAssertions(preferredHandlerID);
 
-    var infoID = this._getInfoID(aHandlerInfo);
+    var infoID = this._getInfoID(this._getClass(aHandlerInfo), aHandlerInfo.type);
     this._removeAssertions(infoID);
 
-    var typeID = this._getTypeID(aHandlerInfo);
+    var typeID = this._getTypeID(this._getClass(aHandlerInfo), aHandlerInfo.type);
     this._removeAssertions(typeID);
 
     // Now that there's no longer a handler for this type, remove the type
@@ -156,12 +265,180 @@ HandlerService.prototype = {
       this._ds.Flush();
   },
 
+  getTypeFromExtension: function HS_getTypeFromExtension(aFileExtension) {
+    var fileExtension = aFileExtension.toLowerCase();
+    var typeID;
+
+    if (this._existsLiteralTarget(NC_FILE_EXTENSIONS, fileExtension))
+      typeID = this._getSourceForLiteral(NC_FILE_EXTENSIONS, fileExtension);
+
+    if (typeID && this._hasValue(typeID, NC_VALUE)) {
+      let type = this._getValue(typeID, NC_VALUE);
+      if (type == "")
+        throw Cr.NS_ERROR_FAILURE;
+      return type;
+    }
+
+    throw Cr.NS_ERROR_NOT_AVAILABLE;
+  },
+
+
+  //**************************************************************************//
+  // Retrieval Methods
+
+  /**
+   * Retrieve the preferred action for the info record with the given ID.
+   *
+   * @param aInfoID  {string}  the info record ID
+   *
+   * @returns  {integer}  the preferred action enumeration value
+   */
+  _retrievePreferredAction: function HS__retrievePreferredAction(aInfoID) {
+    if (this._getValue(aInfoID, NC_SAVE_TO_DISK) == "true")
+      return Ci.nsIHandlerInfo.saveToDisk;
+    
+    if (this._getValue(aInfoID, NC_USE_SYSTEM_DEFAULT) == "true")
+      return Ci.nsIHandlerInfo.useSystemDefault;
+    
+    if (this._getValue(aInfoID, NC_HANDLE_INTERNALLY) == "true")
+      return Ci.nsIHandlerInfo.handleInternal;
+
+    return Ci.nsIHandlerInfo.useHelperApp;
+  },
+
+  /**
+   * Fill an array of possible handlers with the handlers for the given info ID.
+   *
+   * @param aInfoID            {string}           the ID of the info record
+   * @param aPossibleHandlers  {nsIMutableArray}  the array of possible handlers
+   * @param aPreferredHandler  {nsIHandlerApp}    the preferred handler, if any
+   */
+  _fillPossibleHandlers: function HS__fillPossibleHandlers(aInfoID,
+                                                           aPossibleHandlers,
+                                                           aPreferredHandler) {
+    // The set of possible handlers should include the preferred handler,
+    // but legacy datastores (from before we added possible handlers) won't
+    // include the preferred handler, so check if it's included as we build
+    // the list of handlers, and, if it's not included, add it to the list.
+    if (aPreferredHandler)
+      aPossibleHandlers.appendElement(aPreferredHandler, false);
+
+    var possibleHandlerTargets = this._getTargets(aInfoID, NC_POSSIBLE_APP);
+
+    while (possibleHandlerTargets.hasMoreElements()) {
+      let possibleHandlerTarget = possibleHandlerTargets.getNext();
+      if (!(possibleHandlerTarget instanceof Ci.nsIRDFResource))
+        continue;
+
+      let possibleHandlerID = possibleHandlerTarget.ValueUTF8;
+      let possibleHandler = this._retrieveHandlerApp(possibleHandlerID);
+      if (possibleHandler && (!aPreferredHandler ||
+                              !possibleHandler.equals(aPreferredHandler)))
+        aPossibleHandlers.appendElement(possibleHandler, false);
+    }
+  },
+
+  /**
+   * Retrieve the handler app object with the given ID.
+   *
+   * @param aHandlerAppID  {string}  the ID of the handler app to retrieve
+   *
+   * @returns  {nsIHandlerApp}  the handler app, if any; otherwise null
+   */
+  _retrieveHandlerApp: function HS__retrieveHandlerApp(aHandlerAppID) {
+    var handlerApp;
+
+    // If it has a path, it's a local handler; otherwise, it's a web handler.
+    if (this._hasValue(aHandlerAppID, NC_PATH)) {
+      let executable =
+        this._getFileWithPath(this._getValue(aHandlerAppID, NC_PATH));
+      if (!executable)
+        return null;
+
+      handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
+                   createInstance(Ci.nsILocalHandlerApp);
+      handlerApp.executable = executable;
+    }
+    else if (this._hasValue(aHandlerAppID, NC_URI_TEMPLATE)) {
+      let uriTemplate = this._getValue(aHandlerAppID, NC_URI_TEMPLATE);
+      if (!uriTemplate)
+        return null;
+
+      handlerApp = Cc["@mozilla.org/uriloader/web-handler-app;1"].
+                   createInstance(Ci.nsIWebHandlerApp);
+      handlerApp.uriTemplate = uriTemplate;
+    }
+    else
+      return null;
+
+    handlerApp.name = this._getValue(aHandlerAppID, NC_PRETTY_NAME);
+
+    return handlerApp;
+  },
+
+  /*
+   * Retrieve file extensions, if any, for the MIME type with the given type ID.
+   *
+   * @param aTypeID  {string}  the type record ID
+   */
+  _retrieveFileExtensions: function HS__retrieveFileExtensions(aTypeID) {
+    var fileExtensions = [];
+
+    var fileExtensionTargets = this._getTargets(aTypeID, NC_FILE_EXTENSIONS);
+
+    while (fileExtensionTargets.hasMoreElements()) {
+      let fileExtensionTarget = fileExtensionTargets.getNext();
+      if (fileExtensionTarget instanceof Ci.nsIRDFLiteral &&
+          fileExtensionTarget.Value != "")
+        fileExtensions.push(fileExtensionTarget.Value);
+    }
+
+    return fileExtensions;
+  },
+
+  /**
+   * Get the file with the given path.  This is not as simple as merely
+   * initializing a local file object with the path, because the path might be
+   * relative to the current process directory, in which case we have to
+   * construct a path starting from that directory.
+   *
+   * @param aPath  {string}  a path to a file
+   *
+   * @returns {nsILocalFile} the file, or null if the file does not exist
+   */
+  _getFileWithPath: function HS__getFileWithPath(aPath) {
+    var file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+
+    try {
+      file.initWithPath(aPath);
+
+      if (file.exists())
+        return file;
+    }
+    catch(ex) {
+      // Note: for historical reasons, we don't actually check to see
+      // if the exception is NS_ERROR_FILE_UNRECOGNIZED_PATH, which is what
+      // nsILocalFile::initWithPath throws when a path is relative.
+
+      file = this._dirSvc.get("XCurProcD", Ci.nsIFile);
+
+      try {
+        file.append(aPath);
+        if (file.exists())
+          return file;
+      }
+      catch(ex) {}
+    }
+
+    return null;
+  },
+
 
   //**************************************************************************//
   // Storage Methods
 
   _storePreferredAction: function HS__storePreferredAction(aHandlerInfo) {
-    var infoID = this._getInfoID(aHandlerInfo);
+    var infoID = this._getInfoID(this._getClass(aHandlerInfo), aHandlerInfo.type);
 
     switch(aHandlerInfo.preferredAction) {
       case Ci.nsIHandlerInfo.saveToDisk:
@@ -196,8 +473,10 @@ HandlerService.prototype = {
   },
 
   _storePreferredHandler: function HS__storePreferredHandler(aHandlerInfo) {
-    var infoID = this._getInfoID(aHandlerInfo);
-    var handlerID = this._getPreferredHandlerID(aHandlerInfo);
+    var infoID = this._getInfoID(this._getClass(aHandlerInfo), aHandlerInfo.type);
+    var handlerID =
+      this._getPreferredHandlerID(this._getClass(aHandlerInfo), aHandlerInfo.type);
+
     var handler = aHandlerInfo.preferredApplicationHandler;
 
     if (handler) {
@@ -228,7 +507,7 @@ HandlerService.prototype = {
    * @param aHandlerInfo  {nsIHandlerInfo}  the handler info object
    */
   _storePossibleHandlers: function HS__storePossibleHandlers(aHandlerInfo) {
-    var infoID = this._getInfoID(aHandlerInfo);
+    var infoID = this._getInfoID(this._getClass(aHandlerInfo), aHandlerInfo.type);
 
     // First, retrieve the set of handler apps currently stored for the type,
     // keeping track of their IDs in a hash that we'll use to determine which
@@ -238,7 +517,7 @@ HandlerService.prototype = {
     while (currentHandlerTargets.hasMoreElements()) {
       let handlerApp = currentHandlerTargets.getNext();
       if (handlerApp instanceof Ci.nsIRDFResource) {
-        let handlerAppID = handlerApp.Value;
+        let handlerAppID = handlerApp.ValueUTF8;
         currentHandlerApps[handlerAppID] = true;
       }
     }
@@ -250,7 +529,7 @@ HandlerService.prototype = {
       let handlerApp =
         newHandlerApps.getNext().QueryInterface(Ci.nsIHandlerApp);
       let handlerAppID = this._getPossibleHandlerAppID(handlerApp);
-      if (!this._hasResourceTarget(infoID, NC_POSSIBLE_APP, handlerAppID)) {
+      if (!this._hasResourceAssertion(infoID, NC_POSSIBLE_APP, handlerAppID)) {
         this._storeHandlerApp(handlerAppID, handlerApp);
         this._addResourceTarget(infoID, NC_POSSIBLE_APP, handlerAppID);
       }
@@ -303,7 +582,7 @@ HandlerService.prototype = {
   },
 
   _storeAlwaysAsk: function HS__storeAlwaysAsk(aHandlerInfo) {
-    var infoID = this._getInfoID(aHandlerInfo);
+    var infoID = this._getInfoID(this._getClass(aHandlerInfo), aHandlerInfo.type);
     this._setLiteral(infoID,
                      NC_ALWAYS_ASK,
                      aHandlerInfo.alwaysAskBeforeHandling ? "true" : "false");
@@ -312,6 +591,26 @@ HandlerService.prototype = {
 
   //**************************************************************************//
   // Convenience Getters
+
+  // Observer Service
+  __observerSvc: null,
+  get _observerSvc() {
+    if (!this.__observerSvc)
+      this.__observerSvc =
+        Cc["@mozilla.org/observer-service;1"].
+        getService(Ci.nsIObserverService);
+    return this.__observerSvc;
+  },
+
+  // Directory Service
+  __dirSvc: null,
+  get _dirSvc() {
+    if (!this.__dirSvc)
+      this.__dirSvc =
+        Cc["@mozilla.org/file/directory_service;1"].
+        getService(Ci.nsIProperties);
+    return this.__dirSvc;
+  },
 
   // MIME Service
   __mimeSvc: null,
@@ -355,9 +654,7 @@ HandlerService.prototype = {
   __ds: null,
   get _ds() {
     if (!this.__ds) {
-      var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
-                        getService(Ci.nsIProperties);
-      var file = fileLocator.get("UMimTyp", Ci.nsIFile);
+      var file = this._dirSvc.get("UMimTyp", Ci.nsIFile);
       // FIXME: make this a memoizing getter if we use it anywhere else.
       var ioService = Cc["@mozilla.org/network/io-service;1"].
                       getService(Ci.nsIIOService);
@@ -372,7 +669,7 @@ HandlerService.prototype = {
 
 
   //**************************************************************************//
-  // Storage Utils
+  // Datastore Utils
 
   /**
    * Get the string identifying whether this is a MIME or a protocol handler.
@@ -380,7 +677,7 @@ HandlerService.prototype = {
    * 
    * @param aHandlerInfo {nsIHandlerInfo} the handler for which to get the class
    * 
-   * @returns {string} the ID
+   * @returns {string} the class
    */
   _getClass: function HS__getClass(aHandlerInfo) {
     if (aHandlerInfo instanceof Ci.nsIMIMEInfo)
@@ -391,38 +688,39 @@ HandlerService.prototype = {
 
   /**
    * Return the unique identifier for a content type record, which stores
-   * the value field plus a reference to the type's handler.
-   * 
+   * the value field plus a reference to the content type's handler info record.
+   *
    * |urn:<class>:<type>|
-   * 
+   *
    * XXX: should this be a property of nsIHandlerInfo?
-   * 
-   * @param aHandlerInfo {nsIHandlerInfo} the type for which to get the ID
-   * 
+   *
+   * @param aClass {string} the class (CLASS_MIMEINFO or CLASS_PROTOCOLINFO)
+   * @param aType  {string} the type (a MIME type or protocol scheme)
+   *
    * @returns {string} the ID
    */
-  _getTypeID: function HS__getTypeID(aHandlerInfo) {
-    return "urn:" + this._getClass(aHandlerInfo) + ":" + aHandlerInfo.type;
+  _getTypeID: function HS__getTypeID(aClass, aType) {
+    return "urn:" + aClass + ":" + aType;
   },
 
   /**
-   * Return the unique identifier for a type info record, which stores
+   * Return the unique identifier for a handler info record, which stores
    * the preferredAction and alwaysAsk fields plus a reference to the preferred
-   * handler.  Roughly equivalent to the nsIHandlerInfo interface.
-   * 
+   * handler app.  Roughly equivalent to the nsIHandlerInfo interface.
+   *
    * |urn:<class>:handler:<type>|
-   * 
+   *
    * FIXME: the type info record should be merged into the type record,
    * since there's a one to one relationship between them, and this record
    * merely stores additional attributes of a content type.
-   * 
-   * @param aHandlerInfo {nsIHandlerInfo} the handler for which to get the ID
-   * 
+   *
+   * @param aClass {string} the class (CLASS_MIMEINFO or CLASS_PROTOCOLINFO)
+   * @param aType  {string} the type (a MIME type or protocol scheme)
+   *
    * @returns {string} the ID
    */
-  _getInfoID: function HS__getInfoID(aHandlerInfo) {
-    return "urn:" + this._getClass(aHandlerInfo) + ":handler:" +
-           aHandlerInfo.type;
+  _getInfoID: function HS__getInfoID(aClass, aType) {
+    return "urn:" + aClass + ":handler:" + aType;
   },
 
   /**
@@ -441,13 +739,13 @@ HandlerService.prototype = {
    * have to change IDs when it goes from being a possible handler to being
    * the preferred one (once we support possible handlers).
    * 
-   * @param aHandlerInfo {nsIHandlerInfo} the handler for which to get the ID
+   * @param aClass {string} the class (CLASS_MIMEINFO or CLASS_PROTOCOLINFO)
+   * @param aType  {string} the type (a MIME type or protocol scheme)
    * 
    * @returns {string} the ID
    */
-  _getPreferredHandlerID: function HS__getPreferredHandlerID(aHandlerInfo) {
-    return "urn:" + this._getClass(aHandlerInfo) + ":externalApplication:" +
-           aHandlerInfo.type;
+  _getPreferredHandlerID: function HS__getPreferredHandlerID(aClass, aType) {
+    return "urn:" + aClass + ":externalApplication:" + aType;
   },
 
   /**
@@ -487,10 +785,6 @@ HandlerService.prototype = {
    * @returns {nsIRDFContainer} the list of types
    */
   _ensureAndGetTypeList: function HS__ensureAndGetTypeList(aClass) {
-    // FIXME: once nsIHandlerInfo supports retrieving the scheme
-    // (and differentiating between MIME and protocol content types),
-    // implement support for protocols.
-
     var source = this._rdf.GetResource("urn:" + aClass + "s");
     var property =
       this._rdf.GetResource(aClass == CLASS_MIMEINFO ? NC_MIME_TYPES
@@ -531,7 +825,7 @@ HandlerService.prototype = {
 
     // If there's already a record in the datastore for this type, then we
     // don't need to do anything more.
-    var typeID = this._getTypeID(aHandlerInfo);
+    var typeID = this._getTypeID(this._getClass(aHandlerInfo), aHandlerInfo.type);
     var type = this._rdf.GetResource(typeID);
     if (typeList.IndexOf(type) != -1)
       return;
@@ -541,7 +835,7 @@ HandlerService.prototype = {
     this._setLiteral(typeID, NC_VALUE, aHandlerInfo.type);
     
     // Create a basic info record for this type.
-    var infoID = this._getInfoID(aHandlerInfo);
+    var infoID = this._getInfoID(this._getClass(aHandlerInfo), aHandlerInfo.type);
     this._setLiteral(infoID, NC_ALWAYS_ASK, "false");
     this._setResource(typeID, NC_HANDLER_INFO, infoID);
     // XXX Shouldn't we set preferredAction to useSystemDefault?
@@ -553,7 +847,8 @@ HandlerService.prototype = {
     // and nsExternalHelperAppService::FillHandlerInfoForTypeFromDS doesn't seem
     // to require the record , but downloadactions.js::_ensureMIMERegistryEntry
     // used to create it, so we'll do the same.
-    var preferredHandlerID = this._getPreferredHandlerID(aHandlerInfo);
+    var preferredHandlerID =
+      this._getPreferredHandlerID(this._getClass(aHandlerInfo), aHandlerInfo.type);
     this._setLiteral(preferredHandlerID, NC_PATH, "");
     this._setResource(infoID, NC_PREFERRED_APP, preferredHandlerID);
   },
@@ -586,13 +881,26 @@ HandlerService.prototype = {
         continue;
 
       var handler;
-      if (typeList.Resource.Value == "urn:mimetypes:root")
+      if (typeList.Resource.ValueUTF8 == "urn:mimetypes:root")
         handler = this._mimeSvc.getFromTypeAndExtension(type, null);
       else
         handler = this._protocolSvc.getProtocolHandlerInfo(type);
 
       aHandlers.appendElement(handler, false);
     }
+  },
+
+  /**
+   * Whether or not a property of an RDF source has a value.
+   *
+   * @param sourceURI   {string}  the URI of the source
+   * @param propertyURI {string}  the URI of the property
+   * @returns           {boolean} whether or not the property has a value
+   */
+  _hasValue: function HS__hasValue(sourceURI, propertyURI) {
+    var source = this._rdf.GetResource(sourceURI);
+    var property = this._rdf.GetResource(propertyURI);
+    return this._ds.hasArcOut(source, property);
   },
 
   /**
@@ -709,23 +1017,72 @@ HandlerService.prototype = {
   /**
    * Whether or not a property of an RDF source has a given resource target.
    * 
-   * The difference between this method and _setResource is that this one adds
-   * an assertion even if one already exists, which allows its callers to make
-   * sets of assertions (i.e. to set a property to multiple targets).
-   *
    * @param sourceURI   {string} the URI of the source
    * @param propertyURI {string} the URI of the property
    * @param targetURI   {string} the URI of the target
    *
    * @returns {boolean} whether or not there is such an assertion
    */
-  _hasResourceTarget: function HS__hasResourceTarget(sourceURI, propertyURI,
-                                                     targetURI) {
+  _hasResourceAssertion: function HS__hasResourceAssertion(sourceURI,
+                                                           propertyURI,
+                                                           targetURI) {
     var source = this._rdf.GetResource(sourceURI);
     var property = this._rdf.GetResource(propertyURI);
     var target = this._rdf.GetResource(targetURI);
 
     return this._ds.HasAssertion(source, property, target, true);
+  },
+
+  /**
+   * Whether or not a property of an RDF source has a given literal value.
+   * 
+   * @param sourceURI   {string} the URI of the source
+   * @param propertyURI {string} the URI of the property
+   * @param value       {string} the literal value
+   *
+   * @returns {boolean} whether or not there is such an assertion
+   */
+  _hasLiteralAssertion: function HS__hasLiteralAssertion(sourceURI,
+                                                         propertyURI,
+                                                         value) {
+    var source = this._rdf.GetResource(sourceURI);
+    var property = this._rdf.GetResource(propertyURI);
+    var target = this._rdf.GetLiteral(value);
+
+    return this._ds.HasAssertion(source, property, target, true);
+  },
+
+  /**
+   * Whether or not there is an RDF source that has the given property set to
+   * the given literal value.
+   * 
+   * @param propertyURI {string} the URI of the property
+   * @param value       {string} the literal value
+   *
+   * @returns {boolean} whether or not there is a source
+   */
+  _existsLiteralTarget: function HS__existsLiteralTarget(propertyURI, value) {
+    var property = this._rdf.GetResource(propertyURI);
+    var target = this._rdf.GetLiteral(value);
+
+    return this._ds.hasArcIn(target, property);
+  },
+
+  /**
+   * Get the source for a property set to a given literal value.
+   *
+   * @param propertyURI {string} the URI of the property
+   * @param value       {string} the literal value
+   */
+  _getSourceForLiteral: function HS__getSourceForLiteral(propertyURI, value) {
+    var property = this._rdf.GetResource(propertyURI);
+    var target = this._rdf.GetLiteral(value);
+
+    var source = this._ds.GetSource(property, target, true);
+    if (source)
+      return source.ValueUTF8;
+
+    return null;
   },
 
   /**
@@ -779,59 +1136,8 @@ HandlerService.prototype = {
       var target = this._ds.GetTarget(source, property, true);
       this._ds.Unassert(source, property, target);
     }
-  },
-
-
-  //**************************************************************************//
-  // Utilities
-
-  // FIXME: given that I keep copying them from JS component to JS component,
-  // these utilities should all be in a JavaScript module or FUEL interface.
-
-  /**
-   * Get an app pref or a default value if the pref doesn't exist.
-   *
-   * @param   aPrefName
-   * @param   aDefaultValue
-   * @returns the pref's value or the default (if it is missing)
-   */
-  _getAppPref: function _getAppPref(aPrefName, aDefaultValue) {
-    try {
-      var prefBranch = Cc["@mozilla.org/preferences-service;1"].
-                       getService(Ci.nsIPrefBranch);
-      switch (prefBranch.getPrefType(aPrefName)) {
-        case prefBranch.PREF_STRING:
-          return prefBranch.getCharPref(aPrefName);
-
-        case prefBranch.PREF_INT:
-          return prefBranch.getIntPref(aPrefName);
-
-        case prefBranch.PREF_BOOL:
-          return prefBranch.getBoolPref(aPrefName);
-      }
-    }
-    catch (ex) { /* return the default value */ }
-    
-    return aDefaultValue;
-  },
-
-  // Console Service
-  __consoleSvc: null,
-  get _consoleSvc() {
-    if (!this.__consoleSvc)
-      this.__consoleSvc = Cc["@mozilla.org/consoleservice;1"].
-                          getService(Ci.nsIConsoleService);
-    return this.__consoleSvc;
-  },
-
-  _log: function _log(aMessage) {
-    if (!this._getAppPref("browser.contentHandling.log", false))
-      return;
-
-    aMessage = "*** HandlerService: " + aMessage;
-    dump(aMessage + "\n");
-    this._consoleSvc.logStringMessage(aMessage);
   }
+
 };
 
 
