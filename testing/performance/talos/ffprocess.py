@@ -58,12 +58,10 @@ elif platform.system() == "Darwin":
 
 
 
-def SyncAndSleep():
+def Sleep():
   """Runs sync and sleeps for a few seconds between Firefox runs.
      Otherwise "Firefox is already running.." errors occur
   """
-
-  os.spawnl(os.P_WAIT, config.SYNC)
   time.sleep(5)
 
 

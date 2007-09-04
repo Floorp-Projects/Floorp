@@ -19,6 +19,7 @@
 #
 # Contributor(s):
 #   Annie Sullivan <annie.sullivan@gmail.com> (original author)
+#   Alice Nodelman <anodelman@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,13 +35,9 @@
 #
 # ***** END LICENSE BLOCK *****
 
-"""A set of functions to set up a Firefox profile with the correct
+"""A set of functions to set up a Firefox browser with the correct
    preferences and extensions in the given directory.
 
-   Sets up the profile by copying from a base directory, editing the
-   prefs.js file to set the prefs, and creating a file to link to each
-   extension.  The profile is run with Firefox to make sure it is fully
-   initialized and won't cause extra startup time on the first run.
 """
 
 __author__ = 'annie.sullivan@gmail.com (Annie Sullivan)'
@@ -52,6 +49,7 @@ import re
 import shutil
 import tempfile
 import time
+import glob
 
 import utils
 import ffprocess
@@ -128,6 +126,20 @@ def CreateTempProfileDir(source_profile, prefs, extensions):
 
   return profile_dir
 
+def InstallInBrowser(firefox_path, dir_path):
+  """
+    Take the given directory and copies it to appropriate location in the given
+    firefox install
+  """
+  # add the provided directory to the given firefox install
+  fromfiles = glob.glob(os.path.join(dir_path, '*'))
+  todir = os.path.join(os.path.dirname(firefox_path), os.path.basename(os.path.normpath(dir_path)))
+  for fromfile in fromfiles:
+      if not os.path.isfile(os.path.join(todir, os.path.basename(fromfile))):
+          shutil.copy(fromfile, todir)
+          utils.debug("installed " + fromfile)
+      else:
+          utils.debug("WARNING: file already installed (" + fromfile + ")")
 
 def InitializeNewProfile(firefox_path, profile_dir):
   """Runs Firefox with the new profile directory, to negate any performance
@@ -139,19 +151,16 @@ def InitializeNewProfile(firefox_path, profile_dir):
     firefox_path: String containing the path to the Firefox exe
     profile_dir: The full path to the profile directory to load
   """
-
-  # Run Firefox with the new profile directory
+  PROFILE_REGEX = re.compile('__metrics(.*)__metrics', re.DOTALL|re.MULTILINE)
+  res = 1
   cmd = ffprocess.GenerateFirefoxCommandLine(firefox_path, profile_dir, config.INIT_URL)
-  handle = os.popen(cmd)
-
-  # Wait for Firefox to shut down and restart with the new profile,
-  # then kill the new instance if it doesn't close itself.
-  time_elapsed = 0
-  while time_elapsed < 30:
-    time_elapsed += 5
-    time.sleep(5)
-    if not ffprocess.ProcessesWithNameExist("firefox"):
-      return
-  utils.debug("terminating firefox process")
-  ffprocess.TerminateAllProcesses("firefox")
-  ffprocess.SyncAndSleep()
+  (match, timed_out) = ffprocess.RunProcessAndWaitForOutput(cmd,
+                                                              'firefox',
+                                                              PROFILE_REGEX,
+                                                              30)
+  if (not timed_out):
+    print match
+  else:
+    res = 0
+    print "ERROR: no metrics"
+  return res
