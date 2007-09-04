@@ -3797,7 +3797,7 @@ NS_IMETHODIMP nsTreeBodyFrame::EnsureCellIsVisible(PRInt32 aRow, nsITreeColumn* 
   rv = col->GetWidthInTwips(this, &columnWidth);
   if(NS_FAILED(rv)) return rv;
 
-  if (!col->GetNext())
+  if (col->IsLastVisible(this))
     columnWidth -= mAdjustWidth; // this is one case we don't want to adjust
 
   // If the start of the column is before the
