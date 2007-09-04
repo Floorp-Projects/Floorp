@@ -9,6 +9,7 @@
 var TestRunner = {};
 TestRunner.logEnabled = false;
 TestRunner._currentTest = 0;
+TestRunner.currentTestURL = "";
 TestRunner._urls = [];
 
 /**
@@ -86,6 +87,8 @@ TestRunner.runTests = function (/*url...*/) {
 TestRunner.runNextTest = function() {
     if (TestRunner._currentTest < TestRunner._urls.length) {
         var url = TestRunner._urls[TestRunner._currentTest];
+        TestRunner.currentTestURL = url;
+
         $("current-test-path").innerHTML = url;
         
         if (TestRunner.logEnabled)
