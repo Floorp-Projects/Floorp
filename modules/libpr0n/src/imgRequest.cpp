@@ -78,7 +78,8 @@ NS_IMPL_ISUPPORTS6(imgRequest, imgILoad,
 imgRequest::imgRequest() : 
   mLoading(PR_FALSE), mProcessing(PR_FALSE), mHadLastPart(PR_FALSE),
   mNetworkStatus(0), mImageStatus(imgIRequest::STATUS_NONE), mState(0),
-  mCacheId(0), mValidator(nsnull), mIsMultiPartChannel(PR_FALSE)
+  mCacheId(0), mValidator(nsnull), mIsMultiPartChannel(PR_FALSE),
+  mImageSniffers("image-sniffing-services") 
 {
   /* member initializers and constructor code */
 }
@@ -928,6 +929,24 @@ void
 imgRequest::SniffMimeType(const char *buf, PRUint32 len)
 {
   imgLoader::GetMimeTypeFromContent(buf, len, mContentType);
+
+  // The vast majority of the time, imgLoader will find a gif/jpeg/png image
+  // and fill mContentType with the sniffed MIME type.
+  if (!mContentType.IsEmpty())
+    return;
+
+  // When our sniffing fails, we want to query registered image decoders
+  // to see if they can identify the image. If we always trusted the server
+  // to send the right MIME, images sent as text/plain would not be rendered.
+  const nsCOMArray<nsIContentSniffer>& sniffers = mImageSniffers.GetEntries();
+  PRUint32 length = sniffers.Count();
+  for (PRUint32 i = 0; i < length; ++i) {
+    nsresult rv =
+      sniffers[i]->GetMIMETypeFromContent(nsnull, (const PRUint8 *) buf, len, mContentType);
+    if (NS_SUCCEEDED(rv) && !mContentType.IsEmpty()) {
+      return;
+    }
+  }
 }
 
 nsresult 

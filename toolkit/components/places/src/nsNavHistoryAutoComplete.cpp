@@ -68,6 +68,7 @@
 // This is the maximum results we'll return for a "typed" search
 // This happens in response to clicking the down arrow next to the URL.
 #define AUTOCOMPLETE_MAX_PER_TYPED 100
+#define LMANNO_FEEDURI "livemark/feedURI"
 
 // nsNavHistory::InitAutoComplete
 nsresult
@@ -76,7 +77,17 @@ nsNavHistory::InitAutoComplete()
   nsresult rv = CreateAutoCompleteQuery();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCString sql = NS_LITERAL_CSTRING(
+    "SELECT annos.item_id FROM moz_anno_attributes attrs "
+    "JOIN moz_items_annos annos WHERE attrs.name = \"" LMANNO_FEEDURI "\" "
+    "AND attrs.id = annos.anno_attribute_id");
+  rv = mDBConn->CreateStatement(sql, getter_AddRefs(mLivemarkFeedsQuery));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (!mCurrentResultURLs.Init(128))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  if (!mLivemarkFeedItemIds.Init(128))
     return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
@@ -92,7 +103,7 @@ nsresult
 nsNavHistory::CreateAutoCompleteQuery()
 {
   nsCString sql = NS_LITERAL_CSTRING(
-    "SELECT h.url, h.title, f.url, b.id "
+    "SELECT h.url, h.title, f.url, b.id, b.parent "
     "FROM moz_places h "
     "JOIN moz_historyvisits v ON h.id = v.place_id "
     "LEFT OUTER JOIN moz_bookmarks b ON b.fk = h.id "
@@ -265,6 +276,19 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mCurrentResultURLs.Clear();
+  mLivemarkFeedItemIds.Clear();
+
+  // find all the items that have the "livemark/feedURI" annotation
+  // and save off their item ids.  when doing autocomplete, 
+  // if a result's parent item id matches a saved item id, the result
+  // it is not really a bookmark, but a rss feed item.
+  mozStorageStatementScoper scope(mLivemarkFeedsQuery);
+  PRBool hasMore = PR_FALSE;
+  while (NS_SUCCEEDED(mLivemarkFeedsQuery->ExecuteStep(&hasMore)) && hasMore) {
+    PRInt64 itemId = 0;
+    mLivemarkFeedsQuery->GetInt64(0, &itemId);
+    mLivemarkFeedItemIds.Put(itemId, PR_TRUE);
+  }
 
   // Search through the previous result
   if (searchPrevious) {
@@ -326,7 +350,7 @@ nsresult nsNavHistory::AutoCompleteTypedSearch()
   nsCOMPtr<mozIStorageStatement> dbSelectStatement;
 
   nsCString sql = NS_LITERAL_CSTRING(
-    "SELECT h.url, h.title, f.url, b.id "
+    "SELECT h.url, h.title, f.url, b.id, b.parent "
     "FROM moz_places h "
     "LEFT OUTER JOIN moz_bookmarks b ON b.fk = h.id "
     "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id "
@@ -351,12 +375,19 @@ nsresult nsNavHistory::AutoCompleteTypedSearch()
     dbSelectStatement->GetString(kAutoCompleteIndex_FaviconURL, entryFavicon);
     PRInt64 itemId = 0;
     dbSelectStatement->GetInt64(kAutoCompleteIndex_ItemId, &itemId);
+    PRInt64 parentId = 0;
+    dbSelectStatement->GetInt64(kAutoCompleteIndex_ParentId, &parentId);
+
+    PRBool dummy;
+    // don't show rss feed items as bookmarked
+    PRBool isBookmark = (itemId != 0) && 
+                        !mLivemarkFeedItemIds.Get(parentId, &dummy);
 
     nsCAutoString imageSpec;
     faviconService->GetFaviconSpecForIconString(
       NS_ConvertUTF16toUTF8(entryFavicon), imageSpec);
     rv = mCurrentResult->AppendMatch(entryURL, entryTitle, 
-      NS_ConvertUTF8toUTF16(imageSpec), itemId ? NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon"));
+      NS_ConvertUTF8toUTF16(imageSpec), isBookmark ? NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon"));
     NS_ENSURE_SUCCESS(rv, rv);
   } 
   return NS_OK;
@@ -402,8 +433,14 @@ nsNavHistory::AutoCompleteFullHistorySearch()
     mDBAutoCompleteQuery->GetString(kAutoCompleteIndex_FaviconURL, entryFavicon);
     PRInt64 itemId = 0;
     mDBAutoCompleteQuery->GetInt64(kAutoCompleteIndex_ItemId, &itemId);
+    PRInt64 parentId = 0;
+    mDBAutoCompleteQuery->GetInt64(kAutoCompleteIndex_ParentId, &parentId);
 
     PRBool dummy;
+    // don't show rss feed items as bookmarked
+    PRBool isBookmark = (itemId != 0) && 
+                        !mLivemarkFeedItemIds.Get(parentId, &dummy);
+
     // prevent duplicates.  this can happen when chunking as we
     // may have already seen this URL from an earlier chunk of time
     if (!mCurrentResultURLs.Get(entryURL, &dummy)) {
@@ -412,7 +449,7 @@ nsNavHistory::AutoCompleteFullHistorySearch()
       faviconService->GetFaviconSpecForIconString(
         NS_ConvertUTF16toUTF8(entryFavicon), faviconSpec);
       rv = mCurrentResult->AppendMatch(entryURL, entryTitle, 
-        NS_ConvertUTF8toUTF16(faviconSpec), itemId ? NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon"));
+        NS_ConvertUTF8toUTF16(faviconSpec), isBookmark ? NS_LITERAL_STRING("bookmark") : NS_LITERAL_STRING("favicon"));
       NS_ENSURE_SUCCESS(rv, rv);
 
       mCurrentResultURLs.Put(entryURL, PR_TRUE);

@@ -57,6 +57,7 @@ var gDownloadManager  = null;
 var gObserverIndex    = -1;
 var gInSafeMode       = false;
 var gCheckCompat      = true;
+var gCheckUpdateSecurity = true;
 var gUpdatesOnly      = false;
 var gAppID            = "";
 var gPref             = null;
@@ -66,8 +67,10 @@ var gPlugins          = null;
 var gPluginsDS        = null;
 
 const PREF_EM_CHECK_COMPATIBILITY           = "extensions.checkCompatibility";
+const PREF_EM_CHECK_UPDATE_SECURITY         = "extensions.checkUpdateSecurity";
 const PREF_EXTENSIONS_GETMORETHEMESURL      = "extensions.getMoreThemesURL";
 const PREF_EXTENSIONS_GETMOREEXTENSIONSURL  = "extensions.getMoreExtensionsURL";
+const PREF_EXTENSIONS_GETMOREPLUGINSURL     = "extensions.getMorePluginsURL";
 const PREF_EXTENSIONS_DSS_ENABLED           = "extensions.dss.enabled";
 const PREF_EXTENSIONS_DSS_SWITCHPENDING     = "extensions.dss.switchPending";
 const PREF_EXTENSIONS_HIDE_INSTALL_BTN      = "extensions.hideInstallButton";
@@ -267,11 +270,13 @@ function showView(aView) {
                       ["plugin", "?plugin"],
                       ["previewImage", "?previewImage"],
                       ["satisfiesDependencies", "?satisfiesDependencies"],
+                      ["providesUpdatesSecurely", "?providesUpdatesSecurely"],
                       ["type", "?type"],
                       ["updateable", "?updateable"],
                       ["updateURL", "?updateURL"],
                       ["version", "?version"] ];
 
+  var prefURL;
   var showInstallFile = true;
   try {
     showInstallFile = !gPref.getBoolPref(PREF_EXTENSIONS_HIDE_INSTALL_BTN);
@@ -284,15 +289,18 @@ function showView(aView) {
   var showContinue = false;
   switch (aView) {
     case "extensions":
+      prefURL = PREF_EXTENSIONS_GETMOREEXTENSIONSURL;
       var types = [ [ ["type", nsIUpdateItem.TYPE_EXTENSION, "Integer"] ] ];
       break;
     case "themes":
+      prefURL = PREF_EXTENSIONS_GETMORETHEMESURL;
       types = [ [ ["type", nsIUpdateItem.TYPE_THEME, "Integer"] ] ];
       break;
     case "locales":
       types = [ [ ["type", nsIUpdateItem.TYPE_LOCALE, "Integer"] ] ];
       break;
     case "plugins":
+      prefURL = PREF_EXTENSIONS_GETMOREPLUGINSURL;
       types = [ [ ["plugin", "true", null] ] ];
       break;
     case "updates":
@@ -316,6 +324,7 @@ function showView(aView) {
                       ["opType", "?opType"],
                       ["previewImage", "?previewImage"],
                       ["satisfiesDependencies", "?satisfiesDependencies"],
+                      ["providesUpdatesSecurely", "?providesUpdatesSecurely"],
                       ["type", "?type"],
                       ["updateURL", "?updateURL"],
                       ["version", "?version"],
@@ -363,33 +372,30 @@ function showView(aView) {
       break;
   }
 
+  var showGetMore = false;
+  var getMore = document.getElementById("getMore");
+  if (prefURL) {
+    try {
+      getMore.setAttribute("value", getMore.getAttribute("value" + aView));
+      var getMoreURL = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                                 .getService(Components.interfaces.nsIURLFormatter)
+                                 .formatURLPref(prefURL);
+      getMore.setAttribute("getMoreURL", getMoreURL);
+      showGetMore = getMoreURL == "about:blank" ? false : true;
+    }
+    catch (e) { }
+  }
+  getMore.hidden = !showGetMore;
+
   var isThemes = aView == "themes";
 
-  var getMore = document.getElementById("getMore");
   if (aView == "themes" || aView == "extensions") {
-    try {
-      var el = document.getElementById("installFileButton");
-      el.setAttribute("tooltiptext", el.getAttribute(isThemes ? "tooltiptextthemes" :
-                                                                  "tooltiptextaddons"));
-      el = document.getElementById("checkUpdatesAllButton");
-      el.setAttribute("tooltiptext", el.getAttribute(isThemes ? "tooltiptextthemes" :
-                                                                  "tooltiptextaddons"));
-      getMore.setAttribute("value", getMore.getAttribute(isThemes ? "valuethemes" :
-                                                                    "valueextensions"));
-      var getMorePref = isThemes ? PREF_EXTENSIONS_GETMORETHEMESURL : PREF_EXTENSIONS_GETMOREEXTENSIONSURL;
-      var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
-                                .getService(Components.interfaces.nsIURLFormatter);
-      var getMoreURL = formatter.formatURLPref(getMorePref);
-      getMore.setAttribute("getMoreURL", getMoreURL);
-      if (getMore.hidden)
-        getMore.hidden = false;
-    }
-    catch (e) {
-      getMore.hidden = true;
-    }
-  }
-  else if (!getMore.hidden) {
-    getMore.hidden = true;
+    var el = document.getElementById("installFileButton");
+    el.setAttribute("tooltiptext", el.getAttribute(isThemes ? "tooltiptextthemes" :
+                                                              "tooltiptextaddons"));
+    el = document.getElementById("checkUpdatesAllButton");
+    el.setAttribute("tooltiptext", el.getAttribute(isThemes ? "tooltiptextthemes" :
+                                                              "tooltiptextaddons"));
   }
 
   document.getElementById("installFileButton").hidden = !showInstallFile;
@@ -654,6 +660,10 @@ function Startup()
     gCheckCompat = gPref.getBoolPref(PREF_EM_CHECK_COMPATIBILITY);
   } catch(e) { }
 
+  try {
+    gCheckUpdateSecurity = gPref.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY);
+  } catch(e) { }
+
   // Sort on startup and anytime an add-on is installed or upgraded.
   gExtensionManager.sortTypeByProperty(nsIUpdateItem.TYPE_ADDON, "name", true);
   // Extension Command Updating is handled by a command controller.
@@ -689,6 +699,23 @@ function Startup()
                 msgText, buttonLabel, buttonAccesskey,
                 true, notifyData);
   }
+  if (!gCheckUpdateSecurity) {
+    var defaultCheckSecurity = true;
+    try {
+      defaultCheckSecurity = defaultPref.getBoolPref(PREF_EM_CHECK_UPDATE_SECURITY);
+    } catch (e) { }
+
+    // App has update security checking enabled by default so show warning
+    if (defaultCheckSecurity) {
+      var msgText = getExtensionString("disabledUpdateSecurityMsg");
+      var buttonLabel = getExtensionString("enableButtonLabel");
+      var buttonAccesskey = getExtensionString("enableButtonAccesskey");
+      var notifyData = "addons-enable-updatesecurity";
+      showMessage("chrome://mozapps/skin/extensions/question.png",
+                  msgText, buttonLabel, buttonAccesskey,
+                  true, notifyData);
+    }
+  }
   if (gInSafeMode) {
     showMessage("chrome://mozapps/skin/extensions/question.png",
                 getExtensionString("safeModeMsg"),
@@ -717,6 +744,8 @@ function Startup()
                     null, null, true, null);
         document.title = getExtensionString("newUpdateWindowTitle", [getBrandShortName()]);
       }
+      else
+        showView(window.arguments[0]);
     }
   }
   else if (viewGroup.hasAttribute("last-selected") &&
@@ -809,7 +838,7 @@ XPInstallDownloadManager.prototype = {
       var type = isTheme ? nsIUpdateItem.TYPE_THEME : nsIUpdateItem.TYPE_EXTENSION;
       var item = Components.classes["@mozilla.org/updates/item;1"]
                            .createInstance(Components.interfaces.nsIUpdateItem);
-      item.init(url, " ", "app-profile", "", "", displayName, url, "", iconURL, "", type, "");
+      item.init(url, " ", "app-profile", "", "", displayName, url, "", iconURL, "", "", type, "");
       items.push(item);
 
       // Advance the enumerator
@@ -1014,8 +1043,7 @@ UpdateCheckListener.prototype = {
     const nsIAUCL = Components.interfaces.nsIAddonUpdateCheckListener;
     switch (status) {
     case nsIAUCL.STATUS_UPDATE:
-      var updatedVersion = element.getAttribute("availableUpdateVersion");
-      var statusMsg = getExtensionString("updateAvailableMsg", [updatedVersion]);
+      var statusMsg = getExtensionString("updateAvailableMsg", [addon.version]);
       this._updateFound = true;
       break;
     case nsIAUCL.STATUS_VERSIONINFO:
@@ -1080,15 +1108,6 @@ function onViewDoubleClick(aEvent)
       gExtensionsViewController.doCommand('cmd_includeUpdate');
       break;
   }
-}
-
-function onViewGroupKeypress(aEvent) {
-  // prevent focus from being taken over by the richlistbox
-  gExtensionsView.suppressFocus = true;
-}
-
-function onViewGroupClick(aEvent) {
-  gExtensionsView.suppressFocus = false;
 }
 
 function onAddonSelect(aEvent)
@@ -1368,6 +1387,10 @@ const gAddonsMsgObserver = {
     case "addons-enable-compatibility":
       gPref.clearUserPref(PREF_EM_CHECK_COMPATIBILITY);
       gCheckCompat = true;
+      break;
+    case "addons-enable-updatesecurity":
+      gPref.clearUserPref(PREF_EM_CHECK_UPDATE_SECURITY);
+      gCheckUpdateSecurity = true;
       break;
     case "addons-no-updates":
       var children = gExtensionsView.children;
@@ -1691,6 +1714,7 @@ var gExtensionsViewController = {
              (!selectedItem.opType ||
              selectedItem.opType == "needs-disable")) &&
              !selectedItem.isBlocklisted &&
+             (!gCheckUpdateSecurity || selectedItem.providesUpdatesSecurely) &&
              (!gCheckCompat || selectedItem.isCompatible) &&
              selectedItem.satisfiesDependencies &&
              !gExtensionsView.hasAttribute("update-operation");

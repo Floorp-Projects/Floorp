@@ -49,6 +49,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_bug365773.xul \
 		test_closemenu_attribute.xul \
 		test_colorpicker_popup.xul \
+		test_deck.xul \
 		test_menulist_keynav.xul \
 		test_popup_coords.xul \
 		test_popup_recreate.xul \
@@ -67,6 +68,8 @@ _TEST_FILES = 	test_bug360220.xul \
 		window_popup_attribute.xul \
 		window_tooltip.xul \
 		test_progressmeter.xul \
+		test_props.xul \
+		test_statusbar.xul \
 		test_datepicker.xul \
 		test_timepicker.xul \
 		test_textbox_number.xul \
@@ -74,6 +77,7 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_panelfrommenu.xul \
 		test_hiddenitems.xul \
 		test_hiddenpaging.xul \
+		test_popup_tree.xul \
 		$(NULL)
 
 ifeq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

@@ -80,42 +80,7 @@
           return this._appVersion;
         </body>
       </method>
-
-      <field name="suppressFocus">false</field>
-
-<!-- Override of richlistbox's _setItemSelection. Allows us to prevent focus
-     when using the keyboard to navigate views and to ensure an element is
-     visible after it has had a chance to reflow. -->
-      <method name="_setItemSelection">
-        <parameter name="aItem"/>
-        <body>
-          <![CDATA[
-            // unselect current item
-            if (this._selectedItem)
-              this._selectedItem.selected = false
-
-            this._selectedItem = aItem;
-            this._selectedIndex = this.getIndexOf(aItem);
-
-            if (aItem) {
-              aItem.selected = true;
-              if (!this.suppressFocus)
-                aItem.focus();
-            }
-          ]]>
-        </body>
-      </method>
     </implementation>
-    <handlers>
-      <handler event="focus">
-        if (!this.hasAttribute("focused"))
-          this.setAttribute("focused", "true");
-      </handler>
-      <handler event="blur">
-        if (this.hasAttribute("focused"))
-          this.removeAttribute("focused");
-      </handler>
-    </handlers>
   </binding>
 
   <binding id="addon-base" extends="chrome://global/content/bindings/richlistbox.xml#richlistitem">
@@ -129,6 +94,7 @@
       <property name="isCompatible" onget="return this.getAttribute('compatible') == 'true';"/>
       <property name="isBlocklisted" onget="return this.getAttribute('blocklisted') == 'true';"/>
       <property name="isDisabled" onget="return this.getAttribute('isDisabled') == 'true';"/>
+      <property name="providesUpdatesSecurely" onget="return this.getAttribute('providesUpdatesSecurely') == 'true';"/>
       <property name="satisfiesDependencies" onget="return this.getAttribute('satisfiesDependencies') == 'true';"/>
       <property name="opType">
         <getter>
@@ -238,6 +204,9 @@
             </xul:hbox>
             <xul:hbox flex="1" class="incompatibleBox attention">
               <xul:label anonid="incompatibleLabel" crop="end"/>
+            </xul:hbox>
+            <xul:hbox flex="1" class="insecureUpdateBox attention">
+              <xul:label value="&insecureUpdate.label;" crop="end"/>
             </xul:hbox>
             <xul:hbox flex="1" class="needsDependenciesBox attention">
               <xul:label value="&needsDependencies.label;" crop="end"/>
@@ -396,13 +365,6 @@
     </implementation>
 
     <handlers>
-      <handler event="focus">
-      <![CDATA[
-        if (this.parentNode.suppressFocus)
-          event.preventDefault();
-      ]]>
-    </handler>
-
 <!-- When an add-on displays a status messages the element may extend below the
      bottom of the list This will ensure that the element is visible for the
      most common cases. -->

@@ -1226,7 +1226,7 @@ public:
      * be treated as invisible and zero-width.
      */
     static PRBool IsInvalidChar(PRUnichar ch) {
-        return ch == '\t' || ch == '\r' || ch == '\n' ||
+        return ch == '\t' || ch == '\r' || ch == '\n' || ch == '\f' ||
            ch == 0x200B/*ZWSP*/ || ch == 0x2028/*LSEP*/ || ch == 0x2029/*PSEP*/;
     }
 

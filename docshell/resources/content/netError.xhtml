@@ -67,7 +67,7 @@
       // or optionally, to specify an alternate CSS class to allow for
       // custom styling and favicon:
       //
-      //   moz-neterror:page?c=classname&e=error&u=url&d=desc
+      //   moz-neterror:page?e=error&u=url&s=classname&d=desc
 
       // Note that this file uses document.documentURI to get
       // the URL (with the format from above). This is because
@@ -86,14 +86,13 @@
       function getCSSClass()
       {
         var url = document.documentURI;
-        var classParam = url.search(/c\=/);
-        
-        // c is optional, if classParam == -1 just return nothing
-        if (classParam == -1)
+        var matches = url.match(/s\=([^&]+)\&/);
+        // s is optional, if no match just return nothing
+        if (!matches || matches.length < 2)
           return "";
-          
-        var rest = url.search(/\&/);
-        return decodeURIComponent(url.slice(classParam + 2, rest));
+
+        // parenthetical match is the second entry
+        return decodeURIComponent(matches[1]);
       }
 
       function getDescription()

@@ -54,12 +54,12 @@ richlistitem[selected="true"] {
   color: -moz-DialogText;
 }
 
-richlistbox[focused] richlistitem[selected="true"] {
+richlistbox:focus richlistitem[selected="true"] {
   background-color: Highlight;
   color: HighlightText;
 }
 
-richlistbox[focused] richlistitem[selected="true"][isDisabled="true"] {
+richlistbox:focus richlistitem[selected="true"][isDisabled="true"] {
   background-image: url("chrome://mozapps/skin/extensions/itemDisabledFader.png");
 }
 
@@ -136,6 +136,7 @@ richlistitem .notifyBadge {
 richlistitem[availableUpdateURL][updateable="true"] .updateBadge,
 richlistitem[availableUpdateURL][updateable="true"] .updateAvailableBox,
 richlistitem[compatible="false"] .notifyBadge,
+richlistitem[providesUpdatesSecurely="false"] .notifyBadge,
 richlistitem[blocklisted="true"] .notifyBadge,
 richlistitem[satisfiesDependencies="false"] .notifyBadge {
   display: -moz-box;
@@ -205,6 +206,7 @@ richlistitem[type="4"] .disableHide {
 
 /* Selected Add-on status messages and images */
 richlistitem[compatible="true"] .incompatibleBox,
+richlistitem[providesUpdatesSecurely="true"] .insecureUpdateBox,
 richlistitem[satisfiesDependencies="true"] .needsDependenciesBox,
 richlistitem[blocklisted="false"] .blocklistedBox,
 richlistitem[opType="needs-uninstall"] .blocklistedBox,

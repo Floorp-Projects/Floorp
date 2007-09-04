@@ -688,7 +688,7 @@ nsBlockReflowState::CanPlaceFloat(const nsSize& aFloatSize,
       }
 
       // See if there is now enough height for the float.
-      if (yb < mY + mAvailSpaceRect.height) {
+      if (yb <= mY + mAvailSpaceRect.height) {
         // Winner. The bottom Y coordinate of the float is in
         // this band.
         break;

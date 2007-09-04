@@ -443,7 +443,8 @@ function run_test() {
       var node = rootNode.getChild(i);
       if (node.type == node.RESULT_TYPE_FOLDER ||
           node.type == node.RESULT_TYPE_URI ||
-          node.type == node.RESULT_TYPE_SEPARATOR) {
+          node.type == node.RESULT_TYPE_SEPARATOR ||
+          node.type == node.RESULT_TYPE_QUERY) {
         do_check_true(node.itemId > 0);
       }
       else {

@@ -23,6 +23,7 @@
 # Contributor(s):
 #   Blake Ross <blake@blakeross.com>
 #   Ben Goodger <ben@mozilla.org>
+#   Dão Gottwald <dao@design-noir.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,9 +48,8 @@
 <?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
 #endif
 
-<dialog xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        id="aboutDialog"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         windowtype="Shell:SetDesktopBackground"
 #ifndef XP_MACOSX
         buttons="accept,cancel"
@@ -60,27 +60,24 @@
         onload="gSetBackground.load();"
         ondialogaccept="gSetBackground.setDesktopBackground();"
         title="&setDesktopBackground.title;"
-        style="width: 30em;"> 
-    
+        style="width: 30em;">
+
     <stringbundle id="backgroundBundle"
                   src="chrome://browser/locale/shellservice.properties"/>
-    <script type="application/x-javascript"
-            src="chrome://browser/content/utilityOverlay.js"/>
-    <script type="application/x-javascript"
-            src="chrome://browser/content/setDesktopBackground.js"/>
-    <script type="application/x-javascript"
-            src="chrome://global/content/contentAreaUtils.js"/>
+    <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
+    <script type="application/javascript" src="chrome://browser/content/setDesktopBackground.js"/>
+    <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
 
 #ifndef XP_MACOSX
-    <hbox align="center" id="foo">
+    <hbox align="center">
       <label value="&position.label;"/>
       <menulist id="menuPosition"
                 label="&position.label;" 
-                oncommand="gSetBackground.updatePosition(parseInt(this.value));">
+                oncommand="gSetBackground.updatePosition();">
         <menupopup>
-          <menuitem label="&center.label;"  value="3"/>
-          <menuitem label="&tile.label;"    value="1"/>
-          <menuitem label="&stretch.label;" value="2"/>
+          <menuitem label="&center.label;"  value="CENTER"/>
+          <menuitem label="&tile.label;"    value="TILE"/>
+          <menuitem label="&stretch.label;" value="STRETCH"/>
         </menupopup>
       </menulist>
       <spacer flex="1"/>
@@ -93,8 +90,9 @@
     <groupbox align="center">
       <caption label="&preview.label;"/>
       <stack>
-        <vbox id="monitor" align="center" pack="center"/>
-        <image id="monitorImage"/>
+        <!-- if width and height are not present, they default to 300x150 and stretch the stack -->
+        <html:canvas id="screen" width="1" height="1"/>
+        <image id="monitor"/>
       </stack>
     </groupbox>
     

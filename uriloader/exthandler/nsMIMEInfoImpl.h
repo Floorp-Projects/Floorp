@@ -89,7 +89,8 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     NS_IMETHOD GetPossibleApplicationHandlers(nsIMutableArray * *aPossibleAppHandlers);
     NS_IMETHOD GetDefaultDescription(nsAString & aDefaultDescription);
     NS_IMETHOD LaunchWithFile(nsIFile *aFile);
-    NS_IMETHOD LaunchWithURI(nsIURI *aURI);
+    NS_IMETHOD LaunchWithURI(nsIURI *aURI,
+                             nsIInterfaceRequestor *aWindowContext);
     NS_IMETHOD GetPreferredAction(nsHandlerInfoAction *aPreferredAction);
     NS_IMETHOD SetPreferredAction(nsHandlerInfoAction aPreferredAction);
     NS_IMETHOD GetAlwaysAskBeforeHandling(PRBool *aAlwaysAskBeforeHandling);
@@ -158,9 +159,19 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
      * Used to launch a web-based handler with this URI.
      * 
      * @param aURI  The URI to launch with.
+     * 
+     * @param aWindowContext 
+     *        The window to parent the dialog against, and, if a web handler
+     *        is chosen, it is loaded in this window as well.  This parameter
+     *        may be ultimately passed nsIURILoader.openURI in the case of a
+     *        web handler, and aWindowContext is null or not present, web
+     *        handlers will fail.  We need to do better than that; bug 394483
+     *        filed in order to track.
+     * 
      */
-    static NS_HIDDEN_(nsresult) LaunchWithWebHandler(nsIWebHandlerApp *aApp, 
-                                                     nsIURI *aURI);
+    static NS_HIDDEN_(nsresult) 
+        LaunchWithWebHandler(nsIWebHandlerApp *aApp, nsIURI *aURI,
+                             nsIInterfaceRequestor *aWindowContext);
 
     /**
      * Given a file: nsIURI, return the associated nsILocalFile

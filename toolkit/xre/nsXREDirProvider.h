@@ -122,7 +122,11 @@ protected:
   // Calculate all bundle directories, including distribution bundles,
   // extensions, and themes
   void LoadBundleDirectories();
+
+#ifdef LOAD_DISTRO_BUNDLES
   void LoadAppBundleDirs();
+#endif
+
   void Append(nsIFile* aDirectory);
 
   nsCOMPtr<nsIDirectoryServiceProvider> mAppProvider;
@@ -132,6 +136,7 @@ protected:
   nsCOMPtr<nsIFile>      mProfileLocalDir;
   PRPackedBool           mProfileNotified;
   PRPackedBool           mExtensionsLoaded;
+  nsCOMArray<nsIFile>    mAppBundleDirectories;
   nsCOMArray<nsIFile>    mExtensionDirectories;
   nsCOMArray<nsIFile>    mThemeDirectories;
 };

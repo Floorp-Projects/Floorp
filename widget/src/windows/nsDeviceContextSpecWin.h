@@ -47,16 +47,12 @@
 #include <windows.h>
 
 class nsDeviceContextSpecWin : public nsIDeviceContextSpec
-#ifndef MOZ_CAIRO_GFX
-  , public nsISupportsVoid
-#endif
 {
 public:
   nsDeviceContextSpecWin();
 
   NS_DECL_ISUPPORTS
 
-#ifdef MOZ_CAIRO_GFX
   NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
   NS_IMETHOD BeginDocument(PRUnichar*  aTitle, 
                            PRUnichar*  aPrintToFileName,
@@ -65,13 +61,6 @@ public:
   NS_IMETHOD EndDocument() { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD BeginPage() { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD EndPage() { return NS_ERROR_NOT_IMPLEMENTED; }
-#else
-  // kill these when we move to CAIRO_GFX
-  NS_IMETHOD GetType(PRUint16 *aType) { *aType = nsISupportsPrimitive::TYPE_VOID; return NS_OK; }
-  NS_IMETHOD GetData(void * *aData);
-  NS_IMETHOD SetData(void * aData) { return NS_ERROR_FAILURE; }
-  NS_IMETHOD ToString(char **_retval) { return NS_ERROR_FAILURE; }
-#endif
 
   NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS, PRBool aIsPrintPreview);
 

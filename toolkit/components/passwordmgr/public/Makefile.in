@@ -48,6 +48,7 @@ XPIDLSRCS = \
 		nsILoginInfo.idl \
 		nsILoginManager.idl \
 		nsILoginManagerStorage.idl \
+		nsILoginManagerPrompter.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

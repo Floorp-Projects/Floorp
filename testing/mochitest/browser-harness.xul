@@ -116,7 +116,12 @@
         return this.tests.filter(function (t) !t.pass).length;
       },
       get log() {
-        return this.tests.map(function (t) t.msg).join("\n");
+        var path = this.path;
+        return this.tests.map(function (t) {
+                                if (!t.pass)
+                                  return t.msg + " - " + path;
+                                return t.msg;
+                              }).join("\n");
       }
     };
 

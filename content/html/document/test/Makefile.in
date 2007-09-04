@@ -53,13 +53,14 @@ _TEST_FILES = 	test_bug1682.html \
 		bug199692-nested-d2.html \
 		test_bug172261.html \
 		test_bug255820.html \
+		test_bug259332.html \
 		test_bug311681.html \
 		test_bug311681.xhtml \
+		test_bug324378.html \
 		test_bug332848.xhtml \
 		test_bug359657.html \
 		test_bug380383.html \
 		test_bug386495.html \
-		test_bug259332.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

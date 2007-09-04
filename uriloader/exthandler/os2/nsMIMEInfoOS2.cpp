@@ -59,7 +59,8 @@ nsMIMEInfoOS2::~nsMIMEInfoOS2()
 {
 }
 
-NS_IMETHODIMP nsMIMEInfoOS2::LaunchWithURI(nsIURI* aURI)
+NS_IMETHODIMP nsMIMEInfoOS2::LaunchWithURI(nsIURI* aURI,
+                                           nsIInterfaceRequestor* aWindowContext)
 {
   nsresult rv = NS_OK;
 
