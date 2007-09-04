@@ -583,7 +583,7 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!exists) {
-    rv = dataDirectory->Create(nsIFile::DIRECTORY_TYPE, 0600);
+    rv = dataDirectory->Create(nsIFile::DIRECTORY_TYPE, 0700);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
