@@ -424,6 +424,27 @@ LoadPlatformDirectory(nsIFile* aBundleDirectory,
 }
 
 static void
+LoadAppDirIntoArray(nsIFile* aXULAppDir,
+                    const char *const *aAppendList,
+                    nsCOMArray<nsIFile>& aDirectories)
+{
+  if (!aXULAppDir)
+    return;
+
+  nsCOMPtr<nsIFile> subdir;
+  aXULAppDir->Clone(getter_AddRefs(subdir));
+  if (!subdir)
+    return;
+
+  for (; *aAppendList; ++aAppendList)
+    subdir->AppendNative(nsDependentCString(*aAppendList));
+
+  PRBool exists;
+  if (NS_SUCCEEDED(subdir->Exists(&exists)) && exists)
+    aDirectories.AppendObject(subdir);
+}
+
+static void
 LoadDirsIntoArray(nsCOMArray<nsIFile>& aSourceDirs,
                   const char *const* aAppendList,
                   nsCOMArray<nsIFile>& aDirectories)
@@ -524,7 +545,6 @@ nsXREDirProvider::LoadBundleDirectories()
 
   // first load distribution/bundles
   if (mXULAppDir) {
-    mAppBundleDirectories.AppendObject(mXULAppDir);
     LoadPlatformDirectory(mXULAppDir, mAppBundleDirectories);
 
 #ifdef LOAD_DISTRO_BUNDLES
@@ -593,6 +613,21 @@ nsXREDirProvider::LoadAppBundleDirs()
 
 static const char *const kAppendPrefDir[] = { "defaults", "preferences", nsnull };
 
+#ifdef DEBUG_bsmedberg
+static void
+DumpFileArray(const char *key,
+              nsCOMArray<nsIFile> dirs)
+{
+  fprintf(stderr, "nsXREDirProvider::GetFilesInternal(%s)\n", key);
+
+  nsCAutoString path;
+  for (PRInt32 i = 0; i < dirs.Count(); ++i) {
+    dirs[i]->GetNativePath(path);
+    fprintf(stderr, "  %s\n", path.get());
+  }
+}
+#endif // DEBUG_bsmedberg
+
 nsresult
 nsXREDirProvider::GetFilesInternal(const char* aProperty,
                                    nsISimpleEnumerator** aResult)
@@ -629,6 +664,8 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
     nsCOMArray<nsIFile> directories;
 
     LoadBundleDirectories();
+
+    LoadAppDirIntoArray(mXULAppDir, kAppendPrefDir, directories);
     LoadDirsIntoArray(mAppBundleDirectories,
                       kAppendPrefDir, directories);
 
@@ -696,6 +733,9 @@ nsXREDirProvider::GetFilesInternal(const char* aProperty,
     static const char *const kAppendChromeDir[] = { "chrome", nsnull };
     nsCOMArray<nsIFile> directories;
     LoadBundleDirectories();
+    LoadAppDirIntoArray(mXULAppDir,
+                        kAppendChromeDir,
+                        directories);
     LoadDirsIntoArray(mAppBundleDirectories,
                       kAppendChromeDir,
                       directories);
