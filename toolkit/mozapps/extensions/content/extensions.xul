@@ -218,6 +218,7 @@
       <label id="getMore" class="text-link"
              onclick="openURL(this.getAttribute('getMoreURL'));"
              valuethemes="&getThemes.label;"
+             valueplugins="&getPlugins.label;"
              valueextensions="&getExtensions.label;"/>
       <spacer flex="1"/>
       <button id="restartAppButton" label="&cmd.restartApp2.label;"
