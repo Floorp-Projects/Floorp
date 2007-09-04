@@ -243,9 +243,6 @@ TextRunWordCache::LookupWord(gfxTextRun *aTextRun, gfxFont *aFirstFont,
     if (fontEntry->mTextRun) {
         existingEntry = fontEntry;
     } else {
-#ifdef DEBUG
-        ++aTextRun->mCachedWords;
-#endif
         PR_LOG(gWordCacheLog, PR_LOG_DEBUG, ("%p(%d-%d,%d): added using font", aTextRun, aStart, aEnd - aStart, aHash));
         key.mFontOrGroup = aTextRun->GetFontGroup();
         CacheHashEntry *groupEntry = mCache.GetEntry(key);
@@ -273,6 +270,9 @@ TextRunWordCache::LookupWord(gfxTextRun *aTextRun, gfxFont *aFirstFont,
         return PR_TRUE;
     }
 
+#ifdef DEBUG
+    ++aTextRun->mCachedWords;
+#endif
     // Set up the cache entry so that if later in this textrun we hit this
     // entry, we'll copy within our own textrun
     fontEntry->mTextRun = aTextRun;
