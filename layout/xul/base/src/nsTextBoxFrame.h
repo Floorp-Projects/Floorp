@@ -130,7 +130,7 @@ private:
   nscoord mTitleWidth;
   nsAccessKeyInfo* mAccessKeyInfo;
   PRPackedBool mNeedsRecalc;
-  PRPackedBool mReflowCallbackPosted;
+  PRPackedBool mNeedsReflowCallback;
   nsSize mTextSize;
   nscoord mAscent;
 
