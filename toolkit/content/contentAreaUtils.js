@@ -457,24 +457,22 @@ function getTargetFile(aFpP, aSkipPrompt)
   var useDownloadDir = prefs.getBoolPref("useDownloadDir");
   var dir = null;
   
-  try {
-    // On prompt operations, default to lastDir, on direct to folder
-    // downloads, default to the user's configured download folder.
-    // (right-click save image vs. drag-and-drop into download manager)
+  // Default to lastDir if useDownloadDir is false, and lastDir
+  // is configured and valid. Otherwise, use the user's default
+  // downloads directory configured through download prefs.
+  var dnldMgr = Components.classes["@mozilla.org/download-manager;1"]
+                          .getService(Components.interfaces.nsIDownloadManager);
+  try {                          
     var lastDir = prefs.getComplexValue("lastDir", nsILocalFile);
-    var dnldMgr = Components.classes["@mozilla.org/download-manager;1"]
-                            .getService(Components.interfaces.nsIDownloadManager);
-    if (!aSkipPrompt) {
+    if (!useDownloadDir && lastDir.exists())
       dir = lastDir;
-    } else {
+    else
       dir = dnldMgr.userDownloadsDirectory;
-    }
-  } catch (ex) {
+  } catch(ex) {
+    dir = dnldMgr.userDownloadsDirectory;
   }
 
   if (!aSkipPrompt || !useDownloadDir || !dir || (dir && !dir.exists())) {
-    // If we're asking the user where to save the file, root the Save As...
-    // dialog on the place they last picked.
     if (!dir || (dir && !dir.exists())) {
       // Default to desktop.
       var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
