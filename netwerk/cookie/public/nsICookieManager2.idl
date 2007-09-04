@@ -94,13 +94,18 @@ interface nsICookieManager2 : nsICookieManager
   boolean cookieExists(in nsICookie2 aCookie);
 
   /**
-   * Count how many cookies a given host has already set.
+   * Count how many cookies would be returned to a given host, ignoring the
+   * cookie flags isDomain, isSecure, and isHttpOnly. Thus, for a host
+   * "weather.yahoo.com", host or domain cookies for "weather.yahoo.com" and
+   * "yahoo.com" would be counted, while a cookie for "my.weather.yahoo.com"
+   * would not.
    *
    * @param aHost
-   *        the raw host string to look for, e.g. "google.com"
+   *        the host string to look for, e.g. "google.com". this should consist
+   *        of only the host portion of a URI, and should not contain a leading
+   *        dot, a port, etc.
    *
-   * @return the number of cookies found whose hosts are the same as, or
-   *         subdomains of, aHost
+   * @return the number of cookies found.
    */
   unsigned long countCookiesFromHost(in ACString aHost);
 };
