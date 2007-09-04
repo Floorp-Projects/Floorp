@@ -142,7 +142,8 @@ nsTextBoxFrame::AttributeChanged(PRInt32         aNameSpaceID,
 }
 
 nsTextBoxFrame::nsTextBoxFrame(nsIPresShell* aShell, nsStyleContext* aContext):
-  nsLeafBoxFrame(aShell, aContext), mCropType(CropRight),mAccessKeyInfo(nsnull)
+  nsLeafBoxFrame(aShell, aContext), mCropType(CropRight), mAccessKeyInfo(nsnull),
+  mNeedsReflowCallback(PR_FALSE)
 {
     mState |= NS_STATE_NEED_LAYOUT;
     MarkIntrinsicWidthsDirty();
@@ -249,7 +250,6 @@ nsTextBoxFrame::UpdateAccesskey(nsWeakFrame& aWeakThis)
         mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accesskey);
     }
 
-    mReflowCallbackPosted = PR_FALSE;
     if (!accesskey.Equals(mAccessKey)) {
         // Need to get clean mTitle.
         mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::value, mTitle);
@@ -306,15 +306,10 @@ nsTextBoxFrame::UpdateAttributes(nsIAtom*         aAttribute,
         doUpdateTitle = PR_TRUE;
     }
 
-    if (!mReflowCallbackPosted &&
-        (aAttribute == nsnull || aAttribute == nsGkAtoms::accesskey)) {
-        mReflowCallbackPosted = PR_TRUE;
+    if (aAttribute == nsnull || aAttribute == nsGkAtoms::accesskey) {
+        mNeedsReflowCallback = PR_TRUE;
         // Ensure that layout is refreshed and reflow callback called.
         aResize = PR_TRUE;
-        nsIReflowCallback* cb = new nsAsyncAccesskeyUpdate(this);
-        if (cb) {
-            PresContext()->PresShell()->PostReflowCallback(cb);
-        }
     }
 
     if (doUpdateTitle) {
@@ -891,6 +886,14 @@ nsTextBoxFrame::UpdateAccessIndex()
 NS_IMETHODIMP
 nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
 {
+    if (mNeedsReflowCallback) {
+        nsIReflowCallback* cb = new nsAsyncAccesskeyUpdate(this);
+        if (cb) {
+            PresContext()->PresShell()->PostReflowCallback(cb);
+        }
+        mNeedsReflowCallback = PR_FALSE;
+    }
+
     mState |= NS_STATE_NEED_LAYOUT;
 
     return nsLeafBoxFrame::DoLayout(aBoxLayoutState);
