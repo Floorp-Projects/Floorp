@@ -346,8 +346,12 @@ static PRBool MenuNodeIsVisible(nsISupports *item)
   // Find the content for this item in the menu, be it a MenuItem or a Menu
   nsCOMPtr<nsIContent> itemContent;
   nsCOMPtr<nsIMenuItem> menuItem = do_QueryInterface(item);
-  if (menuItem)
+  if (item == &gDummyMenuItemX) {
+    return PR_TRUE;
+  }
+  else if (menuItem) {
     menuItem->GetMenuItemContent(getter_AddRefs(itemContent));
+  }
   else {
     nsCOMPtr<nsIMenu> menu = do_QueryInterface(item);
     if (menu)
