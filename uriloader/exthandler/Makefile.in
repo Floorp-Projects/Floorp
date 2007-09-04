@@ -77,7 +77,6 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  uriloader \
 		  necko \
-		  rdf \
 		  webshell \
 		  plugin \
 		  pref \

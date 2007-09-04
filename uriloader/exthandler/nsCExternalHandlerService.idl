@@ -55,6 +55,9 @@ nsIExternalHelperAppService
 #define NS_EXTERNALHELPERAPPSERVICE_CONTRACTID \
 "@mozilla.org/uriloader/external-helper-app-service;1"
 
+#define NS_HANDLERSERVICE_CONTRACTID \
+"@mozilla.org/uriloader/handler-service;1"
+
 #define NS_EXTERNALPROTOCOLSERVICE_CONTRACTID \
 "@mozilla.org/uriloader/external-protocol-service;1"
 
