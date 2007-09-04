@@ -178,8 +178,10 @@ var gMainPane = {
    *   True if the Download Manager should be closed when all downloads
    *   complete, false if it should be left open.
    * browser.download.useDownloadDir - bool
-   *   True if downloads are saved with no save-as UI shown, false if
-   *   the user should always be asked where to save a file.
+   *   True - Save files directly to the folder configured via the
+   *   browser.download.folderList preference.
+   *   False - Always ask the user where to save a file and default to 
+   *   browser.download.lastDir when displaying a folder picker dialog.
    * browser.download.dir - local file handle
    *   A local folder the user may have selected for downloaded files to be
    *   saved. Migration of other browser settings may also set this path.
