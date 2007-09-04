@@ -300,6 +300,7 @@ kernel/image.h
 kernel/OS.h
 key.h
 keyt.h
+keythi.h
 LAction.h
 langinfo.h
 LApplication.h
