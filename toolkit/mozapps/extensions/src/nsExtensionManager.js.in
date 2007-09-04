@@ -48,16 +48,22 @@
 // - better logging
 //
 
-const nsIExtensionManager             = Components.interfaces.nsIExtensionManager;
-const nsIAddonUpdateCheckListener     = Components.interfaces.nsIAddonUpdateCheckListener;
-const nsIUpdateItem                   = Components.interfaces.nsIUpdateItem;
-const nsILocalFile                    = Components.interfaces.nsILocalFile;
-const nsILineInputStream              = Components.interfaces.nsILineInputStream;
-const nsIInstallLocation              = Components.interfaces.nsIInstallLocation;
-const nsIURL                          = Components.interfaces.nsIURL
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+const nsIExtensionManager             = Ci.nsIExtensionManager;
+const nsIAddonUpdateCheckListener     = Ci.nsIAddonUpdateCheckListener;
+const nsIUpdateItem                   = Ci.nsIUpdateItem;
+const nsILocalFile                    = Ci.nsILocalFile;
+const nsILineInputStream              = Ci.nsILineInputStream;
+const nsIInstallLocation              = Ci.nsIInstallLocation;
+const nsIURL                          = Ci.nsIURL
 // XXXrstrong calling hasMoreElements on a nsIDirectoryEnumerator after
 // it has been removed will cause a crash on Mac OS X - bug 292823
-const nsIDirectoryEnumerator          = Components.interfaces.nsIDirectoryEnumerator;
+const nsIDirectoryEnumerator          = Ci.nsIDirectoryEnumerator;
 
 const PREF_EM_CHECK_COMPATIBILITY     = "extensions.checkCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
@@ -192,8 +198,8 @@ var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\
  */
 function getVersionChecker() {
   if (!gVersionChecker) {
-    gVersionChecker = Components.classes["@mozilla.org/xpcom/version-comparator;1"]
-                                .getService(Components.interfaces.nsIVersionComparator);
+    gVersionChecker = Cc["@mozilla.org/xpcom/version-comparator;1"].
+                      getService(Ci.nsIVersionComparator);
   }
   return gVersionChecker;
 }
@@ -206,8 +212,8 @@ var BundleManager = {
   * @returns A nsIStringBundle which was retrieved.
   */
   getBundle: function(bundleURI) {
-    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
-                        .getService(Components.interfaces.nsIStringBundleService);
+    var sbs = Cc["@mozilla.org/intl/stringbundle;1"].
+              getService(Ci.nsIStringBundleService);
     return sbs.createBundle(bundleURI);
   },
 
@@ -296,8 +302,8 @@ function getPref(func, preference, defaultValue) {
  * @returns The nsIRDFContainer, initialized at the root.
  */
 function getContainer(datasource, root) {
-  var ctr = Components.classes["@mozilla.org/rdf/container;1"]
-                      .createInstance(Components.interfaces.nsIRDFContainer);
+  var ctr = Cc["@mozilla.org/rdf/container;1"].
+            createInstance(Ci.nsIRDFContainer);
   ctr.Init(datasource, root);
   return ctr;
 }
@@ -373,8 +379,8 @@ function getDirNoCreate(key, pathArray) {
  * @return  nsIFile object for the location specified.
  */
 function getDirInternal(key, pathArray, shouldCreate) {
-  var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
-                              .getService(Components.interfaces.nsIProperties);
+  var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
+                    getService(Ci.nsIProperties);
   var dir = fileLocator.get(key, nsILocalFile);
   for (var i = 0; i < pathArray.length; ++i) {
     dir.append(pathArray[i]);
@@ -436,12 +442,12 @@ function getAbsoluteDescriptor(itemLocation) {
  * @returns The nsILocalFile object representing the location of the item
  */
 function getFileFromDescriptor(descriptor, installLocation) {
-  var location = Components.classes["@mozilla.org/file/local;1"]
-                           .createInstance(nsILocalFile);
+  var location = Cc["@mozilla.org/file/local;1"].
+                 createInstance(nsILocalFile);
 
   var m = descriptor.match(/^(abs|rel)\%(.*)$/);
   if (!m)
-    throw Components.results.NS_ERROR_INVALID_ARG;
+    throw Cr.NS_ERROR_INVALID_ARG;
 
   if (m[1] == "rel") {
     location.setRelativeDescriptor(installLocation.location, m[2]);
@@ -475,8 +481,8 @@ function fileIsItemPackage(file) {
  * @returns nsIFileOutputStream to write to.
  */
 function openSafeFileOutputStream(file, modeFlags) {
-  var fos = Components.classes["@mozilla.org/network/safe-file-output-stream;1"]
-                      .createInstance(Components.interfaces.nsIFileOutputStream);
+  var fos = Cc["@mozilla.org/network/safe-file-output-stream;1"].
+            createInstance(Ci.nsIFileOutputStream);
   if (modeFlags === undefined)
     modeFlags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
   if (!file.exists())
@@ -491,7 +497,7 @@ function openSafeFileOutputStream(file, modeFlags) {
  *          The stream to close.
  */
 function closeSafeFileOutputStream(stream) {
-  if (stream instanceof Components.interfaces.nsISafeOutputStream)
+  if (stream instanceof Ci.nsISafeOutputStream)
     stream.finish();
   else
     stream.close();
@@ -516,7 +522,7 @@ function removeDirRecursive(dir) {
 
   var dirEntries = dir.directoryEntries;
   while (dirEntries.hasMoreElements()) {
-    var entry = dirEntries.getNext().QueryInterface(Components.interfaces.nsIFile);
+    var entry = dirEntries.getNext().QueryInterface(Ci.nsIFile);
 
     if (entry.isDirectory()) {
       removeDirRecursive(entry);
@@ -599,10 +605,10 @@ function stripPrefix(string, prefix) {
  * @returns The file URL spec to the file
  */
 function getURLSpecFromFile(file) {
-  var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
-                         .getService(Components.interfaces.nsIIOService);
+  var ioServ = Cc["@mozilla.org/network/io-service;1"].
+               getService(Ci.nsIIOService);
   var fph = ioServ.getProtocolHandler("file")
-                  .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
+                  .QueryInterface(Ci.nsIFileProtocolHandler);
   return fph.getURLSpecFromFile(file);
 }
 
@@ -613,8 +619,8 @@ function getURLSpecFromFile(file) {
  * @returns The nsIURI constructed.
  */
 function newURI(spec) {
-  var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
-                         .getService(Components.interfaces.nsIIOService);
+  var ioServ = Cc["@mozilla.org/network/io-service;1"].
+               getService(Ci.nsIIOService);
   return ioServ.newURI(spec, null, null);
 }
 
@@ -625,8 +631,8 @@ function newURI(spec) {
  * @returns The file URI to the file
  */
 function getURIFromFile(file) {
-  var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
-                         .getService(Components.interfaces.nsIIOService);
+  var ioServ = Cc["@mozilla.org/network/io-service;1"].
+               getService(Ci.nsIIOService);
   return ioServ.newFileURI(file);
 }
 
@@ -645,9 +651,9 @@ function inSafeMode() {
  *          supplied is not a RDF string literal or resource.
  */
 function stringData(literalOrResource) {
-  if (literalOrResource instanceof Components.interfaces.nsIRDFLiteral)
+  if (literalOrResource instanceof Ci.nsIRDFLiteral)
     return literalOrResource.Value;
-  if (literalOrResource instanceof Components.interfaces.nsIRDFResource)
+  if (literalOrResource instanceof Ci.nsIRDFResource)
     return literalOrResource.Value;
   return undefined;
 }
@@ -659,7 +665,7 @@ function stringData(literalOrResource) {
  * @return  integer value of the literal
  */
 function intData(literal) {
-  if (literal instanceof Components.interfaces.nsIRDFInt)
+  if (literal instanceof Ci.nsIRDFInt)
     return literal.Value;
   return undefined;
 }
@@ -752,8 +758,8 @@ function showIncompatibleError(installData) {
     message = extensionStrings.formatStringFromName("incompatibleMsg", params, params.length);
   }
 
-  var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                     .getService(Components.interfaces.nsIPromptService);
+  var ps = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+           getService(Ci.nsIPromptService);
   ps.alert(null, title, message);
 }
 
@@ -781,8 +787,8 @@ function showMessage(titleKey, titleParams, messageKey, messageParams) {
   }
   else
     message = extensionStrings.GetStringFromName(messageKey);
-  var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                     .getService(Components.interfaces.nsIPromptService);
+  var ps = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+           getService(Ci.nsIPromptService);
   ps.alert(null, title, message);
 }
 
@@ -796,8 +802,8 @@ function showMessage(titleKey, titleParams, messageKey, messageParams) {
  */
 function showBlocklistMessage(items, fromInstall) {
   var win = null;
-  var params = Components.classes["@mozilla.org/embedcomp/dialogparam;1"]
-                         .createInstance(Components.interfaces.nsIDialogParamBlock);
+  var params = Cc["@mozilla.org/embedcomp/dialogparam;1"].
+               createInstance(Ci.nsIDialogParamBlock);
   params.SetInt(0, (fromInstall ? 1 : 0));
   params.SetInt(1, items.length);
   params.SetNumberStrings(items.length * 2);
@@ -806,13 +812,13 @@ function showBlocklistMessage(items, fromInstall) {
 
   // if this was initiated from an install try to find the appropriate manager
   if (fromInstall) {
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+             getService(Ci.nsIWindowMediator);
     win = wm.getMostRecentWindow(nsIUpdateItem.TYPE_THEME ? "Extension:Manager-themes" :
                                                             "Extension:Manager-extensions");
   }
-  var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                     .getService(Components.interfaces.nsIWindowWatcher);
+  var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+           getService(Ci.nsIWindowWatcher);
   ww.openWindow(win, URI_EXTENSION_LIST_DIALOG, "",
                 "chrome,centerscreen,modal,dialog,titlebar", params);
 }
@@ -825,8 +831,8 @@ function showBlocklistMessage(items, fromInstall) {
  */
 function getZipReaderForFile(zipFile) {
   try {
-    var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
-                              .createInstance(Components.interfaces.nsIZipReader);
+    var zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].
+                    createInstance(Ci.nsIZipReader);
     zipReader.open(zipFile);
   }
   catch (e) {
@@ -883,7 +889,7 @@ function showOldThemeError(contentsManifest) {
     var elts = ctr.GetElements();
     var nameArc = gRDF.GetResource(CHROME_NS("displayName"));
     while (elts.hasMoreElements()) {
-      var elt = elts.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var elt = elts.getNext().QueryInterface(Ci.nsIRDFResource);
       themeName = stringData(contentsManifest.GetTarget(elt, nameArc, true));
       if (themeName)
         break;
@@ -897,8 +903,8 @@ function showOldThemeError(contentsManifest) {
             BundleManager.appName, appVersion];
   var message = extensionStrings.formatStringFromName("incompatibleMsgSingleAppVersion",
                                                       params, params.length);
-  var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                     .getService(Components.interfaces.nsIPromptService);
+  var ps = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+           getService(Ci.nsIPromptService);
   ps.alert(null, title, message);
 }
 
@@ -914,8 +920,8 @@ function getInstallManifest(file) {
   var arcs = ds.ArcLabelsOut(gInstallManifestRoot);
   if (!arcs.hasMoreElements()) {
     ds = null;
-    var uri = Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService(Components.interfaces.nsIIOService)
+    var uri = Cc["@mozilla.org/network/io-service;1"].
+              getService(Ci.nsIIOService)
                         .newFileURI(file);
     var url = uri.QueryInterface(nsIURL);
     showMessage("malformedTitle", [], "malformedMessage",
@@ -1048,16 +1054,16 @@ DirectoryInstallLocation.prototype = {
    * @returns A nsILocalFile object representing the linked directory.
    */
   _readDirectoryFromFile: function(file) {
-    var fis = Components.classes["@mozilla.org/network/file-input-stream;1"]
-                        .createInstance(Components.interfaces.nsIFileInputStream);
+    var fis = Cc["@mozilla.org/network/file-input-stream;1"].
+              createInstance(Ci.nsIFileInputStream);
     fis.init(file, -1, -1, false);
     var line = { value: "" };
     if (fis instanceof nsILineInputStream)
       fis.readLine(line);
     fis.close();
     if (line.value) {
-      var linkedDirectory = Components.classes["@mozilla.org/file/local;1"]
-                                      .createInstance(nsILocalFile);
+      var linkedDirectory = Cc["@mozilla.org/file/local;1"].
+                            createInstance(nsILocalFile);
       try {
         linkedDirectory.initWithPath(line.value);
       }
@@ -1293,20 +1299,12 @@ DirectoryInstallLocation.prototype = {
     }
   },
 
-  /**
-   * See nsISupports.idl
-   */
-  QueryInterface: function (iid) {
-    if (!iid.equals(Components.interfaces.nsIInstallLocation) &&
-        !iid.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIInstallLocation])
 };
 
 #ifdef XP_WIN
 
-const nsIWindowsRegKey = Components.interfaces.nsIWindowsRegKey;
+const nsIWindowsRegKey = Ci.nsIWindowsRegKey;
 
 /**
  * An object that identifies the location of installed items based on entries
@@ -1338,8 +1336,8 @@ function WinRegInstallLocation(name, rootKey, restricted, priority) {
   // cases, we just leave ourselves in the empty state.
   try {
     var path = this._appKeyPath + "\\Extensions";
-    var key = Components.classes["@mozilla.org/windows-registry-key;1"]
-                        .createInstance(nsIWindowsRegKey);
+    var key = Cc["@mozilla.org/windows-registry-key;1"].
+              createInstance(nsIWindowsRegKey);
     key.open(this._rootKey, path, nsIWindowsRegKey.ACCESS_READ);
     this._readAddons(key);
   } catch (e) {
@@ -1386,8 +1384,8 @@ WinRegInstallLocation.prototype = {
     for (var i = 0; i < count; ++i) {
       var id = key.getValueName(i);
 
-      var dir = Components.classes["@mozilla.org/file/local;1"]
-                          .createInstance(nsILocalFile);
+      var dir = Cc["@mozilla.org/file/local;1"].
+                createInstance(nsILocalFile);
       dir.initWithPath(key.readStringValue(id));
 
       if (dir.exists() && dir.isDirectory()) {
@@ -1446,12 +1444,7 @@ WinRegInstallLocation.prototype = {
     return true;
   },
 
-  QueryInterface: function(iid) {
-    if (!iid.equals(Components.interfaces.nsIInstallLocation) &&
-        !iid.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIInstallLocation])
 };
 
 #endif
@@ -1670,8 +1663,8 @@ Installer.prototype = {
    */
   upgradeThemeChrome: function() {
     // Use the Chrome Registry API to install the theme there
-    var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                       .getService(Components.interfaces.nsIToolkitChromeRegistry);
+    var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
+             getService(Ci.nsIToolkitChromeRegistry);
     var manifestFile = this._installLocation.getItemFile(this._id, FILE_CHROME_MANIFEST);
     if (manifestFile.exists() ||
         this._id == stripPrefix(RDFURI_DEFAULT_THEME, PREFIX_ITEM_URI))
@@ -1745,7 +1738,7 @@ Installer.prototype = {
       var manifestURI = getURIFromFile(manifestFile);
       var files = this.metadataDS.GetTargets(gInstallManifestRoot, EM_R("file"), true);
       while (files.hasMoreElements()) {
-        var file = files.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        var file = files.getNext().QueryInterface(Ci.nsIRDFResource);
         var chromeFile = chromeDir.clone();
         var fileName = file.Value.substr("urn:mozilla:extension:file:".length, file.Value.length);
         chromeFile.append(fileName);
@@ -1762,7 +1755,7 @@ Installer.prototype = {
         for (var i = 0; i < providers.length; ++i) {
           var items = this.metadataDS.GetTargets(file, providers[i], true);
           while (items.hasMoreElements()) {
-            var item = items.getNext().QueryInterface(Components.interfaces.nsIRDFLiteral);
+            var item = items.getNext().QueryInterface(Ci.nsIRDFLiteral);
             var fileURI = newURI(fileURLSpec + item.Value);
             // Extract the contents.rdf files instead of opening them inside of
             // the jar. This prevents the jar from being cached by the zip
@@ -1774,8 +1767,8 @@ Installer.prototype = {
             else
               contentsFileURI = fileURI;
 
-            var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                               .getService(Components.interfaces.nsIToolkitChromeRegistry);
+            var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                     getService(Ci.nsIToolkitChromeRegistry);
             cr.processContentsManifest(contentsFileURI, manifestURI, fileURI, true, false);
           }
         }
@@ -2267,8 +2260,8 @@ var StartupCache = {
       // change manifest was removed. Return an empty dataset and rebuild.
       return;
     }
-    var fis = Components.classes["@mozilla.org/network/file-input-stream;1"]
-                        .createInstance(Components.interfaces.nsIFileInputStream);
+    var fis = Cc["@mozilla.org/network/file-input-stream;1"].
+              createInstance(Ci.nsIFileInputStream);
     fis.init(itemChangeManifest, -1, -1, false);
     if (fis instanceof nsILineInputStream) {
       var line = { value: "" };
@@ -2336,9 +2329,8 @@ var StartupCache = {
  * @constructor
  */
 function ExtensionManager() {
-  gApp = Components.classes["@mozilla.org/xre/app-info;1"]
-                   .getService(Components.interfaces.nsIXULAppInfo)
-                   .QueryInterface(Components.interfaces.nsIXULRuntime);
+  gApp = Cc["@mozilla.org/xre/app-info;1"].
+         getService(Ci.nsIXULAppInfo).QueryInterface(Ci.nsIXULRuntime);
   gOSTarget = gApp.OS;
   try {
     gXPCOMABI = gApp.XPCOMABI;
@@ -2349,18 +2341,18 @@ function ExtensionManager() {
     // transmitted to update URLs.
     gXPCOMABI = UNKNOWN_XPCOM_ABI;
   }
-  gPref = Components.classes["@mozilla.org/preferences-service;1"]
-                    .getService(Components.interfaces.nsIPrefBranch2);
+  gPref = Cc["@mozilla.org/preferences-service;1"].
+          getService(Ci.nsIPrefBranch2);
 
-  gOS = Components.classes["@mozilla.org/observer-service;1"]
-                  .getService(Components.interfaces.nsIObserverService);
+  gOS = Cc["@mozilla.org/observer-service;1"].
+        getService(Ci.nsIObserverService);
   gOS.addObserver(this, "xpcom-shutdown", false);
 
-  gConsole = Components.classes["@mozilla.org/consoleservice;1"]
-                       .getService(Components.interfaces.nsIConsoleService);
+  gConsole = Cc["@mozilla.org/consoleservice;1"].
+             getService(Ci.nsIConsoleService);
 
-  gRDF = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                   .getService(Components.interfaces.nsIRDFService);
+  gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
+         getService(Ci.nsIRDFService);
   gInstallManifestRoot = gRDF.GetResource(RDFURI_INSTALL_MANIFEST_ROOT);
 
   // Register Global Install Location
@@ -2396,13 +2388,13 @@ function ExtensionManager() {
 #endif
 
   // Register Additional Install Locations
-  var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
-                                  .getService(Components.interfaces.nsICategoryManager);
+  var categoryManager = Cc["@mozilla.org/categorymanager;1"].
+                        getService(Ci.nsICategoryManager);
   var locations = categoryManager.enumerateCategory(CATEGORY_INSTALL_LOCATIONS);
   while (locations.hasMoreElements()) {
-    var entry = locations.getNext().QueryInterface(Components.interfaces.nsISupportsCString).data;
+    var entry = locations.getNext().QueryInterface(Ci.nsISupportsCString).data;
     var contractID = categoryManager.getCategoryEntry(CATEGORY_INSTALL_LOCATIONS, entry);
-    var location = Components.classes[contractID].getService(nsIInstallLocation);
+    var location = Cc[contractID].getService(nsIInstallLocation);
     InstallLocations.put(location);
   }
 }
@@ -2459,8 +2451,8 @@ ExtensionManager.prototype = {
   _updateLocale: function() {
     try {
       if (gPref.getBoolPref(PREF_MATCH_OS_LOCALE)) {
-        var localeSvc = Components.classes["@mozilla.org/intl/nslocaleservice;1"]
-                                  .getService(Components.interfaces.nsILocaleService);
+        var localeSvc = Cc["@mozilla.org/intl/nslocaleservice;1"].
+                        getService(Ci.nsILocaleService);
         gLocale = localeSvc.getLocaleComponentForUserAgent();
         return;
       }
@@ -2483,7 +2475,7 @@ ExtensionManager.prototype = {
     var ctr = getContainer(ds, ds._itemRoot);
     var elements = ctr.GetElements();
     while (elements.hasMoreElements()) {
-      var itemResource = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var itemResource = elements.getNext().QueryInterface(Ci.nsIRDFResource);
 
       // App disable or enable items as necessary
       // _appEnableItem and _appDisableItem will do nothing if the item is already
@@ -2530,12 +2522,12 @@ ExtensionManager.prototype = {
     const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
     const EMFEATURES = "chrome,centerscreen,extra-chrome,dialog,resizable,modal";
 
-    var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                       .getService(Components.interfaces.nsIWindowWatcher);
-    var param = Components.classes["@mozilla.org/supports-array;1"]
-                          .createInstance(Components.interfaces.nsISupportsArray);
-    var arg = Components.classes["@mozilla.org/supports-string;1"]
-                        .createInstance(Components.interfaces.nsISupportsString);
+    var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+             getService(Ci.nsIWindowWatcher);
+    var param = Cc["@mozilla.org/supports-array;1"].
+                createInstance(Ci.nsISupportsArray);
+    var arg = Cc["@mozilla.org/supports-string;1"].
+              createInstance(Ci.nsISupportsString);
     arg.data = "updates-only";
     param.AppendElement(arg);
     ww.openWindow(null, EMURL, null, EMFEATURES, param);
@@ -2650,9 +2642,8 @@ ExtensionManager.prototype = {
    */
   _startTimers: function() {
     // Register a background update check timer
-    var tm =
-        Components.classes["@mozilla.org/updates/timer-manager;1"]
-                  .getService(Components.interfaces.nsIUpdateTimerManager);
+    var tm = Cc["@mozilla.org/updates/timer-manager;1"].
+             getService(Ci.nsIUpdateTimerManager);
     var interval = getPref("getIntPref", PREF_EM_UPDATE_INTERVAL, 86400);
     tm.registerTimer("addon-background-update-timer", this, interval);
   },
@@ -2881,8 +2872,8 @@ ExtensionManager.prototype = {
       * @returns A nsIDialogParamBlock loaded with the strings and dialog state.
       */
     function getParamBlock(strings) {
-      var dpb = Components.classes["@mozilla.org/embedcomp/dialogparam;1"]
-                          .createInstance(Components.interfaces.nsIDialogParamBlock);
+      var dpb = Cc["@mozilla.org/embedcomp/dialogparam;1"].
+                createInstance(Ci.nsIDialogParamBlock);
       // OK and Cancel Buttons
       dpb.SetInt(0, 2);
       // Number of Strings
@@ -2892,12 +2883,12 @@ ExtensionManager.prototype = {
       for (var i = 0; i < strings.length; ++i)
         dpb.SetString(i, strings[i]);
 
-      var supportsString = Components.classes["@mozilla.org/supports-string;1"]
-                                     .createInstance(Components.interfaces.nsISupportsString);
+      var supportsString = Cc["@mozilla.org/supports-string;1"].
+                           createInstance(Ci.nsISupportsString);
       var bundle = BundleManager.getBundle(URI_EXTENSIONS_PROPERTIES);
       supportsString.data = bundle.GetStringFromName("droppedInWarning");
-      var objs = Components.classes["@mozilla.org/array;1"]
-                           .createInstance(Components.interfaces.nsIMutableArray);
+      var objs = Cc["@mozilla.org/array;1"].
+                 createInstance(Ci.nsIMutableArray);
       objs.appendElement(supportsString, false);
       dpb.objects = objs;
       return dpb;
@@ -2919,12 +2910,12 @@ ExtensionManager.prototype = {
         return;
 
       var dpb = getParamBlock(xpinstallStrings);
-      var ifptr = Components.classes["@mozilla.org/supports-interface-pointer;1"]
-                            .createInstance(Components.interfaces.nsISupportsInterfacePointer);
+      var ifptr = Cc["@mozilla.org/supports-interface-pointer;1"].
+                  createInstance(Ci.nsISupportsInterfacePointer);
       ifptr.data = dpb;
-      ifptr.dataIID = Components.interfaces.nsIDialogParamBlock;
-      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                          .getService(Components.interfaces.nsIWindowWatcher);
+      ifptr.dataIID = Ci.nsIDialogParamBlock;
+      var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+               getService(Ci.nsIWindowWatcher);
       ww.openWindow(null, URI_XPINSTALL_CONFIRM_DIALOG,
                     "", "chrome,centerscreen,modal,dialog,titlebar", ifptr);
       if (!dpb.GetInt(0)) {
@@ -3212,8 +3203,8 @@ ExtensionManager.prototype = {
           var contentsURI = newURI("jar:" + jarFileURI.spec + "!/");
 
           // Use the Chrome Registry API to install the theme there
-          var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                            .getService(Components.interfaces.nsIToolkitChromeRegistry);
+          var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                   getService(Ci.nsIToolkitChromeRegistry);
           cr.processContentsManifest(contentsURI, manifestURI, contentsURI, false, true);
         }
         entries.close();
@@ -3369,7 +3360,7 @@ ExtensionManager.prototype = {
           var ctr = getContainer(ds, ds._itemRoot);
           var elements = ctr.GetElements();
           while (elements.hasMoreElements()) {
-            var itemResource = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+            var itemResource = elements.getNext().QueryInterface(Ci.nsIRDFResource);
 
             // Ensure appDisabled is in the correct state.
             id = stripPrefix(itemResource.Value, PREFIX_ITEM_URI);
@@ -3394,8 +3385,8 @@ ExtensionManager.prototype = {
       // Upgrade contents.rdf files to the new chrome.manifest format for
       // existing Extensions and Themes
       if (this._upgradeChrome()) {
-        var cr = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
-                           .getService(Components.interfaces.nsIChromeRegistry);
+        var cr = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                 getService(Ci.nsIChromeRegistry);
         cr.checkForNewChrome();
       }
 
@@ -3457,7 +3448,7 @@ ExtensionManager.prototype = {
     ds.beginUpdateBatch();
     var allResources = ds.GetAllResources();
     while (allResources.hasMoreElements()) {
-      var res = allResources.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var res = allResources.getNext().QueryInterface(Ci.nsIRDFResource);
       if (ds.GetTarget(res, EM_R("downloadURL"), true) ||
           (!ds.GetTarget(res, EM_R("installLocation"), true) &&
           stringData(ds.GetTarget(res, EM_R("appDisabled"), true)) == "true"))
@@ -3469,7 +3460,7 @@ ExtensionManager.prototype = {
     var ctr = getContainer(ds, ds._itemRoot);
     var elements = ctr.GetElements();
     while (elements.hasMoreElements()) {
-      var itemResource = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var itemResource = elements.getNext().QueryInterface(Ci.nsIRDFResource);
       var id = stripPrefix(itemResource.Value, PREFIX_ITEM_URI);
       if (ds.getItemProperty(id, "appManaged") == "true") {
         // Force an update of the metadata for appManaged extensions since the
@@ -3496,7 +3487,7 @@ ExtensionManager.prototype = {
         if (installRDF.exists()) {
           var metadataDS = getInstallManifest(installRDF);
           var literal = metadataDS.GetTarget(gInstallManifestRoot, EM_R("updateKey"), true);
-          if (literal && literal instanceof Components.interfaces.nsIRDFLiteral)
+          if (literal && literal instanceof Ci.nsIRDFLiteral)
             ds.setItemProperty(id, EM_R("updateKey"), literal);
         }
       }
@@ -3538,8 +3529,8 @@ ExtensionManager.prototype = {
    * Shows the "Compatibility Updates" UI
    */
   _showMismatchWindow: function(items) {
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+             getService(Ci.nsIWindowMediator);
     var wizard = wm.getMostRecentWindow("Update:Wizard");
     if (wizard)
       wizard.focus();
@@ -3547,8 +3538,8 @@ ExtensionManager.prototype = {
       var features = "chrome,centerscreen,dialog,titlebar,modal";
       // This *must* be modal so as not to break startup! This code is invoked before
       // the main event loop is initiated (via checkForMismatches).
-      var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
-                         .getService(Components.interfaces.nsIWindowWatcher);
+      var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+               getService(Ci.nsIWindowWatcher);
       ww.openWindow(null, URI_EXTENSION_UPDATE_DIALOG, "", features, null);
     }
   },
@@ -3711,7 +3702,7 @@ ExtensionManager.prototype = {
       var targetApps = oldExtensionsDS.GetTargets(oldRes, EM_R("targetApplication"), true);
       while (targetApps.hasMoreElements()) {
         var targetApp = targetApps.getNext();
-        if (targetApp instanceof Components.interfaces.nsIRDFResource) {
+        if (targetApp instanceof Ci.nsIRDFResource) {
           try {
             var foundAppID = stringData(oldExtensionsDS.GetTarget(targetApp, EM_R("id"), true));
             // Different target application?  (Note:  v1.0 didn't support toolkit app ID)
@@ -3920,7 +3911,7 @@ ExtensionManager.prototype = {
                                                 true);
     while (targetApps.hasMoreElements()) {
       var targetApp = targetApps.getNext();
-      if (targetApp instanceof Components.interfaces.nsIRDFResource) {
+      if (targetApp instanceof Ci.nsIRDFResource) {
         try {
           var data = { id        : readTAProperty(targetApp, "id"),
                        minVersion: readTAProperty(targetApp, "minVersion"),
@@ -3998,8 +3989,8 @@ ExtensionManager.prototype = {
     
     // Check if the item is blocklisted.
     if (!gBlocklist)
-      gBlocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
-                             .getService(Components.interfaces.nsIBlocklistService);
+      gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
+                   getService(Ci.nsIBlocklistService);
     if (gBlocklist.isAddonBlocklisted(installData.id, installData.version,
                                       undefined, undefined))
       installData.error = INSTALLERROR_BLOCKLISTED;
@@ -4113,14 +4104,14 @@ ExtensionManager.prototype = {
         var targetApp = installData.targetApps[i];
         if (targetApp.id != gApp.ID && targetApp.id != TOOLKIT_ID) {
         /* XXXben uncomment when this works!
-          var settingsThingy = Components.classes[]
-                                        .getService(Components.interfaces.nsIXULRunnerSettingsThingy);
+          var settingsThingy = Cc[].
+                               getService(Ci.nsIXULRunnerSettingsThingy);
           try {
             var appPrefix = "SOFTWARE\\Mozilla\\XULRunner\\Applications\\";
             var branch = settingsThingy.getBranch(appPrefix + targetApp.id);
             var path = branch.getProperty("ExtensionsLocation");
-            var destination = Components.classes["@mozilla.org/file/local;1"]
-                                        .createInstance(nsILocalFile);
+            var destination = Cc["@mozilla.org/file/local;1"].
+                              createInstance(nsILocalFile);
             destination.initWithPath(path);
             xpiFile.copyTo(file, xpiFile.leafName);
           }
@@ -4261,7 +4252,7 @@ ExtensionManager.prototype = {
        */
       onAddonUpdateStarted: function(addon) {
         if (!addon)
-          throw Components.results.NS_ERROR_INVALID_ARG;
+          throw Cr.NS_ERROR_INVALID_ARG;
 
         LOG("Phone Home Listener: Update For " + addon.id + " started");
         em.datasource.addIncompatibleUpdateItem(addon.name, this._xpi.path,
@@ -4273,7 +4264,7 @@ ExtensionManager.prototype = {
        */
       onAddonUpdateEnded: function(addon, status) {
         if (!addon)
-          throw Components.results.NS_ERROR_INVALID_ARG;
+          throw Cr.NS_ERROR_INVALID_ARG;
 
         LOG("Phone Home Listener: Update For " + addon.id + " ended, status = " + status);
         em.datasource.removeDownload(this._xpi.path);
@@ -4308,7 +4299,7 @@ ExtensionManager.prototype = {
           }
           // Prevent the datasource file from being lazily recreated after
           // it is deleted by calling Flush.
-          this._installManifest.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+          this._installManifest.QueryInterface(Ci.nsIRDFRemoteDataSource);
           this._installManifest.Flush();
         }
         else {
@@ -4319,15 +4310,7 @@ ExtensionManager.prototype = {
         }
       },
 
-      /**
-       * See nsISupports.idl
-       */
-      QueryInterface: function(iid) {
-        if (!iid.equals(Components.interfaces.nsIAddonUpdateCheckListener) &&
-            !iid.equals(Components.interfaces.nsISupports))
-          throw Components.results.NS_ERROR_NO_INTERFACE;
-        return this;
-      }
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIAddonUpdateCheckListener])
     }
 
     var installManifestFile = extractRDFFileToTempDir(aXPIFile, FILE_INSTALL_MANIFEST, true);
@@ -4525,10 +4508,10 @@ ExtensionManager.prototype = {
     var localeProp = EM_R("locale");
     var localizations = installManifest.GetTargets(gInstallManifestRoot, localizationProp, true);
     while (localizations.hasMoreElements()) {
-      var localization = localizations.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+      var localization = localizations.getNext().QueryInterface(Ci.nsIRDFNode);
       var locales = installManifest.GetTargets(localization, localeProp, true);
       while (locales.hasMoreElements()) {
-        var locale = locales.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+        var locale = locales.getNext().QueryInterface(Ci.nsIRDFNode);
         if (stringData(locale) == gLocale)
           name = installManifest.GetTarget(localization, EM_R("name"), true);
       }
@@ -5167,12 +5150,12 @@ ExtensionManager.prototype = {
    */
   update: function(items, itemCount, updateCheckType, listener) {
     if (itemCount == 0)
-      throw Components.results.NS_ERROR_ILLEGAL_VALUE;
+      throw Cr.NS_ERROR_ILLEGAL_VALUE;
 
     for (i = 0; i < itemCount; ++i) {
       var currItem = items[i];
       if (!currItem)
-        throw Components.results.NS_ERROR_ILLEGAL_VALUE;
+        throw Cr.NS_ERROR_ILLEGAL_VALUE;
     }
 
     var appID = gApp.ID;
@@ -5341,7 +5324,7 @@ ExtensionManager.prototype = {
 #endif
       if (!result)
         this._cancelDownloads();
-      if (subject instanceof Components.interfaces.nsISupportsPRBool)
+      if (subject instanceof Ci.nsISupportsPRBool)
         subject.data = result;
     }
   },
@@ -5363,7 +5346,7 @@ ExtensionManager.prototype = {
                                             "dontGoOfflineButton");
       if (!result)
         this._cancelDownloads();
-      if (subject instanceof Components.interfaces.nsISupportsPRBool)
+      if (subject instanceof Ci.nsISupportsPRBool)
         subject.data = result;
     }
   },
@@ -5410,12 +5393,12 @@ ExtensionManager.prototype = {
     }
     var dontQuitButton = bundle.GetStringFromName(dontCancelButton);
 
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                       .getService(Components.interfaces.nsIWindowMediator);
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+             getService(Ci.nsIWindowMediator);
     var win = wm.getMostRecentWindow("Extension:Manager");
-    const nsIPromptService = Components.interfaces.nsIPromptService;
-    var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                       .getService(nsIPromptService);
+    const nsIPromptService = Ci.nsIPromptService;
+    var ps = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+             getService(nsIPromptService);
     var flags = (nsIPromptService.BUTTON_TITLE_IS_STRING * nsIPromptService.BUTTON_POS_0) +
                 (nsIPromptService.BUTTON_TITLE_IS_STRING * nsIPromptService.BUTTON_POS_1);
     var rv = ps.confirmEx(win, title, message, flags, quitButton, dontQuitButton, null, null, { });
@@ -5425,12 +5408,12 @@ ExtensionManager.prototype = {
   /* See nsIExtensionManager.idl */
   addDownloads: function(items, itemCount, fromChrome) {
     if (itemCount == 0)
-      throw Components.results.NS_ERROR_ILLEGAL_VALUE;
+      throw Cr.NS_ERROR_ILLEGAL_VALUE;
 
     for (i = 0; i < itemCount; ++i) {
       var currItem = items[i];
       if (!currItem)
-        throw Components.results.NS_ERROR_ILLEGAL_VALUE;
+        throw Cr.NS_ERROR_ILLEGAL_VALUE;
     }
 
     var ds = this.datasource;
@@ -5468,9 +5451,8 @@ ExtensionManager.prototype = {
 
     if (fromChrome) {
       // Initiate an install from chrome
-      var xpimgr =
-          Components.classes["@mozilla.org/xpinstall/install-manager;1"].
-          createInstance(Components.interfaces.nsIXPInstallManager);
+      var xpimgr = Cc["@mozilla.org/xpinstall/install-manager;1"].
+                   createInstance(Ci.nsIXPInstallManager);
       xpimgr.initManagerWithHashes(urls, hashes, urls.length, txn);
     }
     else
@@ -5525,7 +5507,7 @@ ExtensionManager.prototype = {
       this._updateListeners[i].onStateChange(addon, state, value);
     var ds = this.datasource;
     var id = addon.id != addon.xpiURL ? PREFIX_ITEM_URI + addon.id : addon.xpiURL;
-    const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
+    const nsIXPIProgressDialog = Ci.nsIXPIProgressDialog;
     switch (state) {
     case nsIXPIProgressDialog.DOWNLOAD_START:
       ds.updateDownloadState(id, "downloading");
@@ -5613,48 +5595,28 @@ ExtensionManager.prototype = {
    */
   get datasource() {
     this._ensureDS();
-    return this._ds.QueryInterface(Components.interfaces.nsIRDFDataSource);
+    return this._ds.QueryInterface(Ci.nsIRDFDataSource);
   },
 
-  /**
-   * See nsIClassInfo.idl
-   */
+  // nsIClassInfo
+  flags: Ci.nsIClassInfo.SINGLETON,
+  implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
+  getHelperForLanguage: function(language) null,
   getInterfaces: function(count) {
-    var interfaces = [Components.interfaces.nsIExtensionManager,
-                      Components.interfaces.nsIXPIProgressDialog,
-                      Components.interfaces.nsIObserver];
+    var interfaces = [Ci.nsIExtensionManager, Ci.nsIObserver];
     count.value = interfaces.length;
     return interfaces;
   },
-  getHelperForLanguage: function(language) {
-    return null;
-  },
-  get contractID() {
-    return "@mozilla.org/extensions/manager;1";
-  },
-  get classDescription() {
-    return "Extension Manager";
-  },
-  get classID() {
-    return Components.ID("{8A115FAA-7DCB-4e8f-979B-5F53472F51CF}");
-  },
-  get implementationLanguage() {
-    return Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT;
-  },
-  get flags() {
-    return Components.interfaces.nsIClassInfo.SINGLETON;
-  },
 
-  /* See nsISupports.idl */
-  QueryInterface: function(iid) {
-    if (!iid.equals(Components.interfaces.nsIExtensionManager) &&
-        !iid.equals(Components.interfaces.nsITimerCallback) &&
-        !iid.equals(Components.interfaces.nsIObserver) &&
-        !iid.equals(Components.interfaces.nsIClassInfo) &&
-        !iid.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
+  classDescription: "Extension Manager",
+  contractID: "@mozilla.org/extensions/manager;1",
+  classID: Components.ID("{8A115FAA-7DCB-4e8f-979B-5F53472F51CF}"),
+  _xpcom_categories: [{ category: "app-startup", service: true }],
+  _xpcom_factory: EmFactory,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIExtensionManager,
+                                         Ci.nsITimerCallback,
+                                         Ci.nsIObserver,
+                                         Ci.nsIClassInfo])
 };
 
 /**
@@ -5740,14 +5702,7 @@ ItemDownloadTransaction.prototype = {
     this._manager.onProgress(this._downloads[index].addon, value, maxValue);
   },
 
-  /////////////////////////////////////////////////////////////////////////////
-  // nsISupports
-  QueryInterface: function(iid) {
-    if (!iid.equals(Components.interfaces.nsIXPIProgressDialog) &&
-        !iid.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIXPIProgressDialog])
 };
 
 /**
@@ -5925,8 +5880,8 @@ ExtensionItemUpdater.prototype = {
       return false;
 
     if (!gBlocklist)
-      gBlocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
-                             .getService(Components.interfaces.nsIBlocklistService);
+      gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
+                   getService(Ci.nsIBlocklistService);
     if (gBlocklist.isAddonBlocklisted(aLocalItem.id, aRemoteItem.version,
                                       undefined, undefined))
       return false;
@@ -6037,14 +5992,14 @@ RDFItemUpdater.prototype = {
     // install manifest, 3) the default configuration
     try {
       var dsURI = gPref.getComplexValue(PREF_EM_ITEM_UPDATE_URL.replace(/%UUID%/, aItem.id),
-                                        Components.interfaces.nsIPrefLocalizedString).data;
+                                        Ci.nsIPrefLocalizedString).data;
     }
     catch (e) { }
     if (!dsURI)
       dsURI = aItem.updateRDF;
     if (!dsURI) {
       dsURI = gPref.getComplexValue(PREF_UPDATE_DEFAULT_URL,
-                                    Components.interfaces.nsIPrefLocalizedString).data;
+                                    Ci.nsIPrefLocalizedString).data;
     }
     dsURI = dsURI.replace(/%ITEM_ID%/g, aItem.id);
     dsURI = dsURI.replace(/%ITEM_VERSION%/g, aItem.version);
@@ -6061,14 +6016,14 @@ RDFItemUpdater.prototype = {
     var catMan = null;
     dsURI = dsURI.replace(/%(\w{3,})%/g, function(match, param) {
       if (!catMan) {
-        catMan = Components.classes["@mozilla.org/categorymanager;1"]
-                           .getService(Components.interfaces.nsICategoryManager);
+        catMan = Cc["@mozilla.org/categorymanager;1"].
+                 getService(Ci.nsICategoryManager);
       }
 
       try {
         var contractID = catMan.getCategoryEntry(CATEGORY_UPDATE_PARAMS, param);
-        var paramHandler = Components.classes[contractID]
-                                     .getService(Components.interfaces.nsIPropertyBag2);
+        var paramHandler = Cc[contractID].
+                           getService(Ci.nsIPropertyBag2);
         return paramHandler.getPropertyAsAString(param);
       }
       catch(e) {
@@ -6094,14 +6049,14 @@ RDFItemUpdater.prototype = {
     LOG("RDFItemUpdater:checkForUpdates sending a request to server for: " +
         uri.spec + ", item = " + aItem.objectSource);
 
-    var request = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                            .createInstance(Components.interfaces.nsIXMLHttpRequest)
-                            .QueryInterface(Components.interfaces.nsIJSXMLHttpRequest);
+    var request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+                  createInstance(Ci.nsIXMLHttpRequest).
+                  QueryInterface(Ci.nsIJSXMLHttpRequest);
     request.open("GET", uri.spec, true);
     request.channel.notificationCallbacks = new BadCertHandler();
     request.overrideMimeType("text/xml");
-    request.channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
-    request.QueryInterface(Components.interfaces.nsIJSXMLHttpRequest);
+    request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
+    request.QueryInterface(Ci.nsIJSXMLHttpRequest);
 
     var self = this;
     request.onerror     = function(event) { self.onXMLError(event, aItem);    };
@@ -6142,10 +6097,10 @@ RDFItemUpdater.prototype = {
       return;
     }
 
-    var rdfParser = Components.classes["@mozilla.org/rdf/xml-parser;1"]
-                              .createInstance(Components.interfaces.nsIRDFXMLParser)
-    var ds = Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"]
-                       .createInstance(Components.interfaces.nsIRDFDataSource);
+    var rdfParser = Cc["@mozilla.org/rdf/xml-parser;1"].
+                    createInstance(Ci.nsIRDFXMLParser)
+    var ds = Cc["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].
+             createInstance(Ci.nsIRDFDataSource);
     rdfParser.parseString(ds, request.channel.URI, request.responseText);
 
     this.onDatasourceLoaded(ds, aItem);
@@ -6158,7 +6113,7 @@ RDFItemUpdater.prototype = {
       var status = request.status;
     }
     catch (e) {
-      request = aEvent.target.channel.QueryInterface(Components.interfaces.nsIRequest);
+      request = aEvent.target.channel.QueryInterface(Ci.nsIRequest);
       status = request.status;
     }
     // this can fail when a network connection is not present.
@@ -6244,8 +6199,8 @@ RDFItemUpdater.prototype = {
         var serializer = new RDFSerializer();
         try {
           var updateString = serializer.serializeResource(aDatasource, extensionRes);
-          var verifier = Components.classes["@mozilla.org/security/datasignatureverifier;1"]
-                                   .getService(Components.interfaces.nsIDataSignatureVerifier);
+          var verifier = Cc["@mozilla.org/security/datasignatureverifier;1"].
+                         getService(Ci.nsIDataSignatureVerifier);
           try {
             if (!verifier.verifyData(updateString, signature, aLocalItem.updateKey)) {
               LOG("RDFItemUpdater:onDatasourceLoaded: Update manifest for " +
@@ -6340,7 +6295,7 @@ RDFItemUpdater.prototype = {
       var property = gRDF.GetResource(EM_NS(aProperty));
       rv = stringData(aDataSource.GetTarget(aSourceResource, property, true));
       if (rv === undefined)
-        throw Components.results.NS_ERROR_FAILURE;
+        throw Cr.NS_ERROR_FAILURE;
     }
     catch (e) {
       // XXXben show console message "aProperty" not found on aSourceResource.
@@ -6369,7 +6324,7 @@ RDFItemUpdater.prototype = {
     var updates = aDataSource.GetTarget(extensionRes, updatesArc, true);
 
     try {
-      updates = updates.QueryInterface(Components.interfaces.nsIRDFResource);
+      updates = updates.QueryInterface(Ci.nsIRDFResource);
     }
     catch (e) {
       LOG("RDFItemUpdater:_parseV20UpdateInfo: No updates were found for:\r\n" +
@@ -6387,8 +6342,8 @@ RDFItemUpdater.prototype = {
     // Track the newest update found
     var updatedItem = null;
 
-    var cu = Components.classes["@mozilla.org/rdf/container-utils;1"]
-                       .getService(Components.interfaces.nsIRDFContainerUtils);
+    var cu = Cc["@mozilla.org/rdf/container-utils;1"].
+             getService(Ci.nsIRDFContainerUtils);
     if (cu.IsContainer(aDataSource, updates)) {
       var ctr = getContainer(aDataSource, updates);
 
@@ -6397,7 +6352,7 @@ RDFItemUpdater.prototype = {
         // There are two different methodologies for collecting version
         // information depending on whether or not we've been invoked in
         // "version updates only" mode or "version+newest" mode.
-        var version = versions.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        var version = versions.getNext().QueryInterface(Ci.nsIRDFResource);
         var foundItem = this._parseV20Update(aDataSource, version, aLocalItem,
                                              updatedItem ? updatedItem.version : aLocalItem.version,
                                              aUpdateCheckType);
@@ -6447,7 +6402,7 @@ RDFItemUpdater.prototype = {
     // Track the best update we have found so far
     var newestUpdateItem = null;
     while (targetApps.hasMoreElements()) {
-      var targetApp = targetApps.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var targetApp = targetApps.getNext().QueryInterface(Ci.nsIRDFResource);
       var appID = this._getPropertyFromResource(aDataSource, targetApp, "id", aLocalItem);
       if (appID != this._updater._appID && appID != TOOLKIT_ID)
         continue;
@@ -6508,8 +6463,8 @@ RDFItemUpdater.prototype = {
  */
 function RDFSerializer()
 {
-  this.cUtils = Components.classes["@mozilla.org/rdf/container-utils;1"]
-                          .getService(Components.interfaces.nsIRDFContainerUtils);
+  this.cUtils = Cc["@mozilla.org/rdf/container-utils;1"].
+                getService(Ci.nsIRDFContainerUtils);
   this.resources = [];
 }
 
@@ -6544,7 +6499,7 @@ RDFSerializer.prototype = {
     var result = "";
     var items = container.GetElements();
     while (items.hasMoreElements()) {
-      var item = items.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var item = items.getNext().QueryInterface(Ci.nsIRDFResource);
       result += indent + "<RDF:li>\n"
       result += this.serializeResource(ds, item, indent + this.INDENT);
       result += indent + "</RDF:li>\n"
@@ -6567,7 +6522,7 @@ RDFSerializer.prototype = {
     var items = [];
     var arcs = ds.ArcLabelsOut(resource);
     while (arcs.hasMoreElements()) {
-      var arc = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var arc = arcs.getNext().QueryInterface(Ci.nsIRDFResource);
       if (arc.ValueUTF8.substring(0, PREFIX_NS_EM.length) != PREFIX_NS_EM)
         continue;
       var prop = arc.ValueUTF8.substring(PREFIX_NS_EM.length);
@@ -6577,16 +6532,16 @@ RDFSerializer.prototype = {
       var targets = ds.GetTargets(resource, arc, true);
       while (targets.hasMoreElements()) {
         var target = targets.getNext();
-        if (target instanceof Components.interfaces.nsIRDFResource) {
+        if (target instanceof Ci.nsIRDFResource) {
           var item = indent + "<em:" + prop + ">\n";
           item += this.serializeResource(ds, target, indent + this.INDENT);
           item += indent + "</em:" + prop + ">\n";
           items.push(item);
         }
-        else if (target instanceof Components.interfaces.nsIRDFLiteral) {
+        else if (target instanceof Ci.nsIRDFLiteral) {
           items.push(indent + "<em:" + prop + ">" + this.escapeEntities(target.Value) + "</em:" + prop + ">\n");
         }
-        else if (target instanceof Components.interfaces.nsIRDFInt) {
+        else if (target instanceof Ci.nsIRDFInt) {
           items.push(indent + "<em:" + prop + " NC:parseType=\"Integer\">" + target.Value + "</em:" + prop + ">\n");
         }
         else {
@@ -6691,7 +6646,7 @@ ExtensionsDataSource.prototype = {
     var minVersionRes = EM_R("minVersion");
     var maxVersionRes = EM_R("maxVersion");
     while (targets.hasMoreElements()) {
-      var target = targets.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var target = targets.getNext().QueryInterface(Ci.nsIRDFResource);
       var dependencyID = stringData(ds.GetTarget(target, idRes, true));
       var version = null;
       version = this.getItemProperty(dependencyID, "version");
@@ -6755,7 +6710,7 @@ ExtensionsDataSource.prototype = {
     var versionChecker = getVersionChecker();
     var rv = false;
     while (targets.hasMoreElements()) {
-      var targetApp = targets.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var targetApp = targets.getNext().QueryInterface(Ci.nsIRDFResource);
       var id          = stringData(datasource.GetTarget(targetApp, idRes, true));
       var minVersion  = stringData(datasource.GetTarget(targetApp, minVersionRes, true));
       var maxVersion  = stringData(datasource.GetTarget(targetApp, maxVersionRes, true));
@@ -6795,7 +6750,7 @@ ExtensionsDataSource.prototype = {
     var ctr = getContainer(this._inner, this._itemRoot);
     var elements = ctr.GetElements();
     while (elements.hasMoreElements()) {
-      var item = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var item = elements.getNext().QueryInterface(Ci.nsIRDFResource);
       var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
       var type = this.getItemProperty(id, "type");
       // Skip this item if we're not seeking disabled items
@@ -6839,13 +6794,13 @@ ExtensionsDataSource.prototype = {
   getBlocklistedItemList: function(appVersion, platformVersion, desiredType,
                                    includeAppDisabled) {
     if (!gBlocklist)
-      gBlocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
-                             .getService(Components.interfaces.nsIBlocklistService);
+      gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
+                   getService(Ci.nsIBlocklistService);
     var items = [];
     var ctr = getContainer(this._inner, this._itemRoot);
     var elements = ctr.GetElements();
     while (elements.hasMoreElements()) {
-      var item = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var item = elements.getNext().QueryInterface(Ci.nsIRDFResource);
       var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
       var type = this.getItemProperty(id, "type");
 
@@ -6877,7 +6832,7 @@ ExtensionsDataSource.prototype = {
     var ctr = getContainer(this, this._itemRoot);
     var elements = ctr.GetElements();
     while (elements.hasMoreElements()) {
-      var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var e = elements.getNext().QueryInterface(Ci.nsIRDFResource);
       var eID = stripPrefix(e.Value, PREFIX_ITEM_URI);
       var type = this.getItemProperty(eID, "type");
       if (type != -1 && type & desiredType)
@@ -6905,12 +6860,12 @@ ExtensionsDataSource.prototype = {
     var ctr = getContainer(this, this._itemRoot);
     var elements = ctr.GetElements();
     while (elements.hasMoreElements()) {
-      var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var e = elements.getNext().QueryInterface(Ci.nsIRDFResource);
       var dependentID = stripPrefix(e.Value, PREFIX_ITEM_URI);
       var targets = ds.GetTargets(e, EM_R("requires"), true);
       var idRes = EM_R("id");
       while (targets.hasMoreElements()) {
-        var target = targets.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        var target = targets.getNext().QueryInterface(Ci.nsIRDFResource);
         var dependencyID = stringData(ds.GetTarget(target, idRes, true));
         if (dependencyID == id) {
           if (!includeDisabled && this.getItemProperty(dependentID, "isDisabled") == "true")
@@ -7050,7 +7005,7 @@ ExtensionsDataSource.prototype = {
     var outData = null;
     while (targetApps.hasMoreElements()) {
       var targetApp = targetApps.getNext();
-      if (targetApp instanceof Components.interfaces.nsIRDFResource) {
+      if (targetApp instanceof Ci.nsIRDFResource) {
         try {
           var foundAppID = stringData(this._inner.GetTarget(targetApp, EM_R("id"), true));
           // Different target application?
@@ -7117,7 +7072,7 @@ ExtensionsDataSource.prototype = {
     else {
       while (targetApps.hasMoreElements()) {
         var targetApp = targetApps.getNext();
-        if (targetApp instanceof Components.interfaces.nsIRDFResource) {
+        if (targetApp instanceof Ci.nsIRDFResource) {
           var foundAppID = stringData(this._inner.GetTarget(targetApp, EM_R("id"), true));
           // Different target application?
           if (foundAppID != targetAppID)
@@ -7165,7 +7120,7 @@ ExtensionsDataSource.prototype = {
     var outData = null;
     while (targetApps.hasMoreElements()) {
       var targetApp = targetApps.getNext();
-      if (targetApp instanceof Components.interfaces.nsIRDFResource) {
+      if (targetApp instanceof Ci.nsIRDFResource) {
         try {
           var foundAppID = stringData(datasource.GetTarget(targetApp, EM_R("id"), true));
           // Different target application?
@@ -7218,7 +7173,7 @@ ExtensionsDataSource.prototype = {
       targetApps = datasource.GetTargets(gInstallManifestRoot, EM_R("targetApplication"), true);
     while (targetApps.hasMoreElements()) {
       var targetApp = targetApps.getNext();
-      if (targetApp instanceof Components.interfaces.nsIRDFResource) {
+      if (targetApp instanceof Ci.nsIRDFResource) {
         var foundAppID = stringData(targetDataSource.GetTarget(targetApp, EM_R("id"), true));
         // Different target application?
         if (foundAppID != targetAppID)
@@ -7376,11 +7331,11 @@ ExtensionsDataSource.prototype = {
 
       var oldValues = this._inner.GetTargets(targetRes, property, true);
       while (oldValues.hasMoreElements()) {
-        var oldValue = oldValues.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+        var oldValue = oldValues.getNext().QueryInterface(Ci.nsIRDFNode);
         this._inner.Unassert(targetRes, property, oldValue);
       }
       while (literals.hasMoreElements()) {
-        var literal = literals.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+        var literal = literals.getNext().QueryInterface(Ci.nsIRDFNode);
         this._inner.Assert(targetRes, property, literal, true);
       }
     }
@@ -7424,18 +7379,18 @@ ExtensionsDataSource.prototype = {
     // Remove old localized properties
     var oldValues = this._inner.GetTargets(targetRes, localizedProp, true);
     while (oldValues.hasMoreElements()) {
-      var oldValue = oldValues.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+      var oldValue = oldValues.getNext().QueryInterface(Ci.nsIRDFNode);
       this._cleanResource(oldValue);
       this._inner.Unassert(targetRes, localizedProp, oldValue);
     }
     // Add each localized property
     var localizations = installManifest.GetTargets(gInstallManifestRoot, localizedProp, true);
     while (localizations.hasMoreElements()) {
-      var localization = localizations.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var localization = localizations.getNext().QueryInterface(Ci.nsIRDFResource);
       var anon = gRDF.GetAnonymousResource();
       var literals = installManifest.GetTargets(localization, localeProp, true);
       while (literals.hasMoreElements()) {
-        var literal = literals.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+        var literal = literals.getNext().QueryInterface(Ci.nsIRDFNode);
         this._inner.Assert(anon, localeProp, literal, true);
       }
       this._addLocalizedMetadata(installManifest, localization, anon);
@@ -7455,12 +7410,12 @@ ExtensionsDataSource.prototype = {
 
       var oldVersionInfos = this._inner.GetTargets(targetRes, property, true);
       while (oldVersionInfos.hasMoreElements()) {
-        var oldVersionInfo = oldVersionInfos.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        var oldVersionInfo = oldVersionInfos.getNext().QueryInterface(Ci.nsIRDFResource);
         this._cleanResource(oldVersionInfo);
         this._inner.Unassert(targetRes, property, oldVersionInfo);
       }
       while (newVersionInfos.hasMoreElements()) {
-        var newVersionInfo = newVersionInfos.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        var newVersionInfo = newVersionInfos.getNext().QueryInterface(Ci.nsIRDFResource);
         var anon = gRDF.GetAnonymousResource();
         this._inner.Assert(anon, idRes, installManifest.GetTarget(newVersionInfo, idRes, true), true);
         this._inner.Assert(anon, minVersionRes, installManifest.GetTarget(newVersionInfo, minVersionRes, true), true);
@@ -7484,7 +7439,7 @@ ExtensionsDataSource.prototype = {
     for (var i = 0; i < resources.length; ++i) {
       var targetApps = this._inner.GetTargets(item, EM_R(resources[i]), true);
       while (targetApps.hasMoreElements()) {
-        var targetApp = targetApps.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        var targetApp = targetApps.getNext().QueryInterface(Ci.nsIRDFResource);
         this._cleanResource(targetApp);
       }
     }
@@ -7503,10 +7458,10 @@ ExtensionsDataSource.prototype = {
     // Remove outward arcs
     var arcs = this._inner.ArcLabelsOut(resource);
     while (arcs.hasMoreElements()) {
-      var arc = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var arc = arcs.getNext().QueryInterface(Ci.nsIRDFResource);
       var targets = this._inner.GetTargets(resource, arc, true);
       while (targets.hasMoreElements()) {
-        var value = targets.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+        var value = targets.getNext().QueryInterface(Ci.nsIRDFNode);
         if (value)
           this._inner.Unassert(resource, arc, value);
       }
@@ -7592,7 +7547,7 @@ ExtensionsDataSource.prototype = {
     // Base 0 ordinal for checking against the existing order after sorting
     var ordinal = 0;
     while (elements.hasMoreElements()) {
-      var item = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var item = elements.getNext().QueryInterface(Ci.nsIRDFResource);
       var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
       var itemType = this.getItemProperty(id, "type");
       if (itemType & type) {
@@ -7792,7 +7747,7 @@ ExtensionsDataSource.prototype = {
     var ctr = getContainer(this, this._itemRoot);
     var items = ctr.GetElements();
     while (items.hasMoreElements()) {
-      var item = items.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var item = items.getNext().QueryInterface(Ci.nsIRDFResource);
       // Resource URIs adopt the format: location-key,item-id
       var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
       this.visibleItems[id] = this.getItemProperty(id, "installLocation");
@@ -7837,8 +7792,8 @@ ExtensionsDataSource.prototype = {
       return;
     }
 
-    var cu = Components.classes["@mozilla.org/rdf/container-utils;1"]
-                       .getService(Components.interfaces.nsIRDFContainerUtils);
+    var cu = Cc["@mozilla.org/rdf/container-utils;1"].
+             getService(Ci.nsIRDFContainerUtils);
     cu.MakeSeq(this._inner, this._itemRoot);
 
     this._buildVisibleItemList();
@@ -7863,7 +7818,7 @@ ExtensionsDataSource.prototype = {
    */
   onAddonUpdateStarted: function(addon) {
     if (!addon)
-      throw Components.results.NS_ERROR_INVALID_ARG;
+      throw Cr.NS_ERROR_INVALID_ARG;
 
     LOG("Datasource: Addon Update Started: " + addon.id);
     this.updateProperty(addon.id, "availableUpdateURL");
@@ -7874,7 +7829,7 @@ ExtensionsDataSource.prototype = {
    */
   onAddonUpdateEnded: function(addon, status) {
     if (!addon)
-      throw Components.results.NS_ERROR_INVALID_ARG;
+      throw Cr.NS_ERROR_INVALID_ARG;
 
     LOG("Datasource: Addon Update Ended: " + addon.id + ", status: " + status);
     var url = null, hash = null, version = null;
@@ -8039,8 +7994,8 @@ ExtensionsDataSource.prototype = {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var version = this.getItemProperty(id, "version");
     if (!gBlocklist)
-      gBlocklist = Components.classes["@mozilla.org/extensions/blocklist;1"]
-                             .getService(Components.interfaces.nsIBlocklistService);
+      gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].
+                   getService(Ci.nsIBlocklistService);
     if (gBlocklist.isAddonBlocklisted(id, version,
                                       undefined, undefined))
       return EM_L("true");
@@ -8140,10 +8095,10 @@ ExtensionsDataSource.prototype = {
     var localeProp = EM_R("locale");
     var localizations = this._inner.GetTargets(item, localizedProp, true);
     while (localizations.hasMoreElements()) {
-      var localized = localizations.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+      var localized = localizations.getNext().QueryInterface(Ci.nsIRDFNode);
       var list = this._inner.GetTargets(localized, localeProp, true);
       while (list.hasMoreElements()) {
-        var locale = list.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
+        var locale = list.getNext().QueryInterface(Ci.nsIRDFNode);
         if (stringData(locale) == gLocale)
           return localized;
       }
@@ -8168,7 +8123,7 @@ ExtensionsDataSource.prototype = {
                     stripPrefix(property.Value, PREFIX_NS_EM);
     try {
       var value = gPref.getComplexValue(prefName,
-                                        Components.interfaces.nsIPrefLocalizedString);
+                                        Ci.nsIPrefLocalizedString);
       if (value.data)
         return EM_L(value.data);
     }
@@ -8289,14 +8244,14 @@ ExtensionsDataSource.prototype = {
     while (true) {
       try {
         var value = gPref.getComplexValue(prefName + "." + ++i,
-                                          Components.interfaces.nsIPrefLocalizedString);
+                                          Ci.nsIPrefLocalizedString);
         if (value.data)
           values.push(EM_L(value.data));
       }
       catch (e) {
         try {
           var value = gPref.getComplexValue(prefName,
-                                            Components.interfaces.nsIPrefLocalizedString);
+                                            Ci.nsIPrefLocalizedString);
           if (value.data)
             values.push(EM_L(value.data));
         }
@@ -8451,7 +8406,7 @@ ExtensionsDataSource.prototype = {
    * See nsIRDFRemoteDataSource.idl
    */
   get loaded() {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
   },
 
   Init: function(uri) {
@@ -8461,27 +8416,18 @@ ExtensionsDataSource.prototype = {
   },
 
   Flush: function() {
-    if (this._inner instanceof Components.interfaces.nsIRDFRemoteDataSource)
+    if (this._inner instanceof Ci.nsIRDFRemoteDataSource)
       this._inner.Flush();
   },
 
   FlushTo: function(uri) {
   },
 
-  /**
-   * See nsISupports.idl
-   */
-  QueryInterface: function(iid) {
-    if (!iid.equals(Components.interfaces.nsIRDFDataSource) &&
-        !iid.equals(Components.interfaces.nsIRDFRemoteDataSource) &&
-        !iid.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
-  }
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIRDFDataSource,
+                                         Ci.nsIRDFRemoteDataSource])
 };
 
-function UpdateItem () {
-}
+function UpdateItem () {}
 UpdateItem.prototype = {
   /**
    * See nsIUpdateService.idl
@@ -8541,91 +8487,38 @@ UpdateItem.prototype = {
            }.toSource();
   },
 
-  /**
-   * See nsISupports.idl
-   */
-  QueryInterface: function(iid) {
-    if (!iid.equals(Components.interfaces.nsIUpdateItem) &&
-        !iid.equals(Components.interfaces.nsISupports))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-    return this;
+  classDescription: "Update Item",
+  contractID: "@mozilla.org/updates/item;1",
+  classID: Components.ID("{F3294B1C-89F4-46F8-98A0-44E1EAE92518}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIUpdateItem])
+};
+
+var gEmSingleton = null;
+var EmFactory = {
+  createInstance: function(outer, iid) {
+    if (outer != null)
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+
+    if (!gEmSingleton)
+      gEmSingleton = new ExtensionManager();
+    return gEmSingleton.QueryInterface(iid);
   }
 };
 
-var ExtensionManagerDataSourceFactory = {
-  createInstance: function() {
-    return Components.classes[ExtensionManager.prototype.contractID]
-                     .getService(Components.interfaces.nsIExtensionManager)
-                     .datasource;
-  }
-}
-
-var gModule = {
-  registerSelf: function(componentManager, fileSpec, location, type) {
-    componentManager = componentManager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-
-    for (var key in this._objects) {
-      var obj = this._objects[key];
-      componentManager.registerFactoryLocation(obj.CID, obj.className, obj.contractID,
-                                               fileSpec, location, type);
-    }
-
-    // Make the Extension Manager a startup observer
-    var categoryManager = Components.classes["@mozilla.org/categorymanager;1"]
-                                    .getService(Components.interfaces.nsICategoryManager);
-    categoryManager.addCategoryEntry("app-startup", this._objects.manager.className,
-                                     "service," + this._objects.manager.contractID,
-                                     true, true);
-  },
-
-  getClassObject: function(componentManager, cid, iid) {
-    if (!iid.equals(Components.interfaces.nsIFactory))
-      throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-
-    for (var key in this._objects) {
-      if (cid.equals(this._objects[key].CID))
-        return this._objects[key].factory;
-    }
-
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
-
-  _makeFactory: #1= function(ctor) {
-    return {
-             createInstance: function (outer, iid) {
-               if (outer != null)
-                 throw Components.results.NS_ERROR_NO_AGGREGATION;
-               return (new ctor()).QueryInterface(iid);
-             }
-           };
-  },
-
-  _objects: {
-    manager: { CID        : ExtensionManager.prototype.classID,
-               contractID : ExtensionManager.prototype.contractID,
-               className  : ExtensionManager.prototype.classDescription,
-               factory    : #1#(ExtensionManager)
-             },
-    item:    { CID        : Components.ID("{F3294B1C-89F4-46F8-98A0-44E1EAE92518}"),
-               contractID : "@mozilla.org/updates/item;1",
-               className  : "Update Item",
-               factory    : #1#(UpdateItem)
-             },
-    datasource: { CID        : Components.ID("{69BB8313-2D4F-45EC-97E0-D39DA58ECCE9}"),
-                  contractID : "@mozilla.org/rdf/datasource;1?name=extensions",
-                  className  : "Extension Manager Data Source",
-                  factory    : ExtensionManagerDataSourceFactory
-             }
-   },
-
-  canUnload: function(componentManager) {
-    return true;
+function DatasourceModule() {}
+DatasourceModule.prototype = {
+  classDescription: "Extension Manager Data Source",
+  contractID: "@mozilla.org/rdf/datasource;1?name=extensions",
+  classID: Components.ID("{69BB8313-2D4F-45EC-97E0-D39DA58ECCE9}"),
+  _xpcom_factory: {
+    createInstance: function() Cc[ExtensionManager.prototype.contractID].
+                               getService(Ci.nsIExtensionManager).datasource
   }
 };
 
-function NSGetModule(compMgr, fileSpec) {
-  return gModule;
-}
+
+function NSGetModule(compMgr, fileSpec)
+  XPCOMUtils.generateModule([ExtensionManager, DatasourceModule, UpdateItem]);
 
 #if 0
 function stackTraceFunctionFormat(aFunctionName) {
