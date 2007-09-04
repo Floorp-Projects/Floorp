@@ -572,13 +572,6 @@ function initPluginsDS()
   for (var pluginName in gPlugins) {
     plugin = gPlugins[pluginName];
     var pluginNode = rdf.GetResource(PREFIX_ITEM_URI + plugin.filename);
-    var desc = plugin.description.replace(/<br>/g, "<br/> ");
-    try {
-      div.innerHTML = desc;
-      desc = div.textContent;
-    } catch (e) {
-      desc = plugin.description;
-    }
     rootctr.AppendElement(pluginNode);
     gPluginsDS.Assert(pluginNode,
                       rdf.GetResource(PREFIX_NS_EM + "name"),
