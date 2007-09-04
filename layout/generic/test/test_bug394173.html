@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=394173
+-->
+<head>
+  <title>Test for Bug 394173</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>.fl:first-letter { }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=394173">Mozilla Bug 394173</a>
+<div id="content">
+<iframe src="data:text/html;charset=utf-8,%3Chtml%3E%0A%3Chead%3E%0A%3Cstyle%3E%0Adiv%3A%3Afirst-letter%20%7B%20%7D%0Aspan%3A%3Aafter%20%7B%20content%3A%22before%20text%22%3B%20%7D%0A%3C/style%3E%0A%3C/head%3E%0A%3Cbody%3E%0A%3Cdiv%20style%3D%22position%3A%20fixed%3B%20direction%3A%20rtl%3B%22%3E%0A%20%20%3Cspan%20style%3D%22%20direction%3A%20ltr%3B%20unicode-bidi%3A%20bidi-override%3B%20font-size%3A%2070px%3B%20%22%3E%0A%20%20%20%20%3Cspan%20style%3D%22display%3A%20table%3B%20position%3A%20fixed%3B%22%3E%3C/span%3E%0A%20%20%3C/span%3E%0A%3C/div%3E%0A%3Cscript%3E%0Afunction%20doe%28i%29%7B%0Adocument.documentElement.setAttribute%28%27style%27%2C%20%27%27%29%3B%0A%7D%0AsetTimeout%28doe%2C100%29%3B%0A%3C/script%3E%0A%3C/body%3E%0A%3C/html%3E" style="width:200px;height: 200px;"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+ function boom()
+{
+/** Test for Bug 394173 **/
+  ok(true, "Should not crash");
+  SimpleTest.finish();
+}
+  setTimeout(boom, 500);
+  SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>
+
