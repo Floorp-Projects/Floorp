@@ -238,7 +238,7 @@ function SetClickAndHoldHandlers()
                           false);
     aElm.addEventListener("mouseout",
                           MayStopClickAndHoldTimer,
-                          false);  
+                          false);
     
     // don't propagate onclick and oncommand events after
     // click-and-hold opened the drop-down menu
@@ -3183,6 +3183,20 @@ var FullScreen =
   }
 };
 
+/**
+ * Returns true if |aMimeType| is text-based, false otherwise.
+ *
+ * @param aMimeType
+ *        The MIME type to check.
+ */
+function mimeTypeIsTextBased(aMimeType)
+{
+  return /^text\/|\+xml$/.test(aMimeType) ||
+         aMimeType == "application/x-javascript" ||
+         aMimeType == "application/xml" ||
+         aMimeType == "mozilla.application/cached-xul";
+}
+
 function nsBrowserStatusHandler()
 {
   this.init();
@@ -3281,14 +3295,6 @@ nsBrowserStatusHandler.prototype =
     }
   },
   
-  mimeTypeIsTextBased : function(contentType)
-  {
-    return /^text\/|\+xml$/.test(contentType) ||
-           contentType == "application/x-javascript" ||
-           contentType == "application/xml" ||
-           contentType == "mozilla.application/cached-xul";
-  },
-
   onLinkIconAvailable : function(aBrowser)
   {
     if (gProxyFavIcon &&
@@ -3408,7 +3414,7 @@ nsBrowserStatusHandler.prototype =
           this.setDefaultStatus(msg);
 
           // Disable menu entries for images, enable otherwise
-          if (content.document && this.mimeTypeIsTextBased(content.document.contentType))
+          if (content.document && mimeTypeIsTextBased(content.document.contentType))
             this.isImage.removeAttribute('disabled');
           else
             this.isImage.setAttribute('disabled', 'true');
@@ -3471,13 +3477,23 @@ nsBrowserStatusHandler.prototype =
       if (newIndexOfHash != -1)
         newSpec = newSpec.substr(0, newSpec.indexOf("#"));
       if (newSpec != oldSpec) {
-        gBrowser.getNotificationBox(selectedBrowser).removeAllNotifications(true);
+        // Remove all the notifications, except for those which want to
+        // persist across the first location change.
+        var nBox = gBrowser.getNotificationBox(selectedBrowser);
+        for (var n = nBox.allNotifications.length - 1; n >= 0; n--) {
+          var notify = nBox.allNotifications[n];
+          if (notify.ignoreFirstLocationChange)
+            notify.ignoreFirstLocationChange = false;
+          else if (!notify.ignoreLocationChangeTimeout ||
+            (Date.now() / 1000) > notify.ignoreLocationChangeTimeout)
+            nBox.removeNotification(notify);
+        }
       }
     }
     selectedBrowser.lastURI = aLocationURI;
 
     // Disable menu entries for images, enable otherwise
-    if (content.document && this.mimeTypeIsTextBased(content.document.contentType))
+    if (content.document && mimeTypeIsTextBased(content.document.contentType))
       this.isImage.removeAttribute('disabled');
     else
       this.isImage.setAttribute('disabled', 'true');
@@ -5370,6 +5386,9 @@ HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
   for (var i = 0; i < undoItems.length; i++) {
     var m = undoPopup.appendChild(document.createElement("menuitem"));
     m.setAttribute("label", undoItems[i].title);
+    if (undoItems[i].image)
+      m.setAttribute("image", undoItems[i].image);
+    m.setAttribute("class", "menuitem-iconic bookmark-item");
     m.setAttribute("value", i);
     m.setAttribute("oncommand", "undoCloseTab(" + i + ");");
     m.addEventListener("click", undoCloseMiddleClick, false);

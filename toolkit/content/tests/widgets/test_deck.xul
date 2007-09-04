@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  XUL Widget Test for deck
+  -->
+<window title="Deck Test"
+        onload="setTimeout(test_deck, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" 
+          src="/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript"
+          src="/tests/SimpleTest/EventUtils.js"></script>      
+
+<deck id="deck1" style="padding-top: 5px; padding-bottom: 12px;">
+  <button id="d1b1" label="Button One"/>
+  <button id="d1b2" label="Button Two is larger" height="80" style="margin: 1px;"/>
+</deck>
+<deck id="deck2" selectedIndex="1">
+  <button id="d2b1" label="Button One"/>
+  <button id="d2b2" label="Button Two"/>
+</deck>
+
+  <!-- test resuls are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml" style="height: 300px; overflow: auto;"/>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function test_deck()
+{
+  var deck = $("deck1");
+  ok(deck.selectedIndex === '0', "deck one selectedIndex");
+  // this size is the button height, 80, plus the button padding of 1px on each side,
+  // plus the deck's 5px top padding and the 12px bottom padding.
+  var rect = deck.getBoundingClientRect();
+  is(Math.round(rect.bottom) - Math.round(rect.top), 99, "deck size of largest child");
+  synthesizeMouseExpectEvent(deck, 12, 12, { }, $("d1b1"), "click", "mouse on deck one");
+
+  // change the selected page of the deck and ensure that the mouse click goes
+  // to the button on that page
+  deck.selectedIndex = 1;
+  ok(deck.selectedIndex === '1', "deck one selectedIndex after change");
+  synthesizeMouseExpectEvent(deck, 9, 9, { }, $("d1b2"), "click", "mouse on deck one after change");
+
+  deck = $("deck2");
+  ok(deck.selectedIndex === '1', "deck two selectedIndex");
+  synthesizeMouseExpectEvent(deck, 9, 9, { }, $("d2b2"), "click", "mouse on deck two");
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+
+</window>

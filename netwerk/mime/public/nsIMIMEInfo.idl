@@ -43,6 +43,7 @@ interface nsIFile;
 interface nsIUTF8StringEnumerator;
 interface nsIHandlerApp;
 interface nsIMutableArray;
+interface nsIInterfaceRequestor;
 
 typedef long nsHandlerInfoAction;
 
@@ -50,7 +51,7 @@ typedef long nsHandlerInfoAction;
  * nsIHandlerInfo gives access to the information about how a given protocol
  * scheme or MIME-type is handled.
  */
-[scriptable, uuid(4c7f5603-cfa9-4576-a769-c3343cb0135b)]
+[scriptable, uuid(325e56a7-3762-4312-aec7-f1fcf84b4145)]
 interface nsIHandlerInfo : nsISupports {
     /**
      * The type of this handler info.  For MIME handlers, this is the MIME type.
@@ -106,12 +107,22 @@ interface nsIHandlerInfo : nsISupports {
      * and our code will not make any decision based on the content-type or
      * extension, though the invoked file: handler is free to do so. 
      *
-     * @param aURI The URI to launch this application with
+     * @param aURI
+     *        The URI to launch this application with
      *
-     * @throw NS_ERROR_INVALID_ARG if action is not valid for this function.
-     * Other exceptions may be thrown.
+     * @param aWindowContext 
+     *        The window to parent the dialog against, and, if a web handler
+     *        is chosen, it is loaded in this window as well.  This parameter
+     *        may be ultimately passed nsIURILoader.openURI in the case of a
+     *        web handler, and aWindowContext is null or not present, web
+     *        handlers will fail.  We need to do better than that; bug 394483
+     *        filed in order to track.
+     *       
+     * @throw NS_ERROR_INVALID_ARG if preferredAction is not valid for this
+     * call. Other exceptions may be thrown.
      */
-    void launchWithURI(in nsIURI aURI);
+    void launchWithURI(in nsIURI aURI, 
+                       [optional] in nsIInterfaceRequestor aWindowContext);
 
     /**
      * preferredAction is how the user specified they would like to handle

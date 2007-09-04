@@ -470,9 +470,9 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
   }
 
   // expand queries
-  if (options->ExpandQueries()) {
+  if (!options->ExpandQueries()) {
     AppendAmpersandIfNonempty(queryString);
-    queryString += NS_LITERAL_CSTRING(QUERYKEY_EXPAND_QUERIES "=1");
+    queryString += NS_LITERAL_CSTRING(QUERYKEY_EXPAND_QUERIES "=0");
   }
 
   // include hidden

@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// This file tests the functions of mozIStorageStatement
+// This file tests the functions of mozIStorageStatementWrapper
 
 function setup()
 {

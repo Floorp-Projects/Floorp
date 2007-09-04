@@ -21,12 +21,14 @@
   <binding id="basetext" extends="chrome://global/content/bindings/general.xml#basecontrol">
     <implementation>
       <!-- public implementation -->
-      <property name="label"      onset="return this.setAttribute('label',val);"
+      <property name="label"      onset="this.setAttribute('label',val); return val;"
                                   onget="return this.getAttribute('label');"/>
-      <property name="crop"       onset="return this.setAttribute('crop',val);"
+      <property name="crop"       onset="this.setAttribute('crop',val); return val;"
                                   onget="return this.getAttribute('crop');"/>
-      <property name="image"      onset="return this.setAttribute('image',val);"
+      <property name="image"      onset="this.setAttribute('image',val); return val;"
                                   onget="return this.getAttribute('image');"/>
+      <property name="command"    onset="this.setAttribute('command',val); return val;"
+                                  onget="return this.getAttribute('command');"/>
       <property name="accessKey">
         <getter>
           <![CDATA[
@@ -53,7 +55,7 @@
 
   <binding id="control-item" extends="chrome://global/content/bindings/general.xml#basetext">
     <implementation>
-      <property name="value"      onset="return this.setAttribute('value', val);"
+      <property name="value"      onset="this.setAttribute('value', val); return val;"
                                   onget="return this.getAttribute('value');"/>
     </implementation>
   </binding>
@@ -239,16 +241,16 @@
       <property name="label"
                 onget="return this.getAttribute('label');"
                 onset="this.setAttribute('label',val); return val;"/>
-      <property name="src"
-                onget="return this.getAttribute('src');"
-                onset="this.setAttribute('src',val); return val;"/>
+      <property name="image"
+                onget="return this.getAttribute('image');"
+                onset="this.setAttribute('image',val); return val;"/>
     </implementation>
   </binding>
 
   <binding id="statusbarpanel-menu-iconic" display="xul:menu"
            extends="chrome://global/content/bindings/general.xml#statusbarpanel">
     <content>
-      <xul:image class="statusbarpanel-icon" xbl:inherits="src"/>
+      <xul:image class="statusbarpanel-icon" xbl:inherits="image,image=src"/>
       <children/>
     </content>
   </binding>
@@ -275,7 +277,7 @@
   <binding id="statusbarpanel-iconic" display="xul:button"
            extends="chrome://global/content/bindings/general.xml#statusbarpanel">
     <content>
-      <xul:image class="statusbarpanel-icon" xbl:inherits="src"/>
+      <xul:image class="statusbarpanel-icon" xbl:inherits="image,image=src"/>
     </content>
 
     <implementation implements="nsIAccessibleProvider">
@@ -292,7 +294,7 @@
   <binding id="statusbarpanel-iconic-text" display="xul:button"
            extends="chrome://global/content/bindings/general.xml#statusbarpanel">
     <content>
-      <xul:image class="statusbarpanel-icon" xbl:inherits="src"/>
+      <xul:image class="statusbarpanel-icon" xbl:inherits="image,image=src"/>
       <xul:label class="statusbarpanel-text" xbl:inherits="value=label,crop"/>
     </content>
   </binding>
@@ -315,7 +317,7 @@
   <binding id="deck">
     <implementation>
       <property name="selectedIndex"
-                onget="return this.getAttribute('selectedIndex');">
+                onget="return this.getAttribute('selectedIndex') || '0'">
         <setter>
         <![CDATA[
           if (this.selectedIndex == val)

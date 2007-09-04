@@ -224,7 +224,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
       aState->active  = (eventState & NS_EVENT_STATE_ACTIVE) == NS_EVENT_STATE_ACTIVE;
       aState->focused = (eventState & NS_EVENT_STATE_FOCUS) == NS_EVENT_STATE_FOCUS;
       aState->inHover = (eventState & NS_EVENT_STATE_HOVER) == NS_EVENT_STATE_HOVER;
-      aState->isDefault = FALSE; // XXX fix me
+      aState->isDefault = IsDefaultButton(aFrame);
       aState->canDefault = FALSE; // XXX fix me
 
       if (aFrame && aFrame->GetContent()->IsNodeOfType(nsINode::eXUL)) {
@@ -891,6 +891,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
         aAttribute == nsWidgetAtoms::selected ||
         aAttribute == nsWidgetAtoms::focused ||
         aAttribute == nsWidgetAtoms::readonly ||
+        aAttribute == nsWidgetAtoms::_default ||
         aAttribute == nsWidgetAtoms::mozmenuactive)
       *aShouldRepaint = PR_TRUE;
   }

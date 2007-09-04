@@ -92,4 +92,10 @@ protected:
   friend class nsDocumentOpenInfo;
 };
 
+/**
+ * The load has been cancelled because it was found on a malware blacklist.
+ * XXX: this belongs in an nsDocShellErrors.h file of some sort.
+ */
+#define NS_ERROR_MALWARE_URI   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_URILOADER, 30)
+
 #endif /* nsURILoader_h__ */

@@ -58,6 +58,7 @@
 #include "nsUrlClassifierDBService.h"
 #include "nsUrlClassifierStreamUpdater.h"
 #include "nsUrlClassifierUtils.h"
+#include "nsDocShellCID.h"
 #endif
 
 #ifdef MOZ_FEEDS
@@ -136,6 +137,10 @@ static const nsModuleComponentInfo components[] =
   { "Url Classifier DB Service",
     NS_URLCLASSIFIERDBSERVICE_CID,
     NS_URLCLASSIFIERDBSERVICE_CONTRACTID,
+    nsUrlClassifierDBServiceConstructor },
+  { "Url Classifier DB Service",
+    NS_URLCLASSIFIERDBSERVICE_CID,
+    NS_URICLASSIFIERSERVICE_CONTRACTID,
     nsUrlClassifierDBServiceConstructor },
   { "Url Classifier Stream Updater",
     NS_URLCLASSIFIERSTREAMUPDATER_CID,

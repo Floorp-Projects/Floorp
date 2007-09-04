@@ -47,11 +47,13 @@
 #include "imgIDecoderObserver.h"
 
 #include "nsICacheEntryDescriptor.h"
+#include "nsIContentSniffer.h"
 #include "nsIRequest.h"
 #include "nsIProperties.h"
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
 
+#include "nsCategoryCache.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -173,6 +175,8 @@ private:
 
   imgCacheValidator *mValidator;
   PRBool   mIsMultiPartChannel;
+
+  nsCategoryCache<nsIContentSniffer> mImageSniffers;
 };
 
 #endif

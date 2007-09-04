@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (original author)
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,6 +56,8 @@
  *   This is the nsIHandlerInfo that gives us all our precious information.
  * window.arguments[7]:
  *   This is the nsIURI that we are being brought up for in the first place.
+ * window.arguments[8]:
+ *   The nsIInterfaceRequestor of the parent window; may be null
  */
 
 const Cc = Components.classes;
@@ -69,7 +72,8 @@ var dialog = {
   _URI: null,
   _itemChoose: null,
   _okButton: null,
-
+  _windowCtxt: null,
+  
   //////////////////////////////////////////////////////////////////////////////
   //// Methods
 
@@ -80,6 +84,9 @@ var dialog = {
   {
     this._handlerInfo = window.arguments[6].QueryInterface(Ci.nsIHandlerInfo);
     this._URI         = window.arguments[7].QueryInterface(Ci.nsIURI);
+    this._windowCtxt  = window.arguments[8];
+    if (this._windowCtxt)
+      this._windowCtxt.QueryInterface(Ci.nsIInterfaceRequestor);
     this._itemChoose  = document.getElementById("item-choose");
     this._okButton    = document.documentElement.getButton("accept");
 
@@ -202,7 +209,7 @@ var dialog = {
              getService(Ci.nsIHandlerService);
     hs.store(this._handlerInfo);
 
-    this._handlerInfo.launchWithURI(this._URI);
+    this._handlerInfo.launchWithURI(this._URI, this._windowCtxt);
 
     return true;
   },

@@ -391,7 +391,6 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                              "    headCells[i].appendChild(anchor);\n"
                              "    headCells[i].addEventListener(\"click\", rowAction(i), true);\n"
                              "  }\n"
-                             "  gOrderBy = gTable.getAttribute(\"order-by\");\n"
                              "  gRows = [];\n"
                              "  for (var row, i = gTBody.rows.length - 1; i >= 0; i--) {\n"
                              "    row = gTBody.rows[i];\n"
@@ -399,8 +398,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                              "    if (gUI_showHidden && !hiddenObjects)\n"
                              "      hiddenObjects = (row.className == \"hidden-object\");\n"
                              "  }\n"
-                             "  gRows.sort(compareRows);\n"
-                             "  orderBy(gOrderBy);\n"
+                             "  gTable.setAttribute(\"order\", \"\");\n"
                              "  if (hiddenObjects) {\n"
                              "    gUI_showHidden.style.display = \"block\";\n"
                              "    updateHidden();\n"
@@ -434,6 +432,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                              "    gTable.setAttribute(\"order-by\", column);\n"
                              "    gRows.sort(compareRows);\n"
                              "  }\n"
+                             "  gTable.removeChild(gTBody);\n"
                              "  gTable.setAttribute(\"order\", order);\n"
                              "  if (order == \"asc\")\n"
                              "    for (var i = 0; i < gRows.length; i++)\n"
@@ -441,6 +440,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                              "  else\n"
                              "    for (var i = gRows.length - 1; i >= 0; i--)\n"
                              "      gTBody.appendChild(gRows[i]);\n"
+                             "  gTable.appendChild(gTBody);\n"
                              "}\n"
                              "function updateHidden() {\n"
                              "  gTable.className = gUI_showHidden.getElementsByTagName(\"input\")[0].checked ?\n"
@@ -610,9 +610,9 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         buffer.AppendLiteral("</label></p>\n");
     }
 
-    if (!isSchemeGopher) {
-        buffer.AppendLiteral("<table order-by=\"0\">\n");
+    buffer.AppendLiteral("<table>\n");
 
+    if (!isSchemeGopher) {
         nsXPIDLString columnText;
 
         buffer.AppendLiteral(" <thead>\n"
@@ -640,8 +640,6 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
         buffer.AppendLiteral("</th>\n"
                              "  </tr>\n"
                              " </thead>\n");
-    } else {
-        buffer.AppendLiteral("<table>\n");
     }
     buffer.AppendLiteral(" <tbody>\n");
 
@@ -893,7 +891,13 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 
     if (type == nsIDirIndex::TYPE_FILE || type == nsIDirIndex::TYPE_UNKNOWN) {
         pushBuffer.AppendLiteral("<img src=\"moz-icon://");
-        AppendUTF8toUTF16(escapeBuf, pushBuffer);
+        PRInt32 lastDot = escapeBuf.RFindChar('.');
+        if (lastDot != kNotFound) {
+            escapeBuf.Cut(0, lastDot);
+            AppendUTF8toUTF16(escapeBuf, pushBuffer);
+        } else {
+            pushBuffer.AppendLiteral("unknown");
+        }
         pushBuffer.AppendLiteral("?size=16\" alt=\"");
 
         nsXPIDLString altText;

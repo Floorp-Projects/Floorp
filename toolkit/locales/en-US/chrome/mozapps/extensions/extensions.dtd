@@ -99,6 +99,7 @@
 <!ENTITY includeUpdate.tooltip            "Include this Add-on when installing the updates">
 
 <!-- Status Messsages -->
+<!ENTITY insecureUpdate.label             "Does not provide secure updates.">
 <!ENTITY needsDependencies.label          "Requires additional items.">
 <!ENTITY blocklisted.label                "Disabled for your protection.">
 <!ENTITY toBeDisabled.label               "This add-on will be disabled when &brandShortName; is restarted.">
@@ -108,9 +109,8 @@
 <!ENTITY toBeUpdated.label                "This add-on will be updated when &brandShortName; is restarted.">
 
 <!ENTITY getExtensions.label              "Get Extensions">
-<!ENTITY getExtensions.tooltip            "Get Extensions from addons.mozilla.org">
 <!ENTITY getThemes.label                  "Get Themes">
-<!ENTITY getThemes.tooltip                "Get Themes from addons.mozilla.org">
+<!ENTITY getPlugins.label                 "Get Plugins">
 <!ENTITY previewNoThemeSelected.label     "No Theme Selected">
 <!ENTITY previewNoPreviewImage.label      "This Theme does not have a Preview Image">
 <!ENTITY moreInfo.label                   "More Information">

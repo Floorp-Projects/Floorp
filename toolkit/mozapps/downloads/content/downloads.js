@@ -126,6 +126,9 @@ function downloadCompleted(aDownload)
   try {
     let dl = getDownload(aDownload.id);
 
+    // Update attributes now that we've finished
+    dl.setAttribute("startTime", Math.round(aDownload.startTime / 1000));
+
     // If we are displaying search results, we do not want to add it to the list
     // of completed downloads
     if (!gSearching)
@@ -225,9 +228,9 @@ function resumeDownload(aDownload)
 function removeDownload(aDownload)
 {
   gDownloadManager.removeDownload(aDownload.getAttribute("dlid"));
-  var newIndex = Math.max(gDownloadsView.selectedIndex - 1, 0);
+  let index = gDownloadsView.selectedIndex;
   gDownloadsView.removeChild(aDownload);
-  gDownloadsView.selectedIndex = newIndex;
+  gDownloadsView.selectedIndex = Math.min(index, gDownloadsView.itemCount - 1);
 }
 
 function showDownload(aDownload)

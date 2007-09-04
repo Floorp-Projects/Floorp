@@ -50,6 +50,12 @@
     "@mozilla.org/webnavigation-info;1"
 
 /**
+ * Contract ID for a service implementing nsIURIClassifier that identifies
+ * phishing and malware sites.
+ */
+#define NS_URICLASSIFIERSERVICE_CONTRACTID "@mozilla.org/uriclassifierservice"
+
+/**
  * An observer service topic that can be listened to to catch creation
  * of content browsing areas (both toplevel ones and subframes).  The
  * subject of the notification will be the nsIWebNavigation being

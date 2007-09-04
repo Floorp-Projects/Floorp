@@ -64,7 +64,8 @@ class nsMIMEInfoOS2 : public nsMIMEInfoImpl
       nsMIMEInfoImpl(aType, aClass) {}
     virtual ~nsMIMEInfoOS2();
 
-    NS_IMETHOD LaunchWithURI(nsIURI* aURI);
+    NS_IMETHOD LaunchWithURI(nsIURI* aURI,
+                             nsIInterfaceRequestor* aWindowContext);
   protected:
     virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI);
 #ifdef DEBUG

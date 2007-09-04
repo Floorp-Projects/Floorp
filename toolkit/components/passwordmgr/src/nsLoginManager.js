@@ -65,15 +65,6 @@ LoginManager.prototype = {
     },
 
 
-    __promptService : null, // Prompt service for user interaction
-    get _promptService() {
-        if (!this.__promptService)
-            this.__promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"]
-                                        .getService(Ci.nsIPromptService2);
-        return this.__promptService;
-    },
-
-
     __ioService: null, // IO service for string -> nsIURI conversion
     get _ioService() {
         if (!this.__ioService)
@@ -90,36 +81,6 @@ LoginManager.prototype = {
                                 "@mozilla.org/satchel/form-fill-controller;1"]
                                     .getService(Ci.nsIFormFillController);
         return this.__formFillService;
-    },
-
-
-    __strBundle : null, // String bundle for L10N
-    get _strBundle() {
-        if (!this.__strBundle) {
-            var bunService = Cc["@mozilla.org/intl/stringbundle;1"]
-                                    .getService(Ci.nsIStringBundleService);
-            this.__strBundle = bunService.createBundle(
-                        "chrome://passwordmgr/locale/passwordmgr.properties");
-            if (!this.__strBundle)
-                throw "String bundle for Login Manager not present!";
-        }
-
-        return this.__strBundle;
-    },
-
-
-    __brandBundle : null, // String bundle for L10N
-    get _brandBundle() {
-        if (!this.__brandBundle) {
-            var bunService = Cc["@mozilla.org/intl/stringbundle;1"]
-                                    .getService(Ci.nsIStringBundleService);
-            this.__brandBundle = bunService.createBundle(
-                        "chrome://branding/locale/brand.properties");
-            if (!this.__brandBundle)
-                throw "Branding string bundle not present!";
-        }
-
-        return this.__brandBundle;
     },
 
 
@@ -239,7 +200,7 @@ LoginManager.prototype = {
                 this._pwmgr.log("Caught error in onFormSubmit: " + e);
             }
 
-            return true; // Always return true, or form submt will be canceled.
+            return true; // Always return true, or form submit will be canceled.
         },
 
         // nsObserver
@@ -301,7 +262,7 @@ LoginManager.prototype = {
             var domDoc = domWin.document;
 
             // Only process things which might have HTML forms.
-            if (! domDoc instanceof Ci.nsIDOMHTMLDocument)
+            if (!(domDoc instanceof Ci.nsIDOMHTMLDocument))
                 return;
 
             this._pwmgr.log("onStateChange accepted: req = " + (aRequest ?
@@ -657,7 +618,7 @@ LoginManager.prototype = {
         }
 
 
-        // Locate the username field in the form by serarching backwards
+        // Locate the username field in the form by searching backwards
         // from the first passwordfield, assume the first text field is the
         // username. We might not find a username field if the user is
         // already logged in to the site. 
@@ -763,11 +724,17 @@ LoginManager.prototype = {
             return (found ? existingLogin : null);
         }
 
+        function getPrompter(aWindow) {
+            var prompterSvc = Cc["@mozilla.org/login-manager/prompter;1"].
+                            createInstance(Ci.nsILoginManagerPrompter);
+            prompterSvc.init(aWindow);
+            return prompterSvc;
+        }
 
 
 
         var doc = form.ownerDocument;
-        var win = doc.window;
+        var win = doc.defaultView;
 
         // If password saving is disabled (globally or for host), bail out now.
         if (!this._remember)
@@ -830,15 +797,17 @@ LoginManager.prototype = {
             if (logins.length == 0) {
                 this.log("(no logins for this host -- pwchange ignored)");
                 return;
-            } else if (logins.length == 1) {
-                username = logins[0].username;
-                ok = this._promptToChangePassword(win, username)
-            } else {
-                var usernames = [];
-                logins.forEach(function(l) { usernames.push(l.username); });
+            }
 
-                [ok, username] = this._promptToChangePasswordWithUsernames(
-                                                                win, usernames);
+            var prompter = getPrompter(win);
+
+            if (logins.length == 1) {
+                username = logins[0].username;
+                ok = prompter.promptToChangePassword(username);
+            } else {
+                var usernames = logins.map(function (l) l.username);
+                [ok, username] = prompter.promptToChangePasswordWithUsernames(
+                                                                usernames);
             }
 
             if (!ok)
@@ -884,19 +853,9 @@ LoginManager.prototype = {
         }
 
 
-        // Prompt user to save a new login.
-        var userChoice = this._promptToSaveLogin(win);
-
-        if (userChoice == 2) {
-            this.log("Disabling " + hostname + " logins by user request.");
-            this.setLoginSavingEnabled(hostname, false);
-        } else if (userChoice == 0) {
-            this.log("Saving login for " + hostname);
-            this.addLogin(formLogin);
-        } else {
-            // userChoice == 1 --> just ignore the login.
-            this.log("Ignoring login.");
-        }
+        // Prompt user to save login (via dialog or notification bar)
+        prompter = getPrompter(win);
+        prompter.promptToSavePassword(formLogin);
     },
 
 
@@ -1093,143 +1052,7 @@ LoginManager.prototype = {
 
         this.log("Found a matching login, filling in password.");
         passwordField.value = match.password;
-    },
-
-
-
-
-
-
-    /* ---------- User Prompts ---------- */
-
-
-
-
-    /*
-     * _promptToSaveLogin
-     *
-     * Called when we detect a new login in a form submission,
-     * asks the user what to do.
-     *
-     * Return values:
-     *   0 - Save the login
-     *   1 - Ignore the login this time
-     *   2 - Never save logins for this site
-     */
-    _promptToSaveLogin : function (aWindow) {
-        const buttonFlags = Ci.nsIPrompt.BUTTON_POS_1_DEFAULT +
-            (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
-            (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1) +
-            (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_2);
-
-        var brandShortName =
-                this._brandBundle.GetStringFromName("brandShortName");
-
-        var dialogText         = this._getLocalizedString(
-                                        "savePasswordText", [brandShortName]);
-        var dialogTitle        = this._getLocalizedString(
-                                        "savePasswordTitle");
-        var neverButtonText    = this._getLocalizedString(
-                                        "neverForSiteButtonText");
-        var rememberButtonText = this._getLocalizedString(
-                                        "rememberButtonText");
-        var notNowButtonText   = this._getLocalizedString(
-                                        "notNowButtonText");
-
-        this.log("Prompting user to save/ignore login");
-        var result = this._promptService.confirmEx(aWindow,
-                                            dialogTitle, dialogText,
-                                            buttonFlags, rememberButtonText,
-                                            notNowButtonText, neverButtonText,
-                                            null, {});
-        return result;
-    },
-
-
-    /*
-     * _promptToChangePassword
-     *
-     * Called when we think we detect a password change for an existing
-     * login, when the form being submitted contains multiple password
-     * fields.
-     *
-     * Return values:
-     *   true  - Update the stored password
-     *   false - Do not update the stored password
-     */
-    _promptToChangePassword : function (aWindow, username) {
-        const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
-
-        var dialogText  = this._getLocalizedString(
-                                    "passwordChangeText", [username]);
-        var dialogTitle = this._getLocalizedString(
-                                    "passwordChangeTitle");
-
-        // returns 0 for yes, 1 for no.
-        var result = this._promptService.confirmEx(aWindow,
-                                dialogTitle, dialogText, buttonFlags,
-                                null, null, null,
-                                null, {});
-        return !result;
-    },
-
-
-    /*
-     * _promptToChangePasswordWithUsernames
-     *
-     * Called when we detect a password change in a form submission, but we
-     * don't know which existing login (username) it's for. Asks the user
-     * to select a username and confirm the password change.
-     *
-     * Returns multiple paramaters:
-     * [0] - User's respone to the dialog
-     *   true  = Update the stored password
-     *   false = Do not update the stored password
-     * [1] - The username selected
-     *   (null if [0] is false)
-     *  
-     */
-    _promptToChangePasswordWithUsernames : function (aWindow, usernames) {
-        const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
-
-        var dialogText  = this._getLocalizedString("userSelectText");
-        var dialogTitle = this._getLocalizedString("passwordChangeTitle");
-        var selectedUser = null, selectedIndex = { value: null };
-
-        // If user selects ok, outparam.value is set to the index
-        // of the selected username.
-        var ok = this._promptService.select(aWindow,
-                                dialogTitle, dialogText,
-                                usernames.length, usernames,
-                                selectedIndex);
-        if (ok)
-            selectedUser = usernames[selectedIndex.value];
-
-        return [ok, selectedUser];
-    },
-
-
-    /*
-     * _getLocalisedString
-     *
-     * Can be called as:
-     *   _getLocalisedString("key1");
-     *   _getLocalizedString("key2", ["arg1"]);
-     *   _getLocalizedString("key3", ["arg1", "arg2"]);
-     *   (etc)
-     *
-     * Returns the localized string for the specified key,
-     * formatted if required.
-     *
-     */ 
-    _getLocalizedString : function (key, formatArgs) {
-        if (formatArgs)
-            return this._strBundle.formatStringFromName(
-                                        key, formatArgs, formatArgs.length);
-        else
-            return this._strBundle.GetStringFromName(key);
     }
-
 }; // end of LoginManager implementation
 
 

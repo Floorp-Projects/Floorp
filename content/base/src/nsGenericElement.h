@@ -1055,9 +1055,11 @@ _elementName::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const        \
 class nsNSElementTearoff : public nsIDOMNSElement
 {
 public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   NS_DECL_NSIDOMNSELEMENT
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsNSElementTearoff)
 
   nsNSElementTearoff(nsGenericElement *aContent) : mContent(aContent)
   {

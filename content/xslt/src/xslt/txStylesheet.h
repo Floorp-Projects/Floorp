@@ -236,6 +236,14 @@ protected:
 class txIGlobalParameter
 {
 public:
+    txIGlobalParameter()
+    {
+        MOZ_COUNT_CTOR(txIGlobalParameter);
+    }
+    virtual ~txIGlobalParameter()
+    {
+        MOZ_COUNT_DTOR(txIGlobalParameter);
+    }
     virtual nsresult getValue(txAExprResult** aValue) = 0;
 };
 

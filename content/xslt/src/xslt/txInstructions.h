@@ -53,18 +53,19 @@ class txExecutionState;
 class txInstruction : public TxObject
 {
 public:
-    txInstruction() : mNext(0)
+    txInstruction()
     {
+        MOZ_COUNT_CTOR(txInstruction);
     }
 
     virtual ~txInstruction()
     {
-        delete mNext;
+        MOZ_COUNT_DTOR(txInstruction);
     }
 
     virtual nsresult execute(txExecutionState& aEs) = 0;
 
-    txInstruction* mNext;
+    nsAutoPtr<txInstruction> mNext;
 };
 
 #define TX_DECL_TXINSTRUCTION  \

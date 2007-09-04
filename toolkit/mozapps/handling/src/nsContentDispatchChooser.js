@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com> (Original Author)
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -99,7 +100,8 @@ nsContentDispatchChooser.prototype =
     }
     params.appendElement(aHandler, false);
     params.appendElement(aURI, false);
-
+    params.appendElement(aWindowContext, false);
+    
     var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
              getService(Ci.nsIWindowWatcher);
     ww.openWindow(window,

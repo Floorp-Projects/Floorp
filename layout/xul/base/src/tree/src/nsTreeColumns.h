@@ -64,6 +64,8 @@ public:
 protected:
   nsIFrame* GetFrame();
   nsIFrame* GetFrame(nsTreeBodyFrame* aBodyFrame);
+  // Don't call this if GetWidthInTwips or GetRect fails
+  PRBool IsLastVisible(nsTreeBodyFrame* aBodyFrame);
 
   /**
    * Returns a rect with x and width taken from the frame's rect and specified

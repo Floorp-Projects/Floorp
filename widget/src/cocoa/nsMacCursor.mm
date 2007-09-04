@@ -95,6 +95,7 @@
     @param      aFrameIndex the index indicating which frame from the animation to display
 */
 - (void) setFrame: (int) aFrameIndex;
+
 @end
 
 /*! @class      nsThemeCursor
@@ -115,6 +116,7 @@
     @result     an instance of <code>nsThemeCursor</code> representing the given <code>ThemeCursor</code>
 */
 - (id) initWithThemeCursor: (ThemeCursor) aCursor;
+
 @end
 
 /*! @class      nsCocoaCursor
@@ -151,13 +153,14 @@
     @abstract   Create a cursor by specifying the name of an image resource to use for the cursor and a hotspot.
     @discussion Creates a cursor by loading the named image using the <code>+[NSImage imageNamed:]</code> method.
                 <p>The image must be compatible with any restrictions laid down by <code>NSCursor</code>. These vary
-                by operating system version. eg, Jaguar has a smaller maximum size than Panther.</p>
+                by operating system version.</p>
                 <p>The hotspot precisely determines the point where the user clicks when using the cursor.</p>
     @param      aCursor the name of the image to use for the cursor
     @param      aPoint the point within the cursor to use as the hotspot
     @result     an instance of <code>nsCocoaCursor</code> that uses the given image and hotspot
 */
 - (id) initWithImageNamed: (NSString *) aCursorImage hotSpot: (NSPoint) aPoint;
+
 @end
 
 /*! @class      nsResourceCursor
@@ -185,6 +188,7 @@
     @result     an instance of <code>nsResourceCursor</code> that will animate the given cursor resources
 */
 - (id) initWithFirstFrame: (int) aFirstFrame lastFrame: (int) aLastFrame;
+
 @end
 
 @implementation nsMacCursor
@@ -288,6 +292,7 @@
 @end
 
 @implementation nsThemeCursor
+
 - (id) initWithThemeCursor: (ThemeCursor) aCursor
 {
   self = [super init];
@@ -328,6 +333,7 @@
 @end
 
 @implementation nsCocoaCursor
+
 - (id) initWithFrames: (NSArray *) aCursorFrames
 {
   self = [super init];
@@ -395,8 +401,9 @@ INIT_FAILURE:
 - (void) dealloc
 {
   [mFrames release];
-  [super dealloc];    
+  [super dealloc];
 }
+
 @end
 
 @implementation nsResourceCursor

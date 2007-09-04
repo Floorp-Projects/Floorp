@@ -922,24 +922,32 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
       // the borders need not actually reflect the size of the drawn border.
       aResult->SizeTo(kAquaDropdownLeftBorder, 1, kAquaDropdownRightBorder, 1);
       break;
-    
-    case NS_THEME_TEXTFIELD: {
+
+    case NS_THEME_TEXTFIELD:
+    {
       SInt32 frameOutset = 0;
       ::GetThemeMetric(kThemeMetricEditTextFrameOutset, &frameOutset);
+
+      SInt32 textPadding = 0;
+      ::GetThemeMetric(kThemeMetricEditTextWhitespace, &textPadding);
+
+      frameOutset += textPadding;
+
       aResult->SizeTo(frameOutset, frameOutset, frameOutset, frameOutset);
-    }
       break;
+    }
 
     case NS_THEME_TEXTFIELD_MULTILINE:
       aResult->SizeTo(1, 1, 1, 1);
       break;
-      
-    case NS_THEME_LISTBOX: {
+
+    case NS_THEME_LISTBOX:
+    {
       SInt32 frameOutset = 0;
       ::GetThemeMetric(kThemeMetricListBoxFrameOutset, &frameOutset);
       aResult->SizeTo(frameOutset, frameOutset, frameOutset, frameOutset);
-    }
       break;
+    }
 
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
@@ -963,33 +971,24 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
         else
           aResult->SizeTo(0, endcapSize, 0, 0);
       }
-    }
       break;
+    }
   }
-  
+
   return NS_OK;
 }
 
 
-// return false here to indicate that CSS padding values should be used
+// Return PR_FALSE here to indicate that CSS padding values should be used. There is
+// no reason to make a distinction between padding and border values, just specify
+// whatever values you want in GetWidgetBorder and only use this to return PR_TRUE
+// if you want to override CSS padding values.
 PRBool
 nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext, 
                                      nsIFrame* aFrame,
                                      PRUint8 aWidgetType,
                                      nsMargin* aResult)
 {
-  switch (aWidgetType)
-  {
-    case NS_THEME_TEXTFIELD:
-    case NS_THEME_TEXTFIELD_MULTILINE:
-    {
-      SInt32 nativePadding = 0;
-      ::GetThemeMetric(kThemeMetricEditTextWhitespace, &nativePadding);
-      aResult->SizeTo(nativePadding, nativePadding, nativePadding, nativePadding);
-      return PR_TRUE;
-    }
-  }
-
   return PR_FALSE;
 }
 

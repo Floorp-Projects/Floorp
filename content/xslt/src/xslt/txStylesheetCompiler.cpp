@@ -72,13 +72,17 @@ txStylesheetCompiler::txStylesheetCompiler(const nsAString& aStylesheetURI,
 nsrefcnt
 txStylesheetCompiler::AddRef()
 {
-    return ++mRefCnt;
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "txStylesheetCompiler", sizeof(*this));
+    return mRefCnt;
 }
 
 nsrefcnt
 txStylesheetCompiler::Release()
 {
-    if (--mRefCnt == 0) {
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "txStylesheetCompiler");
+    if (mRefCnt == 0) {
         mRefCnt = 1; //stabilize
         delete this;
         return 0;
@@ -764,7 +768,7 @@ txStylesheetCompilerState::addInstruction(nsAutoPtr<txInstruction> aInstruction)
     txInstruction* newInstr = aInstruction;
 
     *mNextInstrPtr = aInstruction.forget();
-    mNextInstrPtr = &newInstr->mNext;
+    mNextInstrPtr = newInstr->mNext.StartAssignment();
     
     PRInt32 i, count = mGotoTargetPointers.Count();
     for (i = 0; i < count; ++i) {

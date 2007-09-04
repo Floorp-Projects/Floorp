@@ -96,11 +96,11 @@ nsXULPopupListener::~nsXULPopupListener(void)
   ClosePopup();
 }
 
-NS_IMPL_ADDREF(nsXULPopupListener)
-NS_IMPL_RELEASE(nsXULPopupListener)
+NS_IMPL_CYCLE_COLLECTION_2(nsXULPopupListener, mElement, mPopupContent)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULPopupListener)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULPopupListener)
 
-
-NS_INTERFACE_MAP_BEGIN(nsXULPopupListener)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULPopupListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMContextMenuListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMMouseListener)

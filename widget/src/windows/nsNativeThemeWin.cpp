@@ -761,7 +761,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
           aState += TS_ACTIVE;
         else if (eventState & NS_EVENT_STATE_HOVER)
           aState += TS_HOVER;
-        else if (parentState & NS_EVENT_STATE_HOVER)
+        else if (GetWindowsVersion() >= VISTA_VERSION && parentState & NS_EVENT_STATE_HOVER)
           aState = (aWidgetType - NS_THEME_SCROLLBAR_BUTTON_UP) + SP_BUTTON_IMPLICIT_HOVER_BASE;
         else
           aState += TS_NORMAL;

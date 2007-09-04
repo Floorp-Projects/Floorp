@@ -341,6 +341,36 @@ nsMenuBarFrame::CurrentMenuIsBeingDestroyed()
   mCurrentMenu = nsnull;
 }
 
+class nsMenuBarSwitchMenu : public nsRunnable
+{
+public:
+  nsMenuBarSwitchMenu(nsIContent *aOldMenu,
+                      nsIContent *aNewMenu,
+                      PRBool aSelectFirstItem)
+    : mOldMenu(aOldMenu), mNewMenu(aNewMenu), mSelectFirstItem(aSelectFirstItem)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+    if (!pm)
+      return NS_ERROR_UNEXPECTED;
+
+    if (mOldMenu)
+      pm->HidePopup(mOldMenu, PR_FALSE, PR_FALSE, PR_FALSE);
+    if (mNewMenu)
+      pm->ShowMenu(mNewMenu, mSelectFirstItem, PR_FALSE);
+
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIContent> mOldMenu;
+  nsCOMPtr<nsIContent> mNewMenu;
+  PRBool mSelectFirstItem;
+};
+
 NS_IMETHODIMP
 nsMenuBarFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
                                PRBool aSelectFirstItem)
@@ -353,6 +383,8 @@ nsMenuBarFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
   if (pm && pm->HasContextMenu(nsnull))
     return NS_OK;
 
+  nsIContent* aOldMenu = nsnull, *aNewMenu = nsnull;
+  
   // Unset the current child.
   PRBool wasOpen = PR_FALSE;
   if (mCurrentMenu) {
@@ -361,7 +393,7 @@ nsMenuBarFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
     if (wasOpen) {
       nsMenuPopupFrame* popupFrame = mCurrentMenu->GetPopup();
       if (popupFrame)
-        pm->HidePopup(popupFrame->GetContent(), PR_FALSE, PR_FALSE, PR_TRUE);
+        aOldMenu = popupFrame->GetContent();
     }
   }
 
@@ -376,10 +408,14 @@ nsMenuBarFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
     NS_ENSURE_TRUE(weakNewMenu.IsAlive(), NS_OK);
     mCurrentMenu = aMenuItem;
     if (wasOpen && !aMenuItem->IsDisabled())
-      pm->ShowMenu(content, aSelectFirstItem, PR_TRUE);
+      aNewMenu = content;
   }
 
-  return NS_OK;
+  // use an event so that hiding and showing can be done synchronously, which
+  // avoids flickering
+  nsCOMPtr<nsIRunnable> event =
+    new nsMenuBarSwitchMenu(aOldMenu, aNewMenu, aSelectFirstItem);
+  return NS_DispatchToCurrentThread(event);
 }
 
 nsMenuFrame*

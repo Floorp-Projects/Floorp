@@ -1235,7 +1235,7 @@ var PlacesUtils = {
    *        a DOM node
    * @return the closet ancestor places view if exists, null otherwsie.
    */
-  getViewForNode: function(aNode) {
+  getViewForNode: function PU_getViewForNode(aNode) {
     var node = aNode;
     while (node) {
       // XXXmano: Use QueryInterface(nsIPlacesView) once we implement it...
@@ -1502,15 +1502,116 @@ var PlacesUtils = {
     var bmkIds = this.bookmarks.getBookmarkIdsForURI(aURI, {});
     for each (var bk in bmkIds) {
       // Find the first folder which isn't a tag container
-      var folder = this.bookmarks.getFolderIdForItem(bk);
-      if (folder == this.placesRootId)
+      var parent = this.bookmarks.getFolderIdForItem(bk);
+      if (parent == this.placesRootId)
         return bk;
-      var parent = this.bookmarks.getFolderIdForItem(folder)
-      if (parent != this.tagRootId &&
+      var grandparent = this.bookmarks.getFolderIdForItem(parent);
+      if (grandparent != this.tagRootId &&
           !this.annotations.itemHasAnnotation(parent, "livemark/feedURI"))
         return bk;
     }
     return -1;
+  },
+
+  getURLsForContainerNode: function PU_getURLsForContainerNode(aNode) {
+    let urls = [];
+    if (this.nodeIsFolder(aNode) && asQuery(aNode).queryOptions.excludeItems) {
+      // grab manually
+      let contents = this.getFolderContents(node.itemId, false, false).root;
+      for (let i = 0; i < contents.childCount; ++i) {
+        let child = contents.getChild(i);
+        if (this.nodeIsURI(child))
+          urls.push(node.uri);
+      }
+    }
+    else {
+      let wasOpen = aNode.containerOpen;
+      if (!wasOpen)
+        aNode.containerOpen = true;
+      for (let i = 0; i < aNode.childCount; ++i) {
+        let child = aNode.getChild(i);
+        if (this.nodeIsURI(child))
+          urls.push(child.uri);
+      }
+      aNode.containerOpen = wasOpen;
+    }
+
+    return urls;
+  },
+
+  /**
+   * Gives the user a chance to cancel loading lots of tabs at once
+   */
+  _confirmOpenInTabs: function PU__confirmOpenInTabs(numTabsToOpen) {
+    var pref = Cc["@mozilla.org/preferences-service;1"].
+               getService(Ci.nsIPrefBranch);
+
+    const kWarnOnOpenPref = "browser.tabs.warnOnOpen";
+    var reallyOpen = true;
+    if (pref.getBoolPref(kWarnOnOpenPref)) {
+      if (numTabsToOpen >= pref.getIntPref("browser.tabs.maxOpenBeforeWarn")) {
+        var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                            getService(Ci.nsIPromptService);
+
+        // default to true: if it were false, we wouldn't get this far
+        var warnOnOpen = { value: true };
+
+        var messageKey = "tabs.openWarningMultipleBranded";
+        var openKey = "tabs.openButtonMultiple";
+        const BRANDING_BUNDLE_URI = "chrome://branding/locale/brand.properties";
+        var brandShortName = Cc["@mozilla.org/intl/stringbundle;1"].
+                             getService(Ci.nsIStringBundleService).
+                             createBundle(BRANDING_BUNDLE_URI).
+                             GetStringFromName("brandShortName");
+
+        var buttonPressed = promptService.confirmEx(window,
+          this.getString("tabs.openWarningTitle"),
+          this.getFormattedString(messageKey, [numTabsToOpen, brandShortName]),
+          (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0)
+           + (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
+          this.getString(openKey), null, null,
+          this.getFormattedString("tabs.openWarningPromptMeBranded",
+                                  [brandShortName]), warnOnOpen);
+
+        reallyOpen = (buttonPressed == 0);
+        // don't set the pref unless they press OK and it's false
+        if (reallyOpen && !warnOnOpen.value)
+          pref.setBoolPref(kWarnOnOpenPref, false);
+      }
+    }
+    return reallyOpen;
+  },
+
+  _openTabset: function PU__openTabset(aURLs, aEvent) {
+    var browserWindow = getTopWin();
+    var where = browserWindow ?
+                whereToOpenLink(aEvent, false, true) : "window";
+    if (where == "window") {
+      window.openDialog(getBrowserURL(), "_blank",
+                        "chrome,all,dialog=no", aURLs.join("|"));
+      return;
+    }
+
+    var loadInBackground = where == "tabshifted" ? true : false;
+    var replaceCurrentTab = where == "tab" ? false : true;
+    browserWindow.getBrowser().loadTabs(aURLs, loadInBackground,
+                                        replaceCurrentTab);
+  },
+
+  openContainerNodeInTabs: function PU_openContainerInTabs(aNode, aEvent) {
+    var urlsToOpen = this.getURLsForContainerNode(aNode);
+    if (!this._confirmOpenInTabs(urlsToOpen.length))
+      return;
+    this._openTabset(urlsToOpen, aEvent);
+  },
+
+  openURINodesInTabs: function PU_openURINodesInTabs(aNodes, aEvent) {
+    var urlsToOpen = [];
+    for (var i=0; i < aNodes.length; i++) {
+      if (this.nodeIsURI(aNodes[i]))
+        urlsToOpen.push(aNodes[i].uri);
+    }
+    this._openTabset(urlsToOpen, aEvent);
   }
 };
 

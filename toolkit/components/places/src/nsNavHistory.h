@@ -249,7 +249,8 @@ public:
   nsresult RowToResult(mozIStorageValueArray* aRow,
                        nsNavHistoryQueryOptions* aOptions,
                        nsNavHistoryResultNode** aResult);
-  nsresult QueryRowToResult(const nsACString& aURI, const nsACString& aTitle,
+  nsresult QueryRowToResult(PRInt64 aItemId, const nsACString& aURI,
+                            const nsACString& aTitle,
                             PRUint32 aAccessCount, PRTime aTime,
                             const nsACString& aFavicon,
                             nsNavHistoryResultNode** aNode);
@@ -510,7 +511,8 @@ protected:
                        nsCOMArray<nsNavHistoryResultNode>* aDest,
                        PRBool aIsDomain);
 
-  nsresult FilterResultSet(const nsCOMArray<nsNavHistoryResultNode>& aSet,
+  nsresult FilterResultSet(nsNavHistoryQueryResultNode *aParentNode,
+                           const nsCOMArray<nsNavHistoryResultNode>& aSet,
                            nsCOMArray<nsNavHistoryResultNode>* aFiltered,
                            const nsString& aSearch);
 
@@ -559,6 +561,7 @@ protected:
   static const PRInt32 kAutoCompleteIndex_Title;
   static const PRInt32 kAutoCompleteIndex_FaviconURL;
   static const PRInt32 kAutoCompleteIndex_ItemId;
+  static const PRInt32 kAutoCompleteIndex_ParentId;
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery; //  kAutoCompleteIndex_* results
   nsresult InitAutoComplete();
   nsresult CreateAutoCompleteQuery();
@@ -571,6 +574,9 @@ protected:
   nsDataHashtable<nsStringHashKey, PRBool> mCurrentResultURLs;
   PRTime mCurrentChunkEndTime;
   PRTime mCurrentOldestVisit;
+
+  nsDataHashtable<nsTrimInt64HashKey, PRBool> mLivemarkFeedItemIds;  
+  nsCOMPtr<mozIStorageStatement> mLivemarkFeedsQuery;
 
   nsresult AutoCompleteTypedSearch();
   nsresult AutoCompleteFullHistorySearch();

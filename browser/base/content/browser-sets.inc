@@ -23,6 +23,7 @@
 #   Ben Goodger <ben@bengoodger.com> (v2.0)
 #   Blake Ross <blakeross@telocity.com>
 #   Shawn Wilsher <me@shawnwilsher.com>
+#   Ehsan Akhgari <ehsan.akhgari@gmail.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -155,6 +156,7 @@
                  oncommand="gPopupBlockerObserver.dontShowMessage();"/>
     <broadcaster id="blockedPopupsSeparator"/>
     <broadcaster id="isImage"/>
+    <broadcaster id="isFrameImage"/>
   </broadcasterset>
 
   <keyset id="mainKeyset">
