@@ -1769,6 +1769,7 @@ nsHTMLSelectElement::RebuildOptionsArray()
 {
   mOptions->Clear();
   AddOptionsRecurse(this, mOptions);
+  FindSelectedIndex(0);
 }
 
 #ifdef DEBUG
