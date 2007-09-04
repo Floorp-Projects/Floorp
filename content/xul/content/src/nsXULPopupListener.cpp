@@ -96,7 +96,7 @@ nsXULPopupListener::~nsXULPopupListener(void)
   ClosePopup();
 }
 
-NS_IMPL_CYCLE_COLLECTION_2(nsXULPopupListener, mElement, mPopupContent);
+NS_IMPL_CYCLE_COLLECTION_2(nsXULPopupListener, mElement, mPopupContent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULPopupListener)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULPopupListener)
 
