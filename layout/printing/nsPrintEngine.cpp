@@ -712,13 +712,6 @@ nsPrintEngine::Print(nsIPrintSettings*       aPrintSettings,
   return CommonPrint(PR_FALSE, aPrintSettings, aWebProgressListener);
 }
 
-/** ---------------------------------------------------
- *  See documentation above in the nsIContentViewerfile class definition
- *	@update 11/01/01 rods
- *
- *  For a full and detailed understanding of the issues with
- *  PrintPreview: See the design spec that is attached to Bug 107562
- */
 NS_IMETHODIMP
 nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings, 
                                  nsIDOMWindow *aChildDOMWin, 
@@ -2533,6 +2526,9 @@ void nsPrintEngine::SetIsPrinting(PRBool aIsPrinting)
   mIsDoingPrinting = aIsPrinting;
   if (mDocViewerPrint) {
     mDocViewerPrint->SetIsPrinting(aIsPrinting);
+  }
+  if (mPrt && aIsPrinting) {
+    mPrt->mPreparingForPrint = PR_TRUE;
   }
 }
 
