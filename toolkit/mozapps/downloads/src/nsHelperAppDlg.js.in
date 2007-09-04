@@ -184,11 +184,20 @@ nsUnknownContentTypeDialog.prototype = {
 
       picker.appendFilters( nsIFilePicker.filterAll );
 
-      // Get the default download directory from download manager
+      // Default to lastDir if it's valid, use the user's default
+      // downloads directory otherwise.
       var dnldMgr = Components.classes["@mozilla.org/download-manager;1"]
                               .getService(Components.interfaces.nsIDownloadManager);
-      var startDir = dnldMgr.defaultDownloadsDirectory;
-      picker.displayDirectory = startDir;
+      try {
+        var lastDir = prefs.getComplexValue("browser.download.lastDir",
+                            Components.interfaces.nsILocalFile);
+        if (lastDir.exists())
+          picker.displayDirectory = lastDir;
+        else
+          picker.displayDirectory = dnldMgr.userDownloadsDirectory;
+      } catch (ex) {
+        picker.displayDirectory = dnldMgr.userDownloadsDirectory;
+      }
 
       if (picker.show() == nsIFilePicker.returnCancel) {
         // null result means user cancelled.
@@ -210,7 +219,7 @@ nsUnknownContentTypeDialog.prototype = {
         }
         catch (e) { }
         var newDir = result.parent;
-        prefs.setComplexValue("browser.download.dir", Components.interfaces.nsILocalFile, newDir);
+        prefs.setComplexValue("browser.download.lastDir", Components.interfaces.nsILocalFile, newDir);
         result = this.validateLeafName(newDir, result.leafName, null);
       }
       return result;
