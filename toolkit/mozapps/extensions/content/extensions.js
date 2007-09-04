@@ -70,6 +70,7 @@ const PREF_EM_CHECK_COMPATIBILITY           = "extensions.checkCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY         = "extensions.checkUpdateSecurity";
 const PREF_EXTENSIONS_GETMORETHEMESURL      = "extensions.getMoreThemesURL";
 const PREF_EXTENSIONS_GETMOREEXTENSIONSURL  = "extensions.getMoreExtensionsURL";
+const PREF_EXTENSIONS_GETMOREPLUGINSURL     = "extensions.getMorePluginsURL";
 const PREF_EXTENSIONS_DSS_ENABLED           = "extensions.dss.enabled";
 const PREF_EXTENSIONS_DSS_SWITCHPENDING     = "extensions.dss.switchPending";
 const PREF_EXTENSIONS_HIDE_INSTALL_BTN      = "extensions.hideInstallButton";
@@ -275,6 +276,7 @@ function showView(aView) {
                       ["updateURL", "?updateURL"],
                       ["version", "?version"] ];
 
+  var prefURL;
   var showInstallFile = true;
   try {
     showInstallFile = !gPref.getBoolPref(PREF_EXTENSIONS_HIDE_INSTALL_BTN);
@@ -287,15 +289,18 @@ function showView(aView) {
   var showContinue = false;
   switch (aView) {
     case "extensions":
+      prefURL = PREF_EXTENSIONS_GETMOREEXTENSIONSURL;
       var types = [ [ ["type", nsIUpdateItem.TYPE_EXTENSION, "Integer"] ] ];
       break;
     case "themes":
+      prefURL = PREF_EXTENSIONS_GETMORETHEMESURL;
       types = [ [ ["type", nsIUpdateItem.TYPE_THEME, "Integer"] ] ];
       break;
     case "locales":
       types = [ [ ["type", nsIUpdateItem.TYPE_LOCALE, "Integer"] ] ];
       break;
     case "plugins":
+      prefURL = PREF_EXTENSIONS_GETMOREPLUGINSURL;
       types = [ [ ["plugin", "true", null] ] ];
       break;
     case "updates":
@@ -367,33 +372,30 @@ function showView(aView) {
       break;
   }
 
+  var showGetMore = false;
+  var getMore = document.getElementById("getMore");
+  if (prefURL) {
+    try {
+      getMore.setAttribute("value", getMore.getAttribute("value" + aView));
+      var getMoreURL = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
+                                 .getService(Components.interfaces.nsIURLFormatter)
+                                 .formatURLPref(prefURL);
+      getMore.setAttribute("getMoreURL", getMoreURL);
+      showGetMore = getMoreURL == "about:blank" ? false : true;
+    }
+    catch (e) { }
+  }
+  getMore.hidden = !showGetMore;
+
   var isThemes = aView == "themes";
 
-  var getMore = document.getElementById("getMore");
   if (aView == "themes" || aView == "extensions") {
-    try {
-      var el = document.getElementById("installFileButton");
-      el.setAttribute("tooltiptext", el.getAttribute(isThemes ? "tooltiptextthemes" :
-                                                                  "tooltiptextaddons"));
-      el = document.getElementById("checkUpdatesAllButton");
-      el.setAttribute("tooltiptext", el.getAttribute(isThemes ? "tooltiptextthemes" :
-                                                                  "tooltiptextaddons"));
-      getMore.setAttribute("value", getMore.getAttribute(isThemes ? "valuethemes" :
-                                                                    "valueextensions"));
-      var getMorePref = isThemes ? PREF_EXTENSIONS_GETMORETHEMESURL : PREF_EXTENSIONS_GETMOREEXTENSIONSURL;
-      var formatter = Components.classes["@mozilla.org/toolkit/URLFormatterService;1"]
-                                .getService(Components.interfaces.nsIURLFormatter);
-      var getMoreURL = formatter.formatURLPref(getMorePref);
-      getMore.setAttribute("getMoreURL", getMoreURL);
-      if (getMore.hidden)
-        getMore.hidden = false;
-    }
-    catch (e) {
-      getMore.hidden = true;
-    }
-  }
-  else if (!getMore.hidden) {
-    getMore.hidden = true;
+    var el = document.getElementById("installFileButton");
+    el.setAttribute("tooltiptext", el.getAttribute(isThemes ? "tooltiptextthemes" :
+                                                              "tooltiptextaddons"));
+    el = document.getElementById("checkUpdatesAllButton");
+    el.setAttribute("tooltiptext", el.getAttribute(isThemes ? "tooltiptextthemes" :
+                                                              "tooltiptextaddons"));
   }
 
   document.getElementById("installFileButton").hidden = !showInstallFile;
