@@ -744,6 +744,8 @@ function Startup()
                     null, null, true, null);
         document.title = getExtensionString("newUpdateWindowTitle", [getBrandShortName()]);
       }
+      else
+        showView(window.arguments[0]);
     }
   }
   else if (viewGroup.hasAttribute("last-selected") &&
