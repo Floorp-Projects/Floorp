@@ -2660,9 +2660,9 @@ ExtensionManager.prototype = {
     var items = this.getItemList(nsIUpdateItem.TYPE_ADDON, { });
 
     var updater = new ExtensionItemUpdater(gApp.ID, gApp.version, this);
-    updater._background = true;
     updater.checkForUpdates(items, items.length,
-                            nsIExtensionManager.UPDATE_CHECK_NEWVERSION, null);
+                            nsIExtensionManager.UPDATE_CHECK_NEWVERSION,
+                            new BackgroundUpdateCheckListener(this.datasource));
   },
 
   /**
@@ -5706,6 +5706,91 @@ ItemDownloadTransaction.prototype = {
 };
 
 /**
+ * A listener object that watches the background update check and notifies the
+ * user of any updates found.
+ */
+function BackgroundUpdateCheckListener(datasource) {
+  this._emDS = datasource;
+}
+BackgroundUpdateCheckListener.prototype = {
+  _updateCount: 0,
+  _emDS: null,
+
+  // nsIObserver implementation
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic != "alertclickcallback")
+      return;
+
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+             getService(Ci.nsIWindowMediator);
+    var win = wm.getMostRecentWindow("Extension:Manager");
+    if (win) {
+      win.focus();
+      win.showView("updates");
+      // Don't show the update notification on next startup
+      gPref.setBoolPref(PREF_UPDATE_NOTIFYUSER, false);
+    }
+    else {
+      const EMURL = "chrome://mozapps/content/extensions/extensions.xul";
+      const EMFEATURES = "chrome,centerscreen,extra-chrome,dialog,resizable,modal";
+
+      var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+               getService(Ci.nsIWindowWatcher);
+      var param = Cc["@mozilla.org/supports-array;1"].
+                  createInstance(Ci.nsISupportsArray);
+      var arg = Cc["@mozilla.org/supports-string;1"].
+                createInstance(Ci.nsISupportsString);
+      arg.data = "updates";
+      param.AppendElement(arg);
+      ww.openWindow(null, EMURL, null, EMFEATURES, param);
+    }
+  },
+  
+  // nsIAddonUpdateCheckListener implementation
+  onUpdateStarted: function() {
+  },
+
+  onUpdateEnded: function() {
+    if (this._updateCount > 0 && Cc["@mozilla.org/alerts-service;1"]) {
+      var extensionStrings = BundleManager.getBundle(URI_EXTENSIONS_PROPERTIES);
+      var title = extensionStrings.GetStringFromName("updateNotificationTitle");
+      var text;
+      if (this._updateCount > 1)
+        text = extensionStrings.formatStringFromName("multipleUpdateNotificationText",
+                                                     [BundleManager.appName, this._updateCount], 2);
+      else
+        text = extensionStrings.formatStringFromName("updateNotificationText",
+                                                     [BundleManager.appName], 1);
+
+      try {
+        var notifier = Cc["@mozilla.org/alerts-service;1"].
+                       getService(Ci.nsIAlertsService);
+        notifier.showAlertNotification(URI_GENERIC_ICON_XPINSTALL,
+                                       title, text, true, "", this);
+      }
+      catch (e) {
+        LOG("Failed to retrieve alerts service, probably an unsupported " +
+            "platform - " + e);
+      }
+    }
+  },
+
+  onAddonUpdateStarted: function(item) {
+  },
+
+  onAddonUpdateEnded: function(item, status) {
+    if (status == nsIAddonUpdateCheckListener.STATUS_UPDATE) {
+      var lastupdate = this._emDS.getItemProperty(item.id, "availableUpdateVersion");
+      if (lastupdate != item.version) {
+        gPref.setBoolPref(PREF_UPDATE_NOTIFYUSER, true);
+        this._updateCount++;
+      }
+    }
+  }
+};
+
+
+/**
  * A listener object to the update check process that routes notifications to
  * the right places and keeps the datasource up to date.
  */
@@ -5764,7 +5849,6 @@ ExtensionItemUpdater.prototype = {
   _updateCheckType    : 0,
   _items              : [],
   _listener           : null,
-  _background         : false,
 
   /* ExtensionItemUpdater
 #
@@ -5890,12 +5974,6 @@ ExtensionItemUpdater.prototype = {
   },
 
   checkForDone: function(item, status) {
-    if (this._background &&
-        status == nsIAddonUpdateCheckListener.STATUS_UPDATE) {
-      var lastupdate = this._emDS.getItemProperty(item.id, "availableUpdateVersion");
-      if (lastupdate != item.version)
-        gPref.setBoolPref(PREF_UPDATE_NOTIFYUSER, true);
-    }
     if (this._listener) {
       try {
         this._listener.onAddonUpdateEnded(item, status);
