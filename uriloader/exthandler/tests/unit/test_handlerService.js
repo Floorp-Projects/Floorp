@@ -75,20 +75,6 @@ function run_test() {
   webHandler.name = "Web Handler";
   webHandler.uriTemplate = "http://www.example.com/?%s";
 
-
-  //**************************************************************************//
-  // Helper Functions
-
-  function checkLocalHandlersAreEquivalent(handler1, handler2) {
-    do_check_eq(handler1.name, handler2.name);
-    do_check_eq(handler1.executable.path, handler2.executable.path);
-  }
-
-  function checkWebHandlersAreEquivalent(handler1, handler2) {
-    do_check_eq(handler1.name, handler2.name);
-    do_check_eq(handler1.uriTemplate, handler2.uriTemplate);
-  }
-
   // FIXME: these tests create and manipulate enough variables that it would
   // make sense to move each test into its own scope so we don't run the risk
   // of one test stomping on another's data.
@@ -111,9 +97,10 @@ function run_test() {
   // Deprecated property, but we should still make sure it's set correctly.
   do_check_eq(handlerInfo.MIMEType, "nonexistent/type");
 
-  // These three properties are the ones the handler service knows how to store.
+  // These properties are the ones the handler service knows how to store.
   do_check_eq(handlerInfo.preferredAction, Ci.nsIHandlerInfo.saveToDisk);
   do_check_eq(handlerInfo.preferredApplicationHandler, null);
+  do_check_eq(handlerInfo.possibleApplicationHandlers.length, 0);
   do_check_true(handlerInfo.alwaysAskBeforeHandling);
 
   // These properties are initialized to default values by the service,
@@ -243,8 +230,10 @@ function run_test() {
   webPossibleHandler.QueryInterface(Ci.nsIWebHandlerApp);
 
   // Make sure the two handlers are the ones we stored.
-  checkLocalHandlersAreEquivalent(localPossibleHandler, localHandler);
-  checkWebHandlersAreEquivalent(webPossibleHandler, webHandler);
+  do_check_eq(localPossibleHandler.name, localHandler.name);
+  do_check_true(localPossibleHandler.equals(localHandler));
+  do_check_eq(webPossibleHandler.name, webHandler.name);
+  do_check_true(webPossibleHandler.equals(webHandler));
 
   // Remove a handler, store the object, re-retrieve it, and make sure
   // it only has one handler.
@@ -255,11 +244,10 @@ function run_test() {
   do_check_eq(possibleHandlersInfo.possibleApplicationHandlers.length, 1);
 
   // Make sure the handler is the one we didn't remove.
-  checkWebHandlersAreEquivalent(possibleHandlersInfo.
-                                  possibleApplicationHandlers.
-                                  queryElementAt(0, Ci.nsIHandlerApp).
-                                  QueryInterface(Ci.nsIWebHandlerApp),
-                                webHandler);
+  webPossibleHandler = possibleHandlersInfo.possibleApplicationHandlers.
+                       queryElementAt(0, Ci.nsIWebHandlerApp);
+  do_check_eq(webPossibleHandler.name, webHandler.name);
+  do_check_true(webPossibleHandler.equals(webHandler));
 
   // FIXME: test round trip integrity for a protocol.
   // FIXME: test round trip integrity for a handler info with a web handler.

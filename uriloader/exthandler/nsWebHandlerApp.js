@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,6 +42,7 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 //// Constants
 
 const Ci = Components.interfaces;
+const Cr = Components.results;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsWebHandler class
@@ -67,6 +69,19 @@ nsWebHandlerApp.prototype = {
 
   set name(aName) {
     this._name = aName;
+  },
+
+  equals: function(aHandlerApp) {
+    if (!aHandlerApp)
+      throw Cr.NS_ERROR_NULL_POINTER;
+
+    if (aHandlerApp instanceof Ci.nsIWebHandlerApp &&
+        aHandlerApp.uriTemplate &&
+        this.uriTemplate &&
+        aHandlerApp.uriTemplate == this.uriTemplate)
+      return true;
+
+    return false;
   },
 
   //////////////////////////////////////////////////////////////////////////////
