@@ -307,6 +307,9 @@ ifdef MOZ_XUL
 	$(MAKE) -C pki $@
 endif
 
+check::
+	$(MAKE) -C ssl $@
+
 install::
 ifndef MOZ_NATIVE_NSS
 	$(SYSINSTALL) -m 755 $(DIST)/lib/$(LOADABLE_ROOT_MODULE) $(DESTDIR)$(mozappdir)
