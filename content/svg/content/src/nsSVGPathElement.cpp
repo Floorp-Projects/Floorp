@@ -442,6 +442,24 @@ nsSVGPathElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                              aValue, aNotify);
 }
 
+nsresult
+nsSVGPathElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                            PRBool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::d) {
+    if (mSegments) {
+      NS_REMOVE_SVGVALUE_OBSERVER(mSegments);
+      mSegments = nsnull;
+    }
+
+    mPathData.Clear();
+
+    return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
+  }
+
+  return nsSVGPathElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
+}
+
 NS_IMETHODIMP
 nsSVGPathElement::DidModifySVGObservable(nsISVGValue* observable,
                                          nsISVGValue::modificationType aModType)
