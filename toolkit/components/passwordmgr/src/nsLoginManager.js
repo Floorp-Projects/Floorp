@@ -781,7 +781,6 @@ LoginManager.prototype = {
         // logins to update the password for.
         if (!usernameField && oldPasswordField) {
 
-            var ok, username;
             var logins = this.findLogins({}, hostname, formSubmitURL, null);
 
             // XXX we could be smarter here: look for a login matching the
@@ -802,32 +801,16 @@ LoginManager.prototype = {
             var prompter = getPrompter(win);
 
             if (logins.length == 1) {
-                username = logins[0].username;
-                ok = prompter.promptToChangePassword(username);
+                var oldLogin = logins[0];
+                formLogin.username      = oldLogin.username;
+                formLogin.usernameField = oldLogin.usernameField;
+
+                prompter.promptToChangePassword(oldLogin, formLogin);
             } else {
-                var usernames = logins.map(function (l) l.username);
-                [ok, username] = prompter.promptToChangePasswordWithUsernames(
-                                                                usernames);
+                prompter.promptToChangePasswordWithUsernames(
+                                    logins, logins.length, formLogin);
             }
 
-            if (!ok)
-                return;
-
-            // Now that we know the desired username, find that login and
-            // update the info in our formLogin representation.
-            this.log("Updating password for username " + username);
-
-            var existingLogin;
-            logins.some(function(l) {
-                                    existingLogin = l;
-                                    return (l.username == username);
-                                });
-
-            formLogin.username      = username;
-            formLogin.usernameField = existingLogin.usernameField;
-
-            this.modifyLogin(existingLogin, formLogin);
-            
             return;
         }
 
