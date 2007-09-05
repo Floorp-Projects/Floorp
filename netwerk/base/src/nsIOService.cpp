@@ -81,12 +81,6 @@
 
 #define MAX_RECURSION_COUNT 50
 
-static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
-static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
-static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
-
 nsIOService* gIOService = nsnull;
 
 // A general port blacklist.  Connections to these ports will not be allowed unless 
@@ -202,20 +196,20 @@ nsIOService::Init()
 
     // TODO(darin): Load the Socket and DNS services lazily.
 
-    mSocketTransportService = do_GetService(kSocketTransportServiceCID, &rv);
+    mSocketTransportService = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
         NS_WARNING("failed to get socket transport service");
         return rv;
     }
 
-    mDNSService = do_GetService(kDNSServiceCID, &rv);
+    mDNSService = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) {
         NS_WARNING("failed to get DNS service");
         return rv;
     }
 
     // XXX hack until xpidl supports error info directly (bug 13423)
-    nsCOMPtr<nsIErrorService> errorService = do_GetService(kErrorServiceCID);
+    nsCOMPtr<nsIErrorService> errorService = do_GetService(NS_ERRORSERVICE_CONTRACTID);
     if (errorService) {
         errorService->RegisterErrorStringBundle(NS_ERROR_MODULE_NETWORK, NECKO_MSGS_URL);
     }
