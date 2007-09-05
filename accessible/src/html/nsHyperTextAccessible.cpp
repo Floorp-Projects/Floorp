@@ -395,7 +395,8 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
           PRInt32 outStartLineUnused;
           PRInt32 contentOffset;
           if (frame->GetType() == nsAccessibilityAtoms::textFrame) {
-            iter.ConvertSkippedToOriginal(startOffset) + ourRenderedStart - ourContentStart;
+            contentOffset = iter.ConvertSkippedToOriginal(startOffset) +
+                            ourRenderedStart - ourContentStart;
           }
           else {
             contentOffset = startOffset;
