@@ -180,7 +180,6 @@ bin\components\widget.xpt
 bin\components\windowds.xpt
 bin\components\windowwatcher.xpt
 bin\components\shellservice.xpt
-bin\components\xml-rpc.xpt
 bin\components\xpcom_base.xpt
 bin\components\xpcom_system.xpt
 bin\components\xpcom_components.xpt
@@ -210,7 +209,6 @@ bin\components\nsProxyAutoConfig.js
 bin\components\nsSearchService.js
 bin\components\nsSearchSuggestions.js
 bin\components\nsSidebar.js
-bin\components\nsXmlRpcClient.js
 bin\components\nsExtensionManager.js
 bin\components\nsBlocklistService.js
 bin\components\nsUpdateService.js
