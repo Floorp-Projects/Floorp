@@ -105,8 +105,6 @@ protected:
     nsCOMPtr<nsIScriptContext>  mScriptContexts[NS_STID_ARRAY_UBOUND];
     void *                      mScriptGlobals[NS_STID_ARRAY_UBOUND];
 
-    nsCOMPtr<nsIPrincipal> mCachedPrincipal;
-
     static JSClass gSharedGlobalClass;
 };
 
@@ -761,12 +759,6 @@ nsXULPDGlobalObject::GetScriptGlobal(PRUint32 lang_id)
 void
 nsXULPDGlobalObject::ClearGlobalObjectOwner()
 {
-    NS_ASSERTION(!mCachedPrincipal, "This shouldn't ever be set until now!");
-
-    // Cache mGlobalObjectOwner's principal if possible.
-    if (this != nsXULPrototypeDocument::gSystemGlobal)
-        mCachedPrincipal = mGlobalObjectOwner->DocumentPrincipal();
-
     PRUint32 lang_ndx;
     NS_STID_FOR_INDEX(lang_ndx) {
         if (mScriptContexts[lang_ndx]) {
@@ -774,7 +766,6 @@ nsXULPDGlobalObject::ClearGlobalObjectOwner()
             mScriptContexts[lang_ndx] = nsnull;
         }
     }
-
     mGlobalObjectOwner = nsnull;
 }
 
@@ -815,9 +806,9 @@ nsXULPDGlobalObject::GetPrincipal()
         if (this == nsXULPrototypeDocument::gSystemGlobal) {
             return nsXULPrototypeDocument::gSystemPrincipal;
         }
-        // Return the cached principal if it exists.
-        return mCachedPrincipal;
+        return nsnull;
     }
 
     return mGlobalObjectOwner->DocumentPrincipal();
 }
+
