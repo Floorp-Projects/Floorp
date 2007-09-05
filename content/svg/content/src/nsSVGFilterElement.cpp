@@ -238,6 +238,20 @@ nsSVGFilterElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return rv;
 }
 
+nsresult
+nsSVGFilterElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                              PRBool aNotify)
+{
+  if (aName == nsGkAtoms::filterRes && aNamespaceID == kNameSpaceID_None) {
+    mFilterResX->SetBaseVal(0);
+    mFilterResY->SetBaseVal(0);
+
+    return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
+  }
+
+  return nsSVGFilterElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
+}
+
 NS_IMETHODIMP_(PRBool)
 nsSVGFilterElement::IsAttributeMapped(const nsIAtom* name) const
 {

@@ -69,6 +69,25 @@
 #include "nsSVGNumber2.h"
 #include "nsSVGEnum.h"
 #include "nsIDOMSVGUnitTypes.h"
+#include "nsIDOMSVGAngle.h"
+#include "nsIDOMSVGAnimatedAngle.h"
+#include "nsIDOMSVGAnimatedBoolean.h"
+#include "nsIDOMSVGAnimatedInteger.h"
+#include "nsIDOMSVGLength.h"
+#include "nsIDOMSVGLengthList.h"
+#include "nsIDOMSVGAnimatedLengthList.h"
+#include "nsIDOMSVGNumberList.h"
+#include "nsIDOMSVGAnimatedNumberList.h"
+#include "nsIDOMSVGPointList.h"
+#include "nsIDOMSVGAnimatedPoints.h"
+#include "nsIDOMSVGPresAspectRatio.h"
+#include "nsIDOMSVGAnimPresAspRatio.h"
+#include "nsIDOMSVGTransformList.h"
+#include "nsIDOMSVGAnimTransformList.h"
+#include "nsIDOMSVGAnimatedString.h"
+#include "nsIDOMSVGAnimatedRect.h"
+#include "nsSVGRect.h"
+#include "nsSVGAnimatedString.h"
 #include <stdarg.h>
 
 nsSVGEnumMapping nsSVGElement::sSVGUnitTypesMap[] = {
@@ -315,6 +334,62 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
           enumInfo.mEnums[i].Init(i, enumInfo.mEnumInfo[i].mDefaultValue);
           DidChangeEnum(i, PR_FALSE);
           break;
+        }
+      }
+
+      // Now check for one of the old style basetypes going away
+      nsCOMPtr<nsISVGValue> svg_value = GetMappedAttribute(aNamespaceID, aName);
+
+      if (svg_value) {
+#ifdef DEBUG_tor
+        nsCOMPtr<nsIDOMSVGAnimatedAngle> a = do_QueryInterface(svg_value);
+        NS_ASSERTION(!a, "must provide element processing for unset angle");
+
+        nsCOMPtr<nsIDOMSVGAnimatedBoolean> b = do_QueryInterface(svg_value);
+        NS_ASSERTION(!b, "must provide element processing for unset boolean");
+
+        nsCOMPtr<nsIDOMSVGAnimatedInteger> i = do_QueryInterface(svg_value);
+        NS_ASSERTION(!i, "must provide element processing for unset integer");
+#endif
+
+        nsCOMPtr<nsIDOMSVGAnimatedRect> r = do_QueryInterface(svg_value);
+        if (r) {
+          nsIDOMSVGRect *rect;
+          r->GetBaseVal(&rect);
+          static_cast<nsSVGRect*>(rect)->Clear();
+        }
+        nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> ar = do_QueryInterface(svg_value);
+        if (ar) {
+          nsIDOMSVGPreserveAspectRatio *par;
+          ar->GetBaseVal(&par);
+          par->SetAlign(nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID);
+          par->SetMeetOrSlice(nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET);
+        }
+        nsCOMPtr<nsIDOMSVGAnimatedString> s = do_QueryInterface(svg_value);
+        if (s) {
+          static_cast<nsSVGAnimatedString*>(s.get())->Clear();
+        }
+        nsCOMPtr<nsIDOMSVGPointList> pl = do_QueryInterface(svg_value);
+        if (pl) {
+          pl->Clear();
+        }
+        nsCOMPtr<nsIDOMSVGAnimatedLengthList> ll = do_QueryInterface(svg_value);
+        if (ll) {
+          nsIDOMSVGLengthList *lengthlist;
+          ll->GetBaseVal(&lengthlist);
+          lengthlist->Clear();
+        }
+        nsCOMPtr<nsIDOMSVGAnimatedNumberList> nl = do_QueryInterface(svg_value);
+        if (nl) {
+          nsIDOMSVGNumberList *numberlist;
+          nl->GetBaseVal(&numberlist);
+          numberlist->Clear();
+        }
+        nsCOMPtr<nsIDOMSVGAnimatedTransformList> tl = do_QueryInterface(svg_value);
+        if (tl) {
+          nsIDOMSVGTransformList *transform;
+          tl->GetBaseVal(&transform);
+          transform->Clear();
         }
       }
     }
