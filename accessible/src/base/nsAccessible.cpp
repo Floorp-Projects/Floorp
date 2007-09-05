@@ -1051,6 +1051,10 @@ nsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     *aState |= nsIAccessibleStates::STATE_OFFSCREEN;
   }
 
+  nsIFrame *frame = GetFrame();
+  if (frame && (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW))
+    *aState |= nsIAccessibleStates::STATE_FLOATING;
+
   return NS_OK;
 }
 
