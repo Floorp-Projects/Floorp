@@ -102,6 +102,9 @@ static jsuword gStackBase;
 
 static size_t gScriptStackQuota = JS_DEFAULT_SCRIPT_STACK_QUOTA;
 
+static uint32 gBranchCount;
+static uint32 gBranchLimit;
+
 int gExitCode = 0;
 JSBool gQuitting = JS_FALSE;
 FILE *gErrFile = NULL;
@@ -169,31 +172,31 @@ GetLine(JSContext *cx, char *bufp, FILE *file, const char *prompt) {
     return JS_TRUE;
 }
 
-static void
-Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
+static JSBool
+my_BranchCallback(JSContext *cx, JSScript *script)
 {
-    JSBool ok, hitEOF;
-    JSScript *script;
-    jsval result;
-    JSString *str;
-    char buffer[4096];
-    char *bufp;
-    int lineno;
-    int startline;
-    FILE *file;
-    jsuword stackLimit;
-
-    if (forceTTY || !filename || strcmp(filename, "-") == 0) {
-        file = stdin;
-    } else {
-        file = fopen(filename, "r");
-        if (!file) {
-            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
-                                 JSSMSG_CANT_OPEN, filename, strerror(errno));
-            gExitCode = EXITCODE_FILE_NOT_FOUND;
-            return;
+    if (++gBranchCount == gBranchLimit) {
+        if (script) {
+            if (script->filename)
+                fprintf(gErrFile, "%s:", script->filename);
+            fprintf(gErrFile, "%u: script branch callback (%u callbacks)\n",
+                    script->lineno, gBranchLimit);
+        } else {
+            fprintf(gErrFile, "native branch callback (%u callbacks)\n",
+                    gBranchLimit);
         }
+        gBranchCount = 0;
+        return JS_FALSE;
     }
+    if ((gBranchCount & 0x3fff) == 1)
+        JS_MaybeGC(cx);
+    return JS_TRUE;
+}
+
+static void
+SetContextOptions(JSContext *cx)
+{
+    jsuword stackLimit;
 
     if (gMaxStackSize == 0) {
         /*
@@ -208,6 +211,39 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
 #endif
     }
     JS_SetThreadStackLimit(cx, stackLimit);
+    JS_SetScriptStackQuota(cx, gScriptStackQuota);
+    if (gBranchLimit != 0) {
+        JS_SetBranchCallback(cx, my_BranchCallback);
+        JS_ToggleOptions(cx, JSOPTION_NATIVE_BRANCH_CALLBACK);
+    }
+}
+
+static void
+Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
+{
+    JSBool ok, hitEOF;
+    JSScript *script;
+    jsval result;
+    JSString *str;
+    char buffer[4096];
+    char *bufp;
+    int lineno;
+    int startline;
+    FILE *file;
+
+    if (forceTTY || !filename || strcmp(filename, "-") == 0) {
+        file = stdin;
+    } else {
+        file = fopen(filename, "r");
+        if (!file) {
+            JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+                                 JSSMSG_CANT_OPEN, filename, strerror(errno));
+            gExitCode = EXITCODE_FILE_NOT_FOUND;
+            return;
+        }
+    }
+
+    SetContextOptions(cx);
 
     if (!forceTTY && !isatty(fileno(file))) {
         /*
@@ -287,30 +323,6 @@ usage(void)
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
     fprintf(gErrFile, "usage: js [-PswWxCi] [-b branchlimit] [-c stackchunksize] [-o option] [-v version] [-f scriptfile] [-e script] [-S maxstacksize] [scriptfile] [scriptarg...]\n");
     return 2;
-}
-
-static uint32 gBranchCount;
-static uint32 gBranchLimit;
-
-static JSBool
-my_BranchCallback(JSContext *cx, JSScript *script)
-{
-    if (++gBranchCount == gBranchLimit) {
-        if (script) {
-            if (script->filename)
-                fprintf(gErrFile, "%s:", script->filename);
-            fprintf(gErrFile, "%u: script branch callback (%u callbacks)\n",
-                    script->lineno, gBranchLimit);
-        } else {
-            fprintf(gErrFile, "native branch callback (%u callbacks)\n",
-                    gBranchLimit);
-        }
-        gBranchCount = 0;
-        return JS_FALSE;
-    }
-    if ((gBranchCount & 0x3fff) == 1)
-        JS_MaybeGC(cx);
-    return JS_TRUE;
 }
 
 static struct {
@@ -450,8 +462,6 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
         case 'b':
             gBranchLimit = atoi(argv[++i]);
-            JS_SetBranchCallback(cx, my_BranchCallback);
-            JS_ToggleOptions(cx, JSOPTION_NATIVE_BRANCH_CALLBACK);
             break;
 
         case 'c':
@@ -3141,13 +3151,13 @@ snarf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 #endif /* NARCISSUS */
 
-JSBool
+static JSBool
 ContextCallback(JSContext *cx, uintN contextOp)
 {
     if (contextOp == JSCONTEXT_NEW) {
         JS_SetErrorReporter(cx, my_ErrorReporter);
         JS_SetVersion(cx, JSVERSION_LATEST);
-        JS_SetScriptStackQuota(cx, gScriptStackQuota);
+        SetContextOptions(cx);
     }
     return JS_TRUE;
 }
