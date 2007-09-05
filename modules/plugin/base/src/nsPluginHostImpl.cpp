@@ -211,7 +211,6 @@ static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_service;1";
 // for the dialog
-static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID); // needed for NS_TRY_SAFE_CALL
 
 ////////////////////////////////////////////////////////////////////////
@@ -6482,7 +6481,7 @@ nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInsta
   nsCOMPtr<nsIPrompt> prompt;
   GetPrompt(owner, getter_AddRefs(prompt));
   if (prompt) {
-    nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID, &rv));
+    nsCOMPtr<nsIStringBundleService> strings(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
     if (NS_FAILED(rv))
       return rv;
 

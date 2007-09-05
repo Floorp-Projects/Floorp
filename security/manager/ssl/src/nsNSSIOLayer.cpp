@@ -690,9 +690,8 @@ nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
   socketInfo->GetHostName(getter_Copies(hostName));
   NS_ConvertASCIItoUTF16 hostNameU(hostName);
 
-  NS_DEFINE_CID(StringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
   nsCOMPtr<nsIStringBundleService> service = 
-                              do_GetService(StringBundleServiceCID, &rv);
+           do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
 
   nsString formattedString;
   rv = getErrorMessage(err, hostNameU, nssComponent, formattedString);

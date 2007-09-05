@@ -134,10 +134,7 @@
 // CIDs
 //
 
-static NS_DEFINE_CID(kLocalStoreCID,             NS_LOCALSTORE_CID);
 static NS_DEFINE_CID(kParserCID,                 NS_PARSER_CID);
-static NS_DEFINE_CID(kRDFServiceCID,             NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 
 static PRBool IsChromeURI(nsIURI* aURI)
 {
@@ -1850,12 +1847,12 @@ nsXULDocument::Init()
     // this _could_ fail; e.g., if we've tried to grab the local store
     // before profiles have initialized. If so, no big deal; nothing
     // will persist.
-    mLocalStore = do_GetService(kLocalStoreCID);
+    mLocalStore = do_GetService(NS_LOCALSTORE_CONTRACTID);
 
     if (gRefCnt++ == 0) {
         // Keep the RDF service cached in a member variable to make using
         // it a bit less painful
-        rv = CallGetService(kRDFServiceCID, &gRDFService);
+        rv = CallGetService("@mozilla.org/rdf/rdf-service;1", &gRDFService);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF Service");
         if (NS_FAILED(rv)) return rv;
 
