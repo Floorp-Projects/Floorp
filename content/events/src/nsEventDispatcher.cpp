@@ -138,14 +138,16 @@ public:
   nsresult PostHandleEvent(nsEventChainPostVisitor& aVisitor);
 
 
-  nsCOMPtr<nsPIDOMEventTarget> mTarget;
-  nsEventTargetChainItem*      mChild;
-  nsEventTargetChainItem*      mParent;
-  PRUint16                     mFlags;
-  PRUint16                     mItemFlags;
-  nsCOMPtr<nsISupports>        mItemData;
+  nsCOMPtr<nsPIDOMEventTarget>      mTarget;
+  nsEventTargetChainItem*           mChild;
+  nsEventTargetChainItem*           mParent;
+  PRUint16                          mFlags;
+  PRUint16                          mItemFlags;
+  nsCOMPtr<nsISupports>             mItemData;
   // Event retargeting must happen whenever mNewTarget is non-null.
-  nsCOMPtr<nsISupports>        mNewTarget;
+  nsCOMPtr<nsISupports>             mNewTarget;
+  // Cache mTarget's event listener manager.
+  nsCOMPtr<nsIEventListenerManager> mManager;
 };
 
 nsEventTargetChainItem::nsEventTargetChainItem(nsISupports* aTarget,
@@ -192,14 +194,18 @@ nsresult
 nsEventTargetChainItem::HandleEvent(nsEventChainPostVisitor& aVisitor,
                                     PRUint32 aFlags)
 {
-  nsCOMPtr<nsIEventListenerManager> lm;
-  mTarget->GetListenerManager(PR_FALSE, getter_AddRefs(lm));
-  aVisitor.mEvent->currentTarget = CurrentTarget()->GetTargetForDOMEvent(); 
-  if (lm && aVisitor.mEvent->currentTarget) {
-    lm->HandleEvent(aVisitor.mPresContext, aVisitor.mEvent, &aVisitor.mDOMEvent,
-                    aVisitor.mEvent->currentTarget, aFlags,
-                    &aVisitor.mEventStatus);
-    aVisitor.mEvent->currentTarget = nsnull;
+  if (!mManager) {
+    mTarget->GetListenerManager(PR_FALSE, getter_AddRefs(mManager));
+  }
+  if (mManager) {
+    aVisitor.mEvent->currentTarget = CurrentTarget()->GetTargetForDOMEvent();
+    if (aVisitor.mEvent->currentTarget) {
+      mManager->HandleEvent(aVisitor.mPresContext, aVisitor.mEvent,
+                            &aVisitor.mDOMEvent,
+                            aVisitor.mEvent->currentTarget, aFlags,
+                            &aVisitor.mEventStatus);
+      aVisitor.mEvent->currentTarget = nsnull;
+    }
   }
   return NS_OK;
 }
