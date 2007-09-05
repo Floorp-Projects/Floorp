@@ -1472,6 +1472,10 @@ GetFontGroupForFrame(nsIFrame* aFrame)
   return fm->GetThebesFontGroup();
 }
 
+/**
+ * The returned textrun must be released via gfxTextRunCache::ReleaseTextRun
+ * or gfxTextRunCache::AutoTextRun.
+ */
 static gfxTextRun*
 GetHyphenTextRun(gfxTextRun* aTextRun, nsIRenderingContext* aRefContext)
 {
@@ -2524,9 +2528,9 @@ PropertyProvider::GetHyphenWidth()
 {
   if (mHyphenWidth < 0) {
     nsCOMPtr<nsIRenderingContext> rc = GetReferenceRenderingContext(mFrame, nsnull);
-    gfxTextRun* hyphenTextRun = GetHyphenTextRun(mTextRun, rc);
+    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, rc));
     mHyphenWidth = mLetterSpacing;
-    if (hyphenTextRun) {
+    if (hyphenTextRun.get()) {
       mHyphenWidth += hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull);
     }
   }
@@ -2635,8 +2639,8 @@ PropertyProvider::SetupJustificationSpacing()
                               GetSkippedDistance(mStart, realEnd), this);
   if (mFrame->GetStateBits() & TEXT_HYPHEN_BREAK) {
     nsCOMPtr<nsIRenderingContext> rc = GetReferenceRenderingContext(mFrame, nsnull);
-    gfxTextRun* hyphenTextRun = GetHyphenTextRun(mTextRun, rc);
-    if (hyphenTextRun) {
+    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, rc));
+    if (hyphenTextRun.get()) {
       naturalWidth +=
         hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull);
     }
@@ -4127,8 +4131,8 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
       // Get a reference rendering context because aCtx might not have the
       // reference matrix currently set
       nsCOMPtr<nsIRenderingContext> rc = GetReferenceRenderingContext(this, nsnull);
-      gfxTextRun* hyphenTextRun = GetHyphenTextRun(mTextRun, rc);
-      if (hyphenTextRun) {
+      gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, rc));
+      if (hyphenTextRun.get()) {
         hyphenTextRun->Draw(aCtx, gfxPoint(hyphenBaselineX, aTextBaselinePt.y),
                             0, hyphenTextRun->GetLength(), &aDirtyRect, nsnull, nsnull);
       }
@@ -4295,8 +4299,8 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
   if (GetStateBits() & TEXT_HYPHEN_BREAK) {
     gfxFloat hyphenBaselineX = textBaselinePt.x + mTextRun->GetDirection()*advanceWidth;
     nsCOMPtr<nsIRenderingContext> rc = GetReferenceRenderingContext(this, nsnull);
-    gfxTextRun* hyphenTextRun = GetHyphenTextRun(mTextRun, rc);
-    if (hyphenTextRun) {
+    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, rc));
+    if (hyphenTextRun.get()) {
       hyphenTextRun->Draw(ctx, gfxPoint(hyphenBaselineX, textBaselinePt.y),
                           0, hyphenTextRun->GetLength(), &dirtyRect, nsnull, nsnull);
     }
@@ -5481,9 +5485,9 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   }
   if (usedHyphenation) {
     // Fix up metrics to include hyphen
-    gfxTextRun* hyphenTextRun = GetHyphenTextRun(mTextRun, aReflowState.rendContext);
-    if (hyphenTextRun) {
-      AddCharToMetrics(hyphenTextRun,
+    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, aReflowState.rendContext));
+    if (hyphenTextRun.get()) {
+      AddCharToMetrics(hyphenTextRun.get(),
                        mTextRun, &textMetrics, needTightBoundingBox);
     }
     AddStateBits(TEXT_HYPHEN_BREAK);
