@@ -142,6 +142,8 @@ nsAsyncInstantiateEvent::Run()
            mContent, mContentType.get(), mURI.get(), spec.get()));
     }
 
+    // We don't have to stop the plugin because we only use the event
+    // for newly created frames that don't have a plugin loaded yet.
     nsresult rv = mContent->Instantiate(frame, mContentType, mURI);
     if (NS_FAILED(rv)) {
       mContent->Fallback(PR_TRUE);
@@ -484,6 +486,8 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
         mInstantiating = PR_FALSE;
         return NS_BINDING_ABORTED;
       }
+      // We came here via eState_Loading. Therefore, our frame is newly
+      // created, thus we don't have to stop the plugin.
       rv = frame->Instantiate(chan, getter_AddRefs(mFinalListener));
       mInstantiating = PR_FALSE;
       break;
@@ -1468,6 +1472,21 @@ nsObjectLoadingContent::TryInstantiate(const nsACString& aMIMEType,
     LOG(("OBJLC [%p]: Frame hasn't been reflown yet\n", this));
     return NS_OK; // Not a failure to have no frame
   }
+  // Stop the plugin first. Since that might destroy the frame,
+  // we have to get it again.
+  frame->StopPlugin();
+
+  frame = GetFrame(PR_FALSE);
+  if (!frame) {
+    LOG(("OBJLC [%p]: No frame anymore\n", this));
+    return NS_OK; // Not a failure to have no frame
+  }
+  CallQueryInterface(frame, &iframe);
+  if (iframe->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+    LOG(("OBJLC [%p]: New frame hasn't been reflown yet\n", this));
+    return NS_OK; // Not a failure to have no frame
+  }
+
   return Instantiate(frame, aMIMEType, aURI);
 }
 
