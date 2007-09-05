@@ -34,7 +34,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: nsPKCS12Blob.cpp,v 1.48 2007/07/08 07:08:42 jwalden%mit.edu Exp $ */
+/* $Id: nsPKCS12Blob.cpp,v 1.49 2007/09/05 07:13:46 jwalden%mit.edu Exp $ */
 
 #include "prmem.h"
 #include "prprf.h"
@@ -393,8 +393,7 @@ nsPKCS12Blob::ExportToFile(nsILocalFile *file,
     if (NS_FAILED(nrv)) goto finish;
 #endif
   for (i=0; i<numCerts; i++) {
-//    nsNSSCertificate *cert = NS_REINTREPRET_POINTER_CAST(nsNSSCertificate *,
-//                                                         certs[i]);
+//    nsNSSCertificate *cert = reinterpret_cast<nsNSSCertificate *>(certs[i]);
     nsNSSCertificate *cert = (nsNSSCertificate *)certs[i];
     // get it as a CERTCertificate XXX
     CERTCertificate *nssCert = NULL;
