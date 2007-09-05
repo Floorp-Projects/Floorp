@@ -160,6 +160,12 @@ JS_SAFE_ARENA	= 1
 
 DASH_R		= -r
 
+ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
+SDK_LIBRARY = $(IMPORT_LIBRARY)
+else
+SDK_LIBRARY = $(SHARED_LIBRARY)
+endif
+
 include $(topsrcdir)/config/config.mk
 
 EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
