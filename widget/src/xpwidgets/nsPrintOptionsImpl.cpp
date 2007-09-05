@@ -61,11 +61,8 @@
 
 #include "nsIStringEnumerator.h"
 #include "nsISupportsPrimitives.h"
-#include "nsWidgetsCID.h"
 #include "stdlib.h"
 #include "nsAutoPtr.h"
-
-static NS_DEFINE_IID(kCPrinterEnumerator, NS_PRINTER_ENUMERATOR_CID);
 
 NS_IMPL_ISUPPORTS2(nsPrintOptions, nsIPrintOptions, nsIPrintSettingsService)
 
@@ -113,8 +110,7 @@ static const char kJustLeft[]   = "left";
 static const char kJustCenter[] = "center";
 static const char kJustRight[]  = "right";
 
-static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
-
+#define NS_PRINTER_ENUMERATOR_CONTRACTID "@mozilla.org/gfx/printerenumerator;1"
 
 nsPrintOptions::nsPrintOptions()
 {
@@ -771,7 +767,7 @@ nsPrintOptions::DisplayJobProperties(const PRUnichar *aPrinter,
 
   nsresult rv;
   nsCOMPtr<nsIPrinterEnumerator> propDlg =
-    do_CreateInstance(kCPrinterEnumerator, &rv);
+           do_CreateInstance(NS_PRINTER_ENUMERATOR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   NS_ENSURE_ARG_POINTER(aPrintSettings);
@@ -835,8 +831,8 @@ NS_IMETHODIMP
 nsPrintOptions::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
 {
   nsresult rv;
-  nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService(kPrinterEnumeratorCID,
-                                                         &rv);
+  nsCOMPtr<nsIPrinterEnumerator> prtEnum =
+           do_GetService(NS_PRINTER_ENUMERATOR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Look up the printer from the last print job
@@ -889,8 +885,8 @@ nsPrintOptions::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName,
     return NS_OK;
 
   nsresult rv;
-  nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService(kPrinterEnumeratorCID,
-                                                         &rv);
+  nsCOMPtr<nsIPrinterEnumerator> prtEnum =
+           do_GetService(NS_PRINTER_ENUMERATOR_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = prtEnum->InitPrintSettingsFromPrinter(aPrinterName, aPrintSettings);

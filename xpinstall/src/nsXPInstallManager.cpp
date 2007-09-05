@@ -92,8 +92,6 @@
 
 #include "nsEmbedCID.h"
 
-static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 #define PREF_XPINSTALL_ENABLED                "xpinstall.enabled"
 #define PREF_XPINSTALL_CONFIRM_DLG            "xpinstall.dialog.confirm"
 #define PREF_XPINSTALL_STATUS_DLG_SKIN        "xpinstall.dialog.progress.skin"
@@ -437,7 +435,7 @@ PRBool nsXPInstallManager::ConfirmChromeInstall(nsIDOMWindowInternal* aParentWin
     nsXPIDLString applyNowText;
     nsXPIDLString confirmText;
     nsCOMPtr<nsIStringBundleService> bundleSvc =
-             do_GetService( kStringBundleServiceCID );
+             do_GetService(NS_STRINGBUNDLE_CONTRACTID);
     if (!bundleSvc)
         return PR_FALSE;
 

@@ -42,7 +42,6 @@
 #include "nsIPref.h" // XX Need to convert Handler code to new pref stuff
 #include "nsNetCID.h"
 #include "nsEscape.h"
-static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID); // XXX need to convert to contract id
 
 #define INCL_DOS
 #define INCL_DOSMISC

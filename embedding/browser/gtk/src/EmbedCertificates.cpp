@@ -75,8 +75,6 @@
 
 #define PIPSTRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties"
 
-static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
-
 EmbedCertificates::EmbedCertificates(void)
 {
 }
@@ -105,7 +103,8 @@ nsresult
 EmbedCertificates::Init(void)
 {
   nsresult rv;
-  nsCOMPtr<nsIStringBundleService> service = do_GetService(kCStringBundleServiceCID, &rv);
+  nsCOMPtr<nsIStringBundleService> service =
+           do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return NS_OK;
   rv = service->CreateBundle(PIPSTRING_BUNDLE_URL,
                              getter_AddRefs(mPIPStringBundle));
