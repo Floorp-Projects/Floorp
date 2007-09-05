@@ -3349,11 +3349,10 @@ nsNavHistory::PerformVacuumIfIdle()
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
-#if 0
-      // Currently commented out because compression is very slow
+      // if our database was created before incremental vacuuming
+      // do a full vacuum on idle
       rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM;"));
       NS_ENSURE_SUCCESS(rv, rv);
-#endif
     }
   }
   return NS_OK;
