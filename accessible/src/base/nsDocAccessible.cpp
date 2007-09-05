@@ -284,6 +284,10 @@ NS_IMETHODIMP nsDocAccessible::TakeFocus()
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIPresShell> shell(GetPresShell());
+  if (!shell) {
+    NS_WARNING("Was not shutdown properly via InvalidateCacheSubtree()");
+    return NS_ERROR_FAILURE;
+  }
   nsIEventStateManager *esm = shell->GetPresContext()->EventStateManager();
   NS_ENSURE_TRUE(esm, NS_ERROR_FAILURE);
 
