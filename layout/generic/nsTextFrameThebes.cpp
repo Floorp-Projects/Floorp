@@ -4959,7 +4959,7 @@ FindFirstLetterRange(const nsTextFragment* aFrag,
   gfxSkipCharsIterator iter(aIter);
   PRInt32 nextClusterStart;
   for (nextClusterStart = i + 1; nextClusterStart < length; ++nextClusterStart) {
-    iter.SetOriginalOffset(nextClusterStart);
+    iter.SetOriginalOffset(aOffset + nextClusterStart);
     if (iter.IsOriginalCharSkipped() ||
         aTextRun->IsClusterStart(iter.GetSkippedOffset()))
       break;
