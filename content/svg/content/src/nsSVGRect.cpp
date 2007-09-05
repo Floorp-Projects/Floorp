@@ -48,18 +48,36 @@
 #include "nsContentUtils.h"
 #include "nsDOMError.h"
 
+////////////////////////////////////////////////////////////////////////
+// nsSVGRect class
+
+class nsSVGRect : public nsIDOMSVGRect,
+                  public nsSVGValue
+{
+public:
+  nsSVGRect(float x=0.0f, float y=0.0f, float w=0.0f, float h=0.0f);
+  
+  // nsISupports interface:
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMSVGRect interface:
+  NS_DECL_NSIDOMSVGRECT
+
+  // nsISVGValue interface:
+  NS_IMETHOD SetValueString(const nsAString& aValue);
+  NS_IMETHOD GetValueString(nsAString& aValue);
+
+
+protected:
+  float mX, mY, mWidth, mHeight;
+};
+
 //----------------------------------------------------------------------
 // implementation:
 
 nsSVGRect::nsSVGRect(float x, float y, float w, float h)
     : mX(x), mY(y), mWidth(w), mHeight(h)
 {
-}
-
-void
-nsSVGRect::Clear()
-{
-  mX = mY = mWidth = mHeight = 0.0f;
 }
 
 //----------------------------------------------------------------------
