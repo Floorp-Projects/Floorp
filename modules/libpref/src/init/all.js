@@ -669,7 +669,7 @@ pref("network.IDN.blacklist_chars", "\u0020\u00A0\u00BC\u00BD\u01C3\u0337\u0338\
 // This preference specifies a list of domains for which DNS lookups will be
 // IPv4 only. Works around broken DNS servers which can't handle IPv6 lookups
 // and/or allows the user to disable IPv6 on a per-domain basis. See bug 68796.
-pref("network.dns.ipv4OnlyDomains", ".doubleclick.net");
+pref("network.dns.ipv4OnlyDomains", "");
 
 // This preference can be used to turn off IPv6 name lookups. See bug 68796.
 pref("network.dns.disableIPv6", false);
