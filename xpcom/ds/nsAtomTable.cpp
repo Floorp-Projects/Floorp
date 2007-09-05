@@ -339,8 +339,8 @@ PR_STATIC_CALLBACK(PRBool)
 AtomTableInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                    const void *key)
 {
-  AtomTableEntry *he = NS_STATIC_CAST(AtomTableEntry*, entry);
-  const AtomTableEntry *strKey = NS_STATIC_CAST(const AtomTableEntry*, key);
+  AtomTableEntry *he = static_cast<AtomTableEntry*>(entry);
+  const AtomTableEntry *strKey = static_cast<const AtomTableEntry*>(key);
 
   he->mLength = strKey->getLength();
 
