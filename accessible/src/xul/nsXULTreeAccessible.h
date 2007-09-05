@@ -72,6 +72,8 @@ public:
   NS_IMETHOD GetLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetChildCount(PRInt32 *_retval);
   NS_IMETHOD GetFocusedChild(nsIAccessible **aFocusedChild);
+  NS_IMETHOD GetChildAtPoint(PRInt32 aX, PRInt32 aY,
+                             nsIAccessible **aAccessible);
 
   static void GetTreeBoxObject(nsIDOMNode* aDOMNode, nsITreeBoxObject** aBoxObject);
   static nsresult GetColumnCount(nsITreeBoxObject* aBoxObject, PRInt32 *aCount);

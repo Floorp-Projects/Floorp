@@ -319,6 +319,42 @@ NS_IMETHODIMP nsXULTreeAccessible::GetFocusedChild(nsIAccessible **aFocusedChild
   return NS_OK;
 }
 
+// nsIAccessible::getChildAtPoint(in long x, in long y)
+NS_IMETHODIMP
+nsXULTreeAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                     nsIAccessible **aAccessible)
+{
+  nsIFrame *frame = GetFrame();
+  if (!frame)
+    return NS_ERROR_FAILURE;
+
+  nsPresContext *presContext = frame->PresContext();
+  nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
+
+  nsIFrame *rootFrame = presShell->GetRootFrame();
+  NS_ENSURE_STATE(rootFrame);
+
+  nsIntRect rootRect = rootFrame->GetScreenRectExternal();
+
+  PRInt32 clientX = presContext->AppUnitsToIntCSSPixels(
+    presContext->DevPixelsToAppUnits(aX - rootRect.x));
+  PRInt32 clientY = presContext->AppUnitsToIntCSSPixels(
+    presContext->DevPixelsToAppUnits(aY - rootRect.y));
+
+  PRInt32 row = -1;
+  nsCOMPtr<nsITreeColumn> column;
+  nsCAutoString childEltUnused;
+  mTree->GetCellAt(clientX, clientY, &row, getter_AddRefs(column),
+                   childEltUnused);
+
+  // If we failed to find tree cell for the given point then it might be
+  // tree columns.
+  if (row == -1 || !column)
+    return nsXULSelectableAccessible::GetChildAtPoint(aX, aY, aAccessible);
+
+  return GetCachedTreeitemAccessible(row, column, aAccessible);
+}
+
 // Ask treeselection to get all selected children
 NS_IMETHODIMP nsXULTreeAccessible::GetSelectedChildren(nsIArray **_retval)
 {
