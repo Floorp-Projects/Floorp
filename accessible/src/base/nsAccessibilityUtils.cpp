@@ -42,9 +42,14 @@
 #include "nsPIAccessible.h"
 #include "nsAccessibleEventData.h"
 
+#include "nsIDocument.h"
+#include "nsIDOMAbstractView.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentView.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIEventListenerManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
@@ -54,6 +59,7 @@
 
 #include "nsContentCID.h"
 #include "nsComponentManagerUtils.h"
+#include "nsIInterfaceRequestorUtils.h"
 
 static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
@@ -345,5 +351,54 @@ nsAccUtils::ConvertScrollTypeToPercents(PRUint32 aScrollType,
       *aVPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
       *aHPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
   }
+}
+
+nsIntPoint
+nsAccUtils::GetScreenCoordsForWindow(nsIDOMNode *aNode)
+{
+  nsIntPoint coords(0, 0);
+  nsCOMPtr<nsIDocShellTreeItem> treeItem(GetDocShellTreeItemFor(aNode));
+  if (!treeItem)
+    return coords;
+
+  nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
+  treeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
+  nsCOMPtr<nsIDOMDocument> domDoc = do_GetInterface(rootTreeItem);
+  nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(domDoc));
+  if (!docView)
+    return coords;
+
+  nsCOMPtr<nsIDOMAbstractView> abstractView;
+  docView->GetDefaultView(getter_AddRefs(abstractView));
+  nsCOMPtr<nsIDOMWindowInternal> windowInter(do_QueryInterface(abstractView));
+  if (!windowInter)
+    return coords;
+
+  windowInter->GetScreenX(&coords.x);
+  windowInter->GetScreenY(&coords.y);
+  return coords;
+}
+
+already_AddRefed<nsIDocShellTreeItem>
+nsAccUtils::GetDocShellTreeItemFor(nsIDOMNode *aNode)
+{
+  if (!aNode)
+    return nsnull;
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aNode->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (!doc)
+    doc = do_QueryInterface(aNode);
+
+  NS_ASSERTION(doc, "No document for node passed in");
+  NS_ENSURE_TRUE(doc, nsnull);
+
+  nsCOMPtr<nsISupports> container = doc->GetContainer();
+  nsIDocShellTreeItem *docShellTreeItem = nsnull;
+  if (container)
+    CallQueryInterface(container, &docShellTreeItem);
+
+  return docShellTreeItem;
 }
 
