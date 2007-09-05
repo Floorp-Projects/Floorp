@@ -122,10 +122,7 @@ protected:
   // Calculate all bundle directories, including distribution bundles,
   // extensions, and themes
   void LoadBundleDirectories();
-
-#ifdef LOAD_DISTRO_BUNDLES
   void LoadAppBundleDirs();
-#endif
 
   void Append(nsIFile* aDirectory);
 

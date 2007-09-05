@@ -547,9 +547,7 @@ nsXREDirProvider::LoadBundleDirectories()
   if (mXULAppDir) {
     LoadPlatformDirectory(mXULAppDir, mAppBundleDirectories);
 
-#ifdef LOAD_DISTRO_BUNDLES
     LoadAppBundleDirs();
-#endif
   }
 
   if (mProfileDir && !gSafeMode) {
@@ -575,7 +573,6 @@ nsXREDirProvider::LoadBundleDirectories()
   }
 }
 
-#ifdef LOAD_DISTRO_BUNDLES
 void
 nsXREDirProvider::LoadAppBundleDirs()
 {
@@ -609,7 +606,6 @@ nsXREDirProvider::LoadAppBundleDirs()
     LoadPlatformDirectory(subdir, mAppBundleDirectories);
   }
 }
-#endif // LOAD_DISTRO_BUNDLES
 
 static const char *const kAppendPrefDir[] = { "defaults", "preferences", nsnull };
 
