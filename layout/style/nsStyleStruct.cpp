@@ -44,6 +44,7 @@
 
 #include "nsStyleStruct.h"
 #include "nsStyleConsts.h"
+#include "nsThemeConstants.h"
 #include "nsString.h"
 #include "nsUnitConversion.h"
 #include "nsPresContext.h"
@@ -1119,7 +1120,7 @@ PRBool nsStyleBackground::HasFixedBackground() const
 
 nsStyleDisplay::nsStyleDisplay()
 {
-  mAppearance = 0;
+  mAppearance = NS_THEME_NONE;
   mDisplay = NS_STYLE_DISPLAY_INLINE;
   mOriginalDisplay = NS_STYLE_DISPLAY_NONE;
   mPosition = NS_STYLE_POSITION_STATIC;
