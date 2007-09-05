@@ -79,8 +79,6 @@ class nsIXULPrototypeScript;
 struct JSObject;
 struct PRLogModuleInfo;
 
-#include "nsIFastLoadService.h"         // XXXbe temporary?
-
 /**
  * The XUL document class
  */
