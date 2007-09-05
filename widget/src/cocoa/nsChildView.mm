@@ -78,6 +78,11 @@
 #undef DEBUG_UPDATE
 #undef INVALIDATE_DEBUGGING  // flash areas as they are invalidated
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
+#endif
+#include "prlog.h"
+
 #ifdef PR_LOGGING
 PRLogModuleInfo* sCocoaLog = nsnull;
 #endif
@@ -342,14 +347,13 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mPluginIsCG(PR_FALSE)
 , mVisRgn(nsnull)
 {
-  SetBackgroundColor(NS_RGB(255, 255, 255));
-  SetForegroundColor(NS_RGB(0, 0, 0));
-
 #ifdef PR_LOGGING
   if (!sCocoaLog)
     sCocoaLog = PR_NewLogModule("nsCocoaWidgets");
 #endif
 
+  SetBackgroundColor(NS_RGB(255, 255, 255));
+  SetForegroundColor(NS_RGB(0, 0, 0));
 }
 
 

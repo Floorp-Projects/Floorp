@@ -43,16 +43,6 @@
 
 #include <Cocoa/Cocoa.h>
 
-#ifdef MOZ_LOGGING
-// make sure that logging is enabled before including prlog.h
-#define FORCE_PR_LOG
-#include "prlog.h"
-#endif
-
-#ifdef PR_LOGGING
-extern PRLogModuleInfo* sCocoaLog;
-#endif
-
 extern NSString* const kWildcardPboardType;
 
 class nsDragService : public nsBaseDragService
