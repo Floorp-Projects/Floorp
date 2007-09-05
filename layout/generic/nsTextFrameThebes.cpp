@@ -154,10 +154,6 @@
 
 #define TEXT_WHITESPACE_FLAGS      0x18000000
 
-// This bit is set if this frame is an owner of the textrun (i.e., occurs
-// as the mStartFrame of some flow associated with the textrun)
-#define TEXT_IS_RUN_OWNER          0x20000000
-
 // This bit is set while the frame is registered as a blinking frame.
 #define TEXT_BLINK_ON              0x80000000
 
@@ -201,8 +197,6 @@ class PropertyProvider;
  * positive (when a text node starts in the middle of a text run) or
  * negative (when a text run starts in the middle of a text node). Of course
  * it can also be zero.
- * 
- * mStartFrame has TEXT_IS_RUN_OWNER set.
  */
 struct TextRunMappedFlow {
   nsTextFrame* mStartFrame;
@@ -598,9 +592,6 @@ DestroyUserData(void* aUserData)
 static void
 ClearAllTextRunReferences(nsTextFrame* aFrame, gfxTextRun* aTextRun)
 {
-  NS_ASSERTION(aFrame->GetStateBits() & TEXT_IS_RUN_OWNER,
-               "aFrame should be marked as a textrun owner");
-  aFrame->RemoveStateBits(TEXT_IS_RUN_OWNER);
   while (aFrame) {
     if (aFrame->GetTextRun() != aTextRun)
       break;
@@ -1944,13 +1935,9 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
       f->ClearTextRun();
       f->SetTextRun(aTextRun);
     }
-    nsIContent* content = startFrame->GetContent();
     // BuildTextRunForFrames mashes together mapped flows for the same element,
     // so we do that here too.
-    if (content != lastContent) {
-      startFrame->AddStateBits(TEXT_IS_RUN_OWNER);
-      lastContent = content;
-    }    
+    lastContent = startFrame->GetContent();
   }
 }
 
@@ -3254,10 +3241,10 @@ nsTextFrame::Init(nsIContent*      aContent,
 void
 nsTextFrame::Destroy()
 {
+  ClearTextRun();
   if (mNextContinuation) {
     mNextContinuation->SetPrevInFlow(nsnull);
   }
-  ClearTextRun();
   // Let the base class destroy the frame
   nsFrame::Destroy();
 }
@@ -3369,10 +3356,10 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
 void
 nsContinuingTextFrame::Destroy()
 {
+  ClearTextRun();
   if (mPrevContinuation || mNextContinuation) {
     nsSplittableFrame::RemoveFromFlow(this);
   }
-  ClearTextRun();
   // Let the base class destroy the frame
   nsFrame::Destroy();
 }
@@ -3548,7 +3535,7 @@ nsTextFrame::ClearTextRun()
   // save textrun because ClearAllTextRunReferences will clear ours
   gfxTextRun* textRun = mTextRun;
   
-  if (!textRun || !(GetStateBits() & TEXT_IS_RUN_OWNER))
+  if (!textRun)
     return;
 
   UnhookTextRunFromFrames(textRun);
