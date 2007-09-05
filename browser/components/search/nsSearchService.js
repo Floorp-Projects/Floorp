@@ -205,6 +205,7 @@ const SEARCH_LOG_PREFIX = "*** Search: ";
  * logging pref (browser.search.log) is set to true.
  */
 function LOG(aText) {
+#ifdef DEBUG
   var prefB = Cc["@mozilla.org/preferences-service;1"].
               getService(Ci.nsIPrefBranch);
   var shouldLog = false;
@@ -218,6 +219,7 @@ function LOG(aText) {
                          getService(Ci.nsIConsoleService);
     consoleService.logStringMessage(aText);
   }
+#endif
 }
 
 function ERROR(message, resultCode) {
