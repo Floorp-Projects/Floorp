@@ -449,13 +449,17 @@ sub LeaveOnlyUpdateMarsCallback {
     my $this = shift;
     my $dirent = $File::Find::name;
 
+    my $marsDir = catfile($this->GetStageDir(), 'batch1', 'mar');
+
     if (-f $dirent) {
         if ($dirent !~ /\.mar$/) {
             $this->Log(msg => "Unlinking non-mar deliverable: $dirent");
             unlink($dirent) or die("Couldn't unlink $dirent");
         }
     } elsif (-d $dirent) {
-        push(@{$this->{'leaveOnlyMarsDirDeleteList'}}, $dirent);
+        if ($dirent ne $marsDir) {
+          push(@{$this->{'leaveOnlyMarsDirDeleteList'}}, $dirent);
+        }
     } else {
         $this->Log(msg => 'WARNING: LeaveOnlyUpdateMarsCallback(): '. 
          "Unknown dirent type: $dirent");
