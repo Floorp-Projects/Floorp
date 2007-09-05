@@ -192,10 +192,10 @@ def send_to_graph(title, date, browser_config, results):
         val_list = cd[count_type]
         chunks = chunk_list(val_list)
         chunk_link = ''
+        i = 0
         for chunk in chunks:
           filename = tempfile.mktemp()
           tmpf = open(filename, "w")
-          i = 0
           for val in chunk:
               tmpf.write(result_format2 % (float(val), res + "_" + count_type.replace("%", "Percent"), tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete"))
               i += 1
