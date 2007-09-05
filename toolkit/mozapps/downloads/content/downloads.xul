@@ -98,6 +98,8 @@
              oncommand="gDownloadViewController.doCommand('cmd_show');"/>
     <command id="cmd_showInfo"
              oncommand="gDownloadViewController.doCommand('cmd_showInfo');"/>
+    <command id="cmd_copyLocation"
+             oncommand="gDownloadViewController.doCommand('cmd_copyLocation');"/>
   </commandset>
     
   <keyset id="downloadKeys">
@@ -147,6 +149,13 @@
     <menuitem id="menuitem_remove"
               label="&cmd.remove.label;" accesskey="&cmd.remove.accesskey;"
               command="cmd_remove"/>
+              
+    <menuseparator id="menuseparator_copy_location"/>
+              
+    <menuitem id="menuitem_copyLocation"
+              label="&cmd.copyLocation.label;"
+              accesskey="&cmd.copyLocation.accesskey;"
+              command="cmd_copyLocation"/>
   </vbox>
   
   <menupopup id="downloadContextMenu" onpopupshowing="return buildContextMenu(event);"/>

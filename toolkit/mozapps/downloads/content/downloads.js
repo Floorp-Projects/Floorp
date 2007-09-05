@@ -364,6 +364,15 @@ function retryDownload(aDownload)
   gDownloadManager.retryDownload(aDownload.getAttribute("dlid"));
 }
 
+function copySourceLocation(aDownload)
+{
+  var uri = aDownload.getAttribute("uri");
+  var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
+                  getService(Ci.nsIClipboardHelper);
+
+  clipboard.copyString(uri);
+}
+
 // This is called by the progress listener. We don't actually use the event
 // system here to minimize time wastage. 
 var gLastComputedMean = -1;
@@ -449,19 +458,26 @@ function Shutdown()
 // View Context Menus
 var gContextMenus = [
   // DOWNLOAD_DOWNLOADING
-  ["menuitem_pause", "menuitem_cancel"],
+  ["menuitem_pause", "menuitem_cancel", "menuseparator_copy_location",
+   "menuitem_copyLocation"],
   // DOWNLOAD_FINISHED
-  ["menuitem_open", "menuitem_show", "menuitem_remove"],
+  ["menuitem_open", "menuitem_show", "menuitem_remove",
+   "menuseparator_copy_location", "menuitem_copyLocation"],
   // DOWNLOAD_FAILED
-  ["menuitem_retry", "menuitem_remove"],
+  ["menuitem_retry", "menuitem_remove", "menuseparator_copy_location",
+   "menuitem_copyLocation"],
   // DOWNLOAD_CANCELED
-  ["menuitem_retry", "menuitem_remove"],
+  ["menuitem_retry", "menuitem_remove", "menuseparator_copy_location",
+   "menuitem_copyLocation"],
   // DOWNLOAD_PAUSED
-  ["menuitem_resume", "menuitem_cancel"],
+  ["menuitem_resume", "menuitem_cancel", "menuseparator_copy_location",
+   "menuitem_copyLocation"],
   // DOWNLOAD_QUEUED
-  ["menuitem_cancel"],
+  ["menuitem_cancel", "menuseparator_copy_location",
+   "menuitem_copyLocation"],
   // DOWNLOAD_BLOCKED
-  ["menuitem_retry", "menuitem_remove"]
+  ["menuitem_retry", "menuitem_remove", "menuseparator_copy_location",
+   "menuitem_copyLocation"]
 ];
 
 function buildContextMenu(aEvent)
@@ -557,6 +573,7 @@ var gDownloadViewController = {
       case "cmd_retry":
         return dl.removable;
       case "cmd_showInfo":
+      case "cmd_copyLocation":
         return true;
     }
     return false;
@@ -616,6 +633,9 @@ var gDownloadViewController = {
     },
     cmd_showInfo: function(aSelectedItem) {
       showDownloadInfo(aSelectedItem);
+    },
+    cmd_copyLocation: function(aSelectedItem) {
+      copySourceLocation(aSelectedItem);
     }
   }
 };
