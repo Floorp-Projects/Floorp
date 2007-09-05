@@ -221,8 +221,8 @@ nsDOMOfflineLoadStatusList::FindWrapper(nsIDOMLoadStatus *aStatus,
                                         PRUint32 *index)
 {
   for (int i = 0; i < mItems.Count(); i++) {
-    nsDOMOfflineLoadStatus *item = NS_STATIC_CAST(nsDOMOfflineLoadStatus*,
-                                                  mItems[i]);
+    nsDOMOfflineLoadStatus *item = static_cast<nsDOMOfflineLoadStatus*>
+                                              (mItems[i]);
     if (item->Implementation() == aStatus) {
       *index = i;
       return mItems[i];
@@ -484,7 +484,7 @@ nsDOMOfflineLoadStatusList::SendLoadEvent(const nsAString &aEventName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   NotifyEventListeners(aListeners,
-                       NS_STATIC_CAST(nsIDOMLoadStatusEvent*, event));
+                       static_cast<nsIDOMLoadStatusEvent*>(event));
 
   return NS_OK;
 }
