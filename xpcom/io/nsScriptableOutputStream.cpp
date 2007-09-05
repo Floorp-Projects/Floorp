@@ -195,7 +195,7 @@ nsScriptableOutputStream::WriteFloat(float aFloat)
 {
   NS_ASSERTION(sizeof(float) == sizeof (PRUint32),
                "False assumption about sizeof(float)");
-  return Write32(*NS_REINTERPRET_CAST(PRUint32*, &aFloat));
+  return Write32(*reinterpret_cast<PRUint32*>(&aFloat));
 }
 
 NS_IMETHODIMP
@@ -204,8 +204,8 @@ nsScriptableOutputStream::WriteDouble(double aDouble)
   NS_ASSERTION(sizeof(double) == sizeof(PRUint64),
                "False assumption about sizeof(double)");
 
-  PRUint64 val = NS_SWAP64(*NS_REINTERPRET_CAST(PRUint64*, &aDouble));
-  return WriteFully(NS_REINTERPRET_CAST(char*, &val), sizeof val);
+  PRUint64 val = NS_SWAP64(*reinterpret_cast<PRUint64*>(&aDouble));
+  return WriteFully(reinterpret_cast<char*>(&val), sizeof val);
 }
 
 NS_IMETHODIMP

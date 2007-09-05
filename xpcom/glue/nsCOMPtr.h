@@ -67,7 +67,7 @@
 
 #ifndef nscore_h___
 #include "nscore.h"
-  // for |NS_..._CAST|, |NS_COM_GLUE|
+  // for |NS_COM_GLUE|
 #endif
 
 

@@ -2,7 +2,6 @@
 #define nsCppSharedAllocator_h__
 
 #include "nsMemory.h"     // for |nsMemory|
-#include "nscore.h"       // for |NS_XXX_CAST|
 #include NEW_H					// to allow placement |new|
 
 

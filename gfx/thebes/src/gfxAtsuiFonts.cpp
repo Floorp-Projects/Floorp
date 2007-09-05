@@ -321,7 +321,7 @@ CreateFontFallbacksFromFontList(nsTArray< nsRefPtr<gfxFont> > *aFonts,
     nsAutoTArray<ATSUFontID,16> fids;
 
     for (unsigned int i = 0; i < aFonts->Length(); i++) {
-        gfxAtsuiFont* atsuiFont = NS_STATIC_CAST(gfxAtsuiFont*, aFonts->ElementAt(i).get());
+        gfxAtsuiFont* atsuiFont = static_cast<gfxAtsuiFont*>(aFonts->ElementAt(i).get());
         fids.AppendElement(atsuiFont->GetATSUFontID());
     }
     status = ::ATSUSetObjFontFallbacks(*aFallbacks, fids.Length(), fids.Elements(), aMethod);

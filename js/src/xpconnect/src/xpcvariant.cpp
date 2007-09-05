@@ -641,7 +641,7 @@ VARIANT_DONE:
         if(type == nsIDataType::VTYPE_INTERFACE ||
            type == nsIDataType::VTYPE_INTERFACE_IS)
         {
-            nsISupports *src = NS_REINTERPRET_CAST(nsISupports *, xpctvar.val.p);
+            nsISupports *src = reinterpret_cast<nsISupports *>(xpctvar.val.p);
             if(nsXPCWrappedJSClass::IsWrappedJS(src))
             {
                 // First QI the wrapper to the right interface.
