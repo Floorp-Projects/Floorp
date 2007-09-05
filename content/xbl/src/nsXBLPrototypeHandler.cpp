@@ -939,8 +939,9 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
 void
 nsXBLPrototypeHandler::ReportKeyConflict(const PRUnichar* aKey, const PRUnichar* aModifiers, nsIContent* aKeyElement, const char *aMessageName)
 {
-  nsIURI* uri = mPrototypeBinding ? uri = mPrototypeBinding->DocURI() :
-           aKeyElement ? aKeyElement->GetOwnerDoc()->GetDocumentURI() : nsnull;
+  nsIURI* uri = mPrototypeBinding ? mPrototypeBinding->DocURI() :
+                aKeyElement ? aKeyElement->GetOwnerDoc()->GetDocumentURI() :
+                nsnull;
   const PRUnichar* params[] = { aKey, aModifiers };
   nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
                                   aMessageName,
