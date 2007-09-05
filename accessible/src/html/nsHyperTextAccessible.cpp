@@ -1268,7 +1268,8 @@ nsHyperTextAccessible::GetAssociatedEditor(nsIEditor **aEditor)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem = GetDocShellTreeItemFor(mDOMNode);
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
   nsCOMPtr<nsIEditingSession> editingSession(do_GetInterface(docShellTreeItem));
   if (!editingSession)
     return NS_OK; // No editing session interface

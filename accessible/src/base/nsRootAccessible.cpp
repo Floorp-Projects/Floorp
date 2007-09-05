@@ -132,7 +132,7 @@ NS_IMETHODIMP nsRootAccessible::GetName(nsAString& aName)
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
-    GetDocShellTreeItemFor(mDOMNode);
+    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
@@ -191,7 +191,8 @@ PRUint32 nsRootAccessible::GetChromeFlags()
   // Return the flag set for the top level window as defined 
   // by nsIWebBrowserChrome::CHROME_WINDOW_[FLAGNAME]
   // Not simple: nsIXULWindow is not just a QI from nsIDOMWindow
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
+  nsCOMPtr<nsIDocShellTreeItem> treeItem =
+    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
   NS_ENSURE_TRUE(treeItem, 0);
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
   treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
@@ -377,7 +378,7 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
   // This also works for firing events for error pages
 
   nsCOMPtr<nsIDocShellTreeItem> treeItem =
-    GetDocShellTreeItemFor(aDocNode);
+    nsAccUtils::GetDocShellTreeItemFor(aDocNode);
   NS_ASSERTION(treeItem, "No docshelltreeitem for aDocNode");
   if (!treeItem) {
     return;
@@ -975,7 +976,8 @@ NS_IMETHODIMP nsRootAccessible::GetAccessibleRelated(PRUint32 aRelationType,
     return nsDocAccessibleWrap::GetAccessibleRelated(aRelationType, aRelated);
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);   
+  nsCOMPtr<nsIDocShellTreeItem> treeItem =
+    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
   nsCOMPtr<nsIDocShellTreeItem> contentTreeItem = GetContentDocShell(treeItem);
   // there may be no content area, so we need a null check
   if (contentTreeItem) {
@@ -996,7 +998,7 @@ NS_IMETHODIMP nsRootAccessible::FireDocLoadEvents(PRUint32 aEventType)
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    nsAccessNode::GetDocShellTreeItemFor(mDOMNode);
+    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
   NS_ASSERTION(docShellTreeItem, "No doc shell tree item for document");
   NS_ENSURE_TRUE(docShellTreeItem, NS_ERROR_FAILURE);
   PRInt32 contentType;
