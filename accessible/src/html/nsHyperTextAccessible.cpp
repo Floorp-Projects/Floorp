@@ -1495,15 +1495,26 @@ NS_IMETHODIMP nsHyperTextAccessible::SetSelectionBounds(PRInt32 aSelectionNum, P
   nsIFrame *startFrame = GetPosAndText(aStartOffset, aEndOffset, nsnull, &endFrame);
   NS_ENSURE_TRUE(startFrame, NS_ERROR_FAILURE);
 
+  nsCOMPtr<nsIPresShell> shell = GetPresShell();
+
   nsIContent *startParentContent = startFrame->GetContent();
+  PRInt32 startOffset;
   if (startFrame->GetType() != nsAccessibilityAtoms::textFrame) {
     nsIContent *newParent = startParentContent->GetParent();
-    aStartOffset = newParent->IndexOf(startParentContent);
+    startOffset = newParent->IndexOf(startParentContent);
     startParentContent = newParent;
+  }
+  else {
+    // We have a rendered offset into the text frame, and it needs to be
+    // a content offset for us to set the caret
+    nsIFrame *startPrimaryFrame =
+      shell->GetPrimaryFrameFor(startFrame->GetContent());
+    rv = RenderedToContentOffset(startPrimaryFrame, aStartOffset, &startOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   nsCOMPtr<nsIDOMNode> startParentNode(do_QueryInterface(startParentContent));
   NS_ENSURE_TRUE(startParentNode, NS_ERROR_FAILURE);
-  rv = range->SetStart(startParentNode, aStartOffset);
+  rv = range->SetStart(startParentNode, startOffset);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (isOnlyCaret) { 
@@ -1512,14 +1523,23 @@ NS_IMETHODIMP nsHyperTextAccessible::SetSelectionBounds(PRInt32 aSelectionNum, P
   }
   else {
     nsIContent *endParentContent = endFrame->GetContent();
+    PRInt32 endOffset;
     if (endFrame->GetType() != nsAccessibilityAtoms::textFrame) {
       nsIContent *newParent = endParentContent->GetParent();
-      aEndOffset = newParent->IndexOf(endParentContent);
+      endOffset = newParent->IndexOf(endParentContent);
       endParentContent = newParent;
+    }
+    else {
+      // We have a rendered offset into the text frame, and it needs to be
+      // a content offset for us to set the caret
+      nsIFrame *endPrimaryFrame =
+        shell->GetPrimaryFrameFor(endFrame->GetContent());
+      rv = RenderedToContentOffset(endPrimaryFrame, aEndOffset, &endOffset);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
     nsCOMPtr<nsIDOMNode> endParentNode(do_QueryInterface(endParentContent));
     NS_ENSURE_TRUE(endParentNode, NS_ERROR_FAILURE);
-    rv = range->SetEnd(endParentNode, aEndOffset);
+    rv = range->SetEnd(endParentNode, endOffset);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
