@@ -41,49 +41,13 @@
 #include "nsSVGAnimatedString.h"
 #include "nsContentUtils.h"
 
-
-////////////////////////////////////////////////////////////////////////
-// nsSVGAnimatedString
-
-class nsSVGAnimatedString : public nsIDOMSVGAnimatedString,
-                            public nsSVGValue
-{
-protected:
-  friend nsresult NS_NewSVGAnimatedString(nsIDOMSVGAnimatedString** result);
-  nsSVGAnimatedString();
-  ~nsSVGAnimatedString();
-  void Init();
-  
-public:
-  // nsISupports interface:
-  NS_DECL_ISUPPORTS
-
-  // nsIDOMSVGAnimatedString interface:
-  NS_DECL_NSIDOMSVGANIMATEDSTRING
-
-  // remainder of nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAString& aValue);
-  NS_IMETHOD GetValueString(nsAString& aValue);
-
-protected:
-  nsString mBaseVal;
-};
-
-
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGAnimatedString::nsSVGAnimatedString()
-{
-}
-
-nsSVGAnimatedString::~nsSVGAnimatedString()
-{
-}
-
 void
-nsSVGAnimatedString::Init()
+nsSVGAnimatedString::Clear()
 {
+  mBaseVal.Truncate();
 }
 
 //----------------------------------------------------------------------
@@ -157,8 +121,6 @@ NS_NewSVGAnimatedString(nsIDOMSVGAnimatedString** aResult)
   if(!animatedString) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(animatedString);
 
-  animatedString->Init();
-  
   *aResult = (nsIDOMSVGAnimatedString*) animatedString;
   
   return NS_OK;
