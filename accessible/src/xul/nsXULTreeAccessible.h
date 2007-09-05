@@ -128,6 +128,7 @@ public:
   NS_IMETHOD GetUniqueID(void **aUniqueID);
 
 protected:
+  PRBool IsExpandable();
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeView> mTreeView;
   PRInt32 mRow;

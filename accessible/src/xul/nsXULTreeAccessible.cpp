@@ -634,18 +634,11 @@ nsXULTreeitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
             nsIAccessibleStates::STATE_SELECTABLE;
 
   // get expanded/collapsed state
-  PRBool isContainer, isContainerOpen, isContainerEmpty;
-  mTreeView->IsContainer(mRow, &isContainer);
-  if (isContainer) {
-    mTreeView->IsContainerEmpty(mRow, &isContainerEmpty);
-    if (!isContainerEmpty) {
-      if (aExtraState)
-        *aExtraState |= nsIAccessibleStates::EXT_STATE_EXPANDABLE;
-
-      mTreeView->IsContainerOpen(mRow, &isContainerOpen);
-      *aState |= isContainerOpen? PRUint32(nsIAccessibleStates::STATE_EXPANDED):
-                                  PRUint32(nsIAccessibleStates::STATE_COLLAPSED);
-    }
+  if (IsExpandable()) {
+    PRBool isContainerOpen;
+    mTreeView->IsContainerOpen(mRow, &isContainerOpen);
+    *aState |= isContainerOpen? PRUint32(nsIAccessibleStates::STATE_EXPANDED):
+                                PRUint32(nsIAccessibleStates::STATE_COLLAPSED);
   }
 
   // get selected state
@@ -689,17 +682,31 @@ nsXULTreeitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
-// "activate" (xor "cycle") action is available for all treeitems
-// "expand/collapse" action is avaible for treeitem which is container
-NS_IMETHODIMP nsXULTreeitemAccessible::GetNumActions(PRUint8 *_retval)
+PRBool nsXULTreeitemAccessible::IsExpandable()
 {
-  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mTree && mTreeView && mColumn, NS_ERROR_FAILURE);
   PRBool isContainer;
   mTreeView->IsContainer(mRow, &isContainer);
-  if (isContainer)
-    *_retval = 2;
-  else
-    *_retval = 1;
+  if (isContainer) {
+    PRBool isEmpty; 
+    mTreeView->IsContainerEmpty(mRow, &isEmpty);
+    if (!isEmpty) {
+      PRBool isPrimary;
+      mColumn->GetPrimary(&isPrimary);
+      if (isPrimary) {
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
+// "activate" (xor "cycle") action is available for all treeitems
+// "expand/collapse" action is avaible for treeitem which is container
+NS_IMETHODIMP nsXULTreeitemAccessible::GetNumActions(PRUint8 *aNumActions)
+{
+  NS_ENSURE_TRUE(mTree && mTreeView && mColumn, NS_ERROR_FAILURE);
+  *aNumActions = IsExpandable() ? 2 : 1;
 
   return NS_OK;
 }
@@ -720,17 +727,13 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetActionName(PRUint8 aIndex, nsAString& 
     }
     return NS_OK;
   }
-  else if (aIndex == eAction_Expand) {
-    PRBool isContainer, isContainerOpen;
-    mTreeView->IsContainer(mRow, &isContainer);
-    if (isContainer) {
-      mTreeView->IsContainerOpen(mRow, &isContainerOpen);
-      if (isContainerOpen)
-        aName.AssignLiteral("collapse");
-      else
-        aName.AssignLiteral("expand");
-    }
-
+  else if (aIndex == eAction_Expand && IsExpandable()) {
+    PRBool isContainerOpen;
+    mTreeView->IsContainerOpen(mRow, &isContainerOpen);
+    if (isContainerOpen)
+      aName.AssignLiteral("collapse");
+    else
+      aName.AssignLiteral("expand");
     return NS_OK;
   }
 
@@ -920,11 +923,8 @@ NS_IMETHODIMP nsXULTreeitemAccessible::DoAction(PRUint8 index)
     }
     return rv;
   }
-  else if (index == eAction_Expand) {
-    PRBool isContainer;
-    mTreeView->IsContainer(mRow, &isContainer);
-    if (isContainer)
-      return mTreeView->ToggleOpenState(mRow);
+  else if (index == eAction_Expand && IsExpandable()) {
+    return mTreeView->ToggleOpenState(mRow);
   }
 
   return NS_ERROR_INVALID_ARG;
