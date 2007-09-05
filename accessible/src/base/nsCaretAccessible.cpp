@@ -252,6 +252,8 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
   PRBool isCollapsed;
   nsIView *view;
   nsCOMPtr<nsISelection> caretSelection(do_QueryReferent(mLastUsedSelection));
+  NS_ENSURE_TRUE(caretSelection, caretRect);
+  
   caret->GetCaretCoordinates(nsICaret::eRenderingViewCoordinates, caretSelection,
                              &caretRect, &isCollapsed, &view);
   if (!view || caretRect.IsEmpty()) {
