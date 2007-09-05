@@ -201,9 +201,9 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
         mMetrics.maxAdvance = mMetrics.aveCharWidth;
     }
 
-    mMetrics.underlineOffset = atsMetrics.underlinePosition * size;
+    mMetrics.underlineOffset = -mMetrics.maxDescent - atsMetrics.underlinePosition * size;
     // ATSUI sometimes returns 0 for underline thickness, see bug 361576.
-    mMetrics.underlineSize = PR_MAX(1.0f, atsMetrics.underlineThickness * size);
+    mMetrics.underlineSize = PR_MAX(1.0, atsMetrics.underlineThickness * size);
 
     mMetrics.subscriptOffset = mMetrics.xHeight;
     mMetrics.superscriptOffset = mMetrics.xHeight;
