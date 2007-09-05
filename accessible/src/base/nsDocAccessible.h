@@ -157,10 +157,17 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     void ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute);
 
     /**
-     * Fire text changed event for charackter data changed.
+     * Fire text changed event for character data changed. The method is used
+     * from nsIMutationObserver methods.
+     *
+     * @param aContent     the text node holding changed data
+     * @param aInfo        info structure describing how the data was changed
+     * @param aIsInserted  the flag pointed whether removed or inserted
+     *                     characters should be cause of event
      */
-    void FireTextChangedEventOnDOMCharacterDataModified(nsIContent *aContent,
-                                                        CharacterDataChangeInfo* aInfo);
+    void FireTextChangeEventForText(nsIContent *aContent,
+                                    CharacterDataChangeInfo* aInfo,
+                                    PRBool aIsInserted);
 
     /**
      * Create a text change event for a changed node

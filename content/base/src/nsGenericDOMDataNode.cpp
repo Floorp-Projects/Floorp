@@ -423,6 +423,16 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
     endOffset = textLength;
   }
 
+  if (aNotify) {
+    CharacterDataChangeInfo info = {
+      aOffset == textLength,
+      aOffset,
+      endOffset,
+      aLength
+    };
+    nsNodeUtils::CharacterDataWillChange(this, &info);
+  }
+
   if (aOffset == 0 && endOffset == textLength) {
     // Replacing whole text or old text was empty
     mText.SetTo(aBuffer, aLength);
