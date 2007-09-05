@@ -306,7 +306,13 @@ nsSVGMarkerElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       vb->SetHeight(mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx));
     } else if (aName == nsGkAtoms::orient) {
       mOrientType.SetBaseValue(SVG_MARKER_ORIENT_AUTO, this, PR_FALSE);
+      nsIDOMSVGAngle *angle;
+      mOrient->GetBaseVal(&angle);
+      angle->NewValueSpecifiedUnits(nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED,
+                                    0.0f);
     }
+
+    return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
   }
 
   return nsSVGMarkerElementBase::UnsetAttr(aNamespaceID, aName, aNotify);

@@ -3010,6 +3010,8 @@ public:
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                             PRBool aNotify);
 
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
@@ -3232,6 +3234,18 @@ nsSVGFETurbulenceElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
   return nsSVGFETurbulenceElementBase::ParseAttribute(aNameSpaceID, aName,
                                                       aValue, aResult);
+}
+
+nsresult
+nsSVGFETurbulenceElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                    PRBool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::numOctaves) {
+    mNumOctaves->SetBaseVal(1);
+    return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
+  }
+
+  return nsSVGFETurbulenceElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
 }
 
 NS_IMETHODIMP
@@ -3835,6 +3849,8 @@ public:
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                             PRBool aNotify);
 
 protected:
   virtual PRBool OperatesOnPremultipledAlpha() {
@@ -3951,7 +3967,7 @@ nsSVGFEConvolveMatrixElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-  // DOM property: targetY , #IMPLIED attrib: targetY
+  // DOM property: preserveAlpha , #IMPLIED attrib: preserveAlpha
   {
     rv = NS_NewSVGAnimatedBoolean(getter_AddRefs(mPreserveAlpha), PR_FALSE);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -4117,6 +4133,35 @@ nsSVGFEConvolveMatrixElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aNam
 
   return nsSVGFEConvolveMatrixElementBase::ParseAttribute(aNameSpaceID, aName,
                                                           aValue, aResult);
+}
+
+nsresult
+nsSVGFEConvolveMatrixElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
+                                    PRBool aNotify)
+{
+  if (aNamespaceID == kNameSpaceID_None) {
+    PRBool processed = PR_FALSE;
+    if (aName == nsGkAtoms::order) {
+      mOrderX->SetBaseVal(0);
+      mOrderY->SetBaseVal(0);
+      processed = PR_TRUE;
+    } else if (aName == nsGkAtoms::targetX) {
+      mTargetX->SetBaseVal(0);
+      processed = PR_TRUE;
+    } else if (aName == nsGkAtoms::targetY) {
+      mTargetY->SetBaseVal(0);
+      processed = PR_TRUE;
+    } else if (aName == nsGkAtoms::preserveAlpha) {
+      mPreserveAlpha->SetBaseVal(PR_FALSE);
+      processed = PR_TRUE;
+    }
+
+    if (processed) {
+      return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
+    }
+  }
+
+  return nsSVGFEConvolveMatrixElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
 }
 
 #define BOUND(val, min, max) \
