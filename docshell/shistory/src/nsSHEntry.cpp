@@ -649,6 +649,13 @@ nsSHEntry::NodeWillBeDestroyed(const nsINode* aNode)
 }
 
 void
+nsSHEntry::CharacterDataWillChange(nsIDocument* aDocument,
+                                   nsIContent* aContent,
+                                   CharacterDataChangeInfo* aInfo)
+{
+}
+
+void
 nsSHEntry::CharacterDataChanged(nsIDocument* aDocument,
                                 nsIContent* aContent,
                                 CharacterDataChangeInfo* aInfo)

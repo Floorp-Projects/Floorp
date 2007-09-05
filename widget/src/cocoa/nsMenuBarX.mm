@@ -846,6 +846,12 @@ NS_IMETHODIMP nsMenuBarX::Paint()
 //
 
 
+nsMenuBarX::CharacterDataWillChange(nsIDocument * aDocument,
+                                    nsIContent * aContent,
+                                    CharacterDataChangeInfo * aInfo)
+{
+}
+
 void
 nsMenuBarX::CharacterDataChanged(nsIDocument * aDocument,
                                  nsIContent * aContent,

@@ -1171,11 +1171,18 @@ void nsDocAccessible::ContentStatesChanged(nsIDocument* aDocument,
   nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent2);
 }
 
+void nsDocAccessible::CharacterDataWillChange(nsIDocument *aDocument,
+                                              nsIContent* aContent,
+                                              CharacterDataChangeInfo* aInfo)
+{
+  FireTextChangeEventForText(aContent, aInfo, PR_FALSE);
+}
+
 void nsDocAccessible::CharacterDataChanged(nsIDocument *aDocument,
                                            nsIContent* aContent,
                                            CharacterDataChangeInfo* aInfo)
 {
-  FireTextChangedEventOnDOMCharacterDataModified(aContent, aInfo);
+  FireTextChangeEventForText(aContent, aInfo, PR_TRUE);
 }
 
 void
@@ -1206,8 +1213,9 @@ nsDocAccessible::ParentChainChanged(nsIContent *aContent)
 }
 
 void
-nsDocAccessible::FireTextChangedEventOnDOMCharacterDataModified(nsIContent *aContent,
-                                                                CharacterDataChangeInfo* aInfo)
+nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
+                                            CharacterDataChangeInfo* aInfo,
+                                            PRBool aIsInserted)
 {
   if (!mIsContentLoaded || !mDocument) {
     return;
@@ -1229,26 +1237,38 @@ nsDocAccessible::FireTextChangedEventOnDOMCharacterDataModified(nsIContent *aCon
     return;
 
   PRInt32 start = aInfo->mChangeStart;
-  PRUint32 end = aInfo->mChangeEnd;
-  PRInt32 length = end - start;
-  PRUint32 replaceLen = aInfo->mReplaceLength;
 
   PRInt32 offset = 0;
   rv = textAccessible->DOMPointToHypertextOffset(node, start, &offset);
   if (NS_FAILED(rv))
     return;
 
-  // Text has been removed.
-  if (length > 0) {
-    nsCOMPtr<nsIAccessibleTextChangeEvent> event =
-      new nsAccTextChangeEvent(accessible, offset, length, PR_FALSE);
-    textAccessible->FireAccessibleEvent(event);
-  }
+  PRInt32 length = aIsInserted ?
+    aInfo->mReplaceLength; // text has been added
+    aInfo->mChangeEnd - start : // text has been removed
 
-  // Text has been added.
-  if (replaceLen) {
+  if (length > 0) {
+    nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
+    if (!shell)
+      return;
+
+    PRUint32 renderedStartOffset, renderedEndOffset;
+    nsIFrame* frame = shell->GetPrimaryFrameFor(aContent);
+
+    rv = textAccessible->ContentToRenderedOffset(frame, start,
+                                                 &renderedStartOffset);
+    if (NS_FAILED(rv))
+      return;
+
+    rv = textAccessible->ContentToRenderedOffset(frame, start + length,
+                                                 &renderedEndOffset);
+    if (NS_FAILED(rv))
+      return;
+
     nsCOMPtr<nsIAccessibleTextChangeEvent> event =
-      new nsAccTextChangeEvent(accessible, offset, replaceLen, PR_TRUE);
+      new nsAccTextChangeEvent(accessible, offset,
+                               renderedEndOffset - renderedStartOffset,
+                               aIsInserted, PR_FALSE);
     textAccessible->FireAccessibleEvent(event);
   }
 }

@@ -80,6 +80,15 @@
 
 
 void
+nsNodeUtils::CharacterDataWillChange(nsIContent* aContent,
+                                     CharacterDataChangeInfo* aInfo)
+{
+  nsIDocument* doc = aContent->GetOwnerDoc();
+  IMPL_MUTATION_NOTIFICATION(CharacterDataWillChange, aContent,
+                             (doc, aContent, aInfo));
+}
+
+void
 nsNodeUtils::CharacterDataChanged(nsIContent* aContent,
                                   CharacterDataChangeInfo* aInfo)
 {
