@@ -32,6 +32,7 @@
 #define INCL_DEV
 #include <os2.h>
 #include "prlog.h"
+#include "nsHashtable.h"
 
 #include <uconv.h> // XXX hack XXX
 
@@ -72,17 +73,7 @@ void PMERROR(const char *str);
 class nsString;
 class nsIDeviceContext;
 
-struct nsUconvInfo
-{
-  PRUint16 mCodePage;
-  UconvObject  mConverter;
-  nsUconvInfo* pNext;
-};
 
-static nsUconvInfo* gUconvInfoList = NULL;
-
-int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize );
-int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnichar *szBuffer, ULONG ulSize );
 BOOL GetTextExtentPoint32(HPS aPS, const char* aString, int aLength, PSIZEL aSizeL);
 BOOL ExtTextOut(HPS aPS, int X, int Y, UINT fuOptions, const RECTL* lprc,
                 const char* aString, unsigned int aLength, const int* pDx);
@@ -98,5 +89,16 @@ BOOL IsDBCS();
 #ifdef DEBUG
 extern PRLogModuleInfo *gGFXOS2LogModule;
 #endif
+
+class OS2Uni {
+public:
+  static UconvObject GetUconvObject(int CodePage);
+  static FreeUconvObjects();
+private:
+  static nsHashtable gUconvObjects;
+};
+
+int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize );
+int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnichar *szBuffer, ULONG ulSize );
 
 #endif
