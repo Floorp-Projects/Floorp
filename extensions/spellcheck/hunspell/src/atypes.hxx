@@ -61,9 +61,9 @@
 #ifdef HUNSPELL_WARNING_ON
 #define HUNSPELL_WARNING fprintf
 #else
+// empty inline function to switch off warnings (instead of the C99 standard variadic macros)
 static inline void HUNSPELL_WARNING(FILE *, const char *, ...) {}
 #endif
-#define WARNVAR warnvar
 #endif
 
 // HUNSTEM def.
@@ -75,7 +75,7 @@ static inline void HUNSPELL_WARNING(FILE *, const char *, ...) {}
 #define SETSIZE         256
 #define CONTSIZE        65536
 #define MAXWORDLEN      100
-#define MAXWORDUTF8LEN  (MAXWORDLEN * 4)
+#define MAXWORDUTF8LEN  256
 
 // affentry options
 #define aeXPRODUCT      (1 << 0)
@@ -90,7 +90,7 @@ static inline void HUNSPELL_WARNING(FILE *, const char *, ...) {}
 #define IN_CPD_END   2
 #define IN_CPD_OTHER 3
 
-#define MAXLNLEN        8192 * 4
+#define MAXLNLEN        8192
 
 #define MINCPDLEN       3
 #define MAXCOMPOUND     10
@@ -129,11 +129,6 @@ struct affentry
    short        contclasslen;
 };
 
-struct replentry {
-  char * pattern;
-  char * pattern2;
-};
-
 struct mapentry {
   char * set;
   w_char * set_utf16;
@@ -148,6 +143,7 @@ struct flagentry {
 struct guessword {
   char * word;
   bool allow;
+  char * orig;
 };
 
 #endif

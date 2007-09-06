@@ -33,44 +33,45 @@
 #
 # ****** END LICENSE BLOCK ******
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH           = ../../../..
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		 = hunspell
-LIBRARY_NAME	 = hunspell_s
+MODULE           = hunspell
+LIBRARY_NAME     = hunspell_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY   = 1
 
-REQUIRES	= xpcom \
-		  string \
-		  uconv \
-		  unicharutil \
-		  spellchecker \
-		  xulapp \
-		  $(NULL)
+REQUIRES         = xpcom \
+                   string \
+                   uconv \
+                   unicharutil \
+                   spellchecker \
+                   xulapp \
+                   $(NULL)
 
-CPPSRCS =         affentry.cpp \
-		  affixmgr.cpp \
-		  hashmgr.cpp \
-		  suggestmgr.cpp \
-		  csutil.cpp \
-		  hunspell.cpp \
-		  mozHunspell.cpp \
-                  $(NULL)
+CPPSRCS          = affentry.cpp \
+                   affixmgr.cpp \
+                   csutil.cpp \
+                   hashmgr.cpp \
+                   hunspell.cpp \
+                   mozHunspell.cpp \
+                   phonet.cpp \
+                   suggestmgr.cpp \
+                   $(NULL)
 
 ifdef MOZ_XUL_APP
 CPPSRCS += mozHunspellDirProvider.cpp
 endif
 
 EXTRA_DSO_LDOPTS = \
-		$(LIBS_DIR) \
-		$(XPCOM_LIBS) \
-		$(NSPR_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(NULL)
+                   $(LIBS_DIR) \
+                   $(XPCOM_LIBS) \
+                   $(NSPR_LIBS) \
+                   $(MOZ_UNICHARUTIL_LIBS) \
+                   $(NULL)
 
 include $(topsrcdir)/config/rules.mk
