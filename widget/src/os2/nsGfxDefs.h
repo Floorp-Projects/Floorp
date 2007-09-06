@@ -104,7 +104,6 @@ struct nsGfxModuleData
 {
    HMODULE hModResources;
    HPS     hpsScreen;
-   LONG    lDisplayDepth;
 
    nsGfxModuleData();
   ~nsGfxModuleData();
