@@ -47,10 +47,6 @@ txUnknownHandler::txUnknownHandler(txExecutionState* aEs)
 {
 }
 
-txUnknownHandler::~txUnknownHandler()
-{
-}
-
 nsresult
 txUnknownHandler::endDocument(nsresult aResult)
 {

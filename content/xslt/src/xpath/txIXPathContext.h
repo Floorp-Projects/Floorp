@@ -139,10 +139,6 @@ public:
 class txIEvalContext : public txIMatchContext
 {
 public:
-    virtual ~txIEvalContext()
-    {
-    }
-
     /*
      * Get the context node.
      */

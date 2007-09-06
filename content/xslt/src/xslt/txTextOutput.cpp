@@ -44,10 +44,6 @@ txTextOutput::txTextOutput(ostream* aOut)
 {
 }
 
-txTextOutput::~txTextOutput()
-{
-}
-
 nsresult
 txTextOutput::attribute(const nsAString& aName,
                         const PRInt32 aNsID,
