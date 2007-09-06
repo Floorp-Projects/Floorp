@@ -111,6 +111,28 @@ function ServiceInfo(contentType, uri, name) {
 }
 ServiceInfo.prototype = {
   /**
+   * See nsIHandlerApp
+   */
+  get name() {
+    return this._name;
+  },
+  
+  /**
+   * See nsIHandlerApp
+   */
+  equals: function SI_equals(aHandlerApp) {
+    if (!aHandlerApp)
+      throw Cr.NS_ERROR_NULL_POINTER;
+
+    if (aHandlerApp instanceof Ci.nsIWebContentHandlerInfo &&
+        aHandlerApp.contentType == this.contentType &&
+        aHandlerApp.uri == this.uri)
+      return true;
+
+    return false;
+  },
+
+  /**
    * See nsIWebContentHandlerInfo
    */
   get contentType() {
@@ -127,23 +149,8 @@ ServiceInfo.prototype = {
   /**
    * See nsIWebContentHandlerInfo
    */
-  get name() {
-    return this._name;
-  },
-  
-  /**
-   * See nsIWebContentHandlerInfo
-   */
   getHandlerURI: function SI_getHandlerURI(uri) {
     return this._uri.replace(/%s/gi, encodeURIComponent(uri));
-  },
-  
-  /**
-   * See nsIWebContentHandlerInfo
-   */
-  equals: function SI_equals(other) {
-    return this.contentType == other.contentType &&
-           this.uri == other.uri;
   },
   
   QueryInterface: function SI_QueryInterface(iid) {
