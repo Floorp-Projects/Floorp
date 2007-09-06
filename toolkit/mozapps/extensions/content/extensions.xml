@@ -481,12 +481,12 @@
           <xul:hbox>
             <xul:description xbl:inherits="value=updateAvailableMsg" flex="1" crop="end"/>
           </xul:hbox>
+          <xul:hbox pack="end" align="end">
+            <xul:checkbox anonid="includeUpdate" class="includeUpdate" checked="true"
+            label="&includeUpdate.label;" tooltiptext="&includeUpdate.tooltip;"
+            includeUpdateAccesskey="&includeUpdate.accesskey;" accesskey="&includeUpdate.accesskey;"/>
+          </xul:hbox>
         </xul:vbox>
-        <xul:hbox pack="end" align="end">
-          <xul:checkbox anonid="includeUpdate" class="includeUpdate" checked="true"
-          label="&includeUpdate.label;" tooltiptext="&includeUpdate.tooltip;"
-          includeUpdateAccesskey="&includeUpdate.accesskey;" accesskey="&includeUpdate.accesskey;"/>
-        </xul:hbox>
       </xul:hbox>
     </content>
 

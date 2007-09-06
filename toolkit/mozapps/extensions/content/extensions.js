@@ -22,7 +22,8 @@
 #   Ben Goodger <ben@mozilla.org>
 #   Robert Strong <robert.bugzilla@gmail.com>
 #   Dão Gottwald <dao@design-noir.de>
-#
+#   Dave Townsend <dtownsend@oxymoronical.com>
+# 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
 # the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -78,10 +79,11 @@ const PREF_EM_LAST_SELECTED_SKIN            = "extensions.lastSelectedSkin";
 const PREF_GENERAL_SKINS_SELECTEDSKIN       = "general.skins.selectedSkin";
 const PREF_UPDATE_NOTIFYUSER                = "extensions.update.notifyUser";
 
-const RDFURI_ITEM_ROOT  = "urn:mozilla:item:root";
-const PREFIX_ITEM_URI   = "urn:mozilla:item:";
-const PREFIX_NS_EM      = "http://www.mozilla.org/2004/em-rdf#";
-const kXULNSURI         = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const RDFURI_ITEM_ROOT    = "urn:mozilla:item:root";
+const PREFIX_ITEM_URI     = "urn:mozilla:item:";
+const PREFIX_NS_EM        = "http://www.mozilla.org/2004/em-rdf#";
+const kXULNSURI           = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const XMLURI_PARSE_ERROR  = "http://www.mozilla.org/newlayout/xml/parsererror.xml"
 
 const OP_NONE                         = "";
 const OP_NEEDS_INSTALL                = "needs-install";
@@ -315,6 +317,7 @@ function showView(aView) {
       bindingList = [ ["aboutURL", "?aboutURL"],
                       ["availableUpdateURL", "?availableUpdateURL"],
                       ["availableUpdateVersion", "?availableUpdateVersion"],
+                      ["availableUpdateInfo", "?availableUpdateInfo"],
                       ["blocklisted", "?blocklisted"],
                       ["homepageURL", "?homepageURL"],
                       ["iconURL", "?iconURL"],
@@ -406,6 +409,8 @@ function showView(aView) {
   document.getElementById("continueDialogButton").hidden = !showContinue;
   document.getElementById("themePreviewArea").hidden = !isThemes;
   document.getElementById("themeSplitter").hidden = !isThemes;
+  document.getElementById("showUpdateInfoButton").hidden = aView != "updates";
+  document.getElementById("hideUpdateInfoButton").hidden = true;
 
   AddonsViewBuilder.updateView(types, "richlistitem", bindingList, null);
 
@@ -1111,24 +1116,146 @@ function onAddonSelect(aEvent)
 
   if (!document.getElementById("themePreviewArea").hidden) {
     var previewImageDeck = document.getElementById("previewImageDeck");
-    var previewImage = document.getElementById("previewImage");
-    if (!gExtensionsView.selectedItem) {
-      previewImageDeck.setAttribute("selectedIndex", "0");
-      if (previewImage.hasAttribute("src"))
-        previewImage.removeAttribute("src");
-    }
-    else {
-      var url = gExtensionsView.selectedItem.getAttribute("previewImage");
-      if (url) {
-        previewImageDeck.setAttribute("selectedIndex", "2");
-        previewImage.setAttribute("src", url);
-      }
-      else {
-        previewImageDeck.setAttribute("selectedIndex", "1");
+    if (gView == "themes") {
+      var previewImage = document.getElementById("previewImage");
+      if (!gExtensionsView.selectedItem) {
+        previewImageDeck.selectedIndex = 0;
         if (previewImage.hasAttribute("src"))
           previewImage.removeAttribute("src");
       }
+      else {
+        var url = gExtensionsView.selectedItem.getAttribute("previewImage");
+        if (url) {
+          previewImageDeck.selectedIndex = 2;
+          previewImage.setAttribute("src", url);
+        }
+        else {
+          previewImageDeck.selectedIndex = 1;
+          if (previewImage.hasAttribute("src"))
+            previewImage.removeAttribute("src");
+        }
+      }
     }
+    else if (gView == "updates") {
+      UpdateInfoLoader.cancelLoad();
+      if (!gExtensionsView.selectedItem)
+        previewImageDeck.selectedIndex = 3;
+      else if (!gExtensionsView.selectedItem.hasAttribute("availableUpdateInfo"))
+        previewImageDeck.selectedIndex = 4;
+      else
+        UpdateInfoLoader.loadInfo(gExtensionsView.selectedItem.getAttribute("availableUpdateInfo"));
+    }
+  }
+}
+
+/**
+ * Manages the retrieval of update information and the xsl stylesheet
+ * used to format the inforation into chrome.
+ */
+var UpdateInfoLoader = {
+  _stylesheet: null,
+  _styleRequest: null,
+  _infoDocument: null,
+  _infoRequest: null,
+  
+  // Called once both stylesheet and info requests have completed
+  displayInfo: function()
+  {
+    var processor = Components.classes["@mozilla.org/document-transformer;1?type=xslt"]
+                              .createInstance(Components.interfaces.nsIXSLTProcessor);
+    processor.flags |= Components.interfaces.nsIXSLTProcessorPrivate.DISABLE_ALL_LOADS;
+    
+    processor.importStylesheet(this._stylesheet);
+    var fragment = processor.transformToFragment(this._infoDocument, document);
+    document.getElementById("infoDisplay").appendChild(fragment);
+    document.getElementById("previewImageDeck").selectedIndex = 7;
+  },
+  
+  onStylesheetLoaded: function(event)
+  {
+    var request = event.target;
+    this._styleRequest = null;
+    this._stylesheet = request.responseXML;
+
+    if (!this._stylesheet ||
+        this._stylesheet.documentElement.namespaceURI == XMLURI_PARSE_ERROR ||
+        (request.status != 200 && request.status != 0)) {
+      // The stylesheet load failing is a bad sign
+      document.getElementById("previewImageDeck").selectedIndex = 6;
+      return;
+    }
+
+    if (this._infoDocument)
+      this.displayInfo();
+  },
+  
+  onInfoLoaded: function(event)
+  {
+    var request = event.target;
+    this._infoRequest = null;
+    this._infoDocument = request.responseXML;
+    
+    if (!this._infoDocument ||
+        this._infoDocument.documentElement.namespaceURI == XMLURI_PARSE_ERROR ||
+        (request.status != 200 && request.status != 0)) {
+      // Should attempt to parse request.responseText with the html parser
+      document.getElementById("previewImageDeck").selectedIndex = 6;
+      return;
+    }
+
+    if (this._stylesheet)
+      this.displayInfo();
+  },
+  
+  onError: function(event)
+  {
+    if (event.request == this._infoRequest)
+      this._infoRequest = null;
+    else // Means the stylesheet load has failed which is pretty bad news
+      this.cancelRequest();
+
+    document.getElementById("previewImageDeck").selectedIndex = 6;
+  },
+  
+  loadInfo: function(url)
+  {
+    this.cancelLoad();
+    this._infoDocument = null;
+    document.getElementById("previewImageDeck").selectedIndex = 5;
+    var display = document.getElementById("infoDisplay");
+    while (display.lastChild)
+      display.removeChild(display.lastChild);
+
+    this._infoRequest = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                                  .createInstance(Components.interfaces.nsIXMLHttpRequest);
+    this._infoRequest.open("GET", url, true);
+    
+    var self = this;
+    this._infoRequest.onerror = function(event) { self.onError(event); };
+    this._infoRequest.onload = function(event) { self.onInfoLoaded(event); };
+    this._infoRequest.send(null);
+
+    // We may have the stylesheet cached from a previous load, or may still be
+    // loading it.
+    if (this._stylesheet || this._styleRequest)
+      return;
+
+    this._styleRequest = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                                   .createInstance(Components.interfaces.nsIXMLHttpRequest);
+    this._styleRequest.open("GET", "chrome://mozapps/content/extensions/updateinfo.xsl", true);
+    this._styleRequest.overrideMimeType("text/xml");
+    
+    this._styleRequest.onerror = function(event) { self.onError(event); };
+    this._styleRequest.onload = function(event) { self.onStylesheetLoaded(event); };
+    this._styleRequest.send(null);
+  },
+  
+  cancelLoad: function()
+  {
+    // Leave the stylesheet loader running, there's a good chance we'll need it
+    if (this._infoRequest)
+      this._infoRequest.abort();
+    this._infoRequest = null;
   }
 }
 
@@ -1529,6 +1656,24 @@ function updateGlobalCommands() {
   setElementDisabledByID("cmd_installUpdatesAll", disableInstallUpdate);
   setElementDisabledByID("cmd_restartApp", disableAppRestart);
   setElementDisabledByID("cmd_installFile", disableInstallFile);
+}
+
+function showUpdateInfo()
+{
+  document.getElementById("themePreviewArea").hidden = false;
+  document.getElementById("themeSplitter").hidden = false;
+  document.getElementById("showUpdateInfoButton").hidden = true;
+  document.getElementById("hideUpdateInfoButton").hidden = false;
+  onAddonSelect();
+}
+
+function hideUpdateInfo()
+{
+  UpdateInfoLoader.cancelLoad();
+  document.getElementById("themePreviewArea").hidden = true;
+  document.getElementById("themeSplitter").hidden = true;
+  document.getElementById("showUpdateInfoButton").hidden = false;
+  document.getElementById("hideUpdateInfoButton").hidden = true;
 }
 
 function checkUpdatesAll() {
