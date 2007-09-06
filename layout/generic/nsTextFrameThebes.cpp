@@ -1502,6 +1502,14 @@ GetFontMetrics(gfxFontGroup* aFontGroup)
   return font->GetMetrics();
 }
 
+static void
+AppendLineBreakOffset(nsTArray<PRUint32>* aArray, PRUint32 aOffset)
+{
+  if (aArray->Length() > 0 && (*aArray)[aArray->Length() - 1] == aOffset)
+    return;
+  aArray->AppendElement(aOffset);
+}
+
 void
 BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 {
@@ -1519,11 +1527,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     textFlags |= nsTextFrameUtils::TEXT_INCOMING_WHITESPACE;
   }
 
-  nsAutoTArray<PRUint32,50> textBreakPoints;
-  // We might have a final break offset for the end of the textrun
-  if (!textBreakPoints.AppendElements(mLineBreakBeforeFrames.Length() + 1))
-    return;
-
+  nsAutoTArray<PRInt32,50> textBreakPoints;
   TextRunUserData dummyData;
   TextRunMappedFlow dummyMappedFlow;
 
@@ -1596,8 +1600,8 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       ++finalMappedFlowCount;
 
       while (nextBreakBeforeFrame && nextBreakBeforeFrame->GetContent() == content) {
-        textBreakPoints[nextBreakIndex - 1] =
-          nextBreakBeforeFrame->GetContentOffset() + newFlow->mDOMOffsetToBeforeTransformOffset;
+        textBreakPoints.AppendElement(
+            nextBreakBeforeFrame->GetContentOffset() + newFlow->mDOMOffsetToBeforeTransformOffset);
         nextBreakBeforeFrame = GetNextBreakBeforeFrame(&nextBreakIndex);
       }
     }
@@ -1742,19 +1746,19 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   NS_ASSERTION(nextBreakIndex == mLineBreakBeforeFrames.Length(),
                "Didn't find all the frames to break-before...");
   gfxSkipCharsIterator iter(skipChars);
-  for (i = 0; i < nextBreakIndex; ++i) {
-    PRUint32* breakPoint = &textBreakPoints[i];
-    *breakPoint = iter.ConvertOriginalToSkipped(*breakPoint);
+  nsAutoTArray<PRUint32,50> textBreakPointsAfterTransform;
+  for (i = 0; i < textBreakPoints.Length(); ++i) {
+    AppendLineBreakOffset(&textBreakPointsAfterTransform, 
+            iter.ConvertOriginalToSkipped(textBreakPoints[i]));
   }
   if (mStartOfLine) {
-    textBreakPoints[nextBreakIndex] = transformedLength;
-    ++nextBreakIndex;
+    AppendLineBreakOffset(&textBreakPointsAfterTransform, transformedLength);
   }
 
   gfxTextRun* textRun;
   gfxTextRunFactory::Parameters params =
       { mContext, finalUserData, &skipChars,
-        textBreakPoints.Elements(), nextBreakIndex,
+        textBreakPointsAfterTransform.Elements(), textBreakPointsAfterTransform.Length(),
         firstFrame->PresContext()->AppUnitsPerDevPixel() };
 
   if (mDoubleByteText) {
