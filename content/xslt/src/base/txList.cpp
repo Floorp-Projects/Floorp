@@ -246,10 +246,6 @@ txListIterator::txListIterator(txList* list) {
    atEndOfList  = MB_FALSE;
 } //-- txListIterator
 
-txListIterator::~txListIterator() {
-  //-- overrides default destructor to do nothing
-} //-- ~txListIterator
-
 /**
  * Adds the Object pointer to the txList pointed to by this txListIterator.
  * The Object pointer is inserted as the next item in the txList

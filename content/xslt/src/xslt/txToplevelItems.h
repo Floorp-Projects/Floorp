@@ -127,7 +127,7 @@ public:
 class txStripSpaceItem : public txToplevelItem
 {
 public:
-    virtual ~txStripSpaceItem();
+    ~txStripSpaceItem();
 
     TX_DECL_TOPLEVELITEM
 

@@ -56,9 +56,6 @@ class nsXPathEvaluator : public nsIDOMXPathEvaluator,
 {
 public:
     nsXPathEvaluator(nsISupports *aOuter);
-    virtual ~nsXPathEvaluator()
-    {
-    }
 
     nsresult Init();
 

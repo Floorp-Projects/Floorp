@@ -44,10 +44,6 @@ txTextHandler::txTextHandler(MBool aOnlyText) : mLevel(0),
 {
 }
 
-txTextHandler::~txTextHandler()
-{
-}
-
 nsresult
 txTextHandler::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
                          nsIAtom* aLowercaseLocalName, PRInt32 aNsID,

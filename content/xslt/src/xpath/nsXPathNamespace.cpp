@@ -48,14 +48,6 @@ NS_INTERFACE_MAP_BEGIN(nsXPathNamespace)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XPathNamespace)
 NS_INTERFACE_MAP_END
 
-nsXPathNamespace::nsXPathNamespace()
-{
-}
-
-nsXPathNamespace::~nsXPathNamespace()
-{
-}
-
 /* readonly attribute DOMString nodeName; */
 NS_IMETHODIMP nsXPathNamespace::GetNodeName(nsAString & aNodeName)
 {
