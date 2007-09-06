@@ -57,6 +57,7 @@
 #include "nsStringStream.h"
 #include "nsIFormProcessor.h"
 #include "nsIURI.h"
+#include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsLinebreakConverter.h"
 #include "nsICharsetConverterManager.h"
@@ -532,29 +533,35 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
       return NS_OK;
     }
 
-    nsCAutoString path;
-    rv = aURI->GetPath(path);
-    NS_ENSURE_SUCCESS(rv, rv);
-    // Bug 42616: Trim off named anchor and save it to add later
-    PRInt32 namedAnchorPos = path.FindChar('#');
-    nsCAutoString namedAnchor;
-    if (kNotFound != namedAnchorPos) {
-      path.Right(namedAnchor, (path.Length() - namedAnchorPos));
-      path.Truncate(namedAnchorPos);
+    nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+    if (url) {
+      url->SetQuery(mQueryString);
     }
+    else {
+      nsCAutoString path;
+      rv = aURI->GetPath(path);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // Bug 42616: Trim off named anchor and save it to add later
+      PRInt32 namedAnchorPos = path.FindChar('#');
+      nsCAutoString namedAnchor;
+      if (kNotFound != namedAnchorPos) {
+        path.Right(namedAnchor, (path.Length() - namedAnchorPos));
+        path.Truncate(namedAnchorPos);
+      }
 
-    // Chop off old query string (bug 25330, 57333)
-    // Only do this for GET not POST (bug 41585)
-    PRInt32 queryStart = path.FindChar('?');
-    if (kNotFound != queryStart) {
-      path.Truncate(queryStart);
+      // Chop off old query string (bug 25330, 57333)
+      // Only do this for GET not POST (bug 41585)
+      PRInt32 queryStart = path.FindChar('?');
+      if (kNotFound != queryStart) {
+        path.Truncate(queryStart);
+      }
+
+      path.Append('?');
+      // Bug 42616: Add named anchor to end after query string
+      path.Append(mQueryString + namedAnchor);
+
+      aURI->SetPath(path);
     }
-
-    path.Append('?');
-    // Bug 42616: Add named anchor to end after query string
-    path.Append(mQueryString + namedAnchor);
-
-    aURI->SetPath(path);
   }
 
   return rv;
