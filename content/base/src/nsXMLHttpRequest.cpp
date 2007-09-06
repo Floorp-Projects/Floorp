@@ -1503,10 +1503,29 @@ nsXMLHttpRequest::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInp
   return inStr->ReadSegments(nsXMLHttpRequest::StreamReaderFunc, (void*)this, count, &totalRead);
 }
 
+PRBool
+IsSameOrBaseChannel(nsIRequest* aPossibleBase, nsIChannel* aChannel)
+{
+  nsCOMPtr<nsIMultiPartChannel> mpChannel = do_QueryInterface(aPossibleBase);
+  if (mpChannel) {
+    nsCOMPtr<nsIChannel> baseChannel;
+    nsresult rv = mpChannel->GetBaseChannel(getter_AddRefs(baseChannel));
+    NS_ENSURE_SUCCESS(rv, PR_FALSE);
+    
+    return baseChannel == aChannel;
+  }
+
+  return aPossibleBase == aChannel;
+}
+
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
 NS_IMETHODIMP
 nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
+  if (!IsSameOrBaseChannel(request, mChannel)) {
+    return NS_OK;
+  }
+
   // Don't do anything if we have been aborted
   if (mState & XML_HTTP_REQUEST_UNINITIALIZED)
     return NS_OK;
@@ -1520,7 +1539,7 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(request));
   NS_ENSURE_TRUE(channel, NS_ERROR_UNEXPECTED);
 
-  mChannel->SetOwner(mPrincipal);
+  channel->SetOwner(mPrincipal);
 
   mReadRequest = request;
   mContext = ctxt;
@@ -1617,6 +1636,10 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 NS_IMETHODIMP
 nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult status)
 {
+  if (!IsSameOrBaseChannel(request, mChannel)) {
+    return NS_OK;
+  }
+
   // Don't do anything if we have been aborted
   if (mState & XML_HTTP_REQUEST_UNINITIALIZED)
     return NS_OK;
