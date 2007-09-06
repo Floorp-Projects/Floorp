@@ -1,5 +1,4 @@
 <!-- ***** BEGIN LICENSE BLOCK *****
-#if 0
    - Version: MPL 1.1/GPL 2.0/LGPL 2.1
    -
    - The contents of this file are subject to the Mozilla Public License Version
@@ -15,12 +14,12 @@
    - The Original Code is DOM Inspector.
    -
    - The Initial Developer of the Original Code is
-   - Netscape Communications Corporation.
-   - Portions created by the Initial Developer are Copyright (C) 2003
+   - Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2007
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   Shawn Wilsher <me@shawnwilsher.com>
+   -   Alexander Surkov <surkov.alexander@gmail.com>
    -   Hasse Wallanger <hasse@jasajudeju.se>
    -
    - Alternatively, the contents of this file may be used under the terms of
@@ -35,32 +34,10 @@
    - the provisions above, a recipient may use your version of this file under
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
-#endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY nodeName.label "Nodnamn:">
-<!ENTITY localName.label "Lokalt namn:">
-<!ENTITY namespaceURI.label "Namnrymdens URI:">
-<!ENTITY nodeType.label "Nodtyp:">
-<!ENTITY nodeValue.label "Nodevärde:">
+<!ENTITY eventType.label "Händelsetyp">
+<!ENTITY eventTime.label "Tid">
+<!ENTITY eventNodeName.label "Nodnamn">
+<!ENTITY clearEventList.label "Rensa händelselista">
 
-<!ENTITY namespaceTitle.null.label "noll">
-<!ENTITY namespaceTitle.default.label "Dokumentstandard">
-<!ENTITY namespaceTitle.custom.label "Anpassad">
-
-<!-- LOCALIZATION NOTE: The following entities are names of W3C specifications.
-                        Please consult http://www.w3.org/Consortium/Translation/
-                        for appropriate translation or leave unchanged. -->
-<!ENTITY namespaceTitle.XMLNS.label "XMLNS">
-<!ENTITY namespaceTitle.XML.label "XML">
-<!ENTITY namespaceTitle.XHTML.label "XHTML">
-<!ENTITY namespaceTitle.XLink.label "XLink">
-<!ENTITY namespaceTitle.XSLT.label "XSLT">
-<!ENTITY namespaceTitle.XBL.label "XBL">
-<!ENTITY namespaceTitle.MathML.label "MathML">
-<!ENTITY namespaceTitle.RDF.label "RDF">
-<!ENTITY namespaceTitle.XUL.label "XUL">
-<!ENTITY namespaceTitle.SVG.label "SVG">
-<!ENTITY namespaceTitle.XMLEvents.label "XML Events">
-<!ENTITY namespaceTitle.WAIRoles.label "WAI Roles">
-<!ENTITY namespaceTitle.WAIProperties.label "WAI Properties">
