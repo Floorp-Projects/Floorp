@@ -20,6 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
+   -   Shawn Wilsher <me@shawnwilsher.com>
    -   Hasse Wallanger <hasse@jasajudeju.se>
    -
    - Alternatively, the contents of this file may be used under the terms of
@@ -52,6 +53,9 @@
 
   <!ENTITY cmdToggleAccessibleNodes.label "Visa åtkomliga noder">
   <!ENTITY cmdToggleAccessibleNodes.accesskey "å">
+
+  <!ENTITY cmdToggleProcessingInstructions.label "Visa processinstruktioner">
+  <!ENTITY cmdToggleProcessingInstructions.accesskey "c">
 
   <!ENTITY cmdFlashSelected.label "Blinka med det markerade elementet">
 
@@ -97,3 +101,38 @@
   <!ENTITY mnEditPasteFirstChild.label "Som första barn">
   <!ENTITY mnEditPasteLastChild.label "Som sista barn">
   <!ENTITY mnEditPasteAsParent.label "Som förälder">
+
+  <!ENTITY mnEditInsertMenu.label "Infoga">
+  <!ENTITY mnEditInsertAfter.label "Efter">
+  <!ENTITY mnEditInsertBefore.label "Före">
+  <!ENTITY mnEditInsertFirstChild.label "Som första underordnad">
+  <!ENTITY mnEditInsertLastChild.label "Som sista underordnad">
+
+  <!ENTITY insertNode.title "Infoga nod">
+  <!ENTITY nodeType.label "Nodtyp:">
+  <!ENTITY nodeType.element.label "Element">
+  <!ENTITY nodeType.text.label "Text">
+  <!ENTITY namespaceURI.label "Namnrymd-URI:">
+  <!ENTITY tagName.label "Taggnamn:">
+  <!ENTITY nodeValue.label "Nodvärde:">
+
+  <!ENTITY namespaceTitle.null.label "ingen">
+  <!ENTITY namespaceTitle.default.label "Dokumentstandard">
+  <!ENTITY namespaceTitle.custom.label "Anpassad">
+
+<!-- LOCALIZATION NOTE: The following entities are names of W3C specifications.
+                        Please consult http://www.w3.org/Consortium/Translation/
+                        for appropriate translation or leave unchanged. -->
+  <!ENTITY namespaceTitle.XMLNS.label "XMLNS">
+  <!ENTITY namespaceTitle.XML.label "XML">
+  <!ENTITY namespaceTitle.XHTML.label "XHTML">
+  <!ENTITY namespaceTitle.XLink.label "XLink">
+  <!ENTITY namespaceTitle.XSLT.label "XSLT">
+  <!ENTITY namespaceTitle.XBL.label "XBL">
+  <!ENTITY namespaceTitle.MathML.label "MathML">
+  <!ENTITY namespaceTitle.RDF.label "RDF">
+  <!ENTITY namespaceTitle.XUL.label "XUL">
+  <!ENTITY namespaceTitle.SVG.label "SVG">
+  <!ENTITY namespaceTitle.XMLEvents.label "XML Events">
+  <!ENTITY namespaceTitle.WAIRoles.label "WAI Roles">
+  <!ENTITY namespaceTitle.WAIProperties.label "WAI Properties">
