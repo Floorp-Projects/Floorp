@@ -4480,7 +4480,8 @@ ExtensionManager.prototype = {
                   type            : EM_I(type),
                   availableUpdateURL    : null,
                   availableUpdateHash   : null,
-                  availableUpdateVersion: null };
+                  availableUpdateVersion: null,
+                  availableUpdateInfo   : null };
     for (var p in props)
       ds.setItemProperty(id, EM_R(p), props[p]);
     ds.updateProperty(id, "availableUpdateURL");
@@ -4520,7 +4521,8 @@ ExtensionManager.prototype = {
                   newVersion      : EM_L(getManifestProperty(installManifest, "version")),
                   availableUpdateURL      : null,
                   availableUpdateHash     : null,
-                  availableUpdateVersion  : null };
+                  availableUpdateVersion  : null,
+                  availableUpdateInfo     : null };
     for (var p in props)
       ds.setItemProperty(id, EM_R(p), props[p]);
     ds.updateProperty(id, "availableUpdateURL");
@@ -5392,6 +5394,7 @@ ExtensionManager.prototype = {
         ds.setItemProperty(id, EM_R("availableUpdateURL"), null);
         ds.setItemProperty(id, EM_R("availableUpdateHash"), null);
         ds.setItemProperty(id, EM_R("availableUpdateVersion"), null);
+        ds.setItemProperty(id, EM_R("availableUpdateInfo"), null);
         ds.updateProperty(id, "availableUpdateURL");
         ds.updateProperty(id, "updateable");
       }
@@ -6474,6 +6477,15 @@ RDFItemUpdater.prototype = {
                                  appID);
 
       if (this._updater._isValidUpdate(aLocalItem, updatedItem)) {
+        if (aUpdateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION) {
+          var infourl = this._getPropertyFromResource(aDataSource, targetApp,
+                                                      "updateInfoURL");
+          if (infourl)
+            infourl = EM_L(infourl);
+          this._updater._emDS.setItemProperty(aLocalItem.id,
+                                              EM_R("availableUpdateInfo"),
+                                              infourl);
+        }
         if (appID == this._updater._appID) {
           // App takes precedence over toolkit.  If we found the app, bail out.
           return updatedItem;
