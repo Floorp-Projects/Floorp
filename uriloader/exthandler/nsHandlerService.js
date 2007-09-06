@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Myk Melez <myk@mozilla.org>
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,6 +47,9 @@ const CLASS_PROTOCOLINFO    = "scheme";
 
 // namespace prefix
 const NC_NS                 = "http://home.netscape.com/NC-rdf#";
+
+// the most recent default handlers that have been injected
+const NC_DEFAULT_HANDLERS_VERSION = NC_NS + "defaultHandlersVersion";
 
 // type list properties
 
@@ -118,11 +122,33 @@ HandlerService.prototype = {
     // Observe xpcom-shutdown so we can remove these observers
     // when the application shuts down.
     this._observerSvc.addObserver(this, "xpcom-shutdown", false);
+
+    // Observe profile-do-change so that non-default profiles get upgraded too
+    this._observerSvc.addObserver(this, "profile-do-change", false);
+    
+    // do any necessary updating of the datastore
+    this._updateDB();
   },
 
+  _updateDB: function HS__updateDB() {
+    // if the default prefs have changed, inject any new default handers
+    // into the datastore 
+    try { 
+      if (this._datastoreDefaultHandlersVersion <
+          this._prefsDefaultHandlersVersion) {
+        this._injectNewDefaults();
+        this._datastoreDefaultHandlersVersion = 
+        this._prefsDefaultHandlersVersion;
+      }
+    } catch (ex) {
+      // if injecting the defaults failed, life goes on...
+    }
+  },
+  
   _destroy: function HS__destroy() {
     this._observerSvc.removeObserver(this, "profile-before-change");
     this._observerSvc.removeObserver(this, "xpcom-shutdown");
+    this._observerSvc.removeObserver(this, "profile-do-change");
 
     // XXX Should we also null references to all the services that get stored
     // by our memoizing getters in the Convenience Getters section?
@@ -134,6 +160,95 @@ HandlerService.prototype = {
     this.__ds = null;
   },
 
+  _isInHandlerArray: function HS__isInHandlerArray(aArray, aHandler) {
+    var enumerator = aArray.enumerate();
+    while (enumerator.hasMoreElements()) {
+      let handler = enumerator.getNext();
+      handler.QueryInterface(Ci.nsIHandlerApp);
+      if (handler.equals(aHandler))
+        return true;
+    }
+    
+    return false;
+  },
+
+  get _datastoreDefaultHandlersVersion() {
+    var version = this._getValue("urn:root", NC_DEFAULT_HANDLERS_VERSION); 
+    
+    version = version ? version : -1;
+    
+    return version;
+  },
+
+  set _datastoreDefaultHandlersVersion(aNewVersion) {
+    return this._setLiteral("urn:root", NC_DEFAULT_HANDLERS_VERSION, 
+                            aNewVersion);
+  },
+
+  get _prefsDefaultHandlersVersion() {
+    // get handler service pref branch
+    var prefSvc = Cc["@mozilla.org/preferences-service;1"].
+                  getService(Ci.nsIPrefService);
+    var handlerSvcBranch = prefSvc.getBranch("gecko.handlerService.");
+  
+    // get the version of the preferences for this locale
+    var version = handlerSvcBranch.getComplexValue("defaultHandlersVersion",
+                                                   Ci.nsISupportsString).data;
+                                                   
+    return version;                                                   
+  },
+  
+  _injectNewDefaults: function HS__injectNewDefaults() {
+    // get handler service pref branch
+    var prefSvc = Cc["@mozilla.org/preferences-service;1"].
+                  getService(Ci.nsIPrefService);
+
+    let schemesPrefBranch = prefSvc.getBranch("gecko.handlerService.schemes.");
+    let schemePrefList = schemesPrefBranch.getChildList("", {}); 
+
+    let protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"].
+                   getService(Ci.nsIExternalProtocolService);
+
+    var schemes = {};
+
+    // read all the scheme prefs into a hash
+    for each (var schemePrefName in schemePrefList) {
+
+      let [scheme, handlerNumber, attribute] = schemePrefName.split(".");
+
+      if (!(scheme in schemes))
+        schemes[scheme] = {};
+      if (!(handlerNumber in schemes[scheme]))
+        schemes[scheme][handlerNumber] = {};
+        
+      schemes[scheme][handlerNumber][attribute] = 
+        schemesPrefBranch.getComplexValue(schemePrefName,
+                                          Ci.nsISupportsString).data;
+    }
+
+    for (var scheme in schemes) {
+
+      // get a protocol info object for that scheme and cache the possible
+      // handlers to avoid extra xpconnect traversals
+      let protoInfo = protoSvc.getProtocolHandlerInfo(scheme);  
+      let possibleHandlers = protoInfo.possibleApplicationHandlers;
+
+      for each (var handlerPrefs in schemes[scheme]) {
+
+        let handlerApp = Cc["@mozilla.org/uriloader/web-handler-app;1"].
+                         createInstance(Ci.nsIWebHandlerApp);
+
+        handlerApp.uriTemplate = handlerPrefs.uriTemplate;
+        handlerApp.name = handlerPrefs.name;                
+
+        if (!this._isInHandlerArray(possibleHandlers, handlerApp)) {
+             possibleHandlers.appendElement(handlerApp, false);
+        }
+      }
+
+      this.store(protoInfo);
+    }
+  },
 
   //**************************************************************************//
   // nsIObserver
@@ -146,6 +261,9 @@ HandlerService.prototype = {
       case "xpcom-shutdown":
         this._destroy();
         break;
+      case "profile-do-change":
+        this._updateDB();
+        break;  
     }
   },
 
