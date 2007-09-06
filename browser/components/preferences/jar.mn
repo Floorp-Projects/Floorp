@@ -2,8 +2,8 @@ browser.jar:
 *   content/browser/preferences/advanced.xul
 *   content/browser/preferences/advanced.js
 *   content/browser/preferences/advanced-scripts.xul
-*   content/browser/preferences/changeaction.xul
-*   content/browser/preferences/changeaction.js
+*   content/browser/preferences/applications.xul
+*   content/browser/preferences/applications.js
 *   content/browser/preferences/colors.xul
 *   content/browser/preferences/cookies.xul
 *   content/browser/preferences/cookies.js
@@ -11,13 +11,11 @@ browser.jar:
 *   content/browser/preferences/content.js
 *   content/browser/preferences/connection.xul
 *   content/browser/preferences/connection.js
-*   content/browser/preferences/downloadactions.xul
-*   content/browser/preferences/downloadactions.js
 *   content/browser/preferences/fallbackEULA.xhtml
-*   content/browser/preferences/feeds.xul
-*   content/browser/preferences/feeds.js
 *   content/browser/preferences/fonts.xul
 *   content/browser/preferences/fonts.js
+*   content/browser/preferences/handlers.xml
+*   content/browser/preferences/handlers.css
 *   content/browser/preferences/languages.xul
 *   content/browser/preferences/languages.js
 *   content/browser/preferences/main.xul

@@ -114,14 +114,14 @@ radio[pane=paneContent][selected="true"] {
 	-moz-image-region: rect(32px, 96px, 64px, 64px);
 }
 
-/* ----- FEEDS BUTTON ----- */
+/* ----- APPLICATIONS BUTTON ----- */
 
-radio[pane=paneFeeds] {
+radio[pane=paneApplications] {
 	-moz-image-region: rect(0px, 128px, 32px, 96px);
 }
-radio[pane=paneFeeds]:hover,
-radio[pane=paneFeeds]:active,
-radio[pane=paneFeeds][selected="true"] {
+radio[pane=paneApplications]:hover,
+radio[pane=paneApplications]:active,
+radio[pane=paneApplications][selected="true"] {
 	-moz-image-region: rect(32px, 128px, 64px, 96px);
 }
 
@@ -275,12 +275,4 @@ caption {
 
 .updateControls {
   -moz-margin-start: 10px;
-}
-
-
-/**
- * Feeds pane
- */
-#chooseClientAppCell {
-  -moz-padding-end: 12px;
 }

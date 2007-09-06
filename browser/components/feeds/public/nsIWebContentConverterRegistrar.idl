@@ -36,11 +36,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIMIMEInfo.idl"
 
 interface nsIRequest;
 
-[scriptable, uuid(2bd97d63-e928-4d52-9fd4-34061349a9a6)]
-interface nsIWebContentHandlerInfo : nsISupports
+[scriptable, uuid(eb361098-5158-4b21-8f98-50b445f1f0b2)]
+interface nsIWebContentHandlerInfo : nsIHandlerApp
 {
   /**
    * The content type handled by the handler
@@ -53,11 +54,6 @@ interface nsIWebContentHandlerInfo : nsISupports
    */
   readonly attribute AString uri;
 
-  /**
-   * A human readable title of the handler.
-   */
-  readonly attribute AString name;
-
   /** 
    * Gets the service URL Spec, with the loading document URI encoded in it.
    * @param   uri
@@ -66,15 +62,6 @@ interface nsIWebContentHandlerInfo : nsISupports
    *          it.
    */
   AString getHandlerURI(in AString uri);
-
-  /**
-   * Determines if this handler object is equivalent to another.
-   * @param   other
-   *          The other handler info object
-   * @returns true if the two objects are equivalent (same content type, 
-   *          same uri).
-   */
-  boolean equals(in nsIWebContentHandlerInfo other);
 };
 
 [scriptable, uuid(632b16a8-5c6b-4dc5-a8db-01771af7a79d)]
