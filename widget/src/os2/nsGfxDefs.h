@@ -81,18 +81,6 @@ struct nsUconvInfo
 
 static nsUconvInfo* gUconvInfoList = NULL;
 
-// Module data
-struct nsGfxModuleData
-{
-   HMODULE hModResources;
-   HPS     hpsScreen;
-
-   nsGfxModuleData();
-  ~nsGfxModuleData();
-
-   void Init();
-};
-
 int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize );
 int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnichar *szBuffer, ULONG ulSize );
 BOOL GetTextExtentPoint32(HPS aPS, const char* aString, int aLength, PSIZEL aSizeL);
@@ -100,8 +88,6 @@ BOOL ExtTextOut(HPS aPS, int X, int Y, UINT fuOptions, const RECTL* lprc,
                 const char* aString, unsigned int aLength, const int* pDx);
 
 BOOL IsDBCS();
-
-extern nsGfxModuleData gGfxModuleData;
 
 #ifndef min
 #define min(a,b) (((a) < (b)) ? (a) : (b))
