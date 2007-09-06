@@ -370,6 +370,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 379316-2.html 379316-2-ref.html # bug 
 == 391140-1.html 391140-1-ref.html
 == 391909-1.html 391909-1-ref.html
 == 391994-1.html 391994-1-ref.html
+== 392435-1.html 392435-1-ref.html
 == 393649-1.html 393649-1-ref.html
 == 393517-1.xhtml about:blank  # crash test
 == 393671-1.html 393671-1-ref.html
