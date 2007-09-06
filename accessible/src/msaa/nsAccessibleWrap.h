@@ -94,8 +94,7 @@ class nsAccessibleWrap : public nsAccessible,
                          public CAccessibleHyperlink,
                          public CAccessibleValue,
                          public IAccessible2,
-                         public IEnumVARIANT,
-                         public IServiceProvider
+                         public IEnumVARIANT
 {
   public: // construction, destruction
     nsAccessibleWrap(nsIDOMNode*, nsIWeakReference *aShell);
@@ -106,9 +105,6 @@ class nsAccessibleWrap : public nsAccessible,
 
   public: // IUnknown methods - see iunknown.h for documentation
     STDMETHODIMP QueryInterface(REFIID, void**);
-
-  public: // IServiceProvider
-    STDMETHODIMP QueryService(REFGUID guidService, REFIID riid, void** ppv);
 
   // Return the registered OLE class ID of this object's CfDataObj.
     CLSID GetClassID() const;
