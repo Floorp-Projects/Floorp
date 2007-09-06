@@ -796,8 +796,5 @@ error_callback(png_structp png_ptr, png_const_charp error_msg)
 void
 warning_callback(png_structp png_ptr, png_const_charp warning_msg)
 {
-  /* convert tRNS warning to error (bug #251381) */
-  if (strncmp(warning_msg, "Missing PLTE before tRNS", 24) == 0)
-    png_error(png_ptr, warning_msg);
   PR_LOG(gPNGLog, PR_LOG_WARNING, ("libpng warning: %s\n", warning_msg));
 }
