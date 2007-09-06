@@ -69,16 +69,17 @@
 
 struct hentry
 {
-  short    wlen;
-  short    alen;
-  char     wbeg[2];
-  char *   word;
-  unsigned short * astr;
-  struct   hentry * next;
-  struct   hentry * next_homonym;
+  unsigned char blen; // word length in bytes
+  unsigned char clen; // word length in characters (different for UTF-8 enc.)
+  short    alen;      // length of affix flag vector
+  unsigned short * astr;  // affix flag vector
+  struct   hentry * next; // next word with same hash code
+  struct   hentry * next_homonym; // next homonym word (with same hash code)
 #ifdef HUNSPELL_EXPERIMENTAL
-  char *   description;
+  char *   description; // morphological data (optional)
 #endif
+  char     var;       // variable fields (only for special pronounciation yet)
+  char     word;      // variable-length word (8-bit or UTF-8 encoding)
 };
 
 #endif

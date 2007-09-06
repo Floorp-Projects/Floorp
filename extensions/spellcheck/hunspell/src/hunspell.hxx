@@ -147,8 +147,7 @@ public:
   const char * get_wordchars();
   unsigned short * get_wordchars_utf16(int * len);
 
-//  struct cs_info * get_csconv();
-//  int utf16_isalpha(unsigned short c);
+  struct cs_info * get_csconv();
   const char * get_version();
 
   /* experimental functions */
