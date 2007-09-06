@@ -23,6 +23,7 @@
  *   Blake Ross <blaker@netscape.com>
  *   Ben Goodger <ben@netscape.com>
  *   Shawn Wilsher <me@shawnwilsher.com>
+ *   Srirang G Doddihal <brahmana@doddihal.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -158,6 +159,7 @@ protected:
                                   const PRUnichar* aDontCancelButton);
 
   PRInt32  GetRetentionBehavior();
+  nsresult ExecuteDesiredAction(nsDownload *aDownload);
 
   static PRBool IsInFinalStage(DownloadState aState)
   {
@@ -227,6 +229,7 @@ protected:
 
 private:
   nsString mDisplayName;
+  nsCString mEntityID;
 
   nsCOMPtr<nsIURI> mSource;
   nsCOMPtr<nsIURI> mReferrer;
@@ -245,6 +248,7 @@ private:
   PRTime mStartTime;
   PRTime mLastUpdate;
   PRBool mPaused;
+  PRBool mWasResumed;
   double mSpeed;
 
   friend class nsDownloadManager;
