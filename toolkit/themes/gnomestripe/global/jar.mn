@@ -9,3 +9,9 @@ classic.jar:
 +  skin/classic/global/checkbox.css
 +  skin/classic/global/radio.css
 +  skin/classic/global/global.css
++  skin/classic/global/menu/Menu-arrow.png                     (menu/Menu-arrow.png)
++  skin/classic/global/menu/Menu-arrow-rtl.png                 (menu/Menu-arrow-rtl.png)
++  skin/classic/global/menu/Menu-arrow-disabled.png            (menu/Menu-arrow-disabled.png)
++  skin/classic/global/menu/Menu-arrow-disabled-rtl.png        (menu/Menu-arrow-disabled-rtl.png)
++  skin/classic/global/menu/Menu-arrow-hover.png               (menu/Menu-arrow-hover.png)
++  skin/classic/global/menu/Menu-arrow-hover-rtl.png           (menu/Menu-arrow-hover-rtl.png)
