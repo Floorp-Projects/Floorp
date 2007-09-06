@@ -496,6 +496,9 @@ pref("security.enable_java",                true);
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
 
+// Same-origin policy for file: URIs: 0=self, 1=samedir, 2=subdir, 3=anyfile
+pref("security.fileuri.origin_policy", 0);
+
 // If there is ever a security firedrill that requires
 // us to block certian ports global, this is the pref 
 // to use.  Is is a comma delimited list of port numbers
