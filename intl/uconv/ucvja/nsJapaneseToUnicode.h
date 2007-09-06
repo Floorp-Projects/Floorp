@@ -123,6 +123,7 @@ public:
         mState = mState_ASCII;
         mLastLegalState = mState_ASCII;
         mData = 0;
+        mRunLength = 0;
         G2charset = G2_unknown;
         mGB2312Decoder = nsnull;
         mEUCKRDecoder = nsnull;
@@ -148,6 +149,7 @@ public:
      {
         mState = mState_ASCII;
         mLastLegalState = mState_ASCII;
+        mRunLength = 0;
         setMapMode();
         return NS_OK;
      }
@@ -176,6 +178,7 @@ private:
    mState_ERROR
  } mState, mLastLegalState;
  PRInt32 mData;
+ PRInt32 mRunLength; // the length of a non-ASCII run
  enum {
    G2_unknown,
    G2_ISO88591,

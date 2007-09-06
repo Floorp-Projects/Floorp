@@ -164,6 +164,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_ESC_24_29_A:  // ESC $ ) A
         if(SO == *src) {
            mState = eState_GB2312_1980;
+           mRunLength = 0;
         } else {
            if(dest+5 >= destEnd)
               goto error1;
@@ -180,6 +181,12 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_GB2312_1980:   // ESC $ ) A SO
         if(SI == *src) { // Shift-In (SI)
            mState = eState_ESC_24_29_A_SO_SI;
+           if (mRunLength == 0) {
+              if(dest+1 >= destEnd)
+                 goto error1;
+              *dest++ = 0xFFFD;
+           }
+           mRunLength = 0;
         } else if(ESC == *src) {
            mState = eState_ESC;
         } else {
@@ -204,6 +211,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
 
            aLen = destEnd - dest;
            rv = GB2312_To_Unicode(gb, gbLen, dest, &aLen);
+           ++mRunLength;
            if(rv == NS_OK_UDEC_MOREOUTPUT) {
               goto error1;
            } else if(NS_FAILED(rv)) {
@@ -223,6 +231,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_ESC_24_29_A_SO_SI:  // ESC $ ) A SO SI
         if(SO == *src) {
            mState = eState_GB2312_1980;
+           mRunLength = 0;
         } else if(ESC == *src) {
            mState = eState_ESC;
         } else {
@@ -237,6 +246,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_ESC_24_29_G:   // ESC $ ) G
         if(SO == *src) {
            mState = eState_CNS11643_1;
+           mRunLength = 0;
         } else {
            if(dest+5 >= destEnd)
               goto error1;
@@ -253,6 +263,12 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_CNS11643_1:   // ESC $ ) G SO
         if(SI == *src) { // Shift-In (SI)
            mState = eState_ESC_24_29_G_SO_SI;
+           if (mRunLength == 0) {
+              if(dest+1 >= destEnd)
+                 goto error1;
+              *dest++ = 0xFFFD;
+           }
+           mRunLength = 0;
         } else if(ESC == *src) {
            mState = eState_ESC;
         } else {
@@ -277,6 +293,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
 
            aLen = destEnd - dest;
            rv = EUCTW_To_Unicode(cns, cnsLen, dest, &aLen);
+           ++mRunLength;
            if(rv == NS_OK_UDEC_MOREOUTPUT) {
               goto error1;
            } else if(NS_FAILED(rv)) {
@@ -296,6 +313,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_ESC_24_29_G_SO_SI: // ESC $ ) G SO SI
         if(SO == *src) {
            mState = eState_CNS11643_1;
+           mRunLength = 0;
         } else if(ESC == *src) {
            mState = eState_ESC;
         } else {
@@ -341,6 +359,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_ESC_24_2A_H_ESC:  // ESC $ * H ESC
         if(SS2 == *src) {
            mState = eState_CNS11643_2;
+           mRunLength = 0;
         } else if('$' == *src) {
            mState = eState_ESC_24;
         } else {
@@ -360,6 +379,12 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_CNS11643_2:  // ESC $ * H ESC SS2
         if(SI == *src) { // Shift-In (SI)
            mState = eState_ESC_24_2A_H_ESC_SS2_SI;
+           if (mRunLength == 0) {
+              if(dest+1 >= destEnd)
+                 goto error1;
+              *dest++ = 0xFFFD;
+           }
+           mRunLength = 0;
         } else if(ESC == *src) {
            mState = eState_ESC_24_2A_H_ESC;
         } else {
@@ -386,6 +411,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
  
            aLen = destEnd - dest;
            rv = EUCTW_To_Unicode(cns, cnsLen, dest, &aLen);
+           ++mRunLength;
            if(rv == NS_OK_UDEC_MOREOUTPUT) {
               goto error1;
            } else if(NS_FAILED(rv)) {
@@ -417,6 +443,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_ESC_24_2A_H_ESC_SS2_SI_ESC:  // ESC $ * H ESC SS2 SI ESC
         if(SS2 == *src) {
            mState = eState_CNS11643_2;
+           mRunLength = 0;
         } else if('$' == *src) {
            mState = eState_ESC_24;
         } else {
@@ -463,6 +490,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_ESC_24_2B_I_ESC:  // ESC $ + I ESC
         if(SS3 == *src) {
            mState = eState_CNS11643_3;
+           mRunLength = 0;
         } else if('$' == *src) {
            mState = eState_ESC_24;
         } else {
@@ -482,6 +510,12 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_CNS11643_3:   // ESC $ + I ESC SS3
         if(SI == *src) { // Shift-In (SI)
            mState = eState_ESC_24_2B_I_ESC_SS3_SI;
+           if (mRunLength == 0) {
+              if(dest+1 >= destEnd)
+                 goto error1;
+              *dest++ = 0xFFFD;
+           }
+           mRunLength = 0;
         } else if(ESC == *src) {
            mState = eState_ESC_24_2B_I_ESC;
         } else {
@@ -509,6 +543,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
 
            aLen = destEnd - dest;
            rv = EUCTW_To_Unicode(cns, cnsLen, dest, &aLen);
+           ++mRunLength;
            if(rv == NS_OK_UDEC_MOREOUTPUT) {
               goto error1;
            } else if(NS_FAILED(rv)) {
@@ -540,6 +575,7 @@ NS_IMETHODIMP nsISO2022CNToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
       case eState_ESC_24_2B_I_ESC_SS3_SI_ESC:  // ESC $ + I ESC SS3 SI ESC
         if(SS3 == *src) {
            mState = eState_CNS11643_3;
+           mRunLength = 0;
         } else if('$' == *src) {
            mState = eState_ESC_24;
         } else {
