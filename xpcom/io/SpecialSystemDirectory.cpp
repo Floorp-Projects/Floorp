@@ -676,6 +676,11 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             char szPath[CCHMAXPATH + 1];        
             BOOL fSuccess;
             fSuccess = WinQueryActiveDesktopPathname (szPath, sizeof(szPath));
+            if (!fSuccess) {
+                // this could happen if we are running without the WPS, return
+                // the Home directory instead
+                return GetSpecialSystemDirectory(OS2_HomeDirectory, aFile);
+            }
             int len = strlen (szPath);   
             if (len > CCHMAXPATH -1)
                 break;
