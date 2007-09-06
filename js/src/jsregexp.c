@@ -2880,20 +2880,20 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
                 continue;
 
               case REOP_RPAREN:
+              {
+                ptrdiff_t delta;
+
                 pc = ReadCompactIndex(pc, &parenIndex);
                 JS_ASSERT(parenIndex < gData->regexp->parenCount);
                 cap = &x->parens[parenIndex];
-                cap->length = x->cp - (gData->cpbegin + cap->index);
-#if defined(DEBUG_crowder) || defined(DEBUG_mrbkap)
-                JS_ASSERT(x->cp >= (gData->cpbegin + cap->index));
-                JS_ASSERT((int)cap->length <= (gData->cpend - gData->cpbegin));
-#endif
+                delta = x->cp - (gData->cpbegin + cap->index);
+                cap->length = (delta < 0) ? 0 : (size_t) delta;
                 op = (REOp) *pc++;
 
                 if (!result)
                     result = x;
                 continue;
-
+              }
               case REOP_ASSERT:
                 nextpc = pc + GET_OFFSET(pc);  /* start of term after ASSERT */
                 pc += ARG_LEN;                 /* start of ASSERT child */
