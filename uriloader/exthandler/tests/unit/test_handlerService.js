@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Myk Melez <myk@mozilla.org>
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,7 +45,11 @@ function run_test() {
   const mimeSvc = Cc["@mozilla.org/uriloader/external-helper-app-service;1"].
                   getService(Ci.nsIMIMEService);
 
-
+  const prefSvc = Cc["@mozilla.org/preferences-service;1"].
+                  getService(Ci.nsIPrefService);
+                  
+  const rootPrefBranch = prefSvc.getBranch("");
+  
   //**************************************************************************//
   // Sample Data
 
@@ -141,11 +146,18 @@ function run_test() {
   do_check_false(handlerInfo.alwaysAskBeforeHandling);
 
   // Make sure the handler service's enumerate method lists all known handlers.
-  // FIXME: store and test enumeration of a protocol handler once bug 391150
-  // gets fixed and we can actually retrieve a protocol handler.
   var handlerInfo2 = mimeSvc.getFromTypeAndExtension("nonexistent/type2", null);
   handlerSvc.store(handlerInfo2);
   var handlerTypes = ["nonexistent/type", "nonexistent/type2"];
+  try { 
+    // If we have a defaultHandlersVersion pref, then assume that we're in the
+    // firefox tree and that we'll also have an added webcal handler.
+    // Bug 395131 has been filed to make this test work more generically
+    // by providing our own prefs for this test rather than this icky
+    // special casing.
+    rootPrefBranch.getCharPref("gecko.handlerService.defaultHandlersVersion");
+    handlerTypes.push("webcal");
+  } catch (ex) {}   
   var handlers = handlerSvc.enumerate();
   while (handlers.hasMoreElements()) {
     var handler = handlers.getNext().QueryInterface(Ci.nsIHandlerInfo);
