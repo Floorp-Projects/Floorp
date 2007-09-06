@@ -18,6 +18,8 @@
 <!ENTITY mnInspectChromeDocument.accesskey "h">
 <!ENTITY cmdShowOpenURLDialog.label "Inspektera en URL...">
 <!ENTITY cmdShowOpenURLDialog.accesskey "u">
+<!ENTITY cmdSave.label "Spara DOM som...">
+<!ENTITY cmdSave.accesskey "S">
 <!ENTITY cmdClose.label "Stäng">
 <!ENTITY cmdClose.accesskey "ä">
 <!ENTITY cmdExit.label "Avsluta">
@@ -40,26 +42,15 @@
 
 <!ENTITY mnSearch.label "Sök">
 <!ENTITY mnSearch.accesskey "s">
-<!ENTITY mnSearchPlugins.label "Tillägg">
-<!ENTITY mnSearchPlugins.accesskey "T">
-<!ENTITY cmdRunSearch.label "Kör...">
-<!ENTITY cmdRunSearch.accesskey "K">
 
 <!ENTITY mnView.label "Visa">
 <!ENTITY mnView.accesskey "v">
 <!ENTITY cmdToggleBrowser.label "Webbläsare">
 <!ENTITY cmdToggleSearch.label "Sökresultat">
 
-<!ENTITY cmdViewSearchItem.label "Visa...">
-<!ENTITY cmdEditSearchItem.label "Redigera...">
-<!ENTITY cmdCopySearchItemLine.label "Kopiera rad">
-<!ENTITY cmdCopySearchItemAll.label "Kopiera alla">
-<!ENTITY cmdSaveSearchItemText.label "Spara...">
-<!ENTITY cmdClearSearch.label "Rensa">
-<!ENTITY cmdHideSearchItems.label "Dölj">
-
 <!ENTITY browserPanel.label "Webbläsare">
 
 <!ENTITY inspectNewWindow.label "Inspektera i ett nytt fönster">
 
+<!ENTITY saveCmd.key "S">
 <!ENTITY closeCmd.key "W">
