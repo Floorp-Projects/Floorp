@@ -55,6 +55,8 @@
 #include "nsPIDOMWindow.h"
 #include "nsRootAccessible.h"
 #include "nsIServiceManager.h"
+#include "AccessibleApplication.h"
+#include "nsApplicationAccessibleWrap.h"
 
 /// the accessible library and cached methods
 HINSTANCE nsAccessNodeWrap::gmAccLib = nsnull;
@@ -124,6 +126,34 @@ STDMETHODIMP nsAccessNodeWrap::QueryInterface(REFIID iid, void** ppv)
    
   (reinterpret_cast<IUnknown*>(*ppv))->AddRef(); 
   return S_OK;
+}
+
+STDMETHODIMP
+nsAccessNodeWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
+{
+  // Can get to IAccessibleApplication from any node via QS
+  if (iid == IID_IAccessibleApplication) {
+    nsRefPtr<nsApplicationAccessibleWrap> app =
+      GetApplicationAccessible();
+    nsresult rv = app->QueryNativeInterface(iid, ppv);
+    return NS_SUCCEEDED(rv) ? S_OK : E_NOINTERFACE;
+  }
+
+  /**
+   * To get an ISimpleDOMNode, ISimpleDOMDocument, ISimpleDOMText
+   * or any IAccessible2 interface on should use IServiceProvider like this:
+   * -----------------------------------------------------------------------
+   * ISimpleDOMDocument *pAccDoc = NULL;
+   * IServiceProvider *pServProv = NULL;
+   * pAcc->QueryInterface(IID_IServiceProvider, (void**)&pServProv);
+   * if (pServProv) {
+   *   const GUID unused;
+   *   pServProv->QueryService(unused, IID_ISimpleDOMDocument, (void**)&pAccDoc);
+   *   pServProv->Release();
+   * }
+   */
+
+  return QueryInterface(iid, ppv);
 }
 
 //-----------------------------------------------------
