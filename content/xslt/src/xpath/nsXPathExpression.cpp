@@ -67,10 +67,6 @@ nsXPathExpression::nsXPathExpression(nsAutoPtr<Expr>& aExpression,
 {
 }
 
-nsXPathExpression::~nsXPathExpression()
-{
-}
-
 NS_IMETHODIMP
 nsXPathExpression::Evaluate(nsIDOMNode *aContextNode,
                             PRUint16 aType,

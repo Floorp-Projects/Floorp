@@ -48,7 +48,6 @@ class txUnknownHandler : public txBufferingHandler
 {
 public:
     txUnknownHandler(txExecutionState* aEs);
-    virtual ~txUnknownHandler();
 
     nsresult endDocument(nsresult aResult);
     nsresult startElement(nsIAtom* aPrefix, nsIAtom* aName,
