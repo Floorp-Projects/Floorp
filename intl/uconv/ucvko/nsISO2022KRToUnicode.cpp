@@ -59,6 +59,7 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
         } 
         else if(0x0e == *src) { // Shift-Out 
           mState = mState_KSX1001_1992;
+          mRunLength = 0;
         } 
         else if(*src & 0x80) {
           *dest++ = 0xFFFD;
@@ -103,6 +104,12 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
         mState = mLastLegalState;
         if('C' == *src) {
           mState = mState_ASCII;
+          if (mRunLength == 0) {
+            if(dest+1 >= destEnd)
+              goto error1;
+            *dest++ = 0xFFFD;
+          }
+          mRunLength = 0;
         } 
         else  {
           if((dest+4) >= destEnd)
@@ -122,11 +129,18 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
         } 
         else if (0x0f == *src) { // Shift-In (SI)
           mState = mState_ASCII;
+          if (mRunLength == 0) {
+            if(dest+1 >= destEnd)
+              goto error1;
+            *dest++ = 0xFFFD;
+          }
+          mRunLength = 0;
         } 
         else if ((PRUint8) *src == 0x20 || (PRUint8) *src == 0x09) {
           // Allow space and tab between SO and SI (i.e. in Hangul segment)
           mState = mState_KSX1001_1992;
           *dest++ = (PRUnichar) *src;
+          ++mRunLength;
           if(dest >= destEnd)
           goto error1;
         } 
@@ -164,6 +178,7 @@ NS_IMETHODIMP nsISO2022KRToUnicode::Convert(const char * aSrc, PRInt32 * aSrcLen
             // Convert EUC-KR to unicode.
             mEUCKRDecoder->Convert((const char *)ksx, &ksxLen, &uni, &uniLen);
             *dest++ = uni;
+            ++mRunLength;
           }
           if(dest >= destEnd)
             goto error1;
