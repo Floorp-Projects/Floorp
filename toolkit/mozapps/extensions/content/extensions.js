@@ -491,7 +491,7 @@ function flushDataSource()
 
 function noUpdatesDismiss(aEvent)
 {
-  window.removeEventListener("command", noUpdatesDismiss, true);
+  window.removeEventListener("select", noUpdatesDismiss, true);
 
   var children = gExtensionsView.children;
   for (var i = 0; i < children.length; ++i) {
@@ -770,7 +770,7 @@ function Shutdown()
   os.removeObserver(gDownloadManager, "xpinstall-download-started");
   var currentNotification = document.getElementById("addonsMsg").currentNotification;
   if (currentNotification && currentNotification.value == "addons-no-updates")
-    window.removeEventListener("command", noUpdatesDismiss, true);
+    window.removeEventListener("select", noUpdatesDismiss, true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1010,7 +1010,7 @@ UpdateCheckListener.prototype = {
       showMessage("chrome://mozapps/skin/extensions/question.png",
                   getExtensionString("noUpdatesMsg"),
                   null, null, true, "addons-no-updates");
-      window.addEventListener("command", noUpdatesDismiss, true);
+      window.addEventListener("select", noUpdatesDismiss, true);
     }
   },
 
