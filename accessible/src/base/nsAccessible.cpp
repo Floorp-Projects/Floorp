@@ -2230,12 +2230,14 @@ PRBool nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut
     if (aStateMapEntry->attributeValue == kBoolState) {
       // No attribute value map specified in state map entry indicates state cleared
       if (attribValue.EqualsLiteral("false")) {
-        return *aStateInOut &= ~aStateMapEntry->state;
+        *aStateInOut &= ~aStateMapEntry->state;
       }
-      return *aStateInOut |= aStateMapEntry->state;
+      else {
+        *aStateInOut |= aStateMapEntry->state;
+      }
     }
-    if (NS_ConvertUTF16toUTF8(attribValue).Equals(aStateMapEntry->attributeValue)) {
-      return *aStateInOut |= aStateMapEntry->state;
+    else if (NS_ConvertUTF16toUTF8(attribValue).Equals(aStateMapEntry->attributeValue)) {
+      *aStateInOut |= aStateMapEntry->state;
     }
   }
 
