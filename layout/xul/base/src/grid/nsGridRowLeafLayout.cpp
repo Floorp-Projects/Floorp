@@ -258,6 +258,7 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
   // see if we are in a scrollable frame. If we are then there could be scrollbars present
   // if so we need to subtract them out to make sure our columns line up.
   if (aBox) {
+     PRBool isHorizontal = aBox->IsHorizontal();
 
      // go up the parent chain looking for scrollframes
      aBox = aBox->GetParentBox();
@@ -273,7 +274,7 @@ nsGridRowLeafLayout::ComputeChildSizes(nsIBox* aBox,
           ourRect.Deflate(padding);
 
           nscoord diff;
-          if (aBox->IsHorizontal()) {
+          if (isHorizontal) {
             diff = scrollbarSizes.left + scrollbarSizes.right;
           } else {
             diff = scrollbarSizes.top + scrollbarSizes.bottom;
