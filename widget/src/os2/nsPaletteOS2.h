@@ -40,8 +40,9 @@
 #define INCL_WIN
 #define INCL_GPI
 #include <os2.h>
+#include "gfxCore.h"
 
-class nsPaletteOS2 {
+class NS_GFX nsPaletteOS2 {
 public:
   static void FreeGlobalPalette();
   static void InitializeGlobalPalette();
