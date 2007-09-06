@@ -1985,6 +1985,15 @@ _getvalue(NPP npp, NPNVariable variable, void *result)
     return NPERR_NO_ERROR;
   }
 
+  case NPNVSupportsWindowless: {
+#if defined(XP_WIN) || defined(XP_MACOSX) || (defined(MOZ_X11) && defined(MOZ_WIDGET_GTK2))
+    *(NPBool*)result = PR_TRUE;
+#else
+    *(NPBool*)result = PR_FALSE;
+#endif
+    return NPERR_NO_ERROR;
+  }
+
 #ifdef XP_MACOSX
   case NPNVpluginDrawingModel: {
     if (npp) {
