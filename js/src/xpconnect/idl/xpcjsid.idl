@@ -48,7 +48,7 @@ interface nsIJSID : nsISupports
     [noscript] readonly attribute nsIDPtr id;
     readonly attribute boolean            valid;
 
-    boolean equals(in nsIJSID other);
+    boolean equals(in nsIDRef other);
 
     void initialize(in string idString);
 
