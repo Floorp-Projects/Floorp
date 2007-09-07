@@ -771,7 +771,8 @@ var PlacesStarButton = {
       return;
 
     var uri = getBrowser().currentURI;
-    this._starred = uri && (PlacesUtils.getMostRecentBookmarkForURI(uri) != -1);
+    this._starred = uri && (PlacesUtils.getMostRecentBookmarkForURI(uri) != -1 ||
+                            PlacesUtils.getMostRecentFolderForFeedURI(uri) != -1);
     if (this._starred)
       starIcon.setAttribute("starred", "true");
     else

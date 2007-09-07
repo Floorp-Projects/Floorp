@@ -580,7 +580,8 @@ protected:
   PRTime mCurrentOldestVisit;
   PRBool mFirstChunk;
 
-  nsDataHashtable<nsTrimInt64HashKey, PRBool> mLivemarkFeedItemIds;  
+  nsDataHashtable<nsTrimInt64HashKey, PRBool> mLivemarkFeedItemIds;
+  nsDataHashtable<nsStringHashKey, PRBool> mLivemarkFeedURIs;
   nsCOMPtr<mozIStorageStatement> mLivemarkFeedsQuery;
 
   nsresult AutoCompleteTypedSearch();

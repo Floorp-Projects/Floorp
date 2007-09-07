@@ -84,6 +84,9 @@ nsNavHistory::InitAutoComplete()
   if (!mLivemarkFeedItemIds.Init(128))
     return NS_ERROR_OUT_OF_MEMORY;
 
+  if (!mLivemarkFeedURIs.Init(128))
+    return NS_ERROR_OUT_OF_MEMORY;
+
   return NS_OK;
 }
 
@@ -97,9 +100,9 @@ nsresult
 nsNavHistory::CreateAutoCompleteQueries()
 {
   nsCString sql = NS_LITERAL_CSTRING(
-    "SELECT annos.item_id FROM moz_anno_attributes attrs "
-    "JOIN moz_items_annos annos WHERE attrs.name = \"" LMANNO_FEEDURI "\" "
-    "AND attrs.id = annos.anno_attribute_id;");
+    "SELECT annos.item_id, annos.content FROM moz_anno_attributes attrs " 
+    "JOIN moz_items_annos annos ON attrs.id = annos.anno_attribute_id "
+    "WHERE attrs.name = \"" LMANNO_FEEDURI "\";");
   nsresult rv = mDBConn->CreateStatement(sql, getter_AddRefs(mLivemarkFeedsQuery));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -279,18 +282,30 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
   NS_ENSURE_SUCCESS(rv, rv);
 
   mCurrentResultURLs.Clear();
-  mLivemarkFeedItemIds.Clear();
 
-  // find all the items that have the "livemark/feedURI" annotation
-  // and save off their item ids.  when doing autocomplete, 
-  // if a result's parent item id matches a saved item id, the result
-  // it is not really a bookmark, but a rss feed item.
-  mozStorageStatementScoper scope(mLivemarkFeedsQuery);
-  PRBool hasMore = PR_FALSE;
-  while (NS_SUCCEEDED(mLivemarkFeedsQuery->ExecuteStep(&hasMore)) && hasMore) {
-    PRInt64 itemId = 0;
-    mLivemarkFeedsQuery->GetInt64(0, &itemId);
-    mLivemarkFeedItemIds.Put(itemId, PR_TRUE);
+  // if we are searching through our previous results,
+  // we don't need to regenerate these hash tables
+  if (!searchPrevious) {
+    mLivemarkFeedItemIds.Clear();
+    mLivemarkFeedURIs.Clear();
+
+    // find all the items that have the "livemark/feedURI" annotation
+    // and save off their item ids and URIs. when doing autocomplete, 
+    // if a result's parent item id matches a saved item id, the result
+    // it is not really a bookmark, but a rss feed item.
+    // if a results URI matches a saved URI, the result is a bookmark,
+    // so we should show the star.
+    mozStorageStatementScoper scope(mLivemarkFeedsQuery);
+    PRBool hasMore = PR_FALSE;
+    while (NS_SUCCEEDED(mLivemarkFeedsQuery->ExecuteStep(&hasMore)) && hasMore) {
+      PRInt64 itemId = 0;
+      mLivemarkFeedsQuery->GetInt64(0, &itemId);
+      mLivemarkFeedItemIds.Put(itemId, PR_TRUE);
+      nsAutoString feedURI;
+      // no need to worry about duplicates.
+      mLivemarkFeedsQuery->GetString(1, feedURI);
+      mLivemarkFeedURIs.Put(feedURI, PR_TRUE);
+    }
   }
 
   // Search through the previous result
@@ -334,6 +349,15 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
           NS_ENSURE_SUCCESS(rv, rv);
         }
       }
+    }
+    // if we found some results, announce them now instead of waiting
+    // to do the first db search.
+    PRUint32 count;
+    mCurrentResult->GetMatchCount(&count); 
+
+    if (count > 0) {
+      mCurrentResult->SetSearchResult(nsIAutoCompleteResult::RESULT_SUCCESS_ONGOING);
+      mCurrentResult->SetDefaultIndex(0);
     }
   }
   else if (!mCurrentSearchString.IsEmpty()) {
@@ -424,9 +448,11 @@ nsresult nsNavHistory::AutoCompleteTypedSearch()
     dbSelectStatement->GetInt64(kAutoCompleteIndex_ParentId, &parentId);
 
     PRBool dummy;
-    // don't show rss feed items as bookmarked
-    PRBool isBookmark = (itemId != 0) && 
-                        !mLivemarkFeedItemIds.Get(parentId, &dummy);
+    // don't show rss feed items as bookmarked,
+    // but do show rss feed URIs as bookmarked.
+    PRBool isBookmark = (itemId != 0 && 
+                         !mLivemarkFeedItemIds.Get(parentId, &dummy)) ||
+                        mLivemarkFeedURIs.Get(entryURL, &dummy);   
 
     nsCAutoString imageSpec;
     faviconService->GetFaviconSpecForIconString(
@@ -548,9 +574,11 @@ nsNavHistory::AutoCompleteFullHistorySearch()
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool dummy;
-    // don't show rss feed items as bookmarked
-    PRBool isBookmark = (itemId != 0) && 
-                        !mLivemarkFeedItemIds.Get(parentId, &dummy);
+    // don't show rss feed items as bookmarked,
+    // but do show rss feed URIs as bookmarked.
+    PRBool isBookmark = (itemId != 0 && 
+                         !mLivemarkFeedItemIds.Get(parentId, &dummy)) ||
+                         mLivemarkFeedURIs.Get(entryURL, &dummy);  
 
     // prevent duplicates.  this can happen when chunking as we
     // may have already seen this URL from an earlier chunk of time
