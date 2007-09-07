@@ -1345,8 +1345,8 @@ nsNavHistory::LoadPrefs()
   mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED,
                            &mAutoCompleteOnlyTyped);
   if (oldCompleteOnlyTyped != mAutoCompleteOnlyTyped) {
-    // update the autocomplete statement if the option has changed.
-    nsresult rv = CreateAutoCompleteQuery();
+    // update the autocomplete statements if the option has changed.
+    nsresult rv = CreateAutoCompleteQueries();
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
