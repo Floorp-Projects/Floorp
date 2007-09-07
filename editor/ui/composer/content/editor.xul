@@ -191,7 +191,7 @@
   <!-- toolbar filled out from editorOverlay -->
   <!-- add  class="standard" for dark blue background (icons need rework first) -->
   <toolbar class="chromeclass-toolbar toolbar-primary" id="EditToolbar" persist="collapsed" 
-           tbalign="stretch" grippytooltiptext="&compositionToolbar.tooltip;">
+           grippytooltiptext="&compositionToolbar.tooltip;">
     <toolbarbutton id="newButton"/>
     <toolbarbutton id="openButton"/>
     <toolbarbutton id="saveButton"/>
@@ -216,7 +216,7 @@
       </button>
     </hbox> 
   </toolbar>
-  <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" tbalign="center" grippytooltiptext="&formatToolbar.tooltip;">
+  <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" grippytooltiptext="&formatToolbar.tooltip;">
     <!-- from editorOverlay -->
     <menulist id="ParagraphSelect"/>
     <stack id="ColorButtons"/>
