@@ -138,22 +138,17 @@ nsJSID::GetValid(PRBool *aValid)
 }
 
 NS_IMETHODIMP
-nsJSID::Equals(nsIJSID *other, PRBool *_retval)
+nsJSID::Equals(REFNSIID other, PRBool *_retval)
 {
     if(!_retval)
         return NS_ERROR_NULL_POINTER;
 
     *_retval = PR_FALSE;
 
-    if(!other || mID.Equals(GetInvalidIID()))
+    if(mID.Equals(GetInvalidIID()))
         return NS_OK;
 
-    nsID* otherID;
-    if(NS_SUCCEEDED(other->GetId(&otherID)))
-    {
-        *_retval = mID.Equals(*otherID);
-        nsMemory::Free(otherID);
-    }
+    *_retval = mID.Equals(other);
     return NS_OK;
 }
 
@@ -433,22 +428,12 @@ NS_IMETHODIMP nsJSIID::GetValid(PRBool *aValid)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsJSIID::Equals(nsIJSID *other, PRBool *_retval)
+NS_IMETHODIMP nsJSIID::Equals(const nsID &other, PRBool *_retval)
 {
     if(!_retval)
         return NS_ERROR_NULL_POINTER;
 
-    *_retval = PR_FALSE;
-
-    if(!other)
-        return NS_OK;
-
-    nsID* otherID;
-    if(NS_SUCCEEDED(other->GetId(&otherID)))
-    {
-        mInfo->IsIID((nsIID*)otherID, _retval);
-        nsMemory::Free(otherID);
-    }
+    mInfo->IsIID((nsIID*) &other, _retval);
     return NS_OK;
 }
 
@@ -679,7 +664,7 @@ NS_IMETHODIMP nsJSCID::GetId(nsID* *aId)
 NS_IMETHODIMP nsJSCID::GetValid(PRBool *aValid)
     {return mDetails.GetValid(aValid);}
 
-NS_IMETHODIMP nsJSCID::Equals(nsIJSID *other, PRBool *_retval)
+NS_IMETHODIMP nsJSCID::Equals(const nsID &other, PRBool *_retval)
     {return mDetails.Equals(other, _retval);}
 
 NS_IMETHODIMP nsJSCID::Initialize(const char *idString)
