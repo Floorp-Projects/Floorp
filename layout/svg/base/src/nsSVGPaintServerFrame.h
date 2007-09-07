@@ -48,10 +48,11 @@ typedef nsSVGContainerFrame nsSVGPaintServerFrameBase;
 class nsSVGPaintServerFrame : public nsSVGPaintServerFrameBase,
                               public nsSVGValue
 {
-public:
+protected:
   nsSVGPaintServerFrame(nsStyleContext* aContext) :
-      nsSVGPaintServerFrameBase(aContext) {}
+    nsSVGPaintServerFrameBase(aContext) {}
 
+public:
   /*
    * Configure paint server prior to rendering
    * @return PR_FALSE to skip rendering
