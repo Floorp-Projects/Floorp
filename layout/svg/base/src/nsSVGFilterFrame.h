@@ -46,10 +46,10 @@ class nsSVGFilterFrame : public nsSVGFilterFrameBase
 {
   friend nsIFrame*
   NS_NewSVGFilterFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-
-public:
+protected:
   nsSVGFilterFrame(nsStyleContext* aContext) : nsSVGFilterFrameBase(aContext) {}
 
+public:
   nsresult FilterPaint(nsSVGRenderState *aContext,
                        nsISVGChildFrame *aTarget);
   nsRect GetInvalidationRegion(nsIFrame *aTarget);
