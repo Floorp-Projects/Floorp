@@ -331,22 +331,28 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
       nsAutoString style;
       aPreviousResult->GetStyleAt(i, style);
       if (!style.Equals(NS_LITERAL_STRING("tag"))) {
-        nsAutoString url, title;
+        nsAutoString url;
         aPreviousResult->GetValueAt(i, url);
-        aPreviousResult->GetCommentAt(i, title);
 
-        PRBool isMatch = CaseInsensitiveFindInReadable(mCurrentSearchString, url);
-        if (!isMatch)
-          isMatch = CaseInsensitiveFindInReadable(mCurrentSearchString, title);
+        // make sure the url isn't already listed, as a tag result
+        PRBool dummy;
+        if (!mCurrentResultURLs.Get(url, &dummy)) {
+          nsAutoString title;
+          aPreviousResult->GetCommentAt(i, title);
 
-        if (isMatch) {
-          nsAutoString image;
-          aPreviousResult->GetImageAt(i, image);
+          PRBool isMatch = CaseInsensitiveFindInReadable(mCurrentSearchString, url);
+          if (!isMatch)
+            isMatch = CaseInsensitiveFindInReadable(mCurrentSearchString, title);
 
-          mCurrentResultURLs.Put(url, PR_TRUE);
+          if (isMatch) {
+            nsAutoString image;
+            aPreviousResult->GetImageAt(i, image);
+
+            mCurrentResultURLs.Put(url, PR_TRUE);
   
-          rv = mCurrentResult->AppendMatch(url, title, image, style);
-          NS_ENSURE_SUCCESS(rv, rv);
+            rv = mCurrentResult->AppendMatch(url, title, image, style);
+            NS_ENSURE_SUCCESS(rv, rv);
+          }
         }
       }
     }
