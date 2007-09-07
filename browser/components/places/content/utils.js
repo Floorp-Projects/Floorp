@@ -51,6 +51,7 @@ Components.utils.import("resource://gre/modules/JSON.jsm");
 const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const POST_DATA_ANNO = "URIProperties/POSTData";
+const LMANNO_FEEDURI = "livemark/feedURI";
 
 #ifdef XP_MACOSX
 // On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
@@ -398,7 +399,7 @@ var PlacesUtils = {
   */
   nodeIsLivemarkContainer: function PU_nodeIsLivemarkContainer(aNode) {
     return this.nodeIsFolder(aNode) &&
-           this.annotations.itemHasAnnotation(aNode.itemId, "livemark/feedURI");
+           this.annotations.itemHasAnnotation(aNode.itemId, LMANNO_FEEDURI);
   },
 
  /**
@@ -1507,8 +1508,20 @@ var PlacesUtils = {
         return bk;
       var grandparent = this.bookmarks.getFolderIdForItem(parent);
       if (grandparent != this.tagRootId &&
-          !this.annotations.itemHasAnnotation(parent, "livemark/feedURI"))
+          !this.annotations.itemHasAnnotation(parent, LMANNO_FEEDURI))
         return bk;
+    }
+    return -1;
+  },
+
+  getMostRecentFolderForFeedURI:
+  function PU_getMostRecentFolderForFeedURI(aURI) {
+    var feedSpec = aURI.spec
+    var annosvc = this.annotations;
+    var livemarks = annosvc.getItemsWithAnnotation(LMANNO_FEEDURI, {});
+    for (var i = 0; i < livemarks.length; i++) {
+      if (annosvc.getItemAnnotation(livemarks[i], LMANNO_FEEDURI) == feedSpec)
+        return livemarks[i];
     }
     return -1;
   },
