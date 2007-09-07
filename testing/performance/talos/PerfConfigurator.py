@@ -7,7 +7,7 @@ Created by Rob Campbell on 2007-03-02.
 Modified by Rob Campbell on 2007-05-30
 Modified by Rob Campbell on 2007-06-26 - added -i buildid option
 Modified by Rob Campbell on 2007-07-06 - added -d testDate option
-Modified by Ben Hearsum on 2007-08-22 - bugfixes, cleanup, support for multiple platforms
+Modified by Ben Hearsum on 2007-08-22 - bugfixes, cleanup, support for multiple platforms. Only works on Talos2
 """
 
 import sys
@@ -98,19 +98,16 @@ class PerfConfigurator:
         for line in config:
             newline = line
             if 'firefox:' in line:
-                newline = '  firefox: ' + self.exePath
-            if 'testtitle' in line:
-                newline = line.replace('testtitle', self.title)
+                newline = 'firefox: ' + self.exePath
+            if 'title:' in line:
+                newline = 'title: ' + self.title
                 if self.testDateFromBuildId:
                     newline += '\n'
                     newline += 'testdate: "%s"\n' % self._getTimeFromBuildId()
-            if 'testfilename' in line:
-                newline = line.replace('testfilename', self.outputName)
-            if 'testbranchid' in line:
-                newline = line.replace('testbranchid', buildidString)
-            else:
-                if 'testbranch' in line:
-                    newline = line.replace('testbranch', self.branch)
+            if 'buildid:' in line:
+                newline = 'buildid: ' + buildidString
+            if 'testbranch' in line:
+                newline = 'branch: ' + self.branch
             destination.write(newline)
         destination.close()
         if self.verbose:
@@ -208,5 +205,4 @@ def main(argv=None):
 
 if __name__ == "__main__":
     sys.exit(main())
-
 
