@@ -1,5 +1,4 @@
 comm.jar:
-#ifdef MOZ_XUL_APP
 % content editor %content/editor/ xpcnativewrappers=yes
 % overlay chrome://communicator/content/tasksOverlay.xul chrome://editor/content/editorTasksOverlay.xul
 % overlay chrome://messenger/content/mailWindowOverlay.xul chrome://editor/content/editorMailOverlay.xul
@@ -8,10 +7,6 @@ comm.jar:
 % overlay chrome://communicator/content/pref/pref-appearance.xul chrome://editor/content/editorPrefsOverlay.xul
 % overlay chrome://navigator/content/navigatorOverlay.xul chrome://editor/content/editorNavigatorOverlay.xul
 % content editor-region %content/editor-region/ xpcnativewrappers=yes
-#endif
-#else
-*     content/editor/contents.rdf                              (composer/content/contents.rdf)
-*     content/editor-region/contents.rdf                       (composer/content/contents-region.rdf)
 #endif
       content/editor/editor.xul                                (composer/content/editor.xul) 
       content/editor/editor.js                                 (composer/content/editor.js) 
