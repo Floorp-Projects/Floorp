@@ -565,8 +565,10 @@ protected:
   static const PRInt32 kAutoCompleteIndex_ItemId;
   static const PRInt32 kAutoCompleteIndex_ParentId;
   nsCOMPtr<mozIStorageStatement> mDBAutoCompleteQuery; //  kAutoCompleteIndex_* results
+  nsCOMPtr<mozIStorageStatement> mDBTagAutoCompleteQuery; //  kAutoCompleteIndex_* results
+
   nsresult InitAutoComplete();
-  nsresult CreateAutoCompleteQuery();
+  nsresult CreateAutoCompleteQueries();
   PRBool mAutoCompleteOnlyTyped;
   nsCOMPtr<nsITimer> mAutoCompleteTimer;
 
@@ -576,12 +578,14 @@ protected:
   nsDataHashtable<nsStringHashKey, PRBool> mCurrentResultURLs;
   PRTime mCurrentChunkEndTime;
   PRTime mCurrentOldestVisit;
+  PRBool mFirstChunk;
 
   nsDataHashtable<nsTrimInt64HashKey, PRBool> mLivemarkFeedItemIds;  
   nsCOMPtr<mozIStorageStatement> mLivemarkFeedsQuery;
 
   nsresult AutoCompleteTypedSearch();
   nsresult AutoCompleteFullHistorySearch();
+  nsresult AutoCompleteTagsSearch();
 
   nsresult PerformAutoComplete();
   nsresult StartAutoCompleteTimer(PRUint32 aMilliseconds);
