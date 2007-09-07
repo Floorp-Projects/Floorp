@@ -493,6 +493,7 @@ protected:
                                     const nsAString& aName,
                                     const nsAString& aOptions,
                                     PRBool aDialog,
+                                    PRBool aContentModal,
                                     PRBool aCalledNoScript,
                                     PRBool aDoJSFixups,
                                     nsIArray *argv,
