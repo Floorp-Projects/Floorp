@@ -2791,9 +2791,6 @@ js_FinalizeObject(JSContext *cx, JSObject *obj)
                                    cx->debugHooks->objectHookData);
     }
 
-    /* Remove all watchpoints with weak links to obj. */
-    JS_ClearWatchPointsForObject(cx, obj);
-
     /* Finalize obj first, in case it needs map and slots. */
     GC_AWARE_GET_CLASS(cx, obj)->finalize(cx, obj);
 
@@ -4847,6 +4844,9 @@ js_TraceObject(JSTracer *trc, JSObject *obj)
             continue;
         TRACE_SCOPE_PROPERTY(trc, sprop);
     }
+
+    if (!JS_CLIST_IS_EMPTY(&cx->runtime->watchPointList))
+        js_TraceWatchPoints(trc, obj);
 
     /* No one runs while the GC is running, so we can use LOCKED_... here. */
     clasp = LOCKED_OBJ_GET_CLASS(obj);
