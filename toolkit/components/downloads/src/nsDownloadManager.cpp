@@ -150,7 +150,10 @@ nsDownloadManager::CompleteDownload(nsDownload *aDownload)
   // we've stopped, so break the cycle we created at download start
   aDownload->mCancelable = nsnull;
   aDownload->mEntityID.Truncate();
-  if (aDownload->mWasResumed)
+
+  // we need do what exthandler would have done for a finished download
+  if (aDownload->mDownloadState == nsIDownloadManager::DOWNLOAD_FINISHED &&
+      aDownload->mWasResumed)
     (void)ExecuteDesiredAction(aDownload);
 
   (void)mCurrentDownloads.RemoveObject(aDownload);
@@ -161,8 +164,13 @@ nsDownloadManager::ExecuteDesiredAction(nsDownload *aDownload)
 {
   // If we have a temp file and we have resumed, we have to do what the external
   // helper app service would have done.
-  if (!aDownload->mTempFile && !aDownload->mWasResumed)
+  if (!aDownload->mTempFile || !aDownload->mWasResumed)
     return NS_OK;
+
+  // We need to bail if for some reason the temp file got removed
+  PRBool fileExists;
+  if (NS_FAILED(aDownload->mTempFile->Exists(&fileExists)) || !fileExists)
+    return NS_ERROR_FAILURE;
 
   // Find out if it was a SaveToDisk kind of a download
   nsHandlerInfoAction action = nsIMIMEInfo::saveToDisk;
@@ -183,7 +191,6 @@ nsDownloadManager::ExecuteDesiredAction(nsDownload *aDownload)
         // MoveTo will fail if the file already exists, but we've already
         // obtained confirmation from the user that this is OK.  So, we have
         // to remove it if it exists.
-        PRBool fileExists;
         if (NS_SUCCEEDED(target->Exists(&fileExists)) && fileExists) {
           rv = target->Remove(PR_FALSE);
           NS_ENSURE_SUCCESS(rv, rv);
