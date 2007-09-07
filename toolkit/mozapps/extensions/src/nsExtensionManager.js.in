@@ -7058,9 +7058,10 @@ ExtensionsDataSource.prototype = {
           var updatedMinVersion = this._inner.GetTarget(targetApp, EM_R("updatedMinVersion"), true);
           var updatedMaxVersion = this._inner.GetTarget(targetApp, EM_R("updatedMaxVersion"), true);
           if (updatedMinVersion && updatedMaxVersion)
-            outData = { id        : id,
-                        minVersion: stringData(updatedMinVersion),
-                        maxVersion: stringData(updatedMaxVersion) };
+            outData = { id          : id,
+                        targetAppID : foundAppID,
+                        minVersion  : stringData(updatedMinVersion),
+                        maxVersion  : stringData(updatedMaxVersion) };
           if (foundAppID == appID)
             return outData;
         }
