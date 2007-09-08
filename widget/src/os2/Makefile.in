@@ -68,14 +68,12 @@ REQUIRES	= gfx \
 		  imglib2 \
 		  unicharutil \
 		  layout \
+		  cairo \
+		  thebes \
 		  $(NULL)
 
 ifdef BUILD_STATIC_LIBS
 EXPORTS		= wdgtos2rc.h
-endif
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-REQUIRES += cairo thebes
 endif
 
 CPPSRCS		= \
@@ -85,6 +83,9 @@ CPPSRCS		= \
 		nsFilePicker.cpp \
 		nsFrameWindow.cpp \
 		nsLookAndFeel.cpp \
+		nsOS2Uni.cpp \
+		nsPaletteOS2.cpp \
+		nsPrintOS2.cpp \
 		nsSound.cpp \
 		nsToolkit.cpp \
 		nsWidgetFactory.cpp \
@@ -106,12 +107,9 @@ EXTRA_DSO_LDOPTS = \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
+		-lthebes \
 		$(LCMS_LIBS) \
 		$(NULL)
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-EXTRA_DSO_LDOPTS += -lthebes
-endif
 
 ifdef ENABLE_TESTS
 HAS_EXTRAEXPORTS = 1
