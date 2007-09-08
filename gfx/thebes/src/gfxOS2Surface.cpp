@@ -47,13 +47,14 @@ gfxOS2Surface::gfxOS2Surface(HPS aPS, const gfxIntSize& aSize)
     : mOwnsPS(PR_FALSE), mPS(aPS), mSize(aSize)
 {
 #ifdef DEBUG_thebes_2
-    printf("gfxOS2Surface::gfxOS2Surface(HPS, ...)\n");
+    printf("gfxOS2Surface[%#x]::gfxOS2Surface(HPS=%#x, ...)\n",
+           (unsigned int)this, (unsigned int)aPS);
 #endif
 
     cairo_surface_t *surf = cairo_os2_surface_create(mPS, mSize.width, mSize.height);
 #ifdef DEBUG_thebes_2
-    printf("  type(%#x)=%d (own=%d, h/w=%d/%d)\n", (unsigned int)surf,
-           cairo_surface_get_type(surf), mOwnsPS, mSize.width, mSize.height);
+    printf("  type(%#x)=%d (own=%d, ID=%#x, h/w=%d/%d)\n", (unsigned int)surf,
+           cairo_surface_get_type(surf), mOwnsPS, (unsigned int)mPS, mSize.width, mSize.height);
 #endif
     // XXX for now uncomment the mark_dirty function, see bug 371505
     //cairo_surface_mark_dirty(surf);
@@ -63,7 +64,8 @@ gfxOS2Surface::gfxOS2Surface(HPS aPS, const gfxIntSize& aSize)
 gfxOS2Surface::gfxOS2Surface(HWND aWnd)
 {
 #ifdef DEBUG_thebes_2
-    printf("gfxOS2Surface::gfxOS2Surface(HWND)\n");
+    printf("gfxOS2Surface[%#x]::gfxOS2Surface(HWND=%#x)\n",
+           (unsigned int)this, (unsigned int)aWnd);
 #endif
 
     if (!mPS) {
@@ -82,8 +84,8 @@ gfxOS2Surface::gfxOS2Surface(HWND aWnd)
     if (mSize.height == 0) mSize.height = 10; // cairo_os2_surface_create() return something sensible
     cairo_surface_t *surf = cairo_os2_surface_create(mPS, mSize.width, mSize.height);
 #ifdef DEBUG_thebes_2
-    printf("  type(%#x)=%d (own=%d, h/w=%d/%d)\n", (unsigned int)surf,
-           cairo_surface_get_type(surf), mOwnsPS, mSize.width, mSize.height);
+    printf("  type(%#x)=%d (own=%d, ID=%#x, h/w=%d/%d)\n", (unsigned int)surf,
+           cairo_surface_get_type(surf), mOwnsPS, (unsigned int)mPS, mSize.width, mSize.height);
 #endif
     cairo_os2_surface_set_hwnd(surf, aWnd); // XXX is this needed here??
     // XXX for now uncomment the mark_dirty function, see bug 371505
@@ -94,7 +96,7 @@ gfxOS2Surface::gfxOS2Surface(HWND aWnd)
 gfxOS2Surface::~gfxOS2Surface()
 {
 #ifdef DEBUG_thebes_2
-    printf("gfxOS2Surface::~gfxOS2Surface()\n");
+    printf("gfxOS2Surface[%#x]::~gfxOS2Surface()\n", (unsigned int)this);
 #endif
 
     if (mOwnsPS)
