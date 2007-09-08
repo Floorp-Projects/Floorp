@@ -62,26 +62,21 @@ gfxOS2Surface::gfxOS2Surface(HPS aPS, const gfxIntSize& aSize)
 }
 
 gfxOS2Surface::gfxOS2Surface(HWND aWnd)
+    : mOwnsPS(PR_TRUE)
 {
 #ifdef DEBUG_thebes_2
     printf("gfxOS2Surface[%#x]::gfxOS2Surface(HWND=%#x)\n",
            (unsigned int)this, (unsigned int)aWnd);
 #endif
 
-    if (!mPS) {
-        // it must have been passed to us from somwhere else
-        mOwnsPS = PR_TRUE;
-        mPS = WinGetPS(aWnd);
-    } else {
-        mOwnsPS = PR_FALSE;
-    }
+    mPS = WinGetPS(aWnd);
 
     RECTL rectl;
     WinQueryWindowRect(aWnd, &rectl);
     mSize.width = rectl.xRight - rectl.xLeft;
     mSize.height = rectl.yTop - rectl.yBottom;
-    if (mSize.width == 0) mSize.width = 10;   // XXX fake some surface area to make
-    if (mSize.height == 0) mSize.height = 10; // cairo_os2_surface_create() return something sensible
+    if (mSize.width == 0) mSize.width = 1;   // fake a minimal surface area to let
+    if (mSize.height == 0) mSize.height = 1; // cairo_os2_surface_create() return something
     cairo_surface_t *surf = cairo_os2_surface_create(mPS, mSize.width, mSize.height);
 #ifdef DEBUG_thebes_2
     printf("  type(%#x)=%d (own=%d, ID=%#x, h/w=%d/%d)\n", (unsigned int)surf,
