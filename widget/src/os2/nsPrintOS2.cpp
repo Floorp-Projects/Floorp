@@ -50,7 +50,7 @@ static HMODULE hmodRes;
 #define SHIFT_PTR(ptr,offset) ( *((LONG*)&ptr) += offset )
 
 
-class NS_GFX PRTQUEUE
+class PRTQUEUE
 {
 public:
    PRTQUEUE (const PRQINFO3* pPQI3)  { InitWithPQI3 (pPQI3); }
@@ -354,7 +354,7 @@ BOOL PRINTDLG::ShowProperties(ULONG printerNdx)
 /*  Job management                                                          */
 /****************************************************************************/
 
-NS_GFX_(HDC) PrnOpenDC( PRTQUEUE *pInfo, PSZ pszApplicationName, int copies, int destination, char *file )
+HDC PrnOpenDC( PRTQUEUE *pInfo, PSZ pszApplicationName, int copies, int destination, char *file )
 {
    HDC hdc = 0;
    PSZ pszLogAddress;
@@ -405,7 +405,7 @@ NS_GFX_(HDC) PrnOpenDC( PRTQUEUE *pInfo, PSZ pszApplicationName, int copies, int
 }
 
 /* find the selected form */
-NS_GFX_(BOOL) PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo)
+BOOL PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo)
 {
    BOOL rc = FALSE;
 
@@ -440,19 +440,19 @@ NS_GFX_(BOOL) PrnQueryHardcopyCaps( HDC hdc, PHCINFO pHCInfo)
 /*  Library-level data and functions    -Printing                           */
 /****************************************************************************/
 
-NS_GFX_(BOOL) PrnInitialize( HMODULE hmodResources)
+BOOL PrnInitialize( HMODULE hmodResources)
 {
    hmodRes = hmodResources;
    return TRUE;
 }
 
-NS_GFX_(BOOL) PrnTerminate()
+BOOL PrnTerminate()
 {
    /* nop for now, may do something eventually */
    return TRUE;
 }
 
-NS_GFX_(BOOL) PrnClosePrinter( PRTQUEUE *pPrintQueue)
+BOOL PrnClosePrinter( PRTQUEUE *pPrintQueue)
 {
    BOOL rc = FALSE;
 
