@@ -135,7 +135,7 @@ void OS2Uni::FreeUconvObjects()
 /**********************************************************
     WideCharToMultiByte
  **********************************************************/
-NS_GFX_(nsresult)
+nsresult
 WideCharToMultiByte(int aCodePage, const PRUnichar* aSrc,
                     PRInt32 aSrcLength, nsAutoCharBuffer& aResult,
                     PRInt32& aResultLength)
@@ -159,7 +159,7 @@ WideCharToMultiByte(int aCodePage, const PRUnichar* aSrc,
 /**********************************************************
     MultiByteToWideChar
  **********************************************************/
-NS_GFX_(nsresult)
+nsresult
 MultiByteToWideChar(int aCodePage, const char* aSrc,
                     PRInt32 aSrcLength, nsAutoChar16Buffer& aResult,
                     PRInt32& aResultLength)
