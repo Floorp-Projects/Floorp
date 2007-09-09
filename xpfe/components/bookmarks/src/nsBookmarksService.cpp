@@ -96,12 +96,7 @@
 #include "nsVoidArray.h"
 #include "nsUnicharUtils.h"
 #include "nsAutoBuffer.h"
-
-// Tempoarary defines while we convert to the frozen API
-#ifdef MOZILLA_INTERNAL_API
-#include "nsEscape.h"
-#define CaseInsensitiveCompare nsCaseInsensitiveStringComparator()
-#endif
+#include "nsINetUtil.h"
 
 #if defined(XP_WIN) || defined(XP_OS2)
 #define NS_LINEBREAK "\015\012"
@@ -396,6 +391,43 @@ bm_ReleaseGlobals()
         NS_IF_RELEASE(kNC_BookmarkCommand_SetNewSearchFolder);
         NS_IF_RELEASE(kNC_BookmarkCommand_Import);
         NS_IF_RELEASE(kNC_BookmarkCommand_Export);
+    }
+}
+
+/**
+ * Escape HTML-special characters in a string.
+ */
+static void
+EscapeHTML(nsCString &data)
+{
+    const char *begin = data.get();
+
+    for (PRInt32 pos = data.Length() - 1; pos >= 0; --pos) {
+        switch (begin[pos]) {
+        case '<':
+            data.Replace(pos, 1, "&lt;");
+            break;
+
+        case '>':
+            data.Replace(pos, 1, "&gt;");
+            break;
+
+        case '&':
+            data.Replace(pos, 1, "&amp;");
+            break;
+
+        case '"':
+            data.Replace(pos, 1, "&quot;");
+            break;
+
+        case '\'':
+            data.Replace(pos, 1, "&#39;");
+            break;
+
+        default:
+            continue;
+        }
+        begin = data.get();
     }
 }
 
@@ -749,7 +781,7 @@ BookmarkParser::DecodeBuffer(nsString &line, char *buf, PRUint32 aLength)
     }
     else
     {
-        CopyASCIItoUTF16(buf, line);
+        CopyASCIItoUTF16(nsDependentCString(buf), line);
     }
     return NS_OK;
 }
@@ -1350,7 +1382,7 @@ BookmarkParser::ParseDate(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aR
     PRInt32 theDate = 0;
     if (!aValue.IsEmpty())
     {
-        PRInt32 err;
+        nsresult err;
         theDate = aValue.ToInteger(&err); // ignored.
     }
     if (theDate == 0)
@@ -1862,11 +1894,11 @@ nsBookmarksService::ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool 
                     nsAutoString startStr(StringHead(hourRange, dashOffset));
                     nsAutoString endStr(Substring(hourRange, dashOffset + 1));
 
-                    PRInt32 rv2 = 0;
+                    nsresult rv2;
                     startHour = startStr.ToInteger(&rv2);
-                    if (rv2) startHour = -1;
+                    if (NS_FAILED(rv2)) startHour = -1;
                     endHour = endStr.ToInteger(&rv2);
-                    if (rv2) endHour = -1;
+                    if (NS_FAILED(rv2)) endHour = -1;
                     
                     if ((startHour >=0) && (endHour >=0))
                     {
@@ -1878,7 +1910,7 @@ nsBookmarksService::ExamineBookmarkSchedule(nsIRDFResource *theBookmark, PRBool 
 
                             // get duration
                             duration = durationStr.ToInteger(&rv2);
-                            if (rv2) duration = -1;
+                            if (NS_FAILED(rv2)) duration = -1;
 
                             // what's left is the notification options
                             notificationMethod = schedule;
@@ -2299,9 +2331,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
             }
 
             // update icon?
-            if (FindInReadable(NS_LITERAL_STRING("icon"),
-                               schedule,
-                               CaseInsensitiveCompare))
+            if (schedule.Find(NS_LITERAL_STRING("icon"), PR_TRUE) != -1)
             {
                 nsCOMPtr<nsIRDFLiteral> statusLiteral;
                 if (NS_SUCCEEDED(rv = gRDF->GetLiteral(NS_LITERAL_STRING("new").get(), getter_AddRefs(statusLiteral))))
@@ -2321,9 +2351,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
             }
             
             // play a sound?
-            if (FindInReadable(NS_LITERAL_STRING("sound"),
-                               schedule,
-                               CaseInsensitiveCompare))
+            if (schedule.Find(NS_LITERAL_STRING("sound"), PR_TRUE) != -1)
             {
                 nsCOMPtr<nsISound> soundInterface =
                         do_CreateInstance("@mozilla.org/sound;1", &rv);
@@ -2337,9 +2365,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
             PRBool      openURLFlag = PR_FALSE;
 
             // show an alert?
-            if (FindInReadable(NS_LITERAL_STRING("alert"),
-                               schedule,
-                               CaseInsensitiveCompare))
+            if (schedule.Find(NS_LITERAL_STRING("alert"), PR_TRUE) != -1)
             {
                 nsCOMPtr<nsIPrompt> prompter;
                 NS_QueryNotificationCallbacks(channel, prompter);
@@ -2412,9 +2438,7 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 
             // open the URL in a new window?
             if ((openURLFlag == PR_TRUE) ||
-                FindInReadable(NS_LITERAL_STRING("open"),
-                               schedule,
-                               CaseInsensitiveCompare))
+                schedule.Find(NS_LITERAL_STRING("open"), PR_TRUE) != -1)
             {
                 if (NS_SUCCEEDED(rv))
                 {
@@ -2710,9 +2734,8 @@ nsBookmarksService::Compare(const void* aElement1, const void* aElement2, void* 
                                           &result);
             }
             else {
-                result = ::Compare(nsDependentString(value1),
-                                   nsDependentString(value2),
-                                   CaseInsensitiveCompare);
+                result = nsDependentString(value1).Compare(nsDependentString(value2),
+                                                           CaseInsensitiveCompare);
             }
 
             return result * sortInfo->mDirection;
@@ -3847,7 +3870,7 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
             PRInt32 lnkExtStart = bookmarkName.Length() - lnkExt.Length();
             if (StringEndsWith(bookmarkName, lnkExt,
                   CaseInsensitiveCompare))
-                bookmarkName.Truncate(lnkExtStart);
+                bookmarkName.SetLength(lnkExtStart);
 
             nsCOMPtr<nsIRDFResource> bookmark;
             // NS_GetURLSpecFromFile on Windows returns url-escaped URL in 
@@ -3878,7 +3901,7 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
             nsCAutoString extension;
 
             url->GetFileExtension(extension);
-            if (!extension.LowerCaseEqualsLiteral("url"))
+            if (!extension.Equals(NS_LITERAL_CSTRING("url"), CaseInsensitiveCompare))
                 continue;
 
             nsAutoString name(Substring(bookmarkName, 0, 
@@ -4097,7 +4120,7 @@ nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
     // if we have a new icon URL, save it away into our internal graph
     if (iconURL)
     {
-        LossyCopyUTF16toASCII(iconURL, path);
+        LossyCopyUTF16toASCII(nsDependentString(iconURL), path);
 
         nsCOMPtr<nsIRDFLiteral> iconLiteral;
         if (NS_FAILED(rv = gRDF->GetLiteral(iconURL, getter_AddRefs(iconLiteral))))
@@ -4128,7 +4151,7 @@ nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
             const PRUnichar *uni = nsnull;
             tempLiteral->GetValueConst(&uni);
             if (uni)
-                LossyCopyUTF16toASCII(uni, path);
+                LossyCopyUTF16toASCII(nsDependentString(uni), path);
         }
     }
 
@@ -5532,7 +5555,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                         const PRUnichar *title = nsnull;
                         if (NS_SUCCEEDED(rv = nameLiteral->GetValueConst(&title)))
                         {
-                            CopyUTF16toUTF8(title, name);
+                            CopyUTF16toUTF8(nsDependentString(title), name);
                         }
                     }
                 }
@@ -5605,12 +5628,9 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                     if (!name.IsEmpty())
                     {
                         // see bug #65098
-                        char *escapedAttrib = nsEscapeHTML(name.get());
-                        if (escapedAttrib)
-                        {
-                            rv |= strm->Write(escapedAttrib, strlen(escapedAttrib), &dummy);
-                            NS_Free(escapedAttrib);
-                        }
+                        EscapeHTML(name);
+
+                        rv |= strm->Write(name.get(), name.Length(), &dummy);
                     }
                     rv |= strm->Write(kCloseH3, sizeof(kCloseH3)-1, &dummy);
 
@@ -5703,15 +5723,10 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds,
                             {
                                 // Note: we escape the title due to security issues;
                                 //       see bug # 13197 for details
-                                char *escapedAttrib = nsEscapeHTML(name.get());
-                                if (escapedAttrib)
-                                {
-                                    rv |= strm->Write(escapedAttrib,
-                                                       strlen(escapedAttrib),
-                                                       &dummy);
-                                    NS_Free(escapedAttrib);
-                                    escapedAttrib = nsnull;
-                                }
+                                EscapeHTML(name);
+
+                                rv |= strm->Write(name.get(), name.Length(),
+                                                  &dummy);
                             }
 
                             rv |= strm->Write(kAClose, sizeof(kAClose)-1, &dummy);
@@ -5868,38 +5883,34 @@ nsBookmarksService::WriteBookmarkProperties(nsIRDFDataSource *ds,
                 }
             }
 
-            char        *attribute = ToNewUTF8String(literalString);
-            if (nsnull != attribute)
+            nsCAutoString attribute;
+            CopyUTF16toUTF8(literalString, attribute);
+
+            if (isFirst == PR_FALSE)
             {
-                if (isFirst == PR_FALSE)
-                {
-                    rv |= strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
-                }
+                rv |= strm->Write(kSpaceStr, sizeof(kSpaceStr)-1, &dummy);
+            }
 
-                if (property == kNC_Description)
+            if (property == kNC_Description)
+            {
+                if (!literalString.IsEmpty())
                 {
-                    if (!literalString.IsEmpty())
+                    EscapeHTML(attribute);
+
+                    if (NS_SUCCEEDED(rv))
                     {
-                        char *escapedAttrib = nsEscapeHTML(attribute);
-                        if (escapedAttrib)
-                        {
-                            rv |= strm->Write(htmlAttrib, strlen(htmlAttrib), &dummy);
-                            rv |= strm->Write(escapedAttrib, strlen(escapedAttrib), &dummy);
-                            rv |= strm->Write(kNL, sizeof(kNL)-1, &dummy);
-
-                            NS_Free(escapedAttrib);
-                            escapedAttrib = nsnull;
-                        }
+                        rv |= strm->Write(htmlAttrib, strlen(htmlAttrib), &dummy);
+                        rv |= strm->Write(attribute.get(),
+                                          attribute.Length(), &dummy);
+                        rv |= strm->Write(kNL, sizeof(kNL)-1, &dummy);
                     }
                 }
-                else
-                {
-                    rv |= strm->Write(htmlAttrib, strlen(htmlAttrib), &dummy);
-                    rv |= strm->Write(attribute, strlen(attribute), &dummy);
-                    rv |= strm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
-                }
-                NS_Free(attribute);
-                attribute = nsnull;
+            }
+            else
+            {
+                rv |= strm->Write(htmlAttrib, strlen(htmlAttrib), &dummy);
+                rv |= strm->Write(attribute.get(), attribute.Length(), &dummy);
+                rv |= strm->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
             }
         }
     }
