@@ -59,9 +59,14 @@ interface nsIHandlerInfo;
 interface nsIExternalProtocolService : nsISupports
 {
   /**
-   * Check whether a handler for a specific protocol exists.
+   * Check whether a handler for a specific protocol exists.  Specifically,
+   * this looks to see whether there are any known possible application handlers
+   * in either the nsIHandlerService datastore or registered with the OS.
+   *
    * @param aProtocolScheme The scheme from a url: http, ftp, mailto, etc.
+   *
    * @return true if we have a handler and false otherwise.
+   *
    * XXX shouldn't aProtocolScheme be an ACString like nsIURI::scheme?
    */
   boolean externalProtocolHandlerExists(in string aProtocolScheme);
