@@ -120,7 +120,7 @@ nsNavHistory::CreateAutoCompleteQueries()
 
   sql += NS_LITERAL_CSTRING(
     "(h.title LIKE ?3 ESCAPE '/' OR h.url LIKE ?3 ESCAPE '/') "
-    "GROUP BY h.id ORDER BY h.visit_count DESC, MAX(v.visit_date) DESC;");
+    "GROUP BY h.id ORDER BY h.typed DESC, h.visit_count DESC, MAX(v.visit_date) DESC;");
 
   rv = mDBConn->CreateStatement(sql, getter_AddRefs(mDBAutoCompleteQuery));
   NS_ENSURE_SUCCESS(rv, rv);
