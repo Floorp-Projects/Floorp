@@ -86,6 +86,10 @@
              oncommand="PlacesOrganizer.exportBookmarks();"/>
     <command id="OrganizerCommand_import"
              oncommand="PlacesOrganizer.importBookmarks();"/>
+    <command id="OrganizerCommand_backup"
+             oncommand="PlacesOrganizer.backupBookmarks();"/>
+    <command id="OrganizerCommand_restoreFromFile"
+             oncommand="PlacesOrganizer.restoreFromFile();"/>
     <command id="OrganizerCommand_search:save"
              oncommand="PlacesOrganizer.saveSearch();"/>
     <command id="OrganizerCommand_search:moreCriteria"
@@ -187,6 +191,20 @@
                     command="OrganizerCommand_export"
                     label="&cmd.export.label;"
                     accesskey="&cmd.export.accesskey;"/>
+          <menuseparator/>
+          <menuitem id="backupBookmarks"
+                    command="OrganizerCommand_backup"
+                    label="&cmd.backup.label;"
+                    accesskey="&cmd.backup.accesskey;"/>
+          <menu id="fileRestoreMenu" label="&cmd.restore.label;"
+                    accesskey="&cmd.export.accesskey;">
+            <menupopup id="fileRestorePopup" onpopupshowing="PlacesOrganizer.populateRestoreMenu();">
+              <menuitem id="restoreFromFile"
+                        command="OrganizerCommand_restoreFromFile"
+                        label="&cmd.restoreFromFile.label;"
+                        accesskey="&cmd.restoreFromFile.accesskey;"/>
+            </menupopup>
+          </menu>
           <menuseparator/>
           <menuitem id="fileClose"
                     key="placesKey_close" 
