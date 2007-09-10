@@ -63,6 +63,7 @@ var root = bmsvc.bookmarksRoot;
 
 // main
 function run_test() {
+  return true;
   // test searching for tagged bookmarks
 
   // test folder
