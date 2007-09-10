@@ -532,28 +532,19 @@ nsresult
 nsNavHistoryExpire::EraseAnnotations(mozIStorageConnection* aConnection,
     const nsTArray<nsNavHistoryExpireRecord>& aRecords)
 {
-  nsresult rv;
-  nsCOMPtr<nsIAnnotationService> annotationService = do_GetService("@mozilla.org/browser/annotation-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<mozIStorageStatement> statement;
-  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "DELETE FROM moz_annos WHERE id in ("
-      "SELECT a.id from moz_annos a JOIN moz_places p on a.place_id = p.id "
-      "WHERE p.url = ?1 AND a.expiration != ?2)"),
-    getter_AddRefs(statement));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // remove annotations for the set of records passed in
+  nsCString placeIds;
   for (PRUint32 i = 0; i < aRecords.Length(); i ++) {
-    // delete annotations (except EXPIRE_NEVER)
-    rv = statement->BindUTF8StringParameter(0, aRecords[i].uri);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->BindInt32Parameter(1, nsIAnnotationService::EXPIRE_NEVER);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (!placeIds.IsEmpty())
+      placeIds.AppendLiteral(", ");
+    placeIds.AppendInt(aRecords[i].placeID);
   }
+  
+  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "DELETE FROM moz_annos WHERE place_id in (") +
+      placeIds + NS_LITERAL_CSTRING(") AND expiration != ") +
+      nsPrintfCString("%d", nsIAnnotationService::EXPIRE_NEVER));
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 
