@@ -54,7 +54,7 @@ TIERS += base
 
 #
 # tier "base" - basic setup
-# 
+#
 tier_base_dirs = \
 	config \
 	build \
@@ -64,7 +64,7 @@ include $(topsrcdir)/$(MOZ_BUILD_APP)/build.mk
 
 TIERS += testharness
 
-# test harnesses 
+# test harnesses
 ifdef ENABLE_TESTS
 tier_testharness_dirs += tools/test-harness
 endif
@@ -74,7 +74,7 @@ DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    dependencies.beos config/autoconf.mk config/myrules.mk config/myconfig.mk \
    unallmakefiles mozilla-config.h \
    gfx/gfx-config.h netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
-   $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out 
+   $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out
 
 # Build pseudo-external modules first when export is explicitly called
 export::
@@ -163,6 +163,9 @@ ifdef MOZ_SYMBOLS_EXTRA_BUILDID
 EXTRA_BUILDID := -$(MOZ_SYMBOLS_EXTRA_BUILDID)
 endif
 
+SYMBOL_ARCHIVE_BASENAME := \
+  $(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_ARCH)-$(BUILDID)$(EXTRA_BUILDID)
+
 buildsymbols:
 ifdef MOZ_CRASHREPORTER
 	echo building symbol store
@@ -171,18 +174,18 @@ ifdef MOZ_CRASHREPORTER
 	  $(MAKE_SYM_STORE_ARGS) -s $(topsrcdir) $(DUMP_SYMS_BIN)     \
 	  $(DIST)/crashreporter-symbols/$(BUILDID)                    \
 	  $(MAKE_SYM_STORE_PATH) >                                    \
-	  $(DIST)/crashreporter-symbols/$(BUILDID)/$(MOZ_APP_NAME)-$(MOZ_APP_VERSION)-$(OS_ARCH)-$(BUILDID)$(EXTRA_BUILDID)-symbols.txt
+	  $(DIST)/crashreporter-symbols/$(BUILDID)/$(SYMBOL_ARCHIVE_BASENAME)-symbols.txt
 	echo packing symbols
 	mkdir -p $(topsrcdir)/../$(BUILDID)
 	cd $(DIST)/crashreporter-symbols/$(BUILDID) && \
-          zip -r9D ../crashreporter-symbols-$(BUILDID).zip .
-	mv $(DIST)/crashreporter-symbols/crashreporter-symbols-$(BUILDID).zip \
+          zip -r9D ../crashreporter-symbols-$(SYMBOL_ARCHIVE_BASENAME).zip .
+	mv $(DIST)/crashreporter-symbols/crashreporter-symbols-$(SYMBOL_ARCHIVE_BASENAME).zip \
           $(topsrcdir)/../$(BUILDID)
 endif # MOZ_CRASHREPORTER
 
 uploadsymbols:
 ifdef MOZ_CRASHREPORTER
-	$(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(topsrcdir)/../$(BUILDID)/crashreporter-symbols-$(BUILDID).zip
+	$(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.sh $(topsrcdir)/../$(BUILDID)/crashreporter-symbols-$(SYMBOL_ARCHIVE_BASENAME).zip
 endif
 
 ifeq ($(OS_ARCH),WINNT)
