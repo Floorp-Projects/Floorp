@@ -42,6 +42,14 @@
 #define MAX_COLORS           256
 #define MAX_HOLD_SIZE        256
 
+enum { GIF_TRAILER                     = 0x3B }; //';'
+enum { GIF_IMAGE_SEPARATOR             = 0x2C }; //','
+enum { GIF_EXTENSION_INTRODUCER        = 0x21 }; //'!'
+enum { GIF_GRAPHIC_CONTROL_LABEL       = 0xF9 };
+enum { GIF_COMMENT_LABEL               = 0xFE };
+enum { GIF_PLAIN_TEXT_LABEL            = 0x01 };
+enum { GIF_APPLICATION_EXTENSION_LABEL = 0xFF };
+
 /* gif2.h  
    The interface for the GIF87/89a decoder. 
 */
@@ -50,7 +58,7 @@ typedef enum {
     gif_type,
     gif_global_header,
     gif_global_colormap,
-    gif_image_start,            
+    gif_image_start,
     gif_image_header,
     gif_image_colormap,
     gif_image_body,

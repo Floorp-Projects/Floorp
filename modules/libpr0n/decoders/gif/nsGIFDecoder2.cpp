@@ -483,6 +483,9 @@ PRUint32 nsGIFDecoder2::OutputRow()
 PRBool
 nsGIFDecoder2::DoLzw(const PRUint8 *q)
 {
+  if (!mGIFStruct.rows_remaining)
+    return PR_TRUE;
+
   /* Copy all the decoder state variables into locals so the compiler
    * won't worry about them being aliased.  The locals will be homed
    * back into the GIF decoder structure when we exit.
@@ -503,10 +506,6 @@ nsGIFDecoder2::DoLzw(const PRUint8 *q)
   PRUint32 *rowp    = mGIFStruct.rowp;
   PRUint32 *rowend  = mImageData + (mGIFStruct.irow + 1) * mGIFStruct.width;
   PRUint32 *cmap    = mColormap;
-
-  if (rowp == rowend)
-    return PR_TRUE;
-
 #define OUTPUT_ROW()                                        \
   PR_BEGIN_MACRO                                            \
     if (!OutputRow())                                       \
@@ -797,21 +796,21 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
 
     case gif_image_start:
       switch (*q) {
-        case ';':  /* terminator */
+        case GIF_TRAILER:
           mGIFStruct.state = gif_done;
           break;
 
-        case '!': /* extension */
+        case GIF_EXTENSION_INTRODUCER:
           GETN(2, gif_extension);
           break;
 
-        case ',':
+        case GIF_IMAGE_SEPARATOR:
           GETN(9, gif_image_header);
           break;
 
         default:
-          /* If we get anything other than ',' (image separator), '!'
-           * (extension), or ';' (trailer), there is extraneous data
+          /* If we get anything other than GIF_IMAGE_SEPARATOR, 
+           * GIF_EXTENSION_INTRODUCER, or GIF_TRAILER, there is extraneous data
            * between blocks. The GIF87a spec tells us to keep reading
            * until we find an image separator, but GIF89a says such
            * a file is corrupt. We follow GIF89a and bail out. */
@@ -833,15 +832,15 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
       mGIFStruct.bytes_to_consume = q[1];
       if (mGIFStruct.bytes_to_consume) {
         switch (*q) {
-        case 0xf9:
+        case GIF_GRAPHIC_CONTROL_LABEL:
           mGIFStruct.state = gif_control_extension;
           break;
   
-        case 0xff:
+        case GIF_APPLICATION_EXTENSION_LABEL:
           mGIFStruct.state = gif_application_extension;
           break;
   
-        case 0xfe:
+        case GIF_COMMENT_LABEL:
           mGIFStruct.state = gif_consume_comment;
           break;
   
@@ -1046,6 +1045,11 @@ nsresult nsGIFDecoder2::GifWrite(const PRUint8 *buf, PRUint32 len)
           /* This is an illegal GIF, but we remain tolerant. */
           GETN(1, gif_sub_block);
 #endif
+          if (mGIFStruct.count == GIF_TRAILER) {
+            /* Found a terminator anyway, so consider the image done */
+            GETN(1, gif_done);
+            break;
+          }
         }
         GETN(mGIFStruct.count, gif_lzw);
       } else {
