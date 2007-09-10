@@ -403,7 +403,7 @@ var PlacesOrganizer = {
 
     var d = new Date();
     var date = dateService.FormatDate("", dateService.dateFormatShort,
-                           d.getFullYear(), d.getMonth(), d.getDate());
+                           d.getFullYear(), d.getMonth() + 1, d.getDate());
     fp.defaultString = PlacesUtils.getFormattedString("bookmarksBackupFilename",
                                                       [date]);
   
