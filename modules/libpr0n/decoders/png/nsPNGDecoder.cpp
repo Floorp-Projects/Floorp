@@ -437,7 +437,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   if (decoder->mInProfile && gfxPlatform::GetCMSOutputProfile()) {
     PRUint32 outType;
 
-    if (color_type & PNG_COLOR_MASK_ALPHA || trans)
+    if (color_type & PNG_COLOR_MASK_ALPHA || num_trans)
       outType = TYPE_RGBA_8;
     else
       outType = TYPE_RGB_8;
@@ -453,7 +453,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
         color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
       png_set_gray_to_rgb(png_ptr);
     if (gfxPlatform::IsCMSEnabled()) {
-      if (color_type & PNG_COLOR_MASK_ALPHA || trans)
+      if (color_type & PNG_COLOR_MASK_ALPHA || num_trans)
         decoder->mTransform = gfxPlatform::GetCMSRGBATransform();
       else
         decoder->mTransform = gfxPlatform::GetCMSRGBTransform();
