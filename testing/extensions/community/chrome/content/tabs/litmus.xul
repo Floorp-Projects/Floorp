@@ -1,42 +1,41 @@
-<?xml version="1.0"?><!-- -*- Mode: HTML -*-  
-# ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
-#
-# The contents of this file are subject to the Mozilla Public License Version
-# 1.1 (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
-# http://www.mozilla.org/MPL/
-#
-# Software distributed under the License is distributed on an "AS IS" basis,
-# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-# for the specific language governing rights and limitations under the
-# License.
-#
-# The Original Code is the Mozilla Community QA Extension
-#
-# The Initial Developer of the Original Code is the Mozilla Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2006
-# the Initial Developer. All Rights Reserved.
-#
-# Contributor(s):
-#   Zach Lipton <zach@zachlipton.com>
-#   Ben Hsieh <bhsieh@mozilla.com>
-#
-# Alternatively, the contents of this file may be used under the terms of
-# either the GNU General Public License Version 2 or later (the "GPL"), or
-# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-# in which case the provisions of the GPL or the LGPL are applicable instead
-# of those above. If you wish to allow use of your version of this file only
-# under the terms of either the GPL or the LGPL, and not to allow others to
-# use your version of this file under the terms of the MPL, indicate your
-# decision by deleting the provisions above and replace them with the notice
-# and other provisions required by the LGPL or the GPL. If you do not delete
-# the provisions above, a recipient may use your version of this file under
-# the terms of any one of the MPL, the GPL or the LGPL.
-#
-# ***** END LICENSE BLOCK ***** -->
+<?xml version="1.0"?><!-- -*- Mode: HTML -*-
+* ***** BEGIN LICENSE BLOCK *****
+* Version: MPL 1.1/GPL 2.0/LGPL 2.1
+*
+* The contents of this file are subject to the Mozilla Public License Version
+* 1.1 (the "License"); you may not use this file except in compliance with
+* the License. You may obtain a copy of the License at
+* http://www.mozilla.org/MPL/
+*
+* Software distributed under the License is distributed on an "AS IS" basis,
+* WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+* for the specific language governing rights and limitations under the
+* License.
+*
+* The Original Code is the Mozilla Community QA Extension
+*
+* The Initial Developer of the Original Code is the Mozilla Corporation.
+* Portions created by the Initial Developer are Copyright (C) 2007
+* the Initial Developer. All Rights Reserved.
+*
+* Contributor(s):
+*  Zach Lipton <zach@zachlipton.com>
+*  Ben Hsieh <bhsieh@mozilla.com>
+*
+* Alternatively, the contents of this file may be used under the terms of
+* either the GNU General Public License Version 2 or later (the "GPL"), or
+* the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+* in which case the provisions of the GPL or the LGPL are applicable instead
+* of those above. If you wish to allow use of your version of this file only
+* under the terms of either the GPL or the LGPL, and not to allow others to
+* use your version of this file under the terms of the MPL, indicate your
+* decision by deleting the provisions above and replace them with the notice
+* and other provisions required by the GPL or the LGPL. If you do not delete
+* the provisions above, a recipient may use your version of this file under
+* the terms of any one of the MPL, the GPL or the LGPL.
+*
+* ***** END LICENSE BLOCK ***** -->
 
-<?xml-stylesheet href="chrome://qa/skin/" type="text/css"?>
 
 <!DOCTYPE overlay [
 <!ENTITY % qaDTD SYSTEM "chrome://qa/locale/qa.dtd"> %qaDTD;
@@ -45,69 +44,79 @@
 
 <overlay id="qa-litmus-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <tabpanel id="qa-tab-litmus" onload="litmus.readStateFromPref();">
-		
+
 <vbox align="start" pack="start">
-	<hbox align="start" pack="start">
-		<vbox minwidth="150">
-			 <button maxwidth="110" label="&qa.litmus.selecttests;"
+  <hbox align="start" pack="start">
+    <vbox minwidth="150">
+       <button maxwidth="110" label="&qa.litmus.selecttests;"
                      oncommand="litmus.handleDialog()"
                      style="margin-left: 4px;" />
-			 <label maxwidth="160" value="" id="qa-testrun-label"/>
-			 <label maxwidth="160" value="" id="qa-testgroup-label"/>
-			 <label maxwidth="160" value="" id="qa-subgroup-label"/>
+       <label maxwidth="160" value="" id="qa-testrun-label"/>
+       <label maxwidth="160" value="" id="qa-testgroup-label"/>
+       <label maxwidth="160" value="" id="qa-subgroup-label"/>
              <label value="" />
              <label value="" id="qa-testcase-progress" />
-		</vbox>
-		<listbox rows="7" minwidth="200" onselect="litmus.handleSelect()" id="testlist">
+    </vbox>
+    <listbox rows="7" minwidth="200" onselect="litmus.handleSelect()"
+             id="testlist">
             <listcols>
                 <listcol />
                 <listcol />
             </listcols>
             <listitem label="&qa.litmus.testlist.initiallabel;" />
-                
+
         </listbox>
-	 </hbox>
-	 <vbox>
-	   <hbox style="font-weight: bold;">
-	  	   <label id="qa-testcase-id" value="&qa.litmus.testlist.initialdescription;" />
-	  	   <label value="&mdash;" />
-           <description id="qa-testcase-summary" maxwidth="230px" crop="end"></description> 
-	   </hbox>
-	   
-	 </vbox>
-	 
-	
-	<vbox width="370px" minwidth="370px">
-		<groupbox maxheight="130px" minwidth="370px" width="370px">
-			<caption label="&qa.testcase.steps;" crop="end" maxwidth="200"/>
-			<div xmlns="http://www.w3.org/1999/xhtml" style="width: 350px; height: 140px; overflow: auto;" id="qa-testcase-steps" class="list"/>
-		</groupbox>
-		<splitter id="qa-mainwindow-splitter" state="open" collapse="none">
-			<grippy/>
-		</splitter>
-		<groupbox maxheight="120px" minwidth="370px" width="370px">
-			<caption label="&qa.testcase.expected;" />
-			<div xmlns="http://www.w3.org/1999/xhtml" style="width: 350px; height: 120px; overflow: auto;" id="qa-testcase-expected" class="list"/>
-		</groupbox>
-	</vbox>
-	<hbox>
-	<groupbox>
-		<caption label="Result:" />
-		<radiogroup id="qa-testcase-result">
-			<radio id="qa-testcase-pass" label="&qa.testcase.result.pass;"/>
-			<radio id="qa-testcase-fail" label="&qa.testcase.result.fail;"/>
-			<radio id="qa-testcase-unclearBroken" label="&qa.testcase.result.unclearbroken;"/>
-		</radiogroup>
-	</groupbox>
-	<groupbox>
-	<caption control="qa-testcase-comment" label="&qa.testcase.comment;"/>
-	<textbox id="qa-testcase-comment" style="min-height: 75px; width:150px;" class="plain"/>
+  </hbox>
+  <vbox>
+    <hbox style="font-weight: bold;">
+      <label id="qa-testcase-id" value="&qa.litmus.testlist.initialdescription;" />
+      <label value="&mdash;" />
+        <description id="qa-testcase-summary" maxwidth="230px" crop="end">
+         </description>
+    </hbox>
+
+  </vbox>
+
+
+  <vbox width="370px" minwidth="370px">
+    <groupbox maxheight="130px" minwidth="370px" width="370px">
+      <caption label="&qa.testcase.steps;" crop="end" maxwidth="200"/>
+      <div xmlns="http://www.w3.org/1999/xhtml"
+           style="width: 350px; height: 140px; overflow: auto;"
+           id="qa-testcase-steps" class="list"/>
     </groupbox>
-	</hbox>
-	<hbox flex="1" maxheight="30px">
-		 <button id="qa-mainwindow-previousButton" label="Previous" oncommand="litmus.prevButton()"/> 
-		<button id="qa-mainwindow-nextButton" label="Next (Submit)" oncommand="litmus.nextButton()"/>
-	</hbox>
+    <splitter id="qa-mainwindow-splitter" state="open" collapse="none">
+      <grippy/>
+    </splitter>
+    <groupbox maxheight="120px" minwidth="370px" width="370px">
+      <caption label="&qa.testcase.expected;" />
+      <div xmlns="http://www.w3.org/1999/xhtml"
+           style="width: 350px; height: 120px; overflow: auto;"
+           id="qa-testcase-expected" class="list"/>
+    </groupbox>
+  </vbox>
+  <hbox>
+  <groupbox>
+    <caption label="Result:" />
+    <radiogroup id="qa-testcase-result">
+      <radio id="qa-testcase-pass" label="&qa.testcase.result.pass;"/>
+      <radio id="qa-testcase-fail" label="&qa.testcase.result.fail;"/>
+      <radio id="qa-testcase-unclearBroken"
+             label="&qa.testcase.result.unclearbroken;"/>
+    </radiogroup>
+  </groupbox>
+  <groupbox>
+  <caption control="qa-testcase-comment" label="&qa.testcase.comment;"/>
+  <textbox id="qa-testcase-comment" rows="4" cols="30" multiline="true"
+           class="plain"/>
+    </groupbox>
+  </hbox>
+  <hbox flex="1" maxheight="30px">
+     <button id="qa-mainwindow-previousButton" label="Previous"
+             oncommand="litmus.prevButton()"/>
+    <button id="qa-mainwindow-nextButton" label="Next (Submit)"
+            oncommand="litmus.nextButton()"/>
+  </hbox>
   <label id="qa-litmus-stats" value="" />
   <script type="application/x-javascript">
     this.addEventListener('load', litmus.loadStats, false);

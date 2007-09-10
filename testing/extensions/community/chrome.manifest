@@ -1,6 +1,6 @@
-content	qa	chrome/content/
-skin	qa	classic/1.0	chrome/skin/
-locale	qa	en-US	chrome/locale/en-US/
+content  qa  chrome/content/
+skin  qa  classic/1.0	chrome/skin/
+locale  qa  en-US chrome/locale/en-US/
 
 overlay chrome://browser/content/browser.xul chrome://qa/content/browserOverlays.xul
 
