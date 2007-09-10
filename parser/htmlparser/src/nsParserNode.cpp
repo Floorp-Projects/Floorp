@@ -264,6 +264,11 @@ nsCParserNode::PopAttributeToken() {
   return 0;
 }
 
+CToken* 
+nsCParserNode::PopAttributeTokenFront() {
+  return 0;
+}
+
 /** Retrieve a string containing the tag and its attributes in "source" form
  * @update	rickg 06June2000
  * @return  void
@@ -351,6 +356,12 @@ CToken*
 nsCParserStartNode::PopAttributeToken() 
 {
   return static_cast<CToken*>(mAttributes.Pop());
+}
+
+CToken* 
+nsCParserStartNode::PopAttributeTokenFront() 
+{
+  return static_cast<CToken*>(mAttributes.PopFront());
 }
 
 void nsCParserStartNode::GetSource(nsString& aString) const
