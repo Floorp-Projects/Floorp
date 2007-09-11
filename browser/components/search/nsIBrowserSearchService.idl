@@ -41,7 +41,6 @@
 #include "nsISupports.idl"
 
 interface nsIURI;
-interface nsIFile;
 interface nsIInputStream;
 
 [scriptable, uuid(58e4f602-a7c8-4cd1-9dca-716705e826ef)]
@@ -163,17 +162,9 @@ interface nsISearchEngine : nsISupports
 
 };
 
-[scriptable, uuid(c2e8ae4f-9fea-4a24-81e3-c94cdc055c1b)]
+[scriptable, uuid(8307b8f2-08ea-45b8-96bf-b1dc7688fe3b)]
 interface nsIBrowserSearchService : nsISupports
 {
-  /**
-   * Loads all the engines in the supplied directory.
-   *
-   * @param enginesDir
-   *        The directory containing the engine description files.
-   */
-  void loadEngines(in nsIFile enginesDir);
-
   /**
    * Adds a new search engine from the file at the supplied URI, optionally
    * asking the user for confirmation first.  If a confirmation dialog is

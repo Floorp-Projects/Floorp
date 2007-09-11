@@ -2222,7 +2222,7 @@ SearchService.prototype = {
 
     while (locations.hasMoreElements()) {
       var location = locations.getNext().QueryInterface(Ci.nsIFile);
-      this.loadEngines(location);
+      this._loadEngines(location);
     }
 
     // Now that all engines are loaded, build the sorted engine list
@@ -2298,8 +2298,8 @@ SearchService.prototype = {
     }
   },
 
-  loadEngines: function SRCH_SVC_loadEngines(aDir) {
-    LOG("loadEngines: Searching in " + aDir.path + " for search engines.");
+  _loadEngines: function SRCH_SVC_loadEngines(aDir) {
+    LOG("_loadEngines: Searching in " + aDir.path + " for search engines.");
 
     // Check whether aDir is the user profile dir
     var isInProfile = aDir.equals(getDir(NS_APP_USER_SEARCH_DIR));
@@ -2338,7 +2338,7 @@ SearchService.prototype = {
         addedEngine = new Engine(file, dataType, !isWritable);
         addedEngine._initFromFile();
       } catch (ex) {
-        LOG("loadEngines: Failed to load " + file.path + "!\n" + ex);
+        LOG("_loadEngines: Failed to load " + file.path + "!\n" + ex);
         continue;
       }
 
@@ -2347,7 +2347,7 @@ SearchService.prototype = {
           try {
             this._convertSherlockFile(addedEngine, fileURL.fileBaseName);
           } catch (ex) {
-            LOG("loadEngines: Failed to convert: " + fileURL.path + "\n" + ex);
+            LOG("_loadEngines: Failed to convert: " + fileURL.path + "\n" + ex);
             // The engine couldn't be converted, mark it as read-only
             addedEngine._readOnly = true;
           }
