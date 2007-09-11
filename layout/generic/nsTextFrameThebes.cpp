@@ -2727,6 +2727,7 @@ void nsBlinkTimer::Stop()
 {
   if (nsnull != mTimer) {
     mTimer->Cancel();
+    mTimer = nsnull;
   }
 }
 
