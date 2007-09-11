@@ -652,6 +652,9 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 		return (cairo_rectangle_list_t*) &_cairo_rectangles_not_representable;
 	    }
         }
+
+	_cairo_region_boxes_fini (&clip->region, boxes);
+
     } else {
         cairo_rectangle_int_t extents;
 
