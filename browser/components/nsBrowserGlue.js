@@ -38,7 +38,10 @@
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource:///modules/distribution.js");
 
 // Factory object
 const BrowserGlueServiceFactory = {
@@ -75,6 +78,9 @@ BrowserGlue.prototype = {
       case "profile-change-teardown": 
         this._onProfileShutdown();
         break;
+      case "prefservice:after-app-defaults":
+        this._onAppDefaults();
+        break;
       case "final-ui-startup":
         this._onProfileStartup();
         break;
@@ -107,6 +113,7 @@ BrowserGlue.prototype = {
     osvr.addObserver(this, "profile-before-change", false);
     osvr.addObserver(this, "profile-change-teardown", false);
     osvr.addObserver(this, "xpcom-shutdown", false);
+    osvr.addObserver(this, "prefservice:after-app-defaults", false);
     osvr.addObserver(this, "final-ui-startup", false);
     osvr.addObserver(this, "browser:purge-session-history", false);
     osvr.addObserver(this, "quit-application-requested", false);
@@ -122,10 +129,19 @@ BrowserGlue.prototype = {
     osvr.removeObserver(this, "profile-before-change");
     osvr.removeObserver(this, "profile-change-teardown");
     osvr.removeObserver(this, "xpcom-shutdown");
+    osvr.removeObserver(this, "prefservice:after-app-defaults");
     osvr.removeObserver(this, "final-ui-startup");
     osvr.removeObserver(this, "browser:purge-session-history");
     osvr.removeObserver(this, "quit-application-requested");
     osvr.removeObserver(this, "quit-application-granted");
+  },
+
+  _onAppDefaults: function()
+  {
+    // apply distribution customizations (prefs)
+    // other customizations are applied in _onProfileStartup()
+    var distro = new DistributionCustomizer();
+    distro.applyPrefDefaults();
   },
 
   // profile startup handler (contains profile initialization routines)
@@ -161,6 +177,11 @@ BrowserGlue.prototype = {
 
     // initialize Places
     this._initPlaces();
+
+    // apply distribution customizations
+    // prefs are applied in _onAppDefaults()
+    var distro = new DistributionCustomizer();
+    distro.applyCustomizations();
 
     // indicate that the profile was initialized
     this._profileStarted = true;

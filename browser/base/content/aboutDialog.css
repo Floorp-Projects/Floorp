@@ -45,6 +45,20 @@
   margin: 1em 0px 10px 17px;
 }
 
+#distribution {
+  font-weight: bold;
+  color: #909090;
+  display: none;
+  margin: 0em 0px 0px 17px;
+}
+
+#distributionId {
+  font-weight: bold;
+  color: #909090;
+  display: none;
+  margin: 0em 0px 10px 17px;
+}
+
 #copyright {
   margin: 0px 0px 3px 16px;
 }
