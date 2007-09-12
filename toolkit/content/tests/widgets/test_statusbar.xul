@@ -31,6 +31,9 @@ function test_statusbar()
   var panel = $("panel");
   ok(panel.label, "OK", "statusbarpanel label");
   ok(panel.image, "happy.png", "statusbarpanel image");
+  panel.src = "sad.png";
+  ok(panel.src, "sad.png", "statusbarpanel set src");
+  ok(panel.getAttribute("src"), "sad.png", "statusbarpanel set src attribute");
 
   SimpleTest.finish();
 }

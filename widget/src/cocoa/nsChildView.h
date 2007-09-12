@@ -69,12 +69,6 @@
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 
-#ifdef MOZ_LOGGING
-// make sure that logging is enabled before including prlog.h
-#define FORCE_PR_LOG
-#include "prlog.h"
-#endif
-
 class gfxASurface;
 class nsChildView;
 union nsPluginPort;

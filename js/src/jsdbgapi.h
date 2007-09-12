@@ -99,7 +99,10 @@ JS_ClearAllWatchPoints(JSContext *cx);
  * header file "jsconfig.h" has been included.
  */
 extern void
-js_TraceWatchPoints(JSTracer *trc);
+js_TraceWatchPoints(JSTracer *trc, JSObject *obj);
+
+extern void
+js_SweepWatchPoints(JSContext *cx);
 
 extern JSScopeProperty *
 js_FindWatchPoint(JSRuntime *rt, JSScope *scope, jsid id);

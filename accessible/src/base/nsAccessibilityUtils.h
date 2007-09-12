@@ -46,6 +46,8 @@
 #include "nsIPersistentProperties2.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsPoint.h"
 
 class nsAccUtils
 {
@@ -165,6 +167,19 @@ public:
   static void ConvertScrollTypeToPercents(PRUint32 aScrollType,
                                           PRInt16 *aVPercent,
                                           PRInt16 *aHPercent);
+
+  /**
+   * Returns coordinates relative screen for the top level window.
+   *
+   * @param - aNode - the DOM node hosted in the window.
+   */
+  static nsIntPoint GetScreenCoordsForWindow(nsIDOMNode *aNode);
+
+  /**
+   * Return document shell tree item for the given DOM node.
+   */
+  static already_AddRefed<nsIDocShellTreeItem>
+    GetDocShellTreeItemFor(nsIDOMNode *aNode);
 };
 
 #endif

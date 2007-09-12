@@ -608,7 +608,7 @@ static void ReparentFrame(nsIFrame* aFrame, nsIFrame* aOldParent,
 /* virtual */ void
 nsBlockFrame::MarkIntrinsicWidthsDirty()
 {
-  nsBlockFrame* dirtyBlock = NS_STATIC_CAST(nsBlockFrame*, GetFirstContinuation());
+  nsBlockFrame* dirtyBlock = static_cast<nsBlockFrame*>(GetFirstContinuation());
   dirtyBlock->mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
   dirtyBlock->mPrefWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
   dirtyBlock->AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
@@ -639,7 +639,7 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   ResolveBidi();
   InlineMinWidthData data;
   for (nsBlockFrame* curFrame = this; curFrame;
-       curFrame = NS_STATIC_CAST(nsBlockFrame*, curFrame->GetNextContinuation())) {
+       curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
     for (line_iterator line = curFrame->begin_lines(), line_end = curFrame->end_lines();
       line != line_end; ++line)
     {
@@ -710,7 +710,7 @@ nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   ResolveBidi();
   InlinePrefWidthData data;
   for (nsBlockFrame* curFrame = this; curFrame;
-       curFrame = NS_STATIC_CAST(nsBlockFrame*, curFrame->GetNextContinuation())) {
+       curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
     for (line_iterator line = curFrame->begin_lines(), line_end = curFrame->end_lines();
          line != line_end; ++line)
     {
@@ -6616,8 +6616,8 @@ nsBlockFrame::ResolveBidi()
     return NS_ERROR_NULL_POINTER;
 
   for (nsBlockFrame* curFrame = this;
-       curFrame; curFrame = NS_STATIC_CAST(nsBlockFrame*,
-                                           curFrame->GetNextContinuation())) {
+       curFrame; curFrame = static_cast<nsBlockFrame*>
+                                       (curFrame->GetNextContinuation())) {
     if (!curFrame->mLines.empty()) {
       nsresult rv = bidiUtils->Resolve(curFrame,
                                        curFrame->mLines.front()->mFirstChild,

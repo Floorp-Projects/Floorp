@@ -58,10 +58,8 @@
 #include "nsBaseWidget.h"
 #include "nsToolkit.h"
 #include "nsSwitchToUIThread.h"
-
-#ifdef MOZ_CAIRO_GFX
-#include <gfxOS2Surface.h>
-#endif
+#include "gfxOS2Surface.h"
+#include "gfxContext.h"
 
 class imgIContainer;
 
@@ -127,9 +125,7 @@ class nsWindow : public nsBaseWidget,
                       nsIAppShell *aAppShell = nsnull,
                       nsIToolkit *aToolkit = nsnull,
                       nsWidgetInitData *aInitData = nsnull);
-#ifdef MOZ_CAIRO_GFX
    gfxASurface* GetThebesSurface();
-#endif
    NS_IMETHOD Destroy(); // call before releasing
 
    // Hierarchy: only interested in widget children (it seems)
@@ -292,9 +288,7 @@ protected:
    nsFont        *mFont;
    nsIMenuBar    *mMenuBar;
    PRInt32        mWindowState;
-#ifdef MOZ_CAIRO_GFX
    nsRefPtr<gfxOS2Surface> mThebesSurface;
-#endif
 
    // Implementation ------------------------------
    void DoCreate( HWND hwndP, nsWindow *wndP, const nsRect &rect,
@@ -336,6 +330,7 @@ protected:
 
    HBITMAP DataToBitmap(PRUint8* aImageData, PRUint32 aWidth,
                         PRUint32 aHeight, PRUint32 aDepth);
+   HBITMAP CreateBitmapRGB(PRUint8* aImageData, PRUint32 aWidth, PRUint32 aHeight);
    // 'format' should be 'gfx_format' which is a PRInt32
    HBITMAP CreateTransparencyMask(PRInt32  format, PRUint8* aImageData,
                                   PRUint32 aWidth, PRUint32 aHeight);

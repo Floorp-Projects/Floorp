@@ -51,7 +51,6 @@ class nsXPathNSResolver : public nsIDOMXPathNSResolver
 {
 public:
     nsXPathNSResolver(nsIDOMNode* aNode);
-    virtual ~nsXPathNSResolver();
 
     // nsISupports interface
     NS_DECL_ISUPPORTS

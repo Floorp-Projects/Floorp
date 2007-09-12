@@ -2088,7 +2088,6 @@ js_TraceRuntime(JSTracer *trc, JSBool allAtoms)
     if (rt->gcLocksHash)
         JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_traversal, trc);
     js_TraceAtomState(trc, allAtoms);
-    js_TraceWatchPoints(trc);
     js_TraceNativeIteratorStates(trc);
 
     iter = NULL;
@@ -2339,17 +2338,6 @@ restart:
 
     rt->gcMarkingTracer = NULL;
 
-    /* Finalize iterator states before the objects they iterate over. */
-    CloseNativeIterators(cx);
-
-#ifdef DUMP_CALL_TABLE
-    /*
-     * Call js_DumpCallTable here so it can meter and then clear weak refs to
-     * GC-things that are about to be finalized.
-     */
-    js_DumpCallTable(cx);
-#endif
-
     /*
      * Sweep phase.
      *
@@ -2365,6 +2353,20 @@ restart:
      * atomization API must not be called during GC.
      */
     js_SweepAtomState(cx);
+
+    /* Finalize iterator states before the objects they iterate over. */
+    CloseNativeIterators(cx);
+
+    /* Finalize watch points associated with unreachable objects. */
+    js_SweepWatchPoints(cx);
+
+#ifdef DUMP_CALL_TABLE
+    /*
+     * Call js_DumpCallTable here so it can meter and then clear weak refs to
+     * GC-things that are about to be finalized.
+     */
+    js_DumpCallTable(cx);
+#endif
 
     /*
      * Here we need to ensure that JSObject instances are finalized before GC-

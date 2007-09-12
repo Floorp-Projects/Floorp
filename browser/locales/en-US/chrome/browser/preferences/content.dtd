@@ -29,9 +29,3 @@
 
 <!ENTITY  colors.label                "Colors...">
 <!ENTITY  colors.accesskey            "C">
-
-<!ENTITY fileTypes.label              "File Types">
-
-<!ENTITY configureFileTypes.label     "Configure how &brandShortName; handles certain types of files">
-<!ENTITY manage.label                 "Manage...">
-<!ENTITY manage.accesskey             "M">

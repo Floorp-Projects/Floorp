@@ -58,7 +58,7 @@ var gContentPane = {
   /**
    * Utility function to enable/disable the button specified by aButtonID based
    * on the value of the Boolean preference specified by aPreferenceID.
-   */  
+   */
   updateButtons: function (aButtonID, aPreferenceID)
   {
     var button = document.getElementById(aButtonID);
@@ -262,18 +262,6 @@ var gContentPane = {
   {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/colors.xul",
                                            "", null);  
-  },
-
-  // FILE TYPES
-
-  /**
-   * Displays the file type configuration dialog.
-   */
-  configureFileTypes: function ()
-  {
-    document.documentElement.openWindow("Preferences:DownloadActions",
-                                        "chrome://browser/content/preferences/downloadactions.xul",
-                                        "", null);
   }
 
 };

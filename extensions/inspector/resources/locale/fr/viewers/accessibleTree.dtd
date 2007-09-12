@@ -37,7 +37,6 @@
 #endif
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY role.label "Role">
-<!ENTITY name.label "Name">
-<!ENTITY nodeName.label "Node Name">
-
+<!ENTITY role.label "Rôle">
+<!ENTITY name.label "Nom">
+<!ENTITY nodeName.label "Nom du nœud">

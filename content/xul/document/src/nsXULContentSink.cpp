@@ -83,9 +83,8 @@
 #include "jscntxt.h"  // for JSVERSION_HAS_XML
 #include "nsCRT.h"
 
-#include "nsIFastLoadService.h"         // XXXbe temporary
-#include "nsIObjectInputStream.h"       // XXXbe temporary
-#include "nsXULDocument.h"              // XXXbe temporary
+#include "nsXULPrototypeDocument.h"     // XXXbe temporary
+#include "nsICSSLoader.h"
 
 #include "nsUnicharUtils.h"
 #include "nsGkAtoms.h"
@@ -98,8 +97,6 @@
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gLog;
 #endif
-
-static NS_DEFINE_CID(kXULPrototypeCacheCID, NS_XULPROTOTYPECACHE_CID);
 
 //----------------------------------------------------------------------
 

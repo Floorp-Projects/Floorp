@@ -458,24 +458,25 @@ LoginManagerPrompter.prototype = {
      * login, when the form being submitted contains multiple password
      * fields.
      *
-     * Return values:
-     *   true  - Update the stored password
-     *   false - Do not update the stored password
      */
-    promptToChangePassword : function (aUsername) {
+    promptToChangePassword : function (aOldLogin, aNewLogin) {
         const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
 
         var dialogText  = this._getLocalizedString(
-                                    "passwordChangeText", [aUsername]);
+                                    "passwordChangeText",
+                                    [aOldLogin.username]);
         var dialogTitle = this._getLocalizedString(
                                     "passwordChangeTitle");
 
         // returns 0 for yes, 1 for no.
-        var result = this._promptService.confirmEx(this._window,
+        var ok = !this._promptService.confirmEx(this._window,
                                 dialogTitle, dialogText, buttonFlags,
                                 null, null, null,
                                 null, {});
-        return !result;
+        if (ok) {
+            this.log("Updating password for user " + aOldLogin.username);
+            this._pwmgr.modifyLogin(aOldLogin, aNewLogin);
+        }
     },
 
 
@@ -486,20 +487,19 @@ LoginManagerPrompter.prototype = {
      * don't know which existing login (username) it's for. Asks the user
      * to select a username and confirm the password change.
      *
-     * Returns multiple parameters:
-     * [0] - User's response to the dialog
-     *   true  = Update the stored password
-     *   false = Do not update the stored password
-     * [1] - The username selected
-     *   (null if [0] is false)
-     *  
+     * Note: The caller doesn't know the username for aNewLogin, so this
+     *       function fills in .username and .usernameField with the values
+     *       from the login selected by the user.
+     * 
+     * Note; XPCOM stupidity: |count| is just |logins.length|.
      */
-    promptToChangePasswordWithUsernames : function (usernames) {
+    promptToChangePasswordWithUsernames : function (logins, count, aNewLogin) {
         const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
 
+        var usernames = logins.map(function (l) l.username);
         var dialogText  = this._getLocalizedString("userSelectText");
         var dialogTitle = this._getLocalizedString("passwordChangeTitle");
-        var selectedUser = null, selectedIndex = { value: null };
+        var selectedIndex = { value: null };
 
         // If user selects ok, outparam.value is set to the index
         // of the selected username.
@@ -507,10 +507,19 @@ LoginManagerPrompter.prototype = {
                                 dialogTitle, dialogText,
                                 usernames.length, usernames,
                                 selectedIndex);
-        if (ok)
-            selectedUser = usernames[selectedIndex.value];
+        if (ok) {
+            // Now that we know which login to change the password for,
+            // update the missing username info in the aNewLogin.
 
-        return [ok, selectedUser];
+            var selectedLogin = logins[selectedIndex.value];
+
+            this.log("Updating password for user " + selectedLogin.username);
+
+            aNewLogin.username      = selectedLogin.username;
+            aNewLogin.usernameField = selectedLogin.usernameField;
+
+            this._pwmgr.modifyLogin(selectedLogin, aNewLogin);
+        }
     },
 
 

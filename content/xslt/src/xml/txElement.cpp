@@ -53,14 +53,6 @@ Element::Element(nsIAtom *aPrefix, nsIAtom *aLocalName, PRInt32 aNamespaceID,
 {
 }
 
-//
-// This element is being destroyed, so destroy all attributes stored
-// in the mAttributes NamedNodeMap.
-//
-Element::~Element()
-{
-}
-
 Node* Element::appendChild(Node* newChild)
 {
   switch (newChild->getNodeType())

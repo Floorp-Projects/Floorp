@@ -79,7 +79,6 @@ endif
 EXTRA_DSO_LDOPTS += \
 	$(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib) \
 	$(LIBXUL_DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX) \
-	$(MOZ_JS_LIBS) \
 	$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)

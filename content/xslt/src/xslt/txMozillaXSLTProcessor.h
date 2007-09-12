@@ -85,7 +85,7 @@ public:
     /**
      * Default destructor for txMozillaXSLTProcessor
      */
-    virtual ~txMozillaXSLTProcessor();
+    ~txMozillaXSLTProcessor();
 
     // nsISupports interface
     NS_DECL_ISUPPORTS

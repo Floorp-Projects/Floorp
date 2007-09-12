@@ -97,7 +97,7 @@ class nsXPathResult : public nsIDOMXPathResult,
 {
 public:
     nsXPathResult();
-    virtual ~nsXPathResult();
+    ~nsXPathResult();
 
     // nsISupports interface
     NS_DECL_ISUPPORTS

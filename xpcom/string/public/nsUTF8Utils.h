@@ -603,9 +603,16 @@ class ConvertUTF16toUTF8
                 ++p;
                 if (p == end)
                   {
-                    NS_ERROR("Surrogate pair split between fragments");
-                    mBuffer = out;
-                    return N;
+                    // Treat broken characters as the Unicode
+                    // replacement character 0xFFFD (0xEFBFBD in
+                    // UTF-8)
+                    *out++ = 0xEF;
+                    *out++ = 0xBF;
+                    *out++ = 0xBD;
+
+                    NS_WARNING("String ending in half a surrogate pair!");
+
+                    break;
                   }
                 c = *p;
 
@@ -692,8 +699,14 @@ class CalculateUTF8Size
                 ++p;
                 if (p == end)
                   {
-                    NS_ERROR("Surrogate pair split between fragments");
-                    return N;
+                    // Treat broken characters as the Unicode
+                    // replacement character 0xFFFD (0xEFBFBD in
+                    // UTF-8)
+                    mSize += 3;
+
+                    NS_WARNING("String ending in half a surrogate pair!");
+
+                    break;
                   }
                 c = *p;
 

@@ -149,6 +149,7 @@ public:
   nsIPlugin     *mEntryPoint;
   PRPackedBool  mCanUnloadLibrary;
   PRPackedBool  mXPConnected;
+  PRPackedBool  mIsJavaPlugin;
   char          *mFileName;
   char          *mFullPath;
   PRInt64       mLastModifiedTime;
@@ -324,6 +325,10 @@ public:
   // if it is now disabled
   nsresult UpdatePluginInfo(nsPluginTag* aPluginTag);
 
+  // checks whether aTag is a "java" plugin tag (a tag for a plugin
+  // that does Java)
+  static PRBool IsJavaMIMEType(const char *aType);
+
 private:
   NS_IMETHOD
   TrySetUpPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
@@ -402,14 +407,6 @@ private:
   // checks whether the given plugin is an unwanted Java plugin
   // (e.g. no OJI support is compiled in)
   PRBool IsUnwantedJavaPlugin(nsPluginTag * aPluginTag);
-
-  // checks whether aTag is a "java" plugin tag (a tag for a plugin
-  // that does Java)
-  PRBool IsJavaPluginTag(nsPluginTag * aPluginTag);
-
-  // checks whether aTag is a "java" plugin tag (a tag for a plugin
-  // that does Java)
-  PRBool IsJavaMIMEType(const char *aType);
 
   nsresult EnsurePrivateDirServiceProvider();
 

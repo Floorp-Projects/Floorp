@@ -34,7 +34,7 @@
 *
 ******* END LICENSE BLOCK *******
 
-Hunspell Version: 1.1.8
+Hunspell Version: 1.1.12
 
 Hunspell Author: László Németh
 MySpell Author: Kevin Hendricks & David Einstein
@@ -45,7 +45,7 @@ are available at http://hunspell.sourceforge.net.
 
 A special thanks and credit goes to Geoff Kuenning, the creator of Ispell.
 MySpell's affix algorithms were based on those of Ispell, which should be
-noted is copyright Geoff Kuenning et.al. and now available under a BSD-style
+noted is copyright Geoff Kuenning et al and now available under a BSD-style
 license. For more information on Ispell and affix compression in general,
 please see: http://lasr.cs.ucla.edu/geoff/ispell.html (Ispell homepage)
 

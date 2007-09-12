@@ -110,6 +110,8 @@
     <command id="cmd_restartApp" oncommand="restartApp();"/>
     <command id="cmd_continue" oncommand="closeEM();" disabled="true"/>
     <command id="cmd_close" oncommand="closeEM();"/>
+    <command id="cmd_showUpdateInfo" oncommand="showUpdateInfo();"/>
+    <command id="cmd_hideUpdateInfo" oncommand="hideUpdateInfo();"/>
   </commandset>
 
   <vbox id="addonContextMenuPalette" hidden="true">
@@ -193,6 +195,20 @@
               <image id="previewImage"/>
             </description>
           </vbox>
+          <vbox id="infoNoAddonSelected" align="center" pack="center">
+            <label class="previewText">&infoNoAddonSelected.label;</label>
+          </vbox>
+          <vbox id="infoNoUpdateInfo" align="center" pack="center">
+            <label class="previewText">&infoNoUpdateInfo.label;</label>
+          </vbox>
+          <vbox id="infoLoadingInfo" align="center" pack="center">
+            <image class="addonThrobber"/>
+          </vbox>
+          <vbox id="infoUpdateInfoError" align="center" pack="center">
+            <label class="previewText">&infoUpdateInfoError.label;</label>
+          </vbox>
+          <vbox id="infoDisplay">
+          </vbox>
         </deck>
       </vbox>
     </hbox>
@@ -208,6 +224,14 @@
               accesskey="&cmd.installUpdatesAll.accesskey;"
               tooltiptext="&cmd.installUpdatesAll.tooltip;"
               command="cmd_installUpdatesAll"/>
+      <button id="showUpdateInfoButton" label="&cmd.showUpdateInfo.label;"
+              accesskey="&cmd.showUpdateInfo.accesskey;"
+              tooltiptext="&cmd.showUpdateInfo.tooltip;"
+              command="cmd_showUpdateInfo"/>
+      <button id="hideUpdateInfoButton" label="&cmd.hideUpdateInfo.label;"
+              accesskey="&cmd.hideUpdateInfo.accesskey;"
+              tooltiptext="&cmd.hideUpdateInfo.tooltip;"
+              command="cmd_hideUpdateInfo"/>
       <button id="checkUpdatesAllButton" label="&cmd.checkUpdatesAll.label;"
               accesskey="&cmd.checkUpdatesAll.accesskey;"
               tooltiptextaddons="&cmd.checkUpdatesAllAddon.tooltip;"

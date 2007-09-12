@@ -55,10 +55,6 @@ nsXPathNSResolver::nsXPathNSResolver(nsIDOMNode* aNode)
     NS_ASSERTION(mNode, "Need a node to resolve namespaces.");
 }
 
-nsXPathNSResolver::~nsXPathNSResolver()
-{
-}
-
 NS_IMETHODIMP
 nsXPathNSResolver::LookupNamespaceURI(const nsAString & aPrefix,
                                       nsAString & aResult)

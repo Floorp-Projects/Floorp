@@ -163,7 +163,7 @@ nsresult nsMIMEInfoOS2::LoadUriInternal(nsIURI * aURL)
 
   /* Convert SimpleURI to StandardURL */
   nsresult rv;
-  nsCOMPtr<nsIURI> uri = do_CreateInstance(kStandardURLCID, &rv);
+  nsCOMPtr<nsIURI> uri = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
   if (NS_FAILED(rv)) {
     return NS_ERROR_FAILURE;
   }

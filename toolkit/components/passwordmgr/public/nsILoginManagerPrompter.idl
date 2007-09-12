@@ -43,15 +43,59 @@ interface nsIDOMWindow;
 [scriptable, uuid(68b3cb59-51b8-4c57-bd7f-b2ce955a593d)]
 
 interface nsILoginManagerPrompter : nsISupports {
+    /**
+     * Initialize the prompter. Must be called before using other interfaces.
+     *
+     * @param aWindow
+     *        The in which the user is doing some login-related action that's
+     *        resulting in a need to prompt them for something. The prompt
+     *        will be associated with this window (or, if a notification bar
+     *        is being used, topmost opener in some cases).
+     */
     void init(in nsIDOMWindow aWindow);
 
+    /**
+     * Ask the user if they want to save a login (Yes, Never, Not Now)
+     *
+     * @param aLogin
+     *        The login to be saved.
+     */
     void promptToSavePassword(in nsILoginInfo aLogin);
 
-    void promptToChangePassword(in AString aUsername);
+    /**
+     * Ask the user if they want to change a login's password. If the
+     * user consents, modifyLogin() will be called.
+     *
+     * @param aOldLogin
+     *        The existing login (with the old password).
+     * @param aNewLogin
+     *        The new login.
+     */
+    void promptToChangePassword(in nsILoginInfo aOldLogin,
+                                in nsILoginInfo aNewLogin);
 
+    /**
+     * Ask the user if they want to change the password for one of
+     * multiple logins, when the caller can't determine exactly which
+     * login should be changed. If the user consents, modifyLogin() will
+     * be called.
+     *
+     * @param logins
+     *        An array of existing logins.
+     * @param count
+     *        (length of the array)
+     * @param aNewLogin
+     *        The new login. 
+     *
+     * Note: Because the caller does not know the username of the login
+     *       to be changed, aNewLogin.username and aNewLogin.usernameField
+     *       will be set (using the user's selection) before modifyLogin()
+     *       is called.
+     */
     void promptToChangePasswordWithUsernames(
+            [array, size_is(count)] in nsILoginInfo logins,
             in PRUint32 count,
-            [array, size_is(count)] in wstring usernames);
+            in nsILoginInfo aNewLogin);
 };
 %{C++
 

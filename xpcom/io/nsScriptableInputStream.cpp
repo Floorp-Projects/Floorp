@@ -220,13 +220,13 @@ nsScriptableInputStream::ReadBoolean(PRBool* aBoolean)
 NS_IMETHODIMP
 nsScriptableInputStream::Read8(PRUint8* aVal)
 {
-  return ReadFully(sizeof *aVal, NS_REINTERPRET_CAST(char*, aVal));
+  return ReadFully(sizeof *aVal, reinterpret_cast<char*>(aVal));
 }
 
 NS_IMETHODIMP
 nsScriptableInputStream::Read16(PRUint16* aVal)
 {
-  nsresult rv = ReadFully(sizeof *aVal, NS_REINTERPRET_CAST(char*, aVal));
+  nsresult rv = ReadFully(sizeof *aVal, reinterpret_cast<char*>(aVal));
   NS_ENSURE_SUCCESS(rv, rv);
   *aVal = NS_SWAP16(*aVal);
   return NS_OK;
@@ -235,7 +235,7 @@ nsScriptableInputStream::Read16(PRUint16* aVal)
 NS_IMETHODIMP
 nsScriptableInputStream::Read32(PRUint32* aVal)
 {
-  nsresult rv = ReadFully(sizeof *aVal, NS_REINTERPRET_CAST(char*, aVal));
+  nsresult rv = ReadFully(sizeof *aVal, reinterpret_cast<char*>(aVal));
   NS_ENSURE_SUCCESS(rv, rv);
   *aVal = NS_SWAP32(*aVal);
   return NS_OK;
@@ -246,7 +246,7 @@ nsScriptableInputStream::ReadFloat(float* aFloat)
 {
   NS_ASSERTION(sizeof(float) == sizeof (PRUint32),
                "False assumption about sizeof(float)");
-  return Read32(NS_REINTERPRET_CAST(PRUint32*, aFloat));
+  return Read32(reinterpret_cast<PRUint32*>(aFloat));
 }
 
 NS_IMETHODIMP
@@ -255,18 +255,18 @@ nsScriptableInputStream::ReadDouble(double* aDouble)
   NS_ASSERTION(sizeof(double) == sizeof(PRUint64),
                "False assumption about sizeof(double)");
 
-  nsresult rv = ReadFully(sizeof(double), NS_REINTERPRET_CAST(char*, aDouble));
+  nsresult rv = ReadFully(sizeof(double), reinterpret_cast<char*>(aDouble));
 
   NS_ENSURE_SUCCESS(rv, rv);
-  PRUint64 i = NS_SWAP64(*NS_REINTERPRET_CAST(PRUint64*, aDouble));
-  *aDouble = *NS_REINTERPRET_CAST(double*, &i);
+  PRUint64 i = NS_SWAP64(*reinterpret_cast<PRUint64*>(aDouble));
+  *aDouble = *reinterpret_cast<double*>(&i);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsScriptableInputStream::ReadByteArray(PRUint32 aCount, PRUint8 **aBytes)
 {
-  char* s = NS_REINTERPRET_CAST(char*, NS_Alloc(aCount));
+  char* s = reinterpret_cast<char*>(NS_Alloc(aCount));
   NS_ENSURE_TRUE(s, NS_ERROR_OUT_OF_MEMORY);
 
   PRUint32 bytesRead;

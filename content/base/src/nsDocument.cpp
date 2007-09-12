@@ -5757,14 +5757,6 @@ nsDocument::OnPageHide(PRBool aPersisted)
 }
 
 void
-nsDocument::MayDispatchMutationEvent(nsINode* aTarget)
-{
-  if (mSubtreeModifiedDepth > 0) {
-    mSubtreeModifiedTargets.AppendObject(aTarget);
-  }
-}
-
-void
 nsDocument::WillDispatchMutationEvent(nsINode* aTarget)
 {
   NS_ASSERTION(mSubtreeModifiedDepth != 0 ||

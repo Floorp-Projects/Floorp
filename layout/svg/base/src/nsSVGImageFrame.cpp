@@ -164,9 +164,6 @@ nsSVGImageFrame::Init(nsIContent* aContent,
   nsresult rv = nsSVGPathGeometryFrame::Init(aContent, aParent, aPrevInFlow);
   if (NS_FAILED(rv)) return rv;
   
-  nsCOMPtr<nsIDOMSVGImageElement> Rect = do_QueryInterface(mContent);
-  NS_ASSERTION(Rect,"wrong content element");
-
   mListener = new nsSVGImageListener(this);
   if (!mListener) return NS_ERROR_OUT_OF_MEMORY;
   nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);

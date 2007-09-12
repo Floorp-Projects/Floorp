@@ -2497,7 +2497,7 @@ nsStandardURL::SetFile(nsIFile *file)
 {
     ENSURE_MUTABLE();
 
-    NS_PRECONDITION(file, "null pointer");
+    NS_ENSURE_ARG_POINTER(file);
 
     nsresult rv;
     nsCAutoString url;

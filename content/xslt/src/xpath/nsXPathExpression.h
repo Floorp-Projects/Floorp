@@ -57,7 +57,6 @@ class nsXPathExpression : public nsIDOMXPathExpression,
 public:
     nsXPathExpression(nsAutoPtr<Expr>& aExpression, txResultRecycler* aRecycler,
                       nsIDOMDocument *aDocument);
-    virtual ~nsXPathExpression();
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -84,10 +83,6 @@ private:
               mContextSize(aContextSize),
               mLastError(NS_OK),
               mRecycler(aRecycler)
-        {
-        }
-
-        ~EvalContextImpl()
         {
         }
 

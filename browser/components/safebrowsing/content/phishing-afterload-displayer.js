@@ -208,7 +208,6 @@ PROT_PhishMsgDisplayerBase.prototype.browserSelected = function() {
     this.messageShouldShow_ = true;
   }
 
-  this.hideLockIcon_();        // Comes back when we are unselected or unloaded
   this.addWarningInUrlbar_();  // Goes away when we are unselected or unloaded
 
   // messageShouldShow might be false if the user dismissed the warning, 
@@ -234,7 +233,6 @@ PROT_PhishMsgDisplayerBase.prototype.explicitShow = function() {
  */
 PROT_PhishMsgDisplayerBase.prototype.browserUnselected = function() {
   this.removeWarningInUrlbar_();
-  this.unhideLockIcon_();
   if (this.messageShowing_)
     this.hideMessage_();
 }
@@ -290,7 +288,6 @@ PROT_PhishMsgDisplayerBase.prototype.done = function() {
     // If we were started, we must be the current problem, so these things
     // must be showing
     this.removeWarningInUrlbar_();
-    this.unhideLockIcon_();
 
     // Could be though that they've closed the warning dialog
     if (this.messageShowing_)
@@ -325,28 +322,6 @@ PROT_PhishMsgDisplayerBase.prototype.removeIfExists_ = function(orig,
     orig = orig.substring(0, pos) + orig.substring(pos + toRemove.length);
 
   return orig;
-}
-
-/**
- * We don't want to confuse users if they land on a phishy page that uses
- * SSL, so ensure that the lock icon never shows when we're showing our 
- * warning.
- */
-PROT_PhishMsgDisplayerBase.prototype.hideLockIcon_ = function() {
-  var lockIcon = this.doc_.getElementById("lock-icon");
-  if (!lockIcon)
-    return;
-  lockIcon.hidden = true;
-}
-
-/**
- * Ensure they can see it after our warning is finished.
- */
-PROT_PhishMsgDisplayerBase.prototype.unhideLockIcon_ = function() {
-  var lockIcon = this.doc_.getElementById("lock-icon");
-  if (!lockIcon)
-    return;
-  lockIcon.hidden = false;
 }
 
 /**
