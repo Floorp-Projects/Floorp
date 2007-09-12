@@ -45,13 +45,13 @@ class nsSVGClipPathFrame : public nsSVGClipPathFrameBase
 {
   friend nsIFrame*
   NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-
+protected:
   nsSVGClipPathFrame(nsStyleContext* aContext) :
     nsSVGClipPathFrameBase(aContext),
     mClipParentMatrix(nsnull),
     mInUse(PR_FALSE) {}
 
- public:
+public:
   // nsSVGClipPathFrame methods:
   nsresult ClipPaint(nsSVGRenderState* aContext,
                      nsISVGChildFrame* aParent,

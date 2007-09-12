@@ -45,10 +45,6 @@ txResultTreeFragment::txResultTreeFragment(nsAutoPtr<txResultBuffer>& aBuffer)
 {
 }
 
-txResultTreeFragment::~txResultTreeFragment()
-{
-}
-
 short txResultTreeFragment::getResultType()
 {
     return RESULT_TREE_FRAGMENT;
@@ -91,14 +87,6 @@ nsresult txResultTreeFragment::flushToHandler(txAXMLEventHandler** aHandler)
     }
 
     return mBuffer->flushToHandler(aHandler);
-}
-
-txRtfHandler::txRtfHandler()
-{
-}
-
-txRtfHandler::~txRtfHandler()
-{
 }
 
 nsresult

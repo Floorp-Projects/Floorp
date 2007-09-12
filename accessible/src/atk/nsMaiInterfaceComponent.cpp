@@ -111,32 +111,11 @@ getExtentsCB(AtkComponent *aComponent,
     if (NS_FAILED(rv))
         return;
     if (aCoordType == ATK_XY_WINDOW) {
-      // Make coordinates relative to top level window instead of screen
-      nsCOMPtr<nsIDOMNode> domNode;
-      accWrap->GetDOMNode(getter_AddRefs(domNode));
-      nsCOMPtr<nsIDocShellTreeItem> treeItem = nsAccessNode::GetDocShellTreeItemFor(domNode);
-      nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-      treeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
-      nsCOMPtr<nsIDOMDocument> domDoc = do_GetInterface(rootTreeItem);
-      nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(domDoc));
-      if (!docView) {
-        return;
-      }
-
-      nsCOMPtr<nsIDOMAbstractView> abstractView;
-      docView->GetDefaultView(getter_AddRefs(abstractView));
-      nsCOMPtr<nsIDOMWindowInternal> windowInter(do_QueryInterface(abstractView));
-      if (!windowInter) {
-        return;
-      }
-
-      PRInt32 screenX, screenY;
-      if (NS_FAILED(windowInter->GetScreenX(&screenX)) ||
-          NS_FAILED(windowInter->GetScreenY(&screenY))) {
-        return;
-      }
-      nsAccX -= screenX;
-      nsAccY -= screenY;
+        nsCOMPtr<nsIDOMNode> domNode;
+        accWrap->GetDOMNode(getter_AddRefs(domNode));
+        nsIntPoint winCoords = nsAccUtils::GetScreenCoordsForWindow(domNode);
+        nsAccX -= winCoords.x;
+        nsAccY -= winCoords.y;
     }
 
     *aAccX = nsAccX;

@@ -44,30 +44,8 @@ import msvcrt
 import config
 
 
-def GetCygwinPath(dos_path):
-  """Helper function to get the Cygwin path from a dos path.
-     Used to generate a Firefox command line piped through the
-     Cygwin bash shell
-
-  Args:
-    dos_path: String containing the dos path
-
-  Returns:
-    String containing the cygwin path
-  """
-
-  # Convert the path to a cygwin path. Assumes the path starts with
-  # /cygdrive/driveletter
-  cygwin_path = '/' + dos_path[3:]                       # Remove 'C:\'
-  cygwin_path = cygwin_path.replace('\\', '/')           # Backslashes->slashes
-  cygwin_path = cygwin_path.replace(' ', '\\ ')          # Escape spaces
-  cygwin_path = '/cygdrive/' + dos_path[0] + cygwin_path # Add drive letter
-  return cygwin_path
-
-
 def GenerateFirefoxCommandLine(firefox_path, profile_dir, url):
-  """Generates the command line for a process to run Firefox, wrapped
-     by cygwin so that we can read the output from dump() statements.
+  """Generates the command line for a process to run Firefox
 
   Args:
     firefox_path: String containing the path to the firefox exe to use
@@ -80,16 +58,9 @@ def GenerateFirefoxCommandLine(firefox_path, profile_dir, url):
     profile_dir = profile_dir.replace('\\', '\\\\\\')
     profile_arg = '-profile %s' % profile_dir
 
-  url_arg = ''
-  if url:
-    url_arg = '-url %s' % url
-
-  cmd = '%s "%s %s %s -width %d -height %d"' % (config.CYGWIN,
-                           GetCygwinPath(firefox_path),
+  cmd = '%s %s %s' % (firefox_path,
                            profile_arg,
-                           url_arg,
-                           config.BROWSER_WIDTH,
-                           config.BROWSER_HEIGHT)
+                           url)
   return cmd
 
 

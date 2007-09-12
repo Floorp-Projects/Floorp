@@ -76,6 +76,12 @@
 <!ENTITY cmd.installUpdate.label          "Install Update">
 <!ENTITY cmd.installUpdate.accesskey      "I">
 <!ENTITY cmd.installUpdate.tooltip        "Install an update for this Add-on">
+<!ENTITY cmd.showUpdateInfo.label         "Show Information">
+<!ENTITY cmd.showUpdateInfo.accesskey     "S">
+<!ENTITY cmd.showUpdateInfo.tooltip       "Show more information about these updates">
+<!ENTITY cmd.hideUpdateInfo.label         "Hide Information">
+<!ENTITY cmd.hideUpdateInfo.accesskey     "H">
+<!ENTITY cmd.hideUpdateInfo.tooltip       "Hide information about these updates">
 <!-- The selected add-on's cancel action button label -->
 <!ENTITY cancel.label                     "Cancel">
 <!ENTITY cancel.accesskey                 "C">
@@ -114,6 +120,9 @@
 <!ENTITY previewNoThemeSelected.label     "No Theme Selected">
 <!ENTITY previewNoPreviewImage.label      "This Theme does not have a Preview Image">
 <!ENTITY moreInfo.label                   "More Information">
+<!ENTITY infoNoAddonSelected.label        "No Update Selected">
+<!ENTITY infoNoUpdateInfo.label           "This update does not have any additional information">
+<!ENTITY infoUpdateInfoError.label        "There was an error loading the information about this update">
 
 <!ENTITY updateSuccess.label              "Update completed successfully.">
 <!ENTITY installSuccess.label             "Install completed successfully.">

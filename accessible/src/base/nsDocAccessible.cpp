@@ -109,8 +109,8 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
   // XXX aaronl should we use an algorithm for the initial cache size?
   mAccessNodeCache.Init(kDefaultCacheSize);
 
-  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =                              
-    GetDocShellTreeItemFor(mDOMNode);
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
+    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(docShellTreeItem);
   if (docShell) {
     PRUint32 busyFlags;
@@ -164,7 +164,7 @@ NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *aRole)
   *aRole = nsIAccessibleRole::ROLE_PANE; // Fall back
 
   nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem =
-    GetDocShellTreeItemFor(mDOMNode);
+    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
   if (docShellTreeItem) {
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
     docShellTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
@@ -278,11 +278,16 @@ NS_IMETHODIMP nsDocAccessible::TakeFocus()
     return NS_ERROR_FAILURE; // Not focusable
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
+  nsCOMPtr<nsIDocShellTreeItem> treeItem =
+    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
   nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(treeItem);
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIPresShell> shell(GetPresShell());
+  if (!shell) {
+    NS_WARNING("Was not shutdown properly via InvalidateCacheSubtree()");
+    return NS_ERROR_FAILURE;
+  }
   nsIEventStateManager *esm = shell->GetPresContext()->EventStateManager();
   NS_ENSURE_TRUE(esm, NS_ERROR_FAILURE);
 
@@ -525,7 +530,8 @@ NS_IMETHODIMP nsDocAccessible::Shutdown()
     return NS_OK;  // Already shutdown
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
+  nsCOMPtr<nsIDocShellTreeItem> treeItem =
+    nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
   ShutdownChildDocuments(treeItem);
 
   if (mDocLoadTimer) {
@@ -787,7 +793,8 @@ NS_IMETHODIMP nsDocAccessible::FireDocLoadEvents(PRUint32 aEventType)
                                           nsITimer::TYPE_ONE_SHOT);
     }
   } else {
-    nsCOMPtr<nsIDocShellTreeItem> treeItem = GetDocShellTreeItemFor(mDOMNode);
+    nsCOMPtr<nsIDocShellTreeItem> treeItem =
+      nsAccUtils::GetDocShellTreeItemFor(mDOMNode);
     if (!treeItem) {
       return NS_OK;
     }
@@ -1168,11 +1175,18 @@ void nsDocAccessible::ContentStatesChanged(nsIDocument* aDocument,
   nsHTMLSelectOptionAccessible::SelectionChangedIfOption(aContent2);
 }
 
+void nsDocAccessible::CharacterDataWillChange(nsIDocument *aDocument,
+                                              nsIContent* aContent,
+                                              CharacterDataChangeInfo* aInfo)
+{
+  FireTextChangeEventForText(aContent, aInfo, PR_FALSE);
+}
+
 void nsDocAccessible::CharacterDataChanged(nsIDocument *aDocument,
                                            nsIContent* aContent,
                                            CharacterDataChangeInfo* aInfo)
 {
-  FireTextChangedEventOnDOMCharacterDataModified(aContent, aInfo);
+  FireTextChangeEventForText(aContent, aInfo, PR_TRUE);
 }
 
 void
@@ -1203,8 +1217,9 @@ nsDocAccessible::ParentChainChanged(nsIContent *aContent)
 }
 
 void
-nsDocAccessible::FireTextChangedEventOnDOMCharacterDataModified(nsIContent *aContent,
-                                                                CharacterDataChangeInfo* aInfo)
+nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
+                                            CharacterDataChangeInfo* aInfo,
+                                            PRBool aIsInserted)
 {
   if (!mIsContentLoaded || !mDocument) {
     return;
@@ -1226,26 +1241,38 @@ nsDocAccessible::FireTextChangedEventOnDOMCharacterDataModified(nsIContent *aCon
     return;
 
   PRInt32 start = aInfo->mChangeStart;
-  PRUint32 end = aInfo->mChangeEnd;
-  PRInt32 length = end - start;
-  PRUint32 replaceLen = aInfo->mReplaceLength;
 
   PRInt32 offset = 0;
   rv = textAccessible->DOMPointToHypertextOffset(node, start, &offset);
   if (NS_FAILED(rv))
     return;
 
-  // Text has been removed.
-  if (length > 0) {
-    nsCOMPtr<nsIAccessibleTextChangeEvent> event =
-      new nsAccTextChangeEvent(accessible, offset, length, PR_FALSE);
-    textAccessible->FireAccessibleEvent(event);
-  }
+  PRInt32 length = aIsInserted ?
+    aInfo->mReplaceLength: // text has been added
+    aInfo->mChangeEnd - start; // text has been removed
 
-  // Text has been added.
-  if (replaceLen) {
+  if (length > 0) {
+    nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
+    if (!shell)
+      return;
+
+    PRUint32 renderedStartOffset, renderedEndOffset;
+    nsIFrame* frame = shell->GetPrimaryFrameFor(aContent);
+
+    rv = textAccessible->ContentToRenderedOffset(frame, start,
+                                                 &renderedStartOffset);
+    if (NS_FAILED(rv))
+      return;
+
+    rv = textAccessible->ContentToRenderedOffset(frame, start + length,
+                                                 &renderedEndOffset);
+    if (NS_FAILED(rv))
+      return;
+
     nsCOMPtr<nsIAccessibleTextChangeEvent> event =
-      new nsAccTextChangeEvent(accessible, offset, replaceLen, PR_TRUE);
+      new nsAccTextChangeEvent(accessible, offset,
+                               renderedEndOffset - renderedStartOffset,
+                               aIsInserted, PR_FALSE);
     textAccessible->FireAccessibleEvent(event);
   }
 }
@@ -1852,7 +1879,7 @@ void nsDocAccessible::DocLoadCallback(nsITimer *aTimer, void *aClosure)
     // Fire STATE_CHANGE event for doc load finish if focus is in same doc tree
     if (gLastFocusedNode) {
       nsCOMPtr<nsIDocShellTreeItem> focusedTreeItem =
-        GetDocShellTreeItemFor(gLastFocusedNode);
+        nsAccUtils::GetDocShellTreeItemFor(gLastFocusedNode);
       if (focusedTreeItem) {
         nsCOMPtr<nsIDocShellTreeItem> sameTypeRootOfFocus;
         focusedTreeItem->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRootOfFocus));

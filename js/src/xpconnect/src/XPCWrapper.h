@@ -167,8 +167,8 @@ public:
     if ((flags & JSRESOLVE_ASSIGNING) &&
         (::JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)) {
       nsCOMPtr<nsIXPCScriptNotify> scriptNotify = 
-        do_QueryInterface(NS_STATIC_CAST(nsISupports*,
-                                         JS_GetContextPrivate(cx)));
+        do_QueryInterface(static_cast<nsISupports*>
+                                     (JS_GetContextPrivate(cx)));
       if (scriptNotify) {
         return NS_SUCCEEDED(scriptNotify->PreserveWrapper(wn));
       }

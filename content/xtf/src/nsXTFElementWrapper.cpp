@@ -527,7 +527,14 @@ nsXTFElementWrapper::GetExistingAttrNameFromQName(const nsAString& aStr) const
 PRInt32
 nsXTFElementWrapper::IntrinsicState() const
 {
-  return nsXTFElementWrapperBase::IntrinsicState() | mIntrinsicState;
+  PRInt32 retState = nsXTFElementWrapperBase::IntrinsicState();
+  if (mIntrinsicState & NS_EVENT_STATE_MOZ_READONLY) {
+    retState &= ~NS_EVENT_STATE_MOZ_READWRITE;
+  } else if (mIntrinsicState & NS_EVENT_STATE_MOZ_READWRITE) {
+    retState &= ~NS_EVENT_STATE_MOZ_READONLY;
+  }
+
+  return  retState | mIntrinsicState;
 }
 
 void
@@ -878,6 +885,10 @@ nsXTFElementWrapper::SetIntrinsicState(PRInt32 aNewState)
   
   if (!doc || !bits)
     return NS_OK;
+
+  NS_WARN_IF_FALSE(!((aNewState & NS_EVENT_STATE_MOZ_READONLY) &&
+                   (aNewState & NS_EVENT_STATE_MOZ_READWRITE)),
+                   "Both READONLY and READWRITE are being set.  Yikes!!!");
 
   mIntrinsicState = aNewState;
   mozAutoDocUpdate upd(doc, UPDATE_CONTENT_STATE, PR_TRUE);

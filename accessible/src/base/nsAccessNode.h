@@ -49,7 +49,6 @@
 #include "nsIAccessNode.h"
 #include "nsIContent.h"
 #include "nsPIAccessNode.h"
-#include "nsIDocShellTreeItem.h"
 #include "nsIDOMNode.h"
 #include "nsINameSpaceManager.h"
 #include "nsIStringBundle.h"
@@ -104,7 +103,6 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsISupports *aContainer, PRBool aCanCreate = PR_FALSE);
     static already_AddRefed<nsIAccessibleDocument> GetDocAccessibleFor(nsIDOMNode *aNode);
 
-    static already_AddRefed<nsIDocShellTreeItem> GetDocShellTreeItemFor(nsIDOMNode *aStartNode);
     static already_AddRefed<nsIDOMNode> GetDOMNodeForContainer(nsISupports *aContainer);
     static already_AddRefed<nsIPresShell> GetPresShellFor(nsIDOMNode *aStartNode);
     

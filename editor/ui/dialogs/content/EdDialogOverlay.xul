@@ -91,7 +91,7 @@
            oninput="ChangeLinkLocation();">
     <menupopup class="autocomplete-history-popup"
                popupalign="topleft" popupanchor="bottomleft"
-               oncommand="this.parentNode.value = event.target.getAttribute('label');"/>
+               oncommand="this.parentNode.value = event.target.getAttribute('label'); ChangeLinkLocation();"/>
   </textbox>
   <hbox align="center">
     <!-- from EdDialogOverlay.xul 'for' identifies the textfield to get URL from -->

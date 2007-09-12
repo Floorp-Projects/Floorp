@@ -61,10 +61,6 @@ txXMLOutput::txXMLOutput(txOutputFormat* aFormat, ostream* aOut)
     mOutputFormat.setFromDefaults();
 }
 
-txXMLOutput::~txXMLOutput()
-{
-}
-
 nsresult
 txXMLOutput::attribute(const nsAString& aName,
                        const PRInt32 aNsID,

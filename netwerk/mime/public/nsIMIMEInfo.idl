@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Dan Mosedale <dmose@mozilla.org>
+ *   Myk Melez <myk@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -232,19 +233,32 @@ interface nsIMIMEInfo : nsIHandlerInfo {
 
 /**
  * nsIHandlerApp represents an external application that can handle content
- * of some sort (either a MIME-type or a protocol).  Note that for theoretical
- * cleanliness, nsI{Local,Web}HandlerApp really ought to inherit from
- * nsIHandlerApp.  After that's done, we should also try and make
- * nsIWebContentHandlerInfo inherit from or possibly be replaced by
- * nsIWebHandlerApp.
+ * of some sort (either a MIME type or a protocol).
+ *
+ * FIXME: now that we've made nsIWebHandlerApp inherit from nsIHandlerApp,
+ * we should also try to make nsIWebContentHandlerInfo inherit from or possibly
+ * be replaced by nsIWebHandlerApp (bug 394710).
  */
-[scriptable, uuid(08a543dc-081f-4933-b325-252cf68d6ad9)]
+[scriptable, uuid(b504f39e-d88a-4435-8e0d-e13f1070f7e7)]
 interface nsIHandlerApp : nsISupports {
 
     /**
      * Human readable name for the handler
      */
     attribute AString name;
+
+    /**
+     * Whether or not the given handler app is logically equivalent to the
+     * invokant (i.e. they represent the same app).
+     * 
+     * Two apps are the same if they are both either local or web handlers
+     * and their executables/URI templates are the same in a string comparison.
+     *
+     * @param aHandlerApp the handler app to compare to the invokant
+     *
+     * @returns true if the two are logically equivalent, false otherwise
+     */
+    boolean equals(in nsIHandlerApp aHandlerApp);
 };
 
 /**

@@ -217,11 +217,12 @@ sub StoreBuildID() {
     print $bh 'buildID=' . $buildID;
     $bh->close() || 
      die("Could not open buildID temp file $buildIDTempFile: $!");
+    chmod(0644, $buildIDTempFile);
 
     my $buildIDFile = $osFileMatch . '_info.txt';
     $this->Shell(
       cmd => 'scp',
-      cmdArgs => [$buildIDTempFile, 
+      cmdArgs => ['-p', $buildIDTempFile, 
                   $stagingUser . '@' . $stagingServer . ':' .
                   $pushDir . '/' . $buildIDFile],
       logFile => $pushLog,

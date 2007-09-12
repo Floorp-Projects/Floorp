@@ -1182,6 +1182,15 @@ nsBindingManager::RemoveObserver(nsIMutationObserver* aObserver)
 }
 
 void
+nsBindingManager::CharacterDataWillChange(nsIDocument* aDocument,
+                                          nsIContent* aContent,
+                                          CharacterDataChangeInfo* aInfo)
+{
+  NS_BINDINGMANAGER_NOTIFY_OBSERVERS(CharacterDataWillChange,
+                                     (aDocument, aContent, aInfo));
+}
+
+void
 nsBindingManager::CharacterDataChanged(nsIDocument* aDocument,
                                        nsIContent* aContent,
                                        CharacterDataChangeInfo* aInfo)

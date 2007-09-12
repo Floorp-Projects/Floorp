@@ -347,6 +347,10 @@ nsXMLEventsManager::EndLoad(nsIDocument* aDocument)
   AddListeners(aDocument);
 }
 NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsXMLEventsManager)
+void
+nsXMLEventsManager::CharacterDataWillChange(nsIDocument* aDocument,
+                                            nsIContent* aContent,
+                                            CharacterDataChangeInfo* aInfo) {}
 void 
 nsXMLEventsManager::CharacterDataChanged(nsIDocument* aDocument,
                                          nsIContent* aContent,

@@ -423,13 +423,6 @@ typedef PRUint32 nsrefcnt;
   #define NS_SPECIALIZE_TEMPLATE
 #endif
 
-#define NS_STATIC_CAST(__type, __ptr)      static_cast< __type >(__ptr)
-#define NS_CONST_CAST(__type, __ptr)       const_cast< __type >(__ptr)
-
-#define NS_REINTERPRET_POINTER_CAST(__type, __ptr)    reinterpret_cast< __type >(__ptr)
-#define NS_REINTERPRET_NONPOINTER_CAST(__type, __obj) reinterpret_cast< __type >(__obj)
-#define NS_REINTERPRET_CAST(__type, __expr)           reinterpret_cast< __type >(__expr)
-
 /* 
  * Use these macros to do 64bit safe pointer conversions.
  */

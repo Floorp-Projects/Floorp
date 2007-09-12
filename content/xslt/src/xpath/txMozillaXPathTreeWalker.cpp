@@ -69,10 +69,6 @@ txXPathTreeWalker::txXPathTreeWalker(const txXPathNode& aNode)
 {
 }
 
-txXPathTreeWalker::~txXPathTreeWalker()
-{
-}
-
 void
 txXPathTreeWalker::moveToRoot()
 {

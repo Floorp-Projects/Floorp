@@ -50,11 +50,9 @@
 nsIFrame*
 NS_NewSVGClipPathFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
-  nsCOMPtr<nsIDOMSVGTransformable> transformable = do_QueryInterface(aContent);
-  if (!transformable) {
-#ifdef DEBUG
-    printf("warning: trying to construct an SVGClipPathFrame for a content element that doesn't support the right interfaces\n");
-#endif
+  nsCOMPtr<nsIDOMSVGClipPathElement> clipPath = do_QueryInterface(aContent);
+  if (!clipPath) {
+    NS_ERROR("Can't create frame! Content is not an SVG clipPath!");
     return nsnull;
   }
 

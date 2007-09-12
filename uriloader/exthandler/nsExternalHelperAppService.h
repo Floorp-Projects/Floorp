@@ -69,10 +69,7 @@
 #include "nsIChannel.h"
 #include "nsITimer.h"
 
-#ifdef MOZ_RDF
-#include "nsIRDFDataSource.h"
-#include "nsIRDFResource.h"
-#endif
+#include "nsIHandlerService.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsCOMArray.h"
@@ -81,7 +78,6 @@
 
 class nsExternalAppHandler;
 class nsIMIMEInfo;
-class nsIRDFService;
 class nsITransfer;
 class nsIDOMWindowInternal;
 
@@ -107,13 +103,6 @@ public:
 
   nsExternalHelperAppService();
   virtual ~nsExternalHelperAppService();
-  /**
-   * Initializes the RDF datasource from the profile.
-   * @retval NS_OK Loading was successful
-   * @retval errorcode Loading failed
-   * @see mOverRideDataSource
-   */
-  NS_HIDDEN_(nsresult) InitDataSource();
 
   /**
    * Initializes internal state. Will be called automatically when
@@ -121,64 +110,6 @@ public:
    */
   NS_HIDDEN_(nsresult) Init();
  
-  /**
-   * Given an existing MIME info object and a MIME type, fill in any user
-   * override info from the in-memory data source.
-   *
-   * @param aContentType  The MIME content-type 
-   * @param aMIMEInfo     The mime info to fill with the information
-   */
-  NS_HIDDEN_(nsresult) FillMIMEInfoForMimeTypeFromDS(
-    const nsACString& aContentType, nsIMIMEInfo * aMIMEInfo);
-
-  /**
-   * Given an existing protocol info object and a protocol scheme, fill in
-   * any user override info from the in-memory data source.
-   *
-   * @param aScheme   The protocol scheme
-   * @param aMIMEInfo The mime info to fill with the information
-   */
-  NS_HIDDEN_(nsresult) FillProtoInfoForSchemeFromDS(
-    const nsACString& aScheme, nsIHandlerInfo * aMIMEInfo);
-
-#ifdef MOZ_RDF
-  /**
-   * Fill in the generic handler info stuff; called by Fill*InfoFor*FromDS.
-   * 
-   * @param aTypeNodeResource  RDF resource representing the top level scheme
-   *                           or MIME-type node in the graph
-   * @param aType              content-type or scheme name 
-   * @param aRDFService        the RDF service
-   * @param aTypeNodePrefix    One of NC_{CONTENT,SCHEME}_NODE_PREFIX
-   * @param aHandlerInfo       object to be filled in
-   */
-  NS_HIDDEN_(nsresult) FillHandlerInfoForTypeFromDS(
-    nsIRDFResource *aTypeNodeResource, const nsCAutoString& aType,
-    nsIRDFService *aRDFService, const char *aTypeNodePrefix, 
-    nsIHandlerInfo * aHandlerInfo);
-#endif
-    
-  /**
-   * Given an extension, look up the user override information to see if we
-   * have a mime info object representing this extension. The user over ride
-   * information is contained in an in-memory data source.
-   *
-   * Does not change the MIME Type of the MIME Info.
-   *
-   * @param aMIMEInfo The mime info to fill with the information
-   */
-  NS_HIDDEN_(nsresult) FillMIMEInfoForExtensionFromDS(
-    const nsACString& aFileExtension, nsIMIMEInfo * aMIMEInfo);
-
-  /**
-   * Looks up the MIME Type for a given extension in the RDF Datasource.
-   * @param aExtension The extension to look for
-   * @param aType [out] The type, if found
-   * @return PR_TRUE if found, PR_FALSE otherwise
-   */
-  NS_HIDDEN_(PRBool) GetTypeFromDS(const nsACString& aFileExtension,
-                                   nsACString& aType);
-
   /**
    * Given a mimetype and an extension, looks up a mime info from the OS.
    * The mime type is given preference. This function follows the same rules
@@ -225,82 +156,10 @@ public:
   virtual nsresult GetFileTokenForPath(const PRUnichar * platformAppPath,
                                        nsIFile ** aFile);
 
-  /**
-   * Helper routine used to test whether a given mime type is in our
-   * mimeTypes.rdf data source
-   */
-  NS_HIDDEN_(PRBool) MIMETypeIsInDataSource(const char * aContentType);
-
   virtual NS_HIDDEN_(nsresult) OSProtocolHandlerExists(const char *aScheme,
                                                        PRBool *aExists) = 0;
 
 protected:
-  /**
-   * Pointer to the datasource that contains the user override information.
-   * @see InitDataSource
-   */
-#ifdef MOZ_RDF
-  nsCOMPtr<nsIRDFDataSource> mOverRideDataSource;
-
-  nsCOMPtr<nsIRDFResource> kNC_Description;
-  nsCOMPtr<nsIRDFResource> kNC_Value;
-  nsCOMPtr<nsIRDFResource> kNC_FileExtensions;
-  nsCOMPtr<nsIRDFResource> kNC_Path;
-  nsCOMPtr<nsIRDFResource> kNC_UseSystemDefault;
-  nsCOMPtr<nsIRDFResource> kNC_SaveToDisk;
-  nsCOMPtr<nsIRDFResource> kNC_AlwaysAsk;
-  nsCOMPtr<nsIRDFResource> kNC_HandleInternal;
-  nsCOMPtr<nsIRDFResource> kNC_PrettyName;
-  nsCOMPtr<nsIRDFResource> kNC_UriTemplate;
-  nsCOMPtr<nsIRDFResource> kNC_PossibleApplication;
-#endif
-
-  /**
-   * Whether mOverRideDataSource is initialized
-   */
-  PRBool mDataSourceInitialized;
-
-  /**
-   * Helper routines for digesting the data source and filling in a handler
-   * info object for a given content type inside that data source. The content
-   * type of the handler info object will not be changed.
-   */
-#ifdef MOZ_RDF
-  NS_HIDDEN_(nsresult) FillMIMEExtensionProperties(
-    nsIRDFResource * aContentTypeNodeResource, nsIRDFService * aRDFService,
-    nsIMIMEInfo * aMIMEInfo);
-  
-  /**
-   * @see FillMIMEExtensionProperties
-   */
-  NS_HIDDEN_(nsresult) FillContentHandlerProperties(const char * aContentType,
-                                                    const char * aNodePrefix,
-                                                    nsIRDFService * aRDFService,
-                                                    nsIHandlerInfo * aHandler);
-
-  /**
-   * A small helper function which gets the target for a given source and
-   * property. QIs to a literal and returns a CONST ptr to the string value
-   * of that target
-   */
-  NS_HIDDEN_(nsresult) FillLiteralValueFromTarget(nsIRDFResource * aSource,
-                                                  nsIRDFResource * aProperty,
-                                                  const PRUnichar ** aLiteralValue);
-
-  /**
-   * Returns the nsIHandlerApp represented by the source node.
-   */
-  NS_HIDDEN_(nsresult) FillHandlerAppFromSource(nsIRDFResource * aSource,
-                                                nsIHandlerApp ** aHandlerApp);
-
-  /**
-   * Returns an array of nsIHandlerApp objects representing possible apps
-   * for the handler represented by the source node.
-   */
-  NS_HIDDEN_(nsresult) FillPossibleAppsFromSource(nsIRDFResource * aSource,
-                                                  nsIMutableArray * aPossibleApps);
-#endif
-
   /**
    * Searches the "extra" array of MIMEInfo objects for an object
    * with a specific type. If found, it will modify the passed-in

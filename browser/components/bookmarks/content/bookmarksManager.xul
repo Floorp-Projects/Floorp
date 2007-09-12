@@ -202,7 +202,7 @@
       <menu id="helpMenu"/>
     </menubar>
 
-    <toolbar id="command-toolbar" tbalign="stretch" class="chromeclass-toolbar">
+    <toolbar id="command-toolbar" class="chromeclass-toolbar">
       <toolbarbutton id="newbookmark" label="&menuitem.newBookmark.label;"
                      accesskey="&menuitem.newBookmark.accesskey;"
                      command="cmd_bm_newbookmark"/>

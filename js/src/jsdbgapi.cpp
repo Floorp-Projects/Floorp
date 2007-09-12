@@ -386,7 +386,6 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
         }
     }
 
-    js_RemoveRoot(cx->runtime, &wp->closure);
     JS_free(cx, wp);
     return ok;
 }
@@ -397,7 +396,7 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag)
  * respect the request model).
  */
 void
-js_TraceWatchPoints(JSTracer *trc)
+js_TraceWatchPoints(JSTracer *trc, JSObject *obj)
 {
     JSRuntime *rt;
     JSWatchPoint *wp;
@@ -407,11 +406,45 @@ js_TraceWatchPoints(JSTracer *trc)
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          wp != (JSWatchPoint *)&rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
-        TRACE_SCOPE_PROPERTY(trc, wp->sprop);
-        if ((wp->sprop->attrs & JSPROP_SETTER) && wp->setter)
-            JS_CALL_OBJECT_TRACER(trc, (JSObject *)wp->setter, "wp->setter");
+        if (wp->object == obj) {
+            TRACE_SCOPE_PROPERTY(trc, wp->sprop);
+            if ((wp->sprop->attrs & JSPROP_SETTER) && wp->setter) {
+                JS_CALL_OBJECT_TRACER(trc, (JSObject *)wp->setter,
+                                      "wp->setter");
+            }
+            JS_SET_TRACING_NAME(trc, "wp->closure");
+            js_CallValueTracerIfGCThing(trc, (jsval) wp->closure);
+        }
     }
 }
+
+void
+js_SweepWatchPoints(JSContext *cx)
+{
+    JSRuntime *rt;
+    JSWatchPoint *wp, *next;
+    uint32 sample;
+
+    rt = cx->runtime;
+    DBG_LOCK(rt);
+    for (wp = (JSWatchPoint *)rt->watchPointList.next;
+         wp != (JSWatchPoint *)&rt->watchPointList;
+         wp = next) {
+        next = (JSWatchPoint *)wp->links.next;
+        if (js_IsAboutToBeFinalized(cx, wp->object)) {
+            sample = rt->debuggerMutations;
+
+            /* Ignore failures. */
+            DropWatchPointAndUnlock(cx, wp, JSWP_LIVE);
+            DBG_LOCK(rt);
+            if (rt->debuggerMutations != sample + 1)
+                next = (JSWatchPoint *)rt->watchPointList.next;
+        }
+    }
+    DBG_UNLOCK(rt);
+}
+
+
 
 /*
  * NB: FindWatchPoint must be called with rt->debuggerLock acquired.
@@ -734,11 +767,6 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
         }
         wp->handler = NULL;
         wp->closure = NULL;
-        ok = js_AddRoot(cx, &wp->closure, "wp->closure");
-        if (!ok) {
-            JS_free(cx, wp);
-            goto out;
-        }
         wp->object = obj;
         JS_ASSERT(sprop->setter != js_watch_set || pobj != obj);
         wp->setter = sprop->setter;

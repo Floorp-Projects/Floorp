@@ -49,6 +49,13 @@
 nsIFrame*
 NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
+  nsCOMPtr<nsIDOMSVGMaskElement> mask = do_QueryInterface(aContent);
+
+  if (!mask) {
+    NS_ERROR("Can't create frame! Content is not an SVG mask");
+    return nsnull;
+  }
+
   return new (aPresShell) nsSVGMaskFrame(aContext);
 }
 
@@ -146,7 +153,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
     nsSVGUtils::SetClipRect(gfx, aMatrix, x, y, width, height);
   }
 
-  mMaskParent = aParent,
+  mMaskParent = aParent;
   mMaskParentMatrix = aMatrix;
 
   for (nsIFrame* kid = mFrames.FirstChild(); kid;

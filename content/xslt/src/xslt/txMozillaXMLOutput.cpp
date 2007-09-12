@@ -132,10 +132,6 @@ txMozillaXMLOutput::txMozillaXMLOutput(txOutputFormat* aFormat,
     }
 }
 
-txMozillaXMLOutput::~txMozillaXMLOutput()
-{
-}
-
 nsresult
 txMozillaXMLOutput::attribute(nsIAtom* aPrefix,
                               nsIAtom* aLocalName,
@@ -998,10 +994,6 @@ txMozillaXMLOutput::createHTMLElement(nsIAtom* aName,
 txTransformNotifier::txTransformNotifier()
     : mPendingStylesheetCount(0),
       mInTransform(PR_FALSE)      
-{
-}
-
-txTransformNotifier::~txTransformNotifier()
 {
 }
 

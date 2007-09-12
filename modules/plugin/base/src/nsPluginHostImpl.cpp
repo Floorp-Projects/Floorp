@@ -211,7 +211,6 @@ static NS_DEFINE_IID(kIPluginTagInfo2IID, NS_IPLUGINTAGINFO2_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static const char kDirectoryServiceContractID[] = "@mozilla.org/file/directory_service;1";
 // for the dialog
-static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCPluginManagerCID, NS_PLUGINMANAGER_CID); // needed for NS_TRY_SAFE_CALL
 
 ////////////////////////////////////////////////////////////////////////
@@ -768,6 +767,7 @@ nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
   mEntryPoint = nsnull;
   mFlags = NS_PLUGIN_FLAG_ENABLED;
   mXPConnected = PR_FALSE;
+  mIsJavaPlugin = aPluginTag->mIsJavaPlugin;
   mFileName = new_str(aPluginTag->mFileName);
   mFullPath = new_str(aPluginTag->mFullPath);
 }
@@ -785,12 +785,16 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
   mMimeTypeArray = nsnull;
   mMimeDescriptionArray = nsnull;
   mExtensionsArray = nsnull;
+  mIsJavaPlugin = PR_FALSE;
 
   if(aPluginInfo->fMimeTypeArray != nsnull)
   {
     mMimeTypeArray = new char*[mVariants];
-    for (int i = 0; i < mVariants; i++)
+    for (int i = 0; i < mVariants; i++) {
       mMimeTypeArray[i] = new_str(aPluginInfo->fMimeTypeArray[i]);
+      if (nsPluginHostImpl::IsJavaMIMEType(mMimeTypeArray[i]))
+        mIsJavaPlugin = PR_TRUE;
+    }
   }
 
   if(aPluginInfo->fMimeDescriptionArray != nsnull)
@@ -873,6 +877,7 @@ nsPluginTag::nsPluginTag(const char* aName,
   mDescription     = new_str(aDescription);
   mFileName        = new_str(aFileName);
   mFullPath        = new_str(aFullPath);
+  mIsJavaPlugin    = PR_FALSE;
 
   if (mVariants) {
     mMimeTypeArray        = new char*[mVariants];
@@ -883,6 +888,8 @@ nsPluginTag::nsPluginTag(const char* aName,
       mMimeTypeArray[i]        = new_str(aMimeTypes[i]);
       mMimeDescriptionArray[i] = new_str(aMimeDescriptions[i]);
       mExtensionsArray[i]      = new_str(aExtensions[i]);
+      if (nsPluginHostImpl::IsJavaMIMEType(mMimeTypeArray[i]))
+        mIsJavaPlugin = PR_TRUE;
     }
   }
 }
@@ -991,6 +998,19 @@ nsPluginTag::SetDisabled(PRBool aDisabled)
 {
   if (HasFlag(NS_PLUGIN_FLAG_ENABLED) == !aDisabled)
     return NS_OK;
+
+  if (mIsJavaPlugin) {
+    nsresult rv;
+    nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool javaEnabled;
+    rv = pref->GetBoolPref("security.enable_java", &javaEnabled);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (javaEnabled == aDisabled)
+      return pref->SetBoolPref("security.enable_java", !aDisabled);
+  }
 
   if (aDisabled)
     UnMark(NS_PLUGIN_FLAG_ENABLED);
@@ -3481,7 +3501,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbeddedPlugin(const char *aMimeType,
     return NS_ERROR_NOT_AVAILABLE;
   }
     
-  PRBool isJava = pluginTag && IsJavaPluginTag(pluginTag);
+  PRBool isJava = pluginTag && pluginTag->mIsJavaPlugin;
 
   // Determine if the scheme of this URL is one we can handle internaly because we should
   // only open the initial stream if it's one that we can handle internally. Otherwise
@@ -3645,7 +3665,7 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
     nsIPluginInstance* instance;
     aOwner->GetInstance(instance);
     nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_TRUE);
-    if(!pluginTag || !IsJavaPluginTag(pluginTag))
+    if(!pluginTag || !pluginTag->mIsJavaPlugin)
       NewFullPagePluginStream(aStreamListener, instance);
     NS_IF_RELEASE(instance);
     return NS_OK;
@@ -3925,7 +3945,7 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
     mimetype = aMimeType;
 
   NS_ASSERTION(pluginTag, "Must have plugin tag here!");
-  PRBool isJavaPlugin = IsJavaPluginTag(pluginTag);
+  PRBool isJavaPlugin = pluginTag->mIsJavaPlugin;
 
 #if defined(OJI) && ((defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_OS2))
   // This is a work-around on Unix for a LiveConnect problem (bug 83698).
@@ -4833,21 +4853,10 @@ static PRBool isUnwantedPlugin(nsPluginTag * tag)
 PRBool nsPluginHostImpl::IsUnwantedJavaPlugin(nsPluginTag * tag)
 {
 #ifndef OJI
-  return IsJavaPluginTag(tag);
+  return tag->mIsJavaPlugin;
 #else
   return PR_FALSE;
 #endif /* OJI */
-}
-
-PRBool nsPluginHostImpl::IsJavaPluginTag(nsPluginTag * tag)
-{
-  for (PRInt32 i = 0; i < tag->mVariants; ++i) {
-    if (IsJavaMIMEType(tag->mMimeTypeArray[i])) {
-      return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
 }
 
 PRBool nsPluginHostImpl::IsJavaMIMEType(const char* aType)
@@ -5150,7 +5159,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       pluginTag->mLibrary = pluginLibrary;
       pluginTag->mLastModifiedTime = fileModTime;
       if (!(oldFlags & NS_PLUGIN_FLAG_ENABLED) ||
-          (IsJavaPluginTag(pluginTag) && !mJavaEnabled))
+          (pluginTag->mIsJavaPlugin && !mJavaEnabled))
         pluginTag->UnMark(NS_PLUGIN_FLAG_ENABLED);
 
       if (oldFlags & NS_PLUGIN_FLAG_BLOCKLISTED)
@@ -5790,7 +5799,7 @@ nsPluginHostImpl::ReadPluginInfo()
 
     // Mark plugin as loaded from cache
     tag->Mark(tagflag | NS_PLUGIN_FLAG_FROMCACHE);
-    if (IsJavaPluginTag(tag)) {
+    if (tag->mIsJavaPlugin) {
       if (mJavaEnabled)
         tag->Mark(NS_PLUGIN_FLAG_ENABLED);
       else
@@ -6435,7 +6444,7 @@ NS_IMETHODIMP nsPluginHostImpl::Observe(nsISupports *aSubject,
       // disabled so at least FindPluginForType/Extension doesn't return
       // anything.
       for (nsPluginTag* cur = mPlugins; cur; cur = cur->mNext) {
-        if (IsJavaPluginTag(cur))
+        if (cur->mIsJavaPlugin)
           cur->SetDisabled(!mJavaEnabled);
       }            
     }
@@ -6472,7 +6481,7 @@ nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInsta
   nsCOMPtr<nsIPrompt> prompt;
   GetPrompt(owner, getter_AddRefs(prompt));
   if (prompt) {
-    nsCOMPtr<nsIStringBundleService> strings(do_GetService(kStringBundleServiceCID, &rv));
+    nsCOMPtr<nsIStringBundleService> strings(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
     if (NS_FAILED(rv))
       return rv;
 

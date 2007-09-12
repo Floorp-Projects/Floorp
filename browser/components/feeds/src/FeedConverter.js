@@ -357,27 +357,25 @@ var FeedResultService = {
     switch (handler) {
     case "client":
       var clientApp = prefs.getComplexValue(PREF_SELECTED_APP, Ci.nsILocalFile);
-#ifdef XP_MACOSX
-      // On OS X, the built in feed dispatcher (Safari) sends feeds to other
-      // applications (When Default Reader is adjusted) in the following format:
+
+      // For the benefit of applications that might know how to deal with more
+      // URLs than just feeds, send feed: URLs in the following format:
       //
       // http urls: replace scheme with feed, e.g.
       // http://foo.com/index.rdf -> feed://foo.com/index.rdf
-      // other urils: prepend feed: scheme, e.g.
+      // other urls: prepend feed: scheme, e.g.
       // https://foo.com/index.rdf -> feed:https://foo.com/index.rdf
-      //
-      // We duplicate this here for compatibility. 
       var ios = 
           Cc["@mozilla.org/network/io-service;1"].
           getService(Ci.nsIIOService);
-      var macURI = ios.newURI(spec, null, null);
-      if (macURI.schemeIs("http")) {
-        macURI.scheme = "feed";
-        spec = macURI.spec;
+      var feedURI = ios.newURI(spec, null, null);
+      if (feedURI.schemeIs("http")) {
+        feedURI.scheme = "feed";
+        spec = feedURI.spec;
       }
       else
         spec = "feed:" + spec;
-#endif
+
       var ss = 
           Cc["@mozilla.org/browser/shell-service;1"].
           getService(Ci.nsIShellService);

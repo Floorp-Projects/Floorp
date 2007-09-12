@@ -58,7 +58,6 @@ public:
                         nsIDOMDocument* aResultDocument,
                         nsITransformObserver* aObserver);
     txMozillaTextOutput(nsIDOMDocumentFragment* aDest);
-    virtual ~txMozillaTextOutput();
 
     TX_DECL_TXAXMLEVENTHANDLER
     TX_DECL_TXAOUTPUTXMLEVENTHANDLER

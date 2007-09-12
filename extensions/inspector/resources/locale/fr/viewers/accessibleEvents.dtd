@@ -35,8 +35,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!ENTITY eventType.label "Event Type">
-<!ENTITY eventTime.label "Time">
-<!ENTITY eventNodeName.label "Node Name">
-<!ENTITY clearEventList.label "Clear Event List">
-
+<!ENTITY eventType.label "Type d'événement">
+<!ENTITY eventTime.label "Heure">
+<!ENTITY eventNodeName.label "Nom du nœud">
+<!ENTITY clearEventList.label "Effacer la liste des événements">
