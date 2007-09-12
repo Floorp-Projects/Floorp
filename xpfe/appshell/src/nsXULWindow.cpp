@@ -72,7 +72,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIIOService.h"
-#include "nsNetCID.h"
 #include "nsIJSContextStack.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIObserverService.h"
@@ -108,9 +107,6 @@
 #define HEIGHT_ATTRIBUTE   NS_LITERAL_STRING("height")
 #define MODE_ATTRIBUTE     NS_LITERAL_STRING("sizemode")
 #define ZLEVEL_ATTRIBUTE   NS_LITERAL_STRING("zlevel")
-// CIDs
-static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
-static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 //*****************************************************************************
 //***    nsXULWindow: Object Management
@@ -212,7 +208,7 @@ NS_IMETHODIMP nsXULWindow::GetDocShell(nsIDocShell** aDocShell)
 
 NS_IMETHODIMP nsXULWindow::GetZLevel(PRUint32 *outLevel)
 {
-  nsCOMPtr<nsIWindowMediator> mediator(do_GetService(kWindowMediatorCID));
+  nsCOMPtr<nsIWindowMediator> mediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
   if (mediator)
     mediator->GetZLevel(this, outLevel);
   else
@@ -222,7 +218,7 @@ NS_IMETHODIMP nsXULWindow::GetZLevel(PRUint32 *outLevel)
 
 NS_IMETHODIMP nsXULWindow::SetZLevel(PRUint32 aLevel)
 {
-  nsCOMPtr<nsIWindowMediator> mediator(do_GetService(kWindowMediatorCID));
+  nsCOMPtr<nsIWindowMediator> mediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
   if (!mediator)
     return NS_ERROR_FAILURE;
 
@@ -765,7 +761,7 @@ NS_IMETHODIMP nsXULWindow::SetVisibility(PRBool aVisibility)
   shellAsWin->SetVisibility(aVisibility);
   mWindow->Show(aVisibility);
 
-  nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
+  nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
   if (windowMediator)
      windowMediator->UpdateWindowTimeStamp(static_cast<nsIXULWindow*>(this));
 
@@ -859,7 +855,7 @@ NS_IMETHODIMP nsXULWindow::SetTitle(const PRUnichar* aTitle)
   NS_ENSURE_SUCCESS(mWindow->SetTitle(mTitle), NS_ERROR_FAILURE);
 
   // Tell the window mediator that a title has changed
-  nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
+  nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
   if(!windowMediator)
     return NS_OK;
 
@@ -1503,7 +1499,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
     }
     if (persistString.Find("zlevel") >= 0) {
       PRUint32 zLevel;
-      nsCOMPtr<nsIWindowMediator> mediator(do_GetService(kWindowMediatorCID));
+      nsCOMPtr<nsIWindowMediator> mediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
       if (mediator) {
         mediator->GetZLevel(this, &zLevel);
         PR_snprintf(sizeBuf, sizeof(sizeBuf), "%lu", (unsigned long)zLevel);
@@ -1849,7 +1845,7 @@ PRBool nsXULWindow::ConstrainToZLevel(
     return PR_FALSE;
 #endif
 
-  nsCOMPtr<nsIWindowMediator> mediator(do_GetService(kWindowMediatorCID));
+  nsCOMPtr<nsIWindowMediator> mediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
   if(!mediator)
     return PR_FALSE;
 
@@ -1939,7 +1935,7 @@ void nsXULWindow::PlaceWindowLayersBehind(PRUint32 aLowLevel,
 
   // step through windows in z-order from top to bottommost window
 
-  nsCOMPtr<nsIWindowMediator> mediator(do_GetService(kWindowMediatorCID));
+  nsCOMPtr<nsIWindowMediator> mediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID));
   if(!mediator)
     return;
 

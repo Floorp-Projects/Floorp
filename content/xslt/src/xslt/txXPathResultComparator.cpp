@@ -70,10 +70,6 @@ txResultStringComparator::txResultStringComparator(MBool aAscending,
 #endif
 }
 
-txResultStringComparator::~txResultStringComparator()
-{
-}
-
 #ifndef TX_EXE
 nsresult txResultStringComparator::init(const nsAFlatString& aLanguage)
 {
@@ -262,10 +258,6 @@ txResultStringComparator::StringValue::~StringValue()
 txResultNumberComparator::txResultNumberComparator(MBool aAscending)
 {
     mAscending = aAscending ? 1 : -1;
-}
-
-txResultNumberComparator::~txResultNumberComparator()
-{
 }
 
 nsresult

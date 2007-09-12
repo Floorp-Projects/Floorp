@@ -42,7 +42,7 @@
 
 <!ENTITY newRules.label "Ny">
 <!ENTITY deleteSelectedRules.label "Ta bort">
-<!ENTITY disableSelectedRules.label "Avaktivera">
+<!ENTITY disableSelectedRules.label "Inaktivera">
 <!ENTITY openSelectedFileInEditor.label "Öppna fil i redigerare">
 
 <!-- LOCALIZATION NOTE: DO NOT LOCALIZE "!important" since it is a CSS API -->

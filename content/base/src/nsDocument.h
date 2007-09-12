@@ -73,7 +73,6 @@
 #include "nsINodeInfo.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOM3DocumentEvent.h"
-#include "nsCOMArray.h"
 #include "nsHashtable.h"
 #include "nsInterfaceHashtable.h"
 #include "nsIBoxObject.h"
@@ -507,7 +506,6 @@ public:
   virtual void OnPageShow(PRBool aPersisted);
   virtual void OnPageHide(PRBool aPersisted);
   
-  virtual void MayDispatchMutationEvent(nsINode* aTarget);
   virtual void WillDispatchMutationEvent(nsINode* aTarget);
   virtual void MutationEventDispatched(nsINode* aTarget);
 
@@ -818,9 +816,6 @@ private:
 
   // Member to store out last-selected stylesheet set.
   nsString mLastStyleSheetSet;
-
-  nsCOMArray<nsINode> mSubtreeModifiedTargets;
-  PRUint32            mSubtreeModifiedDepth;
 
   // Our update nesting level
   PRUint32 mUpdateNestLevel;

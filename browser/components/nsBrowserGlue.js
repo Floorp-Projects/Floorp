@@ -1,43 +1,59 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the Firefox Browser Glue Service.
- *
- * The Initial Developer of the Original Code is
- * Giorgio Maone
- * Portions created by the Initial Developer are Copyright (C) 2005
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Giorgio Maone <g.maone@informaction.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is the Browser Search Service.
+#
+# The Initial Developer of the Original Code is
+# Giorgio Maone
+# Portions created by the Initial Developer are Copyright (C) 2005
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#   Giorgio Maone <g.maone@informaction.com>
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
 
 const Ci = Components.interfaces;
 const Cc = Components.classes;
 const Cr = Components.results;
+const Cu = Components.utils;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource:///modules/distribution.js");
+
+// Factory object
+const BrowserGlueServiceFactory = {
+  _instance: null,
+  createInstance: function (outer, iid) 
+  {
+    if (outer != null)
+      throw Components.results.NS_ERROR_NO_AGGREGATION;
+    return this._instance == null ?
+      this._instance = new BrowserGlue() : this._instance;
+  }
+};
 
 // Constructor
 
@@ -49,12 +65,6 @@ function BrowserGlue() {
 BrowserGlue.prototype = {
   _saveSession: false,
 
-  QueryInterface: function(iid) 
-  {
-     xpcomCheckInterfaces(iid, kServiceIIds, Cr.NS_ERROR_NO_INTERFACE);
-     return this;
-  }
-,
   // nsIObserver implementation 
   observe: function(subject, topic, data) 
   {
@@ -67,6 +77,9 @@ BrowserGlue.prototype = {
         break;
       case "profile-change-teardown": 
         this._onProfileShutdown();
+        break;
+      case "prefservice:after-app-defaults":
+        this._onAppDefaults();
         break;
       case "final-ui-startup":
         this._onProfileStartup();
@@ -100,6 +113,7 @@ BrowserGlue.prototype = {
     osvr.addObserver(this, "profile-before-change", false);
     osvr.addObserver(this, "profile-change-teardown", false);
     osvr.addObserver(this, "xpcom-shutdown", false);
+    osvr.addObserver(this, "prefservice:after-app-defaults", false);
     osvr.addObserver(this, "final-ui-startup", false);
     osvr.addObserver(this, "browser:purge-session-history", false);
     osvr.addObserver(this, "quit-application-requested", false);
@@ -115,10 +129,19 @@ BrowserGlue.prototype = {
     osvr.removeObserver(this, "profile-before-change");
     osvr.removeObserver(this, "profile-change-teardown");
     osvr.removeObserver(this, "xpcom-shutdown");
+    osvr.removeObserver(this, "prefservice:after-app-defaults");
     osvr.removeObserver(this, "final-ui-startup");
     osvr.removeObserver(this, "browser:purge-session-history");
     osvr.removeObserver(this, "quit-application-requested");
     osvr.removeObserver(this, "quit-application-granted");
+  },
+
+  _onAppDefaults: function()
+  {
+    // apply distribution customizations (prefs)
+    // other customizations are applied in _onProfileStartup()
+    var distro = new DistributionCustomizer();
+    distro.applyPrefDefaults();
   },
 
   // profile startup handler (contains profile initialization routines)
@@ -154,6 +177,11 @@ BrowserGlue.prototype = {
 
     // initialize Places
     this._initPlaces();
+
+    // apply distribution customizations
+    // prefs are applied in _onAppDefaults()
+    var distro = new DistributionCustomizer();
+    distro.applyCustomizations();
 
     // indicate that the profile was initialized
     this._profileStarted = true;
@@ -366,111 +394,31 @@ BrowserGlue.prototype = {
   sanitize: function(aParentWindow) 
   {
     this.Sanitizer.sanitize(aParentWindow);
-  }
+  },
+
+  // for XPCOM
+  classDescription: "Firefox Browser Glue Service",
+  classID:          Components.ID("{eab9012e-5f74-4cbc-b2b5-a590235513cc}"),
+  contractID:       "@mozilla.org/browser/browserglue;1",
+
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupports,
+                                          Ci.nsISupportsWeakReference,
+                                          Ci.nsIBrowserGlue]),
+
+  // redefine the default factory for XPCOMUtils
+  _xpcom_factory: BrowserGlueServiceFactory,
+
+  // get this contractID registered for certain categories via XPCOMUtils
+  _xpcom_categories: [
+    // make BrowserGlue a startup observer
+    { category: "app-startup", service: true }
+  ]
 }
 
-
-// XPCOM Scaffolding code
-
-// component defined in this file
-
-const kServiceName = "Firefox Browser Glue Service";
-const kServiceId = "{eab9012e-5f74-4cbc-b2b5-a590235513cc}";
-const kServiceCtrId = "@mozilla.org/browser/browserglue;1";
-const kServiceConstructor = BrowserGlue;
-
-const kServiceCId = Components.ID(kServiceId);
-
-// interfaces implemented by this component
-const kServiceIIds = [ 
-  Ci.nsIObserver,
-  Ci.nsISupports,
-  Ci.nsISupportsWeakReference,
-  Ci.nsIBrowserGlue
-  ];
-
-// categories which this component is registered in
-const kServiceCats = ["app-startup"];
-
-// Factory object
-const kServiceFactory = {
-  _instance: null,
-  createInstance: function (outer, iid) 
-  {
-    if (outer != null) throw Cr.NS_ERROR_NO_AGGREGATION;
-
-    xpcomCheckInterfaces(iid, kServiceIIds, 
-                          Cr.NS_ERROR_INVALID_ARG);
-    return this._instance == null ?
-      this._instance = new kServiceConstructor() : this._instance;
-  }
-};
-
-function xpcomCheckInterfaces(iid, iids, ex) {
-  for (var j = iids.length; j-- >0;) {
-    if (iid.equals(iids[j])) return true;
-  }
-  throw ex;
+//module initialization
+function NSGetModule(aCompMgr, aFileSpec) {
+  return XPCOMUtils.generateModule([BrowserGlue]);
 }
 
-// Module
+	
 
-var Module = {
-  registered: false,
-  
-  registerSelf: function(compMgr, fileSpec, location, type) 
-  {
-    if (!this.registered) {
-      compMgr.QueryInterface(Ci.nsIComponentRegistrar)
-             .registerFactoryLocation(kServiceCId,
-                                      kServiceName,
-                                      kServiceCtrId, 
-                                      fileSpec,
-                                      location, 
-                                      type);
-      const catman = Cc['@mozilla.org/categorymanager;1'].
-                     getService(Ci.nsICategoryManager);
-      var len = kServiceCats.length;
-      for (var j = 0; j < len; j++) {
-        catman.addCategoryEntry(kServiceCats[j],
-          kServiceCtrId, kServiceCtrId, true, true);
-      }
-      this.registered = true;
-    } 
-  },
-  
-  unregisterSelf: function(compMgr, fileSpec, location) 
-  {
-    compMgr.QueryInterface(Ci.nsIComponentRegistrar)
-           .unregisterFactoryLocation(kServiceCId, fileSpec);
-    const catman = Cc['@mozilla.org/categorymanager;1'].
-                   getService(Ci.nsICategoryManager);
-    var len = kServiceCats.length;
-    for (var j = 0; j < len; j++) {
-      catman.deleteCategoryEntry(kServiceCats[j], kServiceCtrId, true);
-    }
-  },
-  
-  getClassObject: function(compMgr, cid, iid) 
-  {
-    if(cid.equals(kServiceCId))
-      return kServiceFactory;
-    
-    throw Cr[
-      iid.equals(Ci.nsIFactory)
-      ? "NS_ERROR_NO_INTERFACE"
-      : "NS_ERROR_NOT_IMPLEMENTED"
-    ];
-    
-  },
-  
-  canUnload: function(compMgr) 
-  {
-    return true;
-  }
-};
-
-// entrypoint
-function NSGetModule(compMgr, fileSpec) {
-  return Module;
-}

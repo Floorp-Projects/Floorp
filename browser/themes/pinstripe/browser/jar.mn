@@ -10,6 +10,7 @@ classic.jar:
   skin/classic/browser/find.png
   skin/classic/browser/find-bar-background.png
   skin/classic/browser/Go.png
+  skin/classic/browser/identity.png
   skin/classic/browser/Info.png
   skin/classic/browser/page-livemarks.png
   skin/classic/browser/livemark-item.png
@@ -48,6 +49,7 @@ classic.jar:
   skin/classic/browser/places/editBookmarkOverlay.css       (places/editBookmarkOverlay.css)
   skin/classic/browser/places/starPage.png                  (places/starPage.png)
   skin/classic/browser/places/pageStarred.png               (places/pageStarred.png)
+  skin/classic/browser/places/tag.png                       (places/tag.png)
   skin/classic/browser/places/organizer-toolbar.png         (bookmarks/Bookmarks-toolbar.png)
   skin/classic/browser/places/expander-closed-active.png    (bookmarks/expander-closed-active.png)
   skin/classic/browser/places/expander-closed.png           (bookmarks/expander-closed.png)

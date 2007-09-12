@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Myk Melez <myk@mozilla.org>
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,7 +45,11 @@ function run_test() {
   const mimeSvc = Cc["@mozilla.org/uriloader/external-helper-app-service;1"].
                   getService(Ci.nsIMIMEService);
 
-
+  const prefSvc = Cc["@mozilla.org/preferences-service;1"].
+                  getService(Ci.nsIPrefService);
+                  
+  const rootPrefBranch = prefSvc.getBranch("");
+  
   //**************************************************************************//
   // Sample Data
 
@@ -75,20 +80,6 @@ function run_test() {
   webHandler.name = "Web Handler";
   webHandler.uriTemplate = "http://www.example.com/?%s";
 
-
-  //**************************************************************************//
-  // Helper Functions
-
-  function checkLocalHandlersAreEquivalent(handler1, handler2) {
-    do_check_eq(handler1.name, handler2.name);
-    do_check_eq(handler1.executable.path, handler2.executable.path);
-  }
-
-  function checkWebHandlersAreEquivalent(handler1, handler2) {
-    do_check_eq(handler1.name, handler2.name);
-    do_check_eq(handler1.uriTemplate, handler2.uriTemplate);
-  }
-
   // FIXME: these tests create and manipulate enough variables that it would
   // make sense to move each test into its own scope so we don't run the risk
   // of one test stomping on another's data.
@@ -111,9 +102,10 @@ function run_test() {
   // Deprecated property, but we should still make sure it's set correctly.
   do_check_eq(handlerInfo.MIMEType, "nonexistent/type");
 
-  // These three properties are the ones the handler service knows how to store.
+  // These properties are the ones the handler service knows how to store.
   do_check_eq(handlerInfo.preferredAction, Ci.nsIHandlerInfo.saveToDisk);
   do_check_eq(handlerInfo.preferredApplicationHandler, null);
+  do_check_eq(handlerInfo.possibleApplicationHandlers.length, 0);
   do_check_true(handlerInfo.alwaysAskBeforeHandling);
 
   // These properties are initialized to default values by the service,
@@ -154,11 +146,18 @@ function run_test() {
   do_check_false(handlerInfo.alwaysAskBeforeHandling);
 
   // Make sure the handler service's enumerate method lists all known handlers.
-  // FIXME: store and test enumeration of a protocol handler once bug 391150
-  // gets fixed and we can actually retrieve a protocol handler.
   var handlerInfo2 = mimeSvc.getFromTypeAndExtension("nonexistent/type2", null);
   handlerSvc.store(handlerInfo2);
   var handlerTypes = ["nonexistent/type", "nonexistent/type2"];
+  try { 
+    // If we have a defaultHandlersVersion pref, then assume that we're in the
+    // firefox tree and that we'll also have an added webcal handler.
+    // Bug 395131 has been filed to make this test work more generically
+    // by providing our own prefs for this test rather than this icky
+    // special casing.
+    rootPrefBranch.getCharPref("gecko.handlerService.defaultHandlersVersion");
+    handlerTypes.push("webcal");
+  } catch (ex) {}   
   var handlers = handlerSvc.enumerate();
   while (handlers.hasMoreElements()) {
     var handler = handlers.getNext().QueryInterface(Ci.nsIHandlerInfo);
@@ -243,8 +242,10 @@ function run_test() {
   webPossibleHandler.QueryInterface(Ci.nsIWebHandlerApp);
 
   // Make sure the two handlers are the ones we stored.
-  checkLocalHandlersAreEquivalent(localPossibleHandler, localHandler);
-  checkWebHandlersAreEquivalent(webPossibleHandler, webHandler);
+  do_check_eq(localPossibleHandler.name, localHandler.name);
+  do_check_true(localPossibleHandler.equals(localHandler));
+  do_check_eq(webPossibleHandler.name, webHandler.name);
+  do_check_true(webPossibleHandler.equals(webHandler));
 
   // Remove a handler, store the object, re-retrieve it, and make sure
   // it only has one handler.
@@ -255,11 +256,10 @@ function run_test() {
   do_check_eq(possibleHandlersInfo.possibleApplicationHandlers.length, 1);
 
   // Make sure the handler is the one we didn't remove.
-  checkWebHandlersAreEquivalent(possibleHandlersInfo.
-                                  possibleApplicationHandlers.
-                                  queryElementAt(0, Ci.nsIHandlerApp).
-                                  QueryInterface(Ci.nsIWebHandlerApp),
-                                webHandler);
+  webPossibleHandler = possibleHandlersInfo.possibleApplicationHandlers.
+                       queryElementAt(0, Ci.nsIWebHandlerApp);
+  do_check_eq(webPossibleHandler.name, webHandler.name);
+  do_check_true(webPossibleHandler.equals(webHandler));
 
   // FIXME: test round trip integrity for a protocol.
   // FIXME: test round trip integrity for a handler info with a web handler.

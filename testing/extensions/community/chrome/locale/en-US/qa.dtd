@@ -1,18 +1,55 @@
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla QA Extension Code.
+   -
+   - The Initial Developer of the Original Code is the Mozilla Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 2007
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Zach Lipton <zach@zachlipton.com>
+   -  Ben Hsieh <bhsieh@mozilla.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
 <!ENTITY qa.litmus.title "Litmus">
 <!ENTITY qa.litmus.selecttests "Select Tests">
 <!ENTITY qa.litmus.testlist.initiallabel "No tests loaded, select some tests!">
 <!ENTITY qa.litmus.testlist.initialdescription "No testcase">
-<!ENTITY qa.statusbar.label	"QA">
-<!ENTITY qa.mainwindow.prefs	"Preferences">
-<!ENTITY qa.mainwindow.title	"Mozilla QA">
-<!ENTITY qa.testcase.steps	"Steps to Perform">
-<!ENTITY qa.testcase.expected	"Expected Results">
-<!ENTITY qa.testcase.result.pass	"Test Passed">
-<!ENTITY qa.testcase.result.fail	"Test Failed">
-<!ENTITY qa.testcase.result.unclearbroken	"Test is unclear or broken">
-<!ENTITY qa.testcase.comment	"Comment (optional):">
+<!ENTITY qa.statusbar.label "QA">
+<!ENTITY qa.mainwindow.prefs  "Preferences">
+<!ENTITY qa.mainwindow.title  "Mozilla QA">
+<!ENTITY qa.testcase.steps  "Steps to Perform">
+<!ENTITY qa.testcase.expected  "Expected Results">
+<!ENTITY qa.testcase.result.pass  "Test Passed">
+<!ENTITY qa.testcase.result.fail  "Test Failed">
+<!ENTITY qa.testcase.result.unclearbroken  "Test is unclear or broken">
+<!ENTITY qa.testcase.comment  "Comment (optional):">
 
-<!ENTITY qa.selecttests.load	"Loading...">
+<!ENTITY qa.selecttests.load  "Loading...">
 <!ENTITY qa.selecttests.header "Select test group">
 
 <!ENTITY qa.preferences.title "Settings">
@@ -44,27 +81,27 @@
 <!ENTITY qa.setup.welcomeheader	"Welcome to the Mozilla QA Extension!">
 <!ENTITY qa.setup.welcometext	"
 <html:h4>Welcome to the Mozilla Quality Assurance community!</html:h4>
-Mozilla Quality Assurance (QA) is a network of countless volunteers 
-from the Internet community, along with a group of Mozilla employees, who share 
-the common mission of <html:i>taming the lizard</html:i> through testing and 
+Mozilla Quality Assurance (QA) is a network of countless volunteers
+from the Internet community, along with a group of Mozilla employees, who share
+the common mission of <html:i>taming the lizard</html:i> through testing and
 constructively reporting bugs in Mozilla products.
 <html:br/><html:br/>
-This extension allows you to <html:b>find bugs</html:b> in Mozilla products by 
-running simple tests within the browser. Helping out doesn't take up much of 
-your time, doesn't require any special skills, and helps to improve Mozilla 
-products like Firefox and Thunderbird. 
+This extension allows you to <html:b>find bugs</html:b> in Mozilla products by
+running simple tests within the browser. Helping out doesn't take up much of
+your time, doesn't require any special skills, and helps to improve Mozilla
+products like Firefox and Thunderbird.
 <html:br/><html:br/>
-When you find a bug, this extension helps you to <html:b>report it</html:b> 
-to <html:a href='http://litmus.mozilla.org/' target='_blank'>Litmus</html:a>, 
-the tool we use to track our testing efforts. Your test results are valuable, 
-and we use them to ensure that all features work properly across a wide range 
-of platforms, operating systems, and configurations. 
+When you find a bug, this extension helps you to <html:b>report it</html:b>
+to <html:a href='http://litmus.mozilla.org/' target='_blank'>Litmus</html:a>,
+the tool we use to track our testing efforts. Your test results are valuable,
+and we use them to ensure that all features work properly across a wide range
+of platforms, operating systems, and configurations.
 
 <html:h4>Why Should I Get Involved?</html:h4>
 xxx
 
 <html:h5>For more information on Mozilla Quality Assurance, please
-see the 
+see the
 <html:a href='http://wiki.mozilla.org/Mozilla_QA_Community' target='_blank'>
 Mozilla QA Community Wiki</html:a>.</html:h5>
 ">
@@ -72,21 +109,21 @@ Mozilla QA Community Wiki</html:a>.</html:h5>
 <!ENTITY qa.setup.aboutheader	"About the Mozilla QA Extension">
 <!ENTITY qa.setup.abouttext	"
 <html:h4>How do I get started?</html:h4>
-Getting started with Mozilla QA is easy! This setup wizard will ask you a 
-few simple questions. Once that's done, you will be taken to the test runner, 
-where you can select what you want to test, run those tests, and submit your 
-results to Litmus. You'll also have a chance to learn about QA Community 
+Getting started with Mozilla QA is easy! This setup wizard will ask you a
+few simple questions. Once that's done, you will be taken to the test runner,
+where you can select what you want to test, run those tests, and submit your
+results to Litmus. You'll also have a chance to learn about QA Community
 events and other ways to get involved.
 
 <html:h4>A note on privacy</html:h4>
-When you use the QA Extension, you are submitting test results to an 
+When you use the QA Extension, you are submitting test results to an
 open system. Other members of the community will access the information you
-submit in order to improve the quality of Mozilla products. You 
-<html:b>should not</html:b> submit any private or confidential information 
+submit in order to improve the quality of Mozilla products. You
+<html:b>should not</html:b> submit any private or confidential information
 using the Mozilla QA Extension. If you provide your real name or an IRC nickname
-to display instead, we will hide your email address from 
-public view to help prevent email harvesting bots from spamming you. 
-For more information, please see our 
+to display instead, we will hide your email address from
+public view to help prevent email harvesting bots from spamming you.
+For more information, please see our
 <html:a href='http://www.mozilla.com/privacy-policy.html' target='_blank'>
 privacy policy</html:a>.
 
@@ -94,39 +131,39 @@ privacy policy</html:a>.
 ">
 
 <!ENTITY qa.setup.accountheader	"Creating an account">
-<!ENTITY qa.setup.accounttext	"To use the QA Extension, you will need an account 
+<!ENTITY qa.setup.accounttext	"To use the QA Extension, you will need an account
 on Litmus, our test management system.">
 <!ENTITY qa.setup.haveaccount	"Do you already have a Litmus account?">
 <!ENTITY qa.setup.accountno	"I do not have a Litmus account">
 <!ENTITY qa.setup.accountyes	"I already have a Litmus account">
 <!ENTITY qa.setup.accountyes.enterinfo	"Enter your Litmus account information:">
-<!ENTITY qa.setup.accountno.text	"Complete the form below and press the 
-<html:b>Create Account</html:b> button to create your new account. <html:br/>Once your 
+<!ENTITY qa.setup.accountno.text	"Complete the form below and press the
+<html:b>Create Account</html:b> button to create your new account. <html:br/>Once your
 account is created, press the 'Continue' button to complete setup.">
 
 <!ENTITY qa.setup.accountdone	"
 <html:h4>Account Created</html:h4>
-<html:b>Congratulations!</html:b> Your Litmus 
-account has been created. You'll be able to use your new account both here in 
+<html:b>Congratulations!</html:b> Your Litmus
+account has been created. You'll be able to use your new account both here in
 the QA Extension, and on the Litmus website.
 
 <html:h4>That's it!</html:h4>
-<html:b>You're ready to start testing.</html:b> If you have any questions along 
-the way, you may post to the 
+<html:b>You're ready to start testing.</html:b> If you have any questions along
+the way, you may post to the
 <html:a href='http://weblogs.mozillazine.org/qa/' target='_blank'>Mozilla QA Blog
-</html:a>, or, if you prefer, you can join us on 
-<html:a href='http://irc.mozilla.org' target='_blank'>IRC</html:a> (Internet Relay 
-Chat) and become more involved in our testing community. 
-We are in #qa on irc.mozilla.org. If you have an irc client installed already, 
+</html:a>, or, if you prefer, you can join us on
+<html:a href='http://irc.mozilla.org' target='_blank'>IRC</html:a> (Internet Relay
+Chat) and become more involved in our testing community.
+We are in #qa on irc.mozilla.org. If you have an irc client installed already,
 you should be able to join by clicking this link: <html:a href='irc://irc.mozilla.org/qa'>
 join #qa</html:a>.
 ">
 
 <!ENTITY qa.setup.sysconfig.header	"System Configuration">
 <!ENTITY qa.setup.sysconfig.text	"
-For your test results to be useful, we need to know a little bit about your 
-system configuration. We've tried to detect as much of the information below as 
-possible, but please check the settings below and make any necessary changes. 
+For your test results to be useful, we need to know a little bit about your
+system configuration. We've tried to detect as much of the information below as
+possible, but please check the settings below and make any necessary changes.
 ">
 <!ENTITY qa.setup.sysconfig.platform	"Platform:">
 <!ENTITY qa.setup.sysconfig.opsys	"Operating System:">

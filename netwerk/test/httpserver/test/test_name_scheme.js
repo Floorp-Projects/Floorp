@@ -36,9 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// requests for files beginning with an underscore are handled specially to
-// enable htaccess-like functionality without the need to explicitly disable
-// display of such files
+// requests for files ending with a caret (^) are handled specially to enable
+// htaccess-like functionality without the need to explicitly disable display
+// of such files
 
 const PREFIX = "http://localhost:4444";
 

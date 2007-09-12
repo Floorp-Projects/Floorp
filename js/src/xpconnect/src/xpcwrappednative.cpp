@@ -1889,16 +1889,6 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
     jsval* argv = ccx.GetArgv();
     PRUint32 argc = ccx.GetArgc();
 
-#ifdef DEBUG_stats_jband
-    PRIntervalTime startTime = PR_IntervalNow();
-    PRIntervalTime endTime = 0;
-    static int totalTime = 0;
-    static int count = 0;
-    static const int interval = 10;
-    if(0 == (++count % interval))
-        printf(">>>>>>>> %d calls on XPCWrappedNatives made.  (%d)\n", count, PR_IntervalToMilliseconds(totalTime));
-#endif
-
     ccx.SetRetVal(JSVAL_VOID);
 
     tls->SetException(nsnull);
@@ -1925,7 +1915,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
             break;
         default:
             NS_ASSERTION(0,"bad value");
-            goto done;
+            return JS_FALSE;
     }
 
     sm = xpcc->GetAppropriateSecurityManager(secFlag);
@@ -1936,7 +1926,58 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                                      ccx.GetWrapper()->GetSecurityInfoAddr())))
     {
         // the security manager vetoed. It should have set an exception.
-        goto done;
+        return JS_FALSE;
+    }
+
+    // fast-path QueryInterface: we already know the signature and can avoid a
+    // lot of work
+    if(vtblIndex == 0)
+    {
+        if(argc < 1)
+        {
+            Throw(NS_ERROR_XPC_NOT_ENOUGH_ARGS, ccx);
+            return JS_FALSE;
+        }
+        nsID* iid;
+        JSObject* obj;
+        if(!JSVAL_IS_OBJECT(argv[0]) ||
+           (!(obj = JSVAL_TO_OBJECT(argv[0]))) ||
+           (!(iid = xpc_JSObjectToID(ccx, obj))))
+        {
+            ThrowBadParam(NS_ERROR_XPC_BAD_CONVERT_JS, 0, ccx);
+            return JS_FALSE;
+        }
+
+        nsISupports* qiresult = nsnull;
+        {
+            AutoJSSuspendRequest req(ccx);
+            invokeResult = callee->QueryInterface(*iid, (void**) &qiresult);
+        }
+
+        xpcc->SetLastResult(invokeResult);
+
+        if(NS_FAILED(invokeResult))
+        {
+            ThrowBadResult(invokeResult, ccx);
+            PR_Free(iid);
+            return JS_FALSE;
+        }
+
+        jsval v = JSVAL_NULL;
+        retval = XPCConvert::NativeData2JS(ccx, &v, &qiresult, 
+                                           nsXPTType::T_INTERFACE_IS | XPT_TDP_POINTER,
+                                           iid, ccx.GetCurrentJSObject(), &err);
+        PR_Free(iid);
+        NS_IF_RELEASE(qiresult);
+
+        if(!retval)
+        {
+            ThrowBadParam(err, 0, ccx);
+            return JS_FALSE;
+        }
+
+        ccx.SetRetVal(v);
+        return JS_TRUE;
     }
 
     if(NS_FAILED(ifaceInfo->GetMethodInfo(vtblIndex, &methodInfo)))
@@ -2464,17 +2505,6 @@ done:
 
     if(dispatchParams && dispatchParams != paramBuffer)
         delete [] dispatchParams;
-
-#ifdef off_DEBUG_stats_jband
-    endTime = PR_IntervalNow();
-
-    printf("%s::%s %d ( js->c ) \n",
-           ccx.GetInterface()->GetNameString(),
-           ccx.GetInterface()->GetMemberName(ccx, ccx.GetMember()),
-           PR_IntervalToMilliseconds(endTime-startTime));
-
-    totalTime += (endTime-startTime);
-#endif
 
     return retval;
 }

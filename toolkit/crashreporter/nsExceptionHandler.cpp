@@ -578,6 +578,15 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
   rv = dataDirectory->Append(NS_LITERAL_STRING("Crash Reports"));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  PRBool exists;
+  rv = dataDirectory->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!exists) {
+    rv = dataDirectory->Create(nsIFile::DIRECTORY_TYPE, 0700);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   nsCAutoString data;
   if(NS_SUCCEEDED(GetOrInit(dataDirectory, NS_LITERAL_STRING("UserID"),
                             data, InitUserID)))

@@ -196,10 +196,6 @@ txHTMLOutput::txHTMLOutput(txOutputFormat* aFormat, ostream* aOut)
     mUseEmptyElementShorthand = PR_FALSE;
 }
 
-txHTMLOutput::~txHTMLOutput()
-{
-}
-
 nsresult
 txHTMLOutput::attribute(const nsAString& aName, const PRInt32 aNsID,
                         const nsAString& aValue)

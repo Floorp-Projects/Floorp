@@ -341,9 +341,6 @@ pref("network.cookie.enableForCurrentSessionOnly", false);
 
 // l12n and i18n
 pref("intl.accept_languages", "chrome://global/locale/intl.properties");
-// collationOption is only set on linux for japanese. see bug 18338 and 62015
-// we need to check if this pref is still useful.
-pref("intl.collationOption",  "chrome://global-platform/locale/intl.properties");
 pref("intl.charsetmenu.browser.static", "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.more1",  "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.more2",  "chrome://global/locale/intl.properties");
@@ -498,6 +495,20 @@ pref("browser.contentHandlers.types.5.uri", "chrome://browser-region/locale/regi
 pref("browser.contentHandlers.types.5.type", "application/vnd.mozilla.maybe.feed");
 
 pref("browser.feeds.handler", "ask");
+
+// For now, this is living in content rather than in locales, as per Pike.
+// Eventually it will get merged into region.properties; see bug 395277.
+//
+// At startup, if the handler service notices that the version number here
+// is newer than the version number in the handler service datastore, it will
+// add any handlers it finds in the prefs (as seeded by this file) to its
+// datastore.  
+pref("gecko.handlerService.defaultHandlersVersion", "0");
+//
+// The default set of web-based protocol handlers shown in the application
+// selection dialog
+pref("gecko.handlerService.schemes.webcal.0.name", "WebCal Test Handler");
+pref("gecko.handlerService.schemes.webcal.0.uriTemplate", "http://handler-test.mozilla.org/webcal?url=%s");
 
 #ifdef MOZ_SAFE_BROWSING
 // Safe browsing does nothing unless both these prefs are set.

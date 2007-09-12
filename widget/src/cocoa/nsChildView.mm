@@ -78,9 +78,19 @@
 #undef DEBUG_UPDATE
 #undef INVALIDATE_DEBUGGING  // flash areas as they are invalidated
 
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
+#endif
+#include "prlog.h"
+
 #ifdef PR_LOGGING
 PRLogModuleInfo* sCocoaLog = nsnull;
 #endif
+
+// npapi.h defines NPEventType_AdjustCursorEvent but we don't want to include npapi.h here.
+// We need to send this in the "what" field for certain native plugin events. WebKit does
+// this as well.
+#define adjustCursorEvent 33
 
 extern "C" {
   CG_EXTERN void CGContextResetCTM(CGContextRef);
@@ -342,14 +352,13 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mPluginIsCG(PR_FALSE)
 , mVisRgn(nsnull)
 {
-  SetBackgroundColor(NS_RGB(255, 255, 255));
-  SetForegroundColor(NS_RGB(0, 0, 0));
-
 #ifdef PR_LOGGING
   if (!sCocoaLog)
     sCocoaLog = PR_NewLogModule("nsCocoaWidgets");
 #endif
 
+  SetBackgroundColor(NS_RGB(255, 255, 255));
+  SetForegroundColor(NS_RGB(0, 0, 0));
 }
 
 
@@ -2617,11 +2626,12 @@ class nsNonNativeContextMenuEvent : public nsRunnable {
 }
 
 
-static nsEventStatus SendMouseEvent(PRBool isTrusted,
-                                    PRUint32 msg,
-                                    nsIWidget *widget,
-                                    nsMouseEvent::reasonType aReason,
-                                    NSPoint* localEventLocation)
+// sends a mouse enter or exit event into gecko
+static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
+                                                    PRUint32 msg,
+                                                    nsIWidget *widget,
+                                                    nsMouseEvent::reasonType aReason,
+                                                    NSPoint* localEventLocation)
 {
   if (!widget || !localEventLocation)
     return nsEventStatus_eIgnore;
@@ -2629,6 +2639,14 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
   nsMouseEvent event(isTrusted, msg, widget, aReason);
   event.refPoint.x = nscoord((PRInt32)localEventLocation->x);
   event.refPoint.y = nscoord((PRInt32)localEventLocation->y);
+
+  EventRecord macEvent;
+  macEvent.what = adjustCursorEvent;
+  macEvent.message = 0;
+  macEvent.when = ::TickCount();
+  ::GetGlobalMouse(&macEvent.where);
+  macEvent.modifiers = GetCurrentKeyModifiers();
+  event.nativeMsg = &macEvent;
 
   nsEventStatus status;
   widget->DispatchEvent(&event, status);
@@ -2651,7 +2669,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
   if (![NSApp isActive] && ![ChildView mouseEventIsOverRollupWidget:theEvent]) {
     if (sLastViewEntered) {
       nsIWidget* lastViewEnteredWidget = [(NSView<mozView>*)sLastViewEntered widget];
-      SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal, &viewEventLocation);
+      SendGeckoMouseEnterOrExitEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal, &viewEventLocation);
       sLastViewEntered = nil;
     }
     return;
@@ -2729,7 +2747,7 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
     if (sLastViewEntered) {
       // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", viewEventLocation.x, viewEventLocation.y);
       nsIWidget* lastViewEnteredWidget = [(NSView<mozView>*)sLastViewEntered widget];
-      SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal, &viewEventLocation);
+      SendGeckoMouseEnterOrExitEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal, &viewEventLocation);
       sLastViewEntered = nil;      
     }
     return;
@@ -2744,11 +2762,11 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
     if (sLastViewEntered) {
       // NSLog(@"sending NS_MOUSE_EXIT event with point %f,%f\n", viewEventLocation.x, viewEventLocation.y);
       nsIWidget* lastViewEnteredWidget = [(NSView<mozView>*)sLastViewEntered widget];
-      SendMouseEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal, &viewEventLocation);
+      SendGeckoMouseEnterOrExitEvent(PR_TRUE, NS_MOUSE_EXIT, lastViewEnteredWidget, nsMouseEvent::eReal, &viewEventLocation);
     }
 
     // NSLog(@"sending NS_MOUSE_ENTER event with point %f,%f\n", viewEventLocation.x, viewEventLocation.y);
-    SendMouseEvent(PR_TRUE, NS_MOUSE_ENTER, mGeckoChild, nsMouseEvent::eReal, &viewEventLocation);
+    SendGeckoMouseEnterOrExitEvent(PR_TRUE, NS_MOUSE_ENTER, mGeckoChild, nsMouseEvent::eReal, &viewEventLocation);
 
     // mark this view as the last view entered
     sLastViewEntered = (NSView*)self;
@@ -2768,11 +2786,10 @@ static nsEventStatus SendMouseEvent(PRBool isTrusted,
 
   // create native EventRecord for use by plugins
   EventRecord macEvent;
-  macEvent.what = nullEvent;
+  macEvent.what = adjustCursorEvent;
   macEvent.message = 0;
   macEvent.when = ::TickCount();
   ::GetGlobalMouse(&macEvent.where);
-  
   macEvent.modifiers = GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
 

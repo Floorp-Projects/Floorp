@@ -39,7 +39,7 @@
 interface nsIHandlerInfo;
 interface nsISimpleEnumerator;
 
-[scriptable, uuid(18bd7cc7-04b5-46d1-ad95-386e51191eb2)]
+[scriptable, uuid(53f0ad17-ec62-46a1-adbc-efccc06babcd)]
 interface nsIHandlerService : nsISupports
 {
   /**
@@ -52,19 +52,70 @@ interface nsIHandlerService : nsISupports
   nsISimpleEnumerator enumerate();
 
   /**
-   * Save the preferred action, preferred handler, and always ask properties
-   * of the given handler info object to the datastore.  Updates an existing
-   * record or creates a new one if necessary.
+   * Fill a handler info object with information from the datastore.
+   *
+   * Note: because of the way the external helper app service currently mixes
+   * OS and user handler info in the same handler info object, this method
+   * takes an existing handler info object (probably retrieved from the OS)
+   * and "fills it in" with information from the datastore, overriding any
+   * existing properties on the object with properties from the datastore.
+   *
+   * Ultimately, however, we're going to separate OS and user handler info
+   * into separate objects, at which point this method should be renamed to
+   * something like "get" or "retrieve", take a class and type (or perhaps
+   * a type whose class can be determined by querying the type, for example
+   * an nsIContentType which is also an nsIMIMEType or an nsIProtocolScheme),
+   * and return a handler info object representing only the user info.
+   *
+   * Note: if you specify an override type, then the service will fill in
+   * the handler info object with information about that type instead of
+   * the type specified by the object's nsIHandlerInfo::type attribute.
+   *
+   * This is useful when you are trying to retrieve information about a MIME
+   * type that doesn't exist in the datastore, but you have a file extension
+   * for that type, and nsIHandlerService::getTypeFromExtension returns another
+   * MIME type that does exist in the datastore and can handle that extension.
+   *
+   * For example, the user clicks on a link, and the content has a MIME type
+   * that isn't in the datastore, but the link has a file extension, and that
+   * extension is associated with another MIME type in the datastore (perhaps
+   * an unofficial MIME type preceded an official one, like with image/x-png
+   * and image/png).
+   *
+   * In that situation, you can call this method to fill in the handler info
+   * object with information about that other type by passing the other type
+   * as the aOverrideType parameter.
+   *
+   * @param aHandlerInfo   the handler info object
+   * @param aOverrideType  a type to use instead of aHandlerInfo::type
+   *
+   * Note: if there is no information in the datastore about this type,
+   * this method throws NS_ERROR_NOT_AVAILABLE.
+   */
+  void fillHandlerInfo(in nsIHandlerInfo aHandlerInfo,
+                       in ACString aOverrideType);
+
+  /**
+   * Save the preferred action, preferred handler, possible handlers, and
+   * always ask properties of the given handler info object to the datastore.
+   * Updates an existing record or creates a new one if necessary.
    *
    * Note: if preferred action is undefined or invalid, then we assume
    * the default value nsIHandlerInfo::useHelperApp.
    *
-   * FIXME: also store any changes to the list of possible handlers
-   * (once we support possible handlers).
-   *
    * @param aHandlerInfo  the handler info object
    */
   void store(in nsIHandlerInfo aHandlerInfo);
+
+  /**
+   * Whether or not a record for the given handler info object exists
+   * in the datastore.
+   *
+   * @param aHandlerInfo  a handler info object
+   *
+   * @returns whether or not a record exists
+   */
+  boolean exists(in nsIHandlerInfo aHandlerInfo);
 
   /**
    * Remove the given handler info object from the datastore.  Deletes all
@@ -75,4 +126,21 @@ interface nsIHandlerService : nsISupports
    * @param aHandlerInfo  the handler info object
    */
   void remove(in nsIHandlerInfo aHandlerInfo);
+
+  /**
+   * Get the MIME type mapped to the given file extension in the datastore.
+   *
+   * XXX If we ever support extension -> protocol scheme mappings, then this
+   * method should work for those as well.
+   *
+   * Note: in general, you should use nsIMIMEService::getTypeFromExtension
+   * to get a MIME type from a file extension, as that method checks a variety
+   * of other sources besides just the datastore.  Use this only when you want
+   * to specifically get only the mapping available in the datastore.
+   *
+   * @param aFileExtension  the file extension
+   *
+   * @returns the MIME type, if any; otherwise throws NS_ERROR_NOT_AVAILABLE
+   */
+  ACString getTypeFromExtension(in ACString aFileExtension);
 };

@@ -781,7 +781,6 @@ LoginManager.prototype = {
         // logins to update the password for.
         if (!usernameField && oldPasswordField) {
 
-            var ok, username;
             var logins = this.findLogins({}, hostname, formSubmitURL, null);
 
             // XXX we could be smarter here: look for a login matching the
@@ -802,32 +801,16 @@ LoginManager.prototype = {
             var prompter = getPrompter(win);
 
             if (logins.length == 1) {
-                username = logins[0].username;
-                ok = prompter.promptToChangePassword(username);
+                var oldLogin = logins[0];
+                formLogin.username      = oldLogin.username;
+                formLogin.usernameField = oldLogin.usernameField;
+
+                prompter.promptToChangePassword(oldLogin, formLogin);
             } else {
-                var usernames = logins.map(function (l) l.username);
-                [ok, username] = prompter.promptToChangePasswordWithUsernames(
-                                                                usernames);
+                prompter.promptToChangePasswordWithUsernames(
+                                    logins, logins.length, formLogin);
             }
 
-            if (!ok)
-                return;
-
-            // Now that we know the desired username, find that login and
-            // update the info in our formLogin representation.
-            this.log("Updating password for username " + username);
-
-            var existingLogin;
-            logins.some(function(l) {
-                                    existingLogin = l;
-                                    return (l.username == username);
-                                });
-
-            formLogin.username      = username;
-            formLogin.usernameField = existingLogin.usernameField;
-
-            this.modifyLogin(existingLogin, formLogin);
-            
             return;
         }
 
@@ -930,15 +913,39 @@ LoginManager.prototype = {
             // Only the actionOrigin might be changing, so if it's the same
             // as the last form on the page we can reuse the same logins.
             if (actionOrigin != previousActionOrigin) {
-                var logins =
+                var foundLogins =
                     this.findLogins({}, formOrigin, actionOrigin, null);
 
-                this.log("form[" + i + "]: got " + logins.length + " logins.");
+                this.log("form[" + i + "]: got " +
+                         foundLogins.length + " logins.");
 
                 previousActionOrigin = actionOrigin;
             } else {
                 this.log("form[" + i + "]: using logins from last form.");
             }
+
+
+            // Discard logins which have username/password values that don't
+            // fit into the fields (as specified by the maxlength attribute).
+            // The user couldn't enter these values anyway, and it helps
+            // with sites that have an extra PIN to be entered (bug 391514)
+            var maxUsernameLen = Number.MAX_VALUE;
+            var maxPasswordLen = Number.MAX_VALUE;
+
+            // If attribute wasn't set, default is -1.
+            if (usernameField && usernameField.maxLength >= 0)
+                maxUsernameLen = usernameField.maxLength;
+            if (passwordField.maxLength >= 0)
+                maxPasswordLen = passwordField.maxLength;
+
+            logins = foundLogins.filter(function (l) {
+                    var fit = (l.username.length <= maxUsernameLen &&
+                               l.password.length <= maxPasswordLen);
+                    if (!fit)
+                        this.log("Ignored " + l.username + " login: won't fit");
+
+                    return fit;
+                }, this);
 
 
             // Nothing to do if we have no matching logins available.
@@ -960,13 +967,13 @@ LoginManager.prototype = {
                 if (usernameField && usernameField.value) {
                     var username = usernameField.value;
 
-                    var foundLogin;
+                    var matchingLogin;
                     var found = logins.some(function(l) {
-                                                foundLogin = l;
+                                                matchingLogin = l;
                                                 return (l.username == username);
                                             });
                     if (found)
-                        passwordField.value = foundLogin.password;
+                        passwordField.value = matchingLogin.password;
 
                 } else if (logins.length == 1) {
                     if (usernameField)

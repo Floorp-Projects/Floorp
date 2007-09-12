@@ -55,6 +55,8 @@ EXTRA_PP_COMPONENTS = \
 	nsBrowserGlue.js \
 	$(NULL)
 
+EXTRA_JS_MODULES = distribution.js
+
 DIRS = \
 	dirprovider \
 	microsummaries \

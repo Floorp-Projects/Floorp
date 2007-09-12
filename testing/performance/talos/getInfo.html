@@ -45,7 +45,7 @@
 
   <body onload="
 	if (window.dump) {
-		dump('__metricsScreen width:' + screen.width + ' Screen height:' + screen.height + ' colorDepth:' + screen.colorDepth + '\n\n');
+            dump('__metrics\tScreen width/height:' + screen.width + '/' + screen.height + '\n\tcolorDepth:' + screen.colorDepth + '\n\tBrowser inner width/height: ' + window.innerWidth + '/' + window.innerHeight + '\n\tBrowser outer width/height: ' + window.outerWidth + '/' + window.outerHeight + '__metrics')
 	}
 	goQuitApplication();
 	window.close();

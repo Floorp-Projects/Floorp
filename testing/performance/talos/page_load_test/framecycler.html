@@ -5,7 +5,7 @@
 
   var NUM_PAGES;
   var NUM_CYCLES;
-  var DEFAULT_TIMEOUT = 25000; //how long any given page can take to load
+  var DEFAULT_TIMEOUT = 55000; //how long any given page can take to load
   var QUIT; // whether to quit the app (with quit.js) after the tests
   var t; 
 
@@ -134,9 +134,9 @@
 
     var r = getArrayStats(all);
     dump(
-      "__start_tp_report\n" + 
+      "__start_report\n" + 
       "_x_x_mozilla_page_load,"+avgmed+","+r.max+","+r.min+"\n"+
-      "_x_x_mozilla_page_load_details,avgmedian|"+avgmed+"|average|"+avg.toFixed(2)+"|minimum|"+r.min+"|maximum|"+r.max+"|stddev|"+r.stdd.toFixed(2)+"\n"
+      "_x_x_mozilla_page_load_details,avgmedian|"+avgmed+"|average|"+avg.toFixed(2)+"|minimum|"+r.min+"|maximum|"+r.max+"|stddev|"+r.stdd.toFixed(2)
     );
 
     for (var i = 0; i < timeVals.length; ++i) {
@@ -160,7 +160,7 @@
       }
       dump("\n")
     } 
-    dump("__end_tp_report\n\n");
+    dump("__end_report\n\n");
     //rstring += "__end_page_load_report";
     //alert(rstring);
     //dump(rstring);
@@ -194,6 +194,9 @@
 
   function loadFail() {
     dump("__FAILtimeout:" + frames["content"].document.location.href + "__FAIL");
+    if (QUIT) {
+      goQuitApplication();
+    }
     window.close();
   }
 
@@ -211,7 +214,7 @@
       
       // use quit.js to quit the app if the quit param is true and 
       // we have universalxpconnect privs:
-      if (QUIT && canQuitApplication()) {
+      if (QUIT) {
         goQuitApplication();
       }
       

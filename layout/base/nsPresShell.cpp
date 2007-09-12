@@ -873,7 +873,9 @@ public:
   virtual nsresult ReconstructFrames(void);
   virtual void Freeze();
   virtual void Thaw();
-  
+
+  virtual nsIFrame* GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt);
+
   NS_IMETHOD RenderDocument(const nsRect& aRect, PRBool aUntrusted,
                             PRBool aIgnoreViewportScrolling,
                             nscolor aBackgroundColor,
@@ -2968,6 +2970,12 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
     CallQueryInterface(frame, aResult);
   }
   return *aResult ? NS_OK : NS_ERROR_FAILURE;
+}
+
+nsIFrame*
+PresShell::GetFrameForPoint(nsIFrame* aFrame, nsPoint aPt)
+{
+  return nsLayoutUtils::GetFrameForPoint(aFrame, aPt);
 }
 
 void

@@ -1342,8 +1342,8 @@ nsNavHistory::LoadPrefs()
   mPrefBranch->GetBoolPref(PREF_AUTOCOMPLETE_ONLY_TYPED,
                            &mAutoCompleteOnlyTyped);
   if (oldCompleteOnlyTyped != mAutoCompleteOnlyTyped) {
-    // update the autocomplete statement if the option has changed.
-    nsresult rv = CreateAutoCompleteQuery();
+    // update the autocomplete statements if the option has changed.
+    nsresult rv = CreateAutoCompleteQueries();
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
@@ -3351,6 +3351,9 @@ nsNavHistory::PerformVacuumIfIdle()
     else {
 #if 0
       // Currently commented out because compression is very slow
+      // see bug #390244 for more details
+      // if our database was created before incremental vacuuming
+      // do a full vacuum on idle
       rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING("VACUUM;"));
       NS_ENSURE_SUCCESS(rv, rv);
 #endif
@@ -4129,9 +4132,10 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aParentNode,
   */
 
   for (PRInt32 nodeIndex = 0; nodeIndex < aSet.Count(); nodeIndex ++) {
-    if (aParentNode) {
-      if (aParentNode->mItemId == aSet[nodeIndex]->mItemId)
-        continue; // filter out nodes that are the same as the parent
+    if (aParentNode && aParentNode->mItemId != -1) {
+      if (aParentNode->mItemId == aSet[nodeIndex]->mItemId) {
+        continue; // filter out bookmark nodes that are the same as the parent
+      }
     }
 
     if (excludeQueries && IsQueryURI(aSet[nodeIndex]->mURI))

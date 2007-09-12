@@ -47,6 +47,12 @@
 nsIFrame*
 NS_NewSVGMarkerFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext)
 {
+  nsCOMPtr<nsIDOMSVGMarkerElement> marker = do_QueryInterface(aContent);
+  if (!marker) {
+    NS_ASSERTION(marker, "Can't create frame! Content is not an SVG marker");
+    return nsnull;
+  }
+
   return new (aPresShell) nsSVGMarkerFrame(aContext);
 }
 

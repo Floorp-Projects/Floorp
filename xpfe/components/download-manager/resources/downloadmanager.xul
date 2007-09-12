@@ -164,7 +164,7 @@
   </popup>
 
   <toolbox id="toolbox">
-    <toolbar id="download-toolbar" tbalign="stretch" class="chromeclass-toolbar" persist="collapsed" grippytooltiptext="&dm.tooltip;">
+    <toolbar id="download-toolbar" class="chromeclass-toolbar" persist="collapsed" grippytooltiptext="&dm.tooltip;">
       <toolbarbutton label="&cmd.properties.label;" accesskey="&cmd.properties.accesskey;"
                      command="cmd_properties"/>
       <toolbarseparator/>

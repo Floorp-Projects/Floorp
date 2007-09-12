@@ -48,13 +48,13 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase
 {
   friend nsIFrame*
   NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsStyleContext* aContext);
-
+protected:
   nsSVGMaskFrame(nsStyleContext* aContext) :
     nsSVGMaskFrameBase(aContext),
     mMaskParentMatrix(nsnull),
     mInUse(PR_FALSE) {}
 
- public:
+public:
   // nsSVGMaskFrame method:
   already_AddRefed<gfxPattern> ComputeMaskAlpha(nsSVGRenderState *aContext,
                                                 nsISVGChildFrame* aParent,
@@ -75,7 +75,7 @@ class nsSVGMaskFrame : public nsSVGMaskFrameBase
   }
 #endif
 
- private:
+private:
   // A helper class to allow us to paint masks safely. The helper
   // automatically sets and clears the mInUse flag on the mask frame
   // (to prevent nasty reference loops). It's easy to mess this up

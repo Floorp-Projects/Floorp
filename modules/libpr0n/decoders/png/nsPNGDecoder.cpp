@@ -437,7 +437,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
   if (decoder->mInProfile && gfxPlatform::GetCMSOutputProfile()) {
     PRUint32 outType;
 
-    if (color_type & PNG_COLOR_MASK_ALPHA || trans)
+    if (color_type & PNG_COLOR_MASK_ALPHA || num_trans)
       outType = TYPE_RGBA_8;
     else
       outType = TYPE_RGB_8;
@@ -453,7 +453,7 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
         color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
       png_set_gray_to_rgb(png_ptr);
     if (gfxPlatform::IsCMSEnabled()) {
-      if (color_type & PNG_COLOR_MASK_ALPHA || trans)
+      if (color_type & PNG_COLOR_MASK_ALPHA || num_trans)
         decoder->mTransform = gfxPlatform::GetCMSRGBATransform();
       else
         decoder->mTransform = gfxPlatform::GetCMSRGBTransform();
@@ -796,8 +796,5 @@ error_callback(png_structp png_ptr, png_const_charp error_msg)
 void
 warning_callback(png_structp png_ptr, png_const_charp warning_msg)
 {
-  /* convert tRNS warning to error (bug #251381) */
-  if (strncmp(warning_msg, "Missing PLTE before tRNS", 24) == 0)
-    png_error(png_ptr, warning_msg);
   PR_LOG(gPNGLog, PR_LOG_WARNING, ("libpng warning: %s\n", warning_msg));
 }

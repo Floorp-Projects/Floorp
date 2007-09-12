@@ -44,8 +44,7 @@ import config
 
 
 def GenerateFirefoxCommandLine(firefox_path, profile_dir, url):
-  """Generates the command line for a process to run Firefox, wrapped
-     by cygwin so that we can read the output from dump() statements.
+  """Generates the command line for a process to run Firefox
 
   Args:
     firefox_path: String containing the path to the firefox exe to use
@@ -57,15 +56,9 @@ def GenerateFirefoxCommandLine(firefox_path, profile_dir, url):
   if profile_dir:
     profile_arg = '-profile %s' % profile_dir
 
-  url_arg = ''
-  if url:
-    url_arg = '-url %s' % url
-
-  cmd = '%s %s %s -width %d -height %d' % (firefox_path,
+  cmd = '%s %s %s' % (firefox_path,
                       profile_arg,
-                      url_arg,
-                      config.BROWSER_WIDTH,
-                      config.BROWSER_HEIGHT)
+                      url)
   return cmd
 
 
@@ -121,8 +114,10 @@ def TerminateProcess(pid):
   Args:
     pid: integer process id of the process to terminate.
   """
-
-  os.kill(pid, signal.SIGTERM)
+  try:
+    os.kill(pid, signal.SIGTERM)
+  except OSError, (errno, strerror):
+        print 'WARNING: failed os.kill: %s : %s' % (errno, strerror)
 
 
 def TerminateAllProcesses(process_name):

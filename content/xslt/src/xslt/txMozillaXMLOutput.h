@@ -64,7 +64,6 @@ class txTransformNotifier : public nsIScriptLoaderObserver,
 {
 public:
     txTransformNotifier();
-    virtual ~txTransformNotifier();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCRIPTLOADEROBSERVER
@@ -103,7 +102,6 @@ public:
     txMozillaXMLOutput(txOutputFormat* aFormat,
                        nsIDOMDocumentFragment* aFragment,
                        PRBool aNoFixup);
-    virtual ~txMozillaXMLOutput();
 
     TX_DECL_TXAXMLEVENTHANDLER
     TX_DECL_TXAOUTPUTXMLEVENTHANDLER

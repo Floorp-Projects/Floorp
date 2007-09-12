@@ -98,7 +98,6 @@ class txStylesheetSink : public nsIXMLContentSink,
 {
 public:
     txStylesheetSink(txStylesheetCompiler* aCompiler, nsIParser* aParser);
-    virtual ~txStylesheetSink();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIEXPATSINK
@@ -134,10 +133,6 @@ txStylesheetSink::txStylesheetSink(txStylesheetCompiler* aCompiler,
       mCheckedForXML(PR_FALSE)
 {
     mListener = do_QueryInterface(aParser);
-}
-
-txStylesheetSink::~txStylesheetSink()
-{
 }
 
 NS_IMPL_ISUPPORTS7(txStylesheetSink,
@@ -464,7 +459,6 @@ public:
     txCompileObserver(txMozillaXSLTProcessor* aProcessor,
                       nsILoadGroup* aLoadGroup,
                       nsIPrincipal* aCallerPrincipal);
-    virtual ~txCompileObserver();
 
     TX_DECL_ACOMPILEOBSERVER;
 
@@ -490,10 +484,6 @@ txCompileObserver::txCompileObserver(txMozillaXSLTProcessor* aProcessor,
     : mProcessor(aProcessor),
       mLoadGroup(aLoadGroup),
       mCallerPrincipal(aCallerPrincipal)
-{
-}
-
-txCompileObserver::~txCompileObserver()
 {
 }
 
@@ -709,7 +699,6 @@ class txSyncCompileObserver : public txACompileObserver
 public:
     txSyncCompileObserver(txMozillaXSLTProcessor* aProcessor,
                           nsIPrincipal* aCallerPrincipal);
-    virtual ~txSyncCompileObserver();
 
     TX_DECL_ACOMPILEOBSERVER;
 
@@ -723,10 +712,6 @@ txSyncCompileObserver::txSyncCompileObserver(txMozillaXSLTProcessor* aProcessor,
                                             nsIPrincipal* aCallerPrincipal)
   : mProcessor(aProcessor),
     mCallerPrincipal(aCallerPrincipal)
-{
-}
-
-txSyncCompileObserver::~txSyncCompileObserver()
 {
 }
 

@@ -67,6 +67,18 @@
   "Import...">
 <!ENTITY cmd.import.accesskey
   "I">
+<!ENTITY cmd.backup.label
+  "Backup...">
+<!ENTITY cmd.backup.accesskey
+  "B">
+<!ENTITY cmd.restore.label
+  "Restore...">
+<!ENTITY cmd.restore.accesskey
+  "R">
+<!ENTITY cmd.restoreFromFile.label
+  "Choose File...">
+<!ENTITY cmd.restoreFromFile.accesskey
+  "C">
 <!ENTITY cmd.select_all.label
   "Select All">
 <!ENTITY cmd.select_all.accesskey

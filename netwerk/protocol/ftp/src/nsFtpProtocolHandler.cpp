@@ -88,9 +88,6 @@ PRLogModuleInfo* gFTPLog = nsnull;
 #define IDLE_TIMEOUT_PREF     "network.ftp.idleConnectionTimeout"
 #define IDLE_CONNECTION_LIMIT 8 /* TODO pref me */
 
-static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
-
 nsFtpProtocolHandler *gFtpHandler = nsnull;
 
 //-----------------------------------------------------------------------------
@@ -197,7 +194,7 @@ nsFtpProtocolHandler::NewURI(const nsACString &aSpec,
         return NS_ERROR_MALFORMED_URI;
 
     nsresult rv;
-    nsCOMPtr<nsIStandardURL> url = do_CreateInstance(kStandardURLCID, &rv);
+    nsCOMPtr<nsIStandardURL> url = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY, 21, aSpec, aCharset, aBaseURI);

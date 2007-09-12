@@ -105,3 +105,41 @@ richlistitem[opType="needs-disable"] hbox.addon-description {
   -moz-box-align: center;
   -moz-appearance: none;
 }
+
+/* Hide / Display buttons depending on the state of the add-on */
+.enableHide,
+.uninstallShow,
+.installShow,
+.upgradeShow,
+richlistitem[isDisabled="true"] .disableHide {
+  display: none;
+}
+
+richlistitem[opType="needs-uninstall"] .uninstallShow,
+richlistitem[opType="needs-install"] .installShow,
+richlistitem[opType="needs-upgrade"] .upgradeShow,
+richlistitem[opType="needs-enable"] .enableShow,
+richlistitem[opType="needs-disable"] .disableShow,
+richlistitem[isDisabled="true"] .disableShow {
+  display: -moz-box;
+}
+
+richlistitem[opType="needs-uninstall"] .uninstallHide,
+richlistitem[opType="needs-install"] .uninstallHide,
+richlistitem[opType="needs-upgrade"] .uninstallHide,
+richlistitem[opType="needs-enable"] .enableHide,
+richlistitem[opType="needs-disable"] .disableHide {
+  display: none;
+}
+
+richlistitem[plugin] .themeButton,
+richlistitem[plugin] .optionsButton,
+richlistitem[plugin] .uninstallButton,
+richlistitem[type="2"] .themeButton,
+richlistitem[type="8"] .themeButton,
+richlistitem[type="4"] .optionsButton,
+richlistitem[type="8"] .optionsButton,
+richlistitem[type="4"] .disableShow,
+richlistitem[type="4"] .disableHide {
+  display: none;
+}

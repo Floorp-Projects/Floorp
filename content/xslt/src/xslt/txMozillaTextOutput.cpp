@@ -70,10 +70,6 @@ txMozillaTextOutput::txMozillaTextOutput(nsIDOMDocumentFragment* aDest)
     mDocument = mTextParent->GetOwnerDoc();
 }
 
-txMozillaTextOutput::~txMozillaTextOutput()
-{
-}
-
 nsresult
 txMozillaTextOutput::attribute(nsIAtom* aPrefix, nsIAtom* aLocalName,
                                nsIAtom* aLowercaseLocalName,

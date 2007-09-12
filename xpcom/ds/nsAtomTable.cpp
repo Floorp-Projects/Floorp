@@ -288,9 +288,9 @@ AtomTableMatchKey(PLDHashTable *table, const PLDHashEntryHdr *entry,
 
   if (strKey->IsUTF16String()) {
     return
-      CompareUTF8toUTF16(nsDependentCString(atomString, he->getLength()),
-                         nsDependentString(strKey->getUTF16String(),
-                                           strKey->getLength())) == 0;
+      CompareUTF8toUTF16(nsDependentCSubstring(atomString, atomString + he->getLength()),
+                         nsDependentSubstring(strKey->getUTF16String(),
+                                              strKey->getUTF16String() + strKey->getLength())) == 0;
   }
 
   PRUint32 length = he->getLength();
@@ -339,8 +339,8 @@ PR_STATIC_CALLBACK(PRBool)
 AtomTableInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
                    const void *key)
 {
-  AtomTableEntry *he = NS_STATIC_CAST(AtomTableEntry*, entry);
-  const AtomTableEntry *strKey = NS_STATIC_CAST(const AtomTableEntry*, key);
+  AtomTableEntry *he = static_cast<AtomTableEntry*>(entry);
+  const AtomTableEntry *strKey = static_cast<const AtomTableEntry*>(key);
 
   he->mLength = strKey->getLength();
 
@@ -544,7 +544,7 @@ NS_IMETHODIMP
 AtomImpl::Equals(const nsAString& aString, PRBool* aResult)
 {
   *aResult = CompareUTF8toUTF16(nsDependentCString(mString, mLength),
-                                PromiseFlatString(aString)) == 0;
+                                aString) == 0;
   return NS_OK;
 }
 
@@ -605,7 +605,7 @@ nsStaticAtomWrapper::Equals(const nsAString& aString, PRBool* aResult)
 {
   *aResult = CompareUTF8toUTF16(nsDependentCString(mStaticAtom->mString,
                                                    mLength),
-                                PromiseFlatString(aString)) == 0;
+                                aString) == 0;
   return NS_OK;
 }
 //----------------------------------------------------------------------
@@ -715,7 +715,7 @@ NS_NewAtom(const char* aUTF8String)
 NS_COM nsIAtom*
 NS_NewAtom(const nsACString& aUTF8String)
 {
-  AtomTableEntry *he = GetAtomHashEntry(PromiseFlatCString(aUTF8String).get(),
+  AtomTableEntry *he = GetAtomHashEntry(aUTF8String.Data(),
                                         aUTF8String.Length());
 
   if (!he) {
@@ -728,10 +728,7 @@ NS_NewAtom(const nsACString& aUTF8String)
   if (he->HasValue())
     return he->GetAtom();
 
-  // MSVC.NET doesn't like passing a temporary nsDependentCString() to
-  // operator new, so declare one as a local instead.
-  nsDependentCString str(aUTF8String);
-  AtomImpl* atom = new (str) AtomImpl();
+  AtomImpl* atom = new (aUTF8String) AtomImpl();
   he->SetAtomImpl(atom);
   if (!atom) {
     PL_DHashTableRawRemove(&gAtomTable, he);
@@ -751,7 +748,7 @@ NS_NewAtom(const PRUnichar* aUTF16String)
 NS_COM nsIAtom*
 NS_NewAtom(const nsAString& aUTF16String)
 {
-  AtomTableEntry *he = GetAtomHashEntry(PromiseFlatString(aUTF16String).get(),
+  AtomTableEntry *he = GetAtomHashEntry(aUTF16String.Data(),
                                         aUTF16String.Length());
 
   if (he->HasValue())
@@ -780,7 +777,7 @@ NS_NewPermanentAtom(const char* aUTF8String)
 NS_COM nsIAtom*
 NS_NewPermanentAtom(const nsACString& aUTF8String)
 {
-  AtomTableEntry *he = GetAtomHashEntry(PromiseFlatCString(aUTF8String).get(),
+  AtomTableEntry *he = GetAtomHashEntry(aUTF8String.Data(),
                                         aUTF8String.Length());
 
   if (he->HasValue() && he->IsStaticAtom())

@@ -49,16 +49,12 @@ class nsSVGContainerFrame : public nsSVGContainerFrameBase
   friend nsIFrame* NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
                                            nsIContent* aContent,
                                            nsStyleContext* aContext);
-
 protected:
-  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
-  {
-    return nsSVGContainerFrameBase::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
-  }
-
-public:
   nsSVGContainerFrame(nsStyleContext* aContext) :
     nsSVGContainerFrameBase(aContext) {}
+
+public:
+  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM() { return nsnull; }
 
   // nsIFrame:
   NS_IMETHOD AppendFrames(nsIAtom*        aListName,
@@ -72,17 +68,21 @@ public:
                   nsIFrame*        aParent,
                   nsIFrame*        aPrevInFlow);
 
-  virtual already_AddRefed<nsIDOMSVGMatrix> GetCanvasTM() { return nsnull; }
+  virtual PRBool IsFrameOfType(PRUint32 aFlags) const
+  {
+    return nsSVGContainerFrameBase::IsFrameOfType(aFlags & ~(nsIFrame::eSVG));
+  }
 };
 
 class nsSVGDisplayContainerFrame : public nsSVGContainerFrame,
                                    public nsISVGChildFrame
 {
-public:
+protected:
   nsSVGDisplayContainerFrame(nsStyleContext* aContext) :
     nsSVGContainerFrame(aContext) {}
 
-   // nsISupports interface:
+public:
+  // nsISupports interface:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return 1; }

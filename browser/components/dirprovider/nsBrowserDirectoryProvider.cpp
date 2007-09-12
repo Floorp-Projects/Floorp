@@ -200,6 +200,95 @@ AppendFileKey(const char *key, nsIProperties* aDirSvc,
   array.AppendObject(file);
 }
 
+// Appends the distribution-specific search engine directories to the
+// array.  The directory structure is as follows:
+
+// appdir/
+// \- distribution/
+//    \- searchplugins/
+//       |- common/
+//       \- locale/
+//          |- <locale 1>/
+//          ...
+//          \- <locale N>/
+
+// common engines are loaded for all locales.  If there is no locale
+// directory for the current locale, there is a pref:
+// "distribution.searchplugins.defaultLocale"
+// which specifies a default locale to use.
+
+static void
+AppendDistroSearchDirs(nsIProperties* aDirSvc, nsCOMArray<nsIFile> &array)
+{
+  nsCOMPtr<nsIFile> searchPlugins;
+  nsresult rv = aDirSvc->Get(NS_XPCOM_CURRENT_PROCESS_DIR,
+                             NS_GET_IID(nsIFile),
+                             getter_AddRefs(searchPlugins));
+  if (NS_FAILED(rv))
+    return;
+  searchPlugins->AppendNative(NS_LITERAL_CSTRING("distribution"));
+  searchPlugins->AppendNative(NS_LITERAL_CSTRING("searchplugins"));
+
+  PRBool exists;
+  rv = searchPlugins->Exists(&exists);
+  if (NS_FAILED(rv) || !exists)
+    return;
+
+  nsCOMPtr<nsIFile> commonPlugins;
+  rv = searchPlugins->Clone(getter_AddRefs(commonPlugins));
+  if (NS_SUCCEEDED(rv)) {
+    commonPlugins->AppendNative(NS_LITERAL_CSTRING("common"));
+    rv = commonPlugins->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && exists)
+        array.AppendObject(commonPlugins);
+  }
+
+  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefs) {
+
+    nsCOMPtr<nsIFile> localePlugins;
+    rv = searchPlugins->Clone(getter_AddRefs(localePlugins));
+    if (NS_FAILED(rv))
+      return;
+
+    localePlugins->AppendNative(NS_LITERAL_CSTRING("locale"));
+
+    nsCString locale;
+    rv = prefs->GetCharPref("general.useragent.locale", getter_Copies(locale));
+    if (NS_SUCCEEDED(rv)) {
+
+      nsCOMPtr<nsIFile> curLocalePlugins;
+      rv = localePlugins->Clone(getter_AddRefs(curLocalePlugins));
+      if (NS_SUCCEEDED(rv)) {
+
+        curLocalePlugins->AppendNative(locale);
+        rv = curLocalePlugins->Exists(&exists);
+        if (NS_SUCCEEDED(rv) && exists) {
+          array.AppendObject(curLocalePlugins);
+          return; // all done
+        }
+      }
+    }
+
+    // we didn't append the locale dir - try the default one
+    nsCString defLocale;
+    rv = prefs->GetCharPref("distribution.searchplugins.defaultLocale",
+                            getter_Copies(defLocale));
+    if (NS_SUCCEEDED(rv)) {
+
+      nsCOMPtr<nsIFile> defLocalePlugins;
+      rv = localePlugins->Clone(getter_AddRefs(defLocalePlugins));
+      if (NS_SUCCEEDED(rv)) {
+
+        defLocalePlugins->AppendNative(defLocale);
+        rv = defLocalePlugins->Exists(&exists);
+        if (NS_SUCCEEDED(rv) && exists)
+          array.AppendObject(defLocalePlugins);
+      }
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsBrowserDirectoryProvider::GetFiles(const char *aKey,
                                      nsISimpleEnumerator* *aResult)
@@ -214,6 +303,7 @@ nsBrowserDirectoryProvider::GetFiles(const char *aKey,
 
     nsCOMArray<nsIFile> baseFiles;
 
+    AppendDistroSearchDirs(dirSvc, baseFiles);
     AppendFileKey(NS_APP_SEARCH_DIR, dirSvc, baseFiles);
     AppendFileKey(NS_APP_USER_SEARCH_DIR, dirSvc, baseFiles);
 

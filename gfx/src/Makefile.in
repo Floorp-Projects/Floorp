@@ -81,7 +81,7 @@ else
  ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
  DIRS	     += mac
  endif
- ifneq (,$(filter windows beos os2 mac,$(MOZ_WIDGET_TOOLKIT)))
+ ifneq (,$(filter windows beos mac,$(MOZ_WIDGET_TOOLKIT)))
  DIRS        += $(MOZ_WIDGET_TOOLKIT)
  endif
 endif
@@ -109,19 +109,6 @@ endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += \
         mac/nsRegionPool.cpp \
-        $(NULL)
-endif
-
-ifeq ($(OS_ARCH),OS2)
-CPPSRCS += \
-        os2/nsOS2Uni.cpp \
-        os2/nsPaletteOS2.cpp \
-        os2/nsPrintOS2.cpp \
-        $(NULL)
-EXPORTS += \
-        os2/nsOS2Uni.h \
-        os2/nsPaletteOS2.h \
-        os2/nsPrintOS2.h \
         $(NULL)
 endif
 

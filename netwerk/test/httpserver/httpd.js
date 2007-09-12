@@ -441,7 +441,7 @@ nsHttpServer.prototype =
   //
   registerFile: function(path, file)
   {
-    if (!file.exists() || lf.isDirectory())
+    if (!file.exists() || file.isDirectory())
       throw Cr.NS_ERROR_INVALID_ARG;
 
     this._handler.registerFile(path, file);
@@ -1569,7 +1569,10 @@ ServerHandler.prototype =
         response.recycle();
 
         if (!(e instanceof HttpError))
+        {
+          dumpn("*** unexpected error: e == " + e);
           throw HTTP_500;
+        }
         if (e.code != 404)
           throw e;
 
@@ -1620,6 +1623,7 @@ ServerHandler.prototype =
     dumpn("*** registering '" + path + "' as mapping to " + file.path);
     file = file.clone();
 
+    var self = this;
     this._overridePaths[path] =
       function(metadata, response)
       {
@@ -1627,7 +1631,7 @@ ServerHandler.prototype =
           throw HTTP_404;
 
         response.setStatusLine(metadata.httpVersion, 200, "OK");
-        this._writeFileResponse(file, response);
+        self._writeFileResponse(file, response);
         maybeAddHeaders(file, metadata, response);
       };
   },

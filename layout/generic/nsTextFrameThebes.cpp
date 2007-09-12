@@ -154,10 +154,6 @@
 
 #define TEXT_WHITESPACE_FLAGS      0x18000000
 
-// This bit is set if this frame is an owner of the textrun (i.e., occurs
-// as the mStartFrame of some flow associated with the textrun)
-#define TEXT_IS_RUN_OWNER          0x20000000
-
 // This bit is set while the frame is registered as a blinking frame.
 #define TEXT_BLINK_ON              0x80000000
 
@@ -201,8 +197,6 @@ class PropertyProvider;
  * positive (when a text node starts in the middle of a text run) or
  * negative (when a text run starts in the middle of a text node). Of course
  * it can also be zero.
- * 
- * mStartFrame has TEXT_IS_RUN_OWNER set.
  */
 struct TextRunMappedFlow {
   nsTextFrame* mStartFrame;
@@ -598,9 +592,6 @@ DestroyUserData(void* aUserData)
 static void
 ClearAllTextRunReferences(nsTextFrame* aFrame, gfxTextRun* aTextRun)
 {
-  NS_ASSERTION(aFrame->GetStateBits() & TEXT_IS_RUN_OWNER,
-               "aFrame should be marked as a textrun owner");
-  aFrame->RemoveStateBits(TEXT_IS_RUN_OWNER);
   while (aFrame) {
     if (aFrame->GetTextRun() != aTextRun)
       break;
@@ -1472,6 +1463,10 @@ GetFontGroupForFrame(nsIFrame* aFrame)
   return fm->GetThebesFontGroup();
 }
 
+/**
+ * The returned textrun must be released via gfxTextRunCache::ReleaseTextRun
+ * or gfxTextRunCache::AutoTextRun.
+ */
 static gfxTextRun*
 GetHyphenTextRun(gfxTextRun* aTextRun, nsIRenderingContext* aRefContext)
 {
@@ -1507,6 +1502,14 @@ GetFontMetrics(gfxFontGroup* aFontGroup)
   return font->GetMetrics();
 }
 
+static void
+AppendLineBreakOffset(nsTArray<PRUint32>* aArray, PRUint32 aOffset)
+{
+  if (aArray->Length() > 0 && (*aArray)[aArray->Length() - 1] == aOffset)
+    return;
+  aArray->AppendElement(aOffset);
+}
+
 void
 BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
 {
@@ -1524,11 +1527,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     textFlags |= nsTextFrameUtils::TEXT_INCOMING_WHITESPACE;
   }
 
-  nsAutoTArray<PRUint32,50> textBreakPoints;
-  // We might have a final break offset for the end of the textrun
-  if (!textBreakPoints.AppendElements(mLineBreakBeforeFrames.Length() + 1))
-    return;
-
+  nsAutoTArray<PRInt32,50> textBreakPoints;
   TextRunUserData dummyData;
   TextRunMappedFlow dummyMappedFlow;
 
@@ -1601,8 +1600,8 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
       ++finalMappedFlowCount;
 
       while (nextBreakBeforeFrame && nextBreakBeforeFrame->GetContent() == content) {
-        textBreakPoints[nextBreakIndex - 1] =
-          nextBreakBeforeFrame->GetContentOffset() + newFlow->mDOMOffsetToBeforeTransformOffset;
+        textBreakPoints.AppendElement(
+            nextBreakBeforeFrame->GetContentOffset() + newFlow->mDOMOffsetToBeforeTransformOffset);
         nextBreakBeforeFrame = GetNextBreakBeforeFrame(&nextBreakIndex);
       }
     }
@@ -1747,19 +1746,19 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   NS_ASSERTION(nextBreakIndex == mLineBreakBeforeFrames.Length(),
                "Didn't find all the frames to break-before...");
   gfxSkipCharsIterator iter(skipChars);
-  for (i = 0; i < nextBreakIndex; ++i) {
-    PRUint32* breakPoint = &textBreakPoints[i];
-    *breakPoint = iter.ConvertOriginalToSkipped(*breakPoint);
+  nsAutoTArray<PRUint32,50> textBreakPointsAfterTransform;
+  for (i = 0; i < textBreakPoints.Length(); ++i) {
+    AppendLineBreakOffset(&textBreakPointsAfterTransform, 
+            iter.ConvertOriginalToSkipped(textBreakPoints[i]));
   }
   if (mStartOfLine) {
-    textBreakPoints[nextBreakIndex] = transformedLength;
-    ++nextBreakIndex;
+    AppendLineBreakOffset(&textBreakPointsAfterTransform, transformedLength);
   }
 
   gfxTextRun* textRun;
   gfxTextRunFactory::Parameters params =
       { mContext, finalUserData, &skipChars,
-        textBreakPoints.Elements(), nextBreakIndex,
+        textBreakPointsAfterTransform.Elements(), textBreakPointsAfterTransform.Length(),
         firstFrame->PresContext()->AppUnitsPerDevPixel() };
 
   if (mDoubleByteText) {
@@ -1940,13 +1939,9 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
       f->ClearTextRun();
       f->SetTextRun(aTextRun);
     }
-    nsIContent* content = startFrame->GetContent();
     // BuildTextRunForFrames mashes together mapped flows for the same element,
     // so we do that here too.
-    if (content != lastContent) {
-      startFrame->AddStateBits(TEXT_IS_RUN_OWNER);
-      lastContent = content;
-    }    
+    lastContent = startFrame->GetContent();
   }
 }
 
@@ -2524,9 +2519,9 @@ PropertyProvider::GetHyphenWidth()
 {
   if (mHyphenWidth < 0) {
     nsCOMPtr<nsIRenderingContext> rc = GetReferenceRenderingContext(mFrame, nsnull);
-    gfxTextRun* hyphenTextRun = GetHyphenTextRun(mTextRun, rc);
+    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, rc));
     mHyphenWidth = mLetterSpacing;
-    if (hyphenTextRun) {
+    if (hyphenTextRun.get()) {
       mHyphenWidth += hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull);
     }
   }
@@ -2635,8 +2630,8 @@ PropertyProvider::SetupJustificationSpacing()
                               GetSkippedDistance(mStart, realEnd), this);
   if (mFrame->GetStateBits() & TEXT_HYPHEN_BREAK) {
     nsCOMPtr<nsIRenderingContext> rc = GetReferenceRenderingContext(mFrame, nsnull);
-    gfxTextRun* hyphenTextRun = GetHyphenTextRun(mTextRun, rc);
-    if (hyphenTextRun) {
+    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, rc));
+    if (hyphenTextRun.get()) {
       naturalWidth +=
         hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull);
     }
@@ -2732,6 +2727,7 @@ void nsBlinkTimer::Stop()
 {
   if (nsnull != mTimer) {
     mTimer->Cancel();
+    mTimer = nsnull;
   }
 }
 
@@ -3250,10 +3246,10 @@ nsTextFrame::Init(nsIContent*      aContent,
 void
 nsTextFrame::Destroy()
 {
+  ClearTextRun();
   if (mNextContinuation) {
     mNextContinuation->SetPrevInFlow(nsnull);
   }
-  ClearTextRun();
   // Let the base class destroy the frame
   nsFrame::Destroy();
 }
@@ -3365,10 +3361,10 @@ nsContinuingTextFrame::Init(nsIContent* aContent,
 void
 nsContinuingTextFrame::Destroy()
 {
+  ClearTextRun();
   if (mPrevContinuation || mNextContinuation) {
     nsSplittableFrame::RemoveFromFlow(this);
   }
-  ClearTextRun();
   // Let the base class destroy the frame
   nsFrame::Destroy();
 }
@@ -3544,7 +3540,7 @@ nsTextFrame::ClearTextRun()
   // save textrun because ClearAllTextRunReferences will clear ours
   gfxTextRun* textRun = mTextRun;
   
-  if (!textRun || !(GetStateBits() & TEXT_IS_RUN_OWNER))
+  if (!textRun)
     return;
 
   UnhookTextRunFromFrames(textRun);
@@ -4127,8 +4123,8 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
       // Get a reference rendering context because aCtx might not have the
       // reference matrix currently set
       nsCOMPtr<nsIRenderingContext> rc = GetReferenceRenderingContext(this, nsnull);
-      gfxTextRun* hyphenTextRun = GetHyphenTextRun(mTextRun, rc);
-      if (hyphenTextRun) {
+      gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, rc));
+      if (hyphenTextRun.get()) {
         hyphenTextRun->Draw(aCtx, gfxPoint(hyphenBaselineX, aTextBaselinePt.y),
                             0, hyphenTextRun->GetLength(), &aDirtyRect, nsnull, nsnull);
       }
@@ -4295,8 +4291,8 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
   if (GetStateBits() & TEXT_HYPHEN_BREAK) {
     gfxFloat hyphenBaselineX = textBaselinePt.x + mTextRun->GetDirection()*advanceWidth;
     nsCOMPtr<nsIRenderingContext> rc = GetReferenceRenderingContext(this, nsnull);
-    gfxTextRun* hyphenTextRun = GetHyphenTextRun(mTextRun, rc);
-    if (hyphenTextRun) {
+    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, rc));
+    if (hyphenTextRun.get()) {
       hyphenTextRun->Draw(ctx, gfxPoint(hyphenBaselineX, textBaselinePt.y),
                           0, hyphenTextRun->GetLength(), &dirtyRect, nsnull, nsnull);
     }
@@ -4955,7 +4951,7 @@ FindFirstLetterRange(const nsTextFragment* aFrag,
   gfxSkipCharsIterator iter(aIter);
   PRInt32 nextClusterStart;
   for (nextClusterStart = i + 1; nextClusterStart < length; ++nextClusterStart) {
-    iter.SetOriginalOffset(nextClusterStart);
+    iter.SetOriginalOffset(aOffset + nextClusterStart);
     if (iter.IsOriginalCharSkipped() ||
         aTextRun->IsClusterStart(iter.GetSkippedOffset()))
       break;
@@ -5481,9 +5477,9 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   }
   if (usedHyphenation) {
     // Fix up metrics to include hyphen
-    gfxTextRun* hyphenTextRun = GetHyphenTextRun(mTextRun, aReflowState.rendContext);
-    if (hyphenTextRun) {
-      AddCharToMetrics(hyphenTextRun,
+    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, aReflowState.rendContext));
+    if (hyphenTextRun.get()) {
+      AddCharToMetrics(hyphenTextRun.get(),
                        mTextRun, &textMetrics, needTightBoundingBox);
     }
     AddStateBits(TEXT_HYPHEN_BREAK);

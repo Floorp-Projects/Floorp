@@ -1006,27 +1006,6 @@ STDMETHODIMP nsAccessibleWrap::put_accValue(
 #include "mshtml.h"
 
 STDMETHODIMP
-nsAccessibleWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
-{
-  /**
-   * To get an ISimpleDOMNode, ISimpleDOMDocument or ISimpleDOMText
-   * from an IAccessible you have to use IServiceProvider like this:
-   * --------------------------------------------------------------
-   * ISimpleDOMDocument *pAccDoc = NULL;
-   * IServiceProvider *pServProv = NULL;
-   * pAcc->QueryInterface(IID_IServiceProvider, (void**)&pServProv);
-   * if (pServProv) {
-   *   const GUID unused;
-   *   pServProv->QueryService(unused, IID_ISimpleDOMDocument, (void**)&pAccDoc);
-   *   pServProv->Release();
-   * }
-   */
-
-  return QueryInterface(iid, ppv);
-}
-
-
-STDMETHODIMP
 nsAccessibleWrap::Next(ULONG aNumElementsRequested, VARIANT FAR* pvar, ULONG FAR* aNumElementsFetched)
 {
   // If there are two clients using this at the same time, and they are

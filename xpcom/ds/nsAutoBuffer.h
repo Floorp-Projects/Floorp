@@ -46,6 +46,13 @@
 /**
  * A buffer which will use stack space if the requested size will
  * fit in the stack buffer and allocate from the heap if not.
+ *
+ * Be careful when you call EnsureElemCapacity/AddElemCapacity: the data
+ * contained in the buffer is not preserved through this operation.
+ *
+ * This class is not intended to be used with types that are not
+ * POD structures or primitives. The buffer allocated by this class is not
+ * initialized.
  * 
  * Below is a usage example : 
  * 
@@ -58,16 +65,14 @@
  *
  * PRUnichar *unicharPtr = buffer.get();
  *
- * // add PRUnichar's to the buffer pointed to by |unicharPtr| as long as
- * // the number of PRUnichar's is less than |intialLength|
- *    
+ * // use the buffer for various stuff
+ *
  * // increase the capacity
+ * // note that the data will not be preserved through this step
  * if (!buffer.AddElemCapacity(extraLength))
  *     return NS_ERROR_OUT_OF_MEMORY
  *
- * unicharPtr = buffer.get() + initialLength;
- *
- * //continue to add PRUnichar's....
+ * // continue to use the buffer for other things
  */
 
 template <class T, PRInt32 sz>
@@ -83,26 +88,26 @@ public:
   ~nsAutoBuffer()
   {
     if (mBufferPtr != mStackBuffer)
-      nsMemory::Free(mBufferPtr);
+      NS_Free(mBufferPtr);
   }
 
+  // Note that this method can forget the data in the array!
+  // This is intentional.
   PRBool EnsureElemCapacity(PRInt32 inElemCapacity)
   {
     if (inElemCapacity <= mCurElemCapacity)
       return PR_TRUE;
-    
+
     T* newBuffer;
 
-    if (mBufferPtr != mStackBuffer)
-      newBuffer = (T*)nsMemory::Realloc((void *)mBufferPtr, inElemCapacity * sizeof(T));
-    else 
-      newBuffer = (T*)nsMemory::Alloc(inElemCapacity * sizeof(T));
+    if (mBufferPtr != mStackBuffer) {
+      newBuffer = static_cast<T*>(NS_Realloc(mBufferPtr, inElemCapacity * sizeof(T)));
+    } else {
+      newBuffer = static_cast<T*>(NS_Alloc(inElemCapacity * sizeof(T)));
+    }
 
     if (!newBuffer)
       return PR_FALSE;
-
-    if (mBufferPtr != mStackBuffer)
-      nsMemory::Free(mBufferPtr);
 
     mBufferPtr = newBuffer; 
     mCurElemCapacity = inElemCapacity;

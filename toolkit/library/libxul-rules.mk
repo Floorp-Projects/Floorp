@@ -86,9 +86,7 @@ ifdef MOZ_ENABLE_PANGO
 EXTRA_DSO_LDOPTS += $(MOZ_PANGO_LIBS)
 endif
 
-ifneq (,$(MOZ_ENABLE_CANVAS)$(MOZ_SVG))
 EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS)
-endif
 
 export:: dlldeps.cpp
 

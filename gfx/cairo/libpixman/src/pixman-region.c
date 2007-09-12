@@ -2523,6 +2523,8 @@ pixman_region_init_rects (pixman_region16_t *region,
     }
 
     pixman_region_init(region);
+    if (count == 0)
+	return TRUE;
     if (!pixman_rect_alloc(region, count))
 	return FALSE;
 

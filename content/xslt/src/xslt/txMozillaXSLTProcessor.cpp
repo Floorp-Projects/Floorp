@@ -85,10 +85,6 @@ public:
     {
     }
 
-    virtual ~txToDocHandlerFactory()
-    {
-    }
-
     TX_DECL_TXAOUTPUTHANDLERFACTORY
 
 private:
@@ -103,10 +99,6 @@ class txToFragmentHandlerFactory : public txAOutputHandlerFactory
 public:
     txToFragmentHandlerFactory(nsIDOMDocumentFragment* aFragment)
         : mFragment(aFragment)
-    {
-    }
-
-    virtual ~txToFragmentHandlerFactory()
     {
     }
 
