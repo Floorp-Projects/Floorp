@@ -1,0 +1,2 @@
+#!/bin/bash
+../../mozilla-trunk/obj/firefox/dist/bin/xpidl -m typelib -I ../../mozilla-trunk/mozilla/xpcom/base/ -o nsIBookmarksSyncService nsIBookmarksSyncService.idl
