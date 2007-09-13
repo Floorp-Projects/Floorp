@@ -8,7 +8,7 @@ use File::Copy qw(move);
 use POSIX qw(strftime);
 
 use MozBuild::Util qw(MkdirWithPath RunShellCommand);
-use Bootstrap::Util qw(CvsCatfile);
+use Bootstrap::Util qw(CvsCatfile GetDiffFileList);
 
 use Bootstrap::Step;
 use Bootstrap::Step::Tag::Bump;
@@ -115,7 +115,9 @@ sub Execute {
         $this->Shell(cmd => 'cvs',
                      cmdArgs => ['up',
                                  '-r', $geckoTag],
-                     dir => catfile($cvsrootTagDir, 'mozilla'));
+                     dir => catfile($cvsrootTagDir, 'mozilla'),
+                     logFile => catfile($logDir, 'tag-relbranch_update_' .
+                                        $geckoTag));
     } else {
         # We go through some convoluted hoops here to get the _RELBRANCH
         # datespec without forcing it to be specified. Because of this,
@@ -236,50 +238,35 @@ sub CvsTag {
     my %args = @_;
 
     # All the required args first, followed by the optional ones...
-    die "ASSERT: Bootstrap::Step::Tag::CvsTag(): null tagName" if 
-     (!exists($args{'tagName'})); 
-    my $tagName = $args{'tagName'};
-
-    die "ASSERT: Bootstrap::Step::Tag::CvsTag(): null coDir" if 
-     (!exists($args{'coDir'})); 
-    my $coDir = $args{'coDir'};
-
-    die "ASSERT: Bootstrap::Step::Tag::CvsTag(): invalid files data" if 
-     (exists($args{'files'}) && ref($args{'files'}) ne 'ARRAY');
 
     die "ASSERT: Bootstrap::Step::Tag::CvsTag(): null logFile"
      if (!exists($args{'logFile'}));
-    my $logFile = $args{'logFile'};
-   
-    my $branch = exists($args{'branch'}) ? $args{'branch'} : 0;
-    my $files = exists($args{'files'}) ? $args{'files'} : [];
-    my $force = exists($args{'force'}) ? $args{'force'} : 0;
+    die "ASSERT: Bootstrap::Step::Tag::CvsTag(): null coDir" if 
+     (!exists($args{'coDir'}));
 
+    # We renamed this argument when CvsTag() got moved...
+    $args{'cvsDir'} = $args{'coDir'};
+
+    # Check if we're supposed to dump the tagging output to stdout...
     my $config = new Bootstrap::Config();
-    my $logDir = $config->Get(sysvar => 'logDir');
-
-    # only force or branch specific files, not the whole tree
-    if ($force && scalar(@{$files}) <= 0) {
-        die("ASSERT: Bootstrap::Step::Tag::CvsTag(): Cannot specify force without files");
-    } elsif ($branch && scalar(@{$files}) <= 0) {
-        die("ASSERT: Bootstrap::Step::Tag::CvsTag(): Cannot specify branch without files");
-    } elsif ($branch && $force) {
-        die("ASSERT: Bootstrap::Step::Tag::CvsTag(): Cannot specify both branch and force");
+    if ($config->Exists(var => 'dumpLogs') && 
+     $config->Get(var => 'dumpLogs')) {
+        $args{'output'} = 1;
     }
 
-    my @cmdArgs;
-    push(@cmdArgs, 'tag');
-    push(@cmdArgs, '-F') if ($force);
-    push(@cmdArgs, '-b') if ($branch);
-    push(@cmdArgs, $tagName);
-    push(@cmdArgs, @{$files}) if (scalar(@{$files}) > 0);
+    # We call this by full scoping (and don't include it in the use() statement
+    # for Bootstrap::Util above) to disambiguate between the Util version and
+    # the Tag version, which is a shim now.
+    my $rv = Bootstrap::Util::CvsTag(%args);
 
-    $this->Shell(
-      cmd => 'cvs',
-      cmdArgs => \@cmdArgs,
-      dir => $coDir,
-      logFile => $logFile,
-    );
+    if ($rv->{'timedOut'} || ($rv->{'exitValue'} != 0)) {
+        $this->Log(msg => "Bootstrap::Step::Tag::CvsTag failed; rv: " .
+         "$rv->{'exitValue'}, timeout: $rv->{'timedOut'}, output: " .
+         "$rv->{'output'}");
+        die("Bootstrap::Step::Tag::CvsTag: exited bogusly: $rv->{'exitValue'}");
+    }
+
+    return $rv;
 }
 
 #
@@ -324,55 +311,6 @@ sub GenerateRelbranchName {
      ($geckoDateSpec !~ /^20\d{6}$/);
 
     return 'GECKO' . $geckoVersion . '_' . $geckoDateSpec . '_RELBRANCH';
-}
-
-sub GetDiffFileList {
-    my $this = shift;
-    my %args = @_;
-
-    foreach my $requiredArg (qw(cvsDir prevTag newTag)) {
-        if (!exists($args{$requiredArg})) {
-            die "ASSERT: MozBuild::Util::GetDiffFileList(): null arg: " .
-             $requiredArg;
-        }
-    }
-
-    my $cvsDir = $args{'cvsDir'};
-    my $firstTag = $args{'prevTag'};
-    my $newTag = $args{'newTag'};
-
-    my $rv = RunShellCommand(command => 'cvs',
-                             args => ['diff', '-uN',
-                                      '-r', $firstTag,
-                                      '-r', $newTag],
-                             dir => $cvsDir,
-                             timeout => 3600);
-
-    # Gah. So, the shell return value of "cvs diff" is dependent on whether or
-    # not there were diffs, NOT whether or not the command succeeded. (Thanks,
-    # CVS!) So, we can't really check exitValue here, since it could be 1 or
-    # 0, depending on whether or not there were diffs (and both cases are valid
-    # for this function). Maybe if there's an error it returns a -1? Or 2?
-    # Who knows.
-    #
-    # So basically, we check that it's not 1 or 0, which... isn't a great test.
-    #
-    # TODO - check to see if timedOut, dumpedCore, or sigNum are set.
-    if ($rv->{'exitValue'} != 1 && $rv->{'exitValue'} != 0) {
-        die("ASSERT: MozBuild::Util::GetDiffFileList(): cvs diff returned " .
-         $rv->{'exitValue'});
-    }
-
-    my @differentFiles = ();
-
-    foreach my $line (split(/\n/, $rv->{'output'})) {
-        if ($line =~ /^Index:\s(.+)$/) {
-            push(@differentFiles, $1);
-        }
-    }
-
-
-    return \@differentFiles;
 }
 
 1;

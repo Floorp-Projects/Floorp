@@ -10,9 +10,13 @@ use MozBuild::Util qw(RunShellCommand);
 
 use base qw(Exporter);
 
-our @EXPORT_OK = qw(CvsCatfile GetLocaleManifest
+our @EXPORT_OK = qw(CvsCatfile CvsTag
+                    GetDiffFileList
+                    GetLocaleManifest
                     GetBouncerPlatforms GetPatcherPlatforms
                     GetBouncerToPatcherPlatformMap);
+
+our($DEFAULT_SHELL_TIMEOUT);
 
 use strict;
 
@@ -36,6 +40,7 @@ my %PLATFORM_MAP = (# bouncer/shipped-locales platform => patcher2 platform
 
 my $DEFAULT_CVSROOT = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
 
+$DEFAULT_SHELL_TIMEOUT = 3600;
 
 ##
 # Turn an array of directory/filenames into a CVS module path.
@@ -163,6 +168,106 @@ sub GetLocaleManifest {
     }
 
     return $localeManifest;
+}
+
+sub CvsTag {
+    my %args = @_;
+
+    # All the required args first, followed by the optional ones...
+    die "ASSERT: Bootstrap::Step::Tag::CvsTag(): null tagName" if 
+     (!exists($args{'tagName'})); 
+    my $tagName = $args{'tagName'};
+
+    die "ASSERT: Bootstrap::Step::Tag::CvsTag(): null cvsDir" if 
+     (!exists($args{'cvsDir'})); 
+    my $cvsDir = $args{'cvsDir'};
+
+    die "ASSERT: Bootstrap::Step::Tag::CvsTag(): invalid files data" if 
+     (exists($args{'files'}) && ref($args{'files'}) ne 'ARRAY');
+
+    die "ASSERT: Bootstrap::Step::Tag::CvsTag(): null logFile"
+     if (!exists($args{'logFile'}));
+    my $logFile = $args{'logFile'};
+   
+    my $branch = exists($args{'branch'}) ? $args{'branch'} : 0;
+    my $files = exists($args{'files'}) ? $args{'files'} : [];
+    my $force = exists($args{'force'}) ? $args{'force'} : 0;
+    my $timeout = exists($args{'timeout'}) ? $args{'timeout'} :
+     $DEFAULT_SHELL_TIMEOUT;
+
+    # only force or branch specific files, not the whole tree
+    if ($force && scalar(@{$files}) <= 0) {
+        die("ASSERT: Bootstrap::Util::CvsTag(): Cannot specify force without files");
+    } elsif ($branch && scalar(@{$files}) <= 0) {
+        die("ASSERT: Bootstrap::UtilCvsTag(): Cannot specify branch without files");
+    } elsif ($branch && $force) {
+        die("ASSERT: Bootstrap::UtilCvsTag(): Cannot specify both branch and force");
+    }
+
+    my @cmdArgs;
+    push(@cmdArgs, 'tag');
+    push(@cmdArgs, '-F') if ($force);
+    push(@cmdArgs, '-b') if ($branch);
+    push(@cmdArgs, $tagName);
+    push(@cmdArgs, @{$files}) if (scalar(@{$files}) > 0);
+
+    my %cvsTagArgs = (command => 'cvs',
+                      args => \@cmdArgs,
+                      dir => $cvsDir,
+                      logfile => $logFile);
+
+    $cvsTagArgs{'timeout'} = $timeout if (defined($timeout));
+    $cvsTagArgs{'output'} = $args{'output'} if (exists($args{'output'}));
+
+    return RunShellCommand(%cvsTagArgs);
+}
+
+sub GetDiffFileList {
+    my %args = @_;
+
+    foreach my $requiredArg (qw(cvsDir prevTag newTag)) {
+        if (!exists($args{$requiredArg})) {
+            die "ASSERT: MozBuild::Util::GetDiffFileList(): null arg: " .
+             $requiredArg;
+        }
+    }
+
+    my $cvsDir = $args{'cvsDir'};
+    my $firstTag = $args{'prevTag'};
+    my $newTag = $args{'newTag'};
+
+    my $rv = RunShellCommand(command => 'cvs',
+                             args => ['diff', '-uN',
+                                      '-r', $firstTag,
+                                      '-r', $newTag],
+                             dir => $cvsDir,
+                             timeout => 3600);
+
+    # Gah. So, the shell return value of "cvs diff" is dependent on whether or
+    # not there were diffs, NOT whether or not the command succeeded. (Thanks,
+    # CVS!) So, we can't really check exitValue here, since it could be 1 or
+    # 0, depending on whether or not there were diffs (and both cases are valid
+    # for this function). Maybe if there's an error it returns a -1? Or 2?
+    # Who knows.
+    #
+    # So basically, we check that it's not 1 or 0, which... isn't a great test.
+    #
+    # TODO - check to see if timedOut, dumpedCore, or sigNum are set.
+    if ($rv->{'exitValue'} != 1 && $rv->{'exitValue'} != 0) {
+        die("ASSERT: MozBuild::Util::GetDiffFileList(): cvs diff returned " .
+         $rv->{'exitValue'});
+    }
+
+    my @differentFiles = ();
+
+    foreach my $line (split(/\n/, $rv->{'output'})) {
+        if ($line =~ /^Index:\s(.+)$/) {
+            push(@differentFiles, $1);
+        }
+    }
+
+
+    return \@differentFiles;
 }
 
 1;

@@ -9,13 +9,13 @@ use File::Spec::Functions;
 use POSIX qw(strftime);
 
 use Bootstrap::Config;
+use Bootstrap::Util;
 use MozBuild::Util qw(RunShellCommand Email);
 
 use base 'Exporter';
 
 our @EXPORT = qw(catfile);
 
-my $DEFAULT_TIMEOUT = 3600;
 my $DEFAULT_LOGFILE = 'default.log';
 
 sub new {
@@ -33,7 +33,7 @@ sub Shell {
     my $cmdArgs = exists($args{'cmdArgs'}) ? $args{'cmdArgs'} : [];
     my $dir = $args{'dir'};
     my $timeout = exists($args{'timeout'}) ? $args{'timeout'} :
-     $DEFAULT_TIMEOUT;
+     $Bootstrap::Util::DEFAULT_SHELL_TIMEOUT;
     my $ignoreExitValue = exists($args{'ignoreExitValue'}) ? 
      $args{'ignoreExitValue'} : 0;
     my $rv = '';
