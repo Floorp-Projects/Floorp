@@ -254,30 +254,6 @@ nsMenuPopupFrame::SetInitialChildList(nsIAtom* aListName,
   return nsBoxFrame::SetInitialChildList(aListName, aChildList);
 }
 
-PRBool
-nsMenuPopupFrame::IsLeaf() const
-{
-  if (mGeneratedChildren)
-    return PR_FALSE;
-
-  // any popup with a type attribute, such as the autocomplete popup,
-  // is always generated right away.
-  if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::type))
-    return PR_FALSE;
-
-  if (mPopupType != ePopupTypeMenu)
-    return PR_TRUE;
-
-  // menu popups generate their child frames lazily only when opened, so
-  // behave like a leaf frame. However, generate child frames normally if
-  // the parent menu has a sizetopopup attribute. In this case the size of
-  // the parent menu is dependant on the size of the popup, so the frames
-  // need to exist in order to calculate this size.
-  nsIContent* parentContent = mContent->GetParent();
-  return (parentContent &&
-          !parentContent->HasAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup));
-}
-
 void
 nsMenuPopupFrame::AdjustView()
 {
