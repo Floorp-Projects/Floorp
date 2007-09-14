@@ -1158,11 +1158,20 @@ CompareUTF8toUTF16(const nsASingleFragmentCString& aUTF8String,
             if (err)
               return PR_INT32_MIN;
 
-            PRUint32 c16_32 = UTF16CharEnumerator::NextChar(&u16, u16end,
-                                                            &err);
-            if (err)
-              return PR_INT32_MIN;
-
+            PRUint32 c16_32 = UTF16CharEnumerator::NextChar(&u16, u16end);
+            // The above UTF16CharEnumerator::NextChar() calls can
+            // fail, but if it does for anything other than no data to
+            // look at (which can't happen here), it returns the
+            // Unicode replacement character 0xFFFD for the invalid
+            // data they were fed. Ignore that error and treat invalid
+            // UTF16 as 0xFFFD.
+            //
+            // This matches what our UTF16 to UTF8 conversion code
+            // does, and thus a UTF8 string that came from an invalid
+            // UTF16 string will compare equal to the invalid UTF16
+            // string it came from. Same is true for any other UTF16
+            // string differs only in the invalid part of the string.
+            
             if (c8_32 != c16_32)
               return c8_32 < c16_32 ? -1 : 1;
           }

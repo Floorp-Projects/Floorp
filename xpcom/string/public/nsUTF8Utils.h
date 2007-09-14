@@ -293,13 +293,18 @@ public:
       }
     else if (NS_IS_HIGH_SURROGATE(c)) // U+D800 - U+DBFF
       {
-        if (*buffer == end)
+        if (p == end)
           {
-            NS_ERROR("Unexpected end of buffer after high surrogate");
+            // Found a high surrogate the end of the buffer. Flag this
+            // as an error and return the Unicode replacement
+            // character 0xFFFD.
+
+            NS_WARNING("Unexpected end of buffer after high surrogate");
+
             if (err)
               *err = PR_TRUE;
-
-            return 0;
+            *buffer = p;
+            return 0xFFFD;
           }
 
         // D800- DBFF - High Surrogate
@@ -319,15 +324,31 @@ public:
           }
         else
           {
-            NS_ERROR("got a High Surrogate but no low surrogate");
-            // output nothing.
+            // Found a high surrogate followed by something other than
+            // a low surrogate. Flag this as an error and return the
+            // Unicode replacement character 0xFFFD.
+
+            NS_WARNING("got a High Surrogate but no low surrogate");
+
+            if (err)
+              *err = PR_TRUE;
+            *buffer = p;
+            return 0xFFFD;
           }
       }
     else // U+DC00 - U+DFFF
       {
         // DC00- DFFF - Low Surrogate
-        NS_ERROR("got a low Surrogate but no high surrogate");
-        // output nothing.
+
+        // Found a low surrogate w/o a preceeding high surrogate. Flag
+        // this as an error and return the Unicode replacement
+        // character 0xFFFD.
+
+        NS_WARNING("got a low Surrogate but no high surrogate");
+        if (err)
+          *err = PR_TRUE;
+        *buffer = p;
+        return 0xFFFD;
       }
 
     if (err)
@@ -359,10 +380,15 @@ public:
       {
         if (iter == end)
           {
+            // Found a high surrogate the end of the buffer. Flag this
+            // as an error and return the Unicode replacement
+            // character 0xFFFD.
+
+            NS_WARNING("Unexpected end of buffer after high surrogate");
+
             if (err)
               *err = PR_TRUE;
-
-            return 0;
+            return 0xFFFD;
           }
 
         // D800- DBFF - High Surrogate
@@ -381,15 +407,30 @@ public:
           }
         else
           {
-            NS_ERROR("got a High Surrogate but no low surrogate");
-            // output nothing.
+            // Found a high surrogate followed by something other than
+            // a low surrogate. Flag this as an error and return the
+            // Unicode replacement character 0xFFFD.
+
+            NS_WARNING("got a High Surrogate but no low surrogate");
+
+            if (err)
+              *err = PR_TRUE;
+            return 0xFFFD;
           }
       }
     else // U+DC00 - U+DFFF
       {
         // DC00- DFFF - Low Surrogate
-        NS_ERROR("got a low Surrogate but no high surrogate");
-        // output nothing.
+
+        // Found a low surrogate w/o a preceeding high surrogate. Flag
+        // this as an error and return the Unicode replacement
+        // character 0xFFFD.
+
+        NS_WARNING("got a low Surrogate but no high surrogate");
+
+        if (err)
+          *err = PR_TRUE;
+        return 0xFFFD;
       }
 
     if (err)
