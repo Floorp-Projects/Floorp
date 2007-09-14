@@ -96,15 +96,14 @@ public:
     nsEventStatus SetRebuild(PRBool aMenuEvent);
 
     // nsIMenu Methods
-    NS_IMETHOD Create (nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
-                       nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode);
+    NS_IMETHOD Create(nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
+                      nsIChangeManager* aManager, nsIContent* aNode);
     NS_IMETHOD GetParent(nsISupports *&aParent);
     NS_IMETHOD GetLabel(nsString &aText);
     NS_IMETHOD SetLabel(const nsAString &aText);
     NS_IMETHOD GetAccessKey(nsString &aText);
     NS_IMETHOD SetAccessKey(const nsAString &aText);
     NS_IMETHOD AddItem(nsISupports* aText);
-    NS_IMETHOD AddSeparator();
     NS_IMETHOD GetItemCount(PRUint32 &aCount);
     NS_IMETHOD GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem);
     NS_IMETHOD GetVisibleItemCount(PRUint32 &aCount);
@@ -145,7 +144,6 @@ protected:
 
     void LoadMenuItem(nsIContent* inMenuItemContent);  
     void LoadSubMenu(nsIContent* inMenuContent);
-    void LoadSeparator(nsIContent* inSeparatorContent);
 
     NSMenu* CreateMenuWithGeckoString(nsString& menuTitle);
 

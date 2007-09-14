@@ -154,8 +154,7 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
   if (menuItem) {
     nsIMenuItem::EMenuItemType menuItemType;
     menuItem->GetMenuItemType(&menuItemType);
-    if (menuItemType == nsIMenuItem::eCheckbox ||
-        menuItemType == nsIMenuItem::eRadio)
+    if (menuItemType != nsIMenuItem::eRegular)
       return NS_ERROR_FAILURE;
   }
 

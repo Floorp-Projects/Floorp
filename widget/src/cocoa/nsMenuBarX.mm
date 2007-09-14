@@ -445,14 +445,13 @@ nsMenuBarX::MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
         menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::accesskey, menuAccessKey);
 
         // Don't create the whole menu yet, just add in the top level names
-        
+
         // Create nsMenu, the menubar will own it
         nsCOMPtr<nsIMenu> pnsMenu(do_CreateInstance(kMenuCID));
         if (pnsMenu) {
           pnsMenu->Create(static_cast<nsIMenuBar*>(this), menuName, menuAccessKey, 
-                          static_cast<nsIChangeManager *>(this), 
-                          nsnull, menu);
-          
+                          static_cast<nsIChangeManager *>(this), menu);
+
           // Make nsMenu a child of nsMenuBar. nsMenuBar takes ownership.
           AddMenu(pnsMenu);
           

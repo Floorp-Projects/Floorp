@@ -42,7 +42,6 @@
 #include "nsISupports.h"
 #include "nsString.h"
 
-#include "nsIDocShell.h"
 #include "nsIDOMElement.h"
 
 // {F9A30AA5-D526-4C19-8418-C21BF6B31837}
@@ -72,16 +71,15 @@ class nsIMenuItem : public nsISupports {
   public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMENUITEM_IID)
 
-    enum EMenuItemType { eRegular = 0, eCheckbox, eRadio } ;
+    enum EMenuItemType { eRegular = 0, eCheckbox, eRadio, eSeparator} ;
 
    /**
     * Creates the MenuItem
     *
     */
-    NS_IMETHOD Create(nsIMenu* aParent, const nsString & aLabel, PRBool isSeparator, 
-                      EMenuItemType aItemType, nsIChangeManager* aManager,
-                      nsIDocShell* aShell, nsIContent* aNode) = 0;
-    
+    NS_IMETHOD Create(nsIMenu* aParent, const nsString & aLabel, EMenuItemType aItemType,
+                      nsIChangeManager* aManager, nsIContent* aNode) = 0;
+
    /**
     * Get the MenuItem label
     *
