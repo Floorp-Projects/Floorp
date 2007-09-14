@@ -1,40 +1,5 @@
 <?xml version="1.0"?>
-<RDF:RDF xmlns:NC="http://home.netscape.com/NC-rdf#"
-         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="chrome://browser/content/browser.xul#PersonalToolbar"
-                   currentset="personal-bookmarks" />
-  <RDF:Description RDF:about="chrome://browser/content/browser.xul#sidebar-box"
-                   sidebarcommand=""
-                   width=""
-                   src="" />
-  <RDF:Description RDF:about="chrome://browser/content/browser.xul#sidebar-title"
-                   value="" />
-  <RDF:Description RDF:about="chrome://browser/content/browser.xul#main-window"
-                   sizemode="normal"
-                   width="1138"
-                   height="883"
-                   screenX="374"
-                   screenY="83" />
-  <RDF:Description RDF:about="chrome://mozapps/content/extensions/extensions.xul">
-    <NC:persist RDF:resource="chrome://mozapps/content/extensions/extensions.xul#extensions-view"/>
-    <NC:persist RDF:resource="chrome://mozapps/content/extensions/extensions.xul#extensionsManager"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="chrome://browser/content/browser.xul#nav-bar"
-                   currentset="back-button,forward-button,reload-button,stop-button,home-button,urlbar-container,printpdf-toolbar-button,search-container,throbber-box" />
-  <RDF:Description RDF:about="chrome://mozapps/content/extensions/extensions.xul#extensionsManager"
-                   screenX="10"
-                   screenY="572"
-                   width="520"
-                   height="380"
-                   sizemode="normal" />
-  <RDF:Description RDF:about="chrome://browser/content/browser.xul">
-    <NC:persist RDF:resource="chrome://browser/content/browser.xul#main-window"/>
-    <NC:persist RDF:resource="chrome://browser/content/browser.xul#sidebar-box"/>
-    <NC:persist RDF:resource="chrome://browser/content/browser.xul#sidebar-title"/>
-    <NC:persist RDF:resource="chrome://browser/content/browser.xul#toolbar-menubar"/>
-    <NC:persist RDF:resource="chrome://browser/content/browser.xul#nav-bar"/>
-    <NC:persist RDF:resource="chrome://browser/content/browser.xul#PersonalToolbar"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="chrome://browser/content/browser.xul#toolbar-menubar"
-                   currentset="menubar-items" />
+<RDF:RDF
+     xmlns:NC="http://home.netscape.com/NC-rdf#"
+     xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 </RDF:RDF>
