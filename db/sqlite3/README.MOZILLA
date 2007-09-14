@@ -1,7 +1,8 @@
-This is sqlite 3.4.2
+This is sqlite 3.4.1
 
-See the change log for more details:
-http://www.sqlite.org/changes.html#version_3_4_2
+This version has some security stuff dealing with the upper
+bounds of data types.  See the change log for more details:
+http://www.sqlite.org/changes.html#version_3_4_1
 
 -- Shawn Wilsher <me@shawnwilsher.com> 08/2007
 
@@ -17,7 +18,7 @@ Simply copy the sqlite3.h and sqlite3.c files from the amalgamation of sqlite.
 They you need to update sqlite3file.h, which pulls out random bits of the
 internal files that we need to export. If any of these internal structures
 change, they need to be changed in sqlite3file.h as well.  This may involve
-downloading the whole source (not the amalgamation) to check.
+downloading the whole souce (not the amalgamation) to check.
 
 -- Shawn Wilsher <me@shawnwilsher.com> 06/2007
 
