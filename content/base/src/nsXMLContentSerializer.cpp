@@ -529,7 +529,9 @@ nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
     // need to select the delimiter character and escape characters using
     // character entity references, ignoring the value of aDoEscapeEntities.
     // See http://www.w3.org/TR/REC-html40/appendix/notes.html#h-B.3.2.2 for
-    // the standard on character entity references in values. 
+    // the standard on character entity references in values.  We also have to
+    // make sure to escape any '&' characters.
+    
     PRBool bIncludesSingle = PR_FALSE;
     PRBool bIncludesDouble = PR_FALSE;
     nsAString::const_iterator iCurr, iEnd;
@@ -565,18 +567,16 @@ nsXMLContentSerializer::SerializeAttr(const nsAString& aPrefix,
         (bIncludesDouble && !bIncludesSingle) ? PRUnichar('\'') : PRUnichar('"');
     AppendToString(PRUnichar('='), aStr);
     AppendToString(cDelimiter, aStr);
+    nsAutoString sValue(aValue);
+    sValue.ReplaceSubstring(NS_LITERAL_STRING("&"),
+                            NS_LITERAL_STRING("&amp;"));
     if (bIncludesDouble && bIncludesSingle) {
-      nsAutoString sValue(aValue);
-      sValue.ReplaceSubstring(NS_LITERAL_STRING("\"").get(), NS_LITERAL_STRING("&quot;").get());
-      mInAttribute = PR_TRUE;
-      AppendToString(sValue, aStr, PR_FALSE);
-      mInAttribute = PR_FALSE;
+      sValue.ReplaceSubstring(NS_LITERAL_STRING("\""),
+                              NS_LITERAL_STRING("&quot;"));
     }
-    else {
-      mInAttribute = PR_TRUE;
-      AppendToString(aValue, aStr, PR_FALSE);
-      mInAttribute = PR_FALSE;
-    }
+    mInAttribute = PR_TRUE;
+    AppendToString(sValue, aStr, PR_FALSE);
+    mInAttribute = PR_FALSE;
     AppendToString(cDelimiter, aStr);
   }
 }
