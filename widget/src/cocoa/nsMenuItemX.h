@@ -71,9 +71,8 @@ public:
   NS_DECL_NSICHANGEOBSERVER
 
   // nsIMenuItem Methods
-  NS_IMETHOD Create(nsIMenu* aParent, const nsString & aLabel, PRBool aIsSeparator,
-                    EMenuItemType aItemType, nsIChangeManager* aManager,
-                    nsIDocShell* aShell, nsIContent* aNode);
+  NS_IMETHOD Create(nsIMenu* aParent, const nsString & aLabel, EMenuItemType aItemType,
+                    nsIChangeManager* aManager, nsIContent* aNode);
   NS_IMETHOD GetLabel(nsString &aText);
   NS_IMETHOD SetShortcutChar(const nsString &aText);
   NS_IMETHOD GetShortcutChar(nsString &aText);
@@ -122,10 +121,9 @@ protected:
   nsRefPtr<nsMenuItemIconX> mIcon;
   
   PRUint8           mModifiers;
-  PRPackedBool      mIsSeparator;
   PRPackedBool      mEnabled;
   PRPackedBool      mIsChecked;
-  EMenuItemType     mMenuType;
+  EMenuItemType     mType; // regular, checkbox, radio, or separator
 };
 
 #endif // nsMenuItemX_h_

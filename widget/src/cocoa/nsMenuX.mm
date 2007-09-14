@@ -86,22 +86,6 @@ static PRBool gConstructingMenu = PR_FALSE;
 static NS_DEFINE_CID(kMenuCID,     NS_MENU_CID);
 static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 
-// Refcounted class for dummy menu items like separators
-class nsDummyMenuItemX : public nsISupports {
-public:
-    NS_DECL_ISUPPORTS
-
-    nsDummyMenuItemX()
-    {
-    }
-};
-
-NS_IMETHODIMP_(nsrefcnt) nsDummyMenuItemX::AddRef() { return ++mRefCnt; }
-NS_IMETHODIMP nsDummyMenuItemX::Release() { return --mRefCnt; }
-NS_IMPL_QUERY_INTERFACE0(nsDummyMenuItemX)
-static nsDummyMenuItemX gDummyMenuItemX;
-
-
 NS_IMPL_ISUPPORTS4(nsMenuX, nsIMenu, nsIMenuListener, nsIChangeObserver, nsISupportsWeakReference)
 
 
@@ -133,7 +117,7 @@ nsMenuX::~nsMenuX()
 
 NS_IMETHODIMP 
 nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
-                nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode)
+                nsIChangeManager* aManager, nsIContent* aNode)
 {
   mMenuContent = aNode;
 
@@ -308,17 +292,6 @@ nsresult nsMenuX::AddMenu(nsIMenu * aMenu)
 }
 
 
-NS_IMETHODIMP nsMenuX::AddSeparator()
-{
-  // We're not really appending an nsMenuItem but a placeholder needs to be
-  // here to make sure that event dispatching isn't off by one.
-  mMenuItemsArray.AppendObject(&gDummyMenuItemX);  // owning ref
-  ++mVisibleItemsCount;
-  [mMacMenu addItem:[NSMenuItem separatorItem]];
-  return NS_OK;
-}
-
-
 // Includes all items, including hidden/collapsed ones
 NS_IMETHODIMP nsMenuX::GetItemCount(PRUint32 &aCount)
 {
@@ -346,10 +319,7 @@ static PRBool MenuNodeIsVisible(nsISupports *item)
   // Find the content for this item in the menu, be it a MenuItem or a Menu
   nsCOMPtr<nsIContent> itemContent;
   nsCOMPtr<nsIMenuItem> menuItem = do_QueryInterface(item);
-  if (item == &gDummyMenuItemX) {
-    return PR_TRUE;
-  }
-  else if (menuItem) {
+  if (menuItem) {
     menuItem->GetMenuItemContent(getter_AddRefs(itemContent));
   }
   else {
@@ -596,10 +566,8 @@ nsEventStatus nsMenuX::MenuConstruct(
     if (child) {
       // depending on the type, create a menu item, separator, or submenu
       nsIAtom *tag = child->Tag();
-      if (tag == nsWidgetAtoms::menuitem)
+      if (tag == nsWidgetAtoms::menuitem || tag == nsWidgetAtoms::menuseparator)
         LoadMenuItem(child);
-      else if (tag == nsWidgetAtoms::menuseparator)
-        LoadSeparator(child);
       else if (tag == nsWidgetAtoms::menu)
         LoadSubMenu(child);
     }
@@ -707,18 +675,22 @@ void nsMenuX::LoadMenuItem(nsIContent* inMenuItemContent)
 
   // printf("menuitem %s \n", NS_LossyConvertUTF16toASCII(menuitemName).get());
 
-  static nsIContent::AttrValuesArray strings[] =
-  {&nsWidgetAtoms::checkbox, &nsWidgetAtoms::radio, nsnull};
   nsIMenuItem::EMenuItemType itemType = nsIMenuItem::eRegular;
-  switch (inMenuItemContent->FindAttrValueIn(kNameSpaceID_None, nsWidgetAtoms::type,
-                                             strings, eCaseMatters)) {
-    case 0: itemType = nsIMenuItem::eCheckbox; break;
-    case 1: itemType = nsIMenuItem::eRadio; break;
+  if (inMenuItemContent->Tag() == nsWidgetAtoms::menuseparator) {
+    itemType = nsIMenuItem::eSeparator;
+  }
+  else {
+    static nsIContent::AttrValuesArray strings[] =
+  {&nsWidgetAtoms::checkbox, &nsWidgetAtoms::radio, nsnull};
+    switch (inMenuItemContent->FindAttrValueIn(kNameSpaceID_None, nsWidgetAtoms::type,
+                                               strings, eCaseMatters)) {
+      case 0: itemType = nsIMenuItem::eCheckbox; break;
+      case 1: itemType = nsIMenuItem::eRadio; break;
+    }
   }
 
   // Create the item.
-  pnsMenuItem->Create(this, menuitemName, PR_FALSE, itemType, mManager,
-                      nsnull, inMenuItemContent);
+  pnsMenuItem->Create(this, menuitemName, itemType, mManager, inMenuItemContent);
 
   AddMenuItem(pnsMenuItem);
 
@@ -739,24 +711,13 @@ void nsMenuX::LoadSubMenu(nsIContent* inMenuContent)
   if (!pnsMenu)
     return;
 
-  pnsMenu->Create(reinterpret_cast<nsISupports*>(this), menuName, EmptyString(), mManager, nsnull, inMenuContent);
+  pnsMenu->Create(reinterpret_cast<nsISupports*>(this), menuName, EmptyString(), mManager, inMenuContent);
 
   AddMenu(pnsMenu);
 
   // This needs to happen after the nsIMenu object is inserted into
   // our item array in AddMenu()
   pnsMenu->SetupIcon();
-}
-
-
-void nsMenuX::LoadSeparator(nsIContent* inSeparatorContent) 
-{
-  // See bug 375011.
-  // Currently we don't create nsIMenuItem objects for separators so we can't
-  // track changes in their hidden/collapsed attributes. If it is hidden now it
-  // is hidden forever.
-  if (!NodeIsHiddenOrCollapsed(inSeparatorContent))
-    AddSeparator();
 }
 
 
