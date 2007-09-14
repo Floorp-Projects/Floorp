@@ -67,11 +67,10 @@ nsMenuItemX::nsMenuItemX()
   mNativeMenuItem     = nil;
   mMenuParent         = nsnull;
   mManager            = nsnull;
-  mIsSeparator        = PR_FALSE;
   mKeyEquivalent.AssignLiteral(" ");
   mEnabled            = PR_TRUE;
   mIsChecked          = PR_FALSE;
-  mMenuType           = eRegular;
+  mType               = eRegular;
 }
 
 
@@ -85,15 +84,14 @@ nsMenuItemX::~nsMenuItemX()
 }
 
 
-NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool aIsSeparator,
-                              EMenuItemType aItemType, nsIChangeManager* aManager,
-                              nsIDocShell* aShell, nsIContent* aNode)
+NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, EMenuItemType aItemType,
+                              nsIChangeManager* aManager, nsIContent* aNode)
 {
   mContent = aNode;      // addref
   mMenuParent = aParent; // weak
-  
-  mMenuType = aItemType;
-  
+
+  mType = aItemType;
+
   // register for AttributeChanged messages
   mManager = aManager;
   nsCOMPtr<nsIChangeObserver> obs = do_QueryInterface(static_cast<nsIChangeObserver*>(this));
@@ -126,11 +124,10 @@ NS_METHOD nsMenuItemX::Create(nsIMenu* aParent, const nsString & aLabel, PRBool 
   else
     mEnabled = !mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled, nsWidgetAtoms::_true, eCaseMatters);
   
-  mIsSeparator = aIsSeparator;
   mLabel = aLabel;
   
   // set up the native menu item
-  if (aIsSeparator) {
+  if (mType == nsIMenuItem::eSeparator) {
     mNativeMenuItem = [[NSMenuItem separatorItem] retain];
   }
   else {
@@ -218,7 +215,7 @@ NS_METHOD nsMenuItemX::GetChecked(PRBool *aIsEnabled)
 
 NS_METHOD nsMenuItemX::GetMenuItemType(EMenuItemType *aType)
 {
-  *aType = mMenuType;
+  *aType = mType;
   return NS_OK;
 }
 
@@ -247,7 +244,7 @@ NS_METHOD nsMenuItemX::RemoveMenuListener(nsIMenuListener * aMenuListener)
 
 NS_METHOD nsMenuItemX::IsSeparator(PRBool & aIsSep)
 {
-  aIsSep = mIsSeparator;
+  aIsSep = (mType == nsIMenuItem::eSeparator);
   return NS_OK;
 }
 
@@ -312,11 +309,11 @@ nsEventStatus nsMenuItemX::SetRebuild(PRBool aNeedsRebuild)
 
 // Executes the "cached" javaScript command.
 // Returns NS_OK if the command was executed properly, otherwise an error code.
-NS_METHOD nsMenuItemX::DoCommand()
+NS_IMETHODIMP nsMenuItemX::DoCommand()
 {
   // flip "checked" state if we're a checkbox menu, or an un-checked radio menu
-  if (mMenuType == nsIMenuItem::eCheckbox ||
-      (mMenuType == nsIMenuItem::eRadio && !mIsChecked)) {
+  if (mType == nsIMenuItem::eCheckbox ||
+      (mType == nsIMenuItem::eRadio && !mIsChecked)) {
     if (!mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::autocheck,
                                nsWidgetAtoms::_false, eCaseMatters))
     SetChecked(!mIsChecked);
@@ -327,7 +324,7 @@ NS_METHOD nsMenuItemX::DoCommand()
   nsXULCommandEvent event(PR_TRUE, NS_XUL_COMMAND, nsnull);
 
   mContent->DispatchDOMEvent(&event, nsnull, nsnull, &status);
-  return nsEventStatus_eConsumeNoDefault;
+  return NS_OK;
 }
     
 
@@ -460,7 +457,7 @@ nsMenuItemX::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIC
     if (aAttribute == nsWidgetAtoms::checked) {
       // if we're a radio menu, uncheck our sibling radio items. No need to
       // do any of this if we're just a normal check menu.
-      if (mMenuType == eRadio) {
+      if (mType == nsIMenuItem::eRadio) {
         if (mContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::checked,
                                   nsWidgetAtoms::_true, eCaseMatters))
           UncheckRadioSiblings(mContent);

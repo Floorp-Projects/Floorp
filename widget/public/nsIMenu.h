@@ -41,7 +41,6 @@
 #include "nsISupports.h"
 #include "nsStringFwd.h"
 
-class nsIDocShell;
 class nsIMenuBar;
 class nsIMenu;
 class nsIMenuItem;
@@ -68,8 +67,8 @@ class nsIMenu : public nsISupports {
     * Creates the Menu
     *
     */
-    NS_IMETHOD Create ( nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
-                          nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode ) = 0;
+    NS_IMETHOD Create(nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
+                      nsIChangeManager* aManager, nsIContent* aNode) = 0;
 
    /**
     * Get the Menu's Parent.  This addrefs.
@@ -119,13 +118,6 @@ class nsIMenu : public nsISupports {
     *
     */
     NS_IMETHOD AddItem(nsISupports* aItem) = 0;
-
-   /**
-    * Adds a separator. Do not use outside of widget menu implementations.
-    * Add and modify menu separators via DOM content.
-    *
-    */
-    NS_IMETHOD AddSeparator() = 0;
 
    /**
     * Returns the number of visible menu items
