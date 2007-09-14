@@ -493,6 +493,7 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
                                                       (char**)&xpctvar.val.p)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_PSTRING_SIZE_IS | XPT_TDP_POINTER);
+            xpctvar.SetValIsAllocated();
             break;
         case nsIDataType::VTYPE_WCHAR_STR:        
             if(NS_FAILED(variant->GetAsWString((PRUnichar**)&xpctvar.val.p)))
@@ -505,6 +506,7 @@ XPCVariant::VariantDataToJS(XPCCallContext& ccx,
                                                       (PRUnichar**)&xpctvar.val.p)))
                 return JS_FALSE;
             xpctvar.type = (uint8)(TD_PWSTRING_SIZE_IS | XPT_TDP_POINTER);
+            xpctvar.SetValIsAllocated();
             break;
         case nsIDataType::VTYPE_INTERFACE:        
         case nsIDataType::VTYPE_INTERFACE_IS:        
