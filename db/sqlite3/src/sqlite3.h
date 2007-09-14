@@ -30,7 +30,7 @@
 ** the version number) and changes its name to "sqlite3.h" as
 ** part of the build process.
 **
-** @(#) $Id: sqlite3.h,v 1.11 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** @(#) $Id: sqlite3.h,v 1.12 2007/09/14 20:46:32 dmose%mozilla.org Exp $
 */
 #ifndef _SQLITE3_H_
 #define _SQLITE3_H_
@@ -41,6 +41,13 @@
 */
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+/*
+** Add the ability to override 'extern'
+*/
+#ifndef SQLITE_EXTERN
+# define SQLITE_EXTERN extern
 #endif
 
 /*
@@ -81,8 +88,8 @@ extern "C" {
 **
 ** See also: [sqlite3_libversion()] and [sqlite3_libversion_number()].
 */
-#define SQLITE_VERSION         "3.4.1"
-#define SQLITE_VERSION_NUMBER 3004001
+#define SQLITE_VERSION         "3.4.2"
+#define SQLITE_VERSION_NUMBER 3004002
 
 /*
 ** CAPI3REF: Run-Time Library Version Numbers
@@ -100,7 +107,7 @@ extern "C" {
 ** is provided for DLL users who can only access functions and not
 ** constants within the DLL.
 */
-extern const char sqlite3_version[];
+SQLITE_EXTERN const char sqlite3_version[];
 const char *sqlite3_libversion(void);
 int sqlite3_libversion_number(void);
 
@@ -2020,7 +2027,7 @@ int sqlite3_sleep(int);
 ** it is not safe to invoke this routine after [sqlite3_open()] has
 ** been called.
 */
-extern char *sqlite3_temp_directory;
+SQLITE_EXTERN char *sqlite3_temp_directory;
 
 /*
 ** CAPI3REF:  Test To See If The Databse Is In Auto-Commit Mode
