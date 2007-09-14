@@ -233,6 +233,14 @@ sub Verify {
     # biz logic for rc 1 vs. rc > 1 is different.
 }
 
+#
+# All of the logic for CvsTag() was moved to Bootstrap::Util::CvsTag(), however
+# this shim out to that function was kept because this does some argument
+# handling and also various error-condition handling that would have to be
+# duplicated if every call-site was converted to Bootstrap::Util::CvsTag(),
+# so this version was kept to centralize the handling of that. See bug 387970.
+#
+
 sub CvsTag {
     my $this = shift;
     my %args = @_;
