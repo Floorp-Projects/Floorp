@@ -323,6 +323,17 @@ nsTextInputListener::NotifySelectionChanged(nsIDOMDocument* aDoc, nsISelection* 
   
   mSelectionWasCollapsed = collapsed;
 
+  if (!mFrame) {
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIContent> focusedContent;
+  mFrame->PresContext()->EventStateManager()->
+    GetFocusedContent(getter_AddRefs(focusedContent));
+  if (focusedContent != mFrame->GetContent()) {
+    return NS_OK;
+  }
+
   return UpdateTextInputCommands(NS_LITERAL_STRING("select"));
 }
 
