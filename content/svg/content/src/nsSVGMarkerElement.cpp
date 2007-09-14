@@ -102,21 +102,21 @@ nsSVGMarkerElement::Init()
   nsresult rv = nsSVGMarkerElementBase::Init();
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // non-attrib enum - pass in invalid enum (will never get used by nsSVGEnum)
-  mOrientType.Init(0xff, SVG_MARKER_ORIENT_AUTO);
+  // derived (non-attrib) DOM properties
 
-  // Create mapped properties:
+  // DOM property: orientType
+  mOrientType.Init(ORIENTTYPE, SVG_MARKER_ORIENT_ANGLE);
 
-  // DOM property: orient
+  // DOM property: orientAngle
   {
     nsCOMPtr<nsIDOMSVGAngle> angle;
     rv = NS_NewSVGAngle(getter_AddRefs(angle), 0.0f);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedAngle(getter_AddRefs(mOrient), angle);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::orient, mOrient);
+    rv = NS_NewSVGAnimatedAngle(getter_AddRefs(mOrientAngle), angle);
     NS_ENSURE_SUCCESS(rv,rv);
   }
+
+  // Create mapped properties:
 
   // DOM property: viewBox
   {
@@ -213,7 +213,7 @@ NS_IMETHODIMP nsSVGMarkerElement::GetOrientType(nsIDOMSVGAnimatedEnumeration * *
 /* readonly attribute nsIDOMSVGAnimatedLength orientAngle; */
 NS_IMETHODIMP nsSVGMarkerElement::GetOrientAngle(nsIDOMSVGAnimatedAngle * *aOrientAngle)
 {
-  *aOrientAngle = mOrient;
+  *aOrientAngle = mOrientAngle;
   NS_IF_ADDREF(*aOrientAngle);
   return NS_OK;
 }
@@ -221,9 +221,7 @@ NS_IMETHODIMP nsSVGMarkerElement::GetOrientAngle(nsIDOMSVGAnimatedAngle * *aOrie
 /* void setOrientToAuto (); */
 NS_IMETHODIMP nsSVGMarkerElement::SetOrientToAuto()
 {
-  nsIDOMSVGAngle *a;
-  mOrient->GetBaseVal(&a);
-  a->SetValueAsString(NS_LITERAL_STRING("auto"));
+  mOrientType.SetBaseValue(SVG_MARKER_ORIENT_AUTO, this, PR_TRUE);
   return NS_OK;
 }
 
@@ -234,10 +232,13 @@ NS_IMETHODIMP nsSVGMarkerElement::SetOrientToAngle(nsIDOMSVGAngle *angle)
     return NS_ERROR_DOM_SVG_WRONG_TYPE_ERR;
 
   nsIDOMSVGAngle *a;
-  mOrient->GetBaseVal(&a);
+  mOrientAngle->GetBaseVal(&a);
   float f;
   angle->GetValue(&f);
   a->SetValue(f);
+
+  mOrientType.SetBaseValue(SVG_MARKER_ORIENT_ANGLE, this, PR_TRUE);
+
   return NS_OK;
 }
 
@@ -276,20 +277,43 @@ nsSVGMarkerElement::IsAttributeMapped(const nsIAtom* name) const
 //----------------------------------------------------------------------
 // nsSVGElement methods
 
-nsresult
-nsSVGMarkerElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                 const nsAString* aValue, PRBool aNotify)
+PRBool
+nsSVGMarkerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                            nsAString &aResult) const
 {
-  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::orient) {
-    if (aValue->EqualsLiteral("auto")) {
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::orient) {
+    if (mOrientType.GetBaseValue() == SVG_MARKER_ORIENT_AUTO) {
+      aResult.AssignLiteral("auto");
+    } else {
+      nsCOMPtr<nsIDOMSVGAngle> a;
+      mOrientAngle->GetBaseVal(getter_AddRefs(a));
+      nsCOMPtr<nsISVGValue> value = do_QueryInterface(a);
+      value->GetValueString(aResult);
+    }
+    return PR_TRUE;
+  }
+  return nsSVGMarkerElementBase::GetAttr(aNameSpaceID, aName, aResult);
+}
+
+nsresult
+nsSVGMarkerElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                            nsIAtom* aPrefix, const nsAString& aValue,
+                            PRBool aNotify)
+{
+  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::orient) {
+    if (aValue.EqualsLiteral("auto")) {
       mOrientType.SetBaseValue(SVG_MARKER_ORIENT_AUTO, this, PR_FALSE);
     } else {
       mOrientType.SetBaseValue(SVG_MARKER_ORIENT_ANGLE, this, PR_FALSE);
+      nsCOMPtr<nsIDOMSVGAngle> a;
+      mOrientAngle->GetBaseVal(getter_AddRefs(a));
+      nsCOMPtr<nsISVGValue> value = do_QueryInterface(a);
+      value->SetValueString(aValue);
     }
   }
 
-  return nsSVGMarkerElementBase::AfterSetAttr(aNamespaceID, aName,
-                                              aValue, aNotify);
+  return nsSVGMarkerElementBase::SetAttr(aNameSpaceID, aName,
+                                         aPrefix, aValue, aNotify);
 }
 
 nsresult
@@ -305,9 +329,9 @@ nsSVGMarkerElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       vb->SetWidth(mLengthAttributes[MARKERWIDTH].GetAnimValue(mCoordCtx));
       vb->SetHeight(mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx));
     } else if (aName == nsGkAtoms::orient) {
-      mOrientType.SetBaseValue(SVG_MARKER_ORIENT_AUTO, this, PR_FALSE);
+      mOrientType.SetBaseValue(SVG_MARKER_ORIENT_ANGLE, this, PR_FALSE);
       nsIDOMSVGAngle *angle;
-      mOrient->GetBaseVal(&angle);
+      mOrientAngle->GetBaseVal(&angle);
       angle->NewValueSpecifiedUnits(nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED,
                                     0.0f);
     }
@@ -335,6 +359,31 @@ nsSVGMarkerElement::DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr)
     vb->SetWidth(mLengthAttributes[MARKERWIDTH].GetAnimValue(mCoordCtx));
     vb->SetHeight(mLengthAttributes[MARKERHEIGHT].GetAnimValue(mCoordCtx));
   }
+}
+
+void
+nsSVGMarkerElement::DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  if (!aDoSetAttr)
+    return;
+
+  if (aAttrEnum == ORIENTTYPE) {
+    if (mOrientType.GetBaseValue() == SVG_MARKER_ORIENT_AUTO) {
+      nsSVGMarkerElementBase::SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
+                                      NS_LITERAL_STRING("auto"), PR_TRUE);
+    } else {
+      nsAutoString value;
+      GetAttr(kNameSpaceID_None, nsGkAtoms::orient, value);
+      if (value.EqualsLiteral("auto")) {
+        // type is being set to non-auto - remove an "auto" valued
+        // attribute if it's set, otherwise leave the angle specified.
+        UnsetAttr(kNameSpaceID_None, nsGkAtoms::orient, PR_TRUE);
+      }
+    }
+    return;
+  }
+
+  nsSVGMarkerElementBase::DidChangeEnum(aAttrEnum, aDoSetAttr);
 }
 
 void 
@@ -378,12 +427,11 @@ nsSVGMarkerElement::GetMarkerTransform(float aStrokeWidth,
       SVG_MARKERUNITS_STROKEWIDTH)
     scale = aStrokeWidth;
 
-  nsCOMPtr<nsIDOMSVGAngle> a;
-  mOrient->GetAnimVal(getter_AddRefs(a));
-  nsAutoString value;
-  a->GetValueAsString(value);
-  if (!value.EqualsLiteral("auto"))
-     a->GetValue(&aAngle);
+  if (mOrientType.GetBaseValue() != SVG_MARKER_ORIENT_AUTO) {
+    nsCOMPtr<nsIDOMSVGAngle> a;
+    mOrientAngle->GetAnimVal(getter_AddRefs(a));
+    a->GetValue(&aAngle);
+  }
 
   nsCOMPtr<nsIDOMSVGMatrix> matrix;
   NS_NewSVGMatrix(getter_AddRefs(matrix),

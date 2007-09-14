@@ -76,13 +76,17 @@ public:
   // nsIContent interface
   NS_IMETHODIMP_(PRBool) IsAttributeMapped(const nsIAtom* name) const;
 
-  virtual nsresult AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                const nsAString* aValue, PRBool aNotify);
+  virtual PRBool GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                         nsAString& aResult) const;
+  virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                           nsIAtom* aPrefix, const nsAString& aValue,
+                           PRBool aNotify);
   virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify);
 
   // nsSVGElement specializations:
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
   // public helpers
   nsresult GetMarkerTransform(float aStrokeWidth,
@@ -103,17 +107,16 @@ protected:
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
-  enum { MARKERUNITS };
+  enum { MARKERUNITS, ORIENTTYPE = 0xFF };
   nsSVGEnum mEnumAttributes[1];
   static nsSVGEnumMapping sUnitsMap[];
   static EnumInfo sEnumInfo[1];
 
-  // this needs to be handled seperately because its a derived enum
-  nsSVGEnum mOrientType;
+  // derived properties (from 'orient') handled separately
+  nsSVGEnum                              mOrientType;
+  nsCOMPtr<nsIDOMSVGAnimatedAngle>       mOrientAngle;
 
   nsSVGSVGElement                       *mCoordCtx;
-  nsCOMPtr<nsIDOMSVGAnimatedAngle>       mOrient;
-
   nsCOMPtr<nsIDOMSVGAnimatedRect>        mViewBox;
   nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> mPreserveAspectRatio;
   nsCOMPtr<nsIDOMSVGMatrix>         mViewBoxToViewportTransform;
