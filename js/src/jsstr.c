@@ -2365,14 +2365,13 @@ js_InitRuntimeStringState(JSContext *cx)
 #define UNIT_STRING_SPACE_RT(rt) UNIT_STRING_SPACE((rt)->unitStrings)
 
 #define IN_UNIT_STRING_SPACE(sp,cp)                                           \
-    ((cp) - UNIT_STRING_SPACE(sp) < 2 * UNIT_STRING_LIMIT)
+    ((size_t)((cp) - UNIT_STRING_SPACE(sp)) < 2 * UNIT_STRING_LIMIT)
 #define IN_UNIT_STRING_SPACE_RT(rt,cp)                                        \
     IN_UNIT_STRING_SPACE((rt)->unitStrings, cp)
 
 JSString *
 js_GetUnitString(JSContext *cx, jschar c)
 {
-#if 1
     JSRuntime *rt;
     JSString **sp, *str;
     jschar *cp, i;
@@ -2404,38 +2403,20 @@ js_GetUnitString(JSContext *cx, jschar c)
     if (!rt->unitStrings[c]) {
         cp = UNIT_STRING_SPACE_RT(rt);
         str = js_NewString(cx, cp + 2 * c, 1);
-        if (!str || !js_LockGCThing(cx, str))
+        if (!str)
             return NULL;
         JS_LOCK_GC(rt);
-        if (!rt->unitStrings[c]) {
+        if (!rt->unitStrings[c])
             rt->unitStrings[c] = str;
-            JS_UNLOCK_GC(rt);
-        } else {
-            JS_UNLOCK_GC(rt);
-            js_UnlockGCThingRT(rt, str);
-        }
+        JS_UNLOCK_GC(rt);
     }
     return rt->unitStrings[c];
-#else
-    return js_NewStringCopyN(cx, &c, 1);
-#endif
 }
 
 void
 js_FinishRuntimeStringState(JSContext *cx)
 {
-    JSRuntime *rt = cx->runtime;
-
-    rt->emptyString = NULL;
-
-    if (rt->unitStrings) {
-        jschar c;
-
-        for (c = 0; c < UNIT_STRING_LIMIT; c++) {
-            if (rt->unitStrings[c])
-                js_UnlockGCThingRT(rt, rt->unitStrings[c]);
-        }
-    }
+    cx->runtime->emptyString = NULL;
 }
 
 void
@@ -2665,8 +2646,14 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
     } else {
         /* A stillborn string has null chars, so is not valid. */
         valid = (str->u.chars != NULL);
-        if (valid && !IN_UNIT_STRING_SPACE_RT(rt, str->u.chars))
-            free(str->u.chars);
+        if (valid) {
+            if (IN_UNIT_STRING_SPACE_RT(rt, str->u.chars)) {
+                JS_ASSERT(rt->unitStrings[*str->u.chars] == str);
+                rt->unitStrings[*str->u.chars] = NULL;
+            } else {
+                free(str->u.chars);
+            }
+        }
     }
     if (valid)
         js_PurgeDeflatedStringCache(rt, str);
