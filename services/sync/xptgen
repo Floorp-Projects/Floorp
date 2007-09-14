@@ -1,2 +1,12 @@
 #!/bin/bash
-../../mozilla-trunk/obj/firefox/dist/bin/xpidl -m typelib -I ../../mozilla-trunk/mozilla/xpcom/base/ -o nsIBookmarksSyncService nsIBookmarksSyncService.idl
+
+if [[ ! -d $MOZOBJDIR ]]; then
+    echo "MOZOBJDIR environment variable must point to a Mozilla build obj tree (with xptgen)"
+    exit 1
+fi
+if [[ ! -d $MOZSRCDIR ]]; then
+    echo "MOZSRCDIR environment variable must point to a Mozilla source tree"
+    exit 1
+fi
+
+$MOZOBJDIR/dist/bin/xpidl -m typelib -I $MOZSRCDIR/xpcom/base/ -o nsIBookmarksSyncService nsIBookmarksSyncService.idl
