@@ -65,6 +65,12 @@ extern BOOL                gSomeMenuBarPainted;
 NS_IMPL_ISUPPORTS_INHERITED1(nsCocoaWindow, Inherited, nsPIWidgetCocoa)
 
 
+// A note on testing to see if your object is a sheet...
+// |mWindowType == eWindowType_sheet| is true if your gecko nsIWidget is a sheet
+// widget - whether or not the sheet is showing. |[mWindow isSheet]| will return
+// true *only when the sheet is actually showing*. Choose your test wisely.
+
+
 // returns the height of the title bar for a given cocoa NSWindow
 static float TitleBarHeightForWindow(NSWindow* aWindow)
 {
@@ -752,21 +758,10 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
     // width is easy, no adjusting necessary
     newFrame.size.width = aWidth;
 
-    // Adjusting the height is harder.
-    // Note that [mWindow isSheet] is not the same as checking for
-    // |mWindowType == eWindowType_sheet|. If this is a sheet object, the latter
-    // will always be true. The former is true only when the sheet is being shown.
-    // Here we need to know if the sheet is actually being shown because if it is,
-    // the content view and the window's frame are equal, despite the fact that
-    // the native window object has the title bar flag set. If the window is not
-    // being shown as a sheet the content area and window frame differ.
-    float newHeight = (float)aHeight;
-    if (mWindowType != eWindowType_popup && ![mWindow isSheet])
-      newHeight += TitleBarHeightForWindow(mWindow); // add height of title bar
-    // Now we need to adjust for the fact that gecko wants the top of the window
+    // We need to adjust for the fact that gecko wants the top of the window
     // to remain in the same place.
-    newFrame.origin.y += newFrame.size.height - newHeight;
-    newFrame.size.height = newHeight;
+    newFrame.origin.y += newFrame.size.height - aHeight;
+    newFrame.size.height = aHeight;
 
     StartResizing();
     [mWindow setFrame:newFrame display:NO];
@@ -785,16 +780,13 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
 }
 
 
-// We return the origin for the entire window (title bar and all) but
-// the size of the content area. I have no idea why it was originally done
-// this way, but it matches Carbon and makes things work nicely.
 NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(nsRect &aRect)
 {
   nsRect windowFrame = cocoaRectToGeckoRect([mWindow frame]);
   aRect.x = windowFrame.x;
   aRect.y = windowFrame.y;
-  aRect.width = mBounds.width;
-  aRect.height = mBounds.height;
+  aRect.width = windowFrame.width;
+  aRect.height = windowFrame.height;
   // printf("GetScreenBounds: output: %d,%d,%d,%d\n", aRect.x, aRect.y, aRect.width, aRect.height);
   return NS_OK;
 }
