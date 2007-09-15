@@ -609,6 +609,13 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                       ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL(wp->setter),
                                         1, vp, vp)
                       : wp->setter(cx, OBJ_THIS_OBJECT(cx, obj), userid, vp));
+
+                /* Evil code can cause us to have an arguments object. */
+                if (frame.callobj)
+                    ok &= js_PutCallObject(cx, &frame);
+                if (frame.argsobj)
+                    ok &= js_PutArgsObject(cx, &frame);
+
                 cx->fp = frame.down;
                 if (argv != smallv)
                     JS_free(cx, argv);
