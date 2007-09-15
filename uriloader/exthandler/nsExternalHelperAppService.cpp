@@ -1979,6 +1979,9 @@ nsresult nsExternalAppHandler::OpenWithApplication()
   // if a stop request was already issued then proceed with launching the application.
   if (mStopRequestIssued)
   {
+    // make the tmp file readonly so users won't edit it and lose the changes
+    mFinalFileDestination->SetPermissions(0400);
+
     rv = mMimeInfo->LaunchWithFile(mFinalFileDestination);        
     if (NS_FAILED(rv))
     {
