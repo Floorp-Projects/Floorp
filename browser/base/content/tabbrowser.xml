@@ -2585,26 +2585,38 @@
   <binding id="tabbrowser-tabs"
            extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
-      <xul:arrowscrollbox anonid="arrowscrollbox" class="tabbrowser-arrowscrollbox" flex="1"
-                          xbl:inherits="smoothscroll" orient="horizontal" style="min-width: 1px;">
-        <children includes="tab"/>
-      </xul:arrowscrollbox>
-      <xul:stack align="center" pack="end" class="tabs-alltabs-stack">
-        <xul:hbox flex="1" class="tabs-alltabs-box" anonid="alltabs-box"/>
-        <xul:hbox flex="1" class="tabs-alltabs-box-animate" 
-                  anonid="alltabs-box-animate"/>
-        <xul:toolbarbutton class="tabs-alltabs-button" type="menu"
-                           anonid="alltabs-button"
-                           tooltipstring="&listAllTabs.label;">
-          <xul:menupopup class="tabs-alltabs-popup"
-                         anonid="alltabs-popup" 
-                         position="after_end"/>
-        </xul:toolbarbutton>
+      <xul:stack flex="1" class="tabs-stack">
+        <xul:vbox>
+          <xul:spacer flex="1"/>
+          <xul:hbox class="tabs-bottom" align="center"/>
+        </xul:vbox>
+        <xul:vbox>
+          <xul:hbox>
+            <xul:stack>
+              <xul:spacer class="tabs-left"/>
+            </xul:stack>
+            <xul:arrowscrollbox anonid="arrowscrollbox" orient="horizontal" flex="1"
+                                style="min-width: 1px;" chromedir="&locale.dir;"
+                                class="tabbrowser-arrowscrollbox">
+              <children/>
+            </xul:arrowscrollbox>
+            <xul:stack align="center" pack="end" chromedir="&locale.dir;">
+              <xul:hbox flex="1" class="tabs-alltabs-box" anonid="alltabs-box"/>
+              <xul:hbox flex="1" class="tabs-alltabs-box-animate" anonid="alltabs-box-animate"/>
+              <xul:toolbarbutton class="tabs-alltabs-button" type="menu" anonid="alltabs-button"
+                                 tooltipstring="&listAllTabs.label;">
+                <xul:menupopup class="tabs-alltabs-popup" anonid="alltabs-popup"
+                               position="after_end"/>
+              </xul:toolbarbutton>
+            </xul:stack>
+            <xul:hbox anonid="tabstrip-closebutton" class="tabs-closebutton-box"
+                      align="center" pack="end" chromedir="&locale.dir;">
+              <xul:toolbarbutton class="close-button tabs-closebutton"/>
+            </xul:hbox>
+          </xul:hbox>
+          <xul:spacer class="tabs-bottom-spacer"/>
+        </xul:vbox>
       </xul:stack>
-      <xul:hbox anonid="tabstrip-closebutton" class="tabs-closebutton-box"
-                align="center" pack="end" chromedir="&locale.dir;">
-        <xul:toolbarbutton class="close-button tabs-closebutton"/>
-      </xul:hbox>
     </content>
     <implementation implements="nsITimerCallback, nsIDOMEventListener">
       <constructor>
@@ -3168,11 +3180,16 @@
            extends="chrome://global/content/bindings/tabbox.xml#tab">
     <content chromedir="&locale.dir;"
              closetabtext="&closeTab.label;">
-      <xul:hbox class="tab-middle box-inherit" xbl:inherits="align,dir,pack,orient,selected" flex="1">
-        <xul:image class="tab-icon" xbl:inherits="validate,src=image"/>
-        <xul:label class="tab-text" xbl:inherits="value=label,accesskey,crop,disabled" flex="1"/>
+      <xul:hbox class="tab-image-left" xbl:inherits="selected"/>
+      <xul:hbox flex="1" class="tab-image-middle" align="center" xbl:inherits="selected">
+        <xul:stack class="tab-icon">
+          <xul:image xbl:inherits="validate,src=image" class="tab-icon-image"/>
+          <xul:image class="tab-extra-status"/>
+        </xul:stack>
+        <xul:label flex="1" xbl:inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
       </xul:hbox>
       <xul:toolbarbutton anonid="close-button" tabindex="-1" class="tab-close-button"/>
+      <xul:hbox class="tab-image-right" xbl:inherits="selected"/>
     </content>
 
     <implementation>

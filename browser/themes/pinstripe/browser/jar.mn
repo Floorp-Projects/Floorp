@@ -73,7 +73,6 @@ classic.jar:
   skin/classic/browser/tabbrowser/tab-arrow-end.png                      (tabbrowser/tab-arrow-end.png)
   skin/classic/browser/tabbrowser/tab-arrow-end-bkgnd.png                (tabbrowser/tab-arrow-end-bkgnd.png)
   skin/classic/browser/tabbrowser/tab-arrow-end-bkgnd-animate.png        (tabbrowser/tab-arrow-end-bkgnd-animate.png)
-  skin/classic/browser/tabbrowser/tabbrowserBindings.xml                 (tabbrowser/tabbrowserBindings.xml)
   skin/classic/browser/tabbrowser/tabbrowser-tabs-bkgnd.png              (tabbrowser/tabbrowser-tabs-bkgnd.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png                   (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabbrowser/tab-left.png                           (tabbrowser/tab-left.png)

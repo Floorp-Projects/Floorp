@@ -1267,7 +1267,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tabbrowser-tab {
-  -moz-binding: url("chrome://browser/skin/tabbrowser/tabbrowserBindings.xml#tabbrowser-tab") !important;
   -moz-appearance: none;
   color: #383838;
   -moz-box-pack: center;
@@ -1376,7 +1375,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 }
 
 .tabbrowser-tabs {
-  -moz-binding: url("chrome://browser/skin/tabbrowser/tabbrowserBindings.xml#tabbrowser-tabs");
   border: none;
   padding: 0;
   margin: 0;
