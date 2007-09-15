@@ -42,7 +42,6 @@
 
 /* High level class and public functions implementation. */
 
-#include <io.h>
 #include "xpcprivate.h"
 #include "XPCNativeWrapper.h"
 #include "nsBaseHashtable.h"
@@ -1965,29 +1964,25 @@ nsXPConnect::DebugDumpObject(nsISupports *p, PRInt16 depth)
     return NS_OK;
 }
 
-/* void debugDumpJSStack (in fd filedesc, in PRBool showArgs, in PRBool showLocals, in PRBool showThisProps); */
+/* void debugDumpJSStack (in PRBool showArgs, in PRBool showLocals, in PRBool showThisProps); */
 NS_IMETHODIMP
-nsXPConnect::DebugDumpJSStack(int filedesc,
-                              PRBool showArgs,
+nsXPConnect::DebugDumpJSStack(PRBool showArgs,
                               PRBool showLocals,
                               PRBool showThisProps)
 {
 #ifdef DEBUG
-    static const char kGetServiceFailed[] = "failed to get nsIThreadJSContextStack service!\n";
-    static const char kPeekFailed[] = "failed to peek into nsIThreadJSContextStack service!\n";
-    static const char kNoContext[] = "there is no JSContext on the nsIThreadJSContextStack!\n";
     JSContext* cx;
     nsresult rv;
     nsCOMPtr<nsIThreadJSContextStack> stack = 
              do_GetService(XPC_CONTEXT_STACK_CONTRACTID, &rv);
     if(NS_FAILED(rv) || !stack)
-        _write(filedesc, kGetServiceFailed, sizeof(kGetServiceFailed) - 1);
+        printf("failed to get nsIThreadJSContextStack service!\n");
     else if(NS_FAILED(stack->Peek(&cx)))
-        _write(filedesc, kPeekFailed, sizeof(kPeekFailed) - 1);
+        printf("failed to peek into nsIThreadJSContextStack service!\n");
     else if(!cx)
-        _write(filedesc, kNoContext, sizeof(kNoContext) - 1);
+        printf("there is no JSContext on the nsIThreadJSContextStack!\n");
     else
-        xpc_DumpJSStack(filedesc, cx, showArgs, showLocals, showThisProps);
+        xpc_DumpJSStack(cx, showArgs, showLocals, showThisProps);
 #endif
     return NS_OK;
 }
@@ -2110,7 +2105,7 @@ void DumpJSStack()
     nsresult rv;
     nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
     if(NS_SUCCEEDED(rv) && xpc)
-        xpc->DebugDumpJSStack(1/*stdout*/, PR_TRUE, PR_TRUE, PR_FALSE);
+        xpc->DebugDumpJSStack(PR_TRUE, PR_TRUE, PR_FALSE);
     else
         printf("failed to get XPConnect service!\n");
 }
