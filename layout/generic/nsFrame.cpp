@@ -5184,7 +5184,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
                "Computed overflow area must contain frame bounds");
 
   const nsStyleDisplay *disp = GetStyleDisplay();
-  if (IsThemed(disp)) {
+  if (!IsBoxWrapped() && IsThemed(disp)) {
     nsRect r;
     nsPresContext *presContext = PresContext();
     if (presContext->GetTheme()->
