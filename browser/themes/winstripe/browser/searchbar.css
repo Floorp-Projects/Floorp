@@ -1,10 +1,12 @@
-/* *** winstripe *** */
-
 %ifdef MOZ_WIDGET_GTK2
 #searchbar {
   -moz-margin-start: 3px;
 }
 %endif
+
+.searchbar-box {
+  -moz-padding-end: 5px;
+}
 
 .searchbar-textbox {
   min-height: 22px;
@@ -133,117 +135,14 @@ toolbar[mode="text"] .searchbar-box {
 
 .search-go-button {
   list-style-image: url("chrome://browser/skin/Search-glass.png");
-  border: 0px !important;
+  -moz-image-region: rect(0px 25px 22px 0px);
+  border: 0px;
   padding: 0px;
   -moz-appearance: none;
 }
 
 .search-go-button[chromedir="rtl"] {
   list-style-image: url("chrome://browser/skin/Search-glass-rtl.png");
-}
-
-.search-go-button-stack {
-  padding: 2px 0px 2px 0px;
-  -moz-padding-end: 5px;
-}
-
-toolbar[mode="text"] .search-go-button {
-  -moz-margin-start: 5px;
-  padding: 3px;
-  -moz-appearance: toolbarbutton;
-}
-
-toolbar[mode="text"] .search-go-button-stack {
-  padding: 0px;
-}
-
-toolbar[mode="text"] .search-go-button,
-toolbar[mode="text"] .search-go-button-stack .search-go-button-bkgnd {
-  background-image: none;
-  list-style-image: none;
-  width: auto;
-}
-
-.search-go-button-top {
-  list-style-image: url("chrome://browser/skin/Search-bkgnd.png");
-  -moz-image-region: rect(0px, 25px, 10px, 0px);
-  height: 10px;
-}
-
-/* GTK does not stretch image regions properly, so use background
-   images instead.  See bugs 351764 and 254659. */
-.search-go-button-mid-top {
-  background-image: url("chrome://browser/skin/Search-mid-top.png");
-}
-
-.search-go-button-mid-bottom {
-  background-image: url("chrome://browser/skin/Search-mid-bottom.png");
-}
-
-.search-go-button-bottom {
-  list-style-image: url("chrome://browser/skin/Search-bkgnd.png");
-  -moz-image-region: rect(12px, 25px, 22px, 0px);
-  height: 10px;
-}
-
-.search-go-button-top[chromedir="rtl"],
-.search-go-button-bottom[chromedir="rtl"] {
-  list-style-image: url("chrome://browser/skin/Search-bkgnd-rtl.png");
-}
-
-.search-go-button-mid-top[chromedir="rtl"] {
-  background-image: url("chrome://browser/skin/Search-mid-top-rtl.png");
-}
-
-.search-go-button-mid-bottom[chromedir="rtl"] {
-  background-image: url("chrome://browser/skin/Search-mid-bottom-rtl.png");
-}
-
-.search-go-button-stack:hover .search-go-button-top {
-  -moz-image-region: rect(0px, 50px, 10px, 25px);
-}
-
-.search-go-button-stack:hover .search-go-button-mid-top,
-.search-go-button-stack:hover .search-go-button-mid-bottom  {
-  background-position: -25px 0px;
-}
-
-.search-go-button-stack:hover .search-go-button-bottom {
-  -moz-image-region: rect(12px, 50px, 22px, 25px);
-}
-
-
-/* Disabled images are not used. */
-.search-go-button-stack[disabled="true"] .search-go-button-top {
-  -moz-image-region: rect(0px, 75px, 10px, 50px);
-}
-
-.search-go-button-stack[disabled="true"] .search-go-button-mid-top,
-.search-go-button-stack[disabled="true"] .search-go-button-mid-bottom {
-  background-position: -50px 0px;
-}
-
-.search-go-button-stack[disabled="true"] .search-go-button-bottom {
-  -moz-image-region: rect(12px, 75px, 22px, 50px);
-}
-
-
-.search-go-button-stack:hover:active .search-go-button-top {
-  -moz-image-region: rect(0px, 100px, 10px, 75px);
-}
-
-.search-go-button-stack:hover:active .search-go-button-mid-top,
-.search-go-button-stack:hover:active .search-go-button-mid-bottom {
-  background-position: -75px 0px;
-}
-
-.search-go-button-stack:hover:active .search-go-button-bottom {
-  -moz-image-region: rect(12px, 100px, 22px, 75px);
-}
-
-
-.search-go-button {
-  -moz-image-region: rect(0px 25px 22px 0px);
 }
 
 .search-go-button:hover {
@@ -258,8 +157,24 @@ toolbar[mode="text"] .search-go-button-stack .search-go-button-bkgnd {
   -moz-image-region: rect(0px, 100px, 22px, 75px);
 }
 
+toolbar[mode="text"] .search-go-button {
+  -moz-margin-start: 5px;
+  padding: 3px;
+  -moz-appearance: toolbarbutton;
+}
+
+toolbar[mode="text"] .search-go-button-stack {
+  padding: 0px;
+}
+
+toolbar[mode="text"] .search-go-button {
+  background-image: none;
+  list-style-image: none;
+  width: auto;
+}
+
 .search-go-button > .toolbarbutton-icon {
-  margin: 0px !important;
+  margin: 0px;
 }
 
 .searchbar-engine-menuitem[selected="true"] > .menu-iconic-text {
