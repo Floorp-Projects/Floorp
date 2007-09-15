@@ -1001,6 +1001,40 @@ statusbarpanel#statusbar-display {
   border-top: 1px solid GrayText;
 }
 
+/* ::::: endcaps ::::: */
+
+.endcap {
+  padding: 2px 0px 2px 0px;
+}
+
+.endcap-box {
+  -moz-border-top-colors: #96969D;
+  -moz-border-right-colors: #96969D;
+  -moz-border-bottom-colors: #96969D;
+  -moz-border-radius: 0 4px 4px 0;
+  border: 1px solid;
+  border-left: none;
+  background-image: url("chrome://browser/skin/endcap-bkgnd.png");
+  background-repeat: repeat-x;
+  background-position: 50% 50%;
+}
+
+toolbar:not([mode="text"]) .endcap:hover > .endcap-box {
+  background-image: url("chrome://browser/skin/endcap-bkgnd-hover.png");
+}
+
+.endcap-box[chromedir="rtl"] {
+  -moz-border-radius: 4px 0 0 4px;
+  -moz-border-left-colors: #96969D;
+  border-left: 1px solid;
+  border-right: none;
+}
+
+toolbar[mode="text"] .endcap-box {
+  border: none;
+  background-image: none;
+}
+
 /* ::::: go button ::::: */
 
 /* In text icon mode, the Go button scales independently of the location bar,
@@ -1014,31 +1048,49 @@ toolbar[mode="text"] #urlbar-button-box {
   -moz-box-align: center;
 }
 
-toolbar[mode="text"] #go-button {
-  -moz-margin-start: 5px;
+#go-button {
+  -moz-appearance: none;
+  list-style-image: url("chrome://browser/skin/Go-arrow.png");
+  -moz-image-region: rect(0px 25px 22px 0px);
+  border: none;
+  padding: 0;
 }
 
-toolbar[mode="text"] #go-button,
-toolbar[mode="text"] #go-button-stack .go-button-background {
-  list-style-image: none;
-  background-image: none;
+#go-button[chromedir="rtl"] {
+  list-style-image: url("chrome://browser/skin/Go-arrow-rtl.png");
+}
+
+toolbar[mode="text"] #go-button {
+  -moz-appearance: toolbarbutton;
+  -moz-margin-start: 5px;
+  padding: 3px;
 }
 
 toolbar[mode="text"] #go-button-stack {
   padding: 0;
 }
 
-#go-button-stack {
-  padding: 2px 0px 2px 0px;
+#go-button > .toolbarbutton-icon {
+  margin: 0;
+}
+
+#go-button:hover {
+  -moz-image-region: rect(0px 50px 22px 25px);
+}
+
+#go-button:hover:active {
+  -moz-image-region: rect(0px 100px 22px 75px);
+}
+
+#go-button[disabled="true"] {
+  -moz-image-region: rect(0px 75px 22px 50px);
 }
 
 toolbar:not([mode="text"]) #go-button,
-#palette-box #go-button {
-  -moz-appearance: none;
-  list-style-image: url("chrome://browser/skin/Go-arrow.png");
-  -moz-image-region: rect(0px 25px 22px 0px);
-  border: none;
-  padding: 0;
+toolbar:not([mode="text"]) .search-go-button,
+toolbarpaletteitem:not([place="toolbar"]) #go-button,
+toolbarpaletteitem:not([place="toolbar"]) .search-go-button {
+  -moz-binding: url(chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image);
 }
 
 /* star button */
@@ -1055,128 +1107,11 @@ toolbar:not([mode="text"]) #star-button[starred="true"],
   list-style-image: url("chrome://browser/skin/places/pageStarred.png");
 }
 
-#go-button[chromedir="rtl"] {
-  list-style-image: url("chrome://browser/skin/Go-arrow-rtl.png");
-}
-
-#go-button-top {
-  list-style-image: url("chrome://browser/skin/Go-bkgnd.png");
-  -moz-image-region: rect(0px, 25px, 10px, 0px);
-  height: 10px;
-}
-
-/* GTK does not stretch image regions properly, so use background
-   images instead.  See bugs 351764 and 254659. */
-#go-button-mid-top {
-  background-image: url("chrome://browser/skin/Go-mid-top.png");
-}
-
-#go-button-mid-bottom {
-  background-image: url("chrome://browser/skin/Go-mid-bottom.png");
-}
-
-#go-button-bottom {
-  list-style-image: url("chrome://browser/skin/Go-bkgnd.png");
-  -moz-image-region: rect(12px, 25px, 22px, 0px);
-  height: 10px;
-}
-
-#go-button-top[chromedir="rtl"],
-#go-button-bottom[chromedir="rtl"] {
-  list-style-image: url("chrome://browser/skin/Go-bkgnd-rtl.png");
-}
-
-#go-button-mid-top[chromedir="rtl"] {
-  background-image: url("chrome://browser/skin/Go-mid-top-rtl.png");
-}
-
-#go-button-mid-bottom[chromedir="rtl"] {
-  background-image: url("chrome://browser/skin/Go-mid-bottom-rtl.png");
-}
-
-#go-button-stack:hover #go-button-top {
-  -moz-image-region: rect(0px, 50px, 10px, 25px);
-}
-
-#go-button-stack:hover #go-button-mid-top,
-#go-button-stack:hover #go-button-mid-bottom {
-  background-position: -25px 0px;
-}
-
-#go-button-stack:hover #go-button-bottom {
-  -moz-image-region: rect(12px, 50px, 22px, 25px);
-}
-
-/* Disabled images are not used. */
-#go-button-stack[disabled="true"] #go-button-top {
-  -moz-image-region: rect(0px, 75px, 10px, 50px) !important;
-}
-
-#go-button-stack[disabled="true"] #go-button-mid-top,
-#go-button-stack[disabled="true"] #go-button-mid-bottom {
-  background-position: -50px 0px;
-}
-
-#go-button-stack[disabled="true"] #go-button-bottom {
-  -moz-image-region: rect(12px, 75px, 22px, 50px) !important;
-}
-
-
-#go-button-stack:hover:active #go-button-top {
-  -moz-image-region: rect(0px, 100px, 10px, 75px);
-}
-
-#go-button-stack:hover:active #go-button-mid-top,
-#go-button-stack:hover:active #go-button-mid-bottom {
-  background-position: -75px;
-}
-
-#go-button-stack:hover:active #go-button-bottom {
-  -moz-image-region: rect(12px, 100px, 22px, 75px);
-}
-
-
-toolbar[mode="text"] #go-button-top,
-toolbar[mode="text"] #go-button-mid-top,
-toolbar[mode="text"] #go-button-mid-bottom,
-toolbar[mode="text"] #go-button-bottom {
-  display: none;
-}
-
-toolbar[mode="text"] #go-button > .toolbarbutton-text {
-  display: -moz-box !important;
-  -moz-margin-start: 4px !important;
-}
-
-/* Not used. */
-#go-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(0px 50px 22px 25px);
-}
-
-#go-button[disabled="true"] {
-  -moz-image-region: rect(0px 75px 22px 50px);
-}
-
-#go-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(0px 100px 22px 75px);
-}
-
-#go-button > .toolbarbutton-icon {
-  margin: 0;
-}
-
-toolbar:not([mode="text"]) #go-button,
-toolbar:not([mode="text"]) .search-go-button,
-toolbarpaletteitem:not([place="toolbar"]) #go-button,
-toolbarpaletteitem:not([place="toolbar"]) .search-go-button {
-  -moz-binding: url(chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image);
-}
+/* ::::: content area ::::: */
 
 #sidebar {
   background-color: Window;
 }
-
-/* ::::: content area ::::: */
 
 #status-bar {
   border-top: none;
