@@ -1173,7 +1173,8 @@ fun_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                  * root until then to protect pval in case it is figuratively
                  * up in the air, with no strong refs protecting it.
                  */
-                cx->weakRoots.newborn[GCX_OBJECT] = JSVAL_TO_GCTHING(pval);
+                cx->weakRoots.newborn[GCX_OBJECT] =
+                    (JSGCThing *)JSVAL_TO_GCTHING(pval);
                 parentProto = JSVAL_TO_OBJECT(pval);
             }
         }
