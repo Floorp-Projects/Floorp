@@ -352,7 +352,13 @@ nsresult nsPrefService::UseUserPrefFile()
   if (NS_SUCCEEDED(rv) && aFile) {
     rv = aFile->AppendNative(NS_LITERAL_CSTRING("user.js"));
     if (NS_SUCCEEDED(rv)) {
-      rv = openPrefFile(aFile);
+      PRBool exists = PR_FALSE;
+      aFile->Exists(&exists);
+      if (exists) {
+        rv = openPrefFile(aFile);
+      } else {
+        rv = NS_ERROR_FILE_NOT_FOUND;
+      }
     }
   }
   return rv;
