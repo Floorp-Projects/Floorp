@@ -254,11 +254,10 @@ typedef struct JSGCStats {
     uint32  maxdepth;   /* maximum mark tail recursion depth */
     uint32  cdepth;     /* mark recursion depth of C functions */
     uint32  maxcdepth;  /* maximum mark recursion depth of C functions */
-    uint32  untraced;   /* number of times tracing of GC thing's children were
-                           delayed due to a low C stack */
+    uint32  unscanned;  /* mark C stack overflows or number of times
+                           GC things were put in unscanned bag */
 #ifdef DEBUG
-    uint32  maxuntraced;/* maximum number of things with children to trace
-                           later */
+    uint32  maxunscanned;       /* maximum size of unscanned bag */
 #endif
     uint32  maxlevel;   /* maximum GC nesting (indirect recursion) level */
     uint32  poke;       /* number of potentially useful GC calls */
@@ -277,9 +276,8 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp);
 
 #endif /* JS_GCMETER */
 
-typedef struct JSGCArenaInfo JSGCArenaInfo;
+typedef struct JSGCArena JSGCArena;
 typedef struct JSGCArenaList JSGCArenaList;
-typedef struct JSGCChunkInfo JSGCChunkInfo;
 
 #ifdef JS_GCMETER
 typedef struct JSGCArenaStats JSGCArenaStats;
@@ -300,26 +298,25 @@ struct JSGCArenaStats {
 #endif
 
 struct JSGCArenaList {
-    JSGCArenaInfo   *last;          /* last allocated GC arena */
-    uint16          lastCount;      /* number of allocated things in the last
-                                       arena */
-    uint16          thingSize;      /* size of things to allocate on this list
-                                     */
-    JSGCThing       *freeList;      /* list of free GC things */
+    JSGCArena   *last;          /* last allocated GC arena */
+    uint16      lastLimit;      /* end offset of allocated so far things in
+                                   the last arena */
+    uint16      thingSize;      /* size of things to allocate on this list */
+    JSGCThing   *freeList;      /* list of free GC things */
 #ifdef JS_GCMETER
-    JSGCArenaStats  stats;
+    JSGCArenaStats stats;
 #endif
 };
 
 struct JSWeakRoots {
     /* Most recently created things by type, members of the GC's root set. */
-    void            *newborn[GCX_NTYPES];
+    JSGCThing           *newborn[GCX_NTYPES];
 
     /* Atom root for the last-looked-up atom on this context. */
-    jsval           lastAtom;
+    jsval               lastAtom;
 
     /* Root for the result of the most recent js_InternalInvoke call. */
-    jsval           lastInternalResult;
+    jsval               lastInternalResult;
 };
 
 JS_STATIC_ASSERT(JSVAL_NULL == 0);
