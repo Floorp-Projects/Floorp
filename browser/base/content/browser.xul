@@ -264,7 +264,8 @@
 #endif
             </hbox>
           </textbox>
-          <stack id="go-button-stack">
+          <stack id="go-button-stack" class="endcap">
+            <box class="endcap-box" chromedir="&locale.dir;"/>
             <hbox>
               <toolbarbutton id="star-button" onclick="if (event.button == 0) PlacesStarButton.onClick(event);"/>
               <toolbarbutton id="go-button" chromedir="&locale.dir;"
