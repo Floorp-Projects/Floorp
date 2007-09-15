@@ -558,7 +558,8 @@ class nsIWidget : public nsISupports {
      * Get this widget's outside dimensions in global coordinates. (One might think this
      * could be accomplished by stringing together other methods in this interface, but
      * then one would bloody one's nose on different coordinate system handling by different
-     * platforms.)
+     * platforms.) This includes any title bar on the window.
+     *
      *
      * @param aRect on return it holds the  x, y, width and height of this widget
      *
