@@ -65,6 +65,7 @@
       native JSID(jsid);
 [ptr] native voidPtrPtr(void*);
 [ptr] native JSTracerPtr(JSTracer);
+      native fd(int);
 
 /***************************************************************************/
 
@@ -583,7 +584,8 @@ interface nsIXPConnect : nsISupports
 
     void debugDump(in short depth);
     void debugDumpObject(in nsISupports aCOMObj, in short depth);
-    void debugDumpJSStack(in PRBool showArgs,
+    void debugDumpJSStack(in fd filedesc,
+                          in PRBool showArgs,
                           in PRBool showLocals,
                           in PRBool showThisProps);
     void debugDumpEvalInJSStackFrame(in PRUint32 aFrameNumber,

@@ -3253,7 +3253,7 @@ void DEBUG_ReportWrapperThreadSafetyError(XPCCallContext& ccx,
         printf("  %s\n  wrapper @ 0x%p\n", msg, (void *)wrapper);
 
     printf("  JS call stack...\n");
-    xpc_DumpJSStack(ccx, JS_TRUE, JS_TRUE, JS_TRUE);
+    xpc_DumpJSStack(1/*stdout*/, ccx, JS_TRUE, JS_TRUE, JS_TRUE);
     printf("---------------------------------------------------------------\n");
     
     tls->ClearWrappedNativeThreadsafetyReportDepth();
