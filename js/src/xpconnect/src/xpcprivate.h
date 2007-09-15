@@ -3232,7 +3232,7 @@ xpc_JSObjectIsID(JSContext *cx, JSObject* obj);
 // in xpcdebug.cpp
 
 extern JSBool
-xpc_DumpJSStack(JSContext* cx, JSBool showArgs, JSBool showLocals,
+xpc_DumpJSStack(int filedesc, JSContext* cx, JSBool showArgs, JSBool showLocals,
                 JSBool showThisProps);
 
 extern JSBool
