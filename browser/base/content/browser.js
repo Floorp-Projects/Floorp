@@ -816,20 +816,13 @@ function BrowserStartup()
     else {
       // Create a narrower window for large or wide-aspect displays, to suggest
       // side-by-side page view.
-      if ((screen.availWidth / 2) >= 800)
+      if (screen.availWidth >= 1600)
         defaultWidth = (screen.availWidth / 2) - 20;
       defaultHeight = screen.availHeight - 10;
 #ifdef MOZ_WIDGET_GTK2
-#define USE_HEIGHT_ADJUST
-#endif
-#ifdef USE_HEIGHT_ADJUST
       // On X, we're not currently able to account for the size of the window
       // border.  Use 28px as a guess (titlebar + bottom window border)
       defaultHeight -= 28;
-#endif
-#ifdef XP_MACOSX
-      // account for the Mac OS X title bar
-      defaultHeight -= 22;
 #endif
     }
     document.documentElement.setAttribute("width", defaultWidth);

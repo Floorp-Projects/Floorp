@@ -1062,8 +1062,10 @@ PRBool nsXULWindow::LoadPositionFromXUL()
         specX += parentX;
         specY += parentY;
       }
-    } else
+    }
+    else {
       StaggerPosition(specX, specY, currWidth, currHeight);
+    }
   }
   mWindow->ConstrainPosition(PR_FALSE, &specX, &specY);
   if (specX != currX || specY != currY)
@@ -1256,8 +1258,7 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
     }
   }
 
-  // one full pass through all windows of this type. repeat until
-  // no collisions.
+  // One full pass through all windows of this type, repeat until no collisions.
   do {
     keepTrying = PR_FALSE;
     nsCOMPtr<nsISimpleEnumerator> windowList;
@@ -1266,11 +1267,9 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
     if (!windowList)
       break;
 
-    // one full pass through all windows of this type. offset and stop
-    // on collision.
+    // One full pass through all windows of this type, offset and stop on collision.
     do {
       PRBool more;
-      PRInt32 listX, listY;
       windowList->HasMoreElements(&more);
       if (!more)
         break;
@@ -1279,13 +1278,13 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
       windowList->GetNext(getter_AddRefs(supportsWindow));
 
       nsCOMPtr<nsIXULWindow> listXULWindow(do_QueryInterface(supportsWindow));
-      nsCOMPtr<nsIBaseWindow> listBaseWindow(do_QueryInterface(supportsWindow));
-
       if (listXULWindow != ourXULWindow) {
+        PRInt32 listX, listY;
+        nsCOMPtr<nsIBaseWindow> listBaseWindow(do_QueryInterface(supportsWindow));
         listBaseWindow->GetPosition(&listX, &listY);
 
-        if (PR_ABS(listX-aRequestedX) <= kSlop &&
-            PR_ABS(listY-aRequestedY) <= kSlop) {
+        if (PR_ABS(listX - aRequestedX) <= kSlop &&
+            PR_ABS(listY - aRequestedY) <= kSlop) {
           // collision! offset and start over
           if (bouncedX & 0x1)
             aRequestedX -= kOffset;
@@ -1294,16 +1293,19 @@ void nsXULWindow::StaggerPosition(PRInt32 &aRequestedX, PRInt32 &aRequestedY,
           aRequestedY += kOffset;
 
           if (gotScreen) {
-            // bounce off left and right edges
-            if (!(bouncedX & 0x1) && aRequestedX + aSpecWidth > screenRight) {
+            // if we're moving to the right and we need to bounce...
+            if (!(bouncedX & 0x1) && ((aRequestedX + aSpecWidth) > screenRight)) {
               aRequestedX = screenRight - aSpecWidth;
               ++bouncedX;
             }
+
+            // if we're moving to the left and we need to bounce...
             if ((bouncedX & 0x1) && aRequestedX < screenLeft) {
               aRequestedX = screenLeft;
               ++bouncedX;
             }
-            // hit the bottom and start again at the top
+
+            // if we hit the bottom then bounce to the top
             if (aRequestedY + aSpecHeight > screenBottom) {
               aRequestedY = screenTop;
               ++bouncedY;
