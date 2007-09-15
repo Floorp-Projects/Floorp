@@ -334,6 +334,8 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
     JSObject *obj;
     JSTempValueRooter tvr;
     JSAtom *atom;
+    JSClass *clasp;
+    JSExtendedClass *xclasp;
     JSBool ok;
     JSObject *iterobj;
     jsval arg;
@@ -370,47 +372,60 @@ js_ValueToIterator(JSContext *cx, uintN flags, jsval *vp)
     JS_ASSERT(obj);
     JS_PUSH_TEMP_ROOT_OBJECT(cx, obj, &tvr);
 
-    atom = cx->runtime->atomState.iteratorAtom;
-#if JS_HAS_XML_SUPPORT
-    if (OBJECT_IS_XML(cx, obj)) {
-        if (!js_GetXMLFunction(cx, obj, ATOM_TO_JSID(atom), vp))
-            goto bad;
-    } else
-#endif
-    {
-        if (!OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(atom), vp))
-            goto bad;
-    }
-
-    if (JSVAL_IS_VOID(*vp)) {
-      default_iter:
-        /*
-         * Fail over to the default enumerating native iterator.
-         *
-         * Create iterobj with a NULL parent to ensure that we use the correct
-         * scope chain to lookup the iterator's constructor. Since we use the
-         * parent slot to keep track of the iterable, we must fix it up after.
-         */
-        iterobj = js_NewObject(cx, &js_IteratorClass, NULL, NULL);
+    clasp = OBJ_GET_CLASS(cx, obj);
+    if ((clasp->flags & JSCLASS_IS_EXTENDED) &&
+        (xclasp = (JSExtendedClass *) clasp)->iteratorObject) {
+        iterobj = xclasp->iteratorObject(cx, obj, !(flags & JSITER_FOREACH));
         if (!iterobj)
             goto bad;
-
-        /* Store iterobj in *vp to protect it from GC (callers must root vp). */
         *vp = OBJECT_TO_JSVAL(iterobj);
-
-        if (!InitNativeIterator(cx, iterobj, obj, flags))
-            goto bad;
     } else {
-        arg = BOOLEAN_TO_JSVAL((flags & JSITER_FOREACH) == 0);
-        if (!js_InternalInvoke(cx, obj, *vp, JSINVOKE_ITERATOR, 1, &arg, vp))
-            goto bad;
-        if (JSVAL_IS_PRIMITIVE(*vp)) {
-            const char *printable = js_AtomToPrintableString(cx, atom);
-            if (printable) {
-                js_ReportValueError2(cx, JSMSG_BAD_ITERATOR_RETURN,
-                                     JSDVG_SEARCH_STACK, *vp, NULL, printable);
+        atom = cx->runtime->atomState.iteratorAtom;
+#if JS_HAS_XML_SUPPORT
+        if (OBJECT_IS_XML(cx, obj)) {
+            if (!js_GetXMLFunction(cx, obj, ATOM_TO_JSID(atom), vp))
+                goto bad;
+        } else
+#endif
+        {
+            if (!OBJ_GET_PROPERTY(cx, obj, ATOM_TO_JSID(atom), vp))
+                goto bad;
+        }
+
+        if (JSVAL_IS_VOID(*vp)) {
+          default_iter:
+            /*
+             * Fail over to the default enumerating native iterator.
+             *
+             * Create iterobj with a NULL parent to ensure that we use the
+             * correct scope chain to lookup the iterator's constructor. Since
+             * we use the parent slot to keep track of the iterable, we must
+             * fix it up after.
+             */
+            iterobj = js_NewObject(cx, &js_IteratorClass, NULL, NULL);
+            if (!iterobj)
+                goto bad;
+
+            /* Store in *vp to protect it from GC (callers must root vp). */
+            *vp = OBJECT_TO_JSVAL(iterobj);
+
+            if (!InitNativeIterator(cx, iterobj, obj, flags))
+                goto bad;
+        } else {
+            arg = BOOLEAN_TO_JSVAL((flags & JSITER_FOREACH) == 0);
+            if (!js_InternalInvoke(cx, obj, *vp, JSINVOKE_ITERATOR, 1, &arg,
+                                   vp)) {
+                goto bad;
             }
-            goto bad;
+            if (JSVAL_IS_PRIMITIVE(*vp)) {
+                const char *printable = js_AtomToPrintableString(cx, atom);
+                if (printable) {
+                    js_ReportValueError2(cx, JSMSG_BAD_ITERATOR_RETURN,
+                                         JSDVG_SEARCH_STACK, *vp, NULL,
+                                         printable);
+                }
+                goto bad;
+            }
         }
     }
 
