@@ -4004,6 +4004,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         void *cg2mark;
         JSCodeGenerator *cg2;
         JSFunction *fun;
+        uintN slot;
 
 #if JS_HAS_XML_SUPPORT
         if (pn->pn_arity == PN_NULLARY) {
@@ -4072,29 +4073,46 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          */
         CG_SWITCH_TO_PROLOG(cg);
 
-        if (cg->treeContext.flags & TCF_IN_FUNCTION) {
+        op = JSOP_DEFFUN;
+#ifdef __GNUC__
+        slot = 0;   /* quell GCC overwarning */
+#endif
+        JS_ASSERT((cg->treeContext.flags & TCF_IN_FUNCTION) ||
+                  !cg->treeContext.topStmt);
+
+        if ((cg->treeContext.flags & TCF_IN_FUNCTION) ||
+            ((cx->fp->flags & JSFRAME_SPECIAL) && cx->fp->fun)) {
             JSObject *obj, *pobj;
             JSProperty *prop;
             JSScopeProperty *sprop;
-            uintN slot;
 
-            obj = OBJ_GET_PARENT(cx, fun->object);
+            obj = (cg->treeContext.flags & TCF_IN_FUNCTION)
+                  ? OBJ_GET_PARENT(cx, fun->object)
+                  : cx->fp->fun->object;
             if (!js_LookupHiddenProperty(cx, obj, ATOM_TO_JSID(fun->atom),
                                          &pobj, &prop)) {
                 return JS_FALSE;
             }
 
-            JS_ASSERT(prop && pobj == obj);
-            sprop = (JSScopeProperty *) prop;
-            JS_ASSERT(sprop->getter == js_GetLocalVariable);
-            slot = sprop->shortid;
-            OBJ_DROP_PROPERTY(cx, pobj, prop);
+            if (prop) {
+                if (pobj == obj) {
+                    sprop = (JSScopeProperty *) prop;
+                    if (sprop->getter == js_GetLocalVariable) {
+                        slot = sprop->shortid;
+                        op = JSOP_DEFLOCALFUN;
+                    }
+                }
+                OBJ_DROP_PROPERTY(cx, pobj, prop);
+            }
+
+            JS_ASSERT(op == JSOP_DEFLOCALFUN ||
+                      !(cg->treeContext.flags & TCF_IN_FUNCTION));
 
             /*
-             * If this local function is declared in a body block induced by
-             * let declarations, reparent fun->object to the compiler-created
-             * body block object so that JSOP_DEFLOCALFUN can clone that block
-             * into the runtime scope chain.
+             * If this local function is declared in a body block induced
+             * by let declarations, reparent fun->object to the compiler-
+             * created body block object, so that JSOP_DEFLOCALFUN clones
+             * that block into the runtime scope chain.
              */
             stmt = cg->treeContext.topStmt;
             if (stmt && stmt->type == STMT_BLOCK &&
@@ -4104,12 +4122,13 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                 JS_ASSERT(LOCKED_OBJ_GET_CLASS(obj) == &js_BlockClass);
                 OBJ_SET_PARENT(cx, fun->object, obj);
             }
+        }
 
-            if (!EmitSlotIndexOp(cx, JSOP_DEFLOCALFUN, slot, index, cg))
+        if (op == JSOP_DEFLOCALFUN) {
+            if (!EmitSlotIndexOp(cx, op, slot, index, cg))
                 return JS_FALSE;
         } else {
-            JS_ASSERT(!cg->treeContext.topStmt);
-            EMIT_INDEX_OP(JSOP_DEFFUN, index);
+            EMIT_INDEX_OP(op, index);
         }
 
         CG_SWITCH_TO_MAIN(cg);
