@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <io.h>
+
 #include "xpcprivate.h"
 #if defined(DEBUG_xpc_hacker) || defined(DEBUG)
 
@@ -289,18 +291,21 @@ static char* FormatJSStackDump(JSContext* cx, char* buf,
 }
 
 JSBool
-xpc_DumpJSStack(JSContext* cx, JSBool showArgs, JSBool showLocals, JSBool showThisProps)
+xpc_DumpJSStack(int filedesc, JSContext* cx, JSBool showArgs, JSBool showLocals, JSBool showThisProps)
 {
     char* buf;
 
     buf = FormatJSStackDump(cx, nsnull, showArgs, showLocals, showThisProps);
     if(buf)
     {
-        fputs(buf, stdout);
+        _write(filedesc, buf, strlen(buf));
         JS_smprintf_free(buf);
     }
     else
-        puts("Failed to format JavaScript stack for dump");
+    {
+        const char kDumpFailed[] = "Failed to format JavaScript stack for dump";
+        _write(filedesc, kDumpFailed, sizeof(kDumpFailed) - 1);
+    }
     return JS_TRUE;
 }
 
@@ -372,7 +377,7 @@ xpc_DebuggerKeywordHandler(JSContext *cx, JSScript *script, jsbytecode *pc,
     "------------------------------------------------------------------------";
     puts(line);
     puts("Hit JavaScript \"debugger\" keyword. JS call stack...");
-    xpc_DumpJSStack(cx, JS_TRUE, JS_TRUE, JS_FALSE);
+    xpc_DumpJSStack(1/*stdout*/, cx, JS_TRUE, JS_TRUE, JS_FALSE);
     puts(line);
     return JSTRAP_CONTINUE;
 }
