@@ -339,6 +339,11 @@ DEFINES += -DMOZ_SPELLCHECK
 COMPONENT_LIBS += spellchecker
 endif
 
+ifdef MOZ_ZIPWRITER
+DEFINES += -DMOZ_ZIPWRITER
+COMPONENT_LIBS += zipwriter
+endif
+
 ifneq (,$(filter layout-debug,$(MOZ_EXTENSIONS)))
 COMPONENT_LIBS += gkdebug
 endif
