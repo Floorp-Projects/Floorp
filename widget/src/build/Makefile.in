@@ -60,11 +60,9 @@ REQUIRES	= xpcom \
 		  dom \
 		  timer \
 		  accessibility \
+		  thebes \
+		  cairo \
 		  $(NULL)
-
-ifeq ($(MOZ_ENABLE_CAIRO_GFX),1)
-REQUIRES += thebes cairo
-endif
 
 CPPSRCS		= nsWinWidgetFactory.cpp
 
