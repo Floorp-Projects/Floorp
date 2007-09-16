@@ -293,36 +293,36 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
                          "th > a {\n"
                          "  color: inherit;\n"
                          "}\n"
-                         "table[order] th {\n"
+                         "table[order] > thead > tr > th {\n"
                          "  cursor: pointer;\n"
                          "}\n"
-                         "table[order] th::after {\n"
+                         "table[order] > thead > tr > th::after {\n"
                          "  display: none;\n"
                          "  width: .8em;\n"
                          "  margin-right: -.8em;\n"
                          "  text-align: right;\n"
                          "}\n"
-                         "table[order=\"asc\"] th::after {\n"
+                         "table[order=\"asc\"] > thead > tr > th::after {\n"
                          "  content: \"\\2193\"; /* DOWNWARDS ARROW (U+2193) */\n"
                          "}\n"
-                         "table[order=\"desc\"] th::after {\n"
+                         "table[order=\"desc\"] > thead > tr > th::after {\n"
                          "  content: \"\\2191\"; /* UPWARDS ARROW (U+2191) */\n"
                          "}\n"
-                         "table[order][order-by=\"0\"] th:first-child ,\n"
-                         "table[order][order-by=\"1\"] th:first-child + th ,\n"
-                         "table[order][order-by=\"2\"] th:first-child + th + th {\n"
+                         "table[order][order-by=\"0\"] > thead > tr > th:first-child ,\n"
+                         "table[order][order-by=\"1\"] > thead > tr > th:first-child + th ,\n"
+                         "table[order][order-by=\"2\"] > thead > tr > th:first-child + th + th {\n"
                          "  text-decoration: underline;\n"
                          "}\n"
-                         "table[order][order-by=\"0\"] th:first-child::after ,\n"
-                         "table[order][order-by=\"1\"] th:first-child + th::after ,\n"
-                         "table[order][order-by=\"2\"] th:first-child + th + th::after {\n"
+                         "table[order][order-by=\"0\"] > thead > tr > th:first-child::after ,\n"
+                         "table[order][order-by=\"1\"] > thead > tr > th:first-child + th::after ,\n"
+                         "table[order][order-by=\"2\"] > thead > tr > th:first-child + th + th::after {\n"
                          "  display: inline-block;\n"
                          "}\n"
                          "table.remove-hidden > tbody > tr.hidden-object {\n"
                          "  display: none;\n"
                          "}\n"
-                         "td {\n"
-                         "  white-space: nowrap;\n"
+                         "td > a {\n"
+                         "  display: block;\n"
                          "}\n"
                          "/* size */\n"
                          "td:first-child + td {\n"
@@ -807,7 +807,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
     // Truncate long names to not stretch the table
     //XXX this should be left to the stylesheet (bug 391471)
     nsString escapedShort;
-    if (description.Length() > 46) {
+    if (description.Length() > 71) {
         nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
         nsCOMPtr<nsIURI> uri;
         rv = channel->GetURI(getter_AddRefs(uri));
@@ -819,10 +819,10 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
             //XXX this potentially truncates after a combining char (bug 391472)
             nsXPIDLString descriptionAffix;
             descriptionAffix.Assign(description);
-            descriptionAffix.Cut(0, descriptionAffix.Length() - 15);
+            descriptionAffix.Cut(0, descriptionAffix.Length() - 25);
             if (NS_IS_LOW_SURROGATE(descriptionAffix.First()))
                 descriptionAffix.Cut(0, 1);
-            description.Truncate(30);
+            description.Truncate(PR_MIN(71, description.Length() - 28));
             if (NS_IS_HIGH_SURROGATE(description.Last()))
                 description.Truncate(description.Length() - 1);
 

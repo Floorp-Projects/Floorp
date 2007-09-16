@@ -38,14 +38,16 @@
   background-color: -moz-dialog;
   color: -moz-dialogtext;
   font: message-box;
+  padding-left: 2em;
+  padding-right: 2em;
 }
 
 body {
   border: 1px solid ThreeDShadow;
   -moz-border-radius: 10px;
   padding: 3em;
-  min-width: 13em;
-  max-width: 52em;
+  min-width: 30em;
+  max-width: 65em;
   margin: 4em auto;
   background-color: -moz-field;
   color: -moz-fieldtext;
@@ -103,7 +105,7 @@ th:first-child + th {
   padding-right: 2em;
 }
 
-table[order] th:hover {
+table[order] > thead > tr > th:hover {
   text-decoration: underline;
 }
 
@@ -112,9 +114,7 @@ tbody > tr:not(:hover) > td:not(:first-child) {
 }
 
 /* let 'Size' and 'Last Modified' take only as much space as they need and 'Name' all the rest */
-td:first-child + td ,
-td:first-child + td + td ,
-td:last-child {
+td:not(:first-child) {
   width: 0;
 }
 
