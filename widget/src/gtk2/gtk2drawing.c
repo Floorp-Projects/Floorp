@@ -201,7 +201,7 @@ ensure_option_menu_widget()
 {
     if (!gOptionMenuWidget) {
         gOptionMenuWidget = gtk_option_menu_new();
-        setup_widget_prototype(gOptionMenuWidget);
+        setup_widget_prototype(gOptionMenuWidget);        
     }
     return MOZ_GTK_SUCCESS;
 }
@@ -210,7 +210,7 @@ static gint
 ensure_arrow_widget()
 {
     if (!gArrowWidget) {
-        gDropdownButtonWidget = gtk_combo_box_entry_new();
+        gDropdownButtonWidget = gtk_button_new();
         setup_widget_prototype(gDropdownButtonWidget);
         gArrowWidget = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_OUT);
         gtk_container_add(GTK_CONTAINER(gDropdownButtonWidget), gArrowWidget);
@@ -1091,13 +1091,13 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
     GtkStyle* style;
 
     ensure_arrow_widget();
-    style = gDropdownButtonWidget->style;
-    gtk_paint_box(style, drawable, state_type, shadow_type, cliprect, gDropdownButtonWidget,
-                  "combo_entry_button", rect->x, rect->y, rect->width, rect->height);
+    moz_gtk_button_paint(drawable, rect, cliprect, state, GTK_RELIEF_NORMAL,
+                         gDropdownButtonWidget);
 
     /* This mirrors gtkbutton's child positioning */
-    arrow_rect.x = rect->x + 1 + XTHICKNESS(style);
-    arrow_rect.y = rect->y + 1 + YTHICKNESS(style);
+    style = gDropdownButtonWidget->style;
+    arrow_rect.x = rect->x + 1 + XTHICKNESS(gDropdownButtonWidget->style);
+    arrow_rect.y = rect->y + 1 + YTHICKNESS(gDropdownButtonWidget->style);
     arrow_rect.width = MAX(1, rect->width - (arrow_rect.x - rect->x) * 2);
     arrow_rect.height = MAX(1, rect->height - (arrow_rect.y - rect->y) * 2);
 
@@ -1112,7 +1112,7 @@ moz_gtk_dropdown_arrow_paint(GdkDrawable* drawable, GdkRectangle* rect,
     real_arrow_rect.y = floor (arrow_rect.y + ((arrow_rect.height - real_arrow_rect.height) / 2) + 0.5);
 
     gtk_paint_arrow(style, drawable, state_type, shadow_type, cliprect,
-                    gDropdownButtonWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
+                    gHorizScrollbarWidget, "arrow",  GTK_ARROW_DOWN, TRUE,
                     real_arrow_rect.x, real_arrow_rect.y,
                     real_arrow_rect.width, real_arrow_rect.height);
 
