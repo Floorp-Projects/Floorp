@@ -1347,7 +1347,7 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
         return NS_OK;
     }
 
-    if (mRequestHead.PeekHeader(nsHttp::Range)) {
+    if (mRequestHead.PeekHeader(nsHttp::Range) || mResuming) {
         // we don't support caching for byte range requests initiated
         // by our clients or via nsIResumableChannel.
         // XXX perhaps we could munge their byte range into the cache
