@@ -54,10 +54,9 @@ menulist {
 
 .menulist-label-box {
   -moz-appearance: menulist-text;
+  color: -moz-DialogText;
   -moz-box-align: center;
   -moz-box-pack: center;
-  background-color: #CCCCCC;
-border: 1px solid blue;
 }
 
 .menulist-label {
