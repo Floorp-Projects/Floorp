@@ -79,269 +79,151 @@
 #endif
 
 /*
- * Deduce if mmap or similar is available.
+ * GC arena sizing depends on amortizing arena overhead using a large number
+ * of things per arena, and on the thing/flags ratio of 8:1 on most platforms.
+ *
+ * On 64-bit platforms, we would have half as many things per arena because
+ * pointers are twice as big, so we double the bytes for things per arena.
+ * This preserves the 1024 byte flags sub-arena size, which relates to the
+ * GC_PAGE_SIZE (see below for why).
  */
-#ifndef JS_GC_USE_MMAP
-# if defined(XP_WIN)
-#  define JS_GC_USE_MMAP 1
-# elif defined(XP_UNIX) || defined(XP_BEOS)
-#  include <unistd.h>
-#  if defined(_POSIX_MAPPED_FILES) && _POSIX_MAPPED_FILES > 0
-#   define JS_GC_USE_MMAP 1
-#  endif
-# endif
+#if JS_BYTES_PER_WORD == 8
+# define GC_THINGS_SHIFT 14     /* 16KB for things on Alpha, etc. */
+#else
+# define GC_THINGS_SHIFT 13     /* 8KB for things on most platforms */
 #endif
-
-#ifndef JS_GC_USE_MMAP
-# define JS_GC_USE_MMAP 0
-#endif
-
-#if JS_GC_USE_MMAP
-# if defined(XP_WIN)
-#  include <windows.h>
-# elif defined(XP_UNIX) || defined(XP_BEOS)
-#  include <sys/mman.h>
-
-/* On Mac OS X MAP_ANONYMOUS is not defined. */
-#  if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
-#   define MAP_ANONYMOUS MAP_ANON
-#  endif
-
-# endif
-#endif
+#define GC_THINGS_SIZE  JS_BIT(GC_THINGS_SHIFT)
+#define GC_FLAGS_SIZE   (GC_THINGS_SIZE / sizeof(JSGCThing))
 
 /*
  * A GC arena contains one flag byte for each thing in its heap, and supports
  * O(1) lookup of a flag given its thing's address.
  *
- * To implement this, we allocate things of the same size from a GC arena
- * containing GC_ARENA_SIZE bytes aligned on GC_ARENA_SIZE boundary. The
- * following picture shows arena's layout:
+ * To implement this, we take advantage of the thing/flags numerology: given
+ * the 8K bytes worth of GC-things, there are 1K flag bytes. Within each 9K
+ * allocation for things+flags there are always 8 consecutive 1K-pages each
+ * aligned on 1K boundary. We use these pages to allocate things and the
+ * remaining 1K of space before and after the aligned pages to store flags.
+ * If we are really lucky and things+flags starts on a 1K boundary, then
+ * flags would consist of a single 1K chunk that comes after 8K of things.
+ * Otherwise there are 2 chunks of flags, one before and one after things.
  *
- *  +------------------------------+--------------------+---------------+
- *  | allocation area for GC thing | flags of GC things | JSGCArenaInfo |
- *  +------------------------------+--------------------+---------------+
+ * To be able to find the flag byte for a particular thing, we put a
+ * JSGCPageInfo record at the beginning of each 1K-aligned page to hold that
+ * page's offset from the beginning of things+flags allocation and we allocate
+ * things after this record. Thus for each thing |thing_address & ~1023|
+ * gives the address of a JSGCPageInfo record from which we read page_offset.
+ * Due to page alignment
+ *  (page_offset & ~1023) + (thing_address & 1023)
+ * gives thing_offset from the beginning of 8K paged things. We then divide
+ * thing_offset by sizeof(JSGCThing) to get thing_index.
  *
- * For a GC thing of size thingSize the number of things that the arena can
- * hold is given by:
- *   (GC_ARENA_SIZE - sizeof(JSGCArenaInfo)) / (thingSize + 1)
+ * Now |page_address - page_offset| is things+flags arena_address and
+ * (page_offset & 1023) is the offset of the first page from the start of
+ * things+flags area. Thus if
+ *  thing_index < (page_offset & 1023)
+ * then
+ *  allocation_start_address + thing_index < address_of_the_first_page
+ * and we use
+ *  allocation_start_address + thing_index
+ * as the address to store thing's flags. If
+ *  thing_index >= (page_offset & 1023),
+ * then we use the chunk of flags that comes after the pages with things
+ * and calculate the address for the flag byte as
+ *  address_of_the_first_page + 8K + (thing_index - (page_offset & 1023))
+ * which is just
+ *  allocation_start_address + thing_index + 8K.
  *
- * The address of thing's flag is given by:
- *   flagByteAddress =
- *       (thingAddress | GC_ARENA_MASK) - sizeof(JSGCArenaInfo) -
- *       (thingAddress & GC_ARENA_MASK) / thingSize
- * where
- *   (thingAddress | GC_ARENA_MASK) - sizeof(JSGCArenaInfo)
- * is the last byte of flags' area and
- *   (thingAddress & GC_ARENA_MASK) / thingSize
- * is thing's index counting from arena's start.
+ * When we allocate things with size equal to sizeof(JSGCThing), the overhead
+ * of this scheme for 32 bit platforms is (8+8*(8+1))/(8+9K) or 0.87%
+ * (assuming 4 bytes for each JSGCArena header, and 8 bytes for each
+ * JSGCThing and JSGCPageInfo). When thing_size > 8, the scheme wastes the
+ * flag byte for each extra 8 bytes beyond sizeof(JSGCThing) in thing_size
+ * and the overhead is close to 1/8 or 12.5%.
+ * FIXME: How can we avoid this overhead?
  *
- * Things are allocated from the start of their area and flags are allocated
- * from the end of their area. This avoids calculating the location of the
- * boundary separating things and flags.
+ * Here's some ASCII art showing an arena:
  *
- * JS_GC_USE_MMAP macros governs the allocation of aligned arenas. When the
- * macro is true, a platform specific allocation code like POSIX mmap is used
- * with no extra overhead. If the macro is false, the code uses malloc to
- * allocate a chunk of
- *   GC_ARENA_SIZE * (js_gcArenasPerChunk + 1)
- * bytes. The chunk contains at least js_gcArenasPerChunk aligned arenas so
- * the overhead of this schema is approximately 1/js_gcArenasPerChunk. See
- * NewGCChunk/DestroyGCChunk below for details.
+ *   split or the first 1-K aligned address.
+ *     |
+ *     V
+ *  +--+-------+-------+-------+-------+-------+-------+-------+-------+-----+
+ *  |fB|  tp0  |  tp1  |  tp2  |  tp3  |  tp4  |  tp5  |  tp6  |  tp7  | fA  |
+ *  +--+-------+-------+-------+-------+-------+-------+-------+-------+-----+
+ *              ^                                 ^
+ *  tI ---------+                                 |
+ *  tJ -------------------------------------------+
  *
- * Note that even when JS_GC_USE_MMAP is true the code still allocates arenas
- * in chunks to minimize the overhead of mmap/munmap.
+ *  - fB are the "before split" flags, fA are the "after split" flags
+ *  - tp0-tp7 are the 8 thing pages
+ *  - thing tI points into tp1, whose flags are below the split, in fB
+ *  - thing tJ points into tp5, clearly above the split
+ *
+ * In general, one of the thing pages will have some of its things' flags on
+ * the low side of the split, and the rest of its things' flags on the high
+ * side.  All the other pages have flags only below or only above.
+ *
+ * (If we need to implement card-marking for an incremental GC write barrier,
+ * we can replace word-sized offsetInArena in JSGCPageInfo by pair of
+ * uint8 card_mark and uint16 offsetInArena fields as the offset can not exceed
+ * GC_THINGS_SIZE. This would gives an extremely efficient write barrier:
+ * when mutating an object obj, just store a 1 byte at
+ * (uint8 *) ((jsuword)obj & ~1023) on 32-bit platforms.)
  */
+#define GC_PAGE_SHIFT   10
+#define GC_PAGE_MASK    ((jsuword) JS_BITMASK(GC_PAGE_SHIFT))
+#define GC_PAGE_SIZE    JS_BIT(GC_PAGE_SHIFT)
+#define GC_PAGE_COUNT   (1 << (GC_THINGS_SHIFT - GC_PAGE_SHIFT))
 
-/*
- * When mmap is available, use the minimal known CPU page size as the size of
- * GC arena. Otherwise use 1K arenas to minimize the overhead of the aligned
- * allocation.
- */
-#if JS_GC_USE_MMAP
-# define GC_ARENA_SHIFT              12
-#else
-# define GC_ARENA_SHIFT              10
-#endif
+typedef struct JSGCPageInfo {
+    jsuword     offsetInArena;          /* offset from the arena start */
+    jsuword     unscannedBitmap;        /* bitset for fast search of marked
+                                           but not yet scanned GC things */
+} JSGCPageInfo;
 
-#define GC_ARENA_MASK               ((jsuword) JS_BITMASK(GC_ARENA_SHIFT))
-#define GC_ARENA_SIZE               JS_BIT(GC_ARENA_SHIFT)
-
-struct JSGCArenaInfo {
-    /*
-     * Allocation list for the arena.
-     */
-    JSGCArenaList   *list;
-
-    /*
-     * Pointer to the previous arena in a linked list. The arena can either
-     * belong to one of JSContext.gcArenaList lists or, when it does not have
-     * any allocated GC things, to the list of free arenas in the chunk with
-     * head stored in JSGCChunkInfo.lastFreeArena.
-     */
-    JSGCArenaInfo   *prev;
-
-    /*
-     * A link field for the list of arenas with marked but not yet traced
-     * things. The field is encoded as arena's page to share the space with
-     * firstArena and arenaIndex fields.
-     */
-    jsuword         prevUntracedPage :  JS_BITS_PER_WORD - GC_ARENA_SHIFT;
-
-    /*
-     * When firstArena is false, the index of arena in the chunk. When
-     * firstArena is true, the index of a free arena holding JSGCChunkInfo or
-     * NO_FREE_ARENAS if there are no free arenas in the chunk.
-     *
-     * GET_ARENA_INDEX and GET_CHUNK_INFO_INDEX are convenience macros to
-     * access either of indexes.
-     */
-    jsuword         arenaIndex :        GC_ARENA_SHIFT - 1;
-
-    /*
-     * Flag indicating if the arena is the first in the chunk.
-     */
-    jsuword         firstArena :        1;
-
-    /*
-     * Bitset for fast search of marked but not yet traced things.
-     */
-    jsuword         untracedThings;
+struct JSGCArena {
+    JSGCArenaList       *list;          /* allocation list for the arena */
+    JSGCArena           *prev;          /* link field for allocation list */
+    JSGCArena           *prevUnscanned; /* link field for the list of arenas
+                                           with marked but not yet scanned
+                                           things */
+    jsuword             unscannedPages; /* bitset for fast search of pages
+                                           with marked but not yet scanned
+                                           things */
+    uint8               base[1];        /* things+flags allocation area */
 };
 
-/*
- * Verify that the bit fields are indeed shared and JSGCArenaInfo is as small
- * as possible. The code does not rely on this check so if on a particular
- * platform this does not compile, then, as a workaround, comment the assert
- * out and submit a bug report.
- */
-JS_STATIC_ASSERT(sizeof(JSGCArenaInfo) == 4 * sizeof(jsuword));
+#define GC_ARENA_SIZE                                                         \
+    (offsetof(JSGCArena, base) + GC_THINGS_SIZE + GC_FLAGS_SIZE)
 
-#define NO_FREE_ARENAS              JS_BITMASK(GC_ARENA_SHIFT - 1)
+#define FIRST_THING_PAGE(a)                                                   \
+    (((jsuword)(a)->base + GC_FLAGS_SIZE - 1) & ~GC_PAGE_MASK)
+
+#define PAGE_TO_ARENA(pi)                                                     \
+    ((JSGCArena *)((jsuword)(pi) - (pi)->offsetInArena                        \
+                   - offsetof(JSGCArena, base)))
+
+#define PAGE_INDEX(pi)                                                        \
+    ((size_t)((pi)->offsetInArena >> GC_PAGE_SHIFT))
+
+#define THING_TO_PAGE(thing)                                                  \
+    ((JSGCPageInfo *)((jsuword)(thing) & ~GC_PAGE_MASK))
 
 /*
- * All chunks that have at least one free arena are put on the doubly-linked
- * list with the head stored in JSRuntime.gcChunkList. JSGCChunkInfo contains
- * the head of the chunk's free arena list together with the link fields for
- * gcChunkList.
+ * Given a thing size n, return the size of the gap from the page start before
+ * the first thing.  We know that any n not a power of two packs from
+ * the end of the page leaving at least enough room for one JSGCPageInfo, but
+ * not for another thing, at the front of the page (JS_ASSERTs below insist
+ * on this).
  *
- * The structure is stored in one of chunk's free arenas. GET_CHUNK_INFO_INDEX
- * macro gives the index of this arena. When all arenas in the chunk are used,
- * it is removed from the list and the index is set to NO_FREE_ARENAS
- * indicating that the chunk is not on gcChunkList and has no JSGCChunkInfo
- * available.
+ * This works because all allocations are a multiple of sizeof(JSGCThing) ==
+ * sizeof(JSGCPageInfo) in size.
  */
-struct JSGCChunkInfo {
-    JSGCChunkInfo   **prevp;
-    JSGCChunkInfo   *next;
-    JSGCArenaInfo   *lastFreeArena;
-    uint32          numFreeArenas;
-};
-
-/*
- * Even when mmap is available, its overhead may be too big so the final
- * decision to use it is done at runtime.
- */
-#if JS_GC_USE_MMAP
-static uint32 js_gcArenasPerChunk = 0;
-static JSBool js_gcUseMmap = JS_FALSE;
-#else
-# define js_gcArenasPerChunk 31
-#endif
-
-/*
- * Macros to convert between JSGCArenaInfo, the start address of the arena and
- * arena's page defined as (start address) >> GC_ARENA_SHIFT.
- */
-#define ARENA_INFO_OFFSET (GC_ARENA_SIZE - (uint32) sizeof(JSGCArenaInfo))
-
-#define IS_ARENA_INFO_ADDRESS(arena)                                          \
-    (((jsuword) (arena) & GC_ARENA_MASK) == ARENA_INFO_OFFSET)
-
-#define ARENA_START_TO_INFO(arenaStart)                                       \
-    (JS_ASSERT(((arenaStart) & (jsuword) GC_ARENA_MASK) == 0),                \
-     (JSGCArenaInfo *) ((arenaStart) + ARENA_INFO_OFFSET))
-
-#define ARENA_INFO_TO_START(arena)                                            \
-    (JS_ASSERT(IS_ARENA_INFO_ADDRESS(arena)),                                 \
-     (jsuword) (arena) & ~(jsuword) GC_ARENA_MASK)
-
-#define ARENA_PAGE_TO_INFO(arenaPage)                                         \
-    (JS_ASSERT(arenaPage != 0),                                               \
-     JS_ASSERT(((arenaPage) >> (JS_BITS_PER_WORD - GC_ARENA_SHIFT)) == 0),    \
-     ARENA_START_TO_INFO((arenaPage) << GC_ARENA_SHIFT))
-
-#define ARENA_INFO_TO_PAGE(arena)                                             \
-    (JS_ASSERT(IS_ARENA_INFO_ADDRESS(arena)),                                 \
-     ((jsuword) (arena) >> GC_ARENA_SHIFT))
-
-#define GET_ARENA_INFO(chunk, index)                                          \
-    (JS_ASSERT((index) < js_gcArenasPerChunk),                                \
-     ARENA_START_TO_INFO(chunk + ((index) << GC_ARENA_SHIFT)))
-
-/*
- * Macros to access/modify information about the chunk of GC arenas.
- */
-#define GET_ARENA_CHUNK(arena, index)                                         \
-    (JS_ASSERT(GET_ARENA_INDEX(arena) == index),                              \
-     ARENA_INFO_TO_START(arena) - ((index) << GC_ARENA_SHIFT))
-
-#define GET_ARENA_INDEX(arena)                                                \
-    ((arena)->firstArena ? 0 : (uint32) (arena)->arenaIndex)
-
-#define GET_CHUNK_INFO_INDEX(chunk)                                           \
-    ((uint32) ARENA_START_TO_INFO(chunk)->arenaIndex)
-
-#define SET_CHUNK_INFO_INDEX(chunk, index)                                    \
-    (JS_ASSERT((index) < js_gcArenasPerChunk || (index) == NO_FREE_ARENAS),   \
-     (void) (ARENA_START_TO_INFO(chunk)->arenaIndex = (jsuword) (index)))
-
-#define GET_CHUNK_INFO(chunk, infoIndex)                                      \
-    (JS_ASSERT(GET_CHUNK_INFO_INDEX(chunk) == (infoIndex)),                   \
-     JS_ASSERT((uint32) (infoIndex) < js_gcArenasPerChunk),                   \
-     (JSGCChunkInfo *) ((chunk) + ((infoIndex) << GC_ARENA_SHIFT)))
-
-#define CHUNK_INFO_TO_INDEX(ci)                                               \
-    GET_ARENA_INDEX(ARENA_START_TO_INFO((jsuword)ci))
-
-/*
- * Macros for GC-thing operations.
- */
-#define THINGS_PER_ARENA(thingSize)                                           \
-    ((GC_ARENA_SIZE - (uint32) sizeof(JSGCArenaInfo)) / ((thingSize) + 1U))
-
-#define THING_TO_ARENA(thing)                                                 \
-    ((JSGCArenaInfo *)(((jsuword) (thing) | GC_ARENA_MASK) +                  \
-                       1 - sizeof(JSGCArenaInfo)))
-
-#define THING_TO_INDEX(thing, thingSize)                                      \
-    ((uint32) ((jsuword) (thing) & GC_ARENA_MASK) / (uint32) (thingSize))
-
-#define THING_FLAGS_END(arena) ((uint8 *)(arena))
-
-#define THING_FLAGP(arena, thingIndex)                                        \
-    (JS_ASSERT((jsuword) (thingIndex)                                         \
-               < (jsuword) THINGS_PER_ARENA((arena)->list->thingSize)),       \
-     (uint8 *)(arena) - 1 - (thingIndex))
-
-#define THING_TO_FLAGP(thing, thingSize)                                      \
-    THING_FLAGP(THING_TO_ARENA(thing), THING_TO_INDEX(thing, thingSize))
-
-#define FLAGP_TO_ARENA(flagp) THING_TO_ARENA(flagp)
-
-#define FLAGP_TO_INDEX(flagp)                                                 \
-    (JS_ASSERT(((jsuword) (flagp) & GC_ARENA_MASK) < ARENA_INFO_OFFSET),      \
-     (ARENA_INFO_OFFSET - 1 - (uint32) ((jsuword) (flagp) & GC_ARENA_MASK)))
-
-#define FLAGP_TO_THING(flagp, thingSize)                                      \
-    (JS_ASSERT(((jsuword) (flagp) & GC_ARENA_MASK) >=                         \
-               (ARENA_INFO_OFFSET - THINGS_PER_ARENA(thingSize))),            \
-     (void *)(((jsuword) (flagp) & ~GC_ARENA_MASK) +                          \
-              (thingSize) * FLAGP_TO_INDEX(flagp)))
+#define PAGE_THING_GAP(n) (((n) & ((n) - 1)) ? (GC_PAGE_SIZE % (n)) : (n))
 
 #ifdef JS_THREADSAFE
 /*
- * The maximum number of things to put on the local free list by taking
+ * The maximum number of things to put to the local free list by taking
  * several things from the global free list or from the tail of the last
  * allocated arena to amortize the cost of rt->gcLock.
  *
@@ -351,6 +233,8 @@ static JSBool js_gcUseMmap = JS_FALSE;
 
 #endif
 
+JS_STATIC_ASSERT(sizeof(JSGCThing) == sizeof(JSGCPageInfo));
+JS_STATIC_ASSERT(GC_FLAGS_SIZE >= GC_PAGE_SIZE);
 JS_STATIC_ASSERT(sizeof(JSStackHeader) >= 2 * sizeof(jsval));
 
 JS_STATIC_ASSERT(sizeof(JSGCThing) >= sizeof(JSString));
@@ -530,217 +414,63 @@ ShrinkPtrTable(JSPtrTable *table, const JSPtrTableInfo *info,
 # define METER(x) ((void) 0)
 #endif
 
-/*
- * For chunks allocated via over-sized malloc, get a pointer to store the gap
- * between the malloc's result and the first arena in the chunk.
- */
-static uint32 *
-GetMallocedChunkGapPtr(jsuword chunk)
+static JSBool
+NewGCArena(JSRuntime *rt, JSGCArenaList *arenaList)
 {
-    JS_ASSERT((chunk & GC_ARENA_MASK) == 0);
+    JSGCArena *a;
+    jsuword offset;
+    JSGCPageInfo *pi;
 
-    /* Use the memory after the chunk, see NewGCChunk for details. */
-    return (uint32 *) (chunk + (js_gcArenasPerChunk << GC_ARENA_SHIFT));
-}
+    /* Check if we are allowed and can allocate a new arena. */
+    if (rt->gcBytes >= rt->gcMaxBytes)
+        return JS_FALSE;
+    a = (JSGCArena *)malloc(GC_ARENA_SIZE);
+    if (!a)
+        return JS_FALSE;
 
-static jsuword
-NewGCChunk()
-{
-    void *p;
-    jsuword chunk;
+    /* Initialize the JSGCPageInfo records at the start of every thing page. */
+    offset = (GC_PAGE_SIZE - ((jsuword)a->base & GC_PAGE_MASK)) & GC_PAGE_MASK;
+    JS_ASSERT((jsuword)a->base + offset == FIRST_THING_PAGE(a));
+    do {
+        pi = (JSGCPageInfo *) (a->base + offset);
+        pi->offsetInArena = offset;
+        pi->unscannedBitmap = 0;
+        offset += GC_PAGE_SIZE;
+    } while (offset < GC_THINGS_SIZE);
 
-#if JS_GC_USE_MMAP
-    if (js_gcUseMmap) {
-# if defined(XP_WIN)
-        p = VirtualAlloc(NULL, js_gcArenasPerChunk << GC_ARENA_SHIFT,
-                         MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-        return (jsuword) p;
-# elif defined(XP_UNIX) || defined(XP_BEOS)
-        p = mmap(NULL, js_gcArenasPerChunk << GC_ARENA_SHIFT,
-                 PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-        return (p == MAP_FAILED) ? 0 : (jsuword) p;
-# else
-#  error "Not implemented"
-# endif
-    }
-#endif
+    METER(++arenaList->stats.narenas);
+    METER(arenaList->stats.maxarenas
+          = JS_MAX(arenaList->stats.maxarenas, arenaList->stats.narenas));
 
-    /*
-     * Implement the chunk allocation using over sized malloc if mmap cannot
-     * be used. FIXME bug 396007: the code should use posix_memalign when it
-     * is available.
-     *
-     * Since malloc allocates pointers aligned on the word boundary, to get
-     * js_gcArenasPerChunk aligned arenas, we need to malloc only
-     *   ((js_gcArenasPerChunk + 1) << GC_ARENA_SHIFT) - sizeof(size_t)
-     * bytes. But since we stores the gap between the malloced pointer and the
-     * first arena in the chunk after the chunk, we need to ask for
-     *   ((js_gcArenasPerChunk + 1) << GC_ARENA_SHIFT)
-     * bytes to ensure that we always have room to store the gap.
-     */
-    p = malloc((js_gcArenasPerChunk + 1) << GC_ARENA_SHIFT);
-    if (!p)
-        return 0;
-    chunk = ((jsuword) p + GC_ARENA_MASK) & ~GC_ARENA_MASK;
-    *GetMallocedChunkGapPtr(chunk) = (uint32) (chunk - (jsuword) p);
-    return chunk;
+    a->list = arenaList;
+    a->prev = arenaList->last;
+    a->prevUnscanned = NULL;
+    a->unscannedPages = 0;
+    arenaList->last = a;
+    arenaList->lastLimit = 0;
+    rt->gcBytes += GC_ARENA_SIZE;
+    return JS_TRUE;
 }
 
 static void
-DestroyGCChunk(jsuword chunk)
+DestroyGCArena(JSRuntime *rt, JSGCArenaList *arenaList, JSGCArena **ap)
 {
-    JS_ASSERT((chunk & GC_ARENA_MASK) == 0);
-#if JS_GC_USE_MMAP
-    if (js_gcUseMmap) {
-# if defined(XP_WIN)
-        VirtualFree((void *) chunk, 0, MEM_RELEASE);
-# elif defined(XP_UNIX) || defined(XP_BEOS)
-        munmap((void *) chunk, js_gcArenasPerChunk << GC_ARENA_SHIFT);
-# else
-#  error "Not implemented"
-# endif
-        return;
-    }
-#endif
+    JSGCArena *a;
 
-    /* See comments in NewGCChunk. */
-    JS_ASSERT(*GetMallocedChunkGapPtr(chunk) < GC_ARENA_SIZE);
-    free((void *) (chunk - *GetMallocedChunkGapPtr(chunk)));
-}
-
-static void
-AddChunkToList(JSRuntime *rt, JSGCChunkInfo *ci)
-{
-    ci->prevp = &rt->gcChunkList;
-    ci->next = rt->gcChunkList;
-    if (rt->gcChunkList) {
-        JS_ASSERT(rt->gcChunkList->prevp == &rt->gcChunkList);
-        rt->gcChunkList->prevp = &ci->next;
-    }
-    rt->gcChunkList = ci;
-}
-
-static void
-RemoveChunkFromList(JSRuntime *rt, JSGCChunkInfo *ci)
-{
-    *ci->prevp = ci->next;
-    if (ci->next) {
-        JS_ASSERT(ci->next->prevp == &ci->next);
-        ci->next->prevp = ci->prevp;
-    }
-}
-
-static JSGCArenaInfo *
-NewGCArena(JSRuntime *rt)
-{
-    jsuword chunk;
-    JSGCChunkInfo *ci;
-    uint32 i;
-    JSGCArenaInfo *a, *aprev;
-
-    if (js_gcArenasPerChunk == 1) {
-        chunk = NewGCChunk();
-        return (chunk == 0) ? NULL : ARENA_START_TO_INFO(chunk);
-    }
-
-    ci = rt->gcChunkList;
-    if (!ci) {
-        chunk = NewGCChunk();
-        if (chunk == 0)
-            return NULL;
-        JS_ASSERT((chunk & GC_ARENA_MASK) == 0);
-        a = GET_ARENA_INFO(chunk, 0);
-        a->firstArena = JS_TRUE;
-        a->arenaIndex = 0;
-        aprev = NULL;
-        i = 0;
-        do {
-            a->prev = aprev;
-            aprev = a;
-            ++i;
-            a = GET_ARENA_INFO(chunk, i);
-            a->firstArena = JS_FALSE;
-            a->arenaIndex = i;
-        } while (i != js_gcArenasPerChunk - 1);
-        ci = GET_CHUNK_INFO(chunk, 0);
-        ci->lastFreeArena = aprev;
-        ci->numFreeArenas = js_gcArenasPerChunk - 1;
-        AddChunkToList(rt, ci);
-    } else {
-        JS_ASSERT(ci->prevp == &rt->gcChunkList);
-        a = ci->lastFreeArena;
-        aprev = a->prev;
-        if (!aprev) {
-            JS_ASSERT(ci->numFreeArenas == 1);
-            JS_ASSERT(ARENA_INFO_TO_START(a) == (jsuword) ci);
-            RemoveChunkFromList(rt, ci);
-            chunk = GET_ARENA_CHUNK(a, GET_ARENA_INDEX(a));
-            SET_CHUNK_INFO_INDEX(chunk, NO_FREE_ARENAS);
-        } else {
-            JS_ASSERT(ci->numFreeArenas >= 2);
-            JS_ASSERT(ARENA_INFO_TO_START(a) != (jsuword) ci);
-            ci->lastFreeArena = aprev;
-            ci->numFreeArenas--;
-        }
-    }
-
-    return a;
-}
-
-static void
-DestroyGCArena(JSRuntime *rt, JSGCArenaInfo *a)
-{
-    uint32 arenaIndex;
-    jsuword chunk;
-    uint32 chunkInfoIndex;
-    JSGCChunkInfo *ci;
-
+    a = *ap;
+    JS_ASSERT(a);
+    JS_ASSERT(rt->gcBytes >= GC_ARENA_SIZE);
+    rt->gcBytes -= GC_ARENA_SIZE;
     METER(rt->gcStats.afree++);
-
-    if (js_gcArenasPerChunk == 1) {
-        DestroyGCChunk(ARENA_INFO_TO_START(a));
-        return;
-    }
+    METER(--arenaList->stats.narenas);
+    if (a == arenaList->last)
+        arenaList->lastLimit = (uint16)(a->prev ? GC_THINGS_SIZE : 0);
+    *ap = a->prev;
 
 #ifdef DEBUG
-    {
-        jsuword firstArena, arenaIndex;
-
-        firstArena = a->firstArena;
-        arenaIndex = a->arenaIndex;
-        memset((void *) ARENA_INFO_TO_START(a), JS_FREE_PATTERN,
-               GC_ARENA_SIZE);
-        a->firstArena = firstArena;
-        a->arenaIndex = arenaIndex;
-    }
+    memset(a, JS_FREE_PATTERN, GC_ARENA_SIZE);
 #endif
-
-    arenaIndex = GET_ARENA_INDEX(a);
-    chunk = GET_ARENA_CHUNK(a, arenaIndex);
-    chunkInfoIndex = GET_CHUNK_INFO_INDEX(chunk);
-    if (chunkInfoIndex == NO_FREE_ARENAS) {
-        chunkInfoIndex = arenaIndex;
-        SET_CHUNK_INFO_INDEX(chunk, arenaIndex);
-        ci = GET_CHUNK_INFO(chunk, chunkInfoIndex);
-        a->prev = NULL;
-        ci->lastFreeArena = a;
-        ci->numFreeArenas = 1;
-        AddChunkToList(rt, ci);
-    } else {
-        JS_ASSERT(chunkInfoIndex != arenaIndex);
-        ci = GET_CHUNK_INFO(chunk, chunkInfoIndex);
-        JS_ASSERT(ci->numFreeArenas != 0);
-        JS_ASSERT(ci->lastFreeArena);
-        JS_ASSERT(a != ci->lastFreeArena);
-        if (ci->numFreeArenas == js_gcArenasPerChunk - 1) {
-            RemoveChunkFromList(rt, ci);
-            DestroyGCChunk(chunk);
-        } else {
-            ++ci->numFreeArenas;
-            a->prev = ci->lastFreeArena;
-            ci->lastFreeArena = a;
-        }
-    }
+    free(a);
 }
 
 static void
@@ -754,7 +484,7 @@ InitGCArenaLists(JSRuntime *rt)
         thingSize = GC_FREELIST_NBYTES(i);
         JS_ASSERT((size_t)(uint16)thingSize == thingSize);
         arenaList->last = NULL;
-        arenaList->lastCount = THINGS_PER_ARENA(thingSize);
+        arenaList->lastLimit = 0;
         arenaList->thingSize = (uint16)thingSize;
         arenaList->freeList = NULL;
         METER(memset(&arenaList->stats, 0, sizeof arenaList->stats));
@@ -766,41 +496,40 @@ FinishGCArenaLists(JSRuntime *rt)
 {
     uintN i;
     JSGCArenaList *arenaList;
-    JSGCArenaInfo *a, *aprev;
 
     for (i = 0; i < GC_NUM_FREELISTS; i++) {
         arenaList = &rt->gcArenaList[i];
-
-        for (a = arenaList->last; a; a = aprev) {
-            aprev = a->prev;
-            DestroyGCArena(rt, a);
-        }
-        arenaList->last = NULL;
-        arenaList->lastCount = THINGS_PER_ARENA(arenaList->thingSize);
+        while (arenaList->last)
+            DestroyGCArena(rt, arenaList, &arenaList->last);
         arenaList->freeList = NULL;
-        METER(arenaList->stats.narenas = 0);
     }
-    rt->gcBytes = 0;
-    JS_ASSERT(rt->gcChunkList == 0);
 }
 
 JS_FRIEND_API(uint8 *)
 js_GetGCThingFlags(void *thing)
 {
-    JSGCArenaInfo *a;
-    uint32 index;
+    JSGCPageInfo *pi;
+    jsuword offsetInArena, thingIndex;
 
-    a = THING_TO_ARENA(thing);
-    index = THING_TO_INDEX(thing, a->list->thingSize);
-    return THING_FLAGP(a, index);
+    pi = THING_TO_PAGE(thing);
+    offsetInArena = pi->offsetInArena;
+    JS_ASSERT(offsetInArena < GC_THINGS_SIZE);
+    thingIndex = ((offsetInArena & ~GC_PAGE_MASK) |
+                  ((jsuword)thing & GC_PAGE_MASK)) / sizeof(JSGCThing);
+    JS_ASSERT(thingIndex < GC_PAGE_SIZE);
+    if (thingIndex >= (offsetInArena & GC_PAGE_MASK))
+        thingIndex += GC_THINGS_SIZE;
+    return (uint8 *)pi - offsetInArena + thingIndex;
 }
 
 JSRuntime*
 js_GetGCStringRuntime(JSString *str)
 {
+    JSGCPageInfo *pi;
     JSGCArenaList *list;
 
-    list = THING_TO_ARENA(str)->list;
+    pi = THING_TO_PAGE(str);
+    list = PAGE_TO_ARENA(pi)->list;
 
     JS_ASSERT(list->thingSize == sizeof(JSGCThing));
     JS_ASSERT(GC_FREELIST_INDEX(sizeof(JSGCThing)) == 0);
@@ -894,59 +623,11 @@ typedef struct JSGCRootHashEntry {
 
 /* Initial size of the gcRootsHash table (SWAG, small enough to amortize). */
 #define GC_ROOTS_SIZE   256
-
-/*
- * For a CPU with extremely large pages using them for GC things wastes
- * too much memory.
- */
-#define GC_ARENAS_PER_CPU_PAGE_LIMIT JS_BIT(18 - GC_ARENA_SHIFT)
-
-JS_STATIC_ASSERT(GC_ARENAS_PER_CPU_PAGE_LIMIT <= NO_FREE_ARENAS);
+#define GC_FINALIZE_LEN 1024
 
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
-#if JS_GC_USE_MMAP
-    if (js_gcArenasPerChunk == 0) {
-        size_t cpuPageSize, arenasPerPage;
-# if defined(XP_WIN)
-        SYSTEM_INFO si;
-
-        GetSystemInfo(&si);
-        cpuPageSize = si.dwPageSize;
-
-# elif defined(XP_UNIX) || defined(XP_BEOS)
-        cpuPageSize = (size_t) sysconf(_SC_PAGESIZE);
-# else
-#  error "Not implemented"
-# endif
-        /* cpuPageSize is a power of 2. */
-        JS_ASSERT((cpuPageSize & (cpuPageSize - 1)) == 0);
-        arenasPerPage = cpuPageSize >> GC_ARENA_SHIFT;
-#ifdef DEBUG
-        if (arenasPerPage == 0) {
-            fprintf(stderr,
-"JS engine warning: the size of the CPU page, %u bytes, is too low to use\n"
-"paged allocation for the garbage collector. Please report this.\n",
-                    (unsigned) cpuPageSize);
-        }
-#endif
-        if (arenasPerPage - 1 <= (size_t) (GC_ARENAS_PER_CPU_PAGE_LIMIT - 1)) {
-            /*
-             * Use at least 4 GC arenas per paged allocation chunk to minimize
-             * the overhead of mmap/VirtualAlloc.
-             */
-            js_gcUseMmap = JS_TRUE;
-            js_gcArenasPerChunk = JS_MAX((uint32) arenasPerPage, 4);
-        } else {
-            js_gcUseMmap = JS_FALSE;
-            js_gcArenasPerChunk = 7;
-        }
-    }
-#endif
-    JS_ASSERT(1 <= js_gcArenasPerChunk &&
-              js_gcArenasPerChunk <= NO_FREE_ARENAS);
-
     InitGCArenaLists(rt);
     if (!JS_DHashTableInit(&rt->gcRootsHash, JS_DHashGetStubOps(), NULL,
                            sizeof(JSGCRootHashEntry), GC_ROOTS_SIZE)) {
@@ -969,7 +650,6 @@ JS_FRIEND_API(void)
 js_DumpGCStats(JSRuntime *rt, FILE *fp)
 {
     uintN i;
-    size_t thingsPerArena;
     size_t totalThings, totalMaxThings, totalBytes;
     size_t sumArenas, sumTotalArenas;
     size_t sumFreeSize, sumTotalFreeSize;
@@ -993,7 +673,6 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
                     i, UL(GC_FREELIST_NBYTES(i)));
             continue;
         }
-        thingsPerArena = THINGS_PER_ARENA(list->thingSize);
         fprintf(fp, "ARENA LIST %u (thing size %lu):\n",
                 i, UL(GC_FREELIST_NBYTES(i)));
         fprintf(fp, "                     arenas: %lu\n", UL(stats->narenas));
@@ -1004,18 +683,20 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
         fprintf(fp, "          free list density: %.1f%%\n",
                 stats->narenas == 0
                 ? 0.0
-                : 100.0 * stats->freelen / (thingsPerArena * stats->narenas));
+                : (100.0 * list->thingSize * (jsdouble)stats->freelen /
+                   (GC_THINGS_SIZE * (jsdouble)stats->narenas)));
         fprintf(fp, "  average free list density: %.1f%%\n",
                 stats->totalarenas == 0
                 ? 0.0
-                : 100.0 * stats->totalfreelen /
-                  (thingsPerArena * stats->totalarenas));
+                : (100.0 * list->thingSize * (jsdouble)stats->totalfreelen /
+                   (GC_THINGS_SIZE * (jsdouble)stats->totalarenas)));
         fprintf(fp, "                   recycles: %lu\n", UL(stats->recycle));
         fprintf(fp, "        recycle/alloc ratio: %.2f\n",
-                (double) stats->recycle / (stats->totalnew - stats->recycle));
+                (jsdouble)stats->recycle /
+                (jsdouble)(stats->totalnew - stats->recycle));
         totalThings += stats->nthings;
         totalMaxThings += stats->maxthings;
-        totalBytes += list->thingSize * stats->nthings;
+        totalBytes += GC_FREELIST_NBYTES(i) * stats->nthings;
         sumArenas += stats->narenas;
         sumTotalArenas += stats->totalarenas;
         sumFreeSize += list->thingSize * stats->freelen;
@@ -1034,11 +715,11 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     fprintf(fp, "    total free list density: %.1f%%\n",
             sumArenas == 0
             ? 0.0
-            : 100.0 * sumFreeSize / (sumArenas << GC_ARENA_SHIFT));
+            : 100.0 * sumFreeSize / (GC_THINGS_SIZE * (jsdouble)sumArenas));
     fprintf(fp, "  average free list density: %.1f%%\n",
             sumTotalFreeSize == 0
             ? 0.0
-            : 100.0 * sumTotalFreeSize / (sumTotalArenas << GC_ARENA_SHIFT));
+            : 100.0 * sumTotalFreeSize / (GC_THINGS_SIZE * sumTotalArenas));
     fprintf(fp, "allocation retries after GC: %lu\n", ULSTAT(retry));
     fprintf(fp, "        allocation failures: %lu\n", ULSTAT(fail));
     fprintf(fp, "         things born locked: %lu\n", ULSTAT(lockborn));
@@ -1048,9 +729,9 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
     fprintf(fp, "     maximum mark recursion: %lu\n", ULSTAT(maxdepth));
     fprintf(fp, "     mark C recursion depth: %lu\n", ULSTAT(cdepth));
     fprintf(fp, "   maximum mark C recursion: %lu\n", ULSTAT(maxcdepth));
-    fprintf(fp, "      delayed tracing calls: %lu\n", ULSTAT(untraced));
+    fprintf(fp, "      delayed scan bag adds: %lu\n", ULSTAT(unscanned));
 #ifdef DEBUG
-    fprintf(fp, "      max trace later count: %lu\n", ULSTAT(maxuntraced));
+    fprintf(fp, "  max delayed scan bag size: %lu\n", ULSTAT(maxunscanned));
 #endif
     fprintf(fp, "   maximum GC nesting level: %lu\n", ULSTAT(maxlevel));
     fprintf(fp, "potentially useful GC calls: %lu\n", ULSTAT(poke));
@@ -1350,10 +1031,10 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     uintN flindex;
     JSBool doGC;
     JSGCThing *thing;
-    uint8 *flagp;
+    uint8 *flagp, *firstPage;
     JSGCArenaList *arenaList;
-    JSGCArenaInfo *a;
-    uintN thingsLimit;
+    jsuword offset;
+    JSGCArena *a;
     JSLocalRootStack *lrs;
 #ifdef JS_THREADSAFE
     JSBool gcLocked;
@@ -1464,71 +1145,67 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
             break;
         }
 
-        /*
-         * Try to allocate things from the last arena. If it is fully used,
-         * check if we can allocate a new one and, if we cannot, consider
-         * doing a "last ditch" GC unless already tried.
-         */
-        thingsLimit = THINGS_PER_ARENA(nbytes);
-        if (arenaList->lastCount != thingsLimit) {
-            JS_ASSERT(arenaList->lastCount < thingsLimit);
-            a = arenaList->last;
-        } else {
-            if (rt->gcBytes >= rt->gcMaxBytes || !(a = NewGCArena(rt))) {
-                if (doGC)
-                    goto fail;
-                rt->gcPoke = JS_TRUE;
-                doGC = JS_TRUE;
-                continue;
+        /* Allocate from the tail of last arena or from new arena if we can. */
+        if ((arenaList->last && arenaList->lastLimit != GC_THINGS_SIZE) ||
+            NewGCArena(rt, arenaList)) {
+
+            offset = arenaList->lastLimit;
+            if ((offset & GC_PAGE_MASK) == 0) {
+                /*
+                 * Skip JSGCPageInfo record located at GC_PAGE_SIZE boundary.
+                 */
+                offset += PAGE_THING_GAP(nbytes);
             }
-
-            rt->gcBytes += GC_ARENA_SIZE;
-            METER(++arenaList->stats.narenas);
-            METER(arenaList->stats.maxarenas
-                  = JS_MAX(arenaList->stats.maxarenas,
-                           arenaList->stats.narenas));
-
-            a->list = arenaList;
-            a->prev = arenaList->last;
-            a->prevUntracedPage = 0;
-            a->untracedThings = 0;
-            arenaList->last = a;
-            arenaList->lastCount = 0;
-        }
-
-        flagp = THING_FLAGP(a, arenaList->lastCount);
-        thing = (JSGCThing *) FLAGP_TO_THING(flagp, nbytes);
-        arenaList->lastCount++;
+            JS_ASSERT(offset + nbytes <= GC_THINGS_SIZE);
+            arenaList->lastLimit = (uint16)(offset + nbytes);
+            a = arenaList->last;
+            firstPage = (uint8 *)FIRST_THING_PAGE(a);
+            thing = (JSGCThing *)(firstPage + offset);
+            flagp = a->base + offset / sizeof(JSGCThing);
+            if (flagp >= firstPage)
+                flagp += GC_THINGS_SIZE;
 
 #ifdef JS_THREADSAFE
-        /*
-         * Refill the local free list by taking free things from the last
-         * arena. Prefer to order free things by ascending address in the
-         * (unscientific) hope of better cache locality.
-         */
-        if (rt->gcMallocBytes >= rt->gcMaxMallocBytes || flbase[flindex])
-            break;
-        METER(nfree = 0);
-        lastptr = &flbase[flindex];
-        maxFreeThings = thingsLimit - arenaList->lastCount;
-        if (maxFreeThings > MAX_THREAD_LOCAL_THINGS)
+            /*
+             * Refill the local free list by taking free things from the last
+             * arena. Prefer to order free things by ascending address in the
+             * (unscientific) hope of better cache locality.
+             */
+            if (rt->gcMallocBytes >= rt->gcMaxMallocBytes || flbase[flindex])
+                break;
+            METER(nfree = 0);
+            lastptr = &flbase[flindex];
             maxFreeThings = MAX_THREAD_LOCAL_THINGS;
-        METER(arenaList->stats.freelen += maxFreeThings);
-        while (maxFreeThings != 0) {
-            --maxFreeThings;
+            for (offset = arenaList->lastLimit;
+                 offset != GC_THINGS_SIZE && maxFreeThings-- != 0;
+                 offset += nbytes) {
+                if ((offset & GC_PAGE_MASK) == 0)
+                    offset += PAGE_THING_GAP(nbytes);
+                JS_ASSERT(offset + nbytes <= GC_THINGS_SIZE);
+                tmpflagp = a->base + offset / sizeof(JSGCThing);
+                if (tmpflagp >= firstPage)
+                    tmpflagp += GC_THINGS_SIZE;
 
-            tmpflagp = THING_FLAGP(a, arenaList->lastCount);
-            tmpthing = (JSGCThing *) FLAGP_TO_THING(tmpflagp, nbytes);
-            arenaList->lastCount++;
-            tmpthing->flagp = tmpflagp;
-            *tmpflagp = GCF_FINAL;    /* signifying that thing is free */
+                tmpthing = (JSGCThing *)(firstPage + offset);
+                tmpthing->flagp = tmpflagp;
+                *tmpflagp = GCF_FINAL;    /* signifying that thing is free */
 
-            *lastptr = tmpthing;
-            lastptr = &tmpthing->next;
-        }
-        *lastptr = NULL;
+                *lastptr = tmpthing;
+                lastptr = &tmpthing->next;
+                METER(++nfree);
+            }
+            arenaList->lastLimit = (uint16)offset;
+            *lastptr = NULL;
+            METER(arenaList->stats.freelen += nfree);
 #endif
-        break;
+            break;
+        }
+
+        /* Consider doing a "last ditch" GC unless already tried. */
+        if (doGC)
+            goto fail;
+        rt->gcPoke = JS_TRUE;
+        doGC = JS_TRUE;
     }
 
     /* We successfully allocated the thing. */
@@ -1796,171 +1473,234 @@ JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
 }
 
 /*
- * Number of things covered by a single bit of JSGCArenaInfo.untracedThings.
+ * Avoid using PAGE_THING_GAP inside this macro to optimize the
+ * thingsPerUnscannedChunk calculation when thingSize is a power of two.
  */
-#define THINGS_PER_UNTRACED_BIT(thingSize)                                    \
-    JS_HOWMANY(THINGS_PER_ARENA(thingSize), JS_BITS_PER_WORD)
+#define GET_GAP_AND_CHUNK_SPAN(thingSize, thingsPerUnscannedChunk, pageGap)   \
+    JS_BEGIN_MACRO                                                            \
+        if (0 == ((thingSize) & ((thingSize) - 1))) {                         \
+            pageGap = (thingSize);                                            \
+            thingsPerUnscannedChunk = ((GC_PAGE_SIZE / (thingSize))           \
+                                       + JS_BITS_PER_WORD - 1)                \
+                                      >> JS_BITS_PER_WORD_LOG2;               \
+        } else {                                                              \
+            pageGap = GC_PAGE_SIZE % (thingSize);                             \
+            thingsPerUnscannedChunk = JS_HOWMANY(GC_PAGE_SIZE / (thingSize),  \
+                                                 JS_BITS_PER_WORD);           \
+        }                                                                     \
+    JS_END_MACRO
 
 static void
-DelayTracingChildren(JSRuntime *rt, uint8 *flagp)
+AddThingToUnscannedBag(JSRuntime *rt, void *thing, uint8 *flagp)
 {
-    JSGCArenaInfo *a;
-    uint32 untracedBitIndex;
+    JSGCPageInfo *pi;
+    JSGCArena *arena;
+    size_t thingSize;
+    size_t thingsPerUnscannedChunk;
+    size_t pageGap;
+    size_t chunkIndex;
     jsuword bit;
 
-    /*
-     * Things with children to be traced later are marked with
-     * GCF_MARK | GCF_FINAL flags.
-     */
+    /* Things from delayed scanning bag are marked as GCF_MARK | GCF_FINAL. */
     JS_ASSERT((*flagp & (GCF_MARK | GCF_FINAL)) == GCF_MARK);
     *flagp |= GCF_FINAL;
 
-    METER(rt->gcStats.untraced++);
+    METER(rt->gcStats.unscanned++);
 #ifdef DEBUG
-    ++rt->gcTraceLaterCount;
-    METER(if (rt->gcTraceLaterCount > rt->gcStats.maxuntraced)
-              rt->gcStats.maxuntraced = rt->gcTraceLaterCount);
+    ++rt->gcUnscannedBagSize;
+    METER(if (rt->gcUnscannedBagSize > rt->gcStats.maxunscanned)
+              rt->gcStats.maxunscanned = rt->gcUnscannedBagSize);
 #endif
 
-    a = FLAGP_TO_ARENA(flagp);
-    untracedBitIndex = FLAGP_TO_INDEX(flagp) /
-                       THINGS_PER_UNTRACED_BIT(a->list->thingSize);
-    JS_ASSERT(untracedBitIndex < JS_BITS_PER_WORD);
-    bit = (jsuword)1 << untracedBitIndex;
-    if (a->untracedThings != 0) {
-        JS_ASSERT(rt->gcUntracedArenaStackTop);
-        if (a->untracedThings & bit) {
-            /* bit already covers things with children to trace later. */
-            return;
+    pi = THING_TO_PAGE(thing);
+    arena = PAGE_TO_ARENA(pi);
+    thingSize = arena->list->thingSize;
+    GET_GAP_AND_CHUNK_SPAN(thingSize, thingsPerUnscannedChunk, pageGap);
+    chunkIndex = (((jsuword)thing & GC_PAGE_MASK) - pageGap) /
+                 (thingSize * thingsPerUnscannedChunk);
+    JS_ASSERT(chunkIndex < JS_BITS_PER_WORD);
+    bit = (jsuword)1 << chunkIndex;
+    if (pi->unscannedBitmap != 0) {
+        JS_ASSERT(rt->gcUnscannedArenaStackTop);
+        if (thingsPerUnscannedChunk != 1) {
+            if (pi->unscannedBitmap & bit) {
+                /* Chunk already contains things to scan later. */
+                return;
+            }
+        } else {
+            /*
+             * The chunk must not contain things to scan later if there is
+             * only one thing per chunk.
+             */
+            JS_ASSERT(!(pi->unscannedBitmap & bit));
         }
-        a->untracedThings |= bit;
+        pi->unscannedBitmap |= bit;
+        JS_ASSERT(arena->unscannedPages & ((size_t)1 << PAGE_INDEX(pi)));
     } else {
         /*
-         * The thing is the first thing with not yet traced children in the
-         * whole arena, so push the arena on the stack of arenas with things
-         * to be traced later unless the arena has already been pushed. We
-         * detect that through checking prevUntracedPage as the field is 0
-         * only for not yet pushed arenas. To ensure that
-         *   prevUntracedPage != 0
-         * even when the stack contains one element, we make prevUntracedPage
-         * for the arena at the bottom to point to itself.
-         *
-         * See comments in TraceDelayedChildren.
+         * The thing is the first unscanned thing in the page, set the bit
+         * corresponding to this page arena->unscannedPages.
          */
-        a->untracedThings = bit;
-        if (a->prevUntracedPage == 0) {
-            if (!rt->gcUntracedArenaStackTop) {
-                /* Stack was empty, mark the arena as the bottom element. */
-                a->prevUntracedPage = ARENA_INFO_TO_PAGE(a);
-            } else {
-                JS_ASSERT(rt->gcUntracedArenaStackTop->prevUntracedPage != 0);
-                a->prevUntracedPage =
-                    ARENA_INFO_TO_PAGE(rt->gcUntracedArenaStackTop);
+        pi->unscannedBitmap = bit;
+        JS_ASSERT(PAGE_INDEX(pi) < JS_BITS_PER_WORD);
+        bit = (jsuword)1 << PAGE_INDEX(pi);
+        JS_ASSERT(!(arena->unscannedPages & bit));
+        if (arena->unscannedPages != 0) {
+            arena->unscannedPages |= bit;
+            JS_ASSERT(arena->prevUnscanned);
+            JS_ASSERT(rt->gcUnscannedArenaStackTop);
+        } else {
+            /*
+             * The thing is the first unscanned thing in the whole arena, push
+             * the arena on the stack of unscanned arenas unless the arena
+             * has already been pushed. We detect that through prevUnscanned
+             * field which is NULL only for not yet pushed arenas. To ensure
+             * that prevUnscanned != NULL even when the stack contains one
+             * element, we make prevUnscanned for the arena at the bottom
+             * to point to itself.
+             *
+             * See comments in ScanDelayedChildren.
+             */
+            arena->unscannedPages = bit;
+            if (!arena->prevUnscanned) {
+                if (!rt->gcUnscannedArenaStackTop) {
+                    /* Stack was empty, mark the arena as bottom element. */
+                    arena->prevUnscanned = arena;
+                } else {
+                    JS_ASSERT(rt->gcUnscannedArenaStackTop->prevUnscanned);
+                    arena->prevUnscanned = rt->gcUnscannedArenaStackTop;
+                }
+                rt->gcUnscannedArenaStackTop = arena;
             }
-            rt->gcUntracedArenaStackTop = a;
-        }
-    }
-    JS_ASSERT(rt->gcUntracedArenaStackTop);
+         }
+     }
+    JS_ASSERT(rt->gcUnscannedArenaStackTop);
 }
 
 static void
-TraceDelayedChildren(JSTracer *trc)
+ScanDelayedChildren(JSTracer *trc)
 {
     JSRuntime *rt;
-    JSGCArenaInfo *a, *aprev;
-    uint32 thingSize;
-    uint32 thingsPerUntracedBit;
-    uint32 untracedBitIndex, thingIndex, indexLimit, endIndex;
+    JSGCArena *arena;
+    size_t thingSize;
+    size_t thingsPerUnscannedChunk;
+    size_t pageGap;
+    size_t pageIndex;
+    JSGCPageInfo *pi;
+    size_t chunkIndex;
+    size_t thingOffset, thingLimit;
     JSGCThing *thing;
     uint8 *flagp;
+    JSGCArena *prevArena;
 
     rt = trc->context->runtime;
-    a = rt->gcUntracedArenaStackTop;
-    if (!a) {
-        JS_ASSERT(rt->gcTraceLaterCount == 0);
+    arena = rt->gcUnscannedArenaStackTop;
+    if (!arena) {
+        JS_ASSERT(rt->gcUnscannedBagSize == 0);
         return;
     }
 
+  init_size:
+    thingSize = arena->list->thingSize;
+    GET_GAP_AND_CHUNK_SPAN(thingSize, thingsPerUnscannedChunk, pageGap);
     for (;;) {
         /*
-         * The following assert verifies that the current arena belongs to the
-         * untraced stack, since DelayTracingChildren ensures that even for
-         * stack's bottom prevUntracedPage != 0 but rather points to itself.
+         * The following assert verifies that the current arena belongs to
+         * the unscan stack since AddThingToUnscannedBag ensures that even
+         * for stack's bottom prevUnscanned != NULL but rather points to self.
          */
-        JS_ASSERT(a->prevUntracedPage != 0);
-        JS_ASSERT(rt->gcUntracedArenaStackTop->prevUntracedPage != 0);
-        thingSize = a->list->thingSize;
-        indexLimit = (a == a->list->last)
-                     ? a->list->lastCount
-                     : THINGS_PER_ARENA(thingSize);
-        thingsPerUntracedBit = THINGS_PER_UNTRACED_BIT(thingSize);
-
-        /*
-         * We can not use do-while loop here as a->untracedThings can be zero
-         * before the loop as a leftover from the previous iterations. See
-         * comments after the loop.
-         */
-        while (a->untracedThings != 0) {
-            untracedBitIndex = JS_FLOOR_LOG2W(a->untracedThings);
-            a->untracedThings &= ~((jsuword)1 << untracedBitIndex);
-            thingIndex = untracedBitIndex * thingsPerUntracedBit;
-            endIndex = thingIndex + thingsPerUntracedBit;
-
-            /*
-             * endIndex can go beyond the last allocated thing as the real
-             * limit can be "inside" the bit.
-             */
-            if (endIndex > indexLimit)
-                endIndex = indexLimit;
-            JS_ASSERT(thingIndex < indexLimit);
-
-            do {
+        JS_ASSERT(arena->prevUnscanned);
+        JS_ASSERT(rt->gcUnscannedArenaStackTop->prevUnscanned);
+        while (arena->unscannedPages != 0) {
+            pageIndex = JS_FLOOR_LOG2W(arena->unscannedPages);
+            JS_ASSERT(pageIndex < GC_PAGE_COUNT);
+            pi = (JSGCPageInfo *)(FIRST_THING_PAGE(arena) +
+                                  pageIndex * GC_PAGE_SIZE);
+            JS_ASSERT(pi->unscannedBitmap);
+            chunkIndex = JS_FLOOR_LOG2W(pi->unscannedBitmap);
+            pi->unscannedBitmap &= ~((jsuword)1 << chunkIndex);
+            if (pi->unscannedBitmap == 0)
+                arena->unscannedPages &= ~((jsuword)1 << pageIndex);
+            thingOffset = (pageGap
+                           + chunkIndex * thingsPerUnscannedChunk * thingSize);
+            JS_ASSERT(thingOffset >= sizeof(JSGCPageInfo));
+            thingLimit = thingOffset + thingsPerUnscannedChunk * thingSize;
+            if (thingsPerUnscannedChunk != 1) {
                 /*
-                 * Skip free or already traced things that share the bit
-                 * with untraced ones.
+                 * thingLimit can go beyond the last allocated thing for the
+                 * last chunk as the real limit can be inside the chunk.
                  */
-                flagp = THING_FLAGP(a, thingIndex);
-                if ((*flagp & (GCF_MARK|GCF_FINAL)) != (GCF_MARK|GCF_FINAL))
-                    continue;
+                if (arena->list->last == arena &&
+                    arena->list->lastLimit < (pageIndex * GC_PAGE_SIZE +
+                                              thingLimit)) {
+                    thingLimit = (arena->list->lastLimit -
+                                  pageIndex * GC_PAGE_SIZE);
+                } else if (thingLimit > GC_PAGE_SIZE) {
+                    thingLimit = GC_PAGE_SIZE;
+                }
+                JS_ASSERT(thingLimit > thingOffset);
+            }
+            JS_ASSERT(arena->list->last != arena ||
+                      arena->list->lastLimit >= (pageIndex * GC_PAGE_SIZE +
+                                                 thingLimit));
+            JS_ASSERT(thingLimit <= GC_PAGE_SIZE);
+
+            for (; thingOffset != thingLimit; thingOffset += thingSize) {
+                /*
+                 * XXX: inline js_GetGCThingFlags() to use already available
+                 * pi.
+                 */
+                thing = (JSGCThing *)((jsuword)pi + thingOffset);
+                flagp = js_GetGCThingFlags(thing);
+                if (thingsPerUnscannedChunk != 1) {
+                    /*
+                     * Skip free or already scanned things that share the chunk
+                     * with unscanned ones.
+                     */
+                    if ((*flagp & (GCF_MARK|GCF_FINAL)) != (GCF_MARK|GCF_FINAL))
+                        continue;
+                }
+                JS_ASSERT((*flagp & (GCF_MARK|GCF_FINAL))
+                              == (GCF_MARK|GCF_FINAL));
                 *flagp &= ~GCF_FINAL;
 #ifdef DEBUG
-                JS_ASSERT(rt->gcTraceLaterCount != 0);
-                --rt->gcTraceLaterCount;
+                JS_ASSERT(rt->gcUnscannedBagSize != 0);
+                --rt->gcUnscannedBagSize;
 #endif
-                thing = FLAGP_TO_THING(flagp, thingSize);
                 JS_TraceChildren(trc, thing,
                                  GCTypeToTraceKindMap[*flagp & GCF_TYPEMASK]);
-            } while (++thingIndex != endIndex);
+            }
         }
-
         /*
-         * We finished tracing of all things in the the arena but we can only
-         * pop it from the stack if the arena is the stack's top.
+         * We finished scanning of the arena but we can only pop it from
+         * the stack if the arena is the stack's top.
          *
-         * When JS_TraceChildren from the above calls JS_CallTracer that in
-         * turn on low C stack calls DelayTracingChildren and the latter
-         * pushes new arenas to the untraced stack, we have to skip popping
-         * of this arena until it becomes the top of the stack again.
+         * When JS_TraceChildren from the above calls JS_Trace that in turn
+         * on low C stack calls AddThingToUnscannedBag and the latter pushes
+         * new arenas to the unscanned stack, we have to skip popping of this
+         * arena until it becomes the top of the stack again.
          */
-        if (a == rt->gcUntracedArenaStackTop) {
-            aprev = ARENA_PAGE_TO_INFO(a->prevUntracedPage);
-            a->prevUntracedPage = 0;
-            if (a == aprev) {
+        if (arena == rt->gcUnscannedArenaStackTop) {
+            prevArena = arena->prevUnscanned;
+            arena->prevUnscanned = NULL;
+            if (arena == prevArena) {
                 /*
-                 * prevUntracedPage points to itself and we reached the
-                 * bottom of the stack.
+                 * prevUnscanned points to itself and we reached the bottom
+                 * of the stack.
                  */
                 break;
             }
-            rt->gcUntracedArenaStackTop = a = aprev;
+            rt->gcUnscannedArenaStackTop = arena = prevArena;
         } else {
-            a = rt->gcUntracedArenaStackTop;
+            arena = rt->gcUnscannedArenaStackTop;
         }
+        if (arena->list->thingSize != thingSize)
+            goto init_size;
     }
-    JS_ASSERT(rt->gcUntracedArenaStackTop);
-    JS_ASSERT(rt->gcUntracedArenaStackTop->prevUntracedPage == 0);
-    rt->gcUntracedArenaStackTop = NULL;
-    JS_ASSERT(rt->gcTraceLaterCount == 0);
+    JS_ASSERT(rt->gcUnscannedArenaStackTop);
+    JS_ASSERT(!rt->gcUnscannedArenaStackTop->prevUnscanned);
+    rt->gcUnscannedArenaStackTop = NULL;
+    JS_ASSERT(rt->gcUnscannedBagSize == 0);
 }
 
 JS_PUBLIC_API(void)
@@ -1984,42 +1724,8 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
     JS_ASSERT(rt->gcMarkingTracer == trc);
     JS_ASSERT(rt->gcLevel > 0);
 
-    /*
-     * Optimize for string and double as their size is known and their tracing
-     * is not recursive.
-     */
-    switch (kind) {
-      case JSTRACE_DOUBLE:
-        flagp = THING_TO_FLAGP(thing, sizeof(JSGCThing));
-        JS_ASSERT((*flagp & GCF_FINAL) == 0);
-        JS_ASSERT(GCTypeToTraceKindMap[*flagp & GCF_TYPEMASK] == kind);
-        if (rt->gcThingCallback)
-            rt->gcThingCallback(thing, *flagp, rt->gcThingCallbackClosure);
-
-        *flagp |= GCF_MARK;
-        goto out;
-
-      case JSTRACE_STRING:
-        for (;;) {
-            flagp = THING_TO_FLAGP(thing, sizeof(JSGCThing));
-            JS_ASSERT((*flagp & GCF_FINAL) == 0);
-            JS_ASSERT(GCTypeToTraceKindMap[*flagp & GCF_TYPEMASK] == kind);
-            if (rt->gcThingCallback)
-                rt->gcThingCallback(thing, *flagp, rt->gcThingCallbackClosure);
-
-            if (!JSSTRING_IS_DEPENDENT((JSString *) thing)) {
-                *flagp |= GCF_MARK;
-                goto out;
-            }
-            if (*flagp & GCF_MARK)
-                goto out;
-            *flagp |= GCF_MARK;
-            thing = JSSTRDEP_BASE((JSString *) thing);
-        }
-        /* NOTREACHED */
-    }
-
     flagp = js_GetGCThingFlags(thing);
+    JS_ASSERT(*flagp != GCF_FINAL);
     JS_ASSERT(GCTypeToTraceKindMap[*flagp & GCF_TYPEMASK] == kind);
 
     if (rt->gcThingCallback)
@@ -2027,13 +1733,8 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
 
     if (*flagp & GCF_MARK)
         goto out;
-
-    /*
-     * We check for non-final flag only if mark is unset as
-     * DelayTracingChildren uses the flag. See comments in the function.
-     */
-    JS_ASSERT(*flagp != GCF_FINAL);
     *flagp |= GCF_MARK;
+
     if (!cx->insideGCMarkCallback) {
         /*
          * With JS_GC_ASSUME_LOW_C_STACK defined the mark phase of GC always
@@ -2047,28 +1748,28 @@ JS_CallTracer(JSTracer *trc, void *thing, uint32 kind)
 # define RECURSION_TOO_DEEP() (!JS_CHECK_STACK_SIZE(cx, stackDummy))
 #endif
         if (RECURSION_TOO_DEEP())
-            DelayTracingChildren(rt, flagp);
+            AddThingToUnscannedBag(rt, thing, flagp);
         else
             JS_TraceChildren(trc, thing, kind);
     } else {
         /*
          * For API compatibility we allow for the callback to assume that
-         * after it calls JS_MarkGCThing for the last time, the callback can
-         * start to finalize its own objects that are only referenced by
-         * unmarked GC things.
+         * after it calls JS_Trace or JS_MarkGCThing for the last time, the
+         * callback can start to finalize its own objects that are only
+         * referenced by unmarked GC things.
          *
          * Since we do not know which call from inside the callback is the
-         * last, we ensure that children of all marked things are traced and
-         * call TraceDelayedChildren(trc) after tracing the thing.
+         * last, we ensure that the unscanned bag is always empty when we
+         * return to the callback and all marked things are scanned.
          *
-         * As TraceDelayedChildren unconditionally invokes JS_TraceChildren
-         * for the things with untraced children, calling DelayTracingChildren
-         * is useless here. Hence we always trace thing's children even with a
-         * low native stack.
+         * We do not check for the stack size here and uncondinally call
+         * JS_TraceChildren. Otherwise with low C stack the thing would be
+         * pushed to the bag just to be feed again to JS_TraceChildren from
+         * inside ScanDelayedChildren.
          */
         cx->insideGCMarkCallback = JS_FALSE;
         JS_TraceChildren(trc, thing, kind);
-        TraceDelayedChildren(trc);
+        ScanDelayedChildren(trc);
         cx->insideGCMarkCallback = JS_TRUE;
     }
 
@@ -2115,20 +1816,18 @@ gc_root_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
         jsuword thing = (jsuword) JSVAL_TO_GCTHING(v);
         uintN i;
         JSGCArenaList *arenaList;
-        uint32 thingSize;
-        JSGCArenaInfo *a;
+        JSGCArena *a;
         size_t limit;
 
         for (i = 0; i < GC_NUM_FREELISTS; i++) {
             arenaList = &trc->context->runtime->gcArenaList[i];
-            thingSize = arenaList->thingSize;
-            limit = (size_t) arenaList->lastCount * thingSize;
+            limit = arenaList->lastLimit;
             for (a = arenaList->last; a; a = a->prev) {
-                if (thing - ARENA_INFO_TO_START(a) < limit) {
+                if (thing - FIRST_THING_PAGE(a) < limit) {
                     root_points_to_gcArenaList = JS_TRUE;
                     break;
                 }
-                limit = (size_t) THINGS_PER_ARENA(thingSize) * thingSize;
+                limit = GC_THINGS_SIZE;
             }
         }
         if (!root_points_to_gcArenaList && rhe->name) {
@@ -2410,9 +2109,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     JSBool keepAtoms;
     uintN i, type;
     JSTracer trc;
-    uint32 thingSize, indexLimit;
-    JSGCArenaInfo *a, **ap;
-    uint8 flags, *flagp;
+    size_t nbytes, limit, offset;
+    JSGCArena *a, **ap;
+    uint8 flags, *flagp, *firstPage;
     JSGCThing *thing, *freeList;
     JSGCArenaList *arenaList;
     GCFinalizeOp finalizer;
@@ -2610,8 +2309,8 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
 
 restart:
     rt->gcNumber++;
-    JS_ASSERT(!rt->gcUntracedArenaStackTop);
-    JS_ASSERT(rt->gcTraceLaterCount == 0);
+    JS_ASSERT(!rt->gcUnscannedArenaStackTop);
+    JS_ASSERT(rt->gcUnscannedBagSize == 0);
 
     /*
      * Mark phase.
@@ -2626,7 +2325,7 @@ restart:
      * Mark children of things that caused too deep recursion during the above
      * tracing.
      */
-    TraceDelayedChildren(&trc);
+    ScanDelayedChildren(&trc);
 
     JS_ASSERT(!cx->insideGCMarkCallback);
     if (rt->gcCallback) {
@@ -2635,7 +2334,7 @@ restart:
         JS_ASSERT(cx->insideGCMarkCallback);
         cx->insideGCMarkCallback = JS_FALSE;
     }
-    JS_ASSERT(rt->gcTraceLaterCount == 0);
+    JS_ASSERT(rt->gcUnscannedBagSize == 0);
 
     rt->gcMarkingTracer = NULL;
 
@@ -2683,18 +2382,22 @@ restart:
                                      : i == GC_FREELIST_INDEX(sizeof(JSObject))
                                      ? 0
                                      : i];
-        a = arenaList->last;
-        if (!a)
-            continue;
-
-        thingSize = arenaList->thingSize;
-        indexLimit = THINGS_PER_ARENA(thingSize);
-        JS_ASSERT(arenaList->lastCount > 0);
-        flagp = THING_FLAGP(a, arenaList->lastCount - 1);
-        for (;;) {
-            JS_ASSERT(a->prevUntracedPage == 0);
-            JS_ASSERT(a->untracedThings == 0);
-            do {
+        nbytes = arenaList->thingSize;
+        limit = arenaList->lastLimit;
+        for (a = arenaList->last; a; a = a->prev) {
+            JS_ASSERT(!a->prevUnscanned);
+            JS_ASSERT(a->unscannedPages == 0);
+            firstPage = (uint8 *) FIRST_THING_PAGE(a);
+            for (offset = 0; offset != limit; offset += nbytes) {
+                if ((offset & GC_PAGE_MASK) == 0) {
+                    JS_ASSERT(((JSGCPageInfo *)(firstPage + offset))->
+                              unscannedBitmap == 0);
+                    offset += PAGE_THING_GAP(nbytes);
+                }
+                JS_ASSERT(offset < limit);
+                flagp = a->base + offset / sizeof(JSGCThing);
+                if (flagp >= firstPage)
+                    flagp += GC_THINGS_SIZE;
                 flags = *flagp;
                 if (flags & GCF_MARK) {
                     *flagp &= ~GCF_MARK;
@@ -2703,7 +2406,7 @@ restart:
                     type = flags & GCF_TYPEMASK;
                     finalizer = gc_finalizers[type];
                     if (finalizer) {
-                        thing = (JSGCThing *) FLAGP_TO_THING(flagp, thingSize);
+                        thing = (JSGCThing *)(firstPage + offset);
                         *flagp = (uint8)(flags | GCF_FINAL);
                         if (type >= GCX_EXTERNAL_STRING)
                             js_PurgeDeflatedStringCache(rt, (JSString *)thing);
@@ -2713,11 +2416,8 @@ restart:
                     /* Set flags to GCF_FINAL, signifying that thing is free. */
                     *flagp = GCF_FINAL;
                 }
-            } while (++flagp != THING_FLAGS_END(a));
-            a = a->prev;
-            if (!a)
-                break;
-            flagp = THING_FLAGP(a, indexLimit - 1);
+            }
+            limit = GC_THINGS_SIZE;
         }
     }
 
@@ -2742,45 +2442,47 @@ restart:
     for (i = 0; i < GC_NUM_FREELISTS; i++) {
         arenaList = &rt->gcArenaList[i];
         ap = &arenaList->last;
-        if (!(a = *ap))
+        a = *ap;
+        if (!a)
             continue;
 
         allClear = JS_TRUE;
         arenaList->freeList = NULL;
         freeList = NULL;
-        thingSize = arenaList->thingSize;
-        indexLimit = THINGS_PER_ARENA(thingSize);
-        JS_ASSERT(arenaList->lastCount > 0);
-        flagp = THING_FLAGP(a, arenaList->lastCount - 1);
         METER(arenaList->stats.nthings = 0);
         METER(arenaList->stats.freelen = 0);
-        for (;;) {
+
+        nbytes = GC_FREELIST_NBYTES(i);
+        limit = arenaList->lastLimit;
+        do {
             METER(size_t nfree = 0);
-            do {
+            firstPage = (uint8 *) FIRST_THING_PAGE(a);
+            for (offset = 0; offset != limit; offset += nbytes) {
+                if ((offset & GC_PAGE_MASK) == 0)
+                    offset += PAGE_THING_GAP(nbytes);
+                JS_ASSERT(offset < limit);
+                flagp = a->base + offset / sizeof(JSGCThing);
+                if (flagp >= firstPage)
+                    flagp += GC_THINGS_SIZE;
+
                 if (*flagp != GCF_FINAL) {
                     allClear = JS_FALSE;
                     METER(++arenaList->stats.nthings);
                 } else {
-                    thing = (JSGCThing *) FLAGP_TO_THING(flagp, thingSize);
+                    thing = (JSGCThing *)(firstPage + offset);
                     thing->flagp = flagp;
                     thing->next = freeList;
                     freeList = thing;
                     METER(++nfree);
                 }
-            } while (++flagp != THING_FLAGS_END(a));
-
+            }
             if (allClear) {
                 /*
-                 * Forget just assembled free list head for the arena and
-                 * destroy the arena itself.
+                 * Forget just assembled free list head for the arena
+                 * and destroy the arena itself.
                  */
                 freeList = arenaList->freeList;
-                if (a == arenaList->last)
-                    arenaList->lastCount = indexLimit;
-                *ap = a->prev;
-                JS_ASSERT(rt->gcBytes >= GC_ARENA_SIZE);
-                rt->gcBytes -= GC_ARENA_SIZE;
-                DestroyGCArena(rt, a);
+                DestroyGCArena(rt, arenaList, ap);
             } else {
                 allClear = JS_TRUE;
                 arenaList->freeList = freeList;
@@ -2789,10 +2491,8 @@ restart:
                 METER(arenaList->stats.totalfreelen += nfree);
                 METER(++arenaList->stats.totalarenas);
             }
-            if (!(a = *ap))
-                break;
-            flagp = THING_FLAGP(a, indexLimit - 1);
-        }
+            limit = GC_THINGS_SIZE;
+        } while ((a = *ap) != NULL);
     }
 
     if (rt->gcCallback)

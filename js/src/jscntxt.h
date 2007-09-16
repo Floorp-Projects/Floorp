@@ -171,7 +171,6 @@ struct JSRuntime {
     JSContextCallback   cxCallback;
 
     /* Garbage collector state, used by jsgc.c. */
-    JSGCChunkInfo       *gcChunkList;
     JSGCArenaList       gcArenaList[GC_NUM_FREELISTS];
     JSDHashTable        gcRootsHash;
     JSDHashTable        *gcLocksHash;
@@ -203,9 +202,9 @@ struct JSRuntime {
     JSGCThingCallback   gcThingCallback;
     void                *gcThingCallbackClosure;
     uint32              gcMallocBytes;
-    JSGCArenaInfo       *gcUntracedArenaStackTop;
+    JSGCArena           *gcUnscannedArenaStackTop;
 #ifdef DEBUG
-    size_t              gcTraceLaterCount;
+    size_t              gcUnscannedBagSize;
 #endif
 
     /*
