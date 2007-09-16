@@ -68,11 +68,9 @@ REQUIRES	= xpcom \
 		  pref \
 		  view \
 		  locale \
+		  cairo \
+		  thebes \
 		  $(NULL)
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-REQUIRES += cairo thebes
-endif
 
 CPPSRCS		= \
 		nsAppShell.cpp \
@@ -102,11 +100,8 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
 		$(TK_LIBS) \
+		-lthebes \
 		$(NULL)
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-EXTRA_DSO_LDOPTS += -lthebes
-endif
 
 include $(topsrcdir)/config/rules.mk
 
