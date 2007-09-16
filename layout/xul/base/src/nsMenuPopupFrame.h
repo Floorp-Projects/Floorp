@@ -183,22 +183,7 @@ public:
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  virtual PRBool IsLeaf() const
-  {
-    if (!mGeneratedChildren && mPopupType == ePopupTypeMenu) {
-      // menu popups generate their child frames lazily only when opened, so
-      // behave like a leaf frame. However, generate child frames normally if
-      // the parent menu has a sizetopopup attribute. In this case the size of
-      // the parent menu is dependant on the size of the popup, so the frames
-      // need to exist in order to calculate this size.
-      nsIContent* parentContent = mContent->GetParent();
-      if (parentContent &&
-          !parentContent->HasAttr(kNameSpaceID_None, nsGkAtoms::sizetopopup))
-        return PR_TRUE;
-    }
-
-    return PR_FALSE;
-  }
+  virtual PRBool IsLeaf() const;
 
   // AdjustView should be called by the parent frame after the popup has been
   // laid out, so that the view can be shown.
