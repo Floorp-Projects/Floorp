@@ -4164,6 +4164,7 @@ MOZ_XSLT_STANDALONE=
 MOZ_XTF=1
 MOZ_XUL=1
 MOZ_XUL_APP=1
+MOZ_ZIPWRITER=1
 NS_PRINTING=1
 NECKO_COOKIES=1
 NECKO_DISK_CACHE=1
@@ -4281,6 +4282,7 @@ basic)
   MOZ_XPFE_COMPONENTS=
   MOZ_XPINSTALL=
   MOZ_XTF=
+  MOZ_ZIPWRITER=
   NECKO_DISK_CACHE=
   NECKO_PROTOCOLS_DEFAULT="about data http file res"
   NECKO_SMALL_BUFFERS=1
@@ -4331,6 +4333,7 @@ minimal)
   MOZ_XPINSTALL=
   MOZ_XTF=
   MOZ_XUL=
+  MOZ_ZIPWRITER=
   MOZ_RDF=
   NECKO_DISK_CACHE=
   NECKO_PROTOCOLS_DEFAULT="about data http file res"
@@ -5902,6 +5905,15 @@ if test -n "$MOZ_URL_CLASSIFIER"; then
     AC_DEFINE(MOZ_URL_CLASSIFIER)
 fi
 AC_SUBST(MOZ_URL_CLASSIFIER)
+
+dnl ========================================================
+dnl = Disable zipwriter
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(zipwriter,
+[  --disable-zipwriter             Disable zipwriter component],
+    MOZ_ZIPWRITER=,
+    MOZ_ZIPWRITER=1 )
+AC_SUBST(MOZ_ZIPWRITER)
 
 dnl ========================================================
 dnl = Enable Ultrasparc specific optimizations for JS

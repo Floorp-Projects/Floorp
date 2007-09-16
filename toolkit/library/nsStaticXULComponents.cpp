@@ -222,6 +222,12 @@
 #define STORAGE_MODULE
 #endif
 
+#ifdef MOZ_ZIPWRITER
+#define ZIPWRITER_MODULE MODULE(ZipWriterModule)
+#else
+#define ZIPWRITER_MODULE
+#endif
+
 #ifdef MOZ_PLACES
 #define PLACES_MODULES \
     MODULE(nsPlacesModule)
@@ -268,6 +274,7 @@
     AUTH_MODULE                              \
     IPC_MODULE                               \
     MODULE(nsJarModule)                      \
+    ZIPWRITER_MODULE                         \
     MODULE(nsPrefModule)                     \
     MODULE(nsSecurityManagerModule)          \
     RDF_MODULE                               \
