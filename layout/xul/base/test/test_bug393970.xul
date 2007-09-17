@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<?xml-stylesheet href="data:text/css,description {border: 1px solid black; padding: 2px;}" type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=393970
+-->
+<window title="Mozilla Bug 393970"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="/MochiKit/packed.js" />
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test resuls are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=393970"
+     target="_blank">Mozilla Bug 393970</a>
+  </body>
+
+  <grid flex="1" style="visibility: hidden;">
+    <columns>
+      <column flex="1"/>
+      <column flex="2"/>
+      <column flex="3"/>
+    </columns>
+    <rows id="rows1">
+      <row>
+        <description id="cell11">test1</description>
+        <description id="cell12">test2</description>
+        <description id="cell13">test3</description>
+      </row>
+      <rows id="rows2" flex="1">
+        <row>
+          <description id="cell21">test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1</description>
+          <description id="cell22">test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2</description>
+          <description id="cell23">test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3</description>
+        </row>
+        <rows id="rows3">
+          <row>
+            <description id="cell31">test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1 test1</description>
+            <description id="cell32">test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2 test2</description>
+            <description id="cell33">test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3 test3</description>
+          </row>
+        </rows>
+      </rows>
+    </rows>
+  </grid>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    /** Test for Bug 393970 **/
+
+    var tests = [
+      'overflow-x: hidden; overflow-y: hidden;',
+      'overflow-x: scroll; overflow-y: hidden;',
+      'overflow-x: hidden; overflow-y: scroll;',
+      'overflow-x: scroll; overflow-y: scroll;',
+    ];
+    var currentTest = -1;
+
+    function runNextTest() {
+      currentTest++;
+      if (currentTest >= tests.length) {
+        SimpleTest.finish();
+        return;
+      }
+
+      $("rows2").setAttribute("style", tests[currentTest]);
+      setTimeout(checkPositions, 0, tests[currentTest]);
+    }
+
+    function checkPositions(variant) {
+      for (var col = 1; col <= 3; col++) {
+        is($('cell1' + col).boxObject.x, $('cell2' + col).boxObject.x, "Cells (1," + col + ") and (2," + col + ") line up horizontally (with " + variant + ")");
+        is($('cell2' + col).boxObject.x, $('cell3' + col).boxObject.x, "Cells (2," + col + ") and (3," + col + ") line up horizontally (with " + variant + ")");
+      }
+      for (var row = 1; row <= 3; row++) {
+        is($('cell' + row + '1').boxObject.y, $('cell' + row + '2').boxObject.y, "Cells (" + row + ",1) and (" + row + ",2) line up vertically (with " + variant + ")");
+        is($('cell' + row + '2').boxObject.y, $('cell' + row + '3').boxObject.y, "Cells (" + row + ",2) and (" + row + ",3) line up vertically (with " + variant + ")");
+      }
+      runNextTest();
+    }
+ 
+    addLoadEvent(runNextTest);
+    SimpleTest.waitForExplicitFinish()
+   ]]></script>
+</window>
