@@ -349,7 +349,7 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
       case JOF_SLOTOBJECT:
         fprintf(fp, " %u", GET_VARNO(pc));
         index = js_GetIndexFromBytecode(script, pc, VARNO_LEN);
-        if (type == JOF_ATOM) {
+        if (type == JOF_SLOTATOM) {
             JS_GET_SCRIPT_ATOM(script, index, atom);
             v = ATOM_KEY(atom);
         } else {

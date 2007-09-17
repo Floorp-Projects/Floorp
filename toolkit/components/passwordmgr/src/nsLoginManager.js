@@ -884,19 +884,22 @@ LoginManager.prototype = {
     _fillDocument : function (doc) {
         var forms = doc.forms;
         if (!forms || forms.length == 0)
-            return; 
+            return;
 
         var formOrigin = this._getPasswordOrigin(doc.documentURI);
-        var autofillForm = this._prefBranch.getBoolPref("autofillForms");
 
-        this.log("fillDocument found " + forms.length +
+        // If there are no logins for this site, bail out now.
+        if (!this.countLogins(formOrigin, "", null))
+            return;
+
+        this.log("fillDocument processing " + forms.length +
                  " forms on " + doc.documentURI);
 
+        var autofillForm = this._prefBranch.getBoolPref("autofillForms");
         var previousActionOrigin = null;
 
         for (var i = 0; i < forms.length; i++) {
             var form = forms[i];
-            var actionOrigin = this._getActionOrigin(form);
 
             // Heuristically determine what the user/pass fields are
             // We do this before checking to see if logins are stored,
@@ -912,6 +915,7 @@ LoginManager.prototype = {
 
             // Only the actionOrigin might be changing, so if it's the same
             // as the last form on the page we can reuse the same logins.
+            var actionOrigin = this._getActionOrigin(form);
             if (actionOrigin != previousActionOrigin) {
                 var foundLogins =
                     this.findLogins({}, formOrigin, actionOrigin, null);

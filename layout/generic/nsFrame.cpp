@@ -2032,6 +2032,8 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   if (NS_FAILED(rv))
     return rv;
 
+  // Keep frameSelection alive.
+  nsRefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
   nsCOMPtr<nsISelection> selection;
   if (NS_SUCCEEDED(selcon->GetSelection(nsISelectionController::SELECTION_NORMAL,
                                         getter_AddRefs(selection)))){
@@ -2045,7 +2047,7 @@ nsFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   //no release 
 
   // maintain selection
-  return GetFrameSelection()->MaintainSelection(aAmountBack);
+  return frameSelection->MaintainSelection(aAmountBack);
 }
 
 // Figure out which view we should point capturing at, given that drag started
@@ -5184,7 +5186,7 @@ nsIFrame::FinishAndStoreOverflow(nsRect* aOverflowArea, nsSize aNewSize)
                "Computed overflow area must contain frame bounds");
 
   const nsStyleDisplay *disp = GetStyleDisplay();
-  if (IsThemed(disp)) {
+  if (!IsBoxWrapped() && IsThemed(disp)) {
     nsRect r;
     nsPresContext *presContext = PresContext();
     if (presContext->GetTheme()->

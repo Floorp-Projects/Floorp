@@ -171,8 +171,9 @@ private:
 public:
   // Note: It's the caller's responsibility to make sure to wrap a
   // ProcessPendingRestyles call in a view update batch.
-  // ProcessPendingRestyles will handle calling ProcessAttachedQueue() on the
-  // binding manager.
+  // This function does not call ProcessAttachedQueue() on the binding manager.
+  // If the caller wants that to happen synchronously, it needs to handle that
+  // itself.
   void ProcessPendingRestyles();
 
   void PostRestyleEvent(nsIContent* aContent, nsReStyleHint aRestyleHint,

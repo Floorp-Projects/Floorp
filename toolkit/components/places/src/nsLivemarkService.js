@@ -515,28 +515,28 @@ LivemarkLoadListener.prototype = {
 
     this.deleteLivemarkChildren(this._livemark.folderId);
     this._livemark.loadingId = -1;
-    var title, href, entry;
     var feed = result.doc.QueryInterface(Ci.nsIFeed);
     // Loop through and check for a link and a title
     // as the old code did
     for (var i = 0; i < feed.items.length; ++i) {
-      entry = feed.items.queryElementAt(i, Ci.nsIFeedEntry);
-      if (entry.title)
-        title = entry.title.plainText();
-      else if (entry.updated)
-        title = entry.updated;
+      let entry = feed.items.queryElementAt(i, Ci.nsIFeedEntry);
+      let href = entry.link;
+      if (!href)
+        continue;
 
-      if (entry.link) {
-        try {
-          secMan.checkLoadURIStr(this._livemark.feedURI.spec, entry.link.spec,
-                                 SEC_FLAGS);
-          href = entry.link;
-        }
-        catch (ex) { }
+      let title = entry.title ? entry.title.plainText() : entry.updated;
+      if (!title)
+        continue;
+
+      try {
+        secMan.checkLoadURIStr(this._livemark.feedURI.spec, href.spec,
+                               SEC_FLAGS);
+      }
+      catch(ex) {
+        continue;
       }
 
-      if (href && title)
-        this.insertLivemarkChild(this._livemark.folderId, href, title);
+      this.insertLivemarkChild(this._livemark.folderId, href, title);
     }
   },
 

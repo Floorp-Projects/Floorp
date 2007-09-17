@@ -840,6 +840,15 @@ if [ "$MOZ_COMPOSER" ]; then
   "
 fi
 
+if [ "$MOZ_ZIPWRITER" ]; then
+  add_makefiles "
+    modules/libjar/zipwriter/Makefile
+    modules/libjar/zipwriter/public/Makefile
+    modules/libjar/zipwriter/src/Makefile
+    modules/libjar/zipwriter/test/Makefile
+  "
+fi
+
 if [ "$MOZ_STORAGE" ]; then
   add_makefiles "
     db/sqlite3/src/Makefile

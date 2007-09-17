@@ -70,11 +70,9 @@ REQUIRES	= xpcom \
 			uriloader \
 			webbrowserpersist \
 			unicharutil \
+			thebes \
+			cairo \
 			$(NULL)
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-REQUIRES += thebes cairo
-endif
 
 CPPSRCS		= \
 	L_Ienumfe.cpp  \

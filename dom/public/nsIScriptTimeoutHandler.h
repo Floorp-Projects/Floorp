@@ -68,6 +68,8 @@ public:
   virtual const PRUnichar *GetHandlerText() = 0;
 
   // Get the location of the script.
+  // Note: The memory pointed to by aFileName is owned by the
+  // nsIScriptTimeoutHandler and should not be freed by the caller.
   virtual void GetLocation(const char **aFileName, PRUint32 *aLineNo) = 0;
 
   // If a script object, get the argv suitable for passing back to the

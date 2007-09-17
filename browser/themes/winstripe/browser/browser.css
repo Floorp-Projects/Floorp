@@ -850,7 +850,7 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
   margin-bottom: 2px;
   margin-top: 2px;
   -moz-margin-end: 0px;
-  -moz-margin-start: 0px;
+  -moz-margin-start: 3px;
   width: 7em;
   min-width: 7em;
 
@@ -1001,6 +1001,40 @@ statusbarpanel#statusbar-display {
   border-top: 1px solid GrayText;
 }
 
+/* ::::: endcaps ::::: */
+
+.endcap {
+  padding: 2px 0px 2px 0px;
+}
+
+.endcap-box {
+  -moz-border-top-colors: #96969D;
+  -moz-border-right-colors: #96969D;
+  -moz-border-bottom-colors: #96969D;
+  -moz-border-radius: 0 4px 4px 0;
+  border: 1px solid;
+  border-left: none;
+  background-image: url("chrome://browser/skin/endcap-bkgnd.png");
+  background-repeat: repeat-x;
+  background-position: 50% 50%;
+}
+
+toolbar:not([mode="text"]) .endcap:hover > .endcap-box {
+  background-image: url("chrome://browser/skin/endcap-bkgnd-hover.png");
+}
+
+.endcap-box[chromedir="rtl"] {
+  -moz-border-radius: 4px 0 0 4px;
+  -moz-border-left-colors: #96969D;
+  border-left: 1px solid;
+  border-right: none;
+}
+
+toolbar[mode="text"] .endcap-box {
+  border: none;
+  background-image: none;
+}
+
 /* ::::: go button ::::: */
 
 /* In text icon mode, the Go button scales independently of the location bar,
@@ -1014,31 +1048,49 @@ toolbar[mode="text"] #urlbar-button-box {
   -moz-box-align: center;
 }
 
-toolbar[mode="text"] #go-button {
-  -moz-margin-start: 5px;
+#go-button {
+  -moz-appearance: none;
+  list-style-image: url("chrome://browser/skin/Go-arrow.png");
+  -moz-image-region: rect(0px 25px 22px 0px);
+  border: none;
+  padding: 0;
 }
 
-toolbar[mode="text"] #go-button,
-toolbar[mode="text"] #go-button-stack .go-button-background {
-  list-style-image: none;
-  background-image: none;
+#go-button[chromedir="rtl"] {
+  list-style-image: url("chrome://browser/skin/Go-arrow-rtl.png");
+}
+
+toolbar[mode="text"] #go-button {
+  -moz-appearance: toolbarbutton;
+  -moz-margin-start: 5px;
+  padding: 3px;
 }
 
 toolbar[mode="text"] #go-button-stack {
   padding: 0;
 }
 
-#go-button-stack {
-  padding: 2px 0px 2px 0px;
+#go-button > .toolbarbutton-icon {
+  margin: 0;
+}
+
+#go-button:hover {
+  -moz-image-region: rect(0px 50px 22px 25px);
+}
+
+#go-button:hover:active {
+  -moz-image-region: rect(0px 100px 22px 75px);
+}
+
+#go-button[disabled="true"] {
+  -moz-image-region: rect(0px 75px 22px 50px);
 }
 
 toolbar:not([mode="text"]) #go-button,
-#palette-box #go-button {
-  -moz-appearance: none;
-  list-style-image: url("chrome://browser/skin/Go-arrow.png");
-  -moz-image-region: rect(0px 25px 22px 0px);
-  border: none;
-  padding: 0;
+toolbar:not([mode="text"]) .search-go-button,
+toolbarpaletteitem:not([place="toolbar"]) #go-button,
+toolbarpaletteitem:not([place="toolbar"]) .search-go-button {
+  -moz-binding: url(chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image);
 }
 
 /* star button */
@@ -1055,128 +1107,11 @@ toolbar:not([mode="text"]) #star-button[starred="true"],
   list-style-image: url("chrome://browser/skin/places/pageStarred.png");
 }
 
-#go-button[chromedir="rtl"] {
-  list-style-image: url("chrome://browser/skin/Go-arrow-rtl.png");
-}
-
-#go-button-top {
-  list-style-image: url("chrome://browser/skin/Go-bkgnd.png");
-  -moz-image-region: rect(0px, 25px, 10px, 0px);
-  height: 10px;
-}
-
-/* GTK does not stretch image regions properly, so use background
-   images instead.  See bugs 351764 and 254659. */
-#go-button-mid-top {
-  background-image: url("chrome://browser/skin/Go-mid-top.png");
-}
-
-#go-button-mid-bottom {
-  background-image: url("chrome://browser/skin/Go-mid-bottom.png");
-}
-
-#go-button-bottom {
-  list-style-image: url("chrome://browser/skin/Go-bkgnd.png");
-  -moz-image-region: rect(12px, 25px, 22px, 0px);
-  height: 10px;
-}
-
-#go-button-top[chromedir="rtl"],
-#go-button-bottom[chromedir="rtl"] {
-  list-style-image: url("chrome://browser/skin/Go-bkgnd-rtl.png");
-}
-
-#go-button-mid-top[chromedir="rtl"] {
-  background-image: url("chrome://browser/skin/Go-mid-top-rtl.png");
-}
-
-#go-button-mid-bottom[chromedir="rtl"] {
-  background-image: url("chrome://browser/skin/Go-mid-bottom-rtl.png");
-}
-
-#go-button-stack:hover #go-button-top {
-  -moz-image-region: rect(0px, 50px, 10px, 25px);
-}
-
-#go-button-stack:hover #go-button-mid-top,
-#go-button-stack:hover #go-button-mid-bottom {
-  background-position: -25px 0px;
-}
-
-#go-button-stack:hover #go-button-bottom {
-  -moz-image-region: rect(12px, 50px, 22px, 25px);
-}
-
-/* Disabled images are not used. */
-#go-button-stack[disabled="true"] #go-button-top {
-  -moz-image-region: rect(0px, 75px, 10px, 50px) !important;
-}
-
-#go-button-stack[disabled="true"] #go-button-mid-top,
-#go-button-stack[disabled="true"] #go-button-mid-bottom {
-  background-position: -50px 0px;
-}
-
-#go-button-stack[disabled="true"] #go-button-bottom {
-  -moz-image-region: rect(12px, 75px, 22px, 50px) !important;
-}
-
-
-#go-button-stack:hover:active #go-button-top {
-  -moz-image-region: rect(0px, 100px, 10px, 75px);
-}
-
-#go-button-stack:hover:active #go-button-mid-top,
-#go-button-stack:hover:active #go-button-mid-bottom {
-  background-position: -75px;
-}
-
-#go-button-stack:hover:active #go-button-bottom {
-  -moz-image-region: rect(12px, 100px, 22px, 75px);
-}
-
-
-toolbar[mode="text"] #go-button-top,
-toolbar[mode="text"] #go-button-mid-top,
-toolbar[mode="text"] #go-button-mid-bottom,
-toolbar[mode="text"] #go-button-bottom {
-  display: none;
-}
-
-toolbar[mode="text"] #go-button > .toolbarbutton-text {
-  display: -moz-box !important;
-  -moz-margin-start: 4px !important;
-}
-
-/* Not used. */
-#go-button:not([disabled="true"]):hover {
-  -moz-image-region: rect(0px 50px 22px 25px);
-}
-
-#go-button[disabled="true"] {
-  -moz-image-region: rect(0px 75px 22px 50px);
-}
-
-#go-button:not([disabled="true"]):hover:active {
-  -moz-image-region: rect(0px 100px 22px 75px);
-}
-
-#go-button > .toolbarbutton-icon {
-  margin: 0;
-}
-
-toolbar:not([mode="text"]) #go-button,
-toolbar:not([mode="text"]) .search-go-button,
-toolbarpaletteitem:not([place="toolbar"]) #go-button,
-toolbarpaletteitem:not([place="toolbar"]) .search-go-button {
-  -moz-binding: url(chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image);
-}
+/* ::::: content area ::::: */
 
 #sidebar {
   background-color: Window;
 }
-
-/* ::::: content area ::::: */
 
 #status-bar {
   border-top: none;
@@ -1263,7 +1198,6 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
  */
 
 .tabbrowser-tabs {
-  -moz-binding: url("chrome://browser/skin/tabbrowser/tabbrowserBindings.xml#tabbrowser-tabs") !important;
   padding-top: 0px;
   background: -moz-dialog url("chrome://browser/skin/tabbrowser/tabbrowser-tabs-bkgnd.png") !important;
   -moz-padding-start: 0px;
@@ -1279,7 +1213,6 @@ toolbar[mode="text"] #navigator-throbber[busy="true"] {
 
 .tabbrowser-tab {
   -moz-appearance: none !important;
-  -moz-binding: url("chrome://browser/skin/tabbrowser/tabbrowserBindings.xml#tabbrowser-tab") !important;
   background: transparent !important;
   margin: 0px 0px 1px !important;
   padding: 0px !important;
@@ -1809,6 +1742,43 @@ toolbar[mode="text"] > #window-controls > toolbarbutton > .toolbarbutton-text {
   color: #000000;
 }
 
+#urlbar[level="high"] #lock-icon {
+  -moz-image-region: rect(0px, 18px, 18px, 0px);
+  list-style-image: url("chrome://browser/skin/Secure.png");
+}
+#urlbar[level="high"] #lock-icon:hover {
+  -moz-image-region: rect(18px, 18px, 36px, 0px);
+  list-style-image: url("chrome://browser/skin/Secure.png");
+}
+#urlbar[level="high"] #lock-icon:active {
+  -moz-image-region: rect(36px, 18px, 54px, 0px);
+  list-style-image: url("chrome://browser/skin/Secure.png");
+}
+#urlbar[level="low"] #lock-icon {
+  -moz-image-region: rect(0px, 18px, 18px, 0px);
+  list-style-image: url("chrome://browser/skin/Secure.png");
+}
+#urlbar[level="low"] #lock-icon:hover {
+  -moz-image-region: rect(18px, 18px, 36px, 0px);
+  list-style-image: url("chrome://browser/skin/Secure.png");
+}
+#urlbar[level="low"] #lock-icon:active {
+  -moz-image-region: rect(36px, 18px, 54px, 0px);
+  list-style-image: url("chrome://browser/skin/Secure.png");
+}
+#urlbar[level="broken"] #lock-icon {
+  -moz-image-region: rect(0px, 18px, 18px, 0px);
+  list-style-image: url("chrome://browser/skin/Security-broken.png");
+}
+#urlbar[level="broken"] #lock-icon:hover {
+  -moz-image-region: rect(18px, 18px, 36px, 0px);
+  list-style-image: url("chrome://browser/skin/Security-broken.png");
+}
+#urlbar[level="broken"] #lock-icon:active {
+  -moz-image-region: rect(36px, 18px, 54px, 0px);
+  list-style-image: url("chrome://browser/skin/Security-broken.png");
+}
+
 %ifdef MOZ_WIDGET_GTK2
 #urlbar > .autocomplete-textbox-container {
   -moz-binding: url(chrome://browser/skin/browser.xml#autocomplete-security-wrapper);
@@ -1920,106 +1890,4 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 .bookmark-item[dragover-bottom="true"] {
   -moz-border-bottom-colors: #000000;
-}
-
-/* ::::: Identity Indicator Styling ::::: */
-/* Location bar visuals*/
-#identity-box {
-  border-right: 1px solid #888;
-  background-color: white;
-  opacity: 0.9;
-}
-
-#identity-box:hover {
-  opacity: 1.0;
-}
-
-#identity-box.verifiedIdentity {
-  background-color: #BFA;
-}
-
-#identity-icon-label {
-    padding: 1px 2px 2px;
-    margin: 0;
-    color: black;
-    vertical-align: middle;
-}
-
-.unknownIdentity > #identity-icon-label {
-    display: none;
-}
-
-/* Popup Icons */
-#identity-popup-icon {
-    height: 64px;
-    width: 64px;
-    padding: 0;
-    margin: 10px 0 0;
-    list-style-image: url("chrome://browser/skin/identity.png");
-    -moz-image-region: rect(0px, 64px, 64px, 0px);
-}
-
-.verifiedDomain > #identity-popup-container > #identity-popup-icon {
-    -moz-image-region: rect(64px, 64px, 128px, 0px);
-}
-
-.verifiedIdentity > #identity-popup-container > #identity-popup-icon {
-    -moz-image-region: rect(128px, 64px, 192px, 0px);
-}
-
-/* Popup Title */
-#identity-popup-title {
-    font-size: 120%;
-    font-weight: bold;
-}
-
-.verifiedIdentity > #identity-popup-title {
-    color: #6A6;
-}
-
-.unknownIdentity > #identity-popup-title {
-    color: #999;
-}
-
-.verifiedDomain > #identity-popup-title {
-    color: black;
-}
-
-/* Popup Body Text */
-#identity-popup-content-box > description,
-#identity-popup-encryption-label {
-    white-space: -moz-pre-wrap;
-    color: black;
-    padding-left: 10px;
-}
-
-#identity-popup-content {
-    padding-top: 5px;
-    margin-bottom: 0;
-    max-width: 200px;
-}
-
-.verifiedIdentity > #identity-popup-content,
-.verifiedDomain > #identity-popup-content {
-   font-size: 140%;
-   font-weight: bold;
-   max-width: 300px;
-}
-
-#identity-popup-encryption {
-  margin: 10px 0;
-}
-
-.verifiedIdentity > #identity-popup-encryption > * > #identity-popup-encryption-icon,
-.verifiedDomain > #identity-popup-encryption > * >#identity-popup-encryption-icon {
-  list-style-image: url("chrome://browser/skin/Secure.png");
-  -moz-image-region: rect(0px, 18px, 18px, 0px);
-}
-
-/* Popup Bounding Box */
-#identity-popup-container {
-    background-image: none;
-    background-color: white;
-    min-width: 280px;
-    padding: 10px;
 }

@@ -1157,6 +1157,10 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
     AppendUTF8toUTF16(ext, saltedTempLeafName);
   }
 
+  // Add an additional .part to prevent the OS from running this file in the
+  // default application.
+  saltedTempLeafName.Append(NS_LITERAL_STRING(".part"));
+
   mTempFile->Append(saltedTempLeafName); // make this file unique!!!
   mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
 
@@ -1979,6 +1983,9 @@ nsresult nsExternalAppHandler::OpenWithApplication()
   // if a stop request was already issued then proceed with launching the application.
   if (mStopRequestIssued)
   {
+    // make the tmp file readonly so users won't edit it and lose the changes
+    mFinalFileDestination->SetPermissions(0400);
+
     rv = mMimeInfo->LaunchWithFile(mFinalFileDestination);        
     if (NS_FAILED(rv))
     {

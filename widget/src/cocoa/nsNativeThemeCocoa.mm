@@ -199,8 +199,15 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
   }
   else {
     HIRect drawFrame = inBoxRect;
-    if (inKind == kThemePushButton)
+    if (inKind == kThemePushButton) {
       drawFrame.size.height -= NATIVE_PUSH_BUTTON_HEIGHT_DIFF;
+    }
+    else if (inKind == kThemePopupButton) {
+      // popup buttons draw outside their frame by 1 pixel on each side and two on the bottom
+      drawFrame.size.width -= 2;
+      drawFrame.origin.x += 1;
+      drawFrame.size.height -= NATIVE_PUSH_BUTTON_HEIGHT_DIFF;
+    }
 
     HIThemeDrawButton(&drawFrame, &bdi, cgContext, kHIThemeOrientationNormal, NULL);
   }
@@ -918,9 +925,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
 
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
-      // We need to shift the text up a single pixel. For native form control drawing,
-      // the borders need not actually reflect the size of the drawn border.
-      aResult->SizeTo(kAquaDropdownLeftBorder, 1, kAquaDropdownRightBorder, 1);
+      aResult->SizeTo(kAquaDropdownLeftBorder, 2, kAquaDropdownRightBorder, 2);
       break;
 
     case NS_THEME_TEXTFIELD:

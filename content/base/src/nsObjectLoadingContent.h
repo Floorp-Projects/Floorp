@@ -280,6 +280,14 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     nsIObjectFrame* GetFrame(PRBool aFlushLayout);
 
     /**
+     * Handle being blocked by a content policy.  aStatus is the nsresult
+     * return value of the Should* call, while aRetval is what it returned in
+     * its out parameter.
+     */
+    void HandleBeingBlockedByContentPolicy(nsresult aStatus,
+                                           PRInt16 aRetval);
+
+    /**
      * Checks if we have a frame that's ready for instantiation, and if so,
      * calls Instantiate().
      */

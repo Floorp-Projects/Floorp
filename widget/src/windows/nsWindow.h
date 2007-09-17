@@ -70,9 +70,7 @@ class imgIContainer;
 #include "nsIAccessible.h"
 #endif
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxWindowsSurface.h"
-#endif
 
 #define IME_MAX_CHAR_POS       64
 
@@ -208,9 +206,7 @@ public:
   NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
   nsWindow*               GetTopLevelWindow();
 
-#ifdef MOZ_CAIRO_GFX
   gfxASurface             *GetThebesSurface();
-#endif
 
 #ifdef MOZ_XUL
   NS_IMETHOD              SetWindowTranslucency(PRBool aTransparent);

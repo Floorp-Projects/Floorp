@@ -66,9 +66,9 @@ public:
                     nsSVGElement *aSVGElement,
                     PRBool aDoSetAttr);
 
-  PRUint16 GetBaseValue()
+  PRUint16 GetBaseValue() const
     { return mBaseVal; }
-  PRUint16 GetAnimValue()
+  PRUint16 GetAnimValue() const
     { return mAnimVal; }
 
   nsresult ToDOMAnimatedEnum(nsIDOMSVGAnimatedEnumeration **aResult,

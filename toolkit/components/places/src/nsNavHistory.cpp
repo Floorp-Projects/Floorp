@@ -12,15 +12,17 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla History System
+ * The Original Code is Mozilla History System.
  *
- * The Initial Developer of the Original Code is
- * Google Inc.
+ * The Initial Developer of the Original Code is Google Inc.
  * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Brett Wilson <brettw@gmail.com> (original author)
+ *   Dietrich Ayala <dietrich@mozilla.com>
+ *   Seth Spitzer <sspitzer@mozilla.com>
+ *   Asaf Romano <mano@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -69,6 +71,9 @@
 #include "prtime.h"
 #include "prprf.h"
 #include "nsEscape.h"
+#include "nsITaggingService.h"
+#include "nsIVariant.h"
+#include "nsVariant.h"
 
 #include "mozIStorageService.h"
 #include "mozIStorageConnection.h"
@@ -177,7 +182,8 @@ static PRBool IsNumericHostName(const nsCString& aHost);
 static PRInt64 GetSimpleBookmarksQueryFolder(
     const nsCOMArray<nsNavHistoryQuery>& aQueries,
     nsNavHistoryQueryOptions* aOptions);
-static void ParseSearchQuery(const nsString& aQuery, nsStringArray* aTerms);
+static void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
+                                        nsTArray<nsStringArray*>* aTerms);
 
 inline void ReverseString(const nsString& aInput, nsAString& aReversed)
 {
@@ -1549,8 +1555,10 @@ nsNavHistory::EvaluateQueryForNode(const nsCOMArray<nsNavHistoryQuery>& aQueries
       // an array.
       nsCOMArray<nsNavHistoryResultNode> inputSet;
       inputSet.AppendObject(aNode);
+      nsCOMArray<nsNavHistoryQuery> queries;
+      queries.AppendObject(query);
       nsCOMArray<nsNavHistoryResultNode> filteredSet;
-      nsresult rv = FilterResultSet(nsnull, inputSet, &filteredSet, query->SearchTerms());
+      nsresult rv = FilterResultSet(nsnull, inputSet, &filteredSet, queries);
       if (NS_FAILED(rv))
         continue;
       if (! filteredSet.Count())
@@ -2381,6 +2389,17 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
 
   // bind parameters
   PRInt32 numParameters = 0;
+
+  // optimize the case where we just want a list with no grouping: this
+  // directly fills in the results and we avoid a copy of the whole list
+  PRBool resultAsList = PR_TRUE;
+  PRUint32 groupCount;
+  const PRUint16 *groupings = aOptions->GroupingMode(&groupCount);
+
+  if (groupCount != 0 || aOptions->ExcludeQueries()) {
+    resultAsList = PR_FALSE;
+  }
+
   PRInt32 i;
   for (i = 0; i < aQueries.Count(); i ++) {
     PRInt32 clauseParameters = 0;
@@ -2388,18 +2407,20 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
                                    aQueries[i], aOptions, &clauseParameters);
     NS_ENSURE_SUCCESS(rv, rv);
     numParameters += clauseParameters;
+    if (resultAsList) {
+      if (aQueries[i]->Folders().Length() != 0) {
+        resultAsList = PR_FALSE;
+      } else {
+        PRBool hasSearchTerms;
+        rv = aQueries[i]->GetHasSearchTerms(&hasSearchTerms);
+        if (hasSearchTerms)
+          resultAsList = PR_FALSE;
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
   }
 
-  PRUint32 groupCount;
-  const PRUint16 *groupings = aOptions->GroupingMode(&groupCount);
-
-  PRBool hasSearchTerms;
-  rv = aQueries[0]->GetHasSearchTerms(&hasSearchTerms);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (groupCount == 0 && ! hasSearchTerms) {
-    // optimize the case where we just want a list with no grouping: this
-    // directly fills in the results and we avoid a copy of the whole list
+  if (resultAsList) {
     rv = ResultsAsList(statement, aOptions, aResults);
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
@@ -2408,22 +2429,13 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
     rv = ResultsAsList(statement, aOptions, &toplevel);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (hasSearchTerms) {
-      // keyword search
-      if (groupCount == 0) {
-        // keyword search with no grouping: can filter directly into the result
-        FilterResultSet(aResultNode, toplevel, aResults, aQueries[0]->SearchTerms());
-      } else {
-        // keyword searching with grouping: need intermediate filtered results
-        nsCOMArray<nsNavHistoryResultNode> filteredResults;
-        FilterResultSet(aResultNode, toplevel, &filteredResults, aQueries[0]->SearchTerms());
-        rv = RecursiveGroup(aResultNode, filteredResults, groupings, groupCount,
-                            aResults);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+    if (groupCount == 0) {
+      FilterResultSet(aResultNode, toplevel, aResults, aQueries);
     } else {
-      // group unfiltered results
-      rv = RecursiveGroup(aResultNode, toplevel, groupings, groupCount, aResults);
+      nsCOMArray<nsNavHistoryResultNode> filteredResults;
+      FilterResultSet(aResultNode, toplevel, &filteredResults, aQueries);
+      rv = RecursiveGroup(aResultNode, filteredResults, groupings, groupCount,
+                          aResults);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -3600,19 +3612,8 @@ nsNavHistory::QueryToSelectClause(nsNavHistoryQuery* aQuery, // const
   }
 
   
-  if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS) {
-    // Folders only have an affect on bookmark queries
-    // XXX: add multiple folders support
-    if (aQuery->Folders().Length() == 1) {
-      if (!aClause->IsEmpty())
-        *aClause += NS_LITERAL_CSTRING(" AND ");
-
-      nsCAutoString paramString;
-      parameterString(aStartParameter + *aParamCount, paramString);
-      (*aParamCount) ++;
-      *aClause += NS_LITERAL_CSTRING(" b.parent = ") + paramString;
-    }
-  } else if (aQuery->OnlyBookmarked()) {
+  if (aOptions->QueryType() != nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS &&
+      aQuery->OnlyBookmarked()) {
     // only bookmarked, has no affect on bookmarks-only queries
     if (!aClause->IsEmpty())
       *aClause += NS_LITERAL_CSTRING(" AND ");
@@ -3750,18 +3751,6 @@ nsNavHistory::BindQueryClauseParameters(mozIStorageStatement* statement,
     NS_ENSURE_SUCCESS(rv, rv);
     (*aParamCount) ++;
   }
-
-  // folder
-  if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS) {
-    // XXX: add multiple folders support
-    if (aQuery->Folders().Length() == 1) {
-      rv = statement->BindInt64Parameter(aStartParameter + *aParamCount,
-                                         aQuery->Folders()[0]);
-      NS_ENSURE_SUCCESS(rv, rv);
-      (*aParamCount) ++;
-    }
-  }
-  // onlyBookmarked: nothing to bind
 
   // domain (see GetReversedHostname for more info on reversed host names)
   if (NS_SUCCEEDED(aQuery->GetHasDomain(&hasIt)) && hasIt) {
@@ -4096,98 +4085,184 @@ nsNavHistory::GroupByHost(nsNavHistoryQueryResultNode *aResultNode,
   return NS_OK;
 }
 
+PRBool
+nsNavHistory::URIHasTag(nsIURI* aURI, const nsAString& aTag)
+{
+  nsresult rv;
+  nsCOMPtr<nsITaggingService> tagService =
+    do_GetService(TAGGING_SERVICE_CID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIVariant> tagsV;
+  rv = tagService->GetTagsForURI(aURI, getter_AddRefs(tagsV));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // confirm that type is array, and has elements
+  // (data type is different for empty array)
+  PRUint16 dataType;
+  tagsV->GetDataType(&dataType);
+  if (dataType != nsIDataType::VTYPE_ARRAY)
+    return PR_FALSE;
+
+  // get tags as array
+  PRUint16 type;
+  nsIID iid;
+  PRUint32 count;
+  PRUnichar** tags;
+  rv = tagsV->GetAsArray(&type, &iid, &count, (void**)&tags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  for (PRUint32 i = 0; i < count; i++) {
+    nsAutoString tag(tags[i]);
+    PRInt32 position = Compare(tag, aTag, nsCaseInsensitiveStringComparator());
+    if (position == 0) {
+      nsMemory::Free(tags);
+      return PR_TRUE;
+    }
+  }
+  nsMemory::Free(tags);
+  return PR_FALSE;
+}
+
 
 // nsNavHistory::FilterResultSet
 //
 //    This does some post-query-execution filtering:
 //      - searching on title & url
+//      - parent folder (recursively)
 //      - excludeQueries
 
 nsresult
-nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aParentNode,
+nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
                               const nsCOMArray<nsNavHistoryResultNode>& aSet,
                               nsCOMArray<nsNavHistoryResultNode>* aFiltered,
-                              const nsString& aSearch)
+                              const nsCOMArray<nsNavHistoryQuery>& aQueries)
 {
   nsresult rv;
-  nsStringArray terms;
-  ParseSearchQuery(aSearch, &terms);
+
+  // get the bookmarks service
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+
+  // parse the search terms
+  nsTArray<nsStringArray*> terms;
+  ParseSearchTermsFromQueries(aQueries, &terms);
+
+  PRUint32 queryIndex;
+
+  // The includeFolders array for each query is initialized with its
+  // query's folders array. We add sub-folders as we check items.
+  nsTArray< nsTArray<PRInt64>* > includeFolders;
+  nsTArray< nsTArray<PRInt64>* > excludeFolders;
+  for (queryIndex = 0;
+       queryIndex < aQueries.Count(); queryIndex++) {
+    includeFolders.AppendElement(new nsTArray<PRInt64>(aQueries[queryIndex]->Folders()));
+    excludeFolders.AppendElement(new nsTArray<PRInt64>());
+  }
 
   // filter against query options
   // XXX only excludeQueries is supported at the moment
   PRBool excludeQueries = PR_FALSE;
-  if (aParentNode) {
-    rv = aParentNode->mOptions->GetExcludeQueries(&excludeQueries);
+  if (aQueryNode) {
+    rv = aQueryNode->mOptions->GetExcludeQueries(&excludeQueries);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCStringArray searchAnnotations;
-  /*
-  if (mAnnotationService) {
-    searchAnnotations.AppendCString(NS_LITERAL_CSTRING("qwer"));
-    searchAnnotations.AppendCString(NS_LITERAL_CSTRING("asdf"));
-    searchAnnotations.AppendCString(NS_LITERAL_CSTRING("zxcv"));
-    //mAnnotationService->GetSearchableAnnotations();
-  }
-  */
-
   for (PRInt32 nodeIndex = 0; nodeIndex < aSet.Count(); nodeIndex ++) {
-    if (aParentNode && aParentNode->mItemId != -1) {
-      if (aParentNode->mItemId == aSet[nodeIndex]->mItemId) {
-        continue; // filter out bookmark nodes that are the same as the parent
-      }
-    }
-
     if (excludeQueries && IsQueryURI(aSet[nodeIndex]->mURI))
       continue;
 
-    PRBool allTermsFound = PR_TRUE;
-
-    nsStringArray curAnnotations;
-    /*
-    if (searchAnnotations.Count()) {
-      // come up with a list of all annotation *values* we need to search
-      for (PRInt32 annotIndex = 0; annotIndex < searchAnnotations.Count(); annotIndex ++) {
-        nsString annot;
-        if (NS_SUCCEEDED(mAnnotationService->GetAnnotationString(
-                                         aSet[nodeIndex]->mURI,
-                                         *searchAnnotations[annotIndex],
-                                         annot)))
-          curAnnotations.AppendString(annot);
-      }
+    PRInt64 parentId = -1;
+    if (aSet[nodeIndex]->mItemId != -1) {
+      if (aQueryNode->mItemId == aSet[nodeIndex]->mItemId)
+        continue;
+      rv = bookmarks->GetFolderIdForItem(aSet[nodeIndex]->mItemId, &parentId);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
-    */
 
-    if (terms.Count() == 0) {
-        allTermsFound = PR_TRUE;
-    } else {
-      for (PRInt32 termIndex = 0; termIndex < terms.Count(); termIndex ++) {
-        PRBool termFound = PR_FALSE;
-        // title and URL
-        if (CaseInsensitiveFindInReadable(*terms[termIndex],
-                                          NS_ConvertUTF8toUTF16(aSet[nodeIndex]->mTitle)) ||
-            (aSet[nodeIndex]->IsURI() &&
-             CaseInsensitiveFindInReadable(*terms[termIndex],
-                                    NS_ConvertUTF8toUTF16(aSet[nodeIndex]->mURI))))
-          termFound = PR_TRUE;
-        // searchable annotations
-        /*if (! termFound) {
-          for (PRInt32 annotIndex = 0; annotIndex < curAnnotations.Count(); annotIndex ++) {
-            if (CaseInsensitiveFindInReadable(*terms[termIndex],
-                                              *curAnnotations[annotIndex]))
-              termFound = PR_TRUE;
+    // Append the node if it matches one of the queries
+    PRBool appendNode = PR_FALSE;
+    for (queryIndex = 0;
+         queryIndex < aQueries.Count() && !appendNode; queryIndex++) {
+      // parent folder
+      if (includeFolders[queryIndex]->Length() != 0) {
+        // filter out simple history nodes from bookmark queries
+        if (aSet[nodeIndex]->mItemId == -1)
+          continue;
+
+        // filter out the node of which their parent is in the exclude-folders
+        // cache
+        if (excludeFolders[queryIndex]->IndexOf(parentId) != -1)
+          continue;
+
+        if (includeFolders[queryIndex]->IndexOf(parentId) == -1) {
+          // check ancestors
+          PRInt64 ancestor = parentId, lastAncestor;
+          PRBool belongs = PR_FALSE;
+
+          while (!belongs) {
+            // Avoid using |ancestor| itself if GetFolderIdForItem failed.
+            lastAncestor = ancestor;
+
+            // GetFolderIdForItems throws when called for the places-root
+            if (NS_FAILED(bookmarks->GetFolderIdForItem(ancestor,&ancestor))) {
+              break;
+            } else if (includeFolders[queryIndex]->IndexOf(ancestor) != -1) {
+              belongs = PR_TRUE;
+            }
           }
-        }*/
-        if (! termFound) {
-          allTermsFound = PR_FALSE;
-          break;
+          if (belongs) {
+            includeFolders[queryIndex]->AppendElement(lastAncestor);
+          } else {
+            excludeFolders[queryIndex]->AppendElement(lastAncestor);
+            continue;
+          }
         }
       }
-    }
 
-    if (allTermsFound)
+      // search terms
+      // XXXmano/dietrich: when bug 331487 is fixed, bookmark queries can group
+      // by folder or not regardless of specified folders or search terms.
+      PRBool allTermsFound = PR_TRUE;
+      for (PRInt32 termIndex = 0; termIndex < terms[queryIndex]->Count() &&
+           allTermsFound; termIndex ++) {
+        // search terms should match title, url or tags
+        PRBool termFound = PR_FALSE;
+        // title and URL
+        if (CaseInsensitiveFindInReadable(*terms[queryIndex]->StringAt(termIndex),
+                                          NS_ConvertUTF8toUTF16(aSet[nodeIndex]->mTitle)) ||
+            (aSet[nodeIndex]->IsURI() &&
+              CaseInsensitiveFindInReadable(*terms[queryIndex]->StringAt(termIndex),
+                                            NS_ConvertUTF8toUTF16(aSet[nodeIndex]->mURI))))
+          termFound = PR_TRUE;
+
+        // tags
+        if (!termFound) {
+          nsCOMPtr<nsIURI> itemURI;
+          rv = NS_NewURI(getter_AddRefs(itemURI), aSet[nodeIndex]->mURI);
+          NS_ENSURE_SUCCESS(rv, rv);
+          termFound = URIHasTag(itemURI, *terms[queryIndex]->StringAt(termIndex));
+        }
+
+        if (!termFound)
+          allTermsFound = PR_FALSE;
+      }
+      if (!allTermsFound)
+        continue;
+
+      appendNode = PR_TRUE;
+    }
+    if (appendNode)
       aFiltered->AppendObject(aSet[nodeIndex]);
   }
+
+  // de-allocate the matrixes
+  for (PRUint32 i=0; i < aQueries.Count(); i++) {
+    delete terms[i];
+    delete includeFolders[i];
+    delete excludeFolders[i];
+  }
+
   return NS_OK;
 }
 
@@ -4867,9 +4942,13 @@ GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries,
 }
 
 
-// ParseSearchQuery
+// ParseSearchTermsFromQueries
 //
-//    This just breaks the query up into words. We don't do anything fancy,
+//    Construct a matrix of search terms from the given queries array.
+//    All of the query objects are ORed together. Within a query, all the terms
+//    are ANDed together. See nsINavHistory.idl.
+//
+//    This just breaks the quer up into words. We don't do anything fancy,
 //    not even quoting. We do, however, strip quotes, because people might
 //    try to input quotes expecting them to do something and get no results
 //    back.
@@ -4879,26 +4958,38 @@ inline PRBool isQueryWhitespace(PRUnichar ch)
   return ch == ' ';
 }
 
-void ParseSearchQuery(const nsString& aQuery, nsStringArray* aTerms)
+void ParseSearchTermsFromQueries(const nsCOMArray<nsNavHistoryQuery>& aQueries,
+                                 nsTArray<nsStringArray*>* aTerms)
 {
   PRInt32 lastBegin = -1;
-  for (PRUint32 i = 0; i < aQuery.Length(); i ++) {
-    if (isQueryWhitespace(aQuery[i]) || aQuery[i] == '"') {
-      if (lastBegin >= 0) {
-        // found the end of a word
-        aTerms->AppendString(Substring(aQuery, lastBegin, i - lastBegin));
-        lastBegin = -1;
+  for (PRUint32 i=0; i < aQueries.Count(); i++) {
+    nsStringArray *queryTerms = new nsStringArray();
+    PRBool hasSearchTerms;
+    if (NS_SUCCEEDED(aQueries[i]->GetHasSearchTerms(&hasSearchTerms)) &&
+        hasSearchTerms) {
+      const nsString& searchTerms = aQueries[i]->SearchTerms();
+      for (PRUint32 j = 0; j < searchTerms.Length(); j++) {
+        if (isQueryWhitespace(searchTerms[j]) ||
+            searchTerms[j] == '"') {
+          if (lastBegin >= 0) {
+            // found the end of a word
+            queryTerms->AppendString(Substring(searchTerms, lastBegin,
+                                               j - lastBegin));
+            lastBegin = -1;
+          }
+        } else {
+          if (lastBegin < 0) {
+            // found the beginning of a word
+            lastBegin = j;
+          }
+        }
       }
-    } else {
-      if (lastBegin < 0) {
-        // found the beginning of a word
-        lastBegin = i;
-      }
+      // last word
+      if (lastBegin >= 0)
+        queryTerms->AppendString(Substring(searchTerms, lastBegin));
     }
+    aTerms->AppendElement(queryTerms);
   }
-  // last word
-  if (lastBegin >= 0)
-    aTerms->AppendString(Substring(aQuery, lastBegin));
 }
 
 
