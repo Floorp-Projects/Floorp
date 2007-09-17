@@ -1498,6 +1498,7 @@ nsDownload::nsDownload() : mDownloadState(nsIDownloadManager::DOWNLOAD_NOTSTARTE
                            mLastUpdate(PR_Now() - (PRUint32)gUpdateInterval),
                            mPaused(PR_FALSE),
                            mWasResumed(PR_FALSE),
+                           mResumedAt(0),
                            mSpeed(0)
 {
 }
@@ -1744,9 +1745,7 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
   // during that time for more accuracy.
   double elapsedSecs = double(delta) / PR_USEC_PER_SEC;
   if (elapsedSecs > 0) {
-    nsUint64 curTotalProgress = (PRUint64)aCurTotalProgress;
-    nsUint64 diffBytes = curTotalProgress - nsUint64(mCurrBytes);
-    double speed = double(diffBytes) / elapsedSecs;
+    double speed = double(aCurTotalProgress - mCurrBytes) / elapsedSecs;
     if (mCurrBytes == 0) {
       mSpeed = speed;
     } else {
@@ -1755,17 +1754,19 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
     }
   }
 
-  if (aMaxTotalProgress > 0)
-    mPercentComplete = (PRInt32)((PRFloat64)aCurTotalProgress * 100 / aMaxTotalProgress + .5);
-  else
-    mPercentComplete = -1;
-
   mCurrBytes = aCurTotalProgress;
   mMaxBytes = aMaxTotalProgress;
 
+  PRUint64 currBytes, maxBytes;
+  (void)GetAmountTransferred(&currBytes);
+  (void)GetSize(&maxBytes);
+  if (aMaxTotalProgress > 0)
+    mPercentComplete = (PRInt32)((PRFloat64)currBytes * 100 / maxBytes + .5);
+  else
+    mPercentComplete = -1;
+
   mDownloadManager->NotifyListenersOnProgressChange(
-    aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
-    aCurTotalProgress, aMaxTotalProgress, this);
+    aWebProgress, aRequest, currBytes, maxBytes, currBytes, maxBytes, this);
 
   return NS_OK;
 }
@@ -1884,12 +1885,6 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       if (mMaxBytes == LL_MAXUINT)
         mMaxBytes = mCurrBytes;
 
-      // Files less than 1Kb shouldn't show up as 0Kb.
-      if (mMaxBytes < 1024) {
-        mCurrBytes = 1024;
-        mMaxBytes  = 1024;
-      }
-
       mPercentComplete = 100;
 
 #ifdef XP_WIN
@@ -1985,14 +1980,14 @@ nsDownload::GetPercentComplete(PRInt32* aPercentComplete)
 NS_IMETHODIMP
 nsDownload::GetAmountTransferred(PRUint64* aAmountTransferred)
 {
-  *aAmountTransferred = mCurrBytes;
+  *aAmountTransferred = mCurrBytes + mResumedAt;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDownload::GetSize(PRUint64* aSize)
 {
-  *aSize = mMaxBytes;
+  *aSize = mMaxBytes + (mMaxBytes != LL_MAXUINT ? mResumedAt : 0);
   return NS_OK;
 }
 
@@ -2111,6 +2106,11 @@ nsDownload::PauseResume(PRBool aPause)
       return NS_ERROR_UNEXPECTED;
     rv = resumableChannel->ResumeAt(fileSize, mEntityID);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    // Track where we resumed because progress notifications restart at 0
+    mResumedAt = fileSize;
+    mCurrBytes = 0;
+    mMaxBytes = LL_MAXUINT;
 
     // Set the referrer
     if (mReferrer) {
