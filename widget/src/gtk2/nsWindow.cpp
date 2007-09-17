@@ -4177,7 +4177,7 @@ get_gtk_cursor(nsCursor aCursor)
         gdkcursor = gdk_cursor_new(GDK_FLEUR);
         break;
     case eCursor_help:
-        newType = MOZ_CURSOR_QUESTION_ARROW;
+        gdkcursor = gdk_cursor_new(GDK_QUESTION_ARROW);
         break;
     case eCursor_copy: // CSS3
         newType = MOZ_CURSOR_COPY;
