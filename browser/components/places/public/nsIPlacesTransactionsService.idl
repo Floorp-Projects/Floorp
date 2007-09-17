@@ -202,7 +202,7 @@ interface nsIPlacesTransactionsService : nsISupports
   nsITransaction editItemTitle(in long long id, in AString newTitle);
 
   /**
-   * Transaction for editting a bookmark's uri.
+   * Transaction for editing a bookmark's uri.
    *
    * @param aBookmarkId
    *        id of the bookmark to edit
@@ -225,7 +225,7 @@ interface nsIPlacesTransactionsService : nsISupports
                                   in boolean aLoadInSidebar);
 
   /**
-   * Transaction for editting a the description of a bookmark or a folder
+   * Transaction for editing a the description of a bookmark or a folder
    * 
    * @param aItemId
    *        id of the item to edit
@@ -237,7 +237,7 @@ interface nsIPlacesTransactionsService : nsISupports
                                      in AString aDescription);
 
   /**
-   * Transaction for editting a bookmark's keyword.
+   * Transaction for editing a bookmark's keyword.
    *
    * @param id
    *        id of the bookmark to edit
@@ -249,7 +249,7 @@ interface nsIPlacesTransactionsService : nsISupports
                                            in AString newKeyword);
 
   /**
-   * Transaction for editting the post data associated with a URI
+   * Transaction for editing the post data associated with a URI
    *
    * @param aURI
    *        uri to edit
@@ -261,7 +261,7 @@ interface nsIPlacesTransactionsService : nsISupports
                                  in AString aPostData);
 
   /**
-   * Transaction for editting a live bookmark's site URI.
+   * Transaction for editing a live bookmark's site URI.
    *
    * @param aFolderId
    *        id of the livemark
@@ -283,7 +283,7 @@ interface nsIPlacesTransactionsService : nsISupports
   nsITransaction editLivemarkFeedURI(in long long folderId, in nsIURI uri);
 
   /**
-   * Transaction for editting a bookmark's microsummary.
+   * Transaction for editing a bookmark's microsummary.
    *
    * @param aItemId
    *        id of the bookmark to edit
