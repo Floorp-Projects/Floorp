@@ -113,7 +113,7 @@ nsMenuX::~nsMenuX()
 }
 
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
                 nsIChangeManager* aManager, nsIContent* aNode)
 {
@@ -142,15 +142,13 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
   if (menubar && mMenuContent->GetChildCount() == 0)
     mVisible = PR_FALSE;
 
-  // XXXjag simply use mIsEnabled?
   SetEnabled(!mMenuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
                                         nsWidgetAtoms::_true, eCaseMatters));
+  [mNativeMenuItem setEnabled:(BOOL)mIsEnabled];
 
   NSString *newCocoaLabelString = MenuHelpersX::CreateTruncatedCocoaLabel(mLabel);
   mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
   [newCocoaLabelString release];
-
-  [mNativeMenuItem setEnabled:(BOOL)mIsEnabled];
 
   // We call MenuConstruct here because keyboard commands are dependent upon
   // native menu items being created. If we only call MenuConstruct when a menu
