@@ -84,7 +84,7 @@ sub compareDTD
         $failure = 1;
         print "Entities in $path don't match:\n";
         if (@extra1) {
-            print "  In $gSource1: (add these keys to you localization)\n";
+            print "  In $gSource1: (add these keys to your localization)\n";
             map { print "    $_\n"; } @extra1;
         }
 
