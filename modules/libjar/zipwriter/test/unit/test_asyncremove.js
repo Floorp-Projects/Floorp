@@ -53,7 +53,8 @@ var observer = {
     zipW.close();
 
     // Empty zip file should just be the end of central directory marker
-    do_check_eq(tmpFile.fileSize, ZIP_EOCDR_HEADER_SIZE);
+    var newTmpFile = tmpFile.clone();
+    do_check_eq(newTmpFile.fileSize, ZIP_EOCDR_HEADER_SIZE);
     do_test_finished();
   }
 };
