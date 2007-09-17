@@ -38,6 +38,7 @@
 #include "zlib.h"
 #include "nsCRT.h"
 #include "prmem.h"
+#include "prprf.h"
 #include "nsXPIDLString.h"
 #include "nsInstall.h"
 #include "nsInstallPatch.h"
@@ -365,11 +366,14 @@ void nsInstallPatch::Abort()
 
 char* nsInstallPatch::toString()
 {
+    if (!mInstall)
+        return nsnull;
+
 	  char* buffer = new char[1024];
     char* rsrcVal = nsnull;
 
-    if (buffer == nsnull || !mInstall)
-        return buffer;
+    if (!buffer)
+        return nsnull;
 
     if (mTargetFile != nsnull)
     {
@@ -379,7 +383,7 @@ char* nsInstallPatch::toString()
         {
             nsCAutoString temp;
             mTargetFile->GetNativePath(temp);
-            sprintf( buffer, rsrcVal, temp.get()); 
+            PR_snprintf( buffer, 1024, rsrcVal, temp.get()); 
             nsCRT::free(rsrcVal);
         }
     }
