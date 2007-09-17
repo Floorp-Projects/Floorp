@@ -350,7 +350,6 @@ nsChildView::nsChildView() : nsBaseWidget()
 , mIsPluginView(PR_FALSE)
 , mPluginDrawing(PR_FALSE)
 , mPluginIsCG(PR_FALSE)
-, mVisRgn(nsnull)
 {
 #ifdef PR_LOGGING
   if (!sCocoaLog)
@@ -371,11 +370,6 @@ nsChildView::~nsChildView()
   }
 
   TearDownView(); // should have already been done from Destroy
-  
-  if (mVisRgn) {
-    ::DisposeRgn(mVisRgn);
-    mVisRgn = nsnull;
-  }
 }
 
 
@@ -582,7 +576,7 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
 
   switch (aDataType) 
   {
-    case NS_NATIVE_WIDGET:            // the NSView
+    case NS_NATIVE_WIDGET:
     case NS_NATIVE_DISPLAY:
       retVal = (void*)mView;
       break;
@@ -590,25 +584,12 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
     case NS_NATIVE_WINDOW:
       retVal = [mView nativeWindow];
       break;
-      
-    case NS_NATIVE_GRAPHIC:           // quickdraw port
-      // XXX qdPort is invalid if we have not locked focus
-      retVal = GetChildViewQuickDrawPort();
-      break;
-      
-    case NS_NATIVE_REGION:
-    {
-      if (!mVisRgn)
-        mVisRgn = ::NewRgn();
 
-      // XXX qdPort is invalid if we have not locked focus
-      GrafPtr grafPort = GetChildViewQuickDrawPort();
-      if (grafPort && mVisRgn)
-        ::GetPortVisibleRegion(grafPort, mVisRgn);
-      retVal = (void*)mVisRgn;
+    case NS_NATIVE_GRAPHIC:
+      NS_ASSERTION(0, "Requesting NS_NATIVE_GRAPHIC on a Mac OS X child view!");
+      retVal = nsnull;
       break;
-    }
-      
+
     case NS_NATIVE_OFFSETX:
       retVal = 0;
       break;
@@ -1689,15 +1670,6 @@ NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
 }
 
 
-GrafPtr
-nsChildView::GetChildViewQuickDrawPort()
-{
-  if ([mView isKindOfClass:[ChildView class]])
-    return (GrafPtr)[(ChildView*)mView qdPort];
-  return NULL;
-}
-
-
 #pragma mark -
 
 
@@ -1862,10 +1834,12 @@ NSEvent* globalDragEvent = nil;
   
   if (sLastViewEntered == self)
     sLastViewEntered = nil;
-  
-  [super dealloc];    // This sets the current port to _savePort (which should be
-                      // a valid port, checked with the assertion above.
-  SetPort(NULL);      // Bullet-proof against future changes in NSQDView
+
+  [super dealloc];    
+
+  // This sets the current port to _savePort.
+  // todo: Only do if a Quickdraw plugin is present in the hierarchy!
+  ::SetPort(NULL);
 }
 
 
@@ -2217,7 +2191,7 @@ NSEvent* globalDragEvent = nil;
   // Set the current GrafPort to a "safe" port before calling [NSQuickDrawView lockFocus],
   // so that the NSQuickDrawView stashes a pointer to this known-good port internally.
   // It will set the port back to this port on destruction.
-  SetPort(NULL);
+  ::SetPort(NULL);  // todo: only do if a Quickdraw plugin is present in the hierarchy!
   [super lockFocus];
 }
 
