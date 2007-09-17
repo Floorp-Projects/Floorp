@@ -500,6 +500,13 @@ nsSHEntry::GetOwner(nsISupports **aOwner)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSHEntry::SetOwner(nsISupports *aOwner)
+{
+  mOwner = aOwner;
+  return NS_OK;
+}
+
 //*****************************************************************************
 //    nsSHEntry: nsISHContainer
 //*****************************************************************************
