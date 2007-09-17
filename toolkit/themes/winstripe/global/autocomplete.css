@@ -77,7 +77,7 @@ textbox.padded {
   border-top: none !important;
   border-bottom: none !important;
   border-left: 1px solid !important;
-  -moz-border-left-colors: #96969D !important;
+  -moz-border-left-colors: ThreeDShadow !important;
   border-right: none !important;
   padding: 0 !important;
   list-style-image: url("chrome://global/skin/icons/autocomplete-dropmark-arrow.png") !important;
@@ -91,7 +91,7 @@ textbox.padded {
 textbox[chromedir="rtl"] .autocomplete-history-dropmarker {
   border-left: none !important;
   border-right: 1px solid !important;
-  -moz-border-right-colors: #96969D !important;
+  -moz-border-right-colors: ThreeDShadow !important;
 }
 
 .autocomplete-history-dropmarker:hover {
