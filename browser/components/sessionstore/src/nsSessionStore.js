@@ -869,9 +869,13 @@ SessionStoreService.prototype = {
     
     var cacheKey = aEntry.cacheKey;
     if (cacheKey && cacheKey instanceof Ci.nsISupportsPRUint32) {
+      // XXXbz would be better to have cache keys implement
+      // nsISerializable or something.
       entry.cacheKey = cacheKey.data;
     }
     entry.ID = aEntry.ID;
+    
+    entry.contentType = aEntry.contentType;
     
     var x = {}, y = {};
     aEntry.getScrollPosition(x, y);
@@ -882,16 +886,48 @@ SessionStoreService.prototype = {
       if (prefPostdata && aEntry.postData && this._checkPrivacyLevel(aEntry.URI.schemeIs("https"))) {
         aEntry.postData.QueryInterface(Ci.nsISeekableStream).
                         seek(Ci.nsISeekableStream.NS_SEEK_SET, 0);
-        var stream = Cc["@mozilla.org/scriptableinputstream;1"].
-                     createInstance(Ci.nsIScriptableInputStream);
-        stream.init(aEntry.postData);
-        var postdata = stream.read(stream.available());
-        if (prefPostdata == -1 || postdata.replace(/^(Content-.*\r\n)+(\r\n)*/, "").length <= prefPostdata) {
-          entry.postdata = postdata;
+        var stream = Cc["@mozilla.org/binaryinputstream;1"].
+                     createInstance(Ci.nsIBinaryInputStream);
+        stream.setInputStream(aEntry.postData);
+        var postBytes = stream.readByteArray(stream.available());
+        var postdata = String.fromCharCode.apply(null, postBytes);
+        if (prefPostdata == -1 ||
+            postdata.replace(/^(Content-.*\r\n)+(\r\n)*/, "").length <=
+              prefPostdata) {
+          // We can stop doing base64 encoding once our serialization into JSON
+          // is guaranteed to handle all chars in strings, including embedded
+          // nulls.
+          entry.postdata_b64 = btoa(postdata);
         }
       }
     }
     catch (ex) { debug(ex); } // POSTDATA is tricky - especially since some extensions don't get it right
+
+    if (aEntry.owner) {
+      // Not catching anything specific here, just possible errors
+      // from writeCompoundObject and the like.
+      try {
+        var binaryStream = Cc["@mozilla.org/binaryoutputstream;1"].
+                           createInstance(Ci.nsIObjectOutputStream);
+        var pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
+        pipe.init(false, false, 0, 0xffffffff, null);
+        binaryStream.setOutputStream(pipe.outputStream);
+        binaryStream.writeCompoundObject(aEntry.owner, Ci.nsISupports, true);
+        binaryStream.close();
+
+        // Now we want to read the data from the pipe's input end and encode it.
+        var scriptableStream = Cc["@mozilla.org/binaryinputstream;1"].
+                               createInstance(Ci.nsIBinaryInputStream);
+        scriptableStream.setInputStream(pipe.inputStream);
+        var ownerBytes =
+          scriptableStream.readByteArray(scriptableStream.available());
+        // We can stop doing base64 encoding once our serialization into JSON
+        // is guaranteed to handle all chars in strings, including embedded
+        // nulls.
+        entry.owner_b64 = btoa(String.fromCharCode.apply(null, ownerBytes));
+      }
+      catch (ex) { debug(ex); }
+    }
     
     if (!(aEntry instanceof Ci.nsISHContainer)) {
       return entry;
@@ -1420,6 +1456,7 @@ SessionStoreService.prototype = {
     shEntry.setTitle(aEntry.title || aEntry.url);
     shEntry.setIsSubFrame(aEntry.subframe || false);
     shEntry.loadType = Ci.nsIDocShellLoadInfo.loadHistory;
+    shEntry.contentType = aEntry.contentType;
     
     if (aEntry.cacheKey) {
       var cacheKey = Cc["@mozilla.org/supports-PRUint32;1"].
@@ -1442,12 +1479,37 @@ SessionStoreService.prototype = {
     var scrollPos = (aEntry.scroll || "0,0").split(",");
     scrollPos = [parseInt(scrollPos[0]) || 0, parseInt(scrollPos[1]) || 0];
     shEntry.setScrollPosition(scrollPos[0], scrollPos[1]);
-    
-    if (aEntry.postdata) {
+
+    var postdata;
+    if (aEntry.postdata_b64) {  // Firefox 3
+      postdata = atob(aEntry.postdata_b64);
+    } else if (aEntry.postdata) { // Firefox 2
+      postdata = aEntry.postdata;
+    }
+
+    if (postdata) {
       var stream = Cc["@mozilla.org/io/string-input-stream;1"].
                    createInstance(Ci.nsIStringInputStream);
-      stream.setData(aEntry.postdata, -1);
+      stream.setData(postdata, postdata.length);
       shEntry.postData = stream;
+    }
+
+    if (aEntry.owner_b64) {  // Firefox 3
+      var ownerInput = Cc["@mozilla.org/io/string-input-stream;1"].
+                       createInstance(Ci.nsIStringInputStream);
+      var binaryData = atob(aEntry.owner_b64);
+      ownerInput.setData(binaryData, binaryData.length);
+      var binaryStream = Cc["@mozilla.org/binaryinputstream;1"].
+                         createInstance(Ci.nsIObjectInputStream);
+      binaryStream.setInputStream(ownerInput);
+      try { // Catch possible deserialization exceptions
+        shEntry.owner = binaryStream.readObject(true);
+      } catch (ex) { debug(ex); }
+    } else if (aEntry.ownerURI) { // Firefox 2
+      var uriObj = ioService.newURI(aEntry.ownerURI, null, null);
+      shEntry.owner = Cc["@mozilla.org/scriptsecuritymanager;1"].
+                      getService(Ci.nsIScriptSecurityManager).
+                      getCodebasePrincipal(uriObj);
     }
     
     if (aEntry.children && shEntry instanceof Ci.nsISHContainer) {
