@@ -1078,7 +1078,7 @@ var gApplicationsPane = {
     while (menuPopup.hasChildNodes())
       menuPopup.removeChild(menuPopup.lastChild);
 
-    // If this is the feed type, add "always ask" and "live bookmarks" items.
+    // If this is the feed type, add Preview in Firefox and Live Bookmarks items.
     if (handlerInfo.type == TYPE_MAYBE_FEED) {
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("alwaysAsk", "true");
@@ -1094,6 +1094,11 @@ var gApplicationsPane = {
       menuPopup.appendChild(menuItem);
       if (handlerInfo.preferredAction == Ci.nsIHandlerInfo.handleInternally)
         menu.selectedItem = menuItem;
+
+      // Add a separator to distinguish these items from the helper app items
+      // that follow them.
+      menuItem = document.createElementNS(kXULNS, "menuseparator");
+      menuPopup.appendChild(menuItem);
     }
 
     // Create a menu item for the OS default application, if any.
