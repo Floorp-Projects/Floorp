@@ -1320,15 +1320,13 @@ var gApplicationsPane = {
         handlerInfo.disablePluginType();
 
       // Set the preferred application handler.
-      // FIXME: consider leaving the existing preferred app in the list
-      // when we set the preferred action to something other than useHelperApp
-      // so that legacy datastores that don't have the preferred app in the list
+      // We leave the existing preferred app in the list when we set
+      // the preferred action to something other than useHelperApp so that
+      // legacy datastores that don't have the preferred app in the list
       // of possible apps still include the preferred app in the list of apps
-      // the user can use to handle the type.  Filed as bug 395140.
+      // the user can choose to handle the type.
       if (action == Ci.nsIHandlerInfo.useHelperApp)
         handlerInfo.preferredApplicationHandler = actionItem.handlerApp;
-      else
-        handlerInfo.preferredApplicationHandler = null;
 
       // Set the "always ask" flag.
       handlerInfo.alwaysAskBeforeHandling = false;
