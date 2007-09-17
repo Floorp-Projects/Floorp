@@ -516,7 +516,7 @@ nsNavHistoryContainerResultNode::ReverseUpdateStats(PRInt32 aAccessCountChange)
     if (! resorted) {
       // repaint visible rows
       nsNavHistoryResult* result = GetResult();
-      if (result && result->GetView()) {
+      if (result && result->GetView() && mParent->AreChildrenVisible()) {
         result->GetView()->ItemChanged(static_cast<nsINavHistoryContainerResultNode*>(mParent));
       }
     }
@@ -1173,7 +1173,7 @@ nsNavHistoryContainerResultNode::InsertChildAt(nsNavHistoryResultNode* aNode,
     mAccessCount += aNode->mAccessCount;
     if (mTime < aNode->mTime)
       mTime = aNode->mTime;
-    if (result->GetView())
+    if (result->GetView() && (!mParent || mParent->AreChildrenVisible()))
       result->GetView()->ItemChanged(
           static_cast<nsINavHistoryContainerResultNode*>(this));
     ReverseUpdateStats(aNode->mAccessCount);
@@ -1182,7 +1182,7 @@ nsNavHistoryContainerResultNode::InsertChildAt(nsNavHistoryResultNode* aNode,
   // Update tree if we are visible. Note that we could be here and not expanded,
   // like when there is a bookmark folder being updated because its parent is
   // visible.
-  if (mExpanded && result->GetView())
+  if (result->GetView() && AreChildrenVisible())
     result->GetView()->ItemInserted(this, aNode, aIndex);
   return NS_OK;
 }
@@ -1331,7 +1331,7 @@ nsNavHistoryContainerResultNode::ReplaceChildURIAt(PRUint32 aIndex,
   // update view
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
-  if (result->GetView())
+  if (result->GetView() && AreChildrenVisible())
     result->GetView()->ItemReplaced(this, oldItem, aNode, aIndex);
 
   mChildren[aIndex]->OnRemoving();
@@ -1372,7 +1372,7 @@ nsNavHistoryContainerResultNode::RemoveChildAt(PRInt32 aIndex,
 
   // remove from our list and notify the tree
   mChildren.RemoveObjectAt(aIndex);
-  if (result->GetView())
+  if (result->GetView() && AreChildrenVisible())
     result->GetView()->ItemRemoved(this, oldNode, aIndex);
 
   if (! aIsTemporary) {
@@ -1481,6 +1481,8 @@ nsNavHistoryContainerResultNode::UpdateURIs(PRBool aRecursive, PRBool aOnlyOne,
       NS_NOTREACHED("All URI nodes being updated must have parents");
       continue;
     }
+    PRBool childrenVisible = result->GetView() != nsnull && parent->AreChildrenVisible();
+
     PRUint32 oldAccessCount = node->mAccessCount;
     PRTime oldTime = node->mTime;
     aCallback(node, aClosure);
@@ -1490,7 +1492,7 @@ nsNavHistoryContainerResultNode::UpdateURIs(PRBool aRecursive, PRBool aOnlyOne,
       parent->mAccessCount += node->mAccessCount - oldAccessCount;
       if (node->mTime > parent->mTime)
         parent->mTime = node->mTime;
-      if (result->GetView())
+      if (childrenVisible)
         result->GetView()->ItemChanged(
             static_cast<nsINavHistoryContainerResultNode*>(parent));
       parent->ReverseUpdateStats(node->mAccessCount - oldAccessCount);
@@ -1505,10 +1507,10 @@ nsNavHistoryContainerResultNode::UpdateURIs(PRBool aRecursive, PRBool aOnlyOne,
         parent->InsertChildAt(node, parent->FindInsertionPoint(node, comparator,
                                                                sortingAnnotation.get()),
                               PR_TRUE);
-      } else if (result->GetView()) {
+      } else if (childrenVisible) {
         result->GetView()->ItemChanged(node);
       }
-    } else if (result->GetView()) {
+    } else if (childrenVisible) {
       result->GetView()->ItemChanged(node);
     }
   }
@@ -3202,7 +3204,7 @@ nsNavHistoryResultNode::OnItemChanged(PRInt64 aItemId,
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
 
-  if (result->GetView()) {
+  if (result->GetView() && (!mParent || mParent->AreChildrenVisible())) {
     result->GetView()->ItemChanged(this);
   }
 
@@ -3288,7 +3290,7 @@ nsNavHistoryFolderResultNode::OnItemVisited(PRInt64 aItemId,
                     FindInsertionPoint(node, comparator, sortingAnnotation.get()),
                     PR_TRUE);
     }
-  } else if (result->GetView()) {
+  } else if (result->GetView() && AreChildrenVisible()) {
     // no sorting changed, just redraw the row if visible
     result->GetView()->ItemChanged(node);
   }
