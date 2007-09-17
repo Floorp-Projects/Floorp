@@ -82,7 +82,7 @@ const char XUL_FASTLOAD_FILE_BASENAME[] = "XUL";
 // (opaque to XPCOM FastLoad code) format of XUL-specific XDR serializations.
 // See also JSXDR_BYTECODE_VERSION in jsxdrapi.h, which tracks incompatible JS
 // bytecode version changes.
-#define XUL_FASTLOAD_FILE_VERSION       (0xfeedbeef - 22)
+#define XUL_FASTLOAD_FILE_VERSION       (0xfeedbeef - 23)
 
 #define XUL_SERIALIZATION_BUFFER_SIZE   (64 * 1024)
 #define XUL_DESERIALIZATION_BUFFER_SIZE (8 * 1024)
