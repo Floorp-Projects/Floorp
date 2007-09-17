@@ -175,6 +175,7 @@ HandlerInfoWrapper.prototype = {
   // we haven't (yet?) implemented, so we make it a public property.
   wrappedHandlerInfo: null,
 
+
   //**************************************************************************//
   // Convenience Utils
 
@@ -192,20 +193,6 @@ HandlerInfoWrapper.prototype = {
 
   element: function(aID) {
     return document.getElementById(aID);
-  },
-
-
-  //**************************************************************************//
-  // nsISupports
-
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIHandlerInfo) ||
-        aIID.equals(Ci.nsISupports) ||
-        (aIID.equals(Ci.nsIMIMEInfo) &&
-         this.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
   },
 
 
@@ -1172,7 +1159,7 @@ var gApplicationsPane = {
     // And it's not available to types handled only by plugins either, although
     // I would think we'd want to give users the ability to redirect that stuff
     // to disk (so maybe we should revisit that decision).
-    if ((handlerInfo instanceof Ci.nsIMIMEInfo) &&
+    if ((handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) &&
         handlerInfo.type != TYPE_MAYBE_FEED &&
         !handlerInfo.handledOnlyByPlugin) {
       let menuItem = document.createElementNS(kXULNS, "menuitem");
