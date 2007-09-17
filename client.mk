@@ -246,7 +246,6 @@ MODULES_suite :=                                \
   $(MODULES_toolkit)                            \
   mozilla/directory/xpcom                       \
   mozilla/mailnews                              \
-  mozilla/themes                                \
   mozilla/suite                                 \
   mozilla/other-licenses/7zstub/seamonkey       \
   $(NULL)
