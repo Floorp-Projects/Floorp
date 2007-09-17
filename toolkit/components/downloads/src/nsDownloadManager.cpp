@@ -581,11 +581,12 @@ nsDownloadManager::RestoreDatabaseState()
       "OR state = ?3"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = stmt->BindInt32Parameter(0, nsIDownloadManager::DOWNLOAD_NOTSTARTED);
+  PRInt32 i = 0;
+  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_NOTSTARTED);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(1, nsIDownloadManager::DOWNLOAD_QUEUED);
+  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_QUEUED);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(2, nsIDownloadManager::DOWNLOAD_DOWNLOADING);
+  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_DOWNLOADING);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Next, we iterate through them storing them in an array
@@ -607,13 +608,14 @@ nsDownloadManager::RestoreDatabaseState()
       "OR state = ?4"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = stmt->BindInt32Parameter(0, nsIDownloadManager::DOWNLOAD_FAILED);
+  i = 0;
+  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_FAILED);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(1, nsIDownloadManager::DOWNLOAD_NOTSTARTED);
+  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_NOTSTARTED);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(2, nsIDownloadManager::DOWNLOAD_QUEUED);
+  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_QUEUED);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->BindInt32Parameter(3, nsIDownloadManager::DOWNLOAD_DOWNLOADING);
+  rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_DOWNLOADING);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Finally, let's retry all of those downloads
@@ -638,28 +640,29 @@ nsDownloadManager::AddDownloadToDB(const nsAString &aName,
     "VALUES (?1, ?2, ?3, ?4, ?5, ?6)"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, 0);
 
+  PRInt32 i = 0;
   // name
-  rv = stmt->BindStringParameter(0, aName);
+  rv = stmt->BindStringParameter(i++, aName);
   NS_ENSURE_SUCCESS(rv, 0);
 
   // source
-  rv = stmt->BindUTF8StringParameter(1, aSource);
+  rv = stmt->BindUTF8StringParameter(i++, aSource);
   NS_ENSURE_SUCCESS(rv, 0);
 
   // target
-  rv = stmt->BindUTF8StringParameter(2, aTarget);
+  rv = stmt->BindUTF8StringParameter(i++, aTarget);
   NS_ENSURE_SUCCESS(rv, 0);
 
   // startTime
-  rv = stmt->BindInt64Parameter(3, aStartTime);
+  rv = stmt->BindInt64Parameter(i++, aStartTime);
   NS_ENSURE_SUCCESS(rv, 0);
 
   // endTime
-  rv = stmt->BindInt64Parameter(4, aEndTime);
+  rv = stmt->BindInt64Parameter(i++, aEndTime);
   NS_ENSURE_SUCCESS(rv, 0);
 
   // state
-  rv = stmt->BindInt32Parameter(5, aState);
+  rv = stmt->BindInt32Parameter(i++, aState);
   NS_ENSURE_SUCCESS(rv, 0);
 
   PRBool hasMore;
@@ -775,26 +778,27 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
   if (!dl)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  PRInt32 i = 0;
   // Setting all properties of the download now
   dl->mCancelable = nsnull;
-  dl->mID = stmt->AsInt64(0);
-  dl->mDownloadState = stmt->AsInt32(1);
-  dl->mStartTime = stmt->AsInt64(2);
+  dl->mID = stmt->AsInt64(i++);
+  dl->mDownloadState = stmt->AsInt32(i++);
+  dl->mStartTime = stmt->AsInt64(i++);
 
   nsCString source;
-  stmt->GetUTF8String(3, source);
+  stmt->GetUTF8String(i++, source);
   rv = NS_NewURI(getter_AddRefs(dl->mSource), source);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCString target;
-  stmt->GetUTF8String(4, target);
+  stmt->GetUTF8String(i++, target);
   rv = NS_NewURI(getter_AddRefs(dl->mTarget), target);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  stmt->GetString(5, dl->mDisplayName);
+  stmt->GetString(i++, dl->mDisplayName);
 
   nsCString referrer;
-  rv = stmt->GetUTF8String(6, referrer);
+  rv = stmt->GetUTF8String(i++, referrer);
   if (NS_SUCCEEDED(rv) && !referrer.IsEmpty()) {
     rv = NS_NewURI(getter_AddRefs(dl->mReferrer), referrer);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -823,7 +827,7 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
     dl->mCurrBytes = 0;
   }
 
-  rv = stmt->GetUTF8String(7, dl->mEntityID);
+  rv = stmt->GetUTF8String(i++, dl->mEntityID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Addrefing and returning
@@ -2164,16 +2168,17 @@ nsDownload::UpdateDB()
 
   mozIStorageStatement *stmt = mDownloadManager->mUpdateDownloadStatement;
 
+  PRInt32 i = 0;
   // startTime
-  nsresult rv = stmt->BindInt64Parameter(0, mStartTime);
+  nsresult rv = stmt->BindInt64Parameter(i++, mStartTime);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // endTime
-  rv = stmt->BindInt64Parameter(1, mLastUpdate);
+  rv = stmt->BindInt64Parameter(i++, mLastUpdate);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // state
-  rv = stmt->BindInt32Parameter(2, mDownloadState);
+  rv = stmt->BindInt32Parameter(i++, mDownloadState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // referrer
@@ -2181,18 +2186,18 @@ nsDownload::UpdateDB()
     nsCAutoString referrer;
     rv = mReferrer->GetSpec(referrer);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = stmt->BindUTF8StringParameter(3, referrer);
+    rv = stmt->BindUTF8StringParameter(i++, referrer);
   } else {
-    rv = stmt->BindNullParameter(3);
+    rv = stmt->BindNullParameter(i++);
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
   // entityID
-  rv = stmt->BindUTF8StringParameter(4, mEntityID);
+  rv = stmt->BindUTF8StringParameter(i++, mEntityID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // id
-  rv = stmt->BindInt64Parameter(5, mID);
+  rv = stmt->BindInt64Parameter(i++, mID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return stmt->Execute();
