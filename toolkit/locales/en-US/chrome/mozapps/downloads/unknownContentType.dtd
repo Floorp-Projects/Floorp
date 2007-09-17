@@ -45,8 +45,8 @@
 <!ENTITY  openWith.accesskey          "o">
 <!ENTITY  other.label                 "Other...">
 
-<!ENTITY  save.label                  "Save to Disk">
-<!ENTITY  save.accesskey              "s">
+<!ENTITY  saveFile.label              "Save File">
+<!ENTITY  saveFile.accesskey          "s">
 
 <!ENTITY  rememberChoice.label        "Do this automatically for files like this from now on.">
 <!ENTITY  rememberChoice.accesskey    "a">
