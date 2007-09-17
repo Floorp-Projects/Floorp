@@ -841,6 +841,7 @@ nsDownloadManager::AddToCurrentDownloads(nsDownload *aDl)
   if (!mCurrentDownloads.AppendObject(aDl))
     return NS_ERROR_OUT_OF_MEMORY;
 
+  aDl->mDownloadManager = this;
   return NS_OK;
 }
 
@@ -1062,7 +1063,6 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
     return NS_ERROR_OUT_OF_MEMORY;
 
   // give our new nsIDownload some info so it's ready to go off into the world
-  dl->mDownloadManager = this;
   dl->mTarget = aTarget;
   dl->mSource = aSource;
   dl->mTempFile = aTempFile;
@@ -1142,13 +1142,12 @@ nsDownloadManager::CancelDownload(PRUint32 aID)
   if (dl->IsFinished())
     return NS_OK;
 
-  // if the download is paused, we have to resume it so we can cancel it
-  if (dl->IsPaused())
-    (void)dl->PauseResume(PR_FALSE);
+  // if the download is fake-paused, we have to resume it so we can cancel it
+  if (dl->IsPaused() && !dl->IsResumable())
+    (void)dl->Resume();
 
-  // Cancel using the provided object
-  if (dl->mCancelable)
-    dl->mCancelable->Cancel(NS_BINDING_ABORTED);
+  // Have the download cancel its connection
+  (void)dl->Cancel();
 
   // Dump the temp file.  This should really be done when the transfer
   // is cancelled, but there are other cancellation causes that shouldn't
@@ -1179,35 +1178,25 @@ nsDownloadManager::RetryDownload(PRUint32 aID)
       dl->mDownloadState != nsIDownloadManager::DOWNLOAD_CANCELED)
     return NS_ERROR_FAILURE;
 
-  // we are redownloading this, so we need to link the download manager to the
-  // download else we'll try to dereference null pointers - eww
-  dl->mDownloadManager = this;
-
   dl->SetStartTime(PR_Now());
 
   nsCOMPtr<nsIWebBrowserPersist> wbp =
     do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Creates a cycle that will be broken when the download finishes
-  dl->mCancelable = wbp;
-  wbp->SetProgressListener(dl);
-
   rv = wbp->SetPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_REPLACE_EXISTING_FILES |
                             nsIWebBrowserPersist::PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION);
-  if (NS_FAILED(rv)) {
-    dl->mCancelable = nsnull;
-    (void)wbp->SetProgressListener(nsnull);
-    return rv;
-  }
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = AddToCurrentDownloads(dl);
-  if (NS_FAILED(rv)) {
-    dl->mCancelable = nsnull;
-    (void)wbp->SetProgressListener(nsnull);
-    return rv;
-  }
-  (void)dl->SetState(nsIDownloadManager::DOWNLOAD_QUEUED);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = dl->SetState(nsIDownloadManager::DOWNLOAD_QUEUED);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Creates a cycle that will be broken when the download finishes
+  dl->mCancelable = wbp;
+  (void)wbp->SetProgressListener(dl);
 
   rv = wbp->SaveURI(dl->mSource, nsnull, nsnull, nsnull, nsnull, dl->mTarget);
   if (NS_FAILED(rv)) {
@@ -1301,23 +1290,21 @@ nsDownloadManager::GetCanCleanUp(PRBool *aResult)
 NS_IMETHODIMP
 nsDownloadManager::PauseDownload(PRUint32 aID)
 {
-  return PauseResumeDownload(aID, PR_TRUE);
+  nsDownload *dl = FindDownload(aID);
+  if (!dl)
+    return NS_ERROR_FAILURE;
+
+  return dl->Pause();
 }
 
 NS_IMETHODIMP
 nsDownloadManager::ResumeDownload(PRUint32 aID)
 {
-  return PauseResumeDownload(aID, PR_FALSE);
-}
-
-nsresult
-nsDownloadManager::PauseResumeDownload(PRUint32 aID, PRBool aPause)
-{
   nsDownload *dl = FindDownload(aID);
   if (!dl)
     return NS_ERROR_FAILURE;
 
-  return dl->PauseResume(aPause);
+  return dl->Resume();
 }
 
 NS_IMETHODIMP
@@ -1874,16 +1861,10 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
       // HTTP 450 - Blocked by parental control proxies
       if (NS_SUCCEEDED(rv) && status == 450) {
         // Cancel using the provided object
-        if (mCancelable)
-          (void)mCancelable->Cancel(NS_BINDING_ABORTED);
+        (void)Cancel();
 
         // Fail the download - DOWNLOAD_BLOCKED
         (void)SetState(nsIDownloadManager::DOWNLOAD_BLOCKED);
-
-        mDownloadManager->NotifyListenersOnStateChange(aWebProgress, aRequest,
-                                                       aStateFlags, aStatus, this);
-
-        return UpdateDB();
       }
     }
   } else if (aStateFlags & STATE_STOP) {
@@ -2041,93 +2022,116 @@ nsDownload::GetReferrer(nsIURI **referrer)
 }
 
 nsresult
-nsDownload::PauseResume(PRBool aPause)
+nsDownload::Pause()
 {
-  if (IsPaused() == aPause || !mRequest)
-    return NS_OK;
+  nsresult rv = NS_ERROR_FAILURE;
+  if (IsResumable())
+    rv = Cancel();
+  else if (mRequest)
+    rv = mRequest->Suspend();
+  else
+    NS_NOTREACHED("We don't have a resumable download or a request to suspend??");
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsresult rv;
-  if (aPause) {
-    if (IsResumable()) {
-      rv = mCancelable->Cancel(NS_BINDING_ABORTED);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      // This is for non-resumable downloads and downloads that are used with
-      // "Open With...".
-      rv = mRequest->Suspend();
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    return SetState(nsIDownloadManager::DOWNLOAD_PAUSED);
+  return SetState(nsIDownloadManager::DOWNLOAD_PAUSED);
+}
+
+nsresult
+nsDownload::Cancel()
+{
+  nsresult rv = NS_OK;
+  if (mCancelable) {
+    rv = mCancelable->Cancel(NS_BINDING_ABORTED);
+    // we're done with this, so break the cycle
+    mCancelable = nsnull;
   }
 
-  if (IsResumable()) {
-    nsCOMPtr<nsIWebBrowserPersist> wbp =
-      do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  return rv;
+}
 
-    rv = wbp->SetPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_APPEND_TO_FILE |
-                              nsIWebBrowserPersist::PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Create a new channel for the source URI
-    nsCOMPtr<nsIChannel> channel;
-    nsCOMPtr<nsIInterfaceRequestor> ir(do_QueryInterface(wbp));
-    rv = NS_NewChannel(getter_AddRefs(channel), mSource, nsnull, nsnull, ir);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Get the size of the temporary or target file to be used as offset.
-    PRInt64 fileSize;
-    nsCOMPtr<nsILocalFile> targetLocalFile(mTempFile);
-    if (!targetLocalFile) {
-      rv = GetTargetFile(getter_AddRefs(targetLocalFile));
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    // We need to get a new nsIFile though because of caching issues with the
-    // file size.  Cloning it takes care of this :(
-    nsCOMPtr<nsIFile> clone;
-    rv = targetLocalFile->Clone(getter_AddRefs(clone));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = clone->GetFileSize(&fileSize);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Set the channel to resume at the right position along with the entityID
-    nsCOMPtr<nsIResumableChannel> resumableChannel(do_QueryInterface(channel));
-    if (!resumableChannel)
-      return NS_ERROR_UNEXPECTED;
-    rv = resumableChannel->ResumeAt(fileSize, mEntityID);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // Track where we resumed because progress notifications restart at 0
-    mResumedAt = fileSize;
-    mCurrBytes = 0;
-    mMaxBytes = LL_MAXUINT;
-
-    // Set the referrer
-    if (mReferrer) {
-      nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-      if (httpChannel) {
-        rv = httpChannel->SetReferrer(mReferrer);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-    }
-
-    // Creates a cycle that will be broken when the download finishes
-    mCancelable = wbp;
-    (void)wbp->SetProgressListener(this);
-
-    // Save the channel using nsIWBP.
-    rv = wbp->SaveChannel(channel, targetLocalFile);
-    if (NS_FAILED(rv)) {
-      mCancelable = nsnull;
-      (void)wbp->SetProgressListener(nsnull);
-      return rv;
-    }
-  } else {
+nsresult
+nsDownload::Resume()
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  if (IsResumable())
+    rv = RealResume();
+  else if (mRequest)
     rv = mRequest->Resume();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  else
+    NS_NOTREACHED("We don't have a resumable download or a request to resume??");
+  NS_ENSURE_SUCCESS(rv, rv);
 
   return SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
+}
+
+nsresult
+nsDownload::RealResume()
+{
+  nsresult rv;
+  nsCOMPtr<nsIWebBrowserPersist> wbp =
+    do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = wbp->SetPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_APPEND_TO_FILE |
+                            nsIWebBrowserPersist::PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Create a new channel for the source URI
+  nsCOMPtr<nsIChannel> channel;
+  nsCOMPtr<nsIInterfaceRequestor> ir(do_QueryInterface(wbp));
+  rv = NS_NewChannel(getter_AddRefs(channel), mSource, nsnull, nsnull, ir);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get the size of the temporary or target file to be used as offset.
+  PRInt64 fileSize;
+  nsCOMPtr<nsILocalFile> targetLocalFile(mTempFile);
+  if (!targetLocalFile) {
+    rv = GetTargetFile(getter_AddRefs(targetLocalFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // We need to get a new nsIFile though because of caching issues with the
+  // file size.  Cloning it takes care of this :(
+  nsCOMPtr<nsIFile> clone;
+  rv = targetLocalFile->Clone(getter_AddRefs(clone));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = clone->GetFileSize(&fileSize);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Set the channel to resume at the right position along with the entityID
+  nsCOMPtr<nsIResumableChannel> resumableChannel(do_QueryInterface(channel));
+  if (!resumableChannel)
+    return NS_ERROR_UNEXPECTED;
+  rv = resumableChannel->ResumeAt(fileSize, mEntityID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Track where we resumed because progress notifications restart at 0
+  mResumedAt = fileSize;
+  mCurrBytes = 0;
+  mMaxBytes = LL_MAXUINT;
+
+  // Set the referrer
+  if (mReferrer) {
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
+    if (httpChannel) {
+      rv = httpChannel->SetReferrer(mReferrer);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  // Creates a cycle that will be broken when the download finishes
+  mCancelable = wbp;
+  (void)wbp->SetProgressListener(this);
+
+  // Save the channel using nsIWBP
+  rv = wbp->SaveChannel(channel, targetLocalFile);
+  if (NS_FAILED(rv)) {
+    mCancelable = nsnull;
+    (void)wbp->SetProgressListener(nsnull);
+    return rv;
+  }
+
+  return NS_OK;
 }
 
 PRBool
