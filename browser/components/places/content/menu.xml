@@ -36,7 +36,7 @@
 # the provisions above, a recipient may use your version of this file under
 # the terms of any one of the MPL, the GPL or the LGPL.
 #
-# ***** END LICENSE BLOCK ***** 
+# ***** END LICENSE BLOCK *****
 
 <bindings id="placesMenuBindings"
           xmlns="http://www.mozilla.org/xbl"
@@ -44,12 +44,12 @@
           xmlns:html="http://www.w3.org/1999/xhtml"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="places-menupopup" 
+  <binding id="places-menupopup"
            extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation>
       <constructor><![CDATA[
 #if 0
-        // Support an asyncinit attribute that causes the view to populate 
+        // Support an asyncinit attribute that causes the view to populate
         // itself only after the window has been shown. This is to ensure we
         // do not regress browser window show time (Ts/Txul)
         if (this.hasAttribute("asyncinit")) {
@@ -60,7 +60,7 @@
 #endif
         this._init();
       ]]></constructor>
-      
+
       <destructor><![CDATA[
         this._resultNode = null;
         if (this._result) {
@@ -77,7 +77,7 @@
           // This function should only be called for top-level menus like the bookmarks menu.
           // Submenus get their _result and _resultNode from their parents.
           if (this.hasAttribute("place")) {
-            // Do the initial build. 
+            // Do the initial build.
             this.place = this.place;
           }
         ]]></body>
@@ -103,9 +103,9 @@
           this.popupShowingCallback();
         ]]></body>
       </method>
-      
+
       <field name="_selection">null</field>
-      
+
       <method name="setResultAndNode">
         <parameter name="result"/>
         <parameter name="resultNode"/>
@@ -141,7 +141,7 @@
            _startMarker and _endMarker are -1. -->
       <field name="_startMarker">-1</field>
       <field name="_endMarker">-1</field>
-      
+
       <method name="_cleanMenu">
         <body><![CDATA[
           // Find static menuitems that should go at the start
@@ -164,7 +164,7 @@
             if ((this._startMarker != -1) && (this._endMarker == -1))
               items.push(item);
           }
-          
+
           // If static items at the beginning were found, remove all items between
           // them and the static content at the end.
           for (var i = 0; i < items.length; ++i) {
@@ -172,7 +172,7 @@
             if (this._endMarker > 0)
               --this._endMarker;
           }
-            
+
           // If no static items were found at the beginning, remove all items before
           // the static items at the end.
           if (this._startMarker == -1) {
@@ -279,6 +279,23 @@
       <field name="_needsBindingAttachment">false</field>
 #endif
 
+      <field name="_emptyMenuItem">null</field>
+      <method name="_showEmptyMenuItem">
+        <body><![CDATA[
+          if (this._emptyMenuItem) {
+            this._emptyMenuItem.hidden = false;
+            return;
+          }
+
+          var label = PlacesUtils.getString("bookmarksMenuEmptyFolder");
+          const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          this._emptyMenuItem = document.createElementNS(XULNS, "menuitem");
+          this._emptyMenuItem.setAttribute("label", label);
+          this._emptyMenuItem.setAttribute("disabled", true);
+          this.appendChild(this._emptyMenuItem);
+        ]]></body>
+      </method>
+
       <method name="_rebuild">
         <body><![CDATA[
           // Make sure not to hold onto any references to menu nodes when we
@@ -289,7 +306,7 @@
             this._DNDObserver._clearOverFolder();
 
           this._cleanMenu();
-          
+
           NS_ASSERT(PlacesUtils.nodeIsContainer(this._resultNode),
                     "Result-node of a places popup has to be a container node");
 
@@ -310,6 +327,9 @@
 
           var cc = this._resultNode.childCount;
           if (cc > 0) {
+            if (this._emptyMenuItem)
+              this._emptyMenuItem.hidden = true;
+
             for (var i = 0; i < cc; ++i) {
               var child = this._resultNode.getChild(i);
               this.insertNewItem(child, null);
@@ -318,14 +338,8 @@
           else {
             // This menu is empty.  If there is no static content, add
             // an element to show it is empty.
-            if (this._startMarker == -1 && this._endMarker == -1) {
-              var label = PlacesUtils.getString("bookmarksMenuEmptyFolder");
-              const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-              var element = document.createElementNS(XULNS, "menuitem");
-              element.setAttribute("label", label);
-              element.setAttribute("disabled", true);
-              this.appendChild(element);
-            }
+            if (this._startMarker == -1 && this._endMarker == -1)
+              this._showEmptyMenuItem();
           }
           this._built = true;
         ]]></body>
@@ -355,6 +369,8 @@
             var index = this._self._startMarker + 1 + aIndex;
             var before = this._self.childNodes[index] || null;
             this._self.insertNewItem(aNode, before);
+            if (this._self._emptyMenuItem)
+              this._self._emptyMenuItem.hidden = true;
           }
           else
             this._forwardToChildView(aParentNode, "itemInserted", arguments);
@@ -366,11 +382,15 @@
 
           if (aParentNode == this._self.getResultNode()) {
             var children = this._self.childNodes;
-            
+
             for (var i = 0; i < children.length; i++) {
               if (children[i].node == aNode) {
                 this._self.removeItem(children[i]);
-                return;
+                if (!this._self.hasChildNodes() ||
+                    (this._self.childNodes.length == 1 &&
+                     this._self.firstChild == this._self._emptyMenuItem)) {
+                  this._self._showEmptyMenuItem();
+                }
               }
             }
           }
@@ -411,7 +431,7 @@
           if (PlacesUtils.nodeIsSeparator(aNode)) {
             // nothing to do when a separator changes
             return;
-          } 
+          }
           else if (PlacesUtils.nodeIsContainer(aNode)) {
             if (PlacesUtils.nodeIsLivemarkContainer(aNode)) {
               var folder = aNode.itemId;
@@ -481,13 +501,13 @@
           var viewerToRebuild = null;
           for (var i=0; i < this._self._containerNodesMap.length; i++) {
             var node = this._self._containerNodesMap[i].resultNode;
-            
+
             if (node == aContainer)
               viewerToRebuild = this._self._containerNodesMap[i].domNode._viewer;
             if (isChildOf(node, aContainer))
               this._self._containerNodesMap.splice(i,1);
           }
-        
+
           if (aContainer.containerOpen) {
             if (viewerToRebuild)
               viewerToRebuild._built = false;
@@ -534,9 +554,9 @@
           this.setAttribute("place", val);
           var queries = { }, options = { };
           PlacesUtils.history.queryStringToQueries(val, queries, { }, options);
-          if (!queries.value.length) 
+          if (!queries.value.length)
             queries.value = [PlacesUtils.history.getNewQuery()];
-          this._result = 
+          this._result =
             PlacesUtils.history.executeQueries(queries.value,
                                                queries.value.length,
                                                options.value);
@@ -548,14 +568,14 @@
 
       <!-- nsIPlacesView -->
       <property name="hasSelection">
-        <getter><![CDATA[ 
+        <getter><![CDATA[
           return this._selection != null;
         ]]></getter>
       </property>
-      
+
       <!-- nsIPlacesView -->
       <property name="hasSingleSelection">
-        <getter><![CDATA[ 
+        <getter><![CDATA[
           return this.hasSelection;
         ]]></getter>
       </property>
@@ -569,7 +589,7 @@
 
       <!-- nsIPlacesView -->
       <method name="getRemovableSelectionRanges">
-        <body><![CDATA[ 
+        <body><![CDATA[
           return [this.getSelectionNodes()];
         ]]></body>
       </method>
@@ -592,7 +612,7 @@
 
       <!-- nsIPlacesView -->
       <property name="selectedNode">
-        <getter><![CDATA[ 
+        <getter><![CDATA[
           return this.hasSelection ? this._selection : null;
         ]]></getter>
       </property>
@@ -607,8 +627,8 @@
 
       <!-- nsIPlacesView -->
       <property name="insertionPoint">
-        <getter><![CDATA[ 
-          // By default, the insertion point is at the top level, at the end. 
+        <getter><![CDATA[
+          // By default, the insertion point is at the top level, at the end.
           var index = -1;
           var folderId = 0;
           if (PlacesUtils.nodeIsFolder(this._resultNode))
@@ -637,7 +657,7 @@
 
       <!-- nsIPlacesView -->
       <method name="selectAll">
-        <body><![CDATA[ 
+        <body><![CDATA[
           // Nothing
         ]]></body>
       </method>
@@ -653,7 +673,7 @@
       </method>
 
       <field name="_DNDObserver"><![CDATA[({
-        // Inside the _DNDObserver object's functions, this points to 
+        // Inside the _DNDObserver object's functions, this points to
         // the _DNDObserver object.  _self points to the menu xbl object.
         _self: this,
         // Subfolders should be opened when the mouse drags over them, and closed
@@ -685,7 +705,7 @@
           if (timer == this._overFolder.closeTimer) {
             // Only close the submenu if the mouse isn't being dragged over any
             // of its child menus.
-            var draggingOverChild = 
+            var draggingOverChild =
               PlacesControllerDragHelper.draggingOverChildNode(this._overFolder.node);
             if (draggingOverChild)
               this._overFolder.node = null;
