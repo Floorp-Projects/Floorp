@@ -243,12 +243,20 @@ private:
 
   PRUint32 mID;
   PRInt32 mPercentComplete;
+
+  /**
+   * These bytes are based on the position of where the request started, so 0
+   * doesn't necessarily mean we have nothing. Use GetAmountTransferred and
+   * GetSize for the real transferred amount and size.
+   */
   PRUint64 mCurrBytes;
   PRUint64 mMaxBytes;
+
   PRTime mStartTime;
   PRTime mLastUpdate;
   PRBool mPaused;
   PRBool mWasResumed;
+  PRUint64 mResumedAt;
   double mSpeed;
 
   friend class nsDownloadManager;
