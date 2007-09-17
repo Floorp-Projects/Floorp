@@ -157,7 +157,7 @@ var gEditItemOverlay = {
     var container = PlacesUtils.bookmarks.getFolderIdForItem(this._itemId);
 
     // only show "All Bookmarks" if the url isn't bookmarked somewhere else
-    this._element("placesRootItem").hidden = container != PlacesUtils.placesRootId;
+    this._element("unfiledRootItem").hidden = container != PlacesUtils.unfiledRootId;
 
     // List of recently used folders:
     var annos = PlacesUtils.annotations;
@@ -479,8 +479,8 @@ var gEditItemOverlay = {
   function EIO__getFolderIdFromMenuList() {
     var selectedItem = this._folderMenuList.selectedItem
     switch (selectedItem.id) {
-      case "editBMPanel_placesRootItem":
-        return PlacesUtils.placesRootId;
+      case "editBMPanel_unfiledRootItem":
+        return PlacesUtils.unfiledRootId;
       case "editBMPanel_bmRootItem":
         return PlacesUtils.bookmarksRootId;
       case "editBMPanel_toolbarFolderItem":
@@ -515,8 +515,8 @@ var gEditItemOverlay = {
     }
 
     if (aCheckStaticFolderItems) {
-      if (aFolderId == PlacesUtils.placesRootId)
-        return this._element("placesRootItem");
+      if (aFolderId == PlacesUtils.unfiledRootId)
+        return this._element("unfiledRootItem");
       if (aFolderId == PlacesUtils.bookmarksRootId)
         return this._element("bmRootItem");
       if (aFolderId == PlacesUtils.toolbarFolderId)
@@ -540,7 +540,7 @@ var gEditItemOverlay = {
 
       // Mark the containing folder as recently-used if it isn't the
       // "All Bookmarks" root
-      if (container != PlacesUtils.placesRootId)
+      if (container != PlacesUtils.unfiledRootId)
         this._markFolderAsRecentlyUsed(container);
     }
 

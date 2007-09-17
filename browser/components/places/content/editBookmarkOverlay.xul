@@ -90,7 +90,7 @@
                     oncommand="gEditItemOverlay.onFolderMenuListCommand();">
             <menupopup>
               <!-- Static item for special folders -->
-              <menuitem id="editBMPanel_placesRootItem"
+              <menuitem id="editBMPanel_unfiledRootItem"
                         label="&editBookmarkOverlay.allBookmarksFolderItem.label;"
                         class="menuitem-iconic folder-icon"/>
               <menuitem id="editBMPanel_bmRootItem"
