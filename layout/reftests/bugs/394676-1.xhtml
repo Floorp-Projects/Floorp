@@ -1,0 +1,39 @@
+<html xmlns="http://www.w3.org/1999/xhtml" class="reftest-wait">
+<head>
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="xbltest">
+      <implementation>
+        <constructor>
+          <![CDATA[
+            str += "constructor "
+            testFinished();
+          ]]>
+        </constructor>
+      </implementation>
+    </binding>
+  </bindings>
+</head>
+<body>
+<span id="test" style="-moz-binding: url(#xbltest)"></span>
+<script class="testbody" type="text/javascript">
+<![CDATA[
+  var testsToFinish = 2;
+  var str = "";
+  
+  function testFinished() {
+    --testsToFinish;
+    if (!testsToFinish) {
+      document.getElementById("test").textContent = str;
+      document.documentElement.className = '';
+    }
+  }
+
+  window.onload = function() {
+    str += "onload ";
+    testFinished();
+  }
+]]>
+</script>
+</body>
+</html>
+

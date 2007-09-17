@@ -102,21 +102,8 @@
           </xul:textbox>
         </xul:hbox>
 
-        <xul:stack class="search-go-button-stack">
-          <xul:vbox>
-            <!-- These image segments allow the button's gradient to stretch
-                 nicely in larger urlbars. -->
-            <xul:image class="search-go-button-top search-go-button-bkgnd"
-                       chromedir="&locale.dir;"/>
-            <xul:image flex="1"
-                       class="search-go-button-mid-top search-go-button-bkgnd"
-                       chromedir="&locale.dir;"/>
-            <xul:image flex="1"
-                       class="search-go-button-mid-bottom search-go-button-bkgnd"
-                       chromedir="&locale.dir;"/>
-            <xul:image class="search-go-button-bottom search-go-button-bkgnd"
-                       chromedir="&locale.dir;"/>
-          </xul:vbox>
+        <xul:stack class="search-go-button-stack endcap">
+          <xul:box class="endcap-box" chromedir="&locale.dir;"/>
           <xul:toolbarbutton class="search-go-button"
                              anonid="search-go-button"
                              chromedir="&locale.dir;"

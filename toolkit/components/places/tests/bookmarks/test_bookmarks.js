@@ -117,6 +117,7 @@ function run_test() {
   do_check_true(bmsvc.bookmarksRoot > 0);
   do_check_true(bmsvc.tagRoot > 0);
   do_check_true(bmsvc.toolbarFolder > 0);
+  do_check_true(bmsvc.unfiledRoot > 0);
 
   // test root parentage
   do_check_eq(bmsvc.getFolderIdForItem(bmsvc.bookmarksRoot), bmsvc.placesRoot);

@@ -358,7 +358,7 @@ js_InitRuntimeStringState(JSContext *cx);
  * Maximum character code for which we will create a pinned unit string on
  * demand -- see JSRuntime.unitStrings in jscntxt.h.
  */
-#define UNIT_STRING_LIMIT 256
+#define UNIT_STRING_LIMIT 256U
 
 /*
  * Get the independent string containing only character code c (backstopped

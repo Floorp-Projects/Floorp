@@ -511,10 +511,12 @@ protected:
                        nsCOMArray<nsNavHistoryResultNode>* aDest,
                        PRBool aIsDomain);
 
+  PRBool URIHasTag(nsIURI* aURI, const nsAString& aTag);
+
   nsresult FilterResultSet(nsNavHistoryQueryResultNode *aParentNode,
                            const nsCOMArray<nsNavHistoryResultNode>& aSet,
                            nsCOMArray<nsNavHistoryResultNode>* aFiltered,
-                           const nsString& aSearch);
+                           const nsCOMArray<nsNavHistoryQuery>& aQueries);
 
   // observers
   nsMaybeWeakPtrArray<nsINavHistoryObserver> mObservers;

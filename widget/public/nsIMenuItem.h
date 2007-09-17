@@ -42,13 +42,12 @@
 #include "nsISupports.h"
 #include "nsString.h"
 
-#include "nsIDocShell.h"
 #include "nsIDOMElement.h"
 
-// {F9A30AA5-D526-4C19-8418-C21BF6B31837}
+// 7DF81BE2-51F4-4CAA-9FD7-3F974A7AEA51
 #define NS_IMENUITEM_IID \
-{ 0xF9A30AA5, 0xD526, 0x4C19, \
-  { 0x84, 0x18, 0xC2, 0x1B, 0xF6, 0xB3, 0x18, 0x37 } }
+{ 0x7DF81BE2, 0x51F4, 0x4CAA, \
+  { 0x9F, 0xD7, 0x3F, 0x97, 0x4A, 0x7A, 0xEA, 0x51 } }
 
 class nsIMenu;
 class nsIWidget;
@@ -72,16 +71,15 @@ class nsIMenuItem : public nsISupports {
   public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IMENUITEM_IID)
 
-    enum EMenuItemType { eRegular = 0, eCheckbox, eRadio } ;
+    enum EMenuItemType { eRegular = 0, eCheckbox, eRadio, eSeparator} ;
 
    /**
     * Creates the MenuItem
     *
     */
-    NS_IMETHOD Create(nsIMenu* aParent, const nsString & aLabel, PRBool isSeparator, 
-                      EMenuItemType aItemType, nsIChangeManager* aManager,
-                      nsIDocShell* aShell, nsIContent* aNode) = 0;
-    
+    NS_IMETHOD Create(nsIMenu* aParent, const nsString & aLabel, EMenuItemType aItemType,
+                      nsIChangeManager* aManager, nsIContent* aNode) = 0;
+
    /**
     * Get the MenuItem label
     *

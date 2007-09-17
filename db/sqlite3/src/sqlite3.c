@@ -59,7 +59,7 @@
 ** the version number) and changes its name to "sqlite3.h" as
 ** part of the build process.
 **
-** @(#) $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** @(#) $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 #ifndef _SQLITE3_H_
 #define _SQLITE3_H_
@@ -2750,7 +2750,7 @@ int sqlite3_blob_write(sqlite3_blob *, const void *z, int n, int iOffset);
 ** sqlite3RegisterDateTimeFunctions() found at the bottom of the file.
 ** All other code has file scope.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 **
 ** SQLite processes all times and dates as Julian Day numbers.  The
 ** dates and times are stored as the number of days since noon
@@ -2794,7 +2794,7 @@ int sqlite3_blob_write(sqlite3_blob *, const void *z, int n, int iOffset);
 *************************************************************************
 ** Internal interface definitions for SQLite.
 **
-** @(#) $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** @(#) $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 #ifndef _SQLITEINT_H_
 #define _SQLITEINT_H_
@@ -2814,7 +2814,7 @@ int sqlite3_blob_write(sqlite3_blob *, const void *z, int n, int iOffset);
 ** 
 ** This file defines various limits of what SQLite can process.
 **
-** @(#) $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** @(#) $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /*
@@ -3017,7 +3017,7 @@ int sqlite3_blob_write(sqlite3_blob *, const void *z, int n, int iOffset);
 ** This is the header file for the generic hash-table implemenation
 ** used in SQLite.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 #ifndef _SQLITE_HASH_H_
 #define _SQLITE_HASH_H_
@@ -3449,7 +3449,7 @@ struct BusyHandler {
 ** or VDBE.  The VDBE implements an abstract machine that runs a
 ** simple program to access and modify the underlying database.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 #ifndef _SQLITE_VDBE_H_
 #define _SQLITE_VDBE_H_
@@ -3765,7 +3765,7 @@ SQLITE_PRIVATE   void sqlite3VdbeComment(Vdbe*, const char*, ...);
 ** subsystem.  See comments in the source code for a detailed description
 ** of what each interface routine does.
 **
-** @(#) $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** @(#) $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 #ifndef _BTREE_H_
 #define _BTREE_H_
@@ -3919,7 +3919,7 @@ SQLITE_PRIVATE int sqlite3BtreePageDump(Btree*, int, int recursive);
 ** subsystem.  The page cache subsystem reads and writes a file a page
 ** at a time and provides a journal for rollback.
 **
-** @(#) $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** @(#) $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 #ifndef _PAGER_H_
@@ -7471,7 +7471,7 @@ struct sqlite3OsVtbl *sqlite3_os_switch(void){
 ** Memory allocation functions used throughout sqlite.
 **
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /*
@@ -9194,7 +9194,7 @@ SQLITE_PRIVATE void sqlite3DebugPrintf(const char *zFormat, ...){
 ** Random numbers are used by some of the database backends in order
 ** to generate random integer keys for tables or random filenames.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 
@@ -9292,7 +9292,7 @@ SQLITE_PRIVATE void sqlite3Randomness(int N, void *pBuf){
 ** This file contains routines used to translate between UTF-8, 
 ** UTF-16, UTF-16BE, and UTF-16LE.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 **
 ** Notes on UTF-8:
 **
@@ -10272,7 +10272,7 @@ SQLITE_PRIVATE void sqlite3UtfSelfTest(){
 ** This file contains functions for allocating memory, comparing
 ** strings, and stuff like that.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 
@@ -11001,7 +11001,7 @@ SQLITE_PRIVATE void sqlite3ReleaseThreadData(){
 ** This is the implementation of generic hash-tables
 ** used in SQLite.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /* Turn bulk memory into a hash table object by initializing the
@@ -17882,7 +17882,7 @@ SQLITE_PRIVATE ThreadData *sqlite3WinThreadSpecificData(int allocateFlag){
 ** file simultaneously, or one process from reading the database while
 ** another is writing.
 **
-** @(#) $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** @(#) $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 #ifndef SQLITE_OMIT_DISKIO
 
@@ -22340,7 +22340,7 @@ SQLITE_PRIVATE void sqlite3PagerRefdump(Pager *pPager){
 **    May you share freely, never taking more than you give.
 **
 *************************************************************************
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 **
 ** This file implements a external (disk-based) database using BTrees.
 ** See the header comment on "btreeInt.h" for additional information.
@@ -22359,7 +22359,7 @@ SQLITE_PRIVATE void sqlite3PagerRefdump(Pager *pPager){
 **    May you share freely, never taking more than you give.
 **
 *************************************************************************
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 **
 ** This file implements a external (disk-based) database using BTrees.
 ** For a detailed discussion of BTrees, refer to
@@ -33566,7 +33566,7 @@ sqlite3 *sqlite3_db_handle(sqlite3_stmt *pStmt){
 ** in this file for details.  If in doubt, do not deviate from existing
 ** commenting and indentation practices when changing or adding code.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /*
@@ -38758,7 +38758,7 @@ abort_due_to_interrupt:
 **
 ** This file contains code used to implement incremental BLOB I/O.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 
@@ -39069,7 +39069,7 @@ int sqlite3_blob_bytes(sqlite3_blob *pBlob){
 ** This file contains routines used for analyzing expressions and
 ** for generating VDBE code that evaluates expressions in SQLite.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /*
@@ -41651,7 +41651,7 @@ SQLITE_PRIVATE int sqlite3ExprAnalyzeAggList(NameContext *pNC, ExprList *pList){
 ** This file contains C code routines that used to generate VDBE code
 ** that implements the ALTER TABLE command.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /*
@@ -42260,7 +42260,7 @@ exit_begin_add_column:
 *************************************************************************
 ** This file contains code associated with the ANALYZE command.
 **
-** @(#) $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** @(#) $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 #ifndef SQLITE_OMIT_ANALYZE
 
@@ -42672,7 +42672,7 @@ SQLITE_PRIVATE int sqlite3AnalysisLoad(sqlite3 *db, int iDb){
 *************************************************************************
 ** This file contains code used to implement the ATTACH and DETACH commands.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 #ifndef SQLITE_OMIT_ATTACH
@@ -43193,7 +43193,7 @@ SQLITE_PRIVATE int sqlite3FixTriggerStep(
 ** systems that do not need this facility may omit it by recompiling
 ** the library with -DSQLITE_OMIT_AUTHORIZATION=1
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /*
@@ -43436,7 +43436,7 @@ SQLITE_PRIVATE void sqlite3AuthContextPop(AuthContext *pContext){
 **     COMMIT
 **     ROLLBACK
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /*
@@ -46789,7 +46789,7 @@ SQLITE_PRIVATE KeyInfo *sqlite3IndexKeyinfo(Parse *pParse, Index *pIdx){
 ** This file contains functions used to access the internal hash tables
 ** of user defined functions and collation sequences.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 
@@ -47168,7 +47168,7 @@ SQLITE_PRIVATE Schema *sqlite3SchemaGet(Btree *pBt){
 ** separating it out, the code will be automatically omitted from
 ** static links that do not use it.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 #ifndef SQLITE_OMIT_COMPLETE
 
@@ -47429,7 +47429,7 @@ SQLITE_API int sqlite3_complete16(const void *zSql){
 ** This file contains C code routines that are called by the parser
 ** in order to generate code for DELETE FROM statements.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /*
@@ -47902,7 +47902,7 @@ SQLITE_PRIVATE void sqlite3GenerateIndexKey(
 ** sqliteRegisterBuildinFunctions() found at the bottom of the file.
 ** All other code has file scope.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 /* #include <math.h> */
 
@@ -49388,7 +49388,7 @@ SQLITE_PRIVATE int sqlite3IsLikeFunction(sqlite3 *db, Expr *pExpr, int *pIsNocas
 ** This file contains C code routines that are called by the parser
 ** to handle INSERT statements in SQLite.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /*
@@ -50996,7 +50996,7 @@ static int xferOptimization(
 ** other files are for internal use by SQLite and should not be
 ** accessed by users of the library.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 
@@ -51148,7 +51148,7 @@ exec_out:
 ** as extensions by SQLite should #include this file instead of 
 ** sqlite3.h.
 **
-** @(#) $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** @(#) $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 #ifndef _SQLITE3EXT_H_
 #define _SQLITE3EXT_H_
@@ -51865,7 +51865,7 @@ SQLITE_PRIVATE int sqlite3AutoLoadExtensions(sqlite3 *db){
 *************************************************************************
 ** This file contains code used to implement the PRAGMA command.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /* Ignore this whole file if pragmas are disabled
@@ -53045,7 +53045,7 @@ pragma_out:
 ** interface, and routines that contribute to loading the database schema
 ** from disk.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /*
@@ -53741,7 +53741,7 @@ int sqlite3_prepare16_v2(
 ** This file contains C code routines that are called by the parser
 ** to handle SELECT statements in SQLite.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 
@@ -58277,7 +58277,7 @@ SQLITE_PRIVATE int sqlite3CodeRowTrigger(
 ** This file contains C code routines that are called by the parser
 ** to handle UPDATE statements.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE
@@ -58908,7 +58908,7 @@ static void updateVirtualTable(
 ** Most of the code in this file may be omitted by defining the
 ** SQLITE_OMIT_VACUUM macro.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 #if !defined(SQLITE_OMIT_VACUUM) && !defined(SQLITE_OMIT_ATTACH)
@@ -59167,7 +59167,7 @@ end_of_vacuum:
 *************************************************************************
 ** This file contains code used to help implement virtual tables.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 #ifndef SQLITE_OMIT_VIRTUALTABLE
 
@@ -59955,7 +59955,7 @@ SQLITE_PRIVATE FuncDef *sqlite3VtabOverloadFunction(
 ** so is applicable.  Because this module is responsible for selecting
 ** indices, you might also think of this module as the "query optimizer".
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /*
@@ -65819,7 +65819,7 @@ SQLITE_PRIVATE void sqlite3Parser(
 ** individual tokens and sends those tokens one-by-one over to the
 ** parser for analysis.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /*
@@ -65872,7 +65872,7 @@ const unsigned char ebcdicToAscii[] = {
 **
 ** The code in this file has been automatically generated by
 **
-**     $Header: /cvsroot/mozilla/db/sqlite3/src/sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+**     $Header: /cvsroot/mozilla/db/sqlite3/src/sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 **
 ** The code in this file implements a function that determines whether
 ** or not a given identifier is really an SQL keyword.  The same thing
@@ -66448,7 +66448,7 @@ abort_parse:
 ** other files are for internal use by SQLite and should not be
 ** accessed by users of the library.
 **
-** $Id: sqlite3.c,v 1.6 2007/08/02 15:24:51 sspitzer%mozilla.org Exp $
+** $Id: sqlite3.c,v 1.8 2007/09/14 21:07:51 dmose%mozilla.org Exp $
 */
 
 /*

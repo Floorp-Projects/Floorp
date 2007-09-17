@@ -28,7 +28,6 @@
 #   Joe Hewitt <hewitt@netscape.com>
 #   Pierre Chanial <chanial@noos.fr>
 #   Dean Tessman <dean_tessman@hotmail.com>
-#   Johnathan Nightingale <johnath@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -137,34 +136,6 @@
 
     <popup id="placesContext"/>
 
-    <!-- Popup for site identity information -->
-    <panel id="identity-popup" position="after_start" hidden="true">
-      <hbox id="identity-popup-container" align="top">
-        <image id="identity-popup-icon"/>
-        <vbox id="identity-popup-content-box">
-          <!-- Title Bar -->
-          <label id="identity-popup-title"/>
-          <!-- Content area -->
-          <description id="identity-popup-content"/>
-          <description id="identity-popup-content-supplemental"/>
-          <description id="identity-popup-content-verifier"/>
-          <hbox id="identity-popup-encryption" flex="1">
-            <vbox>
-              <image id="identity-popup-encryption-icon"/>
-              <spacer flex="1"/>
-            </vbox>
-            <description id="identity-popup-encryption-label" flex="1"/>
-          </hbox>
-          <spacer flex="1"/>
-          <!-- Footer link to page info -->
-          <label id="identity-popup-more-info-link"
-                 class="text-link plain"
-                 value="&identity.moreInfoLinkText;"
-                 onclick="getIdentityHandler().handleMoreInfoClick(event);"/>
-        </vbox>
-      </hbox>
-    </panel>
-
     <tooltip id="urlTooltip">
       <label crop="center" flex="1"/>
     </tooltip>
@@ -245,90 +216,66 @@
       <toolbaritem id="urlbar-container" align="center" flex="400" persist="width"
                    title="&locationItem.title;" class="chromeclass-location">
         <hbox id="urlbar-button-box" flex="1">
-            <textbox id="urlbar" flex="1"
-                     chromedir="&locale.dir;"
-                     type="autocomplete"
-                     autocompletesearch="history" 
-                     autocompletepopup="PopupAutoComplete"
-                     completeselectedindex="true"
-                     tabscrolling="true"
-                     showcommentcolumn="true"
-                     showimagecolumn="true" 
-                     enablehistory="true"
-                     maxrows="10"
-                     newlines="stripsurroundingwhitespace"
-                     oninput="gBrowser.userTypedValue = this.value"
-                     ontextentered="return handleURLBarCommand(param);"
-                     ontextreverted="return handleURLBarRevert();">
-              <!-- Use onmouseup instead of normal popup= syntax since the popup
-                   code fires onmousedown, and hence eats our favicon drag events -->
-              <box id="identity-box" align="center"
-                   onmouseup="getIdentityHandler().handleMouseUp(event);">
-                <deck id="page-proxy-deck" onclick="PageProxyClickHandler(event);">
-                  <image id="page-proxy-button"
-                         ondraggesture="PageProxyDragGesture(event);"
-                         tooltiptext="&proxyIcon.tooltip;"/>
-                  <image id="page-proxy-favicon" validate="never"
-                         ondraggesture="PageProxyDragGesture(event);"
-                         onload="this.parentNode.selectedIndex = 1;
-                                 event.stopPropagation();"
-                         onerror="gBrowser.addToMissedIconCache(this.src);
-                                  this.removeAttribute('src');
-                                  this.parentNode.selectedIndex = 0;"
-                         tooltiptext="&proxyIcon.tooltip;"/>
-                </deck>
-                <label id="identity-icon-label"/>
-              </box> 
-              <hbox id="urlbar-icons">
-                <button type="menu"
-                        style="-moz-user-focus: none"
-                        class="plain"
-                        id="feed-button"
-                        chromedir="&locale.dir;"
-                        onclick="return FeedHandler.onFeedButtonClick(event);">
-                  <menupopup position="after_end"
-                             onpopupshowing="return FeedHandler.buildFeedList(this);"
-                             oncommand="return FeedHandler.subscribeToFeed(null, event);"
-                             onclick="checkForMiddleClick(this, event);"/>
-                </button>
+          <textbox id="urlbar" flex="1"
+                   chromedir="&locale.dir;"
+                   type="autocomplete"
+                   autocompletesearch="history" 
+                   autocompletepopup="PopupAutoComplete"
+                   completeselectedindex="true"
+                   tabscrolling="true"
+                   showcommentcolumn="true"
+                   showimagecolumn="true" 
+                   enablehistory="true"
+                   maxrows="10"
+                   newlines="stripsurroundingwhitespace"
+                   oninput="gBrowser.userTypedValue = this.value"
+                   ontextentered="return handleURLBarCommand(param);"
+                   ontextreverted="return handleURLBarRevert();">
+            <deck id="page-proxy-deck" onclick="PageProxyClickHandler(event);">
+              <image id="page-proxy-button"
+                     ondraggesture="PageProxyDragGesture(event);"
+                     tooltiptext="&proxyIcon.tooltip;"/>
+              <image id="page-proxy-favicon" validate="never"
+                     ondraggesture="PageProxyDragGesture(event);"
+                     onload="this.parentNode.selectedIndex = 1;
+                             event.stopPropagation();"
+                     onerror="gBrowser.addToMissedIconCache(this.src);
+                              this.removeAttribute('src');
+                              this.parentNode.selectedIndex = 0;"
+                     tooltiptext="&proxyIcon.tooltip;"/>
+            </deck>
+            <hbox id="urlbar-icons">
+              <button type="menu"
+                      style="-moz-user-focus: none"
+                      class="plain"
+                      id="feed-button"
+                      chromedir="&locale.dir;"
+                      onclick="return FeedHandler.onFeedButtonClick(event);">
+                <menupopup position="after_end"
+                           onpopupshowing="return FeedHandler.buildFeedList(this);"
+                           oncommand="return FeedHandler.subscribeToFeed(null, event);"
+                           onclick="checkForMiddleClick(this, event);"/>
+              </button>
+              <image id="lock-icon" onclick="if (event.button == 0) displaySecurityInfo(); event.stopPropagation();"/>
 #ifdef MOZ_SAFE_BROWSING
-                <image id="safebrowsing-urlbar-icon" tooltiptext="&safeb.urlbaricon.tooltip;"
-                       level="safe"
-                       onclick="goDoCommand('safebrowsing-show-warning')" />
+              <image id="safebrowsing-urlbar-icon" tooltiptext="&safeb.urlbaricon.tooltip;"
+                     level="safe"
+                     onclick="goDoCommand('safebrowsing-show-warning')"/>
 #endif
-              </hbox>
-            </textbox>
-            <stack id="go-button-stack">
-              <vbox>
-                <!-- These image segments allow the button to stretch nicely
-                     in larger urlbars. -->
-                <image id="go-button-top"
-                       class="go-button-background"
-                       chromedir="&locale.dir;" />
-                <image flex="1"
-                       id="go-button-mid-top"
-                       class="go-button-background"
-                       chromedir="&locale.dir;" />
-                <image flex="1"
-                       id="go-button-mid-bottom"
-                      class="go-button-background"
-                      chromedir="&locale.dir;" />
-                <image id="go-button-bottom"
-                       class="go-button-background"
-                       chromedir="&locale.dir;" />
-              </vbox>
-							
-              <hbox>
-                <toolbarbutton id="star-button" onclick="if (event.button == 0) PlacesStarButton.onClick(event);"/>
-                <toolbarbutton id="go-button"
-                               chromedir="&locale.dir;"
-                               label="&goEndCap.label;"
-                               onclick="handleURLBarCommand(event);"
-                               ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
-                               ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
-                               ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
-                               tooltiptext="&goEndCap.tooltip;"/>
-              </hbox>
+            </hbox>
+          </textbox>
+          <stack id="go-button-stack" class="endcap">
+            <box class="endcap-box" chromedir="&locale.dir;"/>
+            <hbox>
+              <toolbarbutton id="star-button" onclick="if (event.button == 0) PlacesStarButton.onClick(event);"/>
+              <toolbarbutton id="go-button" chromedir="&locale.dir;"
+                             label="&goEndCap.label;"
+                             onclick="handleURLBarCommand(event);"
+                             ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
+                             ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
+                             ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
+                             tooltiptext="&goEndCap.tooltip;"/>
+            </hbox>
           </stack>
         </hbox>
       </toolbaritem>

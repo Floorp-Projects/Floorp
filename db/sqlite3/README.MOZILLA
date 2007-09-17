@@ -15,7 +15,7 @@ To move to a new version:
 
 Simply copy the sqlite3.h and sqlite3.c files from the amalgamation of sqlite.
 
-They you need to update sqlite3file.h, which pulls out random bits of the
+Then you need to update sqlite3file.h, which pulls out random bits of the
 internal files that we need to export. If any of these internal structures
 change, they need to be changed in sqlite3file.h as well.  This may involve
 downloading the whole souce (not the amalgamation) to check.

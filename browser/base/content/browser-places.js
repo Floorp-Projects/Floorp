@@ -154,7 +154,7 @@ var PlacesCommandHook = {
    *        a <browser> element.
    * @param [optional] aParent
    *        The folder in which to create a new bookmark if the page loaded in
-   *        aBrowser isn't bookmarked yet, defaults to the places root.
+   *        aBrowser isn't bookmarked yet, defaults to the unfiled root.
    * @param [optional] aShowEditUI
    *        whether or not to show the edit-bookmark UI for the bookmark item
    * @param [optional] aAnchorElement
@@ -183,7 +183,7 @@ var PlacesCommandHook = {
       }
       catch (e) { }
 
-      var parent = aParent != undefined ? aParent : PlacesUtils.placesRootId;
+      var parent = aParent != undefined ? aParent : PlacesUtils.unfiledRootId;
       var descAnno = { name: DESCRIPTION_ANNO, value: description };
       var txn = PlacesUtils.ptm.createItem(uri, parent, -1,
                                            title, null, [descAnno]);

@@ -41,7 +41,6 @@
 #include "nsISupports.h"
 #include "nsStringFwd.h"
 
-class nsIDocShell;
 class nsIMenuBar;
 class nsIMenu;
 class nsIMenuItem;
@@ -51,10 +50,10 @@ class nsIContent;
 class nsIMenuCommandDispatcher;
 
 
-// a0aa02c5-5549-4228-8514-1083c6e8aa5d
+// 9188038F-D392-43BD-AEE7-730C3723643F
 #define NS_IMENU_IID \
-{ 0xa0aa02c5, 0x5549, 0x4228, \
-  { 0x85, 0x14, 0x10, 0x83, 0xc6, 0xe8, 0xaa, 0x5d } }
+{ 0x9188038F, 0xD392, 0x43BD, \
+  { 0xAE, 0xE7, 0x73, 0x0C, 0x37, 0x23, 0x64, 0x3F } }
 
 /**
  * Menu widget
@@ -68,8 +67,8 @@ class nsIMenu : public nsISupports {
     * Creates the Menu
     *
     */
-    NS_IMETHOD Create ( nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
-                          nsIChangeManager* aManager, nsIDocShell* aShell, nsIContent* aNode ) = 0;
+    NS_IMETHOD Create(nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
+                      nsIChangeManager* aManager, nsIContent* aNode) = 0;
 
    /**
     * Get the Menu's Parent.  This addrefs.
@@ -119,13 +118,6 @@ class nsIMenu : public nsISupports {
     *
     */
     NS_IMETHOD AddItem(nsISupports* aItem) = 0;
-
-   /**
-    * Adds a separator. Do not use outside of widget menu implementations.
-    * Add and modify menu separators via DOM content.
-    *
-    */
-    NS_IMETHOD AddSeparator() = 0;
 
    /**
     * Returns the number of visible menu items

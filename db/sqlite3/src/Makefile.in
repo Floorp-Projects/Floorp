@@ -51,7 +51,6 @@ VISIBILITY_FLAGS =
 
 ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 ifndef GNU_CC
-MAPFILE = $(LIBRARY_NAME).map
 DEFFILE = $(win_srcdir)/sqlite.def
 endif
 endif
