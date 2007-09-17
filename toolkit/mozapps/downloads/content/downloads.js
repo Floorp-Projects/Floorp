@@ -477,7 +477,9 @@ var gContextMenus = [
    "menuitem_copyLocation"],
   // DOWNLOAD_BLOCKED
   ["menuitem_retry", "menuitem_remove", "menuseparator_copy_location",
-   "menuitem_copyLocation"]
+   "menuitem_copyLocation"],
+  // DOWNLOAD_SCANNING
+  ["menuitem_copyLocation"]
 ];
 
 function buildContextMenu(aEvent)
