@@ -71,17 +71,6 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsCocoaWindow, Inherited, nsPIWidgetCocoa)
 // true *only when the sheet is actually showing*. Choose your test wisely.
 
 
-// returns the height of the title bar for a given cocoa NSWindow
-static float TitleBarHeightForWindow(NSWindow* aWindow)
-{
-  NS_ASSERTION(aWindow, "Must have a window to calculate a title bar height!");
-  
-  NSRect frameRect = [aWindow frame];
-  NSRect contentRect = [aWindow contentRectForFrameRect:frameRect];
-  return (frameRect.size.height - contentRect.size.height);
-}
-
-
 // roll up any popup windows
 static void RollUpPopups()
 {
@@ -752,6 +741,9 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
+  if (IsResizing())
+    return NS_OK;
+
   if (mWindow) {
     NSRect newFrame = [mWindow frame];
 
@@ -768,14 +760,8 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
     StopResizing();
   }
 
-  // report the actual size of the window because it can be restricted
-  NSRect finalWindowFrame = [mWindow contentRectForFrameRect:[mWindow frame]];
-  mBounds.width  = (nscoord)finalWindowFrame.size.width;
-  mBounds.height = (nscoord)finalWindowFrame.size.height;
-
-  // tell gecko to update all the child widgets
   ReportSizeEvent();
-  
+
   return NS_OK;
 }
 
@@ -952,13 +938,17 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 void
 nsCocoaWindow::ReportSizeEvent()
 {
+  NSRect windowFrame = [mWindow contentRectForFrameRect:[mWindow frame]];
+  mBounds.width  = nscoord(windowFrame.size.width);
+  mBounds.height = nscoord(windowFrame.size.height);
+
   nsSizeEvent sizeEvent(PR_TRUE, NS_SIZE, this);
   sizeEvent.time = PR_IntervalNow();
 
   sizeEvent.windowSize = &mBounds;
   sizeEvent.mWinWidth  = mBounds.width;
   sizeEvent.mWinHeight = mBounds.height;
-  
+
   nsEventStatus status = nsEventStatus_eIgnore;
   DispatchEvent(&sizeEvent, status);
 }
@@ -1126,13 +1116,10 @@ gfxASurface* nsCocoaWindow::GetThebesSurface()
 
 - (void)windowDidResize:(NSNotification *)aNotification
 {
-  if (mGeckoWindow->IsResizing())
+  if (!mGeckoWindow || mGeckoWindow->IsResizing())
     return;
-  
-  // Gecko already compensates for the title bar, so we have to strip it out here.
-  NSRect frameRect = [[[aNotification object] contentView] frame];
-  mGeckoWindow->Resize(static_cast<PRInt32>(frameRect.size.width),
-                       static_cast<PRInt32>(frameRect.size.height), PR_TRUE);
+
+  mGeckoWindow->ReportSizeEvent();
 }
 
 
