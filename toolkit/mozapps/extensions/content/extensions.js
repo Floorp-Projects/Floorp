@@ -553,9 +553,12 @@ function initPluginsDS()
   for (var i = 0; i < plugins.length; i++) {
     var plugin = plugins[i];
     var name = plugin.name;
-    if (!(name in gPlugins)) {
-      // Removes all html markup in a plugin's description
-      var desc = plugin.description.replace(/<\/?[a-z][^>]*>/gi, " ");
+    if (!(name in gPlugins))
+      gPlugins[name] = { };
+
+    // Removes all html markup in a plugin's description
+    var desc = plugin.description.replace(/<\/?[a-z][^>]*>/gi, " ");
+    if (!(desc in gPlugins[name])) {
       var homepageURL = null;
       // Some plugins (e.g. QuickTime) add an anchor to their description to
       // provide a link to the plugin's homepage in about:plugins. This can be
@@ -563,60 +566,60 @@ function initPluginsDS()
       if (/<A\s+HREF=[^>]*>/i.test(plugin.description))
         homepageURL = /<A\s+HREF=["']?([^>"'\s]*)/i.exec(plugin.description)[1];
 
-      gPlugins[name] = { name        : name,
-                         filename    : plugin.filename,
-                         description : desc,
-                         homepageURL : homepageURL,
-                         disabled    : plugin.disabled,
-                         blocklisted : plugin.blocklisted,
-                         plugins     : [] };
+      gPlugins[name][desc] = { filename    : plugin.filename,
+                               homepageURL : homepageURL,
+                               disabled    : plugin.disabled,
+                               blocklisted : plugin.blocklisted,
+                               plugins     : [] };
     }
-    gPlugins[name].plugins.push(plugin);
+    gPlugins[name][desc].plugins.push(plugin);
   }
 
   for (var pluginName in gPlugins) {
-    plugin = gPlugins[pluginName];
-    var pluginNode = rdf.GetResource(PREFIX_ITEM_URI + plugin.filename);
-    rootctr.AppendElement(pluginNode);
-    gPluginsDS.Assert(pluginNode,
-                      rdf.GetResource(PREFIX_NS_EM + "name"),
-                      rdf.GetLiteral(plugin.name),
-                      true);
-    gPluginsDS.Assert(pluginNode,
-                      rdf.GetResource(PREFIX_NS_EM + "addonID"),
-                      rdf.GetLiteral(plugin.filename),
-                      true);
-    gPluginsDS.Assert(pluginNode,
-                      rdf.GetResource(PREFIX_NS_EM + "description"),
-                      rdf.GetLiteral(plugin.description),
-                      true);
-    if (plugin.homepageURL)
+    for (var pluginDesc in gPlugins[pluginName]) {
+      plugin = gPlugins[pluginName][pluginDesc];
+      var pluginNode = rdf.GetResource(PREFIX_ITEM_URI + plugin.filename);
+      rootctr.AppendElement(pluginNode);
       gPluginsDS.Assert(pluginNode,
-                        rdf.GetResource(PREFIX_NS_EM + "homepageURL"),
-                        rdf.GetLiteral(plugin.homepageURL),
+                        rdf.GetResource(PREFIX_NS_EM + "name"),
+                        rdf.GetLiteral(pluginName),
                         true);
-    gPluginsDS.Assert(pluginNode,
-                      rdf.GetResource(PREFIX_NS_EM + "isDisabled"),
-                      rdf.GetLiteral(plugin.disabled ? "true" : "false"),
-                      true);
-    gPluginsDS.Assert(pluginNode,
-                      rdf.GetResource(PREFIX_NS_EM + "blocklisted"),
-                      rdf.GetLiteral(plugin.blocklisted ? "true" : "false"),
-                      true);
-    gPluginsDS.Assert(pluginNode,
-                      rdf.GetResource(PREFIX_NS_EM + "compatible"),
-                      rdf.GetLiteral("true"),
-                      true);
-    gPluginsDS.Assert(pluginNode,
-                      rdf.GetResource(PREFIX_NS_EM + "plugin"),
-                      rdf.GetLiteral("true"),
-                      true);
+      gPluginsDS.Assert(pluginNode,
+                        rdf.GetResource(PREFIX_NS_EM + "addonID"),
+                        rdf.GetLiteral(plugin.filename),
+                        true);
+      gPluginsDS.Assert(pluginNode,
+                        rdf.GetResource(PREFIX_NS_EM + "description"),
+                        rdf.GetLiteral(pluginDesc),
+                        true);
+      if (plugin.homepageURL)
+        gPluginsDS.Assert(pluginNode,
+                          rdf.GetResource(PREFIX_NS_EM + "homepageURL"),
+                          rdf.GetLiteral(plugin.homepageURL),
+                          true);
+      gPluginsDS.Assert(pluginNode,
+                        rdf.GetResource(PREFIX_NS_EM + "isDisabled"),
+                        rdf.GetLiteral(plugin.disabled ? "true" : "false"),
+                        true);
+      gPluginsDS.Assert(pluginNode,
+                        rdf.GetResource(PREFIX_NS_EM + "blocklisted"),
+                        rdf.GetLiteral(plugin.blocklisted ? "true" : "false"),
+                        true);
+      gPluginsDS.Assert(pluginNode,
+                        rdf.GetResource(PREFIX_NS_EM + "compatible"),
+                        rdf.GetLiteral("true"),
+                        true);
+      gPluginsDS.Assert(pluginNode,
+                        rdf.GetResource(PREFIX_NS_EM + "plugin"),
+                        rdf.GetLiteral("true"),
+                        true);
+    }
   }
 }
 
-function togglePluginDisabled(aName)
+function togglePluginDisabled(aName, aDesc)
 {
-  var plugin = gPlugins[aName];
+  var plugin = gPlugins[aName][aDesc];
   plugin.disabled = !plugin.disabled;
   for (var i = 0; i < plugin.plugins.length; ++i)
     plugin.plugins[i].disabled = plugin.disabled;
@@ -2089,7 +2092,9 @@ var gExtensionsViewController = {
     cmd_disable: function (aSelectedItem)
     {
       if (aSelectedItem.getAttribute("plugin") == "true") {
-        togglePluginDisabled(aSelectedItem.getAttribute("name"));
+        var name = aSelectedItem.getAttribute("name");
+        var desc = aSelectedItem.getAttribute("description");
+        togglePluginDisabled(name, desc);
         return;
       }
 
@@ -2097,7 +2102,7 @@ var gExtensionsViewController = {
       var dependentItems = gExtensionManager.getDependentItemListForID(id, false, { });
 
       if (dependentItems.length > 0) {
-        var name = aSelectedItem.getAttribute("name");
+        name = aSelectedItem.getAttribute("name");
         var result = confirmOperation(name, "disableTitle", "disableQueryMessage",
                                       "disableButton", "cancelButton",
                                       "disableWarningDependMessage", dependentItems);
@@ -2113,7 +2118,9 @@ var gExtensionsViewController = {
     cmd_enable: function (aSelectedItem)
     {
       if (aSelectedItem.getAttribute("plugin") == "true") {
-        togglePluginDisabled(aSelectedItem.getAttribute("name"));
+        var name = aSelectedItem.getAttribute("name");
+        var desc = aSelectedItem.getAttribute("description");
+        togglePluginDisabled(name, desc);
         return;
       }
 
