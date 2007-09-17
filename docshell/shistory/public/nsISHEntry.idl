@@ -55,7 +55,7 @@ struct nsRect;
 %}
 [ref] native nsRect(nsRect);
 
-[scriptable, uuid(9b4c7bf5-5e68-4406-9bb4-a4408c8e8bb5)]
+[scriptable, uuid(abe54136-49e5-44ca-a749-290038c6b85d)]
 interface nsISHEntry : nsIHistoryEntry
 {
     /** URI for the document */
@@ -166,11 +166,11 @@ interface nsISHEntry : nsIHistoryEntry
     void getScrollPosition(out long x, out long y);
 
     /** Additional ways to create an entry */
-    void create(in nsIURI URI, in AString title,
-                in nsIInputStream inputStream,
-                in nsILayoutHistoryState layoutHistoryState,
-                in nsISupports cacheKey, in ACString contentType,
-                in nsISupports owner);
+    [noscript] void create(in nsIURI URI, in AString title,
+                           in nsIInputStream inputStream,
+                           in nsILayoutHistoryState layoutHistoryState,
+                           in nsISupports cacheKey, in ACString contentType,
+                           in nsISupports owner);
 
     nsISHEntry clone();
 
@@ -187,7 +187,7 @@ interface nsISHEntry : nsIHistoryEntry
      * that the document that was loaded to create this history entry
      * came from.
      */
-    readonly attribute nsISupports owner;
+    attribute nsISupports owner;
 };
 
 
