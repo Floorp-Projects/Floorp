@@ -60,10 +60,6 @@ var observer = {
 
 function run_test()
 {
-  // XXX Disabled for now
-  do_check_true(true);
-  return;
-
   // Copy our test zip to the tmp dir so we can modify it
   var testzip = do_get_file(DATA_DIR + "test.zip");
   testzip.copyTo(tmpDir, tmpFile.leafName);
