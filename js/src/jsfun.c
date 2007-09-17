@@ -1059,6 +1059,8 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       case FUN_CALLER:
+        while (fp && (fp->flags & JSFRAME_SKIP_CALLER) && fp->down)
+            fp = fp->down;
         if (fp && fp->down && fp->down->fun)
             *vp = OBJECT_TO_JSVAL(fp->down->callee);
         else
@@ -1588,9 +1590,11 @@ static JSBool
 fun_call(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj;
-    jsval fval, *argv, *invokevp;
+    jsval fval, *argv, *sp, *oldsp;
     JSString *str;
     void *mark;
+    uintN i;
+    JSStackFrame *fp;
     JSBool ok;
 
     obj = JSVAL_TO_OBJECT(vp[1]);
@@ -1628,17 +1632,28 @@ fun_call(JSContext *cx, uintN argc, jsval *vp)
     }
 
     /* Allocate stack space for fval, obj, and the args. */
-    invokevp = js_AllocStack(cx, 2 + argc, &mark);
-    if (!invokevp)
+    sp = js_AllocStack(cx, 2 + argc, &mark);
+    if (!sp)
         return JS_FALSE;
 
     /* Push fval, obj, and the args. */
-    invokevp[0] = fval;
-    invokevp[1] = OBJECT_TO_JSVAL(obj);
-    memcpy(invokevp + 2, argv, argc * sizeof *argv);
+    *sp++ = fval;
+    *sp++ = OBJECT_TO_JSVAL(obj);
+    for (i = 0; i < argc; i++)
+        *sp++ = argv[i];
 
-    ok = js_Invoke(cx, argc, invokevp, JSINVOKE_INTERNAL);
-    *vp = *invokevp;
+    /* Lift current frame to include the args and do the call. */
+    fp = cx->fp;
+    oldsp = fp->sp;
+    fp->sp = sp;
+    ok = js_Invoke(cx, argc,
+                   (fp->flags & JSFRAME_IN_FAST_CALL)
+                   ? JSINVOKE_INTERNAL
+                   : JSINVOKE_INTERNAL | JSINVOKE_SKIP_CALLER);
+
+    /* Store rval and pop stack back to our frame's sp. */
+    *vp = fp->sp[-1];
+    fp->sp = oldsp;
     js_FreeStack(cx, mark);
     return ok;
 }
@@ -1647,12 +1662,13 @@ static JSBool
 fun_apply(JSContext *cx, uintN argc, jsval *vp)
 {
     JSObject *obj, *aobj;
-    jsval fval, *invokevp, *sp;
+    jsval fval, *sp, *oldsp;
     JSString *str;
     jsuint length;
     JSBool arraylike, ok;
     void *mark;
     uintN i;
+    JSStackFrame *fp;
 
     if (argc == 0) {
         /* Will get globalObject as 'this' and no other arguments. */
@@ -1711,12 +1727,11 @@ fun_apply(JSContext *cx, uintN argc, jsval *vp)
 
     /* Allocate stack space for fval, obj, and the args. */
     argc = (uintN)JS_MIN(length, ARRAY_INIT_LIMIT - 1);
-    invokevp = js_AllocStack(cx, 2 + argc, &mark);
-    if (!invokevp)
+    sp = js_AllocStack(cx, 2 + argc, &mark);
+    if (!sp)
         return JS_FALSE;
 
     /* Push fval, obj, and aobj's elements as args. */
-    sp = invokevp;
     *sp++ = fval;
     *sp++ = OBJECT_TO_JSVAL(obj);
     for (i = 0; i < argc; i++) {
@@ -1726,8 +1741,18 @@ fun_apply(JSContext *cx, uintN argc, jsval *vp)
         sp++;
     }
 
-    ok = js_Invoke(cx, argc, invokevp, JSINVOKE_INTERNAL);
-    *vp = *invokevp;
+    /* Lift current frame to include the args and do the call. */
+    fp = cx->fp;
+    oldsp = fp->sp;
+    fp->sp = sp;
+    ok = js_Invoke(cx, argc,
+                   (fp->flags & JSFRAME_IN_FAST_CALL)
+                   ? JSINVOKE_INTERNAL
+                   : JSINVOKE_INTERNAL | JSINVOKE_SKIP_CALLER);
+
+    /* Store rval and pop stack back to our frame's sp. */
+    *vp = fp->sp[-1];
+    fp->sp = oldsp;
 out:
     js_FreeStack(cx, mark);
     return ok;
@@ -1740,7 +1765,8 @@ fun_applyConstructor(JSContext *cx, uintN argc, jsval *vp)
     JSObject *aobj;
     uintN length, i;
     void *mark;
-    jsval *invokevp, *sp;
+    jsval *sp, *newsp, *oldsp;
+    JSStackFrame *fp;
     JSBool ok;
 
     if (JSVAL_IS_PRIMITIVE(vp[2]) ||
@@ -1757,11 +1783,12 @@ fun_applyConstructor(JSContext *cx, uintN argc, jsval *vp)
 
     if (length >= ARRAY_INIT_LIMIT)
         length = ARRAY_INIT_LIMIT - 1;
-    invokevp = js_AllocStack(cx, 2 + length, &mark);
-    if (!invokevp)
+    newsp = sp = js_AllocStack(cx, 2 + length, &mark);
+    if (!sp)
         return JS_FALSE;
 
-    sp = invokevp;
+    fp = cx->fp;
+    oldsp = fp->sp;
     *sp++ = vp[1];
     *sp++ = JSVAL_NULL; /* This is filled automagically. */
     for (i = 0; i < length; i++) {
@@ -1771,8 +1798,12 @@ fun_applyConstructor(JSContext *cx, uintN argc, jsval *vp)
         sp++;
     }
 
-    ok = js_InvokeConstructor(cx, invokevp, length);
-    *vp = *invokevp;
+    oldsp = fp->sp;
+    fp->sp = sp;
+    ok = js_InvokeConstructor(cx, newsp, length);
+
+    *vp = fp->sp[-1];
+    fp->sp = oldsp;
 out:
     js_FreeStack(cx, mark);
     return ok;
@@ -2327,7 +2358,9 @@ js_ReportIsNotFunction(JSContext *cx, jsval *vp, uintN flags)
     }
 
     js_ReportValueError3(cx, error,
-                         (fp && fp->spbase <= vp && vp < fp->sp)
+                         (fp &&
+                          !(fp->flags & JSFRAME_IN_FAST_CALL) &&
+                          fp->spbase <= vp && vp < fp->sp)
                          ? vp - fp->sp
                          : (flags & JSV2F_SEARCH_STACK)
                          ? JSDVG_SEARCH_STACK

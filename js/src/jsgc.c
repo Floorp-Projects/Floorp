@@ -2205,7 +2205,8 @@ gc_lock_traversal(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num,
 void
 js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
 {
-    uintN nslots, minargs, skip;
+    uintN depth, nslots, minargs;
+    jsval *vp;
 
     if (fp->callobj)
         JS_CALL_OBJECT_TRACER(trc, fp->callobj, "call");
@@ -2220,9 +2221,11 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
              * Don't mark what has not been pushed yet, or what has been
              * popped already.
              */
-            JS_ASSERT(JS_UPTRDIFF(fp->sp, fp->spbase) <=
-                      fp->script->depth * sizeof(jsval));
-            nslots = (uintN) (fp->sp - fp->spbase);
+            depth = fp->script->depth;
+            nslots = (JS_UPTRDIFF(fp->sp, fp->spbase)
+                      < depth * sizeof(jsval))
+                     ? (uintN)(fp->sp - fp->spbase)
+                     : depth;
             TRACE_JSVALS(trc, nslots, fp->spbase, "operand");
         }
     }
@@ -2236,20 +2239,32 @@ js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
         JS_CALL_OBJECT_TRACER(trc, fp->callee, "callee");
 
     if (fp->argv) {
+        /* Trace argv including callee and thisp slots. */
         nslots = fp->argc;
-        skip = 0;
         if (fp->fun) {
             minargs = FUN_MINARGS(fp->fun);
             if (minargs > nslots)
                 nslots = minargs;
-            if (!FUN_INTERPRETED(fp->fun)) {
-                JS_ASSERT(!(fp->fun->flags & JSFUN_FAST_NATIVE));
+            if (!FUN_INTERPRETED(fp->fun))
                 nslots += fp->fun->u.n.extra;
-            }
-            if (fp->fun->flags & JSFRAME_ROOTED_ARGV)
-                skip = 2 + fp->argc;
         }
-        TRACE_JSVALS(trc, 2 + nslots - skip, fp->argv - 2 + skip, "operand");
+        nslots += 2;
+        vp = fp->argv - 2;
+        if (fp->down && fp->down->spbase) {
+            /*
+             * Avoid unnecessary tracing in the common case when args overlaps
+             * with the stack segment of the previous frame. That segment is
+             * traced via the above spbase code and, when sp > spbase + depth,
+             * during tracing of the stack headers in js_TraceContext.
+             */
+            if (JS_UPTRDIFF(vp, fp->down->spbase) <
+                JS_UPTRDIFF(fp->down->sp, fp->down->spbase)) {
+                JS_ASSERT((size_t)nslots >= (size_t)(fp->down->sp - vp));
+                nslots -= (uintN)(fp->down->sp - vp);
+                vp = fp->down->sp;
+            }
+        }
+        TRACE_JSVALS(trc, nslots, vp, "arg");
     }
     JS_CALL_VALUE_TRACER(trc, fp->rval, "rval");
     if (fp->vars)
