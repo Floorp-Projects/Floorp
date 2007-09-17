@@ -1557,7 +1557,8 @@ PrintPropertyGetterOrSetter(JSTracer *trc, char *buf, size_t bufsize)
 void
 js_TraceScopeProperty(JSTracer *trc, JSScopeProperty *sprop)
 {
-    sprop->flags |= SPROP_MARK;
+    if (IS_GC_MARKING_TRACER(trc))
+        sprop->flags |= SPROP_MARK;
     TRACE_ID(trc, sprop->id);
 
 #if JS_HAS_GETTER_SETTER
