@@ -397,13 +397,10 @@ var PlacesOrganizer = {
       getService(Ci.nsIProperties);
     var backupsDir = dirSvc.get("Desk", Ci.nsILocalFile);
     fp.displayDirectory = backupsDir;
-  
-    var dateService = Cc["@mozilla.org/intl/scriptabledateformat;1"].
-      getService(Ci.nsIScriptableDateFormat);
 
-    var d = new Date();
-    var date = dateService.FormatDate("", dateService.dateFormatShort,
-                           d.getFullYear(), d.getMonth() + 1, d.getDate());
+    // Use YYYY-MM-DD (ISO 8601) as it doesn't contain illegal characters
+    // and makes the alphabetical order of multiple backup files more useful.
+    var date = (new Date).toLocaleFormat("%Y-%m-%d");
     fp.defaultString = PlacesUtils.getFormattedString("bookmarksBackupFilename",
                                                       [date]);
   

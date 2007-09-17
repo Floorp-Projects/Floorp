@@ -2537,7 +2537,9 @@ nsPlacesImportExportService::ArchiveBookmarksFile(PRInt32 numberOfBackups,
   PR_NormalizeTime(&nowInfo, PR_LocalTimeParameters);
 
   char timeString[128];
-  
+
+  // Use YYYY-MM-DD (ISO 8601) as it doesn't contain illegal characters
+  // and makes the alphabetical order of multiple backup files more useful.
   PR_FormatTime(timeString, 128, "bookmarks-%Y-%m-%d.html", &nowInfo);
 
   //nsCAutoString backupFilenameCString(timeString);
