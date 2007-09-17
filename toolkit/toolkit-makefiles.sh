@@ -777,7 +777,6 @@ MAKEFILES_libmar="
 
 MAKEFILES_themes="
   themes/Makefile
-  themes/modern/Makefile
   themes/classic/Makefile
 "
 
