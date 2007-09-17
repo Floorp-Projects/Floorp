@@ -204,9 +204,8 @@ var PlacesCommandHook = {
     // it to the content area
     var starIcon = document.getElementById("star-button");
     if (starIcon && isElementVisible(starIcon)) {
-      var dockTo = document.getElementById("go-button-bottom");
       this.bookmarkPage(getBrowser().selectedBrowser, aParent, aShowEditUI,
-                        dockTo, "after_start");
+                        starIcon, "after_start");
     }
     else {
       this.bookmarkPage(getBrowser().selectedBrowser, aParent, aShowEditUI,
