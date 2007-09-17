@@ -144,11 +144,12 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
 
   SetEnabled(!mMenuContent->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::disabled,
                                         nsWidgetAtoms::_true, eCaseMatters));
-  [mNativeMenuItem setEnabled:(BOOL)mIsEnabled];
 
   NSString *newCocoaLabelString = MenuHelpersX::CreateTruncatedCocoaLabel(mLabel);
   mNativeMenuItem = [[NSMenuItem alloc] initWithTitle:newCocoaLabelString action:nil keyEquivalent:@""];
   [newCocoaLabelString release];
+
+  [mNativeMenuItem setEnabled:(BOOL)mIsEnabled];
 
   // We call MenuConstruct here because keyboard commands are dependent upon
   // native menu items being created. If we only call MenuConstruct when a menu
