@@ -805,7 +805,7 @@ var gUpdatesAvailablePage = {
    */
   showIncompatibleItems: function() {
     openDialog("chrome://mozapps/content/update/incompatible.xul", "",
-               "dialog,centerscreen,modal,resizable,titlebar", this._incompatibleItems);
+               "dialog,centerscreen,modal,titlebar", this._incompatibleItems);
   }
 };
 
