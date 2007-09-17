@@ -168,6 +168,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
     return nsnull;
 
   nsRefPtr<gfxASurface> surface = pattern->GetSurface();
+  surface->SetDeviceOffset(gfxPoint(0,0));
 
   gfxRect clipExtents = gfx->GetClipExtents();
 
@@ -197,7 +198,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
 
   gfxContext transferCtx(image);
   transferCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
-  transferCtx.SetSource(surface, -clipExtents.pos);
+  transferCtx.SetSource(surface);
   transferCtx.Paint();
 
   PRUint8 *data   = image->Data();
