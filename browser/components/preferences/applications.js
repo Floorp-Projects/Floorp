@@ -987,17 +987,10 @@ var gApplicationsPane = {
     return visibleTypes;
   },
 
-  // FIXME: we filter on type and primary extension, but we don't show those
-  // values to users, unlike the description and action description, which we
-  // do show, and that could be confusing, so filter only on the values we show.
-  // Filed as bug 395139.
   _matchesFilter: function(aType) {
     var filterValue = this._filter.value.toLowerCase();
     return aType.description.toLowerCase().indexOf(filterValue) != -1 ||
-           this._describePreferredAction(aType).toLowerCase().indexOf(filterValue) != -1 ||
-           aType.type.toLowerCase().indexOf(filterValue) != -1 ||
-           (aType.primaryExtension &&
-            aType.primaryExtension.toLowerCase().indexOf(filterValue) != -1);
+           this._describePreferredAction(aType).toLowerCase().indexOf(filterValue) != -1;
   },
 
   /**
