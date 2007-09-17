@@ -101,13 +101,11 @@ protected:
   nsresult RestoreDatabaseState();
   nsresult GetDownloadFromDB(PRUint32 aID, nsDownload **retVal);
 
-  inline nsresult AddToCurrentDownloads(nsDownload *aDl)
-  {
-    if (!mCurrentDownloads.AppendObject(aDl))
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    return NS_OK;
-  }
+  /**
+   * Specially track the active downloads so that we don't need to check
+   * every download to see if they're in progress.
+   */
+  nsresult AddToCurrentDownloads(nsDownload *aDl);
 
   void SendEvent(nsDownload *aDownload, const char *aTopic);
 
@@ -160,26 +158,6 @@ protected:
   PRInt32 GetRetentionBehavior();
   nsresult ExecuteDesiredAction(nsDownload *aDownload);
 
-  static PRBool IsInFinalStage(DownloadState aState)
-  {
-    return aState == nsIDownloadManager::DOWNLOAD_NOTSTARTED ||
-           aState == nsIDownloadManager::DOWNLOAD_QUEUED ||
-           aState == nsIDownloadManager::DOWNLOAD_DOWNLOADING;
-  }
-
-  static PRBool IsInProgress(DownloadState aState)
-  {
-    return aState == nsIDownloadManager::DOWNLOAD_NOTSTARTED ||
-           aState == nsIDownloadManager::DOWNLOAD_QUEUED ||
-           aState == nsIDownloadManager::DOWNLOAD_DOWNLOADING ||
-           aState == nsIDownloadManager::DOWNLOAD_PAUSED;
-  }
-
-  static PRBool CompletedSuccessfully(DownloadState aState)
-  {
-    return aState == nsIDownloadManager::DOWNLOAD_FINISHED;
-  }
-
 private:
   nsCOMArray<nsIDownloadProgressListener> mListeners;
   nsCOMPtr<nsIStringBundle> mBundle;
@@ -222,6 +200,16 @@ protected:
   void SetStartTime(PRInt64 aStartTime);
 
   nsresult PauseResume(PRBool aPause);
+
+  /**
+   * Download is in a state to stop and complete the download?
+   */
+  PRBool IsFinishable();
+
+  /**
+   * Download is totally done transferring and all?
+   */
+  PRBool IsFinished();
 
   nsDownloadManager *mDownloadManager;
   nsCOMPtr<nsIURI> mTarget;
