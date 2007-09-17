@@ -545,16 +545,11 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                  * identify the guilty party.  So that the watcher appears to
                  * be active to obj_eval and other such code, point frame.pc
                  * at the JSOP_STOP at the end of the script.
-                 *
-                 * The pseudo-frame is not created for fast natives as they
-                 * are treated as interpreter frame extensions and always
-                 * trusted.
                  */
                 JSObject *closure;
                 JSClass *clasp;
                 JSFunction *fun;
                 JSScript *script;
-                JSBool injectFrame;
                 uintN nslots;
                 jsval smallv[5];
                 jsval *argv;
@@ -574,66 +569,56 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 }
 
                 nslots = 2;
-                injectFrame = JS_TRUE;
                 if (fun) {
                     nslots += FUN_MINARGS(fun);
-                    if (!FUN_INTERPRETED(fun)) {
+                    if (!FUN_INTERPRETED(fun))
                         nslots += fun->u.n.extra;
-                        injectFrame = !(fun->flags & JSFUN_FAST_NATIVE);
+                }
+
+                if (nslots <= JS_ARRAY_LENGTH(smallv)) {
+                    argv = smallv;
+                } else {
+                    argv = (jsval *) JS_malloc(cx, nslots * sizeof(jsval));
+                    if (!argv) {
+                        DBG_LOCK(rt);
+                        DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
+                        return JS_FALSE;
                     }
                 }
 
-                if (injectFrame) {
-                    if (nslots <= JS_ARRAY_LENGTH(smallv)) {
-                        argv = smallv;
-                    } else {
-                        argv = (jsval *) JS_malloc(cx, nslots * sizeof(jsval));
-                        if (!argv) {
-                            DBG_LOCK(rt);
-                            DropWatchPointAndUnlock(cx, wp, JSWP_HELD);
-                            return JS_FALSE;
-                        }
-                    }
+                argv[0] = OBJECT_TO_JSVAL(closure);
+                argv[1] = JSVAL_NULL;
+                memset(argv + 2, 0, (nslots - 2) * sizeof(jsval));
 
-                    argv[0] = OBJECT_TO_JSVAL(closure);
-                    argv[1] = JSVAL_NULL;
-                    memset(argv + 2, 0, (nslots - 2) * sizeof(jsval));
-
-                    memset(&frame, 0, sizeof(frame));
-                    frame.script = script;
-                    if (script) {
-                        JS_ASSERT(script->length >= JSOP_STOP_LENGTH);
-                        frame.pc = script->code + script->length
-                                   - JSOP_STOP_LENGTH;
-                    }
-                    frame.callee = closure;
-                    frame.fun = fun;
-                    frame.argv = argv + 2;
-                    frame.down = cx->fp;
-                    frame.scopeChain = OBJ_GET_PARENT(cx, closure);
-
-                    cx->fp = &frame;
+                memset(&frame, 0, sizeof(frame));
+                frame.script = script;
+                if (script) {
+                    JS_ASSERT(script->length >= JSOP_STOP_LENGTH);
+                    frame.pc = script->code + script->length
+                             - JSOP_STOP_LENGTH;
                 }
-#ifdef __GNUC__
-                else
-                    argv = NULL;    /* suppress bogus gcc warnings */
-#endif
+                frame.callee = closure;
+                frame.fun = fun;
+                frame.argv = argv + 2;
+                frame.down = cx->fp;
+                frame.scopeChain = OBJ_GET_PARENT(cx, closure);
+
+                cx->fp = &frame;
                 ok = !wp->setter ||
                      ((sprop->attrs & JSPROP_SETTER)
                       ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL(wp->setter),
                                         1, vp, vp)
                       : wp->setter(cx, OBJ_THIS_OBJECT(cx, obj), userid, vp));
-                if (injectFrame) {
-                    /* Evil code can cause us to have an arguments object. */
-                    if (frame.callobj)
-                        ok &= js_PutCallObject(cx, &frame);
-                    if (frame.argsobj)
-                        ok &= js_PutArgsObject(cx, &frame);
 
-                    cx->fp = frame.down;
-                    if (argv != smallv)
-                        JS_free(cx, argv);
-                }
+                /* Evil code can cause us to have an arguments object. */
+                if (frame.callobj)
+                    ok &= js_PutCallObject(cx, &frame);
+                if (frame.argsobj)
+                    ok &= js_PutArgsObject(cx, &frame);
+
+                cx->fp = frame.down;
+                if (argv != smallv)
+                    JS_free(cx, argv);
             }
             DBG_LOCK(rt);
             return DropWatchPointAndUnlock(cx, wp, JSWP_HELD) && ok;

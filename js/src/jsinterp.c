@@ -81,9 +81,13 @@
  */
 #define PUSH(v)         (*sp++ = (v))
 #define POP()           (*--sp)
+#ifdef DEBUG
 #define SAVE_SP(fp)                                                           \
     (JS_ASSERT((fp)->script || !(fp)->spbase || (sp) == (fp)->spbase),        \
      (fp)->sp = sp)
+#else
+#define SAVE_SP(fp)     ((fp)->sp = sp)
+#endif
 #define RESTORE_SP(fp)  (sp = (fp)->sp)
 
 /*
@@ -261,35 +265,6 @@
         v = sp[n];                                                            \
     JS_END_MACRO
 
-/*
- * Check if the current arena has enough space to fit nslots after sp and, if
- * so, reserve the necessary space.
- */
-static JSBool
-AllocateAfterSP(JSContext *cx, jsval *sp, uintN nslots)
-{
-    uintN surplus;
-    jsval *sp2;
-
-    JS_ASSERT((jsval *) cx->stackPool.current->base <= sp);
-    JS_ASSERT(sp <= (jsval *) cx->stackPool.current->avail);
-    surplus = (jsval *) cx->stackPool.current->avail - sp;
-    if (nslots <= surplus)
-        return JS_TRUE;
-
-    /*
-     * No room before current->avail, check if the arena has enough space to
-     * fit the missing slots before the limit.
-     */
-    if (nslots > (size_t) ((jsval *) cx->stackPool.current->limit - sp))
-        return JS_FALSE;
-
-    JS_ARENA_ALLOCATE_CAST(sp2, jsval *, &cx->stackPool,
-                           (nslots - surplus) * sizeof(jsval));
-    JS_ASSERT(sp2 == sp + surplus);
-    return JS_TRUE;
-}
-
 JS_FRIEND_API(jsval *)
 js_AllocRawStack(JSContext *cx, uintN nslots, void **markp)
 {
@@ -316,9 +291,10 @@ js_FreeRawStack(JSContext *cx, void *mark)
 JS_FRIEND_API(jsval *)
 js_AllocStack(JSContext *cx, uintN nslots, void **markp)
 {
-    jsval *sp;
+    jsval *sp, *vp, *end;
     JSArena *a;
     JSStackHeader *sh;
+    JSStackFrame *fp;
 
     /* Callers don't check for zero nslots: we do to avoid empty segments. */
     if (nslots == 0) {
@@ -340,9 +316,24 @@ js_AllocStack(JSContext *cx, uintN nslots, void **markp)
         a->avail -= 2 * sizeof(jsval);
     } else {
         /*
-         * Need a new stack segment, so allocate and push a stack segment
-         * header from the 2 extra slots.
+         * Need a new stack segment, so we must initialize unused slots in the
+         * current frame.  See js_GC, just before marking the "operand" jsvals,
+         * where we scan from fp->spbase to fp->sp or through fp->script->depth
+         * (whichever covers fewer slots).
          */
+        fp = cx->fp;
+        if (fp && fp->script && fp->spbase) {
+#ifdef DEBUG
+            jsuword depthdiff = fp->script->depth * sizeof(jsval);
+            JS_ASSERT(JS_UPTRDIFF(fp->sp, fp->spbase) <= depthdiff);
+            JS_ASSERT(JS_UPTRDIFF(*markp, fp->spbase) >= depthdiff);
+#endif
+            end = fp->spbase + fp->script->depth;
+            for (vp = fp->sp; vp < end; vp++)
+                *vp = JSVAL_VOID;
+        }
+
+        /* Allocate and push a stack segment header from the 2 extra slots. */
         sh = (JSStackHeader *)sp;
         sh->nslots = nslots;
         sh->down = cx->stackHeaders;
@@ -613,9 +604,9 @@ js_ComputeThis(JSContext *cx, jsval *argv)
 #if JS_HAS_NO_SUCH_METHOD
 
 static JSBool
-NoSuchMethod(JSContext *cx, uintN argc, jsval *vp, uint32 flags)
+NoSuchMethod(JSContext *cx, JSStackFrame *fp, jsval *vp, uint32 flags,
+             uintN argc)
 {
-    JSStackFrame *fp;
     JSObject *thisp, *argsobj;
     JSAtom *atom;
     jsval *sp, roots[3];
@@ -627,7 +618,6 @@ NoSuchMethod(JSContext *cx, uintN argc, jsval *vp, uint32 flags)
     /* NB: js_ComputeThis or equivalent must have been called already. */
     JS_ASSERT(JSVAL_IS_PRIMITIVE(vp[0]));
     JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
-    fp = cx->fp;
     RESTORE_SP(fp);
 
     /* From here on, control must flow through label out: to return. */
@@ -1039,6 +1029,11 @@ LogCall(JSContext *cx, jsval callee, uintN argc, jsval *argv)
 # define ASSERT_NOT_THROWING(cx) /* nothing */
 #endif
 
+#define START_FAST_CALL(fp) (JS_ASSERT(!((fp)->flags & JSFRAME_IN_FAST_CALL)),\
+                             (fp)->flags |= JSFRAME_IN_FAST_CALL)
+#define END_FAST_CALL(fp)   (JS_ASSERT((fp)->flags & JSFRAME_IN_FAST_CALL),   \
+                             (fp)->flags &= ~JSFRAME_IN_FAST_CALL)
+
 /*
  * We check if the function accepts a primitive value as |this|. For that we
  * use a table that maps value's tag into the corresponding function flag.
@@ -1070,12 +1065,12 @@ static const uint16 PrimitiveTestFlags[] = {
  * when done.  Then push the return value.
  */
 JS_FRIEND_API(JSBool)
-js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
+js_Invoke(JSContext *cx, uintN argc, uintN flags)
 {
     void *mark;
-    JSStackFrame frame;
-    jsval *sp, *argv, *newvp;
-    jsval v;
+    JSStackFrame *fp, frame;
+    jsval *sp, *newsp, *limit;
+    jsval *vp, v;
     JSObject *funobj, *parent;
     JSBool ok;
     JSClass *clasp;
@@ -1083,21 +1078,24 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
     JSNative native;
     JSFunction *fun;
     JSScript *script;
-    uintN nslots, nvars, i;
-    uint32 rootedArgsFlag;
+    uintN nslots, nvars, nalloc, surplus;
     JSInterpreterHook hook;
     void *hookData;
 
-    /* [vp .. vp + 2 + argc) must belong to the last JS stack arena. */
-    JS_ASSERT((jsval *) cx->stackPool.current->base <= vp);
-    JS_ASSERT(vp + 2 + argc <= (jsval *) cx->stackPool.current->avail);
+    /* Mark the top of stack and load frequently-used registers. */
+    mark = JS_ARENA_MARK(&cx->stackPool);
+    fp = cx->fp;
+    sp = fp->sp;
 
     /*
-     * Mark the top of stack and load frequently-used registers. After this
-     * point the control should flow through label out2: to return.
+     * Set vp to the callee value's stack slot (it's where rval goes).
+     * Once vp is set, control should flow through label out2: to return.
+     * Set frame.rval early so native class and object ops can throw and
+     * return false, causing a goto out2 with ok set to false.
      */
-    mark = JS_ARENA_MARK(&cx->stackPool);
+    vp = sp - (2 + argc);
     v = *vp;
+    frame.rval = JSVAL_VOID;
 
     /*
      * A callee must be an object reference, unless its 'this' parameter
@@ -1112,8 +1110,10 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
      */
     if (JSVAL_IS_PRIMITIVE(v)) {
 #if JS_HAS_NO_SUCH_METHOD
-        if (cx->fp && cx->fp->script && !(flags & JSINVOKE_INTERNAL)) {
-            ok = NoSuchMethod(cx, argc, vp, flags);
+        if (fp->script && !(flags & JSINVOKE_INTERNAL)) {
+            ok = NoSuchMethod(cx, fp, vp, flags, argc);
+            if (ok)
+                frame.rval = *vp;
             goto out2;
         }
 #endif
@@ -1170,8 +1170,8 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
 have_fun:
         /* Get private data and set derived locals from it. */
         fun = (JSFunction *) OBJ_GET_PRIVATE(cx, funobj);
-        nslots = FUN_MINARGS(fun);
-        nslots = (nslots > argc) ? nslots - argc : 0;
+        nalloc = FUN_MINARGS(fun);
+        nslots = (nalloc > argc) ? nalloc - argc : 0;
         if (FUN_INTERPRETED(fun)) {
             native = NULL;
             script = fun->u.i.script;
@@ -1189,12 +1189,14 @@ have_fun:
         } else if (!JSVAL_IS_OBJECT(vp[1])) {
             JS_ASSERT(!(flags & JSINVOKE_CONSTRUCT));
             if (PRIMITIVE_THIS_TEST(fun, vp[1]))
-                goto init_slots;
+                goto init_frame;
         }
     }
 
     if (flags & JSINVOKE_CONSTRUCT) {
+        /* Default return value for a constructor is the new object. */
         JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]));
+        frame.rval = vp[1];
     } else {
         /*
          * We must call js_ComputeThis in case we are not called from the
@@ -1206,80 +1208,9 @@ have_fun:
             goto out2;
     }
 
-  init_slots:
-    argv = vp + 2;
-    sp = argv + argc;
-
-    rootedArgsFlag = JSFRAME_ROOTED_ARGV;
-    if (nslots != 0) {
-        /*
-         * The extra slots required by the function must be continues with the
-         * arguments. Thus, when the last arena does not have room to fit
-         * nslots right after sp and AllocateAfterSP fails, we have to copy
-         * [vp..vp+2+argc) slots and clear rootedArgsFlag to root the copy.
-         */
-        if (!AllocateAfterSP(cx, sp, nslots)) {
-            rootedArgsFlag = 0;
-            newvp = js_AllocRawStack(cx, 2 + argc + nslots, NULL);
-            if (!newvp) {
-                ok = JS_FALSE;
-                goto out2;
-            }
-            memcpy(newvp, vp, (2 + argc) * sizeof(jsval));
-            argv = newvp + 2;
-            sp = argv + argc;
-        }
-
-        /* Push void to initialize missing args. */
-        i = nslots;
-        do {
-            PUSH(JSVAL_VOID);
-        } while (--i != 0);
-    }
-
-    if (native && fun && (fun->flags & JSFUN_FAST_NATIVE)) {
-        JSTempValueRooter tvr;
-#ifdef DEBUG_NOT_THROWING
-        JSBool alreadyThrowing = cx->throwing;
-#endif
-#if JS_HAS_LVALUE_RETURN
-        /* Set by JS_SetCallReturnValue2, used to return reference types. */
-        cx->rval2set = JS_FALSE;
-#endif
-        /* Root the extra slots that are not covered by [vp..vp+2+argc). */
-        i = rootedArgsFlag ? 2 + argc : 0;
-        JS_PUSH_TEMP_ROOT(cx, 2 + argc + nslots - i, argv - 2 + i, &tvr);
-        ok = ((JSFastNative) native)(cx, argc, argv - 2);
-        JS_POP_TEMP_ROOT(cx, &tvr);
-
-        JS_RUNTIME_METER(cx->runtime, nativeCalls);
-#ifdef DEBUG_NOT_THROWING
-        if (ok && !alreadyThrowing)
-            ASSERT_NOT_THROWING(cx);
-#endif
-        goto out2;
-    }
-
-    /* Now allocate stack space for local variables of interpreted function. */
-    if (nvars) {
-        if (!AllocateAfterSP(cx, sp, nvars)) {
-            /* NB: Discontinuity between argv and vars. */
-            sp = js_AllocRawStack(cx, nvars, NULL);
-            if (!sp) {
-                ok = JS_FALSE;
-                goto out2;
-            }
-        }
-
-        /* Push void to initialize local variables. */
-        i = nvars;
-        do {
-            PUSH(JSVAL_VOID);
-        } while (--i != 0);
-    }
-
+  init_frame:
     /*
-     * Initialize the frame, except for sp (set by SAVE_SP later).
+     * Initialize the rest of frame, except for sp (set by SAVE_SP later).
      *
      * To set thisp we use an explicit cast and not JSVAL_TO_OBJECT, as vp[1]
      * can be a primitive value here for those native functions specified with
@@ -1292,20 +1223,17 @@ have_fun:
     frame.callee = funobj;
     frame.fun = fun;
     frame.argc = argc;
-    frame.argv = argv;
-
-    /* Default return value for a constructor is the new object. */
-    frame.rval = (flags & JSINVOKE_CONSTRUCT) ? vp[1] : JSVAL_VOID;
+    frame.argv = sp - argc;
     frame.nvars = nvars;
-    frame.vars = sp - nvars;
-    frame.down = cx->fp;
+    frame.vars = sp;
+    frame.down = fp;
     frame.annotation = NULL;
     frame.scopeChain = NULL;    /* set below for real, after cx->fp is set */
     frame.pc = NULL;
     frame.spbase = NULL;
     frame.sharpDepth = 0;
     frame.sharpArray = NULL;
-    frame.flags = flags | rootedArgsFlag;
+    frame.flags = flags;
     frame.dormantNext = NULL;
     frame.xmlNamespace = NULL;
     frame.blockChain = NULL;
@@ -1316,6 +1244,77 @@ have_fun:
     /* Init these now in case we goto out before first hook call. */
     hook = cx->debugHooks->callHook;
     hookData = NULL;
+
+    /* Check for argument slots required by the function. */
+    if (nslots) {
+        /* All arguments must be contiguous, so we may have to copy actuals. */
+        nalloc = nslots;
+        limit = (jsval *) cx->stackPool.current->limit;
+        JS_ASSERT((jsval *) cx->stackPool.current->base <= sp && sp <= limit);
+        if (sp + nslots > limit) {
+            /* Hit end of arena: we have to copy argv[-2..(argc+nslots-1)]. */
+            nalloc += 2 + argc;
+        } else {
+            /* Take advantage of surplus slots in the caller's frame depth. */
+            JS_ASSERT((jsval *)mark >= sp);
+            surplus = (jsval *)mark - sp;
+            nalloc -= surplus;
+        }
+
+        /* Check whether we have enough space in the caller's frame. */
+        if ((intN)nalloc > 0) {
+            /* Need space for actuals plus missing formals minus surplus. */
+            newsp = js_AllocRawStack(cx, nalloc, NULL);
+            if (!newsp) {
+                ok = JS_FALSE;
+                goto out;
+            }
+
+            /* If we couldn't allocate contiguous args, copy actuals now. */
+            if (newsp != mark) {
+                JS_ASSERT(sp + nslots > limit);
+                JS_ASSERT(2 + argc + nslots == nalloc);
+                *newsp++ = vp[0];
+                *newsp++ = vp[1];
+                if (argc)
+                    memcpy(newsp, frame.argv, argc * sizeof(jsval));
+                frame.argv = newsp;
+                sp = frame.vars = newsp + argc;
+            }
+        }
+
+        /* Advance frame.vars to make room for the missing args. */
+        frame.vars += nslots;
+
+        /* Push void to initialize missing args. */
+        do {
+            PUSH(JSVAL_VOID);
+        } while (--nslots != 0);
+    }
+    JS_ASSERT(nslots == 0);
+
+    /* Now allocate stack space for local variables. */
+    if (nvars) {
+        JS_ASSERT((jsval *)cx->stackPool.current->avail >= frame.vars);
+        surplus = (jsval *)cx->stackPool.current->avail - frame.vars;
+        if (surplus < nvars) {
+            newsp = js_AllocRawStack(cx, nvars, NULL);
+            if (!newsp) {
+                ok = JS_FALSE;
+                goto out;
+            }
+            if (newsp != sp) {
+                /* NB: Discontinuity between argv and vars. */
+                sp = frame.vars = newsp;
+            }
+        }
+
+        /* Push void to initialize local variables. */
+        do {
+            PUSH(JSVAL_VOID);
+        } while (--nvars != 0);
+    }
+    JS_ASSERT(nvars == 0);
 
     /* Store the current sp in frame before calling fun. */
     SAVE_SP(&frame);
@@ -1336,20 +1335,23 @@ have_fun:
 #endif
 
         /* If native, use caller varobj and scopeChain for eval. */
-        if (cx->fp) {
-            frame.varobj = cx->fp->varobj;
-            frame.scopeChain = cx->fp->scopeChain;
-        } else {
-            frame.varobj = NULL;
-            frame.scopeChain = NULL;
-        }
+        frame.varobj = fp->varobj;
+        frame.scopeChain = fp->scopeChain;
 
         /* But ensure that we have a scope chain. */
         if (!frame.scopeChain)
             frame.scopeChain = parent;
 
+        if (fun && (fun->flags & JSFUN_FAST_NATIVE)) {
+            /*
+             * Note the lack of START/END_FAST_CALL bracketing here. Unlike
+             * the other JSFastNative call (see the JSOP_CALL special case in
+             * js_Interpret), we have a full stack frame for this call.
+             */
+            ok = ((JSFastNative) native)(cx, argc, frame.argv - 2);
+            frame.rval = frame.argv[-2];
+        } else {
 #ifdef DEBUG_brendan
-        {
             static FILE *fp;
             if (!fp) {
                 fp = fopen("/tmp/slow-natives.dump", "w");
@@ -1372,9 +1374,9 @@ have_fun:
                         ? JS_GetFunctionName(fun)
                         : "???");
             }
-        }
 #endif
-        ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
+            ok = native(cx, frame.thisp, argc, frame.argv, &frame.rval);
+        }
 
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
 #ifdef DEBUG_NOT_THROWING
@@ -1416,16 +1418,24 @@ out:
     if (frame.argsobj)
         ok &= js_PutArgsObject(cx, &frame);
 
-    *vp = frame.rval;
-
     /* Restore cx->fp now that we're done releasing frame objects. */
-    cx->fp = frame.down;
+    cx->fp = fp;
 
 out2:
     /* Pop everything we may have allocated off the stack. */
     JS_ARENA_RELEASE(&cx->stackPool, mark);
-    if (!ok)
-        *vp = JSVAL_NULL;
+
+    /* Store the return value and restore sp just above it. */
+    *vp = frame.rval;
+    fp->sp = vp + 1;
+
+    /*
+     * Store the location of the JSOP_CALL or JSOP_EVAL that generated the
+     * return value, but only if this is an external (compiled from script
+     * source) call that has stack budget for the generating pc.
+     */
+    if (fp->script && !(flags & JSINVOKE_INTERNAL))
+        vp[-(intN)fp->script->depth] = (jsval)fp->pc;
     return ok;
 
 bad:
@@ -1438,20 +1448,33 @@ JSBool
 js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
                   uintN argc, jsval *argv, jsval *rval)
 {
-    jsval *invokevp;
+    JSStackFrame *fp, *oldfp, frame;
+    jsval *oldsp, *sp;
     void *mark;
+    uintN i;
     JSBool ok;
 
-    invokevp = js_AllocStack(cx, 2 + argc, &mark);
-    if (!invokevp)
-        return JS_FALSE;
+    fp = oldfp = cx->fp;
+    if (!fp) {
+        memset(&frame, 0, sizeof frame);
+        cx->fp = fp = &frame;
+    }
+    oldsp = fp->sp;
+    sp = js_AllocStack(cx, 2 + argc, &mark);
+    if (!sp) {
+        ok = JS_FALSE;
+        goto out;
+    }
 
-    invokevp[0] = fval;
-    invokevp[1] = OBJECT_TO_JSVAL(obj);
-    memcpy(invokevp + 2, argv, argc * sizeof *argv);
-
-    ok = js_Invoke(cx, argc, invokevp, flags | JSINVOKE_INTERNAL);
+    PUSH(fval);
+    PUSH(OBJECT_TO_JSVAL(obj));
+    for (i = 0; i < argc; i++)
+        PUSH(argv[i]);
+    SAVE_SP(fp);
+    ok = js_Invoke(cx, argc, flags | JSINVOKE_INTERNAL);
     if (ok) {
+        RESTORE_SP(fp);
+
         /*
          * Store *rval in the a scoped local root if a scope is open, else in
          * the lastInternalResult pigeon-hole GC root, solely so users of
@@ -1459,7 +1482,7 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
          * example) callers do not need to manage roots for local, temporary
          * references to such results.
          */
-        *rval = *invokevp;
+        *rval = POP_OPND();
         if (JSVAL_IS_GCTHING(*rval) && *rval != JSVAL_NULL) {
             if (cx->localRootStack) {
                 if (js_PushLocalRoot(cx, cx->localRootStack, *rval) < 0)
@@ -1471,6 +1494,11 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
     }
 
     js_FreeStack(cx, mark);
+out:
+    fp->sp = oldsp;
+    if (oldfp != fp)
+        cx->fp = oldfp;
+
     return ok;
 }
 
@@ -1928,7 +1956,7 @@ js_InvokeConstructor(JSContext *cx, jsval *vp, uintN argc)
 
     /* Now we have an object with a constructor method; call it. */
     vp[1] = OBJECT_TO_JSVAL(obj);
-    if (!js_Invoke(cx, argc, vp, JSINVOKE_CONSTRUCT)) {
+    if (!js_Invoke(cx, argc, JSINVOKE_CONSTRUCT)) {
         cx->weakRoots.newborn[GCX_OBJECT] = NULL;
         return JS_FALSE;
     }
@@ -3488,8 +3516,7 @@ interrupt:
             ok = js_InvokeConstructor(cx, vp, argc);
             if (!ok)
                 goto out;
-            sp = vp + 1;
-            vp[-depth] = (jsval)pc;
+            RESTORE_SP(fp);
             LOAD_INTERRUPT_HANDLER(cx);
             obj = JSVAL_TO_OBJECT(*vp);
             len = js_CodeSpec[op].length;
@@ -4061,12 +4088,7 @@ interrupt:
                         if (sp + nargs > fp->spbase + depth)
                             goto do_invoke;
                         do {
-                            /*
-                             * Use PUSH_OPND to set the proper pc values for
-                             * the extra arguments. The decompiler relies on
-                             * this.
-                             */
-                            PUSH_OPND(JSVAL_VOID);
+                            PUSH(JSVAL_VOID);
                         } while (--nargs != 0);
                         SAVE_SP(fp);
                     }
@@ -4074,7 +4096,9 @@ interrupt:
                     JS_ASSERT(!JSVAL_IS_PRIMITIVE(vp[1]) ||
                               PRIMITIVE_THIS_TEST(fun, vp[1]));
 
+                    START_FAST_CALL(fp);
                     ok = ((JSFastNative) fun->u.n.native)(cx, argc, vp);
+                    END_FAST_CALL(fp);
                     if (!ok)
                         goto out;
                     sp = vp + 1;
@@ -4084,9 +4108,8 @@ interrupt:
             }
 
           do_invoke:
-            ok = js_Invoke(cx, argc, vp, 0);
-            sp = vp + 1;
-            vp[-depth] = (jsval)pc;
+            ok = js_Invoke(cx, argc, 0);
+            RESTORE_SP(fp);
             LOAD_INTERRUPT_HANDLER(cx);
             if (!ok)
                 goto out;
@@ -4123,10 +4146,8 @@ interrupt:
           BEGIN_CASE(JSOP_SETCALL)
             argc = GET_ARGC(pc);
             SAVE_SP_AND_PC(fp);
-            vp = sp - argc - 2;
-            ok = js_Invoke(cx, argc, vp, 0);
-            sp = vp + 1;
-            vp[-depth] = (jsval)pc;
+            ok = js_Invoke(cx, argc, 0);
+            RESTORE_SP(fp);
             LOAD_INTERRUPT_HANDLER(cx);
             if (!ok)
                 goto out;

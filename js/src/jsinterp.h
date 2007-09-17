@@ -95,21 +95,24 @@ typedef struct JSInlineFrame {
 /* JS stack frame flags. */
 #define JSFRAME_CONSTRUCTING  0x01  /* frame is for a constructor invocation */
 #define JSFRAME_INTERNAL      0x02  /* internal call, not invoked by a script */
-#define JSFRAME_ASSIGNING     0x04  /* a complex (not simplex JOF_ASSIGNING) op
+#define JSFRAME_SKIP_CALLER   0x04  /* skip one link when evaluating f.caller
+                                       for this invocation of f */
+#define JSFRAME_ASSIGNING     0x08  /* a complex (not simplex JOF_ASSIGNING) op
                                        is currently assigning to a property */
-#define JSFRAME_DEBUGGER      0x08  /* frame for JS_EvaluateInStackFrame */
-#define JSFRAME_EVAL          0x10  /* frame for obj_eval */
-#define JSFRAME_SPECIAL       0x18  /* special evaluation frame flags */
-#define JSFRAME_COMPILING     0x20  /* frame is being used by compiler */
-#define JSFRAME_COMPILE_N_GO  0x40  /* compiler-and-go mode, can optimize name
+#define JSFRAME_DEBUGGER      0x10  /* frame for JS_EvaluateInStackFrame */
+#define JSFRAME_EVAL          0x20  /* frame for obj_eval */
+#define JSFRAME_SPECIAL       0x30  /* special evaluation frame flags */
+#define JSFRAME_COMPILING     0x40  /* frame is being used by compiler */
+#define JSFRAME_COMPILE_N_GO  0x80  /* compiler-and-go mode, can optimize name
                                        references based on scope chain */
-#define JSFRAME_SCRIPT_OBJECT 0x80  /* compiling source for a Script object */
-#define JSFRAME_YIELDING      0x100 /* js_Interpret dispatched JSOP_YIELD */
-#define JSFRAME_FILTERING     0x200 /* XML filtering predicate expression */
-#define JSFRAME_ITERATOR      0x400 /* trying to get an iterator for for-in */
-#define JSFRAME_POP_BLOCKS    0x800 /* scope chain contains blocks to pop */
-#define JSFRAME_GENERATOR    0x1000 /* frame belongs to generator-iterator */
-#define JSFRAME_ROOTED_ARGV  0x2000 /* frame.argv is rooted by the caller */
+#define JSFRAME_SCRIPT_OBJECT 0x100 /* compiling source for a Script object */
+#define JSFRAME_YIELDING      0x200 /* js_Interpret dispatched JSOP_YIELD */
+#define JSFRAME_FILTERING     0x400 /* XML filtering predicate expression */
+#define JSFRAME_ITERATOR      0x800 /* trying to get an iterator for for-in */
+#define JSFRAME_POP_BLOCKS   0x1000 /* scope chain contains blocks to pop */
+#define JSFRAME_GENERATOR    0x2000 /* frame belongs to generator-iterator */
+#define JSFRAME_IN_FAST_CALL 0x4000 /* calling frame is calling a fast native */
+#define JSFRAME_DID_SET_RVAL 0x8000 /* fast native used JS_SET_RVAL(cx, vp) */
 
 #define JSFRAME_OVERRIDE_SHIFT 24   /* override bit-set params; see jsfun.c */
 #define JSFRAME_OVERRIDE_BITS  8
@@ -175,15 +178,11 @@ js_ComputeThis(JSContext *cx, jsval *argv);
 
 /*
  * NB: js_Invoke requires that cx is currently running JS (i.e., that cx->fp
- * is non-null), and that vp points to the callee, |this| parameter, and
- * actual arguments of the call. [vp .. vp + 2 + argc) must belong to the last
- * JS stack segment that js_AllocStack or js_AllocRawStack allocated. The
- * function may use the space available after vp + 2 + argc in the stack
- * segment for temporaries so the caller should not use that space for values
- * that must be preserved across the call.
+ * is non-null), and that the callee, |this| parameter, and actual arguments
+ * are already pushed on the stack under cx->fp->sp.
  */
 extern JS_FRIEND_API(JSBool)
-js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags);
+js_Invoke(JSContext *cx, uintN argc, uintN flags);
 
 /*
  * Consolidated js_Invoke flags simply rename certain JSFRAME_* flags, so that
@@ -200,6 +199,7 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags);
  */
 #define JSINVOKE_CONSTRUCT      JSFRAME_CONSTRUCTING
 #define JSINVOKE_INTERNAL       JSFRAME_INTERNAL
+#define JSINVOKE_SKIP_CALLER    JSFRAME_SKIP_CALLER
 #define JSINVOKE_ITERATOR       JSFRAME_ITERATOR
 
 /*
