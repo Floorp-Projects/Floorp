@@ -356,7 +356,10 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
     }
     // Fallthrough to the next upgrade
 
+  // Extra sanity checking for developers
+#ifndef DEBUG
   case DM_SCHEMA_VERSION:
+#endif
     break;
 
   case 0:
