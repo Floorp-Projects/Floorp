@@ -831,6 +831,15 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
   return NS_OK;
 }
 
+nsresult
+nsDownloadManager::AddToCurrentDownloads(nsDownload *aDl)
+{
+  if (!mCurrentDownloads.AppendObject(aDl))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
+}
+
 void
 nsDownloadManager::SendEvent(nsDownload *aDownload, const char *aTopic)
 {
@@ -1126,7 +1135,7 @@ nsDownloadManager::CancelDownload(PRUint32 aID)
     return NS_ERROR_FAILURE;
 
   // Don't cancel if download is already finished
-  if (CompletedSuccessfully(dl->mDownloadState))
+  if (dl->IsFinished())
     return NS_OK;
 
   // if the download is paused, we have to resume it so we can cancel it
@@ -1876,7 +1885,7 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
       }
     }
   } else if (aStateFlags & STATE_STOP) {
-    if (nsDownloadManager::IsInFinalStage(mDownloadState)) {
+    if (IsFinishable()) {
       // Set file size at the end of a transfer (for unknown transfer amounts)
       if (mMaxBytes == LL_MAXUINT)
         mMaxBytes = mCurrBytes;
@@ -2131,6 +2140,20 @@ nsDownload::PauseResume(PRBool aPause)
 
   mPaused = PR_FALSE;
   return SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
+}
+
+PRBool
+nsDownload::IsFinishable()
+{
+  return mDownloadState == nsIDownloadManager::DOWNLOAD_NOTSTARTED ||
+         mDownloadState == nsIDownloadManager::DOWNLOAD_QUEUED ||
+         mDownloadState == nsIDownloadManager::DOWNLOAD_DOWNLOADING;
+}
+
+PRBool
+nsDownload::IsFinished()
+{
+  return mDownloadState == nsIDownloadManager::DOWNLOAD_FINISHED;
 }
 
 nsresult
