@@ -126,7 +126,6 @@ nsDownloadScanner::FindCLSID()
   }
   ULONG nReceived;
   clsidEnumerator->Next(1, &mScannerCLSID, &nReceived);
-  clsidEnumerator->Next(1, &mScannerCLSID, &nReceived);
   if (nReceived == 0) {
     // No installed Anti Virus program
     return -3;
