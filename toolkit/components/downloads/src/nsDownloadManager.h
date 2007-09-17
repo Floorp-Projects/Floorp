@@ -202,6 +202,26 @@ protected:
   nsresult PauseResume(PRBool aPause);
 
   /**
+   * Download is not transferring?
+   */
+  PRBool IsPaused();
+
+  /**
+   * Download can continue from the middle of a transfer?
+   */
+  PRBool IsResumable();
+
+  /**
+   * Download was resumed?
+   */
+  PRBool WasResumed();
+
+  /**
+   * Download is real-paused? (not fake-paused by stalling the channel)
+   */
+  PRBool IsRealPaused();
+
+  /**
    * Download is in a state to stop and complete the download?
    */
   PRBool IsFinishable();
@@ -241,8 +261,6 @@ private:
 
   PRTime mStartTime;
   PRTime mLastUpdate;
-  PRBool mPaused;
-  PRBool mWasResumed;
   PRUint64 mResumedAt;
   double mSpeed;
 
