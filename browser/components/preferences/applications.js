@@ -416,10 +416,6 @@ HandlerInfoWrapper.prototype = {
     this._handlerSvc.store(this.wrappedHandlerInfo);
   },
 
-  remove: function() {
-    this._handlerSvc.remove(this.wrappedHandlerInfo);
-  },
-
 
   //**************************************************************************//
   // Icons
@@ -692,9 +688,6 @@ var feedHandlerInfo = {
   // the handler.
   // XXX Should we hold off on making the changes until this method gets called?
   store: function() {},
-
-  // The feed type cannot be removed.
-  remove: function() {},
 
 
   //**************************************************************************//
@@ -1182,17 +1175,6 @@ var gApplicationsPane = {
       menuItem.setAttribute("label", this._bundle.getString("chooseApp"));
       menuPopup.appendChild(menuItem);
     }
-
-    // Create a menu item for removing this entry unless it's a plugin
-    // or the feed type, which cannot be removed.
-    // XXX Should this perhaps be a button on the entry, or should we perhaps
-    // provide no UI for removing entries at all?
-    if (!handlerInfo.plugin && handlerInfo.type != TYPE_MAYBE_FEED) {
-      let menuItem = document.createElementNS(kXULNS, "menuitem");
-      menuItem.setAttribute("oncommand", "gApplicationsPane.removeType(event)");
-      menuItem.setAttribute("label", this._bundle.getString("removeType"));
-      menuPopup.appendChild(menuItem);
-    }
   },
 
 
@@ -1386,40 +1368,6 @@ var gApplicationsPane = {
     // If they picked an app, we want to add the app to the menu and select it.
     // If they canceled, we want to go back to their previous selection.
     this.rebuildActionsMenu();
-  },
-
-  removeType: function() {
-    var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                        getService(Ci.nsIPromptService);
-    var flags = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING * Ci.nsIPromptService.BUTTON_POS_0;
-    flags += Ci.nsIPromptService.BUTTON_TITLE_CANCEL * Ci.nsIPromptService.BUTTON_POS_1;
-
-    var title = this._bundle.getString("removeTitle");
-    var message = this._bundle.getString("removeMessage");
-    var button = this._bundle.getString("removeButton");
-    var rv = promptService.confirmEx(window, title, message, flags, button, 
-                                     null, null, null, { value: 0 });
-
-    if (rv == 0) {
-      // Remove information about the type from the handlers datastore.
-      let listItem = this._list.selectedItem;
-      let handlerInfo = this._handledTypes[listItem.type];
-      handlerInfo.remove();
-
-      // Select the next item in the list (or the previous item if the item
-      // being removed is the last item).
-      if (this._list.selectedIndex == this._list.getRowCount() - 1)
-        this._list.selectedIndex = this._list.selectedIndex - 1;
-      else
-        this._list.selectedIndex = this._list.selectedIndex + 1;
-
-      // Remove the item from the list.
-      this._list.removeChild(listItem);
-    }
-    else {
-      // Rebuild the actions menu so we go back to their previous selection.
-      this.rebuildActionsMenu();
-    }
   },
 
   // Mark which item in the list was last selected so we can reselect it
