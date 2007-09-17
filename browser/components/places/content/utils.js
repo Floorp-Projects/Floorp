@@ -1454,6 +1454,13 @@ var PlacesUtils = {
     return this._tagRootId;
   },
 
+  get unfiledRootId() {
+    if (!("_unfiledRootId" in this))
+      this._unfiledRootId = this.bookmarks.unfiledRoot;
+
+    return this._unfiledRootId;
+  },
+
   /**
    * Set the POST data associated with a URI, if any.
    * Used by POST keywords.
@@ -1504,8 +1511,9 @@ var PlacesUtils = {
     for each (var bk in bmkIds) {
       // Find the first folder which isn't a tag container
       var parent = this.bookmarks.getFolderIdForItem(bk);
-      if (parent == this.placesRootId)
+      if (parent == this.unfiledRootId)
         return bk;
+
       var grandparent = this.bookmarks.getFolderIdForItem(parent);
       if (grandparent != this.tagRootId &&
           !this.annotations.itemHasAnnotation(parent, LMANNO_FEEDURI))
