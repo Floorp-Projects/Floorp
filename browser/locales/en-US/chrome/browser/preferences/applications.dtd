@@ -1,4 +1,3 @@
-<!ENTITY  prefpane.label          "Here you can configure &brandShortName; to let your favorite applications handle different types of content.">
 <!ENTITY  filterActive.label      "The following entries match your search:">
 
 <!ENTITY  typeColumn.label        "Content Type">
