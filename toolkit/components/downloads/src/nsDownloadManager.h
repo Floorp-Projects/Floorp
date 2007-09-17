@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 #ifndef downloadmanager___h___
 #define downloadmanager___h___
 
@@ -111,7 +111,6 @@ protected:
 
   void SendEvent(nsDownload *aDownload, const char *aTopic);
 
-
   /**
    * Adds a download with the specified information to the DB.
    *
@@ -144,21 +143,21 @@ protected:
   nsresult CancelAllDownloads();
 
   /**
-   * Removes download from "current downloads". 
+   * Removes download from "current downloads".
    *
-   * This method removes the cycle created when starting the download, so 
+   * This method removes the cycle created when starting the download, so
    * make sure to use kungFuDeathGrip if you want to access member variables
    */
   void CompleteDownload(nsDownload *aDownload);
 
-  void     ConfirmCancelDownloads(PRInt32 aCount,
-                                  nsISupportsPRBool* aCancelDownloads,
-                                  const PRUnichar* aTitle, 
-                                  const PRUnichar* aCancelMessageMultiple, 
-                                  const PRUnichar* aCancelMessageSingle,
-                                  const PRUnichar* aDontCancelButton);
+  void ConfirmCancelDownloads(PRInt32 aCount,
+                              nsISupportsPRBool *aCancelDownloads,
+                              const PRUnichar *aTitle,
+                              const PRUnichar *aCancelMessageMultiple,
+                              const PRUnichar *aCancelMessageSingle,
+                              const PRUnichar *aDontCancelButton);
 
-  PRInt32  GetRetentionBehavior();
+  PRInt32 GetRetentionBehavior();
   nsresult ExecuteDesiredAction(nsDownload *aDownload);
 
   static PRBool IsInFinalStage(DownloadState aState)
@@ -168,11 +167,11 @@ protected:
            aState == nsIDownloadManager::DOWNLOAD_DOWNLOADING;
   }
 
-  static PRBool IsInProgress(DownloadState aState) 
+  static PRBool IsInProgress(DownloadState aState)
   {
-    return aState == nsIDownloadManager::DOWNLOAD_NOTSTARTED || 
+    return aState == nsIDownloadManager::DOWNLOAD_NOTSTARTED ||
            aState == nsIDownloadManager::DOWNLOAD_QUEUED ||
-           aState == nsIDownloadManager::DOWNLOAD_DOWNLOADING || 
+           aState == nsIDownloadManager::DOWNLOAD_DOWNLOADING ||
            aState == nsIDownloadManager::DOWNLOAD_PAUSED;
   }
 
@@ -224,7 +223,7 @@ protected:
 
   nsresult PauseResume(PRBool aPause);
 
-  nsDownloadManager* mDownloadManager;
+  nsDownloadManager *mDownloadManager;
   nsCOMPtr<nsIURI> mTarget;
 
 private:
@@ -237,9 +236,9 @@ private:
   nsCOMPtr<nsIRequest> mRequest;
   nsCOMPtr<nsILocalFile> mTempFile;
   nsCOMPtr<nsIMIMEInfo> mMIMEInfo;
-  
+
   DownloadState mDownloadState;
-  DownloadType  mDownloadType;
+  DownloadType mDownloadType;
 
   PRUint32 mID;
   PRInt32 mPercentComplete;
