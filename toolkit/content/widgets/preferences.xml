@@ -575,6 +575,9 @@
         }
         var panes = this.preferencePanes;
 
+        if (this._shouldAnimate)
+          this.style.minHeight = 0;
+
         var lastPane = null;
         if (this.lastSelected) {
           lastPane = document.getElementById(this.lastSelected);
@@ -735,23 +738,28 @@
               this._paneDeck.selectedIndex = i;
               
               if (this.type != "child") {
+                // Calling sizeToContent after the first prefpane is loaded
+                // will size the windows contents so style information is
+                // available to calculate correct sizing.
+                if (!this._initialized)
+                  window.sizeToContent();
+
                 var oldPane = this.lastSelected ? document.getElementById(this.lastSelected) : this.preferencePanes[0];
                 oldPane.selected = !(aPaneElement.selected = true);
                 this.lastSelected = aPaneElement.id;
                 this.currentPane = aPaneElement;
+                this._initialized = true;
+
                 // Only animate if we've switched between prefpanes
                 if (this._shouldAnimate && oldPane.id != aPaneElement.id) {
-                  // Don't let the new pane content flex to the current window
-                  // height if we're animating 
-                  aPaneElement.removeAttribute("flex");
                   aPaneElement.style.opacity = 0.0;
                   this.animate(oldPane, aPaneElement);
                 }
-                else if (this._initialized && !this._shouldAnimate) {
+                else if (!this._shouldAnimate) {
                   var targetHeight = parseInt(window.getComputedStyle(this._paneDeckContainer, "").height);
-                  targetHeight -= parseInt(window.getComputedStyle(this, "").paddingTop);
-                  targetHeight -= parseInt(window.getComputedStyle(this, "").paddingBottom);
-                  if (aPaneElement.contentHeight > targetHeight) {
+                  var verticalPadding = parseInt(window.getComputedStyle(aPaneElement, "").paddingTop);
+                  verticalPadding += parseInt(window.getComputedStyle(aPaneElement, "").paddingBottom);
+                  if (aPaneElement.contentHeight > targetHeight - verticalPadding) {
                     // To workaround the bottom border of a groupbox from being
                     // cutoff an hbox with a class of bottomBox may enclose it.
                     // This needs to include its padding to resize properly.
@@ -760,10 +768,14 @@
                     var bottomBox = aPaneElement.getElementsByAttribute("class", "bottomBox")[0];
                     if (bottomBox)
                       bottomPadding = parseInt(window.getComputedStyle(bottomBox, "").paddingBottom);
-                    window.innerHeight += bottomPadding + aPaneElement.contentHeight - targetHeight;
+                    window.innerHeight += bottomPadding + verticalPadding + aPaneElement.contentHeight - targetHeight;
                   }
+
+                  // XXX rstrong - extend the contents of the prefpane to
+                  // prevent elements from being cutoff (see bug 349098).
+                  if (aPaneElement.contentHeight + verticalPadding < targetHeight)
+                    aPaneElement._content.style.height = targetHeight - verticalPadding + "px";
                 }
-                this._initialized = true;
               }
               break;
             }
