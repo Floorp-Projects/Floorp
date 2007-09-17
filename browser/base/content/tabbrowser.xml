@@ -1275,7 +1275,11 @@
               if (aAllowThirdPartyFixup) {
                 flags = nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
               }
-              b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
+              try {
+                b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
+              }
+              catch (ex) {
+              }
             }
 
             // |setTimeout| here to ensure we're post reflow
