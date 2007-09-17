@@ -150,18 +150,8 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
   return rv;
 }
 
-
-PR_STATIC_CALLBACK(PRBool)
-deleteElement(void* aElement, void *aData)
-{
-  nsHashtable *ht = (nsHashtable *) aElement;
-  delete ht;
-  return PR_TRUE;
-}
-
 nsPrincipal::~nsPrincipal(void)
 {
-  mAnnotations.EnumerateForwards(deleteElement, nsnull);
   SetSecurityPolicy(nsnull); 
 }
 
@@ -486,14 +476,20 @@ nsPrincipal::SetCapability(const char *capability, void **annotation,
                            AnnotationValue value)
 {
   if (*annotation == nsnull) {
-    *annotation = new nsHashtable(5);
-    if (!*annotation) {
+    nsHashtable* ht = new nsHashtable(5);
+
+    if (!ht) {
        return NS_ERROR_OUT_OF_MEMORY;
      }
 
     // This object owns its annotations. Save them so we can release
     // them when we destroy this object.
-    mAnnotations.AppendElement(*annotation);
+    if (!mAnnotations.AppendElement(ht)) {
+      delete ht;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    *annotation = ht;
   }
 
   const char *start = capability;
@@ -502,7 +498,7 @@ nsPrincipal::SetCapability(const char *capability, void **annotation,
     int len = space ? space - start : strlen(start);
     nsCAutoString capString(start, len);
     nsCStringKey key(capString);
-    nsHashtable *ht = (nsHashtable *) *annotation;
+    nsHashtable *ht = static_cast<nsHashtable *>(*annotation);
     ht->Put(&key, (void *) value);
     if (!space) {
       break;
@@ -673,7 +669,7 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
 {
   NS_PRECONDITION(mCapabilities.Count() == 0,
                   "mCapabilities was already initialized?");
-  NS_PRECONDITION(mAnnotations.Count() == 0,
+  NS_PRECONDITION(mAnnotations.Length() == 0,
                   "mAnnotations was already initialized?");
   NS_PRECONDITION(!mInitialized, "We were already initialized?");
 
@@ -911,39 +907,15 @@ FreeAnnotationEntry(nsIObjectInputStream* aStream, nsHashKey* aKey,
 NS_IMETHODIMP
 nsPrincipal::Read(nsIObjectInputStream* aStream)
 {
-  PRUint32 annotationCount;
-  nsresult rv = aStream->Read32(&annotationCount);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  for (PRInt32 i = 0, n = PRInt32(annotationCount); i < n; i++) {
-    nsHashtable *ht = new nsHashtable(aStream,
-                                      ReadAnnotationEntry,
-                                      FreeAnnotationEntry,
-                                      &rv);
-    if (!ht) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    if (NS_FAILED(rv)) {
-      delete ht;
-      return rv;
-    }
-
-    if (!mAnnotations.InsertElementAt(reinterpret_cast<void*>(ht), i)) {
-      delete ht;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
   PRBool hasCapabilities;
-  rv = aStream->ReadBoolean(&hasCapabilities);
+  nsresult rv = aStream->ReadBoolean(&hasCapabilities);
   if (NS_SUCCEEDED(rv) && hasCapabilities) {
-    mCapabilities = nsHashtable(aStream,
-                                ReadAnnotationEntry,
-                                FreeAnnotationEntry,
-                                &rv);
+    // We want to use one of the nsHashtable constructors, but don't want to
+    // generally have mCapabilities be a pointer... and nsHashtable has no
+    // reasonable copy-constructor.  Placement-new to the rescue!
+    mCapabilities.~nsHashtable();
+    new (&mCapabilities) nsHashtable(aStream, ReadAnnotationEntry,
+                                     FreeAnnotationEntry, &rv);
   }
 
   if (NS_FAILED(rv)) {
@@ -951,6 +923,68 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
   }
 
   rv = NS_ReadOptionalCString(aStream, mPrefName);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  const char* ordinalBegin = PL_strpbrk(mPrefName.get(), "1234567890");
+  if (ordinalBegin) {
+    PRIntn n = atoi(ordinalBegin);
+    if (sCapabilitiesOrdinal <= n) {
+      sCapabilitiesOrdinal = n + 1;
+    }
+  }
+
+  PRBool haveCert;
+  rv = aStream->ReadBoolean(&haveCert);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCString fingerprint;
+  nsCString subjectName;
+  nsCString prettyName;
+  nsCOMPtr<nsISupports> cert;
+  if (haveCert) {
+    rv = NS_ReadOptionalCString(aStream, fingerprint);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = NS_ReadOptionalCString(aStream, subjectName);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = NS_ReadOptionalCString(aStream, prettyName);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = aStream->ReadObject(PR_TRUE, getter_AddRefs(cert));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  nsCOMPtr<nsIURI> codebase;
+  rv = NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(codebase));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = Init(fingerprint, subjectName, prettyName, cert, codebase);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> domain;
+  rv = NS_ReadOptionalObject(aStream, PR_TRUE, getter_AddRefs(domain));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  SetDomain(domain);
+
+  rv = aStream->Read8(&mTrusted);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -969,22 +1003,13 @@ WriteScalarValue(nsIObjectOutputStream* aStream, void* aData)
 NS_IMETHODIMP
 nsPrincipal::Write(nsIObjectOutputStream* aStream)
 {
-  PRUint32 annotationCount = PRUint32(mAnnotations.Count());
-  nsresult rv = aStream->Write32(annotationCount);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  for (PRInt32 i = 0, n = PRInt32(annotationCount); i < n; i++) {
-    nsHashtable *ht = reinterpret_cast<nsHashtable *>(mAnnotations[i]);
-    rv = ht->Write(aStream, WriteScalarValue);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
+  NS_ENSURE_STATE(mCert || mCodebase);
+  
+  // mAnnotations is transient data associated to specific JS stack frames.  We
+  // don't want to serialize that.
+  
   PRBool hasCapabilities = (mCapabilities.Count() > 0);
-  rv = aStream->WriteBoolean(hasCapabilities);
+  nsresult rv = aStream->WriteBoolean(hasCapabilities);
   if (NS_SUCCEEDED(rv) && hasCapabilities) {
     rv = mCapabilities.Write(aStream, WriteScalarValue);
   }
@@ -997,6 +1022,62 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  rv = aStream->WriteBoolean(mCert != nsnull);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (mCert) {
+    NS_ENSURE_STATE(mCert->cert);
+    
+    rv = NS_WriteOptionalStringZ(aStream, mCert->fingerprint.get());
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    
+    rv = NS_WriteOptionalStringZ(aStream, mCert->subjectName.get());
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    
+    rv = NS_WriteOptionalStringZ(aStream, mCert->prettyName.get());
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = aStream->WriteCompoundObject(mCert->cert, NS_GET_IID(nsISupports),
+                                      PR_TRUE);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }    
+  }
+  
+  // mSecurityPolicy is an optimization; it'll get looked up again as needed.
+  // Don't bother saving and restoring it, esp. since it might change if
+  // preferences change.
+
+  rv = NS_WriteOptionalCompoundObject(aStream, mCodebase, NS_GET_IID(nsIURI),
+                                      PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = NS_WriteOptionalCompoundObject(aStream, mDomain, NS_GET_IID(nsIURI),
+                                      PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // mOrigin is an optimization; don't bother serializing it.
+
+  rv = aStream->Write8(mTrusted);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // mCodebaseImmutable and mDomainImmutable will be recomputed based
+  // on the deserialized URIs in Read().
 
   return NS_OK;
 }
