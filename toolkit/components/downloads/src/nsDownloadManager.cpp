@@ -153,7 +153,7 @@ nsDownloadManager::CompleteDownload(nsDownload *aDownload)
 
   // we need do what exthandler would have done for a finished download
   if (aDownload->mDownloadState == nsIDownloadManager::DOWNLOAD_FINISHED &&
-      aDownload->mWasResumed)
+      aDownload->WasResumed())
     (void)ExecuteDesiredAction(aDownload);
 
   (void)mCurrentDownloads.RemoveObject(aDownload);
@@ -164,7 +164,7 @@ nsDownloadManager::ExecuteDesiredAction(nsDownload *aDownload)
 {
   // If we have a temp file and we have resumed, we have to do what the external
   // helper app service would have done.
-  if (!aDownload->mTempFile || !aDownload->mWasResumed)
+  if (!aDownload->mTempFile || !aDownload->WasResumed())
     return NS_OK;
 
   // We need to bail if for some reason the temp file got removed
@@ -1143,7 +1143,7 @@ nsDownloadManager::CancelDownload(PRUint32 aID)
     return NS_OK;
 
   // if the download is paused, we have to resume it so we can cancel it
-  if (dl->mPaused)
+  if (dl->IsPaused())
     (void)dl->PauseResume(PR_FALSE);
 
   // Cancel using the provided object
@@ -1507,8 +1507,6 @@ nsDownload::nsDownload() : mDownloadState(nsIDownloadManager::DOWNLOAD_NOTSTARTE
                            mMaxBytes(LL_MAXUINT),
                            mStartTime(0),
                            mLastUpdate(PR_Now() - (PRUint32)gUpdateInterval),
-                           mPaused(PR_FALSE),
-                           mWasResumed(PR_FALSE),
                            mResumedAt(0),
                            mSpeed(0)
 {
@@ -2045,22 +2043,12 @@ nsDownload::GetReferrer(nsIURI **referrer)
 nsresult
 nsDownload::PauseResume(PRBool aPause)
 {
-  if (mPaused == aPause || !mRequest)
+  if (IsPaused() == aPause || !mRequest)
     return NS_OK;
 
-  nsHandlerInfoAction action = nsIMIMEInfo::saveToDisk;
   nsresult rv;
-  if (mMIMEInfo) {
-    rv = mMIMEInfo->GetPreferredAction(&action);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  PRBool resumable = PR_FALSE;
-  if (action == nsIMIMEInfo::saveToDisk && !mEntityID.IsEmpty())
-    resumable = PR_TRUE;
-
   if (aPause) {
-    if (resumable) {
+    if (IsResumable()) {
       rv = mCancelable->Cancel(NS_BINDING_ABORTED);
       NS_ENSURE_SUCCESS(rv, rv);
     } else {
@@ -2069,13 +2057,10 @@ nsDownload::PauseResume(PRBool aPause)
       rv = mRequest->Suspend();
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    mPaused = PR_TRUE;
     return SetState(nsIDownloadManager::DOWNLOAD_PAUSED);
   }
 
-  if (resumable) {
-    mWasResumed = PR_TRUE;
-
+  if (IsResumable()) {
     nsCOMPtr<nsIWebBrowserPersist> wbp =
       do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2142,8 +2127,36 @@ nsDownload::PauseResume(PRBool aPause)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  mPaused = PR_FALSE;
   return SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
+}
+
+PRBool
+nsDownload::IsPaused()
+{
+  return mDownloadState == nsIDownloadManager::DOWNLOAD_PAUSED;
+}
+
+PRBool
+nsDownload::IsResumable()
+{
+  nsHandlerInfoAction action = nsIMIMEInfo::saveToDisk;
+  if (mMIMEInfo)
+    (void)mMIMEInfo->GetPreferredAction(&action);
+
+  // For now we can only resume saveToDisk type actions (not open with)
+  return action == nsIMIMEInfo::saveToDisk && !mEntityID.IsEmpty();
+}
+
+PRBool
+nsDownload::WasResumed()
+{
+  return mResumedAt > 0;
+}
+
+PRBool
+nsDownload::IsRealPaused()
+{
+  return IsPaused() && IsResumable();
 }
 
 PRBool
