@@ -192,6 +192,7 @@ bin\components\xpinstall.xpt
 bin\components\xulapp.xpt
 bin\components\xuldoc.xpt
 bin\components\xultmpl.xpt
+bin\components\zipwriter.xpt
 ; JavaScript components
 bin\components\FeedProcessor.js
 bin\components\FeedConverter.js
