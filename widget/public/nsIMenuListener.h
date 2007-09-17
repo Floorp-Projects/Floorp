@@ -43,10 +43,10 @@
 
 class nsIWidget;
 
-// {f2e79602-1700-11d5-bb6f-90f240fe493c}
+// F463E22A-C5A9-4443-9407-2A7CD6634AE1
 #define NS_IMENULISTENER_IID      \
-{ 0xf2e79602, 0x1700, 0x11d5, \
-  { 0xbb, 0x6f, 0x90, 0xf2, 0x40, 0xfe, 0x49, 0x3c } }
+{ 0xF463E22A, 0xC5A9, 0x4443, \
+  { 0x94, 0x07, 0x2A, 0x7C, 0xD6, 0x63, 0x4A, 0xE1 } }
 
 /**
  *
@@ -81,9 +81,8 @@ class nsIMenuListener : public nsISupports {
      */
     virtual nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent) = 0;
 
-    virtual nsEventStatus MenuConstruct( const nsMenuEvent & aMenuEvent,
-                                          nsIWidget* aParentWindow, void* aNode,
-                                          void* aDocShell) = 0;
+    virtual nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent,
+                                        nsIWidget* aParentWindow, void* aNode) = 0;
 
     virtual nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent) = 0;
     
