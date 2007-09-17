@@ -270,7 +270,7 @@ nsUnknownDecoder::GetMIMETypeFromContent(nsIRequest* aRequest,
   mBufferLen = 0;
   type.Assign(mContentType);
   mContentType.Truncate();
-  return NS_OK;
+  return type.IsEmpty() ? NS_ERROR_NOT_AVAILABLE : NS_OK;
 }
 
 
@@ -711,6 +711,10 @@ nsBinaryDetector::DetermineContentType(nsIRequest* aRequest)
   if (mContentType.Equals(APPLICATION_OCTET_STREAM)) {
     // We want to guess at it instead
     mContentType = APPLICATION_GUESS_FROM_EXT;
+  } else {
+    // Let the text/plain type we already have be, so that other content
+    // sniffers can also get a shot at this data.
+    mContentType.Truncate();
   }
 }
 
