@@ -223,9 +223,9 @@ HandlerInfoWrapper.prototype = {
       return this.wrappedHandlerInfo.description;
 
     if (this.primaryExtension) {
-      let bundle = this.element("bundlePreferences");
       var extension = this.primaryExtension.toUpperCase();
-      return bundle.getFormattedString("fileEnding", [extension]);
+      return this.element("bundlePreferences").getFormattedString("fileEnding",
+                                                                  [extension]);
     }
 
     return this.type;
@@ -479,7 +479,7 @@ var feedHandlerInfo = {
   // nsIHandlerInfo
 
   get description() {
-    return gApplicationsPane._bundle.getString("webFeed");
+    return this.element("bundlePreferences").getString("webFeed");
   },
 
   get preferredApplicationHandler() {
@@ -712,7 +712,8 @@ var gApplicationsPane = {
   // objects, indexed by type.
   _handledTypes: {},
 
-  _bundle       : null,
+  _brandBundle  : null,
+  _prefsBundle  : null,
   _list         : null,
   _filter       : null,
 
@@ -740,7 +741,8 @@ var gApplicationsPane = {
 
   init: function() {
     // Initialize shortcuts to some commonly accessed elements.
-    this._bundle = document.getElementById("bundlePreferences");
+    this._brandBundle = document.getElementById("bundleBrand");
+    this._prefsBundle = document.getElementById("bundlePreferences");
     this._list = document.getElementById("handlersView");
     this._filter = document.getElementById("filter");
 
@@ -1003,11 +1005,11 @@ var gApplicationsPane = {
     // with alwaysAskBeforeHandling except for the feed type, so here we use
     // a feed-specific message to describe the behavior.
     if (aHandlerInfo.alwaysAskBeforeHandling)
-      return this._bundle.getString("alwaysAskAboutFeed");
+      return this._prefsBundle.getString("alwaysAskAboutFeed");
 
     switch (aHandlerInfo.preferredAction) {
       case Ci.nsIHandlerInfo.saveToDisk:
-        return this._bundle.getString("saveToDisk");
+        return this._prefsBundle.getString("saveToDisk");
 
       case Ci.nsIHandlerInfo.useHelperApp:
         return aHandlerInfo.preferredApplicationHandler.name;
@@ -1015,7 +1017,7 @@ var gApplicationsPane = {
       case Ci.nsIHandlerInfo.handleInternally:
         // For the feed type, handleInternally means live bookmarks.
         if (aHandlerInfo.type == TYPE_MAYBE_FEED)
-          return this._bundle.getString("liveBookmarks");
+          return this._prefsBundle.getString("liveBookmarks");
 
         // For other types, handleInternally looks like either useHelperApp
         // or useSystemDefault depending on whether or not there's a preferred
@@ -1034,7 +1036,10 @@ var gApplicationsPane = {
         return aHandlerInfo.defaultDescription;
 
       case kActionUsePlugin:
-        return aHandlerInfo.plugin.name;
+        let brandShortName = this._brandBundle.getString("brandShortName");
+        return this._prefsBundle.getFormattedString("pluginName",
+                                                    [aHandlerInfo.plugin.name,
+                                                     brandShortName]);
     }
   },
 
@@ -1082,14 +1087,15 @@ var gApplicationsPane = {
     if (handlerInfo.type == TYPE_MAYBE_FEED) {
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("alwaysAsk", "true");
-      menuItem.setAttribute("label", this._bundle.getString("alwaysAskAboutFeed"));
+      menuItem.setAttribute("label",
+                            this._prefsBundle.getString("alwaysAskAboutFeed"));
       menuPopup.appendChild(menuItem);
       if (handlerInfo.alwaysAskBeforeHandling)
         menu.selectedItem = menuItem;
 
       menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("action", Ci.nsIHandlerInfo.handleInternally);
-      menuItem.setAttribute("label", this._bundle.getString("liveBookmarks"));
+      menuItem.setAttribute("label", this._prefsBundle.getString("liveBookmarks"));
       menuItem.setAttribute("image", "chrome://browser/skin/page-livemarks.png");
       menuPopup.appendChild(menuItem);
       if (handlerInfo.preferredAction == Ci.nsIHandlerInfo.handleInternally)
@@ -1149,7 +1155,11 @@ var gApplicationsPane = {
     if (handlerInfo.plugin) {
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("action", kActionUsePlugin);
-      menuItem.setAttribute("label", handlerInfo.plugin.name);
+      let brandShortName = this._brandBundle.getString("brandShortName");
+      let label = this._prefsBundle.getFormattedString("pluginName",
+                                                       [handlerInfo.plugin.name,
+                                                        brandShortName]);
+      menuItem.setAttribute("label", label);
       menuPopup.appendChild(menuItem);
       if (handlerInfo.preferredAction == kActionUsePlugin)
         menu.selectedItem = menuItem;
@@ -1167,7 +1177,7 @@ var gApplicationsPane = {
         !handlerInfo.handledOnlyByPlugin) {
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("action", Ci.nsIHandlerInfo.saveToDisk);
-      menuItem.setAttribute("label", this._bundle.getString("saveToDisk"));
+      menuItem.setAttribute("label", this._prefsBundle.getString("saveToDisk"));
       menuPopup.appendChild(menuItem);
       if (handlerInfo.preferredAction == Ci.nsIHandlerInfo.saveToDisk)
         menu.selectedItem = menuItem;
@@ -1177,7 +1187,7 @@ var gApplicationsPane = {
     {
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("oncommand", "gApplicationsPane.chooseApp(event)");
-      menuItem.setAttribute("label", this._bundle.getString("chooseApp"));
+      menuItem.setAttribute("label", this._prefsBundle.getString("chooseApp"));
       menuPopup.appendChild(menuItem);
     }
   },
@@ -1336,7 +1346,7 @@ var gApplicationsPane = {
     aEvent.stopPropagation();
 
     var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    var winTitle = this._bundle.getString("fpTitleChooseApp");
+    var winTitle = this._prefsBundle.getString("fpTitleChooseApp");
     fp.init(window, winTitle, Ci.nsIFilePicker.modeOpen);
     fp.appendFilters(Ci.nsIFilePicker.filterApps);
 
