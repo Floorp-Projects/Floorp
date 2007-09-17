@@ -77,6 +77,12 @@ EnsureUseCocoaDockAPI()
 void
 SetupMacApplicationDelegate()
 {
+  // This call makes it so that application:openFile: doesn't get bogus calls
+  // from Cocoa doing its own parsing of the argument string. And yes, we need
+  // to use a string with a boolean value in it. That's just how it works.
+  [[NSUserDefaults standardUserDefaults] setObject:@"NO"
+                                            forKey:@"NSTreatUnknownArgumentsAsOpen"];
+
   // Create the delegate. This should be around for the lifetime of the app.
   MacApplicationDelegate *delegate = [[MacApplicationDelegate alloc] init];
   [[NSApplication sharedApplication] setDelegate:delegate];
