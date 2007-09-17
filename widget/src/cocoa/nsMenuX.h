@@ -53,7 +53,6 @@
 
 class nsIMenuBar;
 class nsIMenuListener;
-class nsIDocShell;
 class nsMenuX;
 class nsMenuItemIconX;
 
@@ -90,7 +89,7 @@ public:
     nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent); 
     nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent); 
     nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
-                                void * menuNode, void * aDocShell);
+                                void * aMenuNode);
     nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
     nsEventStatus CheckRebuild(PRBool & aMenuEvent);
     nsEventStatus SetRebuild(PRBool aMenuEvent);

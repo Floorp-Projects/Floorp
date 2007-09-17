@@ -40,10 +40,8 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIDOMDocument.h"
-#include "nsIDocumentViewer.h"
 #include "nsIDocumentObserver.h"
 #include "nsIComponentManager.h"
-#include "nsIDocShell.h"
 #include "prinrval.h"
 #include "nsIRollupListener.h"
 
@@ -159,7 +157,7 @@ nsMenuX::Create(nsISupports * aParent, const nsAString &aLabel, const nsAString 
   // is actually selected, then we can't access keyboard commands until the
   // menu gets selected, which is bad.
   nsMenuEvent fake(PR_TRUE, 0, nsnull);
-  MenuConstruct(fake, nsnull, nsnull, nsnull);
+  MenuConstruct(fake, nsnull, nsnull);
   
   if (menu)
     mIcon = new nsMenuItemIconX(static_cast<nsIMenu*>(this), menu, mMenuContent, mNativeMenuItem);
@@ -476,7 +474,7 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
       if (mNeedsRebuild)
         RemoveAll();
 
-      MenuConstruct(aMenuEvent, nsnull, nsnull, nsnull);
+      MenuConstruct(aMenuEvent, nsnull, nsnull);
       mConstructed = true;
     }
 
@@ -515,8 +513,7 @@ nsEventStatus nsMenuX::MenuDeselected(const nsMenuEvent & aMenuEvent)
 nsEventStatus nsMenuX::MenuConstruct(
     const nsMenuEvent & aMenuEvent,
     nsIWidget         * aParentWindow, 
-    void              * /* menuNode */,
-    void              * aDocShell)
+    void              * aMenuNode)
 {
   mConstructed = false;
   gConstructingMenu = PR_TRUE;
