@@ -271,15 +271,18 @@ NS_IMETHODIMP nsZipWriter::Open(nsIFile *aFile, PRInt32 aIoFlags)
     // Need to be able to write to the file
     if (aIoFlags & PR_RDONLY)
         return NS_ERROR_FAILURE;
+    
+    nsresult rv = aFile->Clone(getter_AddRefs(mFile));
+    NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool exists;
-    nsresult rv = aFile->Exists(&exists);
+    rv = mFile->Exists(&exists);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!exists && !(aIoFlags & PR_CREATE_FILE))
         return NS_ERROR_FILE_NOT_FOUND;
 
     if (exists && !(aIoFlags & (PR_TRUNCATE | PR_WRONLY))) {
-        rv = ReadFile(aFile);
+        rv = ReadFile(mFile);
         NS_ENSURE_SUCCESS(rv, rv);
         mCDSDirty = PR_FALSE;
     }
@@ -293,7 +296,7 @@ NS_IMETHODIMP nsZipWriter::Open(nsIFile *aFile, PRInt32 aIoFlags)
     aIoFlags &= 0xef;
 
     nsCOMPtr<nsIOutputStream> stream;
-    rv = NS_NewLocalFileOutputStream(getter_AddRefs(stream), aFile, aIoFlags);
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(stream), mFile, aIoFlags);
     if (NS_FAILED(rv)) {
         mHeaders.Clear();
         mEntryHash.Clear();
@@ -312,8 +315,6 @@ NS_IMETHODIMP nsZipWriter::Open(nsIFile *aFile, PRInt32 aIoFlags)
         rv = SeekCDS();
         NS_ENSURE_SUCCESS(rv, rv);
     }
-
-    mFile = aFile;
 
     return NS_OK;
 }
@@ -373,12 +374,14 @@ NS_IMETHODIMP nsZipWriter::AddEntryFile(const nsACString & aZipEntry,
     if (!mStream)
         return NS_ERROR_NOT_INITIALIZED;
 
+    nsresult rv;
     if (aQueue) {
         nsZipQueueItem item;
         item.mOperation = OPERATION_ADD;
         item.mZipEntry = aZipEntry;
         item.mCompression = aCompression;
-        item.mFile = aFile;
+        rv = aFile->Clone(getter_AddRefs(item.mFile));
+        NS_ENSURE_SUCCESS(rv, rv);
         if (!mQueue.AppendElement(item))
             return NS_ERROR_OUT_OF_MEMORY;
         return NS_OK;
@@ -388,7 +391,7 @@ NS_IMETHODIMP nsZipWriter::AddEntryFile(const nsACString & aZipEntry,
         return NS_ERROR_IN_PROGRESS;
 
     PRBool exists;
-    nsresult rv = aFile->Exists(&exists);
+    rv = aFile->Exists(&exists);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!exists)
         return NS_ERROR_FILE_NOT_FOUND;
