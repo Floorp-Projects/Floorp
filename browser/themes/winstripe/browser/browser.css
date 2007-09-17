@@ -1422,7 +1422,7 @@ tabpanels {
 .tabs-closebutton-box > .tabs-closebutton {
   padding-top: 5px;
   -moz-padding-end: 1px;
-  padding-bottom: 3px;
+  padding-bottom: 2px;
   -moz-padding-start: 2px;
   background-image: url("chrome://browser/skin/tabbrowser/close-bkgnd.png");
   background-color: -moz-dialog;
