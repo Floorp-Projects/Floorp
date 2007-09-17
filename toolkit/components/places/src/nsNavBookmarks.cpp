@@ -263,6 +263,19 @@ nsNavBookmarks::Init()
   mLock = PR_NewLock();
   NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
 
+  // Temporary migration code for bug 396300
+  nsCOMPtr<mozIStorageStatement> moveUnfiledBookmarks;
+  rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks SET parent = ?1 WHERE type = ?2 AND parent=?3"),
+                               getter_AddRefs(moveUnfiledBookmarks));
+  rv = moveUnfiledBookmarks->BindInt64Parameter(0, mUnfiledRoot);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = moveUnfiledBookmarks->BindInt32Parameter(1, TYPE_BOOKMARK);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = moveUnfiledBookmarks->BindInt32Parameter(2, mRoot);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = moveUnfiledBookmarks->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsAnnotationService* annosvc = nsAnnotationService::GetAnnotationService();
   NS_ENSURE_TRUE(annosvc, NS_ERROR_OUT_OF_MEMORY);
 
@@ -401,6 +414,10 @@ nsNavBookmarks::InitRoots()
   rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("tags"), &mTagRoot, mRoot, nsnull);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  getRootStatement->Reset();
+  rv = CreateRoot(getRootStatement, NS_LITERAL_CSTRING("unfiled"), &mUnfiledRoot, mRoot, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (importDefaults) {
     // when there is no places root, we should define the hierarchy by
     // importing the default one.
@@ -408,25 +425,6 @@ nsNavBookmarks::InitRoots()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // migration for bug 382094 - remove for A6
-  PRInt64 parent;
-  rv = GetFolderIdForItem(mBookmarksRoot, &parent);
-  if (NS_FAILED(rv) || parent == 0) {
-    nsCOMPtr<mozIStorageStatement> statement;
-    rv = DBConn()->CreateStatement(NS_LITERAL_CSTRING("UPDATE moz_bookmarks SET parent = ?1 WHERE id = ?2 or id = ?3"),
-                                   getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = statement->BindInt64Parameter(0, mRoot);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->BindInt64Parameter(1, mBookmarksRoot);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = statement->BindInt64Parameter(2, mTagRoot);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = statement->Execute();
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
   return NS_OK;
 }
 
@@ -473,60 +471,11 @@ nsNavBookmarks::InitToolbarFolder()
   nsTArray<PRInt64> folders;
   nsresult rv = annosvc->GetItemsWithAnnotationTArray(BOOKMARKS_TOOLBAR_FOLDER_ANNO,
                                                       &folders);
-  if (NS_FAILED(rv) || folders.Length() == 0) {
-    /**
-     * XXXmano: temporary migaration code, should be removed some time
-     *          after alpha 5.
-     */
-    mozIStorageConnection *dbConn = DBConn();
+  if (NS_FAILED(rv) || folders.Length() == 0)
+    mToolbarFolder = -1;
+  else
+    mToolbarFolder = folders[0];
 
-    nsCOMPtr<mozIStorageStatement> statement;
-    rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT id from moz_bookmarks WHERE folder_type = 'toolbar'"),
-                                 getter_AddRefs(statement));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    PRBool hasResult;
-    rv = statement->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (hasResult) {
-      PRInt64 toolbarFolder;
-      rv = statement->GetInt64(0, &toolbarFolder);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = SetToolbarFolder(toolbarFolder);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      /**
-      * XXXdietrich: temporary migration code to fix bug 389808.
-      *              should be removed some time after alpha 7. 
-      */
-      
-      nsCOMPtr<mozIStorageStatement> getToolbarFolderStatement;
-      rv = dbConn->CreateStatement(NS_LITERAL_CSTRING("SELECT id from moz_bookmarks WHERE title = ?1 AND type = ?2"),
-                                   getter_AddRefs(getToolbarFolderStatement));
-      NS_ENSURE_SUCCESS(rv, rv);
-      
-      nsXPIDLString toolbarTitle;
-      rv = mBundle->GetStringFromName(NS_LITERAL_STRING("PlacesBookmarksToolbarTitle").get(),
-                                      getter_Copies(toolbarTitle));
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = getToolbarFolderStatement->BindStringParameter(0, toolbarTitle);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = getToolbarFolderStatement->BindInt32Parameter(1, TYPE_FOLDER);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = getToolbarFolderStatement->ExecuteStep(&hasResult);
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (hasResult) {
-        PRInt64 toolbarFolder;
-        rv = getToolbarFolderStatement->GetInt64(0, &toolbarFolder);
-        NS_ENSURE_SUCCESS(rv, rv);
-        rv = SetToolbarFolder(toolbarFolder);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-    }
-    return NS_OK;
-  }
-
-  mToolbarFolder = folders[0];
   return NS_OK;
 }
 
@@ -935,6 +884,13 @@ NS_IMETHODIMP
 nsNavBookmarks::GetTagRoot(PRInt64 *aRoot)
 {
   *aRoot = mTagRoot;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNavBookmarks::GetUnfiledRoot(PRInt64 *aRoot)
+{
+  *aRoot = mUnfiledRoot;
   return NS_OK;
 }
 

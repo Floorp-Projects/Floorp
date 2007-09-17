@@ -78,7 +78,6 @@ namespace CrashReporter {
 
 #ifdef XP_WIN32
 typedef wchar_t XP_CHAR;
-#define TO_NEW_XP_CHAR(x) ToNewUnicode(x)
 #define CONVERT_UTF16_TO_XP_CHAR(x) x
 #define XP_STRLEN(x) wcslen(x)
 #define CRASH_REPORTER_FILENAME "crashreporter.exe"
@@ -95,7 +94,6 @@ typedef wchar_t XP_CHAR;
 #endif
 #else
 typedef char XP_CHAR;
-#define TO_NEW_XP_CHAR(x) ToNewUTF8String(x)
 #define CONVERT_UTF16_TO_XP_CHAR(x) NS_ConvertUTF16toUTF8(x)
 #define XP_STRLEN(x) strlen(x)
 #define CRASH_REPORTER_FILENAME "crashreporter"
@@ -348,16 +346,24 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   exePath->Append(NS_LITERAL_STRING("MacOS"));
 #endif
 
-  exePath->Append(NS_LITERAL_STRING(CRASH_REPORTER_FILENAME));
+  exePath->AppendNative(NS_LITERAL_CSTRING(CRASH_REPORTER_FILENAME));
 
+#ifdef XP_WIN32
   nsString crashReporterPath_temp;
   exePath->GetPath(crashReporterPath_temp);
 
-  crashReporterPath = TO_NEW_XP_CHAR(crashReporterPath_temp);
+  crashReporterPath = ToNewUnicode(crashReporterPath_temp);
+#else
+  nsCString crashReporterPath_temp;
+  exePath->GetNativePath(crashReporterPath_temp);
+
+  crashReporterPath = ToNewCString(crashReporterPath_temp);
+#endif
 
   // get temp path to use for minidump path
-  nsString tempPath;
 #if defined(XP_WIN32)
+  nsString tempPath;
+
   // first figure out buffer size
   int pathLen = GetTempPath(0, NULL);
   if (pathLen == 0)
@@ -366,6 +372,7 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   tempPath.SetLength(pathLen);
   GetTempPath(pathLen, (LPWSTR)tempPath.BeginWriting());
 #elif defined(XP_MACOSX)
+  nsCString tempPath;
   FSRef fsRef;
   OSErr err = FSFindFolder(kUserDomain, kTemporaryFolderType,
                            kCreateFolder, &fsRef);
@@ -376,19 +383,19 @@ nsresult SetExceptionHandler(nsILocalFile* aXREDirectory,
   OSStatus status = FSRefMakePath(&fsRef, (UInt8*)path, PATH_MAX);
   if (status != noErr)
     return NS_ERROR_FAILURE;
-  tempPath = NS_ConvertUTF8toUTF16(path);
+
+  tempPath = path;
 
 #elif defined(XP_UNIX)
   // we assume it's always /tmp on unix systems
-  tempPath = NS_LITERAL_STRING("/tmp/");
+  nsCString tempPath = NS_LITERAL_CSTRING("/tmp/");
 #else
-  //XXX: implement get temp path on other platforms
-  return NS_ERROR_NOT_IMPLEMENTED;
+#error "Implement this for your platform"
 #endif
 
   // now set the exception handler
   gExceptionHandler = new google_breakpad::
-    ExceptionHandler(CONVERT_UTF16_TO_XP_CHAR(tempPath).get(),
+    ExceptionHandler(tempPath.get(),
                      nsnull,
                      MinidumpCallback,
                      nsnull,
@@ -429,12 +436,13 @@ nsresult SetMinidumpPath(const nsAString& aPath)
 static nsresult
 WriteDataToFile(nsIFile* aFile, const nsACString& data)
 {
-  nsCAutoString filename;
-  nsresult rv = aFile->GetNativePath(filename);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aFile);
+  NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
 
-  PRFileDesc* fd = PR_Open(filename.get(), PR_WRONLY | PR_CREATE_FILE, 00600);
-  NS_ENSURE_TRUE(fd, NS_ERROR_FAILURE);
+  PRFileDesc* fd;
+  nsresult rv = localFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE, 00600,
+                                            &fd);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_OK;
   if (PR_Write(fd, data.Data(), data.Length()) == -1) {
@@ -447,12 +455,12 @@ WriteDataToFile(nsIFile* aFile, const nsACString& data)
 static nsresult
 GetFileContents(nsIFile* aFile, nsACString& data)
 {
-  nsCAutoString filename;
-  nsresult rv = aFile->GetNativePath(filename);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(aFile);
+  NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
 
-  PRFileDesc* fd = PR_Open(filename.get(), PR_RDONLY, 0);
-  NS_ENSURE_TRUE(fd, NS_ERROR_FILE_NOT_FOUND);
+  PRFileDesc* fd;
+  nsresult rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = NS_OK;
   PRInt32 filesize = PR_Available(fd);
@@ -477,7 +485,7 @@ typedef nsresult (*InitDataFunc)(nsACString&);
 // does not exist, create it and initialize its contents
 // by calling aInitFunc for the data.
 static nsresult 
-GetOrInit(nsIFile* aDir, const nsAString& filename,
+GetOrInit(nsIFile* aDir, const nsACString& filename,
           nsACString& aContents, InitDataFunc aInitFunc)
 {
   PRBool exists;
@@ -486,7 +494,7 @@ GetOrInit(nsIFile* aDir, const nsAString& filename,
   nsresult rv = aDir->Clone(getter_AddRefs(dataFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = dataFile->Append(filename);
+  rv = dataFile->AppendNative(filename);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = dataFile->Exists(&exists);
@@ -570,12 +578,11 @@ InitInstallTime(nsACString& aInstallTime)
 nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
                         const nsACString& aBuildID)
 {
-  
   nsCOMPtr<nsIFile> dataDirectory;
   nsresult rv = aAppDataDirectory->Clone(getter_AddRefs(dataDirectory));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = dataDirectory->Append(NS_LITERAL_STRING("Crash Reports"));
+  rv = dataDirectory->AppendNative(NS_LITERAL_CSTRING("Crash Reports"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   PRBool exists;
@@ -588,13 +595,12 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
   }
 
   nsCAutoString data;
-  if(NS_SUCCEEDED(GetOrInit(dataDirectory, NS_LITERAL_STRING("UserID"),
+  if(NS_SUCCEEDED(GetOrInit(dataDirectory, NS_LITERAL_CSTRING("UserID"),
                             data, InitUserID)))
     AnnotateCrashReport(NS_LITERAL_CSTRING("UserID"), data);
 
   if(NS_SUCCEEDED(GetOrInit(dataDirectory,
-                            NS_LITERAL_STRING("InstallTime") +
-                            NS_ConvertASCIItoUTF16(aBuildID),
+                            NS_LITERAL_CSTRING("InstallTime") + aBuildID,
                             data, InitInstallTime)))
     AnnotateCrashReport(NS_LITERAL_CSTRING("InstallTime"), data);
 
@@ -603,10 +609,9 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
   // crash report with the stored value, since we really want
   // (now - LastCrash), so we just get a value if it exists,
   // and store it in a time_t value.
-  if(NS_SUCCEEDED(GetOrInit(dataDirectory, NS_LITERAL_STRING("LastCrash"),
+  if(NS_SUCCEEDED(GetOrInit(dataDirectory, NS_LITERAL_CSTRING("LastCrash"),
                             data, NULL))) {
     lastCrashTime = (time_t)atol(data.get());
-    
   }
 
   // not really the best place to init this, but I have the path I need here
@@ -614,7 +619,7 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
   rv = dataDirectory->Clone(getter_AddRefs(lastCrashFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = lastCrashFile->Append(NS_LITERAL_STRING("LastCrash"));
+  rv = lastCrashFile->AppendNative(NS_LITERAL_CSTRING("LastCrash"));
   NS_ENSURE_SUCCESS(rv, rv);
   memset(lastCrashTimeFilename, 0, sizeof(lastCrashTimeFilename));
 

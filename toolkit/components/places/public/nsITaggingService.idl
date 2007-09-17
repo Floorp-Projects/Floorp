@@ -91,3 +91,9 @@ interface nsITaggingService : nsISupports
    */
   readonly attribute nsIVariant allTags;
 };
+
+%{C++
+
+#define TAGGING_SERVICE_CID "@mozilla.org/browser/tagging-service;1"
+
+%}

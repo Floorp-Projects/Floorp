@@ -401,13 +401,54 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
   ObjectType newType = GetTypeOfContent(mContentType);
   LOG(("OBJLC [%p]: OnStartRequest: Content Type=<%s> Old type=%u New Type=%u\n",
        this, mContentType.get(), mType, newType));
+
+  // Now do a content policy check
+  // XXXbz this duplicates some code in nsContentBlocker::ShouldLoad  
+  PRInt32 contentPolicyType;
+  switch (newType) {
+    case eType_Image:
+      contentPolicyType = nsIContentPolicy::TYPE_IMAGE;
+      break;
+    case eType_Document:
+      contentPolicyType = nsIContentPolicy::TYPE_SUBDOCUMENT;
+      break;
+    default:
+      contentPolicyType = nsIContentPolicy::TYPE_OBJECT;
+      break;
+  }
+  nsCOMPtr<nsIURI> uri;
+  chan->GetURI(getter_AddRefs(uri));
+  nsCOMPtr<nsIContent> thisContent = 
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  NS_ASSERTION(thisContent, "must be a content");
+
+  nsIDocument* doc = thisContent->GetOwnerDoc();
+  if (!doc) {
+    Fallback(PR_FALSE);
+    return NS_BINDING_ABORTED;    
+  }
+
+  PRInt16 shouldProcess = nsIContentPolicy::ACCEPT;
+  rv =
+    NS_CheckContentProcessPolicy(contentPolicyType,
+                                 uri,
+                                 doc->NodePrincipal(),
+                                 static_cast<nsIImageLoadingContent*>(this),
+                                 mContentType,
+                                 nsnull, //extra
+                                 &shouldProcess,
+                                 nsContentUtils::GetContentPolicy(),
+                                 nsContentUtils::GetSecurityManager());
+  if (NS_FAILED(rv) || NS_CP_REJECTED(shouldProcess)) {
+    HandleBeingBlockedByContentPolicy(rv, shouldProcess);
+    rv = NS_OK; // otherwise, the AutoFallback will make us fall back
+    return NS_BINDING_ABORTED;
+  }  
+  
   if (mType != newType) {
     UnloadContent();
   }
 
-  nsCOMPtr<nsIContent> thisContent = 
-    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
-  NS_ASSERTION(thisContent, "must be a content");
   switch (newType) {
     case eType_Image:
       rv = LoadImageWithChannel(chan, getter_AddRefs(mFinalListener));
@@ -434,8 +475,6 @@ nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest, nsISupports *aConte
         }
       }
 
-      nsCOMPtr<nsIURI> uri;
-      chan->GetURI(getter_AddRefs(uri));
       rv = mFrameLoader->CheckForRecursiveLoad(uri);
       if (NS_FAILED(rv)) {
         Fallback(PR_FALSE);
@@ -918,19 +957,9 @@ nsObjectLoadingContent::LoadObject(nsIURI* aURI,
                                 nsnull, //extra
                                 &shouldLoad,
                                 nsContentUtils::GetContentPolicy(),
-                                nsContentUtils::GetSecurityManager());
+                                secMan);
     if (NS_FAILED(rv) || NS_CP_REJECTED(shouldLoad)) {
-      // Must call UnloadContent first, as it overwrites
-      // mSuppressed/mUserDisabled. It also takes care of setting the type to
-      // eType_Null.
-      UnloadContent();
-      if (NS_SUCCEEDED(rv)) {
-        if (shouldLoad == nsIContentPolicy::REJECT_TYPE) {
-          mUserDisabled = PR_TRUE;
-        } else if (shouldLoad == nsIContentPolicy::REJECT_SERVER) {
-          mSuppressed = PR_TRUE;
-        }
-      }
+      HandleBeingBlockedByContentPolicy(rv, shouldLoad);
       return NS_OK;
     }
   }
@@ -1455,6 +1484,23 @@ nsObjectLoadingContent::GetFrame(PRBool aFlushLayout)
   nsIObjectFrame* objFrame;
   CallQueryInterface(frame, &objFrame);
   return objFrame;
+}
+
+void
+nsObjectLoadingContent::HandleBeingBlockedByContentPolicy(nsresult aStatus,
+                                                          PRInt16 aRetval)
+{
+  // Must call UnloadContent first, as it overwrites
+  // mSuppressed/mUserDisabled. It also takes care of setting the type to
+  // eType_Null.
+  UnloadContent();
+  if (NS_SUCCEEDED(aStatus)) {
+    if (aRetval == nsIContentPolicy::REJECT_TYPE) {
+      mUserDisabled = PR_TRUE;
+    } else if (aRetval == nsIContentPolicy::REJECT_SERVER) {
+      mSuppressed = PR_TRUE;
+    }
+  }
 }
 
 nsresult

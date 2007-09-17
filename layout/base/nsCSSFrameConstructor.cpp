@@ -13020,11 +13020,6 @@ nsCSSFrameConstructor::ProcessPendingRestyles()
 
   delete [] restylesToProcess;
 
-  // Run the XBL binding constructors for any new frames we've constructed.
-  // Note that the restyle event is holding a strong ref to us, so we're ok
-  // here.
-  mDocument->BindingManager()->ProcessAttachedQueue();
-
   EndUpdate();
 
 #ifdef DEBUG
@@ -13071,7 +13066,7 @@ NS_IMETHODIMP nsCSSFrameConstructor::RestyleEvent::Run() {
   if (!mConstructor)
     return NS_OK;  // event was revoked
 
-  nsIViewManager* viewManager =
+  nsCOMPtr<nsIViewManager> viewManager =
     mConstructor->mPresShell->GetViewManager();
   NS_ASSERTION(viewManager, "Must have view manager for update");
 
@@ -13087,6 +13082,7 @@ NS_IMETHODIMP nsCSSFrameConstructor::RestyleEvent::Run() {
   mConstructor->mRestyleEvent.Forget();
 
   mConstructor->ProcessPendingRestyles();
+  mConstructor->mDocument->BindingManager()->ProcessAttachedQueue();
   viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
   return NS_OK;

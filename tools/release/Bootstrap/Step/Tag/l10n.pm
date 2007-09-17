@@ -93,7 +93,9 @@ sub Execute {
         $this->Shell(cmd => 'cvs',
                      cmdArgs => ['up',
                                  '-r', $geckoTag],
-                     dir => catfile($l10nTagDir, 'l10n'));
+                     dir => catfile($l10nTagDir, 'l10n'),
+                     logFile => catfile($logDir, 'tag-l10n_relbranch_update_' .
+                                        $geckoTag));
     }
 
     # Create the l10n RC tag

@@ -285,6 +285,12 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool *aIsInterval,
     }
 
     mExpr = expr;
+
+    // Get the calling location.
+    const char *filename;
+    if (nsJSUtils::GetCallingLocation(cx, &filename, &mLineNo)) {
+      mFileName.Assign(filename);
+    }
   } else if (funobj) {
     if (!::JS_AddNamedRoot(cx, &mFunObj, "timeout.mFunObj")) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -301,10 +307,12 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool *aIsInterval,
     if (NS_FAILED(rv)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+
     PRUint32 dummy;
     jsval *jsargv = nsnull;
     nsCOMPtr<nsIJSArgArray> jsarray(do_QueryInterface(array));
     jsarray->GetArgs(&dummy, reinterpret_cast<void **>(&jsargv));
+
     // must have worked - we own the impl! :)
     NS_ASSERTION(jsargv, "No argv!");
     for (PRInt32 i = 2; (PRUint32)i < argc; ++i) {
@@ -312,17 +320,6 @@ nsJSScriptTimeoutHandler::Init(nsIScriptContext *aContext, PRBool *aIsInterval,
     }
     // final arg slot remains null, array has rooted vals.
     mArgv = array;
-
-    // Get the calling location.
-    const char *filename;
-    if (nsJSUtils::GetCallingLocation(cx, &filename, &mLineNo)) {
-      mFileName.Assign(filename);
-
-      if (mFileName.IsEmpty()) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-
   } else {
     NS_WARNING("No func and no expr - why are we here?");
   }

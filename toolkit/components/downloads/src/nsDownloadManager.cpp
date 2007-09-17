@@ -2080,7 +2080,8 @@ nsDownload::PauseResume(PRBool aPause)
       do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = wbp->SetPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION);
+    rv = wbp->SetPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_APPEND_TO_FILE |
+                              nsIWebBrowserPersist::PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION);
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Create a new channel for the source URI

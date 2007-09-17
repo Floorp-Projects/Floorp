@@ -816,20 +816,13 @@ function BrowserStartup()
     else {
       // Create a narrower window for large or wide-aspect displays, to suggest
       // side-by-side page view.
-      if ((screen.availWidth / 2) >= 800)
+      if (screen.availWidth >= 1600)
         defaultWidth = (screen.availWidth / 2) - 20;
       defaultHeight = screen.availHeight - 10;
 #ifdef MOZ_WIDGET_GTK2
-#define USE_HEIGHT_ADJUST
-#endif
-#ifdef USE_HEIGHT_ADJUST
       // On X, we're not currently able to account for the size of the window
       // border.  Use 28px as a guess (titlebar + bottom window border)
       defaultHeight -= 28;
-#endif
-#ifdef XP_MACOSX
-      // account for the Mac OS X title bar
-      defaultHeight -= 22;
 #endif
     }
     document.documentElement.setAttribute("width", defaultWidth);
@@ -3689,8 +3682,9 @@ nsBrowserStatusHandler.prototype =
 
     var securityUI = gBrowser.securityUI;
     this.securityButton.setAttribute("tooltiptext", securityUI.tooltipText);
-    
-    getIdentityHandler().checkIdentity(aWebProgress, aRequest, aState);
+    var lockIcon = document.getElementById("lock-icon");
+    if (lockIcon)
+      lockIcon.setAttribute("tooltiptext", securityUI.tooltipText);
   },
 
   // simulate all change notifications after switching tabs
@@ -5572,202 +5566,4 @@ function showToolbars() {
     goButtonStack.removeAttribute("hidden");
   
   return false; // Dismiss the notification message
-}
-
-/**
- * Utility class to handle manipulations of the identity indicators in the UI
- */
-function IdentityHandler() {}
-
-IdentityHandler.prototype = {
-
-  // Mode strings used to control CSS display
-  IDENTITY_MODE_IDENTIFIED       : "verifiedIdentity", // High-quality identity information
-  IDENTITY_MODE_DOMAIN_VERIFIED  : "verifiedDomain",   // Minimal SSL CA-signed domain verification
-  IDENTITY_MODE_UNKNOWN          : "unknownIdentity",  // No trusted identity information
-
-  // Cache the most recently seen SSLStatus and URI to prevent unnecessary updates
-  _lastStatus : null,
-  _lastURI : null,
-
-  /**
-   * Handler for mouseclicks on the "Tell me more about this website" link text
-   * in the "identity-popup" panel.
-   */
-  handleMoreInfoClick : function(event) {
-    if (event.button == 0) {
-      displaySecurityInfo();
-      event.stopPropagation();
-    }   
-  },
-  
-  /**
-   * Determine the identity of the page being displayed by examining its SSL cert
-   * (if available) and, if necessary, update the UI to reflect this.  Intended to
-   * be called by an nsIWebProgressListener.
-   *
-   * @param nsIWebProgress webProgress
-   * @param nsIRequest request
-   * @param PRUint32 state
-   */
-  checkIdentity : function(webProgress, request, state) {
-    var currentStatus = gBrowser.securityUI
-                                .QueryInterface(Components.interfaces.nsISSLStatusProvider)
-                                .SSLStatus;
-    var currentURI = gBrowser.currentURI;
-    if (currentStatus == this._lastStatus && currentURI == this._lastURI) {
-      // No need to update, this is a no-op check
-      return;
-    }
-
-    this._lastStatus = currentStatus;
-    this._lastURI = currentURI;
-    
-    if (state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
-      this.setMode(this.IDENTITY_MODE_IDENTIFIED);
-    else if (state & Components.interfaces.nsIWebProgressListener.STATE_SECURE_HIGH)
-      this.setMode(this.IDENTITY_MODE_DOMAIN_VERIFIED);
-    else
-      this.setMode(this.IDENTITY_MODE_UNKNOWN);
-  },
-  
-  /**
-   * Update the UI to reflect the specified mode, which should be one of the
-   * IDENTITY_MODE_* constants.
-   */
-  setMode : function(newMode) {
-    document.getElementById("identity-popup").className = newMode;
-    document.getElementById("identity-box").className = newMode;
-    document.getElementById("identity-popup-content-box").className = newMode;
-    this.setMessages(newMode);
-  },
-  
-  /**
-   * Set up the title and content messages for the identity message bubble, and
-   * primary UI based on the specified mode, and the details of the SSL cert, where
-   * applicable
-   *
-   * @param newMode The newly set identity mode.  Should be one of the IDENTITY_MODE_* constants.
-   */
-  setMessages : function(newMode) {
-      
-    var stringBundle = document.getElementById("bundle_browser");
-    
-    // Initialize the optional strings to empty values
-    var supplemental = "";
-    var verifier = "";
-      
-    if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
-      var title = stringBundle.getString("identity.domainverified.title");
-      var encryption_label = stringBundle.getString("identity.encrypted");
-      var status = this._lastStatus.QueryInterface(Components.interfaces.nsISSLStatus);
-      var cert = status.serverCert;
-
-      // It would be sort of nice to use the CN= field in the cert, since that's
-      // typically what we want here, but thanks to x509 certs being extensible,
-      // it's not the only place you have to check, there can be more than one domain,
-      // et cetera, ad nauseum.  We know the cert is valid for location.host, so
-      // let's just use that, it's what the status bar does too.
-      var body = this._lastURI.host;
-      var caOrg = cert.issuerOrganization || cert.issuerCommonName;      
-      verifier = stringBundle.getFormattedString("identity.identified.verifier",
-                                                 [caOrg]);
-      supplemental = stringBundle.getString("identity.domainverified.supplemental");
-      
-      var icon_label = body;
-      var tooltip = verifier;
-    }
-    else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
-      title = stringBundle.getString("identity.identified.title");
-      encryption_label = stringBundle.getString("identity.encrypted");
-  
-      // If it's identified, then we can populate the dialog with credentials
-      status = this._lastStatus.QueryInterface(Components.interfaces.nsISSLStatus);
-      cert = status.serverCert;
-
-      // Pull the basics out with fallback options in case common
-      // (optional) fields are left blank
-      body = cert.organization || cert.commonName;
-      caOrg = cert.issuerOrganization || cert.issuerCommonName;        
-      verifier = tooltip = stringBundle.getFormattedString("identity.identified.verifier",
-                                                           [caOrg]);
-            
-      // Now try to extract out supplemental location fields and append
-      // them, where available.  subjectName is a comma-delimited list of
-      // key=value pairs.
-      if (cert.subjectName) {
-        var subjectNameFields = {};
-        cert.subjectName.split(",").forEach(function(v) {
-          var field = v.split("=");
-          this[field[0]] = field[1];
-        }, subjectNameFields);
-
-        if (subjectNameFields.L) // City
-          supplemental += subjectNameFields.L + "\n";
-                
-        if (subjectNameFields.ST && subjectNameFields.C) // State and Country
-          supplemental += stringBundle.getFormattedString("identity.identified.state_and_country",
-                                                          [subjectNameFields.ST,
-                                                          subjectNameFields.C]);
-        else if (subjectNameFields.ST) // State only
-          supplemental += subjectNameFields.ST;
-        else if (subjectNameFields.C) // Country only
-          supplemental += subjectNameFields.C;
-          
-        // Include country code in top-level label, if we have one
-        if (subjectNameFields.C)
-          icon_label = stringBundle.getFormattedString("identity.identified.title_with_country",
-                                                       [body, subjectNameFields.C]);
-        else
-          icon_label = body;
-      }
-    }
-    else {
-      encryption_label = stringBundle.getString("identity.unencrypted");
-      title = stringBundle.getString("identity.unknown.title");
-      body = stringBundle.getString("identity.unknown.body");
-      icon_label = "";
-      tooltip = body;
-    }
-    
-    // Push the appropriate strings out to the UI
-    document.getElementById("identity-popup-title").value = title;
-    document.getElementById("identity-popup-content").textContent = body;
-    document.getElementById("identity-popup-content-supplemental")
-            .textContent = supplemental;
-    document.getElementById("identity-popup-content-verifier")
-            .textContent = verifier;
-    document.getElementById("identity-popup-encryption-label")
-            .textContent = encryption_label;
-    document.getElementById("identity-box").tooltipText = tooltip;
-    document.getElementById("identity-icon-label").value = icon_label;
-  },
-  
-  /**
-   * Click handler for the identity-box element in primary chrome.  
-   */
-  handleMouseUp : function(event) {
-    if (event.button != 0)
-      return; // We only want left-clicks
-        
-    // Make sure that the display:none style we set in xul is removed now that
-    // the popup is actually needed
-    var popup = document.getElementById('identity-popup');
-    popup.hidden = false;
-    
-    // Now open the popup, anchored off the primary chrome element
-    popup.openPopup(document.getElementById('identity-box'), 'after_start');
-  }
-};
-
-var gIdentityHandler; 
-
-/**
- * Returns the singleton instance of the identity handler class.  Should always be
- * used instead of referencing the global variable directly or creating new instances
- */
-function getIdentityHandler() {
-  if (!gIdentityHandler)
-    gIdentityHandler = new IdentityHandler();
-  return gIdentityHandler;    
 }

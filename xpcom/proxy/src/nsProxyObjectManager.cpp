@@ -148,6 +148,36 @@ nsProxyObjectManager::Create(nsISupports* outer, const nsIID& aIID,
     return proxyObjectManager->QueryInterface(aIID, aInstancePtr);
 }
 
+class nsProxyLockedRefPtr
+{
+public:
+    nsProxyLockedRefPtr(nsProxyObject* aPtr) :
+        mProxyObject(aPtr)
+    {
+        if (mProxyObject)
+            mProxyObject->LockedAddRef();
+    }
+
+    ~nsProxyLockedRefPtr()
+    {
+        if (mProxyObject)
+            mProxyObject->LockedRelease();
+    }
+
+    operator nsProxyObject*() const
+    {
+        return mProxyObject;
+    }
+
+    nsProxyObject* operator->() const
+    {
+        return mProxyObject;
+    }
+
+private:
+    nsProxyObject *mProxyObject;
+};
+
 NS_IMETHODIMP 
 nsProxyObjectManager::GetProxyForObject(nsIEventTarget* aTarget, 
                                         REFNSIID aIID, 
@@ -195,8 +225,8 @@ nsProxyObjectManager::GetProxyForObject(nsIEventTarget* aTarget,
 
     {
         nsAutoLock lock(mProxyCreationLock);
-                nsProxyObject *root =
-                    (nsProxyObject*) mProxyObjectMap.Get(&rootKey);
+        nsProxyLockedRefPtr root =
+            (nsProxyObject*) mProxyObjectMap.Get(&rootKey);
         if (root)
             return root->LockedFind(aIID, aProxyObject);
     }
@@ -209,7 +239,7 @@ nsProxyObjectManager::GetProxyForObject(nsIEventTarget* aTarget,
     // lock again, and check for a race putting into mProxyObjectMap
     {
         nsAutoLock lock(mProxyCreationLock);
-        nsProxyObject *root =
+        nsProxyLockedRefPtr root = 
             (nsProxyObject*) mProxyObjectMap.Get(&rootKey);
         if (root) {
             delete newRoot;
@@ -217,6 +247,8 @@ nsProxyObjectManager::GetProxyForObject(nsIEventTarget* aTarget,
         }
 
         mProxyObjectMap.Put(&rootKey, newRoot);
+
+        nsProxyLockedRefPtr kungFuDeathGrip(newRoot);
         return newRoot->LockedFind(aIID, aProxyObject);
     }
 }
