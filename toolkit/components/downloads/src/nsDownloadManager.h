@@ -137,7 +137,6 @@ protected:
                                     nsIDownload *aDownload);
 
   nsDownload *FindDownload(PRUint32 aID);
-  nsresult PauseResumeDownload(PRUint32 aID, PRBool aPause);
   nsresult CancelAllDownloads();
 
   /**
@@ -199,7 +198,27 @@ public:
 protected:
   void SetStartTime(PRInt64 aStartTime);
 
-  nsresult PauseResume(PRBool aPause);
+  /**
+   * Pause the download, but in certain cases it might get fake-paused instead
+   * of real-paused.
+   */
+  nsresult Pause();
+
+  /**
+   * All this does is cancel the connection that the download is using. It does
+   * not remove it from the download manager.
+   */
+  nsresult Cancel();
+
+  /**
+   * Resume the download. Works for both real-paused and fake-paused.
+   */
+  nsresult Resume();
+
+  /**
+   * Resume the real-paused download. Let Resume decide if this should get used.
+   */
+  nsresult RealResume();
 
   /**
    * Download is not transferring?
