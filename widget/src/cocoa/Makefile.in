@@ -62,12 +62,9 @@ REQUIRES = xpcom \
 		  view \
 		  xul \
 		  necko \
-		  nkcache \
 		  locale \
 		  pref \
 		  intl \
-		  mimetype \
-		  unicharutil \
 		  exthandler \
 		  appshell \
 		  thebes \
