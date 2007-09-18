@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet 
+  href="chrome://mochikit/content/tests/SimpleTest/test.css"
+  type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=253481
+-->
+<window title="Mozilla Bug 253481"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+
+<body  xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=253481">Mozilla Bug 253481</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+</body>
+
+<description>
+  Tests pasting of multi-line content into a single-line xul:textbox.
+</description>
+
+<vbox>
+<textbox id="pasteintact" newlines="pasteintact"/>
+<textbox id="pastetofirst" newlines="pastetofirst"/>
+<textbox id="replacewithspaces" newlines="replacewithspaces"/>
+<textbox id="strip" newlines="strip"/>
+<textbox id="replacewithcommas" newlines="replacewithcommas"/>
+<textbox id="stripsurroundingwhitespace" newlines="stripsurroundingwhitespace"/>
+</vbox>
+<script class="testbody" type="application/javascript;version=1.7">
+<![CDATA[
+/** Test for Bug 253481 **/
+function testPaste(name, element, expected) {
+  element.focus();
+  synthesizeKey("v", { accelKey: true });
+  is(element.value, expected, name);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+setTimeout(function() {
+var testString = "  hello hello  \n  world\nworld  ";
+var expectedResults = {
+"pasteintact": testString,
+"pastetofirst": testString.split(/\n/)[0],
+"replacewithspaces": testString.replace('\n',' ','g'),
+"strip": testString.replace('\n','','g'),
+"replacewithcommas": testString.replace('\n',',','g'),
+"stripsurroundingwhitespace": testString.replace(/\s*\n\s*/g,'')
+};
+
+// Put a multi-line string in the clipboard
+Components.classes["@mozilla.org/widget/clipboardhelper;1"]
+          .getService(Components.interfaces.nsIClipboardHelper)
+          .copyString(testString);
+
+for (let [item, expected] in Iterator(expectedResults)) {
+   testPaste(item, $(item), expected);
+}
+
+SimpleTest.finish();
+}, 0);
+});
+
+]]>
+</script>
+
+</window>
