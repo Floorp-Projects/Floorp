@@ -2257,10 +2257,9 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
     PRUint32 flags = 0;
     
     if (chromeWindow) {
-      // Flag this context and scripts compiled against it as "system", for
+      // Flag this object and scripts compiled against it as "system", for
       // optional automated XPCNativeWrapper construction when chrome views
       // a content DOM.
-      ::JS_FlagSystemContext(mContext);
       flags = nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT;
 
       // Always enable E4X for XUL and other chrome content -- there is no

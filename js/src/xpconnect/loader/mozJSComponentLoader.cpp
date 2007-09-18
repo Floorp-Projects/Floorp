@@ -74,7 +74,6 @@
 #include "nsIFileURL.h"
 #include "nsNetUtil.h"
 #endif
-#include "jsdbgapi.h"
 #include "jsxdrapi.h"
 #include "jsprf.h"
 #include "nsIFastLoadFileControl.h"
@@ -509,8 +508,6 @@ mozJSComponentLoader::ReallyInit()
     mContext = JS_NewContext(mRuntime, 256);
     if (!mContext)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    JS_FlagSystemContext(mContext);
 
     uint32 options = JS_GetOptions(mContext);
     JS_SetOptions(mContext, options | JSOPTION_XML);
