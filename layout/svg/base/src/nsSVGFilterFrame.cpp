@@ -41,7 +41,6 @@
 #include "nsSVGOuterSVGFrame.h"
 #include "nsISVGFilter.h"
 #include "nsGkAtoms.h"
-#include "nsIDOMSVGAnimatedInteger.h"
 #include "nsSVGUtils.h"
 #include "nsSVGFilterElement.h"
 #include "nsSVGFilterInstance.h"
@@ -170,8 +169,7 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
 
   if (mContent->HasAttr(kNameSpaceID_None, nsGkAtoms::filterRes)) {
     PRInt32 filterResX, filterResY;
-    filter->mFilterResX->GetAnimVal(&filterResX);
-    filter->mFilterResY->GetAnimVal(&filterResY);
+    filter->GetAnimatedIntegerValues(&filterResX, &filterResY, nsnull);
 
     filterRes =
       nsSVGUtils::ConvertToSurfaceSize(gfxSize(filterResX, filterResY),
