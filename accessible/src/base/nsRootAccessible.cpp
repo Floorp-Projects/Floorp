@@ -442,6 +442,12 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
       nsCOMPtr<nsIDOMEventTarget> domEventTarget;
       nsevent->GetOriginalTarget(getter_AddRefs(domEventTarget));
       nsCOMPtr<nsIDOMNode> realFocusedNode(do_QueryInterface(domEventTarget));
+      if (!realFocusedNode) {
+        // When FireCurrentFocusEvent() synthesizes a focus event,
+        // the orignal target does not exist, so use the passed-in node
+        // which is the relevant focused node
+        realFocusedNode = aNode;
+      }
       if (realFocusedNode) {
         mCaretAccessible->SetControlSelectionListener(realFocusedNode);
       }
