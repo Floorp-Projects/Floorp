@@ -58,7 +58,7 @@
 
 #include <windows.h>
 
-#include "nsAutoBuffer.h"
+#include "nsTArray.h"
 #include "nsUnicodeRange.h"
 #include "nsUnicharUtils.h"
 
@@ -651,15 +651,15 @@ SetupTextRunFromGlyphs(gfxTextRun *aRun, WCHAR *aGlyphs, HDC aDC,
         return PR_FALSE;
 
     SIZE size;
-    nsAutoBuffer<int,500> partialWidthArray;
-    if (!partialWidthArray.EnsureElemCapacity(length))
+    nsAutoTArray<int,500> partialWidthArray;
+    if (!partialWidthArray.SetLength(length))
         return PR_FALSE;
     BOOL success = GetTextExtentExPointI(aDC,
                                          (WORD*) aGlyphs,
                                          length,
                                          INT_MAX,
                                          NULL,
-                                         partialWidthArray.get(),
+                                         partialWidthArray.Elements(),
                                          &size);
     if (!success)
         return PR_FALSE;
@@ -701,14 +701,14 @@ gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun,
     nsRefPtr<gfxWindowsFont> font = GetFontAt(0);
     DCFromContext dc(aContext);
     if (SetupDCFont(dc, font)) {
-        nsAutoBuffer<WCHAR,500> glyphArray;
-        if (!glyphArray.EnsureElemCapacity(aLength))
+        nsAutoTArray<WCHAR,500> glyphArray;
+        if (!glyphArray.SetLength(aLength))
             return;
 
-        DWORD ret = GetGlyphIndicesA(dc, aString, aLength, (WORD*) glyphArray.get(),
+        DWORD ret = GetGlyphIndicesA(dc, aString, aLength, (WORD*) glyphArray.Elements(),
                                      GGI_MARK_NONEXISTING_GLYPHS);
         if (ret != GDI_ERROR &&
-            SetupTextRunFromGlyphs(aRun, glyphArray.get(), dc, font))
+            SetupTextRunFromGlyphs(aRun, glyphArray.Elements(), dc, font))
             return;
     }
 
@@ -725,14 +725,14 @@ gfxWindowsFontGroup::InitTextRunGDI(gfxContext *aContext, gfxTextRun *aRun,
     nsRefPtr<gfxWindowsFont> font = GetFontAt(0);
     DCFromContext dc(aContext);
     if (SetupDCFont(dc, font)) {
-        nsAutoBuffer<WCHAR,500> glyphArray;
-        if (!glyphArray.EnsureElemCapacity(aLength))
+        nsAutoTArray<WCHAR,500> glyphArray;
+        if (!glyphArray.SetLength(aLength))
             return;
 
-        DWORD ret = GetGlyphIndicesW(dc, aString, aLength, (WORD*) glyphArray.get(),
+        DWORD ret = GetGlyphIndicesW(dc, aString, aLength, (WORD*) glyphArray.Elements(),
                                      GGI_MARK_NONEXISTING_GLYPHS);
         if (ret != GDI_ERROR &&
-            SetupTextRunFromGlyphs(aRun, glyphArray.get(), dc, font))
+            SetupTextRunFromGlyphs(aRun, glyphArray.Elements(), dc, font))
             return;
     }
 
@@ -886,9 +886,9 @@ public:
         mNumGlyphs(0), mMaxGlyphs((int)(1.5 * aLength) + 16),
         mFontSelected(PR_FALSE)
     {
-        mGlyphs.EnsureElemCapacity(mMaxGlyphs);
-        mClusters.EnsureElemCapacity(mItemLength + 1);
-        mAttr.EnsureElemCapacity(mMaxGlyphs);
+        mGlyphs.SetLength(mMaxGlyphs);
+        mClusters.SetLength(mItemLength + 1);
+        mAttr.SetLength(mMaxGlyphs);
     }
 
     ~UniscribeItem() {
@@ -926,12 +926,12 @@ public:
             rv = ScriptShape(shapeDC, mCurrentFont->ScriptCache(),
                              str, mRangeLength,
                              mMaxGlyphs, &sa,
-                             mGlyphs.get(), mClusters.get(),
-                             mAttr.get(), &mNumGlyphs);
+                             mGlyphs.Elements(), mClusters.Elements(),
+                             mAttr.Elements(), &mNumGlyphs);
 
             if (rv == E_OUTOFMEMORY) {
-                mGlyphs.AddElemCapacity(mMaxGlyphs);
-                mAttr.AddElemCapacity(mMaxGlyphs);
+                mGlyphs.SetLength(mMaxGlyphs);
+                mAttr.SetLength(mMaxGlyphs);
                 mMaxGlyphs *= 2;
                 continue;
             }
@@ -949,7 +949,7 @@ public:
             }
 #ifdef DEBUG_pavlov
             if (rv == USP_E_SCRIPT_NOT_IN_FONT) {
-                ScriptGetCMap(mDC, mCurrentFont->ScriptCache(), str, mRangeString, 0, mGlyphs.get());
+                ScriptGetCMap(mDC, mCurrentFont->ScriptCache(), str, mRangeString, 0, mGlyphs.Elements());
                 PRUnichar foo[LF_FACESIZE+1];
                 GetTextFaceW(mDC, LF_FACESIZE, foo);
                 printf("bah\n");
@@ -989,16 +989,16 @@ public:
     HRESULT Place() {
         HRESULT rv;
 
-        mOffsets.EnsureElemCapacity(mNumGlyphs);
-        mAdvances.EnsureElemCapacity(mNumGlyphs);
+        mOffsets.SetLength(mNumGlyphs);
+        mAdvances.SetLength(mNumGlyphs);
 
         HDC placeDC = nsnull;
 
         while (PR_TRUE) {
             rv = ScriptPlace(placeDC, mCurrentFont->ScriptCache(),
-                             mGlyphs.get(), mNumGlyphs,
-                             mAttr.get(), &mScriptItem->a,
-                             mAdvances.get(), mOffsets.get(), NULL);
+                             mGlyphs.Elements(), mNumGlyphs,
+                             mAttr.Elements(), &mScriptItem->a,
+                             mAdvances.Elements(), mOffsets.Elements(), NULL);
 
             if (rv == E_PENDING) {
                 SelectFont();
@@ -1457,12 +1457,12 @@ private:
 
 #define AVERAGE_ITEM_LENGTH 40
 
-    nsAutoBuffer<WORD, PRUint32(1.5 * AVERAGE_ITEM_LENGTH) + 16> mGlyphs;
-    nsAutoBuffer<WORD, AVERAGE_ITEM_LENGTH + 1> mClusters;
-    nsAutoBuffer<SCRIPT_VISATTR, PRUint32(1.5 * AVERAGE_ITEM_LENGTH) + 16> mAttr;
+    nsAutoTArray<WORD, PRUint32(1.5 * AVERAGE_ITEM_LENGTH) + 16> mGlyphs;
+    nsAutoTArray<WORD, AVERAGE_ITEM_LENGTH + 1> mClusters;
+    nsAutoTArray<SCRIPT_VISATTR, PRUint32(1.5 * AVERAGE_ITEM_LENGTH) + 16> mAttr;
  
-    nsAutoBuffer<GOFFSET, 2 * AVERAGE_ITEM_LENGTH> mOffsets;
-    nsAutoBuffer<int, 2 * AVERAGE_ITEM_LENGTH> mAdvances;
+    nsAutoTArray<GOFFSET, 2 * AVERAGE_ITEM_LENGTH> mOffsets;
+    nsAutoTArray<int, 2 * AVERAGE_ITEM_LENGTH> mAdvances;
 
 #undef AVERAGE_ITEM_LENGTH
 

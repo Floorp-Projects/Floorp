@@ -147,12 +147,12 @@ WideCharToMultiByte(int aCodePage, const PRUnichar* aSrc,
   if (NS_FAILED(uco->GetMaxLength(aSrc, aSrcLength, &aResultLength))) {
     return NS_ERROR_UNEXPECTED;
   }
-  if (!aResult.EnsureElemCapacity(aResultLength + 1))
+  if (!aResult.SetLength(aResultLength + 1))
     return NS_ERROR_OUT_OF_MEMORY;
-  char* str = aResult.get();
+  char* str = aResult.Elements();
 
   rv = uco->Convert(aSrc, &aSrcLength, str, &aResultLength);
-  aResult.get()[aResultLength] = '\0';
+  aResult[aResultLength] = '\0';
   return rv;
 }
 
@@ -171,11 +171,11 @@ MultiByteToWideChar(int aCodePage, const char* aSrc,
   if (NS_FAILED(uco->GetMaxLength(aSrc, aSrcLength, &aResultLength))) {
     return NS_ERROR_UNEXPECTED;
   }
-  if (!aResult.EnsureElemCapacity(aResultLength + 1))
+  if (!aResult.SetLength(aResultLength + 1))
     return NS_ERROR_OUT_OF_MEMORY;
-  PRUnichar* str = aResult.get();
+  PRUnichar* str = aResult.Elements();
 
   rv = uco->Convert(aSrc, &aSrcLength, str, &aResultLength);
-  aResult.get()[aResultLength] = '\0';
+  aResult[aResultLength] = '\0';
   return rv;
 }

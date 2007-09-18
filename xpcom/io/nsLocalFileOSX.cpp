@@ -58,7 +58,7 @@
 
 #include "MoreFilesX.h"
 #include "FSCopyObject.h"
-#include "nsAutoBuffer.h"
+#include "nsTArray.h"
 #include "nsTraceRefcntImpl.h"
 
 // Mac Includes
@@ -483,7 +483,7 @@ NS_IMETHODIMP nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
   CFURLRef pathURLRef = mBaseRef;
   FSRef pathFSRef;
   CFStringRef leafStrRef = nsnull;
-  nsAutoBuffer<UniChar, FILENAME_BUFFER_SIZE> buffer;
+  nsAutoTArray<UniChar, FILENAME_BUFFER_SIZE> buffer;
   Boolean success;
   
   // Work backwards through the path to find the last node which
@@ -494,11 +494,11 @@ NS_IMETHODIMP nsLocalFile::Create(PRUint32 type, PRUint32 permissions)
     if (!leafStrRef)
       break;
     CFIndex leafLen = ::CFStringGetLength(leafStrRef);
-    if (!buffer.EnsureElemCapacity(leafLen + 1))
+    if (!buffer.SetLength(leafLen + 1))
       break;
-    ::CFStringGetCharacters(leafStrRef, CFRangeMake(0, leafLen), buffer.get());
-    buffer.get()[leafLen] = '\0';
-    nonExtantNodes.AppendString(nsString(nsDependentString(buffer.get())));
+    ::CFStringGetCharacters(leafStrRef, CFRangeMake(0, leafLen), buffer.Elements());
+    buffer[leafLen] = '\0';
+    nonExtantNodes.AppendString(nsString(nsDependentString(buffer.Elements())));
     ::CFRelease(leafStrRef);
     leafStrRef = nsnull;
     
@@ -2499,12 +2499,12 @@ static void CopyUTF8toUTF16NFC(const nsACString& aSrc, nsAString& aResult)
     if (chars) 
         aResult.Assign(chars, length);
     else {
-        nsAutoBuffer<UniChar, FILENAME_BUFFER_SIZE> buffer;
-        if (!buffer.EnsureElemCapacity(length))
+        nsAutoTArray<UniChar, FILENAME_BUFFER_SIZE> buffer;
+        if (!buffer.SetLength(length))
             CopyUTF8toUTF16(aSrc, aResult);
         else {
-            CFStringGetCharacters(inStr, CFRangeMake(0, length), buffer.get());
-            aResult.Assign(buffer.get(), length);
+            CFStringGetCharacters(inStr, CFRangeMake(0, length), buffer.Elements());
+            aResult.Assign(buffer.Elements(), length);
         }
     }
     CFRelease(inStr);
