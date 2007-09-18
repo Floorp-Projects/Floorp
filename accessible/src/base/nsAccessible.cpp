@@ -2337,17 +2337,29 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
       }
     }
 
-    // XXX We can remove this hack once we support RDF-based role & state maps
-    if (mRoleMapEntry && (mRoleMapEntry->role == nsIAccessibleRole::ROLE_ENTRY ||
-        mRoleMapEntry->role == nsIAccessibleRole::ROLE_PASSWORD_TEXT)) {
-      nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+    PRUint32 role;
+    GetFinalRole(&role);
+    if (role == nsIAccessibleRole::ROLE_ENTRY ||
+        role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
+        role == nsIAccessibleRole::ROLE_COMBOBOX) {
+      nsIContent *content = frame->GetContent();
       NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
-      if (content->AttrValueIs(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::multiline,
-                               nsAccessibilityAtoms::_true, eCaseMatters)) {
-        *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
+      nsAutoString autocomplete;
+      if (content->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::autocomplete, autocomplete) &&
+          (autocomplete.EqualsIgnoreCase("inline") ||
+           autocomplete.EqualsIgnoreCase("list") ||
+           autocomplete.EqualsIgnoreCase("both"))) {
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION;
       }
-      else {
-        *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+      // XXX We can remove this hack once we support RDF-based role & state maps
+      if (mRoleMapEntry && mRoleMapEntry->role == nsIAccessibleRole::ROLE_ENTRY) {
+        if (content->AttrValueIs(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::multiline,
+                                 nsAccessibilityAtoms::_true, eCaseMatters)) {
+          *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
+        }
+        else {
+          *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
+        }
       }
     }
   }
