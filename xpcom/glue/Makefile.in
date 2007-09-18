@@ -112,6 +112,7 @@ SDK_HEADERS = \
 		nsIClassInfoImpl.h \
 		nsTObserverArray.h \
 		nsCycleCollectionParticipant.h \
+		nsDeque.h \
 		$(NULL)
 
 EXPORTS = \
