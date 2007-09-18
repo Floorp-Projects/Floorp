@@ -160,8 +160,9 @@ nsXULPopupManager::GetInstance()
 NS_IMETHODIMP
 nsXULPopupManager::Rollup()
 {
-  if (mCurrentMenu)
-    HidePopup(mCurrentMenu->Content(), PR_TRUE, PR_TRUE, PR_TRUE);
+  nsMenuChainItem* item = GetTopVisibleMenu();
+  if (item)
+    HidePopup(item->Content(), PR_TRUE, PR_TRUE, PR_FALSE);
   return NS_OK;
 }
 
@@ -984,7 +985,7 @@ nsXULPopupManager::GetTopPopup(nsPopupType aType)
 
   nsMenuChainItem* item = GetTopVisibleMenu();
   while (item) {
-    if (item->PopupType() == aType)
+    if (item->PopupType() == aType || aType == ePopupTypeAny)
       return item->Frame();
     item = item->GetParent();
   }
@@ -1866,7 +1867,7 @@ nsXULMenuCommandEvent::Run()
   }
 
   if (popup && mCloseMenuMode != CloseMenuMode_None)
-    pm->HidePopup(popup, mCloseMenuMode == CloseMenuMode_Auto, PR_TRUE, PR_TRUE);
+    pm->HidePopup(popup, mCloseMenuMode == CloseMenuMode_Auto, PR_TRUE, PR_FALSE);
 
   return NS_OK;
 }
