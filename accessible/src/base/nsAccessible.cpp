@@ -1630,11 +1630,10 @@ nsIContent* nsAccessible::GetHTMLLabelContent(nsIContent *aForNode)
       // for="control_id" attribute. To save computing time, only 
       // look for those inside of a form element
       nsAutoString forId;
-      aForNode->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, forId);
-      // Actually we'll be walking down the content this time, with a depth first search
-      if (forId.IsEmpty()) {
+      if (!nsAccUtils::GetID(aForNode, forId)) {
         break;
       }
+      // Actually we'll be walking down the content this time, with a depth first search
       return FindDescendantPointingToID(&forId, walkUpContent,
                                         nsAccessibilityAtoms::_for);
     }
@@ -1701,10 +1700,8 @@ nsAccessible::FindNeighbourPointingToNode(nsIContent *aForNode,
                                           PRUint32 aAncestorLevelsToSearch)
 {
   nsCOMPtr<nsIContent> binding;
-
   nsAutoString controlID;
-  aForNode->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, controlID);
-  if (controlID.IsEmpty()) {
+  if (!nsAccUtils::GetID(aForNode, controlID)) {
     binding = aForNode->GetBindingParent();
     if (binding == aForNode)
       return nsnull;
@@ -2063,12 +2060,10 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIContent> content = GetRoleContent(mDOMNode);
-  if (content) {
-    nsAutoString id;
+  nsAutoString id;
+  if (content && nsAccUtils::GetID(content, id)) {
     nsAutoString oldValueUnused;
-    if (content->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::id, id)) {
-      attributes->SetStringProperty(NS_LITERAL_CSTRING("id"), id, oldValueUnused);    
-    }
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("id"), id, oldValueUnused);
     // XXX In the future we may need to expose the dynamic content role inheritance chain
     // through this attribute
     nsAutoString xmlRole;

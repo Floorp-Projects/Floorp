@@ -866,18 +866,17 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
                                        amount, eDirNext, needsStart);
     NS_ENSURE_TRUE(endOffset >= 0, NS_ERROR_FAILURE);
     if (finalEndOffset == aOffset) {
+      if (aType == eGetAt && amount == eSelectWord) { 
+        // Fix word error for the first character in word: PeekOffset() will return the previous word when 
+        // aOffset points to the first character of the word, but accessibility APIs want the current word 
+        // that the first character is in
+        return GetTextHelper(eGetAfter, aBoundaryType, aOffset, aStartOffset, aEndOffset, aText);
+      }
       // This happens sometimes when current character at finalStartOffset 
       // is an embedded object character representing another hypertext, that
       // the AT really needs to dig into separately
       ++ finalEndOffset;
     }
-  }
-
-  // Fix word error for the first character in word: PeekOffset() will return the previous word when 
-  // aOffset points to the first character of the word, but accessibility APIs want the current word 
-  // that the first character is in
-  if (aType == eGetAt && amount == eSelectWord && aOffset == endOffset) { 
-    return GetTextHelper(eGetAfter, aBoundaryType, aOffset, aStartOffset, aEndOffset, aText);
   }
 
   *aStartOffset = finalStartOffset;
