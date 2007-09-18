@@ -806,7 +806,16 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
   if (!startFrame) {
     PRInt32 textLength;
     GetCharacterCount(&textLength);
-    return (aOffset < 0 || aOffset > textLength) ? NS_ERROR_FAILURE : NS_OK;
+    if (aBoundaryType == BOUNDARY_LINE_START && aOffset > 0 && aOffset == textLength) {
+      // Asking for start of line, while on last character
+      nsCOMPtr<nsPIAccessNode> startAccessNode = do_QueryInterface(startAcc);
+      if (startAccessNode) {
+        startFrame = startAccessNode->GetFrame();
+      }
+    }
+    if (!startFrame) {
+      return (aOffset < 0 || aOffset > textLength) ? NS_ERROR_FAILURE : NS_OK;
+    }
   }
 
   nsSelectionAmount amount;
@@ -901,10 +910,14 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
         // that the first character is in
         return GetTextHelper(eGetAfter, aBoundaryType, aOffset, aStartOffset, aEndOffset, aText);
       }
-      // This happens sometimes when current character at finalStartOffset 
-      // is an embedded object character representing another hypertext, that
-      // the AT really needs to dig into separately
-      ++ finalEndOffset;
+      PRInt32 textLength;
+      GetCharacterCount(&textLength);
+      if (finalEndOffset < textLength) {
+        // This happens sometimes when current character at finalStartOffset 
+        // is an embedded object character representing another hypertext, that
+        // the AT really needs to dig into separately
+        ++ finalEndOffset;
+      }
     }
   }
 
@@ -914,7 +927,8 @@ nsresult nsHyperTextAccessible::GetTextHelper(EGetTextType aType, nsAccessibleTe
   NS_ASSERTION((finalStartOffset < aOffset && finalEndOffset >= aOffset) || aType != eGetBefore, "Incorrect results for GetTextHelper");
   NS_ASSERTION((finalStartOffset <= aOffset && finalEndOffset > aOffset) || aType == eGetBefore, "Incorrect results for GetTextHelper");
 
-  return GetPosAndText(finalStartOffset, finalEndOffset, &aText) ? NS_OK : NS_ERROR_FAILURE;
+  GetPosAndText(finalStartOffset, finalEndOffset, &aText);
+  return NS_OK;
 }
 
 /**
