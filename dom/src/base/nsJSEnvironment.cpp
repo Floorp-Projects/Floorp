@@ -996,6 +996,9 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 
 nsJSContext::~nsJSContext()
 {
+#ifdef DEBUG
+  nsCycleCollector_DEBUG_wasFreed(static_cast<nsIScriptContext*>(this));
+#endif
   NS_PRECONDITION(!mTerminations, "Shouldn't have termination funcs by now");
                   
   // Cope with JS_NewContext failure in ctor (XXXbe move NewContext to Init?)
