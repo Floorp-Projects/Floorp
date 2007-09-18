@@ -434,7 +434,7 @@ var popupTests = [
       compareEdge(gTrigger, gMenuPopup, "after_start", 0, 0, testname);
   }
 },
-{end: true,
+{
   testname: "open submenu with open property",
   events: [ "popupshowing submenupopup", "DOMMenuItemActive submenu",
             "popupshown submenupopup" ],
@@ -450,6 +450,7 @@ var popupTests = [
   }
 },
 {
+  end: true,
   testname: "hidePopup hides entire chain",
   events: [ "popuphiding submenupopup", "popuphidden submenupopup",
             "popuphiding thepopup", "popuphidden thepopup",
