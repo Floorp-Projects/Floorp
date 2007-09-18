@@ -260,6 +260,7 @@
 # Accel+Shift+A-F are reserved on GTK2
 #ifndef MOZ_WIDGET_GTK2
     <key id="bookmarkAllTabsKb" key="&addCurPageAsCmd.commandkey;" command="Browser:BookmarkAllTabs" modifiers="accel,shift"/>
+    <key id="manBookmarkKb" key="&bookmarksSidebarCmd.commandkey;" command="Browser:ShowBookmarks" modifiers="accel,shift"/>
 #endif
     <key id="viewBookmarksSidebarKb" key="&bookmarksSidebarCmd.commandkey;" command="viewBookmarksSidebar" modifiers="accel"/>
 #ifdef XP_WIN
