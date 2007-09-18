@@ -14,12 +14,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Håkan Waara Portions created by Håkan Waara are Copyright (C) Håkan Waara.  All Rights Reserved.
+ * HÃ¥kan Waara Portions created by HÃ¥kan Waara are Copyright (C) HÃ¥kan Waara.  All Rights Reserved.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Håkan Waara (Original Author)
+ *   HÃ¥kan Waara (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,7 +47,8 @@ spinbuttons {
 .spinbuttons-up {
   -moz-appearance: none;
   -moz-box-flex: 1;
-  min-width: 12px;
+  min-width: 1px;
+  min-height: 1px;
   margin: 0;
   padding: 0;
 }
@@ -55,7 +56,8 @@ spinbuttons {
 .spinbuttons-down {
   -moz-appearance: none;
   -moz-box-flex: 1;
-  min-width: 12px;
+  min-width: 1px;
+  min-height: 1px;
   margin: 0;
   padding: 0;
 }
