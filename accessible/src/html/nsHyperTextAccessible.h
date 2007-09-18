@@ -110,10 +110,18 @@ public:
     *                                      contained the offset, if it is within
     *                                      the current nsHyperTextAccessible,
     *                                      otherwise it is set to nsnull.
+    * @param aIsEndOffset - if PR_TRUE, then then this offset is not inclusive. The character
+    *                       indicated by the offset returned is at [offset - 1]. This means
+    *                       if the passed-in offset is really in a descendant, then the offset returned
+    *                       will come just after the relevant embedded object characer.
+    *                       If PR_FALSE, then the offset is inclusive. The character indicated
+    *                       by the offset returned is at [offset]. If the passed-in offset in inside a
+    *                       descendant, then the returned offset will be on the relevant embedded object char.
     */
   nsresult DOMPointToHypertextOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset,
                                      PRInt32 *aHypertextOffset,
-                                     nsIAccessible **aFinalAccessible = nsnull);
+                                     nsIAccessible **aFinalAccessible = nsnull,
+                                     PRBool aIsEndOffset = PR_FALSE);
 
 protected:
   /*
@@ -184,7 +192,16 @@ protected:
   nsIntRect GetBoundsForString(nsIFrame *aFrame, PRUint32 aStartRenderedOffset, PRUint32 aEndRenderedOffset);
 
   // Selection helpers
-  nsresult GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel);
+
+  /**
+   * Get the relevant selection interfaces and ranges for the current hyper text
+   * @param aSelCon      The selection controller for the current hyper text, or nsnull if not needed
+   * @param aDomSel      The selection interface for the current hyper text, or nsnull if not needed
+   * @param aRanges      The selected ranges within the current subtree, or nsnull if not needed
+   */
+  nsresult GetSelections(nsISelectionController **aSelCon,
+                         nsISelection **aDomSel = nsnull,
+                         nsCOMArray<nsIDOMRange>* aRanges = nsnull);
   nsresult SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos);
 };
 

@@ -58,6 +58,7 @@
 #include "nsIFrame.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIPlaintextEditor.h"
+#include "nsISelection2.h"
 #include "nsIServiceManager.h"
 #include "nsTextFragment.h"
 #include "gfxSkipChars.h"
@@ -105,7 +106,12 @@ nsresult nsHyperTextAccessible::QueryInterface(REFNSIID aIID, void** aInstancePt
     if (aIID.Equals(NS_GET_IID(nsIAccessibleHyperText))) {
       if (role == nsIAccessibleRole::ROLE_ENTRY ||
           role == nsIAccessibleRole::ROLE_PASSWORD_TEXT) {
-        return NS_ERROR_NO_INTERFACE;
+        nsCOMPtr<nsIEditor> editor;
+        GetAssociatedEditor(getter_AddRefs(editor));
+        nsCOMPtr<nsIPlaintextEditor> peditor(do_QueryInterface(editor));
+        if (peditor) {
+          return NS_ERROR_NO_INTERFACE; // No embedded objects ever in plain text
+        }
       }
       *aInstancePtr = static_cast<nsIAccessibleHyperText*>(this);
       NS_ADDREF_THIS();
@@ -533,7 +539,8 @@ NS_IMETHODIMP nsHyperTextAccessible::GetCharacterAtOffset(PRInt32 aOffset, PRUni
 
 nsresult nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode* aNode, PRInt32 aNodeOffset,
                                                           PRInt32* aHyperTextOffset,
-                                                          nsIAccessible **aFinalAccessible)
+                                                          nsIAccessible **aFinalAccessible,
+                                                          PRBool aIsEndOffset)
 {
   // Turn a DOM Node and offset into an offset into this hypertext.
   // On failure, return null. On success, return the DOM node which contains the offset.
@@ -609,10 +616,19 @@ nsresult nsHyperTextAccessible::DOMPointToHypertextOffset(nsIDOMNode* aNode, PRI
     // <div>abc<h1>def</h1>ghi</div>
     // If the passed-in DOM point was not on a direct child of the hypertext, we will
     // return the offset for that entire hypertext
-    // If the offset was after the first character of the passed in object, we will now use 1 for
+    if (aIsEndOffset) {
+      // Not inclusive, the indicated char comes at index before this offset
+      // If the end offset is after the first character of the passed in object, use 1 for
     // addTextOffset, to put us after the embedded object char. We'll only treat the offset as
     // before the embedded object char if we end at the very beginning of the child.
     addTextOffset = addTextOffset > 0;
+    }
+    else {
+      // Start offset, inclusive
+      // Make sure the offset lands on the embedded object character in order to indicate
+      // the true inner offset is inside the subtree for that link
+      addTextOffset = (TextLength(descendantAccessible) == addTextOffset) ? 1 : 0;
+    }
     descendantAccessible = parentAccessible;
   }  
 
@@ -699,7 +715,9 @@ nsHyperTextAccessible::GetRelativeOffset(nsIPresShell *aPresShell,
   NS_ENSURE_TRUE(resultNode, -1);
 
   nsCOMPtr<nsIAccessible> finalAccessible;
-  rv = DOMPointToHypertextOffset(resultNode, pos.mContentOffset, &hyperTextOffset, getter_AddRefs(finalAccessible));
+  rv = DOMPointToHypertextOffset(resultNode, pos.mContentOffset, &hyperTextOffset,
+                                 getter_AddRefs(finalAccessible),
+                                 aDirection == eDirNext);
   // If finalAccessible == nsnull, then DOMPointToHypertextOffset() searched through the hypertext
   // children without finding the node/offset position
   NS_ENSURE_SUCCESS(rv, -1);
@@ -1371,48 +1389,88 @@ NS_IMETHODIMP nsHyperTextAccessible::GetCaretOffset(PRInt32 *aCaretOffset)
   return DOMPointToHypertextOffset(caretNode, caretOffset, aCaretOffset);
 }
 
-nsresult nsHyperTextAccessible::GetSelections(nsISelectionController **aSelCon, nsISelection **aDomSel)
+nsresult nsHyperTextAccessible::GetSelections(nsISelectionController **aSelCon,
+                                              nsISelection **aDomSel,
+                                              nsCOMArray<nsIDOMRange>* aRanges)
 {
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;
+  }
   if (aSelCon) {
     *aSelCon = nsnull;
   }
   if (aDomSel) {
     *aDomSel = nsnull;
   }
+  if (aRanges) {
+    aRanges->Clear();
+  }
   
+  nsCOMPtr<nsISelection> domSel;
+  nsCOMPtr<nsISelectionController> selCon;
+
   nsCOMPtr<nsIEditor> editor;
   GetAssociatedEditor(getter_AddRefs(editor));
-  if (editor) {
+  nsCOMPtr<nsIPlaintextEditor> peditor(do_QueryInterface(editor));
+  if (peditor) {
+    // Case 1: plain text editor
+    // This is for form controls which have their own
+    // selection controller separate from the document, for example
+    // HTML:input, HTML:textarea, XUL:textbox, etc.
     if (aSelCon) {
-      editor->GetSelectionController(aSelCon);
+      editor->GetSelectionController(getter_AddRefs(selCon));
       NS_ENSURE_TRUE(*aSelCon, NS_ERROR_FAILURE);
     }
 
-    if (aDomSel) {
-      editor->GetSelection(aDomSel);
-      NS_ENSURE_TRUE(*aDomSel, NS_ERROR_FAILURE);
+    editor->GetSelection(getter_AddRefs(domSel));
+    NS_ENSURE_TRUE(domSel, NS_ERROR_FAILURE);
     }
+  else {
+    // Case 2: rich content subtree (can be rich editor)
+    // This uses the selection controller from the entire document
+    nsIFrame *frame = GetFrame();
+    NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-    return NS_OK;
+    // Get the selection and selection controller
+    frame->GetSelectionController(GetPresContext(),
+                                  getter_AddRefs(selCon));
+    NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
+    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
+                         getter_AddRefs(domSel));
+    NS_ENSURE_TRUE(domSel, NS_ERROR_FAILURE);
   }
 
-  nsIFrame *frame = GetFrame();
-  NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-
-  // Get the selection and selection controller
-  nsCOMPtr<nsISelectionController> selCon;
-  frame->GetSelectionController(GetPresContext(),
-                                getter_AddRefs(selCon));
-  NS_ENSURE_TRUE(selCon, NS_ERROR_FAILURE);
   if (aSelCon) {
     NS_ADDREF(*aSelCon = selCon);
   }
-
   if (aDomSel) {
-    nsCOMPtr<nsISelection> domSel;
-    selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel));
-    NS_ENSURE_TRUE(domSel, NS_ERROR_FAILURE);
     NS_ADDREF(*aDomSel = domSel);
+  }
+  if (aRanges) {
+    nsCOMPtr<nsISelection2> selection2(do_QueryInterface(domSel));
+    NS_ENSURE_TRUE(selection2, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDOMNodeList> childNodes;
+    nsresult rv = mDOMNode->GetChildNodes(getter_AddRefs(childNodes));
+    NS_ENSURE_SUCCESS(rv, rv);
+    PRUint32 numChildren; 
+    rv = childNodes->GetLength(&numChildren);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = selection2->GetRangesForIntervalCOMArray(mDOMNode, 0,
+                                                  mDOMNode, numChildren,
+                                                  PR_TRUE, aRanges);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // Remove collapsed ranges
+    PRInt32 numRanges = aRanges->Count();
+    for (PRInt32 count = 0; count < numRanges; count ++) {
+      PRBool isCollapsed;
+      (*aRanges)[count]->GetCollapsed(&isCollapsed);
+      if (isCollapsed) {
+        aRanges->RemoveObjectAt(count);
+        -- numRanges;
+        -- count;
+      }
+    }
   }
 
   return NS_OK;
@@ -1424,18 +1482,13 @@ nsresult nsHyperTextAccessible::GetSelections(nsISelectionController **aSelCon, 
 NS_IMETHODIMP nsHyperTextAccessible::GetSelectionCount(PRInt32 *aSelectionCount)
 {
   nsCOMPtr<nsISelection> domSel;
-  nsresult rv = GetSelections(nsnull, getter_AddRefs(domSel));
+  nsCOMArray<nsIDOMRange> ranges;
+  nsresult rv = GetSelections(nsnull, nsnull, &ranges);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRBool isSelectionCollapsed;
-  rv = domSel->GetIsCollapsed(&isSelectionCollapsed);
-  NS_ENSURE_SUCCESS(rv, rv);
+  *aSelectionCount = ranges.Count();
 
-  if (isSelectionCollapsed) {
-    *aSelectionCount = 0;
-    return NS_OK;
-  }
-  return domSel->GetRangeCount(aSelectionCount);
+  return NS_OK;
 }
 
 /*
@@ -1446,35 +1499,49 @@ NS_IMETHODIMP nsHyperTextAccessible::GetSelectionBounds(PRInt32 aSelectionNum, P
   *aStartOffset = *aEndOffset = 0;
 
   nsCOMPtr<nsISelection> domSel;
-  nsresult rv = GetSelections(nsnull, getter_AddRefs(domSel));
+  nsCOMArray<nsIDOMRange> ranges;
+  nsresult rv = GetSelections(nsnull, getter_AddRefs(domSel), &ranges);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 rangeCount;
-  domSel->GetRangeCount(&rangeCount);
+  PRInt32 rangeCount = ranges.Count();
   if (aSelectionNum < 0 || aSelectionNum >= rangeCount)
     return NS_ERROR_INVALID_ARG;
 
-  nsCOMPtr<nsIDOMRange> range;
-  rv = domSel->GetRangeAt(aSelectionNum, getter_AddRefs(range));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMRange> range = ranges[aSelectionNum];
 
+  // Get start point
   nsCOMPtr<nsIDOMNode> startNode;
   range->GetStartContainer(getter_AddRefs(startNode));
   PRInt32 startOffset;
   range->GetStartOffset(&startOffset);
-  rv = DOMPointToHypertextOffset(startNode, startOffset, aStartOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
 
+  // Get end point
   nsCOMPtr<nsIDOMNode> endNode;
   range->GetEndContainer(getter_AddRefs(endNode));
   PRInt32 endOffset;
   range->GetEndOffset(&endOffset);
-  if (startNode == endNode && startOffset == endOffset) {
-    // Shortcut for collapsed selection case (caret)
-    *aEndOffset = *aStartOffset;
-    return NS_OK;
+
+  PRInt16 rangeCompareResult;
+  rv = range->CompareBoundaryPoints(nsIDOMRange::START_TO_END, range, &rangeCompareResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (rangeCompareResult < 0) {
+    // Make sure start is before end, by swapping offsets
+    // This occurs when the user selects backwards in the text
+    startNode.swap(endNode);
+    PRInt32 tempOffset = startOffset;
+    startOffset = endOffset;
+    endOffset = tempOffset;
   }
-  return DOMPointToHypertextOffset(endNode, endOffset, aEndOffset);
+
+  nsCOMPtr<nsIAccessible> startAccessible;
+  rv = DOMPointToHypertextOffset(startNode, startOffset, aStartOffset, getter_AddRefs(startAccessible));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!startAccessible) {
+    *aStartOffset = 0; // Could not find start point within this hypertext, so starts before
+  }
+
+  return DOMPointToHypertextOffset(endNode, endOffset, aEndOffset, nsnull, PR_TRUE);
 }
 
 /*
