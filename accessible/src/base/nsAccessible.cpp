@@ -1064,6 +1064,24 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nsnull;
 
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Already shut down
+  }
+
+  // If we can't find the point in a child, we will return the fallback answer:
+  // we return |this| if the point is within it, otherwise nsnull
+  nsCOMPtr<nsIAccessible> fallbackAnswer;
+  PRInt32 x, y, width, height;
+  GetBounds(&x, &y, &width, &height);
+  if (aX >= x && aX < x + width &&
+      aY >= y && aY < y + height) {
+    fallbackAnswer = this;
+  }
+  if (MustPrune(this)) {  // Do not dig any further
+    NS_IF_ADDREF(*aAccessible = fallbackAnswer);
+    return NS_OK;
+  }
+
   // Search an accessible at the given point starting from accessible document
   // because containing block (see CSS2) for out of flow element (for example,
   // absolutely positioned element) may be different from its DOM parent and
@@ -1073,9 +1091,7 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   nsCOMPtr<nsIAccessibleDocument> accDocument;
   nsresult rv = GetAccessibleDocument(getter_AddRefs(accDocument));
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!accDocument)
-    return NS_OK;
+  NS_ENSURE_TRUE(accDocument, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsPIAccessNode> accessNodeDocument(do_QueryInterface(accDocument));
   NS_ASSERTION(accessNodeDocument,
@@ -1092,37 +1108,75 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
 
   nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
   nsIFrame *foundFrame = presShell->GetFrameForPoint(frame, offset);
-  if (!foundFrame)
+  nsCOMPtr<nsIContent> content;
+  if (!foundFrame || !(content = foundFrame->GetContent())) {
+    NS_IF_ADDREF(*aAccessible = fallbackAnswer);
     return NS_OK;
-
-  nsCOMPtr<nsIContent> content(foundFrame->GetContent());
-  if (!content)
-    return NS_OK;
+  }
 
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
   nsCOMPtr<nsIAccessibilityService> accService = GetAccService();
 
   nsCOMPtr<nsIDOMNode> relevantNode;
   accService->GetRelevantContentNodeFor(node, getter_AddRefs(relevantNode));
-  if (!relevantNode)
+  if (!relevantNode) {
+    NS_IF_ADDREF(*aAccessible = fallbackAnswer);
     return NS_OK;
+  }
 
   nsCOMPtr<nsIAccessible> accessible;
   accService->GetAccessibleFor(relevantNode, getter_AddRefs(accessible));
-  if (!accessible)
-    return NS_OK;
-
-  nsCOMPtr<nsIAccessible> parent;
-  accessible->GetParent(getter_AddRefs(parent));
-
-  while (parent && parent != this) {
-    accessible.swap(parent);
-    accessible->GetParent(getter_AddRefs(parent));
+  if (!accessible) {
+    // No accessible for the node with the point, so find the first
+    // accessible in the DOM parent chain
+    accDocument->GetAccessibleInParentChain(relevantNode,
+                                            getter_AddRefs(accessible));
+    if (!accessible) {
+      NS_IF_ADDREF(*aAccessible = fallbackAnswer);
+      return NS_OK;
+    }
   }
 
-  if (parent)
-    NS_ADDREF(*aAccessible = accessible);
+  if (accessible == this) {
+    // Manually walk through accessible children and see if
+    // the are within this point.
+    // This takes care of cases where layout won't walk into
+    // things for us, such as image map areas and sub documents
+    nsCOMPtr<nsIAccessible> child;
+    while (NextChild(child)) {
+      PRInt32 childX, childY, childWidth, childHeight;
+      child->GetBounds(&childX, &childY, &childWidth, &childHeight);
+      if (aX >= childX && aX < childX + childWidth &&
+          aY >= childY && aY < childY + childHeight &&
+          (State(child) & nsIAccessibleStates::STATE_INVISIBLE) == 0) {
+        // Don't walk into offscreen or invisible items
+        NS_IF_ADDREF(*aAccessible = child);
+        return NS_OK;
+      }
+    }
+    // Fall through -- the point is in this accessible but not in a child
+    // We are allowed to return |this| as the answer
+  }
+  else {
+    nsCOMPtr<nsIAccessible> parent;
+    while (PR_TRUE) {
+      accessible->GetParent(getter_AddRefs(parent));
+      if (!parent) {
+        // Reached the top of the hierarchy
+        // these bounds were inside an accessible that is not a descendant of this one
+        NS_IF_ADDREF(*aAccessible = fallbackAnswer);
+        return NS_OK;
+      }
+      if (parent == this) {
+        // We reached |this|, so |accessible| is the
+        // child we want to return
+        break;
+      }
+      accessible.swap(parent);
+    }
+  }
 
+  NS_IF_ADDREF(*aAccessible = accessible);
   return NS_OK;
 }
 

@@ -86,6 +86,24 @@ nsOuterDocAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsOuterDocAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
+                                      nsIAccessible **aAccessible)
+{
+  NS_ENSURE_ARG_POINTER(aAccessible);
+  *aAccessible = nsnull;
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;
+  }
+  PRInt32 docX, docY, docWidth, docHeight;
+  GetBounds(&docX, &docY, &docWidth, &docHeight);
+  if (aX < docX || aX >= docX + docWidth || aY < docY || aY >= docY + docHeight) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return GetFirstChild(aAccessible);  // Always return the inner doc unless bounds outside of it
+}
+
 void nsOuterDocAccessible::CacheChildren()
 {  
   // An outer doc accessible usually has 1 nsDocAccessible child,

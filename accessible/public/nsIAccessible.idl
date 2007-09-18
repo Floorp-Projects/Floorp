@@ -194,6 +194,10 @@ interface nsIAccessible : nsISupports
 
   /**
    * Accessible child which contains the coordinate at (x, y) in screen pixels.
+   * If the point is in the current accessible but not in a child, the
+   * current accessible will be returned.
+   * If the point is in neither the current accessible or a child, then
+   * null will be returned.
    */
   nsIAccessible getChildAtPoint(in long x, in long y);
 
