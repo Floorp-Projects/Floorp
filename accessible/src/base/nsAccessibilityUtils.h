@@ -180,6 +180,14 @@ public:
    */
   static already_AddRefed<nsIDocShellTreeItem>
     GetDocShellTreeItemFor(nsIDOMNode *aNode);
+
+  /**
+   * Get the ID for an element, in some types of XML this may not be the ID attribute
+   * @param aContent  Node to get the ID for
+   * @param aID       Where to put ID string
+   * @return          PR_TRUE if there is an ID set for this node
+   */
+  static PRBool GetID(nsIContent *aContent, nsAString& aID);
 };
 
 #endif
