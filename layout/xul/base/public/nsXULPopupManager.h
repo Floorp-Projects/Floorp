@@ -79,7 +79,8 @@ class nsIDOMKeyEvent;
 enum nsPopupType {
   ePopupTypePanel,
   ePopupTypeMenu,
-  ePopupTypeTooltip
+  ePopupTypeTooltip,
+  ePopupTypeAny = 0xF000 // used only to pass to GetTopPopup
 };
 
 // when a menu command is executed, the closemenu attribute may be used
@@ -483,7 +484,8 @@ public:
 
   /**
    * Return the frame for the topmost open popup of a given type, or null if
-   * no popup of that type is open.
+   * no popup of that type is open. If aType is ePopupTypeAny, a menu of any
+   * type is returned, except for popups in the mPanels list.
    */
   nsIFrame* GetTopPopup(nsPopupType aType);
 
