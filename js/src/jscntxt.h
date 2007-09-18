@@ -643,10 +643,10 @@ struct JSContext {
      * property values associated with this context's global object.
      */
     uint8               xmlSettingFlags;
-    uint8               padding;
 #else
-    uint16              padding;
+    uint8               padding;
 #endif
+    uint8               gcDefaultFlags;
 
     /* Runtime version control identifier. */
     uint16              version;

@@ -112,10 +112,6 @@ XPCWrappedNativeProto::Init(
 
     JSBool ok = mJSProtoObject && JS_SetPrivate(ccx, mJSProtoObject, this);
 
-    // Propagate the system flag from parent to child.
-    if(ok && JS_IsSystemObject(ccx, parent))
-        JS_FlagSystemObject(ccx, mJSProtoObject);
-
     DEBUG_ReportShadowedMembers(mSet, nsnull, this);
 
     return ok;
