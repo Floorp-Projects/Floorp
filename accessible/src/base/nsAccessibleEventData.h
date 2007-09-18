@@ -64,7 +64,6 @@ public:
 
   static void GetLastEventAttributes(nsIDOMNode *aNode,
                                       nsIPersistentProperties *aAttributes);
-  static nsIDOMNode* GetLastEventAtomicRegion(nsIDOMNode *aNode);
 
 protected:
   already_AddRefed<nsIAccessible> GetAccessibleByNode();

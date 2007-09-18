@@ -2083,6 +2083,28 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
         attributes->SetStringProperty(nsDependentCString(ariaProperties[index]), value, oldValueUnused);    
       }
     }
+
+    // Get container-foo computed live region properties based on the closest container with
+    // the live region attribute
+    nsAutoString atomic, live, relevant, channel, busy;
+    while (content) {
+      if (relevant.IsEmpty() && 
+          content->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::relevant, relevant))
+        attributes->SetStringProperty(NS_LITERAL_CSTRING("container-relevant"), relevant, oldValueUnused);
+      if (live.IsEmpty() &&
+          content->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::live, live))
+        attributes->SetStringProperty(NS_LITERAL_CSTRING("container-live"), live, oldValueUnused);
+      if (channel.IsEmpty() &&
+          content->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::channel, channel))
+        attributes->SetStringProperty(NS_LITERAL_CSTRING("container-channel"), channel, oldValueUnused);
+      if (atomic.IsEmpty() &&
+          content->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::atomic, atomic))
+        attributes->SetStringProperty(NS_LITERAL_CSTRING("container-atomic"), atomic, oldValueUnused);
+      if (busy.IsEmpty() &&
+          content->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::busy, busy))
+        attributes->SetStringProperty(NS_LITERAL_CSTRING("container-busy"), busy, oldValueUnused);
+      content = content->GetParent();
+    }
   }
 
   if (!nsAccUtils::HasAccGroupAttrs(attributes)) {
@@ -2560,6 +2582,26 @@ nsAccessible::FindNeighbourPointingToThis(nsIAtom *aRelationAttr,
   return relatedNode;
 }
 
+nsIDOMNode* nsAccessible::GetAtomicRegion()
+{
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
+  nsIContent *loopContent = content;
+  nsAutoString atomic;
+
+  while (loopContent) {
+    loopContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::atomic, atomic);
+    if (!atomic.IsEmpty()) {
+      break;
+    }
+    loopContent = loopContent->GetParent();
+  }
+
+  nsCOMPtr<nsIDOMNode> atomicRegion;
+  if (atomic.EqualsLiteral("true")) {
+    atomicRegion = do_QueryInterface(loopContent);
+  }
+  return atomicRegion;
+}
 
 /* nsIAccessible getAccessibleRelated(); */
 NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAccessible **aRelated)
@@ -2724,7 +2766,7 @@ NS_IMETHODIMP nsAccessible::GetAccessibleRelated(PRUint32 aRelationType, nsIAcce
     }
   case nsIAccessibleRelation::RELATION_MEMBER_OF:
     {
-      relatedNode = nsAccEvent::GetLastEventAtomicRegion(mDOMNode);
+      relatedNode = GetAtomicRegion();
       break;
     }
   default:
