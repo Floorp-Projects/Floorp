@@ -657,6 +657,8 @@ SessionStoreService.prototype = {
   getClosedTabCount: function sss_getClosedTabCount(aWindow) {
     if (!aWindow.__SSi && aWindow.__SS_dyingCache)
       return aWindow.__SS_dyingCache._closedTabs.length;
+    if (!aWindow.__SSi)
+      return 0; // not a browser window, or not otherwise tracked by SS.
     
     return this._windows[aWindow.__SSi]._closedTabs.length;
   },
