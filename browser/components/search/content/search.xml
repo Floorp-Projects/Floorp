@@ -98,7 +98,7 @@
                        completeselectedindex="true"
                        showcommentcolumn="true"
                        tabscrolling="true"
-                       xbl:inherits="disabled,disableautocomplete,searchengine,src">
+                       xbl:inherits="disabled,disableautocomplete,searchengine,src,newlines">
           </xul:textbox>
         </xul:hbox>
 
