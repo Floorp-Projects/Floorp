@@ -1135,14 +1135,14 @@ public:
 private:
     // nsCycleCollectionTraversalCallback methods.
 #ifdef DEBUG_CC
-    NS_METHOD_(void) DescribeNode(nsrefcnt refCount, size_t objSz, const char *objName);
+    NS_IMETHOD_(void) DescribeNode(nsrefcnt refCount, size_t objSz, const char *objName);
 #else
-    NS_METHOD_(void) DescribeNode(nsrefcnt refCount);
+    NS_IMETHOD_(void) DescribeNode(nsrefcnt refCount);
 #endif
-    NS_METHOD_(void) NoteXPCOMChild(nsISupports *child);
-    NS_METHOD_(void) NoteNativeChild(void *child,
+    NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child);
+    NS_IMETHOD_(void) NoteNativeChild(void *child,
                                      nsCycleCollectionParticipant *participant);
-    NS_METHOD_(void) NoteScriptChild(PRUint32 langID, void *child);
+    NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void *child);
 };
 
 GCGraphBuilder::GCGraphBuilder(GCGraph &aGraph,
@@ -1209,7 +1209,7 @@ GCGraphBuilder::Traverse(PtrInfo* aPtrInfo)
     mCurrPi->mLastChild = mEdgeBuilder.Mark();
 }
 
-void 
+NS_IMETHODIMP_(void)
 #ifdef DEBUG_CC
 GCGraphBuilder::DescribeNode(nsrefcnt refCount, size_t objSz, const char *objName)
 #else
@@ -1230,7 +1230,7 @@ GCGraphBuilder::DescribeNode(nsrefcnt refCount)
 #endif
 }
 
-void 
+NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteXPCOMChild(nsISupports *child) 
 {
     if (!child || !(child = canonicalize(child)))
@@ -1252,7 +1252,7 @@ GCGraphBuilder::NoteXPCOMChild(nsISupports *child)
     }
 }
 
-void
+NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteNativeChild(void *child,
                                 nsCycleCollectionParticipant *participant)
 {
@@ -1268,7 +1268,7 @@ GCGraphBuilder::NoteNativeChild(void *child,
     ++childPi->mInternalRefs;
 }
 
-void
+NS_IMETHODIMP_(void)
 GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child) 
 {
     if (!child)
@@ -1876,14 +1876,14 @@ public:
         return mSuppressThisNode;
     }
 
-    NS_METHOD_(void) DescribeNode(nsrefcnt refCount, size_t objSz, const char *objName)
+    NS_IMETHOD_(void) DescribeNode(nsrefcnt refCount, size_t objSz, const char *objName)
     {
         mSuppressThisNode = (PL_strstr(sSuppressionList, objName) != nsnull);
     }
 
-    NS_METHOD_(void) NoteXPCOMChild(nsISupports *child) {}
-    NS_METHOD_(void) NoteScriptChild(PRUint32 langID, void *child) {}
-    NS_METHOD_(void) NoteNativeChild(void *child,
+    NS_IMETHOD_(void) NoteXPCOMChild(nsISupports *child) {}
+    NS_IMETHOD_(void) NoteScriptChild(PRUint32 langID, void *child) {}
+    NS_IMETHOD_(void) NoteNativeChild(void *child,
                                      nsCycleCollectionParticipant *participant) {}
 };
 
