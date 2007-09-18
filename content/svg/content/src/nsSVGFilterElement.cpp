@@ -37,7 +37,6 @@
 #include "nsGkAtoms.h"
 #include "nsSVGLength.h"
 #include "nsCOMPtr.h"
-#include "nsSVGAnimatedInteger.h"
 #include "nsSVGAnimatedString.h"
 #include "nsSVGFilterElement.h"
 
@@ -47,6 +46,12 @@ nsSVGElement::LengthInfo nsSVGFilterElement::sLengthInfo[4] =
   { &nsGkAtoms::y, -10, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
   { &nsGkAtoms::width, 120, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::X },
   { &nsGkAtoms::height, 120, nsIDOMSVGLength::SVG_LENGTHTYPE_PERCENTAGE, nsSVGUtils::Y },
+};
+
+nsSVGElement::IntegerInfo nsSVGFilterElement::sIntegerInfo[2] =
+{
+  { &nsGkAtoms::filterRes, 0 },
+  { &nsGkAtoms::filterRes, 0 }
 };
 
 nsSVGElement::EnumInfo nsSVGFilterElement::sEnumInfo[2] =
@@ -93,18 +98,6 @@ nsSVGFilterElement::Init()
   NS_ENSURE_SUCCESS(rv,rv);
 
   // Create mapped properties:
-
-  // DOM property: filterResX , #IMPLIED attrib: filterRes
-  {
-    rv = NS_NewSVGAnimatedInteger(getter_AddRefs(mFilterResX), 0);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: filterResY , #IMPLIED attrib: filterRes
-  {
-    rv = NS_NewSVGAnimatedInteger(getter_AddRefs(mFilterResY), 0);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
 
   // nsIDOMSVGURIReference properties
 
@@ -169,17 +162,13 @@ NS_IMETHODIMP nsSVGFilterElement::GetPrimitiveUnits(nsIDOMSVGAnimatedEnumeration
 /* readonly attribute nsIDOMSVGAnimatedEnumeration filterResY; */
 NS_IMETHODIMP nsSVGFilterElement::GetFilterResX(nsIDOMSVGAnimatedInteger * *aFilterResX)
 {
-  *aFilterResX = mFilterResX;
-  NS_IF_ADDREF(*aFilterResX);
-  return NS_OK;
+  return mIntegerAttributes[FILTERRES_X].ToDOMAnimatedInteger(aFilterResX, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedEnumeration filterResY; */
 NS_IMETHODIMP nsSVGFilterElement::GetFilterResY(nsIDOMSVGAnimatedInteger * *aFilterResY)
 {
-  *aFilterResY = mFilterResY;
-  NS_IF_ADDREF(*aFilterResY);
-  return NS_OK;
+  return mIntegerAttributes[FILTERRES_Y].ToDOMAnimatedInteger(aFilterResY, this);
 }
 
 /* void setFilterRes (in unsigned long filterResX, in unsigned long filterResY);
@@ -187,8 +176,8 @@ NS_IMETHODIMP nsSVGFilterElement::GetFilterResY(nsIDOMSVGAnimatedInteger * *aFil
 NS_IMETHODIMP
 nsSVGFilterElement::SetFilterRes(PRUint32 filterResX, PRUint32 filterResY)
 {
-  mFilterResX->SetBaseVal(filterResX);
-  mFilterResY->SetBaseVal(filterResY);
+  mIntegerAttributes[FILTERRES_X].SetBaseValue(filterResX, this, PR_FALSE);
+  mIntegerAttributes[FILTERRES_Y].SetBaseValue(filterResY, this, PR_FALSE);
   return NS_OK;
 }
 
@@ -222,12 +211,12 @@ nsSVGFilterElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     int num = sscanf(str, "%d %d\n", &resX, &resY);
     switch (num) {
     case 2:
-      mFilterResX->SetBaseVal(resX);
-      mFilterResY->SetBaseVal(resY);
+      mIntegerAttributes[FILTERRES_X].SetBaseValue(resX, this, PR_FALSE);
+      mIntegerAttributes[FILTERRES_Y].SetBaseValue(resY, this, PR_FALSE);
       break;
     case 1:
-      mFilterResX->SetBaseVal(resX);
-      mFilterResY->SetBaseVal(resX);
+      mIntegerAttributes[FILTERRES_X].SetBaseValue(resX, this, PR_FALSE);
+      mIntegerAttributes[FILTERRES_Y].SetBaseValue(resX, this, PR_FALSE);
       break;
     default:
       break;
@@ -236,20 +225,6 @@ nsSVGFilterElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   return rv;
-}
-
-nsresult
-nsSVGFilterElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                              PRBool aNotify)
-{
-  if (aName == nsGkAtoms::filterRes && aNamespaceID == kNameSpaceID_None) {
-    mFilterResX->SetBaseVal(0);
-    mFilterResY->SetBaseVal(0);
-
-    return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
-  }
-
-  return nsSVGFilterElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
 }
 
 NS_IMETHODIMP_(PRBool)
@@ -277,6 +252,13 @@ nsSVGFilterElement::GetLengthInfo()
 {
   return LengthAttributesInfo(mLengthAttributes, sLengthInfo,
                               NS_ARRAY_LENGTH(sLengthInfo));
+}
+
+nsSVGElement::IntegerAttributesInfo
+nsSVGFilterElement::GetIntegerInfo()
+{
+  return IntegerAttributesInfo(mIntegerAttributes, sIntegerInfo,
+                               NS_ARRAY_LENGTH(sIntegerInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
