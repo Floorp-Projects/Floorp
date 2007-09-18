@@ -4510,7 +4510,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         pos = lParamToClient(lParam);
       }
       result = DispatchMouseEvent(NS_CONTEXTMENU, wParam, pos, contextMenukey,
-                                  nsMouseEvent::eRightButton);
+                                  contextMenukey ?
+                                    nsMouseEvent::eLeftButton :
+                                    nsMouseEvent::eRightButton);
     }
     break;
 

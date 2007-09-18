@@ -4902,7 +4902,7 @@ key_event_to_context_menu_event(const nsKeyEvent* aKeyEvent,
     aCMEvent->eventStructType = NS_MOUSE_EVENT;
     aCMEvent->message = NS_CONTEXTMENU;
     aCMEvent->context = nsMouseEvent::eContextMenuKey;
-    aCMEvent->button = nsMouseEvent::eRightButton;
+    aCMEvent->button = nsMouseEvent::eLeftButton;
     aCMEvent->isShift = aCMEvent->isControl = PR_FALSE;
     aCMEvent->isAlt = aCMEvent->isMeta = PR_FALSE;
     aCMEvent->clickCount = 0;
