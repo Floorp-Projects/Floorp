@@ -79,7 +79,7 @@ private:
   // As this HTTP request depends on some original SSL socket,
   // we can use this handle to cancel the dependent HTTP request,
   // should we be asked to close the original SSL socket.
-  nsIRequest* mPendingHTTPRequest;
+  nsCOMPtr<nsIRequest> mPendingHTTPRequest;
 
   virtual void Run(void);
 
