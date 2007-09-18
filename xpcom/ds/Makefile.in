@@ -58,7 +58,6 @@ CPPSRCS		= \
 		nsByteBuffer.cpp \
 		nsCheapSets.cpp \
 		nsCRT.cpp \
-		nsDeque.cpp \
 		nsFixedSizeAllocator.cpp \
 		nsHashSets.cpp \
 		nsHashtable.cpp \
@@ -87,7 +86,6 @@ EXPORTS		= \
 		nsCheapSets.h \
 		nsCppSharedAllocator.h \
 		nsCRT.h \
-		nsDeque.h \
 		nsDoubleHashtable.h \
 		nsExpirationTracker.h \
 		nsFixedSizeAllocator.h \
