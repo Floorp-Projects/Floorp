@@ -824,8 +824,11 @@ nsMenuFrame::Enter()
     // behavior on Windows - close the popup chain
     if (mMenuParent) {
       nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-      if (pm)
-        pm->Rollup();
+      if (pm) {
+        nsIFrame* popup = pm->GetTopPopup(ePopupTypeAny);
+        if (popup)
+          pm->HidePopup(popup->GetContent(), PR_TRUE, PR_TRUE, PR_TRUE);
+      }
     }
 #endif   // #ifdef XP_WIN
     // this menu item was disabled - exit
