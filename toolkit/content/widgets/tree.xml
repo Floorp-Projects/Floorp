@@ -820,7 +820,7 @@
          }
          else if (!this.disableKeyNavigation && event.charCode > 0 &&
                   !event.altKey && !this._isAccelPressed(event) &&
-                  !event.metaKey) {
+                  !event.metaKey && !event.ctrlKey) {
            var l = this.keyNavigate(event);
            if (l >= 0) {
              this.view.selection.timedSelect(l, this._selectDelay);
