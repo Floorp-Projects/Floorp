@@ -97,22 +97,145 @@ BookmarksSyncService.prototype = {
     var jsLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
       getService(Ci.mozIJSSubScriptLoader);
     jsLoader.loadSubScript("chrome://sync/content/sync-engine.js", this._sync);
-    jsLoader.loadSubScript("chrome://browser/content/places/utils.js", this._utils);
   },
 
-  _applyCommands: function BSS__applyCommands(node, commandList) {
+  _wrapNode: function BSS__wrapNode(node) {
+    var items = {};
+    this._wrapNodeInternal(node, items);
+
+    // sanity check
+    var rootGuid = this._bms.getItemGUID(node.itemId);
+    for (var wanted in items) {
+      if (rootGuid == wanted)
+        continue;
+      var found = false;
+      for (var parent in items) {
+        if (items[parent].children && items[parent].children.indexOf(wanted) >= 0) {
+          found = true;
+          continue;
+        }
+      }
+      if (!found) {
+        LOG("wrapNode error: node has no parent (" + wanted + ")");
+      }
+    }
+
+    return items;
+  },
+
+  _wrapNodeInternal: function BSS__wrapNodeInternal(node, items) {
+    var guid = this._bms.getItemGUID(node.itemId);
+    var item = {"type": node.type};
+
+    if (node.type == node.RESULT_TYPE_FOLDER) {
+      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+      var openState = node.containerOpen;
+      node.containerOpen = true;
+      var children = [];
+      for (var i = 0; i < node.childCount; i++) {
+        var child = node.getChild(i);
+        this._wrapNodeInternal(child, items);
+        children.push(this._bms.getItemGUID(child.itemId));
+      }
+      item["children"] = children;
+      item["title"] = node.title;
+      node.containerOpen = openState;
+    } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
+    } else if (node.type == node.RESULT_TYPE_URI) {
+      // FIXME: need to verify that it's a bookmark, it could be a history result!
+      item["title"] = node.title;
+      item["uri"] = node.uri;
+    } else {
+      // what do we do?
+    }
+
+    items[guid] = item;
+  },
+
+  // find parent & index
+  // note that this._snapshot needs to be up-to-date!
+  _findItemParent: function BSS__findItemParent(itemGuid) {
+    var parent;
+    var index;
+    for (var item in this._snapshot) {
+      if (this._snapshot[item].children) {
+        index = this._snapshot[item].children.indexOf(itemGuid);
+        if (index >= 0) {
+          parent = item;
+          break;
+        }
+      }
+    }
+    return [parent, index];
+  },
+
+  _combineCommands: function BSS__combineCommands(commandList) {
+    var newList = [];
+    var lastObj;
+    if (newList.length)
+      lastObj = newList[newList.length - 1];
+
+    for (var i = 0; i < commandList.length; i++) {
+      LOG("Command: " + uneval(commandList[i]) + "\n");
+      var action = commandList[i].action;
+      var path = commandList[i].path;
+      var guid = path.shift();
+
+      // Note: this only works when the commands to be collapsed are
+      // contiguous in the array (this is ok right?)
+      if ((action == "create" || action == "remove") &&
+          (!newList.length ||
+           (lastObj && lastObj.guid != guid && lastObj.action != action))) {
+        // Avoid the commands that edit the parent's children property
+        if (path.length != 1)
+          continue;
+
+        let [parent, index] = this._findItemParent(guid);
+        if (!parent) {
+          LOG("Warning: item has no parent!\n");
+          continue;
+        }
+
+        newList.push({action: action,
+                      guid: guid,
+                      parentGuid: parent,
+                      index: index,
+                      data: this._snapshot[guid]});
+
+      } else if (action == "edit") {
+        // FIXME: will we never edit anything deeper?
+        if (path.length != 1) {
+          LOG("Warning: editing deep property - dropping");
+          continue;
+        }
+
+        if (!newList.length ||
+            (lastObj && lastObj.guid != guid && lastObj.action != action))
+          newList.push({action: action, guid: guid});
+
+        var key = path[path.length - 1];
+        var value = this._snapshot[guid][key];
+        newList[newList.length - 1].data[key] = value;
+      }
+    }
+    LOG("Combined list:\n");
+    LOG(uneval(newList) + "\n");
+    return newList;
+  },
+
+  _applyCommands: function BSS__applyCommands(commandList) {
     for (var i = 0; i < commandList.length; i++) {
       var command = commandList[i];
       LOG("Processing command: " + uneval(command));
       switch (command["action"]) {
       case "create":
-        this._createCommand(node, this._snapshot, command);
+        this._createCommand(command);
         break;
       case "remove":
-        this._removeCommand(node, command);
+        this._removeCommand(command);
         break;
       case "edit":
-        this._editCommand(node, command);
+        this._editCommand(command);
         break;
       default:
         LOG("unknown action in command: " + command["action"]);
@@ -121,53 +244,38 @@ BookmarksSyncService.prototype = {
     }
   },
 
-  _nodeFromPath: function BSS__nodeFromPath (aNodeRoot, aPath) {
-    var node = aNodeRoot;
-    for (var i = 0; i < aPath.length; i = i + 2) {
-      if (aPath[i] != "children")
-        break;
-      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-      var openState = node.containerOpen;
-      node.containerOpen = true;
-      node = node.getChild(aPath[i + 1]);
-      //node.containerOpen = openState; // fixme?
-    }
-    return node;
-  },
-
-  _createCommand: function BSS__createCommand(aNode, aJsonNode, aCommand) {
-    var path = aCommand["path"];
-    if (path[path.length - 2] != "children")
-      path = aCommand["path"].slice(0, path.length - 1);
-
-    var json = this._sync.pathToReference(aJsonNode, path);
-    if (json["_done"] == true)
-      return;
-    json["_done"] = true;
-
-    var index = path[path.length - 1];
-    var node = this._nodeFromPath(aNode, path.slice(0, path.length - 2));
-
-    switch (json["type"]) {
+  _createCommand: function BSS__createCommand(command) {
+    var newId;
+    var parentId = this._bms.getItemIdForGUID(command.parentGuid);
+    switch (command.data.type) {
     case 0:
-      LOG("  -> creating a bookmark: '" + json["title"] + "' -> " + json["uri"]);
-      this._bms.insertBookmark(node.itemId, makeURI(json["uri"]), index, json["title"]);
+      LOG("  -> creating a bookmark: '" + command.data.title +
+          "' -> " + command.data.uri);
+      newId = this._bms.insertBookmark(parentId,
+                                       makeURI(command.data.uri),
+                                       command.index,
+                                       command.data.title);
       break;
     case 6:
-      LOG("  -> creating a folder: '" + json["title"] + "'");
-      this._bms.createFolder(node.itemId, json["title"], index);
+      LOG("  -> creating a folder: '" + command.data.title + "'");
+      newId = this._bms.createFolder(parentId,
+                                     command.data.title,
+                                     command.index);
       break;
     case 7:
       LOG("  -> creating a separator");
-      this._bms.insertSeparator(node.itemId, index);
+      newId = this._bms.insertSeparator(parentId, command.index);
       break;
     default:
-      LOG("createCommand: Unknown item type: " + json["type"]);
+      LOG("createCommand: Unknown item type: " + command.data.type);
       break;
     }
+    if (newId)
+      this._bms.setItemGUID(newId, command.guid);
   },
 
-  _removeCommand: function BSS__removeCommand(node, command) {
+  _removeCommand: function BSS__removeCommand(command) {
+    var iid = this._bss.getItemIdForGUID(aCommand.guid);
     if (command["path"].length == 0) {
       LOG("removing item");
       switch (node.type) {
@@ -239,35 +347,6 @@ BookmarksSyncService.prototype = {
     return this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
   },
 
-  // FIXME: temp version here because we can't yet get to PlacesUtils.wrapNode
-  _wrapNode: function BSS__wrapNode(node) {
-    //var guid = this._bms.getItemGuid(node.itemId);
-    var item = {"type": node.type}; //,
-    //                "guid": guid};
-
-    if (node.type == node.RESULT_TYPE_FOLDER) {
-      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-      var openState = node.containerOpen;
-      node.containerOpen = true;
-      var children = [];
-      for (var i = 0; i < node.childCount; i++) {
-        children.push(this._wrapNode(node.getChild(i)));
-      }
-      item["children"] = children;
-      item["title"] = node.title;
-      node.containerOpen = openState;
-    } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
-    } else if (node.type == node.RESULT_TYPE_URI) {
-      // FIXME: need to verify that it's a bookmark, it could be a history result!
-      item["title"] = node.title;
-      item["uri"] = node.uri;
-    } else {
-      // what do we do?
-    }
-
-    return item;
-  },
-
   // 1) Fetch server deltas
   // 1.1) Construct current server status from snapshot + server deltas
   // 1.2) Generate single delta from snapshot -> current server status
@@ -306,6 +385,7 @@ BookmarksSyncService.prototype = {
       LOG("Latest server version: " + server['version']);
 
       // 2) Generate local deltas from snapshot -> current client status
+
       LOG("Generating local updates");
       var localUpdates = this._sanitizeCommands(this._sync.detectUpdates(this._snapshot, localJson));
       if (!(server['status'] == 1 || localUpdates.length > 0)) {
@@ -314,35 +394,45 @@ BookmarksSyncService.prototype = {
       }
 	  
       // 3) Reconcile client/server deltas and generate new deltas for them.
+
       var propagations = [server['updates'], localUpdates];
+      var conflicts;
+
       if (server['status'] == 1 && localUpdates.length > 0) {
         LOG("Reconciling updates");
-        propagations = this._sync.reconcile([localUpdates, server['updates']]);
+        var ret = this._sync.reconcile([localUpdates, server['updates']]);
+        propagations = ret.propagations;
+        conflicts = ret.conflicts;
       }
+
+      LOG("\n" + uneval(conflicts) + "\n");
 	  
-	  if (!((propagations[0] && propagations[0].length > 0) || (propagations[1] && propagations[1].length > 0))) {
+      this._snapshotVersion = server['version'];
+
+      LOG(uneval(propagations));
+      if (!((propagations[0] && propagations[0].length > 0) ||
+            (propagations[1] && propagations[1].length > 0))) {
         this._snapshot = this._wrapNode(localBookmarks);
         LOG("Sync complete (2): no changes needed on client or server");
         return;
-      } 
-	  
-	 this._snapshotVersion = server['version'];
+      }
 
       // 3.1) Apply server changes to local store
       if (propagations[0] && propagations[0].length > 0) {
         LOG("Applying changes locally");
         localBookmarks = this._getLocalBookmarks(); // fixme: wtf
         this._snapshot = this._wrapNode(localBookmarks);
-        // applyCommands changes the input commands, so we eval(uneval()) them to make a copy :-/
-   	    this._sync.applyCommands(this._snapshot, eval(uneval(propagations[0])));
-        this._applyCommands(localBookmarks, propagations[0]);
+        // Note: propagations[0] is changed by applyCommands, so we make a deep copy
+        this._sync.applyCommands(this._snapshot, eval(uneval(propagations[0])));
+        var combinedCommands = this._combineCommands(propagations[0]);
+        this._applyCommands(combinedCommands);
         this._snapshot = this._wrapNode(localBookmarks);
-		this._snapshotVersion = server['version'];
       }
 
       // 3.2) Append server delta to the delta file and upload
       if (propagations[1] && propagations[1].length) {
         LOG("Uploading changes to server");
+        this._snapshot = this._wrapNode(localBookmarks);
         this._snapshotVersion++;
         server['deltas'][this._snapshotVersion] = propagations[1];
         this._dav.PUT("bookmarks.delta", uneval(server['deltas']), handlers);
@@ -353,7 +443,7 @@ BookmarksSyncService.prototype = {
         else
           LOG("Error: could not update deltas on server");
       }
-	      LOG("Sync complete");
+      LOG("Sync complete");
     } finally {
       //this._dav.unlock(handlers);
       //data = yield;
