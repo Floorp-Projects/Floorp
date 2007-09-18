@@ -49,6 +49,7 @@ TOOLKIT_NSIS_FILES = \
 	locales.nsi \
 	nsProcess.dll \
 	overrides.nsh \
+	RealProgress.dll \
 	ShellLink.dll \
 	version.nsh \
 	$(NULL)

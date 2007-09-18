@@ -39,13 +39,14 @@
   ${SetStartMenuInternet}
 
   ; Remove registry entries for non-existent apps and for apps that point to our
-  ; install location in the Software\Mozilla key.
+  ; install location in the Software\Mozilla key and uninstall registry entries
+  ; that point to our install location for both HKCU and HKLM.
   SetShellVarContext current  ; Set SHCTX to HKCU
   ${RegCleanMain} "Software\Mozilla"
+  ${RegCleanUninstall}
+
   SetShellVarContext all  ; Set SHCTX to HKLM
   ${RegCleanMain} "Software\Mozilla"
-
-  ; Remove uninstall entries that point to our install location
   ${RegCleanUninstall}
 
   ; Add Software\Mozilla\ registry entries
