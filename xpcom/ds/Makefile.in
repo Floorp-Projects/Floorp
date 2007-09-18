@@ -107,7 +107,6 @@ EXPORTS		= \
 		nsTextFormatter.h \
 		nsValueArray.h \
 		nsStringEnumerator.h \
-		nsAutoBuffer.h \
 		nsHashPropertyBag.h \
 		nsWhitespaceTokenizer.h \
 		$(NULL)			
