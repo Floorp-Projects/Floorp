@@ -379,4 +379,6 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 379316-2.html 379316-2-ref.html # bug 
 == 394111-1.html about:blank  # Really an assertion test rather than a rendering test
 == 394534-1.html 394534-1-ref.html
 == 394676-1.xhtml 394676-1-ref.xhtml
+== 395130-1.html 395130-1-ref.html
+== 395130-2.html 395130-2-ref.html
 == 396286-1.html about:blank  # crash test
