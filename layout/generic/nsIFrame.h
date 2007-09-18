@@ -92,6 +92,7 @@ class nsDisplayListSet;
 class nsDisplayList;
 class gfxSkipChars;
 class gfxSkipCharsIterator;
+class nsLineList_iterator;
 
 struct nsPeekOffsetStruct;
 struct nsPoint;
@@ -1137,11 +1138,15 @@ public:
    */
   struct InlineIntrinsicWidthData {
     InlineIntrinsicWidthData()
-      : prevLines(0)
+      : line(nsnull)
+      , prevLines(0)
       , currentLine(0)
       , skipWhitespace(PR_TRUE)
       , trailingWhitespace(0)
     {}
+
+    // The line. This may be null if the inlines are not associated with a block.
+    const nsLineList_iterator* line;
 
     // The maximum intrinsic width for all previous lines.
     nscoord prevLines;
