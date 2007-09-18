@@ -227,6 +227,9 @@ static nsresult    initialize_prefs        (void);
 nsWindow *nsWindow::mLastDragMotionWindow = NULL;
 PRBool nsWindow::sIsDraggingOutOf = PR_FALSE;
 
+// the last window that had a MOUSE_ENTER event
+nsWindow *nsWindow::sLastMouseEnterWindow = nsnull;
+
 // This is the time of the last button press event.  The drag service
 // uses it as the time to start drags.
 guint32   nsWindow::mLastButtonPressTime = 0;
@@ -418,6 +421,10 @@ nsWindow::Destroy(void)
 {
     if (mIsDestroyed || !mCreated)
         return NS_OK;
+
+    if (this == sLastMouseEnterWindow) {
+        sLastMouseEnterWindow = nsnull;
+    }
 
     LOG(("nsWindow::Destroy [%p]\n", (void *)this));
     mIsDestroyed = PR_TRUE;
@@ -1889,6 +1896,14 @@ nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
     if (aEvent->subwindow != NULL)
         return;
 
+    // Do not fire MOUSE_ENTER event if the mouse pointer is not on it.
+    // In this case, enter_notify_event is not triggered by mouse.
+    if (aEvent->x < 0 || aEvent->y < 0 ||
+        aEvent->x >= mBounds.width || aEvent->y >= mBounds.height) {
+        return;
+    }
+    sLastMouseEnterWindow = this;
+
     nsMouseEvent event(PR_TRUE, NS_MOUSE_ENTER, this, nsMouseEvent::eReal);
 
     event.refPoint.x = nscoord(aEvent->x);
@@ -1908,6 +1923,16 @@ nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
     // XXXldb Is this the right test for embedding cases?
     if (aEvent->subwindow != NULL)
         return;
+
+    // Do not fire MOUSE_EXIT event if the last MOUSE_ENTER event was not for
+    // the leaving window, or the mouse pointer is still on the leaving window.
+    // In this case, leave_notify_event is not triggered by mouse.
+    if (this != sLastMouseEnterWindow ||
+        (aEvent->x >= 0 && aEvent->y >= 0 &&
+         aEvent->x < mBounds.width && aEvent->y < mBounds.height)) {
+        return;
+    }
+    sLastMouseEnterWindow = nsnull;
 
     nsMouseEvent event(PR_TRUE, NS_MOUSE_EXIT, this, nsMouseEvent::eReal);
 
