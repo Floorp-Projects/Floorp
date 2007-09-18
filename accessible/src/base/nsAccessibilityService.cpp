@@ -434,7 +434,6 @@ nsresult
 nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame *aFrame,
                                                      nsIWeakReference *aWeakShell,
                                                      nsIDOMNode *aNode,
-                                                     const nsAString& aRole,
                                                      nsIAccessible **aAccessible)
 {
   // This method assumes we're in an HTML namespace.
@@ -1337,9 +1336,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   }
 
   nsAutoString role;
-  if (nsAccessNode::GetRoleAttribute(content, role) &&
-      StringEndsWith(role, NS_LITERAL_STRING(":presentation")) &&
-      !content->IsFocusable()) {
+  if (nsAccessNode::GetARIARole(content, role) && role.EqualsLiteral("presentation") && !content->IsFocusable()) {
     // Only create accessible for role=":presentation" if it is focusable --
     // in that case we need an accessible in case it gets focused, we
     // don't want focus ever to be 'lost'
@@ -1366,7 +1363,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   } else if (!newAcc) {  // HTML accessibles
     // Prefer to use markup (mostly tag name, perhaps attributes) to
     // decide if and what kind of accessible to create.
-    CreateHTMLAccessibleByMarkup(frame, aWeakShell, aNode, role, getter_AddRefs(newAcc));
+    CreateHTMLAccessibleByMarkup(frame, aWeakShell, aNode, getter_AddRefs(newAcc));
 
     PRBool tryFrame = (newAcc == nsnull);
     if (!content->IsFocusable()) { 
