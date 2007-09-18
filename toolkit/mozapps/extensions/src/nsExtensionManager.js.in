@@ -2616,6 +2616,12 @@ ExtensionManager.prototype = {
   _installGlobalItem: function(file) {
     if (!file || !file.exists())
       throw new Error("Unable to find the file specified on the command line!");
+#ifdef XP_WIN
+    // make sure the file is local on Windows
+    file.normalize();
+    if (file.path[1] != ':')
+      throw new Error("Can't install global chrome from non-local file "+file.path);
+#endif
     var installManifestFile = extractRDFFileToTempDir(file, FILE_INSTALL_MANIFEST, true);
     if (!installManifestFile.exists())
       throw new Error("The package is missing an install manifest!");
