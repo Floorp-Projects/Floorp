@@ -1054,7 +1054,6 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
 #endif
     fprintf(fp, "   maximum GC nesting level: %lu\n", ULSTAT(maxlevel));
     fprintf(fp, "potentially useful GC calls: %lu\n", ULSTAT(poke));
-    fprintf(fp, "           useless GC calls: %lu\n", ULSTAT(nopoke));
     fprintf(fp, "  thing arenas freed so far: %lu\n", ULSTAT(afree));
     fprintf(fp, "     stack segments scanned: %lu\n", ULSTAT(stackseg));
     fprintf(fp, "stack segment slots scanned: %lu\n", ULSTAT(segslots));
@@ -1403,14 +1402,10 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
         return NULL;
     }
 
-    doGC = (rt->gcMallocBytes >= rt->gcMaxMallocBytes);
+    doGC = (rt->gcMallocBytes >= rt->gcMaxMallocBytes && rt->gcPoke);
 #ifdef JS_GC_ZEAL
-    if (rt->gcZeal >= 1) {
-        doGC = JS_TRUE;
-        if (rt->gcZeal >= 2)
-            rt->gcPoke = JS_TRUE;
-    }
-#endif /* !JS_GC_ZEAL */
+    doGC = doGC || rt->gcZeal >= 2 || (rt->gcZeal >= 1 && rt->gcPoke);
+#endif
 
     arenaList = &rt->gcArenaList[flindex];
     for (;;) {
@@ -1477,7 +1472,6 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
             if (rt->gcBytes >= rt->gcMaxBytes || !(a = NewGCArena(rt))) {
                 if (doGC)
                     goto fail;
-                rt->gcPoke = JS_TRUE;
                 doGC = JS_TRUE;
                 continue;
             }
@@ -2432,11 +2426,9 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
         /* The last ditch GC preserves all atoms and weak roots. */
         keepAtoms = JS_TRUE;
     } else {
-        JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
-        rt->gcPoke = JS_TRUE;
-
         /* Keep atoms when a suspended compile is running on another context. */
         keepAtoms = (rt->gcKeepAtoms != 0);
+        JS_CLEAR_WEAK_ROOTS(&cx->weakRoots);
     }
 
     /*
@@ -2463,13 +2455,6 @@ js_GC(JSContext *cx, JSGCInvocationKind gckind)
     if (gckind != GC_LAST_DITCH)
         JS_LOCK_GC(rt);
 
-    /* Do nothing if no mutator has executed since the last GC. */
-    if (!rt->gcPoke) {
-        METER(rt->gcStats.nopoke++);
-        if (gckind != GC_LAST_DITCH)
-            JS_UNLOCK_GC(rt);
-        return;
-    }
     METER(rt->gcStats.poke++);
     rt->gcPoke = JS_FALSE;
 
