@@ -68,7 +68,7 @@ var gViewSourceUtils = {
     openDialog("chrome://global/content/viewSource.xul",
                "_blank",
                "all,dialog=no",
-               aURL, charset, isForcedCharset, aPageDescriptor);
+               aURL, charset, aPageDescriptor, 0, isForcedCharset);
   },
 
   // aCallBack is a function accepting two arguments - result (true=success) and a data object
