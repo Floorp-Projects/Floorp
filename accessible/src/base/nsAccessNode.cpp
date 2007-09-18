@@ -47,12 +47,14 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
 #include "nsIDocumentViewer.h"
+#include "nsIDOM3Node.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
+#include "nsIDOMNSDocument.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMViewCSS.h"
 #include "nsIDOMWindow.h"
@@ -890,3 +892,71 @@ nsAccessNode::GetLanguage(nsAString& aLanguage)
   return NS_OK;
 }
 
+PRBool
+nsAccessNode::GetARIARole(nsIContent *aContent, nsString& aRole)
+{
+  nsAutoString prefix;
+  PRBool strictPrefixChecking = PR_TRUE;
+  aRole.Truncate();
+
+  if (aContent->IsNodeOfType(nsINode::eHTML)) { // HTML node
+    // Allow non-namespaced role attribute in HTML
+    aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, aRole);
+    // Find non-namespaced role attribute on HTML node
+    nsCOMPtr<nsIDOMNSDocument> doc(do_QueryInterface(aContent->GetDocument()));
+    if (doc) {
+      // In text/html we are hardcoded to allow the exact prefix "wairole:" to 
+      // always indicate that we are using the WAI roles.
+      // This allows ARIA to be used within text/html where namespaces cannot be defined.
+      // We also now relax the prefix checking, which means no prefix is required to use WAI Roles
+      nsAutoString mimeType;
+      doc->GetContentType(mimeType);
+      if (mimeType.EqualsLiteral("text/html")) {
+        prefix = NS_LITERAL_STRING("wairole:");
+        strictPrefixChecking = PR_FALSE;
+      }
+    }
+  }
+
+  // Try namespaced-role attribute (xhtml or xhtml2 namespace) -- allowed in any kind of content
+  if (aRole.IsEmpty() && !aContent->GetAttr(kNameSpaceID_XHTML, nsAccessibilityAtoms::role, aRole) &&
+      !aContent->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, aRole)) {
+    return PR_FALSE;
+  }
+
+  PRBool hasPrefix = (aRole.Find(":") >= 0);
+
+  if (!hasPrefix) {
+    // * No prefix* -- not a QName
+    // Just return entire string as long as prefix is not currently required
+    if (strictPrefixChecking) {
+      // Prefix was required and we didn't have one
+      aRole.Truncate();
+      return PR_FALSE;
+    }
+    return PR_TRUE;
+  }
+
+  // * Has prefix * -- is a QName (role="prefix:rolename")
+  if (strictPrefixChecking) {  // Not text/html, we need to actually find the WAIRole prefix
+    // QI to nsIDOM3Node causes some overhead. Unfortunately we need to do this each
+    // time there is a prefixed role attribute, because the prefix to namespace mappings
+    // can change within any subtree via the xmlns attribute
+    nsCOMPtr<nsIDOM3Node> dom3Node(do_QueryInterface(aContent));
+    if (dom3Node) {
+      // Look up exact prefix name for WAI Roles
+      NS_NAMED_LITERAL_STRING(kWAIRoles_Namespace, "http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#");
+      dom3Node->LookupPrefix(kWAIRoles_Namespace, prefix);
+      prefix += ':';
+    }
+  }
+
+  PRUint32 length = prefix.Length();
+  if (length > 1 && StringBeginsWith(aRole, prefix)) {
+    // Is a QName (role="prefix:rolename"), and prefix matches WAI Role prefix
+    // Trim the WAI Role prefix off
+    aRole.Cut(0, length);
+  }
+
+  return PR_TRUE;
+}
