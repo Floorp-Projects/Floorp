@@ -86,7 +86,7 @@ public:
 
 class nsDequeIterator;
 
-class NS_COM nsDeque {
+class NS_COM_GLUE nsDeque {
   friend class nsDequeIterator;
   public:
    nsDeque(nsDequeFunctor* aDeallocator = nsnull);
@@ -240,7 +240,7 @@ private:
  * Here comes the nsDequeIterator class...
  ******************************************************/
 
-class NS_COM nsDequeIterator {
+class NS_COM_GLUE nsDequeIterator {
 public:
   /**
    * DequeIterator is an object that knows how to iterate
