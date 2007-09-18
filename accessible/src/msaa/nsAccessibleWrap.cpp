@@ -466,7 +466,7 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
 
   if (content->IsNodeOfType(nsINode::eELEMENT)) {
     nsAutoString roleString;
-    if (msaaRole != ROLE_SYSTEM_CLIENT && !GetRoleAttribute(content, roleString)) {
+    if (msaaRole != ROLE_SYSTEM_CLIENT && !GetARIARole(content, roleString)) {
       nsINodeInfo *nodeInfo = content->NodeInfo();
       nodeInfo->GetName(roleString);
       nsAutoString nameSpaceURI;
