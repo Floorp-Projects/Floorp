@@ -1423,7 +1423,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // We don't do this for <body>, <html>, <window>, <dialog> etc. which 
   // correspond to the doc accessible and will be created in any case
   if (!newAcc && content->Tag() != nsAccessibilityAtoms::body && content->GetParent() && 
-      (content->IsFocusable() ||
+      (content->IsFocusable() || content->GetID() ||
       (isHTML && nsAccUtils::HasListener(content, NS_LITERAL_STRING("click"))) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::describedby) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::labelledby) ||

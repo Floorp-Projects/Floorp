@@ -481,6 +481,7 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
     return PR_FALSE;
   }
 
+  gLastFocusedAccessiblesState = State(finalFocusAccessible);
   PRUint32 role = Role(finalFocusAccessible);
   if (role == nsIAccessibleRole::ROLE_MENUITEM) {
     if (!mCurrentARIAMenubar) {  // Entering menus

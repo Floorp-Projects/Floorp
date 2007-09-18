@@ -77,6 +77,8 @@
 // nsDocAccessible  //
 //=============================//
 
+PRUint32 nsDocAccessible::gLastFocusedAccessiblesState = 0;
+
 //-----------------------------------------------------
 // construction
 //-----------------------------------------------------
@@ -919,6 +921,23 @@ nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                   PRInt32 aModType, PRUint32 aStateMask)
 {
+  AttributeChangedImpl(aContent, aNameSpaceID, aAttribute);
+
+  // If it was the focused node, cache the new state
+  nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(aContent);
+  if (targetNode == gLastFocusedNode) {
+    nsCOMPtr<nsIAccessible> focusedAccessible;
+    GetAccService()->GetAccessibleFor(targetNode, getter_AddRefs(focusedAccessible));
+    if (focusedAccessible) {
+      gLastFocusedAccessiblesState = State(focusedAccessible);
+    }
+  }
+}
+
+
+void
+nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID, nsIAtom* aAttribute)
+{
   // Fire accessible event after short timer, because we need to wait for
   // DOM attribute & resulting layout to actually change. Otherwise,
   // assistive technology will retrieve the wrong state/value/selection info.
@@ -1087,21 +1106,33 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     return;
   }
 
-  if (aAttribute == nsAccessibilityAtoms::checked) {
+  if (aAttribute == nsAccessibilityAtoms::checked ||
+      aAttribute == nsAccessibilityAtoms::pressed) {
+    const PRUint32 kState = (aAttribute == nsAccessibilityAtoms::checked) ?
+                            nsIAccessibleStates::STATE_CHECKED : 
+                            nsIAccessibleStates::STATE_PRESSED;
     nsCOMPtr<nsIAccessibleStateChangeEvent> event =
-      new nsAccStateChangeEvent(targetNode,
-                                nsIAccessibleStates::STATE_CHECKED,
-                                PR_FALSE);
+      new nsAccStateChangeEvent(targetNode, kState, PR_FALSE);
     FireDelayedAccessibleEvent(event);
-    return;
-  }
-
-  if (aAttribute == nsAccessibilityAtoms::pressed) {
-    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
-      new nsAccStateChangeEvent(targetNode,
-                                nsIAccessibleStates::STATE_PRESSED,
-                                PR_FALSE);
-    FireDelayedAccessibleEvent(event);
+    if (targetNode == gLastFocusedNode) {
+      // State changes for MIXED state currently only supported for focused item, because
+      // otherwise we would need access to the old attribute value in this listener.
+      // This is because we don't know if the previous value of aaa:checked or aaa:pressed was "mixed"
+      // without caching that info.
+      nsCOMPtr<nsIAccessible> accessible;
+      event->GetAccessible(getter_AddRefs(accessible));
+      if (accessible) {
+        PRBool wasMixed = (gLastFocusedAccessiblesState & nsIAccessibleStates::STATE_MIXED) != 0;
+        PRBool isMixed  = (State(accessible) & nsIAccessibleStates::STATE_MIXED) != 0;
+        if (wasMixed != isMixed) {
+          nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+            new nsAccStateChangeEvent(targetNode,
+                                      nsIAccessibleStates::STATE_MIXED,
+                                      PR_FALSE, isMixed);
+          FireDelayedAccessibleEvent(event);
+        }
+      }
+    }
     return;
   }
 

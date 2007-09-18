@@ -402,3 +402,9 @@ nsAccUtils::GetDocShellTreeItemFor(nsIDOMNode *aNode)
   return docShellTreeItem;
 }
 
+PRBool
+nsAccUtils::GetID(nsIContent *aContent, nsAString& aID)
+{
+  nsIAtom *idAttribute = aContent->GetIDAttributeName();
+  return idAttribute ? aContent->GetAttr(kNameSpaceID_None, idAttribute, aID) : PR_FALSE;
+}
