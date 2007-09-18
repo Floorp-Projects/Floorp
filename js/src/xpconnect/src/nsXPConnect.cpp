@@ -982,8 +982,9 @@ nsXPConnect::InitClassesWithNewWrappedGlobal(JSContext * aJSContext,
        !JS_SetPrototype(aJSContext, tempGlobal, nsnull))
         return UnexpectedFailure(NS_ERROR_FAILURE);
 
-    if(aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT)
-        JS_FlagSystemObject(aJSContext, tempGlobal);
+    NS_ASSERTION(!(aFlags & nsIXPConnect::FLAG_SYSTEM_GLOBAL_OBJECT) ||
+                 JS_IsSystemObject(aJSContext, tempGlobal),
+                 "system flag mismatch");
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     {

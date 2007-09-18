@@ -2431,6 +2431,7 @@ JSObject *
 js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
 {
     jsid id;
+    uintN gcflags;
     JSObject *obj;
     JSObjectOps *ops;
     JSObjectMap *map;
@@ -2451,17 +2452,20 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
         }
     }
 
-    /* Always call the class's getObjectOps hook if it has one. */
-    ops = clasp->getObjectOps
-          ? clasp->getObjectOps(cx, clasp)
-          : &js_ObjectOps;
+    /*
+     * Require that obj has the same system flag as its parent or (if null)
+     * its context's default system flag (see js_NewGCThing).
+     */
+    gcflags = GCX_OBJECT;
+    if (parent)
+        gcflags |= *js_GetGCThingFlags(parent) & GCF_SYSTEM;
 
     /*
      * Allocate a zeroed object from the GC heap.  Do this *after* any other
      * GC-thing allocations under js_GetClassPrototype or clasp->getObjectOps,
      * to avoid displacing the newborn root for obj.
      */
-    obj = (JSObject *) js_NewGCThing(cx, GCX_OBJECT, sizeof(JSObject));
+    obj = (JSObject *) js_NewGCThing(cx, gcflags, sizeof(JSObject));
     if (!obj)
         return NULL;
 
@@ -2480,6 +2484,11 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     /* Initialize the remaining fixed slots. */
     for (i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
         obj->fslots[i] = JSVAL_VOID;
+
+    /* Always call the class's getObjectOps hook if it has one. */
+    ops = clasp->getObjectOps
+          ? clasp->getObjectOps(cx, clasp)
+          : &js_ObjectOps;
 
     /*
      * Root obj to prevent it from being collected out from under this call to
