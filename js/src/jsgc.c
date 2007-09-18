@@ -1563,7 +1563,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
     }
 
     /* We can't fail now, so update flags. */
-    *flagp = (uint8)flags;
+    *flagp = (uint8)flags | cx->gcDefaultFlags;
 
 #ifdef DEBUG_gchist
     gchist[gchpos].lastDitch = doGC;
