@@ -3794,12 +3794,12 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
     return;
 
   gfxFont::Metrics fontMetrics = GetFontMetrics(aProvider.GetFontGroup());
-  PRInt32 app = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
+  gfxFloat app = aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
 
   // XXX aFramePt is in AppUnits, shouldn't it be nsFloatPoint?
   gfxPoint pt(aFramePt.x / app, (aTextBaselinePt.y - mAscent) / app);
-  gfxSize size(GetRect().width / app, 0);
-  gfxFloat ascent = mAscent / app;
+  gfxSize size(gfxFloat(GetRect().width) / app, 0);
+  gfxFloat ascent = gfxFloat(mAscent) / app;
 
   if (decorations & NS_FONT_DECORATION_OVERLINE) {
     size.height = fontMetrics.underlineSize;
