@@ -196,8 +196,7 @@ nsMenuFrame::nsMenuFrame(nsIPresShell* aShell, nsStyleContext* aContext):
     mChecked(PR_FALSE),
     mType(eMenuType_Normal),
     mMenuParent(nsnull),
-    mPopupFrame(nsnull),
-    mLastPref(-1,-1)
+    mPopupFrame(nsnull)
 {
 
 } // cntr
@@ -734,10 +733,9 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
         prefSize.width = mRect.width;
 
     // if the pref size changed then set bounds to be the pref size
-    PRBool sizeChanged = (mLastPref != prefSize);
+    PRBool sizeChanged = (mPopupFrame->GetRect().Size() != prefSize);
     if (sizeChanged) {
       mPopupFrame->SetBounds(aState, nsRect(0,0,prefSize.width, prefSize.height));
-      mLastPref = prefSize;
     }
 
     // if the menu has just been opened, or its size changed, position
@@ -1166,7 +1164,6 @@ nsMenuFrame::RemoveFrame(nsIAtom*        aListName,
     // Go ahead and remove this frame.
     mPopupFrame->Destroy();
     mPopupFrame = nsnull;
-    mLastPref.SizeTo(-1, -1);
     PresContext()->PresShell()->
       FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                        NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -1187,7 +1184,6 @@ nsMenuFrame::InsertFrames(nsIAtom*        aListName,
 
   if (!mPopupFrame && aFrameList->GetType() == nsGkAtoms::menuPopupFrame) {
     mPopupFrame = static_cast<nsMenuPopupFrame *>(aFrameList);
-    mLastPref.SizeTo(-1, -1);
 
 #ifdef DEBUG_LAYOUT
     nsBoxLayoutState state(PresContext());
@@ -1215,7 +1211,6 @@ nsMenuFrame::AppendFrames(nsIAtom*        aListName,
 
   if (!mPopupFrame && aFrameList->GetType() == nsGkAtoms::menuPopupFrame) {
     mPopupFrame = static_cast<nsMenuPopupFrame *>(aFrameList);
-    mLastPref.SizeTo(-1, -1);
 
 #ifdef DEBUG_LAYOUT
     nsBoxLayoutState state(PresContext());
