@@ -866,6 +866,7 @@ public:
     }
   }
   void ScanFrame(nsIFrame* aFrame);
+  PRBool IsTextRunValidForMappedFlows(gfxTextRun* aTextRun);
   void FlushFrames(PRBool aFlushLineBreaks);
   void ResetRunInfo() {
     mLastFrame = nsnull;
@@ -898,9 +899,8 @@ public:
   PRBool ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFrame* aFrame2);
 
   // Like TextRunMappedFlow but with some differences. mStartFrame to mEndFrame
-  // are a sequence of in-flow frames. There can be multiple MappedFlows per
-  // content element; the frames in each MappedFlow all have the same style
-  // context.
+  // (exclusive) are a sequence of in-flow frames (if mEndFrame is null, then
+  // continuations starting from mStartFrame are a sequence of in-flow frames).
   struct MappedFlow {
     nsTextFrame* mStartFrame;
     nsTextFrame* mEndFrame;
@@ -910,9 +910,12 @@ public:
     // ancestor of mStartFrame and the previous text frame, or null if there
     // was no previous text frame on this line.
     nsIFrame*    mAncestorControllingInitialBreak;
-    PRInt32      mContentOffset;
-    PRInt32      mContentEndOffset;
     PRUint32     mTransformedTextOffset; // Only used inside BuildTextRunForFrames
+    
+    PRInt32 GetContentEnd() {
+      return mEndFrame ? mEndFrame->GetContentOffset()
+          : mStartFrame->GetContent()->GetText()->GetLength();
+    }
   };
 
   class BreakSink : public nsILineBreakSink {
@@ -1234,6 +1237,26 @@ ExpandBuffer(PRUnichar* aDest, PRUint8* aSrc, PRUint32 aCount)
   return aDest;
 }
 
+PRBool BuildTextRunsScanner::IsTextRunValidForMappedFlows(gfxTextRun* aTextRun)
+{
+  if (aTextRun->GetFlags() & nsTextFrameUtils::TEXT_IS_SIMPLE_FLOW)
+    return mMappedFlows.Length() == 1 &&
+      mMappedFlows[0].mStartFrame == static_cast<nsTextFrame*>(aTextRun->GetUserData()) &&
+      mMappedFlows[0].mEndFrame == nsnull;
+
+  TextRunUserData* userData = static_cast<TextRunUserData*>(aTextRun->GetUserData());
+  if (userData->mMappedFlowCount != PRInt32(mMappedFlows.Length()))
+    return PR_FALSE;
+  PRUint32 i;
+  for (i = 0; i < mMappedFlows.Length(); ++i) {
+    if (userData->mMappedFlows[i].mStartFrame != mMappedFlows[i].mStartFrame ||
+        PRInt32(userData->mMappedFlows[i].mContentLength) !=
+            mMappedFlows[i].GetContentEnd() - mMappedFlows[i].mStartFrame->GetContentOffset())
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 /**
  * This gets called when we need to make a text run for the current list of
  * frames.
@@ -1245,11 +1268,9 @@ void BuildTextRunsScanner::FlushFrames(PRBool aFlushLineBreaks)
 
   if (!mSkipIncompleteTextRuns && mCurrentFramesAllSameTextRun &&
       ((mCurrentFramesAllSameTextRun->GetFlags() & nsTextFrameUtils::TEXT_INCOMING_WHITESPACE) != 0) ==
-      mCurrentRunTrimLeadingWhitespace) {
+      mCurrentRunTrimLeadingWhitespace &&
+      IsTextRunValidForMappedFlows(mCurrentFramesAllSameTextRun)) {
     // Optimization: We do not need to (re)build the textrun.
-    // Note that if the textrun included all these frames and more, and something
-    // changed so that it can only cover these frames, then one of the frames
-    // at the boundary would have detected the change and nuked the textrun.
 
     // Feed this run's text into the linebreaker to provide context. This also
     // updates mTrimNextRunLeadingWhitespace appropriately.
@@ -1284,6 +1305,15 @@ void BuildTextRunsScanner::AccumulateRunInfo(nsTextFrame* aFrame)
   mDoubleByteText |= aFrame->GetContent()->GetText()->Is2b();
   mLastFrame = aFrame;
   mCommonAncestorWithLastFrame = aFrame;
+
+  MappedFlow* mappedFlow = &mMappedFlows[mMappedFlows.Length() - 1];
+  NS_ASSERTION(mappedFlow->mStartFrame == aFrame ||
+               mappedFlow->GetContentEnd() == aFrame->GetContentOffset(),
+               "Overlapping or discontiguous frames => BAD");
+  mappedFlow->mEndFrame = static_cast<nsTextFrame*>(aFrame->GetNextContinuation());
+  if (mCurrentFramesAllSameTextRun != aFrame->GetTextRun()) {
+    mCurrentFramesAllSameTextRun = nsnull;
+  }
 
   if (mStartOfLine) {
     mLineBreakBeforeFrames.AppendElement(aFrame);
@@ -1344,7 +1374,8 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
   // First check if we can extend the current mapped frame block. This is common.
   if (mMappedFlows.Length() > 0) {
     MappedFlow* mappedFlow = &mMappedFlows[mMappedFlows.Length() - 1];
-    if (mappedFlow->mEndFrame == aFrame) {
+    if (mappedFlow->mEndFrame == aFrame &&
+        (aFrame->GetStateBits() & NS_FRAME_IS_FLUID_CONTINUATION)) {
       NS_ASSERTION(aFrame->GetType() == nsGkAtoms::textFrame,
                    "Flow-sibling of a text frame is not a text frame?");
 
@@ -1353,15 +1384,7 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
       // This is almost always true:
       if (mLastFrame->GetStyleContext() == aFrame->GetStyleContext() &&
           !HasTerminalNewline(mLastFrame)) {
-        nsTextFrame* frame = static_cast<nsTextFrame*>(aFrame);
-        mappedFlow->mEndFrame = static_cast<nsTextFrame*>(frame->GetNextInFlow());
-        NS_ASSERTION(mappedFlow->mContentEndOffset == frame->GetContentOffset(),
-                     "Overlapping or discontiguous frames => BAD");
-        mappedFlow->mContentEndOffset = frame->GetContentEnd();
-        if (mCurrentFramesAllSameTextRun != frame->GetTextRun()) {
-          mCurrentFramesAllSameTextRun = nsnull;
-        }
-        AccumulateRunInfo(frame);
+        AccumulateRunInfo(static_cast<nsTextFrame*>(aFrame));
         return;
       }
     }
@@ -1371,8 +1394,15 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
   if (aFrame->GetType() == nsGkAtoms::textFrame) {
     nsTextFrame* frame = static_cast<nsTextFrame*>(aFrame);
 
-    if (mLastFrame && !ContinueTextRunAcrossFrames(mLastFrame, frame)) {
-      FlushFrames(PR_FALSE);
+    if (mLastFrame) {
+      if (!ContinueTextRunAcrossFrames(mLastFrame, frame)) {
+        FlushFrames(PR_FALSE);
+      } else {
+        if (mLastFrame->GetContent() == frame->GetContent()) {
+          AccumulateRunInfo(frame);
+          return;
+        }
+      }
     }
 
     MappedFlow* mappedFlow = mMappedFlows.AppendElement();
@@ -1380,22 +1410,14 @@ void BuildTextRunsScanner::ScanFrame(nsIFrame* aFrame)
       return;
 
     mappedFlow->mStartFrame = frame;
-    mappedFlow->mEndFrame = static_cast<nsTextFrame*>(frame->GetNextInFlow());
     mappedFlow->mAncestorControllingInitialBreak = mCommonAncestorWithLastFrame;
-    mappedFlow->mContentOffset = frame->GetContentOffset();
-    mappedFlow->mContentEndOffset = frame->GetContentEnd();
     // This is temporary: it's overwritten in BuildTextRunForFrames
     mappedFlow->mTransformedTextOffset = 0;
-    mLastFrame = frame;
 
     AccumulateRunInfo(frame);
     if (mMappedFlows.Length() == 1) {
       mCurrentFramesAllSameTextRun = frame->GetTextRun();
       mCurrentRunTrimLeadingWhitespace = mTrimNextRunLeadingWhitespace;
-    } else {
-      if (mCurrentFramesAllSameTextRun != frame->GetTextRun()) {
-        mCurrentFramesAllSameTextRun = nsnull;
-      }
     }
     return;
   }
@@ -1536,17 +1558,17 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   // If the situation is particularly simple (and common) we don't need to
   // allocate userData.
   if (mMappedFlows.Length() == 1 && !mMappedFlows[0].mEndFrame &&
-      !mMappedFlows[0].mContentOffset) {
+      mMappedFlows[0].mStartFrame->GetContentOffset() == 0) {
     userData = &dummyData;
     dummyData.mMappedFlows = &dummyMappedFlow;
   } else {
     userData = static_cast<TextRunUserData*>
-                          (nsMemory::Alloc(sizeof(TextRunUserData) + mMappedFlows.Length()*sizeof(TextRunMappedFlow)));
+      (nsMemory::Alloc(sizeof(TextRunUserData) + mMappedFlows.Length()*sizeof(TextRunMappedFlow)));
     userData->mMappedFlows = reinterpret_cast<TextRunMappedFlow*>(userData + 1);
   }
+  userData->mMappedFlowCount = mMappedFlows.Length();
   userData->mLastFlowIndex = 0;
 
-  PRUint32 finalMappedFlowCount = 0;
   PRUint32 currentTransformedTextOffset = 0;
 
   PRUint32 nextBreakIndex = 0;
@@ -1582,29 +1604,20 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     // Figure out what content is included in this flow.
     nsIContent* content = f->GetContent();
     const nsTextFragment* frag = content->GetText();
-    PRInt32 contentStart = mappedFlow->mContentOffset;
-    PRInt32 contentEnd = mappedFlow->mContentEndOffset;
+    PRInt32 contentStart = mappedFlow->mStartFrame->GetContentOffset();
+    PRInt32 contentEnd = mappedFlow->GetContentEnd();
     PRInt32 contentLength = contentEnd - contentStart;
 
-    if (content == lastContent) {
-      NS_ASSERTION(endOfLastContent == contentStart,
-                   "Gap or overlap in textframes mapping content?!");
-      if (contentStart >= contentEnd)
-        continue;
-      userData->mMappedFlows[finalMappedFlowCount - 1].mContentLength += contentLength;
-    } else {
-      TextRunMappedFlow* newFlow = &userData->mMappedFlows[finalMappedFlowCount];
+    TextRunMappedFlow* newFlow = &userData->mMappedFlows[i];
+    newFlow->mStartFrame = mappedFlow->mStartFrame;
+    newFlow->mDOMOffsetToBeforeTransformOffset = builder.GetCharCount() -
+      mappedFlow->mStartFrame->GetContentOffset();
+    newFlow->mContentLength = contentLength;
 
-      newFlow->mStartFrame = mappedFlow->mStartFrame;
-      newFlow->mDOMOffsetToBeforeTransformOffset = builder.GetCharCount() - mappedFlow->mContentOffset;
-      newFlow->mContentLength = contentLength;
-      ++finalMappedFlowCount;
-
-      while (nextBreakBeforeFrame && nextBreakBeforeFrame->GetContent() == content) {
-        textBreakPoints.AppendElement(
-            nextBreakBeforeFrame->GetContentOffset() + newFlow->mDOMOffsetToBeforeTransformOffset);
-        nextBreakBeforeFrame = GetNextBreakBeforeFrame(&nextBreakIndex);
-      }
+    while (nextBreakBeforeFrame && nextBreakBeforeFrame->GetContent() == content) {
+      textBreakPoints.AppendElement(
+          nextBreakBeforeFrame->GetContentOffset() + newFlow->mDOMOffsetToBeforeTransformOffset);
+      nextBreakBeforeFrame = GetNextBreakBeforeFrame(&nextBreakIndex);
     }
 
     PRUint32 analysisFlags;
@@ -1666,12 +1679,6 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     userData = nsnull;
     finalUserData = mMappedFlows[0].mStartFrame;
   } else {
-    userData = static_cast<TextRunUserData*>
-                          (nsMemory::Realloc(userData, sizeof(TextRunUserData) + finalMappedFlowCount*sizeof(TextRunMappedFlow)));
-    if (!userData)
-      return;
-    userData->mMappedFlows = reinterpret_cast<TextRunMappedFlow*>(userData + 1);
-    userData->mMappedFlowCount = finalMappedFlowCount;
     finalUserData = userData;
   }
 
@@ -1862,7 +1869,7 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
       - offset;
 
     nsTextFrame* startFrame = mappedFlow->mStartFrame;
-    if (HasCompressedLeadingWhitespace(startFrame, mappedFlow->mContentEndOffset, iter)) {
+    if (HasCompressedLeadingWhitespace(startFrame, mappedFlow->GetContentEnd(), iter)) {
       mLineBreaker.AppendInvisibleWhitespace();
     }
 
@@ -1902,7 +1909,8 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
       }
     }
     
-    iter.AdvanceOriginal(mappedFlow->mContentEndOffset - mappedFlow->mContentOffset);
+    iter.AdvanceOriginal(mappedFlow->GetContentEnd() -
+            mappedFlow->mStartFrame->GetContentOffset());
   }
 }
 
@@ -1917,7 +1925,7 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
     nsTextFrame* endFrame = mappedFlow->mEndFrame;
     nsTextFrame* f;
     for (f = startFrame; f != endFrame;
-         f = static_cast<nsTextFrame*>(f->GetNextInFlow())) {
+         f = static_cast<nsTextFrame*>(f->GetNextContinuation())) {
 #ifdef DEBUG_roc
       if (f->GetTextRun()) {
         gfxTextRun* textRun = f->GetTextRun();
