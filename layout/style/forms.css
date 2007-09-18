@@ -84,6 +84,7 @@ input {
   background-color: -moz-Field;
   color: -moz-FieldText;
   font: -moz-field;
+  text-rendering: optimizeLegibility;
   line-height: normal !important;
   text-align: start;
   text-transform: none;
@@ -105,6 +106,7 @@ textarea {
   background-color: -moz-Field;
   color: -moz-FieldText;
   font: medium -moz-fixed;
+  text-rendering: optimizeLegibility;
   text-align: start;
   text-transform: none;
   word-spacing: normal;
