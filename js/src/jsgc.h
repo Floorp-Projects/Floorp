@@ -262,7 +262,6 @@ typedef struct JSGCStats {
 #endif
     uint32  maxlevel;   /* maximum GC nesting (indirect recursion) level */
     uint32  poke;       /* number of potentially useful GC calls */
-    uint32  nopoke;     /* useless GC calls where js_PokeGC was not set */
     uint32  afree;      /* thing arenas freed so far */
     uint32  stackseg;   /* total extraordinary stack segments scanned */
     uint32  segslots;   /* total stack segment jsval slots scanned */
