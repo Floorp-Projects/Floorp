@@ -330,6 +330,13 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
                                      nsIAccessible **aStartAcc,
                                      nsIAccessible **aEndAcc)
 {
+  if (aStartOffset < 0) {
+    GetCharacterCount(&aStartOffset);
+  }
+  if (aEndOffset < 0) {
+    GetCharacterCount(&aEndOffset);
+  }
+
   PRInt32 startOffset = aStartOffset;
   PRInt32 endOffset = aEndOffset;
 
@@ -358,7 +365,7 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
     *aEndAcc = nsnull;
 
   nsIntRect unionRect;
-  nsCOMPtr<nsIAccessible> accessible;
+  nsCOMPtr<nsIAccessible> accessible, lastAccessible;
 
   gfxSkipChars skipChars;
   gfxSkipCharsIterator iter;
@@ -366,6 +373,7 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
   // Loop through children and collect valid offsets, text and bounds
   // depending on what we need for out parameters
   while (NextChild(accessible)) {
+    lastAccessible = accessible;
     nsCOMPtr<nsPIAccessNode> accessNode(do_QueryInterface(accessible));
     nsIFrame *frame = accessNode->GetFrame();
     if (!frame) {
@@ -479,10 +487,13 @@ nsHyperTextAccessible::GetPosAndText(PRInt32& aStartOffset, PRInt32& aEndOffset,
     }
   }
 
+  if (aStartAcc && !*aStartAcc) {
+    NS_IF_ADDREF(*aStartAcc = lastAccessible);
+  }
   if (aEndFrame && !*aEndFrame) {
     *aEndFrame = startFrame;
     if (aStartAcc && aEndAcc)
-      NS_ADDREF(*aEndAcc = *aStartAcc);
+      NS_IF_ADDREF(*aEndAcc = *aStartAcc);
   }
 
   return startFrame;
@@ -1571,33 +1582,54 @@ NS_IMETHODIMP nsHyperTextAccessible::SetSelectionBounds(PRInt32 aSelectionNum, P
   }
 
   nsIFrame *endFrame;
-  nsIFrame *startFrame = GetPosAndText(aStartOffset, aEndOffset, nsnull, &endFrame);
-  NS_ENSURE_TRUE(startFrame, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIAccessible> startAcc, endAcc;
+  nsIFrame *startFrame = GetPosAndText(aStartOffset, aEndOffset, nsnull, &endFrame, nsnull,
+                                       getter_AddRefs(startAcc), getter_AddRefs(endAcc));
 
   nsCOMPtr<nsIPresShell> shell = GetPresShell();
 
-  nsIContent *startParentContent = startFrame->GetContent();
-  PRInt32 startOffset;
-  if (startFrame->GetType() != nsAccessibilityAtoms::textFrame) {
-    nsIContent *newParent = startParentContent->GetParent();
-    startOffset = newParent->IndexOf(startParentContent);
-    startParentContent = newParent;
-  }
-  else {
-    // We have a rendered offset into the text frame, and it needs to be
-    // a content offset for us to set the caret
-    nsIFrame *startPrimaryFrame =
-      shell->GetPrimaryFrameFor(startFrame->GetContent());
-    rv = RenderedToContentOffset(startPrimaryFrame, aStartOffset, &startOffset);
+  if (!startFrame) { // past the end of the hyper text
+    nsCOMPtr<nsIAccessNode> startAccessNode = do_QueryInterface(startAcc);
+    NS_ENSURE_TRUE(startAccessNode, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDOMNode> node;
+    startAccessNode->GetDOMNode(getter_AddRefs(node));
+    NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+    rv = range->SetStartAfter(node);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  nsCOMPtr<nsIDOMNode> startParentNode(do_QueryInterface(startParentContent));
-  NS_ENSURE_TRUE(startParentNode, NS_ERROR_FAILURE);
-  rv = range->SetStart(startParentNode, startOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
+  else {
+    nsIContent *startParentContent = startFrame->GetContent();
+    PRInt32 startOffset;
+    if (startFrame->GetType() != nsAccessibilityAtoms::textFrame) {
+      nsIContent *newParent = startParentContent->GetParent();
+      startOffset = newParent->IndexOf(startParentContent);
+      startParentContent = newParent;
+    }
+    else {
+      // We have a rendered offset into the text frame, and it needs to be
+      // a content offset for us to set the caret
+      nsIFrame *startPrimaryFrame =
+        shell->GetPrimaryFrameFor(startFrame->GetContent());
+      rv = RenderedToContentOffset(startPrimaryFrame, aStartOffset, &startOffset);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    nsCOMPtr<nsIDOMNode> startParentNode(do_QueryInterface(startParentContent));
+    NS_ENSURE_TRUE(startParentNode, NS_ERROR_FAILURE);
+    rv = range->SetStart(startParentNode, startOffset);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   if (isOnlyCaret) { 
     rv = range->Collapse(PR_TRUE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else if (!endFrame) {  // past the end of the hyper text
+    nsCOMPtr<nsIAccessNode> endAccessNode = do_QueryInterface(endAcc);
+    NS_ENSURE_TRUE(endAccessNode, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIDOMNode> node;
+    endAccessNode->GetDOMNode(getter_AddRefs(node));
+    NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
+    rv = range->SetEndAfter(node);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   else {
