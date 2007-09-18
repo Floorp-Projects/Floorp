@@ -393,25 +393,22 @@ JS_FlagScriptFilenamePrefix(JSRuntime *rt, const char *prefix, uint32 flags);
 #define JSFILENAME_SYSTEM       0x00000001      /* "system" script, see below */
 
 /*
- * Return true if obj is a "system" object, that is, one parented by a system
- * object, or if obj's parent is null, one created on a context flagged as a
- * system context by JS_FlagSystemContext.
- *
- * What "system" means is up to the API client, but it can be used to implement
- * access control policies based on script filenames and their prefixes, using
- * JS_FlagScriptFilenamePrefix and JS_GetTopScriptFilenameFlags.
+ * Return true if obj is a "system" object, that is, one flagged by a prior
+ * call to JS_FlagSystemObject(cx, obj).  What "system" means is up to the API
+ * client, but it can be used to coordinate access control policies based on
+ * script filenames and their prefixes, using JS_FlagScriptFilenamePrefix and
+ * JS_GetTopScriptFilenameFlags.
  */
 extern JS_PUBLIC_API(JSBool)
 JS_IsSystemObject(JSContext *cx, JSObject *obj);
 
 /*
- * Flag cx as a "system" context. The API client can flag system contexts to
- * optimize access control checks. The engine stores, but does not interpret,
- * the per-context flag set by this call, and uses it when new GC-things are
- * created on cx.
+ * Flag obj as a "system" object.  The API client can flag system objects to
+ * optimize access control checks.  The engine stores but does not interpret
+ * the per-object flag set by this call.
  */
 extern JS_PUBLIC_API(void)
-JS_FlagSystemContext(JSContext *cx);
+JS_FlagSystemObject(JSContext *cx, JSObject *obj);
 
 /************************************************************************/
 
