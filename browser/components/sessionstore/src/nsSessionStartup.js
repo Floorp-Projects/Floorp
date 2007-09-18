@@ -110,7 +110,7 @@ SessionStartup.prototype = {
     
     // only read the session file if config allows possibility of restoring
     var resumeFromCrash = this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
-    if (resumeFromCrash || this._doResumeSession()) {
+    if ((resumeFromCrash || this._doResumeSession()) && this._sessionFile.exists()) {
       // get string containing session state
       this._iniString = this._readFile(this._sessionFile);
       if (this._iniString) {
