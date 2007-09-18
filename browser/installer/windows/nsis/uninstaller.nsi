@@ -209,7 +209,6 @@ Section "Uninstall"
   ; installing even if there is another install of Firefox that is set as the
   ; default browser. Now the key is always updated on install but it is only
   ; removed if it refers to this install location.
-  MessageBox MB_OK "$INSTDIR$\n$R1"
   ${If} "$INSTDIR" == "$R1"
     ; XXXrstrong - if there is another installation of the same app ideally we
     ; would just modify these values. The GetSecondInstallPath macro could be
