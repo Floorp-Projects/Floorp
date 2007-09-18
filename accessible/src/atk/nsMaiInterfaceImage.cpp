@@ -69,8 +69,18 @@ getImagePositionCB(AtkImage *aImage, gint *aAccX, gint *aAccY,
       return;
 
     PRInt32 width, height; // dummy
-    image->GetImageBounds(aAccX, aAccY, &width, &height);
-    // TODO: translate (x,y) accroding aCoordType. see bug 369821
+    // Returned in screen coordinates
+    nsresult rv = image->GetImageBounds(aAccX, aAccY, &width, &height);
+    if (NS_FAILED(rv))
+      return;
+    
+    if (aCoordType == ATK_XY_WINDOW) {
+        nsCOMPtr<nsIDOMNode> domNode;
+        accWrap->GetDOMNode(getter_AddRefs(domNode));
+        nsIntPoint winCoords = nsAccUtils::GetScreenCoordsForWindow(domNode);
+        *aAccX -= winCoords.x;
+        *aAccY -= winCoords.y;
+    }
 }
 
 const gchar *
