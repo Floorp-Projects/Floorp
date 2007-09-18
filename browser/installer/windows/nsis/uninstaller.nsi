@@ -34,7 +34,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# Also requires:
+# Required Plugins:
 # ShellLink plugin http://nsis.sourceforge.net/ShellLink_plug-in
 
 ; Set verbosity to 3 (e.g. no script) to lessen the noise in the build logs
@@ -62,12 +62,22 @@ Var TmpVal
 !include WordFunc.nsh
 !include MUI.nsh
 
-!insertmacro GetOptions
-!insertmacro GetParameters
+; WinVer.nsh was added in the same release that RequestExecutionLevel so check
+; if ___WINVER__NSH___ is defined to determine if RequestExecutionLevel is
+; available.
+!include /NONFATAL WinVer.nsh
+!ifdef ___WINVER__NSH___
+  RequestExecutionLevel admin
+!else
+  !warning "Uninstaller will be created without Vista compatibility.$\n            \
+            Upgrade your NSIS installation to at least version 2.22 to resolve."
+!endif
+
 !insertmacro StrFilter
 !insertmacro WordFind
 !insertmacro WordReplace
 
+!insertmacro un.GetParent
 !insertmacro un.LineFind
 !insertmacro un.TrimNewLines
 
@@ -82,23 +92,27 @@ Var TmpVal
 ; post update cleanup.
 VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
 
-!insertmacro GetLongPath
 !insertmacro AddHandlerValues
 !insertmacro CleanVirtualStore
+!insertmacro GetLongPath
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
-!insertmacro UpdateUninstallLog
-!insertmacro WriteRegStr2
 !insertmacro WriteRegDWORD2
+!insertmacro WriteRegStr2
 
-!insertmacro un.GetLongPath
-!insertmacro un.RegCleanMain
-!insertmacro un.RegCleanUninstall
 !insertmacro un.CleanVirtualStore
 !insertmacro un.CloseApp
+!insertmacro un.GetLongPath
 !insertmacro un.GetSecondInstallPath
+!insertmacro un.ParseUninstallLog
+!insertmacro un.RegCleanMain
+!insertmacro un.RegCleanUninstall
+!insertmacro un.RemoveQuotesFromPath
 
 !include shared.nsh
+
+; Helper macros for ui callbacks. Insert these after shared.nsh
+!insertmacro UninstallOnInitCommon
 
 Name "${BrandFullName}"
 OutFile "helper.exe"
@@ -164,14 +178,16 @@ Section "Uninstall"
   SetDetailsPrint textonly
   DetailPrint $(STATUS_UNINSTALL_MAIN)
   SetDetailsPrint none
+
   ; Remove registry entries for non-existent apps and for apps that point to our
-  ; install location in the Software\Mozilla key.
+  ; install location in the Software\Mozilla key and uninstall registry entries
+  ; that point to our install location for both HKCU and HKLM.
   SetShellVarContext current  ; Sets SHCTX to HKCU
   ${un.RegCleanMain} "Software\Mozilla"
+  ${un.RegCleanUninstall}
+
   SetShellVarContext all  ; Sets SHCTX to HKLM
   ${un.RegCleanMain} "Software\Mozilla"
-
-  ; Remove uninstall entries that point to our install location
   ${un.RegCleanUninstall}
 
   SetShellVarContext all  ; Set SHCTX to HKLM
@@ -182,13 +198,9 @@ Section "Uninstall"
   ${EndIf}
 
   StrCpy $0 "Software\Clients\StartMenuInternet\${FileMainEXE}\shell\open\command"
-  ReadRegStr $1 HKLM "$0" ""
-  Push $1
-  ${GetPathFromRegStr}
-  Pop $R0
-  Push $R0
-  ${GetParentDir}
-  Pop $R1
+  ReadRegStr $R1 HKLM "$0" ""
+  ${un.RemoveQuotesFromPath} "$R1" $R1
+  ${un.GetParent} "$R1" $R1
 
   ; Only remove the StartMenuInternet key if it refers to this install location.
   ; The StartMenuInternet registry key is independent of the default browser
@@ -197,6 +209,7 @@ Section "Uninstall"
   ; installing even if there is another install of Firefox that is set as the
   ; default browser. Now the key is always updated on install but it is only
   ; removed if it refers to this install location.
+  MessageBox MB_OK "$INSTDIR$\n$R1"
   ${If} "$INSTDIR" == "$R1"
     ; XXXrstrong - if there is another installation of the same app ideally we
     ; would just modify these values. The GetSecondInstallPath macro could be
@@ -215,151 +228,44 @@ Section "Uninstall"
     StrCpy $0 "MIME\Database\Content Type\application/x-xpinstall;app=firefox"
     DeleteRegKey HKCR "$0"
   ${Else}
-    ReadRegStr $1 HKLM "$0" ""
-    Push $1
-    ${GetPathFromRegStr}
-    Pop $R0
-    Push $R0
-    ${GetParentDir}
-    Pop $R1
+    ReadRegStr $R1 HKLM "$0" ""
+    ${un.RemoveQuotesFromPath} "$R1" $R1
+    ${un.GetParent} "$R1" $R1
     ${If} "$INSTDIR" == "$R1"
       WriteRegStr HKLM "$0" "" "$R9"
-      Push $R9
-      ${GetParentDir}
-      Pop $R1
+      ${un.GetParent} "$R9" $R1
       WriteRegStr HKLM "$0" "Path" "$R1"
     ${EndIf}
   ${EndIf}
 
-  ; Remove files. If we don't have a log file skip
-  ${If} ${FileExists} "$INSTDIR\uninstall\uninstall.log"
-    ; Copy the uninstall log file to a temporary file
-    GetTempFileName $TmpVal
-    CopyFiles /SILENT /FILESONLY "$INSTDIR\uninstall\uninstall.log" "$TmpVal"
+  ; Remove directories and files we always control
+  RmDir /r "$INSTDIR\updates"
+  RmDir /r "$INSTDIR\defaults\shortcuts"
+  RmDir /r "$INSTDIR\distribution"
+  Delete "$INSTDIR\removed-files"
 
-    ; Unregister DLL's
-    ${un.LineFind} "$TmpVal" "/NUL" "1:-1" "un.UnRegDLLsCallback"
+  ; Parse the uninstall log to unregister dll's and remove all installed
+  ; files / directories this install is responsible for.
+  ${un.ParseUninstallLog}
 
-    ; Delete files
-    ${un.LineFind} "$TmpVal" "/NUL" "1:-1" "un.RemoveFilesCallback"
+  ; Remove the uninstall directory that we control
+  RmDir /r "$INSTDIR\uninstall"
 
-    ; Remove directories we always control
-    RmDir /r "$INSTDIR\uninstall"
-    RmDir /r "$INSTDIR\updates"
-    RmDir /r "$INSTDIR\defaults\shortcuts"
-
-    ; Remove empty directories
-    ${un.LineFind} "$TmpVal" "/NUL" "1:-1" "un.RemoveDirsCallback"
-
-    ; Delete the temporary uninstall log file
-    ${DeleteFile} "$TmpVal"
-
-    ; Remove the installation directory if it is empty
-    ${RemoveDir} "$INSTDIR"
-  ${EndIf}
+  ; Remove the installation directory if it is empty
+  ${RemoveDir} "$INSTDIR"
 
   ; Remove files that may be left behind by the application in the
   ; VirtualStore directory.
   ${un.CleanVirtualStore}
 
   ; Refresh desktop icons otherwise the start menu internet item won't be
-  ; removed and other ugly things will happen like recreation of the registry
-  ; key by the OS under some conditions.
+  ; removed and other ugly things will happen like recreation of the app's
+  ; clients registry key by the OS under some conditions.
   System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"
 SectionEnd
 
 ################################################################################
 # Helper Functions
-
-Function un.RemoveFilesCallback
-  ${un.TrimNewLines} "$R9" "$R9"
-  StrCpy $R1 "$R9" 5
-  ${If} $R1 == "File:"
-    StrCpy $R9 "$R9" "" 6
-    StrCpy $R0 "$R9" 1
-    ; If the path is relative prepend the install directory
-    ${If} $R0 == "\"
-      StrCpy $R0 "$INSTDIR$R9"
-    ${Else}
-      StrCpy $R0 "$R9"
-    ${EndIf}
-    ${If} ${FileExists} "$R0"
-      ${DeleteFile} "$R0"
-    ${EndIf}
-  ${EndIf}
-  ClearErrors
-  Push 0
-FunctionEnd
-
-; Using locate will leave file handles open to some of the directories which
-; will prevent the deletion of these directories. This parses the uninstall.log
-; and uses the file entries to find / remove empty directories.
-Function un.RemoveDirsCallback
-  ${un.TrimNewLines} "$R9" "$R9"
-  StrCpy $R1 "$R9" 5
-  ${If} $R1 == "File:"
-    StrCpy $R9 "$R9" "" 6
-    StrCpy $R1 "$R9" 1
-    ${If} $R1 == "\"
-      StrCpy $R2 "$INSTDIR"
-      StrCpy $R1 "$INSTDIR$R9"
-    ${Else}
-      StrCpy $R2 ""
-      StrCpy $R1 "$R9"
-    ${EndIf}
-    loop:
-      Push $R1
-      ${GetParentDir}
-      Pop $R0
-      GetFullPathName $R1 "$R0"
-      ; We only try to remove empty directories but the Desktop, StartMenu, and
-      ; QuickLaunch directories can be empty so guard against removing them.
-      ${If} "$R2" != "$INSTDIR"
-        SetShellVarContext all
-        ${If} $R1 == "$DESKTOP"
-        ${OrIf} $R1 == "$STARTMENU"
-          GoTo end
-        ${EndIf}
-        SetShellVarContext current
-        ${If} $R1 == "$QUICKLAUNCH"
-        ${OrIf} $R1 == "$DESKTOP"
-        ${OrIf} $R1 == "$STARTMENU"
-          GoTo end
-        ${EndIf}
-      ${ElseIf} "$R1" == "$INSTDIR"
-        GoTo end
-      ${EndIf}
-      ${If} ${FileExists} "$R1"
-        RmDir "$R1"
-      ${EndIf}
-      ${If} ${Errors}
-      ${OrIf} "$R2" != "$INSTDIR"
-        GoTo end
-      ${EndIf}
-      GoTo loop
-  ${EndIf}
-
-  end:
-    ClearErrors
-    Push 0
-FunctionEnd
-
-Function un.UnRegDLLsCallback
-  ${un.TrimNewLines} "$R9" "$R9"
-  StrCpy $R1 "$R9" 7
-  ${If} $R1 == "DLLReg:"
-    StrCpy $R9 "$R9" "" 8
-    StrCpy $R1 "$R9" 1
-    ${If} $R1 == "\"
-      StrCpy $R1 "$INSTDIR$R9"
-    ${Else}
-      StrCpy $R1 "$R9"
-    ${EndIf}
-    UnRegDLL $R1
-  ${EndIf}
-  ClearErrors
-  Push 0
-FunctionEnd
 
 ; Setup the survey controls, functions, etc. except when the application has
 ; defined NO_UNINSTALL_SURVEY
@@ -441,88 +347,13 @@ FunctionEnd
 
 ################################################################################
 # Initialization Functions
-
 Function .onInit
-  GetFullPathName $INSTDIR "$EXEDIR\.."
-  ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}"
-    Abort
-  ${EndUnless}
-  ${GetParameters} $R0
-
-  ${Switch} $R0
-    ${Case} "/HideShortcuts"
-      ${HideShortcuts}
-      StrCpy $R1 "true"
-      ${Break}
-    ${Case} "/ShowShortcuts"
-      ${ShowShortcuts}
-      StrCpy $R1 "true"
-      ${Break}
-    ${Case} "/SetAsDefaultAppUser"
-      ${SetAsDefaultAppUser}
-      StrCpy $R1 "true"
-      ${Break}
-    ${Case} "/SetAsDefaultAppGlobal"
-      ${SetAsDefaultAppGlobal}
-      StrCpy $R1 "true"
-      ${Break}
-    ${Default}
-      ClearErrors
-      ${Unless} "$R0" == ""
-        ${WordReplace} "$R0" "$\"" "" "+" $R0
-        ClearErrors
-        ${GetOptions} "$R0" "/PostUpdate" $R2
-        ${Unless} ${Errors}
-          ${PostUpdate}
-          ClearErrors
-          ${GetOptions} "$R0" "/UninstallLog=" $R2
-          ${Unless} ${Errors}
-            ${Unless} "$R2" == ""
-              GetFullPathName $R3 "$R2"
-              ${If} ${FileExists} "$R3"
-                Delete "$INSTDIR\uninstall\*wizard*"
-                Delete "$INSTDIR\uninstall\uninstall.log"
-                CopyFiles /SILENT /FILESONLY "$R3" "$INSTDIR\uninstall\"
-                Push $R3
-                ${GetParentDir}
-                Pop $R4
-                Delete "$R3"
-                RmDir "$R4"
-              ${EndIf}
-            ${EndUnless}
-          ${Else}
-            ${UpdateUninstallLog}
-          ${EndUnless}
-          StrCpy $R1 "true"
-        ${EndUnless}
-      ${EndUnless}
-      ${Break}
-  ${EndSwitch}
-
-  ${If} $R1 == "true"
-    System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"
-    Quit
-  ${EndIf}
-
-  ; If we made it this far then this installer is being used as an uninstaller.
-  WriteUninstaller "$EXEDIR\uninstaller.exe"
-
-  ${If} $R0 == "/S"
-    StrCpy $TmpVal "$\"$EXEDIR\uninstaller.exe$\" /S"
-  ${Else}
-    StrCpy $TmpVal "$\"$EXEDIR\uninstaller.exe$\""
-  ${EndIf}
-
-  ; When the uninstaller is launched it copies itself to the temp directory so
-  ; it won't be in use so it can delete itself.
-  ExecWait $TmpVal
-  ${DeleteFile} "$EXEDIR\uninstaller.exe"
-  SetErrorLevel 0
-  Quit
+  ${UninstallOnInitCommon}
 FunctionEnd
 
 Function un.onInit
   GetFullPathName $INSTDIR "$INSTDIR\.."
+  ${un.GetLongPath} "$INSTDIR" $INSTDIR
   ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}"
     Abort
   ${EndUnless}
