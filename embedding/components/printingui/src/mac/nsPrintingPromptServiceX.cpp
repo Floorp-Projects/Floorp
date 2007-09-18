@@ -52,7 +52,7 @@
 #include "nsIPrintSettingsX.h"
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
-#include "nsAutoBuffer.h"
+#include "nsTArray.h"
 
 #include "nsPDECommon.h"
 
@@ -98,11 +98,11 @@ static CFDictionaryRef ExtractCustomSettingsDict(PMPrintSettings nativePrintSett
     
     OSStatus status = ::PMGetPrintSettingsExtendedData(nativePrintSettings, kAppPrintDialogAppOnlyKey, &bytesNeeded, NULL);
     if (status == noErr) {
-        nsAutoBuffer<UInt8, 512> dataBuffer;
-        if (dataBuffer.EnsureElemCapacity(bytesNeeded)) {           
-            status = ::PMGetPrintSettingsExtendedData(nativePrintSettings, kAppPrintDialogAppOnlyKey, &bytesNeeded, dataBuffer.get());
+        nsAutoTArray<UInt8, 512> dataBuffer;
+        if (dataBuffer.SetLength(bytesNeeded)) {           
+            status = ::PMGetPrintSettingsExtendedData(nativePrintSettings, kAppPrintDialogAppOnlyKey, &bytesNeeded, dataBuffer.Elements());
             if (status == noErr) {
-                CFDataRef xmlData = ::CFDataCreate(kCFAllocatorDefault, dataBuffer.get(), bytesNeeded);
+                CFDataRef xmlData = ::CFDataCreate(kCFAllocatorDefault, dataBuffer.Elements(), bytesNeeded);
                 if (xmlData) {
                     resultDict = (CFDictionaryRef)::CFPropertyListCreateFromXMLData(
                                                         kCFAllocatorDefault,
@@ -128,10 +128,10 @@ GetDictionaryStringValue(CFDictionaryRef aDictionary, CFStringRef aKey, nsAStrin
     {
         CFIndex stringLen = CFStringGetLength((CFStringRef)dictValue);
 
-        nsAutoBuffer<UniChar, 256> stringBuffer;
-        if (stringBuffer.EnsureElemCapacity(stringLen + 1)) {
-            ::CFStringGetCharacters((CFStringRef)dictValue, CFRangeMake(0, stringLen), stringBuffer.get());
-            aResult.Assign(stringBuffer.get(), stringLen);
+        nsAutoTArray<UniChar, 256> stringBuffer;
+        if (stringBuffer.SetLength(stringLen + 1)) {
+            ::CFStringGetCharacters((CFStringRef)dictValue, CFRangeMake(0, stringLen), stringBuffer.Elements());
+            aResult.Assign(stringBuffer.Elements(), stringLen);
             return PR_TRUE;
         }
     }

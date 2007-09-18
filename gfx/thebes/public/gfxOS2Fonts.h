@@ -49,7 +49,6 @@
 #include "cairo-ft.h" // includes fontconfig.h, too
 #include <freetype/tttables.h>
 
-#include "nsAutoBuffer.h"
 #include "nsICharsetConverterManager.h"
 
 class gfxOS2Font : public gfxFont {
