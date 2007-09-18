@@ -2755,7 +2755,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
               WinSendMsg(hwndCurrFocus, msg, mp1, mp2);
             } else {
               result = DispatchMouseEvent(NS_CONTEXTMENU, mp1, mp2, PR_TRUE,
-                                          nsMouseEvent::eRightButton);
+                                          nsMouseEvent::eLeftButton);
             }
           } else {
             result = DispatchMouseEvent(NS_CONTEXTMENU, mp1, mp2, PR_FALSE,
