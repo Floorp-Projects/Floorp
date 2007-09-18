@@ -275,6 +275,15 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
         NS_ADDREF(element);
 
         element->mPrototype = aPrototype;
+        if (aPrototype->mHasIdAttribute) {
+            element->SetFlags(NODE_MAY_HAVE_ID);
+        }
+        if (aPrototype->mHasClassAttribute) {
+            element->SetFlags(NODE_MAY_HAVE_CLASS);
+        }
+        if (aPrototype->mHasStyleAttribute) {
+            element->SetFlags(NODE_MAY_HAVE_STYLE);
+        }
 
         NS_ASSERTION(aPrototype->mScriptTypeID != nsIProgrammingLanguage::UNKNOWN,
                     "Need to know the language!");
@@ -1069,11 +1078,13 @@ nsXULElement::ParseAttribute(PRInt32 aNamespaceID,
     // Any changes should be made to both functions.
     if (aNamespaceID == kNameSpaceID_None) {
         if (aAttribute == nsGkAtoms::style) {
+            SetFlags(NODE_MAY_HAVE_STYLE);
             nsStyledElement::ParseStyleAttribute(this, aValue, aResult);
             return PR_TRUE;
         }
 
         if (aAttribute == nsGkAtoms::_class) {
+            SetFlags(NODE_MAY_HAVE_CLASS);
             aResult.ParseAtomArray(aValue);
             return PR_TRUE;
         }
@@ -1632,6 +1643,10 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify)
 nsIAtom*
 nsXULElement::GetID() const
 {
+    if (!HasFlag(NODE_MAY_HAVE_ID)) {
+        return nsnull;
+    }
+
     const nsAttrValue* attrVal = FindLocalOrProtoAttr(kNameSpaceID_None, nsGkAtoms::id);
 
     NS_ASSERTION(!attrVal ||
@@ -1649,6 +1664,9 @@ nsXULElement::GetID() const
 const nsAttrValue*
 nsXULElement::GetClasses() const
 {
+    if (!HasFlag(NODE_MAY_HAVE_CLASS)) {
+        return nsnull;
+    }
     return FindLocalOrProtoAttr(kNameSpaceID_None, nsGkAtoms::_class);
 }
 
@@ -1661,6 +1679,9 @@ nsXULElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 nsICSSStyleRule*
 nsXULElement::GetInlineStyleRule()
 {
+    if (!HasFlag(NODE_MAY_HAVE_STYLE)) {
+        return nsnull;
+    }
     // Fetch the cached style rule from the attributes.
     const nsAttrValue* attrVal = FindLocalOrProtoAttr(kNameSpaceID_None, nsGkAtoms::style);
 
@@ -1674,6 +1695,7 @@ nsXULElement::GetInlineStyleRule()
 NS_IMETHODIMP
 nsXULElement::SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify)
 {
+  SetFlags(NODE_MAY_HAVE_STYLE);
   PRBool modification = PR_FALSE;
   nsAutoString oldValueStr;
 
@@ -1887,6 +1909,7 @@ nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
         rv = gCSSOMFactory->CreateDOMCSSAttributeDeclaration(this,
                 getter_AddRefs(slots->mStyle));
         NS_ENSURE_SUCCESS(rv, rv);
+        SetFlags(NODE_MAY_HAVE_STYLE);
     }
 
     NS_IF_ADDREF(*aStyle = slots->mStyle);
@@ -2470,7 +2493,10 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
     nsresult rv;
 
     // Read script language
-    rv = aStream->Read32(&mScriptTypeID);
+    PRUint32 scriptId = 0;
+    rv = aStream->Read32(&scriptId);
+    mScriptTypeID = scriptId;
+
     // Read Node Info
     PRUint32 number;
     rv |= aStream->Read32(&number);
@@ -2610,6 +2636,7 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
 
     if (mAttributes[aPos].mName.Equals(nsGkAtoms::id) &&
         !aValue.IsEmpty()) {
+        mHasIdAttribute = PR_TRUE;
         // Store id as atom.
         // id="" means that the element has no id. Not that it has
         // emptystring as id.
@@ -2618,12 +2645,14 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
         return NS_OK;
     }
     else if (mAttributes[aPos].mName.Equals(nsGkAtoms::_class)) {
+        mHasClassAttribute = PR_TRUE;
         // Compute the element's class list
         mAttributes[aPos].mValue.ParseAtomArray(aValue);
         
         return NS_OK;
     }
     else if (mAttributes[aPos].mName.Equals(nsGkAtoms::style)) {
+        mHasStyleAttribute = PR_TRUE;
         // Parse the element's 'style' attribute
         nsCOMPtr<nsICSSStyleRule> rule;
         nsICSSParser* parser = GetCSSParser();
