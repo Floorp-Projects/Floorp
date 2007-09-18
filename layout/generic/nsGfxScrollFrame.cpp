@@ -425,10 +425,6 @@ nsHTMLScrollFrame::ReflowScrolledFrame(const ScrollReflowState& aState,
       mInner.mVScrollbarBox->GetPrefSize(const_cast<nsBoxLayoutState&>(aState.mBoxState));
     availWidth = PR_MAX(0, availWidth - vScrollbarPrefSize.width);
   }
-  // pixel align the content
-  nsPresContext* presContext = PresContext();
-  nscoord twp = nsPresContext::CSSPixelsToAppUnits(1);
-  availWidth -=  availWidth % twp;
 
   // We're forcing the padding on our scrolled frame, so let it know what that
   // padding is.
@@ -437,6 +433,7 @@ nsHTMLScrollFrame::ReflowScrolledFrame(const ScrollReflowState& aState,
                 new nsMargin(aState.mReflowState.mComputedPadding),
                 nsCSSOffsetState::DestroyMarginFunc);  
   
+  nsPresContext* presContext = PresContext();
   // Pass PR_FALSE for aInit so we can pass in the correct padding
   nsHTMLReflowState kidReflowState(presContext, aState.mReflowState,
                                    mInner.mScrolledFrame,
