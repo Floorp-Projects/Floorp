@@ -1,7 +1,7 @@
-<!ENTITY places.bm.title
-  "Bookmarks Manager">
-<!ENTITY file.label
-  "File">
+<!ENTITY places.organizer.title
+  "Places Organizer">
+<!ENTITY organize.label
+  "Organize">
 <!ENTITY file.accesskey
   "F">
 <!ENTITY file.close.label
@@ -14,8 +14,8 @@
   "Edit">
 <!ENTITY edit.accesskey
   "E">
-<!ENTITY view.label
-  "View">
+<!ENTITY views.label
+  "Views">
 <!ENTITY view.accesskey
   "V">
 <!ENTITY view.toolbar.label
@@ -26,6 +26,10 @@
   "Show Columns">
 <!ENTITY view.columns.accesskey
   "S">
+<!ENTITY view.sort.label
+  "Sort">
+<!ENTITY view.sort.accesskey
+  "s">
 <!ENTITY view.unsorted.label
   "Unsorted">
 <!ENTITY view.unsorted.accesskey
@@ -314,3 +318,28 @@
   "Feed">
 <!ENTITY feed.subscribe.tooltip
   "Subscribe">
+<!ENTITY view.detailsMacOSX.label
+  "List">
+<!ENTITY view.details.label
+  "Details">
+<!ENTITY view.details.accesskey
+  "">
+<!ENTITY view.addons.label
+  "Get View Add-ons">
+<!ENTITY view.columns.label
+  "Columns">
+<!ENTITY maintenance.label
+  "Import and Backup">
+
+<!ENTITY backCmd.label
+  "Back">
+<!ENTITY backCmd.accesskey
+  "B">
+<!ENTITY backButton.tooltip
+  "Go back">
+<!ENTITY forwardCmd.label
+  "Forward">
+<!ENTITY forwardCmd.accesskey
+  "F">
+<!ENTITY forwardButton.tooltip
+  "Go forward">
