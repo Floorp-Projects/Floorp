@@ -101,50 +101,30 @@ BookmarksSyncService.prototype = {
 
   _wrapNode: function BSS__wrapNode(node) {
     var items = {};
-    this._wrapNodeInternal(node, items);
-
-    // sanity check
-    var rootGuid = this._bms.getItemGUID(node.itemId);
-    for (var wanted in items) {
-      if (rootGuid == wanted)
-        continue;
-      var found = false;
-      for (var parent in items) {
-        if (items[parent].children && items[parent].children.indexOf(wanted) >= 0) {
-          found = true;
-          continue;
-        }
-      }
-      if (!found) {
-        LOG("wrapNode error: node has no parent (" + wanted + ")");
-      }
-    }
-
+    this._wrapNodeInternal(node, items, null, null);
     return items;
   },
 
-  _wrapNodeInternal: function BSS__wrapNodeInternal(node, items) {
+  _wrapNodeInternal: function BSS__wrapNodeInternal(node, items, parentGuid, index) {
     var guid = this._bms.getItemGUID(node.itemId);
-    var item = {"type": node.type};
+    var item = {type: node.type,
+                parentGuid: parentGuid,
+                index: index};
 
     if (node.type == node.RESULT_TYPE_FOLDER) {
+      item.title = node.title;
+
       node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-      var openState = node.containerOpen;
       node.containerOpen = true;
-      var children = [];
+
       for (var i = 0; i < node.childCount; i++) {
-        var child = node.getChild(i);
-        this._wrapNodeInternal(child, items);
-        children.push(this._bms.getItemGUID(child.itemId));
+        this._wrapNodeInternal(node.getChild(i), items, guid, i);
       }
-      item["children"] = children;
-      item["title"] = node.title;
-      node.containerOpen = openState;
     } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
     } else if (node.type == node.RESULT_TYPE_URI) {
       // FIXME: need to verify that it's a bookmark, it could be a history result!
-      item["title"] = node.title;
-      item["uri"] = node.uri;
+      item.title = node.title;
+      item.uri = node.uri;
     } else {
       // what do we do?
     }
@@ -152,74 +132,38 @@ BookmarksSyncService.prototype = {
     items[guid] = item;
   },
 
-  // find parent & index
-  // note that this._snapshot needs to be up-to-date!
-  _findItemParent: function BSS__findItemParent(itemGuid) {
-    var parent;
-    var index;
-    for (var item in this._snapshot) {
-      if (this._snapshot[item].children) {
-        index = this._snapshot[item].children.indexOf(itemGuid);
-        if (index >= 0) {
-          parent = item;
-          break;
-        }
-      }
-    }
-    return [parent, index];
-  },
-
   _combineCommands: function BSS__combineCommands(commandList) {
     var newList = [];
-    var lastObj;
-    if (newList.length)
-      lastObj = newList[newList.length - 1];
 
     for (var i = 0; i < commandList.length; i++) {
-      LOG("Command: " + uneval(commandList[i]) + "\n");
+      LOG("Combining command: " + uneval(commandList[i]));
+
       var action = commandList[i].action;
+      var value = commandList[i].value;
       var path = commandList[i].path;
+
+      // ignore commands about creating the item container itself
+      if (path.length <= 1)
+        continue;
+
       var guid = path.shift();
+      var key = path.pop();
 
-      // Note: this only works when the commands to be collapsed are
-      // contiguous in the array (this is ok right?)
-      if ((action == "create" || action == "remove") &&
-          (!newList.length ||
-           (lastObj && lastObj.guid != guid && lastObj.action != action))) {
-        // Avoid the commands that edit the parent's children property
-        if (path.length != 1)
-          continue;
-
-        let [parent, index] = this._findItemParent(guid);
-        if (!parent) {
-          LOG("Warning: item has no parent!\n");
-          continue;
-        }
-
-        newList.push({action: action,
-                      guid: guid,
-                      parentGuid: parent,
-                      index: index,
-                      data: this._snapshot[guid]});
-
-      } else if (action == "edit") {
-        // FIXME: will we never edit anything deeper?
-        if (path.length != 1) {
-          LOG("Warning: editing deep property - dropping");
-          continue;
-        }
-
-        if (!newList.length ||
-            (lastObj && lastObj.guid != guid && lastObj.action != action))
-          newList.push({action: action, guid: guid});
-
-        var key = path[path.length - 1];
-        var value = this._snapshot[guid][key];
-        newList[newList.length - 1].data[key] = value;
+      if (path.length) {
+        LOG("Warning: editing deep property - dropping");
+        continue;
       }
+
+      if (!newList.length ||
+          newList[newList.length - 1].guid != guid ||
+          newList[newList.length - 1].action != action) {
+        newList.push({action: action, guid: guid, data: {}});
+      }
+
+      newList[newList.length - 1].data[key] = value;
     }
-    LOG("Combined list:\n");
-    LOG(uneval(newList) + "\n");
+
+    LOG("Combined list: " + uneval(newList) + "\n");
     return newList;
   },
 
@@ -246,32 +190,32 @@ BookmarksSyncService.prototype = {
 
   _createCommand: function BSS__createCommand(command) {
     var newId;
-    var parentId = this._bms.getItemIdForGUID(command.parentGuid);
+    var parentId = this._bms.getItemIdForGUID(command.data.parentGuid);
     switch (command.data.type) {
     case 0:
       LOG("  -> creating a bookmark: '" + command.data.title +
           "' -> " + command.data.uri);
       newId = this._bms.insertBookmark(parentId,
                                        makeURI(command.data.uri),
-                                       command.index,
+                                       command.data.index,
                                        command.data.title);
       break;
     case 6:
       LOG("  -> creating a folder: '" + command.data.title + "'");
       newId = this._bms.createFolder(parentId,
                                      command.data.title,
-                                     command.index);
+                                     command.data.index);
       break;
     case 7:
       LOG("  -> creating a separator");
-      newId = this._bms.insertSeparator(parentId, command.index);
+      newId = this._bms.insertSeparator(parentId, command.data.index);
       break;
     default:
       LOG("createCommand: Unknown item type: " + command.data.type);
       break;
     }
     if (newId)
-      this._bms.setItemGUID(newId, command.guid);
+      this._bms.setItemGUID(newId, command.data.guid);
   },
 
   _removeCommand: function BSS__removeCommand(command) {
@@ -405,20 +349,27 @@ BookmarksSyncService.prototype = {
         conflicts = ret.conflicts;
       }
 
-      LOG("\n" + uneval(conflicts) + "\n");
+      LOG("Propagations: " + uneval(propagations) + "\n");
+      LOG("Conflicts: " + uneval(conflicts) + "\n");
 	  
       this._snapshotVersion = server['version'];
 
-      LOG(uneval(propagations));
-      if (!((propagations[0] && propagations[0].length > 0) ||
-            (propagations[1] && propagations[1].length > 0))) {
+      if (!((propagations[0] && propagations[0].length) ||
+            (propagations[1] && propagations[1].length) ||
+            (conflicts[0] && conflicts[0].length) ||
+            (conflicts[1] && conflicts[1].length))) {
         this._snapshot = this._wrapNode(localBookmarks);
         LOG("Sync complete (2): no changes needed on client or server");
         return;
       }
 
+      if ((conflicts[0] && conflicts[0].length) ||
+          (conflicts[1] && conflicts[1].length)) {
+        LOG("\nWARNING: Conflicts found, but we don't resolve conflicts yet!\n");
+      }
+
       // 3.1) Apply server changes to local store
-      if (propagations[0] && propagations[0].length > 0) {
+      if (propagations[0] && propagations[0].length) {
         LOG("Applying changes locally");
         localBookmarks = this._getLocalBookmarks(); // fixme: wtf
         this._snapshot = this._wrapNode(localBookmarks);
