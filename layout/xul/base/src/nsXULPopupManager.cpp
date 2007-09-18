@@ -194,6 +194,7 @@ nsXULPopupManager::GetSubmenuWidgetChain(nsISupportsArray **_retval)
   while (item) {
     nsCOMPtr<nsIWidget> widget;
     item->Frame()->GetWidget(getter_AddRefs(widget));
+    NS_ASSERTION(widget, "open popup has no widget");
     nsCOMPtr<nsISupports> genericWidget(do_QueryInterface(widget));
     (*_retval)->AppendElement(genericWidget);
     // In the case when a menulist inside a panel is open, clicking in the
