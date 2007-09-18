@@ -1632,9 +1632,12 @@ JS_IsSystemObject(JSContext *cx, JSObject *obj)
 }
 
 JS_PUBLIC_API(void)
-JS_FlagSystemContext(JSContext *cx)
+JS_FlagSystemObject(JSContext *cx, JSObject *obj)
 {
-    cx->gcDefaultFlags = GCF_SYSTEM;
+    uint8 *flagp;
+
+    flagp = js_GetGCThingFlags(obj);
+    *flagp |= GCF_SYSTEM;
 }
 
 /************************************************************************/
