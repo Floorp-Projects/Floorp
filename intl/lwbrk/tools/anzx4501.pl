@@ -396,11 +396,11 @@ printf "[%s || %s]\n", $r, $def;
    }
    print HEADER "};\n\n";
 }
-printarray("00", "8");
-printarray("20", "8");
-printarray("21", "8");
+printarray("00", "7");
+printarray("20", "7");
+printarray("21", "7");
 printarray("30", "5");
-printarray("0E", "9");
+printarray("0E", "8");
 
 #print %rangecount;
 
