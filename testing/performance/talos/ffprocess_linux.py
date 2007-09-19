@@ -40,7 +40,6 @@ import signal
 import os
 from select import select
 
-import config
 
 
 def GenerateFirefoxCommandLine(firefox_path, profile_dir, url):
