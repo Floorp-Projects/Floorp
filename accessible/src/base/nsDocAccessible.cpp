@@ -753,11 +753,6 @@ NS_IMETHODIMP nsDocAccessible::FireAnchorJumpEvent()
     lastAnchor.Assign(currentAnchor);
   }
 
-  if (mIsAnchorJumped) {
-    nsAccUtils::
-      FireAccEvent(nsIAccessibleEvent::EVENT_DOCUMENT_ATTRIBUTES_CHANGED, this);
-  }
-
   return NS_OK;
 }
 
