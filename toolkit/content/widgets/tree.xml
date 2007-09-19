@@ -1084,7 +1084,7 @@
       <property name="accessibleType" readonly="true">
         <getter>
           <![CDATA[
-            return Components.interfaces.nsIAccessibleProvider.XULTreeColumnitem;
+            return Components.interfaces.nsIAccessibleProvider.XULTreeColumnItem;
           ]]>
         </getter>
       </property>
