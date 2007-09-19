@@ -1894,6 +1894,8 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, void *aScope,
   NS_ENSURE_SUCCESS(rv, rv);
 
   JSObject *funobj = (JSObject*) aHandler;
+  
+  JSAutoRequest ar(mContext);
 
   NS_ASSERTION(JS_TypeOfValue(mContext, OBJECT_TO_JSVAL(funobj)) == JSTYPE_FUNCTION,
                "Event handler object not a function");
@@ -1905,8 +1907,6 @@ nsJSContext::BindCompiledEventHandler(nsISupports* aTarget, void *aScope,
   if (NS_FAILED(rv) || NS_FAILED(stack->Push(mContext))) {
     return NS_ERROR_FAILURE;
   }
-
-  JSAutoRequest ar(mContext);
 
   // Make sure the handler function is parented by its event target object
   if (funobj) { // && ::JS_GetParent(mContext, funobj) != target) {
@@ -1950,9 +1950,9 @@ nsJSContext::GetBoundEventHandler(nsISupports* aTarget, void *aScope,
 
     jsval funval;
     if (!JS_LookupProperty(mContext, obj, 
-                             charName, &funval))
+                           charName, &funval))
         return NS_ERROR_FAILURE;
-
+    
     if (JS_TypeOfValue(mContext, funval) != JSTYPE_FUNCTION) {
         NS_WARNING("Event handler object not a function");
         aHandler.drop();
@@ -3673,6 +3673,8 @@ nsJSArgArray::nsJSArgArray(JSContext *aContext, PRUint32 argc, jsval *argv,
     *prv = NS_ERROR_OUT_OF_MEMORY;
     return;
   }
+
+  JSAutoRequest ar(aContext);
   for (PRUint32 i = 0; i < argc; ++i) {
     if (argv)
       mArgv[i] = argv[i];

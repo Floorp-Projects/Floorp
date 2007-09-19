@@ -262,6 +262,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         // First check to make sure it's OK to evaluate this script to
         // start with.  For example, script could be disabled.
         JSContext *cx = (JSContext*)scriptContext->GetNativeContext();
+        JSAutoRequest ar(cx);
 
         PRBool ok;
         rv = securityManager->CanExecuteScripts(cx, principal, &ok);
@@ -336,7 +337,9 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
         // lose the error), or it might be JS that then proceeds to
         // cause an error of its own (which will also make us lose
         // this error).
-        ::JS_ReportPendingException((JSContext*)scriptContext->GetNativeContext());
+        JSContext *cx = (JSContext*)scriptContext->GetNativeContext();
+        JSAutoRequest ar(cx);
+        ::JS_ReportPendingException(cx);
     }
     
     if (NS_FAILED(rv)) {

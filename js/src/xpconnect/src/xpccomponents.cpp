@@ -2889,6 +2889,8 @@ nsXPCComponents_Utils::ReportError()
     if(NS_FAILED(rv) || !cx)
         return NS_OK;
 
+    JSAutoRequest ar(cx);
+
     // get argc and argv and verify arg count
     PRUint32 argc;
     rv = cc->GetArgc(&argc);
