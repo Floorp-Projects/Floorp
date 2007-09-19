@@ -46,40 +46,51 @@ function setup()
 
   var stmt = createStatement("INSERT INTO t1 (x) VALUES ('a')");
   stmt.execute();
+  stmt.finalize();
 
   stmt = createStatement("INSERT INTO t1 (x) VALUES ('ab')");
   stmt.execute();
+  stmt.finalize();
 
   stmt = createStatement("INSERT INTO t1 (x) VALUES ('abc')");
   stmt.execute();
+  stmt.finalize();
 
   stmt = createStatement("INSERT INTO t1 (x) VALUES ('abcd')");
   stmt.execute();
+  stmt.finalize();
 
   stmt = createStatement("INSERT INTO t1 (x) VALUES ('acd')");
   stmt.execute();
+  stmt.finalize();
 
   stmt = createStatement("INSERT INTO t1 (x) VALUES ('abd')");
   stmt.execute();
+  stmt.finalize();
 
   stmt = createStatement("INSERT INTO t1 (x) VALUES ('bc')");
   stmt.execute();
+  stmt.finalize();
 
   stmt = createStatement("INSERT INTO t1 (x) VALUES ('bcd')");
   stmt.execute();
+  stmt.finalize();
 
   stmt = createStatement("INSERT INTO t1 (x) VALUES ('xyz')");
   stmt.execute();
+  stmt.finalize();
 
   stmt = createStatement("INSERT INTO t1 (x) VALUES ('ABC')");
   stmt.execute();
+  stmt.finalize();
 
   stmt = createStatement("INSERT INTO t1 (x) VALUES ('CDE')");
   stmt.execute();
+  stmt.finalize();
 
   stmt = createStatement("INSERT INTO t1 (x) VALUES ('ABC abc xyz')");
   stmt.execute();
-  stmt.reset();
+  stmt.finalize();
 }
 
 function test_count()
@@ -88,6 +99,7 @@ function test_count()
   do_check_true(stmt.executeStep());
   do_check_eq(stmt.getInt32(0), 12);
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_like_1()
@@ -100,6 +112,7 @@ function test_like_1()
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
   do_check_false(stmt.executeStep());
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_like_2()
@@ -112,6 +125,7 @@ function test_like_2()
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
   do_check_false(stmt.executeStep());
   stmt.reset();
+  stmt.finalize();
 }
     
 function test_like_3()
@@ -124,6 +138,7 @@ function test_like_3()
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
   do_check_false(stmt.executeStep());
   stmt.reset();
+  stmt.finalize();
 }
    
 function test_like_4()
@@ -140,6 +155,7 @@ function test_like_4()
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
   do_check_false(stmt.executeStep());
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_like_5()
@@ -152,6 +168,7 @@ function test_like_5()
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
   do_check_false(stmt.executeStep());
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_like_6()
@@ -164,6 +181,7 @@ function test_like_6()
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
   do_check_false(stmt.executeStep());
   stmt.reset();
+  stmt.finalize();
 }
     
 function test_like_7()
@@ -180,6 +198,7 @@ function test_like_7()
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
   do_check_false(stmt.executeStep());
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_like_8()
@@ -192,6 +211,7 @@ function test_like_8()
   do_check_true(solutions.indexOf(stmt.getString(0)) != -1);
   do_check_false(stmt.executeStep());
   stmt.reset();
+  stmt.finalize();
 }
     
 var tests = [test_count, test_like_1, test_like_2, test_like_3, test_like_4, 

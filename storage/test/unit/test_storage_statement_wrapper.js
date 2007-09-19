@@ -59,16 +59,19 @@ function test_binding_params()
   const name = "foo";
   stmt.params.name = name;
   stmt.execute();
+  stmt.statement.finalize();
 
   stmt = createStatement("SELECT COUNT(*) AS number FROM test");
   do_check_true(stmt.step());
   do_check_eq(1, stmt.row.number);
   stmt.reset();
+  stmt.statement.finalize();
 
   stmt = createStatement("SELECT name FROM test WHERE id = 1");
   do_check_true(stmt.step());
   do_check_eq(name, stmt.row.name);
   stmt.reset();
+  stmt.statement.finalize();
 }
 
 function test_binding_multiple_params()
@@ -78,17 +81,20 @@ function test_binding_multiple_params()
   const name = "me";
   stmt.params.name = name;
   stmt.execute();
+  stmt.statement.finalize();
 
   stmt = createStatement("SELECT COUNT(*) AS number FROM test");
   do_check_true(stmt.step());
   do_check_eq(2, stmt.row.number);
   stmt.reset();
+  stmt.statement.finalize();
 
   stmt = createStatement("SELECT name, alt_name FROM test WHERE id = 2");
   do_check_true(stmt.step());
   do_check_eq(name, stmt.row.name);
   do_check_eq(name, stmt.row.alt_name);
   stmt.reset();
+  stmt.statement.finalize();
 }
 
 var tests = [test_binding_params, test_binding_multiple_params];
