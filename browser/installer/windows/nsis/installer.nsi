@@ -155,7 +155,7 @@ ReserveFile shortcuts.ini
 !insertmacro MUI_PAGE_WELCOME
 
 ; License Page
-!define MUI_LICENSEPAGE_RADIOBUTTONS
+!define MUI_LICENSEPAGE_CHECKBOX
 !insertmacro MUI_PAGE_LICENSE license.rtf
 
 ; Custom Options Page
