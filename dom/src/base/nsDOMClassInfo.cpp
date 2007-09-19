@@ -8854,6 +8854,8 @@ nsHTMLPluginObjElementSH::GetPluginJSObject(JSContext *cx, JSObject *obj,
   nsCOMPtr<nsIPluginInstanceInternal> plugin_internal =
     do_QueryInterface(plugin_inst);
 
+  JSAutoRequest ar(cx);
+
   if (plugin_internal) {
     *plugin_obj = plugin_internal->GetJSObject(cx);
 
