@@ -52,6 +52,8 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
+PRInt32 gXULModalLevel = 0;
+
 // defined in nsMenuBarX.mm
 extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
 
@@ -89,6 +91,7 @@ nsCocoaWindow::nsCocoaWindow()
 , mWindowMadeHere(PR_FALSE)
 , mVisible(PR_FALSE)
 , mSheetNeedsShow(PR_FALSE)
+, mModal(PR_FALSE)
 {
 
 }
@@ -111,6 +114,13 @@ nsCocoaWindow::~nsCocoaWindow()
   }
 
   NS_IF_RELEASE(mPopupContentView);
+
+  // Deal with the possiblity that we're being destroyed while running modal.
+  NS_ASSERTION(!mModal, "Widget destroyed while running modal!");
+  if (mModal) {
+    --gXULModalLevel;
+    NS_ASSERTION(gXULModalLevel >= 0, "Wierdness setting modality!");
+  }
 }
 
 
@@ -421,6 +431,19 @@ void* nsCocoaWindow::GetNativeData(PRUint32 aDataType)
 NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
 {
   aState = mVisible;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
+{
+  mModal = aState;
+  if (aState) {
+    ++gXULModalLevel;
+  } else {
+    --gXULModalLevel;
+    NS_ASSERTION(gXULModalLevel >= 0, "Mismatched call to nsCocoaWindow::SetModal(PR_FALSE)!");
+  }
   return NS_OK;
 }
 
