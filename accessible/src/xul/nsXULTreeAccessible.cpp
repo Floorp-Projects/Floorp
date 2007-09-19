@@ -504,8 +504,12 @@ NS_IMETHODIMP nsXULTreeAccessible::SelectAllSelection(PRBool *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTreeAccessible::GetCachedTreeitemAccessible(PRInt32 aRow, nsITreeColumn* aColumn, nsIAccessible** aAccessible)
+NS_IMETHODIMP
+nsXULTreeAccessible::GetCachedTreeitemAccessible(PRInt32 aRow,
+                                                 nsITreeColumn* aColumn,
+                                                 nsIAccessible** aAccessible)
 {
+  NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nsnull;
 
   NS_ASSERTION(mAccessNodeCache, "No accessibility cache for tree");
@@ -524,8 +528,12 @@ NS_IMETHODIMP nsXULTreeAccessible::GetCachedTreeitemAccessible(PRInt32 aRow, nsI
       cols->GetKeyColumn(getter_AddRefs(col));
   }
 
-  if (col)
-     col->GetIndex(&columnIndex);
+  // Do not create accessible for treeitem if there is no column in the tree
+  // because it doesn't render treeitems properly.
+  if (!col)
+    return NS_OK;
+
+  col->GetIndex(&columnIndex);
 
   nsCOMPtr<nsIAccessNode> accessNode;
   GetCacheEntry(*mAccessNodeCache, (void*)(aRow * kMaxTreeColumns + columnIndex), getter_AddRefs(accessNode));
