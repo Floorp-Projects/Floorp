@@ -84,9 +84,9 @@ function PlacesController(aView) {
   this._view = aView;
 }
 
-PlacesController.prototype = {  
+PlacesController.prototype = {
   /**
-   * The places view. 
+   * The places view.
    */
   _view: null,
 
@@ -350,7 +350,7 @@ PlacesController.prototype = {
     }
     return false;
   },
-  
+
   /**
    * Looks at the data on the clipboard to see if it is paste-able. 
    * Paste-able data is:
@@ -362,34 +362,24 @@ PlacesController.prototype = {
   _isClipboardDataPasteable: function PC__isClipboardDataPasteable() {
     // if the clipboard contains TYPE_X_MOZ_PLACE_* data, it is definitely
     // pasteable, with no need to unwrap all the nodes.
-    
-    var placeTypes = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
-                      PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
-                      PlacesUtils.TYPE_X_MOZ_PLACE];
-    var flavors = Cc["@mozilla.org/supports-array;1"].
-                    createInstance(Ci.nsISupportsArray);
-    for (var i = 0; i < placeTypes.length; ++i) {
-      var cstring = Cc["@mozilla.org/supports-cstring;1"].
-                      createInstance(Ci.nsISupportsCString);
-      cstring.data = placeTypes[i];
-      flavors.AppendElement(cstring);
-    }
-    var clipboard = Cc["@mozilla.org/widget/clipboard;1"].
-                      getService(Ci.nsIClipboard);
-    var hasPlacesData = clipboard.hasDataMatchingFlavors(flavors,
-                                            Ci.nsIClipboard.kGlobalClipboard);
+
+    var flavors = PlacesUtils.placesFlavors;
+    var clipboard = PlacesUtils.clipboard;
+    var hasPlacesData =
+      clipboard.hasDataMatchingFlavors(flavors,
+                                       Ci.nsIClipboard.kGlobalClipboard);
     if (hasPlacesData)
       return this._view.insertionPoint != null;
-      
+
     // if the clipboard doesn't have TYPE_X_MOZ_PLACE_* data, we also allow
     // pasting of valid "text/unicode" and "text/x-moz-url" data
     var xferable = Cc["@mozilla.org/widget/transferable;1"].
-                     createInstance(Ci.nsITransferable);
+                   createInstance(Ci.nsITransferable);
 
     xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_URL);
     xferable.addDataFlavor(PlacesUtils.TYPE_UNICODE);
     clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
-    
+
     try {
       // getAnyTransferData will throw if no data is available.
       var data = { }, type = { };
@@ -1379,17 +1369,32 @@ var PlacesControllerDragHelper = {
 };
 
 function goUpdatePlacesCommands() {
-  goUpdateCommand("placesCmd_open");
-  goUpdateCommand("placesCmd_open:window");
-  goUpdateCommand("placesCmd_open:tab");
-  goUpdateCommand("placesCmd_new:folder");
-  goUpdateCommand("placesCmd_new:bookmark");
-  goUpdateCommand("placesCmd_new:livemark");
-  goUpdateCommand("placesCmd_new:separator");
-  goUpdateCommand("placesCmd_show:info");
-  goUpdateCommand("placesCmd_moveBookmarks");
-  goUpdateCommand("placesCmd_setAsBookmarksToolbarFolder");
-  goUpdateCommand("placesCmd_reload");
-  goUpdateCommand("placesCmd_reloadMicrosummary");
-  goUpdateCommand("placesCmd_sortBy:name");
+  var placesController;
+  try {
+    // Or any other command...
+    placesController = top.document.commandDispatcher
+                          .getControllerForCommand("placesCmd_open");
+  }
+  catch(ex) { return; }
+
+  function updatePlacesCommand(aCommand) {
+    var enabled = false;
+    if (placesController)
+      enabled = placesController.isCommandEnabled(aCommand);
+    goSetCommandEnabled(aCommand, enabled);
+  }
+
+  updatePlacesCommand("placesCmd_open");
+  updatePlacesCommand("placesCmd_open:window");
+  updatePlacesCommand("placesCmd_open:tab");
+  updatePlacesCommand("placesCmd_new:folder");
+  updatePlacesCommand("placesCmd_new:bookmark");
+  updatePlacesCommand("placesCmd_new:livemark");
+  updatePlacesCommand("placesCmd_new:separator");
+  updatePlacesCommand("placesCmd_show:info");
+  updatePlacesCommand("placesCmd_moveBookmarks");
+  updatePlacesCommand("placesCmd_setAsBookmarksToolbarFolder");
+  updatePlacesCommand("placesCmd_reload");
+  updatePlacesCommand("placesCmd_reloadMicrosummary");
+  updatePlacesCommand("placesCmd_sortBy:name");
 }
