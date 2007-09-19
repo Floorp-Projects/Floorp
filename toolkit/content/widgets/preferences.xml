@@ -575,9 +575,6 @@
         }
         var panes = this.preferencePanes;
 
-        if (this._shouldAnimate)
-          this.style.minHeight = 0;
-
         var lastPane = null;
         if (this.lastSelected) {
           lastPane = document.getElementById(this.lastSelected);
@@ -741,8 +738,11 @@
                 // Calling sizeToContent after the first prefpane is loaded
                 // will size the windows contents so style information is
                 // available to calculate correct sizing.
-                if (!this._initialized)
+                if (!this._initialized && prefpanes.length > 1) {
+                  if (this._shouldAnimate)
+                    this.style.minHeight = 0;
                   window.sizeToContent();
+                }
 
                 var oldPane = this.lastSelected ? document.getElementById(this.lastSelected) : this.preferencePanes[0];
                 oldPane.selected = !(aPaneElement.selected = true);
@@ -755,7 +755,7 @@
                   aPaneElement.style.opacity = 0.0;
                   this.animate(oldPane, aPaneElement);
                 }
-                else if (!this._shouldAnimate) {
+                else if (!this._shouldAnimate && prefpanes.length > 1) {
                   var targetHeight = parseInt(window.getComputedStyle(this._paneDeckContainer, "").height);
                   var verticalPadding = parseInt(window.getComputedStyle(aPaneElement, "").paddingTop);
                   verticalPadding += parseInt(window.getComputedStyle(aPaneElement, "").paddingBottom);
