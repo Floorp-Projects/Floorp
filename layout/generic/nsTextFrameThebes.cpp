@@ -3807,7 +3807,7 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
 
   // XXX aFramePt is in AppUnits, shouldn't it be nsFloatPoint?
   gfxPoint pt(aFramePt.x / app, (aTextBaselinePt.y - mAscent) / app);
-  gfxSize size(gfxFloat(GetRect().width) / app, 0);
+  gfxSize size(GetRect().width / app, 0);
   gfxFloat ascent = gfxFloat(mAscent) / app;
 
   if (decorations & NS_FONT_DECORATION_OVERLINE) {
