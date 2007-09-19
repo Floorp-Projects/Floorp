@@ -40,7 +40,6 @@
 #include "cairo-xlib.h"
 #include <stdlib.h>
 
-#include <stdint.h>
 #if   HAVE_STDINT_H
 #include <stdint.h>
 #elif HAVE_INTTYPES_H
