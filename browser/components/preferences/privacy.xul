@@ -108,7 +108,7 @@
                   accesskey="&rememberBefore.accesskey;"
                   oncommand="gPrivacyPane.onchangeHistoryDaysCheck();"
                   aaa:labelledby="rememberHistoryDays historyDays rememberAfter"/>
-        <textbox id="historyDays" size="3"
+        <textbox id="historyDays" type="number" size="3"
                  aaa:labelledby="rememberHistoryDays historyDays rememberAfter"/>
         <label id="rememberAfter"> &rememberAfter.label;</label>
       </hbox>
