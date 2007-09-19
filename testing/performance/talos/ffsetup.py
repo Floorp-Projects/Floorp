@@ -53,7 +53,6 @@ import glob
 
 import utils
 import ffprocess
-import config
 
 if platform.system() == "Linux":
     from ffprofile_unix import *
@@ -141,7 +140,7 @@ def InstallInBrowser(firefox_path, dir_path):
       else:
           utils.debug("WARNING: file already installed (" + fromfile + ")")
 
-def InitializeNewProfile(firefox_path, profile_dir):
+def InitializeNewProfile(firefox_path, profile_dir, init_url):
   """Runs Firefox with the new profile directory, to negate any performance
      hit that could occur as a result of starting up with a new profile.  
      Also kills the "extra" Firefox that gets spawned the first time Firefox
@@ -153,7 +152,7 @@ def InitializeNewProfile(firefox_path, profile_dir):
   """
   PROFILE_REGEX = re.compile('__metrics(.*)__metrics', re.DOTALL|re.MULTILINE)
   res = 1
-  cmd = ffprocess.GenerateFirefoxCommandLine(firefox_path, profile_dir, config.INIT_URL)
+  cmd = ffprocess.GenerateFirefoxCommandLine(firefox_path, profile_dir, init_url)
   (match, timed_out) = ffprocess.RunProcessAndWaitForOutput(cmd,
                                                               'firefox',
                                                               PROFILE_REGEX,

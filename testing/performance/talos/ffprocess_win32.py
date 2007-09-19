@@ -41,8 +41,6 @@ import win32pdhutil
 import win32pipe
 import msvcrt
 
-import config
-
 
 def GenerateFirefoxCommandLine(firefox_path, profile_dir, url):
   """Generates the command line for a process to run Firefox

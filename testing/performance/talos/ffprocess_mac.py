@@ -40,7 +40,6 @@ import subprocess
 import signal
 import os
 import time
-import config
 from select import select
 
 

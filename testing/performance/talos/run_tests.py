@@ -57,9 +57,9 @@ import os
 import string
 import socket
 socket.setdefaulttimeout(480)
+import getopt
 
 import utils
-import config
 import post_file
 import ttest
 
@@ -83,11 +83,11 @@ def process_Request(post):
         str += line.split(":")[3] + ":" + shortNames(line.split(":")[1]) + ":" + line.split(":")[2] + '\n'
   return str
 
-def send_to_csv(results):
+def send_to_csv(csv_file, results):
   import csv
   for res in results:
     browser_dump, counter_dump = results[res]
-    writer = csv.writer(open(config.CSV_FILE + '_' +  res, "wb"))
+    writer = csv.writer(open(csv_file + '_' +  res, "wb"))
     if res == 'ts':
       i = 0
       writer.writerow(['i', 'val'])
@@ -110,19 +110,19 @@ def send_to_csv(results):
           i += 1
     for cd in counter_dump:
       for count_type in cd:
-        writer = csv.writer(open(config.CSV_FILE + '_' + res + '_' + count_type, "wb"))
+        writer = csv.writer(open(csv_file + '_' + res + '_' + count_type, "wb"))
         writer.writerow(['i', 'value'])
         i = 0
         for val in cd[count_type]:
           writer.writerow([i, val])
           i += 1
 
-def post_chunk(id, filename):
+def post_chunk(results_server, results_link, id, filename):
   tmpf = open(filename, "r")
   file_data = tmpf.read()
   while True:
     try:
-      ret = post_file.post_multipart(config.RESULTS_SERVER, config.RESULTS_LINK, [("key", "value")], [("filename", filename, file_data)])
+      ret = post_file.post_multipart(results_server, results_link, [("key", "value")], [("filename", filename, file_data)])
     except IOError:
       print "FAIL: IOError on sending data to the graph server"
     else:
@@ -144,7 +144,7 @@ def chunk_list(val_list):
     val_list = val_list[end:len(val_list)]
   return chunks
 
-def send_to_graph(title, date, browser_config, results):
+def send_to_graph(results_server, results_link, title, date, browser_config, results):
   tbox = title
   url_format = "http://%s/%s"
   link_format= "<a href = \"%s\">%s</a>"
@@ -185,7 +185,7 @@ def send_to_graph(title, date, browser_config, results):
           i += 1
     tmpf.flush()
     tmpf.close()
-    links += post_chunk(res, filename)
+    links += post_chunk(results_server, results_link, res, filename)
     os.remove(filename)
     for cd in counter_dump:
       for count_type in cd:
@@ -201,7 +201,7 @@ def send_to_graph(title, date, browser_config, results):
               i += 1
           tmpf.flush()
           tmpf.close()
-          chunk_link = post_chunk('%s_%s (%d values)' % (res, count_type, len(chunk)), filename)
+          chunk_link = post_chunk(results_server, results_link, '%s_%s (%d values)' % (res, count_type, len(chunk)), filename)
           os.remove(filename)
         links += chunk_link
     
@@ -215,7 +215,7 @@ def send_to_graph(title, date, browser_config, results):
       linkName += "_T: " + values[2]
     else:
       linkName += "_1"
-    url = url_format % (config.RESULTS_SERVER, values[0],)
+    url = url_format % (results_server, values[0],)
     link = link_format % (url, linkName,)
     print "RETURN: " + link
 
@@ -230,6 +230,9 @@ def test_file(filename):
   tests = []
   title = ''
   testdate = ''
+  csv_file = ''
+  results_server = ''
+  results_link = ''
   results = {}
   
   # Read in the profile info from the YAML config file
@@ -241,6 +244,12 @@ def test_file(filename):
       title = yaml_config[item]
     elif item == 'testdate':
       testdate = yaml_config[item]
+    elif item == 'csv_file':
+       csv_file = os.path.normpath(yaml_config[item])
+    elif item == 'results_server':
+       results_server = yaml_config[item]
+    elif item == 'results_link' :
+       results_link = yaml_config[item]
   browser_config = {'preferences'  : yaml_config['preferences'],
                     'extensions'   : yaml_config['extensions'],
                     'firefox'      : yaml_config['firefox'],
@@ -248,7 +257,13 @@ def test_file(filename):
                     'buildid'      : yaml_config['buildid'],
                     'profile_path' : yaml_config['profile_path'],
                     'env'          : yaml_config['env'],
-                    'dirs'         : yaml_config['dirs']}
+                    'dirs'         : yaml_config['dirs'],
+                    'init_url'     : yaml_config['init_url']}
+  #normalize paths to work accross platforms
+  browser_config['firefox'] = os.path.normpath(browser_config['firefox'])
+  browser_config['profile_path'] = os.path.normpath(browser_config['profile_path'])
+  for dir in browser_config['dirs']:
+    browser_config['dirs'][dir] = os.path.normpath(browser_config['dirs'][dir])
   tests = yaml_config['tests']
   config_file.close()
   if (testdate != ''):
@@ -268,16 +283,20 @@ def test_file(filename):
     print "Completed test: " + test
 
   #process the results
-  if config.TO_GRAPH_SERVER:
+  if (results_server != '') and (results_link != ''):
     #send results to the graph server
-    send_to_graph(title, date, browser_config, results)
-  if config.TO_CSV:
-    send_to_csv(results)
+    send_to_graph(results_server, results_link, title, date, browser_config, results)
+  if csv_file != '':
+    send_to_csv(csv_file, results)
   
 if __name__=='__main__':
-
+  optlist, args = getopt.getopt(sys.argv[1:], 'd', ['debug'])
+  for o, a in optlist:
+    if o in ('-d', "--debug"):
+      print 'setting debug'
+      utils.setdebug(1)
   # Read in each config file and run the tests on it.
-  for i in range(1, len(sys.argv)):
-    utils.debug("running test file " + sys.argv[i])
-    test_file(sys.argv[i])
+  for arg in args:
+    utils.debug("running test file " + arg)
+    test_file(arg)
 
