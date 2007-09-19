@@ -49,8 +49,6 @@
 #include "nsIPrintOptions.h"
 #include "nsIPrintSettingsX.h"
 
-#include "nsToolkit.h"
-
 #include "gfxQuartzSurface.h"
 #include "gfxImageSurface.h"
 
@@ -63,7 +61,6 @@ nsDeviceContextSpecX::nsDeviceContextSpecX()
 : mPrintSession(NULL)
 , mPageFormat(kPMNoPageFormat)
 , mPrintSettings(kPMNoPrintSettings)
-, mBeganPrinting(PR_FALSE)
 {
 }
 
@@ -75,7 +72,6 @@ nsDeviceContextSpecX::~nsDeviceContextSpecX()
 {
   if (mPrintSession)
     ::PMRelease(mPrintSession);
-  ClosePrintManager();
 }
 
 NS_IMPL_ISUPPORTS1(nsDeviceContextSpecX, nsIDeviceContextSpec)
@@ -88,46 +84,27 @@ NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIWidget *aWidget,
                                          nsIPrintSettings* aPS,
                                          PRBool aIsPrintPreview)
 {
-  return Init(aPS, aIsPrintPreview);
+  nsresult rv;
+
+  nsCOMPtr<nsIPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
+  if (!printSettingsX)
+    return NS_ERROR_NO_INTERFACE;
+
+  rv = printSettingsX->GetNativePrintSession(&mPrintSession);
+  if (NS_FAILED(rv))
+    return rv;  
+  ::PMRetain(mPrintSession);
+
+  rv = printSettingsX->GetPMPageFormat(&mPageFormat);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = printSettingsX->GetPMPrintSettings(&mPrintSettings);
+  if (NS_FAILED(rv))
+    return rv;
+
+  return NS_OK;
 }
-
-NS_IMETHODIMP nsDeviceContextSpecX::Init(nsIPrintSettings* aPS, PRBool aIsPrintPreview)
-{
-    nsresult rv;
-    
-    nsCOMPtr<nsIPrintSettingsX> printSettingsX(do_QueryInterface(aPS));
-    if (!printSettingsX)
-        return NS_ERROR_NO_INTERFACE;
-  
-    rv = printSettingsX->GetNativePrintSession(&mPrintSession);
-    if (NS_FAILED(rv))
-        return rv;  
-    ::PMRetain(mPrintSession);
-
-    rv = printSettingsX->GetPMPageFormat(&mPageFormat);
-    if (NS_FAILED(rv))
-        return rv;
-    rv = printSettingsX->GetPMPrintSettings(&mPrintSettings);
-    if (NS_FAILED(rv))
-        return rv;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecX::PrintManagerOpen(PRBool* aIsOpen)
-{
-    *aIsOpen = mBeganPrinting;
-    return NS_OK;
-}
-
-/** -------------------------------------------------------
- * Closes the printmanager if it is open.
- * @update   dc 12/03/98
- */
-NS_IMETHODIMP nsDeviceContextSpecX::ClosePrintManager()
-{
-    return NS_OK;
-}  
 
 NS_IMETHODIMP nsDeviceContextSpecX::BeginDocument(PRUnichar*  aTitle, 
                                                   PRUnichar*  aPrintToFileName,
@@ -183,29 +160,12 @@ NS_IMETHODIMP nsDeviceContextSpecX::EndPage()
     return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecX::GetPrinterResolution(double* aResolution)
-{
-    PMPrinter printer;
-    OSStatus status = ::PMSessionGetCurrentPrinter(mPrintSession, &printer);
-    if (status != noErr)
-        return NS_ERROR_FAILURE;
-      
-    PMResolution defaultResolution;
-    status = ::PMPrinterGetPrinterResolution(printer, kPMDefaultResolution, &defaultResolution);
-    if (status != noErr)
-        return NS_ERROR_FAILURE;
-    
-    *aResolution = defaultResolution.hRes;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextSpecX::GetPageRect(double* aTop, double* aLeft, double* aBottom, double* aRight)
+void nsDeviceContextSpecX::GetPageRect(double* aTop, double* aLeft, double* aBottom, double* aRight)
 {
     PMRect pageRect;
     ::PMGetAdjustedPageRect(mPageFormat, &pageRect);
     *aTop = pageRect.top, *aLeft = pageRect.left;
     *aBottom = pageRect.bottom, *aRight = pageRect.right;
-    return NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
