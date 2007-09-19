@@ -403,6 +403,9 @@
       <!-- nsIPlacesView -->
       <property name="insertionPoint">
         <getter><![CDATA[
+          if (this._cachedInsertionPoint !== undefined)
+            return this._cachedInsertionPoint;
+
           // By default, the insertion point is at the top level, at the end. 
           var index = -1;
           var folderId = this._result.root.itemId;
@@ -418,7 +421,8 @@
               index = PlacesUtils.getIndexOfNode(this.selectedNode)
             }
           }
-          return new InsertionPoint(folderId, index, 1);
+          this._cachedInsertionPoint = new InsertionPoint(folderId, index, 1);
+          return this._cachedInsertionPoint;
         ]]></getter>
       </property>
 
@@ -994,6 +998,7 @@
           this._selection = event.target.node;
         else
           this._selection = this.getResult().root;
+        this._cachedInsertionPoint = undefined;
       ]]></handler>
       <handler event="draggesture"><![CDATA[
         if (event.target.localName == "toolbarbutton")
