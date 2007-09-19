@@ -2168,17 +2168,12 @@ out:
 void
 js_FinalizeFunction(JSContext *cx, JSFunction *fun)
 {
-    JSScript *script;
-
     /*
      * Null-check of i.script is required since the parser sets interpreted
      * very early.
      */
-    if (FUN_INTERPRETED(fun) && fun->u.i.script) {
-        script = fun->u.i.script;
-        fun->u.i.script = NULL;
-        js_DestroyScript(cx, script);
-    }
+    if (FUN_INTERPRETED(fun) && fun->u.i.script)
+        js_DestroyScript(cx, fun->u.i.script);
 }
 
 JSObject *
