@@ -397,6 +397,7 @@ js_string_uninterner(JSDHashTable *table, JSDHashEntryHdr *hdr,
 {
     JSAtomHashEntry *entry = TO_ATOM_ENTRY(hdr);
     JSRuntime *rt = (JSRuntime *)arg;
+    JSString *str;
 
     /*
      * Any string entry that remains at this point must be initialized, as the
@@ -404,7 +405,10 @@ js_string_uninterner(JSDHashTable *table, JSDHashEntryHdr *hdr,
      */
     JS_ASSERT(IS_STRING_TABLE(table));
     JS_ASSERT(entry->keyAndFlags != 0);
-    js_FinalizeStringRT(rt, (JSString *)ATOM_ENTRY_KEY(entry));
+    str = (JSString *)ATOM_ENTRY_KEY(entry);
+
+    /* Pass null as context. */
+    js_FinalizeStringRT(rt, str, GCF_TYPEMASK & *js_GetGCThingFlags(str), NULL);
     return JS_DHASH_NEXT;
 }
 

@@ -414,7 +414,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
 
         /*
          * Free unit string storage only after the last GC has completed, so
-         * that js_FinalizeStringRT can detect unit strings and avoid calling
+         * that js_FinalizeString can detect unit strings and avoid calling
          * free on their chars storage.
          */
         free(rt->unitStrings);
