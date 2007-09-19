@@ -67,6 +67,8 @@ void
 nsAccUtils::GetAccAttr(nsIPersistentProperties *aAttributes, nsIAtom *aAttrName,
                        nsAString& aAttrValue)
 {
+  aAttrValue.Truncate();
+
   nsCAutoString attrName;
   aAttrName->ToUTF8String(attrName);
   aAttributes->GetStringProperty(attrName, aAttrValue);

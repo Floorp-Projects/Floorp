@@ -2230,7 +2230,7 @@ nsAccessible::GroupPosition(PRInt32 *aGroupLevel,
   // If 'level' attribute doesn't make sense element then it isn't represented
   // via IAccessible::attributes and groupLevel of groupPosition method is 0.
   // Elements that expose 'level' attribute only (like html headings elements)
-  // don't support this method and all arguements are equealed 0.
+  // don't support this method and all arguements are equalled 0.
 
   NS_ENSURE_ARG_POINTER(aGroupLevel);
   NS_ENSURE_ARG_POINTER(aSimilarItemsInGroup);
