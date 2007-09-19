@@ -1346,11 +1346,6 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_LOAD_STOPPED\n"));
         g_signal_emit_by_name (atkObj, "load_stopped");
       } break;
-    case nsIAccessibleEvent::EVENT_DOCUMENT_ATTRIBUTES_CHANGED:
-      {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_ATTRIBUTES_CHANGED\n"));
-        g_signal_emit_by_name (atkObj, "attributes_changed");
-      } break;
 
     case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_MENUPOPUP_START\n"));
