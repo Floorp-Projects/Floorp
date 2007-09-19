@@ -50,6 +50,7 @@ function setup()
   }
   stmt.reset();
   msc.commitTransaction();
+  stmt.finalize();
 }
 
 var testProgressHandler = {
@@ -92,6 +93,7 @@ function test_handler_call()
     "SELECT SUM(t1.num * t2.num) FROM handler_tests AS t1, handler_tests AS t2");
   while(stmt.executeStep());
   do_check_true(testProgressHandler.calls > 0);
+  stmt.finalize();
 }
 
 function test_handler_abort()
@@ -102,13 +104,22 @@ function test_handler_abort()
   // Some long-executing request
   var stmt = createStatement(
     "SELECT SUM(t1.num * t2.num) FROM handler_tests AS t1, handler_tests AS t2");
+
+  const SQLITE_INTERRUPT = 9;
   try {
     while(stmt.executeStep());
     do_throw("We shouldn't get here!");
   } catch (e) {
     do_check_eq(Cr.NS_ERROR_ABORT, e.result);
-    // Magic value: SQLITE_INTERRUPT
-    do_check_eq(msc.lastError, 9);
+    do_check_eq(SQLITE_INTERRUPT, msc.lastError);
+  }
+  try {
+    stmt.finalize();
+    do_throw("We shouldn't get here!");
+  } catch (e) {
+    // finalize should return the error code since we encountered an error
+    do_check_eq(Cr.NS_ERROR_ABORT, e.result);
+    do_check_eq(SQLITE_INTERRUPT, msc.lastError);
   }
 }
 

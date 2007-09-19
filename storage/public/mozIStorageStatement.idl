@@ -45,7 +45,7 @@ interface nsISimpleEnumerator;
 
 [ptr] native sqlite3stmtptr(struct sqlite3_stmt);
 
-[scriptable, uuid(80e5210f-c0da-4f37-b5f9-d9925a75612a)]
+[scriptable, uuid(1a95a6ec-e4b0-4d0b-947b-d2f40b04d057)]
 interface mozIStorageStatement : mozIStorageValueArray {
   /**
    * Initialize this query with the given SQL statement.
@@ -53,6 +53,13 @@ interface mozIStorageStatement : mozIStorageValueArray {
    */
   void initialize(in mozIStorageConnection aDBConnection,
                   in AUTF8String aSQLStatement);
+
+  /**
+   * Finalizes a statement so you can successfully close a database connection.
+   * This method does not need to be used from native callers since you can just
+   * set the statement to null, but is extremely useful to JS callers.
+   */
+  void finalize();
 
   /**
    * Create a clone of this statement, by initializing a new statement
