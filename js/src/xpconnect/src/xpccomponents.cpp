@@ -2761,6 +2761,8 @@ nsXPCComponents_Utils::LookupMethod()
     if(NS_FAILED(rv) || !cx)
         return NS_ERROR_FAILURE;
 
+    JSAutoRequest ar(cx);
+
     // get place for return value
     jsval *retval = nsnull;
     rv = cc->GetRetValPtr(&retval);
