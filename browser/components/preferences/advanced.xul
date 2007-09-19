@@ -207,7 +207,7 @@
              <hbox align="center">
                <label id="useCacheBefore"
                       accesskey="&useCacheBefore.accesskey;">&useCacheBefore.label;</label>
-               <textbox id="cacheSize" size="2"
+               <textbox id="cacheSize" type="number" size="2"
                         preference="browser.cache.disk.capacity"
                         onsyncfrompreference="return gAdvancedPane.readCacheSize();"
                         onsynctopreference="return gAdvancedPane.writeCacheSize();"
