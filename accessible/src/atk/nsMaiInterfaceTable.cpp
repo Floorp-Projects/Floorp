@@ -287,7 +287,7 @@ getColumnHeaderCB(AtkTable *aTable, gint aColumn)
     //
     // 1. "getColumnHeaderCB" defined in AtkTableIface should return object
     // whose role is "ATK_ROLE_TABLE_COLUMN_HEADER", which is implemented
-    // by nsXULTreeColumnitemAccessible.
+    // by nsXULTreeColumnItemAccessible.
     //
     // 2. "GetColumnHeader" defined in nsIAccessibleTable returns
     // nsXULTreeColumnsAccessibleWrap, which exports nsIAccessibleTable and is

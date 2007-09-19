@@ -1603,6 +1603,12 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XULListbox:
       *aAccessible = new nsXULListboxAccessible(aNode, weakShell);
       break;
+    case nsIAccessibleProvider::XULListHead:
+      *aAccessible = new nsXULColumnsAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULListHeader:
+      *aAccessible = new nsXULColumnItemAccessible(aNode, weakShell);
+      break;
     case nsIAccessibleProvider::XULListitem:
       *aAccessible = new nsXULListitemAccessible(aNode, weakShell);
       break;
@@ -1673,8 +1679,8 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XULTreeColumns:
       *aAccessible = new nsXULTreeColumnsAccessibleWrap(aNode, weakShell);
       break;
-    case nsIAccessibleProvider::XULTreeColumnitem:
-      *aAccessible = new nsXULTreeColumnitemAccessible(aNode, weakShell);
+    case nsIAccessibleProvider::XULTreeColumnItem:
+      *aAccessible = new nsXULColumnItemAccessible(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XULToolbar:
       *aAccessible = new nsXULToolbarAccessible(aNode, weakShell);
