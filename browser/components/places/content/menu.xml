@@ -628,6 +628,9 @@
       <!-- nsIPlacesView -->
       <property name="insertionPoint">
         <getter><![CDATA[
+          if (this._cachedInsertionPoint !== undefined)
+            return this._cachedInsertionPoint;
+
           // By default, the insertion point is at the top level, at the end.
           var index = -1;
           var folderId = 0;
@@ -645,7 +648,8 @@
               index = PlacesUtils.getIndexOfNode(this.selectedNode)
             }
           }
-          return new InsertionPoint(folderId, index);
+          this._cachedInsertionPoint = new InsertionPoint(folderId, index);
+          return this._cachedInsertionPoint;
         ]]></getter>
       </property>
 
@@ -835,6 +839,7 @@
 
         onDragStart: function TBV_DO_onDragStart(event, xferData, dragAction) {
           this._self._selection = event.target.node;
+          this._self._cachedInsertionPoint = undefined;
           if (event.ctrlKey)
             dragAction.action = Ci.nsIDragService.DRAGDROP_ACTION_COPY;
           xferData.data = this._self._controller.getTransferData(dragAction.action);
@@ -956,6 +961,7 @@
           // Set the selection to the node that was activated.  If that
           // node has a command but no data associated with it, it should
           // act on the entire menu.
+          this._cachedInsertionPoint = undefined;
           this._selection = event.target.node || this._resultNode;
         }
       ]]></handler>
@@ -965,8 +971,10 @@
         var popupNode = document.popupNode;
         // |popupNode == this| happens when the area between menuseparators
         // is clicked.
-        if (popupNode == this || popupNode.parentNode == this)
+        if (popupNode == this || popupNode.parentNode == this) {
           this._selection = popupNode.node || this._resultNode;
+          this._cachedInsertionPoint = undefined;
+        }
       ]]></handler>
 
       <handler event="draggesture"><![CDATA[
