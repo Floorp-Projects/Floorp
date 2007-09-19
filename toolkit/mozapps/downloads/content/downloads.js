@@ -227,10 +227,14 @@ function resumeDownload(aDownload)
 
 function removeDownload(aDownload)
 {
+  removeFromView(aDownload);
   gDownloadManager.removeDownload(aDownload.getAttribute("dlid"));
-  let index = gDownloadsView.selectedIndex;
-  gDownloadsView.removeChild(aDownload);
-  gDownloadsView.selectedIndex = Math.min(index, gDownloadsView.itemCount - 1);
+}
+
+function retryDownload(aDownload)
+{
+  removeFromView(aDownload);
+  gDownloadManager.retryDownload(aDownload.getAttribute("dlid"));
 }
 
 function showDownload(aDownload)
@@ -357,11 +361,6 @@ function showDownloadInfo(aDownload)
 
   var button = document.getAnonymousElementByAttribute(aDownload, "anonid", "info");
   gDownloadInfoPopup.openPopup(button, "after_end", 0, 0, false, false);
-}
-
-function retryDownload(aDownload)
-{
-  gDownloadManager.retryDownload(aDownload.getAttribute("dlid"));
 }
 
 function copySourceLocation(aDownload)
@@ -662,6 +661,13 @@ function openExternal(aFile)
 
 ///////////////////////////////////////////////////////////////////////////////
 //// Utility functions
+
+function removeFromView(aDownload)
+{
+  let index = gDownloadsView.selectedIndex;
+  gDownloadsView.removeChild(aDownload);
+  gDownloadsView.selectedIndex = Math.min(index, gDownloadsView.itemCount - 1);
+}
 
 /**
  * Builds the default view that the download manager starts out with.
