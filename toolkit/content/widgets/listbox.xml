@@ -1106,8 +1106,16 @@
         <children includes="listheader"/>
       </xul:listheaditem>
     </content>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULListHead;
+        </getter>
+      </property>
+    </implementation>
   </binding>
-  
+
   <binding id="listheader" display="xul:button">
 
     <resources>
@@ -1119,6 +1127,14 @@
       <xul:label class="listheader-label" xbl:inherits="value=label,crop" flex="1" crop="right"/>
       <xul:image class="listheader-sortdirection" xbl:inherits="sortDirection"/>
     </content>
+
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessibleType" readonly="true">
+        <getter>
+          return Components.interfaces.nsIAccessibleProvider.XULListHeader;
+        </getter>
+      </property>
+    </implementation>
   </binding>
 
 </bindings>
