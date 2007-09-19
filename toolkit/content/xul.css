@@ -16,6 +16,10 @@
   display: -moz-box;
 }
 
+:root {
+  text-rendering: optimizeLegibility;
+}
+
 /* hide the content and destroy the frame */
 *[hidden="true"] {
   display: none;
