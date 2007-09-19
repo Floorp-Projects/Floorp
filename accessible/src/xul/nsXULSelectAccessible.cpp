@@ -146,6 +146,9 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsXULListitemAccessible, nsAccessible)
   */
 NS_IMETHODIMP nsXULListitemAccessible::GetName(nsAString& _retval)
 {
+  if (!mDOMNode)
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIDOMNode> child;
   if (NS_SUCCEEDED(mDOMNode->GetFirstChild(getter_AddRefs(child)))) {
     nsCOMPtr<nsIDOMElement> childElement (do_QueryInterface(child));
@@ -339,6 +342,9 @@ NS_IMETHODIMP nsXULComboboxAccessible::GetDescription(nsAString& aDescription)
 NS_IMETHODIMP
 nsXULComboboxAccessible::GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren)
 {
+  if (!mDOMNode)
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIContent> content = do_QueryInterface(mDOMNode);
 
   if (content->NodeInfo()->Equals(nsAccessibilityAtoms::textbox, kNameSpaceID_XUL) ||

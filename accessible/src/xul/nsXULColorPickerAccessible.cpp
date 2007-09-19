@@ -97,6 +97,9 @@ NS_IMETHODIMP nsXULColorPickerTileAccessible::GetName(nsAString& _retval)
 
 NS_IMETHODIMP nsXULColorPickerTileAccessible::GetValue(nsAString& _retval)
 {
+  if (!mDOMNode)
+    return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No XUL Element for colorpicker");
   return element->GetAttribute(NS_LITERAL_STRING("color"), _retval);
