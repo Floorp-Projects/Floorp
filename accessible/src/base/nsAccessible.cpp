@@ -405,9 +405,12 @@ nsAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
     return NS_ERROR_FAILURE;
 
   PRUint32 key = nsAccUtils::GetAccessKeyFor(content);
-  if (!key) {
+  if (!key && content->IsNodeOfType(nsIContent::eELEMENT)) {
+    // Copy access key from label node unless it is labeled
+    // via an ancestor <label>, in which case that would be redundant
     nsCOMPtr<nsIContent> labelContent(GetLabelContent(content));
-    if (labelContent)
+    nsCOMPtr<nsIDOMNode> labelNode = do_QueryInterface(labelContent);
+    if (labelNode && !nsAccUtils::IsAncestorOf(labelNode, mDOMNode))
       key = nsAccUtils::GetAccessKeyFor(labelContent);
   }
 
