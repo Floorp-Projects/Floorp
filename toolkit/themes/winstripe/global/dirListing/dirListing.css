@@ -131,16 +131,9 @@ td:not(:first-child) {
 .file > img {
   margin-right: 4px;
   margin-left: -20px;
-  opacity: .6;
   vertical-align: middle;
 }
 
 .up::before {
   content: url(chrome://global/skin/dirListing/up.png);
-}
-
-.up:hover::before ,
-tr:hover > td > a::before ,
-tr:hover > td > .file > img {
-  opacity: 1;
 }
