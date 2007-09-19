@@ -333,68 +333,78 @@ nsAccessibleWrap::get_accDescription(VARIANT varChild,
 
   nsAutoString description;
 
-  // Try nsIAccessible::groupPosition to make a positional description string.
-  PRInt32 groupLevel;
-  PRInt32 similarItemsInGroup;
-  PRInt32 positionInGroup;
+  // Try to get group attributes to make a positional description string. We
+  // can't use nsIAccessible::groupPosition because the method isn't supposed
+  // to work with elements exposing 'level' attribute only (like HTML headings).
+  nsCOMPtr<nsIPersistentProperties> attributes;
+  nsresult rv = xpAccessible->GetAttributes(getter_AddRefs(attributes));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!attributes)
+    return NS_ERROR_FAILURE;
 
-  nsresult rv = xpAccessible->GroupPosition(&groupLevel, &similarItemsInGroup,
-                                            &positionInGroup);
-  if (NS_SUCCEEDED(rv)) {
-    if (positionInGroup > 0) {
-      if (groupLevel > 0) {
-        // XXX: How do we calculate the number of children? Now we append
-        // " with [numChildren]c" for tree item. In the future we may need to
-        // use the ARIA owns property to calculate that if it's present.
-        PRInt32 numChildren = 0;
+  PRInt32 groupLevel = 0;
+  PRInt32 itemsInGroup = 0;
+  PRInt32 positionInGroup = 0;
+  nsAccUtils::GetAccGroupAttrs(attributes, &groupLevel, &positionInGroup,
+                               &itemsInGroup);
 
-        PRUint32 currentRole = 0;
-        rv = xpAccessible->GetFinalRole(&currentRole);
-        if (NS_SUCCEEDED(rv) &&
-            currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM) {
-          nsCOMPtr<nsIAccessible> child;
-          xpAccessible->GetFirstChild(getter_AddRefs(child));
-          while (child) {
-            child->GetFinalRole(&currentRole);
-            if (currentRole == nsIAccessibleRole::ROLE_GROUPING) {
-              nsCOMPtr<nsIAccessible> groupChild;
-              child->GetFirstChild(getter_AddRefs(groupChild));
-              while (groupChild) {
-                groupChild->GetFinalRole(&currentRole);
-                numChildren +=
-                  (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM);
-                nsCOMPtr<nsIAccessible> nextGroupChild;
-                groupChild->GetNextSibling(getter_AddRefs(nextGroupChild));
-                groupChild.swap(nextGroupChild);
-              }
-              break;
+  if (positionInGroup > 0) {
+    if (groupLevel > 0) {
+      // XXX: How do we calculate the number of children? Now we append
+      // " with [numChildren]c" for tree item. In the future we may need to
+      // use the ARIA owns property to calculate that if it's present.
+      PRInt32 numChildren = 0;
+
+      PRUint32 currentRole = 0;
+      rv = xpAccessible->GetFinalRole(&currentRole);
+      if (NS_SUCCEEDED(rv) &&
+          currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM) {
+        nsCOMPtr<nsIAccessible> child;
+        xpAccessible->GetFirstChild(getter_AddRefs(child));
+        while (child) {
+          child->GetFinalRole(&currentRole);
+          if (currentRole == nsIAccessibleRole::ROLE_GROUPING) {
+            nsCOMPtr<nsIAccessible> groupChild;
+            child->GetFirstChild(getter_AddRefs(groupChild));
+            while (groupChild) {
+              groupChild->GetFinalRole(&currentRole);
+              numChildren +=
+                (currentRole == nsIAccessibleRole::ROLE_OUTLINEITEM);
+              nsCOMPtr<nsIAccessible> nextGroupChild;
+              groupChild->GetNextSibling(getter_AddRefs(nextGroupChild));
+              groupChild.swap(nextGroupChild);
             }
-            nsCOMPtr<nsIAccessible> nextChild;
-            child->GetNextSibling(getter_AddRefs(nextChild));
-            child.swap(nextChild);
+            break;
           }
+          nsCOMPtr<nsIAccessible> nextChild;
+          child->GetNextSibling(getter_AddRefs(nextChild));
+          child.swap(nextChild);
         }
-
-        if (numChildren) {
-          nsTextFormatter::ssprintf(description,
-                                    NS_LITERAL_STRING("L%d, %d of %d with %d").get(),
-                                    groupLevel, positionInGroup,
-                                    similarItemsInGroup + 1, numChildren);
-        } else {
-          nsTextFormatter::ssprintf(description,
-                                    NS_LITERAL_STRING("L%d, %d of %d").get(),
-                                    groupLevel, positionInGroup,
-                                    similarItemsInGroup + 1);
-        }
-      } else { // Position has no level
-        nsTextFormatter::ssprintf(description,
-                                  NS_LITERAL_STRING("%d of %d").get(),
-                                  positionInGroup, similarItemsInGroup + 1);
       }
 
-      *pszDescription = ::SysAllocString(description.get());
-      return S_OK;
+      if (numChildren) {
+        nsTextFormatter::ssprintf(description,
+                                  NS_LITERAL_STRING("L%d, %d of %d with %d").get(),
+                                  groupLevel, positionInGroup, itemsInGroup,
+                                  numChildren);
+      } else {
+        nsTextFormatter::ssprintf(description,
+                                  NS_LITERAL_STRING("L%d, %d of %d").get(),
+                                  groupLevel, positionInGroup, itemsInGroup);
+      }
+    } else { // Position has no level
+      nsTextFormatter::ssprintf(description,
+                                NS_LITERAL_STRING("%d of %d").get(),
+                                positionInGroup, itemsInGroup);
     }
+  } else if (groupLevel > 0) {
+    nsTextFormatter::ssprintf(description, NS_LITERAL_STRING("L%d").get(),
+                              groupLevel);
+  }
+
+  if (!description.IsEmpty()) {
+    *pszDescription = ::SysAllocString(description.get());
+    return S_OK;
   }
 
   xpAccessible->GetDescription(description);
