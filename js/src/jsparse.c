@@ -3993,8 +3993,8 @@ OrExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSParseNode *pn;
 
     pn = AndExpr(cx, ts, tc);
-    if (pn && js_MatchToken(cx, ts, TOK_OR))
-        pn = NewBinary(cx, TOK_OR, JSOP_OR, pn, OrExpr(cx, ts, tc), tc);
+    while (pn && js_MatchToken(cx, ts, TOK_OR))
+        pn = NewBinary(cx, TOK_OR, JSOP_OR, pn, AndExpr(cx, ts, tc), tc);
     return pn;
 }
 
@@ -4004,8 +4004,8 @@ AndExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSParseNode *pn;
 
     pn = BitOrExpr(cx, ts, tc);
-    if (pn && js_MatchToken(cx, ts, TOK_AND))
-        pn = NewBinary(cx, TOK_AND, JSOP_AND, pn, AndExpr(cx, ts, tc), tc);
+    while (pn && js_MatchToken(cx, ts, TOK_AND))
+        pn = NewBinary(cx, TOK_AND, JSOP_AND, pn, BitOrExpr(cx, ts, tc), tc);
     return pn;
 }
 
