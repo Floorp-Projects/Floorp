@@ -1083,7 +1083,7 @@ js_Invoke(JSContext *cx, uintN argc, jsval *vp, uintN flags)
     JSNative native;
     JSFunction *fun;
     JSScript *script;
-    uintN nslots, nvars, i;
+    uintN nslots, nvars, i, skip;
     uint32 rootedArgsFlag;
     JSInterpreterHook hook;
     void *hookData;
@@ -1246,10 +1246,16 @@ have_fun:
         /* Set by JS_SetCallReturnValue2, used to return reference types. */
         cx->rval2set = JS_FALSE;
 #endif
-        /* Root the extra slots that are not covered by [vp..vp+2+argc). */
-        i = rootedArgsFlag ? 2 + argc : 0;
-        JS_PUSH_TEMP_ROOT(cx, 2 + argc + nslots - i, argv - 2 + i, &tvr);
+        /* Root the slots that are not covered by [vp..vp+2+argc). */
+        skip = rootedArgsFlag ? 2 + argc : 0;
+        JS_PUSH_TEMP_ROOT(cx, 2 + argc + nslots - skip, argv - 2 + skip, &tvr);
         ok = ((JSFastNative) native)(cx, argc, argv - 2);
+
+        /*
+         * To avoid extra checks we always copy the result to *vp even if we
+         * have not copied argv and vp == argv - 2.
+         */
+        *vp = argv[-2];
         JS_POP_TEMP_ROOT(cx, &tvr);
 
         JS_RUNTIME_METER(cx->runtime, nativeCalls);
@@ -1336,12 +1342,11 @@ have_fun:
 #endif
 
         /* If native, use caller varobj and scopeChain for eval. */
-        if (cx->fp) {
-            frame.varobj = cx->fp->varobj;
-            frame.scopeChain = cx->fp->scopeChain;
-        } else {
-            frame.varobj = NULL;
-            frame.scopeChain = NULL;
+        JS_ASSERT(!frame.varobj);
+        JS_ASSERT(!frame.scopeChain);
+        if (frame.down) {
+            frame.varobj = frame.down->varobj;
+            frame.scopeChain = frame.down->scopeChain;
         }
 
         /* But ensure that we have a scope chain. */
