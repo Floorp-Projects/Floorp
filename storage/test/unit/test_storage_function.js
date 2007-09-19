@@ -48,6 +48,7 @@ function setup()
     stmt.execute();
   }
   stmt.reset();
+  stmt.finalize();
 }
 
 var testSquareFunction = {
@@ -96,6 +97,7 @@ function test_function_call()
   while(stmt.executeStep());
   do_check_eq(testNums.length, testSquareFunction.calls);
   testSquareFunction.calls = 0;
+  stmt.finalize();
 }
 
 function test_function_result()
@@ -104,6 +106,7 @@ function test_function_result()
   stmt.executeStep();
   do_check_eq(42*42, stmt.getInt32(0));
   testSquareFunction.calls = 0;
+  stmt.finalize();
 }
 
 var tests = [test_function_registration, test_function_no_double_registration,

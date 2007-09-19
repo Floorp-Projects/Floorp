@@ -192,8 +192,7 @@ mozStorageStatement::Initialize(mozIStorageConnection *aDBConnection, const nsAC
 
 mozStorageStatement::~mozStorageStatement()
 {
-    if (mDBStatement)
-        sqlite3_finalize (mDBStatement);
+    (void)Finalize();
 }
 
 /* mozIStorageStatement clone (); */
@@ -208,6 +207,18 @@ mozStorageStatement::Clone(mozIStorageStatement **_retval)
     NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ADDREF(*_retval = mss);
+    return NS_OK;
+}
+
+/* void finalize(); */
+NS_IMETHODIMP
+mozStorageStatement::Finalize()
+{
+    if (mDBStatement) {
+        int srv = sqlite3_finalize(mDBStatement);
+        mDBStatement = NULL;
+        return ConvertResultCode(srv);
+    }
     return NS_OK;
 }
 
