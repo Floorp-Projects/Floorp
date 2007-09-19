@@ -971,7 +971,7 @@ STDMETHODIMP nsAccessibleWrap::accHitTest(
   } else {
     // no child at that point
     pvarChild->vt = VT_EMPTY;
-    return E_FAIL;
+    return S_FALSE;
   }
 
   return S_OK;
