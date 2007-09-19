@@ -426,9 +426,6 @@ private:
     // drag in progress
     static PRBool DragInProgress(void);
 
-    // the last window that had a MOUSE_ENTER event
-    static nsWindow  *sLastMouseEnterWindow;
-
     void         ResetDragMotionTimer     (GtkWidget      *aWidget,
                                            GdkDragContext *aDragContext,
                                            gint           aX,
