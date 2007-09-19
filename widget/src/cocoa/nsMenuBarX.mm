@@ -136,15 +136,6 @@ nsMenuBarX::~nsMenuBarX()
 nsEventStatus 
 nsMenuBarX::MenuItemSelected(const nsMenuEvent &aMenuEvent)
 {
-  for (PRInt32 i = mMenusArray.Count() - 1; i >= 0; i--) {
-    nsCOMPtr<nsIMenu> menu = mMenusArray.ObjectAt(i);
-    nsCOMPtr<nsIMenuListener> menuListener = do_QueryInterface(menu);
-    if (menuListener) {
-      nsEventStatus eventStatus = menuListener->MenuItemSelected(aMenuEvent);
-      if (eventStatus != nsEventStatus_eIgnore)
-        return eventStatus;
-    }
-  }
   return nsEventStatus_eIgnore;
 }
 
@@ -152,17 +143,6 @@ nsMenuBarX::MenuItemSelected(const nsMenuEvent &aMenuEvent)
 nsEventStatus 
 nsMenuBarX::MenuSelected(const nsMenuEvent &aMenuEvent)
 {
-  for (PRInt32 i = mMenusArray.Count() - 1; i >= 0; i--) {
-    nsCOMPtr<nsIMenu> menu = mMenusArray.ObjectAt(i);
-    nsCOMPtr<nsIMenuListener> thisListener = do_QueryInterface(menu);
-    if (thisListener) {
-      //TODO: MenuSelected is the right thing to call...
-      //eventStatus = menuListener->MenuSelected(aMenuEvent);
-      nsEventStatus eventStatus = thisListener->MenuItemSelected(aMenuEvent);
-      if (eventStatus != nsEventStatus_eIgnore)
-        return eventStatus;
-    }
-  }
   return nsEventStatus_eIgnore;
 }
 

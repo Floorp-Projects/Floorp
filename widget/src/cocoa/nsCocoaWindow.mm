@@ -932,7 +932,7 @@ NS_IMETHODIMP nsCocoaWindow::ResetInputState()
 }
 
 
-// Invokes callback and  ProcessEvent method on Event Listener object
+// Invokes callback and ProcessEvent methods on Event Listener object
 NS_IMETHODIMP 
 nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 {
@@ -940,16 +940,15 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 
   nsIWidget* aWidget = event->widget;
   NS_IF_ADDREF(aWidget);
-  
-  if (nsnull != mMenuListener){
-    if(NS_MENU_EVENT == event->eventStructType)
-      aStatus = mMenuListener->MenuSelected(static_cast<nsMenuEvent&>(*event));
-  }
+
+  if (mMenuListener &&  event->eventStructType == NS_MENU_EVENT)
+    aStatus = mMenuListener->MenuSelected(static_cast<nsMenuEvent&>(*event));
+
   if (mEventCallback)
     aStatus = (*mEventCallback)(event);
 
   // Dispatch to event listener if event was not consumed
-  if ((aStatus != nsEventStatus_eConsumeNoDefault) && (mEventListener != nsnull))
+  if (mEventListener && aStatus != nsEventStatus_eConsumeNoDefault)
     aStatus = mEventListener->ProcessEvent(*event);
 
   NS_IF_RELEASE(aWidget);
