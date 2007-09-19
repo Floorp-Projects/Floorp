@@ -5590,42 +5590,57 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
          * JSOP_AND converts the operand on the stack to boolean, and if false,
          * leaves the original operand value on the stack and jumps; otherwise
          * it pops and falls into the right operand's bytecode.
-         *
-         * Avoid tail recursion for long ||...|| expressions and long &&...&&
-         * expressions or long mixtures of ||'s and &&'s that can easily blow
-         * the stack, by forward-linking and then backpatching all the JSOP_OR
-         * and JSOP_AND bytecodes' immediate jump-offset operands.
          */
-        pn3 = pn;
-        if (!js_EmitTree(cx, cg, pn->pn_left))
-            return JS_FALSE;
-        top = EmitJump(cx, cg, JSOP_BACKPATCH_POP, 0);
-        if (top < 0)
-            return JS_FALSE;
-        jmp = top;
-        pn2 = pn->pn_right;
-        while (pn2->pn_type == TOK_OR || pn2->pn_type == TOK_AND) {
-            pn = pn2;
+        if (pn->pn_arity == PN_BINARY) {
             if (!js_EmitTree(cx, cg, pn->pn_left))
                 return JS_FALSE;
-            off = EmitJump(cx, cg, JSOP_BACKPATCH_POP, 0);
-            if (off < 0)
+            top = EmitJump(cx, cg, JSOP_BACKPATCH_POP, 0);
+            if (top < 0)
                 return JS_FALSE;
-            if (!SetBackPatchDelta(cx, cg, CG_CODE(cg, jmp), off - jmp))
+            if (!js_EmitTree(cx, cg, pn->pn_right))
                 return JS_FALSE;
-            jmp = off;
-            pn2 = pn->pn_right;
-        }
-        if (!js_EmitTree(cx, cg, pn2))
-            return JS_FALSE;
-        off = CG_OFFSET(cg);
-        do {
+            off = CG_OFFSET(cg);
             pc = CG_CODE(cg, top);
-            tmp = GetJumpOffset(cg, pc);
             CHECK_AND_SET_JUMP_OFFSET(cx, cg, pc, off - top);
-            *pc = pn3->pn_op;
-            top += tmp;
-        } while ((pn3 = pn3->pn_right) != pn2);
+            *pc = pn->pn_op;
+        } else {
+            JS_ASSERT(pn->pn_arity == PN_LIST);
+            JS_ASSERT(pn->pn_head->pn_next->pn_next);
+
+            /* Left-associative operator chain: avoid too much recursion. */
+            pn2 = pn->pn_head;
+            if (!js_EmitTree(cx, cg, pn2))
+                return JS_FALSE;
+            top = EmitJump(cx, cg, JSOP_BACKPATCH_POP, 0);
+            if (top < 0)
+                return JS_FALSE;
+
+            /* Emit nodes between the head and the tail. */
+            jmp = top;
+            while ((pn2 = pn2->pn_next)->pn_next) {
+                if (!js_EmitTree(cx, cg, pn2))
+                    return JS_FALSE;
+                off = EmitJump(cx, cg, JSOP_BACKPATCH_POP, 0);
+                if (off < 0)
+                    return JS_FALSE;
+                if (!SetBackPatchDelta(cx, cg, CG_CODE(cg, jmp), off - jmp))
+                    return JS_FALSE;
+                jmp = off;
+
+            }
+            if (!js_EmitTree(cx, cg, pn2))
+                return JS_FALSE;
+
+            pn2 = pn->pn_head;
+            off = CG_OFFSET(cg);
+            do {
+                pc = CG_CODE(cg, top);
+                tmp = GetJumpOffset(cg, pc);
+                CHECK_AND_SET_JUMP_OFFSET(cx, cg, pc, off - top);
+                *pc = pn->pn_op;
+                top += tmp;
+            } while ((pn2 = pn2->pn_next)->pn_next);
+        }
         break;
 
       case TOK_BITOR:
