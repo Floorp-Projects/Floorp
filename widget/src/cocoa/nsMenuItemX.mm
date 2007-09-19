@@ -255,8 +255,7 @@ NS_METHOD nsMenuItemX::IsSeparator(PRBool & aIsSep)
 
 nsEventStatus nsMenuItemX::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-  // this is all handled by Carbon Events
-  return nsEventStatus_eConsumeNoDefault;
+  return nsEventStatus_eIgnore;
 }
 
 

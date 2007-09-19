@@ -1311,7 +1311,7 @@ NS_IMETHODIMP nsChildView::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 }
 
 
-// Invokes callback and  ProcessEvent method on Event Listener object
+// Invokes callback and ProcessEvent methods on Event Listener object
 NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 {
   aStatus = nsEventStatus_eIgnore;
@@ -1344,7 +1344,7 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
   
   // dispatch to event listener if event was not consumed
   if (mEventListener && aStatus != nsEventStatus_eConsumeNoDefault)
-    mEventListener->ProcessEvent(*event);
+    aStatus = mEventListener->ProcessEvent(*event);
 
   return NS_OK;
 }
