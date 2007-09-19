@@ -1097,9 +1097,7 @@ _render_glyph_bitmap (FT_Face		      face,
      * we avoid the FT_LOAD_NO_RECURSE flag.
      */
     error = FT_Render_Glyph (glyphslot, FT_RENDER_MODE_NORMAL);
-    /* XXX ignoring all other errors for now.  They are not fatal, typically
-     * just a glyph-not-found. */
-    if (error == FT_Err_Out_Of_Memory) {
+    if (error) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
@@ -1893,9 +1891,8 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
     error = FT_Load_Glyph (scaled_font->unscaled->face,
 			   _cairo_scaled_glyph_index(scaled_glyph),
 			   load_flags);
-    /* XXX ignoring all other errors for now.  They are not fatal, typically
-     * just a glyph-not-found. */
-    if (error == FT_Err_Out_Of_Memory) {
+
+    if (error) {
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto FAIL;
     }
@@ -2045,9 +2042,8 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	    error = FT_Load_Glyph (face,
 				   _cairo_scaled_glyph_index(scaled_glyph),
 				   load_flags | FT_LOAD_NO_BITMAP);
-	    /* XXX ignoring all other errors for now.  They are not fatal, typically
-	     * just a glyph-not-found. */
-	    if (error == FT_Err_Out_Of_Memory) {
+
+	    if (error) {
 		_cairo_ft_unscaled_font_unlock_face (unscaled);
 		_cairo_error (CAIRO_STATUS_NO_MEMORY);
 		return CAIRO_STATUS_NO_MEMORY;
