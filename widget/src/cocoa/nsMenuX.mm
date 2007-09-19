@@ -444,15 +444,13 @@ NS_IMETHODIMP nsMenuX::RemoveMenuListener(nsIMenuListener * aMenuListener)
 
 nsEventStatus nsMenuX::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-  // all this is now handled by Carbon Events.
-  return nsEventStatus_eConsumeNoDefault;
+  return nsEventStatus_eIgnore;
 }
 
 
 nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
   // printf("JOSH: MenuSelected called for %s \n", NS_LossyConvertUTF16toASCII(mLabel).get());
-  nsEventStatus eventStatus = nsEventStatus_eIgnore;
 
   // Determine if this is the correct menu to handle the event
   MenuRef selectedMenuHandle = (MenuRef)aMenuEvent.mCommand;
@@ -479,7 +477,7 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
 
     OnCreated();  // Now that it's built, fire the popupShown event.
 
-    eventStatus = nsEventStatus_eConsumeNoDefault;  
+    return nsEventStatus_eConsumeNoDefault;  
   }
   else {
     // Make sure none of our submenus are the ones that should be handling this
@@ -487,14 +485,14 @@ nsEventStatus nsMenuX::MenuSelected(const nsMenuEvent & aMenuEvent)
       nsISupports*              menuSupports = mMenuItemsArray.ObjectAt(i);
       nsCOMPtr<nsIMenuListener> menuListener = do_QueryInterface(menuSupports);
       if (menuListener) {
-        eventStatus = menuListener->MenuSelected(aMenuEvent);
-        if (nsEventStatus_eIgnore != eventStatus)
+        nsEventStatus eventStatus = menuListener->MenuSelected(aMenuEvent);
+        if (eventStatus != nsEventStatus_eIgnore)
           return eventStatus;
       }  
     }
   }
 
-  return eventStatus;
+  return nsEventStatus_eIgnore;
 }
 
 
