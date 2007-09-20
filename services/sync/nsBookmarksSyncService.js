@@ -71,12 +71,6 @@ BookmarksSyncService.prototype = {
   // DAVCollection object
   _dav: null,
 
-  // sync.js
-  _sync: {},
-
-  // PlacesUtils
-  _utils: {},
-
   // Last synced tree
   // FIXME: this should be serialized to disk
   _snapshot: {},
@@ -93,10 +87,6 @@ BookmarksSyncService.prototype = {
     catch (ex) { /* use defaults */ }
     LOG("Bookmarks sync server: " + serverUrl);
     this._dav = new DAVCollection(serverUrl);
-
-    var jsLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-      getService(Ci.mozIJSSubScriptLoader);
-    jsLoader.loadSubScript("chrome://sync/content/sync-engine.js", this._sync);
   },
 
   _wrapNode: function BSS__wrapNode(node) {
@@ -272,7 +262,7 @@ BookmarksSyncService.prototype = {
       curItem = parent.getChild(command.data.index);
 
     if (this._compareItems(curItem, command.data)) {
-      LOG(" -> skipping item (already exists)");
+      LOG(" -> FIXME - skipping item (already exists)");
       this._bms.setItemGUID(curItem.itemId, command.guid);
       return;
     }
@@ -369,6 +359,17 @@ BookmarksSyncService.prototype = {
     return ret;
   },
 
+  _nodeParents: function BSS__nodeParents(guid, tree) {
+    return this._nodeParentsInt(guid, tree, []);
+  },
+
+  _nodeParentsInt: function BSS__nodeParentsInt(guid, tree, parents) {
+    if (tree[guid].parentGuid == null)
+      return parents;
+    parents.push(tree[guid].parentGuid);
+    return this._nodeParentsInt(tree[guid].parentGuid, tree, parents);
+  },
+
   _detectUpdates: function BSS__detectUpdates(a, b) {
     let cmds = [];
     for (let guid in a) {
@@ -378,19 +379,133 @@ BookmarksSyncService.prototype = {
           continue;
         if (edits == {}) // no changes - skip
           continue;
-        cmds.push({action: "edit", guid: guid, data: edits});
+        let parents = this._nodeParents(guid, b);
+        cmds.push({action: "edit", guid: guid,
+                   depth: parents.length, parents: parents,
+                   data: edits});
       } else {
-        cmds.push({action: "remove", guid: guid});
+        let parents = this._nodeParents(guid, a); // ???
+        cmds.push({action: "remove", guid: guid,
+                   depth: parents.length, parents: parents});
       }
     }
     for (let guid in b) {
       if (guid in a)
         continue;
-      cmds.push({action: "create", guid: guid, data: b[guid]});
+      let parents = this._nodeParents(guid, b);
+      cmds.push({action: "create", guid: guid,
+                 depth: parents.length, parents: parents,
+                 data: b[guid]});
+    }
+    return cmds;
+  },
+
+  _conflicts: function BSS__conflicts(a, b) {
+    if ((a.depth < b.depth) &&
+        (b.parents.indexOf(a.guid) >= 0) &&
+        a.action == "remove")
+      return true;
+    if ((a.guid == b.guid) && a != b)
+      return true;
+// FIXME - how else can two commands conflict?
+    return false;
+  },
+
+  // NEED TO also look at the parent chain & index; only items in the
+  // same "spot" qualify for likeness
+  _commandLike: function BSS__commandLike(a, b) {
+    if (!a || !b)
+      return false;
+
+    if (a.action != b.action)
+      return false;
+
+    switch (a.data.type) {
+    case 0:
+      if (b.data.type == a.data.type &&
+          b.data.uri == a.data.uri &&
+          b.data.title == a.data.title)
+        return true;
+      return false;
+    case 6:
+      if (b.data.type == a.data.type &&
+          b.data.title == a.data.title)
+        return true;
+      return false;
+    case 7:
+      // fixme: we need to enable this after we 
+//      if (b.data.type == a.data.type)
+//        return true;
+      return false;
+    default:
+      LOG("_commandLike: Unknown item type: " + uneval(a));
+      return false;
     }
   },
 
-  _reconcile: function BSS__reconcile(a, b) {
+  _deepEquals: function BSS__commandEquals(a, b) {
+    if (!a && !b)
+      return true;
+    if (!a || !b)
+      return false;
+
+    for (let key in a) {
+      if (typeof(a[key]) == "object") {
+        if (!typeof(b[key]) == "object")
+          return false;
+        if (!this._deepEquals(a[key], b[key]))
+          return false;
+      } else {
+        if (a[key] != b[key])
+          return false;
+      }
+    }
+    return true;
+  },
+
+  _reconcile: function BSS__reconcile(listA, listB) {
+    let propagations = [[], []];
+    let conflicts = [[], []];
+
+    for (let i = 0; i < listA.length; i++) {
+      for (let j = 0; j < listB.length; j++) {
+        if (this._commandLike(listA[i], listB[j]) ||
+            this._deepEquals(listA[i], listB[j])) {
+          delete listA[i];
+          delete listB[j];
+        }
+      }
+    }
+
+    listA = listA.filter(function(elt) { return elt });
+    listB = listB.filter(function(elt) { return elt });
+
+    for (let i = 0; i < listA.length; i++) {
+      for (let j = 0; j < listB.length; j++) {
+        if (this._conflicts(listA[i], listB[j]) ||
+            this._conflicts(listB[j], listA[i])) {
+          if (conflicts[0].some(
+            function(elt) { return elt.guid == listA[i].guid }))
+            conflicts[0].push(listA[i]);
+          if (conflicts[1].some(
+            function(elt) { return elt.guid == listB[j].guid }))
+            conflicts[1].push(listB[j]);
+        }
+      }
+    }
+    for (let i = 0; i < listA.length; i++) {
+      // need to check if a previous conflict might break this cmd
+      if (!conflicts[0].some(
+        function(elt) { return elt.guid == listA[i].guid }))
+        propagations[1].push(listA[i]);
+    }
+    for (let j = 0; j < listB.length; j++) {
+      // need to check if a previous conflict might break this cmd
+      if (!conflicts[1].some(
+        function(elt) { return elt.guid == listB[j].guid }))
+        propagations[0].push(listB[j]);
+    }
+    return {propagations: propagations, conflicts: conflicts};
   },
 
   _applyCommandsToObj: function BSS__applyCommandsToObj(commands, obj) {
@@ -407,17 +522,6 @@ BookmarksSyncService.prototype = {
         break;
       }
     }
-  },
-
-  // FIXME - hack to make sure we have Commands, not just eval'ed hashes
-  _sanitizeCommands: function BSS__sanitizeCommands(hashes) {
-    var commands = [];
-    for (var i = 0; i < hashes.length; i++) {
-      commands.push(new this._sync.Command(hashes[i]["action"],
-                                           hashes[i]["path"],
-                                           hashes[i]["value"]));
-    }
-    return commands;
   },
 
   _getBookmarks: function BMS__getBookmarks(folder) {
@@ -449,11 +553,13 @@ BookmarksSyncService.prototype = {
 
       var localBookmarks = this._getBookmarks();
       var localJson = this._wrapNode(localBookmarks);
+      LOG("local json: " + uneval(localJson));
 
       // 1) Fetch server deltas
       asyncRun(bind2(this, this._getServerData), handlers['complete'], localJson);
       var server = yield;
 
+      LOG("server: " + uneval(server));
       if (server['status'] == 2) {
         LOG("Sync complete");
         return;
@@ -468,7 +574,8 @@ BookmarksSyncService.prototype = {
       // 2) Generate local deltas from snapshot -> current client status
 
       LOG("Generating local updates");
-      var localUpdates = this._sanitizeCommands(this._sync.detectUpdates(this._snapshot, localJson));
+      var localUpdates = this._detectUpdates(this._snapshot, localJson);
+      LOG("updates: " + uneval(localUpdates));
       if (!(server['status'] == 1 || localUpdates.length > 0)) {
         LOG("Sync complete (1): no changes needed on client or server");
         return;
@@ -481,7 +588,7 @@ BookmarksSyncService.prototype = {
 
       if (server['status'] == 1 && localUpdates.length > 0) {
         LOG("Reconciling updates");
-        var ret = this._sync.reconcile([localUpdates, server['updates']]);
+        var ret = this._reconcile(localUpdates, server['updates']);
         propagations = ret.propagations;
         conflicts = ret.conflicts;
       }
@@ -516,15 +623,15 @@ BookmarksSyncService.prototype = {
       // 3.1) Apply server changes to local store
       if (propagations[0] && propagations[0].length) {
         LOG("Applying changes locally");
-        localBookmarks = this._getBookmarks(); // fixme: wtf
+        //localBookmarks = this._getBookmarks(); // fixme: wtf
         this._snapshot = this._wrapNode(localBookmarks);
-        // Note: propagations[0] is changed by applyCommands, so we make a deep copy
-        this._sync.applyCommands(this._snapshot, eval(uneval(propagations[0])));
-        var combinedCommands = this._combineCommands(propagations[0]);
-        LOG("Combined commands: " + uneval(combinedCommands) + "\n");
-        var sortedCommands = this._sortCommands(combinedCommands);
-        LOG("Sorted commands: " + uneval(sortedCommands) + "\n");
-        this._applyCommands(combinedCommands);
+        this._applyCommandsToObj(this._snapshot, propagations[0]);
+        //var combinedCommands = this._combineCommands(propagations[0]);
+        //LOG("Combined commands: " + uneval(combinedCommands) + "\n");
+        //var sortedCommands = this._sortCommands(combinedCommands);
+        //LOG("Sorted commands: " + uneval(sortedCommands) + "\n");
+        //this._applyCommands(combinedCommands);
+        this._applyCommands(propagations[0]);
         this._snapshot = this._wrapNode(localBookmarks);
       }
 
@@ -604,10 +711,10 @@ BookmarksSyncService.prototype = {
         }
         keys = keys.sort();
         for (var i = 0; i < keys.length; i++) {
-          this._sync.applyCommands(tmp, this._sanitizeCommands(ret.deltas[keys[i]]));
+          this._applyCommandsToObj(tmp, ret.deltas[keys[i]]);
         }
         ret.status = 1;
-        ret.updates = this._sync.detectUpdates(this._snapshot, tmp);
+        ret.updates = this._detectUpdates(this._snapshot, tmp);
 
       } else if (ret.deltas[this._snapshotVersion]) {
         LOG("No changes from server");
@@ -627,7 +734,7 @@ BookmarksSyncService.prototype = {
         }
 
         var tmp = eval(uneval(this._snapshot)); // fixme hack hack hack
-        this._sync.applyCommands(tmp, this._sanitizeCommands(data.updates));
+        this._applyCommandsToObj(tmp, data.updates);
 
         // fixme: this is duplicated from above, need to do some refactoring
 
@@ -640,11 +747,11 @@ BookmarksSyncService.prototype = {
         }
         keys = keys.sort();
         for (var i = 0; i < keys.length; i++) {
-          this._sync.applyCommands(tmp, this._sanitizeCommands(ret.deltas[keys[i]]));
+          this._applyCommandsToObj(tmp, ret.deltas[keys[i]]);
         }
 
         ret.status = data.status;
-        ret.updates = this._sync.detectUpdates(this._snapshot, tmp);
+        ret.updates = this._detectUpdates(this._snapshot, tmp);
         ret.version = data.version;
         var keys = [];
         for (var v in ret.deltas) {
@@ -681,7 +788,7 @@ BookmarksSyncService.prototype = {
       LOG("Got full bookmarks file from server");
       var tmp = eval(data.target.responseText);
       ret.status = 1;
-      ret.updates = this._sync.detectUpdates(this._snapshot, tmp.snapshot);
+      ret.updates = this._detectUpdates(this._snapshot, tmp.snapshot);
       ret.version = tmp.version;
       break;
     case 404:
