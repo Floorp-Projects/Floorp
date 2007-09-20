@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: java; tab-width:8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,14 +13,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is JavaScript Engine testing utilities.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Jesse Ruderman
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,34 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsIDragSessionMac_h__
-#define nsIDragSessionMac_h__
+gTestfile = 'regress-380833.js';
 
-#include "nsISupports.h"
-#include <Drag.h>
+var summary = "Crash during GC after uneval";
+var BUGNUMBER = 380833;
+var actual = '';
+var expect = '';
 
+printBugNumber(BUGNUMBER);
+START(summary);
 
-#define NS_IDRAGSESSIONMAC_IID      \
-{ 0x36c4c380, 0x09e2, 0x11d3, { 0xb0, 0x33, 0xa4, 0x20, 0xf4, 0x2c, 0xfd, 0x7c } };
+var www = <x><y/></x>; 
+print(uneval(this) + "\n"); 
+gc();
 
+TEST(1, expect, actual);
 
-class nsIDragSessionMac : public nsISupports {
-
-  public:
-    NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDRAGSESSIONMAC_IID)
-
-  /**
-    * Since the drag may originate in an external application, we need some way of
-    * communicating the DragManager's DragRef to the session so it can use it
-    * when filling in data requests.
-    *
-    * @param  aDragRef the MacOS DragManager's ref number for the current drag
-    */
-
-   NS_IMETHOD SetDragReference ( DragReference aDragRef ) = 0; 
-
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIDragSessionMac, NS_IDRAGSESSIONMAC_IID)
-
-#endif
+END();

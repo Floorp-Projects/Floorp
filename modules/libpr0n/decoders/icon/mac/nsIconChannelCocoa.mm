@@ -57,7 +57,7 @@
 #include "nsILocalFileMac.h"
 #include "nsIFileURL.h"
 #include "nsInt64.h"
-#include "nsAutoBuffer.h"
+#include "nsTArray.h"
 
 #include <Cocoa/Cocoa.h>
 
@@ -313,11 +313,11 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
   
   // create our buffer
   PRInt32 bufferCapacity = 2 + desiredImageSize * desiredImageSize * 4;
-  nsAutoBuffer<PRUint8, 3 + 16 * 16 * 5> iconBuffer; // initial size is for 16x16
-  if (!iconBuffer.EnsureElemCapacity(bufferCapacity))
+  nsAutoTArray<PRUint8, 3 + 16 * 16 * 5> iconBuffer; // initial size is for 16x16
+  if (!iconBuffer.SetLength(bufferCapacity))
     return NS_ERROR_OUT_OF_MEMORY;
   
-  PRUint8* iconBufferPtr = iconBuffer.get();
+  PRUint8* iconBufferPtr = iconBuffer.Elements();
   
   // write header data into buffer
   *iconBufferPtr++ = desiredImageSize;
@@ -348,7 +348,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
 #endif
   }
 
-  NS_ASSERTION(iconBufferPtr == iconBuffer.get() + bufferCapacity,
+  NS_ASSERTION(iconBufferPtr == iconBuffer.Elements() + bufferCapacity,
                "buffer size miscalculation");
   
   // Now, create a pipe and stuff our data into it
@@ -358,7 +358,7 @@ nsresult nsIconChannel::MakeInputStream(nsIInputStream** _retval, PRBool nonBloc
 
   if (NS_SUCCEEDED(rv)) {
     PRUint32 written;
-    rv = outStream->Write((char*)iconBuffer.get(), bufferCapacity, &written);
+    rv = outStream->Write((char*)iconBuffer.Elements(), bufferCapacity, &written);
     if (NS_SUCCEEDED(rv))
       NS_IF_ADDREF(*_retval = inStream);
   }

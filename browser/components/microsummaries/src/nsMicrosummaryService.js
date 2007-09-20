@@ -59,10 +59,10 @@ const GENERATOR_INTERVAL = 7 * 86400; // 1 week
 const MICSUM_NS = new Namespace("http://www.mozilla.org/microsummaries/0.1");
 const XSLT_NS = new Namespace("http://www.w3.org/1999/XSL/Transform");
 
-const FIELD_MICSUM_GEN_URI    = "microsummary/generatorURI";
-const FIELD_MICSUM_EXPIRATION = "microsummary/expiration";
-const FIELD_STATIC_TITLE      = "bookmarks/staticTitle";
-const FIELD_CONTENT_TYPE      = "bookmarks/contentType";
+const ANNO_MICSUM_GEN_URI    = "microsummary/generatorURI";
+const ANNO_MICSUM_EXPIRATION = "microsummary/expiration";
+const ANNO_STATIC_TITLE      = "bookmarks/staticTitle";
+const ANNO_CONTENT_TYPE      = "bookmarks/contentType";
 
 const MAX_SUMMARY_LENGTH = 4096;
 
@@ -224,13 +224,13 @@ MicrosummaryService.prototype = {
       var bookmarkID = bookmarks[i];
 
       // Skip this page if its microsummary hasn't expired yet.
-      if (this._hasField(bookmarkID, FIELD_MICSUM_EXPIRATION) &&
-          this._getField(bookmarkID, FIELD_MICSUM_EXPIRATION) > now)
+      if (this._ans.itemHasAnnotation(bookmarkID, ANNO_MICSUM_EXPIRATION) &&
+          this._ans.getItemAnnotation(bookmarkID, ANNO_MICSUM_EXPIRATION) > now)
         continue;
 
       // Reset the expiration time immediately, so if the refresh is failing
       // we don't try it every 15 seconds, potentially overloading the server.
-      this._setField(bookmarkID, FIELD_MICSUM_EXPIRATION, now + updateInterval);
+      this._setAnnotation(bookmarkID, ANNO_MICSUM_EXPIRATION, now + updateInterval);
 
       // Try to update the microsummary, but trap errors, so an update
       // that throws doesn't prevent us from updating the rest of them.
@@ -254,18 +254,18 @@ MicrosummaryService.prototype = {
   },
 
   _updateMicrosummary: function MSS__updateMicrosummary(bookmarkID, microsummary) {
-    var title = this._getTitle(bookmarkID);
+    var title = this._bms.getItemTitle(bookmarkID);
 
     // Ensure the user-given title is cached
-    if (!this._hasField(bookmarkID, FIELD_STATIC_TITLE))
-      this._setField(bookmarkID, FIELD_STATIC_TITLE, title);
+    if (!this._ans.itemHasAnnotation(bookmarkID, ANNO_STATIC_TITLE))
+      this._setAnnotation(bookmarkID, ANNO_STATIC_TITLE, title);
 
     // A string identifying the bookmark to use when logging the update.
     var bookmarkIdentity = bookmarkID;
 
     // Update if the microsummary differs from the current title.
     if (!title || title != microsummary.content) {
-      this._setTitle(bookmarkID, microsummary.content);
+      this._bms.setItemTitle(bookmarkID, microsummary.content);
       var subject = new LiveTitleNotificationSubject(bookmarkID, microsummary);
       LOG("updated live title for " + bookmarkIdentity +
           " from '" + (title == null ? "<no live title>" : title) +
@@ -280,8 +280,8 @@ MicrosummaryService.prototype = {
     // to the update interval, since the interval represents how long to wait
     // before checking again for updates, and that can vary across updates,
     // even when the title itself hasn't changed.
-    this._setField(bookmarkID, FIELD_MICSUM_EXPIRATION,
-                   Date.now() + (microsummary.updateInterval || this._updateInterval));
+    this._setAnnotation(bookmarkID, ANNO_MICSUM_EXPIRATION,
+                  Date.now() + (microsummary.updateInterval || this._updateInterval));
   },
 
   /**
@@ -494,7 +494,7 @@ MicrosummaryService.prototype = {
         // If this is the current microsummary for this bookmark, load the content
         // from the datastore so it shows up immediately in microsummary picking UI.
         if (bookmarkID != -1 && this.isMicrosummary(bookmarkID, microsummary))
-          microsummary._content = this._getTitle(bookmarkID);
+          microsummary._content = this._bms.getItemTitle(bookmarkID);
 
         microsummaries.AppendElement(microsummary);
       }
@@ -557,9 +557,9 @@ MicrosummaryService.prototype = {
     for ( var i = 0; i < bookmarks.length; i++ ) {
       var bookmarkID = bookmarks[i];
 
-      if (this._hasField(bookmarkID, fieldName) &&
-          this._getField(bookmarkID, fieldName) == oldValue)
-        this._setField(bookmarkID, fieldName, newValue);
+      if (this._ans.itemHasAnnotation(bookmarkID, fieldName) &&
+          this._ans.getItemAnnotation(bookmarkID, fieldName) == oldValue)
+        this._setAnnotation(bookmarkID, fieldName, newValue);
     }
   },
 
@@ -578,7 +578,7 @@ MicrosummaryService.prototype = {
 
     // This try/catch block is a temporary workaround for bug 336194.
     try {
-      bookmarks = this._ans.getItemsWithAnnotation(FIELD_MICSUM_GEN_URI, {});
+      bookmarks = this._ans.getItemsWithAnnotation(ANNO_MICSUM_GEN_URI, {});
     }
     catch(e) {
       bookmarks = [];
@@ -587,36 +587,12 @@ MicrosummaryService.prototype = {
     return bookmarks;
   },
 
-  _getField: function MSS__getField(aBookmarkId, aFieldName) {
-    return this._ans.getItemAnnotation(aBookmarkId, aFieldName);
-  },
-
-  _setField: function MSS__setField(aBookmarkId, aFieldName, aFieldValue) {
+  _setAnnotation: function MSS__setAnnotation(aBookmarkId, aFieldName, aFieldValue) {
     this._ans.setItemAnnotation(aBookmarkId,
                                 aFieldName,
                                 aFieldValue,
                                 0,
                                 this._ans.EXPIRE_NEVER);
-  },
-
-  _getTitle: function MSS_getTitle(aBookmarkId) {
-    return this._bms.getItemTitle(aBookmarkId);
-  },
-
-  _setTitle: function MSS_setTitle(aBookmarkId, aValue) {
-    this._bms.setItemTitle(aBookmarkId, aValue);
-  },
-
-  _clearField: function MSS__clearField(aBookmarkId, aFieldName) {
-    this._ans.removeItemAnnotation(aBookmarkId, aFieldName);
-  },
-
-  _hasField: function MSS__hasField(aBookmarkId, fieldName) {
-    return this._ans.itemHasAnnotation(aBookmarkId, fieldName);
-  },
-
-  _getPageForBookmark: function MSS__getPageForBookmark(aBookmarkId) {
-    return this._bms.getBookmarkURI(aBookmarkId);
   },
 
   /**
@@ -647,8 +623,9 @@ MicrosummaryService.prototype = {
     if (!this.hasMicrosummary(bookmarkID))
       return null;
 
-    var pageURI = this._getPageForBookmark(bookmarkID);
-    var generatorURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
+    var pageURI = this._bms.getBookmarkURI(bookmarkID);
+    var generatorURI = this._uri(this._ans.getItemAnnotation(bookmarkID,
+                                                             ANNO_MICSUM_GEN_URI));
     var generator = this.getGenerator(generatorURI);
 
     return new Microsummary(pageURI, generator);
@@ -682,15 +659,12 @@ MicrosummaryService.prototype = {
    *
    */
   setMicrosummary: function MSS_setMicrosummary(bookmarkID, microsummary) {
-    this._setField(bookmarkID, FIELD_MICSUM_GEN_URI, microsummary.generator.uri.spec);
+    this._setAnnotation(bookmarkID, ANNO_MICSUM_GEN_URI, microsummary.generator.uri.spec);
 
-    if (microsummary.content) {
+    if (microsummary.content)
       this._updateMicrosummary(bookmarkID, microsummary);
-    }
-    else {
-      // Use the bookmark's title for now and attempt an update
+    else
       this.refreshMicrosummary(bookmarkID);
-    }
   },
 
   /**
@@ -702,18 +676,18 @@ MicrosummaryService.prototype = {
    */
   removeMicrosummary: function MSS_removeMicrosummary(bookmarkID) {
     // Restore the user's title
-    if (this._hasField(bookmarkID, FIELD_STATIC_TITLE))
-      this._setTitle(bookmarkID, this._getField(bookmarkID, FIELD_STATIC_TITLE));
+    if (this._ans.itemHasAnnotation(bookmarkID, ANNO_STATIC_TITLE))
+      this._bms.setItemTitle(bookmarkID, this._ans.getItemAnnotation(bookmarkID, ANNO_STATIC_TITLE));
 
-    var fields = [FIELD_MICSUM_GEN_URI,
-                  FIELD_MICSUM_EXPIRATION,
-                  FIELD_STATIC_TITLE,
-                  FIELD_CONTENT_TYPE];
+    var fields = [ANNO_MICSUM_GEN_URI,
+                  ANNO_MICSUM_EXPIRATION,
+                  ANNO_STATIC_TITLE,
+                  ANNO_CONTENT_TYPE];
 
     for (let i = 0; i < fields.length; i++) {
       var field = fields[i];
-      if (this._hasField(bookmarkID, field))
-        this._clearField(bookmarkID, field);
+      if (this._ans.itemHasAnnotation(bookmarkID, field))
+        this._ans.removeItemAnnotation(bookmarkID, field);
     }
   },
 
@@ -728,7 +702,7 @@ MicrosummaryService.prototype = {
    *
    */
   hasMicrosummary: function MSS_hasMicrosummary(bookmarkID) {
-    return this._hasField(bookmarkID, FIELD_MICSUM_GEN_URI);
+    return this._ans.itemHasAnnotation(bookmarkID, ANNO_MICSUM_GEN_URI);
   },
 
   /**
@@ -779,10 +753,11 @@ MicrosummaryService.prototype = {
     if (!this.hasMicrosummary(bookmarkID))
       throw "bookmark " + bookmarkID + " does not have a microsummary";
 
-    var pageURI = this._getPageForBookmark(bookmarkID);
+    var pageURI = this._bms.getBookmarkURI(bookmarkID);
     if (!pageURI)
       throw("can't get URL for bookmark with ID " + bookmarkID);
-    var generatorURI = this._uri(this._getField(bookmarkID, FIELD_MICSUM_GEN_URI));
+    var generatorURI = this._uri(this._ans.getItemAnnotation(bookmarkID,
+                                                             ANNO_MICSUM_GEN_URI));
 
     var generator = this._localGenerators[generatorURI.spec] ||
                     new MicrosummaryGenerator(generatorURI);

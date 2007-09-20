@@ -4177,7 +4177,7 @@ get_gtk_cursor(nsCursor aCursor)
         gdkcursor = gdk_cursor_new(GDK_FLEUR);
         break;
     case eCursor_help:
-        newType = MOZ_CURSOR_QUESTION_ARROW;
+        gdkcursor = gdk_cursor_new(GDK_QUESTION_ARROW);
         break;
     case eCursor_copy: // CSS3
         newType = MOZ_CURSOR_COPY;
@@ -4877,7 +4877,7 @@ key_event_to_context_menu_event(const nsKeyEvent* aKeyEvent,
     aCMEvent->eventStructType = NS_MOUSE_EVENT;
     aCMEvent->message = NS_CONTEXTMENU;
     aCMEvent->context = nsMouseEvent::eContextMenuKey;
-    aCMEvent->button = nsMouseEvent::eRightButton;
+    aCMEvent->button = nsMouseEvent::eLeftButton;
     aCMEvent->isShift = aCMEvent->isControl = PR_FALSE;
     aCMEvent->isAlt = aCMEvent->isMeta = PR_FALSE;
     aCMEvent->clickCount = 0;

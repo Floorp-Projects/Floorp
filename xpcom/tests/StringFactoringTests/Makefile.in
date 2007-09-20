@@ -52,7 +52,7 @@ CPPSRCS		= \
 		$(topsrcdir)/xpcom/ds/nsString.cpp \
 		$(topsrcdir)/xpcom/ds/nsCRT.cpp \
 		$(topsrcdir)/xpcom/base/nsAllocator.cpp \
-		$(topsrcdir)/xpcom/ds/nsDeque.cpp \
+		$(topsrcdir)/xpcom/glue/nsDeque.cpp \
 		profile_main.cpp \
 		$(NULL)
 #		test_main.cpp \

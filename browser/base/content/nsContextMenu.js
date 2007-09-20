@@ -641,8 +641,10 @@ nsContextMenu.prototype = {
   openFrameInTab: function() {
     var doc = this.target.ownerDocument;
     var frameURL = doc.documentURIObject.spec;
+    var referrer = doc.referrer;
 
-    openNewTabWith(frameURL, null, null, null, false, makeURI(doc.referrer));
+    openNewTabWith(frameURL, null, null, null, false,
+                   referrer ? makeURI(referrer) : null);
   },
 
   // Reload clicked-in frame.
@@ -654,8 +656,10 @@ nsContextMenu.prototype = {
   openFrame: function() {
     var doc = this.target.ownerDocument;
     var frameURL = doc.documentURIObject.spec;
+    var referrer = doc.referrer;
 
-    openNewWindowWith(frameURL, null, null, false, makeURI(doc.referrer));
+    openNewWindowWith(frameURL, null, null, false,
+                      referrer ? makeURI(referrer) : null);
   },
 
   // Open clicked-in frame in the same window.
@@ -665,7 +669,8 @@ nsContextMenu.prototype = {
 
     urlSecurityCheck(frameURL, this.browser.contentPrincipal,
                      Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-    this.browser.loadURI(frameURL, makeURI(doc.referrer));
+    var referrer = doc.referrer;
+    this.browser.loadURI(frameURL, referrer ? makeURI(referrer) : null);
   },
 
   // View Partial Source

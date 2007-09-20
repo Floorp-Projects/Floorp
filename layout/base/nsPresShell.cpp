@@ -4414,14 +4414,34 @@ PresShell::DoFlushPendingNotifications(mozFlushType aType,
     // construct frames for content right now that's still waiting to be
     // notified on,
     mDocument->FlushPendingNotifications(Flush_ContentAndNotify);
+
+    // Process pending restyles, since any flush of the presshell wants
+    // up-to-date style data.
     if (!mIsDestroying) {
       mFrameConstructor->ProcessPendingRestyles();
     }
 
+    // Process whatever XBL constructors those restyles queued up.  This
+    // ensures that onload doesn't fire too early and that we won't do extra
+    // reflows after those constructors run.
     if (!mIsDestroying) {
       mDocument->BindingManager()->ProcessAttachedQueue();
     }
 
+    // Now those constructors might have posted restyle events.  At the same
+    // time, we still need up-to-date style data.  In particular, reflow
+    // depends on style being completely up to date.  If it's not, then style
+    // context reparenting, which can happen during reflow, might suddenly pick
+    // up the new rules and we'll end up with frames whose style doesn't match
+    // the frame type.
+    if (!mIsDestroying) {
+      mFrameConstructor->ProcessPendingRestyles();
+    }
+
+    // There might be more pending constructors now, but we're not going to
+    // worry about them.  They can't be triggered during reflow, so we should
+    // be good.
+    
     if (aType >= Flush_Layout && !mIsDestroying) {
       mFrameConstructor->RecalcQuotesAndCounters();
       ProcessReflowCommands(aInterruptibleReflow);

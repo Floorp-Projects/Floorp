@@ -278,6 +278,12 @@ protected:
   PRBool CheckVisibilityInParentChain(nsIDocument* aDocument, nsIView* aView);
 
   /**
+   *  Get the container node for an atomic region, defined by aria:atomic="true"
+   *  @return the container node
+   */
+  nsIDOMNode* GetAtomicRegion();
+
+  /**
    * Get numeric value of the given attribute.
    *
    * @param aNameSpaceID - namespace ID of the attribute

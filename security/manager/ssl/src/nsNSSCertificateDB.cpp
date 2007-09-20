@@ -143,12 +143,14 @@ nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
   unsigned long moduleID,slotID;
   *_cert = nsnull; 
   if (!aDBkey || !*aDBkey)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_INVALID_ARG;
 
   dummy = NSSBase64_DecodeBuffer(nsnull, &keyItem, aDBkey,
                                  (PRUint32)PL_strlen(aDBkey)); 
-  if (!dummy)
-    return NS_ERROR_FAILURE;
+  if (!dummy || keyItem.len < NS_NSS_LONG*4) {
+    PR_FREEIF(keyItem.data);
+    return NS_ERROR_INVALID_ARG;
+  }
 
   CERTCertificate *cert;
   // someday maybe we can speed up the search using the moduleID and slotID
@@ -158,6 +160,12 @@ nsNSSCertificateDB::FindCertByDBKey(const char *aDBkey, nsISupports *aToken,
   // build the issuer/SN structure
   issuerSN.serialNumber.len = NS_NSS_GET_LONG(&keyItem.data[NS_NSS_LONG*2]);
   issuerSN.derIssuer.len = NS_NSS_GET_LONG(&keyItem.data[NS_NSS_LONG*3]);
+  if (issuerSN.serialNumber.len == 0 || issuerSN.derIssuer.len == 0
+      || issuerSN.serialNumber.len + issuerSN.derIssuer.len
+         != keyItem.len - NS_NSS_LONG*4) {
+    PR_FREEIF(keyItem.data);
+    return NS_ERROR_INVALID_ARG;
+  }
   issuerSN.serialNumber.data= &keyItem.data[NS_NSS_LONG*4];
   issuerSN.derIssuer.data= &keyItem.data[NS_NSS_LONG*4+
                                               issuerSN.serialNumber.len];

@@ -327,9 +327,6 @@ protected:
   virtual NSView*   CreateCocoaView(NSRect inFrame);
   void              TearDownView();
 
-  // return qdPort for a focussed ChildView, and null otherwise
-  GrafPtr           GetChildViewQuickDrawPort();
-
 protected:
 
   NSView<mozView>*      mView;      // my parallel cocoa view (ChildView or NativeScrollbarView), [STRONG]
@@ -357,7 +354,6 @@ protected:
   PRPackedBool          mPluginIsCG; // true if this is a CoreGraphics plugin
   
   nsPluginPort          mPluginPort;
-  RgnHandle             mVisRgn;
 };
 
 

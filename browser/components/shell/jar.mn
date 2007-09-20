@@ -1,7 +1,3 @@
-toolkit.jar:
-    content/global/dummyWindow.xul (content/dummyWindow.xul)
-
 browser.jar:
 *       content/browser/setDesktopBackground.xul              (content/setDesktopBackground.xul)
 *       content/browser/setDesktopBackground.js               (content/setDesktopBackground.js)
-

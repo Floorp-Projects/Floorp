@@ -90,7 +90,8 @@
             style="&prefWin.styleGNOME;">
 #endif
 #endif
-  
+
+    <stringbundle id="bundleBrand" src="chrome://branding/locale/brand.properties"/>
     <stringbundle id="bundlePreferences"
                   src="chrome://browser/locale/preferences/preferences.properties"/>
 

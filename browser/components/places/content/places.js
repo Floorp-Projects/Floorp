@@ -67,7 +67,7 @@ var PlacesOrganizer = {
     OptionsFilter.init(Groupers);
     Groupers.init();
 
-    // Select the specified place in the places list. 
+    // Select the specified place in the places list.
     var placeURI = "place:";
     if ("arguments" in window)
       placeURI = window.arguments[0];
@@ -91,6 +91,48 @@ var PlacesOrganizer = {
     OptionsFilter.destroy();
   },
 
+  _location: null,
+  get location() {
+    return this._location;
+  },
+
+  set location(aLocation) {
+    LOG("Node URI: " + aLocation);
+
+    if (!aLocation)
+      return aLocation;
+
+    if (this.location)
+      this._backHistory.unshift(this.location);
+
+    this._content.place = this._location = aLocation;
+
+    // update navigation commands
+    if (this._backHistory.length == 0)
+      document.getElementById("OrganizerCommand:Back").setAttribute("disabled", true);
+    else
+      document.getElementById("OrganizerCommand:Back").removeAttribute("disabled");
+    if (this._forwardHistory.length == 0)
+      document.getElementById("OrganizerCommand:Forward").setAttribute("disabled", true);
+    else
+      document.getElementById("OrganizerCommand:Forward").removeAttribute("disabled");
+
+    return aLocation;
+  },
+
+  _backHistory: [],
+  _forwardHistory: [],
+  back: function PO_back() {
+    this._forwardHistory.unshift(this.location);
+    var historyEntry = this._backHistory.shift();
+    this._location = null;
+    this.location = historyEntry;
+  },
+  forward: function PO_forward() {
+    var historyEntry = this._forwardHistory.shift();
+    this.location = historyEntry;
+  },
+
   HEADER_TYPE_SHOWING: 1,
   HEADER_TYPE_SEARCH: 2,
   HEADER_TYPE_ADVANCED_SEARCH: 3,
@@ -106,6 +148,7 @@ var PlacesOrganizer = {
    */
   setHeaderText: function PO_setHeaderText(type, text) {
     NS_ASSERT(type == 1 || type == 2 || type == 3, "Invalid Header Type");
+
     var prefix = document.getElementById("showingPrefix");
     prefix.setAttribute("value",
                         PlacesUtils.getString("headerTextPrefix" + type));
@@ -142,11 +185,17 @@ var PlacesOrganizer = {
    * Loads the place URI entered in the debug 
    */
   loadPlaceURI: function PO_loadPlaceURI() {
+
+    // clear forward history
+    this._forwardHistory.splice(0);
+
     var placeURI = document.getElementById("placeURI");
+
     var queriesRef = { }, optionsRef = { };
     PlacesUtils.history.queryStringToQueries(placeURI.value, 
                                              queriesRef, { }, optionsRef);
     
+    // for debug panel
     var autoFilterResults = document.getElementById("autoFilterResults");
     if (autoFilterResults.checked) {
       var options = 
@@ -154,7 +203,13 @@ var PlacesOrganizer = {
     }
     else
       options = optionsRef.value;
-    this._content.load(queriesRef.value, options);
+
+    this.location =
+      PlacesUtils.history.queriesToQueryString(queriesRef.value,
+                                               queriesRef.value.length,
+                                               options);
+    
+    placeURI.value = this.location;
 
     this.setHeaderText(this.HEADER_TYPE_SHOWING, "Debug results for: " + placeURI.value);
 
@@ -185,17 +240,21 @@ var PlacesOrganizer = {
   onPlaceSelected: function PO_onPlaceSelected(resetSearchBox) {
     if (!this._places.hasSelection)
       return;
+
     var node = asQuery(this._places.selectedNode);
-    LOG("Node URI: " + node.uri);
+
     var queries = node.getQueries({});
 
     // Items are only excluded on the left pane
     var options = node.queryOptions.clone();
     options.excludeItems = false;
 
-    this._content.load(queries, 
-                       OptionsFilter.filter(queries, options, null));
-    
+    // clear forward history
+    this._forwardHistory.splice(0);
+
+    // update location
+    this.location = PlacesUtils.history.queriesToQueryString(queries, queries.length, options);
+   
     // Make sure the query builder is hidden.
     PlacesQueryBuilder.hide();
     if (resetSearchBox) {
@@ -397,13 +456,10 @@ var PlacesOrganizer = {
       getService(Ci.nsIProperties);
     var backupsDir = dirSvc.get("Desk", Ci.nsILocalFile);
     fp.displayDirectory = backupsDir;
-  
-    var dateService = Cc["@mozilla.org/intl/scriptabledateformat;1"].
-      getService(Ci.nsIScriptableDateFormat);
 
-    var d = new Date();
-    var date = dateService.FormatDate("", dateService.dateFormatShort,
-                           d.getFullYear(), d.getMonth() + 1, d.getDate());
+    // Use YYYY-MM-DD (ISO 8601) as it doesn't contain illegal characters
+    // and makes the alphabetical order of multiple backup files more useful.
+    var date = (new Date).toLocaleFormat("%Y-%m-%d");
     fp.defaultString = PlacesUtils.getFormattedString("bookmarksBackupFilename",
                                                       [date]);
   
@@ -440,22 +496,6 @@ var PlacesOrganizer = {
                      getService(Ci.nsIPlacesImportExportService);
       ieSvc.importHTMLFromFile(fp.file, true);
     }
-  },
-
-  updateStatusBarForView: function PO_updateStatusBarForView(aView) {
-    var statusText = "";
-    var selectedNode = aView.selectedNode;
-    if (selectedNode) {
-      if (PlacesUtils.nodeIsFolder(selectedNode)) {
-        var childsCount = 
-          PlacesUtils.getFolderContents(selectedNode.itemId).root.childCount;
-        statusText = PlacesUtils.getFormattedString("status_foldercount",
-                                                    [childsCount]);
-      }
-      else if (PlacesUtils.nodeIsBookmark(selectedNode))
-        statusText = selectedNode.uri;
-    }
-    document.getElementById("status").label = statusText;
   },
 
   onContentTreeSelect: function PO_onContentTreeSelect() {
@@ -743,7 +783,7 @@ var PlacesQueryBuilder = {
     var advancedSearch = document.getElementById("advancedSearch");
     // Need to collapse the advanced search box.
     advancedSearch.collapsed = true;
-    
+
     var titleDeck = document.getElementById("titleDeck");
     titleDeck.setAttribute("selectedIndex", 0);
   },
@@ -778,6 +818,7 @@ var PlacesQueryBuilder = {
     // Titlebar should show "match any/all" iff there are > 1 queries visible.
     var titleDeck = document.getElementById("titleDeck");
     titleDeck.setAttribute("selectedIndex", (this._numRows <= 1) ? 0 : 1);
+
     const asType = PlacesOrganizer.HEADER_TYPE_ADVANCED_SEARCH;
     PlacesOrganizer.setHeaderText(asType, "");
 
@@ -1263,7 +1304,7 @@ var ViewMenu = {
   /**
    * Set up the content of the view menu.
    */
-  populate: function VM_populate(event) {
+  populateSortMenu: function VM_populateSortMenu(event) {
     this.fillWithColumns(event, "viewUnsorted", "directionSeparator", "radio", "view.sortBy.");
 
     var sortColumn = this._getSortColumn();
@@ -1450,7 +1491,7 @@ var Groupers = {
   annotationGroupers: [],
 
   /**
-   * Initializes groupings for various vie types. 
+   * Initializes groupings for various view types. 
    */
   init: function G_init() {
     this.defaultGrouper = 

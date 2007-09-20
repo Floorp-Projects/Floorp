@@ -1559,7 +1559,7 @@ gfxTextRun::SetDetailedGlyphs(PRUint32 aIndex, const DetailedGlyph *aGlyphs,
 }
   
 void
-gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUnichar aChar)
+gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUint32 aChar)
 {
     DetailedGlyph *details = AllocateDetailedGlyphs(aIndex, 1);
     if (!details)
@@ -1569,7 +1569,7 @@ gfxTextRun::SetMissingGlyph(PRUint32 aIndex, PRUnichar aChar)
     details->mGlyphID = aChar;
     GlyphRun *glyphRun = &mGlyphRuns[FindFirstGlyphRunContaining(aIndex)];
     gfxFloat width = PR_MAX(glyphRun->mFont->GetMetrics().aveCharWidth,
-                            gfxFontMissingGlyphs::GetDesiredMinWidth());
+                            gfxFontMissingGlyphs::GetDesiredMinWidth(aChar));
     details->mAdvance = PRUint32(width*GetAppUnitsPerDevUnit());
     details->mXOffset = 0;
     details->mYOffset = 0;

@@ -44,7 +44,7 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "prprf.h"
-#include "nsAutoBuffer.h"
+#include "nsTArray.h"
 
 #include <ctype.h>
 
@@ -265,16 +265,16 @@ nsLocaleService::nsLocaleService(void)
     CFStringRef userLocaleStr = ::CFLocaleGetIdentifier(userLocaleRef);
     ::CFRetain(userLocaleStr);
 
-    nsAutoBuffer<UniChar, 32> buffer;
+    nsAutoTArray<UniChar, 32> buffer;
     int size = ::CFStringGetLength(userLocaleStr);
-    if (buffer.EnsureElemCapacity(size))
+    if (buffer.SetLength(size))
     {
         CFRange range = ::CFRangeMake(0, size);
-        ::CFStringGetCharacters(userLocaleStr, range, buffer.get());
-        buffer.get()[size] = 0;
+        ::CFStringGetCharacters(userLocaleStr, range, buffer.Elements());
+        buffer[size] = 0;
 
         // Convert the locale string to the format that Mozilla expects
-        nsAutoString xpLocale(buffer.get());
+        nsAutoString xpLocale(buffer.Elements());
         xpLocale.ReplaceChar('_', '-');
 
         nsresult rv = NewLocale(xpLocale, getter_AddRefs(mSystemLocale));

@@ -147,63 +147,52 @@ PRInt32 nsWinRegItem::Complete()
 
 char* nsWinRegItem::toString()
 {
-	nsString*  keyString     = nsnull;
-	nsString*  result        = nsnull;
+  nsString*  keyString     = nsnull;
+  nsAutoString  result;
   char*      resultCString = nsnull;
 
-	switch(mCommand)
-	{
+  switch(mCommand)
+  {
     case NS_WIN_REG_CREATE:
       keyString = keystr(mRootkey, mSubkey, nsnull);
-      result    = new nsString;
-      result->AssignWithConversion(kCRK);
+      result.AssignWithConversion(kCRK);
       break;
 
     case NS_WIN_REG_DELETE:
       keyString = keystr(mRootkey, mSubkey, nsnull);
-      result    = new nsString;
-      result->AssignWithConversion(kDRK);
+      result.AssignWithConversion(kDRK);
       break;
 
     case NS_WIN_REG_DELETE_VAL:
       keyString = keystr(mRootkey, mSubkey, mName);
-      result    = new nsString;
-      result->AssignWithConversion(kDRV);
+      result.AssignWithConversion(kDRV);
      break;
 
     case NS_WIN_REG_SET_VAL_STRING:
       keyString = keystr(mRootkey, mSubkey, mName);
-      result    = new nsString;
-      result->AssignWithConversion(kSRVS);
+      result.AssignWithConversion(kSRVS);
       break;
 
     case NS_WIN_REG_SET_VAL_NUMBER:
       keyString = keystr(mRootkey, mSubkey, mName);
-      result    = new nsString;
-      result->AssignWithConversion(kSRVN);
+      result.AssignWithConversion(kSRVN);
       break;
 
     case NS_WIN_REG_SET_VAL:
       keyString = keystr(mRootkey, mSubkey, mName);
-      result    = new nsString;
-      result->AssignWithConversion(kSRV);
+      result.AssignWithConversion(kSRV);
       break;
 
     default:
       keyString = keystr(mRootkey, mSubkey, mName);
-      result    = new nsString;
-      result->AssignWithConversion(kUNK);
+      result.AssignWithConversion(kUNK);
       break;
-	}
-    
-  if (result)
-  {
-      result->Append(*keyString);
-      resultCString = ToNewCString(*result);
   }
+    
+  result.Append(*keyString);
+  resultCString = ToNewCString(result);
   
   if (keyString) delete keyString;
-  if (result)    delete result;
   
   return resultCString;
 }

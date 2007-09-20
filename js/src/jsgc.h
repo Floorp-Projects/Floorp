@@ -91,15 +91,15 @@ js_GetGCStringRuntime(JSString *str);
 #define GC_POKE(cx, oldval) ((cx)->runtime->gcPoke = JSVAL_IS_GCTHING(oldval))
 #endif
 
-extern intN
-js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
-                                 JSStringFinalizeOp newop);
-
 extern JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes);
 
 extern void
 js_FinishGC(JSRuntime *rt);
+
+extern intN
+js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
+                                 JSStringFinalizeOp newop);
 
 extern JSBool
 js_AddRoot(JSContext *cx, void *rp, const char *name);
@@ -262,7 +262,6 @@ typedef struct JSGCStats {
 #endif
     uint32  maxlevel;   /* maximum GC nesting (indirect recursion) level */
     uint32  poke;       /* number of potentially useful GC calls */
-    uint32  nopoke;     /* useless GC calls where js_PokeGC was not set */
     uint32  afree;      /* thing arenas freed so far */
     uint32  stackseg;   /* total extraordinary stack segments scanned */
     uint32  segslots;   /* total stack segment jsval slots scanned */

@@ -58,7 +58,7 @@
 #include "prprf.h"
 #include "nsReadableUtils.h"
 #include "nsUnicodeRange.h"
-#include "nsAutoBuffer.h"
+#include "nsTArray.h"
 
 #define DEFAULT_TTF_SYMBOL_ENCODING "windows-1252"
 #define IS_RTL_PRESENTATION_FORM(c) ((0xfb1d <= (c)) && ((c)<= 0xfefc))
@@ -283,8 +283,8 @@ static nsFontCleanupObserver *gFontCleanupObserver;
 #undef CHAR_BUFFER_SIZE
 #define CHAR_BUFFER_SIZE 1024
 
-typedef nsAutoBuffer<char, CHAR_BUFFER_SIZE> nsAutoCharBuffer;
-typedef nsAutoBuffer<PRUnichar, CHAR_BUFFER_SIZE> nsAutoChar16Buffer;
+typedef nsAutoTArray<char, CHAR_BUFFER_SIZE> nsAutoCharBuffer;
+typedef nsAutoTArray<PRUnichar, CHAR_BUFFER_SIZE> nsAutoChar16Buffer;
 
 class nsFontSubset : public nsFontWin
 {
@@ -701,10 +701,10 @@ GetNAME(HDC aDC, nsString* aName, PRBool* aIsSymbolEncoding = nsnull)
     return eGetName_OtherError;
   }
   nsAutoFontDataBuffer buffer;
-  if (!buffer.EnsureElemCapacity(len)) {
+  if (!buffer.SetLength(len)) {
     return eGetName_OtherError;
   }
-  PRUint8* buf = buffer.get();
+  PRUint8* buf = buffer.Elements();
 
   DWORD newLen = GetFontData(aDC, NAME, 0, buf, len);
   if (newLen != len) {
@@ -805,10 +805,10 @@ GetSpaces(HDC aDC, PRBool* aIsCFFOutline, PRUint32* aMaxGlyph,
   if ((len == GDI_ERROR) || (!len)) {
     return NS_ERROR_FAILURE;
   }
-  if (!aIsSpace.EnsureElemCapacity(len)) {
+  if (!aIsSpace.SetLength(len)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  PRUint8* buf = aIsSpace.get();
+  PRUint8* buf = aIsSpace.Elements();
   DWORD newLen = GetFontData(aDC, LOCA, 0, buf, len);
   if (newLen != len) {
     return NS_ERROR_FAILURE;
@@ -1429,8 +1429,8 @@ ConvertUnicodeToGlyph(const PRUnichar* aSrc,  PRInt32 aSrcLength,
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (!aResult.EnsureElemCapacity(aDestLength)) return NS_ERROR_OUT_OF_MEMORY;
-  char* str = aResult.get();
+  if (!aResult.SetLength(aDestLength)) return NS_ERROR_OUT_OF_MEMORY;
+  char* str = aResult.Elements();
 
   aConverter->Convert(aSrc, &aSrcLength, str, &aDestLength);
 
@@ -1680,10 +1680,10 @@ nsFontMetricsWin::GetFontCCMAP(HDC aDC, const char* aShortName,
     return nsnull;
   }
   nsAutoFontDataBuffer buffer;
-  if (!buffer.EnsureElemCapacity(len)) {
+  if (!buffer.SetLength(len)) {
     return nsnull;
   }
-  PRUint8* buf = buffer.get();
+  PRUint8* buf = buffer.Elements();
   DWORD newLen = GetFontData(aDC, CMAP, 0, buf, len);
   if (newLen != len) {
     return nsnull;
@@ -1938,10 +1938,10 @@ GetGlyphIndices(HDC                 aDC,
     if ((len == GDI_ERROR) || (!len)) {
       return NS_ERROR_UNEXPECTED;
     }
-    if (!buffer.EnsureElemCapacity(len)) {
+    if (!buffer.SetLength(len)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    buf = buffer.get();
+    buf = buffer.Elements();
     DWORD newLen = GetFontData(aDC, CMAP, 0, buf, len);
     if (newLen != len) {
       return NS_ERROR_UNEXPECTED;
@@ -2034,10 +2034,10 @@ GetGlyphIndices(HDC                 aDC,
     PRUint16* idDelta = startCode + segCount;
     PRUint16* idRangeOffset = idDelta + segCount;
 
-    if (!aResult.EnsureElemCapacity(aLength)) {
+    if (!aResult.SetLength(aLength)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-    PRUnichar* result = aResult.get();
+    PRUnichar* result = aResult.Elements();
     for (i = 0; i < aLength; ++i) {
       result[i] = GetGlyphIndex(segCount, endCode, startCode,
                                 idRangeOffset, idDelta, end, 
@@ -2146,7 +2146,7 @@ nsGlyphAgent::GetGlyphMetrics(HDC           aDC,
   if (0 == aGlyphIndex) { // caller doesn't know the glyph index, so find it
     nsAutoChar16Buffer buf;
     if (NS_SUCCEEDED(GetGlyphIndices(aDC, nsnull, &aChar, 1, buf)))
-      aGlyphIndex = *(buf.get());
+      aGlyphIndex = *(buf.Elements());
   }
   if (0 < aGlyphIndex) {
     return GetGlyphOutlineA(aDC, aGlyphIndex, GGO_METRICS | GGO_GLYPH_INDEX, aGlyphMetrics, 0, nsnull, &mMat);
@@ -4394,7 +4394,7 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
     }
   }
 
-  return GetBoundingMetricsCommon(aDC, mOverhangCorrection, aString, aLength, aBoundingMetrics, buffer.get());
+  return GetBoundingMetricsCommon(aDC, mOverhangCorrection, aString, aLength, aBoundingMetrics, buffer.Elements());
 }
 
 #ifdef NS_DEBUG
@@ -4433,9 +4433,9 @@ nsFontWinNonUnicode::GetWidth(HDC aDC, const PRUnichar* aString,
 
   SIZE size;
   if (!mIsWide)
-    ::GetTextExtentPoint32A(aDC, buffer.get(), destLength, &size);
+    ::GetTextExtentPoint32A(aDC, buffer.Elements(), destLength, &size);
   else
-    ::GetTextExtentPoint32W(aDC, (const PRUnichar*) buffer.get(), destLength / 2, &size);
+    ::GetTextExtentPoint32W(aDC, (const PRUnichar*) buffer.Elements(), destLength / 2, &size);
   size.cx -= mOverhangCorrection;
 
   return size.cx;
@@ -4455,9 +4455,9 @@ nsFontWinNonUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   }
 
   if (!mIsWide)
-    NS_ExtTextOutA(aDC, this, aX, aY, 0, NULL, buffer.get(), aLength, NULL);
+    NS_ExtTextOutA(aDC, this, aX, aY, 0, NULL, buffer.Elements(), aLength, NULL);
   else 
-    NS_ExtTextOutW(aDC, this, aX, aY, 0, NULL, (const PRUnichar*) buffer.get(), destLength / 2, NULL);
+    NS_ExtTextOutW(aDC, this, aX, aY, 0, NULL, (const PRUnichar*) buffer.Elements(), destLength / 2, NULL);
 }
 
 #ifdef MOZ_MATHML
@@ -4486,7 +4486,7 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
     if (gGlyphAgent.GetState() != eGlyphAgent_UNICODE) {
       // we are on a platform that doesn't implement GetGlyphOutlineW() 
       // we need to use glyph indices
-      rv = GetGlyphIndices(aDC, &mCMAP, (const PRUnichar*)buffer.get(), destLength / 2, buf);
+      rv = GetGlyphIndices(aDC, &mCMAP, (const PRUnichar*)buffer.Elements(), destLength / 2, buf);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -4494,12 +4494,12 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
 
     // buffer.mBuffer is now a pseudo-Unicode string so that we can use 
     // GetBoundingMetricsCommon() also used by nsFontWinUnicode. 
-    return  GetBoundingMetricsCommon(aDC, mOverhangCorrection, (const PRUnichar*)buffer.get(), 
-              destLength / 2, aBoundingMetrics, buf.get());
+    return  GetBoundingMetricsCommon(aDC, mOverhangCorrection, (const PRUnichar*)buffer.Elements(), 
+              destLength / 2, aBoundingMetrics, buf.Elements());
 
   }
 
-  return GetBoundingMetricsCommonA(aDC, mOverhangCorrection, buffer.get(), destLength, 
+  return GetBoundingMetricsCommonA(aDC, mOverhangCorrection, buffer.Elements(), destLength, 
                                    aBoundingMetrics);
 }
 
@@ -4544,11 +4544,11 @@ SubstituteChars(PRBool              aDisplayUnicode,
 #ifdef WINCE
 // Unicode backend on WINCE... Substitute nothing.
 
-  if (!aResult.EnsureElemCapacity(aLength))
+  if (!aResult.SetLength(aLength))
     return NS_ERROR_OUT_OF_MEMORY;
 
   *aCount = aLength;
-  memcpy(aResult.get(), aString, aLength * sizeof(PRUnichar));
+  memcpy(aResult.Elements(), aString, aLength * sizeof(PRUnichar));
   return NS_OK;
 
 #else
@@ -4582,10 +4582,10 @@ SubstituteChars(PRBool              aDisplayUnicode,
     if (NS_SUCCEEDED(res)) {
       *aCount = conv.Length();
       if (*aCount > 0) {
-        if (!aResult.EnsureElemCapacity(*aCount)) {
+        if (!aResult.SetLength(*aCount)) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
-        result = aResult.get();
+        result = aResult.Elements();
         PRUnichar* u = result;
         const char* c = conv.get();
         for (; *c; ++c, ++u) {
@@ -4597,8 +4597,8 @@ SubstituteChars(PRBool              aDisplayUnicode,
   }
 
   // we reach here if we couldn't transliterate, so fallback to question marks 
-  if (!aResult.EnsureElemCapacity(aLength)) return NS_ERROR_OUT_OF_MEMORY;
-  result = aResult.get();
+  if (!aResult.SetLength(aLength)) return NS_ERROR_OUT_OF_MEMORY;
+  result = aResult.Elements();
   for (PRUint32 i = 0; i < aLength; i++) {
     result[i] = NS_REPLACEMENT_CHAR;
   }
@@ -4618,7 +4618,7 @@ nsFontWinSubstitute::GetWidth(HDC aDC, const PRUnichar* aString,
   if (NS_FAILED(rv) || !aLength) return 0;
 
   SIZE size;
-  ::GetTextExtentPoint32W(aDC, buffer.get(), aLength, &size);
+  ::GetTextExtentPoint32W(aDC, buffer.Elements(), aLength, &size);
   size.cx -= mOverhangCorrection;
 
   return size.cx;
@@ -4634,7 +4634,7 @@ nsFontWinSubstitute::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   nsresult rv = SubstituteChars(PR_FALSE, aString, aLength, buffer, &aLength);
   if (NS_FAILED(rv) || !aLength) return;
 
-  NS_ExtTextOutW(aDC, this, aX, aY, 0, NULL, buffer.get(), aLength, NULL);
+  NS_ExtTextOutW(aDC, this, aX, aY, 0, NULL, buffer.Elements(), aLength, NULL);
 }
 
 #ifdef MOZ_MATHML
@@ -4661,14 +4661,14 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
   if (gGlyphAgent.GetState() != eGlyphAgent_UNICODE) {
     // we are on a platform that doesn't implement GetGlyphOutlineW() 
     // we better get all glyph indices in one swoop
-    rv = GetGlyphIndices(aDC, &mCMAP, buffer.get(), aLength, buf);
+    rv = GetGlyphIndices(aDC, &mCMAP, buffer.Elements(), aLength, buf);
     if (NS_FAILED(rv)) {
       return rv;
     }
   }
 
-  return GetBoundingMetricsCommon(aDC, mOverhangCorrection, buffer.get(), aLength, 
-                                  aBoundingMetrics, buf.get());
+  return GetBoundingMetricsCommon(aDC, mOverhangCorrection, buffer.Elements(), aLength, 
+                                  aBoundingMetrics, buf.Elements());
 }
 
 #ifdef NS_DEBUG
@@ -4800,8 +4800,8 @@ nsFontSubset::Convert(const PRUnichar* aString, PRUint32 aLength,
   int nb = WideCharToMultiByte(mCodePage, 0, aString, aLength,
                                nsnull, 0, nsnull, nsnull);
 
-  if (!nb || !aResult.EnsureElemCapacity(nb)) return;
-  char* buf = aResult.get();
+  if (!nb || !aResult.SetLength(nb)) return;
+  char* buf = aResult.Elements();
   // Convert the Unicode string to ANSI
   *aResultLength = WideCharToMultiByte(mCodePage, 0, aString, aLength,
                                        buf, nb, nsnull, nsnull);
@@ -4814,7 +4814,7 @@ nsFontSubset::GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength)
   Convert(aString, aLength, buffer, &aLength);
   if (aLength) {
     SIZE size;
-    ::GetTextExtentPoint32A(aDC, buffer.get(), aLength, &size);
+    ::GetTextExtentPoint32A(aDC, buffer.Elements(), aLength, &size);
     size.cx -= mOverhangCorrection;
     return size.cx;
   }
@@ -4828,7 +4828,7 @@ nsFontSubset::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   nsAutoCharBuffer buffer;
   Convert(aString, aLength, buffer, &aLength);
   if (aLength) {
-    NS_ExtTextOutA(aDC, this, aX, aY, 0, NULL, buffer.get(), aLength, NULL);
+    NS_ExtTextOutA(aDC, this, aX, aY, 0, NULL, buffer.Elements(), aLength, NULL);
   }
 }
 
@@ -4843,7 +4843,7 @@ nsFontSubset::GetBoundingMetrics(HDC                aDC,
   nsAutoCharBuffer buffer;
   Convert(aString, aLength, buffer, &aLength);
   if (aLength) {
-    return GetBoundingMetricsCommonA(aDC, mOverhangCorrection, buffer.get(), aLength, 
+    return GetBoundingMetricsCommonA(aDC, mOverhangCorrection, buffer.Elements(), aLength, 
                                      aBoundingMetrics);
   }
   return NS_OK;
@@ -4926,11 +4926,11 @@ nsFontSubsetSubstitute::Convert(const PRUnichar* aString, PRUint32 aLength,
   }
   if (!aLength) {
     // this is the case where the substitute string collapsed to nothingness
-    *(aResult.get()) = '\0';
+    *(aResult.Elements()) = '\0';
     *aResultLength = 0;
     return;
   }
-  nsFontSubset::Convert(buffer.get(), aLength, aResult, aResultLength);
+  nsFontSubset::Convert(buffer.Elements(), aLength, aResult, aResultLength);
 }
 
 nsFontWinA::nsFontWinA(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap)

@@ -1339,6 +1339,8 @@ mozJSComponentLoader::Import(const nsACString & registryLocation)
     rv = cc->GetJSContext(&cx);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    JSAutoRequest ar(cx);
+
     JSObject *targetObject = nsnull;
 
     PRUint32 argc = 0;
@@ -1455,6 +1457,8 @@ mozJSComponentLoader::ImportInto(const nsACString & aLocation,
 
     jsval symbols;
     if (targetObj) {
+        JSAutoRequest ar(mContext);
+
         if (!JS_GetProperty(mContext, mod->global,
                             "EXPORTED_SYMBOLS", &symbols)) {
             return ReportOnCaller(cc, ERROR_NOT_PRESENT,

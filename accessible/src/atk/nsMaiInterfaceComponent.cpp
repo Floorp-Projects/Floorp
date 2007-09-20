@@ -72,9 +72,13 @@ refAccessibleAtPointCB(AtkComponent *aComponent,
     if (!accWrap || nsAccessibleWrap::MustPrune(accWrap))
         return nsnull;
 
-    // or ATK_XY_SCREEN  what is definition this in nsIAccessible ???
+    // nsIAccessible getChildAtPoint (x,y) is in screen pixels.
     if (aCoordType == ATK_XY_WINDOW) {
-        /* deal with the coord type */
+        nsCOMPtr<nsIDOMNode> domNode;
+        accWrap->GetDOMNode(getter_AddRefs(domNode));
+        nsIntPoint winCoords = nsAccUtils::GetScreenCoordsForWindow(domNode);
+        aAccX += winCoords.x;
+        aAccY += winCoords.y;
     }
 
     nsCOMPtr<nsIAccessible> pointAcc;

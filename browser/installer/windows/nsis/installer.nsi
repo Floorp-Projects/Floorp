@@ -34,8 +34,8 @@
 #
 # ***** END LICENSE BLOCK *****
 
-# Also requires:
-# ShellLink plugin http://nsis.sourceforge.net/ShellLink_plug-in
+# Required Plugins:
+# ShellLink    http://nsis.sourceforge.net/ShellLink_plug-in
 
 ; Set verbosity to 3 (e.g. no script) to lessen the noise in the build logs
 !verbose 3
@@ -59,8 +59,6 @@ Var InstallType
 Var AddStartMenuSC
 Var AddQuickLaunchSC
 Var AddDesktopSC
-Var fhInstallLog
-Var fhUninstallLog
 
 ; Other included files may depend upon these includes!
 ; The following includes are provided by NSIS.
@@ -71,16 +69,21 @@ Var fhUninstallLog
 !include WordFunc.nsh
 !include MUI.nsh
 
-!insertmacro FileJoin
-!insertmacro GetTime
-!insertmacro LineFind
+; WinVer.nsh was added in the same release that RequestExecutionLevel so check
+; if ___WINVER__NSH___ is defined to determine if RequestExecutionLevel is
+; available.
+!include /NONFATAL WinVer.nsh
+!ifdef ___WINVER__NSH___
+  RequestExecutionLevel admin
+!else
+  !warning "Installer will be created without Vista compatibility.$\n            \
+            Upgrade your NSIS installation to at least version 2.22 to resolve."
+!endif
+
 !insertmacro StrFilter
-!insertmacro TrimNewLines
 !insertmacro WordFind
 !insertmacro WordReplace
 !insertmacro GetSize
-!insertmacro GetParameters
-!insertmacro GetOptions
 
 ; NSIS provided macros that we have overridden
 !include overrides.nsh
@@ -96,20 +99,26 @@ Var fhUninstallLog
 
 VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
 
+; Must be inserted before other macros that use logging
+!insertmacro _LoggingCommon
+
 !insertmacro AddHandlerValues
-!insertmacro CanWriteToInstallDir
-!insertmacro CheckDiskSpace
-!insertmacro CleanVirtualStore
 !insertmacro CloseApp
 !insertmacro CreateRegKey
-!insertmacro GetLongPath
-!insertmacro GetSingleInstallPath
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
 !insertmacro WriteRegStr2
 !insertmacro WriteRegDWORD2
 
 !include shared.nsh
+
+; Helper macros for ui callbacks. Insert these after shared.nsh
+!insertmacro CheckCustomCommon
+!insertmacro InstallEndCleanupCommon
+!insertmacro InstallOnInitCommon
+!insertmacro InstallStartCleanupCommon
+!insertmacro LeaveDirectoryCommon
+!insertmacro PreDirectoryCommon
 
 Name "${BrandFullName}"
 OutFile "setup.exe"
@@ -146,7 +155,7 @@ ReserveFile shortcuts.ini
 !insertmacro MUI_PAGE_WELCOME
 
 ; License Page
-!define MUI_LICENSEPAGE_RADIOBUTTONS
+!define MUI_LICENSEPAGE_CHECKBOX
 !insertmacro MUI_PAGE_LICENSE license.rtf
 
 ; Custom Options Page
@@ -173,7 +182,7 @@ Page custom preShortcuts leaveShortcuts
 !insertmacro MUI_PAGE_STARTMENU Application $StartMenuDir
 
 ; Install Files Page
-!define MUI_PAGE_CUSTOMFUNCTION_LEAVE leaveInstFiles
+!define MUI_PAGE_CUSTOMFUNCTION_PRE preInstFiles
 !insertmacro MUI_PAGE_INSTFILES
 
 ; Finish Page
@@ -188,11 +197,14 @@ Page custom preShortcuts leaveShortcuts
 ################################################################################
 # Install Sections
 
-Section "-Application" Section1
-  SectionIn 1 RO
-  SetDetailsPrint textonly
+; Cleanup operations to perform at the start of the installation.
+Section "-InstallStartCleanup"
+  SetDetailsPrint both
   DetailPrint $(STATUS_CLEANUP)
   SetDetailsPrint none
+
+  SetOutPath $INSTDIR
+  ${StartInstallLog} "${BrandFullName}" "${AB_CD}" "${AppVersion}" "${GREVersion}"
 
   ; Try to delete the app's main executable and if we can't delete it try to
   ; close the app. This allows running an instance that is located in another
@@ -244,19 +256,7 @@ Section "-Application" Section1
   RmDir /r "$TmpVal"
   ClearErrors
 
-  ; During an install Vista checks if a new entry is added under the uninstall
-  ; registry key (e.g. ARP). When the same version of the app is installed on
-  ; top of an existing install the key is deleted / added and the Program
-  ; Compatibility Assistant doesn't see this as a new entry and displays an
-  ; error to the user. See Bug 354000.
-  StrCpy $0 "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})"
-  DeleteRegKey HKLM "$0"
-
-  ; Remove files that may be left behind by the application in the
-  ; VirtualStore directory.
-  ${CleanVirtualStore}
-
-  ${If} $InstallType != 1
+  ${If} $InstallType == ${INSTALLTYPE_CUSTOM}
     ; Custom installs.
     ; If DOMi is installed and this install includes DOMi remove it from
     ; the installation directory. This will remove it if the user deselected
@@ -267,60 +267,16 @@ Section "-Application" Section1
     ${EndIf}
   ${EndIf}
 
-  Call CleanupOldLogs
+  ${InstallStartCleanupCommon}
+SectionEnd
 
-  ${If} ${FileExists} "$INSTDIR\uninstall\uninstall.log"
-    ; Diff cleanup.log with uninstall.bak
-    ${LogHeader} "Updating Uninstall Log With XPInstall Wizard Logs"
-    StrCpy $R0 "$INSTDIR\uninstall\uninstall.log"
-    StrCpy $R1 "$INSTDIR\uninstall\cleanup.log"
-    GetTempFileName $R2
-    FileOpen $R3 $R2 w
-    ${TextCompareNoDetails} "$R1" "$R0" "SlowDiff" "GetDiff"
-    FileClose $R3
+Section "-Application" APP_IDX
+  ${StartUninstallLog}
 
-    ${Unless} ${Errors}
-      ${FileJoin} "$INSTDIR\uninstall\uninstall.log" "$R2" "$INSTDIR\uninstall\uninstall.log"
-    ${EndUnless}
-    ${DeleteFile} "$INSTDIR\uninstall\cleanup.log"
-    ${DeleteFile} "$R2"
-    ${DeleteFile} "$INSTDIR\uninstall\uninstall.bak"
-    Rename "$INSTDIR\uninstall\uninstall.log" "$INSTDIR\uninstall\uninstall.bak"
-  ${EndIf}
-
-  ${Unless} ${FileExists} "$INSTDIR\uninstall"
-    CreateDirectory "$INSTDIR\uninstall"
-  ${EndUnless}
-
-  FileOpen $fhUninstallLog "$INSTDIR\uninstall\uninstall.log" w
-  FileOpen $fhInstallLog "$INSTDIR\install.log" w
-
-  ${GetTime} "" "L" $0 $1 $2 $3 $4 $5 $6
-  FileWrite $fhInstallLog "${BrandFullName} Installation Started: $2-$1-$0 $4:$5:$6"
-  Call WriteLogSeparator
-
-  ${LogHeader} "Installation Details"
-  ${LogMsg} "Install Dir: $INSTDIR"
-  ${LogMsg} "Locale     : ${AB_CD}"
-  ${LogMsg} "App Version: ${AppVersion}"
-  ${LogMsg} "GRE Version: ${GREVersion}"
-
-  ${If} ${FileExists} "$EXEDIR\removed-files.log"
-    ${LogHeader} "Removing Obsolete Files and Directories"
-    ${LineFind} "$EXEDIR\removed-files.log" "/NUL" "1:-1" "onInstallDeleteFile"
-    ${LineFind} "$EXEDIR\removed-files.log" "/NUL" "1:-1" "onInstallRemoveDir"
-  ${EndIf}
-
-  ${DeleteFile} "$INSTDIR\install_wizard.log"
-  ${DeleteFile} "$INSTDIR\install_status.log"
-
-  RmDir /r "$INSTDIR\updates"
-  ${DeleteFile} "$INSTDIR\updates.xml"
-  ${DeleteFile} "$INSTDIR\active-update.xml"
-
-  SetDetailsPrint textonly
+  SetDetailsPrint both
   DetailPrint $(STATUS_INSTALL_APP)
   SetDetailsPrint none
+
   ${LogHeader} "Installing Main Files"
   StrCpy $R0 "$EXEDIR\nonlocalized"
   StrCpy $R1 "$INSTDIR"
@@ -354,19 +310,14 @@ Section "-Application" Section1
   ${LogUninstall} "File: \install_wizard.log"
   ${LogUninstall} "File: \updates.xml"
 
-  SetDetailsPrint textonly
+  SetDetailsPrint both
   DetailPrint $(STATUS_INSTALL_LANG)
   SetDetailsPrint none
+
   ${LogHeader} "Installing Localized Files"
   StrCpy $R0 "$EXEDIR\localized"
   StrCpy $R1 "$INSTDIR"
   Call DoCopyFiles
-
-  ${If} $InstallType != 4
-    ${If} ${FileExists} "$INSTDIR\extensions\inspector@mozilla.org"
-      Call installInspector
-    ${EndIf}
-  ${EndIf}
 
   ${LogHeader} "Adding Additional Files"
   ; Check if QuickTime is installed and copy the nsIQTScriptablePlugin.xpt from
@@ -410,13 +361,14 @@ Section "-Application" Section1
   ${EndIf}
 
   ; Remove registry entries for non-existent apps and for apps that point to our
-  ; install location in the Software\Mozilla key.
+  ; install location in the Software\Mozilla key and uninstall registry entries
+  ; that point to our install location for both HKCU and HKLM.
   SetShellVarContext current  ; Set SHCTX to HKCU
   ${RegCleanMain} "Software\Mozilla"
+  ${RegCleanUninstall}
+
   SetShellVarContext all  ; Set SHCTX to HKLM
   ${RegCleanMain} "Software\Mozilla"
-
-  ; Remove uninstall entries that point to our install location
   ${RegCleanUninstall}
 
   ${LogHeader} "Adding Registry Entries"
@@ -482,43 +434,40 @@ Section "-Application" Section1
   ; Create Start Menu shortcuts
   ${LogHeader} "Adding Shortcuts"
   ${If} $AddStartMenuSC == 1
-    CreateDirectory "$SMPROGRAMS\$StartMenuDir"
+    ${Unless} ${FileExists} "$SMPROGRAMS\$StartMenuDir"
+      CreateDirectory "$SMPROGRAMS\$StartMenuDir"
+      ${LogMsg} "Added Start Menu Directory: $SMPROGRAMS\$StartMenuDir"
+    ${EndUnless}
     CreateShortCut "$SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
     ${LogUninstall} "File: $SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal}.lnk"
+    ${LogMsg} "Added Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal}.lnk"
     CreateShortCut "$SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal} ($(SAFE_MODE)).lnk" "$INSTDIR\${FileMainEXE}" "-safe-mode" "$INSTDIR\${FileMainEXE}" 0
     ${LogUninstall} "File: $SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal} ($(SAFE_MODE)).lnk"
+    ${LogMsg} "Added Shortcut: $SMPROGRAMS\$StartMenuDir\${BrandFullNameInternal} ($(SAFE_MODE)).lnk"
   ${EndIf}
 
   ; perhaps use the uninstall keys
   ${If} $AddQuickLaunchSC == 1
     CreateShortCut "$QUICKLAUNCH\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
     ${LogUninstall} "File: $QUICKLAUNCH\${BrandFullName}.lnk"
+    ${LogMsg} "Added Shortcut: $QUICKLAUNCH\${BrandFullName}.lnk"
   ${EndIf}
 
-  ${LogHeader} "Updating Quick Launch Shortcuts"
   ${If} $AddDesktopSC == 1
     CreateShortCut "$DESKTOP\${BrandFullName}.lnk" "$INSTDIR\${FileMainEXE}" "" "$INSTDIR\${FileMainEXE}" 0
     ${LogUninstall} "File: $DESKTOP\${BrandFullName}.lnk"
+    ${LogMsg} "Added Shortcut: $DESKTOP\${BrandFullName}.lnk"
   ${EndIf}
 
   !insertmacro MUI_STARTMENU_WRITE_END
-
-  ; Refresh desktop icons
-  System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"
 SectionEnd
 
-Section /o "Developer Tools" Section2
-  Call installInspector
-SectionEnd
-
-################################################################################
-# Helper Functions
-
-Function installInspector
+Section /o "Developer Tools" DOMI_IDX
   ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
-    SetDetailsPrint textonly
+    SetDetailsPrint both
     DetailPrint $(STATUS_INSTALL_OPTIONAL)
     SetDetailsPrint none
+
     ${RemoveDir} "$INSTDIR\extensions\inspector@mozilla.org"
     ClearErrors
     ${LogHeader} "Installing Developer Tools"
@@ -526,7 +475,23 @@ Function installInspector
     StrCpy $R1 "$INSTDIR\extensions\inspector@mozilla.org"
     Call DoCopyFiles
   ${EndIf}
-FunctionEnd
+SectionEnd
+
+; Cleanup operations to perform at the end of the installation.
+Section "-InstallEndCleanup"
+  SetDetailsPrint both
+  DetailPrint "$(STATUS_CLEANUP)"
+  SetDetailsPrint none
+  ${LogHeader} "Updating Uninstall Log With Previous Uninstall Log"
+
+  ${InstallEndCleanupCommon}
+
+  ; Refresh desktop icons
+  System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"
+SectionEnd
+
+################################################################################
+# Helper Functions
 
 ; Copies a file to a temporary backup directory and then checks if it is in use
 ; by attempting to delete the file. If the file is in use an error is displayed
@@ -551,72 +516,6 @@ Function CheckInUse
       Quit
     ${EndIf}
   ${EndIf}
-FunctionEnd
-
-; Adds a section divider to the human readable log.
-Function WriteLogSeparator
-  FileWrite $fhInstallLog "$\r$\n-------------------------------------------------------------------------------$\r$\n"
-FunctionEnd
-
-; Check whether to display the current page (e.g. if we aren't performing a
-; custom install don't display the custom pages).
-Function CheckCustom
-  ${If} $InstallType != 4
-    Abort
-  ${EndIf}
-FunctionEnd
-
-Function onInstallDeleteFile
-  ${TrimNewLines} "$R9" "$R9"
-  StrCpy $R1 "$R9" 5
-  ${If} $R1 == "File:"
-    StrCpy $R9 "$R9" "" 6
-    ${If} ${FileExists} "$INSTDIR$R9"
-      ClearErrors
-      Delete "$INSTDIR$R9"
-      ${If} ${Errors}
-        ${LogMsg} "** ERROR Deleting File: $INSTDIR$R9 **"
-      ${Else}
-        ${LogMsg} "Deleted File: $INSTDIR$R9"
-      ${EndIf}
-    ${EndIf}
-  ${EndIf}
-  ClearErrors
-  Push 0
-FunctionEnd
-
-; The previous installer removed directories even when they aren't empty so this
-; function does as well.
-Function onInstallRemoveDir
-  ${TrimNewLines} "$R9" "$R9"
-  StrCpy $R1 "$R9" 4
-  ${If} $R1 == "Dir:"
-    StrCpy $R9 "$R9" "" 5
-    StrCpy $R1 "$R9" "" -1
-    ${If} $R1 == "\"
-      StrCpy $R9 "$R9" -1
-    ${EndIf}
-    ${If} ${FileExists} "$INSTDIR$R9"
-      ClearErrors
-      RmDir /r "$INSTDIR$R9"
-      ${If} ${Errors}
-        ${LogMsg} "** ERROR Removing Directory: $INSTDIR$R9 **"
-      ${Else}
-        ${LogMsg} "Removed Directory: $INSTDIR$R9"
-      ${EndIf}
-    ${EndIf}
-  ${EndIf}
-  ClearErrors
-  Push 0
-FunctionEnd
-
-Function GetDiff
-  ${TrimNewLines} "$9" "$9"
-  ${If} $9 != ""
-    FileWrite $R3 "$9$\r$\n"
-    ${LogMsg} "Added To Uninstall Log: $9"
-  ${EndIf}
-  Push 0
 FunctionEnd
 
 Function DoCopyFiles
@@ -668,7 +567,9 @@ Function CopyFile
       ${EndIf}
     ${EndIf}
     ClearErrors
+
     CopyFiles /SILENT $R9 "$R1$R3"
+
     ${If} ${Errors}
       ${LogMsg} "** ERROR Installing File: $R1$R3\$R7 **"
       StrCpy $0 "$R1$R3\$R7"
@@ -686,85 +587,6 @@ Function CopyFile
     ${LogUninstall} "File: $R3"
   ${EndIf}
   Push 0
-FunctionEnd
-
-; Clean up the old log files. We only diff the first two found since it is
-; possible for there to be several MB and comparing that many would take a very
-; long time to diff.
-Function CleanupOldLogs
-  FindFirst $0 $TmpVal "$INSTDIR\uninstall\*wizard*"
-  StrCmp $TmpVal "" done
-  StrCpy $TmpVal "$INSTDIR\uninstall\$TmpVal"
-
-  FindNext $0 $1
-  StrCmp $1 "" cleanup
-  StrCpy $1 "$INSTDIR\uninstall\$1"
-  Push $1
-  Call DiffOldLogFiles
-  FindClose $0
-  ${DeleteFile} "$1"
-
-  cleanup:
-    StrCpy $2 "$INSTDIR\uninstall\cleanup.log"
-    ${DeleteFile} "$2"
-    FileOpen $R2 $2 w
-    Push $TmpVal
-    ${LineFind} "$INSTDIR\uninstall\$TmpVal" "/NUL" "1:-1" "CleanOldLogFilesCallback"
-    ${DeleteFile} "$INSTDIR\uninstall\$TmpVal"
-  done:
-    FindClose $0
-    FileClose $R2
-    FileClose $R3
-FunctionEnd
-
-Function DiffOldLogFiles
-  StrCpy $R1 "$1"
-  GetTempFileName $R2
-  FileOpen $R3 $R2 w
-  ${TextCompareNoDetails} "$R1" "$TmpVal" "SlowDiff" "GetDiff"
-  FileClose $R3
-  ${FileJoin} "$TmpVal" "$R2" "$TmpVal"
-  ${DeleteFile} "$R2"
-FunctionEnd
-
-Function CleanOldLogFilesCallback
-  ${TrimNewLines} "$R9" $R9
-  ${WordReplace} "$R9" "$INSTDIR" "" "+" $R3
-  ${WordFind} "$R9" "	" "E+1}" $R0
-  IfErrors updater 0
-
-  ${WordFind} "$R0" "Installing: " "E+1}" $R1
-  ${Unless} ${Errors}
-    FileWrite $R2 "File: $R1$\r$\n"
-    GoTo done
-  ${EndUnless}
-
-  ${WordFind} "$R0" "Replacing: " "E+1}" $R1
-  ${Unless} ${Errors}
-    FileWrite $R2 "File: $R1$\r$\n"
-    GoTo done
-  ${EndUnless}
-
-  ${WordFind} "$R0" "Windows Shortcut: " "E+1}" $R1
-  ${Unless} ${Errors}
-    FileWrite $R2 "File: $R1.lnk$\r$\n"
-    GoTo done
-  ${EndUnless}
-
-  ${WordFind} "$R0" "Create Folder: " "E+1}" $R1
-  ${Unless} ${Errors}
-    FileWrite $R2 "Dir: $R1$\r$\n"
-    GoTo done
-  ${EndUnless}
-
-  updater:
-    ${WordFind} "$R9" "installing: " "E+1}" $R0
-    ${Unless} ${Errors}
-      FileWrite $R2 "File: $R0$\r$\n"
-    ${EndUnless}
-
-  done:
-    Push 0
 FunctionEnd
 
 Function LaunchApp
@@ -801,14 +623,14 @@ Function leaveOptions
   ${EndIf}
   ${MUI_INSTALLOPTIONS_READ} $R0 "options.ini" "Field 2" "State"
   StrCmp $R0 "1" +1 +2
-  StrCpy $InstallType "1"
+  StrCpy $InstallType ${INSTALLTYPE_BASIC}
   ${MUI_INSTALLOPTIONS_READ} $R0 "options.ini" "Field 3" "State"
   StrCmp $R0 "1" +1 +2
-  StrCpy $InstallType "4"
+  StrCpy $InstallType ${INSTALLTYPE_CUSTOM}
 FunctionEnd
 
 Function preComponents
-  Call CheckCustom
+  ${CheckCustomCommon}
   ; If DOMi isn't available skip the components page
   ${Unless} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
     Abort
@@ -821,48 +643,19 @@ Function leaveComponents
   ${MUI_INSTALLOPTIONS_READ} $R0 "components.ini" "Field 2" "State"
   ; State will be 1 for checked and 0 for unchecked so we can use that to set
   ; the section flags for installation.
-  SectionSetFlags 1 $R0
+  SectionSetFlags ${DOMI_IDX} $R0
 FunctionEnd
 
 Function preDirectory
-  SetShellVarContext all  ; Set SHCTX to HKLM
-  ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
-  ${If} $R9 == "false"
-    SetShellVarContext current  ; Set SHCTX to HKCU
-    ${GetSingleInstallPath} "Software\Mozilla\${BrandFullNameInternal}" $R9
-  ${EndIf}
-
-  ${Unless} $R9 == "false"
-    StrCpy $INSTDIR "$R9"
-  ${EndUnless}
-
-  ${If} $InstallType != 4
-    ${CheckDiskSpace} $R9
-    ${If} $R9 != "false"
-      ${CanWriteToInstallDir} $R9
-      ${If} $R9 != "false"
-        Abort
-      ${EndIf}
-    ${EndIf}
-  ${EndIf}
+  ${PreDirectoryCommon}
 FunctionEnd
 
 Function leaveDirectory
-  ${CheckDiskSpace} $R9
-  ${If} $R9 == "false"
-    MessageBox MB_OK "$(WARN_DISK_SPACE)"
-    Abort
-  ${EndIf}
-
-  ${CanWriteToInstallDir} $R9
-  ${If} $R9 == "false"
-    MessageBox MB_OK "$(WARN_WRITE_ACCESS)"
-    Abort
-  ${EndIf}
+  ${LeaveDirectoryCommon} "$(WARN_DISK_SPACE)" "$(WARN_WRITE_ACCESS)"
 FunctionEnd
 
 Function preShortcuts
-  Call CheckCustom
+  ${CheckCustomCommon}
   !insertmacro MUI_HEADER_TEXT "$(SHORTCUTS_PAGE_TITLE)" "$(SHORTCUTS_PAGE_SUBTITLE)"
   !insertmacro MUI_INSTALLOPTIONS_DISPLAY "shortcuts.ini"
 FunctionEnd
@@ -878,42 +671,23 @@ Function leaveShortcuts
 FunctionEnd
 
 Function preStartMenu
-  Call CheckCustom
+  ${CheckCustomCommon}
   ${If} $AddStartMenuSC != 1
     Abort
   ${EndIf}
 FunctionEnd
 
-Function leaveInstFiles
-  FileClose $fhUninstallLog
-  ; Diff and add missing entries from the previous file log if it exists
-  ${If} ${FileExists} "$INSTDIR\uninstall\uninstall.bak"
-    SetDetailsPrint textonly
-    DetailPrint $(STATUS_CLEANUP)
-    SetDetailsPrint none
-    ${LogHeader} "Updating Uninstall Log With Previous Uninstall Log"
-    StrCpy $R0 "$INSTDIR\uninstall\uninstall.log"
-    StrCpy $R1 "$INSTDIR\uninstall\uninstall.bak"
-    GetTempFileName $R2
-    FileOpen $R3 $R2 w
-    ${TextCompareNoDetails} "$R1" "$R0" "SlowDiff" "GetDiff"
-    FileClose $R3
-    ${Unless} ${Errors}
-      ${FileJoin} "$INSTDIR\uninstall\uninstall.log" "$R2" "$INSTDIR\uninstall\uninstall.log"
-    ${EndUnless}
-    ${DeleteFile} "$INSTDIR\uninstall\uninstall.bak"
-    ${DeleteFile} "$R2"
+Function preInstFiles
+  ${If} $InstallType != ${INSTALLTYPE_CUSTOM}
+    ; Set DOMi to be installed
+    SectionSetFlags ${DOMI_IDX} 1
   ${EndIf}
-
-  Call WriteLogSeparator
-  ${GetTime} "" "L" $0 $1 $2 $3 $4 $5 $6
-  FileWrite $fhInstallLog "${BrandFullName} Installation Finished: $2-$1-$0 $4:$5:$6$\r$\n"
-  FileClose $fhInstallLog
 FunctionEnd
 
 ; When we add an optional action to the finish page the cancel button is
 ; enabled. This disables it and leaves the finish button as the only choice.
 Function preFinish
+  ${EndInstallLog} "${BrandFullName}"
   !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "cancelenabled" "0"
 FunctionEnd
 
@@ -921,124 +695,8 @@ FunctionEnd
 # Initialization Functions
 
 Function .onInit
-  ${GetParameters} $R0
-  ${If} $R0 != ""
-    ClearErrors
-    ${GetOptions} "$R0" "-ms" $R1
-    ${If} ${Errors}
-      ; Default install type
-      StrCpy $InstallType "1"
-      ; Support for specifying an installation configuration file.
-      ClearErrors
-      ${GetOptions} "$R0" "/INI=" $R1
-      ${Unless} ${Errors}
-        ; The configuration file must also exist
-        ${If} ${FileExists} "$R1"
-          SetSilent silent
-          ReadINIStr $0 $R1 "Install" "InstallDirectoryName"
-          ${If} $0 != ""
-            StrCpy $INSTDIR "$PROGRAMFILES\$0"
-          ${Else}
-            ReadINIStr $0 $R1 "Install" "InstallDirectoryPath"
-            ${If} $$0 != ""
-              StrCpy $INSTDIR "$0"
-            ${EndIf}
-          ${EndIf}
+  ${InstallOnInitCommon} "$(WARN_UNSUPPORTED_MSG)"
 
-          ${If} $INSTDIR == ""
-            ; Check if there is an existing uninstall registry entry for this
-            ; version of the application and if present install into that location
-            ReadRegStr $0 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${BrandFullNameInternal} (${AppVersion})" "InstallLocation"
-            ${If} $0 == ""
-              StrCpy $INSTDIR "$PROGRAMFILES\${BrandFullName}"
-            ${Else}
-              GetFullPathName $INSTDIR "$0"
-              ${Unless} ${FileExists} "$INSTDIR"
-                StrCpy $INSTDIR "$PROGRAMFILES\${BrandFullName}"
-              ${EndUnless}
-            ${EndIf}
-          ${EndIf}
-
-          ; Quit if we are unable to create the installation directory or we are
-          ; unable to write to a file in the installation directory.
-          ClearErrors
-          ${If} ${FileExists} "$INSTDIR"
-            GetTempFileName $R2 "$INSTDIR"
-            FileOpen $R3 $R2 w
-            FileWrite $R3 "Write Access Test"
-            FileClose $R3
-            Delete $R2
-            ${If} ${Errors}
-              Quit
-            ${EndIf}
-          ${Else}
-            CreateDirectory "$INSTDIR"
-            ${If} ${Errors}
-              Quit
-            ${EndIf}
-          ${EndIf}
-
-          ReadINIStr $0 $R1 "Install" "CloseAppNoPrompt"
-          ${If} $0 == "true"
-            ; Try to close the app if the exe is in use.
-            ClearErrors
-            ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
-              ${DeleteFile} "$INSTDIR\${FileMainEXE}"
-            ${EndIf}
-            ${If} ${Errors}
-              ClearErrors
-              ${CloseApp} "false" ""
-              ClearErrors
-              ${DeleteFile} "$INSTDIR\${FileMainEXE}"
-              ; If unsuccessful try one more time and if it still fails Quit
-              ${If} ${Errors}
-                ClearErrors
-                ${CloseApp} "false" ""
-                ClearErrors
-                ${DeleteFile} "$INSTDIR\${FileMainEXE}"
-                ${If} ${Errors}
-                  Quit
-                ${EndIf}
-              ${EndIf}
-            ${EndIf}
-          ${EndIf}
-
-          ReadINIStr $0 $R1 "Install" "QuickLaunchShortcut"
-          ${If} $0 == "false"
-            StrCpy $AddQuickLaunchSC "0"
-          ${Else}
-            StrCpy $AddQuickLaunchSC "1"
-          ${EndIf}
-
-          ReadINIStr $0 $R1 "Install" "DesktopShortcut"
-          ${If} $0 == "false"
-            StrCpy $AddDesktopSC "0"
-          ${Else}
-            StrCpy $AddDesktopSC "1"
-          ${EndIf}
-
-          ReadINIStr $0 $R1 "Install" "StartMenuShortcuts"
-          ${If} $0 == "false"
-            StrCpy $AddStartMenuSC "0"
-          ${Else}
-            StrCpy $AddStartMenuSC "1"
-          ${EndIf}
-
-          ReadINIStr $0 $R1 "Install" "StartMenuDirectoryName"
-          ${If} $0 != ""
-            StrCpy $StartMenuDir "$0"
-          ${EndIf}
-        ${EndIf}
-      ${EndUnless}
-    ${Else}
-      ; Support for the deprecated -ms command line argument. The new command
-      ; line arguments are not supported when -ms is used.
-      SetSilent silent
-    ${EndIf}
-  ${EndIf}
-  ClearErrors
-
-  StrCpy $LANGUAGE 0
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "options.ini"
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "components.ini"
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "shortcuts.ini"
@@ -1046,18 +704,20 @@ Function .onInit
   !insertmacro createComponentsINI
   !insertmacro createShortcutsINI
 
+  StrCpy $LANGUAGE 0
+
   ; There must always be nonlocalized and localized directories.
-  ${GetSize} "$EXEDIR\nonlocalized\" "/S=0K" $1 $8 $9
-  ${GetSize} "$EXEDIR\localized\" "/S=0K" $2 $8 $9
-  IntOp $0 $1 + $2
-  SectionSetSize 0 $0
+  ${GetSize} "$EXEDIR\nonlocalized\" "/S=0K" $R5 $R7 $R8
+  ${GetSize} "$EXEDIR\localized\" "/S=0K" $R6 $R7 $R8
+  IntOp $R8 $R5 + $R6
+  SectionSetSize ${APP_IDX} $R8
 
   ${If} ${FileExists} "$EXEDIR\optional\extensions\inspector@mozilla.org"
     ; Set the section size for DOMi.
     ${GetSize} "$EXEDIR\optional\extensions\inspector@mozilla.org" "/S=0K" $0 $8 $9
-    SectionSetSize 1 $0
+    SectionSetSize ${DOMI_IDX} $0
   ${Else}
     ; Hide DOMi in the components page if it isn't available.
-    SectionSetText 1 ""
+    SectionSetText ${DOMI_IDX} ""
   ${EndIf}
 FunctionEnd

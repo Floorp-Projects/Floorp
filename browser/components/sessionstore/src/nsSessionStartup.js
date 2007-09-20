@@ -1,75 +1,74 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is the nsSessionStore component.
- *
- * The Initial Developer of the Original Code is
- * Simon Bünzli <zeniko@gmail.com>
- * Portions created by the Initial Developer are Copyright (C) 2006
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Dietrich Ayala <autonome@gmail.com>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* 
+# ***** BEGIN LICENSE BLOCK *****
+# * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+# *
+# * The contents of this file are subject to the Mozilla Public License Version
+# * 1.1 (the "License"); you may not use this file except in compliance with
+# * the License. You may obtain a copy of the License at
+# * http://www.mozilla.org/MPL/
+# *
+# * Software distributed under the License is distributed on an "AS IS" basis,
+# * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# * for the specific language governing rights and limitations under the
+# * License.
+# *
+# * The Original Code is the nsSessionStore component.
+# *
+# * The Initial Developer of the Original Code is
+# * Simon Bünzli <zeniko@gmail.com>
+# * Portions created by the Initial Developer are Copyright (C) 2006
+# * the Initial Developer. All Rights Reserved.
+# *
+# * Contributor(s):
+# *   Dietrich Ayala <autonome@gmail.com>
+# *
+# * Alternatively, the contents of this file may be used under the terms of
+# * either the GNU General Public License Version 2 or later (the "GPL"), or
+# * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# * in which case the provisions of the GPL or the LGPL are applicable instead
+# * of those above. If you wish to allow use of your version of this file only
+# * under the terms of either the GPL or the LGPL, and not to allow others to
+# * use your version of this file under the terms of the MPL, indicate your
+# * decision by deleting the provisions above and replace them with the notice
+# * and other provisions required by the GPL or the LGPL. If you do not delete
+# * the provisions above, a recipient may use your version of this file under
+# * the terms of any one of the MPL, the GPL or the LGPL.
+# *
+# * ***** END LICENSE BLOCK ***** 
+*/
 
 /**
- * Session Storage and Restoration
- * 
- * Overview
- * This service reads user's session file at startup, and makes a determination 
- * as to whether the session should be restored. It will restore the session 
- * under the circumstances described below.
- * 
- * Crash Detection
- * The session file stores a session.state property, that 
- * indicates whether the browser is currently running. When the browser shuts 
- * down, the field is changed to "stopped". At startup, this field is read, and
- * if it's value is "running", then it's assumed that the browser had previously
- * crashed, or at the very least that something bad happened, and that we should
- * restore the session.
- * 
- * Forced Restarts
- * In the event that a restart is required due to application update or extension
- * installation, set the browser.sessionstore.resume_session_once pref to true,
- * and the session will be restored the next time the browser starts.
- * 
- * Always Resume
- * This service will always resume the session if the integer pref 
- * browser.startup.page is set to 3.
- */
+# * Session Storage and Restoration
+# * 
+# * Overview
+# * This service reads user's session file at startup, and makes a determination 
+# * as to whether the session should be restored. It will restore the session 
+# * under the circumstances described below.
+# * 
+# * Crash Detection
+# * The session file stores a session.state property, that 
+# * indicates whether the browser is currently running. When the browser shuts 
+# * down, the field is changed to "stopped". At startup, this field is read, and
+# * if it's value is "running", then it's assumed that the browser had previously
+# * crashed, or at the very least that something bad happened, and that we should
+# * restore the session.
+# * 
+# * Forced Restarts
+# * In the event that a restart is required due to application update or extension
+# * installation, set the browser.sessionstore.resume_session_once pref to true,
+# * and the session will be restored the next time the browser starts.
+# * 
+# * Always Resume
+# * This service will always resume the session if the integer pref 
+# * browser.startup.page is set to 3.
+*/
 
 /* :::::::: Constants and Helpers ::::::::::::::: */
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
-
-const CID = Components.ID("{ec7a6c20-e081-11da-8ad9-0800200c9a66}");
-const CONTRACT_ID = "@mozilla.org/browser/sessionstartup;1";
-const CLASS_NAME = "Browser Session Startup Service";
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const STATE_RUNNING_STR = "running";
 
@@ -110,7 +109,7 @@ SessionStartup.prototype = {
     
     // only read the session file if config allows possibility of restoring
     var resumeFromCrash = this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
-    if (resumeFromCrash || this._doResumeSession()) {
+    if ((resumeFromCrash || this._doResumeSession()) && this._sessionFile.exists()) {
       // get string containing session state
       this._iniString = this._readFile(this._sessionFile);
       if (this._iniString) {
@@ -341,84 +340,24 @@ SessionStartup.prototype = {
     return null;
   },
 
-/* ........ QueryInterface .............. */
+  /* ........ QueryInterface .............. */
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsISupportsWeakReference,
+                                          Ci.nsISessionStartup]),
+  classDescription: "Browser Session Startup Service",
+  classID:          Components.ID("{ec7a6c20-e081-11da-8ad9-0800200c9a66}"),
+  contractID:       "@mozilla.org/browser/sessionstartup;1",
 
-  QueryInterface: function(aIID) {
-    if (!aIID.equals(Ci.nsISupports) && !aIID.equals(Ci.nsIObserver) && 
-      !aIID.equals(Ci.nsISupportsWeakReference) && 
-      !aIID.equals(Ci.nsISessionStartup)) {
-      Components.returnCode = Cr.NS_ERROR_NO_INTERFACE;
-      return null;
-    }
-    
-    return this;
-  }
+  // get this contractID registered for certain categories via XPCOMUtils
+  _xpcom_categories: [
+    // make ourselves a startup observer
+    { category: "app-startup", service: true }
+  ]
+
 };
 
-/* :::::::: Service Registration & Initialization ::::::::::::::: */
-
-/* ........ nsIModule .............. */
-
-const SessionStartupModule = {
-
-  getClassObject: function(aCompMgr, aCID, aIID) {
-    if (aCID.equals(CID)) {
-      return SessionStartupFactory;
-    }
-    
-    Components.returnCode = Cr.NS_ERROR_NOT_REGISTERED;
-    return null;
-  },
-
-  registerSelf: function(aCompMgr, aFileSpec, aLocation, aType) {
-    aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
-    aCompMgr.registerFactoryLocation(CID, CLASS_NAME, CONTRACT_ID, aFileSpec, aLocation, aType);
-
-    var catMan = Cc["@mozilla.org/categorymanager;1"].
-                 getService(Ci.nsICategoryManager);
-    catMan.addCategoryEntry("app-startup", CLASS_NAME, "service," + CONTRACT_ID, true, true);
-  },
-
-  unregisterSelf: function(aCompMgr, aLocation, aType) {
-    aCompMgr.QueryInterface(Ci.nsIComponentRegistrar);
-    aCompMgr.unregisterFactoryLocation(CID, aLocation);
-
-    var catMan = Cc["@mozilla.org/categorymanager;1"].
-                 getService(Ci.nsICategoryManager);
-    catMan.deleteCategoryEntry( "app-startup", "service," + CONTRACT_ID, true);
-  },
-
-  canUnload: function(aCompMgr) {
-    return true;
-  }
+//module initialization
+function NSGetModule(aCompMgr, aFileSpec) {
+  return XPCOMUtils.generateModule([SessionStartup]);
 }
 
-/* ........ nsIFactory .............. */
-
-const SessionStartupFactory = {
-
-  createInstance: function(aOuter, aIID) {
-    if (aOuter != null) {
-      Components.returnCode = Cr.NS_ERROR_NO_AGGREGATION;
-      return null;
-    }
-    
-    return (new SessionStartup()).QueryInterface(aIID);
-  },
-
-  lockFactory: function(aLock) { },
-
-  QueryInterface: function(aIID) {
-    if (!aIID.equals(Ci.nsISupports) && !aIID.equals(Ci.nsIModule) &&
-        !aIID.equals(Ci.nsIFactory) && !aIID.equals(Ci.nsISessionStartup)) {
-      Components.returnCode = Cr.NS_ERROR_NO_INTERFACE;
-      return null;
-    }
-    
-    return this;
-  }
-};
-
-function NSGetModule(aComMgr, aFileSpec) {
-  return SessionStartupModule;
-}

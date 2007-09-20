@@ -96,10 +96,13 @@ void nsInstallLogComment::Abort()
 
 char* nsInstallLogComment::toString()
 {
+    if (!mInstall)
+        return nsnull;
+
     char* buffer = new char[1024];
     char* rsrcVal = nsnull;
     
-    if (buffer == nsnull || !mInstall)
+    if (!buffer)
         return nsnull;
 
     rsrcVal = mInstall->GetResourcedString(mFileOpCommand);

@@ -48,6 +48,7 @@ function setup()
   var stmt = createStatement("INSERT INTO t1 (x) VALUES ('a')");
   stmt.execute();
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_vacuum()
@@ -55,6 +56,7 @@ function test_vacuum()
   var stmt = createStatement("VACUUM;");
   stmt.executeStep();
   stmt.reset();
+  stmt.finalize();
 }
 
 var tests = [test_vacuum];

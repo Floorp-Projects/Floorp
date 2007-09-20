@@ -77,10 +77,8 @@ const TYPE_XUL = "application/vnd.mozilla.xul+xml";
 // We use this once, for Clear Private Data
 const GLUE_CID = "@mozilla.org/browser/browserglue;1";
 
-var gRDF = null;
 var gGlobalHistory = null;
 var gURIFixup = null;
-var gPageStyleButton = null;
 var gCharsetMenu = null;
 var gLastBrowserCharset = null;
 var gPrevCharset = null;
@@ -92,7 +90,6 @@ var gProxyDeck = null;
 var gNavigatorBundle = null;
 var gIsLoadingBlank = false;
 var gLastValidURLStr = "";
-var gLastValidURL = null;
 var gMustLoadSidebar = false;
 var gProgressMeterPanel = null;
 var gProgressCollapseTimer = null;

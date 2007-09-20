@@ -40,6 +40,7 @@
 
 #include "nsString.h"
 #include "nsTArray.h"
+#include "nsILineBreaker.h"
 
 class nsIAtom;
 
@@ -81,10 +82,7 @@ public:
   nsLineBreaker();
   ~nsLineBreaker();
   
-  static inline PRBool IsSpace(PRUnichar u)
-  {
-    return u == 0x0020 || u == 0x200b/*ZWSP*/ || u == '\n' || u == '\t';
-  }
+  static inline PRBool IsSpace(PRUnichar u) { return NS_IsSpace(u); }
 
   static inline PRBool IsComplexASCIIChar(PRUnichar u)
   {

@@ -1428,71 +1428,59 @@ pref("ui.click_hold_context_menus", false);
 
 // default font name (in UTF8)
 
-pref("font.name.serif.ar", "Lucida Grande");
-pref("font.name.sans-serif.ar", "Lucida Grande");
-pref("font.name.monospace.ar", "Monaco");
-pref("font.name.cursive.ar", "XXX.cursive");
-pref("font.name.fantasy.ar", "XXX.fantasy");
-pref("font.name-list.serif.ar", "Lucida Grande");
-pref("font.name-list.sans-serif.ar", "Lucida Grande");
-pref("font.name-list.monospace.ar", "Monaco");
-pref("font.name-list.cursive.ar", "XXX.cursive");
-pref("font.name-list.fantasy.ar", "XXX.fantasy");
+pref("font.name.serif.ar", "Al Bayan");
+pref("font.name.sans-serif.ar", "Geeza Pro");
+pref("font.name.monospace.ar", "Geeza Pro");
+pref("font.name.cursive.ar", "DecoType Naskh");
+pref("font.name.fantasy.ar", "KufiStandardGK");
+pref("font.name-list.serif.ar", "Al Bayan");
+pref("font.name-list.sans-serif.ar", "Geeza Pro");
+pref("font.name-list.monospace.ar", "Geeza Pro");
+pref("font.name-list.cursive.ar", "DecoType Naskh");
+pref("font.name-list.fantasy.ar", "KufiStandardGK");
 
 pref("font.name.serif.el", "Lucida Grande");
 pref("font.name.sans-serif.el", "Lucida Grande");
-pref("font.name.monospace.el", "Monaco");
-pref("font.name.cursive.el", "XXX.cursive");
-pref("font.name.fantasy.el", "XXX.fantasy");
+pref("font.name.monospace.el", "Lucida Grande");
+pref("font.name.cursive.el", "Lucida Grande");
+pref("font.name.fantasy.el", "Lucida Grande");
 pref("font.name-list.serif.el", "Lucida Grande");
 pref("font.name-list.sans-serif.el", "Lucida Grande");
-pref("font.name-list.monospace.el", "Monaco");
-pref("font.name-list.cursive.el", "XXX.cursive");
-pref("font.name-list.fantasy.el", "XXX.fantasy");
+pref("font.name-list.monospace.el", "Lucida Grande");
+pref("font.name-list.cursive.el", "Lucida Grande");
+pref("font.name-list.fantasy.el", "Lucida Grande");
 
-pref("font.name.serif.he", "Lucida Grande");
-pref("font.name.sans-serif.he", "Lucida Grande");
-pref("font.name.monospace.he", "Monaco");
-pref("font.name.cursive.he", "XXX.cursive");
-pref("font.name.fantasy.he", "XXX.fantasy");
-pref("font.name-list.serif.he", "Lucida Grande");
-pref("font.name-list.sans-serif.he", "Lucida Grande");
-pref("font.name-list.monospace.he", "Monaco");
-pref("font.name-list.cursive.he", "XXX.cursive");
-pref("font.name-list.fantasy.he", "XXX.fantasy");
+pref("font.name.serif.he", "Raanana");
+pref("font.name.sans-serif.he", "Arial Hebrew");
+pref("font.name.monospace.he", "Arial Hebrew");
+pref("font.name.cursive.he", "Corsiva Hebrew");
+pref("font.name.fantasy.he", "Corsiva Hebrew");
+pref("font.name-list.serif.he", "Raanana");
+pref("font.name-list.sans-serif.he", "Arial Hebrew");
+pref("font.name-list.monospace.he", "Arial Hebrew");
+pref("font.name-list.cursive.he", "Corsiva Hebrew");
+pref("font.name-list.fantasy.he", "Corsiva Hebrew");
 
 pref("font.name.serif.ja", "ヒラギノ明朝 Pro"); 
 pref("font.name.sans-serif.ja", "ヒラギノ角ゴ Pro"); 
 pref("font.name.monospace.ja", "Osaka−等幅"); 
-pref("font.name.cursive.ja", "XXX.cursive");
-pref("font.name.fantasy.ja", "XXX.fantasy");
 pref("font.name-list.serif.ja", "ヒラギノ明朝 Pro"); 
 pref("font.name-list.sans-serif.ja", "ヒラギノ角ゴ Pro"); 
 pref("font.name-list.monospace.ja", "Osaka−等幅"); 
-pref("font.name-list.cursive.ja", "XXX.cursive");
-pref("font.name-list.fantasy.ja", "XXX.fantasy");
 
 pref("font.name.serif.ko", "AppleMyungjo"); 
 pref("font.name.sans-serif.ko", "AppleGothic"); 
 pref("font.name.monospace.ko", "AppleGothic"); 
-pref("font.name.cursive.ko", "XXX.cursive");
-pref("font.name.fantasy.ko", "XXX.fantasy");
 pref("font.name-list.serif.ko", "AppleMyungjo"); 
 pref("font.name-list.sans-serif.ko", "AppleGothic"); 
 pref("font.name-list.monospace.ko", "AppleGothic"); 
-pref("font.name-list.cursive.ko", "XXX.cursive");
-pref("font.name-list.fantasy.ko", "XXX.fantasy");
 
-pref("font.name.serif.th", "Lucida Grande");
-pref("font.name.sans-serif.th", "Lucida Grande");
-pref("font.name.monospace.th", "Monaco");
-pref("font.name.cursive.th", "XXX.cursive");
-pref("font.name.fantasy.th", "XXX.fantasy");
-pref("font.name-list.serif.th", "Lucida Grande");
-pref("font.name-list.sans-serif.th", "Lucida Grande");
-pref("font.name-list.monospace.th", "Monaco");
-pref("font.name-list.cursive.th", "XXX.cursive");
-pref("font.name-list.fantasy.th", "XXX.fantasy");
+pref("font.name.serif.th", "Thonburi");
+pref("font.name.sans-serif.th", "Krungthep");
+pref("font.name.monospace.th", "Ayuthaya");
+pref("font.name-list.serif.th", "Thonburi");
+pref("font.name-list.sans-serif.th", "Krungthep");
+pref("font.name-list.monospace.th", "Ayuthaya");
 
 pref("font.name.serif.tr", "Times");
 pref("font.name.sans-serif.tr", "Helvetica");
@@ -1505,6 +1493,13 @@ pref("font.name-list.monospace.tr", "Courier");
 pref("font.name-list.cursive.tr", "Apple Chancery");
 pref("font.name-list.fantasy.tr", "Papyrus");
 
+pref("font.name.serif.x-armn", "Mshtakan");
+pref("font.name.sans-serif.x-armn", "Mshtakan");
+pref("font.name.monospace.x-armn", "Mshtakan");
+pref("font.name-list.serif.x-armn", "Mshtakan");
+pref("font.name-list.sans-serif.x-armn", "Mshtakan");
+pref("font.name-list.monospace.x-armn", "Mshtakan");
+ 
 pref("font.name.serif.x-baltic", "Times");
 pref("font.name.sans-serif.x-baltic", "Helvetica");
 pref("font.name.monospace.x-baltic", "Courier");
@@ -1515,6 +1510,23 @@ pref("font.name-list.sans-serif.x-baltic", "Helvetica");
 pref("font.name-list.monospace.x-baltic", "Courier");
 pref("font.name-list.cursive.x-baltic", "Apple Chancery");
 pref("font.name-list.fantasy.x-baltic", "Papyrus");
+
+// no suitable fonts for bengali ship with mac os x
+// however two can be freely downloaded
+// SolaimanLipi, Rupali http://ekushey.org/?page/mac_download
+pref("font.name.serif.x-beng", "সোলাইমান লিপি");
+pref("font.name.sans-serif.x-beng", "রূপালী");
+pref("font.name.monospace.x-beng", "রূপালী");
+pref("font.name-list.serif.x-beng", "সোলাইমান লিপি");
+pref("font.name-list.sans-serif.x-beng", "রূপালী");
+pref("font.name-list.monospace.x-beng", "রূপালী");
+
+pref("font.name.serif.x-cans", "Euphemia UCAS");
+pref("font.name.sans-serif.x-cans", "Euphemia UCAS");
+pref("font.name.monospace.x-cans", "Euphemia UCAS");
+pref("font.name-list.serif.x-cans", "Euphemia UCAS");
+pref("font.name-list.sans-serif.x-cans", "Euphemia UCAS");
+pref("font.name-list.monospace.x-cans", "Euphemia UCAS");
 
 pref("font.name.serif.x-central-euro", "Times");
 pref("font.name.sans-serif.x-central-euro", "Helvetica");
@@ -1538,6 +1550,61 @@ pref("font.name-list.monospace.x-cyrillic", "Monaco CY");
 pref("font.name-list.cursive.x-cyrillic", "Geneva CY");
 pref("font.name-list.fantasy.x-cyrillic", "Charcoal CY");
 
+pref("font.name.serif.x-devanagari", "Devanagari MT");
+pref("font.name.sans-serif.x-devanagari", "Devanagari MT");
+pref("font.name.monospace.x-devanagari", "Devanagari MT");
+pref("font.name-list.serif.x-devanagari", "Devanagari MT");
+pref("font.name-list.sans-serif.x-devanagari", "Devanagari MT");
+pref("font.name-list.monospace.x-devanagari", "Devanagari MT");
+
+// no suitable fonts for ethiopic ship with mac os x
+// however one can be freely downloaded
+// Abyssinica SIL http://scripts.sil.org/AbyssinicaSIL_Download
+pref("font.name.serif.x-ethi", "Abyssinica SIL");
+pref("font.name.sans-serif.x-ethi", "Abyssinica SIL");
+pref("font.name.monospace.x-ethi", "Abyssinica SIL");
+pref("font.name-list.serif.x-ethi", "Abyssinica SIL");
+pref("font.name-list.sans-serif.x-ethi", "Abyssinica SIL");
+pref("font.name-list.monospace.x-ethi", "Abyssinica SIL");
+
+// no suitable fonts for georgian ship with mac os x
+// however some can be freely downloaded
+// TITUS Cyberbit Basic http://titus.fkidg1.uni-frankfurt.de/unicode/tituut.asp
+// Zuzumbo http://homepage.mac.com/rsiradze/FileSharing91.html
+pref("font.name.serif.x-geor", "TITUS Cyberbit Basic");
+pref("font.name.sans-serif.x-geor", "Zuzumbo");
+pref("font.name.monospace.x-geor", "Zuzumbo");
+pref("font.name-list.serif.x-geor", "TITUS Cyberbit Basic"); 
+pref("font.name-list.sans-serif.x-geor", "Zuzumbo");
+pref("font.name-list.monospace.x-geor", "Zuzumbo");
+
+pref("font.name.serif.x-gujr", "Gujarati MT");
+pref("font.name.sans-serif.x-gujr", "Gujarati MT");
+pref("font.name.monospace.x-gujr", "Gujarati MT");
+pref("font.name-list.serif.x-gujr", "Gujarati MT"); 
+pref("font.name-list.sans-serif.x-gujr", "Gujarati MT");
+pref("font.name-list.monospace.x-gujr", "Gujarati MT");
+
+pref("font.name.serif.x-guru", "Gurmukhi MT");
+pref("font.name.sans-serif.x-guru", "Gurmukhi MT");
+pref("font.name.monospace.x-guru", "Gurmukhi MT");
+pref("font.name-list.serif.x-guru", "Gurmukhi MT"); 
+pref("font.name-list.sans-serif.x-guru", "Gurmukhi MT");
+pref("font.name-list.monospace.x-guru", "Gurmukhi MT");
+
+// no suitable fonts for khmer ship with mac os x
+// add this section when fonts exist
+
+// no suitable fonts for malayalam ship with mac os x
+// add this section when fonts exist
+
+pref("font.name.serif.x-tamil", "InaiMathi");
+pref("font.name.sans-serif.x-tamil", "InaiMathi");
+pref("font.name.monospace.x-tamil", "InaiMathi");
+pref("font.name-list.serif.x-tamil", "InaiMathi");
+pref("font.name-list.sans-serif.x-tamil", "InaiMathi");
+pref("font.name-list.monospace.x-tamil", "InaiMathi");
+
 pref("font.name.serif.x-unicode", "Times");
 pref("font.name.sans-serif.x-unicode", "Helvetica");
 pref("font.name.monospace.x-unicode", "Courier");
@@ -1560,41 +1627,29 @@ pref("font.name-list.monospace.x-western", "Courier");
 pref("font.name-list.cursive.x-western", "Apple Chancery");
 pref("font.name-list.fantasy.x-western", "Papyrus");
 
-pref("font.name.serif.zh-CN", "Song");
+pref("font.name.serif.zh-CN", "华文宋体");
 pref("font.name.sans-serif.zh-CN", "Hei");
 pref("font.name.monospace.zh-CN", "Hei");
-pref("font.name.cursive.zh-CN", "XXX.cursive");
-pref("font.name.fantasy.zh-CN", "XXX.fantasy");
-pref("font.name-list.serif.zh-CN", "Song");
+pref("font.name-list.serif.zh-CN", "华文宋体");
 pref("font.name-list.sans-serif.zh-CN", "Hei");
 pref("font.name-list.monospace.zh-CN", "Hei");
-pref("font.name-list.cursive.zh-CN", "XXX.cursive");
-pref("font.name-list.fantasy.zh-CN", "XXX.fantasy");
 
 pref("font.name.serif.zh-TW", "Apple LiSung Light"); 
 pref("font.name.sans-serif.zh-TW", "Apple LiGothic Medium");  
 pref("font.name.monospace.zh-TW", "Apple LiGothic Medium");  
-pref("font.name.cursive.zh-TW", "XXX.cursive");
-pref("font.name.fantasy.zh-TW", "XXX.fantasy");
 pref("font.name-list.serif.zh-TW", "Apple LiSung Light"); 
 pref("font.name-list.sans-serif.zh-TW", "Apple LiGothic Medium");  
 pref("font.name-list.monospace.zh-TW", "Apple LiGothic Medium");  
-pref("font.name-list.cursive.zh-TW", "XXX.cursive");
-pref("font.name-list.fantasy.zh-TW", "XXX.fantasy");
 
 pref("font.name.serif.zh-HK", "儷宋 Pro");
 pref("font.name.sans-serif.zh-HK", "儷黑 Pro");
 pref("font.name.monospace.zh-HK", "儷黑 Pro");
-pref("font.name.cursive.zh-HK", "XXX.cursive");
-pref("font.name.fantasy.zh-HK", "XXX.fantasy");
 pref("font.name-list.serif.zh-HK", "儷宋 Pro");
 pref("font.name-list.sans-serif.zh-HK", "儷黑 Pro");
 pref("font.name-list.monospace.zh-HK", "儷黑 Pro");
-pref("font.name-list.cursive.zh-HK", "XXX.cursive");
-pref("font.name-list.fantasy.zh-HK", "XXX.fantasy");
 
 pref("font.default.ar", "sans-serif");
-pref("font.size.variable.ar", 15);
+pref("font.size.variable.ar", 16);
 pref("font.size.fixed.ar", 13);
 
 pref("font.default.el", "serif");
@@ -1602,12 +1657,12 @@ pref("font.size.variable.el", 16);
 pref("font.size.fixed.el", 13);
 
 pref("font.default.he", "sans-serif");
-pref("font.size.variable.he", 15);
+pref("font.size.variable.he", 16);
 pref("font.size.fixed.he", 13);
 
 pref("font.default.ja", "sans-serif");
-pref("font.size.variable.ja", 14);
-pref("font.size.fixed.ja", 14);
+pref("font.size.variable.ja", 16);
+pref("font.size.fixed.ja", 16);
 
 pref("font.default.ko", "sans-serif");
 pref("font.size.variable.ko", 16);
@@ -1621,9 +1676,21 @@ pref("font.default.tr", "serif");
 pref("font.size.variable.tr", 16);
 pref("font.size.fixed.tr", 13);
 
+pref("font.default.x-armn", "serif");
+pref("font.size.variable.x-armn", 16);
+pref("font.size.fixed.x-armn", 13);
+
 pref("font.default.x-baltic", "serif");
 pref("font.size.variable.x-baltic", 16);
 pref("font.size.fixed.x-baltic", 13);
+
+pref("font.default.x-beng", "serif");
+pref("font.size.variable.x-beng", 16);
+pref("font.size.fixed.x-beng", 13);
+
+pref("font.default.x-cans", "serif");
+pref("font.size.variable.x-cans", 16);
+pref("font.size.fixed.x-cans", 13);
 
 pref("font.default.x-central-euro", "serif");
 pref("font.size.variable.x-central-euro", 16);
@@ -1632,6 +1699,38 @@ pref("font.size.fixed.x-central-euro", 13);
 pref("font.default.x-cyrillic", "serif");
 pref("font.size.variable.x-cyrillic", 16);
 pref("font.size.fixed.x-cyrillic", 13);
+
+pref("font.default.x-devanagari", "serif");
+pref("font.size.variable.x-devanagari", 16);
+pref("font.size.fixed.x-devanagari", 13);
+
+pref("font.default.x-ethi", "serif");
+pref("font.size.variable.x-ethi", 16);
+pref("font.size.fixed.x-ethi", 13);
+
+pref("font.default.x-geor", "serif");
+pref("font.size.variable.x-geor", 16);
+pref("font.size.fixed.x-geor", 13);
+
+pref("font.default.x-gujr", "serif");
+pref("font.size.variable.x-gujr", 16);
+pref("font.size.fixed.x-gujr", 13);
+
+pref("font.default.x-guru", "serif");
+pref("font.size.variable.x-guru", 16);
+pref("font.size.fixed.x-guru", 13);
+
+pref("font.default.x-khmr", "serif");
+pref("font.size.variable.x-khmr", 16);
+pref("font.size.fixed.x-khmr", 13);
+
+pref("font.default.x-mlym", "serif");
+pref("font.size.variable.x-mlym", 16);
+pref("font.size.fixed.x-mlym", 13);
+
+pref("font.default.x-tamil", "serif");
+pref("font.size.variable.x-tamil", 16);
+pref("font.size.fixed.x-tamil", 13);
 
 pref("font.default.x-unicode", "serif");
 pref("font.size.variable.x-unicode", 16);

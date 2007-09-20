@@ -434,7 +434,6 @@ nsresult
 nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame *aFrame,
                                                      nsIWeakReference *aWeakShell,
                                                      nsIDOMNode *aNode,
-                                                     const nsAString& aRole,
                                                      nsIAccessible **aAccessible)
 {
   // This method assumes we're in an HTML namespace.
@@ -1337,9 +1336,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   }
 
   nsAutoString role;
-  if (nsAccessNode::GetRoleAttribute(content, role) &&
-      StringEndsWith(role, NS_LITERAL_STRING(":presentation")) &&
-      !content->IsFocusable()) {
+  if (nsAccessNode::GetARIARole(content, role) && role.EqualsLiteral("presentation") && !content->IsFocusable()) {
     // Only create accessible for role=":presentation" if it is focusable --
     // in that case we need an accessible in case it gets focused, we
     // don't want focus ever to be 'lost'
@@ -1364,12 +1361,9 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
                                         nsIAccessibleRole::ROLE_EQUATION);
     }
   } else if (!newAcc) {  // HTML accessibles
-    // Prefer to use markup (mostly tag name, perhaps attributes) to
-    // decide if and what kind of accessible to create.
-    CreateHTMLAccessibleByMarkup(frame, aWeakShell, aNode, role, getter_AddRefs(newAcc));
+    PRBool tryTagNameOrFrame = PR_TRUE;
 
-    PRBool tryFrame = (newAcc == nsnull);
-    if (!content->IsFocusable()) { 
+    if (!content->IsFocusable()) {
       // If we're in unfocusable table-related subcontent, check for the
       // Presentation role on the containing table
       nsIAtom *tag = content->Tag();
@@ -1389,28 +1383,40 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
               // Table that we're a descendant of is not styled as a table,
               // and has no table accessible for an ancestor, or
               // table that we're a descendant of is presentational
-              tryFrame = PR_FALSE;
+              tryTagNameOrFrame = PR_FALSE;
             }
-
             break;
           }
         }
       }
     }
 
-    if (tryFrame) {
-      // Do not create accessible object subtrees for non-rendered table captions.
-      // This could not be done in nsTableCaptionFrame::GetAccessible() because the
-      // descendants of the table caption would still be created.
-      // By setting *aIsHidden = PR_TRUE we ensure that no descendant accessibles are created
-      if (frame->GetType() == nsAccessibilityAtoms::tableCaptionFrame &&
-         frame->GetRect().IsEmpty()) {
-        // XXX This is not the ideal place for this code, but right now there is 
-        // no better place:
-        *aIsHidden = PR_TRUE;
-        return NS_OK;
+    if (tryTagNameOrFrame) {
+      // Prefer to use markup (mostly tag name, perhaps attributes) to
+      // decide if and what kind of accessible to create.
+      // The method creates accessibles for table related content too therefore
+      // we do not call it if accessibles for table related content are
+      // prevented above.
+      rv = CreateHTMLAccessibleByMarkup(frame, aWeakShell, aNode,
+                                        getter_AddRefs(newAcc));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (!newAcc) {
+        // Do not create accessible object subtrees for non-rendered table
+        // captions. This could not be done in
+        // nsTableCaptionFrame::GetAccessible() because the descendants of
+        // the table caption would still be created. By setting
+        // *aIsHidden = PR_TRUE we ensure that no descendant accessibles are
+        // created.
+        if (frame->GetType() == nsAccessibilityAtoms::tableCaptionFrame &&
+           frame->GetRect().IsEmpty()) {
+          // XXX This is not the ideal place for this code, but right now there
+          // is no better place:
+          *aIsHidden = PR_TRUE;
+          return NS_OK;
+        }
+        frame->GetAccessible(getter_AddRefs(newAcc)); // Try using frame to do it
       }
-      frame->GetAccessible(getter_AddRefs(newAcc)); // Try using frame to do it
     }
   }
 
@@ -1423,7 +1429,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   // We don't do this for <body>, <html>, <window>, <dialog> etc. which 
   // correspond to the doc accessible and will be created in any case
   if (!newAcc && content->Tag() != nsAccessibilityAtoms::body && content->GetParent() && 
-      (content->IsFocusable() ||
+      (content->IsFocusable() || content->GetID() ||
       (isHTML && nsAccUtils::HasListener(content, NS_LITERAL_STRING("click"))) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::describedby) ||
        content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::labelledby) ||
@@ -1597,6 +1603,12 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XULListbox:
       *aAccessible = new nsXULListboxAccessible(aNode, weakShell);
       break;
+    case nsIAccessibleProvider::XULListHead:
+      *aAccessible = new nsXULColumnsAccessible(aNode, weakShell);
+      break;
+    case nsIAccessibleProvider::XULListHeader:
+      *aAccessible = new nsXULColumnItemAccessible(aNode, weakShell);
+      break;
     case nsIAccessibleProvider::XULListitem:
       *aAccessible = new nsXULListitemAccessible(aNode, weakShell);
       break;
@@ -1667,8 +1679,8 @@ nsresult nsAccessibilityService::GetAccessibleByType(nsIDOMNode *aNode,
     case nsIAccessibleProvider::XULTreeColumns:
       *aAccessible = new nsXULTreeColumnsAccessibleWrap(aNode, weakShell);
       break;
-    case nsIAccessibleProvider::XULTreeColumnitem:
-      *aAccessible = new nsXULTreeColumnitemAccessible(aNode, weakShell);
+    case nsIAccessibleProvider::XULTreeColumnItem:
+      *aAccessible = new nsXULColumnItemAccessible(aNode, weakShell);
       break;
     case nsIAccessibleProvider::XULToolbar:
       *aAccessible = new nsXULToolbarAccessible(aNode, weakShell);

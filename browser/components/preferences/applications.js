@@ -175,6 +175,7 @@ HandlerInfoWrapper.prototype = {
   // we haven't (yet?) implemented, so we make it a public property.
   wrappedHandlerInfo: null,
 
+
   //**************************************************************************//
   // Convenience Utils
 
@@ -196,20 +197,6 @@ HandlerInfoWrapper.prototype = {
 
 
   //**************************************************************************//
-  // nsISupports
-
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIHandlerInfo) ||
-        aIID.equals(Ci.nsISupports) ||
-        (aIID.equals(Ci.nsIMIMEInfo) &&
-         this.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo))
-      return this;
-
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  },
-
-
-  //**************************************************************************//
   // nsIHandlerInfo
 
   // The MIME type or protocol scheme.
@@ -223,9 +210,9 @@ HandlerInfoWrapper.prototype = {
       return this.wrappedHandlerInfo.description;
 
     if (this.primaryExtension) {
-      let bundle = this.element("bundlePreferences");
       var extension = this.primaryExtension.toUpperCase();
-      return bundle.getFormattedString("fileEnding", [extension]);
+      return this.element("bundlePreferences").getFormattedString("fileEnding",
+                                                                  [extension]);
     }
 
     return this.type;
@@ -416,10 +403,6 @@ HandlerInfoWrapper.prototype = {
     this._handlerSvc.store(this.wrappedHandlerInfo);
   },
 
-  remove: function() {
-    this._handlerSvc.remove(this.wrappedHandlerInfo);
-  },
-
 
   //**************************************************************************//
   // Icons
@@ -483,7 +466,7 @@ var feedHandlerInfo = {
   // nsIHandlerInfo
 
   get description() {
-    return gApplicationsPane._bundle.getString("webFeed");
+    return this.element("bundlePreferences").getString("webFeed");
   },
 
   get preferredApplicationHandler() {
@@ -693,9 +676,6 @@ var feedHandlerInfo = {
   // XXX Should we hold off on making the changes until this method gets called?
   store: function() {},
 
-  // The feed type cannot be removed.
-  remove: function() {},
-
 
   //**************************************************************************//
   // Icons
@@ -719,7 +699,8 @@ var gApplicationsPane = {
   // objects, indexed by type.
   _handledTypes: {},
 
-  _bundle       : null,
+  _brandBundle  : null,
+  _prefsBundle  : null,
   _list         : null,
   _filter       : null,
 
@@ -747,7 +728,8 @@ var gApplicationsPane = {
 
   init: function() {
     // Initialize shortcuts to some commonly accessed elements.
-    this._bundle = document.getElementById("bundlePreferences");
+    this._brandBundle = document.getElementById("bundleBrand");
+    this._prefsBundle = document.getElementById("bundlePreferences");
     this._list = document.getElementById("handlersView");
     this._filter = document.getElementById("filter");
 
@@ -987,17 +969,10 @@ var gApplicationsPane = {
     return visibleTypes;
   },
 
-  // FIXME: we filter on type and primary extension, but we don't show those
-  // values to users, unlike the description and action description, which we
-  // do show, and that could be confusing, so filter only on the values we show.
-  // Filed as bug 395139.
   _matchesFilter: function(aType) {
     var filterValue = this._filter.value.toLowerCase();
     return aType.description.toLowerCase().indexOf(filterValue) != -1 ||
-           this._describePreferredAction(aType).toLowerCase().indexOf(filterValue) != -1 ||
-           aType.type.toLowerCase().indexOf(filterValue) != -1 ||
-           (aType.primaryExtension &&
-            aType.primaryExtension.toLowerCase().indexOf(filterValue) != -1);
+           this._describePreferredAction(aType).toLowerCase().indexOf(filterValue) != -1;
   },
 
   /**
@@ -1017,11 +992,11 @@ var gApplicationsPane = {
     // with alwaysAskBeforeHandling except for the feed type, so here we use
     // a feed-specific message to describe the behavior.
     if (aHandlerInfo.alwaysAskBeforeHandling)
-      return this._bundle.getString("alwaysAskAboutFeed");
+      return this._prefsBundle.getString("alwaysAskAboutFeed");
 
     switch (aHandlerInfo.preferredAction) {
       case Ci.nsIHandlerInfo.saveToDisk:
-        return this._bundle.getString("saveToDisk");
+        return this._prefsBundle.getString("saveToDisk");
 
       case Ci.nsIHandlerInfo.useHelperApp:
         return aHandlerInfo.preferredApplicationHandler.name;
@@ -1029,7 +1004,7 @@ var gApplicationsPane = {
       case Ci.nsIHandlerInfo.handleInternally:
         // For the feed type, handleInternally means live bookmarks.
         if (aHandlerInfo.type == TYPE_MAYBE_FEED)
-          return this._bundle.getString("liveBookmarks");
+          return this._prefsBundle.getString("liveBookmarks");
 
         // For other types, handleInternally looks like either useHelperApp
         // or useSystemDefault depending on whether or not there's a preferred
@@ -1048,7 +1023,10 @@ var gApplicationsPane = {
         return aHandlerInfo.defaultDescription;
 
       case kActionUsePlugin:
-        return aHandlerInfo.plugin.name;
+        let brandShortName = this._brandBundle.getString("brandShortName");
+        return this._prefsBundle.getFormattedString("pluginName",
+                                                    [aHandlerInfo.plugin.name,
+                                                     brandShortName]);
     }
   },
 
@@ -1092,22 +1070,28 @@ var gApplicationsPane = {
     while (menuPopup.hasChildNodes())
       menuPopup.removeChild(menuPopup.lastChild);
 
-    // If this is the feed type, add "always ask" and "live bookmarks" items.
+    // If this is the feed type, add Preview in Firefox and Live Bookmarks items.
     if (handlerInfo.type == TYPE_MAYBE_FEED) {
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("alwaysAsk", "true");
-      menuItem.setAttribute("label", this._bundle.getString("alwaysAskAboutFeed"));
+      menuItem.setAttribute("label",
+                            this._prefsBundle.getString("alwaysAskAboutFeed"));
       menuPopup.appendChild(menuItem);
       if (handlerInfo.alwaysAskBeforeHandling)
         menu.selectedItem = menuItem;
 
       menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("action", Ci.nsIHandlerInfo.handleInternally);
-      menuItem.setAttribute("label", this._bundle.getString("liveBookmarks"));
+      menuItem.setAttribute("label", this._prefsBundle.getString("liveBookmarks"));
       menuItem.setAttribute("image", "chrome://browser/skin/page-livemarks.png");
       menuPopup.appendChild(menuItem);
       if (handlerInfo.preferredAction == Ci.nsIHandlerInfo.handleInternally)
         menu.selectedItem = menuItem;
+
+      // Add a separator to distinguish these items from the helper app items
+      // that follow them.
+      menuItem = document.createElementNS(kXULNS, "menuseparator");
+      menuPopup.appendChild(menuItem);
     }
 
     // Create a menu item for the OS default application, if any.
@@ -1158,7 +1142,11 @@ var gApplicationsPane = {
     if (handlerInfo.plugin) {
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("action", kActionUsePlugin);
-      menuItem.setAttribute("label", handlerInfo.plugin.name);
+      let brandShortName = this._brandBundle.getString("brandShortName");
+      let label = this._prefsBundle.getFormattedString("pluginName",
+                                                       [handlerInfo.plugin.name,
+                                                        brandShortName]);
+      menuItem.setAttribute("label", label);
       menuPopup.appendChild(menuItem);
       if (handlerInfo.preferredAction == kActionUsePlugin)
         menu.selectedItem = menuItem;
@@ -1171,12 +1159,12 @@ var gApplicationsPane = {
     // And it's not available to types handled only by plugins either, although
     // I would think we'd want to give users the ability to redirect that stuff
     // to disk (so maybe we should revisit that decision).
-    if ((handlerInfo instanceof Ci.nsIMIMEInfo) &&
+    if ((handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) &&
         handlerInfo.type != TYPE_MAYBE_FEED &&
         !handlerInfo.handledOnlyByPlugin) {
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("action", Ci.nsIHandlerInfo.saveToDisk);
-      menuItem.setAttribute("label", this._bundle.getString("saveToDisk"));
+      menuItem.setAttribute("label", this._prefsBundle.getString("saveToDisk"));
       menuPopup.appendChild(menuItem);
       if (handlerInfo.preferredAction == Ci.nsIHandlerInfo.saveToDisk)
         menu.selectedItem = menuItem;
@@ -1186,18 +1174,7 @@ var gApplicationsPane = {
     {
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("oncommand", "gApplicationsPane.chooseApp(event)");
-      menuItem.setAttribute("label", this._bundle.getString("chooseApp"));
-      menuPopup.appendChild(menuItem);
-    }
-
-    // Create a menu item for removing this entry unless it's a plugin
-    // or the feed type, which cannot be removed.
-    // XXX Should this perhaps be a button on the entry, or should we perhaps
-    // provide no UI for removing entries at all?
-    if (!handlerInfo.plugin && handlerInfo.type != TYPE_MAYBE_FEED) {
-      let menuItem = document.createElementNS(kXULNS, "menuitem");
-      menuItem.setAttribute("oncommand", "gApplicationsPane.removeType(event)");
-      menuItem.setAttribute("label", this._bundle.getString("removeType"));
+      menuItem.setAttribute("label", this._prefsBundle.getString("chooseApp"));
       menuPopup.appendChild(menuItem);
     }
   },
@@ -1327,15 +1304,13 @@ var gApplicationsPane = {
         handlerInfo.disablePluginType();
 
       // Set the preferred application handler.
-      // FIXME: consider leaving the existing preferred app in the list
-      // when we set the preferred action to something other than useHelperApp
-      // so that legacy datastores that don't have the preferred app in the list
+      // We leave the existing preferred app in the list when we set
+      // the preferred action to something other than useHelperApp so that
+      // legacy datastores that don't have the preferred app in the list
       // of possible apps still include the preferred app in the list of apps
-      // the user can use to handle the type.  Filed as bug 395140.
+      // the user can choose to handle the type.
       if (action == Ci.nsIHandlerInfo.useHelperApp)
         handlerInfo.preferredApplicationHandler = actionItem.handlerApp;
-      else
-        handlerInfo.preferredApplicationHandler = null;
 
       // Set the "always ask" flag.
       handlerInfo.alwaysAskBeforeHandling = false;
@@ -1358,7 +1333,7 @@ var gApplicationsPane = {
     aEvent.stopPropagation();
 
     var fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-    var winTitle = this._bundle.getString("fpTitleChooseApp");
+    var winTitle = this._prefsBundle.getString("fpTitleChooseApp");
     fp.init(window, winTitle, Ci.nsIFilePicker.modeOpen);
     fp.appendFilters(Ci.nsIFilePicker.filterApps);
 
@@ -1395,40 +1370,6 @@ var gApplicationsPane = {
     // If they picked an app, we want to add the app to the menu and select it.
     // If they canceled, we want to go back to their previous selection.
     this.rebuildActionsMenu();
-  },
-
-  removeType: function() {
-    var promptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].
-                        getService(Ci.nsIPromptService);
-    var flags = Ci.nsIPromptService.BUTTON_TITLE_IS_STRING * Ci.nsIPromptService.BUTTON_POS_0;
-    flags += Ci.nsIPromptService.BUTTON_TITLE_CANCEL * Ci.nsIPromptService.BUTTON_POS_1;
-
-    var title = this._bundle.getString("removeTitle");
-    var message = this._bundle.getString("removeMessage");
-    var button = this._bundle.getString("removeButton");
-    var rv = promptService.confirmEx(window, title, message, flags, button, 
-                                     null, null, null, { value: 0 });
-
-    if (rv == 0) {
-      // Remove information about the type from the handlers datastore.
-      let listItem = this._list.selectedItem;
-      let handlerInfo = this._handledTypes[listItem.type];
-      handlerInfo.remove();
-
-      // Select the next item in the list (or the previous item if the item
-      // being removed is the last item).
-      if (this._list.selectedIndex == this._list.getRowCount() - 1)
-        this._list.selectedIndex = this._list.selectedIndex - 1;
-      else
-        this._list.selectedIndex = this._list.selectedIndex + 1;
-
-      // Remove the item from the list.
-      this._list.removeChild(listItem);
-    }
-    else {
-      // Rebuild the actions menu so we go back to their previous selection.
-      this.rebuildActionsMenu();
-    }
   },
 
   // Mark which item in the list was last selected so we can reselect it

@@ -72,12 +72,18 @@ nsDownloadManagerUI.prototype = {
         window = aWindowContext.getInterface(Ci.nsIDOMWindow);
     } catch (e) { /* it's OK to not have a parent window */ }
 
-    // We pass the download manager and the nsIDownload  we want selected
+    // We pass the download manager and the nsIDownload we want selected (if any)
     var params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
     var dm = Cc["@mozilla.org/download-manager;1"].
              getService(Ci.nsIDownloadManager);
     params.appendElement(dm, false);
-    params.appendElement(dm.getDownload(aID), false);
+
+    // Don't fail if our passed in ID is invalid
+    var download = null;
+    try {
+      download = dm.getDownload(aID);
+    } catch (ex) {}
+    params.appendElement(download, false);
 
     var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
              getService(Ci.nsIWindowWatcher);

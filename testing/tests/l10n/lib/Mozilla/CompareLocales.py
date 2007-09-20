@@ -38,41 +38,11 @@
 'Mozilla l10n compare locales tool'
 
 import os
+import os.path
 import re
 import logging
 import Parser
 import Paths
-
-def __regify(tpl):
-  return tuple(map(re.compile, tpl))
-
-exceptions = [
-  # ignore langpack contributor section for mail and brownser
-  __regify(('mail|browser', 'defines.inc', 'MOZ_LANGPACK_CONTRIBUTORS')),
-  # ignore search engine order for browser
-  __regify(('browser', 'chrome\\/browser-region\\/region\\.properties',
-   'browser\\.search\\.order\.[1-9]')),
-  # ignore feed engine order for browser
-  __regify(('browser', 'chrome\\/browser-region\\/region\\.properties',
-   'browser\\.contentHandlers\\.types\.[0-5]'))]
-
-def __dont_ignore(tpl):
-  for mod, path, key in exceptions:
-    if mod.match(tpl[0]) and path.match(tpl[1]) and key.match(tpl[2]):
-      return False
-  return True
-
-fl_exceptions = [
-  # ignore search plugins
-  __regify(('browser', 'searchplugins\\/.+\\.xml')),
-  # ignore help images
-  __regify(('browser', 'chrome\\/help\\/images\\/[A-Za-z-_]+\\.png'))]
-
-def do_ignore_fl(tpl):
-  for mod, path in fl_exceptions:
-    if mod.match(tpl[0]) and path.match(tpl[1]):
-      return True
-  return False
 
 class FileCollector:
   class Iter:
@@ -141,6 +111,32 @@ def collectFiles(aComparer, apps = None, locales = None):
   modules = Paths.Modules(apps)
   en = FileCollector()
   l10n = FileCollector()
+  # load filter functions for each app
+  fltrs = []
+  for app in apps:
+    filterpath = 'mozilla/%s/locales/filter.py' % app
+    if not os.path.exists(filterpath):
+      continue
+    l = {}
+    execfile(filterpath, {}, l)
+    if 'test' not in l or not callable(l['test']):
+      logging.debug('%s does not define function "test"' % filterpath)
+      continue
+    fltrs.append(l['test'])
+  
+  # define fltr function to be used, calling into the app specific ones
+  # if one of our apps wants us to know about a triple, make it so
+  def fltr(mod, lpath, entity = None):
+    for f in fltrs:
+      keep  = True
+      try:
+        keep = f(mod, lpath, entity)
+      except Exception, e:
+        logging.error(str(e))
+      if not keep:
+        return False
+    return True
+  
   for cat in modules.keys():
     logging.debug(" testing " + cat+ " on " + str(modules))
     aComparer.notifyLocales(cat, locales[cat])
@@ -154,11 +150,21 @@ def collectFiles(aComparer, apps = None, locales = None):
             aComparer.compareFile(mod, loc, l_fl)
             del fls[l_fl]
           else:
-            # file in locale, but not in en-US, remove?
-            aComparer.removeFile(mod, loc, l_fl)
+            if fltr(mod, l_fl):
+              # file in locale, but not in en-US, remove
+              aComparer.removeFile(mod, loc, l_fl)
+            else:
+              logging.debug(" ignoring %s from %s in %s" %
+                            (l_fl, loc, mod))
         # all locale files dealt with, remaining fls need to be added?
         for lf in fls.keys():
-          aComparer.addFile(mod,loc,lf)
+          if fltr(mod, lf):
+            aComparer.addFile(mod,loc,lf)
+          else:
+            logging.debug(" ignoring %s from %s in %s" %
+                          (lf, loc, mod))
+
+  return fltr
 
 class CompareCollector:
   'collects files to be compared, added, removed'
@@ -173,9 +179,6 @@ class CompareCollector:
       else:
         self.modules[loc] = [aModule]
   def addFile(self, aModule, aLocale, aLeaf):
-    if do_ignore_fl((aModule, aLeaf)):
-      logging.debug(" ignoring %s from %s in %s" % (aLeaf, aLocale, aModule))
-      return
     logging.debug(" add %s for %s in %s" % (aLeaf, aLocale, aModule))
     if not self.files.has_key(aLocale):
       self.files[aLocale] = {'missingFiles': [(aModule, aLeaf)],
@@ -190,9 +193,6 @@ class CompareCollector:
       self.cl[(aModule, aLeaf)].append(aLocale)
     pass
   def removeFile(self, aModule, aLocale, aLeaf):
-    if do_ignore_fl((aModule, aLeaf)):
-      logging.debug(" ignoring %s from %s in %s" % (aLeaf, aLocale, aModule))
-      return
     logging.debug(" remove %s from %s in %s" % (aLeaf, aLocale, aModule))
     if not self.files.has_key(aLocale):
       self.files[aLocale] = {'obsoleteFiles': [(aModule, aLeaf)],
@@ -204,7 +204,8 @@ class CompareCollector:
 def compare(apps=None, testLocales=None):
   result = {}
   c = CompareCollector()
-  collectFiles(c, apps=apps, locales=testLocales)
+  fltr = collectFiles(c, apps=apps, locales=testLocales)
+  
   key = re.compile('[kK]ey')
   for fl, locales in c.cl.iteritems():
     (mod,path) = fl
@@ -222,7 +223,7 @@ def compare(apps=None, testLocales=None):
       enTmp = dict(enMap)
       parser.read(Paths.get_path(mod, loc, path))
       for k,v in parser:
-        if not __dont_ignore((mod, path, k)):
+        if not fltr(mod, path, k):
           if enTmp.has_key(k):
             del enTmp[k]
           continue
@@ -240,7 +241,8 @@ def compare(apps=None, testLocales=None):
                          (k, Paths.get_path(mod, loc, path)))
           else:
             result[loc]['changed'] +=1
-      result[loc]['missing'].extend(filter(__dont_ignore, [(mod,path,k) for k in enTmp.keys()]))
+      result[loc]['missing'].extend(filter(lambda t: fltr(*t),
+                                           [(mod,path,k) for k in enTmp.keys()]))
   for loc,dics in c.files.iteritems():
     if not result.has_key(loc):
       result[loc] = dics

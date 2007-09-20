@@ -67,6 +67,7 @@
 #include "nsSVGUtils.h"
 #include "nsSVGLength2.h"
 #include "nsSVGNumber2.h"
+#include "nsSVGInteger.h"
 #include "nsSVGEnum.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsIDOMSVGAngle.h"
@@ -121,6 +122,12 @@ nsSVGElement::Init()
 
   for (i = 0; i < numberInfo.mNumberCount; i++) {
     numberInfo.mNumbers[i].Init(i, numberInfo.mNumberInfo[i].mDefaultValue);
+  }
+
+  IntegerAttributesInfo integerInfo = GetIntegerInfo();
+
+  for (i = 0; i < integerInfo.mIntegerCount; i++) {
+    integerInfo.mIntegers[i].Init(i, integerInfo.mIntegerInfo[i].mDefaultValue);
   }
 
   EnumAttributesInfo enumInfo = GetEnumInfo();
@@ -261,6 +268,15 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
       }
     }
 
+    // Check for nsSVGInteger attribute
+    IntegerAttributesInfo integerInfo = GetIntegerInfo();
+    for (PRUint32 i = 0; i < integerInfo.mIntegerCount && !foundMatch; i++) {
+      if (aAttribute == *integerInfo.mIntegerInfo[i].mName) {
+        rv = integerInfo.mIntegers[i].SetBaseValueString(aValue, this, PR_FALSE);
+        foundMatch = PR_TRUE;
+      }
+    }
+
     // Check for nsSVGEnum attribute
     EnumAttributesInfo enumInfo = GetEnumInfo();
     for (PRUint32 i = 0; i < enumInfo.mEnumCount && !foundMatch; i++) {
@@ -312,7 +328,6 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
                                    lenInfo.mLengthInfo[i].mDefaultValue,
                                    lenInfo.mLengthInfo[i].mDefaultUnitType);
           DidChangeLength(i, PR_FALSE);
-          break;
         }
       }
       // Check if this is a number attribute going away
@@ -322,18 +337,26 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         if (aName == *numInfo.mNumberInfo[i].mName) {
           numInfo.mNumbers[i].Init(i, numInfo.mNumberInfo[i].mDefaultValue);
           DidChangeNumber(i, PR_FALSE);
-          break;
         }
       }
 
-      // Check if this is a number attribute going away
+      // Check if this is an integer attribute going away
+      IntegerAttributesInfo intInfo = GetIntegerInfo();
+
+      for (i = 0; i < intInfo.mIntegerCount; i++) {
+        if (aName == *intInfo.mIntegerInfo[i].mName) {
+          intInfo.mIntegers[i].Init(i, intInfo.mIntegerInfo[i].mDefaultValue);
+          DidChangeInteger(i, PR_FALSE);
+        }
+      }
+
+      // Check if this is an enum attribute going away
       EnumAttributesInfo enumInfo = GetEnumInfo();
 
       for (i = 0; i < enumInfo.mEnumCount; i++) {
         if (aName == *enumInfo.mEnumInfo[i].mName) {
           enumInfo.mEnums[i].Init(i, enumInfo.mEnumInfo[i].mDefaultValue);
           DidChangeEnum(i, PR_FALSE);
-          break;
         }
       }
 
@@ -347,9 +370,6 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
         nsCOMPtr<nsIDOMSVGAnimatedBoolean> b = do_QueryInterface(svg_value);
         NS_ASSERTION(!b, "must provide element processing for unset boolean");
-
-        nsCOMPtr<nsIDOMSVGAnimatedInteger> i = do_QueryInterface(svg_value);
-        NS_ASSERTION(!i, "must provide element processing for unset integer");
 #endif
 
         nsCOMPtr<nsIDOMSVGAnimatedRect> r = do_QueryInterface(svg_value);
@@ -973,6 +993,53 @@ nsSVGElement::GetAnimatedNumberValues(float *aFirst, ...)
   va_end(args);
 }
 
+nsSVGElement::IntegerAttributesInfo
+nsSVGElement::GetIntegerInfo()
+{
+  return IntegerAttributesInfo(nsnull, nsnull, 0);
+}
+
+void
+nsSVGElement::DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr)
+{
+  if (!aDoSetAttr)
+    return;
+
+  IntegerAttributesInfo info = GetIntegerInfo();
+
+  NS_ASSERTION(info.mIntegerCount > 0,
+               "DidChangeInteger on element with no integer attribs");
+
+  NS_ASSERTION(aAttrEnum < info.mIntegerCount, "aAttrEnum out of range");
+
+  nsAutoString newStr;
+  info.mIntegers[aAttrEnum].GetBaseValueString(newStr);
+
+  SetAttr(kNameSpaceID_None, *info.mIntegerInfo[aAttrEnum].mName,
+          newStr, PR_TRUE);
+}
+
+void
+nsSVGElement::GetAnimatedIntegerValues(PRInt32 *aFirst, ...)
+{
+  IntegerAttributesInfo info = GetIntegerInfo();
+
+  NS_ASSERTION(info.mIntegerCount > 0,
+               "GetAnimatedIntegerValues on element with no integer attribs");
+
+  PRInt32 *n = aFirst;
+  PRUint32 i = 0;
+
+  va_list args;
+  va_start(args, aFirst);
+
+  while (n && i < info.mIntegerCount) {
+    *n = info.mIntegers[i++].GetAnimValue();
+    n = va_arg(args, PRInt32*);
+  }
+  va_end(args);
+}
+
 nsSVGElement::EnumAttributesInfo
 nsSVGElement::GetEnumInfo()
 {
@@ -988,7 +1055,7 @@ nsSVGElement::DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr)
   EnumAttributesInfo info = GetEnumInfo();
 
   NS_ASSERTION(info.mEnumCount > 0,
-               "DidChangeNumber on element with no number attribs");
+               "DidChangeEnum on element with no enum attribs");
 
   NS_ASSERTION(aAttrEnum < info.mEnumCount, "aAttrEnum out of range");
 

@@ -75,78 +75,14 @@ nsAccEvent::nsAccEvent(PRUint32 aEventType, nsIDOMNode *aDOMNode,
 void nsAccEvent::GetLastEventAttributes(nsIDOMNode *aNode,
                                         nsIPersistentProperties *aAttributes)
 {
-  if (aNode != gLastEventNodeWeak) {
-    return; // Passed-in node doesn't Change the last event's node
+  if (aNode == gLastEventNodeWeak) {
+    // Only provide event-from-input for last event's node
+    nsAutoString oldValueUnused;
+    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("event-from-input"),
+                                   gLastEventFromUserInput ? NS_LITERAL_STRING("true") :
+                                                             NS_LITERAL_STRING("false"),
+                                   oldValueUnused);
   }
-  nsAutoString oldValueUnused;
-  aAttributes->SetStringProperty(NS_LITERAL_CSTRING("event-from-input"),
-                                 gLastEventFromUserInput ? NS_LITERAL_STRING("true") :
-                                                           NS_LITERAL_STRING("false"),
-                                 oldValueUnused);
-
-  nsCOMPtr<nsIContent> lastEventContent = do_QueryInterface(aNode);
-  nsIContent *loopContent = lastEventContent;
-
-  nsAutoString atomic, live, relevant, channel, busy;
-
-  while (loopContent) {
-    if (relevant.IsEmpty()) {
-      loopContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::relevant, relevant);
-    }
-    if (live.IsEmpty()) {
-      loopContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::live, live);
-    }
-    if (channel.IsEmpty()) {
-      loopContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::channel, channel);
-    }
-    if (atomic.IsEmpty()) {
-      loopContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::atomic, atomic);
-    }
-    if (busy.IsEmpty()) {
-      loopContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::busy, busy);
-    }
-    loopContent = loopContent->GetParent();
-  }
-
-  if (!relevant.IsEmpty()) {
-    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("container-relevant"), relevant, oldValueUnused);
-  }
-  if (!live.IsEmpty()) {
-    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("container-live"), live, oldValueUnused);
-  }
-  if (!channel.IsEmpty()) {
-    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("container-channel"), channel, oldValueUnused);
-  }
-  if (!atomic.IsEmpty()) {
-    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("container-atomic"), atomic, oldValueUnused);
-  }
-  if (!busy.IsEmpty()) {
-    aAttributes->SetStringProperty(NS_LITERAL_CSTRING("container-busy"), busy, oldValueUnused);
-  }
-}
-
-nsIDOMNode* nsAccEvent::GetLastEventAtomicRegion(nsIDOMNode *aNode)
-{
-  if (aNode != gLastEventNodeWeak) {
-    return nsnull; // Passed-in node doesn't Change the last changed node
-  }
-  nsCOMPtr<nsIContent> lastEventContent = do_QueryInterface(aNode);
-  nsIContent *loopContent = lastEventContent;
-  nsAutoString atomic;
-
-  while (loopContent) {
-    loopContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::atomic, atomic);
-    if (!atomic.IsEmpty()) {
-      break;
-    }
-    loopContent = loopContent->GetParent();
-  }
-
-  nsCOMPtr<nsIDOMNode> atomicRegion;
-  if (atomic.EqualsLiteral("true")) {
-    atomicRegion = do_QueryInterface(loopContent);
-  }
-  return atomicRegion;
 }
 
 void nsAccEvent::CaptureIsFromUserInput(PRBool aIsAsynch)

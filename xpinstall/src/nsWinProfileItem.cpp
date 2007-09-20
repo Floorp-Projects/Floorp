@@ -90,8 +90,11 @@ char* nsWinProfileItem::toString()
   nsString* result = new nsString;
   result->AssignLiteral("Write ");
 
-  if (filename == nsnull || result == nsnull)
+  if (filename == nsnull || result == nsnull) {
+      delete filename;
+      delete result;
       return nsnull;
+  }
 
   result->Append(*filename);
   result->AppendLiteral(": [");

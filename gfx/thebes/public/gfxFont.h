@@ -1068,7 +1068,7 @@ public:
      */
     void SetDetailedGlyphs(PRUint32 aCharIndex, const DetailedGlyph *aGlyphs,
                            PRUint32 aNumGlyphs);
-    void SetMissingGlyph(PRUint32 aCharIndex, PRUnichar aChar);
+    void SetMissingGlyph(PRUint32 aCharIndex, PRUint32 aChar);
     void SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext, PRUint32 aCharIndex);
 
     // API for access to the raw glyph data, needed by gfxFont::Draw

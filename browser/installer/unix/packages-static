@@ -187,6 +187,7 @@ bin/components/xremoteservice.xpt
 bin/components/xulapp.xpt
 bin/components/xuldoc.xpt
 bin/components/xultmpl.xpt
+bin/components/zipwriter.xpt
 bin/components/shellservice.xpt
 ; JavaScript components
 bin/components/FeedProcessor.js

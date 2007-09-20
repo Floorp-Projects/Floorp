@@ -45,6 +45,10 @@
 #include "nsMemory.h"
 #include "nsIImage.h"
 #include "nsILocalFile.h"
+#include "nsStringStream.h"
+
+// Screenshots use the (undocumented) png pasteboard type.
+#define IMAGE_PASTEBOARD_TYPES NSTIFFPboardType, @"Apple PNG pasteboard type", nil
 
 #ifdef MOZ_LOGGING
 #define FORCE_PR_LOG
@@ -196,14 +200,72 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhi
       free(clipboardDataPtr);
       break;
     }
+    else if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
+             flavorStr.EqualsLiteral(kPNGImageMime) ||
+             flavorStr.EqualsLiteral(kGIFImageMime)) {
+      // Figure out if there's data on the pasteboard we can grab (sanity check)
+      NSString *type = [cocoaPasteboard availableTypeFromArray:[NSArray arrayWithObjects:IMAGE_PASTEBOARD_TYPES]];
+      if (!type)
+        continue;
 
-    /*
-    if (flavorStr.EqualsLiteral(kPNGImageMime) || flavorStr.EqualsLiteral(kJPEGImageMime) ||
-        flavorStr.EqualsLiteral(kGIFImageMime)) {
-      // We have never supported this on Mac OS X, we could someday but nobody does this.
-      break;
+      // Read data off the clipboard, make sure to catch any exceptions (timeouts)
+      // XXX should convert to @try/@catch someday?
+      NSData *pasteboardData = nil;
+      NS_DURING
+        pasteboardData = [cocoaPasteboard dataForType:type];
+      NS_HANDLER
+        NS_ASSERTION(0, "Exception raised while getting data from the pasteboard.");
+      NS_ENDHANDLER
+      if (!pasteboardData)
+        continue;
+
+      // Figure out what type we're converting to
+      CFStringRef outputType = NULL; 
+      if (flavorStr.EqualsLiteral(kJPEGImageMime))
+        outputType = CFSTR("public.jpeg");
+      else if (flavorStr.EqualsLiteral(kPNGImageMime))
+        outputType = CFSTR("public.png");
+      else if (flavorStr.EqualsLiteral(kGIFImageMime))
+        outputType = CFSTR("com.compuserve.gif");
+      else
+        continue;
+
+      // Use ImageIO to interpret the data on the clipboard and transcode.
+      // Note that ImageIO, like all CF APIs, allows NULLs to propagate freely
+      // and safely in most cases (like ObjC). A notable exception is CFRelease.
+      NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
+                                (NSNumber*)kCFBooleanTrue, kCGImageSourceShouldAllowFloat,
+                                (type == NSTIFFPboardType ? @"public.tiff" : @"public.png"),
+                                kCGImageSourceTypeIdentifierHint, nil];
+
+      CGImageSourceRef source = CGImageSourceCreateWithData((CFDataRef)pasteboardData, 
+                                                            (CFDictionaryRef)options);
+      NSMutableData *encodedData = [NSMutableData data];
+      CGImageDestinationRef dest = CGImageDestinationCreateWithData((CFMutableDataRef)encodedData,
+                                                                    outputType,
+                                                                    1, NULL);
+      CGImageDestinationAddImageFromSource(dest, source, 0, NULL);
+      PRBool successfullyConverted = CGImageDestinationFinalize(dest);
+
+      if (successfullyConverted) {
+        // Put the converted data in a form Gecko can understand
+        nsCOMPtr<nsIInputStream> byteStream;
+        NS_NewByteInputStream(getter_AddRefs(byteStream), (const char*)[encodedData bytes],
+                                   [encodedData length], NS_ASSIGNMENT_COPY);
+  
+        aTransferable->SetTransferData(flavorStr, byteStream, sizeof(nsIInputStream*));
+      }
+
+      if (dest)
+        CFRelease(dest);
+      if (source)
+        CFRelease(source);
+      
+      if (successfullyConverted)
+        break;
+      else
+        continue;
     }
-    */
   }
 
   return NS_OK;
@@ -268,6 +330,15 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList, PRInt32 aWhic
       if (flavorStr.EqualsLiteral(kUnicodeMime)) {
         NSString* availableType = [generalPBoard availableTypeFromArray:[NSArray arrayWithObject:NSStringPboardType]];
         if (availableType && [availableType isEqualToString:NSStringPboardType]) {
+          *outResult = PR_TRUE;
+          break;
+        }
+      } else if (flavorStr.EqualsLiteral(kJPEGImageMime) ||
+                 flavorStr.EqualsLiteral(kPNGImageMime) ||
+                 flavorStr.EqualsLiteral(kGIFImageMime)) {
+        NSString* availableType = [generalPBoard availableTypeFromArray:
+                                    [NSArray arrayWithObjects:IMAGE_PASTEBOARD_TYPES]];
+        if (availableType) {
           *outResult = PR_TRUE;
           break;
         }
@@ -369,28 +440,31 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
                                           NULL,
                                           0,
                                           kCGRenderingIntentDefault);
+      CGColorSpaceRelease(colorSpace);
       CGDataProviderRelease(dataProvider);
 
       // Convert the CGImageRef to TIFF data.
       CFMutableDataRef tiffData = CFDataCreateMutable(kCFAllocatorDefault, 0);
       CGImageDestinationRef destRef = CGImageDestinationCreateWithData(tiffData,
-                                                                       (CFStringRef)@"public.tiff",
+                                                                       CFSTR("public.tiff"),
                                                                        1,
-                                                                       nil);
-      CGImageDestinationAddImage(destRef, imageRef, nil);
-      CGImageDestinationFinalize(destRef);
+                                                                       NULL);
+      CGImageDestinationAddImage(destRef, imageRef, NULL);
+      PRBool successfullyConverted = CGImageDestinationFinalize(destRef);
 
-      CGColorSpaceRelease(colorSpace);
       CGImageRelease(imageRef);
-      CFRelease(destRef);
+      if (destRef)
+        CFRelease(destRef);
 
-      if (NS_FAILED(image->UnlockImagePixels(PR_FALSE))) {
-        CFRelease(tiffData);
+      if (NS_FAILED(image->UnlockImagePixels(PR_FALSE)) || !successfullyConverted) {
+        if (tiffData)
+          CFRelease(tiffData);
         continue;
       }
 
       [pasteboardOutputDict setObject:(NSMutableData*)tiffData forKey:NSTIFFPboardType];
-      CFRelease(tiffData);
+      if (tiffData)
+        CFRelease(tiffData);
     }
     else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
       [pasteboardOutputDict setObject:[NSArray arrayWithObject:@""] forKey:NSFilesPromisePboardType];      

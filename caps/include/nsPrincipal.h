@@ -45,6 +45,8 @@
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
 #include "nsJSPrincipals.h"
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
@@ -100,7 +102,7 @@ public:
 
 protected:
   nsJSPrincipals mJSPrincipals;
-  nsVoidArray mAnnotations;
+  nsTArray< nsAutoPtr<nsHashtable> > mAnnotations;
   nsHashtable mCapabilities;
   nsCString mPrefName;
   static PRInt32 sCapabilitiesOrdinal;
