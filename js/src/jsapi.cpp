@@ -96,8 +96,9 @@
 #define JS_ADDRESSOF_VA_LIST(ap) (&(ap))
 #endif
 
-#if defined(JS_PARANOID_REQUEST) && defined(JS_THREADSAFE)
-#define CHECK_REQUEST(cx)       JS_ASSERT(cx->requestDepth)
+#if defined(JS_THREADSAFE)
+#define CHECK_REQUEST(cx)                                                   \
+    JS_ASSERT((cx)->requestDepth || (cx)->thread == (cx)->runtime->gcThread)
 #else
 #define CHECK_REQUEST(cx)       ((void)0)
 #endif
@@ -4136,7 +4137,6 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, jsval *vp)
     jsval fsv;
     JSFunctionSpec *fs;
     JSObject *tmp;
-    JSStackFrame *fp;
 
     if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(*vp), 0, &fsv))
         return JS_FALSE;
@@ -4171,13 +4171,8 @@ js_generic_fast_native_method_dispatcher(JSContext *cx, uintN argc, jsval *vp)
      * Follow Function.prototype.apply and .call by using the global object as
      * the 'this' param if no args.
      */
-    fp = cx->fp;
-    JS_ASSERT((fp->flags & JSFRAME_IN_FAST_CALL) || fp->argv == vp + 2);
     if (!js_ComputeThis(cx, vp + 2))
         return JS_FALSE;
-    if (!(fp->flags & JSFRAME_IN_FAST_CALL))
-        fp->thisp = JSVAL_TO_OBJECT(vp[1]);
-
     /*
      * Protect against argc underflowing. By calling js_ComputeThis, we made
      * it as if the static was called with one parameter, the explicit |this|
@@ -4196,8 +4191,6 @@ js_generic_native_method_dispatcher(JSContext *cx, JSObject *obj,
     jsval fsv;
     JSFunctionSpec *fs;
     JSObject *tmp;
-
-    JS_ASSERT(!(cx->fp->flags & JSFRAME_IN_FAST_CALL));
 
     if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(argv[-2]), 0, &fsv))
         return JS_FALSE;
@@ -4961,7 +4954,6 @@ JS_IsRunning(JSContext *cx)
 JS_PUBLIC_API(JSBool)
 JS_IsConstructing(JSContext *cx)
 {
-    JS_ASSERT(!cx->fp || !(cx->fp->flags & JSFRAME_IN_FAST_CALL));
     return cx->fp && (cx->fp->flags & JSFRAME_CONSTRUCTING);
 }
 
@@ -4971,7 +4963,6 @@ JS_IsAssigning(JSContext *cx)
     JSStackFrame *fp;
     jsbytecode *pc;
 
-    JS_ASSERT(!cx->fp || !(cx->fp->flags & JSFRAME_IN_FAST_CALL));
     for (fp = cx->fp; fp && !fp->script; fp = fp->down)
         continue;
     if (!fp || !(pc = fp->pc))
@@ -4997,7 +4988,6 @@ JS_SaveFrameChain(JSContext *cx)
     if (!fp)
         return fp;
 
-    JS_ASSERT(!(fp->flags & JSFRAME_IN_FAST_CALL));
     JS_ASSERT(!fp->dormantNext);
     fp->dormantNext = cx->dormantFrameChain;
     cx->dormantFrameChain = fp;

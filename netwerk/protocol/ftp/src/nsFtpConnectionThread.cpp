@@ -1907,8 +1907,10 @@ nsFtpState::OnTransportStatus(nsITransport *transport, nsresult status,
     }
 
     // Ignore the progressMax value from the socket.  We know the true size of
-    // the file based on the response from our SIZE request.
-    mChannel->OnTransportStatus(nsnull, status, progress, mFileSize);
+    // the file based on the response from our SIZE request. Additionally, only
+    // report the max progress based on where we started/resumed.
+    mChannel->OnTransportStatus(nsnull, status, progress,
+                                mFileSize - mChannel->StartPos());
     return NS_OK;
 }
 

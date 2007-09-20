@@ -504,8 +504,12 @@ NS_IMETHODIMP nsXULTreeAccessible::SelectAllSelection(PRBool *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTreeAccessible::GetCachedTreeitemAccessible(PRInt32 aRow, nsITreeColumn* aColumn, nsIAccessible** aAccessible)
+NS_IMETHODIMP
+nsXULTreeAccessible::GetCachedTreeitemAccessible(PRInt32 aRow,
+                                                 nsITreeColumn* aColumn,
+                                                 nsIAccessible** aAccessible)
 {
+  NS_ENSURE_ARG_POINTER(aAccessible);
   *aAccessible = nsnull;
 
   NS_ASSERTION(mAccessNodeCache, "No accessibility cache for tree");
@@ -524,8 +528,12 @@ NS_IMETHODIMP nsXULTreeAccessible::GetCachedTreeitemAccessible(PRInt32 aRow, nsI
       cols->GetKeyColumn(getter_AddRefs(col));
   }
 
-  if (col)
-     col->GetIndex(&columnIndex);
+  // Do not create accessible for treeitem if there is no column in the tree
+  // because it doesn't render treeitems properly.
+  if (!col)
+    return NS_OK;
+
+  col->GetIndex(&columnIndex);
 
   nsCOMPtr<nsIAccessNode> accessNode;
   GetCacheEntry(*mAccessNodeCache, (void*)(aRow * kMaxTreeColumns + columnIndex), getter_AddRefs(accessNode));
@@ -1041,50 +1049,18 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetAccessibleRelated(PRUint32 aRelationTy
 #endif
 }
 
-// ---------- nsXULTreeColumnsAccessible ----------
-
-nsXULTreeColumnsAccessible::nsXULTreeColumnsAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell):
-nsAccessibleWrap(aDOMNode, aShell)
+////////////////////////////////////////////////////////////////////////////////
+//  nsXULTreeColumnsAccessible
+nsXULTreeColumnsAccessible::
+  nsXULTreeColumnsAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell):
+  nsXULColumnsAccessible(aDOMNode, aShell)
 {
 }
-
-NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeColumnsAccessible, nsAccessible)
 
 NS_IMETHODIMP
-nsXULTreeColumnsAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+nsXULTreeColumnsAccessible::GetNextSibling(nsIAccessible **aNextSibling)
 {
-  if (aExtraState)
-    *aExtraState = 0;
-
-  *aState = nsIAccessibleStates::STATE_READONLY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULTreeColumnsAccessible::GetRole(PRUint32 *_retval)
-{
-  *_retval = nsIAccessibleRole::ROLE_LIST;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULTreeColumnsAccessible::GetNumActions(PRUint8 *_retval)
-{
-  *_retval = 1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULTreeColumnsAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
-{
-  if (aIndex == eAction_Click) {
-    aName.AssignLiteral("click");
-    return NS_OK;
-  }
-
-  return NS_ERROR_INVALID_ARG;
-}
-
-NS_IMETHODIMP nsXULTreeColumnsAccessible::GetNextSibling(nsIAccessible **aNextSibling) 
-{
-  nsresult ret = nsAccessible::GetNextSibling(aNextSibling);
+  nsresult ret = nsXULColumnsAccessible::GetNextSibling(aNextSibling);
 
   if (*aNextSibling == nsnull) { // if there is not other sibling, use the first row as its sibling
     nsCOMPtr<nsITreeBoxObject> tree;
@@ -1106,73 +1082,6 @@ NS_IMETHODIMP nsXULTreeColumnsAccessible::GetNextSibling(nsIAccessible **aNextSi
     }
   }
 
-  return ret;  
+  return ret;
 }
 
-NS_IMETHODIMP nsXULTreeColumnsAccessible::GetPreviousSibling(nsIAccessible **aPreviousSibling) 
-{  
-  return nsAccessible::GetPreviousSibling(aPreviousSibling);
-}
-
-NS_IMETHODIMP nsXULTreeColumnsAccessible::DoAction(PRUint8 index)
-{
-  if (index == eAction_Click)
-    return NS_OK;
-
-  return NS_ERROR_INVALID_ARG;
-}
-
-// ---------- nsXULTreeColumnitemAccessible ----------
-
-nsXULTreeColumnitemAccessible::nsXULTreeColumnitemAccessible(nsIDOMNode *aDOMNode, nsIWeakReference *aShell):
-nsLeafAccessible(aDOMNode, aShell)
-{
-}
-
-NS_IMPL_ISUPPORTS_INHERITED0(nsXULTreeColumnitemAccessible, nsLeafAccessible)
-
-NS_IMETHODIMP
-nsXULTreeColumnitemAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
-{
-  if (aExtraState)
-    *aExtraState = 0;
-
-  *aState = nsIAccessibleStates::STATE_READONLY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULTreeColumnitemAccessible::GetName(nsAString& _retval)
-{
-  return GetXULName(_retval);
-}
-
-NS_IMETHODIMP nsXULTreeColumnitemAccessible::GetRole(PRUint32 *_retval)
-{
-  *_retval = nsIAccessibleRole::ROLE_COLUMNHEADER;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULTreeColumnitemAccessible::GetNumActions(PRUint8 *_retval)
-{
-  *_retval = 1;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULTreeColumnitemAccessible::GetActionName(PRUint8 aIndex, nsAString& aName)
-{
-  if (aIndex == eAction_Click) {
-    aName.AssignLiteral("click");
-    return NS_OK;
-  }
-
-  return NS_ERROR_INVALID_ARG;
-}
-
-NS_IMETHODIMP nsXULTreeColumnitemAccessible::DoAction(PRUint8 index)
-{
-  if (index == eAction_Click) {
-    return DoCommand();
-  }
-
-  return NS_ERROR_INVALID_ARG;
-}

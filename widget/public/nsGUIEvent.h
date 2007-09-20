@@ -645,12 +645,14 @@ public:
     if (msg == NS_MOUSE_MOVE) {
       flags |= NS_EVENT_FLAG_CANT_CANCEL;
     } else if (msg == NS_CONTEXTMENU) {
-      button = eRightButton;
+      button = (context == eNormal) ? eRightButton : eLeftButton;
     }
   }
 #ifdef NS_DEBUG
   ~nsMouseEvent() {
-    NS_WARN_IF_FALSE(message != NS_CONTEXTMENU || button == eRightButton,
+    NS_WARN_IF_FALSE(message != NS_CONTEXTMENU ||
+                     button ==
+                       ((context == eNormal) ? eRightButton : eLeftButton),
                      "Wrong button set to NS_CONTEXTMENU event?");
   }
 #endif

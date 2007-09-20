@@ -57,6 +57,7 @@
 class nsSVGSVGElement;
 class nsSVGLength2;
 class nsSVGNumber2;
+class nsSVGInteger;
 class nsSVGEnum;
 struct nsSVGEnumMapping;
 
@@ -118,10 +119,12 @@ public:
 
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
   void GetAnimatedLengthValues(float *aFirst, ...);
   void GetAnimatedNumberValues(float *aFirst, ...);
+  void GetAnimatedIntegerValues(PRInt32 *aFirst, ...);
 
   virtual void RecompileScriptEventListeners();
 
@@ -143,9 +146,7 @@ protected:
   
   static nsIAtom* GetEventNameForAttr(nsIAtom* aAttr);
 
-  // The following two structures should be protected, but VC6
-  // doesn't allow children of nsSVGElement to access them.
-public:
+protected:
   struct LengthInfo {
     nsIAtom** mName;
     float     mDefaultValue;
@@ -182,6 +183,25 @@ public:
       {}
   };
 
+  struct IntegerInfo {
+    nsIAtom** mName;
+    PRInt32   mDefaultValue;
+  };
+
+  struct IntegerAttributesInfo {
+    nsSVGInteger* mIntegers;
+    IntegerInfo*  mIntegerInfo;
+    PRUint32      mIntegerCount;
+
+    IntegerAttributesInfo(nsSVGInteger *aIntegers,
+                          IntegerInfo *aIntegerInfo,
+                          PRUint32 aIntegerCount) :
+      mIntegers(aIntegers), mIntegerInfo(aIntegerInfo), mIntegerCount(aIntegerCount)
+      {}
+  };
+
+  friend class nsSVGEnum;
+
   struct EnumInfo {
     nsIAtom**         mName;
     nsSVGEnumMapping* mMapping;
@@ -205,6 +225,7 @@ public:
 protected:
   virtual LengthAttributesInfo GetLengthInfo();
   virtual NumberAttributesInfo GetNumberInfo();
+  virtual IntegerAttributesInfo GetIntegerInfo();
 
   static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
                                               nsIAtom* aAttribute,

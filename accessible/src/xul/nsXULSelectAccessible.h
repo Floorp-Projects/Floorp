@@ -40,13 +40,49 @@
 
 #include "nsCOMPtr.h"
 #include "nsXULMenuAccessible.h"
+#include "nsBaseWidgetAccessible.h"
 
 class nsIWeakReference;
 
 /**
-  * Selects, Listboxes and Comboboxes, are made up of a number of different
-  *  widgets, some of which are shared between the two. This file contains 
-  *  all of the widgets for both of the Selects, for XUL only.
+ * nsXULColumnsAccessible are accessible for list and tree columns elements
+ * (xul:treecols and xul:listcols).
+ */
+class nsXULColumnsAccessible : public nsAccessibleWrap
+{
+public:
+  nsXULColumnsAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+
+  // nsIAccessible
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
+};
+
+/**
+ * nsXULColumnAccessible are accessibles for list and tree column elements
+ * (xul:listcol and xul:treecol).
+ */
+class nsXULColumnItemAccessible : public nsLeafAccessible
+{
+public:
+  nsXULColumnItemAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
+
+  // nsIAccessible
+  NS_IMETHOD GetRole(PRUint32 *aRole);
+  NS_IMETHOD GetName(nsAString& aName);
+  NS_IMETHOD GetState(PRUint32 *aState, PRUint32 *aExtraState);
+
+  NS_IMETHOD GetNumActions(PRUint8 *aNumActions);
+  NS_IMETHOD GetActionName(PRUint8 aIndex, nsAString& aName);
+  NS_IMETHOD DoAction(PRUint8 aIndex);
+
+  enum { eAction_Click = 0 };
+};
+
+/**
+  * Listboxes (xul:listbox) and Comboboxes (xul:menulist) are made up of a
+  * number of different widgets, some of which are shared between the two.
+  * This file contains all of the widgets for both of them, for XUL only.
   *
   *  Listbox:
   *     - nsXULListboxAccessible

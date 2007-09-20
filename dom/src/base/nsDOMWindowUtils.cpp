@@ -198,6 +198,7 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
     return NS_ERROR_FAILURE;
 
   PRInt32 msg;
+  PRBool contextMenuKey = PR_FALSE;
   if (aType.EqualsLiteral("mousedown"))
     msg = NS_MOUSE_BUTTON_DOWN;
   else if (aType.EqualsLiteral("mouseup"))
@@ -208,12 +209,15 @@ nsDOMWindowUtils::SendMouseEvent(const nsAString& aType,
     msg = NS_MOUSE_ENTER;
   else if (aType.EqualsLiteral("mouseout"))
     msg = NS_MOUSE_EXIT;
-  else if (aType.EqualsLiteral("contextmenu"))
+  else if (aType.EqualsLiteral("contextmenu")) {
     msg = NS_CONTEXTMENU;
-  else
+    contextMenuKey = (aButton == 0);
+  } else
     return NS_ERROR_FAILURE;
 
-  nsMouseEvent event(PR_TRUE, msg, widget, nsMouseEvent::eReal);
+  nsMouseEvent event(PR_TRUE, msg, widget, nsMouseEvent::eReal,
+                     contextMenuKey ?
+                       nsMouseEvent::eContextMenuKey : nsMouseEvent::eNormal);
   event.isShift = (aModifiers & nsIDOMNSEvent::SHIFT_MASK) ? PR_TRUE : PR_FALSE;
   event.isControl = (aModifiers & nsIDOMNSEvent::CONTROL_MASK) ? PR_TRUE : PR_FALSE;
   event.isAlt = (aModifiers & nsIDOMNSEvent::ALT_MASK) ? PR_TRUE : PR_FALSE;

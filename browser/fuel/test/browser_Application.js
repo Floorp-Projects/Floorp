@@ -11,10 +11,11 @@ function test() {
   
   var wMediator = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator);
   var console = wMediator.getMostRecentWindow("global:console");
+  waitForExplicitFinish();
   if (!console) {
     Application.console.open();
-    setTimeout(checkConsole, 500);
   }
+  setTimeout(checkConsole, 500);
 }
 
 function checkConsole() {
@@ -23,4 +24,5 @@ function checkConsole() {
   ok(console, "Check to see if the console window opened");
   if (console)
     console.close();
+  finish();
 }

@@ -67,6 +67,8 @@ void
 nsAccUtils::GetAccAttr(nsIPersistentProperties *aAttributes, nsIAtom *aAttrName,
                        nsAString& aAttrValue)
 {
+  aAttrValue.Truncate();
+
   nsCAutoString attrName;
   aAttrName->ToUTF8String(attrName);
   aAttributes->GetStringProperty(attrName, aAttrValue);
@@ -402,3 +404,9 @@ nsAccUtils::GetDocShellTreeItemFor(nsIDOMNode *aNode)
   return docShellTreeItem;
 }
 
+PRBool
+nsAccUtils::GetID(nsIContent *aContent, nsAString& aID)
+{
+  nsIAtom *idAttribute = aContent->GetIDAttributeName();
+  return idAttribute ? aContent->GetAttr(kNameSpaceID_None, idAttribute, aID) : PR_FALSE;
+}

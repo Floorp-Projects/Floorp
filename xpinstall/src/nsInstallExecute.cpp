@@ -255,10 +255,13 @@ void nsInstallExecute::Abort()
 
 char* nsInstallExecute::toString()
 {
+    if (!mInstall)
+        return nsnull;
+
     char* buffer = new char[1024];
     char* rsrcVal = nsnull;
 
-    if (buffer == nsnull || !mInstall)
+    if (!buffer)
         return nsnull;
 
     // if the FileSpec is NULL, just us the in jar file name.

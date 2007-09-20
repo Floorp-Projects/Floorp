@@ -180,7 +180,12 @@ class nsTArrayElementTraits {
   public:
     // Invoke the default constructor in place.
     static inline void Construct(E *e) {
-      new (static_cast<void *>(e)) E();
+      // Do NOT call "E()"! That triggers C++ "default initialization"
+      // which zeroes out POD ("plain old data") types such as regular ints.
+      // We don't want that because it can be a performance issue and people
+      // don't expect it; nsTArray should work like a regular C/C++ array in
+      // this respect.
+      new (static_cast<void *>(e)) E;
     }
     // Invoke the copy-constructor in place.
     template<class A>

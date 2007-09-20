@@ -106,7 +106,7 @@
           </deck>
         </hbox>
         
-        <radio id="save" label="&save.label;" accesskey="&save.accesskey;"/>
+        <radio id="save" label="&saveFile.label;" accesskey="&saveFile.accesskey;"/>
       </radiogroup> 
       <separator class="thin"/>
       <hbox class="small-indent">

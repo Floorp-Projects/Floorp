@@ -54,17 +54,6 @@ const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const nsIExtensionManager             = Ci.nsIExtensionManager;
-const nsIAddonUpdateCheckListener     = Ci.nsIAddonUpdateCheckListener;
-const nsIUpdateItem                   = Ci.nsIUpdateItem;
-const nsILocalFile                    = Ci.nsILocalFile;
-const nsILineInputStream              = Ci.nsILineInputStream;
-const nsIInstallLocation              = Ci.nsIInstallLocation;
-const nsIURL                          = Ci.nsIURL
-// XXXrstrong calling hasMoreElements on a nsIDirectoryEnumerator after
-// it has been removed will cause a crash on Mac OS X - bug 292823
-const nsIDirectoryEnumerator          = Ci.nsIDirectoryEnumerator;
-
 const PREF_EM_CHECK_COMPATIBILITY     = "extensions.checkCompatibility";
 const PREF_EM_CHECK_UPDATE_SECURITY   = "extensions.checkUpdateSecurity";
 const PREF_EM_LAST_APP_VERSION        = "extensions.lastAppVersion";
@@ -99,8 +88,6 @@ const FILE_CONTENTS_MANIFEST          = "contents.rdf";
 const FILE_CHROME_MANIFEST            = "chrome.manifest";
 
 const UNKNOWN_XPCOM_ABI               = "unknownABI";
-
-const FILE_LOGFILE                    = "extensionmanager.log";
 
 const FILE_DEFAULT_THEME_JAR          = "classic.jar";
 const TOOLKIT_ID                      = "toolkit@mozilla.org"
@@ -144,7 +131,6 @@ const XMLURI_PARSE_ERROR              = "http://www.mozilla.org/newlayout/xml/pa
 const URI_GENERIC_ICON_XPINSTALL      = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
 const URI_GENERIC_ICON_THEME          = "chrome://mozapps/skin/extensions/themeGeneric.png";
 const URI_XPINSTALL_CONFIRM_DIALOG    = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
-const URI_FINALIZE_DIALOG             = "chrome://mozapps/content/extensions/finalize.xul";
 const URI_EXTENSIONS_PROPERTIES       = "chrome://mozapps/locale/extensions/extensions.properties";
 const URI_BRAND_PROPERTIES            = "chrome://branding/locale/brand.properties";
 const URI_DOWNLOADS_PROPERTIES        = "chrome://mozapps/locale/downloads/downloads.properties";
@@ -228,19 +214,6 @@ var BundleManager = {
       this._appName = brandBundle.GetStringFromName("brandShortName");
     }
     return this._appName;
-  },
-
-  _toolkitName: "",
-
-  /**
-   * The toolkit's display name.
-   */
-  get toolkitName() {
-    if (!this._toolkitName) {
-      var brandBundle = this.getBundle(URI_EXTENSIONS_PROPERTIES)
-      this._toolkitName = brandBundle.GetStringFromName("toolkitName");
-    }
-    return this._toolkitName;
   }
 };
 
@@ -381,11 +354,11 @@ function getDirNoCreate(key, pathArray) {
 function getDirInternal(key, pathArray, shouldCreate) {
   var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
                     getService(Ci.nsIProperties);
-  var dir = fileLocator.get(key, nsILocalFile);
+  var dir = fileLocator.get(key, Ci.nsILocalFile);
   for (var i = 0; i < pathArray.length; ++i) {
     dir.append(pathArray[i]);
     if (shouldCreate && !dir.exists())
-      dir.create(nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+      dir.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
   }
   dir.followLinks = false;
   return dir;
@@ -443,7 +416,7 @@ function getAbsoluteDescriptor(itemLocation) {
  */
 function getFileFromDescriptor(descriptor, installLocation) {
   var location = Cc["@mozilla.org/file/local;1"].
-                 createInstance(nsILocalFile);
+                 createInstance(Ci.nsILocalFile);
 
   var m = descriptor.match(/^(abs|rel)\%(.*)$/);
   if (!m)
@@ -467,7 +440,7 @@ function getFileFromDescriptor(descriptor, installLocation) {
  */
 function fileIsItemPackage(file) {
   var fileURL = getURIFromFile(file);
-  if (fileURL instanceof nsIURL)
+  if (fileURL instanceof Ci.nsIURL)
     var extension = fileURL.fileExtension.toLowerCase();
   return extension == "xpi" || extension == "jar";
 }
@@ -486,7 +459,7 @@ function openSafeFileOutputStream(file, modeFlags) {
   if (modeFlags === undefined)
     modeFlags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
   if (!file.exists())
-    file.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+    file.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
   fos.init(file, modeFlags, PERMS_FILE, 0);
   return fos;
 }
@@ -579,9 +552,9 @@ function getRandomFileName(fileName) {
  * @returns The RDF URI prefix.
  */
 function getItemPrefix(type) {
-  if (type & nsIUpdateItem.TYPE_EXTENSION)
+  if (type & Ci.nsIUpdateItem.TYPE_EXTENSION)
     return PREFIX_EXTENSION;
-  else if (type & nsIUpdateItem.TYPE_THEME)
+  else if (type & Ci.nsIUpdateItem.TYPE_THEME)
     return PREFIX_THEME;
   return PREFIX_ITEM_URI;
 }
@@ -706,10 +679,10 @@ function getAddonTypeFromInstallManifest(installManifest) {
   // Install Manifest, so we fall back to a theme-only property to
   // differentiate.
   if (getManifestProperty(installManifest, "internalName") !== undefined)
-    return nsIUpdateItem.TYPE_THEME;
+    return Ci.nsIUpdateItem.TYPE_THEME;
 
   // If no type is provided, default to "Extension"
-  return nsIUpdateItem.TYPE_EXTENSION;
+  return Ci.nsIUpdateItem.TYPE_EXTENSION;
 }
 
 /**
@@ -782,8 +755,8 @@ function showBlocklistMessage(items, fromInstall) {
   if (fromInstall) {
     var wm = Cc["@mozilla.org/appshell/window-mediator;1"].
              getService(Ci.nsIWindowMediator);
-    win = wm.getMostRecentWindow(nsIUpdateItem.TYPE_THEME ? "Extension:Manager-themes" :
-                                                            "Extension:Manager-extensions");
+    win = wm.getMostRecentWindow(Ci.nsIUpdateItem.TYPE_THEME ? "Extension:Manager-themes" :
+                                                               "Extension:Manager-extensions");
   }
   var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
            getService(Ci.nsIWindowWatcher);
@@ -853,7 +826,7 @@ function getInstallManifest(file) {
     var uri = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService)
                         .newFileURI(file);
-    var url = uri.QueryInterface(nsIURL);
+    var url = uri.QueryInterface(Ci.nsIURL);
     showMessage("malformedTitle", [], "malformedMessage",
                 [BundleManager.appName, url.fileName]);
   }
@@ -949,7 +922,7 @@ function DirectoryInstallLocation(name, location, restricted, priority) {
   }
   else {
     try {
-      location.create(nsILocalFile.DIRECTORY_TYPE, 0775);
+      location.create(Ci.nsILocalFile.DIRECTORY_TYPE, 0775);
     }
     catch (e) {
       LOG("DirectoryInstallLocation: failed to create location " +
@@ -988,12 +961,12 @@ DirectoryInstallLocation.prototype = {
               createInstance(Ci.nsIFileInputStream);
     fis.init(file, -1, -1, false);
     var line = { value: "" };
-    if (fis instanceof nsILineInputStream)
+    if (fis instanceof Ci.nsILineInputStream)
       fis.readLine(line);
     fis.close();
     if (line.value) {
       var linkedDirectory = Cc["@mozilla.org/file/local;1"].
-                            createInstance(nsILocalFile);
+                            createInstance(Ci.nsILocalFile);
       try {
         linkedDirectory.initWithPath(line.value);
       }
@@ -1015,12 +988,12 @@ DirectoryInstallLocation.prototype = {
       return new FileEnumerator(locations);
 
     try {
-      var entries = this._location.directoryEntries.QueryInterface(nsIDirectoryEnumerator);
+      var entries = this._location.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
       while (true) {
         var entry = entries.nextFile;
         if (!entry)
           break;
-        entry instanceof nsILocalFile;
+        entry instanceof Ci.nsILocalFile;
         if (!entry.isDirectory() && gIDTest.test(entry.leafName)) {
           var linkedDirectory = this._readDirectoryFromFile(entry);
           if (linkedDirectory && linkedDirectory.exists() &&
@@ -1083,7 +1056,7 @@ DirectoryInstallLocation.prototype = {
     var testFile = this.location;
     testFile.append("Access Privileges Test");
     try {
-      testFile.createUnique(nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+      testFile.createUnique(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
       testFile.remove(false);
       this._canAccess = true;
     }
@@ -1109,7 +1082,7 @@ DirectoryInstallLocation.prototype = {
     if (itemLocation.exists() && !itemLocation.isDirectory())
       return this._readDirectoryFromFile(itemLocation);
     if (!itemLocation.exists() && this.canAccess)
-      itemLocation.create(nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+      itemLocation.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
     return itemLocation;
   },
 
@@ -1177,10 +1150,10 @@ DirectoryInstallLocation.prototype = {
     if (!stageDir.exists() || !stageDir.isDirectory())
       return null;
     try {
-      var entries = stageDir.directoryEntries.QueryInterface(nsIDirectoryEnumerator);
+      var entries = stageDir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
       while (entries.hasMoreElements()) {
         var file = entries.nextFile;
-        if (!(file instanceof nsILocalFile))
+        if (!(file instanceof Ci.nsILocalFile))
           continue;
         if (file.isDirectory())
           removeDirRecursive(file);
@@ -1195,7 +1168,7 @@ DirectoryInstallLocation.prototype = {
     }
     catch (e) {
     }
-    if (entries instanceof nsIDirectoryEnumerator)
+    if (entries instanceof Ci.nsIDirectoryEnumerator)
       entries.close();
     return stageFile;
   },
@@ -1220,7 +1193,7 @@ DirectoryInstallLocation.prototype = {
         parent = parent.parent;
         entries = parent.directoryEntries;
       }
-      if (entries instanceof nsIDirectoryEnumerator)
+      if (entries instanceof Ci.nsIDirectoryEnumerator)
         entries.close();
     }
     catch (e) {
@@ -1315,7 +1288,7 @@ WinRegInstallLocation.prototype = {
       var id = key.getValueName(i);
 
       var dir = Cc["@mozilla.org/file/local;1"].
-                createInstance(nsILocalFile);
+                createInstance(Ci.nsILocalFile);
       dir.initWithPath(key.readStringValue(id));
 
       if (dir.exists() && dir.isDirectory()) {
@@ -1432,7 +1405,7 @@ Installer.prototype = {
       return;
 
     // Upgrade old-style contents.rdf Chrome Manifests if necessary.
-    if (this._type == nsIUpdateItem.TYPE_THEME)
+    if (this._type == Ci.nsIUpdateItem.TYPE_THEME)
       this.upgradeThemeChrome();
     else
       this.upgradeExtensionChrome();
@@ -1471,7 +1444,7 @@ Installer.prototype = {
         var target = installLocation.getItemFile(extensionID, entryName);
         if (!target.exists()) {
           try {
-            target.create(nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+            target.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
           }
           catch (e) {
             LOG("extractExtensionsFiles: failed to create target directory for extraction " +
@@ -1488,7 +1461,7 @@ Installer.prototype = {
           continue;
 
         try {
-          target.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+          target.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
         }
         catch (e) {
           LOG("extractExtensionsFiles: failed to create target file for extraction " +
@@ -1536,7 +1509,7 @@ Installer.prototype = {
             continue;
           target = installLocation.getItemFile(id, entryName);
           try {
-            target.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+            target.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
           }
           catch (e) {
             LOG("extractThemeFiles: failed to create target file for extraction " +
@@ -1549,7 +1522,7 @@ Installer.prototype = {
       else { // old theme structure requires only an install.rdf
         try {
           var contentsManifestFile = installLocation.getItemFile(id, FILE_CONTENTS_MANIFEST);
-          contentsManifestFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+          contentsManifestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
           zipReader.extract(FILE_CONTENTS_MANIFEST, contentsManifestFile);
         }
         catch (e) {
@@ -1567,7 +1540,7 @@ Installer.prototype = {
           throw e; // let the safe-op clean up
         }
 
-        if (!installer.metadataDS && installer._type == nsIUpdateItem.TYPE_THEME) {
+        if (!installer.metadataDS && installer._type == Ci.nsIUpdateItem.TYPE_THEME) {
           var themeName = extensionStrings.GetStringFromName("incompatibleThemeName");
           if (contentsManifestFile && contentsManifestFile.exists()) {
             var contentsManifest = gRDF.GetDataSourceBlocking(getURLSpecFromFile(contentsManifestFile));
@@ -1577,7 +1550,7 @@ Installer.prototype = {
               var elts = ctr.GetElements();
               var nameArc = gRDF.GetResource(CHROME_NS("displayName"));
               while (elts.hasMoreElements()) {
-                var elt = elts.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+                var elt = elts.getNext().QueryInterface(Ci.nsIRDFResource);
                 themeName = stringData(contentsManifest.GetTarget(elt, nameArc, true));
                 if (themeName)
                   break;
@@ -1588,7 +1561,7 @@ Installer.prototype = {
             }
           }
           showIncompatibleError({ name: themeName, version: "",
-                                  type: nsIUpdateItem.TYPE_THEME });
+                                  type: Ci.nsIUpdateItem.TYPE_THEME });
           LOG("Theme JAR file: " + jarFile.leafName + " contains an Old-Style " +
               "Theme that is not compatible with this version of the software.");
           throw new Error("Old Theme"); // let the safe-op clean up
@@ -1598,7 +1571,7 @@ Installer.prototype = {
 
     var installer = this;
     var callback = extractExtensionFiles;
-    if (this._type == nsIUpdateItem.TYPE_THEME)
+    if (this._type == Ci.nsIUpdateItem.TYPE_THEME)
       callback = extractThemeFiles;
     safeInstallOperation(this._id, this._installLocation,
                           { callback: callback, data: file });
@@ -1623,7 +1596,7 @@ Installer.prototype = {
       var chromeDir = this._installLocation.getItemFile(this._id, DIR_CHROME);
       // We're relying on the fact that there is only one JAR file
       // in the "chrome" directory. This is a hack, but it works.
-      var entries = chromeDir.directoryEntries.QueryInterface(nsIDirectoryEnumerator);
+      var entries = chromeDir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
       var jarFile = entries.nextFile;
       if (jarFile) {
         var jarFileURI = getURIFromFile(jarFile);
@@ -1680,7 +1653,7 @@ Installer.prototype = {
       // Even if an extension doesn't have any chrome, we generate an empty
       // manifest file so that we don't try to upgrade from the "old-style"
       // chrome manifests at every startup.
-      manifestFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+      manifestFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
 
       var manifestURI = getURIFromFile(manifestFile);
       var files = this.metadataDS.GetTargets(gInstallManifestRoot, EM_R("file"), true);
@@ -1695,7 +1668,7 @@ Installer.prototype = {
           var zipReader = getZipReaderForFile(chromeFile);
           fileURLSpec = "jar:" + fileURLSpec + "!/";
           var contentsFile = this._installLocation.getItemFile(this._id, FILE_CONTENTS_MANIFEST);
-          contentsFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+          contentsFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
         }
 
         var providers = [EM_R("package"), EM_R("skin"), EM_R("locale")];
@@ -1825,16 +1798,16 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
    *          |sourceDir| itself) we are moving files from.
    */
   function moveDirectory(sourceDir, targetDir, currentDir) {
-    var entries = currentDir.directoryEntries.QueryInterface(nsIDirectoryEnumerator);
+    var entries = currentDir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
     while (true) {
       var entry = entries.nextFile;
       if (!entry)
         break;
       if (entry.isDirectory())
         moveDirectory(sourceDir, targetDir, entry);
-      else if (entry instanceof nsILocalFile) {
+      else if (entry instanceof Ci.nsILocalFile) {
         var rd = entry.getRelativeDescriptor(sourceDir);
-        var destination = targetDir.clone().QueryInterface(nsILocalFile);
+        var destination = targetDir.clone().QueryInterface(Ci.nsILocalFile);
         destination.setRelativeDescriptor(targetDir, rd);
         moveFile(entry, destination.parent);
       }
@@ -1922,7 +1895,7 @@ function safeInstallOperation(itemID, installLocation, installCallback) {
           throw e;
         }
       }
-      itemLocationTrash.create(nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+      itemLocationTrash.create(Ci.nsILocalFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
       // Move the pointer file to the trash.
       moveFile(pointerFile, itemLocationTrash);
     }
@@ -2115,7 +2088,7 @@ var StartupCache = {
     var descriptor = null;
     var mtime = null;
     if (itemLocation) {
-      itemLocation.QueryInterface(nsILocalFile);
+      itemLocation.QueryInterface(Ci.nsILocalFile);
       descriptor = getDescriptorFromFile(itemLocation, installLocation);
       if (itemLocation.exists() && itemLocation.isDirectory())
         mtime = Math.floor(itemLocation.lastModifiedTime / 1000);
@@ -2210,7 +2183,7 @@ var StartupCache = {
     var fis = Cc["@mozilla.org/network/file-input-stream;1"].
               createInstance(Ci.nsIFileInputStream);
     fis.init(itemChangeManifest, -1, -1, false);
-    if (fis instanceof nsILineInputStream) {
+    if (fis instanceof Ci.nsILineInputStream) {
       var line = { value: "" };
       var more = false;
       do {
@@ -2304,7 +2277,7 @@ function ExtensionManager() {
 
   // Register Global Install Location
   var appGlobalExtensions = getDirNoCreate(KEY_APPDIR, [DIR_EXTENSIONS]);
-  var priority = nsIInstallLocation.PRIORITY_APP_SYSTEM_GLOBAL;
+  var priority = Ci.nsIInstallLocation.PRIORITY_APP_SYSTEM_GLOBAL;
   var globalLocation = new DirectoryInstallLocation(KEY_APP_GLOBAL,
                                                     appGlobalExtensions, true,
                                                     priority);
@@ -2312,7 +2285,7 @@ function ExtensionManager() {
 
   // Register App-Profile Install Location
   var appProfileExtensions = getDirNoCreate(KEY_PROFILEDS, [DIR_EXTENSIONS]);
-  var priority = nsIInstallLocation.PRIORITY_APP_PROFILE;
+  var priority = Ci.nsIInstallLocation.PRIORITY_APP_PROFILE;
   var profileLocation = new DirectoryInstallLocation(KEY_APP_PROFILE,
                                                      appProfileExtensions, false,
                                                      priority);
@@ -2324,14 +2297,14 @@ function ExtensionManager() {
       new WinRegInstallLocation("winreg-app-global",
                                 nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
                                 true,
-                                nsIInstallLocation.PRIORITY_APP_SYSTEM_GLOBAL + 10));
+                                Ci.nsIInstallLocation.PRIORITY_APP_SYSTEM_GLOBAL + 10));
 
   // Register HKEY_CURRENT_USER Install Location
   InstallLocations.put(
       new WinRegInstallLocation("winreg-app-user",
                                 nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
                                 false,
-                                nsIInstallLocation.PRIORITY_APP_SYSTEM_USER + 10));
+                                Ci.nsIInstallLocation.PRIORITY_APP_SYSTEM_USER + 10));
 #endif
 
   // Register Additional Install Locations
@@ -2341,7 +2314,7 @@ function ExtensionManager() {
   while (locations.hasMoreElements()) {
     var entry = locations.getNext().QueryInterface(Ci.nsISupportsCString).data;
     var contractID = categoryManager.getCategoryEntry(CATEGORY_INSTALL_LOCATIONS, entry);
-    var location = Cc[contractID].getService(nsIInstallLocation);
+    var location = Cc[contractID].getService(Ci.nsIInstallLocation);
     InstallLocations.put(location);
   }
 }
@@ -2604,11 +2577,11 @@ ExtensionManager.prototype = {
     if (!getPref("getBoolPref", PREF_EM_UPDATE_ENABLED, true))
       return;
 
-    var items = this.getItemList(nsIUpdateItem.TYPE_ADDON, { });
+    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ADDON, { });
 
     var updater = new ExtensionItemUpdater(gApp.ID, gApp.version, this);
     updater.checkForUpdates(items, items.length,
-                            nsIExtensionManager.UPDATE_CHECK_NEWVERSION,
+                            Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION,
                             new BackgroundUpdateCheckListener(this.datasource));
   },
 
@@ -2643,6 +2616,12 @@ ExtensionManager.prototype = {
   _installGlobalItem: function(file) {
     if (!file || !file.exists())
       throw new Error("Unable to find the file specified on the command line!");
+#ifdef XP_WIN
+    // make sure the file is local on Windows
+    file.normalize();
+    if (file.path[1] != ':')
+      throw new Error("Can't install global chrome from non-local file "+file.path);
+#endif
     var installManifestFile = extractRDFFileToTempDir(file, FILE_INSTALL_MANIFEST, true);
     if (!installManifestFile.exists())
       throw new Error("The package is missing an install manifest!");
@@ -2653,7 +2632,7 @@ ExtensionManager.prototype = {
                                   InstallLocations.get(KEY_APP_GLOBAL),
                                   installData.type);
     installer._installExtensionFiles(file);
-    if (installData.type == nsIUpdateItem.TYPE_THEME)
+    if (installData.type == Ci.nsIUpdateItem.TYPE_THEME)
       installer.upgradeThemeChrome();
     else
       installer.upgradeExtensionChrome();
@@ -2897,7 +2876,7 @@ ExtensionManager.prototype = {
     // enumeration returned is pre-sorted.
     var installLocations = this.installLocations;
     while (installLocations.hasMoreElements()) {
-      var location = installLocations.getNext().QueryInterface(nsIInstallLocation);
+      var location = installLocations.getNext().QueryInterface(Ci.nsIInstallLocation);
 
       // Hash the set of items actually held by the Install Location.
       var actualItems = { };
@@ -3088,8 +3067,8 @@ ExtensionManager.prototype = {
     // If we have extensions that were installed before the new flat chrome
     // manifests, and are still valid, we need to manually create the flat
     // manifest files.
-    var extensions = this._getActiveItems(nsIUpdateItem.TYPE_EXTENSION +
-                                          nsIUpdateItem.TYPE_LOCALE);
+    var extensions = this._getActiveItems(Ci.nsIUpdateItem.TYPE_EXTENSION +
+                                          Ci.nsIUpdateItem.TYPE_LOCALE);
     for (var i = 0; i < extensions.length; ++i) {
       var e = extensions[i];
       var itemLocation = e.location.getItemLocation(e.id);
@@ -3103,7 +3082,7 @@ ExtensionManager.prototype = {
           var itemLocation = installLocation.getItemLocation(e.id);
           if (itemLocation.exists() && itemLocation.isDirectory()) {
             var installer = new Installer(ds, e.id, installLocation,
-                                          nsIUpdateItem.TYPE_EXTENSION);
+                                          Ci.nsIUpdateItem.TYPE_EXTENSION);
             installer.upgradeExtensionChrome();
           }
         }
@@ -3116,7 +3095,7 @@ ExtensionManager.prototype = {
       }
     }
 
-    var themes = this._getActiveItems(nsIUpdateItem.TYPE_THEME);
+    var themes = this._getActiveItems(Ci.nsIUpdateItem.TYPE_THEME);
     // If we have themes that were installed before the new flat chrome
     // manifests, and are still valid, we need to manually create the flat
     // manifest files.
@@ -3143,7 +3122,7 @@ ExtensionManager.prototype = {
 
         // We're relying on the fact that there is only one JAR file
         // in the "chrome" directory. This is a hack, but it works.
-        entries = chromeDir.directoryEntries.QueryInterface(nsIDirectoryEnumerator);
+        entries = chromeDir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
         var jarFile = entries.nextFile;
         if (jarFile) {
           var jarFileURI = getURIFromFile(jarFile);
@@ -3563,7 +3542,7 @@ ExtensionManager.prototype = {
         if (!entry.isDirectory() || installRDF.exists() || !chromeDir.exists())
           continue;
 
-        var chromeEntries = chromeDir.directoryEntries.QueryInterface(nsIDirectoryEnumerator);
+        var chromeEntries = chromeDir.directoryEntries.QueryInterface(Ci.nsIDirectoryEnumerator);
         if (!chromeEntries.hasMoreElements())
           continue;
 
@@ -3627,7 +3606,7 @@ ExtensionManager.prototype = {
     var currAppID = gApp.ID;
     for (var i = 0; i < itemsToCheck.length; ++i) {
       var item = ds.getItemForID(itemsToCheck[i]);
-      var oldPrefix = (item.type == nsIUpdateItem.TYPE_EXTENSION) ? PREFIX_EXTENSION : PREFIX_THEME;
+      var oldPrefix = (item.type == Ci.nsIUpdateItem.TYPE_EXTENSION) ? PREFIX_EXTENSION : PREFIX_THEME;
       var oldRes = gRDF.GetResource(oldPrefix + item.id);
       // Disable the item if it was disabled in the version 1.0 extensions
       // datasource.
@@ -3732,9 +3711,9 @@ ExtensionManager.prototype = {
     //
     // To do this we obtain a list of active extensions and themes and write
     // these to the extensions.ini file in the profile directory.
-    var validExtensions = this._getActiveItems(nsIUpdateItem.TYPE_EXTENSION +
-                                               nsIUpdateItem.TYPE_LOCALE);
-    var validThemes     = this._getActiveItems(nsIUpdateItem.TYPE_THEME);
+    var validExtensions = this._getActiveItems(Ci.nsIUpdateItem.TYPE_EXTENSION +
+                                               Ci.nsIUpdateItem.TYPE_LOCALE);
+    var validThemes     = this._getActiveItems(Ci.nsIUpdateItem.TYPE_THEME);
 
     var extensionsLocationsFile = getFile(KEY_PROFILEDIR, [FILE_EXTENSION_MANIFEST]);
     var fos = openSafeFileOutputStream(extensionsLocationsFile);
@@ -3743,7 +3722,7 @@ ExtensionManager.prototype = {
     fos.write(extensionSectionHeader, extensionSectionHeader.length);
     for (var i = 0; i < validExtensions.length; ++i) {
       var e = validExtensions[i];
-      var itemLocation = e.location.getItemLocation(e.id).QueryInterface(nsILocalFile);
+      var itemLocation = e.location.getItemLocation(e.id).QueryInterface(Ci.nsILocalFile);
       var descriptor = getAbsoluteDescriptor(itemLocation);
       var line = "Extension" + i + "=" + descriptor + "\r\n";
       fos.write(line, line.length);
@@ -3753,7 +3732,7 @@ ExtensionManager.prototype = {
     fos.write(themeSectionHeader, themeSectionHeader.length);
     for (i = 0; i < validThemes.length; ++i) {
       var e = validThemes[i];
-      var itemLocation = e.location.getItemLocation(e.id).QueryInterface(nsILocalFile);
+      var itemLocation = e.location.getItemLocation(e.id).QueryInterface(Ci.nsILocalFile);
       var descriptor = getAbsoluteDescriptor(itemLocation);
       var line = "Extension" + i + "=" + descriptor + "\r\n";
       fos.write(line, line.length);
@@ -3781,7 +3760,7 @@ ExtensionManager.prototype = {
     try {
       var autoregFile = getFile(KEY_PROFILEDIR, [FILE_AUTOREG]);
       if (val && !autoregFile.exists())
-        autoregFile.create(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+        autoregFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
     }
     catch (e) {
     }
@@ -4058,7 +4037,7 @@ ExtensionManager.prototype = {
             var branch = settingsThingy.getBranch(appPrefix + targetApp.id);
             var path = branch.getProperty("ExtensionsLocation");
             var destination = Cc["@mozilla.org/file/local;1"].
-                              createInstance(nsILocalFile);
+                              createInstance(Ci.nsILocalFile);
             destination.initWithPath(path);
             xpiFile.copyTo(file, xpiFile.leafName);
           }
@@ -4074,7 +4053,7 @@ ExtensionManager.prototype = {
      * within a xpi.
      */
     function installMultiXPI(xpiFile, installData) {
-      var fileURL = getURIFromFile(xpiFile).QueryInterface(nsIURL);
+      var fileURL = getURIFromFile(xpiFile).QueryInterface(Ci.nsIURL);
       if (fileURL.fileExtension.toLowerCase() != "xpi") {
         LOG("Invalid File Extension: Item: \"" + fileURL.fileName + "\" has an " +
             "invalid file extension. Only xpi file extensions are allowed for " +
@@ -4103,7 +4082,7 @@ ExtensionManager.prototype = {
           var entryName = entries.getNext();
           var target = getFile(KEY_TEMPDIR, [entryName]);
           try {
-            target.createUnique(nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+            target.createUnique(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
           }
           catch (e) {
             LOG("installMultiXPI: failed to create target file for extraction " +
@@ -4139,7 +4118,7 @@ ExtensionManager.prototype = {
     function IncompatibleObserver() {}
     IncompatibleObserver.prototype = {
       _id: null,
-      _type: nsIUpdateItem.TYPE_ANY,
+      _type: Ci.nsIUpdateItem.TYPE_ANY,
       _xpi: null,
       _installManifest: null,
       _installRDF: null,
@@ -4175,7 +4154,7 @@ ExtensionManager.prototype = {
                             installData.updateKey || "",
                             installData.type,
                             installData.currentApp.id);
-        em.update([item], 1, nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY, this);
+        em.update([item], 1, Ci.nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY, this);
       },
 
       /**
@@ -4218,7 +4197,7 @@ ExtensionManager.prototype = {
         LOG("Version Check Phone Home Completed");
         // Only compatibility updates (e.g. STATUS_VERSIONINFO) are currently
         // supported
-        if (status == nsIAddonUpdateCheckListener.STATUS_VERSIONINFO) {
+        if (status == Ci.nsIAddonUpdateCheckListener.STATUS_VERSIONINFO) {
           em.datasource.setTargetApplicationInfo(addon.id,
                                                  addon.targetAppID,
                                                  addon.minAppVersion,
@@ -4314,7 +4293,7 @@ ExtensionManager.prototype = {
       break;
     case INSTALLERROR_SUCCESS:
       // Installation of multiple extensions / themes contained within a single xpi.
-      if (installData.type == nsIUpdateItem.TYPE_MULTI_XPI) {
+      if (installData.type == Ci.nsIUpdateItem.TYPE_MULTI_XPI) {
         installMultiXPI(aXPIFile, installData);
         break;
       }
@@ -4426,7 +4405,7 @@ ExtensionManager.prototype = {
    */
   installRequiresRestart: function(id, type) {
     switch (type) {
-    case nsIUpdateItem.TYPE_THEME:
+    case Ci.nsIUpdateItem.TYPE_THEME:
       var internalName = this.datasource.getItemProperty(id, "internalName");
       var needsRestart = false;
       if (gPref.prefHasUserValue(PREF_DSS_SKIN_TO_SELECT))
@@ -5115,7 +5094,7 @@ ExtensionManager.prototype = {
     var appVersion = gApp.version;
 
     if (items.length == 0)
-      items = this.getItemList(nsIUpdateItem.TYPE_ADDON, { });
+      items = this.getItemList(Ci.nsIUpdateItem.TYPE_ADDON, { });
 
     var updater = new ExtensionItemUpdater(appID, appVersion, this);
     updater.checkForUpdates(items, items.length, updateCheckType, listener);
@@ -5133,7 +5112,7 @@ ExtensionManager.prototype = {
    */
   checkForBlocklistChanges: function() {
     var ds = this.datasource;
-    var items = this.getItemList(nsIUpdateItem.TYPE_ADDON, { });
+    var items = this.getItemList(Ci.nsIUpdateItem.TYPE_ADDON, { });
     for (var i = 0; i < items.length; ++i) {
       var id = items[i].id;
       ds.updateProperty(id, "blocklisted");
@@ -5141,7 +5120,7 @@ ExtensionManager.prototype = {
         this._appEnableItem(id);
     }
 
-    items = ds.getBlocklistedItemList(null, null, nsIUpdateItem.TYPE_ADDON,
+    items = ds.getBlocklistedItemList(null, null, Ci.nsIUpdateItem.TYPE_ADDON,
                                       false);
     for (i = 0; i < items.length; ++i)
       this._appDisableItem(items[i].id);
@@ -5733,7 +5712,7 @@ BackgroundUpdateCheckListener.prototype = {
   },
 
   onAddonUpdateEnded: function(item, status) {
-    if (status == nsIAddonUpdateCheckListener.STATUS_UPDATE) {
+    if (status == Ci.nsIAddonUpdateCheckListener.STATUS_UPDATE) {
       var lastupdate = this._emDS.getItemProperty(item.id, "availableUpdateVersion");
       if (lastupdate != item.version) {
         gPref.setBoolPref(PREF_UPDATE_NOTIFYUSER, true);
@@ -5887,7 +5866,7 @@ ExtensionItemUpdater.prototype = {
         this._em._appEnableItem(aLocalItem.id);
       return true;
     }
-    else if (this._updateCheckType == nsIExtensionManager.UPDATE_SYNC_COMPATIBILITY)
+    else if (this._updateCheckType == Ci.nsIExtensionManager.UPDATE_SYNC_COMPATIBILITY)
       this._emDS.updateTargetAppInfo(aLocalItem.id,
                                      aRemoteItem.targetAppID,
                                      aRemoteItem.minAppVersion,
@@ -5963,7 +5942,7 @@ RDFItemUpdater.prototype = {
     // A preference setting can disable updating for this item
     try {
       if (!gPref.getBoolPref(PREF_EM_ITEM_UPDATE_ENABLED.replace(/%UUID%/, aItem.id))) {
-        var status = nsIAddonUpdateCheckListener.STATUS_DISABLED;
+        var status = Ci.nsIAddonUpdateCheckListener.STATUS_DISABLED;
         this._updater.checkForDone(aItem, status);
         return;
       }
@@ -5973,7 +5952,7 @@ RDFItemUpdater.prototype = {
     // Items managed by the app are not checked for updates.
     var emDS = this._updater._emDS;
     if (emDS.getItemProperty(aItem.id, "appManaged") == "true") {
-      var status = nsIAddonUpdateCheckListener.STATUS_APP_MANAGED;
+      var status = Ci.nsIAddonUpdateCheckListener.STATUS_APP_MANAGED;
       this._updater.checkForDone(aItem, status);
       return;
     }
@@ -5982,7 +5961,7 @@ RDFItemUpdater.prototype = {
     // for updates.
     var opType = emDS.getItemProperty(aItem.id, "opType");
     if (opType) {
-      var status = nsIAddonUpdateCheckListener.STATUS_PENDING_OP;
+      var status = Ci.nsIAddonUpdateCheckListener.STATUS_PENDING_OP;
       this._updater.checkForDone(aItem, status);
       return;
     }
@@ -5992,16 +5971,16 @@ RDFItemUpdater.prototype = {
     // not managed by the app.
     if (installLocation && (installLocation.name == "winreg-app-global" ||
         installLocation.name == "winreg-app-user")) {
-      var status = nsIAddonUpdateCheckListener.STATUS_NOT_MANAGED;
+      var status = Ci.nsIAddonUpdateCheckListener.STATUS_NOT_MANAGED;
       this._updater.checkForDone(aItem, status);
       return;
     }
 
     // Don't check items for updates if the location can't be written to except
     // when performing a version only update.
-    if ((aUpdateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION) &&
+    if ((aUpdateCheckType == Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION) &&
         (!installLocation || !installLocation.canAccess)) {
-      var status = nsIAddonUpdateCheckListener.STATUS_READ_ONLY;
+      var status = Ci.nsIAddonUpdateCheckListener.STATUS_READ_ONLY;
       this._updater.checkForDone(aItem, status);
       return;
     }
@@ -6077,7 +6056,7 @@ RDFItemUpdater.prototype = {
       LOG("RDFItemUpdater:checkForUpdates: There was an error loading the \r\n" +
           " update datasource for: " + dsURI + ", item = " + aItem.id + ", error: " + e);
       this._updater.checkForDone(aItem,
-                                 nsIAddonUpdateCheckListener.STATUS_FAILURE);
+                                 Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
       return;
     }
 
@@ -6117,7 +6096,7 @@ RDFItemUpdater.prototype = {
       // one should not be a barrier in either case.
       LOG("RDFItemUpdater::onXMLLoad: " + e);
       this._updater.checkForDone(aItem,
-                                 nsIAddonUpdateCheckListener.STATUS_FAILURE);
+                                 Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
       return;
     }
     var responseXML = request.responseXML;
@@ -6127,8 +6106,8 @@ RDFItemUpdater.prototype = {
     // for updates on AMO even if they are not hosted there.
     if (!responseXML || responseXML.documentElement.namespaceURI == XMLURI_PARSE_ERROR ||
         (request.status != 200 && request.status != 0)) {
-      this._updater.checkForDone(aItem, (aItem.updateRDF ? nsIAddonUpdateCheckListener.STATUS_FAILURE :
-                                                           nsIAddonUpdateCheckListener.STATUS_NONE));
+      this._updater.checkForDone(aItem, (aItem.updateRDF ? Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE :
+                                                           Ci.nsIAddonUpdateCheckListener.STATUS_NONE));
       return;
     }
 
@@ -6165,7 +6144,7 @@ RDFItemUpdater.prototype = {
     LOG("RDFItemUpdater:onError: There was an error loading the \r\n" +
         "the update datasource for item " + aItem.id + ", error: " + statusText);
     this._updater.checkForDone(aItem,
-                               nsIAddonUpdateCheckListener.STATUS_FAILURE);
+                               Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
   },
 
   onDatasourceLoaded: function(aDatasource, aLocalItem) {
@@ -6240,28 +6219,28 @@ RDFItemUpdater.prototype = {
             if (!verifier.verifyData(updateString, signature, aLocalItem.updateKey)) {
               LOG("RDFItemUpdater:onDatasourceLoaded: Update manifest for " +
                   aLocalItem.id + " failed signature check.");
-              this._updater.checkForDone(aLocalItem, nsIAddonUpdateCheckListener.STATUS_FAILURE);
+              this._updater.checkForDone(aLocalItem, Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
               return;
             }
           }
           catch (e) {
             LOG("RDFItemUpdater:onDatasourceLoaded: Failed to verify signature for " +
                 aLocalItem.id + ". This indicates a malformed update key or signature.");
-            this._updater.checkForDone(aLocalItem, nsIAddonUpdateCheckListener.STATUS_FAILURE);
+            this._updater.checkForDone(aLocalItem, Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
             return;
           }
         }
         catch (e) {
           LOG("RDFItemUpdater:onDatasourceLoaded: Failed to generate signature " +
               "string for " + aLocalItem.id + ". Serializer threw " + e);
-          this._updater.checkForDone(aLocalItem, nsIAddonUpdateCheckListener.STATUS_FAILURE);
+          this._updater.checkForDone(aLocalItem, Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
           return;
         }
       }
       else {
         LOG("RDFItemUpdater:onDatasourceLoaded: Update manifest for " +
             aLocalItem.id + " did not contain a signature.");
-        this._updater.checkForDone(aLocalItem, nsIAddonUpdateCheckListener.STATUS_FAILURE);
+        this._updater.checkForDone(aLocalItem, Ci.nsIAddonUpdateCheckListener.STATUS_FAILURE);
         return;
       }
     }
@@ -6272,13 +6251,13 @@ RDFItemUpdater.prototype = {
     var newerItem, sameItem;
 
     // Firefox 1.0PR+ update.rdf format
-    if (this._updateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION) {
+    if (this._updateCheckType == Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION) {
       // Look for newer versions of this item, we only do this in "normal"
       // mode... see comment by ExtensionItemUpdater_checkForUpdates
       // about how we do this in all cases but Install Phone Home - which
       // only needs to do a version check.
       newerItem = this._parseV20UpdateInfo(aDatasource, aLocalItem,
-                                           nsIExtensionManager.UPDATE_CHECK_NEWVERSION);
+                                           Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION);
 
       if (newerItem) {
         ++this._updater._updateCount;
@@ -6290,7 +6269,7 @@ RDFItemUpdater.prototype = {
     // Now look for updated version compatibility metadata for the currently
     // installed version...
     sameItem = this._parseV20UpdateInfo(aDatasource, aLocalItem,
-                                        nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY);
+                                        Ci.nsIExtensionManager.UPDATE_CHECK_COMPATIBILITY);
 
     if (sameItem) {
       // Install-time updates are not written to the DS because there is no
@@ -6303,19 +6282,19 @@ RDFItemUpdater.prototype = {
         LOG("RDFItemUpdater:onDatasourceLoaded: Found info about the installed\r\n" +
             "version of this item: " + sameItem.objectSource);
     }
-    var item = null, status = nsIAddonUpdateCheckListener.STATUS_NONE;
-    if (this._updateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION
+    var item = null, status = Ci.nsIAddonUpdateCheckListener.STATUS_NONE;
+    if (this._updateCheckType == Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION
         && newerItem) {
       item = newerItem;
-      status = nsIAddonUpdateCheckListener.STATUS_UPDATE;
+      status = Ci.nsIAddonUpdateCheckListener.STATUS_UPDATE;
     }
     else if (sameItem) {
       item = sameItem;
-      status = nsIAddonUpdateCheckListener.STATUS_VERSIONINFO;
+      status = Ci.nsIAddonUpdateCheckListener.STATUS_VERSIONINFO;
     }
     else {
       item = aLocalItem;
-      status = nsIAddonUpdateCheckListener.STATUS_NO_UPDATE;
+      status = Ci.nsIAddonUpdateCheckListener.STATUS_NO_UPDATE;
     }
     // Only one call of this._updater.checkForDone is needed for RDF
     // responses, since there is only one response per item.
@@ -6428,7 +6407,7 @@ RDFItemUpdater.prototype = {
      * version is greater than any previously found update. Otherwise check
      * if this update is for the same version as we have installed. */
     var result = gVersionChecker.compare(version, aNewestVersionFound);
-    if (aUpdateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION ? result <= 0 : result != 0)
+    if (aUpdateCheckType == Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION ? result <= 0 : result != 0)
       return null;
 
     var taArc = gRDF.GetResource(EM_NS("targetApplication"));
@@ -6444,7 +6423,7 @@ RDFItemUpdater.prototype = {
 
       var updateLink = this._getPropertyFromResource(aDataSource, targetApp, "updateLink", aLocalItem);
       var updateHash = this._getPropertyFromResource(aDataSource, targetApp, "updateHash", aLocalItem);
-      if (aUpdateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION) {
+      if (aUpdateCheckType == Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION) {
         // New version information is useless without a link to get it from
         if (!updateLink)
           continue;
@@ -6477,7 +6456,7 @@ RDFItemUpdater.prototype = {
                                  appID);
 
       if (this._updater._isValidUpdate(aLocalItem, updatedItem)) {
-        if (aUpdateCheckType == nsIExtensionManager.UPDATE_CHECK_NEWVERSION) {
+        if (aUpdateCheckType == Ci.nsIExtensionManager.UPDATE_CHECK_NEWVERSION) {
           var infourl = this._getPropertyFromResource(aDataSource, targetApp,
                                                       "updateInfoURL");
           if (infourl)
@@ -7688,8 +7667,8 @@ ExtensionsDataSource.prototype = {
    *          The version of the item
    */
   addIncompatibleUpdateItem: function(name, url, type, version) {
-    var iconURL = (type == nsIUpdateItem.TYPE_THEME) ? URI_GENERIC_ICON_THEME :
-                                                       URI_GENERIC_ICON_XPINSTALL;
+    var iconURL = (type == Ci.nsIUpdateItem.TYPE_THEME) ? URI_GENERIC_ICON_THEME :
+                                                          URI_GENERIC_ICON_XPINSTALL;
     var extensionsStrings = BundleManager.getBundle(URI_EXTENSIONS_PROPERTIES);
     var updateMsg = extensionsStrings.formatStringFromName("incompatibleUpdateMessage",
                                                            [BundleManager.appName, name], 2)
@@ -7878,7 +7857,7 @@ ExtensionsDataSource.prototype = {
 
     LOG("Datasource: Addon Update Ended: " + addon.id + ", status: " + status);
     var url = null, hash = null, version = null;
-    var updateAvailable = status == nsIAddonUpdateCheckListener.STATUS_UPDATE;
+    var updateAvailable = status == Ci.nsIAddonUpdateCheckListener.STATUS_UPDATE;
     if (updateAvailable) {
       url = EM_L(addon.xpiURL);
       if (addon.xpiHash)
@@ -7938,7 +7917,7 @@ ExtensionsDataSource.prototype = {
   _rdfGet_iconURL: function(item, property) {
     var id = stripPrefix(item.Value, PREFIX_ITEM_URI);
     var type = this.getItemProperty(id, "type");
-    if (type & nsIUpdateItem.TYPE_THEME)
+    if (type & Ci.nsIUpdateItem.TYPE_THEME)
       return this._getThemeImageURL(item, "icon.png", URI_GENERIC_ICON_THEME);
 
     if (inSafeMode())
@@ -7969,7 +7948,7 @@ ExtensionsDataSource.prototype = {
    */
   _rdfGet_previewImage: function(item, property) {
     var type = this.getItemProperty(stripPrefix(item.Value, PREFIX_ITEM_URI), "type");
-    if (type != -1 && type & nsIUpdateItem.TYPE_THEME)
+    if (type != -1 && type & Ci.nsIUpdateItem.TYPE_THEME)
       return this._getThemeImageURL(item, "preview.png", null);
     return null;
   },

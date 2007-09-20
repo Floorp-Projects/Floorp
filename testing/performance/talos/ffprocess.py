@@ -47,8 +47,6 @@ import re
 import time
 import subprocess
 
-import config
-
 if platform.system() == "Linux":
     from ffprocess_linux import *
 elif platform.system() == "Windows":

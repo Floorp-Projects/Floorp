@@ -40,7 +40,7 @@
 #define INCL_WIN
 #include <os2.h>
 #include <uconv.h>
-#include "nsAutoBuffer.h"
+#include "nsTArray.h"
 #include "nsICharsetConverterManager.h"
 #include "gfxCore.h"
 
@@ -58,8 +58,8 @@ private:
 };
 
 #define CHAR_BUFFER_SIZE 1024
-typedef nsAutoBuffer<char, CHAR_BUFFER_SIZE> nsAutoCharBuffer;
-typedef nsAutoBuffer<PRUnichar, CHAR_BUFFER_SIZE> nsAutoChar16Buffer;
+typedef nsAutoTArray<char, CHAR_BUFFER_SIZE> nsAutoCharBuffer;
+typedef nsAutoTArray<PRUnichar, CHAR_BUFFER_SIZE> nsAutoChar16Buffer;
 
 nsresult WideCharToMultiByte(int aCodePage, const PRUnichar* aSrc,
                              PRInt32 aSrcLength, nsAutoCharBuffer& aResult,

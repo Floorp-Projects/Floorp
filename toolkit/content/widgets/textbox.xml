@@ -113,29 +113,34 @@
         </body>
       </method>
 
+      <method name="_setNewlineHandling">
+        <body><![CDATA[
+          var str = this.getAttribute("newlines");
+          if (str) {
+            const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
+            for (var x in nsIPlaintextEditor) {
+              if (/^eNewlines/.test(x)) {
+                if (str == RegExp.rightContext.toLowerCase()) {
+                  this.editor.QueryInterface(nsIPlaintextEditor)
+                      .newlineHandling = nsIPlaintextEditor[x];
+                  break;
+                }
+              }
+            }
+          }
+        ]]></body>
+      </method>
+
       <constructor><![CDATA[
         var str = this.boxObject.getProperty("value");
         if (str) {
           this.inputField.value = str;
           this.boxObject.removeProperty("value");
         }
-#ifndef MOZILLA_1_8_BRANCH
-# bug 253481
-
-        str = this.getAttribute("newlines");
-        if (str) {
-          const nsIPlaintextEditor = Components.interfaces.nsIPlaintextEditor;
-          for (var x in nsIPlaintextEditor) {
-            if (/^eNewlines/.test(x)) {
-              if (str == RegExp.rightContext.toLowerCase()) {
-                this.editor.QueryInterface(nsIPlaintextEditor)
-                    .newlineHandling = nsIPlaintextEditor[x];
-                break;
-              }
-            }
-          }
-        }
-#endif
+        // this.editor may not be initialized yet in
+        // bindings that inherit from xul:textbox, so
+        // do this after construction
+        setTimeout(function (a) { a._setNewlineHandling(); }, 0, this);
       ]]></constructor>
 
       <destructor>

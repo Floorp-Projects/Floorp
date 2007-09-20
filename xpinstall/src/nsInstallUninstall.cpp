@@ -44,6 +44,7 @@
 #include "VerReg.h"
 #include "nsCRT.h"
 #include "prmem.h"
+#include "prprf.h"
 #include "ScheduledTasks.h"
 #include "nsReadableUtils.h"
 #include "nsILocalFile.h"
@@ -113,11 +114,14 @@ void nsInstallUninstall::Abort()
 
 char* nsInstallUninstall::toString()
 {
+    if (!mInstall)
+        return nsnull;
+
     char* buffer = new char[1024];
     char* rsrcVal = nsnull;
 
-    if (buffer == nsnull || !mInstall)
-        return buffer;
+    if (!buffer)
+        return nsnull;
     
     char* temp = ToNewCString(mUIName);
     
@@ -127,7 +131,7 @@ char* nsInstallUninstall::toString()
 
         if (rsrcVal)
         {
-            sprintf( buffer, rsrcVal, temp);
+            PR_snprintf( buffer, 1024, rsrcVal, temp);
             nsCRT::free(rsrcVal);
         }
     }

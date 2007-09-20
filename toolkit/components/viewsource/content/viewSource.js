@@ -106,9 +106,9 @@ function viewSource(url)
   // Parse the 'arguments' supplied with the dialog.
   //    arg[0] - URL string.
   //    arg[1] - Charset value in the form 'charset=xxx'.
-  //    arg[2] - Whether charset was forced by the user
-  //    arg[3] - Page descriptor used to load content from the cache.
-  //    arg[4] - Line number to go to.
+  //    arg[2] - Page descriptor used to load content from the cache.
+  //    arg[3] - Line number to go to.
+  //    arg[4] - Whether charset was forced by the user
   //
   if ("arguments" in window) {
     var arg;
@@ -133,8 +133,8 @@ function viewSource(url)
       }
     }
     // If the document had a forced charset, set it here also
-    if (window.arguments.length >= 3) {
-      arg = window.arguments[2];
+    if (window.arguments.length >= 5) {
+      arg = window.arguments[4];
 
       try {
         if (arg === true) {
@@ -149,16 +149,16 @@ function viewSource(url)
     //
     // Get any specified line to jump to.
     //
-    if (window.arguments.length >= 5) {
-      arg = window.arguments[4];
+    if (window.arguments.length >= 4) {
+      arg = window.arguments[3];
       gGoToLine = parseInt(arg);
     }
     //
     // Use the page descriptor to load the content from the cache (if
     // available).
     //
-    if (window.arguments.length >= 4) {
-      arg = window.arguments[3];
+    if (window.arguments.length >= 3) {
+      arg = window.arguments[2];
 
       try {
         if (typeof(arg) == "object" && arg != null) {

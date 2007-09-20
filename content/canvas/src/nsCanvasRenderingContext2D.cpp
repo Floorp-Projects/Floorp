@@ -1885,6 +1885,8 @@ nsCanvasRenderingContext2D::DrawImage()
     if (argc < 3)
         return NS_ERROR_INVALID_ARG;
 
+    JSAutoRequest ar(ctx);
+
     double sx,sy,sw,sh;
     double dx,dy,dw,dh;
 

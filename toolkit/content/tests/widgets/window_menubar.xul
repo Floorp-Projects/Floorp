@@ -190,8 +190,8 @@ var popupTests = [
       return [ "DOMMenuItemInactive copy", "DOMMenuInactive editpopup",
                "DOMMenuBarInactive menubar",
                "DOMMenuItemInactive editmenu", "DOMMenuItemInactive editmenu",
-               "command copy", "DOMMenuItemInactive copy",
-               "popuphiding editpopup", "popuphidden editpopup" ];
+               "command copy", "popuphiding editpopup", "popuphidden editpopup",
+               "DOMMenuItemInactive copy" ];
   },
   test: function() { synthesizeKey("VK_ENTER", { }); },
   result: function(testname) { checkClosed("editmenu", testname); }
@@ -358,8 +358,8 @@ var popupTests = [
             "DOMMenuItemInactive amenu", "DOMMenuInactive helppopup",
             "DOMMenuBarInactive menubar", "DOMMenuItemInactive helpmenu",
             "DOMMenuItemInactive helpmenu",
-            "command amenu", "DOMMenuItemInactive amenu",
-            "popuphiding helppopup", "popuphidden helppopup",
+            "command amenu", "popuphiding helppopup", "popuphidden helppopup",
+            "DOMMenuItemInactive amenu",
            ],
   test: function() { synthesizeKey("M", { }); },
   result: function(testname) { checkClosed("helpmenu", testname); }
@@ -423,8 +423,8 @@ var popupTests = [
                   "DOMMenuBarInactive menubar",
                   "DOMMenuItemInactive helpmenu",
                   "DOMMenuItemInactive helpmenu",
-                  "command third", "DOMMenuItemInactive third",
-                  "popuphiding helppopup", "popuphidden helppopup",
+                  "command third", "popuphiding helppopup",
+                  "popuphidden helppopup", "DOMMenuItemInactive third",
                 ];
     if (navigator.platform.indexOf("Win") == -1)
       elist[0] = "DOMMenuItemInactive only";
@@ -485,8 +485,8 @@ var popupTests = [
             "DOMMenuBarInactive menubar",
             "DOMMenuItemInactive editmenu",
             "DOMMenuItemInactive editmenu",
-            "command copy", "DOMMenuItemInactive copy",
-            "popuphiding editpopup", "popuphidden editpopup",
+            "command copy", "popuphiding editpopup", "popuphidden editpopup",
+            "DOMMenuItemInactive copy",
            ],
   test: function() {
     synthesizeMouse(document.getElementById("copy"), 8, 8, { });

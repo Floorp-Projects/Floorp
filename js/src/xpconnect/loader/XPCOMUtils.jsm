@@ -102,6 +102,7 @@
 EXPORTED_SYMBOLS = [ "XPCOMUtils" ];
 
 const Ci = Components.interfaces;
+const Cr = Components.results;
 
 var XPCOMUtils = {
   /**
@@ -152,15 +153,16 @@ var XPCOMUtils = {
 
     return { // nsIModule impl.
       getClassObject: function(compMgr, cid, iid) {
+        // We only support nsIFactory queries, not nsIClassInfo
         if (!iid.equals(Ci.nsIFactory))
-          throw Components.results.NS_ERROR_NO_INTERFACE;
+          throw Cr.NS_ERROR_NOT_IMPLEMENTED;
 
         for each (let classDesc in classes) {
           if (classDesc.cid.equals(cid))
             return classDesc.factory;
         }
 
-        throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+        throw Cr.NS_ERROR_FACTORY_NOT_REGISTERED;
       },
 
       registerSelf: function(compMgr, fileSpec, location, type) {
@@ -207,7 +209,8 @@ var XPCOMUtils = {
             let catMan = XPCOMUtils.categoryManager;
             for each (let cat in classDesc.categories) {
               catMan.deleteCategoryEntry(cat.category,
-                                         cat.entry || classDesc.className);
+                                         cat.entry || classDesc.className,
+                                         true);
             }
           }
           compMgr.unregisterFactoryLocation(classDesc.cid, fileSpec);
@@ -237,8 +240,8 @@ var XPCOMUtils = {
     if (!factory) {
       factory = {
         createInstance: function(outer, iid) {
-          if(outer)
-            throw CR.NS_ERROR_NO_AGGREGATION;
+          if (outer)
+            throw Cr.NS_ERROR_NO_AGGREGATION;
           return (new component()).QueryInterface(iid);
         }
       }
@@ -259,6 +262,6 @@ function makeQI(interfaceNames) {
         return this;
     }
 
-    throw Components.results.NS_ERROR_NO_INTERFACE;
+    throw Cr.NS_ERROR_NO_INTERFACE;
   };
 }

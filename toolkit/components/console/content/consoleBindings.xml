@@ -428,7 +428,7 @@
           var line = getAttribute("line");  
           window.openDialog(
             "chrome://global/content/viewSource.xul", "_blank", 
-            "all,dialog=no", url, null, null, line);
+            "all,dialog=no", url, null, null, line, false);
         ]]>
       </handler>
     </handlers>

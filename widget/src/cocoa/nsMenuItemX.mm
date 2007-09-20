@@ -53,7 +53,6 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMDocumentEvent.h"
-#include "nsIDocShell.h"
 
 #include "nsMenuItemIconX.h"
 #include "nsGUIEvent.h"
@@ -256,8 +255,7 @@ NS_METHOD nsMenuItemX::IsSeparator(PRBool & aIsSep)
 
 nsEventStatus nsMenuItemX::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-  // this is all handled by Carbon Events
-  return nsEventStatus_eConsumeNoDefault;
+  return nsEventStatus_eIgnore;
 }
 
 
@@ -281,8 +279,7 @@ nsEventStatus nsMenuItemX::MenuDeselected(const nsMenuEvent & aMenuEvent)
 nsEventStatus nsMenuItemX::MenuConstruct(
     const nsMenuEvent & aMenuEvent,
     nsIWidget         * aParentWindow, 
-    void              * menuNode,
-    void              * aDocShell)
+    void              * aMenuNode)
 {
     return nsEventStatus_eIgnore;
 }

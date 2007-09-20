@@ -144,6 +144,7 @@
           var treeView = new PlacesTreeView(this.showRoot);
           result.viewer = treeView;
           this.view = treeView;
+          this._cachedInsertionPoint = undefined;
         ]]></body>
       </method>
 
@@ -432,24 +433,31 @@
           return null;
         ]]></getter>
       </property>
-      
+
+
       <!-- nsIPlacesView -->
       <property name="insertionPoint">
         <getter><![CDATA[
+          // invalidated on selection and focus changes
+          if (this._cachedInsertionPoint !== undefined)
+            return this._cachedInsertionPoint;
+
           // there is no insertion point for history queries
           // so bail out now and save a lot of work when updating commands
           var resultNode = this.getResultNode();
           if (PlacesUtils.nodeIsQuery(resultNode)) {
             var options = asQuery(resultNode).queryOptions;
-            if (options.queryType == options.QUERY_TYPE_HISTORY) 
-              return null;
+            if (options.queryType == options.QUERY_TYPE_HISTORY)
+              return this._cachedInsertionPoint = null;
           }
 
           var orientation = NHRVO.DROP_AFTER;
           // If there is no selection, insert at the end of the container. 
           if (!this.hasSelection) {
             var index = this.view.rowCount - 1;
-            return this._getInsertionPoint(index, orientation);
+            this._cachedInsertionPoint =
+              this._getInsertionPoint(index, orientation);
+            return this._cachedInsertionPoint;
           }
 
           // This is a two-part process. The first part is determining the drop
@@ -484,7 +492,9 @@
                          .itemId == PlacesUtils.bookmarksRootId))
             orientation = NHRVO.DROP_ON;
 
-          return this._getInsertionPoint(max.value, orientation);
+          this._cachedInsertionPoint =
+            this._getInsertionPoint(max.value, orientation);
+          return this._cachedInsertionPoint;
         ]]></getter>
       </property>
       
@@ -992,11 +1002,15 @@
     </implementation>
     <handlers>
       <handler event="focus"><![CDATA[
+        this._cachedInsertionPoint = undefined;
+
         // See select handler. We need the sidebar's places commandset to be
         // updated as well
         document.commandDispatcher.updateCommands("focus");
       ]]></handler>
       <handler event="select"><![CDATA[
+        this._cachedInsertionPoint = undefined;
+
         // This additional complexity is here for the sidebars
         var win = window;
         while (true) {

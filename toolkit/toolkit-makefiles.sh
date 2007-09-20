@@ -366,6 +366,7 @@ MAKEFILES_uriloader="
   uriloader/Makefile
   uriloader/base/Makefile
   uriloader/exthandler/Makefile
+  uriloader/exthandler/tests/Makefile
 "
 
 MAKEFILES_profile="
@@ -531,9 +532,6 @@ MAKEFILES_xpfe="
   xpfe/browser/public/Makefile
   xpfe/browser/src/Makefile
   xpfe/components/Makefile
-  xpfe/components/bookmarks/Makefile
-  xpfe/components/bookmarks/public/Makefile
-  xpfe/components/bookmarks/src/Makefile
   xpfe/components/directory/Makefile
   xpfe/components/download-manager/Makefile
   xpfe/components/download-manager/src/Makefile
@@ -555,9 +553,6 @@ MAKEFILES_xpfe="
   xpfe/components/related/Makefile
   xpfe/components/related/src/Makefile
   xpfe/components/related/public/Makefile
-  xpfe/components/search/Makefile
-  xpfe/components/search/public/Makefile
-  xpfe/components/search/src/Makefile
   xpfe/components/sidebar/Makefile
   xpfe/components/sidebar/src/Makefile
   xpfe/components/startup/Makefile
@@ -777,7 +772,6 @@ MAKEFILES_libmar="
 
 MAKEFILES_themes="
   themes/Makefile
-  themes/modern/Makefile
   themes/classic/Makefile
 "
 

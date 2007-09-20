@@ -149,10 +149,9 @@ public:
     NS_IMETHOD              Show(PRBool aState);
     NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
     NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
-    NS_IMETHOD              AddMenuListener(nsIMenuListener * aListener);
     NS_IMETHOD              Enable(PRBool aState);
     NS_IMETHOD              IsEnabled(PRBool *aState);
-    NS_IMETHOD              SetModal(PRBool aState) { return NS_OK; }
+    NS_IMETHOD              SetModal(PRBool aState);
     NS_IMETHOD              IsVisible(PRBool & aState);
     NS_IMETHOD              SetFocus(PRBool aState=PR_FALSE);
     NS_IMETHOD              SetMenuBar(nsIMenuBar * aMenuBar);
@@ -217,6 +216,7 @@ protected:
   PRPackedBool         mWindowMadeHere; // true if we created the window, false for embedding
   PRPackedBool         mVisible;        // Whether or not we're visible.
   PRPackedBool         mSheetNeedsShow; // if this is a sheet, are we waiting to be shown?
+  PRPackedBool         mModal;
 };
 
 

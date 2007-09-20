@@ -217,11 +217,18 @@
 
 - (void)windowWillClose:(NSNotification*)inNotification
 {
+  // We can get _NSAutoreleaseNoPool errors on shutdown here (from Camino)
+  // unless we use a local pool -- possibly triggered by a call we're now
+  // making to NS_ProcessPendingEvents() from nsAppShell::WillTerminate().
+  NSAutoreleasePool* localPool = [[NSAutoreleasePool alloc] init];
+
   // postpone our destruction
   [[self retain] autorelease];
 
   // remove ourselves from the window map (which owns us)
   [[WindowDataMap sharedWindowDataMap] removeDataForWindow:[inNotification object]];
+
+  [localPool release];
 }
 
 @end

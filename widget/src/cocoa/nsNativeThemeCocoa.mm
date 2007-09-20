@@ -1052,9 +1052,11 @@ nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
 
     case NS_THEME_SPINNER:
     {
-      SInt32 buttonHeight = 0;
-      ::GetThemeMetric(kThemeMetricPushButtonHeight, &buttonHeight);
-      aResult->SizeTo(14, buttonHeight);
+      SInt32 buttonHeight = 0, buttonWidth = 0;
+      ::GetThemeMetric(kThemeMetricLittleArrowsWidth, &buttonWidth);
+      ::GetThemeMetric(kThemeMetricLittleArrowsHeight, &buttonHeight);
+      aResult->SizeTo(buttonWidth, buttonHeight);
+      *aIsOverridable = PR_FALSE;
       break;
     }
 

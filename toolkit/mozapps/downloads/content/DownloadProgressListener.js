@@ -1,4 +1,5 @@
-# -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+# -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+# vim:set expandtab ts=2 sw=2 sts=2 cin
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 # 
@@ -22,7 +23,7 @@
 # Contributor(s):
 #   Blake Ross <blakeross@telocity.com> (Original Author) 
 #   Ben Goodger <ben@bengoodger.com> (v2.0) 
-#   Edward Lee <edilee@gmail.com>
+#   Edward Lee <edward.lee@engineering.uiuc.edu>
 #   Shawn Wilsher <me@shawnwilsher.com> (v3.0)
 # 
 # Alternatively, the contents of this file may be used under the terms of
@@ -39,7 +40,16 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-function DownloadProgressListener() 
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+
+/**
+ * DownloadProgressListener "class" is used to help update download items shown
+ * in the Download Manager UI such as displaying amount transferred, transfer
+ * rate, and time left for each download.
+ *
+ * This class implements the nsIDownloadProgressListener interface.
+ */
+function DownloadProgressListener()
 {
   var sb = document.getElementById("downloadStrings");
   this._paused = sb.getString("paused");
@@ -59,8 +69,15 @@ function DownloadProgressListener()
   this.lastSeconds = Infinity;
 }
 
-DownloadProgressListener.prototype = 
-{
+DownloadProgressListener.prototype = {
+  //////////////////////////////////////////////////////////////////////////////
+  //// nsISupports
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIDownloadProgressListener]),
+
+  //////////////////////////////////////////////////////////////////////////////
+  //// nsIDownloadProgressListener
+
   onDownloadStateChange: function dlPL_onDownloadStateChange(aState, aDownload)
   {
     var dl = getDownload(aDownload.id);
@@ -70,23 +87,9 @@ DownloadProgressListener.prototype =
         gDownloadsActiveTitle.hidden = false;
       case Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING:
         // if dl is non-null, the download is already added to the UI, so we
-        // just make sure it is where it is supposed to be
-        if (!dl) {
-          // We have to create the download object
-          let uri = Cc["@mozilla.org/network/util;1"].
-                    getService(Ci.nsIIOService).
-                    newFileURI(aDownload.targetFile);
-          let referrer = aDownload.referrer;
-          dl = createDownloadItem(aDownload.id,
-                                  uri.spec,
-                                  aDownload.displayName,
-                                  aDownload.source.spec,
-                                  aDownload.state,
-                                  "",
-                                  aDownload.percentComplete,
-                                  Math.round(aDownload.startTime / 1000),
-                                  referrer ? referrer.spec : null);
-        }
+        // just make sure it is where it is supposed to be; otherwise, create it
+        if (!dl)
+          dl = this._createDownloadItem(aDownload);
         gDownloadsView.insertBefore(dl, gDownloadsActiveTitle.nextSibling);
         break;
       case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
@@ -96,7 +99,6 @@ DownloadProgressListener.prototype =
         break;
       case Ci.nsIDownloadManager.DOWNLOAD_FINISHED:
         downloadCompleted(aDownload);
-
         autoRemoveAndClose(aDownload);
         break;
       case Ci.nsIDownloadManager.DOWNLOAD_PAUSED:
@@ -113,40 +115,24 @@ DownloadProgressListener.prototype =
     } catch (e) { }
   },
 
-  onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus, aDownload)
-  {
-    if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP) {
-      let dl = getDownload(aDownload.id);
-      if (dl)
-        dl.setAttribute("status", "");
-    }
-  },
-
-  onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
-                              aCurTotalProgress, aMaxTotalProgress, aDownload)
+  onProgressChange: function(aWebProgress, aRequest, aCurSelfProgress,
+                             aMaxSelfProgress, aCurTotalProgress,
+                             aMaxTotalProgress, aDownload)
   {
     var download = getDownload(aDownload.id);
     if (!download) {
       // d'oh - why this happens is complicated, let's just add it in
-      let uri = Cc["@mozilla.org/network/util;1"].
-                getService(Ci.nsIIOService).newFileURI(aDownload.targetFile);
-      let referrer = aDownload.referrer;
-      let itm = createDownloadItem(aDownload.id, uri.spec,
-                                   aDownload.displayName,
-                                   aDownload.source.spec,
-                                   aDownload.state,
-                                   aDownload.percentComplete,
-                                   referrer ? referrer.spec : null);
-      download = gDownloadsView.insertBefore(itm, gDownloadsActiveTitle.nextSibling);
+      download = this._createDownloadItem(aDownload);
+      gDownloadsView.insertBefore(download, gDownloadsActiveTitle.nextSibling);
     }
 
     // any activity means we should have active downloads!
     gDownloadsActiveTitle.hidden = false;
 
     // Update this download's progressmeter
-    if (aDownload.percentComplete == -1)
+    if (aDownload.percentComplete == -1) {
       download.setAttribute("progressmode", "undetermined");
-    else {
+    } else {
       download.setAttribute("progressmode", "normal");
       download.setAttribute("progress", aDownload.percentComplete);
     }
@@ -158,7 +144,7 @@ DownloadProgressListener.prototype =
             .dispatchEvent(event);
 
     // Update the rest of the UI (bytes transferred, bytes total, download rate,
-    // time remaining). 
+    // time remaining).
     let status = this._statusFormat;
 
     // Update the bytes transferred and bytes total
@@ -213,7 +199,7 @@ DownloadProgressListener.prototype =
         // Show 2 digit seconds starting at 60; otherwise use minutes
         else if (seconds <= 60)
           remain = this._replaceInsert(this._timeSecondsLeft, 1, seconds);
-        else 
+        else
           remain = this._replaceInsert(this._timeMinutesLeft, 1,
                                        Math.ceil(seconds / 60));
       } else {
@@ -223,38 +209,32 @@ DownloadProgressListener.prototype =
       // Insert 4 is the time remaining
       status = this._replaceInsert(status, 4, remain);
     }
-    
+
     download.setAttribute("status", status);
 
     // Update window title
     onUpdateProgress();
   },
+
+  onStateChange: function(aWebProgress, aRequest, aState, aStatus, aDownload)
+  {
+  },
+
   onLocationChange: function(aWebProgress, aRequest, aLocation, aDownload)
   {
   },
+
   onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage, aDownload)
   {
   },
-  onSecurityChange: function(aWebProgress, aRequest, state, aDownload)
-  {
-  },
-  QueryInterface : function(iid)
-  {
-    if (iid.equals(Components.interfaces.nsIDownloadProgressListener) ||
-        iid.equals(Components.interfaces.nsISupports))
-      return this;
 
-    throw Cr.NS_NOINTERFACE;
+  onSecurityChange: function(aWebProgress, aRequest, aState, aDownload)
+  {
   },
 
-  _replaceInsert: function ( text, index, value ) 
-  {
-    var result = text;
-    var regExp = new RegExp( "#"+index );
-    result = result.replace( regExp, value );
-    return result;
-  },
-  
+  //////////////////////////////////////////////////////////////////////////////
+  //// DownloadProgressListener
+
   // converts a number of bytes to the appropriate unit that results in a
   // number that needs fewer than 4 digits
   // returns a pair: [new value with 3 sig. figs., its unit]
@@ -274,5 +254,26 @@ DownloadProgressListener.prototype =
     aBytes = aBytes.toFixed((aBytes > 0) && (aBytes < 100) ? 1 : 0);
 
     return [aBytes, this._units[unitIndex]];
+  },
+
+  _createDownloadItem: function(aDownload)
+  {
+    let uri = Cc["@mozilla.org/network/util;1"].
+              getService(Ci.nsIIOService).newFileURI(aDownload.targetFile);
+    let referrer = aDownload.referrer;
+    return createDownloadItem(aDownload.id,
+                              uri.spec,
+                              aDownload.displayName,
+                              aDownload.source.spec,
+                              aDownload.state,
+                              "",
+                              aDownload.percentComplete,
+                              Math.round(aDownload.startTime / 1000),
+                              referrer ? referrer.spec : null);
+  },
+
+  _replaceInsert: function(aText, aIndex, aValue)
+  {
+    return aText.replace("#" + aIndex, aValue);
   }
 };

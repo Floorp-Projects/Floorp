@@ -11,12 +11,14 @@
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>  
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>  
 
-<scale id="scale-horizontal-normal"/>
-<scale id="scale-horizontal-reverse" dir="reverse"/>
-<vbox align="start">
+<hbox>
+  <vbox>
+    <scale id="scale-horizontal-normal"/>
+    <scale id="scale-horizontal-reverse" dir="reverse"/>
+  </vbox>
   <scale id="scale-vertical-normal" orient="vertical"/>
   <scale id="scale-vertical-reverse" orient="vertical" dir="reverse"/>
-</vbox>
+</hbox>
 
 <body xmlns="http://www.w3.org/1999/xhtml">
 <p id="display"></p>
@@ -118,10 +120,6 @@ function testtag_scale_UI(element, testid, horiz, reverse)
   is(element.value, reverse ? 20 : 0, testid + " key home");
   synthesizeKeyExpectEvent("VK_END", { }, element, "change", testid + "key end");
   is(element.value, reverse ? 0 : 20, testid + " key end");
-
-  // XXXndeakin disable these tests for now
-  if (!horiz)
-    return;
 
   testtag_scale_UI_Mouse(element, testid, horiz, reverse, 4);
 

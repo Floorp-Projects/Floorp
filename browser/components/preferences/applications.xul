@@ -78,8 +78,6 @@
       <key key="&focusSearch2.key;" modifiers="accel" oncommand="gApplicationsPane.focusFilterBox();"/>
     </keyset>
 
-    <label>&prefpane.label;</label>
-
     <vbox flex="1" class="contentPane">
       <hbox align="center">
         <label accesskey="&filter.accesskey;" control="filter">&filter.label;</label>

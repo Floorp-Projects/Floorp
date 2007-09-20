@@ -334,10 +334,13 @@ void nsInstallFile::Abort()
 #define RESBUFSIZE 4096
 char* nsInstallFile::toString()
 {
+    if (!mInstall)
+        return nsnull;
+
     char* buffer  = new char[RESBUFSIZE];
     char* rsrcVal = nsnull;
 
-    if (buffer == nsnull || !mInstall)
+    if (!buffer)
         return nsnull;
     else
         buffer[0] = '\0';

@@ -618,6 +618,9 @@ nsGlobalWindow::CleanUp()
 
   mOpener = nsnull;             // Forces Release
   if (mContext) {
+#ifdef DEBUG
+    nsCycleCollector_DEBUG_shouldBeFreed(mContext);
+#endif
     mContext = nsnull;            // Forces Release
   }
   mChromeEventHandler = nsnull; // Forces Release
@@ -1818,10 +1821,11 @@ nsGlobalWindow::SetDocShell(nsIDocShell* aDocShell)
         mScriptContexts[st_ndx] = nsnull;
       }
     }
-    mContext = nsnull; // we nuked it above also
 #ifdef DEBUG
+    nsCycleCollector_DEBUG_shouldBeFreed(mContext);
     nsCycleCollector_DEBUG_shouldBeFreed(static_cast<nsIScriptGlobalObject*>(this));
 #endif
+    mContext = nsnull; // we nuked it above also
   }
 
   mDocShell = aDocShell;        // Weak Reference

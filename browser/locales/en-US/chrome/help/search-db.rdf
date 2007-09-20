@@ -14,6 +14,8 @@
         -->
         <li><Description nc:name="Accessibility Options" nc:link="prefs.xhtml#accessibility" nc:platform="win os2"/></li>
         <li><Description nc:name="Accessibility Preferences" nc:link="prefs.xhtml#accessibility" nc:platform="unix mac"/></li>
+        <li><Description nc:name="Anti-Phishing Options" nc:link="prefs.xhtml#phishing" nc:platform="win os2"/></li>
+        <li><Description nc:name="Anti-Phishing Preferences" nc:link="prefs.xhtml#phishing" nc:platform="unix mac"/></li>
         <li><Description nc:name="authentication (definition)" nc:link="glossary.xhtml#authentication"/></li>
         <li><Description nc:name="Back Button" nc:link="using_firebird.xhtml#retracing_your_steps"/></li>
         <li><Description nc:name="Block Popups" nc:link="popup.xhtml"/></li>

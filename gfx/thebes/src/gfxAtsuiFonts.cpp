@@ -201,9 +201,9 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
         mMetrics.maxAdvance = mMetrics.aveCharWidth;
     }
 
-    mMetrics.underlineOffset = atsMetrics.underlinePosition * size;
+    mMetrics.underlineOffset = -mMetrics.maxDescent - atsMetrics.underlinePosition * size;
     // ATSUI sometimes returns 0 for underline thickness, see bug 361576.
-    mMetrics.underlineSize = PR_MAX(1.0f, atsMetrics.underlineThickness * size);
+    mMetrics.underlineSize = PR_MAX(1.0, atsMetrics.underlineThickness * size);
 
     mMetrics.subscriptOffset = mMetrics.xHeight;
     mMetrics.superscriptOffset = mMetrics.xHeight;
@@ -693,7 +693,8 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
                            Fixed *aBaselineDeltas, PRUint32 aAppUnitsPerDevUnit,
                            gfxTextRun *aRun, PRUint32 aSegmentStart,
                            const PRPackedBool *aUnmatched,
-                           const PRUnichar *aString)
+                           const PRUnichar *aString,
+                           const PRUint32 aLength)
 {
     NS_ASSERTION(aGlyphCount > 0, "Must set at least one glyph");
     PRUint32 firstOffset = aGlyphs[0].originalOffset;
@@ -727,7 +728,15 @@ SetGlyphsForCharacterGroup(ATSLayoutRecord *aGlyphs, PRUint32 aGlyphCount,
     if (!allMatched) {
         for (i = firstOffset; i <= lastOffset; ++i) {
             PRUint32 index = i/2;
-            aRun->SetMissingGlyph(aSegmentStart + index, aString[index]);
+            if (NS_IS_HIGH_SURROGATE(aString[index]) &&
+                index + 1 < aLength &&
+                NS_IS_LOW_SURROGATE(aString[index + 1])) {
+                aRun->SetMissingGlyph(aSegmentStart + index,
+                                      SURROGATE_TO_UCS4(aString[index],
+                                                        aString[index + 1]));
+            } else {
+                aRun->SetMissingGlyph(aSegmentStart + index, aString[index]);
+            }
         }
         return;
     }
@@ -888,12 +897,12 @@ PostLayoutCallback(ATSULineRef aLine, gfxTextRun *aRun,
                                        glyphCount,
                                        baselineDeltas ? baselineDeltas + numGlyphs - glyphCount : nsnull,
                                        appUnitsPerDevUnit, aRun, aSegmentStart,
-                                       aUnmatched, aString);
+                                       aUnmatched, aString, aSegmentLength);
         } else {
             SetGlyphsForCharacterGroup(glyphRecords,
                                        glyphCount, baselineDeltas,
                                        appUnitsPerDevUnit, aRun, aSegmentStart,
-                                       aUnmatched, aString);
+                                       aUnmatched, aString, aSegmentLength);
             glyphRecords += glyphCount;
             if (baselineDeltas) {
                 baselineDeltas += glyphCount;

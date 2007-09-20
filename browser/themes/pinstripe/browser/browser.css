@@ -1232,10 +1232,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 /* ::::: tabbrowser ::::: */
 
-.tabs-left {
-	display: none !important;
-}
-
 .tabbrowser-tab:not([selected="true"]):hover {
   background: url("chrome://browser/skin/tabbrowser/tabbrowser-tabs-bkgnd.png") repeat-x;
 }
@@ -1296,10 +1292,6 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 .tabbrowser-tab[selected="true"], .tabbrowser-tab:hover {
   color: #000000;
-}
-
-.tabbrowser-tab[first-tab="true"] > .tab-image-left {
-  margin-left: 3px !important;
 }
 
 .tab-image-left, .tab-image-right {
@@ -1394,32 +1386,43 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   margin: 0px !important;
 }
 
+.tabs-left {
+  display: -moz-box;
+  width: 3px;
+}
+
+.tabbrowser-tabs[overflow="true"] .tabs-left {
+  display: none;
+}
+
 tabbrowser > tabbox > tabpanels {
   -moz-appearance: none !important;
 }
 
+/**
+ * Tab Drag and Drop
+ */
+
 .tab-drop-indicator-bar {
-   visibility: hidden;
-   height: 9px;
-   margin-top: -9px;
-   position: relative;
+  height: 10px;
+  margin-top: -10px;
+  position: relative;
+  /* set -moz-margin-start to -1/2 indicator width: */
+  -moz-margin-start: -4px;
 }
 
 .tab-drop-indicator {
-   height: 9px;
-   width: 9px;
-   margin-bottom: -5px;
-   position: relative;
-   background: url('chrome://browser/skin/tabbrowser/tabDragIndicator.png') 50% 50% no-repeat;
-}
-
-.tab-drop-indicator-bar[dragging="true"] {
-   visibility: visible;
+  height: 10px;
+  width: 8px;
+  margin-bottom: -5px;
+  position: relative;
+  background: url('chrome://browser/skin/tabbrowser/tabDragIndicator.png') 50% 50% no-repeat;
 }
 
 /**
  * In-tab close button
  */
+
 .tab-close-button > .toolbarbutton-icon {
   -moz-margin-end: 0px !important;
   margin-top: 2px;

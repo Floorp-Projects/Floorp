@@ -43,9 +43,6 @@
 #include "nsMemory.h"
 #include "prmem.h"
 #include "imgIEncoder.h"
-#ifdef MOZILLA_1_8_BRANCH
-#define imgIEncoder imgIEncoder_MOZILLA_1_8_BRANCH
-#endif
 #include "nsLiteralString.h"
 
 /* Things To Do 11/8/00
@@ -233,7 +230,7 @@ nsImageFromClipboard ::GetEncodedImageStream (unsigned char * aClipboardData, ns
       nsCOMPtr<imgIEncoder> encoder = do_CreateInstance("@mozilla.org/image/encoder;2?type=image/jpeg", &rv);
       if (NS_SUCCEEDED(rv)){
         rv = encoder->InitFromData(rgbData, 0, width, height, 3 * width /* RGB * # pixels in a row */, 
-                                   imgIEncoder::INPUT_FORMAT_RGB, NS_LITERAL_STRING("transparency=none"));
+                                   imgIEncoder::INPUT_FORMAT_RGB, EmptyString());
         if (NS_SUCCEEDED(rv))
           encoder->QueryInterface(NS_GET_IID(nsIInputStream), (void **) aInputStream);
       }

@@ -38,7 +38,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
- 
+
 #ifndef downloadmanager___h___
 #define downloadmanager___h___
 
@@ -101,16 +101,13 @@ protected:
   nsresult RestoreDatabaseState();
   nsresult GetDownloadFromDB(PRUint32 aID, nsDownload **retVal);
 
-  inline nsresult AddToCurrentDownloads(nsDownload *aDl)
-  {
-    if (!mCurrentDownloads.AppendObject(aDl))
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    return NS_OK;
-  }
+  /**
+   * Specially track the active downloads so that we don't need to check
+   * every download to see if they're in progress.
+   */
+  nsresult AddToCurrentDownloads(nsDownload *aDl);
 
   void SendEvent(nsDownload *aDownload, const char *aTopic);
-
 
   /**
    * Adds a download with the specified information to the DB.
@@ -140,46 +137,25 @@ protected:
                                     nsIDownload *aDownload);
 
   nsDownload *FindDownload(PRUint32 aID);
-  nsresult PauseResumeDownload(PRUint32 aID, PRBool aPause);
   nsresult CancelAllDownloads();
 
   /**
-   * Removes download from "current downloads". 
+   * Removes download from "current downloads".
    *
-   * This method removes the cycle created when starting the download, so 
+   * This method removes the cycle created when starting the download, so
    * make sure to use kungFuDeathGrip if you want to access member variables
    */
   void CompleteDownload(nsDownload *aDownload);
 
-  void     ConfirmCancelDownloads(PRInt32 aCount,
-                                  nsISupportsPRBool* aCancelDownloads,
-                                  const PRUnichar* aTitle, 
-                                  const PRUnichar* aCancelMessageMultiple, 
-                                  const PRUnichar* aCancelMessageSingle,
-                                  const PRUnichar* aDontCancelButton);
+  void ConfirmCancelDownloads(PRInt32 aCount,
+                              nsISupportsPRBool *aCancelDownloads,
+                              const PRUnichar *aTitle,
+                              const PRUnichar *aCancelMessageMultiple,
+                              const PRUnichar *aCancelMessageSingle,
+                              const PRUnichar *aDontCancelButton);
 
-  PRInt32  GetRetentionBehavior();
+  PRInt32 GetRetentionBehavior();
   nsresult ExecuteDesiredAction(nsDownload *aDownload);
-
-  static PRBool IsInFinalStage(DownloadState aState)
-  {
-    return aState == nsIDownloadManager::DOWNLOAD_NOTSTARTED ||
-           aState == nsIDownloadManager::DOWNLOAD_QUEUED ||
-           aState == nsIDownloadManager::DOWNLOAD_DOWNLOADING;
-  }
-
-  static PRBool IsInProgress(DownloadState aState) 
-  {
-    return aState == nsIDownloadManager::DOWNLOAD_NOTSTARTED || 
-           aState == nsIDownloadManager::DOWNLOAD_QUEUED ||
-           aState == nsIDownloadManager::DOWNLOAD_DOWNLOADING || 
-           aState == nsIDownloadManager::DOWNLOAD_PAUSED;
-  }
-
-  static PRBool CompletedSuccessfully(DownloadState aState)
-  {
-    return aState == nsIDownloadManager::DOWNLOAD_FINISHED;
-  }
 
 private:
   nsCOMArray<nsIDownloadProgressListener> mListeners;
@@ -222,9 +198,59 @@ public:
 protected:
   void SetStartTime(PRInt64 aStartTime);
 
-  nsresult PauseResume(PRBool aPause);
+  /**
+   * Pause the download, but in certain cases it might get fake-paused instead
+   * of real-paused.
+   */
+  nsresult Pause();
 
-  nsDownloadManager* mDownloadManager;
+  /**
+   * All this does is cancel the connection that the download is using. It does
+   * not remove it from the download manager.
+   */
+  nsresult Cancel();
+
+  /**
+   * Resume the download. Works for both real-paused and fake-paused.
+   */
+  nsresult Resume();
+
+  /**
+   * Resume the real-paused download. Let Resume decide if this should get used.
+   */
+  nsresult RealResume();
+
+  /**
+   * Download is not transferring?
+   */
+  PRBool IsPaused();
+
+  /**
+   * Download can continue from the middle of a transfer?
+   */
+  PRBool IsResumable();
+
+  /**
+   * Download was resumed?
+   */
+  PRBool WasResumed();
+
+  /**
+   * Download is real-paused? (not fake-paused by stalling the channel)
+   */
+  PRBool IsRealPaused();
+
+  /**
+   * Download is in a state to stop and complete the download?
+   */
+  PRBool IsFinishable();
+
+  /**
+   * Download is totally done transferring and all?
+   */
+  PRBool IsFinished();
+
+  nsDownloadManager *mDownloadManager;
   nsCOMPtr<nsIURI> mTarget;
 
 private:
@@ -237,18 +263,24 @@ private:
   nsCOMPtr<nsIRequest> mRequest;
   nsCOMPtr<nsILocalFile> mTempFile;
   nsCOMPtr<nsIMIMEInfo> mMIMEInfo;
-  
+
   DownloadState mDownloadState;
-  DownloadType  mDownloadType;
+  DownloadType mDownloadType;
 
   PRUint32 mID;
   PRInt32 mPercentComplete;
+
+  /**
+   * These bytes are based on the position of where the request started, so 0
+   * doesn't necessarily mean we have nothing. Use GetAmountTransferred and
+   * GetSize for the real transferred amount and size.
+   */
   PRUint64 mCurrBytes;
   PRUint64 mMaxBytes;
+
   PRTime mStartTime;
   PRTime mLastUpdate;
-  PRBool mPaused;
-  PRBool mWasResumed;
+  PRUint64 mResumedAt;
   double mSpeed;
 
   friend class nsDownloadManager;

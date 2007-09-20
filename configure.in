@@ -6734,8 +6734,8 @@ MOZ_ARG_ENABLE_BOOL(static,
     BUILD_STATIC_LIBS=1,
     BUILD_STATIC_LIBS=)
 
-dnl Disable libxul in debug builds.
-if test -n "$MOZ_DEBUG"; then
+dnl Disable libxul in debug builds, but not for xulrunner.
+if test -n "$MOZ_DEBUG" -a "$MOZ_BUILD_APP" != "xulrunner"; then
    MOZ_ENABLE_LIBXUL=
 fi
 
