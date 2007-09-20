@@ -3744,49 +3744,14 @@ nsHTMLEditRules::WillHTMLIndent(nsISelection *aSelection, PRBool *aCancel, PRBoo
     // some logic for putting list items into nested lists...
     if (nsHTMLEditUtils::IsList(curParent))
     {
-      sibling = nsnull;
-
-      // Check for whether we should join a list that follows curNode.
-      // We do this if the next element is a list, and the list is of the
-      // same type (li/ol) as curNode was a part it.
-      mHTMLEditor->GetNextHTMLSibling(curNode, address_of(sibling));
-      if (sibling && nsHTMLEditUtils::IsList(sibling))
-      {
-        nsAutoString curListTag, siblingListTag;
-        nsEditor::GetTagString(curParent, curListTag);
-        nsEditor::GetTagString(sibling, siblingListTag);
-        if (curListTag == siblingListTag)
-        {
-          res = mHTMLEditor->MoveNode(curNode, sibling, 0);
-          if (NS_FAILED(res)) return res;
-          continue;
-        }
-      }
-
-      // Check for whether we should join a list that preceeds curNode.
-      // We do this if the previous element is a list, and the list is of
-      // the same type (li/ol) as curNode was a part of.
-      mHTMLEditor->GetPriorHTMLSibling(curNode, address_of(sibling));
-      if (sibling && nsHTMLEditUtils::IsList(sibling))
-      {
-        nsAutoString curListTag, siblingListTag;
-        nsEditor::GetTagString(curParent, curListTag);
-        nsEditor::GetTagString(sibling, siblingListTag);
-        if (curListTag == siblingListTag)
-        {
-          res = mHTMLEditor->MoveNode(curNode, sibling, -1);
-          if (NS_FAILED(res)) return res;
-          continue;
-        }
-      }
-
-      sibling = nsnull;
-
       // check to see if curList is still appropriate.  Which it is if
       // curNode is still right after it in the same list.
       if (curList)
+      {
+        sibling = nsnull;
         mHTMLEditor->GetPriorHTMLSibling(curNode, address_of(sibling));
-
+      }
+      
       if (!curList || (sibling && sibling != curList) )
       {
         nsAutoString listTag;
