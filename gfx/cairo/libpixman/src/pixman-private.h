@@ -5,8 +5,6 @@
 #ifndef PIXMAN_PRIVATE_H
 #define PIXMAN_PRIVATE_H
 
-#include "cairo-platform.h"
-
 #include "pixman.h"
 #include <time.h>
 
@@ -16,30 +14,6 @@
 
 #ifndef TRUE
 #define TRUE 1
-#endif
-
-#ifdef _MSC_VER
-
-#define snprintf _snprintf
-#undef inline
-#define inline __inline
-
-# ifndef INT16_MIN
-#  define INT16_MIN	(-32767-1)
-# endif
-# ifndef INT16_MAX
-#  define INT16_MAX	(32767)
-# endif
-# ifndef INT32_MIN
-#  define INT32_MIN	(-2147483647-1)
-# endif
-# ifndef INT32_MAX
-#  define INT32_MAX	(2147483647)
-# endif
-# ifndef UINT32_MAX
-#  define UINT32_MAX    (4294967295)
-# endif
-
 #endif
 
 #define MSBFirst 0
@@ -53,9 +27,7 @@
 #  define BITMAP_BIT_ORDER LSBFirst
 #endif
 
-#ifndef DEBUG
 #define DEBUG 0
-#endif
 
 #if defined (__GNUC__)
 #  define FUNC     ((const char*) (__PRETTY_FUNCTION__))
@@ -65,6 +37,28 @@
 #  define FUNC     ((const char*) ("???"))
 #endif
 
+#ifndef INT16_MIN
+# define INT16_MIN              (-32767-1)
+# define INT16_MAX              (32767)
+#endif
+
+#ifndef INT32_MIN
+# define INT32_MIN              (-2147483647-1)
+# define INT32_MAX              (2147483647)
+#endif
+
+#ifndef UINT32_MIN
+# define UINT32_MIN             (0)
+# define UINT32_MAX             (4294967295U)
+#endif
+
+#ifndef M_PI
+# define M_PI			3.14159265358979323846
+#endif
+
+#ifdef _MSC_VER
+#define inline __inline
+#endif
 
 #define FB_SHIFT    5
 #define FB_UNIT     (1 << FB_SHIFT)
@@ -664,8 +658,8 @@ union pixman_image
     } while (0)
 
 /* FIXME */
-#define fbPrepareAccess(x) do { } while (0)
-#define fbFinishAccess(x) do { } while (0)
+#define fbPrepareAccess(x)
+#define fbFinishAccess(x)
 
 #else
 
@@ -675,8 +669,8 @@ union pixman_image
     memcpy(dst, src, size)
 #define MEMSET_WRAPPED(dst, val, size)					\
     memset(dst, val, size)
-#define fbPrepareAccess(x) do { } while (0)
-#define fbFinishAccess(x) do { } while (0)
+#define fbPrepareAccess(x)
+#define fbFinishAccess(x)
 #endif
 
 #define fbComposeGetSolid(img, res, fmt)				\
@@ -802,7 +796,7 @@ pixman_rasterize_edges_accessors (pixman_image_t *image,
 				  pixman_fixed_t	b);
 
 
-#ifndef MOZILLA_CLIENT
+#ifdef PIXMAN_TIMING
 
 /* Timing */
 static inline uint64_t
@@ -847,6 +841,6 @@ void pixman_timer_register (PixmanTimer *timer);
         timer##tname.total += OIL_STAMP() - begin##tname;		\
     }
 
-#endif /* MOZILLA_CLIENT */
+#endif /* PIXMAN_TIMING */
 
 #endif /* PIXMAN_PRIVATE_H */

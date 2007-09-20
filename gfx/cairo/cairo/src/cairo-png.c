@@ -114,7 +114,7 @@ write_png (cairo_surface_t	*surface,
     png_struct *png;
     png_info *info;
     png_time pt;
-    png_byte **rows;
+    png_byte **rows = NULL;
     png_color_16 white;
     int png_color_type;
     int depth;
@@ -128,14 +128,16 @@ write_png (cairo_surface_t	*surface,
     else if (status != CAIRO_STATUS_SUCCESS)
 	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
 
-    rows = _cairo_malloc_ab (image->height, sizeof(png_byte*));
-    if (rows == NULL) {
-        status = CAIRO_STATUS_NO_MEMORY;
-	goto BAIL1;
-    }
+    if (image->height && image->width) {
+	rows = _cairo_malloc_ab (image->height, sizeof(png_byte*));
+	if (rows == NULL) {
+	    status = CAIRO_STATUS_NO_MEMORY;
+	    goto BAIL1;
+	}
 
-    for (i = 0; i < image->height; i++)
-	rows[i] = (png_byte *) image->data + i * image->stride;
+	for (i = 0; i < image->height; i++)
+	    rows[i] = (png_byte *) image->data + i * image->stride;
+    }
 
     png = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL,
 	                           png_simple_error_callback,
@@ -208,7 +210,8 @@ write_png (cairo_surface_t	*surface,
     if (image->format == CAIRO_FORMAT_RGB24)
 	png_set_filler (png, 0, PNG_FILLER_AFTER);
 
-    png_write_image (png, rows);
+    if (rows)
+	png_write_image (png, rows);
     png_write_end (png, info);
 
 BAIL3:

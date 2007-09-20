@@ -31,6 +31,7 @@
  *
  * Contributor(s):
  *	Kristian Høgsberg <krh@redhat.com>
+ *	Adrian Johnson <ajohnson@redneon.com>
  */
 
 #ifndef CAIRO_META_SURFACE_H
@@ -57,21 +58,32 @@ typedef enum {
 
 } cairo_command_type_t;
 
-typedef struct _cairo_command_paint {
+typedef enum {
+    CAIRO_META_REGION_ALL,
+    CAIRO_META_REGION_NATIVE,
+    CAIRO_META_REGION_IMAGE_FALLBACK,
+} cairo_meta_region_type_t;
+
+typedef struct _cairo_command_header {
     cairo_command_type_t	 type;
+    cairo_meta_region_type_t     region;
+} cairo_command_header_t;
+
+typedef struct _cairo_command_paint {
+    cairo_command_header_t       header;
     cairo_operator_t		 op;
     cairo_pattern_union_t	 source;
 } cairo_command_paint_t;
 
 typedef struct _cairo_command_mask {
-    cairo_command_type_t	 type;
+    cairo_command_header_t       header;
     cairo_operator_t		 op;
     cairo_pattern_union_t	 source;
     cairo_pattern_union_t	 mask;
 } cairo_command_mask_t;
 
 typedef struct _cairo_command_stroke {
-    cairo_command_type_t	 type;
+    cairo_command_header_t       header;
     cairo_operator_t		 op;
     cairo_pattern_union_t	 source;
     cairo_path_fixed_t		 path;
@@ -83,7 +95,7 @@ typedef struct _cairo_command_stroke {
 } cairo_command_stroke_t;
 
 typedef struct _cairo_command_fill {
-    cairo_command_type_t	 type;
+    cairo_command_header_t       header;
     cairo_operator_t		 op;
     cairo_pattern_union_t	 source;
     cairo_path_fixed_t		 path;
@@ -93,7 +105,7 @@ typedef struct _cairo_command_fill {
 } cairo_command_fill_t;
 
 typedef struct _cairo_command_show_glyphs {
-    cairo_command_type_t	 type;
+    cairo_command_header_t       header;
     cairo_operator_t		 op;
     cairo_pattern_union_t	 source;
     cairo_glyph_t		*glyphs;
@@ -102,7 +114,7 @@ typedef struct _cairo_command_show_glyphs {
 } cairo_command_show_glyphs_t;
 
 typedef struct _cairo_command_intersect_clip_path {
-    cairo_command_type_t	type;
+    cairo_command_header_t      header;
     cairo_path_fixed_t	       *path_pointer;
     cairo_path_fixed_t		path;
     cairo_fill_rule_t		fill_rule;
@@ -111,7 +123,7 @@ typedef struct _cairo_command_intersect_clip_path {
 } cairo_command_intersect_clip_path_t;
 
 typedef union _cairo_command {
-    cairo_command_type_t			type;
+    cairo_command_header_t      header;
 
     /* The 5 basic drawing operations. */
     cairo_command_paint_t			paint;
@@ -150,6 +162,18 @@ _cairo_meta_surface_create (cairo_content_t	content,
 cairo_private cairo_status_t
 _cairo_meta_surface_replay (cairo_surface_t *surface,
 			    cairo_surface_t *target);
+
+cairo_private cairo_status_t
+_cairo_meta_surface_replay_analyze_meta_pattern (cairo_surface_t *surface,
+						 cairo_surface_t *target);
+
+cairo_private cairo_status_t
+_cairo_meta_surface_replay_and_create_regions (cairo_surface_t *surface,
+					       cairo_surface_t *target);
+cairo_private cairo_status_t
+_cairo_meta_surface_replay_region (cairo_surface_t          *surface,
+				   cairo_surface_t          *target,
+				   cairo_meta_region_type_t  region);
 
 cairo_private cairo_bool_t
 _cairo_surface_is_meta (const cairo_surface_t *surface);

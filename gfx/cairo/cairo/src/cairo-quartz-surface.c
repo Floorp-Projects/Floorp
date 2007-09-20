@@ -1681,14 +1681,6 @@ cairo_quartz_surface_create (cairo_format_t format,
     int stride;
     int bitsPerComponent;
 
-    unsigned int realWidth = width;
-    unsigned int realHeight = height;
-
-    if (width == 0)
-	width = 1;
-    if (height == 0)
-	height = 1;
-
     if (format == CAIRO_FORMAT_ARGB32) {
 	cgColorspace = CGColorSpaceCreateDeviceRGB();
 	stride = width * 4;
@@ -1745,7 +1737,7 @@ cairo_quartz_surface_create (cairo_format_t format,
     CGContextScaleCTM (cgc, 1.0, -1.0);
 
     surf = _cairo_quartz_surface_create_internal (cgc, _cairo_content_from_format (format),
-						  realWidth, realHeight);
+						   width, height);
     if (!surf) {
 	CGContextRelease (cgc);
 	// create_internal will have set an error

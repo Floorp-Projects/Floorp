@@ -37,13 +37,10 @@
  */
 
 #include "cairoint.h"
-#include "cairo-xlib.h"
-#include "cairo-xlib-xrender.h"
+
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-surface-private.h"
 #include "cairo-clip-private.h"
-#include <X11/extensions/Xrender.h>
-#include <X11/extensions/renderproto.h>
 
 /* Xlib doesn't define a typedef, so define one ourselves */
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
@@ -344,46 +341,6 @@ _noop_error_handler (Display     *display,
     return False;		/* return value is ignored */
 }
 
-static cairo_bool_t
-_CAIRO_MASK_FORMAT (cairo_format_masks_t *masks, cairo_format_t *format)
-{
-    switch (masks->bpp) {
-    case 32:
-	if (masks->alpha_mask == 0xff000000 &&
-	    masks->red_mask == 0x00ff0000 &&
-	    masks->green_mask == 0x0000ff00 &&
-	    masks->blue_mask == 0x000000ff)
-	{
-	    *format = CAIRO_FORMAT_ARGB32;
-	    return True;
-	}
-	if (masks->alpha_mask == 0x00000000 &&
-	    masks->red_mask == 0x00ff0000 &&
-	    masks->green_mask == 0x0000ff00 &&
-	    masks->blue_mask == 0x000000ff)
-	{
-	    *format = CAIRO_FORMAT_RGB24;
-	    return True;
-	}
-	break;
-    case 8:
-	if (masks->alpha_mask == 0xff)
-	{
-	    *format = CAIRO_FORMAT_A8;
-	    return True;
-	}
-	break;
-    case 1:
-	if (masks->alpha_mask == 0x1)
-	{
-	    *format = CAIRO_FORMAT_A1;
-	    return True;
-	}
-	break;
-    }
-    return False;
-}
-
 static void
 _swap_ximage_2bytes (XImage *ximage)
 {
@@ -504,7 +461,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     XImage *ximage;
     short x1, y1, x2, y2;
     cairo_format_masks_t masks;
-    cairo_format_t format;
+    pixman_format_code_t pixman_format;
 
     x1 = 0;
     y1 = 0;
@@ -638,38 +595,15 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	    masks.alpha_mask = 0xffffffff;
     }
 
-    /*
-     * Prefer to use a standard pixman format instead of the
-     * general masks case.
-     */
-    if (_CAIRO_MASK_FORMAT (&masks, &format))
-    {
-	image = (cairo_image_surface_t*)
-	    cairo_image_surface_create_for_data ((unsigned char *) ximage->data,
-						 format,
-						 ximage->width,
-						 ximage->height,
-						 ximage->bytes_per_line);
-	if (image->base.status)
-	    goto FAIL;
-    }
-    else
-    {
-	/*
-	 * XXX This can't work.  We must convert the data to one of the
-	 * supported pixman formats.  Pixman needs another function
-	 * which takes data in an arbitrary format and converts it
-	 * to something supported by that library.
-	 */
-	image = (cairo_image_surface_t*)
-	    _cairo_image_surface_create_with_masks ((unsigned char *) ximage->data,
-						    &masks,
-						    ximage->width,
-						    ximage->height,
-						    ximage->bytes_per_line);
-	if (image->base.status)
-	    goto FAIL;
-    }
+    pixman_format = _pixman_format_from_masks (&masks);
+    image = (cairo_image_surface_t*)
+	_cairo_image_surface_create_with_pixman_format ((unsigned char *) ximage->data,
+							pixman_format,
+							ximage->width,
+							ximage->height,
+							ximage->bytes_per_line);
+    if (image->base.status)
+	goto FAIL;
 
     /* Let the surface take ownership of the data */
     _cairo_image_surface_assume_ownership_of_data (image);
@@ -770,38 +704,6 @@ _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
-cairo_format_get_masks (cairo_format_t  format,
-			uint32_t       *bpp,
-			uint32_t       *red,
-			uint32_t       *green,
-			uint32_t       *blue)
-{
-    *red = 0x0;
-    *green = 0x0;
-    *blue = 0x0;
-    
-    switch (format)
-    {
-    case CAIRO_FORMAT_ARGB32:
-    case CAIRO_FORMAT_RGB24:
-    default:
-	*bpp =   32;
-	*red =   0x00ff0000;
-	*green = 0x0000ff00;
-	*blue =  0x000000ff;
-	break;
-	
-    case CAIRO_FORMAT_A8:
-	*bpp = 8;
-	break;
-	
-    case CAIRO_FORMAT_A1:
-	*bpp = 1;
-	break;
-    }
-}
-
 static cairo_status_t
 _draw_image_surface (cairo_xlib_surface_t   *surface,
 		     cairo_image_surface_t  *image,
@@ -817,7 +719,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
     cairo_status_t status;
 
-    cairo_format_get_masks (image->format, &bpp, &red, &green, &blue);
+    _pixman_format_to_masks (image->pixman_format, &bpp, &red, &green, &blue);
     
     ximage.width = image->width;
     ximage.height = image->height;
@@ -1626,11 +1528,14 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
      * the servers that have XRenderAddTraps().
      */
     mask_picture = _create_a8_picture (dst, &transparent, width, height, FALSE);
-    solid_picture = _create_a8_picture (dst, &solid, width, height, TRUE);
+    if (num_traps == 0)
+	return mask_picture;
 
     offset_traps = _cairo_malloc_ab (num_traps, sizeof (XTrapezoid));
-    if (!offset_traps)
+    if (!offset_traps) {
+	XRenderFreePicture (dst->dpy, mask_picture);
 	return None;
+    }
 
     for (i = 0; i < num_traps; i++) {
 	offset_traps[i].top = _cairo_fixed_to_16_16(traps[i].top) - 0x10000 * dst_y;
@@ -1644,6 +1549,8 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
 	offset_traps[i].right.p2.x = _cairo_fixed_to_16_16(traps[i].right.p2.x) - 0x10000 * dst_x;
 	offset_traps[i].right.p2.y = _cairo_fixed_to_16_16(traps[i].right.p2.y) - 0x10000 * dst_y;
     }
+
+    solid_picture = _create_a8_picture (dst, &solid, width, height, TRUE);
 
     XRenderCompositeTrapezoids (dst->dpy, PictOpAdd,
 				solid_picture, mask_picture,
@@ -2216,6 +2123,7 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
 						NULL, NULL, width, height, 1);
 }
 
+#if CAIRO_HAS_XLIB_XRENDER_SURFACE
 /**
  * cairo_xlib_surface_create_with_xrender_format:
  * @dpy: an X Display
@@ -2248,6 +2156,7 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
 						NULL, format, width, height, 0);
 }
 slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
+#endif
 
 /**
  * cairo_xlib_surface_set_size:
@@ -2686,45 +2595,9 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	    goto BAIL;
     }
 
-    /*
-     *  Most of the font rendering system thinks of glyph tiles as having
-     *  an origin at (0,0) and an x and y bounding box "offset" which
-     *  extends possibly off into negative coordinates, like so:
-     *
-     *
-     *       (x,y) <-- probably negative numbers
-     *         +----------------+
-     *         |      .         |
-     *         |      .         |
-     *         |......(0,0)     |
-     *         |                |
-     *         |                |
-     *         +----------------+
-     *                  (width+x,height+y)
-     *
-     *  This is a postscript-y model, where each glyph has its own
-     *  coordinate space, so it's what we expose in terms of metrics. It's
-     *  apparently what everyone's expecting. Everyone except the Render
-     *  extension. Render wants to see a glyph tile starting at (0,0), with
-     *  an origin offset inside, like this:
-     *
-     *       (0,0)
-     *         +---------------+
-     *         |      .        |
-     *         |      .        |
-     *         |......(x,y)    |
-     *         |               |
-     *         |               |
-     *         +---------------+
-     *                   (width,height)
-     *
-     *  Luckily, this is just the negation of the numbers we already have
-     *  sitting around for x and y.
-     */
-
     /* XXX: FRAGILE: We're ignore device_transform scaling here. A bug? */
-    glyph_info.x = - _cairo_lround (glyph_surface->base.device_transform.x0);
-    glyph_info.y = - _cairo_lround (glyph_surface->base.device_transform.y0);
+    glyph_info.x = _cairo_lround (glyph_surface->base.device_transform.x0);
+    glyph_info.y = _cairo_lround (glyph_surface->base.device_transform.y0);
     glyph_info.width = glyph_surface->width;
     glyph_info.height = glyph_surface->height;
     glyph_info.xOff = scaled_glyph->x_advance;

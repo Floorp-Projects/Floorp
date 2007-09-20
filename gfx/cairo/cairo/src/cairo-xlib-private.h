@@ -35,7 +35,10 @@
 
 #include "cairoint.h"
 #include "cairo-xlib.h"
+#include "cairo-xlib-xrender-private.h"
 #include "cairo-freelist-private.h"
+
+#include <X11/Xutil.h> /* for XDestroyImage */
 
 typedef struct _cairo_xlib_display cairo_xlib_display_t;
 typedef struct _cairo_xlib_hook cairo_xlib_hook_t;
@@ -120,12 +123,5 @@ cairo_private GC
 _cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth);
 cairo_private cairo_status_t
 _cairo_xlib_screen_put_gc (cairo_xlib_screen_info_t *info, int depth, GC gc, cairo_bool_t reset_clip);
-
-#if 1 /* CAIRO_HAS_XLIB_XRENDER_SURFACE */
-
-#include "cairo-xlib-xrender.h"
-slim_hidden_proto (cairo_xlib_surface_create_with_xrender_format);
-
-#endif
 
 #endif /* CAIRO_XLIB_PRIVATE_H */

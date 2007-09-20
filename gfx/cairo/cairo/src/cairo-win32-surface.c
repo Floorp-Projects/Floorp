@@ -108,7 +108,7 @@ _cairo_win32_print_gdi_error (const char *context)
     return CAIRO_STATUS_NO_MEMORY;
 }
 
-static uint32_t
+uint32_t
 _cairo_win32_flags_for_dc (HDC dc)
 {
     uint32_t flags = 0;
@@ -426,7 +426,7 @@ _cairo_win32_surface_create_similar_internal (void	    *abstract_src,
     return (cairo_surface_t*) new_surf;
 }
 
-static cairo_surface_t *
+cairo_surface_t *
 _cairo_win32_surface_create_similar (void	    *abstract_src,
 				     cairo_content_t content,
 				     int	     width,
@@ -435,7 +435,50 @@ _cairo_win32_surface_create_similar (void	    *abstract_src,
     return _cairo_win32_surface_create_similar_internal (abstract_src, content, width, height, FALSE);
 }
 
-static cairo_status_t
+cairo_status_t
+_cairo_win32_surface_clone_similar (void *abstract_surface,
+				    cairo_surface_t *src,
+				    int src_x,
+				    int src_y,
+				    int width,
+				    int height,
+				    cairo_surface_t **clone_out)
+{
+    cairo_content_t src_content;
+    cairo_surface_t *new_surface;
+    cairo_status_t status;
+    cairo_pattern_union_t pattern;
+
+    src_content = cairo_surface_get_content(src);
+    new_surface =
+	_cairo_win32_surface_create_similar_internal (abstract_surface, src_content, width, height, FALSE);
+
+    if (cairo_surface_status(new_surface))
+	return cairo_surface_status(new_surface);
+
+    _cairo_pattern_init_for_surface (&pattern.surface, src);
+
+    status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
+				       &pattern.base,
+				       NULL,
+				       new_surface,
+				       src_x, src_y,
+				       0, 0,
+				       0, 0,
+				       width, height);
+
+    _cairo_pattern_fini (&pattern.base);
+
+    if (status == CAIRO_STATUS_SUCCESS)
+	*clone_out = new_surface;
+    else
+	cairo_surface_destroy (new_surface);
+
+    return status;
+}
+
+
+cairo_status_t
 _cairo_win32_surface_finish (void *abstract_surface)
 {
     cairo_win32_surface_t *surface = abstract_surface;
@@ -476,12 +519,8 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
 
-    /* Check for SURFACE_IS_DISPLAY here, because there are a lot
-     * of printer drivers that lie and say they can BitBlt, but
-     * just spit out black instead.
-     */
-    if ((local->flags & CAIRO_WIN32_SURFACE_IS_DISPLAY) &&
-	(local->flags & CAIRO_WIN32_SURFACE_CAN_BITBLT) &&
+    /* Only BitBlt if the source surface supports it. */
+    if ((surface->flags & CAIRO_WIN32_SURFACE_CAN_BITBLT) &&
 	BitBlt (local->dc,
 		0, 0,
 		width, height,
@@ -1476,7 +1515,7 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
     }
 }
 
-static cairo_int_status_t
+cairo_int_status_t
 _cairo_win32_surface_get_extents (void		          *abstract_surface,
 				  cairo_rectangle_int_t   *rectangle)
 {
@@ -1495,7 +1534,7 @@ _cairo_win32_surface_flush (void *abstract_surface)
 
 #define STACK_GLYPH_SIZE 256
 
-static cairo_int_status_t
+cairo_int_status_t
 _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_operator_t	 op,
 				  cairo_pattern_t	*source,
@@ -1538,8 +1577,10 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* If we have a fallback mask clip set on the dst, we have
-     * to go through the fallback path */
-    if (dst->base.clip &&
+     * to go through the fallback path, but only if we're not
+     * doing this for printing */
+    if (dst->base.clip  &&
+	!(dst->flags & CAIRO_WIN32_SURFACE_FOR_PRINTING) &&
 	(dst->base.clip->mode != CAIRO_CLIP_MODE_REGION ||
 	 dst->base.clip->surface != NULL))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1694,6 +1735,8 @@ cairo_win32_surface_create (HDC hdc)
     surface->bitmap = NULL;
     surface->is_dib = FALSE;
     surface->saved_dc_bitmap = NULL;
+    surface->brush = NULL;
+    surface->old_brush = NULL;
 
     surface->clip_rect.x = (int16_t) rect.left;
     surface->clip_rect.y = (int16_t) rect.top;
@@ -1715,6 +1758,7 @@ cairo_win32_surface_create (HDC hdc)
     surface->extents = surface->clip_rect;
 
     surface->flags = _cairo_win32_flags_for_dc (surface->dc);
+    surface->clip_saved_dc = 0;
 
     _cairo_surface_init (&surface->base, &cairo_win32_surface_backend,
 			 _cairo_content_from_format (format));
@@ -1809,7 +1853,9 @@ cairo_win32_surface_create_with_ddb (HDC hdc,
  * _cairo_surface_is_win32:
  * @surface: a #cairo_surface_t
  *
- * Checks if a surface is an #cairo_win32_surface_t
+ * Checks if a surface is a win32 surface.  This will
+ * return False if this is a win32 printing surface; use
+ * _cairo_surface_is_win32_printing() to check for that.
  *
  * Return value: True if the surface is an win32 surface
  **/
@@ -1835,10 +1881,8 @@ cairo_win32_surface_get_dc (cairo_surface_t *surface)
 {
     cairo_win32_surface_t *winsurf;
 
-    if (surface == NULL)
-	return NULL;
-
-    if (!_cairo_surface_is_win32(surface))
+    if (!_cairo_surface_is_win32(surface) &&
+	!_cairo_surface_is_win32_printing(surface))
 	return NULL;
 
     winsurf = (cairo_win32_surface_t *) surface;
@@ -1900,7 +1944,7 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     _cairo_win32_surface_release_source_image,
     _cairo_win32_surface_acquire_dest_image,
     _cairo_win32_surface_release_dest_image,
-    NULL, /* clone_similar */
+    _cairo_win32_surface_clone_similar,
     _cairo_win32_surface_composite,
     _cairo_win32_surface_fill_rectangles,
     NULL, /* composite_trapezoids */
