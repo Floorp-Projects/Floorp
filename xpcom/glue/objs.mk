@@ -65,6 +65,7 @@ XPCOM_GLUE_SRC_LCPPSRCS =        \
   nsTObserverArray.cpp           \
   nsCycleCollectionParticipant.cpp \
   nsDeque.cpp \
+  nsTextFormatter.cpp \
   $(NULL)
 
 XPCOM_GLUE_SRC_CPPSRCS = $(addprefix $(topsrcdir)/xpcom/glue/, $(XPCOM_GLUE_SRC_LCPPSRCS))
