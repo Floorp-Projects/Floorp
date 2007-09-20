@@ -769,7 +769,6 @@ var gApplicationsPane = {
     var _delayedPaneLoad = function(self) {
       self._loadData();
       self.rebuildView();
-      self._list.focus();
     }
     setTimeout(_delayedPaneLoad, 0, this);
   },
