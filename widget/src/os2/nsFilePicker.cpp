@@ -201,7 +201,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
       PRInt32 bufLength;
       WideCharToMultiByte(0, typeWide.get(), typeWide.Length(),
                           buffer, bufLength);
-      apszTypeList[i] = ToNewCString(nsDependentCString(buffer.get()));
+      apszTypeList[i] = ToNewCString(nsDependentCString(buffer.Elements()));
     }
     apszTypeList[i] = 0;
     filedlg.papszITypeList = (PAPSZ)apszTypeList;
