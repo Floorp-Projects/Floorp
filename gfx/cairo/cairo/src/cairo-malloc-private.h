@@ -40,11 +40,26 @@
 #include "cairo-wideint-private.h"
 
 /**
+ * _cairo_malloc:
+ * @size: size in bytes
+ *
+ * Allocate @size memory using malloc().
+ * The memory should be freed using free().
+ * malloc is skipped, if 0 bytes are requested, and %NULL will be returned.
+ *
+ * Return value: A pointer to the newly allocated memory, or %NULL in
+ * case of malloc() failure or size is 0.
+ */
+
+#define _cairo_malloc(size) \
+   ((size) ? malloc((unsigned) (size)) : NULL)
+
+/**
  * _cairo_malloc_ab:
  * @n: number of elements to allocate
  * @size: size of each element
  *
- * Allocates @a*@size memory using malloc(), taking care to not
+ * Allocates @a*@size memory using _cairo_malloc(), taking care to not
  * overflow when doing the multiplication.  Behaves much like
  * calloc(), except that the returned memory is not set to zero.
  * The memory should be freed using free().
@@ -57,8 +72,8 @@
  */
 
 #define _cairo_malloc_ab(a, size) \
-  ((unsigned) (a) >= INT32_MAX / (unsigned) (size) ? NULL : \
-   malloc((unsigned) (a) * (unsigned) (size)))
+  ((size) && (unsigned) (a) >= INT32_MAX / (unsigned) (size) ? NULL : \
+   _cairo_malloc((unsigned) (a) * (unsigned) (size)))
 
 /**
  * _cairo_malloc_abc:
@@ -66,7 +81,7 @@
  * @b: second factor of number of elements to allocate
  * @size: size of each element
  *
- * Allocates @a*@b*@size memory using malloc(), taking care to not
+ * Allocates @a*@b*@size memory using _cairo_malloc(), taking care to not
  * overflow when doing the multiplication.  Behaves like
  * _cairo_malloc_ab().  The memory should be freed using free().
  *
@@ -78,9 +93,9 @@
  */
 
 #define _cairo_malloc_abc(a, b, size) \
-  ((unsigned) (a) >= INT32_MAX / (unsigned) (b) ? NULL : \
-   (unsigned) ((a)*(b)) >= INT32_MAX / (unsigned) (size) ? NULL : \
-   malloc((unsigned) (a) * (unsigned) (b) * (unsigned) size))
+  ((b) && (unsigned) (a) >= INT32_MAX / (unsigned) (b) ? NULL : \
+   (size) && (unsigned) ((a)*(b)) >= INT32_MAX / (unsigned) (size) ? NULL : \
+   _cairo_malloc((unsigned) (a) * (unsigned) (b) * (unsigned) (size)))
 
 /**
  * _cairo_malloc_ab_plus_c:
@@ -88,7 +103,7 @@
  * @size: size of each element
  * @k: additional size to allocate
  *
- * Allocates @a*@ksize+@k memory using malloc(), taking care to not
+ * Allocates @a*@ksize+@k memory using _cairo_malloc(), taking care to not
  * overflow when doing the arithmetic.  Behaves like
  * _cairo_malloc_ab().  The memory should be freed using free().
  *
@@ -97,8 +112,8 @@
  */
 
 #define _cairo_malloc_ab_plus_c(n, size, k) \
-  ((unsigned) (n) >= INT32_MAX / (unsigned) (size) ? NULL : \
+  ((size) && (unsigned) (n) >= INT32_MAX / (unsigned) (size) ? NULL : \
    (unsigned) (k) >= INT32_MAX - (unsigned) (n) * (unsigned) (size) ? NULL : \
-   malloc((unsigned) (n) * (unsigned) (size) + (unsigned) (k)))
+   _cairo_malloc((unsigned) (n) * (unsigned) (size) + (unsigned) (k)))
 
 #endif /* CAIRO_MALLOC_PRIVATE_H */
