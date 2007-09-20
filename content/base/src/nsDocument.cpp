@@ -1710,16 +1710,18 @@ NS_IMETHODIMP
 nsDocument::GetElementsByClassName(const nsAString& aClasses,
                                    nsIDOMNodeList** aReturn)
 {
-  return GetElementsByClassNameHelper(mRootContent, aClasses, aReturn);
+  return GetElementsByClassNameHelper(this, aClasses, aReturn);
 }
 
 
 // static GetElementsByClassName helpers
 nsresult
-nsDocument::GetElementsByClassNameHelper(nsIContent* aContent,
+nsDocument::GetElementsByClassNameHelper(nsINode* aRootNode,
                                          const nsAString& aClasses,
                                          nsIDOMNodeList** aReturn)
 {
+  NS_PRECONDITION(aRootNode, "Must have root node");
+  
   nsAttrValue attrValue;
   attrValue.ParseAtomArray(aClasses);
   // nsAttrValue::Equals is sensitive to order, so we'll send an array
@@ -1733,8 +1735,8 @@ nsDocument::GetElementsByClassNameHelper(nsIContent* aContent,
   }
   
   nsBaseContentList* elements;
-  if (classes->Count() > 0 && aContent) {
-    elements = new nsContentList(aContent, MatchClassNames,
+  if (classes->Count() > 0) {
+    elements = new nsContentList(aRootNode, MatchClassNames,
                                  DestroyClassNameArray, classes);
   } else {
     elements = new nsBaseContentList();
