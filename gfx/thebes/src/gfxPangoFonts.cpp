@@ -1002,21 +1002,6 @@ ConvertPangoToAppUnits(PRInt32 aCoordinate, PRUint32 aAppUnitsPerDevUnit)
     return PRInt32(v);
 }
 
-static void
-SetMissingGlyphForUCS4(gfxTextRun *aTextRun, PRUint32 aIndex, gunichar aCh)
-{
-    if (aCh < 0x10000) {
-        aTextRun->SetMissingGlyph(aIndex, PRUnichar(aCh));
-        return;
-    }
-
-    // Display non-BMP characters as a surrogate pair
-    aTextRun->SetMissingGlyph(aIndex, H_SURROGATE(aCh));
-    if (aIndex + 1 < aTextRun->GetLength()) {
-        aTextRun->SetMissingGlyph(aIndex + 1, L_SURROGATE(aCh));
-    }
-}
-
 /**
  * Given a run of Pango glyphs that should be treated as a single
  * cluster/ligature, store them in the textrun at the appropriate character
@@ -1242,7 +1227,7 @@ gfxPangoFontGroup::SetMissingGlyphs(gfxTextRun *aTextRun,
             break;
         }
         gunichar ch = g_utf8_get_char(aUTF8 + index);
-        SetMissingGlyphForUCS4(aTextRun, utf16Offset, ch);
+        aTextRun->SetMissingGlyph(utf16Offset, ch);
 
         ++utf16Offset;
         NS_ASSERTION(!IS_SURROGATE(ch), "surrogates should not appear in UTF8");
@@ -1301,7 +1286,7 @@ gfxPangoFontGroup::CreateGlyphRunsXft(gfxTextRun *aTextRun,
             } else if (IS_MISSING_GLYPH(glyph)) {
                 // Note that missing-glyph IDs are not simple glyph IDs, so we'll
                 // always get here when a glyph is missing
-                SetMissingGlyphForUCS4(aTextRun, utf16Offset, ch);
+                aTextRun->SetMissingGlyph(utf16Offset, ch);
             } else {
                 gfxTextRun::DetailedGlyph details;
                 details.mIsLastGlyph = PR_TRUE;

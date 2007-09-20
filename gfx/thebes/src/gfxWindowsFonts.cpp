@@ -1103,7 +1103,15 @@ public:
                 NS_ASSERTION(!gfxFontGroup::IsInvalidChar(mRangeString[offset]),
                 		     "invalid character detected");
                 if (missing) {
-                    aRun->SetMissingGlyph(runOffset, mRangeString[offset]);
+                    if (NS_IS_HIGH_SURROGATE(mRangeString[offset]) &&
+                        offset + 1 < mRangeLength &&
+                        NS_IS_LOW_SURROGATE(mRangeString[offset + 1])) {
+                        aRun->SetMissingGlyph(runOffset,
+                                              SURROGATE_TO_UCS4(mRangeString[offset],
+                                                                mRangeString[offset + 1]));
+                    } else {
+                        aRun->SetMissingGlyph(runOffset, mRangeString[offset]);
+                    }
                 } else if (glyphCount == 1 && advance >= 0 &&
                     mOffsets[k].dv == 0 && mOffsets[k].du == 0 &&
                     gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance) &&
