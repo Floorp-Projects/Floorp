@@ -149,7 +149,6 @@ public:
     NS_IMETHOD              Show(PRBool aState);
     NS_IMETHOD              AddMouseListener(nsIMouseListener * aListener);
     NS_IMETHOD              AddEventListener(nsIEventListener * aListener);
-    NS_IMETHOD              AddMenuListener(nsIMenuListener * aListener);
     NS_IMETHOD              Enable(PRBool aState);
     NS_IMETHOD              IsEnabled(PRBool *aState);
     NS_IMETHOD              SetModal(PRBool aState);
