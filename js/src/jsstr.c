@@ -4956,7 +4956,7 @@ js_PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp,
 {
     jschar *chars, *charsEnd;
     size_t n;
-    char *escape;
+    const char *escape;
     char c;
     uintN u, hex, shift;
     enum {

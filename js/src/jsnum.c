@@ -290,7 +290,8 @@ num_toLocaleString(JSContext *cx, uintN argc, jsval *vp)
     JSRuntime *rt;
     JSString *numStr, *str;
     const char *num, *end, *tmpSrc;
-    char *buf, *dec, *tmpDest;
+    char *buf, *tmpDest;
+    const char *dec;
     int digits, size, remainder, nrepeat;
 
     /*
