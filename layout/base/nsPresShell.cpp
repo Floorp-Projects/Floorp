@@ -2480,40 +2480,29 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     return NS_OK;
 
   NS_ASSERTION(mViewManager, "Must have view manager");
-  nsCOMPtr<nsIViewManager> viewManager = mViewManager;
-  viewManager->BeginUpdateViewBatch();
+  mViewManager->BeginUpdateViewBatch();
 
-  // Take this ref after viewManager so it'll make sure to go away first
-  nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+  // XXX Do a full invalidate at the beginning so that invalidates along
+  // the way don't have region accumulation issues?
 
-  // Make sure style is up to date
-  mFrameConstructor->ProcessPendingRestyles();
-  if (!mIsDestroying) {
-    // XXX Do a full invalidate at the beginning so that invalidates along
-    // the way don't have region accumulation issues?
+  WillCauseReflow();
+  WillDoReflow();
 
-    WillCauseReflow();
-    WillDoReflow();
+  {
+    // Kick off a top-down reflow
+    AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
+    mIsReflowing = PR_TRUE;
 
-    {
-      // Kick off a top-down reflow
-      AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
-      mIsReflowing = PR_TRUE;
-
-      mDirtyRoots.RemoveElement(rootFrame);
-      DoReflow(rootFrame);
-      mIsReflowing = PR_FALSE;
-    }
-
-    DidCauseReflow();
-    DidDoReflow();
+    mDirtyRoots.RemoveElement(rootFrame);
+    DoReflow(rootFrame);
+    mIsReflowing = PR_FALSE;
   }
 
-  viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+  DidCauseReflow();
+  DidDoReflow();
+  mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
 
-  if (!mIsDestroying) {
-    CreateResizeEventTimer();
-  }
+  CreateResizeEventTimer();
 
   return NS_OK; //XXX this needs to be real. MMP
 }
@@ -6234,31 +6223,26 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
 
     DidDoReflow();
 
-    // DidDoReflow might have killed us
-    if (!mIsDestroying) {
 #ifdef DEBUG
-      if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
-        printf("\nPresShell::ProcessReflowCommands() finished: this=%p\n",
-               (void*)this);
-      }
-      DoVerifyReflow();
+    if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
+      printf("\nPresShell::ProcessReflowCommands() finished: this=%p\n", (void*)this);
+    }
+    DoVerifyReflow();
 #endif
 
-      // If any new reflow commands were enqueued during the reflow, schedule
-      // another reflow event to process them.  Note that we want to do this
-      // after DidDoReflow(), since that method can change whether there are
-      // dirty roots around by flushing, and there's no point in posting a
-      // reflow event just to have the flush revoke it.
-      if (mDirtyRoots.Count())
-        PostReflowEvent();
-    }
+    // If any new reflow commands were enqueued during the reflow, schedule
+    // another reflow event to process them.  Note that we want to do this
+    // after DidDoReflow(), since that method can change whether there are
+    // dirty roots around by flushing, and there's no point in posting a reflow
+    // event just to have the flush revoke it.
+    if (mDirtyRoots.Count())
+      PostReflowEvent();
   }
   
   MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::ProcessReflowCommands(), this=%p\n", this));
   MOZ_TIMER_STOP(mReflowWatch);  
 
-  if (!mIsDestroying && mShouldUnsuppressPainting &&
-      mDirtyRoots.Count() == 0) {
+  if (mShouldUnsuppressPainting && mDirtyRoots.Count() == 0) {
     // We only unlock if we're out of reflows.  It's pointless
     // to unlock if reflows are still pending, since reflows
     // are just going to thrash the frames around some more.  By
