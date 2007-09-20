@@ -336,8 +336,8 @@ static JSBool js_gcUseMmap = JS_FALSE;
 #define FLAGP_TO_THING(flagp, thingSize)                                      \
     (JS_ASSERT(((jsuword) (flagp) & GC_ARENA_MASK) >=                         \
                (ARENA_INFO_OFFSET - THINGS_PER_ARENA(thingSize))),            \
-     (void *)(((jsuword) (flagp) & ~GC_ARENA_MASK) +                          \
-              (thingSize) * FLAGP_TO_INDEX(flagp)))
+     (JSGCThing *)(((jsuword) (flagp) & ~GC_ARENA_MASK) +                     \
+                   (thingSize) * FLAGP_TO_INDEX(flagp)))
 
 #ifdef JS_THREADSAFE
 /*
@@ -1445,7 +1445,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
         }
 
         flagp = THING_FLAGP(a, arenaList->lastCount);
-        thing = (JSGCThing *) FLAGP_TO_THING(flagp, nbytes);
+        thing = FLAGP_TO_THING(flagp, nbytes);
         arenaList->lastCount++;
 
 #ifdef JS_THREADSAFE
@@ -1466,7 +1466,7 @@ js_NewGCThing(JSContext *cx, uintN flags, size_t nbytes)
             --maxFreeThings;
 
             tmpflagp = THING_FLAGP(a, arenaList->lastCount);
-            tmpthing = (JSGCThing *) FLAGP_TO_THING(tmpflagp, nbytes);
+            tmpthing = FLAGP_TO_THING(tmpflagp, nbytes);
             arenaList->lastCount++;
             tmpthing->flagp = tmpflagp;
             *tmpflagp = GCF_FINAL;    /* signifying that thing is free */
@@ -2633,7 +2633,7 @@ restart:
                     METER(++arenaList->stats.nthings);
                 } else if (!(flags & GCF_FINAL)) {
                     /* Call the finalizer with GCF_FINAL ORed into flags. */
-                    thing = (JSGCThing *) FLAGP_TO_THING(flagp, thingSize);
+                    thing = FLAGP_TO_THING(flagp, thingSize);
                     *flagp = (uint8)(flags | GCF_FINAL);
                     type = flags & GCF_TYPEMASK;
                     switch (type) {
