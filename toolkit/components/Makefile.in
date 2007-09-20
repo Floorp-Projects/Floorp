@@ -51,6 +51,7 @@ endif
 DIRS += \
         urlformatter \
         contentprefs \
+        microformats \
         $(NULL)
 
 # These component dirs are built only for XUL apps
