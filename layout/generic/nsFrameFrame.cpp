@@ -89,6 +89,7 @@
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsDisplayList.h"
 #include "nsUnicharUtils.h"
+#include "nsIReflowCallback.h"
 
 // For Accessibility
 #ifdef ACCESSIBILITY
@@ -102,7 +103,8 @@ static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
  * nsSubDocumentFrame
  *****************************************************************************/
 class nsSubDocumentFrame : public nsLeafFrame,
-                           public nsIFrameFrame
+                           public nsIFrameFrame,
+                           public nsIReflowCallback
 {
 public:
   nsSubDocumentFrame(nsStyleContext* aContext);
@@ -159,6 +161,9 @@ public:
 
   NS_IMETHOD  VerifyTree() const;
 
+  // nsIReflowCallback
+  virtual PRBool ReflowFinished();
+
 protected:
   nsSize GetMargin();
   PRBool IsInline() { return mIsInline; }
@@ -175,11 +180,12 @@ protected:
   PRPackedBool mDidCreateDoc;
   PRPackedBool mOwnsFrameLoader;
   PRPackedBool mIsInline;
+  PRPackedBool mPostedReflowCallback;
 };
 
 nsSubDocumentFrame::nsSubDocumentFrame(nsStyleContext* aContext)
   : nsLeafFrame(aContext), mDidCreateDoc(PR_FALSE), mOwnsFrameLoader(PR_FALSE),
-    mIsInline(PR_FALSE)
+    mIsInline(PR_FALSE), mPostedReflowCallback(PR_FALSE)
 {
 }
 
@@ -372,6 +378,9 @@ nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
 
+  NS_ASSERTION(aPresContext->GetPresShell()->GetPrimaryFrameFor(mContent) == this,
+               "Shouldn't happen");
+
   // "offset" is the offset of our content area from our frame's
   // top-left corner.
   nsPoint offset(0, 0);
@@ -409,22 +418,9 @@ nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
   nsRect rect(nsPoint(0, 0), GetSize());
   Invalidate(rect, PR_FALSE);
 
-  if (!aPresContext->IsPaginated()) {
-    nsCOMPtr<nsIDocShell> docShell;
-    GetDocShell(getter_AddRefs(docShell));
-
-    nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(docShell));
-
-    // resize the sub document
-    if (baseWindow) {
-      PRInt32 x = 0;
-      PRInt32 y = 0;
-      
-      baseWindow->GetPositionAndSize(&x, &y, nsnull, nsnull);
-      PRInt32 cx = aPresContext->AppUnitsToDevPixels(innerSize.width);
-      PRInt32 cy = aPresContext->AppUnitsToDevPixels(innerSize.height);
-      baseWindow->SetPositionAndSize(x, y, cx, cy, PR_FALSE);
-    }
+  if (!aPresContext->IsPaginated() && !mPostedReflowCallback) {
+    PresContext()->PresShell()->PostReflowCallback(this);
+    mPostedReflowCallback = PR_TRUE;
   }
 
   // printf("OuterFrame::Reflow DONE %X (%d,%d)\n", this,
@@ -437,6 +433,39 @@ nsSubDocumentFrame::Reflow(nsPresContext*          aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;
 }
+
+PRBool
+nsSubDocumentFrame::ReflowFinished()
+{
+  mPostedReflowCallback = PR_FALSE;
+  
+  nsSize innerSize(GetSize());
+  if (IsInline()) {
+    nsMargin usedBorderPadding = GetUsedBorderAndPadding();
+    innerSize.width  -= usedBorderPadding.LeftRight();
+    innerSize.height -= usedBorderPadding.TopBottom();
+  }
+  
+  nsCOMPtr<nsIDocShell> docShell;
+  GetDocShell(getter_AddRefs(docShell));
+
+  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(docShell));
+
+  // resize the sub document
+  if (baseWindow) {
+    PRInt32 x = 0;
+    PRInt32 y = 0;
+
+    nsPresContext* presContext = PresContext();
+    baseWindow->GetPositionAndSize(&x, &y, nsnull, nsnull);
+    PRInt32 cx = presContext->AppUnitsToDevPixels(innerSize.width);
+    PRInt32 cy = presContext->AppUnitsToDevPixels(innerSize.height);
+    baseWindow->SetPositionAndSize(x, y, cx, cy, PR_FALSE);
+  }
+
+  return PR_FALSE;
+}
+
 
 NS_IMETHODIMP
 nsSubDocumentFrame::VerifyTree() const
@@ -556,6 +585,11 @@ NS_NewSubDocumentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 void
 nsSubDocumentFrame::Destroy()
 {
+  if (mPostedReflowCallback) {
+    PresContext()->PresShell()->CancelReflowCallback(this);
+    mPostedReflowCallback = PR_FALSE;
+  }
+  
   if (mFrameLoader && mDidCreateDoc) {
     // Get the content viewer through the docshell, but don't call
     // GetDocShell() since we don't want to create one if we don't
@@ -684,7 +718,7 @@ nsSubDocumentFrame::ShowDocShell()
 
   if (presShell) {
     // The docshell is already showing, nothing left to do...
-
+    NS_ASSERTION(mInnerView, "What's going on?");
     return NS_OK;
   }
 
