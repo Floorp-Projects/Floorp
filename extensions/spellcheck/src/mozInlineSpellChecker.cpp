@@ -76,6 +76,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
 #include "nsPIDOMEventTarget.h"
+#include "nsIDOMMouseEvent.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
@@ -1693,9 +1694,17 @@ NS_IMETHODIMP mozInlineSpellChecker::Blur(nsIDOMEvent* aEvent)
 
 NS_IMETHODIMP mozInlineSpellChecker::MouseClick(nsIDOMEvent *aMouseEvent)
 {
+  nsCOMPtr<nsIDOMMouseEvent>mouseEvent = do_QueryInterface(aMouseEvent);
+  NS_ENSURE_TRUE(mouseEvent, NS_OK);
+
   // ignore any errors from HandleNavigationEvent as we don't want to prevent 
   // anyone else from seeing this event.
-  HandleNavigationEvent(aMouseEvent, PR_FALSE);
+  PRUint16 button;
+  mouseEvent->GetButton(&button);
+  if (button == 0)
+    HandleNavigationEvent(mouseEvent, PR_FALSE);
+  else
+    HandleNavigationEvent(mouseEvent, PR_TRUE);
   return NS_OK;
 }
 
