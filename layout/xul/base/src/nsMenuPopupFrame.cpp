@@ -1622,9 +1622,12 @@ nsMenuPopupFrame::MoveToInternal(PRInt32 aLeft, PRInt32 aTop)
   aLeft = context->AppUnitsToDevPixels(nsPresContext::CSSPixelsToAppUnits(aLeft));
   aTop = context->AppUnitsToDevPixels(nsPresContext::CSSPixelsToAppUnits(aTop));
 
-  // Move the widget
+  // Move the widget. The widget will be null if it hasn't been created yet,
+  // but that's OK as the popup won't be open in this case.
   // XXXbz don't we want screenPos to be the parent _widget_'s position, then?
-  view->GetWidget()->Move(aLeft - screenPos.x, aTop - screenPos.y);
+  nsIWidget* widget = view->GetWidget();
+  if (widget) 
+    widget->Move(aLeft - screenPos.x, aTop - screenPos.y);
 }
 
 void 

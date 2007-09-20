@@ -64,7 +64,7 @@
 #include "nsSafariProfileMigrator.h"
 #include "nsToolkitCompsCID.h"
 #include "nsNetUtil.h"
-#include "nsAutoBuffer.h"
+#include "nsTArray.h"
 
 #include <Carbon/Carbon.h>
 
@@ -311,12 +311,12 @@ GetDictionaryStringValue(CFDictionaryRef aDictionary, CFStringRef aKey,
 {
   CFStringRef value = (CFStringRef)::CFDictionaryGetValue(aDictionary, aKey);
   if (value) {
-    nsAutoBuffer<UniChar, 1024> buffer;
+    nsAutoTArray<UniChar, 1024> buffer;
     CFIndex valueLength = ::CFStringGetLength(value);
-    buffer.EnsureElemCapacity(valueLength);
+    buffer.SetLength(valueLength);
 
-    ::CFStringGetCharacters(value, CFRangeMake(0, valueLength), buffer.get());
-    aResult.Assign(buffer.get(), valueLength);
+    ::CFStringGetCharacters(value, CFRangeMake(0, valueLength), buffer.Elements());
+    aResult.Assign(buffer.Elements(), valueLength);
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -328,12 +328,12 @@ GetDictionaryCStringValue(CFDictionaryRef aDictionary, CFStringRef aKey,
 {
   CFStringRef value = (CFStringRef)::CFDictionaryGetValue(aDictionary, aKey);
   if (value) {
-    nsAutoBuffer<char, 1024> buffer;
+    nsAutoTArray<char, 1024> buffer;
     CFIndex valueLength = ::CFStringGetLength(value);
-    buffer.EnsureElemCapacity(valueLength + 1);
+    buffer.SetLength(valueLength + 1);
 
-    if (::CFStringGetCString(value, buffer.get(), valueLength + 1, aEncoding)) {
-      aResult = buffer.get();
+    if (::CFStringGetCString(value, buffer.Elements(), valueLength + 1, aEncoding)) {
+      aResult = buffer.Elements();
       return PR_TRUE;
     }
   }
@@ -345,12 +345,12 @@ GetArrayStringValue(CFArrayRef aArray, PRInt32 aIndex, nsAString& aResult)
 {
   CFStringRef value = (CFStringRef)::CFArrayGetValueAtIndex(aArray, aIndex);
   if (value) {
-    nsAutoBuffer<UniChar, 1024> buffer;
+    nsAutoTArray<UniChar, 1024> buffer;
     CFIndex valueLength = ::CFStringGetLength(value);
-    buffer.EnsureElemCapacity(valueLength);
+    buffer.SetLength(valueLength);
 
-    ::CFStringGetCharacters(value, CFRangeMake(0, valueLength), buffer.get());
-    aResult.Assign(buffer.get(), valueLength);
+    ::CFStringGetCharacters(value, CFRangeMake(0, valueLength), buffer.Elements());
+    aResult.Assign(buffer.Elements(), valueLength);
     return PR_TRUE;
   }
   return PR_FALSE;

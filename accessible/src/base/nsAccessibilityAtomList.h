@@ -164,7 +164,6 @@ ACCESSIBILITY_ATOM(editable, "editable")
 ACCESSIBILITY_ATOM(_for, "for")
 ACCESSIBILITY_ATOM(hidden, "hidden")   // XUL tree columns
 ACCESSIBILITY_ATOM(href, "href")
-ACCESSIBILITY_ATOM(id, "id")
 ACCESSIBILITY_ATOM(increment, "increment") // XUL
 ACCESSIBILITY_ATOM(lang, "lang")
 ACCESSIBILITY_ATOM(maxpos, "maxpos") // XUL

@@ -73,6 +73,9 @@ FORCE_SHARED_LIB = 1
 # Force use of PIC
 FORCE_USE_PIC	= 1
 
+# must link statically with the CRT to avoid problems with VC8
+USE_STATIC_LIBS = 1
+
 NO_DIST_INSTALL	= 1
 NO_INSTALL = 1
 

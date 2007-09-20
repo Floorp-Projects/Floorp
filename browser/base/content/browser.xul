@@ -283,7 +283,8 @@
       <toolbaritem id="search-container" title="&searchItem.title;" 
                    align="center" class="chromeclass-toolbar-additional"
                    flex="100" persist="width">
-        <searchbar id="searchbar" flex="1" chromedir="&locale.dir;"/>
+        <searchbar id="searchbar" flex="1" chromedir="&locale.dir;"
+                   newlines="replacewithspaces"/>
       </toolbaritem>
 
       <toolbarbutton id="print-button" class="toolbarbutton-1 chromeclass-toolbar-additional"

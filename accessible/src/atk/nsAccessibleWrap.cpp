@@ -124,6 +124,8 @@ static GType GetAtkTypeForMai(MaiInterfaceType type)
   return G_TYPE_INVALID;
 }
 
+static const char* kNonUserInputEvent = ":system";
+    
 static const GInterfaceInfo atk_if_infos[] = {
     {(GInterfaceInitFunc)componentInterfaceInitCB,
      (GInterfaceFinalizeFunc) NULL, NULL}, 
@@ -791,7 +793,7 @@ GetAttributeSet(nsIAccessible* aAccessible)
     
     if (attributes) {
         // Deal with attributes that we only need to expose in ATK
-        PRUint32 state, extraState;
+        PRUint32 state;
         aAccessible->GetFinalState(&state, nsnull);
         if (state & nsIAccessibleStates::STATE_HASPOPUP) {
           // There is no ATK state for haspopup, must use object attribute to expose the same info
@@ -1285,15 +1287,6 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
         g_signal_emit_by_name(atkObj, "visible_data_changed");
         break;
 
-    case nsIAccessibleEvent::EVENT_HYPERTEXT_LINK_SELECTED:
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_HYPERTEXT_LINK_SELECTED\n"));
-        atk_focus_tracker_notify(atkObj);
-        g_signal_emit_by_name(atkObj,
-                              "link_selected",
-                              // Selected link index 
-                              *(gint *)eventData);
-        break;
-
     case nsIAccessibleEvent::EVENT_DOM_CREATE:
     case nsIAccessibleEvent::EVENT_ASYNCH_SHOW:
         return FireAtkShowHideEvent(aEvent, atkObj, PR_TRUE);
@@ -1352,11 +1345,6 @@ nsAccessibleWrap::FireAccessibleEvent(nsIAccessibleEvent *aEvent)
       {
         MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_LOAD_STOPPED\n"));
         g_signal_emit_by_name (atkObj, "load_stopped");
-      } break;
-    case nsIAccessibleEvent::EVENT_DOCUMENT_ATTRIBUTES_CHANGED:
-      {
-        MAI_LOG_DEBUG(("\n\nReceived: EVENT_DOCUMENT_ATTRIBUTES_CHANGED\n"));
-        g_signal_emit_by_name (atkObj, "attributes_changed");
       } break;
 
     case nsIAccessibleEvent::EVENT_MENUPOPUP_START:
@@ -1437,11 +1425,13 @@ nsAccessibleWrap::FireAtkTextChangedEvent(nsIAccessibleEvent *aEvent,
     PRBool isInserted;
     event->IsInserted(&isInserted);
 
-    g_signal_emit_by_name (aObject,
-                           isInserted ? \
-                           "text_changed::insert":"text_changed::delete",
-                           start,
-                           length);
+    PRBool isFromUserInput;
+    event->GetIsFromUserInput(&isFromUserInput);
+
+    char *signal_name = g_strconcat(isInserted ? "text_changed::insert" : "text_changed::delete",
+                                    isFromUserInput ? "" : kNonUserInputEvent, NULL);
+    g_signal_emit_by_name(aObject, signal_name, start, length);
+    g_free (signal_name);
 
     return NS_OK;
 }
@@ -1539,13 +1529,12 @@ nsAccessibleWrap::FireAtkShowHideEvent(nsIAccessibleEvent *aEvent,
     AtkObject *parentObject = GetAtkObject(parentAccessible);
     NS_ENSURE_STATE(parentObject);
 
-    g_signal_emit_by_name(parentObject,
-                          aIsAdded ? \
-                          "children_changed::add" : \
-                          "children_changed::remove",
-                          indexInParent,
-                          aObject,
-                          NULL);
+    PRBool isFromUserInput;
+    aEvent->GetIsFromUserInput(&isFromUserInput);
+    char *signal_name = g_strconcat(aIsAdded ? "children_changed::add" :  "children_changed::remove",
+                                    isFromUserInput ? "" : kNonUserInputEvent, NULL);
+    g_signal_emit_by_name(parentObject, signal_name, indexInParent, aObject, NULL);
+    g_free(signal_name);
 
     return NS_OK;
 }

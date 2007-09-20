@@ -7,6 +7,6 @@
 <!ENTITY editBookmarkOverlay.toolbarFolderItem.label         "Bookmarks Toolbar">
 <!ENTITY editBookmarkOverlay.foldersExpanderDown.tooltip     "Show all the bookmarks folders">
 <!ENTITY editBookmarkOverlay.expanderUp.tooltip              "Hide">
-<!ENTITY editBookmarkOverlay.tags.label                      "Tags">
+<!ENTITY editBookmarkOverlay.tags.label                      "Tags:">
 <!ENTITY editBookmarkOverlay.description.label               "Description:">
 <!ENTITY editBookmarkOverlay.tagsExpanderDown.tooltip        "Show all tags">

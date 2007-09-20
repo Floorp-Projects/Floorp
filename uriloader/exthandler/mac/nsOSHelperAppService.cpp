@@ -40,7 +40,7 @@
 #include "nsOSHelperAppService.h"
 #include "nsISupports.h"
 #include "nsString.h"
-#include "nsAutoBuffer.h"
+#include "nsTArray.h"
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
 #include "nsILocalFile.h"
@@ -125,12 +125,12 @@ NS_IMETHODIMP nsOSHelperAppService::GetApplicationDescription(const nsACString& 
           (CFStringRef)::CFBundleGetValueForInfoDictionaryKey(handlerBundle,
                                                               kCFBundleNameKey);
         if (bundleName) {
-          nsAutoBuffer<UniChar, 255> buffer;
+          nsAutoTArray<UniChar, 255> buffer;
           CFIndex bundleNameLength = ::CFStringGetLength(bundleName);
-          buffer.EnsureElemCapacity(bundleNameLength);
+          buffer.SetLength(bundleNameLength);
           ::CFStringGetCharacters(bundleName, CFRangeMake(0, bundleNameLength),
-                                  buffer.get());
-          _retval.Assign(buffer.get(), bundleNameLength);
+                                  buffer.Elements());
+          _retval.Assign(buffer.Elements(), bundleNameLength);
           rv = NS_OK;
         }
 

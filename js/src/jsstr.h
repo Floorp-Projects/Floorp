@@ -406,12 +406,13 @@ js_NewStringCopyN(JSContext *cx, const jschar *s, size_t n);
 extern JSString *
 js_NewStringCopyZ(JSContext *cx, const jschar *s);
 
-/* Free the chars held by str when it is finalized by the GC. */
+/*
+ * Free the chars held by str when it is finalized by the GC.
+ *
+ * This function always needs rt but can live with null cx.
+ */
 extern void
-js_FinalizeString(JSContext *cx, JSString *str);
-
-extern void
-js_FinalizeStringRT(JSRuntime *rt, JSString *str);
+js_FinalizeStringRT(JSRuntime *rt, JSString *str, uintN gctype, JSContext *cx);
 
 /*
  * Convert a value to a printable C string.

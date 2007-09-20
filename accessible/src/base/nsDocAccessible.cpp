@@ -77,6 +77,8 @@
 // nsDocAccessible  //
 //=============================//
 
+PRUint32 nsDocAccessible::gLastFocusedAccessiblesState = 0;
+
 //-----------------------------------------------------
 // construction
 //-----------------------------------------------------
@@ -751,11 +753,6 @@ NS_IMETHODIMP nsDocAccessible::FireAnchorJumpEvent()
     lastAnchor.Assign(currentAnchor);
   }
 
-  if (mIsAnchorJumped) {
-    nsAccUtils::
-      FireAccEvent(nsIAccessibleEvent::EVENT_DOCUMENT_ATTRIBUTES_CHANGED, this);
-  }
-
   return NS_OK;
 }
 
@@ -918,6 +915,23 @@ void
 nsDocAccessible::AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
                                   PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                   PRInt32 aModType, PRUint32 aStateMask)
+{
+  AttributeChangedImpl(aContent, aNameSpaceID, aAttribute);
+
+  // If it was the focused node, cache the new state
+  nsCOMPtr<nsIDOMNode> targetNode = do_QueryInterface(aContent);
+  if (targetNode == gLastFocusedNode) {
+    nsCOMPtr<nsIAccessible> focusedAccessible;
+    GetAccService()->GetAccessibleFor(targetNode, getter_AddRefs(focusedAccessible));
+    if (focusedAccessible) {
+      gLastFocusedAccessiblesState = State(focusedAccessible);
+    }
+  }
+}
+
+
+void
+nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID, nsIAtom* aAttribute)
 {
   // Fire accessible event after short timer, because we need to wait for
   // DOM attribute & resulting layout to actually change. Otherwise,
@@ -1087,21 +1101,33 @@ nsDocAccessible::ARIAAttributeChanged(nsIContent* aContent, nsIAtom* aAttribute)
     return;
   }
 
-  if (aAttribute == nsAccessibilityAtoms::checked) {
+  if (aAttribute == nsAccessibilityAtoms::checked ||
+      aAttribute == nsAccessibilityAtoms::pressed) {
+    const PRUint32 kState = (aAttribute == nsAccessibilityAtoms::checked) ?
+                            nsIAccessibleStates::STATE_CHECKED : 
+                            nsIAccessibleStates::STATE_PRESSED;
     nsCOMPtr<nsIAccessibleStateChangeEvent> event =
-      new nsAccStateChangeEvent(targetNode,
-                                nsIAccessibleStates::STATE_CHECKED,
-                                PR_FALSE);
+      new nsAccStateChangeEvent(targetNode, kState, PR_FALSE);
     FireDelayedAccessibleEvent(event);
-    return;
-  }
-
-  if (aAttribute == nsAccessibilityAtoms::pressed) {
-    nsCOMPtr<nsIAccessibleStateChangeEvent> event =
-      new nsAccStateChangeEvent(targetNode,
-                                nsIAccessibleStates::STATE_PRESSED,
-                                PR_FALSE);
-    FireDelayedAccessibleEvent(event);
+    if (targetNode == gLastFocusedNode) {
+      // State changes for MIXED state currently only supported for focused item, because
+      // otherwise we would need access to the old attribute value in this listener.
+      // This is because we don't know if the previous value of aaa:checked or aaa:pressed was "mixed"
+      // without caching that info.
+      nsCOMPtr<nsIAccessible> accessible;
+      event->GetAccessible(getter_AddRefs(accessible));
+      if (accessible) {
+        PRBool wasMixed = (gLastFocusedAccessiblesState & nsIAccessibleStates::STATE_MIXED) != 0;
+        PRBool isMixed  = (State(accessible) & nsIAccessibleStates::STATE_MIXED) != 0;
+        if (wasMixed != isMixed) {
+          nsCOMPtr<nsIAccessibleStateChangeEvent> event =
+            new nsAccStateChangeEvent(targetNode,
+                                      nsIAccessibleStates::STATE_MIXED,
+                                      PR_FALSE, isMixed);
+          FireDelayedAccessibleEvent(event);
+        }
+      }
+    }
     return;
   }
 
@@ -1776,9 +1802,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
                             eCoalesceFromSameSubtree, isAsynch);
 
     // Check to see change occured in an ARIA menu, and fire an EVENT_MENUPOPUP_START if it did
-    nsAutoString role;
-    if (GetRoleAttribute(aChild, role) &&
-        StringEndsWith(role, NS_LITERAL_STRING(":menu"), nsCaseInsensitiveStringComparator())) {
+    if (ARIARoleEquals(aChild, "menu")) {
       FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_MENUPOPUP_START,
                               childNode, nsnull, eAllowDupes, isAsynch);
     }
@@ -1786,8 +1810,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
     // Check to see if change occured inside an alert, and fire an EVENT_ALERT if it did
     nsIContent *ancestor = aChild;
     while (ancestor) {
-      if (GetRoleAttribute(ancestor, role) &&
-          StringEndsWith(role, NS_LITERAL_STRING(":alert"), nsCaseInsensitiveStringComparator())) {
+      if (ARIARoleEquals(ancestor, "alert")) {
         nsCOMPtr<nsIDOMNode> alertNode(do_QueryInterface(ancestor));
         FireDelayedToolkitEvent(nsIAccessibleEvent::EVENT_ALERT, alertNode, nsnull,
                                 eRemoveDupes, isAsynch);

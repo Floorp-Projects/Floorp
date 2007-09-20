@@ -52,6 +52,8 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
+PRInt32 gXULModalLevel = 0;
+
 // defined in nsMenuBarX.mm
 extern NSMenu* sApplicationMenu; // Application menu shared by all menubars
 
@@ -69,17 +71,6 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsCocoaWindow, Inherited, nsPIWidgetCocoa)
 // |mWindowType == eWindowType_sheet| is true if your gecko nsIWidget is a sheet
 // widget - whether or not the sheet is showing. |[mWindow isSheet]| will return
 // true *only when the sheet is actually showing*. Choose your test wisely.
-
-
-// returns the height of the title bar for a given cocoa NSWindow
-static float TitleBarHeightForWindow(NSWindow* aWindow)
-{
-  NS_ASSERTION(aWindow, "Must have a window to calculate a title bar height!");
-  
-  NSRect frameRect = [aWindow frame];
-  NSRect contentRect = [aWindow contentRectForFrameRect:frameRect];
-  return (frameRect.size.height - contentRect.size.height);
-}
 
 
 // roll up any popup windows
@@ -100,6 +91,7 @@ nsCocoaWindow::nsCocoaWindow()
 , mWindowMadeHere(PR_FALSE)
 , mVisible(PR_FALSE)
 , mSheetNeedsShow(PR_FALSE)
+, mModal(PR_FALSE)
 {
 
 }
@@ -122,6 +114,13 @@ nsCocoaWindow::~nsCocoaWindow()
   }
 
   NS_IF_RELEASE(mPopupContentView);
+
+  // Deal with the possiblity that we're being destroyed while running modal.
+  NS_ASSERTION(!mModal, "Widget destroyed while running modal!");
+  if (mModal) {
+    --gXULModalLevel;
+    NS_ASSERTION(gXULModalLevel >= 0, "Wierdness setting modality!");
+  }
 }
 
 
@@ -436,6 +435,19 @@ NS_IMETHODIMP nsCocoaWindow::IsVisible(PRBool & aState)
 }
 
 
+NS_IMETHODIMP nsCocoaWindow::SetModal(PRBool aState)
+{
+  mModal = aState;
+  if (aState) {
+    ++gXULModalLevel;
+  } else {
+    --gXULModalLevel;
+    NS_ASSERTION(gXULModalLevel >= 0, "Mismatched call to nsCocoaWindow::SetModal(PR_FALSE)!");
+  }
+  return NS_OK;
+}
+
+
 // Hide or show this window
 NS_IMETHODIMP nsCocoaWindow::Show(PRBool bState)
 {
@@ -640,17 +652,6 @@ NS_METHOD nsCocoaWindow::AddEventListener(nsIEventListener * aListener)
 }
 
 
-NS_METHOD nsCocoaWindow::AddMenuListener(nsIMenuListener * aListener)
-{
-  nsBaseWidget::AddMenuListener(aListener);
-
-  if (mPopupContentView)
-    mPopupContentView->AddMenuListener(aListener);
-
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP nsCocoaWindow::Enable(PRBool aState)
 {
   return NS_OK;
@@ -752,6 +753,9 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRIn
 
 NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
+  if (IsResizing())
+    return NS_OK;
+
   if (mWindow) {
     NSRect newFrame = [mWindow frame];
 
@@ -768,14 +772,8 @@ NS_IMETHODIMP nsCocoaWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRep
     StopResizing();
   }
 
-  // report the actual size of the window because it can be restricted
-  NSRect finalWindowFrame = [mWindow contentRectForFrameRect:[mWindow frame]];
-  mBounds.width  = (nscoord)finalWindowFrame.size.width;
-  mBounds.height = (nscoord)finalWindowFrame.size.height;
-
-  // tell gecko to update all the child widgets
   ReportSizeEvent();
-  
+
   return NS_OK;
 }
 
@@ -923,7 +921,7 @@ NS_IMETHODIMP nsCocoaWindow::ResetInputState()
 }
 
 
-// Invokes callback and  ProcessEvent method on Event Listener object
+// Invokes callback and ProcessEvent methods on Event Listener object
 NS_IMETHODIMP 
 nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 {
@@ -931,16 +929,12 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 
   nsIWidget* aWidget = event->widget;
   NS_IF_ADDREF(aWidget);
-  
-  if (nsnull != mMenuListener){
-    if(NS_MENU_EVENT == event->eventStructType)
-      aStatus = mMenuListener->MenuSelected(static_cast<nsMenuEvent&>(*event));
-  }
+
   if (mEventCallback)
     aStatus = (*mEventCallback)(event);
 
   // Dispatch to event listener if event was not consumed
-  if ((aStatus != nsEventStatus_eConsumeNoDefault) && (mEventListener != nsnull))
+  if (mEventListener && aStatus != nsEventStatus_eConsumeNoDefault)
     aStatus = mEventListener->ProcessEvent(*event);
 
   NS_IF_RELEASE(aWidget);
@@ -952,13 +946,17 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 void
 nsCocoaWindow::ReportSizeEvent()
 {
+  NSRect windowFrame = [mWindow contentRectForFrameRect:[mWindow frame]];
+  mBounds.width  = nscoord(windowFrame.size.width);
+  mBounds.height = nscoord(windowFrame.size.height);
+
   nsSizeEvent sizeEvent(PR_TRUE, NS_SIZE, this);
   sizeEvent.time = PR_IntervalNow();
 
   sizeEvent.windowSize = &mBounds;
   sizeEvent.mWinWidth  = mBounds.width;
   sizeEvent.mWinHeight = mBounds.height;
-  
+
   nsEventStatus status = nsEventStatus_eIgnore;
   DispatchEvent(&sizeEvent, status);
 }
@@ -1126,13 +1124,10 @@ gfxASurface* nsCocoaWindow::GetThebesSurface()
 
 - (void)windowDidResize:(NSNotification *)aNotification
 {
-  if (mGeckoWindow->IsResizing())
+  if (!mGeckoWindow || mGeckoWindow->IsResizing())
     return;
-  
-  // Gecko already compensates for the title bar, so we have to strip it out here.
-  NSRect frameRect = [[[aNotification object] contentView] frame];
-  mGeckoWindow->Resize(static_cast<PRInt32>(frameRect.size.width),
-                       static_cast<PRInt32>(frameRect.size.height), PR_TRUE);
+
+  mGeckoWindow->ReportSizeEvent();
 }
 
 

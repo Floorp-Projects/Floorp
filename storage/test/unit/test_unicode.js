@@ -57,6 +57,7 @@ function setup()
   stmt.bindStringParameter(0, LATIN1_ae);
   stmt.bindInt32Parameter(1, 4);
   stmt.execute();
+  stmt.finalize();
 }
 
 function test_upper_ascii()
@@ -66,6 +67,7 @@ function test_upper_ascii()
   do_check_eq("A", stmt.getString(0));
   do_check_eq(2, stmt.getInt32(1));
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_upper_non_ascii()
@@ -76,6 +78,7 @@ function test_upper_non_ascii()
   do_check_eq(LATIN1_AE, stmt.getString(0));
   do_check_eq(1, stmt.getInt32(1));
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_lower_ascii()
@@ -85,6 +88,7 @@ function test_lower_ascii()
   do_check_eq("b", stmt.getString(0));
   do_check_eq(3, stmt.getInt32(1));
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_lower_non_ascii()
@@ -95,6 +99,7 @@ function test_lower_non_ascii()
   do_check_eq(LATIN1_ae, stmt.getString(0));
   do_check_eq(4, stmt.getInt32(1));
   stmt.reset();
+  stmt.finalize();
 }
 
 function test_like_search_different()
@@ -103,6 +108,7 @@ function test_like_search_different()
   stmt.bindStringParameter(0, LATIN1_AE);
   do_check_true(stmt.executeStep());
   do_check_eq(2, stmt.getInt32(0));
+  stmt.finalize();
 }
 
 function test_like_search_same()
@@ -111,6 +117,7 @@ function test_like_search_same()
   stmt.bindStringParameter(0, LATIN1_ae);
   do_check_true(stmt.executeStep());
   do_check_eq(2, stmt.getInt32(0));
+  stmt.finalize();
 }
 
 var tests = [test_upper_ascii, test_upper_non_ascii, test_lower_ascii,

@@ -200,6 +200,15 @@ var PlacesUtils = {
     return this._ptm;
   },
 
+  _clipboard: null,
+  get clipboard() {
+    if (!this._clipboard) {
+      this._clipboard = Cc["@mozilla.org/widget/clipboard;1"].
+                        getService(Ci.nsIClipboard);
+    }
+    return this._clipboard;
+  },
+
   /**
    * Makes a URI from a spec.
    * @param   aSpec
@@ -537,7 +546,7 @@ var PlacesUtils = {
                        type: self.TYPE_X_MOZ_PLACE_CONTAINER };
               bNode.containerOpen = wasOpen;
             }
-          } 
+          }
           return node;
         }
         return JSON.toString(gatherDataPlace(convertNode(aNode)));
@@ -605,7 +614,7 @@ var PlacesUtils = {
         var wasOpen = bNode.containerOpen;
         if (!wasOpen)
           bNode.containerOpen = true;
-          
+
         var childString = bNode.title + NEWLINE;
         var cc = bNode.childCount;
         for (var i = 0; i < cc; ++i) {
@@ -669,14 +678,14 @@ var PlacesUtils = {
                        return aExcludeAnnotations.indexOf(aValue.name) == -1;
                     });
     }
-    
+
     return this.ptm.createItem(itemURL, aContainer, aIndex, itemTitle, keyword,
                                annos);
   },
 
   /**
    * Gets a transaction for copying (recursively nesting to include children)
-   * a folder (or container) and its contents from one folder to another. 
+   * a folder (or container) and its contents from one folder to another.
    *
    * @param   aData
    *          Unwrapped dropped folder data - Obj containing folder and children
@@ -696,12 +705,12 @@ var PlacesUtils = {
       for (var i = 0; i < cc; ++i) {
         var txn = null;
         var node = aChildren[i];
-        
+
         // adjusted to make sure that items are given the correct index -
         // transactions insert differently if index == -1
         if (aIndex > -1)
           index = aIndex + i;
-          
+
         if (node.type == self.TYPE_X_MOZ_PLACE_CONTAINER) {
           if (node.folder) {
             var title = node.folder.title;
@@ -823,11 +832,11 @@ var PlacesUtils = {
     case this.TYPE_X_MOZ_PLACE:
       if (data.id <= 0)
         return this._getURIItemCopyTransaction(data, container, index);
-  
+
       if (copy) {
         // Copying a child of a live-bookmark by itself should result
         // as a new normal bookmark item (bug 376731)
-        var copyBookmarkAnno = 
+        var copyBookmarkAnno =
           this._getBookmarkItemCopyTransaction(data, container, index,
                                                ["livemark/bookmarkFeedURI"]);
         return copyBookmarkAnno;
@@ -1633,6 +1642,24 @@ var PlacesUtils = {
         urlsToOpen.push(aNodes[i].uri);
     }
     this._openTabset(urlsToOpen, aEvent);
+  },
+
+  _placesFlavors: null,
+  get placesFlavors() {
+    if (!this._placesFlavors) {
+      var placeTypes = [PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
+                        PlacesUtils.TYPE_X_MOZ_PLACE_SEPARATOR,
+                        PlacesUtils.TYPE_X_MOZ_PLACE];
+      this._placesFlavors = Cc["@mozilla.org/supports-array;1"].
+                            createInstance(Ci.nsISupportsArray);
+      for (var i = 0; i < placeTypes.length; ++i) {
+        var cstring = Cc["@mozilla.org/supports-cstring;1"].
+                        createInstance(Ci.nsISupportsCString);
+        cstring.data = placeTypes[i];
+        this._placesFlavors.AppendElement(cstring);
+      }
+    }
+    return this._placesFlavors;
   }
 };
 

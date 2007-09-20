@@ -66,7 +66,7 @@
       <xul:stringbundle anonid="tbstringbundle" src="chrome://browser/locale/tabbrowser.properties"/>
       <xul:tabbox anonid="tabbox" flex="1" eventnode="document" xbl:inherits="handleCtrlPageUpDown"
                   onselect="if (!('updateCurrentBrowser' in this.parentNode) || event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
-        <xul:hbox class="tab-drop-indicator-bar">
+        <xul:hbox class="tab-drop-indicator-bar" collapsed="true" chromedir="&locale.dir;">
           <xul:hbox class="tab-drop-indicator" mousethrough="always"/>
         </xul:hbox>
         <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child"
@@ -1275,7 +1275,11 @@
               if (aAllowThirdPartyFixup) {
                 flags = nsIWebNavigation.LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP;
               }
-              b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
+              try {
+                b.loadURIWithFlags(aURI, flags, aReferrerURI, aCharset, aPostData);
+              }
+              catch (ex) {
+              }
             }
 
             // |setTimeout| here to ensure we're post reflow
@@ -1749,7 +1753,7 @@
                 (aEvent.screenX >= aDragSession.sourceNode.boxObject.screenX &&
                  aEvent.screenX <= (aDragSession.sourceNode.boxObject.screenX +
                                     aDragSession.sourceNode.boxObject.width)))
-                return false;
+              return false;
             return true;
           ]]>
         </body>
@@ -1757,6 +1761,7 @@
 
       <field name="mDragTime">0</field>
       <field name="mDragOverDelay">350</field>
+
       <method name="onDragOver">
         <parameter name="aEvent"/>
         <parameter name="aFlavour"/>
@@ -1793,98 +1798,59 @@
             }
 
             var newIndex = this.getNewIndex(aEvent);
-
             var ib = this.mTabDropIndicatorBar;
             var ind = ib.firstChild;
-            ib.setAttribute('dragging',
-               aDragSession.canDrop ? 'true' : 'false');
-
             var tabStripBoxObject = tabStrip.scrollBoxObject;
-            var halfIndWidth = Math.floor((ind.boxObject.width + 1) / 2);
-            if (window.getComputedStyle(this.parentNode, null)
-                      .direction == "ltr") {
-              var newMarginLeft;
-              var minMarginLeft = tabStripBoxObject.x - halfIndWidth -
-                                  ib.boxObject.x;
-              // make sure we don't place the tab drop indicator past the
-              // edge, or the containing box will flex and stretch
-              // the tab drop indicator bar, which will flex the url bar.  
-              // XXX todo
-              // just use first value if you can figure out how to get
-              // the tab drop indicator to crop instead of flex and stretch
-              // the tab drop indicator bar.
-              var maxMarginLeft = Math.min(
-                (minMarginLeft + tabStripBoxObject.width), 
-                (ib.boxObject.x + ib.boxObject.width - ind.boxObject.width));
-
+            var minMargin = tabStripBoxObject.x - this.boxObject.x;
+            // make sure we don't place the tab drop indicator past the
+            // edge, or the containing box will flex and stretch
+            // the tab drop indicator bar, which will flex the url bar.  
+            // XXX todo
+            // just use first value if you can figure out how to get
+            // the tab drop indicator to crop instead of flex and stretch
+            // the tab drop indicator bar.
+            var maxMargin = Math.min(minMargin + tabStripBoxObject.width, 
+                                     ib.boxObject.x + ib.boxObject.width -
+                                     ind.boxObject.width);
+            var newMargin, tabBoxObject;
+            var ltr = (window.getComputedStyle(this.parentNode, null).direction
+                       == "ltr");
+            if (pixelsToScroll) {
               // if we are scrolling, put the drop indicator at the edge
               // so that it doesn't jump while scrolling
-              if (pixelsToScroll > 0)
-                newMarginLeft = maxMarginLeft;
-              else if (pixelsToScroll < 0)
-                newMarginLeft = minMarginLeft;
-              else {
-              if (newIndex == this.mTabs.length) {
-                  newMarginLeft = this.mTabs[newIndex-1].boxObject.screenX +
-                                  this.mTabs[newIndex-1].boxObject.width - 
-                                  this.boxObject.screenX - halfIndWidth;
-              } else {
-                  newMarginLeft = this.mTabs[newIndex].boxObject.screenX - 
-                                  this.boxObject.screenX - halfIndWidth;
-              }
-
-              // ensure we never place the drop indicator beyond
-              // our limits
-              if (newMarginLeft < minMarginLeft)
-                newMarginLeft = minMarginLeft;
-              else if (newMarginLeft > maxMarginLeft)
-                newMarginLeft = maxMarginLeft;
-              }
-              ind.style.marginLeft = newMarginLeft + 'px';
-            } else {
-              var newMarginRight;
-              var minMarginRight = tabStripBoxObject.x - halfIndWidth -
-                                   ib.boxObject.x;
-              // make sure we don't place the tab drop indicator past the
-              // edge, or the containing box will flex and stretch
-              // the tab drop indicator bar, which will flex the url bar.  
-              // XXX todo
-              // just use first value if you can figure out how to get
-              // the tab drop indicator to crop instead of flex and stretch
-              // the tab drop indicator bar.
-              var maxMarginRight = Math.min(
-                (minMarginRight + tabStripBoxObject.width), 
-                (ib.boxObject.x + ib.boxObject.width - ind.boxObject.width));
-
-              // if we are scrolling, put the drop indicator at the edge
-              // so that it doesn't jump while scrolling
-              if (pixelsToScroll > 0)
-                newMarginRight = maxMarginRight;
-              else if (pixelsToScroll < 0)
-                newMarginRight = minMarginRight;
-              else {
-                if (newIndex == this.mTabs.length) {
-                    newMarginRight = this.boxObject.width + 
-                                     this.boxObject.screenX -
-                                     this.mTabs[newIndex-1].boxObject.screenX -
-                                     halfIndWidth;
-                } else {
-                    newMarginRight = this.boxObject.width + 
-                                     this.boxObject.screenX -
-                                     this.mTabs[newIndex].boxObject.screenX -
-                                     this.mTabs[newIndex].boxObject.width -
-                                     halfIndWidth;
-                }
-
-                // ensure we never place the drop indicator beyond
-                // our limits
-                if (newMarginRight < minMarginRight)
-                  newMarginRight = minMarginRight;
-                else if (newMarginRight > maxMarginRight)
-                  newMarginRight = maxMarginRight;
-              }
-              ind.style.marginRight = newMarginRight + 'px';
+              newMargin = (pixelsToScroll > 0) ? maxMargin : minMargin;
             }
+            else {
+              if (newIndex == this.mTabs.length) {
+                tabBoxObject =  this.mTabs[newIndex-1].boxObject;
+                if (ltr)
+                  newMargin = tabBoxObject.screenX - this.boxObject.screenX
+                              + tabBoxObject.width;
+                else
+                  newMargin = this.boxObject.screenX - tabBoxObject.screenX
+                              + this.boxObject.width;
+              }
+              else {
+                tabBoxObject =  this.mTabs[newIndex].boxObject;
+                if (ltr)
+                  newMargin = tabBoxObject.screenX - this.boxObject.screenX;
+                else
+                  newMargin = this.boxObject.screenX - tabBoxObject.screenX
+                              + this.boxObject.width - tabBoxObject.width;
+              }
+              // ensure we never place the drop indicator beyond our limits
+              if (newMargin < minMargin)
+                newMargin = minMargin;
+              else if (newMargin > maxMargin)
+                newMargin = maxMargin;
+            }
+
+            if (ltr)
+              ind.style.marginLeft = newMargin + 'px';
+            else
+              ind.style.marginRight = newMargin + 'px';
+
+            ib.collapsed = !aDragSession.canDrop;
           ]]>
         </body>
       </method>
@@ -1959,14 +1925,7 @@
               if (target)
                 return;
             }
-            this.mTabDropIndicatorBar.setAttribute('dragging','false');
-
-            // FIXME: bug 390979 - we need to reset the horizontal margins on the
-            // tab-drop indicator here to avoid impacting tabbar resizing. This
-            // shouldn't be necessary once we can collapse the indicator.
-            var dropIndicator = this.mTabDropIndicatorBar.firstChild;
-            dropIndicator.style.marginRight = "0px";
-            dropIndicator.style.marginLeft = "0px";
+            this.mTabDropIndicatorBar.collapsed = true;
           ]]>
         </body>
       </method>
@@ -2029,11 +1988,10 @@
                 if (aEvent.screenX < this.mTabs[i].boxObject.screenX + this.mTabs[i].boxObject.width / 2) 
                   return i;
             } else {
-               for (i = aEvent.target.localName == "tab" ? aEvent.target._tPos : 0; i < this.mTabs.length; i++)
+              for (i = aEvent.target.localName == "tab" ? aEvent.target._tPos : 0; i < this.mTabs.length; i++)
                 if (aEvent.screenX > this.mTabs[i].boxObject.screenX + this.mTabs[i].boxObject.width / 2)
                   return i;
             }
-
             return this.mTabs.length;
           ]]>
         </body>
@@ -2086,7 +2044,7 @@
             var tabPos = this.mCurrentTab._tPos;
             if (tabPos < this.browsers.length - 1) {
               this.moveTabTo(this.mCurrentTab,
-                                        this.browsers.length - 1);
+                             this.browsers.length - 1);
               this.mCurrentTab.focus();
             }
           ]]>

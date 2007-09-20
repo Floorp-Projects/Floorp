@@ -49,7 +49,7 @@
 <overlay id="TabsPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="paneTabs" helpTopic="prefs-tabs" helpURI="chrome://browser/locale/help/help.rdf" flex="1">
+  <prefpane id="paneTabs" helpTopic="prefs-tabs" helpURI="chrome://browser/locale/help/help.rdf">
 
     <preferences id="tabsPreferences">
       <preference id="browser.link.open_external"      name="browser.link.open_external"      type="int"/>
@@ -75,8 +75,8 @@
 
     <separator id="tabsSeparator"/>
 
-    <!-- XXX flex below and on prefpane is a hack because wrapping checkboxes don't
-             reflow properly; see bug 349098 -->
+    <!-- XXX flex below is a hack because wrapping checkboxes don't reflow
+             properly; see bug 349098 -->
     <vbox id="tabPrefsBox" align="start" flex="1">
       <checkbox id="warnCloseMultiple" label="&warnCloseMultipleTabs.label;"
                 accesskey="&warnCloseMultipleTabs.accesskey;"

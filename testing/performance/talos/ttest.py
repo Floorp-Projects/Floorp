@@ -63,10 +63,13 @@ import ffsetup
 
 if platform.system() == "Linux":
     from cmanager_linux import *
+    platform_type = 'unix_'
 elif platform.system() == "Windows":
     from cmanager_win32 import *
+    platform_type = 'win_'
 elif platform.system() == "Darwin":
     from cmanager_mac import *
+    platform_type = 'unix_'
 
 
 # Regula expression for getting results from most tests
@@ -89,7 +92,8 @@ def runTest(browser_config, test_config):
   """
  
   res = 0
-  counters = test_config['counters']
+  utils.debug("operating with platform_type : " + platform_type)
+  counters = test_config[platform_type + 'counters']
   resolution = test_config['resolution']
   all_browser_results = []
   all_counter_results = []
@@ -106,7 +110,7 @@ def runTest(browser_config, test_config):
   # Run Firefox once with new profile so initializing it doesn't cause
   # a performance hit, and the second Firefox that gets created is properly
   # terminated.
-  res = ffsetup.InitializeNewProfile(browser_config['firefox'], profile_dir)
+  res = ffsetup.InitializeNewProfile(browser_config['firefox'], profile_dir, browser_config['init_url'])
   if not res:
     print "FAIL: couldn't initialize firefox"
     return (res, all_browser_results, all_counter_results)

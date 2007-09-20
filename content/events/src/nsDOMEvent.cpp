@@ -708,6 +708,7 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       isInputEvent = PR_TRUE;
       mouseEvent->clickCount = oldMouseEvent->clickCount;
       mouseEvent->acceptActivation = oldMouseEvent->acceptActivation;
+      mouseEvent->context = oldMouseEvent->context;
       mouseEvent->relatedTarget = oldMouseEvent->relatedTarget;
       mouseEvent->button = oldMouseEvent->button;
       newEvent = mouseEvent;

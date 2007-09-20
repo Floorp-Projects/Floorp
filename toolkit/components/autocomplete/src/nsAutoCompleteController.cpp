@@ -221,6 +221,13 @@ nsAutoCompleteController::HandleText(PRBool aIgnoreSelection)
   // Stop all searches in case they are async.
   StopSearch();
 
+  if (!mInput) {
+    // StopSearch() can call PostSearchCleanup() which might result
+    // in a blur event, which could null out mInput, so we need to check it
+    // again.  See bug #395344 for more details
+    return NS_OK;
+  }
+
   PRBool disabled;
   mInput->GetDisableAutoComplete(&disabled);
   NS_ENSURE_TRUE(!disabled, NS_OK);

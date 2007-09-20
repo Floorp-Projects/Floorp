@@ -249,7 +249,10 @@
                     xbl:inherits="accesskey=matchcaseaccesskey"/>
       <xul:label anonid="match-case-status" class="findbar-find-fast"/>
       <xul:image anonid="find-status-icon" class="findbar-find-fast find-status-icon"/>
-      <xul:label anonid="find-status" class="findbar-find-fast findbar-find-status"/>
+      <xul:description anonid="find-status" class="findbar-find-fast findbar-find-status"
+                       control="findbar-textbox">
+      <!-- Do not use value, first child is used because it provides a11y with text change events -->
+      </xul:description>
     </content>
 
     <implementation implements="nsIDOMEventListener">
@@ -350,7 +353,7 @@
         // These elements are accessed frequently and are therefore cached
         this._findField = this.getElement("findbar-textbox");
         this._findStatusIcon = this.getElement("find-status-icon");
-        this._findStatusLabel = this.getElement("find-status");
+        this._findStatusDesc = this.getElement("find-status");
 
         var prefsvc =
           Components.classes["@mozilla.org/preferences-service;1"]
@@ -1174,19 +1177,19 @@
           switch (res) {
             case this.nsITypeAheadFind.FIND_WRAPPED:
               this._findStatusIcon.setAttribute("status", "wrapped");
-              this._findStatusLabel.value =
+              this._findStatusDesc.textContent =
                 aFindPrevious ? this._wrappedToBottomStr : this._wrappedToTopStr;
               this._findField.removeAttribute("status");
               break;
             case this.nsITypeAheadFind.FIND_NOTFOUND:
               this._findStatusIcon.setAttribute("status", "notfound");
-              this._findStatusLabel.value = this._notFoundStr;
+              this._findStatusDesc.textContent = this._notFoundStr;
               this._findField.setAttribute("status", "notfound");
               break;
             case this.nsITypeAheadFind.FIND_FOUND:
             default:
               this._findStatusIcon.removeAttribute("status");
-              this._findStatusLabel.value = "";
+              this._findStatusDesc.textContent = "";
               this._findField.removeAttribute("status");
               break;
           }

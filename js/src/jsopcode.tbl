@@ -171,8 +171,8 @@ OPDEF(JSOP_NULL,      64, js_null_str,  js_null_str,  1,  0,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_THIS,      65, js_this_str,  js_this_str,  1,  0,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_FALSE,     66, js_false_str, js_false_str, 1,  0,  1, 19,  JOF_BYTE)
 OPDEF(JSOP_TRUE,      67, js_true_str,  js_true_str,  1,  0,  1, 19,  JOF_BYTE)
-OPDEF(JSOP_OR,        68, "or",         NULL,         3,  1,  0,  5,  JOF_JUMP|JOF_DETECTING)
-OPDEF(JSOP_AND,       69, "and",        NULL,         3,  1,  0,  6,  JOF_JUMP|JOF_DETECTING)
+OPDEF(JSOP_OR,        68, "or",         NULL,         3,  1,  0,  5,  JOF_JUMP|JOF_DETECTING|JOF_LEFTASSOC)
+OPDEF(JSOP_AND,       69, "and",        NULL,         3,  1,  0,  6,  JOF_JUMP|JOF_DETECTING|JOF_LEFTASSOC)
 
 /* The switch bytecodes have variable length. */
 OPDEF(JSOP_TABLESWITCH,  70, "tableswitch",  NULL,   -1,  1,  0,  0,  JOF_TABLESWITCH|JOF_DETECTING|JOF_PARENHEAD)

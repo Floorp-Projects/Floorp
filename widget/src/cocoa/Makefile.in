@@ -56,20 +56,15 @@ REQUIRES = xpcom \
 		  string \
 		  uconv \
 		  dom \
-		  webshell \
-		  docshell \
 		  plugin \
 		  content \
 		  layout \
 		  view \
 		  xul \
 		  necko \
-		  nkcache \
 		  locale \
 		  pref \
 		  intl \
-		  mimetype \
-		  unicharutil \
 		  exthandler \
 		  appshell \
 		  thebes \

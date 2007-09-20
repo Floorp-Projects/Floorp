@@ -2631,6 +2631,10 @@ nsStandardURL::SetMutable(PRBool value)
 NS_IMETHODIMP
 nsStandardURL::Read(nsIObjectInputStream *stream)
 {
+    NS_PRECONDITION(!mHostA, "Shouldn't have cached ASCII host");
+    NS_PRECONDITION(mSpecEncoding == eEncoding_Unknown,
+                    "Shouldn't have spec encoding here");
+    
     nsresult rv;
     
     PRUint32 urlType;
@@ -2706,9 +2710,30 @@ nsStandardURL::Read(nsIObjectInputStream *stream)
     PRBool isMutable;
     rv = stream->ReadBoolean(&isMutable);
     if (NS_FAILED(rv)) return rv;
-
+    if (isMutable != PR_TRUE && isMutable != PR_FALSE) {
+        NS_WARNING("Unexpected boolean value");
+        return NS_ERROR_UNEXPECTED;
+    }
     mMutable = isMutable;
 
+    PRBool supportsFileURL;
+    rv = stream->ReadBoolean(&supportsFileURL);
+    if (NS_FAILED(rv)) return rv;
+    if (supportsFileURL != PR_TRUE && supportsFileURL != PR_FALSE) {
+        NS_WARNING("Unexpected boolean value");
+        return NS_ERROR_UNEXPECTED;
+    }
+    mSupportsFileURL = supportsFileURL;
+
+    PRUint32 hostEncoding;
+    rv = stream->Read32(&hostEncoding);
+    if (NS_FAILED(rv)) return rv;
+    if (hostEncoding != eEncoding_ASCII && hostEncoding != eEncoding_UTF8) {
+        NS_WARNING("Unexpected host encoding");
+        return NS_ERROR_UNEXPECTED;
+    }
+    mHostEncoding = hostEncoding;
+    
     return NS_OK;
 }
 
@@ -2773,6 +2798,14 @@ nsStandardURL::Write(nsIObjectOutputStream *stream)
 
     rv = stream->WriteBoolean(mMutable);
     if (NS_FAILED(rv)) return rv;
+
+    rv = stream->WriteBoolean(mSupportsFileURL);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = stream->Write32(mHostEncoding);
+    if (NS_FAILED(rv)) return rv;
+
+    // mSpecEncoding and mHostA are just caches that can be recovered as needed.
 
     return NS_OK;
 }

@@ -50,7 +50,7 @@
 #include "xpcom-private.h"
 #include "nsError.h"
 #include "prio.h"   /* for PR_Rename */
-#include "nsAutoBuffer.h"
+#include "nsTArray.h"
 
 #if defined(_SCO_DS)
 #define _SVID3  /* for statvfs.h */
@@ -764,10 +764,10 @@ static void CopyUTF8toUTF16NFC(const nsACString& aSrc, nsAString& aResult)
     if (chars) 
         aResult.Assign(chars, length);
     else {
-        nsAutoBuffer<UniChar, 512> buffer;
-        if (buffer.EnsureElemCapacity(length)) {
-            CFStringGetCharacters(inStr, CFRangeMake(0, length), buffer.get());
-            aResult.Assign(buffer.get(), length);
+        nsAutoTArray<UniChar, 512> buffer;
+        if (buffer.SetLength(length)) {
+            CFStringGetCharacters(inStr, CFRangeMake(0, length), buffer.Elements());
+            aResult.Assign(buffer.Elements(), length);
         }
         else 
             CopyUTF8toUTF16(aSrc, aResult);

@@ -63,6 +63,8 @@ public:
   NS_IMETHOD GetLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetChildCount(PRInt32 *_retval);
   NS_IMETHOD GetAllowsAnonChildAccessibles(PRBool *aAllowsAnonChildren);
+  NS_IMETHOD GetChildAtPoint(PRInt32 aX, PRInt32 aY, nsIAccessible **aAccessible)
+    { *aAccessible = this; return NS_OK; } // Don't walk into these
 };
 
 /**

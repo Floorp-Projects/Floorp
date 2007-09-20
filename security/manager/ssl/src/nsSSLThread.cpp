@@ -48,8 +48,7 @@ extern PRLogModuleInfo* gPIPNSSLog;
 
 nsSSLThread::nsSSLThread()
 : mBusySocket(nsnull),
-  mSocketScheduledToBeDestroyed(nsnull),
-  mPendingHTTPRequest(nsnull)
+  mSocketScheduledToBeDestroyed(nsnull)
 {
   NS_ASSERTION(!ssl_thread_singleton, "nsSSLThread is a singleton, caller attempts to create another instance!");
   
@@ -379,7 +378,7 @@ PRStatus nsSSLThread::requestClose(nsNSSSocketInfo *si)
     return PR_FAILURE;
 
   PRBool close_later = PR_FALSE;
-  nsIRequest* requestToCancel = nsnull;
+  nsCOMPtr<nsIRequest> requestToCancel;
 
   {
     nsAutoLock threadLock(ssl_thread_singleton->mMutex);
@@ -395,8 +394,7 @@ PRStatus nsSSLThread::requestClose(nsNSSSocketInfo *si)
       
       if (ssl_thread_singleton->mPendingHTTPRequest)
       {
-        requestToCancel = ssl_thread_singleton->mPendingHTTPRequest;
-        ssl_thread_singleton->mPendingHTTPRequest = nsnull;
+        requestToCancel.swap(ssl_thread_singleton->mPendingHTTPRequest);
       }
       
       close_later = PR_TRUE;
@@ -417,7 +415,7 @@ PRStatus nsSSLThread::requestClose(nsNSSSocketInfo *si)
       NS_WARNING("Attempt to close SSL socket from a thread that is not the main thread. Can not cancel pending HTTP request from NSS");
     }
   
-    NS_RELEASE(requestToCancel);
+    requestToCancel = nsnull;
   }
   
   if (!close_later)
@@ -1129,7 +1127,6 @@ void nsSSLThread::rememberPendingHTTPRequest(nsIRequest *aRequest)
 
   nsAutoLock threadLock(ssl_thread_singleton->mMutex);
 
-  NS_IF_ADDREF(aRequest);
   ssl_thread_singleton->mPendingHTTPRequest = aRequest;
 }
 
@@ -1143,9 +1140,6 @@ void nsSSLThread::cancelPendingHTTPRequest()
   if (ssl_thread_singleton->mPendingHTTPRequest)
   {
     ssl_thread_singleton->mPendingHTTPRequest->Cancel(NS_ERROR_ABORT);
-
-    NS_RELEASE(ssl_thread_singleton->mPendingHTTPRequest);
-
     ssl_thread_singleton->mPendingHTTPRequest = nsnull;
   }
 }

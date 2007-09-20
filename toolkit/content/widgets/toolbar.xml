@@ -267,6 +267,11 @@
   </binding>
 
   <binding id="menubar" extends="chrome://global/content/bindings/toolbar.xml#toolbar-base" display="xul:menubar">
+    <content height="0">
+      <xul:hbox flex="1">
+        <children/>
+      </xul:hbox>
+    </content>
     <implementation implements="nsIAccessibleProvider">
       <property name="accessibleType" readonly="true">
         <getter>

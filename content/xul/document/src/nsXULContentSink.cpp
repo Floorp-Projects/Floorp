@@ -855,7 +855,9 @@ XULContentSinkImpl::SetElementScriptType(nsXULPrototypeElement* element,
             // Ask the top-node for its script type (which has already
             // had this function called for it - so no need to recurse
             // until we find it)
-            rv = mContextStack.GetTopNodeScriptType(&element->mScriptTypeID);
+            PRUint32 scriptId = 0;
+            rv = mContextStack.GetTopNodeScriptType(&scriptId);
+            element->mScriptTypeID = scriptId;
         }
     }
     return rv;

@@ -149,7 +149,16 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
     static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
 
     /**
-     * Fires accessible events when ARIA attribute is chaned.
+     * Fires accessible events when attribute is changed.
+     *
+     * @param aContent - node that attribute is changed for
+     * @param aNameSpaceID - namespace of changed attribute
+     * @param aAttribute - changed attribute
+     */
+    void AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID, nsIAtom* aAttribute);
+
+    /**
+     * Fires accessible events when ARIA attribute is changed.
      *
      * @param aContent - node that attribute is changed for
      * @param aAttribute - changed attribute
@@ -195,6 +204,7 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
 protected:
     PRBool mIsAnchor;
     PRBool mIsAnchorJumped;
+    static PRUint32 gLastFocusedAccessiblesState;
 
 private:
     static void DocLoadCallback(nsITimer *aTimer, void *aClosure);

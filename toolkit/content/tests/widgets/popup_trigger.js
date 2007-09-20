@@ -251,8 +251,9 @@ var popupTests = [
 },
 {
   testname: "activate menuitem with mouse",
-  events: [ "DOMMenuInactive thepopup", "command item3", "DOMMenuItemInactive item3",
-            "popuphiding thepopup", "popuphidden thepopup" ],
+  events: [ "DOMMenuInactive thepopup", "command item3",
+            "popuphiding thepopup", "popuphidden thepopup",
+            "DOMMenuItemInactive item3" ],
   test: function(testname, step) {
     var item3 = document.getElementById("item3");
     synthesizeMouse(item3, 4, 4, { });
@@ -284,8 +285,8 @@ var popupTests = [
   testname: "menuitem accelerator",
   events: [ "DOMMenuItemActive amenu", "DOMMenuItemInactive amenu",
             "DOMMenuInactive thepopup",
-            "command amenu", "DOMMenuItemInactive amenu",
-            "popuphiding thepopup", "popuphidden thepopup",
+            "command amenu", "popuphiding thepopup", "popuphidden thepopup",
+            "DOMMenuItemInactive amenu"
            ],
   test: function() { synthesizeKey("M", { }); },
   result: function(testname) { checkClosed("trigger", testname); }
@@ -414,8 +415,8 @@ var popupTests = [
   testname: "menuitem with non accelerator single",
   events: [ "DOMMenuItemInactive item1", "DOMMenuItemActive amenu",
             "DOMMenuItemInactive amenu", "DOMMenuInactive thepopup",
-            "command amenu", "DOMMenuItemInactive amenu",
-            "popuphiding thepopup", "popuphidden thepopup",
+            "command amenu", "popuphiding thepopup", "popuphidden thepopup",
+            "DOMMenuItemInactive amenu",
            ],
   test: function() { synthesizeKey("M", { }); },
   result: function(testname) {
@@ -433,7 +434,7 @@ var popupTests = [
       compareEdge(gTrigger, gMenuPopup, "after_start", 0, 0, testname);
   }
 },
-{ end: true,
+{
   testname: "open submenu with open property",
   events: [ "popupshowing submenupopup", "DOMMenuItemActive submenu",
             "popupshown submenupopup" ],
@@ -449,6 +450,7 @@ var popupTests = [
   }
 },
 {
+  end: true,
   testname: "hidePopup hides entire chain",
   events: [ "popuphiding submenupopup", "popuphidden submenupopup",
             "popuphiding thepopup", "popuphidden thepopup",
@@ -553,8 +555,8 @@ var popupTests = [
   condition: function() { return gIsMenu; },
   events: [ "DOMMenuItemActive item1", "DOMMenuItemInactive item1",
             "DOMMenuInactive thepopup", "command item1",
-            "DOMMenuItemInactive item1",
-            "popuphiding thepopup", "popuphidden thepopup" ],
+            "popuphiding thepopup", "popuphidden thepopup",
+            "DOMMenuItemInactive item1" ],
   test: function(testname, step) {
     synthesizeKey("VK_DOWN", { });
     synthesizeKey("VK_ENTER", { });

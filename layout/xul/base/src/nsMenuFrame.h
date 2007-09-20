@@ -270,8 +270,6 @@ protected:
   // the popup for this menu, owned
   nsMenuPopupFrame* mPopupFrame;
 
-  nsSize mLastPref;
-
   // Reference to the mediator which wraps this frame.
   nsRefPtr<nsMenuTimerMediator> mTimerMediator;
 

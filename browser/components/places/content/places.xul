@@ -44,9 +44,13 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 
+#ifdef XP_MACOSX
+<?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
+#else
 <?xul-overlay href="chrome://browser/content/baseMenuOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://browser/content/places/placesOverlay.xul"?>
+#endif
 
 <!DOCTYPE window [
 <!ENTITY % placesDTD SYSTEM "chrome://browser/locale/places/places.dtd">
@@ -56,7 +60,7 @@
 ]>
 
 <window id="places"
-        title="&places.bm.title;" 
+        title="&places.organizer.title;" 
         windowtype="Places:Organizer" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="PlacesOrganizer.init();"
@@ -66,12 +70,13 @@
 
   <script type="application/x-javascript"
           src="chrome://browser/content/places/places.js"/>
-  
-  <stringbundleset id="stringbundleset"/>
 
+#ifdef XP_MACOSX
+#include ../../../base/content/browserMountPoints.inc
+#else
   <commandset id="editMenuCommands"/>
-  <commandset id="baseMenuCommandSet"/>
   <commandset id="placesCommands"/>
+#endif
   
   <commandset id="organizerCommandSet">
     <command id="OrganizerCommand_find:all"
@@ -94,6 +99,10 @@
              oncommand="PlacesOrganizer.saveSearch();"/>
     <command id="OrganizerCommand_search:moreCriteria"
              oncommand="PlacesQueryBuilder.addRow();"/>
+    <command id="OrganizerCommand:Back"
+             oncommand="PlacesOrganizer.back();"/>
+    <command id="OrganizerCommand:Forward"
+             oncommand="PlacesOrganizer.forward();"/>
   </commandset>
 
   <broadcasterset id="placesGroupingBroadcasters">
@@ -102,7 +111,6 @@
     <broadcaster id="placesBC_grouping:separator"/>
   </broadcasterset>
 
-  <keyset id="baseMenuKeyset"/>
   <keyset id="placesOrganizerKeyset">
     <!-- Instantiation Keys -->
     <key id="placesKey_close" key="&cmd.close.key;" modifiers="accel" 
@@ -162,27 +170,159 @@
     <popup id="placesContext"/>
   </popupset>
 
-  <toolbox>
-    <menubar id="placesMenubar">
-      <menu id="fileMenu" label="&file.label;" accesskey="&file.accesskey;">
-        <menupopup>
-          <menuitem id="fileNewBookmark"
+  <toolbox id="placesToolbox">
+    <toolbar class="chromeclass-toolbar" id="placesToolbar">
+      <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     command="OrganizerCommand:Back"
+                     tooltiptext="&backButton.tooltip;"
+                     accesskey="&backCmd.accesskey;"
+                     disabled="true"/>
+    
+      <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     command="OrganizerCommand:Forward"
+                     tooltiptext="&forwardButton.tooltip;"
+                     accesskey="&forwardCmd.accesskey;"
+                     disabled="true"/>
+
+      <toolbarbutton id="organizeButton" type="menu" label="&organize.label;">
+        <menupopup id="organizeButtonPopup">
+          <menuitem id="newbookmark"
                     command="placesCmd_new:bookmark"
                     label="&cmd.new_bookmark.label;"
                     accesskey="&cmd.new_bookmark.accesskey;"/>
-          <menuitem id="fileNewLivemark"
-                    command="placesCmd_new:livemark"
-                    label="&cmd.new_livemark.label;"
-                    accesskey="&cmd.new_livemark.accesskey;"/>
-          <menuitem id="fileNewFolder"
+          <menuitem id="newfolder"
                     command="placesCmd_new:folder"
                     label="&cmd.new_folder.label;"
                     accesskey="&cmd.new_folder.accesskey;"/>
-          <menuitem id="fileNewSeparator"
+          <menuitem id="newseparator"
                     command="placesCmd_new:separator"
                     label="&cmd.new_separator.label;"
                     accesskey="&cmd.new_separator.accesskey;"/>
-          <menuseparator/>
+
+          <menuseparator id="orgCutSeparator"/>
+          
+          <menuitem id="orgCut"
+                    command="cmd_cut"
+                    label="&cutCmd.label;"
+                    key="key_cut"
+                    accesskey="&cutCmd.accesskey;"
+                    selection="separator|link|folder|mixed"/>
+          <menuitem id="orgCopy"
+                    command="cmd_copy"
+                    label="&copyCmd.label;"
+                    key="key_copy"
+                    accesskey="&copyCmd.accesskey;"
+                    selection="separator|link|folder|mixed"/>
+          <menuitem id="orgPaste"
+                    command="cmd_paste"
+                    label="&pasteCmd.label;"
+                    key="key_paste"
+                    accesskey="&pasteCmd.accesskey;"
+                    selection="mutable"/>
+          <menuitem id="orgUndo"
+                    command="cmd_undo"
+                    label="&undoCmd.label;"
+                    key="key_undo"
+                    accesskey="&undoCmd.accesskey;"/>
+          <menuitem id="orgRedo"
+                    command="cmd_redo"
+                    label="&redoCmd.label;"
+                    key="key_redo"
+                    accesskey="&redoCmd.accesskey;"/>
+
+          <menuseparator id="selectAllSeparator"/>
+          
+          <menuitem id="orgSelectAll"
+                    command="cmd_selectAll"
+                    label="&selectAllCmd.label;"
+                    key="key_selectAll"
+                    accesskey="&selectAllCmd.accesskey;"/>
+
+          <menuseparator id="orgMoveSeparator"/>
+          
+          <menuitem id="orgDelete"
+                    command="cmd_delete"
+                    label="&deleteCmd.label;"
+                    key="key_delete"
+                    accesskey="&deleteCmd.accesskey;"/>
+          <menuitem id="orgRename"
+                    command="placesCmd_rename"
+                    label="&cmd.rename.label;"
+                    accesskey="&cmd.rename.accesskey;"/>
+          <menuitem id="orgProperties"
+                    command="placesCmd_show:info"
+                    label="&cmd.properties.label;"
+                    key="placesKey_show:info"
+                    accesskey="&cmd.properties.accesskey;"/>
+          
+          <menuseparator id="orgCloseSeparator"/>
+
+          <menuitem id="orgClose"
+                    key="placesKey_close" 
+                    label="&file.close.label;"
+                    accesskey="&file.close.accesskey;" 
+                    oncommand="close();"/>
+        </menupopup>
+      </toolbarbutton>
+
+      <toolbarbutton id="viewMenu" type="menu"
+                     label="&views.label;"
+                     accesskey="&view.accesskey;">
+        <menupopup id="viewMenuPopup">
+          <menuitem id="viewDetails"
+                    type="radio"
+#ifdef MACOSX
+                    label="&view.detailsMacOSX.label;"
+#else
+                    label="&view.details.label;"
+#endif
+                    accesskey="&view.details.label;">
+          </menuitem>
+
+          <menuseparator id="addonsSeparator"/>
+
+          <!--
+          <menuitem id="viewAddons"
+                    command=""
+                    label="&view.addons.label;"
+                    accesskey="&view.addons.label;"/>
+          <menuseparator id="sortingSeparator"/>
+          -->
+          <menu id="viewColumns" 
+                label="&view.columns.label;" accesskey="&view.columns.accesskey;">
+            <menupopup onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
+                       oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
+          </menu>
+          <menu id="viewSort" label="&view.sort.label;"
+                accesskey="&view.sort.accesskey;">
+            <menupopup onpopupshowing="ViewMenu.populateSortMenu(event);"
+                       oncommand="ViewMenu.setSortColumn(event.target.getAttribute('column'), null);">
+              <menuitem id="viewUnsorted" type="radio" name="columns" 
+                        label="&view.unsorted.label;" accesskey="&view.unsorted.accesskey;"
+                        oncommand="ViewMenu.setSortColumn(null, null);"/>
+              <menuseparator id="directionSeparator"/>
+              <menuitem id="viewSortAscending" type="radio" name="direction" 
+                        label="&view.sortAscending.label;" accesskey="&view.sortAscending.accesskey;"
+                        oncommand="ViewMenu.setSortColumn(null, 'ascending'); event.stopPropagation();"/>
+              <menuitem id="viewSortDescending" type="radio" name="direction" 
+                        label="&view.sortDescending.label;" accesskey="&view.sortDescending.accesskey;"
+                        oncommand="ViewMenu.setSortColumn(null, 'descending'); event.stopPropagation();"/>
+            </menupopup>
+          </menu>
+          <!--
+          <menuseparator id="groupingSeparator" observes="placesBC_grouping:separator"/>
+
+          <menuitem id="viewGroupNone" type="radio" name="group"
+                    observes="placesBC_grouping:off"/>
+          <menuitem id="viewGroupGroup" type="radio" name="group"
+                    observes="placesBC_grouping:on"/>
+          -->
+        </menupopup>
+      </toolbarbutton>
+
+      <toolbarbutton id="maintenanceButton" style="min-width:0px !important;"
+                     type="menu" label="&maintenance.label;">
+        <menupopup id="maintenanceButtonPopup">
           <menuitem id="fileImport"
                     command="OrganizerCommand_import"
                     label="&cmd.import.label;"
@@ -197,7 +337,7 @@
                     label="&cmd.backup.label;"
                     accesskey="&cmd.backup.accesskey;"/>
           <menu id="fileRestoreMenu" label="&cmd.restore.label;"
-                    accesskey="&cmd.export.accesskey;">
+                    accesskey="&cmd.restore.accesskey;">
             <menupopup id="fileRestorePopup" onpopupshowing="PlacesOrganizer.populateRestoreMenu();">
               <menuitem id="restoreFromFile"
                         command="OrganizerCommand_restoreFromFile"
@@ -205,142 +345,19 @@
                         accesskey="&cmd.restoreFromFile.accesskey;"/>
             </menupopup>
           </menu>
-          <menuseparator/>
-          <menuitem id="fileClose"
-                    key="placesKey_close" 
-                    label="&file.close.label;"
-                    accesskey="&file.close.accesskey;" 
-                    oncommand="close();"/>
         </menupopup>
-      </menu>
-      <menu id="editMenu" label="&edit.label;" accesskey="&edit.accesskey;">
-        <menupopup>
-          <menuitem id="menu_undo"/>
-          <menuitem id="menu_redo"/>
-          <menuseparator/>
-          <menuitem id="menu_cut"/>
-          <menuitem id="menu_copy"/>
-          <menuitem id="menu_paste"/>
-          <menuitem id="menu_delete"/>
-          <menuseparator/>
-          <menuitem id="menu_selectAll"/>
-          <menuseparator/>
-          <menuitem id="editFindAll"
-                    command="OrganizerCommand_find:all"
-                    key="placesKey_find:all"/>
-          <menuitem id="editFindCurrent"
-                    command="OrganizerCommand_find:current"
-                    key="placesKey_find:current"/>
-          <menuseparator/>
-          <menuitem command="placesCmd_moveBookmarks"
-                    label="&cmd.moveBookmarks.menuLabel;"
-                    accesskey="&cmd.moveBookmarks.menuAccesskey;"/>
-          <menuitem command="placesCmd_setAsBookmarksToolbarFolder"
-                    label="&cmd.personalToolbarFolder.menuLabel;"
-                    accesskey="&cmd.personalToolbarFolder.menuAccesskey;"/>
-          <menuseparator/>
-          <menuitem id="editReload"
-                    command="placesCmd_reload"
-                    label="&cmd.reloadLivebookmark.label;"
-                    accesskey="&cmd.reloadLivebookmark.accesskey;"/>
-          <menuitem id="editReloadMicrosummary"
-                    command="placesCmd_reloadMicrosummary"
-                    label="&cmd.reloadMicrosummary.label;"
-                    accesskey="&cmd.reloadMicrosummary.accesskey;"/>
-          <menuseparator/>
-          <menuitem id="properties"
-                    command="placesCmd_show:info"
-                    key="placesKey_show:info"
-                    label="&cmd.properties.label;" 
-                    accesskey="&cmd.properties.accesskey;"/>
-        </menupopup>
-      </menu>
-      <menu id="viewMenu" label="&view.label;" accesskey="&view.accesskey;"
-            onpopupshowing="ViewMenu.populate(event);"
-            oncommand="ViewMenu.setSortColumn(event.target.getAttribute('column'), null);">
-        <menupopup>
-          <menuitem id="viewToolbar"
-                    type="checkbox"
-                    label="&view.toolbar.label;"
-                    accesskey="&view.toolbar.accesskey;"
-                    oncommand="goToggleToolbar('mainToolbar', 'viewToolbar'); event.stopPropagation();"
-                    checked="true"/>/>
-          <menu id="viewColumns" 
-                label="&view.columns.label;" accesskey="&view.columns.accesskey;">
-            <menupopup onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
-                       oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
-          </menu>
-          <menuseparator id="groupingSeparator" observes="placesBC_grouping:separator"/>
-          <menuitem id="viewGroupNone" type="radio" name="group"
-                    observes="placesBC_grouping:off"/>
-          <menuitem id="viewGroupGroup" type="radio" name="group"
-                    observes="placesBC_grouping:on"/>
-          <menuseparator id="columnSeparator"/>
-          <menuitem id="viewUnsorted" type="radio" name="columns" 
-                    label="&view.unsorted.label;" accesskey="&view.unsorted.accesskey;"
-                    oncommand="ViewMenu.setSortColumn(null, null);"/>
-          <menuseparator id="directionSeparator"/>
-          <menuitem id="viewSortAscending" type="radio" name="direction" 
-                    label="&view.sortAscending.label;" accesskey="&view.sortAscending.accesskey;"
-                    oncommand="ViewMenu.setSortColumn(null, 'ascending'); event.stopPropagation();"/>
-          <menuitem id="viewSortDescending" type="radio" name="direction" 
-                    label="&view.sortDescending.label;" accesskey="&view.sortDescending.accesskey;"
-                    oncommand="ViewMenu.setSortColumn(null, 'descending'); event.stopPropagation();"/>
-        </menupopup>
-      </menu>
-#ifdef XP_MACOSX
-      <menu id="windowMenu"/>
-      <menupopup id="menu_ToolsPopup"/>
-#endif
-      <menu id="helpMenu"/>
-    </menubar>
+      </toolbarbutton>
 
-    <toolbar id="mainToolbar" class="chromeclass-toolbar">
-      <toolbarbutton id="newbookmark"
-                     command="placesCmd_new:bookmark"
-                     label="&cmd.new_bookmark.label;"
-                     accesskey="&cmd.new_bookmark.accesskey;"/>
-      <toolbarbutton id="newfolder"
-                     command="placesCmd_new:folder"
-                     label="&cmd.new_folder.label;"
-                     accesskey="&cmd.new_folder.accesskey;"/>
-      <toolbarbutton id="newseparator"
-                     command="placesCmd_new:separator"
-                     label="&cmd.new_separator.label;"
-                     accesskey="&cmd.new_separator.accesskey;"/>
-      <toolbarseparator/>
-      <toolbarbutton id="moveBookmark"
-                     command="placesCmd_moveBookmarks"
-                     label="&cmd.moveBookmarks.label;"
-                     accesskey="&cmd.moveBookmarks.accesskey;"/>
-      <toolbarseparator/>
-      <toolbarbutton id="properties"
-                     command="placesCmd_show:info"
-                     label="&cmd.properties.label;" 
-                     accesskey="&cmd.properties.accesskey;"/>
-      <toolbarbutton id="rename"
-                     command="placesCmd_rename"
-                     label="&cmd.rename.label;"
-                     accesskey="&cmd.rename.accesskey;"/>
-      <toolbarbutton id="delete"
-                     command="cmd_delete"
-                     label="&deleteCmd.label;"
-                     accesskey="&deleteCmd.accesskey;" />
-    </toolbar>
+      <spacer flex="1"/>
 
-    <toolbar class="chromeclass-toolbar">
       <textbox id="searchFilter" style="width: 23em;" timeout="500"
                oncommand="PlacesSearchBox.search(this.value);" 
                onreset="PlacesOrganizer.onPlaceSelected(false); return true;" 
                collection="bookmarks">
       </textbox>
-      <spacer flex="1"/>
-      <toolbarbutton id="toolbarGroupOff" type="radio" group="grouping" 
-                     observes="placesBC_grouping:off"/>
-      <toolbarbutton id="toolbarGroupOn" type="radio" group="grouping" 
-                     observes="placesBC_grouping:on" />
     </toolbar>
   </toolbox>
+
   <hbox flex="1" id="placesView">
     <tree id="placesList"
           class="placesTree"
@@ -348,11 +365,11 @@
           showRoot="true"
           place="place:folder=2&amp;group=3&amp;excludeItems=1&amp;queryType=1"
           hidecolumnpicker="true" context="placesContext"
-          onselect="PlacesOrganizer.onPlaceSelected(true);
-                    PlacesOrganizer.updateStatusBarForView(this);"
+          onselect="PlacesOrganizer.onPlaceSelected(true);"
           onclick="PlacesOrganizer.onTreeClick(event);"
           seltype="single"
-          persist="width">
+          persist="width"
+          width="160">
       <treecols>
         <treecol id="title" flex="1" primary="true" hideheader="true"/>
       </treecols>
@@ -363,7 +380,7 @@
     </splitter>
     <vbox id="contentView" flex="4">
       <deck id="contentDeck" flex="1">
-        <vbox flex="1">
+        <vbox id="defaultView" flex="1">
           <hbox id="titlebar" align="center">
             <label id="showingPrefix"/>
             <deck id="titleDeck" flex="1">
@@ -394,8 +411,7 @@
           <tree id="placeContent" class="placesTree" context="placesContext" 
                 flex="1" type="places" 
                 ondblclick="this.controller.openSelectedNodeWithEvent(event);"
-                onclick="PlacesOrganizer.onTreeClick(event);"
-                onselect="PlacesOrganizer.updateStatusBarForView(this);">
+                onclick="PlacesOrganizer.onTreeClick(event);">
             <treecols id="placeContentColumns">
               <treecol label="&col.name.label;" id="title" flex="5" primary="true" 
                        persist="width hidden ordinal sortActive sortDirection"/>
@@ -406,7 +422,7 @@
               <treecol label="&col.url.label;" id="url" flex="5" 
                        persist="width hidden ordinal sortActive sortDirection"/>
               <splitter class="tree-splitter"/>
-              <treecol label="&col.lastvisit.label;" id="date" flex="1"
+              <treecol label="&col.lastvisit.label;" id="date" flex="1" hidden="true"
                        persist="width hidden ordinal sortActive sortDirection"/>
               <splitter class="tree-splitter"/>
               <treecol label="&col.visitcount.label;" id="visitCount" flex="1" hidden="true"
@@ -463,7 +479,4 @@
       </deck>
     </vbox>
   </hbox>
-  <statusbar>
-    <statusbarpanel id="status" flex="1"/>
-  </statusbar>
 </window>

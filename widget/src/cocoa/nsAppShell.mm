@@ -49,28 +49,38 @@
 #include "nsString.h"
 #include "nsIRollupListener.h"
 #include "nsIWidget.h"
+#include "nsThreadUtils.h"
+#include "nsIWindowMediator.h"
+#include "nsServiceManagerUtils.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIWebBrowserChrome.h"
 
 // defined in nsChildView.mm
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
 
+// defined in nsCocoaWindow.mm
+extern PRInt32             gXULModalLevel;
+
+@interface NSApplication (Undocumented)
+
+// Present in all versions of OS X from (at least) 10.2.8 through 10.5.
+- (BOOL)_isRunningModal;
+
+@end
+
 // AppShellDelegate
 //
-// Cocoa bridge class.  An object of this class is used as an NSPort
-// delegate called on the main thread when Gecko wants to interrupt
-// the native run loop.
+// Cocoa bridge class.  An object of this class is registered to receive
+// notifications.
 //
 @interface AppShellDelegate : NSObject
 {
   @private
     nsAppShell* mAppShell;
-    nsresult    mRunRV;
 }
 
 - (id)initWithAppShell:(nsAppShell*)aAppShell;
-- (void)handlePortMessage:(NSPortMessage*)aPortMessage;
-- (void)runAppShell;
-- (nsresult)rvFromRun;
 - (void)applicationWillTerminate:(NSNotification*)aNotification;
 - (void)beginMenuTracking:(NSNotification*)aNotification;
 @end
@@ -92,11 +102,14 @@ nsAppShell::ResumeNative(void)
 
 nsAppShell::nsAppShell()
 : mAutoreleasePools(nsnull)
-, mPort(nil)
-, mDelegate(nil)
+, mDelegate(nsnull)
+, mCFRunLoop(NULL)
+, mCFRunLoopSource(NULL)
 , mRunningEventLoop(PR_FALSE)
+, mStarted(PR_FALSE)
 , mTerminated(PR_FALSE)
 , mSkippedNativeCallback(PR_FALSE)
+, mHadMoreEventsCount(0)
 {
   // mMainPool sits low on the autorelease pool stack to serve as a catch-all
   // for autoreleased objects on this thread.  Because it won't be popped
@@ -109,15 +122,19 @@ nsAppShell::nsAppShell()
 
 nsAppShell::~nsAppShell()
 {
+  if (mCFRunLoop) {
+    if (mCFRunLoopSource) {
+      ::CFRunLoopRemoveSource(mCFRunLoop, mCFRunLoopSource,
+                              kCFRunLoopCommonModes);
+      ::CFRelease(mCFRunLoopSource);
+    }
+    ::CFRelease(mCFRunLoop);
+  }
+
   if (mAutoreleasePools) {
     NS_ASSERTION(::CFArrayGetCount(mAutoreleasePools) == 0,
                  "nsAppShell destroyed without popping all autorelease pools");
     ::CFRelease(mAutoreleasePools);
-  }
-
-  if (mPort) {
-    [[NSRunLoop currentRunLoop] removePort:mPort forMode:NSDefaultRunLoopMode];
-    [mPort release];
   }
 
   [mDelegate release];
@@ -126,16 +143,17 @@ nsAppShell::~nsAppShell()
 
 // Init
 //
-// Loads the nib (see bug 316076c21) and sets up the NSPort used to
-// interrupt the main Cocoa event loop.
+// Loads the nib (see bug 316076c21) and sets up the CFRunLoopSource used to
+// interrupt the main native run loop.
 //
 // public
 nsresult
 nsAppShell::Init()
 {
-  // No event loop is running yet.  Avoid autoreleasing objects to
-  // mMainPool.  The appshell retains objects it needs to be long-lived
-  // and will release them as appropriate.
+  // No event loop is running yet (unless Camino is running, or another
+  // embedding app that uses NSApplicationMain()).  Avoid autoreleasing
+  // objects to mMainPool.  The appshell retains objects it needs to be
+  // long-lived and will release them as appropriate.
   NSAutoreleasePool* localPool = [[NSAutoreleasePool alloc] init];
 
   // mAutoreleasePools is used as a stack of NSAutoreleasePool objects created
@@ -157,7 +175,12 @@ nsAppShell::Init()
   rv = nibFile->GetNativePath(nibPath);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // This call initializes NSApplication.
+  // This call initializes NSApplication unless:
+  // 1) we're using xre -- NSApp's already been initialized by
+  //    MacApplicationDelegate.mm's EnsureUseCocoaDockAPI().
+  // 2) Camino is running (or another embedding app that uses
+  //    NSApplicationMain()) -- NSApp's already been initialized and
+  //    its main run loop is already running.
   [NSBundle loadNibFile:
                      [NSString stringWithUTF8String:(const char*)nibPath.get()]
       externalNameTable:
@@ -165,16 +188,26 @@ nsAppShell::Init()
                                        forKey:@"NSOwner"]
                withZone:NSDefaultMallocZone()];
 
-  // A message will be sent through mPort to mDelegate on the main thread
-  // to interrupt the run loop while it is running.
   mDelegate = [[AppShellDelegate alloc] initWithAppShell:this];
   NS_ENSURE_STATE(mDelegate);
 
-  mPort = [[NSPort port] retain];
-  NS_ENSURE_STATE(mPort);
+  // Add a CFRunLoopSource to the main native run loop.  The source is
+  // responsible for interrupting the run loop when Gecko events are ready.
 
-  [mPort setDelegate:mDelegate];
-  [[NSRunLoop currentRunLoop] addPort:mPort forMode:NSDefaultRunLoopMode];
+  mCFRunLoop = [[NSRunLoop currentRunLoop] getCFRunLoop];
+  NS_ENSURE_STATE(mCFRunLoop);
+  ::CFRetain(mCFRunLoop);
+
+  CFRunLoopSourceContext context;
+  bzero(&context, sizeof(context));
+  // context.version = 0;
+  context.info = this;
+  context.perform = ProcessGeckoEvents;
+  
+  mCFRunLoopSource = ::CFRunLoopSourceCreate(kCFAllocatorDefault, 0, &context);
+  NS_ENSURE_STATE(mCFRunLoopSource);
+
+  ::CFRunLoopAddSource(mCFRunLoop, mCFRunLoopSource, kCFRunLoopCommonModes);
 
   rv = nsBaseAppShell::Init();
 
@@ -185,25 +218,33 @@ nsAppShell::Init()
 
 // ProcessGeckoEvents
 //
-// Arrange for Gecko events to be processed.  They will either be processed
-// after the main run loop returns (if we own the run loop) or on
-// NativeEventCallback (if an embedder owns the loop).
+// The "perform" target of mCFRunLoop, called when mCFRunLoopSource is
+// signalled from ScheduleNativeEventCallback.
 //
-// Called by -[AppShellDelegate handlePortMessage:] after mPort signals as a
-// result of a ScheduleNativeEventCallback call.  This method is public only
-// because it needs to be called by that Objective-C fragment, and C++ can't
-// make |friend|s with Objective-C.
+// Arrange for Gecko events to be processed on demand (in response to a call
+// to ScheduleNativeEventCallback(), if processing of Gecko events via "native
+// methods" hasn't been suspended).  This happens in NativeEventCallback() ...
+// or rather it's supposed to:  nsBaseAppShell::NativeEventCallback() doesn't
+// actually process any Gecko events if elsewhere we're also processing Gecko
+// events in a tight loop (as happens in nsBaseAppShell::Run()) -- in that
+// case ProcessGeckoEvents() is always called while ProcessNextNativeEvent()
+// is running (called from nsBaseAppShell::OnProcessNextEvent()) and
+// mProcessingNextNativeEvent is always true (which makes NativeEventCallback()
+// take an early out).
 //
-// public
+// protected static
 void
-nsAppShell::ProcessGeckoEvents()
+nsAppShell::ProcessGeckoEvents(void* aInfo)
 {
-  if (mRunningEventLoop) {
-    mRunningEventLoop = PR_FALSE;
+  nsAppShell* self = static_cast<nsAppShell*> (aInfo);
 
-    // The run loop is sleeping.  [NSApp nextEventMatchingMask:...] won't
-    // return until it's given a reason to wake up.  Awaken it by posting
-    // a bogus event.  There's no need to make the event presentable.
+  if (self->mRunningEventLoop) {
+    self->mRunningEventLoop = PR_FALSE;
+
+    // The run loop may be sleeping -- [NSRunLoop acceptInputForMode:...]
+    // won't return until it's given a reason to wake up.  Awaken it by
+    // posting a bogus event.  There's no need to make the event
+    // presentable.
     [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
                                         location:NSMakePoint(0,0)
                                    modifierFlags:0
@@ -216,12 +257,14 @@ nsAppShell::ProcessGeckoEvents()
              atStart:NO];
   }
 
-  if (mSuspendNativeCount <= 0) {
-    NativeEventCallback();
+  if (self->mSuspendNativeCount <= 0) {
+    self->NativeEventCallback();
   } else {
-    mSkippedNativeCallback = PR_TRUE;
+    self->mSkippedNativeCallback = PR_TRUE;
   }
 
+  // Still needed to fix bug 343033 ("5-10 second delay or hang or crash
+  // when quitting Cocoa Firefox").
   [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
                                       location:NSMakePoint(0,0)
                                  modifierFlags:0
@@ -232,19 +275,41 @@ nsAppShell::ProcessGeckoEvents()
                                          data1:0
                                          data2:0]
            atStart:NO];
+
+  // Each Release() here is balanced by exactly one AddRef() in
+  // ScheduleNativeEventCallback().
+  NS_RELEASE(self);
 }
 
 // WillTerminate
 //
 // Called by the AppShellDelegate when an NSApplicationWillTerminate
 // notification is posted.  After this method is called, native events should
-// no longer be processed.
+// no longer be processed.  The NSApplicationWillTerminate notification is
+// only posted when [NSApp terminate:] is called, which doesn't happen on a
+// "normal" application quit.
 //
 // public
 void
 nsAppShell::WillTerminate()
 {
+  if (mTerminated)
+    return;
   mTerminated = PR_TRUE;
+
+  // Ugly hack to stop _NSAutoreleaseNoPool errors on shutdown from Camino --
+  // these seem to be triggered by our call here to NS_ProcessPendingEvents().
+  [[NSAutoreleasePool alloc] init];
+
+  // Calling [NSApp terminate:] causes (among other things) an
+  // NSApplicationWillTerminate notification to be posted and the main run
+  // loop to die before returning (in the call to [NSApp run]).  So this is
+  // our last crack at processing any remaining Gecko events.
+  NS_ProcessPendingEvents(NS_GetCurrentThread());
+
+  // Unless we call nsBaseAppShell::Exit() here, it might not get called
+  // at all.
+  nsBaseAppShell::Exit();
 }
 
 // ScheduleNativeEventCallback
@@ -253,26 +318,33 @@ nsAppShell::WillTerminate()
 // needs to be processed.  The Gecko event needs to be processed on the
 // main thread, so the native run loop must be interrupted.
 //
+// In nsBaseAppShell.cpp, the mNativeEventPending variable is used to
+// ensure that ScheduleNativeEventCallback() is called no more than once
+// per call to NativeEventCallback().  ProcessGeckoEvents() can skip its
+// call to NativeEventCallback() if processing of Gecko events by native
+// means is suspended (using nsIAppShell::SuspendNative()), which will
+// suspend calls from nsBaseAppShell::OnDispatchedEvent() to
+// ScheduleNativeEventCallback().  But when Gecko event processing by
+// native means is resumed (in ResumeNative()), an extra call is made to
+// ScheduleNativeEventCallback() (from ResumeNative()).  This triggers
+// another call to ProcessGeckoEvents(), which calls NativeEventCallback(),
+// and nsBaseAppShell::OnDispatchedEvent() resumes calling
+// ScheduleNativeEventCallback().
+//
 // protected virtual
 void
 nsAppShell::ScheduleNativeEventCallback()
 {
-  NS_ADDREF(this);
+  if (mTerminated)
+    return;
 
-  void* self = static_cast<void*>(this);
-  NSData* data = [[NSData alloc] initWithBytes:&self length:sizeof(this)];
-  NSArray* components = [[NSArray alloc] initWithObjects:&data count:1];
+  // Each AddRef() here is balanced by exactly one Release() in
+  // ProcessGeckoEvents().
+  NS_ADDREF_THIS();
 
-  // This will invoke [mDelegate handlePortMessage:message] on the main thread.
-
-  NSPortMessage* message = [[NSPortMessage alloc] initWithSendPort:mPort
-                                                       receivePort:nil
-                                                        components:components];
-  [message sendBeforeDate:[NSDate distantFuture]];
-
-  [message release];
-  [components release];
-  [data release];
+  // This will invoke ProcessGeckoEvents on the main thread.
+  ::CFRunLoopSourceSignal(mCFRunLoopSource);
+  ::CFRunLoopWakeUp(mCFRunLoop);
 }
 
 // ProcessNextNativeEvent
@@ -282,14 +354,21 @@ nsAppShell::ScheduleNativeEventCallback()
 //
 // Returns true if more events are waiting in the native event queue.
 //
+// But (now that we're using [NSRunLoop acceptInputForMode:beforeDate:]) it's
+// too expensive to call ProcessNextNativeEvent() many times in a row (in a
+// tight loop), so we never return true more than kHadMoreEventsCountMax
+// times in a row.  This doesn't seem to cause native event starvation.
+//
 // protected virtual
 PRBool
 nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 {
+  PRBool moreEvents = PR_FALSE;
   PRBool eventProcessed = PR_FALSE;
+  NSString* currentMode = nil;
 
   if (mTerminated)
-    return eventProcessed;
+    return moreEvents;
 
   PRBool wasRunningEventLoop = mRunningEventLoop;
   mRunningEventLoop = aMayWait;
@@ -303,56 +382,135 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
     NS_ASSERTION(mAutoreleasePools && ::CFArrayGetCount(mAutoreleasePools),
                  "No autorelease pool for native event");
 
-    if (NSEvent* event = [NSApp nextEventMatchingMask:NSAnyEventMask
-                                            untilDate:waitUntil
-                                               inMode:NSDefaultRunLoopMode
-                                              dequeue:YES]) {
-      [NSApp sendEvent:event];
+    // If an event is waiting to be processed, run the main event loop
+    // just long enough to process it.  For some reason, using [NSApp
+    // nextEventMatchingMask:...] to dequeue the event and [NSApp sendEvent:]
+    // to "send" it causes trouble, so we no longer do that.  (The trouble
+    // was very strange, and only happened while processing Gecko events on
+    // demand (via ProcessGeckoEvents()), as opposed to processing Gecko
+    // events in a tight loop (via nsBaseAppShell::Run()):  Particularly in
+    // Camino, mouse-down events sometimes got dropped (or mis-handled), so
+    // that (for example) you sometimes needed to click more than once on a
+    // button to make it work (the zoom button was particularly susceptible).
+    // You also sometimes had to ctrl-click or right-click multiple times to
+    // bring up a context menu.)
 
-      // Additional processing that [NSApp run] does after each event.
-      NSEventType type = [event type];
-      if (type != NSPeriodic && type != NSMouseMoved) {
-        [[NSApp servicesMenu] update];
-        [[NSApp windowsMenu] update];
-        [[NSApp mainMenu] update];
+    // Now that we're using [NSRunLoop acceptInputForMode:beforeDate:], it's
+    // too expensive to call ProcessNextNativeEvent() many times in a row, so
+    // we never return true more than kHadMoreEventsCountMax in a row.  I'm
+    // not entirely sure why [NSRunLoop acceptInputForMode:beforeDate:] is too
+    // expensive, since it and its cousin [NSRunLoop runMode:beforeDate:] are
+    // designed to be called in a tight loop.  Possibly the problem is due to
+    // combining [NSRunLoop acceptInputForMode:beforeDate] with [NSApp
+    // nextEventMatchingMask:...].
+
+    // If the current mode is something else than NSDefaultRunLoopMode, look
+    // for events in that mode.
+    currentMode = [[NSRunLoop currentRunLoop] currentMode];
+    if (!currentMode)
+      currentMode = NSDefaultRunLoopMode;
+
+    // If we're running modal (either Cocoa modal or XUL modal) we still need
+    // to use nextEventMatchingMask and sendEvent -- otherwise (in Minefield)
+    // the modal window won't receive key events or most mouse events.
+    if ([NSApp _isRunningModal] || (gXULModalLevel > 0)) {
+      if (NSEvent* event = [NSApp nextEventMatchingMask:NSAnyEventMask
+                                              untilDate:waitUntil
+                                                 inMode:currentMode
+                                                dequeue:YES]) {
+        [NSApp sendEvent:event];
+        eventProcessed = PR_TRUE;
       }
-
-      [NSApp updateWindows];
-
-      eventProcessed = PR_TRUE;
+    } else {
+      if (aMayWait ||
+          [NSApp nextEventMatchingMask:NSAnyEventMask
+                             untilDate:nil
+                                inMode:currentMode
+                               dequeue:NO]) {
+        [[NSRunLoop currentRunLoop] acceptInputForMode:currentMode
+                                            beforeDate:waitUntil];
+        eventProcessed = PR_TRUE;
+      }
     }
   } while (mRunningEventLoop);
 
+  if (eventProcessed && (mHadMoreEventsCount < kHadMoreEventsCountMax)) {
+    moreEvents = ([NSApp nextEventMatchingMask:NSAnyEventMask
+                                     untilDate:nil
+                                        inMode:currentMode
+                                       dequeue:NO] != nil);
+  }
+
+  if (moreEvents) {
+    // Once this reaches kHadMoreEventsCountMax, it will be reset to 0 the
+    // next time through (whether or not we process any events then).
+    ++mHadMoreEventsCount;
+  } else {
+    mHadMoreEventsCount = 0;
+  }
+
   mRunningEventLoop = wasRunningEventLoop;
 
-  return eventProcessed;
+  return moreEvents;
 }
 
 // Run
 //
-// Overrides the base class' Run method to ensure that [NSApp run] has been
-// called.  When [NSApp run] has not yet been called, this method calls it
-// after arranging for a selector to be called from the run loop.  That
-// selector is responsible for calling Run again.  At that point, because
-// [NSApp run] has been called, the base class' method is called.
+// Overrides the base class's Run() method to call [NSApp run] (which spins
+// the native run loop until the application quits).  Since (unlike the base
+// class's Run() method) we don't process any Gecko events here, they need
+// to be processed elsewhere (in NativeEventCallback(), called from
+// ProcessGeckoEvents()).
 //
-// The runAppShell selector will call [NSApp stop:] as soon as the real
-// Run method finishes.  The real Run method's return value is saved so
-// that it may properly be returned.
+// Camino calls [NSApp run] on its own (via NSApplicationMain()), and so
+// doesn't call nsAppShell::Run().
 //
 // public
 NS_IMETHODIMP
 nsAppShell::Run(void)
 {
-  if (![NSApp isRunning]) {
-    [mDelegate performSelector:@selector(runAppShell)
-                    withObject:nil
-                    afterDelay:0];
-    [NSApp run];
-    return [mDelegate rvFromRun];
-  }
+  NS_ASSERTION(!mStarted, "nsAppShell::Run() called multiple times");
+  if (mStarted)
+    return NS_OK;
 
-  return nsBaseAppShell::Run();
+  mStarted = PR_TRUE;
+  [NSApp run];
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppShell::Exit(void)
+{
+  // This method is currently called more than once -- from (according to
+  // mento) an nsAppExitEvent dispatched by nsAppStartup::Quit() and from an
+  // XPCOM shutdown notification that nsBaseAppShell has registered to
+  // receive.  So we need to ensure that multiple calls won't break anything.
+  // But we should also complain about it (since it isn't quite kosher).
+  NS_ASSERTION(!mTerminated, "nsAppShell::Exit() called redundantly");
+  if (mTerminated)
+    return NS_OK;
+
+  mTerminated = PR_TRUE;
+
+  // Quoting from Apple's doc on the [NSApplication stop:] method (from their
+  // doc on the NSApplication class):  "If this method is invoked during a
+  // modal event loop, it will break that loop but not the main event loop."
+  // nsAppShell::Exit() shouldn't be called from a modal event loop.  So if
+  // it is we complain about it (to users of debug builds) and call [NSApp
+  // stop:] one extra time.  (I'm not sure if modal event loops can be nested
+  // -- Apple's docs don't say one way or the other.  But the return value
+  // of [NSApp _isRunningModal] doesn't change immediately after a call to
+  // [NSApp stop:], so we have to assume that one extra call to [NSApp stop:]
+  // will do the job.)
+  BOOL cocoaModal = [NSApp _isRunningModal];
+  NS_ASSERTION(!cocoaModal,
+               "Don't call nsAppShell::Exit() from a modal event loop!");
+  if (cocoaModal)
+    [NSApp stop:nsnull];
+  [NSApp stop:nsnull];
+
+  return nsBaseAppShell::Exit();
 }
 
 // OnProcessNextEvent
@@ -413,7 +571,6 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 {
   if ((self = [self init])) {
     mAppShell = aAppShell;
-    mRunRV = NS_ERROR_NOT_INITIALIZED;
 
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(applicationWillTerminate:)
@@ -433,40 +590,6 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   [[NSNotificationCenter defaultCenter] removeObserver:self];
   [[NSDistributedNotificationCenter defaultCenter] removeObserver:self];
   [super dealloc];
-}
-
-// handlePortMessage:
-//
-// The selector called on the delegate object when nsAppShell::mPort is sent an
-// NSPortMessage by ScheduleNativeEventCallback.  Call into the nsAppShell
-// object for access to mRunningEventLoop and NativeEventCallback.
-//
-- (void)handlePortMessage:(NSPortMessage*)aPortMessage
-{
-  NSData* data = [[aPortMessage components] objectAtIndex:0];
-  nsAppShell* appShell = *static_cast<nsAppShell* const*>([data bytes]);
-  appShell->ProcessGeckoEvents();
-
-  NS_RELEASE(appShell);
-}
-
-// runAppShell
-//
-// Runs the nsAppShell, and immediately stops the Cocoa run loop when
-// nsAppShell::Run is done, saving its return value.
-- (void)runAppShell
-{
-  mRunRV = mAppShell->Run();
-  [NSApp stop:self];
-  return;
-}
-
-// rvFromRun
-//
-// Returns the nsresult return value saved by runAppShell.
-- (nsresult)rvFromRun
-{
-  return mRunRV;
 }
 
 // applicationWillTerminate:
@@ -492,3 +615,4 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
 }
 
 @end
+

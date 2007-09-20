@@ -227,10 +227,14 @@ function resumeDownload(aDownload)
 
 function removeDownload(aDownload)
 {
+  removeFromView(aDownload);
   gDownloadManager.removeDownload(aDownload.getAttribute("dlid"));
-  let index = gDownloadsView.selectedIndex;
-  gDownloadsView.removeChild(aDownload);
-  gDownloadsView.selectedIndex = Math.min(index, gDownloadsView.itemCount - 1);
+}
+
+function retryDownload(aDownload)
+{
+  removeFromView(aDownload);
+  gDownloadManager.retryDownload(aDownload.getAttribute("dlid"));
 }
 
 function showDownload(aDownload)
@@ -359,11 +363,6 @@ function showDownloadInfo(aDownload)
   gDownloadInfoPopup.openPopup(button, "after_end", 0, 0, false, false);
 }
 
-function retryDownload(aDownload)
-{
-  gDownloadManager.retryDownload(aDownload.getAttribute("dlid"));
-}
-
 function copySourceLocation(aDownload)
 {
   var uri = aDownload.getAttribute("uri");
@@ -477,7 +476,9 @@ var gContextMenus = [
    "menuitem_copyLocation"],
   // DOWNLOAD_BLOCKED
   ["menuitem_retry", "menuitem_remove", "menuseparator_copy_location",
-   "menuitem_copyLocation"]
+   "menuitem_copyLocation"],
+  // DOWNLOAD_SCANNING
+  ["menuitem_copyLocation"]
 ];
 
 function buildContextMenu(aEvent)
@@ -660,6 +661,13 @@ function openExternal(aFile)
 
 ///////////////////////////////////////////////////////////////////////////////
 //// Utility functions
+
+function removeFromView(aDownload)
+{
+  let index = gDownloadsView.selectedIndex;
+  gDownloadsView.removeChild(aDownload);
+  gDownloadsView.selectedIndex = Math.min(index, gDownloadsView.itemCount - 1);
+}
 
 /**
  * Builds the default view that the download manager starts out with.

@@ -53,8 +53,6 @@
 #include "nsString.h"
 #include "nsIStringBundle.h"
 #include "nsIDocument.h"
-#include "nsIDocShell.h"
-#include "nsIDocumentViewer.h"
 #include "nsIMutationObserver.h"
 
 #include "nsIDOMDocument.h"
@@ -138,50 +136,14 @@ nsMenuBarX::~nsMenuBarX()
 nsEventStatus 
 nsMenuBarX::MenuItemSelected(const nsMenuEvent &aMenuEvent)
 {
-  // Dispatch menu event
-  nsEventStatus eventStatus = nsEventStatus_eIgnore;
-  
-  for (PRInt32 i = mMenusArray.Count() - 1; i >= 0; i--) {
-    nsCOMPtr<nsIMenu> menu = mMenusArray.ObjectAt(i);
-    nsCOMPtr<nsIMenuListener> menuListener = do_QueryInterface(menu);
-    if (menuListener) {
-      eventStatus = menuListener->MenuItemSelected(aMenuEvent);
-      if (nsEventStatus_eIgnore != eventStatus)
-        return eventStatus;
-    }
-  }
-  return eventStatus;
+  return nsEventStatus_eIgnore;
 }
 
 
 nsEventStatus 
 nsMenuBarX::MenuSelected(const nsMenuEvent &aMenuEvent)
 {
-  // Dispatch event
-  nsEventStatus eventStatus = nsEventStatus_eIgnore;
-  
-  nsCOMPtr<nsIMenuListener> menuListener;
-  if (menuListener) {
-    //TODO: MenuSelected is the right thing to call...
-    //eventStatus = menuListener->MenuSelected(aMenuEvent);
-    eventStatus = menuListener->MenuItemSelected(aMenuEvent);
-    if (nsEventStatus_eIgnore != eventStatus)
-      return eventStatus;
-  }
-  else {
-    for (PRInt32 i = mMenusArray.Count() - 1; i >= 0; i--) {
-      nsCOMPtr<nsIMenu> menu = mMenusArray.ObjectAt(i);
-      nsCOMPtr<nsIMenuListener> thisListener = do_QueryInterface(menu);
-      if (thisListener) {
-        //TODO: MenuSelected is the right thing to call...
-        //eventStatus = menuListener->MenuSelected(aMenuEvent);
-        eventStatus = thisListener->MenuItemSelected(aMenuEvent);
-        if (nsEventStatus_eIgnore != eventStatus)
-          return eventStatus;
-      }
-    }
-  }
-  return eventStatus;
+  return nsEventStatus_eIgnore;
 }
 
 
@@ -207,44 +169,7 @@ nsMenuBarX::SetRebuild(PRBool aNeedsRebuild)
 }
 
 
-void
-nsMenuBarX::GetDocument(nsIDocShell* inDocShell, nsIDocument** outDocument)
-{
-  *outDocument = nsnull;
-  
-  if (inDocShell) {
-    nsCOMPtr<nsIContentViewer> cv;
-    inDocShell->GetContentViewer(getter_AddRefs(cv));
-    if (cv) {
-      // get the document
-      nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-      if (!docv)
-        return;
-      docv->GetDocument(outDocument); // addrefs
-    }
-  }
-}
-
-
-void
-nsMenuBarX::RegisterAsDocumentObserver(nsIDocShell* inDocShell)
-{
-  nsCOMPtr<nsIDocument> doc;
-  GetDocument(inDocShell, getter_AddRefs(doc));
-  if (!doc)
-    return;
-  
-  // register ourselves
-  doc->AddMutationObserver(this);
-  // also get pointer to doc, just in case docshell goes away
-  // we can still remove ourself as doc observer directly from doc
-  mDocument = doc;
-}
-
-
-// Do what's necessary to conform to the Aqua guidelines for menus. Initially, this
-// means removing 'Quit' from the file menu and 'Preferences' from the edit menu, along
-// with their various separators (if present).
+// Do what's necessary to conform to the Aqua guidelines for menus.
 void
 nsMenuBarX::AquifyMenuBar()
 {
@@ -384,8 +309,8 @@ nsMenuBarX::ExecuteCommand(nsIContent* inDispatchTo)
   if (!inDispatchTo)
     return nsEventStatus_eIgnore;
   
-  return MenuHelpersX::DispatchCommandTo(mDocShellWeakRef, inDispatchTo);
-} // ExecuteCommand
+  return MenuHelpersX::DispatchCommandTo(inDispatchTo);
+}
 
 
 // Hide the item in the menu by setting the 'hidden' attribute. Returns it in |outHiddenNode| so
@@ -409,30 +334,30 @@ nsMenuBarX::HideItem(nsIDOMDocument* inDoc, const nsAString & inID, nsIContent**
 
 nsEventStatus
 nsMenuBarX::MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
-                          void * menubarNode, void * aDocShell)
+                          void * aMenubarNode)
 {
-  mDocShellWeakRef = do_GetWeakReference(static_cast<nsIDocShell*>(aDocShell));
-  nsIDOMNode* aDOMNode  = static_cast<nsIDOMNode*>(menubarNode);
-  mMenuBarContent = do_QueryInterface(aDOMNode); // strong ref
+  nsIDOMNode* domNode  = static_cast<nsIDOMNode*>(aMenubarNode);
+  mMenuBarContent = do_QueryInterface(domNode); // strong ref
   NS_ASSERTION(mMenuBarContent, "No content specified for this menubar");
   if (!mMenuBarContent)
     return nsEventStatus_eIgnore;
   
-  Create(aParentWindow);
+  SetParent(aParentWindow);
   
   AquifyMenuBar();
   
   OSStatus err = InstallCommandEventHandler();
   if (err)
     return nsEventStatus_eIgnore;
-  
-  nsCOMPtr<nsIDocShell> docShell = do_QueryReferent(mDocShellWeakRef);
-  if (docShell)
-    RegisterAsDocumentObserver(docShell);
-  
-  // set this as a nsMenuListener on aParentWindow
-  aParentWindow->AddMenuListener((nsIMenuListener *)this);
-  
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  domNode->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+  if (!doc)
+    return nsEventStatus_eIgnore;
+  doc->AddMutationObserver(this);
+  mDocument = doc;
+
   PRUint32 count = mMenuBarContent->GetChildCount();
   for (PRUint32 i = 0; i < count; i++) { 
     nsIContent *menu = mMenuBarContent->GetChildAt(i);
@@ -444,31 +369,19 @@ nsMenuBarX::MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
         menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuName);
         menu->GetAttr(kNameSpaceID_None, nsWidgetAtoms::accesskey, menuAccessKey);
 
-        // Don't create the whole menu yet, just add in the top level names
-
         // Create nsMenu, the menubar will own it
         nsCOMPtr<nsIMenu> pnsMenu(do_CreateInstance(kMenuCID));
         if (pnsMenu) {
           pnsMenu->Create(static_cast<nsIMenuBar*>(this), menuName, menuAccessKey, 
                           static_cast<nsIChangeManager *>(this), menu);
-
-          // Make nsMenu a child of nsMenuBar. nsMenuBar takes ownership.
           AddMenu(pnsMenu);
-          
-          if (menu->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::id,
-                                NS_LITERAL_STRING("menu_Help"), eCaseMatters)) {
-            nsMenuEvent event(PR_TRUE, 0, nsnull);
-            event.mCommand = (unsigned int)nsnull;
-            nsCOMPtr<nsIMenuListener> listener(do_QueryInterface(pnsMenu));
-            listener->MenuSelected(event);
-          }
         }
       } 
     }
-  } // for each menu
+  }
   
   // Give the aParentWindow this nsMenuBarX to hold onto.
-  // The parent takes ownership
+  // The parent takes ownership.
   aParentWindow->SetMenuBar(this);
   
   return nsEventStatus_eIgnore;
@@ -802,7 +715,7 @@ NS_IMETHODIMP nsMenuBarX::RemoveAll()
 
 NS_IMETHODIMP nsMenuBarX::GetNativeData(void *& aData)
 {
-  aData = (void *) mRootMenu;
+  aData = (void*)mRootMenu;
   return NS_OK;
 }
 
@@ -1031,8 +944,7 @@ nsMenuBarX::Unregister(PRUint32 inCommandID)
 
 
 nsEventStatus
-MenuHelpersX::DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
-                                nsIContent* aTargetContent)
+MenuHelpersX::DispatchCommandTo(nsIContent* aTargetContent)
 {
   NS_PRECONDITION(aTargetContent, "null ptr");
 

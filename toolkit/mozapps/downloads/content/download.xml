@@ -314,4 +314,31 @@
       </xul:hbox>
     </content>
   </binding>
+
+  <binding id="download-scanning" extends="chrome://mozapps/content/downloads/download.xml#download-base">
+    <content>
+      <xul:hbox flex="1">
+#ifdef SHOW_ICONS
+        <xul:vbox pack="start">
+          <xul:image class="downloadTypeIcon" validate="always"
+                     xbl:inherits="src=image"/>
+        </xul:vbox>
+#endif
+        <xul:vbox pack="start" flex="1">
+          <xul:label xbl:inherits="value=target,tooltiptext=target"
+                       crop="center" flex="2" class="name"/>
+          <xul:hbox>
+            <xul:vbox flex="1">
+              <xul:progressmeter mode="undetermined" flex="1" />
+            </xul:vbox>
+            <xul:button class="info mini-button" tooltiptext="&cmd.info.label;"
+                        command="cmd_showInfo" ondblclick="event.stopPropagation();"
+                        anonid="info"/>
+          </xul:hbox>
+          <xul:label value="&scanning.label;" class="status"/>
+          <xul:spacer flex="1"/>
+        </xul:vbox>
+      </xul:hbox>
+    </content>  
+  </binding>
 </bindings>

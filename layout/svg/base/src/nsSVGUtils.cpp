@@ -1456,6 +1456,29 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
   return PR_FALSE;
 }
 
+#ifdef DEBUG
+void
+nsSVGUtils::WritePPM(const char *fname, gfxImageSurface *aSurface)
+{
+  FILE *f = fopen(fname, "wb");
+  if (!f)
+    return;
+
+  gfxIntSize size = aSurface->GetSize();
+  fprintf(f, "P6\n%d %d\n255\n", size.width, size.height);
+  unsigned char *data = aSurface->Data();
+  PRInt32 stride = aSurface->Stride();
+  for (int y=0; y<size.height; y++) {
+    for (int x=0; x<size.width; x++) {
+      fwrite(data + y * stride + 4 * x + GFX_ARGB32_OFFSET_R, 1, 1, f);
+      fwrite(data + y * stride + 4 * x + GFX_ARGB32_OFFSET_G, 1, 1, f);
+      fwrite(data + y * stride + 4 * x + GFX_ARGB32_OFFSET_B, 1, 1, f);
+    }
+  }
+  fclose(f);
+}
+#endif
+
 // ----------------------------------------------------------------------
 
 nsSVGRenderState::nsSVGRenderState(nsIRenderingContext *aContext) :

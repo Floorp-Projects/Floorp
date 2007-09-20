@@ -72,6 +72,8 @@ interface nsIAccessibleProvider : nsISupports
   const long XULLink = 0x0000100A;
   const long XULListbox = 0x0000100B;
   const long XULListitem = 0x0000100C;
+  const long XULListHead = 0x00001024;
+  const long XULListHeader = 0x00001025;
   const long XULMenubar = 0x0000100D;
   const long XULMenuitem = 0x0000100E;
   const long XULMenupopup = 0x0000100F;
@@ -97,7 +99,7 @@ interface nsIAccessibleProvider : nsISupports
   const long XULThumb            = 0x0000101B;
   const long XULTree             = 0x0000101C;
   const long XULTreeColumns      = 0x0000101D;
-  const long XULTreeColumnitem   = 0x0000101E;
+  const long XULTreeColumnItem   = 0x0000101E;
   const long XULToolbar          = 0x0000101F;
   const long XULToolbarSeparator = 0x00001020;
   const long XULTooltip          = 0x00001021;

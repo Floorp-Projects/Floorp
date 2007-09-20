@@ -55,7 +55,6 @@
 class nsIWidget;
 class nsIDocument;
 class nsIDOMNode;
-class nsIDocShell;
 
 extern "C" MenuRef _NSGetCarbonMenu(NSMenu* aMenu);
 
@@ -63,8 +62,7 @@ PRBool NodeIsHiddenOrCollapsed(nsIContent* inContent);
 
 namespace MenuHelpersX
 {
-  nsEventStatus DispatchCommandTo(nsIWeakReference* aDocShellWeakRef,
-                                  nsIContent* aTargetContent);
+  nsEventStatus DispatchCommandTo(nsIContent* aTargetContent);
   NSString* CreateTruncatedCocoaLabel(const nsString& itemLabel);
   PRUint8 GeckoModifiersForNodeAttribute(const nsString& modifiersAttribute);
   unsigned int MacModifiersForGeckoModifiers(PRUint8 geckoModifiers);
@@ -93,9 +91,7 @@ class nsMenuBarX : public nsIMenuBar,
 public:
     nsMenuBarX();
     virtual ~nsMenuBarX();
-    
-    enum {kApplicationMenuID = 1};
-    
+
     // |NSMenuItem|s target Objective-C objects
     static NativeMenuItemTarget* sNativeEventTarget;
     
@@ -110,7 +106,7 @@ public:
     nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
     nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
     nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
-                                void * menuNode, void * aDocShell);
+                                void * aMenuNode);
     nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
     nsEventStatus CheckRebuild(PRBool & aMenuEvent);
     nsEventStatus SetRebuild(PRBool aMenuEvent);
@@ -134,9 +130,6 @@ public:
     NS_IMETHOD SetNativeData(void* aData);
     
 protected:
-
-    void GetDocument(nsIDocShell* inDocShell, nsIDocument** outDocument) ;
-    void RegisterAsDocumentObserver(nsIDocShell* inDocShell);
     
     // Make our menubar conform to Aqua UI guidelines
     void AquifyMenuBar();
@@ -165,8 +158,6 @@ protected:
     PRBool                  mIsMenuBarAdded;
     PRUint32                mCurrentCommandID;    // unique command id (per menu-bar) to give to next item that asks
 
-
-    nsWeakPtr               mDocShellWeakRef;     // weak ref to docshell
     nsIDocument*            mDocument;            // pointer to document
 
     NSMenu*                 mRootMenu;            // root menu, representing entire menu bar

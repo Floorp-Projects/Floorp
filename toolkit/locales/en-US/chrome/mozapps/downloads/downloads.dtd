@@ -9,6 +9,7 @@
 
 <!-- 'Parental Controls' label should be capitalized -->
 <!ENTITY blocked.label                    "Blocked by Parental Controls">
+<!ENTITY scanning.label                   "Scanning for viruses...">
 
 <!ENTITY downloads.title                  "Downloads">
 

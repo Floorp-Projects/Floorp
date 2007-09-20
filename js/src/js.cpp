@@ -2398,6 +2398,7 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         ok = JS_TRUE;
     } else {
         fp = JS_GetScriptedCaller(cx, NULL);
+        JS_SetGlobalObject(scx, sobj);
         ok = JS_EvaluateUCScript(scx, sobj, src, srclen,
                                  fp->script->filename,
                                  JS_PCToLineNumber(cx, fp->script, fp->pc),

@@ -1391,9 +1391,8 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
     lambda = rdata->lambda;
     if (lambda) {
         uintN argc, i, j, m, n, p;
-        jsval *sp, *oldsp, rval;
+        jsval *invokevp, *sp;
         void *mark;
-        JSStackFrame *fp;
         JSBool ok;
 
         /*
@@ -1415,11 +1414,12 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
          */
         p = rdata->base.regexp->parenCount;
         argc = 1 + p + 2;
-        sp = js_AllocStack(cx, 2 + argc, &mark);
-        if (!sp)
+        invokevp = js_AllocStack(cx, 2 + argc, &mark);
+        if (!invokevp)
             return JS_FALSE;
 
         /* Push lambda and its 'this' parameter. */
+        sp = invokevp;
         *sp++ = OBJECT_TO_JSVAL(lambda);
         *sp++ = OBJECT_TO_JSVAL(OBJ_GET_PARENT(cx, lambda));
 
@@ -1463,21 +1463,14 @@ find_replen(JSContext *cx, ReplaceData *rdata, size_t *sizep)
         *sp++ = INT_TO_JSVAL((jsint)cx->regExpStatics.leftContext.length);
         *sp++ = STRING_TO_JSVAL(rdata->base.str);
 
-        /* Lift current frame to include the args and do the call. */
-        fp = cx->fp;
-        oldsp = fp->sp;
-        fp->sp = sp;
-        ok = js_Invoke(cx, argc, JSINVOKE_INTERNAL);
-        rval = fp->sp[-1];
-        fp->sp = oldsp;
-
+        ok = js_Invoke(cx, argc, invokevp, JSINVOKE_INTERNAL);
         if (ok) {
             /*
              * NB: we count on the newborn string root to hold any string
              * created by this js_ValueToString that would otherwise be GC-
              * able, until we use rdata->repstr in do_replace.
              */
-            repstr = js_ValueToString(cx, rval);
+            repstr = js_ValueToString(cx, *invokevp);
             if (!repstr) {
                 ok = JS_FALSE;
             } else {
@@ -2626,19 +2619,38 @@ js_PurgeDeflatedStringCache(JSRuntime *rt, JSString *str)
     JS_RELEASE_LOCK(rt->deflatedStringCacheLock);
 }
 
-void
-js_FinalizeString(JSContext *cx, JSString *str)
+static JSStringFinalizeOp str_finalizers[GCX_NTYPES - GCX_EXTERNAL_STRING] = {
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+};
+
+intN
+js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
+                                 JSStringFinalizeOp newop)
 {
-    js_FinalizeStringRT(cx->runtime, str);
+    uintN i;
+
+    for (i = 0; i != JS_ARRAY_LENGTH(str_finalizers); i++) {
+        if (str_finalizers[i] == oldop) {
+            str_finalizers[i] = newop;
+            return (intN) i + GCX_EXTERNAL_STRING;
+        }
+    }
+    return -1;
 }
 
+/*
+ * cx is NULL when we are called from js_FinishAtomState to force the
+ * finalization of the permanently interned strings.
+ */
 void
-js_FinalizeStringRT(JSRuntime *rt, JSString *str)
+js_FinalizeStringRT(JSRuntime *rt, JSString *str, uintN gctype, JSContext *cx)
 {
     JSBool valid;
+    JSStringFinalizeOp finalizer;
 
     JS_RUNTIME_UNMETER(rt, liveStrings);
     if (JSSTRING_IS_DEPENDENT(str)) {
+        JS_ASSERT(gctype == GCX_STRING);
         /* If JSSTRFLAG_DEPENDENT is set, this string must be valid. */
         JS_ASSERT(JSSTRDEP_BASE(str));
         JS_RUNTIME_UNMETER(rt, liveDependentStrings);
@@ -2649,17 +2661,26 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
         if (valid) {
             if (IN_UNIT_STRING_SPACE_RT(rt, str->u.chars)) {
                 JS_ASSERT(rt->unitStrings[*str->u.chars] == str);
+                JS_ASSERT(gctype == GCX_STRING);
                 rt->unitStrings[*str->u.chars] = NULL;
-            } else {
+            } else if (gctype == GCX_STRING) {
                 free(str->u.chars);
+            } else {
+                JS_ASSERT(gctype - GCX_EXTERNAL_STRING <
+                          JS_ARRAY_LENGTH(str_finalizers));
+                finalizer = str_finalizers[gctype - GCX_EXTERNAL_STRING];
+                if (finalizer) {
+                    /*
+                     * Assume that the finalizer for the permanently interned
+                     * string knows how to deal with null context.
+                     */
+                    finalizer(cx, str);
+                }
             }
         }
     }
     if (valid)
         js_PurgeDeflatedStringCache(rt, str);
-#ifdef DEBUG
-    memset(str, JS_FREE_PATTERN, sizeof *str);
-#endif
 }
 
 JS_FRIEND_API(const char *)

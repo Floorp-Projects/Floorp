@@ -51,6 +51,7 @@ const nsIFactory             = Components.interfaces.nsIFactory;
 const nsIFileURL             = Components.interfaces.nsIFileURL;
 const nsIHttpProtocolHandler = Components.interfaces.nsIHttpProtocolHandler;
 const nsIInterfaceRequestor  = Components.interfaces.nsIInterfaceRequestor;
+const nsINetUtil             = Components.interfaces.nsINetUtil;
 const nsIPrefBranch          = Components.interfaces.nsIPrefBranch;
 const nsIPrefLocalizedString = Components.interfaces.nsIPrefLocalizedString;
 const nsISupportsString      = Components.interfaces.nsISupportsString;
@@ -66,6 +67,9 @@ const nsICommandLineValidator = Components.interfaces.nsICommandLineValidator;
 const NS_BINDING_ABORTED = 0x804b0002;
 const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
 const NS_ERROR_ABORT = Components.results.NS_ERROR_ABORT;
+
+const URI_INHERITS_SECURITY_CONTEXT = nsIHttpProtocolHandler
+                                        .URI_INHERITS_SECURITY_CONTEXT;
 
 function shouldLoadURI(aURI) {
   if (aURI && !aURI.schemeIs("chrome"))
@@ -430,12 +434,21 @@ var nsBrowserContentHandler = {
       // Handle the old preference dialog URL separately (bug 285416)
       if (chromeParam == "chrome://browser/content/pref/pref.xul") {
         openPreferences();
-      } else {
+        cmdLine.preventDefault = true;
+      } else try {
+        // only load URIs which do not inherit chrome privs
         var features = "chrome,dialog=no,all" + this.getFeatures(cmdLine);
-        openWindow(null, chromeParam, "_blank", features, "");
+        var uri = resolveURIInternal(cmdLine, chromeParam);
+        var netutil = Components.classes["@mozilla.org/network/util;1"]
+                                .getService(nsINetUtil);
+        if (!netutil.URIChainHasFlags(uri, URI_INHERITS_SECURITY_CONTEXT)) {
+          openWindow(null, uri.spec, "_blank", features, "");
+          cmdLine.preventDefault = true;
+        }
       }
-
-      cmdLine.preventDefault = true;
+      catch (e) {
+        Components.utils.reportError(e);
+      }
     }
     if (cmdLine.handleFlag("preferences", false)) {
       openPreferences();

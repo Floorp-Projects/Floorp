@@ -39,6 +39,7 @@
 #include "nsSVGLength.h"
 #include "nsGkAtoms.h"
 #include "nsSVGNumber2.h"
+#include "nsSVGInteger.h"
 #include "nsIDOMSVGFilters.h"
 #include "nsCOMPtr.h"
 #include "nsISVGFilter.h"
@@ -57,7 +58,6 @@
 #include "nsStyleContext.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
-#include "nsSVGAnimatedInteger.h"
 #include "gfxContext.h"
 #include "nsSVGAnimatedBoolean.h"
 #include "nsSVGLengthList.h"
@@ -334,10 +334,14 @@ nsSVGFE::ScanDualValueAttribute(const nsAString& aValue, nsIAtom* aAttribute,
     ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
     x = aInfo1->mDefaultValue;
     y = aInfo2->mDefaultValue;
-    return PR_FALSE;
   }
+
   aNum1->SetBaseValue(x, this, PR_FALSE);
   aNum2->SetBaseValue(y, this, PR_FALSE);
+
+  if (parseError)
+    return PR_FALSE;
+
   aResult.SetTo(aValue);
   return PR_TRUE;
 }
@@ -1971,13 +1975,6 @@ nsSVGComponentTransferFunctionElement::Init()
   return NS_OK;
 }
 
-nsSVGElement::EnumAttributesInfo
-nsSVGComponentTransferFunctionElement::GetEnumInfo()
-{
-  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
-}
-
 //----------------------------------------------------------------------
 // nsIDOMSVGComponentTransferFunctionElement methods
 
@@ -2121,6 +2118,13 @@ nsSVGComponentTransferFunctionElement::GenerateLookupTable(PRUint8 *aTable)
 
 //----------------------------------------------------------------------
 // nsSVGElement methods
+
+nsSVGElement::EnumAttributesInfo
+nsSVGComponentTransferFunctionElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            NS_ARRAY_LENGTH(sEnumInfo));
+}
 
 nsSVGElement::NumberAttributesInfo
 nsSVGComponentTransferFunctionElement::GetNumberInfo()
@@ -2983,7 +2987,6 @@ class nsSVGFETurbulenceElement : public nsSVGFETurbulenceElementBase,
 protected:
   nsSVGFETurbulenceElement(nsINodeInfo* aNodeInfo)
     : nsSVGFETurbulenceElementBase(aNodeInfo) {}
-  nsresult Init();
 
 public:
   virtual PRBool SubregionIsUnionOfRegions() { return PR_FALSE; }
@@ -3010,24 +3013,25 @@ public:
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsresult UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                             PRBool aNotify);
 
 protected:
   virtual NumberAttributesInfo GetNumberInfo();
+  virtual IntegerAttributesInfo GetIntegerInfo();
   virtual EnumAttributesInfo GetEnumInfo();
 
   enum { BASE_FREQ_X, BASE_FREQ_Y, SEED}; // floating point seed?!
   nsSVGNumber2 mNumberAttributes[3];
   static NumberInfo sNumberInfo[3];
 
+  enum { OCTAVES };
+  nsSVGInteger mIntegerAttributes[1];
+  static IntegerInfo sIntegerInfo[1];
+
   enum { STITCHTILES, TYPE };
   nsSVGEnum mEnumAttributes[2];
   static nsSVGEnumMapping sStitchTilesMap[];
   static nsSVGEnumMapping sTypeMap[];
   static EnumInfo sEnumInfo[2];
-
-  nsCOMPtr<nsIDOMSVGAnimatedInteger> mNumOctaves;
 
 private:
 
@@ -3082,7 +3086,7 @@ private:
     int mWrapY;
   };
 
-  void Init(PRInt32 aSeed);
+  void InitSeed(PRInt32 aSeed);
   double Noise2(int aColorChannel, double aVec[2], StitchInfo *aStitchInfo);
   double
   Turbulence(int aColorChannel, double *aPoint, double aBaseFreqX,
@@ -3096,6 +3100,11 @@ nsSVGElement::NumberInfo nsSVGFETurbulenceElement::sNumberInfo[3] =
   { &nsGkAtoms::baseFrequency, 0 },
   { &nsGkAtoms::baseFrequency, 0 },
   { &nsGkAtoms::seed, 0 }
+};
+
+nsSVGElement::IntegerInfo nsSVGFETurbulenceElement::sIntegerInfo[1] =
+{
+  { &nsGkAtoms::numOctaves, 1 }
 };
 
 nsSVGEnumMapping nsSVGFETurbulenceElement::sTypeMap[] = {
@@ -3145,35 +3154,6 @@ NS_INTERFACE_MAP_BEGIN(nsSVGFETurbulenceElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGFETurbulenceElementBase)
 
 //----------------------------------------------------------------------
-// Implementation
-
-nsresult
-nsSVGFETurbulenceElement::Init()
-{
-  nsresult rv = nsSVGFETurbulenceElementBase::Init();
-  NS_ENSURE_SUCCESS(rv,rv);
-
-  // Create mapped properties:
-
-  // DOM property: numOctaves ,  #IMPLIED attrib: numOctaves
-  {
-    rv = NS_NewSVGAnimatedInteger(getter_AddRefs(mNumOctaves), 1);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::numOctaves, mNumOctaves);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  return rv;
-}
-
-nsSVGElement::EnumAttributesInfo
-nsSVGFETurbulenceElement::GetEnumInfo()
-{
-  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
-                            NS_ARRAY_LENGTH(sEnumInfo));
-}
-
-//----------------------------------------------------------------------
 // nsIDOMNode methods
 
 NS_IMPL_ELEMENT_CLONE_WITH_INIT(nsSVGFETurbulenceElement)
@@ -3196,9 +3176,7 @@ NS_IMETHODIMP nsSVGFETurbulenceElement::GetBaseFrequencyY(nsIDOMSVGAnimatedNumbe
 /* readonly attribute nsIDOMSVGAnimatedInteger numOctaves; */
 NS_IMETHODIMP nsSVGFETurbulenceElement::GetNumOctaves(nsIDOMSVGAnimatedInteger * *aNum)
 {
-  *aNum = mNumOctaves;
-  NS_IF_ADDREF(*aNum);
-  return NS_OK;
+  return mIntegerAttributes[OCTAVES].ToDOMAnimatedInteger(aNum, this);
 }
 
 /* readonly attribute nsIDOMSVGAnimatedNumber seed; */
@@ -3236,18 +3214,6 @@ nsSVGFETurbulenceElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                                                       aValue, aResult);
 }
 
-nsresult
-nsSVGFETurbulenceElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                    PRBool aNotify)
-{
-  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::numOctaves) {
-    mNumOctaves->SetBaseVal(1);
-    return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
-  }
-
-  return nsSVGFETurbulenceElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
-}
-
 NS_IMETHODIMP
 nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance)
 {
@@ -3276,9 +3242,9 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance)
   PRUint16 stitch = mEnumAttributes[STITCHTILES].GetAnimValue();
 
   GetAnimatedNumberValues(&fX, &fY, &seed, nsnull);
-  mNumOctaves->GetAnimVal(&octaves);
+  GetAnimatedIntegerValues(&octaves, nsnull);
 
-  Init((PRInt32)seed);
+  InitSeed((PRInt32)seed);
 
   float filterX, filterY, filterWidth, filterHeight;
   instance->GetFilterBox(&filterX, &filterY, &filterWidth, &filterHeight);
@@ -3350,7 +3316,7 @@ nsSVGFETurbulenceElement::GetRequirements(PRUint32 *aRequirements)
 }
 
 void
-nsSVGFETurbulenceElement::Init(PRInt32 aSeed)
+nsSVGFETurbulenceElement::InitSeed(PRInt32 aSeed)
 {
   double s;
   int i, j, k;
@@ -3512,6 +3478,20 @@ nsSVGFETurbulenceElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               NS_ARRAY_LENGTH(sNumberInfo));
+}
+
+nsSVGElement::IntegerAttributesInfo
+nsSVGFETurbulenceElement::GetIntegerInfo()
+{
+  return IntegerAttributesInfo(mIntegerAttributes, sIntegerInfo,
+                               NS_ARRAY_LENGTH(sIntegerInfo));
+}
+
+nsSVGElement::EnumAttributesInfo
+nsSVGFETurbulenceElement::GetEnumInfo()
+{
+  return EnumAttributesInfo(mEnumAttributes, sEnumInfo,
+                            NS_ARRAY_LENGTH(sEnumInfo));
 }
 
 //---------------------Morphology------------------------
@@ -3860,21 +3840,22 @@ protected:
   }
 
   virtual NumberAttributesInfo GetNumberInfo();
+  virtual IntegerAttributesInfo GetIntegerInfo();
   virtual EnumAttributesInfo GetEnumInfo();
 
   enum { DIVISOR, BIAS, KERNEL_UNIT_LENGTH_X, KERNEL_UNIT_LENGTH_Y };
   nsSVGNumber2 mNumberAttributes[4];
   static NumberInfo sNumberInfo[4];
 
+  enum { ORDER_X, ORDER_Y, TARGET_X, TARGET_Y };
+  nsSVGInteger mIntegerAttributes[4];
+  static IntegerInfo sIntegerInfo[4];
+
   enum { EDGEMODE };
   nsSVGEnum mEnumAttributes[1];
   static nsSVGEnumMapping sEdgeModeMap[];
   static EnumInfo sEnumInfo[1];
 
-  nsCOMPtr<nsIDOMSVGAnimatedInteger> mOrderX;
-  nsCOMPtr<nsIDOMSVGAnimatedInteger> mOrderY;
-  nsCOMPtr<nsIDOMSVGAnimatedInteger> mTargetX;
-  nsCOMPtr<nsIDOMSVGAnimatedInteger> mTargetY;
   nsCOMPtr<nsIDOMSVGAnimatedNumberList>  mKernelMatrix;
   nsCOMPtr<nsIDOMSVGAnimatedBoolean> mPreserveAlpha;
 
@@ -3887,6 +3868,14 @@ nsSVGElement::NumberInfo nsSVGFEConvolveMatrixElement::sNumberInfo[4] =
   { &nsGkAtoms::bias, 0 },
   { &nsGkAtoms::kernelUnitLength, 0 },
   { &nsGkAtoms::kernelUnitLength, 0 }
+};
+
+nsSVGElement::IntegerInfo nsSVGFEConvolveMatrixElement::sIntegerInfo[4] =
+{
+  { &nsGkAtoms::order, 0 },
+  { &nsGkAtoms::order, 0 },
+  { &nsGkAtoms::targetX, 0 },
+  { &nsGkAtoms::targetY, 0 }
 };
 
 nsSVGEnumMapping nsSVGFEConvolveMatrixElement::sEdgeModeMap[] = {
@@ -3944,29 +3933,6 @@ nsSVGFEConvolveMatrixElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-  {
-    rv = NS_NewSVGAnimatedInteger(getter_AddRefs(mOrderX), 0);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = NS_NewSVGAnimatedInteger(getter_AddRefs(mOrderY), 0);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: targetX , #IMPLIED attrib: targetX
-  {
-    rv = NS_NewSVGAnimatedInteger(getter_AddRefs(mTargetX), 0);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::targetX, mTargetX);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: targetY , #IMPLIED attrib: targetY
-  {
-    rv = NS_NewSVGAnimatedInteger(getter_AddRefs(mTargetY), 0);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::targetY, mTargetY);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
   // DOM property: preserveAlpha , #IMPLIED attrib: preserveAlpha
   {
     rv = NS_NewSVGAnimatedBoolean(getter_AddRefs(mPreserveAlpha), PR_FALSE);
@@ -4003,16 +3969,12 @@ NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetIn1(nsIDOMSVGAnimatedString * *aI
 
 NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetOrderX(nsIDOMSVGAnimatedInteger * *aOrderX)
 {
-  *aOrderX = mOrderX;
-  NS_IF_ADDREF(*aOrderX);
-  return NS_OK;
+  return mIntegerAttributes[ORDER_X].ToDOMAnimatedInteger(aOrderX, this);
 }
 
 NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetOrderY(nsIDOMSVGAnimatedInteger * *aOrderY)
 {
-  *aOrderY = mOrderY;
-  NS_IF_ADDREF(*aOrderY);
-  return NS_OK;
+  return mIntegerAttributes[ORDER_Y].ToDOMAnimatedInteger(aOrderY, this);
 }
 
 NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetKernelMatrix(nsIDOMSVGAnimatedNumberList * *aKernelMatrix)
@@ -4024,16 +3986,12 @@ NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetKernelMatrix(nsIDOMSVGAnimatedNum
 
 NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetTargetX(nsIDOMSVGAnimatedInteger * *aTargetX)
 {
-  *aTargetX = mTargetX;
-  NS_IF_ADDREF(*aTargetX);
-  return NS_OK;
+  return mIntegerAttributes[TARGET_X].ToDOMAnimatedInteger(aTargetX, this);
 }
 
 NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetTargetY(nsIDOMSVGAnimatedInteger * *aTargetY)
 {
-  *aTargetY = mTargetY;
-  NS_IF_ADDREF(*aTargetY);
-  return NS_OK;
+  return mIntegerAttributes[TARGET_Y].ToDOMAnimatedInteger(aTargetY, this);
 }
 
 NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetEdgeMode(nsIDOMSVGAnimatedEnumeration * *aEdgeMode)
@@ -4111,13 +4069,18 @@ nsSVGFEConvolveMatrixElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aNam
       }
     }
 
-    mOrderX->SetBaseVal(x);
-    mOrderY->SetBaseVal(y);
-
     if (parseError) {
       ReportAttributeParseFailure(GetOwnerDoc(), aName, aValue);
-      return PR_FALSE;
+      x = sIntegerInfo[ORDER_X].mDefaultValue;
+      y = sIntegerInfo[ORDER_Y].mDefaultValue;
     }
+
+    mIntegerAttributes[ORDER_X].SetBaseValue(x, this, PR_FALSE);
+    mIntegerAttributes[ORDER_Y].SetBaseValue(y, this, PR_FALSE);
+
+    if (parseError)
+      return PR_FALSE;
+
     aResult.SetTo(aValue);
     return PR_TRUE;
   }
@@ -4137,28 +4100,11 @@ nsSVGFEConvolveMatrixElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aNam
 
 nsresult
 nsSVGFEConvolveMatrixElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                    PRBool aNotify)
+                                        PRBool aNotify)
 {
-  if (aNamespaceID == kNameSpaceID_None) {
-    PRBool processed = PR_FALSE;
-    if (aName == nsGkAtoms::order) {
-      mOrderX->SetBaseVal(0);
-      mOrderY->SetBaseVal(0);
-      processed = PR_TRUE;
-    } else if (aName == nsGkAtoms::targetX) {
-      mTargetX->SetBaseVal(0);
-      processed = PR_TRUE;
-    } else if (aName == nsGkAtoms::targetY) {
-      mTargetY->SetBaseVal(0);
-      processed = PR_TRUE;
-    } else if (aName == nsGkAtoms::preserveAlpha) {
-      mPreserveAlpha->SetBaseVal(PR_FALSE);
-      processed = PR_TRUE;
-    }
-
-    if (processed) {
-      return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
-    }
+  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::preserveAlpha) {
+    mPreserveAlpha->SetBaseVal(PR_FALSE);
+    return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
   }
 
   return nsSVGFEConvolveMatrixElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
@@ -4247,23 +4193,21 @@ nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance)
   }
 
   PRInt32 orderX, orderY;
-  mOrderX->GetAnimVal(&orderX);
-  mOrderY->GetAnimVal(&orderY);
+  PRInt32 targetX, targetY;
+  GetAnimatedIntegerValues(&orderX, &orderY, &targetX, &targetY, nsnull);
+
   if (orderX <= 0 || orderY <= 0 ||
       static_cast<PRUint32>(orderX * orderY) != num) {
     return NS_ERROR_FAILURE;
   }
 
-  PRInt32 targetX, targetY;
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::targetX)) {
-    mTargetX->GetAnimVal(&targetX);
     if (targetX < 0 || targetX >= orderX)
       return NS_ERROR_FAILURE;
   } else {
     targetX = orderX / 2;
   }
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::targetY)) {
-    mTargetY->GetAnimVal(&targetY);
     if (targetY < 0 || targetY >= orderY)
       return NS_ERROR_FAILURE;
   } else {
@@ -4353,6 +4297,13 @@ nsSVGFEConvolveMatrixElement::GetNumberInfo()
 {
   return NumberAttributesInfo(mNumberAttributes, sNumberInfo,
                               NS_ARRAY_LENGTH(sNumberInfo));
+}
+
+nsSVGElement::IntegerAttributesInfo
+nsSVGFEConvolveMatrixElement::GetIntegerInfo()
+{
+  return IntegerAttributesInfo(mIntegerAttributes, sIntegerInfo,
+                               NS_ARRAY_LENGTH(sIntegerInfo));
 }
 
 nsSVGElement::EnumAttributesInfo

@@ -12,14 +12,14 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla SVG project.
+ * The Original Code is JavaScript Engine testing utilities.
  *
  * The Initial Developer of the Original Code is
- * IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2005
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Jesse Ruderman
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -33,21 +33,36 @@
  * the provisions above, a recipient may use your version of this file under
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
- * Parts of this file contain code derived from the following files(s)
- * of the Mozilla SVG project (these parts are Copyright (C) by their
- * respective copyright-holders):
- *    content/svg/content/src/nsSVGAnimatedNumber.h
- *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGANIMATEDINTEGER_H__
-#define __NS_SVGANIMATEDINTEGER_H__
-
-#include "nsIDOMSVGAnimatedInteger.h"
-
-nsresult NS_NewSVGAnimatedInteger(nsIDOMSVGAnimatedInteger** result,
-                                 PRInt32 baseVal);
-
-#endif //__NS_SVGANIMATEDINTEGER_H__
+var gTestfile = 'regress-375639.js';
+//-----------------------------------------------------------------------------
+var BUGNUMBER = 375639;
+var summary = 'Uneval|Decompilation of string containing null character';
+var actual = '';
+var expect = '';
 
 
+//-----------------------------------------------------------------------------
+test();
+//-----------------------------------------------------------------------------
+
+function test()
+{
+  enterFunc ('test');
+  printBugNumber(BUGNUMBER);
+  printStatus (summary);
+ 
+  print('normalize \\x00 to \\0 to hide 1.8.1 vs 1.9.0 ' +
+        'branch differences.');
+
+  expect = '"a\\' + '0b"';
+  actual =  uneval('a\0b').replace(/\\x00/g, '\\0');
+  reportCompare(expect, actual, summary + ': 1');
+
+  expect = 'function () { return "a\\0b"; }';
+  actual = ((function () { return "a\0b"; }) + '').replace(/\\x00/g, '\\0');;
+  compareSource(expect, actual, summary + ': 2');
+
+  exitFunc ('test');
+}
