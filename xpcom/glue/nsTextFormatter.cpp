@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *      Prasad <prasad@medhas.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -46,6 +47,12 @@
  *   Daniele Nicolodi  <daniele@grinta.net>
  */
 
+/*
+ * Copied from xpcom/ds/nsTextFormatter.cpp r1.22
+ *     Changed to use nsMemory and Frozen linkage
+ *                  -- Prasad <prasad@medhas.org>
+ */
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -53,12 +60,11 @@
 #include "prdtoa.h"
 #include "prlong.h"
 #include "prlog.h"
-#include "prmem.h"
 #include "prprf.h"
-#include "nsCRT.h"
+#include "prmem.h"
+#include "nsCRTGlue.h"
 #include "nsTextFormatter.h"
-#include "nsString.h"
-#include "nsReadableUtils.h"
+#include "nsMemory.h"
 
 /*
 ** Note: on some platforms va_list is defined as an array,
@@ -517,7 +523,7 @@ static int cvt_f(SprintfState *ss, double d, int width, int prec,
     while ((*rbufp++ = *bufp++)) { }
     *rbufp = '\0';
 
-    return fill2(ss, rbuf, nsCRT::strlen(rbuf), width, flags);
+    return fill2(ss, rbuf, NS_strlen(rbuf), width, flags);
 }
 
 /*
@@ -535,7 +541,7 @@ static int cvt_S(SprintfState *ss, const PRUnichar *s, int width,
     }
 
     /* Limit string length by precision value */
-    slen = s ? nsCRT::strlen(s) : 6;
+    slen = s ? NS_strlen(s) : 6;
     if (prec > 0) {
 	if (prec < slen) {
 	    slen = prec;
@@ -622,7 +628,7 @@ static struct NumArgState* BuildArgArray(const PRUnichar *fmt,
     }
     
     if (number > NAS_DEFAULT_NUM) {
-	nas = (struct NumArgState*)PR_MALLOC(number * sizeof(struct NumArgState));
+	nas = (struct NumArgState*)nsMemory::Alloc(number * sizeof(struct NumArgState));
 	if (!nas) {
 	    *rv = -1;
 	    return NULL;
@@ -1187,10 +1193,7 @@ StringStuff(SprintfState* ss, const PRUnichar* sp, PRUint32 len)
     nsAString* str = static_cast<nsAString*>(ss->stuffclosure);
     str->Append(sp, len);
 
-    // we can assume contiguous storage
-    nsAString::iterator begin;
-    str->BeginWriting(begin);
-    ss->base = begin.get();
+    ss->base = str->BeginWriting();
     ss->cur = ss->base + off;
 
     return 0;
@@ -1211,9 +1214,9 @@ static int GrowStuff(SprintfState *ss, const PRUnichar *sp, PRUint32 len)
 	/* Grow the buffer */
 	newlen = ss->maxlen + ((len > 32) ? len : 32);
 	if (ss->base) {
-	    newbase = (PRUnichar*) PR_REALLOC(ss->base, newlen*sizeof(PRUnichar));
+	    newbase = (PRUnichar*) nsMemory::Realloc(ss->base, newlen*sizeof(PRUnichar));
 	} else {
-	    newbase = (PRUnichar*) PR_MALLOC(newlen*sizeof(PRUnichar));
+	    newbase = (PRUnichar*) nsMemory::Alloc(newlen*sizeof(PRUnichar));
 	}
 	if (!newbase) {
 	    /* Ran out of memory */
@@ -1256,14 +1259,6 @@ PRUint32 nsTextFormatter::ssprintf(nsAString& out, const PRUnichar* fmt, ...)
     rv = nsTextFormatter::vssprintf(out, fmt, ap);
     va_end(ap);
     return rv;
-}
-
-/*
-** Free memory allocated, for the caller, by smprintf
-*/
-void nsTextFormatter::smprintf_free(PRUnichar *mem)
-{
-    PR_DELETE(mem);
 }
 
 PRUint32 nsTextFormatter::vssprintf(nsAString& out, const PRUnichar* fmt, va_list ap)
@@ -1361,63 +1356,11 @@ PRUint32 nsTextFormatter::vsnprintf(PRUnichar *out, PRUint32 outlen,const PRUnic
     return n ? n - 1 : n;
 }
 
-PRUnichar * nsTextFormatter::sprintf_append(PRUnichar *last, const PRUnichar *fmt, ...)
+/*
+ * Free memory allocated, for the caller, by smprintf
+ */
+void nsTextFormatter::smprintf_free(PRUnichar *mem)
 {
-    va_list ap;
-    PRUnichar *rv;
-
-    va_start(ap, fmt);
-    rv = nsTextFormatter::vsprintf_append(last, fmt, ap);
-    va_end(ap);
-    return rv;
+    nsMemory::Free(mem);
 }
 
-PRUnichar * nsTextFormatter::vsprintf_append(PRUnichar *last, const PRUnichar *fmt, va_list ap)
-{
-    SprintfState ss;
-    int rv;
-
-    ss.stuff = GrowStuff;
-    if (last) {
-	int lastlen = nsCRT::strlen(last);
-	ss.base = last;
-	ss.cur = last + lastlen;
-	ss.maxlen = lastlen;
-    } else {
-	ss.base = 0;
-	ss.cur = 0;
-	ss.maxlen = 0;
-    }
-    rv = dosprintf(&ss, fmt, ap);
-    if (rv < 0) {
-	if (ss.base) {
-	    PR_DELETE(ss.base);
-	}
-	return 0;
-    }
-    return ss.base;
-}
-#ifdef DEBUG
-PRBool nsTextFormatter::SelfTest()
-{ 
-    PRBool passed = PR_TRUE ;
-    nsAutoString fmt(NS_LITERAL_STRING("%3$s %4$S %1$d %2$d"));
-
-    char utf8[] = "Hello";
-    PRUnichar ucs2[]={'W', 'o', 'r', 'l', 'd', 0x4e00, 0xAc00, 0xFF45, 0x0103};
-    int d=3;
-
-
-    PRUnichar buf[256];
-    int ret;
-    ret = nsTextFormatter::snprintf(buf, 256, fmt.get(), d, 333, utf8, ucs2);
-    printf("ret = %d\n", ret);
-    nsAutoString out(buf);
-    printf("%s \n", NS_LossyConvertUTF16toASCII(out).get());
-    const PRUnichar *uout = out.get();
-    for(PRUint32 i=0;i<out.Length();i++)
-        printf("%2X ", uout[i]);
-
-    return passed;
-}
-#endif
