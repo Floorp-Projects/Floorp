@@ -1479,7 +1479,8 @@ var PlacesUtils = {
   setPostDataForURI: function PU_setPostDataForURI(aURI, aPostData) {
     const annos = this.annotations;
     if (aPostData)
-      annos.setPageAnnotation(aURI, POST_DATA_ANNO, aPostData, 0, 0);
+      annos.setPageAnnotation(aURI, POST_DATA_ANNO, aPostData, 
+                              0, Ci.nsIAnnotationService.EXPIRE_NEVER);
     else if (annos.pageHasAnnotation(aURI, POST_DATA_ANNO))
       annos.removePageAnnotation(aURI, POST_DATA_ANNO);
   },
