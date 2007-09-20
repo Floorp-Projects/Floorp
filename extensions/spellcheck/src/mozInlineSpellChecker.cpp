@@ -73,7 +73,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMElement.h"
-#include "nsPIDOMWindow.h"
 #include "nsIDOMEventTarget.h"
 #include "nsPIDOMEventTarget.h"
 #include "nsIDOMMouseEvent.h"
@@ -505,7 +504,6 @@ public:
 NS_INTERFACE_MAP_BEGIN(mozInlineSpellChecker)
 NS_INTERFACE_MAP_ENTRY(nsIInlineSpellChecker)
 NS_INTERFACE_MAP_ENTRY(nsIEditActionListener)
-NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
 NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
 NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMKeyListener)
@@ -626,24 +624,11 @@ mozInlineSpellChecker::RegisterEventListeners()
 
   nsCOMPtr<nsIDOMDocument> doc;
   nsresult rv = editor->GetDocument(getter_AddRefs(doc));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIDocument> doc2 = do_QueryInterface(doc);
-  NS_ENSURE_TRUE(doc2, nsnull);
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(doc2->GetWindow());
-  nsPIDOMEventTarget* chromeEventHandler = nsnull;
-  if (win)
-    chromeEventHandler = win->GetChromeEventHandler();
-
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(chromeEventHandler, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv); 
 
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(doc, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv); 
 
-  target->AddEventListener(NS_LITERAL_STRING("blur"),
-                           static_cast<nsIDOMFocusListener *>(this),
-                           PR_TRUE);
   piTarget->AddEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
                                   NS_GET_IID(nsIDOMMouseListener));
   piTarget->AddEventListenerByIID(static_cast<nsIDOMKeyListener*>(this),
@@ -669,20 +654,6 @@ mozInlineSpellChecker::UnregisterEventListeners()
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(doc);
   NS_ENSURE_TRUE(piTarget, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDocument> doc2 = do_QueryInterface(doc);
-  NS_ENSURE_TRUE(doc2, nsnull);
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(doc2->GetWindow());
-  nsPIDOMEventTarget* chromeEventHandler = nsnull;
-  if (win)
-    chromeEventHandler = win->GetChromeEventHandler();
-
-  nsresult rv;
-  nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(chromeEventHandler, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  target->RemoveEventListener(NS_LITERAL_STRING("blur"),
-                              static_cast<nsIDOMFocusListener *>(this),
-                              PR_TRUE);
   piTarget->RemoveEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
                                      NS_GET_IID(nsIDOMMouseListener));
   piTarget->RemoveEventListenerByIID(static_cast<nsIDOMKeyListener*>(this),
@@ -1677,18 +1648,6 @@ mozInlineSpellChecker::HandleNavigationEvent(nsIDOMEvent* aEvent,
 
 NS_IMETHODIMP mozInlineSpellChecker::HandleEvent(nsIDOMEvent* aEvent)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::Focus(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP mozInlineSpellChecker::Blur(nsIDOMEvent* aEvent)
-{
-  // force spellcheck on blur, for instance when tabbing out of a textbox
-  HandleNavigationEvent(aEvent, PR_TRUE);
   return NS_OK;
 }
 
