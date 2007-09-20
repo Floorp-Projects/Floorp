@@ -74,8 +74,6 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMNodeList.h"
 
-#include "nsIMenuBar.h"
-#include "nsIMenuListener.h"
 #include "nsITimer.h"
 
 #include "prmem.h"
@@ -111,6 +109,8 @@
 #include "nsIMarkupDocumentViewer.h"
 
 #if defined(XP_MACOSX)
+#include "nsIMenuListener.h"
+#include "nsIMenuBar.h"
 #define USE_NATIVE_MENUS
 #endif
 
