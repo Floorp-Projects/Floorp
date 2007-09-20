@@ -139,5 +139,5 @@ install::
 check::
 	@echo "Running TestVersionComparator tests"
 	@$(PERL) -w $(srcdir)/TestVersionComparatorRunner.pl "$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestVersionComparator$(BIN_SUFFIX)"
-	@echo "Running nsTextFormater tests"
-	@$(RUN_TEST_PROGRAM) $(DIST)/bin/run-mozilla.sh $(FINAL_TARGET)/TestTextFormatter$(BIN_SUFFIX)
+	@echo "Running nsTextFormatter tests"
+	@$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestTextFormatter$(BIN_SUFFIX)
