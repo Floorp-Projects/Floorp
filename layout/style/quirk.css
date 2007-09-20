@@ -124,7 +124,6 @@ table, td, th {
  * selectors will be hashed in the RuleHash and things will be much more
  * efficient.
  */
-body > form:-moz-first-node, td > form:-moz-first-node, th > form:-moz-first-node,
 body > p:-moz-first-node, td > p:-moz-first-node, th > p:-moz-first-node,
 body > dl:-moz-first-node, td > dl:-moz-first-node, th > dl:-moz-first-node,
 body > multicol:-moz-first-node, td > multicol:-moz-first-node, th > multicol:-moz-first-node,
@@ -154,8 +153,7 @@ td > p:-moz-last-node, th > p:-moz-last-node {
  *  collapse the bottom or top margins of empty elements
  *  - see bug 97361
  */
-body > form:-moz-only-whitespace:-moz-first-node, td > form:-moz-only-whitespace:-moz-first-node,
-th > form:-moz-only-whitespace:-moz-first-node, body > p:-moz-only-whitespace:-moz-first-node,
+body > p:-moz-only-whitespace:-moz-first-node,
 td > p:-moz-only-whitespace:-moz-first-node, th > p:-moz-only-whitespace:-moz-first-node,
 body > dl:-moz-only-whitespace:-moz-first-node, td > dl:-moz-only-whitespace:-moz-first-node,
 th > dl:-moz-only-whitespace:-moz-first-node, body > multicol:-moz-only-whitespace:-moz-first-node,
@@ -186,7 +184,6 @@ th > ol:-moz-only-whitespace:-moz-first-node {
   margin-bottom: 0;
 }
 
-td > form:-moz-only-whitespace:-moz-last-node, th > form:-moz-only-whitespace:-moz-last-node,
 td > p:-moz-only-whitespace:-moz-last-node, th > p:-moz-only-whitespace:-moz-last-node,
 td > dl:-moz-only-whitespace:-moz-last-node, th > dl:-moz-only-whitespace:-moz-last-node,
 td > multicol:-moz-only-whitespace:-moz-last-node, th > multicol:-moz-only-whitespace:-moz-last-node,
@@ -286,5 +283,5 @@ input:not([type=image]), textarea {
 
 /* Quirk: give form margin for compat (b=41806) */
 form{
- margin: 0 0 1em 0;
+ margin-bottom: 1em;
 }
