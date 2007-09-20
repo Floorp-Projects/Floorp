@@ -312,6 +312,9 @@ fails == 368504-2.html 368504-2-ref.html # bug 368504
 == 375716-1.html 375716-1-ref.html
 == 375827-1.html 375827-1-ref.html
 == 376484-1.html 376484-1-ref.html
+== 376532-1.html 376532-1-ref.html
+!= 376532-2.html 376532-2-ref.html
+!= 376532-3.html 376532-3-ref.html
 == 377603-1.html 377603-1-ref.html
 == 377918.html 377918-ref.html
 == 378535-1.html 378535-1-ref.html
