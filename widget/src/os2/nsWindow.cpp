@@ -1679,7 +1679,7 @@ NS_METHOD nsWindow::SetFont(const nsFont &aFont)
 
       char *buffer = new char[fontnameLength + 6];
       if (buffer) {
-        sprintf(buffer, "%d.%s", points, fontname.get());
+        sprintf(buffer, "%d.%s", points, fontname.Elements());
         ::WinSetPresParam(mWnd, PP_FONTNAMESIZE,
                           strlen(buffer) + 1, buffer);
         delete [] buffer;
@@ -2530,7 +2530,7 @@ PRBool nsWindow::OnKey(MPARAM mp1, MPARAM mp2)
     PRInt32 bufLength;
     MultiByteToWideChar(0, (const char*)inbuf, 2, outbuf, bufLength);
 
-    pressEvent.charCode = outbuf.get()[0];
+    pressEvent.charCode = outbuf[0];
 
     if (pressEvent.isControl && !(fsFlags & (KC_VIRTUALKEY | KC_DEADKEY))) {
       if (!pressEvent.isShift && (pressEvent.charCode >= 'A' && pressEvent.charCode <= 'Z')) {
@@ -3596,15 +3596,15 @@ NS_METHOD nsWindow::SetTitle(const nsAString& aTitle)
       PRInt32 titleLength;
       WideCharToMultiByte(0, uchtemp, aTitle.Length(), title, titleLength);
       if (titleLength > MAX_TITLEBAR_LENGTH) {
-        title.get()[MAX_TITLEBAR_LENGTH] = '\0';
+        title[MAX_TITLEBAR_LENGTH] = '\0';
       }
-      ::WinSetWindowText(GetMainWindow(), title.get());
+      ::WinSetWindowText(GetMainWindow(), title.Elements());
       if (mChromeHidden) {
          /* If the chrome is hidden, set the text of the titlebar directly */
          if (mFrameWnd) {
             HWND hwndTitleBar = (HWND)::WinQueryProperty(mFrameWnd,
                                                          "hwndTitleBar");
-            ::WinSetWindowText(hwndTitleBar, title.get());
+            ::WinSetWindowText(hwndTitleBar, title.Elements());
          }
       }
       nsMemory::Free(uchtemp);

@@ -1742,7 +1742,7 @@ int UnicodeToCodepage(const nsAString& aString, char **aResult)
   PRInt32 bufLength;
   WideCharToMultiByte(0, PromiseFlatString(aString).get(), aString.Length(),
                       buffer, bufLength);
-  *aResult = ToNewCString(nsDependentCString(buffer.get()));
+  *aResult = ToNewCString(nsDependentCString(buffer.Elements()));
   return bufLength;
 }
 
@@ -1754,7 +1754,7 @@ int CodepageToUnicode(const nsACString& aString, PRUnichar **aResult)
   PRInt32 bufLength;
   MultiByteToWideChar(0, PromiseFlatCString(aString).get(),
                       aString.Length(), buffer, bufLength);
-  *aResult = ToNewUnicode(nsDependentString(buffer.get()));
+  *aResult = ToNewUnicode(nsDependentString(buffer.Elements()));
   return bufLength;
 }
 

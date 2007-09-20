@@ -472,7 +472,7 @@ nsresult GlobalPrinters::InitializeGlobalPrinters ()
     PRInt32 printerNameLength;
     rv = MultiByteToWideChar(0, printer, strlen(printer),
                              printerName, printerNameLength);
-    mGlobalPrinterList->AppendString(nsDependentString(printerName.get()));
+    mGlobalPrinterList->AppendString(nsDependentString(printerName.Elements()));
 
     // store printer description in prefs for the print dialog
     if (!prefFailed) {
@@ -509,7 +509,7 @@ void GlobalPrinters::GetDefaultPrinterName(PRUnichar*& aDefaultPrinterName)
   PRInt32 printerNameLength;
   MultiByteToWideChar(0, printer, strlen(printer), printerName,
                       printerNameLength);
-  aDefaultPrinterName = ToNewUnicode(nsDependentString(printerName.get()));
+  aDefaultPrinterName = ToNewUnicode(nsDependentString(printerName.Elements()));
 
   GlobalPrinters::GetInstance()->FreeGlobalPrinters();
 }
