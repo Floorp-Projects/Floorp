@@ -75,6 +75,8 @@ typedef struct cairo_ps_surface {
     cairo_array_t dsc_page_setup_comments;
 
     cairo_array_t *dsc_comment_target;
+
+    cairo_surface_t *paginated_surface;
 } cairo_ps_surface_t;
 
 #endif /* CAIRO_PS_SURFACE_PRIVATE_H */

@@ -730,8 +730,8 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
     /* correct for difference between cairo and quartz 
      * coordinate systems.
      */
-    cairo_surface_set_device_offset ((cairo_surface_t *)surface, left, 
-				    -bbox.size.height - bottom);
+    cairo_surface_set_device_offset ((cairo_surface_t *)surface,
+				     -left, (bbox.size.height + bottom));
     _cairo_scaled_glyph_set_surface (scaled_glyph,
 				     &base,
 				     surface);

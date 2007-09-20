@@ -303,19 +303,21 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     status = _cairo_scaled_font_init (&f->base, font_face,
 				      font_matrix, ctm, options,
 				      &cairo_win32_scaled_font_backend);
-    if (status) {
-	free (f);
-	return NULL;
-    }
+    if (status)
+	goto FAIL;
 
     status = _cairo_win32_scaled_font_set_metrics (f);
+
     if (status) {
-	_cairo_scaled_font_fini (f);
-	free (f);
-	return NULL;
+	_cairo_scaled_font_fini (&f->base);
+	goto FAIL;
     }
 
     return &f->base;
+
+ FAIL:
+    free (f);
+    return NULL;
 }
 
 static cairo_status_t
@@ -324,12 +326,7 @@ _win32_scaled_font_set_world_transform (cairo_win32_scaled_font_t *scaled_font,
 {
     XFORM xform;
 
-    xform.eM11 = scaled_font->logical_to_device.xx;
-    xform.eM21 = scaled_font->logical_to_device.xy;
-    xform.eM12 = scaled_font->logical_to_device.yx;
-    xform.eM22 = scaled_font->logical_to_device.yy;
-    xform.eDx = scaled_font->logical_to_device.x0;
-    xform.eDy = scaled_font->logical_to_device.y0;
+    _cairo_matrix_to_win32_xform (&scaled_font->logical_to_device, &xform);
 
     if (!SetWorldTransform (hdc, &xform))
 	return _cairo_win32_print_gdi_error ("_win32_scaled_font_set_world_transform");
