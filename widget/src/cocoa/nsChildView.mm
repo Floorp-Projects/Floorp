@@ -1335,13 +1335,10 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
       }
     }
   }
-  
-  if (mMenuListener && event->eventStructType == NS_MENU_EVENT)
-    aStatus = mMenuListener->MenuSelected(static_cast<nsMenuEvent&>(*event));
-  
+
   if (mEventCallback)
     aStatus = (*mEventCallback)(event);
-  
+
   // dispatch to event listener if event was not consumed
   if (mEventListener && aStatus != nsEventStatus_eConsumeNoDefault)
     aStatus = mEventListener->ProcessEvent(*event);

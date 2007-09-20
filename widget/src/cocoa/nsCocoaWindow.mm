@@ -652,17 +652,6 @@ NS_METHOD nsCocoaWindow::AddEventListener(nsIEventListener * aListener)
 }
 
 
-NS_METHOD nsCocoaWindow::AddMenuListener(nsIMenuListener * aListener)
-{
-  nsBaseWidget::AddMenuListener(aListener);
-
-  if (mPopupContentView)
-    mPopupContentView->AddMenuListener(aListener);
-
-  return NS_OK;
-}
-
-
 NS_IMETHODIMP nsCocoaWindow::Enable(PRBool aState)
 {
   return NS_OK;
@@ -940,9 +929,6 @@ nsCocoaWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStatus)
 
   nsIWidget* aWidget = event->widget;
   NS_IF_ADDREF(aWidget);
-
-  if (mMenuListener &&  event->eventStructType == NS_MENU_EVENT)
-    aStatus = mMenuListener->MenuSelected(static_cast<nsMenuEvent&>(*event));
 
   if (mEventCallback)
     aStatus = (*mEventCallback)(event);

@@ -358,8 +358,6 @@ nsMenuBarX::MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget* aParentWind
   doc->AddMutationObserver(this);
   mDocument = doc;
 
-  aParentWindow->AddMenuListener((nsIMenuListener *)this);
-
   PRUint32 count = mMenuBarContent->GetChildCount();
   for (PRUint32 i = 0; i < count; i++) { 
     nsIContent *menu = mMenuBarContent->GetChildAt(i);
