@@ -49,9 +49,6 @@
 
 CAIRO_BEGIN_DECLS
 
-#ifndef MOZILLA_CAIRO_NOT_DEFINED
-#define CAIRO_NO_MUTEX 1
-#endif
 
 /* A fully qualified no-operation statement */
 #define CAIRO_MUTEX_NOOP	do {/*no-op*/} while (0)
@@ -144,24 +141,13 @@ CAIRO_BEGIN_DECLS
 
 #if CAIRO_NO_MUTEX
 
-/* No mutex at all */
+/* No mutexes */
 
   typedef int cairo_mutex_t;
 
 # define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
-# define CAIRO_MUTEX_LOCK(mutex) CAIRO_MUTEX_NOOP
-# define CAIRO_MUTEX_UNLOCK(mutex) CAIRO_MUTEX_NOOP
-# define CAIRO_MUTEX_NIL_INITIALIZER 0
-
-#elif CAIRO_POOR_MAN_MUTEX
-
-/* A poor man's mutex */
-
-  typedef int cairo_mutex_t;
-
-# define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
-# define CAIRO_MUTEX_LOCK(mutex) do { while (mutex) ; (mutex) = 1; } while (0)
-# define CAIRO_MUTEX_UNLOCK(mutex) (mutex) = 0
+# define CAIRO_MUTEX_LOCK(mutex) CAIRO_MUTEX_NOOP1(mutex)
+# define CAIRO_MUTEX_UNLOCK(mutex) CAIRO_MUTEX_NOOP1(mutex)
 # define CAIRO_MUTEX_NIL_INITIALIZER 0
 
 #elif HAVE_PTHREAD_H /*******************************************************/

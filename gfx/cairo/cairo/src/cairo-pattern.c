@@ -185,7 +185,9 @@ _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
     } break;
     }
 
+    /* The reference count and user_data array are unique to the copy. */
     pattern->ref_count = 1;
+    _cairo_user_data_array_init (&pattern->user_data);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1210,7 +1212,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     {
 	image = (cairo_image_surface_t *)
 	    _cairo_image_surface_create_for_pixman_image (pixman_image,
-							  CAIRO_FORMAT_ARGB32);
+							  PIXMAN_a8r8g8b8);
 	if (image->base.status)
 	{
 	    pixman_image_unref (pixman_image);
@@ -1675,38 +1677,6 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 
 	status = _cairo_surface_clone_similar (dst, pattern->surface,
 					       x, y, width, height, out);
-
-	if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-
-	    cairo_t *cr;
-
-	    *out = cairo_surface_create_similar (dst, dst->content,
-						 width, height);
-	    status = cairo_surface_status (*out);
-	    if (status) {
-		cairo_surface_destroy (*out);
-		*out = NULL;
-		return status;
-	    }
-
-	    (*out)->device_transform = pattern->surface->device_transform;
-	    (*out)->device_transform_inverse = pattern->surface->device_transform_inverse;
-
-	    /* XXX Use _cairo_surface_composite directly */
-	    cr = cairo_create (*out);
-
-	    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	    cairo_set_source_surface (cr, pattern->surface, -x, -y);
-	    cairo_paint (cr);
-
-	    status = cairo_status (cr);
-	    cairo_destroy (cr);
-
-	    if (status) {
-		cairo_surface_destroy (*out);
-		*out = NULL;
-	    }
-	}
     }
 
     return status;
@@ -1977,8 +1947,8 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
 
 	imatrix = pattern->matrix;
 	status = cairo_matrix_invert (&imatrix);
-	if (status)
-	    return status;
+	/* cairo_pattern_set_matrix ensures the matrix is invertible */
+	assert (status == CAIRO_STATUS_SUCCESS);
 
 	/* XXX Use _cairo_matrix_transform_bounding_box here */
 	for (sy = 0; sy <= 1; sy++) {

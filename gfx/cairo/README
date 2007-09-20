@@ -7,8 +7,8 @@ http://www.cairographics.org/.
 
 VERSIONS:
 
-  cairo (1.5.x - c0a7d33ac6c81dd74ee2a9daaa3749a346ef4897)
-  pixman (0.9.3 - 0c80a0cd84f30616563cef5910df9deb4f8ed687)
+  cairo (1.5.x - d8b0de01d67cdf73d8266a73f54ba1ac42fee3c9)
+  pixman (0.9.x - 3be35594c99b7abd2af43b66349ca53bfa1462d6)
   glitz 0.5.2 (cvs - 2006-01-10)
 
 ***** NOTE FOR VISUAL C++ 6.0 *****
@@ -17,34 +17,11 @@ VC6 is not supported.  Please upgrade to VC8.
 
 ==== Patches ====
 
-All patches in the cairo tree are surrounded by "MOZILLA_CAIRO_NOT_DEFINED"
-(which should obviously not be defined).
-
 Some specific things:
 
 max-font-size.patch: Clamp freetype font size to 1000 to avoid overflow issues
 
-win32-scaled-font-size.patch: Add cairo_win32_font_face_create_for_logfontw_hfont,
-allow win32 scaled_fonts to rescale themselves properly to the required CTM
-and only use the font_face's hfont if we're sure it's appropriate
-
 win32-logical-font-scale.patch: set CAIRO_WIN32_LOGICAL_FONT_SCALE to 1
-
-win32-no-printer-bitblt.patch: If we need to BitBlt from a DC (to do
-fallback), only bother trying if the IS_DISPLAY flag is set -- many
-printers lie about their support for BitBlt, and we end up getting
-black instead of what we want.
 
 nonfatal-assertions.patch: Make assertions non-fatal
 
-clone-similar-fallback.patch: Implement fallback for clone_similar.
-
-scaled-font-create-deadlock.patch: the "poor man's mutex" that is provided
-for CAIRO_NO_MUTEX will deadlock if a recursive mutex lock occurs.
-It's also just a bunch of useless assignments for applications that makes
-all cairo calls from a single thread.  An example of where a deadlock occurs
-is the cairo_scaled_font_destroy() call from win32_scaled_font_create(),
-which is a bug, but it illustrates the dangers of that "poor man's mutex".
-The patch makes all mutex operations do nothing under CAIRO_NO_MUTEX and
-it fixes the bug in win32_scaled_font_create().
-See  https://bugzilla.mozilla.org/show_bug.cgi?id=378716

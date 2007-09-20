@@ -64,11 +64,11 @@ endif
 endif
 
 CSRCS	= \
+	pixman-compose.c \
 	pixman-compose-accessors.c \
-	pixman-compose-noaccessors.c \
 	pixman-compute-region.c \
+	pixman-edge.c \
 	pixman-edge-accessors.c \
-	pixman-edge-noaccessors.c \
 	pixman-image.c \
 	pixman-pict.c \
 	pixman-region.c \

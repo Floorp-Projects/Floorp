@@ -34,10 +34,116 @@
  *	Carl D. Worth <cworth@cworth.org>
  *      Graydon Hoare <graydon@redhat.com>
  *      Owen Taylor <otaylor@redhat.com>
+ *      Behdad Esfahbod <behdad@behdad.org>
  */
 
 #include "cairoint.h"
 #include "cairo-scaled-font-private.h"
+
+/*
+ *  NOTES:
+ *
+ *  To store rasterizations of glyphs, we use an image surface and the
+ *  device offset to represent the glyph origin.
+ *
+ *  A device_transform converts from device space (a conceptual space) to
+ *  surface space.  For simple cases of translation only, it's called a
+ *  device_offset and is public API (cairo_surface_[gs]et_device_offset).
+ *  A possibly better name for those functions could have been
+ *  cairo_surface_[gs]et_origing.  So, that's what they do: they set where
+ *  the device-space origin (0,0) is in the surface.  If the origin is inside
+ *  the surface, device_offset values are positive.  It may look like this:
+ *
+ *  Device space:
+ *        (-x,-y) <-- negative numbers
+ *           +----------------+
+ *           |      .         |
+ *           |      .         |
+ *           |......(0,0) <---|-- device-space origin
+ *           |                |
+ *           |                |
+ *           +----------------+
+ *                    (width-x,height-y)
+ *
+ *  Surface space:
+ *         (0,0) <-- surface-space origin
+ *           +---------------+
+ *           |      .        |
+ *           |      .        |
+ *           |......(x,y) <--|-- device_offset
+ *           |               |
+ *           |               |
+ *           +---------------+
+ *                     (width,height)
+ *
+ *  In other words: device_offset is the coordinates of the device-space
+ *  origin relative to the top-left of the surface.
+ *
+ *  We use device offsets in a couple of places:
+ *
+ *    - Public API: To let toolkits like Gtk+ give user a surface that
+ *      only represents part of the final destination (say, the expose
+ *      area), but has the same device space as the destination.  In these
+ *      cases device_offset is typically negative.  Example:
+ *
+ *           application window
+ *           +---------------+
+ *           |      .        |
+ *           | (x,y).        |
+ *           |......+---+    |
+ *           |      |   | <--|-- expose area
+ *           |      +---+    |
+ *           +---------------+
+ *
+ *      In this case, the user of cairo API can set the device_space on
+ *      the expose area to (-x,-y) to move the device space origin to that
+ *      of the application window, such that drawing in the expose area
+ *      surface and painting it in the application window has the same
+ *      effect as drawing in the application window directly.  Gtk+ has
+ *      been using this feature.
+ *
+ *    - Glyph surfaces: In most font rendering systems, glyph surfaces
+ *      have an origin at (0,0) and a bounding box that is typically
+ *      represented as (x_bearing,y_bearing,width,height).  Depending on
+ *      which way y progresses in the system, y_bearing may typically be
+ *      negative (for systems similar to cairo, with origin at top left),
+ *      or be positive (in systems like PDF with origin at bottom left).
+ *      No matter which is the case, it is important to note that
+ *      (x_bearing,y_bearing) is the coordinates of top-left of the glyph
+ *      relative to the glyph origin.  That is, for example:
+ *
+ *      Scaled-glyph space:
+ *
+ *        (x_bearing,y_bearing) <-- negative numbers
+ *           +----------------+
+ *           |      .         |
+ *           |      .         |
+ *           |......(0,0) <---|-- glyph origin
+ *           |                |
+ *           |                |
+ *           +----------------+
+ *                    (width+x_bearing,height+y_bearing)
+ *
+ *      Note the similarity of the origin to the device space.  That is
+ *      exactly how we use the device_offset to represent scaled glyphs:
+ *      to use the device-space origin as the glyph origin.
+ *
+ *  Now compare the scaled-glyph space to device-space and surface-space
+ *  and convince yourself that:
+ *
+ *  	(x_bearing,y_bearing) = (-x,-y) = - device_offset
+ *
+ *  That's right.  If you are not convinced yet, contrast the definition
+ *  of the two:
+ *
+ *  	"(x_bearing,y_bearing) is the coordinates of top-left of the
+ *  	 glyph relative to the glyph origin."
+ *
+ *  	"In other words: device_offset is the coordinates of the
+ *  	 device-space origin relative to the top-left of the surface."
+ *
+ *  and note that glyph origin = device-space origin.
+ */
 
 static cairo_bool_t
 _cairo_scaled_glyph_keys_equal (const void *abstract_key_a, const void *abstract_key_b)
@@ -297,14 +403,16 @@ _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
     scaled_font->font_face = font_face;
     scaled_font->font_matrix = *font_matrix;
     scaled_font->ctm = *ctm;
+    /* ignore translation values in the ctm */
+    scaled_font->ctm.x0 = 0.;
+    scaled_font->ctm.y0 = 0.;
     scaled_font->options = *options;
 
-    /* We do a bytewise hash on the font matrices, ignoring the
-     * translation values in the ctm */
+    /* We do a bytewise hash on the font matrices */
     hash = _hash_bytes_fnv ((unsigned char *)(&scaled_font->font_matrix.xx),
 			    sizeof(cairo_matrix_t), hash);
     hash = _hash_bytes_fnv ((unsigned char *)(&scaled_font->ctm.xx),
-			    sizeof(double) * 4, hash);
+			    sizeof(cairo_matrix_t), hash);
 
     hash ^= (unsigned long) scaled_font->font_face;
 
@@ -1108,10 +1216,8 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
 	/* round glyph locations to the nearest pixel */
 	/* XXX: FRAGILE: We're ignoring device_transform scaling here. A bug? */
-	x = _cairo_lround (glyphs[i].x +
-                           glyph_surface->base.device_transform.x0);
-	y = _cairo_lround (glyphs[i].y +
-                           glyph_surface->base.device_transform.y0);
+	x = _cairo_lround (glyphs[i].x - glyph_surface->base.device_transform.x0);
+	y = _cairo_lround (glyphs[i].y - glyph_surface->base.device_transform.y0);
 
 	_cairo_pattern_init_for_surface (&glyph_pattern, &glyph_surface->base);
 
@@ -1286,7 +1392,7 @@ _trace_mask_to_path (cairo_image_surface_t *mask,
 	    for (bit = 7; bit >= 0 && x < a1_mask->width; bit--, x++) {
 		if (byte & (1 << bit)) {
 		    status = _add_unit_rectangle_to_path (path,
-							  x + xoff, y + yoff);
+							  x - xoff, y - yoff);
 		    if (status)
 			return status;
 		}

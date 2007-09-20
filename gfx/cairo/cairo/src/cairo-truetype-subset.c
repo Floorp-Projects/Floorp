@@ -931,13 +931,16 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     truetype_subset->ascent = (double)font->base.ascent/font->base.units_per_em;
     truetype_subset->descent = (double)font->base.descent/font->base.units_per_em;
 
-    truetype_subset->data = malloc (length);
-    if (truetype_subset->data == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
-	goto fail3;
-    }
+    if (length) {
+	truetype_subset->data = malloc (length);
+	if (truetype_subset->data == NULL) {
+	    status = CAIRO_STATUS_NO_MEMORY;
+	    goto fail3;
+	}
 
-    memcpy (truetype_subset->data, data, length);
+	memcpy (truetype_subset->data, data, length);
+    } else
+	truetype_subset->data = NULL;
     truetype_subset->data_length = length;
 
     if (num_strings) {

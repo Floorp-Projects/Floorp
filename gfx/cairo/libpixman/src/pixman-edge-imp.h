@@ -1,4 +1,5 @@
 /*
+ * $Id: pixman-edge-imp.h,v 1.7 2007/09/20 19:24:51 vladimir%pobox.com Exp $
  *
  * Copyright © 2004 Keith Packard
  *

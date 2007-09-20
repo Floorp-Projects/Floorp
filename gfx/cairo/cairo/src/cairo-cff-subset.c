@@ -158,7 +158,7 @@ encode_integer (unsigned char *p, int i)
         i = -i - 108;
         *p++ = (i >> 8)+ 251;
         *p++ = i & 0xff;
-    } else if (i >= -1131 && i <= -108) {
+    } else if (i >= -32768 && i <= 32767) {
         *p++ = 28;
         *p++ = (i >> 8)  & 0xff;
         *p++ = i & 0xff;
