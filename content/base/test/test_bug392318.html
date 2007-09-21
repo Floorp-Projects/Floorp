@@ -23,8 +23,8 @@ SimpleTest.waitForExplicitFinish();
 var testRan = false;
 
 function runTest() {
-  is($("t").offsetWidth, 202, "Unexpected offsetWidth");
-  is($("t").offsetHeight, 102, "Unexpected offsetHeight");
+  isnot($("t").offsetWidth, 0, "Unexpected offsetWidth");
+  isnot($("t").offsetHeight, 0, "Unexpected offsetHeight");
   testRan = true;
 }
 
