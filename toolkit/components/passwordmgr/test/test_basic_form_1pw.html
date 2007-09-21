@@ -2800,34 +2800,6 @@ function startTest() {
     SimpleTest.finish();
 }
 
-function checkForm(formNum, val1, val2, val3) {
-    var form = document.getElementById("form" + formNum);
-    ok(form, "Locating form " + formNum);
-
-    is(form.elements[0].value, val1, "Test value of field " +
-            form.elements[0].name + " in form " + formNum);
-
-    if (val2 != null)
-        is(form.elements[1].value, val2, "Test value of field " +
-            form.elements[1].name + " in form " + formNum);
-
-    if (val3 != null)
-        is(form.elements[2].value, val3, "Test value of field " +
-            form.elements[2].name + " in form " + formNum);
-}
-
-function checkUnmodifiedForm(formNum) {
-    var form = document.getElementById("form" + formNum);
-    ok(form, "Locating form " + formNum);
-
-    // Ignore last two elements, they're the two buttons.
-    for (var i = 0; i < form.elements.length - 2; i++) {
-        var ele = form.elements[i];
-
-        is(ele.value, ele.defaultValue, "Test to default value of field " +
-            ele.name + " in form " + formNum);
-    }
-}
 
 window.onload = startTest;
 

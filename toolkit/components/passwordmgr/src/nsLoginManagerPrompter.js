@@ -462,9 +462,15 @@ LoginManagerPrompter.prototype = {
     promptToChangePassword : function (aOldLogin, aNewLogin) {
         const buttonFlags = Ci.nsIPrompt.STD_YES_NO_BUTTONS;
 
-        var dialogText  = this._getLocalizedString(
+        var dialogText;
+        if (aOldLogin.username)
+            dialogText  = this._getLocalizedString(
                                     "passwordChangeText",
                                     [aOldLogin.username]);
+        else
+            dialogText  = this._getLocalizedString(
+                                    "passwordChangeTextNoUser");
+
         var dialogTitle = this._getLocalizedString(
                                     "passwordChangeTitle");
 
