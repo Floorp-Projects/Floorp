@@ -2751,6 +2751,9 @@ GetDocumentFromDocShellTreeItem(nsIDocShellTreeItem *aDocShell,
 void
 nsDocument::DispatchContentLoadedEvents()
 {
+  // If you add early returns from this method, make sure you're
+  // calling UnblockOnload properly.
+  
   // Fire a DOM event notifying listeners that this document has been
   // loaded (excluding images and other loads initiated by this
   // document).
@@ -2846,6 +2849,8 @@ nsDocument::DispatchContentLoadedEvents()
       tmp->GetSameTypeParent(getter_AddRefs(docShellParent));
     }
   }
+
+  UnblockOnload(PR_TRUE);
 }
 
 void
@@ -2861,8 +2866,10 @@ nsDocument::EndLoad()
   
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
 
-  DispatchContentLoadedEvents();
-  UnblockOnload(PR_TRUE);
+  nsRefPtr<nsIRunnable> ev =
+    new nsRunnableMethod<nsDocument>(this,
+                                     &nsDocument::DispatchContentLoadedEvents);
+  NS_DispatchToCurrentThread(ev);
 }
 
 void
