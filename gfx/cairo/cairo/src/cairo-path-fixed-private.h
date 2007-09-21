@@ -36,13 +36,14 @@
 #ifndef CAIRO_PATH_FIXED_PRIVATE_H
 #define CAIRO_PATH_FIXED_PRIVATE_H
 
-typedef enum cairo_path_op {
+enum cairo_path_op {
     CAIRO_PATH_OP_MOVE_TO = 0,
     CAIRO_PATH_OP_LINE_TO = 1,
     CAIRO_PATH_OP_CURVE_TO = 2,
     CAIRO_PATH_OP_CLOSE_PATH = 3
-} __attribute__ ((packed)) cairo_path_op_t; /* Don't want 32 bits if we can avoid it. */
-/* XXX Shall we just not use char instead of hoping for __attribute__ working? */
+};
+/* we want to make sure a single byte is used for thie enum */
+typedef char cairo_path_op_t;
 
 /* make cairo_path_fixed fit a 512 bytes.  about 50 items */
 #define CAIRO_PATH_BUF_SIZE ((512 - 12 * sizeof (void*)) \

@@ -207,3 +207,16 @@ _cairo_region_translate (cairo_region_t *region,
 {
     pixman_region_translate (&region->rgn, x, y);
 }
+
+pixman_region_overlap_t
+_cairo_region_contains_rectangle (cairo_region_t *region, cairo_rectangle_int_t *rect)
+{
+    pixman_box16_t pbox;
+
+    pbox.x1 = rect->x;
+    pbox.y1 = rect->y;
+    pbox.x2 = rect->x + rect->width;
+    pbox.y2 = rect->y + rect->height;
+
+    return pixman_region_contains_rectangle (&region->rgn, &pbox);
+}

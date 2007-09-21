@@ -237,21 +237,13 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 
 	tri[0] = in->point;
 	if (clockwise) {
-	    status = _cairo_pen_find_active_ccw_vertex_index (pen, &in->dev_vector, &start);
-	    if (status)
-		return status;
+	    _cairo_pen_find_active_ccw_vertex_index (pen, &in->dev_vector, &start);
 	    step = -1;
-	    status = _cairo_pen_find_active_ccw_vertex_index (pen, &out->dev_vector, &stop);
-	    if (status)
-		return status;
+	    _cairo_pen_find_active_ccw_vertex_index (pen, &out->dev_vector, &stop);
 	} else {
-	    status = _cairo_pen_find_active_cw_vertex_index (pen, &in->dev_vector, &start);
-	    if (status)
-		return status;
+	    _cairo_pen_find_active_cw_vertex_index (pen, &in->dev_vector, &start);
 	    step = +1;
-	    status = _cairo_pen_find_active_cw_vertex_index (pen, &out->dev_vector, &stop);
-	    if (status)
-		return status;
+	    _cairo_pen_find_active_cw_vertex_index (pen, &out->dev_vector, &stop);
 	}
 
 	i = start;
@@ -394,14 +386,10 @@ _cairo_stroker_add_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 	cairo_pen_t *pen = &stroker->pen;
 
 	slope = f->dev_vector;
-	status = _cairo_pen_find_active_cw_vertex_index (pen, &slope, &start);
-	if (status)
-	    return status;
+	_cairo_pen_find_active_cw_vertex_index (pen, &slope, &start);
 	slope.dx = -slope.dx;
 	slope.dy = -slope.dy;
-	status = _cairo_pen_find_active_cw_vertex_index (pen, &slope, &stop);
-	if (status)
-	    return status;
+	_cairo_pen_find_active_cw_vertex_index (pen, &slope, &stop);
 
 	tri[0] = f->point;
 	tri[1] = f->cw;

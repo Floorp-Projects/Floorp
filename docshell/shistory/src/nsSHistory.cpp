@@ -789,11 +789,17 @@ nsSHistory::EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
     }
     endIndex = PR_MIN(mLength, aFromIndex + gHistoryMaxViewers);
   }
+  
+  EvictContentViewersInRange(startIndex, endIndex);
+}
 
+void
+nsSHistory::EvictContentViewersInRange(PRInt32 aStart, PRInt32 aEnd)
+{
   nsCOMPtr<nsISHTransaction> trans;
-  GetTransactionAtIndex(startIndex, getter_AddRefs(trans));
+  GetTransactionAtIndex(aStart, getter_AddRefs(trans));
 
-  for (PRInt32 i = startIndex; i < endIndex; ++i) {
+  for (PRInt32 i = aStart; i < aEnd; ++i) {
     nsCOMPtr<nsISHEntry> entry;
     trans->GetSHEntry(getter_AddRefs(entry));
     nsCOMPtr<nsIContentViewer> viewer;
@@ -939,6 +945,46 @@ nsSHistory::EvictGlobalContentViewer()
       shouldTryEviction = PR_FALSE;
     }
   }  // while shouldTryEviction
+}
+
+NS_IMETHODIMP
+nsSHistory::EvictExpiredContentViewerForEntry(nsISHEntry *aEntry)
+{
+  PRInt32 startIndex = PR_MAX(0, mIndex - gHistoryMaxViewers);
+  PRInt32 endIndex = PR_MIN(mLength - 1,
+                            mIndex + gHistoryMaxViewers);
+  nsCOMPtr<nsISHTransaction> trans;
+  GetTransactionAtIndex(startIndex, getter_AddRefs(trans));
+
+  PRInt32 i;
+  for (i = startIndex; i <= endIndex; ++i) {
+    nsCOMPtr<nsISHEntry> entry;
+    trans->GetSHEntry(getter_AddRefs(entry));
+    if (entry == aEntry)
+      break;
+
+    nsISHTransaction *temp = trans;
+    temp->GetNext(getter_AddRefs(trans));
+  }
+  if (i > endIndex)
+    return NS_OK;
+  
+  NS_ASSERTION(i != mIndex, "How did the current session entry expire?");
+  if (i == mIndex)
+    return NS_OK;
+  
+  // We evict content viewers for the expired entry and any other entries that
+  // we would have to go through the expired entry to get to (i.e. the entries
+  // that have the expired entry between them and the current entry). Those
+  // other entries should have timed out already, actually, but this is just
+  // to be on the safe side.
+  if (i < mIndex) {
+    EvictContentViewersInRange(startIndex, i + 1);
+  } else {
+    EvictContentViewersInRange(i, endIndex + 1);
+  }
+  
+  return NS_OK;
 }
 
 // Evicts all content viewers in all history objects.  This is very

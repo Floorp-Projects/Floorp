@@ -1,4 +1,3 @@
-#define _cairo_image_surface_nil_invalid_format __moz__cairo_image_surface_nil_invalid_format
 #define cairo_append_path _moz_cairo_append_path
 #define cairo_arc _moz_cairo_arc
 #define cairo_arc_negative _moz_cairo_arc_negative
@@ -220,6 +219,7 @@
 #define cairo_stroke_extents _moz_cairo_stroke_extents
 #define cairo_stroke_preserve _moz_cairo_stroke_preserve
 #define cairo_stroke_to_path _moz_cairo_stroke_to_path
+#define cairo_surface_copy_page _moz_cairo_surface_copy_page
 #define cairo_surface_create_similar _moz_cairo_surface_create_similar
 #define cairo_surface_destroy _moz_cairo_surface_destroy
 #define cairo_surface_finish _moz_cairo_surface_finish
@@ -236,6 +236,7 @@
 #define cairo_surface_set_device_offset _moz_cairo_surface_set_device_offset
 #define cairo_surface_set_fallback_resolution _moz_cairo_surface_set_fallback_resolution
 #define cairo_surface_set_user_data _moz_cairo_surface_set_user_data
+#define cairo_surface_show_page _moz_cairo_surface_show_page
 #define cairo_surface_status _moz_cairo_surface_status
 #define cairo_surface_write_to_png _moz_cairo_surface_write_to_png
 #define cairo_surface_write_to_png_stream _moz_cairo_surface_write_to_png_stream

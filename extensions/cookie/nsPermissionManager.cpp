@@ -636,23 +636,34 @@ nsPermissionManager::Read()
   nsresult rv;
   
   PRBool readingOldFile = PR_FALSE;
-
   nsCOMPtr<nsIInputStream> fileInputStream;
-  rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), mPermissionsFile);
-  if (rv == NS_ERROR_FILE_NOT_FOUND) {
+
+  PRBool fileExists = PR_FALSE;
+  rv = mPermissionsFile->Exists(&fileExists);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (fileExists) {
+    rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream),
+                                    mPermissionsFile);
+  } else {
     // Try finding the old-style file
 
     nsCOMPtr<nsIFile> oldPermissionsFile;
-    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(oldPermissionsFile));
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                getter_AddRefs(oldPermissionsFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = oldPermissionsFile->AppendNative(NS_LITERAL_CSTRING(kOldPermissionsFileName));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream), oldPermissionsFile);
-
-    readingOldFile = PR_TRUE;
-
+    rv = oldPermissionsFile->Exists(&fileExists);
+    if (NS_SUCCEEDED(rv) && fileExists) {
+      rv = NS_NewLocalFileInputStream(getter_AddRefs(fileInputStream),
+                                      oldPermissionsFile);
+      readingOldFile = PR_TRUE;
+    } else {
+      rv = NS_ERROR_FILE_NOT_FOUND;
+    }
     /* old format is:
      * host \t number permission \t number permission ... \n
      * if this format isn't respected we move onto the next line in the file.

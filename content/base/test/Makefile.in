@@ -87,7 +87,9 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug375314.html \
 		test_bug382113.html \
 		test_bug390735.html \
+		test_bug392318.html \
 		test_bug392511.html \
+		test_bug395915.html \
 		bug382113_object.html \
 		test_CrossSiteXHR.html \
 		file_CrossSiteXHR_fail1.xml \

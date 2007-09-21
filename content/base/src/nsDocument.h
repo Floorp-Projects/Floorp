@@ -649,9 +649,10 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDocument, nsIDocument)
 
   /**
-   * Utility method for getElementsByClassName
+   * Utility method for getElementsByClassName.  aRootNode is the node (either
+   * document or element), which getElementsByClassName was called on.
    */
-  static nsresult GetElementsByClassNameHelper(nsIContent* aContent,
+  static nsresult GetElementsByClassNameHelper(nsINode* aRootNode,
                                                const nsAString& aClasses,
                                                nsIDOMNodeList** aReturn);
 protected:
@@ -726,6 +727,11 @@ protected:
   // Pointer to our parser if we're currently in the process of being
   // parsed into.
   nsCOMPtr<nsIParser> mParser;
+
+  // Weak reference to our sink for in case we no longer have a parser.  This
+  // will allow us to flush out any pending stuff from the sink even if
+  // EndLoad() has already happened.
+  nsWeakPtr mWeakSink;
 
   nsCOMArray<nsIStyleSheet> mStyleSheets;
   nsCOMArray<nsIStyleSheet> mCatalogSheets;

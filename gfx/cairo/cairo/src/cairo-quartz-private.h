@@ -38,7 +38,7 @@
 #ifndef CAIRO_QUARTZ_PRIVATE_H
 #define CAIRO_QUARTZ_PRIVATE_H
 
-#include <cairoint.h>
+#include "cairoint.h"
 
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
 #include <cairo-quartz.h>

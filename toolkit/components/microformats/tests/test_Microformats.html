@@ -1,0 +1,51 @@
+<html>
+<head>
+  <title>Testing Microformats.js</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"></link>
+</head>
+<body>
+<div id="content" style="display: none">
+  <div class="vcard" id="vcard1_node">
+   <a class="url fn" href="http://tantek.com/">Tantek Çelik</a>
+   <div id="vcard1_org" class="org">Technorati</div>
+  </div>  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+test_Microformats();
+test_hCard();
+
+function test_Microformats() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  Components.utils.import("resource://gre/modules/Microformats.js");
+  
+  ok(Microformats, "Check global access to Microformats");
+  var hCards = Microformats.get("hCard", document, false);
+  is(hCards.length, 1, "Check Microformats.get");
+  is(Microformats.count("hCard", document, false), 1, "Check Microformats.count");
+  ok(Microformats.isMicroformat(document.getElementById("vcard1_node")), "Check isMicroformat");
+  is(Microformats.getParent(document.getElementById("vcard1_org")), document.getElementById("vcard1_node"), "Check getParent");
+  is(Microformats.getNamesFromNode(document.getElementById("vcard1_node")), "hCard", "Check getNamesFromNode");
+  
+}
+
+function test_hCard() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  Components.utils.import("resource://gre/modules/Microformats.js");
+  
+  var hCards = Microformats.get("hCard", document, false); 
+  
+  is(hCards[0].fn, "Tantek Çelik", "Check for fn on test vcard");
+  is(hCards[0].url, "http://tantek.com/", "Check for url on test vcard");
+}
+
+</script>
+</pre>
+</body>
+</html>

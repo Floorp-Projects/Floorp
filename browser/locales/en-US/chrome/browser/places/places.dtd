@@ -178,7 +178,7 @@
 
 <!ENTITY view.detailsMacOSX.label  "List">
 <!ENTITY view.details.label        "Details">
-<!ENTITY view.details.accesskey    "">
+<!ENTITY view.details.accesskey    "D">
 
 <!ENTITY view.addons.label   "Get View Add-ons">
 <!ENTITY view.columns.label  "Columns">

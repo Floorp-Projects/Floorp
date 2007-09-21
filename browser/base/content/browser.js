@@ -5365,7 +5365,7 @@ HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
   // populate menu
   var undoItems = eval("(" + ss.getClosedTabData(window) + ")");
   for (var i = 0; i < undoItems.length; i++) {
-    var m = undoPopup.appendChild(document.createElement("menuitem"));
+    var m = document.createElement("menuitem");
     m.setAttribute("label", undoItems[i].title);
     if (undoItems[i].image)
       m.setAttribute("image", undoItems[i].image);
@@ -5373,6 +5373,9 @@ HistoryMenu.populateUndoSubmenu = function PHM_populateUndoSubmenu() {
     m.setAttribute("value", i);
     m.setAttribute("oncommand", "undoCloseTab(" + i + ");");
     m.addEventListener("click", undoCloseMiddleClick, false);
+    if (i == 0)
+      m.setAttribute("key", "key_undoCloseTab");
+    undoPopup.appendChild(m);
   }
 
   // "Open All in Tabs"

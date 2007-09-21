@@ -3063,8 +3063,8 @@ interrupt:
 
 #define INTEGER_OP(OP, EXTRA_CODE)                                            \
     JS_BEGIN_MACRO                                                            \
-        FETCH_INT(cx, -1, j);                                                 \
         FETCH_INT(cx, -2, i);                                                 \
+        FETCH_INT(cx, -1, j);                                                 \
         EXTRA_CODE                                                            \
         i = i OP j;                                                           \
         sp--;                                                                 \
@@ -3294,8 +3294,8 @@ interrupt:
           {
             uint32 u;
 
-            FETCH_INT(cx, -1, j);
             FETCH_UINT(cx, -2, u);
+            FETCH_INT(cx, -1, j);
             u >>= j & 31;
             sp--;
             STORE_UINT(cx, -1, u);

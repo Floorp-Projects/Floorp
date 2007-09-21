@@ -253,13 +253,9 @@ for each (var tag in allTags) {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
   var nodeClassInfo = node.QueryInterface(Components.interfaces.nsIClassInfo);
   var count = {};
-  var classInfoInterfaces = nodeClassInfo.getInterfaces(count);
-
-  // Stringify them
-  for (var idx = 0; idx < classInfoInterfaces.length; ++idx) {
-    classInfoInterfaces[idx] =
-      Components.interfacesByID[classInfoInterfaces[idx]].toString();
-  }
+  var classInfoInterfaces =
+    nodeClassInfo.getInterfaces(count).
+    map(function(id) { return Components.interfacesByID[id].toString(); });
 
   // Make sure that we know about all the things classinfo claims
   for each (var classInfoInterface in classInfoInterfaces) {
