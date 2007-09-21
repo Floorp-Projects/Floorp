@@ -1,5 +1,7 @@
 <!ENTITY editBookmarkOverlay.name.label                      "Name:">
 <!ENTITY editBookmarkOverlay.location.label                  "Location:">
+<!ENTITY editBookmarkOverlay.feedLocation.label              "Feed Location:">
+<!ENTITY editBookmarkOverlay.siteLocation.label              "Site Location:">
 <!ENTITY editBookmarkOverlay.liveTitlesSeparator.label       "Live Titles">
 <!ENTITY editBookmarkOverlay.folder.label                    "Folder:">
 <!ENTITY editBookmarkOverlay.allBookmarksFolderItem.label    "All Bookmarks">
@@ -9,4 +11,6 @@
 <!ENTITY editBookmarkOverlay.expanderUp.tooltip              "Hide">
 <!ENTITY editBookmarkOverlay.tags.label                      "Tags:">
 <!ENTITY editBookmarkOverlay.description.label               "Description:">
+<!ENTITY editBookmarkOverlay.keyword.label                   "Keyword:">
 <!ENTITY editBookmarkOverlay.tagsExpanderDown.tooltip        "Show all tags">
+<!ENTITY editBookmarkOverlay.loadInSidebar.label             "Load this bookmark in the sidebar">

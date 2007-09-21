@@ -49,6 +49,8 @@ classic.jar:
   skin/classic/browser/places/editBookmarkOverlay.css       (places/editBookmarkOverlay.css)
   skin/classic/browser/places/starPage.png                  (places/starPage.png)
   skin/classic/browser/places/pageStarred.png               (places/pageStarred.png)
+  skin/classic/browser/places/twisty-open.gif               (places/twisty-open.gif)
+  skin/classic/browser/places/twisty-closed.gif             (places/twisty-closed.gif)
   skin/classic/browser/places/tag.png                       (places/tag.png)
   skin/classic/browser/places/organizer-toolbar.png         (bookmarks/Bookmarks-toolbar.png)
   skin/classic/browser/places/expander-closed-active.png    (bookmarks/expander-closed-active.png)
