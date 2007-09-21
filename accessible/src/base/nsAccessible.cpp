@@ -2301,69 +2301,81 @@ nsAccessible::GetFinalState(PRUint32 *aState, PRUint32 *aExtraState)
   *aState |= GetARIAState();
 
   // Set additional states which presence depends on another states.
-  if (aExtraState) {
-    if (!(*aState & nsIAccessibleStates::STATE_UNAVAILABLE)) {
-      *aExtraState |= nsIAccessibleStates::EXT_STATE_ENABLED |
-                      nsIAccessibleStates::EXT_STATE_SENSITIVE;
+  if (!aExtraState)
+    return NS_OK;
+
+  if (!(*aState & nsIAccessibleStates::STATE_UNAVAILABLE)) {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_ENABLED |
+                    nsIAccessibleStates::EXT_STATE_SENSITIVE;
+  }
+
+  const PRUint32 kExpandCollapseStates =
+    nsIAccessibleStates::STATE_COLLAPSED | nsIAccessibleStates::STATE_EXPANDED;
+  if (*aState & kExpandCollapseStates) {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_EXPANDABLE;
+    if ((*aState & kExpandCollapseStates) == kExpandCollapseStates) {
+      // Cannot be both expanded and collapsed -- this happens 
+      // in ARIA expanded combobox because of limitation of nsARIAMap
+      // XXX Perhaps we will be able to make this less hacky if 
+      // we support extended states in nsARIAMap, e.g. derive
+      // COLLAPSED from EXPANDABLE && !EXPANDED
+      *aExtraState &= ~nsIAccessibleStates::STATE_COLLAPSED;
+    }
+  }
+
+  PRUint32 role;
+  rv = GetFinalRole(&role);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (role == nsIAccessibleRole::ROLE_ENTRY ||
+      role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
+      role == nsIAccessibleRole::ROLE_COMBOBOX) {
+
+    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+    NS_ENSURE_STATE(content);
+
+    nsAutoString autocomplete;
+    if (content->GetAttr(kNameSpaceID_WAIProperties,
+                         nsAccessibilityAtoms::autocomplete, autocomplete) &&
+        (autocomplete.EqualsIgnoreCase("inline") ||
+         autocomplete.EqualsIgnoreCase("list") ||
+         autocomplete.EqualsIgnoreCase("both"))) {
+      *aExtraState |= nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION;
     }
 
-    const PRUint32 kExpandCollapseStates =
-      nsIAccessibleStates::STATE_COLLAPSED | nsIAccessibleStates::STATE_EXPANDED;
-    if (*aState & kExpandCollapseStates) {
-      *aExtraState |= nsIAccessibleStates::EXT_STATE_EXPANDABLE;
-      if ((*aState & kExpandCollapseStates) == kExpandCollapseStates) {
-        // Cannot be both expanded and collapsed -- this happens 
-        // in ARIA expanded combobox because of limitation of nsARIAMap
-        // XXX Perhaps we will be able to make this less hacky if 
-        // we support extended states in nsARIAMap, e.g. derive
-        // COLLAPSED from EXPANDABLE && !EXPANDED
-        *aExtraState &= ~nsIAccessibleStates::STATE_COLLAPSED;
-      } 
-    }
-    nsIFrame *frame = GetFrame();
-    if (frame) {
-      const nsStyleDisplay* display = frame->GetStyleDisplay();
-      if (display && display->mOpacity == 1.0f &&
-          !(*aState & nsIAccessibleStates::STATE_INVISIBLE)) {
-        *aExtraState |= nsIAccessibleStates::EXT_STATE_OPAQUE;
+    // XXX We can remove this hack once we support RDF-based role & state maps
+    if (mRoleMapEntry && mRoleMapEntry->role == nsIAccessibleRole::ROLE_ENTRY) {
+      if (content->AttrValueIs(kNameSpaceID_WAIProperties,
+                               nsAccessibilityAtoms::multiline,
+                               nsAccessibilityAtoms::_true, eCaseMatters)) {
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
       }
-
-      const nsStyleXUL *xulStyle = frame->GetStyleXUL();
-      if (xulStyle) {
-        // In XUL all boxes are either vertical or horizontal
-        if (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL) {
-          *aExtraState |= nsIAccessibleStates::EXT_STATE_VERTICAL;
-        }
-        else {
-          *aExtraState |= nsIAccessibleStates::EXT_STATE_HORIZONTAL;
-        }
+      else {
+        *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
       }
     }
+  }
 
-    PRUint32 role;
-    GetFinalRole(&role);
-    if (role == nsIAccessibleRole::ROLE_ENTRY ||
-        role == nsIAccessibleRole::ROLE_PASSWORD_TEXT ||
-        role == nsIAccessibleRole::ROLE_COMBOBOX) {
-      nsIContent *content = frame->GetContent();
-      NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
-      nsAutoString autocomplete;
-      if (content->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::autocomplete, autocomplete) &&
-          (autocomplete.EqualsIgnoreCase("inline") ||
-           autocomplete.EqualsIgnoreCase("list") ||
-           autocomplete.EqualsIgnoreCase("both"))) {
-        *aExtraState |= nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION;
-      }
-      // XXX We can remove this hack once we support RDF-based role & state maps
-      if (mRoleMapEntry && mRoleMapEntry->role == nsIAccessibleRole::ROLE_ENTRY) {
-        if (content->AttrValueIs(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::multiline,
-                                 nsAccessibilityAtoms::_true, eCaseMatters)) {
-          *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
-        }
-        else {
-          *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
-        }
-      }
+  // For some reasons DOM node may have not a frame. We tract such accessibles
+  // as invisible.
+  nsIFrame *frame = GetFrame();
+  if (!frame)
+    return NS_OK;
+
+  const nsStyleDisplay* display = frame->GetStyleDisplay();
+  if (display && display->mOpacity == 1.0f &&
+      !(*aState & nsIAccessibleStates::STATE_INVISIBLE)) {
+    *aExtraState |= nsIAccessibleStates::EXT_STATE_OPAQUE;
+  }
+
+  const nsStyleXUL *xulStyle = frame->GetStyleXUL();
+  if (xulStyle) {
+    // In XUL all boxes are either vertical or horizontal
+    if (xulStyle->mBoxOrient == NS_STYLE_BOX_ORIENT_VERTICAL) {
+      *aExtraState |= nsIAccessibleStates::EXT_STATE_VERTICAL;
+    }
+    else {
+      *aExtraState |= nsIAccessibleStates::EXT_STATE_HORIZONTAL;
     }
   }
 
