@@ -38,8 +38,26 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(1f00216a-4d2d-40e8-b4c5-afa3338a2d6c)]
+[scriptable, uuid(b3e52c09-5c33-4d07-a3e6-7c453d0c4be8)]
 interface nsIBookmarksSyncService : nsISupports
 {
+  /**
+   * The currently logged-in user
+   */
+  readonly attribute AString currentUser;
+
+  /**
+   * Log into the server.  Pre-requisite for sync().
+   */
+  void login();
+
+  /**
+   * Log out of the server.
+   */
+  void logout();
+
+  /**
+   * Initiate a sync operation.
+   */
   void sync();
 };

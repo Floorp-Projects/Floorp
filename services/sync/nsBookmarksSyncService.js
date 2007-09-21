@@ -68,6 +68,14 @@ BookmarksSyncService.prototype = {
     return this.__ans;
   },
 
+  __os: null,
+  get _os() {
+    if (!this.__os)
+      this.__os = Cc["@mozilla.org/observer-service;1"]
+        .getService(Ci.nsIObserverService);
+    return this.__os;
+  },
+
   // DAVCollection object
   _dav: null,
 
@@ -75,6 +83,14 @@ BookmarksSyncService.prototype = {
   // FIXME: this should be serialized to disk
   _snapshot: {},
   _snapshotVersion: 0,
+
+  get currentUser() {
+    // FIXME - need to expose that info some other way
+    if (this._dav._currentUserPath)
+      return this._dav._currentUserPath + "@mozilla.com";
+    else
+      return null;
+  },
 
   _init: function BSS__init() {
 
@@ -351,10 +367,12 @@ BookmarksSyncService.prototype = {
     if (a.type != b.type)
       return -1;
 
-    let ret = {};
+    let ret = {numProps: 0, props: {}};
     for (prop in a) {
-      if (a[prop] != b[prop])
-        ret[prop] = b[prop];
+      if (a[prop] != b[prop]) {
+        ret.numProps++;
+        ret.props[prop] = b[prop];
+      }
     }
 
     // FIXME: prune out properties we don't care about
@@ -380,12 +398,12 @@ BookmarksSyncService.prototype = {
         let edits = this._getEdits(a[guid], b[guid]);
         if (edits == -1) // something went very wrong -- FIXME
           continue;
-        if (edits == {}) // no changes - skip
+        if (edits.numProps == 0) // no changes - skip
           continue;
         let parents = this._nodeParents(guid, b);
         cmds.push({action: "edit", guid: guid,
                    depth: parents.length, parents: parents,
-                   data: edits});
+                   data: edits.props});
       } else {
         let parents = this._nodeParents(guid, a); // ???
         cmds.push({action: "remove", guid: guid,
@@ -425,13 +443,19 @@ BookmarksSyncService.prototype = {
     return false;
   },
 
-  // NEED TO also look at the parent chain & index; only items in the
-  // same "spot" qualify for likeness
+  // Bookmarks are allowed to be in a different index as long as they
+  // are in the same folder.  Folders and separators must be at the
+  // same index to qualify for 'likeness'.
   _commandLike: function BSS__commandLike(a, b) {
     if (!a || !b)
       return false;
 
     if (a.action != b.action)
+      return false;
+
+    // this check works because reconcile() fixes up the parent guids
+    // as it runs, and the command list is sorted by depth
+    if (a.parentGuid != b.parentGuid)
       return false;
 
     switch (a.data.type) {
@@ -442,14 +466,15 @@ BookmarksSyncService.prototype = {
         return true;
       return false;
     case 6:
-      if (b.data.type == a.data.type &&
+      if (b.index == a.index &&
+          b.data.type == a.data.type &&
           b.data.title == a.data.title)
         return true;
       return false;
     case 7:
-      // fixme: we need to enable this after we 
-//      if (b.data.type == a.data.type)
-//        return true;
+      if (b.index == a.index &&
+          b.data.type == a.data.type)
+        return true;
       return false;
     default:
       LOG("_commandLike: Unknown item type: " + uneval(a));
@@ -616,14 +641,16 @@ BookmarksSyncService.prototype = {
       // 3) Reconcile client/server deltas and generate new deltas for them.
 
       var propagations = [server['updates'], localUpdates];
-      var conflicts;
+      var conflicts = [[],[]];
 
-      if (server['status'] == 1 && localUpdates.length > 0) {
-        LOG("Reconciling updates");
-        var ret = this._reconcile(localUpdates, server['updates']);
-        propagations = ret.propagations;
-        conflicts = ret.conflicts;
-      }
+      // reconciliation was wrapped in this - why?
+      //if (server['status'] == 1 && localUpdates.length > 0) {
+      //}
+
+      LOG("Reconciling updates");
+      var ret = this._reconcile(localUpdates, server['updates']);
+      propagations = ret.propagations;
+      conflicts = ret.conflicts;
 
       LOG("Propagations: " + uneval(propagations) + "\n");
       LOG("Conflicts: " + uneval(conflicts) + "\n");
@@ -742,8 +769,10 @@ BookmarksSyncService.prototype = {
             ret.version = v;
         }
         keys = keys.sort();
+        LOG("TMP: " + uneval(tmp));
         for (var i = 0; i < keys.length; i++) {
           this._applyCommandsToObj(tmp, ret.deltas[keys[i]]);
+          LOG("TMP: " + uneval(tmp));
         }
         ret.status = 1;
         ret.updates = this._detectUpdates(this._snapshot, tmp);
@@ -757,12 +786,14 @@ BookmarksSyncService.prototype = {
       } else {
         LOG("Server delta can't update from our snapshot version, getting full file");
         // generate updates from full local->remote snapshot diff
-        asyncRun(bind2(this, this._getServerUpdatesFull), handlers['complete'], localJson);
+        asyncRun(bind2(this, this._getServerUpdatesFull),
+                 handlers['complete'], localJson);
         data = yield;
         if (data.status == 2) {
           // we have a delta file but no snapshot on the server.  bad.
           // fixme?
-          LOG("Error: Delta file on server, but snapshot file missing.  New snapshot uploaded, may be inconsistent with deltas!");
+          LOG("Error: Delta file on server, but snapshot file missing.  " +
+              "New snapshot uploaded, may be inconsistent with deltas!");
         }
 
         var tmp = eval(uneval(this._snapshot)); // fixme hack hack hack
@@ -852,10 +883,16 @@ BookmarksSyncService.prototype = {
     return h;
   },
 
+  _onLogin: function BSS__onLogin(event) {
+    this._os.notifyObservers(null, "bookmarks-sync:login", "");
+  },
+
+  _onLoginError: function BSS__onLoginError(event) {
+    this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
+  },
+
   // Interfaces this component implements.
   interfaces: [Ci.nsIBookmarksSyncService, Ci.nsISupports],
-
-  // nsISupports
 
   // XPCOM registration
   classDescription: "Bookmarks Sync Service",
@@ -863,9 +900,22 @@ BookmarksSyncService.prototype = {
   classID: Components.ID("{6efd73bf-6a5a-404f-9246-f70a1286a3d6}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIBookmarksSyncService, Ci.nsISupports]),
 
+  // nsISupports
+
   // nsIBookmarksSyncService
 
-  sync: function BSS_sync() { asyncRun(bind2(this, this._doSync)); }
+  sync: function BSS_sync() { asyncRun(bind2(this, this._doSync)); },
+
+  login: function BSS_login() {
+    this._dav.login("USER@mozilla.com", "PASSWORD", // FIXME
+                    {load: bind2(this, this._onLogin),
+                     error: bind2(this, this._onLoginError)});
+  },
+
+  logout: function BSS_logout() {
+    this._dav.logout();
+    this._os.notifyObservers(null, "bookmarks-sync:logout", "");
+  }
 };
 
 function asyncRun(func, handler, data) {
@@ -897,6 +947,23 @@ function DAVCollection(baseUrl) {
   this._baseUrl = baseUrl;
 }
 DAVCollection.prototype = {
+  _loggedIn: false,
+
+  __base64: {},
+  __vase64loaded: false,
+  get _base64() {
+    if (!this.__base64loaded) {
+      let jsLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
+        getService(Ci.mozIJSSubScriptLoader);
+      jsLoader.loadSubScript("chrome://sync/content/base64.js", this.__base64);
+      this.__base64loaded = true;
+    }
+    return this.__base64;
+  },
+
+  _authString: null,
+  _currentUserPath: "nobody",
+
   _addHandler: function DC__addHandler(request, handlers, eventName) {
     if (handlers[eventName])
       request.addEventListener(eventName, new EventListener(handlers[eventName]), false);
@@ -921,22 +988,79 @@ DAVCollection.prototype = {
 
     return request;
   },
+
   GET: function DC_GET(path, handlers, headers) {
     if (!headers)
       headers = {'Content-type': 'text/plain'};
+    if (this._authString)
+      headers['Authorization'] = this._authString;
+
     var request = this._makeRequest("GET", path, handlers, headers);
     request.send(null);
   },
+
   PUT: function DC_PUT(path, data, handlers, headers) {
     if (!headers)
       headers = {'Content-type': 'text/plain'};
+    if (this._authString)
+      headers['Authorization'] = this._authString;
+
     var request = this._makeRequest("PUT", path, handlers, headers);
     request.send(data);
   },
-  _runLockHandler: function DC__runLockHandler(name, event) {
-    if (this._lockHandlers && this._lockHandlers[name])
-      this._lockHandlers[name](event);
+
+  // Login / Logout
+
+  login: function DC_login(username, password, handlers) {
+    this._loginHandlers = handlers;
+    internalHandlers = {load: bind2(this, this._onLogin),
+                        error: bind2(this, this._onLoginError)};
+
+    this._authString = "Basic " +
+      this._base64.Base64.encode(username + ":" + password);
+    headers = {'Authorization': this._authString};
+
+    let request = this._makeRequest("GET", "", internalHandlers, headers);
+    request.send(null);
   },
+
+  logout: function DC_logout() {
+    this._authString = null;
+  },
+
+  _onLogin: function DC__onLogin(event) {
+    //LOG("logged in (" + event.target.status + "):\n" +
+    //    event.target.responseText + "\n");
+
+    if (event.target.status != 200) {
+      this._onLoginError(event);
+      return;
+    }
+
+    let hello = /Hello (.+)@mozilla.com/.exec(event.target.responseText)
+    if (hello) {
+      this._currentUserPath = hello[1];	
+      this._baseUrl = "http://dotmoz.mozilla.org/~" +
+        this._currentUserPath + "/";
+    }
+
+    this._loggedIn = true;
+
+    if (this._loginHandlers && this._loginHandlers.load)
+      this._loginHandlers.load(event);
+  },
+  _onLoginError: function DC__onLoginError(event) {
+    LOG("login failed (" + event.target.status + "):\n" +
+        event.target.responseText + "\n");
+
+    this._loggedIn = false;
+
+    if (this._loginHandlers && this._loginHandlers.error)
+      this._loginHandlers.error(event);
+  },
+
+  // Locking
+
   // FIXME: make this function not reentrant
   lock: function DC_lock(handlers) {
     this._lockHandlers = handlers;
@@ -950,15 +1074,7 @@ DAVCollection.prototype = {
                  "  <D:lockscope><D:exclusive/></D:lockscope>\n" +
                  "</D:lockinfo>");
   },
-  _onLock: function DC__onLock(event) {
-    LOG("acquired lock (" + event.target.status + "):\n" + event.target.responseText + "\n");
-    this._token = "woo";
-    this._runLockHandler("load", event);
-  },
-  _onLockError: function DC__onLockError(event) {
-    LOG("lock failed (" + event.target.status + "):\n" + event.target.responseText + "\n");
-    this._runLockHandler("error", event);
-  },
+
   // FIXME: make this function not reentrant
   unlock: function DC_unlock(handlers) {
     this._lockHandlers = handlers;
@@ -968,14 +1084,29 @@ DAVCollection.prototype = {
     var request = this._makeRequest("UNLOCK", "", internalHandlers, headers);
     request.send(null);
   },
+
+  _onLock: function DC__onLock(event) {
+    LOG("acquired lock (" + event.target.status + "):\n" + event.target.responseText + "\n");
+    this._token = "woo";
+    if (this._lockHandlers && this._lockHandlers.load)
+      this._lockHandlers.load(event);
+  },
+  _onLockError: function DC__onLockError(event) {
+    LOG("lock failed (" + event.target.status + "):\n" + event.target.responseText + "\n");
+    if (this._lockHandlers && this._lockHandlers.error)
+      this._lockHandlers.error(event);
+  },
+
   _onUnlock: function DC__onUnlock(event) {
     LOG("removed lock (" + event.target.status + "):\n" + event.target.responseText + "\n");
     this._token = null;
-    this._runLockHandler("load", event);
+    if (this._lockHandlers && this._lockHandlers.load)
+      this._lockHandlers.load(event);
   },
   _onUnlockError: function DC__onUnlockError(event) {
     LOG("unlock failed (" + event.target.status + "):\n" + event.target.responseText + "\n");
-    this._runLockHandler("error", event);
+    if (this._lockHandlers && this._lockHandlers.error)
+      this._lockHandlers.error(event);
   },
 };
 
