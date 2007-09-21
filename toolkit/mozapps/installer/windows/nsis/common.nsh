@@ -499,6 +499,37 @@
   WriteINIStr "$PLUGINSDIR\options.ini" "Field 7" Bottom "117"
 !macroend
 
+!macro createSummaryINI
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Settings" NumFields "3"
+
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 1" Type   "label"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 1" Text   "$(SUMMARY_INSTALLED_TO)"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 1" Left   "0"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 1" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 1" Top    "5"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 1" Bottom "15"
+
+  ; XXXrstrong - a side affect of using a READONLY textbox is if the path is
+  ; longer than the visible area of the textbox it will display the characters
+  ; at the end and the beginning of the path will be hidden. Since the path has
+  ; to be greater than 74 characters in length I'm not going to spend any
+  ; cycles trying to come up with a workaround.
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 2" Type   "text"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 2" state  "$INSTDIR"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 2" Left   "0"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 2" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 2" Top    "17"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 2" Bottom "30"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 2" flags  "READONLY"
+
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Type   "label"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Text   "$(SUMMARY_CLICK)"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Left   "0"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Right  "-1"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Top    "130"
+  WriteINIStr "$PLUGINSDIR\summary.ini" "Field 3" Bottom "150"
+!macroend
+
 /**
  * DEPRECATED - use GetParent instead.
  */
@@ -568,7 +599,7 @@
 
 
 ################################################################################
-# Macros for creating Install Options ini files
+# Macros for handling files in use
 
 /**
  * The macros below will automatically prepend un. to the function names when
@@ -591,6 +622,80 @@
   !undef _MOZFUNC_VERBOSE
   !define _MOZFUNC_VERBOSE ${_VERBOSE}
   !verbose pop
+!macroend
+
+/**
+ * Displays a MessageBox and then calls abort to prevent continuing to the
+ * next page when the specified Window Class is found.
+ *
+ * @param   _WINDOW_CLASS
+ *          The Window Class to search for with FindWindow.
+ * @param   _MSG
+ *          The message text to display in the message box.
+ *
+ * $R7 = return value from FindWindow
+ * $R8 = _WINDOW_CLASS
+ * $R9 = _MSG
+ */
+!macro ManualCloseAppPrompt
+
+  !ifndef ${_MOZFUNC_UN}ManualCloseAppPrompt
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}ManualCloseAppPrompt "!insertmacro ${_MOZFUNC_UN}ManualCloseAppPromptCall"
+
+    Function ${_MOZFUNC_UN}ManualCloseAppPrompt
+      Exch $R9
+      Exch 1
+      Exch $R8
+      Push $R7
+
+      FindWindow $R7 "$R8"
+      IntCmp $R7 0 +3 +1 +1
+      MessageBox MB_OK|MB_ICONQUESTION "$R9"
+      Abort
+
+      Pop $R7
+      Exch $R8
+      Exch 1
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro ManualCloseAppPromptCall _WINDOW_CLASS _MSG
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_WINDOW_CLASS}"
+  Push "${_MSG}"
+  Call ManualCloseAppPrompt
+  !verbose pop
+!macroend
+
+!macro un.ManualCloseAppPromptCall _WINDOW_CLASS _MSG
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_WINDOW_CLASS}"
+  Push "${_MSG}"
+  Call un.ManualCloseAppPrompt
+  !verbose pop
+!macroend
+
+!macro un.ManualCloseAppPrompt
+  !ifndef un.ManualCloseAppPrompt
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro ManualCloseAppPrompt
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
 !macroend
 
 /**
@@ -2770,7 +2875,7 @@
       ${un.LineFind} "$TmpVal" "/NUL" "1:-1" "un.RemoveDirsCallback"
 
       ; Delete the temporary uninstall log file
-      ${DeleteFile} "$TmpVal"
+      Delete /REBOOTOK "$TmpVal"
 
       end:
 
@@ -2798,7 +2903,16 @@
       StrCmp "$R0" "\" +2 +1
       StrCpy $R1 "$R9"
 
-      ${DeleteFile} "$R1"
+      IfFileExists "$R1" +1 end
+      Delete "$R1"
+      IfErrors +1 end
+      ClearErrors
+      Rename "$R1" "$R1.moz-delete"
+      IfErrors +1 +3
+      Delete /REBOOTOK "$R1"
+      GoTo end
+
+      Delete /REBOOTOK "$R1.moz-delete"
 
       end:
       ClearErrors
