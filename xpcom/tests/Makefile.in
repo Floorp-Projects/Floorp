@@ -72,6 +72,7 @@ CPPSRCS		= \
 		TestAutoPtr.cpp \
 		TestVersionComparator.cpp \
 		TestTextFormatter.cpp \
+		TestPipe.cpp \
 		$(NULL)
 
 ifndef MOZ_ENABLE_LIBXUL
@@ -123,6 +124,8 @@ ENABLE_CXX_EXCEPTIONS = 1
 
 XPCSHELL_TESTS = unit
 
+CPP_UNIT_TESTS = TestPipe
+
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= \
@@ -141,3 +144,7 @@ check::
 	@$(PERL) -w $(srcdir)/TestVersionComparatorRunner.pl "$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestVersionComparator$(BIN_SUFFIX)"
 	@echo "Running nsTextFormatter tests"
 	@$(RUN_TEST_PROGRAM) $(FINAL_TARGET)/TestTextFormatter$(BIN_SUFFIX)
+	@$(EXIT_ON_ERROR) \
+	for f in $(CPP_UNIT_TESTS); do \
+	  XPCOM_DEBUG_BREAK=stack-and-abort $(RUN_TEST_PROGRAM) $(DIST)/bin/$$f; \
+	done
