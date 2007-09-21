@@ -71,6 +71,7 @@ CPPSRCS		= \
 		TestServMgr.cpp \
 		TestAutoPtr.cpp \
 		TestVersionComparator.cpp \
+		TestTextFormatter.cpp \
 		$(NULL)
 
 ifndef MOZ_ENABLE_LIBXUL
@@ -87,7 +88,6 @@ CPPSRCS += \
 		TestXPIDLString.cpp \
 		TestDeque.cpp \
 		TestStrings.cpp \
-		TestTextFormatter.cpp \
 		TestStorageStream.cpp \
 		TestExpirationTracker.cpp \
 		$(NULL)
