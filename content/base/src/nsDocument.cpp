@@ -2851,7 +2851,9 @@ nsDocument::DispatchContentLoadedEvents()
 void
 nsDocument::EndLoad()
 {
-  // Drop the ref to our parser, if any
+  // Drop the ref to our parser, if any, but keep hold of the sink so that we
+  // can flush it from FlushPendingNotifications as needed.  We might have to
+  // do that to get a StartLayout() to happen.
   if (mParser) {
     mWeakSink = do_GetWeakReference(mParser->GetContentSink());
     mParser = nsnull;
