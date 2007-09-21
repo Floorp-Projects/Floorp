@@ -88,7 +88,7 @@ function restoreForm() {
 
 
 // Check for expected username/password in form.
-function checkForm(expectedUsername, expectedPassword) {
+function checkACForm(expectedUsername, expectedPassword) {
   is(uname.value, expectedUsername, "Checking form username");
   is(pword.value, expectedPassword, "Checking form password");
 }
@@ -130,7 +130,7 @@ function runTest(testNum) {
   switch(testNum) {
     case 1:
         // Make sure initial form is empty.
-        checkForm("", "");
+        checkACForm("", "");
         // Trigger autocomplete popup
         restoreForm();
         doKey("down");
@@ -139,9 +139,9 @@ function runTest(testNum) {
     case 2:
         // Check first entry
         doKey("down");
-        checkForm("", ""); // value shouldn't update
+        checkACForm("", ""); // value shouldn't update
         doKey("return"); // not "enter"!
-        checkForm("tempuser1", "temppass1");
+        checkACForm("tempuser1", "temppass1");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -153,7 +153,7 @@ function runTest(testNum) {
         doKey("down");
         doKey("down");
         doKey("return"); // not "enter"!
-        checkForm("testuser2", "testpass2");
+        checkACForm("testuser2", "testpass2");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -166,7 +166,7 @@ function runTest(testNum) {
         doKey("down");
         doKey("down");
         doKey("return");
-        checkForm("testuser3", "testpass3");
+        checkACForm("testuser3", "testpass3");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -180,7 +180,7 @@ function runTest(testNum) {
         doKey("down");
         doKey("down");
         doKey("return");
-        checkForm("zzzuser4", "zzzpass4");
+        checkACForm("zzzuser4", "zzzpass4");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -196,7 +196,7 @@ function runTest(testNum) {
         doKey("down"); // deselects
         doKey("down");
         doKey("return");
-        checkForm("tempuser1", "temppass1");
+        checkACForm("tempuser1", "temppass1");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -207,7 +207,7 @@ function runTest(testNum) {
         // Check the last entry via arrow-up
         doKey("up");
         doKey("return");
-        checkForm("zzzuser4", "zzzpass4");
+        checkACForm("zzzuser4", "zzzpass4");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -220,7 +220,7 @@ function runTest(testNum) {
         doKey("up");   // selects nothing!
         doKey("up");   // select last entry
         doKey("return");
-        checkForm("zzzuser4", "zzzpass4");
+        checkACForm("zzzuser4", "zzzpass4");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -238,7 +238,7 @@ function runTest(testNum) {
         doKey("up"); // deselects
         doKey("up"); // last entry
         doKey("return");
-        checkForm("zzzuser4", "zzzpass4");
+        checkACForm("zzzuser4", "zzzpass4");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -249,7 +249,7 @@ function runTest(testNum) {
         // Set first entry w/o triggering autocomplete
         doKey("down");
         doKey("right");
-        checkForm("tempuser1", ""); // empty password
+        checkACForm("tempuser1", ""); // empty password
 
         // Trigger autocomplete popup
         restoreForm();
@@ -260,7 +260,7 @@ function runTest(testNum) {
         // Set first entry w/o triggering autocomplete
         doKey("down");
         doKey("left");
-        checkForm("tempuser1", ""); // empty password
+        checkACForm("tempuser1", ""); // empty password
 
         // Trigger autocomplete popup
         restoreForm();
@@ -273,7 +273,7 @@ function runTest(testNum) {
         doKey("down");
         doKey("page_up");
         doKey("return");
-        checkForm("tempuser1", "temppass1");
+        checkACForm("tempuser1", "temppass1");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -285,7 +285,7 @@ function runTest(testNum) {
         doKey("down");
         doKey("page_down");
         doKey("return");
-        checkForm("zzzuser4", "zzzpass4");
+        checkACForm("zzzuser4", "zzzpass4");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -299,7 +299,7 @@ function runTest(testNum) {
 //        doKey("down");
 //        doKey("down");
 //        doKey("escape");
-//        checkForm("", "");
+//        checkACForm("", "");
 
         // Trigger autocomplete popup
 //        restoreForm();
@@ -323,11 +323,11 @@ function runTest(testNum) {
         // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
         doKey("delete", shiftModifier);
 
-        checkForm("zzzuser4", ""); // why does a value get set here?
+        checkACForm("zzzuser4", ""); // why does a value get set here?
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
         is(numLogins, 3, "Correct number of logins after deleting one");
         doKey("return");
-        checkForm("testuser2", "testpass2");
+        checkACForm("testuser2", "testpass2");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -338,7 +338,7 @@ function runTest(testNum) {
         // Check the new first entry (of 3)
         doKey("down");
         doKey("return");
-        checkForm("testuser2", "testpass2");
+        checkACForm("testuser2", "testpass2");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -350,11 +350,11 @@ function runTest(testNum) {
         doKey("down");
         doKey("down");
         doKey("delete", shiftModifier);
-        checkForm("testuser2", ""); // XXX why does a value get set here?
+        checkACForm("testuser2", ""); // XXX why does a value get set here?
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
         is(numLogins, 2, "Correct number of logins after deleting one");
         doKey("return");
-        checkForm("zzzuser4", "zzzpass4");
+        checkACForm("zzzuser4", "zzzpass4");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -365,7 +365,7 @@ function runTest(testNum) {
         // Check the new second entry (of 2)
         doKey("down");
         doKey("return");
-        checkForm("testuser2", "testpass2");
+        checkACForm("testuser2", "testpass2");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -377,11 +377,11 @@ function runTest(testNum) {
         doKey("down");
         doKey("down");
         doKey("delete", shiftModifier);
-        checkForm("testuser2", ""); // XXX why does a value get set here?
+        checkACForm("testuser2", ""); // XXX why does a value get set here?
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
         is(numLogins, 1, "Correct number of logins after deleting one");
         doKey("return");
-        checkForm("testuser2", "testpass2");
+        checkACForm("testuser2", "testpass2");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -392,7 +392,7 @@ function runTest(testNum) {
         // Check the new second entry (of 2)
         doKey("down");
         doKey("return");
-        checkForm("testuser2", "testpass2");
+        checkACForm("testuser2", "testpass2");
 
         // Trigger autocomplete popup
         restoreForm();
@@ -404,7 +404,7 @@ function runTest(testNum) {
         doKey("down");
         doKey("delete", shiftModifier);
         //doKey("return");
-        checkForm("", "");
+        checkACForm("", "");
         numLogins = pwmgr.countLogins("http://localhost:8888", "http://autocomplete:8888", null);
         is(numLogins, 0, "Correct number of logins after deleting one");
 

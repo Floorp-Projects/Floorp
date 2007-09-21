@@ -513,17 +513,13 @@ _cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
 
     while (buf) {
 	 for (i = 0; i < buf->num_points; i++) {
-	     if (scalex == CAIRO_FIXED_ONE) {
-		 buf->points[i].x += offx;
-	     } else {
-		 buf->points[i].x = _cairo_fixed_mul (buf->points[i].x + offx, scalex);
-	     }
+	     if (scalex != CAIRO_FIXED_ONE)
+		 buf->points[i].x = _cairo_fixed_mul (buf->points[i].x, scalex);
+	     buf->points[i].x += offx;
 
-	     if (scaley == CAIRO_FIXED_ONE) {
-		 buf->points[i].y += offy;
-	     } else {
-		 buf->points[i].y = _cairo_fixed_mul (buf->points[i].y + offy, scaley);
-	     }
+	     if (scaley != CAIRO_FIXED_ONE)
+		 buf->points[i].y = _cairo_fixed_mul (buf->points[i].y, scaley);
+	     buf->points[i].y += offy;
 	 }
 
 	 buf = buf->next;
@@ -546,13 +542,38 @@ _cairo_path_fixed_device_transform (cairo_path_fixed_t	*path,
 				    cairo_matrix_t	*device_transform)
 {
     assert (device_transform->yx == 0.0 && device_transform->xy == 0.0);
-    /* XXX: FRAGILE: I'm not really sure whether we're doing the
-     * "right" thing here if there is both scaling and translation in
-     * the matrix. But for now, the internals guarantee that we won't
-     * really ever have both going on. */
+    /* XXX: Support freeform matrices someday (right now, only translation and scale
+     * work. */
     _cairo_path_fixed_offset_and_scale (path,
 					_cairo_fixed_from_double (device_transform->x0),
 					_cairo_fixed_from_double (device_transform->y0),
 					_cairo_fixed_from_double (device_transform->xx),
 					_cairo_fixed_from_double (device_transform->yy));
+}
+
+cairo_bool_t
+_cairo_path_fixed_is_equal (cairo_path_fixed_t *path,
+			    cairo_path_fixed_t *other)
+{
+    cairo_path_buf_t *path_buf, *other_buf;
+
+    if (path->current_point.x != other->current_point.x ||
+	path->current_point.y != other->current_point.y ||
+	path->has_current_point != other->has_current_point ||
+	path->has_curve_to != other->has_curve_to ||
+	path->last_move_point.x != other->last_move_point.x ||
+	path->last_move_point.y != other->last_move_point.y)
+	return FALSE;
+
+    other_buf = other->buf_head;
+    for (path_buf = path->buf_head; path_buf != NULL; path_buf = path_buf->next) {
+	if (other_buf == NULL ||
+	    path_buf->num_ops != other_buf->num_ops ||
+	    path_buf->num_points != other_buf->num_points ||
+	    memcmp (path_buf->op, other_buf->op, path_buf->num_ops) != 0 ||
+	    memcmp (path_buf->points, other_buf->points, path_buf->num_points != 0))
+	    return FALSE;
+	other_buf = other_buf->next;
+    }
+    return TRUE;
 }

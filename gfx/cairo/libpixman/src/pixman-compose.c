@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-#if HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
@@ -136,7 +136,7 @@ fbFetch_x8r8g8b8 (pixman_image_t *image,
     const uint32_t *pixel = (const uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     while (pixel < end) {
-	WRITE(buffer++, READ(pixel++) | 0xff000000);
+	*buffer++ = READ(pixel++) | 0xff000000;
     }
 }
 
@@ -147,10 +147,10 @@ fbFetch_a8b8g8r8 (pixman_image_t *image,
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     while (pixel < end) {
-	WRITE(buffer++, ((READ(pixel) & 0xff00ff00) |
-			 ((READ(pixel) >> 16) & 0xff) |
-			 ((READ(pixel) & 0xff) << 16)));
-	++pixel;
+	uint32_t p = READ(pixel++);
+	*buffer++ = (p & 0xff00ff00) |
+	            ((p >> 16) & 0xff) |
+	    ((p & 0xff) << 16);
     }
 }
 
@@ -161,11 +161,11 @@ fbFetch_x8b8g8r8 (pixman_image_t *image,
     const uint32_t *pixel = (uint32_t *)bits + x;
     const uint32_t *end = pixel + width;
     while (pixel < end) {
-	WRITE(buffer++, 0xff000000 |
-	      ((READ(pixel) & 0x0000ff00) |
-	       ((READ(pixel) >> 16) & 0xff) |
-	       ((READ(pixel) & 0xff) << 16)));
-	++pixel;
+	uint32_t p = READ(pixel++);
+	*buffer++ = 0xff000000 |
+	    (p & 0x0000ff00) |
+	    ((p >> 16) & 0xff) |
+	    ((p & 0xff) << 16);
     }
 }
 
@@ -178,7 +178,7 @@ fbFetch_r8g8b8 (pixman_image_t *image,
     while (pixel < end) {
 	uint32_t b = Fetch24(pixel) | 0xff000000;
 	pixel += 3;
-	WRITE(buffer++, b);
+	*buffer++ = b;
     }
 }
 
@@ -199,7 +199,7 @@ fbFetch_b8g8r8 (pixman_image_t *image,
 	b |= (READ(pixel++) << 8);
 	b |= (READ(pixel++));
 #endif
-	WRITE(buffer++, b);
+	*buffer++ = b;
     }
 }
 
@@ -211,13 +211,13 @@ fbFetch_r5g6b5 (pixman_image_t *image,
     const uint16_t *pixel = (const uint16_t *)bits + x;
     const uint16_t *end = pixel + width;
     while (pixel < end) {
-	uint32_t  p = READ(pixel++);
+	uint32_t p = READ(pixel++);
 	uint32_t r = (((p) << 3) & 0xf8) | 
 	    (((p) << 5) & 0xfc00) |
 	    (((p) << 8) & 0xf80000);
 	r |= (r >> 5) & 0x70007;
 	r |= (r >> 6) & 0x300;
-	WRITE(buffer++, 0xff000000 | r);
+	*buffer++ = 0xff000000 | r;
     }
 }
 
@@ -235,7 +235,7 @@ fbFetch_b5g6r5 (pixman_image_t *image,
 	b = ((p & 0xf800) | ((p & 0xe000) >> 5)) >> 8;
 	g = ((p & 0x07e0) | ((p & 0x0600) >> 6)) << 5;
 	r = ((p & 0x001c) | ((p & 0x001f) << 5)) << 14;
-	WRITE(buffer++, (0xff000000 | r | g | b));
+	*buffer++ = 0xff000000 | r | g | b;
     }
 }
 
@@ -254,7 +254,7 @@ fbFetch_a1r5g5b5 (pixman_image_t *image,
 	r = ((p & 0x7c00) | ((p & 0x7000) >> 5)) << 9;
 	g = ((p & 0x03e0) | ((p & 0x0380) >> 5)) << 6;
 	b = ((p & 0x001c) | ((p & 0x001f) << 5)) >> 2;
-	WRITE(buffer++, (a | r | g | b));
+	*buffer++ = a | r | g | b;
     }
 }
 
@@ -272,7 +272,7 @@ fbFetch_x1r5g5b5 (pixman_image_t *image,
 	r = ((p & 0x7c00) | ((p & 0x7000) >> 5)) << 9;
 	g = ((p & 0x03e0) | ((p & 0x0380) >> 5)) << 6;
 	b = ((p & 0x001c) | ((p & 0x001f) << 5)) >> 2;
-	WRITE(buffer++, (0xff000000 | r | g | b));
+	*buffer++ = 0xff000000 | r | g | b;
     }
 }
 
@@ -291,7 +291,7 @@ fbFetch_a1b5g5r5 (pixman_image_t *image,
 	b = ((p & 0x7c00) | ((p & 0x7000) >> 5)) >> 7;
 	g = ((p & 0x03e0) | ((p & 0x0380) >> 5)) << 6;
 	r = ((p & 0x001c) | ((p & 0x001f) << 5)) << 14;
-	WRITE(buffer++, (a | r | g | b));
+	*buffer++ = a | r | g | b;
     }
 }
 
@@ -309,7 +309,7 @@ fbFetch_x1b5g5r5 (pixman_image_t *image,
 	b = ((p & 0x7c00) | ((p & 0x7000) >> 5)) >> 7;
 	g = ((p & 0x03e0) | ((p & 0x0380) >> 5)) << 6;
 	r = ((p & 0x001c) | ((p & 0x001f) << 5)) << 14;
-	WRITE(buffer++, (0xff000000 | r | g | b));
+	*buffer++ = 0xff000000 | r | g | b;
     }
 }
 
@@ -327,7 +327,7 @@ fbFetch_a4r4g4b4 (pixman_image_t *image,
 	r = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) << 12;
 	g = ((p & 0x00f0) | ((p & 0x00f0) >> 4)) << 8;
 	b = ((p & 0x000f) | ((p & 0x000f) << 4));
-	WRITE(buffer++, (a | r | g | b));
+	*buffer++ = a | r | g | b;
     }
 }
 
@@ -345,7 +345,7 @@ fbFetch_x4r4g4b4 (pixman_image_t *image,
 	r = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) << 12;
 	g = ((p & 0x00f0) | ((p & 0x00f0) >> 4)) << 8;
 	b = ((p & 0x000f) | ((p & 0x000f) << 4));
-	WRITE(buffer++, (0xff000000 | r | g | b));
+	*buffer++ = 0xff000000 | r | g | b;
     }
 }
 
@@ -364,7 +364,7 @@ fbFetch_a4b4g4r4 (pixman_image_t *image,
 	b = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) >> 4;
 	g = ((p & 0x00f0) | ((p & 0x00f0) >> 4)) << 8;
 	r = ((p & 0x000f) | ((p & 0x000f) << 4)) << 16;
-	WRITE(buffer++, (a | r | g | b));
+	*buffer++ = a | r | g | b;
     }
 }
 
@@ -382,7 +382,7 @@ fbFetch_x4b4g4r4 (pixman_image_t *image,
 	b = ((p & 0x0f00) | ((p & 0x0f00) >> 4)) >> 4;
 	g = ((p & 0x00f0) | ((p & 0x00f0) >> 4)) << 8;
 	r = ((p & 0x000f) | ((p & 0x000f) << 4)) << 16;
-	WRITE(buffer++, (0xff000000 | r | g | b));
+	*buffer++ = 0xff000000 | r | g | b;
     }
 }
 
@@ -393,7 +393,7 @@ fbFetch_a8 (pixman_image_t *image,
     const uint8_t *pixel = (const uint8_t *)bits + x;
     const uint8_t *end = pixel + width;
     while (pixel < end) {
-	WRITE(buffer++, READ(pixel++) << 24);
+	*buffer++ = READ(pixel++) << 24;
     }
 }
 
@@ -414,7 +414,7 @@ fbFetch_r3g3b2 (pixman_image_t *image,
 	     ((p & 0x03) << 2) |
 	     ((p & 0x03) << 4) |
 	     ((p & 0x03) << 6));
-	WRITE(buffer++, (0xff000000 | r | g | b));
+	*buffer++ = 0xff000000 | r | g | b;
     }
 }
 
@@ -437,7 +437,7 @@ fbFetch_b2g3r3 (pixman_image_t *image,
 	r = (((p & 0x07)     ) |
 	     ((p & 0x07) << 3) |
 	     ((p & 0x06) << 6)) << 16;
-	WRITE(buffer++, (0xff000000 | r | g | b));
+	*buffer++ = 0xff000000 | r | g | b;
     }
 }
 
@@ -455,7 +455,7 @@ fbFetch_a2r2g2b2 (pixman_image_t *image,
 	r = ((p & 0x30) * 0x55) << 12;
 	g = ((p & 0x0c) * 0x55) << 6;
 	b = ((p & 0x03) * 0x55);
-	WRITE(buffer++, a|r|g|b);
+	*buffer++ = a|r|g|b;
     }
 }
 
@@ -473,7 +473,7 @@ fbFetch_a2b2g2r2 (pixman_image_t *image,
 	b = ((p & 0x30) * 0x55) >> 6;
 	g = ((p & 0x0c) * 0x55) << 6;
 	r = ((p & 0x03) * 0x55) << 16;
-	WRITE(buffer++, a|r|g|b);
+	*buffer++ = a|r|g|b;
     }
 }
 
@@ -485,7 +485,7 @@ fbFetch_c8 (pixman_image_t *image,
     const uint8_t *end = pixel + width;
     while (pixel < end) {
 	uint32_t  p = READ(pixel++);
-	WRITE(buffer++, indexed->rgba[p]);
+	*buffer++ = indexed->rgba[p];
     }
 }
 
@@ -497,11 +497,11 @@ fbFetch_x4a4 (pixman_image_t *image,
     const uint8_t *end = pixel + width;
     while (pixel < end) {
 	uint8_t p = READ(pixel++) & 0xf;
-	WRITE(buffer++, (p | (p << 4)) << 24);
+	*buffer++ = (p | (p << 4)) << 24;
     }
 }
 
-#define Fetch8(l,o)    (((uint8_t *) (l))[(o) >> 2])
+#define Fetch8(l,o)    (READ((uint8_t *)(l) + ((o) >> 2)))
 #if IMAGE_BYTE_ORDER == MSBFirst
 #define Fetch4(l,o)    ((o) & 2 ? Fetch8(l,o) & 0xf : Fetch8(l,o) >> 4)
 #else
@@ -517,7 +517,7 @@ fbFetch_a4 (pixman_image_t *image,
 	uint32_t  p = Fetch4(bits, i + x);
 	
 	p |= p << 4;
-	WRITE(buffer++, p << 24);
+	*buffer++ = p << 24;
     }
 }
 
@@ -533,7 +533,7 @@ fbFetch_r1g2b1 (pixman_image_t *image,
 	r = ((p & 0x8) * 0xff) << 13;
 	g = ((p & 0x6) * 0x55) << 7;
 	b = ((p & 0x1) * 0xff);
-	WRITE(buffer++, 0xff000000|r|g|b);
+	*buffer++ = 0xff000000|r|g|b;
     }
 }
 
@@ -549,7 +549,7 @@ fbFetch_b1g2r1 (pixman_image_t *image,
 	b = ((p & 0x8) * 0xff) >> 3;
 	g = ((p & 0x6) * 0x55) << 7;
 	r = ((p & 0x1) * 0xff) << 16;
-	WRITE(buffer++, 0xff000000|r|g|b);
+	*buffer++ = 0xff000000|r|g|b;
     }
 }
 
@@ -566,7 +566,7 @@ fbFetch_a1r1g1b1 (pixman_image_t *image,
 	r = ((p & 0x4) * 0xff) << 14;
 	g = ((p & 0x2) * 0xff) << 7;
 	b = ((p & 0x1) * 0xff);
-	WRITE(buffer++, a|r|g|b);
+	*buffer++ = a|r|g|b;
     }
 }
 
@@ -583,7 +583,7 @@ fbFetch_a1b1g1r1 (pixman_image_t *image,
 	r = ((p & 0x4) * 0xff) >> 3;
 	g = ((p & 0x2) * 0xff) << 7;
 	b = ((p & 0x1) * 0xff) << 16;
-	WRITE(buffer++, a|r|g|b);
+	*buffer++ = a|r|g|b;
     }
 }
 
@@ -595,7 +595,7 @@ fbFetch_c4 (pixman_image_t *image,
     for (i = 0; i < width; ++i) {
 	uint32_t  p = Fetch4(bits, i + x);
 	
-	WRITE(buffer++, indexed->rgba[p]);
+	*buffer++ = indexed->rgba[p];
     }
 }
 
@@ -606,7 +606,7 @@ fbFetch_a1 (pixman_image_t *image,
 {
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = ((uint32_t *)bits)[(i + x) >> 5];
+	uint32_t  p = READ(bits + ((i + x) >> 5));
 	uint32_t  a;
 #if BITMAP_BIT_ORDER == MSBFirst
 	a = p >> (0x1f - ((i+x) & 0x1f));
@@ -617,7 +617,7 @@ fbFetch_a1 (pixman_image_t *image,
 	a |= a << 1;
 	a |= a << 2;
 	a |= a << 4;
-	WRITE(buffer++, a << 24);
+	*buffer++ = a << 24;
     }
 }
 
@@ -627,7 +627,7 @@ fbFetch_g1 (pixman_image_t *image,
 {
     int i;
     for (i = 0; i < width; ++i) {
-	uint32_t  p = ((uint32_t *)bits)[(i+x) >> 5];
+	uint32_t p = READ(bits + ((i+x) >> 5));
 	uint32_t a;
 #if BITMAP_BIT_ORDER == MSBFirst
 	a = p >> (0x1f - ((i+x) & 0x1f));
@@ -635,7 +635,7 @@ fbFetch_g1 (pixman_image_t *image,
 	a = p >> ((i+x) & 0x1f);
 #endif
 	a = a & 1;
-	WRITE(buffer++, indexed->rgba[a]);
+	*buffer++ = indexed->rgba[a];
     }
 }
 
@@ -995,13 +995,6 @@ fbFetchPixel_x4a4 (pixman_image_t *image,
     return ((pixel & 0xf) | ((pixel & 0xf) << 4)) << 24;
 }
 
-#define Fetch8(l,o)    (((uint8_t *) (l))[(o) >> 2])
-#if IMAGE_BYTE_ORDER == MSBFirst
-#define Fetch4(l,o)    ((o) & 2 ? Fetch8(l,o) & 0xf : Fetch8(l,o) >> 4)
-#else
-#define Fetch4(l,o)    ((o) & 2 ? Fetch8(l,o) >> 4 : Fetch8(l,o) & 0xf)
-#endif
-
 static FASTCALL uint32_t
 fbFetchPixel_a4 (pixman_image_t *image,
 		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
@@ -1080,7 +1073,7 @@ static FASTCALL uint32_t
 fbFetchPixel_a1 (pixman_image_t *image,
 		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
-    uint32_t  pixel = ((uint32_t *)bits)[offset >> 5];
+    uint32_t  pixel = READ(bits + (offset >> 5));
     uint32_t  a;
 #if BITMAP_BIT_ORDER == MSBFirst
     a = pixel >> (0x1f - (offset & 0x1f));
@@ -1098,7 +1091,7 @@ static FASTCALL uint32_t
 fbFetchPixel_g1 (pixman_image_t *image,
 		 const uint32_t *bits, int offset, const pixman_indexed_t * indexed)
 {
-    uint32_t pixel = ((uint32_t *)bits)[offset >> 5];
+    uint32_t pixel = READ(bits + (offset >> 5));
     uint32_t a;
 #if BITMAP_BIT_ORDER == MSBFirst
     a = pixel >> (0x1f - (offset & 0x1f));
@@ -1187,7 +1180,7 @@ fbStore_x8r8g8b8 (pixman_image_t *image,
     int i;
     uint32_t *pixel = (uint32_t *)bits + x;
     for (i = 0; i < width; ++i)
-	WRITE(pixel++, READ(values + i) & 0xffffff);
+	WRITE(pixel++, values[i] & 0xffffff);
 }
 
 static FASTCALL void
@@ -1197,7 +1190,7 @@ fbStore_a8b8g8r8 (pixman_image_t *image,
     int i;
     uint32_t *pixel = (uint32_t *)bits + x;
     for (i = 0; i < width; ++i)
-	WRITE(pixel++, (READ(values + i) & 0xff00ff00) | ((READ(values + i) >> 16) & 0xff) | ((READ(values + i) & 0xff) << 16));
+	WRITE(pixel++, (values[i] & 0xff00ff00) | ((values[i] >> 16) & 0xff) | ((values[i] & 0xff) << 16));
 }
 
 static FASTCALL void
@@ -1207,7 +1200,7 @@ fbStore_x8b8g8r8 (pixman_image_t *image,
     int i;
     uint32_t *pixel = (uint32_t *)bits + x;
     for (i = 0; i < width; ++i)
-	WRITE(pixel++, (READ(values + i) & 0x0000ff00) | ((READ(values + i) >> 16) & 0xff) | ((READ(values + i) & 0xff) << 16));
+	WRITE(pixel++, (values[i] & 0x0000ff00) | ((values[i] >> 16) & 0xff) | ((values[i] & 0xff) << 16));
 }
 
 static FASTCALL void
@@ -1218,7 +1211,7 @@ fbStore_r8g8b8 (pixman_image_t *image,
     int i;
     uint8_t *pixel = ((uint8_t *) bits) + 3*x;
     for (i = 0; i < width; ++i) {
-	Store24(pixel, READ(values + i));
+	Store24(pixel, values[i]);
 	pixel += 3;
     }
 }
@@ -1230,7 +1223,7 @@ fbStore_b8g8r8 (pixman_image_t *image,
     int i;
     uint8_t *pixel = ((uint8_t *) bits) + 3*x;
     for (i = 0; i < width; ++i) {
-	uint32_t val = READ(values + i);
+	uint32_t val = values[i];
 #if IMAGE_BYTE_ORDER == MSBFirst
 	WRITE(pixel++, Blue(val));
 	WRITE(pixel++, Green(val));
@@ -1250,7 +1243,7 @@ fbStore_r5g6b5 (pixman_image_t *image,
     int i;
     uint16_t *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	uint32_t s = READ(values + i);
+	uint32_t s = values[i];
 	WRITE(pixel++, ((s >> 3) & 0x001f) |
 	      ((s >> 5) & 0x07e0) |
 	      ((s >> 8) & 0xf800));
@@ -1264,7 +1257,7 @@ fbStore_b5g6r5 (pixman_image_t *image,
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	Split(READ(values + i));
+	Split(values[i]);
 	WRITE(pixel++, ((b << 8) & 0xf800) |
 	      ((g << 3) & 0x07e0) |
 	      ((r >> 3)         ));
@@ -1278,7 +1271,7 @@ fbStore_a1r5g5b5 (pixman_image_t *image,
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	Splita(READ(values + i));
+	Splita(values[i]);
 	WRITE(pixel++, ((a << 8) & 0x8000) |
 	      ((r << 7) & 0x7c00) |
 	      ((g << 2) & 0x03e0) |
@@ -1293,7 +1286,7 @@ fbStore_x1r5g5b5 (pixman_image_t *image,
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	Split(READ(values + i));
+	Split(values[i]);
 	WRITE(pixel++, ((r << 7) & 0x7c00) |
 	      ((g << 2) & 0x03e0) |
 	      ((b >> 3)         ));
@@ -1307,7 +1300,7 @@ fbStore_a1b5g5r5 (pixman_image_t *image,
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	Splita(READ(values + i));
+	Splita(values[i]);
 	WRITE(pixel++, ((a << 8) & 0x8000) |
 	      ((b << 7) & 0x7c00) |
 	      ((g << 2) & 0x03e0) |
@@ -1322,7 +1315,7 @@ fbStore_x1b5g5r5 (pixman_image_t *image,
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	Split(READ(values + i));
+	Split(values[i]);
 	WRITE(pixel++, ((b << 7) & 0x7c00) |
 	      ((g << 2) & 0x03e0) |
 	      ((r >> 3)         ));
@@ -1336,7 +1329,7 @@ fbStore_a4r4g4b4 (pixman_image_t *image,
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	Splita(READ(values + i));
+	Splita(values[i]);
 	WRITE(pixel++, ((a << 8) & 0xf000) |
 	      ((r << 4) & 0x0f00) |
 	      ((g     ) & 0x00f0) |
@@ -1351,7 +1344,7 @@ fbStore_x4r4g4b4 (pixman_image_t *image,
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	Split(READ(values + i));
+	Split(values[i]);
 	WRITE(pixel++, ((r << 4) & 0x0f00) |
 	      ((g     ) & 0x00f0) |
 	      ((b >> 4)         ));
@@ -1365,7 +1358,7 @@ fbStore_a4b4g4r4 (pixman_image_t *image,
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	Splita(READ(values + i));
+	Splita(values[i]);
 	WRITE(pixel++, ((a << 8) & 0xf000) |
 	      ((b << 4) & 0x0f00) |
 	      ((g     ) & 0x00f0) |
@@ -1380,7 +1373,7 @@ fbStore_x4b4g4r4 (pixman_image_t *image,
     int i;
     uint16_t  *pixel = ((uint16_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	Split(READ(values + i));
+	Split(values[i]);
 	WRITE(pixel++, ((b << 4) & 0x0f00) |
 	      ((g     ) & 0x00f0) |
 	      ((r >> 4)         ));
@@ -1394,7 +1387,7 @@ fbStore_a8 (pixman_image_t *image,
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	WRITE(pixel++, READ(values + i) >> 24);
+	WRITE(pixel++, values[i] >> 24);
     }
 }
 
@@ -1405,7 +1398,7 @@ fbStore_r3g3b2 (pixman_image_t *image,
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	Split(READ(values + i));
+	Split(values[i]);
 	WRITE(pixel++,
 	      ((r     ) & 0xe0) |
 	      ((g >> 3) & 0x1c) |
@@ -1420,7 +1413,7 @@ fbStore_b2g3r3 (pixman_image_t *image,
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	Split(READ(values + i));
+	Split(values[i]);
 	WRITE(pixel++,
 	      ((b     ) & 0xc0) |
 	      ((g >> 2) & 0x1c) |
@@ -1435,7 +1428,7 @@ fbStore_a2r2g2b2 (pixman_image_t *image,
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	Splita(READ(values + i));
+	Splita(values[i]);
 	WRITE(pixel++, ((a     ) & 0xc0) |
 	      ((r >> 2) & 0x30) |
 	      ((g >> 4) & 0x0c) |
@@ -1450,7 +1443,7 @@ fbStore_c8 (pixman_image_t *image,
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	WRITE(pixel++, miIndexToEnt24(indexed,READ(values + i)));
+	WRITE(pixel++, miIndexToEnt24(indexed,values[i]));
     }
 }
 
@@ -1461,11 +1454,11 @@ fbStore_x4a4 (pixman_image_t *image,
     int i;
     uint8_t   *pixel = ((uint8_t *) bits) + x;
     for (i = 0; i < width; ++i) {
-	WRITE(pixel++, READ(values + i) >> 28);
+	WRITE(pixel++, values[i] >> 28);
     }
 }
 
-#define Store8(l,o,v)  (((uint8_t *) l)[(o) >> 3] = (v))
+#define Store8(l,o,v)  (WRITE((uint8_t *)(l) + ((o) >> 3), (v)))
 #if IMAGE_BYTE_ORDER == MSBFirst
 #define Store4(l,o,v)  Store8(l,o,((o) & 4 ?				\
 				   (Fetch8(l,o) & 0xf0) | (v) :		\
@@ -1482,7 +1475,7 @@ fbStore_a4 (pixman_image_t *image,
 {
     int i;
     for (i = 0; i < width; ++i) {
-	Store4(bits, i + x, READ(values + i)>>28);
+	Store4(bits, i + x, values[i]>>28);
     }
 }
 
@@ -1494,7 +1487,7 @@ fbStore_r1g2b1 (pixman_image_t *image,
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
 	
-	Split(READ(values + i));
+	Split(values[i]);
 	pixel = (((r >> 4) & 0x8) |
 		 ((g >> 5) & 0x6) |
 		 ((b >> 7)      ));
@@ -1510,7 +1503,7 @@ fbStore_b1g2r1 (pixman_image_t *image,
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
 	
-	Split(READ(values + i));
+	Split(values[i]);
 	pixel = (((b >> 4) & 0x8) |
 		 ((g >> 5) & 0x6) |
 		 ((r >> 7)      ));
@@ -1525,7 +1518,7 @@ fbStore_a1r1g1b1 (pixman_image_t *image,
     int i;
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
-	Splita(READ(values + i));
+	Splita(values[i]);
 	pixel = (((a >> 4) & 0x8) |
 		 ((r >> 5) & 0x4) |
 		 ((g >> 6) & 0x2) |
@@ -1541,7 +1534,7 @@ fbStore_a1b1g1r1 (pixman_image_t *image,
     int i;
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
-	Splita(READ(values + i));
+	Splita(values[i]);
 	pixel = (((a >> 4) & 0x8) |
 		 ((b >> 5) & 0x4) |
 		 ((g >> 6) & 0x2) |
@@ -1558,7 +1551,7 @@ fbStore_c4 (pixman_image_t *image,
     for (i = 0; i < width; ++i) {
 	uint32_t  pixel;
 	
-	pixel = miIndexToEnt24(indexed, READ(values + i));
+	pixel = miIndexToEnt24(indexed, values[i]);
 	Store4(bits, i + x, pixel);
     }
 }
@@ -1572,7 +1565,7 @@ fbStore_a1 (pixman_image_t *image,
 	uint32_t  *pixel = ((uint32_t *) bits) + ((i+x) >> 5);
 	uint32_t  mask = FbStipMask((i+x) & 0x1f, 1);
 	
-	uint32_t v = READ(values + i) & 0x80000000 ? mask : 0;
+	uint32_t v = values[i] & 0x80000000 ? mask : 0;
 	WRITE(pixel, (READ(pixel) & ~mask) | v);
     }
 }
@@ -1586,7 +1579,7 @@ fbStore_g1 (pixman_image_t *image,
 	uint32_t  *pixel = ((uint32_t *) bits) + ((i+x) >> 5);
 	uint32_t  mask = FbStipMask((i+x) & 0x1f, 1);
 	
-	uint32_t v = miIndexToEntY24(indexed,READ(values + i)) ? mask : 0;
+	uint32_t v = miIndexToEntY24(indexed,values[i]) ? mask : 0;
 	WRITE(pixel, (READ(pixel) & ~mask) | v);
     }
 }
@@ -3303,10 +3296,10 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
  *        ·       ╲r₂
  *  p₁ ·           ╲
  *  •              θ╲
- *   ╲             〓〓•
+ *   ╲             ╌╌•
  *    ╲r₁        ·   c₂
  *    θ╲    ·
- *    〓〓•
+ *    ╌╌•
  *      c₁
  *
  * Given (c₁,r₁), (c₂,r₂) and p, we must find an angle θ such that two
@@ -3354,7 +3347,7 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
  *   ╲       ┆       •c₂
  *    ╲r₁    ┆   ·   ┆
  *     ╲    ·┆       ┆cdy
- *      •〓〓〓〓┴〓〓〓〓〓〓〓┘
+ *      •╌╌╌╌┴╌╌╌╌╌╌╌┘
  *    c₁  pdx   cdx
  *
  * cdx = (c₂x - c₁x)
@@ -3393,7 +3386,7 @@ static void pixmanFetchSourcePict(source_image_t * pict, int x, int y, int width
  * precomputed. From here we just use the quadratic formula to solve
  * for t:
  *
- * t = (-2·B ± 〓(B² - 4·A·C)) / 2·A
+ * t = (-2·B ± ⎷(B² - 4·A·C)) / 2·A
  */
         /* radial or conical */
         pixman_bool_t affine = TRUE;
@@ -4259,6 +4252,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	case PIXMAN_OP_CLEAR:
 	case PIXMAN_OP_SRC:
 	    fetchDest = NULL;
+#ifndef PIXMAN_FB_ACCESSORS
 	    /* fall-through */
 	case PIXMAN_OP_ADD:
 	case PIXMAN_OP_OVER:
@@ -4270,6 +4264,7 @@ PIXMAN_COMPOSITE_RECT_GENERAL (const FbComposeData *data,
 	    default:
 		break;
 	    }
+#endif
 	    break;
 	}
     }

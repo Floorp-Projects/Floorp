@@ -45,7 +45,7 @@ SOFTWARE.
 
 ******************************************************************/
 
-#if HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
@@ -1510,6 +1510,8 @@ pixman_region_validate(pixman_region16_t * badreg,
     box = PIXREGION_BOXPTR(&ri[0].reg);
     ri[0].reg.extents = *box;
     ri[0].reg.data->numRects = 1;
+    badreg->extents = *pixman_region_emptyBox;
+    badreg->data = pixman_region_emptyData;
 
     /* Now scatter rectangles into the minimum set of valid regions.  If the
        next rectangle to be added to a region would force an existing rectangle
@@ -1623,6 +1625,8 @@ NextRect: ;
 	    freeData(hreg);
 	}
 	numRI -= half;
+	if (!ret)
+	    goto bail;
     }
     *badreg = ri[0].reg;
     free(ri);
@@ -1632,6 +1636,7 @@ bail:
     for (i = 0; i < numRI; i++)
 	freeData(&ri[i].reg);
     free (ri);
+
     return pixman_break (badreg);
 }
 
@@ -2513,6 +2518,8 @@ pixman_region_init_rects (pixman_region16_t *region,
 {
     int overlap;
 
+    /* if it's 1, then we just want to set the extents, so call
+     * the existing method. */
     if (count == 1) {
        pixman_region_init_rect(region,
                                boxes[0].x1,
@@ -2523,8 +2530,15 @@ pixman_region_init_rects (pixman_region16_t *region,
     }
 
     pixman_region_init(region);
+
+    /* if it's 0, don't call pixman_rect_alloc -- 0 rectangles is
+     * a special case, and causing pixman_rect_alloc would cause
+     * us to leak memory (because the 0-rect case should be the
+     * static pixman_region_emptyData data).
+     */
     if (count == 0)
-	return TRUE;
+        return TRUE;
+
     if (!pixman_rect_alloc(region, count))
 	return FALSE;
 

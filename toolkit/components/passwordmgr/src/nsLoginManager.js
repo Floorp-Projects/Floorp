@@ -344,8 +344,9 @@ LoginManager.prototype = {
         if (login.hostname == null || login.hostname.length == 0)
             throw "Can't add a login with a null or empty hostname.";
 
-        if (login.username == null || login.username.length == 0)
-            throw "Can't add a login with a null or empty username.";
+        // For logins w/o a username, set to "", not null.
+        if (login.username == null)
+            throw "Can't add a login with a null username.";
 
         if (login.password == null || login.password.length == 0)
             throw "Can't add a login with a null or empty password.";
@@ -585,8 +586,14 @@ LoginManager.prototype = {
         }
 
         // If too few or too many fields, bail out.
-        if (pwFields.length == 0 || pwFields.length > 3)
+        if (pwFields.length == 0) {
+            this.log("(form ignored -- no password fields.)");
             return null;
+        } else if (pwFields.length > 3) {
+            this.log("(form ignored -- too many password fields. [got " +
+                        pwFields.length + "])");
+            return null;
+        }
 
         return pwFields;
     },
@@ -609,13 +616,13 @@ LoginManager.prototype = {
      * that is being changed.
      */
     _getFormFields : function (form, isSubmission) {
+        var usernameField = null;
+
         // Locate the password field(s) in the form. Up to 3 supported.
         // If there's no password field, there's nothing for us to do.
         var pwFields = this._getPasswordFields(form, isSubmission);
-        if (!pwFields) {
-            this.log("(form ignored -- either 0 or >3 pw fields.)");
+        if (!pwFields)
             return [null, null, null];
-        }
 
 
         // Locate the username field in the form by searching backwards
@@ -624,7 +631,7 @@ LoginManager.prototype = {
         // already logged in to the site. 
         for (var i = pwFields[0].index - 1; i >= 0; i--) {
             if (form.elements[i].type == "text") {
-                var usernameField = form.elements[i];
+                usernameField = form.elements[i];
                 break;
             }
         }
@@ -706,32 +713,12 @@ LoginManager.prototype = {
         };
 
         // local helper function
-        function findExistingLogin(pwmgr, hostname,
-                                   formSubmitURL, usernameField) {
-
-            var searchLogin = new pwmgr._nsLoginInfo();
-            searchLogin.init(hostname, formSubmitURL, null,
-                             usernameField.value, "",
-                             usernameField.name,  "");
-
-            var logins = pwmgr.findLogins({}, hostname, formSubmitURL, null);
-            var existingLogin;
-            var found = logins.some(function(l) {
-                                    existingLogin = l;
-                                    return searchLogin.equalsIgnorePassword(l);
-                                });
-
-            return (found ? existingLogin : null);
-        }
-
         function getPrompter(aWindow) {
             var prompterSvc = Cc["@mozilla.org/login-manager/prompter;1"].
                             createInstance(Ci.nsILoginManagerPrompter);
             prompterSvc.init(aWindow);
             return prompterSvc;
         }
-
-
 
         var doc = form.ownerDocument;
         var win = doc.defaultView;
@@ -771,9 +758,9 @@ LoginManager.prototype = {
 
         var formLogin = new this._nsLoginInfo();
         formLogin.init(hostname, formSubmitURL, null,
-                    (usernameField ? usernameField.value : null),
+                    (usernameField ? usernameField.value : ""),
                     newPasswordField.value,
-                    (usernameField ? usernameField.name  : null),
+                    (usernameField ? usernameField.name  : ""),
                     newPasswordField.name);
 
         // If we didn't find a username field, but seem to be changing a
@@ -814,22 +801,60 @@ LoginManager.prototype = {
             return;
         }
 
-        if (!usernameField && !oldPasswordField) {
-            this.log("XXX not handled yet");
-            return;
+
+        // Look for an existing login that matches the form login.
+        var existingLogin = null;
+        var logins = this.findLogins({}, hostname, formSubmitURL, null);
+
+        for (var i = 0; i < logins.length; i++) {
+            var same, login = logins[i];
+
+            // If one login has a username but the other doesn't, ignore
+            // the username when comparing and only match if they have the
+            // same password. Otherwise, compare the logins and match even
+            // if the passwords differ.
+            if (!login.username && formLogin.username) {
+                var restoreMe = formLogin.username;
+                formLogin.username = ""; 
+                same = formLogin.equals(login);
+                formLogin.username = restoreMe;
+            } else if (!formLogin.username && login.username) {
+                formLogin.username = login.username;
+                same = formLogin.equals(login);
+                formLogin.username = ""; // we know it's always blank.
+            } else {
+                same = formLogin.equalsIgnorePassword(login);
+            }
+
+            if (same) {
+                existingLogin = login;
+                break;
+            }
         }
 
-        // We have a username. Look for an existing login that matches the
-        // form data (other than the password, which might be different)
-        existingLogin = findExistingLogin(this, hostname, formSubmitURL,
-                                          usernameField);
         if (existingLogin) {
             this.log("Found an existing login matching this form submission");
 
-            // Change password if needed
+            /*
+             * Change password if needed.
+             *
+             * If the login has a username, change the password w/o prompting
+             * (because we can be fairly sure there's only one password
+             * associated with the username). But for logins without a
+             * username, ask the user... Some sites use a password-only "login"
+             * in different contexts (enter your PIN, answer a security
+             * question, etc), and without a username we can't be sure if
+             * modifying an existing login is the right thing to do.
+             */
             if (existingLogin.password != formLogin.password) {
-                this.log("...Updating password for existing login.");
-                this.modifyLogin(existingLogin, formLogin);
+                if (formLogin.username) {
+                    this.log("...Updating password for existing login.");
+                    this.modifyLogin(existingLogin, formLogin);
+                } else {
+                    this.log("...passwords differ, prompting to change.");
+                    prompter = getPrompter(win);
+                    prompter.promptToChangePassword(existingLogin, formLogin);
+                }
             }
 
             return;
@@ -966,9 +991,10 @@ LoginManager.prototype = {
 
             if (autofillForm) {
 
-                // If username was specified in the form, only fill in the
-                // password if we find a matching login.
                 if (usernameField && usernameField.value) {
+                    // If username was specified in the form, only fill in the
+                    // password if we find a matching login.
+
                     var username = usernameField.value;
 
                     var matchingLogin;
@@ -979,6 +1005,19 @@ LoginManager.prototype = {
                     if (found)
                         passwordField.value = matchingLogin.password;
 
+                } else if (usernameField && logins.length == 2) {
+                    // Special case, for sites which have a normal user+pass
+                    // login *and* a password-only login (eg, a PIN)...
+                    // When we have a username field and 1 of 2 available
+                    // logins is password-only, go ahead and prefill the
+                    // one with a username.
+                    if (!logins[0].username && logins[1].username) {
+                        usernameField.value = logins[1].username;
+                        passwordField.value = logins[1].password;
+                    } else if (!logins[1].username && logins[0].username) {
+                        usernameField.value = logins[0].username;
+                        passwordField.value = logins[0].password;
+                    }
                 } else if (logins.length == 1) {
                     if (usernameField)
                         usernameField.value = logins[0].username;

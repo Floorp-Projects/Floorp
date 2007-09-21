@@ -37,11 +37,7 @@
 #ifndef CAIRO_REGION_PRIVATE_H
 #define CAIRO_REGION_PRIVATE_H
 
-#ifdef MOZ_TREE_CAIRO
-#include "pixman.h"
-#else
-#include <pixman/pixman.h>
-#endif
+#include <pixman.h>
 
 /* cairo_region_t is defined in cairoint.h */
 
@@ -105,5 +101,9 @@ _cairo_region_not_empty (cairo_region_t *region);
 cairo_private void
 _cairo_region_translate (cairo_region_t *region,
 			 int x, int y);
+
+cairo_private pixman_region_overlap_t
+_cairo_region_contains_rectangle (cairo_region_t *region, cairo_rectangle_int_t *box);
+
 
 #endif /* CAIRO_REGION_PRIVATE_H */

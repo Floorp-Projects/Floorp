@@ -69,8 +69,6 @@ SOFTWARE.
 #ifndef PIXMAN_H__
 #define PIXMAN_H__
 
-#include "pixman-remap.h"
-
 /*
  * Standard integers
  */
@@ -184,20 +182,46 @@ typedef enum
 
 typedef enum
 {
-    PIXMAN_OP_CLEAR,
-    PIXMAN_OP_SRC,
-    PIXMAN_OP_DST,
-    PIXMAN_OP_OVER,
-    PIXMAN_OP_OVER_REVERSE,
-    PIXMAN_OP_IN,
-    PIXMAN_OP_IN_REVERSE,
-    PIXMAN_OP_OUT,
-    PIXMAN_OP_OUT_REVERSE,
-    PIXMAN_OP_ATOP,
-    PIXMAN_OP_ATOP_REVERSE,
-    PIXMAN_OP_XOR,
-    PIXMAN_OP_ADD,
-    PIXMAN_OP_SATURATE
+    PIXMAN_OP_CLEAR			= 0x00,
+    PIXMAN_OP_SRC			= 0x01,
+    PIXMAN_OP_DST			= 0x02,
+    PIXMAN_OP_OVER			= 0x03,
+    PIXMAN_OP_OVER_REVERSE		= 0x04,
+    PIXMAN_OP_IN			= 0x05,
+    PIXMAN_OP_IN_REVERSE		= 0x06,
+    PIXMAN_OP_OUT			= 0x07,
+    PIXMAN_OP_OUT_REVERSE		= 0x08,
+    PIXMAN_OP_ATOP			= 0x09,
+    PIXMAN_OP_ATOP_REVERSE		= 0x0a,
+    PIXMAN_OP_XOR			= 0x0b,
+    PIXMAN_OP_ADD			= 0x0c,
+    PIXMAN_OP_SATURATE			= 0x0d,
+
+    PIXMAN_OP_DISJOINT_CLEAR		= 0x10,
+    PIXMAN_OP_DISJOINT_SRC		= 0x11,
+    PIXMAN_OP_DISJOINT_DST		= 0x12,
+    PIXMAN_OP_DISJOINT_OVER		= 0x13,
+    PIXMAN_OP_DISJOINT_OVER_REVERSE	= 0x14,
+    PIXMAN_OP_DISJOINT_IN		= 0x15,
+    PIXMAN_OP_DISJOINT_IN_REVERSE	= 0x16,
+    PIXMAN_OP_DISJOINT_OUT		= 0x17,
+    PIXMAN_OP_DISJOINT_OUT_REVERSE	= 0x18,
+    PIXMAN_OP_DISJOINT_ATOP		= 0x19,
+    PIXMAN_OP_DISJOINT_ATOP_REVERSE	= 0x1a,
+    PIXMAN_OP_DISJOINT_XOR		= 0x1b,
+
+    PIXMAN_OP_CONJOINT_CLEAR		= 0x20,
+    PIXMAN_OP_CONJOINT_SRC		= 0x21,
+    PIXMAN_OP_CONJOINT_DST		= 0x22,
+    PIXMAN_OP_CONJOINT_OVER		= 0x23,
+    PIXMAN_OP_CONJOINT_OVER_REVERSE	= 0x24,
+    PIXMAN_OP_CONJOINT_IN		= 0x25,
+    PIXMAN_OP_CONJOINT_IN_REVERSE	= 0x26,
+    PIXMAN_OP_CONJOINT_OUT		= 0x27,
+    PIXMAN_OP_CONJOINT_OUT_REVERSE	= 0x28,
+    PIXMAN_OP_CONJOINT_ATOP		= 0x29,
+    PIXMAN_OP_CONJOINT_ATOP_REVERSE	= 0x2a,
+    PIXMAN_OP_CONJOINT_XOR		= 0x2b
 } pixman_op_t;
 
 /*
@@ -280,8 +304,10 @@ pixman_bool_t           pixman_region_subtract   (pixman_region16_t *regD,
 pixman_bool_t           pixman_region_inverse    (pixman_region16_t *newReg,
 						  pixman_region16_t *reg1,
 						  pixman_box16_t    *invRect);
-pixman_bool_t           pixman_region_contains_point (pixman_region16_t *region, int x, int y, pixman_box16_t *box);
-pixman_region_overlap_t pixman_region_contains_rectangle (pixman_region16_t *pixman_region16_t, pixman_box16_t *prect);
+pixman_bool_t           pixman_region_contains_point (pixman_region16_t *region,
+						      int x, int y, pixman_box16_t *box);
+pixman_region_overlap_t pixman_region_contains_rectangle (pixman_region16_t *pixman_region16_t,
+							  pixman_box16_t *prect);
 pixman_bool_t           pixman_region_not_empty (pixman_region16_t *region);
 pixman_box16_t *        pixman_region_extents (pixman_region16_t *region);
 int                     pixman_region_n_rects (pixman_region16_t *region);
@@ -290,7 +316,7 @@ pixman_box16_t *        pixman_region_rectangles (pixman_region16_t *region,
 pixman_bool_t		pixman_region_equal (pixman_region16_t *region1,
 					     pixman_region16_t *region2);
 pixman_bool_t		pixman_region_selfcheck (pixman_region16_t *region);
-void			pixman_region_reset(pixman_region16_t *region, pixman_box16_t *box);
+void			pixman_region_reset (pixman_region16_t *region, pixman_box16_t *box);
 pixman_bool_t		pixman_region_init_rects (pixman_region16_t *region,
 						  pixman_box16_t *boxes, int count);
 
@@ -453,7 +479,7 @@ pixman_image_t *pixman_image_create_bits             (pixman_format_code_t      
 
 /* Destructor */
 pixman_image_t *pixman_image_ref                     (pixman_image_t               *image);
-void            pixman_image_unref                   (pixman_image_t               *image);
+pixman_bool_t   pixman_image_unref                   (pixman_image_t               *image);
 
 
 /* Set properties */
@@ -472,6 +498,8 @@ pixman_bool_t   pixman_image_set_filter              (pixman_image_t            
 void            pixman_image_set_filter_params       (pixman_image_t               *image,
 						      pixman_fixed_t               *params,
 						      int                           n_params);
+void		pixman_image_set_source_cliping      (pixman_image_t		   *image,
+						      pixman_bool_t                 source_clipping);
 void            pixman_image_set_alpha_map           (pixman_image_t               *image,
 						      pixman_image_t               *alpha_map,
 						      int16_t                       x,

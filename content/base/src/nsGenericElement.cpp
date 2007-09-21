@@ -83,6 +83,7 @@
 #ifdef MOZ_XUL
 #include "nsXULElement.h"
 #endif /* MOZ_XUL */
+#include "nsFrameManager.h"
 
 #include "nsBindingManager.h"
 #include "nsXBLBinding.h"
@@ -694,19 +695,14 @@ nsNSElementTearoff::GetElementsByClassName(const nsAString& aClasses,
 static nsPoint
 GetOffsetFromInitialContainingBlock(nsIFrame* aFrame)
 {
-  nsPresContext* presContext = aFrame->PresContext();
-  nsIPresShell* shell = presContext->PresShell();
-  nsIFrame* rootScrollFrame = shell->GetRootScrollFrame();
+  nsIFrame* rootFrame = aFrame->PresContext()->FrameManager()->GetRootFrame();
   nsPoint pt(0,0);
-  nsIFrame* child = aFrame;
-  for (nsIFrame* p = aFrame->GetParent(); p && p != rootScrollFrame;
-       p = p->GetParent()) {
-    pt += p->GetPositionOfChildIgnoringScrolling(child);
+  for (nsIFrame* p = aFrame; p != rootFrame; p = p->GetParent()) {
     // coordinates of elements inside a foreignobject are relative to the top-left
     // of the nearest foreignobject
-    if (p->IsFrameOfType(nsIFrame::eSVGForeignObject))
+    if (p->IsFrameOfType(nsIFrame::eSVGForeignObject) && p != aFrame)
       return pt;
-    child = p;
+    pt += p->GetPosition();
   }
   return pt;
 }
@@ -2089,7 +2085,8 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
                   "Shallow unbind won't clear document and binding parent on "
                   "kids!");
   // Make sure to unbind this node before doing the kids
-  nsIDocument *document = GetCurrentDoc();
+  nsIDocument *document =
+    HasFlag(NODE_FORCE_XBL_BINDINGS) ? GetOwnerDoc() : GetCurrentDoc();
   if (document) {
     // Notify XBL- & nsIAnonymousContentCreator-generated
     // anonymous content that the document is changing.

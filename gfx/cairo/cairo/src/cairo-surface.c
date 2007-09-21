@@ -62,6 +62,8 @@ const cairo_surface_t name = {					\
       0.0, 1.0,							\
       0.0, 0.0							\
     },					/* device_transform_inverse */	\
+    0.0,				/* x_resolution */	\
+    0.0,				/* y_resolution */	\
     0.0,				/* x_fallback_resolution */	\
     0.0,				/* y_fallback_resolution */	\
     NULL,				/* clip */		\
@@ -194,6 +196,9 @@ _cairo_surface_init (cairo_surface_t			*surface,
 
     cairo_matrix_init_identity (&surface->device_transform);
     cairo_matrix_init_identity (&surface->device_transform_inverse);
+
+    surface->x_resolution = CAIRO_SURFACE_RESOLUTION_DEFAULT;
+    surface->y_resolution = CAIRO_SURFACE_RESOLUTION_DEFAULT;
 
     surface->x_fallback_resolution = CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT;
     surface->y_fallback_resolution = CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT;
@@ -1024,46 +1029,49 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      int               height,
 			      cairo_surface_t **clone_out)
 {
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
     cairo_image_surface_t *image;
     void *image_extra;
 
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    if (surface->backend->clone_similar == NULL)
-	return (cairo_int_status_t)
-	    _cairo_surface_fallback_clone_similar (surface, src,
-						   src_x, src_y,
-						   width, height,
-						   clone_out);
+    if (surface->backend->clone_similar) {
+	status = surface->backend->clone_similar (surface, src, src_x, src_y,
+						  width, height, clone_out);
 
-    status = surface->backend->clone_similar (surface, src, src_x, src_y,
-					      width, height, clone_out);
-    if (status == CAIRO_STATUS_SUCCESS && *clone_out != src)
-        (*clone_out)->device_transform = src->device_transform;
+	if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	    /* If we failed, try again with an image surface */
+	    status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
+	    if (status == CAIRO_STATUS_SUCCESS) {
+		status =
+		    surface->backend->clone_similar (surface, &image->base,
+						     src_x, src_y,
+						     width, height,
+						     clone_out);
 
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return status;
-
-    status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
-    if (status != CAIRO_STATUS_SUCCESS)
-	return status;
-
-    status = surface->backend->clone_similar (surface, &image->base, src_x,
-					      src_y, width, height, clone_out);
-    if (status == CAIRO_STATUS_SUCCESS && *clone_out != src) {
-        (*clone_out)->device_transform = src->device_transform;
-        (*clone_out)->device_transform_inverse = src->device_transform_inverse;
+		_cairo_surface_release_source_image (src, image, image_extra);
+	    }
+	}
     }
 
-    /* If the above failed point, we could implement a full fallback
-     * using acquire_dest_image, but that's going to be very
-     * inefficient compared to a backend-specific implementation of
-     * clone_similar() with an image source. So we don't bother
-     */
+    /* If we're still unsupported, hit our fallback path to get a clone */
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	status =
+	    _cairo_surface_fallback_clone_similar (surface, src, src_x, src_y,
+						   width, height, clone_out);
 
-    _cairo_surface_release_source_image (src, image, image_extra);
+    /* We should never get UNSUPPORTED here, so if we have an error, bail. */
+    if (status)
+	return status;
+
+    /* Update the clone's device_transform (which the underlying surface
+     * backend knows nothing about) */
+    if (*clone_out != src) {
+        (*clone_out)->device_transform = src->device_transform;
+        (*clone_out)->device_transform_inverse = src->device_transform_inverse;
+    }	
+
     return status;
 }
 
@@ -1391,6 +1399,65 @@ _cairo_surface_mask (cairo_surface_t	*surface,
 }
 
 cairo_status_t
+_cairo_surface_fill_stroke (cairo_surface_t	    *surface,
+			    cairo_operator_t	     fill_op,
+			    cairo_pattern_t	    *fill_source,
+			    cairo_fill_rule_t	     fill_rule,
+			    double		     fill_tolerance,
+			    cairo_antialias_t	     fill_antialias,
+			    cairo_path_fixed_t	    *path,
+			    cairo_operator_t	     stroke_op,
+			    cairo_pattern_t	    *stroke_source,
+			    cairo_stroke_style_t    *stroke_style,
+			    cairo_matrix_t	    *stroke_ctm,
+			    cairo_matrix_t	    *stroke_ctm_inverse,
+			    double		     stroke_tolerance,
+			    cairo_antialias_t	     stroke_antialias)
+{
+    cairo_status_t status;
+
+    if (surface->backend->fill_stroke) {
+	cairo_pattern_union_t dev_stroke_source;
+	cairo_pattern_union_t dev_fill_source;
+	cairo_matrix_t dev_ctm = *stroke_ctm;
+	cairo_matrix_t dev_ctm_inverse = *stroke_ctm_inverse;
+
+	status = _cairo_surface_copy_pattern_for_destination (stroke_source, surface, &dev_stroke_source.base);
+	if (status)
+	    return status;
+
+	status = _cairo_surface_copy_pattern_for_destination (fill_source, surface, &dev_fill_source.base);
+	if (status) {
+	    _cairo_pattern_fini (&dev_stroke_source.base);
+	    return status;
+	}
+
+	status = surface->backend->fill_stroke (surface, fill_op, &dev_fill_source.base,
+						fill_rule, fill_tolerance, fill_antialias,
+						path, stroke_op, &dev_stroke_source.base, stroke_style,
+						&dev_ctm, &dev_ctm_inverse, stroke_tolerance,
+						stroke_antialias);
+
+	_cairo_pattern_fini (&dev_stroke_source.base);
+	_cairo_pattern_fini (&dev_fill_source.base);
+
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
+    status = _cairo_surface_fill (surface, fill_op, fill_source, path,
+				  fill_rule, fill_tolerance, fill_antialias);
+    if (status)
+	return status;
+
+    status = _cairo_surface_stroke (surface, stroke_op, stroke_source, path,
+				    stroke_style, stroke_ctm, stroke_ctm_inverse,
+				    stroke_tolerance, stroke_antialias);
+
+    return status;
+}
+
+cairo_status_t
 _cairo_surface_stroke (cairo_surface_t		*surface,
 		       cairo_operator_t		 op,
 		       cairo_pattern_t		*source,
@@ -1523,8 +1590,19 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		op,
 							  traps, num_traps);
 }
 
+/**
+ * cairo_surface_copy_page:
+ * @suface: a #cairo_surface_t
+ *
+ * Emits the current page for backends that support multiple pages,
+ * but doesn't clear it, so that the contents of the current page will
+ * be retained for the next page.  Use cairo_surface_show_page() if you
+ * want to get an empty page after the emission.
+ *
+ * Since: 1.6
+ */
 cairo_status_t
-_cairo_surface_copy_page (cairo_surface_t *surface)
+cairo_surface_copy_page (cairo_surface_t *surface)
 {
     assert (! surface->is_snapshot);
 
@@ -1540,9 +1618,20 @@ _cairo_surface_copy_page (cairo_surface_t *surface)
 
     return surface->backend->copy_page (surface);
 }
+slim_hidden_def (cairo_surface_copy_page);
+
+/**
+ * cairo_surface_show_page:
+ * @surface: a #cairo_Surface_t
+ *
+ * Emits and clears the current page for backends that support multiple
+ * pages.  Use cairo_surface_copy_page() if you don't want to clear the page.
+ *
+ * Since: 1.6
+ **/
 
 cairo_status_t
-_cairo_surface_show_page (cairo_surface_t *surface)
+cairo_surface_show_page (cairo_surface_t *surface)
 {
     assert (! surface->is_snapshot);
 
@@ -1558,6 +1647,7 @@ _cairo_surface_show_page (cairo_surface_t *surface)
 
     return surface->backend->show_page (surface);
 }
+slim_hidden_def (cairo_surface_show_page);
 
 /**
  * _cairo_surface_get_current_clip_serial:
@@ -1835,6 +1925,14 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
     return surface->backend->get_extents (surface, rectangle);
 }
 
+/* Note: the backends may modify the contents of the glyph array as long as
+ * they do not return CAIRO_STATUS_UNSUPPORTED. This makes it possible to
+ * avoid copying the array again and again, and edit it in-place.
+ * Backends are in fact free to use the array as a generic buffer as they
+ * see fit.
+ * See commits 5a9642c5746fd677aed35ce620ce90b1029b1a0c and
+ * 1781e6018c17909311295a9cc74b70500c6b4d0a for the rationale.
+ */
 cairo_status_t
 _cairo_surface_show_glyphs (cairo_surface_t	*surface,
 			    cairo_operator_t	 op,
@@ -2191,6 +2289,25 @@ _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
     }
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * _cairo_surface_set_resolution
+ * @surface: the surface
+ * @x_res: x resolution, in dpi
+ * @y_res: y resolution, in dpi
+ *
+ * Set the actual surface resolution of @surface to the given x and y DPI.
+ * Mainly used for correctly computing the scale factor when fallback
+ * rendering needs to take place in the paginated surface.
+ */
+void
+_cairo_surface_set_resolution (cairo_surface_t *surface,
+			       double x_res,
+			       double y_res)
+{
+    surface->x_resolution = x_res;
+    surface->y_resolution = y_res;
 }
 
 /*  LocalWords:  rasterized

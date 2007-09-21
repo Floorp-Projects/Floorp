@@ -133,4 +133,9 @@ _cairo_paginated_surface_get_target (cairo_surface_t *surface);
 cairo_private cairo_bool_t
 _cairo_surface_is_paginated (cairo_surface_t *surface);
 
+cairo_private cairo_status_t
+_cairo_paginated_surface_set_size (cairo_surface_t 	*surface,
+				   int			 width,
+				   int			 height);
+
 #endif /* CAIRO_PAGINATED_H */

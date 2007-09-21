@@ -565,8 +565,8 @@ moz_gtk_option_menu_get_metrics(gboolean* interior_focus,
     else
         *indicator_spacing = default_indicator_spacing;
 
-    g_free(tmp_indicator_size);
-    g_free(tmp_indicator_spacing);
+    gtk_requisition_free(tmp_indicator_size);
+    gtk_border_free(tmp_indicator_spacing);
  
     return MOZ_GTK_SUCCESS;
 }

@@ -1284,8 +1284,8 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
                 return CAIRO_INT_STATUS_UNSUPPORTED;
         }
         
-        points[n].x = _cairo_lround (glyphs[i].x + img->base.device_transform.x0);
-        points[n].y = _cairo_lround (glyphs[i].y + img->base.device_transform.y0);
+        points[n].x = _cairo_lround (glyphs[i].x - img->base.device_transform.x0);
+        points[n].y = _cairo_lround (glyphs[i].y - img->base.device_transform.y0);
         
         if (points[n].x >= surface->width  ||
             points[n].y >= surface->height ||

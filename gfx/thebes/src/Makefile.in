@@ -58,7 +58,7 @@ CPPSRCS	+= 	gfxWindowsFonts.cpp \
 		$(NULL)
 CPPSRCS +=	gfxPDFSurface.cpp
 
-_OS_LIBS	= usp10
+_OS_LIBS	= usp10 msimg32
 ifdef GNU_CXX
 _OS_LIBS	+= uuid
 endif

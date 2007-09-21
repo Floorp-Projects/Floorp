@@ -13062,30 +13062,16 @@ nsCSSFrameConstructor::PostRestyleEvent(nsIContent* aContent,
   }
 }
 
-NS_IMETHODIMP nsCSSFrameConstructor::RestyleEvent::Run() {
+NS_IMETHODIMP nsCSSFrameConstructor::RestyleEvent::Run()
+{
   if (!mConstructor)
     return NS_OK;  // event was revoked
 
-  nsCOMPtr<nsIViewManager> viewManager =
-    mConstructor->mPresShell->GetViewManager();
-  NS_ASSERTION(viewManager, "Must have view manager for update");
-
-  viewManager->BeginUpdateViewBatch();
-  // Force flushing of any pending content notifications that might have queued
-  // up while our event was pending.  That will ensure that we don't construct
-  // frames for content right now that's still waiting to be notified on,
-  mConstructor->mPresShell->GetDocument()->
-    FlushPendingNotifications(Flush_ContentAndNotify);
-
   // Make sure that any restyles that happen from now on will go into
   // a new event.
-  mConstructor->mRestyleEvent.Forget();
-
-  mConstructor->ProcessPendingRestyles();
-  mConstructor->mDocument->BindingManager()->ProcessAttachedQueue();
-  viewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
-
-  return NS_OK;
+  mConstructor->mRestyleEvent.Forget();  
+  
+  return mConstructor->mPresShell->FlushPendingNotifications(Flush_Style);
 }
 
 NS_IMETHODIMP

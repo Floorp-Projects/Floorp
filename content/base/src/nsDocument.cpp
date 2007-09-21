@@ -1710,16 +1710,18 @@ NS_IMETHODIMP
 nsDocument::GetElementsByClassName(const nsAString& aClasses,
                                    nsIDOMNodeList** aReturn)
 {
-  return GetElementsByClassNameHelper(mRootContent, aClasses, aReturn);
+  return GetElementsByClassNameHelper(this, aClasses, aReturn);
 }
 
 
 // static GetElementsByClassName helpers
 nsresult
-nsDocument::GetElementsByClassNameHelper(nsIContent* aContent,
+nsDocument::GetElementsByClassNameHelper(nsINode* aRootNode,
                                          const nsAString& aClasses,
                                          nsIDOMNodeList** aReturn)
 {
+  NS_PRECONDITION(aRootNode, "Must have root node");
+  
   nsAttrValue attrValue;
   attrValue.ParseAtomArray(aClasses);
   // nsAttrValue::Equals is sensitive to order, so we'll send an array
@@ -1733,8 +1735,8 @@ nsDocument::GetElementsByClassNameHelper(nsIContent* aContent,
   }
   
   nsBaseContentList* elements;
-  if (classes->Count() > 0 && aContent) {
-    elements = new nsContentList(aContent, MatchClassNames,
+  if (classes->Count() > 0) {
+    elements = new nsContentList(aRootNode, MatchClassNames,
                                  DestroyClassNameArray, classes);
   } else {
     elements = new nsBaseContentList();
@@ -2849,8 +2851,13 @@ nsDocument::DispatchContentLoadedEvents()
 void
 nsDocument::EndLoad()
 {
-  // Drop the ref to our parser, if any
-  mParser = nsnull;
+  // Drop the ref to our parser, if any, but keep hold of the sink so that we
+  // can flush it from FlushPendingNotifications as needed.  We might have to
+  // do that to get a StartLayout() to happen.
+  if (mParser) {
+    mWeakSink = do_GetWeakReference(mParser->GetContentSink());
+    mParser = nsnull;
+  }
   
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
 
@@ -4840,13 +4847,16 @@ nsDocument::CreateEventGroup(nsIDOMEventGroup **aInstancePtrResult)
 void
 nsDocument::FlushPendingNotifications(mozFlushType aType)
 {
+  nsCOMPtr<nsIContentSink> sink;
+  if (mParser) {
+    sink = mParser->GetContentSink();
+  } else {
+    sink = do_QueryReferent(mWeakSink);
+  }
   // Determine if it is safe to flush the sink notifications
   // by determining if it safe to flush all the presshells.
-  if (mParser && (aType == Flush_Content || IsSafeToFlush())) {
-    nsCOMPtr<nsIContentSink> sink = mParser->GetContentSink();
-    if (sink) {
-      sink->FlushPendingNotifications(aType);
-    }
+  if (sink && (aType == Flush_Content || IsSafeToFlush())) {
+    sink->FlushPendingNotifications(aType);
   }
 
   // Should we be flushing pending binding constructors in here?
