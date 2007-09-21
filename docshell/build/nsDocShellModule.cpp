@@ -80,12 +80,16 @@ Initialize(nsIModule* aSelf)
   gInitialized = PR_TRUE;
 
   nsresult rv = nsSHistory::Startup();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = nsSHEntry::Startup();
   return rv;
 }
 
 PR_STATIC_CALLBACK(void)
 Shutdown(nsIModule* aSelf)
 {
+  nsSHEntry::Shutdown();
   gInitialized = PR_FALSE;
 }
 

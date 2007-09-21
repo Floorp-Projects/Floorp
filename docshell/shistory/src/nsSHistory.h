@@ -99,6 +99,7 @@ protected:
    nsresult PrintHistory();
 #endif
 
+  void EvictContentViewersInRange(PRInt32 aStartIndex, PRInt32 aEndIndex);
   void EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex);
   static void EvictGlobalContentViewer();
   static void EvictAllContentViewers();
