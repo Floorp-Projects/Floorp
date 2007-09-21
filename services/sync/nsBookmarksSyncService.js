@@ -322,13 +322,16 @@ BookmarksSyncService.prototype = {
 
     for (let key in command.data) {
       switch (key) {
+      case "guid":
+        this._bms.setItemGUID(itemId, command.data.guid);
+        break;
       case "title":
         this._bms.setItemTitle(itemId, command.data.title);
         break;
       case "uri":
         this._bms.changeBookmarkURI(itemId, makeURI(command.data.uri));
         break;
-      case "index":
+      case "index": // FIXME: what if we do this one before parentGuid ? that'd be wrong
         this._bms.moveItem(itemId, this._bms.getFolderIdForItem(itemId),
                            command.data.index);
         break;
@@ -397,6 +400,17 @@ BookmarksSyncService.prototype = {
                  depth: parents.length, parents: parents,
                  data: b[guid]});
     }
+    cmds.sort(function(a, b) {
+      if (a.depth > b.depth)
+        return 1;
+      if (a.depth < b.depth)
+        return -1;
+      if (a.index > b.index)
+        return -1;
+      if (a.index < b.index)
+        return 1;
+      return 0; // should never happen, but not a big deal if it does
+    });
     return cmds;
   },
 
@@ -463,16 +477,34 @@ BookmarksSyncService.prototype = {
     return true;
   },
 
+  _fixParents: function BSS__fixParents(list, oldGuid, newGuid) {
+    for (let i = 0; i < list.length; i++) {
+      if (!list[i])
+        continue;
+      if (list[i].parentGuid == oldGuid)
+        list[i].parentGuid = newGuid;
+      for (let j = 0; j < list[i].parents.length; j++) {
+        if (list[i].parents[j] == oldGuid)
+          list[i].parents[j] = newGuid;
+      }
+    }
+  },
+
   _reconcile: function BSS__reconcile(listA, listB) {
     let propagations = [[], []];
     let conflicts = [[], []];
 
     for (let i = 0; i < listA.length; i++) {
       for (let j = 0; j < listB.length; j++) {
-        if (this._commandLike(listA[i], listB[j]) ||
-            this._deepEquals(listA[i], listB[j])) {
+        if (this._deepEquals(listA[i], listB[j])) {
           delete listA[i];
           delete listB[j];
+        } else if (this._commandLike(listA[i], listB[j])) {
+          this._fixParents(listA, listA[i].guid, listB[j].guid);
+          listB[j].data = {guid: listB[j].guid};
+          listB[j].guid = listA[i].guid;
+          listB[j].action = "edit";
+          delete listA[i];
         }
       }
     }
