@@ -1548,11 +1548,11 @@ var PlacesUtils = {
     let urls = [];
     if (this.nodeIsFolder(aNode) && asQuery(aNode).queryOptions.excludeItems) {
       // grab manually
-      let contents = this.getFolderContents(node.itemId, false, false).root;
+      let contents = this.getFolderContents(aNode.itemId, false, false).root;
       for (let i = 0; i < contents.childCount; ++i) {
         let child = contents.getChild(i);
         if (this.nodeIsURI(child))
-          urls.push(node.uri);
+          urls.push(child.uri);
       }
     }
     else {
