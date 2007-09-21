@@ -109,7 +109,7 @@ class BackwardsAllocator : public nsIMemory
 
 NS_IMPL_ISUPPORTS1(BackwardsAllocator, nsIMemory)
 
-NS_IMETHODIMP BackwardsAllocator::Init(PRUint32 count, size_t size)
+nsresult BackwardsAllocator::Init(PRUint32 count, size_t size)
 {
   if (mMemory)
   {
