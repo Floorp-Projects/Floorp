@@ -12,9 +12,9 @@
 <!ENTITY view.toolbar.label             "Toolbar">
 <!ENTITY view.toolbar.accesskey         "o">
 <!ENTITY view.columns.label             "Show Columns">
-<!ENTITY view.columns.accesskey         "S">
+<!ENTITY view.columns.accesskey         "C">
 <!ENTITY view.sort.label                "Sort">
-<!ENTITY view.sort.accesskey            "s">
+<!ENTITY view.sort.accesskey            "S">
 <!ENTITY view.unsorted.label            "Unsorted">
 <!ENTITY view.unsorted.accesskey        "U">
 <!ENTITY view.sortAscending.label       "A > Z Sort Order">
@@ -181,7 +181,6 @@
 <!ENTITY view.details.accesskey    "D">
 
 <!ENTITY view.addons.label   "Get View Add-ons">
-<!ENTITY view.columns.label  "Columns">
 
 <!ENTITY maintenance.label   "Import and Backup">
 
