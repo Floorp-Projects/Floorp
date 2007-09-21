@@ -536,7 +536,29 @@ nsPipe::AdvanceWriteCursor(PRUint32 bytesWritten)
 
         mWriteCursor = newWriteCursor;
 
-        NS_ASSERTION(mReadCursor != mWriteCursor, "read cursor is bad");
+        // The only way mReadCursor == mWriteCursor is if:
+        //
+        // - mReadCursor is at the start of a segment (which, based on how
+        //   nsSegmentedBuffer works, means that this segment is the "first"
+        //   segment)
+        // - mWriteCursor points at the location past the end of the current
+        //   write segment (so the current write filled the current write
+        //   segment, so we've incremented mWriteCursor to point past the end
+        //   of it)
+        // - the segment to which data has just been written is located
+        //   exactly one segment's worth of bytes before the first segment
+        //   where mReadCursor is located
+        //
+        // Consequently, the byte immediately after the end of the current
+        // write segment is the first byte of the first segment, so
+        // mReadCursor == mWriteCursor.  (Another way to think about this is
+        // to consider the buffer architecture diagram above, but consider it
+        // with an arena allocator which allocates from the *end* of the
+        // arena to the *beginning* of the arena.)
+        NS_ASSERTION(mReadCursor != mWriteCursor ||
+                     (mBuffer.GetSegment(0) == mReadCursor &&
+                      mWriteCursor == mWriteLimit),
+                     "read cursor is bad");
 
         // update the writable flag on the output stream
         if (mWriteCursor == mWriteLimit) {
