@@ -101,9 +101,9 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
 !insertmacro WriteRegStr2
 
 !insertmacro un.CleanVirtualStore
-!insertmacro un.CloseApp
 !insertmacro un.GetLongPath
 !insertmacro un.GetSecondInstallPath
+!insertmacro un.ManualCloseAppPrompt
 !insertmacro un.ParseUninstallLog
 !insertmacro un.RegCleanMain
 !insertmacro un.RegCleanUninstall
@@ -145,10 +145,10 @@ ShowUnInstDetails nevershow
 !insertmacro MUI_UNPAGE_WELCOME
 
 ; Uninstall Confirm Page
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE un.leaveConfirm
 !insertmacro MUI_UNPAGE_CONFIRM
 
 ; Remove Files Page
-!define MUI_PAGE_CUSTOMFUNCTION_PRE un.preInstFiles
 !insertmacro MUI_UNPAGE_INSTFILES
 
 ; Finish Page
@@ -178,6 +178,18 @@ Section "Uninstall"
   SetDetailsPrint textonly
   DetailPrint $(STATUS_UNINSTALL_MAIN)
   SetDetailsPrint none
+
+  ; Delete the app exe to prevent launching the app while we are uninstalling.
+  ClearErrors
+  ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+  ${If} ${Errors}
+    ; If the user closed the application it can take several seconds for it to
+    ; shut down completely. If the application is being used by another user we
+    ; can still delete the files when the system is restarted. 
+    Sleep 5000
+    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+    ClearErrors
+  ${EndIf}
 
   ; Remove registry entries for non-existent apps and for apps that point to our
   ; install location in the Software\Mozilla key and uninstall registry entries
@@ -237,18 +249,27 @@ Section "Uninstall"
     ${EndIf}
   ${EndIf}
 
-  ; Remove directories and files we always control
-  RmDir /r "$INSTDIR\updates"
-  RmDir /r "$INSTDIR\defaults\shortcuts"
-  RmDir /r "$INSTDIR\distribution"
-  Delete "$INSTDIR\removed-files"
+  ; Remove directories and files we always control before parsing the uninstall
+  ; log so empty directories can be removed.
+  ${If} ${FileExists} "$INSTDIR\updates"
+    RmDir /r /REBOOTOK "$INSTDIR\updates"
+  ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\defaults\shortcuts"
+    RmDir /r /REBOOTOK "$INSTDIR\defaults\shortcuts"
+  ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\distribution"
+    RmDir /r /REBOOTOK "$INSTDIR\distribution"
+  ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\removed-files"
+    Delete /REBOOTOK "$INSTDIR\removed-files"
+  ${EndIf}
 
   ; Parse the uninstall log to unregister dll's and remove all installed
   ; files / directories this install is responsible for.
   ${un.ParseUninstallLog}
 
   ; Remove the uninstall directory that we control
-  RmDir /r "$INSTDIR\uninstall"
+  RmDir /r /REBOOTOK "$INSTDIR\uninstall"
 
   ; Remove the installation directory if it is empty
   ${RemoveDir} "$INSTDIR"
@@ -256,6 +277,19 @@ Section "Uninstall"
   ; Remove files that may be left behind by the application in the
   ; VirtualStore directory.
   ${un.CleanVirtualStore}
+
+  ; If firefox.exe was successfully deleted yet we still need to restart to
+  ; remove other files create a dummy firefox.exe.moz-delete to prevent the
+  ; installer from allowing an install without restart when it is required
+  ; to complete an uninstall.
+  ${If} ${RebootFlag}
+    ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}.moz-delete"
+      FileOpen $0 "$INSTDIR\${FileMainEXE}.moz-delete" w
+      FileWrite $0 "Will be deleted on restart"
+      Delete /REBOOTOK "$INSTDIR\${FileMainEXE}.moz-delete"
+      FileClose $0
+    ${EndUnless}
+  ${EndIf}
 
   ; Refresh desktop icons otherwise the start menu internet item won't be
   ; removed and other ugly things will happen like recreation of the app's
@@ -292,38 +326,27 @@ BrandingText " "
 # Page pre and leave functions
 
 ; Checks if the app being uninstalled is running.
-Function un.preInstFiles
-  ; Try to delete the app executable and if we can't delete it try to close the
-  ; app. This allows running an instance that is located in another directory.
+Function un.leaveConfirm
+  ; Try to delete the app executable and if we can't delete it try to find the
+  ; app's message window and prompt the user to close the app. This allows
+  ; running an instance that is located in another directory. If for whatever
+  ; reason there is no message window we will just rename the app's files and
+  ; then remove them on restart if they are in use.
+  StrCpy $TmpVal ""
   ClearErrors
-  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
-    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
-  ${EndIf}
+  ${DeleteFile} "$INSTDIR\${FileMainEXE}"
   ${If} ${Errors}
-    ClearErrors
-    ${un.CloseApp} "true" $(WARN_APP_RUNNING_UNINSTALL)
-    ; Delete the app exe to prevent launching the app while we are uninstalling.
-    ClearErrors
-    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
-    ${If} ${Errors}
-      ClearErrors
-      ${un.CloseApp} "true" $(WARN_APP_RUNNING_UNINSTALL)
-      ClearErrors
-      ${DeleteFile} "$INSTDIR\${FileMainEXE}"
-    ${EndIf}
+    ${un.ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_UNINSTALL)"
   ${EndIf}
 FunctionEnd
 
-; When we add an optional action to the finish page the cancel button is
-; enabled. This disables it and leaves the finish button as the only choice.
 Function un.preFinish
-  !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "cancelenabled" "0"
-
-  ; Setup the survey controls, functions, etc. except when the application has
-  ; defined NO_UNINSTALL_SURVEY
-  !ifdef NO_UNINSTALL_SURVEY
+  ; Do not modify the finish page if there is a reboot pending
+  ${Unless} ${RebootFlag}
+!ifdef NO_UNINSTALL_SURVEY
     !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
-  !else
+!else
+    ; Setup the survey controls, functions, etc.
     StrCpy $TmpVal "SOFTWARE\Microsoft\IE Setup\Setup"
     ClearErrors
     ReadRegStr $0 HKLM $TmpVal "Path"
@@ -339,9 +362,15 @@ Function un.preFinish
       GetFullPathName $TmpVal $0
       ${If} ${Errors}
         !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
+      ${Else}
+        ; When we add an optional action to the finish page the cancel button
+        ; is enabled. This disables it and leaves the finish button as the
+        ; only choice.
+        !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "cancelenabled" "0"
       ${EndIf}
     ${EndIf}
-  !endif
+!endif
+  ${EndUnless}
 FunctionEnd
 
 ################################################################################
