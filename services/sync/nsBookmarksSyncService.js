@@ -85,11 +85,7 @@ BookmarksSyncService.prototype = {
   _snapshotVersion: 0,
 
   get currentUser() {
-    // FIXME - need to expose that info some other way
-    if (this._dav._currentUserPath)
-      return this._dav._currentUserPath + "@mozilla.com";
-    else
-      return null;
+    return this._dav.currentUser;
   },
 
   _init: function BSS__init() {
@@ -136,230 +132,6 @@ BookmarksSyncService.prototype = {
     }
 
     items[guid] = item;
-  },
-
-  // Takes a vanilla command list (fro sync-engine.js) and combines
-  // them so that each create/edit/remove fully creates/edits/removes
-  // an item (sync-engine.js will give us one command per object
-  // property, i.e., a bunch of commands per item)
-  _combineCommands: function BSS__combineCommands(commandList) {
-    var newList = [];
-
-    for (var i = 0; i < commandList.length; i++) {
-      LOG("Combining command: " + uneval(commandList[i]));
-
-      var action = commandList[i].action;
-      var value = commandList[i].value;
-      var path = commandList[i].path;
-
-      // ignore commands about creating the item container itself
-      if (path.length <= 1)
-        continue;
-
-      var guid = path.shift();
-      var key = path.pop();
-
-      if (path.length) {
-        LOG("Warning: editing deep property - dropping");
-        continue;
-      }
-
-      if (!newList.length ||
-          newList[newList.length - 1].guid != guid ||
-          newList[newList.length - 1].action != action)
-        newList.push({action: action, guid: guid, data: {}});
-
-      newList[newList.length - 1].data[key] = value;
-    }
-    return newList;
-  },
-
-  _nodeDepth: function BSS__nodeDepth(guid, depth) {
-    let parent = this._snapshot[guid].parentGuid;
-    if (parent == null)
-      return depth;
-    return this._nodeDepth(parent, ++depth);
-  },
-
-  // Takes *combined* commands and sorts them so that parent folders
-  // get created first, then children in reverse index order, then
-  // removes.
-  // Note: this method uses this._snapshot to calculate node depths;
-  // so this._snapshot must have server commands applied to it before
-  // calling this method.
-  _sortCommands: function BSS__sortCommands(commandList) {
-    for (let i = 0; i < commandList.length; i++) {
-      commandList[i].depth = this._nodeDepth(commandList[i].guid, 0);
-    }
-    commandList.sort(function compareNodes(a, b) {
-      if (a.depth > b.depth)
-        return 1;
-      if (a.depth < b.depth)
-        return -1;
-      if (a.index > b.index)
-        return -1;
-      if (a.index < b.index)
-        return 1;
-      return 0; // should never happen, but not a big deal if it does
-    });
-    return commandList;
-  },
-
-  // Takes *combined* and *sorted* commands and applies them to the
-  // places db
-  _applyCommands: function BSS__applyCommands(commandList) {
-    for (var i = 0; i < commandList.length; i++) {
-      var command = commandList[i];
-      LOG("Processing command: " + uneval(command));
-      switch (command["action"]) {
-      case "create":
-        this._createCommand(command);
-        break;
-      case "remove":
-        this._removeCommand(command);
-        break;
-      case "edit":
-        this._editCommand(command);
-        break;
-      default:
-        LOG("unknown action in command: " + command["action"]);
-        break;
-      }
-    }
-  },
-
-  _compareItems: function BSS__compareItems(node, data) {
-    switch (data.type) {
-    case 0:
-      if (node &&
-          node.type == node.RESULT_TYPE_URI &&
-          node.uri == data.uri && node.title == data.title)
-        return true;
-      return false;
-    case 6:
-      if (node &&
-          node.type == node.RESULT_TYPE_FOLDER &&
-          node.title == data.title)
-        return true;
-      return false;
-    case 7:
-      if (node && node.type == node.RESULT_TYPE_SEPARATOR)
-        return true;
-      return false;
-    default:
-      LOG("_compareItems: Unknown item type: " + data.type);
-      return false;
-    }
-  },
-
-  // FIXME: can't skip creations here; they need to get pruned out
-  // during reconciliation, sincethere will be "new" items being sent
-  // upstream too
-  _createCommand: function BSS__createCommand(command) {
-    let newId;
-
-    // check if it's the root
-    if (command.data.parentGuid == null) {
-      this._bms.setItemGUID(this._bms.bookmarksRoot, command.guid);
-      return;
-    }
-
-    let parentId = this._bms.getItemIdForGUID(command.data.parentGuid);
-    if (parentId <= 0) {
-      LOG("Warning: creating node with unknown parent -> reparenting to root");
-      parentId = this._bms.bookmarksRoot;
-    }
-    let parent = this._getBookmarks(parentId);
-    parent.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-    parent.containerOpen = true;
-
-    let curItem;
-    if (parent.childCount > command.data.index)
-      curItem = parent.getChild(command.data.index);
-
-    if (this._compareItems(curItem, command.data)) {
-      LOG(" -> FIXME - skipping item (already exists)");
-      this._bms.setItemGUID(curItem.itemId, command.guid);
-      return;
-    }
-
-    LOG(" -> creating item");
-
-    switch (command.data.type) {
-    case 0:
-      newId = this._bms.insertBookmark(parentId,
-                                       makeURI(command.data.uri),
-                                       command.data.index,
-                                       command.data.title);
-      break;
-    case 6:
-      newId = this._bms.createFolder(parentId,
-                                     command.data.title,
-                                     command.data.index);
-      break;
-    case 7:
-      newId = this._bms.insertSeparator(parentId, command.data.index);
-      break;
-    default:
-      LOG("_createCommand: Unknown item type: " + command.data.type);
-      break;
-    }
-    if (newId)
-      this._bms.setItemGUID(newId, command.guid);
-  },
-
-  _removeCommand: function BSS__removeCommand(command) {
-    var itemId = this._bms.getItemIdForGUID(command.guid);
-    var type = this._bms.getItemType(itemId);
-
-    switch (type) {
-    case this._bms.TYPE_BOOKMARK:
-      // FIXME: check it's an actual bookmark?
-      LOG("  -> removing bookmark " + command.guid);
-      this._bms.removeItem(itemId);
-      break;
-    case this._bms.TYPE_FOLDER:
-      LOG("  -> removing folder " + command.guid);
-      this._bms.removeFolder(itemId);
-      break;
-    case this._bms.TYPE_SEPARATOR:
-      LOG("  -> removing separator " + command.guid);
-      this._bms.removeItem(itemId);
-      break;
-    default:
-      LOG("removeCommand: Unknown item type: " + type);
-      break;
-    }
-  },
-
-  _editCommand: function BSS__editCommand(command) {
-    var itemId = this._bms.getItemIdForGUID(command.guid);
-    var type = this._bms.getItemType(itemId);
-
-    for (let key in command.data) {
-      switch (key) {
-      case "guid":
-        this._bms.setItemGUID(itemId, command.data.guid);
-        break;
-      case "title":
-        this._bms.setItemTitle(itemId, command.data.title);
-        break;
-      case "uri":
-        this._bms.changeBookmarkURI(itemId, makeURI(command.data.uri));
-        break;
-      case "index": // FIXME: what if we do this one before parentGuid ? that'd be wrong
-        this._bms.moveItem(itemId, this._bms.getFolderIdForItem(itemId),
-                           command.data.index);
-        break;
-      case "parentGuid":
-        this._bms.moveItem(
-          itemId, this._bms.getItemIdForGUID(command.data.parentGuid), -1);
-        break;
-      default:
-        LOG("Warning: Can't change item property: " + key);
-        break;
-      }
-    }
   },
 
   _getEdits: function BSS__getEdits(a, b) {
@@ -567,15 +339,139 @@ BookmarksSyncService.prototype = {
 
   _applyCommandsToObj: function BSS__applyCommandsToObj(commands, obj) {
     for (let i = 0; i < commands.length; i++) {
-      switch (command.action) {
+      LOG("Applying cmd to obj: " + uneval(commands[i]));
+      switch (commands[i].action) {
       case "create":
-        obj[command.guid] = eval(uneval(command.data));
+        obj[commands[i].guid] = eval(uneval(commands[i].data));
+        break;
       case "edit":
-        for (let prop in command.data) {
-          obj[command.guid][prop] = command.data[prop];
+        for (let prop in commands[i].data) {
+          obj[commands[i].guid][prop] = commands[i].data[prop];
         }
+        break;
       case "remove":
-        delete obj[command.guid];
+        delete obj[commands[i].guid];
+        break;
+      }
+    }
+    return obj;
+  },
+
+  // Applies commands to the places db
+  _applyCommands: function BSS__applyCommands(commandList) {
+    for (var i = 0; i < commandList.length; i++) {
+      var command = commandList[i];
+      LOG("Processing command: " + uneval(command));
+      switch (command["action"]) {
+      case "create":
+        this._createCommand(command);
+        break;
+      case "remove":
+        this._removeCommand(command);
+        break;
+      case "edit":
+        this._editCommand(command);
+        break;
+      default:
+        LOG("unknown action in command: " + command["action"]);
+        break;
+      }
+    }
+  },
+
+  _createCommand: function BSS__createCommand(command) {
+    let newId;
+    let parentId = this._bms.getItemIdForGUID(command.data.parentGuid);
+
+    if (parentId <= 0) {
+      LOG("Warning: creating node with unknown parent -> reparenting to root");
+      parentId = this._bms.bookmarksRoot;
+    }
+
+    LOG(" -> creating item");
+
+    switch (command.data.type) {
+    case 0:
+      newId = this._bms.insertBookmark(parentId,
+                                       makeURI(command.data.uri),
+                                       command.data.index,
+                                       command.data.title);
+      break;
+    case 6:
+      newId = this._bms.createFolder(parentId,
+                                     command.data.title,
+                                     command.data.index);
+      break;
+    case 7:
+      newId = this._bms.insertSeparator(parentId, command.data.index);
+      break;
+    default:
+      LOG("_createCommand: Unknown item type: " + command.data.type);
+      break;
+    }
+    if (newId)
+      this._bms.setItemGUID(newId, command.guid);
+  },
+
+  _removeCommand: function BSS__removeCommand(command) {
+    var itemId = this._bms.getItemIdForGUID(command.guid);
+    var type = this._bms.getItemType(itemId);
+
+    switch (type) {
+    case this._bms.TYPE_BOOKMARK:
+      // FIXME: check it's an actual bookmark?
+      LOG("  -> removing bookmark " + command.guid);
+      this._bms.removeItem(itemId);
+      break;
+    case this._bms.TYPE_FOLDER:
+      LOG("  -> removing folder " + command.guid);
+      this._bms.removeFolder(itemId);
+      break;
+    case this._bms.TYPE_SEPARATOR:
+      LOG("  -> removing separator " + command.guid);
+      this._bms.removeItem(itemId);
+      break;
+    default:
+      LOG("removeCommand: Unknown item type: " + type);
+      break;
+    }
+  },
+
+  _editCommand: function BSS__editCommand(command) {
+    var itemId = this._bms.getItemIdForGUID(command.guid);
+    if (itemId == -1) {
+      LOG("Warning: item for guid " + command.guid + " not found.  Skipping.");
+      return;
+    }
+
+    var type = this._bms.getItemType(itemId);
+
+    for (let key in command.data) {
+      switch (key) {
+      case "guid":
+        var existing = this._bms.getItemIdForGUID(command.guid);
+        if (existing == -1)
+          this._bms.setItemGUID(itemId, command.data.guid);
+        else
+          LOG("Warning: can't change guid " + command.guid +
+              " to " + command.data.guid + ": guid already exists.");
+        break;
+      case "title":
+        this._bms.setItemTitle(itemId, command.data.title);
+        break;
+      case "uri":
+        this._bms.changeBookmarkURI(itemId, makeURI(command.data.uri));
+        break;
+      case "index": // FIXME: what if we do this one before parentGuid ? that'd be wrong
+        this._bms.moveItem(itemId, this._bms.getFolderIdForItem(itemId),
+                           command.data.index);
+        break;
+      case "parentGuid":
+        this._bms.moveItem(
+          itemId, this._bms.getItemIdForGUID(command.data.parentGuid), -1);
+        break;
+      default:
+        LOG("Warning: Can't change item property: " + key);
         break;
       }
     }
@@ -682,14 +578,8 @@ BookmarksSyncService.prototype = {
       // 3.1) Apply server changes to local store
       if (propagations[0] && propagations[0].length) {
         LOG("Applying changes locally");
-        //localBookmarks = this._getBookmarks(); // fixme: wtf
         this._snapshot = this._wrapNode(localBookmarks);
-        this._applyCommandsToObj(this._snapshot, propagations[0]);
-        //var combinedCommands = this._combineCommands(propagations[0]);
-        //LOG("Combined commands: " + uneval(combinedCommands) + "\n");
-        //var sortedCommands = this._sortCommands(combinedCommands);
-        //LOG("Sorted commands: " + uneval(sortedCommands) + "\n");
-        //this._applyCommands(combinedCommands);
+        propagations[0] = this._applyCommandsToObj(this._snapshot, propagations[0]);
         this._applyCommands(propagations[0]);
         this._snapshot = this._wrapNode(localBookmarks);
       }
@@ -771,11 +661,11 @@ BookmarksSyncService.prototype = {
         keys = keys.sort();
         LOG("TMP: " + uneval(tmp));
         for (var i = 0; i < keys.length; i++) {
-          this._applyCommandsToObj(tmp, ret.deltas[keys[i]]);
+          tmp = this._applyCommandsToObj(ret.deltas[keys[i]], tmp);
           LOG("TMP: " + uneval(tmp));
         }
         ret.status = 1;
-        ret.updates = this._detectUpdates(this._snapshot, tmp);
+        ret["updates"] = this._detectUpdates(this._snapshot, tmp);
 
       } else if (ret.deltas[this._snapshotVersion]) {
         LOG("No changes from server");
@@ -797,7 +687,7 @@ BookmarksSyncService.prototype = {
         }
 
         var tmp = eval(uneval(this._snapshot)); // fixme hack hack hack
-        this._applyCommandsToObj(tmp, data.updates);
+        tmp = this._applyCommandsToObj(data.updates, tmp);
 
         // fixme: this is duplicated from above, need to do some refactoring
 
@@ -810,7 +700,7 @@ BookmarksSyncService.prototype = {
         }
         keys = keys.sort();
         for (var i = 0; i < keys.length; i++) {
-          this._applyCommandsToObj(tmp, ret.deltas[keys[i]]);
+          tmp = this._applyCommandsToObj(ret.deltas[keys[i]], tmp);
         }
 
         ret.status = data.status;
@@ -907,7 +797,7 @@ BookmarksSyncService.prototype = {
   sync: function BSS_sync() { asyncRun(bind2(this, this._doSync)); },
 
   login: function BSS_login() {
-    this._dav.login("USER@mozilla.com", "PASSWORD", // FIXME
+    this._dav.login("nobody@mozilla.com", "password", // FIXME
                     {load: bind2(this, this._onLogin),
                      error: bind2(this, this._onLoginError)});
   },
@@ -963,6 +853,11 @@ DAVCollection.prototype = {
 
   _authString: null,
   _currentUserPath: "nobody",
+
+  _currentUser: "nobody@mozilla.com",
+  get currentUser() {
+    return this._currentUser;
+  },
 
   _addHandler: function DC__addHandler(request, handlers, eventName) {
     if (handlers[eventName])
@@ -1040,6 +935,7 @@ DAVCollection.prototype = {
     let hello = /Hello (.+)@mozilla.com/.exec(event.target.responseText)
     if (hello) {
       this._currentUserPath = hello[1];	
+      this._currentUser = this._currentUserPath + "@mozilla.com";
       this._baseUrl = "http://dotmoz.mozilla.org/~" +
         this._currentUserPath + "/";
     }
