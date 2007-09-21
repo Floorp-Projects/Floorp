@@ -2852,7 +2852,10 @@ void
 nsDocument::EndLoad()
 {
   // Drop the ref to our parser, if any
-  mParser = nsnull;
+  if (mParser) {
+    mWeakSink = do_GetWeakReference(mParser->GetContentSink());
+    mParser = nsnull;
+  }
   
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
 
@@ -4842,13 +4845,16 @@ nsDocument::CreateEventGroup(nsIDOMEventGroup **aInstancePtrResult)
 void
 nsDocument::FlushPendingNotifications(mozFlushType aType)
 {
+  nsCOMPtr<nsIContentSink> sink;
+  if (mParser) {
+    sink = mParser->GetContentSink();
+  } else {
+    sink = do_QueryReferent(mWeakSink);
+  }
   // Determine if it is safe to flush the sink notifications
   // by determining if it safe to flush all the presshells.
-  if (mParser && (aType == Flush_Content || IsSafeToFlush())) {
-    nsCOMPtr<nsIContentSink> sink = mParser->GetContentSink();
-    if (sink) {
-      sink->FlushPendingNotifications(aType);
-    }
+  if (sink && (aType == Flush_Content || IsSafeToFlush())) {
+    sink->FlushPendingNotifications(aType);
   }
 
   // Should we be flushing pending binding constructors in here?
