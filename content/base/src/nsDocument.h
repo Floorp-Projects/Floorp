@@ -728,6 +728,11 @@ protected:
   // parsed into.
   nsCOMPtr<nsIParser> mParser;
 
+  // Weak reference to our sink for in case we no longer have a parser.  This
+  // will allow us to flush out any pending stuff from the sink even if
+  // EndLoad() has already happened.
+  nsWeakPtr mWeakSink;
+
   nsCOMArray<nsIStyleSheet> mStyleSheets;
   nsCOMArray<nsIStyleSheet> mCatalogSheets;
 

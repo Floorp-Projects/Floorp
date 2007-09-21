@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=392318
+-->
+<head>
+  <title>Test for Bug 392318</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=392318">Mozilla Bug 392318</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+/** Test for Bug 392318 **/
+
+SimpleTest.waitForExplicitFinish();
+var testRan = false;
+
+function runTest() {
+  is($("t").offsetWidth, 202, "Unexpected offsetWidth");
+  is($("t").offsetHeight, 102, "Unexpected offsetHeight");
+  testRan = true;
+}
+
+document.addEventListener("DOMContentLoaded", runTest, false);
+
+addLoadEvent(function() {
+  is(testRan, true, "Onload firing too early");
+});
+
+addLoadEvent(SimpleTest.finish);
+</script>
+<!-- IMPORTANT: This sheet must come after the test that sets up the
+     DOMContentLoaded handler -->
+<link rel="stylesheet" type="text/css" href="data:text/css;%20charset=utf-8,%23t%20%7B%0Awidth%3A%20200px%3B%0Aborder%3A%201px%20solid%20black%3B%0Aheight%3A%20100px%3B%0A%7D">
+<div id="t"></div>
+</pre>
+</body>
+</html>
+
