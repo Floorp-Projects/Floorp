@@ -37,13 +37,14 @@
 
 /*
  * Test harness for XPCOM objects, providing a scoped XPCOM initializer,
- * nsCOMPtr, nsRefPtr, and stdio.h/stdlib.h.
+ * nsCOMPtr, nsRefPtr, do_CreateInstance, and stdio.h/stdlib.h.
  */
 
 #ifndef TestHarness_h__
 #define TestHarness_h__
 
 #include "nsIServiceManager.h"
+#include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include <stdio.h>
