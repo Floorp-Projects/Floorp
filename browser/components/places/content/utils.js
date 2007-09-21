@@ -52,6 +52,7 @@ const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const POST_DATA_ANNO = "URIProperties/POSTData";
 const LMANNO_FEEDURI = "livemark/feedURI";
+const LMANNO_SITEURI = "livemark/siteURI";
 
 #ifdef XP_MACOSX
 // On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
@@ -408,7 +409,7 @@ var PlacesUtils = {
   */
   nodeIsLivemarkContainer: function PU_nodeIsLivemarkContainer(aNode) {
     return this.nodeIsFolder(aNode) &&
-           this.annotations.itemHasAnnotation(aNode.itemId, LMANNO_FEEDURI);
+           this.livemarks.isLivemark(aNode.itemId);
   },
 
  /**
@@ -457,7 +458,7 @@ var PlacesUtils = {
   },
 
   /**
-   * String-wraps a NavHistoryResultNode according to the rules of the specified
+   * String-wraps a result node according to the rules of the specified
    * content type.
    * @param   aNode
    *          The Result node to wrap (serialize)
