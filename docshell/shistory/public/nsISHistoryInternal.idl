@@ -46,12 +46,13 @@ interface nsIDocShell;
 
 %{C++
 #define NS_SHISTORY_INTERNAL_CID \
-{0x5b4cba4c, 0xbf67, 0x499a, {0xae, 0x2c, 0x3f, 0x76, 0x65, 0x6f, 0x4a, 0x4e}}
+{ 0x9c47c121, 0x1c6e, 0x4d8f, \
+  { 0xb9, 0x04, 0x3a, 0xc9, 0x68, 0x11, 0x6e, 0x88 } }
 
 #define NS_SHISTORY_INTERNAL_CONTRACTID "@mozilla.org/browser/shistory-internal;1"
 %}
 
-[scriptable, uuid(df8788d6-c0ed-4517-b47e-c719afc94284)]
+[scriptable, uuid(9c47c121-1c6e-4d8f-b904-3ac968116e88)]
 interface nsISHistoryInternal: nsISupports
 {
   /**
@@ -98,4 +99,10 @@ interface nsISHistoryInternal: nsISupports
    * the previous viewer.
    */
    void evictContentViewers(in long previousIndex, in long index);
+   
+   /**
+    * Evict the content viewer associated with a session history entry
+    * that has timed out.
+    */
+   void evictExpiredContentViewerForEntry(in nsISHEntry aEntry);
 };
