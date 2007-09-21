@@ -47,7 +47,7 @@
       </handler>
     </handlers>
 
-    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider, nsIDOMEventListener">
+    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider">
       <constructor>
         this.setInitialSelection()
       </constructor>
@@ -189,7 +189,10 @@
 
             if (oldval) {
               oldval.removeAttribute('selected');
-              oldval.removeEventListener("DOMAttrModified", this, false);
+              document.removeBroadcastListenerFor(oldval, this, "value");
+              document.removeBroadcastListenerFor(oldval, this, "label");
+              document.removeBroadcastListenerFor(oldval, this, "image");
+              document.removeBroadcastListenerFor(oldval, this, "description");
             }
 
             this.mSelectedInternal = val;
@@ -199,7 +202,10 @@
               this.setAttribute('image', val.getAttribute('image'));
               this.setAttribute('label', val.getAttribute('label'));
               this.setAttribute('description', val.getAttribute('description'));
-              val.addEventListener("DOMAttrModified", this, false);
+              document.addBroadcastListenerFor(val, this, "value");
+              document.addBroadcastListenerFor(val, this, "label");
+              document.addBroadcastListenerFor(val, this, "image");
+              document.addBroadcastListenerFor(val, this, "description");
             }
             else {
               this.removeAttribute('value');
@@ -249,25 +255,6 @@
               return children[index];
           }
           return null;
-        ]]>
-        </body>
-      </method>
-
-      <method name="handleEvent">
-        <parameter name="event"/>
-        <body>
-        <![CDATA[
-          if (event.type == "DOMAttrModified" &&
-              event.target == this.mSelectedInternal) {
-            var attrName = event.attrName;
-            switch (attrName) {
-              case "value":
-              case "label":
-              case "image":
-              case "description":
-                this.setAttribute(attrName, event.newValue);
-            }
-          }
         ]]>
         </body>
       </method>
@@ -357,8 +344,13 @@
 
       <destructor>
         <![CDATA[
-           if (this.mSelectedInternal)
-             this.mSelectedInternal.removeEventListener("DOMAttrModified", this, false);
+          if (this.mSelectedInternal) {
+            document.removeBroadcastListenerFor(this.mSelectedInternal, this, "value");
+            document.removeBroadcastListenerFor(this.mSelectedInternal, this, "label");
+            document.removeBroadcastListenerFor(this.mSelectedInternal, this, "image");
+            document.removeBroadcastListenerFor(this.mSelectedInternal, this, "description");
+           
+          }
         ]]>
       </destructor>
     </implementation>
