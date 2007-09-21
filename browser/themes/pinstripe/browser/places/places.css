@@ -272,3 +272,24 @@ treechildren::-moz-tree-twisty(title, separator) {
   min-width:0em;
 }
 
+/**
+ * info pane
+ */
+
+/* More/Less button */
+#infoScrollboxExpander {
+  list-style-image: url("chrome://browser/skin/places/twisty-open.gif");
+  -moz-appearance: none;
+  margin: 0;
+  padding: 0;
+  max-width: 0;
+}
+
+#infoScrollbox[minimal="true"] #infoScrollboxExpander {
+  list-style-image: url("chrome://browser/skin/places/twisty-closed.gif");
+}
+
+#itemsCountText,
+#selectItemDescription {
+  color: GrayText;
+}
