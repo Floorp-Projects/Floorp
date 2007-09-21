@@ -573,6 +573,7 @@
 #endif
           }
         }
+        this.setAttribute("animated", this._shouldAnimate ? "true" : "false");
         var panes = this.preferencePanes;
 
         var lastPane = null;
@@ -735,6 +736,9 @@
               this._paneDeck.selectedIndex = i;
               
               if (this.type != "child") {
+                if (aPaneElement.hasAttribute("flex") && this._shouldAnimate &&
+                    prefpanes.length > 1)
+                  aPaneElement.removeAttribute("flex");
                 // Calling sizeToContent after the first prefpane is loaded
                 // will size the windows contents so style information is
                 // available to calculate correct sizing.

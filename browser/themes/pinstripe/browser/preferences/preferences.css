@@ -160,6 +160,15 @@ radio[pane=paneAdvanced][selected="true"] {
 
 
 
+/* ----- APPLICATIONS PREFPANE ----- */
+#BrowserPreferences[animated="true"] #handlersView {
+  height: 25em;
+}
+
+#BrowserPreferences[animated="false"] #handlersView {
+  -moz-box-flex: 1;
+}
+
 .content-box > separator {
   border: 1px solid red;
 }
