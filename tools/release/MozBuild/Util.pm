@@ -310,7 +310,7 @@ sub MkdirWithPath {
     $dirMask = defined($dirMask) ? $dirMask : 0777;
 
     eval { mkpath($dirToCreate, $printProgress, $dirMask) };
-    return defined($@);
+    return ($@ eq '');
 }
 
 sub HashFile {
