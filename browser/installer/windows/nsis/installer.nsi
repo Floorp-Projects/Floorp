@@ -52,6 +52,7 @@ CRCCheck on
 !system 'echo ; > options.ini'
 !system 'echo ; > components.ini'
 !system 'echo ; > shortcuts.ini'
+!system 'echo ; > summary.ini'
 
 Var TmpVal
 Var StartMenuDir
@@ -105,6 +106,7 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
 !insertmacro AddHandlerValues
 !insertmacro CloseApp
 !insertmacro CreateRegKey
+!insertmacro ManualCloseAppPrompt
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
 !insertmacro WriteRegStr2
@@ -129,6 +131,7 @@ ShowInstDetails nevershow
 ReserveFile options.ini
 ReserveFile components.ini
 ReserveFile shortcuts.ini
+ReserveFile summary.ini
 
 ################################################################################
 # Modern User Interface - MUI
@@ -181,8 +184,10 @@ Page custom preShortcuts leaveShortcuts
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Start Menu Folder"
 !insertmacro MUI_PAGE_STARTMENU Application $StartMenuDir
 
+; Custom Summary Page
+Page custom preSummary leaveSummary
+
 ; Install Files Page
-!define MUI_PAGE_CUSTOMFUNCTION_PRE preInstFiles
 !insertmacro MUI_PAGE_INSTFILES
 
 ; Finish Page
@@ -534,7 +539,7 @@ Function CopyFile
       ${If} ${Errors}
         ${LogMsg}  "** ERROR Creating Directory: $R1$R3\$R7 **"
         StrCpy $0 "$R1$R3\$R7"
-        ${WordReplace} "$(^FileError_NoIgnore)" "\r\n" "$\r$\n" "+*" $0
+        StrCpy $0 "$(ERROR_CREATE_DIRECTORY)"
         MessageBox MB_RETRYCANCEL|MB_ICONQUESTION "$0" IDRETRY retry
         Quit
       ${Else}
@@ -548,7 +553,7 @@ Function CopyFile
       ${If} ${Errors}
         ${LogMsg}  "** ERROR Creating Directory: $R1$R3 **"
         StrCpy $0 "$R1$R3"
-        ${WordReplace} "$(^FileError_NoIgnore)" "\r\n" "$\r$\n" "+*" $0
+        StrCpy $0 "$(ERROR_CREATE_DIRECTORY)"
         MessageBox MB_RETRYCANCEL|MB_ICONQUESTION "$0" IDRETRY retry
         Quit
       ${Else}
@@ -590,7 +595,7 @@ Function CopyFile
 FunctionEnd
 
 Function LaunchApp
-  ${CloseApp} "true" $(WARN_APP_RUNNING_INSTALL)
+  ${ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
   Exec "$INSTDIR\${FileMainEXE}"
 FunctionEnd
 
@@ -677,7 +682,26 @@ Function preStartMenu
   ${EndIf}
 FunctionEnd
 
-Function preInstFiles
+Function preSummary
+  !insertmacro createSummaryINI
+  !insertmacro MUI_HEADER_TEXT "$(SUMMARY_PAGE_TITLE)" "$(SUMMARY_PAGE_SUBTITLE)"
+
+  ; The Summary custom page has a textbox that will automatically receive
+  ; focus. This sets the focus to the Install button instead.
+  !insertmacro MUI_INSTALLOPTIONS_INITDIALOG "summary.ini"
+  GetDlgItem $0 $HWNDPARENT 1
+  System::Call "user32::SetFocus(i r0, i 0x0007, i,i)i"
+  !insertmacro MUI_INSTALLOPTIONS_SHOW
+FunctionEnd
+
+Function leaveSummary
+  ; If there is a pending deletion from a previous uninstall don't allow
+  ; installing until after the system has rebooted.
+  IfFileExists "$INSTDIR\${FileMainEXE}.moz-delete" +1 +4
+  MessageBox MB_YESNO "$(WARN_RESTART_REQUIRED_UNINSTALL)" IDNO +2
+  Reboot
+  Quit
+
   ${If} $InstallType != ${INSTALLTYPE_CUSTOM}
     ; Set DOMi to be installed
     SectionSetFlags ${DOMI_IDX} 1
@@ -700,6 +724,7 @@ Function .onInit
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "options.ini"
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "components.ini"
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "shortcuts.ini"
+  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "summary.ini"
   !insertmacro createBasicCustomOptionsINI
   !insertmacro createComponentsINI
   !insertmacro createShortcutsINI
