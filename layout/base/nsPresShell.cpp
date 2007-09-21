@@ -6193,16 +6193,8 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
         ? PR_IntervalNow() + PR_MicrosecondsToInterval(gMaxRCProcessingTime)
         : (PRIntervalTime)0;
 
-    // force flushing of any pending notifications
-    mDocument->BeginUpdate(UPDATE_ALL);
-    mDocument->EndUpdate(UPDATE_ALL);
-
-    // That might have executed JS (via XBL binding constructors).  So we may
-    // no longer have reflow commands.  In fact, we may have had Destroy()
-    // called.
-
-    // Scope for the reflow entry point, in addition to the |if| condition.
-    if (!mIsDestroying && mDirtyRoots.Count() != 0) {
+    // Scope for the reflow entry point
+    {
       AUTO_LAYOUT_PHASE_ENTRY_POINT(GetPresContext(), Reflow);
       mIsReflowing = PR_TRUE;
 
