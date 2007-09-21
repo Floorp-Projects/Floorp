@@ -76,6 +76,9 @@ BookmarksSyncService.prototype = {
     return this.__os;
   },
 
+  // Timer object for yielding to the main loop
+  _timer: null,
+
   // DAVCollection object
   _dav: null,
 
@@ -89,7 +92,6 @@ BookmarksSyncService.prototype = {
   },
 
   _init: function BSS__init() {
-
     var serverUrl = "http://sync.server.url/";
     try {
       var branch = Cc["@mozilla.org/preferences-service;1"].
@@ -209,7 +211,7 @@ BookmarksSyncService.prototype = {
         (b.parents.indexOf(a.guid) >= 0) &&
         a.action == "remove")
       return true;
-    if ((a.guid == b.guid) && a != b)
+    if ((a.guid == b.guid) && !this._deepEquals(a, b))
       return true;
 // FIXME - how else can two commands conflict?
     return false;
@@ -274,6 +276,9 @@ BookmarksSyncService.prototype = {
     return true;
   },
 
+  // When we change the guid of a local item (because we detect it as
+  // being the same item as a remote one), we need to fix any other
+  // local items that have it as their parent
   _fixParents: function BSS__fixParents(list, oldGuid, newGuid) {
     for (let i = 0; i < list.length; i++) {
       if (!list[i])
@@ -287,11 +292,23 @@ BookmarksSyncService.prototype = {
     }
   },
 
-  _reconcile: function BSS__reconcile(listA, listB) {
+  _reconcile: function BSS__reconcile(onComplete, commandLists) {
+    let generator = yield;
+    this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    let callback = bind2(this,
+                         function(event) { handleEvent(generator, event); });
+    let listener = new EventListener(callback);
+
+    let [listA, listB] = commandLists;
     let propagations = [[], []];
     let conflicts = [[], []];
 
     for (let i = 0; i < listA.length; i++) {
+
+      // Yield to main loop
+      this._timer.initWithCallback(listener, 0, this._timer.TYPE_ONE_SHOT);
+      yield;
+
       for (let j = 0; j < listB.length; j++) {
         if (this._deepEquals(listA[i], listB[j])) {
           delete listA[i];
@@ -310,6 +327,11 @@ BookmarksSyncService.prototype = {
     listB = listB.filter(function(elt) { return elt });
 
     for (let i = 0; i < listA.length; i++) {
+
+      // Yield to main loop
+      this._timer.initWithCallback(listener, 0, this._timer.TYPE_ONE_SHOT);
+      yield;
+
       for (let j = 0; j < listB.length; j++) {
         if (this._conflicts(listA[i], listB[j]) ||
             this._conflicts(listB[j], listA[i])) {
@@ -334,7 +356,9 @@ BookmarksSyncService.prototype = {
         function(elt) { return elt.guid == listB[j].guid }))
         propagations[0].push(listB[j]);
     }
-    return {propagations: propagations, conflicts: conflicts};
+
+    this._timer = null;
+    onComplete({propagations: propagations, conflicts: conflicts});
   },
 
   _applyCommandsToObj: function BSS__applyCommandsToObj(commands, obj) {
@@ -449,7 +473,7 @@ BookmarksSyncService.prototype = {
     for (let key in command.data) {
       switch (key) {
       case "guid":
-        var existing = this._bms.getItemIdForGUID(command.guid);
+        var existing = this._bms.getItemIdForGUID(command.data.guid);
         if (existing == -1)
           this._bms.setItemGUID(itemId, command.data.guid);
         else
@@ -544,7 +568,9 @@ BookmarksSyncService.prototype = {
       //}
 
       LOG("Reconciling updates");
-      var ret = this._reconcile(localUpdates, server['updates']);
+      asyncRun(bind2(this, this._reconcile),
+               handlers['complete'], [localUpdates, server.updates]);
+      let ret = yield;
       propagations = ret.propagations;
       conflicts = ret.conflicts;
 
@@ -828,8 +854,23 @@ function EventListener(handler) {
   this._handler = handler;
 }
 EventListener.prototype = {
+  QueryInterface: function(iid) {
+    if (iid.Equals(Components.interfaces.nsITimerCallback) ||
+        iid.Equals(Components.interfaces.nsISupports))
+      return this;
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+  },
+
+  // DOM event listener
+
   handleEvent: function EL_handleEvent(event) {
     this._handler(event);
+  },
+
+  // nsITimerCallback
+
+  notify: function EL_notify(timer) {
+    this._handler(timer);
   }
 };
 
@@ -1003,7 +1044,7 @@ DAVCollection.prototype = {
     LOG("unlock failed (" + event.target.status + "):\n" + event.target.responseText + "\n");
     if (this._lockHandlers && this._lockHandlers.error)
       this._lockHandlers.error(event);
-  },
+  }
 };
 
 function makeFile(path) {
