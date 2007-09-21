@@ -1,0 +1,67 @@
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+  <title>Testing Microformats.js (geo)</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"></link>
+</head>
+<body>
+<div id="content" style="display: none">
+
+    <span class="geo" id="01-geo-basic">
+      <span class="latitude">37.77</span>
+      <span class="longitude">-122.411</span>
+    </span>
+
+
+    <span class="geo" id="01-geo-abbr-latlong" >
+      <abbr class="latitude" title="37.77">Northern</abbr>
+      <abbr class="longitude" title="-122.41">California</abbr>
+    </span>
+
+    <abbr class="geo" id="01-geo-abbr" title="30.267991;-97.739568">Paradise</abbr>
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+test_Microformats();
+test_geo();
+
+function test_Microformats() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  Components.utils.import("resource://gre/modules/Microformats.js");
+
+  ok(Microformats, "Check global access to Microformats");
+};
+
+function test_geo() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  Components.utils.import("resource://gre/modules/Microformats.js");
+
+  var Geo;
+
+  Geo = new geo(document.getElementById("01-geo-basic"));
+
+  is(Geo.latitude, "37.77", "01-geo-basic - latitude");
+  is(Geo.longitude, "-122.411", "01-geo-basic - longitude");
+
+  Geo = new geo(document.getElementById("01-geo-abbr-latlong"));
+
+  is(Geo.latitude, "37.77", "02-geo-abbr-latlong - latitude");
+  is(Geo.longitude, "-122.41", "02-geo-abbr-latlong - longitude");
+
+  Geo = new geo(document.getElementById("01-geo-abbr"));
+
+  is(Geo.latitude, "30.267991", "01-geo-abbr - latitude");
+  is(Geo.longitude, "-97.739568", "01-geo-abbr - longitude");
+}
+
+</script>
+</pre>
+</body>
+</html>

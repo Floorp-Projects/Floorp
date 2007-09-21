@@ -1,4 +1,5 @@
 /*
+ * $Id: pixman-edge.c,v 1.9 2007/09/20 19:24:51 vladimir%pobox.com Exp $
  *
  * Copyright © 2004 Keith Packard
  *
@@ -21,7 +22,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#if HAVE_CONFIG_H
+#ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 

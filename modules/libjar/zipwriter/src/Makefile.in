@@ -44,6 +44,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE                = zipwriter
 LIBRARY_NAME          = zipwriter
+ifneq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+SHORT_LIBNAME         = zipwrite
+endif
 MODULE_NAME           = ZipWriterModule
 EXPORT_LIBRARY        = 1
 LIBXUL_LIBRARY        = 1

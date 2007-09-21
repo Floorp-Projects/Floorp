@@ -38,7 +38,6 @@
 #include <fontconfig/fontconfig.h>
 
 #include <X11/Xlibint.h>	/* For XESetCloseDisplay */
-#include <X11/extensions/Xrender.h>
 
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);
@@ -226,6 +225,7 @@ _cairo_xlib_display_get (Display *dpy)
     cairo_xlib_display_t *display;
     cairo_xlib_display_t **prev;
     XExtCodes *codes;
+    int major_unused, minor_unused;
 
     /* There is an apparent deadlock between this mutex and the
      * mutex for the display, but it's actually safe. For the
@@ -259,6 +259,14 @@ _cairo_xlib_display_get (Display *dpy)
     display = malloc (sizeof (cairo_xlib_display_t));
     if (display == NULL)
 	goto UNLOCK;
+
+    /* Xlib calls out to the extension close_display hooks in LIFO
+     * order. So we have to ensure that all extensions that we depend
+     * on in our close_display hook are properly initialized before we
+     * add our hook. For now, that means Render, so we call into its
+     * QueryVersion function to ensure it gets initialized.
+     */
+    XRenderQueryVersion (dpy, &major_unused, &minor_unused);
 
     codes = XAddExtension (dpy);
     if (codes == NULL) {

@@ -64,11 +64,7 @@
 #include <stdio.h>
 
 #include "cairo.h"
-#ifdef MOZ_TREE_CAIRO
-#include "pixman.h"
-#else
-#include <pixman/pixman.h>
-#endif
+#include <pixman.h>
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
@@ -190,11 +186,6 @@ do {					\
 
 #define CAIRO_REF_COUNT_INVALID ((unsigned int) -1)
 
-#include "cairo-mutex-private.h"
-#include "cairo-wideint-private.h"
-#include "cairo-malloc-private.h"
-#include "cairo-fixed-private.h"
-
 #define CAIRO_ALPHA_IS_OPAQUE(alpha) ((alpha) >= ((double)0xff00 / (double)0xffff))
 #define CAIRO_ALPHA_SHORT_IS_OPAQUE(alpha) ((alpha) >= 0xff00)
 #define CAIRO_ALPHA_IS_ZERO(alpha) ((alpha) <= 0.0)
@@ -249,8 +240,8 @@ be32_to_cpu(uint32_t v)
 #endif
 
 #include "cairo-types-private.h"
-#include "cairo-hash-private.h"
 #include "cairo-cache-private.h"
+#include "cairo-fixed-private.h"
 
 typedef struct _cairo_region cairo_region_t;
 
@@ -329,65 +320,7 @@ typedef cairo_box_int32_t cairo_box_int_t;
 #error Not sure how to pick a cairo_rectangle_int_t for your CAIRO_FIXED_BITS!
 #endif
 
-/* Sure wish C had a real enum type so that this would be distinct
-   from cairo_status_t. Oh well, without that, I'll use this bogus 1000
-   offset */
-typedef enum cairo_int_status {
-    CAIRO_INT_STATUS_DEGENERATE = 1000,
-    CAIRO_INT_STATUS_UNSUPPORTED,
-    CAIRO_INT_STATUS_NOTHING_TO_DO,
-    CAIRO_INT_STATUS_CACHE_EMPTY
-} cairo_int_status_t;
-
-typedef enum cairo_internal_surface_type {
-    CAIRO_INTERNAL_SURFACE_TYPE_META = 0x1000,
-    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
-    CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
-    CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
-    CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
-    CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED
-} cairo_internal_surface_type_t;
-
-/* For xlib fallbacks, we need image surfaces with formats that match
- * the visual of the X server. There are a few common X server visuals
- * for which we do not have corresponding public cairo_format_t
- * values, since we do not plan on always guaranteeing that cairo will
- * be able to draw to these formats.
- *
- * Currently pixman does advertise support for these formats, (with an
- * interface to construct a format from a set of masks---but pixman
- * may not actually have code to support any arbitrary set of
- * maskes). So we lodge a cairo_internal_format_t in the internal
- * cairo image surface to indicate what's going on. The value isn't
- * actually used for much, since it is the set of pixman masks that
- * control the rendering.
- *
- * But even though the value isn't used, it's still useful to maintain
- * this list, as it indicates to use visual formats that have been
- * encountered in practice. We can take advantage of this for future
- * rewrites of pixman that might support a limited set of formats
- * instead of general mask-based rendering, (or at least optimized
- * rendering for a limited set of formats).
- *
- * Another approach that could be taken here is to convert the data at
- * the time of the fallback to a supported format. This is similar to
- * what needs to be done to support PseudoColor visuals, for example.
- *
- * NOTE: The implementation of CAIRO_FORMAT_VALID *must* *not*
- * consider these internal formats as valid.
- *
- * NOTE: When adding a value to this list, be sure to add it to
- * _cairo_format_from_pixman_format, (which is probably the assert
- * failure you're wanting to eliminate), but also don't forget to add
- * it to cairo_content_from_format.
- */
-typedef enum cairo_internal_format {
-    CAIRO_INTERNAL_FORMAT_ABGR32 = 0x1000,
-    CAIRO_INTERNAL_FORMAT_BGR24,
-    CAIRO_INTERNAL_FORMAT_RGB16_565
-} cairo_internal_format_t;
-
-typedef enum cairo_direction {
+typedef enum _cairo_direction {
     CAIRO_DIRECTION_FORWARD,
     CAIRO_DIRECTION_REVERSE
 } cairo_direction_t;
@@ -948,6 +881,22 @@ struct _cairo_surface_backend {
 
     cairo_warn cairo_status_t
     (*reset)			(void			*surface);
+
+    cairo_warn cairo_int_status_t
+    (*fill_stroke)		(void			*surface,
+				 cairo_operator_t	 fill_op,
+				 cairo_pattern_t	*fill_source,
+				 cairo_fill_rule_t	 fill_rule,
+				 double			 fill_tolerance,
+				 cairo_antialias_t	 fill_antialias,
+				 cairo_path_fixed_t	*path,
+				 cairo_operator_t	 stroke_op,
+				 cairo_pattern_t	*stroke_source,
+				 cairo_stroke_style_t	*stroke_style,
+				 cairo_matrix_t		*stroke_ctm,
+				 cairo_matrix_t		*stroke_ctm_inverse,
+				 double			 stroke_tolerance,
+				 cairo_antialias_t	 stroke_antialias);
 };
 
 typedef struct _cairo_format_masks {
@@ -963,7 +912,7 @@ typedef struct _cairo_format_masks {
 struct _cairo_image_surface {
     cairo_surface_t base;
 
-    /* libic-specific fields */
+    pixman_format_code_t pixman_format;
     cairo_format_t format;
     unsigned char *data;
     cairo_bool_t owns_data;
@@ -1135,6 +1084,7 @@ typedef struct _cairo_traps {
 #define CAIRO_GSTATE_MITER_LIMIT_DEFAULT	10.0
 #define CAIRO_GSTATE_DEFAULT_FONT_SIZE  10.0
 
+#define CAIRO_SURFACE_RESOLUTION_DEFAULT 72.0
 #define CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT 300.0
 
 typedef struct _cairo_gstate cairo_gstate_t;
@@ -1543,6 +1493,10 @@ cairo_private cairo_status_t
 _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 			     cairo_path_fixed_t *other);
 
+cairo_private cairo_bool_t
+_cairo_path_fixed_is_equal (cairo_path_fixed_t *path,
+			    cairo_path_fixed_t *other);
+
 cairo_private cairo_path_fixed_t *
 _cairo_path_fixed_create (void);
 
@@ -1748,6 +1702,11 @@ cairo_private void
 _cairo_surface_set_error (cairo_surface_t	*surface,
 			  cairo_status_t	 status);
 
+cairo_private void
+_cairo_surface_set_resolution (cairo_surface_t *surface,
+                               double x_res,
+                               double y_res);
+
 cairo_private cairo_surface_t *
 _cairo_surface_create_similar_scratch (cairo_surface_t *other,
 				       cairo_content_t	content,
@@ -1825,6 +1784,22 @@ _cairo_surface_mask (cairo_surface_t	*surface,
 		     cairo_pattern_t	*mask);
 
 cairo_private cairo_status_t
+_cairo_surface_fill_stroke (cairo_surface_t	    *surface,
+			    cairo_operator_t	     fill_op,
+			    cairo_pattern_t	    *fill_source,
+			    cairo_fill_rule_t	     fill_rule,
+			    double		     fill_tolerance,
+			    cairo_antialias_t	     fill_antialias,
+			    cairo_path_fixed_t	    *path,
+			    cairo_operator_t	     stroke_op,
+			    cairo_pattern_t	    *stroke_source,
+			    cairo_stroke_style_t    *stroke_style,
+			    cairo_matrix_t	    *stroke_ctm,
+			    cairo_matrix_t	    *stroke_ctm_inverse,
+			    double		     stroke_tolerance,
+			    cairo_antialias_t	     stroke_antialias);
+
+cairo_private cairo_status_t
 _cairo_surface_stroke (cairo_surface_t		*surface,
 		       cairo_operator_t		 op,
 		       cairo_pattern_t		*source,
@@ -1865,12 +1840,6 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	op,
 				     unsigned int	height,
 				     cairo_trapezoid_t	*traps,
 				     int		ntraps);
-
-cairo_private cairo_status_t
-_cairo_surface_copy_page (cairo_surface_t *surface);
-
-cairo_private cairo_status_t
-_cairo_surface_show_page (cairo_surface_t *surface);
 
 cairo_private cairo_status_t
 _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
@@ -2034,6 +2003,7 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface);
  * to support it (at least cairo_surface_write_to_png and a few spots
  * in cairo-xlib-surface.c--again see -Wswitch-enum).
  */
+#define CAIRO_FORMAT_INVALID ((unsigned int) -1)
 #define CAIRO_FORMAT_VALID(format) ((format) <= CAIRO_FORMAT_A1)
 
 #define CAIRO_CONTENT_VALID(content) ((content) && 			         \
@@ -2049,8 +2019,25 @@ cairo_private cairo_content_t
 _cairo_content_from_format (cairo_format_t format);
 
 cairo_private cairo_surface_t *
-_cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image,
-					      cairo_format_t  format);
+_cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
+					      pixman_format_code_t	 pixman_format);
+
+cairo_private pixman_format_code_t
+_pixman_format_from_masks (cairo_format_masks_t *masks);
+
+void
+_pixman_format_to_masks (pixman_format_code_t	 pixman_format,
+			 uint32_t		*bpp,
+			 uint32_t		*red,
+			 uint32_t		*green,
+			 uint32_t		*blue);
+
+cairo_private cairo_surface_t *
+_cairo_image_surface_create_with_pixman_format (unsigned char		*data,
+						pixman_format_code_t	 pixman_format,
+						int			 width,
+						int			 height,
+						int			 stride);
 
 cairo_private cairo_surface_t *
 _cairo_image_surface_create_with_masks (unsigned char	       *data,
@@ -2123,12 +2110,12 @@ _cairo_pen_add_points_for_slopes (cairo_pen_t *pen,
 				  cairo_point_t *c,
 				  cairo_point_t *d);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
 					cairo_slope_t *slope,
 					int *active);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_pen_find_active_ccw_vertex_index (cairo_pen_t *pen,
 					 cairo_slope_t *slope,
 					 int *active);
@@ -2475,6 +2462,8 @@ slim_hidden_proto (cairo_surface_mark_dirty_rectangle);
 slim_hidden_proto_no_warn (cairo_surface_reference);
 slim_hidden_proto (cairo_surface_set_device_offset);
 slim_hidden_proto (cairo_surface_set_fallback_resolution);
+slim_hidden_proto (cairo_surface_copy_page);
+slim_hidden_proto (cairo_surface_show_page);
 slim_hidden_proto (cairo_surface_status);
 slim_hidden_proto (cairo_version_string);
 
@@ -2485,5 +2474,10 @@ slim_hidden_proto (cairo_surface_write_to_png_stream);
 #endif
 
 CAIRO_END_DECLS
+
+#include "cairo-mutex-private.h"
+#include "cairo-wideint-private.h"
+#include "cairo-malloc-private.h"
+#include "cairo-hash-private.h"
 
 #endif

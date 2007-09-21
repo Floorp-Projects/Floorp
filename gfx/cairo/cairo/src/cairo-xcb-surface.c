@@ -2087,45 +2087,9 @@ _cairo_xcb_surface_add_glyph (xcb_connection_t *dpy,
 	    goto BAIL;
     }
 
-    /*
-     *  Most of the font rendering system thinks of glyph tiles as having
-     *  an origin at (0,0) and an x and y bounding box "offset" which
-     *  extends possibly off into negative coordinates, like so:
-     *
-     *
-     *       (x,y) <-- probably negative numbers
-     *         +----------------+
-     *         |      .         |
-     *         |      .         |
-     *         |......(0,0)     |
-     *         |                |
-     *         |                |
-     *         +----------------+
-     *                  (width+x,height+y)
-     *
-     *  This is a postscript-y model, where each glyph has its own
-     *  coordinate space, so it's what we expose in terms of metrics. It's
-     *  apparently what everyone's expecting. Everyone except the Render
-     *  extension. Render wants to see a glyph tile starting at (0,0), with
-     *  an origin offset inside, like this:
-     *
-     *       (0,0)
-     *         +---------------+
-     *         |      .        |
-     *         |      .        |
-     *         |......(x,y)    |
-     *         |               |
-     *         |               |
-     *         +---------------+
-     *                   (width,height)
-     *
-     *  Luckily, this is just the negation of the numbers we already have
-     *  sitting around for x and y.
-     */
-
     /* XXX: FRAGILE: We're ignore device_transform scaling here. A bug? */
-    glyph_info.x = - _cairo_lround (glyph_surface->base.device_transform.x0);
-    glyph_info.y = - _cairo_lround (glyph_surface->base.device_transform.y0);
+    glyph_info.x = _cairo_lround (glyph_surface->base.device_transform.x0);
+    glyph_info.y = _cairo_lround (glyph_surface->base.device_transform.y0);
     glyph_info.width = glyph_surface->width;
     glyph_info.height = glyph_surface->height;
     glyph_info.x_off = 0;

@@ -157,7 +157,7 @@ _cairo_glitz_get_boxes_from_region (cairo_region_t *region, int *nboxes)
     glitz_box_t *gboxes;
     int n, i;
 
-    if (_cairo_region_get_boxes (&surface->clip, &n, &cboxes) != CAIRO_STATUS_SUCCESS)
+    if (_cairo_region_get_boxes (region, &n, &cboxes) != CAIRO_STATUS_SUCCESS)
         return NULL;
 
     *nboxes = n;
@@ -176,7 +176,7 @@ _cairo_glitz_get_boxes_from_region (cairo_region_t *region, int *nboxes)
     }
 
 done:
-    _cairo_region_boxes_fini (&sruface->clip, &cboxes);
+    _cairo_region_boxes_fini (region, cboxes);
     return gboxes;
 }
 
@@ -803,10 +803,10 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	for (i = 0; i < gradient->n_stops; i++)
 	{
 	    pixels[i] =
-		(((int) (gradient->stops[i].color.alpha >> 8)) << 24) |
-		(((int) (gradient->stops[i].color.red   >> 8)) << 16) |
-		(((int) (gradient->stops[i].color.green >> 8)) << 8)  |
-		(((int) (gradient->stops[i].color.blue  >> 8)));
+		(((int) (gradient->stops[i].color.alpha_short >> 8)) << 24) |
+		(((int) (gradient->stops[i].color.red_short   >> 8)) << 16) |
+		(((int) (gradient->stops[i].color.green_short >> 8)) << 8)  |
+		(((int) (gradient->stops[i].color.blue_short  >> 8)));
 
 	    params[n_base_params + 3 * i + 0] = gradient->stops[i].x;
 	    params[n_base_params + 3 * i + 1] = i << 16;
@@ -834,10 +834,10 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 
 	    params[0] = grad->c1.x;
 	    params[1] = grad->c1.y;
-	    params[2] = grad->radius1;
+	    params[2] = grad->r1;
 	    params[3] = grad->c2.x;
 	    params[4] = grad->c2.y;
-	    params[5] = grad->radius2;
+	    params[5] = grad->r2;
 	    attr->filter = GLITZ_FILTER_RADIAL_GRADIENT;
 	}
 
@@ -1430,12 +1430,11 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 
 static cairo_int_status_t
 _cairo_glitz_surface_set_clip_region (void		*abstract_surface,
-                                      cairo_region_t	*region);
+                                      cairo_region_t	*region)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
 
     if (region)
-
     {
 	glitz_box_t *box;
 	int	    n;
@@ -2203,8 +2202,8 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 		x_offset = scaled_glyphs[i]->surface->base.device_transform.x0;
 		y_offset = scaled_glyphs[i]->surface->base.device_transform.y0;
 
-		x1 = _cairo_lround (glyphs[i].x) + x_offset;
-		y1 = _cairo_lround (glyphs[i].y) + y_offset;
+		x1 = _cairo_lround (glyphs[i].x - x_offset);
+		y1 = _cairo_lround (glyphs[i].y - y_offset);
 		x2 = x1 + glyph_private->area->width;
 		y2 = y1 + glyph_private->area->height;
 
@@ -2247,8 +2246,8 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 
 		x_offset = scaled_glyphs[i]->surface->base.device_transform.x0;
 		y_offset = scaled_glyphs[i]->surface->base.device_transform.y0;
-		x1 = _cairo_lround (glyphs[i].x) + x_offset;
-		y1 = _cairo_lround (glyphs[i].y) + y_offset;
+		x1 = _cairo_lround (glyphs[i].x - x_offset);
+		y1 = _cairo_lround (glyphs[i].y - y_offset);
 
 		glitz_composite (_glitz_operator (op),
 				 src->surface,

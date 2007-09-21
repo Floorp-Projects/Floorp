@@ -799,8 +799,8 @@ LoginManagerStorage_legacy.prototype = {
                 break;
 
             // If decryption failed (corrupt entry?) skip it.
-            // XXX remove it from the original list entirely?
-            if (!username || !password)
+            // Note that we allow password-only logins, so username con be "".
+            if (username == null || !password)
                 continue;
 
             // We could set the decrypted values on a copy of the object, to
