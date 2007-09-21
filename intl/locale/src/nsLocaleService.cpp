@@ -267,7 +267,7 @@ nsLocaleService::nsLocaleService(void)
 
     nsAutoTArray<UniChar, 32> buffer;
     int size = ::CFStringGetLength(userLocaleStr);
-    if (buffer.SetLength(size))
+    if (buffer.SetLength(size + 1))
     {
         CFRange range = ::CFRangeMake(0, size);
         ::CFStringGetCharacters(userLocaleStr, range, buffer.Elements());
