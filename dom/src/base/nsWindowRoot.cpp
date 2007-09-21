@@ -54,49 +54,10 @@
 #include "nsString.h"
 #include "nsEventDispatcher.h"
 #include "nsIProgrammingLanguage.h"
-#include "nsIObserverService.h"
-#include "nsServiceManagerUtils.h"
-#include "nsITimer.h"
+
 #include "nsCycleCollectionParticipant.h"
 
-#define NS_USER_INTERACTION_INTERVAL 5000 // ms
-
 static NS_DEFINE_CID(kEventListenerManagerCID,    NS_EVENTLISTENERMANAGER_CID);
-static PRUint32 gMouseOrKeyboardEventCounter = 0;
-static PRUint32 gWindowRootCount = 0;
-static nsITimer* gUserInteractionTimer = nsnull;
-static nsITimerCallback* gUserInteractionTimerCallback = nsnull;
-
-class nsUITimerCallback : public nsITimerCallback
-{
-public:
-  nsUITimerCallback() : mPreviousCount(0) {}
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSITIMERCALLBACK
-private:
-  PRUint32 mPreviousCount;
-};
-
-NS_IMPL_ISUPPORTS1(nsUITimerCallback, nsITimerCallback)
-
-// If aTimer is nsnull, this method always sends "user-interaction-inactive"
-// notification.
-NS_IMETHODIMP
-nsUITimerCallback::Notify(nsITimer* aTimer)
-{
-  nsresult rv;
-  nsCOMPtr<nsIObserverService> obs =
-      do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if ((gMouseOrKeyboardEventCounter == mPreviousCount) || !aTimer) {
-    gMouseOrKeyboardEventCounter = 0;
-    obs->NotifyObservers(nsnull, "user-interaction-inactive", nsnull);
-  } else {
-    obs->NotifyObservers(nsnull, "user-interaction-active", nsnull);
-  }
-  mPreviousCount = gMouseOrKeyboardEventCounter;
-  return NS_OK;
-}
 
 nsWindowRoot::nsWindowRoot(nsIDOMWindow* aWindow)
 {
@@ -110,38 +71,12 @@ nsWindowRoot::nsWindowRoot(nsIDOMWindow* aWindow)
   AddEventListener(NS_LITERAL_STRING("focus"), focusListener, PR_TRUE);
   AddEventListener(NS_LITERAL_STRING("blur"), focusListener, PR_TRUE);
   mRefCnt.decr(static_cast<nsIDOMEventTarget*>(this));
-
-  if (gWindowRootCount == 0) {
-    gUserInteractionTimerCallback = new nsUITimerCallback();
-    if (gUserInteractionTimerCallback) {
-      NS_ADDREF(gUserInteractionTimerCallback);
-      CallCreateInstance("@mozilla.org/timer;1", &gUserInteractionTimer);
-      if (gUserInteractionTimer) {
-        gUserInteractionTimer->InitWithCallback(gUserInteractionTimerCallback,
-                                                NS_USER_INTERACTION_INTERVAL,
-                                                nsITimer::TYPE_REPEATING_SLACK);
-      }
-    }
-  }
-  ++gWindowRootCount;
 }
 
 nsWindowRoot::~nsWindowRoot()
 {
   if (mListenerManager) {
     mListenerManager->Disconnect();
-  }
-
-  --gWindowRootCount;
-  if (gWindowRootCount == 0) {
-    if (gUserInteractionTimerCallback) {
-      gUserInteractionTimerCallback->Notify(nsnull);
-      NS_RELEASE(gUserInteractionTimerCallback);
-    }
-    if (gUserInteractionTimer) {
-      gUserInteractionTimer->Cancel();
-      NS_RELEASE(gUserInteractionTimer);
-    }
   }
 }
 
@@ -312,21 +247,6 @@ nsWindowRoot::PreHandleEvent(nsEventChainPreVisitor& aVisitor)
   aVisitor.mForceContentDispatch = PR_TRUE; //FIXME! Bug 329119
   // To keep mWindow alive
   aVisitor.mItemData = mWindow;
-  if (NS_IS_TRUSTED_EVENT(aVisitor.mEvent) &&
-      ((aVisitor.mEvent->eventStructType == NS_MOUSE_EVENT  &&
-        static_cast<nsMouseEvent*>(aVisitor.mEvent)->reason ==
-          nsMouseEvent::eReal) ||
-       aVisitor.mEvent->eventStructType == NS_MOUSE_SCROLL_EVENT ||
-       aVisitor.mEvent->eventStructType == NS_KEY_EVENT)) {
-    if (gMouseOrKeyboardEventCounter == 0) {
-      nsCOMPtr<nsIObserverService> obs =
-        do_GetService("@mozilla.org/observer-service;1");
-      if (obs) {
-        obs->NotifyObservers(nsnull, "user-interaction-active", nsnull);
-      }
-    }
-    ++gMouseOrKeyboardEventCounter;
-  }
   return NS_OK;
 }
 
