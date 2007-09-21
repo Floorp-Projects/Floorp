@@ -150,7 +150,6 @@ function plInit() {
                      browserWindow.focus();
 
                      content = browserWindow.getBrowser();
-                     content.addEventListener('load', plLoadHandler, true);
                      setTimeout(plLoadPage, 100);
                    }, 500);
       };
@@ -182,7 +181,7 @@ function plLoadPage() {
     removeLastAddedListener();
 
   if (plPageFlags() & TEST_DOES_OWN_TIMING) {
-    // if the page does its own timing, use a capturig handler
+    // if the page does its own timing, use a capturing handler
     // to make sure that we can set up the function for content to call
     content.addEventListener('load', plLoadHandlerCapturing, true);
     removeLastAddedListener = function() {
