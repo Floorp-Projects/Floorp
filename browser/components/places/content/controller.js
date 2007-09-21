@@ -632,7 +632,8 @@ PlacesController.prototype = {
     // Set Open Folder/Links In Tabs items enabled state if they're visible
     if (anyVisible) {
       var openContainerInTabsItem = document.getElementById("placesContext_openContainer:tabs");
-      if (!openContainerInTabsItem.hidden) {
+      if (!openContainerInTabsItem.hidden && this._view.selectedNode &&
+          PlacesUtils.nodeIsContainer(this._view.selectedNode)) {
         openContainerInTabsItem.disabled =
           PlacesUtils.getURLsForContainerNode(this._view.selectedNode)
                      .length == 0;
