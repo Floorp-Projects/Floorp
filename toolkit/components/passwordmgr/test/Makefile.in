@@ -57,6 +57,7 @@ MOCHI_TESTS = \
 		test_basic_form_2pw_2.html \
 		test_basic_form_3pw_1.html \
 		test_basic_form_autocomplete.html \
+		test_basic_form_pwonly.html \
 		test_bug_227640.html \
 		test_bug_242956.html \
 		test_bug_360493_1.html \
