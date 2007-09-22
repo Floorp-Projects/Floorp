@@ -2045,8 +2045,9 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!ts) {
         ok = JS_FALSE;
     } else {
-        ok = js_CompileFunctionBody(cx, ts, fun) &&
-             js_CloseTokenStream(cx, ts);
+        /* Note: We must *always* close ts. */
+        ok = js_CompileFunctionBody(cx, ts, fun);
+        ok &= js_CloseTokenStream(cx, ts);
     }
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     return ok;
