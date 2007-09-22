@@ -395,6 +395,7 @@ nsFrame::Init(nsIContent*      aContent,
               nsIFrame*        aParent,
               nsIFrame*        aPrevInFlow)
 {
+  NS_PRECONDITION(!mContent, "Double-initing a frame?");
   NS_ASSERTION(IsFrameOfType(eDEBUGAllFrames) &&
                !IsFrameOfType(eDEBUGNoFrames),
                "IsFrameOfType implementation that doesn't call base class");

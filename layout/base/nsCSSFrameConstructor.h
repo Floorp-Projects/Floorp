@@ -484,12 +484,11 @@ private:
 
 protected:
   static nsresult CreatePlaceholderFrameFor(nsIPresShell*    aPresShell, 
-                                            nsPresContext*  aPresContext,
-                                            nsFrameManager*  aFrameManager,
                                             nsIContent*      aContent,
                                             nsIFrame*        aFrame,
                                             nsStyleContext*  aStyleContext,
                                             nsIFrame*        aParentFrame,
+                                            nsIFrame*        aPrevInFlow,
                                             nsIFrame**       aPlaceholderFrame);
 
 private:
