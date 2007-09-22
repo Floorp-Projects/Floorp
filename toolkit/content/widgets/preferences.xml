@@ -52,7 +52,7 @@
             aPreference.dispatchEvent(event);
           }
           catch (e) {
-            dump(e);
+            Components.utils.reportError(e);
           }
         ]]>
         </body>
@@ -373,7 +373,7 @@
               rv = f(event);
             }
             catch (e) {
-              dump(e);
+              Components.utils.reportError(e);
             }
           }
           var val = rv !== undefined ? rv : (this.instantApply ? this.valueFromPreferences : this.value);
@@ -424,7 +424,7 @@
                 return rv;
             }
             catch (e) {
-              dump(e);
+              Components.utils.reportError(e);
             }
           }
           
