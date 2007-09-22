@@ -40,7 +40,7 @@
 #include "nsISupports.idl"
 #include "nsIObserver.idl"
 
-[scriptable, uuid(3A3C2953-01EE-4D9C-A102-5AA0D7BD444C)]
+[scriptable, uuid(33d256d8-c002-4840-af73-811b2ec20079)]
 interface nsIAlertsService : nsISupports
 {
    /**
@@ -70,7 +70,8 @@ interface nsIAlertsService : nsISupports
                               in AString  text, 
                               in boolean  textClickable,
                               in AString  cookie,
-                              in nsIObserver alertListener); 
+                              in nsIObserver alertListener,
+                              in AString name);
 };
 
 %{ C++
