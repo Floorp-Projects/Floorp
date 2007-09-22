@@ -1225,7 +1225,8 @@ void nsDownload::DisplayDownloadFinishedAlert()
   mTarget->GetSpec(url);
   alertsService->ShowAlertNotification(NS_LITERAL_STRING("moz-icon://") + NS_ConvertUTF8toUTF16(url),
                                        finishedTitle, finishedText, PR_TRUE,
-                                       NS_LITERAL_STRING("download"), this);
+                                       NS_LITERAL_STRING("download"), this,
+                                       EmptyString());
 }
 
 NS_IMETHODIMP
