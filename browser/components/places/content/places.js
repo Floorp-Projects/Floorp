@@ -85,6 +85,19 @@ var PlacesOrganizer = {
 
     // Set up the advanced query builder UI
     PlacesQueryBuilder.init();
+
+#ifdef XP_MACOSX
+    // 1. Make Edit->Find focus the organizer search field
+    var findCommand = document.getElementById("cmd_find");
+    findCommand.setAttribute("oncommand", "PlacesSearchBox.findCurrent();");
+    findCommand.removeAttribute("disabled");
+
+    // 2. Disable some keybindings from browser.xul
+    var elements = ["cmd_handleBackspace", "cmd_handleShiftBackspace"];
+    for (var i=0; i < elements.length; i++) {
+      document.getElementById(elements[i]).setAttribute("disabled", "true");
+    }
+#endif
   },
 
   destroy: function PO_destroy() {
