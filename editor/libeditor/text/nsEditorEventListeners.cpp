@@ -524,25 +524,21 @@ nsresult
 nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 {
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (!presShell)
+    return NS_OK;
+
   if (!mCaret)
   {
-    if (presShell)
+    mCaret = do_CreateInstance("@mozilla.org/layout/caret;1");
+    if (mCaret)
     {
-      mCaret = do_CreateInstance("@mozilla.org/layout/caret;1");
-      if (mCaret)
-      {
-        mCaret->Init(presShell);
-        mCaret->SetCaretReadOnly(PR_TRUE);
-
-        mOtherCaret = presShell->SetCaret(mCaret);
-      }
-      mCaretDrawn = PR_FALSE;
+      mCaret->Init(presShell);
+      mCaret->SetCaretReadOnly(PR_TRUE);
     }
+    mCaretDrawn = PR_FALSE;
   }
-  else if (presShell)
-  {
-    presShell->SetCaret(mCaret);
-  }
+
+  presShell->SetCaret(mCaret);
 
   return DragOver(aDragEvent);
 }
@@ -644,11 +640,8 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
     nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
     if (presShell)
     {
-      NS_ASSERTION(mOtherCaret, "Where'd my other caret go?");
-      mCaret = presShell->SetCaret(mOtherCaret);
+      presShell->RestoreCaret();
     }
-
-    mOtherCaret = mCaret = nsnull;
   }
 
   if (!mEditor)

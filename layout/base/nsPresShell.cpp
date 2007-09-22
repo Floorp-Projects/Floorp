@@ -917,7 +917,8 @@ public:
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
   NS_IMETHOD SetCaretVisibilityDuringSelection(PRBool aVisibility);
-  virtual already_AddRefed<nsICaret> SetCaret(nsICaret *aNewCaret);
+  virtual void SetCaret(nsICaret *aNewCaret);
+  virtual void RestoreCaret();
 
   NS_IMETHOD SetSelectionFlags(PRInt16 aInEnable);
   NS_IMETHOD GetSelectionFlags(PRInt16 *aOutEnable);
@@ -1130,6 +1131,7 @@ protected:
   nsCOMArray<nsIContent> mCurrentEventContentStack;
 
   nsCOMPtr<nsICaret>            mCaret;
+  nsCOMPtr<nsICaret>            mOriginalCaret;
   PRInt16                       mSelectionFlags;
   FrameArena                    mFrameArena;
   StackArena                    mStackArena;
@@ -1498,6 +1500,7 @@ PresShell::Init(nsIDocument* aDocument,
   if (NS_SUCCEEDED(err))
   {
     mCaret->Init(this);
+    mOriginalCaret = mCaret;
   }
 
   //SetCaretEnabled(PR_TRUE);       // make it show in browser windows
@@ -2616,12 +2619,14 @@ NS_IMETHODIMP_(void) PresShell::MaybeInvalidateCaretPosition()
   }
 }
 
-already_AddRefed<nsICaret> PresShell::SetCaret(nsICaret *aNewCaret)
+void PresShell::SetCaret(nsICaret *aNewCaret)
 {
-  nsICaret *oldCaret = nsnull;
-  mCaret.swap(oldCaret);
   mCaret = aNewCaret;
-  return oldCaret;
+}
+
+void PresShell::RestoreCaret()
+{
+  mCaret = mOriginalCaret;
 }
 
 NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)

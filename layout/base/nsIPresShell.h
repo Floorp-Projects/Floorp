@@ -102,10 +102,10 @@ class gfxContext;
 typedef short SelectionType;
 typedef PRUint32 nsFrameState;
 
-// D93B931B-D5EF-4D3C-AB99-444176963464
+// 4BE324F2-FB22-47CD-A653-19C70EE55E3F
 #define NS_IPRESSHELL_IID \
-{ 0xd93b931b, 0xd5ef, 0x4d3c, \
-  { 0xab, 0x99, 0x44, 0x41, 0x76, 0x96, 0x34, 0x64 } }
+{ 0x4BE324F2, 0xFB22, 0x47CD, \
+  { 0xA6, 0x53, 0x19, 0xC7, 0x0E, 0xE5, 0x5E, 0x3F } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -495,9 +495,15 @@ public:
   NS_IMETHOD_(void) MaybeInvalidateCaretPosition() = 0;
 
   /**
-   * Set the current caret to a new caret. Returns the old caret.
+   * Set the current caret to a new caret. To undo this, call RestoreCaret.
    */
-  virtual already_AddRefed<nsICaret> SetCaret(nsICaret *aNewCaret) = 0;
+  virtual void SetCaret(nsICaret *aNewCaret) = 0;
+
+  /**
+   * Restore the caret to the original caret that this pres shell was created
+   * with.
+   */
+  virtual void RestoreCaret() = 0;
 
   /**
    * Should the images have borders etc.  Actual visual effects are determined
