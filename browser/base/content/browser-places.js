@@ -140,7 +140,7 @@ var PlacesCommandHook = {
 
     gEditItemOverlay.initPanel(aItemId,
                                { hiddenRows: ["description", "location",
-                                              "loadInSidebar"] });
+                                              "loadInSidebar", "keyword"] });
     setTimeout(function() {
                  var namePicker = document.getElementById("editBMPanel_namePicker");
                  namePicker.focus();
