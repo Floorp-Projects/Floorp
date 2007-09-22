@@ -49,7 +49,7 @@ class NS_COM_GLUE nsTObserverArray_base {
       protected:
         friend class nsTObserverArray_base;
 
-        Iterator_base(PRInt32 aPosition, nsTObserverArray_base& aArray)
+        Iterator_base(PRInt32 aPosition, const nsTObserverArray_base& aArray)
           : mPosition(aPosition),
             mNext(aArray.mIterators),
             mArray(aArray) {
@@ -80,7 +80,7 @@ class NS_COM_GLUE nsTObserverArray_base {
         Iterator_base* mNext;
 
         // The array we're iterating
-        nsTObserverArray_base& mArray;
+        const nsTObserverArray_base& mArray;
     };
 
     /**
@@ -104,7 +104,7 @@ class NS_COM_GLUE nsTObserverArray_base {
      */
     void AdjustIterators(PRInt32 aModPos, PRInt32 aAdjustment);
 
-    Iterator_base* mIterators;
+    mutable Iterator_base* mIterators;
     nsVoidArray mObservers;
 };
 
@@ -182,7 +182,7 @@ class nsTObserverArray : public nsTObserverArray_base {
     // to GetNext
     class ForwardIterator : public nsTObserverArray_base::Iterator_base {
       public:
-        ForwardIterator(nsTObserverArray<T>& aArray)
+        ForwardIterator(const nsTObserverArray<T>& aArray)
           : Iterator_base(0, aArray) {
         }
 
