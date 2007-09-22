@@ -409,7 +409,7 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
       textRun->DrawToPath(gfx, mPosition, 0, text.Length(), nsnull, nsnull);
     } else {
       gfxTextRun::Metrics metrics =
-        textRun->MeasureText(0, text.Length(), PR_FALSE, nsnull);
+        textRun->MeasureText(0, text.Length(), PR_FALSE, nsnull, nsnull);
       gfx->Rectangle(metrics.mBoundingBox + mPosition);
     }
   } else {
@@ -434,7 +434,7 @@ nsSVGGlyphFrame::UpdateCoveredRegion()
         gfx->Rotate(cp[i].angle);
 
         gfxTextRun::Metrics metrics =
-          textRun->MeasureText(i, 1, PR_FALSE, nsnull);
+          textRun->MeasureText(i, 1, PR_FALSE, nsnull, nsnull);
 
         gfx->Rectangle(metrics.mBoundingBox + gfx->CurrentPoint());
       }
@@ -867,7 +867,7 @@ nsSVGGlyphFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
     return NS_ERROR_OUT_OF_MEMORY;
 
   gfxTextRun::Metrics metrics =
-    textRun->MeasureText(charnum, 1, PR_FALSE, nsnull);
+    textRun->MeasureText(charnum, 1, PR_FALSE, nsnull, nsnull);
 
   if (cp) {
     if (cp[charnum].draw == PR_FALSE) {
@@ -943,7 +943,7 @@ nsSVGGlyphFrame::GetBaselineOffset(PRUint16 baselineIdentifier)
     return 0.0f;
 
   gfxTextRun::Metrics metrics =
-    textRun->MeasureText(0, text.Length(), PR_FALSE, nsnull);
+    textRun->MeasureText(0, text.Length(), PR_FALSE, nsnull, nsnull);
 
   switch (baselineIdentifier) {
   case BASELINE_HANGING:
@@ -1171,7 +1171,7 @@ nsSVGGlyphFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
     }
 
     gfxTextRun::Metrics metrics =
-      textRun->MeasureText(charnum, 1, PR_FALSE, nsnull);
+      textRun->MeasureText(charnum, 1, PR_FALSE, nsnull, nsnull);
 
     gfx->Rectangle(metrics.mBoundingBox + gfx->CurrentPoint());
 
@@ -1293,7 +1293,7 @@ nsSVGGlyphFrame::ContainsPoint(float x, float y)
     }
 
     gfxTextRun::Metrics metrics =
-      textRun->MeasureText(i, 1, PR_FALSE, nsnull);
+      textRun->MeasureText(i, 1, PR_FALSE, nsnull, nsnull);
 
     gfx->Rectangle(metrics.mBoundingBox + gfx->CurrentPoint());
 
