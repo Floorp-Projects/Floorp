@@ -657,25 +657,17 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     return JS_FALSE;
   }
 
-  if (checkProto && JS_GetPrototype(cx, wrappedObj) != proto) {
-    // Ensure that this __proto__ setting didn't create a cycle. The JS
-    // engine tries to do this, but XOWs confuse it. So here we deal with
-    // them by unwrapping each step up the prototype chain.
+  JSObject *newProto;
+  if (checkProto &&
+      (newProto = JS_GetPrototype(cx, wrappedObj)) != proto &&
+      newProto) {
+    // __proto__ setting is a bad hack, people shouldn't do it. In the
+    // interests of sanity, only allow them to set XOW wrapped protos
+    // to null.
 
-    JSObject *oldProto = proto;
-    proto = wrappedObj;
-    while ((proto = JS_GetPrototype(cx, proto)) != nsnull) {
-      JSObject *unwrapped = GetWrappedObject(cx, proto);
-      if (unwrapped) {
-        proto = unwrapped;
-      }
-
-      if (proto == wrappedObj) {
-        JS_SetPrototype(cx, wrappedObj, oldProto);
-        JS_ReportError(cx, "cyclic __proto__ value");
-        return JS_FALSE;
-      }
-    }
+    JS_SetPrototype(cx, wrappedObj, proto);
+    JS_ReportError(cx, "invalid __proto__ value (can only be set to null)");
+    return JS_FALSE;
   }
 
   return WrapSameOriginProp(cx, obj, vp);
