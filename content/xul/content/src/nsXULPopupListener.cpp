@@ -294,23 +294,13 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
 
     if (focusableContent) {
       // Lock to scroll by SetFocus. See bug 309075.
-      nsCOMPtr<nsIFocusController> focusController = nsnull;
-      PRBool isAlreadySuppressed = PR_FALSE;
+      nsFocusScrollSuppressor scrollSuppressor;
       nsPIDOMWindow *ourWindow = doc->GetWindow();
       if (ourWindow) {
-        focusController = ourWindow->GetRootFocusController();
-        if (focusController) {
-          focusController->GetSuppressFocusScroll(&isAlreadySuppressed);
-          if (!isAlreadySuppressed)
-            focusController->SetSuppressFocusScroll(PR_TRUE);
-        }
+        scrollSuppressor.Init(ourWindow->GetRootFocusController());
       }
 
       focusableContent->SetFocus(context);
-
-      // Unlock scroll if it's needed.
-      if (focusController && !isAlreadySuppressed)
-        focusController->SetSuppressFocusScroll(PR_FALSE);
     } else if (!suppressBlur)
       esm->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
 
