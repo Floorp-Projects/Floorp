@@ -99,7 +99,6 @@ typedef struct {
     HFONT scaled_hfont;
     HFONT unscaled_hfont;
 
-    cairo_bool_t is_truetype;
     cairo_bool_t glyph_indexing;
 
     cairo_bool_t delete_scaled_hfont;
@@ -745,11 +744,11 @@ _cairo_win32_scaled_font_set_metrics (cairo_win32_scaled_font_t *scaled_font)
 
     }
 
-    scaled_font->is_truetype = (metrics.tmPitchAndFamily & TMPF_TRUETYPE) != 0;
-    scaled_font->glyph_indexing = scaled_font->is_truetype ||
-        (GetFontData (hdc, OPENTYPE_CFF_TAG, 0, NULL, 0) != GDI_ERROR);
-    // XXX in what situations does this OPENTYPE_CFF thing not have the
-    // TMPF_TRUETYPE flag? GetFontData says it only works on Truetype fonts...
+    if ((metrics.tmPitchAndFamily & TMPF_TRUETYPE) ||
+        (GetFontData (hdc, OPENTYPE_CFF_TAG, 0, NULL, 0) != GDI_ERROR))
+        scaled_font->glyph_indexing = TRUE;
+    else
+        scaled_font->glyph_indexing = FALSE;
 
     _cairo_scaled_font_set_metrics (&scaled_font->base, &extents);
 
@@ -765,35 +764,18 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
     cairo_status_t status;
     cairo_text_extents_t extents;
     HDC hdc;
+    UINT glyph_index_option;
 
     hdc = _get_global_font_dc ();
     if (!hdc)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    if (!scaled_font->is_truetype) {
-        /* GetGlyphOutline will not work. Assume that the glyph does not extend outside the font box. */
-        cairo_font_extents_t font_extents;
-        INT width = 0;
-        UINT charIndex =  _cairo_scaled_glyph_index (scaled_glyph);
+    if (scaled_font->glyph_indexing)
+        glyph_index_option = GGO_GLYPH_INDEX;
+    else
+        glyph_index_option = 0;
 
-        cairo_scaled_font_extents (&scaled_font->base, &font_extents);
-
-        status = cairo_win32_scaled_font_select_font (&scaled_font->base, hdc);
-        if (!status) {
-            if (!GetCharWidth32(hdc, charIndex, charIndex, &width)) {
-                status = _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_init_glyph_metrics:GetCharWidth32");
-                width = 0;
-            }
-        }
-        cairo_win32_scaled_font_done_font (&scaled_font->base);
-
-        extents.x_bearing = 0;
-        extents.y_bearing = -font_extents.ascent / scaled_font->y_scale;
-        extents.width = width / scaled_font->x_scale;
-        extents.height = (font_extents.ascent + font_extents.descent) / scaled_font->y_scale;
-        extents.x_advance = extents.width;
-        extents.y_advance = 0;
-    } else if (scaled_font->preserve_axes && scaled_font->base.options.hint_style != CAIRO_HINT_METRICS_OFF) {
+    if (scaled_font->preserve_axes && scaled_font->base.options.hint_style != CAIRO_HINT_METRICS_OFF) {
 	/* If we aren't rotating / skewing the axes, then we get the metrics
 	 * from the GDI in device space and convert to font space.
 	 */
@@ -801,7 +783,7 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
 	if (status)
 	    return status;
 	if (GetGlyphOutlineW (hdc, _cairo_scaled_glyph_index (scaled_glyph),
-			      GGO_METRICS | GGO_GLYPH_INDEX,
+			      GGO_METRICS | glyph_index_option,
 			      &metrics, 0, NULL, &matrix) == GDI_ERROR) {
 	  status = _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_init_glyph_metrics:GetGlyphOutlineW");
 	  memset (&metrics, 0, sizeof (GLYPHMETRICS));
@@ -840,7 +822,7 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
 	 */
 	status = _cairo_win32_scaled_font_select_unscaled_font (&scaled_font->base, hdc);
 	if (GetGlyphOutlineW (hdc, _cairo_scaled_glyph_index (scaled_glyph),
-	                      GGO_METRICS | GGO_GLYPH_INDEX,
+			      GGO_METRICS | glyph_index_option,
 			      &metrics, 0, NULL, &matrix) == GDI_ERROR) {
 	  status = _cairo_win32_print_gdi_error ("_cairo_win32_scaled_font_init_glyph_metrics:GetGlyphOutlineW");
 	  memset (&metrics, 0, sizeof (GLYPHMETRICS));

@@ -828,7 +828,6 @@ gfxPangoFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
         AppendUTF16toUTF8(unicodeString, utf8);
         InitTextRun(run, utf8.get(), utf8.Length(), headerLen, PR_TRUE);
     }
-    run->FetchGlyphExtents(aParams->mContext);
     return run;
 }
 
@@ -867,7 +866,6 @@ gfxPangoFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
     }
 #endif
     InitTextRun(run, utf8.get(), utf8.Length(), headerLen, is8Bit);
-    run->FetchGlyphExtents(aParams->mContext);
     return run;
 }
 
@@ -918,11 +916,10 @@ CreateScaledFont(cairo_t *aCR, cairo_matrix_t *aCTM, PangoFont *aPangoFont)
 }
 
 PRBool
-gfxPangoFont::SetupCairoFont(gfxContext *aContext)
+gfxPangoFont::SetupCairoFont(cairo_t *aCR)
 {
-    cairo_t *cr = aContext->GetCairo();
     cairo_matrix_t currentCTM;
-    cairo_get_matrix(cr, &currentCTM);
+    cairo_get_matrix(aCR, &currentCTM);
 
     if (mCairoFont) {
         // Need to validate that its CTM is OK
@@ -936,14 +933,14 @@ gfxPangoFont::SetupCairoFont(gfxContext *aContext)
         }
     }
     if (!mCairoFont) {
-        mCairoFont = CreateScaledFont(cr, &currentCTM, GetPangoFont());
+        mCairoFont = CreateScaledFont(aCR, &currentCTM, GetPangoFont());
     }
     if (cairo_scaled_font_status(mCairoFont) != CAIRO_STATUS_SUCCESS) {
         // Don't cairo_set_scaled_font as that would propagate the error to
         // the cairo_t, precluding any further drawing.
         return PR_FALSE;
     }
-    cairo_set_scaled_font(cr, mCairoFont);
+    cairo_set_scaled_font(aCR, mCairoFont);
     return PR_TRUE;
 }
 
