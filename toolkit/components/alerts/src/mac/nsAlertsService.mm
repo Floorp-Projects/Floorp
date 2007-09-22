@@ -67,16 +67,16 @@ struct GrowlDelegateWrapper
   }
 };
 
-////////////////////////////////////////////////////////////////////////////////
-//// NS_DispatchNamedNotification
-
-nsresult
-NS_DispatchNamedNotification(const nsAString &aName,
-                             const nsAString &aImage,
-                             const nsAString &aTitle,
-                             const nsAString &aMessage,
-                             const nsAString &aCookie,
-                             nsIObserver *aListener)
+/**
+ * Helper function to dispatch a notification to Growl
+ */
+static nsresult
+DispatchNamedNotification(const nsAString &aName,
+                          const nsAString &aImage,
+                          const nsAString &aTitle,
+                          const nsAString &aMessage,
+                          const nsAString &aCookie,
+                          nsIObserver *aListener)
 {
   if ([GrowlApplicationBridge isGrowlInstalled] == NO ||
       [GrowlApplicationBridge isGrowlRunning] == NO)
@@ -156,10 +156,16 @@ nsAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
                                        const nsAString& aAlertText,
                                        PRBool aAlertClickable,
                                        const nsAString& aAlertCookie,
-                                       nsIObserver* aAlertListener)
+                                       nsIObserver* aAlertListener,
+                                       const nsAString& aAlertName)
 {
   NS_ASSERTION(mDelegate->delegate == [GrowlApplicationBridge growlDelegate],
                "Growl Delegate was not registered properly.");
+
+  if (!aAlertName.IsEmpty()) {
+    return DispatchNamedNotification(aAlertTitle, aImageUrl, aAlertTitle,
+                                     aAlertText, aAlertCookie, aAlertListener);
+  }
 
   nsresult rv;
   nsCOMPtr<nsIStringBundleService> bundleService =
@@ -179,8 +185,8 @@ nsAlertsService::ShowAlertNotification(const nsAString& aImageUrl,
     }
   }
 
-  return NS_DispatchNamedNotification(name, aImageUrl, aAlertTitle,
-                                      aAlertText, aAlertCookie, aAlertListener);
+  return DispatchNamedNotification(name, aImageUrl, aAlertTitle,
+                                   aAlertText, aAlertCookie, aAlertListener);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -42,24 +42,6 @@
 
 struct GrowlDelegateWrapper;
 
-/**
- * Helper function to allow for C++ to dispatch named notifications.
- *
- * @param aName The name of the notification to dispatch to Growl.
- * @param aImage The image to display in the notification.
- * @param aTitle The text of the title of the notification.
- * @param aMessage The message body of the notification.
- * @param aCookie The cookie string that will be passed back to the observer.
- * @param aListener The nsIObserver that will receive callbacks from Growl.
- */
-nsresult
-NS_DispatchNamedNotification(const nsAString &aName,
-                             const nsAString &aImage,
-                             const nsAString &aTitle,
-                             const nsAString &aMessage,
-                             const nsAString &aCookie,
-                             nsIObserver *aListener);
-
 class nsAlertsService : public nsIAlertsService,
                         public nsIObserver
 {
