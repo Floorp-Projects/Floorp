@@ -94,7 +94,7 @@ def send_to_csv(csv_file, results):
       for val in browser_dump:
         writer.writerow([i, val])
         i += 1
-    if (res.find('tp') > -1) or (res == 'tdhmtl'):
+    else:
       writer.writerow(['i', 'page', 'median', 'mean', 'min' , 'max', 'runs'])
       for bd in browser_dump:
         bd.rstrip('\n')
@@ -102,6 +102,7 @@ def send_to_csv(csv_file, results):
         i = 0
         for mypage in page_results[2:]:
           r = mypage.split(';')
+          r[1] = r[1].rstrip('/')
           if r[1].find('/') > -1 :
              page = r[1].split('/')[1]
           else:
@@ -164,7 +165,7 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
        for val in browser_dump:
          tmpf.write(result_format % (float(val), res, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", "ms"))
          i += 1
-    if (res.find('tp') > -1)  or (res == 'tdhtml'):
+    else:
        # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
       for bd in browser_dump:
         bd.rstrip('\n')
@@ -172,6 +173,7 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
         i = 0
         for mypage in page_results[2:]:
           r = mypage.split(';')
+          r[1] = r[1].rstrip('/')
           if r[1].find('/') > -1 :
              page = r[1].split('/')[1]
           else:
