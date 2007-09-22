@@ -34,7 +34,8 @@
         ok(false, 'cyclic proto value allowed');
         window.__proto__ = origProto;
     } catch (e) {
-        is(e.toString(), 'Error: cyclic __proto__ value',
+        is(e.toString(),
+           'Error: invalid __proto__ value (can only be set to null)',
            'throw the right exception for a cyclic proto');
         is(window.__proto__, origProto, 'reset __proto__ after a cyclic proto');
     }
@@ -47,6 +48,14 @@
 
     is(Object.prototype.toString.call(Object.__parent__),
        '[object XPCCrossOriginWrapper]', '__parent__ returns an XOW');
+
+    try {
+        window.__proto__ = null;
+        is(window.__proto__, null,
+           "allowed to update window.__proto__ to null");
+    } catch (e) {
+        ok(false, "some crazy exception was thrown");
+    }
     </script>
 </body>
 </html>
