@@ -741,7 +741,9 @@ var PlacesSearchBox = {
       break;
     case "bookmarks":
       if (filterString) {
-        content.applyFilter(filterString, true);
+        content.applyFilter(filterString, true,
+                            [PlacesUtils.bookmarksRootId,
+                             PlacesUtils.unfiledRootId]);
         PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
       }
       else
