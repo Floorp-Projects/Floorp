@@ -1402,12 +1402,11 @@ nsFrameConstructorState::AddChild(nsIFrame* aNewFrame,
     nsIFrame* placeholderFrame;
     nsresult rv =
       nsCSSFrameConstructor::CreatePlaceholderFrameFor(mPresShell,
-                                                       mPresContext,
-                                                       mFrameManager,
                                                        aContent,
                                                        aNewFrame,
                                                        aStyleContext,
                                                        aParentFrame,
+                                                       nsnull,
                                                        &placeholderFrame);
     if (NS_FAILED(rv)) {
       // Note that aNewFrame could be the top frame for a scrollframe setup,
@@ -4692,12 +4691,11 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*   aPresShell,
 /* static */
 nsresult
 nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell, 
-                                                 nsPresContext*  aPresContext,
-                                                 nsFrameManager*  aFrameManager,
                                                  nsIContent*      aContent,
                                                  nsIFrame*        aFrame,
                                                  nsStyleContext*  aStyleContext,
                                                  nsIFrame*        aParentFrame,
+                                                 nsIFrame*        aPrevInFlow,
                                                  nsIFrame**       aPlaceholderFrame)
 {
   nsRefPtr<nsStyleContext> placeholderStyle = aPresShell->StyleSet()->
@@ -4708,7 +4706,7 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
     (nsPlaceholderFrame*)NS_NewPlaceholderFrame(aPresShell, placeholderStyle);
 
   if (placeholderFrame) {
-    placeholderFrame->Init(aContent, aParentFrame, nsnull);
+    placeholderFrame->Init(aContent, aParentFrame, aPrevInFlow);
   
     // The placeholder frame has a pointer back to the out-of-flow frame
     placeholderFrame->SetOutOfFlowFrame(aFrame);
@@ -4716,7 +4714,7 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
     aFrame->AddStateBits(NS_FRAME_OUT_OF_FLOW);
 
     // Add mapping from absolutely positioned frame to its placeholder frame
-    aFrameManager->RegisterPlaceholderFrame(placeholderFrame);
+    aPresShell->FrameManager()->RegisterPlaceholderFrame(placeholderFrame);
 
     *aPlaceholderFrame = static_cast<nsIFrame*>(placeholderFrame);
     
@@ -10489,15 +10487,13 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       return rv;
     }
     // create a continuing placeholder frame
-    rv = CreatePlaceholderFrameFor(shell, aPresContext, shell->FrameManager(),
-                                   content, oofContFrame, styleContext,
-                                   aParentFrame, &newFrame);
+    rv = CreatePlaceholderFrameFor(shell, content, oofContFrame, styleContext,
+                                   aParentFrame, aFrame, &newFrame);
     if (NS_FAILED(rv)) {
       oofContFrame->Destroy();
       *aContinuingFrame = nsnull;
       return rv;
     }
-    newFrame->Init(content, aParentFrame, aFrame);
   } else if (nsGkAtoms::fieldSetFrame == frameType) {
     newFrame = NS_NewFieldSetFrame(shell, styleContext);
 
