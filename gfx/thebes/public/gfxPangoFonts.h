@@ -111,7 +111,7 @@ protected:
     void GetCharSize(const char aChar, gfxSize& aInkSize, gfxSize& aLogSize,
                      PRUint32 *aGlyphID = nsnull);
 
-    virtual PRBool SetupCairoFont(cairo_t *aCR);
+    virtual PRBool SetupCairoFont(gfxContext *aContext);
 };
 
 class FontSelector;
