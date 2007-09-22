@@ -237,7 +237,6 @@ protected:
   nsWeakPtr  mPresShell;
   
   nsCOMPtr<nsICaret> mCaret;
-  nsCOMPtr<nsICaret> mOtherCaret;
   PRBool             mCaretDrawn;
 };
 
