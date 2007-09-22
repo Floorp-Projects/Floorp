@@ -434,7 +434,7 @@ gfxWindowsFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
 }
 
 PRBool
-gfxWindowsFont::SetupCairoFont(gfxContext *aContext)
+gfxWindowsFont::SetupCairoFont(cairo_t *aCR)
 {
     cairo_scaled_font_t *scaledFont = CairoScaledFont();
     if (cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
@@ -442,7 +442,7 @@ gfxWindowsFont::SetupCairoFont(gfxContext *aContext)
         // the cairo_t, precluding any further drawing.
         return PR_FALSE;
     }
-    cairo_set_scaled_font(aContext->GetCairo(), scaledFont);
+    cairo_set_scaled_font(aCR, scaledFont);
     return PR_TRUE;
 }
 
@@ -566,8 +566,6 @@ gfxWindowsFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
     else
         InitTextRunGDI(aParams->mContext, textRun, aString, aLength);
 
-    textRun->FetchGlyphExtents(aParams->mContext);
-
     return textRun;
 }
 
@@ -606,8 +604,6 @@ gfxWindowsFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
             InitTextRunGDI(aParams->mContext, textRun, utf16.get(), aLength);
         }
     }
-
-    textRun->FetchGlyphExtents(aParams->mContext);
 
     return textRun;
 }
