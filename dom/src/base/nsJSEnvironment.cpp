@@ -154,26 +154,8 @@ static PRLogModuleInfo* gJSDiagnostics;
 
 #define JAVASCRIPT nsIProgrammingLanguage::JAVASCRIPT
 
-// The max number of delayed cycle collects..
-#define NS_MAX_DELAYED_CCOLLECT     45
-// The max number of user interaction notifications in inactive state before
-// we try to call cycle collector more aggressively.
-#define NS_CC_SOFT_LIMIT_INACTIVE   6
-// The max number of user interaction notifications in active state before
-// we try to call cycle collector more aggressively.
-#define NS_CC_SOFT_LIMIT_ACTIVE     12
-// When higher probability MaybeCC is used, the number of sDelayedCCollectCount
-// is multiplied with this number.
-#define NS_PROBABILITY_MULTIPLIER   3
-// Cycle collector should never run more often than this value
-#define NS_MIN_CC_INTERVAL          10000 // ms
-
 // if you add statics here, add them to the list in nsJSRuntime::Startup
 
-static PRUint32 sDelayedCCollectCount;
-static PRUint32 sCCollectCount;
-static PRTime sPreviousCCTime;
-static PRBool sPreviousCCDidCollect;
 static nsITimer *sGCTimer;
 static PRBool sReadyForGC;
 
@@ -216,75 +198,6 @@ static nsIScriptSecurityManager *sSecurityManager;
 static nsICollation *gCollation;
 
 static nsIUnicodeDecoder *gDecoder;
-
-// nsUserActivityObserver observes user-interaction-active and
-// user-interaction-inactive notifications. It counts the number of
-// notifications and if the number is bigger than NS_CC_SOFT_LIMIT_ACTIVE
-// (in case the current notification is user-interaction-active) or
-// NS_CC_SOFT_LIMIT_INACTIVE (current notification is user-interaction-inactive)
-// MaybeCC is called with aHigherParameter set to PR_TRUE, otherwise PR_FALSE.
-//
-// When moving from active state to inactive, nsJSContext::CC() is called
-// unless the timer related to page load is active.
-
-class nsUserActivityObserver : public nsIObserver
-{
-public:
-  nsUserActivityObserver()
-  : mUserActivityCounter(0), mOldCCollectCount(0), mUserIsActive(PR_FALSE) {}
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-private:
-  PRUint32 mUserActivityCounter;
-  PRUint32 mOldCCollectCount;
-  PRBool   mUserIsActive;
-};
-
-NS_IMPL_ISUPPORTS1(nsUserActivityObserver, nsIObserver)
-
-NS_IMETHODIMP
-nsUserActivityObserver::Observe(nsISupports* aSubject, const char* aTopic,
-                                const PRUnichar* aData)
-{
-  if (mOldCCollectCount != sCCollectCount) {
-    mOldCCollectCount = sCCollectCount;
-    // Cycle collector was called between user interaction notifications, so
-    // we can reset the counter.
-    mUserActivityCounter = 0;
-  }
-  PRBool higherProbability = PR_FALSE;
-  ++mUserActivityCounter;
-  if (!strcmp(aTopic, "user-interaction-inactive")) {
-#ifdef DEBUG_smaug
-    printf("user-interaction-inactive\n");
-#endif
-    if (mUserIsActive) {
-      mUserIsActive = PR_FALSE;
-      if (!sGCTimer) {
-        nsJSContext::CC();
-        return NS_OK;
-      }
-    }
-    higherProbability = (mUserActivityCounter > NS_CC_SOFT_LIMIT_INACTIVE);
-  } else if (!strcmp(aTopic, "user-interaction-active")) {
-#ifdef DEBUG_smaug
-    printf("user-interaction-active\n");
-#endif
-    mUserIsActive = PR_TRUE;
-    higherProbability = (mUserActivityCounter > NS_CC_SOFT_LIMIT_ACTIVE);
-  } else if (!strcmp(aTopic, "xpcom-shutdown")) {
-    nsCOMPtr<nsIObserverService> obs =
-      do_GetService("@mozilla.org/observer-service;1");
-    if (obs) {
-      obs->RemoveObserver(this, "user-interaction-active");
-      obs->RemoveObserver(this, "user-interaction-inactive");
-      obs->RemoveObserver(this, "xpcom-shutdown");
-    }
-    return NS_OK;
-  }
-  nsJSContext::MaybeCC(higherProbability);
-  return NS_OK;
-}
 
 /****************************************************************
  ************************** AutoFree ****************************
@@ -3307,67 +3220,6 @@ nsJSContext::PreserveWrapper(nsIXPConnectWrappedNative *aWrapper)
   return nsDOMClassInfo::PreserveNodeWrapper(aWrapper);
 }
 
-//static
-void
-nsJSContext::MaybeCCOrGC(JSContext* aContext)
-{
-  if (!nsJSContext::MaybeCC(PR_TRUE) && aContext) {
-#ifdef DEBUG_smaug
-  printf("Will call JS_GC\n");
-#endif
-    ::JS_GC(aContext);
-#ifdef DEBUG_smaug
-  printf("Did call JS_GC\n");
-#endif
-  }
-}
-
-//static
-void
-nsJSContext::CC()
-{
-#ifdef DEBUG_smaug
-  printf("Will run cycle collector\n");
-#endif
-  sPreviousCCTime = PR_Now();
-  sDelayedCCollectCount = 0;
-  ++sCCollectCount;
-  // nsCycleCollector_collect() will run a ::JS_GC() indirectly, so
-  // we do not explicitly call ::JS_GC() here.
-  sPreviousCCDidCollect = nsCycleCollector_collect();
-#ifdef DEBUG_smaug
-  printf("%s\n", sPreviousCCDidCollect ?
-                   "Cycle collector did collect nodes" :
-                   "Cycle collector did not collect nodes");
-#endif
-}
-
-//static
-PRBool
-nsJSContext::MaybeCC(PRBool aHigherProbability)
-{
-  ++sDelayedCCollectCount;
-  // Increase the probability also if the previous call to cycle collector
-  // collected something.
-  if (aHigherProbability || sPreviousCCDidCollect) {
-    sDelayedCCollectCount *= NS_PROBABILITY_MULTIPLIER;
-  }
-
-  if (!sGCTimer && (sDelayedCCollectCount > NS_MAX_DELAYED_CCOLLECT)) {
-    if ((PR_Now() - sPreviousCCTime) >=
-        PRTime(NS_MIN_CC_INTERVAL * PR_USEC_PER_MSEC)) {
-      nsJSContext::CC();
-      return PR_TRUE;
-    }
-#ifdef DEBUG_smaug
-    else {
-      printf("Running cycle collector was delayed: NS_MIN_CC_INTERVAL\n");
-    }
-#endif
-  }
-  return PR_FALSE;
-}
-
 NS_IMETHODIMP
 nsJSContext::Notify(nsITimer *timer)
 {
@@ -3386,7 +3238,9 @@ nsJSContext::Notify(nsITimer *timer)
     // loading and move on as if they weren't.
     sPendingLoadCount = 0;
 
-    MaybeCCOrGC(mContext);
+    // nsCycleCollector_collect() will run a ::JS_GC() indirectly,
+    // so we do not explicitly call ::JS_GC() here. 
+    nsCycleCollector_collect();
   } else {
     FireGCTimer(PR_TRUE);
   }
@@ -3405,7 +3259,7 @@ nsJSContext::LoadStart()
 
 // static
 void
-nsJSContext::LoadEnd(nsIScriptGlobalObject* aGlobalObject)
+nsJSContext::LoadEnd()
 {
   // sPendingLoadCount is not a well managed load counter (and doesn't
   // need to be), so make sure we don't make it wrap backwards here.
@@ -3415,18 +3269,13 @@ nsJSContext::LoadEnd(nsIScriptGlobalObject* aGlobalObject)
 
   if (!sPendingLoadCount && sLoadInProgressGCTimer) {
     sGCTimer->Cancel();
+
     NS_RELEASE(sGCTimer);
     sLoadInProgressGCTimer = PR_FALSE;
 
-    JSContext* cx = nsnull;
-    nsCOMPtr<nsIScriptContext> scx;
-    if (aGlobalObject) {
-      scx = aGlobalObject->GetContext();
-      if (scx) {
-        cx = static_cast<JSContext*>(scx->GetNativeContext());
-      }
-    }
-    MaybeCCOrGC(cx);
+    // nsCycleCollector_collect() will run a ::JS_GC() indirectly, so
+    // we do not explicitly call ::JS_GC() here.
+    nsCycleCollector_collect();
   }
 }
 
@@ -3453,7 +3302,10 @@ nsJSContext::FireGCTimer(PRBool aLoadInProgress)
     // timer.
     sLoadInProgressGCTimer = PR_FALSE;
 
-    MaybeCCOrGC(mContext);
+    // nsCycleCollector_collect() will run a ::JS_GC() indirectly, so
+    // we do not explicitly call ::JS_GC() here.
+    nsCycleCollector_collect();
+
     return;
   }
 
@@ -3561,10 +3413,6 @@ void
 nsJSRuntime::Startup()
 {
   // initialize all our statics, so that we can restart XPCOM
-  sDelayedCCollectCount = 0;
-  sCCollectCount = 0;
-  sPreviousCCTime = 0;
-  sPreviousCCDidCollect = PR_FALSE;
   sGCTimer = nsnull;
   sReadyForGC = PR_FALSE;
   sLoadInProgressGCTimer = PR_FALSE;
@@ -3698,15 +3546,6 @@ nsJSRuntime::Init()
                                        nsnull);
   MaxScriptRunTimePrefChangedCallback("dom.max_chrome_script_run_time",
                                       nsnull);
-
-  nsCOMPtr<nsIObserverService> obs =
-    do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsIObserver* activityObserver = new nsUserActivityObserver();
-  NS_ENSURE_TRUE(activityObserver, NS_ERROR_OUT_OF_MEMORY);
-  obs->AddObserver(activityObserver, "user-interaction-inactive", PR_FALSE);
-  obs->AddObserver(activityObserver, "user-interaction-active", PR_FALSE);
-  obs->AddObserver(activityObserver, "xpcom-shutdown", PR_FALSE);
 
   rv = CallGetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &sSecurityManager);
 
