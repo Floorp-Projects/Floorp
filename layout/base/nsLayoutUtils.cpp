@@ -1508,7 +1508,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
 
   if (boxSizing == NS_STYLE_BOX_SIZING_PADDING) {
     min += coordOutsideWidth;
-    result += coordOutsideWidth;
+    result = NSCoordSaturatingAdd(result, coordOutsideWidth);
     pctTotal += pctOutsideWidth;
 
     coordOutsideWidth = 0;
@@ -1519,7 +1519,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
 
   if (boxSizing == NS_STYLE_BOX_SIZING_BORDER) {
     min += coordOutsideWidth;
-    result += coordOutsideWidth;
+    result = NSCoordSaturatingAdd(result, coordOutsideWidth);
     pctTotal += pctOutsideWidth;
 
     coordOutsideWidth = 0;
@@ -1530,7 +1530,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
   pctOutsideWidth += offsets.hPctMargin;
 
   min += coordOutsideWidth;
-  result += coordOutsideWidth;
+  result = NSCoordSaturatingAdd(result, coordOutsideWidth);
   pctTotal += pctOutsideWidth;
 
   nscoord w;
