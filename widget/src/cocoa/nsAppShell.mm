@@ -245,11 +245,19 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
     // won't return until it's given a reason to wake up.  Awaken it by
     // posting a bogus event.  There's no need to make the event
     // presentable.
+    //
+    // But _don't_ set windowNumber to '-1' -- that can lead to nasty
+    // wierdness like bmo bug 397039 (a crash in [NSApp sendEvent:] on one of
+    // these fake events, because the -1 has gotten changed into the number
+    // of an actual NSWindow object, and that NSWindow object has just been
+    // destroyed).  Setting windowNumber to '0' seems to work fine -- this
+    // seems to prevent the OS from ever trying to associate our bogus event
+    // with a particular NSWindow object.
     [NSApp postEvent:[NSEvent otherEventWithType:NSApplicationDefined
                                         location:NSMakePoint(0,0)
                                    modifierFlags:0
                                        timestamp:0
-                                    windowNumber:-1
+                                    windowNumber:0
                                          context:NULL
                                          subtype:0
                                            data1:0
@@ -269,7 +277,7 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
                                       location:NSMakePoint(0,0)
                                  modifierFlags:0
                                      timestamp:0
-                                  windowNumber:-1
+                                  windowNumber:0
                                        context:NULL
                                        subtype:0
                                          data1:0
