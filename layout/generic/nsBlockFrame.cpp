@@ -6541,7 +6541,7 @@ void nsBlockFrame::CollectFloats(nsIFrame* aFrame, nsFrameList& aList, nsIFrame*
                     aList, aTail, aFromOverflow, PR_TRUE);
       // Note: Even though we're calling CollectFloats on aFrame's overflow
       // list, we'll pass down aFromOverflow unchanged because we're still
-      // traversing the normal-child subtree of the 'this' frame.
+      // traversing the regular-children subtree of the 'this' frame.
       CollectFloats(aFrame->GetFirstChild(nsGkAtoms::overflowList), 
                     aList, aTail, aFromOverflow, PR_TRUE);
     }
