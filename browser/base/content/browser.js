@@ -1551,7 +1551,7 @@ function loadOneOrMoreURIs(aURIString)
   // we're not a browser window, pass the URI string to a new browser window
   if (window.location.href != getBrowserURL())
   {
-    newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", aURIString);
+    window.openDialog(getBrowserURL(), "_blank", "all,dialog=no", aURIString);
     return;
   }
 #endif
