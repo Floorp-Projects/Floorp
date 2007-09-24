@@ -2790,8 +2790,9 @@ nsFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
 {
   aData->trailingWhitespace = 0;
   aData->skipWhitespace = PR_FALSE;
-  aData->currentLine += nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                            this, nsLayoutUtils::PREF_WIDTH);
+  nscoord myPref = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, 
+                       this, nsLayoutUtils::PREF_WIDTH);
+  aData->currentLine = NSCoordSaturatingAdd(aData->currentLine, myPref);
 }
 
 void
