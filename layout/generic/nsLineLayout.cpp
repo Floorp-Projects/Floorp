@@ -65,6 +65,7 @@
 #include "nsTextFragment.h"
 #include "nsBidiUtils.h"
 #include "nsLayoutUtils.h"
+#include "nsTextFrame.h"
 
 #ifdef DEBUG
 #undef  NOISY_HORIZONTAL_ALIGN
@@ -2420,6 +2421,10 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD, FrameJustificationState
 
           aState->mWidthForLettersProcessed = newAllocatedWidthForLetters;
         }
+        
+        if (dw) {
+          pfd->SetFlag(PFD_RECOMPUTEOVERFLOW, PR_TRUE);
+        }
       }
       else {
         if (nsnull != pfd->mSpan) {
@@ -2643,11 +2648,12 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
       // aggregating it into our combined area.
       RelativePositionFrames(pfd->mSpan, r);
     } else {
-      // For simple text frames we take the union of the combined area
-      // and the width/height. I think the combined area should always
-      // equal the bounds in this case, but this is safe.
-      nsRect adjustedBounds(0, 0, pfd->mBounds.width, pfd->mBounds.height);
-      r.UnionRect(pfd->mCombinedArea, adjustedBounds);
+      r = pfd->mCombinedArea;
+      if (pfd->GetFlag(PFD_RECOMPUTEOVERFLOW)) {
+        nsTextFrame* f = static_cast<nsTextFrame*>(frame);
+        r = f->RecomputeOverflowRect();
+      }
+      frame->FinishAndStoreOverflow(&r, frame->GetSize());
 
       // If we have something that's not an inline but with a complex frame
       // hierarchy inside that contains views, they need to be
