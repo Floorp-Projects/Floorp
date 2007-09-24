@@ -68,6 +68,8 @@ nsresult xpcJSWeakReference::Init()
     rv = cc->GetArgvPtr(&argv);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    JSAutoRequest ar(cx);
+
     if (JSVAL_IS_NULL(argv[0])) return NS_ERROR_FAILURE;
     
     JSObject *obj;
