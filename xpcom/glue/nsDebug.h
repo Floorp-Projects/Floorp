@@ -50,6 +50,7 @@
 
 #ifdef DEBUG
 #define NS_DEBUG
+#include "prprf.h"
 #endif
 
 #ifdef DEBUG
@@ -203,8 +204,29 @@
 ** Macros for checking results
 ******************************************************************************/
 
+#ifdef DEBUG
+/* So, if you are wondering why on Earth would anyone need to store res in __rv,
+ * please consider the case where res is a function call.  We clearly only want
+ * to call this function once, so we store its result in __rv.
+ */
+#define NS_ENSURE_SUCCESS(res, ret)                                       \
+  PR_BEGIN_MACRO                                                          \
+  nsresult __rv = res;                                                    \
+  if (NS_FAILED(__rv)) {                                                  \
+    static const char format[] = "NS_ENSURE_SUCCESS(" #res ", " #ret ") " \
+      "failed with result 0x%X";                                          \
+    char *msg = PR_smprintf(format, __rv);                                \
+    NS_WARNING(msg);                                                      \
+    PR_smprintf_free(msg);                                                \
+    return ret;                                                           \
+  }                                                                       \
+  PR_END_MACRO
+#else
 #define NS_ENSURE_SUCCESS(res, ret) \
-  NS_ENSURE_TRUE(NS_SUCCEEDED(res), ret)
+  PR_BEGIN_MACRO                    \
+  if (NS_FAILED(res)) return ret;   \
+  PR_END_MACRO
+#endif
 
 /******************************************************************************
 ** Macros for checking state and arguments upon entering interface boundaries
