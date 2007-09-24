@@ -268,6 +268,10 @@ sub Execute {
     my $keyFile = catfile($batch1Dir, 'key-checkout', 'PUBLIC-KEY');
     my $keyFileDest = catfile($skelDir, 'KEY');
     copy($keyFile, $keyFileDest) or die("Could not copy $keyFile to $keyFileDest: $!");
+    chmod(0644, $keyFileDest) or
+      die("Could not chmod $keyFileDest to 644");
+    chown(-1, $gid, $keyFileDest) or 
+      die("Could not chown $keyFileDest to group $gid");
 
     ## Prepare the merging directory.
     $this->Shell(
