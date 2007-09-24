@@ -83,7 +83,8 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
         // if this is a native win32 surface, we don't have to
         // redirect rendering to our own HDC; in some cases,
         // we may be able to use the HDC from the surface directly.
-        if (surf->GetType() == gfxASurface::SurfaceTypeWin32 &&
+        if ((surf->GetType() == gfxASurface::SurfaceTypeWin32 ||
+             surf->GetType() == gfxASurface::SurfaceTypeWin32Printing) &&
             (surf->GetContentType() == gfxASurface::CONTENT_COLOR ||
              (surf->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA &&
               (mNativeDrawFlags & CAN_DRAW_TO_COLOR_ALPHA))))

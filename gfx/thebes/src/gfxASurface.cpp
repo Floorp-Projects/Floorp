@@ -147,7 +147,8 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
         result = new gfxImageSurface(csurf);
     }
 #ifdef CAIRO_HAS_WIN32_SURFACE
-    else if (stype == CAIRO_SURFACE_TYPE_WIN32) {
+    else if (stype == CAIRO_SURFACE_TYPE_WIN32 ||
+             stype == CAIRO_SURFACE_TYPE_WIN32_PRINTING) {
         result = new gfxWindowsSurface(csurf);
     }
 #endif

@@ -69,7 +69,6 @@
 #include "gfxPSSurface.h"
 static nsSystemFontsGTK2 *gSystemFonts = nsnull;
 #elif XP_WIN
-#include <cairo-win32.h>
 #include "nsSystemFontsWin.h"
 #include "gfxWindowsSurface.h"
 #include "gfxPDFSurface.h"
@@ -193,7 +192,7 @@ nsThebesDeviceContext::SetDPI()
 
 #elif defined(XP_OS2)
         // get a printer DC if available, otherwise create a new (memory) DC
-        HDC dc = GetPrintDC();
+        HDC dc = GetPrintHDC();
         PRBool doCloseDC = PR_FALSE;
         if (dc <= 0) { // test for NULLHANDLE/DEV_ERROR or HDC_ERROR
             // create DC compatible with the screen
@@ -333,9 +332,6 @@ nsThebesDeviceContext::CreateRenderingContext(nsIRenderingContext *&aContext)
     }
 
     return rv;
-
-
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -700,6 +696,7 @@ nsThebesDeviceContext::CalcPrintingSize()
 
 #ifdef XP_WIN
     case gfxASurface::SurfaceTypeWin32:
+    case gfxASurface::SurfaceTypeWin32Printing:
     {
         inPoints = PR_FALSE;
         HDC dc =  GetPrintHDC();
@@ -756,3 +753,30 @@ nsThebesDeviceContext::UpdateScaledAppUnits()
 {
     mAppUnitsPerDevPixel = PR_MAX(1, PRInt32(float(mAppUnitsPerDevNotScaledPixel) / mPixelScale));
 }
+
+#if defined(XP_WIN) || defined(XP_OS2)
+HDC
+nsThebesDeviceContext::GetPrintHDC()
+{
+    if (mPrintingSurface) {
+        switch (mPrintingSurface->GetType()) {
+#ifdef XP_WIN
+            case gfxASurface::SurfaceTypeWin32:
+            case gfxASurface::SurfaceTypeWin32Printing:
+                return reinterpret_cast<gfxWindowsSurface*>(mPrintingSurface.get())->GetDC();
+#endif
+
+#ifdef XP_OS2
+            case gfxASurface::SurfaceTypeOS2:
+                return GpiQueryDevice(reinterpret_cast<gfxOS2Surface*>(mPrintingSurface.get())->GetPS());
+#endif
+
+            default:
+                NS_ASSERTION(0, "invalid surface type in GetPrintHDC");
+                break;
+        }
+    }
+
+    return nsnull;
+}
+#endif
