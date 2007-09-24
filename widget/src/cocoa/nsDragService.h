@@ -44,8 +44,8 @@
 #include <Cocoa/Cocoa.h>
 
 extern NSString* const kWildcardPboardType;
-extern NSString* const kCorePasteboardFlavorType_url;
-extern NSString* const kCorePasteboardFlavorType_urln;
+extern NSString* const kCorePboardType_url;
+extern NSString* const kCorePboardType_urln;
 
 class nsDragService : public nsBaseDragService
 {
