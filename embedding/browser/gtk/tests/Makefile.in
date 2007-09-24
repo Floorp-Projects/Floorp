@@ -71,8 +71,6 @@ endif
 
 include $(topsrcdir)/config/config.mk
 
-EXTRA_DSO_LDOPTS += $(NSPR_LIBS)
-
 include $(topsrcdir)/config/rules.mk
 
 LIBS += $(XPCOM_STANDALONE_GLUE_LDOPTS)
