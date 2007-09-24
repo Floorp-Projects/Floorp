@@ -1818,6 +1818,8 @@ NSEvent* gLastDragEvent = nil;
                                                           NSURLPboardType,
                                                           NSFilesPromisePboardType,
                                                           kWildcardPboardType,
+                                                          kCorePasteboardFlavorType_url,
+                                                          kCorePasteboardFlavorType_urln,
                                                           nil]];
 
   return self;
