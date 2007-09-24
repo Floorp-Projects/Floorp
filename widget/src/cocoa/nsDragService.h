@@ -68,6 +68,8 @@ private:
                               nsIScriptableRegion* aRegion);
 
   nsCOMPtr<nsISupportsArray> mDataItems; // only valid for a drag started within gecko
+  NSView* mNativeDragView;
+  NSEvent* mNativeDragEvent;
 };
 
 #endif // nsDragService_h_

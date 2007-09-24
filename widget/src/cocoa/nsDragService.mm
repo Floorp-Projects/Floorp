@@ -75,8 +75,8 @@ extern PRLogModuleInfo* sCocoaLog;
 #endif
 
 extern NSPasteboard* globalDragPboard;
-extern NSView* globalDragView;
-extern NSEvent* globalDragEvent;
+extern NSView* gLastDragView;
+extern NSEvent* gLastDragEvent;
 
 // This global makes the transferable array available to Cocoa's promised
 // file destination callback.
@@ -86,6 +86,8 @@ NSString* const kWildcardPboardType = @"MozillaWildcard";
 
 nsDragService::nsDragService()
 {
+  mNativeDragView = nil;
+  mNativeDragEvent = nil;
 }
 
 
@@ -150,7 +152,7 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
                                   nsRect* aDragRect,
                                   nsIScriptableRegion* aRegion)
 {
-  NSPoint screenPoint = [[globalDragView window] convertBaseToScreen:[globalDragEvent locationInWindow]];
+  NSPoint screenPoint = [[gLastDragView window] convertBaseToScreen:[gLastDragEvent locationInWindow]];
   // Y coordinates are bottom to top, so reverse this
   if ([[NSScreen screens] count] > 0)
     screenPoint.y = NSMaxY([[[NSScreen screens] objectAtIndex:0] frame]) - screenPoint.y;
@@ -269,21 +271,25 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
   else
     point.y = dragRect.y;
 
-  point = [[globalDragView window] convertScreenToBase: point];
-  NSPoint localPoint = [globalDragView convertPoint:point fromView:nil];
+  point = [[gLastDragView window] convertScreenToBase: point];
+  NSPoint localPoint = [gLastDragView convertPoint:point fromView:nil];
  
   // Save the transferables away in case a promised file callback is invoked.
   gDraggedTransferables = aTransferableArray;
 
   nsBaseDragService::StartDragSession();
 
-  [globalDragView dragImage:image
-                         at:localPoint
-                     offset:NSMakeSize(0,0)
-                      event:globalDragEvent
-                 pasteboard:[NSPasteboard pasteboardWithName:NSDragPboard]
-                     source:globalDragView
-                  slideBack:YES];
+  // We need to retain the view and the event during the drag in case either gets destroyed.
+  mNativeDragView = [gLastDragView retain];
+  mNativeDragEvent = [gLastDragEvent retain];
+
+  [mNativeDragView dragImage:image
+                          at:localPoint
+                      offset:NSMakeSize(0,0)
+                       event:mNativeDragEvent
+                  pasteboard:[NSPasteboard pasteboardWithName:NSDragPboard]
+                      source:mNativeDragView
+                   slideBack:YES];
 
   return NS_OK;
 }
@@ -516,6 +522,15 @@ nsDragService::GetNumDropItems(PRUint32* aNumItems)
 NS_IMETHODIMP
 nsDragService::EndDragSession(PRBool aDoneDrag)
 {
+  if (mNativeDragView) {
+    [mNativeDragView release];
+    mNativeDragView = nil;
+  }
+  if (mNativeDragEvent) {
+    [mNativeDragEvent release];
+    mNativeDragEvent = nil;
+  }
+
   mDataItems = nsnull;
   return nsBaseDragService::EndDragSession(aDoneDrag);
 }
