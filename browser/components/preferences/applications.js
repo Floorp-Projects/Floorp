@@ -1002,7 +1002,7 @@ var gApplicationsPane = {
 
     switch (aHandlerInfo.preferredAction) {
       case Ci.nsIHandlerInfo.saveToDisk:
-        return this._prefsBundle.getString("saveToDisk");
+        return this._prefsBundle.getString("saveFile");
 
       case Ci.nsIHandlerInfo.useHelperApp:
         return aHandlerInfo.preferredApplicationHandler.name;
@@ -1172,7 +1172,7 @@ var gApplicationsPane = {
         !handlerInfo.handledOnlyByPlugin) {
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("action", Ci.nsIHandlerInfo.saveToDisk);
-      menuItem.setAttribute("label", this._prefsBundle.getString("saveToDisk"));
+      menuItem.setAttribute("label", this._prefsBundle.getString("saveFile"));
       menuPopup.appendChild(menuItem);
       if (handlerInfo.preferredAction == Ci.nsIHandlerInfo.saveToDisk)
         menu.selectedItem = menuItem;
