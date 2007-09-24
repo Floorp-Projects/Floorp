@@ -457,7 +457,6 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
     // (It may also have overflowing content that doesn't care about the available height
     // boundary, but if so, too bad, this optimization is defeated.)
     PRBool skipResizeHeightShrink = shrinkingHeightOnly
-      && !(child->GetStateBits() & NS_FRAME_IS_DIRTY)
       && child->GetOverflowRect().YMost() <= aConfig.mColMaxHeight;
     if (!reflowNext && (skipIncremental || skipResizeHeightShrink)) {
       // This child does not need to be reflowed, but we may need to move it
