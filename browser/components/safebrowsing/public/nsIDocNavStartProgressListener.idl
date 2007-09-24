@@ -64,8 +64,10 @@ interface nsIDocNavStartProgressListener : nsISupports
   attribute PRUint32 delay;
 
   /**
-   * Callback object to be used when enabled=true.
-   * NULL when there is no callback.
+   * The callback, if non-null, used when globalProgressListenerEnabled is
+   * true.  Setting this to null has the side effect of unqueueing any pending
+   * events for which a callback would be notified; setting it to any other
+   * value, however, will not unqueue any events.
    */
   attribute nsIDocNavStartProgressCallback callback;
 
