@@ -1784,13 +1784,13 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
 NSPasteboard* globalDragPboard = nil;
 
 
-// globalDragView and globalDragEvent are only non-null during calls to |mouseDragged:|
+// gLastDragView and gLastDragEvent are only non-null during calls to |mouseDragged:|
 // in our native NSView. They are used to communicate information to the drag service
 // during drag invocation (starting a drag in from the view). All drag service drag
 // invocations happen only while these two global variables are non-null, while |mouseDragged:|
 // is on the stack.
-NSView* globalDragView = nil;
-NSEvent* globalDragEvent = nil;
+NSView* gLastDragView = nil;
+NSEvent* gLastDragEvent = nil;
 
 
 // initWithFrame:geckoChild:eventSink:
@@ -2782,8 +2782,8 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
     return;
   }
 
-  globalDragView = self;
-  globalDragEvent = theEvent;
+  gLastDragView = self;
+  gLastDragEvent = theEvent;
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
@@ -2799,8 +2799,8 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   mGeckoChild->DispatchMouseEvent(geckoEvent);    
 
-  globalDragView = nil;
-  globalDragEvent = nil;
+  gLastDragView = nil;
+  gLastDragEvent = nil;
   // XXX maybe call markedTextSelectionChanged:client: here?
 }
 
