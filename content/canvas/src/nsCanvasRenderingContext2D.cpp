@@ -1589,8 +1589,8 @@ nsCanvasRenderingContext2D::MozMeasureText(const nsAString& textToMeasure, float
 
     PRBool tightBoundingBox = PR_FALSE;
     gfxTextRun::Metrics metrics = textRun->MeasureText(/* offset = */ 0, textToMeasure.Length(),
-                                                         tightBoundingBox,
-                                                         nsnull);
+                                                       tightBoundingBox, mThebesContext,
+                                                       nsnull);
     *retVal = metrics.mAdvanceWidth/gfxFloat(elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerCSSPixel());
     return NS_OK;
 }
