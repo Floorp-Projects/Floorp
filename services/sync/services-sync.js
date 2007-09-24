@@ -1,4 +1,5 @@
-pref("browser.places.sync.serverUrl", "http://places.sync.url/");
+pref("browser.places.sync.serverURL", "http://dotmoz.mozilla.org/");
+pref("browser.places.sync.username", "nobody@mozilla.com");
 pref("extensions.sync.lastversion", "firstrun");
 pref("extensions.sync.lastsync", "");
 
