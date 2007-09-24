@@ -83,8 +83,8 @@ extern NSEvent* gLastDragEvent;
 nsISupportsArray *gDraggedTransferables = nsnull;
 
 NSString* const kWildcardPboardType = @"MozillaWildcard";
-NSString* const kCorePasteboardFlavorType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
-NSString* const kCorePasteboardFlavorType_urln = @"CorePasteboardFlavorType 0x75726C6E"; // 'urln'  title
+NSString* const kCorePboardType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
+NSString* const kCorePboardType_urln = @"CorePasteboardFlavorType 0x75726C6E"; // 'urln'  title
 
 nsDragService::nsDragService()
 {
@@ -134,8 +134,8 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
       NSString* currentKey = [types objectAtIndex:i];
       id currentValue = [pasteboardOutputDict valueForKey:currentKey];
       if (currentKey == NSStringPboardType ||
-          currentKey == kCorePasteboardFlavorType_url ||
-          currentKey == kCorePasteboardFlavorType_urln) {
+          currentKey == kCorePboardType_url ||
+          currentKey == kCorePboardType_urln) {
         [dragPBoard setString:currentValue forType:currentKey];
       }
       else if (currentKey == NSTIFFPboardType) {

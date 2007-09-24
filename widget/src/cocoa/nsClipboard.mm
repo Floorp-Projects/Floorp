@@ -491,7 +491,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
 
         NSString *nativeTitle = [[NSString alloc] initWithCharacters:urlTitle.get() length:urlTitle.Length()];
         // be nice to Carbon apps, normalize the receiver's contents using Form C.
-        [pasteboardOutputDict setObject:[nativeTitle precomposedStringWithCanonicalMapping] forKey:kCorePasteboardFlavorType_urln];
+        [pasteboardOutputDict setObject:[nativeTitle precomposedStringWithCanonicalMapping] forKey:kCorePboardType_urln];
         [nativeTitle release];
       }
 
@@ -505,7 +505,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
       // printf("Escaped url is %s, length %d\n", escData.get(), escData.Length());
 
       NSString *nativeURL = [NSString stringWithUTF8String:escData.get()];
-      [pasteboardOutputDict setObject:nativeURL forKey:kCorePasteboardFlavorType_url];
+      [pasteboardOutputDict setObject:nativeURL forKey:kCorePboardType_url];
     }
     // If it wasn't a type that we recognize as exportable we don't put it on the system
     // clipboard. We'll just access it from our cached transferable when we need it.
