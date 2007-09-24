@@ -1953,16 +1953,35 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   // -- it's an incremental reflow of a descendant
   // -- and we didn't reflow any floats (so the available space
   // didn't change)
-  // XXXldb We should also check that the first line of the next-in-flow
-  // isn't dirty.
+  // -- my chain of next-in-flows either has no first line, or its first
+  // line isn't dirty.
+  PRBool skipPull = PR_FALSE;
   if (aState.mNextInFlow &&
       (aState.mReflowState.mFlags.mNextInFlowUntouched &&
        !lastLineMovedUp && 
        !(GetStateBits() & NS_FRAME_IS_DIRTY) &&
        !reflowedFloat)) {
-    NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
+    // We'll place lineIter at the last line of this block, so that 
+    // nsBlockInFlowLineIterator::Next() will take us to the first
+    // line of my next-in-flow-chain.  (But first, check that I 
+    // have any lines -- if I don't, just bail out of this
+    // optimization.) 
+    line_iterator lineIter = this->end_lines();
+    if (lineIter != this->begin_lines()) {
+      lineIter--; // I have lines; step back from dummy iterator to last line.
+      nsBlockInFlowLineIterator bifLineIter(this, lineIter, PR_FALSE);
+
+      // Check for next-in-flow-chain's first line.
+      // (First, see if there is such a line, and second, see if it's clean)
+      if (!bifLineIter.Next() ||                
+          !bifLineIter.GetLine()->IsDirty()) {
+        NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
+        skipPull=PR_TRUE;
+      }
+    }
   }
-  else if (aState.mNextInFlow) {
+  
+  if (!skipPull && aState.mNextInFlow) {
     // Pull data from a next-in-flow if there's still room for more
     // content here.
     while (keepGoing && (nsnull != aState.mNextInFlow)) {
