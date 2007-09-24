@@ -176,7 +176,7 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool)
 ifdef MOZ_ENABLE_CAIRO_GFX
-OS_LIBS += $(call EXPAND_LIBNAME,usp10)
+OS_LIBS += $(call EXPAND_LIBNAME,usp10 msimg32)
 ifdef MOZ_ENABLE_GLITZ
 OS_LIBS += $(call EXPAND_LIBNAME,opengl32)
 endif
