@@ -88,12 +88,6 @@
 
     <separator class="thin"/>
 
-    <label id="filterActiveLabel" hidden="true">
-      &filterActive.label;
-    </label>
-
-    <separator class="thin"/>
-
     <richlistbox id="handlersView" orient="vertical"
                  onselect="gApplicationsPane.onSelectionChanged();"
                  persist="lastSelectedType">
