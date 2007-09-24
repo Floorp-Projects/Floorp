@@ -46,6 +46,8 @@
 #include "nsIImage.h"
 #include "nsILocalFile.h"
 #include "nsStringStream.h"
+#include "nsDragService.h"
+#include "nsEscape.h"
 
 // Screenshots use the (undocumented) png pasteboard type.
 #define IMAGE_PASTEBOARD_TYPES NSTIFFPboardType, @"Apple PNG pasteboard type", nil
@@ -469,7 +471,42 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
     else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
       [pasteboardOutputDict setObject:[NSArray arrayWithObject:@""] forKey:NSFilesPromisePboardType];      
     }
+    else if (flavorStr.EqualsLiteral(kURLMime)) {
+      PRUint32 len = 0;
+      nsCOMPtr<nsISupports> genericURL;
+      rv = aTransferable->GetTransferData(flavorStr, getter_AddRefs(genericURL), &len);
+      nsCOMPtr<nsISupportsString> urlObject(do_QueryInterface(genericURL));
 
+      nsAutoString url;
+      urlObject->GetData(url);
+
+      // A newline embedded in the URL means that the form is actually URL + title.
+      PRInt32 newlinePos = url.FindChar(PRUnichar('\n'));
+      if (newlinePos >= 0) {
+        url.Truncate(newlinePos);
+
+        nsAutoString urlTitle;
+        urlObject->GetData(urlTitle);
+        urlTitle.Mid(urlTitle, newlinePos + 1, len - (newlinePos + 1));
+
+        NSString *nativeTitle = [[NSString alloc] initWithCharacters:urlTitle.get() length:urlTitle.Length()];
+        // be nice to Carbon apps, normalize the receiver's contents using Form C.
+        [pasteboardOutputDict setObject:[nativeTitle precomposedStringWithCanonicalMapping] forKey:kCorePasteboardFlavorType_urln];
+        [nativeTitle release];
+      }
+
+      // The Finder doesn't like getting random binary data aka
+      // Unicode, so change it into an escaped URL containing only
+      // ASCII.
+      nsCAutoString utf8Data = NS_ConvertUTF16toUTF8(url.get(), url.Length());
+      nsCAutoString escData;
+      NS_EscapeURL(utf8Data.get(), utf8Data.Length(), esc_OnlyNonASCII|esc_AlwaysCopy, escData);
+
+      // printf("Escaped url is %s, length %d\n", escData.get(), escData.Length());
+
+      NSString *nativeURL = [NSString stringWithUTF8String:escData.get()];
+      [pasteboardOutputDict setObject:nativeURL forKey:kCorePasteboardFlavorType_url];
+    }
     // If it wasn't a type that we recognize as exportable we don't put it on the system
     // clipboard. We'll just access it from our cached transferable when we need it.
   }
