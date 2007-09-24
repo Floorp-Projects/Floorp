@@ -1258,7 +1258,6 @@ var gApplicationsPane = {
 
     this.rebuildView();
 
-    document.getElementById("filterActiveLabel").hidden = false;
     document.getElementById("clearFilter").disabled = false;
   },
 
@@ -1281,7 +1280,6 @@ var gApplicationsPane = {
     this.rebuildView();
 
     this._filter.focus();
-    document.getElementById("filterActiveLabel").hidden = true;
     document.getElementById("clearFilter").disabled = true;
   },
 
