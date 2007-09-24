@@ -11,6 +11,7 @@ stage:
 	mkdir -p /builds/updates/
 	mkdir -p /builds/verify/
 	mkdir -p /builds/logs/
+	mkdir -p /data/symbols/
 	# fake key
 	mkdir -p /home/ftp/pub/firefox/releases/1.5/
 	touch /home/ftp/pub/firefox/releases/1.5/KEY
@@ -32,9 +33,13 @@ cvsmirror_main:
 	chgrp -R cvs /builds/cvsmirror.clean/cvsroot /builds/cvsmirror.clean/l10n
 	chmod -R g+rw /builds/cvsmirror.clean/cvsroot /builds/cvsmirror.clean/l10n
 	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_4_RELEASE mozilla
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_4_RELEASE_l10n mozilla
 	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_4_RC1 mozilla
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_4_RC1_l10n mozilla
 	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_4_RC2 mozilla
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_4_RC2_l10n mozilla
 	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_4_RC3 mozilla
+	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_4_RC3_l10n mozilla
 	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d -B FIREFOX_2_0_0_4_MINIBRANCH mozilla
 	cvs -d /builds/cvsmirror.clean/l10n rtag -d FIREFOX_2_0_0_4_RELEASE l10n
 	cvs -d /builds/cvsmirror.clean/l10n rtag -d FIREFOX_2_0_0_4_RC1 l10n
