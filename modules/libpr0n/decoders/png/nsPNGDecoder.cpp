@@ -476,20 +476,6 @@ info_callback(png_structp png_ptr, png_infop info_ptr)
       png_set_gamma(png_ptr, 2.2, 0.45455);
   }
 
-  if (color_type == PNG_COLOR_TYPE_GRAY ||
-      color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-      png_set_gray_to_rgb(png_ptr);
-
-  if (png_get_gAMA(png_ptr, info_ptr, &aGamma)) {
-      if ((aGamma <= 0.0) || (aGamma > 21474.83)) {
-          aGamma = 0.45455;
-          png_set_gAMA(png_ptr, info_ptr, aGamma);
-      }
-      png_set_gamma(png_ptr, 2.2, aGamma);
-  }
-  else
-      png_set_gamma(png_ptr, 2.2, 0.45455);
-
   /* let libpng expand interlaced images */
   if (interlace_type == PNG_INTERLACE_ADAM7) {
     /* number_passes = */
