@@ -666,6 +666,9 @@
         <parameter name="aPaneElement"/>
         <body>
         <![CDATA[
+          if (!aPaneElement)
+            return;
+
           this._selector.selectedItem = document.getAnonymousElementByAttribute(this, "pane", aPaneElement.id);
           if (!aPaneElement.loaded) {
             function OverlayLoadObserver(aPane)
