@@ -309,8 +309,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
           CHANNELS_SH(channels) |
           BYTES_SH(1);
 
-        /* Adobe Photoshop writes CMYK files with inverted data */
-        if (mInfo.jpeg_color_space == JCS_CMYK)
+        /* Adobe Photoshop writes YCCK/CMYK files with inverted data */
+        if (mInfo.out_color_space == JCS_CMYK)
           type |= FLAVOR_SH(mInfo.saw_Adobe_marker ? 1 : 0);
 
         if (gfxPlatform::GetCMSOutputProfile())
@@ -569,7 +569,8 @@ nsJPEGDecoder::OutputScanlines()
 
       /* Use the Cairo image buffer as scanline buffer */
       JSAMPROW sampleRow = (JSAMPROW)imageRow;
-      if (!mTransform || mInfo.out_color_space != JCS_GRAYSCALE) {
+      if (!mTransform || (mInfo.out_color_space != JCS_GRAYSCALE &&
+                          mInfo.out_color_space != JCS_CMYK)) {
         /* Put the pixels at end of row to enable in-place expansion */
         sampleRow += mInfo.output_width;
       }
@@ -587,6 +588,13 @@ nsJPEGDecoder::OutputScanlines()
           sampleRow += mInfo.output_width;
         }
         cmsDoTransform(mTransform, source, sampleRow, mInfo.output_width);
+        /* Move 3byte RGB data to end of row */
+        if (mInfo.out_color_space == JCS_CMYK) {
+          memmove(sampleRow + mInfo.output_width,
+                  sampleRow,
+                  3 * mInfo.output_width);
+          sampleRow += mInfo.output_width;
+        }
       } else if (gfxPlatform::IsCMSEnabled()) {
         /* No embedded ICC profile - treat as sRGB */
         cmsHTRANSFORM transform = gfxPlatform::GetCMSRGBTransform();
