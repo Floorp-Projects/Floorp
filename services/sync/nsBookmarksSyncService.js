@@ -159,7 +159,7 @@ BookmarksSyncService.prototype = {
   },
 
   _nodeParentsInt: function BSS__nodeParentsInt(guid, tree, parents) {
-    if (tree[guid] && tree[guid].parentGuid == null)
+    if (!tree[guid] || tree[guid].parentGuid == null)
       return parents;
     parents.push(tree[guid].parentGuid);
     return this._nodeParentsInt(tree[guid].parentGuid, tree, parents);
