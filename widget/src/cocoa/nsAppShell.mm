@@ -241,7 +241,7 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
   if (self->mRunningEventLoop) {
     self->mRunningEventLoop = PR_FALSE;
 
-    // The run loop may be sleeping -- [NSRunLoop acceptInputForMode:...]
+    // The run loop may be sleeping -- [NSRunLoop runMode:...]
     // won't return until it's given a reason to wake up.  Awaken it by
     // posting a bogus event.  There's no need to make the event
     // presentable.
@@ -362,8 +362,8 @@ nsAppShell::ScheduleNativeEventCallback()
 //
 // Returns true if more events are waiting in the native event queue.
 //
-// But (now that we're using [NSRunLoop acceptInputForMode:beforeDate:]) it's
-// too expensive to call ProcessNextNativeEvent() many times in a row (in a
+// But (now that we're using [NSRunLoop runMode:beforeDate:]) it's too
+// expensive to call ProcessNextNativeEvent() many times in a row (in a
 // tight loop), so we never return true more than kHadMoreEventsCountMax
 // times in a row.  This doesn't seem to cause native event starvation.
 //
@@ -384,6 +384,8 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
   if (aMayWait)
     waitUntil = [NSDate distantFuture];
 
+  NSRunLoop* currentRunLoop = [NSRunLoop currentRunLoop];
+
   do {
     // No autorelease pool is provided here, because OnProcessNextEvent
     // and AfterProcessNextEvent are responsible for maintaining it.
@@ -403,40 +405,67 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
     // You also sometimes had to ctrl-click or right-click multiple times to
     // bring up a context menu.)
 
-    // Now that we're using [NSRunLoop acceptInputForMode:beforeDate:], it's
-    // too expensive to call ProcessNextNativeEvent() many times in a row, so
-    // we never return true more than kHadMoreEventsCountMax in a row.  I'm
-    // not entirely sure why [NSRunLoop acceptInputForMode:beforeDate:] is too
-    // expensive, since it and its cousin [NSRunLoop runMode:beforeDate:] are
+    // Now that we're using [NSRunLoop runMode:beforeDate:], it's too
+    // expensive to call ProcessNextNativeEvent() many times in a row, so we
+    // never return true more than kHadMoreEventsCountMax in a row.  I'm not
+    // entirely sure why [NSRunLoop runMode:beforeDate:] is too expensive,
+    // since it and its cousin [NSRunLoop acceptInputForMode:beforeDate:] are
     // designed to be called in a tight loop.  Possibly the problem is due to
-    // combining [NSRunLoop acceptInputForMode:beforeDate] with [NSApp
+    // combining [NSRunLoop runMode:beforeDate] with [NSApp
     // nextEventMatchingMask:...].
+
+    // We need to special-case timer events (events of type NSPeriodic),
+    // otherwise we will starve them.  (Which can have strange results --
+    // among other things it causes a ~10% increase in the number of calls
+    // to malloc and a ~2% Tdhtml regression.  See bmo bug 396796.)  Apple's
+    // documentation is very scanty, and it's now more scanty than it used to
+    // be.  But it appears that [NSRunLoop acceptInputForMode:beforeDate:]
+    // doesn't process timer events at all, that it is called from
+    // [NSRunLoop runMode:beforeDate:], and that [NSRunLoop runMode:beforeDate:],
+    // though it does process timer events, doesn't return after doing so.
+    // To get around this, when aWait is PR_FALSE we check for timer events
+    // and process them using [NSApp sendEvent:].  When aWait is PR_TRUE
+    // [NSRunLoop runMode:beforeDate:] will only return on a "real" event.
+    // But there's code in ProcessGeckoEvents() that should (when need be)
+    // wake us up by sending a "fake" "real" event.  (See Apple's current doc
+    // on [NSRunLoop runMode:beforeDate:] and a quote from what appears to be
+    // an older version of this doc at
+    // http://lists.apple.com/archives/cocoa-dev/2001/May/msg00559.html.)
 
     // If the current mode is something else than NSDefaultRunLoopMode, look
     // for events in that mode.
-    currentMode = [[NSRunLoop currentRunLoop] currentMode];
+    currentMode = [currentRunLoop currentMode];
     if (!currentMode)
       currentMode = NSDefaultRunLoopMode;
+
+    NSEvent* nextEvent = nil;
 
     // If we're running modal (either Cocoa modal or XUL modal) we still need
     // to use nextEventMatchingMask and sendEvent -- otherwise (in Minefield)
     // the modal window won't receive key events or most mouse events.
     if ([NSApp _isRunningModal] || (gXULModalLevel > 0)) {
-      if (NSEvent* event = [NSApp nextEventMatchingMask:NSAnyEventMask
-                                              untilDate:waitUntil
-                                                 inMode:currentMode
-                                                dequeue:YES]) {
-        [NSApp sendEvent:event];
+      if (nextEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+                                         untilDate:waitUntil
+                                            inMode:currentMode
+                                           dequeue:YES]) {
+        [NSApp sendEvent:nextEvent];
         eventProcessed = PR_TRUE;
       }
     } else {
       if (aMayWait ||
-          [NSApp nextEventMatchingMask:NSAnyEventMask
-                             untilDate:nil
-                                inMode:currentMode
-                               dequeue:NO]) {
-        [[NSRunLoop currentRunLoop] acceptInputForMode:currentMode
-                                            beforeDate:waitUntil];
+          (nextEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+                                          untilDate:nil
+                                             inMode:currentMode
+                                            dequeue:NO])) {
+        if (nextEvent && ([nextEvent type] == NSPeriodic)) {
+          nextEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
+                                         untilDate:waitUntil
+                                            inMode:currentMode
+                                           dequeue:YES];
+          [NSApp sendEvent:nextEvent];
+        } else {
+          [currentRunLoop runMode:currentMode beforeDate:waitUntil];
+        }
         eventProcessed = PR_TRUE;
       }
     }
