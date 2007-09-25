@@ -2472,10 +2472,17 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
     obj->map = NULL;
     obj->dslots = NULL;
 
-    /* Set the proto, parent, and class properties. */
+    /* Set the proto and parent properties. */
     STOBJ_SET_PROTO(obj, proto);
     STOBJ_SET_PARENT(obj, parent);
+
+    /*
+     * Set the class slot with the initial value of the system flag set to
+     * false.
+     */
+    JS_ASSERT(((jsuword) clasp & 3) == 0);
     STOBJ_SET_SLOT(obj, JSSLOT_CLASS, PRIVATE_TO_JSVAL(clasp));
+    JS_ASSERT(!STOBJ_IS_SYSTEM(obj));
 
     /* Initialize the remaining fixed slots. */
     for (i = JSSLOT_PRIVATE; i != JS_INITIAL_NSLOTS; ++i)
