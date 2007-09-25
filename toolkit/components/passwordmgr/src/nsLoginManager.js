@@ -1075,7 +1075,7 @@ LoginManager.prototype = {
         }
 
         // XXX: we could do better on forms with 2 or 3 password fields.
-        var passwordField = pwFields[pwFields.length - 1].element;
+        var passwordField = pwFields[0].element;
 
         // XXX this would really be cleaner if we could get at the
         // AutoCompleteResult, which has the actual nsILoginInfo for the
