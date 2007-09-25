@@ -601,6 +601,7 @@ BookmarksSyncService.prototype = {
     var generator = yield;
     var handlers = this._handlersForGenerator(generator);
 
+    this._os.notifyObservers(null, "bookmarks-sync:start", "");
     LOG("Beginning sync");
 
     try {
@@ -620,9 +621,11 @@ BookmarksSyncService.prototype = {
 
       LOG("server: " + uneval(server));
       if (server['status'] == 2) {
+        this._os.notifyObservers(null, "bookmarks-sync:end", "");
         LOG("Sync complete");
         return;
       } else if (server['status'] != 0 && server['status'] != 1) {
+        this._os.notifyObservers(null, "bookmarks-sync:end", "");
         LOG("Sync error");
         return;
       }
@@ -636,6 +639,7 @@ BookmarksSyncService.prototype = {
       var localUpdates = this._detectUpdates(this._snapshot, localJson);
       LOG("updates: " + uneval(localUpdates));
       if (!(server['status'] == 1 || localUpdates.length > 0)) {
+        this._os.notifyObservers(null, "bookmarks-sync:end", "");
         LOG("Sync complete (1): no changes needed on client or server");
         return;
       }
@@ -673,6 +677,7 @@ BookmarksSyncService.prototype = {
 
       if (!(clientChanges.length || serverChanges.length ||
             clientConflicts.length || serverConflicts.length)) {
+        this._os.notifyObservers(null, "bookmarks-sync:end", "");
         LOG("Sync complete (2): no changes needed on client or server");
         this._snapshot = this._wrapNode(localBookmarks);
         this._snapshotVersion = server['version'];
@@ -716,6 +721,7 @@ BookmarksSyncService.prototype = {
           LOG("Error: could not update deltas on server");
         }
       }
+      this._os.notifyObservers(null, "bookmarks-sync:end", "");
       LOG("Sync complete");
     } finally {
       //this._dav.unlock(handlers);
