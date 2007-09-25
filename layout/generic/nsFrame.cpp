@@ -1003,9 +1003,8 @@ static PRBool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
     // have clipping.
   }
   
-  aRect->SetRect(aBuilder->ToReferenceFrame(aFrame), aFrame->GetSize());
-  const nsStyleBorder* borderStyle = aFrame->GetStyleContext()->GetStyleBorder();
-  aRect->Deflate(borderStyle->GetBorder());
+  *aRect = aFrame->GetPaddingRect() - aFrame->GetPosition() +
+    aBuilder->ToReferenceFrame(aFrame);
   return PR_TRUE;
 }
 
