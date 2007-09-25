@@ -43,13 +43,13 @@
 
 #define ARIA_PROPERTY(atom) &nsAccessibilityAtoms::##atom,
 nsIAtom** nsARIAMap::gAriaAtomPtrsNS[eAria_none] = {
-#include "nsAriaPropertyList.h"
+#include "nsARIAPropertyList.h"
 };
 #undef ARIA_PROPERTY
 
 #define ARIA_PROPERTY(atom) &nsAccessibilityAtoms::aria_##atom,
 nsIAtom** nsARIAMap::gAriaAtomPtrsHyphenated[eAria_none] = {
-#include "nsAriaPropertyList.h"
+#include "nsARIAPropertyList.h"
 };
 #undef ARIA_PROPERTY
 
