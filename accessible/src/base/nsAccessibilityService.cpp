@@ -1044,7 +1044,10 @@ NS_IMETHODIMP
 nsAccessibilityService::GetStringEventType(PRUint32 aEventType,
                                            nsAString& aString)
 {
-  if ( aEventType >= NS_ARRAY_LENGTH(kEventTypeNames)) {
+  NS_ASSERTION(nsIAccessibleEvent::EVENT_LAST_ENTRY == NS_ARRAY_LENGTH(kEventTypeNames),
+               "nsIAccessibleEvent constants are out of sync to kEventTypeNames");
+
+  if (aEventType >= NS_ARRAY_LENGTH(kEventTypeNames)) {
     aString.AssignLiteral("unknown");
     return NS_OK;
   }
