@@ -41,42 +41,11 @@
 #include "nsIAccessibleRole.h"
 #include "nsIAccessibleStates.h"
 
+#define ARIA_PROPERTY(atom) &nsAccessibilityAtoms::atom,
 nsIAtom** nsARIAMap::gAriaAtomPtrsNS[eAria_none] = {
-  &nsAccessibilityAtoms::activedescendant,
-  &nsAccessibilityAtoms::atomic,
-  &nsAccessibilityAtoms::autocomplete,
-  &nsAccessibilityAtoms::busy,
-  &nsAccessibilityAtoms::channel,
-  &nsAccessibilityAtoms::checked,
-  &nsAccessibilityAtoms::controls,
-  &nsAccessibilityAtoms::datatype,
-  &nsAccessibilityAtoms::describedby,
-  &nsAccessibilityAtoms::disabled,
-  &nsAccessibilityAtoms::dropeffect,
-  &nsAccessibilityAtoms::expanded,
-  &nsAccessibilityAtoms::flowto,
-  &nsAccessibilityAtoms::grab,
-  &nsAccessibilityAtoms::haspopup,
-  &nsAccessibilityAtoms::invalid,
-  &nsAccessibilityAtoms::labelledby,
-  &nsAccessibilityAtoms::level,
-  &nsAccessibilityAtoms::live,
-  &nsAccessibilityAtoms::multiline,
-  &nsAccessibilityAtoms::multiselectable,
-  &nsAccessibilityAtoms::owns,
-  &nsAccessibilityAtoms::posinset,
-  &nsAccessibilityAtoms::pressed,
-  &nsAccessibilityAtoms::readonly,
-  &nsAccessibilityAtoms::relevant,
-  &nsAccessibilityAtoms::required,
-  &nsAccessibilityAtoms::secret,
-  &nsAccessibilityAtoms::selected,
-  &nsAccessibilityAtoms::setsize,
-  &nsAccessibilityAtoms::sort,
-  &nsAccessibilityAtoms::valuenow,
-  &nsAccessibilityAtoms::valuemin,
-  &nsAccessibilityAtoms::valuemax,
+#include "nsARIAPropertyList.h"
 };
+#undef ARIA_PROPERTY
 
 #define ARIA_PROPERTY(atom) &nsAccessibilityAtoms::aria_##atom,
 nsIAtom** nsARIAMap::gAriaAtomPtrsHyphenated[eAria_none] = {
