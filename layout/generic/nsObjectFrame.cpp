@@ -1374,8 +1374,9 @@ nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
 nsresult
 nsObjectFrame::PrepareInstanceOwner()
 {
-  // Our content node should have taken care of stopping the
-  // previously loaded plugin (if any)
+  // First, have to stop any possibly running plugins.
+  StopPluginInternal(PR_FALSE);
+
   NS_ASSERTION(!mInstanceOwner, "Must not have an instance owner here");
 
   mInstanceOwner = new nsPluginInstanceOwner();
@@ -1544,10 +1545,7 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
     return;
   }
 
-  nsRefPtr<nsPluginInstanceOwner> owner;
-  owner.swap(mInstanceOwner);
-
-  owner->PrepareToStop(aDelayedStop);
+  mInstanceOwner->PrepareToStop(aDelayedStop);
 
 #ifdef XP_WIN
   // We only deal with delayed stopping of plugins on Win32 for now,
@@ -1555,8 +1553,8 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
   // unclear how safe widget parenting is on other platforms.
   if (aDelayedStop) {
     // nsStopPluginRunnable will hold a strong reference to
-    // owner, and thus keep it alive as long as it needs it.
-    nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(owner);
+    // mInstanceOwner, and thus keep it alive as long as it needs it.
+    nsCOMPtr<nsIRunnable> evt = new nsStopPluginRunnable(mInstanceOwner);
     NS_DispatchToCurrentThread(evt);
 
     // If we're asked to do a delayed stop it means we're stopping the
@@ -1570,13 +1568,13 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
   } else
 #endif
   {
-    DoStopPlugin(owner);
-    // Stopping the plugin may have destroyed the frame.
-    // Do not touch any member variables after this line.
+    DoStopPlugin(mInstanceOwner);
   }
 
   // Break relationship between frame and plugin instance owner
-  owner->SetOwner(nsnull);
+  mInstanceOwner->SetOwner(nsnull);
+
+  NS_RELEASE(mInstanceOwner);
 }
 
 void
