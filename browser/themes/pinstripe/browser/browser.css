@@ -1692,7 +1692,7 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 }
 
 #identity-icon-label {
-    padding: 2px 2px 1px;
+    padding: 2px 2px 0;
     margin: 0;
     color: black;
     vertical-align: middle;
