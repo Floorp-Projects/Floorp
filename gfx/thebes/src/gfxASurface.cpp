@@ -306,3 +306,33 @@ gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit)
 
     return PR_TRUE;
 }
+
+nsresult
+gfxASurface::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+gfxASurface::EndPrinting()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+gfxASurface::AbortPrinting()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+gfxASurface::BeginPage()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+gfxASurface::EndPage()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
