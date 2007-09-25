@@ -45,7 +45,7 @@ typedef long nsAccessibleTextBoundary;
 
 interface nsIAccessible;
 
-[scriptable, uuid(948419b2-53f6-4a74-bb69-1345faf3e8e8)]
+[scriptable, uuid(caa4f543-070e-4705-8428-2e53575c41bb)]
 interface nsIAccessibleText : nsISupports
 {
   const nsAccessibleTextBoundary BOUNDARY_CHAR = 0;
@@ -180,15 +180,31 @@ interface nsIAccessibleText : nsISupports
   /**
    * Makes a specific part of string visible on screen.
    *
-   * @param aStartIndex - 0-based character offset.
-   * @param aEndIndex - 0-based character offset - the offset of the
-   *                        character just past the last character of the
-   *                        string.
-   * @param aScrollType - defines how to scroll (see nsIAccessibleScrollType for
-   *                      available constants).
+   * @param startIndex  0-based character offset
+   * @param endIndex    0-based character offset - the offset of the
+   *                    character just past the last character of the
+   *                    string
+   * @param scrollType  defines how to scroll (see nsIAccessibleScrollType for
+   *                    available constants)
    */
-  void scrollSubstringTo(in long aStartIndex, in long aEndIndex,
-                         in unsigned long aScrollType);
+  void scrollSubstringTo(in long startIndex, in long endIndex,
+                         in unsigned long scrollType);
+
+  /**
+   * Moves the top left of a substring to a specified location.
+   *
+   * @param startIndex      0-based character offset
+   * @param endIndex        0-based character offset - the offset of the
+   *                        character just past the last character of
+   *                        the string
+   * @param coordinateType  specifies the coordinates origin (for available
+   *                        constants refer to nsIAccessibleCoordinateType)
+   * @param x               defines the x coordinate
+   * @param y               defines the y coordinate
+   */
+  void scrollSubstringToPoint(in long startIndex, in long endIndex,
+                              in unsigned long coordinateType,
+                              in long x, in long y);
 };
 
 /*

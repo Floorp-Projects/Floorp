@@ -61,7 +61,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIFrame.h"
-#include "nsIScrollableFrame.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsPresContext.h"
@@ -441,71 +440,14 @@ nsAccessNode::ScrollToPoint(PRUint32 aCoordinateType, PRInt32 aX, PRInt32 aY)
   if (!frame)
     return NS_ERROR_FAILURE;
 
-  nsPresContext *presContext = frame->PresContext();
-
-  switch (aCoordinateType) {
-    case nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE:
-      break;
-
-    case nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE:
-    {
-      nsIntPoint wndCoords = nsAccUtils::GetScreenCoordsForWindow(mDOMNode);
-      aX += wndCoords.x;
-      aY += wndCoords.y;
-      break;
-    }
-
-    case nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE:
-    {
-      nsCOMPtr<nsPIAccessNode> parent;
-
-      nsCOMPtr<nsIAccessible> accessible;
-      nsresult rv = QueryInterface(NS_GET_IID(nsIAccessible),
-                                   getter_AddRefs(accessible));
-      if (NS_SUCCEEDED(rv) && accessible) {
-        nsCOMPtr<nsIAccessible> parentAccessible;
-        accessible->GetParent(getter_AddRefs(parentAccessible));
-        parent = do_QueryInterface(parentAccessible);
-      } else {
-        nsCOMPtr<nsIAccessNode> parentAccessNode;
-        GetParentNode(getter_AddRefs(parentAccessNode));
-        parent = do_QueryInterface(parentAccessNode);
-      }
-
-      NS_ENSURE_STATE(parent);
-      nsIFrame *parentFrame = parent->GetFrame();
-      NS_ENSURE_STATE(parentFrame);
-
-      nsIntRect parentRect = parentFrame->GetScreenRectExternal();
-      aX += parentRect.x;
-      aY += parentRect.y;
-      break;
-    }
-
-    default:
-      return NS_ERROR_INVALID_ARG;
-  }
+  nsIntPoint coords;
+  nsresult rv = nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordinateType,
+                                                  this, &coords);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsIFrame *parentFrame = frame;
-  while (parentFrame = parentFrame->GetParent()) {
-    nsIScrollableFrame *scrollableFrame = nsnull;
-    CallQueryInterface(parentFrame, &scrollableFrame);
-    if (scrollableFrame) {
-      nsIntRect frameRect = frame->GetScreenRectExternal();
-      PRInt32 devDeltaX = aX - frameRect.x;
-      PRInt32 devDeltaY = aY - frameRect.y;
-
-      nsPoint deltaPoint;
-      deltaPoint.x = presContext->DevPixelsToAppUnits(devDeltaX);
-      deltaPoint.y = presContext->DevPixelsToAppUnits(devDeltaY);
-
-      nsPoint scrollPoint = scrollableFrame->GetScrollPosition();
-
-      scrollPoint -= deltaPoint;
-
-      scrollableFrame->ScrollTo(scrollPoint);
-    }
-  }
+  while (parentFrame = parentFrame->GetParent())
+    nsAccUtils::ScrollFrameToPoint(parentFrame, frame, coords);
 
   return NS_OK;
 }

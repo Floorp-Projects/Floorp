@@ -41,6 +41,7 @@
 
 #include "nsAccessibilityAtoms.h"
 #include "nsIAccessible.h"
+#include "nsIAccessNode.h"
 #include "nsARIAMap.h"
 
 #include "nsIDOMNode.h"
@@ -162,6 +163,33 @@ public:
                                     nsIDOMNode *aEndNode, PRInt32 aEndIndex,
                                     PRUint32 aScrollType);
 
+  /** Helper method to scroll range into view, used for implementation of
+   * nsIAccessibleText::scrollSubstringTo[Point]().
+   *
+   * @param aFrame        the frame for accessible the range belongs to.
+   * @param aStartNode    start node of a range
+   * @param aStartOffset  an offset inside the start node
+   * @param aEndNode      end node of a range
+   * @param aEndOffset    an offset inside the end node
+   * @param aVPercent     how to align vertically, specified in percents
+   * @param aHPercent     how to align horizontally, specified in percents
+   */
+  static nsresult ScrollSubstringTo(nsIFrame *aFrame,
+                                    nsIDOMNode *aStartNode, PRInt32 aStartIndex,
+                                    nsIDOMNode *aEndNode, PRInt32 aEndIndex,
+                                    PRInt16 aVPercent, PRInt16 aHPercent);
+
+  /**
+   * Scrolls the given frame to the point, used for implememntation of
+   * nsIAccessNode::scrollToPoint and nsIAccessibleText::scrollSubstringToPoint.
+   *
+   * @param aScrollableFrame  the scrollable frame
+   * @param aFrame            the frame to scroll
+   * @param aPoint            the point scroll to
+   */
+  static void ScrollFrameToPoint(nsIFrame *aScrollableFrame,
+                                 nsIFrame *aFrame, const nsIntPoint& aPoint);
+
   /**
    * Converts scroll type constant defined in nsIAccessibleScrollType to
    * vertical and horizontal percents.
@@ -169,6 +197,22 @@ public:
   static void ConvertScrollTypeToPercents(PRUint32 aScrollType,
                                           PRInt16 *aVPercent,
                                           PRInt16 *aHPercent);
+
+  /**
+   * Converts the given coordinates to coordinates relative screen.
+   *
+   * @param aX               [in] the given x coord
+   * @param aY               [in] the given y coord
+   * @param aCoordinateType  [in] specifies coordinates origin (refer to
+   *                         nsIAccessibleCoordinateType)
+   * @param aAccessNode      [in] the accessible if coordinates are given
+   *                         relative it.
+   * @param aCoords          [out] converted coordinates
+   */
+  static nsresult ConvertToScreenCoords(PRInt32 aX, PRInt32 aY,
+                                        PRUint32 aCoordinateType,
+                                        nsIAccessNode *aAccessNode,
+                                        nsIntPoint *aCoords);
 
   /**
    * Returns coordinates relative screen for the top level window.
