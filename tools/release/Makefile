@@ -21,7 +21,7 @@ stage:
 	chmod -R g+rwxs /home/ftp/pub/firefox
 	chmod -R o+rx /home/ftp/pub
 	# staging environment
-	mkdir -p /data/cltbld/firefox-2.0.0.4/batch1/stage
+	mkdir -p /data/cltbld/firefox-2.0.0.6/batch1/stage
 	# download 2.0.0.6, for l10n verify
 	cd /data && wget -nv --cut-dirs=3 -np -r http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/2.0.0.6-candidates/rc2/ && mv ftp.mozilla.org/nightly/* /home/ftp/pub/firefox/nightly/ && rm -rfv ftp.mozilla.org
 
