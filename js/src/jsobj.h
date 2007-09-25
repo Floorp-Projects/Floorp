@@ -164,17 +164,10 @@ struct JSObject {
 #define STOBJ_SET_PARENT(obj,parent) \
     ((obj)->fslots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(parent))
 
-/*
- * We use JSSLOT_CLASS to store both JSClass* and the system flag as an int-
- * tagged value (see jsapi.h for details) with the system flag stored in the
- * second lowest bit.
- */
-#define STOBJ_GET_CLASS(obj)    ((JSClass *)((obj)->fslots[JSSLOT_CLASS] & ~3))
-#define STOBJ_IS_SYSTEM(obj)    (((obj)->fslots[JSSLOT_CLASS] & 2) != 0)
+#define STOBJ_GET_CLASS(obj)                                                  \
+    ((JSClass *)JSVAL_TO_PRIVATE((obj)->fslots[JSSLOT_CLASS]))
 
-#define STOBJ_SET_SYSTEM(obj)   ((void)((obj)->fslots[JSSLOT_CLASS] |= 2))
-
-#define STOBJ_GET_PRIVATE(obj)                                          \
+#define STOBJ_GET_PRIVATE(obj)                                                \
     (JS_ASSERT(JSVAL_IS_INT(STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE))),            \
      JSVAL_TO_PRIVATE(STOBJ_GET_SLOT(obj, JSSLOT_PRIVATE)))
 

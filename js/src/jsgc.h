@@ -66,7 +66,8 @@ JS_BEGIN_EXTERN_C
 #define GCF_TYPEMASK    JS_BITMASK(GCX_NTYPES_LOG2)
 #define GCF_MARK        JS_BIT(GCX_NTYPES_LOG2)
 #define GCF_FINAL       JS_BIT(GCX_NTYPES_LOG2 + 1)
-#define GCF_LOCKSHIFT   (GCX_NTYPES_LOG2 + 2)   /* lock bit shift */
+#define GCF_SYSTEM      JS_BIT(GCX_NTYPES_LOG2 + 2)
+#define GCF_LOCKSHIFT   (GCX_NTYPES_LOG2 + 3)   /* lock bit shift */
 #define GCF_LOCK        JS_BIT(GCF_LOCKSHIFT)   /* lock request bit in API */
 
 extern JS_FRIEND_API(uint8 *)
