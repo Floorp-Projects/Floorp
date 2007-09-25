@@ -1399,7 +1399,7 @@ nsDocAccessible::CreateTextChangeEventForNode(nsIAccessible *aContainerAccessibl
     }
   }
   else {
-    NS_ASSERTION(changeAccessible == aAccessibleForChangeNode,
+    NS_ASSERTION(!changeAccessible || changeAccessible == aAccessibleForChangeNode,
                  "Hypertext is reporting a different accessible for this node");
     length = TextLength(aAccessibleForChangeNode);
     if (Role(aAccessibleForChangeNode) == nsIAccessibleRole::ROLE_WHITESPACE) {  // newline
