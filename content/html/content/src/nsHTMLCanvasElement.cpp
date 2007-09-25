@@ -88,10 +88,11 @@ public:
   // nsICanvasElement
   NS_IMETHOD GetPrimaryCanvasFrame(nsIFrame **aFrame);
   NS_IMETHOD GetSize(PRUint32 *width, PRUint32 *height);
-  NS_IMETHOD RenderContexts(nsIRenderingContext *ctx);
-  NS_IMETHOD RenderContextsToSurface(struct _cairo_surface *surf);
+  NS_IMETHOD RenderContexts(gfxContext *ctx);
   virtual PRBool IsWriteOnly();
   virtual void SetWriteOnly();
+  NS_IMETHOD InvalidateFrame ();
+  NS_IMETHOD InvalidateFrameSubrect (const nsRect& damageRect);
 
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
@@ -372,7 +373,8 @@ nsHTMLCanvasElement::ToDataURLImpl(const nsAString& aMimeType,
   // get image bytes
   nsCOMPtr<nsIInputStream> imgStream;
   NS_ConvertUTF16toUTF8 aMimeType8(aMimeType);
-  rv = context->GetInputStream(aMimeType8, aEncoderOptions,
+  rv = context->GetInputStream(nsPromiseFlatCString(aMimeType8).get(),
+                               nsPromiseFlatString(aEncoderOptions).get(),
                                getter_AddRefs(imgStream));
   // XXX ERRMSG we need to report an error to developers here! (bug 329026)
   NS_ENSURE_SUCCESS(rv, rv);
@@ -506,21 +508,12 @@ nsHTMLCanvasElement::GetSize(PRUint32 *width, PRUint32 *height)
 }
 
 NS_IMETHODIMP
-nsHTMLCanvasElement::RenderContexts(nsIRenderingContext *rc)
+nsHTMLCanvasElement::RenderContexts(gfxContext *ctx)
 {
   if (!mCurrentContext)
     return NS_OK;
 
-  return mCurrentContext->Render(rc);
-}
-
-NS_IMETHODIMP
-nsHTMLCanvasElement::RenderContextsToSurface(struct _cairo_surface *surf)
-{
-  if (!mCurrentContext)
-    return NS_OK;
-
-  return mCurrentContext->RenderToSurface(surf);
+  return mCurrentContext->Render(ctx);
 }
 
 PRBool
@@ -533,4 +526,28 @@ void
 nsHTMLCanvasElement::SetWriteOnly()
 {
   mWriteOnly = PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsHTMLCanvasElement::InvalidateFrame()
+{
+  nsIFrame *frame = GetPrimaryFrame(Flush_Frames);
+  if (frame) {
+    nsRect r = frame->GetRect();
+    r.x = r.y = 0;
+    frame->Invalidate(r, PR_FALSE);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLCanvasElement::InvalidateFrameSubrect(const nsRect& damageRect)
+{
+  nsIFrame *frame = GetPrimaryFrame(Flush_Frames);
+  if (frame) {
+    frame->Invalidate(damageRect, PR_FALSE);
+  }
+
+  return NS_OK;
 }
