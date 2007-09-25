@@ -96,6 +96,8 @@
 #include "nsUnicharUtils.h"
 #include "nsIContent.h"
 #include "nsIEventStateManager.h"
+#include "nsIEventListenerManager.h"
+#include "nsGUIEvent.h"
 
 // Set to spew messages to the console about what is happening.
 //#define DEBUG_INLINESPELL
@@ -504,6 +506,7 @@ public:
 NS_INTERFACE_MAP_BEGIN(mozInlineSpellChecker)
 NS_INTERFACE_MAP_ENTRY(nsIInlineSpellChecker)
 NS_INTERFACE_MAP_ENTRY(nsIEditActionListener)
+NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
 NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
 NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMKeyListener)
@@ -624,10 +627,19 @@ mozInlineSpellChecker::RegisterEventListeners()
 
   nsCOMPtr<nsIDOMDocument> doc;
   nsresult rv = editor->GetDocument(getter_AddRefs(doc));
-  NS_ENSURE_SUCCESS(rv, rv); 
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(doc, &rv);
-  NS_ENSURE_SUCCESS(rv, rv); 
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIEventListenerManager> elmP;
+  piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(elmP));
+  if (elmP) {
+    // Focus event doesn't bubble so adding the listener to capturing phase
+    elmP->AddEventListenerByIID(static_cast<nsIDOMFocusListener *>(this),
+                                NS_GET_IID(nsIDOMFocusListener),
+                                NS_EVENT_FLAG_CAPTURE);
+  }
 
   piTarget->AddEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
                                   NS_GET_IID(nsIDOMMouseListener));
@@ -653,6 +665,14 @@ mozInlineSpellChecker::UnregisterEventListeners()
   
   nsCOMPtr<nsPIDOMEventTarget> piTarget = do_QueryInterface(doc);
   NS_ENSURE_TRUE(piTarget, NS_ERROR_NULL_POINTER);
+
+  nsCOMPtr<nsIEventListenerManager> elmP;
+  piTarget->GetListenerManager(PR_TRUE, getter_AddRefs(elmP));
+  if (elmP) {
+    elmP->RemoveEventListenerByIID(static_cast<nsIDOMFocusListener *>(this),
+                                   NS_GET_IID(nsIDOMFocusListener),
+                                   NS_EVENT_FLAG_CAPTURE);
+  }
 
   piTarget->RemoveEventListenerByIID(static_cast<nsIDOMMouseListener*>(this),
                                      NS_GET_IID(nsIDOMMouseListener));
@@ -1648,6 +1668,18 @@ mozInlineSpellChecker::HandleNavigationEvent(nsIDOMEvent* aEvent,
 
 NS_IMETHODIMP mozInlineSpellChecker::HandleEvent(nsIDOMEvent* aEvent)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP mozInlineSpellChecker::Focus(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP mozInlineSpellChecker::Blur(nsIDOMEvent* aEvent)
+{
+  // force spellcheck on blur, for instance when tabbing out of a textbox
+  HandleNavigationEvent(aEvent, PR_TRUE);
   return NS_OK;
 }
 
