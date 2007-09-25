@@ -296,7 +296,7 @@ var PlacesOrganizer = {
    * @param   aEvent
    *          The mouse event.
    */
-  onTreeClick: function PO_onTreeClicked(aEvent) {
+  onTreeClick: function PO_onTreeClick(aEvent) {
     var currentView = aEvent.currentTarget;
     var controller = currentView.controller;
 
@@ -317,6 +317,20 @@ var PlacesOrganizer = {
         controller.openLinksInTabs();
       }
     }
+  },
+
+  onTreeDblClick: function PO_onTreeDblClick(aEvent) {
+    if (aEvent.button != 0 || !this._content.hasSingleSelection ||
+        aEvent.originalTarget.localName != "treechildren")
+      return;
+
+    var row = { }, col = { }, obj = { };
+    this._content.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row,
+                                         col, obj);
+    if (row.value == -1  || obj.value == "twisty")
+      return;
+
+    this._content.controller.openSelectedNodeWithEvent(aEvent);
   },
 
   /**

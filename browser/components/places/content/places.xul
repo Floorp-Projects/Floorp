@@ -399,7 +399,7 @@
           <vbox flex="1">
             <tree id="placeContent" class="placesTree" context="placesContext" 
                   flex="1" type="places" 
-                  ondblclick="this.controller.openSelectedNodeWithEvent(event);"
+                  ondblclick="PlacesOrganizer.onTreeDblClick(event);"
                   onclick="PlacesOrganizer.onTreeClick(event);"
                   onselect="PlacesOrganizer.onContentTreeSelect();">
               <treecols id="placeContentColumns">
