@@ -53,9 +53,7 @@
 
 #include "nsICanvasGLPrivate.h"
 
-#ifndef MOZILLA_1_8_BRANCH
 #include "nsIDocument.h"
-#endif
 
 #include "nsTransform2D.h"
 
@@ -73,27 +71,17 @@
 #include "nsIImageLoadingContent.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIImage.h"
-#include "nsIFrame.h"
 #include "nsDOMError.h"
 #include "nsIJSRuntimeService.h"
 
-#ifndef MOZILLA_1_8_BRANCH
 #include "nsIClassInfoImpl.h"
-#endif
 
 #include "nsServiceManagerUtils.h"
 
 #include "nsDOMError.h"
 
-#include "nsContentUtils.h"
-
 #include "nsIXPConnect.h"
 #include "jsapi.h"
-
-#ifdef MOZ_CAIRO_GFX
-#include "gfxContext.h"
-#include "gfxASurface.h"
-#endif
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -102,7 +90,8 @@
 // GLEW will pull in the GL bits that we want/need
 #include "glew.h"
 
-#include "cairo.h"
+#include "gfxImageSurface.h"
+#include "gfxContext.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gGLES11Log = nsnull;
@@ -1132,13 +1121,14 @@ NS_IMETHODIMP
 nsCanvasRenderingContextGLES11::TexImage2DHTML(PRUint32 target, nsIDOMHTMLElement *imageOrCanvas)
 {
     nsresult rv;
-    cairo_surface_t *cairo_surf = nsnull;
-    PRUint8 *image_data = nsnull, *local_image_data = nsnull;
+    nsRefPtr<gfxASurface> surf;
+    nsRefPtr<gfxImageSurface> tmpImageSurface;
+    PRUint8 *image_data = nsnull;
     PRInt32 width, height;
     nsCOMPtr<nsIURI> element_uri;
     PRBool force_write_only = PR_FALSE;
 
-    rv = CairoSurfaceFromElement(imageOrCanvas, &cairo_surf, &image_data,
+    rv = CairoSurfaceFromElement(imageOrCanvas, getter_AddRefs(surf), &image_data,
                                  &width, &height, getter_AddRefs(element_uri), &force_write_only);
     if (NS_FAILED(rv))
         return rv;
@@ -1157,26 +1147,15 @@ nsCanvasRenderingContextGLES11::TexImage2DHTML(PRUint32 target, nsIDOMHTMLElemen
     }
 
     if (!image_data) {
-        local_image_data = (PRUint8*) PR_Malloc(width * height * 4);
-        if (!local_image_data)
-            return NS_ERROR_FAILURE;
+        nsRefPtr<gfxImageSurface> tmpImageSurface = new gfxImageSurface(gfxIntSize(width, height),
+                                                                        gfxASurface::ImageFormatARGB32);
 
-        cairo_surface_t *tmp = cairo_image_surface_create_for_data (local_image_data,
-                                                                    CAIRO_FORMAT_ARGB32,
-                                                                    width, height, width * 4);
-        if (!tmp) {
-            PR_Free(local_image_data);
-            return NS_ERROR_FAILURE;
-        }
+        nsRefPtr<gfxContext> cx = new gfxContext(tmpImageSurface);
+        cx->SetSource(surf);
+        cx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        cx->Paint();
 
-        cairo_t *tmp_cr = cairo_create (tmp);
-        cairo_set_source_surface (tmp_cr, cairo_surf, 0, 0);
-        cairo_set_operator (tmp_cr, CAIRO_OPERATOR_SOURCE);
-        cairo_paint (tmp_cr);
-        cairo_destroy (tmp_cr);
-        cairo_surface_destroy (tmp);
-
-        image_data = local_image_data;
+        image_data = tmpImageSurface->Data();
     }
 
     // Er, I can do this with glPixelStore, no?
@@ -1208,9 +1187,6 @@ nsCanvasRenderingContextGLES11::TexImage2DHTML(PRUint32 target, nsIDOMHTMLElemen
     MakeContextCurrent();
 
     glTexImage2D(target, 0, 4, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-
-    if (local_image_data)
-        PR_Free(local_image_data);
 
     return NS_OK;
 }
