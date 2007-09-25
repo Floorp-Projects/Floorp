@@ -76,9 +76,6 @@ bool FileID::MachoIdentifier(int cpu_type, unsigned char identifier[16]) {
   if (macho.UUIDCommand(cpu_type, identifier))
     return true;
 
-  if (macho.IDCommand(cpu_type, identifier))
-    return true;
-
   return macho.MD5(cpu_type, identifier);
 }
 
