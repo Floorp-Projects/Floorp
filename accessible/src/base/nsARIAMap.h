@@ -45,7 +45,7 @@
 
 #define ARIA_PROPERTY(atom) eAria_##atom,
 enum EAriaProperty {
-#include "nsAriaPropertyList.h"
+#include "nsARIAPropertyList.h"
   eAria_none };
 #undef ARIA_PROPERTY
 
