@@ -221,8 +221,7 @@ function plRecordTime(time) {
 function plLoadHandlerCapturing(evt) {
   // make sure we pick up the right load event
   if (evt.type != 'load' ||
-      (!(evt.originalTarget instanceof Ci.nsIDOMHTMLDocument) ||
-       evt.originalTarget.defaultView.frameElement))
+       evt.originalTarget.defaultView.frameElement)
       return;
 
   if (!(plPageFlags() & TEST_DOES_OWN_TIMING)) {
@@ -241,8 +240,7 @@ function plLoadHandlerCapturing(evt) {
 function plLoadHandler(evt) {
   // make sure we pick up the right load event
   if (evt.type != 'load' ||
-      (!(evt.originalTarget instanceof Ci.nsIDOMHTMLDocument) ||
-       evt.originalTarget.defaultView.frameElement))
+       evt.originalTarget.defaultView.frameElement)
       return;
 
   var end_time = Date.now();
