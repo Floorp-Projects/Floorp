@@ -388,6 +388,12 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
   if (itemType != nsIDocShellTreeItem::typeContent) {
     return;
   }
+
+  // At minimum, create doc accessible so that events are listened to,
+  // allowing us to see any mutations from a page load handler
+  nsCOMPtr<nsIAccessible> docAccessible;
+  GetAccService()->GetAccessibleFor(aDocNode, getter_AddRefs(docAccessible));
+
   nsCOMPtr<nsIDocShellTreeNode> treeNode(do_QueryInterface(treeItem));
   if (treeNode) {
     PRInt32 subDocuments;
@@ -460,7 +466,7 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   nsCOMPtr<nsIContent> finalFocusContent  = do_QueryInterface(aNode);
   if (finalFocusContent) {
     nsAutoString id;
-    if (finalFocusContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::activedescendant, id)) {
+    if (nsAccUtils::GetAriaProperty(finalFocusContent, nsnull, eAria_activedescendant, id)) {
       nsCOMPtr<nsIDOMDocument> domDoc;
       aNode->GetOwnerDocument(getter_AddRefs(domDoc));
       if (!domDoc) {
