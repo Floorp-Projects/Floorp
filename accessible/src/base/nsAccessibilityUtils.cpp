@@ -40,6 +40,7 @@
 
 #include "nsIAccessibleTypes.h"
 #include "nsPIAccessible.h"
+#include "nsPIAccessNode.h"
 #include "nsAccessibleEventData.h"
 
 #include "nsAccessNode.h"
@@ -57,6 +58,7 @@
 #include "nsIEventListenerManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
+#include "nsIScrollableFrame.h"
 #include "nsIEventStateManager.h"
 #include "nsISelection2.h"
 #include "nsISelectionController.h"
@@ -287,6 +289,19 @@ nsAccUtils::ScrollSubstringTo(nsIFrame *aFrame,
                               nsIDOMNode *aEndNode, PRInt32 aEndIndex,
                               PRUint32 aScrollType)
 {
+  PRInt16 vPercent, hPercent;
+  ConvertScrollTypeToPercents(aScrollType, &vPercent, &hPercent);
+
+  return ScrollSubstringTo(aFrame, aStartNode, aStartIndex, aEndNode, aEndIndex,
+                           vPercent, hPercent);
+}
+
+nsresult
+nsAccUtils::ScrollSubstringTo(nsIFrame *aFrame,
+                              nsIDOMNode *aStartNode, PRInt32 aStartIndex,
+                              nsIDOMNode *aEndNode, PRInt32 aEndIndex,
+                              PRInt16 aVPercent, PRInt16 aHPercent)
+{
   if (!aFrame || !aStartNode || !aEndNode)
     return NS_ERROR_FAILURE;
 
@@ -311,15 +326,39 @@ nsAccUtils::ScrollSubstringTo(nsIFrame *aFrame,
     selection->RemoveAllRanges();
     selection->AddRange(scrollToRange);
 
-    PRInt16 vPercent, hPercent;
-    ConvertScrollTypeToPercents(aScrollType, &vPercent, &hPercent);
     selection->ScrollIntoView(nsISelectionController::SELECTION_ANCHOR_REGION,
-                              PR_TRUE, vPercent, hPercent);
+                              PR_TRUE, aVPercent, aHPercent);
 
     selection->CollapseToStart();
   }
 
   return NS_OK;
+}
+
+void
+nsAccUtils::ScrollFrameToPoint(nsIFrame *aScrollableFrame,
+                               nsIFrame *aFrame,
+                               const nsIntPoint& aPoint)
+{
+  nsIScrollableFrame *scrollableFrame = nsnull;
+  CallQueryInterface(aScrollableFrame, &scrollableFrame);
+  if (!scrollableFrame)
+    return;
+
+  nsPresContext *presContext = aFrame->PresContext();
+
+  nsIntRect frameRect = aFrame->GetScreenRectExternal();
+  PRInt32 devDeltaX = aPoint.x - frameRect.x;
+  PRInt32 devDeltaY = aPoint.y - frameRect.y;
+
+  nsPoint deltaPoint;
+  deltaPoint.x = presContext->DevPixelsToAppUnits(devDeltaX);
+  deltaPoint.y = presContext->DevPixelsToAppUnits(devDeltaY);
+
+  nsPoint scrollPoint = scrollableFrame->GetScrollPosition();
+  scrollPoint -= deltaPoint;
+
+  scrollableFrame->ScrollTo(scrollPoint);
 }
 
 void
@@ -357,6 +396,67 @@ nsAccUtils::ConvertScrollTypeToPercents(PRUint32 aScrollType,
       *aVPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
       *aHPercent = NS_PRESSHELL_SCROLL_ANYWHERE;
   }
+}
+
+nsresult
+nsAccUtils::ConvertToScreenCoords(PRInt32 aX, PRInt32 aY,
+                                  PRUint32 aCoordinateType,
+                                  nsIAccessNode *aAccessNode,
+                                  nsIntPoint *aCoords)
+{
+  NS_ENSURE_ARG_POINTER(aCoords);
+
+  aCoords->MoveTo(aX, aY);
+
+  switch (aCoordinateType) {
+    case nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE:
+      break;
+
+    case nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE:
+    {
+      NS_ENSURE_ARG(aAccessNode);
+
+      nsCOMPtr<nsIDOMNode> DOMNode;
+      aAccessNode->GetDOMNode(getter_AddRefs(DOMNode));
+      NS_ENSURE_STATE(DOMNode);
+
+      nsIntPoint wndCoords = nsAccUtils::GetScreenCoordsForWindow(DOMNode);
+      *aCoords += wndCoords;
+      break;
+    }
+
+    case nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE:
+    {
+      NS_ENSURE_ARG(aAccessNode);
+
+      nsCOMPtr<nsPIAccessNode> parent;
+      nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(aAccessNode));
+      if (accessible) {
+        nsCOMPtr<nsIAccessible> parentAccessible;
+        accessible->GetParent(getter_AddRefs(parentAccessible));
+        parent = do_QueryInterface(parentAccessible);
+      } else {
+        nsCOMPtr<nsIAccessNode> parentAccessNode;
+        aAccessNode->GetParentNode(getter_AddRefs(parentAccessNode));
+        parent = do_QueryInterface(parentAccessNode);
+      }
+
+      NS_ENSURE_STATE(parent);
+
+      nsIFrame *parentFrame = parent->GetFrame();
+      NS_ENSURE_STATE(parentFrame);
+
+      nsIntRect parentRect = parentFrame->GetScreenRectExternal();
+      aCoords->x += parentRect.x;
+      aCoords->y += parentRect.y;
+      break;
+    }
+
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  return NS_OK;
 }
 
 nsIntPoint

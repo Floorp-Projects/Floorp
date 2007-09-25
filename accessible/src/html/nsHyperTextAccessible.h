@@ -123,6 +123,23 @@ public:
                                      nsIAccessible **aFinalAccessible = nsnull,
                                      PRBool aIsEndOffset = PR_FALSE);
 
+  /**
+   * Turn a start and end hypertext offsets into DOM range.
+   *
+   * @param  aStartHTOffset  [in] the given start hypertext offset
+   * @param  aEndHTOffset    [in] the given end hypertext offset
+   * @param  aStartNode      [out] start node of the range
+   * @param  aStartOffset    [out] start offset of the range
+   * @param  aEndNode        [out] end node of the range
+   * @param  aEndOffset      [out] end offset of the range
+   */
+  nsresult HypertextOffsetsToDOMRange(PRInt32 aStartHTOffset,
+                                      PRInt32 aEndHTOffset,
+                                      nsIDOMNode **aStartNode,
+                                      PRInt32 *aStartOffset,
+                                      nsIDOMNode **aEndNode,
+                                      PRInt32 *aEndOffset);
+
 protected:
   /*
    * This does the work for nsIAccessibleText::GetText[At|Before|After]Offset
@@ -203,6 +220,11 @@ protected:
                          nsISelection **aDomSel = nsnull,
                          nsCOMArray<nsIDOMRange>* aRanges = nsnull);
   nsresult SetSelectionRange(PRInt32 aStartPos, PRInt32 aEndPos);
+
+  // Helpers
+  nsresult GetDOMPointByFrameOffset(nsIFrame *aFrame, PRInt32 aOffset,
+                                    nsIAccessible *aAccessible,
+                                    nsIDOMNode **aNode, PRInt32 *aNodeOffset);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHyperTextAccessible,
