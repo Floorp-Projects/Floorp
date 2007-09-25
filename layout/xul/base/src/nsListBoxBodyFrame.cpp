@@ -730,8 +730,11 @@ nsListBoxBodyFrame::GetAvailableHeight()
 {
   nsIScrollableFrame* scrollFrame
     = nsLayoutUtils::GetScrollableFrameFor(this);
-  nsIScrollableView* scrollView = scrollFrame->GetScrollableView();
-  return scrollView->View()->GetBounds().height;
+  if (scrollFrame) {
+    nsIScrollableView* scrollView = scrollFrame->GetScrollableView();
+    return scrollView->View()->GetBounds().height;
+  }
+  return 0;
 }
 
 nscoord
@@ -1011,6 +1014,9 @@ nsListBoxBodyFrame::VerticalScroll(PRInt32 aPosition)
 {
   nsIScrollableFrame* scrollFrame
     = nsLayoutUtils::GetScrollableFrameFor(this);
+  if (!scrollFrame) {
+    return;
+  }
 
   nsPoint scrollPosition = scrollFrame->GetScrollPosition();
  
