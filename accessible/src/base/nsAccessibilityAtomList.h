@@ -176,11 +176,11 @@ ACCESSIBILITY_ATOM(role, "role")
 
   // ARIA properties
 #define ARIA_PROPERTY(atom) ACCESSIBILITY_ATOM(atom, #atom)
-#include "nsAriaPropertyList.h"
+#include "nsARIAPropertyList.h"
 #undef ARIA_PROPERTY
 
 #define ARIA_PROPERTY(atom) ACCESSIBILITY_ATOM(aria_##atom, "aria-"#atom)
-#include "nsAriaPropertyList.h"
+#include "nsARIAPropertyList.h"
 #undef ARIA_PROPERTY
 
   // misc atoms
