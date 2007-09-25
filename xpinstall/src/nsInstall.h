@@ -114,8 +114,6 @@ class nsInstallInfo
 
 #ifdef MOZ_XUL_APP
     nsIExtensionManager* GetExtensionManager()  { return mExtensionManager; }
-    nsIURI*              GetFileJARURL()        { return mFileJARURL; }
-    nsIURI*              GetManifestURL()       { return mManifestURL; }
 #else
     const nsCString&     GetFileJARSpec()       { return mFileJARSpec; }
 #endif
@@ -136,8 +134,6 @@ class nsInstallInfo
     nsCOMPtr<CHROMEREG_IFACE>   mChromeRegistry;
 
 #ifdef MOZ_XUL_APP
-    nsCOMPtr<nsIURI>              mFileJARURL;
-    nsCOMPtr<nsIURI>              mManifestURL;
     nsCOMPtr<nsIExtensionManager> mExtensionManager;
 #else
     nsCString                     mFileJARSpec;
