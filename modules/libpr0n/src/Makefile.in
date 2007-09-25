@@ -56,6 +56,9 @@ REQUIRES	= xpcom \
 		  gfx \
 		  thebes \
 		  cairo \
+		  caps \
+		  xpconnect \
+		  js \
 		  $(NULL)
 
 CPPSRCS		= \
