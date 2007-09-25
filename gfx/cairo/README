@@ -25,3 +25,7 @@ win32-logical-font-scale.patch: set CAIRO_WIN32_LOGICAL_FONT_SCALE to 1
 
 nonfatal-assertions.patch: Make assertions non-fatal
 
+win32-glyph-metrics.patch: GetGlyphOutline only works on Truetype fonts,
+so for non-Truetype fonts, assume no left or right bearing and use the
+font ascent and descent for the glyph extents.
+
