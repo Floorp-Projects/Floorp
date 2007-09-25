@@ -90,7 +90,7 @@ protected:
   // mHadMoreEventsCount and kHadMoreEventsCountMax are used in
   // ProcessNextNativeEvent().
   PRUint32               mHadMoreEventsCount;
-  static const PRUint32  kHadMoreEventsCountMax = 10;
+  static const PRUint32  kHadMoreEventsCountMax = 3;
 };
 
 #endif // nsAppShell_h_
