@@ -61,6 +61,7 @@ REQUIRES	= composer \
 		  necko \
 		  string \
 		  thebes \
+		  view \
 		  webshell \
 		  widget \
 		  xpcom \
