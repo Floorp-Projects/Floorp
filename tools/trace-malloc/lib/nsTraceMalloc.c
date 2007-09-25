@@ -1096,11 +1096,13 @@ my_malloc_hook(size_t size, __const __malloc_ptr_t caller)
 
     PR_ASSERT(tracing_enabled);
     t = tm_get_thread();
+    t->suppress_tracing++;
     __malloc_hook = old_malloc_hook;
     start = PR_IntervalNow();
     ptr = __libc_malloc(size);
     end = PR_IntervalNow();
     __malloc_hook = my_malloc_hook;
+    t->suppress_tracing--;
     MallocCallback(ptr, size, start, end, t);
     return ptr;
 }
@@ -1114,11 +1116,18 @@ my_realloc_hook(__ptr_t oldptr, size_t size, __const __malloc_ptr_t caller)
 
     PR_ASSERT(tracing_enabled);
     t = tm_get_thread();
+    t->suppress_tracing++;
     __realloc_hook = old_realloc_hook;
     start = PR_IntervalNow();
+
+    /*
+     * __libc_realloc(NULL, size) recurs into my_malloc_hook, so it's
+     * important that we've incremented t->suppress_tracing here.
+     */
     ptr = __libc_realloc(oldptr, size);
     end = PR_IntervalNow();
     __realloc_hook = my_realloc_hook;
+    t->suppress_tracing--;
     ReallocCallback(oldptr, ptr, size, start, end, t);
     return ptr;
 }
@@ -1132,11 +1141,13 @@ my_memalign_hook(size_t boundary, size_t size, __const __malloc_ptr_t caller)
 
     PR_ASSERT(tracing_enabled);
     t = tm_get_thread();
+    t->suppress_tracing++;
     __memalign_hook = old_memalign_hook;
     start = PR_IntervalNow();
     ptr = __libc_memalign(boundary, size);
     end = PR_IntervalNow();
     __memalign_hook = my_memalign_hook;
+    t->suppress_tracing--;
     MallocCallback(ptr, size, start, end, t);
     return ptr;
 }
@@ -1149,11 +1160,13 @@ my_free_hook(__ptr_t ptr, __const __malloc_ptr_t caller)
 
     PR_ASSERT(tracing_enabled);
     t = tm_get_thread();
+    t->suppress_tracing++;
     __free_hook = old_free_hook;
     start = PR_IntervalNow();
     __libc_free(ptr);
     end = PR_IntervalNow();
     __free_hook = my_free_hook;
+    t->suppress_tracing--;
     FreeCallback(ptr, start, end, t);
 }
 
