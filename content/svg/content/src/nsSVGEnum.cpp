@@ -95,13 +95,22 @@ nsSVGEnum::GetBaseValueString(nsAString& aValue, nsSVGElement *aSVGElement)
   NS_ERROR("unknown enumeration value");
 }
 
-void
+nsresult
 nsSVGEnum::SetBaseValue(PRUint16 aValue,
                         nsSVGElement *aSVGElement,
                         PRBool aDoSetAttr)
 {
-  mAnimVal = mBaseVal = static_cast<PRUint8>(aValue);
-  aSVGElement->DidChangeEnum(mAttrEnum, aDoSetAttr);
+  nsSVGEnumMapping *tmp = GetMapping(aSVGElement);
+
+  while (tmp && tmp->mKey) {
+    if (tmp->mVal == aValue) {
+      mAnimVal = mBaseVal = static_cast<PRUint8>(aValue);
+      aSVGElement->DidChangeEnum(mAttrEnum, aDoSetAttr);
+      return NS_OK;
+    }
+    tmp++;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
