@@ -62,9 +62,9 @@ public:
   void GetBaseValueString(nsAString& aValue,
                           nsSVGElement *aSVGElement);
 
-  void SetBaseValue(PRUint16 aValue,
-                    nsSVGElement *aSVGElement,
-                    PRBool aDoSetAttr);
+  nsresult SetBaseValue(PRUint16 aValue,
+                        nsSVGElement *aSVGElement,
+                        PRBool aDoSetAttr);
 
   PRUint16 GetBaseValue() const
     { return mBaseVal; }
@@ -94,7 +94,7 @@ private:
     NS_IMETHOD GetBaseVal(PRUint16* aResult)
       { *aResult = mVal->GetBaseValue(); return NS_OK; }
     NS_IMETHOD SetBaseVal(PRUint16 aValue)
-      { mVal->SetBaseValue(aValue, mSVGElement, PR_TRUE); return NS_OK; }
+      { return mVal->SetBaseValue(aValue, mSVGElement, PR_TRUE); }
     NS_IMETHOD GetAnimVal(PRUint16* aResult)
       { *aResult = mVal->GetAnimValue(); return NS_OK; }
   };
