@@ -32,15 +32,15 @@ cvsmirror_main:
 	rsync -a --delete-after cvs-mirror.mozilla.org::l10n/ /builds/cvsmirror.clean/l10n/
 	chgrp -R cvs /builds/cvsmirror.clean/cvsroot /builds/cvsmirror.clean/l10n
 	chmod -R g+rw /builds/cvsmirror.clean/cvsroot /builds/cvsmirror.clean/l10n
-	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RELEASE mozilla
-	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RELEASE_l10n mozilla
-	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RC1 mozilla
-	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RC1_l10n mozilla
+	#cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RELEASE mozilla
+	#cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RELEASE_l10n mozilla
+	#cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RC1 mozilla
+	#cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RC1_l10n mozilla
 	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RC2 mozilla
 	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d FIREFOX_2_0_0_7_RC2_l10n mozilla
 	cvs -d /builds/cvsmirror.clean/cvsroot rtag -d -B FIREFOX_2_0_0_7_MINIBRANCH mozilla
-	cvs -d /builds/cvsmirror.clean/l10n rtag -d FIREFOX_2_0_0_7_RELEASE l10n
-	cvs -d /builds/cvsmirror.clean/l10n rtag -d FIREFOX_2_0_0_7_RC1 l10n
+	#cvs -d /builds/cvsmirror.clean/l10n rtag -d FIREFOX_2_0_0_7_RELEASE l10n
+	#cvs -d /builds/cvsmirror.clean/l10n rtag -d FIREFOX_2_0_0_7_RC1 l10n
 
 cvsmirror_mofo:
 	mkdir -p /builds/cvsmirror.clean/tmp/mofo
