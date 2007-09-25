@@ -39,6 +39,15 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+const MODE_RDONLY   = 0x01;
+const MODE_WRONLY   = 0x02;
+const MODE_CREATE   = 0x08;
+const MODE_APPEND   = 0x10;
+const MODE_TRUNCATE = 0x20;
+
+const PERMS_FILE      = 0644;
+const PERMS_DIRECTORY = 0755;
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function BookmarksSyncService() { this._init(); }
@@ -101,6 +110,59 @@ BookmarksSyncService.prototype = {
     catch (ex) { /* use defaults */ }
     LOG("Bookmarks login server: " + serverURL);
     this._dav = new DAVCollection(serverURL);
+    this._readSnapshot();
+  },
+
+  _saveSnapshot: function BSS__saveSnapshot() {
+    let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+      getService(Ci.nsIProperties);
+
+    let file = dirSvc.get("ProfD", Ci.nsIFile);
+    file.append("bm-sync-snapshot.json");
+    file.QueryInterface(Ci.nsILocalFile);
+
+    if (!file.exists())
+      file.create(file.NORMAL_FILE_TYPE, PERMS_FILE);
+
+    let fos = Cc["@mozilla.org/network/file-output-stream;1"].
+      createInstance(Ci.nsIFileOutputStream);
+    let flags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
+    fos.init(file, flags, PERMS_FILE, 0);
+
+    let out = {version: this._snapshotVersion, snapshot: this._snapshot};
+    out = uneval(out);
+    fos.write(out, out.length);
+    fos.flush();
+    fos.close();
+  },
+
+  _readSnapshot: function BSS__readSnapshot() {
+    let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
+      getService(Ci.nsIProperties);
+
+    let file = dirSvc.get("ProfD", Ci.nsIFile);
+    file.append("bm-sync-snapshot.json");
+
+    if (!file.exists())
+      return;
+
+    let fis = Cc["@mozilla.org/network/file-input-stream;1"].
+      createInstance(Ci.nsIFileInputStream);
+    fis.init(file, MODE_RDONLY, PERMS_FILE, 0);
+    fis.QueryInterface(Ci.nsILineInputStream);
+
+    let json = "";
+    while (fis.available()) {
+      let ret = {};
+      fis.readLine(ret);
+      json += ret.value;
+    }
+    json = eval(json);
+
+    if (json.snapshot && json.version) {
+      this._snapshot = json.snapshot;
+      this._snapshotVersion = json.version;
+    }
   },
 
   _wrapNode: function BSS__wrapNode(node) {
@@ -319,9 +381,8 @@ BookmarksSyncService.prototype = {
 
     for (let i = 0; i < listA.length; i++) {
 
-      // Yield to main loop
       this._timer.initWithCallback(listener, 0, this._timer.TYPE_ONE_SHOT);
-      yield;
+      yield; // Yield to main loop
 
       for (let j = 0; j < listB.length; j++) {
         if (this._deepEquals(listA[i], listB[j])) {
@@ -342,9 +403,8 @@ BookmarksSyncService.prototype = {
 
     for (let i = 0; i < listA.length; i++) {
 
-      // Yield to main loop
       this._timer.initWithCallback(listener, 0, this._timer.TYPE_ONE_SHOT);
-      yield;
+      yield; // Yield to main loop
 
       for (let j = 0; j < listB.length; j++) {
         if (this._conflicts(listA[i], listB[j]) ||
@@ -372,7 +432,13 @@ BookmarksSyncService.prototype = {
     }
 
     this._timer = null;
-    onComplete({propagations: propagations, conflicts: conflicts});
+    let ret = {propagations: propagations, conflicts: conflicts};
+    this._generatorDone(onComplete, ret);
+
+    // shutdown protocol
+    let cookie = yield;
+    if (cookie != "generator shutdown")
+      LOG("_reconcile: Error: generator not properly shut down.")
   },
 
   _applyCommandsToObj: function BSS__applyCommandsToObj(commands, obj) {
@@ -547,8 +613,10 @@ BookmarksSyncService.prototype = {
       LOG("local json: " + uneval(localJson));
 
       // 1) Fetch server deltas
-      asyncRun(bind2(this, this._getServerData), handlers['complete'], localJson);
-      var server = yield;
+      let gsd_gen = this._getServerData(handlers['complete'], localJson);
+      gsd_gen.next(); // must initialize before sending
+      gsd_gen.send(gsd_gen);
+      let server = yield;
 
       LOG("server: " + uneval(server));
       if (server['status'] == 2) {
@@ -574,63 +642,79 @@ BookmarksSyncService.prototype = {
 	  
       // 3) Reconcile client/server deltas and generate new deltas for them.
 
-      var propagations = [server['updates'], localUpdates];
-      var conflicts = [[],[]];
-
       LOG("Reconciling updates");
-      asyncRun(bind2(this, this._reconcile),
-               handlers['complete'], [localUpdates, server.updates]);
+      let callback = function(retval) { continueGenerator(generator, retval); };
+      let rec_gen = this._reconcile(callback, [localUpdates, server.updates]);
+      rec_gen.next(); // must initialize before sending
+      rec_gen.send(rec_gen);
       let ret = yield;
-      propagations = ret.propagations;
-      conflicts = ret.conflicts;
+      // FIXME: Need to come up with a closing protocol for generators
+      rec_gen.close();
 
-      LOG("Propagations: " + uneval(propagations) + "\n");
-      LOG("Conflicts: " + uneval(conflicts) + "\n");
-	  
-      this._snapshotVersion = server['version'];
+      let clientChanges = [];
+      let serverChanges = [];
+      let clientConflicts = [];
+      let serverConflicts = [];
 
-      if (!((propagations[0] && propagations[0].length) ||
-            (propagations[1] && propagations[1].length) ||
-            (conflicts &&
-             (conflicts[0] && conflicts[0].length) ||
-             (conflicts[1] && conflicts[1].length)))) {
-        this._snapshot = this._wrapNode(localBookmarks);
+      if (ret.propagations[0])
+        clientChanges = ret.propagations[0];
+      if (ret.propagations[1])
+        serverChanges = ret.propagations[1];
+
+      if (ret.conflicts && ret.conflicts[0])
+        clientConflicts = ret.conflicts[0];
+      if (ret.conflicts && ret.conflicts[1])
+        serverConflicts = ret.conflicts[1];
+
+      LOG("Changes for client: " + uneval(clientChanges));
+      LOG("Changes for server: " + uneval(serverChanges));
+      LOG("Client conflicts: " + uneval(clientConflicts));
+      LOG("Server conflicts: " + uneval(serverConflicts));
+
+      if (!(clientChanges.length || serverChanges.length ||
+            clientConflicts.length || serverConflicts.length)) {
         LOG("Sync complete (2): no changes needed on client or server");
+        this._snapshot = this._wrapNode(localBookmarks);
+        this._snapshotVersion = server['version'];
+        this._saveSnapshot();
         return;
       }
 
-      if (conflicts && conflicts[0] && conflicts[0].length) {
+      if (clientConflicts.length || serverConflicts.length) {
         LOG("\nWARNING: Conflicts found, but we don't resolve conflicts yet!\n");
-        LOG("Conflicts(1) " + uneval(conflicts[0]));
-      }
-
-      if (conflicts && conflicts[1] && conflicts[1].length) {
-        LOG("\nWARNING: Conflicts found, but we don't resolve conflicts yet!\n");
-        LOG("Conflicts(2) " + uneval(conflicts[1]));
       }
 
       // 3.1) Apply server changes to local store
-      if (propagations[0] && propagations[0].length) {
+      if (clientChanges.length) {
         LOG("Applying changes locally");
+        // Note that we need to need to apply client changes to the
+        // current tree, not the saved snapshot
+        this._snapshot = this._applyCommandsToObj(clientChanges,
+                                                  this._wrapNode(localBookmarks));
+        this._snapshotVersion = server['version'];
+        this._applyCommands(clientChanges);
+        // FIXME: should wrapNode to a separate variable and make sure
+        // that snapshot -> that is an empty diff.
         this._snapshot = this._wrapNode(localBookmarks);
-        propagations[0] = this._applyCommandsToObj(this._snapshot, propagations[0]);
-        this._applyCommands(propagations[0]);
-        this._snapshot = this._wrapNode(localBookmarks);
+        this._saveSnapshot();
       }
 
       // 3.2) Append server delta to the delta file and upload
-      if (propagations[1] && propagations[1].length) {
+      if (serverChanges.length) {
         LOG("Uploading changes to server");
         this._snapshot = this._wrapNode(localBookmarks);
-        this._snapshotVersion++;
-        server['deltas'][this._snapshotVersion] = propagations[1];
+        this._snapshotVersion = server['version'] + 1;
+        server['deltas'][this._snapshotVersion] = serverChanges;
         this._dav.PUT("bookmarks.delta", uneval(server['deltas']), handlers);
         data = yield;
 
-        if (data.target.status >= 200 || data.target.status < 300)
+        if (data.target.status >= 200 || data.target.status < 300) {
           LOG("Successfully updated deltas on server");
-        else
+          this._saveSnapshot();
+        } else {
+          // FIXME: revert snapshot here?
           LOG("Error: could not update deltas on server");
+        }
       }
       LOG("Sync complete");
     } finally {
@@ -710,8 +794,10 @@ BookmarksSyncService.prototype = {
       } else {
         LOG("Server delta can't update from our snapshot version, getting full file");
         // generate updates from full local->remote snapshot diff
-        asyncRun(bind2(this, this._getServerUpdatesFull),
-                 handlers['complete'], localJson);
+        let gsdf_gen = this._getServerUpdatesFull(handlers['complete'],
+                                                  localJson);
+        gsdf_gen.next(); // must initialize before sending
+        gsdf_gen.send(gsdf_gen);
         data = yield;
         if (data.status == 2) {
           // we have a delta file but no snapshot on the server.  bad.
@@ -724,7 +810,6 @@ BookmarksSyncService.prototype = {
         tmp = this._applyCommandsToObj(data.updates, tmp);
 
         // fixme: this is duplicated from above, need to do some refactoring
-
         var keys = [];
         for (var v in ret.deltas) {
           if (v > this._snapshotVersion)
@@ -750,7 +835,9 @@ BookmarksSyncService.prototype = {
     case 404:
       LOG("Server has no delta file.  Getting full bookmarks file from server");
       // generate updates from full local->remote snapshot diff
-      asyncRun(bind2(this, this._getServerUpdatesFull), handlers['complete'], localJson);
+      let gsdf_gen = this._getServerUpdatesFull(handlers['complete'], localJson);
+      gsdf_gen.next(); // must initialize before sending
+      gsdf_gen.send(gsdf_gen);
       ret = yield;
       ret.deltas = {};
       break;
@@ -758,12 +845,12 @@ BookmarksSyncService.prototype = {
       LOG("Could not get bookmarks.delta: unknown HTTP status code " + data.target.status);
       break;
     }
-    onComplete(ret);
+    this._generatorDone(onComplete, ret)
   },
 
   _getServerUpdatesFull: function BSS__getServerUpdatesFull(onComplete, localJson) {
-    var generator = yield;
-    var handlers = this._handlersForGenerator(generator);
+    let generator = yield;
+    let handlers = this._handlersForGenerator(generator);
 
     var ret = {status: -1, version: -1, updates: null};
 
@@ -797,14 +884,34 @@ BookmarksSyncService.prototype = {
       LOG("Could not get bookmarks.json: unknown HTTP status code " + data.target.status);
       break;
     }
-    onComplete(ret);
+    this._generatorDone(onComplete, ret);
   },
 
   _handlersForGenerator: function BSS__handlersForGenerator(generator) {
-    var h = {load: bind2(this, function(event) { continueGenerator(generator, event); }),
-             error: bind2(this, function(event) { LOG("Request failed: " + uneval(event)); })};
+    var h = {load: bind2(this, function(data) { continueGenerator(generator, data); }),
+             error: bind2(this, function(data) { LOG("Request failed: " + uneval(data)); })};
     h['complete'] = h['load'];
     return h;
+  },
+
+  // generators called using asyncRun can't simply call the callback
+  // with the return value, since that would cause the calling
+  // function to end up running (after the yield) from inside the
+  // generator.  Instead, generators can call this method which sets
+  // up a timer to call the callback from a timer (and cleans up the
+  // timer to avoid leaks).
+  _generatorDone: function BSS__generatorDone(callback, retval) {
+    if (this._timer)
+      throw "Called generatorDone when there is a timer already set."
+
+    let cb = bind2(this, function(event) {
+      this._timer = null;
+      callback(retval);
+    });
+
+    this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._timer.initWithCallback(new EventListener(cb),
+                                 0, this._timer.TYPE_ONE_SHOT);
   },
 
   _onLogin: function BSS__onLogin(event) {
@@ -829,7 +936,11 @@ BookmarksSyncService.prototype = {
 
   // nsIBookmarksSyncService
 
-  sync: function BSS_sync() { asyncRun(bind2(this, this._doSync)); },
+  sync: function BSS_sync() {
+    let sync_gen = this._doSync();
+    sync_gen.next(); // must initialize before sending
+    sync_gen.send(sync_gen);
+  },
 
   login: function BSS_login() {
     this._dav.login({load: bind2(this, this._onLogin),
@@ -865,16 +976,12 @@ function bind2(object, method) {
   return function innerBind() { return method.apply(object, arguments); }
 }
 
-function asyncRun(func, handler, data) {
-  var generator = func(handler, data);
-  generator.next();
-  generator.send(generator);
-}
+
 
 function continueGenerator(generator, data) {
   try { generator.send(data); }
   catch (e) {
-    generator.close();
+    LOG("continueGenerator exception! - " + e);
     if (e instanceof StopIteration)
       generator = null;
     else
