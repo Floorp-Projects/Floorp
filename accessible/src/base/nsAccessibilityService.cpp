@@ -1431,22 +1431,7 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   if (!newAcc && content->Tag() != nsAccessibilityAtoms::body && content->GetParent() && 
       (content->IsFocusable() ||
       (isHTML && nsAccUtils::HasListener(content, NS_LITERAL_STRING("click"))) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::describedby) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::labelledby) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::flowto) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::controls) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::atomic) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::busy) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::channel) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::datatype) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::dropeffect) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::grab) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::haspopup) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::live) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::relevant) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::required) ||
-       content->HasAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::invalid) ||
-       !role.IsEmpty())) {
+       HasUniversalAriaProperty(content, aWeakShell) || !role.IsEmpty())) {
     // This content is focusable or has an interesting dynamic content accessibility property.
     // If it's interesting we need it in the accessibility hierarchy so that events or
     // other accessibles can point to it, or so that it can hold a state, etc.
@@ -1461,6 +1446,39 @@ NS_IMETHODIMP nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
   }
 
   return InitAccessible(newAcc, aAccessible);
+}
+
+PRBool
+nsAccessibilityService::HasUniversalAriaProperty(nsIContent *aContent,
+                                                 nsIWeakReference *aWeakShell)
+{
+  nsCOMPtr<nsIAccessibleDocument> docAccessible =
+    nsAccessNode::GetDocAccessibleFor(aWeakShell);
+  if (!docAccessible) {
+    return PR_FALSE;
+  }
+
+  // Precalculate |ariaPropTypes| so that HasAriaProperty() doesn't have to do that each time
+  PRUint32 ariaPropTypes;
+  docAccessible->GetAriaPropTypes(&ariaPropTypes);
+
+  return nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_atomic, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_busy, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_channel, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_controls, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_datatype, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_describedby, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_dropeffect, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_flowto, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_grab, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_haspopup, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_invalid, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_labelledby, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_live, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_owns, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_relevant, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_required, ariaPropTypes) ||
+         nsAccUtils::HasAriaProperty(aContent, aWeakShell, eAria_sort, ariaPropTypes);
 }
 
 NS_IMETHODIMP

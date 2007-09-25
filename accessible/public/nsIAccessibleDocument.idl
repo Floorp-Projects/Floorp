@@ -58,7 +58,7 @@ interface nsIDOMWindow;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(6cc11286-e02d-4a8d-960a-e7a61161b230)]
+[scriptable, uuid(d118c0e9-b5e7-4671-854a-65b4713d9552)]
 interface nsIAccessibleDocument : nsISupports
 {
   /**
@@ -121,4 +121,27 @@ interface nsIAccessibleDocument : nsISupports
    *         to the document root.
    */
   nsIAccessible getAccessibleInParentChain(in nsIDOMNode aDOMNode);
+
+  /**
+   * A bit flag representing the type of ARIA properties which should be
+   * checked in this document:
+   * either eUnknownPropType, eCheckNamespaced, eCheckHyphenated or eCheckAny
+   */
+  readonly attribute unsigned long ariaPropTypes;
+  
+  /**
+   * Check attributes in the form of:
+   * [someprefix]:[propname]  (e.g. aria:live) where ancestor defines: 
+   * xmlns:[someprefix]="http://www.w3.org/2005/07/aaa"
+   */
+  const unsigned long eCheckNamespaced = 1;
+  
+  /**
+   * Check hyphenated attributes in the form of aria-[propname].
+   * This is the default in text/html documents.
+   * Can be combined with eCheckNamespaced flag. This may
+   * change during the life of the document, if setAttributeNS()
+   * is used to set an ARIA property.
+   */
+  const unsigned long eCheckHyphenated = 2;
 };

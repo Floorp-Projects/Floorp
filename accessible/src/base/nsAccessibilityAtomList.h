@@ -140,25 +140,16 @@ ACCESSIBILITY_ATOM(tooltip, "tooltip")   // XUL
 ACCESSIBILITY_ATOM(tr, "tr")
 ACCESSIBILITY_ATOM(ul, "ul")
 
-  // DHTML accessibility relationship attributes
-ACCESSIBILITY_ATOM(controls, "controls")
-ACCESSIBILITY_ATOM(describedby, "describedby")
-ACCESSIBILITY_ATOM(flowto, "flowto")
-ACCESSIBILITY_ATOM(labelledby, "labelledby")
-ACCESSIBILITY_ATOM(owns, "owns")
-
   // Alphabetical list of attributes
 ACCESSIBILITY_ATOM(acceltext, "acceltext")
 ACCESSIBILITY_ATOM(accesskey, "accesskey")
 ACCESSIBILITY_ATOM(alt, "alt")
 ACCESSIBILITY_ATOM(anonid, "anonid") // Used for ID's in XBL
-ACCESSIBILITY_ATOM(autocomplete, "autocomplete") // Used as attribute value too
 ACCESSIBILITY_ATOM(contenteditable, "contenteditable")
 ACCESSIBILITY_ATOM(control, "control")
 ACCESSIBILITY_ATOM(cycles, "cycles") // used for XUL cycler attribute
 ACCESSIBILITY_ATOM(curpos, "curpos") // XUL
 ACCESSIBILITY_ATOM(data, "data")
-ACCESSIBILITY_ATOM(disabled, "disabled")
 ACCESSIBILITY_ATOM(droppable, "droppable")   // XUL combo box
 ACCESSIBILITY_ATOM(editable, "editable")
 ACCESSIBILITY_ATOM(_for, "for")
@@ -168,10 +159,8 @@ ACCESSIBILITY_ATOM(increment, "increment") // XUL
 ACCESSIBILITY_ATOM(lang, "lang")
 ACCESSIBILITY_ATOM(maxpos, "maxpos") // XUL
 ACCESSIBILITY_ATOM(minpos, "minpos") // XUL
-ACCESSIBILITY_ATOM(multiline, "multiline")
 ACCESSIBILITY_ATOM(name, "name")
 ACCESSIBILITY_ATOM(onclick, "onclick")
-ACCESSIBILITY_ATOM(readonly, "readonly")
 ACCESSIBILITY_ATOM(src, "src")
 ACCESSIBILITY_ATOM(summary, "summary")
 ACCESSIBILITY_ATOM(tabindex, "tabindex")
@@ -181,31 +170,18 @@ ACCESSIBILITY_ATOM(type, "type")
 ACCESSIBILITY_ATOM(value, "value")
 
   // ARIA (DHTML accessibility) attributes
-ACCESSIBILITY_ATOM(atomic, "atomic")
-ACCESSIBILITY_ATOM(busy, "busy")
-ACCESSIBILITY_ATOM(channel, "channel")
-ACCESSIBILITY_ATOM(activedescendant, "activedescendant")
-ACCESSIBILITY_ATOM(checked, "checked")
-ACCESSIBILITY_ATOM(datatype, "datatype")
-ACCESSIBILITY_ATOM(dropeffect, "dropeffect")
-ACCESSIBILITY_ATOM(expanded, "expanded")
-ACCESSIBILITY_ATOM(grab, "grab")
-ACCESSIBILITY_ATOM(haspopup, "haspopup")
-ACCESSIBILITY_ATOM(invalid, "invalid")
-ACCESSIBILITY_ATOM(level, "level")
-ACCESSIBILITY_ATOM(live, "live")
-ACCESSIBILITY_ATOM(multiselectable, "multiselectable")
-ACCESSIBILITY_ATOM(posinset, "posinset")
-ACCESSIBILITY_ATOM(pressed, "pressed")
-ACCESSIBILITY_ATOM(relevant, "relevant")
-ACCESSIBILITY_ATOM(required, "required")
+  // Also add to nsARIAMap.cpp and nsARIAMap.h
+  // ARIA role attribute
 ACCESSIBILITY_ATOM(role, "role")
-ACCESSIBILITY_ATOM(secret, "secret")
-ACCESSIBILITY_ATOM(selected, "selected")
-ACCESSIBILITY_ATOM(setsize, "setsize")
-ACCESSIBILITY_ATOM(valuenow, "valuenow")    // For DHTML widget values
-ACCESSIBILITY_ATOM(valuemin, "valuemin")
-ACCESSIBILITY_ATOM(valuemax, "valuemax")
+
+  // ARIA properties
+#define ARIA_PROPERTY(atom) ACCESSIBILITY_ATOM(atom, #atom)
+#include "nsAriaPropertyList.h"
+#undef ARIA_PROPERTY
+
+#define ARIA_PROPERTY(atom) ACCESSIBILITY_ATOM(aria_##atom, "aria-"#atom)
+#include "nsAriaPropertyList.h"
+#undef ARIA_PROPERTY
 
   // misc atoms
 // a form property used to obtain the default label
