@@ -24,6 +24,7 @@
  *   Ben Goodger <ben@netscape.com>
  *   Shawn Wilsher <me@shawnwilsher.com>
  *   Srirang G Doddihal <brahmana@doddihal.com>
+ *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -99,6 +100,13 @@ protected:
   nsresult CreateTable();
   nsresult ImportDownloadHistory();
   nsresult RestoreDatabaseState();
+
+  /**
+   * Paused downloads that survive across sessions are considered active, so
+   * rebuild the list of these downloads.
+   */
+  nsresult RestoreActiveDownloads();
+
   nsresult GetDownloadFromDB(PRUint32 aID, nsDownload **retVal);
 
   /**
@@ -138,7 +146,14 @@ protected:
                                     nsIDownload *aDownload);
 
   nsDownload *FindDownload(PRUint32 aID);
-  nsresult CancelAllDownloads();
+
+  /**
+   * Stop tracking the active downloads. Only use this when we're about to quit
+   * the download manager because we destroy our list of active downloads to
+   * break the dlmgr<->dl cycle. Active downloads that aren't real-paused will
+   * be canceled.
+   */
+  nsresult RemoveAllDownloads();
 
   /**
    * Removes download from "current downloads".
