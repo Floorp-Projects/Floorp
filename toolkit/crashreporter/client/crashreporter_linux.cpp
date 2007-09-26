@@ -296,7 +296,7 @@ static void TryInitGnome()
   gnomeuiLib = dlopen("libgnomeui-2.so.0", RTLD_LAZY);
   if (!gnomeuiLib)
     return;
- 
+
   _gnome_program_init_fn gnome_program_init =
     (_gnome_program_init_fn)(dlsym(gnomeLib, "gnome_program_init"));
   _libgnomeui_module_info_get_fn libgnomeui_module_info_get =
@@ -495,7 +495,7 @@ bool UIGetSettingsPath(const string& vendor,
                        string& settingsPath)
 {
   char* home = getenv("HOME");
-  
+
   if (!home)
     return false;
 
@@ -504,14 +504,14 @@ bool UIGetSettingsPath(const string& vendor,
   if (!vendor.empty()) {
     string lc_vendor;
     std::transform(vendor.begin(), vendor.end(), back_inserter(lc_vendor),
-		   (int(*)(int)) std::tolower);
+                   (int(*)(int)) std::tolower);
     settingsPath += lc_vendor + "/";
   }
   string lc_product;
   std::transform(product.begin(), product.end(), back_inserter(lc_product),
-		 (int(*)(int)) std::tolower);
+                 (int(*)(int)) std::tolower);
   settingsPath += lc_product + "/Crash Reports";
-  return UIEnsurePathExists(settingsPath);
+  return true;
 }
 
 bool UIEnsurePathExists(const string& path)
@@ -553,4 +553,3 @@ std::ofstream* UIOpenWrite(const string& filename)
 {
   return new std::ofstream(filename.c_str(), std::ios::out);
 }
-
