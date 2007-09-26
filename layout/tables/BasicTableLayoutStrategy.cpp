@@ -611,7 +611,8 @@ BasicTableLayoutStrategy::ComputeIntrinsicWidths(nsIRenderingContext* aRendering
             }
             pct_total += p;
         } else {
-            nonpct_pref_total += colFrame->GetPrefCoord();
+            nonpct_pref_total = NSCoordSaturatingAdd(nonpct_pref_total, 
+                                                     colFrame->GetPrefCoord());
         }
     }
 
