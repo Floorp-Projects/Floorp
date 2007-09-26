@@ -163,6 +163,10 @@ ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
 IMPORT_LIBRARY		:= $(LIB_PREFIX)$(LIBRARY_NAME).$(IMPORT_LIB_SUFFIX)
 endif
 
+ifeq ($(MOZ_ENABLE_LIBXUL),1)
+EMBED_MANIFEST_AT=2
+endif
+
 endif # MKSHLIB
 endif # FORCE_SHARED_LIB && !BUILD_STATIC_LIBS
 endif # LIBRARY
@@ -1069,10 +1073,12 @@ endif # NO_LD_ARCHIVE_FLAGS
 	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 ifdef MSMANIFEST_TOOL
+ifdef EMBED_MANIFEST_AT
 	@if test -f $@.manifest; then \
-		mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;2; \
+		mt.exe -NOLOGO -MANIFEST $@.manifest -OUTPUTRESOURCE:$@\;$(EMBED_MANIFEST_AT); \
 		rm -f $@.manifest; \
 	fi
+endif   # EMBED_MANIFEST_AT
 endif	# MSVC with manifest tool
 endif	# WINNT && !GCC
 ifeq ($(OS_ARCH),Darwin)
