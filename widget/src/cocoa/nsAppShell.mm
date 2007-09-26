@@ -414,22 +414,20 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
     // combining [NSRunLoop runMode:beforeDate] with [NSApp
     // nextEventMatchingMask:...].
 
-    // We need to special-case timer events (events of type NSPeriodic),
-    // otherwise we will starve them.  (Which can have strange results --
-    // among other things it causes a ~10% increase in the number of calls
-    // to malloc and a ~2% Tdhtml regression.  See bmo bug 396796.)  Apple's
-    // documentation is very scanty, and it's now more scanty than it used to
-    // be.  But it appears that [NSRunLoop acceptInputForMode:beforeDate:]
-    // doesn't process timer events at all, that it is called from
-    // [NSRunLoop runMode:beforeDate:], and that [NSRunLoop runMode:beforeDate:],
-    // though it does process timer events, doesn't return after doing so.
-    // To get around this, when aWait is PR_FALSE we check for timer events
-    // and process them using [NSApp sendEvent:].  When aWait is PR_TRUE
-    // [NSRunLoop runMode:beforeDate:] will only return on a "real" event.
-    // But there's code in ProcessGeckoEvents() that should (when need be)
-    // wake us up by sending a "fake" "real" event.  (See Apple's current doc
-    // on [NSRunLoop runMode:beforeDate:] and a quote from what appears to be
-    // an older version of this doc at
+    // We special-case timer events (events of type NSPeriodic) to avoid
+    // starving them.  Apple's documentation is very scanty, and it's now
+    // more scanty than it used to be.  But it appears that [NSRunLoop
+    // acceptInputForMode:beforeDate:] doesn't process timer events at all,
+    // that it is called from [NSRunLoop runMode:beforeDate:], and that
+    // [NSRunLoop runMode:beforeDate:], though it does process timer events,
+    // doesn't return after doing so.  To get around this, when aWait is
+    // PR_FALSE we check for timer events and process them using [NSApp
+    // sendEvent:].  When aWait is PR_TRUE [NSRunLoop runMode:beforeDate:]
+    // will only return on a "real" event.  But there's code in
+    // ProcessGeckoEvents() that should (when need be) wake us up by sending
+    // a "fake" "real" event.  (See Apple's current doc on [NSRunLoop
+    // runMode:beforeDate:] and a quote from what appears to be an older
+    // version of this doc at
     // http://lists.apple.com/archives/cocoa-dev/2001/May/msg00559.html.)
 
     // If the current mode is something else than NSDefaultRunLoopMode, look
