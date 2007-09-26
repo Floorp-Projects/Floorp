@@ -1,0 +1,19 @@
+<html class="reftest-wait">
+<head>
+<title>Bug 387876 Test Case 2</title>
+<script>
+ function tweak() {
+   document.getElementById('weird').textContent += 'd';
+   document.documentElement.className = '';
+ }
+</script>
+</head>
+<body onload="setTimeout(tweak, 10);">
+  <div style="width:100%; height:0px;
+              -moz-column-width: 20px; -moz-column-gap: 10px;">
+    <div style="background: lightblue;">a</div>
+    <p id="weird" 
+       style="background: lightgreen">b c</p>
+  </div>
+</body>
+</html>
