@@ -42,11 +42,9 @@
 #include "nsMemory.h"
 #include "nsXBLPrototypeHandler.h"
 #include "nsXBLProtoImplMember.h"
-#include "nsXBLProtoImplField.h"
+#include "nsXBLPrototypeBinding.h"
 
 class nsIXPConnectJSObjectHolder;
-class nsXBLPrototypeBinding;
-class nsXBLProtoImplAnonymousMethod;
 
 class nsXBLProtoImpl
 {
@@ -54,7 +52,6 @@ public:
   nsXBLProtoImpl() 
     : mClassObject(nsnull),
       mMembers(nsnull),
-      mFields(nsnull),
       mConstructor(nsnull),
       mDestructor(nsnull)
   { 
@@ -67,8 +64,7 @@ public:
     // clean them up automatically.
     for (nsXBLProtoImplMember* curr = mMembers; curr; curr=curr->GetNext())
       curr->Destroy(mClassObject != nsnull);
-    delete mMembers;
-    delete mFields;
+    delete mMembers; 
   }
   
   nsresult InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIContent* aBoundElement);
@@ -78,25 +74,9 @@ public:
                              void** aTargetClassObject);
   nsresult CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding);
 
-  void SetMemberList(nsXBLProtoImplMember* aMemberList)
-  {
-    delete mMembers;
-    mMembers = aMemberList;
-  }
-
-  void SetFieldList(nsXBLProtoImplField* aFieldList)
-  {
-    delete mFields;
-    mFields = aFieldList;
-  }
+  void SetMemberList(nsXBLProtoImplMember* aMemberList) { delete mMembers; mMembers = aMemberList; }
 
   void Traverse(nsCycleCollectionTraversalCallback &cb) const;
-
-  nsXBLProtoImplField* FindField(const nsString& aFieldName) const;
-
-  // Resolve all the fields for this implementation on the object |obj| False
-  // return means a JS exception was set.
-  PRBool ResolveAllFields(JSContext *cx, JSObject *obj) const;
 
 protected:
   // Function to call if compilation of a member fails.  When this is called,
@@ -113,8 +93,6 @@ protected:
                         // and methods for the binding.
 
   nsXBLProtoImplMember* mMembers; // The members of an implementation are chained in this singly-linked list.
-
-  nsXBLProtoImplField* mFields; // Our fields
   
 public:
   nsXBLProtoImplAnonymousMethod* mConstructor; // Our class constructor.
