@@ -83,13 +83,12 @@ nsXBLContentSink::nsXBLContentSink()
   : mState(eXBL_InDocument),
     mSecondaryState(eXBL_None),
     mDocInfo(nsnull),
-    mIsChromeOrResource(PR_FALSE),
     mFoundFirstBinding(PR_FALSE),    
+    mIsChromeOrResource(PR_FALSE),
     mBinding(nsnull),
     mHandler(nsnull),
     mImplementation(nsnull),
     mImplMember(nsnull),
-    mImplField(nsnull),
     mProperty(nsnull),
     mMethod(nsnull),
     mField(nsnull)
@@ -262,18 +261,6 @@ nsXBLContentSink::AddMember(nsXBLProtoImplMember* aMember)
     mImplementation->SetMemberList(aMember); // We're the first member in the chain.
 
   mImplMember = aMember; // Adjust our pointer to point to the new last member in the chain.
-}
-
-void
-nsXBLContentSink::AddField(nsXBLProtoImplField* aField)
-{
-  // Add this field to our chain.
-  if (mImplField)
-    mImplField->SetNext(aField); // Already have a chain. Just append to the end.
-  else
-    mImplementation->SetFieldList(aField); // We're the first member in the chain.
-
-  mImplField = aField; // Adjust our pointer to point to the new last field in the chain.
 }
 
 NS_IMETHODIMP 
@@ -716,8 +703,7 @@ nsXBLContentSink::ConstructImplementation(const PRUnichar **aAtts)
 {
   mImplementation = nsnull;
   mImplMember = nsnull;
-  mImplField = nsnull;
-  
+      
   if (!mBinding)
     return;
 
@@ -791,7 +777,7 @@ nsXBLContentSink::ConstructField(const PRUnichar **aAtts, PRUint32 aLineNumber)
     mField = new nsXBLProtoImplField(name, readonly);
     if (mField) {
       mField->SetLineNumber(aLineNumber);
-      AddField(mField);
+      AddMember(mField);
     }
   }
 }
