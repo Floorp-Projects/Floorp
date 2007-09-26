@@ -852,13 +852,13 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
     // the script has a non-cert principal, the document's principal should be
     // downgraded.
     if (channel) {
-      nsCOMPtr<nsISupports> owner;
-      channel->GetOwner(getter_AddRefs(owner));
-      nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
-
-      if (principal) {
+      nsCOMPtr<nsIPrincipal> channelPrincipal;
+      nsContentUtils::GetSecurityManager()->
+        GetChannelPrincipal(channel, getter_AddRefs(channelPrincipal));
+      if (channelPrincipal) {
         nsCOMPtr<nsIPrincipal> newPrincipal =
-          MaybeDowngradeToCodebase(mDocument->NodePrincipal(), principal);
+          MaybeDowngradeToCodebase(mDocument->NodePrincipal(),
+                                   channelPrincipal);
 
         mDocument->SetPrincipal(newPrincipal);
       }
