@@ -58,9 +58,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  nkcache \
 		  gfx \
-		  caps \
-		  xpconnect \
-		  js \
 		  $(JPEG_REQUIRES) \
 		  $(PNG_REQUIRES) \
 		  $(ZLIB_REQUIRES) \
