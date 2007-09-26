@@ -43,7 +43,6 @@
 interface imgIContainer;
 interface imgIDecoderObserver;
 interface nsIURI;
-interface nsIPrincipal;
 
 /**
  * imgIRequest interface
@@ -52,7 +51,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(a297d3fa-5e0c-4e59-9f30-a01c9d4f3f8b)]
+[scriptable, uuid(ccf705f6-1dd1-11b2-82ef-e18eccf7f7ec)]
 interface imgIRequest : nsIRequest
 {
   /**
@@ -81,11 +80,6 @@ interface imgIRequest : nsIRequest
    */
   readonly attribute unsigned long imageStatus;
 
-  /**
-   * The URI the image load was started with.  Note that this might not be the
-   * actual URI for the image (e.g. if HTTP redirects happened during the
-   * load).
-   */
   readonly attribute nsIURI URI;
 
   readonly attribute imgIDecoderObserver decoderObserver;
@@ -99,10 +93,5 @@ interface imgIRequest : nsIRequest
    * for this image load.
    */
   imgIRequest clone(in imgIDecoderObserver aObserver);
-
-  /**
-   * The principal gotten from the channel the image was loaded from.
-   */
-  readonly attribute nsIPrincipal imagePrincipal;
 };
 
