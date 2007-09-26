@@ -599,6 +599,7 @@ nsXULMenupopupAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   nsresult rv = nsAccessible::GetState(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
+#ifdef DEBUG_A11Y
   // We are onscreen if our parent is active
   PRBool isActive = PR_FALSE;
 
@@ -614,10 +615,12 @@ nsXULMenupopupAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
     if (element)
       element->HasAttribute(NS_LITERAL_STRING("open"), &isActive);
   }
+  NS_ASSERTION(isActive || *aState & nsIAccessibleStates::STATE_INVISIBLE,
+               "XULMenupopup doesn't have STATE_INVISIBLE when it's inactive");
+#endif
 
-  if (!isActive)
+  if (*aState & nsIAccessibleStates::STATE_INVISIBLE)
     *aState |= (nsIAccessibleStates::STATE_OFFSCREEN |
-                nsIAccessibleStates::STATE_INVISIBLE |
                 nsIAccessibleStates::STATE_COLLAPSED);
 
   return NS_OK;
