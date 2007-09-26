@@ -47,6 +47,7 @@
 #include "nsIServiceManager.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsIDOMNode.h"
+#include "nsXBLPrototypeBinding.h"
 
 nsresult
 nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIContent* aBoundElement)
@@ -55,7 +56,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
   // this prototype implementation as a guide.  The prototype implementation is compiled lazily,
   // so for the first bound element that needs a concrete implementation, we also build the
   // prototype implementation.
-  if (!mMembers)  // Constructor and destructor also live in mMembers
+  if (!mMembers && !mFields)  // Constructor and destructor also live in mMembers
     return NS_OK; // Nothing to do, so let's not waste time.
 
   // If the way this gets the script context changes, fix
@@ -212,6 +213,37 @@ nsXBLProtoImpl::Traverse(nsCycleCollectionTraversalCallback &cb) const
   for (member = mMembers; member; member = member->GetNext()) {
     member->Traverse(cb);
   }
+}
+
+nsXBLProtoImplField*
+nsXBLProtoImpl::FindField(const nsString& aFieldName) const
+{
+  for (nsXBLProtoImplField* f = mFields; f; f = f->GetNext()) {
+    if (aFieldName.Equals(f->GetName())) {
+      return f;
+    }
+  }
+
+  return nsnull;
+}
+
+PRBool
+nsXBLProtoImpl::ResolveAllFields(JSContext *cx, JSObject *obj) const
+{
+  for (nsXBLProtoImplField* f = mFields; f; f = f->GetNext()) {
+    // Using OBJ_LOOKUP_PROPERTY is a pain, since what we have is a
+    // PRUnichar* for the property name.  Let's just use the public API and
+    // all.
+    nsDependentString name(f->GetName());
+    jsval dummy;
+    if (!::JS_LookupUCProperty(cx, obj,
+                               reinterpret_cast<const jschar*>(name.get()),
+                               name.Length(), &dummy)) {
+      return PR_FALSE;
+    }
+  }
+
+  return PR_TRUE;
 }
 
 void
