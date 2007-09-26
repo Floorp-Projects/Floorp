@@ -78,6 +78,7 @@ ScopedAppData::ScopedAppData(const nsXREAppData* aAppData)
   SetAllocatedString(this->buildID, aAppData->buildID);
   SetAllocatedString(this->ID, aAppData->ID);
   SetAllocatedString(this->copyright, aAppData->copyright);
+  SetAllocatedString(this->profile, aAppData->profile);
   SetStrongPtr(this->directory, aAppData->directory);
   this->flags = aAppData->flags;
 
@@ -100,6 +101,7 @@ ScopedAppData::~ScopedAppData()
   SetAllocatedString(this->buildID, nsnull);
   SetAllocatedString(this->ID, nsnull);
   SetAllocatedString(this->copyright, nsnull);
+  SetAllocatedString(this->profile, nsnull);
 
   NS_IF_RELEASE(this->directory);
 
@@ -208,6 +210,7 @@ XRE_ParseAppData(nsILocalFile* aINIFile, nsXREAppData *aAppData)
     { "App", "BuildID",   &aAppData->buildID },
     { "App", "ID",        &aAppData->ID },
     { "App", "Copyright", &aAppData->copyright },
+    { "App", "Profile",   &aAppData->profile },
     { nsnull }
   };
   ReadStrings(parser, strings);

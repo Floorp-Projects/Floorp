@@ -697,9 +697,11 @@ void UIShowCrashUI(const string& dumpFile,
   }
 
   if (gQueryParameters.find(L"Vendor") != gQueryParameters.end()) {
-    gCrashReporterKey = L"Software\\" +
-                        gQueryParameters[L"Vendor"] +
-                        L"\\Crash Reporter";
+    gCrashReporterKey = L"Software\\";
+    if (!gQueryParameters[L"Vendor"].empty()) {
+      gCrashReporterKey += gQueryParameters[L"Vendor"] + L"\\";
+    }
+    gCrashReporterKey += gQueryParameters[L"Name"] + L"\\Crash Reporter";
   }
 
   gRestartArgs = restartArgs;
@@ -749,8 +751,6 @@ bool UIGetSettingsPath(const string& vendor,
     }
     PathAppend(path, UTF8ToWide(product).c_str());
     PathAppend(path, L"Crash Reports");
-    // in case it doesn't exist
-    CreateDirectory(path, NULL);
     settings_path = WideToUTF8(path);
     return true;
   }
