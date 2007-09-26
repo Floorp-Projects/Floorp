@@ -46,30 +46,31 @@
 #include "nsString.h"
 #include "nsXBLProtoImplMember.h"
 
-class nsXBLProtoImplField: public nsXBLProtoImplMember
+class nsIURI;
+
+class nsXBLProtoImplField
 {
 public:
   nsXBLProtoImplField(const PRUnichar* aName, const PRUnichar* aReadOnly);
-  virtual ~nsXBLProtoImplField();
-  virtual void Destroy(PRBool aIsCompiled);
+  ~nsXBLProtoImplField();
 
   void AppendFieldText(const nsAString& aText);
   void SetLineNumber(PRUint32 aLineNumber) {
     mLineNumber = aLineNumber;
   }
   
-  virtual nsresult InstallMember(nsIScriptContext* aContext,
-                                 nsIContent* aBoundElement, 
-                                 void* aScriptObject,
-                                 void* aTargetClassObject,
-                                 const nsCString& aClassStr);
-  virtual nsresult CompileMember(nsIScriptContext* aContext,
-                                 const nsCString& aClassStr,
-                                 void* aClassObject);
+  nsXBLProtoImplField* GetNext() const { return mNext; }
+  void SetNext(nsXBLProtoImplField* aNext) { mNext = aNext; }
 
-  virtual void Traverse(nsCycleCollectionTraversalCallback &cb) const;
+  nsresult InstallField(nsIScriptContext* aContext,
+                        JSObject* aBoundNode, nsIURI*
+                        aBindingDocURI) const;
+
+  const PRUnichar* GetName() const { return mName; }
 
 protected:
+  nsXBLProtoImplField* mNext;
+  PRUnichar* mName;
   PRUnichar* mFieldText;
   PRUint32 mFieldTextLength;
   PRUint32 mLineNumber;

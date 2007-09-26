@@ -822,7 +822,7 @@ nsXBLPrototypeBinding::InitClass(const nsCString& aClassName,
   *aClassObject = nsnull;
 
   return nsXBLBinding::DoInitJSClass(aContext, aGlobal, aScriptObject,
-                                     aClassName, aClassObject);
+                                     aClassName, this, aClassObject);
 }
 
 nsIContent*
