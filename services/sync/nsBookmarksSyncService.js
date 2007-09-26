@@ -726,6 +726,7 @@ BookmarksSyncService.prototype = {
     } finally {
       //this._dav.unlock(handlers);
       //data = yield;
+      this._os.notifyObservers(null, "bookmarks-sync:end", "");
     }
   },
 
