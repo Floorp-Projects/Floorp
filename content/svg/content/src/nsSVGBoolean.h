@@ -14,8 +14,8 @@
  *
  * The Original Code is the Mozilla SVG project.
  *
- * The Initial Developer of the Original Code is IBM Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2006
+ * The Initial Developer of the Original Code is Robert Longson.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -34,19 +34,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGNUMBER2_H__
-#define __NS_SVGNUMBER2_H__
+#ifndef __NS_SVGBOOLEAN_H__
+#define __NS_SVGBOOLEAN_H__
 
-#include "nsIDOMSVGNumber.h"
-#include "nsIDOMSVGAnimatedNumber.h"
+#include "nsIDOMSVGAnimatedBoolean.h"
 #include "nsSVGElement.h"
 #include "nsDOMError.h"
 
-class nsSVGNumber2
+class nsSVGBoolean
 {
 
 public:
-  void Init(PRUint8 aAttrEnum = 0xff, float aValue = 0) {
+    void Init(PRUint8 aAttrEnum = 0xff, PRBool aValue = PR_FALSE) {
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
   }
@@ -56,39 +55,39 @@ public:
                               PRBool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue);
 
-  void SetBaseValue(float aValue, nsSVGElement *aSVGElement, PRBool aDoSetAttr);
-  float GetBaseValue() const
+  void SetBaseValue(PRBool aValue, nsSVGElement *aSVGElement, PRBool aDoSetAttr);
+  PRBool GetBaseValue() const
     { return mBaseVal; }
-  float GetAnimValue() const
+  PRBool GetAnimValue() const
     { return mAnimVal; }
 
-  nsresult ToDOMAnimatedNumber(nsIDOMSVGAnimatedNumber **aResult,
-                               nsSVGElement* aSVGElement);
+  nsresult ToDOMAnimatedBoolean(nsIDOMSVGAnimatedBoolean **aResult,
+                                nsSVGElement* aSVGElement);
 
 private:
 
-  float mAnimVal;
-  float mBaseVal;
+  PRPackedBool mAnimVal;
+  PRPackedBool mBaseVal;
   PRUint8 mAttrEnum; // element specified tracking for attribute
 
-  struct DOMAnimatedNumber : public nsIDOMSVGAnimatedNumber
+  struct DOMAnimatedBoolean : public nsIDOMSVGAnimatedBoolean
   {
     NS_DECL_ISUPPORTS
 
-    DOMAnimatedNumber(nsSVGNumber2* aVal, nsSVGElement *aSVGElement)
+    DOMAnimatedBoolean(nsSVGBoolean* aVal, nsSVGElement *aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
-    nsSVGNumber2* mVal; // kept alive because it belongs to content
+    nsSVGBoolean* mVal; // kept alive because it belongs to content
     nsRefPtr<nsSVGElement> mSVGElement;
 
-    NS_IMETHOD GetBaseVal(float* aResult)
+    NS_IMETHOD GetBaseVal(PRBool* aResult)
       { *aResult = mVal->GetBaseValue(); return NS_OK; }
-    NS_IMETHOD SetBaseVal(float aValue)
+    NS_IMETHOD SetBaseVal(PRBool aValue)
       { mVal->SetBaseValue(aValue, mSVGElement, PR_TRUE); return NS_OK; }
-    NS_IMETHOD GetAnimVal(float* aResult)
+    NS_IMETHOD GetAnimVal(PRBool* aResult)
       { *aResult = mVal->GetAnimValue(); return NS_OK; }
 
   };
 
 };
-#endif //__NS_SVGNUMBER2_H__
+#endif //__NS_SVGBOOLEAN_H__

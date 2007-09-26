@@ -40,6 +40,7 @@
 #include "nsGkAtoms.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGInteger.h"
+#include "nsSVGBoolean.h"
 #include "nsIDOMSVGFilters.h"
 #include "nsCOMPtr.h"
 #include "nsISVGFilter.h"
@@ -59,7 +60,6 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "gfxContext.h"
-#include "nsSVGAnimatedBoolean.h"
 #include "nsSVGLengthList.h"
 
 //--------------------Filter Resource-----------------------
@@ -3237,12 +3237,11 @@ nsSVGFETurbulenceElement::Filter(nsSVGFilterInstance *instance)
 #endif
 
   float fX, fY, seed;
-  PRInt32 octaves;
+  PRInt32 octaves = mIntegerAttributes[OCTAVES].GetAnimValue();
   PRUint16 type = mEnumAttributes[TYPE].GetAnimValue();
   PRUint16 stitch = mEnumAttributes[STITCHTILES].GetAnimValue();
 
   GetAnimatedNumberValues(&fX, &fY, &seed, nsnull);
-  GetAnimatedIntegerValues(&octaves, nsnull);
 
   InitSeed((PRInt32)seed);
 
@@ -3829,18 +3828,15 @@ public:
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
-  virtual nsresult UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                             PRBool aNotify);
 
 protected:
   virtual PRBool OperatesOnPremultipledAlpha() {
-    PRBool preserveAlpha;
-    mPreserveAlpha->GetAnimVal(&preserveAlpha);
-    return !preserveAlpha;
+    return !mBooleanAttributes[PRESERVEALPHA].GetAnimValue();
   }
 
   virtual NumberAttributesInfo GetNumberInfo();
   virtual IntegerAttributesInfo GetIntegerInfo();
+  virtual BooleanAttributesInfo GetBooleanInfo();
   virtual EnumAttributesInfo GetEnumInfo();
 
   enum { DIVISOR, BIAS, KERNEL_UNIT_LENGTH_X, KERNEL_UNIT_LENGTH_Y };
@@ -3851,13 +3847,16 @@ protected:
   nsSVGInteger mIntegerAttributes[4];
   static IntegerInfo sIntegerInfo[4];
 
+  enum { PRESERVEALPHA };
+  nsSVGBoolean mBooleanAttributes[1];
+  static BooleanInfo sBooleanInfo[1];
+
   enum { EDGEMODE };
   nsSVGEnum mEnumAttributes[1];
   static nsSVGEnumMapping sEdgeModeMap[];
   static EnumInfo sEnumInfo[1];
 
   nsCOMPtr<nsIDOMSVGAnimatedNumberList>  mKernelMatrix;
-  nsCOMPtr<nsIDOMSVGAnimatedBoolean> mPreserveAlpha;
 
   nsCOMPtr<nsIDOMSVGAnimatedString> mIn1;
 };
@@ -3876,6 +3875,11 @@ nsSVGElement::IntegerInfo nsSVGFEConvolveMatrixElement::sIntegerInfo[4] =
   { &nsGkAtoms::order, 0 },
   { &nsGkAtoms::targetX, 0 },
   { &nsGkAtoms::targetY, 0 }
+};
+
+nsSVGElement::BooleanInfo nsSVGFEConvolveMatrixElement::sBooleanInfo[1] =
+{
+  { &nsGkAtoms::preserveAlpha, PR_FALSE }
 };
 
 nsSVGEnumMapping nsSVGFEConvolveMatrixElement::sEdgeModeMap[] = {
@@ -3930,14 +3934,6 @@ nsSVGFEConvolveMatrixElement::Init()
     rv = NS_NewSVGAnimatedNumberList(getter_AddRefs(mKernelMatrix), values);
     NS_ENSURE_SUCCESS(rv,rv);
     rv = AddMappedSVGValue(nsGkAtoms::kernelMatrix, mKernelMatrix);
-    NS_ENSURE_SUCCESS(rv,rv);
-  }
-
-  // DOM property: preserveAlpha , #IMPLIED attrib: preserveAlpha
-  {
-    rv = NS_NewSVGAnimatedBoolean(getter_AddRefs(mPreserveAlpha), PR_FALSE);
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = AddMappedSVGValue(nsGkAtoms::preserveAlpha, mPreserveAlpha);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -4001,9 +3997,7 @@ NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetEdgeMode(nsIDOMSVGAnimatedEnumera
 
 NS_IMETHODIMP nsSVGFEConvolveMatrixElement::GetPreserveAlpha(nsIDOMSVGAnimatedBoolean * *aPreserveAlpha)
 {
-  *aPreserveAlpha = mPreserveAlpha;
-  NS_IF_ADDREF(*aPreserveAlpha);
-  return NS_OK;
+  return mBooleanAttributes[PRESERVEALPHA].ToDOMAnimatedBoolean(aPreserveAlpha, this);
 }
 
 NS_IMETHODIMP
@@ -4098,18 +4092,6 @@ nsSVGFEConvolveMatrixElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aNam
                                                           aValue, aResult);
 }
 
-nsresult
-nsSVGFEConvolveMatrixElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
-                                        PRBool aNotify)
-{
-  if (aNamespaceID == kNameSpaceID_None && aName == nsGkAtoms::preserveAlpha) {
-    mPreserveAlpha->SetBaseVal(PR_FALSE);
-    return nsGenericElement::UnsetAttr(aNamespaceID, aName, aNotify);
-  }
-
-  return nsSVGFEConvolveMatrixElementBase::UnsetAttr(aNamespaceID, aName, aNotify);
-}
-
 #define BOUND(val, min, max) \
   PR_MIN(PR_MAX(val, min), max)
 
@@ -4182,9 +4164,6 @@ ConvolvePixel(const PRUint8 *aSourceData,
 NS_IMETHODIMP
 nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance)
 {
-  PRBool preserveAlpha;
-  mPreserveAlpha->GetAnimVal(&preserveAlpha);
-
   nsCOMPtr<nsIDOMSVGNumberList> list;
   mKernelMatrix->GetAnimVal(getter_AddRefs(list));
   PRUint32 num = 0;
@@ -4259,6 +4238,7 @@ nsSVGFEConvolveMatrixElement::Filter(nsSVGFilterInstance *instance)
 #endif
 
   PRUint16 edgeMode = mEnumAttributes[EDGEMODE].GetAnimValue();
+  PRBool preserveAlpha = mBooleanAttributes[PRESERVEALPHA].GetAnimValue();
 
   float bias = 0;
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::bias)) {
@@ -4304,6 +4284,13 @@ nsSVGFEConvolveMatrixElement::GetIntegerInfo()
 {
   return IntegerAttributesInfo(mIntegerAttributes, sIntegerInfo,
                                NS_ARRAY_LENGTH(sIntegerInfo));
+}
+
+nsSVGElement::BooleanAttributesInfo
+nsSVGFEConvolveMatrixElement::GetBooleanInfo()
+{
+  return BooleanAttributesInfo(mBooleanAttributes, sBooleanInfo,
+                               NS_ARRAY_LENGTH(sBooleanInfo));
 }
 
 nsSVGElement::EnumAttributesInfo
