@@ -91,7 +91,7 @@ static PRBool gStoppingDownloads = PR_FALSE;
 
 static const PRInt64 gUpdateInterval = 400 * PR_USEC_PER_MSEC;
 
-#define DM_SCHEMA_VERSION      4
+#define DM_SCHEMA_VERSION      5
 #define DM_DB_NAME             NS_LITERAL_STRING("downloads.sqlite")
 #define DM_DB_CORRUPT_FILENAME NS_LITERAL_STRING("downloads.sqlite.corrupt")
 
@@ -356,6 +356,20 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
     }
     // Fallthrough to the next upgrade
 
+  case 4: // This version adds a column to the database (tempPath)
+    {
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "ALTER TABLE moz_downloads "
+        "ADD COLUMN tempPath TEXT"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Finally, update the schemaVersion variable and the database schema
+      schemaVersion = 5;
+      rv = mDBConn->SetSchemaVersion(schemaVersion);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    // Fallthrough to the next upgrade
+
   // Extra sanity checking for developers
 #ifndef DEBUG
   case DM_SCHEMA_VERSION:
@@ -385,8 +399,8 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
     {
       nsCOMPtr<mozIStorageStatement> stmt;
       rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT id, name, source, target, startTime, endTime, state, referrer, "
-               "entityID "
+        "SELECT id, name, source, target, tempPath, startTime, endTime, state, "
+               "referrer, entityID "
         "FROM moz_downloads"), getter_AddRefs(stmt));
       if (NS_SUCCEEDED(rv))
         break;
@@ -424,6 +438,7 @@ nsDownloadManager::CreateTable()
       "name TEXT, "
       "source TEXT, "
       "target TEXT, "
+      "tempPath TEXT, "
       "startTime INTEGER, "
       "endTime INTEGER, "
       "state INTEGER, "
@@ -564,7 +579,8 @@ nsDownloadManager::ImportDownloadHistory()
     rv = rdfInt->GetValue(&state);
     if (NS_FAILED(rv)) continue;
 
-    (void)AddDownloadToDB(name, source, target, startTime, endTime, state);
+    (void)AddDownloadToDB(name, source, target, EmptyString(), startTime,
+                          endTime, state);
   }
 
   return NS_OK;
@@ -632,6 +648,7 @@ PRInt64
 nsDownloadManager::AddDownloadToDB(const nsAString &aName,
                                    const nsACString &aSource,
                                    const nsACString &aTarget,
+                                   const nsAString &aTempPath,
                                    PRInt64 aStartTime,
                                    PRInt64 aEndTime,
                                    PRInt32 aState)
@@ -639,8 +656,8 @@ nsDownloadManager::AddDownloadToDB(const nsAString &aName,
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "INSERT INTO moz_downloads "
-    "(name, source, target, startTime, endTime, state) "
-    "VALUES (?1, ?2, ?3, ?4, ?5, ?6)"), getter_AddRefs(stmt));
+    "(name, source, target, tempPath, startTime, endTime, state) "
+    "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, 0);
 
   PRInt32 i = 0;
@@ -654,6 +671,10 @@ nsDownloadManager::AddDownloadToDB(const nsAString &aName,
 
   // target
   rv = stmt->BindUTF8StringParameter(i++, aTarget);
+  NS_ENSURE_SUCCESS(rv, 0);
+
+  // tempPath
+  rv = stmt->BindStringParameter(i++, aTempPath);
   NS_ENSURE_SUCCESS(rv, 0);
 
   // startTime
@@ -763,7 +784,8 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
   // First, let's query the database and see if it even exists
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id, state, startTime, source, target, name, referrer, entityID "
+    "SELECT id, state, startTime, source, target, tempPath, name, referrer, "
+           "entityID "
     "FROM moz_downloads "
     "WHERE id = ?1"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -797,6 +819,13 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
   stmt->GetUTF8String(i++, target);
   rv = NS_NewURI(getter_AddRefs(dl->mTarget), target);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  nsString tempPath;
+  stmt->GetString(i++, tempPath);
+  if (!tempPath.IsEmpty()) {
+    rv = NS_NewLocalFile(tempPath, PR_TRUE, getter_AddRefs(dl->mTempFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   stmt->GetString(i++, dl->mDisplayName);
 
@@ -1085,7 +1114,13 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   aSource->GetSpec(source);
   aTarget->GetSpec(target);
 
-  PRInt64 id = AddDownloadToDB(dl->mDisplayName, source, target, aStartTime, 0,
+  // Track the temp file for exthandler downloads
+  nsAutoString tempPath;
+  if (aTempFile)
+    aTempFile->GetPath(tempPath);
+
+  PRInt64 id = AddDownloadToDB(dl->mDisplayName, source, target, tempPath,
+                               aStartTime, 0,
                                nsIDownloadManager::DOWNLOAD_NOTSTARTED);
   NS_ENSURE_TRUE(id, NS_ERROR_FAILURE);
   dl->mID = id;

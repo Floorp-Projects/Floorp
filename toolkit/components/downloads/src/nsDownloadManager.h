@@ -117,6 +117,7 @@ protected:
   PRInt64 AddDownloadToDB(const nsAString &aName,
                           const nsACString &aSource,
                           const nsACString &aTarget,
+                          const nsAString &aTempPath,
                           PRInt64 aStartTime,
                           PRInt64 aEndTime,
                           PRInt32 aState);
