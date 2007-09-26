@@ -34,56 +34,59 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGInteger.h"
+#include "nsSVGBoolean.h"
 
-NS_IMPL_ADDREF(nsSVGInteger::DOMAnimatedInteger)
-NS_IMPL_RELEASE(nsSVGInteger::DOMAnimatedInteger)
+NS_IMPL_ADDREF(nsSVGBoolean::DOMAnimatedBoolean)
+NS_IMPL_RELEASE(nsSVGBoolean::DOMAnimatedBoolean)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGInteger::DOMAnimatedInteger)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedInteger)
+NS_INTERFACE_MAP_BEGIN(nsSVGBoolean::DOMAnimatedBoolean)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedBoolean)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimatedInteger)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimatedBoolean)
 NS_INTERFACE_MAP_END
 
 /* Implementation */
 
 nsresult
-nsSVGInteger::SetBaseValueString(const nsAString &aValueAsString,
+nsSVGBoolean::SetBaseValueString(const nsAString &aValueAsString,
                                  nsSVGElement *aSVGElement,
                                  PRBool aDoSetAttr)
 {
-  nsAutoString s;
-  s.Assign(aValueAsString);
-  PRInt32 err;
-  PRInt32 val = s.ToInteger(&err);
-  nsresult rv = static_cast<nsresult>(err);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool val;
+
+  if (aValueAsString.EqualsLiteral("true"))
+    val = PR_TRUE;
+  else if (aValueAsString.EqualsLiteral("false"))
+    val = PR_FALSE;
+  else
+    return NS_ERROR_FAILURE;
+
   mBaseVal = mAnimVal = val;
   return NS_OK;
 }
 
 void
-nsSVGInteger::GetBaseValueString(nsAString & aValueAsString)
+nsSVGBoolean::GetBaseValueString(nsAString & aValueAsString)
 {
-  nsAutoString s;
-  s.AppendInt(mBaseVal);
-  aValueAsString.Assign(s);
+  aValueAsString.Assign(mBaseVal
+                        ? NS_LITERAL_STRING("true")
+                        : NS_LITERAL_STRING("false"));
 }
 
 void
-nsSVGInteger::SetBaseValue(int aValue,
+nsSVGBoolean::SetBaseValue(int aValue,
                            nsSVGElement *aSVGElement,
                            PRBool aDoSetAttr)
 {
   mAnimVal = mBaseVal = aValue;
-  aSVGElement->DidChangeInteger(mAttrEnum, aDoSetAttr);
+  aSVGElement->DidChangeBoolean(mAttrEnum, aDoSetAttr);
 }
 
 nsresult
-nsSVGInteger::ToDOMAnimatedInteger(nsIDOMSVGAnimatedInteger **aResult,
+nsSVGBoolean::ToDOMAnimatedBoolean(nsIDOMSVGAnimatedBoolean **aResult,
                                    nsSVGElement *aSVGElement)
 {
-  *aResult = new DOMAnimatedInteger(this, aSVGElement);
+  *aResult = new DOMAnimatedBoolean(this, aSVGElement);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
 
