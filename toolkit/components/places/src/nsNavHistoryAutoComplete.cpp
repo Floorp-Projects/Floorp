@@ -241,8 +241,17 @@ nsNavHistory::PerformAutoComplete()
     mCurrentChunkEndTime -= AUTOCOMPLETE_SEARCH_CHUNK;
     rv = StartAutoCompleteTimer(AUTOCOMPLETE_SEARCH_TIMEOUT);
     NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    DoneSearching();
   }
-  return rv;
+  return NS_OK;
+}
+
+void
+nsNavHistory::DoneSearching()
+{
+  mCurrentResult = nsnull;
+  mCurrentListener = nsnull;
 }
 
 // nsNavHistory::StartSearch
@@ -412,7 +421,7 @@ nsNavHistory::StopSearch()
     mAutoCompleteTimer->Cancel();
 
   mCurrentSearchString.Truncate();
-  mCurrentListener = nsnull;
+  DoneSearching();
 
   return NS_OK;
 }
