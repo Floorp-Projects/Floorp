@@ -61,7 +61,6 @@
 #include "nsIProxyObjectManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIScriptSecurityManager.h"
 
 #include "nsString.h"
 #include "nsXPIDLString.h"
@@ -303,17 +302,6 @@ nsresult imgRequest::GetURI(nsIURI **aURI)
     *aURI = mURI;
     NS_ADDREF(*aURI);
     return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-nsresult imgRequest::GetPrincipal(nsIPrincipal **aPrincipal)
-{
-  LOG_FUNC(gImgLog, "imgRequest::GetPrincipal");
-
-  if (mPrincipal) {
-    NS_ADDREF(*aPrincipal = mPrincipal);
   }
 
   return NS_ERROR_FAILURE;
@@ -611,19 +599,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
     proxy->OnStartRequest(aRequest, ctxt);
   }
 
-  /* Get our principal */
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
-  if (chan) {
-    nsCOMPtr<nsIScriptSecurityManager> secMan =
-      do_GetService("@mozilla.org/scriptsecuritymanager;1");
-    if (secMan) {
-      nsresult rv = secMan->GetChannelPrincipal(chan,
-                                                getter_AddRefs(mPrincipal));
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-  }
 
   /* get the expires info */
   if (mCacheEntry) {
