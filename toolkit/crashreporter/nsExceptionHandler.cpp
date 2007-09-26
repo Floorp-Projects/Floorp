@@ -212,7 +212,7 @@ bool MinidumpCallback(const XP_CHAR* dump_path,
     }
 #endif
   }
-  
+
 #if defined(XP_WIN32)
   XP_CHAR cmdLine[CMDLINE_SIZE];
   size = CMDLINE_SIZE;
@@ -484,7 +484,7 @@ typedef nsresult (*InitDataFunc)(nsACString&);
 // Attempt to read aFile's contents into aContents, if aFile
 // does not exist, create it and initialize its contents
 // by calling aInitFunc for the data.
-static nsresult 
+static nsresult
 GetOrInit(nsIFile* aDir, const nsACString& filename,
           nsACString& aContents, InitDataFunc aInitFunc)
 {
@@ -537,7 +537,7 @@ InitUserID(nsACString& aUserID)
   CFUUIDRef uuid = CFUUIDCreate(kCFAllocatorDefault);
   if (!uuid)
     return NS_ERROR_FAILURE;
-  
+
   CFUUIDBytes bytes = CFUUIDGetUUIDBytes(uuid);
   memcpy(&id, &bytes, sizeof(nsID));
 
@@ -553,7 +553,7 @@ InitUserID(nsACString& aUserID)
 
   nsCAutoString id_str(id.ToString());
   aUserID = Substring(id_str, 1, id_str.Length()-2);
-  
+
   return NS_OK;
 }
 
@@ -566,7 +566,7 @@ InitInstallTime(nsACString& aInstallTime)
   char buf[16];
   sprintf(buf, "%ld", t);
   aInstallTime = buf;
-  
+
   return NS_OK;
 }
 
@@ -593,6 +593,28 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
     rv = dataDirectory->Create(nsIFile::DIRECTORY_TYPE, 0700);
     NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  // Save this path in the environment for the crash reporter application.
+  nsCAutoString dataDirEnv("MOZ_CRASHREPORTER_DATA_DIRECTORY=");
+
+#if defined(XP_WIN32)
+  nsAutoString dataDirectoryPath;
+  rv = dataDirectory->GetPath(dataDirectoryPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  AppendUTF16toUTF8(dataDirectoryPath, dataDirEnv);
+#else
+  nsCAutoString dataDirectoryPath;
+  rv = dataDirectory->GetNativePath(dataDirectoryPath);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  dataDirEnv.Append(dataDirectoryPath);
+#endif
+
+  char* env = ToNewCString(dataDirEnv);
+  NS_ENSURE_TRUE(env, NS_ERROR_OUT_OF_MEMORY);
+
+  PR_SetEnv(env);
 
   nsCAutoString data;
   if(NS_SUCCEEDED(GetOrInit(dataDirectory, NS_LITERAL_CSTRING("UserID"),
@@ -668,7 +690,7 @@ static void ReplaceChar(nsCString& str, const nsACString& character,
                         const nsACString& replacement)
 {
   nsCString::const_iterator start, end;
-  
+
   str.BeginReading(start);
   str.EndReading(end);
 
@@ -713,7 +735,7 @@ nsresult AnnotateCrashReport(const nsACString &key, const nsACString &data)
     return NS_ERROR_INVALID_ARG;
 
   nsCString escapedData(data);
-  
+
   // escape backslashes
   ReplaceChar(escapedData, NS_LITERAL_CSTRING("\\"),
               NS_LITERAL_CSTRING("\\\\"));

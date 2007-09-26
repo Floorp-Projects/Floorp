@@ -561,17 +561,17 @@ nsresult nsProfileLock::Lock(nsILocalFile* aProfileDir,
     }
 
 #elif defined(XP_WIN)
-    nsCAutoString filePath;
-    rv = lockFile->GetNativePath(filePath);
+    nsAutoString filePath;
+    rv = lockFile->GetPath(filePath);
     if (NS_FAILED(rv))
         return rv;
-    mLockFileHandle = CreateFile(filePath.get(),
-                                 GENERIC_READ | GENERIC_WRITE,
-                                 0, // no sharing - of course
-                                 nsnull,
-                                 OPEN_ALWAYS,
-                                 FILE_FLAG_DELETE_ON_CLOSE,
-                                 nsnull);
+    mLockFileHandle = CreateFileW(filePath.get(),
+                                  GENERIC_READ | GENERIC_WRITE,
+                                  0, // no sharing - of course
+                                  nsnull,
+                                  OPEN_ALWAYS,
+                                  FILE_FLAG_DELETE_ON_CLOSE,
+                                  nsnull);
     if (mLockFileHandle == INVALID_HANDLE_VALUE) {
         // XXXbsmedberg: provide a profile-unlocker here!
         return NS_ERROR_FILE_ACCESS_DENIED;
