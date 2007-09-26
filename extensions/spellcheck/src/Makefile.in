@@ -54,7 +54,6 @@ REQUIRES	= xpcom \
 		  string \
 		  editor \
 		  content \
-		  gfx \
 		  layout \
 		  dom \
 		  necko \
