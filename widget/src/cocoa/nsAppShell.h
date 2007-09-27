@@ -72,6 +72,8 @@ protected:
   virtual void ScheduleNativeEventCallback();
   virtual PRBool ProcessNextNativeEvent(PRBool aMayWait);
 
+  PRBool InGeckoMainEventLoop();
+
   static void ProcessGeckoEvents(void* aInfo);
 
 protected:
@@ -96,6 +98,9 @@ protected:
   // reduced the number of calls by 6%-7% (reducing the original regression
   // to 3%-4%).  See bmo bug 395397.
   static const PRUint32  kHadMoreEventsCountMax = 3;
+
+  PRInt32            mRecursionDepth;
+  PRInt32            mNativeEventCallbackDepth;
 };
 
 #endif // nsAppShell_h_
