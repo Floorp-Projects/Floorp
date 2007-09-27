@@ -3629,59 +3629,72 @@ nsBrowserStatusHandler.prototype =
     return true;
   },
 
+  // Properties used to cache security state used to update the UI
+  _state: null,
+  _host: null,
+  _tooltipText: null,
+
   onSecurityChange : function(aWebProgress, aRequest, aState)
   {
-    const wpl = Components.interfaces.nsIWebProgressListener;
-    this.securityButton.removeAttribute("label");
+    var host = null;
+    try {
+      host = gBrowser.contentWindow.location.host;
+    } catch (ex) {}
 
+    // Don't need to do anything if the data we use to update the UI hasn't
+    // changed
+    if (this._state == aState &&
+        this._host == host &&
+        this._tooltipText == gBrowser.securityUI.tooltipText)
+      return;
+
+    this._state = aState;
+    this._host = host;
+    this._tooltipText = gBrowser.securityUI.tooltipText
+
+    // aState is defined as a bitmask that may be extended in the future.
+    // We filter out any unknown bits before testing for known values.
+    const wpl = Components.interfaces.nsIWebProgressListener;
     const wpl_security_bits = wpl.STATE_IS_SECURE |
                               wpl.STATE_IS_BROKEN |
                               wpl.STATE_IS_INSECURE |
                               wpl.STATE_SECURE_HIGH |
                               wpl.STATE_SECURE_MED |
                               wpl.STATE_SECURE_LOW;
+    var level = null;
+    var setHost = false;
 
-    /* aState is defined as a bitmask that may be extended in the future.
-     * We filter out any unknown bits before testing for known values.
-     */
-    switch (aState & wpl_security_bits) {
+    switch (this._state & wpl_security_bits) {
       case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_HIGH:
-        this.securityButton.setAttribute("level", "high");
-        if (this.urlBar)
-          this.urlBar.setAttribute("level", "high");
-        try {
-          this.securityButton.setAttribute("label",
-            gBrowser.contentWindow.location.host);
-        } catch(exception) {}
+        level = "high";
+        setHost = true;
         break;
       case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_MED:
       case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_LOW:
-        this.securityButton.setAttribute("level", "low");
-        if (this.urlBar)
-          this.urlBar.setAttribute("level", "low");
-        try {
-          this.securityButton.setAttribute("label",
-            gBrowser.contentWindow.location.host);
-        } catch(exception) {}
+        level = "low";
+        setHost = true;
         break;
       case wpl.STATE_IS_BROKEN:
-        this.securityButton.setAttribute("level", "broken");
-        if (this.urlBar)
-          this.urlBar.setAttribute("level", "broken");
-        break;
-      case wpl.STATE_IS_INSECURE:
-      default:
-        this.securityButton.removeAttribute("level");
-        if (this.urlBar)
-          this.urlBar.removeAttribute("level");
+        level = "broken";
         break;
     }
 
-    var securityUI = gBrowser.securityUI;
-    this.securityButton.setAttribute("tooltiptext", securityUI.tooltipText);
-    var lockIcon = document.getElementById("lock-icon");
-    if (lockIcon)
-      lockIcon.setAttribute("tooltiptext", securityUI.tooltipText);
+    if (level) {
+      this.securityButton.setAttribute("level", level);
+      if (this.urlBar)
+        this.urlBar.setAttribute("level", level);    
+    } else {
+      this.securityButton.removeAttribute("level");
+      if (this.urlBar)
+        this.urlBar.removeAttribute("level");
+    }
+
+    if (setHost && this._host)
+      this.securityButton.setAttribute("label", this._host);
+    else
+      this.securityButton.removeAttribute("label");
+
+    this.securityButton.setAttribute("tooltiptext", this._tooltipText);
   },
 
   // simulate all change notifications after switching tabs
