@@ -66,6 +66,8 @@ import ttest
 def shortNames(name):
   if name == "tp_loadtime":
     return "tp_l"
+  elif name == "tp_js_loadtime":
+    return "tp_js_l"
   elif name == "tp_Percent Processor Time":
     return "tp_%cpu"
   elif name == "tp_Working Set":
@@ -166,7 +168,10 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
          tmpf.write(result_format % (float(val), res, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", "ms"))
          i += 1
     else:
-       # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
+      # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
+      name = ''
+      if ((res == 'tp') or (res == 'tp_js')):
+          name = '_loadtime'
       for bd in browser_dump:
         bd.rstrip('\n')
         page_results = bd.splitlines()
@@ -183,7 +188,7 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
           except ValueError:
             print 'WARNING: value error for median in tp'
             val = 0
-          tmpf.write(result_format % (val, res + '_loadtime', tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", page))
+          tmpf.write(result_format % (val, res + name, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", page))
           i += 1
     tmpf.flush()
     tmpf.close()
