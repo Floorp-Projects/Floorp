@@ -586,11 +586,10 @@ nsDisplayBorder::OptimizeVisibility(nsDisplayListBuilder* aBuilder,
   if (!nsDisplayItem::OptimizeVisibility(aBuilder, aVisibleRegion))
     return PR_FALSE;
 
-  const nsStyleBorder* border = mFrame->GetStyleBorder();
-  nsRect contentRect = GetBounds(aBuilder);
-  contentRect.Deflate(border->GetBorder());
-  if (contentRect.Contains(aVisibleRegion->GetBounds()) &&
-      !nsLayoutUtils::HasNonZeroSide(border->mBorderRadius)) {
+  nsRect paddingRect = mFrame->GetPaddingRect() - mFrame->GetPosition() +
+    aBuilder->ToReferenceFrame(mFrame);
+  if (paddingRect.Contains(aVisibleRegion->GetBounds()) &&
+      !nsLayoutUtils::HasNonZeroSide(mFrame->GetStyleBorder()->mBorderRadius)) {
     // the visible region is entirely inside the content rect, and no part
     // of the border is rendered inside the content rect, so we are not
     // visible
