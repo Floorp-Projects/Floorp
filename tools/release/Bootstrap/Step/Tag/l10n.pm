@@ -12,7 +12,7 @@ use MozBuild::Util qw(MkdirWithPath);
 use Bootstrap::Step;
 use Bootstrap::Config;
 use Bootstrap::Step::Tag;
-use Bootstrap::Util qw(CvsCatfile);
+use Bootstrap::Util qw(CvsCatfile GetDiffFileList);
 
 use strict;
 
@@ -119,10 +119,10 @@ sub Execute {
     # If we're retagging rc(N > 1), we need to tag -F
     if ($rc > 1) {
         my $previousRcTag = $productTag . '_RC' . ($rc - 1);
-        my $diffFileList = $this->GetDiffFileList(cvsDir => catfile($l10nTagDir,
-                                                                'l10n'),
-                                              prevTag => $previousRcTag,
-                                              newTag => $rcTag);
+        my $diffFileList = GetDiffFileList(cvsDir => catfile($l10nTagDir,
+                                                             'l10n'),
+                                           prevTag => $previousRcTag,
+                                           newTag => $rcTag);
 
         if (scalar(@{$diffFileList}) > 0) {
             $releaseTagArgs{'force'} = 1;

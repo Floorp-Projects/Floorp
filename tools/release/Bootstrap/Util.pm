@@ -237,7 +237,7 @@ sub GetDiffFileList {
     my $newTag = $args{'newTag'};
 
     my $rv = RunShellCommand(command => 'cvs',
-                             args => ['diff', '-uN',
+                             args => ['-q', 'diff', '-uN',
                                       '-r', $firstTag,
                                       '-r', $newTag],
                              dir => $cvsDir,
