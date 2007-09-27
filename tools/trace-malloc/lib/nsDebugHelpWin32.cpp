@@ -186,18 +186,14 @@ DHWImportHooker::~DHWImportHooker()
     mHooking = PR_FALSE;
     PatchAllModules();
 
-    if(gHooks == this)
-        gHooks = mNext;
-    else
+    for (DHWImportHooker **cur = &gHooks;
+         (PR_ASSERT(*cur), *cur); /* assert that we find this */
+         cur = &(*cur)->mNext)
     {
-        for(DHWImportHooker* cur = gHooks; cur; cur = cur->mNext)
+        if (*cur == this)
         {
-            if(cur->mNext == this)
-            {
-                cur->mNext = mNext;
-                break;
-            }
-            PR_ASSERT(cur->mNext); //we were not in the list!       
+            *cur = mNext;
+            break;
         }
     }
 
