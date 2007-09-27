@@ -110,6 +110,8 @@ nsAppShell::nsAppShell()
 , mTerminated(PR_FALSE)
 , mSkippedNativeCallback(PR_FALSE)
 , mHadMoreEventsCount(0)
+, mRecursionDepth(0)
+, mNativeEventCallbackDepth(0)
 {
   // mMainPool sits low on the autorelease pool stack to serve as a catch-all
   // for autoreleased objects on this thread.  Because it won't be popped
@@ -266,7 +268,9 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
   }
 
   if (self->mSuspendNativeCount <= 0) {
+    ++self->mNativeEventCallbackDepth;
     self->NativeEventCallback();
+    --self->mNativeEventCallbackDepth;
   } else {
     self->mSkippedNativeCallback = PR_TRUE;
   }
@@ -438,10 +442,11 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
 
     NSEvent* nextEvent = nil;
 
-    // If we're running modal (either Cocoa modal or XUL modal) we still need
-    // to use nextEventMatchingMask and sendEvent -- otherwise (in Minefield)
-    // the modal window won't receive key events or most mouse events.
-    if ([NSApp _isRunningModal] || (gXULModalLevel > 0)) {
+    // If we're running modal (or not in a Gecko "main" event loop) we still
+    // need to use nextEventMatchingMask and sendEvent -- otherwise (in
+    // Minefield) the modal window (or non-main event loop) won't receive key
+    // events or most mouse events.
+    if ([NSApp _isRunningModal] || !InGeckoMainEventLoop()) {
       if (nextEvent = [NSApp nextEventMatchingMask:NSAnyEventMask
                                          untilDate:waitUntil
                                             inMode:currentMode
@@ -487,6 +492,35 @@ nsAppShell::ProcessNextNativeEvent(PRBool aMayWait)
   mRunningEventLoop = wasRunningEventLoop;
 
   return moreEvents;
+}
+
+// Returns PR_TRUE if Gecko events are currently being processed in its "main"
+// event loop (or one of its "main" event loops).  Returns PR_FALSE if Gecko
+// events are being processed in a "nested" event loop, or if we're not
+// running in any sort of Gecko event loop.  How we process native events in
+// ProcessNextNativeEvent() turns on our decision (and if we make the wrong
+// choice, the result may be a hang).
+//
+// We define the "main" event loop(s) as the place (or places) where Gecko
+// event processing "normally" takes place, and all other Gecko event loops
+// as "nested".  The "nested" event loops are normally processed while a call
+// from a "main" event loop is on the stack ... but not always.  For example,
+// the Venkman JavaScript debugger runs a "nested" event loop (in jsdService::
+// EnterNestedEventLoop()) whenever it breaks into the current script.  But
+// if this happens as the result of the user pressing a key combination, there
+// won't be any other Gecko event-processing call on the stack (e.g.
+// NS_ProcessNextEvent() or NS_ProcessPendingEvents()).  (In the current
+// nsAppShell implementation, what counts as the "main" event loop is what
+// nsBaseAppShell::NativeEventCallback() does to process Gecko events.  We
+// don't currently use nsBaseAppShell::Run().)
+PRBool
+nsAppShell::InGeckoMainEventLoop()
+{
+  if ((gXULModalLevel > 0) || (mRecursionDepth > 0))
+    return PR_FALSE;
+  if (mNativeEventCallbackDepth <= 0)
+    return PR_FALSE;
+  return PR_TRUE;
 }
 
 // Run
@@ -563,6 +597,8 @@ NS_IMETHODIMP
 nsAppShell::OnProcessNextEvent(nsIThreadInternal *aThread, PRBool aMayWait,
                                PRUint32 aRecursionDepth)
 {
+  mRecursionDepth = aRecursionDepth;
+
   NS_ASSERTION(mAutoreleasePools,
                "No stack on which to store autorelease pool");
 
@@ -583,6 +619,8 @@ NS_IMETHODIMP
 nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
                                   PRUint32 aRecursionDepth)
 {
+  mRecursionDepth = aRecursionDepth;
+
   CFIndex count = ::CFArrayGetCount(mAutoreleasePools);
 
   NS_ASSERTION(mAutoreleasePools && count,
