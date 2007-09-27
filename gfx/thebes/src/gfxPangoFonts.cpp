@@ -477,7 +477,7 @@ gfxPangoFont::GetMetrics()
             mMetrics.subscriptOffset = mMetrics.xHeight;
         }
 
-        //        pango_fc_font_unlock_face(PANGO_FC_FONT(face));
+        pango_fc_font_unlock_face(PANGO_FC_FONT(font));
     } else {
 
         mMetrics.superscriptOffset = mMetrics.xHeight;
