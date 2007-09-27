@@ -71,7 +71,7 @@ public:
 
 protected:
     gfxMatrix mCTM;
-    virtual PRBool SetupCairoFont(cairo_t *aCR);
+    virtual PRBool SetupCairoFont(gfxContext *aContext);
 
 private:
     cairo_font_face_t *mFontFace;
