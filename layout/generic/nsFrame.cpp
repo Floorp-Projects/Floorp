@@ -6121,8 +6121,6 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     // see if the overflow option is set. If it is then if our child's bounds overflow then
     // we will set the child's rect to include the overflow size.
     if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
-      // make sure we store the overflow size
-      
       // This kinda sucks. We should be able to handle the case
       // where there's overflow above or to the left of the
       // origin. But for now just chop that stuff off.
