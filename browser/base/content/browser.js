@@ -3679,8 +3679,9 @@ nsBrowserStatusHandler.prototype =
 
     var securityUI = gBrowser.securityUI;
     this.securityButton.setAttribute("tooltiptext", securityUI.tooltipText);
-    
-    getIdentityHandler().checkIdentity(aState);
+    var lockIcon = document.getElementById("lock-icon");
+    if (lockIcon)
+      lockIcon.setAttribute("tooltiptext", securityUI.tooltipText);
   },
 
   // simulate all change notifications after switching tabs
@@ -5662,11 +5663,8 @@ IdentityHandler.prototype = {
    */
   checkIdentity : function(state) {
     var currentURI = gBrowser.currentURI;
-    if (currentURI.schemeIs("http")) {
-      if (!this._lastURI.schemeIs("http"))
-        this.setMode(this.IDENTITY_MODE_UNKNOWN);
+    if (currentURI.schemeIs("http") && this._lastURI.schemeIs("http"))
       return;
-    }
 
     var currentStatus = gBrowser.securityUI
                                 .QueryInterface(Components.interfaces.nsISSLStatusProvider)
