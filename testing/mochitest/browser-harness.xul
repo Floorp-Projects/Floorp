@@ -49,6 +49,13 @@
     function TestStart() {
       gConfig = readConfig();
 
+      // If MochiTest was started with the --test-path flag specifying a subset
+      // of tests to run, put that path in the label of the "Run Tests" button
+      // so the tester knows which tests will run when they press that button.
+      if (gConfig.testPath)
+        document.getElementById("runTestsButton").label =
+          "Run " + gConfig.testPath + " Tests";
+
       if (gConfig.autoRun)
         setTimeout(runAllTests, 0);
     }
@@ -129,8 +136,16 @@
     function listTests() {
       const Cc = Components.classes; const Ci = Components.interfaces;
 
+      var ioSvc = Cc["@mozilla.org/network/io-service;1"].
+                  getService(Ci.nsIIOService);
+
       var testsDir = getChromeDir();
       testsDir.appendRelativePath("browser");
+      if (gConfig.testPath) {
+        var testsDirURI = ioSvc.newFileURI(testsDir);
+        testsDir = ioSvc.newURI(gConfig.testPath, null, testsDirURI)
+                        .QueryInterface(Ci.nsIFileURL).file;
+      }
 
       /** load server.js in so we can share template functions **/
       var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
@@ -138,8 +153,11 @@
       var srvScope = {};
       scriptLoader.loadSubScript("chrome://mochikit/content/server.js", srvScope);
 
-      var [links, count] = srvScope.list("chrome://mochikit/content/browser/",
-                                         testsDir, true);
+      var requestPath = "chrome://mochikit/content/browser";
+      if (gConfig.testPath)
+        requestPath += "/" + gConfig.testPath;
+
+      var [links, count] = srvScope.list(requestPath, testsDir, true);
       var fileNames = [];
       srvScope.arrayOfTestFiles(links, fileNames, /browser_.+\.js$/);
 
@@ -210,7 +228,7 @@
       setStatus("Done.");
     }
   ]]></script>
-  <button onclick="runAllTests();" label="Run All Tests"/>
+  <button id="runTestsButton" onclick="runAllTests();" label="Run All Tests"/>
   <label id="status"/>
   <textbox flex="1" multiline="true" id="results"/>
 </window>
