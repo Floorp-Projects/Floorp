@@ -4763,26 +4763,6 @@ AC_DEFINE_UNQUOTED(MOZ_DISTRIBUTION_ID,"$MOZ_DISTRIBUTION_ID")
 AC_SUBST(MOZ_DISTRIBUTION_ID)
 
 dnl ========================================================
-dnl = FreeType2
-dnl = Enable freetype by default if building against X11 
-dnl = and freetype is available
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(freetype2,
-[  --disable-freetype2     Disable FreeType2 support ],
-    MOZ_ENABLE_FREETYPE2=,
-    MOZ_ENABLE_FREETYPE2=1)
-
-if test "$MOZ_ENABLE_FREETYPE2" && test -z "$MOZ_X11" -o -z "$_HAVE_FREETYPE2"; then
-    AC_MSG_ERROR([Cannot enable FreeType2 support for non-X11 toolkits or if FreeType2 is not detected.])
-fi
-
-if test "$MOZ_ENABLE_FREETYPE2"; then
-    AC_DEFINE(MOZ_ENABLE_FREETYPE2)
-    _NON_GLOBAL_ACDEFINES="$_NON_GLOBAL_ACDEFINES MOZ_ENABLE_FREETYPE2"
-fi
-AC_SUBST(MOZ_ENABLE_FREETYPE2)
-
-dnl ========================================================
 dnl = Xft
 dnl ========================================================
 if test "$MOZ_ENABLE_GTK2"; then
@@ -4796,10 +4776,6 @@ MOZ_ARG_DISABLE_BOOL(xft,
 
 if test "$MOZ_ENABLE_XFT" && test -z "$MOZ_ENABLE_GTK2"; then
     AC_MSG_ERROR([Cannot enable XFT support for non-GTK2 toolkits.])
-fi
-
-if test "$MOZ_ENABLE_XFT" && test "$MOZ_ENABLE_FREETYPE2"; then
-    AC_MSG_ERROR([Cannot enable XFT and FREETYPE2 at the same time.])
 fi
 
 if test "$MOZ_ENABLE_XFT"
