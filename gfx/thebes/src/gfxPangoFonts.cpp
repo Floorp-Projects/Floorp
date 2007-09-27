@@ -214,7 +214,7 @@ gfxPangoFont::Shutdown()
 
     PangoFontMap *fontmap = pango_cairo_font_map_get_default ();
     if (PANGO_IS_FC_FONT_MAP (fontmap))
-	pango_fc_font_map_shutdown (PANGO_FC_FONT_MAP (fontmap));
+        pango_fc_font_map_shutdown (PANGO_FC_FONT_MAP (fontmap));
 
 }
 
@@ -451,11 +451,10 @@ gfxPangoFont::GetMetrics()
 
     FT_Face face = NULL;
     if (PANGO_IS_FC_FONT (font))
-      face = pango_fc_font_lock_face (PANGO_FC_FONT (font));
+        face = pango_fc_font_lock_face (PANGO_FC_FONT (font));
 
     if (face) {
-
-	float val;
+        float val;
 
         TT_OS2 *os2 = (TT_OS2 *) FT_Get_Sfnt_Table(face, ft_sfnt_os2);
     
@@ -478,10 +477,11 @@ gfxPangoFont::GetMetrics()
             mMetrics.subscriptOffset = mMetrics.xHeight;
         }
 
+        pango_fc_font_unlock_face(PANGO_FC_FONT(face));
     } else {
 
-	mMetrics.superscriptOffset = mMetrics.xHeight;
-	mMetrics.subscriptOffset = mMetrics.xHeight;
+        mMetrics.superscriptOffset = mMetrics.xHeight;
+        mMetrics.subscriptOffset = mMetrics.xHeight;
     }
 
 
@@ -694,8 +694,8 @@ SetupClusterBoundaries(gfxTextRun* aTextRun, const gchar *aUTF8, PRUint32 aUTF8L
     if (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_IS_8BIT) {
         // 8-bit text doesn't have clusters.
         // XXX is this true in all languages???
-	// behdad: don't think so.  Czech for example IIRC has a
-	// 'ch' grapheme.
+        // behdad: don't think so.  Czech for example IIRC has a
+        // 'ch' grapheme.
         return;
     }
 
@@ -924,8 +924,8 @@ gfxPangoFontGroup::SetGlyphs(gfxTextRun *aTextRun, gfxPangoFont *aFont,
         } else {
             gunichar ch = g_utf8_get_char(clusterUTF8);
             do { // Does pango ever provide more than one glyph in the cluster
-                 // if there is a missing glyph?
-		 // behdad: yes
+                // if there is a missing glyph?
+                // behdad: yes
                 if (IS_MISSING_GLYPH(glyphs[glyphIndex].glyph)) {
                     if (pango_is_zero_width(ch)) {
                         // the zero width characters returns empty glyph ID at shaping,
