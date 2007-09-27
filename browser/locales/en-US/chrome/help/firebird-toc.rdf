@@ -33,7 +33,7 @@
         <rdf:li> <rdf:Description ID="firebird-mouse-shortcuts" nc:name="Mouse Shortcuts" nc:link="mouse_shortcuts.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="a11y" nc:name="Accessibility Features" nc:link="accessibility.xhtml"/> </rdf:li>
         <rdf:li> <rdf:Description ID="menu" nc:name="Menu Reference" nc:link="menu_reference.xhtml"/> </rdf:li>
-     	<rdf:li> <rdf:Description ID="ieusers" nc:name="Help for Internet Explorer Users" nc:link="forieusers.xhtml"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="ieusers" nc:name="Help for Internet Explorer Users" nc:link="forieusers.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -430,7 +430,7 @@
     <li><Description ID="prefs-main" nc:name="Main" nc:link="prefs.xhtml#main_options"/></li>
     <li><Description ID="prefs-tabs" nc:name="Tabs" nc:link="prefs.xhtml#tabs_options"/></li>
     <li><Description ID="prefs-content" nc:name="Content" nc:link="prefs.xhtml#content_options"/></li>
-    <li><Description ID="prefs-feeds" nc:name="Feeds" nc:link="prefs.xhtml#feeds_options"/></li>
+    <li><Description ID="prefs-applications" nc:name="Applications" nc:link="prefs.xhtml#applications_options"/></li>
     <li><Description ID="prefs-privacy" nc:name="Privacy" nc:link="prefs.xhtml#privacy_options"/></li>
     <li><Description ID="prefs-security" nc:name="Security" nc:link="prefs.xhtml#security_options"/></li>
     <li><Description ID="prefs-advanced" nc:name="Advanced" nc:link="prefs.xhtml#advanced_options"/></li>
@@ -453,7 +453,6 @@
       <Seq>
         <li><Description rdf:ID="prefs-advanced-javascript" nc:name="Advanced Javascript Settings" nc:link="prefs.xhtml#advanced_javascript"/></li>
         <li><Description rdf:ID="prefs-fonts-and-colors" nc:name="Fonts and Colors" nc:link="prefs.xhtml#fonts_and_colors"/></li>
-        <li><Description rdf:ID="prefs-file-types" nc:name="File Types" nc:link="prefs.xhtml#file_types"/></li>
       </Seq>
     </nc:subheadings>
   </Description>
