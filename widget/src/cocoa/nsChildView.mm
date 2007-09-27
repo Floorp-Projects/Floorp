@@ -1744,6 +1744,26 @@ nsChildView::GetThebesSurface()
 }
 
 
+NS_IMETHODIMP
+nsChildView::BeginSecureKeyboardInput()
+{
+  nsresult rv = nsBaseWidget::BeginSecureKeyboardInput();
+  if (NS_SUCCEEDED(rv))
+    ::EnableSecureEventInput();
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsChildView::EndSecureKeyboardInput()
+{
+  nsresult rv = nsBaseWidget::EndSecureKeyboardInput();
+  if (NS_SUCCEEDED(rv))
+    ::DisableSecureEventInput();
+  return rv;
+}
+
+
 #ifdef ACCESSIBILITY
 void
 nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)

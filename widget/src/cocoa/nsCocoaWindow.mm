@@ -1057,6 +1057,24 @@ gfxASurface* nsCocoaWindow::GetThebesSurface()
 }
 
 
+NS_IMETHODIMP nsCocoaWindow::BeginSecureKeyboardInput()
+{
+  nsresult rv = nsBaseWidget::BeginSecureKeyboardInput();
+  if (NS_SUCCEEDED(rv))
+    ::EnableSecureEventInput();
+  return rv;
+}
+
+
+NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
+{
+  nsresult rv = nsBaseWidget::EndSecureKeyboardInput();
+  if (NS_SUCCEEDED(rv))
+    ::DisableSecureEventInput();
+  return rv;
+}
+
+
 @implementation WindowDelegate
 
 
