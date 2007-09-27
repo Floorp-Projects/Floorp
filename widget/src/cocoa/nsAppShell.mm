@@ -626,9 +626,8 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal *aThread,
   NS_ASSERTION(mAutoreleasePools && count,
                "Processed an event, but there's no autorelease pool?");
 
-  NSAutoreleasePool* pool = static_cast<const NSAutoreleasePool*>
-                                       (::CFArrayGetValueAtIndex(mAutoreleasePools,
-                                                        count - 1));
+  const NSAutoreleasePool* pool = static_cast<const NSAutoreleasePool*>
+    (::CFArrayGetValueAtIndex(mAutoreleasePools, count - 1));
   ::CFArrayRemoveValueAtIndex(mAutoreleasePools, count - 1);
   [pool release];
 
