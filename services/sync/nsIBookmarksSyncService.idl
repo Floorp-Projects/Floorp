@@ -38,7 +38,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(b3e52c09-5c33-4d07-a3e6-7c453d0c4be8)]
+[scriptable, uuid(0a1eed46-f832-495c-bce7-cb308ccfd599)]
 interface nsIBookmarksSyncService : nsISupports
 {
   /**
@@ -60,4 +60,12 @@ interface nsIBookmarksSyncService : nsISupports
    * Initiate a sync operation.
    */
   void sync();
+
+  /**
+   * Write a notice to the logfile
+   *
+   *  @param line
+   *         The line of text to print to the logfile
+   */
+  void notice(in AString line);
 };
