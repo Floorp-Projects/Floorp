@@ -55,12 +55,5 @@ XPIDLSRCS	= \
 		gfxtypes.idl \
 		$(NULL)
 
-ifdef MOZ_ENABLE_FREETYPE2
-XPIDLSRCS	+= \
-		nsIFontCatalogService.idl \
-		nsIFreeType2.idl \
-		$(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
