@@ -1103,6 +1103,11 @@ toolbar:not([mode="text"]) #star-button[starred="true"],
   list-style-image: url("chrome://browser/skin/places/pageStarred.png");
 }
 
+#star-button > .toolbarbutton-icon {
+  margin-left: 3px;
+  margin-right: 3px;
+}
+
 /* ::::: content area ::::: */
 
 #sidebar {
