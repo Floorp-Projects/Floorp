@@ -359,7 +359,12 @@ nsTextInputListener::Focus(nsIDOMEvent* aEvent)
     editor->AddEditorObserver(this);
   }
 
-  return mFrame->InitFocusedValue();
+  nsresult rv = mFrame->InitFocusedValue();
+
+  if (NS_SUCCEEDED(rv))
+    rv = mFrame->MaybeBeginSecureKeyboardInput();
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -373,6 +378,8 @@ nsTextInputListener::Blur(nsIDOMEvent* aEvent)
   if (editor) {
     editor->RemoveEditorObserver(this);
   }
+
+  mFrame->MaybeEndSecureKeyboardInput();
 
   return NS_OK;
 }
@@ -1040,6 +1047,7 @@ nsTextControlFrame::nsTextControlFrame(nsIPresShell* aShell, nsStyleContext* aCo
   , mNotifyOnInput(PR_TRUE)
   , mDidPreDestroy(PR_FALSE)
   , mFireChangeEventState(PR_FALSE)
+  , mInSecureKeyboardInputMode(PR_FALSE)
   , mTextListener(nsnull)
 #ifdef DEBUG
   , mCreateFrameForCalled(PR_FALSE)
@@ -1172,6 +1180,9 @@ nsTextControlFrame::PreDestroy()
 void
 nsTextControlFrame::Destroy()
 {
+  if (mInSecureKeyboardInputMode) {
+    MaybeEndSecureKeyboardInput();
+  }
   if (!mDidPreDestroy) {
     PreDestroy();
   }
@@ -1218,6 +1229,29 @@ PRBool nsTextControlFrame::IsPlainTextControl() const
 {
   // need to check HTML attribute of mContent and/or CSS.
   return PR_TRUE;
+}
+
+nsresult nsTextControlFrame::MaybeBeginSecureKeyboardInput()
+{
+  nsresult rv = NS_OK;
+  if (IsPasswordTextControl() && !mInSecureKeyboardInputMode) {
+    nsIWidget* window = GetWindow();
+    NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+    rv = window->BeginSecureKeyboardInput();
+    mInSecureKeyboardInputMode = NS_SUCCEEDED(rv);
+  }
+  return rv;
+}
+
+void nsTextControlFrame::MaybeEndSecureKeyboardInput()
+{
+  if (mInSecureKeyboardInputMode) {
+    nsIWidget* window = GetWindow();
+    if (!window)
+      return;
+    window->EndSecureKeyboardInput();
+    mInSecureKeyboardInputMode = PR_FALSE;
+  }
 }
 
 PRBool nsTextControlFrame::IsPasswordTextControl() const

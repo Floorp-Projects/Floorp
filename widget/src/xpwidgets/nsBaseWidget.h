@@ -131,8 +131,10 @@ public:
   NS_IMETHOD              GetAttention(PRInt32 aCycleCount);
   NS_IMETHOD              GetLastInputEventTime(PRUint32& aTime);
   NS_IMETHOD              SetIcon(const nsAString &anIconSpec);
+  NS_IMETHOD              BeginSecureKeyboardInput();
+  NS_IMETHOD              EndSecureKeyboardInput();
   virtual void            ConvertToDeviceCoordinates(nscoord  &aX,nscoord &aY) {}
-  virtual void            FreeNativeData(void * data, PRUint32 aDataType) {}//~~~
+  virtual void            FreeNativeData(void * data, PRUint32 aDataType) {}
 
 protected:
 
