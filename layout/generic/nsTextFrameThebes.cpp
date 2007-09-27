@@ -5798,7 +5798,7 @@ nsTextFrame::AdjustOffsetsForBidi(PRInt32 aStart, PRInt32 aEnd)
    */
   ClearTextRun();
 
-  nsTextFrame* prev = static_cast<nsTextFrame*>(GetPrevInFlow());
+  nsTextFrame* prev = static_cast<nsTextFrame*>(GetPrevContinuation());
   if (prev) {
     // the bidi resolver can be very evil when columns/pages are involved. Don't
     // let it violate our invariants.
