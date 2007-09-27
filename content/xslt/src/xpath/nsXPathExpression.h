@@ -44,6 +44,7 @@
 #include "txIXPathContext.h"
 #include "txResultRecycler.h"
 #include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
 
 class Expr;
 class txXPathNode;
@@ -59,7 +60,9 @@ public:
                       nsIDOMDocument *aDocument);
 
     // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXPathExpression,
+                                             nsIDOMXPathExpression)
 
     // nsIDOMXPathExpression interface
     NS_DECL_NSIDOMXPATHEXPRESSION
