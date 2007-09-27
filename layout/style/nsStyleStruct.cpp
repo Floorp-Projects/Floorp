@@ -1402,17 +1402,20 @@ nsChangeHint nsStyleContent::MaxDifference()
 
 nsresult nsStyleContent::AllocateContents(PRUint32 aCount)
 {
-  if (aCount != mContentCount) {
-    DELETE_ARRAY_IF(mContents);
-    if (aCount) {
-      mContents = new nsStyleContentData[aCount];
-      if (! mContents) {
-        mContentCount = 0;
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+  // We need to run the destructors of the elements of mContents, so we
+  // delete and reallocate even if aCount == mContentCount.  (If
+  // nsStyleContentData had its members private and managed their
+  // ownership on setting, we wouldn't need this, but that seems
+  // unnecessary at this point.)
+  DELETE_ARRAY_IF(mContents);
+  if (aCount) {
+    mContents = new nsStyleContentData[aCount];
+    if (! mContents) {
+      mContentCount = 0;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
-    mContentCount = aCount;
   }
+  mContentCount = aCount;
   return NS_OK;
 }
 
