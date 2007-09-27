@@ -3679,9 +3679,8 @@ nsBrowserStatusHandler.prototype =
 
     var securityUI = gBrowser.securityUI;
     this.securityButton.setAttribute("tooltiptext", securityUI.tooltipText);
-    var lockIcon = document.getElementById("lock-icon");
-    if (lockIcon)
-      lockIcon.setAttribute("tooltiptext", securityUI.tooltipText);
+    
+    getIdentityHandler().checkIdentity(aState);
   },
 
   // simulate all change notifications after switching tabs
@@ -5566,4 +5565,267 @@ function showToolbars() {
     goButtonStack.removeAttribute("hidden");
   
   return false; // Dismiss the notification message
+}
+
+/**
+ * Utility class to handle manipulations of the identity indicators in the UI
+ */
+function IdentityHandler() {
+  this._identityPopup = document.getElementById("identity-popup");
+  this._identityBox = document.getElementById("identity-box");
+  this._identityPopupContentBox = document.getElementById("identity-popup-content-box");
+  this._identityPopupTitle = document.getElementById("identity-popup-title");
+  this._identityPopupContent = document.getElementById("identity-popup-content");
+  this._identityPopupContentSupp = document.getElementById("identity-popup-content-supplemental");
+  this._identityPopupContentVerif = document.getElementById("identity-popup-content-verifier");
+  this._identityPopupEncLabel = document.getElementById("identity-popup-encryption-label");
+  this._identityIconLabel = document.getElementById("identity-icon-label");
+
+  this._stringBundle = document.getElementById("bundle_browser");
+  this._staticStrings = {};
+  this._staticStrings[this.IDENTITY_MODE_DOMAIN_VERIFIED] = {
+    title: this._stringBundle.getString("identity.domainverified.title"),
+    encryption_label: this._stringBundle.getString("identity.encrypted")  
+  };
+  this._staticStrings[this.IDENTITY_MODE_IDENTIFIED] = {
+    title: this._stringBundle.getString("identity.identified.title"),
+    encryption_label: this._stringBundle.getString("identity.encrypted")
+  };
+  this._staticStrings[this.IDENTITY_MODE_UNKNOWN] = {
+    title: this._stringBundle.getString("identity.unknown.title"),
+    encryption_label: this._stringBundle.getString("identity.unencrypted")  
+  };
+}
+
+IdentityHandler.prototype = {
+
+  // Mode strings used to control CSS display
+  IDENTITY_MODE_IDENTIFIED       : "verifiedIdentity", // High-quality identity information
+  IDENTITY_MODE_DOMAIN_VERIFIED  : "verifiedDomain",   // Minimal SSL CA-signed domain verification
+  IDENTITY_MODE_UNKNOWN          : "unknownIdentity",  // No trusted identity information
+
+  // Cache the most recently seen SSLStatus and URI to prevent unnecessary updates
+  _lastStatus : null,
+  _lastURI : null,
+
+  /**
+   * Handler for mouseclicks on the "Tell me more about this website" link text
+   * in the "identity-popup" panel.
+   */
+  handleMoreInfoClick : function(event) {
+    if (event.button == 0) {
+      displaySecurityInfo();
+      event.stopPropagation();
+    }   
+  },
+  
+  /**
+   * Helper to parse out the important parts of _lastStatus (of the SSL cert in
+   * particular) for use in constructing identity UI strings
+  */
+  getIdentityData : function() {
+    var result = {};
+    var status = this._lastStatus.QueryInterface(Components.interfaces.nsISSLStatus);
+    var cert = status.serverCert;
+    
+    // Human readable name of Subject
+    result.subjectOrg = cert.organization;
+    
+    // SubjectName fields, broken up for individual access
+    if (cert.subjectName) {
+      result.subjectNameFields = {};
+      cert.subjectName.split(",").forEach(function(v) {
+        var field = v.split("=");
+        this[field[0]] = field[1];
+      }, result.subjectNameFields);
+      
+      // Call out city, state, and country specifically
+      result.city = result.subjectNameFields.L;
+      result.state = result.subjectNameFields.ST;
+      result.country = result.subjectNameFields.C;
+    }
+    
+    // Human readable name of Certificate Authority
+    result.caOrg =  cert.issuerOrganization || cert.issuerCommonName;
+    
+    return result;
+  },
+  
+  /**
+   * Determine the identity of the page being displayed by examining its SSL cert
+   * (if available) and, if necessary, update the UI to reflect this.  Intended to
+   * be called by an nsIWebProgressListener.
+   *
+   * @param nsIWebProgress webProgress
+   * @param nsIRequest request
+   * @param PRUint32 state
+   */
+  checkIdentity : function(state) {
+    var currentURI = gBrowser.currentURI;
+    if (currentURI.schemeIs("http")) {
+      if (!this._lastURI.schemeIs("http"))
+        this.setMode(this.IDENTITY_MODE_UNKNOWN);
+      return;
+    }
+
+    var currentStatus = gBrowser.securityUI
+                                .QueryInterface(Components.interfaces.nsISSLStatusProvider)
+                                .SSLStatus;
+    if (currentStatus == this._lastStatus && currentURI == this._lastURI) {
+      // No need to update, this is a no-op check
+      return;
+    }
+
+    this._lastStatus = currentStatus;
+    this._lastURI = currentURI;
+    
+    if (state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
+      this.setMode(this.IDENTITY_MODE_IDENTIFIED);
+    else if (state & Components.interfaces.nsIWebProgressListener.STATE_SECURE_HIGH)
+      this.setMode(this.IDENTITY_MODE_DOMAIN_VERIFIED);
+    else
+      this.setMode(this.IDENTITY_MODE_UNKNOWN);
+  },
+  
+  /**
+   * Update the UI to reflect the specified mode, which should be one of the
+   * IDENTITY_MODE_* constants.
+   */
+  setMode : function(newMode) {
+    document.getElementById("identity-box").className = newMode;
+    this.setIdentityMessages(newMode);
+    
+    // Update the popup too, if it's open
+    if (this._identityPopup.state == "open")
+      this.setPopupMessages(newMode);
+  },
+  
+  /**
+   * Set up the messages for the primary identity UI based on the specified mode,
+   * and the details of the SSL cert, where applicable
+   *
+   * @param newMode The newly set identity mode.  Should be one of the IDENTITY_MODE_* constants.
+   */
+  setIdentityMessages : function(newMode) {
+    if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
+      var iData = this.getIdentityData();     
+      
+      // It would be sort of nice to use the CN= field in the cert, since that's
+      // typically what we want here, but thanks to x509 certs being extensible,
+      // it's not the only place you have to check, there can be more than one domain,
+      // et cetera, ad nauseum.  We know the cert is valid for location.host, so
+      // let's just use that, it's what the status bar does too.
+      var icon_label = this._lastURI.host; 
+      var tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
+                                                          [iData.caOrg]);
+    }
+    else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
+      // If it's identified, then we can populate the dialog with credentials
+      iData = this.getIdentityData();  
+      tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
+                                                      [iData.caOrg]);
+      if (iData.country)
+        icon_label = this._stringBundle.getFormattedString("identity.identified.title_with_country",
+                                                           [iData.subjectOrg, iData.country]);
+      else
+        icon_label = iData.subjectOrg;
+    }
+    else {
+      tooltip = this._stringBundle.getString("identity.unknown.body");
+      icon_label = "";
+    }
+    
+    // Push the appropriate strings out to the UI
+    this._identityBox.tooltipText = tooltip;
+    this._identityIconLabel.value = icon_label;
+  },
+  
+  /**
+   * Set up the title and content messages for the identity message popup,
+   * based on the specified mode, and the details of the SSL cert, where
+   * applicable
+   *
+   * @param newMode The newly set identity mode.  Should be one of the IDENTITY_MODE_* constants.
+   */
+  setPopupMessages : function(newMode) {
+      
+    this._identityPopup.className = newMode;
+    this._identityPopupContentBox.className = newMode;
+    
+    // Set the static strings up front
+    this._identityPopupTitle.value = this._staticStrings[newMode].title;
+    this._identityPopupEncLabel.textContent = this._staticStrings[newMode].encryption_label;
+    
+    // Initialize the optional strings to empty values
+    var supplemental = "";
+    var verifier = "";
+      
+    if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
+      var iData = this.getIdentityData();
+
+      var body = this._lastURI.host;     
+      verifier = this._stringBundle.getFormattedString("identity.identified.verifier",
+                                                       [iData.caOrg]);
+      supplemental = this._stringBundle.getString("identity.domainverified.supplemental");
+    }
+    else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
+      // If it's identified, then we can populate the dialog with credentials
+      iData = this.getIdentityData();
+
+      // Pull the basics out with fallback options in case common
+      // (optional) fields are left blank
+      body = iData.subjectOrg; 
+      verifier = this._stringBundle.getFormattedString("identity.identified.verifier",
+                                                       [iData.caOrg]);
+
+      // Build an appropriate supplemental block out of whatever location data we have
+      if (iData.city)
+        supplemental += iData.city + "\n";        
+      if (iData.state && iData.country)
+        supplemental += this._stringBundle.getFormattedString("identity.identified.state_and_country",
+                                                              [iData.state, iData.country]);
+      else if (iData.state) // State only
+        supplemental += iData.state;
+      else if (iData.country) // Country only
+        supplemental += iData.country;
+    }
+    else {
+      body = this._stringBundle.getString("identity.unknown.body");
+    }
+    
+    // Push the appropriate strings out to the UI
+    this._identityPopupContent.textContent = body;
+    this._identityPopupContentSupp.textContent = supplemental;
+    this._identityPopupContentVerif.textContent = verifier;
+  },
+  
+  /**
+   * Click handler for the identity-box element in primary chrome.  
+   */
+  handleIdentityClick : function(event) {
+    if (event.button != 0)
+      return; // We only want left-clicks
+        
+    // Make sure that the display:none style we set in xul is removed now that
+    // the popup is actually needed
+    this._identityPopup.hidden = false;
+    
+    // Update the popup strings
+    this.setPopupMessages(this._identityBox.className);
+    
+    // Now open the popup, anchored off the primary chrome element
+    this._identityPopup.openPopup(this._identityBox, 'after_start');
+  }
+};
+
+var gIdentityHandler; 
+
+/**
+ * Returns the singleton instance of the identity handler class.  Should always be
+ * used instead of referencing the global variable directly or creating new instances
+ */
+function getIdentityHandler() {
+  if (!gIdentityHandler)
+    gIdentityHandler = new IdentityHandler();
+  return gIdentityHandler;    
 }
