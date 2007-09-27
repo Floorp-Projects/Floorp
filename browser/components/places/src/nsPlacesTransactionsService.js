@@ -63,8 +63,7 @@ placesTransactionsService.prototype = {
   classID: CLASS_ID,
   contractID: CONTRACT_ID,
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPlacesTransactionsService,
-                                         Ci.nsISupports]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPlacesTransactionsService]),
 
   aggregateTransactions: function placesAggrTransactions(name, transactions) {
     return new placesAggregateTransactions(name, transactions);
@@ -179,7 +178,7 @@ placesBaseTransaction.prototype = {
   },
 
   // nsISupports
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsITransaction, Ci.nsISupports]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITransaction]),
 };
 
 function placesAggregateTransactions(name, transactions) {
