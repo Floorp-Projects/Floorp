@@ -1,0 +1,86 @@
+<html>
+<head>
+<!-- MOZ_INSERT_CONTENT_HOOK -->
+<style type="text/css">
+body      {background-color: #000000;}
+.header   { z-index: 2; visibility: hidden; position: absolute; font-weight: bold; font-family: comic sans ms; font-size: 48pt; color: #ffffff;}
+</style>
+
+<title>Mozilla</title>
+
+</head>
+
+<script language="javascript">
+var num = 1;
+var mode = 1;
+var col = 255;
+var posx = 750;
+var count = 0;
+var startTime;
+
+function mzDhtmlStart()
+{
+  startTime = Date.now();
+  doletters();
+}
+
+function doletters()
+{
+  if (mode == 1)
+  {
+    posx -= 15;
+    var letter = document.getElementById("letter" + num).style;
+    letter.visibility = "visible";
+    letter.top = 40;
+    letter.left = posx;
+    var ispace = 0;
+    if (num > 4)
+      ispace = -20;
+    if (posx <= (num * 70 + 180 + ispace))
+    {
+      letter.left = num * 70 + 180 + ispace;
+      num++;
+      posx = 750;
+    }
+  }
+  else if (mode == 2)
+  {
+      var letter=document.getElementById("letter" + num).style;
+      col -= 15;
+      if (col > 16)
+      {
+        letter.color="rgb(255, " + col + "," + col + ")";
+      }
+      else 
+      {
+        letter.color="#ff1010";
+        col = 255;
+        num++;
+      }
+  }
+  
+  if (num > 7) 
+  {
+    mode++;
+    num = 1;
+  }
+  
+  if (mode < 3)
+    setTimeout("doletters()", 0);
+  else
+    tpRecordTime(Date.now() - startTime);
+}
+</script>
+
+<body onload="mzDhtmlStart();">
+
+<div class="header" id="letter1">M</div>
+<div class="header" id="letter2">O</div>
+<div class="header" id="letter3">Z</div>
+<div class="header" id="letter4">I</div>
+<div class="header" id="letter5">L</div>
+<div class="header" id="letter6">L</div>
+<div class="header" id="letter7">A</div>
+
+</body>
+</html>
