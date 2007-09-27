@@ -5646,6 +5646,7 @@ PRBool CSSParserImpl::ParseContent(nsresult& aErrorCode)
           (eCSSUnit_Enumerated == value.GetUnit() &&
            NS_STYLE_CONTENT_ALT_CONTENT == value.GetIntValue())) {
         // This only matters the first time through the loop.
+        delete listHead;
         return PR_FALSE;
       }
       if (ParseVariant(aErrorCode, value, VARIANT_CONTENT, nsCSSProps::kContentKTable) &&
