@@ -755,7 +755,7 @@ protected:
   nsRefPtr<nsScriptLoader> mScriptLoader;
   nsDocHeaderData* mHeaderData;
 
-  nsHashtable mRadioGroups;
+  nsClassHashtable<nsStringHashKey, nsRadioGroupStruct> mRadioGroups;
 
   // True if the document has been detached from its content viewer.
   PRPackedBool mIsGoingAway:1;
