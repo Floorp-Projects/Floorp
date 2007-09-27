@@ -352,11 +352,11 @@ nsString gfxOS2Font::GetUniqueName()
     return mName;
 }
 
-PRBool gfxOS2Font::SetupCairoFont(cairo_t *aCR)
+PRBool gfxOS2Font::SetupCairoFont(gfxContext *aContext)
 {
 #ifdef DEBUG_thebes_2
     printf("gfxOS2Font[%#x]::SetupCairoFont(%#x)\n",
-           (unsigned)this, (unsigned) aCR);
+           (unsigned)this, (unsigned) aContext);
 #endif
     // gfxPangoFont checks the CTM but Windows doesn't so leave away here, too
 
@@ -367,7 +367,7 @@ PRBool gfxOS2Font::SetupCairoFont(cairo_t *aCR)
         // the cairo_t, precluding any further drawing.
         return PR_FALSE;
     }
-    cairo_set_scaled_font(aCR, scaledFont);
+    cairo_set_scaled_font(aContext->GetCairo(), scaledFont);
     return PR_TRUE;
 }
 
@@ -443,6 +443,8 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUnichar* aString, PRUint32 aLen
 
     InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen);
 
+    textRun->FetchGlyphExtents(aParams->mContext);
+
     return textRun;
 }
 
@@ -476,6 +478,8 @@ gfxTextRun *gfxOS2FontGroup::MakeTextRun(const PRUint8* aString, PRUint32 aLengt
         AppendUTF16toUTF8(unicodeString, utf8);
         InitTextRun(textRun, (PRUint8 *)utf8.get(), utf8.Length(), headerLen);
     }
+
+    textRun->FetchGlyphExtents(aParams->mContext);
 
     return textRun;
 }
