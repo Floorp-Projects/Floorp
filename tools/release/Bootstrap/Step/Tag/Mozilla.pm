@@ -7,6 +7,7 @@ use File::Copy qw(move);
 use File::Spec::Functions;
 
 use MozBuild::Util qw(MkdirWithPath);
+use Bootstrap::Util qw(GetDiffFileList);
 
 use Bootstrap::Config;
 use Bootstrap::Step::Tag;
@@ -47,11 +48,10 @@ sub Execute {
 
     if ($rc > 1) {
         my $previousRcTag = $productTag . '_RC' . ($rc - 1);
-        my $diffFileList = $this->GetDiffFileList(cvsDir => 
-                                                   catfile($cvsrootTagDir,
-                                                           'mozilla'),
-                                                  prevTag => $previousRcTag,
-                                                  newTag => $rcTag);
+        my $diffFileList = GetDiffFileList(cvsDir => catfile($cvsrootTagDir,
+                                                             'mozilla'),
+                                           prevTag => $previousRcTag,
+                                           newTag => $rcTag);
 
         if (scalar(@{$diffFileList}) > 0) {
             $this->CvsTag(
