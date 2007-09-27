@@ -401,9 +401,9 @@ BrowserGlue.prototype = {
   classID:          Components.ID("{eab9012e-5f74-4cbc-b2b5-a590235513cc}"),
   contractID:       "@mozilla.org/browser/browserglue;1",
 
-  QueryInterface : XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupports,
-                                          Ci.nsISupportsWeakReference,
-                                          Ci.nsIBrowserGlue]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
+                                         Ci.nsISupportsWeakReference,
+                                         Ci.nsIBrowserGlue]),
 
   // redefine the default factory for XPCOMUtils
   _xpcom_factory: BrowserGlueServiceFactory,
