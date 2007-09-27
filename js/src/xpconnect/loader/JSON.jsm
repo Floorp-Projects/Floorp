@@ -73,31 +73,35 @@ var JSON = {
    * Note: aJSObject MUST not contain cyclic references.
    */
   toString: function JSON_toString(aJSObject, aKeysToDrop) {
-    // these characters have a special escape notation
-    const charMap = { "\b": "\\b", "\t": "\\t", "\n": "\\n", "\f": "\\f",
-                      "\r": "\\r", '"': '\\"', "\\": "\\\\" };
-    
     // we use a single string builder for efficiency reasons
     var pieces = [];
     
     // this recursive function walks through all objects and appends their
     // JSON representation (in one or several pieces) to the string builder
     function append_piece(aObj) {
-      if (typeof aObj == "boolean") {
+      if (typeof aObj == "string") {
+        aObj = aObj.replace(/[\\"\x00-\x1F\u0080-\uFFFF]/g, function($0) {
+          // use the special escape notation if one exists, otherwise
+          // produce a general unicode escape sequence
+          switch ($0) {
+          case "\b": return "\\b";
+          case "\t": return "\\t";
+          case "\n": return "\\n";
+          case "\f": return "\\f";
+          case "\r": return "\\r";
+          case '"':  return '\\"';
+          case "\\": return "\\\\";
+          }
+          return "\\u" + ("0000" + $0.charCodeAt(0).toString(16)).slice(-4);
+        });
+        pieces.push('"' + aObj + '"')
+      }
+      else if (typeof aObj == "boolean") {
         pieces.push(aObj ? "true" : "false");
       }
       else if (typeof aObj == "number" && isFinite(aObj)) {
         // there is no representation for infinite numbers or for NaN!
         pieces.push(aObj.toString());
-      }
-      else if (typeof aObj == "string") {
-        aObj = aObj.replace(/[\\"\x00-\x1F\u0080-\uFFFF]/g, function($0) {
-          // use the special escape notation if one exists, otherwise
-          // produce a general unicode escape sequence
-          return charMap[$0] ||
-            "\\u" + ("0000" + $0.charCodeAt(0).toString(16)).slice(-4);
-        });
-        pieces.push('"' + aObj + '"')
       }
       else if (aObj === null) {
         pieces.push("null");
@@ -109,10 +113,10 @@ var JSON = {
                (aObj.length === 0 || aObj[aObj.length - 1] !== undefined)) {
         pieces.push("[");
         for (var i = 0; i < aObj.length; i++) {
-          append_piece(aObj[i]);
+          arguments.callee(aObj[i]);
           pieces.push(",");
         }
-        if (pieces[pieces.length - 1] == ",")
+        if (aObj.length > 0)
           pieces.pop(); // drop the trailing colon
         pieces.push("]");
       }
@@ -125,9 +129,9 @@ var JSON = {
           if (aKeysToDrop && aKeysToDrop.indexOf(key) != -1)
             continue;
           
-          append_piece(key.toString());
+          arguments.callee(key.toString());
           pieces.push(":");
-          append_piece(aObj[key]);
+          arguments.callee(aObj[key]);
           pieces.push(",");
         }
         if (pieces[pieces.length - 1] == ",")
