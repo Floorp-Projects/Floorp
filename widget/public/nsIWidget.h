@@ -95,11 +95,11 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_PLUGIN_PORT_CG    101
 #endif
 
-// f60fa720-a9bc-4fd3-b863-812496fa85e6
+// 15800FBD-650A-4F67-81FB-186E73F45BE1
 
 #define NS_IWIDGET_IID \
-{ 0xf60fa720, 0xa9bc, 0x4fd3, \
-  { 0xb8, 0x63, 0x81, 0x24, 0x96, 0xfa, 0x85, 0xe6 } }
+{ 0x15800FBD, 0x650A, 0x4F67, \
+  { 0x81, 0xFB, 0x18, 0x6E, 0x73, 0xF4, 0x5B, 0xE1 } }
 
 // Hide the native window systems real window type so as to avoid
 // including native window system types and api's. This is necessary
@@ -1011,6 +1011,24 @@ class nsIWidget : public nsISupports {
      * PR_IntervalToMicroseconds(PR_IntervalNow()).
      */
     NS_IMETHOD GetLastInputEventTime(PRUint32& aTime) = 0;
+
+    /**
+     * Called when when we need to begin secure keyboard input, such as when a password field
+     * gets focus.
+     *
+     * NOTE: Calls to this method may not be nested and you can only enable secure keyboard input
+     * for one widget at a time.
+     */
+    NS_IMETHOD BeginSecureKeyboardInput() = 0;
+
+    /**
+     * Called when when we need to end secure keyboard input, such as when a password field
+     * loses focus.
+     *
+     * NOTE: Calls to this method may not be nested and you can only enable secure keyboard input
+     * for one widget at a time.
+     */
+    NS_IMETHOD EndSecureKeyboardInput() = 0;
 
     /**
      * Get the Thebes surface associated with this widget.
