@@ -198,6 +198,7 @@ BookmarksSyncService.prototype = {
       fis.readLine(ret);
       json += ret.value;
     }
+    fis.close();
     json = eval(json);
 
     if (json.snapshot && json.version) {
