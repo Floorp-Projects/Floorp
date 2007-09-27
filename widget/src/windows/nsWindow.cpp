@@ -2534,71 +2534,58 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
 }
 
 static PRUint8* Data32BitTo1Bit(PRUint8* aImageData,
-                                PRUint32 aImageBytesPerRow,
                                 PRUint32 aWidth, PRUint32 aHeight)
 {
   // We need (aWidth + 7) / 8 bytes plus zero-padding up to a multiple of
   // 4 bytes for each row (HBITMAP requirement). Bug 353553.
   PRUint32 outBpr = ((aWidth + 31) / 8) & ~3;
-  
-  PRUint8* outData = new PRUint8[outBpr * aHeight];
+
+  // Allocate and clear mask buffer
+  PRUint8* outData = (PRUint8*)PR_Calloc(outBpr, aHeight);
   if (!outData)
     return NULL;
 
-  PRUint8 *outRow = outData,
-          *imageRow = aImageData;
-
+  PRInt32 *imageRow = (PRInt32*)aImageData;
   for (PRUint32 curRow = 0; curRow < aHeight; curRow++) {
-    PRUint8 *irow = imageRow;
-    PRUint8 *nextOutRow = outRow + outBpr;
-    PRUint8 alphaPixels = 0;
-    PRUint8 offset = 7;
-
+    PRUint8 *outRow = outData + curRow * outBpr;
+    PRUint8 mask = 0x80;
     for (PRUint32 curCol = 0; curCol < aWidth; curCol++) {
-      if (imageRow[3] > 0)
-        alphaPixels |= (1 << offset);
-      imageRow += 4;
-        
-      if (offset == 0) {
-        *outRow++ = alphaPixels;
-        offset = 7;
-        alphaPixels = 0;
-      } else {
-        offset--;
+      // Use sign bit to test for transparency, as alpha byte is highest byte
+      if (*imageRow++ < 0)
+        *outRow |= mask;
+
+      mask >>= 1;
+      if (!mask) {
+        outRow ++;
+        mask = 0x80;
       }
     }
-    if (offset != 7)
-      *outRow++ = alphaPixels;
-
-    imageRow = irow + aImageBytesPerRow;
-    while (outRow != nextOutRow)
-      *outRow++ = 0; // padding
   }
 
   return outData;
 }
 
-// static
-HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
-                               PRUint32 aWidth,
-                               PRUint32 aHeight,
-                               PRUint32 aDepth)
+/**
+ * Convert the given image data to a HBITMAP. If the requested depth is
+ * 32 bit and the OS supports translucency, a bitmap with an alpha channel
+ * will be returned.
+ *
+ * @param aImageData The image data to convert. Must use the format accepted
+ *                   by CreateDIBitmap.
+ * @param aWidth     With of the bitmap, in pixels.
+ * @param aHeight    Height of the image, in pixels.
+ * @param aDepth     Image depth, in bits. Should be one of 1, 24 and 32.
+ *
+ * @return The HBITMAP representing the image. Caller should call
+ *         DeleteObject when done with the bitmap.
+ *         On failure, NULL will be returned.
+ */
+static HBITMAP DataToBitmap(PRUint8* aImageData,
+                            PRUint32 aWidth,
+                            PRUint32 aHeight,
+                            PRUint32 aDepth)
 {
-  if (aDepth == 8 || aDepth == 4) {
-    NS_WARNING("nsWindow::DataToBitmap can't handle 4 or 8 bit images");
-    return NULL;
-  }
-
-  // dc must be a CreateCompatibleDC.
-  // GetDC, cursors, 1 bit masks, and Win9x do not mix for some reason.
-  HDC dc = ::CreateCompatibleDC(NULL);
-  
-  // force dc into color/bw mode
-  int planes = ::GetDeviceCaps(dc, PLANES);
-  int bpp = (aDepth == 1) ? 1 : ::GetDeviceCaps(dc, BITSPIXEL);
-
-  HBITMAP tBitmap = ::CreateBitmap(1, 1, planes, bpp, NULL);
-  HBITMAP oldbits = (HBITMAP)::SelectObject(dc, tBitmap);
+  HDC dc = ::GetDC(NULL);
 
 #ifndef WINCE
   if (aDepth == 32 && IsCursorTranslucencySupported()) {
@@ -2627,15 +2614,13 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
                                    aImageData,
                                    reinterpret_cast<CONST BITMAPINFO*>(&head),
                                    DIB_RGB_COLORS);
-
-    ::SelectObject(dc, oldbits);
-    ::DeleteObject(tBitmap);
-    ::DeleteDC(dc);
+    ::ReleaseDC(NULL, dc);
     return bmp;
   }
 #endif
 
-  BITMAPINFOHEADER head = { 0 };
+  char reserved_space[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 2];
+  BITMAPINFOHEADER& head = *(BITMAPINFOHEADER*)reserved_space;
 
   head.biSize = sizeof(BITMAPINFOHEADER);
   head.biWidth = aWidth;
@@ -2649,10 +2634,7 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
   head.biClrUsed = 0;
   head.biClrImportant = 0;
   
-  char reserved_space[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 2];
   BITMAPINFO& bi = *(BITMAPINFO*)reserved_space;
-
-  bi.bmiHeader = head;
 
   if (aDepth == 1) {
     RGBQUAD black = { 0, 0, 0, 0 };
@@ -2663,10 +2645,7 @@ HBITMAP nsWindow::DataToBitmap(PRUint8* aImageData,
   }
 
   HBITMAP bmp = ::CreateDIBitmap(dc, &head, CBM_INIT, aImageData, &bi, DIB_RGB_COLORS);
-
-  ::SelectObject(dc, oldbits);
-  ::DeleteObject(tBitmap);
-  ::DeleteDC(dc);
+  ::ReleaseDC(NULL, dc);
   return bmp;
 }
 
@@ -2688,17 +2667,12 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
   frame->GetWidth(&width);
   frame->GetHeight(&height);
 
-  // Reject cursors greater than 128 pixels in some direction, to prevent
+  // Reject cursors greater than 128 pixels in either direction, to prevent
   // spoofing.
   // XXX ideally we should rescale. Also, we could modify the API to
   // allow trusted content to set larger cursors.
   if (width > 128 || height > 128)
     return NS_ERROR_NOT_AVAILABLE;
-
-  PRUint32 bpr;
-  gfx_format format;
-  frame->GetImageBytesPerRow(&bpr);
-  frame->GetFormat(&format);
 
   frame->LockImageData();
 
@@ -2710,44 +2684,15 @@ NS_IMETHODIMP nsWindow::SetCursor(imgIContainer* aCursor,
     return rv;
   }
 
-  /* flip the image so that it is stored bottom-up */
-  PRUint8 *bottomUpData = (PRUint8*)malloc(dataLen);
-  if (!bottomUpData) {
-    frame->UnlockImageData();
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (format == gfxIFormats::RGB_A8 || format == gfxIFormats::BGR_A8) {
-    for (PRInt32 i = 0; i < height; ++i) {
-      PRUint32 srcOffset = i * bpr;
-      PRUint32 dstOffset = dataLen - (bpr * (i + 1));
-      PRUint32 *srcRow = (PRUint32*)(data + srcOffset);
-      PRUint32 *dstRow = (PRUint32*)(bottomUpData + dstOffset);
-      memcpy(dstRow, srcRow, bpr);
-    }
-  } else {
-    for (PRInt32 i = 0; i < height; ++i) {
-      PRUint32 srcOffset = i * bpr;
-      PRUint32 dstOffset = dataLen - (bpr * (i + 1));
-      PRUint32 *srcRow = (PRUint32*)(data + srcOffset);
-      PRUint32 *dstRow = (PRUint32*)(bottomUpData + dstOffset);
-      for (PRInt32 x = 0; x < width; ++x) {
-        dstRow[x] = (srcRow[x] & 0xFFFFFF) | (0xFF << 24);
-      }
-    }
-  }
+  HBITMAP bmp = DataToBitmap(data, width, -height, 32);
+  PRUint8* a1data = Data32BitTo1Bit(data, width, height);
   frame->UnlockImageData();
-
-  PRUint8* a1data = Data32BitTo1Bit(bottomUpData, bpr, width, height);
   if (!a1data) {
-    free(bottomUpData);
     return NS_ERROR_FAILURE;
   }
 
-  HBITMAP bmp = DataToBitmap(bottomUpData, width, height, 32);
-  HBITMAP mbmp = DataToBitmap(a1data, width, height, 1);
-  free(bottomUpData);
-  delete[] a1data;
+  HBITMAP mbmp = DataToBitmap(a1data, width, -height, 1);
+  PR_Free(a1data);
 
   ICONINFO info = {0};
   info.fIcon = FALSE;

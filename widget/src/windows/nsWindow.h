@@ -481,26 +481,6 @@ protected:
   static HCURSOR        gHCursor;
   static imgIContainer* gCursorImgContainer;
 
-  /**
-   * Convert the given image data to a HBITMAP. If the requested depth is
-   * 32 bit and the OS supports translucency, a bitmap with an alpha channel
-   * will be returned.
-   *
-   * @param aImageData The image data to convert. Must use the format accepted
-   *                   by CreateDIBitmap.
-   * @param aWidth     With of the bitmap, in pixels.
-   * @param aHeight    Height of the image, in pixels.
-   * @param aDepth     Image depth, in bits. Should be one of 1, 24 and 32.
-   *
-   * @return The HBITMAP representing the image. Caller should call
-   *         DeleteObject when done with the bitmap.
-   *         On failure, NULL will be returned.
-   */
-  static HBITMAP DataToBitmap(PRUint8* aImageData,
-                              PRUint32 aWidth,
-                              PRUint32 aHeight,
-                              PRUint32 aDepth);
-
 #ifdef ACCESSIBILITY
   static BOOL gIsAccessibilityOn;
   static HINSTANCE gmAccLib;
