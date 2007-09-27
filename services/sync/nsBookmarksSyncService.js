@@ -1218,7 +1218,7 @@ DAVCollection.prototype = {
                                  'Use your ldap username/password - dotmoz');
       //notice("Found " + logins.length + " logins");
 
-      for (let i = 0; i < logins.length; i++) {
+          for (let i = 0; i < logins.length; i++) {
         if (logins[i].username == username) {
           password = logins[i].password;
           break;
@@ -1252,14 +1252,27 @@ DAVCollection.prototype = {
     }
 
     // fixme: hacktastic
-    let hello = /Hello (.+)@mozilla.com/.exec(event.target.responseText)
-    if (hello) {
-      this._currentUserPath = hello[1];	
-      this._currentUser = this._currentUserPath + "@mozilla.com";
-      this._baseURL = "http://dotmoz.mozilla.org/~" +
-        this._currentUserPath + "/";
-    }
+//    let hello = /Hello (.+)@mozilla.com/.exec(event.target.responseText)
+//    let hello = /Index of/.exec(event.target.responseText)
+//    if (hello) {
+//      this._currentUserPath = hello[1];	
+//      this._currentUser = this._currentUserPath + "@mozilla.com";
+//      this._baseURL = "http://dotmoz.mozilla.org/~" +
+//        this._currentUserPath + "/";
+//    }
 
+      // XXX we need to refine some server response codes
+    let branch = Cc["@mozilla.org/preferences-service;1"].
+      getService(Ci.nsIPrefBranch);
+    this._currentUser = branch.getCharPref("browser.places.sync.username");
+
+    // XXX
+    let path = this._currentUser.split("@");
+    this._currentUserPath = path[0];
+
+    let serverURL = branch.getCharPref("browser.places.sync.serverURL");
+    this._baseURL = serverURL + this._currentUserPath + "/";
+    
     this._loggedIn = true;
 
     if (this._loginHandlers && this._loginHandlers.load)
