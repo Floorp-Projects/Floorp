@@ -269,6 +269,14 @@ public:
    */
   static void UnlinkUserData(nsINode *aNode);
 
+  /**
+   * Remove neccesary components of all nodes in a subtree to avoid leaking.
+   * So far this removes XBL bindings and XUL controllers.
+   *
+   * @param aRoot the node that is the root of the subtree to clear.
+   */
+  static void DestroySubtree(nsIContent* aRoot);
+
 private:
   friend PLDHashOperator PR_CALLBACK
     AdoptFunc(nsAttrHashKey::KeyType aKey, nsIDOMNode *aData, void* aUserArg);
