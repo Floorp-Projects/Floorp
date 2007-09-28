@@ -64,8 +64,9 @@ variable            description
 -d datafiles        optional. one or more filenames of files containing 
                     environment variable definitions to be included.
 
-                    note that the environment variables should have the same 
-                    names as in the "variable" column.
+note that the environment variables should have the same names as in the 
+"variable" column.
+
 EOF
     exit 1
 }
@@ -73,17 +74,17 @@ EOF
 unset product branch executablepath directory profilename profiletemplate user datafiles
 
 while getopts $options optname ; 
-do 
-    case $optname in
-        p) product=$OPTARG;;
-        b) branch=$OPTARG;;
-        x) executablepath=$OPTARG;;
-        D) directory=$OPTARG;;
-        N) profilename=$OPTARG;;
-        L) profiletemplate=$OPTARG;;
-        U) user=$OPTARG;;
-        d) datafiles=$OPTARG;;
-    esac
+  do 
+  case $optname in
+      p) product=$OPTARG;;
+      b) branch=$OPTARG;;
+      x) executablepath=$OPTARG;;
+      D) directory=$OPTARG;;
+      N) profilename=$OPTARG;;
+      L) profiletemplate=$OPTARG;;
+      U) user=$OPTARG;;
+      d) datafiles=$OPTARG;;
+  esac
 done
 
 # include environment variables
@@ -104,7 +105,7 @@ if [[ "$product" != "firefox" && "$product" != "thunderbird" ]]; then
 fi
 
 if [[ "$branch" != "1.8.0" && "$branch" != "1.8.1" && "$branch" != "1.9.0" ]]; 
-then
+    then
     error "branch \"$branch\" must be one of 1.8.0, 1.8.1, 1.9.0"
 fi
 
@@ -150,6 +151,3 @@ fi
 if [[ ! -z $user ]]; then
     cp $user $directory/user.js
 fi
-
-
-

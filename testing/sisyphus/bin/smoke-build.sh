@@ -41,8 +41,8 @@ TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
 source ${TEST_BIN}/library.sh
 
 if [[ -z "$1" ]]; then
-  echo smoke-build.sh directorypattern
-  exit 2
+    echo smoke-build.sh directorypattern
+    exit 1
 fi
 
 for filepath in $@; do

@@ -73,32 +73,33 @@ variable            description
 -x executablepath   optional. directory tree containing executable with same 
                     name as product. If the build is downloaded and executable 
                     path is not specified, it will be defaulted to 
-                    /tmp/\$product-\$branch. 
-                    For cvs builds it will be defaulted to the appropriate 
-                    directory in 
-                    /work/mozilla/builds/\$branch/mozilla/\$product-\$buildtype/
--N profilename      optional. profilename. profilename is required if 
-                    profiledirectory or extensiondir are specified.
--D profiledirectory optional. If profiledirectory is specified, a new profile 
-                    will be created in the directory.
--L profiletemplate  optional. If a new profile is created, profiletemplate is 
-                    the path to an existing profile which will be copied over 
-                    the new profile.
--U userpreferences  optional. If a new profile is created, userpreferences is 
-                    the path to a user.js file to be copied into the new 
-                    profile.
-                    If userpreferences is not specified when a new profile is 
-                    created, it is defaulted to
-                    /work/mozilla/mozilla.com/test.mozilla.com/www/prefs/test-user.js
--E extensiondir     optional. path to directory tree containing extensions to 
-                    be installed.
--d datafiles        optional. one or more filenames of files containing 
-                    environment variable definitions to be included.
+    /tmp/\$product-\$branch. 
+    For cvs builds it will be defaulted to the appropriate 
+    directory in 
+    /work/mozilla/builds/\$branch/mozilla/\$product-\$buildtype/
+    -N profilename      optional. profilename. profilename is required if 
+    profiledirectory or extensiondir are specified.
+    -D profiledirectory optional. If profiledirectory is specified, a new profile 
+    will be created in the directory.
+    -L profiletemplate  optional. If a new profile is created, profiletemplate is 
+    the path to an existing profile which will be copied over 
+    the new profile.
+    -U userpreferences  optional. If a new profile is created, userpreferences is 
+    the path to a user.js file to be copied into the new 
+    profile.
+    If userpreferences is not specified when a new profile is 
+    created, it is defaulted to
+    /work/mozilla/mozilla.com/test.mozilla.com/www/prefs/test-user.js
+    -E extensiondir     optional. path to directory tree containing extensions to 
+    be installed.
+    -d datafiles        optional. one or more filenames of files containing 
+    environment variable definitions to be included.
 
-                    note that the environment variables should have the same 
-                    names as in the "variable" column.
+    note that the environment variables should have the same 
+    names as in the "variable" column.
+
 EOF
-    exit 2
+    exit 1
 }
 
 unset product branch url filepath credentials buildcommands buildtype executablepath profilename profiledirectory profiletemplate userpreferences extenstiondir datafiles
@@ -262,6 +263,6 @@ if [[ -n "$extensiondir" ]]; then
 
 fi
 
-        
+
 
 

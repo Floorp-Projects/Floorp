@@ -65,10 +65,11 @@ variable            description
 -d datafiles        optional. one or more filenames of files containing 
                     environment variable definitions to be included.
 
-                    note that the environment variables should have the same 
-                    names as in the "variable" column.
+note that the environment variables should have the same names as in the 
+"variable" column.
+
 EOF
-    exit 2
+    exit 1
 }
 
 unset products branches buildcommands buildtypes extra extraflag datafiles
