@@ -1958,7 +1958,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
       // before the current URI of the webnavigation has been updated, so we
       // can't assert equality here.
       refresher->SetupRefreshURIFromHeader(mDocumentURI,
-                                           NS_LossyConvertUTF16toASCII(aData));
+                                           NS_ConvertUTF16toUTF8(aData));
     }
   }
 }
