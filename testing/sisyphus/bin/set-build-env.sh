@@ -70,8 +70,8 @@ myexit()
 
     case $0 in
         *bash*)
-	  # prevent "sourced" script calls from 
-          # exiting the current shell.
+	        # prevent "sourced" script calls from 
+            # exiting the current shell.
             break 99;;
         *)
             exit $myexit_status;;
@@ -92,7 +92,7 @@ for step in step1; do # dummy loop for handling exits
       esac
     done
 
-# echo product=$product, branch=$branch, buildtype=$buildtype, extra=$extra
+    # echo product=$product, branch=$branch, buildtype=$buildtype, extra=$extra
 
     if [[ -z "$product" || -z "$branch" || -z "$buildtype" ]]; then
         echo -n "missing"
@@ -106,7 +106,7 @@ for step in step1; do # dummy loop for handling exits
             echo -n " -T buildtype"
         fi
         usage
-        myexit 2
+        myexit 1
     fi
 
     if [[ $branch == "1.8.0" ]]; then
@@ -117,12 +117,15 @@ for step in step1; do # dummy loop for handling exits
         export BRANCH_CO_FLAGS="";
     else
         echo "Unknown branch: $branch"
-        myexit 2
+        myexit 1
+    fi
+
+    if [[ -n "$MOZ_CO_DATE" ]]; then
+        export DATE_CO_FLAGS="-D $MOZ_CO_DATE"
     fi
 
     if [[ -n "$WINDIR" ]] ; then
         OSID=win32
-#	app=bin
         export platform=i686
 
         if echo $branch | egrep -q '^1\.8'; then
@@ -148,22 +151,24 @@ for step in step1; do # dummy loop for handling exits
     else
         export TREE="$BUILDDIR/$branch-$extra"
 
-	#
-	# extras can't be placed in mozconfigs since not all parts
-	# of the build system use mozconfig (e.g. js shell) and since
-	# the obj directory is not configurable for them as well thus
-	# requiring separate source trees
-	#
+        #
+        # extras can't be placed in mozconfigs since not all parts
+        # of the build system use mozconfig (e.g. js shell) and since
+        # the obj directory is not configurable for them as well thus
+        # requiring separate source trees
+        #
 
-        if [[ "$extra" == "too-much-gc" ]]; then
+        case "$extra" in
+            too-much-gc)
             export XCFLAGS="-DWAY_TOO_MUCH_GC=1"
             export CFLAGS="-DWAY_TOO_MUCH_GC=1"
             export CXXFLAGS="-DWAY_TOO_MUCH_GC=1"
-        elif [[ "$extra" == "gcov" ]]; then
+            ;;
+            gcov)
 
             if [[ "$OSID" == "win32" ]]; then
                 echo "win32 does not support gcov"
-                myexit 2
+                    myexit 1
             fi
             export CFLAGS="--coverage"
             export CXXFLAGS="--coverage"
@@ -171,7 +176,10 @@ for step in step1; do # dummy loop for handling exits
             export OS_CFLAGS="--coverage"
             export LDFLAGS="--coverage"
             export XLDOPTS="--coverage"	
-        fi
+            ;;
+            jprof)
+            ;;
+        esac
     fi
 
     if [[ ! -d $TREE ]]; then
@@ -202,8 +210,8 @@ for step in step1; do # dummy loop for handling exits
 
     case "$OSID" in
         mac)
-            export JS_EDITLINE=1 # required for mac
-            ;;
+        export JS_EDITLINE=1 # required for mac
+        ;;
     esac
     # end js shell builds
 

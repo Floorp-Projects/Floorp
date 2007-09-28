@@ -54,25 +54,26 @@ if [[ -n "$DEBUG" ]]; then
 fi
 
 if [[ -z "$LIBRARYSH" ]]; then
+
     LIBRARYSH=1
 
-# export variables
+    # export variables
     set -a 
 
-# make pipelines return exit code of intermediate steps
-# requires bash 3.x
+    # make pipelines return exit code of intermediate steps
+    # requires bash 3.x
     set -o pipefail 
 
-# set time format for pipeline timing reports
+    # set time format for pipeline timing reports
     TIMEFORMAT="Elapsed time %0R seconds, User %0U seconds, System %0S seconds, CPU %P%%"
 
     MALLOC_CHECK_=2
 
     ulimit -c 0
 
-# debug msg
-#
-# output debugging message to stdout if $DEBUG is set
+    # debug msg
+    #
+    # output debugging message to stdout if $DEBUG is set
 
     DEBUG=${DEBUG:-""}
 
@@ -83,9 +84,9 @@ if [[ -z "$LIBRARYSH" ]]; then
         fi
     }
 
-# console msg
-#
-# output message to console, ie. stderr
+    # console msg
+    #
+    # output message to console, ie. stderr
 
     console()
     {
@@ -93,8 +94,8 @@ if [[ -z "$LIBRARYSH" ]]; then
     }
 
 
-# error message
-# output error message end exit 2
+    # error message
+    # output error message end exit 2
 
     error()
     {
@@ -105,19 +106,19 @@ if [[ -z "$LIBRARYSH" ]]; then
         exit 2
     } 
 
-# dumpenvironment
-#
-# output environment to stdout
+    # dumpenvironment
+    #
+    # output environment to stdout
 
     dumpenvironment()
     {
         set | grep '^[A-Z]' | sed 's|^|environment: |'
     }
 
-# dumpvars varname1, ...
-#
-# dumps name=value pairs to stdout for each variable named 
-# in argument list
+    # dumpvars varname1, ...
+    #
+    # dumps name=value pairs to stdout for each variable named 
+    # in argument list
 
     dumpvars()
     {
@@ -131,9 +132,9 @@ if [[ -z "$LIBRARYSH" ]]; then
         done
     }
 
-# get_executable product branch directory
-#
-# writes path to product executable to stdout
+    # get_executable product branch directory
+    #
+    # writes path to product executable to stdout
 
     get_executable()
     {
@@ -148,87 +149,88 @@ if [[ -z "$LIBRARYSH" ]]; then
         elif [[ ! -d "$get_executable_directory" ]]; then
             error "get_executable: executable directory \"$get_executable_directory\" does not exist"
         else
-        # should use /u+x,g+x,a+x but mac os x uses an obsolete find
-        # filter the output to remove extraneous file in dist/bin for
-        # cvs builds on mac os x.
+            # should use /u+x,g+x,a+x but mac os x uses an obsolete find
+            # filter the output to remove extraneous file in dist/bin for
+            # cvs builds on mac os x.
             get_executable_name="$get_executable_product${EXE_EXT}"
             case "$OSID" in
                 mac)
-                    get_executable_filter="Contents/MacOS/$get_executable_product"
-                    if [[ "$get_executable_product" == "thunderbird" ]]; then
-                        get_executable_name="$get_executable_product-bin"
-                    fi
-                    ;;
-                *)
-                    get_executable_filter="$get_executable_product"
-            esac
-            if find "$get_executable_directory" -perm +111 -type f \
-                -name "$get_executable_name" | \
-                grep "$get_executable_filter"; then
-                true
-            fi
-        fi
-    }
-
-    if [[ "$0" == "-bash" || "$0" == "bash" ]]; then
-        SCRIPT="library.sh"
-    else
-        SCRIPT=`basename $0`
+    get_executable_filter="Contents/MacOS/$get_executable_product"
+    if [[ "$get_executable_product" == "thunderbird" ]]; then
+        get_executable_name="$get_executable_product-bin"
     fi
+    ;;
+    *)
+    get_executable_filter="$get_executable_product"
+    esac
+    if find "$get_executable_directory" -perm +111 -type f \
+        -name "$get_executable_name" | \
+        grep "$get_executable_filter"; then
+        true
+    fi
+fi
+}
 
-    TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
-    TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
-    TEST_HTTP=${TEST_HTTP:-test.mozilla.com}
-    TEST_STARTUP_TIMEOUT=${TEST_STARTUP_TIMEOUT:-30}
+if [[ "$0" == "-bash" || "$0" == "bash" ]]; then
+    SCRIPT="library.sh"
+else
+    SCRIPT=`basename $0`
+fi
 
-    TEST_TIMEZONE=`date +%z`
+TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
+TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
+TEST_HTTP=${TEST_HTTP:-test.mozilla.com}
+TEST_STARTUP_TIMEOUT=${TEST_STARTUP_TIMEOUT:-30}
 
-    TEST_MACHINE=`uname -n`
-    TEST_KERNEL=`uname -r`
-    TEST_PROCESSORTYPE=`uname -p`
+TEST_TIMEZONE=`date +%z`
+
+TEST_MACHINE=`uname -n`
+TEST_KERNEL=`uname -r`
+TEST_PROCESSORTYPE=`uname -p`
 
 # set path to make life easier
-    if ! echo ${PATH} | grep -q $TEST_BIN; then
-        PATH=${TEST_BIN}:$PATH
-    fi
+if ! echo ${PATH} | grep -q $TEST_BIN; then
+    PATH=${TEST_BIN}:$PATH
+fi
 
-    if echo $OSTYPE | grep -iq cygwin; then
-        OSID=win32
-        EXE_EXT=".exe"
-    elif echo $OSTYPE | grep -iq Linux; then
-        OSID=linux
-        EXE_EXT=
-    elif echo $OSTYPE | grep -iq darwin; then
-        OSID=mac
-        EXE_EXT=
-    else
-        error "Unknown OS $OSTYPE"
-    fi
+if echo $OSTYPE | grep -iq cygwin; then
+    OSID=win32
+    EXE_EXT=".exe"
+elif echo $OSTYPE | grep -iq Linux; then
+    OSID=linux
+    EXE_EXT=
+elif echo $OSTYPE | grep -iq darwin; then
+    OSID=mac
+    EXE_EXT=
+else
+    error "Unknown OS $OSTYPE"
+fi
 
 # save starting directory
-    STARTDIR=`pwd`
+STARTDIR=`pwd`
 
 # location of the script.
-    SCRIPTDIR=`dirname $0`
+SCRIPTDIR=`dirname $0`
 
 # don't attach to running instance
-    MOZ_NO_REMOTE=1
+MOZ_NO_REMOTE=1
 
 # don't restart
-    NO_EM_RESTART=1
+NO_EM_RESTART=1
 
 # bypass profile manager
-    MOZ_BYPASS_PROFILE_AT_STARTUP=1
+MOZ_BYPASS_PROFILE_AT_STARTUP=1
 
 # ah crap handler timeout
-    MOZ_GDB_SLEEP=10
+MOZ_GDB_SLEEP=10
 
 # no dialogs on asserts
-    XPCOM_DEBUG_BREAK=warn
+XPCOM_DEBUG_BREAK=${XPCOM_DEBUG_BREAK:-warn}
 
 # no airbag
-    unset MOZ_AIRBAG
-    MOZ_CRASHREPORTER_DISABLE=1
+unset MOZ_AIRBAG
+MOZ_CRASHREPORTER_DISABLE=1
+MOZ_CRASHREPORTER_NO_REPORT=1
 
 #leak gauge
 #NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5

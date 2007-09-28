@@ -59,15 +59,13 @@ variable            description
 ===============     ===========================================================
 -t testscript       required. quoted test script with required arguments.
 
-
 executes the testscript using the input data files in 
-$TEST_DIR/data constructed from each 
-combination of the input parameters:
+$TEST_DIR/data constructed from each combination of the input parameters:
 
 {item1},{item2},{item3},{item4}
 
 EOF
-    exit 2
+    exit 1
 }
 
 unset testscript testargs

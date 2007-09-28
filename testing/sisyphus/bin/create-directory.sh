@@ -67,10 +67,10 @@ directories... /grandparent/parent/child.
 This script will destroy existing directories and
 their contents. It can potentially wipe out your
 disk. Use with caution.
-******************** WARNING ********************
+    ******************** WARNING ********************
 
 EOF
-    exit 2
+    exit 1
 }
 
 unset directory
@@ -78,15 +78,15 @@ unset directory
 rmopt="-i"
 
 while getopts $options optname ; 
-do 
-    case $optname in
-        d) directory=$OPTARG;;
-        n) unset rmopt;;
-    esac
+  do 
+  case $optname in
+      d) directory=$OPTARG;;
+      n) unset rmopt;;
+  esac
 done
 
 if [[ -z $directory ]]
-then
+    then
     usage
 fi
 

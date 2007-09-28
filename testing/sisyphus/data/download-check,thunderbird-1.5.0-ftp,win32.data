@@ -1,7 +1,7 @@
-allurl=http://stage.mozilla.org/pub/mozilla.org/thunderbird/nightly/1.5.0.12-candidates/rc2/
+allurl=http://ftp.mozilla.org/pub/mozilla.org/thunderbird/nightly/1.5.0.12-candidates/rc2/
 product=firefox
 branch=1.8.1
-url=http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.3/win32/en-US/Firefox%20Setup%202.0.0.3.exe
+url=http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.7/win32/en-US/Firefox%20Setup%202.0.0.7.exe
 profilename=firefox-1.8.1-profile
 profiledirectory=/tmp/firefox-1.8.1-profile
 executablepath=/tmp/firefox-1.8.1

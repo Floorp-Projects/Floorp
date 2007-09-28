@@ -1,0 +1,4 @@
+product=js
+branch=1.8.1
+sourcepath=/work/mozilla/builds/1.8.1-too-much-gc/mozilla/js/src
+buildtype=debug
