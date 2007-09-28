@@ -70,6 +70,9 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
+#ifdef ACCESSIBILITY
+#include "nsIAccessibilityService.h"
+#endif
 
 #define SYNC_TEXT 0x1
 #define SYNC_BUTTON 0x2
@@ -597,6 +600,15 @@ nsFileControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   return DisplaySelectionOverlay(aBuilder, aLists);
 }
+
+#ifdef ACCESSIBILITY
+NS_IMETHODIMP nsFileControlFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  // No accessible object for file control, only for child text frame and button
+  *aAccessible = nsnull;
+  return NS_ERROR_FAILURE;
+}
+#endif
 
 ////////////////////////////////////////////////////////////
 // Mouse listener implementation

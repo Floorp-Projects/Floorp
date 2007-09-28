@@ -230,6 +230,7 @@ void nsAccessibleTreeWalker::UpdateFrame(PRBool aTryFirstChild)
     return;
   }
   if (aTryFirstChild) {
+    nsIContent *containerContent = mState.frame->GetContent();
     mState.frame = mState.frame->GetFirstChild(nsnull);
 // temporary workaround for Bug 359210. We never want to walk frames.
 // Aaron Leventhal will refix :before and :after content later without walking frames.
@@ -253,6 +254,17 @@ void nsAccessibleTreeWalker::UpdateFrame(PRBool aTryFirstChild)
       mState.siblingIndex = eSiblingsWalkFrames;
     }
 #endif
+    // Special case: <input type="file">
+    // We should still need to walk frames inside the file control frame
+    // This special case may turn into a more general rule after Firefox 3,
+    // if HTML 5 controls use nsIAnonymousContentCreator
+    if (containerContent->Tag() == nsAccessibilityAtoms::input &&
+        containerContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                                      NS_LITERAL_STRING("file"), eIgnoreCase) &&
+        mState.frame && mState.siblingIndex < 0)  {
+      mState.domNode = do_QueryInterface(mState.frame->GetContent());
+      mState.siblingIndex = eSiblingsWalkFrames;
+    }
   }
   else {
     mState.frame = mState.frame->GetNextSibling();
