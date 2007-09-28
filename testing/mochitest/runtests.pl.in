@@ -126,7 +126,9 @@ my @servers = ("localhost:8888", # MUST be first -- see PAC pref-setting code
                "sub1.test1.example.com:80",
                "sub1.test2.example.com:80",
                "sub2.test1.example.com:80",
-               "sub2.test2.example.com:80");
+               "sub2.test2.example.com:80",
+               "sectest1.example.org:80",
+               "sub.sectest2.example.org:80");
 
 
 my $profile = "mochitesttestingprofile";
@@ -305,7 +307,7 @@ sub winPathFromDir {
           # we remember the match that is the longest
           $matchlen = $len;
           $bestmatch = $real;
-	}
+        }
       }
     }
   }
@@ -414,6 +416,13 @@ user_pref("capability.principal.codebase.p$i.subjectName", "");
 SERVERPREFEND
     $i++;
   }
+
+  # Now add the two servers that do NOT have God-power so we can properly test
+  # the granting and receiving of God-power
+  push(@servers,
+       "sectest2.example.org:80",
+       "sub.sectest1.example.org:80");
+
 
   # Now actually create the preference to make the proxying happen, stripping
   # off the first server because it's the one to which we proxy all the others.
