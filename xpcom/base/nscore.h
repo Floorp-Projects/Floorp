@@ -462,4 +462,13 @@ typedef PRUint32 nsrefcnt;
 #define NS_UNLIKELY(x)  (!!(x))
 #endif
 
+ /*
+  * If we're being linked as standalone glue, we don't want a dynamic dependency
+  * on NSPR libs, so we skip the debug thread-safety checks, and we cannot use
+  * the THREADSAFE_ISUPPORTS macros.
+  */
+#if defined(XPCOM_GLUE) && !defined(XPCOM_GLUE_USE_NSPR)
+#define XPCOM_GLUE_AVOID_NSPR
+#endif
+
 #endif /* nscore_h___ */

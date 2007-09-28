@@ -50,15 +50,6 @@
 #include "nsISupportsUtils.h"
 #endif
 
-#if defined(XPCOM_GLUE) && !defined(XPCOM_GLUE_USE_NSPR)
-// If we're being linked as standalone glue, we don't want a dynamic dependency
-// on NSPR libs, so we skip the debug thread-safety checks, and we cannot use
-// the THREADSAFE_ISUPPORTS macros.
-
-#define XPCOM_GLUE_AVOID_NSPR
-
-#endif
-
 
 #if !defined(XPCOM_GLUE_AVOID_NSPR)
 #include "prthread.h" /* needed for thread-safety checks */
