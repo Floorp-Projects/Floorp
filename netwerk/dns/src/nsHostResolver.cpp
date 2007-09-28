@@ -612,7 +612,10 @@ nsHostResolver::OnLookupComplete(nsHostRecord *rec, nsresult status, PRAddrInfo 
         // grab list of callbacks to notify
         MoveCList(rec->callbacks, cbs);
 
-        // update record fields
+        // update record fields.  We might have a rec->addr_info already if a
+        // previous lookup result expired and we're reresolving it..
+	if (rec->addr_info)
+	  PR_FreeAddrInfo(rec->addr_info);
         rec->addr_info = result;
         rec->expiration = NowInMinutes() + mMaxCacheLifetime;
         rec->resolving = PR_FALSE;
