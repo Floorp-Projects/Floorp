@@ -264,9 +264,10 @@ menubar {
 
 window[chromehidden~="menubar"] .chromeclass-menubar,
 menubar[hidden="true"],
-menubar[_moz_collapsed="true"],
+menubar[moz-collapsed="true"],
 menubar[collapsed="true"] {
   min-height: 0%;
+  max-height: 0px;
   display: -moz-box;
   visibility: visible;
 }
