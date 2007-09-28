@@ -88,9 +88,11 @@
 #pragma GCC visibility push(default)
 #endif
 extern __ptr_t __libc_malloc(size_t);
+extern __ptr_t __libc_calloc(size_t, size_t);
 extern __ptr_t __libc_realloc(__ptr_t, size_t);
 extern void    __libc_free(__ptr_t);
 extern __ptr_t __libc_memalign(size_t, size_t);
+extern __ptr_t __libc_valloc(size_t);
 #ifdef WRAP_SYSTEM_INCLUDES
 #pragma GCC visibility pop
 #endif
@@ -147,8 +149,11 @@ static char      *sdlogname = NULL; /* filename for shutdown leak log */
  * the performance cost of repeated TM_TLS_GET_DATA calls when
  * trace-malloc is disabled (which is not as bad as the locking we used
  * to have).
+ *
+ * It must default to zero, since it can be tested by the Linux malloc
+ * hooks before NS_TraceMallocStartup sets it.
  */
-static uint32 tracing_enabled = 1;
+static uint32 tracing_enabled = 0;
 
 /*
  * This lock must be held while manipulating the calltree, the
@@ -157,17 +162,32 @@ static uint32 tracing_enabled = 1;
  * Callers should not *enter* the lock without checking suppress_tracing
  * first; otherwise they risk trying to re-enter on the same thread.
  */
-#define TM_ENTER_LOCK()                                                       \
+#define TM_ENTER_LOCK(t)                                                      \
     PR_BEGIN_MACRO                                                            \
+        PR_ASSERT(t->suppress_tracing != 0);                                  \
         if (tmlock)                                                           \
             PR_Lock(tmlock);                                                  \
     PR_END_MACRO
 
-#define TM_EXIT_LOCK()                                                        \
+#define TM_EXIT_LOCK(t)                                                       \
     PR_BEGIN_MACRO                                                            \
+        PR_ASSERT(t->suppress_tracing != 0);                                  \
         if (tmlock)                                                           \
             PR_Unlock(tmlock);                                                \
     PR_END_MACRO
+
+#define TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t)                                 \
+    PR_BEGIN_MACRO                                                            \
+        t->suppress_tracing++;                                                \
+        TM_ENTER_LOCK(t);                                                     \
+    PR_END_MACRO
+
+#define TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t)                                \
+    PR_BEGIN_MACRO                                                            \
+        TM_EXIT_LOCK(t);                                                      \
+        t->suppress_tracing--;                                                \
+    PR_END_MACRO
+
 
 /*
  * Thread-local storage.
@@ -576,7 +596,7 @@ static PLHashTable *filenames = NULL;
 static PLHashTable *methods = NULL;
 
 static callsite *
-calltree(void **stack, size_t num_stack_entries)
+calltree(void **stack, size_t num_stack_entries, tm_thread *t)
 {
     logfile *fp = logfp;
     void *pc;
@@ -598,7 +618,7 @@ calltree(void **stack, size_t num_stack_entries)
      * that we need to in this function, because it makes some calls
      * that could lock in the system's shared library loader.
      */
-    TM_ENTER_LOCK();
+    TM_ENTER_LOCK(t);
 
     maxstack = (num_stack_entries > tmstats.calltree_maxstack);
     if (maxstack) {
@@ -672,9 +692,9 @@ calltree(void **stack, size_t num_stack_entries)
          * and then filling in the descriptions for any that hadn't been
          * described already.  But this is easier for now.
          */
-        TM_EXIT_LOCK();
+        TM_EXIT_LOCK(t);
         rv = NS_DescribeCodeAddress(pc, &details);
-        TM_ENTER_LOCK();
+        TM_ENTER_LOCK(t);
         if (NS_FAILED(rv)) {
             tmstats.dladdr_failures++;
             goto fail;
@@ -862,11 +882,11 @@ calltree(void **stack, size_t num_stack_entries)
     if (maxstack)
         calltree_maxstack_top = site;
 
-    TM_EXIT_LOCK();
+    TM_EXIT_LOCK(t);
     return site;
 
   fail:
-    TM_EXIT_LOCK();
+    TM_EXIT_LOCK(t);
     return NULL;
 }
 
@@ -941,15 +961,15 @@ backtrace(tm_thread *t, int skip)
         return NULL;
     }
 
-    site = calltree(info->buffer, info->entries);
+    site = calltree(info->buffer, info->entries, t);
 
-    TM_ENTER_LOCK();
+    TM_ENTER_LOCK(t);
     tmstats.backtrace_calls++;
     if (!site) {
         tmstats.backtrace_failures++;
         PR_ASSERT(tmstats.backtrace_failures < 100);
     }
-    TM_EXIT_LOCK();
+    TM_EXIT_LOCK(t);
 
     t->suppress_tracing--;
     return site;
@@ -1082,120 +1102,172 @@ ShutdownHooker(void)
 
 #elif defined(XP_UNIX)
 
-static __ptr_t (*old_malloc_hook)(size_t size, __const __malloc_ptr_t caller);
-static __ptr_t (*old_realloc_hook)(__ptr_t ptr, size_t size, __const __malloc_ptr_t caller);
-static __ptr_t (*old_memalign_hook)(size_t boundary, size_t size, __const __malloc_ptr_t caller);
-static void (*old_free_hook)(__ptr_t ptr, __const __malloc_ptr_t caller);
+/*
+ * We can't use glibc's malloc hooks because they can't be used in a
+ * threadsafe manner.  They require unsetting the hooks to call into the
+ * original malloc implementation, and then resetting them when the
+ * original implementation returns.  If another thread calls the same
+ * allocation function while the hooks are unset, we have no chance to
+ * intercept the call.
+ */
 
-static __ptr_t
-my_malloc_hook(size_t size, __const __malloc_ptr_t caller)
+NS_EXTERNAL_VIS_(__ptr_t)
+malloc(size_t size)
 {
-    tm_thread *t;
     PRUint32 start, end;
     __ptr_t ptr;
+    tm_thread *t;
 
-    PR_ASSERT(tracing_enabled);
-    t = tm_get_thread();
+    if (!tracing_enabled || !PR_Initialized() ||
+        (t = tm_get_thread())->suppress_tracing != 0) {
+        return __libc_malloc(size);
+    }
+
     t->suppress_tracing++;
-    __malloc_hook = old_malloc_hook;
     start = PR_IntervalNow();
     ptr = __libc_malloc(size);
     end = PR_IntervalNow();
-    __malloc_hook = my_malloc_hook;
     t->suppress_tracing--;
+
     MallocCallback(ptr, size, start, end, t);
+
     return ptr;
 }
 
-static __ptr_t
-my_realloc_hook(__ptr_t oldptr, size_t size, __const __malloc_ptr_t caller)
+NS_EXTERNAL_VIS_(__ptr_t)
+calloc(size_t count, size_t size)
 {
-    tm_thread *t;
     PRUint32 start, end;
     __ptr_t ptr;
+    tm_thread *t;
 
-    PR_ASSERT(tracing_enabled);
-    t = tm_get_thread();
+    if (!tracing_enabled || !PR_Initialized() ||
+        (t = tm_get_thread())->suppress_tracing != 0) {
+        return __libc_calloc(count, size);
+    }
+
     t->suppress_tracing++;
-    __realloc_hook = old_realloc_hook;
     start = PR_IntervalNow();
+    ptr = __libc_calloc(count, size);
+    end = PR_IntervalNow();
+    t->suppress_tracing--;
 
-    /*
-     * __libc_realloc(NULL, size) recurs into my_malloc_hook, so it's
-     * important that we've incremented t->suppress_tracing here.
-     */
+    CallocCallback(ptr, count, size, start, end, t);
+
+    return ptr;
+}
+
+NS_EXTERNAL_VIS_(__ptr_t)
+realloc(__ptr_t oldptr, size_t size)
+{
+    PRUint32 start, end;
+    __ptr_t ptr;
+    tm_thread *t;
+
+    if (!tracing_enabled || !PR_Initialized() ||
+        (t = tm_get_thread())->suppress_tracing != 0) {
+        return __libc_realloc(oldptr, size);
+    }
+
+    t->suppress_tracing++;
+    start = PR_IntervalNow();
     ptr = __libc_realloc(oldptr, size);
     end = PR_IntervalNow();
-    __realloc_hook = my_realloc_hook;
     t->suppress_tracing--;
+
+    /* FIXME bug 392008: We could race with reallocation of oldptr. */
     ReallocCallback(oldptr, ptr, size, start, end, t);
+
     return ptr;
 }
 
-static __ptr_t
-my_memalign_hook(size_t boundary, size_t size, __const __malloc_ptr_t caller)
+NS_EXTERNAL_VIS_(void*)
+valloc(size_t size)
 {
-    tm_thread *t;
     PRUint32 start, end;
     __ptr_t ptr;
+    tm_thread *t;
 
-    PR_ASSERT(tracing_enabled);
-    t = tm_get_thread();
+    if (!tracing_enabled || !PR_Initialized() ||
+        (t = tm_get_thread())->suppress_tracing != 0) {
+        return __libc_valloc(size);
+    }
+
     t->suppress_tracing++;
-    __memalign_hook = old_memalign_hook;
+    start = PR_IntervalNow();
+    ptr = __libc_valloc(size);
+    end = PR_IntervalNow();
+    t->suppress_tracing--;
+
+    MallocCallback(ptr, size, start, end, t);
+
+    return ptr;
+}
+
+NS_EXTERNAL_VIS_(void*)
+memalign(size_t boundary, size_t size)
+{
+    PRUint32 start, end;
+    __ptr_t ptr;
+    tm_thread *t;
+
+    if (!tracing_enabled || !PR_Initialized() ||
+        (t = tm_get_thread())->suppress_tracing != 0) {
+        return __libc_memalign(boundary, size);
+    }
+
+    t->suppress_tracing++;
     start = PR_IntervalNow();
     ptr = __libc_memalign(boundary, size);
     end = PR_IntervalNow();
-    __memalign_hook = my_memalign_hook;
     t->suppress_tracing--;
+
     MallocCallback(ptr, size, start, end, t);
+
     return ptr;
 }
 
-static void
-my_free_hook(__ptr_t ptr, __const __malloc_ptr_t caller)
+NS_EXTERNAL_VIS_(int)
+posix_memalign(void **memptr, size_t alignment, size_t size)
 {
-    tm_thread *t;
-    PRUint32 start, end;
+    __ptr_t ptr = memalign(alignment, size);
+    if (!ptr)
+        return ENOMEM;
+    *memptr = ptr;
+    return 0;
+}
 
-    PR_ASSERT(tracing_enabled);
-    t = tm_get_thread();
+NS_EXTERNAL_VIS_(void)
+free(__ptr_t ptr)
+{
+    PRUint32 start, end;
+    tm_thread *t;
+
+    if (!tracing_enabled || !PR_Initialized() ||
+        (t = tm_get_thread())->suppress_tracing != 0) {
+        __libc_free(ptr);
+        return;
+    }
+
     t->suppress_tracing++;
-    __free_hook = old_free_hook;
     start = PR_IntervalNow();
     __libc_free(ptr);
     end = PR_IntervalNow();
-    __free_hook = my_free_hook;
     t->suppress_tracing--;
+
+    /* FIXME bug 392008: We could race with reallocation of ptr. */
+
     FreeCallback(ptr, start, end, t);
 }
 
-static void
-StartupHooker(void)
+NS_EXTERNAL_VIS_(void)
+cfree(void *ptr)
 {
-    PR_ASSERT(__malloc_hook != my_malloc_hook);
-
-    old_malloc_hook = __malloc_hook;
-    old_realloc_hook = __realloc_hook;
-    old_memalign_hook = __memalign_hook;
-    old_free_hook = __free_hook;
-
-    __malloc_hook = my_malloc_hook;
-    __realloc_hook = my_realloc_hook;
-    __memalign_hook = my_memalign_hook;
-    __free_hook = my_free_hook;
+    free(ptr);
 }
 
-static void
-ShutdownHooker(void)
-{
-    PR_ASSERT(__malloc_hook == my_malloc_hook);
-
-    __malloc_hook = old_malloc_hook;
-    __realloc_hook = old_realloc_hook;
-    __memalign_hook = old_memalign_hook;
-    __free_hook = old_free_hook;
-}
+#define StartupHooker()                 PR_BEGIN_MACRO PR_END_MACRO
+#define ShutdownHooker()                PR_BEGIN_MACRO PR_END_MACRO
 
 #elif defined(XP_WIN32)
 
@@ -1217,7 +1289,7 @@ PR_IMPLEMENT(void)
 NS_TraceMallocStartup(int logfd)
 {
     /* We must be running on the primordial thread. */
-    PR_ASSERT(tracing_enabled == 1);
+    PR_ASSERT(tracing_enabled == 0);
     PR_ASSERT(logfp == &default_logfile);
     tracing_enabled = (logfd >= 0);
 
@@ -1445,13 +1517,11 @@ NS_TraceMallocDisable(void)
     if (tracing_enabled == 0)
         return;
 
-    t->suppress_tracing++;
-    TM_ENTER_LOCK();
+    TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t);
     for (fp = logfile_list; fp; fp = fp->next)
         flush_logfile(fp);
     sample = --tracing_enabled;
-    TM_EXIT_LOCK();
-    t->suppress_tracing--;
+    TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
     if (sample == 0)
         ShutdownHooker();
 }
@@ -1462,11 +1532,9 @@ NS_TraceMallocEnable(void)
     tm_thread *t = tm_get_thread();
     uint32 sample;
 
-    t->suppress_tracing++;
-    TM_ENTER_LOCK();
+    TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t);
     sample = ++tracing_enabled;
-    TM_EXIT_LOCK();
-    t->suppress_tracing--;
+    TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
     if (sample == 1)
         StartupHooker();
 }
@@ -1478,23 +1546,20 @@ NS_TraceMallocChangeLogFD(int fd)
     struct stat sb;
     tm_thread *t = tm_get_thread();
 
-    t->suppress_tracing++;
-    TM_ENTER_LOCK();
+    TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t);
     oldfp = logfp;
     if (oldfp->fd != fd) {
         flush_logfile(oldfp);
         fp = get_logfile(fd);
         if (!fp) {
-            TM_EXIT_LOCK();
-            t->suppress_tracing--;
+            TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
             return -2;
         }
         if (fd >= 0 && fstat(fd, &sb) == 0 && sb.st_size == 0)
             log_header(fd);
         logfp = fp;
     }
-    TM_EXIT_LOCK();
-    t->suppress_tracing--;
+    TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
     return oldfp->fd;
 }
 
@@ -1524,8 +1589,7 @@ NS_TraceMallocCloseLogFD(int fd)
     logfile *fp;
     tm_thread *t = tm_get_thread();
 
-    t->suppress_tracing++;
-    TM_ENTER_LOCK();
+    TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t);
 
     fp = get_logfile(fd);
     if (fp) {
@@ -1556,8 +1620,7 @@ NS_TraceMallocCloseLogFD(int fd)
         }
     }
 
-    TM_EXIT_LOCK();
-    t->suppress_tracing--;
+    TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
     close(fd);
 }
 
@@ -1573,8 +1636,7 @@ NS_TraceMallocLogTimestamp(const char *caption)
 #endif
     tm_thread *t = tm_get_thread();
 
-    t->suppress_tracing++;
-    TM_ENTER_LOCK();
+    TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t);
 
     fp = logfp;
     log_byte(fp, TM_EVENT_TIMESTAMP);
@@ -1591,8 +1653,7 @@ NS_TraceMallocLogTimestamp(const char *caption)
 #endif
     log_string(fp, caption);
 
-    TM_EXIT_LOCK();
-    t->suppress_tracing--;
+    TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
 }
 
 static PRIntn
@@ -1651,8 +1712,7 @@ NS_TraceMallocDumpAllocations(const char *pathname)
 
     tm_thread *t = tm_get_thread();
 
-    t->suppress_tracing++;
-    TM_ENTER_LOCK();
+    TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t);
 
     ofp = fopen(pathname, WRITE_FLAGS);
     if (ofp) {
@@ -1666,8 +1726,7 @@ NS_TraceMallocDumpAllocations(const char *pathname)
         rv = -1;
     }
 
-    TM_EXIT_LOCK();
-    t->suppress_tracing--;
+    TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
 
     return rv;
 }
@@ -1678,14 +1737,12 @@ NS_TraceMallocFlushLogfiles(void)
     logfile *fp;
     tm_thread *t = tm_get_thread();
 
-    t->suppress_tracing++;
-    TM_ENTER_LOCK();
+    TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t);
 
     for (fp = logfile_list; fp; fp = fp->next)
         flush_logfile(fp);
 
-    TM_EXIT_LOCK();
-    t->suppress_tracing--;
+    TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
 }
 
 PR_IMPLEMENT(void)
@@ -1697,8 +1754,7 @@ NS_TrackAllocation(void* ptr, FILE *ofp)
     fprintf(ofp, "Trying to track %p\n", (void*) ptr);
     setlinebuf(ofp);
 
-    t->suppress_tracing++;
-    TM_ENTER_LOCK();
+    TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t);
     if (get_allocations()) {
         alloc = (allocation*)
                 *PL_HashTableRawLookup(allocations, hash_pointer(ptr), ptr);
@@ -1709,8 +1765,7 @@ NS_TrackAllocation(void* ptr, FILE *ofp)
             fprintf(ofp, "Not tracking %p\n", (void*) ptr);
         }
     }
-    TM_EXIT_LOCK();
-    t->suppress_tracing--;
+    TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
 }
 
 PR_IMPLEMENT(void)
@@ -1725,8 +1780,7 @@ MallocCallback(void *ptr, size_t size, PRUint32 start, PRUint32 end, tm_thread *
 
     site = backtrace(t, 2);
 
-    t->suppress_tracing++;
-    TM_ENTER_LOCK();
+    TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t);
     tmstats.malloc_calls++;
     if (!ptr) {
         tmstats.malloc_failures++;
@@ -1745,8 +1799,7 @@ MallocCallback(void *ptr, size_t size, PRUint32 start, PRUint32 end, tm_thread *
             }
         }
     }
-    TM_EXIT_LOCK();
-    t->suppress_tracing--;
+    TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
 }
 
 PR_IMPLEMENT(void)
@@ -1761,8 +1814,7 @@ CallocCallback(void *ptr, size_t count, size_t size, PRUint32 start, PRUint32 en
 
     site = backtrace(t, 2);
 
-    t->suppress_tracing++;
-    TM_ENTER_LOCK();
+    TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t);
     tmstats.calloc_calls++;
     if (!ptr) {
         tmstats.calloc_failures++;
@@ -1782,8 +1834,7 @@ CallocCallback(void *ptr, size_t count, size_t size, PRUint32 start, PRUint32 en
             }
         }
     }
-    TM_EXIT_LOCK();
-    t->suppress_tracing--;
+    TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
 }
 
 PR_IMPLEMENT(void)
@@ -1802,8 +1853,7 @@ ReallocCallback(void * oldptr, void *ptr, size_t size,
 
     site = backtrace(t, 2);
 
-    t->suppress_tracing++;
-    TM_ENTER_LOCK();
+    TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t);
     tmstats.realloc_calls++;
     oldsite = NULL;
     oldsize = 0;
@@ -1867,8 +1917,7 @@ ReallocCallback(void * oldptr, void *ptr, size_t size,
             }
         }
     }
-    TM_EXIT_LOCK();
-    t->suppress_tracing--;
+    TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
 }
 
 PR_IMPLEMENT(void)
@@ -1881,8 +1930,7 @@ FreeCallback(void * ptr, PRUint32 start, PRUint32 end, tm_thread *t)
     if (!tracing_enabled || t->suppress_tracing != 0)
         return;
 
-    t->suppress_tracing++;
-    TM_ENTER_LOCK();
+    TM_SUPPRESS_TRACING_AND_ENTER_LOCK(t);
     tmstats.free_calls++;
     if (!ptr) {
         tmstats.null_free_calls++;
@@ -1907,8 +1955,7 @@ FreeCallback(void * ptr, PRUint32 start, PRUint32 end, tm_thread *t)
             }
         }
     }
-    TM_EXIT_LOCK();
-    t->suppress_tracing--;
+    TM_EXIT_LOCK_AND_UNSUPPRESS_TRACING(t);
 }
 
 #endif /* NS_TRACE_MALLOC */
