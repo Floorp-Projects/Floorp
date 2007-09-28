@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=326337
+-->
+<head>
+  <title>Inner file for Bug 326337</title>
+</head>
+<body>
+<script>
+
+document.domain = "example.com";
+
+runTest1();
+
+var xhr;
+
+function runTest1() {
+  xhr = new XMLHttpRequest();
+  xhr.open("GET", "file_bug326337.xml", true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      check(xhr.responseXML.documentElement.getAttribute("root"));
+      runTest2();
+    }
+  }
+  xhr.send(null);
+}
+
+function runTest2() {
+  var secondDoc = false;
+  xhr = new XMLHttpRequest();
+  xhr.multipart = true;
+  xhr.open("GET", "file_bug326337_multipart.txt", true);
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState == 4) {
+      check(xhr.responseXML.documentElement.getAttribute("root"));
+      if (secondDoc) {
+        parent.location.hash = "#done";
+      }
+      else {
+        secondDoc = true;
+      }
+    }
+  }
+  xhr.send(null);
+}
+
+function check(attr) {
+  if (attr != "yes") {
+    parent.location.hash = "#fail";
+    throw 1;
+  }
+}
+
+</script>
+</pre>
+</body>
+</html>
