@@ -165,18 +165,19 @@ XBLResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   
   if (~nodeClass->flags &
       (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) {
-    // Looks like whatever |origObj| is it's not our nsIContent.  It might well
-    // be the proto our binding installed, however, so just baul out quietly.
-    // Do NOT throw an exception here.
-    // We could make this stricter by checking the class maybe, but whatever
-    return JS_TRUE;
+    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
+    return JS_FALSE;
   }
 
   nsCOMPtr<nsIXPConnectWrappedNative> xpcWrapper =
     do_QueryInterface(static_cast<nsISupports*>(::JS_GetPrivate(cx, origObj)));
   if (!xpcWrapper) {
-    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
-    return JS_FALSE;
+    // Looks like whatever |origObj| is it's not our nsIContent.  It might well
+    // be the proto our binding installed, however, where the private is the
+    // nsIXBLDocumentInfo, so just baul out quietly.  Do NOT throw an exception
+    // here.
+    // We could make this stricter by checking the class maybe, but whatever
+    return JS_TRUE;
   }
 
   nsCOMPtr<nsIContent> content = do_QueryWrappedNative(xpcWrapper);
