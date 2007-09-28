@@ -121,6 +121,7 @@ void __cdecl dhw_free( void* p )
     DHW_ORIGINAL(FREE_, getFreeHooker())(p);
     PRUint32 end = PR_IntervalNow();
     --t->suppress_tracing;
+    /* FIXME bug 392008: We could race with reallocation of p. */
     FreeCallback(p, start, end, t);
 }
 
@@ -140,6 +141,7 @@ void * __cdecl dhw_realloc(void * pin, size_t size)
     void* pout = DHW_ORIGINAL(REALLOC_, getReallocHooker())(pin, size);
     PRUint32 end = PR_IntervalNow();
     --t->suppress_tracing;
+    /* FIXME bug 392008: We could race with reallocation of pin. */
     ReallocCallback(pin, pout, size, start, end, t);
     return pout;
 }
