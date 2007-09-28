@@ -5536,26 +5536,15 @@ nsDocument::Destroy()
   if (mIsGoingAway)
     return;
 
-  PRInt32 count = mChildren.ChildCount();
-
   mIsGoingAway = PR_TRUE;
-  DestroyLinkMap();
-  for (PRInt32 indx = 0; indx < count; ++indx) {
-    // XXXbz what we _should_ do here is to clear mChildren and null out
-    // mRootContent.  If we did this (or at least the latter), we could remove
-    // the silly null-checks in nsHTMLDocument::MatchLinks.  Unfortunately,
-    // doing that introduces several problems:
-    // 1) Focus issues (see bug 341730).  The fix for bug 303260 may fix these.
-    // 2) Crashes in OnPageHide if it fires after Destroy.  See bug 303260
-    //    comments 9 and 10.
-    // So we're just creating an inconsistent DOM for now and hoping.  :(
-    mChildren.ChildAt(indx)->UnbindFromTree();
+  PRUint32 i, count = mChildren.ChildCount();
+  for (i = 0; i < count; ++i) {
+    nsNodeUtils::DestroySubtree(mChildren.ChildAt(i));
   }
+
   mLayoutHistoryState = nsnull;
 
   nsContentList::OnDocumentDestroy(this);
-  delete mContentWrapperHash;
-  mContentWrapperHash = nsnull;
 }
 
 already_AddRefed<nsILayoutHistoryState>
