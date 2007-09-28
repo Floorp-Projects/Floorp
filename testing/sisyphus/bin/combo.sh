@@ -12,7 +12,7 @@ done
 if [[ $OPTIND -gt 1 ]]; then
     shift 2
 fi
-    
+
 
 if [[ -n "$4" ]]; then
     for a in $1; do for b in $2; do for c in $3; do for d in $4; do echo $a$delim$b$delim$c$delim$d; done; done; done; done
@@ -47,4 +47,5 @@ b-1
 b-2
 
 EOF
+
 fi

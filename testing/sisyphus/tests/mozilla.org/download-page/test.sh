@@ -83,13 +83,13 @@ executable=`get_executable $product $branch $executablepath`
 urlfile=`mktemp /tmp/URLS.XXXX`
 
 if [[ "$test" == "all" ]]; then
-    $timed_run.py $TEST_DOWNLOAD_PAGE_TIMEOUT "test download" \
+    $TEST_BIN/timed_run.py $TEST_DOWNLOAD_PAGE_TIMEOUT "test download" \
 	"$executable" -P "$profilename" -spider -start -quit \
 	-uri "$allurl" -timeout=$TEST_DOWNLOAD_PAGE_TIMEOUT \
 	-hook "http://$TEST_HTTP/tests/mozilla.org/download-page/collect-urls-userhook.js" | \
 	grep 'href: ' | sed 's/^href: //' > $urlfile
 elif [[ "$test" == "ftp" ]]; then
-    $timed_run.py $TEST_DOWNLOAD_PAGE_TIMEOUT "test download" \
+    $TEST_BIN/timed_run.py $TEST_DOWNLOAD_PAGE_TIMEOUT "test download" \
 	"$executable" -P "$profilename" -spider -start -quit \
 	-uri "$allurl" -timeout=$TEST_DOWNLOAD_PAGE_TIMEOUT \
 	-hook "http://$TEST_HTTP/tests/mozilla.org/download-page/userhook-ftp.js" | \

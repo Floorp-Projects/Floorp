@@ -60,24 +60,24 @@ variable            description
 -d datafiles        optional. one or more filenames of files containing 
                     environment variable definitions to be included.
 
-                    note that the environment variables should have the same 
-                    names as in the "variable" column.
+note that the environment variables should have the same names as in the 
+"variable" column.
 
 EOF
-    exit 2
+    exit 1
 }
 
 unset product branch executablepath filename datafiles
 
 while getopts $options optname ; 
-do 
-    case $optname in
-        p) product=$OPTARG;;
-        b) branch=$OPTARG;;
-        x) executablepath=$OPTARG;;
-        f) filename=$OPTARG;;
-        d) datafiles=$OPTARG;;
-    esac
+  do 
+  case $optname in
+      p) product=$OPTARG;;
+      b) branch=$OPTARG;;
+      x) executablepath=$OPTARG;;
+      f) filename=$OPTARG;;
+      d) datafiles=$OPTARG;;
+  esac
 done
 
 # include environment variables
@@ -89,7 +89,7 @@ if [[ -n "$datafiles" ]]; then
 fi
 
 if [[ -z "$product" || -z "$branch" || -z "$executablepath" || -z "$filename" ]]
-then
+    then
     usage
 fi
 
@@ -118,35 +118,35 @@ else
     
     case "$OSID" in
         linux)
-            if echo $filetype | grep -iq 'bzip2'; then
-                tar -jxvf $filename -C "$executablepath"
-            elif echo $filetype | grep -iq 'gzip'; then
-                tar -zxvf $filename -C "$executablepath" 
-            else
-                error "unknown file type $filetype"
-            fi
-            ;; 
+        if echo $filetype | grep -iq 'bzip2'; then
+            tar -jxvf $filename -C "$executablepath"
+        elif echo $filetype | grep -iq 'gzip'; then
+            tar -zxvf $filename -C "$executablepath" 
+        else
+            error "unknown file type $filetype"
+        fi
+        ;; 
 
         mac)
         # answer license prompt
-            result=`${TEST_BIN}/hdiutil-expect.ex $filename`
+        result=`${TEST_BIN}/hdiutil-expect.ex $filename`
         # now get the volume data
 	    #result=`hdiutil attach $filename`
-            disk=`echo $result | sed 's@.*\(/dev/[^ ]*\).*/dev.*/dev.*@\1@'`
+        disk=`echo $result | sed 's@.*\(/dev/[^ ]*\).*/dev.*/dev.*@\1@'`
         # remove the carriage return inserted by expect
-            volume=`echo $result | sed "s|[^a-zA-Z0-9/]||g" | sed 's@.*\(/Volumes/.*\)@\1@'`
-            echo "disk=$disk"
-            echo "volume=$volume"
-            if [[ -z "$disk" || -z "$volume" ]]; then
-                error "mounting disk image: $result"
-            fi
+        volume=`echo $result | sed "s|[^a-zA-Z0-9/]||g" | sed 's@.*\(/Volumes/.*\)@\1@'`
+        echo "disk=$disk"
+        echo "volume=$volume"
+        if [[ -z "$disk" || -z "$volume" ]]; then
+            error "mounting disk image: $result"
+        fi
 
-            for app in $volume/*.app; do
-                cp -R $app $executablepath
-            done
+        for app in $volume/*.app; do
+            cp -R $app $executablepath
+        done
 
-            hdiutil detach $disk
-            ;;
+        hdiutil detach $disk
+        ;;
     esac
 
     #

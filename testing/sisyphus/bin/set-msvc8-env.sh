@@ -79,14 +79,14 @@ $VSINSTALLDIR_cyg/Common7/Tools/bin:\
 $MOZ_TOOLS/bin:\
 $PATH"
 
-        export INCLUDE="\
+export INCLUDE="\
 $MSVCDir\ATLMFC\INCLUDE;\
 $MSVCDir\INCLUDE;\
 $PlatformSDKDir\include;\
 $FrameworkSDKDir\include;\
 $INCLUDE"
 
-         export LIB="\
+export LIB="\
 $MSVCDir\ATLMFC\LIB;\
 $MSVCDir\LIB;\
 $PlatformSDKDir\lib;\
