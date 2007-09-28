@@ -103,7 +103,7 @@ public:
 protected:
   nsJSPrincipals mJSPrincipals;
   nsTArray< nsAutoPtr<nsHashtable> > mAnnotations;
-  nsHashtable mCapabilities;
+  nsHashtable* mCapabilities;
   nsCString mPrefName;
   static PRInt32 sCapabilitiesOrdinal;
 
