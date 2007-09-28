@@ -516,7 +516,8 @@ protected:
   nsresult FilterResultSet(nsNavHistoryQueryResultNode *aParentNode,
                            const nsCOMArray<nsNavHistoryResultNode>& aSet,
                            nsCOMArray<nsNavHistoryResultNode>* aFiltered,
-                           const nsCOMArray<nsNavHistoryQuery>& aQueries);
+                           const nsCOMArray<nsNavHistoryQuery>& aQueries,
+                           nsNavHistoryQueryOptions* aOptions);
 
   // observers
   nsMaybeWeakPtrArray<nsINavHistoryObserver> mObservers;
