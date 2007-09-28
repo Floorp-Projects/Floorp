@@ -46,14 +46,17 @@
 #include "nsXBLProtoImplField.h"
 #include "nsIScriptContext.h"
 #include "nsContentUtils.h"
+#include "nsIURI.h"
 
 nsXBLProtoImplField::nsXBLProtoImplField(const PRUnichar* aName, const PRUnichar* aReadOnly)
-  : nsXBLProtoImplMember(aName),
+  : mNext(nsnull),
     mFieldText(nsnull),
     mFieldTextLength(0),
     mLineNumber(0)
 {
   MOZ_COUNT_CTOR(nsXBLProtoImplField);
+  mName = NS_strdup(aName);  // XXXbz make more sense to use a stringbuffer?
+  
   mJSAttributes = JSPROP_ENUMERATE;
   if (aReadOnly) {
     nsAutoString readOnly; readOnly.Assign(*aReadOnly);
@@ -67,11 +70,8 @@ nsXBLProtoImplField::~nsXBLProtoImplField()
   MOZ_COUNT_DTOR(nsXBLProtoImplField);
   if (mFieldText)
     nsMemory::Free(mFieldText);
-}
-
-void
-nsXBLProtoImplField::Destroy(PRBool aIsCompiled)
-{
+  NS_Free(mName);
+  delete mNext;
 }
 
 void 
@@ -92,27 +92,15 @@ nsXBLProtoImplField::AppendFieldText(const nsAString& aText)
 }
 
 nsresult
-nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext,
-                                   nsIContent* aBoundElement, 
-                                   void* aScriptObject,
-                                   void* aTargetClassObject,
-                                   const nsCString& aClassStr)
+nsXBLProtoImplField::InstallField(nsIScriptContext* aContext,
+                                  JSObject* aBoundNode,
+                                  nsIURI* aBindingDocURI) const
 {
-  if (mFieldTextLength == 0)
-    return NS_OK; // nothing to do.
+  NS_PRECONDITION(aBoundNode,
+                  "uh-oh, bound node should NOT be null or bad things will "
+                  "happen");
 
-  JSContext* cx = (JSContext*) aContext->GetNativeContext();
-  NS_ASSERTION(aScriptObject, "uh-oh, script Object should NOT be null or bad things will happen");
-  if (!aScriptObject)
-    return NS_ERROR_FAILURE;
-
-  nsCAutoString bindingURI(aClassStr);
-  PRInt32 hash = bindingURI.RFindChar('#');
-  if (hash != kNotFound)
-    bindingURI.Truncate(hash);
-  
-  // compile the literal string 
-  jsval result = JSVAL_NULL;
+  jsval result = JSVAL_VOID;
   
   // EvaluateStringWithValue and JS_DefineUCProperty can both trigger GC, so
   // protect |result| here.
@@ -120,39 +108,40 @@ nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext,
   nsAutoGCRoot root(&result, &rv);
   if (NS_FAILED(rv))
     return rv;
-  PRBool undefined;
-  // XXX Need a URI here!
-  nsCOMPtr<nsIScriptContext> context = aContext;
-  rv = context->EvaluateStringWithValue(nsDependentString(mFieldText,
-                                                          mFieldTextLength), 
-                                        aScriptObject,
-                                        nsnull, bindingURI.get(),
-                                        mLineNumber, nsnull,
-                                        (void*) &result, &undefined);
-  if (NS_FAILED(rv))
-    return rv;
 
-  if (!undefined) {
-    // Define the evaluated result as a JS property
-    nsDependentString name(mName);
-    JSAutoRequest ar(cx);
-    if (!::JS_DefineUCProperty(cx, static_cast<JSObject *>(aScriptObject),
-                               reinterpret_cast<const jschar*>(mName), 
-                               name.Length(), result, nsnull, nsnull, mJSAttributes))
-      return NS_ERROR_OUT_OF_MEMORY;
+  if (mFieldTextLength != 0) {
+    nsCAutoString uriSpec;
+    aBindingDocURI->GetSpec(uriSpec);
+  
+    // compile the literal string
+    // XXX Could we produce a better principal here?  Should be able
+    // to, really!
+    PRBool undefined;
+    nsCOMPtr<nsIScriptContext> context = aContext;
+    rv = context->EvaluateStringWithValue(nsDependentString(mFieldText,
+                                                            mFieldTextLength), 
+                                          aBoundNode,
+                                          nsnull, uriSpec.get(),
+                                          mLineNumber, nsnull,
+                                          (void*) &result, &undefined);
+    if (NS_FAILED(rv))
+      return rv;
+
+    if (undefined) {
+      result = JSVAL_VOID;
+    }
+  }
+
+  // Define the evaluated result as a JS property
+  nsDependentString name(mName);
+  JSContext* cx = (JSContext*) aContext->GetNativeContext();
+  JSAutoRequest ar(cx);
+  if (!::JS_DefineUCProperty(cx, aBoundNode,
+                             reinterpret_cast<const jschar*>(mName), 
+                             name.Length(), result, nsnull, nsnull,
+                             mJSAttributes)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   
   return NS_OK;
-}
-
-nsresult 
-nsXBLProtoImplField::CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr,
-                                   void* aClassObject)
-{
-  return NS_OK;
-}
-
-void
-nsXBLProtoImplField::Traverse(nsCycleCollectionTraversalCallback &cb) const
-{
 }

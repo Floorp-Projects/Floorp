@@ -409,6 +409,8 @@ nsXBLDocGlobalObject::GetPrincipal()
 {
   nsresult rv = NS_OK;
   if (!mGlobalObjectOwner) {
+    // XXXbz this should really save the principal when
+    // ClearGlobalObjectOwner() happens.
     return nsnull;
   }
 
@@ -442,8 +444,19 @@ TraverseProtos(nsHashKey *aKey, void *aData, void* aClosure)
   return kHashEnumerateNext;
 }
 
+static PRIntn PR_CALLBACK
+UnlinkProtos(nsHashKey *aKey, void *aData, void* aClosure)
+{
+  nsXBLPrototypeBinding *proto = static_cast<nsXBLPrototypeBinding*>(aData);
+  proto->Unlink();
+  return kHashEnumerateNext;
+}
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsXBLDocumentInfo)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXBLDocumentInfo)
+  if (tmp->mBindingTable) {
+    tmp->mBindingTable->Enumerate(UnlinkProtos, nsnull);
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGlobalObject)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
