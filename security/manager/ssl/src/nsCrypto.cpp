@@ -1950,6 +1950,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
   JSObject* script_obj = nsnull;
   nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
 
+  JSAutoRequest ar(cx);
 
   /*
    * Get all of the parameters.
@@ -2662,6 +2663,8 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
 
     jsval *argv = nsnull;
     ncc->GetArgvPtr(&argv);
+
+    JSAutoRequest ar(cx);
 
     PRUint32 i;
     for (i = 2; i < argc; ++i) {

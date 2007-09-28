@@ -2379,6 +2379,8 @@ nsCanvasRenderingContext2D::GetImageData()
     ncc->GetArgc(&argc);
     ncc->GetArgvPtr(&argv);
 
+    JSAutoRequest ar(ctx);
+
     int32 x, y, w, h;
     if (!JS_ConvertArguments (ctx, argc, argv, "jjjj", &x, &y, &w, &h))
         return NS_ERROR_DOM_SYNTAX_ERR;
@@ -2494,6 +2496,8 @@ nsCanvasRenderingContext2D::PutImageData()
 
     ncc->GetArgc(&argc);
     ncc->GetArgvPtr(&argv);
+
+    JSAutoRequest ar(ctx);
 
     JSObject *dataObject;
     int32 x, y;
