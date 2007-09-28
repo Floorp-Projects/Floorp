@@ -45,6 +45,7 @@
 
 extern NSString* const kWildcardPboardType;
 extern NSString* const kCorePboardType_url;
+extern NSString* const kCorePboardType_urld;
 extern NSString* const kCorePboardType_urln;
 
 class nsDragService : public nsBaseDragService
