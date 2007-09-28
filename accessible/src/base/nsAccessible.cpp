@@ -444,6 +444,16 @@ nsAccessible::GetKeyboardShortcut(nsAString& aAccessKey)
 
 NS_IMETHODIMP nsAccessible::SetParent(nsIAccessible *aParent)
 {
+#ifdef DEBUG
+  if (aParent && aParent != mParent) {
+    nsCOMPtr<nsPIAccessible> privParent = do_QueryInterface(mParent);
+    if (privParent) {
+      nsCOMPtr<nsIAccessible> firstChild;
+      privParent->GetCachedFirstChild(getter_AddRefs(firstChild));
+      NS_ASSERTION(firstChild != this, "Reparenting other node's first child!");
+    }
+  }
+#endif
   mParent = aParent;
   return NS_OK;
 }
@@ -588,6 +598,17 @@ NS_IMETHODIMP nsAccessible::GetCachedParent(nsIAccessible **  aParent)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsAccessible::GetCachedFirstChild(nsIAccessible **  aFirstChild)
+{
+  *aFirstChild = nsnull;
+  if (!mWeakShell) {
+    // This node has been shut down
+    return NS_ERROR_FAILURE;
+  }
+  NS_IF_ADDREF(*aFirstChild = mFirstChild);
+  return NS_OK;
+}
+
   /* readonly attribute nsIAccessible nextSibling; */
 NS_IMETHODIMP nsAccessible::GetNextSibling(nsIAccessible * *aNextSibling) 
 { 
@@ -654,6 +675,16 @@ NS_IMETHODIMP nsAccessible::GetFirstChild(nsIAccessible * *aFirstChild)
   }
   PRInt32 numChildren;
   GetChildCount(&numChildren);  // Make sure we cache all of the children
+
+#ifdef DEBUG
+  nsCOMPtr<nsPIAccessible> firstChild(do_QueryInterface(mFirstChild));
+  if (firstChild) {
+    nsCOMPtr<nsIAccessible> realParent;
+    firstChild->GetCachedParent(getter_AddRefs(realParent));
+    NS_ASSERTION(!realParent || realParent == this,
+                 "Two accessibles have the same first child accessible.");
+  }
+#endif
 
   NS_IF_ADDREF(*aFirstChild = mFirstChild);
 
