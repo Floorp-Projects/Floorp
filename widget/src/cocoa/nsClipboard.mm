@@ -492,6 +492,8 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
         NSString *nativeTitle = [[NSString alloc] initWithCharacters:urlTitle.get() length:urlTitle.Length()];
         // be nice to Carbon apps, normalize the receiver's contents using Form C.
         [pasteboardOutputDict setObject:[nativeTitle precomposedStringWithCanonicalMapping] forKey:kCorePboardType_urln];
+        // Also put the title out as 'urld', since some recipients will look for that.
+        [pasteboardOutputDict setObject:[nativeTitle precomposedStringWithCanonicalMapping] forKey:kCorePboardType_urld];
         [nativeTitle release];
       }
 
