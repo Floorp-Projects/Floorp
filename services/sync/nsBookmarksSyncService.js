@@ -155,6 +155,8 @@ BookmarksSyncService.prototype = {
   },
 
   _saveSnapshot: function BSS__saveSnapshot() {
+    this.notice("Saving snapshot to disk");
+
     let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
       getService(Ci.nsIProperties);
 
@@ -329,6 +331,11 @@ BookmarksSyncService.prototype = {
     if (a.action != b.action)
       return false;
 
+    // Items with the same guid do not qualify - they need to be
+    // processed for edits
+    if (a.guid == b.guid)
+      return false;
+
     // this check works because reconcile() fixes up the parent guids
     // as it runs, and the command list is sorted by depth
     if (a.parentGuid != b.parentGuid)
@@ -429,6 +436,9 @@ BookmarksSyncService.prototype = {
           delete listA[i];
           delete listB[j];
         } else if (this._commandLike(listA[i], listB[j])) {
+          // Disregard likeness if the target guid already exists locally
+          if (this._bms.getItemIdForGUID(listB[j].guid) >= 0)
+            continue;
           this._fixParents(listA, listA[i].guid, listB[j].guid);
           listB[j].data = {guid: listB[j].guid};
           listB[j].guid = listA[i].guid;
@@ -629,58 +639,33 @@ BookmarksSyncService.prototype = {
       folder = this._bms.bookmarksRoot;
     var query = this._hsvc.getNewQuery();
     query.setFolders([folder], 1);
-    return this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
+    let root = this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
+    return this._wrapNode(root);
   },
 
-  // FIXME: these print functions need some love...
-  _mungeJSON: function BSS__mungeJSON(json) {
-    json.replace(":{type", ":\n\t{type");
-    json.replace(", ", ",\n\t");
+  _mungeNodes: function BSS__mungeNodes(nodes) {
+    let json = uneval(nodes);
+    json = json.replace(/:{type/g, ":\n\t{type");
+    json = json.replace(/}, /g, "},\n  ");
+    json = json.replace(/, parentGuid/g, ",\n\t parentGuid");
+    json = json.replace(/, index/g, ",\n\t index");
+    json = json.replace(/, title/g, ",\n\t title");
+    json = json.replace(/, uri/g, ",\n\t uri");
     return json;
   },
 
-  _printNodes: function BSS__printNodes(nodes) {
-    let nodeList = [];
-    for (let guid in nodes) {
-      switch (nodes[guid].type) {
-      case 0:
-        nodeList.push(nodes[guid].parentGuid + " b " + guid + "\n\t" +
-                      nodes[guid].title + nodes[guid].uri);
-        break;
-      case 6:
-        nodeList.push(nodes[guid].parentGuid + " f " + guid + "\n\t" +
-                      nodes[guid].title);
-        break;
-      case 7:
-        nodeList.push(nodes[guid].parentGuid + " s " + guid);
-        break;
-      default:
-        nodeList.push("error: unknown item type!\n" + uneval(nodes[guid]));
-        break;
-      }
-    }
-    nodeList.sort();
-    return nodeList.join("\n");
+  _mungeCommands: function BSS__mungeCommands(commands) {
+    let json = uneval(commands);
+    json = json.replace(/ {action/g, "\n {action");
+    //json = json.replace(/, data/g, ",\n  data");
+    return json;
   },
 
-  _printCommands: function BSS__printCommands(commands) {
-    let ret = [];
-    for (let i = 0; i < commands.length; i++) {
-      switch (commands[i].action) {
-      case "create":
-        ret.push("create");
-        break;
-      case "edit":
-        ret.push();
-        break;
-      case "remove":
-        ret.push();
-        break;
-      default:
-        ret.push("error: unknown command action!\n" + uneval(commands[i]));
-        break;
-      }
-    }
+  _mungeConflicts: function BSS__mungeConflicts(conflicts) {
+    let json = uneval(conflicts);
+    json = json.replace(/ {action/g, "\n {action");
+    //json = json.replace(/, data/g, ",\n  data");
+    return json;
   },
 
   // 1) Fetch server deltas
@@ -703,9 +688,8 @@ BookmarksSyncService.prototype = {
       //var data = yield;
       var data;
 
-      var localBookmarks = this._getBookmarks();
-      var localJson = this._wrapNode(localBookmarks);
-      this.notice("local json:\n" + this._mungeJSON(uneval(localJson)));
+      var localJson = this._getBookmarks();
+      this.notice("local json:\n" + this._mungeNodes(localJson));
 
       // 1) Fetch server deltas
       let gsd_gen = this._getServerData(handlers['complete'], localJson);
@@ -713,7 +697,16 @@ BookmarksSyncService.prototype = {
       gsd_gen.send(gsd_gen);
       let server = yield;
 
-      this.notice("server: " + uneval(server));
+      this.notice("Server status: " + server.status);
+      this.notice("Server version: " + server.version);
+      this.notice("Server version type: " + typeof server.version);
+      this.notice("Local snapshot version: " + this._snapshotVersion);
+
+      for (version in server.deltas) {
+        this.notice("Server delta " + version + ":\n" +
+                    this._mungeCommands(server.deltas[version]));
+      }
+
       if (server['status'] == 2) {
         this._os.notifyObservers(null, "bookmarks-sync:end", "");
         this.notice("Sync complete");
@@ -724,14 +717,10 @@ BookmarksSyncService.prototype = {
         return;
       }
 
-      this.notice("Local snapshot version: " + this._snapshotVersion);
-      this.notice("Latest server version: " + server['version']);
-
       // 2) Generate local deltas from snapshot -> current client status
 
-      this.notice("Generating local updates");
-      var localUpdates = this._detectUpdates(this._snapshot, localJson);
-      this.notice("updates: " + uneval(localUpdates));
+      let localUpdates = this._detectUpdates(this._snapshot, localJson);
+      this.notice("Local updates: " + this._mungeCommands(localUpdates));
       if (!(server['status'] == 1 || localUpdates.length > 0)) {
         this._os.notifyObservers(null, "bookmarks-sync:end", "");
         this.notice("Sync complete (1): no changes needed on client or server");
@@ -740,7 +729,7 @@ BookmarksSyncService.prototype = {
 	  
       // 3) Reconcile client/server deltas and generate new deltas for them.
 
-      this.notice("Reconciling updates");
+      this.notice("Reconciling client/server updates");
       let callback = function(retval) { continueGenerator(generator, retval); };
       let rec_gen = this._reconcile(callback, [localUpdates, server.updates]);
       rec_gen.next(); // must initialize before sending
@@ -764,17 +753,17 @@ BookmarksSyncService.prototype = {
       if (ret.conflicts && ret.conflicts[1])
         serverConflicts = ret.conflicts[1];
 
-      this.notice("Changes for client: " + uneval(clientChanges));
-      this.notice("Changes for server: " + uneval(serverChanges));
-      this.notice("Client conflicts: " + uneval(clientConflicts));
-      this.notice("Server conflicts: " + uneval(serverConflicts));
+      this.notice("Changes for client: " + this._mungeCommands(clientChanges));
+      this.notice("Changes for server: " + this._mungeCommands(serverChanges));
+      this.notice("Client conflicts: " + this._mungeConflicts(clientConflicts));
+      this.notice("Server conflicts: " + this._mungeConflicts(serverConflicts));
 
       if (!(clientChanges.length || serverChanges.length ||
             clientConflicts.length || serverConflicts.length)) {
         this._os.notifyObservers(null, "bookmarks-sync:end", "");
         this.notice("Sync complete (2): no changes needed on client or server");
-        this._snapshot = this._wrapNode(localBookmarks);
-        this._snapshotVersion = server['version'];
+        this._snapshot = localJson;
+        this._snapshotVersion = server.version;
         this._saveSnapshot();
         return;
       }
@@ -788,17 +777,17 @@ BookmarksSyncService.prototype = {
         this.notice("Applying changes locally");
         // Note that we need to need to apply client changes to the
         // current tree, not the saved snapshot
-        this._snapshot = this._applyCommandsToObj(clientChanges,
-                                                  this._wrapNode(localBookmarks));
+
+        this._snapshot = this._applyCommandsToObj(clientChanges, localJson);
         this._snapshotVersion = server['version'];
         this._applyCommands(clientChanges);
 
-        let newSnapshot = this._wrapNode(localBookmarks);
+        let newSnapshot = this._getBookmarks();
         let diff = this._detectUpdates(this._snapshot, newSnapshot);
         if (diff.length != 0) {
           this.notice("Error: commands did not apply correctly.  Diff:\n" +
                       uneval(diff));
-          this._snapshot = this._wrapNode(localBookmarks);
+          this._snapshot = newSnapshot;
           // FIXME: What else can we do?
         }
         this._saveSnapshot();
@@ -807,9 +796,9 @@ BookmarksSyncService.prototype = {
       // 3.2) Append server delta to the delta file and upload
       if (serverChanges.length) {
         this.notice("Uploading changes to server");
-        this._snapshot = this._wrapNode(localBookmarks);
+        this._snapshot = this._getBookmarks();
         this._snapshotVersion = server['version'] + 1;
-        server['deltas'][this._snapshotVersion] = serverChanges;
+        server['deltas']['version ' + this._snapshotVersion] = serverChanges;
         this._dav.PUT("bookmarks.delta", uneval(server['deltas']), handlers);
         data = yield;
 
@@ -862,40 +851,31 @@ BookmarksSyncService.prototype = {
       this.notice("Got bookmarks delta from server");
 
       ret.deltas = eval(data.target.responseText);
-      var tmp = eval(uneval(this._snapshot)); // fixme hack hack hack
 
-      // FIXME: debug here for conditional below...
-      /*
-      this.notice("[sync bowels] local version: " + this._snapshotVersion);
-      for (var z in ret.deltas) {
-        this.notice("[sync bowels] remote version: " + z);
-      }
-      this.notice("foo: " + uneval(ret.deltas[this._snapshotVersion + 1]));
-      if (ret.deltas[this._snapshotVersion + 1])
-        this.notice("-> is true");
-      else
-        this.notice("-> is false");
-      */
+      let next = "version " + (this._snapshotVersion + 1);
+      let cur = "version " + this._snapshotVersion;
 
-      if (ret.deltas[this._snapshotVersion + 1]) {
+      if (next in ret.deltas) {
         // Merge the matching deltas into one, find highest version
-        var keys = [];
-        for (var v in ret.deltas) {
+        let keys = [];
+        for (var vstr in ret.deltas) {
+          let v = parseInt(vstr.replace(/^version /, ''));
           if (v > this._snapshotVersion)
-            keys.push(v);
+            keys.push(vstr);
           if (v > ret.version)
             ret.version = v;
         }
         keys = keys.sort();
-        //this.notice("TMP: " + uneval(tmp));
+
+        let tmp = eval(uneval(this._snapshot)); // fixme hack hack hack
         for (var i = 0; i < keys.length; i++) {
           tmp = this._applyCommandsToObj(ret.deltas[keys[i]], tmp);
-          //this.notice("TMP: " + uneval(tmp));
         }
-        ret.status = 1;
-        ret["updates"] = this._detectUpdates(this._snapshot, tmp);
 
-      } else if (ret.deltas[this._snapshotVersion]) {
+        ret.status = 1;
+        ret.updates = this._detectUpdates(this._snapshot, tmp);
+
+      } else if (cur in ret.deltas) {
         this.notice("No changes from server");
         ret.status = 0;
         ret.version = this._snapshotVersion;
@@ -916,18 +896,19 @@ BookmarksSyncService.prototype = {
               "New snapshot uploaded, may be inconsistent with deltas!");
         }
 
-        var tmp = eval(uneval(this._snapshot)); // fixme hack hack hack
-        tmp = this._applyCommandsToObj(data.updates, tmp);
-
         // fixme: this is duplicated from above, need to do some refactoring
-        var keys = [];
-        for (var v in ret.deltas) {
+        let keys = [];
+        for (var vstr in ret.deltas) {
+          let v = parseInt(vstr.replace(/^version /, ''));
           if (v > this._snapshotVersion)
-            keys.push(v);
+            keys.push(vstr);
           if (v > ret.version)
             ret.version = v;
         }
         keys = keys.sort();
+
+        let tmp = eval(uneval(this._snapshot)); // fixme hack hack hack
+        tmp = this._applyCommandsToObj(data.updates, tmp);
         for (var i = 0; i < keys.length; i++) {
           tmp = this._applyCommandsToObj(ret.deltas[keys[i]], tmp);
         }
@@ -935,11 +916,18 @@ BookmarksSyncService.prototype = {
         ret.status = data.status;
         ret.updates = this._detectUpdates(this._snapshot, tmp);
         ret.version = data.version;
-        var keys = [];
-        for (var v in ret.deltas) {
+
+        for (var vstr in ret.deltas) {
+          let v = parseInt(vstr.replace(/^version /, ''));
           if (v > ret.version)
             ret.version = v;
         }
+
+        if (typeof ret.version != "number") {
+          this.notice("Error: version is not a number!  Correcting...");
+          ret.version = parseInt(ret.version);
+        }
+
       }
       break;
     case 404:
@@ -974,6 +962,9 @@ BookmarksSyncService.prototype = {
       ret.status = 1;
       ret.updates = this._detectUpdates(this._snapshot, tmp.snapshot);
       ret.version = tmp.version;
+      if (typeof ret.version != "number")
+        this.notice("Error: version is not a number!  Full server response text:\n" +
+                    data.target.responseText);
       break;
     case 404:
       this.notice("No bookmarks on server.  Starting initial sync to server");
@@ -985,6 +976,7 @@ BookmarksSyncService.prototype = {
 
       if (data.target.status >= 200 || data.target.status < 300) {
         this.notice("Initial sync to server successful");
+        this._saveSnapshot();
         ret.status = 2;
       } else {
         this.notice("Initial sync to server failed");
