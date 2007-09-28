@@ -50,6 +50,7 @@
 #include "nsHashtable.h"
 #include "nsIXBLDocumentInfo.h"
 #include "nsCOMArray.h"
+#include "nsXBLProtoImpl.h"
 
 class nsIAtom;
 class nsIDocument;
@@ -58,7 +59,7 @@ class nsISupportsArray;
 class nsSupportsHashtable;
 class nsIXBLService;
 class nsFixedSizeAllocator;
-class nsXBLProtoImpl;
+class nsXBLProtoImplField;
 class nsXBLBinding;
 
 // *********************************************************************/
@@ -93,6 +94,22 @@ public:
   nsresult SetConstructor(nsXBLProtoImplAnonymousMethod* aConstructor);
   nsXBLProtoImplAnonymousMethod* GetDestructor();
   nsresult SetDestructor(nsXBLProtoImplAnonymousMethod* aDestructor);
+
+  nsXBLProtoImplField* FindField(const nsString& aFieldName) const
+  {
+    return mImplementation ? mImplementation->FindField(aFieldName) : nsnull;
+  }
+
+  // Resolve all the fields for this binding on the object |obj|.
+  // False return means a JS exception was set.
+  PRBool ResolveAllFields(JSContext* cx, JSObject* obj) const
+  {
+    return !mImplementation || mImplementation->ResolveAllFields(cx, obj);
+  }
+
+  const nsCString& ClassName() const {
+    return mImplementation ? mImplementation->mClassName : EmptyCString();
+  }
 
   nsresult InitClass(const nsCString& aClassName, JSContext * aContext,
                      JSObject * aGlobal, JSObject * aScriptObject,
@@ -172,6 +189,7 @@ public:
                 nsIContent* aElement);
 
   void Traverse(nsCycleCollectionTraversalCallback &cb) const;
+  void Unlink();
 
 // Static members
   static PRUint32 gRefCnt;

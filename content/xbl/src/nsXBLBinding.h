@@ -132,6 +132,10 @@ public:
   nsXBLBinding* RootBinding();
   nsXBLBinding* GetFirstStyleBinding();
 
+  // Resolve all the fields for this binding and all ancestor bindings on the
+  // object |obj|.  False return means a JS exception was set.
+  PRBool ResolveAllFields(JSContext *cx, JSObject *obj) const;
+
   // Get the list of insertion points for aParent. The nsInsertionPointList
   // is owned by the binding, you should not delete it.
   nsresult GetInsertionPointsFor(nsIContent* aParent,
@@ -155,15 +159,10 @@ public:
 
   static nsresult DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
                                 const nsAFlatCString& aClassName,
+                                nsXBLPrototypeBinding* aProtoBinding,
                                 void **aClassObject);
 
   PRBool AllowScripts();  // XXX make const
-
-// Internal member functions
-protected:
-  nsresult InitClass(const nsCString& aClassName, nsIScriptContext* aContext,
-                     nsIDocument* aDocument, void** aScriptObject,
-                     void** aClassObject);
 
 // MEMBER VARIABLES
 protected:
