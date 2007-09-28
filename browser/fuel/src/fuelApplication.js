@@ -401,6 +401,19 @@ function Extension(aItem) {
     this._firstRun = true;
   }
 
+  this._enabled = false;
+  const PREFIX_ITEM_URI = "urn:mozilla:item:";
+  const PREFIX_NS_EM = "http://www.mozilla.org/2004/em-rdf#";
+  var rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
+  var itemResource = rdf.GetResource(PREFIX_ITEM_URI + this._item.id);
+  if (itemResource) {
+    var extmgr = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);
+    var ds = extmgr.datasource;
+    var target = ds.GetTarget(itemResource, rdf.GetResource(PREFIX_NS_EM + "isDisabled"), true);
+    if (target && target instanceof Ci.nsIRDFLiteral)
+      this._enabled = (target.Value != "true");
+  }
+
   var os = Components.classes["@mozilla.org/observer-service;1"]
                      .getService(Ci.nsIObserverService);
   os.addObserver(this, "em-action-requested", false);
@@ -447,6 +460,10 @@ Extension.prototype = {
 
   get name() {
     return this._item.name;
+  },
+
+  get enabled() {
+    return this._enabled;
   },
 
   get version() {
