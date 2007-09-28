@@ -919,9 +919,9 @@ var gApplicationsPane = {
       item.setAttribute("actionIcon",
                         this._getIconURLForPreferredAction(visibleType));
       this._list.appendChild(item);
-      if (visibleType.type == this._list.getAttribute("lastSelectedType"))
-        this._list.selectedItem = item;
     }
+
+    this._selectLastSelectedType();
   },
 
   _getVisibleTypes: function() {
@@ -1034,6 +1034,25 @@ var gApplicationsPane = {
                                                     [aHandlerInfo.plugin.name,
                                                      this._brandShortName]);
     }
+  },
+
+  _selectLastSelectedType: function() {
+    // If the list is disabled by the pref.downloads.disable_button.edit_actions
+    // preference being locked, then don't select the type, as that would cause
+    // it to appear selected, with a different background and an actions menu
+    // that makes it seem like you can choose an action for the type.
+    if (this._list.disabled)
+      return;
+
+    var lastSelectedType = this._list.getAttribute("lastSelectedType");
+    if (!lastSelectedType)
+      return;
+
+    var item = this._list.getElementsByAttribute("type", lastSelectedType)[0];
+    if (!item)
+      return;
+
+    this._list.selectedItem = item;
   },
 
   /**
@@ -1382,8 +1401,9 @@ var gApplicationsPane = {
   // Mark which item in the list was last selected so we can reselect it
   // when we rebuild the list or when the user returns to the prefpane.
   onSelectionChanged: function() {
-    this._list.setAttribute("lastSelectedType",
-                            this._list.selectedItem.getAttribute("type"));
+    if (this._list.selectedItem)
+      this._list.setAttribute("lastSelectedType",
+                              this._list.selectedItem.getAttribute("type"));
   },
 
   _getIconURLForPreferredAction: function(aHandlerInfo) {

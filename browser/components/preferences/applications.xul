@@ -69,6 +69,9 @@
       <preference id="browser.feeds.handlers.webservice"
                   name="browser.feeds.handlers.webservice"
                   type="string"/>
+      <preference id="pref.downloads.disable_button.edit_actions"
+                  name="pref.downloads.disable_button.edit_actions"
+                  type="bool"/>
     </preferences>
 
     <script type="application/x-javascript" src="chrome://browser/content/preferences/applications.js"/>
@@ -88,9 +91,9 @@
 
     <separator class="thin"/>
 
-    <richlistbox id="handlersView" orient="vertical"
-                 onselect="gApplicationsPane.onSelectionChanged();"
-                 persist="lastSelectedType">
+    <richlistbox id="handlersView" orient="vertical" persist="lastSelectedType"
+                 preference="pref.downloads.disable_button.edit_actions"
+                 onselect="gApplicationsPane.onSelectionChanged();">
       <listheader equalsize="always" style="border: 0; padding: 0;">
         <treecol id="typeColumn" label="&typeColumn.label;" value="type"
                  accesskey="&typeColumn.accesskey;" persist="sortDirection"
