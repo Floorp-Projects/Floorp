@@ -1044,16 +1044,13 @@ nsDocAccessible::AttributeChangedImpl(nsIContent* aContent, PRInt32 aNameSpaceID
     return;
   }
 
-  if (aNameSpaceID == kNameSpaceID_XHTML2_Unofficial ||
-      aNameSpaceID == kNameSpaceID_XHTML) {
-    if (aAttribute == nsAccessibilityAtoms::role)
-      InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE);
-    return;
-  }
-
-  if (aAttribute == nsAccessibilityAtoms::href ||
+  if (aAttribute == nsAccessibilityAtoms::role ||
+      aAttribute == nsAccessibilityAtoms::href ||
       aAttribute == nsAccessibilityAtoms::onclick ||
       aAttribute == nsAccessibilityAtoms::droppable) {
+    // Not worth the expense to ensure which namespace these are in
+    // It doesn't kill use to recreate the accessible even if the attribute was used
+    // in the wrong namespace or an element that doesn't support it
     InvalidateCacheSubtree(aContent, nsIAccessibleEvent::EVENT_DOM_SIGNIFICANT_CHANGE);
     return;
   }
