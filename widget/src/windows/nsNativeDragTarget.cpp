@@ -75,7 +75,7 @@ static POINTL gDragLastPoint;
 // construction
 //-----------------------------------------------------
 nsNativeDragTarget::nsNativeDragTarget(nsIWidget * aWnd)
-  : m_cRef(0), mWindow(aWnd), mCanMove(PR_TRUE)
+  : m_cRef(0), mWindow(aWnd), mCanMove(PR_TRUE), mDragCancelled(PR_FALSE)
 {
   mHWnd = (HWND)mWindow->GetNativeData(NS_NATIVE_WINDOW);
 
@@ -294,10 +294,15 @@ nsNativeDragTarget::DragOver(DWORD   grfKeyState,
 		return ResultFromScode(E_FAIL);
   }
 
+  // without the AddRef() |this| can get destroyed in an event handler
+  this->AddRef();
   mDragService->FireDragEventAtSource(NS_DRAGDROP_DRAG);
+  if (!mDragCancelled) {
+    // Now process the native drag state and then dispatch the event
+    ProcessDrag(nsnull, NS_DRAGDROP_OVER, grfKeyState, pt, pdwEffect);
+  }
+  this->Release();
 
-  // Now process the native drag state and then dispatch the event
-  ProcessDrag(nsnull, NS_DRAGDROP_OVER, grfKeyState, pt, pdwEffect);
   return S_OK;
 }
 
