@@ -509,6 +509,7 @@ nsApplicationAccessibleWrap::nsApplicationAccessibleWrap():
 nsApplicationAccessibleWrap::~nsApplicationAccessibleWrap()
 {
     MAI_LOG_DEBUG(("======Destory AppRootAcc=%p\n", (void*)this));
+    nsAccessibleWrap::ShutdownAtkObject();
 }
 
 NS_IMETHODIMP
