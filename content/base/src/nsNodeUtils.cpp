@@ -687,3 +687,27 @@ nsNodeUtils::UnlinkUserData(nsINode *aNode)
                                                       DOM_USER_DATA_HANDLER);
   }
 }
+
+/* static */
+void
+nsNodeUtils::DestroySubtree(nsIContent* aRoot)
+{
+  nsXULElement* xul = nsXULElement::FromContent(aRoot);
+  if (xul) {
+    nsGenericElement::nsDOMSlots* slots = xul->GetExistingDOMSlots();
+    if (slots) {
+      NS_IF_RELEASE(slots->mControllers);
+    }
+  }
+
+  nsIDocument *document = aRoot->GetOwnerDoc();
+  if (document) {
+    document->BindingManager()->ChangeDocumentFor(aRoot, document, nsnull);
+    document->ClearBoxObjectFor(aRoot);
+  }
+
+  PRUint32 i, count = aRoot->GetChildCount();
+  for (i = 0; i < count; ++i) {
+    DestroySubtree(aRoot->GetChildAt(i));
+  }
+}
