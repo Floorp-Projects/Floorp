@@ -766,7 +766,13 @@ nsSHistory::EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
 {
   // To enforce the per SHistory object limit on cached content viewers, we
   // need to release all of the content viewers that are no longer in the
-  // "window" that now ends/begins at aToIndex.
+  // "window" that now ends/begins at aToIndex.  Existing content viewers
+  // should be in the window from
+  // aFromIndex - gHistoryMaxViewers to aFromIndex + gHistoryMaxViewers
+  //
+  // We make the assumption that entries outside this range have no viewers so
+  // that we don't have to walk the whole entire session history checking for
+  // content viewers.
 
   // This can happen on the first load of a page in a particular window
   if (aFromIndex < 0 || aToIndex < 0) {
@@ -787,7 +793,7 @@ nsSHistory::EvictWindowContentViewers(PRInt32 aFromIndex, PRInt32 aToIndex)
     if (startIndex >= mLength) {
       return;
     }
-    endIndex = PR_MIN(mLength, aFromIndex + gHistoryMaxViewers);
+    endIndex = PR_MIN(mLength, aFromIndex + gHistoryMaxViewers + 1);
   }
   
   EvictContentViewersInRange(startIndex, endIndex);
