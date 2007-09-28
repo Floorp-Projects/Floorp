@@ -1278,8 +1278,6 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
     rv = aStream->ReadLine(cBuffer, &moreData);
     if (NS_FAILED(rv)) return rv;
     
-    if (!moreData) break;
-
     CopyUTF8toUTF16(cBuffer, buffer);
     nsString data;
     LineType type = GetLineType(buffer, getter_Copies(data));
@@ -1317,6 +1315,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
       // Assuming it's in UTF-8 is rather safe because it covers two cases 
       // (UTF-8 and ASCII) out of three cases (the last is a non-UTF-8
       // multibyte encoding).
+      // XXX Todo: |description| is not saved.
       if (entryType == EntryType_BOOKMARK) {
         if (!name.IsEmpty() && !url.IsEmpty()) {
           nsCOMPtr<nsIURI> uri;
@@ -1353,7 +1352,7 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
       break;
     }
   }
-  while (1);
+  while (moreData);
 
 done:
   return rv;
