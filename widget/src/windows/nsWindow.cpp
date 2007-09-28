@@ -3096,6 +3096,7 @@ NS_METHOD nsWindow::EnableDragDrop(PRBool aEnable)
       if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mNativeDragTarget, FALSE, TRUE)) {
         rv = NS_OK;
       }
+      mNativeDragTarget->mDragCancelled = PR_TRUE;
       NS_RELEASE(mNativeDragTarget);
     }
   }
