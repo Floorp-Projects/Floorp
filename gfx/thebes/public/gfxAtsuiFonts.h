@@ -128,6 +128,8 @@ public:
 
     gfxAtsuiFont* FindFontFor(ATSUFontID fid);
 
+    PRBool HasFont(ATSUFontID fid);
+
 protected:
     static PRBool FindATSUFont(const nsAString& aName,
                                const nsACString& aGenericName,
