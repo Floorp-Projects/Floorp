@@ -1549,6 +1549,15 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
     accessibleEvent->GetEventType(&eventType);
     if (eventType == nsIAccessibleEvent::EVENT_DOM_CREATE || 
         eventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW) {
+      nsCOMPtr<nsIAccessible> containerAccessible;
+      if (accessible) {
+        accessible->GetParent(getter_AddRefs(containerAccessible));
+        nsCOMPtr<nsPIAccessible> privateContainerAccessible =
+          do_QueryInterface(containerAccessible);
+        if (privateContainerAccessible)
+          privateContainerAccessible->InvalidateChildren();
+      }
+
       // Also fire text changes if the node being created could affect the text in an nsIAccessibleText parent.
       // When a node is being made visible or is inserted, the text in an ancestor hyper text will gain characters
       // At this point we now have the frame and accessible for this node if there is one. That is why we
@@ -1557,8 +1566,10 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
       nsCOMPtr<nsIDOMNode> domNode;
       accessibleEvent->GetDOMNode(getter_AddRefs(domNode));
       if (domNode && domNode != mDOMNode) {
-        nsCOMPtr<nsIAccessible> containerAccessible;
-        GetAccessibleInParentChain(domNode, getter_AddRefs(containerAccessible));
+        if (!containerAccessible)
+          GetAccessibleInParentChain(domNode,
+                                     getter_AddRefs(containerAccessible));
+
         nsCOMPtr<nsIAccessibleTextChangeEvent> textChangeEvent =
           CreateTextChangeEventForNode(containerAccessible, domNode, accessible, PR_TRUE, PR_TRUE);
         if (textChangeEvent) {
@@ -1831,11 +1842,6 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   // and there is always one of those.
 
   if (aChild && !isHiding) {
-    nsCOMPtr<nsPIAccessible> privateContainerAccessible =
-      do_QueryInterface(containerAccessible);
-    if (privateContainerAccessible) {
-      privateContainerAccessible->InvalidateChildren();
-    }
     // Fire EVENT_SHOW, EVENT_MENUPOPUP_START for newly visible content.
     // Fire after a short timer, because we want to make sure the view has been
     // updated to make this accessible content visible. If we don't wait,
