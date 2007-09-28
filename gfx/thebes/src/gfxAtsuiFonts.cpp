@@ -67,6 +67,12 @@
 
 #define ROUND(x) (floor((x) + 0.5))
 
+/* 10.5 SDK includes a funky new definition of FloatToFixed, so reset to old-style definition */
+#ifdef FloatToFixed
+#undef FloatToFixed
+#define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
+#endif
+
 /* We might still need this for fast-pathing, but we'll see */
 #if 0
 OSStatus ATSUGetStyleGroup(ATSUStyle style, void **styleGroup);
