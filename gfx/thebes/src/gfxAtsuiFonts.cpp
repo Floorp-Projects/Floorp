@@ -429,7 +429,7 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
         GetOrMakeFont(fontID, aStyle, &mFonts);
     }
 
-    CreateFontFallbacksFromFontList(&mFonts, &mFallbacks, kATSULastResortOnlyFallback);
+    CreateFontFallbacksFromFontList(&mFonts, &mFallbacks, kATSUSequentialFallbacksExclusive);
 }
 
 PRBool
@@ -443,7 +443,7 @@ gfxAtsuiFontGroup::FindATSUFont(const nsAString& aName,
     gfxQuartzFontCache *fc = gfxQuartzFontCache::SharedFontCache();
     ATSUFontID fontID = fc->FindATSUFontIDForFamilyAndStyle (aName, fontStyle);
 
-    if (fontID != kATSUInvalidFontID) {
+    if (fontID != kATSUInvalidFontID && !fontGroup->HasFont(fontID)) {
         //fprintf (stderr, "..FindATSUFont: %s\n", NS_ConvertUTF16toUTF8(aName).get());
         GetOrMakeFont(fontID, fontStyle, &fontGroup->mFonts);
     }
@@ -671,6 +671,16 @@ gfxAtsuiFontGroup::FindFontFor(ATSUFontID fid)
     }
 
     return GetOrMakeFont(fid, GetStyle(), &mFonts);
+}
+
+PRBool
+gfxAtsuiFontGroup::HasFont(ATSUFontID fid)
+{
+    for (PRUint32 i = 0; i < mFonts.Length(); ++i) {
+        if (fid == static_cast<gfxAtsuiFont *>(mFonts.ElementAt(i).get())->GetATSUFontID())
+            return PR_TRUE;
+    }
+    return PR_FALSE;
 }
 
 /**
@@ -1517,6 +1527,12 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
                 // do we have any more work to do?
                 if (status == noErr)
                     break;
+            }
+
+            if (firstTime && !HasFont(substituteFontID)) {
+                // XXX We are using kATSUSequentialFallbacksExclusive at first time.
+                // But the method uses non-listed font in font fallbacks on 10.4. (ATSUI Reference does not say so...)
+                status = kATSUFontsNotMatched;
             }
 
             // then, handle any chars that were found in the fallback list
