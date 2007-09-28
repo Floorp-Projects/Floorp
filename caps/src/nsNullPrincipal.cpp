@@ -90,6 +90,8 @@ nsNullPrincipal::~nsNullPrincipal()
 {
 }
 
+#define NS_NULLPRINCIPAL_PREFIX NS_NULLPRINCIPAL_SCHEME ":"
+
 nsresult
 nsNullPrincipal::Init()
 {
@@ -106,15 +108,21 @@ nsNullPrincipal::Init()
   char* chars = id.ToString();
   NS_ENSURE_TRUE(chars, NS_ERROR_OUT_OF_MEMORY);
 
-  nsCAutoString str(NS_NULLPRINCIPAL_SCHEME ":");
-  PRUint32 prefixLen = str.Length();
   PRUint32 suffixLen = strlen(chars);
+  PRUint32 prefixLen = NS_ARRAY_LENGTH(NS_NULLPRINCIPAL_PREFIX) - 1;
 
+  // Use an nsCString so we only do the allocation once here and then share
+  // with nsJSPrincipals
+  nsCString str;
+  str.SetCapacity(prefixLen + suffixLen);
+
+  str.Append(NS_NULLPRINCIPAL_PREFIX);
   str.Append(chars);
 
   PR_Free(chars);
   
   if (str.Length() != prefixLen + suffixLen) {
+    NS_WARNING("Out of memory allocating null-principal URI");
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -129,7 +137,7 @@ nsNullPrincipal::Init()
 
   NS_TryToSetImmutable(mURI);
 
-  return mJSPrincipals.Init(this, str.get());
+  return mJSPrincipals.Init(this, str);
 }
 
 /**

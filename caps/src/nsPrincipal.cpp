@@ -103,7 +103,7 @@ nsPrincipal::Release()
 }
 
 nsPrincipal::nsPrincipal()
-  : mCapabilities(7),
+  : mCapabilities(nsnull),
     mSecurityPolicy(nsnull),
     mTrusted(PR_FALSE),
     mInitialized(PR_FALSE),
@@ -134,14 +134,14 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
   if (!aCertFingerprint.IsEmpty()) {
     rv = SetCertificate(aCertFingerprint, aSubjectName, aPrettyName, aCert);
     if (NS_SUCCEEDED(rv)) {
-      rv = mJSPrincipals.Init(this, mCert->fingerprint.get());
+      rv = mJSPrincipals.Init(this, mCert->fingerprint);
     }
   }
   else {
     nsCAutoString spec;
     rv = mCodebase->GetSpec(spec);
     if (NS_SUCCEEDED(rv)) {
-      rv = mJSPrincipals.Init(this, spec.get());
+      rv = mJSPrincipals.Init(this, spec);
     }
   }
 
@@ -153,6 +153,7 @@ nsPrincipal::Init(const nsACString& aCertFingerprint,
 nsPrincipal::~nsPrincipal(void)
 {
   SetSecurityPolicy(nsnull); 
+  delete mCapabilities;
 }
 
 NS_IMETHODIMP
@@ -309,11 +310,13 @@ NS_IMETHODIMP
 nsPrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
 {
   // If this principal is marked invalid, can't enable any capabilities
-  nsCStringKey invalidKey(sInvalid);
-  if (mCapabilities.Exists(&invalidKey)) {
-    *result = nsIPrincipal::ENABLE_DENIED;
+  if (mCapabilities) {
+    nsCStringKey invalidKey(sInvalid);
+    if (mCapabilities->Exists(&invalidKey)) {
+      *result = nsIPrincipal::ENABLE_DENIED;
 
-    return NS_OK;
+      return NS_OK;
+    }
   }
 
   if (!mCert && !mTrusted) {
@@ -353,7 +356,8 @@ nsPrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
     PRInt32 len = space ? space - start : strlen(start);
     nsCAutoString capString(start, len);
     nsCStringKey key(capString);
-    PRInt16 value = (PRInt16)NS_PTR_TO_INT32(mCapabilities.Get(&key));
+    PRInt16 value =
+      mCapabilities ? (PRInt16)NS_PTR_TO_INT32(mCapabilities->Get(&key)) : 0;
     if (value == 0 || value == nsIPrincipal::ENABLE_UNKNOWN) {
       // We don't know whether we can enable this capability,
       // so we should ask the user.
@@ -379,14 +383,18 @@ nsPrincipal::SetCanEnableCapability(const char *capability,
                                     PRInt16 canEnable)
 {
   // If this principal is marked invalid, can't enable any capabilities
+  if (!mCapabilities) {
+    mCapabilities = new nsHashtable(7);  // XXXbz gets bumped up to 16 anyway
+    NS_ENSURE_TRUE(mCapabilities, NS_ERROR_OUT_OF_MEMORY);
+  }
 
   nsCStringKey invalidKey(sInvalid);
-  if (mCapabilities.Exists(&invalidKey)) {
+  if (mCapabilities->Exists(&invalidKey)) {
     return NS_OK;
   }
 
   if (PL_strcmp(capability, sInvalid) == 0) {
-    mCapabilities.Reset();
+    mCapabilities->Reset();
   }
 
   const char *start = capability;
@@ -395,7 +403,7 @@ nsPrincipal::SetCanEnableCapability(const char *capability,
     int len = space ? space - start : strlen(start);
     nsCAutoString capString(start, len);
     nsCStringKey key(capString);
-    mCapabilities.Put(&key, NS_INT32_TO_PTR(canEnable));
+    mCapabilities->Put(&key, NS_INT32_TO_PTR(canEnable));
     if (!space) {
       break;
     }
@@ -667,7 +675,7 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
                                 PRBool aIsCert,
                                 PRBool aTrusted)
 {
-  NS_PRECONDITION(mCapabilities.Count() == 0,
+  NS_PRECONDITION(!mCapabilities || mCapabilities->Count() == 0,
                   "mCapabilities was already initialized?");
   NS_PRECONDITION(mAnnotations.Length() == 0,
                   "mAnnotations was already initialized?");
@@ -699,7 +707,7 @@ nsPrincipal::InitFromPersistent(const char* aPrefName,
     mOrigin = nsnull;
   }
 
-  rv = mJSPrincipals.Init(this, aToken.get());
+  rv = mJSPrincipals.Init(this, aToken);
   NS_ENSURE_SUCCESS(rv, rv);
 
   //-- Save the preference name
@@ -836,10 +844,12 @@ nsPrincipal::GetPreferences(char** aPrefName, char** aID,
 
   //-- Capabilities
   nsCAutoString grantedListStr, deniedListStr;
-  CapabilityList capList = CapabilityList();
-  capList.granted = &grantedListStr;
-  capList.denied = &deniedListStr;
-  mCapabilities.Enumerate(AppendCapability, (void*)&capList);
+  if (mCapabilities) {
+    CapabilityList capList = CapabilityList();
+    capList.granted = &grantedListStr;
+    capList.denied = &deniedListStr;
+    mCapabilities->Enumerate(AppendCapability, (void*)&capList);
+  }
 
   if (!grantedListStr.IsEmpty()) {
     grantedListStr.Truncate(grantedListStr.Length() - 1);
@@ -910,12 +920,9 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
   PRBool hasCapabilities;
   nsresult rv = aStream->ReadBoolean(&hasCapabilities);
   if (NS_SUCCEEDED(rv) && hasCapabilities) {
-    // We want to use one of the nsHashtable constructors, but don't want to
-    // generally have mCapabilities be a pointer... and nsHashtable has no
-    // reasonable copy-constructor.  Placement-new to the rescue!
-    mCapabilities.~nsHashtable();
-    new (&mCapabilities) nsHashtable(aStream, ReadAnnotationEntry,
-                                     FreeAnnotationEntry, &rv);
+    mCapabilities = new nsHashtable(aStream, ReadAnnotationEntry,
+                                    FreeAnnotationEntry, &rv);
+    NS_ENSURE_TRUE(mCapabilities, NS_ERROR_OUT_OF_MEMORY);
   }
 
   if (NS_FAILED(rv)) {
@@ -1008,10 +1015,10 @@ nsPrincipal::Write(nsIObjectOutputStream* aStream)
   // mAnnotations is transient data associated to specific JS stack frames.  We
   // don't want to serialize that.
   
-  PRBool hasCapabilities = (mCapabilities.Count() > 0);
+  PRBool hasCapabilities = (mCapabilities && mCapabilities->Count() > 0);
   nsresult rv = aStream->WriteBoolean(hasCapabilities);
   if (NS_SUCCEEDED(rv) && hasCapabilities) {
-    rv = mCapabilities.Write(aStream, WriteScalarValue);
+    rv = mCapabilities->Write(aStream, WriteScalarValue);
   }
 
   if (NS_FAILED(rv)) {
