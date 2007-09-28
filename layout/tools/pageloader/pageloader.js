@@ -295,10 +295,11 @@ function plStop(force) {
 
       var formats = reportFormat.split(",");
 
-      for each (var fmt in formats)
-        dumpLine(report.getReport(fmt));
-
-      if (renderReport) {
+      if (!renderReport) {
+        for each (var fmt in formats)
+          dumpLine(report.getReport(fmt));
+      }
+      else {
         dumpLine ("*************** Render report *******************");
         for each (var fmt in formats)
           dumpLine(renderReport.getReport(fmt));
