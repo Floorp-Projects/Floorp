@@ -1005,7 +1005,7 @@ var gApplicationsPane = {
         return this._prefsBundle.getString("saveFile");
 
       case Ci.nsIHandlerInfo.useHelperApp:
-        return aHandlerInfo.preferredApplicationHandler.name;
+        return getDisplayNameForFile(aHandlerInfo.preferredApplicationHandler.executable);
 
       case Ci.nsIHandlerInfo.handleInternally:
         // For the feed type, handleInternally means live bookmarks.
@@ -1150,7 +1150,10 @@ var gApplicationsPane = {
 
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("action", Ci.nsIHandlerInfo.useHelperApp);
-      menuItem.setAttribute("label", possibleApp.name);
+      if (possibleApp instanceof Ci.nsILocalHandlerApp)
+        menuItem.setAttribute("label", getDisplayNameForFile(possibleApp.executable));
+      else
+        menuItem.setAttribute("label", possibleApp.name);
       menuItem.setAttribute("image", this._getIconURLForHandlerApp(possibleApp));
 
       // Attach the handler app object to the menu item so we can use it
