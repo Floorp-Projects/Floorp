@@ -1160,6 +1160,14 @@ var gApplicationsPane = {
         menu.selectedItem = menuItem;
     }
 
+    // Create a menu item for selecting a local application.
+    {
+      let menuItem = document.createElementNS(kXULNS, "menuitem");
+      menuItem.setAttribute("oncommand", "gApplicationsPane.chooseApp(event)");
+      menuItem.setAttribute("label", this._prefsBundle.getString("chooseApp"));
+      menuPopup.appendChild(menuItem);
+    }
+
     // Create a menu item for saving to disk.
     // Note: this option isn't available to protocol types, since we don't know
     // what it means to save a URL having a certain scheme to disk, nor is it
@@ -1178,13 +1186,6 @@ var gApplicationsPane = {
         menu.selectedItem = menuItem;
     }
 
-    // Create a menu item for selecting a local application.
-    {
-      let menuItem = document.createElementNS(kXULNS, "menuitem");
-      menuItem.setAttribute("oncommand", "gApplicationsPane.chooseApp(event)");
-      menuItem.setAttribute("label", this._prefsBundle.getString("chooseApp"));
-      menuPopup.appendChild(menuItem);
-    }
   },
 
 
