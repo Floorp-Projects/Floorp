@@ -88,6 +88,7 @@
 #include "nsIParserFilter.h"
 #include "nsCOMArray.h"
 #include "nsIUnicharStreamListener.h"
+#include "nsCycleCollectionParticipant.h"
 
 class nsIDTD;
 class nsScanner;
@@ -114,8 +115,8 @@ class nsParser : public nsIParser,
      */
     static void Shutdown();
 
-    NS_DECL_ISUPPORTS
-
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsParser, nsIParser)
 
     /**
      * default constructor

@@ -1074,6 +1074,7 @@ function FeedProcessor() {
   this._result = null;
   this._extensionHandler = null;
   this._xhtmlHandler = null;
+  this._haveSentResult = false;
   
   // http://www.w3.org/WAI/PF/GUI/ uses QNames in content :(
   this._waiPrefixes = {};
@@ -1262,6 +1263,7 @@ FeedProcessor.prototype = {
   // When we're done with the feed, let the listener know what
   // happened.
   _sendResult: function FP_sendResult() {
+    this._haveSentResult = true;
     try {
       // Can be null when a non-feed is fed to us
       if (this._result.doc)
@@ -1331,7 +1333,8 @@ FeedProcessor.prototype = {
   fatalError: function FP_reportError() {
     this._result.bozo = true;
     //XXX need to QI to FeedProgressListener
-    this._sendResult();
+    if (!this._haveSentResult)
+      this._sendResult();
   },
 
   // nsISAXContentHandler
@@ -1341,7 +1344,8 @@ FeedProcessor.prototype = {
   },
 
   endDocument: function FP_endDocument() {
-    this._sendResult();
+    if (!this._haveSentResult)
+      this._sendResult();
   },
 
   // The transitions defined above identify elements that contain more
