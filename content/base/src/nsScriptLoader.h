@@ -47,6 +47,8 @@
 #include "nsIScriptElement.h"
 #include "nsIURI.h"
 #include "nsCOMArray.h"
+#include "nsTArray.h"
+#include "nsAutoPtr.h"
 #include "nsIDocument.h"
 #include "nsIStreamLoader.h"
 
@@ -202,11 +204,26 @@ protected:
    */
   virtual void ProcessPendingRequestsAsync();
 
-  PRBool ReadyToExecuteScripts()
+  /**
+   * If true, the loader is ready to execute scripts, and so are all its
+   * ancestors.  If the loader itself is ready but some ancestor is not, this
+   * function will add an execute blocker and ask the ancestor to remove it
+   * once it becomes ready.
+   */
+  PRBool ReadyToExecuteScripts();
+
+  /**
+   * Return whether just this loader is ready to execute scripts.
+   */
+  PRBool SelfReadyToExecuteScripts()
   {
     return mEnabled && !mBlockerCount;
   }
 
+  PRBool AddPendingChildLoader(nsScriptLoader* aChild) {
+    return mPendingChildLoaders.AppendElement(aChild) != nsnull;
+  }
+  
   nsresult ProcessRequest(nsScriptLoadRequest* aRequest);
   void FireScriptAvailable(nsresult aResult,
                            nsScriptLoadRequest* aRequest);
@@ -225,6 +242,8 @@ protected:
   nsCOMArray<nsIScriptLoaderObserver> mObservers;
   nsCOMArray<nsScriptLoadRequest> mPendingRequests;
   nsCOMPtr<nsIScriptElement> mCurrentScript;
+  // XXXbz do we want to cycle-collect these or something?  Not sure.
+  nsTArray< nsRefPtr<nsScriptLoader> > mPendingChildLoaders;
   PRUint32 mBlockerCount;
   PRPackedBool mEnabled;
   PRPackedBool mHadPendingScripts;
