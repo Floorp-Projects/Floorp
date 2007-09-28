@@ -22,6 +22,7 @@ function test() {
   // The known version number changes too frequently to hardcode in
   ok(inspector.version, "Check 'Extension.version' for known extension");
   ok(inspector.firstRun, "Check 'Extension.firstRun' for known extension");
+  ok(inspector.enabled, "Check 'Extension.enabled' for known extension");
   
   // test to see if extension find works
   is(Application.extensions.all.length, 1, "Check a find for all extensions");

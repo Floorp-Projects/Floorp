@@ -285,6 +285,11 @@ interface fuelIExtension : nsISupports
   readonly attribute AString name;
   
   /**
+   * Check if the extension is currently enabled, or not.
+   */
+  readonly attribute boolean enabled;
+  
+  /**
    * The version number of the extension.
    */
   readonly attribute AString version;
