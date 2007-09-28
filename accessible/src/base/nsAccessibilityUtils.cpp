@@ -585,7 +585,7 @@ nsAccUtils::FindNeighbourPointingToNode(nsIContent *aForNode,
 {
   NS_ASSERTION(aAriaProperty == eAria_none || !aRelationAttr,
                "Cannot pass in both an ARIA relation property and an atom relation. Choose one");
-  NS_ASSERTION(aAriaProperty != eAria_none || !aTagName,
+  NS_ASSERTION(aAriaProperty == eAria_none || !aTagName,
                "Cannot use aTagName with ARIA relation property, because ARIA relations apply to any tag");
   nsCOMPtr<nsIContent> binding;
   nsAutoString controlID;
