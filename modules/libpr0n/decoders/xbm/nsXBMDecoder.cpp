@@ -55,9 +55,19 @@
 #include "nsIProperties.h"
 #include "nsISupportsPrimitives.h"
 
+#include "gfxColor.h"
+#include "nsIImage.h"
+#include "nsIInterfaceRequestorUtils.h"
+
+// Static colormap
+static const PRUint32 kColors[2] = {
+    GFX_PACKED_PIXEL(0, 0, 0, 0),     // Transparent 
+    GFX_PACKED_PIXEL(255, 0, 0, 0)    // Black
+};
+
 NS_IMPL_ISUPPORTS1(nsXBMDecoder, imgIDecoder)
 
-nsXBMDecoder::nsXBMDecoder() : mBuf(nsnull), mPos(nsnull), mAlphaRow(nsnull)
+nsXBMDecoder::nsXBMDecoder() : mBuf(nsnull), mPos(nsnull), mImageData(nsnull)
 {
 }
 
@@ -65,9 +75,6 @@ nsXBMDecoder::~nsXBMDecoder()
 {
     if (mBuf)
         free(mBuf);
-
-    if (mAlphaRow)
-        free(mAlphaRow);
 }
 
 NS_IMETHODIMP nsXBMDecoder::Init(imgILoad *aLoad)
@@ -87,28 +94,18 @@ NS_IMETHODIMP nsXBMDecoder::Init(imgILoad *aLoad)
 
     mCurRow = mBufSize = mWidth = mHeight = 0;
     mState = RECV_HEADER;
-    mHasNoAlpha = PR_TRUE;
 
     return NS_OK;
 }
 
 NS_IMETHODIMP nsXBMDecoder::Close()
 {
-    if (mHasNoAlpha) {
-        nsCOMPtr<nsIImage> img(do_GetInterface(mFrame));
-        img->SetHasNoAlpha();
-    }
-
     mObserver->OnStopContainer(nsnull, mImage);
     mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
     mObserver = nsnull;
     mImage = nsnull;
     mFrame = nsnull;
-
-    if (mAlphaRow) {
-        free(mAlphaRow);
-        mAlphaRow = nsnull;
-    }
+    mImageData = nsnull;
 
     return NS_OK;
 }
@@ -206,19 +203,8 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
             }
         }
 
-        mImage->AppendFrame(mFrame);
-        mObserver->OnStartFrame(nsnull, mFrame);
-
-        PRUint32 bpr;
-        mFrame->GetImageBytesPerRow(&bpr);
-        PRUint32 abpr;
-        mFrame->GetAlphaBytesPerRow(&abpr);
-
-        mAlphaRow = (PRUint8*)malloc(abpr);
-        if (!mAlphaRow) {
-          mState = RECV_DONE;
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
+        PRUint32 imageLen;
+        mFrame->GetImageData((PRUint8**)&mImageData, &imageLen);
 
         mState = RECV_SEEK;
 
@@ -236,12 +222,8 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
         }
     }
     if (mState == RECV_DATA) {
-        PRUint32 bpr;
-        mFrame->GetImageBytesPerRow(&bpr);
-        PRUint32 abpr;
-        mFrame->GetAlphaBytesPerRow(&abpr);
-        PRBool hiByte = PR_TRUE;
-        PRBool chunkHasNoAlpha = PR_TRUE;
+        nsCOMPtr<nsIImage> img = do_GetInterface(mFrame);
+        PRUint32 *ar = mImageData + mCurRow * mWidth + mCurCol;
 
         do {
             PRUint32 pixel = strtoul(mPos, &endPtr, 0);
@@ -257,53 +239,39 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
             if (!*endPtr) {
                 // Need more data
                 return NS_OK;
-            } else if (*endPtr != ',') {
+            }
+            if (*endPtr != ',') {
                 *endPtr = '\0';
                 mState = RECV_DONE;  // strange character (or ending '}')
+            } else {
+                // Skip the comma
+                endPtr++;
             }
-            if (!mIsX10 || !hiByte)
-                mPos = endPtr; // go to next value only when done with this one
-            if (mIsX10) {
-                // handle X10 flavor short values
-                if (hiByte)
-                    pixel >>= 8;
-                hiByte = !hiByte;
+            mPos = endPtr;
+            PRUint32 numPixels = 8;
+            if (mIsX10) { // X10 use 16bits values, but bytes are swapped
+                pixel = (pixel >> 8) | ((pixel&0xFF) << 8);
+                numPixels = 16;
             }
-
-            PRUint32 *ar = ((PRUint32*)mAlphaRow) + mCurCol;
-            const int alphas = PR_MIN(8, mWidth - mCurCol);
-            for (int i = 0; i < alphas; i++) {
-                const PRUint8 val = ((pixel & (1 << i)) >> i) ? 255 : 0;
-                *ar++ = (val << 24) | 0;
-                if (val == 0)
-                    chunkHasNoAlpha = PR_FALSE;
+            numPixels = PR_MIN(numPixels, mWidth - mCurCol);
+            for (PRUint32 i = numPixels; i > 0; --i) {
+                *ar++ = kColors[pixel & 1];
+                pixel >>= 1;
             }
-
-            mCurCol = PR_MIN(mCurCol + 8, mWidth);
+            mCurCol += numPixels;
             if (mCurCol == mWidth || mState == RECV_DONE) {
-                mFrame->SetImageData(mAlphaRow, abpr, mCurRow * abpr);
-
                 nsIntRect r(0, mCurRow, mWidth, 1);
+                img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
                 mObserver->OnDataAvailable(nsnull, mFrame, &r);
 
-                if ((mCurRow + 1) == mHeight) {
+                mCurRow++;
+                if (mCurRow == mHeight) {
                     mState = RECV_DONE;
                     return mObserver->OnStopFrame(nsnull, mFrame);
                 }
-                mCurRow++;
                 mCurCol = 0;
             }
-
-            // Skip the comma
-            NS_ASSERTION(mState != RECV_DATA || *mPos == ',' ||
-                         (mIsX10 && hiByte),
-                         "Must be a comma");
-            if (*mPos == ',')
-                mPos++;
         } while ((mState == RECV_DATA) && *mPos);
-
-        if (!chunkHasNoAlpha)
-            mHasNoAlpha = PR_FALSE;
     }
 
     return NS_OK;
