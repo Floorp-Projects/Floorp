@@ -3085,7 +3085,7 @@ NS_IMETHODIMP nsAccessible::GetObject(PRInt32 aIndex,
 NS_IMETHODIMP nsAccessible::IsValid(PRBool *aIsValid)
 {
   PRUint32 state = State(this);
-  *aIsValid = (state & nsIAccessibleStates::STATE_INVALID) != 0;
+  *aIsValid = (0 == (state & nsIAccessibleStates::STATE_INVALID));
   // XXX In order to implement this we would need to follow every link
   // Perhaps we can get information about invalid links from the cache
   // In the mean time authors can use role="wairole:link" aaa:invalid="true"
