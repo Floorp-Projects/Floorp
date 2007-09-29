@@ -63,10 +63,6 @@
 #endif
 #include "prlink.h"  // for PRLibrary
 
-#if defined (MOZ_WIDGET_GTK2)
-#include <gtk/gtk.h>
-#endif
-
 ////////////////////////////////////////////////////////////////////////
 
 class ns4xPluginStreamListener;
@@ -173,14 +169,6 @@ protected:
      * and is common for all plugins of the class.
      */
     NPPluginFuncs* fCallbacks;
-
-#if defined (MOZ_WIDGET_GTK2)
-   /**
-    * Special GtkXtBin widget that encapsulates the Xt toolkit
-    * within a Gtk Application
-    */
-   GtkWidget *mXtBin;
-#endif
 
     /**
      * The 4.x-style structure used to communicate between the plugin

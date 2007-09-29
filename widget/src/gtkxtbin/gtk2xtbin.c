@@ -413,11 +413,17 @@ gtk_xtbin_resize (GtkWidget *widget,
   printf("gtk_xtbin_resize %p %d %d\n", (void *)widget, width, height);
 #endif
 
+  xtbin->height = height;
+  xtbin->width  = width;
+
+  // Avoid BadValue errors in XtSetValues
+  if (height <= 0 || width <=0) {
+    height = 1;
+    width = 1;
+  }
   XtSetArg(args[0], XtNheight, height);
   XtSetArg(args[1], XtNwidth,  width);
   XtSetValues(xtbin->xtclient.top_widget, args, 2);
-  xtbin->height = height;
-  xtbin->width  = width;
 
   /* we need to send a size allocate so the socket knows about the
      size changes */
