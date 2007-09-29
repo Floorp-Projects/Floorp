@@ -568,15 +568,15 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
     // If we have a scale, I think we've already lost; so don't round
     // anything here
     CGContextConcatCTM(cgContext,
-                       CGAffineTransformMake(mat.xx, mat.xy,
-                                             mat.yx, mat.yy,
+                       CGAffineTransformMake(mat.xx, mat.yx,
+                                             mat.xy, mat.yy,
                                              mat.x0, mat.y0));
   } else {
     // Otherwise, we round the x0/y0, because otherwise things get rendered badly
     // XXX how should we be rounding the x0/y0?
     CGContextConcatCTM(cgContext,
-                       CGAffineTransformMake(mat.xx, mat.xy,
-                                             mat.yx, mat.yy,
+                       CGAffineTransformMake(mat.xx, mat.yx,
+                                             mat.xy, mat.yy,
                                              floor(mat.x0 + 0.5),
                                              floor(mat.y0 + 0.5)));
   }
@@ -585,6 +585,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   if (1 /*aWidgetType == NS_THEME_TEXTFIELD*/) {
     fprintf(stderr, "Native theme drawing widget %d [%p] dis:%d in rect [%d %d %d %d]\n",
             aWidgetType, aFrame, IsDisabled(aFrame), aRect.x, aRect.y, aRect.width, aRect.height);
+    fprintf(stderr, "Cairo matrix: [%f %f %f %f %f %f]\n",
+            mat.xx, mat.yx, mat.xy, mat.yy, mat.x0, mat.y0);
     fprintf(stderr, "Native theme xform[0]: [%f %f %f %f %f %f]\n",
             mm0.a, mm0.b, mm0.c, mm0.d, mm0.tx, mm0.ty);
     CGAffineTransform mm = CGContextGetCTM(cgContext);
