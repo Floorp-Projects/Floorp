@@ -110,9 +110,23 @@ BookmarksSyncService.prototype = {
   // DAVCollection object
   _dav: null,
 
-  // Last synced tree and version
+  // Last synced tree, version, and GUID (to detect if the store has
+  // been completely replaced and invalidate the snapshot)
   _snapshot: {},
   _snapshotVersion: 0,
+
+  __snapshotGuid: null,
+  get _snapshotGuid() {
+    if (!this.__snapshotGuid) {
+      let uuidgen = Cc["@mozilla.org/uuid-generator;1"].
+        getService(Ci.nsIUUIDGenerator);
+      this.__snapshotGuid = uuidgen.generateUUID().toString().replace(/[{}]/g, '');
+    }
+    return this.__snapshotGuid;
+  },
+  set _snapshotGuid(guid) {
+    this.__snapshotGuid = guid;
+  },
 
   get currentUser() {
     return this._dav.currentUser;
@@ -172,7 +186,9 @@ BookmarksSyncService.prototype = {
     let flags = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
     fos.init(file, flags, PERMS_FILE, 0);
 
-    let out = {version: this._snapshotVersion, snapshot: this._snapshot};
+    let out = {version: this._snapshotVersion,
+               guid: this._snapshotGuid,
+               snapshot: this._snapshot};
     out = uneval(out);
     fos.write(out, out.length);
     fos.close();
@@ -202,9 +218,10 @@ BookmarksSyncService.prototype = {
     fis.close();
     json = eval(json);
 
-    if (json.snapshot && json.version) {
+    if (json && json.snapshot && json.version && json.guid) {
       this._snapshot = json.snapshot;
       this._snapshotVersion = json.version;
+      this._snapshotGuid = json.guid;
     }
   },
 
@@ -699,8 +716,9 @@ BookmarksSyncService.prototype = {
 
       this.notice("Server status: " + server.status);
       this.notice("Server version: " + server.version);
-      this.notice("Server version type: " + typeof server.version);
+      this.notice("Server guid: " + server.guid);
       this.notice("Local snapshot version: " + this._snapshotVersion);
+      this.notice("Local snapshot guid: " + this._snapshotGuid);
 
       for (version in server.deltas) {
         this.notice("Server delta " + version + ":\n" +
@@ -715,6 +733,13 @@ BookmarksSyncService.prototype = {
         this._os.notifyObservers(null, "bookmarks-sync:end", "");
         this.notice("Sync error");
         return;
+      }
+
+      if (this._snapshotGuid != server.guid) {
+        this.notice("Snapshot GUIDs differ, local snapshot is not valid");
+        this._snapshot = {};
+        this._snapshotVersion = -1;
+        this._snapshotGuid = server.guid;
       }
 
       // 2) Generate local deltas from snapshot -> current client status
@@ -799,7 +824,9 @@ BookmarksSyncService.prototype = {
         this._snapshot = this._getBookmarks();
         this._snapshotVersion = server['version'] + 1;
         server['deltas']['version ' + this._snapshotVersion] = serverChanges;
-        this._dav.PUT("bookmarks.delta", uneval(server['deltas']), handlers);
+
+        let out = {guid: this._snapshotGuid, deltas: server['deltas']};
+        this._dav.PUT("bookmarks.delta", uneval(out), handlers);
         data = yield;
 
         if (data.target.status >= 200 || data.target.status < 300) {
@@ -830,6 +857,9 @@ BookmarksSyncService.prototype = {
    *      2: ok, initial sync
    *   version:
    *     the latest version on the server
+   *   guid:
+   *     the guid that was created when the first snapshot was uploaded
+   *     (will only change if the server store is completely wiped)
    *   deltas:
    *     the individual deltas on the server
    *   updates:
@@ -840,7 +870,8 @@ BookmarksSyncService.prototype = {
     var generator = yield;
     var handlers = this._handlersForGenerator(generator);
 
-    var ret = {status: -1, version: -1, deltas: null, updates: null};
+    var ret = {status: -1, version: -1,
+      guid: null, deltas: null, updates: null};
 
     this.notice("Getting bookmarks delta from server");
     this._dav.GET("bookmarks.delta", handlers);
@@ -850,7 +881,9 @@ BookmarksSyncService.prototype = {
     case 200:
       this.notice("Got bookmarks delta from server");
 
-      ret.deltas = eval(data.target.responseText);
+      let resp = eval(data.target.responseText);
+      ret.guid = resp.guid;
+      ret.deltas = resp.deltas;
 
       let next = "version " + (this._snapshotVersion + 1);
       let cur = "version " + this._snapshotVersion;
@@ -858,7 +891,7 @@ BookmarksSyncService.prototype = {
       if (next in ret.deltas) {
         // Merge the matching deltas into one, find highest version
         let keys = [];
-        for (var vstr in ret.deltas) {
+        for (let vstr in ret.deltas) {
           let v = parseInt(vstr.replace(/^version /, ''));
           if (v > this._snapshotVersion)
             keys.push(vstr);
@@ -898,7 +931,7 @@ BookmarksSyncService.prototype = {
 
         // fixme: this is duplicated from above, need to do some refactoring
         let keys = [];
-        for (var vstr in ret.deltas) {
+        for (let vstr in ret.deltas) {
           let v = parseInt(vstr.replace(/^version /, ''));
           if (v > this._snapshotVersion)
             keys.push(vstr);
@@ -916,8 +949,9 @@ BookmarksSyncService.prototype = {
         ret.status = data.status;
         ret.updates = this._detectUpdates(this._snapshot, tmp);
         ret.version = data.version;
+        ret.guid = data.guid;
 
-        for (var vstr in ret.deltas) {
+        for (let vstr in ret.deltas) {
           let v = parseInt(vstr.replace(/^version /, ''));
           if (v > ret.version)
             ret.version = v;
@@ -950,7 +984,7 @@ BookmarksSyncService.prototype = {
     let generator = yield;
     let handlers = this._handlersForGenerator(generator);
 
-    var ret = {status: -1, version: -1, updates: null};
+    var ret = {status: -1, version: -1, guid: null, updates: null};
 
     this._dav.GET("bookmarks.json", handlers);
     data = yield;
@@ -962,6 +996,7 @@ BookmarksSyncService.prototype = {
       ret.status = 1;
       ret.updates = this._detectUpdates(this._snapshot, tmp.snapshot);
       ret.version = tmp.version;
+      ret.guid = tmp.guid;
       if (typeof ret.version != "number")
         this.notice("Error: version is not a number!  Full server response text:\n" +
                     data.target.responseText);
@@ -971,7 +1006,10 @@ BookmarksSyncService.prototype = {
 
       this._snapshot = localJson;
       this._snapshotVersion = 1;
-      this._dav.PUT("bookmarks.json", uneval({version: 1, snapshot: this._snapshot}), handlers);
+      this._dav.PUT("bookmarks.json", uneval({version: 1,
+                                              guid: this._snapshotGuid,
+                                              snapshot: this._snapshot}),
+                    handlers);
       data = yield;
 
       if (data.target.status >= 200 || data.target.status < 300) {
