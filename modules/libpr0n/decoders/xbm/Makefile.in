@@ -50,10 +50,11 @@ MODULE_NAME     = nsXBMModule
 LIBXUL_LIBRARY  = 1
 
 REQUIRES	= xpcom \
-		  gfx \
-		  imglib2 \
-		  thebes \
-		  $(NULL)
+			  string \
+			  gfx \
+			  thebes \
+			  imglib2 \
+			  $(NULL)
 
 CPPSRCS        = nsXBMDecoder.cpp
 
