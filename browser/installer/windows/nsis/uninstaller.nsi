@@ -35,7 +35,9 @@
 # ***** END LICENSE BLOCK *****
 
 # Required Plugins:
-# ShellLink plugin http://nsis.sourceforge.net/ShellLink_plug-in
+# SetVistaDefaultApp http://nsis.sourceforge.net/SetVistaDefaultApp_plug-in
+# ShellLink          http://nsis.sourceforge.net/ShellLink_plug-in
+# UAC                http://nsis.sourceforge.net/UAC_plug-in
 
 ; Set verbosity to 3 (e.g. no script) to lessen the noise in the build logs
 !verbose 3
@@ -47,6 +49,9 @@ SetCompress off
 CRCCheck on
 
 !addplugindir ./
+
+; USE_UAC_PLUGIN is temporary until Thunderbird has been updated to use the UAC plugin
+!define USE_UAC_PLUGIN
 
 ; prevents compiling of the reg write logging.
 !define NO_LOG
@@ -67,14 +72,13 @@ Var TmpVal
 ; available.
 !include /NONFATAL WinVer.nsh
 !ifdef ___WINVER__NSH___
-  RequestExecutionLevel admin
+  RequestExecutionLevel user
 !else
   !warning "Uninstaller will be created without Vista compatibility.$\n            \
             Upgrade your NSIS installation to at least version 2.22 to resolve."
 !endif
 
 !insertmacro StrFilter
-!insertmacro WordFind
 !insertmacro WordReplace
 
 !insertmacro un.GetParent
@@ -92,9 +96,12 @@ Var TmpVal
 ; post update cleanup.
 VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
 
-!insertmacro AddHandlerValues
+!insertmacro AddDDEHandlerValues
 !insertmacro CleanVirtualStore
 !insertmacro GetLongPath
+!insertmacro GetPathFromString
+!insertmacro IsHandlerForInstallDir
+!insertmacro RegCleanAppHandler
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
 !insertmacro WriteRegDWORD2
@@ -105,8 +112,11 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
 !insertmacro un.GetSecondInstallPath
 !insertmacro un.ManualCloseAppPrompt
 !insertmacro un.ParseUninstallLog
+!insertmacro un.RegCleanAppHandler
+!insertmacro un.RegCleanFileHandler
 !insertmacro un.RegCleanMain
 !insertmacro un.RegCleanUninstall
+!insertmacro un.RegCleanProtocolHandler
 !insertmacro un.RemoveQuotesFromPath
 
 !include shared.nsh
@@ -152,13 +162,13 @@ ShowUnInstDetails nevershow
 !insertmacro MUI_UNPAGE_INSTFILES
 
 ; Finish Page
+
+; Don't setup the survey controls, functions, etc. when the application has
+; defined NO_UNINSTALL_SURVEY
+!ifndef NO_UNINSTALL_SURVEY
 !define MUI_PAGE_CUSTOMFUNCTION_PRE un.preFinish
 !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
 !define MUI_FINISHPAGE_SHOWREADME ""
-
-; Setup the survey controls, functions, etc. except when the application has
-; defined NO_UNINSTALL_SURVEY
-!ifndef NO_UNINSTALL_SURVEY
 !define MUI_FINISHPAGE_SHOWREADME_TEXT $(SURVEY_TEXT)
 !define MUI_FINISHPAGE_SHOWREADME_FUNCTION un.Survey
 !endif
@@ -191,16 +201,39 @@ Section "Uninstall"
     ClearErrors
   ${EndIf}
 
-  ; Remove registry entries for non-existent apps and for apps that point to our
-  ; install location in the Software\Mozilla key and uninstall registry entries
-  ; that point to our install location for both HKCU and HKLM.
-  SetShellVarContext current  ; Sets SHCTX to HKCU
+  SetShellVarContext current  ; Set SHCTX to HKCU
   ${un.RegCleanMain} "Software\Mozilla"
   ${un.RegCleanUninstall}
 
-  SetShellVarContext all  ; Sets SHCTX to HKLM
-  ${un.RegCleanMain} "Software\Mozilla"
-  ${un.RegCleanUninstall}
+  ClearErrors
+  WriteRegStr HKLM "Software\Mozilla\InstallerTest" "InstallerTest" "Test"
+  ${If} ${Errors}
+    StrCpy $TmpVal "HKCU" ; used primarily for logging
+  ${Else}
+    SetShellVarContext all  ; Set SHCTX to HKLM
+    DeleteRegKey HKLM "Software\Mozilla\InstallerTest"
+    StrCpy $TmpVal "HKLM" ; used primarily for logging
+    ${un.RegCleanMain} "Software\Mozilla"
+    ${un.RegCleanUninstall}
+  ${EndIf}
+
+  ${un.RegCleanAppHandler} "FirefoxURL"
+  ${un.RegCleanAppHandler} "FirefoxHTML"
+  ${un.RegCleanProtocolHandler} "ftp"
+  ${un.RegCleanProtocolHandler} "http"
+  ${un.RegCleanProtocolHandler} "https"
+
+  ClearErrors
+  ReadRegStr $R9 HKCR "FirefoxHTML" ""
+  ; Don't clean up the file handlers if the FirefoxHTML key still exists since
+  ; there should be a second installation that may be the default file handler
+  ${If} ${Errors}
+    ${un.RegCleanFileHandler}  ".htm"   "FirefoxHTML"
+    ${un.RegCleanFileHandler}  ".html"  "FirefoxHTML"
+    ${un.RegCleanFileHandler}  ".shtml" "FirefoxHTML"
+    ${un.RegCleanFileHandler}  ".xht"   "FirefoxHTML"
+    ${un.RegCleanFileHandler}  ".xhtml" "FirefoxHTML"
+  ${EndIf}
 
   SetShellVarContext all  ; Set SHCTX to HKLM
   ${un.GetSecondInstallPath} "Software\Mozilla" $R9
@@ -222,9 +255,6 @@ Section "Uninstall"
   ; default browser. Now the key is always updated on install but it is only
   ; removed if it refers to this install location.
   ${If} "$INSTDIR" == "$R1"
-    ; XXXrstrong - if there is another installation of the same app ideally we
-    ; would just modify these values. The GetSecondInstallPath macro could be
-    ; made to provide enough information to do this.
     DeleteRegKey HKLM "Software\Clients\StartMenuInternet\${FileMainEXE}"
     DeleteRegValue HKLM "Software\RegisteredApplications" "${AppRegName}"
   ${EndIf}
@@ -236,8 +266,9 @@ Section "Uninstall"
     StrCpy $0 "Software\Microsoft\MediaPlayer\ShimInclusionList\${FileMainEXE}"
     DeleteRegKey HKLM "$0"
     DeleteRegKey HKCU "$0"
-    StrCpy $0 "MIME\Database\Content Type\application/x-xpinstall;app=firefox"
-    DeleteRegKey HKCR "$0"
+    StrCpy $0 "Software\Classes\MIME\Database\Content Type\application/x-xpinstall;app=firefox"
+    DeleteRegKey HKLM "$0"
+    DeleteRegKey HKCU "$0"
   ${Else}
     ReadRegStr $R1 HKLM "$0" ""
     ${un.RemoveQuotesFromPath} "$R1" $R1
@@ -300,7 +331,7 @@ SectionEnd
 ################################################################################
 # Helper Functions
 
-; Setup the survey controls, functions, etc. except when the application has
+; Don't setup the survey controls, functions, etc. when the application has
 ; defined NO_UNINSTALL_SURVEY
 !ifndef NO_UNINSTALL_SURVEY
 Function un.Survey
@@ -340,12 +371,10 @@ Function un.leaveConfirm
   ${EndIf}
 FunctionEnd
 
+!ifndef NO_UNINSTALL_SURVEY
 Function un.preFinish
   ; Do not modify the finish page if there is a reboot pending
   ${Unless} ${RebootFlag}
-!ifdef NO_UNINSTALL_SURVEY
-    !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
-!else
     ; Setup the survey controls, functions, etc.
     StrCpy $TmpVal "SOFTWARE\Microsoft\IE Setup\Setup"
     ClearErrors
@@ -369,12 +398,13 @@ Function un.preFinish
         !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "cancelenabled" "0"
       ${EndIf}
     ${EndIf}
-!endif
   ${EndUnless}
 FunctionEnd
+!endif
 
 ################################################################################
 # Initialization Functions
+
 Function .onInit
   ${UninstallOnInitCommon}
 FunctionEnd

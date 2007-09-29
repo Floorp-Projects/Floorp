@@ -701,22 +701,6 @@ nsXULAppInfo::LaunchAppHelperWithArgs(int aArgc, char **aArgv)
 }
 
 NS_IMETHODIMP
-nsXULAppInfo::FixReg()
-{
-  int resetRegArgc = 2;
-  char **resetRegArgv = (char**) malloc(sizeof(char*) * (resetRegArgc + 1));
-  if (!resetRegArgv)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  resetRegArgv[0] = "argv0ignoredbywinlaunchchild";
-  resetRegArgv[1] = "/fixreg";
-  resetRegArgv[2] = nsnull;
-  nsresult rv = LaunchAppHelperWithArgs(resetRegArgc, resetRegArgv);
-  free(resetRegArgv);
-  return rv;
-}
-
-NS_IMETHODIMP
 nsXULAppInfo::PostUpdate(nsILocalFile *aLogFile)
 {
   nsresult rv;

@@ -1260,6 +1260,7 @@
 
 /**
  * Writes common registry values for a handler using SHCTX.
+ *
  * @param   _KEY
  *          The subkey in relation to the key root.
  * @param   _VALOPEN
@@ -1397,6 +1398,162 @@
   !endif
 !macroend
 
+/**
+ * Writes common registry values for a handler that uses DDE using SHCTX.
+ *
+ * @param   _KEY
+ *          The key name in relation to the HKCR root. SOFTWARE\Classes is
+ *          prefixed to this value when using SHCTX.
+ * @param   _VALOPEN
+ *          The path and args to launch the application.
+ * @param   _VALICON
+ *          The path to an exe that contains an icon and the icon resource id.
+ * @param   _DISPNAME
+ *          The display name for the handler. If emtpy no value will be set.
+ * @param   _ISPROTOCOL
+ *          Sets protocol handler specific registry values when "true".
+ * @param   _DDE_APPNAME
+ *          Sets DDE specific registry values when not an empty string.
+ *
+ * $R0 = storage for SOFTWARE\Classes
+ * $R1 = string value of the current registry key path.
+ * $R2 = _KEY
+ * $R3 = _VALOPEN
+ * $R4 = _VALICON
+ * $R5 = _DISPNAME
+ * $R6 = _ISPROTOCOL
+ * $R7 = _DDE_APPNAME
+ * $R8 = _DDE_DEFAULT
+ * $R9 = _DDE_TOPIC
+ */
+!macro AddDDEHandlerValues
+
+  !ifndef ${_MOZFUNC_UN}AddDDEHandlerValues
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}AddDDEHandlerValues "!insertmacro ${_MOZFUNC_UN}AddDDEHandlerValuesCall"
+
+    Function ${_MOZFUNC_UN}AddDDEHandlerValues
+      Exch $R9
+      Exch 1
+      Exch $R8
+      Exch 2
+      Exch $R7
+      Exch 3
+      Exch $R6
+      Exch 4
+      Exch $R5
+      Exch 5
+      Exch $R4
+      Exch 6
+      Exch $R3
+      Exch 7
+      Exch $R2
+      Push $R1
+      Push $R0
+
+      StrCpy $R0 "SOFTWARE\Classes"
+      StrCmp "$R5" "" +6 +1
+      ReadRegStr $R1 SHCTX "$R2" "FriendlyTypeName"
+
+      StrCmp "$R1" "" +1 +3
+      WriteRegStr SHCTX "$R0\$R2" "" "$R5"
+      WriteRegStr SHCTX "$R0\$R2" "FriendlyTypeName" "$R5"
+
+      StrCmp "$R6" "true" +1 +8
+      WriteRegStr SHCTX "$R0\$R2" "URL Protocol" ""
+      StrCpy $R1 ""
+      ClearErrors
+      ReadRegDWord $R1 SHCTX "$R0\$R2" "EditFlags"
+      StrCmp $R1 "" +1 +3  ; Only add EditFlags if a value doesn't exist
+      DeleteRegValue SHCTX "$R0\$R2" "EditFlags"
+      WriteRegDWord SHCTX "$R0\$R2" "EditFlags" 0x00000002
+      
+      StrCmp "$R4" "" +2 +1
+      WriteRegStr SHCTX "$R0\$R2\DefaultIcon" "" "$R4"
+
+      WriteRegStr SHCTX "$R0\$R2\shell\open\command" "" "$R3"
+
+      WriteRegStr SHCTX "$R0\$R2\shell\open\ddeexec" "" "$R8"
+      WriteRegStr SHCTX "$R0\$R2\shell\open\ddeexec" "NoActivateHandler" ""
+      WriteRegStr SHCTX "$R0\$R2\shell\open\ddeexec\Application" "" "$R7"
+      WriteRegStr SHCTX "$R0\$R2\shell\open\ddeexec\Topic" "" "$R9"
+
+      ; The ifexec key may have been added by another application so try to
+      ; delete it to prevent it from breaking this app's shell integration.
+      ; Also, IE 6 and below doesn't remove this key when it sets itself as the
+      ; default handler and if this key exists IE's shell integration breaks.
+      DeleteRegKey HKLM "$R0\$R2\shell\open\ddeexec\ifexec"
+      DeleteRegKey HKCU "$R0\$R2\shell\open\ddeexec\ifexec"
+      ClearErrors
+
+      Pop $R0
+      Pop $R1
+      Exch $R2
+      Exch 7
+      Exch $R3
+      Exch 6
+      Exch $R4
+      Exch 5
+      Exch $R5
+      Exch 4
+      Exch $R6
+      Exch 3
+      Exch $R7
+      Exch 2
+      Exch $R8
+      Exch 1
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro AddDDEHandlerValuesCall _KEY _VALOPEN _VALICON _DISPNAME _ISPROTOCOL _DDE_APPNAME _DDE_DEFAULT _DDE_TOPIC
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Push "${_VALOPEN}"
+  Push "${_VALICON}"
+  Push "${_DISPNAME}"
+  Push "${_ISPROTOCOL}"
+  Push "${_DDE_APPNAME}"
+  Push "${_DDE_DEFAULT}"
+  Push "${_DDE_TOPIC}"
+  Call AddDDEHandlerValues
+  !verbose pop
+!macroend
+
+!macro un.AddDDEHandlerValuesCall _KEY _VALOPEN _VALICON _DISPNAME _ISPROTOCOL _DDE_APPNAME _DDE_DEFAULT _DDE_TOPIC
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Push "${_VALOPEN}"
+  Push "${_VALICON}"
+  Push "${_DISPNAME}"
+  Push "${_ISPROTOCOL}"
+  Push "${_DDE_APPNAME}"
+  Push "${_DDE_DEFAULT}"
+  Push "${_DDE_TOPIC}"
+  Call un.AddDDEHandlerValues
+  !verbose pop
+!macroend
+
+!macro un.AddDDEHandlerValues
+  !ifndef un.AddDDEHandlerValues
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro AddDDEHandlerValues
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
 
 ################################################################################
 # Macros for retrieving existing install paths
@@ -2447,6 +2604,356 @@
 !macroend
 
 /**
+ * Removes an application specific handler registry key under Software\Classes
+ * for both HKCU and HKLM when its open command refers to this install
+ * location or the install location doesn't exist.
+ *
+ * @param   _HANDLER_NAME
+ *          The registry name for the handler.
+ *
+ * $R7 = stores the long path to the $INSTDIR
+ * $R8 = stores the path to the open command's parent directory
+ * $R9 = _HANDLER_NAME
+ */
+!macro RegCleanAppHandler
+
+  !ifndef ${_MOZFUNC_UN}RegCleanAppHandler
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}GetLongPath
+    !insertmacro ${_MOZFUNC_UN_TMP}GetParent
+    !insertmacro ${_MOZFUNC_UN_TMP}GetPathFromString
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}RegCleanAppHandler "!insertmacro ${_MOZFUNC_UN}RegCleanAppHandlerCall"
+
+    Function ${_MOZFUNC_UN}RegCleanAppHandler
+      Exch $R9
+      Push $R8
+      Push $R7
+
+      ClearErrors
+      ReadRegStr $R8 HKCU "Software\Classes\$R9\shell\open\command" ""
+      IfErrors next +1
+      ${${_MOZFUNC_UN}GetPathFromString} "$R8" $R8
+      ${${_MOZFUNC_UN}GetParent} "$R8" $R8
+      IfFileExists "$R8" +3 +1
+      DeleteRegKey HKCU "Software\Classes\$R9"
+      GoTo next
+
+      ${${_MOZFUNC_UN}GetLongPath} "$R8" $R8
+      ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R7
+      StrCmp "$R7" "$R8" +1 next
+      DeleteRegKey HKCU "Software\Classes\$R9"
+
+      next:
+      ReadRegStr $R8 HKLM "Software\Classes\$R9\shell\open\command" ""
+      IfErrors end
+      ${${_MOZFUNC_UN}GetPathFromString} "$R8" $R8
+      ${${_MOZFUNC_UN}GetParent} "$R8" $R8
+      IfFileExists "$R8" +3 +1
+      DeleteRegKey HKLM "Software\Classes\$R9"
+      GoTo end
+
+      ${${_MOZFUNC_UN}GetLongPath} "$R8" $R8
+      ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R7
+      StrCmp "$R7" "$R8" +1 end
+      DeleteRegKey HKLM "Software\Classes\$R9"
+
+      end:
+
+      Pop $R7
+      Pop $R8
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro RegCleanAppHandlerCall _HANDLER_NAME
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_HANDLER_NAME}"
+  Call RegCleanAppHandler
+  !verbose pop
+!macroend
+
+!macro un.RegCleanAppHandlerCall _HANDLER_NAME
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_HANDLER_NAME}"
+  Call un.RegCleanAppHandler
+  !verbose pop
+!macroend
+
+!macro un.RegCleanAppHandler
+  !ifndef un.RegCleanAppHandler
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro RegCleanAppHandler
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * Cleans up the registry for a protocol handler when its open command
+ * refers to this install location. For HKCU the registry key is deleted
+ * and for HKLM the values set by the application are deleted.
+ *
+ * @param   _HANDLER_NAME
+ *          The registry name for the handler.
+ *
+ * $R7 = stores the long path to $INSTDIR
+ * $R8 = stores the the long path to the open command's parent directory
+ * $R9 = _HANDLER_NAME
+ */
+!macro un.RegCleanProtocolHandler
+
+  !ifndef un.RegCleanProtocolHandler
+    !insertmacro un.GetLongPath
+    !insertmacro un.GetParent
+    !insertmacro un.GetPathFromString
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define un.RegCleanProtocolHandler "!insertmacro un.RegCleanProtocolHandlerCall"
+
+    Function un.RegCleanProtocolHandler
+      Exch $R9
+      Push $R8
+      Push $R7
+
+      ReadRegStr $R8 HKCU "Software\Classes\$R9\shell\open\command" ""
+      ${un.GetLongPath} "$INSTDIR" $R7
+
+      StrCmp "$R8" "" next +1
+      ${un.GetPathFromString} "$R8" $R8
+      ${un.GetParent} "$R8" $R8
+      ${un.GetLongPath} "$R8" $R8
+      StrCmp "$R7" "$R8" +1 next
+      DeleteRegKey HKCU "Software\Classes\$R9"
+
+      next:
+      ReadRegStr $R8 HKLM "Software\Classes\$R9\shell\open\command" ""
+      StrCmp "$R8" "" end +1
+      ${un.GetLongPath} "$INSTDIR" $R7
+      ${un.GetPathFromString} "$R8" $R8
+      ${un.GetParent} "$R8" $R8
+      ${un.GetLongPath} "$R8" $R8
+      StrCmp "$R7" "$R8" +1 end
+      DeleteRegValue HKLM "Software\Classes\$R9\DefaultIcon" ""
+      DeleteRegValue HKLM "Software\Classes\$R9\shell\open" ""
+      DeleteRegValue HKLM "Software\Classes\$R9\shell\ddeexec" ""
+      DeleteRegValue HKLM "Software\Classes\$R9\shell\ddeexec\Application" ""
+      DeleteRegValue HKLM "Software\Classes\$R9\shell\ddeexec\Topic" ""
+
+      end:
+
+      Pop $R7
+      Pop $R8
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro un.RegCleanProtocolHandlerCall _HANDLER_NAME
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_HANDLER_NAME}"
+  Call un.RegCleanProtocolHandler
+  !verbose pop
+!macroend
+
+/**
+ * Cleans up the registry for a file handler when the passed in value equals
+ * the default value for the file handler. For HKCU the registry key is deleted
+ * and for HKLM the default value is deleted.
+ *
+ * @param   _HANDLER_NAME
+ *          The registry name for the handler.
+ * @param   _DEFAULT_VALUE
+ *          The value to check for against the handler's default value.
+ *
+ * $R6 = stores the long path to $INSTDIR
+ * $R7 = _DEFAULT_VALUE
+ * $R9 = _HANDLER_NAME
+ */
+!macro RegCleanFileHandler
+
+  !ifndef ${_MOZFUNC_UN}RegCleanFileHandler
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}GetLongPath
+    !insertmacro ${_MOZFUNC_UN_TMP}GetParent
+    !insertmacro ${_MOZFUNC_UN_TMP}GetPathFromString
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}RegCleanFileHandler "!insertmacro ${_MOZFUNC_UN}RegCleanFileHandlerCall"
+
+    Function ${_MOZFUNC_UN}RegCleanFileHandler
+      Exch $R9
+      Exch 1
+      Exch $R8
+      Push $R7
+
+      ReadRegStr $R7 HKCU "Software\Classes\$R9" ""
+      StrCmp "$R7" "$R8" +1 +2
+      DeleteRegKey HKCU "Software\Classes\$R9"
+
+      ReadRegStr $R7 HKLM "Software\Classes\$R9" ""
+      StrCmp "$R7" "$R8" +1 +2
+      DeleteRegValue HKLM "Software\Classes\$R9" ""
+
+      ClearErrors
+
+      Pop $R7
+      Exch $R8
+      Exch 1
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro RegCleanFileHandlerCall _HANDLER_NAME _DEFAULT_VALUE
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_DEFAULT_VALUE}"
+  Push "${_HANDLER_NAME}"
+  Call RegCleanFileHandler
+  !verbose pop
+!macroend
+
+!macro un.RegCleanFileHandlerCall _HANDLER_NAME _DEFAULT_VALUE
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_DEFAULT_VALUE}"
+  Push "${_HANDLER_NAME}"
+  Call un.RegCleanFileHandler
+  !verbose pop
+!macroend
+
+!macro un.RegCleanFileHandler
+  !ifndef un.RegCleanFileHandler
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro RegCleanFileHandler
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
+ * Checks if a handler's open command points to this installation directory.
+ *
+ * @param   _HANDLER_NAME
+ *          The registry name for the handler.
+ * @param   _RESULT
+ *          true if it is the handler's open command points to this
+ *          installation directory and false if it does not.
+ *
+ * $R7 = stores the value of the open command and the path macros return values
+ * $R8 = stores the handler's registry key name
+ * $R9 = _DEFAULT_VALUE and _RESULT
+ */
+!macro IsHandlerForInstallDir
+
+  !ifndef ${_MOZFUNC_UN}IsHandlerForInstallDir
+    !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
+    !insertmacro ${_MOZFUNC_UN_TMP}GetLongPath
+    !insertmacro ${_MOZFUNC_UN_TMP}GetParent
+    !insertmacro ${_MOZFUNC_UN_TMP}GetPathFromString
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN ${_MOZFUNC_UN_TMP}
+    !undef _MOZFUNC_UN_TMP
+
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}IsHandlerForInstallDir "!insertmacro ${_MOZFUNC_UN}IsHandlerForInstallDirCall"
+
+    Function ${_MOZFUNC_UN}IsHandlerForInstallDir
+      Exch $R9
+      Push $R8
+      Push $R7
+
+      StrCpy $R8 "$R9"
+      StrCpy $R9 "false"
+      ReadRegStr $R7 HKCR "$R8\shell\open\command" ""
+      StrCmp "$R7" "" end
+
+      ${GetPathFromString} "$R7" $R7
+      ${GetParent} "$R7" $R7
+      ${GetLongPath} "$R7" $R7
+      StrCmp "$R7" "$INSTDIR" +1 end
+      StrCpy $R9 "true"
+
+      end:
+      ClearErrors
+
+      Pop $R7
+      Pop $R8
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro IsHandlerForInstallDirCall _HANDLER_NAME _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_HANDLER_NAME}"
+  Call IsHandlerForInstallDir
+  Pop "${_RESULT}"
+  !verbose pop
+!macroend
+
+!macro un.IsHandlerForInstallDirCall _HANDLER_NAME _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_HANDLER_NAME}"
+  Call un.IsHandlerForInstallDir
+  Pop "${_RESULT}"
+  !verbose pop
+!macroend
+
+!macro un.IsHandlerForInstallDir
+  !ifndef un.IsHandlerForInstallDir
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro IsHandlerForInstallDir
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
+!macroend
+
+/**
  * If present removes the VirtualStore directory for this installation. Uses the
  * program files directory path and the current install location to determine
  * the sub-directory in the VirtualStore directory.
@@ -2858,6 +3365,7 @@
       Push $R2
       Push $R1
       Push $R0
+      Push $TmpVal
 
       IfFileExists "$INSTDIR\uninstall\uninstall.log" +1 end
 
@@ -2879,6 +3387,7 @@
 
       end:
 
+      Pop $TmpVal
       Pop $R0
       Pop $R1
       Pop $R2
@@ -3063,6 +3572,7 @@
     !insertmacro GetOptions
     !insertmacro GetParameters
     !insertmacro GetSize
+    !insertmacro ElevateUAC
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
@@ -3083,6 +3593,10 @@
       !endif
 
       ${GetParameters} $R8
+
+      ; Require elevation if the user can elevate
+      ${ElevateUAC}
+
       ${If} $R8 != ""
         ClearErrors
         ${GetOptions} "$R8" "-ms" $R7
@@ -3230,6 +3744,7 @@
     !insertmacro GetOptions
     !insertmacro GetParameters
     !insertmacro UpdateUninstallLog
+    !insertmacro ElevateUAC
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
@@ -3246,42 +3761,60 @@
 
       StrCmp "$R0" "" continue +1
 
-      StrCmp "$R0" "/HideShortcuts" +1 showshortcuts
+      ; Require elevation if the user can elevate
+      ClearErrors
+      ${GetOptions} "$R0" "/HideShortcuts" $R2
+      IfErrors showshortcuts +1
+      ${ElevateUAC}
       ${HideShortcuts}
       StrCpy $R1 "true"
       StrCmp "$R1" "true" continue
 
+      ; Require elevation if the user can elevate
       showshortcuts:
-      StrCmp "$R0" "/ShowShortcuts" +1 defaultappuser
+      ClearErrors
+      ${GetOptions} "$R0" "/ShowShortcuts" $R2
+      IfErrors defaultappuser +1
+      ${ElevateUAC}
       ${ShowShortcuts}
       StrCpy $R1 "true"
       GoTo continue
 
+      ; Require elevation if the the StartMenuInternet registry keys require
+      ; updating and the user can elevate
       defaultappuser:
-      StrCmp "$R0" "/SetAsDefaultAppUser" +1 defaultappglobal
+      ClearErrors
+      ${GetOptions} "$R0" "/SetAsDefaultAppUser" $R2
+      IfErrors defaultappglobal +1
       ${SetAsDefaultAppUser}
       StrCpy $R1 "true"
       GoTo continue
 
+      ; Require elevation if the user can elevate
       defaultappglobal:
-      StrCmp "$R0" "/SetAsDefaultAppGlobal" +1 postupdate
+      ClearErrors
+      ${GetOptions} "$R0" "/SetAsDefaultAppGlobal" $R2
+      IfErrors postupdate +1
+      ${ElevateUAC}
       ${SetAsDefaultAppGlobal}
       StrCpy $R1 "true"
       GoTo continue
 
+      ; Do not attempt to elevate. The application launching this executable is
+      ; responsible for elevation if it is required.
       postupdate:
       ${WordReplace} "$R0" "$\"" "" "+" $R0
       ClearErrors
       ${GetOptions} "$R0" "/PostUpdate" $R2
+      StrCpy $R1 "true"
       IfErrors continue +1
+      ; If the uninstall.log does not exist don't perform post update
+      ; operations. This prevents updating the registry for zip builds.
+      IfFileExists "$EXEDIR\uninstall.log" +1 continue
       ${PostUpdate}
       ClearErrors
       ${GetOptions} "$R0" "/UninstallLog=" $R2
-      IfErrors +1 +4
-      ${UpdateUninstallLog}
-      StrCpy $R1 "true"
-      GoTo continue
-
+      IfErrors updateuninstalllog +1
       StrCmp "$R2" "" continue +1
       GetFullPathName $R3 "$R2"
       IfFileExists "$R3" +1 continue
@@ -3291,13 +3824,26 @@
       ${GetParent} "$R3" $R4
       Delete "$R3"
       RmDir "$R4"
+      GoTo continue
+
+      ; Do not attempt to elevate. The application launching this executable is
+      ; responsible for elevation if it is required.
+      updateuninstalllog:
+      ${UpdateUninstallLog}
       StrCpy $R1 "true"
-
+      
       continue:
-
       StrCmp $R1 "true" +1 +3
       System::Call "shell32::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)"
       Quit
+
+      ; If the uninstall.log does not exist don't perform uninstall
+      ; operations. This prevents running the uninstaller for zip builds.
+      IfFileExists "$EXEDIR\uninstall.log" +2 +1
+      Quit
+
+      ; Require elevation if the user can elevate
+      ${ElevateUAC}
 
       ; If we made it this far then this installer is being used as an uninstaller.
       WriteUninstaller "$EXEDIR\uninstaller.exe"
@@ -3506,7 +4052,6 @@
 
       ; Remove the files and directories in the removed-files.log
       ${ParseRemovedFilesLog}
- 
     FunctionEnd
 
     !verbose pop
@@ -3551,6 +4096,98 @@
   !verbose ${_MOZFUNC_VERBOSE}
   Call InstallEndCleanupCommon
   !verbose pop
+!macroend
+
+
+################################################################################
+# UAC Related Macros
+
+/**
+ * Provides UAC elevation support for Vista and above (requires the UAC plugin).
+ *
+ * $0 = return values from calls to the UAC plugin (always uses $0)
+ * $R9 = return values from GetParameters and GetOptions macros
+ */
+!macro ElevateUAC
+
+  !ifndef ${_MOZFUNC_UN}ElevateUAC
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define ${_MOZFUNC_UN}ElevateUAC "!insertmacro ${_MOZFUNC_UN}ElevateUACCall"
+
+    Function ${_MOZFUNC_UN}ElevateUAC
+      Push $R9
+      Push $0
+
+; USE_UAC_PLUGIN is temporary until Thunderbird has been updated to use the UAC plugin
+!ifdef USE_UAC_PLUGIN
+      !ifdef ___WINVER__NSH___
+        ${If} ${AtLeastWinVista}
+          UAC::IsAdmin
+          ; If the user is not an admin already
+          ${If} "$0" != "1"
+            UAC::SupportsUAC
+            ; If the system supports UAC
+            ${If} "$0" == "1"
+              UAC::GetElevationType
+              ; If the user account has a split token
+              ${If} "$0" == "3"
+                UAC::RunElevated 
+                Quit
+              ${EndIf}
+            ${EndIf}
+          ${Else}
+            ${GetParameters} $R9
+            ${If} $R9 != ""
+              ClearErrors
+              ${GetOptions} "$R9" "/UAC:" $0
+              ; If the command line contains /UAC then we need to initialize
+              ; the UAC plugin to use UAC::ExecCodeSegment to execute code in
+              ; the non-elevated context.
+              ${Unless} ${Errors}
+                UAC::RunElevated 
+              ${EndUnless}
+            ${EndIf}
+          ${EndIf}
+        ${EndIf}
+      !endif
+!endif
+
+      Pop $0
+      Pop $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro ElevateUACCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call ElevateUAC
+  !verbose pop
+!macroend
+
+!macro un.ElevateUACCall
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Call un.ElevateUAC
+  !verbose pop
+!macroend
+
+!macro un.ElevateUAC
+  !ifndef un.ElevateUAC
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN "un."
+
+    !insertmacro ElevateUAC
+
+    !undef _MOZFUNC_UN
+    !define _MOZFUNC_UN
+    !verbose pop
+  !endif
 !macroend
 
 
