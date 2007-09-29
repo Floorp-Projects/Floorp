@@ -56,8 +56,8 @@ const CHECK_INTERVAL = 15 * 1000; // 15 seconds
 // How often to check for generator updates, in seconds
 const GENERATOR_INTERVAL = 7 * 86400; // 1 week
 
-const MICSUM_NS = new Namespace("http://www.mozilla.org/microsummaries/0.1");
-const XSLT_NS = new Namespace("http://www.w3.org/1999/XSL/Transform");
+const MICSUM_NS = "http://www.mozilla.org/microsummaries/0.1";
+const XSLT_NS = "http://www.w3.org/1999/XSL/Transform";
 
 const ANNO_MICSUM_GEN_URI    = "microsummary/generatorURI";
 const ANNO_MICSUM_EXPIRATION = "microsummary/expiration";
