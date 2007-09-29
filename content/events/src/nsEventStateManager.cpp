@@ -1929,8 +1929,8 @@ nsEventStateManager::DoScrollTextsize(nsIFrame *aTargetFrame,
       !content->IsNodeOfType(nsINode::eHTML_FORM_CONTROL) &&
       !content->IsNodeOfType(nsINode::eXUL))
     {
-      // positive adjustment to increase text size, non-positive to decrease
-      ChangeTextSize((adjustment > 0) ? 1 : -1);
+      // negative adjustment to increase text size, positive to decrease
+      ChangeTextSize((adjustment > 0) ? -1 : 1);
     }
 }
 
