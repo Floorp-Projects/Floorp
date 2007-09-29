@@ -23,7 +23,7 @@
  *  Joe Hewitt     <hewitt@netscape.com>   (Set Background)
  *  Blake Ross     <blake@cs.stanford.edu> (Desktop Color, DDE support)
  *  Jungshik Shin  <jshin@mailaps.org>     (I18N)
- *  Robert Strong  <robert.bugzilla@gmail.com>  (Long paths, DDE)
+ *  Robert Strong  <robert.bugzilla@gmail.com>
  *  Asaf Romano    <mano@mozilla.com>
  *  Ryan Jones     <sciguyryan@gmail.com>
  *
@@ -60,6 +60,7 @@
 #include "nsBrowserCompsCID.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIWindowsRegKey.h"
 #include "nsUnicharUtils.h"
 
@@ -82,63 +83,18 @@
 NS_IMPL_ISUPPORTS2(nsWindowsShellService, nsIWindowsShellService, nsIShellService)
 
 static nsresult
-OpenUserKeyForReading(HKEY aStartKey, const nsAString& aKeyName, HKEY* aKey)
+OpenKeyForReading(HKEY aKeyRoot, const nsAString& aKeyName, HKEY* aKey)
 {
   const nsString &flatName = PromiseFlatString(aKeyName);
 
-  DWORD res = ::RegOpenKeyExW(aStartKey, flatName.get(), 0, KEY_READ, aKey);
+  DWORD res = ::RegOpenKeyExW(aKeyRoot, flatName.get(), 0, KEY_READ, aKey);
   switch (res) {
   case ERROR_SUCCESS:
     break;
   case ERROR_ACCESS_DENIED:
     return NS_ERROR_FILE_ACCESS_DENIED;
   case ERROR_FILE_NOT_FOUND:
-    if (aStartKey == HKEY_LOCAL_MACHINE) {
-      // prevent infinite recursion on the second pass through here if 
-      // ::RegOpenKeyEx fails in the all-users case. 
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-    return OpenUserKeyForReading(HKEY_LOCAL_MACHINE, aKeyName, aKey);
-  }
-
-  return NS_OK;
-}
-
-// Sets the default browser registry keys for Windows versions prior to Vista.
-// Try to open / create the key in HKLM and if that fails try to do the same
-// in HKCU. Though this is not strictly the behavior I would expect it is the
-// same behavior that IE has when setting the default browser previous to Vista.
-static nsresult
-OpenKeyForWriting(HKEY aStartKey, const nsAString& aKeyName, HKEY* aKey,
-                  PRBool aHKLMOnly)
-{
-  const nsString &flatName = PromiseFlatString(aKeyName);
-
-  DWORD dwDisp = 0;
-  DWORD res = ::RegCreateKeyExW(aStartKey, flatName.get(), 0, NULL,
-                                0, KEY_READ | KEY_WRITE, NULL, aKey,
-                                &dwDisp);
-  switch (res) {
-  case ERROR_SUCCESS:
-    break;
-  case ERROR_ACCESS_DENIED:
-    if (aHKLMOnly || aStartKey == HKEY_CURRENT_USER)
-      return NS_ERROR_FILE_ACCESS_DENIED;
-    // fallback to HKCU immediately on access denied since we won't be able
-    // to create the key.
-    return OpenKeyForWriting(HKEY_CURRENT_USER, aKeyName, aKey, aHKLMOnly);
-  case ERROR_FILE_NOT_FOUND:
-    res = ::RegCreateKeyExW(aStartKey, flatName.get(), 0, NULL,
-                            0, KEY_READ | KEY_WRITE, NULL, aKey,
-                            NULL);
-    if (res != ERROR_SUCCESS) {
-      if (aHKLMOnly || aStartKey == HKEY_CURRENT_USER) {
-        // prevent infinite recursion on the second pass through here if 
-        // ::RegCreateKey fails in the current user case.
-        return NS_ERROR_FILE_ACCESS_DENIED;
-      }
-      return OpenKeyForWriting(HKEY_CURRENT_USER, aKeyName, aKey, aHKLMOnly);
-    }
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   return NS_OK;
@@ -146,6 +102,9 @@ OpenKeyForWriting(HKEY aStartKey, const nsAString& aKeyName, HKEY* aKey,
 
 ///////////////////////////////////////////////////////////////////////////////
 // Default Browser Registry Settings
+//
+// The setting of these values are made by an external binary since writing
+// these values may require elevation.
 //
 // - File Extension Mappings
 //   -----------------------
@@ -214,9 +173,6 @@ typedef enum {
   NO_SUBSTITUTION           = 0x00,
   APP_PATH_SUBSTITUTION     = 0x01,
   EXE_NAME_SUBSTITUTION     = 0x02,
-  UNINST_PATH_SUBSTITUTION  = 0x04,
-  HKLM_ONLY                 = 0x08,
-  NON_ESSENTIAL             = 0x10
 } SettingFlags;
 
 typedef struct {
@@ -228,17 +184,8 @@ typedef struct {
 } SETTING;
 
 #define APP_REG_NAME L"Firefox"
-#define SMI "SOFTWARE\\Clients\\StartMenuInternet\\"
-#define CLS "SOFTWARE\\Classes\\"
 #define DI "\\DefaultIcon"
-#define II "\\InstallInfo"
 #define SOP "\\shell\\open\\command"
-#define DDE "\\shell\\open\\ddeexec\\"
-#define DDE_NAME "Firefox" // This must be kept in sync with ID_DDE_APPLICATION_NAME as defined in splash.rc
-#define DDE_COMMAND "\"%1\",,0,0,,,,"
-// For the InstallInfo HideIconsCommand, ShowIconsCommand, and ReinstallCommand
-// registry keys. This must be kept in sync with the uninstaller.
-#define UNINSTALL_EXE "\\uninstall\\helper.exe"
 
 #define CLS_HTML "FirefoxHTML"
 #define CLS_URL "FirefoxURL"
@@ -248,93 +195,24 @@ typedef struct {
 #define MAKE_KEY_NAME1(PREFIX, MID) \
   PREFIX MID
 
-#define MAKE_KEY_NAME2(PREFIX, MID, SUFFIX) \
-  PREFIX MID SUFFIX
-
-#define MAKE_KEY_NAME3(PREFIX, MID, MID2, SUFFIX) \
-  PREFIX MID MID2 SUFFIX
-
-// The DefaultIcon registry key value should never be used (e.g. NON_ESSENTIAL)
-// when checking if Firefox is the default browser since other applications
-// (e.g. MS Office) may modify the DefaultIcon registry key value to add Icon
-// Handlers.
+// The DefaultIcon registry key value should never be used when checking if
+// Firefox is the default browser since other applications (e.g. MS Office) may
+// modify the DefaultIcon registry key value to add Icon Handlers.
 // see http://msdn2.microsoft.com/en-us/library/aa969357.aspx for more info.
 static SETTING gSettings[] = {
-  // File Extension Aliases
-  { MAKE_KEY_NAME1(CLS, ".htm"),    "", CLS_HTML, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME1(CLS, ".html"),   "", CLS_HTML, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME1(CLS, ".shtml"),  "", CLS_HTML, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME1(CLS, ".xht"),    "", CLS_HTML, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME1(CLS, ".xhtml"),  "", CLS_HTML, NO_SUBSTITUTION | NON_ESSENTIAL },
-
   // File Extension Class - as of 1.8.1.2 the value for VAL_OPEN is also checked
   // for CLS_HTML since Firefox should also own opeing local files when set as
   // the default browser.
-  { MAKE_KEY_NAME2(CLS, CLS_HTML, DI),  "", VAL_FILE_ICON, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, CLS_HTML, SOP), "", VAL_OPEN, APP_PATH_SUBSTITUTION },
+  { MAKE_KEY_NAME1(CLS_HTML, SOP), "", VAL_OPEN, APP_PATH_SUBSTITUTION },
 
   // Protocol Handler Class - for Vista and above
-  { MAKE_KEY_NAME2(CLS, CLS_URL, DI),  "", VAL_FILE_ICON, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, CLS_URL, SOP), "", VAL_OPEN, APP_PATH_SUBSTITUTION },
+  { MAKE_KEY_NAME1(CLS_URL, SOP), "", VAL_OPEN, APP_PATH_SUBSTITUTION },
 
   // Protocol Handlers
-  { MAKE_KEY_NAME2(CLS, "HTTP", DI),    "", VAL_FILE_ICON, APP_PATH_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "HTTP", SOP),   "", VAL_OPEN, APP_PATH_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "HTTPS", DI),   "", VAL_FILE_ICON, APP_PATH_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "HTTPS", SOP),  "", VAL_OPEN, APP_PATH_SUBSTITUTION },
-  { MAKE_KEY_NAME2(CLS, "FTP", DI),     "", VAL_FILE_ICON, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "FTP", SOP),    "", VAL_OPEN, APP_PATH_SUBSTITUTION | NON_ESSENTIAL },
-
-  // DDE settings
-  { MAKE_KEY_NAME2(CLS, CLS_HTML, DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, CLS_HTML, DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, CLS_HTML, DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, CLS_URL, DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, CLS_URL, DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, CLS_URL, DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "HTTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, "HTTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "HTTPS", DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, "HTTPS", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(CLS, "FTP", DDE), "", DDE_COMMAND, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Application"), "", DDE_NAME, NO_SUBSTITUTION | NON_ESSENTIAL },
-  { MAKE_KEY_NAME3(CLS, "FTP", DDE, "Topic"), "", "WWW_OpenURL", NO_SUBSTITUTION | NON_ESSENTIAL },
-
-  // Windows XP Start Menu
-  { MAKE_KEY_NAME2(SMI, "%APPEXE%", DI),  
-    "", 
-    "%APPPATH%,0", 
-    APP_PATH_SUBSTITUTION | EXE_NAME_SUBSTITUTION | HKLM_ONLY | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(SMI, "%APPEXE%", II),
-    "HideIconsCommand",
-    "\"%UNINSTPATH%\" /HideShortcuts",
-    UNINST_PATH_SUBSTITUTION | EXE_NAME_SUBSTITUTION | HKLM_ONLY | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(SMI, "%APPEXE%", II),
-    "ReinstallCommand",
-    "\"%UNINSTPATH%\" /SetAsDefaultAppGlobal",
-    UNINST_PATH_SUBSTITUTION | EXE_NAME_SUBSTITUTION | HKLM_ONLY | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(SMI, "%APPEXE%", II),
-    "ShowIconsCommand",
-    "\"%UNINSTPATH%\" /ShowShortcuts",
-    UNINST_PATH_SUBSTITUTION | EXE_NAME_SUBSTITUTION | HKLM_ONLY | NON_ESSENTIAL },
-  { MAKE_KEY_NAME2(SMI, "%APPEXE%", SOP), 
-    "", 
-    "%APPPATH%",   
-    APP_PATH_SUBSTITUTION | EXE_NAME_SUBSTITUTION | HKLM_ONLY | NON_ESSENTIAL },
-  { MAKE_KEY_NAME1(SMI, "%APPEXE%\\shell\\properties\\command"),
-    "", 
-    "\"%APPPATH%\" -preferences",
-    APP_PATH_SUBSTITUTION | EXE_NAME_SUBSTITUTION | HKLM_ONLY | NON_ESSENTIAL },
-  { MAKE_KEY_NAME1(SMI, "%APPEXE%\\shell\\safemode\\command"),
-    "", 
-    "\"%APPPATH%\" -safe-mode",
-    APP_PATH_SUBSTITUTION | EXE_NAME_SUBSTITUTION | HKLM_ONLY | NON_ESSENTIAL }
-
-  // These values must be set by hand, since they contain localized strings.
-  //     firefox.exe\shell\properties        (default)   REG_SZ  Firefox &Options
-  //     firefox.exe\shell\safemode          (default)   REG_SZ  Firefox &Safe Mode
+  { MAKE_KEY_NAME1("HTTP", DI),    "", VAL_FILE_ICON, APP_PATH_SUBSTITUTION },
+  { MAKE_KEY_NAME1("HTTP", SOP),   "", VAL_OPEN, APP_PATH_SUBSTITUTION },
+  { MAKE_KEY_NAME1("HTTPS", DI),   "", VAL_FILE_ICON, APP_PATH_SUBSTITUTION },
+  { MAKE_KEY_NAME1("HTTPS", SOP),  "", VAL_OPEN, APP_PATH_SUBSTITUTION }
 };
 
 
@@ -411,39 +289,15 @@ nsWindowsShellService::IsDefaultBrowserVista(PRBool aStartupCheck, PRBool* aIsDe
   return PR_FALSE;
 }
 
-PRBool
-nsWindowsShellService::SetDefaultBrowserVista()
-{
-  IApplicationAssociationRegistration* pAAR;
-  
-  HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationReg,
-                                NULL,
-                                CLSCTX_INPROC,
-                                IID_IApplicationAssociationReg,
-                                (void**)&pAAR);
-  
-  if (SUCCEEDED(hr)) {
-    hr = pAAR->SetAppAsDefaultAll(APP_REG_NAME);
-    
-    pAAR->Release();
-    return PR_TRUE;
-  }
-  
-  return PR_FALSE;
-}
-
 NS_IMETHODIMP
 nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck,
                                         PRBool* aIsDefaultBrowser)
 {
-  // To support side by side installs on Vista we also need to check if the
-  // FirefoxHTML and FirefoxURL registry keys in HKLM / HKCU point to our
-  // install location. If the HKLM keys point to this install location we have
-  // to verify that the keys don't exist in HKCU and remove them if the app is
-  // then set as default. If the HKLM keys don't point to this install location
-  // then we have to add these keys in HKCU to over-ride the HKLM keys.
-  if (IsDefaultBrowserVista(aStartupCheck, aIsDefaultBrowser))
-    return NS_OK;
+  // If this is the first browser window, maintain internal state that we've
+  // checked this session (so that subsequent window opens don't show the 
+  // default browser dialog).
+  if (aStartupCheck)
+    mCheckedThisSession = PR_TRUE;
 
   SETTING* settings;
   SETTING* end = gSettings + sizeof(gSettings)/sizeof(SETTING);
@@ -478,9 +332,6 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck,
 
   PRUnichar currValue[MAX_BUF];
   for (settings = gSettings; settings < end; ++settings) {
-    if (settings->flags & NON_ESSENTIAL)
-      continue; // This is not a registry key that determines whether
-                // or not we consider Firefox the "Default Browser."
     NS_ConvertUTF8toUTF16 dataLongPath(settings->valueData);
     NS_ConvertUTF8toUTF16 dataShortPath(settings->valueData);
     NS_ConvertUTF8toUTF16 key(settings->keyName);
@@ -502,7 +353,7 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck,
 
     ::ZeroMemory(currValue, sizeof(currValue));
     HKEY theKey;
-    rv = OpenUserKeyForReading(HKEY_CURRENT_USER, key, &theKey);
+    rv = OpenKeyForReading(HKEY_CLASSES_ROOT, key, &theKey);
     if (NS_SUCCEEDED(rv)) {
       DWORD len = sizeof currValue;
       DWORD res = ::RegQueryValueExW(theKey, PromiseFlatString(value).get(),
@@ -514,250 +365,60 @@ nsWindowsShellService::IsDefaultBrowser(PRBool aStartupCheck,
           !dataShortPath.Equals(currValue, CaseInsensitiveCompare)) {
         // Key wasn't set, or was set to something else (something else became the default browser)
         *aIsDefaultBrowser = PR_FALSE;
-        break;
+        return NS_OK;
       }
     }
   }
 
-  // If this is the first browser window, maintain internal state that we've
-  // checked this session (so that subsequent window opens don't show the 
-  // default browser dialog).
-  if (aStartupCheck)
-    mCheckedThisSession = PR_TRUE;
+  // Only check if Firefox is the default browser on Vista if the previous
+  // checks show that Firefox is the default browser.
+  if (aIsDefaultBrowser)
+    IsDefaultBrowserVista(aStartupCheck, aIsDefaultBrowser);
 
   return NS_OK;
-}
-
-DWORD
-nsWindowsShellService::DeleteRegKeyDefaultValue(HKEY baseKey,
-                                                const nsString& keyName)
-{
-  HKEY key;
-  DWORD res = ::RegOpenKeyExW(baseKey, keyName.get(),
-                              0, KEY_WRITE, &key);
-  if (res == ERROR_SUCCESS) {
-    res = ::RegDeleteValueW(key, EmptyString().get());
-    ::RegCloseKey(key);
-  }
-
-  return res;
 }
 
 NS_IMETHODIMP
 nsWindowsShellService::SetDefaultBrowser(PRBool aClaimAllTypes, PRBool aForAllUsers)
 {
-  // Delete the protocol and file handlers under HKCU if they exist. This way
-  // the HKCU registry is cleaned up when HKLM is writeable or if it isn't
-  // the values will then be added under HKCU.
-  (void)DeleteRegKey(HKEY_CURRENT_USER,
-    NS_LITERAL_STRING("Software\\Classes\\http\\shell\\open"));
-  (void)DeleteRegKey(HKEY_CURRENT_USER,
-    NS_LITERAL_STRING("Software\\Classes\\http\\DefaultIcon"));
-  (void)DeleteRegKey(HKEY_CURRENT_USER,
-    NS_LITERAL_STRING("Software\\Classes\\https\\shell\\open"));
-  (void)DeleteRegKey(HKEY_CURRENT_USER,
-     NS_LITERAL_STRING("Software\\Classes\\https\\DefaultIcon"));
-  (void)DeleteRegKey(HKEY_CURRENT_USER,
-   NS_LITERAL_STRING("Software\\Classes\\ftp\\shell\\open"));
-  (void)DeleteRegKey(HKEY_CURRENT_USER,
-     NS_LITERAL_STRING("Software\\Classes\\ftp\\DefaultIcon"));
-  (void)DeleteRegKey(HKEY_CURRENT_USER,
-     NS_LITERAL_STRING("Software\\Classes\\FirefoxURL"));
-  (void)DeleteRegKey(HKEY_CURRENT_USER,
-     NS_LITERAL_STRING("Software\\Classes\\FirefoxHTML"));
+  nsresult rv;
+  nsCOMPtr<nsIProperties> directoryService = 
+    do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER,
-     NS_LITERAL_STRING("Software\\Classes\\.htm"));
-  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER,
-     NS_LITERAL_STRING("Software\\Classes\\.html"));
-  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER,
-     NS_LITERAL_STRING("Software\\Classes\\.shtml"));
-  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER,
-     NS_LITERAL_STRING("Software\\Classes\\.xht"));
-  (void)DeleteRegKeyDefaultValue(HKEY_CURRENT_USER,
-     NS_LITERAL_STRING("Software\\Classes\\.xhtml"));
+  nsCOMPtr<nsILocalFile> appHelper;
+  rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(appHelper));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!aForAllUsers && SetDefaultBrowserVista())
-    return NS_OK;
+  rv = appHelper->AppendNative(NS_LITERAL_CSTRING("uninstall"));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  SETTING* settings;
-  SETTING* end = gSettings + sizeof(gSettings)/sizeof(SETTING);
+  rv = appHelper->AppendNative(NS_LITERAL_CSTRING("helper.exe"));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUnichar exePath[MAX_BUF];
-  if (!::GetModuleFileNameW(0, exePath, MAX_BUF))
-    return NS_ERROR_FAILURE;
+  nsCAutoString appHelperPath;
+  rv = appHelper->GetNativePath(appHelperPath);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoString appLongPath(exePath);
-
-  nsCOMPtr<nsILocalFile> lf;
-  nsresult rv = NS_NewLocalFile(nsDependentString(exePath), PR_TRUE,
-                                getter_AddRefs(lf));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsAutoString exeName;
-  rv = lf->GetLeafName(exeName);
-  if (NS_FAILED(rv))
-    return rv;
-  ToUpperCase(exeName);
-
-  nsCOMPtr<nsIFile> appDir;
-  rv = lf->GetParent(getter_AddRefs(appDir));
-  if (NS_FAILED(rv))
-    return rv;
-
-  nsAutoString uninstLongPath;
-  appDir->GetPath(uninstLongPath);
-  uninstLongPath.AppendLiteral(UNINSTALL_EXE);
-
-  for (settings = gSettings; settings < end; ++settings) {
-    NS_ConvertUTF8toUTF16 dataLongPath(settings->valueData);
-    NS_ConvertUTF8toUTF16 key(settings->keyName);
-    NS_ConvertUTF8toUTF16 value(settings->valueName);
-    if (settings->flags & APP_PATH_SUBSTITUTION) {
-      PRInt32 offset = dataLongPath.Find("%APPPATH%");
-      dataLongPath.Replace(offset, 9, appLongPath);
-    }
-    if (settings->flags & UNINST_PATH_SUBSTITUTION) {
-      PRInt32 offset = dataLongPath.Find("%UNINSTPATH%");
-      dataLongPath.Replace(offset, 12, uninstLongPath);
-    }
-    if (settings->flags & EXE_NAME_SUBSTITUTION) {
-      PRInt32 offset = key.Find("%APPEXE%");
-      key.Replace(offset, 8, exeName);
-    }
-
-    SetRegKey(key, value, dataLongPath,
-              (settings->flags & HKLM_ONLY));
+  if (aForAllUsers) {
+    appHelperPath.AppendLiteral(" /SetAsDefaultAppGlobal");
+  } else {
+    appHelperPath.AppendLiteral(" /SetAsDefaultAppUser");
   }
 
-  // Select the Default Browser for the Windows XP Start Menu
-  SetRegKey(NS_LITERAL_STRING(SMI), EmptyString(), exeName, PR_TRUE);
+  STARTUPINFO si = {sizeof(si), 0};
+  PROCESS_INFORMATION pi = {0};
 
-  nsCOMPtr<nsIStringBundleService>
-    bundleService(do_GetService("@mozilla.org/intl/stringbundle;1"));
-  if (!bundleService)
+  BOOL ok = CreateProcess(NULL, (LPSTR)appHelperPath.get(), NULL, NULL,
+                          FALSE, 0, NULL, NULL, &si, &pi);
+
+  if (!ok)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIStringBundle> bundle, brandBundle;
-  rv = bundleService->CreateBundle(SHELLSERVICE_PROPERTIES, getter_AddRefs(bundle));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = bundleService->CreateBundle(BRAND_PROPERTIES, getter_AddRefs(brandBundle));
-  NS_ENSURE_SUCCESS(rv, rv);
+  CloseHandle(pi.hProcess);
+  CloseHandle(pi.hThread);
 
-  // Create the Start Menu item if it doesn't exist
-  nsString brandFullName;
-  brandBundle->GetStringFromName(NS_LITERAL_STRING("brandFullName").get(),
-                                 getter_Copies(brandFullName));
-
-  nsAutoString key1(NS_LITERAL_STRING(SMI));
-  key1.Append(exeName);
-  key1.AppendLiteral("\\");
-  SetRegKey(key1, EmptyString(), brandFullName, PR_TRUE);
-
-  // Set the Options and Safe Mode start menu context menu item labels
-  nsAutoString optionsKey(NS_LITERAL_STRING(SMI));
-  optionsKey.Append(exeName);
-  optionsKey.AppendLiteral("\\shell\\properties");
-
-  nsAutoString safeModeKey(NS_LITERAL_STRING(SMI));
-  safeModeKey.Append(exeName);
-  safeModeKey.AppendLiteral("\\shell\\safemode");
-
-  nsString brandShortName;
-  brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
-                                 getter_Copies(brandShortName));
-
-  const PRUnichar* brandNameStrings[] = { brandShortName.get() };
-
-  // Set the Options menu item
-  nsString optionsTitle;
-  bundle->FormatStringFromName(NS_LITERAL_STRING("optionsLabel").get(),
-                               brandNameStrings, 1,
-                               getter_Copies(optionsTitle));
-  // Set the Safe Mode menu item
-  nsString safeModeTitle;
-  bundle->FormatStringFromName(NS_LITERAL_STRING("safeModeLabel").get(),
-                               brandNameStrings, 1,
-                               getter_Copies(safeModeTitle));
-
-  // Set the registry keys
-  SetRegKey(optionsKey, EmptyString(), optionsTitle, PR_TRUE);
-  SetRegKey(safeModeKey, EmptyString(), safeModeTitle, PR_TRUE);
-
-  // Refresh the Shell
-  SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, 0, 0);
   return NS_OK;
-}
-
-// Utility function to delete a registry subkey.
-DWORD
-nsWindowsShellService::DeleteRegKey(HKEY baseKey, const nsString& keyName)
-{
-  // Make sure input subkey isn't null.
-  if (keyName.IsEmpty())
-    return ERROR_BADKEY;
-
-  const nsString &flatName = PromiseFlatString(keyName);
-
-  // Open subkey.
-  HKEY key;
-  DWORD res = ::RegOpenKeyExW(baseKey, flatName.get(), 0,
-                              KEY_ENUMERATE_SUB_KEYS | DELETE, &key);
-  // Continue till we get an error or are done.
-  while (res == ERROR_SUCCESS) {
-    PRUnichar subkeyName[MAX_PATH];
-    DWORD len = sizeof subkeyName;
-    // Get first subkey name.  Note that we always get the
-    // first one, then delete it.  So we need to get
-    // the first one next time, also.
-    res = ::RegEnumKeyExW(key, 0, subkeyName, &len, NULL, NULL,
-                          NULL, NULL);
-    if (res == ERROR_NO_MORE_ITEMS) {
-      // No more subkeys.  Delete the main one.
-      res = ::RegDeleteKeyW(baseKey, flatName.get());
-      break;
-    }
-    // If we find another subkey, delete it, recursively.
-    if (res == ERROR_SUCCESS)
-      res = DeleteRegKey(key, nsDependentString(subkeyName));
-  }
-  
-  // Close the key we opened.
-  ::RegCloseKey(key);
-  return res;
-}
-
-void
-nsWindowsShellService::SetRegKey(const nsString& aKeyName,
-                                 const nsString& aValueName,
-                                 const nsString& aValue, PRBool aHKLMOnly)
-{
-  PRUnichar buf[MAX_BUF];
-  DWORD len = sizeof buf;
-
-  HKEY theKey;
-  nsresult rv = OpenKeyForWriting(HKEY_LOCAL_MACHINE, aKeyName, &theKey,
-                                  aHKLMOnly);
-  if (NS_FAILED(rv))
-    return;
-
-  // Get the old value
-  DWORD res = ::RegQueryValueExW(theKey, PromiseFlatString(aValueName).get(),
-                                 NULL, NULL, (LPBYTE)buf, &len);
-
-  // Set the new value
-  nsAutoString current(buf);
-  if (REG_FAILED(res) || !current.Equals(aValue)) {
-    const nsString &flatValue = PromiseFlatString(aValue);
-
-    ::RegSetValueExW(theKey, PromiseFlatString(aValueName).get(),
-                     0, REG_SZ, (const BYTE *)flatValue.get(),
-                     (flatValue.Length() + 1) * sizeof(PRUnichar));
-  }
-
-  // Close the key we opened.
-  ::RegCloseKey(theKey);
 }
 
 NS_IMETHODIMP
@@ -1007,13 +668,10 @@ nsWindowsShellService::OpenApplication(PRInt32 aApplication)
   //             \Client Subkey Name\shell\open\command\ 
   //             \Client Subkey Name\shell\open\command\(default) = path to exe
   //
-  nsAutoString clientKey;
-  clientKey.AssignLiteral("SOFTWARE\\Clients\\");
-  clientKey.Append(application);
 
   // Find the default application for this class.
   HKEY theKey;
-  nsresult rv = OpenUserKeyForReading(HKEY_CURRENT_USER, clientKey, &theKey);
+  nsresult rv = OpenKeyForReading(HKEY_CLASSES_ROOT, application, &theKey);
   if (NS_FAILED(rv))
     return rv;
 
@@ -1029,11 +687,11 @@ nsWindowsShellService::OpenApplication(PRInt32 aApplication)
   ::RegCloseKey(theKey);
 
   // Find the "open" command
-  clientKey.AppendLiteral("\\");
-  clientKey.Append(buf);
-  clientKey.AppendLiteral("\\shell\\open\\command");
+  application.AppendLiteral("\\");
+  application.Append(buf);
+  application.AppendLiteral("\\shell\\open\\command");
 
-  rv = OpenUserKeyForReading(HKEY_CURRENT_USER, clientKey, &theKey);
+  rv = OpenKeyForReading(HKEY_CLASSES_ROOT, application, &theKey);
   if (NS_FAILED(rv))
     return rv;
 
