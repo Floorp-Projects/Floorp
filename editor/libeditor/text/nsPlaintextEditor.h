@@ -216,7 +216,8 @@ protected:
 
   // Wrapper for nsCopySupport::GetClipboardEventTarget, finds target to fire
   // [cut,copy,paste] and [beforecut,beforecopy,beforepaste] events at.
-  virtual nsresult GetClipboardEventTarget(nsIDOMNode** aEventTarget);
+  nsresult GetClipboardEventTarget(nsIDOMNode** aEventTarget);
+  nsresult FireClipboardEvent(PRUint32 msg, PRBool* aPreventDefault);
 
 // Data members
 protected:
