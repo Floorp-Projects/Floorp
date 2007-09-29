@@ -44,15 +44,6 @@
                    xbl:inherits="default,value=label,crop,accesskey"/>
       </children>
     </content>
-
-    <implementation>
-      <constructor>
-        if (this.parentNode.id) {
-          document.getAnonymousNodes(this)[1]
-                  .setAttribute("control", this.parentNode.id);
-        }
-      </constructor>
-    </implementation>
   </binding>
 
 </bindings>
