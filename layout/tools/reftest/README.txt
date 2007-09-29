@@ -65,7 +65,7 @@ comments) must be one of the following:
 
       skip  This test should not be run. This is useful when a test fails in a
             catastrophic way, such as crashing or hanging the browser. Using
-            'skip' is prefered to simply commenting out the test because we
+            'skip' is preferred to simply commenting out the test because we
             want to report the test failure at the end of the test run.
 
       skip-if(condition) If the condition is met, the test is not run. This is
@@ -251,5 +251,5 @@ although not required, because the pages are a fixed size in inches.
 The underlying layout support for this mode isn't really complete; it
 doesn't use exactly the same codepath as real print preview/print. In
 particular, scripting and frames are likely to cause problems; it is untested,
-theough.  That said, it should be sufficient for testing layout issues related
+though.  That said, it should be sufficient for testing layout issues related
 to pagination.
