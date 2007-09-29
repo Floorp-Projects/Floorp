@@ -56,6 +56,7 @@
 #include "prprf.h"
 #include "nsIDOMEventListener.h"
 #include "nsIJSContextStack.h"
+#include "nsJSEnvironment.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsWeakPtr.h"
 #include "nsICharsetAlias.h"
@@ -1776,6 +1777,7 @@ nsXMLHttpRequest::RequestCompleted()
     ChangeState(XML_HTTP_REQUEST_OPENED);
   }
 
+  nsJSContext::MaybeCC(PR_FALSE);
   return rv;
 }
 
@@ -2318,6 +2320,7 @@ nsXMLHttpRequest::Error(nsIDOMEvent* aEvent)
     NotifyEventListeners(errorEventListeners, event);
   }
 
+  nsJSContext::MaybeCC(PR_FALSE);
   return NS_OK;
 }
 
