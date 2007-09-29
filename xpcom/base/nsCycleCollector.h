@@ -66,8 +66,7 @@ struct nsCycleCollectionLanguageRuntime
 NS_COM void nsCycleCollector_suspectCurrent(nsISupports *n);
 // NS_COM PRBool nsCycleCollector_forget(nsISupports *n);
 nsresult nsCycleCollector_startup();
-// Returns PR_TRUE if some nodes were collected.
-NS_COM PRBool nsCycleCollector_collect();
+NS_COM void nsCycleCollector_collect();
 void nsCycleCollector_shutdown();
 
 #ifdef DEBUG
