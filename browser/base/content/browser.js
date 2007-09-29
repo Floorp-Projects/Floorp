@@ -1566,7 +1566,7 @@ function loadOneOrMoreURIs(aURIString)
 
 function openLocation()
 {
-  if (gURLBar && isElementVisible(gURLBar)) {
+  if (gURLBar && isElementVisible(gURLBar) && !gURLBar.readOnly) {
     gURLBar.focus();
     gURLBar.select();
     return;
