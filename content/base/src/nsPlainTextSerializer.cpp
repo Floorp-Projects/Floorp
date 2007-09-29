@@ -74,6 +74,8 @@ static const  PRInt32 kIndentIncrementHeaders = 2;  /* If mHeaderStrategy = 1,
 static const  PRInt32 kIndentSizeList = (kTabSize > kOLNumberWidth+3) ? kTabSize: kOLNumberWidth+3;
                                // Indention of non-first lines of ul and ol
 static const  PRInt32 kIndentSizeDD = kTabSize;  // Indention of <dd>
+static const  PRUnichar  kNBSP = 160;
+static const  PRUnichar kSPACE = ' ';
 
 static PRInt32 HeaderLevel(eHTMLTags aTag);
 static PRInt32 GetUnicharWidth(PRUnichar ucs);
@@ -1243,9 +1245,7 @@ nsPlainTextSerializer::Output(nsString& aString)
   if (!(mFlags & nsIDocumentEncoder::OutputPersistNBSP)) {
     // First, replace all nbsp characters with spaces,
     // which the unicode encoder won't do for us.
-    static PRUnichar nbsp = 160;
-    static PRUnichar space = ' ';
-    aString.ReplaceChar(nbsp, space);
+    aString.ReplaceChar(kNBSP, kSPACE);
   }
   mOutputString->Append(aString);
 }
@@ -1277,6 +1277,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
          (
           '>' == aLineFragment[0] ||
           ' ' == aLineFragment[0] ||
+        kNBSP == aLineFragment[0] ||  // bug 215068
           !nsCRT::strncmp(aLineFragment, NS_LITERAL_STRING("From ").get(), 5)
           )
          && mCiteQuoteLevel == 0  // We space-stuff quoted lines anyway
