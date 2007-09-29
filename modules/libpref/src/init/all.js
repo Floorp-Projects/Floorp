@@ -663,6 +663,19 @@ pref("network.IDN.whitelist.info", true);
 pref("network.IDN.whitelist.museum", true);
 pref("network.IDN.whitelist.org", true);
 
+// ".test" localised TLDs for ICANN's top-level IDN trial
+pref("network.IDN.whitelist.xn--0zwm56d", true);
+pref("network.IDN.whitelist.xn--11b5bs3a9aj6g", true);
+pref("network.IDN.whitelist.xn--80akhbyknj4f", true);
+pref("network.IDN.whitelist.xn--9t4b11yi5a", true);
+pref("network.IDN.whitelist.xn--deba0ad", true);
+pref("network.IDN.whitelist.xn--g6w251d", true);
+pref("network.IDN.whitelist.xn--hgbk6aj7f53bba", true);
+pref("network.IDN.whitelist.xn--hlcj6aya9esc7a", true);
+pref("network.IDN.whitelist.xn--jxalpdlp", true);
+pref("network.IDN.whitelist.xn--kgbechtv", true);
+pref("network.IDN.whitelist.xn--zckzah", true);
+
 // If a domain includes any of the following characters, it may be a spoof 
 // attempt and so we always display the domain name as punycode. This would 
 // override the settings "network.IDN_show_punycode" and 
