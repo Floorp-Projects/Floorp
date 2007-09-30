@@ -121,10 +121,6 @@ nsXPInstallManager::nsXPInstallManager()
 
     // initialize mLastUpdate to the current time
     mLastUpdate = PR_Now();
-
-    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-    if (os)
-        os->AddObserver(this, XPI_PROGRESS_TOPIC, PR_TRUE);
 }
 
 
@@ -177,6 +173,10 @@ nsXPInstallManager::InitManagerWithHashes(const PRUnichar **aURLs,
         return NS_ERROR_OUT_OF_MEMORY;
 
     mNeedsShutdown = PR_TRUE;
+
+    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+    if (os)
+        os->AddObserver(this, XPI_PROGRESS_TOPIC, PR_TRUE);
 
     for (PRUint32 i = 0; i < aURLCount; ++i) 
     {
@@ -341,6 +341,10 @@ nsXPInstallManager::InitManagerInternal()
 
         if (OKtoInstall)
         {
+            nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+            if (os)
+                os->AddObserver(this, XPI_PROGRESS_TOPIC, PR_TRUE);
+
             //-----------------------------------------------------
             // Open the progress dialog
             //-----------------------------------------------------
