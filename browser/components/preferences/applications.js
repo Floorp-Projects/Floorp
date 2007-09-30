@@ -1005,7 +1005,11 @@ var gApplicationsPane = {
         return this._prefsBundle.getString("saveFile");
 
       case Ci.nsIHandlerInfo.useHelperApp:
-        return getDisplayNameForFile(aHandlerInfo.preferredApplicationHandler.executable);
+        var preferredApp = aHandlerInfo.preferredApplicationHandler;
+        if (preferredApp instanceof Ci.nsILocalHandlerApp)
+          return getDisplayNameForFile(preferredApp.executable);
+        else
+          return preferredApp.name;
 
       case Ci.nsIHandlerInfo.handleInternally:
         // For the feed type, handleInternally means live bookmarks.
