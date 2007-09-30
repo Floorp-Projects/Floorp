@@ -47,7 +47,7 @@
       </handler>
     </handlers>
 
-    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider">
+    <implementation implements="nsIDOMXULMenuListElement, nsIAccessibleProvider, nsIDOMEventListener">
       <constructor>
         this.setInitialSelection()
       </constructor>
@@ -189,10 +189,14 @@
 
             if (oldval) {
               oldval.removeAttribute('selected');
-              document.removeBroadcastListenerFor(oldval, this, "value");
-              document.removeBroadcastListenerFor(oldval, this, "label");
-              document.removeBroadcastListenerFor(oldval, this, "image");
-              document.removeBroadcastListenerFor(oldval, this, "description");
+              if (document instanceof Components.interfaces.nsIDOMXULDocument) {
+                document.removeBroadcastListenerFor(oldval, this, "value");
+                document.removeBroadcastListenerFor(oldval, this, "label");
+                document.removeBroadcastListenerFor(oldval, this, "image");
+                document.removeBroadcastListenerFor(oldval, this, "description");
+              }
+              else
+                oldval.removeEventListener("DOMAttrModified", this, false);
             }
 
             this.mSelectedInternal = val;
@@ -202,10 +206,16 @@
               this.setAttribute('image', val.getAttribute('image'));
               this.setAttribute('label', val.getAttribute('label'));
               this.setAttribute('description', val.getAttribute('description'));
-              document.addBroadcastListenerFor(val, this, "value");
-              document.addBroadcastListenerFor(val, this, "label");
-              document.addBroadcastListenerFor(val, this, "image");
-              document.addBroadcastListenerFor(val, this, "description");
+              // DOMAttrModified listeners slow down setAttribute calls within
+              // the document, see bug 395496
+              if (document instanceof Components.interfaces.nsIDOMXULDocument) {
+                document.addBroadcastListenerFor(val, this, "value");
+                document.addBroadcastListenerFor(val, this, "label");
+                document.addBroadcastListenerFor(val, this, "image");
+                document.addBroadcastListenerFor(val, this, "description");
+              }
+              else
+                val.addEventListener("DOMAttrModified", this, false);
             }
             else {
               this.removeAttribute('value');
@@ -226,6 +236,25 @@
           ]]>
         </setter>
       </property>
+
+      <method name="handleEvent">
+        <parameter name="aEvent"/>
+        <body>
+          <![CDATA[
+            if (aEvent.type == "DOMAttrModified" &&
+                aEvent.target == this.mSelectedInternal) {
+              var attrName = aEvent.attrName;
+              switch (attrName) {
+                case "value":
+                case "label":
+                case "image":
+                case "description":
+                  this.setAttribute(attrName, aEvent.newValue);
+              }
+            }
+          ]]>
+        </body>
+      </method>
 
       <method name="getIndexOfItem">
         <parameter name="item"/>
@@ -345,11 +374,14 @@
       <destructor>
         <![CDATA[
           if (this.mSelectedInternal) {
-            document.removeBroadcastListenerFor(this.mSelectedInternal, this, "value");
-            document.removeBroadcastListenerFor(this.mSelectedInternal, this, "label");
-            document.removeBroadcastListenerFor(this.mSelectedInternal, this, "image");
-            document.removeBroadcastListenerFor(this.mSelectedInternal, this, "description");
-           
+            if (document instanceof Components.interfaces.nsIDOMXULDocument) {
+              document.removeBroadcastListenerFor(this.mSelectedInternal, this, "value");
+              document.removeBroadcastListenerFor(this.mSelectedInternal, this, "label");
+              document.removeBroadcastListenerFor(this.mSelectedInternal, this, "image");
+              document.removeBroadcastListenerFor(this.mSelectedInternal, this, "description");
+            }
+            else
+              this.mSelectedInternal.removeEventListener("DOMAttrModified", this, false);
           }
         ]]>
       </destructor>
