@@ -812,36 +812,6 @@ nsFormFillController::Input(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsFormFillController::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-  mIgnoreClick = PR_FALSE;
-
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aMouseEvent->GetTarget(getter_AddRefs(target));
-
-  nsCOMPtr<nsIDOMHTMLInputElement> targetInput = do_QueryInterface(target);
-  if (!targetInput || (targetInput && targetInput != mFocusedInput)) {
-    // A new input will be taking focus.  Ignore the first click
-    // so that the popup is not shown.
-    mIgnoreClick = PR_TRUE;
-    return NS_OK;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFormFillController::MouseUp(nsIDOMEvent* aMouseEvent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFormFillController::MouseClick(nsIDOMEvent* aMouseEvent)
-{
-  if (mIgnoreClick) {
-    mIgnoreClick = PR_FALSE;
-    return NS_OK;
-  }
-
   if (!mFocusedInput)
     return NS_OK;
 
@@ -877,6 +847,18 @@ nsFormFillController::MouseClick(nsIDOMEvent* aMouseEvent)
     mController->HandleKeyNavigation(nsIDOMKeyEvent::DOM_VK_DOWN, &cancel);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::MouseUp(nsIDOMEvent* aMouseEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::MouseClick(nsIDOMEvent* aMouseEvent)
+{
   return NS_OK;
 }
 
