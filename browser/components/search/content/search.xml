@@ -102,15 +102,14 @@
           </xul:textbox>
         </xul:hbox>
 
-        <xul:stack class="search-go-button-stack endcap">
-          <xul:box class="endcap-box" chromedir="&locale.dir;"/>
+        <xul:box class="endcap" chromedir="&locale.dir;">
           <xul:toolbarbutton class="search-go-button"
                              anonid="search-go-button"
                              chromedir="&locale.dir;"
                              oncommand="document.getBindingParent(this).handleSearchCommand(event);"
                              onclick="checkForMiddleClick(this, event);"
                              label="&searchEndCap.label;" />
-        </xul:stack>
+        </xul:box>
       </xul:hbox>
     </content>
 

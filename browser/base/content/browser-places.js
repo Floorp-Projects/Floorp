@@ -205,8 +205,9 @@ var PlacesCommandHook = {
     // it to the content area
     var starIcon = document.getElementById("star-button");
     if (starIcon && isElementVisible(starIcon)) {
+      var dockTo = starIcon.parentNode; // urlbar endcap
       this.bookmarkPage(getBrowser().selectedBrowser, aParent, aShowEditUI,
-                        starIcon, "after_start");
+                        dockTo, "after_start");
     }
     else {
       this.bookmarkPage(getBrowser().selectedBrowser, aParent, aShowEditUI,

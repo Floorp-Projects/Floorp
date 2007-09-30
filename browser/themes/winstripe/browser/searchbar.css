@@ -163,10 +163,6 @@ toolbar[mode="text"] .search-go-button {
   -moz-appearance: toolbarbutton;
 }
 
-toolbar[mode="text"] .search-go-button-stack {
-  padding: 0px;
-}
-
 toolbar[mode="text"] .search-go-button {
   background-image: none;
   list-style-image: none;
