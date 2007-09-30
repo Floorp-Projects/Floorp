@@ -163,7 +163,6 @@ protected:
   PRPackedBool mCompleteSelectedIndex;
   PRPackedBool mForceComplete;
   PRPackedBool mSuppressOnInput;
-  PRPackedBool mIgnoreClick;
 };
 
 #endif // __nsFormFillController__
