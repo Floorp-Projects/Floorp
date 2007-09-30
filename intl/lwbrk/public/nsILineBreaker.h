@@ -86,4 +86,10 @@ NS_IsSpace(PRUnichar u)
          u == 0x3000;                    // IDEOGRAPHIC SPACE
 }
 
+static inline PRBool
+NS_NeedsPlatformNativeHandling(PRUnichar aChar)
+{
+  return (0x0e01 <= aChar && aChar <= 0x0fff); // Thai, Lao, Tibetan
+}
+
 #endif  /* nsILineBreaker_h__ */
