@@ -94,7 +94,7 @@ public:
   static inline PRBool IsComplexChar(PRUnichar u)
   {
     return IsComplexASCIIChar(u) ||
-           (0x0e01 <= u && u <= 0x0edf) || // Thai & Lao
+           NS_NeedsPlatformNativeHandling(u) ||
            (0x1100 <= u && u <= 0x11ff) || // Hangul Jamo
            (0x2000 <= u && u <= 0x21ff) || // Punctuations and Symbols
            (0x2e80 <= u && u <= 0xd7ff) || // several CJK blocks
