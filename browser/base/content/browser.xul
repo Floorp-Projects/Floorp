@@ -264,17 +264,20 @@
 #endif
             </hbox>
           </textbox>
-          <hbox id="urlbar-endcap" class="endcap" chromedir="&locale.dir;">
-            <toolbarbutton id="star-button"
-                           onclick="if (event.button == 0) PlacesStarButton.onClick(event);"/>
-            <toolbarbutton id="go-button" chromedir="&locale.dir;"
-                           label="&goEndCap.label;"
-                           onclick="handleURLBarCommand(event);"
-                           ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
-                           ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
-                           ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
-                           tooltiptext="&goEndCap.tooltip;"/>
-          </hbox>
+          <stack id="go-button-stack" class="endcap">
+            <box class="endcap-box" chromedir="&locale.dir;"/>
+            <hbox>
+              <toolbarbutton id="star-button"
+                             onclick="if (event.button == 0) PlacesStarButton.onClick(event);"/>
+              <toolbarbutton id="go-button" chromedir="&locale.dir;"
+                             label="&goEndCap.label;"
+                             onclick="handleURLBarCommand(event);"
+                             ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
+                             ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
+                             ondragexit="nsDragAndDrop.dragExit(event, goButtonObserver);"
+                             tooltiptext="&goEndCap.tooltip;"/>
+            </hbox>
+          </stack>
         </hbox>
       </toolbaritem>
 

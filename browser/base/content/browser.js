@@ -956,9 +956,9 @@ function delayedStartup()
   if (gURLBar && document.documentElement.getAttribute("chromehidden").indexOf("toolbar") != -1) {
     gURLBar.setAttribute("readonly", "true");
     gURLBar.setAttribute("enablehistory", "false");
-    var urlbarEndcap = document.getElementById("urlbar-endcap");
-    if (urlbarEndcap)
-      urlbarEndcap.setAttribute("hidden", "true");
+    var goButtonStack = document.getElementById("go-button-stack");
+    if (goButtonStack)
+      goButtonStack.setAttribute("hidden", "true");
   }
 
   if (gURLBar) {
@@ -5574,9 +5574,9 @@ function showToolbars() {
     gURLBar.setAttribute("enablehistory", "true");
   }
   
-  var urlbarEndcap = document.getElementById("urlbar-endcap");
-  if (urlbarEndcap)
-    urlbarEndcap.removeAttribute("hidden");
+  var goButtonStack = document.getElementById("go-button-stack");
+  if (goButtonStack)
+    goButtonStack.removeAttribute("hidden");
   
   return false; // Dismiss the notification message
 }
