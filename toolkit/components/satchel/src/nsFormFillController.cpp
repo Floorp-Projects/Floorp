@@ -124,31 +124,6 @@ nsFormFillController::~nsFormFillController()
 }
 
 ////////////////////////////////////////////////////////////////////////
-
-nsRect
-GetScreenOrigin(nsIDOMElement* aElement)
-{
-  nsRect rect(0,0,0,0);
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  nsCOMPtr<nsIDocument> doc = content->GetDocument();
-
-  if (doc) {
-    // Get Presentation shell 0
-    nsIPresShell* presShell = doc->GetPrimaryShell();
-
-    if (presShell) {
-      nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
-      if (!frame)
-        return rect;
-      rect = frame->GetScreenRectExternal();
-    }
-  }
-  
-  return rect;
-}
-
-////////////////////////////////////////////////////////////////////////
 //// nsIFormFillController
 
 NS_IMETHODIMP
@@ -245,10 +220,7 @@ nsFormFillController::SetPopupOpen(PRBool aPopupOpen)
                                        NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
                                        NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
 
-      nsRect popupRect = GetScreenOrigin(mFocusedInput);
-      mFocusedPopup->OpenAutocompletePopup(this, popupRect.x,
-                                           popupRect.y+popupRect.height,
-                                           popupRect.width);
+      mFocusedPopup->OpenAutocompletePopup(this, mFocusedInput);
     } else
       mFocusedPopup->ClosePopup();
   }
