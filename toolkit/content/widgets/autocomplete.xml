@@ -324,7 +324,7 @@
 
       <method name="openPopup">
         <body><![CDATA[
-          this.popup.openAutocompletePopup(this, -1, -1, this.boxObject.width);
+          this.popup.openAutocompletePopup(this, this);
         ]]></body>
       </method>
 
@@ -524,7 +524,7 @@
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content>
+    <content minwidth="100">
       <xul:tree anonid="tree" class="autocomplete-tree plain" hidecolumnpicker="true" flex="1">
         <xul:treecols anonid="treecols">
           <xul:treecol id="treecolAutoCompleteValue" class="autocomplete-treecol" flex="1" overflow="true"/>
@@ -571,9 +571,7 @@
 
       <method name="openAutocompletePopup">
         <parameter name="aInput"/>
-        <parameter name="aX"/>
-        <parameter name="aY"/>
-        <parameter name="aWidth"/>
+        <parameter name="aElement"/>
         <body><![CDATA[
           if (!this.mPopupOpen) {
             this.mInput = aInput;
@@ -583,15 +581,12 @@
             this.showCommentColumn = this.mInput.showCommentColumn;
             this.showImageColumn = this.mInput.showImageColumn;
 
-            this.setAttribute("width", aWidth < 100 ? 100 : aWidth);
-
             document.popupNode = null;
-            if (aY == -1) {
-              this.showPopup(this.mInput, -1, -1, "popup", 'bottomleft', 'topleft');
-            }
-            else {
-              this.showPopup(document.documentElement, aX, aY, "popup", null, null);            
-            }
+
+            var rect = aElement.getBoundingClientRect();
+            this.setAttribute("width", rect.right - rect.left);            
+            this.openPopup(aElement, "after_start", 0, 0, false, false);
+
             this.popupBoxObject.setConsumeRollupEvent(this.mInput.consumeRollupEvent);
           }
         ]]></body>

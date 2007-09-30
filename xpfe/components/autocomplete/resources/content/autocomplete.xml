@@ -1405,7 +1405,7 @@
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content>
+    <content minwidth="100">
       <xul:tree anonid="tree" class="autocomplete-tree plain" flex="1">
         <xul:treecols anonid="treecols">
           <xul:treecol class="autocomplete-treecol" id="treecolAutoCompleteValue" flex="2"/>
@@ -1560,21 +1560,22 @@
 
       <method name="openAutocompletePopup">
         <parameter name="aInput"/>
-        <parameter name="aX"/>
-        <parameter name="aY"/>
-        <parameter name="aWidth"/>
-        <body>
+        <parameter name="aElement"/>
+        <body><![CDATA[
           if (!this.input) {
             this.tree.view = aInput.controller;
             this.view = this.tree.view;
             this.showCommentColumn = aInput.showCommentColumn;
             this.input = aInput;
-            this.width = aWidth;
             this.invalidate();
-            this.openPopupAtScreen(aX, aY, false);
+
+            var rect = aElement.getBoundingClientRect();
+            this.setAttribute("width", rect.right - rect.left);            
+            this.openPopup(aElement, "after_start", 0, 0, false, false);
+
             this.popupBoxObject.setConsumeRollupEvent(aInput.consumeRollupEvent);
           }
-        </body>
+        ]]></body>
       </method>
 
       <method name="closePopup">
