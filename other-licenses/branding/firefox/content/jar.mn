@@ -5,6 +5,3 @@ browser.jar:
   content/branding/aboutFooter.png               (aboutFooter.png)
   content/branding/icon48.png                    (icon48.png)
   content/branding/icon64.png                    (icon64.png)
-#ifdef XP_WIN
-  content/branding/uninstall.properties          (uninstall.properties)
-#endif
