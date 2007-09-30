@@ -65,9 +65,6 @@ browser.jar:
   content/branding/aboutFooter.png               (branding/aboutFooter.png)
   content/branding/icon48.png                    (branding/icon48.png)
   content/branding/icon64.png                    (branding/icon64.png)
-#ifdef XP_WIN
-  content/branding/uninstall.properties          (branding/uninstall.properties)
-#endif
 #endif
 
 #ifdef TOOLBAR_CUSTOMIZATION_SHEET
