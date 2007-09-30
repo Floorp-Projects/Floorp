@@ -2372,6 +2372,9 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
     }
 
+#ifdef JS_THREADSAFE
+    JS_BeginRequest(scx);
+#endif
     src = JS_GetStringChars(str);
     srclen = JS_GetStringLength(str);
     lazy = JS_FALSE;
@@ -2406,6 +2409,9 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
 out:
+#ifdef JS_THREADSAFE
+    JS_EndRequest(scx);
+#endif
     JS_DestroyContext(scx);
     return ok;
 }
