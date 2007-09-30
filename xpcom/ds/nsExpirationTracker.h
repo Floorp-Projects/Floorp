@@ -234,6 +234,29 @@ template <class T, PRUint32 K> class nsExpirationTracker {
         AgeOneGeneration();
       }
     }
+    
+    class Iterator {
+    private:
+      nsExpirationTracker<T,K>* mTracker;
+      PRUint32                  mGeneration;
+      PRUint32                  mIndex;
+    public:
+      Iterator(nsExpirationTracker<T,K>* aTracker)
+        : mTracker(aTracker), mGeneration(0), mIndex(0) {}
+      T* Next() {
+        while (mGeneration < K) {
+          nsTArray<T*>* generation = &mTracker->mGenerations[mGeneration];
+          if (mIndex < generation->Length()) {
+            ++mIndex;
+            return (*generation)[mIndex - 1];
+          }
+          ++mGeneration;
+        }
+        return nsnull;
+      }
+    };
+    
+    friend class Iterator;
 
   protected:
     /**
