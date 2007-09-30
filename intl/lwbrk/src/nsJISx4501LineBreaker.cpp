@@ -415,12 +415,6 @@ IS_CJK_CHAR(PRUnichar u)
           (0xff00 <= (u) && (u) <= 0xffef) );
 }
 
-static inline int
-IS_COMPLEX(PRUnichar u)
-{
-  return (0x0e01 <= (u) && (u) <= 0x0e5b);
-}
-
 static inline PRBool
 IS_NONBREAKABLE_SPACE(PRUnichar u)
 {
@@ -447,6 +441,8 @@ GetClass(PRUnichar u)
    // Handle 3 range table first
    if (0x0000 == h) {
      c = GETCLASSFROMTABLE(gLBClass00, l);
+   } else if (NS_NeedsPlatformNativeHandling(u)) {
+     c = CLASS_COMPLEX;
    } else if (0x0E00 == h) {
      c = GETCLASSFROMTABLE(gLBClass0E, l);
    } else if (0x2000 == h) {
@@ -738,12 +734,12 @@ nsJISx4051LineBreaker::WordMove(const PRUnichar* aText, PRUint32 aLen,
   PRInt32 begin, end;
 
   for (begin = aPos; begin > 0 && !NS_IsSpace(aText[begin - 1]); --begin) {
-    if (IS_CJK_CHAR(aText[begin]) || IS_COMPLEX(aText[begin])) {
+    if (IS_CJK_CHAR(aText[begin]) || NS_NeedsPlatformNativeHandling(aText[begin])) {
       textNeedsJISx4051 = PR_TRUE;
     }
   }
   for (end = aPos + 1; end < PRInt32(aLen) && !NS_IsSpace(aText[end]); ++end) {
-    if (IS_CJK_CHAR(aText[end]) || IS_COMPLEX(aText[end])) {
+    if (IS_CJK_CHAR(aText[end]) || NS_NeedsPlatformNativeHandling(aText[end])) {
       textNeedsJISx4051 = PR_TRUE;
     }
   }
