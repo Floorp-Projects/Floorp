@@ -1415,7 +1415,7 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
     case NS_THEME_MENUITEMTEXT:
         if (!theme)
         {
-          left = 16;
+          left = 18;
         }
         else
         {
