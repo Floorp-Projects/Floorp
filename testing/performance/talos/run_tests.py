@@ -102,8 +102,11 @@ def send_to_csv(csv_file, results):
         bd.rstrip('\n')
         page_results = bd.splitlines()
         i = 0
-        for mypage in page_results[2:]:
+        for mypage in page_results:
           r = mypage.split(';')
+          #skip this line if it isn't the correct format
+          if len(r) == 1:
+              continue
           r[1] = r[1].rstrip('/')
           if r[1].find('/') > -1 :
              page = r[1].split('/')[1]
@@ -176,8 +179,11 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
         bd.rstrip('\n')
         page_results = bd.splitlines()
         i = 0
-        for mypage in page_results[2:]:
+        for mypage in page_results:
           r = mypage.split(';')
+          #skip this line if it isn't the correct format
+          if len(r) == 1:
+              continue
           r[1] = r[1].rstrip('/')
           if r[1].find('/') > -1 :
              page = r[1].split('/')[1]
