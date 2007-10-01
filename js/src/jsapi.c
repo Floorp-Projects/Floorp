@@ -65,6 +65,7 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
+#include "jsiter.h"
 #include "jslock.h"
 #include "jsmath.h"
 #include "jsnum.h"
@@ -84,10 +85,6 @@
 
 #if JS_HAS_XML_SUPPORT
 #include "jsxml.h"
-#endif
-
-#if JS_HAS_GENERATORS
-#include "jsiter.h"
 #endif
 
 #ifdef HAVE_VA_LIST_AS_ARRAY
@@ -5547,6 +5544,12 @@ JS_ThrowReportedError(JSContext *cx, const char *message,
                       JSErrorReport *reportp)
 {
     return js_ErrorToException(cx, message, reportp);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_ThrowStopIteration(JSContext *cx)
+{
+    return js_ThrowStopIteration(cx);
 }
 
 #ifdef JS_THREADSAFE
