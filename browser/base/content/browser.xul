@@ -104,9 +104,11 @@
       <vbox id="editBookmarkPanelContent" flex="1"/>
       <hbox flex="1">
         <spacer flex="1"/>
-        <button label="&editBookmark.delete.label;"
+        <button id="editBookmarkPanelDeleteButton"
+                label="&editBookmark.delete.label;"
                 oncommand="PlacesCommandHook.deleteButtonOnCommand();"/>
-        <button label="&editBookmark.done.label;"
+        <button id="editBookmarkPanelDoneButton"
+                label="&editBookmark.done.label;"
                 default="true"
                 oncommand="PlacesCommandHook.doneButtonOnCommand();"/>
       </hbox>
