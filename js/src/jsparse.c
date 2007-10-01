@@ -158,46 +158,23 @@ static uint32 maxparsenodes = 0;
 static uint32 recyclednodes = 0;
 #endif
 
-JS_FRIEND_API(JSBool)
-js_InitParseContext(JSContext *cx, JSParseContext *pc,
-                    const jschar *base, size_t length,
-                    FILE *fp, const char *filename, uintN lineno)
+void
+js_InitParseContext(JSContext *cx, JSParseContext *pc)
 {
-    pc->tempPoolMark = JS_ARENA_MARK(&cx->tempPool);
-    if (!js_InitTokenStream(cx, TS(pc), base, length, fp, filename, lineno)) {
-        JS_ARENA_RELEASE(&cx->tempPool, pc->tempPoolMark);
-        return JS_FALSE;
-    }
-    pc->principals = NULL;
     pc->nodeList = NULL;
     pc->traceListHead = NULL;
 
     /* Root atoms and objects allocated for the parsed tree. */
     JS_KEEP_ATOMS(cx->runtime);
     JS_PUSH_TEMP_ROOT_PARSE_CONTEXT(cx, pc, &pc->tempRoot);
-    return JS_TRUE;
-}
-
-JS_FRIEND_API(void)
-js_FinishParseContext(JSContext *cx, JSParseContext *pc)
-{
-    if (pc->principals)
-        JSPRINCIPALS_DROP(cx, pc->principals);
-    JS_ASSERT(pc->tempRoot.u.parseContext == pc);
-    JS_POP_TEMP_ROOT(cx, &pc->tempRoot);
-    JS_UNKEEP_ATOMS(cx->runtime);
-    js_CloseTokenStream(cx, TS(pc));
-    JS_ARENA_RELEASE(&cx->tempPool, pc->tempPoolMark);
 }
 
 void
-js_InitCompilePrincipals(JSContext *cx, JSParseContext *pc,
-                         JSPrincipals *principals)
+js_FinishParseContext(JSContext *cx, JSParseContext *pc)
 {
-    JS_ASSERT(!pc->principals);
-    if (principals)
-        JSPRINCIPALS_HOLD(cx, principals);
-    pc->principals = principals;
+    JS_ASSERT(pc->tempRoot.u.parseContext == pc);
+    JS_POP_TEMP_ROOT(cx, &pc->tempRoot);
+    JS_UNKEEP_ATOMS(cx->runtime);
 }
 
 JSParsedObjectBox *
@@ -519,7 +496,7 @@ MaybeSetupFrame(JSContext *cx, JSObject *chain, JSStackFrame *oldfp,
  * Parse a top-level JS script.
  */
 JS_FRIEND_API(JSParseNode *)
-js_ParseScript(JSContext *cx, JSObject *chain, JSParseContext *pc)
+js_ParseTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts)
 {
     JSStackFrame *fp, frame;
     JSTreeContext tc;
@@ -541,12 +518,11 @@ js_ParseScript(JSContext *cx, JSObject *chain, JSParseContext *pc)
      *   an object lock before it finishes generating bytecode into a script
      *   protected from the GC by a root or a stack frame reference.
      */
-    TREE_CONTEXT_INIT(&tc, pc);
-    pn = Statements(cx, TS(pc), &tc);
+    TREE_CONTEXT_INIT(&tc, ts->parseContext);
+    pn = Statements(cx, ts, &tc);
     if (pn) {
-        if (!js_MatchToken(cx, TS(pc), TOK_EOF)) {
-            js_ReportCompileErrorNumber(cx, TS(pc),
-                                        JSREPORT_TS | JSREPORT_ERROR,
+        if (!js_MatchToken(cx, ts, TOK_EOF)) {
+            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
                                         JSMSG_SYNTAX_ERROR);
             pn = NULL;
         } else {
@@ -564,15 +540,14 @@ js_ParseScript(JSContext *cx, JSObject *chain, JSParseContext *pc)
 /*
  * Compile a top-level script.
  */
-JS_FRIEND_API(JSScript *)
-js_CompileScript(JSContext *cx, JSObject *chain, JSParseContext *pc)
+JS_FRIEND_API(JSBool)
+js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
+                      JSCodeGenerator *cg)
 {
     JSStackFrame *fp, frame;
     uint32 flags;
-    JSArenaPool codePool, notePool;
-    JSCodeGenerator cg;
     JSParseNode *pn;
-    JSScript *script;
+    JSBool ok;
 #ifdef METER_PARSENODES
     void *sbrk(ptrdiff_t), *before = sbrk(0);
 #endif
@@ -590,48 +565,40 @@ js_CompileScript(JSContext *cx, JSObject *chain, JSParseContext *pc)
                      ? JSFRAME_COMPILING | JSFRAME_COMPILE_N_GO
                      : JSFRAME_COMPILING);
 
-    JS_INIT_ARENA_POOL(&codePool, "code", 1024, sizeof(jsbytecode),
-                       &cx->scriptStackQuota);
-    JS_INIT_ARENA_POOL(&notePool, "note", 1024, sizeof(jssrcnote),
-                       &cx->scriptStackQuota);
-    js_InitCodeGenerator(cx, &cg, pc, &codePool, &notePool, TS(pc)->lineno);
+    /* Prevent GC activation while compiling. */
+    JS_KEEP_ATOMS(cx->runtime);
 
-    /* From this point the control must flow via the label out. */
-    pn = Statements(cx, TS(pc), &cg.treeContext);
+    pn = Statements(cx, ts, &cg->treeContext);
     if (!pn) {
-        script = NULL;
-        goto out;
-    }
-    if (!js_MatchToken(cx, TS(pc), TOK_EOF)) {
-        js_ReportCompileErrorNumber(cx, TS(pc), JSREPORT_TS | JSREPORT_ERROR,
+        ok = JS_FALSE;
+    } else if (!js_MatchToken(cx, ts, TOK_EOF)) {
+        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
                                     JSMSG_SYNTAX_ERROR);
-        script = NULL;
-        goto out;
-    }
+        ok = JS_FALSE;
+    } else {
 #ifdef METER_PARSENODES
-    printf("Parser growth: %d (%u nodes, %u max, %u unrecycled)\n",
-           (char *)sbrk(0) - (char *)before,
-           parsenodes,
-           maxparsenodes,
-           parsenodes - recyclednodes);
-    before = sbrk(0);
+        printf("Parser growth: %d (%u nodes, %u max, %u unrecycled)\n",
+               (char *)sbrk(0) - (char *)before,
+               parsenodes,
+               maxparsenodes,
+               parsenodes - recyclednodes);
+        before = sbrk(0);
 #endif
 
-    /*
-     * No need to emit bytecode here -- Statements already has, for each
-     * statement in turn.  Search for TCF_COMPILING in Statements, below.
-     * That flag is set for every tc == &cg->treeContext, and it implies
-     * that the tc can be downcast to a cg and used to emit code during
-     * parsing, rather than at the end of the parse phase.
-     *
-     * Nowadays the threaded interpreter needs a stop instruction, so we
-     * do have to emit that here.
-     */
-    JS_ASSERT(cg.treeContext.flags & TCF_COMPILING);
-    if (js_Emit1(cx, &cg, JSOP_STOP) < 0) {
-        script = NULL;
-        goto out;
+        /*
+         * No need to emit bytecode here -- Statements already has, for each
+         * statement in turn.  Search for TCF_COMPILING in Statements, below.
+         * That flag is set for every tc == &cg->treeContext, and it implies
+         * that the tc can be downcast to a cg and used to emit code during
+         * parsing, rather than at the end of the parse phase.
+         *
+         * Nowadays the threaded interpreter needs a stop instruction, so we
+         * do have to emit that here.
+         */
+        JS_ASSERT(cg->treeContext.flags & TCF_COMPILING);
+        ok = js_Emit1(cx, cg, JSOP_STOP) >= 0;
     }
+
 #ifdef METER_PARSENODES
     printf("Code-gen growth: %d (%u bytecodes, %u srcnotes)\n",
            (char *)sbrk(0) - (char *)before, CG_OFFSET(cg), cg->noteCount);
@@ -639,16 +606,10 @@ js_CompileScript(JSContext *cx, JSObject *chain, JSParseContext *pc)
 #ifdef JS_ARENAMETER
     JS_DumpArenaStats(stdout);
 #endif
-    script = js_NewScriptFromCG(cx, &cg, NULL);
-
-  out:
-    js_FinishCodeGenerator(cx, &cg);
-    JS_FinishArenaPool(&codePool);
-    JS_FinishArenaPool(&notePool);
-
+    JS_UNKEEP_ATOMS(cx->runtime);
     cx->fp->flags = flags;
     cx->fp = fp;
-    return script;
+    return ok;
 }
 
 /*
@@ -909,9 +870,10 @@ FunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun,
  * handler attribute in an HTML <INPUT> tag.
  */
 JSBool
-js_CompileFunctionBody(JSContext *cx, JSParseContext *pc, JSFunction *fun)
+js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
 {
     JSArenaPool codePool, notePool;
+    JSParseContext pc;
     JSCodeGenerator funcg;
     JSStackFrame *fp, frame;
     JSObject *funobj;
@@ -921,7 +883,14 @@ js_CompileFunctionBody(JSContext *cx, JSParseContext *pc, JSFunction *fun)
                        &cx->scriptStackQuota);
     JS_INIT_ARENA_POOL(&notePool, "note", 1024, sizeof(jssrcnote),
                        &cx->scriptStackQuota);
-    js_InitCodeGenerator(cx, &funcg, pc, &codePool, &notePool, TS(pc)->lineno);
+    js_InitParseContext(cx, &pc);
+    JS_ASSERT(!ts->parseContext);
+    ts->parseContext = &pc;
+    if (!js_InitCodeGenerator(cx, &funcg, &pc, &codePool, &notePool,
+                              ts->filename, ts->lineno,
+                              ts->principals)) {
+        return JS_FALSE;
+    }
 
     /* Push a JSStackFrame for use by FunctionBody. */
     fp = cx->fp;
@@ -949,12 +918,11 @@ js_CompileFunctionBody(JSContext *cx, JSParseContext *pc, JSFunction *fun)
      * Therefore we must fold constants, allocate try notes, and generate code
      * for this function, including a stop opcode at the end.
      */
-    CURRENT_TOKEN(TS(pc)).type = TOK_LC;
-    pn = FunctionBody(cx, TS(pc), fun, &funcg.treeContext);
+    CURRENT_TOKEN(ts).type = TOK_LC;
+    pn = FunctionBody(cx, ts, fun, &funcg.treeContext);
     if (pn) {
-        if (!js_MatchToken(cx, TS(pc), TOK_EOF)) {
-            js_ReportCompileErrorNumber(cx, TS(pc),
-                                        JSREPORT_TS | JSREPORT_ERROR,
+        if (!js_MatchToken(cx, ts, TOK_EOF)) {
+            js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
                                         JSMSG_SYNTAX_ERROR);
             pn = NULL;
         } else {
@@ -966,6 +934,7 @@ js_CompileFunctionBody(JSContext *cx, JSParseContext *pc, JSFunction *fun)
     /* Restore saved state and release code generation arenas. */
     cx->fp = fp;
     js_FinishCodeGenerator(cx, &funcg);
+    js_FinishParseContext(cx, &pc);
     JS_FinishArenaPool(&codePool);
     JS_FinishArenaPool(&notePool);
     return pn != NULL;
@@ -5483,8 +5452,8 @@ XMLElementOrListRoot(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 }
 
 JS_FRIEND_API(JSParseNode *)
-js_ParseXMLText(JSContext *cx, JSObject *chain, JSParseContext *pc,
-                JSBool allowList)
+js_ParseXMLTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
+                       JSBool allowList)
 {
     JSStackFrame *fp, frame;
     JSParseNode *pn;
@@ -5498,22 +5467,22 @@ js_ParseXMLText(JSContext *cx, JSObject *chain, JSParseContext *pc,
      */
     fp = cx->fp;
     MaybeSetupFrame(cx, chain, fp, &frame);
-    TREE_CONTEXT_INIT(&tc, pc);
+    TREE_CONTEXT_INIT(&tc, ts->parseContext);
 
     /* Set XML-only mode to turn off special treatment of {expr} in XML. */
-    TS(pc)->flags |= TSF_OPERAND | TSF_XMLONLYMODE;
-    tt = js_GetToken(cx, TS(pc));
-    TS(pc)->flags &= ~TSF_OPERAND;
+    ts->flags |= TSF_OPERAND | TSF_XMLONLYMODE;
+    tt = js_GetToken(cx, ts);
+    ts->flags &= ~TSF_OPERAND;
 
     if (tt != TOK_XMLSTAGO) {
-        js_ReportCompileErrorNumber(cx, TS(pc), JSREPORT_TS | JSREPORT_ERROR,
+        js_ReportCompileErrorNumber(cx, ts, JSREPORT_TS | JSREPORT_ERROR,
                                     JSMSG_BAD_XML_MARKUP);
         pn = NULL;
     } else {
-        pn = XMLElementOrListRoot(cx, TS(pc), &tc, allowList);
+        pn = XMLElementOrListRoot(cx, ts, &tc, allowList);
     }
 
-    TS(pc)->flags &= ~TSF_XMLONLYMODE;
+    ts->flags &= ~TSF_XMLONLYMODE;
     TREE_CONTEXT_FINISH(&tc);
     cx->fp = fp;
     return pn;
@@ -5938,10 +5907,14 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
       case TOK_XMLPI:
 #endif
       case TOK_NAME:
+      case TOK_OBJECT:
         pn = NewParseNode(cx, ts, PN_NULLARY, tc);
         if (!pn)
             return NULL;
-        pn->pn_atom = CURRENT_TOKEN(ts).t_atom;
+        if (tt == TOK_OBJECT)
+            pn->pn_pob = CURRENT_TOKEN(ts).t_pob;
+        else
+            pn->pn_atom = CURRENT_TOKEN(ts).t_atom;
 #if JS_HAS_XML_SUPPORT
         if (tt == TOK_XMLPI)
             pn->pn_atom2 = CURRENT_TOKEN(ts).t_atom2;
@@ -6005,31 +5978,6 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             }
         }
         break;
-
-      case TOK_REGEXP:
-      {
-        JSObject *obj;
-
-        pn = NewParseNode(cx, ts, PN_NULLARY, tc);
-        if (!pn)
-            return NULL;
-
-        /* Token stream ensures that tokenbuf is NUL-terminated. */
-        JS_ASSERT(*ts->tokenbuf.ptr == (jschar) 0);
-        obj = js_NewRegExpObject(cx, ts,
-                                 ts->tokenbuf.base,
-                                 ts->tokenbuf.ptr - ts->tokenbuf.base,
-                                 CURRENT_TOKEN(ts).t_reflags);
-        if (!obj)
-            return NULL;
-
-        pn->pn_pob = js_NewParsedObjectBox(cx, tc->parseContext, obj);
-        if (!pn->pn_pob)
-            return NULL;
-
-        pn->pn_op = JSOP_REGEXP;
-        break;
-      }
 
       case TOK_NUMBER:
         pn = NewParseNode(cx, ts, PN_NULLARY, tc);
