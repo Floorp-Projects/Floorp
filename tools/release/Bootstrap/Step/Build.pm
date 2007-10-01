@@ -19,6 +19,7 @@ sub Execute {
     my $rc = $config->Get(var => 'rc');
     my $buildPlatform = $config->Get(sysvar => 'buildPlatform');
     my $logDir = $config->Get(sysvar => 'logDir');
+    my $osname = $config->SystemInfo(var => 'osname');    
     my $rcTag = $productTag . '_RC' . $rc;
 
     my $lastBuilt = catfile($buildDir, $buildPlatform, 'last-built');
@@ -30,6 +31,16 @@ sub Execute {
 
     my $buildLog = catfile($logDir, 'build_' . $rcTag . '-build.log');
  
+    # For Cygwin only, ensure that the system mount point is binmode
+    # This forces CVS to use Unix-style linefeed EOL characters.
+    if ($osname eq 'win32') {
+        $this->Shell(
+          cmd => 'mount',
+          cmdArgs => ['-b', '-sc', '/cygdrive'],
+          dir => $buildDir,
+        );
+    }
+  
     $this->Shell(
       cmd => './build-seamonkey.pl',
       cmdArgs => ['--once', '--mozconfig', 'mozconfig', '--depend', 
