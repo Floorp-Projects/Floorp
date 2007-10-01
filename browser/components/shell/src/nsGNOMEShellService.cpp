@@ -83,7 +83,6 @@ static const ProtocolAssociation appProtocols[] = {
   { "http",   PR_TRUE  },
   { "https",  PR_TRUE  },
   { "ftp",    PR_FALSE },
-  { "gopher", PR_FALSE },
   { "chrome", PR_FALSE }
 };
 
