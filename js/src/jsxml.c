@@ -1956,12 +1956,11 @@ ParseXMLSource(JSContext *cx, JSString *src)
     jschar *chars;
     const jschar *srcp, *endp;
     JSXML *xml;
-    void *mark;
-    JSTokenStream *ts;
+    JSParseContext pc;
+    const char *filename;
     uintN lineno;
     JSStackFrame *fp;
     JSOp op;
-    JSParseContext pc;
     JSParseNode *pn;
     JSXMLArray nsarray;
     uintN flags;
@@ -2003,28 +2002,25 @@ ParseXMLSource(JSContext *cx, JSString *src)
     chars [offset + dstlen] = 0;
 
     xml = NULL;
-    mark = JS_ARENA_MARK(&cx->tempPool);
-    ts = js_NewBufferTokenStream(cx, chars, length);
-    if (!ts)
-        goto out;
     for (fp = cx->fp; fp && !fp->pc; fp = fp->down)
         JS_ASSERT(!fp->script);
+    filename = NULL;
+    lineno = 1;
     if (fp) {
         op = (JSOp) *fp->pc;
         if (op == JSOP_TOXML || op == JSOP_TOXMLLIST) {
-            ts->filename = fp->script->filename;
+            filename = fp->script->filename;
             lineno = js_PCToLineNumber(cx, fp->script, fp->pc);
-            for (endp = srcp + srclen; srcp < endp; srcp++)
+            for (endp = srcp + srclen; srcp < endp; srcp++) {
                 if (*srcp == '\n')
                     --lineno;
-            ts->lineno = lineno;
+            }
         }
     }
 
-    js_InitParseContext(cx, &pc);
-    JS_ASSERT(!ts->parseContext);
-    ts->parseContext = &pc;
-    pn = js_ParseXMLTokenStream(cx, cx->fp->scopeChain, ts, JS_FALSE);
+    if (!js_InitParseContext(cx, &pc, chars, length, NULL, filename, lineno))
+        goto out;
+    pn = js_ParseXMLText(cx, cx->fp->scopeChain, &pc, JS_FALSE);
     if (pn && XMLArrayInit(cx, &nsarray, 1)) {
         if (GetXMLSettingFlags(cx, &flags))
             xml = ParseNodeToXML(cx, pn, &nsarray, flags);
@@ -2034,7 +2030,6 @@ ParseXMLSource(JSContext *cx, JSString *src)
     js_FinishParseContext(cx, &pc);
 
 out:
-    JS_ARENA_RELEASE(&cx->tempPool, mark);
     JS_free(cx, chars);
     return xml;
 
