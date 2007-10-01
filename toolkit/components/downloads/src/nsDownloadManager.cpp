@@ -1321,7 +1321,13 @@ nsDownloadManager::CleanUp()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return stmt->Execute();
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Notify the UI
+  return mObserverService->NotifyObservers(nsnull,
+                                           "download-manager-clear-history",
+                                           nsnull);
 }
 
 NS_IMETHODIMP
