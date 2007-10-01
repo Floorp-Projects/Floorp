@@ -359,6 +359,14 @@ sub execute_tests {
                                        "Actual exit $got_exit, signal $exit_signal",
                                        join("\n",@output));
             }
+            elsif ($got_exit != 0) {
+                # abnormal termination but the test passed, so output a summary line
+                &report_summary_result($test, $bug_number, "PASSED",
+                                       "", 
+                                       "Expected exit $expected_exit",
+                                       "Actual exit $got_exit, signal $exit_signal",
+                                       join("\n",@output));
+            }
         }
         elsif ($timed_out) {
             # test was terminated due to timeout
@@ -1536,6 +1544,11 @@ sub report_summary_result
     $expected    =~ s/[\n\r]+/ /mg;
     $actual      =~ s/[\n\r]+/ /mg;
     $reason      =~ s/[\n\r]+/ /mg;
+
+    if ($result !~ /PASSED/)
+    {
+        $failures_reported++;
+    }
 
     print STDERR ("jstest: $test " .
                   "bug: $bug_number " .
