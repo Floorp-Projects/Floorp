@@ -198,6 +198,8 @@ function ca_enableButtons()
   enableViewButton.setAttribute("disabled",toggle);
   var enableEditButton=document.getElementById('ca_editButton');
   enableEditButton.setAttribute("disabled",edit_toggle);
+  var enableExportButton=document.getElementById('ca_exportButton');
+  enableExportButton.setAttribute("disabled",toggle);
   var enableDeleteButton=document.getElementById('ca_deleteButton');
   enableDeleteButton.setAttribute("disabled",toggle);
 }
@@ -228,6 +230,8 @@ function websites_enableButtons()
   enableViewButton.setAttribute("disabled",toggle);
   var enableEditButton=document.getElementById('websites_editButton');
   enableEditButton.setAttribute("disabled",toggle);
+  var enableExportButton=document.getElementById('websites_exportButton');
+  enableExportButton.setAttribute("disabled",toggle);
   var enableDeleteButton=document.getElementById('websites_deleteButton');
   enableDeleteButton.setAttribute("disabled",toggle);
 }
@@ -243,6 +247,8 @@ function email_enableButtons()
   enableViewButton.setAttribute("disabled",toggle);
   var enableEditButton=document.getElementById('email_editButton');
   enableEditButton.setAttribute("disabled",toggle);
+  var enableExportButton=document.getElementById('email_exportButton');
+  enableExportButton.setAttribute("disabled",toggle);
   var enableDeleteButton=document.getElementById('email_deleteButton');
   enableDeleteButton.setAttribute("disabled",toggle);
 }
@@ -256,6 +262,8 @@ function orphan_enableButtons()
   }
   var enableViewButton=document.getElementById('orphan_viewButton');
   enableViewButton.setAttribute("disabled",toggle);
+  var enableExportButton=document.getElementById('orphan_exportButton');
+  enableExportButton.setAttribute("disabled",toggle);
   var enableDeleteButton=document.getElementById('orphan_deleteButton');
   enableDeleteButton.setAttribute("disabled",toggle);
 }
@@ -331,6 +339,18 @@ function restoreCerts()
     userTreeView.selection.clearSelection();
     caTreeView.loadCertsFromCache(certcache, nsIX509Cert.CA_CERT);
     caTreeView.selection.clearSelection();
+  }
+}
+
+function exportCerts()
+{
+  getSelectedCerts();
+  var numcerts = selected_certs.length;
+  if (!numcerts)
+    return;
+
+  for (var t=0; t<numcerts; t++) {
+    exportToFile(window, selected_certs[t]);
   }
 }
 

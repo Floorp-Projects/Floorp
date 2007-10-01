@@ -23,6 +23,7 @@
  *   Ian McGreer <mcgreer@netscape.com>
  *   Javier Delgadillo <javi@netscape.com>
  *   Kai Engert <kengert@redhat.com>
+ *   Kaspar Brand <mozcontrib@velox.ch>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -320,4 +321,30 @@ function getProxyOnUIThread(aObject, aInterface) {
     return proxyMgr.getProxyForObject(mainThread,
             aInterface, aObject, 5);
     // 5 == NS_PROXY_ALWAYS | NS_PROXY_SYNC
+}
+
+function getCurrentCert()
+{
+  var realIndex;
+  var tree = document.getElementById('treesetDump');
+  if (tree.view.selection.isSelected(tree.currentIndex)
+      && document.getElementById('prettyprint_tab').selected) {
+    /* if the user manually selected a cert on the Details tab,
+       then take that one  */
+    realIndex = tree.currentIndex;    
+  } else {
+    /* otherwise, take the one at the bottom of the chain
+       (i.e. the one of the end-entity, unless we're displaying
+       CA certs) */
+    realIndex = tree.view.rowCount - 1;
+  }
+  if (realIndex >= 0) {
+    var item = tree.contentView.getItemAtIndex(realIndex);
+    var dbKey = item.firstChild.firstChild.getAttribute('display');
+    var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
+    var cert = certdb.findCertByDBKey(dbKey,null);
+    return cert;
+  }
+  /* shouldn't really happen */
+  return null;
 }

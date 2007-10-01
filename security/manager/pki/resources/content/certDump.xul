@@ -65,5 +65,12 @@
   <label class="header" value="&certmgr.fields.label;"/>
   <textbox id="certDumpVal"  multiline="true" rows="8"
            readonly="true" style="font-family: -moz-fixed;"/>
+  
+  <separator class="thin"/>
+  <hbox>
+    <button id="export_cert" class="normal" label="&certmgr.export.label;"
+            accesskey="&certmgr.export.accesskey;"
+            oncommand="exportToFile(window, getCurrentCert());"/>
+  </hbox>
 </vbox>
 </overlay>
