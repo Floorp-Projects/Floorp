@@ -1140,7 +1140,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
     targetFile->GetLeafName(dl->mDisplayName);
 
   dl->mMIMEInfo = aMIMEInfo;
-  dl->SetStartTime(aStartTime);
+  dl->SetStartTime(aStartTime == 0 ? PR_Now() : aStartTime);
 
   // Creates a cycle that will be broken when the download finishes
   dl->mCancelable = aCancelable;
@@ -1156,7 +1156,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
     aTempFile->GetPath(tempPath);
 
   PRInt64 id = AddDownloadToDB(dl->mDisplayName, source, target, tempPath,
-                               aStartTime, 0,
+                               dl->mStartTime, dl->mLastUpdate,
                                nsIDownloadManager::DOWNLOAD_NOTSTARTED);
   NS_ENSURE_TRUE(id, NS_ERROR_FAILURE);
   dl->mID = id;
@@ -1912,10 +1912,6 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
                           nsIRequest *aRequest, PRUint32 aStateFlags,
                           nsresult aStatus)
 {
-  // Record the start time only if it hasn't been set.
-  if (mStartTime == 0 && (aStateFlags & STATE_START))
-    SetStartTime(PR_Now());
-
   // We don't want to lose access to our member variables
   nsRefPtr<nsDownload> kungFuDeathGrip = this;
 
