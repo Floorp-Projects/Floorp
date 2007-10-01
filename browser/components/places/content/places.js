@@ -822,6 +822,7 @@ var PlacesSearchBox = {
    */
   syncGrayText: function PSB_syncGrayText() {
     this.searchFilter.value = this.searchFilter.grayText;
+    this.searchFilter.setAttribute("label", this.searchFilter.grayText);
   },
 
   /**
@@ -854,6 +855,7 @@ var PlacesSearchBox = {
   init: function PSB_init() {
     var searchFilter = this.searchFilter;
     searchFilter.grayText = PlacesUtils.getString("searchByDefault");
+    searchFilter.setAttribute("label", searchFilter.grayText);
     searchFilter.reset();
   },
 
