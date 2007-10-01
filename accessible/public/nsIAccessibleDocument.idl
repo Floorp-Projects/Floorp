@@ -58,7 +58,7 @@ interface nsIDOMWindow;
  *
  * @status UNDER_REVIEW
  */
-[scriptable, uuid(d118c0e9-b5e7-4671-854a-65b4713d9552)]
+[scriptable, uuid(81ddd75f-adbd-4a1c-b87c-6522bcea0596)]
 interface nsIAccessibleDocument : nsISupports
 {
   /**
@@ -120,7 +120,8 @@ interface nsIAccessibleDocument : nsISupports
    * @return An first nsIAccessible found by crawling up the DOM node
    *         to the document root.
    */
-  nsIAccessible getAccessibleInParentChain(in nsIDOMNode aDOMNode);
+  nsIAccessible getAccessibleInParentChain(in nsIDOMNode aDOMNode,
+                                           in boolean aCanCreate);
 
   /**
    * A bit flag representing the type of ARIA properties which should be
