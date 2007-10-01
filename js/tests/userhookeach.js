@@ -36,81 +36,87 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*
- * Spider hook function to execute e4x browser based JS tests.
+ * Spider hook function to check if an individual browser based JS test
+ * has completed executing.
  */
 
 var gCheckInterval = 1000;
-
-// if jsUnit status doesn't change, force page complete.
+var gCurrentTestId;
+var gReport;
 
 function userOnStart()
 {
+  dlog('userOnStart');
   registerDialogCloser();
 }
 
 function userOnBeforePage()
 {
   dlog('userOnBeforePage');
+  gCurrentTestId = /test=(.*);language/.exec(gSpider.mCurrentUrl.mUrl)[1];
+  cdump('JavaScriptTest: Begin Test ' + gCurrentTestId);
+  cdump('JavaScriptTest: Begin Execution ' + gCurrentTestId);
 }
-
-var gReport;
 
 function userOnAfterPage()
 {
   dlog('userOnAfterPage');
+  cdump('JavaScriptTest: End Execution ' + gCurrentTestId);
+  checkTestCompleted();
+}
+
+function userOnStop()
+{
+  // close any pending dialogs
+  cdump('JavaScriptTest: End Test ' + gCurrentTestId);
+  closeDialog();
+  unregisterDialogCloser();
+}
+
+function checkTestCompleted()
+{
+  dlog('checkTestCompleted()');
 
   var win = gSpider.mDocument.defaultView;
   if (win.wrappedJSObject)
   {
     win = win.wrappedJSObject;
   }
-  win.__Report = win.reportHTML;
-  win.reportHTML = function () { win.__Report(); gPageCompleted = true; };
+  if (win.gPageCompleted)
+  {
+    dlog('Page Completed');
 
+    cdump('JavaScriptTest: Begin Summary ' + gCurrentTestId);
 
-  win.reportCallBack = function (testwin)
+    gPageCompleted = true;
+
+    var gTestcases = win.gTestcases;
+    if (typeof gTestcases == 'undefined')
     {
-      if (testwin.wrappedJSObject)
-      {
-        testwin = testwin.wrappedJSObject;
-      }
-      var gTestcases = testwin.gTestcases;
-      if (typeof gTestcases == 'undefined')
-      {
-        return;
-      }
-      for (var i = 0; i < gTestcases.length; i++)
-      {
-        var testcase = gTestcases[i];
-        cdump('test: '    + testcase.path + ' ' +
-              'bug: '         + testcase.bugnumber + ' ' +
-              'result: ' + (testcase.passed ? 'PASSED':'FAILED') + ' ' +
-              'type: browser ' +
-              'description: ' + testcase.description + ' ' +
-              'expected: '    + testcase.expect + ' ' +
-              'actual: '      + testcase.actual + ' ' +
-              'reason: '      + testcase.reason);
-      }
-    };
+      cdump('JavaScriptTest: ' + gCurrentTestId +
+            ' gTestcases array not defined. Possible test failure.');
+    }
+    else if (gTestcases.length == 0)
+    {
+      cdump('JavaScriptTest: ' + gCurrentTestId +
+            ' gTestcases array is empty. Tests not run.');
+    }
+    else
+    {
+    }
+    cdump('JavaScriptTest: End Summary ' + gCurrentTestId);
 
-// only report failures
-  win.document.forms.testCases.failures.checked = true;
-// use standards mode
-  win.document.forms.testCases.doctype.value = "standards";
-// these calls are all async
-  win.selectAll('e4x');
-// so need to delay this call to make
-// sure the previous ones have completed
-  win.setTimeout("executeList()", 10000);
+    // added in Spider 0.0.1.8
+    // gc to flush out issues quickly
+    collectGarbage();
+  }
+  else
+  {
+    dlog('page not completed, recheck');
+    setTimeout(checkTestCompleted, gCheckInterval);
+  }
+ 
 }
-
-function userOnStop()
-{
-  // close any pending dialogs
-  closeDialog();
-  unregisterDialogCloser();
-}
-
 
 gConsoleListener.onConsoleMessage =
   function userOnConsoleMessage(s)
