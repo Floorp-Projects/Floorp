@@ -1301,7 +1301,7 @@ nsDocAccessible::FireTextChangeEventForText(nsIContent *aContent,
     return;
 
   nsCOMPtr<nsIAccessible> accessible;
-  nsresult rv = GetAccessibleInParentChain(node, getter_AddRefs(accessible));
+  nsresult rv = GetAccessibleInParentChain(node, PR_TRUE, getter_AddRefs(accessible));
   if (NS_FAILED(rv) || !accessible)
     return;
 
@@ -1567,7 +1567,7 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
       accessibleEvent->GetDOMNode(getter_AddRefs(domNode));
       if (domNode && domNode != mDOMNode) {
         if (!containerAccessible)
-          GetAccessibleInParentChain(domNode,
+          GetAccessibleInParentChain(domNode, PR_TRUE,
                                      getter_AddRefs(containerAccessible));
 
         nsCOMPtr<nsIAccessibleTextChangeEvent> textChangeEvent =
@@ -1757,15 +1757,39 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   if (!IsNodeRelevant(childNode)) {
     return NS_OK;  // Don't fire event unless it can be for an attached accessible
   }
-  if (!mIsContentLoaded && mAccessNodeCache.Count() <= 1) {
-    // Still loading and no accessibles has yet been created other than this
-    // doc accessible. In this case we optimize
-    // by not firing SHOW/HIDE/REORDER events for every document mutation
-    // caused by page load, since AT is not going to want to grab the
-    // document and listen to these changes until after the page is first loaded
-    // Leave early, and ensure mAccChildCount stays uninitialized instead of 0,
-    // which it is if anyone asks for its children right now.
-    return InvalidateChildren();
+  if (!mIsContentLoaded) {
+    // Still loading document
+    if (mAccessNodeCache.Count() <= 1) {
+      // Still loading and no accessibles has yet been created other than this
+      // doc accessible. In this case we optimize
+      // by not firing SHOW/HIDE/REORDER events for every document mutation
+      // caused by page load, since AT is not going to want to grab the
+      // document and listen to these changes until after the page is first loaded
+      // Leave early, and ensure mAccChildCount stays uninitialized instead of 0,
+      // which it is if anyone asks for its children right now.
+      return InvalidateChildren();
+    }
+    if (aChangeEventType == nsIAccessibleEvent::EVENT_DOM_CREATE) {
+      nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+      NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+      nsIEventStateManager *esm = presShell->GetPresContext()->EventStateManager();
+      NS_ENSURE_TRUE(esm, NS_ERROR_FAILURE);
+      if (!esm->IsHandlingUserInputExternal()) {
+        // Adding content during page load, but not caused by user input
+        // Just invalidate accessible hierarchy and return,
+        // otherwise the page load time slows down way too much
+        nsCOMPtr<nsIAccessible> containerAccessible;
+        GetAccessibleInParentChain(childNode, PR_FALSE, getter_AddRefs(containerAccessible));
+        if (!containerAccessible) {
+          containerAccessible = this;
+        }
+        nsCOMPtr<nsPIAccessible> privateContainer = do_QueryInterface(containerAccessible);
+        return privateContainer->InvalidateChildren();
+      }     
+      // else: user input, so we must fall through and for full handling,
+      // e.g. fire the mutation events. Note: user input could cause DOM_CREATE
+      // during page load if user typed into an input field or contentEditable area
+    }
   }
 
   // Update last change state information
@@ -1803,7 +1827,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 #endif
 
   nsCOMPtr<nsIAccessible> containerAccessible;
-  GetAccessibleInParentChain(childNode, getter_AddRefs(containerAccessible));
+  GetAccessibleInParentChain(childNode, PR_TRUE, getter_AddRefs(containerAccessible));
   if (!containerAccessible) {
     containerAccessible = this;
   }
@@ -1888,6 +1912,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 
 NS_IMETHODIMP
 nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
+                                            PRBool aCanCreate,
                                             nsIAccessible **aAccessible)
 {
   // Find accessible in parent chain of DOM nodes, or return null
@@ -1911,8 +1936,16 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
     if (NS_SUCCEEDED(accService->GetRelevantContentNodeFor(currentNode, getter_AddRefs(relevantNode))) && relevantNode) {
       currentNode = relevantNode;
     }
-
-    accService->GetAccessibleInWeakShell(currentNode, mWeakShell, aAccessible);
+    if (aCanCreate) {
+      accService->GetAccessibleInWeakShell(currentNode, mWeakShell, aAccessible);
+    }
+    else { // Only return cached accessibles, don't create anything
+      nsCOMPtr<nsIAccessNode> accessNode;
+      GetCachedAccessNode(currentNode, getter_AddRefs(accessNode)); // AddRefs
+      if (accessNode) {
+        CallQueryInterface(accessNode, aAccessible); // AddRefs
+      }
+    }
   } while (!*aAccessible);
 
   return NS_OK;
