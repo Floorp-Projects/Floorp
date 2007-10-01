@@ -57,7 +57,6 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsopcode.h"
-#include "jsparse.h"
 #include "jsscript.h"
 #if JS_HAS_XDR
 #include "jsxdrapi.h"
@@ -1416,7 +1415,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
 
     js_InitAtomMap(cx, &script->atomMap, &cg->atomList);
 
-    filename = cg->treeContext.parseContext->tokenStream.filename;
+    filename = cg->filename;
     if (filename) {
         script->filename = js_SaveScriptFilename(cx, filename);
         if (!script->filename)
@@ -1424,9 +1423,10 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
     }
     script->lineno = cg->firstLine;
     script->depth = cg->maxStackDepth;
-    script->principals = cg->treeContext.parseContext->principals;
-    if (script->principals)
+    if (cg->principals) {
+        script->principals = cg->principals;
         JSPRINCIPALS_HOLD(cx, script->principals);
+    }
 
     if (!js_FinishTakingSrcNotes(cx, cg, SCRIPT_NOTES(script)))
         goto bad;

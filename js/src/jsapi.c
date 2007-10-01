@@ -4318,6 +4318,51 @@ JS_DefineUCFunction(JSContext *cx, JSObject *obj,
     return js_DefineFunction(cx, obj, atom, call, nargs, attrs);
 }
 
+static JSScript *
+CompileTokenStream(JSContext *cx, JSObject *obj, JSTokenStream *ts,
+                   void *tempMark, JSBool *eofp)
+{
+    JSBool eof;
+    JSArenaPool codePool, notePool;
+    JSParseContext pc;
+    JSCodeGenerator cg;
+    JSScript *script;
+
+    eof = JS_FALSE;
+    JS_INIT_ARENA_POOL(&codePool, "code", 1024, sizeof(jsbytecode),
+                       &cx->scriptStackQuota);
+    JS_INIT_ARENA_POOL(&notePool, "note", 1024, sizeof(jssrcnote),
+                       &cx->scriptStackQuota);
+    js_InitParseContext(cx, &pc);
+    JS_ASSERT(!ts->parseContext);
+    ts->parseContext = &pc;
+    if (!js_InitCodeGenerator(cx, &cg, &pc, &codePool, &notePool,
+                              ts->filename, ts->lineno,
+                              ts->principals)) {
+        script = NULL;
+    } else if (!js_CompileTokenStream(cx, obj, ts, &cg)) {
+        script = NULL;
+        eof = (ts->flags & TSF_EOF) != 0;
+    } else {
+        script = js_NewScriptFromCG(cx, &cg, NULL);
+    }
+    if (eofp)
+        *eofp = eof;
+    if (!js_CloseTokenStream(cx, ts)) {
+        if (script)
+            js_DestroyScript(cx, script);
+        script = NULL;
+    }
+
+    js_FinishCodeGenerator(cx, &cg);
+    JS_ASSERT(ts->parseContext == &pc);
+    js_FinishParseContext(cx, &pc);
+    JS_FinishArenaPool(&codePool);
+    JS_FinishArenaPool(&notePool);
+    JS_ARENA_RELEASE(&cx->tempPool, tempMark);
+    return script;
+}
+
 JS_PUBLIC_API(JSScript *)
 JS_CompileScript(JSContext *cx, JSObject *obj,
                  const char *bytes, size_t length,
@@ -4384,15 +4429,16 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
                                 const jschar *chars, size_t length,
                                 const char *filename, uintN lineno)
 {
-    JSParseContext pc;
+    void *mark;
+    JSTokenStream *ts;
     JSScript *script;
 
     CHECK_REQUEST(cx);
-    if (!js_InitParseContext(cx, &pc, chars, length, NULL, filename, lineno))
+    mark = JS_ARENA_MARK(&cx->tempPool);
+    ts = js_NewTokenStream(cx, chars, length, filename, lineno, principals);
+    if (!ts)
         return NULL;
-    js_InitCompilePrincipals(cx, &pc, principals);
-    script = js_CompileScript(cx, obj, &pc);
-    js_FinishParseContext(cx, &pc);
+    script = CompileTokenStream(cx, obj, ts, mark, NULL);
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4404,6 +4450,8 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
     jschar *chars;
     JSBool result;
     JSExceptionState *exnState;
+    void *tempMark;
+    JSTokenStream *ts;
     JSParseContext pc;
     JSErrorReporter older;
 
@@ -4418,10 +4466,15 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
      */
     result = JS_TRUE;
     exnState = JS_SaveExceptionState(cx);
-    if (js_InitParseContext(cx, &pc, chars, length, NULL, NULL, 1)) {
+    tempMark = JS_ARENA_MARK(&cx->tempPool);
+    ts = js_NewTokenStream(cx, chars, length, NULL, 0, NULL);
+    if (ts) {
         older = JS_SetErrorReporter(cx, NULL);
-        if (!js_ParseScript(cx, obj, &pc) &&
-            (pc.tokenStream.flags & TSF_UNEXPECTED_EOF)) {
+        js_InitParseContext(cx, &pc);
+        JS_ASSERT(!ts->parseContext);
+        ts->parseContext = &pc;
+        if (!js_ParseTokenStream(cx, obj, ts) &&
+            (ts->flags & TSF_UNEXPECTED_EOF)) {
             /*
              * We ran into an error.  If it was because we ran out of source,
              * we return false, so our caller will know to try to collect more
@@ -4429,9 +4482,14 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
              */
             result = JS_FALSE;
         }
-        JS_SetErrorReporter(cx, older);
+
+        JS_ASSERT(ts->parseContext == &pc);
         js_FinishParseContext(cx, &pc);
+        JS_SetErrorReporter(cx, older);
+        js_CloseTokenStream(cx, ts);
     }
+
+    JS_ARENA_RELEASE(&cx->tempPool, tempMark);
     JS_free(cx, chars);
     JS_RestoreExceptionState(cx, exnState);
     return result;
@@ -4440,30 +4498,16 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
 JS_PUBLIC_API(JSScript *)
 JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
 {
-    FILE *fp;
-    JSParseContext pc;
+    void *mark;
+    JSTokenStream *ts;
     JSScript *script;
 
     CHECK_REQUEST(cx);
-    if (!filename || strcmp(filename, "-") == 0) {
-        fp = stdin;
-    } else {
-        fp = fopen(filename, "r");
-        if (!fp) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_OPEN,
-                                 filename, "No such file or directory");
-            return NULL;
-        }
-    }
-
-    if (!js_InitParseContext(cx, &pc, NULL, 0, fp, filename, 1)) {
-        script = NULL;
-    } else {
-        script = js_CompileScript(cx, obj, &pc);
-        js_FinishParseContext(cx, &pc);
-    }
-    if (fp != stdin)
-        fclose(fp);
+    mark = JS_ARENA_MARK(&cx->tempPool);
+    ts = js_NewFileTokenStream(cx, filename, stdin);
+    if (!ts)
+        return NULL;
+    script = CompileTokenStream(cx, obj, ts, mark, NULL);
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4480,15 +4524,22 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
                                   const char *filename, FILE *file,
                                   JSPrincipals *principals)
 {
-    JSParseContext pc;
+    void *mark;
+    JSTokenStream *ts;
     JSScript *script;
 
     CHECK_REQUEST(cx);
-    if (!js_InitParseContext(cx, &pc, NULL, 0, file, filename, 1))
+    mark = JS_ARENA_MARK(&cx->tempPool);
+    ts = js_NewFileTokenStream(cx, NULL, file);
+    if (!ts)
         return NULL;
-    js_InitCompilePrincipals(cx, &pc, principals);
-    script = js_CompileScript(cx, obj, &pc);
-    js_FinishParseContext(cx, &pc);
+    ts->filename = filename;
+    /* XXXshaver js_NewFileTokenStream should do this, because it drops */
+    if (principals) {
+        ts->principals = principals;
+        JSPRINCIPALS_HOLD(cx, ts->principals);
+    }
+    script = CompileTokenStream(cx, obj, ts, mark, NULL);
     LAST_FRAME_CHECKS(cx, script);
     return script;
 }
@@ -4583,13 +4634,19 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
                                   const jschar *chars, size_t length,
                                   const char *filename, uintN lineno)
 {
+    void *mark;
+    JSTokenStream *ts;
     JSFunction *fun;
     JSAtom *funAtom, *argAtom;
     uintN i;
-    JSParseContext pc;
-    JSBool ok;
 
     CHECK_REQUEST(cx);
+    mark = JS_ARENA_MARK(&cx->tempPool);
+    ts = js_NewTokenStream(cx, chars, length, filename, lineno, principals);
+    if (!ts) {
+        fun = NULL;
+        goto out;
+    }
     if (!name) {
         funAtom = NULL;
     } else {
@@ -4605,41 +4662,36 @@ JS_CompileUCFunctionForPrincipals(JSContext *cx, JSObject *obj,
     if (nargs) {
         for (i = 0; i < nargs; i++) {
             argAtom = js_Atomize(cx, argnames[i], strlen(argnames[i]), 0);
-            if (!argAtom) {
-                fun = NULL;
-                goto out;
-            }
+            if (!argAtom)
+                break;
             if (!js_AddHiddenProperty(cx, fun->object, ATOM_TO_JSID(argAtom),
                                       js_GetArgument, js_SetArgument,
                                       SPROP_INVALID_SLOT,
                                       JSPROP_PERMANENT | JSPROP_SHARED,
                                       SPROP_HAS_SHORTID, i)) {
-                fun = NULL;
-                goto out;
+                break;
             }
         }
+        if (i < nargs) {
+            fun = NULL;
+            goto out;
+        }
     }
-
-    ok = js_InitParseContext(cx, &pc, chars, length, NULL, filename, lineno);
-    if (ok) {
-        js_InitCompilePrincipals(cx, &pc, principals);
-        ok = js_CompileFunctionBody(cx, &pc, fun);
-        js_FinishParseContext(cx, &pc);
-    }
-    if (!ok) {
+    if (!js_CompileFunctionBody(cx, ts, fun)) {
         fun = NULL;
         goto out;
     }
-
-    if (obj &&
-        funAtom &&
-        !OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(funAtom),
-                             OBJECT_TO_JSVAL(fun->object),
-                             NULL, NULL, JSPROP_ENUMERATE, NULL)) {
-        fun = NULL;
+    if (obj && funAtom) {
+        if (!OBJ_DEFINE_PROPERTY(cx, obj, ATOM_TO_JSID(funAtom),
+                                 OBJECT_TO_JSVAL(fun->object),
+                                 NULL, NULL, JSPROP_ENUMERATE, NULL)) {
+            return NULL;
+        }
     }
-
-  out:
+out:
+    if (ts)
+        js_CloseTokenStream(cx, ts);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
     LAST_FRAME_CHECKS(cx, fun);
     return fun;
 }
