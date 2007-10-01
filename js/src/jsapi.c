@@ -2754,8 +2754,7 @@ bad:
 JS_PUBLIC_API(JSClass *)
 JS_GetClass(JSContext *cx, JSObject *obj)
 {
-    return (JSClass *)
-        JSVAL_TO_PRIVATE(GC_AWARE_GET_SLOT(cx, obj, JSSLOT_CLASS));
+    return GC_AWARE_GET_CLASS(cx, obj);
 }
 #else
 JS_PUBLIC_API(JSClass *)

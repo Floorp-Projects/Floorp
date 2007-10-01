@@ -1643,16 +1643,21 @@ JS_FlagScriptFilenamePrefix(JSRuntime *rt, const char *prefix, uint32 flags)
 JS_PUBLIC_API(JSBool)
 JS_IsSystemObject(JSContext *cx, JSObject *obj)
 {
-    return (*js_GetGCThingFlags(obj) & GCF_SYSTEM) != 0;
+    return STOBJ_IS_SYSTEM(obj);
 }
 
 JS_PUBLIC_API(void)
 JS_FlagSystemObject(JSContext *cx, JSObject *obj)
 {
-    uint8 *flagp;
-
-    flagp = js_GetGCThingFlags(obj);
-    *flagp |= GCF_SYSTEM;
+    /*
+     * We do not need to lock the object here. This method is the only API
+     * that modifies JSSLOT_CLASS after the object is created and the slot is
+     * initialized with the object's class. Since we just set the system flag
+     * here and access to jsval is atomic, any thread that calls the method
+     * will end up writing the same (jsval)class_pointer | 3 value into the
+     * slot.
+     */
+    STOBJ_SET_SYSTEM(obj);
 }
 
 /************************************************************************/
