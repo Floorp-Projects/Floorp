@@ -124,8 +124,10 @@
 
       <method name="init">
         <body><![CDATA[
+          // Make sure we rebuild the popup in onpopupshowing
+          this._needToBuildPopup = true;
+
           // Refresh the display (updating icon, etc)
-          this.rebuildPopup();
           this.updateDisplay();
           this._textbox._displayCurrentEngine();
 
@@ -351,6 +353,11 @@
       -->
       <method name="rebuildPopupDynamic">
         <body><![CDATA[
+          // We might not have added the main popup items yet, do that first
+          // if needed.
+          if (this._needToBuildPopup)
+            this.rebuildPopup();
+
           var popup = this._popup;
           // Clear any addengine menuitems, including addengine-item entries and
           // the addengine-separator.  Work backward to avoid invalidating the
@@ -437,6 +444,8 @@
             popup.insertBefore(menuitem, popup.firstChild);
             menuitem.engine = this._engines[i];
           }
+
+          this._needToBuildPopup = false;
         ]]></body>
       </method>
 
