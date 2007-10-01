@@ -185,7 +185,7 @@ JS_BEGIN_EXTERN_C
  * TOK_NAME,    name        pn_atom: name, string, or object atom
  * TOK_STRING,              pn_op: JSOP_NAME, JSOP_STRING, or JSOP_OBJECT, or
  *                                 JSOP_REGEXP
- * TOK_OBJECT               If JSOP_NAME, pn_op may be JSOP_*ARG or JSOP_*VAR
+ * TOK_REGEXP               If JSOP_NAME, pn_op may be JSOP_*ARG or JSOP_*VAR
  *                          with pn_slot >= 0 and pn_attrs telling const-ness
  * TOK_NUMBER   dval        pn_dval: double value of numeric literal
  * TOK_PRIMARY  nullary     pn_op: JSOp bytecode
@@ -425,8 +425,10 @@ struct JSParsedObjectBox {
     JSObject            *object;
 };
 
-
 struct JSParseContext {
+    JSTokenStream       tokenStream;
+    void                *tempPoolMark;  /* initial JSContext.tempPool mark */
+    JSPrincipals        *principals;    /* principals associated with source */
     JSParseNode         *nodeList;      /* list of recyclable parse-node
                                            structs */
     JSParsedObjectBox   *traceListHead; /* list of parsed object for GC
@@ -443,32 +445,50 @@ struct JSParseContext {
 };
 
 /*
+ * Convenience macro to access JSParseContext.tokenStream as a pointer.
+ */
+#define TS(pc) (&(pc)->tokenStream)
+
+/*
  * Parse a top-level JS script.
  */
 extern JS_FRIEND_API(JSParseNode *)
-js_ParseTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts);
+js_ParseScript(JSContext *cx, JSObject *chain, JSParseContext *pc);
 
-extern JS_FRIEND_API(JSBool)
-js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
-                      JSCodeGenerator *cg);
+extern JS_FRIEND_API(JSScript *)
+js_CompileScript(JSContext *cx, JSObject *chain, JSParseContext *pc);
 
 extern JSBool
-js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun);
+js_CompileFunctionBody(JSContext *cx, JSParseContext *pc, JSFunction *fun);
 
 extern JSBool
 js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc);
 
 #if JS_HAS_XML_SUPPORT
 JS_FRIEND_API(JSParseNode *)
-js_ParseXMLTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
-                       JSBool allowList);
+js_ParseXMLText(JSContext *cx, JSObject *chain, JSParseContext *pc,
+                JSBool allowList);
 #endif
 
-extern void
-js_InitParseContext(JSContext *cx, JSParseContext *pc);
+/*
+ * Initialize a parse context. All parameters after pc are passed to
+ * js_InitTokenStream.
+ *
+ * The parse context owns the arena pool "tops-of-stack" space above the
+ * current JSContext.tempPool mark. This means you cannot allocate from
+ * tempPool and save the pointer beyond the next js_FinishParseContext.
+ */
+extern JS_FRIEND_API(JSBool)
+js_InitParseContext(JSContext *cx, JSParseContext *pc,
+                    const jschar *base, size_t length, FILE *fp,
+                    const char *filename, uintN lineno);
+
+extern JS_FRIEND_API(void)
+js_FinishParseContext(JSContext *cx, JSParseContext *pc);
 
 extern void
-js_FinishParseContext(JSContext *cx, JSParseContext *pc);
+js_InitCompilePrincipals(JSContext *cx, JSParseContext *pc,
+                         JSPrincipals *principals);
 
 /*
  * Allocate a new parseed object node from cx->tempPool.
