@@ -1795,12 +1795,10 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
       }
     }
 
-    // Fetch the entityID
+    // Fetch the entityID, but if we can't get it, don't panic (non-resumable)
     nsCOMPtr<nsIResumableChannel> resumableChannel(do_QueryInterface(aRequest));
-    if (resumableChannel) {
-      rv = resumableChannel->GetEntityID(mEntityID);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    if (resumableChannel)
+      (void)resumableChannel->GetEntityID(mEntityID);
 
     // Update the state and the database
     rv = SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
