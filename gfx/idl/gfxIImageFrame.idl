@@ -133,18 +133,6 @@ interface gfxIImageFrame : nsISupports
   void getImageData([array, size_is(length)] out PRUint8 bits, out unsigned long length);
 
   /**
-   * Sets \a length bytes of \a data in this object.
-   * @param offset The offset from the first pixel in bytes.  To set
-   *   data beginning with the first (top left) pixel in the image, \a offset
-   *   should be 0; to set data beginning with, for example, the sixth pixel in
-   *   the first row of a RGBA32 image, the offset should be 20.
-   * @attension should we use PRUint32 instead?
-   */
-  void setImageData([array, size_is(length), const] in PRUint8 data,
-                    in unsigned long length,
-                    in long offset);
-
-  /**
    * Lock image pixels before addressing the data directly
    */
   void lockImageData();
@@ -153,37 +141,6 @@ interface gfxIImageFrame : nsISupports
    * Unlock image pixels
    */
   void unlockImageData();
-
-
-
-  /* alpha stuff.. used for _A1 and _A8 formated images */
-  readonly attribute unsigned long alphaBytesPerRow;
-
-  /**
-   * returns the number of bytes allocated for the alpha mask
-   */
-  readonly attribute unsigned long alphaDataLength;
-
-  // XXX do we copy here?  lets not...
-  void getAlphaData([array, size_is(length)] out PRUint8 bits, out unsigned long length);
-
-  /**
-   * Sets \a length bytes of \a data in this object.
-   */
-  void setAlphaData([array, size_is(length), const] in PRUint8 data,
-                    in unsigned long length,
-                    in long offset);
-
-  /**
-   * Lock alpha pixels before addressing the data directly
-   */
-  void lockAlphaData();
-
-  /**
-   * Unlock alpha pixels
-   */
-  void unlockAlphaData();
-
 
 
   /* GIF Specific methods.  These should be in a different class or interface. */
@@ -199,9 +156,4 @@ interface gfxIImageFrame : nsISupports
    * moment
    */
   attribute long frameDisposalMethod;
-
-  /* frame background color
-   * GIF specific, should be in a GIF specific frame
-   */  
-  attribute gfx_color backgroundColor;
 };
