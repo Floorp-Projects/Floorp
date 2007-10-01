@@ -165,11 +165,16 @@ nsXULTemplateQueryProcessorXML::GetDatasource(nsIArray* aDataSources,
     if (!uri)
         return NS_ERROR_UNEXPECTED;
 
+    PRBool hasHadScriptObject = PR_TRUE;
+    nsIScriptGlobalObject* scriptObject =
+      doc->GetScriptHandlingObject(hasHadScriptObject);
+    NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
     nsAutoString emptyStr;
     nsCOMPtr<nsIDOMDocument> domDocument;
     rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nsnull,
                                         docurl, doc->GetBaseURI(),
                                         docPrincipal,
+                                        scriptObject,
                                         getter_AddRefs(domDocument));
     NS_ENSURE_SUCCESS(rv, rv);
 

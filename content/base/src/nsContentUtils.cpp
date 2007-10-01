@@ -2376,12 +2376,9 @@ nsContentUtils::GetEventArgNames(PRInt32 aNameSpaceID,
   }
 }
 
-nsCxPusher::nsCxPusher(nsISupports *aCurrentTarget)
+nsCxPusher::nsCxPusher()
     : mScriptIsRunning(PR_FALSE)
 {
-  if (aCurrentTarget) {
-    Push(aCurrentTarget);
-  }
 }
 
 nsCxPusher::~nsCxPusher()
@@ -2422,32 +2419,29 @@ IsContextOnStack(nsIJSContextStack *aStack, JSContext *aContext)
   return PR_FALSE;
 }
 
-void
+PRBool
 nsCxPusher::Push(nsISupports *aCurrentTarget)
 {
   if (mScx) {
     NS_ERROR("Whaaa! No double pushing with nsCxPusher::Push()!");
 
-    return;
+    return PR_FALSE;
   }
 
   nsCOMPtr<nsIScriptGlobalObject> sgo;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aCurrentTarget));
+  nsCOMPtr<nsINode> node(do_QueryInterface(aCurrentTarget));
   nsCOMPtr<nsIDocument> document;
 
-  if (content) {
-    document = content->GetOwnerDoc();
-  }
-
-  if (!document) {
-    document = do_QueryInterface(aCurrentTarget);
-  }
-
-  if (document) {
-    sgo = document->GetScriptGlobalObject();
-  }
-
-  if (!document && !sgo) {
+  if (node) {
+    document = node->GetOwnerDoc();
+    if (document) {
+      PRBool hasHadScriptObject = PR_TRUE;
+      sgo = document->GetScriptHandlingObject(hasHadScriptObject);
+      // It is bad if the document doesn't have event handling context,
+      // but it used to have one.
+      NS_ENSURE_TRUE(sgo || !hasHadScriptObject, PR_FALSE);
+    }
+  } else {
     sgo = do_QueryInterface(aCurrentTarget);
   }
 
@@ -2459,6 +2453,8 @@ nsCxPusher::Push(nsISupports *aCurrentTarget)
     if (mScx) {
       cx = (JSContext *)mScx->GetNativeContext();
     }
+    // Bad, no JSContext from script global object!
+    NS_ENSURE_TRUE(cx, PR_FALSE);
   }
 
   if (cx) {
@@ -2483,6 +2479,7 @@ nsCxPusher::Push(nsISupports *aCurrentTarget)
 
     mScx = nsnull;
   }
+  return PR_TRUE;
 }
 
 void
@@ -3351,25 +3348,16 @@ nsContentUtils::CreateDocument(const nsAString& aNamespaceURI,
                                nsIDOMDocumentType* aDoctype,
                                nsIURI* aDocumentURI, nsIURI* aBaseURI,
                                nsIPrincipal* aPrincipal,
+                               nsIScriptGlobalObject* aEventObject,
                                nsIDOMDocument** aResult)
 {
   nsresult rv = NS_NewDOMDocument(aResult, aNamespaceURI, aQualifiedName,
-                                  aDoctype, aDocumentURI, aBaseURI, aPrincipal);
+                                  aDoctype, aDocumentURI, aBaseURI, aPrincipal,
+                                  PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIDocShell *docShell = GetDocShellFromCaller();
-  if (docShell) {
-    nsCOMPtr<nsPresContext> presContext;
-    docShell->GetPresContext(getter_AddRefs(presContext));
-    if (presContext) {
-      nsCOMPtr<nsISupports> container = presContext->GetContainer();
-      nsCOMPtr<nsIDocument> document = do_QueryInterface(*aResult);
-      if (document) {
-        document->SetContainer(container);
-      }
-    }
-  }
-
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(*aResult);
+  document->SetScriptHandlingObject(aEventObject);
   return NS_OK;
 }
 

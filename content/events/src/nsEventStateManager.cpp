@@ -4342,10 +4342,12 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
           nsCOMPtr<nsIContent> temp = gLastFocusedContent;
           NS_RELEASE(gLastFocusedContent); // nulls out gLastFocusedContent
 
-          nsCxPusher pusher(temp);
-          nsEventDispatcher::Dispatch(temp, oldPresContext, &event, nsnull,
-                                      &status);
-          pusher.Pop();
+          nsCxPusher pusher;
+          if (pusher.Push(temp)) {
+            nsEventDispatcher::Dispatch(temp, oldPresContext, &event, nsnull,
+                                        &status);
+            pusher.Pop();
+          }
 
           focusAfterBlur = mCurrentFocus;
           if (!previousFocus || previousFocus == focusAfterBlur)
@@ -4403,10 +4405,12 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
       NS_RELEASE(gLastFocusedDocument);
       gLastFocusedDocument = nsnull;
 
-      nsCxPusher pusher(temp);
-      nsEventDispatcher::Dispatch(temp, gLastFocusedPresContext, &event, nsnull,
-                                  &status);
-      pusher.Pop();
+      nsCxPusher pusher;
+      if (pusher.Push(temp)) {
+        nsEventDispatcher::Dispatch(temp, gLastFocusedPresContext, &event,
+                                    nsnull, &status);
+        pusher.Pop();
+      }
 
       if (previousFocus && mCurrentFocus != previousFocus) {
         // The document's blur handler focused something else.
@@ -4417,15 +4421,16 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
         return NS_OK;
       }
 
-      pusher.Push(window);
-      nsEventDispatcher::Dispatch(window, gLastFocusedPresContext, &event,
-                                  nsnull, &status);
+      if (pusher.Push(window)) {
+        nsEventDispatcher::Dispatch(window, gLastFocusedPresContext, &event,
+                                    nsnull, &status);
 
-      if (previousFocus && mCurrentFocus != previousFocus) {
-        // The window's blur handler focused something else.
-        // Abort firing any additional blur or focus events.
-        EnsureFocusSynchronization();
-        return NS_OK;
+        if (previousFocus && mCurrentFocus != previousFocus) {
+          // The window's blur handler focused something else.
+          // Abort firing any additional blur or focus events.
+          EnsureFocusSynchronization();
+          return NS_OK;
+        }
       }
     }
   }
@@ -4490,11 +4495,11 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
     event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
 
     if (nsnull != mPresContext) {
-      nsCxPusher pusher(aContent);
-      nsEventDispatcher::Dispatch(aContent, mPresContext, &event, nsnull,
-                                  &status);
-      nsAutoString name;
-      aContent->Tag()->ToString(name);
+      nsCxPusher pusher;
+      if (pusher.Push(aContent)) {
+        nsEventDispatcher::Dispatch(aContent, mPresContext, &event, nsnull,
+                                    &status);
+      }
     }
 
     nsAutoString tabIndex;
@@ -4515,9 +4520,11 @@ nsEventStateManager::SendFocusBlur(nsPresContext* aPresContext,
     event.flags |= NS_EVENT_FLAG_CANT_BUBBLE;
 
     if (nsnull != mPresContext && mDocument) {
-      nsCxPusher pusher(mDocument);
-      nsEventDispatcher::Dispatch(mDocument, mPresContext, &event, nsnull,
-                                  &status);
+      nsCxPusher pusher;
+      if (pusher.Push(mDocument)) {
+        nsEventDispatcher::Dispatch(mDocument, mPresContext, &event, nsnull,
+                                    &status);
+      }
     }
   }
 
