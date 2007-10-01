@@ -296,7 +296,7 @@ private:
 
   PRTime mStartTime;
   PRTime mLastUpdate;
-  PRUint64 mResumedAt;
+  PRInt64 mResumedAt;
   double mSpeed;
 
   friend class nsDownloadManager;

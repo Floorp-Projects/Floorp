@@ -1578,7 +1578,7 @@ nsDownload::nsDownload() : mDownloadState(nsIDownloadManager::DOWNLOAD_NOTSTARTE
                            mMaxBytes(LL_MAXUINT),
                            mStartTime(0),
                            mLastUpdate(PR_Now() - (PRUint32)gUpdateInterval),
-                           mResumedAt(0),
+                           mResumedAt(-1),
                            mSpeed(0)
 {
 }
@@ -2038,14 +2038,14 @@ nsDownload::GetPercentComplete(PRInt32 *aPercentComplete)
 NS_IMETHODIMP
 nsDownload::GetAmountTransferred(PRUint64 *aAmountTransferred)
 {
-  *aAmountTransferred = mCurrBytes + mResumedAt;
+  *aAmountTransferred = mCurrBytes + (WasResumed() ? mResumedAt : 0);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDownload::GetSize(PRUint64 *aSize)
 {
-  *aSize = mMaxBytes + (mMaxBytes != LL_MAXUINT ? mResumedAt : 0);
+  *aSize = mMaxBytes + (WasResumed() && mMaxBytes != LL_MAXUINT ? mResumedAt : 0);
   return NS_OK;
 }
 
@@ -2154,21 +2154,22 @@ nsDownload::RealResume()
   rv = NS_NewChannel(getter_AddRefs(channel), mSource, nsnull, nsnull, ir);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Get the size of the temporary or target file to be used as offset.
-  PRInt64 fileSize;
+  // Make sure we can get a file, either the temporary or the real target, for
+  // both purposes of file size and a target to write to
   nsCOMPtr<nsILocalFile> targetLocalFile(mTempFile);
   if (!targetLocalFile) {
     rv = GetTargetFile(getter_AddRefs(targetLocalFile));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // We need to get a new nsIFile though because of caching issues with the
-  // file size.  Cloning it takes care of this :(
+  // Get the file size to be used as an offset, but if anything goes wrong
+  // along the way, we'll silently restart at 0.
+  PRInt64 fileSize;
+  //  We need a nsIFile clone to deal with file size caching issues. :(
   nsCOMPtr<nsIFile> clone;
-  rv = targetLocalFile->Clone(getter_AddRefs(clone));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = clone->GetFileSize(&fileSize);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(targetLocalFile->Clone(getter_AddRefs(clone))) ||
+      NS_FAILED(clone->GetFileSize(&fileSize)))
+    fileSize = 0;
 
   // Set the channel to resume at the right position along with the entityID
   nsCOMPtr<nsIResumableChannel> resumableChannel(do_QueryInterface(channel));
@@ -2226,7 +2227,7 @@ nsDownload::IsResumable()
 PRBool
 nsDownload::WasResumed()
 {
-  return mResumedAt > 0;
+  return mResumedAt != -1;
 }
 
 PRBool
