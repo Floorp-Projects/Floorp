@@ -51,11 +51,10 @@
 #include "nsIComponentManager.h"
 
 nsMargin                  nsNativeTheme::sButtonBorderSize(2, 2, 2, 2);
-nsMargin                  nsNativeTheme::sButtonDisabledBorderSize(1, 1, 1, 1);
 PRUint8                   nsNativeTheme::sButtonActiveBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
 PRUint8                   nsNativeTheme::sButtonInactiveBorderStyle = NS_STYLE_BORDER_STYLE_OUTSET;
 nsILookAndFeel::nsColorID nsNativeTheme::sButtonBorderColorID = nsILookAndFeel::eColor_buttonface;
-nsILookAndFeel::nsColorID nsNativeTheme::sButtonDisabledBorderColorID = nsILookAndFeel::eColor_buttonshadow;
+nsILookAndFeel::nsColorID nsNativeTheme::sButtonDisabledBorderColorID = nsILookAndFeel::eColor_buttonface;
 nsILookAndFeel::nsColorID nsNativeTheme::sButtonBGColorID = nsILookAndFeel::eColor_buttonface;
 nsILookAndFeel::nsColorID nsNativeTheme::sButtonDisabledBGColorID = nsILookAndFeel::eColor_buttonface;
 
@@ -215,8 +214,9 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
 
       switch (aWidgetType) {
       case NS_THEME_BUTTON:
+        ConvertBorderToAppUnits(aPresContext, sButtonBorderSize, 
+                                defaultBorderSize);
         if (IsDisabled(aFrame)) {
-          ConvertBorderToAppUnits(aPresContext, sButtonDisabledBorderSize, defaultBorderSize);
           defaultBorderStyle = sButtonInactiveBorderStyle;
           lookAndFeel->GetColor(sButtonDisabledBorderColorID,
                                 defaultBorderColor);
@@ -224,7 +224,6 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
                                 defaultBGColor);
         } else {
           PRInt32 contentState = GetContentState(aFrame, aWidgetType);
-          ConvertBorderToAppUnits(aPresContext, sButtonBorderSize, defaultBorderSize);
           if (contentState & NS_EVENT_STATE_HOVER &&
               contentState & NS_EVENT_STATE_ACTIVE)
             defaultBorderStyle = sButtonActiveBorderStyle;

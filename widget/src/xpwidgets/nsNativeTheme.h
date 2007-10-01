@@ -140,7 +140,6 @@ class nsNativeTheme
   
   // push buttons
   static nsMargin                  sButtonBorderSize;
-  static nsMargin                  sButtonDisabledBorderSize;
   static PRUint8                   sButtonActiveBorderStyle;
   static PRUint8                   sButtonInactiveBorderStyle;
   static nsILookAndFeel::nsColorID sButtonBorderColorID;
