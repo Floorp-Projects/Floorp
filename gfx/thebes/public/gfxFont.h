@@ -246,10 +246,8 @@ class THEBES_API gfxGlyphExtents {
 public:
     gfxGlyphExtents(PRUint32 aAppUnitsPerDevUnit) :
         mAppUnitsPerDevUnit(aAppUnitsPerDevUnit) {
-        MOZ_COUNT_CTOR(gfxGlyphExtents);
         mTightGlyphExtents.Init();
     }
-    ~gfxGlyphExtents();
 
     enum { INVALID_WIDTH = 0xFFFF };
 
@@ -258,12 +256,16 @@ public:
     // and the result is its width measured from the baseline origin, in
     // appunits.
     PRUint16 GetContainedGlyphWidthAppUnits(PRUint32 aGlyphID) const {
-        return mContainedGlyphWidths.Get(aGlyphID);
+        if (aGlyphID >= mWidthsForContainedGlyphsAppUnits.Length())
+            return INVALID_WIDTH;
+        return mWidthsForContainedGlyphsAppUnits[aGlyphID];
     }
     
     PRBool IsGlyphKnown(PRUint32 aGlyphID) const {
-        return mContainedGlyphWidths.Get(aGlyphID) != INVALID_WIDTH ||
-            mTightGlyphExtents.GetEntry(aGlyphID) != nsnull;
+        if (aGlyphID < mWidthsForContainedGlyphsAppUnits.Length() &&
+            mWidthsForContainedGlyphsAppUnits[aGlyphID] != INVALID_WIDTH)
+            return PR_TRUE;
+        return mTightGlyphExtents.GetEntry(aGlyphID) != nsnull;
     }
 
     PRBool IsGlyphKnownWithTightExtents(PRUint32 aGlyphID) const {
@@ -273,9 +275,7 @@ public:
     // Get glyph extents; a rectangle relative to the left baseline origin
     gfxRect GetTightGlyphExtentsAppUnits(gfxFont *aFont, gfxContext *aContext, PRUint32 aGlyphID);
 
-    void SetContainedGlyphWidthAppUnits(PRUint32 aGlyphID, PRUint16 aWidth) {
-        mContainedGlyphWidths.Set(aGlyphID, aWidth);
-    }
+    void SetContainedGlyphWidthAppUnits(PRUint32 aGlyphID, PRUint16 aWidth);
     void SetTightGlyphExtents(PRUint32 aGlyphID, const gfxRect& aExtentsAppUnits);
 
     PRUint32 GetAppUnitsPerDevUnit() { return mAppUnitsPerDevUnit; }
@@ -293,52 +293,7 @@ private:
         float x, y, width, height;
     };
 
-    typedef unsigned long PtrBits;
-    enum { BLOCK_SIZE_BITS = 7, BLOCK_SIZE = 1 << BLOCK_SIZE_BITS }; // 128-glyph blocks
-
-    class GlyphWidths {
-    public:
-        void Set(PRUint32 aIndex, PRUint16 aValue);
-        PRUint16 Get(PRUint32 aIndex) const {
-            PRUint32 block = aIndex >> BLOCK_SIZE_BITS;
-            if (block >= mBlocks.Length())
-                return INVALID_WIDTH;
-            PtrBits bits = mBlocks[block];
-            if (!bits)
-                return INVALID_WIDTH;
-            PRUint32 indexInBlock = aIndex & (BLOCK_SIZE - 1);
-            if (bits & 0x1) {
-                if (GetGlyphOffset(bits) != indexInBlock)
-                    return INVALID_WIDTH;
-                return GetWidth(bits);
-            }
-            PRUint16 *widths = reinterpret_cast<PRUint16 *>(bits);
-            return widths[indexInBlock];
-        }
-
-#ifdef DEBUG
-        PRUint32 ComputeSize();
-#endif
-        
-        ~GlyphWidths();
-
-    private:
-        static PRUint32 GetGlyphOffset(PtrBits aBits) {
-            NS_ASSERTION(aBits & 0x1, "This is really a pointer...");
-            return (aBits >> 1) & ((1 << BLOCK_SIZE_BITS) - 1);
-        }
-        static PRUint32 GetWidth(PtrBits aBits) {
-            NS_ASSERTION(aBits & 0x1, "This is really a pointer...");
-            return aBits >> (1 + BLOCK_SIZE_BITS);
-        }
-        static PtrBits MakeSingle(PRUint32 aGlyphOffset, PRUint16 aWidth) {
-            return (aWidth << (1 + BLOCK_SIZE_BITS)) + (aGlyphOffset << 1) + 1;
-        }
-
-        nsTArray<PtrBits> mBlocks;
-    };
-    
-    GlyphWidths             mContainedGlyphWidths;
+    nsTArray<PRUint16>      mWidthsForContainedGlyphsAppUnits;
     nsTHashtable<HashEntry> mTightGlyphExtents;
     PRUint32                mAppUnitsPerDevUnit;
 };
