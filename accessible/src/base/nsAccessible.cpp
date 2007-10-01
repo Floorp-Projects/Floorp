@@ -152,6 +152,12 @@ PRBool nsAccessible::IsTextInterfaceSupportCorrect(nsIAccessible *aAccessible)
 {
   PRBool foundText = PR_FALSE;
 
+  nsCOMPtr<nsIAccessibleDocument> accDoc = do_QueryInterface(aAccessible);
+  if (accDoc) {
+    // Don't test for accessible docs, it makes us create accessibles too
+    // early and fire mutation events before we need to
+    return PR_TRUE;
+  }
   nsCOMPtr<nsIAccessible> child, nextSibling;
   aAccessible->GetFirstChild(getter_AddRefs(child));
   while (child) {
@@ -584,7 +590,7 @@ NS_IMETHODIMP nsAccessible::GetParent(nsIAccessible **  aParent)
   nsCOMPtr<nsIAccessibleDocument> docAccessible(GetDocAccessible());
   NS_ENSURE_TRUE(docAccessible, NS_ERROR_FAILURE);
 
-  return docAccessible->GetAccessibleInParentChain(mDOMNode, aParent);
+  return docAccessible->GetAccessibleInParentChain(mDOMNode, PR_TRUE, aParent);
 }
 
 NS_IMETHODIMP nsAccessible::GetCachedParent(nsIAccessible **  aParent)
@@ -1162,7 +1168,7 @@ nsAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   if (!accessible) {
     // No accessible for the node with the point, so find the first
     // accessible in the DOM parent chain
-    accDocument->GetAccessibleInParentChain(relevantNode,
+    accDocument->GetAccessibleInParentChain(relevantNode, PR_TRUE,
                                             getter_AddRefs(accessible));
     if (!accessible) {
       NS_IF_ADDREF(*aAccessible = fallbackAnswer);
