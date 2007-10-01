@@ -137,12 +137,8 @@ nsUrlClassifierUtils::GetKeyForURI(nsIURI * uri, nsACString & _retval)
   rv = innerURI->GetPath(path);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // strip out anchors and query parameters
+  // strip out anchors
   PRInt32 ref = path.FindChar('#');
-  if (ref != kNotFound)
-    path.SetLength(ref);
-
-  ref = path.FindChar('?');
   if (ref != kNotFound)
     path.SetLength(ref);
 
