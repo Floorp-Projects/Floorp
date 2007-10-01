@@ -5,7 +5,7 @@ TEST_JS = $(shell find . -name '*.js' -print)
 CURRDIR=$(shell pwd)
 JSDIR=$(shell basename $(CURRDIR))
 
-all: menu.html 1.8.0-list.txt 1.8.1-list.txt 1.9.0-list.txt menu-list.txt excluded-n.tests spidermonkey-extensions-n.tests
+all: menu.html 1.8.0-list.txt 1.8.1-list.txt 1.9.0-list.txt menu-list.txt excluded-n.tests spidermonkey-extensions-n.tests failures.txt
 
 menu.html: menuhead.html menufoot.html Makefile excluded-n.tests $(TEST_JS)
 	perl mklistpage.pl > menubody.html
@@ -31,11 +31,11 @@ menu-list.txt:
 	cat 1.8.1-list.txt > 1.9.0-list.txt
 	./list.sh js1_8 | sort >> 1.9.0-list.txt
 
-#e4x-list.txt: $(TEST_JS)
-#	./list.sh e4x | sort > e4x-list.txt
+confidential-failures.txt:
+	touch confidential-failures.txt
 
-#lc2-list.txt: $(TEST_JS)
-#	./list.sh lc2 | sort > lc2-list.txt
+failures.txt: public-failures.txt confidential-failures.txt
+	cat public-failures.txt confidential-failures.txt | sort | uniq > failures.txt
 
 ecma_3/RegExp/re_tests:
 	curl -LsS -m 1800 "http://www.cpan.org/src/stable.tar.bz2" -o stable.tar.bz2
@@ -44,5 +44,5 @@ ecma_3/RegExp/re_tests:
 	rm -fR `find . -maxdepth 1 -name 'perl-*'` stable.tar.bz2
 
 clean:
-	rm -f menubody.html menu.html *-list.txt excluded-n.tests
+	rm -f menubody.html menu.html *-list.txt excluded-n.tests failures.txt
 
