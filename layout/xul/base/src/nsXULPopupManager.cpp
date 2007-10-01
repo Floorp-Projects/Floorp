@@ -1759,13 +1759,13 @@ nsXULPopupManager::KeyPress(nsIDOMEvent* aKeyEvent)
       ShowMenu(content, PR_TRUE, PR_FALSE);
     }
   }
-#if !defined(XP_MAC) && !defined(XP_MACOSX)
+#ifndef XP_MACOSX
   else if (theChar == NS_VK_F10) {
     // doesn't matter what modifier keys are down in Non-Mac platform
     // if the menu bar is active and F10 is pressed - deactivate it
     Rollup();
   }
-#endif // !XP_MAC && !XP_MACOSX
+#endif // !XP_MACOSX
   else {
     HandleShortcutNavigation(keyEvent, nsnull);
   }
