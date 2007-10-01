@@ -699,7 +699,7 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
             subtract += spacing;
         }
     }
-    width -= subtract;
+    width = NSCoordSaturatingSubtract(width, subtract, nscoord_MAX);
     min -= subtract;
 
     // XXX is |width| the right basis for percentage widths?
