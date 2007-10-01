@@ -1262,8 +1262,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   PRBool anyTextTransformStyle = PR_FALSE;
   nsIContent* lastContent = nsnull;
   PRInt32 endOfLastContent = 0;
-  PRUint32 textFlags = gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX |
-    nsTextFrameUtils::TEXT_NO_BREAKS;
+  PRUint32 textFlags = nsTextFrameUtils::TEXT_NO_BREAKS;
 
   if (mCurrentRunTrimLeadingWhitespace) {
     textFlags |= nsTextFrameUtils::TEXT_INCOMING_WHITESPACE;
@@ -1466,6 +1465,11 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
   // frame's style is used, so use the last frame's
   textFlags |= nsLayoutUtils::GetTextRunFlagsForStyle(lastStyleContext,
       textStyle, fontStyle);
+  // XXX this is a bit of a hack. For performance reasons, if we're favouring
+  // performance over quality, don't try to get accurate glyph extents.
+  if (!(textFlags & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED)) {
+    textFlags |= gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX;
+  }
 
   gfxSkipChars skipChars;
   skipChars.TakeFrom(&builder);
