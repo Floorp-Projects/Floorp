@@ -1036,6 +1036,24 @@ NS_IMETHODIMP nsCocoaWindow::CaptureRollupEvents(nsIRollupListener * aListener,
     NS_ADDREF(aListener);
     gRollupWidget = this;
     NS_ADDREF(this);
+    // Sometimes more than one popup window can be visible at the same time
+    // (e.g. nested non-native context menus, or the test case (attachment
+    // 276885) for bmo bug 392389, which displays a non-native combo-box in
+    // a non-native popup window).  In these cases the "active" popup window
+    // (the one that corresponds to the current gRollupWidget) should be the
+    // topmost -- the (nested) context menu the mouse is currently over, or
+    // the combo-box's drop-down list (when it's displayed).  But (among
+    // windows that have the same "level") OS X makes topmost the window that
+    // last received a mouse-down event, which may be incorrect (in the combo-
+    // box case, it makes topmost the window containing the combo-box).  So
+    // here we fiddle with a non-native popup window's level to make sure the
+    // "active" one is always above any other non-native popup windows that
+    // may be visible.
+    if (mWindow && (mWindowType == eWindowType_popup))
+      [mWindow setLevel:NSPopUpMenuWindowLevel];
+  } else {
+    if (mWindow && (mWindowType == eWindowType_popup))
+      [mWindow setLevel:NSModalPanelWindowLevel];
   }
   
   return NS_OK;
@@ -1297,29 +1315,30 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
 - (void)sendEvent:(NSEvent *)anEvent
 {
   NSView *target = nil, *contentView = nil;
-  NSWindow *window = [anEvent window];
   NSEventType type = [anEvent type];
-  if (window) {
-    switch (type) {
-      case NSScrollWheel:
-      case NSLeftMouseDown:
-      case NSLeftMouseUp:
-      case NSRightMouseDown:
-      case NSRightMouseUp:
-      case NSOtherMouseDown:
-      case NSOtherMouseUp:
-      case NSMouseMoved:
-      case NSLeftMouseDragged:
-      case NSRightMouseDragged:
-      case NSOtherMouseDragged:
-        if ((contentView = [window contentView]) != nil) {
-          target = [contentView hitTest:[contentView convertPoint:
-                                        [anEvent locationInWindow] fromView:nil]];
-        }
-        break;
-      default:
-        break;
-    }
+  NSPoint windowLocation = NSZeroPoint;
+  switch (type) {
+    case NSScrollWheel:
+    case NSLeftMouseDown:
+    case NSLeftMouseUp:
+    case NSRightMouseDown:
+    case NSRightMouseUp:
+    case NSOtherMouseDown:
+    case NSOtherMouseUp:
+    case NSMouseMoved:
+    case NSLeftMouseDragged:
+    case NSRightMouseDragged:
+    case NSOtherMouseDragged:
+      if ((contentView = [self contentView]) != nil) {
+        // Since [anEvent window] might not be us, we can't use [anEvent
+        // locationInWindow].
+        windowLocation = [self mouseLocationOutsideOfEventStream];
+        target = [contentView hitTest:[contentView convertPoint:
+                                      windowLocation fromView:nil]];
+      }
+      break;
+    default:
+      break;
   }
   if (target) {
     switch (type) {
@@ -1350,10 +1369,10 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
         // will "work" on a leftMouseDown.
         if (mIsContextMenu) {
           NSEvent *newEvent = [NSEvent mouseEventWithType:NSLeftMouseUp
-                                                 location:[anEvent locationInWindow]
+                                                 location:windowLocation
                                             modifierFlags:[anEvent modifierFlags]
                                                 timestamp:GetCurrentEventTime()
-                                             windowNumber:[[anEvent window] windowNumber]
+                                             windowNumber:[self windowNumber]
                                                   context:nil
                                               eventNumber:0
                                                clickCount:1
@@ -1394,6 +1413,24 @@ NS_IMETHODIMP nsCocoaWindow::EndSecureKeyboardInput()
         break;
     }
   } else {
+    // Sometimes more than one popup window can be visible at the same time
+    // (e.g. nested non-native context menus, or the test case (attachment
+    // 276885) for bmo bug 392389, which displays a non-native combo-box in
+    // a non-native popup window).  In these cases the "active" popup window
+    // (the one that corresponds to the current gRollupWidget) should receive
+    // all mouse events that happen over it.  So if anEvent wasn't processed
+    // here, if there's a current gRollupWidget, and if its NSWindow object
+    // isn't us, we send anEvent to the gRollupWidget's NSWindow object, then
+    // return.  Other code (in nsChildView.mm's ChildView class) will redirect
+    // events that happen over us but should be redirected to the current
+    // gRollupWidget.
+    if (gRollupWidget) {
+      NSWindow *rollupWindow = (NSWindow*)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
+      if (rollupWindow && ![rollupWindow isEqual:self]) {
+        [rollupWindow sendEvent:anEvent];
+        return;
+      }
+    }
     [super sendEvent:anEvent];
   }
 }
