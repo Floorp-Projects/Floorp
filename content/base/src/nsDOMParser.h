@@ -95,6 +95,7 @@ private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mBaseURI;
+  nsWeakPtr mScriptHandlingObject;
   
   PRPackedBool mLoopingForSyncLoad;
   PRPackedBool mAttemptedInit;

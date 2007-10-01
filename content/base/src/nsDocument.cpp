@@ -609,7 +609,8 @@ class nsDOMImplementation : public nsIDOMDOMImplementation,
                             public nsIPrivateDOMImplementation
 {
 public:
-  nsDOMImplementation(nsIURI* aDocumentURI,
+  nsDOMImplementation(nsIScriptGlobalObject* aScriptObject,
+                      nsIURI* aDocumentURI,
                       nsIURI* aBaseURI,
                       nsIPrincipal* aPrincipal);
   virtual ~nsDOMImplementation();
@@ -624,6 +625,7 @@ public:
                   nsIPrincipal* aPrincipal);
 
 protected:
+  nsWeakPtr mScriptObject;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;
@@ -633,7 +635,7 @@ protected:
 nsresult
 NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult)
 {
-  *aInstancePtrResult = new nsDOMImplementation(nsnull, nsnull, nsnull);
+  *aInstancePtrResult = new nsDOMImplementation(nsnull, nsnull, nsnull, nsnull);
   if (!*aInstancePtrResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -643,10 +645,12 @@ NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult)
   return NS_OK;
 }
 
-nsDOMImplementation::nsDOMImplementation(nsIURI* aDocumentURI,
+nsDOMImplementation::nsDOMImplementation(nsIScriptGlobalObject* aScriptObject,
+                                         nsIURI* aDocumentURI,
                                          nsIURI* aBaseURI,
                                          nsIPrincipal* aPrincipal)
-  : mDocumentURI(aDocumentURI),
+  : mScriptObject(do_GetWeakReference(aScriptObject)),
+    mDocumentURI(aDocumentURI),
     mBaseURI(aBaseURI),
     mPrincipal(aPrincipal)
 {
@@ -735,9 +739,12 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
     }
   }
 
+  nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
+    do_QueryReferent(mScriptObject);
+
   return nsContentUtils::CreateDocument(aNamespaceURI, aQualifiedName, aDoctype,
                                         mDocumentURI, mBaseURI, mPrincipal,
-                                        aReturn);
+                                        scriptHandlingObject, aReturn);
 }
 
 NS_IMETHODIMP
@@ -2601,9 +2608,34 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   mScriptGlobalObject = aScriptGlobalObject;
 
   if (aScriptGlobalObject) {
+    mHasHadScriptHandlingObject = PR_TRUE;
     // Go back to using the docshell for the layout history state
     mLayoutHistoryState = nsnull;
     mScopeObject = do_GetWeakReference(aScriptGlobalObject);
+  }
+}
+
+nsIScriptGlobalObject*
+nsDocument::GetScriptHandlingObject(PRBool& aHasHadScriptHandlingObject) const
+{
+  aHasHadScriptHandlingObject = mHasHadScriptHandlingObject;
+  if (mScriptGlobalObject) {
+    return mScriptGlobalObject;
+  }
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
+    do_QueryReferent(mScriptObject);
+  return scriptHandlingObject;
+}
+void
+nsDocument::SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject)
+{
+  NS_ASSERTION(!mScriptGlobalObject ||
+               mScriptGlobalObject == aScriptObject,
+               "Wrong script object!");
+  mScriptObject = do_GetWeakReference(aScriptObject);
+  if (aScriptObject) {
+    mHasHadScriptHandlingObject = PR_TRUE;
   }
 }
 
@@ -2959,8 +2991,12 @@ nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), "about:blank");
   NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
-  
-  *aImplementation = new nsDOMImplementation(uri, uri, NodePrincipal());
+  PRBool hasHadScriptObject = PR_TRUE;
+  nsIScriptGlobalObject* scriptObject =
+    GetScriptHandlingObject(hasHadScriptObject);
+  NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
+  *aImplementation = new nsDOMImplementation(scriptObject, uri, uri,
+                                             NodePrincipal());
   if (!*aImplementation) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
