@@ -101,6 +101,7 @@ public:                                            \
       object = nsnull;                             \
     }                                              \
   }                                                \
+  void detach() {object=nsnull;}                   \
 };
 
 #define NSSCleanupAutoPtrClass_WithParam(nsstype, cleanfunc, namesuffix, paramvalue) \
@@ -120,6 +121,7 @@ public:                                            \
       object = nsnull;                             \
     }                                              \
   }                                                \
+  void detach() {object=nsnull;}                   \
 };
 
 #endif

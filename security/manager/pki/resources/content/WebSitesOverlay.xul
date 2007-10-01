@@ -72,19 +72,23 @@
 
     <hbox>
       <button id="websites_viewButton"
-              label="&certmgr.view.label;"
+              label="&certmgr.view2.label;"
               accesskey="&certmgr.view.accesskey;"
               disabled="true" oncommand="viewCerts();"/>
       <button id="websites_editButton"
-              label="&certmgr.edit.label;"
+              label="&certmgr.edit2.label;"
               accesskey="&certmgr.edit.accesskey;"
               disabled="true" oncommand="editCerts();"/>
       <button id="websites_addButton"
-              label="&certmgr.restore.label;"
+              label="&certmgr.restore2.label;"
               accesskey="&certmgr.restore.accesskey;"
               oncommand="addWebSiteCert();"/>
+      <button id="websites_exportButton"
+              label="&certmgr.export.label;"
+              accesskey="&certmgr.export.accesskey;"
+              disabled="true" oncommand="exportCerts();"/>
       <button id="websites_deleteButton"
-              label="&certmgr.delete.label;"
+              label="&certmgr.delete2.label;"
               accesskey="&certmgr.delete.accesskey;"
               disabled="true" oncommand="deleteCerts();"/>
     </hbox>

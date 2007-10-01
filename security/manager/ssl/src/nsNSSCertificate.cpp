@@ -43,6 +43,7 @@
 #include "prprf.h"
 
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
+#include "nsNSSCleaner.h"
 #include "nsCOMPtr.h"
 #include "nsIMutableArray.h"
 #include "nsNSSCertificate.h"
@@ -86,12 +87,20 @@ extern "C" {
 #include "ssl.h"
 #include "ocsp.h"
 #include "plbase64.h"
+#include "cms.h"
+#include "cert.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
 #endif
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
+NSSCleanupAutoPtrClass(CERTCertificateList, CERT_DestroyCertificateList)
+NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
+NSSCleanupAutoPtrClass(NSSCMSMessage, NSS_CMSMessage_Destroy)
+NSSCleanupAutoPtrClass_WithParam(PLArenaPool, PORT_FreeArena, FalseParam, PR_FALSE)
+NSSCleanupAutoPtrClass(NSSCMSSignedData, NSS_CMSSignedData_Destroy)
 
 // This is being stored in an PRUint32 that can otherwise
 // only take values from nsIX509Cert's list of cert types.
@@ -965,6 +974,137 @@ nsNSSCertificate::GetRawDER(PRUint32 *aLength, PRUint8 **aArray)
   }
   *aLength = 0;
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::ExportAsCMS(PRUint32 chainMode,
+                              PRUint32 *aLength, PRUint8 **aArray)
+{
+  NS_ENSURE_ARG(aLength);
+  NS_ENSURE_ARG(aArray);
+
+  nsNSSShutDownPreventionLock locker;
+  if (isAlreadyShutDown())
+    return NS_ERROR_NOT_AVAILABLE;
+
+  if (!mCert)
+    return NS_ERROR_FAILURE;
+
+  switch (chainMode) {
+    case nsIX509Cert3::CMS_CHAIN_MODE_CertOnly:
+    case nsIX509Cert3::CMS_CHAIN_MODE_CertChain:
+    case nsIX509Cert3::CMS_CHAIN_MODE_CertChainWithRoot:
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  };
+
+  PLArenaPool *arena = PORT_NewArena(1024);
+  PLArenaPoolCleanerFalseParam arenaCleaner(arena);
+  if (!arena) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("nsNSSCertificate::ExportAsCMS - out of memory\n"));
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NSSCMSMessage *cmsg = NSS_CMSMessage_Create(nsnull);
+  NSSCMSMessageCleaner cmsgCleaner(cmsg);
+  if (!cmsg) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("nsNSSCertificate::ExportAsCMS - can't create CMS message\n"));
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  /*
+   * first, create SignedData with the certificate only (no chain)
+   */
+  NSSCMSSignedData *sigd = NSS_CMSSignedData_CreateCertsOnly(cmsg, mCert, PR_FALSE);
+  NSSCMSSignedDataCleaner sigdCleaner(sigd);
+  if (!sigd) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("nsNSSCertificate::ExportAsCMS - can't create SignedData\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  /*
+   * Calling NSS_CMSSignedData_CreateCertsOnly() will not allow us
+   * to specify the inclusion of the root, but CERT_CertChainFromCert() does.
+   * Since CERT_CertChainFromCert() also includes the certificate itself,
+   * we have to start at the issuing cert (to avoid duplicate certs
+   * in the SignedData).
+   */
+  if (chainMode == nsIX509Cert3::CMS_CHAIN_MODE_CertChain ||
+      chainMode == nsIX509Cert3::CMS_CHAIN_MODE_CertChainWithRoot) {
+    CERTCertificate *issuerCert = CERT_FindCertIssuer(mCert, PR_Now(), certUsageAnyCA);
+    CERTCertificateCleaner issuerCertCleaner(issuerCert);
+    /*
+     * the issuerCert of a self signed root is the cert itself,
+     * so make sure we're not adding duplicates, again
+     */
+    if (issuerCert && issuerCert != mCert) {
+      PRBool includeRoot = 
+        (chainMode == nsIX509Cert3::CMS_CHAIN_MODE_CertChainWithRoot);
+      CERTCertificateList *certChain = CERT_CertChainFromCert(issuerCert, certUsageAnyCA, includeRoot);
+      CERTCertificateListCleaner certChainCleaner(certChain);
+      if (certChain) {
+        if (NSS_CMSSignedData_AddCertList(sigd, certChain) == SECSuccess) {
+          certChainCleaner.detach();
+        }
+        else {
+          PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+                 ("nsNSSCertificate::ExportAsCMS - can't add chain\n"));
+          return NS_ERROR_FAILURE;
+        }
+      }
+      else { 
+        /* try to add the issuerCert, at least */
+        if (NSS_CMSSignedData_AddCertificate(sigd, issuerCert)
+            == SECSuccess) {
+          issuerCertCleaner.detach();
+        }
+        else {
+          PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+                 ("nsNSSCertificate::ExportAsCMS - can't add issuer cert\n"));
+          return NS_ERROR_FAILURE;
+        }
+      }
+    }
+  }
+
+  NSSCMSContentInfo *cinfo = NSS_CMSMessage_GetContentInfo(cmsg);
+  if (NSS_CMSContentInfo_SetContent_SignedData(cmsg, cinfo, sigd)
+       == SECSuccess) {
+    sigdCleaner.detach();
+  }
+  else {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("nsNSSCertificate::ExportAsCMS - can't attach SignedData\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  SECItem certP7 = { siBuffer, nsnull, 0 };
+  NSSCMSEncoderContext *ecx = NSS_CMSEncoder_Start(cmsg, nsnull, nsnull, &certP7, arena,
+                                                   nsnull, nsnull, nsnull, nsnull, nsnull,
+                                                   nsnull);
+  if (!ecx) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("nsNSSCertificate::ExportAsCMS - can't create encoder context\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NSS_CMSEncoder_Finish(ecx) != SECSuccess) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("nsNSSCertificate::ExportAsCMS - failed to add encoded data\n"));
+    return NS_ERROR_FAILURE;
+  }
+
+  *aArray = (PRUint8*)nsMemory::Alloc(certP7.len);
+  if (!*aArray)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  memcpy(*aArray, certP7.data, certP7.len);
+  *aLength = certP7.len;
+  return NS_OK;
 }
 
 CERTCertificate *
