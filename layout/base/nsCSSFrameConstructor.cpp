@@ -9840,6 +9840,10 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   if (!count)
     return NS_OK;
 
+  // Make sure to not rebuild quote or counter lists while we're
+  // processing restyles
+  BeginUpdate();
+
   nsPropertyTable *propTable = mPresShell->GetPresContext()->PropertyTable();
 
   // Mark frames so that we skip frames that die along the way, bug 123049.
@@ -9904,6 +9908,8 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
 #endif
   }
 
+  EndUpdate();
+  
   // cleanup references
   index = count;
   while (0 <= --index) {
