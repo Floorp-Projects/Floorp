@@ -446,12 +446,27 @@ function Startup()
   // close and act accordingly
   if (!autoRemoveAndClose())
     gDownloadsView.focus();
+
+  var obs = Components.classes["@mozilla.org/observer-service;1"].
+            getService(Components.interfaces.nsIObserverService);
+  obs.addObserver(clearDownloadsObserver, "download-manager-clear-history", false);
 }
 
 function Shutdown() 
 {
   gDownloadManager.removeListener(gDownloadListener);
+
+  var obs = Components.classes["@mozilla.org/observer-service;1"].
+            getService(Components.interfaces.nsIObserverService);
+  obs.removeObserver(clearDownloadsObserver, "download-manager-clear-history");
 }
+
+var clearDownloadsObserver = {
+  observe: function cdo_observe() {
+    // Rebuild the default view
+    buildDefaultView();
+  }
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // View Context Menus
