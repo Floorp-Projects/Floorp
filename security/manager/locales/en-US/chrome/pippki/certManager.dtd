@@ -102,21 +102,23 @@
 
 <!ENTITY certmgr.close.label                  "Close">
 <!ENTITY certmgr.close.accesskey              "C">
-<!ENTITY certmgr.view.label                   "View">
+<!ENTITY certmgr.view2.label                   "View…">
 <!ENTITY certmgr.view.accesskey               "V">
-<!ENTITY certmgr.edit.label                   "Edit">
+<!ENTITY certmgr.edit2.label                   "Edit…">
 <!ENTITY certmgr.edit.accesskey               "E">
 <!ENTITY certmgr.editca.label                 "Edit CA Trust">
 <!ENTITY certmgr.editca.accesskey             "d">
 <!ENTITY certmgr.add.label                    "Add">
 <!ENTITY certmgr.add.accesskey                "A">
-<!ENTITY certmgr.delete.label                 "Delete">
+<!ENTITY certmgr.export.label                 "Export…">
+<!ENTITY certmgr.export.accesskey             "x">
+<!ENTITY certmgr.delete2.label                 "Delete…">
 <!ENTITY certmgr.delete.accesskey             "D">
-<!ENTITY certmgr.backup.label                 "Backup">
+<!ENTITY certmgr.backup2.label                 "Backup…">
 <!ENTITY certmgr.backup.accesskey             "B">
-<!ENTITY certmgr.backupall.label              "Backup All">
+<!ENTITY certmgr.backupall2.label              "Backup All…">
 <!ENTITY certmgr.backupall.accesskey          "k">
-<!ENTITY certmgr.restore.label                "Import">
+<!ENTITY certmgr.restore2.label                "Import…">
 <!ENTITY certmgr.restore.accesskey            "m">
 <!ENTITY certmgr.details.label                "Certificate Fields">
 <!ENTITY certmgr.details.accesskey            "F">

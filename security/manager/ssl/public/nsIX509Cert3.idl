@@ -46,8 +46,15 @@ interface nsICertVerificationListener;
  * TODO: nsIX509Cert3 should be derived from nsIX509Cert2
  *       (and nsIX509Cert2 derived from nsIX509Cert)
  */
-[scriptable, uuid(402aee39-653c-403f-8be1-6d1824223bf9)]
+[scriptable, uuid(89d9f248-1160-4935-9f99-2bdbf67b5849)]
 interface nsIX509Cert3 : nsISupports {
+
+  /**
+   *  Constants for specifying the chain mode when exporting a certificate
+   */
+  const unsigned long CMS_CHAIN_MODE_CertOnly = 1;
+  const unsigned long CMS_CHAIN_MODE_CertChain = 2;
+  const unsigned long CMS_CHAIN_MODE_CertChainWithRoot = 3;
 
   /**
    *  Async version of nsIX509Cert::getUsagesArray()
@@ -56,6 +63,19 @@ interface nsIX509Cert3 : nsISupports {
    *  availability of results will be notified.
    */ 
   void requestUsagesArrayAsync(in nsICertVerificationListener cvl);
+
+  /**
+   *  Obtain the certificate wrapped in a PKCS#7 SignedData structure,
+   *  with or without the certificate chain
+   *
+   *  @param chainMode Whether to include the chain (with or without the root),
+                       see CMS_CHAIN_MODE constants.
+   *  @param length The number of bytes of the PKCS#7 data.
+   *  @param data The bytes representing the PKCS#7 wrapped certificate.
+   */
+  void exportAsCMS(in unsigned long chainMode,
+                   out unsigned long length,
+                   [retval, array, size_is(length)] out octet data);
 };
 
 [scriptable, uuid(2fd0a785-9f2d-4327-8871-8c3e0783891d)]
