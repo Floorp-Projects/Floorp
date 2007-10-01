@@ -64,13 +64,6 @@ gfxFontCache *gfxFontCache::gGlobalCache = nsnull;
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
 static PRUint32 gTextRunStorageHighWaterMark = 0;
 static PRUint32 gTextRunStorage = 0;
-static PRUint32 gFontCount = 0;
-static PRUint32 gGlyphExtentsCount = 0;
-static PRUint32 gGlyphExtentsWidthsTotalSize = 0;
-static PRUint32 gGlyphExtentsSetupEagerSimple = 0;
-static PRUint32 gGlyphExtentsSetupEagerTight = 0;
-static PRUint32 gGlyphExtentsSetupLazyTight = 0;
-static PRUint32 gGlyphExtentsSetupFallBackToTight = 0;
 #endif
 
 nsresult
@@ -89,14 +82,6 @@ gfxFontCache::Shutdown()
 
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
     printf("Textrun storage high water mark=%d\n", gTextRunStorageHighWaterMark);
-    printf("Total number of fonts=%d\n", gFontCount);
-    printf("Total glyph extents allocated=%d (size %d)\n", gGlyphExtentsCount,
-            int(gGlyphExtentsCount*sizeof(gfxGlyphExtents)));
-    printf("Total glyph extents width-storage size allocated=%d\n", gGlyphExtentsWidthsTotalSize);
-    printf("Number of simple glyph extents eagerly requested=%d\n", gGlyphExtentsSetupEagerSimple);
-    printf("Number of tight glyph extents eagerly requested=%d\n", gGlyphExtentsSetupEagerTight);
-    printf("Number of tight glyph extents lazily requested=%d\n", gGlyphExtentsSetupLazyTight);
-    printf("Number of simple glyph extent setups that fell back to tight=%d\n", gGlyphExtentsSetupFallBackToTight);
 #endif
 }
 
@@ -175,9 +160,6 @@ gfxFontCache::DestroyFont(gfxFont *aFont)
 gfxFont::gfxFont(const nsAString &aName, const gfxFontStyle *aFontStyle) :
     mName(aName), mStyle(*aFontStyle)
 {
-#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
-    ++gFontCount;
-#endif
 }
 
 gfxFont::~gfxFont()
@@ -349,7 +331,8 @@ UnionWithXPoint(gfxRect *aRect, double aX)
 static PRBool
 NeedsGlyphExtents(gfxTextRun *aTextRun)
 {
-    return (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX) != 0;
+    return (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_OPTIMIZE_SPEED) == 0;
+    // return PR_TRUE;
 }
 
 gfxFont::RunMetrics
@@ -497,25 +480,11 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID, PRBool aNeed
             return;
         }
     }
-#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
-    if (!aNeedTight) {
-        ++gGlyphExtentsSetupFallBackToTight;
-    }
-#endif
 
     double d2a = appUnitsPerDevUnit;
     gfxRect bounds(extents.x_bearing*d2a, extents.y_bearing*d2a,
                    extents.width*d2a, extents.height*d2a);
     aExtents->SetTightGlyphExtents(aGlyphID, bounds);
-}
-
-gfxGlyphExtents::~gfxGlyphExtents()
-{
-#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
-    gGlyphExtentsWidthsTotalSize += mContainedGlyphWidths.ComputeSize();
-    gGlyphExtentsCount++;
-#endif
-    MOZ_COUNT_DTOR(gfxGlyphExtents);
 }
 
 gfxRect
@@ -525,9 +494,6 @@ gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont *aFont,
     HashEntry *entry = mTightGlyphExtents.GetEntry(aGlyphID);
     if (!entry) {
         aFont->SetupCairoFont(aContext);
-#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
-        ++gGlyphExtentsSetupLazyTight;
-#endif
         aFont->SetupGlyphExtents(aContext, aGlyphID, PR_TRUE, this);
         entry = mTightGlyphExtents.GetEntry(aGlyphID);
         if (!entry) {
@@ -539,65 +505,20 @@ gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont *aFont,
     return gfxRect(entry->x, entry->y, entry->width, entry->height);
 }
 
-gfxGlyphExtents::GlyphWidths::~GlyphWidths()
-{
-    PRUint32 i;
-    for (i = 0; i < mBlocks.Length(); ++i) {
-        PtrBits bits = mBlocks[i];
-        if (bits && !(bits & 0x1)) {
-            delete[] reinterpret_cast<PRUint16 *>(bits);
-        }
-    }
-}
-
-#ifdef DEBUG
-PRUint32
-gfxGlyphExtents::GlyphWidths::ComputeSize()
-{
-    PRUint32 i;
-    PRUint32 size = mBlocks.Capacity()*sizeof(PtrBits);
-    for (i = 0; i < mBlocks.Length(); ++i) {
-        PtrBits bits = mBlocks[i];
-        if (bits && !(bits & 0x1)) {
-            size += BLOCK_SIZE*sizeof(PRUint16);
-        }
-    }
-    return size;
-}
-#endif
-
 void
-gfxGlyphExtents::GlyphWidths::Set(PRUint32 aGlyphID, PRUint16 aWidth)
+gfxGlyphExtents::SetContainedGlyphWidthAppUnits(PRUint32 aGlyphID, PRUint16 aWidth)
 {
-    PRUint32 block = aGlyphID >> BLOCK_SIZE_BITS;
-    PRUint32 len = mBlocks.Length();
-    if (block >= len) {
-        PtrBits *elems = mBlocks.AppendElements(block + 1 - len);
+    PRUint32 len = mWidthsForContainedGlyphsAppUnits.Length();
+    if (aGlyphID >= len) {
+        PRUint16 *elems = mWidthsForContainedGlyphsAppUnits.AppendElements(aGlyphID + 1 - len);
         if (!elems)
             return;
-        memset(elems, 0, sizeof(PtrBits)*(block + 1 - len));
+        PRUint32 i;
+        for (i = len; i < aGlyphID; ++i) {
+            mWidthsForContainedGlyphsAppUnits[i] = INVALID_WIDTH;
+        }
     }
-
-    PtrBits bits = mBlocks[block];
-    PRUint32 glyphOffset = aGlyphID & (BLOCK_SIZE - 1);
-    if (!bits) {
-        mBlocks[block] = MakeSingle(glyphOffset, aWidth);
-        return;
-    }
-
-    PRUint16 *newBlock;
-    if (bits & 0x1) {
-        // Expand the block to a real block. We could avoid this by checking
-        // glyphOffset == GetGlyphOffset(bits), but that never happens so don't bother
-        newBlock = new PRUint16[BLOCK_SIZE];
-        if (!newBlock)
-            return;
-        newBlock[GetGlyphOffset(bits)] = GetWidth(bits);
-        mBlocks[block] = reinterpret_cast<PtrBits>(newBlock);
-    } else {
-        newBlock = reinterpret_cast<PRUint16 *>(bits);
-    }
-    newBlock[glyphOffset] = aWidth;
+    mWidthsForContainedGlyphsAppUnits[aGlyphID] = aWidth;
 }
 
 void
@@ -2011,9 +1932,6 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
                             font->SetupCairoFont(aRefContext);
                             fontIsSetup = PR_TRUE;
                         }
-#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
-                        ++gGlyphExtentsSetupEagerSimple;
-#endif
                         font->SetupGlyphExtents(aRefContext, glyphIndex, PR_FALSE, extents);
                     }
                 }
@@ -2026,9 +1944,6 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
                             font->SetupCairoFont(aRefContext);
                             fontIsSetup = PR_TRUE;
                         }
-#ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
-                        ++gGlyphExtentsSetupEagerTight;
-#endif
                         font->SetupGlyphExtents(aRefContext, glyphIndex, PR_TRUE, extents);
                     }
                     if (details->mIsLastGlyph)
