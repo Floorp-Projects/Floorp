@@ -1550,8 +1550,10 @@ nsXMLHttpRequest::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
   // Create an empty document from it 
   const nsAString& emptyStr = EmptyString();
+  nsIScriptGlobalObject* global = mScriptContext ?
+    mScriptContext->GetGlobalObject() : nsnull;
   nsresult rv = nsContentUtils::CreateDocument(emptyStr, emptyStr, nsnull, uri,
-                                               uri, mPrincipal,
+                                               uri, mPrincipal, global,
                                                getter_AddRefs(mDocument));
   NS_ENSURE_SUCCESS(rv, rv);
 

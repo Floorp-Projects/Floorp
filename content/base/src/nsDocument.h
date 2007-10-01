@@ -433,6 +433,10 @@ public:
   virtual nsIScriptGlobalObject* GetScriptGlobalObject() const;
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject);
 
+  virtual nsIScriptGlobalObject*
+    GetScriptHandlingObject(PRBool& aHasHadScriptHandlingObject) const;
+  virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject);
+
   virtual nsIScriptGlobalObject* GetScopeObject();
 
   /**
@@ -744,6 +748,11 @@ protected:
   // *inner* window object.
   nsCOMPtr<nsIScriptGlobalObject> mScriptGlobalObject;
 
+  // If document is created for example using
+  // document.implementation.createDocument(...), mScriptObject points to
+  // the script global object of the original document.
+  nsWeakPtr mScriptObject;
+
   // Weak reference to the scope object (aka the script global object)
   // that, unlike mScriptGlobalObject, is never unset once set. This
   // is a weak reference to avoid leaks due to circular references.
@@ -763,6 +772,8 @@ protected:
   PRPackedBool mInDestructor:1;
   // True if the document "page" is not hidden
   PRPackedBool mVisible:1;
+  // True if document has ever had script handling object.
+  PRPackedBool mHasHadScriptHandlingObject:1;
 
   PRUint8 mXMLDeclarationBits;
 
