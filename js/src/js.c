@@ -2402,10 +2402,17 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     } else {
         fp = JS_GetScriptedCaller(cx, NULL);
         JS_SetGlobalObject(scx, sobj);
+        JS_ToggleOptions(scx, JSOPTION_DONT_REPORT_UNCAUGHT);
         ok = JS_EvaluateUCScript(scx, sobj, src, srclen,
                                  fp->script->filename,
                                  JS_PCToLineNumber(cx, fp->script, fp->pc),
                                  rval);
+        if (!ok) {
+            if (JS_GetPendingException(scx, &v))
+                JS_SetPendingException(cx, v);
+            else
+                JS_ReportOutOfMemory(cx);
+        }
     }
 
 out:
