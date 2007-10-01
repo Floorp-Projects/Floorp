@@ -677,7 +677,7 @@ nsHTMLScrollFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
     nsSize vScrollbarPrefSize(0, 0);
     GetScrollbarMetrics(bls, mInner.mVScrollbarBox,
                         nsnull, &vScrollbarPrefSize, PR_TRUE);
-    result += vScrollbarPrefSize.width;
+    result = NSCoordSaturatingAdd(result, vScrollbarPrefSize.width);
   }
 
   return result;
