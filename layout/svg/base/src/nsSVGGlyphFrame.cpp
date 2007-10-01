@@ -1340,8 +1340,8 @@ nsSVGGlyphFrame::GetTextRun(gfxContext *aCtx, const nsString &aText)
   if (!mFontGroup)
     return nsnull;
 
-  PRUint32 flags = gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX |
-      nsLayoutUtils::GetTextRunFlagsForStyle(GetStyleContext(), GetStyleText(), GetStyleFont());
+  PRUint32 flags = nsLayoutUtils::GetTextRunFlagsForStyle(GetStyleContext(),
+      GetStyleText(), GetStyleFont());
   return gfxTextRunCache::MakeTextRun(aText.get(), aText.Length(),
       mFontGroup, aCtx, 1, flags);
 }
