@@ -620,6 +620,10 @@ nsTextEditorDragListener::DragExit(nsIDOMEvent* aDragEvent)
     mCaretDrawn = PR_FALSE;
   }
 
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (presShell)
+    presShell->RestoreCaret();
+
   return NS_OK;
 }
 
