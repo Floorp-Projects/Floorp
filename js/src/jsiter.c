@@ -270,8 +270,8 @@ IteratorNextImpl(JSContext *cx, JSObject *obj, jsval *rval)
     return JS_TRUE;
 }
 
-static JSBool
-js_ThrowStopIteration(JSContext *cx, JSObject *obj)
+JSBool
+js_ThrowStopIteration(JSContext *cx)
 {
     jsval v;
 
@@ -295,7 +295,7 @@ iterator_next(JSContext *cx, uintN argc, jsval *vp)
 
     if (*vp == JSVAL_HOLE) {
         *vp = JSVAL_NULL;
-        js_ThrowStopIteration(cx, obj);
+        js_ThrowStopIteration(cx);
         return JS_FALSE;
     }
     return JS_TRUE;
@@ -916,7 +916,7 @@ SendToGenerator(JSContext *cx, JSGeneratorOp op, JSObject *obj,
             *rval = JSVAL_VOID;
             return JS_TRUE;
         }
-        return js_ThrowStopIteration(cx, obj);
+        return js_ThrowStopIteration(cx);
     }
 
     /*
@@ -990,7 +990,7 @@ generator_op(JSContext *cx, JSGeneratorOp op, jsval *vp)
         switch (op) {
           case JSGENOP_NEXT:
           case JSGENOP_SEND:
-            return js_ThrowStopIteration(cx, obj);
+            return js_ThrowStopIteration(cx);
           case JSGENOP_THROW:
             JS_SetPendingException(cx, vp[2]);
             return JS_FALSE;
