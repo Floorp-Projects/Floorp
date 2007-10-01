@@ -73,11 +73,6 @@ _TEST_FILES = 	test_bug360220.xul \
 		test_statusbar.xul \
 		test_datepicker.xul \
 		test_timepicker.xul \
-		test_tree.xul \
-		test_tree_single.xul \
-		test_tree_hier.xul \
-		test_tree_hier_cell.xul \
-		tree_shared.js \
 		test_textbox_number.xul \
 		xul_selectcontrol.js \
 		test_panelfrommenu.xul \
