@@ -647,11 +647,12 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
   }
 
   const nsCSubstring& host = Substring(begin, iter++);
-  const nsCSubstring& path = Substring(iter, end);
+  nsCAutoString path;
+  path.Assign(Substring(iter, end));
 
   /**
    * From the protocol doc:
-   * For the hostname, the client will  try at most 5 different strings.  They
+   * For the hostname, the client will try at most 5 different strings.  They
    * are:
    * a) The exact hostname of the url
    * b) The 4 hostnames formed by starting with the last 5 components and
@@ -677,10 +678,11 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
 
   /**
    * From the protocol doc:
-   * For the path, the client will also try at most 5 different strings.
+   * For the path, the client will also try at most 6 different strings.
    * They are:
-   * a) the exact path of the url
-   * b) the 4 paths formed by starting at the root (/) and
+   * a) the exact path of the url, including query parameters
+   * b) the exact path of the url, without query parameters
+   * c) the 4 paths formed by starting at the root (/) and
    *    successively appending path components, including a trailing
    *    slash.  This behavior should only extend up to the next-to-last
    *    path component, that is, a trailing slash should never be
@@ -688,6 +690,14 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
    */
   nsCStringArray paths;
   paths.AppendCString(path);
+
+  path.BeginReading(iter);
+  path.EndReading(end);
+  if (FindCharInReadable('?', iter, end)) {
+    path.BeginReading(begin);
+    path = Substring(begin, iter);
+    paths.AppendCString(path);
+  }
 
   numComponents = 0;
   path.BeginReading(begin);
@@ -700,26 +710,15 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
     numComponents++;
   }
 
-  /**
-   * "In addition to these, the client should look up the exact host
-   * and exact path, with a trailing '$' appended." */
-  nsCAutoString key;
-  key.Assign(spec);
-  key.Append('$');
-  LOG(("Chking %s", key.get()));
-
-  nsUrlClassifierHash* hash = fragments.AppendElement();
-  if (!hash) return NS_ERROR_OUT_OF_MEMORY;
-  hash->FromPlaintext(key, mCryptoHash);
-
   for (int hostIndex = 0; hostIndex < hosts.Count(); hostIndex++) {
     for (int pathIndex = 0; pathIndex < paths.Count(); pathIndex++) {
+      nsCAutoString key;
       key.Assign(*hosts[hostIndex]);
       key.Append('/');
       key.Append(*paths[pathIndex]);
       LOG(("Chking %s", key.get()));
 
-      hash = fragments.AppendElement();
+      nsUrlClassifierHash* hash = fragments.AppendElement();
       if (!hash) return NS_ERROR_OUT_OF_MEMORY;
       hash->FromPlaintext(key, mCryptoHash);
     }
