@@ -1550,7 +1550,7 @@ nsFrame::GetDataForTableSelection(nsFrameSelection *aFrameSelection,
   {  
     // In Browser, special 'table selection' key must be pressed for table selection
     // or when just Shift is pressed and we're already in table/cell selection mode
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
     doTableSelection = aMouseEvent->isMeta || (aMouseEvent->isShift && selectingTableCells);
 #else
     doTableSelection = aMouseEvent->isControl || (aMouseEvent->isShift && selectingTableCells);
@@ -1786,7 +1786,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   if (me->isControl)
     return NS_OK;//short ciruit. hard coded for mac due to time restraints.
 #endif
@@ -1866,7 +1866,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 
   frameselection->SetMouseDownState(PR_TRUE);
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   PRBool control = me->isMeta;
 #else
   PRBool control = me->isControl;

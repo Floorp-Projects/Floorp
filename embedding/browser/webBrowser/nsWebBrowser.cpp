@@ -88,12 +88,6 @@
 // PSM2 includes
 #include "nsISecureBrowserUI.h"
 
-#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
-#include <MacWindows.h>
-#include "nsWidgetSupport.h"
-#include "nsIEventSink.h"
-#endif
-
 static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_CID(kChildCID, NS_CHILD_CID);
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -117,9 +111,6 @@ nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull),
    mStream(nsnull),
    mParentWidget(nsnull),
    mListenerArray(nsnull)
-#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
-   , mTopLevelWidget(nsnull)
-#endif
 {
     mInitInfo = new nsWebBrowserInitInfo();
     mWWatch = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
@@ -162,10 +153,6 @@ NS_IMETHODIMP nsWebBrowser::InternalDestroy()
       mListenerArray = nsnull;
    }
 
-#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)   
-   NS_IF_RELEASE(mTopLevelWidget);
-#endif
-
    return NS_OK;
 }
 
@@ -205,11 +192,6 @@ NS_IMETHODIMP nsWebBrowser::GetInterface(const nsIID& aIID, void** aSink)
 
    if(NS_SUCCEEDED(QueryInterface(aIID, aSink)))
       return NS_OK;
-
-#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
-   if (aIID.Equals(NS_GET_IID(nsIEventSink)) && mTopLevelWidget)
-      return mTopLevelWidget->QueryInterface(NS_GET_IID(nsIEventSink), aSink);
-#endif
 
    if (mDocShell) {
 #ifdef NS_PRINTING
@@ -375,40 +357,6 @@ NS_IMETHODIMP nsWebBrowser::EnableGlobalHistory(PRBool aEnable)
        
     return rv;
 }
-
-#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
-NS_IMETHODIMP nsWebBrowser::EnsureTopLevelWidget(nativeWindow aWindow)
-{
-    WindowPtr macWindow = static_cast<WindowPtr>(aWindow);
-    nsIWidget *widget = nsnull;
-    nsCOMPtr<nsIWidget> newWidget;
-    nsresult rv = NS_ERROR_FAILURE;
-
-    ::GetWindowProperty(macWindow, kTopLevelWidgetPropertyCreator,
-        kTopLevelWidgetRefPropertyTag, sizeof(nsIWidget*), nsnull, (void*)&widget);
-    if (!widget) {
-      newWidget = do_CreateInstance(kWindowCID, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        
-        // Create it with huge bounds. The actual bounds that matters is that of the
-        // nsIBaseWindow. The bounds of the top level widget clips its children so
-        // we just have to make sure it is big enough to always contain the children.
-
-        nsRect r(0, 0, 32000, 32000);
-        rv = newWidget->Create(macWindow, r, nsnull, nsnull, nsnull, nsnull, nsnull);
-        if (NS_SUCCEEDED(rv))
-          widget = newWidget;
-      }
-    }
-    NS_ASSERTION(widget, "Failed to get or create a toplevel widget!!");
-    if (widget) {
-      mTopLevelWidget = widget;
-      NS_ADDREF(mTopLevelWidget); // Allows multiple nsWebBrowsers to be in 1 window.
-      rv = NS_OK;
-    }
-    return rv;
-}
-#endif
 
 NS_IMETHODIMP nsWebBrowser::GetContainerWindow(nsIWebBrowserChrome** aTopWindow)
 {
@@ -1425,14 +1373,8 @@ NS_IMETHODIMP nsWebBrowser::GetParentNativeWindow(nativeWindow* aParentNativeWin
 NS_IMETHODIMP nsWebBrowser::SetParentNativeWindow(nativeWindow aParentNativeWindow)
 {
    NS_ENSURE_STATE(!mDocShell);
-   
-#if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
-   nsresult rv = EnsureTopLevelWidget(aParentNativeWindow);
-   NS_ENSURE_SUCCESS(rv, rv);
-   mParentNativeWindow = mTopLevelWidget->GetNativeData(NS_NATIVE_WINDOW);
-#else
+
    mParentNativeWindow = aParentNativeWindow;
-#endif
 
    return NS_OK;
 }
