@@ -1674,35 +1674,28 @@ nsDownload::SetState(DownloadState aState)
         LPSHELLFOLDER lpShellFolder = NULL;
 
         if (SUCCEEDED(::SHGetDesktopFolder(&lpShellFolder))) {
-          nsresult rv;
-          nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget, &rv);
-          NS_ENSURE_SUCCESS(rv, rv);
-
+          nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget);
           nsCOMPtr<nsIFile> file;
-          rv = fileURL->GetFile(getter_AddRefs(file));
-          NS_ENSURE_SUCCESS(rv, rv);
-
           nsAutoString path;
-          rv = file->GetPath(path);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          PRUnichar *filePath = ToNewUnicode(path);
-          LPITEMIDLIST lpItemIDList = NULL;
-          if (SUCCEEDED(lpShellFolder->ParseDisplayName(NULL, NULL, filePath,
-                  NULL, &lpItemIDList, NULL))) {
-            ::SHAddToRecentDocs(SHARD_PIDL, lpItemIDList);
-            ::CoTaskMemFree(lpItemIDList);
+          if (fileURL && fileURL->GetFile(getter_AddRefs(file)) && file && 
+              NS_SUCCEEDED(file->GetPath(path))) {
+            PRUnichar *filePath = ToNewUnicode(path);
+            LPITEMIDLIST lpItemIDList = NULL;
+            if (SUCCEEDED(lpShellFolder->ParseDisplayName(NULL, NULL, filePath,
+                                                          NULL, &lpItemIDList,
+                                                          NULL))) {
+              ::SHAddToRecentDocs(SHARD_PIDL, lpItemIDList);
+              ::CoTaskMemFree(lpItemIDList);
+            }
+            nsMemory::Free(filePath);
           }
-          nsMemory::Free(filePath);
           lpShellFolder->Release();
         }
       }
 #endif
-
       // Now remove the download if the user's retention policy is "Remove when Done"
       if (mDownloadManager->GetRetentionBehavior() == 0)
         mDownloadManager->RemoveDownload(mID);
-
     }
     break;
   default:
