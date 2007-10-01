@@ -1,2 +1,2 @@
 HTTP 200 OK
-Content-Access-Control: allow <*>, deny <*>
+Access-Control: allow <*>, deny <*>
