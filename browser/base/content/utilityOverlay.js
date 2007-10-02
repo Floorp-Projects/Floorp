@@ -586,68 +586,48 @@ function openNewWindowWith(aURL, aDocument, aPostData, aAllowThirdPartyFixup,
 }
 
 /**
- * recognizeFeedFromLink: recognizes RSS/ATOM feeds from DOM link elements.
+ * isValidFeed: checks whether the given data represents a valid feed.
  *
- * @param  aLink
- *         The DOM link element to check for representing a feed.
+ * @param  aData
+ *         An object representing a feed with title, href and type.
  * @param  aPrincipal
  *         The principal of the document, used for security check.
- * @return object
- *         The feed object containing href, type, and title properties,
- *          if successful, otherwise null.
+ * @param  aIsFeed
+ *         Whether this is already a known feed or not, if true only a security
+ *         check will be performed.
  */ 
-function recognizeFeedFromLink(aLink, aPrincipal)
+function isValidFeed(aData, aPrincipal, aIsFeed)
 {
-  if (!aLink || !aPrincipal)
-    return null;
+  if (!aData || !aPrincipal)
+    return false;
 
-  var erel = aLink.rel && aLink.rel.toLowerCase();
-  var etype = aLink.type && aLink.type.toLowerCase();
-  var etitle = aLink.title;
-  const rssTitleRegex = /(^|\s)rss($|\s)/i;
-  var rels = {};
+  if (!aIsFeed) {
+    var type = aData.type && aData.type.toLowerCase();
+    type = type.replace(/^\s+|\s*(?:;.*)?$/g, "");
 
-  if (erel) {
-    for each (var relValue in erel.split(/\s+/))
-      rels[relValue] = true;
-  }
-  var isFeed = rels.feed;
+    aIsFeed = (type == "application/rss+xml" ||
+               type == "application/atom+xml");
 
-  if (!isFeed && (!rels.alternate || rels.stylesheet || !etype))
-    return null;
-
-  if (!isFeed) {
-    // Use type value
-    etype = etype.replace(/^\s+/, "");
-    etype = etype.replace(/\s+$/, "");
-    etype = etype.replace(/\s*;.*/, "");
-    isFeed = (etype == "application/rss+xml" ||
-              etype == "application/atom+xml");
-    if (!isFeed) {
+    if (!aIsFeed) {
       // really slimy: general XML types with magic letters in the title
-      isFeed = ((etype == "text/xml" || etype == "application/xml" ||
-                 etype == "application/rdf+xml") && rssTitleRegex.test(etitle));
+      const titleRegex = /(^|\s)rss($|\s)/i;
+      aIsFeed = ((type == "text/xml" || type == "application/rdf+xml" ||
+                  type == "application/xml") && titleRegex.test(aData.title));
     }
   }
 
-  if (isFeed) {
-    try { 
-      urlSecurityCheck(aLink.href,
-                       aPrincipal,
+  if (aIsFeed) {
+    try {
+      urlSecurityCheck(aData.href, aPrincipal,
                        Components.interfaces.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
     }
-    catch (ex) {
-      dump(ex.message);
-      return null; // doesn't pass security check
+    catch(ex) {
+      aIsFeed = false;
     }
-
-    // successful!  return the feed
-    return {
-        href: aLink.href,
-        type: etype,
-        title: aLink.title
-      };
   }
 
-  return null;
+  if (type)
+    aData.type = type;
+
+  return aIsFeed;
 }
