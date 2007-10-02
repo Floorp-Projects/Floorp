@@ -96,8 +96,8 @@ static const PRInt64 gUpdateInterval = 400 * PR_USEC_PER_MSEC;
 #define DM_DB_NAME             NS_LITERAL_STRING("downloads.sqlite")
 #define DM_DB_CORRUPT_FILENAME NS_LITERAL_STRING("downloads.sqlite.corrupt")
 
-///////////////////////////////////////////////////////////////////////////////
-// nsDownloadManager
+////////////////////////////////////////////////////////////////////////////////
+//// nsDownloadManager
 
 NS_IMPL_ISUPPORTS2(nsDownloadManager, nsIDownloadManager, nsIObserver)
 
@@ -148,78 +148,6 @@ nsDownloadManager::RemoveAllDownloads()
   }
 
   return rv;
-}
-
-void
-nsDownloadManager::CompleteDownload(nsDownload *aDownload)
-{
-  // we've stopped, so break the cycle we created at download start
-  aDownload->mCancelable = nsnull;
-  aDownload->mEntityID.Truncate();
-
-  // we need do what exthandler would have done for a finished download
-  if (aDownload->mDownloadState == nsIDownloadManager::DOWNLOAD_FINISHED &&
-      aDownload->WasResumed())
-    (void)ExecuteDesiredAction(aDownload);
-
-  (void)mCurrentDownloads.RemoveObject(aDownload);
-}
-
-nsresult
-nsDownloadManager::ExecuteDesiredAction(nsDownload *aDownload)
-{
-  // If we have a temp file and we have resumed, we have to do what the external
-  // helper app service would have done.
-  if (!aDownload->mTempFile || !aDownload->WasResumed())
-    return NS_OK;
-
-  // We need to bail if for some reason the temp file got removed
-  PRBool fileExists;
-  if (NS_FAILED(aDownload->mTempFile->Exists(&fileExists)) || !fileExists)
-    return NS_ERROR_FAILURE;
-
-  // Find out if it was a SaveToDisk kind of a download
-  nsHandlerInfoAction action = nsIMIMEInfo::saveToDisk;
-  nsresult rv;
-  if (aDownload->mMIMEInfo) {
-    rv = aDownload->mMIMEInfo->GetPreferredAction(&action);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  switch (action) {
-    case nsIMIMEInfo::saveToDisk:
-      // For this instance, we need to move the file to the proper location
-      {
-        nsCOMPtr<nsILocalFile> target;
-        rv = aDownload->GetTargetFile(getter_AddRefs(target));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // MoveTo will fail if the file already exists, but we've already
-        // obtained confirmation from the user that this is OK.  So, we have
-        // to remove it if it exists.
-        if (NS_SUCCEEDED(target->Exists(&fileExists)) && fileExists) {
-          rv = target->Remove(PR_FALSE);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-
-        // extract the new leaf name from the file location
-        nsAutoString fileName;
-        rv = target->GetLeafName(fileName);
-        NS_ENSURE_SUCCESS(rv, rv);
-        nsCOMPtr<nsIFile> dir;
-        rv = target->GetParent(getter_AddRefs(dir));
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (dir) {
-          rv = aDownload->mTempFile->MoveTo(dir, fileName);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-      }
-      break;
-    default:
-      break;
-  }
-
-  return NS_OK;
 }
 
 nsresult
@@ -920,7 +848,7 @@ nsDownloadManager::SendEvent(nsDownload *aDownload, const char *aTopic)
   (void)mObserverService->NotifyObservers(aDownload, aTopic, nsnull);
 }
 
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //// nsIDownloadManager
 
 NS_IMETHODIMP
@@ -1449,8 +1377,8 @@ nsDownloadManager::NotifyListenersOnStateChange(nsIWebProgress *aProgress,
                                  aDownload);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// nsIObserver
+////////////////////////////////////////////////////////////////////////////////
+//// nsIObserver
 
 NS_IMETHODIMP
 nsDownloadManager::Observe(nsISupports *aSubject,
@@ -1568,8 +1496,8 @@ nsDownloadManager::ConfirmCancelDownloads(PRInt32 aCount,
   }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// nsDownload
+////////////////////////////////////////////////////////////////////////////////
+//// nsDownload
 
 NS_IMPL_ISUPPORTS4(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener,
                    nsIWebProgressListener2)
@@ -1616,7 +1544,8 @@ nsDownload::SetState(DownloadState aState)
     case nsIDownloadManager::DOWNLOAD_BLOCKED:
     case nsIDownloadManager::DOWNLOAD_CANCELED:
     case nsIDownloadManager::DOWNLOAD_FAILED:
-      mDownloadManager->CompleteDownload(this);
+      // Transfers are finished, so break the reference cycle
+      Finalize();
       break;
 #ifdef XP_WIN
     case nsIDownloadManager::DOWNLOAD_SCANNING:
@@ -1630,7 +1559,11 @@ nsDownload::SetState(DownloadState aState)
 #endif
     case nsIDownloadManager::DOWNLOAD_FINISHED:
     {
-      mDownloadManager->CompleteDownload(this);
+      // Do what exthandler would have done if necessary
+      (void)ExecuteDesiredAction();
+
+      // Now that we're done with handling the download, clean it up
+      Finalize();
 
       // Master pref to control this function.
       PRBool showTaskbarAlert = PR_TRUE;
@@ -1740,21 +1673,8 @@ nsDownload::SetState(DownloadState aState)
   return NS_OK;
 }
 
-DownloadType
-nsDownload::GetDownloadType()
-{
-  return mDownloadType;
-}
-
-void
-nsDownload::SetStartTime(PRInt64 aStartTime)
-{
-  mStartTime = aStartTime;
-  mLastUpdate = aStartTime;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// nsIWebProgressListener2
+////////////////////////////////////////////////////////////////////////////////
+//// nsIWebProgressListener2
 
 NS_IMETHODIMP
 nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
@@ -1851,8 +1771,8 @@ nsDownload::OnRefreshAttempted(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// nsIWebProgressListener
+////////////////////////////////////////////////////////////////////////////////
+//// nsIWebProgressListener
 
 NS_IMETHODIMP
 nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
@@ -1960,8 +1880,8 @@ nsDownload::OnSecurityChange(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// nsIDownload
+////////////////////////////////////////////////////////////////////////////////
+//// nsIDownload
 
 NS_IMETHODIMP
 nsDownload::Init(nsIURI *aSource,
@@ -2084,6 +2004,90 @@ nsDownload::GetReferrer(nsIURI **referrer)
 {
   NS_IF_ADDREF(*referrer = mReferrer);
   return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// nsDownload Helper Functions
+
+void
+nsDownload::Finalize()
+{
+  // We're stopping, so break the cycle we created at download start
+  mCancelable = nsnull;
+
+  // Reset values that aren't needed anymore, so the DB can be updated as well
+  mEntityID.Truncate();
+
+  // Remove ourself from the active downloads
+  (void)mDownloadManager->mCurrentDownloads.RemoveObject(this);
+}
+
+nsresult
+nsDownload::ExecuteDesiredAction()
+{
+  // If we have a temp file and we have resumed, we have to do what the
+  // external helper app service would have done.
+  if (!mTempFile || !WasResumed())
+    return NS_OK;
+
+  // We need to bail if for some reason the temp file got removed
+  PRBool fileExists;
+  if (NS_FAILED(mTempFile->Exists(&fileExists)) || !fileExists)
+    return NS_ERROR_FILE_NOT_FOUND;
+
+  // Assume an unknown action is save to disk
+  nsHandlerInfoAction action = nsIMIMEInfo::saveToDisk;
+  if (mMIMEInfo) {
+    nsresult rv = mMIMEInfo->GetPreferredAction(&action);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsresult ret = NS_OK;
+  switch (action) {
+    case nsIMIMEInfo::saveToDisk:
+      // Move the file to the proper location
+      ret = MoveTempToTarget();
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+}
+
+nsresult
+nsDownload::MoveTempToTarget()
+{
+  nsCOMPtr<nsILocalFile> target;
+  nsresult rv = GetTargetFile(getter_AddRefs(target));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // MoveTo will fail if the file already exists, but we've already obtained
+  // confirmation from the user that this is OK, so remove it if it exists.
+  PRBool fileExists;
+  if (NS_SUCCEEDED(target->Exists(&fileExists)) && fileExists) {
+    rv = target->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Extract the new leaf name from the file location
+  nsAutoString fileName;
+  rv = target->GetLeafName(fileName);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIFile> dir;
+  rv = target->GetParent(getter_AddRefs(dir));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mTempFile->MoveTo(dir, fileName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+void
+nsDownload::SetStartTime(PRInt64 aStartTime)
+{
+  mStartTime = aStartTime;
+  mLastUpdate = aStartTime;
 }
 
 void

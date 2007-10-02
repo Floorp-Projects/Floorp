@@ -155,14 +155,6 @@ protected:
    */
   nsresult RemoveAllDownloads();
 
-  /**
-   * Removes download from "current downloads".
-   *
-   * This method removes the cycle created when starting the download, so
-   * make sure to use kungFuDeathGrip if you want to access member variables
-   */
-  void CompleteDownload(nsDownload *aDownload);
-
   void ConfirmCancelDownloads(PRInt32 aCount,
                               nsISupportsPRBool *aCancelDownloads,
                               const PRUnichar *aTitle,
@@ -171,7 +163,6 @@ protected:
                               const PRUnichar *aDontCancelButton);
 
   PRInt32 GetRetentionBehavior();
-  nsresult ExecuteDesiredAction(nsDownload *aDownload);
 
 private:
   nsCOMArray<nsIDownloadProgressListener> mListeners;
@@ -198,7 +189,6 @@ public:
   nsDownload();
   virtual ~nsDownload();
 
-public:
   /**
    * This method MUST be called when changing states on a download.  It will
    * notify the download listener when a change happens.  This also updates the
@@ -206,12 +196,32 @@ public:
    */
   nsresult SetState(DownloadState aState);
 
-  DownloadType GetDownloadType();
-  void SetDownloadType(DownloadType aType);
-
-  nsresult UpdateDB();
-
 protected:
+  /**
+   * Finish up the download by breaking reference cycles and clearing unneeded
+   * data. Additionally, the download removes itself from the download
+   * manager's list of current downloads.
+   *
+   * NOTE: This method removes the cycle created when starting the download, so
+   * make sure to use kungFuDeathGrip if you want to access member variables.
+   */
+  void Finalize();
+
+  /**
+   * For finished resumed downloads that came in from exthandler, perform the
+   * action that would have been done if the download wasn't resumed.
+   */
+  nsresult ExecuteDesiredAction();
+
+  /**
+   * Move the temporary file to the final destination by removing the existing
+   * dummy target and renaming the temporary.
+   */
+  nsresult MoveTempToTarget();
+
+  /**
+   * Update the start time which also implies the last update time is the same.
+   */
   void SetStartTime(PRInt64 aStartTime);
 
   /**
@@ -271,6 +281,13 @@ protected:
    * Download is totally done transferring and all?
    */
   PRBool IsFinished();
+
+  /**
+   * Update the DB with the current state of the download including time,
+   * download state and other values not known when first creating the
+   * download DB entry.
+   */
+  nsresult UpdateDB();
 
   /**
    * Fail a download because of a failure status and prompt the provided
