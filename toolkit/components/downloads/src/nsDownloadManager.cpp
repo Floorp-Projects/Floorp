@@ -92,7 +92,7 @@ static PRBool gStoppingDownloads = PR_FALSE;
 
 static const PRInt64 gUpdateInterval = 400 * PR_USEC_PER_MSEC;
 
-#define DM_SCHEMA_VERSION      5
+#define DM_SCHEMA_VERSION      6
 #define DM_DB_NAME             NS_LITERAL_STRING("downloads.sqlite")
 #define DM_DB_CORRUPT_FILENAME NS_LITERAL_STRING("downloads.sqlite.corrupt")
 
@@ -376,6 +376,25 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
     }
     // Fallthrough to the next upgrade
 
+  case 5:
+    {
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "ALTER TABLE moz_downloads "
+        "ADD COLUMN currBytes INTEGER NOT NULL DEFAULT 0"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "ALTER TABLE moz_downloads "
+        "ADD COLUMN maxBytes INTEGER NOT NULL DEFAULT -1"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Finally, update the schemaVersion variable and the database schema
+      schemaVersion = 6;
+      rv = mDBConn->SetSchemaVersion(schemaVersion);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    // Fallthrough to the next upgrade
+
   // Extra sanity checking for developers
 #ifndef DEBUG
   case DM_SCHEMA_VERSION:
@@ -406,7 +425,7 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
       nsCOMPtr<mozIStorageStatement> stmt;
       rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
         "SELECT id, name, source, target, tempPath, startTime, endTime, state, "
-               "referrer, entityID "
+               "referrer, entityID, currBytes, maxBytes "
         "FROM moz_downloads"), getter_AddRefs(stmt));
       if (NS_SUCCEEDED(rv))
         break;
@@ -449,7 +468,9 @@ nsDownloadManager::CreateTable()
       "endTime INTEGER, "
       "state INTEGER, "
       "referrer TEXT, "
-      "entityID TEXT"
+      "entityID TEXT, "
+      "currBytes INTEGER NOT NULL DEFAULT 0, "
+      "maxBytes INTEGER NOT NULL DEFAULT -1"
     ")"));
 }
 
@@ -775,8 +796,9 @@ nsDownloadManager::Init()
 
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_downloads "
-    "SET startTime = ?1, endTime = ?2, state = ?3, referrer = ?4, entityID = ?5 "
-    "WHERE id = ?6"), getter_AddRefs(mUpdateDownloadStatement));
+    "SET startTime = ?1, endTime = ?2, state = ?3, referrer = ?4, "
+        "entityID = ?5, currBytes = ?6, maxBytes = ?7 "
+    "WHERE id = ?8"), getter_AddRefs(mUpdateDownloadStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The following three AddObserver calls must be the last lines in this function,
@@ -821,7 +843,7 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT id, state, startTime, source, target, tempPath, name, referrer, "
-           "entityID "
+           "entityID, currBytes, maxBytes "
     "FROM moz_downloads "
     "WHERE id = ?1"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -872,31 +894,10 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsILocalFile> file;
-  rv = dl->GetTargetFile(getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool fileExists;
-  if (NS_SUCCEEDED(file->Exists(&fileExists)) && fileExists) {
-    if (dl->mDownloadState == nsIDownloadManager::DOWNLOAD_FINISHED) {
-      dl->mPercentComplete = 100;
-
-      PRInt64 size;
-      rv = file->GetFileSize(&size);
-      NS_ENSURE_SUCCESS(rv, rv);
-      dl->mMaxBytes = dl->mCurrBytes = size;
-    } else {
-      dl->mPercentComplete = -1;
-      dl->mMaxBytes = LL_MAXUINT;
-    }
-  } else {
-    dl->mPercentComplete = 0;
-    dl->mMaxBytes = LL_MAXUINT;
-    dl->mCurrBytes = 0;
-  }
-
   rv = stmt->GetUTF8String(i++, dl->mEntityID);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  dl->SetProgressBytes(stmt->AsInt64(i++), stmt->AsInt64(i++));
 
   // Addrefing and returning
   NS_ADDREF(*retVal = dl);
@@ -1252,7 +1253,9 @@ nsDownloadManager::RetryDownload(PRUint32 aID)
       dl->mDownloadState != nsIDownloadManager::DOWNLOAD_CANCELED)
     return NS_ERROR_FAILURE;
 
+  // reset time and download progress
   dl->SetStartTime(PR_Now());
+  dl->SetProgressBytes(0, -1);
 
   nsCOMPtr<nsIWebBrowserPersist> wbp =
     do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1", &rv);
@@ -1575,7 +1578,7 @@ nsDownload::nsDownload() : mDownloadState(nsIDownloadManager::DOWNLOAD_NOTSTARTE
                            mID(0),
                            mPercentComplete(0),
                            mCurrBytes(0),
-                           mMaxBytes(LL_MAXUINT),
+                           mMaxBytes(-1),
                            mStartTime(0),
                            mLastUpdate(PR_Now() - (PRUint32)gUpdateInterval),
                            mResumedAt(-1),
@@ -1825,17 +1828,12 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
     }
   }
 
-  mCurrBytes = aCurTotalProgress;
-  mMaxBytes = aMaxTotalProgress;
+  SetProgressBytes(aCurTotalProgress, aMaxTotalProgress);
 
-  PRUint64 currBytes, maxBytes;
+  // Report to the listener our real sizes
+  PRInt64 currBytes, maxBytes;
   (void)GetAmountTransferred(&currBytes);
   (void)GetSize(&maxBytes);
-  if (aMaxTotalProgress > 0)
-    mPercentComplete = (PRInt32)((PRFloat64)currBytes * 100 / maxBytes + .5);
-  else
-    mPercentComplete = -1;
-
   mDownloadManager->NotifyListenersOnProgressChange(
     aWebProgress, aRequest, currBytes, maxBytes, currBytes, maxBytes, this);
 
@@ -1941,11 +1939,30 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
     }
   } else if (aStateFlags & STATE_STOP) {
     if (IsFinishable()) {
-      // Set file size at the end of a transfer (for unknown transfer amounts)
-      if (mMaxBytes == LL_MAXUINT)
+      // We can't completely trust the bytes we've added up because we might be
+      // missing on some/all of the progress updates (especially from cache).
+      // Our best bet is the file itself, but if for some reason it's gone, the
+      // next best is what we've calculated.
+      PRInt64 fileSize;
+      nsCOMPtr<nsILocalFile> file;
+      //  We need a nsIFile clone to deal with file size caching issues. :(
+      nsCOMPtr<nsIFile> clone;
+      if (NS_SUCCEEDED(GetTargetFile(getter_AddRefs(file))) &&
+          NS_SUCCEEDED(file->Clone(getter_AddRefs(clone))) &&
+          NS_SUCCEEDED(clone->GetFileSize(&fileSize)) && fileSize > 0) {
+        mCurrBytes = mMaxBytes = fileSize;
+
+        // If we resumed, keep the fact that we did and fix size calculations
+        if (WasResumed())
+          mResumedAt = 0;
+      } else if (mMaxBytes == -1) {
         mMaxBytes = mCurrBytes;
+      } else {
+        mCurrBytes = mMaxBytes;
+      }
 
       mPercentComplete = 100;
+      mLastUpdate = PR_Now();
 
 #ifdef XP_WIN
       (void)SetState(nsIDownloadManager::DOWNLOAD_SCANNING);
@@ -2036,16 +2053,16 @@ nsDownload::GetPercentComplete(PRInt32 *aPercentComplete)
 }
 
 NS_IMETHODIMP
-nsDownload::GetAmountTransferred(PRUint64 *aAmountTransferred)
+nsDownload::GetAmountTransferred(PRInt64 *aAmountTransferred)
 {
   *aAmountTransferred = mCurrBytes + (WasResumed() ? mResumedAt : 0);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDownload::GetSize(PRUint64 *aSize)
+nsDownload::GetSize(PRInt64 *aSize)
 {
-  *aSize = mMaxBytes + (WasResumed() && mMaxBytes != LL_MAXUINT ? mResumedAt : 0);
+  *aSize = mMaxBytes + (WasResumed() && mMaxBytes != -1 ? mResumedAt : 0);
   return NS_OK;
 }
 
@@ -2091,6 +2108,25 @@ nsDownload::GetReferrer(nsIURI **referrer)
 {
   NS_IF_ADDREF(*referrer = mReferrer);
   return NS_OK;
+}
+
+void
+nsDownload::SetProgressBytes(PRInt64 aCurrBytes, PRInt64 aMaxBytes)
+{
+  mCurrBytes = aCurrBytes;
+  mMaxBytes = aMaxBytes;
+
+  // Get the real bytes that include resume position
+  PRInt64 currBytes, maxBytes;
+  (void)GetAmountTransferred(&currBytes);
+  (void)GetSize(&maxBytes);
+
+  if (currBytes == maxBytes)
+    mPercentComplete = 100;
+  else if (maxBytes <= 0)
+    mPercentComplete = -1;
+  else
+    mPercentComplete = (PRInt32)((PRFloat64)currBytes / maxBytes * 100 + .5);
 }
 
 nsresult
@@ -2181,7 +2217,7 @@ nsDownload::RealResume()
   // Track where we resumed because progress notifications restart at 0
   mResumedAt = fileSize;
   mCurrBytes = 0;
-  mMaxBytes = LL_MAXUINT;
+  mMaxBytes = -1;
 
   // Set the referrer
   if (mReferrer) {
@@ -2284,6 +2320,18 @@ nsDownload::UpdateDB()
 
   // entityID
   rv = stmt->BindUTF8StringParameter(i++, mEntityID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // currBytes
+  PRInt64 currBytes;
+  (void)GetAmountTransferred(&currBytes);
+  rv = stmt->BindInt64Parameter(i++, currBytes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // maxBytes
+  PRInt64 maxBytes;
+  (void)GetSize(&maxBytes);
+  rv = stmt->BindInt64Parameter(i++, maxBytes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // id
