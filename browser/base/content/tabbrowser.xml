@@ -853,73 +853,6 @@
         </body>
       </method>
 
-      <method name="onLinkAdded">
-        <parameter name="event"/>
-        <body>
-          <![CDATA[
-            if (!this.mPrefs.getBoolPref("browser.chrome.site_icons"))
-              return;
-
-            if (!event.originalTarget.rel.match((/(?:^|\s)icon(?:\s|$)/i)))
-              return;
-
-            // We have an icon.
-            var href = event.originalTarget.href;
-            if (!href)
-              return;
-
-            const nsIContentPolicy = Components.interfaces.nsIContentPolicy;
-            try {
-              var contentPolicy =
-                Components.classes['@mozilla.org/layout/content-policy;1']
-                          .getService(nsIContentPolicy);
-            } catch(e) {
-              return; // Refuse to load if we can't do a security check.
-            }
-
-            // Get the IOService so we can make URIs
-            const ioService =
-              Components.classes["@mozilla.org/network/io-service;1"]
-                        .getService(Components.interfaces.nsIIOService);
-
-            const targetDoc = event.target.ownerDocument;
-            // Make a URI out of our href.
-            var uri = ioService.newURI(href, targetDoc.characterSet, null);
-            try {
-              // Verify that the load of this icon is legal.
-              // error pages can load their favicon, to be on the safe side,
-              // only allow chrome:// favicons
-              const nsIScriptSecMan =
-                Components.interfaces.nsIScriptSecurityManager;
-              var secMan = Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                                     .getService(nsIScriptSecMan);
-              const aboutNeterr = "about:neterror?";
-              if (targetDoc.documentURI.substr(0, aboutNeterr.length) != aboutNeterr ||
-                  !uri.schemeIs("chrome"))
-                secMan.checkLoadURIWithPrincipal(targetDoc.nodePrincipal, uri,
-                                                 nsIScriptSecMan.DISALLOW_SCRIPT);
-            } catch(e) {
-              return;
-            }
-
-            // Security says okay, now ask content policy
-            if (contentPolicy.shouldLoad(nsIContentPolicy.TYPE_IMAGE,
-                                         uri, targetDoc.documentURIObject,
-                                         event.target, event.target.type,
-                                         null) != nsIContentPolicy.ACCEPT)
-              return;
-
-            var browserIndex = this.getBrowserIndexForDocument(targetDoc);
-            // no browser? no favicon.
-            if (browserIndex == -1)
-              return;
-
-            var tab = this.mTabContainer.childNodes[browserIndex];
-            this.setIcon(tab, href);
-          ]]>
-        </body>
-      </method>
-
       <method name="onTitleChanged">
         <parameter name="evt"/>
         <body>
@@ -2400,8 +2333,6 @@
     </implementation>
 
     <handlers>
-      <handler event="DOMLinkAdded" phase="capturing" action="this.onLinkAdded(event);"/>
-
       <handler event="DOMWindowClose" phase="capturing">
         <![CDATA[
           if (!event.isTrusted)

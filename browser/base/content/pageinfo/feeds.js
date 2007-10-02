@@ -50,14 +50,23 @@ function initFeedTab()
   var linkNodes = gDocument.getElementsByTagName("link");
   var length = linkNodes.length;
   for (var i = 0; i < length; i++) {
-    var feed = recognizeFeedFromLink(linkNodes[i], gDocument.nodePrincipal);
-    if (feed) {
-      var type = feed.type;
-      if (type in feedTypes)
-        type = feedTypes[type];
-      else
-        type = feedTypes["application/rss+xml"];
-      addRow(feed.title, type, feed.href);
+    var link = linkNodes[i];
+    if (!link.href)
+      continue;
+
+    var rel = link.rel && link.rel.toLowerCase();
+    var rels = {};
+    if (rel) {
+      for each (let relVal in rel.split(/\s+/))
+        rels[relVal] = true;
+    }
+
+    if (rels.feed || (link.type && rels.alternate && !rels.stylesheet)) {
+      var feed = { title: link.title, href: link.href, type: link.type || "" };
+      if (isValidFeed(feed, gDocument.nodePrincipal, rels.feed)) {
+        var type = feedTypes[feed.type] || feedTypes["application/rss+xml"];
+        addRow(feed.title, type, feed.href);
+      }
     }
   }
 
