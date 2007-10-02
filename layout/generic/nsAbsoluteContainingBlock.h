@@ -71,14 +71,18 @@ class nsAbsoluteContainingBlock
 {
 public:
   nsAbsoluteContainingBlock(nsIAtom* aChildListName)
+#ifdef DEBUG
     : mChildListName(aChildListName)
+#endif
   {
     NS_ASSERTION(mChildListName == nsGkAtoms::absoluteList ||
                  mChildListName == nsGkAtoms::fixedList,
                  "should either represent position:fixed or absolute content");
   }
 
+#ifdef DEBUG
   nsIAtom* GetChildListName() const { return mChildListName; }
+#endif
 
   nsresult FirstChild(const nsIFrame* aDelegatingFrame,
                       nsIAtom*        aListName,
@@ -116,6 +120,7 @@ public:
                   nsReflowStatus&          aReflowStatus,
                   nscoord                  aContainingBlockWidth,
                   nscoord                  aContainingBlockHeight,
+                  PRBool                   aConstrainHeight,
                   PRBool                   aCBWidthChanged,
                   PRBool                   aCBHeightChanged,
                   nsRect*                  aChildBounds = nsnull);
@@ -137,6 +142,7 @@ protected:
                                const nsHTMLReflowState& aReflowState,
                                nscoord                  aContainingBlockWidth,
                                nscoord                  aContainingBlockHeight,
+                               PRBool                   aConstrainHeight,
                                nsIFrame*                aKidFrame,
                                nsReflowStatus&          aStatus,
                                nsRect*                  aChildBounds);
@@ -144,11 +150,13 @@ protected:
 protected:
   nsFrameList mAbsoluteFrames;  // additional named child list
 
+#ifdef DEBUG
   nsIAtom* const mChildListName; // nsGkAtoms::fixedList or nsGkAtoms::absoluteList
 
   // helper routine for debug printout
   void PrettyUC(nscoord aSize,
                 char*   aBuf);
+#endif
 };
 
 #endif /* nsnsAbsoluteContainingBlock_h___ */
