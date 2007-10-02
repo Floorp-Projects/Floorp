@@ -10,6 +10,7 @@ use POSIX "uname";
 use File::Copy qw(move);
 
 use Bootstrap::Util qw(GetLocaleManifest CvsCatfile);
+use Bootstrap::Util qw(GetFtpNightlyDir);
 
 # shared static config
 my %config;
@@ -150,12 +151,10 @@ sub GetFtpCandidateDir {
     }
     my $bitsUnsigned = $args{'bitsUnsigned'};
 
-    my $product = $this->Get(var => 'product');
     my $version = $this->Get(var => 'version');
     my $rc = $this->Get(var => 'rc');
 
-    my $candidateDir = CvsCatfile('/home', 'ftp', 'pub', $product, 'nightly',
-                            $version . '-candidates', 'rc' . $rc ) . '/';
+    my $candidateDir = CvsCatfile(GetFtpNightlyDir(), $version . '-candidates', 'rc' . $rc ) . '/';
 
     my $osFileMatch = $this->SystemInfo(var => 'osname');
 

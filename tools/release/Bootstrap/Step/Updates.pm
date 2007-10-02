@@ -6,7 +6,7 @@ package Bootstrap::Step::Updates;
 
 use Bootstrap::Step;
 use Bootstrap::Config;
-use Bootstrap::Util qw(CvsCatfile);
+use Bootstrap::Util qw(CvsCatfile SyncNightlyDirToStaging);
 
 use File::Find qw(find);
 use POSIX qw(strftime);
@@ -260,6 +260,8 @@ sub Push {
         logFile => $pushLog,
       );
     }
+
+    SyncNightlyDirToStaging();
 }
 
 sub Announce {
