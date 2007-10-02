@@ -434,6 +434,9 @@ pref("plugin.default_plugin_disabled", true);
 // plugin finder service url
 pref("pfs.datasource.url", "https://pfs.mozilla.org/plugins/PluginFinderService.php?mimetype=%PLUGIN_MIMETYPE%&appID=%APP_ID%&appVersion=%APP_VERSION%&clientOS=%CLIENT_OS%&chromeLocale=%CHROME_LOCALE%");
 
+// by default we show an infobar message when pages require plugins the user has not installed
+pref("plugins.hide_infobar_for_missing_plugin", false);
+
 #ifdef XP_WIN
 pref("browser.preferences.instantApply", false);
 #else

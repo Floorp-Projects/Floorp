@@ -1,4 +1,4 @@
-# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+# -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -5052,6 +5052,11 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
                                    gMissingPluginInstaller.installSinglePlugin,
                                    false);
   }
+
+  try {
+    if (gPrefService.getBoolPref("plugins.hide_infobar_for_missing_plugin"))
+      return;
+  } catch (ex) {} // if the pref is missing, treat it as false, which shows the infobar
 
   var tabbrowser = getBrowser();
   const browsers = tabbrowser.mPanelContainer.childNodes;
