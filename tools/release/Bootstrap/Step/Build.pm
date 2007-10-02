@@ -6,7 +6,7 @@ package Bootstrap::Step::Build;
 use File::Temp qw(tempfile);
 
 use Bootstrap::Step;
-use Bootstrap::Util qw(CvsCatfile);
+use Bootstrap::Util qw(CvsCatfile SyncNightlyDirToStaging);
 
 @ISA = ("Bootstrap::Step");
 
@@ -155,6 +155,8 @@ sub Push {
                   $candidateDir],
       logFile => $pushLog,
     );
+
+    SyncNightlyDirToStaging(); 
 }
 
 sub Announce {
@@ -241,4 +243,3 @@ sub StoreBuildID() {
 }
 
 1;
-
