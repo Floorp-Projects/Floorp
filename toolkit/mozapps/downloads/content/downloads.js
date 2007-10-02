@@ -95,7 +95,7 @@ let gBaseQuery = "SELECT id, target, name, source, state, startTime, " +
                         "referrer, currBytes, maxBytes " +
                  "FROM moz_downloads " +
                  "WHERE #1 " +
-                 "ORDER BY endTime ASC";
+                 "ORDER BY endTime ASC, startTime ASC";
 
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions 
@@ -928,7 +928,7 @@ function buildActiveDownloadsList()
   var stmt = gActiveDownloadsQuery;
   if (!stmt) {
     stmt = db.createStatement(replaceInsert(gBaseQuery, 1,
-      "state = ?1 OR state = ?2 OR state = ?3"));
+      "state = ?1 OR state = ?2 OR state = ?3 OR state = ?4 OR state = ?5"));
     gActiveDownloadsQuery = stmt;
   }
 
@@ -936,6 +936,8 @@ function buildActiveDownloadsList()
     stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED);
     stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
     stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
+    stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_QUEUED);
+    stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_SCANNING);
     buildDownloadList(stmt, gDownloadsActiveTitle);
   } finally {
     stmt.reset();
