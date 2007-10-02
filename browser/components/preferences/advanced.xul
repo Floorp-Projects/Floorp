@@ -53,8 +53,7 @@
 
   <prefpane id="paneAdvanced" onpaneload="gAdvancedPane.init();"
             helpURI="chrome://browser/locale/help/help.rdf"
-            xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
-            xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+            xmlns:xhtml="http://www.w3.org/1999/xhtml"
             xmlns:aaa="http://www.w3.org/2005/07/aaa">
 
     <preferences id="advancedPreferences">
@@ -223,7 +222,7 @@
         <!-- Update -->
         <tabpanel id="updatePanel" orient="vertical" align="start">
           <label control="autoUpdateGroup">&autoCheck.label;</label>
-          <vbox class="indent" id="autoUpdateGroup" xhtml2:role="wairole:groupbox">
+          <vbox class="indent" id="autoUpdateGroup" xhtml:role="group">
             <checkbox id="enableAppUpdate"
                       label="&enableAppUpdate.label;"
                       accesskey="&enableAppUpdate.accesskey;"
