@@ -138,7 +138,7 @@ treechildren::-moz-tree-twisty(title, separator) {
 
 .textbox-input-closebutton {
   -moz-appearance: none;
-  margin: 1px 2px 1px 1px;
+  margin: -2px 2px -2px 1px;
   min-width: 0;
   background-color: transparent;
   border: none;
@@ -152,7 +152,7 @@ treechildren::-moz-tree-twisty(title, separator) {
 .textbox-input-closebutton > .button-box {
   margin: 0;
   padding: 0;
-  border: 0;
+  border: none;
 }
 
 .textbox-input-closebutton:hover:active {
@@ -292,4 +292,30 @@ treechildren::-moz-tree-twisty(title, separator) {
 #itemsCountText,
 #selectItemDescription {
   color: GrayText;
+}
+
+/**** expanders ****/
+
+.expander-up,
+.expander-down {
+  -moz-appearance: none;
+  margin-left: 8px;
+  padding: 0;
+  min-width: 0;
+}
+
+.expander-up {
+	list-style-image: url("chrome://browser/skin/places/expander-open.png") !important;
+}
+
+.expander-down {
+	list-style-image: url("chrome://browser/skin/places/expander-closed.png") !important;
+}
+
+.expander-down:hover:active {
+	list-style-image: url("chrome://browser/skin/places/expander-closed-active.png") !important;
+}
+
+.expander-up:hover:active {
+	list-style-image: url("chrome://browser/skin/places/expander-open-active.png") !important;
 }
