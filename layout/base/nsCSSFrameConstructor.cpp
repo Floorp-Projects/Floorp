@@ -1864,6 +1864,9 @@ nsIXBLService * nsCSSFrameConstructor::GetXBLService()
 void
 nsCSSFrameConstructor::NotifyDestroyingFrame(nsIFrame* aFrame)
 {
+  NS_PRECONDITION(mUpdateCount != 0,
+                  "Should be in an update while destroying frames");
+
   if (aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT) {
     if (mQuoteList.DestroyNodesFor(aFrame))
       QuotesDirty();
@@ -6672,6 +6675,9 @@ nsCSSFrameConstructor::InitAndRestoreFrame(const nsFrameConstructorState& aState
                                            nsIFrame*                aNewFrame,
                                            PRBool                   aAllowCounters)
 {
+  NS_PRECONDITION(mUpdateCount != 0,
+                  "Should be in an update while creating frames");
+  
   nsresult rv = NS_OK;
   
   NS_ASSERTION(aNewFrame, "Null frame cannot be initialized");
@@ -8445,6 +8451,9 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
                                        PRInt32         aNewIndexInContainer)
 {
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
+  NS_PRECONDITION(mUpdateCount != 0,
+                  "Should be in an update while creating frames");
+
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
     printf("nsCSSFrameConstructor::ContentAppended container=%p index=%d\n",
@@ -8809,6 +8818,9 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
                                        nsILayoutHistoryState* aFrameState)
 {
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
+  NS_PRECONDITION(mUpdateCount != 0,
+                  "Should be in an update while creating frames");
+
   // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
   // the :empty pseudo-class?
 #ifdef DEBUG
@@ -9375,6 +9387,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
                                       PRBool          aInReinsertContent)
 {
   AUTO_LAYOUT_PHASE_ENTRY_POINT(mPresShell->GetPresContext(), FrameC);
+  NS_PRECONDITION(mUpdateCount != 0,
+                  "Should be in an update while destroying frames");
+
   // XXXldb Do we need to re-resolve style to handle the CSS2 + combinator and
   // the :empty pseudo-class?
 
@@ -13096,9 +13111,11 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
     menuPopupFrame->SetGeneratedChildren();
 #endif
 
+    nsCSSFrameConstructor* fc = mPresShell->FrameConstructor();
+    fc->BeginUpdate();
+
     nsFrameItems childItems;
     nsFrameConstructorState state(mPresShell, nsnull, nsnull, nsnull);
-    nsCSSFrameConstructor* fc = mPresShell->FrameConstructor();
     nsresult rv = fc->ProcessChildren(state, mContent, frame, PR_FALSE,
                                       childItems, PR_FALSE);
     if (NS_FAILED(rv))
@@ -13107,6 +13124,8 @@ nsCSSFrameConstructor::LazyGenerateChildrenEvent::Run()
     fc->CreateAnonymousFrames(mContent->Tag(), state, mContent, frame,
                               PR_FALSE, childItems);
     frame->SetInitialChildList(nsnull, childItems.childList);
+
+    fc->EndUpdate();
 
     if (mCallback)
       mCallback(mContent, frame, mArg);
