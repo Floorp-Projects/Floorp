@@ -48,6 +48,8 @@ const MODE_TRUNCATE = 0x20;
 const PERMS_FILE      = 0644;
 const PERMS_DIRECTORY = 0755;
 
+const STORAGE_FORMAT_VERSION = 0;
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function BookmarksSyncService() { this._init(); }
@@ -706,7 +708,7 @@ BookmarksSyncService.prototype = {
       var data;
 
       var localJson = this._getBookmarks();
-      this.notice("local json:\n" + this._mungeNodes(localJson));
+      //this.notice("local json:\n" + this._mungeNodes(localJson));
 
       // 1) Fetch server deltas
       let gsd_gen = this._getServerData(handlers['complete'], localJson);
@@ -714,39 +716,33 @@ BookmarksSyncService.prototype = {
       gsd_gen.send(gsd_gen);
       let server = yield;
 
-      this.notice("Server status: " + server.status);
-      this.notice("Server version: " + server.version);
-      this.notice("Server guid: " + server.guid);
       this.notice("Local snapshot version: " + this._snapshotVersion);
-      this.notice("Local snapshot guid: " + this._snapshotGuid);
+      this.notice("Server status: " + server.status);
 
-      for (version in server.deltas) {
-        this.notice("Server delta " + version + ":\n" +
-                    this._mungeCommands(server.deltas[version]));
-      }
-
-      if (server['status'] == 2) {
+      if (server['status'] != 0) {
         this._os.notifyObservers(null, "bookmarks-sync:end", "");
-        this.notice("Sync complete");
-        return;
-      } else if (server['status'] != 0 && server['status'] != 1) {
-        this._os.notifyObservers(null, "bookmarks-sync:end", "");
-        this.notice("Sync error");
+        this.notice("Sync error: could not get server status, " +
+                    "or initial upload failed.");
         return;
       }
 
-      if (this._snapshotGuid != server.guid) {
-        this.notice("Snapshot GUIDs differ, local snapshot is not valid");
-        this._snapshot = {};
-        this._snapshotVersion = -1;
-        this._snapshotGuid = server.guid;
-      }
+      this.notice("Server maxVersion: " + server.maxVersion);
+      this.notice("Server snapVersion: " + server.snapVersion);
+      this.notice("Server updates: " + this._mungeCommands(server.updates));
+
+      // if (server['status'] == 2) {
+      //   this._os.notifyObservers(null, "bookmarks-sync:end", "");
+      //   this.notice("Sync complete");
+      //   return;
+      // } else 
 
       // 2) Generate local deltas from snapshot -> current client status
 
       let localUpdates = this._detectUpdates(this._snapshot, localJson);
       this.notice("Local updates: " + this._mungeCommands(localUpdates));
-      if (!(server['status'] == 1 || localUpdates.length > 0)) {
+
+      if (server.updates.length == 0 && localUpdates.length == 0) {
+        this._snapshotVersion = server.maxVersion;
         this._os.notifyObservers(null, "bookmarks-sync:end", "");
         this.notice("Sync complete (1): no changes needed on client or server");
         return;
@@ -755,8 +751,8 @@ BookmarksSyncService.prototype = {
       // 3) Reconcile client/server deltas and generate new deltas for them.
 
       this.notice("Reconciling client/server updates");
-      let callback = function(retval) { continueGenerator(generator, retval); };
-      let rec_gen = this._reconcile(callback, [localUpdates, server.updates]);
+      let rec_gen = this._reconcile(handlers.load,
+                                    [localUpdates, server.updates]);
       rec_gen.next(); // must initialize before sending
       rec_gen.send(rec_gen);
       let ret = yield;
@@ -788,7 +784,7 @@ BookmarksSyncService.prototype = {
         this._os.notifyObservers(null, "bookmarks-sync:end", "");
         this.notice("Sync complete (2): no changes needed on client or server");
         this._snapshot = localJson;
-        this._snapshotVersion = server.version;
+        this._snapshotVersion = server.maxVersion;
         this._saveSnapshot();
         return;
       }
@@ -804,7 +800,7 @@ BookmarksSyncService.prototype = {
         // current tree, not the saved snapshot
 
         this._snapshot = this._applyCommandsToObj(clientChanges, localJson);
-        this._snapshotVersion = server['version'];
+        this._snapshotVersion = server.maxVersion;
         this._applyCommands(clientChanges);
 
         let newSnapshot = this._getBookmarks();
@@ -822,15 +818,24 @@ BookmarksSyncService.prototype = {
       if (serverChanges.length) {
         this.notice("Uploading changes to server");
         this._snapshot = this._getBookmarks();
-        this._snapshotVersion = server['version'] + 1;
-        server['deltas']['version ' + this._snapshotVersion] = serverChanges;
+        this._snapshotVersion = ++server.maxVersion;
+        server.deltas.push(serverChanges);
 
-        let out = {guid: this._snapshotGuid, deltas: server['deltas']};
-        this._dav.PUT("bookmarks.delta", uneval(out), handlers);
-        data = yield;
+        this._dav.PUT("bookmarks-deltas.json", uneval(server.deltas), handlers);
+        let deltasPut = yield;
 
-        if (data.target.status >= 200 || data.target.status < 300) {
-          this.notice("Successfully updated deltas on server");
+        // FIXME: need to watch out for the storage format version changing,
+        // in that case we'll have to re-upload all the files, not just these
+        this._dav.PUT("bookmarks-status.json",
+                      uneval({guid: this._snapshotGuid,
+                              formatVersion: STORAGE_FORMAT_VERSION,
+                              snapVersion: server.snapVersion,
+                              maxVersion: this._snapshotVersion}), handlers);
+        let statusPut = yield;
+
+        if (deltasPut.target.status >= 200 && deltasPut.target.status < 300 &&
+            statusPut.target.status >= 200 && statusPut.target.status < 300) {
+          this.notice("Successfully updated deltas and status on server");
           this._saveSnapshot();
         } else {
           // FIXME: revert snapshot here? - can't, we already applied
@@ -847,184 +852,173 @@ BookmarksSyncService.prototype = {
     }
   },
 
-
   /* Get the deltas/combined updates from the server
    * Returns:
    *   status:
    *     -1: error
-   *      0: no changes from server
-   *      1: ok
-   *      2: ok, initial sync
-   *   version:
+   *      0: ok
+   * These fields may be null when status is -1:
+   *   formatVersion:
+   *     version of the data format itself.  For compatibility checks.
+   *   maxVersion:
    *     the latest version on the server
-   *   guid:
-   *     the guid that was created when the first snapshot was uploaded
-   *     (will only change if the server store is completely wiped)
+   *   snapVersion:
+   *     the version of the current snapshot on the server (deltas not applied)
+   *   snapshot:
+   *     full snapshot of the latest server version (deltas applied)
    *   deltas:
-   *     the individual deltas on the server
+   *     all of the individual deltas on the server
    *   updates:
    *     the relevant deltas (from our snapshot version to current),
    *     combined into a single set.
    */
+  // FIXME: this function needs to get check the remote format version and bail out earlier if needed
+  // FIXME: deal with errors!
   _getServerData: function BSS__getServerData(onComplete, localJson) {
-    var generator = yield;
-    var handlers = this._handlersForGenerator(generator);
-
-    var ret = {status: -1, version: -1,
-      guid: null, deltas: null, updates: null};
-
-    this.notice("Getting bookmarks delta from server");
-    this._dav.GET("bookmarks.delta", handlers);
-    var data = yield;
-
-    switch (data.target.status) {
-    case 200:
-      this.notice("Got bookmarks delta from server");
-
-      let resp = eval(data.target.responseText);
-      ret.guid = resp.guid;
-      ret.deltas = resp.deltas;
-
-      let next = "version " + (this._snapshotVersion + 1);
-      let cur = "version " + this._snapshotVersion;
-
-      if (next in ret.deltas) {
-        // Merge the matching deltas into one, find highest version
-        let keys = [];
-        for (let vstr in ret.deltas) {
-          let v = parseInt(vstr.replace(/^version /, ''));
-          if (v > this._snapshotVersion)
-            keys.push(vstr);
-          if (v > ret.version)
-            ret.version = v;
-        }
-        keys = keys.sort();
-
-        let tmp = eval(uneval(this._snapshot)); // fixme hack hack hack
-        for (var i = 0; i < keys.length; i++) {
-          tmp = this._applyCommandsToObj(ret.deltas[keys[i]], tmp);
-        }
-
-        ret.status = 1;
-        ret.updates = this._detectUpdates(this._snapshot, tmp);
-
-      } else if (cur in ret.deltas) {
-        this.notice("No changes from server");
-        ret.status = 0;
-        ret.version = this._snapshotVersion;
-        ret.updates = [];
-
-      } else {
-        this.notice("Server delta can't update from our snapshot version, getting full file");
-        // generate updates from full local->remote snapshot diff
-        let gsdf_gen = this._getServerUpdatesFull(handlers['complete'],
-                                                  localJson);
-        gsdf_gen.next(); // must initialize before sending
-        gsdf_gen.send(gsdf_gen);
-        data = yield;
-        if (data.status == 2) {
-          // we have a delta file but no snapshot on the server.  bad.
-          // fixme?
-          this.notice("Error: Delta file on server, but snapshot file missing.  " +
-              "New snapshot uploaded, may be inconsistent with deltas!");
-        }
-
-        // fixme: this is duplicated from above, need to do some refactoring
-        let keys = [];
-        for (let vstr in ret.deltas) {
-          let v = parseInt(vstr.replace(/^version /, ''));
-          if (v > this._snapshotVersion)
-            keys.push(vstr);
-          if (v > ret.version)
-            ret.version = v;
-        }
-        keys = keys.sort();
-
-        let tmp = eval(uneval(this._snapshot)); // fixme hack hack hack
-        tmp = this._applyCommandsToObj(data.updates, tmp);
-        for (var i = 0; i < keys.length; i++) {
-          tmp = this._applyCommandsToObj(ret.deltas[keys[i]], tmp);
-        }
-
-        ret.status = data.status;
-        ret.updates = this._detectUpdates(this._snapshot, tmp);
-        ret.version = data.version;
-        ret.guid = data.guid;
-
-        for (let vstr in ret.deltas) {
-          let v = parseInt(vstr.replace(/^version /, ''));
-          if (v > ret.version)
-            ret.version = v;
-        }
-
-        if (typeof ret.version != "number") {
-          this.notice("Error: version is not a number!  Correcting...");
-          ret.version = parseInt(ret.version);
-        }
-
-      }
-      break;
-    case 404:
-      this.notice("Server has no delta file.  Getting full bookmarks file from server");
-      // generate updates from full local->remote snapshot diff
-      let gsdf_gen = this._getServerUpdatesFull(handlers['complete'], localJson);
-      gsdf_gen.next(); // must initialize before sending
-      gsdf_gen.send(gsdf_gen);
-      ret = yield;
-      ret.deltas = {};
-      break;
-    default:
-      this.notice("Could not get bookmarks.delta: unknown HTTP status code " + data.target.status);
-      break;
-    }
-    this._generatorDone(onComplete, ret)
-  },
-
-  _getServerUpdatesFull: function BSS__getServerUpdatesFull(onComplete, localJson) {
     let generator = yield;
     let handlers = this._handlersForGenerator(generator);
 
-    var ret = {status: -1, version: -1, guid: null, updates: null};
+    let ret = {status: -1,
+               formatVersion: null, maxVersion: null, snapVersion: null,
+               snapshot: null, deltas: null, updates: null};
 
-    this._dav.GET("bookmarks.json", handlers);
-    data = yield;
+    this.notice("Getting bookmarks status from server");
+    this._dav.GET("bookmarks-status.json", handlers);
+    let statusResp = yield;
 
-    switch (data.target.status) {
+    switch (statusResp.target.status) {
     case 200:
-      this.notice("Got full bookmarks file from server");
-      var tmp = eval(data.target.responseText);
-      ret.status = 1;
-      ret.updates = this._detectUpdates(this._snapshot, tmp.snapshot);
-      ret.version = tmp.version;
-      ret.guid = tmp.guid;
-      if (typeof ret.version != "number")
-        this.notice("Error: version is not a number!  Full server response text:\n" +
-                    data.target.responseText);
+      this.notice("Got bookmarks status from server");
+
+      let status = eval(statusResp.target.responseText);
+      let snap, deltas, allDeltas;
+
+      if (status.guid != this._snapshotGuid) {
+        this.notice("Remote/local sync guids do not match.  " +
+                    "Forcing initial sync.");
+        this._snapshot = {};
+        this._snapshotVersion = -1;
+        this._snapshotGuid = status.guid;
+      }
+
+      if (this._snapshotVersion < status.snapVersion) {
+        if (this._snapshotVersion >= 0)
+          this.notice("Local snapshot is out of date");
+
+        this.notice("Downloading server snapshot");
+        this._dav.GET("bookmarks-snapshot.json", handlers);
+        let snapResp = yield;
+        if (snapResp.target.status == 200)
+          snap = eval(snapResp.target.responseText);
+        else
+          this.notice("Error: could not download server snapshot");
+
+        this.notice("Downloading server deltas");
+        this._dav.GET("bookmarks-deltas.json", handlers);
+        let deltasResp = yield;
+        if (deltasResp.target.status == 200)
+          allDeltas = eval(deltasResp.target.responseText);
+        else
+          this.notice("Error: could not download server deltas");
+
+        deltas = eval(uneval(allDeltas));
+
+      } else if (this._snapshotVersion >= status.snapVersion &&
+                 this._snapshotVersion < status.maxVersion) {
+        snap = eval(uneval(this._snapshot));
+
+        this.notice("Downloading server deltas");
+        this._dav.GET("bookmarks-deltas.json", handlers);
+        let deltasResp = yield;
+        if (deltasResp.target.status == 200)
+          allDeltas = eval(deltasResp.target.responseText);
+        else
+          this.notice("Error: could not download server deltas");
+
+        let start = this._snapshotVersion - status.snapVersion;
+        deltas = allDeltas.slice(start);
+
+      } else if (this._snapshotVersion == status.maxVersion) {
+        snap = eval(uneval(this._snapshot));
+
+        // FIXME: could optimize this case by caching deltas file
+        this.notice("Downloading server deltas");
+        this._dav.GET("bookmarks-deltas.json", handlers);
+        let deltasResp = yield;
+        if (deltasResp.target.status == 200)
+          allDeltas = eval(deltasResp.target.responseText);
+        else
+          this.notice("Error: could not download server deltas");
+
+        deltas = [];
+
+      } else { // this._snapshotVersion > status.maxVersion
+        this.notice("Error: server snapshot is older than local snapshot");
+        // FIXME: eep?
+      }
+
+      for (var i = 0; i < deltas.length; i++) {
+        snap = this._applyCommandsToObj(deltas[i], snap);
+      }
+
+      ret.status = 0;
+      ret.formatVersion = status.formatVersion;
+      ret.maxVersion = status.maxVersion;
+      ret.snapVersion = status.snapVersion;
+      ret.snapshot = snap;
+      ret.deltas = allDeltas;
+      ret.updates = this._detectUpdates(this._snapshot, snap);
       break;
+
     case 404:
-      this.notice("No bookmarks on server.  Starting initial sync to server");
+      this.notice("Server has no status file, Initial upload to server");
 
       this._snapshot = localJson;
-      this._snapshotVersion = 1;
-      this._dav.PUT("bookmarks.json", uneval({version: 1,
-                                              guid: this._snapshotGuid,
-                                              snapshot: this._snapshot}),
-                    handlers);
-      data = yield;
+      this._snapshotVersion = 0;
+      this._snapshotGuid = null; // in case there are other snapshots out there
 
-      if (data.target.status >= 200 || data.target.status < 300) {
-        this.notice("Initial sync to server successful");
+      // FIXME: hmm check status for each and bail out earlier on error?
+
+      this._dav.PUT("bookmarks-snapshot.json",
+                    uneval(this._snapshot), handlers);
+      let snapPut = yield;
+
+      this._dav.PUT("bookmarks-deltas.json", uneval([]), handlers);
+      let deltasPut = yield;
+
+      this._dav.PUT("bookmarks-status.json",
+                    uneval({guid: this._snapshotGuid,
+                            formatVersion: STORAGE_FORMAT_VERSION,
+                            snapVersion: this._snapshotVersion,
+                            maxVersion: this._snapshotVersion}), handlers);
+      let statusPut = yield;
+
+      if (snapPut.target.status >= 200 && snapPut.target.status < 300 &&
+          deltasPut.target.status >= 200 && deltasPut.target.status < 300 &&
+          statusPut.target.status >= 200 && statusPut.target.status < 300) {
+        this.notice("Initial upload to server successful");
         this._saveSnapshot();
-        ret.status = 2;
       } else {
-        this.notice("Initial sync to server failed");
+        // FIXME: eep?
+        this.notice("Error: could not upload files to server");
       }
+
+      ret.status = 0;
+      ret.formatVersion = STORAGE_FORMAT_VERSION;
+      ret.maxVersion = this._snapshotVersion;
+      ret.snapVersion = this._snapshotVersion;
+      ret.snapshot = eval(uneval(this._snapshot));
+      ret.deltas = [];
+      ret.updates = [];
       break;
+
     default:
-      this.notice("Could not get bookmarks.json: unknown HTTP status code " + data.target.status);
+      this.notice("Could not get bookmarks.status: unknown HTTP status code " +
+                  statusResp.target.status);
       break;
     }
-    this._generatorDone(onComplete, ret);
+    this._generatorDone(onComplete, ret)
+
   },
 
   _handlersForGenerator: function BSS__handlersForGenerator(generator) {
