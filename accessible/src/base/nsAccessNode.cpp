@@ -856,9 +856,7 @@ nsAccessNode::GetARIARole(nsIContent *aContent, nsString& aRole)
     }
   }
   // In non-HTML content, use XHTML namespaced-role attribute
-  // XXX We still support XHTML2 for now because of XUL content, but will migrate to XHTML after FF3
-  else if (!aContent->GetAttr(kNameSpaceID_XHTML, nsAccessibilityAtoms::role, aRole) &&
-           !aContent->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, aRole)) {
+  else if (!aContent->GetAttr(kNameSpaceID_XHTML, nsAccessibilityAtoms::role, aRole)) {
     return PR_FALSE;
   }
 
