@@ -503,6 +503,14 @@ static PRBool IsTrimmableSpace(const nsTextFragment* aFrag, PRUint32 aPos)
   return ch == '\t' || ch == '\n' || ch == '\f';
 }
 
+static PRBool IsTrimmableSpace(const nsTextFragment* aFrag,
+                               const nsStyleText* aText, PRUint32 aPos)
+{
+  if (aText->WhiteSpaceIsSignificant())
+    return PR_FALSE;
+  return IsTrimmableSpace(aFrag, aPos);
+}
+
 static PRBool IsSelectionSpace(const nsTextFragment* aFrag, PRUint32 aPos)
 {
   NS_ASSERTION(aPos < aFrag->GetLength(), "No text for IsSpace!");
@@ -4775,12 +4783,14 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
         nscoord trailingWhitespaceWidth;
         PRUint32 trimStart = GetEndOfTrimmedText(frag, wordStart, i, &iter);
         if (trimStart == start) {
-          trailingWhitespaceWidth = width;
+          // This is *all* trimmable whitespace, so whatever trailingWhitespace
+          // we saw previously is still trailing...
+          aData->trailingWhitespace += width;
         } else {
-          trailingWhitespaceWidth =
+          // Some non-whitespace so the old trailingWhitespace is no longer trailing
+          aData->trailingWhitespace =
             NSToCoordCeil(mTextRun->GetAdvanceWidth(trimStart, i - trimStart, &provider));
         }
-        aData->trailingWhitespace += trailingWhitespaceWidth;
       } else {
         aData->trailingWhitespace = 0;
       }
@@ -4796,9 +4806,9 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
     }
   }
 
-  // Check if we have whitespace at the end
+  // Check if we have collapsible whitespace at the end
   aData->skipWhitespace =
-    IsTrimmableSpace(provider.GetFragment(),
+    IsTrimmableSpace(provider.GetFragment(), provider.GetStyleText(),
                      iter.ConvertSkippedToOriginal(flowEndInTextRun - 1));
 }
 
@@ -4851,20 +4861,20 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
   if (collapseWhitespace) {
     // \n line breaks are not honoured, so everything would like to go
     // onto one line, so just measure it
-    aData->currentLine +=
+    nscoord width =
       NSToCoordCeil(mTextRun->GetAdvanceWidth(start, flowEndInTextRun - start, &provider));
+    aData->currentLine += width;
 
     PRUint32 trimStart = GetEndOfTrimmedText(provider.GetFragment(), start,
                                              flowEndInTextRun, &iter);
-    nscoord trimWidth =
-      NSToCoordCeil(mTextRun->GetAdvanceWidth(trimStart, flowEndInTextRun - trimStart, &provider));
     if (trimStart == start) {
       // This is *all* trimmable whitespace, so whatever trailingWhitespace
       // we saw previously is still trailing...
-      aData->trailingWhitespace += trimWidth;
+      aData->trailingWhitespace += width;
     } else {
       // Some non-whitespace so the old trailingWhitespace is no longer trailing
-      aData->trailingWhitespace = trimWidth;
+      aData->trailingWhitespace =
+        NSToCoordCeil(mTextRun->GetAdvanceWidth(trimStart, flowEndInTextRun - trimStart, &provider));
     }
   } else {
     // We respect line breaks, so measure off each line (or part of line).
@@ -4884,9 +4894,9 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
     }
   }
 
-  // Check if we have whitespace at the end
+  // Check if we have collapsible whitespace at the end
   aData->skipWhitespace =
-    IsTrimmableSpace(provider.GetFragment(),
+    IsTrimmableSpace(provider.GetFragment(), provider.GetStyleText(),
                      iter.ConvertSkippedToOriginal(flowEndInTextRun - 1));
 }
 
