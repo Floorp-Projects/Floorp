@@ -128,7 +128,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
     // Note that the compatibility mode check excludes AlmostStandards
     // mode, since this is the inline box model.  See bug 161691.
     if ( ll->CanPlaceFloatNow() ||
-         ll->GetCompatMode() == eCompatibility_FullStandards ) {
+         aPresContext->CompatibilityMode() == eCompatibility_FullStandards ) {
       // If we can place a float on the line now it means that the
       // line is effectively empty (there may be zero sized compressed
       // white-space frames on the line, but they are to be ignored).
