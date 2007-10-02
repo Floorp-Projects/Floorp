@@ -114,7 +114,6 @@ XPIDLSRCS	= \
 		nsIAtomService.idl \
 		nsICollection.idl \
 		nsIEnumerator.idl \
-		nsIHashable.idl \
 		nsIINIParser.idl \
 		nsIPersistentProperties2.idl \
 		nsIProperty.idl \
@@ -133,6 +132,7 @@ XPIDLSRCS	= \
 
 SDK_XPIDLSRCS   = \
 		nsIArray.idl               \
+		nsIHashable.idl            \
 		nsIMutableArray.idl        \
 		nsIObserverService.idl	   \
 		nsIObserver.idl		   \
