@@ -434,7 +434,6 @@ public:
   virtual PRUint32 GetScriptTypeID() const;
   virtual nsresult SetScriptTypeID(PRUint32 aLang);
 
-  virtual void DestroyContent();
 #ifdef DEBUG
   virtual void List(FILE* out, PRInt32 aIndent) const
   {
