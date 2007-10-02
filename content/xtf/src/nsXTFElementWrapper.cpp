@@ -104,15 +104,8 @@ nsXTFElementWrapper::Init()
 //----------------------------------------------------------------------
 // nsISupports implementation
 
-NS_IMPL_ADDREF_INHERITED(nsXTFElementWrapper, nsXTFElementWrapperBase)
-NS_IMPL_RELEASE_INHERITED(nsXTFElementWrapper, nsXTFElementWrapperBase)
-
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsXTFElementWrapper)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXTFElementWrapper,
-                                                  nsXTFElementWrapperBase)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mXTFElement)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mAttributeHandler)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_ADDREF_INHERITED(nsXTFElementWrapper,nsXTFElementWrapperBase)
+NS_IMPL_RELEASE_INHERITED(nsXTFElementWrapper,nsXTFElementWrapperBase)
 
 NS_IMETHODIMP
 nsXTFElementWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
