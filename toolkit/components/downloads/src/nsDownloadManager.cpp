@@ -825,7 +825,9 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
   rv = stmt->GetUTF8String(i++, dl->mEntityID);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  dl->SetProgressBytes(stmt->AsInt64(i++), stmt->AsInt64(i++));
+  PRInt64 currBytes = stmt->AsInt64(i++);
+  PRInt64 maxBytes = stmt->AsInt64(i++);
+  dl->SetProgressBytes(currBytes, maxBytes);
 
   // Addrefing and returning
   NS_ADDREF(*retVal = dl);
@@ -2194,10 +2196,12 @@ nsDownload::RealResume()
   rv = resumableChannel->ResumeAt(fileSize, mEntityID);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // If we know the max size, we know what it should be when resuming
+  PRInt64 maxBytes;
+  GetSize(&maxBytes);
+  SetProgressBytes(0, maxBytes != -1 ? maxBytes - fileSize : -1);
   // Track where we resumed because progress notifications restart at 0
   mResumedAt = fileSize;
-  mCurrBytes = 0;
-  mMaxBytes = -1;
 
   // Set the referrer
   if (mReferrer) {
