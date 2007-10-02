@@ -5036,20 +5036,17 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
   var tabbrowser = getBrowser();
   const browsers = tabbrowser.mPanelContainer.childNodes;
 
-  var window = aEvent.target.ownerDocument.defaultView;
-  // walk up till the toplevel window
-  while (window.parent != window)
-    window = window.parent;
+  var contentWindow = aEvent.target.ownerDocument.defaultView.top;
 
   var i = 0;
   for (; i < browsers.length; i++) {
-    if (tabbrowser.getBrowserAtIndex(i).contentWindow == window)
+    if (tabbrowser.getBrowserAtIndex(i).contentWindow == contentWindow)
       break;
   }
 
   var tab = tabbrowser.mTabContainer.childNodes[i];
   if (!tab.missingPlugins)
-    tab.missingPlugins = new Object();
+    tab.missingPlugins = {};
 
   var pluginInfo = getPluginInfo(aEvent.target);
 
@@ -5068,7 +5065,7 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
     }];
 
     const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-    const iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
+    const iconURL = "chrome://mozapps/skin/plugins/pluginGeneric.png";
     notificationBox.appendNotification(messageString, "missing-plugins",
                                        iconURL, priority, buttons);
   }

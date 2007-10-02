@@ -16,6 +16,7 @@ classic.jar:
         skin/classic/mozapps/extensions/themeGeneric.png              (extensions/themeGeneric.png)
         skin/classic/mozapps/extensions/viewButtons.png               (extensions/viewButtons.png)
         skin/classic/mozapps/plugins/missingPlugin.css                (plugins/missingPlugin.css)
+        skin/classic/mozapps/plugins/pluginGeneric.png                (plugins/pluginGeneric.png)
         skin/classic/mozapps/plugins/pluginInstallerWizard.css        (plugins/pluginInstallerWizard.css)
         skin/classic/mozapps/profile/profileicon.png                  (profile/profileicon.png)
         skin/classic/mozapps/profile/profileSelection.css             (profile/profileSelection.css)
