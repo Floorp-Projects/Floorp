@@ -143,6 +143,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
                                   nsReflowStatus&          aReflowStatus,
                                   nscoord                  aContainingBlockWidth,
                                   nscoord                  aContainingBlockHeight,
+                                  PRBool                   aConstrainHeight,
                                   PRBool                   aCBWidthChanged,
                                   PRBool                   aCBHeightChanged,
                                   nsRect*                  aChildBounds)
@@ -164,7 +165,7 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
       nsReflowStatus  kidStatus = NS_FRAME_COMPLETE;
       ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
                           aContainingBlockWidth, aContainingBlockHeight,
-                          kidFrame, kidStatus, aChildBounds);
+                          aConstrainHeight, kidFrame, kidStatus, aChildBounds);
       nsIFrame* nextFrame = kidFrame->GetNextInFlow();
       if (!NS_FRAME_IS_FULLY_COMPLETE(kidStatus)) {
         // Need a continuation
@@ -358,6 +359,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                                                const nsHTMLReflowState& aReflowState,
                                                nscoord                  aContainingBlockWidth,
                                                nscoord                  aContainingBlockHeight,
+                                               PRBool                   aConstrainHeight,
                                                nsIFrame*                aKidFrame,
                                                nsReflowStatus&          aStatus,
                                                nsRect*                  aChildBounds)
@@ -415,8 +417,8 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   aKidFrame->WillReflow(aPresContext);
 
   PRBool constrainHeight = (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE)
-    && (nsGkAtoms::fixedList != GetChildListName())
-       // Don't split fixed frames
+    && aConstrainHeight
+       // Don't split if told not to (e.g. for fixed frames)
     && (aDelegatingFrame->GetType() != nsGkAtoms::positionedInlineFrame)
        //XXX we don't handle splitting frames for inline absolute containing blocks yet
     && (aKidFrame->GetRect().y <= aReflowState.availableHeight);
