@@ -605,6 +605,9 @@ static void PR_CALLBACK nsNetShutdown(nsIModule *neckoModule)
 
     // Release global state used by the URL helper module.
     net_ShutdownURLHelper();
+#ifdef XP_MACOSX
+    net_ShutdownURLHelperOSX();
+#endif
 
     // Release necko strings
     delete gNetStrings;
