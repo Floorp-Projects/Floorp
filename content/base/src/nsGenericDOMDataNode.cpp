@@ -811,10 +811,6 @@ nsGenericDOMDataNode::IsNodeOfType(PRUint32 aFlags) const
   return !(aFlags & ~(eCONTENT | eDATA_NODE));
 }
 
-void
-nsGenericDOMDataNode::DestroyContent()
-{
-}
 
 #ifdef DEBUG
 void
