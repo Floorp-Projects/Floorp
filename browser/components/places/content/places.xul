@@ -24,6 +24,7 @@
 #   Annie Sullivan <annie.sullivan@gmail.com>
 #   Asaf Romano <mano@mozilla.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Dietrich Ayala <dietrich@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -369,7 +370,7 @@
     <vbox id="contentView" flex="4">
       <deck id="contentDeck" flex="1">
         <vbox id="defaultView" flex="1">
-          <hbox id="titlebar" align="center">
+          <hbox id="titlebar">
             <label id="showingPrefix"/>
             <deck id="titleDeck" flex="1">
               <label id="contentTitle" flex="1" crop="right"/>
@@ -385,17 +386,47 @@
                 <label value="&advancedSearch.rules.label;"/>
               </hbox>
             </deck>
-            <hbox id="searchModifiers" hidden="true" align="center">
-              <button id="saveSearch" class="small" 
-                      label="&saveSearch.label;" accesskey="&saveSearch.accesskey;"
-                      command="OrganizerCommand_search:save"/>
-              <button id="moreCriteria"
-                      class="small"
-                      label="&moreCriteria.label;"
-                      command="OrganizerCommand_search:moreCriteria"/>
-            </hbox>
           </hbox>
-#include advancedSearch.inc
+          <vbox id="searchModifiers" hidden="true">
+            <toolbar id="organizerScopeBar" class="chromeclass-toolbar">
+              <toolbarbutton id="scopeBarTitle" label="&search.label;"/>
+              <toolbarbutton id="scopeBarFolder" type="radio" group="scopeBar" 
+                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
+                             label="&search.scopeFolder.label;"/>
+              <toolbarbutton id="scopeBarAll" type="radio" group="scopeBar"
+                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
+                             label="&search.scopeAll.label;"
+                             checked="true"/>
+              <toolbarbutton id="scopeBarMenu" type="radio" group="scopeBar"
+                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
+                             label="&search.scopeMenu.label;"/>
+              <toolbarbutton id="scopeBarToolbar" type="radio" group="scopeBar"
+                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
+                             label="&search.scopeToolbar.label;"/>
+              <!--
+              <toolbarbutton id="scopeBarDownloads" type="radio" group="scopeBar"
+                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
+                             label="&search.scopeDownloads.label;"/>
+              -->
+              <toolbarbutton id="scopeBarHistory" type="radio" group="scopeBar"
+                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
+                             label="&search.scopeHistory.label;"/>
+              <spacer flex="1"/>
+              <button id="organizerScopeBarExpander"
+                      class="expander-down"
+                      tooltiptext="&search.scopeBarExpanderDown.tooltip;"
+                      tooltiptextdown="&search.scopeBarExpanderDown.tooltip;"
+                      tooltiptextup="&search.scopeBarExpanderUp.tooltip;"
+                      oncommand="PlacesQueryBuilder.toggleVisibility();"/>
+            </toolbar>
+#include advancedSearch.inc          
+            <hbox id="searchActions" align="center">
+              <spacer flex="1"/>
+               <button id="saveSearch" class="small" 
+                       label="&saveSearch.label;" accesskey="&saveSearch.accesskey;"
+                       command="OrganizerCommand_search:save"/>
+            </hbox>
+          </vbox>
           <vbox flex="1">
             <tree id="placeContent" class="placesTree" context="placesContext" 
                   flex="1" type="places" 
