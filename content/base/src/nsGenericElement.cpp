@@ -2857,6 +2857,22 @@ nsGenericElement::GetPrimaryFrameFor(nsIContent* aContent,
   return presShell->GetPrimaryFrameFor(aContent);
 }
 
+void
+nsGenericElement::DestroyContent()
+{
+  nsIDocument *document = GetOwnerDoc();
+  if (document) {
+    document->BindingManager()->ChangeDocumentFor(this, document, nsnull);
+    document->ClearBoxObjectFor(this);
+  }
+
+  PRUint32 i, count = mAttrsAndChildren.ChildCount();
+  for (i = 0; i < count; ++i) {
+    // The child can remove itself from the parent in BindToTree.
+    mAttrsAndChildren.ChildAt(i)->DestroyContent();
+  }
+}
+
 //----------------------------------------------------------------------
 
 // Generic DOMNode implementations
@@ -3348,8 +3364,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
   // Unlink any DOM slots of interest.
   {
     nsDOMSlots *slots = tmp->GetExistingDOMSlots();
-    if (slots)
+    if (slots) {
       slots->mAttributeMap = nsnull;
+      if (tmp->IsNodeOfType(nsINode::eXUL))
+        NS_IF_RELEASE(slots->mControllers);
+    }
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
