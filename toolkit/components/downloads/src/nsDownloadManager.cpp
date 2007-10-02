@@ -1879,35 +1879,8 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
                            nsIRequest *aRequest, nsresult aStatus,
                            const PRUnichar *aMessage)
 {
-  if (NS_FAILED(aStatus)) {
-    // We don't want to lose access to our member variables
-    nsRefPtr<nsDownload> kungFuDeathGrip = this;
-
-    (void)SetState(nsIDownloadManager::DOWNLOAD_FAILED);
-
-    // Get title for alert.
-    nsXPIDLString title;
-
-    nsCOMPtr<nsIStringBundle> bundle = mDownloadManager->mBundle;
-    bundle->GetStringFromName(NS_LITERAL_STRING("downloadErrorAlertTitle").get(),
-                              getter_Copies(title));
-
-    // Get Download Manager window, to be parent of alert.
-    nsresult rv;
-    nsCOMPtr<nsIWindowMediator> wm =
-      do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIDOMWindowInternal> dmWindow;
-    wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(),
-                            getter_AddRefs(dmWindow));
-
-    // Show alert.
-    nsCOMPtr<nsIPromptService> prompter =
-      do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    prompter->Alert(dmWindow, title, aMessage);
-  }
-
+  if (NS_FAILED(aStatus))
+    return FailDownload(aStatus, aMessage);
   return NS_OK;
 }
 
@@ -1937,8 +1910,8 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
         (void)SetState(nsIDownloadManager::DOWNLOAD_BLOCKED);
       }
     }
-  } else if (aStateFlags & STATE_STOP) {
-    if (IsFinishable()) {
+  } else if ((aStateFlags & STATE_STOP) && IsFinishable()) {
+    if (NS_SUCCEEDED(aStatus)) {
       // We can't completely trust the bytes we've added up because we might be
       // missing on some/all of the progress updates (especially from cache).
       // Our best bet is the file itself, but if for some reason it's gone, the
@@ -1969,6 +1942,9 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
 #else
       (void)SetState(nsIDownloadManager::DOWNLOAD_FINISHED);
 #endif
+    } else {
+      // We failed for some unknown reason -- fail with a generic message
+      (void)FailDownload(aStatus, nsnull);
     }
   }
 
@@ -2339,4 +2315,43 @@ nsDownload::UpdateDB()
   NS_ENSURE_SUCCESS(rv, rv);
 
   return stmt->Execute();
+}
+
+nsresult
+nsDownload::FailDownload(nsresult aStatus, const PRUnichar *aMessage)
+{
+  // Grab the bundle before potentially losing our member variables
+  nsCOMPtr<nsIStringBundle> bundle = mDownloadManager->mBundle;
+
+  (void)SetState(nsIDownloadManager::DOWNLOAD_FAILED);
+
+  // Get title for alert.
+  nsXPIDLString title;
+  nsresult rv = bundle->GetStringFromName(
+    NS_LITERAL_STRING("downloadErrorAlertTitle").get(), getter_Copies(title));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get a generic message if we weren't supplied one
+  nsXPIDLString message;
+  message = aMessage;
+  if (message.IsEmpty()) {
+    rv = bundle->GetStringFromName(
+      NS_LITERAL_STRING("downloadErrorGeneric").get(), getter_Copies(message));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Get Download Manager window to be parent of alert
+  nsCOMPtr<nsIWindowMediator> wm =
+    do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMWindowInternal> dmWindow;
+  rv = wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(),
+                               getter_AddRefs(dmWindow));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Show alert
+  nsCOMPtr<nsIPromptService> prompter =
+    do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return prompter->Alert(dmWindow, title, message);
 }
