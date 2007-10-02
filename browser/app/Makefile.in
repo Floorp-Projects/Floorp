@@ -406,7 +406,11 @@ endif
 endif
 
 libs::
+ifeq ($(OS_ARCH),WINNT)
+	$(PERL) -pe 's/(?<!\r)\n/\r\n/g;' < $(topsrcdir)/LICENSE > $(DIST)/LICENSE
+else
 	$(INSTALL) $(topsrcdir)/LICENSE	$(DIST)/bin
+endif
 
 libs:: $(srcdir)/profile/prefs.js
 	$(INSTALL) $^ $(DIST)/bin/defaults/profile
