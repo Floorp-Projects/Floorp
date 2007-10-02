@@ -368,20 +368,8 @@ nsXBLPrototypeBinding::Traverse(nsCycleCollectionTraversalCallback &cb) const
 void
 nsXBLPrototypeBinding::Unlink()
 {
-  mBinding = nsnull;
   if (mImplementation)
     mImplementation->Unlink();
-  if (mResources)
-    NS_IF_RELEASE(mResources->mLoader);
-
-  // I'm not sure whether it would be safer to just nuke the tables or to
-  // traverse them with unlinking functions...  or whether we even need to
-  // unlink them.  I think we need to at least clean up mInsertionPointTable
-  // becase it can hold strong refs to nodes in the binding document.
-  delete mInsertionPointTable;
-  mInsertionPointTable = nsnull;
-  delete mInterfaceTable;
-  mInterfaceTable = nsnull;
 }
 
 void
