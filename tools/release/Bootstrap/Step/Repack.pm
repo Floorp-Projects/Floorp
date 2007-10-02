@@ -5,7 +5,7 @@
 package Bootstrap::Step::Repack;
 use Bootstrap::Step;
 use Bootstrap::Config;
-use Bootstrap::Util qw(CvsCatfile);
+use Bootstrap::Util qw(CvsCatfile SyncNightlyDirToStaging);
 use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step");
 
@@ -232,6 +232,8 @@ sub Push {
                   $pushDir, $candidateDir],
       logFile => $pushLog,
     );
+
+    SyncNightlyDirToStaging(); 
 }
 
 sub Announce {
