@@ -204,9 +204,10 @@ XBLResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
 
   // Now we either resolve or fail
-  *objp = origObj;
+  PRBool didInstall;
   nsresult rv = field->InstallField(context, origObj,
-                                    protoBinding->DocURI());
+                                    protoBinding->DocURI(),
+                                    &didInstall);
   if (NS_FAILED(rv)) {
     if (!::JS_IsExceptionPending(cx)) {
       nsDOMClassInfo::ThrowJSException(cx, rv);
@@ -214,6 +215,11 @@ XBLResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 
     return JS_FALSE;
   }
+
+  if (didInstall) {
+    *objp = origObj;
+  }
+  // else we didn't resolve this field after all
 
   return JS_TRUE;
 }
