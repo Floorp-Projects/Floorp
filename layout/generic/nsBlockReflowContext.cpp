@@ -250,7 +250,8 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
                                   nsMargin&           aComputedOffsets,
                                   nsLineBox*          aLine,
                                   nsHTMLReflowState&  aFrameRS,
-                                  nsReflowStatus&     aFrameReflowStatus)
+                                  nsReflowStatus&     aFrameReflowStatus,
+                                  nsBlockReflowState& aState)
 {
   nsresult rv = NS_OK;
   mFrame = aFrameRS.frame;
@@ -377,6 +378,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
         // Floats will eventually be removed via nsBlockFrame::RemoveFloat
         // which detaches the placeholder from the float.
 /* XXX promote DeleteChildsNextInFlow to nsIFrame to elminate this cast */
+        aState.mOverflowTracker.Finish(mFrame);
         static_cast<nsHTMLContainerFrame*>(kidNextInFlow->GetParent())
           ->DeleteNextInFlowChild(mPresContext, kidNextInFlow);
       }

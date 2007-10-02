@@ -1134,6 +1134,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
       aMetrics.height != oldSize.height;
 
     rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
+                                   state.mReflowStatus,
                                    containingBlockSize.width,
                                    containingBlockSize.height,
                                    cbWidthChanged, cbHeightChanged,
@@ -1278,7 +1279,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // We may have stretched the frame beyond its computed height. Oh well.
       computedHeightLeftOver = PR_MAX(0, computedHeightLeftOver);
     }
-    NS_ASSERTION(!( (mState & NS_FRAME_IS_OVERFLOW_CONTAINER)
+    NS_ASSERTION(!( IS_TRUE_OVERFLOW_CONTAINER(this)
                     && computedHeightLeftOver ),
                  "overflow container must not have computedHeightLeftOver");
 
@@ -1360,6 +1361,14 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     }
     autoHeight += borderPadding.top + borderPadding.bottom;
     aMetrics.height = autoHeight;
+  }
+
+  if (IS_TRUE_OVERFLOW_CONTAINER(this) &&
+      NS_FRAME_IS_NOT_COMPLETE(aState.mReflowStatus)) {
+    // Overflow containers can only be overflow complete.
+    // Note that auto height overflow containers have no normal children
+    NS_ASSERTION(aMetrics.height == 0, "overflow containers must be zero-height");
+    NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
   }
 
 #ifdef DEBUG_blocks
@@ -1975,7 +1984,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // (First, see if there is such a line, and second, see if it's clean)
       if (!bifLineIter.Next() ||                
           !bifLineIter.GetLine()->IsDirty()) {
-        NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
+        if (IS_TRUE_OVERFLOW_CONTAINER(aState.mNextInFlow))
+          NS_FRAME_SET_OVERFLOW_INCOMPLETE(aState.mReflowStatus);
+        else
+          NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
         skipPull=PR_TRUE;
       }
     }
@@ -2941,7 +2953,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     nsReflowStatus frameReflowStatus = NS_FRAME_COMPLETE;
     rv = brc.ReflowBlock(availSpace, applyTopMargin, aState.mPrevBottomMargin,
                          clearance, aState.IsAdjacentWithTop(), computedOffsets,
-                         aLine.get(), blockHtmlRS, frameReflowStatus);
+                         aLine.get(), blockHtmlRS, frameReflowStatus, aState);
 
     // If this was a second-pass reflow and the block's vertical position
     // changed, invalidates from the first pass might have happened in the
@@ -5044,25 +5056,24 @@ nsBlockFrame::RemoveFrame(nsIAtom*  aListName,
 void
 nsBlockFrame::DoRemoveOutOfFlowFrame(nsIFrame* aFrame)
 {
-  // First remove aFrame's next in flow
-  nsIFrame* nextInFlow = aFrame->GetNextInFlow();
-  if (nextInFlow) {
-    nsBlockFrame::DoRemoveOutOfFlowFrame(nextInFlow);
-  }
-  // Now remove aFrame
-  const nsStyleDisplay* display = aFrame->GetStyleDisplay();
-
   // The containing block is always the parent of aFrame.
   nsBlockFrame* block = (nsBlockFrame*)aFrame->GetParent();
 
   // Remove aFrame from the appropriate list.
+  const nsStyleDisplay* display = aFrame->GetStyleDisplay();
   if (display->IsAbsolutelyPositioned()) {
+    // This also deletes the next-in-flows
     block->mAbsoluteContainer.RemoveFrame(block,
                                           nsGkAtoms::absoluteList,
                                           aFrame);
-    aFrame->Destroy();
   }
   else {
+    // First remove aFrame's next in flow
+    nsIFrame* nextInFlow = aFrame->GetNextInFlow();
+    if (nextInFlow) {
+      nsBlockFrame::DoRemoveOutOfFlowFrame(nextInFlow);
+    }
+    // Now remove aFrame
     // This also destroys the frame.
     block->RemoveFloat(aFrame);
   }
@@ -5184,20 +5195,22 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
 {
   // Clear our line cursor, since our lines may change.
   ClearLineCursor();
-        
+
+  nsPresContext* presContext = PresContext();
+  if (NS_FRAME_IS_OVERFLOW_CONTAINER & aDeletedFrame->GetStateBits()) {
+    if (aDestroyFrames)
+      nsContainerFrame::DeleteNextInFlowChild(presContext, aDeletedFrame);
+    else
+      return nsContainerFrame::StealFrame(presContext, aDeletedFrame);
+  }
+
   if (aDeletedFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
     NS_ASSERTION(aDestroyFrames, "We can't not destroy out of flows");
     DoRemoveOutOfFlowFrame(aDeletedFrame);
     return NS_OK;
   }
   
-  nsPresContext* presContext = PresContext();
   nsIPresShell* presShell = presContext->PresShell();
-
-  if (NS_FRAME_IS_OVERFLOW_CONTAINER & aDeletedFrame->GetStateBits()) {
-    nsContainerFrame::DeleteNextInFlowChild(presContext, aDeletedFrame);
-    return NS_OK;
-  }
 
   PRBool isPlaceholder = nsGkAtoms::placeholderFrame == aDeletedFrame->GetType();
   if (isPlaceholder) {
@@ -5593,7 +5606,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
     rv = brc.ReflowBlock(availSpace, PR_TRUE, margin,
                          0, isAdjacentWithTop,
                          offsets, nsnull, floatRS,
-                         aReflowStatus);
+                         aReflowStatus, aState);
   } while (NS_SUCCEEDED(rv) && clearanceFrame);
 
   // An incomplete reflow status means we should split the float 
@@ -5705,7 +5718,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
 PRIntn
 nsBlockFrame::GetSkipSides() const
 {
-  if (mState & NS_FRAME_IS_OVERFLOW_CONTAINER)
+  if (IS_TRUE_OVERFLOW_CONTAINER(this))
     return (1 << NS_SIDE_TOP) | (1 << NS_SIDE_BOTTOM);
 
   PRIntn skip = 0;
@@ -5713,7 +5726,7 @@ nsBlockFrame::GetSkipSides() const
     skip |= 1 << NS_SIDE_TOP;
   }
   nsIFrame* nif = GetNextInFlow();
-  if (nif && !(nif->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+  if (nif && !IS_TRUE_OVERFLOW_CONTAINER(nif)) {
     skip |= 1 << NS_SIDE_BOTTOM;
   }
   return skip;

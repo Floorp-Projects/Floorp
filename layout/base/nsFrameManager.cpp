@@ -848,7 +848,8 @@ VerifyStyleTree(nsPresContext* aPresContext, nsIFrame* aFrame,
   do {
     child = aFrame->GetFirstChild(childList);
     while (child) {
-      if (NS_FRAME_OUT_OF_FLOW != (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+      if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
+          || (child->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
         // only do frames that are in flow
         if (nsGkAtoms::placeholderFrame == child->GetType()) { 
           // placeholder: first recurse and verify the out of flow frame,
@@ -944,7 +945,8 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
           child = aFrame->GetFirstChild(childList);
           while (child) {
             // only do frames that are in flow
-            if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+            if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
+                 || (child->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
               if (nsGkAtoms::placeholderFrame == child->GetType()) {
                 // get out of flow frame and recurse there
                 nsIFrame* outOfFlowFrame =
@@ -1317,8 +1319,9 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
       do {
         nsIFrame* child = aFrame->GetFirstChild(childList);
         while (child) {
-          if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-            // only do frames that are in flow
+          if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
+              || (child->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+            // only do frames that don't have placeholders
             if (nsGkAtoms::placeholderFrame == child->GetType()) { // placeholder
               // get out of flow frame and recur there
               nsIFrame* outOfFlowFrame =
