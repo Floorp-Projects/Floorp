@@ -169,10 +169,6 @@ var PlacesOrganizer = {
 
     var contentTitle = document.getElementById("contentTitle");
     contentTitle.setAttribute("value", text);
-
-    // Hide the advanced search controls when the user hasn't searched
-    var searchModifiers = document.getElementById("searchModifiers");
-    searchModifiers.hidden = type == this.HEADER_TYPE_SHOWING;
   },
 
   onPlaceURIKeypress: function PO_onPlaceURIKeypress(aEvent) {
@@ -268,8 +264,8 @@ var PlacesOrganizer = {
     // update location
     this.location = PlacesUtils.history.queriesToQueryString(queries, queries.length, options);
 
-    // Make sure the query builder is hidden.
-    PlacesQueryBuilder.hide();
+    // Make sure the search UI is hidden.
+    PlacesSearchBox.hideSearchUI();
     if (resetSearchBox) {
       var searchFilter = document.getElementById("searchFilter");
       searchFilter.reset();
@@ -683,18 +679,17 @@ var PlacesOrganizer = {
     var queries = [];
     var options = this.getCurrentOptions();
     options.excludeQueries = true;
-    var advancedSearch = document.getElementById("advancedSearch");
-    if (!advancedSearch.collapsed) {
+    var searchUI = document.getElementById("searchModifiers");
+    if (!searchUI.hidden)
       queries = PlacesQueryBuilder.queries;
-    }
-    // If not, use the value of the search box.
     else if (PlacesSearchBox.value && PlacesSearchBox.value.length > 0) {
+      // If not, use the value of the search box.
       var query = PlacesUtils.history.getNewQuery();
       query.searchTerms = PlacesSearchBox.value;
       queries.push(query);
     }
-    // if there is no query, do nothing.
     else {
+      // if there is no query, do nothing.
       // XXX should probably have a dialog here to explain that the user needs to search first.
      return;
     }
@@ -742,6 +737,20 @@ var PlacesSearchBox = {
   },
 
   /**
+   * Folders to include when searching.
+   */
+  _folders: [],
+  get folders() {
+    if (this._folders.length == 0)
+      this._folders.push(PlacesUtils.bookmarksRootId, PlacesUtils.unfiledRootId);
+    return this._folders;
+  },
+  set folders(aFolders) {
+    this._folders = aFolders;
+    return aFolders;
+  },
+
+  /**
    * Run a search for the specified text, over the collection specified by
    * the dropdown arrow. The default is all bookmarks, but can be
    * localized to the active collection.
@@ -749,39 +758,50 @@ var PlacesSearchBox = {
    *          The text to search for.
    */
   search: function PSB_search(filterString) {
-    // for non-"bookmarks" collections,
-    // do not search for "" since it will match all history. Assume if the user
-    // deleted everything that they want to type something else and don't
-    // update the view.
-    if (PlacesSearchBox.filterCollection != "bookmarks" &&
-        (filterString == "" || this.searchFilter.hasAttribute("empty")))
-      return;
-
-    var content = PlacesOrganizer._content;
     var PO = PlacesOrganizer;
+    // If the user empties the search box manually, reset it and load all
+    // contents of the current scope.
+    // XXX this might be to jumpy, maybe should search for "", so results
+    // are ungrouped, and search box not reset
+    if ((filterString == "" || this.searchFilter.hasAttribute("empty"))) {
+      PO.onPlaceSelected(false);
+      return;
+    }
+
+    var currentOptions = PO.getCurrentOptions();
+    var content = PO._content;
 
     switch (PlacesSearchBox.filterCollection) {
     case "collection":
-      var folderId = PlacesOrganizer._places.selectedNode.itemId;
-      content.applyFilter(filterString, true, [folderId], OptionsFilter);
-      PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
+      content.applyFilter(filterString, true, this.folders, OptionsFilter);
+      // XXX changing the button text is badness
+      //var scopeBtn = document.getElementById("scopeBarFolder");
+      //scopeBtn.label = PlacesOrganizer._places.selectedNode.title;
       break;
     case "bookmarks":
-      if (filterString) {
-        content.applyFilter(filterString, true,
-                            [PlacesUtils.bookmarksRootId,
-                             PlacesUtils.unfiledRootId]);
-        PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
+      content.applyFilter(filterString, true,
+                          [PlacesUtils.bookmarksRootId,
+                           PlacesUtils.unfiledRootId]);
+      break;
+    case "history":
+      if (currentOptions.queryType != Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY) {
+        var query = PlacesUtils.history.getNewQuery();
+        query.searchTerms = filterString;
+        var options = currentOptions.clone();
+        options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
+        content.load([query],
+                     OptionsFilter.filter([query], options, null));
       }
       else
-        PlacesOrganizer.onPlaceSelected();
+        content.applyFilter(filterString, false, null, OptionsFilter);
       break;
     case "all":
       content.applyFilter(filterString, false, null, OptionsFilter);
-      PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
       break;
     }
 
+    PO.setHeaderText(PO.HEADER_TYPE_SEARCH, filterString);
+    PlacesSearchBox.showSearchUI();
     this.searchFilter.setAttribute("filtered", "true");
   },
 
@@ -867,6 +887,21 @@ var PlacesSearchBox = {
   },
   set value(value) {
     return this.searchFilter.value = value;
+  },
+
+  showSearchUI: function PSB_showSearchUI() {
+    // Hide the advanced search controls when the user hasn't searched
+    var searchModifiers = document.getElementById("searchModifiers");
+    searchModifiers.hidden = false;
+
+    // if new search, open builder with pre-populated text row
+    if (PlacesQueryBuilder.numRows == 0)
+      document.getElementById("OrganizerCommand_search:moreCriteria").doCommand();
+  },
+
+  hideSearchUI: function PSB_hideSearchUI() {
+    var searchModifiers = document.getElementById("searchModifiers");
+    searchModifiers.hidden = true;
   }
 };
 
@@ -878,15 +913,12 @@ var PlacesQueryBuilder = {
   queries: [],
   queryOptions: null,
 
-  _numRows: 0,
+  numRows: 0,
 
   /**
    * The maximum number of terms that can be added.
-   * XXXben - this should be generated dynamically based on the contents of a
-   *          list of terms searchable through this widget, rather than being
-   *          a hard coded number.
    */
-  _maxRows: 3,
+  _maxRows: null,
 
   _keywordSearch: {
     advancedSearch_N_Subject: "advancedSearch_N_SubjectKeyword",
@@ -937,6 +969,8 @@ var PlacesQueryBuilder = {
       "location": this.setLocationQuery
     };
 
+    this._maxRows = this._queryBuilders.length;
+
     this._dateService = Cc["@mozilla.org/intl/scriptabledateformat;1"].
                         getService(Ci.nsIScriptableDateFormat);
   },
@@ -961,6 +995,23 @@ var PlacesQueryBuilder = {
     advancedSearch.collapsed = false;
   },
 
+  toggleVisibility: function ABP_toggleVisibility() {
+    var expander = document.getElementById("organizerScopeBarExpander");
+    var advancedSearch = document.getElementById("advancedSearch");
+    if (advancedSearch.collapsed) {
+      advancedSearch.collapsed = false;
+      expander.className = "expander-down";
+      expander.setAttribute("tooltiptext",
+                            expander.getAttribute("tooltiptextdown"));
+    }
+    else {
+      advancedSearch.collapsed = true;
+      expander.className = "expander-up"
+      expander.setAttribute("tooltiptext",
+                            expander.getAttribute("tooltiptextup"));
+    }
+  },
+
   /**
    * Includes the rowId in the id attribute of an element in a row newly
    * created from the template row.
@@ -982,15 +1033,15 @@ var PlacesQueryBuilder = {
   _updateUIForRowChange: function PQB__updateUIForRowChange() {
     // Titlebar should show "match any/all" iff there are > 1 queries visible.
     var titleDeck = document.getElementById("titleDeck");
-    titleDeck.setAttribute("selectedIndex", (this._numRows <= 1) ? 0 : 1);
+    titleDeck.setAttribute("selectedIndex", (this.numRows <= 1) ? 0 : 1);
 
     const asType = PlacesOrganizer.HEADER_TYPE_ADVANCED_SEARCH;
     PlacesOrganizer.setHeaderText(asType, "");
 
     // Update the "can add more criteria" command to make sure various +
     // buttons are disabled.
-    var command = document.getElementById("OrganizerCommand_find:moreCriteria");
-    if (this._numRows >= this._maxRows)
+    var command = document.getElementById("OrganizerCommand_search:moreCriteria");
+    if (this.numRows >= this._maxRows)
       command.setAttribute("disabled", "true");
     else
       command.removeAttribute("disabled");
@@ -1003,7 +1054,7 @@ var PlacesQueryBuilder = {
   addRow: function PQB_addRow() {
     // Limits the number of rows that can be added based on the maximum number
     // of search query subjects.
-    if (this._numRows >= this._maxRows)
+    if (this.numRows >= this._maxRows)
       return;
 
     // Clone the template row and unset the hidden attribute.
@@ -1017,28 +1068,23 @@ var PlacesQueryBuilder = {
     // Subject selector, as defined in _nextSearch.
     var searchType = this._keywordSearch;
     var lastMenu = document.getElementById("advancedSearch" +
-                                           this._numRows +
+                                           this.numRows +
                                            "Subject");
-    if (this._numRows > 0 && lastMenu && lastMenu.selectedItem) {
+    if (this.numRows > 0 && lastMenu && lastMenu.selectedItem)
       searchType = this._nextSearch[lastMenu.selectedItem.value];
-    }
+
     // There is no "next" search type. We are here in error.
     if (!searchType)
       return;
     // We don't insert into the document until _after_ the searchType is
     // determined, since this will interfere with the computation.
     gridRows.appendChild(newRow);
-    this._setRowId(newRow, ++this._numRows);
+    this._setRowId(newRow, ++this.numRows);
 
     // Ensure the Advanced Search container is visible, if this is the first
     // row being added.
-    var advancedSearch = document.getElementById("advancedSearch");
-    if (advancedSearch.collapsed) {
+    if (this.numRows == 1) {
       this.show();
-
-      // Update the header.
-      const asType = PlacesOrganizer.HEADER_TYPE_ADVANCED_SEARCH;
-      PlacesOrganizer.setHeaderText(asType, "");
 
       // Pre-fill the search terms field with the value from the one on the
       // toolbar.
@@ -1047,15 +1093,13 @@ var PlacesQueryBuilder = {
       var searchTermsField = document.getElementById("advancedSearch1Textbox");
       if (searchTermsField)
         setTimeout(function() { searchTermsField.value = PlacesSearchBox.value; }, 10);
-
-      // Call ourselves again to add a second row so that the user is presented
-      // with more than just "Keyword Search" which they already performed from
-      // the toolbar.
-      this.addRow();
+      var query = PlacesUtils.history.getNewQuery();
+      query.searchTerms = PlacesSearchBox.value;
+      this.queries = [query];
       return;
     }
 
-    this.showSearch(this._numRows, searchType);
+    this.showSearch(this.numRows, searchType);
     this._updateUIForRowChange();
   },
 
@@ -1067,11 +1111,11 @@ var PlacesQueryBuilder = {
    */
   removeRow: function PQB_removeRow(row) {
     if (!row)
-      row = document.getElementById("advancedSearch" + this._numRows + "Row");
+      row = document.getElementById("advancedSearch" + this.numRows + "Row");
     row.parentNode.removeChild(row);
-    --this._numRows;
+    --this.numRows;
 
-    if (this._numRows < 1) {
+    if (this.numRows < 1) {
       this.hide();
 
       // Re-do the original toolbar-search-box search that the user used to
@@ -1301,9 +1345,9 @@ var PlacesQueryBuilder = {
     var queryType = document.getElementById("advancedSearchType").selectedItem.value;
     this.queries = [];
     if (queryType == "and")
-      queries.push(PlacesUtils.history.getNewQuery());
+      this.queries.push(PlacesUtils.history.getNewQuery());
     var updated = 0;
-    for (var i = 1; updated < this._numRows; ++i) {
+    for (var i = 1; updated < this.numRows; ++i) {
       var prefix = "advancedSearch" + i;
 
       // The user can remove rows from the middle and start of the list, not
@@ -1331,12 +1375,55 @@ var PlacesQueryBuilder = {
 
     // Make sure we're getting uri results, not visits
     this.options = PlacesOrganizer.getCurrentOptions();
-    this.options.resultType = options.RESULT_TYPE_URI;
+    this.options.resultType = this.options.RESULT_TYPE_URI;
 
     // XXXben - find some public way of doing this!
-    PlacesOrganizer._content.load(queries,
-                                  OptionsFilter.filter(queries, options, null));
+    PlacesOrganizer._content.load(this.queries,
+                                  OptionsFilter.filter(this.queries, this.options, null));
     PlacesOrganizer.updateLoadedURI();
+  },
+
+  onScopeSelected: function PQB_onScopeSelected(aButton) {
+    var id = aButton.getAttribute("id");
+    // get scope bar
+    var bar = document.getElementById("organizerScopeBar");
+    var child = bar.firstChild;
+    while (child) {
+      if (child.getAttribute("id") != id)
+        child.removeAttribute("checked");
+      else
+        child.setAttribute("checked", "true");
+      child = child.nextSibling;
+    }
+
+    // update collection type and get folders
+    var folders = [];
+    switch (id) {
+      case "scopeBarFolder":
+        PlacesSearchBox.filterCollection = "collection";
+        folders.push(PlacesOrganizer._places.selectedNode.itemId);
+        break;
+      case "scopeBarToolbar":
+        PlacesSearchBox.filterCollection = "collection";
+        folders.push(PlacesUtils.toolbarFolderId);
+        break;
+      case "scopeBarMenu":
+        PlacesSearchBox.filterCollection = "collection";
+        folders.push(PlacesUtils.bookmarksRootId);
+        break;
+      case "scopeBarHistory":
+        PlacesSearchBox.filterCollection = "history";
+        folders = [];
+        break;
+      default: // all bookmarks
+        PlacesSearchBox.filterCollection = "bookmarks";
+        folders.push(PlacesUtils.bookmarksRootId,
+                     PlacesUtils.unfiledRootId);
+    }
+
+    // set scope, and re-search
+    PlacesSearchBox.folders = folders;
+    PlacesSearchBox.search(PlacesSearchBox.searchFilter.value);
   }
 };
 

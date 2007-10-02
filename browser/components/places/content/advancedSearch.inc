@@ -34,7 +34,17 @@
 #
 # ***** END LICENSE BLOCK ***** 
 
-<vbox id="advancedSearch" collapsed="true">
+<vbox id="advancedSearch">
+  <hbox>
+    <menulist id="advancedSearchType"
+              oncommand="PlacesQueryBuilder.doSearch();">
+      <menupopup>
+        <menuitem value="and" label="&advancedSearch.all.label;"/>
+        <menuitem value="or" label="&advancedSearch.any.label;"/>
+      </menupopup>
+    </menulist>
+    <label value="&advancedSearch.rules.label;"/>
+  </hbox>
   <grid flex="1">
     <columns>
       <column flex="1"/>
@@ -147,7 +157,7 @@
         <button id="advancedSearch0Plus"
                 label="&advancedSearch.plus.label;"
                 class="small"
-                command="placesCmd_search:moreCriteria"/>
+                command="OrganizerCommand_search:moreCriteria"/>
       </row>
     </rows>
   </grid>
