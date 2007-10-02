@@ -14,8 +14,6 @@
         style="width: 35em;" 
         ondialogaccept="gRemovePasswordDialog.removePassword();" 
         onload="gRemovePasswordDialog.init()"
-        xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
-        xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
         xmlns:aaa="http://www.w3.org/2005/07/aaa">
 
   <script type="application/javascript" src="chrome://mozapps/content/preferences/removemp.js"/>
@@ -36,7 +34,7 @@
       <label control="password" value="&setPassword.oldPassword.label;"/> 
       <textbox id="password" type="password"
                oninput="gRemovePasswordDialog.validateInput();"
-               xhtml2:role="textfield" aaa:describedby="warnings"/>
+               aaa:describedby="warnings"/>
     </hbox>
   </groupbox>
   

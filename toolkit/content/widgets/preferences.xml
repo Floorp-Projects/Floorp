@@ -508,16 +508,15 @@
     <content dlgbuttons="accept,cancel" persist="lastSelected screenX screenY"
              closebuttonlabel="&preferencesCloseButton.label;"
              closebuttonaccesskey="&preferencesCloseButton.accesskey;"
-             xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
-             xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
-             xhtml2:role="wairole:dialog"
+             xmlns:xhtml="http://www.w3.org/1999/xhtml"
+             xhtml:role="dialog"
 #ifdef XP_WIN
              title="&preferencesDefaultTitleWin.title;">
 #else
              title="&preferencesDefaultTitleMac.title;">
 #endif
       <xul:radiogroup anonid="selector" orient="horizontal" class="paneSelector chromeclass-toolbar"
-                      xhtml2:role="wairole:list"/> <!-- Expose to accessibility APIs as a list -->
+                      xhtml:role="listbox"/> <!-- Expose to accessibility APIs as a listbox -->
       <xul:hbox flex="1" class="paneDeckContainer">
         <xul:deck anonid="paneDeck" flex="1">
           <children includes="prefpane"/>
