@@ -75,13 +75,12 @@ nsSVGBoolean::GetBaseValueString(nsAString & aValueAsString)
 
 void
 nsSVGBoolean::SetBaseValue(PRBool aValue,
-                           nsSVGElement *aSVGElement,
-                           PRBool aDoSetAttr)
+                           nsSVGElement *aSVGElement)
 {
   NS_PRECONDITION(aValue == PR_TRUE || aValue == PR_FALSE, "Boolean out of range");
 
   mAnimVal = mBaseVal = aValue;
-  aSVGElement->DidChangeBoolean(mAttrEnum, aDoSetAttr);
+  aSVGElement->DidChangeBoolean(mAttrEnum, PR_TRUE);
 }
 
 nsresult
