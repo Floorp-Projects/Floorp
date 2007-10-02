@@ -71,7 +71,8 @@ public:
                        nsMargin&           aComputedOffsets,
                        nsLineBox*          aLine,
                        nsHTMLReflowState&  aReflowState,
-                       nsReflowStatus&     aReflowStatus);
+                       nsReflowStatus&     aReflowStatus,
+                       nsBlockReflowState& aState);
 
   PRBool PlaceBlock(const nsHTMLReflowState& aReflowState,
                     PRBool                   aForceFit,

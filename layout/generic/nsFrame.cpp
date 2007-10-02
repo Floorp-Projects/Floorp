@@ -4958,6 +4958,10 @@ nsFrame::GetLineNumber(nsIFrame *aFrame, nsIFrame** aContainingBlock)
     if (thisBlock->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
       //if we are searching for a frame that is not in flow we will not find it. 
       //we must instead look for its placeholder
+      if (thisBlock->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+        // abspos continuations don't have placeholders, get the fif
+        thisBlock = thisBlock->GetFirstInFlow();
+      }
       thisBlock = frameManager->GetPlaceholderFrameFor(thisBlock);
       if (!thisBlock)
         return -1;
@@ -5444,8 +5448,15 @@ nsFrame::DoGetParentStyleContextFrame(nsPresContext* aPresContext,
 
   // For out-of-flow frames, we must resolve underneath the
   // placeholder's parent.
+  nsIFrame* oofFrame = this;
+  if ((oofFrame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)
+      && (oofFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+    // Out of flows that are overflow containers do not
+    // have placeholders. Use their first-in-flow's placeholder.
+    oofFrame = oofFrame->GetFirstInFlow();
+  }
   nsIFrame *placeholder =
-    aPresContext->FrameManager()->GetPlaceholderFrameFor(this);
+    aPresContext->FrameManager()->GetPlaceholderFrameFor(oofFrame);
   if (!placeholder) {
     NS_NOTREACHED("no placeholder frame for out-of-flow frame");
     GetCorrectedParent(aPresContext, this, aProviderFrame);

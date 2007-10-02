@@ -1712,9 +1712,12 @@ static nsIAtom*
 GetChildListNameFor(nsIFrame*       aChildFrame)
 {
   nsIAtom*      listName;
-  
+
+  if (aChildFrame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+    listName = nsGkAtoms::overflowContainersList;
+  }
   // See if the frame is moved out of the flow
-  if (aChildFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+  else if (aChildFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
     // Look at the style information to tell
     const nsStyleDisplay* disp = aChildFrame->GetStyleDisplay();
     
@@ -8102,10 +8105,6 @@ FindPreviousAnonymousSibling(nsIPresShell* aPresShell,
         prevSibling = GetLastSpecialSibling(prevSibling);
       }
 
-      // The frame may have a continuation. If so, we want the
-      // last continuation as our previous sibling.
-      prevSibling = prevSibling->GetLastContinuation();
-
       // If the frame is out-of-flow, GPFF() will have returned the
       // out-of-flow frame; we want the placeholder.
       if (prevSibling->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
@@ -8113,6 +8112,14 @@ FindPreviousAnonymousSibling(nsIPresShell* aPresShell,
         aPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
         NS_ASSERTION(placeholderFrame, "no placeholder for out-of-flow frame");
         prevSibling = placeholderFrame;
+      }
+
+      // The frame may have a continuation. If so, we want the
+      // last non-overflow-container continuation as our previous sibling.
+      prevSibling = prevSibling->GetLastContinuation();
+      while (prevSibling->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+        prevSibling = prevSibling->GetPrevInFlow();
+        NS_ASSERTION(prevSibling, "first-in-flow can't be overflow container");
       }
 
       // Found a previous sibling, we're done!
@@ -8287,18 +8294,6 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIContent*       aContainer,
         prevSibling = GetLastSpecialSibling(prevSibling);
       }
 
-      // The frame may have a continuation. Get the last continuation
-      prevSibling = prevSibling->GetLastContinuation();
-
-      // XXXbz should the IsValidSibling check be after we get the
-      // placeholder for out-of-flows?
-      const nsStyleDisplay* display = prevSibling->GetStyleDisplay();
-  
-      if (aChild && !IsValidSibling(aContainerFrame, prevSibling, 
-                                    display->mDisplay, (nsIContent&)*aChild,
-                                    childDisplay))
-        continue;
-
       // If the frame is out-of-flow, GPFF() will have returned the
       // out-of-flow frame; we want the placeholder.
       if (prevSibling->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
@@ -8307,6 +8302,20 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIContent*       aContainer,
         NS_ASSERTION(placeholderFrame, "no placeholder for out-of-flow frame");
         prevSibling = placeholderFrame;
       }
+
+      // The frame may have a continuation. if so get the last
+      // non-overflow-container continuation.
+      prevSibling = prevSibling->GetLastContinuation();
+      while (prevSibling->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+        prevSibling = prevSibling->GetPrevInFlow();
+        NS_ASSERTION(prevSibling, "first-in-flow can't be overflow container");
+      }
+
+      const nsStyleDisplay* display = prevSibling->GetStyleDisplay();
+      if (aChild && !IsValidSibling(aContainerFrame, prevSibling,
+                                    display->mDisplay, (nsIContent&)*aChild,
+                                    childDisplay))
+        continue;
 
 #ifdef DEBUG
       nsIFrame* containerFrame = nsnull;
@@ -9609,7 +9618,8 @@ UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager,
   do {
     nsIFrame* child = aFrame->GetFirstChild(childList);
     while (child) {
-      if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+      if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
+          || (child->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
         // only do frames that are in flow
         if (nsGkAtoms::placeholderFrame == child->GetType()) { // placeholder
           // get out of flow frame and start over there
@@ -9781,8 +9791,11 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIFrame* aFrame)
   if (IsFrameSpecial(aFrame))
     aFrame = GetIBContainingBlockFor(aFrame);
 
-  mPresShell->FrameNeedsReflow(aFrame, nsIPresShell::eStyleChange,
-                               NS_FRAME_IS_DIRTY);
+  do {
+    mPresShell->FrameNeedsReflow(aFrame, nsIPresShell::eStyleChange,
+                                 NS_FRAME_IS_DIRTY);
+    aFrame = aFrame->GetNextContinuation();
+  } while (aFrame);
 
   return NS_OK;
 }
@@ -10560,6 +10573,11 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
   // A continuation of generated content is also generated content
   if (aFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT) {
     newFrame->AddStateBits(NS_FRAME_GENERATED_CONTENT);
+  }
+
+  // A continuation of an out-of-flow is also an out-of-flow
+  if (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+    newFrame->AddStateBits(NS_FRAME_OUT_OF_FLOW);
   }
 
   if (nextInFlow) {

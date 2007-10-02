@@ -522,6 +522,10 @@ nsHTMLReflowState::InitFrameType()
   if (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
     if (disp->IsAbsolutelyPositioned()) {
       frameType = NS_CSS_FRAME_TYPE_ABSOLUTE;
+      //XXXfr hack for making frames behave properly when in overflow container lists
+      //      see bug 154892; need to revisit later
+      if (frame->GetPrevInFlow())
+        frameType = NS_CSS_FRAME_TYPE_BLOCK;
     }
     else if (NS_STYLE_FLOAT_NONE != disp->mFloats) {
       frameType = NS_CSS_FRAME_TYPE_FLOATING;
