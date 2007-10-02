@@ -384,6 +384,10 @@ public:
   static PRBool
   CanOptimizeOpacity(nsIFrame *aFrame);
 
+  /* Calculate the maximum expansion of a matrix */
+  static float
+  MaxExpansion(nsIDOMSVGMatrix *aMatrix);
+
 #ifdef DEBUG
   static void
   WritePPM(const char *fname, gfxImageSurface *aSurface);
