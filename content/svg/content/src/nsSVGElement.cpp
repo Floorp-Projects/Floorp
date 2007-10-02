@@ -397,14 +397,14 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
 
         nsCOMPtr<nsIDOMSVGAnimatedRect> r = do_QueryInterface(svg_value);
         if (r) {
-          nsIDOMSVGRect *rect;
-          r->GetBaseVal(&rect);
-          static_cast<nsSVGRect*>(rect)->Clear();
+          nsCOMPtr<nsIDOMSVGRect> rect;
+          r->GetBaseVal(getter_AddRefs(rect));
+          static_cast<nsSVGRect*>(rect.get())->Clear();
         }
         nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> ar = do_QueryInterface(svg_value);
         if (ar) {
-          nsIDOMSVGPreserveAspectRatio *par;
-          ar->GetBaseVal(&par);
+          nsCOMPtr<nsIDOMSVGPreserveAspectRatio> par;
+          ar->GetBaseVal(getter_AddRefs(par));
           par->SetAlign(nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID);
           par->SetMeetOrSlice(nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET);
         }
@@ -418,20 +418,20 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         }
         nsCOMPtr<nsIDOMSVGAnimatedLengthList> ll = do_QueryInterface(svg_value);
         if (ll) {
-          nsIDOMSVGLengthList *lengthlist;
-          ll->GetBaseVal(&lengthlist);
+          nsCOMPtr<nsIDOMSVGLengthList> lengthlist;
+          ll->GetBaseVal(getter_AddRefs(lengthlist));
           lengthlist->Clear();
         }
         nsCOMPtr<nsIDOMSVGAnimatedNumberList> nl = do_QueryInterface(svg_value);
         if (nl) {
-          nsIDOMSVGNumberList *numberlist;
-          nl->GetBaseVal(&numberlist);
+          nsCOMPtr<nsIDOMSVGNumberList> numberlist;
+          nl->GetBaseVal(getter_AddRefs(numberlist));
           numberlist->Clear();
         }
         nsCOMPtr<nsIDOMSVGAnimatedTransformList> tl = do_QueryInterface(svg_value);
         if (tl) {
-          nsIDOMSVGTransformList *transform;
-          tl->GetBaseVal(&transform);
+          nsCOMPtr<nsIDOMSVGTransformList> transform;
+          tl->GetBaseVal(getter_AddRefs(transform));
           transform->Clear();
         }
       }
