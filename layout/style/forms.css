@@ -80,7 +80,11 @@ input {
      must be the same here, for buttons, and for <select> (including its
      internal padding magic) */
   padding: 1px 0 1px 0;
+%ifdef MOZ_WIDGET_GTK2
+  border: 3px inset ThreeDFace;
+%else
   border: 2px inset ThreeDFace;
+%endif
   background-color: -moz-Field;
   color: -moz-FieldText;
   font: -moz-field;
@@ -102,7 +106,11 @@ input > .anonymous-div {
 
 textarea {
   margin: 1px 0 1px 0;
+%ifdef MOZ_WIDGET_GTK2
+  border: 3px inset ThreeDFace;
+%else
   border: 2px inset ThreeDFace;
+%endif
   background-color: -moz-Field;
   color: -moz-FieldText;
   font: medium -moz-fixed;
@@ -143,7 +151,11 @@ textarea:-moz-read-write {
 
 select {
   margin: 0;
-  border-color: ThreeDFace;
+%ifdef MOZ_WIDGET_GTK2
+  border: 3px inset ThreeDFace;
+%else
+  border: 2px inset ThreeDFace;
+%endif
   background-color: -moz-Field;
   color: -moz-FieldText;
   font: -moz-list;
@@ -154,8 +166,6 @@ select {
   -moz-box-sizing: border-box;
   -moz-user-select: none;
   -moz-appearance: menulist;
-  border-width: 2px;
-  border-style: inset;
   text-indent: 0;
   overflow: -moz-hidden-unscrollable;
 }
@@ -462,7 +472,11 @@ input[type="submit"] {
      must be the same here, for text inputs, and for <select>.  For
      buttons, make sure to include the -moz-focus-inner border/padding. */
   padding: 0px 6px 0px 6px;
+%ifdef MOZ_WIDGET_GTK2
+  border: 3px outset ButtonFace;
+%else
   border: 2px outset ButtonFace;
+%endif
   background-color: ButtonFace;
   color: ButtonText; 
   font: -moz-button;
@@ -522,7 +536,11 @@ input[type="submit"][disabled] {
   /* The sum of border-top, border-bottom, padding-top, padding-bottom
      must be the same here and for text inputs */
   padding: 0px 6px 0px 6px;
+%ifdef MOZ_WIDGET_GTK2
+  border: 3px outset ButtonFace;
+%else
   border: 2px outset ButtonFace;
+%endif
   color: GrayText;
   cursor: inherit; 
 }
