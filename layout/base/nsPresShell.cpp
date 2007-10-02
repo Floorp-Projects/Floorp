@@ -2365,6 +2365,9 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     MOZ_TIMER_RESET(mFrameCreationWatch);
     MOZ_TIMER_START(mFrameCreationWatch);
 
+    WillCauseReflow();
+    mFrameConstructor->BeginUpdate();
+
     if (!rootFrame) {
       // Have style sheet processor construct a frame for the
       // precursors to the root content object's frame
@@ -2383,6 +2386,9 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     // Something in mFrameConstructor->ContentInserted may have caused
     // Destroy() to get called, bug 337586.
     NS_ENSURE_STATE(!mHaveShutDown);
+
+    mFrameConstructor->EndUpdate();
+    DidCauseReflow();
 
     // Run the XBL binding constructors for any new frames we've constructed
     mDocument->BindingManager()->ProcessAttachedQueue();
@@ -6035,15 +6041,20 @@ void
 PresShell::WillDoReflow()
 {
   // We just reflowed, tell the caret that its frame might have moved.
+  // XXXbz that comment makes no sense
   if (mCaret) {
     mCaret->InvalidateOutsideCaret();
     mCaret->UpdateCaretPosition();
   }
+
+  mFrameConstructor->BeginUpdate();
 }
 
 void
 PresShell::DidDoReflow()
 {
+  mFrameConstructor->EndUpdate();
+  
   HandlePostedReflowCallbacks();
   // Null-check mViewManager in case this happens during Destroy.  See
   // bugs 244435 and 238546.

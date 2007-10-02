@@ -1024,17 +1024,13 @@ private:
                         PRUint8&               aDisplay);
 
   void QuotesDirty() {
-    if (mUpdateCount != 0)
-      mQuotesDirty = PR_TRUE;
-    else
-      mQuoteList.RecalcAll();
+    NS_PRECONDITION(mUpdateCount != 0, "Instant quote updates are bad news");
+    mQuotesDirty = PR_TRUE;
   }
 
   void CountersDirty() {
-    if (mUpdateCount != 0)
-      mCountersDirty = PR_TRUE;
-    else
-      mCounterManager.RecalcAll();
+    NS_PRECONDITION(mUpdateCount != 0, "Instant counter updates are bad news");
+    mCountersDirty = PR_TRUE;
   }
 
 public:
