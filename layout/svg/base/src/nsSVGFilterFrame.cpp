@@ -175,18 +175,7 @@ nsSVGFilterFrame::FilterPaint(nsSVGRenderState *aContext,
       nsSVGUtils::ConvertToSurfaceSize(gfxSize(filterResX, filterResY),
                                        &resultOverflows);
   } else {
-    float a, b, c, d;
-    ctm->GetA(&a);
-    ctm->GetB(&b);
-    ctm->GetC(&c);
-    ctm->GetD(&d);
-
-    // maximum expansion derivation from
-    // http://lists.cairographics.org/archives/cairo/2004-October/001980.html
-    float f = (a * a + b * b + c * c + d * d) / 2;
-    float g = (a * a - b * b + c * c - d * d) / 2;
-    float h = a * b + c * d;
-    float scale = sqrt(f + sqrt(g * g + h * h));
+    float scale = nsSVGUtils::MaxExpansion(ctm);
 #ifdef DEBUG_tor
     fprintf(stderr, "scale: %f\n", scale);
 #endif
