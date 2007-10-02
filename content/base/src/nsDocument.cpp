@@ -2058,7 +2058,10 @@ SubDocClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
   SubDocMapEntry *e = static_cast<SubDocMapEntry *>(entry);
 
   NS_RELEASE(e->mKey);
-  NS_IF_RELEASE(e->mSubDocument);
+  if (e->mSubDocument) {
+    e->mSubDocument->SetParentDocument(nsnull);
+    NS_RELEASE(e->mSubDocument);
+  }
 }
 
 PR_STATIC_CALLBACK(PRBool)
@@ -2091,8 +2094,6 @@ nsDocument::SetSubDocumentFor(nsIContent *aContent, nsIDocument* aSubDoc)
                                             PL_DHASH_LOOKUP));
 
       if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
-        entry->mSubDocument->SetParentDocument(nsnull);
-
         PL_DHashTableRawRemove(mSubDocuments, entry);
       }
     }
@@ -5572,26 +5573,16 @@ nsDocument::Destroy()
   if (mIsGoingAway)
     return;
 
-  PRInt32 count = mChildren.ChildCount();
-
   mIsGoingAway = PR_TRUE;
-  DestroyLinkMap();
-  for (PRInt32 indx = 0; indx < count; ++indx) {
-    // XXXbz what we _should_ do here is to clear mChildren and null out
-    // mRootContent.  If we did this (or at least the latter), we could remove
-    // the silly null-checks in nsHTMLDocument::MatchLinks.  Unfortunately,
-    // doing that introduces several problems:
-    // 1) Focus issues (see bug 341730).  The fix for bug 303260 may fix these.
-    // 2) Crashes in OnPageHide if it fires after Destroy.  See bug 303260
-    //    comments 9 and 10.
-    // So we're just creating an inconsistent DOM for now and hoping.  :(
-    mChildren.ChildAt(indx)->UnbindFromTree();
+
+  PRUint32 i, count = mChildren.ChildCount();
+  for (i = 0; i < count; ++i) {
+    mChildren.ChildAt(i)->DestroyContent();
   }
+
   mLayoutHistoryState = nsnull;
 
   nsContentList::OnDocumentDestroy(this);
-  delete mContentWrapperHash;
-  mContentWrapperHash = nsnull;
 }
 
 already_AddRefed<nsILayoutHistoryState>

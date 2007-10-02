@@ -3065,6 +3065,17 @@ nsGenericHTMLFrameElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   return rv;
 }
 
+void
+nsGenericHTMLFrameElement::DestroyContent()
+{
+  if (mFrameLoader) {
+    mFrameLoader->Destroy();
+    mFrameLoader = nsnull;
+  }
+
+  nsGenericHTMLElement::DestroyContent();
+}
+
 //----------------------------------------------------------------------
 
 void
