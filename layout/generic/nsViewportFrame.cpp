@@ -316,7 +316,7 @@ ViewportFrame::Reflow(nsPresContext*          aPresContext,
 #endif
 
   // Just reflow all the fixed-pos frames.
-  rv = mFixedContainer.Reflow(this, aPresContext, reflowState,
+  rv = mFixedContainer.Reflow(this, aPresContext, reflowState, aStatus,
                               reflowState.ComputedWidth(),
                               reflowState.ComputedHeight(),
                               PR_TRUE, PR_TRUE); // XXX could be optimized

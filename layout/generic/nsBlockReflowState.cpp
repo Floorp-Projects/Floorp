@@ -72,11 +72,11 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     mLineNumber(0),
     mFlags(0),
     mFloatBreakType(NS_STYLE_CLEAR_NONE),
-    mOverflowTracker(aPresContext, aFrame)
+    mOverflowTracker(aPresContext, aFrame, PR_FALSE)
 {
   SetFlag(BRS_ISFIRSTINFLOW, aFrame->GetPrevInFlow() == nsnull);
   SetFlag(BRS_ISOVERFLOWCONTAINER,
-          !!(aFrame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER));
+          IS_TRUE_OVERFLOW_CONTAINER(aFrame));
 
   const nsMargin& borderPadding = BorderPadding();
 
