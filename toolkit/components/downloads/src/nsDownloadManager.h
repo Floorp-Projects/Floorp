@@ -215,6 +215,12 @@ protected:
   void SetStartTime(PRInt64 aStartTime);
 
   /**
+   * Update the amount of bytes transferred and max bytes; and recalculate the
+   * download percent.
+   */
+  void SetProgressBytes(PRInt64 aCurrBytes, PRInt64 aMaxBytes);
+
+  /**
    * Pause the download, but in certain cases it might get fake-paused instead
    * of real-paused.
    */
@@ -291,8 +297,8 @@ private:
    * doesn't necessarily mean we have nothing. Use GetAmountTransferred and
    * GetSize for the real transferred amount and size.
    */
-  PRUint64 mCurrBytes;
-  PRUint64 mMaxBytes;
+  PRInt64 mCurrBytes;
+  PRInt64 mMaxBytes;
 
   PRTime mStartTime;
   PRTime mLastUpdate;
