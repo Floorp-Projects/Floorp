@@ -55,7 +55,7 @@ public:
                               PRBool aDoSetAttr);
   void GetBaseValueString(nsAString& aValue);
 
-  void SetBaseValue(PRBool aValue, nsSVGElement *aSVGElement, PRBool aDoSetAttr);
+  void SetBaseValue(PRBool aValue, nsSVGElement *aSVGElement);
   PRBool GetBaseValue() const
     { return mBaseVal; }
   PRBool GetAnimValue() const
@@ -83,7 +83,7 @@ private:
     NS_IMETHOD GetBaseVal(PRBool* aResult)
       { *aResult = mVal->GetBaseValue(); return NS_OK; }
     NS_IMETHOD SetBaseVal(PRBool aValue)
-      { mVal->SetBaseValue(aValue, mSVGElement, PR_TRUE); return NS_OK; }
+      { mVal->SetBaseValue(aValue, mSVGElement); return NS_OK; }
     NS_IMETHOD GetAnimVal(PRBool* aResult)
       { *aResult = mVal->GetAnimValue(); return NS_OK; }
 
