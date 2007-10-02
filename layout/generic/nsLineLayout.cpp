@@ -101,7 +101,6 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     mForceBreakContent(nsnull),
     mLastOptionalBreakContentOffset(-1),
     mForceBreakContentOffset(-1),
-    mTrailingTextFrame(nsnull),
     mBlockRS(nsnull),/* XXX temporary */
     mMinLineHeight(0),
     mTextIndent(0)
@@ -115,9 +114,7 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
   mStyleText = aOuterReflowState->frame->GetStyleText();
   mTextAlign = mStyleText->mTextAlign;
   mLineNumber = 0;
-  mColumn = 0;
   mFlags = 0; // default all flags to false except those that follow here...
-  SetFlag(LL_ENDSINWHITESPACE, PR_TRUE);
   mPlacedFloats = 0;
   mTotalPlacedFrames = 0;
   mTopEdge = 0;
@@ -137,8 +134,6 @@ nsLineLayout::nsLineLayout(nsPresContext* aPresContext,
     SetFlag(LL_GOTLINEBOX, PR_TRUE);
     mLineBox = *aLine;
   }
-
-  mCompatMode = mPresContext->CompatibilityMode();
 }
 
 nsLineLayout::~nsLineLayout()
@@ -201,10 +196,6 @@ nsLineLayout::BeginLineReflow(nscoord aX, nscoord aY,
   mSpansAllocated = mSpansFreed = mFramesAllocated = mFramesFreed = 0;
 #endif
 
-  mColumn = 0;
-  
-  SetFlag(LL_ENDSINWHITESPACE, PR_TRUE);
-  SetFlag(LL_UNDERSTANDSNWHITESPACE, PR_FALSE);
   SetFlag(LL_FIRSTLETTERSTYLEOK, PR_FALSE);
   SetFlag(LL_ISTOPOFPAGE, aIsTopOfPage);
   SetFlag(LL_UPDATEDBAND, PR_FALSE);
@@ -813,7 +804,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
                                 aFrame, availSize);
   reflowState.mLineLayout = this;
   reflowState.mFlags.mIsTopOfPage = GetFlag(LL_ISTOPOFPAGE);
-  SetFlag(LL_UNDERSTANDSNWHITESPACE, PR_FALSE);
   mTextJustificationNumSpaces = 0;
   mTextJustificationNumLetters = 0;
 
@@ -1044,8 +1034,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       }
       
       if (!continuingTextRun) {
-        SetFlag(LL_INWORD, PR_FALSE);
-        mTrailingTextFrame = nsnull;
+        SetHasTrailingTextFrame(PR_FALSE);
         if (!psd->mNoWrap && (!CanPlaceFloatNow() || placedFloat)) {
           // record soft break opportunity after this content that can't be
           // part of a text run. This is not a text frame so we know
@@ -1322,13 +1311,6 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
   PRBool ltr = (NS_STYLE_DIRECTION_LTR == pfd->mFrame->GetStyleVisibility()->mDirection);
   // Advance to next X coordinate
   psd->mX = pfd->mBounds.XMost() + (ltr ? pfd->mMargin.right : pfd->mMargin.left);
-
-  // If the frame is a not aware of white-space and it takes up some
-  // width, disable leading white-space compression for the next frame
-  // to be reflowed.
-  if ((!GetFlag(LL_UNDERSTANDSNWHITESPACE)) && pfd->mBounds.width) {
-    SetFlag(LL_ENDSINWHITESPACE, PR_FALSE);
-  }
 
   // Count the number of non-empty frames on the line...
   if (!emptyFrame) {
@@ -1621,7 +1603,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   nsFrame::ListTag(stdout, spanFrame);
   printf(": preMode=%s strictMode=%s w/h=%d,%d emptyContinuation=%s",
          preMode ? "yes" : "no",
-         InStrictMode() ? "yes" : "no",
+         mPresContext->CompatibilityMode() != eCompatibility_NavQuirks ? "yes" : "no",
          spanFramePFD->mBounds.width, spanFramePFD->mBounds.height,
          emptyContinuation ? "yes" : "no");
   if (psd != mRootSpan) {
@@ -1672,7 +1654,8 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   // checks don't make sense for them.
   // XXXldb This should probably just use nsIFrame::IsSelfEmpty, assuming that
   // it agrees with this code.  (If it doesn't agree, it probably should.)
-  if ((emptyContinuation || mCompatMode != eCompatibility_FullStandards) &&
+  if ((emptyContinuation ||
+       mPresContext->CompatibilityMode() != eCompatibility_FullStandards) &&
       ((psd == mRootSpan) ||
        ((0 == spanFramePFD->mBorderPadding.top) &&
         (0 == spanFramePFD->mBorderPadding.right) &&
@@ -2012,7 +1995,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           yBottom = yTop + logicalHeight;
         }
         if (!preMode &&
-            GetCompatMode() != eCompatibility_FullStandards &&
+            mPresContext->CompatibilityMode() != eCompatibility_FullStandards &&
             !logicalHeight) {
           // Check if it's a BR frame that is not alone on its line (it
           // is given a height of zero to indicate this), and if so reset
