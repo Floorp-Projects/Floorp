@@ -291,6 +291,8 @@ sub SyncNightlyDirToStaging {
     my $productTag = $config->Get(var => 'productTag');
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
+    my $stagingUser = $config->Get(var => 'stagingUser');
+    my $stagingServer = $config->Get(var => 'stagingServer');
     my $externalStagingUser = $config->Get(var => 'externalStagingUser');
     my $externalStagingServer = $config->Get(var => 'externalStagingServer');
     
@@ -298,14 +300,20 @@ sub SyncNightlyDirToStaging {
     my $pushLog  = catfile($logDir, 'build_' . $rcTag . '-push.log');
     my $nightlyDir = $config->GetFtpNightlyDir();
 
-
-    my $command = 'rsync';
-    my @cmdArgs = ('-av', $nightlyDir, $externalStagingUser.'@'.$externalStagingServer.':'.$nightlyDir);
+    my $command = 'ssh';
+    my @cmdArgs = ($stagingUser . '@' . $stagingServer,
+                   'rsync', '-av', $nightlyDir, 
+                   $externalStagingUser.'@'.$externalStagingServer.':'.
+                   $nightlyDir);
     print 'Bootstrap::Util::SyncNightlyDirToStaging() Running shell command: '.$command.' '.join(' ', @cmdArgs)."\n";
+
     my $rv = RunShellCommand(command => $command,
                              args => \@cmdArgs, 
-                             redirectStderr => 0,
+                             redirectStderr => 1,
                              logfile => $pushLog);
+
+    print 'Bootstrap::Util::SyncNightlyDirToStaging() Output: ' . 
+     $rv->{'output'} . "\n";
     if ($rv->{'exitValue'} != 0) {
         die "ASSERT: SyncNightlyDirToStaging(): rsync failed\n";
     }
