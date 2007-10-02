@@ -450,11 +450,6 @@ protected:
 
   virtual void RemoveEventListeners();
 
-  // Sets mCSSAware to correspond to aFlags. This toggles whether CSS is
-  // used to style elements in the editor. Note that the editor is only CSS
-  // aware by default in Composer and in the mail editor.
-  void UpdateCSSAwareForFlags(PRUint32 aFlags);
-
   /** returns the layout object (nsIFrame in the real world) for aNode
     * @param aNode          the content to get a frame for
     * @param aLayoutObject  the "primary frame" for aNode, if one exists.  May be null
