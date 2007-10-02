@@ -63,8 +63,9 @@ public:
   void SetNext(nsXBLProtoImplField* aNext) { mNext = aNext; }
 
   nsresult InstallField(nsIScriptContext* aContext,
-                        JSObject* aBoundNode, nsIURI*
-                        aBindingDocURI) const;
+                        JSObject* aBoundNode,
+                        nsIURI* aBindingDocURI,
+                        PRBool* aDidInstall) const;
 
   const PRUnichar* GetName() const { return mName; }
 
