@@ -79,11 +79,10 @@ static JSBool
 NewTryNote(JSContext *cx, JSCodeGenerator *cg, JSTryNoteKind kind,
            uintN stackDepth, size_t start, size_t end);
 
-JS_FRIEND_API(JSBool)
+JS_FRIEND_API(void)
 js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg, JSParseContext *pc,
                      JSArenaPool *codePool, JSArenaPool *notePool,
-                     const char *filename, uintN lineno,
-                     JSPrincipals *principals)
+                     uintN lineno)
 {
     memset(cg, 0, sizeof *cg);
     TREE_CONTEXT_INIT(&cg->treeContext, pc);
@@ -93,13 +92,10 @@ js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg, JSParseContext *pc,
     cg->codeMark = JS_ARENA_MARK(codePool);
     cg->noteMark = JS_ARENA_MARK(notePool);
     cg->current = &cg->main;
-    cg->filename = filename;
     cg->firstLine = cg->prolog.currentLine = cg->main.currentLine = lineno;
-    cg->principals = principals;
     ATOM_LIST_INIT(&cg->atomList);
     cg->prolog.noteMask = cg->main.noteMask = SRCNOTE_CHUNK - 1;
     ATOM_LIST_INIT(&cg->constList);
-    return JS_TRUE;
 }
 
 JS_FRIEND_API(void)
@@ -180,11 +176,14 @@ UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t target)
     JS_ASSERT(cg->stackDepth >= 0);
     if (cg->stackDepth < 0) {
         char numBuf[12];
+        JSTokenStream *ts;
+
         JS_snprintf(numBuf, sizeof numBuf, "%d", target);
+        ts = &cg->treeContext.parseContext->tokenStream;
         JS_ReportErrorFlagsAndNumber(cx, JSREPORT_WARNING,
                                      js_GetErrorMessage, NULL,
                                      JSMSG_STACK_UNDERFLOW,
-                                     cg->filename ? cg->filename : "stdin",
+                                     ts->filename ? ts->filename : "stdin",
                                      numBuf);
     }
     cg->stackDepth += cs->ndefs;
@@ -4021,12 +4020,9 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JS_ReportOutOfMemory(cx);
             return JS_FALSE;
         }
-        if (!js_InitCodeGenerator(cx, cg2, cg->treeContext.parseContext,
-                                  cg->codePool, cg->notePool,
-                                  cg->filename, pn->pn_pos.begin.lineno,
-                                  cg->principals)) {
-            return JS_FALSE;
-        }
+        js_InitCodeGenerator(cx, cg2, cg->treeContext.parseContext,
+                             cg->codePool, cg->notePool,
+                             pn->pn_pos.begin.lineno);
         cg2->treeContext.flags = (uint16) (pn->pn_flags | TCF_IN_FUNCTION);
         cg2->parent = cg;
         fun = (JSFunction *) OBJ_GET_PRIVATE(cx, pn->pn_funpob->object);
@@ -5275,8 +5271,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
                  cg->treeContext.topStmt->type != STMT_LABEL ||
                  cg->treeContext.topStmt->update < CG_OFFSET(cg))) {
                 CG_CURRENT_LINE(cg) = pn2->pn_pos.begin.lineno;
-                if (!js_ReportCompileErrorNumber(cx, cg,
-                                                 JSREPORT_CG |
+                if (!js_ReportCompileErrorNumber(cx, pn2,
+                                                 JSREPORT_PN |
                                                  JSREPORT_WARNING |
                                                  JSREPORT_STRICT,
                                                  JSMSG_USELESS_EXPR)) {
@@ -6298,22 +6294,21 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         ok = EmitNumberOp(cx, pn->pn_dval, cg);
         break;
 
-      case TOK_OBJECT:
-        if (pn->pn_op == JSOP_REGEXP) {
-            /*
-             * cx->fp->varobj cannot be a Call object here, because that
-             * implies we are compiling eval code, in which case
-             * (cx->fp->flags & JSFRAME_EVAL) is true, and js_GetToken will
-             * have already selected JSOP_OBJECT instead of JSOP_REGEXP, to
-             * avoid all this RegExp object cloning business.
-             */
-            JS_ASSERT(!(cx->fp->flags & (JSFRAME_EVAL | JSFRAME_COMPILE_N_GO)));
-            ok = EmitIndexOp(cx, PN_OP(pn),
+      case TOK_REGEXP:
+        /*
+         * If the regexp's script is one-shot, we can avoid the extra
+         * fork-on-exec costs of JSOP_REGEXP by selecting JSOP_OBJECT.
+         * Otherwise, to avoid incorrect proto, parent, and lastIndex
+         * sharing among threads and sequentially across re-execution,
+         * select JSOP_REGEXP.
+         */
+        JS_ASSERT(pn->pn_op == JSOP_REGEXP);
+        if (cx->fp->flags & (JSFRAME_EVAL | JSFRAME_COMPILE_N_GO)) {
+            ok = EmitObjectOp(cx, pn->pn_pob, JSOP_OBJECT, cg);
+        } else {
+            ok = EmitIndexOp(cx, JSOP_REGEXP,
                              IndexParsedObject(pn->pn_pob, &cg->regexpList),
                              cg);
-        } else {
-            JS_ASSERT(pn->pn_op == JSOP_OBJECT);
-            ok = EmitObjectOp(cx, pn->pn_pob, PN_OP(pn), cg);
         }
         break;
 
