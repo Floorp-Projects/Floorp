@@ -37,7 +37,8 @@
 /**
  * Test download resume to do real-resume instead of stalling-the-channel
  * resume. Also test bug 395537 for resuming files that are deleted before
- * they're resumed.
+ * they're resumed. Bug 398216 is checked by making sure the reported progress
+ * and file size are updated for finished downloads.
  */
 
 const nsIF = Ci.nsIFile;
@@ -118,10 +119,9 @@ function run_test()
         do_check_true(didResumeServer);
         // did we download the whole file?
         do_check_eq(data.length, aDl.targetFile.fileSize);
-        // extra sanity checks on size
-        // XXX remove short-circuit after bug 394548 is fixed
-        true || do_check_eq(data.length, aDl.amountTransferred);
-        true || do_check_eq(data.length, aDl.size);
+        // extra sanity checks on size (test bug 398216)
+        do_check_eq(data.length, aDl.amountTransferred);
+        do_check_eq(data.length, aDl.size);
 
         httpserv.stop();
         // we're done with the test!
