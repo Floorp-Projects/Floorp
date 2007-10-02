@@ -272,6 +272,12 @@ protected:
    */
   PRBool IsFinished();
 
+  /**
+   * Fail a download because of a failure status and prompt the provided
+   * message or use a generic download failure message if nsnull.
+   */
+  nsresult FailDownload(nsresult aStatus, const PRUnichar *aMessage);
+
   nsDownloadManager *mDownloadManager;
   nsCOMPtr<nsIURI> mTarget;
 
