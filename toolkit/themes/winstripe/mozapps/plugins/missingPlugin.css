@@ -41,7 +41,7 @@ html|a {
 }
 
 #missingPluginPlaceholder {
-  list-style-image: url(chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png);
+  list-style-image: url(chrome://mozapps/skin/plugins/pluginGeneric.png);
   display: block;
   border: 0px;
   width: 32px;
