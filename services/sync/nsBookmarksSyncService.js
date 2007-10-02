@@ -79,6 +79,14 @@ BookmarksSyncService.prototype = {
     return this.__ans;
   },
 
+  __ts: null,
+  get _ts() {
+    if (!this.__ts)
+      this.__ts = Cc["@mozilla.org/browser/tagging-service;1"].
+                  getService(Ci.nsITaggingService);
+    return this.__ts;
+  },
+
   __os: null,
   get _os() {
     if (!this.__os)
@@ -253,6 +261,7 @@ BookmarksSyncService.prototype = {
       // FIXME: need to verify that it's a bookmark, it could be a history result!
       item.title = node.title;
       item.uri = node.uri;
+      item.tags = this._ts.getTagsForURI(makeURI(node.uri));
     } else {
       // what do we do?
     }
@@ -267,7 +276,7 @@ BookmarksSyncService.prototype = {
 
     let ret = {numProps: 0, props: {}};
     for (prop in a) {
-      if (a[prop] != b[prop]) {
+      if (!this._deepEquals(a[prop], b[prop])) {
         ret.numProps++;
         ret.props[prop] = b[prop];
       }
@@ -565,10 +574,13 @@ BookmarksSyncService.prototype = {
 
     switch (command.data.type) {
     case 0:
+      let uri = makeURI(command.data.uri);
       newId = this._bms.insertBookmark(parentId,
-                                       makeURI(command.data.uri),
+                                       uri,
                                        command.data.index,
                                        command.data.title);
+      this._ts.untagURI(uri, null);
+      this._ts.tagURI(uri, command.data.tags);
       break;
     case 6:
       newId = this._bms.createFolder(parentId,
@@ -646,6 +658,11 @@ BookmarksSyncService.prototype = {
         this._bms.moveItem(
           itemId, this._bms.getItemIdForGUID(command.data.parentGuid), index);
         break;
+      case "tags":
+        let uri = this._bms.getBookmarkURI(itemId);
+        this._ts.untagURI(uri, null);
+        this._ts.tagURI(uri, command.data.tags);
+        break;
       default:
         this.notice("Warning: Can't change item property: " + key);
         break;
@@ -670,6 +687,7 @@ BookmarksSyncService.prototype = {
     json = json.replace(/, index/g, ",\n\t index");
     json = json.replace(/, title/g, ",\n\t title");
     json = json.replace(/, uri/g, ",\n\t uri");
+    json = json.replace(/, tags/g, ",\n\t tags");
     return json;
   },
 
