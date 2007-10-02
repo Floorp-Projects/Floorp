@@ -179,7 +179,11 @@ public:
   NS_DECL_NSIPHONETIC
 
   // nsIDOMNSEditableElement
-  NS_FORWARD_NSIDOMNSEDITABLEELEMENT(nsGenericHTMLElement::)
+  NS_IMETHOD GetEditor(nsIEditor** aEditor)
+  {
+    return nsGenericHTMLElement::GetEditor(aEditor);
+  }
+  NS_IMETHOD SetUserInput(const nsAString& aInput);
 
   // Overriden nsIFormControl methods
   NS_IMETHOD_(PRInt32) GetType() const { return mType; }
@@ -250,7 +254,8 @@ public:
 protected:
   // Helper method
   nsresult SetValueInternal(const nsAString& aValue,
-                            nsITextControlFrame* aFrame);
+                            nsITextControlFrame* aFrame,
+                            PRBool aUserInput);
 
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
 
@@ -444,7 +449,7 @@ nsHTMLInputElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
         nsAutoString value;
         const_cast<nsHTMLInputElement*>(this)->GetValue(value);
         // SetValueInternal handles setting the VALUE_CHANGED bit for us
-        it->SetValueInternal(value, nsnull);
+        it->SetValueInternal(value, nsnull, PR_FALSE);
       }
       break;
     case NS_FORM_INPUT_FILE:
@@ -783,9 +788,25 @@ nsHTMLInputElement::SetValue(const nsAString& aValue)
     SetFileName(aValue);
   }
   else {
-    SetValueInternal(aValue, nsnull);
+    SetValueInternal(aValue, nsnull, PR_FALSE);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLInputElement::SetUserInput(const nsAString& aValue)
+{
+  if (!nsContentUtils::IsCallerTrustedForWrite()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  if (mType == NS_FORM_INPUT_FILE)
+  {
+    SetFileName(aValue);
+  } else {
+    SetValueInternal(aValue, nsnull, PR_TRUE);
+  }
   return NS_OK;
 }
 
@@ -883,7 +904,8 @@ nsHTMLInputElement::UpdateFileList()
 
 nsresult
 nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
-                                     nsITextControlFrame* aFrame)
+                                     nsITextControlFrame* aFrame,
+                                     PRBool aUserInput)
 {
   NS_PRECONDITION(mType != NS_FORM_INPUT_FILE,
                   "Don't call SetValueInternal for file inputs");
@@ -911,7 +933,8 @@ nsHTMLInputElement::SetValueInternal(const nsAString& aValue,
     }
     // If the frame owns the value, set the value in the frame
     if (frameOwnsValue) {
-      formControlFrame->SetFormProperty(nsGkAtoms::value, aValue);
+      formControlFrame->SetFormProperty(
+        aUserInput ? nsGkAtoms::userInput : nsGkAtoms::value, aValue);
       return NS_OK;
     }
 
@@ -1978,7 +2001,7 @@ nsHTMLInputElement::ParseAttribute(PRInt32 aNamespaceID,
         // confuse values and filenames. However they're there for backwards
         // compat.
         SetFileName(EmptyString());
-        SetValueInternal(EmptyString(), nsnull);
+        SetValueInternal(EmptyString(), nsnull, PR_FALSE);
       } else if (mType == NS_FORM_INPUT_FILE) {
         SetFileName(EmptyString());
       }
@@ -2714,7 +2737,7 @@ nsHTMLInputElement::RestoreState(nsPresState* aState)
         rv = aState->GetStateProperty(NS_LITERAL_STRING("v"), value);
         NS_ASSERTION(NS_SUCCEEDED(rv), "value restore failed!");
         if (rv == NS_STATE_PROPERTY_EXISTS) {
-          SetValueInternal(value, nsnull);
+          SetValueInternal(value, nsnull, PR_FALSE);
         }
         break;
       }

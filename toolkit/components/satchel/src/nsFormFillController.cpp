@@ -74,6 +74,7 @@
 #include "nsIGenericFactory.h"
 #include "nsToolkitCompsCID.h"
 #include "nsEmbedCID.h"
+#include "nsIDOMNSEditableElement.h"
 
 NS_INTERFACE_MAP_BEGIN(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIFormFillController)
@@ -397,9 +398,10 @@ nsFormFillController::GetTextValue(nsAString & aTextValue)
 NS_IMETHODIMP
 nsFormFillController::SetTextValue(const nsAString & aTextValue)
 {
-  if (mFocusedInput) {
+  nsCOMPtr<nsIDOMNSEditableElement> editable = do_QueryInterface(mFocusedInput);
+  if (editable) {
     mSuppressOnInput = PR_TRUE;
-    mFocusedInput->SetValue(aTextValue);
+    editable->SetUserInput(aTextValue);
     mSuppressOnInput = PR_FALSE;
   }
   return NS_OK;
