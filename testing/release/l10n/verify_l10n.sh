@@ -18,14 +18,14 @@ do
   # check for read-only files
   find "./source" -not -perm -u=w -exec echo "FAIL read-only file" {} \;
   locales=`ls $release/*.${platform}.* | grep -v en-US | cut -d\. -f8`
-  for locale in $locales
+  for l in $locales
   do
     rm -rf target/*
-    unpack_build ${platform} target $release/*.${locale}.${platform}.*
+    unpack_build ${platform} target $release/*.${l}.${platform}.*
     # check for read-only files
     find "./target" -not -perm -u=w -exec echo "FAIL read-only file" {} \;
     mkdir -p $release/diffs
-    diff -r source target > $release/diffs/${platform}.${locale}.diff
+    diff -r source target > $release/diffs/${platform}.${l}.diff
   done
 done
 
