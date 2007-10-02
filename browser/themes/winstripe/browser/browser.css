@@ -878,15 +878,10 @@ toolbar[iconsize="small"] #paste-button:not([disabled="true"]):hover:active {
 .formatted-url * {
   margin: 0;
   padding: 0;
-  cursor: text;
-}
-
-.formatted-url-ellipsis {
-  -moz-margin-start: 1px;
 }
 
 .formatted-url-prePath {
-  -moz-box-pack: center;
+  overflow-x: hidden;
 }
 
 #urlbar-container {
