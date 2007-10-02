@@ -851,15 +851,10 @@ toolbar[iconsize="small"] #paste-button:hover:active {
 .formatted-url * {
   margin: 0;
   padding: 0;
-  cursor: text;
-}
-
-.formatted-url-ellipsis {
-  -moz-margin-start: 1px;
 }
 
 .formatted-url-prePath {
-  -moz-box-pack: center;
+  overflow-x: hidden;
 }
 
 #urlbar[level="high"] > .autocomplete-textbox-container,
