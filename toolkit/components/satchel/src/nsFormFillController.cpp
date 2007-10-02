@@ -791,6 +791,12 @@ nsFormFillController::MouseDown(nsIDOMEvent* aMouseEvent)
   if (!mouseEvent)
     return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aMouseEvent->GetTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIDOMHTMLInputElement> targetInput = do_QueryInterface(target);
+  if (!targetInput)
+    return NS_OK;
+
   PRUint16 button;
   mouseEvent->GetButton(&button);
   if (button != 0)
