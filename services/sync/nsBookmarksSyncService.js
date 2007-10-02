@@ -262,6 +262,9 @@ BookmarksSyncService.prototype = {
       item.title = node.title;
       item.uri = node.uri;
       item.tags = this._ts.getTagsForURI(makeURI(node.uri));
+      let keyword = this._bms.getKeywordForBookmark(node.itemId);
+      if (keyword)
+        item.keyword = keyword;
     } else {
       // what do we do?
     }
@@ -581,6 +584,8 @@ BookmarksSyncService.prototype = {
                                        command.data.title);
       this._ts.untagURI(uri, null);
       this._ts.tagURI(uri, command.data.tags);
+      if (command.data.keyword)
+        this._bms.setKeywordForBookmark(newId, command.data.keyword);
       break;
     case 6:
       newId = this._bms.createFolder(parentId,
@@ -663,6 +668,9 @@ BookmarksSyncService.prototype = {
         this._ts.untagURI(uri, null);
         this._ts.tagURI(uri, command.data.tags);
         break;
+      case "keyword":
+        this._bms.setKeywordForBookmark(itemId, command.data.keyword);
+        break;
       default:
         this.notice("Warning: Can't change item property: " + key);
         break;
@@ -688,6 +696,7 @@ BookmarksSyncService.prototype = {
     json = json.replace(/, title/g, ",\n\t title");
     json = json.replace(/, uri/g, ",\n\t uri");
     json = json.replace(/, tags/g, ",\n\t tags");
+    json = json.replace(/, keyword/g, ",\n\t keyword");
     return json;
   },
 
