@@ -92,6 +92,17 @@
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
                                      tabbrowser.removeAllTabsBut(tabbrowser.mContextTab);"/>
             <xul:menuseparator/>
+            <xul:menuitem label="&bookmarkCurTab.label;"
+                          accesskey="&bookmarkCurTab.accesskey;"
+                          oncommand="BookmarkThisTab();"/>
+            <xul:menuitem label="&bookmarkAllTabs.label;"
+                          accesskey="&bookmarkAllTabs.accesskey;"
+                          command="Browser:BookmarkAllTabs"/>
+            <xul:menuitem label="&undoCloseTab.label;"
+                          accesskey="&undoCloseTab.accesskey;"
+                          command="History:UndoCloseTab"
+                          anonid="undoCloseTabMenuItem"/>
+            <xul:menuseparator/>
             <xul:menuitem label="&closeTab.label;" accesskey="&closeTab.accesskey;"
                           oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
                                      tabbrowser.removeTab(tabbrowser.mContextTab);"/>
@@ -153,6 +164,9 @@
       </field>
       <field name="mStringBundle">
         document.getAnonymousElementByAttribute(this, "anonid", "tbstringbundle");
+      </field>
+      <field name="mUndoCloseTabMenuItem">
+        document.getAnonymousElementByAttribute(this, "anonid", "undoCloseTabMenuItem");
       </field>
       <field name="mCurrentTab">
         null
@@ -648,6 +662,16 @@
             var menuItems = aPopupMenu.getElementsByAttribute("tbattr", "tabbrowser-multiple");
             for (var i = 0; i < menuItems.length; i++)
               menuItems[i].disabled = disabled;
+
+            // Session store
+            if (gPrefService.getBoolPref("browser.sessionstore.enabled")) {
+              this.mUndoCloseTabMenuItem.hidden =
+                Cc["@mozilla.org/browser/sessionstore;1"].
+                getService(Ci.nsISessionStore).
+                getClosedTabCount(window) == 0;
+            }
+            else
+              this.mUndoCloseTabMenuItem.hidden = true;
           ]]>
         </body>
       </method>

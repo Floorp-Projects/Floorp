@@ -10,3 +10,9 @@
 <!ENTITY  reloadTab.label        "Reload Tab">
 <!ENTITY  reloadTab.accesskey         "r">
 <!ENTITY  listAllTabs.label      "List all tabs">
+<!ENTITY  bookmarkAllTabs.label       "Bookmark All Tabs...">
+<!ENTITY  bookmarkAllTabs.accesskey   "T">
+<!ENTITY  bookmarkCurTab.label        "Bookmark This Tab...">
+<!ENTITY  bookmarkCurTab.accesskey    "B">
+<!ENTITY  undoCloseTab.label          "Undo Close Tab">
+<!ENTITY  undoCloseTab.accesskey      "U">
