@@ -256,9 +256,13 @@ nsUnknownContentTypeDialog.prototype = {
 
       this.makeFileUnique(aLocalFile);
 
-      if (aLocalFile.isExecutable() && !this.mLauncher.targetFile.isExecutable()) {
+      // Append a file extension if it's an executable that doesn't have one
+      let ext = "." + this.mLauncher.MIMEInfo.primaryExtension;
+      let leaf = aLocalFile.leafName;
+      if (aLocalFile.isExecutable() &&
+          leaf.substring(leaf.length - ext.length) != ext) {
         var f = aLocalFile.clone();
-        aLocalFile.leafName = aLocalFile.leafName + "." + this.mLauncher.MIMEInfo.primaryExtension; 
+        aLocalFile.leafName = leaf + ext;
 
         f.remove(false);
         this.makeFileUnique(aLocalFile);
