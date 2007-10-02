@@ -1,4 +1,4 @@
-# 
+#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -49,8 +49,8 @@ DIRS            = public src
 XPI_NAME	= canvas3d
 INSTALL_EXTENSION_ID = canvas3d@mozilla.com
 XPI_PKGNAME	= canvas3d
+USE_EXTENSION_MANIFEST = 1
 
 DIST_FILES = install.rdf
 
 include $(topsrcdir)/config/rules.mk
-
