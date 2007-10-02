@@ -1133,7 +1133,7 @@ nsPositionedInlineFrame::Reflow(nsPresContext*          aPresContext,
     // That will all be done by nsLineLayout::RelativePositionFrames.
     rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState, aStatus,
                                    containingBlockWidth, containingBlockHeight,
-                                   PR_TRUE, PR_TRUE, // XXX could be optimized
+                                   PR_TRUE, PR_TRUE, PR_TRUE, // XXX could be optimized
                                    &aDesiredSize.mOverflowArea);
   }
 

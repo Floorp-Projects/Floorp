@@ -1136,7 +1136,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     rv = mAbsoluteContainer.Reflow(this, aPresContext, aReflowState,
                                    state.mReflowStatus,
                                    containingBlockSize.width,
-                                   containingBlockSize.height,
+                                   containingBlockSize.height, PR_TRUE,
                                    cbWidthChanged, cbHeightChanged,
                                    &childBounds);
 
