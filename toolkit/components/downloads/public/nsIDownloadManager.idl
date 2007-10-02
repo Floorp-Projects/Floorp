@@ -171,12 +171,15 @@ interface nsIDownloadManager : nsISupports {
 
   /** 
    * Whether or not there are downloads that can be cleaned up (removed)
-   * i.e. downloads that have completed, have failed or have been canceled. 
+   * i.e. downloads that have completed, have failed or have been canceled.
    */
   readonly attribute boolean canCleanUp;
 
   /** 
-   * Removes completed, failed, and canceled downloads from the list. 
+   * Removes completed, failed, and canceled downloads from the list.
+   *
+   * Also notifies observers of the "download-manager-clear-history"
+   * topic, to allow any DM consumers to react to the removals.
    */
   void cleanUp();
 
