@@ -62,32 +62,25 @@ DownloadProgressListener.prototype = {
 
   onDownloadStateChange: function dlPL_onDownloadStateChange(aState, aDownload)
   {
-    var dl = getDownload(aDownload.id);
-    switch (aDownload.state) {
+    let state = aDownload.state;
+    switch (state) {
       case Ci.nsIDownloadManager.DOWNLOAD_QUEUED:
-        // We'll have at least one active download now
-        gDownloadsActiveTitle.hidden = false;
-      case Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING:
-        // if dl is non-null, the download is already added to the UI, so we
-        // just make sure it is where it is supposed to be; otherwise, create it
-        if (!dl)
-          dl = this._createDownloadItem(aDownload);
-        gDownloadsView.insertBefore(dl, gDownloadsActiveTitle.nextSibling);
+        buildActiveDownloadsList();
         break;
       case Ci.nsIDownloadManager.DOWNLOAD_FAILED:
       case Ci.nsIDownloadManager.DOWNLOAD_CANCELED:
       case Ci.nsIDownloadManager.DOWNLOAD_BLOCKED:
-        downloadCompleted(aDownload);
-        break;
       case Ci.nsIDownloadManager.DOWNLOAD_FINISHED:
         downloadCompleted(aDownload);
-        autoRemoveAndClose(aDownload);
+        if (state == Ci.nsIDownloadManager.DOWNLOAD_FINISHED)
+          autoRemoveAndClose(aDownload);
         break;
     }
 
     // autoRemoveAndClose could have already closed our window...
     try {
-      dl.setAttribute("state", aDownload.state);
+      let dl = getDownload(aDownload.id);
+      dl.setAttribute("state", state);
       updateStatus(dl);
       gDownloadViewController.onCommandUpdate();
     } catch (e) { }
@@ -98,14 +91,6 @@ DownloadProgressListener.prototype = {
                              aMaxTotalProgress, aDownload)
   {
     var download = getDownload(aDownload.id);
-    if (!download) {
-      // d'oh - why this happens is complicated, let's just add it in
-      download = this._createDownloadItem(aDownload);
-      gDownloadsView.insertBefore(download, gDownloadsActiveTitle.nextSibling);
-    }
-
-    // any activity means we should have active downloads!
-    gDownloadsActiveTitle.hidden = false;
 
     // Update this download's progressmeter
     if (aDownload.percentComplete == -1) {
@@ -147,25 +132,5 @@ DownloadProgressListener.prototype = {
 
   onSecurityChange: function(aWebProgress, aRequest, aState, aDownload)
   {
-  },
-
-  //////////////////////////////////////////////////////////////////////////////
-  //// DownloadProgressListener
-
-  _createDownloadItem: function(aDownload)
-  {
-    let uri = Cc["@mozilla.org/network/util;1"].
-              getService(Ci.nsIIOService).newFileURI(aDownload.targetFile);
-    let referrer = aDownload.referrer;
-    return createDownloadItem(aDownload.id,
-                              uri.spec,
-                              aDownload.displayName,
-                              aDownload.source.spec,
-                              aDownload.state,
-                              aDownload.percentComplete,
-                              Math.round(aDownload.startTime / 1000),
-                              referrer ? referrer.spec : null,
-                              aDownload.amountTransferred,
-                              aDownload.size);
   }
 };
