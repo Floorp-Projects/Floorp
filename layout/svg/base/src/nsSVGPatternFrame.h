@@ -137,12 +137,16 @@ protected:
                                                      **aPreserveAspectRatio);
   NS_IMETHOD GetPatternFirstChild(nsIFrame **kid);
   NS_IMETHOD GetViewBox(nsIDOMSVGRect * *aMatrix);
-  nsresult   GetPatternRect(nsIDOMSVGRect **patternRect, nsIDOMSVGRect *bbox, 
+  nsresult   GetPatternRect(nsIDOMSVGRect **patternRect,
+                            nsIDOMSVGRect *bbox,
+                            nsIDOMSVGMatrix *callerCTM,
                             nsSVGElement *content);
   gfxMatrix  GetPatternMatrix(nsIDOMSVGRect *bbox,
                               nsIDOMSVGRect *callerBBox,
                               nsIDOMSVGMatrix *callerCTM);
-  nsresult   ConstructCTM(nsIDOMSVGMatrix **ctm, nsIDOMSVGRect *callerBBox);
+  nsresult   ConstructCTM(nsIDOMSVGMatrix **ctm,
+                          nsIDOMSVGRect *callerBBox,
+                          nsIDOMSVGMatrix *callerCTM);
   nsresult   GetCallerGeometry(nsIDOMSVGMatrix **aCTM, 
                                nsIDOMSVGRect **aBBox,
                                nsSVGElement **aContent, 
