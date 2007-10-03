@@ -92,6 +92,9 @@ public:
 
 // Non-interface helpers
 
+  void
+  SetStayActive(PRBool aStayActive) { mStayActive = aStayActive; }
+
   // Called when a menu on the menu bar is clicked on. Returns a menu if one
   // needs to be closed.
   nsMenuFrame* ToggleMenuActiveState();
@@ -125,7 +128,11 @@ public:
 protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.
 
-  PRBool mIsActive; // Whether or not the menu bar is active (a menu item is highlighted or shown).
+  // flag that is temporarily set when switching from one menu on the menubar to another
+  // to indicate that the menubar should not be deactivated.
+  PRPackedBool mStayActive;
+
+  PRPackedBool mIsActive; // Whether or not the menu bar is active (a menu item is highlighted or shown).
   // The current menu that is active (highlighted), which may not be open. This will
   // be null if no menu is active.
   nsMenuFrame* mCurrentMenu;
