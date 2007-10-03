@@ -1817,6 +1817,7 @@ NSEvent* gLastDragEvent = nil;
 - (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild eventSink:(nsIEventSink*)inSink
 {
   if ((self = [super initWithFrame:inFrame])) {
+    mWindow = nil;
     mGeckoChild = inChild;
     mIsPluginView = NO;
     mCurKeyEvent = nil;
