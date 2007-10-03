@@ -1756,9 +1756,9 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
         // Hash by index of control in doc (we are not in a form)
         // These are important as they are unique, and type/name may not be.
 
-        // Note that we've already flushed content, so there's no
-        // reason to flush it again.
-        index = htmlFormControls->IndexOf(aContent, PR_FALSE);
+        // We have to flush sink notifications at this point to make
+        // sure that htmlFormControls is up to date.
+        index = htmlFormControls->IndexOf(aContent, PR_TRUE);
         if (index > -1) {
           KeyAppendInt(index, aKey);
           generatedUniqueKey = PR_TRUE;
