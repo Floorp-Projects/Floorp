@@ -50,6 +50,7 @@
 #include "nsThemeConstants.h"
 #include "nsIComponentManager.h"
 
+nsMargin                  nsNativeTheme::sButtonBorderSize(2, 2, 2, 2);
 PRUint8                   nsNativeTheme::sButtonActiveBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
 PRUint8                   nsNativeTheme::sButtonInactiveBorderStyle = NS_STYLE_BORDER_STYLE_OUTSET;
 nsILookAndFeel::nsColorID nsNativeTheme::sButtonBorderColorID = nsILookAndFeel::eColor_buttonface;
@@ -57,35 +58,25 @@ nsILookAndFeel::nsColorID nsNativeTheme::sButtonDisabledBorderColorID = nsILookA
 nsILookAndFeel::nsColorID nsNativeTheme::sButtonBGColorID = nsILookAndFeel::eColor_buttonface;
 nsILookAndFeel::nsColorID nsNativeTheme::sButtonDisabledBGColorID = nsILookAndFeel::eColor_buttonface;
 
+nsMargin                  nsNativeTheme::sTextfieldBorderSize(2, 2, 2, 2);
 PRUint8                   nsNativeTheme::sTextfieldBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
 nsILookAndFeel::nsColorID nsNativeTheme::sTextfieldBorderColorID = nsILookAndFeel::eColor_threedface;
 PRBool                    nsNativeTheme::sTextfieldBGTransparent = PR_FALSE;
 nsILookAndFeel::nsColorID nsNativeTheme::sTextfieldBGColorID = nsILookAndFeel::eColor__moz_field;
 nsILookAndFeel::nsColorID nsNativeTheme::sTextfieldDisabledBGColorID = nsILookAndFeel::eColor_threedface;
 
+nsMargin                  nsNativeTheme::sListboxBorderSize(2, 2, 2, 2);
 PRUint8                   nsNativeTheme::sListboxBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
 nsILookAndFeel::nsColorID nsNativeTheme::sListboxBorderColorID = nsILookAndFeel::eColor_threedface;
 nsILookAndFeel::nsColorID nsNativeTheme::sListboxBGColorID = nsILookAndFeel::eColor__moz_field;
 nsILookAndFeel::nsColorID nsNativeTheme::sListboxDisabledBGColorID = nsILookAndFeel::eColor_threedface;
 
+nsMargin                  nsNativeTheme::sComboboxBorderSize(2, 2, 2, 2);
 PRUint8                   nsNativeTheme::sComboboxBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
 nsILookAndFeel::nsColorID nsNativeTheme::sComboboxBorderColorID = nsILookAndFeel::eColor_threedface;
 PRBool                    nsNativeTheme::sComboboxBGTransparent = PR_FALSE;
 nsILookAndFeel::nsColorID nsNativeTheme::sComboboxBGColorID = nsILookAndFeel::eColor__moz_field;
 nsILookAndFeel::nsColorID nsNativeTheme::sComboboxDisabledBGColorID = nsILookAndFeel::eColor_threedface;
-
-#ifdef MOZ_WIDGET_GTK2
-// Cross-platform assumptions are evil. GTK seems to give 3px border on every widget.
-nsMargin                  nsNativeTheme::sTextfieldBorderSize(3, 3, 3, 3);
-nsMargin                  nsNativeTheme::sListboxBorderSize(3, 3, 3, 3);
-nsMargin                  nsNativeTheme::sComboboxBorderSize(3, 3, 3, 3);
-nsMargin                  nsNativeTheme::sButtonBorderSize(3, 3, 3, 3);
-#else
-nsMargin                  nsNativeTheme::sTextfieldBorderSize(2, 2, 2, 2);
-nsMargin                  nsNativeTheme::sListboxBorderSize(2, 2, 2, 2);
-nsMargin                  nsNativeTheme::sComboboxBorderSize(2, 2, 2, 2);
-nsMargin                  nsNativeTheme::sButtonBorderSize(2, 2, 2, 2);
-#endif
 
 nsNativeTheme::nsNativeTheme()
 {
