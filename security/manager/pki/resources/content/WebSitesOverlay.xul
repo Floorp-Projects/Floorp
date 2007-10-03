@@ -100,6 +100,10 @@
               label="&certmgr.delete2.label;"
               accesskey="&certmgr.delete.accesskey;"
               disabled="true" oncommand="deleteCerts();"/>
+      <button id="websites_exceptionButton"
+              label="&certmgr.addException.label;"
+              accesskey="&certmgr.addException.accesskey;"
+              oncommand="addException();"/>
     </hbox>
   </vbox>
 </overlay>

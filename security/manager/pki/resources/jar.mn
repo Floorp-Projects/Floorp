@@ -31,6 +31,8 @@ pippki.jar:
     content/pippki/editemailcert.xul         (content/editemailcert.xul)
     content/pippki/editsslcert.xul           (content/editsslcert.xul)
     content/pippki/editcerts.js              (content/editcerts.js)
+    content/pippki/exceptionDialog.xul       (content/exceptionDialog.xul)
+    content/pippki/exceptionDialog.js       (content/exceptionDialog.js)
     content/pippki/deletecert.xul            (content/deletecert.xul)
     content/pippki/deletecert.js             (content/deletecert.js)
     content/pippki/viewCertDetails.js        (content/viewCertDetails.js)
