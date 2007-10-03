@@ -1731,7 +1731,7 @@ function getShortcutOrURI(aURL, aPostDataRef) {
 
     var encodedParam = "";
     if (charset)
-      encodedParam = escape(converFromUnicode(charset, param));
+      encodedParam = escape(convertFromUnicode(charset, param));
     else // Default charset is UTF-8
       encodedParam = encodeURIComponent(param);
 
