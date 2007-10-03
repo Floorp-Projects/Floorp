@@ -224,7 +224,14 @@ nsContainerFrame::RemoveFrame(nsIAtom*  aListName,
       //      check the overflow lists atm, but we'll need a prescontext lookup
       //      for overflow containers once we can split abspos elements with
       //      inline containing blocks.
-      parent->mFrames.DestroyFrame(aOldFrame);
+      if (parent == this) {
+        parent->mFrames.DestroyFrame(aOldFrame);
+      } else {
+        // This recursive call takes care of all continuations after aOldFrame,
+        // so we don't need to loop anymore.
+        parent->RemoveFrame(nsnull, aOldFrame);
+        break;
+      }
       aOldFrame = oldFrameNextContinuation;
       if (aOldFrame) {
         parent = static_cast<nsContainerFrame*>(aOldFrame->GetParent());

@@ -9385,6 +9385,7 @@ static void UnregisterPlaceholderChain(nsFrameManager* frameManager,
   nsPlaceholderFrame* curFrame = placeholderFrame;
   do {
     frameManager->UnregisterPlaceholderFrame(curFrame);
+    curFrame->SetOutOfFlowFrame(nsnull);
     curFrame = static_cast<nsPlaceholderFrame*>(curFrame->GetNextContinuation());
   } while (curFrame);
 }
