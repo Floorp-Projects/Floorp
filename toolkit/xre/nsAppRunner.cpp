@@ -273,6 +273,7 @@ static char **gRestartArgv;
 
 #if defined(MOZ_WIDGET_GTK2)
 #include <gtk/gtk.h>
+#include <gdk/gdkx.h>
 #include "nsGTKToolkit.h"
 #endif
 
@@ -2364,7 +2365,25 @@ static nsGTKToolkit* GetGTKToolkit()
   return static_cast<nsGTKToolkit*>(toolkit);
 }
 
-#endif
+static void MOZ_gdk_display_close(GdkDisplay *display)
+{
+  // gdk_display_close was broken prior to gtk+-2.10.0.
+  // (http://bugzilla.gnome.org/show_bug.cgi?id=85715)
+  // gdk_display_manager_set_default_display (gdk_display_manager_get(), NULL)
+  // was also broken.
+  if(gtk_check_version(2,10,0) != NULL) {
+    // Version check failed - broken gdk_display_close.
+    //
+    // Let the gdk structures leak but at least close the Display,
+    // assuming that gdk will not use it again.
+    Display* dpy = GDK_DISPLAY_XDISPLAY(display);
+    XCloseDisplay(dpy);
+  }
+  else {
+    gdk_display_close(display);
+  }
+}
+#endif // MOZ_WIDGET_GTK2
 
 /** 
  * NSPR will search for the "nspr_use_zone_allocator" symbol throughout
@@ -3214,7 +3233,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif
 
 #ifdef MOZ_WIDGET_GTK2
-      gdk_display_close(display);
+      MOZ_gdk_display_close(display);
 #endif
 
       rv = LaunchChild(nativeApp, appInitiatedRestart, upgraded ? -1 : 0);
@@ -3230,7 +3249,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #ifdef MOZ_WIDGET_GTK2
     // gdk_display_close also calls gdk_display_manager_set_default_display
     // appropriately when necessary.
-    gdk_display_close(display);
+    MOZ_gdk_display_close(display);
 #endif
   }
 
