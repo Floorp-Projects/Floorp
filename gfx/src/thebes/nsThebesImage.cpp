@@ -48,6 +48,15 @@
 
 static PRBool gDisableOptimize = PR_FALSE;
 
+#ifdef XP_WIN
+static PRUint32 gTotalDDBs = 0;
+static PRUint32 gTotalDDBSize = 0;
+// only use up a maximum of 64MB in DDBs
+#define kMaxDDBSize (64*1024*1024)
+// and don't let anything in that's bigger than 4MB
+#define kMaxSingleDDBSize (4*1024*1024)
+#endif
+
 NS_IMPL_ISUPPORTS1(nsThebesImage, nsIImage)
 
 nsThebesImage::nsThebesImage()
@@ -66,6 +75,10 @@ nsThebesImage::nsThebesImage()
         }
         hasCheckedOptimize = PR_TRUE;
     }
+
+#ifdef XP_WIN
+    mIsDDBSurface = PR_FALSE;
+#endif
 }
 
 nsresult
@@ -127,6 +140,12 @@ nsThebesImage::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequi
 
 nsThebesImage::~nsThebesImage()
 {
+#ifdef XP_WIN
+    if (mIsDDBSurface) {
+        gTotalDDBs--;
+        gTotalDDBSize -= mWidth*mHeight*4;
+    }
+#endif
 }
 
 PRInt32
@@ -241,12 +260,31 @@ nsThebesImage::Optimize(nsIDeviceContext* aContext)
     // as we can.
     if (mWinSurface) {
         // Don't do DDBs for large images; see bug 359147
-        // We use 1024 as a reasonable sized maximum; the real fix
-        // will be to make sure we don't ever make a DDB that's bigger
-        // than the primary screen size (rule of thumb).
-        if (mWidth <= 1024 && mHeight <= 1024) {
+        // Note that we bother with DDBs at all because they are much faster
+        // on some systems; on others there isn't much of a speed difference
+        // between DIBs and DDBs.
+        //
+        // Originally this just limited to 1024x1024; but that still
+        // had us hitting overall total memory usage limits (which was
+        // around 220MB on my intel shared memory system with 2GB RAM
+        // and 16-128mb in use by the video card, so I can't make
+        // heads or tails out of this limit).
+        //
+        // So instead, we clamp the max size to 64MB (this limit shuld
+        // be made dynamic based on.. something.. as soon a we figure
+        // out that something) and also limit each individual image to
+        // be less than 4MB to keep very large images out of DDBs.
+
+        // assume (almost -- we don't quadword-align) worst-case size
+        PRUint32 ddbSize = mWidth * mHeight * 4;
+        if (ddbSize <= kMaxSingleDDBSize &&
+            ddbSize + gTotalDDBSize <= kMaxDDBSize)
+        {
             nsRefPtr<gfxWindowsSurface> wsurf = mWinSurface->OptimizeToDDB(nsnull, gfxIntSize(mWidth, mHeight), mFormat);
             if (wsurf) {
+                gTotalDDBs++;
+                gTotalDDBSize += ddbSize;
+                mIsDDBSurface = PR_TRUE;
                 mOptSurface = wsurf;
             }
         }
