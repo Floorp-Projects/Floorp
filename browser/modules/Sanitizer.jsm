@@ -102,7 +102,7 @@ Sanitizer.prototype = {
         var cookieMgr = Components.classes["@mozilla.org/cookiemanager;1"]
                                   .getService(Components.interfaces.nsICookieManager);
         return cookieMgr.enumerator.hasMoreElements();
-      },
+      }
     },
     
     history: {
@@ -124,7 +124,7 @@ Sanitizer.prototype = {
         var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
                                       .getService(Components.interfaces.nsIBrowserHistory);
         return globalHistory.count != 0;
-      },
+      }
     },
     
     formdata: {
@@ -140,7 +140,7 @@ Sanitizer.prototype = {
         var formHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
                                     .getService(Components.interfaces.nsIFormHistory);
         return formHistory.rowCount != 0;
-      },
+      }
     },
     
     downloads: {
@@ -156,7 +156,7 @@ Sanitizer.prototype = {
         var dlMgr = Components.classes["@mozilla.org/download-manager;1"]
                               .getService(Components.interfaces.nsIDownloadManager);
         return dlMgr.canCleanUp;
-      },
+      }
     },
     
     passwords: {
@@ -180,8 +180,8 @@ Sanitizer.prototype = {
         var pwmgr = Components.classes["@mozilla.org/passwordmanager;1"]
                               .getService(Components.interfaces.nsIPasswordManager);
         return pwmgr.enumerator.hasMoreElements();
-      },
-    },
-  },
+      }
+    }
+  }
 };
 
