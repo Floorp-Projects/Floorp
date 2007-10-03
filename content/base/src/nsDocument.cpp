@@ -1093,7 +1093,7 @@ nsDocument::Init()
   mRadioGroups.Init();
 
   // Force initialization.
-  nsBindingManager *bindingManager = new nsBindingManager();
+  nsBindingManager *bindingManager = new nsBindingManager(this);
   NS_ENSURE_TRUE(bindingManager, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(mBindingManager = bindingManager);
 
