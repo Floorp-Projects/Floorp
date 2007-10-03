@@ -361,7 +361,7 @@ NS_IMETHODIMP imgContainer::StopAnimation()
 NS_IMETHODIMP imgContainer::ResetAnimation()
 {
   if (mAnimationMode == kDontAnimMode || 
-      !mAnim || mAnim->currentAnimationFrameIndex)
+      !mAnim || mAnim->currentAnimationFrameIndex == 0)
     return NS_OK;
 
   PRBool oldAnimating = mAnim->animating;
