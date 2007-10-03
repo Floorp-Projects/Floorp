@@ -21,6 +21,7 @@
 #
 # Contributor(s):
 #   Ben Goodger <ben@bengoodger.com>
+#   Myk Melez <myk@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,25 +38,5 @@
 # ***** END LICENSE BLOCK *****
 -->
 
-<!ENTITY  intro.label                 "You have chosen to open">
-<!ENTITY  from.label                  "from:">
-<!ENTITY  actionQuestion.label        "What should &brandShortName; do with this file?">
-
-<!ENTITY  openWith.label              "Open with">
-<!ENTITY  openWith.accesskey          "o">
-<!ENTITY  other.label                 "Other...">
-
-<!ENTITY  saveFile.label              "Save File">
-<!ENTITY  saveFile.accesskey          "s">
-
-<!ENTITY  rememberChoice.label        "Do this automatically for files like this from now on.">
-<!ENTITY  rememberChoice.accesskey    "a">
-
-<!ENTITY  whichIsA.label              "which is a:">
-
-<!ENTITY  chooseHandlerMac.label      "Choose...">
-<!ENTITY  chooseHandlerMac.accesskey  "C">
-<!ENTITY  chooseHandler.label         "Browse...">
-<!ENTITY  chooseHandler.accesskey     "B">
-
-<!ENTITY  unknownPromptText.label     "Would you like to save this file?">
+<!ENTITY  settingsChangePreferences.label  "Settings can be changed using the Applications tab in &brandShortName;'s Preferences.">
+<!ENTITY  settingsChangeOptions.label      "Settings can be changed using the Applications tab in &brandShortName;'s Options.">
