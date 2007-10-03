@@ -1,6 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,15 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Communicator.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Red Hat, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bob Relyea <rrelyea@redhat.com>
+ *   Kai Engert <kengert@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,27 +35,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIX509Cert.idl"
+#include "nsNSSCleaner.h"
+#include "cert.h"
 
-interface nsIArray;
-interface nsIASN1Object;
+CERTVerifyLogContentsCleaner::CERTVerifyLogContentsCleaner(CERTVerifyLog *&cvl)
+:m_cvl(cvl)
+{
+}
 
-%{ C++
- /* forward declaration */
- typedef struct CERTCertificateStr CERTCertificate;
-%}
-[ptr] native CERTCertificatePtr(CERTCertificate);
+CERTVerifyLogContentsCleaner::~CERTVerifyLogContentsCleaner()
+{
+  if (!m_cvl)
+    return;
 
-/**
- * This represents additional interfaces to X.509 certificates
- */
-[scriptable, uuid(5b62c61c-f898-4dab-8ace-51109bb459b4)]
-interface nsIX509Cert2 : nsIX509Cert {
-  /**
-   *  Additional constants to classify the type of a certificate.
-   */
-  const unsigned long ANY_CERT  = 0xffff;
-  readonly attribute unsigned long certType;
-  void markForPermDeletion();
-  [notxpcom, noscript] CERTCertificatePtr getCert();
-};
+  CERTVerifyLogNode *i_node;
+  for (i_node = m_cvl->head; i_node; i_node = i_node->next)
+  {
+    if (i_node->cert)
+      CERT_DestroyCertificate(i_node->cert);
+  }
+}
+

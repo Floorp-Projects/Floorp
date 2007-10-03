@@ -35,19 +35,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIX509Cert2.idl"
 
-interface nsIX509Cert;
 interface nsICertVerificationListener;
 
 /**
  * Extending nsIX509Cert
- * 
- * TODO: nsIX509Cert3 should be derived from nsIX509Cert2
- *       (and nsIX509Cert2 derived from nsIX509Cert)
  */
-[scriptable, uuid(89d9f248-1160-4935-9f99-2bdbf67b5849)]
-interface nsIX509Cert3 : nsISupports {
+[scriptable, uuid(1362ffab-a683-4504-8038-25ce63b45370)]
+interface nsIX509Cert3 : nsIX509Cert2 {
 
   /**
    *  Constants for specifying the chain mode when exporting a certificate

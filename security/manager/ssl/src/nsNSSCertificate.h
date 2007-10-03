@@ -59,9 +59,7 @@ class nsINSSComponent;
 class nsIASN1Sequence;
 
 /* Certificate */
-class nsNSSCertificate : public nsIX509Cert,
-                         public nsIX509Cert2,
-                         public nsIX509Cert3,
+class nsNSSCertificate : public nsIX509Cert3,
                          public nsISMimeCert,
                          public nsISerializable,
                          public nsIClassInfo,
