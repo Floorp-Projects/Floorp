@@ -70,7 +70,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIMUTATIONOBSERVER
 
-  nsBindingManager();
+  nsBindingManager(nsIDocument* aDocument);
   ~nsBindingManager();
 
   nsXBLBinding* GetBinding(nsIContent* aContent);
@@ -291,6 +291,9 @@ protected:
   // Our posted event to process the attached queue, if any
   friend class nsRunnableMethod<nsBindingManager>;
   nsCOMPtr<nsIRunnable> mProcessAttachedQueueEvent;
+
+  // Our document.  This is a weak ref; the document owns us
+  nsIDocument* mDocument; 
 };
 
 #endif
