@@ -98,50 +98,9 @@ Sanitizer.prototype = {
         const ci = Components.interfaces;
         var cacheService = cc["@mozilla.org/network/cache-service;1"]
                              .getService(ci.nsICacheService);
-
-        // Here we play dirty, trying to brutally wipe out all the cache files 
-        // even if the disk cache device has gone away (if it is still with us,
-        // our removal attempt will fail because the directory is locked,
-        // and we fall back to the "nice" way below)
-        
-        var cacheDir;
-        // Look at nsCacheProfilePrefObserver::ReadPrefs()
-        // and nsDiskCacheDevice::SetCacheParentDirectory()
-        // for details on how we guess the cache directory
         try {
-          cacheDir = cc["@mozilla.org/preferences-service;1"]
-                       .getService(ci.nsIPrefBranch)
-                       .getComplexValue("browser.cache.disk.parent_directory",
-                                        ci.nsILocalFile);
-        } catch(er) {
-          const dirServ = cc["@mozilla.org/file/directory_service;1"]
-                            .getService(ci.nsIProperties);
-          try {
-            cacheDir = dirServ.get("cachePDir",ci.nsILocalFile);
-          } catch(er) {
-            cacheDir = dirServ.get("ProfLD",ci.nsILocalFile);
-          }
-        }
-        
-        if (cacheDir) {
-          // Here we try to prevent the "phantom Cache.Trash" issue
-          // reported in bug #296256
-          cacheDir.append("Cache.Trash");
-          try {
-            cacheDir.remove(true);
-          } catch(er) {}
-          cacheDir = cacheDir.parent;
-          cacheDir.append("Cache");
-          try {
-           cacheDir.remove(true);
-          } catch(er) {}
-        }
-        
-        try {
-          // The "nice" way
           cacheService.evictEntries(ci.nsICache.STORE_ANYWHERE);
         } catch(er) {}
-        
       },
       
       get canClear()
