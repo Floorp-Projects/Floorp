@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Ian McGreer <mcgreer@netscape.com>
+ *   Kai Engert <kengert@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -43,15 +44,23 @@
 interface nsINSSCertCache;
 interface nsIX509Cert;
 
-[scriptable, uuid(4ea60761-31d6-491d-9e34-4b53a26c416c)]
+[scriptable, uuid(d0180863-606e-49e6-8324-cf45ed4dd891)]
+interface nsICertTreeItem : nsISupports {
+  readonly attribute nsIX509Cert cert;
+  readonly attribute AString hostPort;
+};
+
+[scriptable, uuid(a8cd1c89-a901-4735-831b-7198b7b8b6b1)]
 interface nsICertTree : nsITreeView {
 
   void loadCerts(in unsigned long type);
   void loadCertsFromCache(in nsINSSCertCache cache, in unsigned long type);
 
   nsIX509Cert getCert(in unsigned long index);
+  nsICertTreeItem getTreeItem(in unsigned long index);
+  boolean isHostPortOverride(in unsigned long index);
   
-  void removeCert(in unsigned long index);
+  void deleteEntryObject(in unsigned long index);
 };
 
 %{C++
