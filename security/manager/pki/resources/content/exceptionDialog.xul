@@ -73,7 +73,7 @@
   </hbox>
 
   <groupbox id="locationGroupBox">
-    <caption label="&exceptionMgr.certlocation.caption;"/>
+    <caption label="&exceptionMgr.certlocation.caption2;"/>
     <hbox align="center">
       <label control="locationTextBox" value="&exceptionMgr.certlocation.url;"/>
       <textbox id="locationTextBox" flex="1" oninput="handleTextChange();" value="https://"/>
