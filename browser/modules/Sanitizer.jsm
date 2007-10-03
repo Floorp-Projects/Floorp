@@ -155,16 +155,7 @@ Sanitizer.prototype = {
       {
         var cookieMgr = Components.classes["@mozilla.org/cookiemanager;1"]
                                   .getService(Components.interfaces.nsICookieManager);
-        var e = cookieMgr.enumerator;
-        var cookies = [];
-        var cookie;
-        while (e.hasMoreElements()) {
-          cookie = e.getNext().QueryInterface(Components.interfaces.nsICookie);
-          cookies.push(cookie);
-        }
-
-        for (var i = 0; i < cookies.length; ++i)
-          cookieMgr.remove(cookies[i].host, cookies[i].name, cookies[i].path, false);
+        cookieMgr.removeAll();
       },
       
       get canClear()
