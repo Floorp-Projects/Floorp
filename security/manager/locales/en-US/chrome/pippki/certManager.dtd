@@ -39,7 +39,7 @@
 
 <!ENTITY certmgr.tab.mine                     "Your Certificates">
 <!ENTITY certmgr.tab.others                   "Other People's">
-<!ENTITY certmgr.tab.websites2                "Internet Sites">
+<!ENTITY certmgr.tab.websites3                "Servers">
 <!ENTITY certmgr.tab.ca                       "Authorities">
 <!ENTITY certmgr.tab.orphan                   "Extra">
 
@@ -134,7 +134,7 @@
 <!ENTITY exceptionMgr.title                   "Add Security Exception">
 <!ENTITY exceptionMgr.exceptionButton         "Confirm Security Exception">
 <!ENTITY exceptionMgr.supplementalWarning     "Legitimate banks, stores, and other public sites will not ask you to do this.">
-<!ENTITY exceptionMgr.certlocation.caption    "Internet Site">
+<!ENTITY exceptionMgr.certlocation.caption2   "Server">
 <!ENTITY exceptionMgr.certlocation.url        "Location:">
 <!ENTITY exceptionMgr.certlocation.download   "Get Certificate">
 <!ENTITY exceptionMgr.certstatus.caption      "Certificate Status">
