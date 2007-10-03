@@ -97,6 +97,9 @@ const PREF_FEED_SELECTED_READER = "browser.feeds.handler.default";
 // identifying the "use plugin" action, so we use this constant instead.
 const kActionUsePlugin = 5;
 
+const ICON_URL_PLUGIN   = "chrome://browser/skin/preferences/plugin.png";
+const ICON_URL_LIVEMARK = "chrome://browser/skin/page-livemarks.png";
+const ICON_URL_APP      = "chrome://browser/skin/preferences/application.png";
 
 //****************************************************************************//
 // Utilities
@@ -913,7 +916,8 @@ var gApplicationsPane = {
       let item = document.createElement("richlistitem");
       item.setAttribute("type", visibleType.type);
       item.setAttribute("typeDescription", visibleType.description);
-      item.setAttribute("typeIcon", visibleType.smallIcon);
+      if (visibleType.smallIcon)
+        item.setAttribute("typeIcon", visibleType.smallIcon);
       item.setAttribute("actionDescription",
                         this._describePreferredAction(visibleType));
       item.setAttribute("actionIcon",
@@ -1115,7 +1119,7 @@ var gApplicationsPane = {
       label = this._prefsBundle.getFormattedString("liveBookmarksInApp",
                                                    [this._brandShortName]);
       menuItem.setAttribute("label", label);
-      menuItem.setAttribute("image", "chrome://browser/skin/page-livemarks.png");
+      menuItem.setAttribute("image", ICON_URL_LIVEMARK);
       menuPopup.appendChild(menuItem);
       if (handlerInfo.preferredAction == Ci.nsIHandlerInfo.handleInternally)
         menu.selectedItem = menuItem;
@@ -1131,12 +1135,7 @@ var gApplicationsPane = {
       let menuItem = document.createElementNS(kXULNS, "menuitem");
       menuItem.setAttribute("action", Ci.nsIHandlerInfo.useSystemDefault);
       menuItem.setAttribute("label", handlerInfo.defaultDescription);
-
-      if (handlerInfo.wrappedHandlerInfo) {
-        let iconURL =
-          this._getIconURLForSystemDefault(handlerInfo.wrappedHandlerInfo);
-        menuItem.setAttribute("image", iconURL);
-      }
+      menuItem.setAttribute("image", this._getIconURLForSystemDefault(handlerInfo));
 
       menuPopup.appendChild(menuItem);
       if (handlerInfo.preferredAction == Ci.nsIHandlerInfo.useSystemDefault)
@@ -1181,6 +1180,7 @@ var gApplicationsPane = {
                                                        [handlerInfo.plugin.name,
                                                         this._brandShortName]);
       menuItem.setAttribute("label", label);
+      menuItem.setAttribute("image", ICON_URL_PLUGIN);
       menuPopup.appendChild(menuItem);
       if (handlerInfo.preferredAction == kActionUsePlugin)
         menu.selectedItem = menuItem;
@@ -1354,10 +1354,11 @@ var gApplicationsPane = {
 
     handlerInfo.store();
 
-    // Update the action label so it says the right thing once this type item
-    // is no longer selected.
+    // Update the action label and image to reflect the new preferred action.
     typeItem.setAttribute("actionDescription",
                           this._describePreferredAction(handlerInfo));
+    typeItem.setAttribute("actionIcon",
+                          this._getIconURLForPreferredAction(handlerInfo));
   },
 
   chooseApp: function(aEvent) {
@@ -1414,15 +1415,24 @@ var gApplicationsPane = {
   },
 
   _getIconURLForPreferredAction: function(aHandlerInfo) {
-    var preferredApp = aHandlerInfo.preferredApplicationHandler;
+    switch (aHandlerInfo.preferredAction) {
+      case Ci.nsIHandlerInfo.handleInternally:
+        if (aHandlerInfo.type == TYPE_MAYBE_FEED)
+          return ICON_URL_LIVEMARK;
+        break;
 
-    if (aHandlerInfo.preferredAction == Ci.nsIHandlerInfo.useHelperApp &&
-        this.isValidHandlerApp(preferredApp))
-      return this._getIconURLForHandlerApp(preferredApp);
+      case Ci.nsIHandlerInfo.useSystemDefault:
+        return this._getIconURLForSystemDefault(aHandlerInfo);
 
-    if (aHandlerInfo.preferredAction == Ci.nsIHandlerInfo.useSystemDefault &&
-        aHandlerInfo.wrappedHandlerInfo)
-      return this._getIconURLForSystemDefault(aHandlerInfo.wrappedHandlerInfo);
+      case Ci.nsIHandlerInfo.useHelperApp:
+        let preferredApp = aHandlerInfo.preferredApplicationHandler;
+        if (this.isValidHandlerApp(preferredApp))
+          return this._getIconURLForHandlerApp(preferredApp);
+        break;
+
+      case kActionUsePlugin:
+        return ICON_URL_PLUGIN;
+    }
 
     // We don't know how to get an icon URL for any other actions.
     return "";
@@ -1467,22 +1477,27 @@ var gApplicationsPane = {
   },
 
   _getIconURLForSystemDefault: function(aHandlerInfo) {
-    // Handler info objects for MIME types on Windows implement a property
-    // bag interface from which we can get an icon for the default app, so if
-    // we're dealing with a MIME type on Windows, then try to get the icon.
-    if (aHandlerInfo instanceof Ci.nsIMIMEInfo &&
-        aHandlerInfo instanceof Ci.nsIPropertyBag) {
-      try {
-        let url = aHandlerInfo.getProperty("defaultApplicationIconURL");
-        if (url)
-          return url + "?size=16";
+    // Handler info objects for MIME types on some OSes implement a property bag
+    // interface from which we can get an icon for the default app, so if we're
+    // dealing with a MIME type on one of those OSes, then try to get the icon.
+    if ("wrappedHandlerInfo" in aHandlerInfo) {
+      let wrappedHandlerInfo = aHandlerInfo.wrappedHandlerInfo;
+
+      if (wrappedHandlerInfo instanceof Ci.nsIMIMEInfo &&
+          wrappedHandlerInfo instanceof Ci.nsIPropertyBag) {
+        try {
+          let url = wrappedHandlerInfo.getProperty("defaultApplicationIconURL");
+          if (url)
+            return url + "?size=16";
+        }
+        catch(ex) {}
       }
-      catch(ex) {}
     }
 
-    // We don't know how to get an icon URL on any other OSes or for any other
-    // classes of content type.
-    return "";
+    // If this isn't a MIME type object on an OS that supports retrieving
+    // the icon, or if we couldn't retrieve the icon for some other reason,
+    // then use a generic icon.
+    return ICON_URL_APP;
   }
 
 };
