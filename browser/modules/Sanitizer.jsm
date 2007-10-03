@@ -50,13 +50,11 @@ Sanitizer.prototype = {
   _prefDomain: "privacy.item.",
   getNameFromPreference: function (aPreferenceName)
   {
-    dump("*** " + aPreferenceName + ", i = " + this._prefDomain.length + ", sub = " + aPreferenceName.substr(this._prefDomain.length, -1) + "\n");
     return aPreferenceName.substr(this._prefDomain.length);
   },
   
   sanitize: function ()
   {
-    dump("*** sanitizing!\n");
     var psvc = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefService);
     var branch = psvc.getBranch(this._prefDomain);
