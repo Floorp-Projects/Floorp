@@ -16,12 +16,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Red Hat, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2006
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bob Relyea <rrelyea@redhat.com>
+ *   Kai Engert <kengert@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,27 +37,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIX509Cert.idl"
+#include "nsISSLStatus.h"
 
-interface nsIArray;
-interface nsIASN1Object;
+#include "nsAutoPtr.h"
+#include "nsXPIDLString.h"
+#include "nsIX509Cert.h"
 
-%{ C++
- /* forward declaration */
- typedef struct CERTCertificateStr CERTCertificate;
-%}
-[ptr] native CERTCertificatePtr(CERTCertificate);
+class nsSSLStatus
+  : public nsISSLStatus
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISSLSTATUS
 
-/**
- * This represents additional interfaces to X.509 certificates
- */
-[scriptable, uuid(5b62c61c-f898-4dab-8ace-51109bb459b4)]
-interface nsIX509Cert2 : nsIX509Cert {
-  /**
-   *  Additional constants to classify the type of a certificate.
-   */
-  const unsigned long ANY_CERT  = 0xffff;
-  readonly attribute unsigned long certType;
-  void markForPermDeletion();
-  [notxpcom, noscript] CERTCertificatePtr getCert();
+  nsSSLStatus();
+  virtual ~nsSSLStatus();
+
+  /* public for initilization in this file */
+  nsCOMPtr<nsIX509Cert> mServerCert;
+
+  PRUint32 mKeyLength;
+  PRUint32 mSecretKeyLength;
+  nsXPIDLCString mCipherName;
+
+  PRBool mIsDomainMismatch;
+  PRBool mIsNotValidAtThisTime;
+  PRBool mIsUntrusted;
+
+  PRBool mHaveKeyLengthAndCipher;
+  PRBool mHaveCertStatus;
 };

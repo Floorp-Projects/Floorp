@@ -16,12 +16,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Red Hat, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bob Relyea <rrelyea@redhat.com>
+ *   Kai Engert <kengert@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,27 +37,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIX509Cert.idl"
+#include "nsISupports.idl"
 
-interface nsIArray;
-interface nsIASN1Object;
-
-%{ C++
- /* forward declaration */
- typedef struct CERTCertificateStr CERTCertificate;
-%}
-[ptr] native CERTCertificatePtr(CERTCertificate);
+interface nsISSLStatus;
+interface nsIInterfaceRequestor;
 
 /**
- * This represents additional interfaces to X.509 certificates
+ * A mechanism to report a broken SSL status. The recipient should NOT block.
+ * Can be used to obtain the SSL handshake status of a connection
+ * that will be canceled because of improper cert status.
  */
-[scriptable, uuid(5b62c61c-f898-4dab-8ace-51109bb459b4)]
-interface nsIX509Cert2 : nsIX509Cert {
+[scriptable, uuid(2c3d268c-ad82-49f3-99aa-e9ffddd7a0dc)]
+interface nsIBadCertListener2 : nsISupports {
+
   /**
-   *  Additional constants to classify the type of a certificate.
+   *  @param socketInfo A network communication context that can be used to obtain more information
+   *                    about the active connection.
+   *  @param cert The certificate that is not trusted and that is having the problem.
+   *  @param targetSite The Site name that was used to open the current connection.
+   *
+   *  @return The consumer shall return true if it wants to suppress the error message
+   *          related to the bad cert (the connection will still get canceled).
    */
-  const unsigned long ANY_CERT  = 0xffff;
-  readonly attribute unsigned long certType;
-  void markForPermDeletion();
-  [notxpcom, noscript] CERTCertificatePtr getCert();
+  boolean notifyCertProblem(in nsIInterfaceRequestor socketInfo, 
+                            in nsISSLStatus status,
+                            in AUTF8String targetSite);
 };

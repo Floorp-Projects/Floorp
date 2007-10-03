@@ -124,4 +124,15 @@ public:                                            \
   void detach() {object=nsnull;}                   \
 };
 
+#include "certt.h"
+
+class CERTVerifyLogContentsCleaner
+{
+public:
+  CERTVerifyLogContentsCleaner(CERTVerifyLog *&cvl);
+  ~CERTVerifyLogContentsCleaner();
+private:
+  CERTVerifyLog *&m_cvl;
+};
+
 #endif

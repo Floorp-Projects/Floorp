@@ -22,6 +22,7 @@
    - Contributor(s):
    -   Bob Lord <lord@netscape.com>
    -   Ian McGreer <mcgreer@netscape.com>
+   -   Kai Engert <kengert@redhat.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,6 +56,14 @@
         <treecol id="certcol" label="&certmgr.certname;" primary="true" 
                      persist="hidden width ordinal" flex="1"/>
         <splitter class="tree-splitter"/>
+        <treecol id="sitecol" label="&certmgr.certsite;" 
+                 persist="hidden width ordinal" flex="1"/>
+        <splitter class="tree-splitter"/>
+<!-- this is too geeky, leave out for now
+        <treecol id="overridetypecol" label="&certmgr.typesofoverrides;" 
+                 persist="hidden width ordinal" flex="1"/>
+        <splitter class="tree-splitter"/>
+-->
 <!-- disable the purposes column until we get a solution
      to fill in this information that is compatible with OCSP
      and does not block the whole interface

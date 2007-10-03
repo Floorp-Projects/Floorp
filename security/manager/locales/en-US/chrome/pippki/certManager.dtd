@@ -93,6 +93,8 @@
 <!ENTITY certmgr.deleteusercert.aftername     "Once you have deleted this certificate, you will not be able to read mail that has been encrypted with it.">
 
 <!ENTITY certmgr.certname                     "Certificate Name">
+<!ENTITY certmgr.certsite                     "Site">
+<!ENTITY certmgr.typesofoverrides             "Exceptions">
 <!ENTITY certmgr.tokenname                    "Security Device">
 <!ENTITY certmgr.purpose                      "Purposes">
 <!ENTITY certmgr.issued                       "Issued On">
