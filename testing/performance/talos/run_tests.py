@@ -90,12 +90,14 @@ def send_to_csv(csv_file, results):
   for res in results:
     browser_dump, counter_dump = results[res]
     writer = csv.writer(open(csv_file + '_' +  res, "wb"))
-    if res == 'ts':
+    if res in ('ts', 'twinopen'):
       i = 0
       writer.writerow(['i', 'val'])
       for val in browser_dump:
-        writer.writerow([i, val])
-        i += 1
+        val_list = val.split('|')
+        for v in val_list:
+          writer.writerow([i, v])
+          i += 1
     else:
       writer.writerow(['i', 'page', 'median', 'mean', 'min' , 'max', 'runs'])
       for bd in browser_dump:
@@ -165,11 +167,13 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
     browser_dump, counter_dump = results[res]
     filename = tempfile.mktemp()
     tmpf = open(filename, "w")
-    if res == 'ts':
+    if res in ('ts', 'twinopen'):
        i = 0
        for val in browser_dump:
-         tmpf.write(result_format % (float(val), res, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", "ms"))
-         i += 1
+        val_list = val.split('|')
+        for v in val_list:
+          tmpf.write(result_format % (float(v), res, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", "ms"))
+          i += 1
     else:
       # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
       name = ''
