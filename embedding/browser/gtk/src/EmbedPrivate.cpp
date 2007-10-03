@@ -314,20 +314,6 @@ static const nsModuleComponentInfo defaultAppComps[] = {
   {
     EMBED_CERTIFICATES_DESCRIPTION,
     EMBED_CERTIFICATES_CID,
-    NS_BADCERTLISTENER_CONTRACTID,
-    EmbedCertificatesConstructor
-  },
-#ifdef BAD_CERT_LISTENER2
-  {
-    EMBED_CERTIFICATES_DESCRIPTION,
-    EMBED_CERTIFICATES_CID,
-    NS_BADCERTLISTENER2_CONTRACTID,
-    EmbedCertificatesConstructor
-  },
-#endif
-  {
-    EMBED_CERTIFICATES_DESCRIPTION,
-    EMBED_CERTIFICATES_CID,
     NS_CERTIFICATEDIALOGS_CONTRACTID,
     EmbedCertificatesConstructor
   },

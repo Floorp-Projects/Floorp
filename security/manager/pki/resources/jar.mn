@@ -16,8 +16,6 @@ pippki.jar:
 #ifndef MOZ_PHOENIX
     content/pippki/PageInfoOverlay.xul       (content/PageInfoOverlay.xul)
 #endif
-    content/pippki/newserver.js              (content/newserver.js)
-    content/pippki/newserver.xul             (content/newserver.xul)
     content/pippki/downloadcert.js           (content/downloadcert.js)
     content/pippki/downloadcert.xul          (content/downloadcert.xul)
     content/pippki/cacertexists.xul          (content/cacertexists.xul)
@@ -39,10 +37,6 @@ pippki.jar:
     content/pippki/getp12password.xul        (content/getp12password.xul)
     content/pippki/setp12password.xul        (content/setp12password.xul)
     content/pippki/pippki.js                 (content/pippki.js)
-    content/pippki/domainMismatch.xul        (content/domainMismatch.xul)
-    content/pippki/domainMismatch.js         (content/domainMismatch.js)
-    content/pippki/serverCertExpired.xul     (content/serverCertExpired.xul)
-    content/pippki/serverCertExpired.js      (content/serverCertExpired.js)
     content/pippki/clientauthask.xul	     (content/clientauthask.xul)
     content/pippki/clientauthask.js          (content/clientauthask.js)
     content/pippki/certpicker.xul	           (content/certpicker.xul)

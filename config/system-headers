@@ -865,6 +865,7 @@ sslt.h
 smime.h
 cms.h
 sechash.h
+secoidt.h
 certdb.h
 secerr.h
 nssb64.h
