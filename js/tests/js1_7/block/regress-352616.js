@@ -52,10 +52,10 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = 'TypeError: (let (b = 1) 2).c is not a function';
+  expect = /TypeError: (\(let \(b = 1\) 2\).c is not a function|Cannot find function c.)/;
   actual = 'No Error';
   try
-  { 
+  {
     for(a in (let (b=1) 2).c(3)) { };
   }
   catch(ex)
@@ -63,12 +63,12 @@ function test()
     actual = ex + '';
   }
 
-  reportCompare(expect, actual, summary + ': 1');
+  reportMatch(expect, actual, summary + ': 1');
 
-  expect = 'TypeError: (let (b = 1, d = 2) 2).c is not a function';
+  expect = /TypeError: (\(let \(b = 1, d = 2\) 2\).c is not a function|Cannot find function c.)/;
   actual = 'No Error';
   try
-  { 
+  {
     for(a in (let (b=1,d=2) 2).c(3)) { };
   }
   catch(ex)
@@ -76,12 +76,12 @@ function test()
     actual = ex + '';
   }
 
-  reportCompare(expect, actual, summary + ': 2');
+  reportMatch(expect, actual, summary + ': 2');
 
-  expect = 'TypeError: (let (b = 1, d = 2) 2).c is not a function';
+  expect = /TypeError: (\(let \(b = 1, d = 2\) 2\).c is not a function|Cannot find function c.)/;
   actual = 'No Error';
   try
-  { 
+  {
     for(a in (let (b=1,d=2) 2).c(3)) { };
   }
   catch(ex)
@@ -89,7 +89,7 @@ function test()
     actual = ex + '';
   }
 
-  reportCompare(expect, actual, summary + ': 3');
+  reportMatch(expect, actual, summary + ': 3');
 
   exitFunc ('test');
 }
