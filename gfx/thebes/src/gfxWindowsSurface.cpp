@@ -75,7 +75,10 @@ gfxWindowsSurface::gfxWindowsSurface(const gfxIntSize& size, gfxImageFormat imag
                                                                 size.width, size.height);
     Init(surf);
 
-    mDC = cairo_win32_surface_get_dc(CairoSurface());
+    if (CairoStatus() == 0)
+        mDC = cairo_win32_surface_get_dc(CairoSurface());
+    else
+        mDC = nsnull;
 }
 
 gfxWindowsSurface::gfxWindowsSurface(HDC dc, const gfxIntSize& size, gfxImageFormat imageFormat) :
@@ -88,14 +91,20 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, const gfxIntSize& size, gfxImageFor
                                                                 size.width, size.height);
     Init(surf);
 
-    mDC = cairo_win32_surface_get_dc(CairoSurface());
+    if (CairoStatus() == 0)
+        mDC = cairo_win32_surface_get_dc(CairoSurface());
+    else
+        mDC = nsnull;
 }
 
 
 gfxWindowsSurface::gfxWindowsSurface(cairo_surface_t *csurf) :
     mOwnsDC(PR_FALSE), mForPrinting(PR_FALSE), mWnd(nsnull)
 {
-    mDC = cairo_win32_surface_get_dc(csurf);
+    if (cairo_surface_status(csurf) == 0)
+        mDC = cairo_win32_surface_get_dc(csurf);
+    else
+        mDC = nsnull;
 
     if (cairo_surface_get_type(csurf) == CAIRO_SURFACE_TYPE_WIN32_PRINTING)
         mForPrinting = PR_TRUE;
@@ -135,14 +144,14 @@ gfxWindowsSurface::OptimizeToDDB(HDC dc, const gfxIntSize& size, gfxImageFormat 
     if (mForPrinting)
         return nsnull;
 
-    gfxImageFormat realFormat = format;
-
-    if (realFormat != ImageFormatRGB24)
+    if (format != ImageFormatRGB24)
         return nsnull;
 
-    nsRefPtr<gfxWindowsSurface> wsurf = new gfxWindowsSurface(dc, size, realFormat);
+    nsRefPtr<gfxWindowsSurface> wsurf = new gfxWindowsSurface(dc, size, format);
+    if (wsurf->CairoStatus() != 0)
+        return nsnull;
 
-    nsRefPtr<gfxContext> tmpCtx(new gfxContext(wsurf));
+    nsRefPtr<gfxContext> tmpCtx = new gfxContext(wsurf);
     tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
     tmpCtx->SetSource(this);
     tmpCtx->Paint();

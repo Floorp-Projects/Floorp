@@ -63,8 +63,6 @@ static cairo_user_data_key_t gfxasurface_pointer_key;
 nsrefcnt
 gfxASurface::AddRef(void)
 {
-    NS_PRECONDITION(mSurface != nsnull, "gfxASurface::AddRef without mSurface");
-
     if (mSurfaceValid) {
         if (mFloatingRefs) {
             // eat a floating ref
@@ -84,8 +82,6 @@ gfxASurface::AddRef(void)
 nsrefcnt
 gfxASurface::Release(void)
 {
-    NS_PRECONDITION(mSurface != nsnull, "gfxASurface::Release without mSurface");
-
     if (mSurfaceValid) {
         NS_ASSERTION(mFloatingRefs == 0, "gfxASurface::Release with floating refs still hanging around!");
 
