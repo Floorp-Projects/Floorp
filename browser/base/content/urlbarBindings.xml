@@ -51,21 +51,28 @@
         </children>
 
         <xul:stack flex="1" class="textbox-stack">
-          <xul:hbox anonid="formatted-url" class="formatted-url" flex="1" hidden="true">
-            <xul:hbox anonid="prePath" class="formatted-url-prePath" pack="center">
-              <xul:label anonid="protocol" class="formatted-url-protocol"/>
-              <xul:label anonid="subdomain" class="formatted-url-subdomain"/>
-              <xul:label anonid="domain" class="formatted-url-domain"/>
-              <xul:label anonid="port" class="formatted-url-port"/>
-            </xul:hbox>
-            <xul:label anonid="path" class="formatted-url-path" crop="end" flex="1" width="1"/>
-          </xul:hbox>
           <xul:hbox anonid="textbox-input-box" class="textbox-input-box"
                     flex="1" xbl:inherits="tooltiptext=inputtooltiptext">
             <children/>
             <html:input anonid="input" class="autocomplete-textbox textbox-input"
                         flex="1" allowevents="true"
                         xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
+          </xul:hbox>
+          <xul:hbox anonid="presentation-box" class="formatted-url" flex="1"
+                    onmousedown="focus();" hidden="true">
+            <xul:scrollbox anonid="presentation" class="formatted-url-contents" flex="1"
+                           onoverflow="_contentIsCropped = true;"
+                           onunderflow="_contentIsCropped = false;">
+              <xul:hbox anonid="prePath" class="formatted-url-prePath">
+                <xul:label anonid="protocol" class="formatted-url-protocol"/>
+                <xul:label anonid="subdomain" class="formatted-url-subdomain"/>
+                <xul:label anonid="domain" class="formatted-url-domain"/>
+                <xul:label anonid="port" class="formatted-url-port"/>
+              </xul:hbox>
+              <xul:label anonid="path" class="formatted-url-path"/>
+            </xul:scrollbox>
+            <xul:label anonid="overflow-ellipsis" class="formatted-url-ellipsis"
+                       value="&#8230;" hidden="true"/>
           </xul:hbox>
         </xul:stack>
 
@@ -95,7 +102,9 @@
         this.doubleClickSelectsAll = this._prefs.getBoolPref("doubleClickSelectsAll");
         this.completeDefaultIndex = this._prefs.getBoolPref("autoFill");
 
-        this._formattedURL = document.getAnonymousElementByAttribute(this, "anonid", "formatted-url");
+        this._inputBox = document.getAnonymousElementByAttribute(this, "anonid", "textbox-input-box");
+        this._presentationBox = document.getAnonymousElementByAttribute(this, "anonid", "presentation-box");
+        this._overflowEllipsis = document.getAnonymousElementByAttribute(this, "anonid", "overflow-ellipsis");
         this._prePath = document.getAnonymousElementByAttribute(this, "anonid", "prePath");
         this._protocol = document.getAnonymousElementByAttribute(this, "anonid", "protocol");
         this._subDomain = document.getAnonymousElementByAttribute(this, "anonid", "subdomain");
@@ -106,9 +115,6 @@
 
         this.inputField.controllers.insertControllerAt(0, this._copyCutController);
         this.inputField.addEventListener("mousedown", this, false);
-        this.inputField.addEventListener("mousemove", this, false);
-        this.inputField.addEventListener("mouseover", this, false);
-        this.inputField.addEventListener("mouseout", this, false);
 
         this._blendingTimers = [];
       ]]></constructor>
@@ -120,9 +126,6 @@
         this._tldService = null;
         this.inputField.controllers.removeController(this._copyCutController);
         this.inputField.removeEventListener("mousedown", this, false);
-        this.inputField.removeEventListener("mousemove", this, false);
-        this.inputField.removeEventListener("mouseover", this, false);
-        this.inputField.removeEventListener("mouseout", this, false);
       ]]></destructor>
 
       <!-- initially empty fields:
@@ -141,12 +144,13 @@
           while (this._blendingTimers.length)
             clearTimeout(this._blendingTimers.pop());
           if (val) {
-            this.inputField.style.removeProperty("opacity");
-            this._formattedURL.hidden = true;
+            this._inputBox.style.removeProperty("opacity");
+            this._presentationBox.hidden = true;
           } else {
-            this.inputField.style.setProperty("opacity", "0", "important");
+            this._inputBox.style.setProperty("opacity", "0", "important");
           }
-          this._formattedURL.style.removeProperty("opacity");
+          this._presentationBox.style.removeProperty("opacity");
+          this._hideURLTooltip();
           return val;
         ]]></setter>
       </property>
@@ -162,6 +166,10 @@
           return this._tldService;
         ]]></getter>
       </property>
+
+      <property name="_contentIsCropped"
+                onget="return !this._overflowEllipsis.hidden;"
+                onset="this._overflowEllipsis.hidden = !val; return val;"/>
 
       <property name="value"
                 onget="return this.inputField.value;">
@@ -196,7 +204,7 @@
             }
           }
           if (!this._uri) {
-            this._protocolHidden = false;
+            this._contentIsCropped = false;
             if (aValue != null)
               this.inputField.value = aValue;
             return;
@@ -265,26 +273,14 @@
 
       <method name="_initPrettyView">
         <body><![CDATA[
-          // Need to get the original prePath width. Therefore temporarily show
-          // the protocol, clear obsolete widths and be inflexible.
+          this._plain = false;
           this._protocol.hidden = false;
-          this._formattedURL.hidden = false;
-          this._prePath.maxWidth =
-            this._prePath.width = "";
-          this._prePath.flex = 0;
-
-          // The path will be cropped with a proper ellipsis, but prePath won't.
-          // flex allows prePath to shrink with the location bar.
-          // width tells prePath to shrink only if really needed, rather than
-          // because the path wants more space due to flex.
-          // maxWidth ensures that prePath won't expand beyond it's original
-          // width due to flex.
-          this._prePath.maxWidth =
+          this._presentationBox.hidden = false;
+          this._prePath.width = "";
+          if (this._protocolHidden) {
             this._prePath.width = this._prePath.boxObject.width;
-          this._prePath.flex = 1;
-
-          if (this._protocolHidden)
             this._protocol.hidden = true;
+          }
         ]]></body>
       </method>
 
@@ -307,22 +303,21 @@
           const DECLINATION_REL = .2;
           const DECLINATION_ABS = .15;
 
-          var inputField = this.inputField;
-          var formattedURL = this._formattedURL;
+          var inputBox = this._inputBox;
+          var presentationBox = this._presentationBox;
           var self = this;
-          var opacity = parseFloat(document.defaultView.getComputedStyle(inputField, null).opacity);
+          var opacity = parseFloat(document.defaultView.getComputedStyle(inputBox, null).opacity);
           var delay = INITIAL_DELAY;
 
           function processFrame(opacity, init) {
-            inputField.style.setProperty("opacity", opacity, "important");
-            formattedURL.style.setProperty("opacity", 1-opacity, "important");
+            inputBox.style.setProperty("opacity", opacity, "important");
+            presentationBox.style.setProperty("opacity", 1-opacity, "important");
             if (init)
               self._initPrettyView();
             if (!opacity)
               self.plain = false;
           }
 
-          this._formatted = true;
           while (opacity > 0) {
             opacity -= opacity * DECLINATION_REL + DECLINATION_ABS;
             if (opacity < 0)
@@ -334,19 +329,24 @@
       </method>
 
       <method name="_initURLTooltip">
+        <parameter name="aCallback"/>
+        <parameter name="aObject"/>
+        <parameter name="aCrop"/>
         <body><![CDATA[
           if (this._tooltipTimer)
             clearTimeout(this._tooltipTimer);
           this._tooltipTimer = setTimeout(function(self) {
             self._tooltipTimer = 0;
-            if (self._mouseover && !self._focused) {
+            var tooltipText = aCallback.apply(aObject);
+            if (tooltipText) {
               var label = self._urlTooltip.firstChild;
-              label.value = self.value;
+              label.value = tooltipText;
+              label.crop = aCrop || "center";
               var bO = self.boxObject;
               self._urlTooltip.maxWidth = bO.width;
               self._urlTooltip.showPopup(self, bO.screenX, bO.screenY + bO.height, "tooltip");
             }
-          }, 700, this);
+          }, 400, this);
         ]]></body>
       </method>
 
@@ -435,38 +435,11 @@
       <method name="handleEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
-          switch (aEvent.type) {
-            case "mousedown":
-              if (this.doubleClickSelectsAll &&
-                  aEvent.button == 0 && aEvent.detail == 2) {
-                this.editor.selectAll();
-                aEvent.preventDefault();
-              }
-              break;
-            case "mousemove":
-              if (this._focused)
-                return;
-              if (this._mouseover && this._protocolHidden) {
-                if (this._plainTimer)
-                  clearTimeout(this._plainTimer);
-                this._plainTimer = setTimeout(function (self) {
-                  if (self._mouseover && !self.plain)
-                    self.plain = true;
-                }, 40, this);
-              }
-              this._initURLTooltip();
-              break;
-            case "mouseover":
-              this._mouseover = true;
-              break;
-            case "mouseout":
-              if (this._mouseover) {
-                this._mouseover = false;
-                if (!this._focused && this.plain)
-                  this._prettyView(this._protocolHidden);
-                this._hideURLTooltip();
-              }
-              break;
+          if (aEvent.type == "mousedown" &&
+              aEvent.button == 0 && aEvent.detail == 2 &&
+              this.doubleClickSelectsAll) {
+            this.editor.selectAll();
+            aEvent.preventDefault();
           }
         ]]></body>
       </method>
@@ -476,11 +449,46 @@
       <handler event="input"
                action="this._syncValue();"/>
 
+      <handler event="mousemove"><![CDATA[
+        if (!this._focused && this._contentIsCropped)
+          this._initURLTooltip(function() {
+            return this.plain ? this.value : null;
+          }, this, "start");
+      ]]></handler>
+
+      <handler event="mouseover"><![CDATA[
+        if (this._mouseover)
+          return;
+        if (!this.plain) {
+          // do nothing if we're over the favicon, history dropmarker et al
+          var pBO = this._presentationBox.boxObject;
+          if (event.screenX < pBO.screenX || event.screenX > pBO.screenX + pBO.width)
+            return;
+        }
+        this._mouseover = true;
+        setTimeout(function(self) {
+          if (self._mouseover) {
+            self.plain = true;
+            if (!self._focused && self._contentIsCropped)
+              self._initURLTooltip(function() {
+                return this.plain ? this.value : null;
+              }, self, "start");
+          }
+        }, 60, this);
+      ]]></handler>
+
+      <handler event="mouseout" phase="target"><![CDATA[
+        this._mouseover = false;
+        if (!this._focused && this.plain)
+          this._prettyView(true);
+        else
+          this._hideURLTooltip();
+      ]]></handler>
+
       <handler event="focus" phase="capturing"><![CDATA[
         if (!this._focused) {
           this._focused = true;
           this.plain = true;
-          this._hideURLTooltip();
         }
       ]]></handler>
 
@@ -489,7 +497,7 @@
           this._focused = false;
           this._syncValue();
           if (!this._mouseover)
-            this._prettyView(this._protocolHidden);
+            this._prettyView(true);
         }
       ]]></handler>
     </handlers>
