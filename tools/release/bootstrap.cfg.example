@@ -24,6 +24,7 @@ logDir          = /builds/logs
 mozillaCvsroot  = /builds/cvsmirror/cvsroot
 l10nCvsroot     = /builds/cvsmirror/l10n
 mofoCvsroot     = /builds/cvsmirror/mofo
+anonCvsroot	= :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
 # private staging area 
 stageHome       = /data/cltbld
 updateDir       = /builds/updates
