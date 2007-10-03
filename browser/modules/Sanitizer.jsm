@@ -151,6 +151,19 @@ Sanitizer.prototype = {
     formdata: {
       clear: function ()
       {
+        //Clear undo history of all searchBars
+        var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
+        var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
+        var windows = windowManagerInterface.getEnumerator("navigator:browser");
+        while (windows.hasMoreElements()) {
+          var searchBar = windows.getNext().document.getElementById("searchbar");
+          if (searchBar) {
+            searchBar.mTextbox.value = "";
+            searchBar.mTextbox.editor.enableUndo(false);
+            searchBar.mTextbox.editor.enableUndo(true);
+          }
+        }
+
         var formHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
                                     .getService(Components.interfaces.nsIFormHistory);
         formHistory.removeAllEntries();
