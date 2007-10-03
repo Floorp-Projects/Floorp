@@ -119,9 +119,7 @@ Sanitizer.prototype = {
       
       get canClear()
       {
-        var cookieMgr = Components.classes["@mozilla.org/cookiemanager;1"]
-                                  .getService(Components.interfaces.nsICookieManager);
-        return cookieMgr.enumerator.hasMoreElements();
+        return true;
       }
     },
     
