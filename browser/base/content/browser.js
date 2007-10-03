@@ -917,9 +917,7 @@ function prepareForStartup()
   gBrowser.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
   // setup our common DOMLinkAdded listener
-  gBrowser.addEventListener("DOMLinkAdded",
-                            function (event) { DOMLinkHandler.onLinkAdded(event); },
-                            false);
+  gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);
 
   gBrowser.addEventListener("pagehide", FeedHandler.onPageHide, false);
 }
@@ -2624,7 +2622,14 @@ var DownloadsButtonDNDObserver = {
 }
 
 const DOMLinkHandler = {
-  onLinkAdded: function(event) {
+  handleEvent: function (event) {
+    switch (event.type) {
+      case "DOMLinkAdded":
+        this.onLinkAdded(event);
+        break;
+    }
+  },
+  onLinkAdded: function (event) {
     var link = event.originalTarget;
     var rel = link.rel && link.rel.toLowerCase();
     if (!link || !link.ownerDocument || !rel || !link.href)
@@ -2655,7 +2660,7 @@ const DOMLinkHandler = {
           break;
         case "icon":
           if (!iconAdded) {
-            if (!gBrowser.mPrefs.getBoolPref("browser.chrome.site_icons"))
+            if (!gPrefService.getBoolPref("browser.chrome.site_icons"))
               break;
 
             try {
@@ -2669,20 +2674,21 @@ const DOMLinkHandler = {
             var ios = Cc["@mozilla.org/network/io-service;1"].
                       getService(Ci.nsIIOService);
             var uri = ios.newURI(link.href, targetDoc.characterSet, null);
-            try {
-              // Verify that the load of this icon is legal.
-              // error pages can load their favicon, to be on the safe side,
-              // only allow chrome:// favicons
-              const aboutNeterr = "about:neterror?";
-              if (targetDoc.documentURI.substr(0, aboutNeterr.length) != aboutNeterr ||
-                  !uri.schemeIs("chrome")) {
+
+            // Verify that the load of this icon is legal.
+            // error pages can load their favicon, to be on the safe side,
+            // only allow chrome:// favicons
+            const aboutNeterr = "about:neterror?";
+            if (targetDoc.documentURI.substr(0, aboutNeterr.length) != aboutNeterr ||
+                !uri.schemeIs("chrome")) {
               var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].
                         getService(Ci.nsIScriptSecurityManager);
-              ssm.checkLoadURIWithPrincipal(targetDoc.nodePrincipal, uri,
-                                            Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+              try {
+                ssm.checkLoadURIWithPrincipal(targetDoc.nodePrincipal, uri,
+                                              Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+              } catch(e) {
+                break;
               }
-            } catch(e) {
-              break;
             }
 
             // Security says okay, now ask content policy
@@ -2708,7 +2714,7 @@ const DOMLinkHandler = {
             type = type.replace(/^\s+|\s*(?:;.*)?$/g, "");
 
             if (type == "application/opensearchdescription+xml" && link.title &&
-                /^(https?|ftp):/i.test(link.href)) {
+                /^(?:https?|ftp):/i.test(link.href)) {
               var engine = { title: link.title, href: link.href };
               BrowserSearch.addEngine(engine, link.ownerDocument);
               searchAdded = true;
