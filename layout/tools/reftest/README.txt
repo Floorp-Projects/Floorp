@@ -108,10 +108,14 @@ comments) must be one of the following:
 
    c. <type> is one of the following:
 
-      ==  The test passes if the images of the two renderings are the
-          SAME.
-      !=  The test passes if the images of the two renderings are 
-          DIFFERENT.
+      ==    The test passes if the images of the two renderings are the
+            SAME.
+      !=    The test passes if the images of the two renderings are 
+            DIFFERENT.
+      load  The test passes unconditionally if the page loads.  url_ref
+            must be omitted, and the test cannot be marked as fails or
+            random.  (Used to test for crashes, hangs, assertions, and
+            leaks.)
 
    d. <url> is either a relative file path or an absolute URL for the
       test page
