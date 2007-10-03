@@ -142,9 +142,9 @@ Sanitizer.prototype = {
       
       get canClear()
       {
-        var globalHistory = Components.classes["@mozilla.org/browser/global-history;2"]
-                                      .getService(Components.interfaces.nsIBrowserHistory);
-        return globalHistory.count != 0;
+        // bug 347231: Always allow clearing history due to dependencies on
+        // the browser:purge-session-history notification. (like error console)
+        return true;
       }
     },
     
