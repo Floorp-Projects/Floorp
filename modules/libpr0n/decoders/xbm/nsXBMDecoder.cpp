@@ -203,6 +203,9 @@ nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
             }
         }
 
+        mImage->AppendFrame(mFrame);
+        mObserver->OnStartFrame(nsnull, mFrame);
+
         PRUint32 imageLen;
         mFrame->GetImageData((PRUint8**)&mImageData, &imageLen);
 
