@@ -194,24 +194,17 @@ Sanitizer.prototype = {
     passwords: {
       clear: function ()
       {
-        var pwmgr = Components.classes["@mozilla.org/passwordmanager;1"]
-                              .getService(Components.interfaces.nsIPasswordManager);
-        var e = pwmgr.enumerator;
-        var passwds = [];
-        while (e.hasMoreElements()) {
-          var passwd = e.getNext().QueryInterface(Components.interfaces.nsIPassword);
-          passwds.push(passwd);
-        }
-        
-        for (var i = 0; i < passwds.length; ++i)
-          pwmgr.removeUser(passwds[i].host, passwds[i].user);
+        var pwmgr = Components.classes["@mozilla.org/login-manager;1"]
+                              .getService(Components.interfaces.nsILoginManager);
+        pwmgr.removeAllLogins();
       },
       
       get canClear()
       {
-        var pwmgr = Components.classes["@mozilla.org/passwordmanager;1"]
-                              .getService(Components.interfaces.nsIPasswordManager);
-        return pwmgr.enumerator.hasMoreElements();
+        var pwmgr = Components.classes["@mozilla.org/login-manager;1"]
+                              .getService(Components.interfaces.nsILoginManager);
+        var logins = pwmgr.getAllLogins({});
+        return (logins.length > 0);
       }
     },
     
