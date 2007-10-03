@@ -1610,6 +1610,8 @@ nsDownload::SetState(DownloadState aState)
         }
       }
 #ifdef XP_WIN
+      // Default is to add the download to the system's "recent documents"
+      // list, with a pref to disable.
       PRBool addToRecentDocs = PR_TRUE;
       if (pref)
         pref->GetBoolPref(PREF_BDM_ADDTORECENTDOCS, &addToRecentDocs);
