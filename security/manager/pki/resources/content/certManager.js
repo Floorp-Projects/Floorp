@@ -620,3 +620,16 @@ function addWebSiteCert()
     caTreeView.selection.clearSelection();
   }
 }
+
+function addException()
+{
+  window.openDialog('chrome://pippki/content/exceptionDialog.xul', "",
+                    'chrome,centerscreen,modal');
+  var certcache = Components.classes[nsNSSCertCache].createInstance(nsINSSCertCache);
+  certcache.cacheAllCerts();
+  serverTreeView.loadCertsFromCache(certcache, nsIX509Cert.SERVER_CERT);
+  serverTreeView.selection.clearSelection();
+  orphanTreeView.loadCertsFromCache(certcache, nsIX509Cert.UNKNOWN_CERT);
+  orphanTreeView.selection.clearSelection();
+}
+
