@@ -1123,7 +1123,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
 
       nsCOMPtr<nsISelectionController> selCon;
       mEditor->GetSelectionController(getter_AddRefs(selCon));
-      if (selCon && editableRoot)
+      if (selCon)
       {
         nsCOMPtr<nsISelection> selection;
         selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
@@ -1149,6 +1149,14 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
         if (selectionPrivate)
         {
           selectionPrivate->SetAncestorLimiter(editableRoot);
+        }
+
+        if (!editableRoot) {
+          PRInt32 rangeCount;
+          selection->GetRangeCount(&rangeCount);
+          if (rangeCount == 0) {
+            mEditor->BeginningOfDocument();
+          }
         }
       }
     }
