@@ -61,7 +61,8 @@
   <script type="application/x-javascript" src="chrome://pippki/content/certManager.js"/>
 
   <vbox flex="1">
-    <tabbox id="certmanagertabs" flex="1" style="margin:5px" persist="selectedIndex">
+    <!-- FIXME Add persist="selectedIndex" to certmanagertabs when 373525/398289 gets fixed. -->
+    <tabbox id="certmanagertabs" flex="1" style="margin:5px">
       <tabs id="certMgrTabbox">
         <tab id="mine_tab" label="&certmgr.tab.mine;"/>
         <tab id="others_tab" label="&certmgr.tab.others;"/>
