@@ -1445,16 +1445,17 @@ nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak)
     // No meaning
     return;
   }
-  
-  // In non-preformatted mode, remove SPACE from the end
-  // of the line, unless we got "-- " in a format=flowed
-  // output. "-- " is the sig delimiter by convention and
-  // shouldn't be touched even in format=flowed
-  // (see RFC 2646). We only check for "-- " when it's a hard line
-  // break for obvious reasons.
+
+  /* In non-preformatted mode, remove spaces from the end of the line for
+   * format=flowed compatibility. Don't do this for these special cases:
+   * "-- ", the signature separator (RFC 2646) shouldn't be touched and
+   * "- -- ", the OpenPGP dash-escaped signature separator in inline
+   * signed messages according to the OpenPGP standard (RFC 2440).
+   */  
   if(!(mFlags & nsIDocumentEncoder::OutputPreformatted) &&
-     (aSoftlinebreak || !mCurrentLine.EqualsLiteral("-- "))) {
-    // Remove SPACE:s from the end of the line.
+     (aSoftlinebreak || 
+     !(mCurrentLine.EqualsLiteral("-- ") || mCurrentLine.EqualsLiteral("- -- ")))) {
+    // Remove spaces from the end of the line.
     while(currentlinelength > 0 &&
           mCurrentLine[currentlinelength-1] == ' ') {
       --currentlinelength;
