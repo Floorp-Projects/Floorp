@@ -1105,47 +1105,42 @@ var gApplicationsPane = {
 
     // If this is the feed type, add Preview in Firefox and Live Bookmarks items.
     if (handlerInfo.type == TYPE_MAYBE_FEED) {
-      let menuItem = document.createElementNS(kXULNS, "menuitem");
-      menuItem.setAttribute("alwaysAsk", "true");
+      var askMenuItem = document.createElementNS(kXULNS, "menuitem");
+      askMenuItem.setAttribute("alwaysAsk", "true");
       let label = this._prefsBundle.getFormattedString("previewInApp",
                                                        [this._brandShortName]);
-      menuItem.setAttribute("label", label);
-      menuPopup.appendChild(menuItem);
-      if (handlerInfo.alwaysAskBeforeHandling)
-        menu.selectedItem = menuItem;
+      askMenuItem.setAttribute("label", label);
+      menuPopup.appendChild(askMenuItem);
 
-      menuItem = document.createElementNS(kXULNS, "menuitem");
-      menuItem.setAttribute("action", Ci.nsIHandlerInfo.handleInternally);
+      var internalMenuItem = document.createElementNS(kXULNS, "menuitem");
+      internalMenuItem.setAttribute("action", Ci.nsIHandlerInfo.handleInternally);
       label = this._prefsBundle.getFormattedString("liveBookmarksInApp",
                                                    [this._brandShortName]);
-      menuItem.setAttribute("label", label);
-      menuItem.setAttribute("image", ICON_URL_LIVEMARK);
-      menuPopup.appendChild(menuItem);
-      if (handlerInfo.preferredAction == Ci.nsIHandlerInfo.handleInternally)
-        menu.selectedItem = menuItem;
+      internalMenuItem.setAttribute("label", label);
+      internalMenuItem.setAttribute("image", ICON_URL_LIVEMARK);
+      menuPopup.appendChild(internalMenuItem);
 
       // Add a separator to distinguish these items from the helper app items
       // that follow them.
-      menuItem = document.createElementNS(kXULNS, "menuseparator");
+      let menuItem = document.createElementNS(kXULNS, "menuseparator");
       menuPopup.appendChild(menuItem);
     }
 
     // Create a menu item for the OS default application, if any.
     if (handlerInfo.hasDefaultHandler) {
-      let menuItem = document.createElementNS(kXULNS, "menuitem");
-      menuItem.setAttribute("action", Ci.nsIHandlerInfo.useSystemDefault);
-      menuItem.setAttribute("label", handlerInfo.defaultDescription);
-      menuItem.setAttribute("image", this._getIconURLForSystemDefault(handlerInfo));
+      var defaultMenuItem = document.createElementNS(kXULNS, "menuitem");
+      defaultMenuItem.setAttribute("action", Ci.nsIHandlerInfo.useSystemDefault);
+      defaultMenuItem.setAttribute("label", handlerInfo.defaultDescription);
+      defaultMenuItem.setAttribute("image", this._getIconURLForSystemDefault(handlerInfo));
 
-      menuPopup.appendChild(menuItem);
-      if (handlerInfo.preferredAction == Ci.nsIHandlerInfo.useSystemDefault)
-        menu.selectedItem = menuItem;
+      menuPopup.appendChild(defaultMenuItem);
     }
 
     // Create menu items for possible handlers.
     let preferredApp = handlerInfo.preferredApplicationHandler;
     let possibleApps = handlerInfo.possibleApplicationHandlers.
                        QueryInterface(Ci.nsIArray).enumerate();
+    var possibleAppMenuItems = [];
     while (possibleApps.hasMoreElements()) {
       let possibleApp = possibleApps.getNext();
       if (!this.isValidHandlerApp(possibleApp))
@@ -1164,26 +1159,19 @@ var gApplicationsPane = {
       menuItem.handlerApp = possibleApp;
 
       menuPopup.appendChild(menuItem);
-
-      // Select this app if the preferred action is to use a helper app
-      // and this is the preferred app.
-      if (handlerInfo.preferredAction == Ci.nsIHandlerInfo.useHelperApp &&
-          preferredApp.equals(possibleApp))
-        menu.selectedItem = menuItem;
+      possibleAppMenuItems.push(menuItem);
     }
 
     // Create a menu item for the plugin.
     if (handlerInfo.plugin) {
-      let menuItem = document.createElementNS(kXULNS, "menuitem");
-      menuItem.setAttribute("action", kActionUsePlugin);
+      var pluginMenuItem = document.createElementNS(kXULNS, "menuitem");
+      pluginMenuItem.setAttribute("action", kActionUsePlugin);
       let label = this._prefsBundle.getFormattedString("pluginName",
                                                        [handlerInfo.plugin.name,
                                                         this._brandShortName]);
-      menuItem.setAttribute("label", label);
-      menuItem.setAttribute("image", ICON_URL_PLUGIN);
-      menuPopup.appendChild(menuItem);
-      if (handlerInfo.preferredAction == kActionUsePlugin)
-        menu.selectedItem = menuItem;
+      pluginMenuItem.setAttribute("label", label);
+      pluginMenuItem.setAttribute("image", ICON_URL_PLUGIN);
+      menuPopup.appendChild(pluginMenuItem);
     }
 
     // Create a menu item for selecting a local application.
@@ -1204,14 +1192,38 @@ var gApplicationsPane = {
     if ((handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) &&
         handlerInfo.type != TYPE_MAYBE_FEED &&
         !handlerInfo.handledOnlyByPlugin) {
-      let menuItem = document.createElementNS(kXULNS, "menuitem");
-      menuItem.setAttribute("action", Ci.nsIHandlerInfo.saveToDisk);
-      menuItem.setAttribute("label", this._prefsBundle.getString("saveFile"));
-      menuPopup.appendChild(menuItem);
-      if (handlerInfo.preferredAction == Ci.nsIHandlerInfo.saveToDisk)
-        menu.selectedItem = menuItem;
+
+      var saveMenuItem = document.createElementNS(kXULNS, "menuitem");
+      saveMenuItem.setAttribute("action", Ci.nsIHandlerInfo.saveToDisk);
+      saveMenuItem.setAttribute("label", this._prefsBundle.getString("saveFile"));
+      menuPopup.appendChild(saveMenuItem);
     }
 
+    // Select the item corresponding to the preferred action.  If the always
+    // ask flag is set, it overrides the preferred action.  Otherwise we pick
+    // the item identified by the preferred action (when the preferred action
+    // is to use a helper app, we have to pick the specific helper app item).
+    if (handlerInfo.alwaysAskBeforeHandling)
+      menu.selectedItem = askMenuItem;
+    else switch (handlerInfo.preferredAction) {
+      case Ci.nsIHandlerInfo.handleInternally:
+        menu.selectedItem = internalMenuItem;
+        break;
+      case Ci.nsIHandlerInfo.useSystemDefault:
+        menu.selectedItem = defaultMenuItem;
+        break;
+      case Ci.nsIHandlerInfo.useHelperApp:
+        if (preferredApp)
+          menu.selectedItem = 
+            possibleAppMenuItems.filter(function(v) v.handlerApp.equals(preferredApp))[0];
+        break;
+      case kActionUsePlugin:
+        menu.selectedItem = pluginMenuItem;
+        break;
+      case Ci.nsIHandlerInfo.saveToDisk:
+        menu.selectedItem = saveMenuItem;
+        break;
+    }
   },
 
 
