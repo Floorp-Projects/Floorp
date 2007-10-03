@@ -165,14 +165,14 @@ Sanitizer.prototype = {
         }
 
         var formHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
-                                    .getService(Components.interfaces.nsIFormHistory);
+                                    .getService(Components.interfaces.nsIFormHistory2);
         formHistory.removeAllEntries();
       },
       
       get canClear()
       {
         var formHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
-                                    .getService(Components.interfaces.nsIFormHistory);
+                                    .getService(Components.interfaces.nsIFormHistory2);
         return formHistory.hasEntries;
       }
     },
