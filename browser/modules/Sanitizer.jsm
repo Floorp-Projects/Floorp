@@ -158,9 +158,9 @@ Sanitizer.prototype = {
         while (windows.hasMoreElements()) {
           var searchBar = windows.getNext().document.getElementById("searchbar");
           if (searchBar) {
-            searchBar.mTextbox.value = "";
-            searchBar.mTextbox.editor.enableUndo(false);
-            searchBar.mTextbox.editor.enableUndo(true);
+            searchBar.textbox.value = "";
+            searchBar.textbox.editor.enableUndo(false);
+            searchBar.textbox.editor.enableUndo(true);
           }
         }
 
