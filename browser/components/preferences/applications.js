@@ -1186,13 +1186,8 @@ var gApplicationsPane = {
     // Note: this option isn't available to protocol types, since we don't know
     // what it means to save a URL having a certain scheme to disk, nor is it
     // available to feeds, since the feed code doesn't implement the capability.
-    // And it's not available to types handled only by plugins either, although
-    // I would think we'd want to give users the ability to redirect that stuff
-    // to disk (so maybe we should revisit that decision).
     if ((handlerInfo.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) &&
-        handlerInfo.type != TYPE_MAYBE_FEED &&
-        !handlerInfo.handledOnlyByPlugin) {
-
+        handlerInfo.type != TYPE_MAYBE_FEED) {
       var saveMenuItem = document.createElementNS(kXULNS, "menuitem");
       saveMenuItem.setAttribute("action", Ci.nsIHandlerInfo.saveToDisk);
       saveMenuItem.setAttribute("label", this._prefsBundle.getString("saveFile"));
