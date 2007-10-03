@@ -408,8 +408,10 @@ var PlacesUtils = {
   * @returns true if the node is a livemark container item
   */
   nodeIsLivemarkContainer: function PU_nodeIsLivemarkContainer(aNode) {
+    // Use the annotations service directly to avoid instantiating
+    // the Livemark service on startup. (bug 398300)
     return this.nodeIsFolder(aNode) &&
-           this.livemarks.isLivemark(aNode.itemId);
+           this._annotations.itemHasAnnotation(aNode, LMANNO_FEEDURI);
   },
 
  /**
