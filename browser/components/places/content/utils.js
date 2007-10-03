@@ -411,7 +411,7 @@ var PlacesUtils = {
     // Use the annotations service directly to avoid instantiating
     // the Livemark service on startup. (bug 398300)
     return this.nodeIsFolder(aNode) &&
-           this._annotations.itemHasAnnotation(aNode, LMANNO_FEEDURI);
+           this.annotations.itemHasAnnotation(aNode.itemId, LMANNO_FEEDURI);
   },
 
  /**
