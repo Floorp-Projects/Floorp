@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Bob Lord <lord@netscape.com>
  *   Ian McGreer <mcgreer@netscape.com>
+ *   Kai Engert <kengert@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -53,7 +54,8 @@ const nsNSSCertCache = "@mozilla.org/security/nsscertcache;1";
 var key;
 
 var selected_certs = [];
-var selected_cert_index = [];
+var selected_tree_items = [];
+var selected_index = [];
 var certdb;
 
 var caTreeView;
@@ -157,7 +159,61 @@ function getSelectedCerts()
         if (cert) {
           var sc = selected_certs.length;
           selected_certs[sc] = cert;
-          selected_cert_index[sc] = j;
+          selected_index[sc] = j;
+        }
+      }
+    }
+  }
+}
+
+function getSelectedTreeItems()
+{
+  var ca_tab = document.getElementById("ca_tab");
+  var mine_tab = document.getElementById("mine_tab");
+  var others_tab = document.getElementById("others_tab");
+  var websites_tab = document.getElementById("websites_tab");
+  var orphan_tab = document.getElementById("orphan_tab");
+  var items = null;
+  if (ca_tab.selected) {
+    items = caTreeView.selection;
+  } else if (mine_tab.selected) {
+    items = userTreeView.selection;
+  } else if (others_tab.selected) {
+    items = emailTreeView.selection;
+  } else if (websites_tab.selected) {
+    items = serverTreeView.selection;
+  } else if (orphan_tab.selected) {
+    items = orphanTreeView.selection;
+  }
+  selected_certs = [];
+  selected_tree_items = [];
+  selected_index = [];
+  var tree_item = null;
+  var nr = 0;
+  if (items != null) nr = items.getRangeCount();
+  if (nr > 0) {
+    for (var i=0; i<nr; i++) {
+      var o1 = {};
+      var o2 = {};
+      items.getRangeAt(i, o1, o2);
+      var min = o1.value;
+      var max = o2.value;
+      for (var j=min; j<=max; j++) {
+        if (ca_tab.selected) {
+          tree_item = caTreeView.getTreeItem(j);
+        } else if (mine_tab.selected) {
+          tree_item = userTreeView.getTreeItem(j);
+        } else if (others_tab.selected) {
+          tree_item = emailTreeView.getTreeItem(j);
+        } else if (websites_tab.selected) {
+          tree_item = serverTreeView.getTreeItem(j);
+        } else if (orphan_tab.selected) {
+          tree_item = orphanTreeView.getTreeItem(j);
+        }
+        if (tree_item) {
+          var sc = selected_tree_items.length;
+          selected_tree_items[sc] = tree_item;
+          selected_index[sc] = j;
         }
       }
     }
@@ -222,18 +278,49 @@ function mine_enableButtons()
 function websites_enableButtons()
 {
   var items = serverTreeView.selection;
-  var toggle="false";
-  if (items.getRangeCount() == 0) {
-    toggle="true";
+  var count_ranges = items.getRangeCount();
+
+  var enable_delete = false;
+  var enable_view = false;
+  var enable_edit = false;
+
+  if (count_ranges > 0) {
+    enable_delete = true;
   }
+
+  if (count_ranges == 1) {
+    var o1 = {};
+    var o2 = {};
+    items.getRangeAt(0, o1, o2); // the first range
+    if (o1.value == o2.value) {
+      // only a single item is selected
+      try {
+        var ti = serverTreeView.getTreeItem(o1.value);
+        if (ti) {
+          if (ti.cert) {
+            enable_view = true;
+          }
+          // Trust editing is not possible for override
+          // entries that are bound to host:port,
+          // where the cert is stored for convenince only.
+          if (!ti.hostPort.length) {
+            enable_edit = true;
+          }
+        }
+      }
+      catch (e) {
+      }
+    }
+  }
+
   var enableViewButton=document.getElementById('websites_viewButton');
-  enableViewButton.setAttribute("disabled",toggle);
+  enableViewButton.setAttribute("disabled", !enable_view);
   var enableEditButton=document.getElementById('websites_editButton');
-  enableEditButton.setAttribute("disabled",toggle);
+  enableEditButton.setAttribute("disabled", !enable_edit);
   var enableExportButton=document.getElementById('websites_exportButton');
-  enableExportButton.setAttribute("disabled",toggle);
+  enableExportButton.setAttribute("disabled", !enable_edit);
   var enableDeleteButton=document.getElementById('websites_deleteButton');
-  enableDeleteButton.setAttribute("disabled",toggle);
+  enableDeleteButton.setAttribute("disabled", !enable_delete);
 }
 
 function email_enableButtons()
@@ -305,15 +392,17 @@ function editCerts()
   for (var t=0; t<numcerts; t++) {
     var cert = selected_certs[t];
     var certkey = cert.dbKey;
-    var ca_tab = document.getElementById("ca_tab");
-    var others_tab = document.getElementById("others_tab");
-    if (ca_tab.selected) {
+    if (document.getElementById("ca_tab").selected) {
       window.openDialog('chrome://pippki/content/editcacert.xul', certkey,
                         'chrome,centerscreen,modal');
-    } else if (others_tab.selected) {
+    } else if (document.getElementById("others_tab").selected) {
       window.openDialog('chrome://pippki/content/editemailcert.xul', certkey,
                         'chrome,centerscreen,modal');
-    } else {
+    } else if (!document.getElementById("websites_tab").selected
+               || !serverTreeView.isHostPortOverride(selected_index[t])) {
+      // If the web sites tab is select, trust editing is only allowed
+      // if the entry refers to a real cert, but not if it's
+      // a host:port override, where the cert is stored for convenince only.
       window.openDialog('chrome://pippki/content/editsslcert.xul', certkey,
                         'chrome,centerscreen,modal');
     }
@@ -356,8 +445,8 @@ function exportCerts()
 
 function deleteCerts()
 {
-  getSelectedCerts();
-  var numcerts = selected_certs.length;
+  getSelectedTreeItems();
+  var numcerts = selected_tree_items.length;
   if (!numcerts)
     return;
 
@@ -398,15 +487,17 @@ function deleteCerts()
   params.SetInt(0,numcerts);
   for (t=0; t<numcerts; t++) 
   {
-    var cert = selected_certs[t];
-    params.SetString(t+1, cert.dbKey);  
+    var tree_item = selected_tree_items[t];
+    var c = tree_item.cert;
+    if (!c) {
+      params.SetString(t+1, tree_item.hostPort);
+    }
+    else {
+      params.SetString(t+1, c.commonName);
+    }
+
   }
-  
-  // The dialog will modify the params.
-  // Every param item where the corresponding cert could get deleted,
-  // will still contain the db key.
-  // Certs which could not get deleted, will have their corrensponding
-  // param string erased.
+
   window.openDialog('chrome://pippki/content/deletecert.xul', "",
                     'chrome,centerscreen,modal', params);
  
@@ -419,30 +510,23 @@ function deleteCerts()
     selTabID = selTab.getAttribute('id');
     if (selTabID == 'mine_tab') {
       treeView = userTreeView;
-      loadParam = nsIX509Cert.USER_CERT;
     } else if (selTabID == "others_tab") {
       treeView = emailTreeView;
-      loadParam = nsIX509Cert.EMAIL_CERT;
     } else if (selTabID == "websites_tab") {
       treeView = serverTreeView;
-      loadParam = nsIX509Cert.SERVER_CERT;
     } else if (selTabID == "ca_tab") {
       treeView = caTreeView;
-      loadParam = nsIX509Cert.CA_CERT;
     } else if (selTabID == "orphan_tab") {
       treeView = orphanTreeView;
-      loadParam = nsIX509Cert.UNKNOWN_CERT;
     }
 
     for (t=numcerts-1; t>=0; t--)
     {
-      var s = params.GetString(t+1);
-      if (s.length) {
-        // This cert was deleted.
-        treeView.removeCert(selected_cert_index[t]);
-      }
+      treeView.deleteEntryObject(selected_index[t]);
     }
 
+    selected_tree_items = [];
+    selected_index = [];
     treeView.selection.clearSelection();
   }
 }

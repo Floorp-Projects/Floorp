@@ -51,7 +51,7 @@ GRE_MODULE	= 1
 SDK_XPIDLSRCS = \
     nsIASN1Object.idl \
     nsIASN1Sequence.idl \
-    nsIBadCertListener.idl \
+    nsIBadCertListener2.idl \
     nsICertificateDialogs.idl \
     nsICRLInfo.idl \
     nsIX509Cert.idl \
@@ -61,6 +61,7 @@ SDK_XPIDLSRCS = \
     $(NULL)
 
 XPIDLSRCS = \
+    nsICertOverrideService.idl \
     nsIFormSigningDialog.idl \
     nsIX509Cert2.idl \
     nsIX509Cert3.idl \

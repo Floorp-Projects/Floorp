@@ -1767,8 +1767,7 @@ MicrosummaryResource.prototype = {
   // and abort loads for bad SSL certs and HTTP authorization requests.
   
   // Interfaces this component implements.
-  interfaces: [Ci.nsIBadCertListener,
-               Ci.nsIAuthPromptProvider,
+  interfaces: [Ci.nsIAuthPromptProvider,
                Ci.nsIAuthPrompt,
                Ci.nsIPrompt,
                Ci.nsIProgressEventSink,
@@ -1798,25 +1797,6 @@ MicrosummaryResource.prototype = {
   
   getInterface: function MSR_getInterface(iid) {
     return this.QueryInterface(iid);
-  },
-
-  // nsIBadCertListener
-
-  // Suppress UI and abort secure loads from servers with bad SSL certificates.
-  
-  confirmUnknownIssuer: function MSR_confirmUnknownIssuer(socketInfo, cert, certAddType) {
-    return false;
-  },
-
-  confirmMismatchDomain: function MSR_confirmMismatchDomain(socketInfo, targetURL, cert) {
-    return false;
-  },
-
-  confirmCertExpired: function MSR_confirmCertExpired(socketInfo, cert) {
-    return false;
-  },
-
-  notifyCrlNextupdate: function MSR_notifyCrlNextupdate(socketInfo, targetURL, cert) {
   },
 
   // Suppress UI and abort loads for files secured by authentication.
