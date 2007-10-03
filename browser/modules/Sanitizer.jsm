@@ -110,7 +110,7 @@ Sanitizer.prototype = {
         // for details on how we guess the cache directory
         try {
           cacheDir = cc["@mozilla.org/preferences-service;1"]
-                       .getService(ci.nsIBranch)
+                       .getService(ci.nsIPrefBranch)
                        .getComplexValue("browser.cache.disk.parent_directory",
                                         ci.nsILocalFile);
         } catch(er) {
@@ -137,8 +137,10 @@ Sanitizer.prototype = {
           } catch(er) {}
         }
         
-        // The "nice" way
-        cacheService.evictEntries(ci.nsICache.STORE_ANYWHERE);
+        try {
+          // The "nice" way
+          cacheService.evictEntries(ci.nsICache.STORE_ANYWHERE);
+        } catch(er) {}
         
       },
       
