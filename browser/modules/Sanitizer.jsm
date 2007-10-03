@@ -181,6 +181,26 @@ Sanitizer.prototype = {
                               .getService(Components.interfaces.nsIPasswordManager);
         return pwmgr.enumerator.hasMoreElements();
       }
+    },
+    
+    sessions: {
+      clear: function ()
+      {
+        // clear all auth tokens
+        var sdr = Components.classes["@mozilla.org/security/sdr;1"]
+                            .getService(Components.interfaces.nsISecretDecoderRing);
+        sdr.logoutAndTeardown();
+
+        // clear plain HTTP auth sessions
+        var authMgr = Components.classes['@mozilla.org/network/http-auth-manager;1']
+                                .getService(Components.interfaces.nsIHttpAuthManager);
+        authMgr.clearAll();
+      },
+      
+      get canClear()
+      {
+        return true;
+      }
     }
   }
 };
