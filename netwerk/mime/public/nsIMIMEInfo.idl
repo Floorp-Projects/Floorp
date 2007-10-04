@@ -52,7 +52,7 @@ typedef long nsHandlerInfoAction;
  * nsIHandlerInfo gives access to the information about how a given protocol
  * scheme or MIME-type is handled.
  */
-[scriptable, uuid(325e56a7-3762-4312-aec7-f1fcf84b4145)]
+[scriptable, uuid(325e56a7-3762-4312-aec7-f1fcf84b4145)] 
 interface nsIHandlerInfo : nsISupports {
     /**
      * The type of this handler info.  For MIME handlers, this is the MIME type.
@@ -239,7 +239,7 @@ interface nsIMIMEInfo : nsIHandlerInfo {
  * we should also try to make nsIWebContentHandlerInfo inherit from or possibly
  * be replaced by nsIWebHandlerApp (bug 394710).
  */
-[scriptable, uuid(b504f39e-d88a-4435-8e0d-e13f1070f7e7)]
+[scriptable, uuid(8d298761-0963-4c90-99e2-6ea498825e82)]
 interface nsIHandlerApp : nsISupports {
 
     /**
@@ -259,6 +259,21 @@ interface nsIHandlerApp : nsISupports {
      * @returns true if the two are logically equivalent, false otherwise
      */
     boolean equals(in nsIHandlerApp aHandlerApp);
+
+    /**
+     * Launches the application with the specified URI.
+     *
+     * @param aURI
+     *        The URI to launch this application with
+     *
+     * @param aWindowContext 
+     *        Required for web handlers; is passed through to 
+     *        nsIURILoader.openURI, but see bug 394483 for info on 
+     *        how this needs to evolve.
+     */
+    void launchWithURI(in nsIURI aURI, 
+                       [optional] in nsIInterfaceRequestor aWindowContext);
+
 };
 
 /**

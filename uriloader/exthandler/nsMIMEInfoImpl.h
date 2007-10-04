@@ -156,24 +156,6 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
                                                    const nsCString &aArg);
 
     /**
-     * Used to launch a web-based handler with this URI.
-     * 
-     * @param aURI  The URI to launch with.
-     * 
-     * @param aWindowContext 
-     *        The window to parent the dialog against, and, if a web handler
-     *        is chosen, it is loaded in this window as well.  This parameter
-     *        may be ultimately passed nsIURILoader.openURI in the case of a
-     *        web handler, and aWindowContext is null or not present, web
-     *        handlers will fail.  We need to do better than that; bug 394483
-     *        filed in order to track.
-     * 
-     */
-    static NS_HIDDEN_(nsresult) 
-        LaunchWithWebHandler(nsIWebHandlerApp *aApp, nsIURI *aURI,
-                             nsIInterfaceRequestor *aWindowContext);
-
-    /**
      * Given a file: nsIURI, return the associated nsILocalFile
      *
      * @param  aURI      the file: URI in question
