@@ -1344,10 +1344,8 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     if (aState.GetFlag(BRS_SPACE_MGR)) {
       // Include the space manager's state to properly account for the
       // bottom margin of any floated elements; e.g., inside a table cell.
-      nscoord ymost;
-      if (aReflowState.mSpaceManager->YMost(ymost) &&
-          autoHeight < ymost)
-        autoHeight = ymost;
+      nscoord floatHeight = aReflowState.mSpaceManager->ClearFloats(nscoord_MIN, NS_STYLE_CLEAR_LEFT_AND_RIGHT);
+      autoHeight = PR_MAX(autoHeight, floatHeight);
     }
 
     // Apply min/max values
