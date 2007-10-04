@@ -561,6 +561,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   CGContextSaveGState(cgContext);
   //CGContextSetCTM(cgContext, CGAffineTransformIdentity);
 
+  // Apply any origin offset we have first, so it gets picked up by any other
+  // transforms we have.
+  CGContextTranslateCTM(cgContext, offsetX, offsetY);
+
   // I -think- that this context will always have an identity
   // transform (since we don't maintain a transform on it in
   // cairo-land, and instead push/pop as needed)
@@ -599,8 +603,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
                               NSAppUnitsToIntPixels(aRect.y, p2a),
                               NSAppUnitsToIntPixels(aRect.width, p2a),
                               NSAppUnitsToIntPixels(aRect.height, p2a));
-  macRect.origin.x += offsetX;
-  macRect.origin.y += offsetY;
 
   // 382049 - need to explicitly set the composite operation to sourceOver
   CGContextSetCompositeOperation(cgContext, kPrivateCGCompositeSourceOver);
