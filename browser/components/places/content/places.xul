@@ -374,17 +374,6 @@
             <label id="showingPrefix"/>
             <deck id="titleDeck" flex="1">
               <label id="contentTitle" flex="1" crop="right"/>
-              <hbox align="center" id="titlebarMatch" hidden="true">
-                <label value="&advancedSearch.match.label;"/>
-                <menulist id="advancedSearchType"
-                          oncommand="PlacesQueryBuilder.doSearch();">
-                  <menupopup>
-                    <menuitem value="and" label="&advancedSearch.all.label;"/>
-                    <menuitem value="or" label="&advancedSearch.any.label;"/>
-                  </menupopup>
-                </menulist>
-                <label value="&advancedSearch.rules.label;"/>
-              </hbox>
             </deck>
           </hbox>
           <vbox id="searchModifiers" hidden="true">
