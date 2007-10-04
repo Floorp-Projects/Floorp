@@ -44,13 +44,9 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= reftest
 
-ifdef DISABLED_FOR_NOW
-
 LIBRARY_NAME    = reftest
 IS_COMPONENT	= 1
 MODULE_NAME	= nsReftestModule
-
-MOZILLA_INTERNAL_API = 1
 
 REQUIRES	= \
 		xpcom \
@@ -83,20 +79,25 @@ REQUIRES	= \
 		zlib \
 		$(NULL)
 
+ifndef MOZ_ENABLE_LIBXUL
 EXTRA_DSO_LIBS = thebes
+PLEASE_LINK_KTHX = $(XPCOM_GLUE_LDOPTS)
+else
+PLEASE_LINK_KTHX = $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX)
+endif
+
 
 EXTRA_DSO_LDOPTS = \
 	$(LIBS_DIR) \
 	$(EXTRA_DSO_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
+	$(PLEASE_LINK_KTHX) \
 	$(ZLIB_LIBS) \
 	$(NULL)
 
 XPIDLSRCS = nsIReftestHelper.idl
 
 CPPSRCS = nsReftestHelper.cpp
-
-endif
 
 EXTRA_COMPONENTS= \
 		reftest-cmdline.js \
