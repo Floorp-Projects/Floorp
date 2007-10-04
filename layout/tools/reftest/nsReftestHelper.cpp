@@ -94,7 +94,8 @@ CanvasToImageSurface(nsIDOMHTMLCanvasElement *canvas)
     t->SetOperator(gfxContext::OPERATOR_CLEAR);
     t->Paint();
 
-    rv = ctx->RenderToSurface(img->CairoSurface());
+    t->SetOperator(gfxContext::OPERATOR_OVER);
+    rv = ctx->Render(t);
     if (NS_FAILED(rv))
         return nsnull;
 
