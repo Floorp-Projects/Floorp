@@ -2121,10 +2121,15 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
             // XXX ERRMSG we need to report an error to developers here! (bug 329026)
             return NS_ERROR_NOT_AVAILABLE;
 
+        PRUint32 status;
+        imgRequest->GetImageStatus(&status);
+        if (status != imgIRequest::STATUS_LOAD_COMPLETE)
+            return NS_ERROR_NOT_AVAILABLE;
+
         nsCOMPtr<nsIURI> uri;
         rv = imageLoader->GetCurrentURI(uriOut);
         NS_ENSURE_SUCCESS(rv, rv);
-       
+
         *forceWriteOnlyOut = PR_FALSE;
 
         rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
