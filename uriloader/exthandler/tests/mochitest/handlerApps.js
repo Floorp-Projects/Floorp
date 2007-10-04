@@ -97,7 +97,7 @@ function test() {
     // assume a generic UNIX variant
     exe = Components.classes["@mozilla.org/file/local;1"].
           createInstance(Components.interfaces.nsILocalFile);
-    exe.initWithPath("/bin/test");
+    exe.initWithPath("/bin/echo");
   }
 
   localHandler.executable = exe;
