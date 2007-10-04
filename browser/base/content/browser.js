@@ -3461,7 +3461,8 @@ nsBrowserStatusHandler.prototype =
   onLocationChange : function(aWebProgress, aRequest, aLocationURI)
   {
     var location = aLocationURI ? aLocationURI.spec : "";
- 
+    this._hostChanged = true;
+
     if (document.tooltipNode) {
       // Optimise for the common case
       if (aWebProgress.DOMWindow == content) {
@@ -3674,25 +3675,38 @@ nsBrowserStatusHandler.prototype =
 
   // Properties used to cache security state used to update the UI
   _state: null,
-  _host: null,
+  _host: undefined,
   _tooltipText: null,
+  _hostChanged: false, // onLocationChange will flip this bit
 
-  onSecurityChange : function(aWebProgress, aRequest, aState)
+  onSecurityChange : function browser_onSecChange(aWebProgress,
+                                                  aRequest, aState)
   {
-    var host = null;
-    try {
-      host = gBrowser.contentWindow.location.host;
-    } catch (ex) {}
-
     // Don't need to do anything if the data we use to update the UI hasn't
     // changed
     if (this._state == aState &&
-        this._host == host &&
-        this._tooltipText == gBrowser.securityUI.tooltipText)
+        this._tooltipText == gBrowser.securityUI.tooltipText &&
+        !this._hostChanged) {
+#ifdef DEBUG
+      var contentHost = gBrowser.contentWindow.location.host;
+      if (this._host !== undefined && this._host != contentHost) {
+          Components.utils.reportError(
+            "ASSERTION: browser.js host is inconsistent. Content window has " + 
+            "<" + contentHost + "> but cached host is <" + this._host + ">.\n"
+          );
+      }
+#endif
       return;
-
+    }
     this._state = aState;
-    this._host = host;
+
+    try {
+      this._host = gBrowser.contentWindow.location.host;
+    } catch(ex) {
+      this._host = null;
+    }
+
+    this._hostChanged = false;
     this._tooltipText = gBrowser.securityUI.tooltipText
 
     // aState is defined as a bitmask that may be extended in the future.
