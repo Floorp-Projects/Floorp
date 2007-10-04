@@ -111,9 +111,9 @@ public:
   nsresult
   RemoveAll();
 
-protected:
-
   nsresult GetUsage(const nsAString &aOwner, PRInt32 *aUsage);
+
+protected:
 
   nsCOMPtr<mozIStorageConnection> mConnection;
 
