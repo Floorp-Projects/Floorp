@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -135,68 +135,68 @@ if [[ $talkback -eq 1 ]]; then
 
     case $OSID in
         win32)
-        vendorid=`dos2unix < master.ini | grep '^VendorID = "' | sed 's@VendorID = "\([^"]*\)"@\1@'`
-        productid=`dos2unix < master.ini | grep '^ProductID = "' | sed 's@ProductID = "\([^"]*\)"@\1@'`
-        platformid=`dos2unix < master.ini | grep '^PlatformID = "' | sed 's@PlatformID = "\([^"]*\)"@\1@'`
-        buildid=`dos2unix < master.ini | grep '^BuildID = "' | sed 's@BuildID = "\([^"]*\)"@\1@'`
-        appdata=`cygpath -a -d "$APPDATA"`
-        talkbackdir="`cygpath -a -u $appdata`/Talkback"
-        ;;
+            vendorid=`dos2unix < master.ini | grep '^VendorID = "' | sed 's@VendorID = "\([^"]*\)"@\1@'`
+            productid=`dos2unix < master.ini | grep '^ProductID = "' | sed 's@ProductID = "\([^"]*\)"@\1@'`
+            platformid=`dos2unix < master.ini | grep '^PlatformID = "' | sed 's@PlatformID = "\([^"]*\)"@\1@'`
+            buildid=`dos2unix < master.ini | grep '^BuildID = "' | sed 's@BuildID = "\([^"]*\)"@\1@'`
+            appdata=`cygpath -a -d "$APPDATA"`
+            talkbackdir="`cygpath -a -u $appdata`/Talkback"
+            ;;
         linux)
-        vendorid=`dos2unix < master.ini | grep '^VendorID = "' | sed 's@VendorID = "\([^"]*\)"@\1@'`
-        productid=`dos2unix < master.ini | grep '^ProductID = "' | sed 's@ProductID = "\([^"]*\)"@\1@'`
-        platformid=`dos2unix < master.ini | grep '^PlatformID = "' | sed 's@PlatformID = "\([^"]*\)"@\1@'`
-        buildid=`dos2unix < master.ini | grep '^BuildID = "' | sed 's@BuildID = "\([^"]*\)"@\1@'`
-        talkbackdir="$HOME/.fullcircle"
-        ;;
+            vendorid=`dos2unix < master.ini | grep '^VendorID = "' | sed 's@VendorID = "\([^"]*\)"@\1@'`
+            productid=`dos2unix < master.ini | grep '^ProductID = "' | sed 's@ProductID = "\([^"]*\)"@\1@'`
+            platformid=`dos2unix < master.ini | grep '^PlatformID = "' | sed 's@PlatformID = "\([^"]*\)"@\1@'`
+            buildid=`dos2unix < master.ini | grep '^BuildID = "' | sed 's@BuildID = "\([^"]*\)"@\1@'`
+            talkbackdir="$HOME/.fullcircle"
+            ;;
         mac)
-        # hack around Mac's use of spaces in directory names
-        vendorid=`grep '^VendorID = "' master.ini | sed 's@VendorID = "\([^"]*\)"@\1@'`
-        productid=`grep '^ProductID = "' master.ini | sed 's@ProductID = "\([^"]*\)"@\1@'`
-        platformid=`grep '^PlatformID = "' master.ini | sed 's@PlatformID = "\([^"]*\)"@\1@'`
-        buildid=`grep '^BuildID = "' master.ini | sed 's@BuildID = "\([^"]*\)"@\1@'`
-        talkbackdir="$HOME/Library/Application Support/FullCircle"
-        IFS=:
-        ;;
+            # hack around Mac's use of spaces in directory names
+            vendorid=`grep '^VendorID = "' master.ini | sed 's@VendorID = "\([^"]*\)"@\1@'`
+            productid=`grep '^ProductID = "' master.ini | sed 's@ProductID = "\([^"]*\)"@\1@'`
+            platformid=`grep '^PlatformID = "' master.ini | sed 's@PlatformID = "\([^"]*\)"@\1@'`
+            buildid=`grep '^BuildID = "' master.ini | sed 's@BuildID = "\([^"]*\)"@\1@'`
+            talkbackdir="$HOME/Library/Application Support/FullCircle"
+            IFS=:
+            ;;
         *)
-        error "unknown os $OSID"
-        ;;
-        esac
+            error "unknown os $OSID"
+            ;;
+    esac
 
-        if [[ -z "$talkbackdir" ]]; then
-            error "empty talkback directory"
-        fi
+    if [[ -z "$talkbackdir" ]]; then
+        error "empty talkback directory"
+    fi
 
-        mkdir -p "$talkbackdir"
-        
-        case $OSID in
-            win32)
+    mkdir -p "$talkbackdir"
+    
+    case $OSID in
+        win32)
             talkbackinidir="$talkbackdir/$vendorid/$productid/$platformid/$buildid"
             ;;
-            linux | mac )
+        linux | mac )
             talkbackinidir="$talkbackdir/$vendorid$productid$platformid$buildid"
             ;;
-        esac
-        
-        if [[ ! -d "$talkbackinidir" ]]; then
-            create-directory.sh -d "$talkbackinidir" -n
-        fi
+    esac
+    
+    if [[ ! -d "$talkbackinidir" ]]; then
+        create-directory.sh -d "$talkbackinidir" -n
+    fi
 
-        cd $talkbackinidir
+    cd $talkbackinidir
 
-        cp /work/mozilla/mozilla.com/test.mozilla.com/www/talkback/$OSID/Talkback.ini .
+    cp /work/mozilla/mozilla.com/test.mozilla.com/www/talkback/$OSID/Talkback.ini .
 
-        case "$OSID" in
-            win32)
+    case "$OSID" in
+        win32)
             sed -i.bak "s@URLEdit .*@URLEdit = \"mozqa:$talkbackid\"@" Talkback.ini
             ;;
-            linux )
+        linux )
             sed -i.bak "s@URLEditControl .*@URLEditControl = \"mozqa:$talkbackid\"@" Talkback.ini
             ;;
-            mac )
+        mac )
             sed -i.bak "s@URLEditControl .*@URLEditControl = \"mozqa:$talkbackid\"@" Talkback.ini
             ;;
-            *)
+        *)
             error "unknown os=$OSID"
-        esac
-        fi
+    esac
+fi
