@@ -39,7 +39,7 @@ sub Execute {
                   'co', '-r', $productTag . '_RELEASE',
                   'mozilla/client.mk', catfile('mozilla', $appName, 'config')],
       dir => $stageDir,
-      logFile => catfile($logDir, 'source_checkout.log'),
+      logFile => catfile($logDir, 'source.log'),
     );
 
     $this->Shell(
@@ -47,7 +47,7 @@ sub Execute {
       cmdArgs => ['-f', 'client.mk', 'checkout',
                   'MOZ_CO_PROJECT=' . $appName],
       dir => catfile($stageDir, 'mozilla'),
-      logFile => catfile($logDir, 'source_make.log'),
+      logFile => catfile($logDir, 'source.log'),
     );
 
     # change all CVS/Root files to anonymous CVSROOT
@@ -62,7 +62,7 @@ sub Execute {
       cmd => 'tar',
       cmdArgs => ['-cjf', $tarFile, 'mozilla'],
       dir => catfile($stageDir),
-      logFile => catfile($logDir, 'source_tar.log'),
+      logFile => catfile($logDir, 'source.log'),
     );
               
     chmod(0644, glob("$stageDir/$tarFile"));
