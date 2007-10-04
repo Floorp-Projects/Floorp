@@ -1294,7 +1294,8 @@ DAVCollection.prototype = {
       // try without the auth header?
       // fixme: may want to just fail here
     }
-
+     this._authProvider._authFailed = false;
+ 
     let request = this._makeRequest("GET", "", internalHandlers, headers);
     request.send(null);
   },
@@ -1304,9 +1305,9 @@ DAVCollection.prototype = {
   },
 
   _onLogin: function DC__onLogin(event) {
-    //notice("logged in (" + event.target.status + "):\n" +
-    //    event.target.responseText + "\n");
-
+//    dump("logged in (" + event.target.status + "):\n" +
+//        event.target.responseText + "\n");
+ 
     if (this._authProvider._authFailed || event.target.status >= 400) {
       this._onLoginError(event);
       return;
