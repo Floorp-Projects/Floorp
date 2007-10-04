@@ -1,4 +1,3 @@
-#
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -12,14 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla browser.
+# The Original Code is mozilla.org code.
 #
-# The Initial Developer of the Original Code is Mozilla.
+# The Initial Developer of the Original Code is
+# Mozilla Foundation.
 # Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Myk Melez <myk@mozilla.org>
 #   Dan Mosedale <dmose@mozilla.org>
 #
 # Alternatively, the contents of this file may be used under the terms of
@@ -36,18 +35,20 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH           = ../../..
-topsrcdir       = @top_srcdir@
-srcdir          = @srcdir@
-VPATH           = @srcdir@
-
-DIRS += mochitest \
-        $(NULL)
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir	= uriloader/exthandler/tests/mochitest 
 
 include $(DEPTH)/config/autoconf.mk
-
-MODULE          = test_uriloader_exthandler
-
-XPCSHELL_TESTS  = unit
-
 include $(topsrcdir)/config/rules.mk
+
+_TEST_FILES =	\
+		test_handlerApps.xhtml \
+		handlerApps.js \
+		handlerApp.xhtml \
+		$(NULL)
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

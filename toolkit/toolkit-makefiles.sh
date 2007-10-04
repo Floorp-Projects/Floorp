@@ -367,6 +367,7 @@ MAKEFILES_uriloader="
   uriloader/base/Makefile
   uriloader/exthandler/Makefile
   uriloader/exthandler/tests/Makefile
+  uriloader/exthandler/tests/browser/Makefile
 "
 
 MAKEFILES_profile="
