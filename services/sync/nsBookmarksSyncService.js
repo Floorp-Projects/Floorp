@@ -1038,7 +1038,8 @@ BookmarksSyncService.prototype = {
                     uneval(this._snapshot), handlers);
       let snapPut = yield;
       if (snapPut.target.status < 200 || snapPut.target.status >= 300) {
-        this.notice("Error: could not upload snapshot to server");
+        this.notice("Error: could not upload snapshot to server, error code: " +
+                    snapPut.target.status);
         generatorDone(this, onComplete, ret)
         return;
       }
@@ -1046,7 +1047,8 @@ BookmarksSyncService.prototype = {
       this._dav.PUT("bookmarks-deltas.json", uneval([]), handlers);
       let deltasPut = yield;
       if (deltasPut.target.status < 200 || deltasPut.target.status >= 300) {
-        this.notice("Error: could not upload deltas to server");
+        this.notice("Error: could not upload deltas to server, error code: " +
+                   deltasPut.target.status);
         generatorDone(this, onComplete, ret)
         return;
       }
@@ -1058,7 +1060,8 @@ BookmarksSyncService.prototype = {
                             maxVersion: this._snapshotVersion}), handlers);
       let statusPut = yield;
       if (statusPut.target.status < 200 || statusPut.target.status >= 300) {
-        this.notice("Error: could not upload status file to server");
+        this.notice("Error: could not upload status file to server, error code: " +
+                   statusPut.target.status);
         generatorDone(this, onComplete, ret)
         return;
       }
@@ -1433,10 +1436,10 @@ DAVCollection.prototype = {
     let request = this._makeRequest("PROPFIND", "", handlers, headers);
     request.send("<?xml version=\"1.0\" encoding=\"utf-8\" ?>" +
                  "<D:propfind xmlns:D='DAV:'>" +
-                 "<D:prop><D:lockdiscovery/></D:prop>" +
+                 "  <D:prop><D:lockdiscovery/></D:prop>" +
                  "</D:propfind>");
     let event = yield;
-    let tokens = xpath(event.target.responseXML, '//D:locktoken');
+    let tokens = xpath(event.target.responseXML, '//D:locktoken/D:href');
     let token = tokens.iterateNext();
     if (token)
       generatorDone(this, onComplete, token.textContent);
@@ -1448,7 +1451,8 @@ DAVCollection.prototype = {
     let generator = yield;
     let handlers = generatorHandlers(generator);
 
-    headers = {'Content-Type': 'text/xml; charset="utf-8"'};
+    headers = {'Content-Type': 'text/xml; charset="utf-8"',
+               'Depth': 'infinity'};
     if (this._authString)
       headers['Authorization'] = this._authString;
 
@@ -1465,11 +1469,10 @@ DAVCollection.prototype = {
       return;
     }
 
-    let tokens = xpath(event.target.responseXML, '//D:locktoken');
+    let tokens = xpath(event.target.responseXML, '//D:locktoken/D:href');
     let token = tokens.iterateNext();
     if (token) {
       this._token = token.textContent;
-      this._token = this._token.replace("\n", "").replace("\n", "");
       generatorDone(this, onComplete, true);
     }
 
@@ -1512,7 +1515,6 @@ DAVCollection.prototype = {
       if (!asyncRun(this, this._getActiveLock, handlers.complete))
         return;
       this._token = yield;
-      this._token = this._token.replace("\n", "").replace("\n", "");
   
       if (!asyncRun(this, this.unlock, handlers.complete))
         return;
