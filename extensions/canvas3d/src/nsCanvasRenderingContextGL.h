@@ -281,8 +281,14 @@ public:
         if (NS_FAILED(error))
             return;
 
+        JS_BeginRequest(ctx);
+
         ncc->GetArgc(&argc);
         ncc->GetArgvPtr(&argv);
+    }
+
+    ~NativeJSContext() {
+        JS_EndRequest(ctx);
     }
 
     PRBool AddGCRoot (void *aPtr, const char *aName) {

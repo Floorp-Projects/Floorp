@@ -99,7 +99,11 @@ CPPSRCS		= nsCanvas3DModule.cpp \
 
 DEFINES += -DXPCOM_GLUE -DXPCOM_GLUE_USE_NSPR -DGLEW_MX -DGLEW_STATIC
 
+ifdef MOZ_ENABLE_LIBXUL
 EXTRA_DSO_LIBS += js3250 xpcom xul
+else
+EXTRA_DSO_LIBS += js3250 xpcom thebes
+endif
 
 # Hack for getting an extension built against static vs. dynamic versions of firefox
 ##ifeq (,$(BUILD_STATIC_LIBS))
