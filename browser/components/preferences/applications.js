@@ -959,14 +959,6 @@ var gApplicationsPane = {
       if (handlerInfo.handledOnlyByPlugin && handlerInfo.isDisabledPluginType)
         continue;
 
-      // Don't display entries for types we always ask about before handling.
-      // FIXME: that's what the old code did, but we should be showing these
-      // types and letting users choose to do something different.  Filed as
-      // bug 395138.
-      if (handlerInfo.alwaysAskBeforeHandling &&
-          handlerInfo.type != TYPE_MAYBE_FEED)
-        continue;
-
       // If the user is filtering the list, then only show matching types.
       if (this._filter.value && !this._matchesFilter(handlerInfo))
         continue;
@@ -997,12 +989,15 @@ var gApplicationsPane = {
    */
   _describePreferredAction: function(aHandlerInfo) {
     // alwaysAskBeforeHandling overrides the preferred action, so if that flag
-    // is set, then describe that behavior instead.  Currently we hide all types
-    // with alwaysAskBeforeHandling except for the feed type, so here we use
-    // a feed-specific message to describe the behavior.
-    if (aHandlerInfo.alwaysAskBeforeHandling)
-      return this._prefsBundle.getFormattedString("previewInApp",
-                                                  [this._brandShortName]);
+    // is set, then describe that behavior instead.  For most types, this is
+    // the "alwaysAsk" string, but for the feed type we show something special.
+    if (aHandlerInfo.alwaysAskBeforeHandling) {
+      if (aHandlerInfo.type == TYPE_MAYBE_FEED)
+        return this._prefsBundle.getFormattedString("previewInApp",
+                                                    [this._brandShortName]);
+      else
+        return this._prefsBundle.getString("alwaysAsk");
+    }
 
     switch (aHandlerInfo.preferredAction) {
       case Ci.nsIHandlerInfo.saveToDisk:
@@ -1103,19 +1098,25 @@ var gApplicationsPane = {
     while (menuPopup.hasChildNodes())
       menuPopup.removeChild(menuPopup.lastChild);
 
-    // If this is the feed type, add Preview in Firefox and Live Bookmarks items.
-    if (handlerInfo.type == TYPE_MAYBE_FEED) {
+    {
       var askMenuItem = document.createElementNS(kXULNS, "menuitem");
       askMenuItem.setAttribute("alwaysAsk", "true");
-      let label = this._prefsBundle.getFormattedString("previewInApp",
-                                                       [this._brandShortName]);
+      let label;
+      if (handlerInfo.type == TYPE_MAYBE_FEED)
+        label = this._prefsBundle.getFormattedString("previewInApp",
+                                                     [this._brandShortName]);
+      else
+        label = this._prefsBundle.getString("alwaysAsk");
       askMenuItem.setAttribute("label", label);
       menuPopup.appendChild(askMenuItem);
+    }
 
+    // If this is the feed type, add a Live Bookmarks item.
+    if (handlerInfo.type == TYPE_MAYBE_FEED) {
       var internalMenuItem = document.createElementNS(kXULNS, "menuitem");
       internalMenuItem.setAttribute("action", Ci.nsIHandlerInfo.handleInternally);
-      label = this._prefsBundle.getFormattedString("liveBookmarksInApp",
-                                                   [this._brandShortName]);
+      let label = this._prefsBundle.getFormattedString("liveBookmarksInApp",
+                                                       [this._brandShortName]);
       internalMenuItem.setAttribute("label", label);
       internalMenuItem.setAttribute("image", ICON_URL_LIVEMARK);
       menuPopup.appendChild(internalMenuItem);
