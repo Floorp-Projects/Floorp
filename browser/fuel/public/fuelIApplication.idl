@@ -271,7 +271,7 @@ interface fuelISessionStorage : nsISupports
 /**
  * Interface representing an extension
  */
-[scriptable, uuid(ea563b60-aa5a-11db-abbd-0800200c9a66)]
+[scriptable, uuid(10cee02c-f6e0-4d61-ab27-c16572b18c46)]
 interface fuelIExtension : nsISupports
 {
   /**
