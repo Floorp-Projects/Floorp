@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -67,7 +67,7 @@ directories... /grandparent/parent/child.
 This script will destroy existing directories and
 their contents. It can potentially wipe out your
 disk. Use with caution.
-    ******************** WARNING ********************
+******************** WARNING ********************
 
 EOF
     exit 1

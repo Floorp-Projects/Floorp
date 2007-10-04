@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/bin/bash
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -38,9 +38,9 @@
 # ***** END LICENSE BLOCK *****
 
 export BUILDDIR=/work/mozilla/builds
-export SHELL=/usr/local/bin/bash
-export CONFIG_SHELL=/usr/local/bin/bash
-export CONFIGURE_ENV_ARGS=/usr/local/bin/bash 
+export SHELL=/bin/bash
+export CONFIG_SHELL=/bin/bash
+export CONFIGURE_ENV_ARGS=/bin/bash 
 export MOZ_CVS_FLAGS="-z3 -q"
 export CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
 export MOZILLA_OFFICIAL=1
@@ -160,25 +160,25 @@ for step in step1; do # dummy loop for handling exits
 
         case "$extra" in
             too-much-gc)
-            export XCFLAGS="-DWAY_TOO_MUCH_GC=1"
-            export CFLAGS="-DWAY_TOO_MUCH_GC=1"
-            export CXXFLAGS="-DWAY_TOO_MUCH_GC=1"
-            ;;
+                export XCFLAGS="-DWAY_TOO_MUCH_GC=1"
+                export CFLAGS="-DWAY_TOO_MUCH_GC=1"
+                export CXXFLAGS="-DWAY_TOO_MUCH_GC=1"
+                ;;
             gcov)
 
-            if [[ "$OSID" == "win32" ]]; then
-                echo "win32 does not support gcov"
+                if [[ "$OSID" == "win32" ]]; then
+                    echo "win32 does not support gcov"
                     myexit 1
-            fi
-            export CFLAGS="--coverage"
-            export CXXFLAGS="--coverage"
-            export XCFLAGS="--coverage"
-            export OS_CFLAGS="--coverage"
-            export LDFLAGS="--coverage"
-            export XLDOPTS="--coverage"	
-            ;;
+                fi
+                export CFLAGS="--coverage"
+                export CXXFLAGS="--coverage"
+                export XCFLAGS="--coverage"
+                export OS_CFLAGS="--coverage"
+                export LDFLAGS="--coverage"
+                export XLDOPTS="--coverage"	
+                ;;
             jprof)
-            ;;
+                ;;
         esac
     fi
 
@@ -210,8 +210,8 @@ for step in step1; do # dummy loop for handling exits
 
     case "$OSID" in
         mac)
-        export JS_EDITLINE=1 # required for mac
-        ;;
+            export JS_EDITLINE=1 # required for mac
+            ;;
     esac
     # end js shell builds
 
