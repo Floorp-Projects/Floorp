@@ -63,6 +63,28 @@ public:
 protected:
   nsString mName;
   nsCOMPtr<nsIFile> mExecutable;
+  
+  /**
+   * Launches this application with a single argument (typically either
+   * a file path or a URI spec).  This is meant as a helper method for
+   * implementations of (e.g.) LaunchWithURI.
+   *
+   * @param aApp The application to launch (may not be null)
+   * @param aArg The argument to pass on the command line
+   */
+   NS_HIDDEN_(nsresult) LaunchWithIProcess(const nsCString &aArg);
+
 };
+
+// any platforms that need a platform-specific class instead of just 
+// using nsLocalHandlerApp need to add an include and a typedef here.
+#ifdef XP_MACOSX
+# ifndef NSLOCALHANDLERAPPMAC_H_  
+# include "mac/nsLocalHandlerAppMac.h"
+typedef nsLocalHandlerAppMac PlatformLocalHandlerApp_t;
+# endif
+#else 
+typedef nsLocalHandlerApp PlatformLocalHandlerApp_t;
+#endif
 
 #endif //  __nsLocalHandlerAppImpl_h__

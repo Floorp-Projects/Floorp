@@ -387,8 +387,6 @@ NS_IMETHODIMP
 nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI,
                               nsIInterfaceRequestor* aWindowContext)
 {
-  nsresult rv;
-
   // for now, this is only being called with protocol handlers; that
   // will change once we get to more general registerContentHandler
   // support
@@ -403,26 +401,7 @@ nsMIMEInfoBase::LaunchWithURI(nsIURI* aURI,
     if (!mPreferredApplication)
       return NS_ERROR_FILE_NOT_FOUND;
 
-    // check for and possibly launch with web application
-    nsCOMPtr<nsIWebHandlerApp> webHandler = 
-      do_QueryInterface(mPreferredApplication, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      return LaunchWithWebHandler(webHandler, aURI, aWindowContext);         
-    }
-
-    // ok, we must have a local handler app
-    nsCOMPtr<nsILocalHandlerApp> localHandler = 
-      do_QueryInterface(mPreferredApplication, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIFile> executable;
-    rv = localHandler->GetExecutable(getter_AddRefs(executable));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // pass the entire URI to the handler.
-    nsCAutoString spec;
-    aURI->GetSpec(spec);
-    return LaunchWithIProcess(executable, spec);
+    return mPreferredApplication->LaunchWithURI(aURI, aWindowContext);
   } 
 
   return NS_ERROR_INVALID_ARG;
@@ -457,70 +436,6 @@ nsMIMEInfoBase::LaunchWithIProcess(nsIFile* aApp, const nsCString& aArg)
 
   PRUint32 pid;
   return process->Run(PR_FALSE, &string, 1, &pid);
-}
-
-/* static */
-nsresult
-nsMIMEInfoBase::LaunchWithWebHandler(nsIWebHandlerApp *aApp, nsIURI *aURI,
-                                     nsIInterfaceRequestor *aWindowContext) 
-{
-  
-  nsCAutoString uriTemplate;
-  nsresult rv = aApp->GetUriTemplate(uriTemplate);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // get the URI spec so we can escape it for insertion into the template 
-  nsCAutoString uriSpecToHandle;
-  rv = aURI->GetSpec(uriSpecToHandle);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // XXX need to strip passwd & username from URI to handle, as per the
-  // WhatWG HTML5 draft.  nsSimpleURL, which is what we're going to get,
-  // can't do this directly.  Ideally, we'd fix nsStandardURL to make it
-  // possible to turn off all of its quirks handling, and use that...
-
-  // XXX this doesn't exactly match how the HTML5 draft is requesting us to
-  // escape; at the very least, it should be escaping @ signs, and there
-  // may well be more issues (bug 382019).
-  nsCAutoString escapedUriSpecToHandle;
-  NS_EscapeURL(uriSpecToHandle, esc_Minimal | esc_Forced | esc_Colon,
-               escapedUriSpecToHandle);
-
-  // XXX note that this replace all occurrences of %s with the URL to be
-  // handled, instead of just the first, as specified by the current draft
-  // of the spec.  Bug 394476 filed to track this.
-  uriTemplate.ReplaceSubstring(NS_LITERAL_CSTRING("%s"),
-                               escapedUriSpecToHandle);
-
-  // convert spec to URI; no original charset needed since there's no way
-  // to communicate that information to any handler
-  nsCOMPtr<nsIURI> uriToSend;
-  rv = NS_NewURI(getter_AddRefs(uriToSend), uriTemplate);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // create a channel
-  nsCOMPtr<nsIChannel> newChannel;
-  rv = NS_NewChannel(getter_AddRefs(newChannel), uriToSend, nsnull, nsnull,
-                     nsnull, nsIChannel::LOAD_DOCUMENT_URI);
-  if (NS_FAILED(rv))
-    return rv;
-
-  // load the URI
-  nsCOMPtr<nsIURILoader> uriLoader = do_GetService(NS_URI_LOADER_CONTRACTID, 
-                                                   &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // XXX ideally, aIsContentPreferred (the second param) should really be
-  // passed in from above.  Practically, PR_TRUE is probably a reasonable
-  // default since browsers don't care much, and link click is likely to be
-  // the more interesting case for non-browser apps.  See 
-  // <https://bugzilla.mozilla.org/show_bug.cgi?id=392957#c9> for details.
-  return uriLoader->OpenURI(newChannel, PR_TRUE, aWindowContext);
 }
 
 // nsMIMEInfoImpl implementation

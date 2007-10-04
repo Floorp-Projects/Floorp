@@ -11,14 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the MacOS MIMEInfo Implementation.
+ * The Original Code is Mozilla code.
  *
  * The Initial Developer of the Original Code is
- * Christian Biesinger <cbiesinger@web.de>.
- * Portions created by the Initial Developer are Copyright (C) 2004
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,32 +35,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsMIMEInfoMac_h_
-#define nsMIMEInfoMac_h_
+#ifndef NSLOCALHANDLERAPPMAC_H_
+#define NSLOCALHANDLERAPPMAC_H_
 
-#include "nsMIMEInfoImpl.h"
+#include "nsLocalHandlerApp.h"
 
-class nsMIMEInfoMac : public nsMIMEInfoImpl {
+class nsLocalHandlerAppMac : public nsLocalHandlerApp {
+
   public:
-    nsMIMEInfoMac(const char* aMIMEType = "") : nsMIMEInfoImpl(aMIMEType) {}
-    nsMIMEInfoMac(const nsACString& aMIMEType) : nsMIMEInfoImpl(aMIMEType) {}
-    nsMIMEInfoMac(const nsACString& aType, HandlerClass aClass) :
-      nsMIMEInfoImpl(aType, aClass) {}
+    nsLocalHandlerAppMac() { }
 
-    NS_IMETHOD LaunchWithFile(nsIFile* aFile);
-    NS_IMETHOD GetHasDefaultHandler(PRBool *_retval);
-  protected:
-    virtual NS_HIDDEN_(nsresult) LoadUriInternal(nsIURI *aURI);
-#ifdef DEBUG
-    virtual NS_HIDDEN_(nsresult) LaunchDefaultWithFile(nsIFile* aFile) {
-      NS_NOTREACHED("do not call this method, use LaunchWithFile");
-      return NS_ERROR_UNEXPECTED;
-    }
-#endif
-    static NS_HIDDEN_(nsresult) OpenApplicationWithURI(nsIFile *aApplication, 
-                                                       const nsCString& aURI);
-    
+    nsLocalHandlerAppMac(const PRUnichar *aName, nsIFile *aExecutable)
+      : nsLocalHandlerApp(aName, aExecutable) {} 
+
+    nsLocalHandlerAppMac(const nsAString & aName, nsIFile *aExecutable) 
+      : nsLocalHandlerApp(aName, aExecutable) {}
+    virtual ~nsLocalHandlerAppMac() { }
+
+    NS_IMETHOD LaunchWithURI(nsIURI* aURI,
+                             nsIInterfaceRequestor* aWindowContext);
 };
 
-
-#endif
+#endif /*NSLOCALHANDLERAPPMAC_H_*/
