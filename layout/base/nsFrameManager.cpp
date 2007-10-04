@@ -1044,6 +1044,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
   // that the frame has the last reference to it, so AddRef it here.
 
   nsChangeHint assumeDifferenceHint = NS_STYLE_HINT_NONE;
+  // XXXbz oldContext should just be an nsRefPtr
   nsStyleContext* oldContext = aFrame->GetStyleContext();
   nsStyleSet* styleSet = aPresContext->StyleSet();
 #ifdef ACCESSIBILITY
@@ -1054,6 +1055,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
   }
 #endif
 
+  // XXXbz the nsIFrame constructor takes an nsStyleContext, so how
+  // could oldContext be null?
   if (oldContext) {
     oldContext->AddRef();
     nsIAtom* const pseudoTag = oldContext->GetPseudoType();
@@ -1095,6 +1098,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
     }
     
     // do primary context
+    // XXXbz newContext should just be an nsRefPtr
     nsStyleContext* newContext = nsnull;
     if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
       NS_ASSERTION(localContent,
@@ -1214,7 +1218,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
     }
 
     // now look for undisplayed child content and pseudos
-    if (localContent && mUndisplayedMap) {
+    if (!pseudoTag && localContent && mUndisplayedMap) {
       for (UndisplayedNode* undisplayed =
                                    mUndisplayedMap->GetFirstNode(localContent);
            undisplayed; undisplayed = undisplayed->mNext) {

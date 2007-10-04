@@ -137,11 +137,13 @@ nsMathMLmactionFrame::Init(nsIContent*      aContent,
         // given us the associated style. But we want to start with our default style.
 
         // So... first, remove the attribute actiontype="restyle#id"
+        // XXXbz this is pretty messed up, since this can change whether we
+        // should have a frame at all.  This really needs a better solution.
         PRBool notify = PR_FALSE; // don't trigger a reflow yet!
         aContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::actiontype_, notify);
 
         // then, re-resolve our style
-        nsStyleContext* parentStyleContext = aParent->GetStyleContext();
+        nsStyleContext* parentStyleContext = GetStyleContext()->GetParent();
         newStyleContext = PresContext()->StyleSet()->
           ResolveStyleFor(aContent, parentStyleContext);
 
