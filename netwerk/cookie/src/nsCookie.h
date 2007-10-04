@@ -56,14 +56,9 @@
 
 class nsCookie : public nsICookie2
 {
-  // break up the NS_DECL_ISUPPORTS macro, since we use a bitfield refcount member
-  public:
-    NS_DECL_ISUPPORTS_INHERITED
-  protected:
-    NS_DECL_OWNINGTHREAD
-
   public:
     // nsISupports
+    NS_DECL_ISUPPORTS
     NS_DECL_NSICOOKIE
     NS_DECL_NSICOOKIE2
 
@@ -87,7 +82,6 @@ class nsCookie : public nsICookie2
      , mEnd(aEnd)
      , mExpiry(aExpiry)
      , mCreationID(aCreationID)
-     , mRefCnt(0)
      , mIsSession(aIsSession != PR_FALSE)
      , mIsSecure(aIsSecure != PR_FALSE)
      , mIsHttpOnly(aIsHttpOnly != PR_FALSE)
@@ -141,20 +135,19 @@ class nsCookie : public nsICookie2
     // store a terminating null for each string, so we can hand them
     // out as nsAFlatCStrings.
 
-    nsCookie   *mNext;
-    const char *mName;
-    const char *mValue;
-    const char *mHost;
-    const char *mPath;
-    const char *mEnd;
-    PRInt64     mExpiry;
+    nsCookie    *mNext;
+    const char  *mName;
+    const char  *mValue;
+    const char  *mHost;
+    const char  *mPath;
+    const char  *mEnd;
+    PRInt64      mExpiry;
     // creation id is unique for each cookie and approximately represents the cookie
     // creation time, in microseconds.
-    PRInt64     mCreationID;
-    PRUint32    mRefCnt    : 16;
-    PRUint32    mIsSession : 1;
-    PRUint32    mIsSecure  : 1;
-    PRUint32    mIsHttpOnly: 1;
+    PRInt64      mCreationID;
+    PRPackedBool mIsSession;
+    PRPackedBool mIsSecure;
+    PRPackedBool mIsHttpOnly;
 };
 
 #endif // nsCookie_h__
