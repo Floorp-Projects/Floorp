@@ -103,7 +103,7 @@
  *
  * @note
  * <li> "Mask", "Alpha", and "Alpha Level" are interchangable phrases in
- * respects to imgContainerGIF.
+ * respects to imgContainer.
  *
  * @par
  * <li> GIFs never have more than a 1 bit alpha.
@@ -143,8 +143,6 @@ public:
   virtual ~imgContainer();
 
 private:
-  friend class nsGIFDecoder2;
-  
   struct Anim
   {
     //! Area of the first frame that needs to be redrawn on subsequent loops.
