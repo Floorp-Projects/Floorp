@@ -791,6 +791,19 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
   return NS_OK;
 }
 
+/**
+ * Determines whether the identifier contained in the given string is a
+ * vendor-specific identifier, as described in CSS 2.1 section 4.1.2.1.
+ */
+static PRBool
+NonMozillaVendorIdentifier(const nsAString& ident)
+{
+  return (ident.First() == PRUnichar('-') &&
+          !StringBeginsWith(ident, NS_LITERAL_STRING("-moz-"))) ||
+         ident.First() == PRUnichar('_');
+
+}
+
 NS_IMETHODIMP
 CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
                                    nsIURI*                  aDocURL,
@@ -1294,8 +1307,11 @@ PRBool CSSParserImpl::ParseAtRule(nsresult& aErrorCode, RuleAppendFunc aAppendFu
       return PR_TRUE;
     }
   }
-  REPORT_UNEXPECTED_TOKEN(PEUnknownAtRule);
-  OUTPUT_ERROR();
+
+  if (!NonMozillaVendorIdentifier(mToken.mIdent)) {
+    REPORT_UNEXPECTED_TOKEN(PEUnknownAtRule);
+    OUTPUT_ERROR();
+  }
 
   // Skip over unsupported at rule, don't advance section
   return SkipAtRule(aErrorCode);
@@ -3298,15 +3314,18 @@ CSSParserImpl::ParseDeclaration(nsresult& aErrorCode,
     return PR_FALSE;
   }
 
-  // Map property name to it's ID and then parse the property
+  // Map property name to its ID and then parse the property
   nsCSSProperty propID = nsCSSProps::LookupProperty(propertyName);
   if (eCSSProperty_UNKNOWN == propID) { // unknown property
-    const PRUnichar *params[] = {
-      propertyName.get()
-    };
-    REPORT_UNEXPECTED_P(PEUnknownProperty, params);
-    REPORT_UNEXPECTED(PEDeclDropped);
-    OUTPUT_ERROR();
+    if (!NonMozillaVendorIdentifier(propertyName)) {
+      const PRUnichar *params[] = {
+        propertyName.get()
+      };
+      REPORT_UNEXPECTED_P(PEUnknownProperty, params);
+      REPORT_UNEXPECTED(PEDeclDropped);
+      OUTPUT_ERROR();
+    }
+
     return PR_FALSE;
   }
   if (! ParseProperty(aErrorCode, propID)) {
