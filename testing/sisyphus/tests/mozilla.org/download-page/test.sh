@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 
 TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
 TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
