@@ -51,6 +51,7 @@
 #include "nsIDOMToString.h"
 #include "nsDOMEvent.h"
 #include "nsIDOMStorageEvent.h"
+#include "nsIDOMStorageManager.h"
 
 #ifdef MOZ_STORAGE
 #include "nsDOMStorageDB.h"
@@ -80,11 +81,15 @@ public:
   nsRefPtr<nsDOMStorageItem> mItem;
 };
 
-class nsDOMStorageManager : public nsIObserver
+class nsDOMStorageManager : public nsIDOMStorageManager
+                          , public nsIObserver
 {
 public:
   // nsISupports
   NS_DECL_ISUPPORTS
+
+  // nsIDOMStorageManager
+  NS_DECL_NSIDOMSTORAGEMANAGER
 
   // nsIObserver
   NS_DECL_NSIOBSERVER
@@ -95,6 +100,7 @@ public:
   nsresult ClearAllStorages();
 
   static nsresult Initialize();
+  static nsDOMStorageManager* GetInstance();
   static void Shutdown();
 
   static nsDOMStorageManager* gStorageManager;
