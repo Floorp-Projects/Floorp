@@ -36,7 +36,7 @@
 
 <vbox id="advancedSearch">
   <hbox>
-    <label value="&advancedSearch.match.label;"/> 
+    <label value="&advancedSearch.match.label;" control="advancedSearchType"/> 
     <menulist id="advancedSearchType"
               oncommand="PlacesQueryBuilder.doSearch();">
       <menupopup>
