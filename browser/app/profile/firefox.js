@@ -553,7 +553,7 @@ pref("browser.EULA.2.accepted", true);
 // if we rev the EULA again, we should bump this so users agree to the new EULA
 pref("browser.EULA.version", 2);
 
-pref("browser.sessionstore.enabled", false);
+pref("browser.sessionstore.enabled", true);
 pref("browser.sessionstore.resume_from_crash", true);
 pref("browser.sessionstore.resume_session_once", false);
  
