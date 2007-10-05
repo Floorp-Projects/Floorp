@@ -143,5 +143,3 @@ REOP_DEF(REOP_ENDALT,        "endalt")
 REOP_DEF(REOP_CONCAT,        "concat")
 /* end of expression */
 REOP_DEF(REOP_END,           "end")
-/* META: no operator >= to this */
-REOP_DEF(REOP_LIMIT,"limit")
