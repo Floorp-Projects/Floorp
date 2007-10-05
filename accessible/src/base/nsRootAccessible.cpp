@@ -670,7 +670,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   if (eventType.EqualsLiteral("CheckboxStateChange")) {
     PRUint32 state = State(accessible);
 
-    PRBool isEnabled = state & nsIAccessibleStates::STATE_CHECKED;
+    PRBool isEnabled = !!(state & nsIAccessibleStates::STATE_CHECKED);
 
     nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
       new nsAccStateChangeEvent(accessible,
