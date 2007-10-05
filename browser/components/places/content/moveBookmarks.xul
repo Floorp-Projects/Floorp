@@ -61,7 +61,7 @@
           src="chrome://browser/content/places/moveBookmarks.js"/>
 
   <hbox flex="1">
-    <label id="movetolabel" value="&moveTo.label;"/>
+    <label id="movetolabel" value="&moveTo.label;" control="foldersTree"/>
     <hbox flex="1">
       <tree id="foldersTree"
             class="placesTree"

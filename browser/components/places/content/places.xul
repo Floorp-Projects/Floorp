@@ -493,7 +493,7 @@
               </columns>
               <rows>
                 <row align="center">
-                  <label value="Debug:"/>
+                  <label value="Debug:" control="placeURI"/>
                   <textbox id="placeURI" flex="1" 
                            onkeypress="PlacesOrganizer.onPlaceURIKeypress(event);"/>
                   <button label="Load" oncommand="PlacesOrganizer.loadPlaceURI();"/>
@@ -509,7 +509,7 @@
                 </row>
                 <separator class="thin"/>
                 <row align="center">
-                  <label value="Loaded:"/>
+                  <label value="Loaded:" control="loadedURI"/>
                   <textbox id="loadedURI" flex="1" readonly="true"/>
                   <spacer/>
                 </row>
