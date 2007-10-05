@@ -100,6 +100,11 @@ const kActionUsePlugin = 5;
 const ICON_URL_PLUGIN   = "chrome://browser/skin/preferences/plugin.png";
 const ICON_URL_LIVEMARK = "chrome://browser/skin/page-livemarks.png";
 const ICON_URL_APP      = "chrome://browser/skin/preferences/application.png";
+// FIXME: come up with icons for the "always ask" and "save file" actions.
+// Filed as bug 398627.
+const ICON_URL_ASK      = ICON_URL_APP;
+const ICON_URL_SAVE     = ICON_URL_APP;
+
 
 //****************************************************************************//
 // Utilities
@@ -1102,6 +1107,7 @@ var gApplicationsPane = {
       else
         label = this._prefsBundle.getString("alwaysAsk");
       askMenuItem.setAttribute("label", label);
+      askMenuItem.setAttribute("image", ICON_URL_ASK);
       menuPopup.appendChild(askMenuItem);
     }
 
@@ -1186,6 +1192,7 @@ var gApplicationsPane = {
       var saveMenuItem = document.createElementNS(kXULNS, "menuitem");
       saveMenuItem.setAttribute("action", Ci.nsIHandlerInfo.saveToDisk);
       saveMenuItem.setAttribute("label", this._prefsBundle.getString("saveFile"));
+      saveMenuItem.setAttribute("image", ICON_URL_SAVE);
       menuPopup.appendChild(saveMenuItem);
     }
 
@@ -1417,7 +1424,13 @@ var gApplicationsPane = {
   },
 
   _getIconURLForPreferredAction: function(aHandlerInfo) {
+    if (aHandlerInfo.alwaysAskBeforeHandling)
+      return ICON_URL_ASK;
+
     switch (aHandlerInfo.preferredAction) {
+      case Ci.nsIHandlerInfo.saveToDisk:
+        return ICON_URL_SAVE;
+
       case Ci.nsIHandlerInfo.handleInternally:
         if (aHandlerInfo.type == TYPE_MAYBE_FEED)
           return ICON_URL_LIVEMARK;
@@ -1434,10 +1447,12 @@ var gApplicationsPane = {
 
       case kActionUsePlugin:
         return ICON_URL_PLUGIN;
-    }
 
-    // We don't know how to get an icon URL for any other actions.
-    return "";
+      // This should never happen, but if preferredAction is set to some weird
+      // value, then fall back to the generic application icon.
+      default:
+        return ICON_URL_APP;
+    }
   },
 
   _getIconURLForHandlerApp: function(aHandlerApp) {
