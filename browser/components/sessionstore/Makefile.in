@@ -50,8 +50,8 @@ XPIDLSRCS = \
 
 DIRS = src
 
-#ifdef MOZ_MOCHITEST
-#DIRS += test
-#endif
+ifdef MOZ_MOCHITEST
+DIRS += test
+endif
 
 include $(topsrcdir)/config/rules.mk
