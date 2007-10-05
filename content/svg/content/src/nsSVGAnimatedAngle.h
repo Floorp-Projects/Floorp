@@ -34,19 +34,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __NS_SVGANGLE_H__
-#define __NS_SVGANGLE_H__
+#ifndef __NS_SVGANIMATEDANGLE_H__
+#define __NS_SVGANIMATEDANGLE_H__
 
+#include "nsIDOMSVGAnimatedAngle.h"
 #include "nsIDOMSVGAngle.h"
-#include "nsAString.h"
 
-nsresult
-NS_NewSVGAngle(nsIDOMSVGAngle** result,
-               float value=0.0f,
-               PRUint16 unit=nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED);
+nsresult NS_NewSVGAnimatedAngle(nsIDOMSVGAnimatedAngle** result,
+                                nsIDOMSVGAngle* baseVal);
 
-nsresult
-NS_NewSVGAngle(nsIDOMSVGAngle** result,
-               const nsAString &value);
-
-#endif //__NS_SVGANGLE_H__
+#endif //__NS_SVGANIMATEDANGLE_H__

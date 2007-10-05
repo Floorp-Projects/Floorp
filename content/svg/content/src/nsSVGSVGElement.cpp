@@ -379,7 +379,7 @@ nsSVGSVGElement::SuspendRedraw(PRUint32 max_wait_milliseconds, PRUint32 *_retval
   // in a binding and svg children are inserted underneath it using
   // <children/>. If the svg children then call suspendRedraw, the
   // above function call fails although the svg:svg's frame has been
-  // built. Strange...
+  // build. Strange...
   
   NS_ASSERTION(frame, "suspending redraw w/o frame");
 #endif
@@ -567,7 +567,7 @@ nsSVGSVGElement::CreateSVGLength(nsIDOMSVGLength **_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGAngle(nsIDOMSVGAngle **_retval)
 {
-  return NS_NewDOMSVGAngle(_retval);
+  return NS_NewSVGAngle(_retval);
 }
 
 /* nsIDOMSVGPoint createSVGPoint (); */
