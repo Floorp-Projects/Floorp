@@ -102,6 +102,14 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
 }
 
 
+static PRBool
+IsTransformOnlyTranslateOrFlip(CGAffineTransform aTransform)
+{
+  return (aTransform.a == 1.0f && aTransform.b == 0.0f && 
+          aTransform.c == 0.0f && (aTransform.d == 1.0f || aTransform.d == -1.0f));
+}
+
+
 void
 nsNativeThemeCocoa::DrawCheckboxRadio(CGContextRef cgContext, ThemeButtonKind inKind,
                                       const HIRect& inBoxRect, PRBool inChecked,
@@ -447,6 +455,7 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   aTdi.max = maxpos;
   aTdi.value = curpos;
   aTdi.attributes = 0;
+  aTdi.enableState = kThemeTrackActive;
   if (isHorizontal)
     aTdi.attributes |= kThemeTrackHorizontal;
 
@@ -494,9 +503,43 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
 void
 nsNativeThemeCocoa::DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame)
 {
+  // If we're drawing offscreen, make the origin (0, 0), since that's where in
+  // the offscreen buffer we'll be drawing.
+  PRBool drawOnScreen = IsTransformOnlyTranslateOrFlip(CGContextGetCTM(aCGContext));
+  HIRect drawRect = drawOnScreen ? aBoxRect : CGRectMake(0, 0, aBoxRect.size.width, aBoxRect.size.height);
   HIThemeTrackDrawInfo tdi;
-  GetScrollbarDrawInfo(tdi, aFrame, aBoxRect, PR_TRUE); //True means we want the press states
-  ::HIThemeDrawTrack(&tdi, NULL, aCGContext, HITHEME_ORIENTATION);
+  GetScrollbarDrawInfo(tdi, aFrame, drawRect, PR_TRUE); //True means we want the press states
+
+  if (drawOnScreen)
+    ::HIThemeDrawTrack(&tdi, NULL, aCGContext, HITHEME_ORIENTATION);
+  else {
+    NSImage *buffer = [[NSImage alloc] initWithSize:NSMakeSize(aBoxRect.size.width, aBoxRect.size.height)];
+    NS_DURING
+      [buffer lockFocus];
+    NS_HANDLER
+      NS_ASSERTION(0, "Could not lock focus on offscreen buffer");
+      [buffer release];
+      return;
+    NS_ENDHANDLER
+    ::HIThemeDrawTrack(&tdi, NULL, (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort],
+                       kHIThemeOrientationInverted);
+    [buffer unlockFocus];
+    
+    [NSGraphicsContext saveGraphicsState];
+    [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:aCGContext flipped:YES]];
+
+    // We need to flip the buffer when we draw it.
+    CGContextTranslateCTM(aCGContext, 0, aBoxRect.size.height + (2 * aBoxRect.origin.y));
+    CGContextScaleCTM(aCGContext, 1.0f, -1.0f);
+    [buffer drawInRect:*(NSRect*)&aBoxRect
+              fromRect:NSZeroRect
+             operation:NSCompositeSourceOver
+              fraction:1.0];
+
+    [NSGraphicsContext restoreGraphicsState];
+
+    [buffer release];
+  }
 }
 
 
