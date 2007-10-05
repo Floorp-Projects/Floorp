@@ -36,273 +36,170 @@
 
 #include "nsSVGAngle.h"
 #include "prdtoa.h"
-#include "nsGkAtoms.h"
-#include "nsSVGValue.h"
-#include "nsReadableUtils.h"
 #include "nsTextFormatter.h"
-#include "nsCRT.h"
-#include "nsIDOMSVGNumber.h"
-#include "nsISVGValueUtils.h"
-#include "nsWeakReference.h"
-#include "nsContentUtils.h"
 #include "nsSVGUtils.h"
-#include <math.h>
 
-////////////////////////////////////////////////////////////////////////
-// nsSVGAngle class
-
-class nsSVGAngle : public nsIDOMSVGAngle,
-                   public nsSVGValue,
-                   public nsISVGValueObserver
+class DOMSVGAngle : public nsIDOMSVGAngle
 {
-protected:
-  friend nsresult NS_NewSVGAngle(nsIDOMSVGAngle** result,
-                                 float value,
-                                 PRUint16 unit);
-
-  friend nsresult NS_NewSVGAngle(nsIDOMSVGAngle** result,
-                                 const nsAString &value);
-  
-  nsSVGAngle(float value, PRUint16 unit);
-  nsSVGAngle();
-
 public:
-  // nsISupports interface:
   NS_DECL_ISUPPORTS
 
-  // nsIDOMSVGAngle interface:
-  NS_DECL_NSIDOMSVGANGLE
+  DOMSVGAngle()
+    { mVal.Init(); }
+    
+  NS_IMETHOD GetUnitType(PRUint16* aResult)
+    { *aResult = mVal.mSpecifiedUnitType; return NS_OK; }
 
-  // nsISVGValue interface:
-  NS_IMETHOD SetValueString(const nsAString& aValue);
-  NS_IMETHOD GetValueString(nsAString& aValue);
-  
-  // nsISVGValueObserver interface:
-  NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable,
-                                     modificationType aModType);
-  NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable,
-                                     modificationType aModType);
+  NS_IMETHOD GetValue(float* aResult)
+    { *aResult = mVal.GetBaseValue(); return NS_OK; }
+  NS_IMETHOD SetValue(float aValue)
+    { mVal.SetBaseValue(aValue, nsnull); return NS_OK; }
 
-  // nsISupportsWeakReference
-  // implementation inherited from nsSupportsWeakReference
-  
-protected:
-  // implementation helpers:
-  void  GetUnitString(nsAString& unit);
-  PRUint16 GetUnitTypeForString(const char* unitStr);
-  PRBool IsValidUnitType(PRUint16 unit);
+  NS_IMETHOD GetValueInSpecifiedUnits(float* aResult)
+    { *aResult = mVal.mBaseVal; return NS_OK; }
+  NS_IMETHOD SetValueInSpecifiedUnits(float aValue)
+    { mVal.mBaseVal = aValue; return NS_OK; }
 
-  float mValueInSpecifiedUnits;
-  PRUint8 mSpecifiedUnitType;
+  NS_IMETHOD SetValueAsString(const nsAString& aValue)
+    { return mVal.SetBaseValueString(aValue, nsnull, PR_FALSE); }
+  NS_IMETHOD GetValueAsString(nsAString& aValue)
+    { mVal.GetBaseValueString(aValue); return NS_OK; }
+
+  NS_IMETHOD NewValueSpecifiedUnits(PRUint16 unitType,
+                                    float valueInSpecifiedUnits)
+    { mVal.NewValueSpecifiedUnits(unitType, valueInSpecifiedUnits, nsnull);
+      return NS_OK; }
+
+  NS_IMETHOD ConvertToSpecifiedUnits(PRUint16 unitType)
+    { mVal.ConvertToSpecifiedUnits(unitType, nsnull); return NS_OK; }
+
+private:
+  nsSVGAngle mVal;
 };
 
+NS_IMPL_ADDREF(nsSVGAngle::DOMBaseVal)
+NS_IMPL_RELEASE(nsSVGAngle::DOMBaseVal)
 
-//----------------------------------------------------------------------
-// Implementation
+NS_IMPL_ADDREF(nsSVGAngle::DOMAnimVal)
+NS_IMPL_RELEASE(nsSVGAngle::DOMAnimVal)
 
-nsresult
-NS_NewSVGAngle(nsIDOMSVGAngle** result,
-               float value,
-               PRUint16 unit)
-{
-  nsSVGAngle *pl = new nsSVGAngle(value, unit);
-  NS_ENSURE_TRUE(pl, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(pl);
-  *result = pl;
-  return NS_OK;
-}
+NS_IMPL_ADDREF(nsSVGAngle::DOMAnimatedAngle)
+NS_IMPL_RELEASE(nsSVGAngle::DOMAnimatedAngle)
 
-nsresult
-NS_NewSVGAngle(nsIDOMSVGAngle** result,
-               const nsAString &value)
-{
-  *result = nsnull;
-  nsSVGAngle *pl = new nsSVGAngle();
-  NS_ENSURE_TRUE(pl, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(pl);
-  if (NS_FAILED(pl->SetValueAsString(value))) {
-    NS_RELEASE(pl);
-    return NS_ERROR_FAILURE;
-  }
-  *result = pl;
-  return NS_OK;
-}  
+NS_IMPL_ADDREF(DOMSVGAngle)
+NS_IMPL_RELEASE(DOMSVGAngle)
 
-
-nsSVGAngle::nsSVGAngle(float value,
-                       PRUint16 unit)
-  : mValueInSpecifiedUnits(value)
-{
-  NS_ASSERTION(unit == SVG_ANGLETYPE_UNKNOWN || IsValidUnitType(unit), "unknown unit");
-  mSpecifiedUnitType = unit;
-}
-
-nsSVGAngle::nsSVGAngle()
-{
-}
-
-//----------------------------------------------------------------------
-// nsISupports methods:
-
-NS_IMPL_ADDREF(nsSVGAngle)
-NS_IMPL_RELEASE(nsSVGAngle)
-
-NS_INTERFACE_MAP_BEGIN(nsSVGAngle)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValue)
-  NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
+NS_INTERFACE_MAP_BEGIN(nsSVGAngle::DOMBaseVal)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAngle)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAngle)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISVGValue)
 NS_INTERFACE_MAP_END
 
-//----------------------------------------------------------------------
-// nsISVGValue methods:
-NS_IMETHODIMP
-nsSVGAngle::SetValueString(const nsAString& aValue)
+NS_INTERFACE_MAP_BEGIN(nsSVGAngle::DOMAnimVal)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAngle)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAngle)
+NS_INTERFACE_MAP_END
+
+NS_INTERFACE_MAP_BEGIN(nsSVGAngle::DOMAnimatedAngle)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedAngle)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimatedAngle)
+NS_INTERFACE_MAP_END
+
+NS_INTERFACE_MAP_BEGIN(DOMSVGAngle)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAngle)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAngle)
+NS_INTERFACE_MAP_END
+
+static nsIAtom** const unitMap[] =
 {
-  return SetValueAsString(aValue);
+  nsnull, /* SVG_ANGLETYPE_UNKNOWN */
+  nsnull, /* SVG_ANGLETYPE_UNSPECIFIED */
+  &nsGkAtoms::deg,
+  &nsGkAtoms::rad,
+  &nsGkAtoms::grad
+};
+
+/* Helper functions */
+
+static PRBool
+IsValidUnitType(PRUint16 unit)
+{
+  if (unit > nsIDOMSVGAngle::SVG_ANGLETYPE_UNKNOWN &&
+      unit <= nsIDOMSVGAngle::SVG_ANGLETYPE_GRAD)
+    return PR_TRUE;
+
+  return PR_FALSE;
 }
 
-NS_IMETHODIMP
-nsSVGAngle::GetValueString(nsAString& aValue)
+static void 
+GetUnitString(nsAString& unit, PRUint16 unitType)
 {
-  return GetValueAsString(aValue);
-}
-
-//----------------------------------------------------------------------
-// nsISVGValueObserver methods
-
-NS_IMETHODIMP
-nsSVGAngle::WillModifySVGObservable(nsISVGValue* observable,
-                                    modificationType aModType)
-{
-  WillModify(aModType);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGAngle::DidModifySVGObservable(nsISVGValue* observable,
-                                   modificationType aModType)
-{
-  DidModify(aModType);
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-// nsIDOMSVGAngle methods:
-
-/* readonly attribute unsigned short unitType; */
-NS_IMETHODIMP
-nsSVGAngle::GetUnitType(PRUint16 *aUnitType)
-{
-  *aUnitType = mSpecifiedUnitType;
-  return NS_OK;
-}
-
-/* attribute float value; */
-NS_IMETHODIMP
-nsSVGAngle::GetValue(float *aValue)
-{
-  nsresult rv = NS_OK;
-  
-  switch (mSpecifiedUnitType) {
-  case SVG_ANGLETYPE_UNSPECIFIED:
-  case SVG_ANGLETYPE_DEG:
-    *aValue = float((mValueInSpecifiedUnits * M_PI) / 180.0);
-    break;
-  case SVG_ANGLETYPE_RAD:
-    *aValue = mValueInSpecifiedUnits;
-    break;
-  case SVG_ANGLETYPE_GRAD:
-    *aValue = float((mValueInSpecifiedUnits * M_PI) / 100.0);
-    break;
-  default:
-    rv = NS_ERROR_FAILURE;
-    break;
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
-nsSVGAngle::SetValue(float aValue)
-{
-  nsresult rv;
-  
-  switch (mSpecifiedUnitType) {
-  case SVG_ANGLETYPE_UNSPECIFIED:
-  case SVG_ANGLETYPE_DEG:
-    rv = SetValueInSpecifiedUnits(float((aValue * 180.0) / M_PI));
-    break;
-  case SVG_ANGLETYPE_RAD:
-    rv = SetValueInSpecifiedUnits(aValue);
-    break;
-  case SVG_ANGLETYPE_GRAD:
-    rv = SetValueInSpecifiedUnits(float((aValue * 100.0) / M_PI));
-    break;
-  default:
-    rv = NS_ERROR_FAILURE;
-    break;
+  if (IsValidUnitType(unitType)) {
+    if (unitMap[unitType]) {
+      (*unitMap[unitType])->ToString(unit);
+    }
+    return;
   }
 
-  return rv;
+  NS_NOTREACHED("Unknown unit type");
+  return;
 }
 
-/* attribute float valueInSpecifiedUnits; */
-NS_IMETHODIMP
-nsSVGAngle::GetValueInSpecifiedUnits(float *aValueInSpecifiedUnits)
+static PRUint16
+GetUnitTypeForString(const char* unitStr)
 {
-  *aValueInSpecifiedUnits = mValueInSpecifiedUnits;
-  return NS_OK;
+  if (!unitStr || *unitStr == '\0') 
+    return nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED;
+                   
+  nsCOMPtr<nsIAtom> unitAtom = do_GetAtom(unitStr);
+
+  for (int i = 0 ; i < NS_ARRAY_LENGTH(unitMap) ; i++) {
+    if (unitMap[i] && *unitMap[i] == unitAtom) {
+      return i;
+    }
+  }
+
+  return nsIDOMSVGAngle::SVG_ANGLETYPE_UNKNOWN;
 }
 
-NS_IMETHODIMP
-nsSVGAngle::SetValueInSpecifiedUnits(float aValueInSpecifiedUnits)
-{
-  WillModify();
-  mValueInSpecifiedUnits = aValueInSpecifiedUnits;
-  DidModify();
-  return NS_OK;
-}
-
-/* attribute DOMString valueAsString; */
-NS_IMETHODIMP
-nsSVGAngle::GetValueAsString(nsAString & aValueAsString)
+static void
+GetValueString(nsAString &aValueAsString, float aValue, PRUint16 aUnitType)
 {
   PRUnichar buf[24];
   nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(PRUnichar),
                             NS_LITERAL_STRING("%g").get(),
-                            (double)mValueInSpecifiedUnits);
+                            (double)aValue);
   aValueAsString.Assign(buf);
-  
+
   nsAutoString unitString;
-  GetUnitString(unitString);
+  GetUnitString(unitString, aUnitType);
   aValueAsString.Append(unitString);
-  
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGAngle::SetValueAsString(const nsAString & aValueAsString)
+static nsresult
+GetValueFromString(const nsAString &aValueAsString,
+                   float *aValue,
+                   PRUint16 *aUnitType)
 {
-  nsresult rv = NS_OK;
-  
   char *str = ToNewCString(aValueAsString);
+  if (!str)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-  char* number = str;
-  while (*number && isspace(*number))
-    ++number;
-
-  if (*number) {
+  nsresult rv = NS_ERROR_FAILURE;
+  
+  if (*str) {
     char *rest;
-    double value = PR_strtod(number, &rest);
-    if (rest!=number) {
-      PRUint16 unitType = GetUnitTypeForString(nsCRT::strtok(rest, "\x20\x9\xD\xA", &rest));
-      rv = NewValueSpecifiedUnits(unitType, (float)value);
-    }
-    else { // parse error
-      // no number
-      rv = NS_ERROR_FAILURE;
+    *aValue = static_cast<float>(PR_strtod(str, &rest));
+    if (rest != str) {
+      *aUnitType = GetUnitTypeForString(nsCRT::strtok(rest,
+                                        "\x20\x9\xD\xA",
+                                        &rest));
+      if (IsValidUnitType(*aUnitType)) {
+        rv = NS_OK;
+      }
     }
   }
   
@@ -311,85 +208,142 @@ nsSVGAngle::SetValueAsString(const nsAString & aValueAsString)
   return rv;
 }
 
-/* void newValueSpecifiedUnits (in unsigned short unitType, in float valueInSpecifiedUnits); */
-NS_IMETHODIMP
-nsSVGAngle::NewValueSpecifiedUnits(PRUint16 unitType, float valueInSpecifiedUnits)
+float
+nsSVGAngle::GetUnitScaleFactor() const
 {
-  if (!IsValidUnitType(unitType)) return NS_ERROR_FAILURE;
-
-  WillModify();
-  mValueInSpecifiedUnits = valueInSpecifiedUnits;
-  mSpecifiedUnitType     = unitType;
-  DidModify();
-  
-  return NS_OK;
-}
-
-/* void convertToSpecifiedUnits (in unsigned short unitType); */
-NS_IMETHODIMP
-nsSVGAngle::ConvertToSpecifiedUnits(PRUint16 unitType)
-{
-  if (!IsValidUnitType(unitType)) return NS_ERROR_FAILURE;
-
-  float valueInUserUnits;
-  GetValue(&valueInUserUnits);
-  mSpecifiedUnitType = unitType;
-  SetValue(valueInUserUnits);
-  
-  return NS_OK;
-}
-
-
-//----------------------------------------------------------------------
-// Implementation helpers:
-
-
-void nsSVGAngle::GetUnitString(nsAString& unit)
-{
-  nsIAtom* UnitAtom = nsnull;
-  
   switch (mSpecifiedUnitType) {
-  case SVG_ANGLETYPE_UNSPECIFIED:
-    UnitAtom = nsnull;
-    break;
-  case SVG_ANGLETYPE_DEG:
-    UnitAtom = nsGkAtoms::deg;
-    break;
-  case SVG_ANGLETYPE_GRAD:
-    UnitAtom = nsGkAtoms::grad;
-    break;
-  case SVG_ANGLETYPE_RAD:
-    UnitAtom = nsGkAtoms::rad;
-    break;
+  case nsIDOMSVGAngle::SVG_ANGLETYPE_UNSPECIFIED:
+  case nsIDOMSVGAngle::SVG_ANGLETYPE_DEG:
+    return static_cast<float>(180.0 / M_PI);
+  case nsIDOMSVGAngle::SVG_ANGLETYPE_RAD:
+    return 1;
+  case nsIDOMSVGAngle::SVG_ANGLETYPE_GRAD:
+    return static_cast<float>(100.0 / M_PI);
   default:
-    NS_ASSERTION(PR_FALSE, "unknown unit");
-    break;
+    NS_NOTREACHED("Unknown unit type");
+    return 0;
   }
-  if (!UnitAtom) return;
-
-  UnitAtom->ToString(unit);
 }
 
-PRUint16 nsSVGAngle::GetUnitTypeForString(const char* unitStr)
+void
+nsSVGAngle::SetBaseValueInSpecifiedUnits(float aValue,
+                                         nsSVGElement *aSVGElement)
 {
-  if (!unitStr || *unitStr=='\0') return SVG_ANGLETYPE_UNSPECIFIED;
-                   
-  nsCOMPtr<nsIAtom> unitAtom = do_GetAtom(unitStr);
-
-  if (unitAtom == nsGkAtoms::deg)
-    return SVG_ANGLETYPE_DEG;
-  else if (unitAtom == nsGkAtoms::grad)
-    return SVG_ANGLETYPE_GRAD;
-  else if (unitAtom == nsGkAtoms::rad)
-    return SVG_ANGLETYPE_RAD;
-
-  return SVG_ANGLETYPE_UNKNOWN;
+  mBaseVal = aValue;
+  aSVGElement->DidChangeAngle(mAttrEnum, PR_TRUE);
 }
 
-PRBool nsSVGAngle::IsValidUnitType(PRUint16 unit)
+void
+nsSVGAngle::ConvertToSpecifiedUnits(PRUint16 unitType,
+                                    nsSVGElement *aSVGElement)
 {
-  if (unit > SVG_ANGLETYPE_UNKNOWN && unit <= SVG_ANGLETYPE_GRAD)
-    return PR_TRUE;
+  if (!IsValidUnitType(unitType))
+    return;
 
-  return PR_FALSE;
+  float valueInUserUnits = mBaseVal / GetUnitScaleFactor();
+  mSpecifiedUnitType = PRUint8(unitType);
+  SetBaseValue(valueInUserUnits, aSVGElement);
+}
+
+void
+nsSVGAngle::NewValueSpecifiedUnits(PRUint16 unitType,
+                                   float valueInSpecifiedUnits,
+                                   nsSVGElement *aSVGElement)
+{
+  if (!IsValidUnitType(unitType))
+    return;
+
+  mBaseVal = mAnimVal = valueInSpecifiedUnits;
+  mSpecifiedUnitType = PRUint8(unitType);
+  if (aSVGElement) {
+    aSVGElement->DidChangeAngle(mAttrEnum, PR_TRUE);
+  }
+}
+
+nsresult
+nsSVGAngle::ToDOMBaseVal(nsIDOMSVGAngle **aResult, nsSVGElement *aSVGElement)
+{
+  *aResult = new DOMBaseVal(this, aSVGElement);
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+nsresult
+nsSVGAngle::ToDOMAnimVal(nsIDOMSVGAngle **aResult, nsSVGElement *aSVGElement)
+{
+  *aResult = new DOMAnimVal(this, aSVGElement);
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+/* Implementation */
+
+nsresult
+nsSVGAngle::SetBaseValueString(const nsAString &aValueAsString,
+                               nsSVGElement *aSVGElement,
+                               PRBool aDoSetAttr)
+{
+  float value;
+  PRUint16 unitType;
+  
+  nsresult rv = GetValueFromString(aValueAsString, &value, &unitType);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mBaseVal = mAnimVal = value;
+  mSpecifiedUnitType = PRUint8(unitType);
+  if (aSVGElement) {
+    aSVGElement->DidChangeAngle(mAttrEnum, aDoSetAttr);
+  }
+
+  return NS_OK;
+}
+
+void
+nsSVGAngle::GetBaseValueString(nsAString & aValueAsString)
+{
+  GetValueString(aValueAsString, mBaseVal, mSpecifiedUnitType);
+}
+
+void
+nsSVGAngle::GetAnimValueString(nsAString & aValueAsString)
+{
+  GetValueString(aValueAsString, mAnimVal, mSpecifiedUnitType);
+}
+
+void
+nsSVGAngle::SetBaseValue(float aValue, nsSVGElement *aSVGElement)
+{
+  mAnimVal = mBaseVal = aValue * GetUnitScaleFactor();
+  if (aSVGElement) {
+    aSVGElement->DidChangeAngle(mAttrEnum, PR_TRUE);
+  }
+}
+
+nsresult
+nsSVGAngle::ToDOMAnimatedAngle(nsIDOMSVGAnimatedAngle **aResult,
+                               nsSVGElement *aSVGElement)
+{
+  *aResult = new DOMAnimatedAngle(this, aSVGElement);
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+  return NS_OK;
+}
+
+nsresult
+NS_NewDOMSVGAngle(nsIDOMSVGAngle** aResult)
+{
+  *aResult = new DOMSVGAngle;
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+  return NS_OK;
 }
