@@ -87,6 +87,22 @@ BookmarksSyncService.prototype = {
     return this.__ts;
   },
 
+  __ls: null,
+  get _ls() {
+    if (!this.__ls)
+      this.__ls = Cc["@mozilla.org/browser/livemark-service;2"].
+        getService(Ci.nsILivemarkService);
+    return this.__ls;
+  },
+
+  __ms: null,
+  get _ms() {
+    if (!this.__ms)
+      this.__ms = Cc["@mozilla.org/microsummary/service;1"].
+        getService(Ci.nsIMicrosummaryService);
+    return this.__ms;
+  },
+
   __os: null,
   get _os() {
     if (!this.__os)
@@ -125,17 +141,17 @@ BookmarksSyncService.prototype = {
   _snapshot: {},
   _snapshotVersion: 0,
 
-  __snapshotGuid: null,
-  get _snapshotGuid() {
-    if (!this.__snapshotGuid) {
+  __snapshotGUID: null,
+  get _snapshotGUID() {
+    if (!this.__snapshotGUID) {
       let uuidgen = Cc["@mozilla.org/uuid-generator;1"].
         getService(Ci.nsIUUIDGenerator);
-      this.__snapshotGuid = uuidgen.generateUUID().toString().replace(/[{}]/g, '');
+      this.__snapshotGUID = uuidgen.generateUUID().toString().replace(/[{}]/g, '');
     }
-    return this.__snapshotGuid;
+    return this.__snapshotGUID;
   },
-  set _snapshotGuid(guid) {
-    this.__snapshotGuid = guid;
+  set _snapshotGUID(GUID) {
+    this.__snapshotGUID = GUID;
   },
 
   get currentUser() {
@@ -197,7 +213,7 @@ BookmarksSyncService.prototype = {
     fos.init(file, flags, PERMS_FILE, 0);
 
     let out = {version: this._snapshotVersion,
-               guid: this._snapshotGuid,
+               GUID: this._snapshotGUID,
                snapshot: this._snapshot};
     out = uneval(out);
     fos.write(out, out.length);
@@ -228,10 +244,10 @@ BookmarksSyncService.prototype = {
     fis.close();
     json = eval(json);
 
-    if (json && json.snapshot && json.version && json.guid) {
+    if (json && json.snapshot && json.version && json.GUID) {
       this._snapshot = json.snapshot;
       this._snapshotVersion = json.version;
-      this._snapshotGuid = json.guid;
+      this._snapshotGUID = json.GUID;
     }
   },
 
@@ -241,35 +257,47 @@ BookmarksSyncService.prototype = {
     return items;
   },
 
-  _wrapNodeInternal: function BSS__wrapNodeInternal(node, items, parentGuid, index) {
-    var guid = this._bms.getItemGUID(node.itemId);
-    var item = {type: node.type,
-                parentGuid: parentGuid,
+  _wrapNodeInternal: function BSS__wrapNodeInternal(node, items, parentGUID, index) {
+    let GUID = this._bms.getItemGUID(node.itemId);
+    let item = {parentGUID: parentGUID,
                 index: index};
 
     if (node.type == node.RESULT_TYPE_FOLDER) {
-      item.title = node.title;
-
-      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
-      node.containerOpen = true;
-
-      for (var i = 0; i < node.childCount; i++) {
-        this._wrapNodeInternal(node.getChild(i), items, guid, i);
+      if (this._ls.isLivemark(node.itemId)) {
+        item.type = "livemark";
+        item.siteURI = this._ls.getSiteURI(node.itemId).spec;
+        item.feedURI = this._ls.getFeedURI(node.itemId).spec;
+      } else {
+        item.type = "folder";
+        node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+        node.containerOpen = true;
+        for (var i = 0; i < node.childCount; i++) {
+          this._wrapNodeInternal(node.getChild(i), items, GUID, i);
+        }
       }
-    } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
-    } else if (node.type == node.RESULT_TYPE_URI) {
-      // FIXME: need to verify that it's a bookmark, it could be a history result!
       item.title = node.title;
-      item.uri = node.uri;
+    } else if (node.type == node.RESULT_TYPE_URI) {
+      if (this._ms.hasMicrosummary(node.itemId)) {
+        item.type = "microsummary";
+        let micsum = this._ms.getMicrosummary(node.itemId);
+        item.generatorURI = micsum.generator.uri.spec; // FIXME: might not be a remote generator!
+      } else {
+        item.type = "bookmark";
+        item.title = node.title;
+      }
+      item.URI = node.uri;
       item.tags = this._ts.getTagsForURI(makeURI(node.uri));
       let keyword = this._bms.getKeywordForBookmark(node.itemId);
       if (keyword)
         item.keyword = keyword;
+    } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
+      item.type = "separator";
     } else {
-      // what do we do?
+      this.notice("Warning: unknown item type, cannot serialize: " + node.type);
+      return;
     }
 
-    items[guid] = item;
+    items[GUID] = item;
   },
 
   // FIXME: this won't work for deep objects, or objects with optional properties
@@ -291,43 +319,43 @@ BookmarksSyncService.prototype = {
     return ret;
   },
 
-  _nodeParents: function BSS__nodeParents(guid, tree) {
-    return this._nodeParentsInt(guid, tree, []);
+  _nodeParents: function BSS__nodeParents(GUID, tree) {
+    return this._nodeParentsInt(GUID, tree, []);
   },
 
-  _nodeParentsInt: function BSS__nodeParentsInt(guid, tree, parents) {
-    if (!tree[guid] || !tree[guid].parentGuid)
+  _nodeParentsInt: function BSS__nodeParentsInt(GUID, tree, parents) {
+    if (!tree[GUID] || !tree[GUID].parentGUID)
       return parents;
-    parents.push(tree[guid].parentGuid);
-    return this._nodeParentsInt(tree[guid].parentGuid, tree, parents);
+    parents.push(tree[GUID].parentGUID);
+    return this._nodeParentsInt(tree[GUID].parentGUID, tree, parents);
   },
 
   _detectUpdates: function BSS__detectUpdates(a, b) {
     let cmds = [];
-    for (let guid in a) {
-      if (guid in b) {
-        let edits = this._getEdits(a[guid], b[guid]);
+    for (let GUID in a) {
+      if (GUID in b) {
+        let edits = this._getEdits(a[GUID], b[GUID]);
         if (edits == -1) // something went very wrong -- FIXME
           continue;
         if (edits.numProps == 0) // no changes - skip
           continue;
-        let parents = this._nodeParents(guid, b);
-        cmds.push({action: "edit", guid: guid,
+        let parents = this._nodeParents(GUID, b);
+        cmds.push({action: "edit", GUID: GUID,
                    depth: parents.length, parents: parents,
                    data: edits.props});
       } else {
-        let parents = this._nodeParents(guid, a); // ???
-        cmds.push({action: "remove", guid: guid,
+        let parents = this._nodeParents(GUID, a); // ???
+        cmds.push({action: "remove", GUID: GUID,
                    depth: parents.length, parents: parents});
       }
     }
-    for (let guid in b) {
-      if (guid in a)
+    for (let GUID in b) {
+      if (GUID in a)
         continue;
-      let parents = this._nodeParents(guid, b);
-      cmds.push({action: "create", guid: guid,
+      let parents = this._nodeParents(GUID, b);
+      cmds.push({action: "create", GUID: GUID,
                  depth: parents.length, parents: parents,
-                 data: b[guid]});
+                 data: b[GUID]});
     }
     cmds.sort(function(a, b) {
       if (a.depth > b.depth)
@@ -345,10 +373,10 @@ BookmarksSyncService.prototype = {
 
   _conflicts: function BSS__conflicts(a, b) {
     if ((a.depth < b.depth) &&
-        (b.parents.indexOf(a.guid) >= 0) &&
+        (b.parents.indexOf(a.GUID) >= 0) &&
         a.action == "remove")
       return true;
-    if ((a.guid == b.guid) && !this._deepEquals(a, b))
+    if ((a.GUID == b.GUID) && !this._deepEquals(a, b))
       return true;
     return false;
   },
@@ -357,38 +385,46 @@ BookmarksSyncService.prototype = {
   // are in the same folder.  Folders and separators must be at the
   // same index to qualify for 'likeness'.
   _commandLike: function BSS__commandLike(a, b) {
-    if (!a || !b)
-      return false;
 
-    if (a.action != b.action)
-      return false;
-
-    // Items with the same guid do not qualify - they need to be
-    // processed for edits
-    if (a.guid == b.guid)
-      return false;
-
-    // this check works because reconcile() fixes up the parent guids
-    // as it runs, and the command list is sorted by depth
-    if (a.parentGuid != b.parentGuid)
+    // Check that neither command is null, that their actions, types,
+    // and parents are the same, and that they don't have the same
+    // GUID.
+    // Items with the same GUID do not qualify because they need to be
+    // processed for edits.
+    // The parent GUID check works because reconcile() fixes up the
+    // parent GUIDs as it runs, and the command list is sorted by
+    // depth
+    if (!a || !b ||
+       a.action != b.action ||
+       a.data.type != b.data.type ||
+       a.parentGUID != b.parentGUID ||
+       a.GUID == b.GUID)
       return false;
 
     switch (a.data.type) {
-    case 0:
-      if (b.data.type == a.data.type &&
-          b.data.uri == a.data.uri &&
-          b.data.title == a.data.title)
+    case "bookmark":
+      if (a.data.URI == b.data.URI &&
+          a.data.title == b.data.title)
         return true;
       return false;
-    case 6:
-      if (b.index == a.index &&
-          b.data.type == a.data.type &&
-          b.data.title == a.data.title)
+    case "microsummary":
+      if (a.data.URI == b.data.URI &&
+          a.data.generatorURI == b.data.generatorURI)
         return true;
       return false;
-    case 7:
-      if (b.index == a.index &&
-          b.data.type == a.data.type)
+    case "folder":
+      if (a.index == b.index &&
+          a.data.title == b.data.title)
+        return true;
+      return false;
+    case "livemark":
+      if (a.data.title == b.data.title &&
+          a.data.siteURI == b.data.siteURI &&
+          a.data.feedURI == b.data.feedURI)
+        return true;
+      return false;
+    case "separator":
+      if (a.index == b.index)
         return true;
       return false;
     default:
@@ -417,18 +453,18 @@ BookmarksSyncService.prototype = {
     return true;
   },
 
-  // When we change the guid of a local item (because we detect it as
+  // When we change the GUID of a local item (because we detect it as
   // being the same item as a remote one), we need to fix any other
   // local items that have it as their parent
-  _fixParents: function BSS__fixParents(list, oldGuid, newGuid) {
+  _fixParents: function BSS__fixParents(list, oldGUID, newGUID) {
     for (let i = 0; i < list.length; i++) {
       if (!list[i])
         continue;
-      if (list[i].parentGuid == oldGuid)
-        list[i].parentGuid = newGuid;
+      if (list[i].parentGUID == oldGUID)
+        list[i].parentGUID = newGUID;
       for (let j = 0; j < list[i].parents.length; j++) {
-        if (list[i].parents[j] == oldGuid)
-          list[i].parents[j] = newGuid;
+        if (list[i].parents[j] == oldGUID)
+          list[i].parents[j] = newGUID;
       }
     }
   },
@@ -467,12 +503,12 @@ BookmarksSyncService.prototype = {
           delete listA[i];
           delete listB[j];
         } else if (this._commandLike(listA[i], listB[j])) {
-          // Disregard likeness if the target guid already exists locally
-          if (this._bms.getItemIdForGUID(listB[j].guid) >= 0)
+          // Disregard likeness if the target GUID already exists locally
+          if (this._bms.getItemIdForGUID(listB[j].GUID) >= 0)
             continue;
-          this._fixParents(listA, listA[i].guid, listB[j].guid);
-          listB[j].data = {guid: listB[j].guid};
-          listB[j].guid = listA[i].guid;
+          this._fixParents(listA, listA[i].GUID, listB[j].GUID);
+          listB[j].data = {GUID: listB[j].GUID};
+          listB[j].GUID = listA[i].GUID;
           listB[j].action = "edit";
           delete listA[i];
         }
@@ -491,10 +527,10 @@ BookmarksSyncService.prototype = {
         if (this._conflicts(listA[i], listB[j]) ||
             this._conflicts(listB[j], listA[i])) {
           if (!conflicts[0].some(
-            function(elt) { return elt.guid == listA[i].guid }))
+            function(elt) { return elt.GUID == listA[i].GUID }))
             conflicts[0].push(listA[i]);
           if (!conflicts[1].some(
-            function(elt) { return elt.guid == listB[j].guid }))
+            function(elt) { return elt.GUID == listB[j].GUID }))
             conflicts[1].push(listB[j]);
         }
       }
@@ -502,13 +538,13 @@ BookmarksSyncService.prototype = {
     for (let i = 0; i < listA.length; i++) {
       // need to check if a previous conflict might break this cmd
       if (!conflicts[0].some(
-        function(elt) { return elt.guid == listA[i].guid }))
+        function(elt) { return elt.GUID == listA[i].GUID }))
         propagations[1].push(listA[i]);
     }
     for (let j = 0; j < listB.length; j++) {
       // need to check if a previous conflict might break this cmd
       if (!conflicts[1].some(
-        function(elt) { return elt.guid == listB[j].guid }))
+        function(elt) { return elt.GUID == listB[j].GUID }))
         propagations[0].push(listB[j]);
     }
 
@@ -527,15 +563,15 @@ BookmarksSyncService.prototype = {
       this.notice("Applying cmd to obj: " + uneval(commands[i]));
       switch (commands[i].action) {
       case "create":
-        obj[commands[i].guid] = eval(uneval(commands[i].data));
+        obj[commands[i].GUID] = eval(uneval(commands[i].data));
         break;
       case "edit":
         for (let prop in commands[i].data) {
-          obj[commands[i].guid][prop] = commands[i].data[prop];
+          obj[commands[i].GUID][prop] = commands[i].data[prop];
         }
         break;
       case "remove":
-        delete obj[commands[i].guid];
+        delete obj[commands[i].GUID];
         break;
       }
     }
@@ -566,7 +602,7 @@ BookmarksSyncService.prototype = {
 
   _createCommand: function BSS__createCommand(command) {
     let newId;
-    let parentId = this._bms.getItemIdForGUID(command.data.parentGuid);
+    let parentId = this._bms.getItemIdForGUID(command.data.parentGUID);
 
     if (parentId <= 0) {
       this.notice("Warning: creating node with unknown parent -> reparenting to root");
@@ -576,23 +612,37 @@ BookmarksSyncService.prototype = {
     this.notice(" -> creating item");
 
     switch (command.data.type) {
-    case 0:
-      let uri = makeURI(command.data.uri);
+    case "bookmark":
+    case "microsummary":
+      let URI = makeURI(command.data.URI);
       newId = this._bms.insertBookmark(parentId,
-                                       uri,
+                                       URI,
                                        command.data.index,
                                        command.data.title);
-      this._ts.untagURI(uri, null);
-      this._ts.tagURI(uri, command.data.tags);
+      this._ts.untagURI(URI, null);
+      this._ts.tagURI(URI, command.data.tags);
       if (command.data.keyword)
         this._bms.setKeywordForBookmark(newId, command.data.keyword);
+
+      if (command.data.type == "microsummary") {
+        let genURI = makeURI(command.data.generatorURI);
+        let micsum = this._ms.createMicrosummary(URI, genURI);
+        this._ms.setMicrosummary(newId, micsum);
+      }
       break;
-    case 6:
+    case "folder":
       newId = this._bms.createFolder(parentId,
                                      command.data.title,
                                      command.data.index);
       break;
-    case 7:
+    case "livemark":
+      newId = this._ls.createLivemark(parentId,
+                                      command.data.title,
+                                      makeURI(command.data.siteURI),
+                                      makeURI(command.data.feedURI),
+                                      command.data.index);
+      break;
+    case "separator":
       newId = this._bms.insertSeparator(parentId, command.data.index);
       break;
     default:
@@ -600,25 +650,24 @@ BookmarksSyncService.prototype = {
       break;
     }
     if (newId)
-      this._bms.setItemGUID(newId, command.guid);
+      this._bms.setItemGUID(newId, command.GUID);
   },
 
   _removeCommand: function BSS__removeCommand(command) {
-    var itemId = this._bms.getItemIdForGUID(command.guid);
+    var itemId = this._bms.getItemIdForGUID(command.GUID);
     var type = this._bms.getItemType(itemId);
 
     switch (type) {
     case this._bms.TYPE_BOOKMARK:
-      // FIXME: check it's an actual bookmark?
-      this.notice("  -> removing bookmark " + command.guid);
+      this.notice("  -> removing bookmark " + command.GUID);
       this._bms.removeItem(itemId);
       break;
     case this._bms.TYPE_FOLDER:
-      this.notice("  -> removing folder " + command.guid);
+      this.notice("  -> removing folder " + command.GUID);
       this._bms.removeFolder(itemId);
       break;
     case this._bms.TYPE_SEPARATOR:
-      this.notice("  -> removing separator " + command.guid);
+      this.notice("  -> removing separator " + command.GUID);
       this._bms.removeItem(itemId);
       break;
     default:
@@ -628,48 +677,58 @@ BookmarksSyncService.prototype = {
   },
 
   _editCommand: function BSS__editCommand(command) {
-    var itemId = this._bms.getItemIdForGUID(command.guid);
+    var itemId = this._bms.getItemIdForGUID(command.GUID);
     if (itemId == -1) {
-      this.notice("Warning: item for guid " + command.guid + " not found.  Skipping.");
+      this.notice("Warning: item for GUID " + command.GUID + " not found.  Skipping.");
       return;
     }
 
-    var type = this._bms.getItemType(itemId);
-
     for (let key in command.data) {
       switch (key) {
-      case "guid":
-        var existing = this._bms.getItemIdForGUID(command.data.guid);
+      case "GUID":
+        var existing = this._bms.getItemIdForGUID(command.data.GUID);
         if (existing == -1)
-          this._bms.setItemGUID(itemId, command.data.guid);
+          this._bms.setItemGUID(itemId, command.data.GUID);
         else
-          this.notice("Warning: can't change guid " + command.guid +
-              " to " + command.data.guid + ": guid already exists.");
+          this.notice("Warning: can't change GUID " + command.GUID +
+              " to " + command.data.GUID + ": GUID already exists.");
         break;
       case "title":
         this._bms.setItemTitle(itemId, command.data.title);
         break;
-      case "uri":
-        this._bms.changeBookmarkURI(itemId, makeURI(command.data.uri));
+      case "URI":
+        this._bms.changeBookmarkURI(itemId, makeURI(command.data.URI));
         break;
       case "index":
         this._bms.moveItem(itemId, this._bms.getFolderIdForItem(itemId),
                            command.data.index);
         break;
-      case "parentGuid":
+      case "parentGUID":
         let index = -1;
         if (command.data.index && command.data.index >= 0)
           index = command.data.index;
         this._bms.moveItem(
-          itemId, this._bms.getItemIdForGUID(command.data.parentGuid), index);
+          itemId, this._bms.getItemIdForGUID(command.data.parentGUID), index);
         break;
       case "tags":
-        let uri = this._bms.getBookmarkURI(itemId);
-        this._ts.untagURI(uri, null);
-        this._ts.tagURI(uri, command.data.tags);
+        let tagsURI = this._bms.getBookmarkURI(itemId);
+        this._ts.untagURI(URI, null);
+        this._ts.tagURI(tagsURI, command.data.tags);
         break;
       case "keyword":
         this._bms.setKeywordForBookmark(itemId, command.data.keyword);
+        break;
+      case "generatorURI":
+        let micsumURI = makeURI(this._bms.getBookmarkURI(itemId));
+        let genURI = makeURI(command.data.generatorURI);
+        let micsum = this._ms.createMicrosummary(micsumURI, genURI);
+        this._ms.setMicrosummary(itemId, micsum);
+        break;
+      case "siteURI":
+        this._ls.setSiteURI(itemId, makeURI(command.data.siteURI));
+        break;
+      case "feedURI":
+        this._ls.setFeedURI(itemId, makeURI(command.data.feedURI));
         break;
       default:
         this.notice("Warning: Can't change item property: " + key);
@@ -691,10 +750,10 @@ BookmarksSyncService.prototype = {
     let json = uneval(nodes);
     json = json.replace(/:{type/g, ":\n\t{type");
     json = json.replace(/}, /g, "},\n  ");
-    json = json.replace(/, parentGuid/g, ",\n\t parentGuid");
+    json = json.replace(/, parentGUID/g, ",\n\t parentGUID");
     json = json.replace(/, index/g, ",\n\t index");
     json = json.replace(/, title/g, ",\n\t title");
-    json = json.replace(/, uri/g, ",\n\t uri");
+    json = json.replace(/, URI/g, ",\n\t URI");
     json = json.replace(/, tags/g, ",\n\t tags");
     json = json.replace(/, keyword/g, ",\n\t keyword");
     return json;
@@ -730,28 +789,16 @@ BookmarksSyncService.prototype = {
     this.notice("Beginning sync");
 
     try {
-//      if (!asyncRun(this._dav, this._dav.lock, handlers.complete))
-//        return;
-//      let locked = yield;
-//
-//      if (locked)
-//        this.notice("Lock acquired");
-//      else {
-//        this.notice("Could not acquire lock, aborting");
-// FIXME
-//        this.notice("Could not acquire lock, attempting to steal it");
-//
-//        if (!asyncRun(this._dav, this._dav.stealLock, handlers.complete))
-//          return;
-//        let stolen = yield;
-//
-//        if (stolen)
-//          this.notice("Lock stolen");
-//        else {
-//          this.notice("Could not steal lock, aborting");
-//          return;
-//        }
-//      }
+      if (!asyncRun(this._dav, this._dav.lock, handlers.complete))
+        return;
+      let locked = yield;
+
+      if (locked)
+        this.notice("Lock acquired");
+      else {
+        this.notice("Could not acquire lock, aborting sync");
+        return;
+      }
 
       var localJson = this._getBookmarks();
       //this.notice("local json:\n" + this._mungeNodes(localJson));
@@ -867,7 +914,7 @@ BookmarksSyncService.prototype = {
         // FIXME: need to watch out for the storage format version changing,
         // in that case we'll have to re-upload all the files, not just these
         this._dav.PUT("bookmarks-status.json",
-                      uneval({guid: this._snapshotGuid,
+                      uneval({GUID: this._snapshotGUID,
                               formatVersion: STORAGE_FORMAT_VERSION,
                               snapVersion: server.snapVersion,
                               maxVersion: this._snapshotVersion}), handlers);
@@ -886,14 +933,13 @@ BookmarksSyncService.prototype = {
       this._os.notifyObservers(null, "bookmarks-sync:end", "");
       this.notice("Sync complete");
     } finally {
-// FIXME
-//      if (!asyncRun(this._dav, this._dav.unlock, handlers.complete))
-//        return;
-//      let unlocked = yield;
-//      if (unlocked)
-//        this.notice("Lock released");
-//      else
-//        this.notice("Error: could not unlock DAV collection");
+      if (!asyncRun(this._dav, this._dav.unlock, handlers.complete))
+        return;
+      let unlocked = yield;
+      if (unlocked)
+        this.notice("Lock released");
+      else
+        this.notice("Error: could not unlock DAV collection");
       this._os.notifyObservers(null, "bookmarks-sync:end", "");
     }
   },
@@ -945,12 +991,12 @@ BookmarksSyncService.prototype = {
         return;
       }
 
-      if (status.guid != this._snapshotGuid) {
-        this.notice("Remote/local sync guids do not match.  " +
+      if (status.GUID != this._snapshotGUID) {
+        this.notice("Remote/local sync GUIDs do not match.  " +
                     "Forcing initial sync.");
         this._snapshot = {};
         this._snapshotVersion = -1;
-        this._snapshotGuid = status.guid;
+        this._snapshotGUID = status.GUID;
       }
 
       if (this._snapshotVersion < status.snapVersion) {
@@ -1032,7 +1078,7 @@ BookmarksSyncService.prototype = {
 
       this._snapshot = localJson;
       this._snapshotVersion = 0;
-      this._snapshotGuid = null; // in case there are other snapshots out there
+      this._snapshotGUID = null; // in case there are other snapshots out there
 
       this._dav.PUT("bookmarks-snapshot.json",
                     uneval(this._snapshot), handlers);
@@ -1054,7 +1100,7 @@ BookmarksSyncService.prototype = {
       }
 
       this._dav.PUT("bookmarks-status.json",
-                    uneval({guid: this._snapshotGuid,
+                    uneval({GUID: this._snapshotGUID,
                             formatVersion: STORAGE_FORMAT_VERSION,
                             snapVersion: this._snapshotVersion,
                             maxVersion: this._snapshotVersion}), handlers);
@@ -1143,10 +1189,10 @@ function makeFile(path) {
   return file;
 }
 
-function makeURI(uriString) {
+function makeURI(URIString) {
   var ioservice = Cc["@mozilla.org/network/io-service;1"].
                   getService(Ci.nsIIOService);
-  return ioservice.newURI(uriString, null, null);
+  return ioservice.newURI(URIString, null, null);
 }
 
 function bind2(object, method) {
@@ -1311,7 +1357,7 @@ DAVCollection.prototype = {
     if (this._authString)
       headers['Authorization'] = this._authString;
     if (this._token)
-      headers['If'] = "(<" + this._token + ">)";
+      headers['If'] = "<" + this._bashURL + "> (<" + this._token + ">)";
 
     var request = this._makeRequest("GET", path, handlers, headers);
     request.send(null);
@@ -1323,7 +1369,7 @@ DAVCollection.prototype = {
     if (this._authString)
       headers['Authorization'] = this._authString;
     if (this._token)
-      headers['If'] = "(<" + this._token + ">)";
+      headers['If'] = "<" + this._bashURL + "> (<" + this._token + ">)";
 
     var request = this._makeRequest("PUT", path, handlers, headers);
     request.send(data);
@@ -1337,7 +1383,7 @@ DAVCollection.prototype = {
                         error: bind2(this, this._onLoginError)};
 
     try {
-      let uri = makeURI(this._baseURL);
+      let URI = makeURI(this._baseURL);
       let username = 'nobody@mozilla.com';
       let password;
 
@@ -1347,7 +1393,7 @@ DAVCollection.prototype = {
 
       // fixme: make a request and get the realm
       let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-      let logins = lm.findLogins({}, uri.hostPort, null,
+      let logins = lm.findLogins({}, URI.hostPort, null,
                                  'Use your ldap username/password - dotmoz');
       //notice("Found " + logins.length + " logins");
 
@@ -1452,6 +1498,7 @@ DAVCollection.prototype = {
     let handlers = generatorHandlers(generator);
 
     headers = {'Content-Type': 'text/xml; charset="utf-8"',
+               'Timeout': 'Second-600',
                'Depth': 'infinity'};
     if (this._authString)
       headers['Authorization'] = this._authString;
