@@ -155,7 +155,7 @@
 
         <row align="center" id="editBMPanel_tagsRow">
           <label value="&editBookmarkOverlay.tags.label;"
-                 control="tagsField"
+                 control="editBMPanel_tagsField"
                  observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_tagsField"
                    onblur="gEditItemOverlay.onTagsFieldBlur();"
