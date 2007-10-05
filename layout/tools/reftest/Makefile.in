@@ -44,6 +44,8 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= reftest
 
+ifneq ($(OS_ARCH), WINNT)
+
 LIBRARY_NAME    = reftest
 IS_COMPONENT	= 1
 MODULE_NAME	= nsReftestModule
@@ -98,6 +100,8 @@ EXTRA_DSO_LDOPTS = \
 XPIDLSRCS = nsIReftestHelper.idl
 
 CPPSRCS = nsReftestHelper.cpp
+
+endif #OS_ARCH != WINNT
 
 EXTRA_COMPONENTS= \
 		reftest-cmdline.js \
