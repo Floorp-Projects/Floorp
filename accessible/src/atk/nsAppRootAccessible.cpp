@@ -523,7 +523,7 @@ nsApplicationAccessibleWrap::Init()
     PRBool isGnomeATEnabled = PR_FALSE;
     const char *envValue = PR_GetEnv(sAccEnv);
     if (envValue) {
-        isGnomeATEnabled = atoi(envValue);
+        isGnomeATEnabled = !!atoi(envValue);
     } else {
         //check gconf-2 setting
         nsresult rv;
