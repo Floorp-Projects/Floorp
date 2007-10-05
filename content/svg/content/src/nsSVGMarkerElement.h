@@ -42,7 +42,6 @@
 #include "nsIDOMSVGFitToViewBox.h"
 #include "nsSVGLength2.h"
 #include "nsSVGEnum.h"
-#include "nsSVGAngle.h"
 
 typedef nsSVGGraphicElement nsSVGMarkerElementBase;
 
@@ -87,6 +86,7 @@ public:
 
   // nsSVGElement specializations:
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
   // public helpers
   nsresult GetMarkerTransform(float aStrokeWidth,
@@ -101,7 +101,6 @@ protected:
   void SetParentCoordCtxProvider(nsSVGSVGElement *aContext);
 
   virtual LengthAttributesInfo GetLengthInfo();
-  virtual AngleAttributesInfo GetAngleInfo();
   virtual EnumAttributesInfo GetEnumInfo();
 
   enum { REFX, REFY, MARKERWIDTH, MARKERHEIGHT };
@@ -113,12 +112,9 @@ protected:
   static nsSVGEnumMapping sUnitsMap[];
   static EnumInfo sEnumInfo[1];
 
-  enum { ORIENT };
-  nsSVGAngle mAngleAttributes[1];
-  static AngleInfo sAngleInfo[1];
-
   // derived properties (from 'orient') handled separately
   nsSVGEnum                              mOrientType;
+  nsCOMPtr<nsIDOMSVGAnimatedAngle>       mOrientAngle;
 
   nsSVGSVGElement                       *mCoordCtx;
   nsCOMPtr<nsIDOMSVGAnimatedRect>        mViewBox;
