@@ -189,7 +189,13 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
     drawFrame.size.height = offscreenHeight - NATIVE_PUSH_BUTTON_HEIGHT_DIFF;
 
     // draw into offscreen image
-    [image lockFocus];
+    NS_DURING
+      [image lockFocus];
+    NS_HANDLER
+      NS_ASSERTION(0, "Could not lock focus on offscreen buffer");
+      [image release];
+      return;
+    NS_ENDHANDLER
     [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationLow];
     HIThemeDrawButton(&drawFrame, &bdi, (CGContext*)[[NSGraphicsContext currentContext] graphicsPort], kHIThemeOrientationInverted, NULL);
     [image unlockFocus];
