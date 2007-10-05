@@ -418,7 +418,7 @@ NS_IMETHODIMP mozHunspell::Check(const PRUnichar *aWord, PRBool *aResult)
   nsresult rv = ConvertCharset(aWord, getter_Copies(charsetWord));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *aResult = mHunspell->spell(charsetWord);
+  *aResult = !!mHunspell->spell(charsetWord);
 
 
   if (!*aResult && mPersonalDictionary) 
