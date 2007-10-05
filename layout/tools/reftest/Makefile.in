@@ -44,7 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= reftest
 
-ifneq ($(OS_ARCH), WINNT)
+ifdef DISABLED_SEE_BUG_387132
 
 LIBRARY_NAME    = reftest
 IS_COMPONENT	= 1
@@ -101,7 +101,7 @@ XPIDLSRCS = nsIReftestHelper.idl
 
 CPPSRCS = nsReftestHelper.cpp
 
-endif #OS_ARCH != WINNT
+endif # DISABLED_SEE_BUG_387132
 
 EXTRA_COMPONENTS= \
 		reftest-cmdline.js \
