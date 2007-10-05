@@ -953,12 +953,6 @@ var gApplicationsPane = {
       if (handlerInfo.handledOnlyByPlugin && !showPlugins)
         continue;
 
-      // Hide types handled only by disabled plugins.
-      // FIXME: we should show these types to give the user a chance to reenable
-      // the plugins.  Filed as bug 395136.
-      if (handlerInfo.handledOnlyByPlugin && handlerInfo.isDisabledPluginType)
-        continue;
-
       // If the user is filtering the list, then only show matching types.
       if (this._filter.value && !this._matchesFilter(handlerInfo))
         continue;
