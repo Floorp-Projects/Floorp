@@ -50,6 +50,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsCOMPtr.h"
 #include "nsBoxLayoutState.h"
+#include "nsIReflowCallback.h"
 //
 // NS_NewToolbarFrame
 //
@@ -70,14 +71,37 @@ nsProgressMeterFrame :: ~nsProgressMeterFrame ( )
 {
 }
 
+class nsAsyncProgressMeterInit : public nsIReflowCallback
+{
+public:
+  nsAsyncProgressMeterInit(nsIFrame* aFrame) : mWeakFrame(aFrame) {}
+
+  virtual PRBool ReflowFinished()
+  {
+    PRBool shouldFlush = PR_FALSE;
+    nsIFrame* frame = mWeakFrame.GetFrame();
+    if (frame) {
+      frame->AttributeChanged(kNameSpaceID_None, nsGkAtoms::value, 0);
+      shouldFlush = PR_TRUE;
+    }
+    delete this;
+    return shouldFlush;
+  }
+
+  nsWeakFrame mWeakFrame;
+};
+
 NS_IMETHODIMP
-nsProgressMeterFrame::SetInitialChildList(nsIAtom*        aListName,
-                                          nsIFrame*       aChildList)
-{ 
-  // Set up our initial flexes.
-  nsresult rv = nsBoxFrame::SetInitialChildList(aListName, aChildList);
-  AttributeChanged(kNameSpaceID_None, nsGkAtoms::value, 0);
-  return rv;
+nsProgressMeterFrame::DoLayout(nsBoxLayoutState& aState)
+{
+  if (mNeedsReflowCallback) {
+    nsIReflowCallback* cb = new nsAsyncProgressMeterInit(this);
+    if (cb) {
+      PresContext()->PresShell()->PostReflowCallback(cb);
+    }
+    mNeedsReflowCallback = PR_FALSE;
+  }
+  return nsBoxFrame::DoLayout(aState);
 }
 
 NS_IMETHODIMP
