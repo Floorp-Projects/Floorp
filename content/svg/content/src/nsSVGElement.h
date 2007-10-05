@@ -58,7 +58,6 @@ class nsSVGSVGElement;
 class nsSVGLength2;
 class nsSVGNumber2;
 class nsSVGInteger;
-class nsSVGAngle;
 class nsSVGBoolean;
 class nsSVGEnum;
 struct nsSVGEnumMapping;
@@ -122,7 +121,6 @@ public:
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr);
-  virtual void DidChangeAngle(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeBoolean(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
@@ -153,7 +151,7 @@ protected:
   struct LengthInfo {
     nsIAtom** mName;
     float     mDefaultValue;
-    PRUint8   mDefaultUnitType;
+    PRUint16  mDefaultUnitType;
     PRUint8   mCtxType;
   };
 
@@ -203,24 +201,6 @@ protected:
       {}
   };
 
-  struct AngleInfo {
-    nsIAtom** mName;
-    float     mDefaultValue;
-    PRUint8   mDefaultUnitType;
-  };
-
-  struct AngleAttributesInfo {
-    nsSVGAngle* mAngles;
-    AngleInfo*  mAngleInfo;
-    PRUint32    mAngleCount;
-
-    AngleAttributesInfo(nsSVGAngle *aAngles,
-                        AngleInfo *aAngleInfo,
-                        PRUint32 aAngleCount) :
-      mAngles(aAngles), mAngleInfo(aAngleInfo), mAngleCount(aAngleCount)
-      {}
-  };
-
   struct BooleanInfo {
     nsIAtom**    mName;
     PRPackedBool mDefaultValue;
@@ -261,15 +241,14 @@ protected:
   virtual LengthAttributesInfo GetLengthInfo();
   virtual NumberAttributesInfo GetNumberInfo();
   virtual IntegerAttributesInfo GetIntegerInfo();
-  virtual AngleAttributesInfo GetAngleInfo();
   virtual BooleanAttributesInfo GetBooleanInfo();
   virtual EnumAttributesInfo GetEnumInfo();
-
-  static nsSVGEnumMapping sSVGUnitTypesMap[];
 
   static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
                                               nsIAtom* aAttribute,
                                               const nsAString& aValue);
+
+  static nsSVGEnumMapping sSVGUnitTypesMap[];
 
   nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
   nsAttrAndChildArray mMappedAttributes;

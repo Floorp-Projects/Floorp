@@ -68,10 +68,14 @@
 #include "nsSVGLength2.h"
 #include "nsSVGNumber2.h"
 #include "nsSVGInteger.h"
-#include "nsSVGAngle.h"
 #include "nsSVGBoolean.h"
 #include "nsSVGEnum.h"
 #include "nsIDOMSVGUnitTypes.h"
+#include "nsIDOMSVGAngle.h"
+#include "nsIDOMSVGAnimatedAngle.h"
+#include "nsIDOMSVGAnimatedBoolean.h"
+#include "nsIDOMSVGAnimatedInteger.h"
+#include "nsIDOMSVGLength.h"
 #include "nsIDOMSVGLengthList.h"
 #include "nsIDOMSVGAnimatedLengthList.h"
 #include "nsIDOMSVGNumberList.h"
@@ -125,14 +129,6 @@ nsSVGElement::Init()
 
   for (i = 0; i < integerInfo.mIntegerCount; i++) {
     integerInfo.mIntegers[i].Init(i, integerInfo.mIntegerInfo[i].mDefaultValue);
-  }
-
-  AngleAttributesInfo angleInfo = GetAngleInfo();
-
-  for (i = 0; i < angleInfo.mAngleCount; i++) {
-    angleInfo.mAngles[i].Init(i,
-                              angleInfo.mAngleInfo[i].mDefaultValue,
-                              angleInfo.mAngleInfo[i].mDefaultUnitType);
   }
 
   BooleanAttributesInfo booleanInfo = GetBooleanInfo();
@@ -263,9 +259,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
 
     // Check for nsSVGLength2 attribute
     LengthAttributesInfo lengthInfo = GetLengthInfo();
-
-    PRUint32 i;
-    for (i = 0; i < lengthInfo.mLengthCount && !foundMatch; i++) {
+    for (PRUint32 i = 0; i < lengthInfo.mLengthCount && !foundMatch; i++) {
       if (aAttribute == *lengthInfo.mLengthInfo[i].mName) {
         rv = lengthInfo.mLengths[i].SetBaseValueString(aValue, this, PR_FALSE);
         foundMatch = PR_TRUE;
@@ -274,7 +268,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
 
     // Check for nsSVGNumber2 attribute
     NumberAttributesInfo numberInfo = GetNumberInfo();
-    for (i = 0; i < numberInfo.mNumberCount && !foundMatch; i++) {
+    for (PRUint32 i = 0; i < numberInfo.mNumberCount && !foundMatch; i++) {
       if (aAttribute == *numberInfo.mNumberInfo[i].mName) {
         rv = numberInfo.mNumbers[i].SetBaseValueString(aValue, this, PR_FALSE);
         foundMatch = PR_TRUE;
@@ -283,25 +277,16 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
 
     // Check for nsSVGInteger attribute
     IntegerAttributesInfo integerInfo = GetIntegerInfo();
-    for (i = 0; i < integerInfo.mIntegerCount && !foundMatch; i++) {
+    for (PRUint32 i = 0; i < integerInfo.mIntegerCount && !foundMatch; i++) {
       if (aAttribute == *integerInfo.mIntegerInfo[i].mName) {
         rv = integerInfo.mIntegers[i].SetBaseValueString(aValue, this, PR_FALSE);
         foundMatch = PR_TRUE;
       }
     }
 
-    // Check for nsSVGAngle attribute
-    AngleAttributesInfo angleInfo = GetAngleInfo();
-    for (i = 0; i < angleInfo.mAngleCount && !foundMatch; i++) {
-      if (aAttribute == *angleInfo.mAngleInfo[i].mName) {
-        rv = angleInfo.mAngles[i].SetBaseValueString(aValue, this, PR_FALSE);
-        foundMatch = PR_TRUE;
-      }
-    }
-
     // Check for nsSVGBoolean attribute
     BooleanAttributesInfo booleanInfo = GetBooleanInfo();
-    for (i = 0; i < booleanInfo.mBooleanCount && !foundMatch; i++) {
+    for (PRUint32 i = 0; i < booleanInfo.mBooleanCount && !foundMatch; i++) {
       if (aAttribute == *booleanInfo.mBooleanInfo[i].mName) {
         rv = booleanInfo.mBooleans[i].SetBaseValueString(aValue, this, PR_FALSE);
         foundMatch = PR_TRUE;
@@ -310,7 +295,7 @@ nsSVGElement::ParseAttribute(PRInt32 aNamespaceID,
 
     // Check for nsSVGEnum attribute
     EnumAttributesInfo enumInfo = GetEnumInfo();
-    for (i = 0; i < enumInfo.mEnumCount && !foundMatch; i++) {
+    for (PRUint32 i = 0; i < enumInfo.mEnumCount && !foundMatch; i++) {
       if (aAttribute == *enumInfo.mEnumInfo[i].mName) {
         rv = enumInfo.mEnums[i].SetBaseValueString(aValue, this, PR_FALSE);
         foundMatch = PR_TRUE;
@@ -381,18 +366,6 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
         }
       }
 
-      // Check if this is an angle attribute going away
-      AngleAttributesInfo angleInfo = GetAngleInfo();
-
-      for (i = 0; i < angleInfo.mAngleCount; i++) {
-        if (aName == *angleInfo.mAngleInfo[i].mName) {
-          angleInfo.mAngles[i].Init(i, 
-                                    angleInfo.mAngleInfo[i].mDefaultValue,
-                                    angleInfo.mAngleInfo[i].mDefaultUnitType);
-          DidChangeAngle(i, PR_FALSE);
-        }
-      }
-
       // Check if this is a boolean attribute going away
       BooleanAttributesInfo boolInfo = GetBooleanInfo();
 
@@ -417,6 +390,11 @@ nsSVGElement::UnsetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
       nsCOMPtr<nsISVGValue> svg_value = GetMappedAttribute(aNamespaceID, aName);
 
       if (svg_value) {
+#ifdef DEBUG_tor
+        nsCOMPtr<nsIDOMSVGAnimatedAngle> a = do_QueryInterface(svg_value);
+        NS_ASSERTION(!a, "must provide element processing for unset angle");
+#endif
+
         nsCOMPtr<nsIDOMSVGAnimatedRect> r = do_QueryInterface(svg_value);
         if (r) {
           nsCOMPtr<nsIDOMSVGRect> rect;
@@ -1085,32 +1063,6 @@ nsSVGElement::GetAnimatedIntegerValues(PRInt32 *aFirst, ...)
   va_end(args);
 }
 
-nsSVGElement::AngleAttributesInfo
-nsSVGElement::GetAngleInfo()
-{
-  return AngleAttributesInfo(nsnull, nsnull, 0);
-}
-
-void
-nsSVGElement::DidChangeAngle(PRUint8 aAttrEnum, PRBool aDoSetAttr)
-{
-  if (!aDoSetAttr)
-    return;
-
-  AngleAttributesInfo info = GetAngleInfo();
-
-  NS_ASSERTION(info.mAngleCount > 0,
-               "DidChangeAngle on element with no angle attribs");
-
-  NS_ASSERTION(aAttrEnum < info.mAngleCount, "aAttrEnum out of range");
-
-  nsAutoString newStr;
-  info.mAngles[aAttrEnum].GetBaseValueString(newStr);
-
-  SetAttr(kNameSpaceID_None, *info.mAngleInfo[aAttrEnum].mName,
-          newStr, PR_TRUE);
-}
-
 nsSVGElement::BooleanAttributesInfo
 nsSVGElement::GetBooleanInfo()
 {
@@ -1126,7 +1078,7 @@ nsSVGElement::DidChangeBoolean(PRUint8 aAttrEnum, PRBool aDoSetAttr)
   BooleanAttributesInfo info = GetBooleanInfo();
 
   NS_ASSERTION(info.mBooleanCount > 0,
-               "DidChangeBoolean on element with no boolean attribs");
+               "DidChangeInteger on element with no boolean attribs");
 
   NS_ASSERTION(aAttrEnum < info.mBooleanCount, "aAttrEnum out of range");
 
