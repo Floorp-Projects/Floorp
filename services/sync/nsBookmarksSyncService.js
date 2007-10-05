@@ -244,7 +244,8 @@ BookmarksSyncService.prototype = {
     fis.close();
     json = eval(json);
 
-    if (json && json.snapshot && json.version && json.GUID) {
+    if (json && 'snapshot' in json && 'version' in json && 'GUID' in json) {
+      this.notice("Reading saved snapshot from disk");
       this._snapshot = json.snapshot;
       this._snapshotVersion = json.version;
       this._snapshotGUID = json.GUID;
@@ -485,10 +486,9 @@ BookmarksSyncService.prototype = {
   //  [2dcA1, 2dcA2, ...], [2dcB1, 2dcB2, ...]]
 
   _reconcile: function BSS__reconcile(onComplete, listA, listB) {
-    let generator = yield;
+    let cont = yield;
+    let listener = new EventListener(cont);
     this._timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    let handlers = generatorHandlers(generator);
-    let listener = new EventListener(handlers['complete']);
 
     let propagations = [[], []];
     let conflicts = [[], []];
@@ -782,14 +782,13 @@ BookmarksSyncService.prototype = {
   // 3.2) Append server delta to the delta file and upload
 
   _doSync: function BSS__doSync() {
-    var generator = yield;
-    var handlers = generatorHandlers(generator);
+    let cont = yield;
 
     this._os.notifyObservers(null, "bookmarks-sync:start", "");
     this.notice("Beginning sync");
 
     try {
-      if (!asyncRun(this._dav, this._dav.lock, handlers.complete))
+      if (!this._dav.lock.async(this._dav, cont))
         return;
       let locked = yield;
 
@@ -804,7 +803,7 @@ BookmarksSyncService.prototype = {
       //this.notice("local json:\n" + this._mungeNodes(localJson));
 
       // 1) Fetch server deltas
-      if (asyncRun(this, this._getServerData, handlers.complete, localJson))
+      if (this._getServerData.async(this, cont, localJson))
         let server = yield;
       else
         return
@@ -838,8 +837,8 @@ BookmarksSyncService.prototype = {
       // 3) Reconcile client/server deltas and generate new deltas for them.
 
       this.notice("Reconciling client/server updates");
-      if (asyncRun(this, this._reconcile, handlers.complete,
-                   localUpdates, server.updates))
+      if (this._reconcile.async(this, cont,
+                                localUpdates, server.updates))
         let ret = yield;
       else
         return
@@ -908,7 +907,7 @@ BookmarksSyncService.prototype = {
         this._snapshotVersion = ++server.maxVersion;
         server.deltas.push(serverChanges);
 
-        this._dav.PUT("bookmarks-deltas.json", uneval(server.deltas), handlers);
+        this._dav.PUT("bookmarks-deltas.json", uneval(server.deltas), cont);
         let deltasPut = yield;
 
         // FIXME: need to watch out for the storage format version changing,
@@ -917,7 +916,7 @@ BookmarksSyncService.prototype = {
                       uneval({GUID: this._snapshotGUID,
                               formatVersion: STORAGE_FORMAT_VERSION,
                               snapVersion: server.snapVersion,
-                              maxVersion: this._snapshotVersion}), handlers);
+                              maxVersion: this._snapshotVersion}), cont);
         let statusPut = yield;
 
         if (deltasPut.target.status >= 200 && deltasPut.target.status < 300 &&
@@ -933,7 +932,7 @@ BookmarksSyncService.prototype = {
       this._os.notifyObservers(null, "bookmarks-sync:end", "");
       this.notice("Sync complete");
     } finally {
-      if (!asyncRun(this._dav, this._dav.unlock, handlers.complete))
+      if (!this._dav.unlock.async(this._dav, cont))
         return;
       let unlocked = yield;
       if (unlocked)
@@ -965,15 +964,14 @@ BookmarksSyncService.prototype = {
    *     combined into a single set.
    */
   _getServerData: function BSS__getServerData(onComplete, localJson) {
-    let generator = yield;
-    let handlers = generatorHandlers(generator);
+    let cont = yield;
 
     let ret = {status: -1,
                formatVersion: null, maxVersion: null, snapVersion: null,
                snapshot: null, deltas: null, updates: null};
 
     this.notice("Getting bookmarks status from server");
-    this._dav.GET("bookmarks-status.json", handlers);
+    this._dav.GET("bookmarks-status.json", cont);
     let statusResp = yield;
 
     switch (statusResp.target.status) {
@@ -1004,7 +1002,7 @@ BookmarksSyncService.prototype = {
           this.notice("Local snapshot is out of date");
 
         this.notice("Downloading server snapshot");
-        this._dav.GET("bookmarks-snapshot.json", handlers);
+        this._dav.GET("bookmarks-snapshot.json", cont);
         let snapResp = yield;
         if (snapResp.target.status < 200 || snapResp.target.status >= 300) {
           this.notice("Error: could not download server snapshot");
@@ -1014,7 +1012,7 @@ BookmarksSyncService.prototype = {
         snap = eval(snapResp.target.responseText);
 
         this.notice("Downloading server deltas");
-        this._dav.GET("bookmarks-deltas.json", handlers);
+        this._dav.GET("bookmarks-deltas.json", cont);
         let deltasResp = yield;
         if (deltasResp.target.status < 200 || deltasResp.target.status >= 300) {
           this.notice("Error: could not download server deltas");
@@ -1029,7 +1027,7 @@ BookmarksSyncService.prototype = {
         snap = eval(uneval(this._snapshot));
 
         this.notice("Downloading server deltas");
-        this._dav.GET("bookmarks-deltas.json", handlers);
+        this._dav.GET("bookmarks-deltas.json", cont);
         let deltasResp = yield;
         if (deltasResp.target.status < 200 || deltasResp.target.status >= 300) {
           this.notice("Error: could not download server deltas");
@@ -1044,7 +1042,7 @@ BookmarksSyncService.prototype = {
 
         // FIXME: could optimize this case by caching deltas file
         this.notice("Downloading server deltas");
-        this._dav.GET("bookmarks-deltas.json", handlers);
+        this._dav.GET("bookmarks-deltas.json", cont);
         let deltasResp = yield;
         if (deltasResp.target.status < 200 || deltasResp.target.status >= 300) {
           this.notice("Error: could not download server deltas");
@@ -1081,7 +1079,7 @@ BookmarksSyncService.prototype = {
       this._snapshotGUID = null; // in case there are other snapshots out there
 
       this._dav.PUT("bookmarks-snapshot.json",
-                    uneval(this._snapshot), handlers);
+                    uneval(this._snapshot), cont);
       let snapPut = yield;
       if (snapPut.target.status < 200 || snapPut.target.status >= 300) {
         this.notice("Error: could not upload snapshot to server, error code: " +
@@ -1090,7 +1088,7 @@ BookmarksSyncService.prototype = {
         return;
       }
 
-      this._dav.PUT("bookmarks-deltas.json", uneval([]), handlers);
+      this._dav.PUT("bookmarks-deltas.json", uneval([]), cont);
       let deltasPut = yield;
       if (deltasPut.target.status < 200 || deltasPut.target.status >= 300) {
         this.notice("Error: could not upload deltas to server, error code: " +
@@ -1103,7 +1101,7 @@ BookmarksSyncService.prototype = {
                     uneval({GUID: this._snapshotGUID,
                             formatVersion: STORAGE_FORMAT_VERSION,
                             snapVersion: this._snapshotVersion,
-                            maxVersion: this._snapshotVersion}), handlers);
+                            maxVersion: this._snapshotVersion}), cont);
       let statusPut = yield;
       if (statusPut.target.status < 200 || statusPut.target.status >= 300) {
         this.notice("Error: could not upload status file to server, error code: " +
@@ -1132,13 +1130,13 @@ BookmarksSyncService.prototype = {
     generatorDone(this, onComplete, ret)
   },
 
-  _onLogin: function BSS__onLogin(event) {
-    this.notice("Bookmarks sync server: " + this._dav.baseURL);
-    this._os.notifyObservers(null, "bookmarks-sync:login", "");
-  },
-
-  _onLoginError: function BSS__onLoginError(event) {
-    this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
+  _onLogin: function BSS__onLogin(success) {
+    if (success) {
+      this.notice("Bookmarks sync server: " + this._dav.baseURL);
+      this._os.notifyObservers(null, "bookmarks-sync:login", "");
+    } else {
+      this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
+    }
   },
 
   // Interfaces this component implements.
@@ -1155,12 +1153,13 @@ BookmarksSyncService.prototype = {
   // nsIBookmarksSyncService
 
   sync: function BSS_sync() {
-    asyncRun(this, this._doSync);
+    this._doSync.async(this);
   },
 
   login: function BSS_login() {
-    this._dav.login({load: bind2(this, this._onLogin),
-                     error: bind2(this, this._onLoginError)});
+    let callback = bind2(this, this._onLogin);
+    if (!this._dav.login.async(this._dav, callback))
+      this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
   },
 
   logout: function BSS_logout() {
@@ -1199,13 +1198,13 @@ function bind2(object, method) {
   return function innerBind() { return method.apply(object, arguments); }
 }
 
-function asyncRun(object, method, onComplete, extra) {
-  let args = Array.prototype.slice.call(arguments, 2); // onComplete + extra + ...
+Function.prototype.async = function(self, extra_args) {
+  let args = Array.prototype.slice.call(arguments, 1);
   let ret = false;
   try {
-    let gen = method.apply(object, args);
+    let gen = this.apply(self, args);
     gen.next(); // must initialize before sending
-    gen.send(gen);
+    gen.send(function(data) { continueGenerator(gen, data); });
     ret = true;
   } catch (e) {
     if (e instanceof StopIteration)
@@ -1226,19 +1225,12 @@ function continueGenerator(generator, data) {
   }
 }
 
-function generatorHandlers(generator) {
-  let cb = function(data) {
-    continueGenerator(generator, data);
-  };
-  return {load: cb, error: cb, complete: cb};
-}
-
-// generators called using asyncRun can't simply call the callback
-// with the return value, since that would cause the calling
+// generators called using Function.async can't simply call the
+// callback with the return value, since that would cause the calling
 // function to end up running (after the yield) from inside the
-// generator.  Instead, generators can call this method which sets
-// up a timer to call the callback from a timer (and cleans up the
-// timer to avoid leaks).
+// generator.  Instead, generators can call this method which sets up
+// a timer to call the callback from a timer (and cleans up the timer
+// to avoid leaks).
 function generatorDone(object, callback, retval) {
   if (object._timer)
     throw "Called generatorDone when there is a timer already set."
@@ -1311,12 +1303,52 @@ DAVCollection.prototype = {
     return this.__base64;
   },
 
+  // FIXME: should we regen this each time to prevent it from staying in memory?
+  __auth: null,
+  get _auth() {
+    if (this.__auth)
+      return this.__auth;
+
+    try {
+      let URI = makeURI(this._baseURL);
+      let username = 'nobody@mozilla.com';
+      let password;
+
+      let branch = Cc["@mozilla.org/preferences-service;1"].
+        getService(Ci.nsIPrefBranch);
+      username = branch.getCharPref("browser.places.sync.username");
+
+      if (!username)
+        return null;
+
+      // fixme: make a request and get the realm
+      let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
+      let logins = lm.findLogins({}, URI.hostPort, null,
+                                 'Use your ldap username/password - dotmoz');
+
+      for (let i = 0; i < logins.length; i++) {
+        if (logins[i].username == username) {
+          password = logins[i].password;
+          break;
+        }
+      }
+
+      if (!password)
+        return null;
+
+      this.__auth = "Basic " +
+        this._base64.Base64.encode(username + ":" + password);
+
+    } catch (e) {}
+
+    return this.__auth;
+  },
+
   get baseURL() {
     return this._baseURL;
   },
 
   _loggedIn: false,
-  _authString: null,
   _currentUserPath: "nobody",
 
   _currentUser: "nobody@mozilla.com",
@@ -1324,19 +1356,12 @@ DAVCollection.prototype = {
     return this._currentUser;
   },
 
-  _addHandler: function DC__addHandler(request, handlers, eventName) {
-    if (handlers[eventName])
-      request.addEventListener(eventName, new EventListener(handlers[eventName]), false);
-  },
-  _makeRequest: function DC__makeRequest(op, path, handlers, headers) {
+  _makeRequest: function DC__makeRequest(op, path, onComplete, headers) {
     var request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance();
     request = request.QueryInterface(Ci.nsIDOMEventTarget);
   
-    if (!handlers)
-      handlers = {};
-    this._addHandler(request, handlers, "load");
-    this._addHandler(request, handlers, "error");
-  
+    request.addEventListener("load", new EventListener(onComplete), false);
+    request.addEventListener("error", new EventListener(onComplete), false);
     request = request.QueryInterface(Ci.nsIXMLHttpRequest);
     request.open(op, this._baseURL + path, true);
   
@@ -1351,229 +1376,169 @@ DAVCollection.prototype = {
     return request;
   },
 
-  GET: function DC_GET(path, handlers, headers) {
+  GET: function DC_GET(path, onComplete, headers) {
     if (!headers)
       headers = {'Content-type': 'text/plain'};
-    if (this._authString)
-      headers['Authorization'] = this._authString;
+    if (this._auth)
+      headers['Authorization'] = this._auth;
     if (this._token)
       headers['If'] = "<" + this._bashURL + "> (<" + this._token + ">)";
-
-    var request = this._makeRequest("GET", path, handlers, headers);
+    let request = this._makeRequest("GET", path, onComplete, headers);
     request.send(null);
   },
 
-  PUT: function DC_PUT(path, data, handlers, headers) {
+  PUT: function DC_PUT(path, data, onComplete, headers) {
     if (!headers)
       headers = {'Content-type': 'text/plain'};
-    if (this._authString)
-      headers['Authorization'] = this._authString;
+    if (this._auth)
+      headers['Authorization'] = this._auth;
     if (this._token)
       headers['If'] = "<" + this._bashURL + "> (<" + this._token + ">)";
-
-    var request = this._makeRequest("PUT", path, handlers, headers);
+    let request = this._makeRequest("PUT", path, onComplete, headers);
     request.send(data);
   },
 
   // Login / Logout
 
-  login: function DC_login(handlers) {
-    this._loginHandlers = handlers;
-    internalHandlers = {load: bind2(this, this._onLogin),
-                        error: bind2(this, this._onLoginError)};
+  login: function DC_login(onComplete) {
+    let cont = yield;
+    this._loggedIn = false;
 
     try {
-      let URI = makeURI(this._baseURL);
-      let username = 'nobody@mozilla.com';
-      let password;
+      let headers = {};
+      if (this._auth)
+        headers['Authorization'] = this._auth;
+   
+      this._authProvider._authFailed = false;
 
+      let request = this._makeRequest("GET", "", cont, headers);
+      request.send(null);
+      let event = yield;
+
+      if (this._authProvider._authFailed || event.target.status >= 400)
+        return;
+  
+      // XXX we need to refine some server response codes
       let branch = Cc["@mozilla.org/preferences-service;1"].
         getService(Ci.nsIPrefBranch);
-      username = branch.getCharPref("browser.places.sync.username");
+      this._currentUser = branch.getCharPref("browser.places.sync.username");
+  
+      // XXX
+      let path = this._currentUser.split("@");
+      this._currentUserPath = path[0];
+      this._baseURL = this._baseURL + this._currentUserPath + "/";
+      this._loggedIn = true;
 
-      // fixme: make a request and get the realm
-      let lm = Cc["@mozilla.org/login-manager;1"].getService(Ci.nsILoginManager);
-      let logins = lm.findLogins({}, URI.hostPort, null,
-                                 'Use your ldap username/password - dotmoz');
-      //notice("Found " + logins.length + " logins");
-
-          for (let i = 0; i < logins.length; i++) {
-        if (logins[i].username == username) {
-          password = logins[i].password;
-          break;
-        }
-      }
-
-      // FIXME: should we regen this each time to prevent it from staying in memory?
-      this._authString = "Basic " +
-        this._base64.Base64.encode(username + ":" + password);
-      headers = {'Authorization': this._authString};
-    } catch (e) {
-      // try without the auth header?
-      // fixme: may want to just fail here
+    } finally {
+      generatorDone(this, onComplete, this._loggedIn);
     }
-     this._authProvider._authFailed = false;
- 
-    let request = this._makeRequest("GET", "", internalHandlers, headers);
-    request.send(null);
   },
 
   logout: function DC_logout() {
-    this._authString = null;
-  },
-
-  _onLogin: function DC__onLogin(event) {
-//    dump("logged in (" + event.target.status + "):\n" +
-//        event.target.responseText + "\n");
- 
-    if (this._authProvider._authFailed || event.target.status >= 400) {
-      this._onLoginError(event);
-      return;
-    }
-
-    // fixme: hacktastic
-//    let hello = /Hello (.+)@mozilla.com/.exec(event.target.responseText)
-//    let hello = /Index of/.exec(event.target.responseText)
-//    if (hello) {
-//      this._currentUserPath = hello[1];	
-//      this._currentUser = this._currentUserPath + "@mozilla.com";
-//      this._baseURL = "http://dotmoz.mozilla.org/~" +
-//        this._currentUserPath + "/";
-//    }
-
-      // XXX we need to refine some server response codes
-    let branch = Cc["@mozilla.org/preferences-service;1"].
-      getService(Ci.nsIPrefBranch);
-    this._currentUser = branch.getCharPref("browser.places.sync.username");
-
-    // XXX
-    let path = this._currentUser.split("@");
-    this._currentUserPath = path[0];
-
-    let serverURL = branch.getCharPref("browser.places.sync.serverURL");
-    this._baseURL = serverURL + this._currentUserPath + "/";
-    
-    this._loggedIn = true;
-
-    if (this._loginHandlers && this._loginHandlers.load)
-      this._loginHandlers.load(event);
-  },
-  _onLoginError: function DC__onLoginError(event) {
-    //notice("login failed (" + event.target.status + "):\n" +
-    //    event.target.responseText + "\n");
-
     this._loggedIn = false;
-
-    if (this._loginHandlers && this._loginHandlers.error)
-      this._loginHandlers.error(event);
+    this.__auth = null;
   },
 
   // Locking
 
   _getActiveLock: function DC__getActiveLock(onComplete) {
-    let generator = yield;
-    let handlers = generatorHandlers(generator);
+    let cont = yield;
+    let ret = null;
 
-    let headers = {'Content-Type': 'text/xml; charset="utf-8"',
-                   'Depth': '0'};
-    if (this._authString)
-      headers['Authorization'] = this._authString;
+    try {
+      let headers = {'Content-Type': 'text/xml; charset="utf-8"',
+                     'Depth': '0'};
+      if (this._auth)
+        headers['Authorization'] = this._auth;
 
-    let request = this._makeRequest("PROPFIND", "", handlers, headers);
-    request.send("<?xml version=\"1.0\" encoding=\"utf-8\" ?>" +
-                 "<D:propfind xmlns:D='DAV:'>" +
-                 "  <D:prop><D:lockdiscovery/></D:prop>" +
-                 "</D:propfind>");
-    let event = yield;
-    let tokens = xpath(event.target.responseXML, '//D:locktoken/D:href');
-    let token = tokens.iterateNext();
-    if (token)
-      generatorDone(this, onComplete, token.textContent);
-    else
-      generatorDone(this, onComplete, null);
+      let request = this._makeRequest("PROPFIND", "", cont, headers);
+      request.send("<?xml version=\"1.0\" encoding=\"utf-8\" ?>" +
+                   "<D:propfind xmlns:D='DAV:'>" +
+                   "  <D:prop><D:lockdiscovery/></D:prop>" +
+                   "</D:propfind>");
+      let event = yield;
+      let tokens = xpath(event.target.responseXML, '//D:locktoken/D:href');
+      let token = tokens.iterateNext();
+      ret = token.textContent;
+    } finally {
+      generatorDone(this, onComplete, ret);
+    }
   },
 
   lock: function DC_lock(onComplete) {
-    let generator = yield;
-    let handlers = generatorHandlers(generator);
+    let cont = yield;
+    this._token = null;
 
-    headers = {'Content-Type': 'text/xml; charset="utf-8"',
-               'Timeout': 'Second-600',
-               'Depth': 'infinity'};
-    if (this._authString)
-      headers['Authorization'] = this._authString;
+    try {
+      headers = {'Content-Type': 'text/xml; charset="utf-8"',
+                 'Timeout': 'Second-600',
+                 'Depth': 'infinity'};
+      if (this._auth)
+        headers['Authorization'] = this._auth;
 
-    let request = this._makeRequest("LOCK", "", handlers, headers);
-    request.send("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
-                 "<D:lockinfo xmlns:D=\"DAV:\">\n" +
-                 "  <D:locktype><D:write/></D:locktype>\n" +
-                 "  <D:lockscope><D:exclusive/></D:lockscope>\n" +
-                 "</D:lockinfo>");
-    let event = yield;
+      let request = this._makeRequest("LOCK", "", cont, headers);
+      request.send("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n" +
+                   "<D:lockinfo xmlns:D=\"DAV:\">\n" +
+                   "  <D:locktype><D:write/></D:locktype>\n" +
+                   "  <D:lockscope><D:exclusive/></D:lockscope>\n" +
+                   "</D:lockinfo>");
+      let event = yield;
 
-    if (event.target.status < 200 || event.target.status >= 300) {
-      generatorDone(this, onComplete, false);
-      return;
+      if (event.target.status < 200 || event.target.status >= 300)
+        return;
+
+      let tokens = xpath(event.target.responseXML, '//D:locktoken/D:href');
+      let token = tokens.iterateNext();
+      if (token)
+        this._token = token.textContent;
+
+    } finally {
+      generatorDone(this, onComplete, this._token);
     }
-
-    let tokens = xpath(event.target.responseXML, '//D:locktoken/D:href');
-    let token = tokens.iterateNext();
-    if (token) {
-      this._token = token.textContent;
-      generatorDone(this, onComplete, true);
-    }
-
-    generatorDone(this, onComplete, false);
   },
 
   unlock: function DC_unlock(onComplete) {
-    let generator = yield;
-    let handlers = generatorHandlers(generator);
+    let cont = yield;
 
-    if (!this._token) {
-      generatorDone(this, onComplete, false);
-      return;
+    try {
+      if (!this._token)
+        return;
+
+      let headers = {'Lock-Token': "<" + this._token + ">"};
+      if (this._auth)
+        headers['Authorization'] = this._auth;
+
+      let request = this._makeRequest("UNLOCK", "", cont, headers);
+      request.send(null);
+      let event = yield;
+
+      if (event.target.status < 200 || event.target.status >= 300)
+        return;
+
+      this._token = null;
+    } finally {
+      if (this._token)
+        generatorDone(this, onComplete, false);
+      else
+        generatorDone(this, onComplete, true);
     }
-
-    headers = {'Lock-Token': "<" + this._token + ">"};
-    if (this._authString)
-      headers['Authorization'] = this._authString;
-
-    let request = this._makeRequest("UNLOCK", "", handlers, headers);
-    request.send(null);
-    let event = yield;
-
-    if (event.target.status < 200 || event.target.status >= 300) {
-      generatorDone(this, onComplete, false);
-      return;
-    }
-
-    this._token = null;
-
-    generatorDone(this, onComplete, true);
   },
 
   stealLock: function DC_stealLock(onComplete) {
-    let generator = yield;
-    let handlers = generatorHandlers(generator);
-    let stolen = false;
+    let cont = yield;
+    let stolen = null;
 
     try {
-      if (!asyncRun(this, this._getActiveLock, handlers.complete))
+      if (!this._getActiveLock.async(this, cont))
         return;
       this._token = yield;
   
-      if (!asyncRun(this, this.unlock, handlers.complete))
+      if (!this.unlock.async(this, cont))
         return;
       let unlocked = yield;
 
-      if (!unlocked)
-        return;
-  
-      if (!asyncRun(this, this.lock, handlers.complete))
-        return;
-      stolen = yield;
-
+      if (unlocked && this.lock.async(this, cont))
+        stolen = yield;
     } finally {
       generatorDone(this, onComplete, stolen);
     }
