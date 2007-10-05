@@ -49,7 +49,7 @@
 #include "nsPlatformCharset.h"
 
 static nsGREResProperties *gInfo = nsnull;
-static PRInt32 gCnt= 0;
+static PRInt32 gCnt = 0;
 
 NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
 
@@ -57,6 +57,7 @@ nsPlatformCharset::nsPlatformCharset()
 {
   NS_TIMELINE_START_TIMER("nsPlatformCharset()");
 
+  PR_AtomicIncrement(&gCnt);
   nsAutoString acpKey(NS_LITERAL_STRING("acp."));
   acpKey.AppendInt(PRInt32(::GetACP() & 0x00FFFF), 10);
   MapToCharset(acpKey, mCharset);
@@ -77,8 +78,6 @@ nsPlatformCharset::~nsPlatformCharset()
 nsresult 
 nsPlatformCharset::InitInfo()
 {  
-  PR_AtomicIncrement(&gCnt); // count for gInfo
-
   if (gInfo == nsnull) {
     nsGREResProperties *info = new nsGREResProperties(NS_LITERAL_CSTRING("wincharset.properties"));
 
