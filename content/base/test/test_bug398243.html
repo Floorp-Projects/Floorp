@@ -32,6 +32,7 @@ function afterLoad() {
 
     /* Reload the page */
     $("testframe").setAttribute("onload", "afterReload()");
+    iframeDoc.location.reload();
 }
 
 addLoadEvent(afterLoad);
