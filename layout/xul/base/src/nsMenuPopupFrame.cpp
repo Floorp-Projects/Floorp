@@ -86,16 +86,6 @@
 
 const PRInt32 kMaxZ = 0x7fffffff; //XXX: Shouldn't there be a define somewhere for MaxInt for PRInt32
 
-static nsPopupSetFrame*
-GetPopupSetFrame(nsPresContext* aPresContext)
-{
-  nsIRootBox* rootBox = nsIRootBox::GetRootBox(aPresContext->PresShell());
-  if (!rootBox)
-    return nsnull;
-
-  return rootBox->GetPopupSetFrame();
-}
-
 // NS_NewMenuPopupFrame
 //
 // Wrapper for creating a new menu popup container
@@ -630,7 +620,6 @@ nsMenuPopupFrame::GetRootViewForPopup(nsIFrame* aStartFrame)
 {
   nsIView* view = aStartFrame->GetClosestView();
   NS_ASSERTION(view, "frame must have a closest view!");
-  nsIView* rootView = nsnull;
   while (view) {
     // Walk up the view hierarchy looking for a view whose widget has a 
     // window type of eWindowType_popup - in other words a popup window

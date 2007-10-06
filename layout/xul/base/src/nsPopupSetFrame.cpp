@@ -23,6 +23,7 @@
  *   Original Author: David W. Hyatt (hyatt@netscape.com)
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Dean Tessman <dean_tessman@hotmail.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -38,36 +39,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsGkAtoms.h"
 #include "nsPopupSetFrame.h"
-#include "nsIMenuParent.h"
-#include "nsMenuFrame.h"
-#include "nsBoxFrame.h"
+#include "nsGkAtoms.h"
+#include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "prtypes.h"
-#include "nsIAtom.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
-#include "nsMenuPopupFrame.h"
-#include "nsMenuBarFrame.h"
-#include "nsIView.h"
-#include "nsIWidget.h"
 #include "nsIDocument.h"
-#include "nsIDOMNSDocument.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMXULDocument.h"
-#include "nsIDOMElement.h"
-#include "nsISupportsArray.h"
-#include "nsIDOMText.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsGUIEvent.h"
 #include "nsIRootBox.h"
-
-#define NS_MENU_POPUP_LIST_INDEX   0
 
 nsPopupFrameList::nsPopupFrameList(nsIContent* aPopupContent, nsPopupFrameList* aNext)
 :mNextPopup(aNext), 
@@ -102,6 +87,12 @@ nsPopupSetFrame::Init(nsIContent*      aContent,
   }
 
   return rv;
+}
+
+nsIAtom*
+nsPopupSetFrame::GetType() const
+{
+  return nsGkAtoms::popupSetFrame;
 }
 
 NS_IMETHODIMP
@@ -148,10 +139,12 @@ nsPopupSetFrame::SetInitialChildList(nsIAtom*        aListName,
 void
 nsPopupSetFrame::Destroy()
 {
+  nsCSSFrameConstructor* frameConstructor =
+    PresContext()->PresShell()->FrameConstructor();
   // remove each popup from the list as we go.
   while (mPopupList) {
     if (mPopupList->mPopupFrame)
-      mPopupList->mPopupFrame->Destroy();
+      DestroyPopupFrame(frameConstructor, mPopupList->mPopupFrame);
 
     nsPopupFrameList* temp = mPopupList;
     mPopupList = mPopupList->mNextPopup;
@@ -245,7 +238,8 @@ nsPopupSetFrame::RemovePopupFrame(nsIFrame* aPopup)
         mPopupList = currEntry->mNextPopup;
       
       // Destroy the frame.
-      currEntry->mPopupFrame->Destroy();
+      DestroyPopupFrame(PresContext()->PresShell()->FrameConstructor(),
+                        currEntry->mPopupFrame);
 
       // Delete the entry.
       currEntry->mNextPopup = nsnull;
@@ -301,4 +295,11 @@ nsPopupSetFrame::AddPopupFrame(nsIFrame* aPopup)
   entry->mPopupFrame = static_cast<nsMenuPopupFrame *>(aPopup);
   
   return NS_OK;
+}
+
+void
+nsPopupSetFrame::DestroyPopupFrame(nsCSSFrameConstructor* aFc, nsIFrame* aPopup)
+{
+  aFc->RemoveMappingsForFrameSubtree(aPopup);
+  aPopup->Destroy();
 }
