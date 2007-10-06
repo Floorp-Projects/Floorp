@@ -8784,7 +8784,7 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
     xulElement->GetBoxObject(getter_AddRefs(boxObject));
     nsCOMPtr<nsPIListBoxObject> listBoxObject = do_QueryInterface(boxObject);
     if (listBoxObject) {
-      nsIListBoxObject* listboxBody = listBoxObject->GetListBoxBody();
+      nsIListBoxObject* listboxBody = listBoxObject->GetListBoxBody(PR_FALSE);
       if (listboxBody) {
         nsListBoxBodyFrame *listBoxBodyFrame = static_cast<nsListBoxBodyFrame*>(listboxBody);
         if (aOperation == CONTENT_REMOVED) {
