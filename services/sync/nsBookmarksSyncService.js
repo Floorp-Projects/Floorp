@@ -288,9 +288,7 @@ BookmarksSyncService.prototype = {
       }
       item.URI = node.uri;
       item.tags = this._ts.getTagsForURI(makeURI(node.uri));
-      let keyword = this._bms.getKeywordForBookmark(node.itemId);
-      if (keyword)
-        item.keyword = keyword;
+      item.keyword = this._bms.getKeywordForBookmark(node.itemId);
     } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
       item.type = "separator";
     } else {
@@ -621,8 +619,7 @@ BookmarksSyncService.prototype = {
                                        command.data.title);
       this._ts.untagURI(URI, null);
       this._ts.tagURI(URI, command.data.tags);
-      if (command.data.keyword)
-        this._bms.setKeywordForBookmark(newId, command.data.keyword);
+      this._bms.setKeywordForBookmark(newId, command.data.keyword);
 
       if (command.data.type == "microsummary") {
         let genURI = makeURI(command.data.generatorURI);
@@ -737,13 +734,27 @@ BookmarksSyncService.prototype = {
     }
   },
 
-  _getBookmarks: function BMS__getBookmarks(folder) {
-    if (!folder)
-      folder = this._bms.bookmarksRoot;
-    var query = this._hsvc.getNewQuery();
+  _getWrappedBookmarks: function BSS__getWrappedBookmarks(folder) {
+    let query = this._hsvc.getNewQuery();
     query.setFolders([folder], 1);
-    let root = this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
+    let root = this._hsvc.executeQuery(query,
+                                       this._hsvc.getNewQueryOptions()).root;
     return this._wrapNode(root);
+  },
+
+  _getBookmarks: function BSS__getBookmarks() {
+    let filed = this._getWrappedBookmarks(this._bms.bookmarksRoot);
+    let unfiled = this._getWrappedBookmarks(this._bms.unfiledRoot);
+
+    for (let guid in unfiled) {
+      if (guid in filed)
+        this.notice("Warning: same bookmark (guid) in both " +
+                    "filed and unfiled trees!");
+      else
+        filed[guid] = unfiled[guid];
+    }
+
+    return filed; // (combined)
   },
 
   _mungeNodes: function BSS__mungeNodes(nodes) {
