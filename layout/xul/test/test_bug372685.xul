@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Test for Bug 372685">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=372685
+-->
+
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+
+<menuitem id="a" style="display: -moz-stack;">
+<box id="b" style="display: -moz-popup; ">
+<box id="c" style="position: fixed;"></box>
+</box>
+</menuitem>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+function removestyles(i){
+          document.getElementById('a').removeAttribute('style');
+	  var x=document.getElementById('html_body').offsetHeight;
+	  is(0, 0, "this is a crash test, so always ok if we survive this far");
+          SimpleTest.finish();
+}
+function do_test() {
+          setTimeout(removestyles,200);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+]]>
+</script>
+
+<body  id="html_body" xmlns="http://www.w3.org/1999/xhtml">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=372685">Mozilla Bug 372685</a>
+<p id="display"></p>
+
+<pre id="test">
+</pre>
+<script>
+addLoadEvent(do_test);
+</script>
+</body>
+
+
+</window>
