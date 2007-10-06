@@ -137,9 +137,7 @@ protected:
     JSObject * mJSMethodObject;               // The JS object for the method (after compilation)
   };
 
-#ifdef DEBUG
   PRBool mIsCompiled;
-#endif
 };
 
 class nsXBLProtoImplAnonymousMethod : public nsXBLProtoImplMethod {
