@@ -99,6 +99,10 @@ public:
   // return means a JS exception was set.
   PRBool ResolveAllFields(JSContext *cx, JSObject *obj) const;
 
+  PRBool CompiledMembers() const {
+    return mClassObject != nsnull;
+  }
+
 protected:
   // Function to call if compilation of a member fails.  When this is called,
   // all members before aBrokenMember are compiled, compilation of
