@@ -1565,6 +1565,8 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
       // the offset, length and text for the text change.
       nsCOMPtr<nsIDOMNode> domNode;
       accessibleEvent->GetDOMNode(getter_AddRefs(domNode));
+      PRBool isFromUserInput;
+      accessibleEvent->GetIsFromUserInput(&isFromUserInput);
       if (domNode && domNode != mDOMNode) {
         if (!containerAccessible)
           GetAccessibleInParentChain(domNode, PR_TRUE,
@@ -1573,8 +1575,6 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
         nsCOMPtr<nsIAccessibleTextChangeEvent> textChangeEvent =
           CreateTextChangeEventForNode(containerAccessible, domNode, accessible, PR_TRUE, PR_TRUE);
         if (textChangeEvent) {
-          PRBool isFromUserInput;
-          accessibleEvent->GetIsFromUserInput(&isFromUserInput);
           nsCOMPtr<nsIDOMNode> hyperTextNode;
           textChangeEvent->GetDOMNode(getter_AddRefs(hyperTextNode));
           nsAccEvent::PrepareForEvent(hyperTextNode, isFromUserInput);
@@ -1584,6 +1584,10 @@ NS_IMETHODIMP nsDocAccessible::FlushPendingEvents()
           FireAccessibleEvent(textChangeEvent);
         }
       }
+
+      // Fire show/create events for this node or first accessible descendants of it
+      FireShowHideEvents(domNode, eventType, PR_FALSE, isFromUserInput); 
+      continue;
     }
 
     if (accessible) {
@@ -1754,9 +1758,7 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
 
   NS_ENSURE_TRUE(mDOMNode, NS_ERROR_FAILURE);
   nsCOMPtr<nsIDOMNode> childNode = aChild ? do_QueryInterface(aChild) : mDOMNode;
-  if (!IsNodeRelevant(childNode)) {
-    return NS_OK;  // Don't fire event unless it can be for an attached accessible
-  }
+
   if (!mIsContentLoaded) {
     // Still loading document
     if (mAccessNodeCache.Count() <= 1) {
@@ -1799,7 +1801,8 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   if (!childAccessible && !isHiding) {
     // If not about to hide it, make sure there's an accessible so we can fire an
     // event for it
-    GetAccService()->GetAccessibleFor(childNode, getter_AddRefs(childAccessible));
+    GetAccService()->GetAttachedAccessibleFor(childNode,
+                                              getter_AddRefs(childAccessible));
   }
 
 #ifdef DEBUG_A11Y
@@ -1833,16 +1836,33 @@ NS_IMETHODIMP nsDocAccessible::InvalidateCacheSubtree(nsIContent *aChild,
   }
 
   if (!isShowing) {
-    // Fire EVENT_ASYNCH_HIDE or EVENT_DOM_DESTROY if previous accessible existed for node being hidden.
-    // Fire this before the accessible goes away.
-    if (childAccessible) {
-      PRUint32 removalEventType = isAsynch ? nsIAccessibleEvent::EVENT_ASYNCH_HIDE :
-                                  nsIAccessibleEvent::EVENT_DOM_DESTROY;
-      nsCOMPtr<nsIAccessibleEvent> removalEvent =
-        new nsAccEvent(removalEventType, childAccessible, nsnull, PR_TRUE);
-      NS_ENSURE_TRUE(removalEvent, NS_ERROR_OUT_OF_MEMORY);
-      FireDelayedAccessibleEvent(removalEvent, eCoalesceFromSameSubtree, isAsynch);
+    // Fire EVENT_ASYNCH_HIDE or EVENT_DOM_DESTROY
+    nsCOMPtr<nsIContent> content(do_QueryInterface(childNode));
+    if (isHiding) {
+      nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+      if (content) {
+        nsIFrame *frame = presShell->GetPrimaryFrameFor(content);
+        if (frame) {
+          nsIFrame *frameParent = frame->GetParent();
+          if (!frameParent || !frameParent->GetStyleVisibility()->IsVisible()) {
+            // Ancestor already hidden or being hidden at the same time:
+            // don't process redundant hide event
+            // This often happens when visibility is cleared for node,
+            // which hides an entire subtree -- we get notified for each
+            // node in the subtree and need to collate the hide events ourselves.
+            return NS_OK;
+          }
+        }
+      }
     }
+
+    PRUint32 removalEventType = isAsynch ? nsIAccessibleEvent::EVENT_ASYNCH_HIDE :
+                                           nsIAccessibleEvent::EVENT_DOM_DESTROY;
+
+    // Fire an event if the accessible existed for node being hidden, otherwise
+    // for the first line accessible descendants. Fire before the accessible(s) away.
+    nsresult rv = FireShowHideEvents(childNode, removalEventType, PR_TRUE, PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
     if (childNode != mDOMNode) { // Fire text change unless the node being removed is for this doc
       // When a node is hidden or removed, the text in an ancestor hyper text will lose characters
       // At this point we still have the frame and accessible for this node if there was one
@@ -1947,6 +1967,57 @@ nsDocAccessible::GetAccessibleInParentChain(nsIDOMNode *aNode,
       }
     }
   } while (!*aAccessible);
+
+  return NS_OK;
+}
+
+nsresult
+nsDocAccessible::FireShowHideEvents(nsIDOMNode *aDOMNode, PRUint32 aEventType,
+                                    PRBool aDelay, PRBool aForceIsFromUserInput)
+{
+  NS_ENSURE_ARG(aDOMNode);
+
+  nsCOMPtr<nsIAccessible> accessible;
+  if (aEventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
+      aEventType == nsIAccessibleEvent::EVENT_DOM_DESTROY) {
+    // Don't allow creation for accessibles when nodes going away
+    nsCOMPtr<nsIAccessNode> accessNode;
+    GetCachedAccessNode(aDOMNode, getter_AddRefs(accessNode));
+    accessible = do_QueryInterface(accessNode);
+  } else {
+    // Allow creation of new accessibles for show events
+    GetAccService()->GetAttachedAccessibleFor(aDOMNode,
+                                              getter_AddRefs(accessible));
+  }
+
+  if (accessible) {
+    // Found an accessible, so fire the show/hide on it and don't
+    // look further into this subtree
+    PRBool isAsynch = aEventType == nsIAccessibleEvent::EVENT_ASYNCH_HIDE ||
+                      aEventType == nsIAccessibleEvent::EVENT_ASYNCH_SHOW;
+
+    nsCOMPtr<nsIAccessibleEvent> event =
+      new nsAccEvent(aEventType, accessible, nsnull, isAsynch);
+    NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
+    if (aForceIsFromUserInput) {
+      nsAccEvent::PrepareForEvent(aDOMNode, aForceIsFromUserInput);
+    }
+    if (aDelay) {
+      return FireDelayedAccessibleEvent(event, eCoalesceFromSameSubtree, isAsynch);
+    }
+    return FireAccessibleEvent(event);
+  }
+
+  // Could not find accessible to show hide yet, so fire on any
+  // accessible descendants in this subtree
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aDOMNode));
+  PRUint32 count = content->GetChildCount();
+  for (PRUint32 index = 0; index < count; index++) {
+    nsCOMPtr<nsIDOMNode> childNode = do_QueryInterface(content->GetChildAt(index));
+    nsresult rv = FireShowHideEvents(childNode, aEventType,
+                                     aDelay, aForceIsFromUserInput);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   return NS_OK;
 }
