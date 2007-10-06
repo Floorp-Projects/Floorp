@@ -322,6 +322,8 @@ nsresult
 gfxFontconfigUtils::GetResolvedFonts(const nsACString& aName,
                                      gfxFontNameList* aResult)
 {
+    printf("GetResolvedFonts\n");
+
     FcPattern *pat = NULL;
     FcFontSet *fs = NULL;
     FcResult fresult;

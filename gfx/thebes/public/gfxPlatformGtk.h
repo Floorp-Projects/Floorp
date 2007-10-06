@@ -79,7 +79,7 @@ public:
         if (sDPI == -1) {
             InitDPI();
         }
-        NS_ASSERTION(sDPI != 0, "Something is wrong");
+        NS_ASSERTION(sDPI > 0, "Something is wrong");
         return sDPI;
     }
 
