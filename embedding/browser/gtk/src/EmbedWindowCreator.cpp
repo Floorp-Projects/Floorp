@@ -17,7 +17,7 @@
  *
  * The Initial Developer of the Original Code is
  * Christopher Blizzard.
- * Portions created by Christopher Blizzard are Copyright (C) Christopher Blizzard.  All Rights Reserved.
+ *
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
