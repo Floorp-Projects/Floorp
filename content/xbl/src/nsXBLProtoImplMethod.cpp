@@ -287,7 +287,13 @@ nsXBLProtoImplMethod::Traverse(nsCycleCollectionTraversalCallback &cb) const
 nsresult
 nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement)
 {
-  NS_PRECONDITION(mIsCompiled, "Can't execute uncompiled method");
+  if (!mIsCompiled) {
+    // Someone might have enabled script between when the binding would have
+    // been compiled and now.  If this is the constructor we shouldn't run it
+    // because our other scripted stuff is not set up, and if it's the
+    // destructor then the constructor never ran.  In either case, bail out.
+    return NS_OK;
+  }
   
   if (!mJSMethodObject) {
     // Nothing to do here
