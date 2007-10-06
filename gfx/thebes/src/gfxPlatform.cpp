@@ -156,6 +156,14 @@ gfxPlatform::~gfxPlatform()
     // cleanly as possible even in production code, so call this
     // cairo_debug_* function unconditionally.
     cairo_debug_reset_static_data();
+
+#if 0
+    // It would be nice to do this (although it might need to be after
+    // the cairo shutdown that happens in ~gfxPlatform).  It even looks
+    // idempotent.  But it has fatal assertions that fire if stuff is
+    // leaked, and we hit them.
+    FcFini();
+#endif
 }
 
 PRBool
