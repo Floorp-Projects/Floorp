@@ -473,7 +473,8 @@ nsXBLPrototypeBinding::FlushSkinSheets()
 nsresult
 nsXBLPrototypeBinding::BindingAttached(nsIContent* aBoundElement)
 {
-  if (mImplementation && mImplementation->mConstructor)
+  if (mImplementation && mImplementation->CompiledMembers() &&
+      mImplementation->mConstructor)
     return mImplementation->mConstructor->Execute(aBoundElement);
   return NS_OK;
 }
@@ -481,7 +482,8 @@ nsXBLPrototypeBinding::BindingAttached(nsIContent* aBoundElement)
 nsresult
 nsXBLPrototypeBinding::BindingDetached(nsIContent* aBoundElement)
 {
-  if (mImplementation && mImplementation->mDestructor)
+  if (mImplementation && mImplementation->CompiledMembers() &&
+      mImplementation->mDestructor)
     return mImplementation->mDestructor->Execute(aBoundElement);
   return NS_OK;
 }
