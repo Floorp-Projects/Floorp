@@ -62,6 +62,7 @@ _TEST_FILES = 	test_bug1682.html \
 		test_bug380383.html \
 		test_bug386495.html \
 		test_bug391777.html \
+		test_form-parsing.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
