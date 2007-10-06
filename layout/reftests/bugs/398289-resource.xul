@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        buttonlabelaccept="OK"
+        ondialogaccept="alert('OK');"
+        buttonlabelcancel="Cancel"
+        ondialogcancel="alert('Cancel');">
+
+  <tabbox id="test" flex="1" persist="selectedIndex">
+
+    <tabs>
+      <tab label="One"/>
+      <tab label="Two"/>
+    </tabs>
+
+    <tabpanels flex="1">
+
+      <vbox flex="1">
+        <description>Text for tab ONE</description>
+        <description class="text-link"
+                     onclick="window.open('https://bugzilla.mozilla.org/show_bug.cgi?id=398289');">(test case for bug 398289)</description>
+        <tree>
+          <treecols>
+            <treecol label="Header" flex="1"/>
+          </treecols>
+        </tree>
+      </vbox>
+
+      <vbox flex="1">
+        <description>Text for tab TWO</description>
+        <description>(When the document is reloaded, this content gets replaced by the one from the first tab.)</description>
+      </vbox>
+
+    </tabpanels>
+
+  </tabbox>
+
+</dialog>
