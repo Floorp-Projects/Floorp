@@ -322,6 +322,7 @@ protected:
                                        const PRUint8 aDecoration);
 
   void TryAllLines(nsLineList::iterator* aIterator,
+                   nsLineList::iterator* aStartIterator,
                    nsLineList::iterator* aEndIterator,
                    PRBool* aInOverflowLines);
 
