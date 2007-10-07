@@ -8014,7 +8014,8 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
         // Replace the current document with about:blank now to prevent
         // anything from the current document from leaking into any JavaScript
         // code in the URL.
-        rv = CreateAboutBlankContentViewer(nsnull);
+        nsCOMPtr<nsIPrincipal> prin = do_QueryInterface(owner);
+        rv = CreateAboutBlankContentViewer(prin);
 
         if (NS_FAILED(rv)) {
             // The creation of the intermittent about:blank content
