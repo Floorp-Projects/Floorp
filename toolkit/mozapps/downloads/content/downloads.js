@@ -47,7 +47,6 @@
 
 const PREF_BDM_CLOSEWHENDONE = "browser.download.manager.closeWhenDone";
 const PREF_BDM_ALERTONEXEOPEN = "browser.download.manager.alertOnEXEOpen";
-const PREF_BDM_RETENTION = "browser.download.manager.retention";
 const PREF_BDM_DISPLAYEDHISTORYDAYS =
   "browser.download.manager.displayedHistoryDays";
 
@@ -166,7 +165,7 @@ function downloadCompleted(aDownload)
     if (!gSearching)
       gDownloadsView.insertBefore(dl, gDownloadsOtherTitle.nextSibling);
     else
-      gDownloadsView.removeChild(dl);
+      removeFromView(dl);
 
     // getTypeFromFile fails if it can't find a type for this file.
     try {
@@ -196,13 +195,6 @@ function autoRemoveAndClose(aDownload)
   var pref = Cc["@mozilla.org/preferences-service;1"].
              getService(Ci.nsIPrefBranch);
 
-  if (aDownload && (pref.getIntPref(PREF_BDM_RETENTION) == 0)) {
-    // The download manager backend removes this, but we have to update the UI!
-    var dl = getDownload(aDownload.id);
-    if (dl)
-      dl.parentNode.removeChild(dl);
-  }
-  
   if (gDownloadManager.activeDownloadCount == 0) {
     // For the moment, just use the simple heuristic that if this window was
     // opened by the download process, rather than by the user, it should
@@ -259,7 +251,6 @@ function resumeDownload(aDownload)
 
 function removeDownload(aDownload)
 {
-  removeFromView(aDownload);
   gDownloadManager.removeDownload(aDownload.getAttribute("dlid"));
 }
 
@@ -488,7 +479,7 @@ function Startup()
 
   var obs = Components.classes["@mozilla.org/observer-service;1"].
             getService(Components.interfaces.nsIObserverService);
-  obs.addObserver(clearDownloadsObserver, "download-manager-clear-history", false);
+  obs.addObserver(gDownloadObserver, "download-manager-remove-download", false);
 }
 
 function Shutdown() 
@@ -497,13 +488,26 @@ function Shutdown()
 
   var obs = Components.classes["@mozilla.org/observer-service;1"].
             getService(Components.interfaces.nsIObserverService);
-  obs.removeObserver(clearDownloadsObserver, "download-manager-clear-history");
+  obs.removeObserver(gDownloadObserver, "download-manager-remove-download");
 }
 
-var clearDownloadsObserver = {
-  observe: function cdo_observe() {
-    // Rebuild the default view
-    buildDefaultView();
+let gDownloadObserver = {
+  observe: function gdo_observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "download-manager-remove-download":
+        // A null subject here indicates "remove all"
+        if (!aSubject) {
+          // Rebuild the default view
+          buildDefaultView();
+          break;
+        }
+
+        // Otherwise, remove a single download
+        let id = aSubject.QueryInterface(Ci.nsISupportsPRUint32);
+        let dl = getDownload(id.data);
+        removeFromView(dl);
+        break;
+    }
   }
 };
 
@@ -843,6 +847,9 @@ function replaceInsert(aText, aIndex, aValue)
 
 function removeFromView(aDownload)
 {
+  // Make sure we have an item to remove
+  if (!aDownload) return;
+
   let index = gDownloadsView.selectedIndex;
   gDownloadsView.removeChild(aDownload);
   gDownloadsView.selectedIndex = Math.min(index, gDownloadsView.itemCount - 1);
