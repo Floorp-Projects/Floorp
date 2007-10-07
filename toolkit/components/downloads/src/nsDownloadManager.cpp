@@ -592,6 +592,9 @@ nsDownloadManager::RestoreDatabaseState()
   rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_DOWNLOADING);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Finally, let's retry all of those downloads
   for (nsTArray<PRUint32>::size_type i = 0; i < ids.Length(); i++)
     (void)RetryDownload(ids[i]);
@@ -697,12 +700,6 @@ nsDownloadManager::Init()
   if (doImport)
     ImportDownloadHistory();
 
-  rv = RestoreDatabaseState();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = RestoreActiveDownloads();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIStringBundleService> bundleService =
     do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -729,6 +726,14 @@ nsDownloadManager::Init()
     "WHERE id = ?8"), getter_AddRefs(mUpdateDownloadStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Do things *after* initializing various download manager properties such as
+  // restoring downloads to a consistent state
+  rv = RestoreDatabaseState();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = RestoreActiveDownloads();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // The following three AddObserver calls must be the last lines in this function,
   // because otherwise, this function may fail (and thus, this object would be not
   // completely initialized), but the observerservice would still keep a reference
@@ -738,7 +743,6 @@ nsDownloadManager::Init()
   // These observers will be cleaned up automatically at app shutdown.  We do
   // not bother explicitly breaking the observers because we are a singleton
   // that lives for the duration of the app.
-  //
   mObserverService->AddObserver(this, "quit-application", PR_FALSE);
   mObserverService->AddObserver(this, "quit-application-requested", PR_FALSE);
   mObserverService->AddObserver(this, "offline-requested", PR_FALSE);
