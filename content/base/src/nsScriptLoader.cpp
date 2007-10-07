@@ -488,7 +488,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
     // If we've got existing pending requests, add ourselves
     // to this list.
-    if (ReadyToExecuteScripts() && mPendingRequests.Count() == 0) {
+    if (mPendingRequests.Count() == 0 && ReadyToExecuteScripts()) {
       return ProcessRequest(request);
     }
   }
@@ -654,13 +654,13 @@ void
 nsScriptLoader::ProcessPendingRequests()
 {
   nsRefPtr<nsScriptLoadRequest> request;
-  while (ReadyToExecuteScripts() && mPendingRequests.Count() &&
+  while (mPendingRequests.Count() && ReadyToExecuteScripts() &&
          !(request = mPendingRequests[0])->mLoading) {
     mPendingRequests.RemoveObjectAt(0);
     ProcessRequest(request);
   }
 
-  while (ReadyToExecuteScripts() && !mPendingChildLoaders.IsEmpty()) {
+  while (!mPendingChildLoaders.IsEmpty() && ReadyToExecuteScripts()) {
     nsRefPtr<nsScriptLoader> child = mPendingChildLoaders[0];
     mPendingChildLoaders.RemoveElementAt(0);
     child->RemoveExecuteBlocker();
