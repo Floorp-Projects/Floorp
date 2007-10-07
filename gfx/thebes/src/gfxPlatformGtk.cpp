@@ -53,6 +53,8 @@
 
 #include "gfxPangoFonts.h"
 
+#include <pango/pangocairo.h>
+
 #ifdef MOZ_ENABLE_GLITZ
 #include "gfxGlitzSurface.h"
 #include "glitz-glx.h"
