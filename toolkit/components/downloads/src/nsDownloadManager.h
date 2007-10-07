@@ -99,6 +99,11 @@ protected:
   nsresult InitDB(PRBool *aDoImport);
   nsresult CreateTable();
   nsresult ImportDownloadHistory();
+
+  /**
+   * Fix up the database after a crash such as dealing with previously-active
+   * downloads.
+   */
   nsresult RestoreDatabaseState();
 
   /**
