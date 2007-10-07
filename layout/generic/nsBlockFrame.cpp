@@ -5084,6 +5084,7 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsIFrame* aFrame)
  */
 void
 nsBlockFrame::TryAllLines(nsLineList::iterator* aIterator,
+                          nsLineList::iterator* aStartIterator,
                           nsLineList::iterator* aEndIterator,
                           PRBool* aInOverflowLines) {
   if (*aIterator == *aEndIterator) {
@@ -5092,7 +5093,8 @@ nsBlockFrame::TryAllLines(nsLineList::iterator* aIterator,
       // Try the overflow lines
       nsLineList* overflowLines = GetOverflowLines();
       if (overflowLines) {
-        *aIterator = overflowLines->begin();
+        *aStartIterator = overflowLines->begin();
+        *aIterator = *aStartIterator;
         *aEndIterator = overflowLines->end();
       }
     }
@@ -5228,13 +5230,14 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
   
   // Find the line and the previous sibling that contains
   // deletedFrame; we also find the pointer to the line.
-  nsLineList::iterator line = mLines.begin(),
+  nsLineList::iterator line_start = mLines.begin(),
                        line_end = mLines.end();
+  nsLineList::iterator line = line_start;
   PRBool searchingOverflowList = PR_FALSE;
   nsIFrame* prevSibling = nsnull;
   // Make sure we look in the overflow lines even if the normal line
   // list is empty
-  TryAllLines(&line, &line_end, &searchingOverflowList);
+  TryAllLines(&line, &line_start, &line_end, &searchingOverflowList);
   while (line != line_end) {
     nsIFrame* frame = line->mFirstChild;
     PRInt32 n = line->GetChildCount();
@@ -5246,7 +5249,7 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
       frame = frame->GetNextSibling();
     }
     ++line;
-    TryAllLines(&line, &line_end, &searchingOverflowList);
+    TryAllLines(&line, &line_start, &line_end, &searchingOverflowList);
   }
 found_frame:;
   if (line == line_end) {
@@ -5254,8 +5257,11 @@ found_frame:;
     return NS_ERROR_FAILURE;
   }
   
-  if (line != mLines.front()) {
+  if (line != line_start) {
     line.prev()->SetInvalidateTextRuns(PR_TRUE);
+  }
+  else if (searchingOverflowList && !mLines.empty()) {
+    mLines.back()->SetInvalidateTextRuns(PR_TRUE);
   }
 
   if (prevSibling && !prevSibling->GetNextSibling()) {
@@ -5400,7 +5406,7 @@ found_frame:;
         }
 
         PRBool wasSearchingOverflowList = searchingOverflowList;
-        TryAllLines(&line, &line_end, &searchingOverflowList);
+        TryAllLines(&line, &line_start, &line_end, &searchingOverflowList);
         if (NS_UNLIKELY(searchingOverflowList && !wasSearchingOverflowList &&
                         prevSibling)) {
           // We switched to the overflow line list and we have a prev sibling
@@ -5444,12 +5450,13 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
   // Find the line and the previous sibling that contains
   // aChild; we also find the pointer to the line.
   nsLineList::iterator line = mLines.begin(),
+                       line_start = line,
                        line_end = mLines.end();
   PRBool searchingOverflowList = PR_FALSE;
   nsIFrame* prevSibling = nsnull;
   // Make sure we look in the overflow lines even if the normal line
   // list is empty
-  TryAllLines(&line, &line_end, &searchingOverflowList);
+  TryAllLines(&line, &line_start, &line_end, &searchingOverflowList);
   while (line != line_end) {
     nsIFrame* frame = line->mFirstChild;
     PRInt32 n = line->GetChildCount();
@@ -5497,7 +5504,7 @@ nsBlockFrame::StealFrame(nsPresContext* aPresContext,
       frame = frame->GetNextSibling();
     }
     ++line;
-    TryAllLines(&line, &line_end, &searchingOverflowList);
+    TryAllLines(&line, &line_start, &line_end, &searchingOverflowList);
   }
   return NS_ERROR_UNEXPECTED;
 }
@@ -5829,7 +5836,6 @@ nsBlockFrame::PaintTextDecorationLine(nsIRenderingContext& aRenderingContext,
     PRBool isRTL = visibility->mDirection == NS_STYLE_DIRECTION_RTL;
     nsRefPtr<gfxContext> ctx = (gfxContext*)
       aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
-    PRInt32 app = PresContext()->AppUnitsPerDevPixel();
     gfxPoint pt(PresContext()->AppUnitsToGfxUnits(start + aPt.x),
                 PresContext()->AppUnitsToGfxUnits(aLine->mBounds.y + aPt.y));
     gfxSize size(PresContext()->AppUnitsToGfxUnits(width),
