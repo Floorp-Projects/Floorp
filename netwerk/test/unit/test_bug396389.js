@@ -7,8 +7,8 @@ function round_trip(uri) {
   var pipe = Cc["@mozilla.org/pipe;1"].createInstance(Ci.nsIPipe);
   pipe.init(false, false, 0, 0xffffffff, null);
   objectOutStream.setOutputStream(pipe.outputStream);
-  objecOutStream.writeCompoundObject(uri, Ci.nsISupports, true);
-  objecOutStream.close();
+  objectOutStream.writeCompoundObject(uri, Ci.nsISupports, true);
+  objectOutStream.close();
 
   var objectInStream = Cc["@mozilla.org/binaryinputstream;1"].
                        createInstance(Ci.nsIObjectInputStream);
