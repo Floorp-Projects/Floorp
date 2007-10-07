@@ -444,6 +444,7 @@
         <li><Description rdf:ID="prefs-startup" nc:name="Startup" nc:link="prefs.xhtml#startup"/></li>
         <li><Description rdf:ID="prefs-downloads" nc:name="Downloads" nc:link="prefs.xhtml#downloads"/></li>
         <li><Description rdf:ID="prefs-system-defaults" nc:name="System Defaults" nc:link="prefs.xhtml#system_defaults"/></li>
+        <li><Description rdf:ID="prefs-addons" nc:name="Add-ons" nc:link="prefs.xhtml#addons"/></li>
       </Seq>
     </nc:subheadings>
   </Description>
