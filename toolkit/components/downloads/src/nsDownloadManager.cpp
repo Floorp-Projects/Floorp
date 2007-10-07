@@ -1232,9 +1232,23 @@ nsDownloadManager::RemoveDownload(PRUint32 aID)
     "DELETE FROM moz_downloads "
     "WHERE id = ?1"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
+
   rv = stmt->BindInt64Parameter(0, aID); // unsigned; 64-bit to prevent overflow
   NS_ENSURE_SUCCESS(rv, rv);
-  return stmt->Execute();
+
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISupportsPRUint32> id =
+    do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = id->SetData(aID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Notify the UI with the topic and download id
+  return mObserverService->NotifyObservers(id,
+                                           "download-manager-remove-download",
+                                           nsnull);
 }
 
 NS_IMETHODIMP
@@ -1261,9 +1275,9 @@ nsDownloadManager::CleanUp()
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Notify the UI
+  // Notify the UI with the topic and null subject to indicate "remove all"
   return mObserverService->NotifyObservers(nsnull,
-                                           "download-manager-clear-history",
+                                           "download-manager-remove-download",
                                            nsnull);
 }
 

@@ -132,6 +132,10 @@ interface nsIDownloadManager : nsISupports {
    * in-progress.  Whereas cancelDownload simply cancels the transfer, but
    * retains information about it, removeDownload removes all knowledge of it.
    *
+   * Also notifies observers of the "download-manager-remove-download" topic
+   * with the download id as the subject to allow any DM consumers to react to
+   * the removal.
+   *
    * @param aID The unique ID of the download.
    * @throws NS_ERROR_FAILURE if the download is active.
    */
@@ -178,8 +182,8 @@ interface nsIDownloadManager : nsISupports {
   /** 
    * Removes completed, failed, and canceled downloads from the list.
    *
-   * Also notifies observers of the "download-manager-clear-history"
-   * topic, to allow any DM consumers to react to the removals.
+   * Also notifies observers of the "download-manager-remove-download" topic
+   * with a null subject to allow any DM consumers to react to the removals.
    */
   void cleanUp();
 
