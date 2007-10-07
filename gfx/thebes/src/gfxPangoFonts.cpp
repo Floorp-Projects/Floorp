@@ -641,7 +641,10 @@ gfxPangoFontGroup::InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
 static cairo_scaled_font_t*
 CreateScaledFont(cairo_t *aCR, cairo_matrix_t *aCTM, PangoFont *aPangoFont)
 {
-#if PANGO_VERSION_CHECK(1,17,5)
+// XXX this needs to also check that we're using system cairo
+// otherwise this causes bad problems.
+#if 0
+//#if PANGO_VERSION_CHECK(1,17,5)
     // Lets just use pango_cairo_font_get_scaled_font() for now.  it's only
     // available in pango 1.17.x though :(
     return cairo_scaled_font_reference (pango_cairo_font_get_scaled_font (PANGO_CAIRO_FONT (aPangoFont)));
