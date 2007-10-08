@@ -79,6 +79,7 @@
 #include "nsIViewManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsStyleChangeList.h"
+#include "nsRuleNode.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -1480,3 +1481,9 @@ nsPresContext::IsChrome()
   return isChrome;
 }
 
+/* virtual */ PRBool
+nsPresContext::HasAuthorSpecifiedBorderOrBackground(nsIFrame *aFrame) const
+{
+  return nsRuleNode::
+           HasAuthorSpecifiedBorderOrBackground(aFrame->GetStyleContext());
+}
