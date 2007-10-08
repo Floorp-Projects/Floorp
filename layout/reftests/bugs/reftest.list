@@ -397,5 +397,6 @@ fails == 386310-1d.html 386310-1-ref.html
 == 394676-1.xhtml 394676-1-ref.xhtml
 == 395130-1.html 395130-1-ref.html
 == 395130-2.html 395130-2-ref.html
+== 395331-1.xml 395331-1-ref.xml
 == 396286-1.html about:blank  # crash test
 == 398289-1.html 398289-1-ref.html
