@@ -50,34 +50,6 @@
 #include "nsThemeConstants.h"
 #include "nsIComponentManager.h"
 
-nsMargin                  nsNativeTheme::sButtonBorderSize(2, 2, 2, 2);
-PRUint8                   nsNativeTheme::sButtonActiveBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
-PRUint8                   nsNativeTheme::sButtonInactiveBorderStyle = NS_STYLE_BORDER_STYLE_OUTSET;
-nsILookAndFeel::nsColorID nsNativeTheme::sButtonBorderColorID = nsILookAndFeel::eColor_buttonface;
-nsILookAndFeel::nsColorID nsNativeTheme::sButtonDisabledBorderColorID = nsILookAndFeel::eColor_buttonface;
-nsILookAndFeel::nsColorID nsNativeTheme::sButtonBGColorID = nsILookAndFeel::eColor_buttonface;
-nsILookAndFeel::nsColorID nsNativeTheme::sButtonDisabledBGColorID = nsILookAndFeel::eColor_buttonface;
-
-nsMargin                  nsNativeTheme::sTextfieldBorderSize(2, 2, 2, 2);
-PRUint8                   nsNativeTheme::sTextfieldBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
-nsILookAndFeel::nsColorID nsNativeTheme::sTextfieldBorderColorID = nsILookAndFeel::eColor_threedface;
-PRBool                    nsNativeTheme::sTextfieldBGTransparent = PR_FALSE;
-nsILookAndFeel::nsColorID nsNativeTheme::sTextfieldBGColorID = nsILookAndFeel::eColor__moz_field;
-nsILookAndFeel::nsColorID nsNativeTheme::sTextfieldDisabledBGColorID = nsILookAndFeel::eColor_threedface;
-
-nsMargin                  nsNativeTheme::sListboxBorderSize(2, 2, 2, 2);
-PRUint8                   nsNativeTheme::sListboxBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
-nsILookAndFeel::nsColorID nsNativeTheme::sListboxBorderColorID = nsILookAndFeel::eColor_threedface;
-nsILookAndFeel::nsColorID nsNativeTheme::sListboxBGColorID = nsILookAndFeel::eColor__moz_field;
-nsILookAndFeel::nsColorID nsNativeTheme::sListboxDisabledBGColorID = nsILookAndFeel::eColor_threedface;
-
-nsMargin                  nsNativeTheme::sComboboxBorderSize(2, 2, 2, 2);
-PRUint8                   nsNativeTheme::sComboboxBorderStyle = NS_STYLE_BORDER_STYLE_INSET;
-nsILookAndFeel::nsColorID nsNativeTheme::sComboboxBorderColorID = nsILookAndFeel::eColor_threedface;
-PRBool                    nsNativeTheme::sComboboxBGTransparent = PR_FALSE;
-nsILookAndFeel::nsColorID nsNativeTheme::sComboboxBGColorID = nsILookAndFeel::eColor__moz_field;
-nsILookAndFeel::nsColorID nsNativeTheme::sComboboxDisabledBGColorID = nsILookAndFeel::eColor_threedface;
-
 nsNativeTheme::nsNativeTheme()
 {
 }
@@ -182,136 +154,19 @@ nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame, PRBool aCheckSelected)
                                                  : nsWidgetAtoms::checked);
 }
 
-static void
-ConvertBorderToAppUnits(nsPresContext* aPresContext, const nsMargin &aSource, nsMargin &aDest)
-{
-  PRInt32 cp2a = nsPresContext::AppUnitsPerCSSPixel();
-  PRInt32 dp2a = aPresContext->AppUnitsPerDevPixel();
-  aDest.top = NS_ROUND_BORDER_TO_PIXELS(NSIntPixelsToAppUnits(aSource.top, cp2a), dp2a);
-  aDest.left = NS_ROUND_BORDER_TO_PIXELS(NSIntPixelsToAppUnits(aSource.left, cp2a), dp2a);
-  aDest.bottom = NS_ROUND_BORDER_TO_PIXELS(NSIntPixelsToAppUnits(aSource.bottom, cp2a), dp2a);
-  aDest.right = NS_ROUND_BORDER_TO_PIXELS(NSIntPixelsToAppUnits(aSource.right, cp2a), dp2a);;
-}
-
 PRBool
 nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
                               PRUint8 aWidgetType)
 {
   // Check for specific widgets to see if HTML has overridden the style.
-  if (aFrame && (aWidgetType == NS_THEME_BUTTON ||
-                 aWidgetType == NS_THEME_TEXTFIELD ||
-                 aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
-                 aWidgetType == NS_THEME_LISTBOX ||
-                 aWidgetType == NS_THEME_DROPDOWN)) {
-    if (aFrame->GetContent()->IsNodeOfType(nsINode::eHTML)) {
-      nscolor defaultBGColor;
-      nscolor defaultBorderColor;
-      PRUint8 defaultBorderStyle;
-      nsMargin defaultBorderSize;
-      PRBool defaultBGTransparent = PR_FALSE;
-
-      nsILookAndFeel *lookAndFeel = aPresContext->LookAndFeel();
-
-      switch (aWidgetType) {
-      case NS_THEME_BUTTON:
-        ConvertBorderToAppUnits(aPresContext, sButtonBorderSize, 
-                                defaultBorderSize);
-        if (IsDisabled(aFrame)) {
-          defaultBorderStyle = sButtonInactiveBorderStyle;
-          lookAndFeel->GetColor(sButtonDisabledBorderColorID,
-                                defaultBorderColor);
-          lookAndFeel->GetColor(sButtonDisabledBGColorID,
-                                defaultBGColor);
-        } else {
-          PRInt32 contentState = GetContentState(aFrame, aWidgetType);
-          if (contentState & NS_EVENT_STATE_HOVER &&
-              contentState & NS_EVENT_STATE_ACTIVE)
-            defaultBorderStyle = sButtonActiveBorderStyle;
-          else
-            defaultBorderStyle = sButtonInactiveBorderStyle;
-          lookAndFeel->GetColor(sButtonBorderColorID,
-                                defaultBorderColor);
-          lookAndFeel->GetColor(sButtonBGColorID,
-                                defaultBGColor);
-        }
-        break;
-
-      case NS_THEME_TEXTFIELD:
-      case NS_THEME_TEXTFIELD_MULTILINE:
-        defaultBorderStyle = sTextfieldBorderStyle;
-        ConvertBorderToAppUnits(aPresContext, sTextfieldBorderSize, defaultBorderSize);
-        lookAndFeel->GetColor(sTextfieldBorderColorID, defaultBorderColor);
-        defaultBGTransparent = sTextfieldBGTransparent;
-        if (!defaultBGTransparent) {
-          if (IsDisabled(aFrame))
-            lookAndFeel->GetColor(sTextfieldDisabledBGColorID, defaultBGColor);
-          else
-            lookAndFeel->GetColor(sTextfieldBGColorID, defaultBGColor);
-        }
-        break;
-
-      case NS_THEME_LISTBOX:
-        defaultBorderStyle = sListboxBorderStyle;
-        ConvertBorderToAppUnits(aPresContext, sListboxBorderSize, defaultBorderSize);
-        lookAndFeel->GetColor(sListboxBorderColorID, defaultBorderColor);
-        if (IsDisabled(aFrame))
-          lookAndFeel->GetColor(sListboxDisabledBGColorID, defaultBGColor);
-        else
-          lookAndFeel->GetColor(sListboxBGColorID, defaultBGColor);
-        break;
-
-      case NS_THEME_DROPDOWN:
-        defaultBorderStyle = sComboboxBorderStyle;
-        ConvertBorderToAppUnits(aPresContext, sComboboxBorderSize, defaultBorderSize);
-        lookAndFeel->GetColor(sComboboxBorderColorID, defaultBorderColor);
-        defaultBGTransparent = sComboboxBGTransparent;
-        if (!defaultBGTransparent) {
-          if (IsDisabled(aFrame))
-            lookAndFeel->GetColor(sComboboxDisabledBGColorID, defaultBGColor);
-          else
-            lookAndFeel->GetColor(sComboboxBGColorID, defaultBGColor);
-        }
-        break;
-
-      default:
-        NS_ERROR("nsNativeTheme::IsWidgetStyled widget type not handled");
-        return PR_FALSE;
-      }
-
-      // Check whether background differs from default
-      const nsStyleBackground* ourBG = aFrame->GetStyleBackground();
-
-      if (defaultBGTransparent) {
-        if (!(ourBG->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT))
-          return PR_TRUE;
-      } else if (ourBG->mBackgroundColor != defaultBGColor ||
-                 ourBG->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)
-        return PR_TRUE;
-
-      if (!(ourBG->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE))
-        return PR_TRUE;
-
-      // Check whether border style or color differs from default
-      const nsStyleBorder* ourBorder = aFrame->GetStyleBorder();
-
-      for (PRInt32 i = 0; i < 4; ++i) {
-        if (ourBorder->GetBorderStyle(i) != defaultBorderStyle)
-          return PR_TRUE;
-
-        PRBool borderFG, borderClear;
-        nscolor borderColor;
-        ourBorder->GetBorderColor(i, borderColor, borderFG, borderClear);
-        if (borderColor != defaultBorderColor || borderClear)
-          return PR_TRUE;
-      }
-
-      // Check whether border size differs from default
-      if (ourBorder->GetBorder() != defaultBorderSize)
-        return PR_TRUE;
-    }
-  }
-
-  return PR_FALSE;
+  return aFrame &&
+         (aWidgetType == NS_THEME_BUTTON ||
+          aWidgetType == NS_THEME_TEXTFIELD ||
+          aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
+          aWidgetType == NS_THEME_LISTBOX ||
+          aWidgetType == NS_THEME_DROPDOWN) &&
+         aFrame->GetContent()->IsNodeOfType(nsINode::eHTML) &&
+         aPresContext->HasAuthorSpecifiedBorderOrBackground(aFrame);
 }
 
 // treeheadercell:
