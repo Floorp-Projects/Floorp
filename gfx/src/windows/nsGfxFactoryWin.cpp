@@ -46,7 +46,6 @@
 #include "nsRegionWin.h"
 #include "nsBlender.h"
 #include "nsScriptableRegion.h"
-#include "nsFontList.h"
 #include "nsIGenericFactory.h"
 #include "gfxImageFrame.h"
 
@@ -60,7 +59,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDrawingSurfaceWin)
 //NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableRegion)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorWin)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 
 PRBool
@@ -184,11 +182,6 @@ static const nsModuleComponentInfo components[] =
     NS_FONT_ENUMERATOR_CID,
     "@mozilla.org/gfx/fontenumerator;1",
     nsFontEnumeratorWinConstructor },
-
-  { "nsFontList",
-    NS_FONTLIST_CID,
-    "@mozilla.org/gfx/fontlist;1",
-    nsFontListConstructor },
 
   { "windows image frame",
     GFX_IMAGEFRAME_CID,

@@ -77,7 +77,6 @@ CPPSRCS = \
         nsColorNames.cpp \
         nsDeviceContext.cpp \
         nsFont.cpp \
-        nsFontList.cpp \
         nsRect.cpp \
         nsRegion.cpp \
         nsTransform2D.cpp \
