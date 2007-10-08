@@ -486,13 +486,13 @@ function buildHelpMenu()
 
 function isElementVisible(aElement)
 {
-  // * When an element is hidden, the width and height of its boxObject
-  //   are set to 0
-  // * css-visibility (unlike css-display) is inherited.
+  if (!aElement)
+    return false;
+
+  // If aElement or a direct or indirect parent is hidden or collapsed,
+  // height, width or both will be 0.
   var bo = aElement.boxObject;
-  return (bo.height != 0 && bo.width != 0 &&
-          document.defaultView
-                  .getComputedStyle(aElement, null).visibility == "visible");
+  return (bo.height > 0 && bo.width > 0);
 }
 
 function getBrowserFromContentWindow(aContentWindow)
