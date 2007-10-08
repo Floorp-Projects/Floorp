@@ -144,7 +144,7 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
    */
 
   // Disable 'unicode-bidi'.
-  if (aData->mSID == eStyleStruct_TextReset) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(TextReset)) {
     nsCSSValue normal(eCSSUnit_Normal);
     aData->mTextData->mUnicodeBidi = normal;
   }
@@ -153,13 +153,13 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
   // handled by the frames so we don't need to bother.
 
   // Disable everything in the nsRuleDataDisplay struct except 'float'.
-  if (aData->mSID == eStyleStruct_Visibility) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Visibility)) {
     nsCSSValue inherit(eCSSUnit_Inherit);
     aData->mDisplayData->mVisibility = inherit;
     aData->mDisplayData->mDirection = inherit;
   }
 
-  if (aData->mSID == eStyleStruct_Display) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
     nsCSSValue none(eCSSUnit_None);
     aData->mDisplayData->mAppearance = none;
 
@@ -195,7 +195,7 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
   // nsCSSSVG, so don't bother.
 
   // Disable everything in the position struct.
-  if (aData->mSID == eStyleStruct_Position) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
     nsCSSValue autovalue(eCSSUnit_Auto);
     nsCSSValue none(eCSSUnit_None);
     nsCSSValue zero(0.0f, eCSSUnit_Point);
@@ -215,7 +215,7 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
   }
 
   // Disable everything in the Content struct.
-  if (aData->mSID == eStyleStruct_Content) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Content)) {
     // Don't bother resetting 'content'.
 
     aData->mContentData->mCounterIncrement = &mNoneCounter;
@@ -225,12 +225,12 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
     aData->mContentData->mMarkerOffset = autovalue;
   }
 
-  if (aData->mSID == eStyleStruct_Quotes) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Quotes)) {
     aData->mContentData->mQuotes = &mInheritQuotes;
   }
 
   // Disable everything in the UserInterface struct.
-  if (aData->mSID == eStyleStruct_UserInterface) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(UserInterface)) {
     nsCSSValue inherit(eCSSUnit_Inherit);
     aData->mUserInterfaceData->mUserInput = inherit;
     aData->mUserInterfaceData->mUserModify = inherit;
@@ -238,7 +238,7 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
     aData->mUserInterfaceData->mCursor = &mInheritList;
   }
 
-  if (aData->mSID == eStyleStruct_UIReset) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(UIReset)) {
     nsCSSValue autovalue(eCSSUnit_Auto);
     nsCSSValue none(eCSSUnit_None);
     // Don't bother with '-moz-force-broken-image-icon' since it's only
@@ -248,7 +248,7 @@ CSSDisablePropsRule::CommonMapRuleInfoInto(nsRuleData* aData)
   }
 
   // Disable all outline properties.
-  if (aData->mSID == eStyleStruct_Outline) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Outline)) {
     nsCSSValue none(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
     aData->mMarginData->mOutlineStyle = none;
   }
@@ -271,14 +271,14 @@ CSSFirstLineRule::MapRuleInfoInto(nsRuleData* aData)
   CommonMapRuleInfoInto(aData);
 
   // Disable 'float'.
-  if (aData->mSID == eStyleStruct_Display) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
     nsCSSValue none(eCSSUnit_None);
     aData->mDisplayData->mFloat = none;
   }
 
   // Disable border properties, margin properties, and padding
   // properties.
-  if (aData->mSID == eStyleStruct_Border) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     nsCSSValue none(NS_STYLE_BORDER_STYLE_NONE, eCSSUnit_Enumerated);
     aData->mMarginData->mBorderStyle.mTop = none;
     aData->mMarginData->mBorderStyle.mRight = none;
@@ -286,7 +286,7 @@ CSSFirstLineRule::MapRuleInfoInto(nsRuleData* aData)
     aData->mMarginData->mBorderStyle.mLeft = none;
   }
 
-  if (aData->mSID == eStyleStruct_Margin) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)) {
     nsCSSValue zero(0.0f, eCSSUnit_Point);
     aData->mMarginData->mMargin.mTop = zero;
     aData->mMarginData->mMargin.mRight = zero;
@@ -294,7 +294,7 @@ CSSFirstLineRule::MapRuleInfoInto(nsRuleData* aData)
     aData->mMarginData->mMargin.mLeft = zero;
   }
 
-  if (aData->mSID == eStyleStruct_Padding) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Padding)) {
     nsCSSValue zero(0.0f, eCSSUnit_Point);
     aData->mMarginData->mPadding.mTop = zero;
     aData->mMarginData->mPadding.mRight = zero;

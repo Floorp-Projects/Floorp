@@ -1910,7 +1910,7 @@ void
 nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttributes,
                                               nsRuleData* aData)
 {
-  if (aData->mSID == eStyleStruct_UserInterface) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(UserInterface)) {
     nsRuleDataUserInterface *ui = aData->mUserInterfaceData;
     if (ui->mUserModify.GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value =
@@ -1928,7 +1928,7 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsMappedAttributes* aAttribu
       }
     }
   }
-  if (aData->mSID == eStyleStruct_Visibility) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Visibility)) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::lang);
     if (value && value->Type() == nsAttrValue::eString) {
       aData->mDisplayData->mLang.SetStringValue(value->GetStringValue(),
@@ -2019,17 +2019,20 @@ void
 nsGenericHTMLElement::MapImageAlignAttributeInto(const nsMappedAttributes* aAttributes,
                                                  nsRuleData* aRuleData)
 {
-  if (aRuleData->mSID == eStyleStruct_Display || aRuleData->mSID == eStyleStruct_TextReset) {
+  if (aRuleData->mSIDs & (NS_STYLE_INHERIT_BIT(Display) |
+                          NS_STYLE_INHERIT_BIT(TextReset))) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
     if (value && value->Type() == nsAttrValue::eEnum) {
       PRInt32 align = value->GetEnumValue();
-      if (aRuleData->mSID == eStyleStruct_Display && aRuleData->mDisplayData->mFloat.GetUnit() == eCSSUnit_Null) {
+      if ((aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) &&
+          aRuleData->mDisplayData->mFloat.GetUnit() == eCSSUnit_Null) {
         if (align == NS_STYLE_TEXT_ALIGN_LEFT)
           aRuleData->mDisplayData->mFloat.SetIntValue(NS_STYLE_FLOAT_LEFT, eCSSUnit_Enumerated);
         else if (align == NS_STYLE_TEXT_ALIGN_RIGHT)
           aRuleData->mDisplayData->mFloat.SetIntValue(NS_STYLE_FLOAT_RIGHT, eCSSUnit_Enumerated);
       }
-      else if (aRuleData->mSID == eStyleStruct_TextReset && aRuleData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
+      if ((aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(TextReset)) &&
+          aRuleData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
         switch (align) {
         case NS_STYLE_TEXT_ALIGN_LEFT:
         case NS_STYLE_TEXT_ALIGN_RIGHT:
@@ -2047,7 +2050,7 @@ void
 nsGenericHTMLElement::MapDivAlignAttributeInto(const nsMappedAttributes* aAttributes,
                                                nsRuleData* aRuleData)
 {
-  if (aRuleData->mSID == eStyleStruct_Text) {
+  if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Text)) {
     if (aRuleData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
       // align: enum
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
@@ -2062,7 +2065,7 @@ void
 nsGenericHTMLElement::MapImageMarginAttributeInto(const nsMappedAttributes* aAttributes,
                                                   nsRuleData* aData)
 {
-  if (aData->mSID != eStyleStruct_Margin)
+  if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)))
     return;
 
   const nsAttrValue* value;
@@ -2108,7 +2111,7 @@ void
 nsGenericHTMLElement::MapImageSizeAttributesInto(const nsMappedAttributes* aAttributes,
                                                  nsRuleData* aData)
 {
-  if (aData->mSID != eStyleStruct_Position)
+  if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)))
     return;
 
   // width: value
@@ -2134,7 +2137,7 @@ void
 nsGenericHTMLElement::MapImageBorderAttributeInto(const nsMappedAttributes* aAttributes,
                                                   nsRuleData* aData)
 {
-  if (aData->mSID != eStyleStruct_Border)
+  if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Border)))
     return;
 
   // border: pixels
@@ -2181,7 +2184,7 @@ void
 nsGenericHTMLElement::MapBackgroundInto(const nsMappedAttributes* aAttributes,
                                         nsRuleData* aData)
 {
-  if (aData->mSID != eStyleStruct_Background)
+  if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Background)))
     return;
 
   if (aData->mColorData->mBackImage.GetUnit() == eCSSUnit_Null) {
@@ -2233,7 +2236,7 @@ void
 nsGenericHTMLElement::MapBGColorInto(const nsMappedAttributes* aAttributes,
                                      nsRuleData* aData)
 {
-  if (aData->mSID != eStyleStruct_Background)
+  if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Background)))
     return;
 
   if (aData->mColorData->mBackColor.GetUnit() == eCSSUnit_Null) {
@@ -2257,7 +2260,7 @@ void
 nsGenericHTMLElement::MapScrollingAttributeInto(const nsMappedAttributes* aAttributes,
                                                 nsRuleData* aData)
 {
-  if (aData->mSID != eStyleStruct_Display)
+  if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)))
     return;
 
   // scrolling

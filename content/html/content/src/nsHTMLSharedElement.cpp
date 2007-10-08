@@ -239,7 +239,7 @@ SpacerMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aData);
 
-  if (aData->mSID == eStyleStruct_Position) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
     const nsStyleDisplay* display = aData->mStyleContext->GetStyleDisplay();
 
     PRBool typeIsBlock = (display->mDisplay == NS_STYLE_DISPLAY_BLOCK);
@@ -280,7 +280,8 @@ SpacerMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                  eCSSUnit_Pixel);
       }
     }
-  } else if (aData->mSID == eStyleStruct_Display) {
+  }
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
     if (value && value->Type() == nsAttrValue::eEnum) {
       PRInt32 align = value->GetEnumValue();
@@ -318,7 +319,7 @@ static void
 DirectoryMenuMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                                nsRuleData* aData)
 {
-  if (aData->mSID == eStyleStruct_List) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(List)) {
     if (aData->mListData->mType.GetUnit() == eCSSUnit_Null) {
       // type: enum
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
