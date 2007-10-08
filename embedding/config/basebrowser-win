@@ -274,16 +274,6 @@ res\fonts\fontEncoding.properties
 
 ; needed for ftp:// dir listings etc
 res\html\folder.png
-res\html\gopher-audio.gif
-res\html\gopher-binary.gif
-res\html\gopher-find.gif
-res\html\gopher-image.gif
-res\html\gopher-menu.gif
-res\html\gopher-movie.gif
-res\html\gopher-sound.gif
-res\html\gopher-telnet.gif
-res\html\gopher-text.gif
-res\html\gopher-unknown.gif
 
 ;
 ; MathML, optional for MathML charset conversion
