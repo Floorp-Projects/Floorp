@@ -132,7 +132,7 @@ nsHTMLTableCaptionElement::ParseAttribute(PRInt32 aNamespaceID,
 static 
 void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
 {
-  if (aData->mSID == eStyleStruct_TableBorder) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(TableBorder)) {
     if (aData->mTableData->mCaptionSide.GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
       if (value && value->Type() == nsAttrValue::eEnum)
