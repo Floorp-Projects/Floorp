@@ -161,6 +161,16 @@
       <field name="_ss">null</field>
       <field name="_engines">null</field>
 
+      <property name="searchButton" readonly="true">
+        <getter><![CDATA[
+          if (!this._searchButton) {
+            this._searchButton = document.getAnonymousElementByAttribute(
+                                            this, "anonid", "searchbar-engine-button");
+          }
+          return this._searchButton;
+        ]]></getter>
+      </property>
+
       <property name="currentEngine"
                 onset="this.searchService.currentEngine = val; return val;">
         <getter><![CDATA[

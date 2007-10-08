@@ -649,7 +649,7 @@ var gEditItemOverlay = {
     }
 
     // Update folder-tree selection
-    if (isElementVisible(this._folderTree)) {
+    if (!this._folderTree.collapsed) {
       var selectedNode = this._folderTree.selectedNode;
       if (!selectedNode || selectedNode.itemId != container)
         this._folderTree.selectFolders([container]);
@@ -702,7 +702,7 @@ var gEditItemOverlay = {
   toggleTagsSelector: function EIO_toggleTagsSelector() {
     var tagsSelector = this._element("tagsSelector");
     var expander = this._element("tagsSelectorExpander");
-    if (!isElementVisible(tagsSelector)) {
+    if (tagsSelector.collapsed) {
       expander.className = "expander-up";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextup"));
@@ -711,14 +711,14 @@ var gEditItemOverlay = {
 
       // This is a no-op if we've added the listener.
       tagsSelector.addEventListener("CheckboxStateChange", this, false);
+      tagsSelector.collapsed = false;
     }
     else {
       expander.className = "expander-down";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextdown"));
+      tagsSelector.collapsed = true;
     }
-
-    tagsSelector.collapsed = !tagsSelector.collapsed;
   },
 
   _getTagsArrayFromTagField: function EIO__getTagsArrayFromTagField() {
