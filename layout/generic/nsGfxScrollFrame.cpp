@@ -651,8 +651,6 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState)
                                              scrolledView,
                                              &scrolledArea,
                                              NS_FRAME_NO_MOVE_VIEW);
-
-  mInner.PostOverflowEvent();
 }
 
 /* virtual */ nscoord
@@ -794,6 +792,7 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
+  mInner.PostOverflowEvent();
   return rv;
 }
 
@@ -1497,6 +1496,8 @@ nsresult
 nsGfxScrollFrameInner::FireScrollPortEvent()
 {
   mAsyncScrollPortEvent.Forget();
+
+  // Keep this in sync with PostOverflowEvent().
   nsSize scrollportSize = GetScrollPortSize();
   nsSize childSize = GetScrolledRect(scrollportSize).Size();
 
@@ -2042,6 +2043,20 @@ void nsGfxScrollFrameInner::PostOverflowEvent()
 {
   if (mAsyncScrollPortEvent.IsPending())
     return;
+
+  // Keep this in sync with FireScrollPortEvent().
+  nsSize scrollportSize = GetScrollPortSize();
+  nsSize childSize = GetScrolledRect(scrollportSize).Size();
+
+  PRBool newVerticalOverflow = childSize.height > scrollportSize.height;
+  PRBool vertChanged = mVerticalOverflow != newVerticalOverflow;
+
+  PRBool newHorizontalOverflow = childSize.width > scrollportSize.width;
+  PRBool horizChanged = mHorizontalOverflow != newHorizontalOverflow;
+
+  if (!vertChanged && !horizChanged) {
+    return;
+  }
 
   nsRefPtr<AsyncScrollPortEvent> ev = new AsyncScrollPortEvent(this);
   if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev)))
