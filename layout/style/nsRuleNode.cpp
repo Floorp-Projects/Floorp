@@ -4917,3 +4917,63 @@ nsRuleNode::Sweep()
   }
   return PR_FALSE;
 }
+
+/* static */ PRBool
+nsRuleNode::HasAuthorSpecifiedBorderOrBackground(nsStyleContext* aStyleContext)
+{
+  nsRuleDataColor colorData;
+  nsRuleDataMargin marginData;
+  /* We're relying on the use of |aStyleContext| not mutating it! */
+  nsRuleData ruleData(NS_STYLE_INHERIT_BIT(Background) |
+                        NS_STYLE_INHERIT_BIT(Border),
+                      aStyleContext->PresContext(), aStyleContext);
+  ruleData.mColorData = &colorData;
+  ruleData.mMarginData = &marginData;
+
+  nsCSSValue* values[] = {
+    &colorData.mBackColor,
+    &colorData.mBackImage,
+    &marginData.mBorderColor.mTop,
+    &marginData.mBorderStyle.mTop,
+    &marginData.mBorderWidth.mTop,
+    &marginData.mBorderColor.mRight,
+    &marginData.mBorderStyle.mRight,
+    &marginData.mBorderWidth.mRight,
+    &marginData.mBorderColor.mBottom,
+    &marginData.mBorderStyle.mBottom,
+    &marginData.mBorderWidth.mBottom,
+    &marginData.mBorderColor.mLeft,
+    &marginData.mBorderStyle.mLeft,
+    &marginData.mBorderWidth.mLeft
+  };
+
+  // We need to be careful not to count styles covered up by
+  // user-important or UA-important declarations.
+  for (nsRuleNode* ruleNode = aStyleContext->GetRuleNode(); ruleNode;
+       ruleNode = ruleNode->GetParent()) {
+    nsIStyleRule *rule = ruleNode->GetRule();
+    if (rule) {
+      ruleData.mLevel = ruleNode->GetLevel();
+      ruleData.mIsImportantRule = ruleNode->IsImportantRule();
+      rule->MapRuleInfoInto(&ruleData);
+      if (ruleData.mLevel == nsStyleSet::eAgentSheet ||
+          ruleData.mLevel == nsStyleSet::eUserSheet) {
+        // This is a rule whose effect we want to ignore, so if any of
+        // the properties we care about were set, set them to the dummy
+        // value that they'll never otherwise get.
+        for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(values); ++i)
+          if (values[i]->GetUnit() != eCSSUnit_Null)
+            values[i]->SetDummyValue();
+      } else {
+        // If any of the values we care about was set by the above rule,
+        // we have author style.
+        for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(values); ++i)
+          if (values[i]->GetUnit() != eCSSUnit_Null &&
+              values[i]->GetUnit() != eCSSUnit_Dummy) // see above
+            return PR_TRUE;
+      }
+    }
+  }
+
+  return PR_FALSE;
+}

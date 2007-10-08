@@ -367,6 +367,12 @@ void nsCSSValue::SetSystemFontValue()
   mUnit = eCSSUnit_System_Font;
 }
 
+void nsCSSValue::SetDummyValue()
+{
+  Reset();
+  mUnit = eCSSUnit_Dummy;
+}
+
 void nsCSSValue::StartImageLoad(nsIDocument* aDocument) const
 {
   NS_PRECONDITION(eCSSUnit_URL == mUnit, "Not a URL value!");

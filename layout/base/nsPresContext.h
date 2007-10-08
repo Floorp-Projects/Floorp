@@ -729,6 +729,9 @@ public:
   // Is this presentation in a chrome docshell?
   PRBool IsChrome();
 
+  // Public API for native theme code to get style internals.
+  virtual PRBool HasAuthorSpecifiedBorderOrBackground(nsIFrame *aFrame) const;
+
 protected:
   friend class nsRunnableMethod<nsPresContext>;
   NS_HIDDEN_(void) ThemeChangedInternal();

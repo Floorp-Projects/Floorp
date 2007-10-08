@@ -710,6 +710,9 @@ public:
    */
   NS_HIDDEN_(void) Mark();
   NS_HIDDEN_(PRBool) Sweep();
+
+  static PRBool
+    HasAuthorSpecifiedBorderOrBackground(nsStyleContext* aStyleContext);
 };
 
 #endif
