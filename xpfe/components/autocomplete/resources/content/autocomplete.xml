@@ -1441,6 +1441,11 @@
         null
       </field>
 
+      <!-- Setting tree.view doesn't always immediately create a selection,
+           so we ensure the selection by asking the tree for the view. Note:
+           this.view.selection is quicker if we know the selection exists. -->
+      <property name="selection" onget="return this.tree.view.selection;"/>
+
      <property name="pageCount"
                onget="return this.tree.treeBoxObject.getPageLength();"/>
 
@@ -1481,7 +1486,7 @@
 
       <method name="clearSelection">
         <body>
-          this.view.selection.clearSelection();
+          this.selection.clearSelection();
         </body>
       </method>
 
@@ -1538,7 +1543,7 @@
 
       <property name="selectedIndex">
         <getter>
-          if (!this.view || !this.view.selection.count)
+          if (!this.view || !this.selection.count)
             return -1;
           var start = {}, end = {};
           this.view.selection.getRangeAt(0, start, end);
@@ -1546,7 +1551,7 @@
         </getter>
         <setter>
           if (this.view) {
-            this.view.selection.select(val);
+            this.selection.select(val);
             if (val >= 0) {
               this.view.selection.currentIndex = -1;
               this.tree.treeBoxObject.ensureRowIsVisible(val);
