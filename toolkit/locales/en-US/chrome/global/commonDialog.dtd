@@ -4,3 +4,7 @@
 <!ENTITY editfield1.label "Password:"> 
 <!ENTITY editfield2.label "Confirm Password:"> 
 <!ENTITY checkbox.label   "check">
+<!ENTITY copyCmd.label    "Copy">
+<!ENTITY copyCmd.accesskey "C">
+<!ENTITY selectAllCmd.label "Select All">
+<!ENTITY selectAllCmd.accesskey "A">
