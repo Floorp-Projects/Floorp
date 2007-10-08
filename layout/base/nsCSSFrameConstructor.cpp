@@ -10644,6 +10644,21 @@ nsCSSFrameConstructor::ReplicateFixedFrames(nsPageContentFrame* aParentFrame)
   return NS_OK;
 }
 
+static PRBool
+IsBindingAncestor(nsIContent* aContent, nsIContent* aBindingRoot)
+{
+  while (PR_TRUE) {
+    nsIContent* bindingParent = aContent->GetBindingParent();
+    if (!bindingParent)
+      return PR_FALSE;
+    if (bindingParent == aBindingRoot)
+      return PR_TRUE;
+    if (bindingParent == aContent)
+      return PR_FALSE;
+    aContent = bindingParent;
+  }
+}
+
 // Helper function that searches the immediate child frames 
 // (and their children if the frames are "special")
 // for a frame that maps the specified content object
@@ -10738,7 +10753,7 @@ nsCSSFrameConstructor::FindFrameWithContent(nsFrameManager*  aFrameManager,
           // We also need to search if the child content is anonymous and scoped
           // to the parent content.
           if (aParentContent == kidContent ||
-              (aParentContent && (aParentContent == kidContent->GetBindingParent()))) 
+              (aParentContent && IsBindingAncestor(kidContent, aParentContent))) 
           {
 #ifdef NOISY_FINDFRAME
             FFWC_recursions++;
