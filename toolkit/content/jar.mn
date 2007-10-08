@@ -17,6 +17,7 @@ toolkit.jar:
 +  content/global/charsetOverlay.xul          (charsetOverlay.xul)
 *+ content/global/commonDialog.js             (commonDialog.js)
 *+ content/global/commonDialog.xul            (commonDialog.xul)
+   content/global/commonDialog.css            (commonDialog.css)
 *  content/global/contentAreaUtils.js         (contentAreaUtils.js)
 *  content/global/customizeCharset.js         (customizeCharset.js)
 *  content/global/customizeCharset.xul        (customizeCharset.xul)
