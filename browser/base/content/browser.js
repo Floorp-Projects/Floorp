@@ -2728,68 +2728,53 @@ const DOMLinkHandler = {
 
 const BrowserSearch = {
   addEngine: function(engine, targetDoc) {
-    // Set the attribute of the (first) search-engine button.
-    var searchButton = document.getAnonymousElementByAttribute(this.getSearchBar(), "anonid",
-                                                               "searchbar-engine-button");
-    if (searchButton) {
-      var browser = gBrowser.getBrowserForDocument(targetDoc);
-      // Append the URI and an appropriate title to the browser data.
-      var iconURL = null;
-      if (gBrowser.shouldLoadFavIcon(browser.currentURI))
-        iconURL = browser.currentURI.prePath + "/favicon.ico";
+    if (!this.searchBar)
+      return;
+    var browser = gBrowser.getBrowserForDocument(targetDoc);
+    // Append the URI and an appropriate title to the browser data.
+    var iconURL = null;
+    if (gBrowser.shouldLoadFavIcon(browser.currentURI))
+      iconURL = browser.currentURI.prePath + "/favicon.ico";
 
-      var hidden = false;
-      // If this engine (identified by title) is already in the list, add it
-      // to the list of hidden engines rather than to the main list.
-      // XXX This will need to be changed when engines are identified by URL;
-      // see bug 335102.
-      var searchService = Cc["@mozilla.org/browser/search-service;1"].
-                          getService(Ci.nsIBrowserSearchService);
-      if (searchService.getEngineByName(engine.title))
-        hidden = true;
+    var hidden = false;
+    // If this engine (identified by title) is already in the list, add it
+    // to the list of hidden engines rather than to the main list.
+    // XXX This will need to be changed when engines are identified by URL;
+    // see bug 335102.
+    var searchService = Cc["@mozilla.org/browser/search-service;1"].
+                        getService(Ci.nsIBrowserSearchService);
+    if (searchService.getEngineByName(engine.title))
+      hidden = true;
 
-      var engines = [];
-      if (hidden) {
-        if (browser.hiddenEngines)
-          engines = browser.hiddenEngines;
-      }
-      else {
-        if (browser.engines)
-          engines = browser.engines;
-      }
+    var engines = (hidden ? browser.hiddenEngines : browser.engines) || [];
 
-      engines.push({ uri: engine.href,
-                     title: engine.title,
-                     icon: iconURL });
+    engines.push({ uri: engine.href,
+                   title: engine.title,
+                   icon: iconURL });
 
-      if (hidden)
-        browser.hiddenEngines = engines;
-      else {
-        browser.engines = engines;
-        if (browser == gBrowser || browser == gBrowser.mCurrentBrowser)
-          this.updateSearchButton();
-      }
+    if (hidden)
+      browser.hiddenEngines = engines;
+    else {
+      browser.engines = engines;
+      if (browser == gBrowser || browser == gBrowser.mCurrentBrowser)
+        this.updateSearchButton();
     }
   },
 
   /**
    * Update the browser UI to show whether or not additional engines are 
    * available when a page is loaded or the user switches tabs to a page that 
-   * has search engines. 
+   * has search engines.
    */
   updateSearchButton: function() {
-    var searchButton = document.getAnonymousElementByAttribute(this.getSearchBar(),
-                                "anonid", "searchbar-engine-button");
-    if (!searchButton)
+    var searchBar = this.searchBar;
+    if (!searchBar)
       return;
     var engines = gBrowser.mCurrentBrowser.engines;
-    if (!engines || engines.length == 0) {
-      if (searchButton.hasAttribute("addengines"))
-        searchButton.removeAttribute("addengines");
-    }
-    else {
-      searchButton.setAttribute("addengines", "true");
-    }
+    if (engines && engines.length > 0)
+      searchBar.searchButton.setAttribute("addengines", "true");
+    else
+      searchBar.searchButton.removeAttribute("addengines");
   },
 
   /**
@@ -2821,8 +2806,8 @@ const BrowserSearch = {
       return;
     }
 #endif
-    var searchBar = this.getSearchBar();
-    if (searchBar) {
+    var searchBar = this.searchBar;
+    if (isElementVisible(searchBar)) {
       searchBar.select();
       searchBar.focus();
     } else {
@@ -2851,7 +2836,7 @@ const BrowserSearch = {
   
     // If the search bar is visible, use the current engine, otherwise, fall
     // back to the default engine.
-    if (this.getSearchBar())
+    if (isElementVisible(this.searchBar))
       engine = ss.currentEngine;
     else
       engine = ss.defaultEngine;
@@ -2873,15 +2858,10 @@ const BrowserSearch = {
   },
 
   /**
-   * Returns the search bar element if it is present in the toolbar and not
-   * hidden, null otherwise.
+   * Returns the search bar element if it is present in the toolbar, null otherwise.
    */
-  getSearchBar: function BrowserSearch_getSearchBar() {
-    var searchBar = document.getElementById("searchbar");
-    if (searchBar && isElementVisible(searchBar))
-      return searchBar;
-
-    return null;
+  get searchBar() {
+    return document.getElementById("searchbar");
   },
 
   loadAddEngines: function BrowserSearch_loadAddEngines() {
