@@ -48,7 +48,6 @@ GRE_MODULE	= 1
 
 XPIDLSRCS	= \
 		nsIFontEnumerator.idl \
-		nsIFontList.idl \
 		nsIScriptableRegion.idl \
 		gfxIFormats.idl \
 		gfxIImageFrame.idl \
