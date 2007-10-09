@@ -153,6 +153,31 @@ function getLocalHandlerApp(aFile) {
   return localHandlerApp;
 }
 
+/**
+ * An enumeration of items in a JS array.
+ *
+ * FIXME: use ArrayConverter once it lands (bug 380839).
+ * 
+ * @constructor
+ */
+function ArrayEnumerator(aItems) {
+  this._index = 0;
+  this._contents = aItems;
+}
+
+ArrayEnumerator.prototype = {
+  _index: 0,
+  _contents: [],
+
+  hasMoreElements: function() {
+    return this._index < this._contents.length;
+  },
+
+  getNext: function() {
+    return this._contents[this._index++];
+  }
+};
+
 
 //****************************************************************************//
 // HandlerInfoWrapper
@@ -236,8 +261,7 @@ HandlerInfoWrapper.prototype = {
     // Make sure the preferred handler is in the set of possible handlers.
     if (aNewValue) {
       var found = false;
-      var possibleApps = this.possibleApplicationHandlers.
-                         QueryInterface(Ci.nsIArray).enumerate();
+      var possibleApps = this.possibleApplicationHandlers.enumerate();
       while (possibleApps.hasMoreElements() && !found)
         found = possibleApps.getNext().equals(aNewValue);
       if (!found)
@@ -520,28 +544,55 @@ var feedHandlerInfo = {
     }
   },
 
-  get possibleApplicationHandlers() {
-    var handlerApps = Cc["@mozilla.org/array;1"].
-                      createInstance(Ci.nsIMutableArray);
+  _possibleApplicationHandlers: null,
 
-    // Add the "selected" local application, if there is one and it's different
-    // from the default handler for the OS.  Unlike for other types, there can
-    // be only one of these at a time for the feed type, since feed preferences
-    // only store a single local app.
+  get possibleApplicationHandlers() {
+    if (this._possibleApplicationHandlers)
+      return this._possibleApplicationHandlers;
+
+    // A minimal implementation of nsIMutableArray.  It only supports the two
+    // methods its callers invoke, namely appendElement and nsIArray::enumerate.
+    this._possibleApplicationHandlers = {
+      _inner: [],
+
+      QueryInterface: function(aIID) {
+        if (aIID.equals(Ci.nsIMutableArray) ||
+            aIID.equals(Ci.nsIArray) ||
+            aIID.equals(Ci.nsISupports))
+          return this;
+
+        throw Cr.NS_ERROR_NO_INTERFACE;
+      },
+
+      enumerate: function() {
+        return new ArrayEnumerator(this._inner);
+      },
+
+      appendElement: function(aHandlerApp, aWeak) {
+        this._inner.push(aHandlerApp);
+      }
+    };
+
+    // Add the selected local app if it's different from the OS default handler.
+    // Unlike for other types, we can store only one local app at a time for the
+    // feed type, since we store it in a preference that historically stores
+    // only a single path.  But we display all the local apps the user chooses
+    // while the prefpane is open, only dropping the list when the user closes
+    // the prefpane, for maximum usability and consistency with other types.
     var preferredAppFile = this.element(PREF_FEED_SELECTED_APP).value;
-    if (preferredAppFile && preferredAppFile.exists()) {
+    if (preferredAppFile) {
       let preferredApp = getLocalHandlerApp(preferredAppFile);
       let defaultApp = this._defaultApplicationHandler;
       if (!defaultApp || !defaultApp.equals(preferredApp))
-        handlerApps.appendElement(preferredApp, false);
+        this._possibleApplicationHandlers.appendElement(preferredApp, false);
     }
 
     // Add the registered web handlers.  There can be any number of these.
     var webHandlers = this._converterSvc.getContentHandlers(this.type, {});
     for each (let webHandler in webHandlers)
-      handlerApps.appendElement(webHandler, false);
+      this._possibleApplicationHandlers.appendElement(webHandler, false);
 
-    return handlerApps;
+    return this._possibleApplicationHandlers;
   },
 
   __defaultApplicationHandler: undefined,
@@ -1115,9 +1166,7 @@ var gApplicationsPane = {
       return false;
 
     if (aHandlerApp instanceof Ci.nsILocalHandlerApp)
-      return aHandlerApp.executable &&
-             aHandlerApp.executable.exists() &&
-             aHandlerApp.executable.isExecutable();
+      return this._isValidHandlerExecutable(aHandlerApp.executable);
 
     if (aHandlerApp instanceof Ci.nsIWebHandlerApp)
       return aHandlerApp.uriTemplate;
@@ -1126,6 +1175,24 @@ var gApplicationsPane = {
       return aHandlerApp.uri;
 
     return false;
+  },
+
+  _isValidHandlerExecutable: function(aExecutable) {
+    return aExecutable &&
+           aExecutable.exists() &&
+           aExecutable.isExecutable() &&
+// XXXben - we need to compare this with the running instance executable
+//          just don't know how to do that via script...
+// XXXmano TBD: can probably add this to nsIShellService
+#ifdef XP_WIN
+#expand    aExecutable.leafName != "__MOZ_APP_NAME__.exe";
+#else
+#ifdef XP_MACOSX
+#expand    aExecutable.leafName != "__MOZ_APP_DISPLAYNAME__.app";
+#else
+#expand    aExecutable.leafName != "__MOZ_APP_NAME__-bin";
+#endif
+#endif
   },
 
   /**
@@ -1137,7 +1204,7 @@ var gApplicationsPane = {
     var handlerInfo = this._handledTypes[typeItem.type];
     var menu =
       document.getAnonymousElementByAttribute(typeItem, "class", "actionsMenu");
-    var menuPopup = menu.firstChild;
+    var menuPopup = menu.menupopup;
 
     // Clear out existing items.
     while (menuPopup.hasChildNodes())
@@ -1185,8 +1252,7 @@ var gApplicationsPane = {
 
     // Create menu items for possible handlers.
     let preferredApp = handlerInfo.preferredApplicationHandler;
-    let possibleApps = handlerInfo.possibleApplicationHandlers.
-                       QueryInterface(Ci.nsIArray).enumerate();
+    let possibleApps = handlerInfo.possibleApplicationHandlers.enumerate();
     var possibleAppMenuItems = [];
     while (possibleApps.hasMoreElements()) {
       let possibleApp = possibleApps.getNext();
@@ -1375,16 +1441,15 @@ var gApplicationsPane = {
   //**************************************************************************//
   // Changes
 
-  onSelectAction: function(event) {
-    var actionItem = event.originalTarget;
+  onSelectAction: function(aActionItem) {
     var typeItem = this._list.selectedItem;
     var handlerInfo = this._handledTypes[typeItem.type];
 
-    if (actionItem.hasAttribute("alwaysAsk")) {
+    if (aActionItem.hasAttribute("alwaysAsk")) {
       handlerInfo.alwaysAskBeforeHandling = true;
     }
-    else if (actionItem.hasAttribute("action")) {
-      let action = parseInt(actionItem.getAttribute("action"));
+    else if (aActionItem.hasAttribute("action")) {
+      let action = parseInt(aActionItem.getAttribute("action"));
 
       // Set the plugin state if we're enabling or disabling a plugin.
       if (action == kActionUsePlugin)
@@ -1399,7 +1464,7 @@ var gApplicationsPane = {
       // of possible apps still include the preferred app in the list of apps
       // the user can choose to handle the type.
       if (action == Ci.nsIHandlerInfo.useHelperApp)
-        handlerInfo.preferredApplicationHandler = actionItem.handlerApp;
+        handlerInfo.preferredApplicationHandler = aActionItem.handlerApp;
 
       // Set the "always ask" flag.
       handlerInfo.alwaysAskBeforeHandling = false;
@@ -1427,39 +1492,42 @@ var gApplicationsPane = {
     fp.init(window, winTitle, Ci.nsIFilePicker.modeOpen);
     fp.appendFilters(Ci.nsIFilePicker.filterApps);
 
-    if (fp.show() == Ci.nsIFilePicker.returnOK && fp.file) {
-      // XXXben - we need to compare this with the running instance executable
-      //          just don't know how to do that via script...
-      // XXXmano TBD: can probably add this to nsIShellService
-#ifdef XP_WIN
-#expand      if (fp.file.leafName == "__MOZ_APP_NAME__.exe")
-#else
-#ifdef XP_MACOSX
-#expand      if (fp.file.leafName == "__MOZ_APP_DISPLAYNAME__.app")
-#else
-#expand      if (fp.file.leafName == "__MOZ_APP_NAME__-bin")
-#endif
-#endif
-        { this.rebuildActionsMenu(); return; }
+    var handlerApp;
 
-      let handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
-                       createInstance(Ci.nsIHandlerApp);
+    // Prompt the user to pick an app.  If they pick one, and it's a valid
+    // selection, then add it to the list of possible handlers.
+    if (fp.show() == Ci.nsIFilePicker.returnOK && fp.file &&
+        this._isValidHandlerExecutable(fp.file)) {
+      handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
+                   createInstance(Ci.nsILocalHandlerApp);
       handlerApp.name = getDisplayNameForFile(fp.file);
-      handlerApp.QueryInterface(Ci.nsILocalHandlerApp);
       handlerApp.executable = fp.file;
 
-      var handlerInfo = this._handledTypes[this._list.selectedItem.type];
-
-      handlerInfo.preferredApplicationHandler = handlerApp;
-      handlerInfo.preferredAction = Ci.nsIHandlerInfo.useHelperApp;
-
-      handlerInfo.store();
+      // Add the app to the type's list of possible handlers.
+      let handlerInfo = this._handledTypes[this._list.selectedItem.type];
+      handlerInfo.possibleApplicationHandlers.appendElement(handlerApp, false);
     }
 
-    // We rebuild the actions menu whether the user picked an app or canceled.
+    // Rebuild the actions menu whether the user picked an app or canceled.
     // If they picked an app, we want to add the app to the menu and select it.
     // If they canceled, we want to go back to their previous selection.
     this.rebuildActionsMenu();
+
+    // If the user picked a new app from the menu, select it.
+    if (handlerApp) {
+      let typeItem = this._list.selectedItem;
+      let actionsMenu =
+        document.getAnonymousElementByAttribute(typeItem, "class", "actionsMenu");
+      let menuItems = actionsMenu.menupopup.childNodes;
+      for (let i = 0; i < menuItems.length; i++) {
+        let menuItem = menuItems[i];
+        if (menuItem.handlerApp && menuItem.handlerApp.equals(handlerApp)) {
+          actionsMenu.selectedIndex = i;
+          this.onSelectAction(menuItem);
+          break;
+        }
+      }
+    }
   },
 
   // Mark which item in the list was last selected so we can reselect it
