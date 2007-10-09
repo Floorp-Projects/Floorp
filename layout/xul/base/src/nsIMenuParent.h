@@ -85,6 +85,10 @@ public:
   // cleared. This should return true if the menu should be deselected
   // by the caller.
   virtual PRBool MenuClosed() = 0;
+
+  // return true if aMenuFrame is the menu that was recently closed. The
+  // recently closed menu state is cleared by this method.
+  virtual PRBool IsRecentlyClosed(nsMenuFrame* aMenuFrame) = 0;
 };
 
 #endif
