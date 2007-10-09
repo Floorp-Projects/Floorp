@@ -167,12 +167,16 @@ XPCWrapper::NewResolve(JSContext *cx, JSObject *wrapperObj,
   }
 
   JSBool isXOW = (JS_GET_CLASS(cx, wrapperObj) == &sXPC_XOW_JSClass.base);
-  JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
-  uintN attrs = sprop->attrs;
-  if ((preserveVal || isXOW) &&
-      SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(innerObjp))) {
-    v = OBJ_GET_SLOT(cx, innerObjp, sprop->slot);
+  uintN attrs = JSPROP_ENUMERATE;
+  if (OBJ_IS_NATIVE(innerObjp)) {
+    JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
+    attrs = sprop->attrs;
+    if ((preserveVal || isXOW) &&
+        SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(innerObjp))) {
+      v = OBJ_GET_SLOT(cx, innerObjp, sprop->slot);
+    }
   }
+
   OBJ_DROP_PROPERTY(cx, innerObjp, prop);
 
   // Hack alert: we only do this for same-origin calls on XOWs: we want
