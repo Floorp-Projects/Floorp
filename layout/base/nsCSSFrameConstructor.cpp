@@ -12266,6 +12266,8 @@ nsCSSFrameConstructor::CreateListBoxContent(nsPresContext* aPresContext,
       return NS_OK;
     }
 
+    BeginUpdate();
+
     rv = ConstructFrameInternal(state, aChild,
                                 aParentFrame, aChild->Tag(),
                                 aChild->GetNameSpaceID(),
@@ -12284,6 +12286,8 @@ nsCSSFrameConstructor::CreateListBoxContent(nsPresContext* aPresContext,
       else
         rv = ((nsListBoxBodyFrame*)aParentFrame)->ListBoxInsertFrames(aPrevFrame, newFrame);
     }
+
+    EndUpdate();
   }
 
   return rv;
