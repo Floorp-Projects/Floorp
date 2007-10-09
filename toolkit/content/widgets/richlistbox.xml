@@ -467,17 +467,6 @@
           }
         ]]>
       </handler>
-      <handler event="contextmenu">
-        <![CDATA[
-          // if the context menu was opened via the keyboard, display it in the
-          // right location.
-          if (event.button != 2) {
-            var popup = document.getElementById(this.getAttribute("context"));
-            if (popup)
-              popup.showPopup(this.currentItem, -1, -1, "context", "bottomleft", "topleft");
-          }
-        ]]>
-      </handler>
     </handlers>
   </binding>
 

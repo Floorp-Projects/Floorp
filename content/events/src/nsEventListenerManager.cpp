@@ -74,6 +74,8 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeColumns.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
+#include "nsIDOMXULSelectCntrlItemEl.h"
+#include "nsIDOMXULMenuListElement.h"
 #endif
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
@@ -1578,6 +1580,83 @@ nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl,
   aPresShell->ScrollContentIntoView(focusedContent,
                                     NS_PRESSHELL_SCROLL_ANYWHERE,
                                     NS_PRESSHELL_SCROLL_ANYWHERE);
+
+  PRBool istree = PR_FALSE, checkLineHeight = PR_TRUE;
+  PRInt32 extraPixelsY = 0, extraTreeY = 0;
+
+#ifdef MOZ_XUL
+  // Set the position to just underneath the current item for multi-select
+  // lists or just underneath the selected item for single-select lists. If
+  // the element is not a list, or there is no selection, leave the position
+  // as is.
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> item;
+  nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
+    do_QueryInterface(aCurrentEl);
+  if (multiSelect) {
+    checkLineHeight = PR_FALSE;
+    
+    PRInt32 currentIndex;
+    multiSelect->GetCurrentIndex(&currentIndex);
+    if (currentIndex >= 0) {
+      nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aCurrentEl));
+      if (xulElement) {
+        nsCOMPtr<nsIBoxObject> box;
+        xulElement->GetBoxObject(getter_AddRefs(box));
+        nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(box));
+        // Tree view special case (tree items have no frames)
+        // Get the focused row and add its coordinates, which are already in pixels
+        // XXX Boris, should we create a new interface so that event listener manager doesn't
+        // need to know about trees? Something like nsINodelessChildCreator which
+        // could provide the current focus coordinates?
+        if (treeBox) {
+          treeBox->EnsureRowIsVisible(currentIndex);
+          PRInt32 firstVisibleRow, rowHeight;
+          treeBox->GetFirstVisibleRow(&firstVisibleRow);
+          treeBox->GetRowHeight(&rowHeight);
+
+          extraPixelsY = (currentIndex - firstVisibleRow + 1) * rowHeight;
+          istree = PR_TRUE;
+
+          nsCOMPtr<nsITreeColumns> cols;
+          treeBox->GetColumns(getter_AddRefs(cols));
+          if (cols) {
+            nsCOMPtr<nsITreeColumn> col;
+            cols->GetFirstColumn(getter_AddRefs(col));
+            if (col) {
+              nsCOMPtr<nsIDOMElement> colElement;
+              col->GetElement(getter_AddRefs(colElement));
+              nsCOMPtr<nsIContent> colContent(do_QueryInterface(colElement));
+              if (colContent) {
+                nsIFrame* frame = aPresShell->GetPrimaryFrameFor(colContent);
+                if (frame) {
+                  extraTreeY = frame->GetSize().height;
+                }
+              }
+            }
+          }
+        }
+        else {
+          multiSelect->GetCurrentItem(getter_AddRefs(item));
+        }
+      }
+    }
+  }
+  else {
+    // don't check menulists as the selected item will be inside a popup.
+    nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(aCurrentEl);
+    if (!menulist) {
+      checkLineHeight = PR_FALSE;
+      nsCOMPtr<nsIDOMXULSelectControlElement> select =
+        do_QueryInterface(aCurrentEl);
+      if (select)
+        select->GetSelectedItem(getter_AddRefs(item));
+    }
+  }
+
+  if (item)
+    focusedContent = do_QueryInterface(item);
+#endif
+
   nsIFrame *frame = aPresShell->GetPrimaryFrameFor(focusedContent);
   if (frame) {
     nsPoint frameOrigin(0, 0);
@@ -1602,69 +1681,25 @@ nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl,
     // On the other hand, we want to use the frame height if it's less
     // than the current line height, so that the context menu appears
     // associated with the correct frame.
-    nscoord extra = frame->GetSize().height;
-    nsIScrollableView *scrollView =
-      nsLayoutUtils::GetNearestScrollingView(view, nsLayoutUtils::eEither);
-    if (scrollView) {
-      nscoord scrollViewLineHeight;
-      scrollView->GetLineHeight(&scrollViewLineHeight);
-      if (extra > scrollViewLineHeight) {
-        extra = scrollViewLineHeight; 
-      }
-    }
-
-    PRInt32 extraPixelsY = 0;
-#ifdef MOZ_XUL
-    // Tree view special case (tree items have no frames)
-    // Get the focused row and add its coordinates, which are already in pixels
-    // XXX Boris, should we create a new interface so that event listener manager doesn't
-    // need to know about trees? Something like nsINodelessChildCreator which
-    // could provide the current focus coordinates?
-    nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(aCurrentEl));
-    if (xulElement) {
-      nsCOMPtr<nsIBoxObject> box;
-      xulElement->GetBoxObject(getter_AddRefs(box));
-      nsCOMPtr<nsITreeBoxObject> treeBox(do_QueryInterface(box));
-      if (treeBox) {
-        // Factor in focused row
-        nsCOMPtr<nsIDOMXULMultiSelectControlElement> multiSelect =
-          do_QueryInterface(aCurrentEl);
-        NS_ASSERTION(multiSelect, "No multi select interface for tree");
-
-        PRInt32 currentIndex;
-        multiSelect->GetCurrentIndex(&currentIndex);
-        if (currentIndex >= 0) {
-          treeBox->EnsureRowIsVisible(currentIndex);
-          PRInt32 firstVisibleRow, rowHeight;
-          treeBox->GetFirstVisibleRow(&firstVisibleRow);
-          treeBox->GetRowHeight(&rowHeight);
-          extraPixelsY = (currentIndex - firstVisibleRow + 1) * rowHeight;
-          extra = 0;
-
-          nsCOMPtr<nsITreeColumns> cols;
-          treeBox->GetColumns(getter_AddRefs(cols));
-          if (cols) {
-            nsCOMPtr<nsITreeColumn> col;
-            cols->GetFirstColumn(getter_AddRefs(col));
-            if (col) {
-              nsCOMPtr<nsIDOMElement> colElement;
-              col->GetElement(getter_AddRefs(colElement));
-              nsCOMPtr<nsIContent> colContent(do_QueryInterface(colElement));
-              if (colContent) {
-                frame = aPresShell->GetPrimaryFrameFor(colContent);
-                if (frame) {
-                  frameOrigin.y += frame->GetSize().height;
-                }
-              }
-            }
+    nscoord extra = 0;
+    if (!istree) {
+      extra = frame->GetSize().height;
+      if (checkLineHeight) {
+        nsIScrollableView *scrollView =
+          nsLayoutUtils::GetNearestScrollingView(view, nsLayoutUtils::eEither);
+        if (scrollView) {
+          nscoord scrollViewLineHeight;
+          scrollView->GetLineHeight(&scrollViewLineHeight);
+          if (extra > scrollViewLineHeight) {
+            extra = scrollViewLineHeight; 
           }
         }
       }
     }
-#endif
 
-    aTargetPt.x = aPresContext->AppUnitsToDevPixels(frameOrigin.x + extra);
-    aTargetPt.y = aPresContext->AppUnitsToDevPixels(frameOrigin.y + extra) + extraPixelsY;
+    aTargetPt.x = aPresContext->AppUnitsToDevPixels(frameOrigin.x);
+    aTargetPt.y = aPresContext->AppUnitsToDevPixels(
+                    frameOrigin.y + extra + extraTreeY) + extraPixelsY;
   }
 }
 
