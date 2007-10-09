@@ -39,9 +39,7 @@
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "nsIFontList.h"
 #include "nsGfxCIID.h"
-#include "nsFontList.h"
 #include "nsFontMetricsMac.h"
 #include "nsRenderingContextMac.h"
 #include "nsImageMac.h"
@@ -64,7 +62,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDrawingSurfaceMac)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorMac)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 
 static NS_IMETHODIMP
@@ -118,10 +115,6 @@ static const nsModuleComponentInfo components[] =
     NS_FONT_ENUMERATOR_CID,
     "@mozilla.org/gfx/fontenumerator;1",
     nsFontEnumeratorMacConstructor },
-  { "nsFontList",
-    NS_FONTLIST_CID,
-    "@mozilla.org/gfx/fontlist;1",
-    nsFontListConstructor },
   { "windows image frame",
     GFX_IMAGEFRAME_CID,
     "@mozilla.org/gfx/image/frame;2",

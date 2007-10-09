@@ -1,4 +1,5 @@
-/* ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -50,7 +51,11 @@
 //-----------------------------------------------------------------------------
 
 nsBrowserStatusFilter::nsBrowserStatusFilter()
-    : mTotalRequests(0)
+    : mCurProgress(0)
+    , mMaxProgress(0)
+    , mStatusIsDirty(PR_TRUE)
+    , mCurrentPercentage(0)
+    , mTotalRequests(0)
     , mFinishedRequests(0)
     , mUseRealProgressFlag(PR_FALSE)
     , mDelayedStatus(PR_FALSE)
@@ -125,9 +130,7 @@ nsBrowserStatusFilter::OnStateChange(nsIWebProgress *aWebProgress,
 
     if (aStateFlags & STATE_START) {
         if (aStateFlags & STATE_IS_NETWORK) {
-            mTotalRequests = 0;
-            mFinishedRequests = 0;
-            mUseRealProgressFlag = PR_FALSE;
+            ResetMembers();
         }
         if (aStateFlags & STATE_IS_REQUEST) {
             ++mTotalRequests;
@@ -152,7 +155,8 @@ nsBrowserStatusFilter::OnStateChange(nsIWebProgress *aWebProgress,
     else if (aStateFlags & STATE_TRANSFERRING) {
         if (aStateFlags & STATE_IS_REQUEST) {
             if (!mUseRealProgressFlag && mTotalRequests)
-                return OnProgressChange(nsnull, nsnull, 0, 0, mFinishedRequests, mTotalRequests);
+                return OnProgressChange(nsnull, nsnull, 0, 0,
+                                        mFinishedRequests, mTotalRequests);
         }
 
         // no need to forward this state change
@@ -207,9 +211,7 @@ nsBrowserStatusFilter::OnProgressChange(nsIWebProgress *aWebProgress,
         return NS_OK;
 
     if (!mDelayedStatus) {
-        mListener->OnProgressChange(nsnull, nsnull, 0, 0,
-				    (PRInt32)mCurProgress,
-				    (PRInt32)mMaxProgress);
+        MaybeSendProgress();
         StartDelayTimer();
     }
 
@@ -241,15 +243,17 @@ nsBrowserStatusFilter::OnStatusChange(nsIWebProgress *aWebProgress,
     //
     // limit frequency of calls to OnStatusChange
     //
-
-    mStatusMsg = aMessage;
+    if (!mCurrentStatusMsg.Equals(aMessage)) {
+        mStatusIsDirty = PR_TRUE;
+        mStatusMsg = aMessage;
+    }
 
     if (mDelayedStatus)
         return NS_OK;
 
     if (!mDelayedProgress) {
-        mListener->OnStatusChange(nsnull, nsnull, 0, aMessage);
-        StartDelayTimer();
+      MaybeSendStatus();
+      StartDelayTimer();
     }
 
     mDelayedStatus = PR_TRUE;
@@ -281,10 +285,10 @@ nsBrowserStatusFilter::OnProgressChange64(nsIWebProgress *aWebProgress,
 {
     // XXX truncates 64-bit to 32-bit
     return OnProgressChange(aWebProgress, aRequest,
-			    (PRInt32)aCurSelfProgress,
-			    (PRInt32)aMaxSelfProgress,
-			    (PRInt32)aCurTotalProgress,
-			    (PRInt32)aMaxTotalProgress);
+                            (PRInt32)aCurSelfProgress,
+                            (PRInt32)aMaxSelfProgress,
+                            (PRInt32)aCurTotalProgress,
+                            (PRInt32)aMaxTotalProgress);
 }
 
 NS_IMETHODIMP
@@ -309,6 +313,47 @@ nsBrowserStatusFilter::OnRefreshAttempted(nsIWebProgress *aWebProgress,
 // nsBrowserStatusFilter <private>
 //-----------------------------------------------------------------------------
 
+void
+nsBrowserStatusFilter::ResetMembers()
+{
+    mTotalRequests = 0;
+    mFinishedRequests = 0;
+    mUseRealProgressFlag = PR_FALSE;
+    mMaxProgress = 0;
+    mCurProgress = 0;
+    mCurrentPercentage = 0;
+    mStatusIsDirty = PR_TRUE;
+}
+
+void
+nsBrowserStatusFilter::MaybeSendProgress() 
+{
+    if (mCurProgress > mMaxProgress || mCurProgress <= 0) 
+        return;
+
+    // check our percentage
+    PRInt32 percentage = (PRInt32) double(mCurProgress) * 100 / mMaxProgress;
+
+    // The progress meter only updates for increases greater than 3 percent
+    if (percentage > (mCurrentPercentage + 3)) {
+        mCurrentPercentage = percentage;
+        // XXX truncates 64-bit to 32-bit
+        mListener->OnProgressChange(nsnull, nsnull, 0, 0,
+                                    (PRInt32)mCurProgress,
+                                    (PRInt32)mMaxProgress);
+    }
+}
+
+void
+nsBrowserStatusFilter::MaybeSendStatus()
+{
+    if (mStatusIsDirty) {
+        mListener->OnStatusChange(nsnull, nsnull, 0, mStatusMsg.get());
+        mCurrentStatusMsg = mStatusMsg;
+        mStatusIsDirty = PR_FALSE;
+    }
+}
+
 nsresult
 nsBrowserStatusFilter::StartDelayTimer()
 {
@@ -316,9 +361,9 @@ nsBrowserStatusFilter::StartDelayTimer()
 
     mTimer = do_CreateInstance("@mozilla.org/timer;1");
     if (!mTimer)
-      return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE;
 
-    return mTimer->InitWithFuncCallback(TimeoutHandler, this, 40, 
+    return mTimer->InitWithFuncCallback(TimeoutHandler, this, 160, 
                                         nsITimer::TYPE_ONE_SHOT);
 }
 
@@ -332,15 +377,12 @@ nsBrowserStatusFilter::ProcessTimeout()
 
     if (mDelayedStatus) {
         mDelayedStatus = PR_FALSE;
-        mListener->OnStatusChange(nsnull, nsnull, 0, mStatusMsg.get());
+        MaybeSendStatus();
     }
 
     if (mDelayedProgress) {
         mDelayedProgress = PR_FALSE;
-	// XXX truncates 64-bit to 32-bit
-        mListener->OnProgressChange(nsnull, nsnull, 0, 0,
-				    (PRInt32)mCurProgress,
-				    (PRInt32)mMaxProgress);
+        MaybeSendProgress();
     }
 }
 

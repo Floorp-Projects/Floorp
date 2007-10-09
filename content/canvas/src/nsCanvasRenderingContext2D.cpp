@@ -99,6 +99,7 @@
 
 #include "gfxContext.h"
 #include "gfxASurface.h"
+#include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "gfxFont.h"
 #include "gfxTextRunCache.h"
@@ -235,16 +236,14 @@ class nsCanvasPattern : public nsIDOMCanvasPattern
 public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_CANVASPATTERN_PRIVATE_IID)
 
-    nsCanvasPattern(cairo_pattern_t *cpat, PRUint8 *dataToFree,
+    nsCanvasPattern(cairo_pattern_t *cpat,
                     nsIURI* URIForSecurityCheck, PRBool forceWriteOnly)
-        : mPattern(cpat), mData(dataToFree), mURI(URIForSecurityCheck), mForceWriteOnly(forceWriteOnly)
+        : mPattern(cpat), mURI(URIForSecurityCheck), mForceWriteOnly(forceWriteOnly)
     { }
 
     ~nsCanvasPattern() {
         if (mPattern)
             cairo_pattern_destroy(mPattern);
-        if (mData)
-            nsMemory::Free(mData);
     }
 
     void Apply(cairo_t *cairo) {
@@ -292,10 +291,9 @@ public:
     // nsICanvasRenderingContextInternal
     NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas);
     NS_IMETHOD SetDimensions(PRInt32 width, PRInt32 height);
-    NS_IMETHOD Render(nsIRenderingContext *rc);
-    NS_IMETHOD RenderToSurface(cairo_surface_t *surf);
-    NS_IMETHOD GetInputStream(const nsACString& aMimeType,
-                              const nsAString& aEncoderOptions,
+    NS_IMETHOD Render(gfxContext *ctx);
+    NS_IMETHOD GetInputStream(const char* aMimeType,
+                              const PRUnichar* aEncoderOptions,
                               nsIInputStream **aStream);
 
     // nsISupports interface
@@ -307,8 +305,6 @@ public:
 protected:
     // destroy cairo/image stuff, in preparation for possibly recreating
     void Destroy();
-
-    nsIFrame *GetCanvasLayoutFrame();
 
     // Some helpers.  Doesn't modify acolor on failure.
     enum {
@@ -456,17 +452,6 @@ nsCanvasRenderingContext2D::nsCanvasRenderingContext2D()
 nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
 {
     Destroy();
-}
-
-nsIFrame*
-nsCanvasRenderingContext2D::GetCanvasLayoutFrame()
-{
-    if (!mCanvasElement)
-        return nsnull;
-
-    nsIFrame *fr = nsnull;
-    mCanvasElement->GetPrimaryCanvasFrame(&fr);
-    return fr;
 }
 
 void
@@ -653,14 +638,10 @@ nsCanvasRenderingContext2D::ApplyStyle(PRInt32 aWhichStyle)
 nsresult
 nsCanvasRenderingContext2D::Redraw()
 {
-    nsIFrame *frame = GetCanvasLayoutFrame();
-    if (frame) {
-        nsRect r = frame->GetRect();
-        r.x = r.y = 0;
-        frame->Invalidate(r, PR_FALSE);
-    }
+    if (!mCanvasElement)
+        return nsnull;
 
-    return NS_OK;
+    return mCanvasElement->InvalidateFrame();
 }
 
 void
@@ -723,7 +704,7 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 }
  
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
+nsCanvasRenderingContext2D::Render(gfxContext *ctx)
 {
     nsresult rv = NS_OK;
 
@@ -735,7 +716,6 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
     if (!mThebesSurface)
         return NS_ERROR_FAILURE;
 
-    gfxContext* ctx = (gfxContext*) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
     nsRefPtr<gfxPattern> pat = new gfxPattern(mThebesSurface);
 
     // XXX I don't want to use PixelSnapped here, but layout doesn't guarantee
@@ -748,19 +728,8 @@ nsCanvasRenderingContext2D::Render(nsIRenderingContext *rc)
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContext2D::RenderToSurface(cairo_surface_t *surf)
-{
-    cairo_t *cr = cairo_create (surf);
-    cairo_set_source_surface (cr, mSurface, 0, 0);
-    cairo_paint (cr);
-    cairo_destroy (cr);
-
-    return NS_OK;
-}
- 
-NS_IMETHODIMP
-nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
-                                           const nsAString& aEncoderOptions,
+nsCanvasRenderingContext2D::GetInputStream(const char *aMimeType,
+                                           const PRUnichar *aEncoderOptions,
                                            nsIInputStream **aStream)
 {
     if (!mSurface ||
@@ -768,10 +737,12 @@ nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
         cairo_surface_status(mSurface) != CAIRO_STATUS_SUCCESS)
         return NS_ERROR_FAILURE;
 
-    nsCString conid(NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type="));
-    conid += aMimeType;
+    const char encoderPrefix[] = "@mozilla.org/image/encoder;2?type=";
+    nsAutoArrayPtr<char> conid(new (std::nothrow) char[strlen(encoderPrefix) + strlen(aMimeType) + 1]);
+    strcpy(conid, encoderPrefix);
+    strcat(conid, aMimeType);
 
-    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(conid.get());
+    nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(conid);
     if (!encoder)
         return NS_ERROR_FAILURE;
 
@@ -779,7 +750,7 @@ nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
         encoder->InitFromData(mImageSurfaceData,
                               mWidth * mHeight * 4, mWidth, mHeight, mWidth * 4,
                               imgIEncoder::INPUT_FORMAT_HOSTARGB,
-                              aEncoderOptions);
+                              nsDependentString(aEncoderOptions));
     } else {
         nsAutoArrayPtr<PRUint8> imageBuffer(new (std::nothrow) PRUint8[mWidth * mHeight * 4]);
         if (!imageBuffer)
@@ -802,7 +773,7 @@ nsCanvasRenderingContext2D::GetInputStream(const nsACString& aMimeType,
         encoder->InitFromData(imageBuffer.get(),
                               mWidth * mHeight * 4, mWidth, mHeight, mWidth * 4,
                               imgIEncoder::INPUT_FORMAT_HOSTARGB,
-                              aEncoderOptions);
+                              nsDependentString(aEncoderOptions));
     }
 
     return CallQueryInterface(encoder, aStream);
@@ -1100,10 +1071,9 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLElement *image,
 
     cairo_pattern_set_extend (cairopat, extend);
 
-    nsCanvasPattern *pat = new nsCanvasPattern(cairopat, imgData, uri, forceWriteOnly);
+    nsCanvasPattern *pat = new nsCanvasPattern(cairopat, uri, forceWriteOnly);
     if (!pat) {
         cairo_pattern_destroy(cairopat);
-        nsMemory::Free(imgData);
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -1589,9 +1559,9 @@ nsCanvasRenderingContext2D::MozMeasureText(const nsAString& textToMeasure, float
 
     PRBool tightBoundingBox = PR_FALSE;
     gfxTextRun::Metrics metrics = textRun->MeasureText(/* offset = */ 0, textToMeasure.Length(),
-                                                         tightBoundingBox,
-                                                         nsnull);
-    *retVal = metrics.mAdvanceWidth/gfxFloat(elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerCSSPixel());
+                                                       tightBoundingBox, mThebesContext,
+                                                       nsnull);
+    *retVal = float(metrics.mAdvanceWidth/gfxFloat(elemDocument->GetPrimaryShell()->GetPresContext()->AppUnitsPerCSSPixel()));
     return NS_OK;
 }
 
@@ -1910,7 +1880,7 @@ nsCanvasRenderingContext2D::DrawImage()
     DoDrawImageSecurityCheck(uri, forceWriteOnly);
 
 #define GET_ARG(dest,whicharg) \
-    do { if (!ConvertJSValToDouble(dest, ctx, whicharg)) { rv = NS_ERROR_INVALID_ARG; goto FAIL; } } while (0)
+    do { if (!ConvertJSValToDouble(dest, ctx, whicharg)) { rv = NS_ERROR_INVALID_ARG; goto FINISH; } } while (0)
 
     rv = NS_OK;
 
@@ -1940,9 +1910,16 @@ nsCanvasRenderingContext2D::DrawImage()
     } else {
         // XXX ERRMSG we need to report an error to developers here! (bug 329026)
         rv = NS_ERROR_INVALID_ARG;
-        goto FAIL;
+        goto FINISH;
     }
 #undef GET_ARG
+
+    if (dw == 0.0 || dh == 0.0) {
+        rv = NS_OK;
+        // not really failure, but nothing to do --
+        // and noone likes a divide-by-zero
+        goto FINISH;
+    }
 
     if (!FloatValidate(sx,sy,sw,sh))
         return NS_ERROR_DOM_SYNTAX_ERR;
@@ -1957,7 +1934,7 @@ nsCanvasRenderingContext2D::DrawImage()
     {
         // XXX ERRMSG we need to report an error to developers here! (bug 329026)
         rv = NS_ERROR_DOM_INDEX_SIZE_ERR;
-        goto FAIL;
+        goto FINISH;
     }
 
     cairo_matrix_init_translate(&surfMat, sx, sy);
@@ -1989,9 +1966,7 @@ nsCanvasRenderingContext2D::DrawImage()
 
     cairo_pattern_destroy(pat);
 
-FAIL:
-    if (imgData)
-        nsMemory::Free(imgData);
+FINISH:
     if (imgSurf)
         cairo_surface_destroy(imgSurf);
 
@@ -2146,10 +2121,15 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
             // XXX ERRMSG we need to report an error to developers here! (bug 329026)
             return NS_ERROR_NOT_AVAILABLE;
 
+        PRUint32 status;
+        imgRequest->GetImageStatus(&status);
+        if (status != imgIRequest::STATUS_LOAD_COMPLETE)
+            return NS_ERROR_NOT_AVAILABLE;
+
         nsCOMPtr<nsIURI> uri;
         rv = imageLoader->GetCurrentURI(uriOut);
         NS_ENSURE_SUCCESS(rv, rv);
-       
+
         *forceWriteOnlyOut = PR_FALSE;
 
         rv = imgRequest->GetImage(getter_AddRefs(imgContainer));
@@ -2162,22 +2142,20 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
             rv = canvas->GetSize(&w, &h);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            cairo_surface_t *surf =
-                cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
-                                            w, h);
-            cairo_t *cr = cairo_create (surf);
-            cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-            cairo_paint (cr);
-            cairo_destroy (cr);
+            nsRefPtr<gfxImageSurface> surf =
+                new gfxImageSurface (gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
+            nsRefPtr<gfxContext> ctx = new gfxContext(surf);
+            ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
+            ctx->Paint();
+            ctx->SetOperator(gfxContext::OPERATOR_OVER);
 
-            rv = canvas->RenderContextsToSurface(surf);
-            if (NS_FAILED(rv)) {
-                cairo_surface_destroy (surf);
+            rv = canvas->RenderContexts(ctx);
+            if (NS_FAILED(rv))
                 return rv;
-            }
 
-            *aCairoSurface = surf;
-            *imgData = nsnull;
+            *aCairoSurface = surf->CairoSurface();
+            cairo_surface_reference(*aCairoSurface);
+            *imgData = surf->Data();
             *widthOut = w;
             *heightOut = h;
 
@@ -2211,8 +2189,8 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
     if (heightOut)
         *heightOut = imgHeight;
 
-    gfxASurface* gfxsurf = nsnull;
-    rv = img->GetSurface(&gfxsurf);
+    nsRefPtr<gfxASurface> gfxsurf;
+    rv = img->GetSurface(getter_AddRefs(gfxsurf));
     NS_ENSURE_SUCCESS(rv, rv);
 
     *aCairoSurface = gfxsurf->CairoSurface();
@@ -2406,6 +2384,8 @@ nsCanvasRenderingContext2D::GetImageData()
     ncc->GetArgc(&argc);
     ncc->GetArgvPtr(&argv);
 
+    JSAutoRequest ar(ctx);
+
     int32 x, y, w, h;
     if (!JS_ConvertArguments (ctx, argc, argv, "jjjj", &x, &y, &w, &h))
         return NS_ERROR_DOM_SYNTAX_ERR;
@@ -2521,6 +2501,8 @@ nsCanvasRenderingContext2D::PutImageData()
 
     ncc->GetArgc(&argc);
     ncc->GetArgvPtr(&argv);
+
+    JSAutoRequest ar(ctx);
 
     JSObject *dataObject;
     int32 x, y;

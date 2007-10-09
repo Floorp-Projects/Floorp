@@ -130,4 +130,37 @@ private:
   const char *mReason;
 };
 
+class nsFocusScrollSuppressor
+{
+public:
+  nsFocusScrollSuppressor(nsIFocusController* aController = nsnull)
+  : mWasSuppressed(PR_FALSE)
+  {
+    Init(aController);
+  }
+
+  ~nsFocusScrollSuppressor()
+  {
+    Init(nsnull);
+  }
+
+  void Init(nsIFocusController* aController)
+  {
+    if (mController) {
+      mController->SetSuppressFocusScroll(mWasSuppressed);
+    }
+
+    mController = aController;
+    if (mController) {
+      mController->GetSuppressFocusScroll(&mWasSuppressed);
+      if (!mWasSuppressed) {
+        mController->SetSuppressFocusScroll(PR_TRUE);
+      }
+    }
+  }
+private:
+  nsCOMPtr<nsIFocusController> mController;
+  PRBool                       mWasSuppressed;
+};
+
 #endif // nsIFocusController_h__

@@ -395,6 +395,7 @@ nsFrame::Init(nsIContent*      aContent,
               nsIFrame*        aParent,
               nsIFrame*        aPrevInFlow)
 {
+  NS_PRECONDITION(!mContent, "Double-initing a frame?");
   NS_ASSERTION(IsFrameOfType(eDEBUGAllFrames) &&
                !IsFrameOfType(eDEBUGNoFrames),
                "IsFrameOfType implementation that doesn't call base class");
@@ -1002,9 +1003,8 @@ static PRBool ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
     // have clipping.
   }
   
-  aRect->SetRect(aBuilder->ToReferenceFrame(aFrame), aFrame->GetSize());
-  const nsStyleBorder* borderStyle = aFrame->GetStyleContext()->GetStyleBorder();
-  aRect->Deflate(borderStyle->GetBorder());
+  *aRect = aFrame->GetPaddingRect() - aFrame->GetPosition() +
+    aBuilder->ToReferenceFrame(aFrame);
   return PR_TRUE;
 }
 
@@ -1550,7 +1550,7 @@ nsFrame::GetDataForTableSelection(nsFrameSelection *aFrameSelection,
   {  
     // In Browser, special 'table selection' key must be pressed for table selection
     // or when just Shift is pressed and we're already in table/cell selection mode
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
     doTableSelection = aMouseEvent->isMeta || (aMouseEvent->isShift && selectingTableCells);
 #else
     doTableSelection = aMouseEvent->isControl || (aMouseEvent->isShift && selectingTableCells);
@@ -1786,7 +1786,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 
   nsMouseEvent *me = (nsMouseEvent *)aEvent;
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   if (me->isControl)
     return NS_OK;//short ciruit. hard coded for mac due to time restraints.
 #endif
@@ -1866,7 +1866,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
 
   frameselection->SetMouseDownState(PR_TRUE);
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   PRBool control = me->isMeta;
 #else
   PRBool control = me->isControl;
@@ -2789,8 +2789,9 @@ nsFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
 {
   aData->trailingWhitespace = 0;
   aData->skipWhitespace = PR_FALSE;
-  aData->currentLine += nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
-                            this, nsLayoutUtils::PREF_WIDTH);
+  nscoord myPref = nsLayoutUtils::IntrinsicForContainer(aRenderingContext, 
+                       this, nsLayoutUtils::PREF_WIDTH);
+  aData->currentLine = NSCoordSaturatingAdd(aData->currentLine, myPref);
 }
 
 void
@@ -4957,6 +4958,10 @@ nsFrame::GetLineNumber(nsIFrame *aFrame, nsIFrame** aContainingBlock)
     if (thisBlock->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
       //if we are searching for a frame that is not in flow we will not find it. 
       //we must instead look for its placeholder
+      if (thisBlock->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) {
+        // abspos continuations don't have placeholders, get the fif
+        thisBlock = thisBlock->GetFirstInFlow();
+      }
       thisBlock = frameManager->GetPlaceholderFrameFor(thisBlock);
       if (!thisBlock)
         return -1;
@@ -5443,8 +5448,15 @@ nsFrame::DoGetParentStyleContextFrame(nsPresContext* aPresContext,
 
   // For out-of-flow frames, we must resolve underneath the
   // placeholder's parent.
+  nsIFrame* oofFrame = this;
+  if ((oofFrame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)
+      && (oofFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+    // Out of flows that are overflow containers do not
+    // have placeholders. Use their first-in-flow's placeholder.
+    oofFrame = oofFrame->GetFirstInFlow();
+  }
   nsIFrame *placeholder =
-    aPresContext->FrameManager()->GetPlaceholderFrameFor(this);
+    aPresContext->FrameManager()->GetPlaceholderFrameFor(oofFrame);
   if (!placeholder) {
     NS_NOTREACHED("no placeholder frame for out-of-flow frame");
     GetCorrectedParent(aPresContext, this, aProviderFrame);
@@ -6120,8 +6132,6 @@ nsFrame::BoxReflow(nsBoxLayoutState&        aState,
     // see if the overflow option is set. If it is then if our child's bounds overflow then
     // we will set the child's rect to include the overflow size.
     if (GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
-      // make sure we store the overflow size
-      
       // This kinda sucks. We should be able to handle the case
       // where there's overflow above or to the left of the
       // origin. But for now just chop that stuff off.

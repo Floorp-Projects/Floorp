@@ -1456,6 +1456,23 @@ nsSVGUtils::CanOptimizeOpacity(nsIFrame *aFrame)
   return PR_FALSE;
 }
 
+float
+nsSVGUtils::MaxExpansion(nsIDOMSVGMatrix *aMatrix)
+{
+  float a, b, c, d;
+  aMatrix->GetA(&a);
+  aMatrix->GetB(&b);
+  aMatrix->GetC(&c);
+  aMatrix->GetD(&d);
+
+  // maximum expansion derivation from
+  // http://lists.cairographics.org/archives/cairo/2004-October/001980.html
+  float f = (a * a + b * b + c * c + d * d) / 2;
+  float g = (a * a + b * b - c * c - d * d) / 2;
+  float h = a * c + b * d;
+  return sqrt(f + sqrt(g * g + h * h));
+}
+
 #ifdef DEBUG
 void
 nsSVGUtils::WritePPM(const char *fname, gfxImageSurface *aSurface)

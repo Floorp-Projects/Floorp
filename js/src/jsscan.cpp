@@ -172,24 +172,6 @@ js_IsIdentifier(JSString *str)
     return JS_TRUE;
 }
 
-JSTokenStream *
-js_NewTokenStream(JSContext *cx, const jschar *base, size_t length,
-                  const char *filename, uintN lineno,
-                  JSPrincipals *principals)
-{
-    JSTokenStream *ts;
-
-    ts = js_NewBufferTokenStream(cx, base, length);
-    if (!ts)
-        return NULL;
-    ts->filename = filename;
-    ts->lineno = lineno;
-    if (principals)
-        JSPRINCIPALS_HOLD(cx, principals);
-    ts->principals = principals;
-    return ts;
-}
-
 #define TBMIN   64
 
 static JSBool
@@ -230,69 +212,50 @@ GrowTokenBuf(JSStringBuffer *sb, size_t newlength)
     return JS_TRUE;
 }
 
-JS_FRIEND_API(JSTokenStream *)
-js_NewBufferTokenStream(JSContext *cx, const jschar *base, size_t length)
+JSBool
+js_InitTokenStream(JSContext *cx, JSTokenStream *ts,
+                   const jschar *base, size_t length,
+                   FILE *fp, const char *filename, uintN lineno)
 {
+    jschar *buf;
     size_t nb;
-    JSTokenStream *ts;
 
-    nb = sizeof(JSTokenStream) + JS_LINE_LIMIT * sizeof(jschar);
-    JS_ARENA_ALLOCATE_CAST(ts, JSTokenStream *, &cx->tempPool, nb);
+    JS_ASSERT_IF(fp, !base);
+    JS_ASSERT_IF(!base, length == 0);
+    nb = fp
+         ? 2 * JS_LINE_LIMIT * sizeof(jschar)
+         : JS_LINE_LIMIT * sizeof(jschar);
+    JS_ARENA_ALLOCATE_CAST(buf, jschar *, &cx->tempPool, nb);
     if (!ts) {
         JS_ReportOutOfMemory(cx);
-        return NULL;
+        return JS_FALSE;
     }
-    memset(ts, 0, nb);
-    ts->lineno = 1;
-    ts->linebuf.base = ts->linebuf.limit = ts->linebuf.ptr = (jschar *)(ts + 1);
-    ts->userbuf.base = (jschar *)base;
-    ts->userbuf.limit = (jschar *)base + length;
-    ts->userbuf.ptr = (jschar *)base;
+    memset(buf, 0, nb);
+    memset(ts, 0, sizeof(*ts));
+    ts->filename = filename;
+    ts->lineno = lineno;
+    ts->linebuf.base = ts->linebuf.limit = ts->linebuf.ptr = buf;
+    if (fp) {
+        ts->file = fp;
+        ts->userbuf.base = buf + JS_LINE_LIMIT;
+        ts->userbuf.ptr = ts->userbuf.limit = ts->userbuf.base + JS_LINE_LIMIT;
+    } else {
+        ts->userbuf.base = (jschar *)base;
+        ts->userbuf.limit = (jschar *)base + length;
+        ts->userbuf.ptr = (jschar *)base;
+    }
     ts->tokenbuf.grow = GrowTokenBuf;
     ts->tokenbuf.data = cx;
     ts->listener = cx->debugHooks->sourceHandler;
     ts->listenerData = cx->debugHooks->sourceHandlerData;
-    return ts;
+    return JS_TRUE;
 }
 
-JS_FRIEND_API(JSTokenStream *)
-js_NewFileTokenStream(JSContext *cx, const char *filename, FILE *defaultfp)
-{
-    jschar *base;
-    JSTokenStream *ts;
-    FILE *file;
-
-    JS_ARENA_ALLOCATE_CAST(base, jschar *, &cx->tempPool,
-                           JS_LINE_LIMIT * sizeof(jschar));
-    if (!base)
-        return NULL;
-    ts = js_NewBufferTokenStream(cx, base, JS_LINE_LIMIT);
-    if (!ts)
-        return NULL;
-    if (!filename || strcmp(filename, "-") == 0) {
-        file = defaultfp;
-    } else {
-        file = fopen(filename, "r");
-        if (!file) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CANT_OPEN,
-                                 filename, "No such file or directory");
-            return NULL;
-        }
-    }
-    ts->userbuf.ptr = ts->userbuf.limit;
-    ts->file = file;
-    ts->filename = filename;
-    return ts;
-}
-
-JS_FRIEND_API(JSBool)
+void
 js_CloseTokenStream(JSContext *cx, JSTokenStream *ts)
 {
     if (ts->flags & TSF_OWNFILENAME)
         JS_free(cx, (void *) ts->filename);
-    if (ts->principals)
-        JSPRINCIPALS_DROP(cx, ts->principals);
-    return !ts->file || fclose(ts->file) == 0;
 }
 
 JS_FRIEND_API(int)
@@ -554,7 +517,6 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
     jschar *linechars = NULL;
     char *linebytes = NULL;
     JSTokenStream *ts = NULL;
-    JSCodeGenerator *cg = NULL;
     JSParseNode *pn = NULL;
     JSErrorReporter onError;
     JSTokenPos *tp;
@@ -574,27 +536,20 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
         return JS_FALSE;
     }
 
-    switch (flags & JSREPORT_HANDLE) {
-      case JSREPORT_TS:
+    if ((flags & JSREPORT_HANDLE) == JSREPORT_TS) {
         ts = (JSTokenStream *) handle;
-        break;
-      case JSREPORT_CG:
-        cg = (JSCodeGenerator *) handle;
-        break;
-      case JSREPORT_PN:
+    } else {
+        JS_ASSERT((flags & JSREPORT_HANDLE) == JSREPORT_PN);
         pn = (JSParseNode *) handle;
         ts = pn->pn_ts;
-        break;
     }
 
-    JS_ASSERT(!ts || ts->linebuf.limit < ts->linebuf.base + JS_LINE_LIMIT);
-
     /*
-     * We are typically called with non-null ts and null cg from jsparse.c.
-     * We can be called with null ts from the regexp compilation functions.
-     * The code generator (jsemit.c) may pass null ts and non-null cg.
+     * The regexp parser calls us with null ts when the regexp is constructed
+     * at runtime and does not come from a literal embedded in a script.
      */
     if (ts) {
+        JS_ASSERT(ts->linebuf.limit < ts->linebuf.base + JS_LINE_LIMIT);
         report->filename = ts->filename;
         if (pn) {
             report->lineno = pn->pn_pos.begin.lineno;
@@ -639,9 +594,6 @@ ReportCompileErrorNumber(JSContext *cx, void *handle, uintN flags,
         report->tokenptr = report->linebuf + index;
         report->uclinebuf = linechars;
         report->uctokenptr = report->uclinebuf + index;
-    } else if (cg) {
-        report->filename = cg->filename;
-        report->lineno = CG_CURRENT_LINE(cg);
     } else {
         /*
          * If we can't find out where the error was based on the current
@@ -1908,10 +1860,8 @@ skipline:
         }
 
         if (ts->flags & TSF_OPERAND) {
-            JSObject *obj;
             uintN flags;
             JSBool inCharClass = JS_FALSE;
-            JSParsedObjectBox *regexpPob;
 
             INIT_TOKENBUF();
             for (;;) {
@@ -1963,29 +1913,8 @@ skipline:
             if (!TOKENBUF_OK())
                 goto error;
             NUL_TERM_TOKENBUF();
-            obj = js_NewRegExpObject(cx, ts,
-                                     TOKENBUF_BASE(),
-                                     TOKENBUF_LENGTH(),
-                                     flags);
-            if (!obj)
-                goto error;
-
-            regexpPob = js_NewParsedObjectBox(cx, ts->parseContext, obj);
-            if (!regexpPob)
-                goto error;
-
-            /*
-             * If the regexp's script is one-shot, we can avoid the extra
-             * fork-on-exec costs of JSOP_REGEXP by selecting JSOP_OBJECT.
-             * Otherwise, to avoid incorrect proto, parent, and lastIndex
-             * sharing among threads and sequentially across re-execution,
-             * select JSOP_REGEXP.
-             */
-            tp->t_op = (cx->fp->flags & (JSFRAME_EVAL | JSFRAME_COMPILE_N_GO))
-                       ? JSOP_OBJECT
-                       : JSOP_REGEXP;
-            tp->t_pob = regexpPob;
-            tt = TOK_OBJECT;
+            tp->t_reflags = flags;
+            tt = TOK_REGEXP;
             break;
         }
 

@@ -846,12 +846,6 @@ nscolor   newcolor;
 //----------------------------------------------------------------------
 // Thebes Border Rendering Code Start
 
-#ifdef MOZ_WIDGET_GTK2
-// Temporarily disable antialising of borders until the performance
-// is acceptable.
-#define DISABLE_BORDER_ANTIALIAS
-#endif
-
 #undef DEBUG_NEW_BORDERS
 
 #ifdef DEBUG_NEW_BORDERS
@@ -2336,10 +2330,6 @@ DrawBorders(gfxContext *ctx,
     // all the colors are transparent; nothing to do.
     return;
   }
-
-#ifdef DISABLE_BORDER_ANTIALIAS
-  ctx->SetAntialiasMode(gfxContext::MODE_ALIASED);
-#endif
 
   // round oRect and iRect; they're already an integer
   // number of pixels apart and should stay that way after

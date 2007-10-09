@@ -41,7 +41,8 @@
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsNSSCallbacks.h"
 #include "nsNSSCertificate.h"
-#include "nsISSLStatus.h"
+#include "nsNSSCleaner.h"
+#include "nsSSLStatus.h"
 #include "nsNSSIOLayer.h" // for nsNSSSocketInfo
 #include "nsIWebProgressListener.h"
 #include "nsIStringBundle.h"
@@ -69,6 +70,7 @@
 #include "ocsp.h"
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -621,77 +623,6 @@ void nsHTTPListener::send_done_signal()
   }
 }
 
-/* Implementation of nsISSLStatus */
-class nsSSLStatus
-  : public nsISSLStatus
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISSLSTATUS
-
-  nsSSLStatus();
-  virtual ~nsSSLStatus();
-
-  /* public for initilization in this file */
-  nsCOMPtr<nsIX509Cert> mServerCert;
-  PRUint32 mKeyLength;
-  PRUint32 mSecretKeyLength;
-  nsXPIDLCString mCipherName;
-};
-
-NS_IMETHODIMP
-nsSSLStatus::GetServerCert(nsIX509Cert** _result)
-{
-  NS_ASSERTION(_result, "non-NULL destination required");
-
-  *_result = mServerCert;
-  NS_IF_ADDREF(*_result);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSSLStatus::GetKeyLength(PRUint32* _result)
-{
-  NS_ASSERTION(_result, "non-NULL destination required");
-
-  *_result = mKeyLength;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSSLStatus::GetSecretKeyLength(PRUint32* _result)
-{
-  NS_ASSERTION(_result, "non-NULL destination required");
-
-  *_result = mSecretKeyLength;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSSLStatus::GetCipherName(char** _result)
-{
-  NS_ASSERTION(_result, "non-NULL destination required");
-
-  *_result = PL_strdup(mCipherName.get());
-
-  return NS_OK;
-}
-
-nsSSLStatus::nsSSLStatus()
-: mKeyLength(0), mSecretKeyLength(0)
-{
-}
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsSSLStatus, nsISSLStatus)
-
-nsSSLStatus::~nsSSLStatus()
-{
-}
-
-
 char* PR_CALLBACK
 PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   nsNSSShutDownPreventionLock locker;
@@ -839,7 +770,12 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
     infoObject->SetShortSecurityDescription(shortDesc.get());
 
     /* Set the SSL Status information */
-    nsCOMPtr<nsSSLStatus> status = new nsSSLStatus();
+    nsCOMPtr<nsSSLStatus> status;
+    infoObject->GetSSLStatus(getter_AddRefs(status));
+    if (!status) {
+      status = new nsSSLStatus();
+      infoObject->SetSSLStatus(status);
+    }
 
     CERTCertificate *serverCert = SSL_PeerCertificate(fd);
     if (serverCert) {
@@ -852,11 +788,10 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
       }
     }
 
+    status->mHaveKeyLengthAndCipher = PR_TRUE;
     status->mKeyLength = keyLength;
     status->mSecretKeyLength = encryptBits;
     status->mCipherName.Adopt(cipherName);
-
-    infoObject->SetSSLStatus(status);
   }
 
   PR_FREEIF(certOrgName);
@@ -874,9 +809,11 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
   // complete chain at any time it might need it.
   // But we keep only those CA certs in the temp db, that we didn't already know.
   
-  if (SECSuccess == rv) {
-    CERTCertificate *serverCert = SSL_PeerCertificate(fd);
-    if (serverCert) {
+  CERTCertificate *serverCert = SSL_PeerCertificate(fd);
+  CERTCertificateCleaner serverCertCleaner(serverCert);
+
+  if (serverCert) {
+    if (SECSuccess == rv) {
       CERTCertList *certList = CERT_GetCertChainFromCert(serverCert, PR_Now(), certUsageSSLCA);
 
       nsCOMPtr<nsINSSComponent> nssComponent;
@@ -915,7 +852,21 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
       }
 
       CERT_DestroyCertList(certList);
-      CERT_DestroyCertificate(serverCert);
+    }
+    else {
+      // The connection will be terminated, let's provide a minimal SSLStatus
+      // to the caller that contains at least the cert and its status.
+      nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*) fd->higher->secret;
+
+      nsCOMPtr<nsSSLStatus> status;
+      infoObject->GetSSLStatus(getter_AddRefs(status));
+      if (!status) {
+        status = new nsSSLStatus();
+        infoObject->SetSSLStatus(status);
+      }
+      if (status) {
+        status->mServerCert = new nsNSSCertificate(serverCert);
+      }
     }
   }
 

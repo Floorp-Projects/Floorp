@@ -370,34 +370,18 @@ CAccessibleText::scrollSubstringTo(long aStartIndex, long aEndIndex,
 
 STDMETHODIMP
 CAccessibleText::scrollSubstringToPoint(long aStartIndex, long aEndIndex,
-                                        enum IA2CoordinateType aCoordinateType,
+                                        enum IA2CoordinateType aCoordType,
                                         long aX, long aY)
 {
   GET_NSIACCESSIBLETEXT
 
-  nsCOMPtr<nsIAccessible> accessible;
-  PRInt32 startOffset = 0, endOffset = 0;
+  PRUint32 geckoCoordType = (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE) ?
+    nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
+    nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
 
-  // XXX: aEndIndex isn't used.
-  textAcc->GetAttributeRange(aStartIndex, &startOffset, &endOffset,
-                             getter_AddRefs(accessible));
-  if (!accessible)
-    return E_FAIL;
-
-  nsCOMPtr<nsIWinAccessNode> winAccessNode(do_QueryInterface(accessible));
-  if (!winAccessNode)
-    return E_FAIL;
-
-  void **instancePtr = 0;
-  winAccessNode->QueryNativeInterface(IID_IAccessible2, instancePtr);
-  if (!instancePtr)
-    return E_FAIL;
-
-  IAccessible2 *pAccessible2 = static_cast<IAccessible2*>(*instancePtr);
-  HRESULT hr = pAccessible2->scrollToPoint(aCoordinateType, aX, aY);
-  pAccessible2->Release();
-
-  return hr;
+  nsresult rv = textAcc->ScrollSubstringToPoint(aStartIndex, aEndIndex,
+                                                geckoCoordType, aX, aY);
+  return NS_FAILED(rv) ? E_FAIL : S_OK;
 }
 
 STDMETHODIMP

@@ -190,6 +190,8 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
       (nsCRT::strcmp(contentType, "application/xhtml+xml") != 0))
     return NS_ERROR_NOT_IMPLEMENTED;
 
+  nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
+    do_QueryReferent(mScriptHandlingObject);
   nsresult rv;
   if (!mPrincipal) {
     NS_ENSURE_TRUE(!mAttemptedInit, NS_ERROR_NOT_INITIALIZED);
@@ -199,7 +201,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
       do_CreateInstance("@mozilla.org/nullprincipal;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
     
-    rv = Init(prin, nsnull, nsnull);
+    rv = Init(prin, nsnull, nsnull, scriptHandlingObject);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -215,10 +217,11 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 
     stream = bufferedStream;
   }
-  
+
   nsCOMPtr<nsIDOMDocument> domDocument;
   rv = nsContentUtils::CreateDocument(EmptyString(), EmptyString(), nsnull,
                                       mDocumentURI, mBaseURI, mPrincipal,
+                                      scriptHandlingObject,
                                       getter_AddRefs(domDocument));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -313,7 +316,7 @@ nsDOMParser::ParseFromStream(nsIInputStream *stream,
 
 NS_IMETHODIMP
 nsDOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
-                  nsIURI* baseURI)
+                  nsIURI* baseURI, nsIScriptGlobalObject* aScriptObject)
 {
   NS_ENSURE_STATE(!mAttemptedInit);
   mAttemptedInit = PR_TRUE;
@@ -328,6 +331,7 @@ nsDOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
     }
   }
 
+  mScriptHandlingObject = do_GetWeakReference(aScriptObject);
   mPrincipal = principal;
   if (!mPrincipal) {
     nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
@@ -470,7 +474,9 @@ nsDOMParser::Initialize(JSContext *cx, JSObject* obj,
     documentURI = doc->GetDocumentURI();
   }
 
-  return Init(prin, documentURI, baseURI);
+  nsIScriptContext* scriptContext = GetScriptContextFromJSContext(cx);
+  return Init(prin, documentURI, baseURI,
+              scriptContext ? scriptContext->GetGlobalObject() : nsnull);
 }
 
 NS_IMETHODIMP
@@ -506,5 +512,7 @@ nsDOMParser::Init()
                    getter_AddRefs(documentURI), getter_AddRefs(baseURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return Init(prin, documentURI, baseURI);  
+  nsIScriptContext* scriptContext = GetScriptContextFromJSContext(cx);
+  return Init(prin, documentURI, baseURI,
+              scriptContext ? scriptContext->GetGlobalObject() : nsnull);
 }

@@ -375,6 +375,24 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
   nsCSSRendering::DrawDashedSides(0, aRC, dirty, borderStyle, colors, fRect, innerRect, 0, nsnull);
 }
 
+void
+nsListControlFrame::InvalidateFocus()
+{
+  if (mFocused != this)
+    return;
+
+  nsIFrame* containerFrame = GetOptionsContainer();
+  if (containerFrame) {
+    // Invalidating from the containerFrame because that's where our focus
+    // is drawn.
+    // The origin of the scrollport is the origin of containerFrame.
+    nsRect invalidateArea = containerFrame->GetOverflowRect();
+    nsRect emptyFallbackArea(0, 0, GetScrollPortSize().width, CalcFallbackRowHeight(0));
+    invalidateArea.UnionRect(invalidateArea, emptyFallbackArea);
+    containerFrame->Invalidate(invalidateArea);
+  }
+}
+
 //---------------------------------------------------------
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
@@ -851,6 +869,7 @@ nsListControlFrame::SingleSelection(PRInt32 aClickedIndex, PRBool aDoToggle)
   ScrollToIndex(aClickedIndex);
   mStartSelectionIndex = aClickedIndex;
   mEndSelectionIndex = aClickedIndex;
+  InvalidateFocus();
   return wasChanged;
 }
 
@@ -947,6 +966,7 @@ nsListControlFrame::PerformSelection(PRInt32 aClickedIndex,
       } else {
         mEndSelectionIndex = aClickedIndex;
       }
+      InvalidateFocus();
     } else if (aIsControl) {
       wasChanged = SingleSelection(aClickedIndex, PR_TRUE);
     } else {
@@ -1298,13 +1318,15 @@ nsListControlFrame::ResetList(PRBool aAllowScrolling)
 
   mStartSelectionIndex = kNothingSelected;
   mEndSelectionIndex = kNothingSelected;
-
+  InvalidateFocus();
   // Combobox will redisplay itself with the OnOptionSelected event
 } 
  
 void 
 nsListControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
+  InvalidateFocus();
+
   if (aOn) {
     ComboboxFocusSet();
     mFocused = this;
@@ -1312,8 +1334,7 @@ nsListControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
     mFocused = nsnull;
   }
 
-  // Make sure the SelectArea frame gets painted
-  Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
+  InvalidateFocus();
 }
 
 void nsListControlFrame::ComboboxFocusSet()
@@ -1491,6 +1512,7 @@ nsListControlFrame::RemoveOption(nsPresContext* aPresContext, PRInt32 aIndex)
     }    
   }
 
+  InvalidateFocus();
   return NS_OK;
 }
 
@@ -1633,6 +1655,7 @@ nsListControlFrame::OnSetSelectedIndex(PRInt32 aOldIndex, PRInt32 aNewIndex)
   ScrollToIndex(aNewIndex);
   mStartSelectionIndex = aNewIndex;
   mEndSelectionIndex = aNewIndex;
+  InvalidateFocus();
 
 #ifdef ACCESSIBILITY
   FireMenuItemActiveEvent();
@@ -2209,12 +2232,6 @@ nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
       if (NS_SUCCEEDED(GetIndexFromDOMEvent(aMouseEvent, selectedIndex))) {
         PerformSelection(selectedIndex, PR_FALSE, PR_FALSE);
       }
-
-      // Make sure the SelectArea frame gets painted
-      // XXX this shouldn't be needed, but other places in this code do it
-      // and if we don't do this, invalidation doesn't happen when we move out
-      // of the top-level window. We should track this down and fix it --- roc
-      Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
     }
   } else {// XXX - temporary until we get drag events
     if (mButtonDown) {
@@ -2720,6 +2737,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
     if (isControl && charcode != ' ') {
       mStartSelectionIndex = newIndex;
       mEndSelectionIndex = newIndex;
+      InvalidateFocus();
       ScrollToIndex(newIndex);
     } else if (mControlSelectMode && charcode == ' ') {
       wasChanged = SingleSelection(newIndex, PR_TRUE);
@@ -2737,10 +2755,6 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       FireMenuItemActiveEvent();
     }
 #endif
-
-    // Make sure the SelectArea frame gets painted
-    Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_TRUE);
-
   }
 
   return NS_OK;

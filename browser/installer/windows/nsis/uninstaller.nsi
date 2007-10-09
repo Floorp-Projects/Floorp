@@ -35,7 +35,9 @@
 # ***** END LICENSE BLOCK *****
 
 # Required Plugins:
-# ShellLink plugin http://nsis.sourceforge.net/ShellLink_plug-in
+# SetVistaDefaultApp http://nsis.sourceforge.net/SetVistaDefaultApp_plug-in
+# ShellLink          http://nsis.sourceforge.net/ShellLink_plug-in
+# UAC                http://nsis.sourceforge.net/UAC_plug-in
 
 ; Set verbosity to 3 (e.g. no script) to lessen the noise in the build logs
 !verbose 3
@@ -47,6 +49,9 @@ SetCompress off
 CRCCheck on
 
 !addplugindir ./
+
+; USE_UAC_PLUGIN is temporary until Thunderbird has been updated to use the UAC plugin
+!define USE_UAC_PLUGIN
 
 ; prevents compiling of the reg write logging.
 !define NO_LOG
@@ -67,14 +72,13 @@ Var TmpVal
 ; available.
 !include /NONFATAL WinVer.nsh
 !ifdef ___WINVER__NSH___
-  RequestExecutionLevel admin
+  RequestExecutionLevel user
 !else
   !warning "Uninstaller will be created without Vista compatibility.$\n            \
             Upgrade your NSIS installation to at least version 2.22 to resolve."
 !endif
 
 !insertmacro StrFilter
-!insertmacro WordFind
 !insertmacro WordReplace
 
 !insertmacro un.GetParent
@@ -92,21 +96,27 @@ Var TmpVal
 ; post update cleanup.
 VIAddVersionKey "FileDescription" "${BrandShortName} Helper"
 
-!insertmacro AddHandlerValues
+!insertmacro AddDDEHandlerValues
 !insertmacro CleanVirtualStore
 !insertmacro GetLongPath
+!insertmacro GetPathFromString
+!insertmacro IsHandlerForInstallDir
+!insertmacro RegCleanAppHandler
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
 !insertmacro WriteRegDWORD2
 !insertmacro WriteRegStr2
 
 !insertmacro un.CleanVirtualStore
-!insertmacro un.CloseApp
 !insertmacro un.GetLongPath
 !insertmacro un.GetSecondInstallPath
+!insertmacro un.ManualCloseAppPrompt
 !insertmacro un.ParseUninstallLog
+!insertmacro un.RegCleanAppHandler
+!insertmacro un.RegCleanFileHandler
 !insertmacro un.RegCleanMain
 !insertmacro un.RegCleanUninstall
+!insertmacro un.RegCleanProtocolHandler
 !insertmacro un.RemoveQuotesFromPath
 
 !include shared.nsh
@@ -145,20 +155,20 @@ ShowUnInstDetails nevershow
 !insertmacro MUI_UNPAGE_WELCOME
 
 ; Uninstall Confirm Page
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE un.leaveConfirm
 !insertmacro MUI_UNPAGE_CONFIRM
 
 ; Remove Files Page
-!define MUI_PAGE_CUSTOMFUNCTION_PRE un.preInstFiles
 !insertmacro MUI_UNPAGE_INSTFILES
 
 ; Finish Page
+
+; Don't setup the survey controls, functions, etc. when the application has
+; defined NO_UNINSTALL_SURVEY
+!ifndef NO_UNINSTALL_SURVEY
 !define MUI_PAGE_CUSTOMFUNCTION_PRE un.preFinish
 !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
 !define MUI_FINISHPAGE_SHOWREADME ""
-
-; Setup the survey controls, functions, etc. except when the application has
-; defined NO_UNINSTALL_SURVEY
-!ifndef NO_UNINSTALL_SURVEY
 !define MUI_FINISHPAGE_SHOWREADME_TEXT $(SURVEY_TEXT)
 !define MUI_FINISHPAGE_SHOWREADME_FUNCTION un.Survey
 !endif
@@ -179,16 +189,51 @@ Section "Uninstall"
   DetailPrint $(STATUS_UNINSTALL_MAIN)
   SetDetailsPrint none
 
-  ; Remove registry entries for non-existent apps and for apps that point to our
-  ; install location in the Software\Mozilla key and uninstall registry entries
-  ; that point to our install location for both HKCU and HKLM.
-  SetShellVarContext current  ; Sets SHCTX to HKCU
+  ; Delete the app exe to prevent launching the app while we are uninstalling.
+  ClearErrors
+  ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+  ${If} ${Errors}
+    ; If the user closed the application it can take several seconds for it to
+    ; shut down completely. If the application is being used by another user we
+    ; can still delete the files when the system is restarted. 
+    Sleep 5000
+    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
+    ClearErrors
+  ${EndIf}
+
+  SetShellVarContext current  ; Set SHCTX to HKCU
   ${un.RegCleanMain} "Software\Mozilla"
   ${un.RegCleanUninstall}
 
-  SetShellVarContext all  ; Sets SHCTX to HKLM
-  ${un.RegCleanMain} "Software\Mozilla"
-  ${un.RegCleanUninstall}
+  ClearErrors
+  WriteRegStr HKLM "Software\Mozilla\InstallerTest" "InstallerTest" "Test"
+  ${If} ${Errors}
+    StrCpy $TmpVal "HKCU" ; used primarily for logging
+  ${Else}
+    SetShellVarContext all  ; Set SHCTX to HKLM
+    DeleteRegKey HKLM "Software\Mozilla\InstallerTest"
+    StrCpy $TmpVal "HKLM" ; used primarily for logging
+    ${un.RegCleanMain} "Software\Mozilla"
+    ${un.RegCleanUninstall}
+  ${EndIf}
+
+  ${un.RegCleanAppHandler} "FirefoxURL"
+  ${un.RegCleanAppHandler} "FirefoxHTML"
+  ${un.RegCleanProtocolHandler} "ftp"
+  ${un.RegCleanProtocolHandler} "http"
+  ${un.RegCleanProtocolHandler} "https"
+
+  ClearErrors
+  ReadRegStr $R9 HKCR "FirefoxHTML" ""
+  ; Don't clean up the file handlers if the FirefoxHTML key still exists since
+  ; there should be a second installation that may be the default file handler
+  ${If} ${Errors}
+    ${un.RegCleanFileHandler}  ".htm"   "FirefoxHTML"
+    ${un.RegCleanFileHandler}  ".html"  "FirefoxHTML"
+    ${un.RegCleanFileHandler}  ".shtml" "FirefoxHTML"
+    ${un.RegCleanFileHandler}  ".xht"   "FirefoxHTML"
+    ${un.RegCleanFileHandler}  ".xhtml" "FirefoxHTML"
+  ${EndIf}
 
   SetShellVarContext all  ; Set SHCTX to HKLM
   ${un.GetSecondInstallPath} "Software\Mozilla" $R9
@@ -210,9 +255,6 @@ Section "Uninstall"
   ; default browser. Now the key is always updated on install but it is only
   ; removed if it refers to this install location.
   ${If} "$INSTDIR" == "$R1"
-    ; XXXrstrong - if there is another installation of the same app ideally we
-    ; would just modify these values. The GetSecondInstallPath macro could be
-    ; made to provide enough information to do this.
     DeleteRegKey HKLM "Software\Clients\StartMenuInternet\${FileMainEXE}"
     DeleteRegValue HKLM "Software\RegisteredApplications" "${AppRegName}"
   ${EndIf}
@@ -224,8 +266,9 @@ Section "Uninstall"
     StrCpy $0 "Software\Microsoft\MediaPlayer\ShimInclusionList\${FileMainEXE}"
     DeleteRegKey HKLM "$0"
     DeleteRegKey HKCU "$0"
-    StrCpy $0 "MIME\Database\Content Type\application/x-xpinstall;app=firefox"
-    DeleteRegKey HKCR "$0"
+    StrCpy $0 "Software\Classes\MIME\Database\Content Type\application/x-xpinstall;app=firefox"
+    DeleteRegKey HKLM "$0"
+    DeleteRegKey HKCU "$0"
   ${Else}
     ReadRegStr $R1 HKLM "$0" ""
     ${un.RemoveQuotesFromPath} "$R1" $R1
@@ -237,18 +280,27 @@ Section "Uninstall"
     ${EndIf}
   ${EndIf}
 
-  ; Remove directories and files we always control
-  RmDir /r "$INSTDIR\updates"
-  RmDir /r "$INSTDIR\defaults\shortcuts"
-  RmDir /r "$INSTDIR\distribution"
-  Delete "$INSTDIR\removed-files"
+  ; Remove directories and files we always control before parsing the uninstall
+  ; log so empty directories can be removed.
+  ${If} ${FileExists} "$INSTDIR\updates"
+    RmDir /r /REBOOTOK "$INSTDIR\updates"
+  ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\defaults\shortcuts"
+    RmDir /r /REBOOTOK "$INSTDIR\defaults\shortcuts"
+  ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\distribution"
+    RmDir /r /REBOOTOK "$INSTDIR\distribution"
+  ${EndIf}
+  ${If} ${FileExists} "$INSTDIR\removed-files"
+    Delete /REBOOTOK "$INSTDIR\removed-files"
+  ${EndIf}
 
   ; Parse the uninstall log to unregister dll's and remove all installed
   ; files / directories this install is responsible for.
   ${un.ParseUninstallLog}
 
   ; Remove the uninstall directory that we control
-  RmDir /r "$INSTDIR\uninstall"
+  RmDir /r /REBOOTOK "$INSTDIR\uninstall"
 
   ; Remove the installation directory if it is empty
   ${RemoveDir} "$INSTDIR"
@@ -256,6 +308,19 @@ Section "Uninstall"
   ; Remove files that may be left behind by the application in the
   ; VirtualStore directory.
   ${un.CleanVirtualStore}
+
+  ; If firefox.exe was successfully deleted yet we still need to restart to
+  ; remove other files create a dummy firefox.exe.moz-delete to prevent the
+  ; installer from allowing an install without restart when it is required
+  ; to complete an uninstall.
+  ${If} ${RebootFlag}
+    ${Unless} ${FileExists} "$INSTDIR\${FileMainEXE}.moz-delete"
+      FileOpen $0 "$INSTDIR\${FileMainEXE}.moz-delete" w
+      FileWrite $0 "Will be deleted on restart"
+      Delete /REBOOTOK "$INSTDIR\${FileMainEXE}.moz-delete"
+      FileClose $0
+    ${EndUnless}
+  ${EndIf}
 
   ; Refresh desktop icons otherwise the start menu internet item won't be
   ; removed and other ugly things will happen like recreation of the app's
@@ -266,7 +331,7 @@ SectionEnd
 ################################################################################
 # Helper Functions
 
-; Setup the survey controls, functions, etc. except when the application has
+; Don't setup the survey controls, functions, etc. when the application has
 ; defined NO_UNINSTALL_SURVEY
 !ifndef NO_UNINSTALL_SURVEY
 Function un.Survey
@@ -292,38 +357,25 @@ BrandingText " "
 # Page pre and leave functions
 
 ; Checks if the app being uninstalled is running.
-Function un.preInstFiles
-  ; Try to delete the app executable and if we can't delete it try to close the
-  ; app. This allows running an instance that is located in another directory.
+Function un.leaveConfirm
+  ; Try to delete the app executable and if we can't delete it try to find the
+  ; app's message window and prompt the user to close the app. This allows
+  ; running an instance that is located in another directory. If for whatever
+  ; reason there is no message window we will just rename the app's files and
+  ; then remove them on restart if they are in use.
+  StrCpy $TmpVal ""
   ClearErrors
-  ${If} ${FileExists} "$INSTDIR\${FileMainEXE}"
-    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
-  ${EndIf}
+  ${DeleteFile} "$INSTDIR\${FileMainEXE}"
   ${If} ${Errors}
-    ClearErrors
-    ${un.CloseApp} "true" $(WARN_APP_RUNNING_UNINSTALL)
-    ; Delete the app exe to prevent launching the app while we are uninstalling.
-    ClearErrors
-    ${DeleteFile} "$INSTDIR\${FileMainEXE}"
-    ${If} ${Errors}
-      ClearErrors
-      ${un.CloseApp} "true" $(WARN_APP_RUNNING_UNINSTALL)
-      ClearErrors
-      ${DeleteFile} "$INSTDIR\${FileMainEXE}"
-    ${EndIf}
+    ${un.ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_UNINSTALL)"
   ${EndIf}
 FunctionEnd
 
-; When we add an optional action to the finish page the cancel button is
-; enabled. This disables it and leaves the finish button as the only choice.
+!ifndef NO_UNINSTALL_SURVEY
 Function un.preFinish
-  !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "cancelenabled" "0"
-
-  ; Setup the survey controls, functions, etc. except when the application has
-  ; defined NO_UNINSTALL_SURVEY
-  !ifdef NO_UNINSTALL_SURVEY
-    !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
-  !else
+  ; Do not modify the finish page if there is a reboot pending
+  ${Unless} ${RebootFlag}
+    ; Setup the survey controls, functions, etc.
     StrCpy $TmpVal "SOFTWARE\Microsoft\IE Setup\Setup"
     ClearErrors
     ReadRegStr $0 HKLM $TmpVal "Path"
@@ -339,13 +391,20 @@ Function un.preFinish
       GetFullPathName $TmpVal $0
       ${If} ${Errors}
         !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "NumFields" "3"
+      ${Else}
+        ; When we add an optional action to the finish page the cancel button
+        ; is enabled. This disables it and leaves the finish button as the
+        ; only choice.
+        !insertmacro MUI_INSTALLOPTIONS_WRITE "ioSpecial.ini" "settings" "cancelenabled" "0"
       ${EndIf}
     ${EndIf}
-  !endif
+  ${EndUnless}
 FunctionEnd
+!endif
 
 ################################################################################
 # Initialization Functions
+
 Function .onInit
   ${UninstallOnInitCommon}
 FunctionEnd

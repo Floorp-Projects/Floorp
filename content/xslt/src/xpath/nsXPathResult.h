@@ -46,6 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsWeakPtr.h"
+#include "nsCycleCollectionParticipant.h"
 
 // {662f2c9a-c7cd-4cab-9349-e733df5a838c}
 #define NS_IXPATHRESULT_IID \
@@ -100,7 +101,8 @@ public:
     ~nsXPathResult();
 
     // nsISupports interface
-    NS_DECL_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXPathResult, nsIDOMXPathResult)
 
     // nsIDOMXPathResult interface
     NS_DECL_NSIDOMXPATHRESULT
@@ -118,7 +120,7 @@ public:
                            nsINode* aContextNode);
     nsresult GetExprResult(txAExprResult **aExprResult);
     nsresult Clone(nsIXPathResult **aResult);
-
+    void RemoveObserver();
 private:
     PRBool isSnapshot() const
     {

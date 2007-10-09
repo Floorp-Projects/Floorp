@@ -119,6 +119,16 @@ private:
                                         nsIAccessible **aAccessible);
 
   static nsAccessibilityService *gAccessibilityService;
+
+  /**
+   * Does this content node have a universal ARIA property set on it?
+   * A universal ARIA property is one that can be defined on any element even if there is no role.
+   *
+   * @param aContent The content node to test
+   * @param aWeakShell  A weak reference to the pres shell
+   * @return PR_TRUE if there is a universal ARIA property set on the node
+   */
+  PRBool HasUniversalAriaProperty(nsIContent *aContent, nsIWeakReference *aWeakShell);
 };
 
 /**
@@ -340,6 +350,7 @@ static const char kEventTypeNames[][40] = {
   "hypertext changed",                       // EVENT_HYPERTEXT_CHANGED
   "hypertext links count changed",           // EVENT_HYPERTEXT_NLINKS_CHANGED
   "object attribute changed",                // EVENT_OBJECT_ATTRIBUTE_CHANGED
+  "page changed",                            // EVENT_PAGE_CHANGED
   "internal load",                           // EVENT_INTERNAL_LOAD
   "reorder"                                  // EVENT_REORDER
 };

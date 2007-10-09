@@ -336,6 +336,13 @@ public:
   // if a popup manager could not be allocated
   static nsXULPopupManager* GetInstance();
 
+  // get the frame for a content node aContent if the frame's type
+  // matches aFrameType. Otherwise, return null. If aShouldFlush is true,
+  // then the frames are flushed before retrieving the frame.
+  nsIFrame* GetFrameOfTypeForContent(nsIContent* aContent,
+                                     nsIAtom* aFrameType,
+                                     PRBool aShouldFlush);
+
   // given a menu frame, find the prevous or next menu frame. If aPopup is
   // true then navigate a menupopup, from one item on the menu to the previous
   // or next one. This is used for cursor navigation between items in a popup
@@ -576,10 +583,6 @@ public:
 protected:
   nsXULPopupManager();
   ~nsXULPopupManager();
-
-  // get the frame for a content node aContent if the frame's type
-  // matches aFrameType. Otherwise, return null.
-  nsIFrame* GetFrameOfTypeForContent(nsIContent* aContent, nsIAtom* aFrameType);
 
   // get the nsMenuFrame, if any, for the given content node
   nsMenuFrame* GetMenuFrameForContent(nsIContent* aContent);

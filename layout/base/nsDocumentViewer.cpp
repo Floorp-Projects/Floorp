@@ -1727,6 +1727,9 @@ DocumentViewerImpl::SetPreviousViewer(nsIContentViewer* aViewer)
     // link from the chain.  This ensures that at most only 2 documents are alive
     // and undestroyed at any given time (the one that is showing and the one that
     // is loading with painting suppressed).
+    // It's very important that if this ever gets changed the code
+    // before the RestorePresentation call in nsDocShell::InternalLoad
+    // be changed accordingly.
     nsCOMPtr<nsIContentViewer> prevViewer;
     aViewer->GetPreviousViewer(getter_AddRefs(prevViewer));
     if (prevViewer) {
@@ -4057,5 +4060,12 @@ NS_IMETHODIMP DocumentViewerImpl::SetPageMode(PRBool aPageMode, nsIPrintSettings
   mViewManager->EnableRefresh(NS_VMREFRESH_NO_SYNC);
 
   Show();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+DocumentViewerImpl::GetHistoryEntry(nsISHEntry **aHistoryEntry)
+{
+  NS_IF_ADDREF(*aHistoryEntry = mSHEntry);
   return NS_OK;
 }

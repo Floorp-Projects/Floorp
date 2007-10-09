@@ -108,7 +108,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrefetchService, Init)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsOfflineCacheUpdateService,
                                          nsOfflineCacheUpdateService::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOfflineCacheUpdate)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLocalHandlerApp)
+NS_GENERIC_FACTORY_CONSTRUCTOR(PlatformLocalHandlerApp_t)
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include "nsInternetConfigService.h"
@@ -218,7 +218,8 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
   { NS_OFFLINECACHEUPDATE_CLASSNAME, NS_OFFLINECACHEUPDATE_CID, NS_OFFLINECACHEUPDATE_CONTRACTID,
     nsOfflineCacheUpdateConstructor, },
   { "Local Application Handler App", NS_LOCALHANDLERAPP_CID, 
-    NS_LOCALHANDLERAPP_CONTRACTID, nsLocalHandlerAppConstructor, },
+    NS_LOCALHANDLERAPP_CONTRACTID, PlatformLocalHandlerApp_tConstructor, },
+
 #if defined(XP_MAC) || defined(XP_MACOSX)
   { "Internet Config Service", NS_INTERNETCONFIGSERVICE_CID, NS_INTERNETCONFIGSERVICE_CONTRACTID,
     nsInternetConfigServiceConstructor, },

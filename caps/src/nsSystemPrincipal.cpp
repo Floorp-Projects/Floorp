@@ -280,10 +280,20 @@ nsSystemPrincipal::nsSystemPrincipal()
 {
 }
 
+#define SYSTEM_PRINCIPAL_SPEC "[System Principal]"
+
 nsresult
 nsSystemPrincipal::Init()
 {
-    return mJSPrincipals.Init(this, "[System Principal]"); 
+    // Use an nsCString so we only do the allocation once here and then
+    // share with nsJSPrincipals
+    nsCString str(SYSTEM_PRINCIPAL_SPEC);
+    if (!str.EqualsLiteral(SYSTEM_PRINCIPAL_SPEC)) {
+        NS_WARNING("Out of memory initializing system principal");
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    return mJSPrincipals.Init(this, str);
 }
 
 nsSystemPrincipal::~nsSystemPrincipal(void)

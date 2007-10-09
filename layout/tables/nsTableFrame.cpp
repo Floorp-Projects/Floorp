@@ -1883,10 +1883,8 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
     }
     nsIFrame* lastChildReflowed = nsnull;
 
-    nsHTMLReflowState &mutable_rs =
-      const_cast<nsHTMLReflowState&>(aReflowState);
-    PRBool oldSpecialHeightReflow = mutable_rs.mFlags.mSpecialHeightReflow;
-    mutable_rs.mFlags.mSpecialHeightReflow = PR_FALSE;
+    NS_ASSERTION(!aReflowState.mFlags.mSpecialHeightReflow,
+                 "Shouldn't be in special height reflow here!");
 
     // do the pass 2 reflow unless this is a special height reflow and we will be 
     // initiating a special height reflow
@@ -1909,6 +1907,9 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
     if (needToInitiateSpecialReflow && NS_FRAME_IS_COMPLETE(aStatus)) {
       // XXXldb Do we need to set the mVResize flag on any reflow states?
 
+      nsHTMLReflowState &mutable_rs =
+        const_cast<nsHTMLReflowState&>(aReflowState);
+
       // distribute extra vertical space to rows
       CalcDesiredHeight(aReflowState, aDesiredSize); 
       mutable_rs.mFlags.mSpecialHeightReflow = PR_TRUE;
@@ -1929,9 +1930,9 @@ NS_METHOD nsTableFrame::Reflow(nsPresContext*          aPresContext,
       }
       haveDesiredHeight = PR_TRUE;
       reflowedChildren  = PR_TRUE;
-    }
 
-    mutable_rs.mFlags.mSpecialHeightReflow = oldSpecialHeightReflow;
+      mutable_rs.mFlags.mSpecialHeightReflow = PR_FALSE;
+    }
   }
 
   aDesiredSize.width = aReflowState.ComputedWidth() +
@@ -6130,7 +6131,6 @@ nsTableFrame::PaintBCBorders(nsIRenderingContext& aRenderingContext,
   nsTableRowGroupFrame* inFlowRG  = nsnull;
   nsTableRowFrame*      inFlowRow = nsnull;
   // find startRowIndex, endRowIndex, startRowY
-  nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
   PRInt32 rowY = startRowY;
   for (PRUint32 rgX = 0; rgX < rowGroups.Length() && !done; rgX++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgX];

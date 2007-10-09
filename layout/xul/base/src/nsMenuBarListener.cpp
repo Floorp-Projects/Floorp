@@ -109,12 +109,12 @@ void nsMenuBarListener::InitAccessKey()
 
   // Compiled-in defaults, in case we can't get LookAndFeel --
   // mac doesn't have menu shortcuts, other platforms use alt.
-#if !(defined(XP_MAC) || defined(XP_MACOSX))
-  mAccessKey = nsIDOMKeyEvent::DOM_VK_ALT;
-  mAccessKeyMask = MODIFIER_ALT;
-#else
+#ifdef XP_MACOSX
   mAccessKey = 0;
   mAccessKeyMask = 0;
+#else
+  mAccessKey = nsIDOMKeyEvent::DOM_VK_ALT;
+  mAccessKeyMask = MODIFIER_ALT;
 #endif
 
   // Get the menu access key value from prefs, overriding the default:
@@ -249,7 +249,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
           retVal = NS_OK;       // I am consuming event
         }
       }    
-#if !defined(XP_MAC) && !defined(XP_MACOSX)
+#ifndef XP_MACOSX
       // Also need to handle F10 specially on Non-Mac platform.
       else if (keyCode == NS_VK_F10) {
         if ((GetModifiers(keyEvent) & ~MODIFIER_CONTROL) == 0) {
@@ -262,7 +262,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
           return NS_OK; // consume the event
         }
       }
-#endif   // !XP_MAC && !XP_MACOSX
+#endif // !XP_MACOSX
     } 
   }
 

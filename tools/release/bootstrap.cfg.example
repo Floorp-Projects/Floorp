@@ -24,6 +24,7 @@ logDir          = /builds/logs
 mozillaCvsroot  = /builds/cvsmirror/cvsroot
 l10nCvsroot     = /builds/cvsmirror/l10n
 mofoCvsroot     = /builds/cvsmirror/mofo
+anonCvsroot	= :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
 # private staging area 
 stageHome       = /data/cltbld
 updateDir       = /builds/updates
@@ -56,6 +57,8 @@ buildTree       = MozillaTest
 # where QA updates/builds go
 stagingUser     = cltbld
 stagingServer   = stage.mozilla.org
+externalStagingUser     = cltbld
+externalStagingServer   = staging-build-console.build.mozilla.org
 # where beta updates/builds go
 ftpServer       = ftp.mozilla.org
 # where release updates/builds go

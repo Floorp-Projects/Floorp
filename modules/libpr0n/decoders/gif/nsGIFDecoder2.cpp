@@ -72,10 +72,7 @@ mailing address.
 */
 
 #include <stddef.h>
-#include "prtypes.h"
 #include "prmem.h"
-#include "prlog.h"
-#include "GIF2.h"
 
 #include "nsIImage.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -86,8 +83,6 @@ mailing address.
 #include "imgIContainerObserver.h"
 
 #include "imgILoad.h"
-
-#include "imgContainer.h"
 
 #include "gfxColor.h"
 #include "gfxPlatform.h"

@@ -26,6 +26,7 @@
 #   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
 #   Josh Aas <josh@mozilla.com>
 #   Shawn Wilsher <me@shawnwilsher.com> (v3.0)
+#   Edward Lee <edward.lee@engineering.uiuc.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,7 +47,6 @@
 
 const PREF_BDM_CLOSEWHENDONE = "browser.download.manager.closeWhenDone";
 const PREF_BDM_ALERTONEXEOPEN = "browser.download.manager.alertOnEXEOpen";
-const PREF_BDM_RETENTION = "browser.download.manager.retention";
 const PREF_BDM_DISPLAYEDHISTORYDAYS =
   "browser.download.manager.displayedHistoryDays";
 
@@ -71,8 +71,34 @@ var gSearching            = false;
 // not auto-close the window. Tough UI decisions about what is "significant."
 var gUserInteracted = false;
 
+// These strings will be converted to the corresponding ones from the string
+// bundle on startup.
+let gStr = {
+  paused: "paused",
+  statusFormat: "statusFormat2",
+  transferSameUnits: "transferSameUnits",
+  transferDiffUnits: "transferDiffUnits",
+  transferNoTotal: "transferNoTotal",
+  timeMinutesLeft: "timeMinutesLeft",
+  timeSecondsLeft: "timeSecondsLeft",
+  timeFewSeconds: "timeFewSeconds",
+  timeUnknown: "timeUnknown",
+  units: ["bytes", "kilobyte", "megabyte", "gigabyte"],
+
+  fileExecutableSecurityWarningTitle: "fileExecutableSecurityWarningTitle",
+  fileExecutableSecurityWarningDontAsk: "fileExecutableSecurityWarningDontAsk"
+};
+
+// base query used to display download items, use replaceInsert to set WHERE
+let gBaseQuery = "SELECT id, target, name, source, state, startTime, " +
+                        "referrer, currBytes, maxBytes " +
+                 "FROM moz_downloads " +
+                 "WHERE #1 " +
+                 "ORDER BY endTime ASC, startTime ASC";
+
 ///////////////////////////////////////////////////////////////////////////////
 // Utility Functions 
+
 function fireEventForElement(aElement, aEventType)
 {
   var e = document.createEvent("Events");
@@ -81,8 +107,8 @@ function fireEventForElement(aElement, aEventType)
   aElement.dispatchEvent(e);
 }
 
-function createDownloadItem(aID, aFile, aTarget, aURI, aState,
-                            aStatus, aProgress, aStartTime, aReferrer)
+function createDownloadItem(aID, aFile, aTarget, aURI, aState, aProgress,
+                            aStartTime, aReferrer, aCurrBytes, aMaxBytes)
 {
   var dl = document.createElement("richlistitem");
   dl.setAttribute("type", "download");
@@ -93,11 +119,15 @@ function createDownloadItem(aID, aFile, aTarget, aURI, aState,
   dl.setAttribute("target", aTarget);
   dl.setAttribute("uri", aURI);
   dl.setAttribute("state", aState);
-  dl.setAttribute("status", aStatus);
   dl.setAttribute("progress", aProgress);
   dl.setAttribute("startTime", aStartTime);
   if (aReferrer)
     dl.setAttribute("referrer", aReferrer);
+  dl.setAttribute("currBytes", aCurrBytes);
+  dl.setAttribute("maxBytes", aMaxBytes);
+  dl.setAttribute("lastSeconds", Infinity);
+
+  updateStatus(dl);
 
   try {
     var file = getLocalFileFromNativePathOrUrl(aFile);
@@ -118,6 +148,7 @@ function getDownload(aID)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Start/Stop Observers
+
 function downloadCompleted(aDownload) 
 {
   // Wrap this in try...catch since this can be called while shutting down... 
@@ -134,7 +165,7 @@ function downloadCompleted(aDownload)
     if (!gSearching)
       gDownloadsView.insertBefore(dl, gDownloadsOtherTitle.nextSibling);
     else
-      gDownloadsView.removeChild(dl);
+      removeFromView(dl);
 
     // getTypeFromFile fails if it can't find a type for this file.
     try {
@@ -164,13 +195,6 @@ function autoRemoveAndClose(aDownload)
   var pref = Cc["@mozilla.org/preferences-service;1"].
              getService(Ci.nsIPrefBranch);
 
-  if (aDownload && (pref.getIntPref(PREF_BDM_RETENTION) == 0)) {
-    // The download manager backend removes this, but we have to update the UI!
-    var dl = getDownload(aDownload.id);
-    if (dl)
-      dl.parentNode.removeChild(dl);
-  }
-  
   if (gDownloadManager.activeDownloadCount == 0) {
     // For the moment, just use the simple heuristic that if this window was
     // opened by the download process, rather than by the user, it should
@@ -227,7 +251,6 @@ function resumeDownload(aDownload)
 
 function removeDownload(aDownload)
 {
-  removeFromView(aDownload);
   gDownloadManager.removeDownload(aDownload.getAttribute("dlid"));
 }
 
@@ -293,8 +316,8 @@ function openDownload(aDownload)
       var name = aDownload.getAttribute("target");
       var message = strings.getFormattedString("fileExecutableSecurityWarning", [name, name]);
 
-      var title = strings.getString("fileExecutableSecurityWarningTitle");
-      var dontAsk = strings.getString("fileExecutableSecurityWarningDontAsk");
+      let title = gStr.fileExecutableSecurityWarningTitle;
+      let dontAsk = gStr.fileExecutableSecurityWarningDontAsk;
 
       var promptSvc = Cc["@mozilla.org/embedcomp/prompt-service;1"].
                       getService(Ci.nsIPromptService);
@@ -432,6 +455,13 @@ function Startup()
   gDownloadsOtherTitle  = document.getElementById("other-downloads-title");
   gDownloadInfoPopup    = document.getElementById("information");
 
+  // convert strings to those in the string bundle
+  let (sb = document.getElementById("downloadStrings")) {
+    let getStr = function(string) sb.getString(string);
+    for (let [name, value] in Iterator(gStr))
+      gStr[name] = typeof value == "string" ? getStr(value) : value.map(getStr);
+  }
+
   buildDefaultView();
 
   // View event listeners
@@ -446,12 +476,40 @@ function Startup()
   // close and act accordingly
   if (!autoRemoveAndClose())
     gDownloadsView.focus();
+
+  var obs = Components.classes["@mozilla.org/observer-service;1"].
+            getService(Components.interfaces.nsIObserverService);
+  obs.addObserver(gDownloadObserver, "download-manager-remove-download", false);
 }
 
 function Shutdown() 
 {
   gDownloadManager.removeListener(gDownloadListener);
+
+  var obs = Components.classes["@mozilla.org/observer-service;1"].
+            getService(Components.interfaces.nsIObserverService);
+  obs.removeObserver(gDownloadObserver, "download-manager-remove-download");
 }
+
+let gDownloadObserver = {
+  observe: function gdo_observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "download-manager-remove-download":
+        // A null subject here indicates "remove all"
+        if (!aSubject) {
+          // Rebuild the default view
+          buildDefaultView();
+          break;
+        }
+
+        // Otherwise, remove a single download
+        let id = aSubject.QueryInterface(Ci.nsISupportsPRUint32);
+        let dl = getDownload(id.data);
+        removeFromView(dl);
+        break;
+    }
+  }
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // View Context Menus
@@ -662,8 +720,136 @@ function openExternal(aFile)
 ///////////////////////////////////////////////////////////////////////////////
 //// Utility functions
 
+/**
+ * Updates the status for a download item depending on its state
+ *
+ * @param aItem
+ *        The richlistitem that has various download attributes.
+ * @param aDownload
+ *        The nsDownload from the backend. This is an optional parameter, but
+ *        is useful for certain states such as DOWNLOADING.
+ */
+function updateStatus(aItem, aDownload) {
+  let status = "";
+
+  let state = Number(aItem.getAttribute("state"));
+  switch (state) {
+    case Ci.nsIDownloadManager.DOWNLOAD_PAUSED:
+    case Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING:
+      let currBytes = Number(aItem.getAttribute("currBytes"));
+      let maxBytes = Number(aItem.getAttribute("maxBytes"));
+
+      // Update the bytes transferred and bytes total
+      let ([progress, progressUnits] = convertByteUnits(currBytes),
+           [total, totalUnits] = convertByteUnits(maxBytes),
+           transfer) {
+        if (total < 0)
+          transfer = gStr.transferNoTotal;
+        else if (progressUnits == totalUnits)
+          transfer = gStr.transferSameUnits;
+        else
+          transfer = gStr.transferDiffUnits;
+
+        transfer = replaceInsert(transfer, 1, progress);
+        transfer = replaceInsert(transfer, 2, progressUnits);
+        transfer = replaceInsert(transfer, 3, total);
+        transfer = replaceInsert(transfer, 4, totalUnits);
+
+        if (state == Ci.nsIDownloadManager.DOWNLOAD_PAUSED) {
+          status = replaceInsert(gStr.paused, 1, transfer);
+
+          // don't need to process any more for PAUSED
+          break;
+        }
+
+        // Insert 1 is the download progress
+        status = replaceInsert(gStr.statusFormat, 1, transfer);
+      }
+
+      // if we don't have an active download, assume 0 bytes/sec
+      let speed = aDownload ? aDownload.speed : 0;
+
+      // Update the download rate
+      let ([rate, unit] = convertByteUnits(speed)) {
+        // Insert 2 is the download rate
+        status = replaceInsert(status, 2, rate);
+        // Insert 3 is the |unit|/sec
+        status = replaceInsert(status, 3, unit);
+      }
+
+      // Update time remaining.
+      let (remain) {
+        if ((speed > 0) && (maxBytes > 0)) {
+          let seconds = Math.ceil((maxBytes - currBytes) / speed);
+          let lastSec = Number(aItem.getAttribute("lastSeconds"));
+
+          // Reuse the last seconds if the new one is only slighty longer
+          // This avoids jittering seconds, e.g., 41 40 38 40 -> 41 40 38 38
+          // However, large changes are shown, e.g., 41 38 49 -> 41 38 49
+          let (diff = seconds - lastSec) {
+            if (diff > 0 && diff <= 10)
+              seconds = lastSec;
+            else
+              aItem.setAttribute("lastSeconds", seconds);
+          }
+
+          // Be friendly in the last few seconds
+          if (seconds <= 3)
+            remain = gStr.timeFewSeconds;
+          // Show 2 digit seconds starting at 60; otherwise use minutes
+          else if (seconds <= 60)
+            remain = replaceInsert(gStr.timeSecondsLeft, 1, seconds);
+          else
+            remain = replaceInsert(gStr.timeMinutesLeft, 1,
+                                   Math.ceil(seconds / 60));
+        } else {
+          remain = gStr.timeUnknown;
+        }
+
+        // Insert 4 is the time remaining
+        status = replaceInsert(status, 4, remain);
+      }
+
+      break;
+  }
+
+  aItem.setAttribute("status", status);
+}
+
+/**
+ * Converts a number of bytes to the appropriate unit that results in a
+ * number that needs fewer than 4 digits
+ *
+ * @return a pair: [new value with 3 sig. figs., its unit]
+ */
+function convertByteUnits(aBytes)
+{
+  let unitIndex = 0;
+
+  // convert to next unit if it needs 4 digits (after rounding), but only if
+  // we know the name of the next unit
+  while ((aBytes >= 999.5) && (unitIndex < gStr.units.length - 1)) {
+    aBytes /= 1024;
+    unitIndex++;
+  }
+
+  // Get rid of insignificant bits by truncating to 1 or 0 decimal points
+  // 0 -> 0; 1.2 -> 1.2; 12.3 -> 12.3; 123.4 -> 123; 234.5 -> 235
+  aBytes = aBytes.toFixed((aBytes > 0) && (aBytes < 100) ? 1 : 0);
+
+  return [aBytes, gStr.units[unitIndex]];
+}
+
+function replaceInsert(aText, aIndex, aValue)
+{
+  return aText.replace("#" + aIndex, aValue);
+}
+
 function removeFromView(aDownload)
 {
+  // Make sure we have an item to remove
+  if (!aDownload) return;
+
   let index = gDownloadsView.selectedIndex;
   gDownloadsView.removeChild(aDownload);
   gDownloadsView.selectedIndex = Math.min(index, gDownloadsView.itemCount - 1);
@@ -693,7 +879,8 @@ function buildDefaultView()
  * @param aStmt
  *        The compiled SQL statement to build with.  This needs to have the
  *        following columns in this order to work properly:
- *        id, target, name, source, state, startTime, referrer
+ *        id, target, name, source, state, startTime, referrer, currBytes, and
+ *        maxBytes
  *        This statement should be ordered on the endTime ASC so that the end
  *        result is a list of downloads with their end time's descending.
  * @param aRef
@@ -718,11 +905,16 @@ function buildDownloadList(aStmt, aRef)
       let dl = gDownloadManager.getDownload(id);
       percentComplete = dl.percentComplete;
     }
-    let dl = createDownloadItem(id, aStmt.getString(1),
-                                aStmt.getString(2), aStmt.getString(3),
-                                state, "", percentComplete,
+    let dl = createDownloadItem(id,
+                                aStmt.getString(1),
+                                aStmt.getString(2),
+                                aStmt.getString(3),
+                                state,
+                                percentComplete,
                                 Math.round(aStmt.getInt64(5) / 1000),
-                                aStmt.getString(6));
+                                aStmt.getString(6),
+                                aStmt.getInt64(7),
+                                aStmt.getInt64(8));
     if (dl)
       gDownloadsView.insertBefore(dl, aRef.nextSibling);
   }
@@ -742,20 +934,17 @@ function buildActiveDownloadsList()
   var db = gDownloadManager.DBConnection;
   var stmt = gActiveDownloadsQuery;
   if (!stmt) {
-    stmt = gActiveDownloadsQuery =
-      db.createStatement("SELECT id, target, name, source, state, startTime, " +
-                         "referrer " +
-                         "FROM moz_downloads " +
-                         "WHERE state = ?1 " +
-                         "OR state = ?2 " +
-                         "OR state = ?3 " +
-                         "ORDER BY endTime ASC");
+    stmt = db.createStatement(replaceInsert(gBaseQuery, 1,
+      "state = ?1 OR state = ?2 OR state = ?3 OR state = ?4 OR state = ?5"));
+    gActiveDownloadsQuery = stmt;
   }
 
   try {
     stmt.bindInt32Parameter(0, Ci.nsIDownloadManager.DOWNLOAD_NOTSTARTED);
     stmt.bindInt32Parameter(1, Ci.nsIDownloadManager.DOWNLOAD_DOWNLOADING);
     stmt.bindInt32Parameter(2, Ci.nsIDownloadManager.DOWNLOAD_PAUSED);
+    stmt.bindInt32Parameter(3, Ci.nsIDownloadManager.DOWNLOAD_QUEUED);
+    stmt.bindInt32Parameter(4, Ci.nsIDownloadManager.DOWNLOAD_SCANNING);
     buildDownloadList(stmt, gDownloadsActiveTitle);
   } finally {
     stmt.reset();
@@ -775,16 +964,9 @@ function buildDownloadListWithTime(aTime)
   var db = gDownloadManager.DBConnection;
   var stmt = gDownloadListWithTimeQuery;
   if (!stmt) {
-    stmt = gDownloadListWithTimeQuery =
-      db.createStatement("SELECT id, target, name, source, state, startTime, " +
-                         "referrer " +
-                         "FROM moz_downloads " +
-                         "WHERE startTime >= ?1 " +
-                         "AND (state = ?2 " +
-                         "OR state = ?3 " +
-                         "OR state = ?4 " +
-                         "OR state = ?5) " +
-                         "ORDER BY endTime ASC");
+    stmt = db.createStatement(replaceInsert(gBaseQuery, 1, "startTime >= ?1 " +
+      "AND (state = ?2 OR state = ?3 OR state = ?4 OR state = ?5)"));
+    gDownloadListWithTimeQuery = stmt;
   }
 
   try {
@@ -823,12 +1005,9 @@ function buildDownloadListWithSearch(aTerms)
     return;
   }
 
-  var sql = "SELECT id, target, name, source, state, startTime, referrer " +
-            "FROM moz_downloads WHERE name LIKE ?1 ESCAPE '/' " +
-            "AND state != ?2 AND state != ?3 ORDER BY endTime ASC";
-
   var db = gDownloadManager.DBConnection;
-  var stmt = db.createStatement(sql);
+  let stmt = db.createStatement(replaceInsert(gBaseQuery, 1,
+    "name LIKE ?1 ESCAPE '/' AND state != ?2 AND state != ?3"));
 
   try {
     var paramForLike = stmt.escapeStringForLIKE(aTerms, '/');

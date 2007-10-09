@@ -22,5 +22,10 @@ skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == pseudo-classes-02.svg pseudo-classes-02-r
 fails == style-property-not-on-script-element-01.svg pass.svg
 fails-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-font-weight-01.svg text-font-weight-01-ref.svg # bug 386713
 skip-if(MOZ_WIDGET_TOOLKIT=="gtk2") == text-in-link-01.svg text-in-link-01-ref.svg # bug 379600 (crashes linux)
+== text-style-01a.svg text-style-01-ref.svg
+== text-style-01b.svg text-style-01-ref.svg
+== text-style-01c.svg text-style-01-ref.svg
+== text-style-01d.svg text-style-01-ref.svg
+== text-style-01e.svg text-style-01-ref.svg
 == viewport-percent-graphic-user-01.svg pass.svg
 == dynamic-reflow-01.svg dynamic-reflow-01-ref.svg

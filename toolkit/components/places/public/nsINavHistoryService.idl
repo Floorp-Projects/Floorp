@@ -134,8 +134,13 @@ interface nsINavHistoryResultNode : nsISupports
 
   /**
    * Value with undefined meaning for use by the view. Its initial value will
-   * be -1. The tree view uses this value to indicate the row in the tree that
-   * this node is at. Other views may use this value however they choose.
+   * be -1. The result implementation treats nodes with this property set to
+   * -1 as invisible!
+   *
+   * View-implementations may use this value to track the node index in the
+   * view, e.g. the tree view uses this value to indicate the row in the
+   * tree that this node is at. Other views may choose not to use this, but
+   * should inititalize this value to anything but -1 for visible nodes.
    */
   attribute long viewIndex;
 

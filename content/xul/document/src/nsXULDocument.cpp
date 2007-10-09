@@ -3088,12 +3088,10 @@ nsXULDocument::DoneWalking()
 
         NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
 
+        // DispatchContentLoadedEvents undoes the onload-blocking we
+        // did in PrepareToWalk().
         DispatchContentLoadedEvents();
 
-        // Undo the onload-blocking we did in PrepareToWalk().  Note that we do
-        // the unblocking sync because that's what the old code did.
-        UnblockOnload(PR_TRUE);
-        
         mInitialLayoutComplete = PR_TRUE;
 
         // Walk the set of pending load notifications and notify any observers.

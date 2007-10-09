@@ -59,6 +59,7 @@
   windowtype="Browser:page-info"
   onload="onLoadPageInfo()"
   onunload="onUnloadPageInfo()"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
   align="stretch"
   screenX="10" screenY="10"
   width="&pageInfoWindow.width;" height="&pageInfoWindow.height;"
@@ -316,15 +317,15 @@
     <!-- Permissions -->
     <vbox id="permPanel">
       <hbox>
-        <label value="&permissionsFor;" control="hosttext" />
+        <label value="&permissionsFor;" control="hostText" />
         <textbox id="hostText" class="header" readonly="true"
                  crop="end" flex="1"/>
       </hbox>
 
       <vbox id="permList" flex="1">
         <vbox>
-          <label value="&permImage;"/>
-          <hbox>
+          <label value="&permImage;" control="permImageGroup imageRadioGroup"/>
+          <hbox id="permImageGroup" xhtml:role="group">
             <checkbox id="imageDef" command="cmd_imageDef" label="&permUseDefault;"/>
             <spacer flex="1"/>
             <radiogroup id="imageRadioGroup" orient="horizontal">
@@ -334,8 +335,8 @@
           </hbox>
         </vbox>
         <vbox>
-          <label value="&permPopup;"/>
-          <hbox>
+          <label value="&permPopup;" control="permPopupGroup popupRadioGroup"/>
+          <hbox id="permPopupGroup" xhtml:role="group">
             <checkbox id="popupDef" command="cmd_popupDef" label="&permUseDefault;"/>
             <spacer flex="1"/>
             <radiogroup id="popupRadioGroup" orient="horizontal">
@@ -345,8 +346,8 @@
           </hbox>
         </vbox>
         <vbox>
-          <label value="&permCookie;"/>
-          <hbox>
+          <label value="&permCookie;" control="permCookieGroup cookieRadioGroup"/>
+          <hbox id="permCookieGroup" xhtml:role="group">
             <checkbox id="cookieDef" command="cmd_cookieDef" label="&permUseDefault;"/>
             <spacer flex="1"/>
             <radiogroup id="cookieRadioGroup" orient="horizontal">
@@ -357,8 +358,8 @@
           </hbox>
         </vbox>
         <vbox>
-          <label value="&permInstall;"/>
-          <hbox>
+          <label value="&permInstall;" control="permInstallGroup installRadioGroup"/>
+          <hbox id="permInstallGroup" xhtml:role="group">
             <checkbox id="installDef" command="cmd_installDef" label="&permUseDefault;"/>
             <spacer flex="1"/>
             <radiogroup id="installRadioGroup" orient="horizontal">
@@ -427,18 +428,18 @@
           </columns>
           <rows>
             <row><!-- History -->
-              <description id="security-privacy-history-label"
+              <label id="security-privacy-history-label"
                            control="security-privacy-history-value"
-                           class="fieldLabel">&securityView.privacy.history;</description>
+                           class="fieldLabel">&securityView.privacy.history;</label>
               <textbox id="security-privacy-history-value"
                        class="fieldValue"
                        value="&securityView.unknown;"
                        readonly="true"/>
             </row>
             <row><!-- Cookies -->
-              <description id="security-privacy-cookies-label"
+              <label id="security-privacy-cookies-label"
                            control="security-privacy-cookies-value"
-                           class="fieldLabel">&securityView.privacy.cookies;</description>
+                           class="fieldLabel">&securityView.privacy.cookies;</label>
               <hbox>
                 <textbox id="security-privacy-cookies-value"
                          class="fieldValue"
@@ -452,9 +453,9 @@
               </hbox>
             </row>
             <row><!-- Passwords -->
-              <description  id="security-privacy-passwords-label"
+              <label id="security-privacy-passwords-label"
                             control="security-privacy-passwords-value"
-                            class="fieldLabel">&securityView.privacy.passwords;</description>
+                            class="fieldLabel">&securityView.privacy.passwords;</label>
               <hbox>
                 <textbox id="security-privacy-passwords-value"
                          class="fieldValue"

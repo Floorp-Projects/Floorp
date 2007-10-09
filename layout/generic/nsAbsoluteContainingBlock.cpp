@@ -44,6 +44,7 @@
 #include "nsAbsoluteContainingBlock.h"
 #include "nsContainerFrame.h"
 #include "nsIPresShell.h"
+#include "nsHTMLContainerFrame.h"
 #include "nsHTMLParts.h"
 #include "nsPresContext.h"
 
@@ -123,21 +124,26 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
                                        nsIFrame*       aOldFrame)
 {
   NS_ASSERTION(GetChildListName() == aListName, "unexpected child list");
+  nsIFrame* nif = aOldFrame->GetNextInFlow();
+  if (nif) {
+    static_cast<nsContainerFrame*>(nif->GetParent())
+      ->DeleteNextInFlowChild(aOldFrame->PresContext(), nif);
+  }
 
   PRBool result = mAbsoluteFrames.DestroyFrame(aOldFrame);
   NS_ASSERTION(result, "didn't find frame to delete");
-  // Because positioned frames aren't part of a flow, there's no additional
-  // work to do, e.g. reflowing sibling frames. And because positioned frames
-  // have a view, we don't need to repaint
+
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
-nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
-                                  nsPresContext*          aPresContext,
+nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
+                                  nsPresContext*           aPresContext,
                                   const nsHTMLReflowState& aReflowState,
+                                  nsReflowStatus&          aReflowStatus,
                                   nscoord                  aContainingBlockWidth,
                                   nscoord                  aContainingBlockHeight,
+                                  PRBool                   aConstrainHeight,
                                   PRBool                   aCBWidthChanged,
                                   PRBool                   aCBHeightChanged,
                                   nsRect*                  aChildBounds)
@@ -145,23 +151,61 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
   // Initialize OUT parameter
   if (aChildBounds)
     aChildBounds->SetRect(0, 0, 0, 0);
+  nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
 
   PRBool reflowAll = aReflowState.ShouldReflowAllKids();
 
   nsIFrame* kidFrame;
+  nsOverflowContinuationTracker tracker(aPresContext, aDelegatingFrame, PR_TRUE);
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
     if (reflowAll ||
         NS_SUBTREE_DIRTY(kidFrame) ||
         FrameDependsOnContainer(kidFrame, aCBWidthChanged, aCBHeightChanged)) {
       // Reflow the frame
-      nsReflowStatus  kidStatus;
-      ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState, aContainingBlockWidth,
-                          aContainingBlockHeight, kidFrame, kidStatus, aChildBounds);
-    } else if (aChildBounds) {
-      aChildBounds->UnionRect(*aChildBounds, kidFrame->GetOverflowRect() +
-                                             kidFrame->GetPosition());
+      nsReflowStatus  kidStatus = NS_FRAME_COMPLETE;
+      ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
+                          aContainingBlockWidth, aContainingBlockHeight,
+                          aConstrainHeight, kidFrame, kidStatus, aChildBounds);
+      nsIFrame* nextFrame = kidFrame->GetNextInFlow();
+      if (!NS_FRAME_IS_FULLY_COMPLETE(kidStatus)) {
+        // Need a continuation
+        if (!nextFrame) {
+          nsresult rv = nsHTMLContainerFrame::CreateNextInFlow(aPresContext,
+                          aDelegatingFrame, kidFrame, nextFrame);
+          NS_ENSURE_SUCCESS(rv, rv);
+          kidFrame->SetNextSibling(nextFrame->GetNextSibling());
+          nextFrame->SetNextSibling(nsnull);
+        }
+        // Add it as an overflow container.
+        //XXXfr This is a hack to fix some of our printing dataloss.
+        // See bug 154892. Not sure how to do it "right" yet; probably want
+        // to keep continuations within an nsAbsoluteContainingBlock eventually.
+        tracker.Insert(nextFrame, kidStatus);
+        reflowStatus = NS_FRAME_MERGE_INCOMPLETE(reflowStatus, kidStatus);
+      }
+      else {
+        // Delete any continuations
+        if (nextFrame) {
+          tracker.Finish(kidFrame);
+          static_cast<nsContainerFrame*>(nextFrame->GetParent())
+            ->DeleteNextInFlowChild(aPresContext, nextFrame);
+        }
+      }
+    }
+    else {
+      tracker.Skip(kidFrame, reflowStatus);
+      if (aChildBounds) {
+        aChildBounds->UnionRect(*aChildBounds, kidFrame->GetOverflowRect() +
+                                               kidFrame->GetPosition());
+      }
     }
   }
+  // Abspos frames can't cause their parent to be incomplete,
+  // only overflow incomplete.
+  if (NS_FRAME_IS_NOT_COMPLETE(reflowStatus))
+    NS_FRAME_SET_OVERFLOW_INCOMPLETE(reflowStatus);
+
+  aReflowStatus = NS_FRAME_MERGE_INCOMPLETE(reflowStatus, aReflowStatus);
   return NS_OK;
 }
 
@@ -315,6 +359,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                                                const nsHTMLReflowState& aReflowState,
                                                nscoord                  aContainingBlockWidth,
                                                nscoord                  aContainingBlockHeight,
+                                               PRBool                   aConstrainHeight,
                                                nsIFrame*                aKidFrame,
                                                nsReflowStatus&          aStatus,
                                                nsRect*                  aChildBounds)
@@ -370,6 +415,19 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
   // Send the WillReflow() notification and position the frame
   aKidFrame->WillReflow(aPresContext);
+
+  PRBool constrainHeight = (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE)
+    && aConstrainHeight
+       // Don't split if told not to (e.g. for fixed frames)
+    && (aDelegatingFrame->GetType() != nsGkAtoms::positionedInlineFrame)
+       //XXX we don't handle splitting frames for inline absolute containing blocks yet
+    && (aKidFrame->GetRect().y <= aReflowState.availableHeight);
+       // Don't split things below the fold. (Ideally we shouldn't *have*
+       // anything totally below the fold, but we can't position frames
+       // across next-in-flow breaks yet.
+  if (constrainHeight) {
+    kidReflowState.availableHeight = aReflowState.availableHeight - aKidFrame->GetRect().y;
+  }
 
   // Do the reflow
   rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);

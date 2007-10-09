@@ -185,11 +185,11 @@ ShouldIgnoreColors(nsRuleData *aRuleData)
 nsresult
 nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
 {
-    // If we have no data for this struct, then return immediately.
+    // If we have no data for these structs, then return immediately.
     // This optimization should make us return most of the time, so we
     // have to worry much less (although still some) about the speed of
     // the rest of the function.
-    if (!(nsCachedStyleData::GetBitForSID(aRuleData->mSID) & mStyleBits))
+    if (!(aRuleData->mSIDs & mStyleBits))
         return NS_OK;
 
     const char* cursor = Block();
@@ -198,7 +198,8 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
         nsCSSProperty iProp = PropertyAtCursor(cursor);
         NS_ASSERTION(0 <= iProp && iProp < eCSSProperty_COUNT_no_shorthands,
                      "out of range");
-        if (nsCSSProps::kSIDTable[iProp] == aRuleData->mSID) {
+        if (nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[iProp]) &
+            aRuleData->mSIDs) {
             void *prop =
                 nsCSSExpandedDataBlock::RuleDataPropertyAt(aRuleData, iProp);
             switch (nsCSSProps::kTypeTable[iProp]) {

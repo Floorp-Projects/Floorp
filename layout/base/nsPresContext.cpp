@@ -79,6 +79,7 @@
 #include "nsIViewManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsStyleChangeList.h"
+#include "nsRuleNode.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -722,10 +723,14 @@ nsPresContext::ClearStyleDataAndReflow()
     nsStyleChangeList changeList;
     mShell->FrameManager()->ComputeStyleChangeFor(mShell->GetRootFrame(),
                                                   &changeList, nsChangeHint(0));
-    // Tell the style set it's safe to destroy the old rule tree
-    mShell->StyleSet()->EndReconstruct();
     // Tell the frame constructor to process the required changes
     mShell->FrameConstructor()->ProcessRestyledFrames(changeList);
+    // Tell the style set it's safe to destroy the old rule tree.  We
+    // must do this after the ProcessRestyledFrames call in case the
+    // change list has frame reconstructs in it (since frames to be
+    // reconstructed will still have their old style context pointers
+    // until they are destroyed).
+    mShell->StyleSet()->EndReconstruct();
   }
 }
 
@@ -1476,3 +1481,9 @@ nsPresContext::IsChrome()
   return isChrome;
 }
 
+/* virtual */ PRBool
+nsPresContext::HasAuthorSpecifiedBorderOrBackground(nsIFrame *aFrame) const
+{
+  return nsRuleNode::
+           HasAuthorSpecifiedBorderOrBackground(aFrame->GetStyleContext());
+}

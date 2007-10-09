@@ -171,6 +171,12 @@ nsScriptLoader::~nsScriptLoader()
   for (PRInt32 i = 0; i < mPendingRequests.Count(); i++) {
     mPendingRequests[i]->FireScriptAvailable(NS_ERROR_ABORT);
   }
+
+  // Unblock the kids, in case any of them moved to a different document
+  // subtree in the meantime and therefore aren't actually going away.
+  for (PRUint32 j = 0; j < mPendingChildLoaders.Length(); ++j) {
+    mPendingChildLoaders[j]->RemoveExecuteBlocker();
+  }  
 }
 
 NS_IMPL_ISUPPORTS1(nsScriptLoader, nsIStreamLoaderObserver)
@@ -482,7 +488,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
     // If we've got existing pending requests, add ourselves
     // to this list.
-    if (ReadyToExecuteScripts() && mPendingRequests.Count() == 0) {
+    if (mPendingRequests.Count() == 0 && ReadyToExecuteScripts()) {
       return ProcessRequest(request);
     }
   }
@@ -636,7 +642,7 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
 void
 nsScriptLoader::ProcessPendingRequestsAsync()
 {
-  if (mPendingRequests.Count()) {
+  if (mPendingRequests.Count() || !mPendingChildLoaders.IsEmpty()) {
     nsCOMPtr<nsIRunnable> ev = new nsRunnableMethod<nsScriptLoader>(this,
       &nsScriptLoader::ProcessPendingRequests);
 
@@ -648,11 +654,38 @@ void
 nsScriptLoader::ProcessPendingRequests()
 {
   nsRefPtr<nsScriptLoadRequest> request;
-  while (ReadyToExecuteScripts() && mPendingRequests.Count() &&
+  while (mPendingRequests.Count() && ReadyToExecuteScripts() &&
          !(request = mPendingRequests[0])->mLoading) {
     mPendingRequests.RemoveObjectAt(0);
     ProcessRequest(request);
   }
+
+  while (!mPendingChildLoaders.IsEmpty() && ReadyToExecuteScripts()) {
+    nsRefPtr<nsScriptLoader> child = mPendingChildLoaders[0];
+    mPendingChildLoaders.RemoveElementAt(0);
+    child->RemoveExecuteBlocker();
+  }
+}
+
+PRBool
+nsScriptLoader::ReadyToExecuteScripts()
+{
+  // Make sure the SelfReadyToExecuteScripts check is first, so that
+  // we don't block twice on an ancestor.
+  if (!SelfReadyToExecuteScripts()) {
+    return PR_FALSE;
+  }
+  
+  for (nsIDocument* doc = mDocument; doc; doc = doc->GetParentDocument()) {
+    nsScriptLoader* ancestor = doc->ScriptLoader();
+    if (!ancestor->SelfReadyToExecuteScripts() &&
+        ancestor->AddPendingChildLoader(this)) {
+      AddExecuteBlocker();
+      return PR_FALSE;
+    }
+  }
+
+  return PR_TRUE;
 }
 
 
@@ -852,13 +885,13 @@ nsScriptLoader::PrepareLoadedRequest(nsScriptLoadRequest* aRequest,
     // the script has a non-cert principal, the document's principal should be
     // downgraded.
     if (channel) {
-      nsCOMPtr<nsISupports> owner;
-      channel->GetOwner(getter_AddRefs(owner));
-      nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(owner);
-
-      if (principal) {
+      nsCOMPtr<nsIPrincipal> channelPrincipal;
+      nsContentUtils::GetSecurityManager()->
+        GetChannelPrincipal(channel, getter_AddRefs(channelPrincipal));
+      if (channelPrincipal) {
         nsCOMPtr<nsIPrincipal> newPrincipal =
-          MaybeDowngradeToCodebase(mDocument->NodePrincipal(), principal);
+          MaybeDowngradeToCodebase(mDocument->NodePrincipal(),
+                                   channelPrincipal);
 
         mDocument->SetPrincipal(newPrincipal);
       }

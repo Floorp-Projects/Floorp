@@ -61,7 +61,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIFrame.h"
-#include "nsIScrollableFrame.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsPresContext.h"
@@ -441,71 +440,14 @@ nsAccessNode::ScrollToPoint(PRUint32 aCoordinateType, PRInt32 aX, PRInt32 aY)
   if (!frame)
     return NS_ERROR_FAILURE;
 
-  nsPresContext *presContext = frame->PresContext();
-
-  switch (aCoordinateType) {
-    case nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE:
-      break;
-
-    case nsIAccessibleCoordinateType::COORDTYPE_WINDOW_RELATIVE:
-    {
-      nsIntPoint wndCoords = nsAccUtils::GetScreenCoordsForWindow(mDOMNode);
-      aX += wndCoords.x;
-      aY += wndCoords.y;
-      break;
-    }
-
-    case nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE:
-    {
-      nsCOMPtr<nsPIAccessNode> parent;
-
-      nsCOMPtr<nsIAccessible> accessible;
-      nsresult rv = QueryInterface(NS_GET_IID(nsIAccessible),
-                                   getter_AddRefs(accessible));
-      if (NS_SUCCEEDED(rv) && accessible) {
-        nsCOMPtr<nsIAccessible> parentAccessible;
-        accessible->GetParent(getter_AddRefs(parentAccessible));
-        parent = do_QueryInterface(parentAccessible);
-      } else {
-        nsCOMPtr<nsIAccessNode> parentAccessNode;
-        GetParentNode(getter_AddRefs(parentAccessNode));
-        parent = do_QueryInterface(parentAccessNode);
-      }
-
-      NS_ENSURE_STATE(parent);
-      nsIFrame *parentFrame = parent->GetFrame();
-      NS_ENSURE_STATE(parentFrame);
-
-      nsIntRect parentRect = parentFrame->GetScreenRectExternal();
-      aX += parentRect.x;
-      aY += parentRect.y;
-      break;
-    }
-
-    default:
-      return NS_ERROR_INVALID_ARG;
-  }
+  nsIntPoint coords;
+  nsresult rv = nsAccUtils::ConvertToScreenCoords(aX, aY, aCoordinateType,
+                                                  this, &coords);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsIFrame *parentFrame = frame;
-  while (parentFrame = parentFrame->GetParent()) {
-    nsIScrollableFrame *scrollableFrame = nsnull;
-    CallQueryInterface(parentFrame, &scrollableFrame);
-    if (scrollableFrame) {
-      nsIntRect frameRect = frame->GetScreenRectExternal();
-      PRInt32 devDeltaX = aX - frameRect.x;
-      PRInt32 devDeltaY = aY - frameRect.y;
-
-      nsPoint deltaPoint;
-      deltaPoint.x = presContext->DevPixelsToAppUnits(devDeltaX);
-      deltaPoint.y = presContext->DevPixelsToAppUnits(devDeltaY);
-
-      nsPoint scrollPoint = scrollableFrame->GetScrollPosition();
-
-      scrollPoint -= deltaPoint;
-
-      scrollableFrame->ScrollTo(scrollPoint);
-    }
-  }
+  while (parentFrame = parentFrame->GetParent())
+    nsAccUtils::ScrollFrameToPoint(parentFrame, frame, coords);
 
   return NS_OK;
 }
@@ -895,32 +837,26 @@ nsAccessNode::GetLanguage(nsAString& aLanguage)
 PRBool
 nsAccessNode::GetARIARole(nsIContent *aContent, nsString& aRole)
 {
-  nsAutoString prefix;
-  PRBool strictPrefixChecking = PR_TRUE;
   aRole.Truncate();
 
-  if (aContent->IsNodeOfType(nsINode::eHTML)) { // HTML node
+  PRBool allowPrefixLookup = PR_TRUE;
+
+  if (aContent->IsNodeOfType(nsINode::eHTML)) {
     // Allow non-namespaced role attribute in HTML
-    aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, aRole);
-    // Find non-namespaced role attribute on HTML node
+    if (!aContent->GetAttr(kNameSpaceID_None, nsAccessibilityAtoms::role, aRole)) {
+      return PR_FALSE;
+    }
     nsCOMPtr<nsIDOMNSDocument> doc(do_QueryInterface(aContent->GetDocument()));
     if (doc) {
-      // In text/html we are hardcoded to allow the exact prefix "wairole:" to 
-      // always indicate that we are using the WAI roles.
-      // This allows ARIA to be used within text/html where namespaces cannot be defined.
-      // We also now relax the prefix checking, which means no prefix is required to use WAI Roles
       nsAutoString mimeType;
       doc->GetContentType(mimeType);
       if (mimeType.EqualsLiteral("text/html")) {
-        prefix = NS_LITERAL_STRING("wairole:");
-        strictPrefixChecking = PR_FALSE;
+        allowPrefixLookup = PR_FALSE;
       }
     }
   }
-
-  // Try namespaced-role attribute (xhtml or xhtml2 namespace) -- allowed in any kind of content
-  if (aRole.IsEmpty() && !aContent->GetAttr(kNameSpaceID_XHTML, nsAccessibilityAtoms::role, aRole) &&
-      !aContent->GetAttr(kNameSpaceID_XHTML2_Unofficial, nsAccessibilityAtoms::role, aRole)) {
+  // In non-HTML content, use XHTML namespaced-role attribute
+  else if (!aContent->GetAttr(kNameSpaceID_XHTML, nsAccessibilityAtoms::role, aRole)) {
     return PR_FALSE;
   }
 
@@ -929,16 +865,23 @@ nsAccessNode::GetARIARole(nsIContent *aContent, nsString& aRole)
   if (!hasPrefix) {
     // * No prefix* -- not a QName
     // Just return entire string as long as prefix is not currently required
-    if (strictPrefixChecking) {
-      // Prefix was required and we didn't have one
-      aRole.Truncate();
-      return PR_FALSE;
-    }
     return PR_TRUE;
   }
 
-  // * Has prefix * -- is a QName (role="prefix:rolename")
-  if (strictPrefixChecking) {  // Not text/html, we need to actually find the WAIRole prefix
+  // Has prefix -- is a QName (role="prefix:rolename")
+
+  // Check hardcoded 'wairole:' prefix
+  NS_NAMED_LITERAL_STRING(hardcodedWairolePrefix, "wairole:");
+  if (StringBeginsWith(aRole, hardcodedWairolePrefix)) {
+    // The exact prefix "wairole:" is reserved to 
+    // always indicate that we are using WAI roles.
+    aRole.Cut(0, hardcodedWairolePrefix.Length());
+    return PR_TRUE;
+  }
+
+  // Check for prefix mapped with xmlns:prefixname=""
+  nsAutoString prefix;
+  if (allowPrefixLookup) {  // Not text/html, so we will try to find the WAIRole prefix
     // QI to nsIDOM3Node causes some overhead. Unfortunately we need to do this each
     // time there is a prefixed role attribute, because the prefix to namespace mappings
     // can change within any subtree via the xmlns attribute
@@ -948,14 +891,13 @@ nsAccessNode::GetARIARole(nsIContent *aContent, nsString& aRole)
       NS_NAMED_LITERAL_STRING(kWAIRoles_Namespace, "http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#");
       dom3Node->LookupPrefix(kWAIRoles_Namespace, prefix);
       prefix += ':';
+      PRUint32 length = prefix.Length();
+      if (length > 1 && StringBeginsWith(aRole, prefix)) {
+        // Is a QName (role="prefix:rolename"), and prefix matches WAI Role prefix
+        // Trim the WAI Role prefix off
+        aRole.Cut(0, length);
+      }
     }
-  }
-
-  PRUint32 length = prefix.Length();
-  if (length > 1 && StringBeginsWith(aRole, prefix)) {
-    // Is a QName (role="prefix:rolename"), and prefix matches WAI Role prefix
-    // Trim the WAI Role prefix off
-    aRole.Cut(0, length);
   }
 
   return PR_TRUE;

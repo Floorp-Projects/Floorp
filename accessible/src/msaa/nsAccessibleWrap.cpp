@@ -1189,10 +1189,15 @@ nsAccessibleWrap::scrollTo(enum IA2ScrollType aScrollType)
 }
 
 STDMETHODIMP
-nsAccessibleWrap::scrollToPoint(enum IA2CoordinateType coordinateType,
-                                long x, long y)
+nsAccessibleWrap::scrollToPoint(enum IA2CoordinateType aCoordType,
+                                long aX, long aY)
 {
-  return E_NOTIMPL;
+  PRUint32 geckoCoordType = (aCoordType == IA2_COORDTYPE_SCREEN_RELATIVE) ?
+    nsIAccessibleCoordinateType::COORDTYPE_SCREEN_RELATIVE :
+    nsIAccessibleCoordinateType::COORDTYPE_PARENT_RELATIVE;
+
+  return NS_SUCCEEDED(ScrollToPoint(geckoCoordType, aX, aY)) ?
+    S_OK : E_FAIL;
 }
 
 STDMETHODIMP

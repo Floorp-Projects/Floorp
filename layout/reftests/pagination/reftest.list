@@ -1,0 +1,7 @@
+# Sanity check
+== blank.html blank.html
+
+# 
+== abspos-overflow-01.xhtml abspos-overflow-01.ref.xhtml
+== abspos-overflow-01-cols.xhtml abspos-overflow-01-cols.ref.xhtml
+# fails for no apparent reason on my system, uncomment if it passes on yours (my system is weird) == dynamic-abspos-overflow-01-cols.xhtml dynamic-abspos-overflow-01-cols.ref.xhtml

@@ -361,7 +361,7 @@ NS_IMETHODIMP imgContainer::StopAnimation()
 NS_IMETHODIMP imgContainer::ResetAnimation()
 {
   if (mAnimationMode == kDontAnimMode || 
-      !mAnim || mAnim->currentAnimationFrameIndex)
+      !mAnim || mAnim->currentAnimationFrameIndex == 0)
     return NS_OK;
 
   PRBool oldAnimating = mAnim->animating;
@@ -578,9 +578,10 @@ nsresult imgContainer::DoComposite(gfxIImageFrame** aFrameToUse,
                             nextFrameRect.width == mSize.width &&
                             nextFrameRect.height == mSize.height);
 
-  PRBool nextFrameHasAlpha;
-  PRUint32 aBPR;
-  nextFrameHasAlpha = NS_SUCCEEDED(aNextFrame->GetAlphaBytesPerRow(&aBPR));
+  gfx_format nextFormat;
+  aNextFrame->GetFormat(&nextFormat);
+  PRBool nextFrameHasAlpha = (nextFormat != gfxIFormats::RGB) &&
+                             (nextFormat != gfxIFormats::BGR);
 
   // Optimization: Skip compositing if this frame is the same size as the
   //               container and it's fully drawing over prev frame (no alpha)

@@ -238,6 +238,7 @@
             button.setAttribute("image", child.icon.spec);
           button.className = "menuitem-iconic bookmark-item";
           button.node = child;
+          button.node.viewIndex = 0;
           if (before)
             this.insertBefore(button, before);
           else
@@ -521,7 +522,10 @@
           else if (PlacesUtils.nodeIsContainer(aNode)) {
             if (PlacesUtils.nodeIsLivemarkContainer(aNode)) {
               var folder = aNode.itemId;
-              var siteURIString = PlacesUtils.livemarks.getSiteURI(folder).spec;
+              var siteURIString = "";
+              var siteURI = PlacesUtils.livemarks.getSiteURI(folder);
+              if (siteURI)
+                siteURIString = siteURI.spec;
               if (siteURIString) {
                 if (button.getAttribute("siteURI") != siteURIString)
                   button.setAttribute("siteURI", siteURIString);

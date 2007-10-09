@@ -5,16 +5,17 @@
 package Bootstrap::Util;
 
 use File::Temp qw(tempfile tempdir);
-
+use File::Spec::Functions;
 use MozBuild::Util qw(RunShellCommand);
-
 use base qw(Exporter);
 
 our @EXPORT_OK = qw(CvsCatfile CvsTag
                     GetDiffFileList
+                    GetFtpNightlyDir
                     GetLocaleManifest
                     GetBouncerPlatforms GetPatcherPlatforms
-                    GetBouncerToPatcherPlatformMap);
+                    GetBouncerToPatcherPlatformMap
+                    SyncNightlyDirToStaging);
 
 our($DEFAULT_SHELL_TIMEOUT);
 
@@ -59,6 +60,21 @@ sub GetBouncerToPatcherPlatformMap {
 
 sub GetBouncerPlatforms {
    return keys(%PLATFORM_MAP);
+}
+
+##
+# GetFtpNightlyDir - construct the FTP path for pushing builds & updates to
+# returns scalar
+#
+# no mandatory arguments
+##
+
+sub GetFtpNightlyDir {
+    my $config = new Bootstrap::Config();
+    my $product = $config->Get(var => 'product');
+
+    my $nightlyDir = CvsCatfile('/home', 'ftp', 'pub', $product, 'nightly') . '/';
+    return $nightlyDir;  
 }
 
 sub GetPatcherPlatforms {
@@ -237,7 +253,7 @@ sub GetDiffFileList {
     my $newTag = $args{'newTag'};
 
     my $rv = RunShellCommand(command => 'cvs',
-                             args => ['diff', '-uN',
+                             args => ['-q', 'diff', '-uN',
                                       '-r', $firstTag,
                                       '-r', $newTag],
                              dir => $cvsDir,
@@ -270,4 +286,37 @@ sub GetDiffFileList {
     return \@differentFiles;
 }
 
+sub SyncNightlyDirToStaging {
+    my $config = new Bootstrap::Config();
+    my $productTag = $config->Get(var => 'productTag');
+    my $rc = $config->Get(var => 'rc');
+    my $logDir = $config->Get(sysvar => 'logDir');
+    my $stagingUser = $config->Get(var => 'stagingUser');
+    my $stagingServer = $config->Get(var => 'stagingServer');
+    my $externalStagingUser = $config->Get(var => 'externalStagingUser');
+    my $externalStagingServer = $config->Get(var => 'externalStagingServer');
+    
+    my $rcTag = $productTag . '_RC' . $rc;
+    my $pushLog  = catfile($logDir, 'build_' . $rcTag . '-push.log');
+    my $nightlyDir = $config->GetFtpNightlyDir();
+
+    my $command = 'ssh';
+    my @cmdArgs = ($stagingUser . '@' . $stagingServer,
+                   'rsync', '-av', $nightlyDir, 
+                   $externalStagingUser.'@'.$externalStagingServer.':'.
+                   $nightlyDir);
+    print 'Bootstrap::Util::SyncNightlyDirToStaging() Running shell command: '.$command.' '.join(' ', @cmdArgs)."\n";
+
+    my $rv = RunShellCommand(command => $command,
+                             args => \@cmdArgs, 
+                             redirectStderr => 1,
+                             logfile => $pushLog);
+
+    print 'Bootstrap::Util::SyncNightlyDirToStaging() Output: ' . 
+     $rv->{'output'} . "\n";
+    if ($rv->{'exitValue'} != 0) {
+        die "ASSERT: SyncNightlyDirToStaging(): rsync failed\n";
+    }
+
+}
 1;

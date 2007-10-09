@@ -216,7 +216,7 @@ NS_IMETHODIMP
 nsXFormsAccessible::GetName(nsAString& aName)
 {
   nsAutoString name;
-  nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::labelledby, name);
+  nsresult rv = GetTextFromRelationID(eAria_labelledby, name);
   if (NS_SUCCEEDED(rv) && !name.IsEmpty()) {
     aName = name;
     return NS_OK;
@@ -230,8 +230,7 @@ NS_IMETHODIMP
 nsXFormsAccessible::GetDescription(nsAString& aDescription)
 {
   nsAutoString description;
-  nsresult rv = GetTextFromRelationID(nsAccessibilityAtoms::describedby,
-                                      description);
+  nsresult rv = GetTextFromRelationID(eAria_describedby, description);
 
   if (NS_SUCCEEDED(rv) && !description.IsEmpty()) {
     aDescription = description;

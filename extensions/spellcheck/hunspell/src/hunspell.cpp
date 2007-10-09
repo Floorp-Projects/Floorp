@@ -112,7 +112,7 @@ Hunspell::~Hunspell()
     pAMgr = NULL;
     pHMgr = NULL;
 #ifdef MOZILLA_CLIENT
-    delete csconv;
+    free(csconv);
 #endif
     csconv= NULL;
     if (encoding) free(encoding);

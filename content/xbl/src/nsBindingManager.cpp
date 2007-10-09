@@ -385,9 +385,10 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsBindingManager)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsBindingManager)
 
 // Constructors/Destructors
-nsBindingManager::nsBindingManager(void)
+nsBindingManager::nsBindingManager(nsIDocument* aDocument)
   : mProcessingAttachedStack(PR_FALSE),
-    mProcessOnEndUpdate(PR_FALSE)
+    mProcessOnEndUpdate(PR_FALSE),
+    mDocument(aDocument)
 {
   mContentListTable.ops = nsnull;
   mAnonymousNodesTable.ops = nsnull;
@@ -804,7 +805,10 @@ nsBindingManager::AddToAttachedQueue(nsXBLBinding* aBinding)
     mProcessAttachedQueueEvent =
       new nsRunnableMethod<nsBindingManager>(
         this, &nsBindingManager::DoProcessAttachedQueue);
-    NS_DispatchToCurrentThread(mProcessAttachedQueueEvent);
+    nsresult rv = NS_DispatchToCurrentThread(mProcessAttachedQueueEvent);
+    if (NS_SUCCEEDED(rv) && mDocument) {
+      mDocument->BlockOnload();
+    }
   }
 
   return NS_OK;
@@ -819,6 +823,10 @@ nsBindingManager::DoProcessAttachedQueue()
                "Shouldn't have pending bindings!");
   
   mProcessAttachedQueueEvent = nsnull;
+
+  if (mDocument) {
+    mDocument->UnblockOnload(PR_TRUE);
+  }
 }
 
 void
@@ -1378,6 +1386,7 @@ nsBindingManager::NodeWillBeDestroyed(const nsINode *aNode)
 {
   // Make sure to not run any more XBL constructors
   mProcessingAttachedStack = PR_TRUE;
+  mDocument = nsnull;
   
   NS_BINDINGMANAGER_NOTIFY_OBSERVERS(NodeWillBeDestroyed, (aNode));
 }

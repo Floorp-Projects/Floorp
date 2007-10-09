@@ -323,14 +323,6 @@ nsresult nsRootAccessible::AddEventListeners()
     mCaretAccessible = new nsCaretAccessible(this);
   }
 
-  // Fire accessible focus event for pre-existing focus, but wait until all internal
-  // focus events are finished for window initialization.
-  mFireFocusTimer = do_CreateInstance("@mozilla.org/timer;1");
-  if (mFireFocusTimer) {
-    mFireFocusTimer->InitWithFuncCallback(FireFocusCallback, this,
-                                          0, nsITimer::TYPE_ONE_SHOT);
-  }
-
   return nsDocAccessible::AddEventListeners();
 }
 
@@ -388,6 +380,12 @@ void nsRootAccessible::TryFireEarlyLoadEvent(nsIDOMNode *aDocNode)
   if (itemType != nsIDocShellTreeItem::typeContent) {
     return;
   }
+
+  // At minimum, create doc accessible so that events are listened to,
+  // allowing us to see any mutations from a page load handler
+  nsCOMPtr<nsIAccessible> docAccessible;
+  GetAccService()->GetAccessibleFor(aDocNode, getter_AddRefs(docAccessible));
+
   nsCOMPtr<nsIDocShellTreeNode> treeNode(do_QueryInterface(treeItem));
   if (treeNode) {
     PRInt32 subDocuments;
@@ -460,7 +458,7 @@ PRBool nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible,
   nsCOMPtr<nsIContent> finalFocusContent  = do_QueryInterface(aNode);
   if (finalFocusContent) {
     nsAutoString id;
-    if (finalFocusContent->GetAttr(kNameSpaceID_WAIProperties, nsAccessibilityAtoms::activedescendant, id)) {
+    if (nsAccUtils::GetAriaProperty(finalFocusContent, nsnull, eAria_activedescendant, id)) {
       nsCOMPtr<nsIDOMDocument> domDoc;
       aNode->GetOwnerDocument(getter_AddRefs(domDoc));
       if (!domDoc) {
@@ -664,7 +662,7 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   if (eventType.EqualsLiteral("CheckboxStateChange")) {
     PRUint32 state = State(accessible);
 
-    PRBool isEnabled = state & nsIAccessibleStates::STATE_CHECKED;
+    PRBool isEnabled = !!(state & nsIAccessibleStates::STATE_CHECKED);
 
     nsCOMPtr<nsIAccessibleStateChangeEvent> accEvent =
       new nsAccStateChangeEvent(accessible,
@@ -733,6 +731,19 @@ nsresult nsRootAccessible::HandleEventWithTarget(nsIDOMEvent* aEvent,
   else
 #endif
   if (eventType.EqualsLiteral("focus")) {
+    if (aTargetNode == mDOMNode) {
+      // Got focus event for the window, we will make sure that an accessible
+      // focus event for initial focus is fired. We do this on a short timer
+      // because the initial focus may not have been set yet.
+      if (!mFireFocusTimer) {
+        mFireFocusTimer = do_CreateInstance("@mozilla.org/timer;1");
+      }
+      if (mFireFocusTimer) {
+        mFireFocusTimer->InitWithFuncCallback(FireFocusCallback, this,
+                                              0, nsITimer::TYPE_ONE_SHOT);
+      }
+    }
+
     // Keep a reference to the target node. We might want to change
     // it to the individual radio button or selected item, and send
     // the focus event to that.

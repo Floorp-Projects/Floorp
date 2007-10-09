@@ -24,6 +24,7 @@
  *   Ben Goodger <ben@netscape.com> (Original Author)
  *   Shawn Wilsher <me@shawnwilsher.com>
  *   Srirang G Doddihal <brahmana@doddihal.com>
+ *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -91,12 +92,12 @@ static PRBool gStoppingDownloads = PR_FALSE;
 
 static const PRInt64 gUpdateInterval = 400 * PR_USEC_PER_MSEC;
 
-#define DM_SCHEMA_VERSION      4
+#define DM_SCHEMA_VERSION      6
 #define DM_DB_NAME             NS_LITERAL_STRING("downloads.sqlite")
 #define DM_DB_CORRUPT_FILENAME NS_LITERAL_STRING("downloads.sqlite.corrupt")
 
-///////////////////////////////////////////////////////////////////////////////
-// nsDownloadManager
+////////////////////////////////////////////////////////////////////////////////
+//// nsDownloadManager
 
 NS_IMPL_ISUPPORTS2(nsDownloadManager, nsIDownloadManager, nsIObserver)
 
@@ -129,91 +130,24 @@ nsDownloadManager::~nsDownloadManager()
 }
 
 nsresult
-nsDownloadManager::CancelAllDownloads()
+nsDownloadManager::RemoveAllDownloads()
 {
   nsresult rv = NS_OK;
   for (PRInt32 i = mCurrentDownloads.Count() - 1; i >= 0; --i) {
     nsRefPtr<nsDownload> dl = mCurrentDownloads[0];
 
-    nsresult result = CancelDownload(dl->mID);
-    // We want to try the rest of them because they should be canceled if they
-    // can be canceled.
-    if (NS_FAILED(result)) rv = result;
+    nsresult result;
+    if (dl->IsRealPaused())
+      result = mCurrentDownloads.RemoveObject(dl);
+    else
+      result = CancelDownload(dl->mID);
+
+    // Track the failure, but don't miss out on other downloads
+    if (NS_FAILED(result))
+      rv = result;
   }
 
   return rv;
-}
-
-void
-nsDownloadManager::CompleteDownload(nsDownload *aDownload)
-{
-  // we've stopped, so break the cycle we created at download start
-  aDownload->mCancelable = nsnull;
-  aDownload->mEntityID.Truncate();
-
-  // we need do what exthandler would have done for a finished download
-  if (aDownload->mDownloadState == nsIDownloadManager::DOWNLOAD_FINISHED &&
-      aDownload->WasResumed())
-    (void)ExecuteDesiredAction(aDownload);
-
-  (void)mCurrentDownloads.RemoveObject(aDownload);
-}
-
-nsresult
-nsDownloadManager::ExecuteDesiredAction(nsDownload *aDownload)
-{
-  // If we have a temp file and we have resumed, we have to do what the external
-  // helper app service would have done.
-  if (!aDownload->mTempFile || !aDownload->WasResumed())
-    return NS_OK;
-
-  // We need to bail if for some reason the temp file got removed
-  PRBool fileExists;
-  if (NS_FAILED(aDownload->mTempFile->Exists(&fileExists)) || !fileExists)
-    return NS_ERROR_FAILURE;
-
-  // Find out if it was a SaveToDisk kind of a download
-  nsHandlerInfoAction action = nsIMIMEInfo::saveToDisk;
-  nsresult rv;
-  if (aDownload->mMIMEInfo) {
-    rv = aDownload->mMIMEInfo->GetPreferredAction(&action);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  switch (action) {
-    case nsIMIMEInfo::saveToDisk:
-      // For this instance, we need to move the file to the proper location
-      {
-        nsCOMPtr<nsILocalFile> target;
-        rv = aDownload->GetTargetFile(getter_AddRefs(target));
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // MoveTo will fail if the file already exists, but we've already
-        // obtained confirmation from the user that this is OK.  So, we have
-        // to remove it if it exists.
-        if (NS_SUCCEEDED(target->Exists(&fileExists)) && fileExists) {
-          rv = target->Remove(PR_FALSE);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-
-        // extract the new leaf name from the file location
-        nsAutoString fileName;
-        rv = target->GetLeafName(fileName);
-        NS_ENSURE_SUCCESS(rv, rv);
-        nsCOMPtr<nsIFile> dir;
-        rv = target->GetParent(getter_AddRefs(dir));
-        NS_ENSURE_SUCCESS(rv, rv);
-        if (dir) {
-          rv = aDownload->mTempFile->MoveTo(dir, fileName);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
-      }
-      break;
-    default:
-      break;
-  }
-
-  return NS_OK;
 }
 
 nsresult
@@ -356,6 +290,39 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
     }
     // Fallthrough to the next upgrade
 
+  case 4: // This version adds a column to the database (tempPath)
+    {
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "ALTER TABLE moz_downloads "
+        "ADD COLUMN tempPath TEXT"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Finally, update the schemaVersion variable and the database schema
+      schemaVersion = 5;
+      rv = mDBConn->SetSchemaVersion(schemaVersion);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    // Fallthrough to the next upgrade
+
+  case 5:
+    {
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "ALTER TABLE moz_downloads "
+        "ADD COLUMN currBytes INTEGER NOT NULL DEFAULT 0"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = mDBConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+        "ALTER TABLE moz_downloads "
+        "ADD COLUMN maxBytes INTEGER NOT NULL DEFAULT -1"));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Finally, update the schemaVersion variable and the database schema
+      schemaVersion = 6;
+      rv = mDBConn->SetSchemaVersion(schemaVersion);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    // Fallthrough to the next upgrade
+
   // Extra sanity checking for developers
 #ifndef DEBUG
   case DM_SCHEMA_VERSION:
@@ -385,8 +352,8 @@ nsDownloadManager::InitDB(PRBool *aDoImport)
     {
       nsCOMPtr<mozIStorageStatement> stmt;
       rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-        "SELECT id, name, source, target, startTime, endTime, state, referrer, "
-               "entityID "
+        "SELECT id, name, source, target, tempPath, startTime, endTime, state, "
+               "referrer, entityID, currBytes, maxBytes "
         "FROM moz_downloads"), getter_AddRefs(stmt));
       if (NS_SUCCEEDED(rv))
         break;
@@ -424,11 +391,14 @@ nsDownloadManager::CreateTable()
       "name TEXT, "
       "source TEXT, "
       "target TEXT, "
+      "tempPath TEXT, "
       "startTime INTEGER, "
       "endTime INTEGER, "
       "state INTEGER, "
       "referrer TEXT, "
-      "entityID TEXT"
+      "entityID TEXT, "
+      "currBytes INTEGER NOT NULL DEFAULT 0, "
+      "maxBytes INTEGER NOT NULL DEFAULT -1"
     ")"));
 }
 
@@ -564,7 +534,8 @@ nsDownloadManager::ImportDownloadHistory()
     rv = rdfInt->GetValue(&state);
     if (NS_FAILED(rv)) continue;
 
-    (void)AddDownloadToDB(name, source, target, startTime, endTime, state);
+    (void)AddDownloadToDB(name, source, target, EmptyString(), startTime,
+                          endTime, state);
   }
 
   return NS_OK;
@@ -621,6 +592,9 @@ nsDownloadManager::RestoreDatabaseState()
   rv = stmt->BindInt32Parameter(i++, nsIDownloadManager::DOWNLOAD_DOWNLOADING);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Finally, let's retry all of those downloads
   for (nsTArray<PRUint32>::size_type i = 0; i < ids.Length(); i++)
     (void)RetryDownload(ids[i]);
@@ -628,10 +602,38 @@ nsDownloadManager::RestoreDatabaseState()
   return NS_OK;
 }
 
+nsresult
+nsDownloadManager::RestoreActiveDownloads()
+{
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT id "
+    "FROM moz_downloads "
+    "WHERE state = ?1 "
+      "AND LENGTH(entityID) > 0"), getter_AddRefs(stmt));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = stmt->BindInt32Parameter(0, nsIDownloadManager::DOWNLOAD_PAUSED);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasResults;
+  while (NS_SUCCEEDED(stmt->ExecuteStep(&hasResults)) && hasResults) {
+    nsRefPtr<nsDownload> dl;
+    // Keep trying to add even if we fail one, but make sure to return failure.
+    // Additionally, be careful to not call anything that tries to change the
+    // database because we're iterating over a live statement.
+    if (NS_FAILED(GetDownloadFromDB(stmt->AsInt32(0), getter_AddRefs(dl))) ||
+        NS_FAILED(AddToCurrentDownloads(dl)))
+      rv = NS_ERROR_FAILURE;
+  }
+  return rv;
+}
+
 PRInt64
 nsDownloadManager::AddDownloadToDB(const nsAString &aName,
                                    const nsACString &aSource,
                                    const nsACString &aTarget,
+                                   const nsAString &aTempPath,
                                    PRInt64 aStartTime,
                                    PRInt64 aEndTime,
                                    PRInt32 aState)
@@ -639,8 +641,8 @@ nsDownloadManager::AddDownloadToDB(const nsAString &aName,
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "INSERT INTO moz_downloads "
-    "(name, source, target, startTime, endTime, state) "
-    "VALUES (?1, ?2, ?3, ?4, ?5, ?6)"), getter_AddRefs(stmt));
+    "(name, source, target, tempPath, startTime, endTime, state) "
+    "VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, 0);
 
   PRInt32 i = 0;
@@ -654,6 +656,10 @@ nsDownloadManager::AddDownloadToDB(const nsAString &aName,
 
   // target
   rv = stmt->BindUTF8StringParameter(i++, aTarget);
+  NS_ENSURE_SUCCESS(rv, 0);
+
+  // tempPath
+  rv = stmt->BindStringParameter(i++, aTempPath);
   NS_ENSURE_SUCCESS(rv, 0);
 
   // startTime
@@ -694,9 +700,6 @@ nsDownloadManager::Init()
   if (doImport)
     ImportDownloadHistory();
 
-  rv = RestoreDatabaseState();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIStringBundleService> bundleService =
     do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -718,8 +721,17 @@ nsDownloadManager::Init()
 
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_downloads "
-    "SET startTime = ?1, endTime = ?2, state = ?3, referrer = ?4, entityID = ?5 "
-    "WHERE id = ?6"), getter_AddRefs(mUpdateDownloadStatement));
+    "SET startTime = ?1, endTime = ?2, state = ?3, referrer = ?4, "
+        "entityID = ?5, currBytes = ?6, maxBytes = ?7 "
+    "WHERE id = ?8"), getter_AddRefs(mUpdateDownloadStatement));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Do things *after* initializing various download manager properties such as
+  // restoring downloads to a consistent state
+  rv = RestoreDatabaseState();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = RestoreActiveDownloads();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // The following three AddObserver calls must be the last lines in this function,
@@ -731,7 +743,6 @@ nsDownloadManager::Init()
   // These observers will be cleaned up automatically at app shutdown.  We do
   // not bother explicitly breaking the observers because we are a singleton
   // that lives for the duration of the app.
-  //
   mObserverService->AddObserver(this, "quit-application", PR_FALSE);
   mObserverService->AddObserver(this, "quit-application-requested", PR_FALSE);
   mObserverService->AddObserver(this, "offline-requested", PR_FALSE);
@@ -763,7 +774,8 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
   // First, let's query the database and see if it even exists
   nsCOMPtr<mozIStorageStatement> stmt;
   nsresult rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT id, state, startTime, source, target, name, referrer, entityID "
+    "SELECT id, state, startTime, source, target, tempPath, name, referrer, "
+           "entityID, currBytes, maxBytes "
     "FROM moz_downloads "
     "WHERE id = ?1"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -798,6 +810,13 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
   rv = NS_NewURI(getter_AddRefs(dl->mTarget), target);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsString tempPath;
+  stmt->GetString(i++, tempPath);
+  if (!tempPath.IsEmpty()) {
+    rv = NS_NewLocalFile(tempPath, PR_TRUE, getter_AddRefs(dl->mTempFile));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   stmt->GetString(i++, dl->mDisplayName);
 
   nsCString referrer;
@@ -807,31 +826,12 @@ nsDownloadManager::GetDownloadFromDB(PRUint32 aID, nsDownload **retVal)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsILocalFile> file;
-  rv = dl->GetTargetFile(getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRBool fileExists;
-  if (NS_SUCCEEDED(file->Exists(&fileExists)) && fileExists) {
-    if (dl->mDownloadState == nsIDownloadManager::DOWNLOAD_FINISHED) {
-      dl->mPercentComplete = 100;
-
-      PRInt64 size;
-      rv = file->GetFileSize(&size);
-      NS_ENSURE_SUCCESS(rv, rv);
-      dl->mMaxBytes = dl->mCurrBytes = size;
-    } else {
-      dl->mPercentComplete = -1;
-      dl->mMaxBytes = LL_MAXUINT;
-    }
-  } else {
-    dl->mPercentComplete = 0;
-    dl->mMaxBytes = LL_MAXUINT;
-    dl->mCurrBytes = 0;
-  }
-
   rv = stmt->GetUTF8String(i++, dl->mEntityID);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt64 currBytes = stmt->AsInt64(i++);
+  PRInt64 maxBytes = stmt->AsInt64(i++);
+  dl->SetProgressBytes(currBytes, maxBytes);
 
   // Addrefing and returning
   NS_ADDREF(*retVal = dl);
@@ -854,7 +854,7 @@ nsDownloadManager::SendEvent(nsDownload *aDownload, const char *aTopic)
   (void)mObserverService->NotifyObservers(aDownload, aTopic, nsnull);
 }
 
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //// nsIDownloadManager
 
 NS_IMETHODIMP
@@ -1075,7 +1075,7 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
     targetFile->GetLeafName(dl->mDisplayName);
 
   dl->mMIMEInfo = aMIMEInfo;
-  dl->SetStartTime(aStartTime);
+  dl->SetStartTime(aStartTime == 0 ? PR_Now() : aStartTime);
 
   // Creates a cycle that will be broken when the download finishes
   dl->mCancelable = aCancelable;
@@ -1085,7 +1085,13 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   aSource->GetSpec(source);
   aTarget->GetSpec(target);
 
-  PRInt64 id = AddDownloadToDB(dl->mDisplayName, source, target, aStartTime, 0,
+  // Track the temp file for exthandler downloads
+  nsAutoString tempPath;
+  if (aTempFile)
+    aTempFile->GetPath(tempPath);
+
+  PRInt64 id = AddDownloadToDB(dl->mDisplayName, source, target, tempPath,
+                               dl->mStartTime, dl->mLastUpdate,
                                nsIDownloadManager::DOWNLOAD_NOTSTARTED);
   NS_ENSURE_TRUE(id, NS_ERROR_FAILURE);
   dl->mID = id;
@@ -1181,7 +1187,9 @@ nsDownloadManager::RetryDownload(PRUint32 aID)
       dl->mDownloadState != nsIDownloadManager::DOWNLOAD_CANCELED)
     return NS_ERROR_FAILURE;
 
+  // reset time and download progress
   dl->SetStartTime(PR_Now());
+  dl->SetProgressBytes(0, -1);
 
   nsCOMPtr<nsIWebBrowserPersist> wbp =
     do_CreateInstance("@mozilla.org/embedding/browser/nsWebBrowserPersist;1", &rv);
@@ -1224,9 +1232,23 @@ nsDownloadManager::RemoveDownload(PRUint32 aID)
     "DELETE FROM moz_downloads "
     "WHERE id = ?1"), getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
+
   rv = stmt->BindInt64Parameter(0, aID); // unsigned; 64-bit to prevent overflow
   NS_ENSURE_SUCCESS(rv, rv);
-  return stmt->Execute();
+
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISupportsPRUint32> id =
+    do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = id->SetData(aID);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Notify the UI with the topic and download id
+  return mObserverService->NotifyObservers(id,
+                                           "download-manager-remove-download",
+                                           nsnull);
 }
 
 NS_IMETHODIMP
@@ -1250,7 +1272,13 @@ nsDownloadManager::CleanUp()
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  return stmt->Execute();
+  rv = stmt->Execute();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Notify the UI with the topic and null subject to indicate "remove all"
+  return mObserverService->NotifyObservers(nsnull,
+                                           "download-manager-remove-download",
+                                           nsnull);
 }
 
 NS_IMETHODIMP
@@ -1369,15 +1397,19 @@ nsDownloadManager::NotifyListenersOnStateChange(nsIWebProgress *aProgress,
                                  aDownload);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// nsIObserver
+////////////////////////////////////////////////////////////////////////////////
+//// nsIObserver
 
 NS_IMETHODIMP
 nsDownloadManager::Observe(nsISupports *aSubject,
                            const char *aTopic,
                            const PRUnichar *aData)
 {
-  PRInt32 currDownloadCount = mCurrentDownloads.Count();
+  // Count active downloads that aren't real-paused
+  PRInt32 currDownloadCount = 0;
+  for (PRInt32 i = mCurrentDownloads.Count() - 1; i >= 0; --i)
+    if (!mCurrentDownloads[i]->IsRealPaused())
+      currDownloadCount++;
 
   nsresult rv;
   if (strcmp(aTopic, "oncancel") == 0) {
@@ -1393,7 +1425,7 @@ nsDownloadManager::Observe(nsISupports *aSubject,
     gStoppingDownloads = PR_TRUE;
 
     if (currDownloadCount)
-      CancelAllDownloads();
+      (void)RemoveAllDownloads();
 
     // Now that active downloads have been canceled, remove all downloads if
     // the user's retention policy specifies it.
@@ -1484,8 +1516,8 @@ nsDownloadManager::ConfirmCancelDownloads(PRInt32 aCount,
   }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// nsDownload
+////////////////////////////////////////////////////////////////////////////////
+//// nsDownload
 
 NS_IMPL_ISUPPORTS4(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener,
                    nsIWebProgressListener2)
@@ -1494,10 +1526,10 @@ nsDownload::nsDownload() : mDownloadState(nsIDownloadManager::DOWNLOAD_NOTSTARTE
                            mID(0),
                            mPercentComplete(0),
                            mCurrBytes(0),
-                           mMaxBytes(LL_MAXUINT),
+                           mMaxBytes(-1),
                            mStartTime(0),
                            mLastUpdate(PR_Now() - (PRUint32)gUpdateInterval),
-                           mResumedAt(0),
+                           mResumedAt(-1),
                            mSpeed(0)
 {
 }
@@ -1532,7 +1564,8 @@ nsDownload::SetState(DownloadState aState)
     case nsIDownloadManager::DOWNLOAD_BLOCKED:
     case nsIDownloadManager::DOWNLOAD_CANCELED:
     case nsIDownloadManager::DOWNLOAD_FAILED:
-      mDownloadManager->CompleteDownload(this);
+      // Transfers are finished, so break the reference cycle
+      Finalize();
       break;
 #ifdef XP_WIN
     case nsIDownloadManager::DOWNLOAD_SCANNING:
@@ -1546,7 +1579,11 @@ nsDownload::SetState(DownloadState aState)
 #endif
     case nsIDownloadManager::DOWNLOAD_FINISHED:
     {
-      mDownloadManager->CompleteDownload(this);
+      // Do what exthandler would have done if necessary
+      (void)ExecuteDesiredAction();
+
+      // Now that we're done with handling the download, clean it up
+      Finalize();
 
       // Master pref to control this function.
       PRBool showTaskbarAlert = PR_TRUE;
@@ -1585,11 +1622,14 @@ nsDownload::SetState(DownloadState aState)
               // the items they downloaded will have been removed.
               alerts->ShowAlertNotification(
                   NS_LITERAL_STRING(DOWNLOAD_MANAGER_ALERT_ICON), title,
-                  message, !removeWhenDone, EmptyString(), mDownloadManager);
+                  message, !removeWhenDone, EmptyString(), mDownloadManager,
+                  EmptyString());
             }
         }
       }
 #ifdef XP_WIN
+      // Default is to add the download to the system's "recent documents"
+      // list, with a pref to disable.
       PRBool addToRecentDocs = PR_TRUE;
       if (pref)
         pref->GetBoolPref(PREF_BDM_ADDTORECENTDOCS, &addToRecentDocs);
@@ -1598,35 +1638,28 @@ nsDownload::SetState(DownloadState aState)
         LPSHELLFOLDER lpShellFolder = NULL;
 
         if (SUCCEEDED(::SHGetDesktopFolder(&lpShellFolder))) {
-          nsresult rv;
-          nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget, &rv);
-          NS_ENSURE_SUCCESS(rv, rv);
-
+          nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget);
           nsCOMPtr<nsIFile> file;
-          rv = fileURL->GetFile(getter_AddRefs(file));
-          NS_ENSURE_SUCCESS(rv, rv);
-
           nsAutoString path;
-          rv = file->GetPath(path);
-          NS_ENSURE_SUCCESS(rv, rv);
-
-          PRUnichar *filePath = ToNewUnicode(path);
-          LPITEMIDLIST lpItemIDList = NULL;
-          if (SUCCEEDED(lpShellFolder->ParseDisplayName(NULL, NULL, filePath,
-                  NULL, &lpItemIDList, NULL))) {
-            ::SHAddToRecentDocs(SHARD_PIDL, lpItemIDList);
-            ::CoTaskMemFree(lpItemIDList);
+          if (fileURL && fileURL->GetFile(getter_AddRefs(file)) && file && 
+              NS_SUCCEEDED(file->GetPath(path))) {
+            PRUnichar *filePath = ToNewUnicode(path);
+            LPITEMIDLIST lpItemIDList = NULL;
+            if (SUCCEEDED(lpShellFolder->ParseDisplayName(NULL, NULL, filePath,
+                                                          NULL, &lpItemIDList,
+                                                          NULL))) {
+              ::SHAddToRecentDocs(SHARD_PIDL, lpItemIDList);
+              ::CoTaskMemFree(lpItemIDList);
+            }
+            nsMemory::Free(filePath);
           }
-          nsMemory::Free(filePath);
           lpShellFolder->Release();
         }
       }
 #endif
-
       // Now remove the download if the user's retention policy is "Remove when Done"
       if (mDownloadManager->GetRetentionBehavior() == 0)
         mDownloadManager->RemoveDownload(mID);
-
     }
     break;
   default:
@@ -1662,21 +1695,8 @@ nsDownload::SetState(DownloadState aState)
   return NS_OK;
 }
 
-DownloadType
-nsDownload::GetDownloadType()
-{
-  return mDownloadType;
-}
-
-void
-nsDownload::SetStartTime(PRInt64 aStartTime)
-{
-  mStartTime = aStartTime;
-  mLastUpdate = aStartTime;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// nsIWebProgressListener2
+////////////////////////////////////////////////////////////////////////////////
+//// nsIWebProgressListener2
 
 NS_IMETHODIMP
 nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
@@ -1719,12 +1739,10 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
       }
     }
 
-    // Fetch the entityID
+    // Fetch the entityID, but if we can't get it, don't panic (non-resumable)
     nsCOMPtr<nsIResumableChannel> resumableChannel(do_QueryInterface(aRequest));
-    if (resumableChannel) {
-      rv = resumableChannel->GetEntityID(mEntityID);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    if (resumableChannel)
+      (void)resumableChannel->GetEntityID(mEntityID);
 
     // Update the state and the database
     rv = SetState(nsIDownloadManager::DOWNLOAD_DOWNLOADING);
@@ -1752,17 +1770,12 @@ nsDownload::OnProgressChange64(nsIWebProgress *aWebProgress,
     }
   }
 
-  mCurrBytes = aCurTotalProgress;
-  mMaxBytes = aMaxTotalProgress;
+  SetProgressBytes(aCurTotalProgress, aMaxTotalProgress);
 
-  PRUint64 currBytes, maxBytes;
+  // Report to the listener our real sizes
+  PRInt64 currBytes, maxBytes;
   (void)GetAmountTransferred(&currBytes);
   (void)GetSize(&maxBytes);
-  if (aMaxTotalProgress > 0)
-    mPercentComplete = (PRInt32)((PRFloat64)currBytes * 100 / maxBytes + .5);
-  else
-    mPercentComplete = -1;
-
   mDownloadManager->NotifyListenersOnProgressChange(
     aWebProgress, aRequest, currBytes, maxBytes, currBytes, maxBytes, this);
 
@@ -1780,8 +1793,8 @@ nsDownload::OnRefreshAttempted(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// nsIWebProgressListener
+////////////////////////////////////////////////////////////////////////////////
+//// nsIWebProgressListener
 
 NS_IMETHODIMP
 nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
@@ -1808,35 +1821,8 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
                            nsIRequest *aRequest, nsresult aStatus,
                            const PRUnichar *aMessage)
 {
-  if (NS_FAILED(aStatus)) {
-    // We don't want to lose access to our member variables
-    nsRefPtr<nsDownload> kungFuDeathGrip = this;
-
-    (void)SetState(nsIDownloadManager::DOWNLOAD_FAILED);
-
-    // Get title for alert.
-    nsXPIDLString title;
-
-    nsCOMPtr<nsIStringBundle> bundle = mDownloadManager->mBundle;
-    bundle->GetStringFromName(NS_LITERAL_STRING("downloadErrorAlertTitle").get(),
-                              getter_Copies(title));
-
-    // Get Download Manager window, to be parent of alert.
-    nsresult rv;
-    nsCOMPtr<nsIWindowMediator> wm =
-      do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIDOMWindowInternal> dmWindow;
-    wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(),
-                            getter_AddRefs(dmWindow));
-
-    // Show alert.
-    nsCOMPtr<nsIPromptService> prompter =
-      do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    prompter->Alert(dmWindow, title, aMessage);
-  }
-
+  if (NS_FAILED(aStatus))
+    return FailDownload(aStatus, aMessage);
   return NS_OK;
 }
 
@@ -1845,10 +1831,6 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
                           nsIRequest *aRequest, PRUint32 aStateFlags,
                           nsresult aStatus)
 {
-  // Record the start time only if it hasn't been set.
-  if (mStartTime == 0 && (aStateFlags & STATE_START))
-    SetStartTime(PR_Now());
-
   // We don't want to lose access to our member variables
   nsRefPtr<nsDownload> kungFuDeathGrip = this;
 
@@ -1870,19 +1852,41 @@ nsDownload::OnStateChange(nsIWebProgress *aWebProgress,
         (void)SetState(nsIDownloadManager::DOWNLOAD_BLOCKED);
       }
     }
-  } else if (aStateFlags & STATE_STOP) {
-    if (IsFinishable()) {
-      // Set file size at the end of a transfer (for unknown transfer amounts)
-      if (mMaxBytes == LL_MAXUINT)
+  } else if ((aStateFlags & STATE_STOP) && IsFinishable()) {
+    if (NS_SUCCEEDED(aStatus)) {
+      // We can't completely trust the bytes we've added up because we might be
+      // missing on some/all of the progress updates (especially from cache).
+      // Our best bet is the file itself, but if for some reason it's gone, the
+      // next best is what we've calculated.
+      PRInt64 fileSize;
+      nsCOMPtr<nsILocalFile> file;
+      //  We need a nsIFile clone to deal with file size caching issues. :(
+      nsCOMPtr<nsIFile> clone;
+      if (NS_SUCCEEDED(GetTargetFile(getter_AddRefs(file))) &&
+          NS_SUCCEEDED(file->Clone(getter_AddRefs(clone))) &&
+          NS_SUCCEEDED(clone->GetFileSize(&fileSize)) && fileSize > 0) {
+        mCurrBytes = mMaxBytes = fileSize;
+
+        // If we resumed, keep the fact that we did and fix size calculations
+        if (WasResumed())
+          mResumedAt = 0;
+      } else if (mMaxBytes == -1) {
         mMaxBytes = mCurrBytes;
+      } else {
+        mCurrBytes = mMaxBytes;
+      }
 
       mPercentComplete = 100;
+      mLastUpdate = PR_Now();
 
 #ifdef XP_WIN
       (void)SetState(nsIDownloadManager::DOWNLOAD_SCANNING);
 #else
       (void)SetState(nsIDownloadManager::DOWNLOAD_FINISHED);
 #endif
+    } else {
+      // We failed for some unknown reason -- fail with a generic message
+      (void)FailDownload(aStatus, nsnull);
     }
   }
 
@@ -1898,8 +1902,8 @@ nsDownload::OnSecurityChange(nsIWebProgress *aWebProgress,
   return NS_OK;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// nsIDownload
+////////////////////////////////////////////////////////////////////////////////
+//// nsIDownload
 
 NS_IMETHODIMP
 nsDownload::Init(nsIURI *aSource,
@@ -1967,16 +1971,16 @@ nsDownload::GetPercentComplete(PRInt32 *aPercentComplete)
 }
 
 NS_IMETHODIMP
-nsDownload::GetAmountTransferred(PRUint64 *aAmountTransferred)
+nsDownload::GetAmountTransferred(PRInt64 *aAmountTransferred)
 {
-  *aAmountTransferred = mCurrBytes + mResumedAt;
+  *aAmountTransferred = mCurrBytes + (WasResumed() ? mResumedAt : 0);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDownload::GetSize(PRUint64 *aSize)
+nsDownload::GetSize(PRInt64 *aSize)
 {
-  *aSize = mMaxBytes + (mMaxBytes != LL_MAXUINT ? mResumedAt : 0);
+  *aSize = mMaxBytes + (WasResumed() && mMaxBytes != -1 ? mResumedAt : 0);
   return NS_OK;
 }
 
@@ -2022,6 +2026,109 @@ nsDownload::GetReferrer(nsIURI **referrer)
 {
   NS_IF_ADDREF(*referrer = mReferrer);
   return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//// nsDownload Helper Functions
+
+void
+nsDownload::Finalize()
+{
+  // We're stopping, so break the cycle we created at download start
+  mCancelable = nsnull;
+
+  // Reset values that aren't needed anymore, so the DB can be updated as well
+  mEntityID.Truncate();
+
+  // Remove ourself from the active downloads
+  (void)mDownloadManager->mCurrentDownloads.RemoveObject(this);
+}
+
+nsresult
+nsDownload::ExecuteDesiredAction()
+{
+  // If we have a temp file and we have resumed, we have to do what the
+  // external helper app service would have done.
+  if (!mTempFile || !WasResumed())
+    return NS_OK;
+
+  // We need to bail if for some reason the temp file got removed
+  PRBool fileExists;
+  if (NS_FAILED(mTempFile->Exists(&fileExists)) || !fileExists)
+    return NS_ERROR_FILE_NOT_FOUND;
+
+  // Assume an unknown action is save to disk
+  nsHandlerInfoAction action = nsIMIMEInfo::saveToDisk;
+  if (mMIMEInfo) {
+    nsresult rv = mMIMEInfo->GetPreferredAction(&action);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsresult ret = NS_OK;
+  switch (action) {
+    case nsIMIMEInfo::saveToDisk:
+      // Move the file to the proper location
+      ret = MoveTempToTarget();
+      break;
+    default:
+      break;
+  }
+
+  return ret;
+}
+
+nsresult
+nsDownload::MoveTempToTarget()
+{
+  nsCOMPtr<nsILocalFile> target;
+  nsresult rv = GetTargetFile(getter_AddRefs(target));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // MoveTo will fail if the file already exists, but we've already obtained
+  // confirmation from the user that this is OK, so remove it if it exists.
+  PRBool fileExists;
+  if (NS_SUCCEEDED(target->Exists(&fileExists)) && fileExists) {
+    rv = target->Remove(PR_FALSE);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Extract the new leaf name from the file location
+  nsAutoString fileName;
+  rv = target->GetLeafName(fileName);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIFile> dir;
+  rv = target->GetParent(getter_AddRefs(dir));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mTempFile->MoveTo(dir, fileName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+void
+nsDownload::SetStartTime(PRInt64 aStartTime)
+{
+  mStartTime = aStartTime;
+  mLastUpdate = aStartTime;
+}
+
+void
+nsDownload::SetProgressBytes(PRInt64 aCurrBytes, PRInt64 aMaxBytes)
+{
+  mCurrBytes = aCurrBytes;
+  mMaxBytes = aMaxBytes;
+
+  // Get the real bytes that include resume position
+  PRInt64 currBytes, maxBytes;
+  (void)GetAmountTransferred(&currBytes);
+  (void)GetSize(&maxBytes);
+
+  if (currBytes == maxBytes)
+    mPercentComplete = 100;
+  else if (maxBytes <= 0)
+    mPercentComplete = -1;
+  else
+    mPercentComplete = (PRInt32)((PRFloat64)currBytes / maxBytes * 100 + .5);
 }
 
 nsresult
@@ -2085,21 +2192,22 @@ nsDownload::RealResume()
   rv = NS_NewChannel(getter_AddRefs(channel), mSource, nsnull, nsnull, ir);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Get the size of the temporary or target file to be used as offset.
-  PRInt64 fileSize;
+  // Make sure we can get a file, either the temporary or the real target, for
+  // both purposes of file size and a target to write to
   nsCOMPtr<nsILocalFile> targetLocalFile(mTempFile);
   if (!targetLocalFile) {
     rv = GetTargetFile(getter_AddRefs(targetLocalFile));
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // We need to get a new nsIFile though because of caching issues with the
-  // file size.  Cloning it takes care of this :(
+  // Get the file size to be used as an offset, but if anything goes wrong
+  // along the way, we'll silently restart at 0.
+  PRInt64 fileSize;
+  //  We need a nsIFile clone to deal with file size caching issues. :(
   nsCOMPtr<nsIFile> clone;
-  rv = targetLocalFile->Clone(getter_AddRefs(clone));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = clone->GetFileSize(&fileSize);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(targetLocalFile->Clone(getter_AddRefs(clone))) ||
+      NS_FAILED(clone->GetFileSize(&fileSize)))
+    fileSize = 0;
 
   // Set the channel to resume at the right position along with the entityID
   nsCOMPtr<nsIResumableChannel> resumableChannel(do_QueryInterface(channel));
@@ -2108,10 +2216,12 @@ nsDownload::RealResume()
   rv = resumableChannel->ResumeAt(fileSize, mEntityID);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // If we know the max size, we know what it should be when resuming
+  PRInt64 maxBytes;
+  GetSize(&maxBytes);
+  SetProgressBytes(0, maxBytes != -1 ? maxBytes - fileSize : -1);
   // Track where we resumed because progress notifications restart at 0
   mResumedAt = fileSize;
-  mCurrBytes = 0;
-  mMaxBytes = LL_MAXUINT;
 
   // Set the referrer
   if (mReferrer) {
@@ -2157,7 +2267,7 @@ nsDownload::IsResumable()
 PRBool
 nsDownload::WasResumed()
 {
-  return mResumedAt > 0;
+  return mResumedAt != -1;
 }
 
 PRBool
@@ -2216,9 +2326,60 @@ nsDownload::UpdateDB()
   rv = stmt->BindUTF8StringParameter(i++, mEntityID);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // currBytes
+  PRInt64 currBytes;
+  (void)GetAmountTransferred(&currBytes);
+  rv = stmt->BindInt64Parameter(i++, currBytes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // maxBytes
+  PRInt64 maxBytes;
+  (void)GetSize(&maxBytes);
+  rv = stmt->BindInt64Parameter(i++, maxBytes);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // id
   rv = stmt->BindInt64Parameter(i++, mID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return stmt->Execute();
+}
+
+nsresult
+nsDownload::FailDownload(nsresult aStatus, const PRUnichar *aMessage)
+{
+  // Grab the bundle before potentially losing our member variables
+  nsCOMPtr<nsIStringBundle> bundle = mDownloadManager->mBundle;
+
+  (void)SetState(nsIDownloadManager::DOWNLOAD_FAILED);
+
+  // Get title for alert.
+  nsXPIDLString title;
+  nsresult rv = bundle->GetStringFromName(
+    NS_LITERAL_STRING("downloadErrorAlertTitle").get(), getter_Copies(title));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get a generic message if we weren't supplied one
+  nsXPIDLString message;
+  message = aMessage;
+  if (message.IsEmpty()) {
+    rv = bundle->GetStringFromName(
+      NS_LITERAL_STRING("downloadErrorGeneric").get(), getter_Copies(message));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // Get Download Manager window to be parent of alert
+  nsCOMPtr<nsIWindowMediator> wm =
+    do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMWindowInternal> dmWindow;
+  rv = wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(),
+                               getter_AddRefs(dmWindow));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Show alert
+  nsCOMPtr<nsIPromptService> prompter =
+    do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return prompter->Alert(dmWindow, title, message);
 }

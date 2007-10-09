@@ -51,10 +51,6 @@
 <!ENTITY  rememberChoice.label        "Do this automatically for files like this from now on.">
 <!ENTITY  rememberChoice.accesskey    "a">
 
-<!ENTITY  settingsChange.label        "Settings can be changed in the Content section of Tools, Options.">
-<!ENTITY  settingsChangeMac.label     "Settings can be changed in the Content section of &brandShortName;, Preferences.">
-<!ENTITY  settingsChangeUnix.label    "Settings can be changed in the Content section of Edit, Preferences.">
-
 <!ENTITY  whichIsA.label              "which is a:">
 
 <!ENTITY  chooseHandlerMac.label      "Choose...">

@@ -354,7 +354,7 @@ var BookmarkPropertiesPanel = {
 
     this._folderMenuList = this._element("folderMenuList");
     this._folderTree = this._element("folderTree");
-    if (isElementVisible(this._folderMenuList))
+    if (!this._element("folderRow").hidden)
       this._initFolderMenuList();
 
     window.sizeToContent();
@@ -896,7 +896,7 @@ var BookmarkPropertiesPanel = {
    */
   _getInsertionPointDetails: function BPP__getInsertionPointDetails() {
     var containerId, indexInContainer = -1;
-    if (isElementVisible(this._folderMenuList))
+    if (!this._element("folderRow").hidden)
       containerId = this._getFolderIdFromMenuList();
     else {
       containerId = this._defaultInsertionPoint.itemId;

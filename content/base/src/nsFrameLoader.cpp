@@ -247,10 +247,8 @@ nsFrameLoader::Destroy()
       nsCOMPtr<nsIDocShellTreeItem> parentItem;
       ourItem->GetParent(getter_AddRefs(parentItem));
       nsCOMPtr<nsIDocShellTreeOwner> owner = do_GetInterface(parentItem);
-      nsCOMPtr<nsIDocShellTreeOwner_MOZILLA_1_8_BRANCH> owner2 =
-        do_QueryInterface(owner);
-      if (owner2) {
-        owner2->ContentShellRemoved(ourItem);
+      if (owner) {
+        owner->ContentShellRemoved(ourItem);
       }
     }
   }
@@ -372,19 +370,14 @@ nsFrameLoader::EnsureDocShell()
       // this some other way.....  Not sure how yet.
       nsCOMPtr<nsIDocShellTreeOwner> parentTreeOwner;
       parentAsItem->GetTreeOwner(getter_AddRefs(parentTreeOwner));
-      nsCOMPtr<nsIDocShellTreeOwner_MOZILLA_1_8_BRANCH> owner2 =
-        do_QueryInterface(parentTreeOwner);
 
       PRBool is_primary = value.LowerCaseEqualsLiteral("content-primary");
 
-      if (owner2) {
+      if (parentTreeOwner) {
         PRBool is_targetable = is_primary ||
           value.LowerCaseEqualsLiteral("content-targetable");
-        owner2->ContentShellAdded2(docShellAsItem, is_primary, is_targetable,
-                                   value);
-      } else if (parentTreeOwner) {
         parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary,
-                                           value.get());
+                                            is_targetable, value);
       }
     }
 

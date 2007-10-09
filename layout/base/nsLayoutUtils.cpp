@@ -1134,8 +1134,10 @@ nsIFrame*
 nsLayoutUtils::GetParentOrPlaceholderFor(nsFrameManager* aFrameManager,
                                          nsIFrame* aFrame)
 {
-  if (aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
+  if ((aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
+      && !(aFrame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
     return aFrameManager->GetPlaceholderFrameFor(aFrame);
+  }
   return aFrame->GetParent();
 }
 
@@ -1508,7 +1510,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
 
   if (boxSizing == NS_STYLE_BOX_SIZING_PADDING) {
     min += coordOutsideWidth;
-    result += coordOutsideWidth;
+    result = NSCoordSaturatingAdd(result, coordOutsideWidth);
     pctTotal += pctOutsideWidth;
 
     coordOutsideWidth = 0;
@@ -1519,7 +1521,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
 
   if (boxSizing == NS_STYLE_BOX_SIZING_BORDER) {
     min += coordOutsideWidth;
-    result += coordOutsideWidth;
+    result = NSCoordSaturatingAdd(result, coordOutsideWidth);
     pctTotal += pctOutsideWidth;
 
     coordOutsideWidth = 0;
@@ -1530,7 +1532,7 @@ nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
   pctOutsideWidth += offsets.hPctMargin;
 
   min += coordOutsideWidth;
-  result += coordOutsideWidth;
+  result = NSCoordSaturatingAdd(result, coordOutsideWidth);
   pctTotal += pctOutsideWidth;
 
   nscoord w;

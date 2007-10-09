@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -61,8 +61,8 @@ variable            description
                     environment 
                     variable definitions to be included.
 
-                    note that the environment variables should have the same 
-                    names as in the "variable" column.
+note that the environment variables should have the same names as in the 
+"variable" column.
 
 EOF
     exit 1
@@ -71,14 +71,14 @@ EOF
 unset product branch executablepath directory datafiles
 
 while getopts $options optname ; 
-do 
-    case $optname in
-        p) product=$OPTARG;;
-        b) branch=$OPTARG;;
-        x) executablepath=$OPTARG;;
-        D) directory=$OPTARG;;
-        d) datafiles=$OPTARG;;
-    esac
+  do 
+  case $optname in
+      p) product=$OPTARG;;
+      b) branch=$OPTARG;;
+      x) executablepath=$OPTARG;;
+      D) directory=$OPTARG;;
+      d) datafiles=$OPTARG;;
+  esac
 done
 
 # include environment variables

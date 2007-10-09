@@ -106,30 +106,38 @@ XPCWrapper::Enumerate(JSContext *cx, JSObject *wrapperObj, JSObject *innerObj)
 
   JSBool ok = JS_TRUE;
 
-  do {
-    JSIdArray *ida = JS_Enumerate(cx, innerObj);
-    if (!ida) {
-      return JS_FALSE;
+  JSIdArray *ida = JS_Enumerate(cx, innerObj);
+  if (!ida) {
+    return JS_FALSE;
+  }
+
+  for (jsint i = 0, n = ida->length; i < n; i++) {
+    JSObject *pobj;
+    JSProperty *prop;
+
+    // Let OBJ_LOOKUP_PROPERTY, in particular our NewResolve hook,
+    // figure out whether this id should be reflected.
+    ok = OBJ_LOOKUP_PROPERTY(cx, wrapperObj, ida->vector[i], &pobj, &prop);
+    if (!ok) {
+      break;
     }
 
-    for (jsint i = 0, n = ida->length; i < n; i++) {
-      JSObject *pobj;
-      JSProperty *prop;
-
-      // Let OBJ_LOOKUP_PROPERTY, in particular our NewResolve hook,
-      // figure out whether this id should be reflected.
-      ok = OBJ_LOOKUP_PROPERTY(cx, wrapperObj, ida->vector[i], &pobj, &prop);
-      if (!ok) {
-        break;
-      }
-
-      if (prop) {
-        OBJ_DROP_PROPERTY(cx, pobj, prop);
-      }
+    if (prop) {
+      OBJ_DROP_PROPERTY(cx, pobj, prop);
     }
 
-    JS_DestroyIdArray(cx, ida);
-  } while (ok && (innerObj = JS_GetPrototype(cx, innerObj)) != nsnull);
+    if (pobj != wrapperObj) {
+      ok = OBJ_DEFINE_PROPERTY(cx, wrapperObj, ida->vector[i], JSVAL_VOID,
+                               nsnull, nsnull, JSPROP_ENUMERATE | JSPROP_SHARED,
+                               nsnull);
+    }
+
+    if (!ok) {
+      break;
+    }
+  }
+
+  JS_DestroyIdArray(cx, ida);
 
   return ok;
 }
@@ -159,12 +167,16 @@ XPCWrapper::NewResolve(JSContext *cx, JSObject *wrapperObj,
   }
 
   JSBool isXOW = (JS_GET_CLASS(cx, wrapperObj) == &sXPC_XOW_JSClass.base);
-  JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
-  uintN attrs = sprop->attrs;
-  if ((preserveVal || isXOW) &&
-      SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(innerObjp))) {
-    v = OBJ_GET_SLOT(cx, innerObjp, sprop->slot);
+  uintN attrs = JSPROP_ENUMERATE;
+  if (OBJ_IS_NATIVE(innerObjp)) {
+    JSScopeProperty *sprop = reinterpret_cast<JSScopeProperty *>(prop);
+    attrs = sprop->attrs;
+    if ((preserveVal || isXOW) &&
+        SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(innerObjp))) {
+      v = OBJ_GET_SLOT(cx, innerObjp, sprop->slot);
+    }
   }
+
   OBJ_DROP_PROPERTY(cx, innerObjp, prop);
 
   // Hack alert: we only do this for same-origin calls on XOWs: we want

@@ -818,6 +818,8 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **identifier,
 
   AutoCXPusher pusher(cx);
 
+  JSAutoRequest ar(cx);
+
   JSIdArray *ida = ::JS_Enumerate(cx, npjsobj->mJSObj);
   if (!ida) {
     return PR_FALSE;
@@ -1668,6 +1670,8 @@ nsJSNPRuntime::OnPluginDestroy(NPP npp)
 
     return;
   }
+
+  JSAutoRequest ar(cx);
 
   if (sNPObjWrappers.ops) {
     NppAndCx nppcx = { npp, cx };

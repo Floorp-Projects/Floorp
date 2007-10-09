@@ -2030,7 +2030,6 @@ nsresult nsExternalAppHandler::OpenWithApplication()
 // perform launch with application. That won't happen until we are done downloading
 // the content and are sure we've showna progress dialog. This was done to simplify the 
 // logic that was showing up in this method. 
-
 NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication, PRBool aRememberThisPreference)
 {
   if (mCanceled)
@@ -2041,8 +2040,8 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   
   mReceivedDispositionInfo = PR_TRUE; 
   if (mMimeInfo && aApplication) {
-    nsLocalHandlerApp *handlerApp(new nsLocalHandlerApp(EmptyString(), 
-                                                        aApplication));
+    PlatformLocalHandlerApp_t *handlerApp =
+      new PlatformLocalHandlerApp_t(EmptyString(), aApplication);
     mMimeInfo->SetPreferredApplicationHandler(handlerApp);
   }
 

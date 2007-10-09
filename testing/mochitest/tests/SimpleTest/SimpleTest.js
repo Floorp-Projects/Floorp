@@ -164,7 +164,12 @@ SimpleTest.showReport = function() {
     var toggleFailed = A({'href': '#'}, "Toggle failed tests");
     togglePassed.onclick = partial(SimpleTest.toggleByClass, 'test_ok');
     toggleFailed.onclick = partial(SimpleTest.toggleByClass, 'test_not_ok');
-    var body = document.getElementsByTagName("body")[0];
+    var body = document.body;  // Handles HTML documents
+    if (!body) {
+	// Do the XML thing
+	body = document.getElementsByTagNameNS("http://www.w3.org/1999/xhtml",
+					       "body")[0]
+    }
     var firstChild = body.childNodes[0];
     var addNode;
     if (firstChild) {

@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -62,8 +62,8 @@ variable            description
 -d datafiles        optional. one or more filenames of files containing 
                     environment variable definitions to be included.
 
-                    note that the environment variables should have the same 
-                    names as in the "variable" column.
+note that the environment variables should have the same names as in the 
+"variable" column.
 
 downloads file from url with optional authentication credentials
 saving the file to filepath. If the path to the file does not exist,
@@ -71,7 +71,7 @@ it is created. If the download takes longer than timeout seconds,
 the download is cancelled.
 
 EOF
-    exit 2
+    exit 1
 }
 
 unset url credentials filepath timeout datafiles

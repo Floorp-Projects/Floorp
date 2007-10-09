@@ -1,14 +1,14 @@
 <?xml version="1.0"?> 
 
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/content/commonDialog.css" type="text/css"?>
 
 <!DOCTYPE dialog SYSTEM "chrome://global/locale/commonDialog.dtd">
 
 <dialog id="commonDialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-        xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
-        xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
-        xhtml2:role="wairole:alert"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xhtml:role="alert"
         onload="commonDialogOnLoad();"
         ondialogaccept="return commonDialogOnAccept();"
         ondialogextra1="return commonDialogOnExtra1();"
@@ -17,6 +17,27 @@
         style="min-width: 29em; min-height: 8.5em; -moz-user-focus: ignore;"> 
     
   <script type="application/javascript" src="chrome://global/content/commonDialog.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+
+  <commandset id="selectEditMenuItems">
+    <command id="cmd_copy" oncommand="goDoCommand('cmd_copy')" disabled="true"/>
+    <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')"/>
+  </commandset>
+
+  <popupset id="contentAreaContextSet">
+    <popup id="contentAreaContextMenu"
+           onpopupshowing="goUpdateCommand('cmd_copy')">
+      <menuitem id="context-copy"
+                label="&copyCmd.label;"
+                accesskey="&copyCmd.accesskey;"
+                command="cmd_copy"
+                disabled="true"/>
+      <menuitem id="context-selectall"
+                label="&selectAllCmd.label;"
+                accesskey="&selectAllCmd.accesskey;"
+                command="cmd_selectAll"/>
+    </popup>
+  </popupset>
 
   <hbox flex="1">
     <hbox align="start">
@@ -31,8 +52,8 @@
 #endif
       <!-- text -->
       <description id="info.header" class="header"/>
-      <vbox id="info.box" style="white-space: -moz-pre-wrap;">
-        <description/>
+      <vbox id="info.box">
+        <description context="contentAreaContextMenu"/>
       </vbox>
 
       <!-- textboxes -->

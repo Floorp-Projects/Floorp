@@ -108,6 +108,15 @@ radio[pane=paneAdvanced][selected="true"] {
   background-color: -moz-Dialog;
 }
 
+/* Applications Pane */
+#BrowserPreferences[animated="true"] #handlersView {
+  height: 25em;
+}
+
+#BrowserPreferences[animated="false"] #handlersView {
+  -moz-box-flex: 1;
+}
+
 /* File Field Widget */
 filefield {
   margin: 2px 4px;

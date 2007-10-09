@@ -273,6 +273,7 @@ static char **gRestartArgv;
 
 #if defined(MOZ_WIDGET_GTK2)
 #include <gtk/gtk.h>
+#include <gdk/gdkx.h>
 #include "nsGTKToolkit.h"
 #endif
 
@@ -698,22 +699,6 @@ nsXULAppInfo::LaunchAppHelperWithArgs(int aArgc, char **aArgv)
     return NS_ERROR_FAILURE;
   else
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULAppInfo::FixReg()
-{
-  int resetRegArgc = 2;
-  char **resetRegArgv = (char**) malloc(sizeof(char*) * (resetRegArgc + 1));
-  if (!resetRegArgv)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  resetRegArgv[0] = "argv0ignoredbywinlaunchchild";
-  resetRegArgv[1] = "/fixreg";
-  resetRegArgv[2] = nsnull;
-  nsresult rv = LaunchAppHelperWithArgs(resetRegArgc, resetRegArgv);
-  free(resetRegArgv);
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -2380,7 +2365,25 @@ static nsGTKToolkit* GetGTKToolkit()
   return static_cast<nsGTKToolkit*>(toolkit);
 }
 
-#endif
+static void MOZ_gdk_display_close(GdkDisplay *display)
+{
+  // gdk_display_close was broken prior to gtk+-2.10.0.
+  // (http://bugzilla.gnome.org/show_bug.cgi?id=85715)
+  // gdk_display_manager_set_default_display (gdk_display_manager_get(), NULL)
+  // was also broken.
+  if(gtk_check_version(2,10,0) != NULL) {
+    // Version check failed - broken gdk_display_close.
+    //
+    // Let the gdk structures leak but at least close the Display,
+    // assuming that gdk will not use it again.
+    Display* dpy = GDK_DISPLAY_XDISPLAY(display);
+    XCloseDisplay(dpy);
+  }
+  else {
+    gdk_display_close(display);
+  }
+}
+#endif // MOZ_WIDGET_GTK2
 
 /** 
  * NSPR will search for the "nspr_use_zone_allocator" symbol throughout
@@ -2725,9 +2728,34 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
     if (CheckArg("install"))
       gdk_rgb_set_install(TRUE);
 
-    // Initialize GTK here for splash
-    gtk_init(&gArgc, &gArgv);
+    // Initialize GTK here for splash.
 
+    // Open the display ourselves instead of using gtk_init, so that we can
+    // close it without fear that one day gtk might clean up the display it
+    // opens.
+    if (!gtk_parse_args(&gArgc, &gArgv))
+      return 1;
+
+    GdkDisplay* display = nsnull;
+    {
+      // display_name is owned by gdk.
+      const char *display_name = gdk_get_display_arg_name();
+      if (!display_name) {
+        display_name = PR_GetEnv("DISPLAY");
+        if (!display_name) {
+          PR_fprintf(PR_STDERR, "Error: no display specified\n");
+          return 1;
+        }
+      }
+      display = gdk_display_open(display_name);
+      if (!display) {
+        PR_fprintf(PR_STDERR, "Error: cannot open display: %s\n", display_name);
+        return 1;
+      }
+    }
+    gdk_display_manager_set_default_display (gdk_display_manager_get(),
+                                             display);
+    
     // g_set_application_name () is only defined in glib2.2 and higher.
     _g_set_application_name_fn _g_set_application_name =
       (_g_set_application_name_fn)FindFunction("g_set_application_name");
@@ -3187,6 +3215,8 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       }
 #endif
 
+// XXXkt s/MOZ_TOOLKIT_GTK2/MOZ_WIDGET_GTK2/?
+// but the hidden window has been destroyed so toolkit is NULL anyway.
 #if defined(HAVE_DESKTOP_STARTUP_ID) && defined(MOZ_TOOLKIT_GTK2)
       nsGTKToolkit* toolkit = GetGTKToolkit();
       if (toolkit) {
@@ -3202,6 +3232,10 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
       }
 #endif
 
+#ifdef MOZ_WIDGET_GTK2
+      MOZ_gdk_display_close(display);
+#endif
+
       rv = LaunchChild(nativeApp, appInitiatedRestart, upgraded ? -1 : 0);
 
 #ifdef MOZ_CRASHREPORTER
@@ -3211,6 +3245,12 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
       return rv == NS_ERROR_LAUNCHED_CHILD_PROCESS ? 0 : 1;
     }
+
+#ifdef MOZ_WIDGET_GTK2
+    // gdk_display_close also calls gdk_display_manager_set_default_display
+    // appropriately when necessary.
+    MOZ_gdk_display_close(display);
+#endif
   }
 
 #ifdef MOZ_CRASHREPORTER

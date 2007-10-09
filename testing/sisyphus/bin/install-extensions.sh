@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -65,8 +65,8 @@ variable            description
 -d datafiles        optional. one or more filenames of files containing 
                     environment variable definitions to be included.
 
-                    note that the environment variables should have the same 
-                    names as in the "variable" column.
+note that the environment variables should have the same names as in the 
+"variable" column.
 
 EOF
     exit 1
@@ -75,15 +75,15 @@ EOF
 unset product branch executablepath profilename extensions datafiles
 
 while getopts $options optname ; 
-do 
-    case $optname in
-        p) product=$OPTARG;;
-        b) branch=$OPTARG;;
-        x) executablepath=$OPTARG;;
-        N) profilename=$OPTARG;;
-        E) extensions=$OPTARG;;
-        d) datafiles=$OPTARG;;
-    esac
+  do 
+  case $optname in
+      p) product=$OPTARG;;
+      b) branch=$OPTARG;;
+      x) executablepath=$OPTARG;;
+      N) profilename=$OPTARG;;
+      E) extensions=$OPTARG;;
+      d) datafiles=$OPTARG;;
+  esac
 done
 
 # include environment variables
@@ -104,7 +104,7 @@ if [[ "$product" != "firefox" && "$product" != "thunderbird" ]]; then
 fi
 
 if [[ "$branch" != "1.8.0" && "$branch" != "1.8.1" && "$branch" != "1.9.0" ]]; 
-then
+    then
     error "branch \"$branch\" must be one of 1.8.0, 1.8.1, 1.9.0"
 fi
 
@@ -149,7 +149,10 @@ for extension in $extensions/$OSID/*; do
     fi
 
     echo installing $extension
-    $TEST_BIN/timed_run.py ${TEST_STARTUP_TIMEOUT} "-" $executable -P $profilename -install-global-extension "$extensionos"
+    if ! $TEST_BIN/timed_run.py ${TEST_STARTUP_TIMEOUT} "-" $executable -P $profilename -install-global-extension "$extensionos"; then
+        error "Failed to install $extensionos"
+    fi
+
 done
 
 # restart twice to make extension manager happy

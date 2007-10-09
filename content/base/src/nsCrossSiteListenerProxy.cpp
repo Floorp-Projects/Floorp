@@ -164,10 +164,10 @@ nsCrossSiteListenerProxy::OnStartRequest(nsIRequest* aRequest,
   }
   mReqSubdomains.AppendElement(Substring(host, currDot));
 
-  // Check the Content-Access-Control header
+  // Check the Access-Control header
   if (http) {
     nsCAutoString ac;
-    rv = http->GetResponseHeader(NS_LITERAL_CSTRING("Content-Access-Control"), ac);
+    rv = http->GetResponseHeader(NS_LITERAL_CSTRING("Access-Control"), ac);
     
     if (NS_SUCCEEDED(rv)) {
       CheckHeader(ac);

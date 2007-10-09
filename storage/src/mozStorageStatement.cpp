@@ -226,8 +226,10 @@ mozStorageStatement::Finalize()
 NS_IMETHODIMP
 mozStorageStatement::GetParameterCount(PRUint32 *aParameterCount)
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
     NS_ENSURE_ARG_POINTER(aParameterCount);
+
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
 
     *aParameterCount = mParamCount;
     return NS_OK;
@@ -237,7 +239,9 @@ mozStorageStatement::GetParameterCount(PRUint32 *aParameterCount)
 NS_IMETHODIMP
 mozStorageStatement::GetParameterName(PRUint32 aParamIndex, nsACString & _retval)
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
+
     // We have to check this index because sqlite3_bind_parameter_name returns
     // NULL if an error occurs, or if a column is unnamed.  Since we handle
     // unnamed columns, we won't be able to tell if it is an error not without
@@ -263,7 +267,8 @@ NS_IMETHODIMP
 mozStorageStatement::GetParameterIndex(const nsACString &aName,
                                        PRUint32 *_retval)
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
 
     int ind = sqlite3_bind_parameter_index(mDBStatement,
                                            nsPromiseFlatCString(aName).get());
@@ -279,8 +284,10 @@ mozStorageStatement::GetParameterIndex(const nsACString &aName,
 NS_IMETHODIMP
 mozStorageStatement::GetColumnCount(PRUint32 *aColumnCount)
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
     NS_ENSURE_ARG_POINTER(aColumnCount);
+
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
 
     *aColumnCount = mResultColumnCount;
     return NS_OK;
@@ -290,7 +297,9 @@ mozStorageStatement::GetColumnCount(PRUint32 *aColumnCount)
 NS_IMETHODIMP
 mozStorageStatement::GetColumnName(PRUint32 aColumnIndex, nsACString & _retval)
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
+
     // We have to check this index because sqlite3_column_name returns
     // NULL if an error occurs, or if a column is unnamed.
     if (aColumnIndex < 0 || aColumnIndex >= mResultColumnCount)
@@ -306,7 +315,8 @@ mozStorageStatement::GetColumnName(PRUint32 aColumnIndex, nsACString & _retval)
 NS_IMETHODIMP
 mozStorageStatement::GetColumnIndex(const nsACString &aName, PRUint32 *_retval)
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
 
     // Surprisingly enough, SQLite doesn't provide an API for this.  We have to
     // determine it ourselves sadly.
@@ -324,7 +334,8 @@ mozStorageStatement::GetColumnIndex(const nsACString &aName, PRUint32 *_retval)
 NS_IMETHODIMP
 mozStorageStatement::Reset()
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
 
     PR_LOG(gStorageLog, PR_LOG_DEBUG, ("Resetting statement: '%s'", nsPromiseFlatCString(mStatementString).get()));
 
@@ -340,7 +351,8 @@ mozStorageStatement::Reset()
 NS_IMETHODIMP
 mozStorageStatement::BindUTF8StringParameter(PRUint32 aParamIndex, const nsACString & aValue)
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
 
     int srv = sqlite3_bind_text (mDBStatement, aParamIndex + 1,
                                  nsPromiseFlatCString(aValue).get(),
@@ -353,7 +365,8 @@ mozStorageStatement::BindUTF8StringParameter(PRUint32 aParamIndex, const nsACStr
 NS_IMETHODIMP
 mozStorageStatement::BindStringParameter(PRUint32 aParamIndex, const nsAString & aValue)
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
 
     int srv = sqlite3_bind_text16 (mDBStatement, aParamIndex + 1,
                                    nsPromiseFlatString(aValue).get(),
@@ -366,7 +379,8 @@ mozStorageStatement::BindStringParameter(PRUint32 aParamIndex, const nsAString &
 NS_IMETHODIMP
 mozStorageStatement::BindDoubleParameter(PRUint32 aParamIndex, double aValue)
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
 
     int srv = sqlite3_bind_double (mDBStatement, aParamIndex + 1, aValue);
 
@@ -377,7 +391,8 @@ mozStorageStatement::BindDoubleParameter(PRUint32 aParamIndex, double aValue)
 NS_IMETHODIMP
 mozStorageStatement::BindInt32Parameter(PRUint32 aParamIndex, PRInt32 aValue)
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
 
     int srv = sqlite3_bind_int (mDBStatement, aParamIndex + 1, aValue);
 
@@ -388,7 +403,8 @@ mozStorageStatement::BindInt32Parameter(PRUint32 aParamIndex, PRInt32 aValue)
 NS_IMETHODIMP
 mozStorageStatement::BindInt64Parameter(PRUint32 aParamIndex, PRInt64 aValue)
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
 
     int srv = sqlite3_bind_int64 (mDBStatement, aParamIndex + 1, aValue);
 
@@ -399,7 +415,8 @@ mozStorageStatement::BindInt64Parameter(PRUint32 aParamIndex, PRInt64 aValue)
 NS_IMETHODIMP
 mozStorageStatement::BindNullParameter(PRUint32 aParamIndex)
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
 
     int srv = sqlite3_bind_null (mDBStatement, aParamIndex + 1);
 
@@ -410,7 +427,8 @@ mozStorageStatement::BindNullParameter(PRUint32 aParamIndex)
 NS_IMETHODIMP
 mozStorageStatement::BindBlobParameter(PRUint32 aParamIndex, const PRUint8 *aValue, PRUint32 aValueSize)
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
 
     int srv = sqlite3_bind_blob (mDBStatement, aParamIndex + 1, aValue,
                                  aValueSize, SQLITE_TRANSIENT);
@@ -422,7 +440,8 @@ mozStorageStatement::BindBlobParameter(PRUint32 aParamIndex, const PRUint8 *aVal
 NS_IMETHODIMP
 mozStorageStatement::Execute()
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
 
     PRBool ret;
     nsresult rv = ExecuteStep(&ret);
@@ -435,7 +454,9 @@ mozStorageStatement::Execute()
 NS_IMETHODIMP
 mozStorageStatement::ExecuteStep(PRBool *_retval)
 {
-    NS_ASSERTION (mDBConnection && mDBStatement, "statement not initialized");
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
+
     nsresult rv;
 
     if (mExecuting == PR_FALSE) {
@@ -545,6 +566,9 @@ mozStorageStatement::GetNumEntries(PRUint32 *aLength)
 NS_IMETHODIMP
 mozStorageStatement::GetTypeOfIndex(PRUint32 aIndex, PRInt32 *_retval)
 {
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
+
     if (aIndex < 0 || aIndex >= mResultColumnCount)
         return NS_ERROR_ILLEGAL_VALUE;
 
@@ -580,6 +604,9 @@ mozStorageStatement::GetTypeOfIndex(PRUint32 aIndex, PRInt32 *_retval)
 NS_IMETHODIMP
 mozStorageStatement::GetInt32(PRUint32 aIndex, PRInt32 *_retval)
 {
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
+
     if (aIndex < 0 || aIndex >= mResultColumnCount)
         return NS_ERROR_ILLEGAL_VALUE;
     
@@ -595,6 +622,9 @@ mozStorageStatement::GetInt32(PRUint32 aIndex, PRInt32 *_retval)
 NS_IMETHODIMP
 mozStorageStatement::GetInt64(PRUint32 aIndex, PRInt64 *_retval)
 {
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
+
     if (aIndex < 0 || aIndex >= mResultColumnCount)
         return NS_ERROR_ILLEGAL_VALUE;
     
@@ -610,6 +640,9 @@ mozStorageStatement::GetInt64(PRUint32 aIndex, PRInt64 *_retval)
 NS_IMETHODIMP
 mozStorageStatement::GetDouble(PRUint32 aIndex, double *_retval)
 {
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
+
     if (aIndex < 0 || aIndex >= mResultColumnCount)
         return NS_ERROR_ILLEGAL_VALUE;
     
@@ -625,6 +658,9 @@ mozStorageStatement::GetDouble(PRUint32 aIndex, double *_retval)
 NS_IMETHODIMP
 mozStorageStatement::GetUTF8String(PRUint32 aIndex, nsACString & _retval)
 {
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
+
     // Get type of Index will check aIndex for us, so we don't have to.
     PRInt32 t;
     nsresult rv = GetTypeOfIndex (aIndex, &t);
@@ -645,6 +681,9 @@ mozStorageStatement::GetUTF8String(PRUint32 aIndex, nsACString & _retval)
 NS_IMETHODIMP
 mozStorageStatement::GetString(PRUint32 aIndex, nsAString & _retval)
 {
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
+
     // Get type of Index will check aIndex for us, so we don't have to.
     PRInt32 t;
     nsresult rv = GetTypeOfIndex (aIndex, &t);
@@ -666,6 +705,9 @@ mozStorageStatement::GetString(PRUint32 aIndex, nsAString & _retval)
 NS_IMETHODIMP
 mozStorageStatement::GetBlob(PRUint32 aIndex, PRUint32 *aDataSize, PRUint8 **aData)
 {
+    if (!mDBConnection || !mDBStatement)
+        return NS_ERROR_NOT_INITIALIZED;
+
     if (aIndex < 0 || aIndex >= mResultColumnCount)
         return NS_ERROR_ILLEGAL_VALUE;
     

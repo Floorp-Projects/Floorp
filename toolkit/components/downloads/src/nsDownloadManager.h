@@ -24,6 +24,7 @@
  *   Ben Goodger <ben@netscape.com>
  *   Shawn Wilsher <me@shawnwilsher.com>
  *   Srirang G Doddihal <brahmana@doddihal.com>
+ *   Edward Lee <edward.lee@engineering.uiuc.edu>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -98,7 +99,19 @@ protected:
   nsresult InitDB(PRBool *aDoImport);
   nsresult CreateTable();
   nsresult ImportDownloadHistory();
+
+  /**
+   * Fix up the database after a crash such as dealing with previously-active
+   * downloads.
+   */
   nsresult RestoreDatabaseState();
+
+  /**
+   * Paused downloads that survive across sessions are considered active, so
+   * rebuild the list of these downloads.
+   */
+  nsresult RestoreActiveDownloads();
+
   nsresult GetDownloadFromDB(PRUint32 aID, nsDownload **retVal);
 
   /**
@@ -117,6 +130,7 @@ protected:
   PRInt64 AddDownloadToDB(const nsAString &aName,
                           const nsACString &aSource,
                           const nsACString &aTarget,
+                          const nsAString &aTempPath,
                           PRInt64 aStartTime,
                           PRInt64 aEndTime,
                           PRInt32 aState);
@@ -137,15 +151,14 @@ protected:
                                     nsIDownload *aDownload);
 
   nsDownload *FindDownload(PRUint32 aID);
-  nsresult CancelAllDownloads();
 
   /**
-   * Removes download from "current downloads".
-   *
-   * This method removes the cycle created when starting the download, so
-   * make sure to use kungFuDeathGrip if you want to access member variables
+   * Stop tracking the active downloads. Only use this when we're about to quit
+   * the download manager because we destroy our list of active downloads to
+   * break the dlmgr<->dl cycle. Active downloads that aren't real-paused will
+   * be canceled.
    */
-  void CompleteDownload(nsDownload *aDownload);
+  nsresult RemoveAllDownloads();
 
   void ConfirmCancelDownloads(PRInt32 aCount,
                               nsISupportsPRBool *aCancelDownloads,
@@ -155,7 +168,6 @@ protected:
                               const PRUnichar *aDontCancelButton);
 
   PRInt32 GetRetentionBehavior();
-  nsresult ExecuteDesiredAction(nsDownload *aDownload);
 
 private:
   nsCOMArray<nsIDownloadProgressListener> mListeners;
@@ -182,7 +194,6 @@ public:
   nsDownload();
   virtual ~nsDownload();
 
-public:
   /**
    * This method MUST be called when changing states on a download.  It will
    * notify the download listener when a change happens.  This also updates the
@@ -190,13 +201,39 @@ public:
    */
   nsresult SetState(DownloadState aState);
 
-  DownloadType GetDownloadType();
-  void SetDownloadType(DownloadType aType);
-
-  nsresult UpdateDB();
-
 protected:
+  /**
+   * Finish up the download by breaking reference cycles and clearing unneeded
+   * data. Additionally, the download removes itself from the download
+   * manager's list of current downloads.
+   *
+   * NOTE: This method removes the cycle created when starting the download, so
+   * make sure to use kungFuDeathGrip if you want to access member variables.
+   */
+  void Finalize();
+
+  /**
+   * For finished resumed downloads that came in from exthandler, perform the
+   * action that would have been done if the download wasn't resumed.
+   */
+  nsresult ExecuteDesiredAction();
+
+  /**
+   * Move the temporary file to the final destination by removing the existing
+   * dummy target and renaming the temporary.
+   */
+  nsresult MoveTempToTarget();
+
+  /**
+   * Update the start time which also implies the last update time is the same.
+   */
   void SetStartTime(PRInt64 aStartTime);
+
+  /**
+   * Update the amount of bytes transferred and max bytes; and recalculate the
+   * download percent.
+   */
+  void SetProgressBytes(PRInt64 aCurrBytes, PRInt64 aMaxBytes);
 
   /**
    * Pause the download, but in certain cases it might get fake-paused instead
@@ -250,6 +287,19 @@ protected:
    */
   PRBool IsFinished();
 
+  /**
+   * Update the DB with the current state of the download including time,
+   * download state and other values not known when first creating the
+   * download DB entry.
+   */
+  nsresult UpdateDB();
+
+  /**
+   * Fail a download because of a failure status and prompt the provided
+   * message or use a generic download failure message if nsnull.
+   */
+  nsresult FailDownload(nsresult aStatus, const PRUnichar *aMessage);
+
   nsDownloadManager *mDownloadManager;
   nsCOMPtr<nsIURI> mTarget;
 
@@ -275,12 +325,12 @@ private:
    * doesn't necessarily mean we have nothing. Use GetAmountTransferred and
    * GetSize for the real transferred amount and size.
    */
-  PRUint64 mCurrBytes;
-  PRUint64 mMaxBytes;
+  PRInt64 mCurrBytes;
+  PRInt64 mMaxBytes;
 
   PRTime mStartTime;
   PRTime mLastUpdate;
-  PRUint64 mResumedAt;
+  PRInt64 mResumedAt;
   double mSpeed;
 
   friend class nsDownloadManager;

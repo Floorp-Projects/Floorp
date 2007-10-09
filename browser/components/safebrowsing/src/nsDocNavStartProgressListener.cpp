@@ -75,19 +75,19 @@ nsDocNavStartProgressListener::nsDocNavStartProgressListener() :
 
 nsDocNavStartProgressListener::~nsDocNavStartProgressListener()
 {
-  // Clean up items left in our queues.
+  ClearPendingEvents();
+}
+
+void
+nsDocNavStartProgressListener::ClearPendingEvents()
+{
   mRequests.Clear();
 
-  // Cancel pending timers.
   PRUint32 length = mTimers.Count();
-
   for (PRUint32 i = 0; i < length; ++i) {
     mTimers[i]->Cancel();
   }
-
   mTimers.Clear();
-  
-  mCallback = nsnull;
 }
 
 // nsDocNavStartProgressListener::AttachListeners
@@ -198,6 +198,17 @@ nsDocNavStartProgressListener::SetCallback(
     nsIDocNavStartProgressCallback* aCallback)
 {
   mCallback = aCallback;
+
+  // Break any cycles we have from mTimers to us by clearing all pending
+  // requests and timers; the timers we use are not exposed externally, but
+  // since we use ourself as an observer with each timer, we have to
+  // manually break this cycle to ensure prompt destruction of this and
+  // the release of everything this entrains, in the case that we can't wait
+  // for all the timers to expire normally for some reason (e.g. application
+  // shutdown).
+  if (!aCallback)
+    ClearPendingEvents();
+
   return NS_OK;
 }
 

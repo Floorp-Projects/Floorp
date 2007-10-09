@@ -54,7 +54,7 @@ interface nsIMIMEInfo;
  *       nsIDownloadManager::DOWNLOAD_FAILED
  *       nsIDownloadManager::DOWNLOAD_CANCELED
  */
-[scriptable, uuid(e5900f21-7a8a-4f9f-ac67-5379a65c18b6)]
+[scriptable, uuid(4ee8befe-b05a-4ca2-9b30-6c47a9c4a622)]
 interface nsIDownload : nsITransfer {
     
     /**
@@ -66,18 +66,18 @@ interface nsIDownload : nsITransfer {
      * The percentage of transfer completed.
      * If the file size is unknown it'll be -1 here.
      */
-    readonly attribute PRInt32 percentComplete;
+    readonly attribute long percentComplete;
 
     /**
      * The amount of bytes downloaded so far.
      */
-    readonly attribute PRUint64 amountTransferred;
+    readonly attribute long long amountTransferred;
 
     /**
      * The size of file in bytes.
-     * Unknown size is represented by LL_MAXUINT.
+     * Unknown size is represented by -1.
      */
-    readonly attribute PRUint64 size;
+    readonly attribute long long size;
     
     /**
      * The source of the transfer.

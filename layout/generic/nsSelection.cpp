@@ -809,9 +809,6 @@ nsSelectionIterator::IsDone()
 
 ////////////END nsSelectionIterator methods
 
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
 ////////////BEGIN nsFrameSelection methods
 
@@ -1124,9 +1121,6 @@ nsFrameSelection::UndefineCaretBidiLevel()
 }
 #endif
 
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
 #ifdef PRINT_RANGE
 void printRange(nsIDOMRange *aDomRange)
@@ -3156,7 +3150,7 @@ printf("HandleTableSelection: Mouse UP event. mDragSelectingCells=%d, mStartSele
       // Any other mouseup actions require that Ctrl or Cmd key is pressed
       //  else stop table selection mode
       PRBool doMouseUpAction = PR_FALSE;
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
       doMouseUpAction = aMouseEvent->isMeta;
 #else
       doMouseUpAction = aMouseEvent->isControl;
@@ -3879,10 +3873,6 @@ nsFrameSelection::SetAncestorLimiter(nsIContent *aLimiter)
 
 //END nsFrameSelection methods
 
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
 //BEGIN nsISelection interface implementations
 

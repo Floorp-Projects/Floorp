@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html class="reftest-wait" style="height: 100%">
+<head>
+  <script>
+    window.onload = function () {
+      window.frames[0].document.getElementById("test").selectedIndex = 0;
+      window.frames[0].document.getElementById("test").selectedIndex = 1;
+      document.getElementById("test").onload = finishTest;
+      window.frames[0].location.reload();
+    }
+
+    function finishTest() {
+      document.documentElement.className = "";
+    }
+  </script>
+</head>
+<body style="height: 100%">
+<iframe id="test" src="398289-resource.xul" width="100%" height="100%">
+</iframe>
+</body>
+</html>

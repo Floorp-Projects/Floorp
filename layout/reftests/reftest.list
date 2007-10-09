@@ -7,6 +7,7 @@ include reftest-sanity/reftest.list
 
 # printing
 include printing/reftest.list
+include pagination/reftest.list
 
 # bugs/
 include bugs/reftest.list

@@ -906,8 +906,7 @@ public:
                                            nsIDOMDocumentFragment** aReturn);
 
   /**
-   * Creates a new XML document, setting the document's container to be the
-   * docshell of whatever script is on the JSContext stack.
+   * Creates a new XML document, which is marked to be loaded as data.
    *
    * @param aNamespaceURI Namespace for the root element to create and insert in
    *                      the document. Only used if aQualifiedName is not
@@ -919,6 +918,8 @@ public:
    * @param aDocumentURI URI of the document. Must not be null.
    * @param aBaseURI Base URI of the document. Must not be null.
    * @param aPrincipal Prinicpal of the document. Must not be null.
+   * @param aScriptObject The object from which the context for event handling
+   *                      can be got.
    * @param aResult [out] The document that was created.
    */
   static nsresult CreateDocument(const nsAString& aNamespaceURI, 
@@ -927,6 +928,7 @@ public:
                                  nsIURI* aDocumentURI,
                                  nsIURI* aBaseURI,
                                  nsIPrincipal* aPrincipal,
+                                 nsIScriptGlobalObject* aScriptObject,
                                  nsIDOMDocument** aResult);
 
   /**
@@ -1172,10 +1174,11 @@ private:
 class nsCxPusher
 {
 public:
-  nsCxPusher(nsISupports *aCurrentTarget);
-  ~nsCxPusher();
+  nsCxPusher();
+  ~nsCxPusher(); // Calls Pop();
 
-  void Push(nsISupports *aCurrentTarget);
+  // Returns PR_FALSE if something erroneous happened.
+  PRBool Push(nsISupports *aCurrentTarget);
   void Pop();
 
 private:

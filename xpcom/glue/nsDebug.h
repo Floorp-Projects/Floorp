@@ -50,6 +50,7 @@
 
 #ifdef DEBUG
 #define NS_DEBUG
+#include "prprf.h"
 #endif
 
 #ifdef DEBUG
@@ -203,8 +204,29 @@
 ** Macros for checking results
 ******************************************************************************/
 
-#define NS_ENSURE_SUCCESS(res, ret) \
-  NS_ENSURE_TRUE(NS_SUCCEEDED(res), ret)
+#if defined(DEBUG) && !defined(XPCOM_GLUE_AVOID_NSPR)
+
+#define NS_ENSURE_SUCCESS_BODY(res, ret)                                  \
+    char *msg = PR_smprintf("NS_ENSURE_SUCCESS(%s, %s) failed with "      \
+                            "result 0x%X", #res, #ret, __rv);             \
+    NS_WARNING(msg);                                                      \
+    PR_smprintf_free(msg);
+
+#else
+
+#define NS_ENSURE_SUCCESS_BODY(res, ret)                                  \
+    NS_WARNING("NS_ENSURE_SUCCESS(" #res ", " #ret ") failed");
+
+#endif
+
+#define NS_ENSURE_SUCCESS(res, ret)                                       \
+  PR_BEGIN_MACRO                                                          \
+    nsresult __rv = res; /* Don't evaluate |res| more than once */        \
+    if (NS_FAILED(__rv)) {                                                \
+      NS_ENSURE_SUCCESS_BODY(res, ret)                                    \
+      return ret;                                                         \
+    }                                                                     \
+  PR_END_MACRO
 
 /******************************************************************************
 ** Macros for checking state and arguments upon entering interface boundaries

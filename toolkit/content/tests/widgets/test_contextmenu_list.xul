@@ -1,0 +1,159 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Context Menu on List Tests"
+        onload="setTimeout(nextTest, 0);"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>      
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>      
+
+<spacer height="5"/>
+
+<hbox style="padding-left: 10px;">
+  <spacer width="5"/>
+  <richlistbox id="list" context="themenu">
+    <richlistitem id="item1"><button label="One"/></richlistitem>
+    <richlistitem id="item2" height="22"><checkbox label="Checkbox"/></richlistitem>
+    <richlistitem id="item3"><button label="Three"/></richlistitem>
+    <richlistitem id="item4"><checkbox label="Four"/></richlistitem>
+  </richlistbox>
+
+  <tree id="tree" rows="5" flex="1" context="themenu" style="-moz-appearance: none; border: 0">
+    <treecols>
+      <treecol label="Name" flex="1"/>
+      <splitter class="tree-splitter"/>
+      <treecol label="Moons"/>
+    </treecols>
+    <treechildren id="treechildren">
+      <treeitem>
+        <treerow>
+          <treecell label="Mercury"/>
+          <treecell label="0"/>
+        </treerow>
+      </treeitem>
+      <treeitem>
+        <treerow>
+          <treecell label="Venus"/>
+          <treecell label="0"/>
+        </treerow>
+      </treeitem>
+      <treeitem>
+        <treerow>
+          <treecell label="Earth"/>
+          <treecell label="1"/>
+        </treerow>
+      </treeitem>
+      <treeitem>
+        <treerow>
+          <treecell label="Mars"/>
+          <treecell label="2"/>
+        </treerow>
+       </treeitem>
+    </treechildren>
+  </tree>
+</hbox>
+
+<menupopup id="themenu" onpopupshown="checkPopup()" onpopuphidden="nextTest()">
+  <menuitem label="Item"/>
+</menupopup>
+
+<script class="testbody" type="application/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+var gTestId = -1;
+var gTestElement = "list";
+
+function nextTest()
+{
+  gTestId++;
+  if (gTestId > 2) {
+    if (gTestElement == "list") {
+      gTestElement = "tree";
+      gTestId = 0;
+    }
+    else {
+      SimpleTest.finish();
+      return;
+    }
+  }
+
+  var element = $(gTestElement);
+  element.focus();
+  if (gTestId == 0) {
+    if (gTestElement == "list")
+      element.selectedIndex = 2;
+    element.currentIndex = 2;
+    synthesizeMouse(element, 0, 0, { type : "contextmenu", button: 0 });
+  }
+  else if (gTestId == 1) {
+    synthesizeMouse(element, 7, 1, { type : "contextmenu", button: 2 });
+  }
+  else {
+    element.currentIndex = -1;
+    element.selectedIndex = -1;
+    synthesizeMouse(element, 0, 0, { type : "contextmenu", button: 0 });
+  }
+}
+
+function checkPopup()
+{
+  var menurect = $("themenu").getBoundingClientRect();
+
+  if (gTestId == 0) {
+    if (gTestElement == "list") {
+      var itemrect = $("item3").getBoundingClientRect();
+      is(Math.round(menurect.left), Math.round(itemrect.left) + 2,
+         "list selection keyboard left");
+      is(Math.round(menurect.top), Math.round(itemrect.bottom) + 2,
+         "list selection keyboard top");
+    }
+    else {
+      var tree = $("tree");
+      var bodyrect = $("treechildren").getBoundingClientRect();
+      is(Math.round(menurect.left), Math.round(bodyrect.left) + 2,
+         "tree selection keyboard left");
+      is(Math.round(menurect.top), Math.round(bodyrect.top) +
+         tree.treeBoxObject.rowHeight * 3 + 2,
+         "tree selection keyboard top");
+    }
+  }
+  else if (gTestId == 1) {
+    // activating a context menu with the mouse from position (7, 1).
+    // Add 2 pixels to these values as context menus are offset by 2 pixels
+    // so that they don't appear exactly only the menu making them easier to
+    // dismiss. See nsXULPopupListener.
+    var elementrect = $(gTestElement).getBoundingClientRect();
+    is(Math.round(menurect.left), Math.round(elementrect.left) + 9,
+       gTestElement + " mouse left");
+    is(Math.round(menurect.top), Math.round(elementrect.top) + 3,
+       gTestElement + " mouse top");
+  }
+  else {
+    var elementrect = $(gTestElement).getBoundingClientRect();
+    is(Math.round(menurect.left), Math.round(elementrect.left) + 2,
+       gTestElement + " no selection keyboard left");
+    is(Math.round(menurect.top), Math.round(elementrect.bottom) + 2,
+       gTestElement + " no selection keyboard top");
+  }
+
+  $("themenu").hidePopup();
+}
+
+]]>
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display">
+</p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+
+</window>

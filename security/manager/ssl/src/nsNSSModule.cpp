@@ -72,6 +72,7 @@
 #include "nsStreamCipher.h"
 #include "nsKeyModule.h"
 #include "nsDataSignatureVerifier.h"
+#include "nsCertOverrideService.h"
 
 // We must ensure that the nsNSSComponent has been loaded before
 // creating any other components.
@@ -192,6 +193,7 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsStreamCipher)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsKeyObject)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsKeyObjectFactory)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(PR_FALSE, nsDataSignatureVerifier)
+NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(PR_FALSE, nsCertOverrideService, Init)
 
 static NS_METHOD RegisterPSMContentListeners(
                       nsIComponentManager *aCompMgr,
@@ -454,6 +456,13 @@ static const nsModuleComponentInfo components[] =
     NS_DATASIGNATUREVERIFIER_CID,
     NS_DATASIGNATUREVERIFIER_CONTRACTID,
     nsDataSignatureVerifierConstructor
+  },
+
+  {
+    "PSM Cert Override Settings Service",
+    NS_CERTOVERRIDE_CID,
+    NS_CERTOVERRIDE_CONTRACTID,
+    nsCertOverrideServiceConstructor
   }
 };
 

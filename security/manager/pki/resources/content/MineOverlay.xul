@@ -82,23 +82,23 @@
 
     <hbox>
        <button id="mine_viewButton" class="normal" 
-               label="&certmgr.view.label;"
+               label="&certmgr.view2.label;"
                accesskey="&certmgr.view.accesskey;"
                disabled="true" oncommand="viewCerts();"/>
        <button id="mine_backupButton" class="normal" 
-               label="&certmgr.backup.label;"
+               label="&certmgr.backup2.label;"
                accesskey="&certmgr.backup.accesskey;"
                disabled="true" oncommand="backupCerts();"/>
        <button id="mine_backupAllButton" class="normal" 
-               label="&certmgr.backupall.label;"
+               label="&certmgr.backupall2.label;"
                accesskey="&certmgr.backupall.accesskey;"
                oncommand="backupAllCerts();"/>
        <button id="mine_restoreButton" class="normal" 
-               label="&certmgr.restore.label;"
+               label="&certmgr.restore2.label;"
                accesskey="&certmgr.restore.accesskey;"
                oncommand="restoreCerts();"/>
        <button id="mine_deleteButton" class="normal" 
-               label="&certmgr.delete.label;"
+               label="&certmgr.delete2.label;"
                accesskey="&certmgr.delete.accesskey;"
                disabled="true" oncommand="deleteCerts();"/>
     </hbox>

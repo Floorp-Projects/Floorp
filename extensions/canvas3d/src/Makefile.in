@@ -52,38 +52,28 @@ EXPORT_LIBRARY	= 0
 IS_COMPONENT	= 1
 MODULE_NAME	= nsCanvas3DModule
 GRE_MODULE	= 1
-MOZILLA_INTERNAL_API = 1
 BUILD_STATIC_LIBS =
 
 REQUIRES	= \
 		xpcom \
 		string \
-		gfx \
+		unicharutil \
+		xpconnect \
+		thebes \
+		cairo \
 		content \
+		dom \
+		caps \
+		js \
+		imglib2 \
+		necko \
+		gfx \
 		layout \
 		widget \
-		dom \
-		js \
 		locale \
-		unicharutil \
-		necko \
-		view \
 		pref \
-		docshell \
-		xpconnect \
-		xuldoc \
-		caps \
-		imglib2 \
-		mimetype \
-		exthandler \
-		uconv \
-		intl \
-		cairo \
+		view \
 		$(NULL)
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-REQUIRES += thebes
-endif
 
 ifdef MOZ_X11
 EXTRA_DSO_LIBS += GL
@@ -109,11 +99,10 @@ CPPSRCS		= nsCanvas3DModule.cpp \
 
 DEFINES += -DXPCOM_GLUE -DXPCOM_GLUE_USE_NSPR -DGLEW_MX -DGLEW_STATIC
 
-EXTRA_DSO_LIBS += js3250 xpcom xpcom_core unicharutil_s
-# mozcairo mozlibpixman
-
-ifdef MOZ_ENABLE_CAIRO_GFX
-EXTRA_DSO_LDOPTS += $(DEPTH)/gfx/thebes/src/thebes.lib $(DEPTH)/gfx/src/gkgfx.lib
+ifdef MOZ_ENABLE_LIBXUL
+EXTRA_DSO_LIBS += js3250 xpcom xul
+else
+EXTRA_DSO_LIBS += js3250 xpcom thebes
 endif
 
 # Hack for getting an extension built against static vs. dynamic versions of firefox
@@ -138,4 +127,4 @@ endif
 ifneq (,$(filter $(MOZ_WIDGET_TOOLKIT),mac cocoa))
 endif
 
-EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(EXTRA_DSO_LIBS)
+EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(EXTRA_DSO_LIBS) $(XPCOM_GLUE_LDOPTS)

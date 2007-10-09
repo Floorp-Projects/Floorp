@@ -69,25 +69,6 @@ function BadCertHandler() {
 }
 BadCertHandler.prototype = {
 
-  // nsIBadCertListener
-  confirmUnknownIssuer: function(socketInfo, cert, certAddType) {
-    LOG("EM BadCertHandler: Unknown issuer");
-    return false;
-  },
-
-  confirmMismatchDomain: function(socketInfo, targetURL, cert) {
-    LOG("EM BadCertHandler: Mismatched domain");
-    return false;
-  },
-
-  confirmCertExpired: function(socketInfo, cert) {
-    LOG("EM BadCertHandler: Expired certificate");
-    return false;
-  },
-
-  notifyCrlNextupdate: function(socketInfo, targetURL, cert) {
-  },
-
   // nsIChannelEventSink
   onChannelRedirect: function(oldChannel, newChannel, flags) {
     // make sure the certificate of the old channel checks out before we follow
@@ -102,8 +83,7 @@ BadCertHandler.prototype = {
 
   // nsISupports
   QueryInterface: function(iid) {
-    if (!iid.equals(Components.interfaces.nsIBadCertListener) &&
-        !iid.equals(Components.interfaces.nsIChannelEventSink) &&
+    if (!iid.equals(Components.interfaces.nsIChannelEventSink) &&
         !iid.equals(Components.interfaces.nsIInterfaceRequestor) &&
         !iid.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;

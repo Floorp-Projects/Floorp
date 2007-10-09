@@ -86,6 +86,7 @@
 # the following files are browser-specific overrides
 *   locale/@AB_CD@/global/netError.dtd                (%chrome/overrides/netError.dtd)
 *   locale/@AB_CD@/global/appstrings.properties       (%chrome/overrides/appstrings.properties)
+*   locale/@AB_CD@/mozapps/downloads/settingsChange.dtd  (%chrome/overrides/settingsChange.dtd)
 #ifdef MOZ_USE_GENERIC_BRANDING
 % locale branding @AB_CD@ %locale/branding/
     locale/branding/brand.dtd         (%chrome/branding/brand.dtd)

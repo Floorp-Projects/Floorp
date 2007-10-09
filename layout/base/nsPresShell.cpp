@@ -917,7 +917,8 @@ public:
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
   NS_IMETHOD SetCaretVisibilityDuringSelection(PRBool aVisibility);
-  virtual already_AddRefed<nsICaret> SetCaret(nsICaret *aNewCaret);
+  virtual void SetCaret(nsICaret *aNewCaret);
+  virtual void RestoreCaret();
 
   NS_IMETHOD SetSelectionFlags(PRInt16 aInEnable);
   NS_IMETHOD GetSelectionFlags(PRInt16 *aOutEnable);
@@ -1130,6 +1131,7 @@ protected:
   nsCOMArray<nsIContent> mCurrentEventContentStack;
 
   nsCOMPtr<nsICaret>            mCaret;
+  nsCOMPtr<nsICaret>            mOriginalCaret;
   PRInt16                       mSelectionFlags;
   FrameArena                    mFrameArena;
   StackArena                    mStackArena;
@@ -1498,6 +1500,7 @@ PresShell::Init(nsIDocument* aDocument,
   if (NS_SUCCEEDED(err))
   {
     mCaret->Init(this);
+    mOriginalCaret = mCaret;
   }
 
   //SetCaretEnabled(PR_TRUE);       // make it show in browser windows
@@ -2362,6 +2365,9 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     MOZ_TIMER_RESET(mFrameCreationWatch);
     MOZ_TIMER_START(mFrameCreationWatch);
 
+    WillCauseReflow();
+    mFrameConstructor->BeginUpdate();
+
     if (!rootFrame) {
       // Have style sheet processor construct a frame for the
       // precursors to the root content object's frame
@@ -2380,6 +2386,9 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     // Something in mFrameConstructor->ContentInserted may have caused
     // Destroy() to get called, bug 337586.
     NS_ENSURE_STATE(!mHaveShutDown);
+
+    mFrameConstructor->EndUpdate();
+    DidCauseReflow();
 
     // Run the XBL binding constructors for any new frames we've constructed
     mDocument->BindingManager()->ProcessAttachedQueue();
@@ -2616,12 +2625,14 @@ NS_IMETHODIMP_(void) PresShell::MaybeInvalidateCaretPosition()
   }
 }
 
-already_AddRefed<nsICaret> PresShell::SetCaret(nsICaret *aNewCaret)
+void PresShell::SetCaret(nsICaret *aNewCaret)
 {
-  nsICaret *oldCaret = nsnull;
-  mCaret.swap(oldCaret);
   mCaret = aNewCaret;
-  return oldCaret;
+}
+
+void PresShell::RestoreCaret()
+{
+  mCaret = mOriginalCaret;
 }
 
 NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
@@ -6030,15 +6041,20 @@ void
 PresShell::WillDoReflow()
 {
   // We just reflowed, tell the caret that its frame might have moved.
+  // XXXbz that comment makes no sense
   if (mCaret) {
     mCaret->InvalidateOutsideCaret();
     mCaret->UpdateCaretPosition();
   }
+
+  mFrameConstructor->BeginUpdate();
 }
 
 void
 PresShell::DidDoReflow()
 {
+  mFrameConstructor->EndUpdate();
+  
   HandlePostedReflowCallbacks();
   // Null-check mViewManager in case this happens during Destroy.  See
   // bugs 244435 and 238546.

@@ -121,10 +121,6 @@ nsXPInstallManager::nsXPInstallManager()
 
     // initialize mLastUpdate to the current time
     mLastUpdate = PR_Now();
-
-    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-    if (os)
-        os->AddObserver(this, XPI_PROGRESS_TOPIC, PR_TRUE);
 }
 
 
@@ -144,7 +140,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS11(nsXPInstallManager,
                                nsIProgressEventSink,
                                nsIInterfaceRequestor,
                                nsPICertNotification,
-                               nsIBadCertListener,
+                               nsIBadCertListener2,
                                nsIChannelEventSink,
                                nsISupportsWeakReference)
 
@@ -177,6 +173,10 @@ nsXPInstallManager::InitManagerWithHashes(const PRUnichar **aURLs,
         return NS_ERROR_OUT_OF_MEMORY;
 
     mNeedsShutdown = PR_TRUE;
+
+    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+    if (os)
+        os->AddObserver(this, XPI_PROGRESS_TOPIC, PR_TRUE);
 
     for (PRUint32 i = 0; i < aURLCount; ++i) 
     {
@@ -341,6 +341,10 @@ nsXPInstallManager::InitManagerInternal()
 
         if (OKtoInstall)
         {
+            nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+            if (os)
+                os->AddObserver(this, XPI_PROGRESS_TOPIC, PR_TRUE);
+
             //-----------------------------------------------------
             // Open the progress dialog
             //-----------------------------------------------------
@@ -1249,7 +1253,7 @@ nsXPInstallManager::GetInterface(const nsIID & eventSinkIID, void* *_retval)
         *_retval = p;
         return NS_OK;
     }
-    else if (eventSinkIID.Equals(NS_GET_IID(nsIBadCertListener))) {
+    else if (eventSinkIID.Equals(NS_GET_IID(nsIBadCertListener2))) {
         // If we aren't chrome triggered fall back to the default dialogs
         if (!mFromChrome)
             return NS_ERROR_NO_INTERFACE;
@@ -1267,31 +1271,14 @@ nsXPInstallManager::OnChannelRedirect(nsIChannel *oldChannel, nsIChannel *newCha
     return NS_OK;
 }
 
-// nsIBadCertListener methods
+// nsIBadCertListener2 methods
 NS_IMETHODIMP
-nsXPInstallManager::ConfirmUnknownIssuer(nsIInterfaceRequestor *socketInfo, nsIX509Cert *cert, PRInt16 *certAddType, PRBool *_retval)
+nsXPInstallManager::NotifyCertProblem(nsIInterfaceRequestor *socketInfo, 
+                                      nsISSLStatus *status, 
+                                      const nsACString &targetSite, 
+                                      PRBool *_retval)
 {
-    *_retval = PR_FALSE;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPInstallManager::ConfirmMismatchDomain(nsIInterfaceRequestor *socketInfo, const nsACString & targetURL, nsIX509Cert *cert, PRBool *_retval)
-{
-    *_retval = PR_FALSE;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPInstallManager::ConfirmCertExpired(nsIInterfaceRequestor *socketInfo, nsIX509Cert *cert, PRBool *_retval)
-{
-    *_retval = PR_FALSE;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPInstallManager::NotifyCrlNextupdate(nsIInterfaceRequestor *socketInfo, const nsACString & targetURL, nsIX509Cert *cert)
-{
+    *_retval = PR_TRUE;
     return NS_OK;
 }
 

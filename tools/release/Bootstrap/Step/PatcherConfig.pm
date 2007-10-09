@@ -30,7 +30,6 @@ sub Execute {
     my $oldVersion = $config->Get(var => 'oldVersion');
     my $mofoCvsroot = $config->Get(var => 'mofoCvsroot');
     my $patcherConfig = $config->Get(var => 'patcherConfig');
-    my $stagingServer = $config->Get(var => 'stagingServer');
     my $ftpServer = $config->Get(var => 'ftpServer');
     my $bouncerServer = $config->Get(var => 'bouncerServer');
 
@@ -89,6 +88,7 @@ sub BumpPatcherConfig {
     my $patcherConfig = $config->Get(var => 'patcherConfig');
     my $stagingUser = $config->Get(var => 'stagingUser');
     my $stagingServer = $config->Get(var => 'stagingServer');
+    my $externalStagingServer = $config->Get(var => 'externalStagingServer');
     my $ftpServer = $config->Get(var => 'ftpServer');
     my $bouncerServer = $config->Get(var => 'bouncerServer');
     my $logDir = $config->Get(sysvar => 'logDir');
@@ -170,9 +170,9 @@ sub BumpPatcherConfig {
                                '.%locale%.%platform%.partial.mar');
 
     $partialUpdate->{'betatest-url'} =
-     'http://' . $stagingServer. '/pub/mozilla.org/' . $product. '/nightly/' . 
-     $version . '-candidates/' . $rcStr . '/' . $product . '-' . $oldVersion . 
-     '-' . $version . '.%locale%.%platform%.partial.mar';
+     'http://' . $externalStagingServer. '/pub/mozilla.org/' . $product . 
+     '/nightly/' .  $version . '-candidates/' . $rcStr . '/' . $product . 
+     '-' . $oldVersion .  '-' . $version . '.%locale%.%platform%.partial.mar';
 
     $partialUpdate->{'beta-url'} =
      'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' . 
@@ -192,9 +192,9 @@ sub BumpPatcherConfig {
      '.%locale%.%platform%.complete.mar');
 
     $completeUpdate->{'betatest-url'} = 
-     'http://' . $stagingServer . '/pub/mozilla.org/' . $product. '/nightly/' .
-     $version . '-candidates/' . $rcStr .  '/' . $product . '-' . $version .
-     '.%locale%.%platform%.complete.mar';
+     'http://' . $externalStagingServer . '/pub/mozilla.org/' . $product . 
+     '/nightly/' .  $version . '-candidates/' . $rcStr .  '/' . $product . 
+     '-' . $version .  '.%locale%.%platform%.complete.mar';
 
     $completeUpdate->{'beta-url'} = 
      'http://' . $ftpServer . '/pub/mozilla.org/' . $product. '/nightly/' .
@@ -262,9 +262,9 @@ sub BumpPatcherConfig {
     $releaseObj->{'locales'} = join(' ', sort (keys(%{$localeInfo})));
 
     $releaseObj->{'completemarurl'} = 
-     'http://' . $stagingServer . '/pub/mozilla.org/' . $product. '/nightly/' .
-     $version . '-candidates/' . $rcStr . '/' . $product . '-'. $version .
-     '.%locale%.%platform%.complete.mar',
+     'http://' . $externalStagingServer . '/pub/mozilla.org/' . $product. 
+     '/nightly/' .  $version . '-candidates/' . $rcStr . '/' . $product . '-'. 
+     $version . '.%locale%.%platform%.complete.mar',
 
     # Compute locale exceptions; 
     # $localeInfo is hash ref of locales -> array of platforms the locale

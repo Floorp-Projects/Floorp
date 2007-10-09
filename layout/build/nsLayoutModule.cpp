@@ -283,6 +283,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(txNodeSetAdaptor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLHttpRequest)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDOMStorageManager,
+                                         nsDOMStorageManager::GetInstance)
 
 //-----------------------------------------------------------------------------
 
@@ -1306,6 +1308,11 @@ static const nsModuleComponentInfo gComponents[] = {
     NS_DOMSTORAGE_CID,
     "@mozilla.org/dom/storage;1",
     NS_NewDOMStorage },
+
+  { "DOM Storage Manager",
+    NS_DOMSTORAGEMANAGER_CID,
+    "@mozilla.org/dom/storagemanager;1",
+    nsDOMStorageManagerConstructor },
 
   { "Text Editor",
     NS_TEXTEDITOR_CID,

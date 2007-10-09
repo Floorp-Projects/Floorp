@@ -171,7 +171,7 @@ extern nsresult TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
                              nsILoadGroup* aLoadGroup,
                              nsIPrincipal* aCallerPrincipal);
 
-extern nsresult TX_CompileStylesheet(nsIDOMNode* aNode,
+extern nsresult TX_CompileStylesheet(nsINode* aNode,
                                      txMozillaXSLTProcessor* aProcessor,
                                      nsIPrincipal* aCallerPrincipal,
                                      txStylesheet** aStylesheet);

@@ -82,15 +82,7 @@
 <!-- Certificate Exists in database -->
 <!ENTITY caCertExists.title "Certificate Exists">
 <!ENTITY caCertExists.message "The Certificate already exists.">
-
-<!-- Strings for the MismatchDomain dialog  -->
-<!ENTITY domainMismatch.title "Security Error: Domain Name Mismatch">
-<!ENTITY examineCert.label "View Certificate">
 <!ENTITY examineCert.accesskey "V">
-
-<!-- Strings for the Server cert expired dialog  -->
-<!ENTITY serverCertExpired.continue "Would you like to continue anyway?">
-<!ENTITY serverCertExpired.accept.label "Continue">
 
 <!-- Strings for the SSL client auth ask dialog -->
 <!ENTITY clientAuthAsk.title "User Identification Request">

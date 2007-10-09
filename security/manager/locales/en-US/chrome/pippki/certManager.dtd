@@ -39,7 +39,7 @@
 
 <!ENTITY certmgr.tab.mine                     "Your Certificates">
 <!ENTITY certmgr.tab.others                   "Other People's">
-<!ENTITY certmgr.tab.websites                 "Web Sites">
+<!ENTITY certmgr.tab.websites3                "Servers">
 <!ENTITY certmgr.tab.ca                       "Authorities">
 <!ENTITY certmgr.tab.orphan                   "Extra">
 
@@ -93,6 +93,8 @@
 <!ENTITY certmgr.deleteusercert.aftername     "Once you have deleted this certificate, you will not be able to read mail that has been encrypted with it.">
 
 <!ENTITY certmgr.certname                     "Certificate Name">
+<!ENTITY certmgr.certsite                     "Site">
+<!ENTITY certmgr.typesofoverrides             "Exceptions">
 <!ENTITY certmgr.tokenname                    "Security Device">
 <!ENTITY certmgr.purpose                      "Purposes">
 <!ENTITY certmgr.issued                       "Issued On">
@@ -102,21 +104,23 @@
 
 <!ENTITY certmgr.close.label                  "Close">
 <!ENTITY certmgr.close.accesskey              "C">
-<!ENTITY certmgr.view.label                   "View">
+<!ENTITY certmgr.view2.label                   "View…">
 <!ENTITY certmgr.view.accesskey               "V">
-<!ENTITY certmgr.edit.label                   "Edit">
+<!ENTITY certmgr.edit2.label                   "Edit…">
 <!ENTITY certmgr.edit.accesskey               "E">
 <!ENTITY certmgr.editca.label                 "Edit CA Trust">
 <!ENTITY certmgr.editca.accesskey             "d">
 <!ENTITY certmgr.add.label                    "Add">
 <!ENTITY certmgr.add.accesskey                "A">
-<!ENTITY certmgr.delete.label                 "Delete">
+<!ENTITY certmgr.export.label                 "Export…">
+<!ENTITY certmgr.export.accesskey             "x">
+<!ENTITY certmgr.delete2.label                 "Delete…">
 <!ENTITY certmgr.delete.accesskey             "D">
-<!ENTITY certmgr.backup.label                 "Backup">
+<!ENTITY certmgr.backup2.label                 "Backup…">
 <!ENTITY certmgr.backup.accesskey             "B">
-<!ENTITY certmgr.backupall.label              "Backup All">
+<!ENTITY certmgr.backupall2.label              "Backup All…">
 <!ENTITY certmgr.backupall.accesskey          "k">
-<!ENTITY certmgr.restore.label                "Import">
+<!ENTITY certmgr.restore2.label                "Import…">
 <!ENTITY certmgr.restore.accesskey            "m">
 <!ENTITY certmgr.details.label                "Certificate Fields">
 <!ENTITY certmgr.details.accesskey            "F">
@@ -124,3 +128,14 @@
 <!ENTITY certmgr.fields.accesskey             "V">
 <!ENTITY certmgr.hierarchy.label              "Certificate Hierarchy">
 <!ENTITY certmgr.hierarchy.accesskey          "C">
+<!ENTITY certmgr.addException.label           "Add Exception…">
+<!ENTITY certmgr.addException.accesskey       "x">
+
+<!ENTITY exceptionMgr.title                   "Add Security Exception">
+<!ENTITY exceptionMgr.exceptionButton         "Confirm Security Exception">
+<!ENTITY exceptionMgr.supplementalWarning     "Legitimate banks, stores, and other public sites will not ask you to do this.">
+<!ENTITY exceptionMgr.certlocation.caption2   "Server">
+<!ENTITY exceptionMgr.certlocation.url        "Location:">
+<!ENTITY exceptionMgr.certlocation.download   "Get Certificate">
+<!ENTITY exceptionMgr.certstatus.caption      "Certificate Status">
+<!ENTITY exceptionMgr.certstatus.viewCert     "View…">

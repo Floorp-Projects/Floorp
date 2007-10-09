@@ -62,28 +62,14 @@ REQUIRES	= xpcom \
 		  thebes \
 		  $(NULL)
 
-DIRS        = shared
-
-ifdef MOZ_ENABLE_FREETYPE2
-DIRS        += freetype
-endif
+DIRS        = shared thebes
 
 ifdef MOZ_ENABLE_POSTSCRIPT
 DIRS        += psshared
 endif
 
-ifdef MOZ_ENABLE_CAIRO_GFX
-DIRS        += thebes
-else
- ifdef MOZ_ENABLE_PHOTON
- DIRS        += photon
- endif
- ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
- DIRS	     += mac
- endif
- ifneq (,$(filter windows beos mac,$(MOZ_WIDGET_TOOLKIT)))
- DIRS        += $(MOZ_WIDGET_TOOLKIT)
- endif
+ifdef MOZ_ENABLE_PHOTON
+DIRS        += photon
 endif
 
 CPPSRCS = \
@@ -91,7 +77,6 @@ CPPSRCS = \
         nsColorNames.cpp \
         nsDeviceContext.cpp \
         nsFont.cpp \
-        nsFontList.cpp \
         nsRect.cpp \
         nsRegion.cpp \
         nsTransform2D.cpp \
@@ -102,23 +87,13 @@ ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 REQUIRES += uconv
 endif
 
-ifneq (,$(filter beos windows os2,$(MOZ_WIDGET_TOOLKIT)))
-CPPSRCS += imgScaler.cpp
-endif
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-CPPSRCS += \
-        mac/nsRegionPool.cpp \
-        $(NULL)
-endif
-
 EXTRA_DSO_LDOPTS = \
         $(DEPTH)/modules/libutil/src/$(LIB_PREFIX)mozutil_s.$(LIB_SUFFIX) \
         $(MOZ_UNICHARUTIL_LIBS) \
         $(MOZ_COMPONENT_LIBS) \
         $(NULL)
 
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += \
         $(TK_LIBS) \
         $(NULL)

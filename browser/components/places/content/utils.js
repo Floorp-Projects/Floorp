@@ -52,6 +52,7 @@ const LOAD_IN_SIDEBAR_ANNO = "bookmarkProperties/loadInSidebar";
 const DESCRIPTION_ANNO = "bookmarkProperties/description";
 const POST_DATA_ANNO = "URIProperties/POSTData";
 const LMANNO_FEEDURI = "livemark/feedURI";
+const LMANNO_SITEURI = "livemark/siteURI";
 
 #ifdef XP_MACOSX
 // On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
@@ -407,6 +408,8 @@ var PlacesUtils = {
   * @returns true if the node is a livemark container item
   */
   nodeIsLivemarkContainer: function PU_nodeIsLivemarkContainer(aNode) {
+    // Use the annotations service directly to avoid instantiating
+    // the Livemark service on startup. (bug 398300)
     return this.nodeIsFolder(aNode) &&
            this.annotations.itemHasAnnotation(aNode.itemId, LMANNO_FEEDURI);
   },
@@ -457,7 +460,7 @@ var PlacesUtils = {
   },
 
   /**
-   * String-wraps a NavHistoryResultNode according to the rules of the specified
+   * String-wraps a result node according to the rules of the specified
    * content type.
    * @param   aNode
    *          The Result node to wrap (serialize)
@@ -1548,11 +1551,11 @@ var PlacesUtils = {
     let urls = [];
     if (this.nodeIsFolder(aNode) && asQuery(aNode).queryOptions.excludeItems) {
       // grab manually
-      let contents = this.getFolderContents(node.itemId, false, false).root;
+      let contents = this.getFolderContents(aNode.itemId, false, false).root;
       for (let i = 0; i < contents.childCount; ++i) {
         let child = contents.getChild(i);
         if (this.nodeIsURI(child))
-          urls.push(node.uri);
+          urls.push(child.uri);
       }
     }
     else {

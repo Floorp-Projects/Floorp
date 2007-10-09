@@ -128,7 +128,7 @@ static void
 MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  if (aData->mSID == eStyleStruct_Display) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Display)) {
     if (aData->mDisplayData->mClear.GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::clear);
       if (value && value->Type() == nsAttrValue::eEnum)

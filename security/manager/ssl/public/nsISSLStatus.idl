@@ -41,10 +41,25 @@
 
 interface nsIX509Cert;
 
-[scriptable, uuid(7b2ca1ca-1dd2-11b2-87ec-d217dbe22b85)]
+[scriptable, uuid(cfede939-def1-49be-81ed-d401b3a07d1c)]
 interface nsISSLStatus : nsISupports {
   readonly attribute nsIX509Cert serverCert;
+
   readonly attribute string cipherName;
   readonly attribute unsigned long keyLength;
   readonly attribute unsigned long secretKeyLength;
+
+  readonly attribute boolean isDomainMismatch;
+  readonly attribute boolean isNotValidAtThisTime;
+
+  /* Note: To distinguish between 
+   *         "unstrusted because missing or untrusted issuer"
+   *       and 
+   *         "untrusted because self signed"
+   *       compare for equality of 
+   *         nsIX509Cert::subjectName
+   *       and
+   *         nsIX509Cert::issuerName
+   */
+  readonly attribute boolean isUntrusted;
 };

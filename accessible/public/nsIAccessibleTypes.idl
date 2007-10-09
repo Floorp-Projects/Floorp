@@ -90,8 +90,7 @@ interface nsIAccessibleScrollType : nsISupports
 
 
 /**
- * These constants define which coordinate system a point is located in. Note,
- * keep them synchronized with IA2CoordinateType.
+ * These constants define which coordinate system a point is located in.
  */
 [scriptable, uuid(c9fbdf10-619e-436f-bf4b-8566686f1577)]
 interface nsIAccessibleCoordinateType : nsISupports

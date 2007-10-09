@@ -58,7 +58,7 @@ Console.prototype = {
   log : function cs_log(aMsg) {
     this._console.logStringMessage(aMsg);
   },
-  
+
   open : function cs_open() {
     var wMediator = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                               .getService(Ci.nsIWindowMediator);
@@ -73,7 +73,7 @@ Console.prototype = {
       console.focus();
     }
   },
-  
+
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIConsole])
 };
 
@@ -89,19 +89,19 @@ function EventItem(aType, aData) {
 // EventItem implementation
 EventItem.prototype = {
   _cancel : false,
-  
+
   get type() {
     return this._type;
   },
-  
+
   get data() {
     return this._data;
   },
-  
+
   preventDefault : function ei_pd() {
     this._cancel = true;
   },
-  
+
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIEventItem])
 };
 
@@ -123,21 +123,21 @@ Events.prototype = {
       event: aEvent,
       listener: aListener
     });
-    
+
     function hasFilter(element) {
       return element.event == aEvent && element.listener == aListener;
     }
   },
-  
+
   removeListener : function evts_rl(aEvent, aListener) {
     this._listeners = this._listeners.filter(function(element){
       return element.event != aEvent && element.listener != aListener;
     });
   },
-  
+
   dispatch : function evts_dispatch(aEvent, aEventItem) {
     eventItem = new EventItem(aEvent, aEventItem);
-    
+
     this._listeners.forEach(function(key){
       if (key.event == aEvent) {
         key.listener.handleEvent ?
@@ -145,10 +145,10 @@ Events.prototype = {
           key.listener(eventItem);
       }
     });
-    
+
     return !eventItem._cancel;
   },
-  
+
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIEvents])
 };
 
@@ -158,21 +158,21 @@ Events.prototype = {
 function PreferenceBranch(aBranch) {
   if (!aBranch)
     aBranch = "";
-  
+
   this._root = aBranch;
   this._prefs = Components.classes["@mozilla.org/preferences-service;1"]
                           .getService(Ci.nsIPrefService);
 
   if (aBranch)
     this._prefs = this._prefs.getBranch(aBranch);
-    
+
   this._prefs.QueryInterface(Ci.nsIPrefBranch);
   this._prefs.QueryInterface(Ci.nsIPrefBranch2);
-  
+
   // we want to listen to "all" changes for this branch, so pass in a blank domain
   this._prefs.addObserver("", this, true);
   this._events = new Events();
-  
+
   var self = this;
   gShutdown.push(function() { self._shutdown(); });
 }
@@ -187,7 +187,7 @@ PreferenceBranch.prototype = {
     this._prefs = null;
     this._events = null;
   },
-  
+
   // for nsIObserver
   observe: function prefs_observe(aSubject, aTopic, aData) {
     if (aTopic == "nsPref:changed")
@@ -197,15 +197,15 @@ PreferenceBranch.prototype = {
   get root() {
     return this._root;
   },
-  
+
   get all() {
     return this.find({});
   },
-  
+
   get events() {
     return this._events;
   },
-  
+
   // XXX: Disabled until we can figure out the wrapped object issues
   // name: "name" or /name/
   // path: "foo.bar." or "" or /fo+\.bar/
@@ -215,25 +215,25 @@ PreferenceBranch.prototype = {
   find : function prefs_find(aOptions) {
     var retVal = [];
     var items = this._prefs.getChildList("", []);
-    
+
     for (var i = 0; i < items.length; i++) {
       retVal.push(new Preference(items[i], this));
     }
 
     return retVal;
   },
-  
+
   has : function prefs_has(aName) {
     return (this._prefs.getPrefType(aName) != Ci.nsIPrefBranch.PREF_INVALID);
   },
-  
+
   get : function prefs_get(aName) {
     return this.has(aName) ? new Preference(aName, this) : null;
   },
 
   getValue : function prefs_gv(aName, aValue) {
     var type = this._prefs.getPrefType(aName);
-    
+
     switch (type) {
       case Ci.nsIPrefBranch2.PREF_STRING:
         aValue = this._prefs.getComplexValue(aName, Ci.nsISupportsString).data;
@@ -245,13 +245,13 @@ PreferenceBranch.prototype = {
         aValue = this._prefs.getIntPref(aName);
         break;
     }
-    
+
     return aValue;
   },
-  
+
   setValue : function prefs_sv(aName, aValue) {
     var type = aValue != null ? aValue.constructor.name : "";
-    
+
     switch (type) {
       case "String":
         var str = Components.classes["@mozilla.org/supports-string;1"]
@@ -269,11 +269,11 @@ PreferenceBranch.prototype = {
         throw("Unknown preference value specified.");
     }
   },
-  
+
   reset : function prefs_reset() {
     this._prefs.resetBranch("");
   },
-  
+
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIPreferenceBranch, Ci.nsISupportsWeakReference])
 };
 
@@ -284,9 +284,9 @@ function Preference(aName, aBranch) {
   this._name = aName;
   this._branch = aBranch;
   this._events = new Events();
-  
+
   var self = this;
-  
+
   this.branch.events.addListener("change", function(aEvent){
     if (aEvent.data == self.name)
       self.events.dispatch(aEvent.type, aEvent.data);
@@ -299,11 +299,11 @@ Preference.prototype = {
   get name() {
     return this._name;
   },
-  
+
   get type() {
     var value = "";
     var type = this._prefs.getPrefType(name);
-    
+
     switch (type) {
       case Ci.nsIPrefBranch2.PREF_STRING:
         value = "String";
@@ -315,42 +315,42 @@ Preference.prototype = {
         value = "Number";
         break;
     }
-    
+
     return value;
   },
-  
+
   get value() {
     return this.branch.getValue(this._name, null);
   },
-  
+
   set value(aValue) {
     return this.branch.setValue(this._name, aValue);
   },
-  
+
   get locked() {
     return this.branch._prefs.prefIsLocked(this.name);
   },
-  
+
   set locked(aValue) {
     this.branch._prefs[ aValue ? "lockPref" : "unlockPref" ](this.name);
   },
-  
+
   get modified() {
     return this.branch._prefs.prefHasUserValue(this.name);
   },
-  
+
   get branch() {
     return this._branch;
   },
-  
+
   get events() {
     return this._events;
   },
-  
+
   reset : function pref_reset() {
     this.branch._prefs.clearUserPref(this.name);
   },
-  
+
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIPreference])
 };
 
@@ -368,20 +368,20 @@ SessionStorage.prototype = {
   get events() {
     return this._events;
   },
-  
+
   has : function ss_has(aName) {
     return this._storage.hasOwnProperty(aName);
   },
-  
+
   set : function ss_set(aName, aValue) {
     this._storage[aName] = aValue;
     this._events.dispatch("change", aName);
   },
-  
+
   get : function ss_get(aName, aDefaultValue) {
     return this.has(aName) ? this._storage[aName] : aDefaultValue;
   },
-  
+
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelISessionStorage])
 };
 
@@ -394,17 +394,30 @@ function Extension(aItem) {
   this._prefs = new PreferenceBranch("extensions." + this._item.id + ".");
   this._storage = new SessionStorage();
   this._events = new Events();
-  
+
   var installPref = "install-event-fired";
   if (!this._prefs.has(installPref)) {
     this._prefs.setValue(installPref, true);
     this._firstRun = true;
   }
 
+  this._enabled = false;
+  const PREFIX_ITEM_URI = "urn:mozilla:item:";
+  const PREFIX_NS_EM = "http://www.mozilla.org/2004/em-rdf#";
+  var rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
+  var itemResource = rdf.GetResource(PREFIX_ITEM_URI + this._item.id);
+  if (itemResource) {
+    var extmgr = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);
+    var ds = extmgr.datasource;
+    var target = ds.GetTarget(itemResource, rdf.GetResource(PREFIX_NS_EM + "isDisabled"), true);
+    if (target && target instanceof Ci.nsIRDFLiteral)
+      this._enabled = (target.Value != "true");
+  }
+
   var os = Components.classes["@mozilla.org/observer-service;1"]
                      .getService(Ci.nsIObserverService);
   os.addObserver(this, "em-action-requested", false);
-  
+
   var self = this;
   gShutdown.push(function(){ self._shutdown(); });
 }
@@ -422,8 +435,8 @@ Extension.prototype = {
     this._storage = null;
     this._events = null;
   },
-  
-  // for nsIObserver  
+
+  // for nsIObserver
   observe: function ext_observe(aSubject, aTopic, aData)
   {
     if ((aSubject instanceof Ci.nsIUpdateItem) && (aSubject.id == this._item.id))
@@ -444,31 +457,35 @@ Extension.prototype = {
   get id() {
     return this._item.id;
   },
-  
+
   get name() {
     return this._item.name;
   },
-  
+
+  get enabled() {
+    return this._enabled;
+  },
+
   get version() {
     return this._item.version;
   },
-  
+
   get firstRun() {
     return this._firstRun;
   },
-  
+
   get storage() {
     return this._storage;
   },
-  
+
   get prefs() {
     return this._prefs;
   },
-  
+
   get events() {
     return this._events;
   },
-  
+
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIExtension])
 };
 
@@ -478,9 +495,9 @@ Extension.prototype = {
 function Extensions() {
   this._extmgr = Components.classes["@mozilla.org/extensions/manager;1"]
                            .getService(Ci.nsIExtensionManager);
-                           
+
   this._cache = {};
-  
+
   var self = this;
   gShutdown.push(function() { self._shutdown(); });
 }
@@ -492,23 +509,23 @@ Extensions.prototype = {
     this._extmgr = null;
     this._cache = null;
   },
-  
+
   /*
    * Helper method to check cache before creating a new extension
    */
   _get : function exts_get(aId) {
     if (this._cache.hasOwnProperty(aId))
       return this._cache[aId];
-      
+
     var newExt = new Extension(this._extmgr.getItemForID(aId));
     this._cache[aId] = newExt;
     return newExt;
   },
-  
+
   get all() {
     return this.find({});
   },
-  
+
   // XXX: Disabled until we can figure out the wrapped object issues
   // id: "some@id" or /id/
   // name: "name" or /name/
@@ -518,22 +535,22 @@ Extensions.prototype = {
   find : function exts_find(aOptions) {
     var retVal = [];
     var items = this._extmgr.getItemList(Ci.nsIUpdateItem.TYPE_EXTENSION, {});
-    
+
     for (var i = 0; i < items.length; i++) {
       retVal.push(this._get(items[i].id));
     }
 
     return retVal;
   },
-  
+
   has : function exts_has(aId) {
     return this._extmgr.getItemForID(aId) != null;
   },
-  
+
   get : function exts_get(aId) {
     return this.has(aId) ? this._get(aId) : null;
   },
-  
+
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIExtensions])
 };
 
@@ -566,7 +583,7 @@ var Utilities = {
     }
     return this._annotations;
   },
-  
+
   _history : null,
   get history() {
     if (!this._history) {
@@ -575,7 +592,7 @@ var Utilities = {
     }
     return this._history;
   },
-  
+
   _windowMediator : null,
   get windowMediator() {
     if (!this._windowMediator) {
@@ -584,14 +601,14 @@ var Utilities = {
     }
     return this._windowMediator;
   },
-  
+
   makeURI : function(aSpec) {
     if (!aSpec)
       return null;
     var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
     return ios.newURI(aSpec, null, null);
   },
-  
+
   free : function() {
     this._bookmarks = null;
     this._livemarks = null;
@@ -609,12 +626,12 @@ function Window(aWindow) {
   this._tabbrowser = aWindow.getBrowser();
   this._events = new Events();
   this._cleanup = {};
-  
+
   this._watch("TabOpen");
   this._watch("TabMove");
   this._watch("TabClose");
   this._watch("TabSelect");
-                                 
+
   var self = this;
   gShutdown.push(function() { self._shutdown(); });
 }
@@ -630,36 +647,36 @@ Window.prototype = {
    */
   _watch : function win_watch(aType) {
     var self = this;
-    this._tabbrowser.addEventListener(aType, 
+    this._tabbrowser.addEventListener(aType,
       this._cleanup[aType] = function(e){ self._event(e); },
       true);
   },
-  
+
   /*
    * Helper event callback used to redirect events made on the XBL element
    */
   _event : function win_event(aEvent) {
     this._events.dispatch(aEvent.type, "");
   },
-  
+
   get tabs() {
     var tabs = [];
     var browsers = this._tabbrowser.browsers;
-    
+
     for (var i=0; i<browsers.length; i++)
       tabs.push(new BrowserTab(this._window, browsers[i]));
-    
+
     return tabs;
   },
-  
+
   get activeTab() {
     return new BrowserTab(this._window, this._tabbrowser.selectedBrowser);
   },
-  
+
   open : function win_open(aURI) {
     return new BrowserTab(this._window, this._tabbrowser.addTab(aURI.spec).linkedBrowser);
   },
-  
+
   _shutdown : function win_shutdown() {
     for (var type in this._cleanup)
       this._tabbrowser.removeEventListener(type, this._cleanup[type], true);
@@ -669,7 +686,7 @@ Window.prototype = {
     this._tabbrowser = null;
     this._events = null;
   },
-  
+
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIWindow])
 };
 
@@ -682,9 +699,9 @@ function BrowserTab(aWindow, aBrowser) {
   this._browser = aBrowser;
   this._events = new Events();
   this._cleanup = {};
-  
+
   this._watch("load");
-                                 
+
   var self = this;
   gShutdown.push(function() { self._shutdown(); });
 }
@@ -693,7 +710,7 @@ BrowserTab.prototype = {
   get uri() {
     return this._browser.currentURI;
   },
-  
+
   get index() {
     var tabs = this._tabbrowser.mTabs;
     for (var i=0; i<tabs.length; i++) {
@@ -706,15 +723,15 @@ BrowserTab.prototype = {
   get events() {
     return this._events;
   },
-  
+
   get window() {
     return this._window;
   },
-  
+
   get document() {
     return this._browser.contentDocument;
   },
-  
+
   /*
    * Helper used to setup event handlers on the XBL element
    */
@@ -724,7 +741,7 @@ BrowserTab.prototype = {
       this._cleanup[aType] = function(e){ self._event(e); },
       true);
   },
-  
+
   /*
    * Helper event callback used to redirect events made on the XBL element
    */
@@ -732,15 +749,15 @@ BrowserTab.prototype = {
     if (aEvent.type == "load") {
       if (!(aEvent.originalTarget instanceof Ci.nsIDOMHTMLDocument))
         return;
-        
+
       if (aEvent.originalTarget.defaultView instanceof Ci.nsIDOMWindowInternal &&
           aEvent.originalTarget.defaultView.frameElement)
         return;
     }
-      
+
     this._events.dispatch(aEvent.type, "");
   },
-  
+
   /*
    * Helper used to determine the index offset of the browsertab
    */
@@ -748,39 +765,39 @@ BrowserTab.prototype = {
     var tabs = this._tabbrowser.mTabs;
     return tabs[this.index] || null;
   },
-  
+
   load : function bt_load(aURI) {
     this._browser.loadURI(aURI.spec, null, null);
   },
-  
+
   focus : function bt_focus() {
     this._tabbrowser.selectedTab = this._getTab();
     this._tabbrowser.focus();
   },
-  
+
   close : function bt_close() {
     this._tabbrowser.removeTab(this._getTab());
   },
-  
+
   moveBefore : function bt_movebefore(aBefore) {
     this._tabbrowser.moveTabTo(this._getTab(), aBefore.index);
   },
-  
+
   moveToEnd : function bt_moveend() {
     this._tabbrowser.moveTabTo(this._getTab(), this._tabbrowser.browsers.length);
   },
-  
+
   _shutdown : function bt_shutdown() {
     for (var type in this._cleanup)
       this._browser.removeEventListener(type, this._cleanup[type], true);
     this._cleanup = null;
-    
+
     this._window = null;
     this._tabbrowser = null;
     this._browser = null;
     this._events = null;
   },
-  
+
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBrowserTab])
 };
 
@@ -795,24 +812,26 @@ Annotations.prototype = {
   get names() {
     return Utilities.annotations.getItemAnnotationNames(this._id, {});
   },
-  
+
   has : function ann_has(aName) {
     return Utilities.annotations.itemHasAnnotation(this._id, aName);
   },
-  
+
   get : function(aName) {
-    return Utilities.annotations.getItemAnnotation(this._id, aName);
+    if (this.has(aName))
+      return Utilities.annotations.getItemAnnotation(this._id, aName);
+    return null;
   },
-  
+
   set : function(aName, aValue, aExpiration) {
     Utilities.annotations.setItemAnnotation(this._id, aName, aValue, 0, aExpiration);
   },
-    
+
   remove : function ann_remove(aName) {
     if (aName)
       Utilities.annotations.removeItemAnnotation(this._id, aName);
   },
-  
+
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIAnnotations])
 };
 
@@ -826,8 +845,8 @@ function Bookmark(aId, aParent, aType) {
   this._annotations = new Annotations(this._id);
   this._events = new Events();
 
-  Utilities.bookmarks.addObserver(this, false);  
-                                 
+  Utilities.bookmarks.addObserver(this, false);
+
   var self = this;
   gShutdown.push(function() { self._shutdown(); });
 }
@@ -836,14 +855,14 @@ Bookmark.prototype = {
   _shutdown : function bm_shutdown() {
     this._annotations = null;
     this._events = null;
-    
-    Utilities.bookmarks.removeObserver(this);  
+
+    Utilities.bookmarks.removeObserver(this);
   },
-  
+
   get id() {
     return this._id;
   },
-  
+
   get title() {
     return Utilities.bookmarks.getItemTitle(this._id);
   },
@@ -883,24 +902,24 @@ Bookmark.prototype = {
   get parent() {
     return this._parent;
   },
-  
+
   set parent(aFolder) {
     Utilities.bookmarks.moveItem(this._id, aFolder.id, Utilities.bookmarks.DEFAULT_INDEX);
     // this._parent is updated in onItemMoved
   },
-  
+
   get annotations() {
     return this._annotations;
   },
-  
+
   get events() {
     return this._events;
   },
-  
+
   remove : function bm_remove() {
     Utilities.bookmarks.removeItem(this._id);
   },
-  
+
   // observer
   onBeginUpdateBatch : function bm_obub() {
   },
@@ -927,13 +946,13 @@ Bookmark.prototype = {
 
   onItemMoved: function bm_oim(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
     if (this._id == aId) {
-      this._parent = new BookmarkFolder(aNewParent, Utilities.bookmarks.getFolderIdForItem(aNewParent));    
+      this._parent = new BookmarkFolder(aNewParent, Utilities.bookmarks.getFolderIdForItem(aNewParent));
       this._events.dispatch("move", aId);
     }
   },
 
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIBookmark, Ci.nsINavBookmarkObserver])
-}; 
+};
 
 
 //=================================================
@@ -942,13 +961,13 @@ function BookmarkFolder(aId, aParent) {
   this._id = aId;
   if (this._id == null)
     this._id = Utilities.bookmarks.bookmarksRoot;
-  
+
   this._parent = aParent;
-                                 
+
   this._annotations = new Annotations(this._id);
   this._events = new Events();
 
-  Utilities.bookmarks.addObserver(this, false);  
+  Utilities.bookmarks.addObserver(this, false);
 
   var self = this;
   gShutdown.push(function() { self._shutdown(); });
@@ -958,14 +977,14 @@ BookmarkFolder.prototype = {
   _shutdown : function bmf_shutdown() {
     this._annotations = null;
     this._events = null;
-    
-    Utilities.bookmarks.removeObserver(this);  
+
+    Utilities.bookmarks.removeObserver(this);
   },
-  
+
   get id() {
     return this._id;
   },
-  
+
   get title() {
     return Utilities.bookmarks.getItemTitle(this._id);
   },
@@ -989,7 +1008,7 @@ BookmarkFolder.prototype = {
   get parent() {
     return this._parent;
   },
-  
+
   set parent(aFolder) {
     Utilities.bookmarks.moveItem(this._id, aFolder.id, Utilities.bookmarks.DEFAULT_INDEX);
     // this._parent is updated in onItemMoved
@@ -998,14 +1017,14 @@ BookmarkFolder.prototype = {
   get annotations() {
     return this._annotations;
   },
-  
+
   get events() {
     return this._events;
   },
-  
+
   get children() {
     var items = [];
-    
+
     var options = Utilities.history.getNewQueryOptions();
     var query = Utilities.history.getNewQuery();
     query.setFolders([this._id], 1);
@@ -1032,29 +1051,29 @@ BookmarkFolder.prototype = {
 
     return items;
   },
-  
+
   addBookmark : function bmf_addbm(aTitle, aUri) {
     var newBookmarkID = Utilities.bookmarks.insertBookmark(this._id, aUri, Utilities.bookmarks.DEFAULT_INDEX, aTitle);
     var newBookmark = new Bookmark(newBookmarkID, this, "bookmark");
     return newBookmark;
   },
-  
+
   addSeparator : function bmf_addsep() {
     var newBookmarkID = Utilities.bookmarks.insertSeparator(this._id, Utilities.bookmarks.DEFAULT_INDEX);
     var newBookmark = new Bookmark(newBookmarkID, this, "separator");
     return newBookmark;
   },
-  
+
   addFolder : function bmf_addfolder(aTitle) {
     var newFolderID = Utilities.bookmarks.createFolder(this._id, aTitle, Utilities.bookmarks.DEFAULT_INDEX);
     var newFolder = new BookmarkFolder(newFolderID, this);
     return newFolder;
   },
-  
+
   remove : function bmf_remove() {
     Utilities.bookmarks.removeFolder(this._id);
   },
-  
+
   // observer
   onBeginUpdateBatch : function bmf_obub() {
   },
@@ -1066,8 +1085,8 @@ BookmarkFolder.prototype = {
     // handle root folder events
     if (!this._parent)
       this._events.dispatch("add", aId);
-    
-    // handle this folder events  
+
+    // handle this folder events
     if (this._id == aFolder)
       this._events.dispatch("addchild", aId);
   },
@@ -1077,7 +1096,7 @@ BookmarkFolder.prototype = {
     if (!this._parent || this._id == aId)
       this._events.dispatch("remove", aId);
 
-    // handle this folder events      
+    // handle this folder events
     if (this._id == aFolder)
       this._events.dispatch("removechild", aId);
   },
@@ -1094,7 +1113,7 @@ BookmarkFolder.prototype = {
   onItemMoved: function bmf_oim(aId, aOldParent, aOldIndex, aNewParent, aNewIndex) {
     // handle this folder event, root folder cannot be moved
     if (this._id == aId) {
-      this._parent = new BookmarkFolder(aNewParent, Utilities.bookmarks.getFolderIdForItem(aNewParent));    
+      this._parent = new BookmarkFolder(aNewParent, Utilities.bookmarks.getFolderIdForItem(aNewParent));
       this._events.dispatch("move", aId);
     }
   },
@@ -1129,10 +1148,10 @@ function Application() {
   this._storage = null;
   this._events = null;
   this._bookmarks = null;
-  
+
   this._info = Components.classes["@mozilla.org/xre/app-info;1"]
                      .getService(Ci.nsIXULAppInfo);
-    
+
   var os = Components.classes["@mozilla.org/observer-service;1"]
                      .getService(Ci.nsIObserverService);
 
@@ -1166,15 +1185,15 @@ Application.prototype = {
   get id() {
     return this._info.ID;
   },
-  
+
   get name() {
     return this._info.name;
   },
-  
+
   get version() {
     return this._info.version;
   },
-  
+
   // for nsIObserver
   observe: function app_observe(aSubject, aTopic, aData) {
     if (aTopic == "app-startup") {
@@ -1197,7 +1216,7 @@ Application.prototype = {
         gShutdown.shift()();
       }
 
-      // release our observers      
+      // release our observers
       var os = Components.classes["@mozilla.org/observer-service;1"]
                          .getService(Ci.nsIObserverService);
 
@@ -1206,7 +1225,7 @@ Application.prototype = {
       os.removeObserver(this, "quit-application-requested");
       os.removeObserver(this, "quit-application-granted");
       os.removeObserver(this, "quit-application");
-      
+
       os.removeObserver(this, "xpcom-shutdown");
 
       this._info = null;
@@ -1216,7 +1235,7 @@ Application.prototype = {
       this._events = null;
       this._extensions = null;
       this._bookmarks = null;
-      
+
       Utilities.free();
     }
   },
@@ -1234,31 +1253,31 @@ Application.prototype = {
   getHelperForLanguage : function app_ghfl(aCount) {
     return null;
   },
-  
+
   // for nsISupports
   QueryInterface : XPCOMUtils.generateQI([Ci.fuelIApplication, Ci.nsIObserver, Ci.nsIClassInfo]),
-  
+
   get console() {
     if (this._console == null)
         this._console = new Console();
 
     return this._console;
   },
-  
+
   get storage() {
     if (this._storage == null)
         this._storage = new SessionStorage();
 
     return this._storage;
   },
-  
+
   get prefs() {
     if (this._prefs == null)
         this._prefs = new PreferenceBranch("");
 
     return this._prefs;
   },
-  
+
   get extensions() {
     return this._extensions;
   },
@@ -1276,17 +1295,17 @@ Application.prototype = {
 
     return this._bookmarks;
   },
-  
+
   get windows() {
     var win = [];
     var enum = Utilities.windowMediator.getEnumerator("navigator:browser");
-    
+
     while (enum.hasMoreElements())
       win.push(new Window(enum.getNext()));
 
     return win;
   },
-  
+
   get activeWindow() {
     return new Window(Utilities.windowMediator.getMostRecentWindow("navigator:browser"));
   }

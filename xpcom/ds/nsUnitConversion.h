@@ -88,9 +88,27 @@ inline PRInt32 NSToIntRound(float aValue)
  */
 inline nscoord NSFloatPixelsToAppUnits(float aPixels, PRInt32 aAppUnitsPerPixel)
 {
-  nscoord r = NSToCoordRound(aPixels * aAppUnitsPerPixel);
-  VERIFY_COORD(r);
-  return r;
+  float product = aPixels * aAppUnitsPerPixel;
+  nscoord result;
+
+#ifdef NS_COORD_IS_FLOAT
+  // No need to bounds-check if converting float to float
+  result = NSToCoordRound(product);
+#else
+  // Bounds-check before converting out of float, to avoid overflow
+  if (product >= nscoord_MAX) {
+    NS_WARNING("Overflowed nscoord_MAX in conversion to nscoord");
+    result = nscoord_MAX;
+  } else if (product <= nscoord_MIN) {
+    NS_WARNING("Overflowed nscoord_MIN in conversion to nscoord");
+    result = nscoord_MIN;
+  } else {
+    result = NSToCoordRound(product);
+  }
+#endif
+
+  VERIFY_COORD(result);
+  return result;
 }
 
 inline nscoord NSIntPixelsToAppUnits(PRInt32 aPixels, PRInt32 aAppUnitsPerPixel)

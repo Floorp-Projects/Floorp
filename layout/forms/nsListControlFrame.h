@@ -245,6 +245,13 @@ public:
    * frame
    */
   void PaintFocus(nsIRenderingContext& aRC, nsPoint aPt);
+  /**
+   * If this frame IsFocused(), invalidates an area that includes anything
+   * that PaintFocus will or could have painted --- basically the whole
+   * GetOptionsContainer, plus some extra stuff if there are no options. This
+   * must be called every time mEndSelectionIndex changes.
+   */
+  void InvalidateFocus();
 
   /**
    * Function to calculate the height a row, for use with the "size" attribute.
