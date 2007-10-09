@@ -5382,7 +5382,9 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
       JSObject *xpc_proto_proto = ::JS_GetPrototype(cx, dot_prototype);
 
-      if (proto && JS_GET_CLASS(cx, xpc_proto_proto) == sObjectClass) {
+      if (proto &&
+          (!xpc_proto_proto ||
+           JS_GET_CLASS(cx, xpc_proto_proto) == sObjectClass)) {
         if (!::JS_SetPrototype(cx, dot_prototype, proto)) {
           return NS_ERROR_UNEXPECTED;
         }
@@ -5403,7 +5405,9 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
 
       JSObject *xpc_proto_proto = ::JS_GetPrototype(cx, dot_prototype);
 
-      if (proto && JS_GET_CLASS(cx, xpc_proto_proto) == sObjectClass) {
+      if (proto &&
+          (!xpc_proto_proto ||
+           JS_GET_CLASS(cx, xpc_proto_proto) == sObjectClass)) {
         if (!::JS_SetPrototype(cx, dot_prototype, proto)) {
           return NS_ERROR_UNEXPECTED;
         }
