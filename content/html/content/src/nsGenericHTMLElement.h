@@ -52,7 +52,6 @@ class nsIDOMNodeList;
 class nsIFrame;
 class nsMappedAttributes;
 class nsIStyleRule;
-class nsISupportsArray;
 class nsChildContentList;
 class nsDOMCSSDeclaration;
 class nsIDOMCSSStyleDeclaration;
