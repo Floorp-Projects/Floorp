@@ -879,6 +879,17 @@ nsNavHistory::InitStatements()
     getter_AddRefs(mDBBookmarkToUrlResult));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // mDBURIHasTag
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+      "SELECT b.id FROM moz_bookmarks b "
+      "JOIN moz_places p ON b.fk = p.id "
+      "WHERE p.url = ?1 "
+        "AND (SELECT b1.parent FROM moz_bookmarks b1 WHERE "
+        "b1.id = b.parent AND LOWER(b1.title) = LOWER(?2)) = ?3 "
+      "LIMIT 1"),
+    getter_AddRefs(mDBURIHasTag));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   return NS_OK;
 }
 
@@ -4098,40 +4109,29 @@ nsNavHistory::GroupByHost(nsNavHistoryQueryResultNode *aResultNode,
 PRBool
 nsNavHistory::URIHasTag(nsIURI* aURI, const nsAString& aTag)
 {
-  nsresult rv;
-  nsCOMPtr<nsITaggingService> tagService =
-    do_GetService(TAGGING_SERVICE_CID, &rv);
+  mozStorageStatementScoper scoper(mDBURIHasTag);
+
+  nsCAutoString spec;
+  nsresult rv = aURI->GetSpec(spec);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBURIHasTag->BindUTF8StringParameter(0, spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIVariant> tagsV;
-  rv = tagService->GetTagsForURI(aURI, getter_AddRefs(tagsV));
+  rv = mDBURIHasTag->BindStringParameter(1, aTag);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // confirm that type is array, and has elements
-  // (data type is different for empty array)
-  PRUint16 dataType;
-  tagsV->GetDataType(&dataType);
-  if (dataType != nsIDataType::VTYPE_ARRAY)
-    return PR_FALSE;
-
-  // get tags as array
-  PRUint16 type;
-  nsIID iid;
-  PRUint32 count;
-  PRUnichar** tags;
-  rv = tagsV->GetAsArray(&type, &iid, &count, (void**)&tags);
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
+  PRInt64 tagRoot;
+  rv = bookmarks->GetTagRoot(&tagRoot);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mDBURIHasTag->BindInt64Parameter(2, tagRoot);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  for (PRUint32 i = 0; i < count; i++) {
-    nsAutoString tag(tags[i]);
-    PRInt32 position = Compare(tag, aTag, nsCaseInsensitiveStringComparator());
-    if (position == 0) {
-      nsMemory::Free(tags);
-      return PR_TRUE;
-    }
-  }
-  nsMemory::Free(tags);
-  return PR_FALSE;
+  PRBool hasTag = PR_FALSE;
+  rv = mDBURIHasTag->ExecuteStep(&hasTag);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return hasTag;
 }
 
 
