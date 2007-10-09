@@ -4816,7 +4816,7 @@ MemberExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
 
             /* Pick JSOP_EVAL and flag tc as heavyweight if eval(...). */
             pn2->pn_op = JSOP_CALL;
-            if (pn->pn_arity == PN_NAME &&
+            if (pn->pn_op == JSOP_NAME &&
                 pn->pn_atom == cx->runtime->atomState.evalAtom) {
                 pn2->pn_op = JSOP_EVAL;
                 tc->flags |= TCF_FUN_HEAVYWEIGHT;
