@@ -777,8 +777,8 @@ VerifySameTree(nsStyleContext* aContext1, nsStyleContext* aContext2)
       break;
     top2 = parent;
   }
-  if (top1 != top2)
-    printf("Style contexts are not in the same style context tree.\n");
+  NS_ASSERTION(top1 == top2,
+               "Style contexts are not in the same style context tree");
 }
 
 static void
@@ -812,9 +812,10 @@ VerifyContextParent(nsPresContext* aPresContext, nsIFrame* aFrame,
     if (aParentContext != actualParentContext) {
       DumpContext(aFrame, aContext);
       if (aContext == aParentContext) {
-        fputs("Using parent's style context\n\n", stdout);
+        NS_ERROR("Using parent's style context");
       }
       else {
+        NS_ERROR("Wrong parent style context");
         fputs("Wrong parent style context: ", stdout);
         DumpContext(nsnull, actualParentContext);
         fputs("should be using: ", stdout);
@@ -826,6 +827,7 @@ VerifyContextParent(nsPresContext* aPresContext, nsIFrame* aFrame,
   }
   else {
     if (actualParentContext) {
+      NS_ERROR("Have parent context and shouldn't");
       DumpContext(aFrame, aContext);
       fputs("Has parent context: ", stdout);
       DumpContext(nsnull, actualParentContext);
