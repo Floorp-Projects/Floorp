@@ -57,7 +57,6 @@
 #include "nsIDeviceContext.h"
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
-#include "nsIEventSink.h"
 #include "nsIScrollableView.h"
 #include "nsIViewManager.h"
 #include "nsIInterfaceRequestor.h"
@@ -121,7 +120,7 @@ nsIWidget         * gRollupWidget   = nsnull;
 @interface ChildView(Private)
 
 // sets up our view, attaching it to its owning gecko view
-- (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild eventSink:(nsIEventSink*)inSink;
+- (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild;
 
 // sends gecko an ime composition event
 - (nsRect) sendCompositionEvent:(PRInt32)aEventType;
@@ -373,7 +372,7 @@ nsChildView::~nsChildView()
 }
 
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsChildView, nsBaseWidget, nsIPluginWidget, nsIKBStateControl, nsIEventSink)
+NS_IMPL_ISUPPORTS_INHERITED2(nsChildView, nsBaseWidget, nsIPluginWidget, nsIKBStateControl)
 
 
 // Utility method for implementing both Create(nsIWidget ...)
@@ -466,7 +465,7 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
 NSView*
 nsChildView::CreateCocoaView(NSRect inFrame)
 {
-  return [[[ChildView alloc] initWithFrame:inFrame geckoChild:this eventSink:nsnull] autorelease];
+  return [[[ChildView alloc] initWithFrame:inFrame geckoChild:this] autorelease];
 }
 
 
@@ -1670,69 +1669,6 @@ NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
 #pragma mark -
 
 
-// Handle an event coming into us and send it to gecko.
-NS_IMETHODIMP
-nsChildView::DispatchEvent(void* anEvent, PRBool *_retval)
-{
-  return NS_OK;
-}
-
-
-// The drag manager has let us know that something related to a drag has
-// occurred in this window. It could be any number of things, ranging from 
-// a drop, to a drag enter/leave, or a drag over event. The actual event
-// is passed in |aMessage| and is passed along to our event handler so Gecko
-// knows about it.
-NS_IMETHODIMP
-nsChildView::DragEvent(PRUint32 aMessage, PRInt16 aMouseGlobalX, PRInt16 aMouseGlobalY,
-                         PRUint16 aKeyModifiers, PRBool *_retval)
-{
-  // ensure that this is going to a ChildView (not something else like a
-  // scrollbar). I think it's safe to just bail at this point if it's not
-  // what we expect it to be
-  if (![mView isKindOfClass:[ChildView class]]) {
-    *_retval = PR_FALSE;
-    return NS_OK;
-  }
-
-  // set up gecko event
-  nsMouseEvent geckoEvent(PR_TRUE, aMessage, nsnull, nsMouseEvent::eReal);
-  [(ChildView*)mView convertGenericCocoaEvent:nil toGeckoEvent:&geckoEvent];
-
-  // Use our own coordinates in the gecko event.
-  // Convert event from gecko global coords to gecko view coords.
-  NSPoint localPoint = NSMakePoint(aMouseGlobalX, aMouseGlobalY);
-  FlipCocoaScreenCoordinate(localPoint);
-  localPoint = [[mView window] convertScreenToBase:localPoint];
-  localPoint = [mView convertPoint:localPoint fromView:nil];
-  geckoEvent.refPoint.x = static_cast<nscoord>(localPoint.x);
-  geckoEvent.refPoint.y = static_cast<nscoord>(localPoint.y);
-
-  DispatchWindowEvent(geckoEvent);
-
-  // we handled the event
-  *_retval = PR_TRUE;
-  return NS_OK;
-}
-
-
-// The cocoa view calls DispatchWindowEvent() directly, so no need for this
-NS_IMETHODIMP
-nsChildView::Scroll(PRBool aVertical, PRInt16 aNumLines, PRInt16 aMouseLocalX, 
-                    PRInt16 aMouseLocalY, PRBool *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
-nsChildView::Idle()
-{
-  // do some idle stuff?
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
 gfxASurface*
 nsChildView::GetThebesSurface()
 {
@@ -1813,8 +1749,8 @@ NSView* gLastDragView = nil;
 NSEvent* gLastDragEvent = nil;
 
 
-// initWithFrame:geckoChild:eventSink:
-- (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild eventSink:(nsIEventSink*)inSink
+// initWithFrame:geckoChild:
+- (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild
 {
   if ((self = [super initWithFrame:inFrame])) {
     mWindow = nil;
@@ -4202,14 +4138,17 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     dragSession->SetDragAction(action);
   }
 
-  NSPoint dragLocation = [aSender draggingLocation];
-  dragLocation = [[self window] convertBaseToScreen:dragLocation];
-  FlipCocoaScreenCoordinate(dragLocation);
+  // set up gecko event
+  nsMouseEvent geckoEvent(PR_TRUE, aMessage, nsnull, nsMouseEvent::eReal);
+  [self convertGenericCocoaEvent:nil toGeckoEvent:&geckoEvent];
 
-  // Pass into Gecko for handling.
-  PRBool handled = PR_FALSE;
-  mGeckoChild->DragEvent(aMessage, (PRInt16)dragLocation.x,
-                         (PRInt16)dragLocation.y, 0, &handled);
+  // Use our own coordinates in the gecko event.
+  // Convert event from gecko global coords to gecko view coords.
+  NSPoint localPoint = [self convertPoint:[aSender draggingLocation] fromView:nil];
+  geckoEvent.refPoint.x = static_cast<nscoord>(localPoint.x);
+  geckoEvent.refPoint.y = static_cast<nscoord>(localPoint.y);
+
+  mGeckoChild->DispatchWindowEvent(geckoEvent);
 
   if (aMessage == NS_DRAGDROP_EXIT && dragSession) {
     nsCOMPtr<nsIDOMNode> sourceNode;
@@ -4223,7 +4162,7 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     }
   }
 
-  return handled ? YES : NO;
+  return YES;
 }
 
 
