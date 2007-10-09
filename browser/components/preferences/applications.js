@@ -287,21 +287,19 @@ HandlerInfoWrapper.prototype = {
     if (this.plugin && !this.isDisabledPluginType)
       return kActionUsePlugin;
 
-    // XXX nsIMIMEService::getFromTypeAndExtension returns handler infos
-    // whose default action is saveToDisk; should we do that here too?
-    // And will there ever be handler info objects with no preferred action?
-    if (!this.wrappedHandlerInfo.preferredAction) {
-      if (gApplicationsPane.isValidHandlerApp(this.preferredApplicationHandler))
-        return Ci.nsIHandlerInfo.useHelperApp;
-      else
-        return Ci.nsIHandlerInfo.useSystemDefault;
-    }
-
     // If the action is to use a helper app, but we don't have a preferred
-    // helper app, switch to using the system default.
+    // handler app, then switch to using the system default, if any; otherwise
+    // fall back to saving to disk, which is the default action in nsMIMEInfo.
+    // Note: "save to disk" is an invalid value for protocol info objects,
+    // but the alwaysAskBeforeHandling getter will detect that situation
+    // and always return true in that case to override this invalid value.
     if (this.wrappedHandlerInfo.preferredAction == Ci.nsIHandlerInfo.useHelperApp &&
-        !gApplicationsPane.isValidHandlerApp(this.preferredApplicationHandler))
-      return Ci.nsIHandlerInfo.useSystemDefault;
+        !gApplicationsPane.isValidHandlerApp(this.preferredApplicationHandler)) {
+      if (this.wrappedHandlerInfo.hasDefaultHandler)
+        return Ci.nsIHandlerInfo.useSystemDefault;
+      else
+        return Ci.nsIHandlerInfo.saveToDisk;
+    }
 
     return this.wrappedHandlerInfo.preferredAction;
   },
@@ -324,6 +322,16 @@ HandlerInfoWrapper.prototype = {
     // plugin-handled types by returning false here.
     if (this.plugin && this.handledOnlyByPlugin)
       return false;
+
+    // If this is a protocol type and the preferred action is "save to disk",
+    // which is invalid for such types, then return true here to override that
+    // action.  This could happen when the preferred action is to use a helper
+    // app, but the preferredApplicationHandler is invalid, and there isn't
+    // a default handler, so the preferredAction getter returns save to disk
+    // instead.
+    if (!(this.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) &&
+        this.preferredAction == Ci.nsIHandlerInfo.saveToDisk)
+      return true;
 
     return this.wrappedHandlerInfo.alwaysAskBeforeHandling;
   },
@@ -1474,6 +1482,10 @@ var gApplicationsPane = {
     }
 
     handlerInfo.store();
+
+    // Make sure the handler info object is flagged to indicate that there is
+    // now some user configuration for the type.
+    handlerInfo.handledOnlyByPlugin = false;
 
     // Update the action label and image to reflect the new preferred action.
     typeItem.setAttribute("actionDescription",
