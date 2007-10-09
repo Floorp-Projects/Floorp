@@ -91,9 +91,7 @@ gfxPSSurface::BeginPage()
 nsresult
 gfxPSSurface::EndPage()
 {
-    cairo_t *cx = cairo_create(CairoSurface());
-    cairo_show_page(cx);
-    cairo_destroy(cx);
+    cairo_surface_show_page(CairoSurface());
     return NS_OK;
 }
 

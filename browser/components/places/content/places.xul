@@ -24,6 +24,7 @@
 #   Annie Sullivan <annie.sullivan@gmail.com>
 #   Asaf Romano <mano@mozilla.com>
 #   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+#   Dietrich Ayala <dietrich@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,6 +46,8 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/places/places.css"?>
 
+<?xul-overlay href="chrome://browser/content/places/editBookmarkOverlay.xul"?>
+
 #ifdef XP_MACOSX
 <?xul-overlay href="chrome://browser/content/macBrowserOverlay.xul"?>
 #else
@@ -64,6 +67,7 @@
         title="&places.organizer.title;" 
         windowtype="Places:Organizer" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         onload="PlacesOrganizer.init();"
         onunload="PlacesOrganizer.destroy();"
         width="700" height="500" screenX="10" screenY="10"
@@ -71,6 +75,8 @@
 
   <script type="application/x-javascript"
           src="chrome://browser/content/places/places.js"/>
+  <script type="application/javascript"
+          src="chrome://browser/content/utilityOverlay.js"/>
 
 #ifdef XP_MACOSX
 #include ../../../base/content/browserMountPoints.inc
@@ -132,22 +138,11 @@
          modifiers="accel,shift"/>
     <key id="placesKey_open"
          command="placesCmd_open" 
-         keycode="VK_ENTER"/>
-    <key id="placesKey_open"
-         command="placesCmd_open" 
          keycode="VK_RETURN"/>
-    <key id="placesKey_open:window"
-         command="placesCmd_open:window" 
-         keycode="VK_ENTER"
-         modifiers="shift"/>
     <key id="placesKey_open:window"
          command="placesCmd_open:window" 
          keycode="VK_RETURN"
          modifiers="shift"/>
-    <key id="placesKey_open:tab"
-         command="placesCmd_open:tab" 
-         keycode="VK_ENTER"
-         modifiers="accel"/>
     <key id="placesKey_open:tab"
          command="placesCmd_open:tab" 
          keycode="VK_RETURN"
@@ -240,22 +235,13 @@
                     accesskey="&selectAllCmd.accesskey;"/>
 
           <menuseparator id="orgMoveSeparator"/>
-          
+
           <menuitem id="orgDelete"
                     command="cmd_delete"
                     label="&deleteCmd.label;"
                     key="key_delete"
                     accesskey="&deleteCmd.accesskey;"/>
-          <menuitem id="orgRename"
-                    command="placesCmd_rename"
-                    label="&cmd.rename.label;"
-                    accesskey="&cmd.rename.accesskey;"/>
-          <menuitem id="orgProperties"
-                    command="placesCmd_show:info"
-                    label="&cmd.properties.label;"
-                    key="placesKey_show:info"
-                    accesskey="&cmd.properties.accesskey;"/>
-          
+ 
           <menuseparator id="orgCloseSeparator"/>
 
           <menuitem id="orgClose"
@@ -270,6 +256,7 @@
                      label="&views.label;"
                      accesskey="&view.accesskey;">
         <menupopup id="viewMenuPopup">
+<!--
           <menuitem id="viewDetails"
                     type="radio"
 #ifdef MACOSX
@@ -282,18 +269,19 @@
 
           <menuseparator id="addonsSeparator"/>
 
-          <!--
           <menuitem id="viewAddons"
                     command=""
                     label="&view.addons.label;"
                     accesskey="&view.addons.label;"/>
           <menuseparator id="sortingSeparator"/>
-          -->
+-->
+
           <menu id="viewColumns" 
                 label="&view.columns.label;" accesskey="&view.columns.accesskey;">
             <menupopup onpopupshowing="ViewMenu.fillWithColumns(event, null, null, 'checkbox', null);"
                        oncommand="ViewMenu.showHideColumn(event.target); event.stopPropagation();"/>
           </menu>
+
           <menu id="viewSort" label="&view.sort.label;"
                 accesskey="&view.sort.accesskey;">
             <menupopup onpopupshowing="ViewMenu.populateSortMenu(event);"
@@ -310,14 +298,14 @@
                         oncommand="ViewMenu.setSortColumn(null, 'descending'); event.stopPropagation();"/>
             </menupopup>
           </menu>
-          <!--
+<!--
           <menuseparator id="groupingSeparator" observes="placesBC_grouping:separator"/>
 
           <menuitem id="viewGroupNone" type="radio" name="group"
                     observes="placesBC_grouping:off"/>
           <menuitem id="viewGroupGroup" type="radio" name="group"
                     observes="placesBC_grouping:on"/>
-          -->
+-->
         </menupopup>
       </toolbarbutton>
 
@@ -382,67 +370,120 @@
     <vbox id="contentView" flex="4">
       <deck id="contentDeck" flex="1">
         <vbox id="defaultView" flex="1">
-          <hbox id="titlebar" align="center">
+          <hbox id="titlebar">
             <label id="showingPrefix"/>
             <deck id="titleDeck" flex="1">
               <label id="contentTitle" flex="1" crop="right"/>
-              <hbox align="center" id="titlebarMatch" hidden="true">
-                <label value="&advancedSearch.match.label;"/>
-                <menulist id="advancedSearchType"
-                          oncommand="PlacesQueryBuilder.doSearch();">
-                  <menupopup>
-                    <menuitem value="and" label="&advancedSearch.all.label;"/>
-                    <menuitem value="or" label="&advancedSearch.any.label;"/>
-                  </menupopup>
-                </menulist>
-                <label value="&advancedSearch.rules.label;"/>
-              </hbox>
             </deck>
-            <hbox id="searchModifiers" hidden="true" align="center">
-              <button id="saveSearch" class="small" 
-                      label="&saveSearch.label;" accesskey="&saveSearch.accesskey;"
-                      command="OrganizerCommand_search:save"/>
-              <button id="moreCriteria"
-                      class="small"
-                      label="&moreCriteria.label;"
-                      command="OrganizerCommand_search:moreCriteria"/>
-            </hbox>
           </hbox>
+          <vbox id="searchModifiers" hidden="true">
+            <toolbar id="organizerScopeBar" class="chromeclass-toolbar">
+              <toolbarbutton id="scopeBarTitle" label="&search.label;"/>
+              <toolbarbutton id="scopeBarFolder" type="radio" group="scopeBar" 
+                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
+                             label="&search.scopeFolder.label;"/>
+              <toolbarbutton id="scopeBarAll" type="radio" group="scopeBar"
+                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
+                             label="&search.scopeAll.label;"
+                             checked="true"/>
+              <toolbarbutton id="scopeBarMenu" type="radio" group="scopeBar"
+                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
+                             label="&search.scopeMenu.label;"/>
+              <toolbarbutton id="scopeBarToolbar" type="radio" group="scopeBar"
+                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
+                             label="&search.scopeToolbar.label;"/>
+              <!--
+              <toolbarbutton id="scopeBarDownloads" type="radio" group="scopeBar"
+                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
+                             label="&search.scopeDownloads.label;"/>
+              -->
+              <toolbarbutton id="scopeBarHistory" type="radio" group="scopeBar"
+                             oncommand="PlacesQueryBuilder.onScopeSelected(this);"
+                             label="&search.scopeHistory.label;"/>
+              <spacer flex="1"/>
+              <button id="organizerScopeBarExpander"
+                      class="expander-down"
+                      tooltiptext="&search.scopeBarExpanderDown.tooltip;"
+                      tooltiptextdown="&search.scopeBarExpanderDown.tooltip;"
+                      tooltiptextup="&search.scopeBarExpanderUp.tooltip;"
+                      oncommand="PlacesQueryBuilder.toggleVisibility();"/>
+            </toolbar>
 #include advancedSearch.inc          
-          <tree id="placeContent" class="placesTree" context="placesContext" 
-                flex="1" type="places" 
-                ondblclick="this.controller.openSelectedNodeWithEvent(event);"
-                onclick="PlacesOrganizer.onTreeClick(event);">
-            <treecols id="placeContentColumns">
-              <treecol label="&col.name.label;" id="title" flex="5" primary="true" 
-                       persist="width hidden ordinal sortActive sortDirection"/>
-              <splitter class="tree-splitter"/>
-              <treecol label="&col.tags.label;" id="tags" flex="2"
-                       persist="width hidden ordinal sortActive sortDirection"/>
-              <splitter class="tree-splitter"/>
-              <treecol label="&col.url.label;" id="url" flex="5" 
-                       persist="width hidden ordinal sortActive sortDirection"/>
-              <splitter class="tree-splitter"/>
-              <treecol label="&col.lastvisit.label;" id="date" flex="1" hidden="true"
-                       persist="width hidden ordinal sortActive sortDirection"/>
-              <splitter class="tree-splitter"/>
-              <treecol label="&col.visitcount.label;" id="visitCount" flex="1" hidden="true"
-                       persist="width hidden ordinal sortActive sortDirection"/>
-              <splitter class="tree-splitter"/>
-              <treecol label="&col.keyword.label;" id="keyword" flex="1" hidden="true"
-                       persist="width hidden ordinal sortActive sortDirection"/>
-              <splitter class="tree-splitter"/>
-              <treecol label="&col.description.label;" id="description" flex="1" hidden="true"
-                       persist="width hidden ordinal sortActive sortDirection"/>
-              <splitter class="tree-splitter"/>
-              <treecol label="&col.dateadded.label;" id="dateAdded" flex="1" hidden="true"
-                       persist="width hidden ordinal sortActive sortDirection"/>
-              <splitter class="tree-splitter"/>
-              <treecol label="&col.lastmodified.label;" id="lastModified" flex="1" hidden="true"
-                       persist="width hidden ordinal sortActive sortDirection"/>
-            </treecols>
-            <treechildren id="placeContentChildren" view="placeContent" flex="1"/>
-          </tree>
+            <hbox id="searchActions" align="center">
+              <spacer flex="1"/>
+               <button id="saveSearch" class="small" 
+                       label="&saveSearch.label;" accesskey="&saveSearch.accesskey;"
+                       command="OrganizerCommand_search:save"/>
+            </hbox>
+          </vbox>
+          <vbox flex="1">
+            <tree id="placeContent" class="placesTree" context="placesContext" 
+                  flex="1" type="places" 
+                  ondblclick="PlacesOrganizer.onTreeDblClick(event);"
+                  onclick="PlacesOrganizer.onTreeClick(event);"
+                  onselect="PlacesOrganizer.onContentTreeSelect();">
+              <treecols id="placeContentColumns">
+                <treecol label="&col.name.label;" id="title" flex="5" primary="true" 
+                         persist="width hidden ordinal sortActive sortDirection"/>
+                <splitter class="tree-splitter"/>
+                <treecol label="&col.tags.label;" id="tags" flex="2"
+                         persist="width hidden ordinal sortActive sortDirection"/>
+                <splitter class="tree-splitter"/>
+                <treecol label="&col.url.label;" id="url" flex="5" 
+                         persist="width hidden ordinal sortActive sortDirection"/>
+                <splitter class="tree-splitter"/>
+                <treecol label="&col.lastvisit.label;" id="date" flex="1" hidden="true"
+                         persist="width hidden ordinal sortActive sortDirection"/>
+                <splitter class="tree-splitter"/>
+                <treecol label="&col.visitcount.label;" id="visitCount" flex="1" hidden="true"
+                         persist="width hidden ordinal sortActive sortDirection"/>
+                <splitter class="tree-splitter"/>
+                <treecol label="&col.keyword.label;" id="keyword" flex="1" hidden="true"
+                         persist="width hidden ordinal sortActive sortDirection"/>
+                <splitter class="tree-splitter"/>
+                <treecol label="&col.description.label;" id="description" flex="1" hidden="true"
+                         persist="width hidden ordinal sortActive sortDirection"/>
+                <splitter class="tree-splitter"/>
+                <treecol label="&col.dateadded.label;" id="dateAdded" flex="1" hidden="true"
+                         persist="width hidden ordinal sortActive sortDirection"/>
+                <splitter class="tree-splitter"/>
+                <treecol label="&col.lastmodified.label;" id="lastModified" flex="1" hidden="true"
+                         persist="width hidden ordinal sortActive sortDirection"/>
+              </treecols>
+              <treechildren id="placeContentChildren" view="placeContent" flex="1"/>
+            </tree>
+            <splitter id="contentSplitter" collapse="after" persist="state">
+              <grippy/>
+            </splitter>
+            <hbox persist="height" id="infoPane">
+              <hbox id="previewBox" style="min-width: 60px; -moz-border-end: 1px solid GrayText;">
+                <html:canvas id="itemThumbnail" notavailabletext="&detailsPane.noPreviewAvailable.label;"/>
+              </hbox>
+              <deck flex="1" id="detailsDeck">
+                <vbox align="center">
+                  <spacer flex="3"/>
+                  <label id="itemsCountText"/>
+                  <spacer flex="1"/>
+                  <description id="selectItemDescription">
+                     &detailsPane.selectAnItemText.description;
+                  </description>
+                  <spacer flex="3"/>
+                </vbox>
+                <scrollbox id="infoScrollbox" minimal="true" orient="vertical" flex="1" style='overflow: auto;'>
+                  <vbox id="editBookmarkPanelContent"/>
+                  <hbox>
+                    <button type="image" id="infoScrollboxExpander"
+                            lesslabel="&detailsPane.less.label;"
+                            morelabel="&detailsPane.more.label;"
+                            label="&detailsPane.more.label;"
+                            oncommand="PlacesOrganizer.toggleAdditionalInfoFields();"
+                            observes="paneElementsBroadcaster"/>
+                    <spacer flex="1"/>
+                  </hbox>
+                </scrollbox>
+              </deck>
+            </hbox>
+          </vbox>
           <vbox id="debugPanel" hidden="true">
             <grid>
               <columns>
@@ -452,7 +493,7 @@
               </columns>
               <rows>
                 <row align="center">
-                  <label value="Debug:"/>
+                  <label value="Debug:" control="placeURI"/>
                   <textbox id="placeURI" flex="1" 
                            onkeypress="PlacesOrganizer.onPlaceURIKeypress(event);"/>
                   <button label="Load" oncommand="PlacesOrganizer.loadPlaceURI();"/>
@@ -468,7 +509,7 @@
                 </row>
                 <separator class="thin"/>
                 <row align="center">
-                  <label value="Loaded:"/>
+                  <label value="Loaded:" control="loadedURI"/>
                   <textbox id="loadedURI" flex="1" readonly="true"/>
                   <spacer/>
                 </row>

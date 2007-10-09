@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -70,7 +70,7 @@ disk. Use with caution.
 ******************** WARNING ********************
 
 EOF
-    exit 2
+    exit 1
 }
 
 unset directory
@@ -78,15 +78,15 @@ unset directory
 rmopt="-i"
 
 while getopts $options optname ; 
-do 
-    case $optname in
-        d) directory=$OPTARG;;
-        n) unset rmopt;;
-    esac
+  do 
+  case $optname in
+      d) directory=$OPTARG;;
+      n) unset rmopt;;
+  esac
 done
 
 if [[ -z $directory ]]
-then
+    then
     usage
 fi
 

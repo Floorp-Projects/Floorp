@@ -111,6 +111,11 @@ menuitem.spell-suggestion {
   min-height: 15px;
 }
 
+.menu-iconic-icon {
+  max-width: 16px;
+  max-height: 16px;
+}
+
 /* ..... menu arrow box ..... */
 
 .menu-right {

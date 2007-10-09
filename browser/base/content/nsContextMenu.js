@@ -1042,7 +1042,7 @@ nsContextMenu.prototype = {
     var engineName = "";
     var ss = Cc["@mozilla.org/browser/search-service;1"].
              getService(Ci.nsIBrowserSearchService);
-    if (BrowserSearch.getSearchBar())
+    if (isElementVisible(BrowserSearch.searchBar))
       engineName = ss.currentEngine.name;
     else
       engineName = ss.defaultEngine.name;

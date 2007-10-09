@@ -126,7 +126,9 @@ my @servers = ("localhost:8888", # MUST be first -- see PAC pref-setting code
                "sub1.test1.example.com:80",
                "sub1.test2.example.com:80",
                "sub2.test1.example.com:80",
-               "sub2.test2.example.com:80");
+               "sub2.test2.example.com:80",
+               "sectest1.example.org:80",
+               "sub.sectest2.example.org:80");
 
 
 my $profile = "mochitesttestingprofile";
@@ -202,14 +204,15 @@ sub main {
   if ($do_chrome) {
    $url = CHROMETESTS_URL . ($test_path ? $test_path : "") . "?";
   } elsif ($do_browser_chrome) {
-   # Tests will run from an overlay, no need to load any URL
+   # Tests will run from an overlay, no need to load any URL.  We'll include
+   # the test path in the config file so the browser chrome harness can use it.
    $url = "about:blank";
   } else {
    $url = TESTS_URL . ($test_path ? $test_path : "") . "?";
   }
 
   if ($do_browser_chrome) {
-    generate_test_config($autorun, $close_when_done, $log_path);
+    generate_test_config($autorun, $close_when_done, $log_path, $test_path);
   } else {
     if ($autorun) {
       $url .= "&autorun=1";
@@ -304,7 +307,7 @@ sub winPathFromDir {
           # we remember the match that is the longest
           $matchlen = $len;
           $bestmatch = $real;
-	}
+        }
       }
     }
   }
@@ -367,17 +370,20 @@ sub startServer {
  ##############
 
 sub generate_test_config {
-  my ($autorun, $close_when_done, $log_path) = @_;
+  my ($autorun, $close_when_done, $log_path, $test_path) = @_;
   $autorun = $autorun || 0;
   $close_when_done = $close_when_done || 0;
   $log_path = $log_path || "";
-  $log_path =~ s/\\/\\\\/;
+  $log_path =~ s/\\/\\\\/g;
+  $test_path = $test_path || "";
+  $test_path =~ s/\\/\\\\/g;
 
   my $config_content = <<CONFIGEND;
 ({
   autoRun: $autorun,
   closeWhenDone: $close_when_done,
-  logPath: "$log_path"
+  logPath: "$log_path",
+  testPath: "$test_path"
 })
 CONFIGEND
 
@@ -410,6 +416,13 @@ user_pref("capability.principal.codebase.p$i.subjectName", "");
 SERVERPREFEND
     $i++;
   }
+
+  # Now add the two servers that do NOT have God-power so we can properly test
+  # the granting and receiving of God-power
+  push(@servers,
+       "sectest2.example.org:80",
+       "sub.sectest1.example.org:80");
+
 
   # Now actually create the preference to make the proxying happen, stripping
   # off the first server because it's the one to which we proxy all the others.

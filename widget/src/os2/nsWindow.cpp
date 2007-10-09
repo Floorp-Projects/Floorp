@@ -55,7 +55,6 @@
 #include "nsGfxCIID.h"
 #include "prtime.h"
 #include "nsISupportsArray.h"
-#include "nsIMenuBar.h"
 #include "nsHashtable.h"
 #include "nsDragService.h"
 #include "nsILocalFile.h"

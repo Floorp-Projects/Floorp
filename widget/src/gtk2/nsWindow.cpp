@@ -462,11 +462,10 @@ nsWindow::Destroy(void)
         gPluginFocusWindow->LoseNonXEmbedPluginFocus();
     }
 
-    // Remove our reference to the window group.  If there was a window
-    // group destroying the widget will have automatically unreferenced
-    // the group, destroying it if necessary.  And, if we're a child
-    // window this isn't going to harm anything.
-    mWindowGroup = nsnull;
+    if (mWindowGroup) {
+        g_object_unref(G_OBJECT(mWindowGroup));
+        mWindowGroup = nsnull;
+    }
 
     // Destroy thebes surface now. Badness can happen if we destroy
     // the surface after its X Window.
@@ -2768,6 +2767,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
 
     NS_ASSERTION(aInitData->mWindowType != eWindowType_popup ||
                  !aParent, "Popups should not be hooked into nsIWidget hierarchy");
+    NS_ASSERTION(!mWindowGroup, "already have window group (leaking it)");
 
     // initialize all the common bits of this class
     BaseCreate(baseParent, aRect, aHandleEventFunction, aContext,
@@ -2898,6 +2898,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
                                                 GTK_WINDOW(mShell));
                     // store this in case any children are created
                     mWindowGroup = parentnsWindow->mWindowGroup;
+                    g_object_ref(G_OBJECT(mWindowGroup));
                     LOG(("adding window %p to group %p\n",
                          (void *)mShell, (void *)mWindowGroup));
                 }
@@ -2916,6 +2917,7 @@ nsWindow::NativeCreate(nsIWidget        *aParent,
                     gtk_window_group_add_window(topLevelParent->group,
                                             GTK_WINDOW(mShell));
                     mWindowGroup = topLevelParent->group;
+                    g_object_ref(G_OBJECT(mWindowGroup));
                 }
             }
         }

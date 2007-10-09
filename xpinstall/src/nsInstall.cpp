@@ -197,17 +197,15 @@ nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
     if (NS_SUCCEEDED(rv)) {
       mChromeRegistry = cr;
 
+#ifndef MOZ_XUL_APP
       nsCAutoString spec;
       rv = NS_GetURLSpecFromFile(aFile, spec);
       if (NS_SUCCEEDED(rv)) {
         spec.Insert(NS_LITERAL_CSTRING("jar:"), 0);
         spec.AppendLiteral("!/");
-#ifdef MOZ_XUL_APP
-        NS_NewURI(getter_AddRefs(mFileJARURL), spec);
-#else
         mFileJARSpec.Assign(spec);
-#endif
       }
+#endif
     }
 
 #ifdef MOZ_XUL_APP
@@ -216,11 +214,6 @@ nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
                                    thread, &rv);
     if (NS_SUCCEEDED(rv))
       mExtensionManager = em;
-
-    nsCOMPtr<nsIFile> manifest;
-    rv = NS_GetSpecialDirectory(NS_APP_CHROME_DIR, getter_AddRefs(manifest));
-    if (NS_SUCCEEDED(rv))
-      NS_NewFileURI(getter_AddRefs(mManifestURL), manifest);
 #endif
 }
 

@@ -413,6 +413,22 @@ protected:
   nsFrameList mFrames;
 };
 
+// ==========================================================================
+/* The out-of-flow-related code below is for a hacky way of splitting
+ * absolutely-positioned frames. Basically what we do is split the frame
+ * in nsAbsoluteContainingBlock and pretend the continuation is an overflow
+ * container. This isn't an ideal solution, but it lets us print the content
+ * at least. See bug 154892.
+ */
+
+#define IS_TRUE_OVERFLOW_CONTAINER(frame)                      \
+  (  (frame->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)  \
+  && !(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW)           )
+//XXXfr This check isn't quite correct, because it doesn't handle cases
+//      where the out-of-flow has overflow.. but that's rare.
+//      We'll need to revisit the way abspos continuations are handled later
+//      for various reasons, this detail is one of them. See bug 154892
+
 /**
  * Helper class for tracking overflow container continuations during reflow.
  *
@@ -442,12 +458,17 @@ public:
    * Initializes an nsOverflowContinuationTracker to help track overflow
    * continuations of aFrame's children. Typically invoked on 'this'.
    *
+   * aWalkOOFFrames determines whether the walker skips out-of-flow frames
+   * or skips non-out-of-flow frames.
+   *
    * Don't set aSkipOverflowContainerChildren to PR_FALSE unless you plan
    * to walk your own overflow container children. (Usually they are handled
-   * by calling ReflowOverflowContainerChildren.)
+   * by calling ReflowOverflowContainerChildren.) aWalkOOFFrames is ignored
+   * if aSkipOverflowContainerChildren is false.
    */
   nsOverflowContinuationTracker(nsPresContext*    aPresContext,
                                 nsContainerFrame* aFrame,
+                                PRBool            aWalkOOFFrames,
                                 PRBool            aSkipOverflowContainerChildren = PR_TRUE);
   /**
    * This function adds an overflow continuation to our running list and
@@ -471,8 +492,9 @@ public:
   nsresult Insert(nsIFrame*       aOverflowCont,
                   nsReflowStatus& aReflowStatus);
   /**
-   * This function should be called for each child that is reflowed
-   * but no longer has an overflow continuation. It increments our
+   * This function must be called for each child that is reflowed
+   * but no longer has an overflow continuation. (It may be called for
+   * other children, but in that case has no effect.) It increments our
    * walker and makes sure we drop any dangling pointers to its
    * next-in-flow. This function MUST be called before stealing or
    * deleting aChild's next-in-flow.
@@ -524,8 +546,10 @@ private:
      overflowContainersProperty */
   nsContainerFrame* mParent;
   /* Tells SetUpListWalker whether or not to walk us past any continuations
-     of overflow containers. */
+     of overflow containers. aWalkOOFFrames is ignored when this is false. */
   PRBool mSkipOverflowContainerChildren;
+  /* Tells us whether to pay attention to OOF frames or non-OOF frames */
+  PRBool mWalkOOFFrames;
 };
 
 #endif /* nsContainerFrame_h___ */

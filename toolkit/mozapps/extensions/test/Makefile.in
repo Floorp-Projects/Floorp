@@ -58,11 +58,11 @@ libs::
 	rm -rf $(TESTXPI)
 	mkdir -p $(TESTXPI)
 	if [ -d $(ADDONSRC) ]; then \
+		$(EXIT_ON_ERROR) \
 		for dir in $(ADDONSRC)/*; do \
 			if [ "$$dir" != "$(ADDONSRC)/CVS" ]; then \
 				base=`basename $$dir` ; \
-				cd $$dir ; \
-				zip $(TESTXPI)/$$base.xpi * ; \
+				(cd $$dir && zip $(TESTXPI)/$$base.xpi *) \
 			fi \
 		done \
 	fi

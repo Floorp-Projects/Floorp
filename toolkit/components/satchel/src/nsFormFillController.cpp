@@ -74,6 +74,7 @@
 #include "nsIGenericFactory.h"
 #include "nsToolkitCompsCID.h"
 #include "nsEmbedCID.h"
+#include "nsIDOMNSEditableElement.h"
 
 NS_INTERFACE_MAP_BEGIN(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY(nsIFormFillController)
@@ -121,31 +122,6 @@ nsFormFillController::~nsFormFillController()
     nsCOMPtr<nsIDOMWindow> domWindow = GetWindowForDocShell(docShell);
     RemoveWindowListeners(domWindow);
   }
-}
-
-////////////////////////////////////////////////////////////////////////
-
-nsRect
-GetScreenOrigin(nsIDOMElement* aElement)
-{
-  nsRect rect(0,0,0,0);
-
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  nsCOMPtr<nsIDocument> doc = content->GetDocument();
-
-  if (doc) {
-    // Get Presentation shell 0
-    nsIPresShell* presShell = doc->GetPrimaryShell();
-
-    if (presShell) {
-      nsIFrame* frame = presShell->GetPrimaryFrameFor(content);
-      if (!frame)
-        return rect;
-      rect = frame->GetScreenRectExternal();
-    }
-  }
-  
-  return rect;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -245,10 +221,7 @@ nsFormFillController::SetPopupOpen(PRBool aPopupOpen)
                                        NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE,
                                        NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE);
 
-      nsRect popupRect = GetScreenOrigin(mFocusedInput);
-      mFocusedPopup->OpenAutocompletePopup(this, popupRect.x,
-                                           popupRect.y+popupRect.height,
-                                           popupRect.width);
+      mFocusedPopup->OpenAutocompletePopup(this, mFocusedInput);
     } else
       mFocusedPopup->ClosePopup();
   }
@@ -425,9 +398,10 @@ nsFormFillController::GetTextValue(nsAString & aTextValue)
 NS_IMETHODIMP
 nsFormFillController::SetTextValue(const nsAString & aTextValue)
 {
-  if (mFocusedInput) {
+  nsCOMPtr<nsIDOMNSEditableElement> editable = do_QueryInterface(mFocusedInput);
+  if (editable) {
     mSuppressOnInput = PR_TRUE;
-    mFocusedInput->SetValue(aTextValue);
+    editable->SetUserInput(aTextValue);
     mSuppressOnInput = PR_FALSE;
   }
   return NS_OK;
@@ -812,42 +786,18 @@ nsFormFillController::Input(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsFormFillController::MouseDown(nsIDOMEvent* aMouseEvent)
 {
-  mIgnoreClick = PR_FALSE;
-
-  nsCOMPtr<nsIDOMEventTarget> target;
-  aMouseEvent->GetTarget(getter_AddRefs(target));
-
-  nsCOMPtr<nsIDOMHTMLInputElement> targetInput = do_QueryInterface(target);
-  if (!targetInput || (targetInput && targetInput != mFocusedInput)) {
-    // A new input will be taking focus.  Ignore the first click
-    // so that the popup is not shown.
-    mIgnoreClick = PR_TRUE;
-    return NS_OK;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFormFillController::MouseUp(nsIDOMEvent* aMouseEvent)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFormFillController::MouseClick(nsIDOMEvent* aMouseEvent)
-{
-  if (mIgnoreClick) {
-    mIgnoreClick = PR_FALSE;
-    return NS_OK;
-  }
-
   if (!mFocusedInput)
     return NS_OK;
 
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aMouseEvent));
   if (!mouseEvent)
     return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aMouseEvent->GetTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIDOMHTMLInputElement> targetInput = do_QueryInterface(target);
+  if (!targetInput)
+    return NS_OK;
 
   PRUint16 button;
   mouseEvent->GetButton(&button);
@@ -877,6 +827,18 @@ nsFormFillController::MouseClick(nsIDOMEvent* aMouseEvent)
     mController->HandleKeyNavigation(nsIDOMKeyEvent::DOM_VK_DOWN, &cancel);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::MouseUp(nsIDOMEvent* aMouseEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFormFillController::MouseClick(nsIDOMEvent* aMouseEvent)
+{
   return NS_OK;
 }
 

@@ -315,7 +315,7 @@ struct nsRadioGroupStruct
    * A strong pointer to the currently selected radio button.
    */
   nsCOMPtr<nsIDOMHTMLInputElement> mSelectedRadioButton;
-  nsSmallVoidArray mRadioButtons;
+  nsCOMArray<nsIFormControl> mRadioButtons;
 };
 
 
@@ -609,7 +609,8 @@ class nsDOMImplementation : public nsIDOMDOMImplementation,
                             public nsIPrivateDOMImplementation
 {
 public:
-  nsDOMImplementation(nsIURI* aDocumentURI,
+  nsDOMImplementation(nsIScriptGlobalObject* aScriptObject,
+                      nsIURI* aDocumentURI,
                       nsIURI* aBaseURI,
                       nsIPrincipal* aPrincipal);
   virtual ~nsDOMImplementation();
@@ -624,6 +625,7 @@ public:
                   nsIPrincipal* aPrincipal);
 
 protected:
+  nsWeakPtr mScriptObject;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mBaseURI;
   nsCOMPtr<nsIPrincipal> mPrincipal;
@@ -633,7 +635,7 @@ protected:
 nsresult
 NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult)
 {
-  *aInstancePtrResult = new nsDOMImplementation(nsnull, nsnull, nsnull);
+  *aInstancePtrResult = new nsDOMImplementation(nsnull, nsnull, nsnull, nsnull);
   if (!*aInstancePtrResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -643,10 +645,12 @@ NS_NewDOMImplementation(nsIDOMDOMImplementation** aInstancePtrResult)
   return NS_OK;
 }
 
-nsDOMImplementation::nsDOMImplementation(nsIURI* aDocumentURI,
+nsDOMImplementation::nsDOMImplementation(nsIScriptGlobalObject* aScriptObject,
+                                         nsIURI* aDocumentURI,
                                          nsIURI* aBaseURI,
                                          nsIPrincipal* aPrincipal)
-  : mDocumentURI(aDocumentURI),
+  : mScriptObject(do_GetWeakReference(aScriptObject)),
+    mDocumentURI(aDocumentURI),
     mBaseURI(aBaseURI),
     mPrincipal(aPrincipal)
 {
@@ -735,9 +739,12 @@ nsDOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
     }
   }
 
+  nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
+    do_QueryReferent(mScriptObject);
+
   return nsContentUtils::CreateDocument(aNamespaceURI, aQualifiedName, aDoctype,
                                         mDocumentURI, mBaseURI, mPrincipal,
-                                        aReturn);
+                                        scriptHandlingObject, aReturn);
 }
 
 NS_IMETHODIMP
@@ -945,23 +952,20 @@ SubDocTraverser(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
   return PL_DHASH_NEXT;
 }
 
-PR_STATIC_CALLBACK(PRIntn)
-RadioGroupsTraverser(nsHashKey *aKey, void *aData, void* aClosure)
+PR_STATIC_CALLBACK(PLDHashOperator)
+RadioGroupsTraverser(const nsAString& aKey, nsAutoPtr<nsRadioGroupStruct>& aData, void* aClosure)
 {
-  nsRadioGroupStruct *entry = static_cast<nsRadioGroupStruct*>(aData);
   nsCycleCollectionTraversalCallback *cb = 
     static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
 
-  cb->NoteXPCOMChild(entry->mSelectedRadioButton);
+  cb->NoteXPCOMChild(aData->mSelectedRadioButton);
 
-  nsSmallVoidArray &radioButtons = entry->mRadioButtons;
-  PRUint32 i, count = radioButtons.Count();
+  PRUint32 i, count = aData->mRadioButtons.Count();
   for (i = 0; i < count; ++i) {
-    cb->NoteXPCOMChild(static_cast<nsIFormControl*>(radioButtons[i]));
+    cb->NoteXPCOMChild(aData->mRadioButtons[i]);
   }
-  
 
-  return kHashEnumerateNext;
+  return PL_DHASH_NEXT;
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
@@ -1086,9 +1090,10 @@ nsDocument::Init()
   }
 
   mLinkMap.Init();
+  mRadioGroups.Init();
 
   // Force initialization.
-  nsBindingManager *bindingManager = new nsBindingManager();
+  nsBindingManager *bindingManager = new nsBindingManager(this);
   NS_ENSURE_TRUE(bindingManager, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(mBindingManager = bindingManager);
 
@@ -1960,7 +1965,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAString& aData)
       // before the current URI of the webnavigation has been updated, so we
       // can't assert equality here.
       refresher->SetupRefreshURIFromHeader(mDocumentURI,
-                                           NS_LossyConvertUTF16toASCII(aData));
+                                           NS_ConvertUTF16toUTF8(aData));
     }
   }
 }
@@ -2603,9 +2608,34 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
   mScriptGlobalObject = aScriptGlobalObject;
 
   if (aScriptGlobalObject) {
+    mHasHadScriptHandlingObject = PR_TRUE;
     // Go back to using the docshell for the layout history state
     mLayoutHistoryState = nsnull;
     mScopeObject = do_GetWeakReference(aScriptGlobalObject);
+  }
+}
+
+nsIScriptGlobalObject*
+nsDocument::GetScriptHandlingObject(PRBool& aHasHadScriptHandlingObject) const
+{
+  aHasHadScriptHandlingObject = mHasHadScriptHandlingObject;
+  if (mScriptGlobalObject) {
+    return mScriptGlobalObject;
+  }
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptHandlingObject =
+    do_QueryReferent(mScriptObject);
+  return scriptHandlingObject;
+}
+void
+nsDocument::SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject)
+{
+  NS_ASSERTION(!mScriptGlobalObject ||
+               mScriptGlobalObject == aScriptObject,
+               "Wrong script object!");
+  mScriptObject = do_GetWeakReference(aScriptObject);
+  if (aScriptObject) {
+    mHasHadScriptHandlingObject = PR_TRUE;
   }
 }
 
@@ -2751,6 +2781,9 @@ GetDocumentFromDocShellTreeItem(nsIDocShellTreeItem *aDocShell,
 void
 nsDocument::DispatchContentLoadedEvents()
 {
+  // If you add early returns from this method, make sure you're
+  // calling UnblockOnload properly.
+  
   // Fire a DOM event notifying listeners that this document has been
   // loaded (excluding images and other loads initiated by this
   // document).
@@ -2846,6 +2879,8 @@ nsDocument::DispatchContentLoadedEvents()
       tmp->GetSameTypeParent(getter_AddRefs(docShellParent));
     }
   }
+
+  UnblockOnload(PR_TRUE);
 }
 
 void
@@ -2861,8 +2896,10 @@ nsDocument::EndLoad()
   
   NS_DOCUMENT_NOTIFY_OBSERVERS(EndLoad, (this));
 
-  DispatchContentLoadedEvents();
-  UnblockOnload(PR_TRUE);
+  nsRefPtr<nsIRunnable> ev =
+    new nsRunnableMethod<nsDocument>(this,
+                                     &nsDocument::DispatchContentLoadedEvents);
+  NS_DispatchToCurrentThread(ev);
 }
 
 void
@@ -2954,8 +2991,12 @@ nsDocument::GetImplementation(nsIDOMDOMImplementation** aImplementation)
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), "about:blank");
   NS_ENSURE_TRUE(uri, NS_ERROR_OUT_OF_MEMORY);
-  
-  *aImplementation = new nsDOMImplementation(uri, uri, NodePrincipal());
+  PRBool hasHadScriptObject = PR_TRUE;
+  nsIScriptGlobalObject* scriptObject =
+    GetScriptHandlingObject(hasHadScriptObject);
+  NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
+  *aImplementation = new nsDOMImplementation(scriptObject, uri, uri,
+                                             NodePrincipal());
   if (!*aImplementation) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -5034,17 +5075,15 @@ nsDocument::GetRadioGroup(const nsAString& aName,
   nsAutoString tmKey(aName);
   if(!IsCaseSensitive())
      ToLowerCase(tmKey); //should case-insensitive.
-  nsStringKey key(tmKey);
-  nsRadioGroupStruct *radioGroup =
-    static_cast<nsRadioGroupStruct *>(mRadioGroups.Get(&key));
+  if (mRadioGroups.Get(tmKey, aRadioGroup))
+    return NS_OK;
 
-  if (!radioGroup) {
-    radioGroup = new nsRadioGroupStruct();
-    NS_ENSURE_TRUE(radioGroup, NS_ERROR_OUT_OF_MEMORY);
-    mRadioGroups.Put(&key, radioGroup);
-  }
+  nsAutoPtr<nsRadioGroupStruct> radioGroup(new nsRadioGroupStruct());
+  NS_ENSURE_TRUE(radioGroup, NS_ERROR_OUT_OF_MEMORY);
+  NS_ENSURE_TRUE(mRadioGroups.Put(tmKey, radioGroup), NS_ERROR_OUT_OF_MEMORY);
 
   *aRadioGroup = radioGroup;
+  radioGroup.forget();
 
   return NS_OK;
 }
@@ -5150,7 +5189,7 @@ nsDocument::GetNextRadioButton(const nsAString& aName,
     else if (++index >= numRadios) {
       index = 0;
     }
-    radio = do_QueryInterface(static_cast<nsIFormControl*>(radioGroup->mRadioButtons.ElementAt(index)));
+    radio = do_QueryInterface(radioGroup->mRadioButtons[index]);
     NS_ASSERTION(radio, "mRadioButtons holding a non-radio button");
     radio->GetDisabled(&disabled);
   } while (disabled && radio != currentRadio);
@@ -5166,8 +5205,7 @@ nsDocument::AddToRadioGroup(const nsAString& aName,
   nsRadioGroupStruct* radioGroup = nsnull;
   GetRadioGroup(aName, &radioGroup);
   if (radioGroup) {
-    radioGroup->mRadioButtons.AppendElement(aRadio);
-    NS_IF_ADDREF(aRadio);
+    radioGroup->mRadioButtons.AppendObject(aRadio);
   }
 
   return NS_OK;
@@ -5180,9 +5218,7 @@ nsDocument::RemoveFromRadioGroup(const nsAString& aName,
   nsRadioGroupStruct* radioGroup = nsnull;
   GetRadioGroup(aName, &radioGroup);
   if (radioGroup) {
-    if (radioGroup->mRadioButtons.RemoveElement(aRadio)) {
-      NS_IF_RELEASE(aRadio);
-    }
+    radioGroup->mRadioButtons.RemoveObject(aRadio);
   }
 
   return NS_OK;
@@ -5201,9 +5237,7 @@ nsDocument::WalkRadioGroup(const nsAString& aName,
 
   PRBool stop = PR_FALSE;
   for (int i = 0; i < radioGroup->mRadioButtons.Count(); i++) {
-    aVisitor->Visit(static_cast<nsIFormControl *>
-                               (radioGroup->mRadioButtons.ElementAt(i)),
-                    &stop);
+    aVisitor->Visit(radioGroup->mRadioButtons[i], &stop);
     if (stop) {
       return NS_OK;
     }

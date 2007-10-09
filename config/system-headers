@@ -213,6 +213,7 @@ Gdiplus.h
 gdk/gdkevents.h
 gdk/gdk.h
 gdk/gdkkeysyms.h
+gdk/gdkpango.h
 gdk/gdkprivate.h
 gdk/gdkregion.h
 gdk/gdkwindow.h
@@ -505,6 +506,7 @@ PALM_CMN.H
 pango-engine.h
 pango-glyph.h
 pango-modules.h
+pango/pangocairo.h
 pango/pangofc-decoder.h
 pango/pangofc-font.h
 pango/pangofc-fontmap.h
@@ -513,6 +515,7 @@ pango/pango-fontmap.h
 pango/pango.h
 pango/pangoxft.h
 pango/pangox.h
+pango/pango-utils.h
 pango-types.h
 pascal.h
 Patches.h
@@ -865,6 +868,7 @@ sslt.h
 smime.h
 cms.h
 sechash.h
+secoidt.h
 certdb.h
 secerr.h
 nssb64.h

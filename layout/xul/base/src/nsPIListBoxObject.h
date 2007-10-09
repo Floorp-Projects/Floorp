@@ -38,9 +38,10 @@
 #ifndef nsPIListBoxObject_h__
 #define nsPIListBoxObject_h__
 
+// fa9549f7-ee09-48fc-89f7-30cceee21c15
 #define NS_PILISTBOXOBJECT_IID \
-{ 0x965f3d0b, 0x2960, 0x40f5, \
-  { 0xaa, 0xab, 0x32, 0xd2, 0xae, 0x09, 0x90, 0x94 } }
+{ 0xfa9549f7, 0xee09, 0x48fc, \
+  { 0x89, 0xf7, 0x30, 0xcc, 0xee, 0xe2, 0x1c, 0x15 } }
 
 #include "nsIListBoxObject.h"
 
@@ -49,8 +50,9 @@ class nsPIListBoxObject : public nsIListBoxObject {
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PILISTBOXOBJECT_IID)
   /**
    * Get the list box body.  This will search for it as needed.
+   * If aFlush is PR_FALSE we don't Flush_Frames though.
    */
-  virtual nsIListBoxObject* GetListBoxBody() = 0;
+  virtual nsIListBoxObject* GetListBoxBody(PRBool aFlush) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIListBoxObject, NS_PILISTBOXOBJECT_IID)

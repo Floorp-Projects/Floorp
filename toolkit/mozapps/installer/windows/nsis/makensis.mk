@@ -49,7 +49,9 @@ TOOLKIT_NSIS_FILES = \
 	locales.nsi \
 	nsProcess.dll \
 	overrides.nsh \
+	SetVistaDefaultApp.dll \
 	ShellLink.dll \
+	UAC.dll \
 	version.nsh \
 	$(NULL)
 

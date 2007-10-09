@@ -46,8 +46,6 @@ class nsMIMEInfoMac : public nsMIMEInfoImpl {
     nsMIMEInfoMac(const nsACString& aType, HandlerClass aClass) :
       nsMIMEInfoImpl(aType, aClass) {}
 
-    NS_IMETHOD LaunchWithURI(nsIURI* aURI,
-                             nsIInterfaceRequestor* aWindowContext);
     NS_IMETHOD LaunchWithFile(nsIFile* aFile);
     NS_IMETHOD GetHasDefaultHandler(PRBool *_retval);
   protected:

@@ -72,6 +72,9 @@ public:
     
     PRBool HasMirroringInfo();
 
+    virtual void SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID,
+            PRBool aNeedTight, gfxGlyphExtents *aExtents);
+
 protected:
     const gfxFontStyle *mFontStyle;
 
@@ -93,7 +96,7 @@ protected:
 
     void InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef);
 
-    virtual PRBool SetupCairoFont(cairo_t *aCR);
+    virtual PRBool SetupCairoFont(gfxContext *aContext);
 };
 
 class THEBES_API gfxAtsuiFontGroup : public gfxFontGroup {
@@ -124,6 +127,8 @@ public:
     }
 
     gfxAtsuiFont* FindFontFor(ATSUFontID fid);
+
+    PRBool HasFont(ATSUFontID fid);
 
 protected:
     static PRBool FindATSUFont(const nsAString& aName,

@@ -122,6 +122,103 @@ inline nscoord NSCoordDivide(nscoord aCoord, PRInt32 aVal) {
 }
 
 /**
+ * Returns a + b, capping the sum to nscoord_MAX.
+ *
+ * This function assumes that neither argument is nscoord_MIN.
+ *
+ * Note: If/when we start using floats for nscoords, this function won't be as
+ * necessary.  Normal float addition correctly handles adding with infinity,
+ * assuming we aren't adding nscoord_MIN. (-infinity)
+ */
+inline nscoord
+NSCoordSaturatingAdd(nscoord a, nscoord b)
+{
+  VERIFY_COORD(a);
+  VERIFY_COORD(b);
+  NS_ASSERTION(a != nscoord_MIN && b != nscoord_MIN,
+               "NSCoordSaturatingAdd got nscoord_MIN as argument");
+
+#ifdef NS_COORD_IS_FLOAT
+  // Float math correctly handles a+b, given that neither is -infinity.
+  return a + b;
+#else
+  if (a == nscoord_MAX || b == nscoord_MAX) {
+    // infinity + anything = anything + infinity = infinity
+    return nscoord_MAX;
+  } else {
+    // a + b = a + b
+    NS_ASSERTION(a < nscoord_MAX && b < nscoord_MAX,
+                 "Doing nscoord addition with values > nscoord_MAX");
+    NS_ASSERTION((PRInt64)a + (PRInt64)b < (PRInt64)nscoord_MAX,
+                 "nscoord addition will reach or pass nscoord_MAX");
+    NS_ASSERTION((PRInt64)a + (PRInt64)b > (PRInt64)nscoord_MIN,
+                 "nscoord addition will reach or pass nscoord_MIN");
+
+    // Cap the result, just in case we're dealing with numbers near nscoord_MAX
+    return PR_MIN(nscoord_MAX, a + b);
+  }
+#endif
+}
+
+/**
+ * Returns a - b, gracefully handling cases involving nscoord_MAX.
+ * This function assumes that neither argument is nscoord_MIN.
+ *
+ * The behavior is as follows:
+ *
+ *  a)  infinity - infinity -> infMinusInfResult
+ *  b)  N - infinity        -> 0  (unexpected -- triggers NOTREACHED)
+ *  c)  infinity - N        -> infinity
+ *  d)  N1 - N2             -> N1 - N2
+ *
+ * Note: For float nscoords, cases (c) and (d) are handled by normal float
+ * math.  We still need to explicitly specify the behavior for cases (a)
+ * and (b), though.  (Under normal float math, those cases would return NaN
+ * and -infinity, respectively.)
+ */
+inline nscoord 
+NSCoordSaturatingSubtract(nscoord a, nscoord b, 
+                          nscoord infMinusInfResult)
+{
+  VERIFY_COORD(a);
+  VERIFY_COORD(b);
+  NS_ASSERTION(a != nscoord_MIN && b != nscoord_MIN,
+               "NSCoordSaturatingSubtract got nscoord_MIN as argument");
+
+  if (b == nscoord_MAX) {
+    if (a == nscoord_MAX) {
+      // case (a)
+      return infMinusInfResult;
+    } else {
+      // case (b)
+      NS_NOTREACHED("Attempted to subtract [n - nscoord_MAX]");
+      return 0;
+    }
+  } else {
+#ifdef NS_COORD_IS_FLOAT
+    // case (c) and (d) for floats.  (float math handles both)
+    return a - b;
+#else
+    if (a == nscoord_MAX) {
+      // case (c) for integers
+      return nscoord_MAX;
+    } else {
+      // case (d) for integers
+      NS_ASSERTION(a < nscoord_MAX && b < nscoord_MAX,
+                   "Doing nscoord subtraction with values > nscoord_MAX");
+      NS_ASSERTION((PRInt64)a - (PRInt64)b < (PRInt64)nscoord_MAX,
+                   "nscoord subtraction will reach or pass nscoord_MAX");
+      NS_ASSERTION((PRInt64)a - (PRInt64)b > (PRInt64)nscoord_MIN,
+                   "nscoord subtraction will reach or pass nscoord_MIN");
+
+      // Cap the result, in case we're dealing with numbers near nscoord_MAX
+      return PR_MIN(nscoord_MAX, a - b);
+    }
+  }
+#endif
+}
+
+/**
  * Convert an nscoord to a PRInt32. This *does not* do rounding because
  * coords are never fractional. They can be out of range, so this does
  * clamp out of bounds coord values to PR_INT32_MIN and PR_INT32_MAX.

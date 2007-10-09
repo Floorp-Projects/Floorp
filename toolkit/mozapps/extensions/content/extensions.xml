@@ -392,6 +392,9 @@
         <xul:vbox pack="start" align="start">
           <xul:image class="addonIcon" xbl:inherits="src=iconURL"/>
         </xul:vbox>
+        <xul:vbox pack="start" align="start">
+          <xul:image class="addonIcon pluginIcon" src="chrome://mozapps/skin/plugins/pluginGeneric.png"/>
+        </xul:vbox>
         <xul:vbox pack="end" align="start">
           <xul:image class="notifyBadge"/>
         </xul:vbox>

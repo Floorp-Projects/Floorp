@@ -242,19 +242,23 @@
                 type="checkbox"
                 accesskey="&spellEnable.accesskey;"
                 oncommand="InlineSpellCheckerUI.toggleEnabled();"/>
+#ifndef MOZ_WIDGET_COCOA
       <menuitem id="spell-add-dictionaries-main"
                 label="&spellAddDictionaries.label;"
                 accesskey="&spellAddDictionaries.accesskey;"
                 oncommand="gContextMenu.addDictionaries();"/>
+#endif
       <menu id="spell-dictionaries"
             label="&spellDictionaries.label;"
             accesskey="&spellDictionaries.accesskey;">
           <menupopup id="spell-dictionaries-menu">
+#ifndef MOZ_WIDGET_COCOA
               <menuseparator id="spell-language-separator"/>
               <menuitem id="spell-add-dictionaries"
                         label="&spellAddDictionaries.label;"
                         accesskey="&spellAddDictionaries.accesskey;"
                         oncommand="gContextMenu.addDictionaries();"/>
+#endif
           </menupopup>
       </menu>
       <menuseparator hidden="true" id="context-sep-bidi"/>

@@ -96,8 +96,8 @@ class mozAutoSubtreeModified;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
-{ 0x9a26d0aa, 0x37d2, 0x4313, \
-  { 0x9e, 0x53, 0x16, 0xd1, 0xa4, 0x67, 0xb3, 0x5b } }
+{ 0xc7f56e99, 0x5538, 0x4841, \
+  { 0x97, 0x39, 0x43, 0x6e, 0x6d, 0x26, 0x95, 0x12 } }
 
 
 // Flag for AddStyleSheet().
@@ -507,6 +507,19 @@ public:
    */
   virtual nsIScriptGlobalObject* GetScriptGlobalObject() const = 0;
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) = 0;
+
+  /**
+   * Get/set the object from which the context for the event/script handling can
+   * be got. Normally GetScriptHandlingObject() returns the same object as
+   * GetScriptGlobalObject(), but if the document is loaded as data,
+   * non-null may be returned, even if GetScriptGlobalObject() returns null.
+   * aHasHadScriptHandlingObject is set PR_TRUE if document has had the object
+   * for event/script handling. Do not process any events/script if the method
+   * returns null, but aHasHadScriptHandlingObject is true.
+   */
+  virtual nsIScriptGlobalObject*
+    GetScriptHandlingObject(PRBool& aHasHadScriptHandlingObject) const = 0;
+  virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject) = 0;
 
   /**
    * Get the object that is used as the scope for all of the content
@@ -1085,7 +1098,8 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   nsIDOMDocumentType* aDoctype,
                   nsIURI* aDocumentURI,
                   nsIURI* aBaseURI,
-                  nsIPrincipal* aPrincipal);
+                  nsIPrincipal* aPrincipal,
+                  PRBool aLoadedAsData);
 nsresult
 NS_NewPluginDocument(nsIDocument** aInstancePtrResult);
 

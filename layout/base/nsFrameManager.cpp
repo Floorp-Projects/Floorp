@@ -777,8 +777,8 @@ VerifySameTree(nsStyleContext* aContext1, nsStyleContext* aContext2)
       break;
     top2 = parent;
   }
-  if (top1 != top2)
-    printf("Style contexts are not in the same style context tree.\n");
+  NS_ASSERTION(top1 == top2,
+               "Style contexts are not in the same style context tree");
 }
 
 static void
@@ -812,9 +812,10 @@ VerifyContextParent(nsPresContext* aPresContext, nsIFrame* aFrame,
     if (aParentContext != actualParentContext) {
       DumpContext(aFrame, aContext);
       if (aContext == aParentContext) {
-        fputs("Using parent's style context\n\n", stdout);
+        NS_ERROR("Using parent's style context");
       }
       else {
+        NS_ERROR("Wrong parent style context");
         fputs("Wrong parent style context: ", stdout);
         DumpContext(nsnull, actualParentContext);
         fputs("should be using: ", stdout);
@@ -826,6 +827,7 @@ VerifyContextParent(nsPresContext* aPresContext, nsIFrame* aFrame,
   }
   else {
     if (actualParentContext) {
+      NS_ERROR("Have parent context and shouldn't");
       DumpContext(aFrame, aContext);
       fputs("Has parent context: ", stdout);
       DumpContext(nsnull, actualParentContext);
@@ -848,7 +850,8 @@ VerifyStyleTree(nsPresContext* aPresContext, nsIFrame* aFrame,
   do {
     child = aFrame->GetFirstChild(childList);
     while (child) {
-      if (NS_FRAME_OUT_OF_FLOW != (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+      if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
+          || (child->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
         // only do frames that are in flow
         if (nsGkAtoms::placeholderFrame == child->GetType()) { 
           // placeholder: first recurse and verify the out of flow frame,
@@ -944,7 +947,8 @@ nsFrameManager::ReParentStyleContext(nsIFrame* aFrame)
           child = aFrame->GetFirstChild(childList);
           while (child) {
             // only do frames that are in flow
-            if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+            if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
+                 || (child->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
               if (nsGkAtoms::placeholderFrame == child->GetType()) {
                 // get out of flow frame and recurse there
                 nsIFrame* outOfFlowFrame =
@@ -1042,6 +1046,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
   // that the frame has the last reference to it, so AddRef it here.
 
   nsChangeHint assumeDifferenceHint = NS_STYLE_HINT_NONE;
+  // XXXbz oldContext should just be an nsRefPtr
   nsStyleContext* oldContext = aFrame->GetStyleContext();
   nsStyleSet* styleSet = aPresContext->StyleSet();
 #ifdef ACCESSIBILITY
@@ -1052,6 +1057,8 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
   }
 #endif
 
+  // XXXbz the nsIFrame constructor takes an nsStyleContext, so how
+  // could oldContext be null?
   if (oldContext) {
     oldContext->AddRef();
     nsIAtom* const pseudoTag = oldContext->GetPseudoType();
@@ -1093,6 +1100,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
     }
     
     // do primary context
+    // XXXbz newContext should just be an nsRefPtr
     nsStyleContext* newContext = nsnull;
     if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
       NS_ASSERTION(localContent,
@@ -1212,7 +1220,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
     }
 
     // now look for undisplayed child content and pseudos
-    if (localContent && mUndisplayedMap) {
+    if (!pseudoTag && localContent && mUndisplayedMap) {
       for (UndisplayedNode* undisplayed =
                                    mUndisplayedMap->GetFirstNode(localContent);
            undisplayed; undisplayed = undisplayed->mNext) {
@@ -1317,8 +1325,9 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
       do {
         nsIFrame* child = aFrame->GetFirstChild(childList);
         while (child) {
-          if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
-            // only do frames that are in flow
+          if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)
+              || (child->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+            // only do frames that don't have placeholders
             if (nsGkAtoms::placeholderFrame == child->GetType()) { // placeholder
               // get out of flow frame and recur there
               nsIFrame* outOfFlowFrame =

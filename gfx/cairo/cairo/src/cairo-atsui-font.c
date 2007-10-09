@@ -40,6 +40,12 @@
 #include "cairo-atsui.h"
 #include "cairo-quartz-private.h"
 
+/* 10.5 SDK includes a funky new definition of FloatToFixed, so reset to old-style definition */
+#ifdef FloatToFixed
+#undef FloatToFixed
+#define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
+#endif
+
 /*
  * FixedToFloat/FloatToFixed are 10.3+ SDK items - include definitions
  * here so we can use older SDKs.

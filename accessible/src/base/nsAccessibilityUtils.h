@@ -41,6 +41,8 @@
 
 #include "nsAccessibilityAtoms.h"
 #include "nsIAccessible.h"
+#include "nsIAccessNode.h"
+#include "nsARIAMap.h"
 
 #include "nsIDOMNode.h"
 #include "nsIPersistentProperties2.h"
@@ -48,6 +50,7 @@
 #include "nsIFrame.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsPoint.h"
+#include "nsIAccessibleDocument.h"
 
 class nsAccUtils
 {
@@ -160,6 +163,33 @@ public:
                                     nsIDOMNode *aEndNode, PRInt32 aEndIndex,
                                     PRUint32 aScrollType);
 
+  /** Helper method to scroll range into view, used for implementation of
+   * nsIAccessibleText::scrollSubstringTo[Point]().
+   *
+   * @param aFrame        the frame for accessible the range belongs to.
+   * @param aStartNode    start node of a range
+   * @param aStartOffset  an offset inside the start node
+   * @param aEndNode      end node of a range
+   * @param aEndOffset    an offset inside the end node
+   * @param aVPercent     how to align vertically, specified in percents
+   * @param aHPercent     how to align horizontally, specified in percents
+   */
+  static nsresult ScrollSubstringTo(nsIFrame *aFrame,
+                                    nsIDOMNode *aStartNode, PRInt32 aStartIndex,
+                                    nsIDOMNode *aEndNode, PRInt32 aEndIndex,
+                                    PRInt16 aVPercent, PRInt16 aHPercent);
+
+  /**
+   * Scrolls the given frame to the point, used for implememntation of
+   * nsIAccessNode::scrollToPoint and nsIAccessibleText::scrollSubstringToPoint.
+   *
+   * @param aScrollableFrame  the scrollable frame
+   * @param aFrame            the frame to scroll
+   * @param aPoint            the point scroll to
+   */
+  static void ScrollFrameToPoint(nsIFrame *aScrollableFrame,
+                                 nsIFrame *aFrame, const nsIntPoint& aPoint);
+
   /**
    * Converts scroll type constant defined in nsIAccessibleScrollType to
    * vertical and horizontal percents.
@@ -167,6 +197,22 @@ public:
   static void ConvertScrollTypeToPercents(PRUint32 aScrollType,
                                           PRInt16 *aVPercent,
                                           PRInt16 *aHPercent);
+
+  /**
+   * Converts the given coordinates to coordinates relative screen.
+   *
+   * @param aX               [in] the given x coord
+   * @param aY               [in] the given y coord
+   * @param aCoordinateType  [in] specifies coordinates origin (refer to
+   *                         nsIAccessibleCoordinateType)
+   * @param aAccessNode      [in] the accessible if coordinates are given
+   *                         relative it.
+   * @param aCoords          [out] converted coordinates
+   */
+  static nsresult ConvertToScreenCoords(PRInt32 aX, PRInt32 aY,
+                                        PRUint32 aCoordinateType,
+                                        nsIAccessNode *aAccessNode,
+                                        nsIntPoint *aCoords);
 
   /**
    * Returns coordinates relative screen for the top level window.
@@ -188,6 +234,92 @@ public:
    * @return          PR_TRUE if there is an ID set for this node
    */
   static PRBool GetID(nsIContent *aContent, nsAString& aID);
+
+  /**
+   * Find out what kinds of properties are checked for this content node's document
+   * @param aContent     The content node we're going to look for ARIA properties on
+   * @param aWeakShell   The presshell for the document we're looking for ARIA properties on (optional optimization)
+   * @return             The types of properties checked
+   */
+  static PRUint32 GetAriaPropTypes(nsIContent *aContent, nsIWeakReference *aWeakShell = nsnull);
+
+  /**
+   *  Check for the relevant ARIA property. Can check either for a properly namespaced property,
+   *  or a fake hyphenated namespace using "aria-" as a prefix in HTML. Is optimized to only
+   *  check for each type when it is possible to exist on a given node.
+   *  @param aContent     Node to check for property on
+   *  @param aWeakShell   The current pres shell if known (as an optimization), or nsnull if not known by caller
+   *  @param aProperty    An enumeration indicating which ARIA property we are checking
+   *  @param aAriaPropTypes  A bitflag for the property types to check for (namespaced, hyphenated or both), if known by caller
+   *  @return             PR_TRUE if the property is defined
+   */
+  static PRBool HasAriaProperty(nsIContent *aContent, nsIWeakReference *aWeakShell,
+                                EAriaProperty aProperty,
+                                PRUint32 aCheckFlags = 0);
+
+  /**
+   *  Get the relevant ARIA property. Can check either for a properly namespaced property,
+   *  or a fake hyphenated namespace using "aria-" as a prefix in HTML. Is optimized to only
+   *  check for each type when it is possible to exist on a given node.
+   *  @param aContent     Node to check for property on
+   *  @param aWeakShell   The current pres shell if known (as an optimization), or nsnull if not known by caller
+   *  @param aProperty    An enumeration indicating which ARIA property we are checking
+   *  @param aValue       Where to store the property value
+   *  @param aAriaPropTypes  A bitflag for the property types to check for (namespaced, hyphenated or both), if known by caller
+   *  @return             PR_TRUE if the property is defined
+   */
+  static PRBool GetAriaProperty(nsIContent *aContent, nsIWeakReference *aWeakShell,
+                                EAriaProperty aProperty, nsAString& aValue, 
+                                PRUint32 aCheckFlags = 0);
+
+  /**
+   * Search element in neighborhood of the given element by tag name and
+   * attribute value that equals to ID attribute of the given element.
+   * ID attribute can be either 'id' attribute or 'anonid' if the element is
+   * anonymous.
+   *
+   * @param aAriaProperty - the ARIA property to search for or eAria_none, if aRelationAttr is passed in
+   * @param aForNode - the given element the search is performed for
+   * @param aTagName - tag name of searched element, or nsnull for any -- ignored if aAriaProperty passed in
+   * @param aRelationAttr - attribute name of searched element, ignored if aAriaProperty passed in
+   * @param aAncestorLevelsToSearch - points how is the neighborhood of the
+   *                                  given element big.
+   */
+  static nsIContent *FindNeighbourPointingToNode(nsIContent *aForNode,
+                                                 EAriaProperty aAriaProperty,
+                                                 nsIAtom *aTagName = nsnull,
+                                                 nsIAtom *aRelationAttr = nsnull,
+                                                 PRUint32 aAncestorLevelsToSearch = 5);
+
+  /**
+   * Search for element that satisfies the requirements in subtree of the given
+   * element. The requirements are tag name, attribute name and value of
+   * attribute.
+   *
+   * @param aId - value of searched attribute
+   * @param aLookContent - element that search is performed inside
+   * @param aAriaProperty - the ARIA property to search for or eAria_none, if aRelationAttr is passed in
+   * @param aRelationAttr - searched attribute-- ignored if aAriaProperty passed in
+   * @param                 if both aAriaProperty and aRelationAttr are null, then any element with aTagType will do
+   * @param aExcludeContent - element that is skiped for search
+   * @param aTagType - tag name of searched element, by default it is 'label' --
+   *                   ignored if aAriaProperty passed in
+   */
+  static nsIContent *FindDescendantPointingToID(const nsString *aId,
+                                                nsIContent *aLookContent,
+                                                EAriaProperty aAriaProperty,
+                                                nsIAtom *aRelationAttr = nsnull,
+                                                nsIContent *aExcludeContent = nsnull,
+                                                nsIAtom *aTagType = nsAccessibilityAtoms::label);
+
+  // Helper for FindDescendantPointingToID(), same args
+  static nsIContent *FindDescendantPointingToIDImpl(nsCString& aIdWithSpaces,
+                                                    nsIContent *aLookContent,
+                                                    EAriaProperty aAriaProperty,
+                                                    PRUint32 aAriaPropTypes,
+                                                    nsIAtom *aRelationAttr = nsnull,
+                                                    nsIContent *aExcludeContent = nsnull,
+                                                    nsIAtom *aTagType = nsAccessibilityAtoms::label);
 };
 
 #endif

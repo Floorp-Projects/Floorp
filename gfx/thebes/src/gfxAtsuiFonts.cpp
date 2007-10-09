@@ -67,6 +67,12 @@
 
 #define ROUND(x) (floor((x) + 0.5))
 
+/* 10.5 SDK includes a funky new definition of FloatToFixed, so reset to old-style definition */
+#ifdef FloatToFixed
+#undef FloatToFixed
+#define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
+#endif
+
 /* We might still need this for fast-pathing, but we'll see */
 #if 0
 OSStatus ATSUGetStyleGroup(ATSUStyle style, void **styleGroup);
@@ -171,8 +177,8 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
 
     mMetrics.emHeight = size;
 
-    mMetrics.maxAscent = atsMetrics.ascent * size;
-    mMetrics.maxDescent = - (atsMetrics.descent * size);
+    mMetrics.maxAscent = NS_ceil(atsMetrics.ascent * size);
+    mMetrics.maxDescent = NS_ceil(- (atsMetrics.descent * size));
 
     mMetrics.maxHeight = mMetrics.maxAscent + mMetrics.maxDescent;
 
@@ -226,7 +232,7 @@ gfxAtsuiFont::InitMetrics(ATSUFontID aFontID, ATSFontRef aFontRef)
 }
 
 PRBool
-gfxAtsuiFont::SetupCairoFont(cairo_t *aCR)
+gfxAtsuiFont::SetupCairoFont(gfxContext *aContext)
 {
     cairo_scaled_font_t *scaledFont = CairoScaledFont();
     if (cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
@@ -234,7 +240,7 @@ gfxAtsuiFont::SetupCairoFont(cairo_t *aCR)
         // the cairo_t, precluding any further drawing.
         return PR_FALSE;
     }
-    cairo_set_scaled_font(aCR, scaledFont);
+    cairo_set_scaled_font(aContext->GetCairo(), scaledFont);
     return PR_TRUE;
 }
 
@@ -329,6 +335,35 @@ CreateFontFallbacksFromFontList(nsTArray< nsRefPtr<gfxFont> > *aFonts,
     return status == noErr ? NS_OK : NS_ERROR_FAILURE;
 }
 
+void
+gfxAtsuiFont::SetupGlyphExtents(gfxContext *aContext, PRUint32 aGlyphID,
+        PRBool aNeedTight, gfxGlyphExtents *aExtents)
+{
+    ATSGlyphScreenMetrics metrics;
+    GlyphID glyph = aGlyphID;
+    OSStatus err = ATSUGlyphGetScreenMetrics(mATSUStyle, 1, &glyph, 0, false, false,
+                                             &metrics);
+    if (err != noErr)
+        return;
+    PRUint32 appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
+    
+    if (!aNeedTight && metrics.topLeft.x >= 0 &&
+        -metrics.topLeft.y + metrics.height <= mMetrics.maxAscent &&
+        metrics.topLeft.y <= mMetrics.maxDescent) {
+        PRUint32 appUnitsWidth =
+        	PRUint32(NS_ceil((metrics.topLeft.x + metrics.width)*appUnitsPerDevUnit));
+        if (appUnitsWidth < gfxGlyphExtents::INVALID_WIDTH) {
+            aExtents->SetContainedGlyphWidthAppUnits(aGlyphID, PRUint16(appUnitsWidth));
+            return;
+        }
+    }
+
+    double d2a = appUnitsPerDevUnit;
+    gfxRect bounds(metrics.topLeft.x*d2a, (metrics.topLeft.y - metrics.height)*d2a,
+                   metrics.width*d2a, metrics.height*d2a);
+    aExtents->SetTightGlyphExtents(aGlyphID, bounds);
+}
+
 PRBool 
 gfxAtsuiFont::HasMirroringInfo()
 {
@@ -394,7 +429,7 @@ gfxAtsuiFontGroup::gfxAtsuiFontGroup(const nsAString& families,
         GetOrMakeFont(fontID, aStyle, &mFonts);
     }
 
-    CreateFontFallbacksFromFontList(&mFonts, &mFallbacks, kATSULastResortOnlyFallback);
+    CreateFontFallbacksFromFontList(&mFonts, &mFallbacks, kATSUSequentialFallbacksExclusive);
 }
 
 PRBool
@@ -408,7 +443,7 @@ gfxAtsuiFontGroup::FindATSUFont(const nsAString& aName,
     gfxQuartzFontCache *fc = gfxQuartzFontCache::SharedFontCache();
     ATSUFontID fontID = fc->FindATSUFontIDForFamilyAndStyle (aName, fontStyle);
 
-    if (fontID != kATSUInvalidFontID) {
+    if (fontID != kATSUInvalidFontID && !fontGroup->HasFont(fontID)) {
         //fprintf (stderr, "..FindATSUFont: %s\n", NS_ConvertUTF16toUTF8(aName).get());
         GetOrMakeFont(fontID, fontStyle, &fontGroup->mFonts);
     }
@@ -572,6 +607,8 @@ gfxAtsuiFontGroup::MakeTextRun(const PRUnichar *aString, PRUint32 aLength,
             break;
         textRun->ResetGlyphRuns();
     }
+    
+    textRun->FetchGlyphExtents(aParams->mContext);
 
     return textRun;
 }
@@ -614,6 +651,8 @@ gfxAtsuiFontGroup::MakeTextRun(const PRUint8 *aString, PRUint32 aLength,
         textRun->ResetGlyphRuns();
     }
 
+    textRun->FetchGlyphExtents(aParams->mContext);
+
     return textRun;
 }
 
@@ -632,6 +671,16 @@ gfxAtsuiFontGroup::FindFontFor(ATSUFontID fid)
     }
 
     return GetOrMakeFont(fid, GetStyle(), &mFonts);
+}
+
+PRBool
+gfxAtsuiFontGroup::HasFont(ATSUFontID fid)
+{
+    for (PRUint32 i = 0; i < mFonts.Length(); ++i) {
+        if (fid == static_cast<gfxAtsuiFont *>(mFonts.ElementAt(i).get())->GetATSUFontID())
+            return PR_TRUE;
+    }
+    return PR_FALSE;
 }
 
 /**
@@ -1478,6 +1527,12 @@ gfxAtsuiFontGroup::InitTextRun(gfxTextRun *aRun,
                 // do we have any more work to do?
                 if (status == noErr)
                     break;
+            }
+
+            if (firstTime && !HasFont(substituteFontID)) {
+                // XXX We are using kATSUSequentialFallbacksExclusive at first time.
+                // But the method uses non-listed font in font fallbacks on 10.4. (ATSUI Reference does not say so...)
+                status = kATSUFontsNotMatched;
             }
 
             // then, handle any chars that were found in the fallback list

@@ -41,11 +41,13 @@
 #include "jsapi.h"
 #include "nsIPrincipal.h"
 
+class nsCString;
+
 struct nsJSPrincipals : JSPrincipals
 {
   static nsresult Startup();
   nsJSPrincipals();
-  nsresult Init(nsIPrincipal* aPrincipal, const char *aCodebase);
+  nsresult Init(nsIPrincipal* aPrincipal, const nsCString& aCodebase);
   ~nsJSPrincipals(void);
 
   nsIPrincipal *nsIPrincipalPtr; // [WEAK] it owns us.

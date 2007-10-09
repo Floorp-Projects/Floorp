@@ -192,6 +192,18 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
                                  PRBool aIsInserting,
                                  PRBool aIsAsynch);
 
+    /**
+     * Fire show/hide events for either the current node if it has an accessible,
+     * or the first-line accessible descendants of the given node.
+     *
+     * @param aDOMNode               the given node
+     * @param aEventType             event type to fire an event
+     * @param aDelay                 whether to fire the event on a delay
+     * @param aForceIsFromUserInput  the event is known to be from user input
+     */
+    nsresult FireShowHideEvents(nsIDOMNode *aDOMNode, PRUint32 aEventType,
+                                PRBool aDelay, PRBool aForceIsFromUserInput);
+
     nsAccessNodeHashtable mAccessNodeCache;
     void *mWnd;
     nsCOMPtr<nsIDocument> mDocument;
@@ -204,6 +216,7 @@ class nsDocAccessible : public nsHyperTextAccessibleWrap,
 protected:
     PRBool mIsAnchor;
     PRBool mIsAnchorJumped;
+    PRUint32 mAriaPropTypes;
     static PRUint32 gLastFocusedAccessiblesState;
 
 private:

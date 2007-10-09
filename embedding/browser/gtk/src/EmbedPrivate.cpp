@@ -16,7 +16,7 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Christopher Blizzard. Portions created by Christopher Blizzard are Copyright (C) Christopher Blizzard.  All Rights Reserved.
+ * Christopher Blizzard.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
@@ -311,20 +311,6 @@ static const nsModuleComponentInfo defaultAppComps[] = {
     NS_TOKENPASSWORDSDIALOG_CONTRACTID,
     EmbedCertificatesConstructor
   },
-  {
-    EMBED_CERTIFICATES_DESCRIPTION,
-    EMBED_CERTIFICATES_CID,
-    NS_BADCERTLISTENER_CONTRACTID,
-    EmbedCertificatesConstructor
-  },
-#ifdef BAD_CERT_LISTENER2
-  {
-    EMBED_CERTIFICATES_DESCRIPTION,
-    EMBED_CERTIFICATES_CID,
-    NS_BADCERTLISTENER2_CONTRACTID,
-    EmbedCertificatesConstructor
-  },
-#endif
   {
     EMBED_CERTIFICATES_DESCRIPTION,
     EMBED_CERTIFICATES_CID,

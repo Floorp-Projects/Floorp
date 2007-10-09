@@ -35,7 +35,9 @@
 # ***** END LICENSE BLOCK *****
 
 # Required Plugins:
-# ShellLink    http://nsis.sourceforge.net/ShellLink_plug-in
+# SetVistaDefaultApp http://nsis.sourceforge.net/SetVistaDefaultApp_plug-in
+# ShellLink          http://nsis.sourceforge.net/ShellLink_plug-in
+# UAC                http://nsis.sourceforge.net/UAC_plug-in
 
 ; Set verbosity to 3 (e.g. no script) to lessen the noise in the build logs
 !verbose 3
@@ -52,6 +54,10 @@ CRCCheck on
 !system 'echo ; > options.ini'
 !system 'echo ; > components.ini'
 !system 'echo ; > shortcuts.ini'
+!system 'echo ; > summary.ini'
+
+; USE_UAC_PLUGIN is temporary until Thunderbird has been updated to use the UAC plugin
+!define USE_UAC_PLUGIN
 
 Var TmpVal
 Var StartMenuDir
@@ -74,16 +80,17 @@ Var AddDesktopSC
 ; available.
 !include /NONFATAL WinVer.nsh
 !ifdef ___WINVER__NSH___
-  RequestExecutionLevel admin
+  RequestExecutionLevel user
 !else
   !warning "Installer will be created without Vista compatibility.$\n            \
             Upgrade your NSIS installation to at least version 2.22 to resolve."
 !endif
 
-!insertmacro StrFilter
-!insertmacro WordFind
-!insertmacro WordReplace
+!insertmacro GetOptions
+!insertmacro GetParameters
 !insertmacro GetSize
+!insertmacro StrFilter
+!insertmacro WordReplace
 
 ; NSIS provided macros that we have overridden
 !include overrides.nsh
@@ -102,9 +109,13 @@ VIAddVersionKey "FileDescription" "${BrandShortName} Installer"
 ; Must be inserted before other macros that use logging
 !insertmacro _LoggingCommon
 
-!insertmacro AddHandlerValues
+!insertmacro AddDDEHandlerValues
 !insertmacro CloseApp
 !insertmacro CreateRegKey
+!insertmacro GetPathFromString
+!insertmacro IsHandlerForInstallDir
+!insertmacro ManualCloseAppPrompt
+!insertmacro RegCleanAppHandler
 !insertmacro RegCleanMain
 !insertmacro RegCleanUninstall
 !insertmacro WriteRegStr2
@@ -129,6 +140,7 @@ ShowInstDetails nevershow
 ReserveFile options.ini
 ReserveFile components.ini
 ReserveFile shortcuts.ini
+ReserveFile summary.ini
 
 ################################################################################
 # Modern User Interface - MUI
@@ -181,8 +193,10 @@ Page custom preShortcuts leaveShortcuts
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME "Start Menu Folder"
 !insertmacro MUI_PAGE_STARTMENU Application $StartMenuDir
 
+; Custom Summary Page
+Page custom preSummary leaveSummary
+
 ; Install Files Page
-!define MUI_PAGE_CUSTOMFUNCTION_PRE preInstFiles
 !insertmacro MUI_PAGE_INSTFILES
 
 ; Finish Page
@@ -360,28 +374,24 @@ Section "-Application" APP_IDX
     StrCpy $AddDesktopSC "1"
   ${EndIf}
 
-  ; Remove registry entries for non-existent apps and for apps that point to our
-  ; install location in the Software\Mozilla key and uninstall registry entries
-  ; that point to our install location for both HKCU and HKLM.
+  ${LogHeader} "Adding Registry Entries"
   SetShellVarContext current  ; Set SHCTX to HKCU
   ${RegCleanMain} "Software\Mozilla"
   ${RegCleanUninstall}
 
-  SetShellVarContext all  ; Set SHCTX to HKLM
-  ${RegCleanMain} "Software\Mozilla"
-  ${RegCleanUninstall}
-
-  ${LogHeader} "Adding Registry Entries"
   ClearErrors
   WriteRegStr HKLM "Software\Mozilla\InstallerTest" "InstallerTest" "Test"
   ${If} ${Errors}
-    SetShellVarContext current  ; Set SHCTX to HKCU
     StrCpy $TmpVal "HKCU" ; used primarily for logging
   ${Else}
     SetShellVarContext all  ; Set SHCTX to HKLM
     DeleteRegKey HKLM "Software\Mozilla\InstallerTest"
     StrCpy $TmpVal "HKLM" ; used primarily for logging
+    ${RegCleanMain} "Software\Mozilla"
+    ${RegCleanUninstall}
   ${EndIf}
+
+  ${RemoveDeprecatedKeys}
 
   ; The previous installer adds several regsitry values to both HKLM and HKCU.
   ; We now try to add to HKLM and if that fails to HKCU
@@ -399,6 +409,18 @@ Section "-Application" APP_IDX
   ${WriteRegDWORD2} $TmpVal "$0" "Create Start Menu Shortcut" $AddStartMenuSC 0
 
   ${FixClassKeys}
+  ${UpdateProtocolHandlers}
+
+  ; On install always add the FirefoxHTML and FirefoxURL keys.
+  ; An empty string is used for the 5th param because FirefoxHTML is not a
+  ; protocol handler.
+  ${AddDDEHandlerValues} "FirefoxHTML" "$2" "$8,1" "${AppRegName} Document" "" \
+                         "${DDEApplication}" "$3" "WWW_OpenURL"
+
+  ${AddDDEHandlerValues} "FirefoxURL" "$2" "$8,1" "${AppRegName} URL" "true" \
+                         "${DDEApplication}" "$3" "WWW_OpenURL"
+
+  ${FixShellIconHandler}
 
   ; The following keys should only be set if we can write to HKLM
   ${If} $TmpVal == "HKLM"
@@ -410,10 +432,10 @@ Section "-Application" APP_IDX
 
     ; If we are writing to HKLM and create the quick launch and the desktop
     ; shortcuts set IconsVisible to 1 otherwise to 0.
+    ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
+    StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
     ${If} $AddQuickLaunchSC == 1
     ${OrIf} $AddDesktopSC == 1
-      ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
-      StrCpy $0 "Software\Clients\StartMenuInternet\$R9\InstallInfo"
       WriteRegDWORD HKLM "$0" "IconsVisible" 1
     ${Else}
       WriteRegDWORD HKLM "$0" "IconsVisible" 0
@@ -534,7 +556,7 @@ Function CopyFile
       ${If} ${Errors}
         ${LogMsg}  "** ERROR Creating Directory: $R1$R3\$R7 **"
         StrCpy $0 "$R1$R3\$R7"
-        ${WordReplace} "$(^FileError_NoIgnore)" "\r\n" "$\r$\n" "+*" $0
+        StrCpy $0 "$(ERROR_CREATE_DIRECTORY)"
         MessageBox MB_RETRYCANCEL|MB_ICONQUESTION "$0" IDRETRY retry
         Quit
       ${Else}
@@ -548,7 +570,7 @@ Function CopyFile
       ${If} ${Errors}
         ${LogMsg}  "** ERROR Creating Directory: $R1$R3 **"
         StrCpy $0 "$R1$R3"
-        ${WordReplace} "$(^FileError_NoIgnore)" "\r\n" "$\r$\n" "+*" $0
+        StrCpy $0 "$(ERROR_CREATE_DIRECTORY)"
         MessageBox MB_RETRYCANCEL|MB_ICONQUESTION "$0" IDRETRY retry
         Quit
       ${Else}
@@ -590,8 +612,30 @@ Function CopyFile
 FunctionEnd
 
 Function LaunchApp
-  ${CloseApp} "true" $(WARN_APP_RUNNING_INSTALL)
+  ${GetParameters} $0
+  ${If} $0 != ""
+    ClearErrors
+    ${GetOptions} "$0" "/UAC:" $1
+    ${Unless} ${Errors}
+      GetFunctionAddress $0 LaunchAppFromElevatedProcess
+      UAC::ExecCodeSegment $0
+      Quit
+    ${EndUnless}
+  ${EndIf}
+
+  ${ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
   Exec "$INSTDIR\${FileMainEXE}"
+FunctionEnd
+
+Function LaunchAppFromElevatedProcess
+  ${ManualCloseAppPrompt} "${WindowClass}" "$(WARN_MANUALLY_CLOSE_APP_LAUNCH)"
+
+  ; Find the installation directory when launching using GetFunctionAddress
+  ; from an elevated installer since $INSTDIR will not be set in this installer
+  ${StrFilter} "${FileMainEXE}" "+" "" "" $R9
+  ReadRegStr $0 HKLM "Software\Clients\StartMenuInternet\$R9\DefaultIcon" ""
+  ${GetPathFromString} "$0" $0
+  Exec "$0"
 FunctionEnd
 
 ################################################################################
@@ -677,7 +721,26 @@ Function preStartMenu
   ${EndIf}
 FunctionEnd
 
-Function preInstFiles
+Function preSummary
+  !insertmacro createSummaryINI
+  !insertmacro MUI_HEADER_TEXT "$(SUMMARY_PAGE_TITLE)" "$(SUMMARY_PAGE_SUBTITLE)"
+
+  ; The Summary custom page has a textbox that will automatically receive
+  ; focus. This sets the focus to the Install button instead.
+  !insertmacro MUI_INSTALLOPTIONS_INITDIALOG "summary.ini"
+  GetDlgItem $0 $HWNDPARENT 1
+  System::Call "user32::SetFocus(i r0, i 0x0007, i,i)i"
+  !insertmacro MUI_INSTALLOPTIONS_SHOW
+FunctionEnd
+
+Function leaveSummary
+  ; If there is a pending deletion from a previous uninstall don't allow
+  ; installing until after the system has rebooted.
+  IfFileExists "$INSTDIR\${FileMainEXE}.moz-delete" +1 +4
+  MessageBox MB_YESNO "$(WARN_RESTART_REQUIRED_UNINSTALL)" IDNO +2
+  Reboot
+  Quit
+
   ${If} $InstallType != ${INSTALLTYPE_CUSTOM}
     ; Set DOMi to be installed
     SectionSetFlags ${DOMI_IDX} 1
@@ -700,6 +763,7 @@ Function .onInit
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "options.ini"
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "components.ini"
   !insertmacro MUI_INSTALLOPTIONS_EXTRACT "shortcuts.ini"
+  !insertmacro MUI_INSTALLOPTIONS_EXTRACT "summary.ini"
   !insertmacro createBasicCustomOptionsINI
   !insertmacro createComponentsINI
   !insertmacro createShortcutsINI
@@ -720,4 +784,12 @@ Function .onInit
     ; Hide DOMi in the components page if it isn't available.
     SectionSetText ${DOMI_IDX} ""
   ${EndIf}
+FunctionEnd
+
+Function .OnInstFailed
+  UAC::Unload
+FunctionEnd
+
+Function .OnInstSuccess
+  UAC::Unload
 FunctionEnd

@@ -271,12 +271,8 @@ nsDOMStorageDB::SetKey(const nsAString& aDomain,
   PRInt32 usage = 0;
   nsresult rv;
   if (!aOwner.IsEmpty()) {
-    if (aOwner == mCachedOwner) {
-      usage = mCachedUsage;
-    } else {
-      rv = GetUsage(aOwner, &usage);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = GetUsage(aOwner, &usage);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   usage += aKey.Length() + aValue.Length();
@@ -426,6 +422,11 @@ nsDOMStorageDB::RemoveAll()
 nsresult
 nsDOMStorageDB::GetUsage(const nsAString &aOwner, PRInt32 *aUsage)
 {
+  if (aOwner == mCachedOwner) {
+    *aUsage = mCachedUsage;
+    return NS_OK;
+  }
+
   mozStorageStatementScoper scope(mGetUsageStatement);
 
   nsresult rv = mGetUsageStatement->BindStringParameter(0, aOwner);
@@ -440,5 +441,13 @@ nsDOMStorageDB::GetUsage(const nsAString &aOwner, PRInt32 *aUsage)
     return NS_OK;
   }
   
-  return mGetUsageStatement->GetInt32(0, aUsage);
+  rv = mGetUsageStatement->GetInt32(0, aUsage);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!aOwner.IsEmpty()) {
+    mCachedOwner = aOwner;
+    mCachedUsage = *aUsage;
+  }
+
+  return NS_OK;
 }

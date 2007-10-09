@@ -66,19 +66,23 @@
 
     <hbox>
       <button id="ca_viewButton"
-              label="&certmgr.view.label;"
+              label="&certmgr.view2.label;"
               accesskey="&certmgr.view.accesskey;"
               disabled="true" oncommand="viewCerts();"/>
       <button id="ca_editButton"
-              label="&certmgr.edit.label;"
+              label="&certmgr.edit2.label;"
               accesskey="&certmgr.edit.accesskey;"
               disabled="true" oncommand="editCerts();"/>
       <button id="ca_addButton"
-              label="&certmgr.restore.label;"
+              label="&certmgr.restore2.label;"
               accesskey="&certmgr.restore.accesskey;"
               oncommand="addCACerts();"/>
+      <button id="ca_exportButton"
+              label="&certmgr.export.label;"
+              accesskey="&certmgr.export.accesskey;"
+              disabled="true" oncommand="exportCerts();"/>
       <button id="ca_deleteButton"
-              label="&certmgr.delete.label;"
+              label="&certmgr.delete2.label;"
               accesskey="&certmgr.delete.accesskey;"
               disabled="true" oncommand="deleteCerts();"/>
     </hbox>

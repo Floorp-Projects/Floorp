@@ -8,7 +8,7 @@ use File::Copy qw(move);
 use POSIX qw(strftime);
 
 use MozBuild::Util qw(MkdirWithPath RunShellCommand);
-use Bootstrap::Util qw(CvsCatfile GetDiffFileList);
+use Bootstrap::Util qw(CvsCatfile);
 
 use Bootstrap::Step;
 use Bootstrap::Step::Tag::Bump;

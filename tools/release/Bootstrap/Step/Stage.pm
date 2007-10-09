@@ -7,7 +7,7 @@ package Bootstrap::Step::Stage;
 use File::Basename;
 use File::Copy qw(copy move);
 use File::Find qw(find);
-use File::Path qw(rmtree);
+use File::Path qw(rmtree mkpath);
 
 use Cwd;
 
@@ -203,20 +203,22 @@ sub Execute {
     # Create the staging directory.
 
     my $stageDir = $this->GetStageDir();
-    my $mergeDir = catfile($stageDir, 'stage-merged');
 
     if (not -d $stageDir) {
         MkdirWithPath(dir => $stageDir) 
           or die("Could not mkdir $stageDir: $!");
         $this->Log(msg => "Created directory $stageDir");
     }
- 
+
     # Create skeleton batch directory.
     my $skelDir = catfile($stageDir, 'batch-skel', 'stage');
-    if (not -d "$skelDir") {
+    if (not -d $skelDir) {
         MkdirWithPath(dir => $skelDir) 
           or die "Cannot create $skelDir: $!";
         $this->Log(msg => "Created directory $skelDir");
+        chmod(0755, $skelDir)
+          or die("Could not chmod 755 $skelDir: $!");
+        $this->Log(msg => "Changed mode of $skelDir to 0775");
     }
     my (undef, undef, $gid) = getgrnam($product)
       or die "Could not getgrname for $product: $!";
@@ -246,6 +248,7 @@ sub Execute {
           or die "Cannot create $batch1Dir: $!";
         $this->Log(msg => "Created directory $batch1Dir");
     }
+
     $this->Shell(
       cmd => 'cvs',
       cmdArgs => [ '-d', $mofoCvsroot, 
@@ -255,16 +258,22 @@ sub Execute {
       logFile => catfile($logDir, 'stage_publickey_checkout.log'),
       dir => $batch1Dir
     );
+
+    # We do this to get the version of the key we shipped with in the logfile
     $this->Shell(
       cmd => 'cvs',
       cmdArgs => [ 'status' ],
       logFile => catfile($logDir, 'stage_publickey_checkout.log'),
-      dir => catfile($stageDir, 'batch1', 'key-checkout'),
+      dir => catfile($batch1Dir, 'key-checkout'),
     );
 
-    my $keyFile = catfile($stageDir, 'batch1', 'key-checkout', 'PUBLIC-KEY');
+    my $keyFile = catfile($batch1Dir, 'key-checkout', 'PUBLIC-KEY');
     my $keyFileDest = catfile($skelDir, 'KEY');
     copy($keyFile, $keyFileDest) or die("Could not copy $keyFile to $keyFileDest: $!");
+    chmod(0644, $keyFileDest) or
+      die("Could not chmod $keyFileDest to 644");
+    chown(-1, $gid, $keyFileDest) or 
+      die("Could not chown $keyFileDest to group $gid");
 
     ## Prepare the merging directory.
     $this->Shell(
@@ -276,9 +285,9 @@ sub Execute {
     
     # Collect the release files from the candidates directory into a prestage
     # directory.
-    my $prestageDir = catfile($stageDir, 'batch1', 'prestage');
+    my $prestageDir = catfile($batch1Dir, 'prestage');
     if (not -d $prestageDir) {
-        MkdirWithPath(dir => $prestageDir) 
+        MkdirWithPath(dir => $prestageDir, mask => 0755) 
           or die "Cannot create $prestageDir: $!";
         $this->Log(msg => "Created directory $prestageDir");
     }
@@ -290,7 +299,7 @@ sub Execute {
                                  '/',
                     './'],
       logFile => catfile($logDir, 'stage_collect.log'),
-      dir => catfile($stageDir, 'batch1', 'prestage'),
+      dir => $prestageDir
     );
 
     # Create a pruning/"trimmed" area; this area will be used to remove
@@ -302,13 +311,16 @@ sub Execute {
       dir => $batch1Dir
     );
 
+    my $prestageTrimmedDir = catfile($batch1Dir, 'prestage-trimmed');
+
     # Remove unknown/unrecognized directories from the -candidates dir; after
     # this, the only directories that should be in the prestage-trimmed
     # directory are directories that we expliciately handle below, to prep
     # for groom-files.
     $this->{'scrubTrimmedDirDeleteList'} = [];
-    find(sub { return $this->ScrubTrimmedDirCallback(); },
-     catfile($stageDir, 'batch1', 'prestage-trimmed'));
+
+    find(sub { return $this->ScrubTrimmedDirCallback(); }, $prestageTrimmedDir);
+
     foreach my $delDir (@{$this->{'scrubTrimmedDirDeleteList'}}) {
         if (-e $delDir && -d $delDir) {
             $this->Log(msg => "rmtree() ing $delDir");
@@ -322,26 +334,28 @@ sub Execute {
 
     # All the magic happens here; we remove unshipped deliverables and cross-
     # check the locales we do ship in this callback.
-    find(sub { return $this->TrimCallback(); },
-     catfile($stageDir, 'batch1', 'prestage-trimmed'));
+    #
+    # We also set the correct permissions and ownership of the dictories and
+    # files in a mishmash of chmod()/chown() calls in TrimCallback() and later
+    # in GroomFiles(); we should really attempt to consolidate these calls at
+    # some point (says the hacker who wrote most of that ickyness ;-)
+    find(sub { return $this->TrimCallback(); }, $prestageTrimmedDir);
    
     # Create a stage-unsigned directory to run groom-files in.
     $this->Shell(
       cmd => 'rsync',
       cmdArgs => ['-av', 'prestage-trimmed/', 'stage-unsigned/'],
       logFile => catfile($logDir, 'stage_collect_stage.log'),
-      dir => catfile($stageDir, 'batch1'),
+      dir => $batch1Dir
     );
 
     find(sub { return $this->RemoveMarsCallback(); },
-     catfile($stageDir, 'batch1', 'stage-unsigned'));
+     catfile($batch1Dir, 'stage-unsigned'));
 
     # Nightly builds using a different naming scheme than production.
     # Rename the files.
     # TODO should support --long filenames, for e.g. Alpha and Beta
-    $this->GroomFiles(
-                      catfile($stageDir, 'batch1', 'stage-unsigned')
-                     );
+    $this->GroomFiles(catfile($batch1Dir, 'stage-unsigned'));
 
     # fix xpi dir names - This is a hash of directory names in the pre-stage
     # dir -> directories under which those directories should be moved to;
@@ -351,8 +365,8 @@ sub Execute {
                    'mac-xpi' => 'mac');
 
     foreach my $xpiDir (keys(%xpiDirs)) {
-        my $fromDir = catfile($stageDir, 'batch1', 'stage-unsigned', $xpiDir);
-        my $toDir = catfile($stageDir, 'batch1', 'stage-unsigned',
+        my $fromDir = catfile($batch1Dir, 'stage-unsigned', $xpiDir);
+        my $toDir = catfile($batch1Dir, 'stage-unsigned',
          $xpiDirs{$xpiDir}, 'xpi');
 
         if (-e $fromDir) {
@@ -399,10 +413,7 @@ sub Execute {
         }
     }
 
-    $this->GroomFiles(
-                      catfile($stageDir, 'batch1', 'mar')
-                      );
-
+    $this->GroomFiles(catfile($batch1Dir, 'mar'));
 }
 
 sub Verify {
@@ -512,8 +523,7 @@ sub ScrubTrimmedDirCallback {
             return if (basename($dirent) eq $allowedDir);
         }
 
-        $this->Log(msg => "Adding extra RC directory entry for deletion: " .
-         $dirent);
+        $this->Log(msg => "WILL DELETE: $dirent");
         push(@{$this->{'scrubTrimmedDirDeleteList'}}, $dirent);
     }
 }
@@ -530,9 +540,9 @@ sub TrimCallback {
          # ZIP files are not shipped; neither are en-US lang packs
          ($dirent =~ /\.zip$/) ||
          ($dirent =~ /en-US\.xpi$/)) {
-          unlink($dirent) || die "Could not unlink $dirent: $!";
+            unlink($dirent) || die "Could not unlink $dirent: $!";
             $this->Log(msg => "Unlinked $dirent");
-          return;
+            return;
         }
 
         # source tarballs don't have a locale, so don't check them for one;
@@ -575,7 +585,8 @@ sub TrimCallback {
           or die "Could not chmod $dirent to 0755: $!";
         $this->Log(msg => "Changed mode of $dirent to 0755");
     } else {
-        die("Unexpected non-file/non-dir directory entry: $dirent");
+        die("Bootstrap::Step::Stage::TrimCallback(): Unexpected " .
+         "non-file/non-dir directory entry: $dirent");
     }
 
     my $product = $config->Get(var => 'product');
@@ -658,6 +669,8 @@ sub GroomFiles {
     }
 
     my $config = new Bootstrap::Config();
+    my (undef, undef, $gid) = getgrnam($config->Get(var => 'product')) or
+     die "Could not getgrname for " . $config->Get(var => 'product') .": $!";
 
     my $start_dir = getcwd();
     chdir($dir) or
@@ -686,12 +699,28 @@ sub GroomFiles {
 
             if ( ! -e $pretty_name ) {
                 if (! -d $pretty_dirname) {
-                    MkdirWithPath(dir => $pretty_dirname) 
-                        or die "Cannot create $pretty_dirname: $!";
+                    my @dirsCreated = ();
+
+                    eval { @dirsCreated = mkpath($pretty_dirname, 1) };
+           
+                    if ($@ ne '') {
+                        die("Cannot create $pretty_dirname: $@");
+                    }
+
+                    foreach my $dir (@dirsCreated) {
+                        chmod(0755, $dir) or die("Could not chmod $dir to 755");
+                        chown(-1, $gid, $dir) or die("Could not chown $dir " .
+                         "to group $gid");
+                    }
+
                     $this->Log(msg => "Created directory $pretty_dirname");
                 }
                 copy($original_name, $pretty_name) or
                     die("Could not copy $original_name to $pretty_name: $!");
+                chmod(0644, $pretty_name) or
+                 die("Could not chmod $pretty_name to 644");
+                chown(-1, $gid, $pretty_name) or 
+                 die("Could not chown $pretty_name to group $gid");
                 $once = 1;
             }
         }

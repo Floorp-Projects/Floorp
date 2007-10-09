@@ -102,17 +102,126 @@
 #include "prprf.h"
 #include "nsNodeUtils.h"
 
+// Nasty hack.  Maybe we could move some of the classinfo utility methods
+// (e.g. WrapNative and ThrowJSException) over to nsContentUtils?
+#include "nsDOMClassInfo.h"
+#include "nsJSUtils.h"
+
 // Helper classes
 
 /***********************************************************************/
 //
 // The JS class for XBLBinding
 //
-PR_STATIC_CALLBACK(void)
+JS_STATIC_DLL_CALLBACK(void)
 XBLFinalize(JSContext *cx, JSObject *obj)
 {
+  nsIXBLDocumentInfo* docInfo =
+    static_cast<nsIXBLDocumentInfo*>(::JS_GetPrivate(cx, obj));
+  NS_RELEASE(docInfo);
+  
   nsXBLJSClass* c = static_cast<nsXBLJSClass*>(::JS_GetClass(cx, obj));
   c->Drop();
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+XBLResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
+           JSObject **objp)
+{
+  // Note: if we get here, that means that the implementation for some binding
+  // was installed, which means that AllowScripts() tested true.  Hence no need
+  // to do checks like that here.
+  
+  // Default to not resolving things.
+  NS_ASSERTION(*objp, "Must have starting object");
+
+  JSObject* origObj = *objp;
+  *objp = NULL;
+
+  if (!JSVAL_IS_STRING(id)) {
+    return JS_TRUE;
+  }
+
+  nsDependentJSString fieldName(id);
+
+  jsval slotVal;
+  ::JS_GetReservedSlot(cx, obj, 0, &slotVal);
+  NS_ASSERTION(!JSVAL_IS_VOID(slotVal), "How did that happen?");
+    
+  nsXBLPrototypeBinding* protoBinding =
+    static_cast<nsXBLPrototypeBinding*>(JSVAL_TO_PRIVATE(slotVal));
+  NS_ASSERTION(protoBinding, "Must have prototype binding!");
+
+  nsXBLProtoImplField* field = protoBinding->FindField(fieldName);
+  if (!field) {
+    return JS_TRUE;
+  }
+
+  // We have this field.  Time to install it.  Get our node.
+  JSClass* nodeClass = ::JS_GetClass(cx, origObj);
+  if (!nodeClass) {
+    return JS_FALSE;
+  }
+  
+  if (~nodeClass->flags &
+      (JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS)) {
+    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
+    return JS_FALSE;
+  }
+
+  nsCOMPtr<nsIXPConnectWrappedNative> xpcWrapper =
+    do_QueryInterface(static_cast<nsISupports*>(::JS_GetPrivate(cx, origObj)));
+  if (!xpcWrapper) {
+    // Looks like whatever |origObj| is it's not our nsIContent.  It might well
+    // be the proto our binding installed, however, where the private is the
+    // nsIXBLDocumentInfo, so just baul out quietly.  Do NOT throw an exception
+    // here.
+    // We could make this stricter by checking the class maybe, but whatever
+    return JS_TRUE;
+  }
+
+  nsCOMPtr<nsIContent> content = do_QueryWrappedNative(xpcWrapper);
+  if (!content) {
+    nsDOMClassInfo::ThrowJSException(cx, NS_ERROR_UNEXPECTED);
+    return JS_FALSE;
+  }
+
+  // This mirrors code in nsXBLProtoImpl::InstallImplementation
+  nsIDocument* doc = content->GetOwnerDoc();
+  if (!doc) {
+    return JS_TRUE;
+  }
+
+  nsIScriptGlobalObject* global = doc->GetScriptGlobalObject();
+  if (!global) {
+    return JS_TRUE;
+  }
+
+  nsCOMPtr<nsIScriptContext> context = global->GetContext();
+  if (!context) {
+    return JS_TRUE;
+  }
+
+
+  // Now we either resolve or fail
+  PRBool didInstall;
+  nsresult rv = field->InstallField(context, origObj,
+                                    protoBinding->DocURI(),
+                                    &didInstall);
+  if (NS_FAILED(rv)) {
+    if (!::JS_IsExceptionPending(cx)) {
+      nsDOMClassInfo::ThrowJSException(cx, rv);
+    }
+
+    return JS_FALSE;
+  }
+
+  if (didInstall) {
+    *objp = origObj;
+  }
+  // else we didn't resolve this field after all
+
+  return JS_TRUE;
 }
 
 nsXBLJSClass::nsXBLJSClass(const nsAFlatCString& aClassName)
@@ -120,9 +229,14 @@ nsXBLJSClass::nsXBLJSClass(const nsAFlatCString& aClassName)
   memset(this, 0, sizeof(nsXBLJSClass));
   next = prev = static_cast<JSCList*>(this);
   name = ToNewCString(aClassName);
+  flags =
+    JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS |
+    JSCLASS_NEW_RESOLVE | JSCLASS_NEW_RESOLVE_GETS_START |
+    // Our one reserved slot holds the relevant nsXBLPrototypeBinding
+    JSCLASS_HAS_RESERVED_SLOTS(1);
   addProperty = delProperty = setProperty = getProperty = ::JS_PropertyStub;
   enumerate = ::JS_EnumerateStub;
-  resolve = ::JS_ResolveStub;
+  resolve = (JSResolveOp)XBLResolve;
   convert = ::JS_ConvertStub;
   finalize = XBLFinalize;
 }
@@ -1034,6 +1148,7 @@ nsXBLBinding::WalkRules(nsIStyleRuleProcessor::EnumFunc aFunc, void* aData)
 nsresult
 nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
                             const nsAFlatCString& aClassName,
+                            nsXBLPrototypeBinding* aProtoBinding,
                             void **aClassObject)
 {
   // First ensure our JS class is initialized.
@@ -1139,6 +1254,20 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    // Keep this proto binding alive while we're alive.  Do this first so that
+    // we can guarantee that in XBLFinalize this will be non-null.
+    nsIXBLDocumentInfo* docInfo = aProtoBinding->XBLDocumentInfo();
+    ::JS_SetPrivate(cx, proto, docInfo);
+    NS_ADDREF(docInfo);
+
+    if (!::JS_SetReservedSlot(cx, proto, 0, PRIVATE_TO_JSVAL(aProtoBinding))) {
+      (nsXBLService::gClassTable)->Remove(&key);
+
+      // |c| will get dropped when |proto| is finalized
+
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
     *aClassObject = (void*)proto;
   }
   else {
@@ -1149,63 +1278,6 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
     // Set the prototype of our object to be the new class.
     if (!::JS_SetPrototype(cx, obj, proto)) {
       return NS_ERROR_FAILURE;
-    }
-  }
-
-  return NS_OK;
-}
-
-
-nsresult
-nsXBLBinding::InitClass(const nsCString& aClassName,
-                        nsIScriptContext* aContext, 
-                        nsIDocument* aDocument, void** aScriptObject,
-                        void** aClassObject)
-{
-  *aClassObject = nsnull;
-  *aScriptObject = nsnull;
-
-  nsresult rv;
-
-  // Obtain the bound element's current script object.
-  JSContext* cx = (JSContext*)aContext->GetNativeContext();
-
-  nsIDocument *ownerDoc = mBoundElement->GetOwnerDoc();
-  nsIScriptGlobalObject *sgo;
-
-  if (!ownerDoc || !(sgo = ownerDoc->GetScriptGlobalObject())) {
-    NS_ERROR("Can't find global object for bound content!");
-
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  nsCOMPtr<nsIXPConnectJSObjectHolder> wrapper;
-  rv = nsContentUtils::XPConnect()->WrapNative(cx, sgo->GetGlobalJSObject(),
-                                               mBoundElement,
-                                               NS_GET_IID(nsISupports),
-                                               getter_AddRefs(wrapper));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  JSObject* object = nsnull;
-  rv = wrapper->GetJSObject(&object);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  *aScriptObject = object;
-
-  // First ensure our JS class is initialized.
-
-  rv = DoInitJSClass(cx, sgo->GetGlobalJSObject(), object, aClassName,
-                     aClassObject);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Root mBoundElement so that it doesn't lose it's binding
-  nsIDocument* doc = mBoundElement->GetOwnerDoc();
-
-  if (doc) {
-    nsCOMPtr<nsIXPConnectWrappedNative> native_wrapper =
-      do_QueryInterface(wrapper);
-    if (native_wrapper) {
-      doc->AddReference(mBoundElement, native_wrapper);
     }
   }
 
@@ -1342,6 +1414,20 @@ nsXBLBinding::GetFirstStyleBinding()
     return this;
 
   return mNextBinding ? mNextBinding->GetFirstStyleBinding() : nsnull;
+}
+
+PRBool
+nsXBLBinding::ResolveAllFields(JSContext *cx, JSObject *obj) const
+{
+  if (!mPrototypeBinding->ResolveAllFields(cx, obj)) {
+    return PR_FALSE;
+  }
+
+  if (mNextBinding) {
+    return mNextBinding->ResolveAllFields(cx, obj);
+  }
+
+  return PR_TRUE;
 }
 
 void

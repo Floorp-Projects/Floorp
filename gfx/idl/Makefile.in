@@ -48,19 +48,11 @@ GRE_MODULE	= 1
 
 XPIDLSRCS	= \
 		nsIFontEnumerator.idl \
-		nsIFontList.idl \
 		nsIScriptableRegion.idl \
 		gfxIFormats.idl \
 		gfxIImageFrame.idl \
 		gfxtypes.idl \
 		$(NULL)
-
-ifdef MOZ_ENABLE_FREETYPE2
-XPIDLSRCS	+= \
-		nsIFontCatalogService.idl \
-		nsIFreeType2.idl \
-		$(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk
 

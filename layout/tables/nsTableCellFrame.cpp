@@ -839,6 +839,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsPresContext*          aPresContext,
   // but only those than are tables in standards mode.  NeedsToObserve
   // will determine how far this is propagated to descendants.
   kidReflowState.mPercentHeightObserver = this;
+  // Don't propagate special height reflow state to our kids
+  kidReflowState.mFlags.mSpecialHeightReflow = PR_FALSE;
+  
   if (aReflowState.mFlags.mSpecialHeightReflow ||
       (GetFirstInFlow()->GetStateBits() & NS_TABLE_CELL_HAD_SPECIAL_REFLOW)) {
     // We need to force the kid to have mVResize set if we've had a

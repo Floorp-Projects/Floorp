@@ -66,6 +66,8 @@ import ttest
 def shortNames(name):
   if name == "tp_loadtime":
     return "tp_l"
+  elif name == "tp_js_loadtime":
+    return "tp_js_l"
   elif name == "tp_Percent Processor Time":
     return "tp_%cpu"
   elif name == "tp_Working Set":
@@ -88,20 +90,26 @@ def send_to_csv(csv_file, results):
   for res in results:
     browser_dump, counter_dump = results[res]
     writer = csv.writer(open(csv_file + '_' +  res, "wb"))
-    if res == 'ts':
+    if res in ('ts', 'twinopen'):
       i = 0
       writer.writerow(['i', 'val'])
       for val in browser_dump:
-        writer.writerow([i, val])
-        i += 1
-    if (res.find('tp') > -1) or (res == 'tdhmtl'):
+        val_list = val.split('|')
+        for v in val_list:
+          writer.writerow([i, v])
+          i += 1
+    else:
       writer.writerow(['i', 'page', 'median', 'mean', 'min' , 'max', 'runs'])
       for bd in browser_dump:
         bd.rstrip('\n')
         page_results = bd.splitlines()
         i = 0
-        for mypage in page_results[2:]:
+        for mypage in page_results:
           r = mypage.split(';')
+          #skip this line if it isn't the correct format
+          if len(r) == 1:
+              continue
+          r[1] = r[1].rstrip('/')
           if r[1].find('/') > -1 :
              page = r[1].split('/')[1]
           else:
@@ -159,19 +167,28 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
     browser_dump, counter_dump = results[res]
     filename = tempfile.mktemp()
     tmpf = open(filename, "w")
-    if res == 'ts':
+    if res in ('ts', 'twinopen'):
        i = 0
        for val in browser_dump:
-         tmpf.write(result_format % (float(val), res, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", "ms"))
-         i += 1
-    if (res.find('tp') > -1)  or (res == 'tdhtml'):
-       # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
+        val_list = val.split('|')
+        for v in val_list:
+          tmpf.write(result_format % (float(v), res, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", "ms"))
+          i += 1
+    else:
+      # each line of the string is of the format i;page_name;median;mean;min;max;time vals\n
+      name = ''
+      if ((res == 'tp') or (res == 'tp_js')):
+          name = '_loadtime'
       for bd in browser_dump:
         bd.rstrip('\n')
         page_results = bd.splitlines()
         i = 0
-        for mypage in page_results[2:]:
+        for mypage in page_results:
           r = mypage.split(';')
+          #skip this line if it isn't the correct format
+          if len(r) == 1:
+              continue
+          r[1] = r[1].rstrip('/')
           if r[1].find('/') > -1 :
              page = r[1].split('/')[1]
           else:
@@ -181,7 +198,7 @@ def send_to_graph(results_server, results_link, title, date, browser_config, res
           except ValueError:
             print 'WARNING: value error for median in tp'
             val = 0
-          tmpf.write(result_format % (val, res + '_loadtime', tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", page))
+          tmpf.write(result_format % (val, res + name, tbox, i, date, browser_config['branch'], browser_config['buildid'], "discrete", page))
           i += 1
     tmpf.flush()
     tmpf.close()

@@ -12,4 +12,3 @@ Content-Type: text/html
 Content-Type: text/plain
 
 File 3
---

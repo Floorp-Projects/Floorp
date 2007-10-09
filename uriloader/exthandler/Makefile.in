@@ -103,6 +103,7 @@ ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 OSHELPER		+= nsInternetConfig.cpp \
 			nsInternetConfigService.cpp \
 			nsMIMEInfoMac.cpp \
+			nsLocalHandlerAppMac.cpp \
 			$(NULL)
 endif
 

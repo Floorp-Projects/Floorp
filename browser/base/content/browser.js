@@ -1,4 +1,4 @@
-# -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+# -*- Mode: javascript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -255,25 +255,6 @@ function SetClickAndHoldHandlers()
     _addClickAndHoldListenersOnElement(forwardButton);
 }
 #endif
-
-function addBookmarkMenuitems()
-{
-  var tabbrowser = getBrowser();
-  var tabMenu = document.getAnonymousElementByAttribute(tabbrowser,"anonid","tabContextMenu");
-  var bookmarkAllTabsItem = document.createElement("menuitem");
-  bookmarkAllTabsItem.setAttribute("label", gNavigatorBundle.getString("bookmarkAllTabs_label"));
-  bookmarkAllTabsItem.setAttribute("accesskey", gNavigatorBundle.getString("bookmarkAllTabs_accesskey"));
-  bookmarkAllTabsItem.setAttribute("command", "Browser:BookmarkAllTabs");
-  var bookmarkCurTabItem = document.createElement("menuitem");
-  bookmarkCurTabItem.setAttribute("label", gNavigatorBundle.getString("bookmarkCurTab_label"));
-  bookmarkCurTabItem.setAttribute("accesskey", gNavigatorBundle.getString("bookmarkCurTab_accesskey"));
-  bookmarkCurTabItem.setAttribute("oncommand", "BookmarkThisTab();");
-  var menuseparator = document.createElement("menuseparator");
-  var insertPos = tabMenu.lastChild.previousSibling;
-  tabMenu.insertBefore(bookmarkAllTabsItem, insertPos);
-  tabMenu.insertBefore(bookmarkCurTabItem, bookmarkAllTabsItem);
-  tabMenu.insertBefore(menuseparator, bookmarkCurTabItem);
-}
 
 function BookmarkThisTab()
 {
@@ -935,11 +916,10 @@ function prepareForStartup()
   // hook up UI through progress listener
   gBrowser.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
-  // Initialize the feedhandler
-  FeedHandler.init();
+  // setup our common DOMLinkAdded listener
+  gBrowser.addEventListener("DOMLinkAdded", DOMLinkHandler, false);
 
-  // Initialize the searchbar
-  BrowserSearch.init();
+  gBrowser.addEventListener("pagehide", FeedHandler.onPageHide, false);
 }
 
 function delayedStartup()
@@ -978,9 +958,6 @@ function delayedStartup()
     var sidebarBox = document.getElementById("sidebar-box");
     sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
   }
-
-  // add bookmark options to context menu for tabs
-  addBookmarkMenuitems();
 
   initBookmarksToolbar();
   PlacesUtils.bookmarks.addObserver(gBookmarksObserver, false);
@@ -1110,9 +1087,6 @@ function delayedStartup()
       dump("nsSessionStore could not be initialized: " + ex + "\n");
     }
   }
-
-  // browser-specific tab augmentation
-  AugmentTabs.init();
 
   // bookmark-all-tabs command
   gBookmarkAllTabsHandler = new BookmarkAllTabsHandler();
@@ -1551,7 +1525,7 @@ function loadOneOrMoreURIs(aURIString)
   // we're not a browser window, pass the URI string to a new browser window
   if (window.location.href != getBrowserURL())
   {
-    newWindow = openDialog(getBrowserURL(), "_blank", "all,dialog=no", aURIString);
+    window.openDialog(getBrowserURL(), "_blank", "all,dialog=no", aURIString);
     return;
   }
 #endif
@@ -1566,7 +1540,7 @@ function loadOneOrMoreURIs(aURIString)
 
 function openLocation()
 {
-  if (gURLBar && isElementVisible(gURLBar)) {
+  if (gURLBar && isElementVisible(gURLBar) && !gURLBar.readOnly) {
     gURLBar.focus();
     gURLBar.select();
     return;
@@ -1755,7 +1729,7 @@ function getShortcutOrURI(aURL, aPostDataRef) {
 
     var encodedParam = "";
     if (charset)
-      encodedParam = escape(converFromUnicode(charset, param));
+      encodedParam = escape(convertFromUnicode(charset, param));
     else // Default charset is UTF-8
       encodedParam = encodeURIComponent(param);
 
@@ -2647,106 +2621,160 @@ var DownloadsButtonDNDObserver = {
   }
 }
 
-const BrowserSearch = {
-
-  /**
-   * Initialize the BrowserSearch
-   */
-  init: function() {
-    gBrowser.addEventListener("DOMLinkAdded", 
-                              function (event) { BrowserSearch.onLinkAdded(event); }, 
-                              false);
+const DOMLinkHandler = {
+  handleEvent: function (event) {
+    switch (event.type) {
+      case "DOMLinkAdded":
+        this.onLinkAdded(event);
+        break;
+    }
   },
-
-  /**
-   * A new <link> tag has been discovered - check to see if it advertises
-   * a OpenSearch engine.
-   */
-  onLinkAdded: function(event) {
-    // XXX this event listener can/should probably be combined with the onLinkAdded
-    // listener in tabbrowser.xml.  See comments in FeedHandler.onLinkAdded().
-    const target = event.target;
-    var etype = target.type;
-    const searchRelRegex = /(^|\s)search($|\s)/i;
-    const searchHrefRegex = /^(https?|ftp):\/\//i;
-
-    if (!etype)
-      return;
-      
-    // Bug 349431: If the engine has no suggested title, ignore it rather
-    // than trying to find an alternative.
-    if (!target.title)
+  onLinkAdded: function (event) {
+    var link = event.originalTarget;
+    var rel = link.rel && link.rel.toLowerCase();
+    if (!link || !link.ownerDocument || !rel || !link.href)
       return;
 
-    if (etype == "application/opensearchdescription+xml" &&
-        searchRelRegex.test(target.rel) && searchHrefRegex.test(target.href))
-    {
-      const targetDoc = target.ownerDocument;
-      // Set the attribute of the (first) search-engine button.
-      var searchButton = document.getAnonymousElementByAttribute(this.getSearchBar(),
-                                  "anonid", "searchbar-engine-button");
-      if (searchButton) {
-        var browser = gBrowser.getBrowserForDocument(targetDoc);
-         // Append the URI and an appropriate title to the browser data.
-        var iconURL = null;
-        if (gBrowser.shouldLoadFavIcon(browser.currentURI))
-          iconURL = browser.currentURI.prePath + "/favicon.ico";
+    var feedAdded = false;
+    var iconAdded = false;
+    var searchAdded = false;
+    var relStrings = rel.split(/\s+/);
+    var rels = {};
+    for (let i = 0; i < relStrings.length; i++)
+      rels[relStrings[i]] = true;
 
-        var hidden = false;
-        // If this engine (identified by title) is already in the list, add it
-        // to the list of hidden engines rather than to the main list.
-        // XXX This will need to be changed when engines are identified by URL;
-        // see bug 335102.
-         var searchService =
-            Components.classes["@mozilla.org/browser/search-service;1"]
-                      .getService(Components.interfaces.nsIBrowserSearchService);
-        if (searchService.getEngineByName(target.title))
-          hidden = true;
+    for (let relVal in rels) {
+      switch (relVal) {
+        case "feed":
+        case "alternate":
+          if (!feedAdded) {
+            if (!rels.feed && rels.alternate && rels.stylesheet)
+              break;
 
-        var engines = [];
-        if (hidden) {
-          if (browser.hiddenEngines)
-            engines = browser.hiddenEngines;
-        }
-        else {
-          if (browser.engines)
-            engines = browser.engines;
-        }
+            var feed = { title: link.title, href: link.href, type: link.type };
+            if (isValidFeed(feed, link.ownerDocument.nodePrincipal, rels.feed)) {
+              FeedHandler.addFeed(feed, link.ownerDocument);
+              feedAdded = true;
+            }
+          }
+          break;
+        case "icon":
+          if (!iconAdded) {
+            if (!gPrefService.getBoolPref("browser.chrome.site_icons"))
+              break;
 
-        engines.push({ uri: target.href,
-                       title: target.title,
-                       icon: iconURL });
+            try {
+              var contentPolicy = Cc["@mozilla.org/layout/content-policy;1"].
+                                  getService(Ci.nsIContentPolicy);
+            } catch(e) {
+              break; // Refuse to load if we can't do a security check.
+            }
 
-         if (hidden) {
-           browser.hiddenEngines = engines;
-         }
-         else {
-           browser.engines = engines;
-           if (browser == gBrowser || browser == gBrowser.mCurrentBrowser)
-             this.updateSearchButton();
-         }
+            var targetDoc = link.ownerDocument;
+            var ios = Cc["@mozilla.org/network/io-service;1"].
+                      getService(Ci.nsIIOService);
+            var uri = ios.newURI(link.href, targetDoc.characterSet, null);
+
+            // Verify that the load of this icon is legal.
+            // error pages can load their favicon, to be on the safe side,
+            // only allow chrome:// favicons
+            const aboutNeterr = "about:neterror?";
+            if (targetDoc.documentURI.substr(0, aboutNeterr.length) != aboutNeterr ||
+                !uri.schemeIs("chrome")) {
+              var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].
+                        getService(Ci.nsIScriptSecurityManager);
+              try {
+                ssm.checkLoadURIWithPrincipal(targetDoc.nodePrincipal, uri,
+                                              Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+              } catch(e) {
+                break;
+              }
+            }
+
+            // Security says okay, now ask content policy
+            if (contentPolicy.shouldLoad(Ci.nsIContentPolicy.TYPE_IMAGE,
+                                         uri, targetDoc.documentURIObject,
+                                         link, link.type, null)
+                                         != Ci.nsIContentPolicy.ACCEPT)
+              break;
+
+            var browserIndex = gBrowser.getBrowserIndexForDocument(targetDoc);
+            // no browser? no favicon.
+            if (browserIndex == -1)
+              break;
+
+            var tab = gBrowser.mTabContainer.childNodes[browserIndex];
+            gBrowser.setIcon(tab, link.href);
+            iconAdded = true;
+          }
+          break;
+        case "search":
+          if (!searchAdded) {
+            var type = link.type && link.type.toLowerCase();
+            type = type.replace(/^\s+|\s*(?:;.*)?$/g, "");
+
+            if (type == "application/opensearchdescription+xml" && link.title &&
+                /^(?:https?|ftp):/i.test(link.href)) {
+              var engine = { title: link.title, href: link.href };
+              BrowserSearch.addEngine(engine, link.ownerDocument);
+              searchAdded = true;
+            }
+          }
+          break;
       }
+    }
+  }
+}
+
+const BrowserSearch = {
+  addEngine: function(engine, targetDoc) {
+    if (!this.searchBar)
+      return;
+    var browser = gBrowser.getBrowserForDocument(targetDoc);
+    // Append the URI and an appropriate title to the browser data.
+    var iconURL = null;
+    if (gBrowser.shouldLoadFavIcon(browser.currentURI))
+      iconURL = browser.currentURI.prePath + "/favicon.ico";
+
+    var hidden = false;
+    // If this engine (identified by title) is already in the list, add it
+    // to the list of hidden engines rather than to the main list.
+    // XXX This will need to be changed when engines are identified by URL;
+    // see bug 335102.
+    var searchService = Cc["@mozilla.org/browser/search-service;1"].
+                        getService(Ci.nsIBrowserSearchService);
+    if (searchService.getEngineByName(engine.title))
+      hidden = true;
+
+    var engines = (hidden ? browser.hiddenEngines : browser.engines) || [];
+
+    engines.push({ uri: engine.href,
+                   title: engine.title,
+                   icon: iconURL });
+
+    if (hidden)
+      browser.hiddenEngines = engines;
+    else {
+      browser.engines = engines;
+      if (browser == gBrowser || browser == gBrowser.mCurrentBrowser)
+        this.updateSearchButton();
     }
   },
 
   /**
    * Update the browser UI to show whether or not additional engines are 
    * available when a page is loaded or the user switches tabs to a page that 
-   * has search engines. 
+   * has search engines.
    */
   updateSearchButton: function() {
-    var searchButton = document.getAnonymousElementByAttribute(this.getSearchBar(),
-                                "anonid", "searchbar-engine-button");
-    if (!searchButton)
+    var searchBar = this.searchBar;
+    if (!searchBar)
       return;
     var engines = gBrowser.mCurrentBrowser.engines;
-    if (!engines || engines.length == 0) {
-      if (searchButton.hasAttribute("addengines"))
-        searchButton.removeAttribute("addengines");
-    }
-    else {
-      searchButton.setAttribute("addengines", "true");
-    }
+    if (engines && engines.length > 0)
+      searchBar.searchButton.setAttribute("addengines", "true");
+    else
+      searchBar.searchButton.removeAttribute("addengines");
   },
 
   /**
@@ -2778,8 +2806,8 @@ const BrowserSearch = {
       return;
     }
 #endif
-    var searchBar = this.getSearchBar();
-    if (searchBar) {
+    var searchBar = this.searchBar;
+    if (isElementVisible(searchBar)) {
       searchBar.select();
       searchBar.focus();
     } else {
@@ -2808,7 +2836,7 @@ const BrowserSearch = {
   
     // If the search bar is visible, use the current engine, otherwise, fall
     // back to the default engine.
-    if (this.getSearchBar())
+    if (isElementVisible(this.searchBar))
       engine = ss.currentEngine;
     else
       engine = ss.defaultEngine;
@@ -2830,15 +2858,10 @@ const BrowserSearch = {
   },
 
   /**
-   * Returns the search bar element if it is present in the toolbar and not
-   * hidden, null otherwise.
+   * Returns the search bar element if it is present in the toolbar, null otherwise.
    */
-  getSearchBar: function BrowserSearch_getSearchBar() {
-    var searchBar = document.getElementById("searchbar");
-    if (searchBar && isElementVisible(searchBar))
-      return searchBar;
-
-    return null;
+  get searchBar() {
+    return document.getElementById("searchbar");
   },
 
   loadAddEngines: function BrowserSearch_loadAddEngines() {
@@ -3418,7 +3441,8 @@ nsBrowserStatusHandler.prototype =
   onLocationChange : function(aWebProgress, aRequest, aLocationURI)
   {
     var location = aLocationURI ? aLocationURI.spec : "";
- 
+    this._hostChanged = true;
+
     if (document.tooltipNode) {
       // Optimise for the common case
       if (aWebProgress.DOMWindow == content) {
@@ -3629,59 +3653,85 @@ nsBrowserStatusHandler.prototype =
     return true;
   },
 
-  onSecurityChange : function(aWebProgress, aRequest, aState)
-  {
-    const wpl = Components.interfaces.nsIWebProgressListener;
-    this.securityButton.removeAttribute("label");
+  // Properties used to cache security state used to update the UI
+  _state: null,
+  _host: undefined,
+  _tooltipText: null,
+  _hostChanged: false, // onLocationChange will flip this bit
 
+  onSecurityChange : function browser_onSecChange(aWebProgress,
+                                                  aRequest, aState)
+  {
+    // Don't need to do anything if the data we use to update the UI hasn't
+    // changed
+    if (this._state == aState &&
+        this._tooltipText == gBrowser.securityUI.tooltipText &&
+        !this._hostChanged) {
+#ifdef DEBUG
+      var contentHost = gBrowser.contentWindow.location.host;
+      if (this._host !== undefined && this._host != contentHost) {
+          Components.utils.reportError(
+            "ASSERTION: browser.js host is inconsistent. Content window has " + 
+            "<" + contentHost + "> but cached host is <" + this._host + ">.\n"
+          );
+      }
+#endif
+      return;
+    }
+    this._state = aState;
+
+    try {
+      this._host = gBrowser.contentWindow.location.host;
+    } catch(ex) {
+      this._host = null;
+    }
+
+    this._hostChanged = false;
+    this._tooltipText = gBrowser.securityUI.tooltipText
+
+    // aState is defined as a bitmask that may be extended in the future.
+    // We filter out any unknown bits before testing for known values.
+    const wpl = Components.interfaces.nsIWebProgressListener;
     const wpl_security_bits = wpl.STATE_IS_SECURE |
                               wpl.STATE_IS_BROKEN |
                               wpl.STATE_IS_INSECURE |
                               wpl.STATE_SECURE_HIGH |
                               wpl.STATE_SECURE_MED |
                               wpl.STATE_SECURE_LOW;
+    var level = null;
+    var setHost = false;
 
-    /* aState is defined as a bitmask that may be extended in the future.
-     * We filter out any unknown bits before testing for known values.
-     */
-    switch (aState & wpl_security_bits) {
+    switch (this._state & wpl_security_bits) {
       case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_HIGH:
-        this.securityButton.setAttribute("level", "high");
-        if (this.urlBar)
-          this.urlBar.setAttribute("level", "high");
-        try {
-          this.securityButton.setAttribute("label",
-            gBrowser.contentWindow.location.host);
-        } catch(exception) {}
+        level = "high";
+        setHost = true;
         break;
       case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_MED:
       case wpl.STATE_IS_SECURE | wpl.STATE_SECURE_LOW:
-        this.securityButton.setAttribute("level", "low");
-        if (this.urlBar)
-          this.urlBar.setAttribute("level", "low");
-        try {
-          this.securityButton.setAttribute("label",
-            gBrowser.contentWindow.location.host);
-        } catch(exception) {}
+        level = "low";
+        setHost = true;
         break;
       case wpl.STATE_IS_BROKEN:
-        this.securityButton.setAttribute("level", "broken");
-        if (this.urlBar)
-          this.urlBar.setAttribute("level", "broken");
-        break;
-      case wpl.STATE_IS_INSECURE:
-      default:
-        this.securityButton.removeAttribute("level");
-        if (this.urlBar)
-          this.urlBar.removeAttribute("level");
+        level = "broken";
         break;
     }
 
-    var securityUI = gBrowser.securityUI;
-    this.securityButton.setAttribute("tooltiptext", securityUI.tooltipText);
-    var lockIcon = document.getElementById("lock-icon");
-    if (lockIcon)
-      lockIcon.setAttribute("tooltiptext", securityUI.tooltipText);
+    if (level) {
+      this.securityButton.setAttribute("level", level);
+      if (this.urlBar)
+        this.urlBar.setAttribute("level", level);    
+    } else {
+      this.securityButton.removeAttribute("level");
+      if (this.urlBar)
+        this.urlBar.removeAttribute("level");
+    }
+
+    if (setHost && this._host)
+      this.securityButton.setAttribute("label", this._host);
+    else
+      this.securityButton.removeAttribute("label");
+
+    this.securityButton.setAttribute("tooltiptext", this._tooltipText);
   },
 
   // simulate all change notifications after switching tabs
@@ -4978,23 +5028,25 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
                                    false);
   }
 
+  try {
+    if (gPrefService.getBoolPref("plugins.hide_infobar_for_missing_plugin"))
+      return;
+  } catch (ex) {} // if the pref is missing, treat it as false, which shows the infobar
+
   var tabbrowser = getBrowser();
   const browsers = tabbrowser.mPanelContainer.childNodes;
 
-  var window = aEvent.target.ownerDocument.defaultView;
-  // walk up till the toplevel window
-  while (window.parent != window)
-    window = window.parent;
+  var contentWindow = aEvent.target.ownerDocument.defaultView.top;
 
   var i = 0;
   for (; i < browsers.length; i++) {
-    if (tabbrowser.getBrowserAtIndex(i).contentWindow == window)
+    if (tabbrowser.getBrowserAtIndex(i).contentWindow == contentWindow)
       break;
   }
 
   var tab = tabbrowser.mTabContainer.childNodes[i];
   if (!tab.missingPlugins)
-    tab.missingPlugins = new Object();
+    tab.missingPlugins = {};
 
   var pluginInfo = getPluginInfo(aEvent.target);
 
@@ -5013,7 +5065,7 @@ missingPluginInstaller.prototype.newMissingPlugin = function(aEvent){
     }];
 
     const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-    const iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
+    const iconURL = "chrome://mozapps/skin/plugins/pluginGeneric.png";
     notificationBox.appendNotification(messageString, "missing-plugins",
                                        iconURL, priority, buttons);
   }
@@ -5060,16 +5112,6 @@ function convertFromUnicode(charset, str)
  * and shows UI when they are discovered. 
  */
 var FeedHandler = {
-  /**
-   * Initialize the Feed Handler
-   */
-  init: function() {
-    gBrowser.addEventListener("DOMLinkAdded", 
-                              function (event) { FeedHandler.onLinkAdded(event); }, 
-                              true);
-    gBrowser.addEventListener("pagehide", FeedHandler.onPageHide, true);
-  },
-  
   onPageHide: function(event) {
     var theBrowser = gBrowser.getBrowserForDocument(event.target);
     if (theBrowser)
@@ -5224,25 +5266,9 @@ var FeedHandler = {
       }
     }
   }, 
-  
-  /**
-   * A new <link> tag has been discovered - check to see if it advertises
-   * an RSS feed. 
-   */
-  onLinkAdded: function(event) {
-    // XXX this event listener can/should probably be combined with the onLinkAdded
-    // listener in tabbrowser.xml, which only listens for favicons and then passes
-    // them to onLinkIconAvailable in the ProgressListener.  We could extend the
-    // progress listener to have a generic onLinkAvailable and have tabbrowser pass
-    // along all events.  It should give us the browser for the tab, as well as
-    // the actual event.
 
-    var feed = recognizeFeedFromLink(event.target,
-      event.target.ownerDocument.nodePrincipal);
-
+  addFeed: function(feed, targetDoc) {
     if (feed) {
-      const targetDoc = event.target.ownerDocument;
-
       // find which tab this is for, and set the attribute on the browser
       var browserForLink = gBrowser.getBrowserForDocument(targetDoc);
       if (!browserForLink) {
@@ -5272,59 +5298,6 @@ var FeedHandler = {
 
 #include browser-contentPrefSink.js
 #include browser-textZoom.js
-
-/**
- * This object is for augmenting tabs
- */
-var AugmentTabs = {
-
-  tabContextMenu: null,
-  undoCloseTabMenu: null,
-
-  /**
-   * Called in delayedStartup
-   */
-  init: function at_init() {
-    // get tab context menu
-    var tabbrowser = getBrowser();
-    this.tabContextMenu = document.getAnonymousElementByAttribute(tabbrowser, "anonid", "tabContextMenu");
-
-    // listen for tab-context menu showing
-    this.tabContextMenu.addEventListener("popupshowing", this.onTabContextMenuLoad, false);
-
-    if (gPrefService.getBoolPref("browser.sessionstore.enabled"))
-      this._addUndoCloseTabContextMenu();
-  },
-
-  /**
-   * Add undo-close-tab to tab context menu
-   */
-  _addUndoCloseTabContextMenu: function at_addUndoCloseTabContextMenu() {
-    // get strings 
-    var menuLabel = gNavigatorBundle.getString("tabContext.undoCloseTab");
-    var menuAccessKey = gNavigatorBundle.getString("tabContext.undoCloseTabAccessKey");
-
-    // create new menu item
-    var undoCloseTabItem = document.createElement("menuitem");
-    undoCloseTabItem.setAttribute("id", "tabContextUndoCloseTab");
-    undoCloseTabItem.setAttribute("label", menuLabel);
-    undoCloseTabItem.setAttribute("accesskey", menuAccessKey);
-    undoCloseTabItem.setAttribute("command", "History:UndoCloseTab");
-
-    // add to tab context menu
-    var insertPos = this.tabContextMenu.lastChild.previousSibling;
-    this.undoCloseTabMenu = this.tabContextMenu.insertBefore(undoCloseTabItem, insertPos);
-  },
-
-  onTabContextMenuLoad: function at_onTabContextMenuLoad() {
-    if (AugmentTabs.undoCloseTabMenu) {
-      // only add the menu of there are tabs to restore
-      var ss = Cc["@mozilla.org/browser/sessionstore;1"].
-               getService(Ci.nsISessionStore);
-      AugmentTabs.undoCloseTabMenu.hidden = !(ss.getClosedTabCount(window) > 0);
-    }
-  }
-};
 
 HistoryMenu.toggleRecentlyClosedTabs = function PHM_toggleRecentlyClosedTabs() {
   // enable/disable the Recently Closed Tabs sub menu
@@ -5566,4 +5539,264 @@ function showToolbars() {
     goButtonStack.removeAttribute("hidden");
   
   return false; // Dismiss the notification message
+}
+
+/**
+ * Utility class to handle manipulations of the identity indicators in the UI
+ */
+function IdentityHandler() {
+  this._identityPopup = document.getElementById("identity-popup");
+  this._identityBox = document.getElementById("identity-box");
+  this._identityPopupContentBox = document.getElementById("identity-popup-content-box");
+  this._identityPopupTitle = document.getElementById("identity-popup-title");
+  this._identityPopupContent = document.getElementById("identity-popup-content");
+  this._identityPopupContentSupp = document.getElementById("identity-popup-content-supplemental");
+  this._identityPopupContentVerif = document.getElementById("identity-popup-content-verifier");
+  this._identityPopupEncLabel = document.getElementById("identity-popup-encryption-label");
+  this._identityIconLabel = document.getElementById("identity-icon-label");
+
+  this._stringBundle = document.getElementById("bundle_browser");
+  this._staticStrings = {};
+  this._staticStrings[this.IDENTITY_MODE_DOMAIN_VERIFIED] = {
+    title: this._stringBundle.getString("identity.domainverified.title"),
+    encryption_label: this._stringBundle.getString("identity.encrypted")  
+  };
+  this._staticStrings[this.IDENTITY_MODE_IDENTIFIED] = {
+    title: this._stringBundle.getString("identity.identified.title"),
+    encryption_label: this._stringBundle.getString("identity.encrypted")
+  };
+  this._staticStrings[this.IDENTITY_MODE_UNKNOWN] = {
+    title: this._stringBundle.getString("identity.unknown.title"),
+    encryption_label: this._stringBundle.getString("identity.unencrypted")  
+  };
+}
+
+IdentityHandler.prototype = {
+
+  // Mode strings used to control CSS display
+  IDENTITY_MODE_IDENTIFIED       : "verifiedIdentity", // High-quality identity information
+  IDENTITY_MODE_DOMAIN_VERIFIED  : "verifiedDomain",   // Minimal SSL CA-signed domain verification
+  IDENTITY_MODE_UNKNOWN          : "unknownIdentity",  // No trusted identity information
+
+  // Cache the most recently seen SSLStatus and URI to prevent unnecessary updates
+  _lastStatus : null,
+  _lastURI : null,
+
+  /**
+   * Handler for mouseclicks on the "Tell me more about this website" link text
+   * in the "identity-popup" panel.
+   */
+  handleMoreInfoClick : function(event) {
+    if (event.button == 0) {
+      displaySecurityInfo();
+      event.stopPropagation();
+    }   
+  },
+  
+  /**
+   * Helper to parse out the important parts of _lastStatus (of the SSL cert in
+   * particular) for use in constructing identity UI strings
+  */
+  getIdentityData : function() {
+    var result = {};
+    var status = this._lastStatus.QueryInterface(Components.interfaces.nsISSLStatus);
+    var cert = status.serverCert;
+    
+    // Human readable name of Subject
+    result.subjectOrg = cert.organization;
+    
+    // SubjectName fields, broken up for individual access
+    if (cert.subjectName) {
+      result.subjectNameFields = {};
+      cert.subjectName.split(",").forEach(function(v) {
+        var field = v.split("=");
+        this[field[0]] = field[1];
+      }, result.subjectNameFields);
+      
+      // Call out city, state, and country specifically
+      result.city = result.subjectNameFields.L;
+      result.state = result.subjectNameFields.ST;
+      result.country = result.subjectNameFields.C;
+    }
+    
+    // Human readable name of Certificate Authority
+    result.caOrg =  cert.issuerOrganization || cert.issuerCommonName;
+    
+    return result;
+  },
+  
+  /**
+   * Determine the identity of the page being displayed by examining its SSL cert
+   * (if available) and, if necessary, update the UI to reflect this.  Intended to
+   * be called by an nsIWebProgressListener.
+   *
+   * @param nsIWebProgress webProgress
+   * @param nsIRequest request
+   * @param PRUint32 state
+   */
+  checkIdentity : function(state) {
+    var currentURI = gBrowser.currentURI;
+    if (currentURI.schemeIs("http") && this._lastURI.schemeIs("http"))
+      return;
+
+    var currentStatus = gBrowser.securityUI
+                                .QueryInterface(Components.interfaces.nsISSLStatusProvider)
+                                .SSLStatus;
+    if (currentStatus == this._lastStatus && currentURI == this._lastURI) {
+      // No need to update, this is a no-op check
+      return;
+    }
+
+    this._lastStatus = currentStatus;
+    this._lastURI = currentURI;
+    
+    if (state & Components.interfaces.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL)
+      this.setMode(this.IDENTITY_MODE_IDENTIFIED);
+    else if (state & Components.interfaces.nsIWebProgressListener.STATE_SECURE_HIGH)
+      this.setMode(this.IDENTITY_MODE_DOMAIN_VERIFIED);
+    else
+      this.setMode(this.IDENTITY_MODE_UNKNOWN);
+  },
+  
+  /**
+   * Update the UI to reflect the specified mode, which should be one of the
+   * IDENTITY_MODE_* constants.
+   */
+  setMode : function(newMode) {
+    document.getElementById("identity-box").className = newMode;
+    this.setIdentityMessages(newMode);
+    
+    // Update the popup too, if it's open
+    if (this._identityPopup.state == "open")
+      this.setPopupMessages(newMode);
+  },
+  
+  /**
+   * Set up the messages for the primary identity UI based on the specified mode,
+   * and the details of the SSL cert, where applicable
+   *
+   * @param newMode The newly set identity mode.  Should be one of the IDENTITY_MODE_* constants.
+   */
+  setIdentityMessages : function(newMode) {
+    if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
+      var iData = this.getIdentityData();     
+      
+      // It would be sort of nice to use the CN= field in the cert, since that's
+      // typically what we want here, but thanks to x509 certs being extensible,
+      // it's not the only place you have to check, there can be more than one domain,
+      // et cetera, ad nauseum.  We know the cert is valid for location.host, so
+      // let's just use that, it's what the status bar does too.
+      var icon_label = this._lastURI.host; 
+      var tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
+                                                          [iData.caOrg]);
+    }
+    else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
+      // If it's identified, then we can populate the dialog with credentials
+      iData = this.getIdentityData();  
+      tooltip = this._stringBundle.getFormattedString("identity.identified.verifier",
+                                                      [iData.caOrg]);
+      if (iData.country)
+        icon_label = this._stringBundle.getFormattedString("identity.identified.title_with_country",
+                                                           [iData.subjectOrg, iData.country]);
+      else
+        icon_label = iData.subjectOrg;
+    }
+    else {
+      tooltip = this._stringBundle.getString("identity.unknown.body");
+      icon_label = "";
+    }
+    
+    // Push the appropriate strings out to the UI
+    this._identityBox.tooltipText = tooltip;
+    this._identityIconLabel.value = icon_label;
+  },
+  
+  /**
+   * Set up the title and content messages for the identity message popup,
+   * based on the specified mode, and the details of the SSL cert, where
+   * applicable
+   *
+   * @param newMode The newly set identity mode.  Should be one of the IDENTITY_MODE_* constants.
+   */
+  setPopupMessages : function(newMode) {
+      
+    this._identityPopup.className = newMode;
+    this._identityPopupContentBox.className = newMode;
+    
+    // Set the static strings up front
+    this._identityPopupTitle.value = this._staticStrings[newMode].title;
+    this._identityPopupEncLabel.textContent = this._staticStrings[newMode].encryption_label;
+    
+    // Initialize the optional strings to empty values
+    var supplemental = "";
+    var verifier = "";
+      
+    if (newMode == this.IDENTITY_MODE_DOMAIN_VERIFIED) {
+      var iData = this.getIdentityData();
+
+      var body = this._lastURI.host;     
+      verifier = this._stringBundle.getFormattedString("identity.identified.verifier",
+                                                       [iData.caOrg]);
+      supplemental = this._stringBundle.getString("identity.domainverified.supplemental");
+    }
+    else if (newMode == this.IDENTITY_MODE_IDENTIFIED) {
+      // If it's identified, then we can populate the dialog with credentials
+      iData = this.getIdentityData();
+
+      // Pull the basics out with fallback options in case common
+      // (optional) fields are left blank
+      body = iData.subjectOrg; 
+      verifier = this._stringBundle.getFormattedString("identity.identified.verifier",
+                                                       [iData.caOrg]);
+
+      // Build an appropriate supplemental block out of whatever location data we have
+      if (iData.city)
+        supplemental += iData.city + "\n";        
+      if (iData.state && iData.country)
+        supplemental += this._stringBundle.getFormattedString("identity.identified.state_and_country",
+                                                              [iData.state, iData.country]);
+      else if (iData.state) // State only
+        supplemental += iData.state;
+      else if (iData.country) // Country only
+        supplemental += iData.country;
+    }
+    else {
+      body = this._stringBundle.getString("identity.unknown.body");
+    }
+    
+    // Push the appropriate strings out to the UI
+    this._identityPopupContent.textContent = body;
+    this._identityPopupContentSupp.textContent = supplemental;
+    this._identityPopupContentVerif.textContent = verifier;
+  },
+  
+  /**
+   * Click handler for the identity-box element in primary chrome.  
+   */
+  handleIdentityClick : function(event) {
+    if (event.button != 0)
+      return; // We only want left-clicks
+        
+    // Make sure that the display:none style we set in xul is removed now that
+    // the popup is actually needed
+    this._identityPopup.hidden = false;
+    
+    // Update the popup strings
+    this.setPopupMessages(this._identityBox.className);
+    
+    // Now open the popup, anchored off the primary chrome element
+    this._identityPopup.openPopup(this._identityBox, 'after_start');
+  }
+};
+
+var gIdentityHandler; 
+
+/**
+ * Returns the singleton instance of the identity handler class.  Should always be
+ * used instead of referencing the global variable directly or creating new instances
+ */
+function getIdentityHandler() {
+  if (!gIdentityHandler)
+    gIdentityHandler = new IdentityHandler();
+  return gIdentityHandler;    
 }

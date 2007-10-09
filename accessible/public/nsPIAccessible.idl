@@ -41,7 +41,7 @@
 interface nsIAccessible;
 interface nsIAccessibleEvent;
 
-[uuid(03932812-53d1-4dc7-965d-6b6ad8a872b1)]
+[uuid(af05f83c-6fd2-48c1-b1c3-811857472421)]
 interface nsPIAccessible : nsISupports
 {
   /**
@@ -63,6 +63,11 @@ interface nsPIAccessible : nsISupports
    * Return parent accessible only if cached.
    */
   void getCachedParent(out nsIAccessible aAccParent);
+
+  /**
+   * Return first child accessible only if cached.
+   */
+  void getCachedFirstChild(out nsIAccessible aAccFirstChild);
 
   /**
    * Set the child count to -1 (unknown) and null out cached child pointers

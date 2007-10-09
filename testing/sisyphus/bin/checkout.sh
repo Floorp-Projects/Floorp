@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -41,7 +41,7 @@ TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
 TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
 source ${TEST_BIN}/library.sh
 
-source /work/mozilla/mozilla.com/test.mozilla.com/www/bin/set-build-env.sh $@
+source ${TEST_BIN}/set-build-env.sh $@
 
 if [[ -z "$TREE" ]]; then
     error "source tree not specified!"
@@ -54,7 +54,7 @@ case $product in
         if [[ ! ( -d mozilla && \
             -e mozilla/client.mk && \
             -e "mozilla/$project/config/mozconfig" ) ]]; then
-            if ! cvs -z3 -q co $BRANCH_CO_FLAGS \
+            if ! eval cvs -z3 -q co $BRANCH_CO_FLAGS \
                 mozilla/client.mk mozilla/$project/config/mozconfig; then
                 error "during checkout of mozconfig"
             fi
@@ -65,33 +65,33 @@ case $product in
         if ! make -f client.mk checkout 2>&1; then
             error "during checkout of tree"
         fi
+
+        case "$extra" in
+            jprof)
+                cvs -z3 -q update -d -P tools/jprof
+                ;;
+        esac
+
         ;;
     js) 
-        if [[ ! ( -d mozilla && \
-            -e mozilla/js && \
-            -e mozilla/js/src ) ]]; then
-            cvs -z3 -q co mozilla/js/src
-        fi
+    if [[ ! ( -d mozilla && \
+        -e mozilla/js && \
+        -e mozilla/js/src ) ]]; then
+        eval cvs -z3 -q co $BRANCH_CO_FLAGS $DATE_CO_FLAGS mozilla/js/src
+    fi
 
-        cd mozilla/js/src
+    cd mozilla/js/src
 
-        if ! cvs -z3 -q update -d -P 2>&1; then
-            error "during checkout of js/src"
-        fi
+    if ! eval cvs -z3 -q update $BRANCH_CO_FLAGS $DATE_CO_FLAGS -d -P 2>&1; then
+        error "during checkout of js/src"
+    fi
 
-        if ! cvs -z3 -q update -d -P -A editline config  2>&1; then
-            error "during checkout of js/src"
-        fi
-# end for js shell
-        ;;
+    if ! cvs -z3 -q update -d -P -A editline config  2>&1; then
+        error "during checkout of js/src"
+    fi
+    # end for js shell
+    ;;
     *)
-        error "unknown product $product"
-        ;;
+    error "unknown product $product"
+    ;;
 esac
-
-
-
-
-
-
-

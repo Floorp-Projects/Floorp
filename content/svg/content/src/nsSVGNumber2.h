@@ -57,9 +57,9 @@ public:
   void GetBaseValueString(nsAString& aValue);
 
   void SetBaseValue(float aValue, nsSVGElement *aSVGElement, PRBool aDoSetAttr);
-  float GetBaseValue()
+  float GetBaseValue() const
     { return mBaseVal; }
-  float GetAnimValue()
+  float GetAnimValue() const
     { return mAnimVal; }
 
   nsresult ToDOMAnimatedNumber(nsIDOMSVGAnimatedNumber **aResult,

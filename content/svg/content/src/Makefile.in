@@ -72,13 +72,13 @@ CPPSRCS		= \
 		nsSVGAElement.cpp \
 		nsSVGAngle.cpp \
 		nsSVGAnimatedAngle.cpp \
-		nsSVGAnimatedBoolean.cpp \
 		nsSVGAnimatedLengthList.cpp \
 		nsSVGAnimatedNumberList.cpp \
 		nsSVGAnimatedRect.cpp \
 		nsSVGAnimatedPreserveAspectRatio.cpp \
 		nsSVGAnimatedString.cpp \
 		nsSVGAnimatedTransformList.cpp \
+		nsSVGBoolean.cpp \
 		nsSVGCircleElement.cpp \
 		nsSVGClassValue.cpp \
 		nsSVGClipPathElement.cpp \

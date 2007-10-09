@@ -1415,7 +1415,7 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
     case NS_THEME_MENUITEMTEXT:
         if (!theme)
         {
-          left = 16;
+          left = 18;
         }
         else
         {
@@ -1812,17 +1812,9 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsIDeviceContext* aContext,
                                   nsMargin* aResult)
 {
   switch (aWidgetType) {
-    case NS_THEME_BUTTON: {
-      const nsStyleUserInterface *uiData = aFrame->GetStyleUserInterface();
-      if (uiData->mUserFocus == NS_STYLE_USER_FOCUS_IGNORE) {
-        // use different padding for non-focusable buttons
-        (*aResult).top = (*aResult).left = 1;
-        (*aResult).bottom = (*aResult).right = 2;
-      }
-      else
-        (*aResult).top = (*aResult).left = (*aResult).bottom = (*aResult).right = 3; 
-      break;  
-    }
+    case NS_THEME_BUTTON:
+      (*aResult).top = (*aResult).left = (*aResult).bottom = (*aResult).right = 2; 
+      break;
     case NS_THEME_STATUSBAR:
       (*aResult).bottom = (*aResult).left = (*aResult).right = 0;
       (*aResult).top = 2;

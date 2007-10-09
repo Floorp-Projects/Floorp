@@ -61,6 +61,7 @@
 #include "gfxOS2Surface.h"
 #include "gfxContext.h"
 
+class nsIMenuBar;
 class imgIContainer;
 
 //#define DEBUG_FOCUS

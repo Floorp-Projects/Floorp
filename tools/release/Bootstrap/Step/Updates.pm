@@ -6,7 +6,7 @@ package Bootstrap::Step::Updates;
 
 use Bootstrap::Step;
 use Bootstrap::Config;
-use Bootstrap::Util qw(CvsCatfile);
+use Bootstrap::Util qw(CvsCatfile SyncNightlyDirToStaging);
 
 use File::Find qw(find);
 use POSIX qw(strftime);
@@ -203,6 +203,16 @@ sub ReleaseBetaAusCallback {
     }
 }
 
+sub PermissionsAusCallback {
+    my $dir = $File::Find::name;
+
+    if (-f $dir) {
+	chmod(0644, $dir) or die("Couldn't chmod $dir to 644: $!");
+    } elsif (-d $dir) {
+	chmod(0775, $dir) or die("Couldn't chmod $dir to 775: $!");
+    }
+}
+
 sub Push {
     my $this = shift;
 
@@ -225,13 +235,17 @@ sub Push {
     my $candidateDir = $config->GetFtpCandidateDir(bitsUnsigned => 0);
 
     # push partial mar files up to ftp server
+    my $marsDir = catfile('ftp', $product, 'nightly', 
+                            $version . '-candidates', 'rc' . $rc) . '/';
+
+    chmod(0644, glob(catfile($fullUpdateDir,$marsDir,"*partial.mar")))
+	or die("Couldn't chmod a partial mar to 644: $!");
     $this->Shell(
      cmd => 'rsync',
      cmdArgs => ['-av', '-e', 'ssh',
                  '--include=*partial.mar', 
                  '--exclude=*',
-                 catfile('ftp', $product, 'nightly', $version . '-candidates', 
-                          'rc' . $rc) . '/',
+                 $marsDir,
                  $stagingUser . '@' . $stagingServer . ':' . $candidateDir],
      dir => $fullUpdateDir,
      logFile => $pushLog,
@@ -244,6 +258,8 @@ sub Push {
     $config->Set(var => 'ausDeliveryDir', value => $targetPrefix);
 
     my @snippetDirs = glob(catfile($fullUpdateDir, "aus2*"));
+
+    File::Find::find(\&PermissionsAusCallback, @snippetDirs);
 
     foreach $dir (@snippetDirs) {
       my $targetDir = $targetPrefix;
@@ -260,6 +276,8 @@ sub Push {
         logFile => $pushLog,
       );
     }
+
+    SyncNightlyDirToStaging();
 }
 
 sub Announce {

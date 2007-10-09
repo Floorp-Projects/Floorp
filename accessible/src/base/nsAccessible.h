@@ -168,63 +168,16 @@ protected:
   PRBool IsVisible(PRBool *aIsOffscreen); 
 
   // Relation helpers
-  nsresult GetTextFromRelationID(nsIAtom *aIDAttrib, nsString &aName);
 
   /**
-   * Search element in neighborhood of the given element by tag name and
-   * attribute value that equals to ID attribute of the current element.
-   * ID attribute can be either 'id' attribute or 'anonid' if the element is
-   * anonymous.
+   * For a given ARIA relation, such as labelledby or describedby, get the collated text
+   * for the subtree that's pointed to.
    *
-   * @param aRelationAttr - attribute name of searched element
-   * @param aRelationNamespaceID - namespace id of searched attribute, by default
-   *                               empty namespace
-   * @param aAncestorLevelsToSearch - points how is the neighborhood of the
-   *                                  given element big.
+   * @param aIDProperty  The ARIA relationship property to get the text for
+   * @param aName        Where to put the text
+   * @return error or success code
    */
-  already_AddRefed<nsIDOMNode> FindNeighbourPointingToThis(nsIAtom *aRelationAttr,
-                                                           PRUint32 aRelationNameSpaceID = kNameSpaceID_None,
-                                                           PRUint32 aAncestorLevelsToSearch = 0);
-
-  /**
-   * Search element in neighborhood of the given element by tag name and
-   * attribute value that equals to ID attribute of the given element.
-   * ID attribute can be either 'id' attribute or 'anonid' if the element is
-   * anonymous.
-   *
-   * @param aForNode - the given element the search is performed for
-   * @param aTagName - tag name of searched element
-   * @param aRelationAttr - attribute name of searched element
-   * @param aRelationNamespaceID - namespace id of searched attribute, by default
-   *                               empty namespace
-   * @param aAncestorLevelsToSearch - points how is the neighborhood of the
-   *                                  given element big.
-   */
-  static nsIContent *FindNeighbourPointingToNode(nsIContent *aForNode,
-                                                 nsIAtom *aTagName,
-                                                 nsIAtom *aRelationAttr,
-                                                 PRUint32 aRelationNameSpaceID = kNameSpaceID_None,
-                                                 PRUint32 aAncestorLevelsToSearch = 5);
-
-  /**
-   * Search for element that satisfies the requirements in subtree of the given
-   * element. The requirements are tag name, attribute name and value of
-   * attribute.
-   *
-   * @param aId - value of searched attribute
-   * @param aLookContent - element that search is performed inside
-   * @param aRelationAttr - searched attribute
-   * @param aRelationNamespaceID - namespace id of searched attribute, by default
-   *                               empty namespace
-   * @param aExcludeContent - element that is skiped for search
-   * @param aTagType - tag name of searched element, by default it is 'label'
-   */
-  static nsIContent *FindDescendantPointingToID(const nsAString *aId,
-                                                nsIContent *aLookContent,
-                                                nsIAtom *aRelationAttr,
-                                                PRUint32 aRelationNamespaceID = kNameSpaceID_None,
-                                                nsIContent *aExcludeContent = nsnull,
-                                                nsIAtom *aTagType = nsAccessibilityAtoms::label);
+  nsresult GetTextFromRelationID(EAriaProperty aIDProperty, nsString &aName);
 
   static nsIContent *GetHTMLLabelContent(nsIContent *aForNode);
   static nsIContent *GetLabelContent(nsIContent *aForNode);
@@ -284,15 +237,14 @@ protected:
   nsIDOMNode* GetAtomicRegion();
 
   /**
-   * Get numeric value of the given attribute.
+   * Get numeric value of the given ARIA attribute.
    *
-   * @param aNameSpaceID - namespace ID of the attribute
-   * @param aName - name of the attribute
+   * @param aAriaProperty - the ARIA property we're using
    * @param aValue - value of the attribute
    *
    * @return - NS_OK_NO_ARIA_VALUE if there is no setted ARIA attribute
    */
-  nsresult GetAttrValue(PRUint32 aNameSpaceID, nsIAtom *aName, double *aValue);
+  nsresult GetAttrValue(EAriaProperty aAriaProperty, double *aValue);
 
   // Data Members
   nsCOMPtr<nsIAccessible> mParent;

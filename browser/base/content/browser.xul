@@ -104,9 +104,11 @@
       <vbox id="editBookmarkPanelContent" flex="1"/>
       <hbox flex="1">
         <spacer flex="1"/>
-        <button label="&editBookmark.delete.label;"
+        <button id="editBookmarkPanelDeleteButton"
+                label="&editBookmark.delete.label;"
                 oncommand="PlacesCommandHook.deleteButtonOnCommand();"/>
-        <button label="&editBookmark.done.label;"
+        <button id="editBookmarkPanelDoneButton"
+                label="&editBookmark.done.label;"
                 default="true"
                 oncommand="PlacesCommandHook.doneButtonOnCommand();"/>
       </hbox>
@@ -267,7 +269,8 @@
           <stack id="go-button-stack" class="endcap">
             <box class="endcap-box" chromedir="&locale.dir;"/>
             <hbox>
-              <toolbarbutton id="star-button" onclick="if (event.button == 0) PlacesStarButton.onClick(event);"/>
+              <toolbarbutton id="star-button"
+                             onclick="if (event.button == 0) PlacesStarButton.onClick(event);"/>
               <toolbarbutton id="go-button" chromedir="&locale.dir;"
                              label="&goEndCap.label;"
                              onclick="handleURLBarCommand(event);"

@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -41,22 +41,22 @@ TEST_DIR=${TEST_DIR:-/work/mozilla/mozilla.com/test.mozilla.com/www}
 TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
 source ${TEST_BIN}/library.sh
 
-source /work/mozilla/mozilla.com/test.mozilla.com/www/bin/set-build-env.sh $@
+source ${TEST_BIN}/set-build-env.sh $@
 
 case $product in
     firefox|thunderbird)
-	cd $TREE/mozilla
+        cd $TREE/mozilla
 
-	if ! make -f client.mk distclean 2>&1; then
-	    error "during client.mk clean"
-	fi
-	;;
+        if ! make -f client.mk clean 2>&1; then
+            error "during client.mk clean"
+        fi
+        ;;
 
     js)
-	cd $TREE/mozilla/js/src
+        cd $TREE/mozilla/js/src
 
-	if ! make -f Makefile.ref clean 2>&1; then
-	    error "during SpiderMonkey clean"
-	fi
-	;;
+        if ! make -f Makefile.ref clean 2>&1; then
+            error "during SpiderMonkey clean"
+        fi
+        ;;
 esac

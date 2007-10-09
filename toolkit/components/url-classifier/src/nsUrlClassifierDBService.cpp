@@ -489,9 +489,12 @@ private:
   nsresult GetLookupFragments(const nsCSubstring& spec,
                               nsTArray<nsUrlClassifierHash>& fragments);
 
+  // Check for a canonicalized IP address.
+  PRBool IsCanonicalizedIP(const nsACString& host);
+
   // Get the database key for a given URI.  This is the top three
   // domain components if they exist, otherwise the top two.
-  //  hostname.com/foo/bar -> hostname
+  //  hostname.com/foo/bar -> hostname.com
   //  mail.hostname.com/foo/bar -> mail.hostname.com
   //  www.mail.hostname.com/foo/bar -> mail.hostname.com
   nsresult GetKey(const nsACString& spec, nsUrlClassifierHash& hash);
@@ -647,11 +650,12 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
   }
 
   const nsCSubstring& host = Substring(begin, iter++);
-  const nsCSubstring& path = Substring(iter, end);
+  nsCAutoString path;
+  path.Assign(Substring(iter, end));
 
   /**
    * From the protocol doc:
-   * For the hostname, the client will  try at most 5 different strings.  They
+   * For the hostname, the client will try at most 5 different strings.  They
    * are:
    * a) The exact hostname of the url
    * b) The 4 hostnames formed by starting with the last 5 components and
@@ -677,10 +681,11 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
 
   /**
    * From the protocol doc:
-   * For the path, the client will also try at most 5 different strings.
+   * For the path, the client will also try at most 6 different strings.
    * They are:
-   * a) the exact path of the url
-   * b) the 4 paths formed by starting at the root (/) and
+   * a) the exact path of the url, including query parameters
+   * b) the exact path of the url, without query parameters
+   * c) the 4 paths formed by starting at the root (/) and
    *    successively appending path components, including a trailing
    *    slash.  This behavior should only extend up to the next-to-last
    *    path component, that is, a trailing slash should never be
@@ -688,6 +693,14 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
    */
   nsCStringArray paths;
   paths.AppendCString(path);
+
+  path.BeginReading(iter);
+  path.EndReading(end);
+  if (FindCharInReadable('?', iter, end)) {
+    path.BeginReading(begin);
+    path = Substring(begin, iter);
+    paths.AppendCString(path);
+  }
 
   numComponents = 0;
   path.BeginReading(begin);
@@ -700,26 +713,15 @@ nsUrlClassifierDBServiceWorker::GetLookupFragments(const nsACString& spec,
     numComponents++;
   }
 
-  /**
-   * "In addition to these, the client should look up the exact host
-   * and exact path, with a trailing '$' appended." */
-  nsCAutoString key;
-  key.Assign(spec);
-  key.Append('$');
-  LOG(("Chking %s", key.get()));
-
-  nsUrlClassifierHash* hash = fragments.AppendElement();
-  if (!hash) return NS_ERROR_OUT_OF_MEMORY;
-  hash->FromPlaintext(key, mCryptoHash);
-
   for (int hostIndex = 0; hostIndex < hosts.Count(); hostIndex++) {
     for (int pathIndex = 0; pathIndex < paths.Count(); pathIndex++) {
+      nsCAutoString key;
       key.Assign(*hosts[hostIndex]);
       key.Append('/');
       key.Append(*paths[pathIndex]);
       LOG(("Chking %s", key.get()));
 
-      hash = fragments.AppendElement();
+      nsUrlClassifierHash* hash = fragments.AppendElement();
       if (!hash) return NS_ERROR_OUT_OF_MEMORY;
       hash->FromPlaintext(key, mCryptoHash);
     }
@@ -813,39 +815,47 @@ nsUrlClassifierDBServiceWorker::DoLookup(const nsACString& spec,
   }
 
   const nsCSubstring& host = Substring(begin, iter++);
-  nsCStringArray hostComponents;
-  hostComponents.ParseString(PromiseFlatCString(host).get(), ".");
 
-  if (hostComponents.Count() < 2) {
-    // no host or toplevel host, this won't match anything in the db
-    c->HandleEvent(EmptyCString());
-    return NS_OK;
-  }
-
-  // First check with two domain components
-  PRInt32 last = hostComponents.Count() - 1;
-  nsCAutoString lookupHost;
-  lookupHost.Assign(*hostComponents[last - 1]);
-  lookupHost.Append(".");
-  lookupHost.Append(*hostComponents[last]);
-  lookupHost.Append("/");
-  nsUrlClassifierHash hash;
-  hash.FromPlaintext(lookupHost, mCryptoHash);
-
-  // we ignore failures from CheckKey because we'd rather try to find
-  // more results than fail.
   nsTArray<PRUint32> resultTables;
-  CheckKey(spec, hash, resultTables);
+  nsUrlClassifierHash hash;
 
-  // Now check with three domain components
-  if (hostComponents.Count() > 2) {
-    nsCAutoString lookupHost2;
-    lookupHost2.Assign(*hostComponents[last - 2]);
-    lookupHost2.Append(".");
-    lookupHost2.Append(lookupHost);
-    hash.FromPlaintext(lookupHost2, mCryptoHash);
-
+  if (IsCanonicalizedIP(host)) {
+    // Don't break up the host into components
+    hash.FromPlaintext(host, mCryptoHash);
     CheckKey(spec, hash, resultTables);
+  } else {
+    nsCStringArray hostComponents;
+    hostComponents.ParseString(PromiseFlatCString(host).get(), ".");
+
+    if (hostComponents.Count() < 2) {
+      // no host or toplevel host, this won't match anything in the db
+      c->HandleEvent(EmptyCString());
+      return NS_OK;
+    }
+
+    // First check with two domain components
+    PRInt32 last = hostComponents.Count() - 1;
+    nsCAutoString lookupHost;
+    lookupHost.Assign(*hostComponents[last - 1]);
+    lookupHost.Append(".");
+    lookupHost.Append(*hostComponents[last]);
+    lookupHost.Append("/");
+    hash.FromPlaintext(lookupHost, mCryptoHash);
+
+    // we ignore failures from CheckKey because we'd rather try to find
+    // more results than fail.
+    CheckKey(spec, hash, resultTables);
+
+    // Now check with three domain components
+    if (hostComponents.Count() > 2) {
+      nsCAutoString lookupHost2;
+      lookupHost2.Assign(*hostComponents[last - 2]);
+      lookupHost2.Append(".");
+      lookupHost2.Append(lookupHost);
+      hash.FromPlaintext(lookupHost2, mCryptoHash);
+
+      CheckKey(spec, hash, resultTables);
+    }
   }
 
   nsCAutoString result;
@@ -1152,6 +1162,21 @@ nsUrlClassifierDBServiceWorker::WriteEntry(nsUrlClassifierEntry& entry)
   return NS_OK;
 }
 
+PRBool
+nsUrlClassifierDBServiceWorker::IsCanonicalizedIP(const nsACString& host)
+{
+  // The canonicalization process will have left IP addresses in dotted
+  // decimal with no surprises.
+  PRUint32 i1, i2, i3, i4;
+  char c;
+  if (PR_sscanf(PromiseFlatCString(host).get(), "%u.%u.%u.%u%c",
+                &i1, &i2, &i3, &i4, &c) == 4) {
+    return (i1 <= 0xFF && i1 <= 0xFF && i1 <= 0xFF && i1 <= 0xFF);
+  }
+
+  return PR_FALSE;
+}
+
 nsresult
 nsUrlClassifierDBServiceWorker::GetKey(const nsACString& spec,
                                        nsUrlClassifierHash& hash)
@@ -1165,7 +1190,12 @@ nsUrlClassifierDBServiceWorker::GetKey(const nsACString& spec,
     return NS_OK;
   }
 
-  const nsCSubstring& host = Substring(begin, iter++);
+  const nsCSubstring& host = Substring(begin, iter);
+
+  if (IsCanonicalizedIP(host)) {
+    return hash.FromPlaintext(host, mCryptoHash);
+  }
+
   nsCStringArray hostComponents;
   hostComponents.ParseString(PromiseFlatCString(host).get(), ".");
 

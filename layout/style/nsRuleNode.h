@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Original Author: David W. Hyatt (hyatt@netscape.com)
+ *   L. David Baron <dbaron@dbaron.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -296,8 +297,7 @@ struct nsCachedStyleData
  *      can use the same nsStyle* struct as its parent nsStyleContext.
  *
  * Since the data represented by an nsIStyleRule are immutable, the data
- * represented by an nsRuleNode are also immutable (with a few
- * exceptions, like system color changes).
+ * represented by an nsRuleNode are also immutable.
  */
 
 class nsRuleNode {
@@ -710,6 +710,9 @@ public:
    */
   NS_HIDDEN_(void) Mark();
   NS_HIDDEN_(PRBool) Sweep();
+
+  static PRBool
+    HasAuthorSpecifiedBorderOrBackground(nsStyleContext* aStyleContext);
 };
 
 #endif

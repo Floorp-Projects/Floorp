@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Shawn Wilsher <me@shawnwilsher.com>
  *   Myk Melez <myk@mozilla.org>
+ *   Dan Mosedale <dmose@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -82,6 +83,38 @@ nsWebHandlerApp.prototype = {
       return true;
 
     return false;
+  },
+
+  launchWithURI: function nWHA__launchWithURI(aURI, aWindowContext) {
+
+    // XXX need to strip passwd & username from URI to handle, as per the
+    // WhatWG HTML5 draft.  nsSimpleURL, which is what we're going to get,
+    // can't do this directly.  Ideally, we'd fix nsStandardURL to make it
+    // possible to turn off all of its quirks handling, and use that...
+
+    // encode the URI to be handled
+    var escapedUriSpecToHandle = encodeURIComponent(aURI.spec);
+
+    // insert the encoded URI 
+    var uriToSend = this.uriTemplate.replace("%s", escapedUriSpecToHandle);
+
+    // create a channel from this URI
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].
+                    getService(Components.interfaces.nsIIOService);
+    var channel = ioService.newChannel(uriToSend, null, null);
+    channel.loadFlags = Components.interfaces.nsIChannel.LOAD_DOCUMENT_URI;
+
+    // load the channel
+    var uriLoader = Components.classes["@mozilla.org/uriloader;1"].
+                    getService(Components.interfaces.nsIURILoader);
+    // XXX ideally, aIsContentPreferred (the second param) should really be
+    // passed in from above.  Practically, true is probably a reasonable
+    // default since browsers don't care much, and link click is likely to be
+    // the more interesting case for non-browser apps.  See 
+    // <https://bugzilla.mozilla.org/show_bug.cgi?id=392957#c9> for details.
+    uriLoader.openURI(channel, true, aWindowContext);
+
+    return;
   },
 
   //////////////////////////////////////////////////////////////////////////////

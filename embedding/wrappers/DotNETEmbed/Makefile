@@ -15,7 +15,7 @@
 # The Original Code is the Mozilla browser.
 #
 # The Initial Developer of the Original Code is
-# Christopher Blizzard.  Portions created by Christopher Blizzard Copyright (C) 1999, Christopher Blizzard.  All Rights Reserved.
+# Christopher Blizzard.
 # Portions created by the Initial Developer are Copyright (C) 2001
 # the Initial Developer. All Rights Reserved.
 #

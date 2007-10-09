@@ -267,6 +267,12 @@ _cairo_win32_printing_surface_paint_surface_pattern (cairo_win32_surface_t   *su
     int x_tile, y_tile, left, right, top, bottom;
     RECT clip;
 
+    /* If we can't use StretchDIBits with this surface, we can't do anything
+     * special here.
+     */
+    if (!(surface->flags & CAIRO_WIN32_SURFACE_CAN_STRETCHDIB))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     extend = cairo_pattern_get_extend (&pattern->base);
     status = _cairo_pattern_acquire_surface ((cairo_pattern_t *)pattern,
 					     (cairo_surface_t *)surface,
@@ -284,6 +290,12 @@ _cairo_win32_printing_surface_paint_surface_pattern (cairo_win32_surface_t   *su
 	goto FINISH2;
     }
 
+    if (image->width == 0 || image->height == 0)
+    {
+	status = CAIRO_STATUS_SUCCESS;
+	goto FINISH2;
+    }
+	
     if (image->format != CAIRO_FORMAT_RGB24) {
 	opaque_surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
 						     image->width,
@@ -378,7 +390,7 @@ _cairo_win32_printing_surface_paint_surface_pattern (cairo_win32_surface_t   *su
 				&bi,
 				DIB_RGB_COLORS,
 				SRCCOPY))
-		return _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_paint(StretchDIBits)");
+		return _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_paint_surface_pattern(StretchDIBits)");
 	}
     }
     SetStretchBltMode(surface->dc, oldmode);

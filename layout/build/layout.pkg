@@ -43,16 +43,6 @@ dist/bin/res/ua.css
 dist/bin/res/broken-image.gif
 dist/bin/res/loading-image.gif
 dist/bin/res/html/folder.png
-dist/bin/res/html/gopher-audio.gif
-dist/bin/res/html/gopher-binary.gif
-dist/bin/res/html/gopher-find.gif
-dist/bin/res/html/gopher-image.gif
-dist/bin/res/html/gopher-menu.gif
-dist/bin/res/html/gopher-movie.gif
-dist/bin/res/html/gopher-sound.gif
-dist/bin/res/html/gopher-telnet.gif
-dist/bin/res/html/gopher-text.gif
-dist/bin/res/html/gopher-unknown.gif
 dist/bin/res/dtd/xhtml11.dtd
 
 [gecko-tests]

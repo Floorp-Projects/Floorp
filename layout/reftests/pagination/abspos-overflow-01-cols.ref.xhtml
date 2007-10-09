@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <title>Multi-column Layout: AbsPos Pagination (Interlaced)</title>
+  <link rel="author" title="Elika J. Etemad" href="http://fantasai.inkedblade.net/contact"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/visudet.html#the-height-property"/>
+  <link rel="help" href="http://www.w3.org/TR/CSS21/syndata.html#length-units"/>
+  <style type="text/css">
+    html {
+      background: white;
+    }
+
+    .following {
+      margin: 0;
+      font-size: 10pt;
+      line-height: 10pt;
+      font-family: sans-serif;
+      text-align: center;
+      width: 100pt;
+    }
+    #colset {
+      width: 300pt;
+      height: 2in;
+      border: silver 2pt;
+      border-style: none solid;
+    }
+    #redline {
+      width: 303pt;
+      border-top: 4px solid lime;
+      margin-top: -1in;
+      position: relative;
+      z-index: -1;
+    }
+  </style>
+ </head>
+ <body>
+  <div id="colset">
+    <div>
+      <div class="ocontainer">
+        <div class="overflow o1"></div>
+      </div>
+      <div class="container">
+        <div class="overflow a1"></div>
+        <div class="overflow a2"></div>
+        <div class="overflow a3"></div>
+        <div class="overflow a4"></div>
+      </div>
+      <div class="container">
+        <div class="overflow b1"></div>
+        <div class="overflow b2"></div>
+        <div class="overflow b3"></div>
+        <div class="overflow b4">
+          <div class="overflow child1"></div>
+          <div class="overflow child2"></div>
+        </div>
+        <div class="overflow b5"></div>
+        <div class="overflow b6"></div>
+      </div>
+    </div>
+    <p class="following f1">
+      There must be a single green line and no red.
+    </p>
+    <div class="container">
+      <div class="overflow c1"></div>
+      <div class="overflow c2"></div>
+      <div class="overflow c3"></div>
+      <div class="overflow c4"></div>
+    </div>
+    <div class="following f2"></div>
+  </div>
+  <div id="redline"></div>
+ </body>
+</html>

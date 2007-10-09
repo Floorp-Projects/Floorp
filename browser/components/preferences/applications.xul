@@ -53,7 +53,7 @@
 <overlay id="ApplicationsPaneOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <prefpane id="paneApplications" onpaneload="gApplicationsPane.init();"
+  <prefpane id="paneApplications" onpaneload="gApplicationsPane.init();" flex="1"
             helpTopic="prefs-applications" helpURI="chrome://browser/locale/help/help.rdf">
 
     <preferences id="feedsPreferences">
@@ -69,6 +69,9 @@
       <preference id="browser.feeds.handlers.webservice"
                   name="browser.feeds.handlers.webservice"
                   type="string"/>
+      <preference id="pref.downloads.disable_button.edit_actions"
+                  name="pref.downloads.disable_button.edit_actions"
+                  type="bool"/>
     </preferences>
 
     <script type="application/x-javascript" src="chrome://browser/content/preferences/applications.js"/>
@@ -78,37 +81,28 @@
       <key key="&focusSearch2.key;" modifiers="accel" oncommand="gApplicationsPane.focusFilterBox();"/>
     </keyset>
 
-    <vbox flex="1" class="contentPane">
-      <hbox align="center">
-        <label accesskey="&filter.accesskey;" control="filter">&filter.label;</label>
-        <textbox id="filter" flex="1" oninput="gApplicationsPane.onFilterInput();" 
-                onkeypress="gApplicationsPane.onFilterKeyPress(event);"/>
-        <button id="clearFilter" icon="clear" label="&clear.label;" accesskey="&clear.accesskey;" 
-                oncommand="gApplicationsPane.clearFilter();" disabled="true"/>
-      </hbox>
+    <hbox align="center">
+      <label accesskey="&filter.accesskey;" control="filter">&filter.label;</label>
+      <textbox id="filter" flex="1" oninput="gApplicationsPane.onFilterInput();" 
+              onkeypress="gApplicationsPane.onFilterKeyPress(event);"/>
+      <button id="clearFilter" icon="clear" label="&clear.label;" accesskey="&clear.accesskey;" 
+              oncommand="gApplicationsPane.clearFilter();" disabled="true"/>
+    </hbox>
 
-      <separator class="thin"/>
+    <separator class="thin"/>
 
-      <label id="filterActiveLabel" hidden="true">
-        &filterActive.label;
-      </label>
-
-      <separator class="thin"/>
-
-      <richlistbox id="handlersView" orient="vertical" style="height: 300px"
-                   onselect="gApplicationsPane.onSelectionChanged();"
-                   persist="lastSelectedType">
-        <listheader equalsize="always" style="border: 0; padding: 0;">
-          <treecol id="typeColumn" label="&typeColumn.label;" value="type"
-                   accesskey="&typeColumn.accesskey;" persist="sortDirection"
-                   flex="1" onclick="gApplicationsPane.sort(event);"
-                   sortDirection="ascending"/>
-          <treecol id="actionColumn" label="&actionColumn.label;" value="action"
-                   accesskey="&actionColumn.accesskey;" persist="sortDirection"
-                   flex="1" onclick="gApplicationsPane.sort(event);"/>
-        </listheader>
-      </richlistbox>
-    </vbox>
-
+    <richlistbox id="handlersView" orient="vertical" persist="lastSelectedType"
+                 preference="pref.downloads.disable_button.edit_actions"
+                 onselect="gApplicationsPane.onSelectionChanged();">
+      <listheader equalsize="always" style="border: 0; padding: 0;">
+        <treecol id="typeColumn" label="&typeColumn.label;" value="type"
+                 accesskey="&typeColumn.accesskey;" persist="sortDirection"
+                 flex="1" onclick="gApplicationsPane.sort(event);"
+                 sortDirection="ascending"/>
+        <treecol id="actionColumn" label="&actionColumn.label;" value="action"
+                 accesskey="&actionColumn.accesskey;" persist="sortDirection"
+                 flex="1" onclick="gApplicationsPane.sort(event);"/>
+      </listheader>
+    </richlistbox>
   </prefpane>
 </overlay>

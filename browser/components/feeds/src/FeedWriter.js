@@ -635,7 +635,7 @@ FeedWriter.prototype = {
 
     // Last-selected application
     var selectedApp;
-    menuItem = this._document.createElementNS(XUL_NS, "menuitem");
+    var menuItem = this._document.createElementNS(XUL_NS, "menuitem");
     menuItem.id = "selectedAppMenuItem";
     menuItem.className = "menuitem-iconic";
     menuItem.setAttribute("handlerType", "client");

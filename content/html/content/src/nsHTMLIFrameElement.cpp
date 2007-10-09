@@ -160,7 +160,7 @@ static void
 MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                       nsRuleData* aData)
 {
-  if (aData->mSID == eStyleStruct_Border) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     // frameborder: 0 | 1 (| NO | YES in quirks mode)
     // If frameborder is 0 or No, set border to 0
     // else leave it as the value set in html.css
@@ -181,7 +181,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       }
     }
   }
-  else if (aData->mSID == eStyleStruct_Position) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
     // width: value
     if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);

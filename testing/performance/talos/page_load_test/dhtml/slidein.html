@@ -1,0 +1,153 @@
+<html><head><title>Gecko's Realm - JavaScript Stress Test</title>
+<!-- MOZ_INSERT_CONTENT_HOOK -->
+<style type="text/css">
+
+img {
+  width: 64px;
+  height: 64px;
+}
+
+.geckoIcon {
+ position: absolute;
+ top: 10px;
+ left: -65px;
+ width: 64px;
+ height: 64px;
+ visibility: visible;
+}
+.wlcmeIcon {
+ position: absolute;
+ top: 74px;
+ left: -65px;
+ width: 64px;
+ height: 64px;
+ visibility: visible;
+}
+.cssssIcon {
+ position: absolute;
+ top: 138px;
+ left: -65px;
+ width: 64px;
+ height: 64px;
+ visibility: visible;
+}
+.dhtmlIcon {
+ position: absolute;
+ top: 202px;
+ left: -65px;
+ width: 64px;
+ height: 64px;
+ visibility: visible;
+}
+.bugssIcon {
+ position: absolute;
+ top: 266px;
+ left: -65px;
+ width: 64px;
+ height: 64px;
+ visibility: visible;
+}
+.crditIcon {
+ position: absolute;
+ top: 330px;
+ left: -65px;
+ width: 64px;
+ height: 64px;
+ visibility: visible;
+}
+</style>
+<script type="text/javascript">
+
+var step = 20;
+var startTime;
+
+function MoveGeckoIcon(start, finish, step) {
+  if (start >= 710)
+    MoveWlcmeIcon(-65,710,step);
+  else
+  {
+    document.getElementById("geckoIcon").style.left = start+"px";
+    start=start+step;
+    setTimeout("MoveGeckoIcon(" + start + ", " + finish + ", " + step + ")", 0);
+  }
+}
+function MoveWlcmeIcon(start, finish, step){
+  if (start >= 710)
+    MoveCssssIcon(-65,710,step);
+  else
+  {
+    document.getElementById("wlcmeIcon").style.left = start+"px";
+    start=start+step;
+    setTimeout("MoveWlcmeIcon(" + start + ", " + finish + ", " + step + ")", 0);
+  }
+}
+function MoveCssssIcon(start, finish, step){
+  if (start >= 710)
+    MoveDhtmlIcon(-65,710,step);
+  else
+  {
+    document.getElementById("cssssIcon").style.left = start+"px";
+    start=start+step;
+    setTimeout("MoveCssssIcon(" + start + ", " + finish + ", " + step + ")", 0);
+  }
+}
+function MoveDhtmlIcon(start, finish, step){
+  if (start >= 710)
+    MoveBugssIcon(-65,710,step);
+  else
+  {
+    document.getElementById("dhtmlIcon").style.left = start+"px";
+    start=start+step;
+    setTimeout("MoveDhtmlIcon(" + start + ", " + finish + ", " + step + ")", 0);
+  }
+}
+function MoveBugssIcon(start, finish, step){
+  if (start >= 710)
+    MoveCrditIcon(-65,710,step);
+  else
+  {
+    document.getElementById("bugssIcon").style.left = start+"px";
+    start=start+step;
+    setTimeout("MoveBugssIcon(" + start + ", " + finish + ", " + step + ")", 0);
+  }
+}
+function MoveCrditIcon(start, finish, step){
+  if (start >= 710) {
+    tpRecordTime(Date.now() - startTime);
+  }
+  else
+  {
+    document.getElementById("crditIcon").style.left = start+"px";
+    start=start+step;
+    setTimeout("MoveCrditIcon(" + start + ", " + finish + ", " + step + ")", 0);
+  }
+}
+
+function mzDhtmlStart()
+{
+  startTime = Date.now();
+  MoveGeckoIcon(-65,710,step);
+}
+
+</script></head>
+
+<body onload="mzDhtmlStart();">
+<div class="geckoIcon" id="geckoIcon" style="left: -65px;">
+  <img src="images/gecko-icon.jpg">
+</div>
+<div class="wlcmeIcon" id="wlcmeIcon" style="left: -65px;">
+  <img src="images/welcome-icon.jpg">
+</div>
+<div class="cssssIcon" id="cssssIcon" style="left: -65px;">
+  <img src="images/css-icon.jpg">
+</div>
+<div class="dhtmlIcon" id="dhtmlIcon" style="left: -65px;">
+  <img src="images/dhtml-icon.jpg">
+</div>
+<div class="bugssIcon" id="bugssIcon" style="left: -65px;">
+  <img src="images/bugs-icon.jpg">
+</div>
+<div class="crditIcon" id="crditIcon" style="left: -65px;">
+  <img src="images/credits-icon.jpg">
+</div>
+</body></html>

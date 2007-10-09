@@ -82,6 +82,36 @@ nsXULTextAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULTextAccessible::GetAccessibleRelated(PRUint32 aRelationType,
+                                          nsIAccessible **aRelated)
+{
+  nsresult rv =
+    nsHyperTextAccessibleWrap::GetAccessibleRelated(aRelationType, aRelated);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (*aRelated) {
+    return NS_OK;
+  }
+
+  nsIContent *content = GetRoleContent(mDOMNode);
+  if (!content)
+    return NS_ERROR_FAILURE;
+
+  if (aRelationType == nsIAccessibleRelation::RELATION_LABEL_FOR) {
+    // Caption is the label for groupbox
+    nsIContent *parent = content->GetParent();
+    if (parent && parent->Tag() == nsAccessibilityAtoms::caption) {
+      nsCOMPtr<nsIAccessible> parentAccessible;
+      GetParent(getter_AddRefs(parentAccessible));
+      if (Role(parentAccessible) == nsIAccessibleRole::ROLE_GROUPING) {
+        parentAccessible.swap(*aRelated);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
 /**
   * For XUL tooltip
   */

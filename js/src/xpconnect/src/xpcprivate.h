@@ -649,12 +649,13 @@ public:
         IDX_PROTOTYPE               ,
         IDX_CREATE_INSTANCE         ,
         IDX_ITEM                    ,
+        IDX_PROTO                   ,
+        IDX_ITERATOR                ,
 #ifdef XPC_IDISPATCH_SUPPORT
         IDX_ACTIVEX_OBJECT          ,
         IDX_COM_OBJECT              ,
         IDX_ACTIVEX_SUPPORTS        ,
 #endif
-        IDX_PROTO                   ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 

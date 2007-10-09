@@ -156,8 +156,8 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   nscolor color;
   PRBool colorIsSet = colorValue && colorValue->GetColorValue(color);
 
-  if (aData->mSID == eStyleStruct_Position ||
-      aData->mSID == eStyleStruct_Border) {
+  if (aData->mSIDs & (NS_STYLE_INHERIT_BIT(Position) |
+                      NS_STYLE_INHERIT_BIT(Border))) {
     if (colorIsSet) {
       noshade = PR_TRUE;
     } else {
@@ -165,7 +165,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     }
   }
 
-  if (aData->mSID == eStyleStruct_Margin) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)) {
     // align: enum
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
     if (value && value->Type() == nsAttrValue::eEnum) {
@@ -193,7 +193,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       }
     }
   }
-  else if (aData->mSID == eStyleStruct_Position) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) {
     // width: integer, percent
     if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
@@ -221,7 +221,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       }
     }
   }
-  else if (aData->mSID == eStyleStruct_Border && noshade) { // if not noshade, border styles are dealt with by html.css
+  if ((aData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) && noshade) { // if not noshade, border styles are dealt with by html.css
     // size: integer
     // if a size is set, use half of it per side, otherwise, use 1px per side
     float sizePerSide;
@@ -291,7 +291,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       }
     }
   }
-  else if (aData->mSID == eStyleStruct_Color) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Color)) {
     // color: a color
     // (we got the color attribute earlier)
     if (colorIsSet &&

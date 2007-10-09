@@ -50,9 +50,7 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 
-#ifndef MOZILLA_1_8_BRANCH
 #include "nsIDocument.h"
-#endif
 
 #include "nsTransform2D.h"
 
@@ -68,19 +66,16 @@
 #include "nsIImageLoadingContent.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIImage.h"
-#include "nsIFrame.h"
 #include "nsDOMError.h"
 #include "nsIJSRuntimeService.h"
 
-#ifndef MOZILLA_1_8_BRANCH
+#include "nsIPrefService.h"
+
 #include "nsIClassInfoImpl.h"
-#endif
 
 #include "nsServiceManagerUtils.h"
 
 #include "nsDOMError.h"
-
-#include "nsContentUtils.h"
 
 #include "nsIXPConnect.h"
 #include "jsapi.h"
@@ -90,34 +85,8 @@
 
 // we're hoping that something is setting us up the remap
 
-#include "cairo.h"
-
-#ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxASurface.h"
-#endif
-
-#ifdef XP_WIN
-#ifdef MOZILLA_1_8_BRANCH
-struct _cairo_surface_win32_hack {
-    void *ptr;
-    unsigned int refcnt;
-    cairo_status_t st;
-    cairo_bool_t finished;
-    /* array_t */
-    int sz;
-    int num_el;
-    int el_sz;
-    void *elements;
-    double dx, dy, dxs, dys;
-    unsigned int a;
-    unsigned int b;
-
-    /* win32 */
-    cairo_format_t format;
-};
-#endif
-#endif
 
 #ifdef MOZ_X11
 #include <gdk/gdk.h>
@@ -544,13 +513,8 @@ nsCanvasRenderingContextGLPrivate::SetDimensions(PRInt32 width, PRInt32 height)
     return NS_OK;
 }
 
-/*
- * This is identical to nsCanvasRenderingContext2D::Render, we just don't
- * have a good place to put it; though maybe I want a CanvasContextImpl that
- * all this stuff can derive from?
- */
 NS_IMETHODIMP
-nsCanvasRenderingContextGLPrivate::Render(nsIRenderingContext *rc)
+nsCanvasRenderingContextGLPrivate::Render(gfxContext *ctx)
 {
     nsresult rv = NS_OK;
 
@@ -560,8 +524,6 @@ nsCanvasRenderingContextGLPrivate::Render(nsIRenderingContext *rc)
     if (!mGLPbuffer->ThebesSurface())
         return NS_OK;
 
-#ifdef MOZ_CAIRO_GFX
-    gfxContext* ctx = (gfxContext*) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT);
     nsRefPtr<gfxASurface> surf = mGLPbuffer->ThebesSurface();
     nsRefPtr<gfxPattern> pat = new gfxPattern(surf);
 
@@ -570,171 +532,13 @@ nsCanvasRenderingContextGLPrivate::Render(nsIRenderingContext *rc)
     ctx->NewPath();
     ctx->PixelSnappedRectangleAndSetPattern(gfxRect(0, 0, mWidth, mHeight), pat);
     ctx->Fill();
-#else
-
-    // non-Thebes; this becomes exciting
-    cairo_surface_t *dest = nsnull;
-    cairo_t *dest_cr = nsnull;
-
-#ifdef XP_WIN
-    void *ptr = nsnull;
-#ifdef MOZILLA_1_8_BRANCH
-    rv = rc->RetrieveCurrentNativeGraphicData(&ptr);
-    if (NS_FAILED(rv) || !ptr)
-        return NS_ERROR_FAILURE;
-#else
-    ptr = rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_WINDOWS_DC);
-#endif
-    HDC dc = (HDC) ptr;
-
-    dest = cairo_win32_surface_create (dc);
-    dest_cr = cairo_create (dest);
-#endif
-
-#ifdef MOZ_WIDGET_GTK2
-    GdkDrawable *gdkdraw = nsnull;
-#ifdef MOZILLA_1_8_BRANCH
-    rv = rc->RetrieveCurrentNativeGraphicData((void**) &gdkdraw);
-    if (NS_FAILED(rv) || !gdkdraw)
-        return NS_ERROR_FAILURE;
-#else
-    gdkdraw = (GdkDrawable*) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_GDK_DRAWABLE);
-    if (!gdkdraw)
-        return NS_ERROR_FAILURE;
-#endif
-
-    gint w, h;
-    gdk_drawable_get_size (gdkdraw, &w, &h);
-    dest = cairo_xlib_surface_create (GDK_DRAWABLE_XDISPLAY(gdkdraw),
-                                      GDK_DRAWABLE_XID(gdkdraw),
-                                      GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(gdkdraw)),
-                                      w, h);
-    dest_cr = cairo_create (dest);
-#endif
-
-    nsTransform2D *tx = nsnull;
-    rc->GetCurrentTransform(tx);
-
-    nsCOMPtr<nsIDeviceContext> dctx;
-    rc->GetDeviceContext(*getter_AddRefs(dctx));
-
-    // Until we can use the quartz2 surface, mac will be different,
-    // since we'll use CG to render.
-#ifndef XP_MACOSX
-
-    float x0 = 0.0, y0 = 0.0;
-    float sx = 1.0, sy = 1.0;
-    if (tx->GetType() & MG_2DTRANSLATION) {
-        tx->Transform(&x0, &y0);
-    }
-
-    if (tx->GetType() & MG_2DSCALE) {
-        sx = sy = dctx->DevUnitsToTwips();
-        tx->TransformNoXLate(&sx, &sy);
-    }
-
-    cairo_translate (dest_cr, NSToIntRound(x0), NSToIntRound(y0));
-    if (sx != 1.0 || sy != 1.0)
-        cairo_scale (dest_cr, sx, sy);
-
-    cairo_rectangle (dest_cr, 0, 0, mWidth, mHeight);
-    cairo_clip (dest_cr);
-
-    cairo_set_source_surface (dest_cr, mCairoImageSurface, 0, 0);
-    cairo_paint (dest_cr);
-
-    if (dest_cr)
-        cairo_destroy (dest_cr);
-    if (dest)
-        cairo_surface_destroy (dest);
-
-#else
-
-    // OSX path
-
-    CGrafPtr port = nsnull;
-#ifdef MOZILLA_1_8_BRANCH
-    rv = rc->RetrieveCurrentNativeGraphicData((void**) &port);
-    if (NS_FAILED(rv) || !port)
-        return NS_ERROR_FAILURE;
-#else
-    port = (CGrafPtr) rc->GetNativeGraphicData(nsIRenderingContext::NATIVE_MAC_THING);
-    if (!port)
-        return NS_ERROR_FAILURE;
-#endif
-
-    struct Rect portRect;
-    GetPortBounds(port, &portRect);
-
-    CGContextRef cgc;
-    OSStatus status;
-    status = QDBeginCGContext (port, &cgc);
-    if (status != noErr)
-        return NS_ERROR_FAILURE;
-
-    CGDataProviderRef dataProvider;
-    CGImageRef img;
-
-    dataProvider = CGDataProviderCreateWithData (NULL, mImageBuffer,
-                                                 mWidth * mHeight * 4,
-                                                 NULL);
-    CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
-    img = CGImageCreate (mWidth, mHeight, 8, 32, mWidth * 4, rgb,
-                         kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host,
-                         dataProvider, NULL, false, kCGRenderingIntentDefault);
-    CGColorSpaceRelease (rgb);
-    CGDataProviderRelease (dataProvider);
-
-    float x0 = 0.0, y0 = 0.0;
-    float sx = 1.0, sy = 1.0;
-    if (tx->GetType() & MG_2DTRANSLATION) {
-        tx->Transform(&x0, &y0);
-    }
-
-    if (tx->GetType() & MG_2DSCALE) {
-        float p2t = dctx->DevUnitsToTwips();
-        sx = p2t, sy = p2t;
-        tx->TransformNoXLate(&sx, &sy);
-    }
-
-    /* Compensate for the bottom-left Y origin */
-    CGContextTranslateCTM (cgc, NSToIntRound(x0),
-                           portRect.bottom - portRect.top - NSToIntRound(y0) - NSToIntRound(mHeight * sy));
-    if (sx != 1.0 || sy != 1.0)
-        CGContextScaleCTM (cgc, sx, sy);
-
-    CGContextDrawImage (cgc, CGRectMake(0, 0, mWidth, mHeight), img);
-
-    CGImageRelease (img);
-
-    status = QDEndCGContext (port, &cgc);
-    /* if EndCGContext fails, what can we do? */
-#endif
-#endif
 
     return rv;
 }
 
 NS_IMETHODIMP
-nsCanvasRenderingContextGLPrivate::RenderToSurface(cairo_surface_t *surf)
-{
-    return NS_OK;
-}
-
-nsIFrame*
-nsCanvasRenderingContextGLPrivate::GetCanvasLayoutFrame()
-{
-    if (!mCanvasElement)
-        return nsnull;
-
-    nsIFrame *fr = nsnull;
-    mCanvasElement->GetPrimaryCanvasFrame(&fr);
-    return fr;
-}
-
-NS_IMETHODIMP
-nsCanvasRenderingContextGLPrivate::GetInputStream(const nsACString& aMimeType,
-                                                  const nsAString& aEncoderOptions,
+nsCanvasRenderingContextGLPrivate::GetInputStream(const char* aMimeType,
+                                                  const PRUnichar* aEncoderOptions,
                                                   nsIInputStream **aStream)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -746,7 +550,7 @@ nsCanvasRenderingContextGLPrivate::GetInputStream(const nsACString& aMimeType,
 
 nsresult
 nsCanvasRenderingContextGLPrivate::CairoSurfaceFromElement(nsIDOMElement *imgElt,
-                                                           cairo_surface_t **aCairoSurface,
+                                                           gfxASurface **aThebesSurface,
                                                            PRUint8 **imgData,
                                                            PRInt32 *widthOut, PRInt32 *heightOut,
                                                            nsIURI **uriOut, PRBool *forceWriteOnlyOut)
@@ -781,23 +585,20 @@ nsCanvasRenderingContextGLPrivate::CairoSurfaceFromElement(nsIDOMElement *imgElt
             rv = canvas->GetSize(&w, &h);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            PRUint8 *data = (PRUint8*) PR_Malloc(w * h * 4);
-            cairo_surface_t *surf =
-                cairo_image_surface_create_for_data (data, CAIRO_FORMAT_ARGB32,
-                                                     w, h, w*4);
-            cairo_t *cr = cairo_create (surf);
-            cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-            cairo_paint (cr);
-            cairo_destroy (cr);
+            nsRefPtr<gfxImageSurface> surf =
+                new gfxImageSurface (gfxIntSize(w, h), gfxASurface::ImageFormatARGB32);
+            nsRefPtr<gfxContext> ctx = new gfxContext(surf);
+            ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
+            ctx->Paint();
+            ctx->SetOperator(gfxContext::OPERATOR_OVER);
 
-            rv = canvas->RenderContextsToSurface(surf);
-            if (NS_FAILED(rv)) {
-                cairo_surface_destroy (surf);
+            rv = canvas->RenderContexts(ctx);
+            if (NS_FAILED(rv))
                 return rv;
-            }
 
-            *aCairoSurface = surf;
-            *imgData = data;
+            NS_ADDREF(surf.get());
+            *aThebesSurface = surf;
+            *imgData = surf->Data();
             *widthOut = w;
             *heightOut = h;
 
@@ -831,266 +632,10 @@ nsCanvasRenderingContextGLPrivate::CairoSurfaceFromElement(nsIDOMElement *imgElt
     if (heightOut)
         *heightOut = imgHeight;
 
-#ifdef MOZ_CAIRO_GFX
-    gfxASurface* gfxsurf = nsnull;
-    rv = img->GetSurface(&gfxsurf);
+    rv = img->GetSurface(aThebesSurface);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    *aCairoSurface = gfxsurf->CairoSurface();
-    cairo_surface_reference (*aCairoSurface);
     *imgData = nsnull;
-#else
-    //
-    // We now need to create a cairo_surface with the same data as
-    // this image element.
-    //
-
-    PRUint8 *cairoImgData = (PRUint8 *)nsMemory::Alloc(imgHeight * imgWidth * 4);
-    PRUint8 *outData = cairoImgData;
-
-    gfx_format format;
-    rv = frame->GetFormat(&format);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = frame->LockImageData();
-    if (img->GetHasAlphaMask())
-        rv |= frame->LockAlphaData();
-    if (NS_FAILED(rv)) {
-        nsMemory::Free(cairoImgData);
-        return NS_ERROR_FAILURE;
-    }
-
-    PRUint8 *inPixBits, *inAlphaBits = nsnull;
-    PRUint32 inPixStride, inAlphaStride = 0;
-    inPixBits = img->GetBits();
-    inPixStride = img->GetLineStride();
-    if (img->GetHasAlphaMask()) {
-        inAlphaBits = img->GetAlphaBits();
-        inAlphaStride = img->GetAlphaLineStride();
-    }
-
-    PRBool topToBottom = img->GetIsRowOrderTopToBottom();
-    PRBool useBGR;
-
-    // The gtk backend optimizes away the alpha mask of images
-    // with a fully opaque alpha, but doesn't update its format (bug?);
-    // you end up with a RGB_A8 image with GetHasAlphaMask() == false.
-    // We need to treat that case as RGB.
-
-    if ((format == gfxIFormats::RGB || format == gfxIFormats::BGR) ||
-        (!(img->GetHasAlphaMask()) && (format == gfxIFormats::RGB_A8 || format == gfxIFormats::BGR_A8)))
-    {
-        useBGR = (format & 1);
-
-#ifdef IS_BIG_ENDIAN
-        useBGR = !useBGR;
-#endif
-
-        for (PRUint32 j = 0; j < (PRUint32) imgHeight; j++) {
-            PRUint32 rowIndex;
-            if (topToBottom)
-                rowIndex = j;
-            else
-                rowIndex = imgHeight - j - 1;
-
-            PRUint8 *inrowrgb = inPixBits + (inPixStride * rowIndex);
-
-            for (PRUint32 i = 0; i < (PRUint32) imgWidth; i++) {
-                // handle rgb data; no alpha to premultiply
-#ifdef XP_MACOSX
-                // skip extra OSX byte
-                inrowrgb++;
-#endif
-                PRUint8 r, g, b;
-                if (useBGR) {
-                    b = *inrowrgb++;
-                    g = *inrowrgb++;
-                    r = *inrowrgb++;
-                } else {
-                    r = *inrowrgb++;
-                    g = *inrowrgb++;
-                    b = *inrowrgb++;
-                }
-
-#ifdef IS_BIG_ENDIAN
-                // alpha
-                *outData++ = 0xff;
-#endif
-
-                *outData++ = r;
-                *outData++ = g;
-                *outData++ = b;
-
-#ifdef IS_LITTLE_ENDIAN
-                // alpha
-                *outData++ = 0xff;
-#endif
-            }
-        }
-        rv = NS_OK;
-    } else if (format == gfxIFormats::RGB_A1 || format == gfxIFormats::BGR_A1) {
-        useBGR = (format & 1);
-
-#ifdef IS_BIG_ENDIAN
-        useBGR = !useBGR;
-#endif
-
-        for (PRUint32 j = 0; j < (PRUint32) imgHeight; j++) {
-            PRUint32 rowIndex;
-            if (topToBottom)
-                rowIndex = j;
-            else
-                rowIndex = imgHeight - j - 1;
-
-            PRUint8 *inrowrgb = inPixBits + (inPixStride * rowIndex);
-            PRUint8 *inrowalpha = inAlphaBits + (inAlphaStride * rowIndex);
-
-            for (PRUint32 i = 0; i < (PRUint32) imgWidth; i++) {
-                // pull out the bit value into alpha
-                PRInt32 bit = i % 8;
-                PRInt32 byte = i / 8;
-
-#ifdef IS_LITTLE_ENDIAN
-                PRUint8 a = (inrowalpha[byte] >> (7-bit)) & 1;
-#else
-                PRUint8 a = (inrowalpha[byte] >> bit) & 1;
-#endif
-
-#ifdef XP_MACOSX
-                // skip extra X8 byte on OSX
-                inrowrgb++;
-#endif
-
-                // handle rgb data; need to multiply the alpha out,
-                // but we short-circuit that here since we know that a
-                // can only be 0 or 1
-                if (a) {
-                    PRUint8 r, g, b;
-
-                    if (useBGR) {
-                        b = *inrowrgb++;
-                        g = *inrowrgb++;
-                        r = *inrowrgb++;
-                    } else {
-                        r = *inrowrgb++;
-                        g = *inrowrgb++;
-                        b = *inrowrgb++;
-                    }
-
-#ifdef IS_BIG_ENDIAN
-                    // alpha
-                    *outData++ = 0xff;
-#endif
-
-                    *outData++ = r;
-                    *outData++ = g;
-                    *outData++ = b;
-
-#ifdef IS_LITTLE_ENDIAN
-                    // alpha
-                    *outData++ = 0xff;
-#endif
-                } else {
-                    // alpha is 0, so we need to write all 0's,
-                    // ignoring input color
-                    inrowrgb += 3;
-                    *outData++ = 0;
-                    *outData++ = 0;
-                    *outData++ = 0;
-                    *outData++ = 0;
-                }
-            }
-        }
-        rv = NS_OK;
-    } else if (format == gfxIFormats::RGB_A8 || format == gfxIFormats::BGR_A8) {
-        useBGR = (format & 1);
-
-#ifdef IS_BIG_ENDIAN
-        useBGR = !useBGR;
-#endif
-
-        for (PRUint32 j = 0; j < (PRUint32) imgHeight; j++) {
-            PRUint32 rowIndex;
-            if (topToBottom)
-                rowIndex = j;
-            else
-                rowIndex = imgHeight - j - 1;
-
-            PRUint8 *inrowrgb = inPixBits + (inPixStride * rowIndex);
-            PRUint8 *inrowalpha = inAlphaBits + (inAlphaStride * rowIndex);
-
-            for (PRUint32 i = 0; i < (PRUint32) imgWidth; i++) {
-                // pull out alpha; we'll need it to premultiply
-                PRUint8 a = *inrowalpha++;
-
-                // handle rgb data; we need to fully premultiply
-                // with the alpha
-#ifdef XP_MACOSX
-                // skip extra X8 byte on OSX
-                inrowrgb++;
-#endif
-
-                // XXX gcc bug: gcc seems to push "r" into a register
-                // early, and pretends that it's in that register
-                // throughout the 3 macros below.  At the end
-                // of the 3rd macro, the correct r value is
-                // calculated but never stored anywhere -- the r variable
-                // has the value of the low byte of register that it
-                // was stuffed into, which has the result of some 
-                // intermediate calculation.
-                // I've seen this on gcc 3.4.2 x86 (Fedora Core 3)
-                // and gcc 3.3 PPC (OS X 10.3)
-
-                //PRUint8 b, g, r;
-                //FAST_DIVIDE_BY_255(b, *inrowrgb++ * a - a / 2);
-                //FAST_DIVIDE_BY_255(g, *inrowrgb++ * a - a / 2);
-                //FAST_DIVIDE_BY_255(r, *inrowrgb++ * a - a / 2);
-
-                PRUint8 r, g, b;
-                if (useBGR) {
-                    b = (*inrowrgb++ * a - a / 2) / 255;
-                    g = (*inrowrgb++ * a - a / 2) / 255;
-                    r = (*inrowrgb++ * a - a / 2) / 255;
-                } else {
-                    r = (*inrowrgb++ * a - a / 2) / 255;
-                    g = (*inrowrgb++ * a - a / 2) / 255;
-                    b = (*inrowrgb++ * a - a / 2) / 255;
-                }
-
-#ifdef IS_BIG_ENDIAN
-                *outData++ = a;
-#endif
-
-                *outData++ = r;
-                *outData++ = g;
-                *outData++ = b;
-
-#ifdef IS_LITTLE_ENDIAN
-                *outData++ = a;
-#endif
-            }
-        }
-        rv = NS_OK;
-    } else {
-        rv = NS_ERROR_FAILURE;
-    }
-
-    if (img->GetHasAlphaMask())
-        frame->UnlockAlphaData();
-    frame->UnlockImageData();
-
-    if (NS_FAILED(rv)) {
-        nsMemory::Free(cairoImgData);
-        return rv;
-    }
-
-    cairo_surface_t *imgSurf =
-        cairo_image_surface_create_for_data(cairoImgData, CAIRO_FORMAT_ARGB32,
-                                            imgWidth, imgHeight, imgWidth*4);
-
-    *aCairoSurface = imgSurf;
-    *imgData = cairoImgData;
-#endif
 
     return NS_OK;
 }
@@ -1125,27 +670,6 @@ nsCanvasRenderingContextGLPrivate::DoDrawImageSecurityCheck(nsIURI* aURI, PRBool
     }
 
     fprintf (stderr, "DoDrawImageSecuritycheck this 5: %p\n", this);
-#ifdef MOZILLA_1_8_BRANCH
-#if 0
-    nsCOMPtr<nsIDOMNode> elem = do_QueryInterface(mCanvasElement);
-    if (elem && ssm) {
-        nsCOMPtr<nsIPrincipal> elemPrincipal;
-        nsCOMPtr<nsIPrincipal> uriPrincipal;
-        nsCOMPtr<nsIDocument> elemDocument;
-        nsContentUtils::GetDocumentAndPrincipal(elem, getter_AddRefs(elemDocument), getter_AddRefs(elemPrincipal));
-        ssm->GetCodebasePrincipal(aURI, getter_AddRefs(uriPrincipal));
-
-        if (uriPrincipal && elemPrincipal) {
-            nsresult rv =
-                ssm->CheckSameOriginPrincipal(elemPrincipal, uriPrincipal);
-            if (NS_SUCCEEDED(rv)) {
-                // Same origin
-                return;
-            }
-        }
-    }
-#endif
-#else
     nsCOMPtr<nsINode> elem = do_QueryInterface(mCanvasElement);
     if (elem && ssm) {
         nsCOMPtr<nsIPrincipal> uriPrincipal;
@@ -1160,7 +684,6 @@ nsCanvasRenderingContextGLPrivate::DoDrawImageSecurityCheck(nsIURI* aURI, PRBool
             }
         }
     }
-#endif
 
     fprintf (stderr, "DoDrawImageSecuritycheck this 6: %p\n", this); fflush(stderr);
     mCanvasElement->SetWriteOnly();
@@ -1221,43 +744,11 @@ nsCanvasRenderingContextGLPrivate::DoSwapBuffers()
 {
     mGLPbuffer->SwapBuffers();
 
-    // then invalidate the region and do a sync redraw
-    // (uh, why sync?)
-    nsIFrame *frame = GetCanvasLayoutFrame();
-    if (frame) {
-        nsRect r = frame->GetRect();
-        r.x = r.y = 0;
+    // then invalidate the region and do a redraw
+    if (!mCanvasElement)
+        return NS_OK;
 
-        // sync redraw
-        //frame->Invalidate(r, PR_TRUE);
-
-        // nsIFrame::Invalidate is an internal non-virtual method,
-        // so we basically recreate it here.  I would suggest
-        // an InvalidateExternal for the trunk.
-        nsIPresShell *shell = frame->PresContext()->GetPresShell();
-        if (shell) {
-            PRBool suppressed = PR_FALSE;
-            shell->IsPaintingSuppressed(&suppressed);
-            if (suppressed)
-                return NS_OK;
-        }
-
-        // maybe VMREFRESH_IMMEDIATE in some cases,
-        // need to think
-        PRUint32 flags = NS_VMREFRESH_NO_SYNC;
-        if (frame->HasView()) {
-            nsIView* view = frame->GetViewExternal();
-            view->GetViewManager()->UpdateView(view, r, flags);
-        } else {
-            nsPoint offset;
-            nsIView *view;
-            frame->GetOffsetFromView(offset, &view);
-            NS_ASSERTION(view, "no view");
-            r += offset;
-            view->GetViewManager()->UpdateView(view, r, flags);
-        }
-    }
-
+    mCanvasElement->InvalidateFrame();
     return NS_OK;
 }
 
@@ -1297,4 +788,17 @@ nsCanvasRenderingContextGLPrivate::SafeToCreateCanvas3DContext()
     LogMessage(NS_LITERAL_CSTRING("Canvas 3D: Web content tried to create 3D Canvas Context, but pref extensions.canvas3d.enabledForWebContent is not set!"));
 
     return PR_FALSE;
+}
+
+/*
+ * We need this here, because nsAString has a different type name based on whether it's
+ * used internally or externally.  BeginPrinting isn't ever called, but gfxImageSurface
+ * wants to inherit the default definition, and it can't find it.  So instead, we just
+ * stick a stub here to shut the compiler up, because we never call this method.
+ */
+
+nsresult
+gfxASurface::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

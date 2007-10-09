@@ -83,6 +83,7 @@ NS_NewMenuBarFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 nsMenuBarFrame::nsMenuBarFrame(nsIPresShell* aShell, nsStyleContext* aContext):
   nsBoxFrame(aShell, aContext),
     mMenuBarListener(nsnull),
+    mStayActive(PR_FALSE),
     mIsActive(PR_FALSE),
     mTarget(nsnull),
     mCaretWasVisible(PR_FALSE)
@@ -129,6 +130,10 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
     return NS_OK;
 
   if (!aActiveFlag) {
+    // Don't deactivate when switching between menus on the menubar.
+    if (mStayActive)
+      return NS_OK;
+
     // if there is a request to deactivate the menu bar, check to see whether
     // there is a menu popup open for the menu bar. In this case, don't
     // deactivate the menu bar.
@@ -347,10 +352,12 @@ nsMenuBarFrame::CurrentMenuIsBeingDestroyed()
 class nsMenuBarSwitchMenu : public nsRunnable
 {
 public:
-  nsMenuBarSwitchMenu(nsIContent *aOldMenu,
+  nsMenuBarSwitchMenu(nsIContent* aMenuBar,
+                      nsIContent *aOldMenu,
                       nsIContent *aNewMenu,
                       PRBool aSelectFirstItem)
-    : mOldMenu(aOldMenu), mNewMenu(aNewMenu), mSelectFirstItem(aSelectFirstItem)
+    : mMenuBar(aMenuBar), mOldMenu(aOldMenu), mNewMenu(aNewMenu),
+      mSelectFirstItem(aSelectFirstItem)
   {
   }
 
@@ -360,8 +367,23 @@ public:
     if (!pm)
       return NS_ERROR_UNEXPECTED;
 
-    if (mOldMenu)
+    // if switching from one menu to another, set a flag so that the call to
+    // HidePopup doesn't deactivate the menubar when the first menu closes.
+    nsMenuBarFrame* menubar = nsnull;
+    if (mOldMenu && mNewMenu) {
+      menubar = static_cast<nsMenuBarFrame *>
+        (pm->GetFrameOfTypeForContent(mMenuBar, nsGkAtoms::menuBarFrame, PR_FALSE));
+      menubar->SetStayActive(PR_TRUE);
+    }
+
+    if (mOldMenu) {
+      nsWeakFrame weakMenuBar(menubar);
       pm->HidePopup(mOldMenu, PR_FALSE, PR_FALSE, PR_FALSE);
+      // clear the flag again
+      if (mNewMenu && weakMenuBar.IsAlive())
+        menubar->SetStayActive(PR_FALSE);
+    }
+
     if (mNewMenu)
       pm->ShowMenu(mNewMenu, mSelectFirstItem, PR_FALSE);
 
@@ -369,6 +391,7 @@ public:
   }
 
 private:
+  nsCOMPtr<nsIContent> mMenuBar;
   nsCOMPtr<nsIContent> mOldMenu;
   nsCOMPtr<nsIContent> mNewMenu;
   PRBool mSelectFirstItem;
@@ -417,7 +440,7 @@ nsMenuBarFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
   // use an event so that hiding and showing can be done synchronously, which
   // avoids flickering
   nsCOMPtr<nsIRunnable> event =
-    new nsMenuBarSwitchMenu(aOldMenu, aNewMenu, aSelectFirstItem);
+    new nsMenuBarSwitchMenu(GetContent(), aOldMenu, aNewMenu, aSelectFirstItem);
   return NS_DispatchToCurrentThread(event);
 }
 

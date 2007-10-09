@@ -63,6 +63,8 @@ enum nsCSSUnit {
   eCSSUnit_None         = 4,      // (n/a) value is none
   eCSSUnit_Normal       = 5,      // (n/a) value is normal (algorithmic, different than auto)
   eCSSUnit_System_Font  = 6,      // (n/a) value is -moz-use-system-font
+  eCSSUnit_Dummy        = 7,      // (n/a) a fake but specified value, used
+                                  //       only in temporary values
   eCSSUnit_String       = 10,     // (PRUnichar*) a string value
   eCSSUnit_Attr         = 11,     // (PRUnichar*) a attr(string) value
   eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
@@ -275,6 +277,7 @@ public:
   NS_HIDDEN_(void)  SetNoneValue();
   NS_HIDDEN_(void)  SetNormalValue();
   NS_HIDDEN_(void)  SetSystemFontValue();
+  NS_HIDDEN_(void)  SetDummyValue();
   NS_HIDDEN_(void)  StartImageLoad(nsIDocument* aDocument)
                                    const;  // Not really const, but pretending
 

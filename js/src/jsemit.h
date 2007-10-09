@@ -295,9 +295,7 @@ struct JSCodeGenerator {
         uintN       currentLine;    /* line number for tree-based srcnote gen */
     } prolog, main, *current;
 
-    const char      *filename;      /* null or weak link to source filename */
     uintN           firstLine;      /* first line, for js_NewScriptFromCG */
-    JSPrincipals    *principals;    /* principals for constant folding eval */
     JSAtomList      atomList;       /* literals indexed for mapping */
 
     intN            stackDepth;     /* current stack depth in script frame */
@@ -351,14 +349,11 @@ struct JSCodeGenerator {
 /*
  * Initialize cg to allocate bytecode space from codePool, source note space
  * from notePool, and all other arena-allocated temporaries from cx->tempPool.
- * Return true on success.  Report an error and return false if the initial
- * code segment can't be allocated.
  */
-extern JS_FRIEND_API(JSBool)
+extern JS_FRIEND_API(void)
 js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg, JSParseContext *pc,
                      JSArenaPool *codePool, JSArenaPool *notePool,
-                     const char *filename, uintN lineno,
-                     JSPrincipals *principals);
+                     uintN lineno);
 
 /*
  * Release cg->codePool, cg->notePool, and cx->tempPool to marks set by

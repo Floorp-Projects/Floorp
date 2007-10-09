@@ -492,8 +492,9 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
         if (IsMenu() && !onmenubar && IsOpen()) {
           // Submenus don't get closed up immediately.
         }
-        else
+        else if (this == mMenuParent->GetCurrentMenuItem()) {
           mMenuParent->ChangeMenuItem(nsnull, PR_FALSE);
+        }
       }
     }
   }
@@ -1075,7 +1076,7 @@ nsMenuFrame::BuildAcceleratorText()
   {
     // Compiled-in defaults, in case we can't get LookAndFeel --
     // command for mac, control for all other platforms.
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
     accelKey = nsIDOMKeyEvent::DOM_VK_META;
 #else
     accelKey = nsIDOMKeyEvent::DOM_VK_CONTROL;

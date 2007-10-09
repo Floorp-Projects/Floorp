@@ -2790,8 +2790,11 @@ nsNavHistoryFolderResultNode::GetUri(nsACString& aURI)
 
   nsNavHistory* history = nsNavHistory::GetHistoryService();
   NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
-  nsCAutoString queryString;
+
   rv = history->QueriesToQueryString(queries, queryCount, mOptions, aURI);
+  for (PRUint32 queryIndex = 0; queryIndex < queryCount;  queryIndex ++) {
+    NS_RELEASE(queries[queryIndex]);
+  }
   nsMemory::Free(queries);
   return rv;
 }

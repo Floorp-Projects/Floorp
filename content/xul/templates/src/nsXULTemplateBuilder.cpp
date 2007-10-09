@@ -1343,6 +1343,8 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     if (! jscontext)
         return NS_ERROR_UNEXPECTED;
 
+    JSAutoRequest ar(jscontext);
+
     nsIXPConnect *xpc = nsContentUtils::XPConnect();
 
     JSObject* jselement = nsnull;

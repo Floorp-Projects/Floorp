@@ -68,6 +68,8 @@ const EXPECTED_PASS = 0;
 const EXPECTED_FAIL = 1;
 const EXPECTED_RANDOM = 2;
 const EXPECTED_DEATH = 3;  // test must be skipped to avoid e.g. crash/hang
+const EXPECTED_LOAD = 4; // test without a reference (just test that it does
+                         // not assert, crash, hang, or leak)
 
 const HTTP_SERVER_PORT = 4444;
 
@@ -191,12 +193,33 @@ function ReadManifest(aURL)
             secMan.checkLoadURI(aURL, incURI,
                                 CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
             ReadManifest(incURI);
+        } else if (items[0] == "load") {
+            if (expected_status == EXPECTED_PASS)
+                expected_status = EXPECTED_LOAD;
+            if (items.length != 2 ||
+                (expected_status != EXPECTED_LOAD &&
+                 expected_status != EXPECTED_DEATH))
+                throw "Error in manifest file " + aURL.spec + " line " + lineNo;
+            var [testURI] = runHttp
+                            ? ServeFiles(aURL,
+                                         listURL.file.parent, [items[1]])
+                            : [gIOService.newURI(items[1], null, listURL)];
+            var prettyPath = runHttp
+                           ? gIOService.newURI(items[1], null, listURL).spec
+                           : testURI.spec;
+            secMan.checkLoadURI(aURL, testURI,
+                                CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+            gURLs.push( { equal: true /* meaningless */,
+                          expected: expected_status,
+                          prettyPath: prettyPath,
+                          url1: testURI,
+                          url2: null } );
         } else if (items[0] == "==" || items[0] == "!=") {
             if (items.length != 3)
                 throw "Error in manifest file " + aURL.spec + " line " + lineNo;
             var [testURI, refURI] = runHttp
                                   ? ServeFiles(aURL,
-                                               listURL.file.parent, items[1], items[2])
+                                               listURL.file.parent, [items[1], items[2]])
                                   : [gIOService.newURI(items[1], null, listURL),
                                      gIOService.newURI(items[2], null, listURL)];
             var prettyPath = runHttp
@@ -217,7 +240,7 @@ function ReadManifest(aURL)
     } while (more);
 }
 
-function ServeFiles(manifestURL, directory, file1, file2)
+function ServeFiles(manifestURL, directory, files)
 {
     if (!gServer)
         gServer = CC["@mozilla.org/server/jshttp;1"].
@@ -227,23 +250,23 @@ function ServeFiles(manifestURL, directory, file1, file2)
     var path = "/" + gCount + "/";
     gServer.registerDirectory(path, directory);
 
-    var testURI = gIOService.newURI("http://localhost:" + HTTP_SERVER_PORT +
-                                    path + file1,
-                                    null, null);
-    var refURI = gIOService.newURI("http://localhost:" + HTTP_SERVER_PORT +
-                                   path + file2,
-                                   null, null);
-
     var secMan = CC[NS_SCRIPTSECURITYMANAGER_CONTRACTID]
                      .getService(CI.nsIScriptSecurityManager);
 
-    // XXX necessary?  manifestURL guaranteed to be file, others always HTTP
-    secMan.checkLoadURI(manifestURL, testURI,
-                        CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
-    secMan.checkLoadURI(manifestURL, refURI,
-                        CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+    function FileToURI(file)
+    {
+        var testURI = gIOService.newURI("http://localhost:" + HTTP_SERVER_PORT +
+                                        path + file,
+                                        null, null);
 
-    return [testURI, refURI];
+        // XXX necessary?  manifestURL guaranteed to be file, others always HTTP
+        secMan.checkLoadURI(manifestURL, testURI,
+                            CI.nsIScriptSecurityManager.DISALLOW_SCRIPT);
+
+        return testURI;
+    }
+
+    return files.map(FileToURI);
 }
 
 function StartCurrentTest()
@@ -345,6 +368,13 @@ function OnDocumentLoad(event)
 function DocumentLoaded()
 {
     clearTimeout(gFailureTimeout);
+
+    if (gURLs[0].expected == EXPECTED_LOAD) {
+        dump("REFTEST PASS (LOAD ONLY): " + gURLs[0].prettyPath + "\n");
+        gURLs.shift();
+        StartCurrentTest();
+        return;
+    }
 
     var canvas;
 

@@ -1,0 +1,20 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<head>
+<style>
+.base { -moz-binding: url("395331-xbl.xml#base"); }
+.inner { -moz-binding: url("395331-xbl.xml#inner"); }
+</style>
+<script>
+function boom()
+{
+  var x = document.getElementById("x");
+  x.removeChild(x.firstChild);
+}
+</script>
+</head>
+<body onload="boom();">
+<xul:box class="base" id="x" style="height:2em;">Hello</xul:box>
+Kitty
+</body>
+</html> 

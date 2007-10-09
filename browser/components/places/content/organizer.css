@@ -27,3 +27,10 @@ button.commandButton {
   display: -moz-box;
 }
 
+/* Edit Item Panel */
+
+#infoScrollbox[minimal="true"] #editBMPanel_descriptionRow,
+#infoScrollbox[minimal="true"] #editBMPanel_loadInSidebarCheckbox,
+#infoScrollbox[minimal="true"] #editBMPanel_keywordRow {
+  visibility: collapse;
+}

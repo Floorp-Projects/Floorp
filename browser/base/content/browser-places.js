@@ -139,7 +139,8 @@ var PlacesCommandHook = {
     this.panel.openPopup(aAnchorElement, aPosition, -1, -1);
 
     gEditItemOverlay.initPanel(aItemId,
-                               { hiddenRows: ["description", "location"] });
+                               { hiddenRows: ["description", "location",
+                                              "loadInSidebar", "keyword"] });
     setTimeout(function() {
                  var namePicker = document.getElementById("editBMPanel_namePicker");
                  namePicker.focus();
@@ -769,13 +770,18 @@ var PlacesStarButton = {
     if (!starIcon)
       return;
 
+    var browserBundle = document.getElementById("bundle_browser");
     var uri = getBrowser().currentURI;
     this._starred = uri && (PlacesUtils.getMostRecentBookmarkForURI(uri) != -1 ||
                             PlacesUtils.getMostRecentFolderForFeedURI(uri) != -1);
-    if (this._starred)
+    if (this._starred) {
       starIcon.setAttribute("starred", "true");
-    else
+      starIcon.setAttribute("tooltiptext", browserBundle.getString("starButtonOn.tooltip"));
+    }
+    else {
       starIcon.removeAttribute("starred");
+      starIcon.setAttribute("tooltiptext", browserBundle.getString("starButtonOff.tooltip"));
+    }
   },
 
   onClick: function PSB_onClick(aEvent) {

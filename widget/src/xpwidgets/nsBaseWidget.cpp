@@ -56,6 +56,7 @@
 
 static void debug_RegisterPrefCallbacks();
 
+static PRBool debug_InSecureKeyboardInputMode = PR_FALSE;
 #endif
 
 #ifdef NOISY_WIDGET_LEAKS
@@ -834,6 +835,26 @@ nsBaseWidget::GetLastInputEventTime(PRUint32& aTime) {
 NS_IMETHODIMP
 nsBaseWidget::SetIcon(const nsAString&)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseWidget::BeginSecureKeyboardInput()
+{
+#ifdef DEBUG
+  NS_ASSERTION(!debug_InSecureKeyboardInputMode, "Attempting to nest call to BeginSecureKeyboardInput!");
+  debug_InSecureKeyboardInputMode = PR_TRUE;
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseWidget::EndSecureKeyboardInput()
+{
+#ifdef DEBUG
+  NS_ASSERTION(debug_InSecureKeyboardInputMode, "Calling EndSecureKeyboardInput when it hasn't been enabled!");
+  debug_InSecureKeyboardInputMode = PR_FALSE;
+#endif
   return NS_OK;
 }
 

@@ -58,6 +58,8 @@ const PREF_GENERAL_USERAGENT_LOCALE       = "general.useragent.locale";
 const PREF_APP_UPDATE_INCOMPATIBLE_MODE   = "app.update.incompatible.mode";
 const PREF_UPDATE_NEVER_BRANCH            = "app.update.never.";
 const PREF_PARTNER_BRANCH                 = "app.partner.";
+const PREF_APP_DISTRIBUTION               = "distribution.id";
+const PREF_APP_DISTRIBUTION_VERSION       = "distribution.version";
 
 const URI_UPDATE_PROMPT_DIALOG  = "chrome://mozapps/content/update/updates.xul";
 const URI_UPDATE_HISTORY_DIALOG = "chrome://mozapps/content/update/history.xul";
@@ -537,6 +539,22 @@ function getUpdateChannel() {
   }
 
   return channel;
+}
+
+/* Get the distribution pref values, from defaults only */
+function getDistributionPrefValue(aPrefName) {
+  var prefValue = "default";
+
+  var defaults =
+      gPref.QueryInterface(Components.interfaces.nsIPrefService).
+      getDefaultBranch(null);
+  try {
+    prefValue = defaults.getCharPref(aPrefName);
+  } catch (e) {
+    // use default when pref not found
+  }
+
+  return prefValue;
 }
 
 /**
@@ -1940,6 +1958,10 @@ Checker.prototype = {
     url = url.replace(/%LOCALE%/g, getLocale());
     url = url.replace(/%CHANNEL%/g, getUpdateChannel());
     url = url.replace(/%PLATFORM_VERSION%/g, gApp.platformVersion);
+    url = url.replace(/%DISTRIBUTION%/g,
+                      getDistributionPrefValue(PREF_APP_DISTRIBUTION));
+    url = url.replace(/%DISTRIBUTION_VERSION%/g,
+                      getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION));
     url = url.replace(/\+/g, "%2B");
 
     if (force)

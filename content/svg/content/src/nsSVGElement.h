@@ -58,6 +58,7 @@ class nsSVGSVGElement;
 class nsSVGLength2;
 class nsSVGNumber2;
 class nsSVGInteger;
+class nsSVGBoolean;
 class nsSVGEnum;
 struct nsSVGEnumMapping;
 
@@ -120,6 +121,7 @@ public:
   virtual void DidChangeLength(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeNumber(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeInteger(PRUint8 aAttrEnum, PRBool aDoSetAttr);
+  virtual void DidChangeBoolean(PRUint8 aAttrEnum, PRBool aDoSetAttr);
   virtual void DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr);
 
   void GetAnimatedLengthValues(float *aFirst, ...);
@@ -146,7 +148,6 @@ protected:
   
   static nsIAtom* GetEventNameForAttr(nsIAtom* aAttr);
 
-protected:
   struct LengthInfo {
     nsIAtom** mName;
     float     mDefaultValue;
@@ -200,6 +201,23 @@ protected:
       {}
   };
 
+  struct BooleanInfo {
+    nsIAtom**    mName;
+    PRPackedBool mDefaultValue;
+  };
+
+  struct BooleanAttributesInfo {
+    nsSVGBoolean* mBooleans;
+    BooleanInfo*  mBooleanInfo;
+    PRUint32      mBooleanCount;
+
+    BooleanAttributesInfo(nsSVGBoolean *aBooleans,
+                          BooleanInfo *aBooleanInfo,
+                          PRUint32 aBooleanCount) :
+      mBooleans(aBooleans), mBooleanInfo(aBooleanInfo), mBooleanCount(aBooleanCount)
+      {}
+  };
+
   friend class nsSVGEnum;
 
   struct EnumInfo {
@@ -220,12 +238,11 @@ protected:
       {}
   };
 
-  virtual EnumAttributesInfo GetEnumInfo();
-
-protected:
   virtual LengthAttributesInfo GetLengthInfo();
   virtual NumberAttributesInfo GetNumberInfo();
   virtual IntegerAttributesInfo GetIntegerInfo();
+  virtual BooleanAttributesInfo GetBooleanInfo();
+  virtual EnumAttributesInfo GetEnumInfo();
 
   static nsresult ReportAttributeParseFailure(nsIDocument* aDocument,
                                               nsIAtom* aAttribute,

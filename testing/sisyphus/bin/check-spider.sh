@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -62,8 +62,8 @@ variable            description
 -d datafiles        optional. one or more filenames of files containing 
                     environment variable definitions to be included.
 
-                    note that the environment variables should have the same 
-                    names as in the "variable" column.
+note that the environment variables should have the same names as in the 
+"variable" column.
 
 Checks if the Spider extension is installed either in the named profile
 or as a global extension, by attempting up to 3 times to launch the Spider.
@@ -77,14 +77,14 @@ EOF
 unset product branch executablepath profilename datafiles
 
 while getopts $options optname ; 
-do 
-    case $optname in
-        p) product=$OPTARG;;
-        b) branch=$OPTARG;;
-        x) executablepath=$OPTARG;;
-        N) profilename=$OPTARG;;
-        d) datafiles=$OPTARG;;
-    esac
+  do 
+  case $optname in
+      p) product=$OPTARG;;
+      b) branch=$OPTARG;;
+      x) executablepath=$OPTARG;;
+      N) profilename=$OPTARG;;
+      d) datafiles=$OPTARG;;
+  esac
 done
 
 # include environment variables
@@ -96,7 +96,7 @@ if [[ -n "$datafiles" ]]; then
 fi
 
 if [[ -z "$product" || -z "$branch" || -z "$executablepath" || -z "$profilename" ]]; 
-then
+    then
     usage
 fi
 
@@ -105,7 +105,7 @@ if [[ "$product" != "firefox" && "$product" != "thunderbird" ]]; then
 fi
 
 if [[ "$branch" != "1.8.0" && "$branch" != "1.8.1" && "$branch" != "1.9.0" ]]; 
-then
+    then
     error "branch \"$branch\" must be one of 1.8.0, 1.8.1, 1.9.0"
 fi
 

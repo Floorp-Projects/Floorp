@@ -215,10 +215,10 @@ nsPopupBoxObject::EnableKeyboardNavigator(PRBool aEnableKeyboardNavigator)
 {
   // Use ignorekeys="true" on the popup instead of using this function.
   if (aEnableKeyboardNavigator)
+    mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::ignorekeys, PR_TRUE);
+  else
     mContent->SetAttr(kNameSpaceID_None, nsGkAtoms::ignorekeys,
                       NS_LITERAL_STRING("true"), PR_TRUE);
-  else
-    mContent->UnsetAttr(kNameSpaceID_None, nsGkAtoms::ignorekeys, PR_TRUE);
 
   return NS_OK;
 }
