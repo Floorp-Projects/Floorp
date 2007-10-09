@@ -212,12 +212,16 @@ nsXULPopupManager::GetSubmenuWidgetChain(nsISupportsArray **_retval)
 
 nsIFrame*
 nsXULPopupManager::GetFrameOfTypeForContent(nsIContent* aContent,
-                                            nsIAtom* aFrameType)
+                                            nsIAtom* aFrameType,
+                                            PRBool aShouldFlush)
 {
   nsIDocument *document = aContent->GetCurrentDoc();
   if (document) {
-    nsIPresShell* presShell = document->GetPrimaryShell();
+    nsCOMPtr<nsIPresShell> presShell = document->GetPrimaryShell();
     if (presShell) {
+      if (aShouldFlush)
+        presShell->FlushPendingNotifications(Flush_Frames);
+
       nsIFrame* frame = presShell->GetPrimaryFrameFor(aContent);
       if (frame && frame->GetType() == aFrameType)
         return frame;
@@ -230,15 +234,16 @@ nsXULPopupManager::GetFrameOfTypeForContent(nsIContent* aContent,
 nsMenuFrame*
 nsXULPopupManager::GetMenuFrameForContent(nsIContent* aContent)
 {
+  // as ShowMenu is called from frames, don't flush to be safe.
   return static_cast<nsMenuFrame *>
-                    (GetFrameOfTypeForContent(aContent, nsGkAtoms::menuFrame));
+                    (GetFrameOfTypeForContent(aContent, nsGkAtoms::menuFrame, PR_FALSE));
 }
 
 nsMenuPopupFrame*
 nsXULPopupManager::GetPopupFrameForContent(nsIContent* aContent)
 {
   return static_cast<nsMenuPopupFrame *>
-                    (GetFrameOfTypeForContent(aContent, nsGkAtoms::menuPopupFrame));
+                    (GetFrameOfTypeForContent(aContent, nsGkAtoms::menuPopupFrame, PR_TRUE));
 }
 
 nsMenuChainItem*
