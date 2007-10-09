@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -41,8 +41,8 @@ TEST_BIN=${TEST_BIN:-$TEST_DIR/bin}
 source ${TEST_BIN}/library.sh
 
 if [[ -z "$1" ]]; then
-  echo smoke-build.sh directorypattern
-  exit 2
+    echo smoke-build.sh directorypattern
+    exit 1
 fi
 
 for filepath in $@; do

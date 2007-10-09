@@ -242,9 +242,11 @@ nsTextBoxFrame::UpdateAccesskey(nsWeakFrame& aWeakThis)
         // may not be the right one. Pushing the context of mContent so that
         // if nsIDOMXULLabelElement is implemented in XBL, we don't get a
         // security exception.
-        nsCxPusher cx(mContent);
-        labelElement->GetAccessKey(accesskey);
-        NS_ENSURE_TRUE(aWeakThis.IsAlive(), PR_FALSE);
+        nsCxPusher cx;
+        if (cx.Push(mContent)) {
+          labelElement->GetAccessKey(accesskey);
+          NS_ENSURE_TRUE(aWeakThis.IsAlive(), PR_FALSE);
+        }
     }
     else {
         mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accesskey);

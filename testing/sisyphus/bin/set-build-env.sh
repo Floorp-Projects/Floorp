@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/bin/bash
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -38,9 +38,9 @@
 # ***** END LICENSE BLOCK *****
 
 export BUILDDIR=/work/mozilla/builds
-export SHELL=/usr/local/bin/bash
-export CONFIG_SHELL=/usr/local/bin/bash
-export CONFIGURE_ENV_ARGS=/usr/local/bin/bash 
+export SHELL=/bin/bash
+export CONFIG_SHELL=/bin/bash
+export CONFIGURE_ENV_ARGS=/bin/bash 
 export MOZ_CVS_FLAGS="-z3 -q"
 export CVSROOT=:pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot
 export MOZILLA_OFFICIAL=1
@@ -70,8 +70,8 @@ myexit()
 
     case $0 in
         *bash*)
-	  # prevent "sourced" script calls from 
-          # exiting the current shell.
+	        # prevent "sourced" script calls from 
+            # exiting the current shell.
             break 99;;
         *)
             exit $myexit_status;;
@@ -92,7 +92,7 @@ for step in step1; do # dummy loop for handling exits
       esac
     done
 
-# echo product=$product, branch=$branch, buildtype=$buildtype, extra=$extra
+    # echo product=$product, branch=$branch, buildtype=$buildtype, extra=$extra
 
     if [[ -z "$product" || -z "$branch" || -z "$buildtype" ]]; then
         echo -n "missing"
@@ -106,7 +106,7 @@ for step in step1; do # dummy loop for handling exits
             echo -n " -T buildtype"
         fi
         usage
-        myexit 2
+        myexit 1
     fi
 
     if [[ $branch == "1.8.0" ]]; then
@@ -117,12 +117,15 @@ for step in step1; do # dummy loop for handling exits
         export BRANCH_CO_FLAGS="";
     else
         echo "Unknown branch: $branch"
-        myexit 2
+        myexit 1
+    fi
+
+    if [[ -n "$MOZ_CO_DATE" ]]; then
+        export DATE_CO_FLAGS="-D $MOZ_CO_DATE"
     fi
 
     if [[ -n "$WINDIR" ]] ; then
         OSID=win32
-#	app=bin
         export platform=i686
 
         if echo $branch | egrep -q '^1\.8'; then
@@ -148,30 +151,35 @@ for step in step1; do # dummy loop for handling exits
     else
         export TREE="$BUILDDIR/$branch-$extra"
 
-	#
-	# extras can't be placed in mozconfigs since not all parts
-	# of the build system use mozconfig (e.g. js shell) and since
-	# the obj directory is not configurable for them as well thus
-	# requiring separate source trees
-	#
+        #
+        # extras can't be placed in mozconfigs since not all parts
+        # of the build system use mozconfig (e.g. js shell) and since
+        # the obj directory is not configurable for them as well thus
+        # requiring separate source trees
+        #
 
-        if [[ "$extra" == "too-much-gc" ]]; then
-            export XCFLAGS="-DWAY_TOO_MUCH_GC=1"
-            export CFLAGS="-DWAY_TOO_MUCH_GC=1"
-            export CXXFLAGS="-DWAY_TOO_MUCH_GC=1"
-        elif [[ "$extra" == "gcov" ]]; then
+        case "$extra" in
+            too-much-gc)
+                export XCFLAGS="-DWAY_TOO_MUCH_GC=1"
+                export CFLAGS="-DWAY_TOO_MUCH_GC=1"
+                export CXXFLAGS="-DWAY_TOO_MUCH_GC=1"
+                ;;
+            gcov)
 
-            if [[ "$OSID" == "win32" ]]; then
-                echo "win32 does not support gcov"
-                myexit 2
-            fi
-            export CFLAGS="--coverage"
-            export CXXFLAGS="--coverage"
-            export XCFLAGS="--coverage"
-            export OS_CFLAGS="--coverage"
-            export LDFLAGS="--coverage"
-            export XLDOPTS="--coverage"	
-        fi
+                if [[ "$OSID" == "win32" ]]; then
+                    echo "win32 does not support gcov"
+                    myexit 1
+                fi
+                export CFLAGS="--coverage"
+                export CXXFLAGS="--coverage"
+                export XCFLAGS="--coverage"
+                export OS_CFLAGS="--coverage"
+                export LDFLAGS="--coverage"
+                export XLDOPTS="--coverage"	
+                ;;
+            jprof)
+                ;;
+        esac
     fi
 
     if [[ ! -d $TREE ]]; then

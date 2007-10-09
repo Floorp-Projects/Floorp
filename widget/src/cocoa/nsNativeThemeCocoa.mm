@@ -102,6 +102,14 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
 }
 
 
+static PRBool
+IsTransformOnlyTranslateOrFlip(CGAffineTransform aTransform)
+{
+  return (aTransform.a == 1.0f && aTransform.b == 0.0f && 
+          aTransform.c == 0.0f && (aTransform.d == 1.0f || aTransform.d == -1.0f));
+}
+
+
 void
 nsNativeThemeCocoa::DrawCheckboxRadio(CGContextRef cgContext, ThemeButtonKind inKind,
                                       const HIRect& inBoxRect, PRBool inChecked,
@@ -181,7 +189,13 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
     drawFrame.size.height = offscreenHeight - NATIVE_PUSH_BUTTON_HEIGHT_DIFF;
 
     // draw into offscreen image
-    [image lockFocus];
+    NS_DURING
+      [image lockFocus];
+    NS_HANDLER
+      NS_ASSERTION(0, "Could not lock focus on offscreen buffer");
+      [image release];
+      return;
+    NS_ENDHANDLER
     [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationLow];
     HIThemeDrawButton(&drawFrame, &bdi, (CGContext*)[[NSGraphicsContext currentContext] graphicsPort], kHIThemeOrientationInverted, NULL);
     [image unlockFocus];
@@ -447,6 +461,7 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   aTdi.max = maxpos;
   aTdi.value = curpos;
   aTdi.attributes = 0;
+  aTdi.enableState = kThemeTrackActive;
   if (isHorizontal)
     aTdi.attributes |= kThemeTrackHorizontal;
 
@@ -494,9 +509,43 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
 void
 nsNativeThemeCocoa::DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRect, nsIFrame *aFrame)
 {
+  // If we're drawing offscreen, make the origin (0, 0), since that's where in
+  // the offscreen buffer we'll be drawing.
+  PRBool drawOnScreen = IsTransformOnlyTranslateOrFlip(CGContextGetCTM(aCGContext));
+  HIRect drawRect = drawOnScreen ? aBoxRect : CGRectMake(0, 0, aBoxRect.size.width, aBoxRect.size.height);
   HIThemeTrackDrawInfo tdi;
-  GetScrollbarDrawInfo(tdi, aFrame, aBoxRect, PR_TRUE); //True means we want the press states
-  ::HIThemeDrawTrack(&tdi, NULL, aCGContext, HITHEME_ORIENTATION);
+  GetScrollbarDrawInfo(tdi, aFrame, drawRect, PR_TRUE); //True means we want the press states
+
+  if (drawOnScreen)
+    ::HIThemeDrawTrack(&tdi, NULL, aCGContext, HITHEME_ORIENTATION);
+  else {
+    NSImage *buffer = [[NSImage alloc] initWithSize:NSMakeSize(aBoxRect.size.width, aBoxRect.size.height)];
+    NS_DURING
+      [buffer lockFocus];
+    NS_HANDLER
+      NS_ASSERTION(0, "Could not lock focus on offscreen buffer");
+      [buffer release];
+      return;
+    NS_ENDHANDLER
+    ::HIThemeDrawTrack(&tdi, NULL, (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort],
+                       kHIThemeOrientationInverted);
+    [buffer unlockFocus];
+    
+    [NSGraphicsContext saveGraphicsState];
+    [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:aCGContext flipped:YES]];
+
+    // We need to flip the buffer when we draw it.
+    CGContextTranslateCTM(aCGContext, 0, aBoxRect.size.height + (2 * aBoxRect.origin.y));
+    CGContextScaleCTM(aCGContext, 1.0f, -1.0f);
+    [buffer drawInRect:*(NSRect*)&aBoxRect
+              fromRect:NSZeroRect
+             operation:NSCompositeSourceOver
+              fraction:1.0];
+
+    [NSGraphicsContext restoreGraphicsState];
+
+    [buffer release];
+  }
 }
 
 
@@ -561,6 +610,10 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   CGContextSaveGState(cgContext);
   //CGContextSetCTM(cgContext, CGAffineTransformIdentity);
 
+  // Apply any origin offset we have first, so it gets picked up by any other
+  // transforms we have.
+  CGContextTranslateCTM(cgContext, offsetX, offsetY);
+
   // I -think- that this context will always have an identity
   // transform (since we don't maintain a transform on it in
   // cairo-land, and instead push/pop as needed)
@@ -568,15 +621,15 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
     // If we have a scale, I think we've already lost; so don't round
     // anything here
     CGContextConcatCTM(cgContext,
-                       CGAffineTransformMake(mat.xx, mat.xy,
-                                             mat.yx, mat.yy,
+                       CGAffineTransformMake(mat.xx, mat.yx,
+                                             mat.xy, mat.yy,
                                              mat.x0, mat.y0));
   } else {
     // Otherwise, we round the x0/y0, because otherwise things get rendered badly
     // XXX how should we be rounding the x0/y0?
     CGContextConcatCTM(cgContext,
-                       CGAffineTransformMake(mat.xx, mat.xy,
-                                             mat.yx, mat.yy,
+                       CGAffineTransformMake(mat.xx, mat.yx,
+                                             mat.xy, mat.yy,
                                              floor(mat.x0 + 0.5),
                                              floor(mat.y0 + 0.5)));
   }
@@ -585,6 +638,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   if (1 /*aWidgetType == NS_THEME_TEXTFIELD*/) {
     fprintf(stderr, "Native theme drawing widget %d [%p] dis:%d in rect [%d %d %d %d]\n",
             aWidgetType, aFrame, IsDisabled(aFrame), aRect.x, aRect.y, aRect.width, aRect.height);
+    fprintf(stderr, "Cairo matrix: [%f %f %f %f %f %f]\n",
+            mat.xx, mat.yx, mat.xy, mat.yy, mat.x0, mat.y0);
     fprintf(stderr, "Native theme xform[0]: [%f %f %f %f %f %f]\n",
             mm0.a, mm0.b, mm0.c, mm0.d, mm0.tx, mm0.ty);
     CGAffineTransform mm = CGContextGetCTM(cgContext);
@@ -597,8 +652,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
                               NSAppUnitsToIntPixels(aRect.y, p2a),
                               NSAppUnitsToIntPixels(aRect.width, p2a),
                               NSAppUnitsToIntPixels(aRect.height, p2a));
-  macRect.origin.x += offsetX;
-  macRect.origin.y += offsetY;
 
   // 382049 - need to explicitly set the composite operation to sourceOver
   CGContextSetCompositeOperation(cgContext, kPrivateCGCompositeSourceOver);

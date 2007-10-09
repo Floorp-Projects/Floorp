@@ -413,9 +413,22 @@ int main(int argc, char** argv)
       return 0;
     }
 
-    string product = queryParameters["ProductName"];
-    string vendor = queryParameters["Vendor"];
-    if (!UIGetSettingsPath(vendor, product, gSettingsPath)) {
+    // Hopefully the settings path exists in the environment. Try that before
+    // asking the platform-specific code to guess.
+    static const char kDataDirKey[] = "MOZ_CRASHREPORTER_DATA_DIRECTORY";
+    const char *settingsPath = getenv(kDataDirKey);
+    if (settingsPath && *settingsPath) {
+      gSettingsPath = settingsPath;
+    }
+    else {
+      string product = queryParameters["ProductName"];
+      string vendor = queryParameters["Vendor"];
+      if (!UIGetSettingsPath(vendor, product, gSettingsPath)) {
+        gSettingsPath.clear();
+      }
+    }
+
+    if (gSettingsPath.empty() || !UIEnsurePathExists(gSettingsPath)) {
       UIError(gStrings[ST_ERROR_NOSETTINGSPATH]);
       return 0;
     }

@@ -75,7 +75,7 @@ NS_IMPL_ISUPPORTS1(nsHTMLStyleSheet::HTMLColorRule, nsIStyleRule)
 NS_IMETHODIMP
 nsHTMLStyleSheet::HTMLColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  if (aRuleData->mSID == eStyleStruct_Color) {
+  if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Color)) {
     if (aRuleData->mColorData->mColor.GetUnit() == eCSSUnit_Null)
       aRuleData->mColorData->mColor = nsCSSValue(mColor);
   }
@@ -126,7 +126,7 @@ static void PostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleDa
 NS_IMETHODIMP
 nsHTMLStyleSheet::TableTHRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  if (aRuleData && aRuleData->mSID == eStyleStruct_Text) {
+  if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Text)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
     aRuleData->mPostResolveCallback = &PostResolveCallback;
   }
@@ -212,7 +212,7 @@ static void TbodyPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aR
 NS_IMETHODIMP
 nsHTMLStyleSheet::TableTbodyRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
+  if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
     aRuleData->mPostResolveCallback = &TbodyPostResolveCallback;
   }
@@ -231,7 +231,7 @@ static void RowPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRul
 NS_IMETHODIMP
 nsHTMLStyleSheet::TableRowRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
+  if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
     aRuleData->mPostResolveCallback = &RowPostResolveCallback;
   }
@@ -249,7 +249,7 @@ static void ColgroupPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData*
 NS_IMETHODIMP
 nsHTMLStyleSheet::TableColgroupRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
+  if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
     aRuleData->mPostResolveCallback = &ColgroupPostResolveCallback;
   }
@@ -278,7 +278,7 @@ static void UngroupedColPostResolveCallback(nsStyleStruct* aStyleStruct,
 NS_IMETHODIMP
 nsHTMLStyleSheet::TableColRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
+  if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
     aRuleData->mPostResolveCallback = &ColPostResolveCallback;
   }
@@ -288,7 +288,7 @@ nsHTMLStyleSheet::TableColRule::MapRuleInfoInto(nsRuleData* aRuleData)
 NS_IMETHODIMP
 nsHTMLStyleSheet::TableUngroupedColRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  if (aRuleData && aRuleData->mSID == eStyleStruct_Border) {
+  if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Border)) {
     aRuleData->mCanStoreInRuleTree = PR_FALSE;
     aRuleData->mPostResolveCallback = &UngroupedColPostResolveCallback;
   }

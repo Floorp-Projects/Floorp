@@ -203,6 +203,9 @@ public:
     // nsIKBStateControl interface
     NS_IMETHOD ResetInputState();
 
+    NS_IMETHOD BeginSecureKeyboardInput();
+    NS_IMETHOD EndSecureKeyboardInput();
+
 protected:
   
   nsIWidget*           mParent;         // if we're a popup, this is our parent [WEAK]

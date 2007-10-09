@@ -337,9 +337,7 @@ nsSoftwareUpdate::InstallChrome( PRUint32 aType,
 
     if (!info->GetChromeRegistry() ||
 #ifdef MOZ_XUL_APP
-        !info->GetExtensionManager() ||
-        !info->GetFileJARURL() ||
-        !info->GetManifestURL()
+        !info->GetExtensionManager()
 #else
         info->GetFileJARSpec().IsEmpty()
 #endif

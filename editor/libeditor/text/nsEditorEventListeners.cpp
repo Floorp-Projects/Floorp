@@ -524,25 +524,21 @@ nsresult
 nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
 {
   nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (!presShell)
+    return NS_OK;
+
   if (!mCaret)
   {
-    if (presShell)
+    mCaret = do_CreateInstance("@mozilla.org/layout/caret;1");
+    if (mCaret)
     {
-      mCaret = do_CreateInstance("@mozilla.org/layout/caret;1");
-      if (mCaret)
-      {
-        mCaret->Init(presShell);
-        mCaret->SetCaretReadOnly(PR_TRUE);
-
-        mOtherCaret = presShell->SetCaret(mCaret);
-      }
-      mCaretDrawn = PR_FALSE;
+      mCaret->Init(presShell);
+      mCaret->SetCaretReadOnly(PR_TRUE);
     }
+    mCaretDrawn = PR_FALSE;
   }
-  else if (presShell)
-  {
-    presShell->SetCaret(mCaret);
-  }
+
+  presShell->SetCaret(mCaret);
 
   return DragOver(aDragEvent);
 }
@@ -624,6 +620,10 @@ nsTextEditorDragListener::DragExit(nsIDOMEvent* aDragEvent)
     mCaretDrawn = PR_FALSE;
   }
 
+  nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+  if (presShell)
+    presShell->RestoreCaret();
+
   return NS_OK;
 }
 
@@ -644,11 +644,8 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
     nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
     if (presShell)
     {
-      NS_ASSERTION(mOtherCaret, "Where'd my other caret go?");
-      mCaret = presShell->SetCaret(mOtherCaret);
+      presShell->RestoreCaret();
     }
-
-    mOtherCaret = mCaret = nsnull;
   }
 
   if (!mEditor)
@@ -1126,7 +1123,7 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
 
       nsCOMPtr<nsISelectionController> selCon;
       mEditor->GetSelectionController(getter_AddRefs(selCon));
-      if (selCon && editableRoot)
+      if (selCon)
       {
         nsCOMPtr<nsISelection> selection;
         selCon->GetSelection(nsISelectionController::SELECTION_NORMAL,
@@ -1152,6 +1149,14 @@ nsTextEditorFocusListener::Focus(nsIDOMEvent* aEvent)
         if (selectionPrivate)
         {
           selectionPrivate->SetAncestorLimiter(editableRoot);
+        }
+
+        if (!editableRoot) {
+          PRInt32 rangeCount;
+          selection->GetRangeCount(&rangeCount);
+          if (rangeCount == 0) {
+            mEditor->BeginningOfDocument();
+          }
         }
       }
     }

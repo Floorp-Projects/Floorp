@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash -e
+#!/bin/bash -e
 # -*- Mode: Shell-script; tab-width: 4; indent-tabs-mode: nil; -*-
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -45,77 +45,88 @@ source $TEST_BIN/set-build-env.sh $@
 
 case $product in
     firefox|thunderbird)
-	cd $TREE/mozilla
+        cd $TREE/mozilla
 
-	if ! make -f client.mk build 2>&1; then
-	    error "during build"
-	fi
+        if ! make -f client.mk build 2>&1; then
 
-	case "$OSID" in
-	    mac) 
-		if [[ "$buildtype" == "debug" ]]; then
-		    if [[ "$product" == "firefox" ]]; then
-			executablepath=$product-$buildtype/dist/FirefoxDebug.app/Contents/MacOS
-		    elif [[ "$product" == "thunderbird" ]]; then
-			executablepath=$product-$buildtype/dist/ThunderbirdDebug.app/Contents/MacOS
-		    fi
-		else
-		    if [[ "$product" == "firefox" ]]; then
-			executablepath=$product-$buildtype/dist/Firefox.app/Contents/MacOS
-		    elif [[ "$product" == "thunderbird" ]]; then
-			executablepath=$product-$buildtype/dist/Thunderbird.app/Contents/MacOS
-		    fi
-		fi
-		;;
-	    "linux")
-		executablepath=$product-$buildtype/dist/bin
-		;;
-	esac
+            if [[ -z "$TEST_FORCE_CLOBBER_ON_ERROR" ]]; then
+                error "error during build"
+            else
+                echo "error occured during build. attempting a clobber build"
+                if ! make -f client.mk distclean 2>&1; then
+                    error "error during forced clobber"
+                fi
+                if ! make -f client.mk build 2>&1; then
+                    error "error during forced build"
+                fi
+            fi
+        fi
 
-	if [[ "$OSID" != "win32" ]]; then
-    #
-    # patch unix-like startup scripts to exec instead of 
-    # forking new processes
-    #
-	    executable=`get_executable $product $branch $executablepath`
-	    if [[ -z "$executable" ]]; then
-		error "get_executable $product $branch $executablepath returned empty path"
-	    fi
+        case "$OSID" in
+            mac) 
+                if [[ "$buildtype" == "debug" ]]; then
+                    if [[ "$product" == "firefox" ]]; then
+                        executablepath=$product-$buildtype/dist/FirefoxDebug.app/Contents/MacOS
+                    elif [[ "$product" == "thunderbird" ]]; then
+                        executablepath=$product-$buildtype/dist/ThunderbirdDebug.app/Contents/MacOS
+                    fi
+                else
+                    if [[ "$product" == "firefox" ]]; then
+                        executablepath=$product-$buildtype/dist/Firefox.app/Contents/MacOS
+                    elif [[ "$product" == "thunderbird" ]]; then
+                        executablepath=$product-$buildtype/dist/Thunderbird.app/Contents/MacOS
+                    fi
+                fi
+                ;;
+            linux)
+            executablepath=$product-$buildtype/dist/bin
+            ;;
+        esac
+
+        if [[ "$OSID" != "win32" ]]; then
+            #
+            # patch unix-like startup scripts to exec instead of 
+            # forking new processes
+            #
+            executable=`get_executable $product $branch $executablepath`
+            if [[ -z "$executable" ]]; then
+                error "get_executable $product $branch $executablepath returned empty path"
+            fi
 
 
-	    executabledir=`dirname $executable`
+            executabledir=`dirname $executable`
 
-    # patch to use exec to prevent forked processes
-	    cd "$executabledir"
-	    if [ -e "$product" ]; then
-		echo "$SCRIPT: patching $product"
-		cp $TEST_BIN/$product.diff .
-		patch -N -p0 < $product.diff
-	    fi
-	    if [ -e run-mozilla.sh ]; then
-		echo "$SCRIPT: patching run-mozilla.sh"
-		cp $TEST_BIN/run-mozilla.diff .
-		patch -N -p0 < run-mozilla.diff
-	    fi
-	fi
-	;;
+            # patch to use exec to prevent forked processes
+            cd "$executabledir"
+            if [ -e "$product" ]; then
+                echo "$SCRIPT: patching $product"
+                cp $TEST_BIN/$product.diff .
+                patch -N -p0 < $product.diff
+            fi
+            if [ -e run-mozilla.sh ]; then
+                echo "$SCRIPT: patching run-mozilla.sh"
+                cp $TEST_BIN/run-mozilla.diff .
+                patch -N -p0 < run-mozilla.diff
+            fi
+        fi
+        ;;
     js)
-	cd $TREE/mozilla/js/src
+    cd $TREE/mozilla/js/src
 
-	if [[ $buildtype == "debug" ]]; then
-	    export JSBUILDOPT=
-	else
-	    export JSBUILDOPT=BUILD_OPT=1
-	fi
+    if [[ $buildtype == "debug" ]]; then
+        export JSBUILDOPT=
+    else
+        export JSBUILDOPT=BUILD_OPT=1
+    fi
 
-	if ! make -f Makefile.ref ${JSBUILDOPT} clean 2>&1; then
-	    error "during js/src clean"
-	fi 
+    if ! make -f Makefile.ref ${JSBUILDOPT} clean 2>&1; then
+        error "during js/src clean"
+    fi 
 
-	if ! make -f Makefile.ref ${JSBUILDOPT} 2>&1; then
-	    error "during js/src build"
-	fi
-	;;
+    if ! make -f Makefile.ref ${JSBUILDOPT} 2>&1; then
+        error "during js/src build"
+    fi
+    ;;
 esac
 
 

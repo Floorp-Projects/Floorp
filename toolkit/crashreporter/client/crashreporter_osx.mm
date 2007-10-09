@@ -494,9 +494,6 @@ bool UIGetSettingsPath(const string& vendor,
 
   settingsPath = [destPath UTF8String];
 
-  if (!UIEnsurePathExists(settingsPath))
-    return false;
-
   return true;
 }
 

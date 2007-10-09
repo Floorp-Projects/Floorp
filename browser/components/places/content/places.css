@@ -10,4 +10,3 @@ hbox[type="places"] {
 menupopup[type="places"] {
   -moz-binding: url("chrome://browser/content/places/menu.xml#places-menupopup");
 }
-

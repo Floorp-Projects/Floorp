@@ -148,7 +148,7 @@ nsHTMLTableColElement::ParseAttribute(PRInt32 aNamespaceID,
 static 
 void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
 {
-  if (aData->mSID == eStyleStruct_Position &&
+  if ((aData->mSIDs & NS_STYLE_INHERIT_BIT(Position)) &&
       aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
     // width
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
@@ -167,7 +167,7 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
       }
     }
   }
-  else if (aData->mSID == eStyleStruct_Text) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Text)) {
     if (aData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
       // align: enum
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
@@ -175,7 +175,7 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
         aData->mTextData->mTextAlign.SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
     }
   }
-  else if (aData->mSID == eStyleStruct_TextReset) {
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(TextReset)) {
     if (aData->mTextData->mVerticalAlign.GetUnit() == eCSSUnit_Null) {
       // valign: enum
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::valign);
@@ -191,7 +191,7 @@ static
 void ColMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                               nsRuleData* aData)
 {
-  if (aData->mSID == eStyleStruct_Table && 
+  if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Table) && 
       aData->mTableData->mSpan.GetUnit() == eCSSUnit_Null) {
     // span: int
     const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::span);

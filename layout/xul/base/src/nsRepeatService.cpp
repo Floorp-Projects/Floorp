@@ -45,7 +45,7 @@
 #include "nsRepeatService.h"
 #include "nsIServiceManager.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
 #define INITAL_REPEAT_DELAY 250
 #define REPEAT_DELAY        25
 #else

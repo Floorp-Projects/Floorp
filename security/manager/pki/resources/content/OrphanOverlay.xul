@@ -67,11 +67,15 @@
 
     <hbox>
        <button id="orphan_viewButton" class="normal" 
-               label="&certmgr.view.label;"
+               label="&certmgr.view2.label;"
                accesskey="&certmgr.view.accesskey;"
                disabled="true" oncommand="viewCerts();"/>
+       <button id="orphan_exportButton" class="normal" 
+               label="&certmgr.export.label;"
+               accesskey="&certmgr.export.accesskey;"
+               disabled="true" oncommand="exportCerts();"/>
        <button id="orphan_deleteButton" class="normal" 
-               label="&certmgr.delete.label;"
+               label="&certmgr.delete2.label;"
                accesskey="&certmgr.delete.accesskey;"
                disabled="true" oncommand="deleteCerts();"/>
     </hbox>

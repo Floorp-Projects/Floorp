@@ -226,6 +226,7 @@ void nsLinkableAccessible::CacheActionContent()
   for (nsCOMPtr<nsIContent> walkUpContent(do_QueryInterface(mDOMNode));
        walkUpContent;
        walkUpContent = walkUpContent->GetParent()) {
+    PRBool isOnclick = nsAccUtils::HasListener(walkUpContent, NS_LITERAL_STRING("click"));
     nsIAtom *tag = walkUpContent->Tag();
     if ((tag == nsAccessibilityAtoms::a || tag == nsAccessibilityAtoms::area) &&
         walkUpContent->IsNodeOfType(nsINode::eHTML)) {
@@ -242,8 +243,16 @@ void nsLinkableAccessible::CacheActionContent()
           break;
         }
       }
+      if (SameCOMIdentity(mDOMNode, walkUpContent)) {
+        // This is the element that caused the creation of a linkable accessible
+        // Don't let it keep walking up, otherwise we may report the wrong container
+        // as the action node
+        mActionContent = walkUpContent;
+        mIsOnclick = isOnclick;
+        break;
+      }
     }
-    if (nsAccUtils::HasListener(walkUpContent, NS_LITERAL_STRING("click"))) {
+    if (isOnclick) {
       mActionContent = walkUpContent;
       mIsOnclick = PR_TRUE;
       break;

@@ -154,12 +154,7 @@ var popupTests = [
       // next item needs to be selected
       "popupshowing editpopup", "DOMMenuItemInactive item1",
       // not sure why the menu inactivated event is firing so late
-      "DOMMenuInactive filepopup", "DOMMenuBarInactive menubar",
-      // the new menu gets disabled and reenabled again, I suspect a
-      // check isn't done to see if the old value equals the new value
-      // somewhere
-      "DOMMenuItemInactive editmenu",
-      "DOMMenuBarActive menubar", "DOMMenuItemActive editmenu",
+      "DOMMenuInactive filepopup",
       // finally, the first item is activated and popupshown is fired
       "DOMMenuItemActive copy", "popupshown editpopup"
     ];

@@ -14,7 +14,7 @@
  * The Original Code is the Python XPCOM language bindings.
  *
  * The Initial Developer of the Original Code is
- * ActiveState Tool Corp. Portions created by ActiveState Tool Corp. are Copyright (C)  2001 ActiveState Tool Corp.  All Rights Reserved.
+ * ActiveState Tool Corp.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *

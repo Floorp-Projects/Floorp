@@ -105,7 +105,8 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
                   nsIDOMDocumentType* aDoctype,
                   nsIURI* aDocumentURI,
                   nsIURI* aBaseURI,
-                  nsIPrincipal* aPrincipal)
+                  nsIPrincipal* aPrincipal,
+                  PRBool aLoadedAsData)
 {
   // Note: can't require that aDocumentURI/aBaseURI/aPrincipal be non-null,
   // since at least one caller (XMLHttpRequest) doesn't have decent args to
@@ -125,6 +126,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
     return rv;
   }
 
+  doc->SetLoadedAsData(aLoadedAsData);
   doc->nsDocument::SetDocumentURI(aDocumentURI);
   // Must set the principal first, since SetBaseURI checks it.
   doc->SetPrincipal(aPrincipal);
@@ -629,19 +631,8 @@ nsXMLDocument::EndLoad()
     // document was loaded as pure data without any presentation
     // attached to it.
     nsEvent event(PR_TRUE, NS_LOAD);
-    nsEventStatus status = nsEventStatus_eIgnore;
-
-    nsIScriptGlobalObject* sgo = nsnull;
-    nsCOMPtr<nsIScriptGlobalObjectOwner> container =
-      do_QueryReferent(mDocumentContainer);
-    if (container) {
-      sgo = container->GetScriptGlobalObject();
-    }
-
-    nsCxPusher pusher(sgo);
-
     nsEventDispatcher::Dispatch(static_cast<nsIDocument*>(this), nsnull,
-                                &event, nsnull, &status);
+                                &event);
   }    
   nsDocument::EndLoad();  
 }
@@ -691,12 +682,19 @@ nsXMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");
 
+  PRBool hasHadScriptObject = PR_TRUE;
+  nsIScriptGlobalObject* scriptObject =
+    GetScriptHandlingObject(hasHadScriptObject);
+  NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
   nsCOMPtr<nsIDOMDocument> newDoc;
   nsresult rv = NS_NewDOMDocument(getter_AddRefs(newDoc), EmptyString(),
                                   EmptyString(), nsnull,
                                   nsIDocument::GetDocumentURI(),
-                                  nsIDocument::GetBaseURI(), NodePrincipal());
+                                  nsIDocument::GetBaseURI(), NodePrincipal(),
+                                  PR_TRUE);
   NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocument> document = do_QueryInterface(newDoc);
+  document->SetScriptHandlingObject(scriptObject);
 
   return CallQueryInterface(newDoc, aResult);
 }

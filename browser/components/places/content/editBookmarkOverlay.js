@@ -54,8 +54,8 @@ var gEditItemOverlay = {
   _uri: null,
   _itemId: -1,
   _itemType: -1,
+  _readOnly: false,
   _microsummaries: null,
-  _doneCallback: null,
   _hiddenRows: [],
   _observersAdded: false,
 
@@ -76,46 +76,83 @@ var gEditItemOverlay = {
 
   _showHideRows: function EIO__showHideRows() {
     var isBookmark = this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK;
-    this._element("nameRow").hidden = this._hiddenRows.indexOf("name") != -1;
-    this._element("folderRow").hidden =
+
+    this._element("nameRow").collapsed = this._hiddenRows.indexOf("name") != -1;
+    this._element("folderRow").collapsed =
       this._hiddenRows.indexOf("folderPicker") != -1;
-    this._element("tagsRow").hidden =
-      this._hiddenRows.indexOf("tags") != -1 || !isBookmark;
-    this._element("descriptionRow").hidden =
-      this._hiddenRows.indexOf("description") != -1;
-    this._element("locationRow").hidden =
-      this._hiddenRows.indexOf("location") != -1 || !isBookmark;
+    this._element("tagsRow").collapsed = !isBookmark ||
+      this._hiddenRows.indexOf("tags") != -1;
+    this._element("descriptionRow").collapsed =
+      this._hiddenRows.indexOf("description") != -1 ||
+      this._readOnly;
+    this._element("keywordRow").collapsed = !isBookmark || this._readOnly ||
+      this._hiddenRows.indexOf("keyword") != -1;
+    this._element("locationRow").collapsed = !isBookmark ||
+      this._hiddenRows.indexOf("location") != -1;
+    this._element("loadInSidebarCheckbox").collapsed = !isBookmark ||
+      this._readOnly || this._hiddenRows.indexOf("loadInSidebar") != -1;
+    this._element("feedLocationRow").collapsed = !this._isLivemark ||
+      this._hiddenRows.indexOf("feedLocation") != -1;
+    this._element("siteLocationRow").collapsed = !this._isLivemark ||
+      this._hiddenRows.indexOf("siteLocation") != -1;
   },
 
   /**
    * Initialize the panel
    */
   initPanel: function EIO_initPanel(aItemId, aInfo) {
+    const bms = PlacesUtils.bookmarks;
+
     this._folderMenuList = this._element("folderMenuList");
     this._folderTree = this._element("folderTree");
     this._itemId = aItemId;
-    this._itemType = PlacesUtils.bookmarks.getItemType(this._itemId);
+    this._itemType = bms.getItemType(this._itemId);
     this._determineInfo(aInfo);
 
+    var container = bms.getFolderIdForItem(this._itemId);
     if (this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK) {
-      this._uri = PlacesUtils.bookmarks.getBookmarkURI(this._itemId);
-      // tags field
-      this._element("tagsField").value =
-        PlacesUtils.tagging.getTagsForURI(this._uri).join(", ");
+      this._uri = bms.getBookmarkURI(this._itemId);
+      this._isLivemark = false;
+      if (PlacesUtils.livemarks.isLivemark(container))
+        this._readOnly = true;
+      else
+        this._readOnly = false;
 
-      this._element("locationField").value = this._uri.spec;
+      this._initTextField("locationField", this._uri.spec);
+      this._initTextField("tagsField",
+                           PlacesUtils.tagging
+                                      .getTagsForURI(this._uri).join(", "),
+                          false);
+      this._initTextField("keywordField",
+                          bms.getKeywordForBookmark(this._itemId));
+
+      // Load In Sidebar checkbox
+      this._element("loadInSidebarCheckbox").checked =
+        PlacesUtils.annotations.itemHasAnnotation(this._itemId,
+                                                  LOAD_IN_SIDEBAR_ANNO);
+    }
+    else {
+      this._readOnly = false;
+      this._isLivemark = PlacesUtils.livemarks.isLivemark(this._itemId);
+      if (this._isLivemark) {
+        var feedURI = PlacesUtils.livemarks.getFeedURI(this._itemId);
+        var siteURI = PlacesUtils.livemarks.getSiteURI(this._itemId);
+        this._initTextField("feedLocationField", feedURI.spec);
+        this._initTextField("siteLocationField", siteURI ? siteURI.spec : "");
+      }
+      this._uri = null;
     }
 
     // folder picker
-    this._initFolderMenuList();
+    this._initFolderMenuList(container);
 
     // name picker
     this._initNamePicker();
 
     // description field
-    this._element("descriptionField").value =
-      PlacesUtils.getItemDescription(this._itemId);
-
+    this._initTextField("descriptionField", 
+                        PlacesUtils.getItemDescription(this._itemId));
+    
     this._showHideRows();
 
     // observe changes
@@ -123,6 +160,20 @@ var gEditItemOverlay = {
       PlacesUtils.bookmarks.addObserver(this, false);
       window.addEventListener("unload", this, false);
       this._observersAdded = true;
+    }
+  },
+
+  _initTextField: function(aTextFieldId, aValue, aReadOnly) {
+    var field = this._element(aTextFieldId);
+    field.readOnly = aReadOnly !== undefined ? aReadOnly : this._readOnly;
+
+    if (field.value != aValue) {
+      field.value = aValue;
+
+      // clear the undo stack
+      var editor = field.editor;
+      if (editor)
+        editor.transactionManager.clear();
     }
   },
 
@@ -148,16 +199,15 @@ var gEditItemOverlay = {
     return folderMenuItem;
   },
 
-  _initFolderMenuList: function EIO__initFolderMenuList() {
+  _initFolderMenuList: function EIO__initFolderMenuList(aSelectedFolder) {
     // clean up first
     var menupopup = this._folderMenuList.menupopup;
     while (menupopup.childNodes.length > 4)
       menupopup.removeChild(menupopup.lastChild);
 
-    var container = PlacesUtils.bookmarks.getFolderIdForItem(this._itemId);
-
     // only show "All Bookmarks" if the url isn't bookmarked somewhere else
-    this._element("unfiledRootItem").hidden = container != PlacesUtils.unfiledRootId;
+    this._element("unfiledRootItem").hidden =
+      aSelectedFolder != PlacesUtils.unfiledRootId;
 
     // List of recently used folders:
     var annos = PlacesUtils.annotations;
@@ -189,11 +239,12 @@ var gEditItemOverlay = {
       this._appendFolderItemToMenupopup(menupopup, folders[i].folderId);
     }
 
-    var defaultItem = this._getFolderMenuItem(container, true);
+    var defaultItem = this._getFolderMenuItem(aSelectedFolder, true);
     this._folderMenuList.selectedItem = defaultItem;
 
     // Hide the folders-separator if no folder is annotated as recently-used
     this._element("foldersSeparator").hidden = (menupopup.childNodes.length <= 4);
+    this._folderMenuList.disabled = this._readOnly;
   },
 
   QueryInterface: function EIO_QueryInterface(aIID) {
@@ -265,7 +316,8 @@ var gEditItemOverlay = {
 
     var itemToSelect = userEnteredNameField;
     try {
-      if (this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK)
+      if (this._itemType == Ci.nsINavBookmarksService.TYPE_BOOKMARK &&
+          !this._readOnly)
         this._microsummaries = this._mss.getMicrosummaries(this._uri, -1);
     }
     catch(ex) {
@@ -303,6 +355,12 @@ var gEditItemOverlay = {
       namePicker.selectedItem = itemToSelect;
 
     namePicker.setAttribute("droppable", droppable);
+    namePicker.readOnly = this._readOnly;
+
+    // clear the undo stack
+    var editor = namePicker.editor;
+    if (editor)
+      editor.transactionManager.clear();
   },
 
   // nsIMicrosummaryObserver
@@ -455,6 +513,52 @@ var gEditItemOverlay = {
     }
   },
 
+  onKeywordFieldBlur: function EIO_onKeywordFieldBlur() {
+    var keyword = this._element("keywordField").value;
+    if (keyword != PlacesUtils.bookmarks.getKeywordForBookmark(this._itemId)) {
+      var txn = PlacesUtils.ptm.editBookmarkKeyword(this._itemId, keyword);
+      PlacesUtils.ptm.commitTransaction(txn);
+    }
+  },
+
+  onFeedLocationFieldBlur: function EIO_onFeedLocationFieldBlur() {
+    // XXXmano: uri fixup
+    var uri;
+    try {
+      uri = IO.newURI(this._element("feedLocationField").value);
+    }
+    catch(ex) { return; }
+
+    var currentFeedURI = PlacesUtils.livemarks.getFeedURI(this._itemId);
+    if (!currentFeedURI.equals(uri)) {
+      var txn = PlacesUtils.ptm.editLivemarkFeedURI(this._itemId, uri);
+      PlacesUtils.ptm.commitTransaction(txn);
+    }
+  },
+
+  onSiteLocationFieldBlur: function EIO_onSiteLocationFieldBlur() {
+    // XXXmano: uri fixup
+    var uri = null;
+    try {
+      uri = IO.newURI(this._element("siteLocationField").value);
+    }
+    catch(ex) {  }
+
+    var currentSiteURI = PlacesUtils.livemarks.getSiteURI(this._itemId);
+    if (!uri || !currentSiteURI.equals(uri)) {
+      var txn = PlacesUtils.ptm.editLivemarkSiteURI(this._itemId, uri);
+      PlacesUtils.ptm.commitTransaction(txn);
+    }
+  },
+
+  onLoadInSidebarCheckboxCommand:
+  function EIO_onLoadInSidebarCheckboxCommand() {
+    var loadInSidebarChecked = this._element("loadInSidebarCheckbox").checked;
+    var txn = PlacesUtils.ptm.setLoadInSidebar(this._itemId,
+                                               loadInSidebarChecked);
+    PlacesUtils.ptm.commitTransaction(txn);
+  },
+
   toggleFolderTreeVisibility: function EIO_toggleFolderTreeVisibility() {
     var expander = this._element("foldersExpander");
     if (!this._folderTree.collapsed) {
@@ -545,7 +649,7 @@ var gEditItemOverlay = {
     }
 
     // Update folder-tree selection
-    if (isElementVisible(this._folderTree)) {
+    if (!this._folderTree.collapsed) {
       var selectedNode = this._folderTree.selectedNode;
       if (!selectedNode || selectedNode.itemId != container)
         this._folderTree.selectFolders([container]);
@@ -598,7 +702,7 @@ var gEditItemOverlay = {
   toggleTagsSelector: function EIO_toggleTagsSelector() {
     var tagsSelector = this._element("tagsSelector");
     var expander = this._element("tagsSelectorExpander");
-    if (!isElementVisible(tagsSelector)) {
+    if (tagsSelector.collapsed) {
       expander.className = "expander-up";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextup"));
@@ -607,14 +711,14 @@ var gEditItemOverlay = {
 
       // This is a no-op if we've added the listener.
       tagsSelector.addEventListener("CheckboxStateChange", this, false);
+      tagsSelector.collapsed = false;
     }
     else {
       expander.className = "expander-down";
       expander.setAttribute("tooltiptext",
                             expander.getAttribute("tooltiptextdown"));
+      tagsSelector.collapsed = true;
     }
-
-    tagsSelector.collapsed = !tagsSelector.collapsed;
   },
 
   _getTagsArrayFromTagField: function EIO__getTagsArrayFromTagField() {
@@ -670,26 +774,53 @@ var gEditItemOverlay = {
 
       var userEnteredNameField = this._element("userEnteredName");
       if (userEnteredNameField.value != aValue) {
-          userEnteredNameField.value = aValue;
+        userEnteredNameField.value = aValue;
         var namePicker = this._element("namePicker");
-        if (namePicker.selectedItem == userEnteredNameField)
+        if (namePicker.selectedItem == userEnteredNameField) {
           namePicker.label = aValue;
+
+          // clear undo stack
+          namePicker.editor.transactionManager.clear();
+        }
       }
       break;
     case "uri":
       var locationField = this._element("locationField");
       if (locationField.value != aValue) {
-        locationField.value = aValue;
         this._uri = IO.newURI(aValue);
+        this._initTextField("locationField", this._uri.spec);
         this._initNamePicker(); // for microsummaries
-        this._element("tagsField").value =
-          PlacesUtils.tagging.getTagsForURI(this._uri).join(", ");
+        this._initTextField("tagsField",
+                             PlacesUtils.tagging
+                                        .getTagsForURI(this._uri).join(", "),
+                            false);
         this._rebuildTagsSelectorList();
       }
       break;
+    case "keyword":
+      this._initTextField("keywordField",
+                          PlacesUtils.bookmarks
+                                     .getKeywordForBookmark(this._itemId));
+      break;
     case DESCRIPTION_ANNO:
-      this._element("descriptionField").value =
-        PlacesUtils.annotations.getItemDescription(this._itemId);
+      this._initTextField("descriptionField",
+                          PlacesUtils.getItemDescription(this._itemId));
+      break;
+    case LOAD_IN_SIDEBAR_ANNO:
+      this._element("loadInSidebarCheckbox").checked =
+        PlacesUtils.annotations.itemHasAnnotation(this._itemId,
+                                                  LOAD_IN_SIDEBAR_ANNO);
+      break;
+    case LMANNO_FEEDURI:
+      var feedURISpec = PlacesUtils.livemarks.getFeedURI(this._itemId).spec;
+      this._initTextField("feedLocationField", feedURISpec);
+      break;
+    case LMANNO_SITEURI:
+      var siteURISpec = "";
+      var siteURI = PlacesUtils.livemarks.getSiteURI(this._itemId);
+      if (siteURI)
+        siteURISpec = siteURI.spec;
+      this._initTextField("siteLocationField", siteURISpec);
       break;
     }
   },

@@ -115,7 +115,6 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
       }
       if (NS_FRAME_OVERFLOW_IS_INCOMPLETE(aStatus)) {
         nextFrame->AddStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
-        NS_FRAME_SET_INCOMPLETE(aStatus); // page frames can't have overflow
       }
     }
 
@@ -147,10 +146,10 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
                   !frame->GetNextInFlow(), "bad child flow list");
   }
   // Reflow our fixed frames 
-  mFixedContainer.Reflow(this, aPresContext, aReflowState,
+  mFixedContainer.Reflow(this, aPresContext, aReflowState, aStatus,
                          aReflowState.availableWidth,
                          aReflowState.availableHeight,
-                         PR_TRUE, PR_TRUE); // XXX could be optimized
+                         PR_FALSE, PR_TRUE, PR_TRUE); // XXX could be optimized
 
   // Return our desired size
   aDesiredSize.width = aReflowState.availableWidth;

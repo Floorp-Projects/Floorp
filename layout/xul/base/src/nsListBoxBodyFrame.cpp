@@ -730,8 +730,11 @@ nsListBoxBodyFrame::GetAvailableHeight()
 {
   nsIScrollableFrame* scrollFrame
     = nsLayoutUtils::GetScrollableFrameFor(this);
-  nsIScrollableView* scrollView = scrollFrame->GetScrollableView();
-  return scrollView->View()->GetBounds().height;
+  if (scrollFrame) {
+    nsIScrollableView* scrollView = scrollFrame->GetScrollableView();
+    return scrollView->View()->GetBounds().height;
+  }
+  return 0;
 }
 
 nscoord
@@ -954,11 +957,14 @@ nsListBoxBodyFrame::DoInternalPositionChanged(PRBool aUp, PRInt32 aDelta)
     // We have scrolled so much that all of our current frames will
     // go off screen, so blow them all away. Weeee!
     nsIFrame *currBox = mFrames.FirstChild();
+    nsCSSFrameConstructor* fc = PresContext()->PresShell()->FrameConstructor();
+    fc->BeginUpdate();
     while (currBox) {
       nsIFrame *nextBox = currBox->GetNextSibling();
       RemoveChildFrame(state, currBox);
       currBox = nextBox;
     }
+    fc->EndUpdate();
   }
 
   // clear frame markers so that CreateRows will re-create
@@ -1011,6 +1017,9 @@ nsListBoxBodyFrame::VerticalScroll(PRInt32 aPosition)
 {
   nsIScrollableFrame* scrollFrame
     = nsLayoutUtils::GetScrollableFrameFor(this);
+  if (!scrollFrame) {
+    return;
+  }
 
   nsPoint scrollPosition = scrollFrame->GetScrollPosition();
  
@@ -1090,6 +1099,8 @@ nsListBoxBodyFrame::DestroyRows(PRInt32& aRowsToLose)
   nsIFrame* childFrame = GetFirstFrame();
   nsBoxLayoutState state(PresContext());
 
+  nsCSSFrameConstructor* fc = PresContext()->PresShell()->FrameConstructor();
+  fc->BeginUpdate();
   while (childFrame && aRowsToLose > 0) {
     --aRowsToLose;
 
@@ -1098,6 +1109,7 @@ nsListBoxBodyFrame::DestroyRows(PRInt32& aRowsToLose)
 
     mTopFrame = childFrame = nextFrame;
   }
+  fc->EndUpdate();
 
   PresContext()->PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
@@ -1112,6 +1124,8 @@ nsListBoxBodyFrame::ReverseDestroyRows(PRInt32& aRowsToLose)
   nsIFrame* childFrame = GetLastFrame();
   nsBoxLayoutState state(PresContext());
 
+  nsCSSFrameConstructor* fc = PresContext()->PresShell()->FrameConstructor();
+  fc->BeginUpdate();
   while (childFrame && aRowsToLose > 0) {
     --aRowsToLose;
     
@@ -1121,6 +1135,7 @@ nsListBoxBodyFrame::ReverseDestroyRows(PRInt32& aRowsToLose)
 
     mBottomFrame = childFrame = prevFrame;
   }
+  fc->EndUpdate();
 
   PresContext()->PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
@@ -1275,11 +1290,15 @@ nsListBoxBodyFrame::ContinueReflow(nscoord height)
       nsIFrame* currFrame = startingPoint->GetNextSibling();
       nsBoxLayoutState state(PresContext());
 
+      nsCSSFrameConstructor* fc =
+        PresContext()->PresShell()->FrameConstructor();
+      fc->BeginUpdate();
       while (currFrame) {
         nsIFrame* nextFrame = currFrame->GetNextSibling();
         RemoveChildFrame(state, currFrame);
         currFrame = nextFrame;
       }
+      fc->EndUpdate();
 
       PresContext()->PresShell()->
         FrameNeedsReflow(this, nsIPresShell::eTreeChange,

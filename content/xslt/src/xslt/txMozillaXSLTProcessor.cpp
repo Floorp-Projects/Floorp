@@ -338,7 +338,8 @@ txMozillaXSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
                    type == nsIDOMNode::DOCUMENT_NODE,
                    NS_ERROR_INVALID_ARG);
 
-    nsresult rv = TX_CompileStylesheet(aStyleDOM, this, mPrincipal,
+    nsCOMPtr<nsINode> styleNode = do_QueryInterface(aStyleDOM);
+    nsresult rv = TX_CompileStylesheet(styleNode, this, mPrincipal,
                                        getter_AddRefs(mStylesheet));
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -586,29 +587,25 @@ txMozillaXSLTProcessor::ImportStylesheet(nsIDOMNode *aStyle)
         return NS_ERROR_DOM_SECURITY_ERR;
     }
     
-    PRUint16 type = 0;
-    aStyle->GetNodeType(&type);
-    NS_ENSURE_TRUE(type == nsIDOMNode::ELEMENT_NODE ||
-                   type == nsIDOMNode::DOCUMENT_NODE,
+    nsCOMPtr<nsINode> styleNode = do_QueryInterface(aStyle);
+    NS_ENSURE_TRUE(styleNode &&
+                   (styleNode->IsNodeOfType(nsINode::eELEMENT) ||
+                    styleNode->IsNodeOfType(nsINode::eDOCUMENT)),
                    NS_ERROR_INVALID_ARG);
 
-    nsresult rv = TX_CompileStylesheet(aStyle, this, mPrincipal,
+    nsresult rv = TX_CompileStylesheet(styleNode, this, mPrincipal,
                                        getter_AddRefs(mStylesheet));
     // XXX set up exception context, bug 204658
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (type == nsIDOMNode::ELEMENT_NODE) {
-        nsCOMPtr<nsIDOMDocument> domDoc;
-        aStyle->GetOwnerDocument(getter_AddRefs(domDoc));
-        NS_ENSURE_TRUE(domDoc, NS_ERROR_UNEXPECTED);
+    if (styleNode->IsNodeOfType(nsINode::eELEMENT)) {
+        mStylesheetDocument = styleNode->GetOwnerDoc();
+        NS_ENSURE_TRUE(mStylesheetDocument, NS_ERROR_UNEXPECTED);
 
-        nsCOMPtr<nsIDocument> styleDoc = do_QueryInterface(domDoc);
-        mStylesheetDocument = styleDoc;
-        mEmbeddedStylesheetRoot = do_QueryInterface(aStyle);
+        mEmbeddedStylesheetRoot = static_cast<nsIContent*>(styleNode.get());
     }
     else {
-        nsCOMPtr<nsIDocument> styleDoc = do_QueryInterface(aStyle);
-        mStylesheetDocument = styleDoc;
+        mStylesheetDocument = static_cast<nsIDocument*>(styleNode.get());
     }
 
     mStylesheetDocument->AddMutationObserver(this);
@@ -1173,10 +1170,11 @@ txMozillaXSLTProcessor::ensureStylesheet()
 
     NS_ENSURE_TRUE(mStylesheetDocument, NS_ERROR_NOT_INITIALIZED);
 
-    nsCOMPtr<nsIDOMNode> style = do_QueryInterface(mEmbeddedStylesheetRoot);
+    nsINode* style = mEmbeddedStylesheetRoot;
     if (!style) {
-        style = do_QueryInterface(mStylesheetDocument);
+        style = mStylesheetDocument;
     }
+
     return TX_CompileStylesheet(style, this, mPrincipal,
                                 getter_AddRefs(mStylesheet));
 }

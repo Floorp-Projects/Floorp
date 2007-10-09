@@ -112,15 +112,26 @@
    */
   -moz-appearance: textfield;
   cursor: text;
-  margin: 2px 4px;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  padding: 2px 2px 3px 4px;
+  margin: 4px 4px;
+  border: 3px solid;
+  -moz-border-top-colors: transparent #888888 #000000;
+  -moz-border-right-colors: transparent #FFFFFF #000000;
+  -moz-border-bottom-colors: transparent #FFFFFF #000000;
+  -moz-border-left-colors: transparent #888888 #000000;
+  -moz-border-radius-topright: 2px;
+  -moz-border-radius-bottomleft: 2px;
+  padding: 0;
   background-color: -moz-Field;
   color: -moz-FieldText;
+}
+
+#editBMPanel_namePicker[droppable="false"][disabled="true"] > .menulist-editable-box {
+  cursor: default;
+  -moz-border-top-colors: transparent ThreeDShadow -moz-Dialog;
+  -moz-border-right-colors: transparent ThreeDShadow -moz-Dialog;
+  -moz-border-bottom-colors: transparent ThreeDShadow -moz-Dialog;
+  -moz-border-left-colors: transparent ThreeDShadow -moz-Dialog;
+  color: GrayText;
 }
 
 #editBMPanel_namePicker[droppable="false"] > .menulist-editable-box > html|*.textbox-input {

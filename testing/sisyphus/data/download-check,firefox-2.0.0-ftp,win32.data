@@ -1,7 +1,7 @@
-allurl=http://stage.mozilla.org/pub/mozilla.org/firefox/nightly/2.0.0.4-candidates/rc2/
+allurl=http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/2.0.0.7-candidates/rc2/
 product=firefox
 branch=1.8.1
-url=http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.3/win32/en-US/Firefox%20Setup%202.0.0.3.exe
+url=http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/latest-trunk/firefox-3.0a9pre.en-US.win32.zip
 profilename=firefox-1.8.1-profile
 profiledirectory=/tmp/firefox-1.8.1-profile
 executablepath=/tmp/firefox-1.8.1

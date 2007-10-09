@@ -171,16 +171,6 @@ endif
 
 RESOURCES_HTML = \
 		$(srcdir)/folder.png \
-		$(srcdir)/gopher-audio.gif \
-		$(srcdir)/gopher-binary.gif \
-		$(srcdir)/gopher-find.gif \
-		$(srcdir)/gopher-image.gif \
-		$(srcdir)/gopher-menu.gif \
-		$(srcdir)/gopher-movie.gif \
-		$(srcdir)/gopher-sound.gif \
-		$(srcdir)/gopher-telnet.gif \
-		$(srcdir)/gopher-text.gif \
-		$(srcdir)/gopher-unknown.gif \
 		$(NULL)
 
 RESOURCES = \

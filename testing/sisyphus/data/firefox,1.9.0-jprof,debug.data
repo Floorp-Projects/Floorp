@@ -1,0 +1,8 @@
+product=firefox
+branch=1.9.0
+profilename=firefox-1.9.0-jprof-profile
+profiledirectory=/tmp/firefox-1.9.0-jprof-profile
+executablepath=/work/mozilla/builds/1.9.0-jprof/mozilla/firefox-debug/dist
+userpreferences=/work/mozilla/mozilla.com/test.mozilla.com/www/prefs/test-user.js
+extensiondir=/work/mozilla/mozilla.com/test.mozilla.com/www/xpi
+buildtype=debug

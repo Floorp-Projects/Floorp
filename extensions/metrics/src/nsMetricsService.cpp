@@ -81,7 +81,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsDocShellCID.h"
 #include "nsMemory.h"
-#include "nsIBadCertListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIX509Cert.h"
@@ -192,95 +191,6 @@ CompressBZ2(nsIInputStream *src, PRFileDesc *outFd)
 }
 
 #endif // !defined(NS_METRICS_SEND_UNCOMPRESSED_DATA)
-
-//-----------------------------------------------------------------------------
-
-class nsMetricsService::BadCertListener : public nsIBadCertListener,
-                                          public nsIInterfaceRequestor
-{
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIBADCERTLISTENER
-  NS_DECL_NSIINTERFACEREQUESTOR
-
-  BadCertListener() { }
-
- private:
-  ~BadCertListener() { }
-};
-
-// This object has to implement threadsafe addref and release, but this is
-// only because the GetInterface call happens on the socket transport thread.
-// The actual notifications are proxied to the main thread.
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsMetricsService::BadCertListener,
-                              nsIBadCertListener, nsIInterfaceRequestor)
-
-NS_IMETHODIMP
-nsMetricsService::BadCertListener::ConfirmUnknownIssuer(
-    nsIInterfaceRequestor *socketInfo, nsIX509Cert *cert,
-    PRInt16 *certAddType, PRBool *result)
-{
-  *result = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMetricsService::BadCertListener::ConfirmMismatchDomain(
-    nsIInterfaceRequestor *socketInfo, const nsACString &targetURL,
-    nsIX509Cert *cert, PRBool *result)
-{
-  *result = PR_FALSE;
-
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  NS_ENSURE_STATE(prefs);
-
-  nsCString certHostOverride;
-  prefs->GetCharPref("metrics.upload.cert-host-override",
-                     getter_Copies(certHostOverride));
-
-  if (!certHostOverride.IsEmpty()) {
-    // Accept the given alternate hostname (CN) for the certificate
-    nsString certHost;
-    cert->GetCommonName(certHost);
-    if (certHostOverride.Equals(NS_ConvertUTF16toUTF8(certHost))) {
-      *result = PR_TRUE;
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMetricsService::BadCertListener::ConfirmCertExpired(
-    nsIInterfaceRequestor *socketInfo, nsIX509Cert *cert, PRBool *result)
-{
-  *result = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMetricsService::BadCertListener::NotifyCrlNextupdate(
-    nsIInterfaceRequestor *socketInfo,
-    const nsACString &targetURL, nsIX509Cert *cert)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMetricsService::BadCertListener::GetInterface(const nsIID &uuid,
-                                                void **result)
-{
-  NS_ENSURE_ARG_POINTER(result);
-
-  if (uuid.Equals(NS_GET_IID(nsIBadCertListener))) {
-    *result = static_cast<nsIBadCertListener *>(this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  *result = nsnull;
-  return NS_ERROR_NO_INTERFACE;
-}
 
 //-----------------------------------------------------------------------------
 
@@ -1326,11 +1236,6 @@ nsMetricsService::UploadData()
   nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(channel);
   NS_ENSURE_STATE(props);
   props->SetPropertyAsBool(NS_LITERAL_STRING("moz-metrics-request"), PR_TRUE);
-
-  nsCOMPtr<nsIInterfaceRequestor> certListener = new BadCertListener();
-  NS_ENSURE_TRUE(certListener, NS_ERROR_OUT_OF_MEMORY);
-
-  channel->SetNotificationCallbacks(certListener);
 
   nsCOMPtr<nsIUploadChannel> uploadChannel = do_QueryInterface(channel);
   NS_ENSURE_STATE(uploadChannel); 

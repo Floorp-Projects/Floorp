@@ -1,0 +1,3 @@
+canvas3d.jar:
+% content canvas3d %content/canvas3d/
+  content/canvas3d/options.xul                   (resources/content/options.xul)

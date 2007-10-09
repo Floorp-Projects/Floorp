@@ -52,7 +52,7 @@
             aPreference.dispatchEvent(event);
           }
           catch (e) {
-            dump(e);
+            Components.utils.reportError(e);
           }
         ]]>
         </body>
@@ -373,7 +373,7 @@
               rv = f(event);
             }
             catch (e) {
-              dump(e);
+              Components.utils.reportError(e);
             }
           }
           var val = rv !== undefined ? rv : (this.instantApply ? this.valueFromPreferences : this.value);
@@ -424,7 +424,7 @@
                 return rv;
             }
             catch (e) {
-              dump(e);
+              Components.utils.reportError(e);
             }
           }
           
@@ -508,16 +508,15 @@
     <content dlgbuttons="accept,cancel" persist="lastSelected screenX screenY"
              closebuttonlabel="&preferencesCloseButton.label;"
              closebuttonaccesskey="&preferencesCloseButton.accesskey;"
-             xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
-             xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
-             xhtml2:role="wairole:dialog"
+             xmlns:xhtml="http://www.w3.org/1999/xhtml"
+             xhtml:role="dialog"
 #ifdef XP_WIN
              title="&preferencesDefaultTitleWin.title;">
 #else
              title="&preferencesDefaultTitleMac.title;">
 #endif
       <xul:radiogroup anonid="selector" orient="horizontal" class="paneSelector chromeclass-toolbar"
-                      xhtml2:role="wairole:list"/> <!-- Expose to accessibility APIs as a list -->
+                      xhtml:role="listbox"/> <!-- Expose to accessibility APIs as a listbox -->
       <xul:hbox flex="1" class="paneDeckContainer">
         <xul:deck anonid="paneDeck" flex="1">
           <children includes="prefpane"/>
@@ -573,6 +572,7 @@
 #endif
           }
         }
+        this.setAttribute("animated", this._shouldAnimate ? "true" : "false");
         var panes = this.preferencePanes;
 
         var lastPane = null;
@@ -665,6 +665,9 @@
         <parameter name="aPaneElement"/>
         <body>
         <![CDATA[
+          if (!aPaneElement)
+            return;
+
           this._selector.selectedItem = document.getAnonymousElementByAttribute(this, "pane", aPaneElement.id);
           if (!aPaneElement.loaded) {
             function OverlayLoadObserver(aPane)
@@ -735,6 +738,9 @@
               this._paneDeck.selectedIndex = i;
               
               if (this.type != "child") {
+                if (aPaneElement.hasAttribute("flex") && this._shouldAnimate &&
+                    prefpanes.length > 1)
+                  aPaneElement.removeAttribute("flex");
                 // Calling sizeToContent after the first prefpane is loaded
                 // will size the windows contents so style information is
                 // available to calculate correct sizing.

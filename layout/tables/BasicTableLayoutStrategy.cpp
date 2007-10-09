@@ -219,7 +219,7 @@ GetWidthInfo(nsIRenderingContext *aRenderingContext,
         // XXX Should we ignore percentage padding?
         nscoord add = offsets.hPadding + offsets.hBorder;
         minCoord += add;
-        prefCoord += add;
+        prefCoord = NSCoordSaturatingAdd(prefCoord, add);
     }
 
     return CellWidthInfo(minCoord, prefCoord, prefPercent, hasSpecifiedWidth);
@@ -490,8 +490,10 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                     NSToCoordRound(float(minWithinPref) * minRatio);
                 nscoord allocatedMinOutsidePref =
                     NSToCoordRound(float(minOutsidePref) * coordRatio);
-                nscoord allocatedPref =
-                    NSToCoordRound(float(info.prefCoord) * coordRatio);
+                nscoord allocatedPref = 
+                    (info.prefCoord == nscoord_MAX ? 
+                     nscoord_MAX : 
+                     NSToCoordRound(float(info.prefCoord) * coordRatio));
                 nscoord spanMin = scolFrame->GetMinCoord() +
                         allocatedMinWithinPref + allocatedMinOutsidePref;
                 nscoord spanPref = scolFrame->GetPrefCoord() + allocatedPref;
@@ -503,7 +505,9 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
                 // passed from the totals.
                 minWithinPref -= allocatedMinWithinPref;
                 minOutsidePref -= allocatedMinOutsidePref;
-                info.prefCoord -= allocatedPref;
+                info.prefCoord = NSCoordSaturatingSubtract(info.prefCoord, 
+                                                           allocatedPref,
+                                                           nscoord_MAX);
                 info.prefPercent -= allocatedPct;
                 totalSPref -= scolFrame->GetPrefCoord();
                 totalSMin -= scolFrame->GetMinCoord();
@@ -521,7 +525,8 @@ BasicTableLayoutStrategy::ComputeColumnIntrinsicWidths(nsIRenderingContext* aRen
             NS_ASSERTION(totalSPref == 0 && totalSMin == 0 &&
                          totalSNonPctPref == 0 && nonPctCount == 0 &&
                          minOutsidePref == 0 && minWithinPref == 0 &&
-                         info.prefCoord == 0 &&
+                         (info.prefCoord == 0 || 
+                          info.prefCoord == nscoord_MAX) &&
                          (info.prefPercent == 0.0f || !spanHasNonPct),
                          "didn't subtract all that we added");
         } while ((item = item->next));
@@ -593,7 +598,7 @@ BasicTableLayoutStrategy::ComputeIntrinsicWidths(nsIRenderingContext* aRendering
             add += spacing;
         }
         min += colFrame->GetMinCoord();
-        pref += colFrame->GetPrefCoord();
+        pref = NSCoordSaturatingAdd(pref, colFrame->GetPrefCoord());
 
         // Percentages are of the table, so we have to reverse them for
         // intrinsic widths.
@@ -606,7 +611,8 @@ BasicTableLayoutStrategy::ComputeIntrinsicWidths(nsIRenderingContext* aRendering
             }
             pct_total += p;
         } else {
-            nonpct_pref_total += colFrame->GetPrefCoord();
+            nonpct_pref_total = NSCoordSaturatingAdd(nonpct_pref_total, 
+                                                     colFrame->GetPrefCoord());
         }
     }
 
@@ -640,8 +646,8 @@ BasicTableLayoutStrategy::ComputeIntrinsicWidths(nsIRenderingContext* aRendering
     // border-spacing isn't part of the basis for percentages
     if (colCount > 0) {
         min += add;
-        pref += add;
-        pref_pct_expand += add;
+        pref = NSCoordSaturatingAdd(pref, add);
+        pref_pct_expand = NSCoordSaturatingAdd(pref_pct_expand, add);
     }
 
     mMinWidth = min;
@@ -693,7 +699,7 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
             subtract += spacing;
         }
     }
-    width -= subtract;
+    width = NSCoordSaturatingSubtract(width, subtract, nscoord_MAX);
     min -= subtract;
 
     // XXX is |width| the right basis for percentage widths?
@@ -749,6 +755,7 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
             total_flex_pref = 0,
             total_fixed_pref = 0;
     float total_pct = 0.0f; // 0.0f to 1.0f
+    PRInt32 numInfiniteWidthCols = 0;
 
     PRInt32 col;
     for (col = 0; col < colCount; ++col) {
@@ -769,19 +776,26 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
             guess_pref += val;
         } else {
             nscoord pref_width = colFrame->GetPrefCoord();
-            guess_pref += pref_width;
+            if (pref_width == nscoord_MAX) {
+                numInfiniteWidthCols++;
+            }
+            guess_pref = NSCoordSaturatingAdd(guess_pref, pref_width);
             guess_min_pct += min_width;
             if (colFrame->GetHasSpecifiedCoord()) {
                 // we'll add on the rest of guess_min_spec outside the
                 // loop
-                guess_min_spec += pref_width - min_width;
-                total_fixed_pref += pref_width;
+                nscoord delta = NSCoordSaturatingSubtract(pref_width, 
+                                                          min_width, 0);
+                guess_min_spec = NSCoordSaturatingAdd(guess_min_spec, delta);
+                total_fixed_pref = NSCoordSaturatingAdd(total_fixed_pref, 
+                                                        pref_width);
             } else {
-                total_flex_pref += pref_width;
+                total_flex_pref = NSCoordSaturatingAdd(total_flex_pref,
+                                                       pref_width);
             }
         }
     }
-    guess_min_spec += guess_min_pct;
+    guess_min_spec = NSCoordSaturatingAdd(guess_min_spec, guess_min_pct);
 
     // Determine what we're flexing:
     enum Loop2Type {
@@ -812,13 +826,18 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
         } else if (width < guess_min_spec) {
             l2t = FLEX_FIXED_SMALL;
             space = width - guess_min_pct;
-            basis.c = guess_min_spec - guess_min_pct;
+            basis.c = NSCoordSaturatingSubtract(guess_min_spec, guess_min_pct,
+                                                nscoord_MAX);
         } else {
             l2t = FLEX_FLEX_SMALL;
             space = width - guess_min_spec;
-            basis.c = guess_pref - guess_min_spec;
+            basis.c = NSCoordSaturatingSubtract(guess_pref, guess_min_spec,
+                                                nscoord_MAX);
         }
     } else {
+        // Note: Shouldn't have to check for nscoord_MAX in this case, because
+        // width should be much less than nscoord_MAX, and being here means
+        // guess_pref is no larger than width.
         space = width - guess_pref;
         if (total_flex_pref > 0) {
             l2t = FLEX_FLEX_LARGE;
@@ -903,11 +922,30 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
                     NS_ASSERTION(col_width == colFrame->GetPrefCoord(),
                                  "wrong width assigned");
                     nscoord col_min = colFrame->GetMinCoord();
-                    nscoord pref_minus_min = col_width - col_min;
+                    nscoord pref_minus_min = 
+                        NSCoordSaturatingSubtract(col_width, col_min, 0);
                     col_width = col_width_before_adjust = col_min;
                     if (pref_minus_min != 0) {
                         float c = float(space) / float(basis.c);
-                        basis.c -= pref_minus_min;
+                        // If we have infinite-width cols, then the standard
+                        // adjustment to col_width using 'c' won't work,
+                        // because basis.c and pref_minus_min are both
+                        // nscoord_MAX and will cancel each other out in the
+                        // col_width adjustment (making us assign all the
+                        // space to the first inf-width col).  To correct for
+                        // this, we'll also divide by numInfiniteWidthCols to
+                        // spread the space equally among the inf-width cols.
+                        if (numInfiniteWidthCols) {
+                            if (colFrame->GetPrefCoord() == nscoord_MAX) {
+                                c = c / float(numInfiniteWidthCols);
+                                numInfiniteWidthCols--;
+                            } else {
+                                c = 0.0f;
+                            }
+                        }
+                        basis.c = NSCoordSaturatingSubtract(basis.c, 
+                                                            pref_minus_min,
+                                                            nscoord_MAX);
                         col_width += NSToCoordRound(
                             float(pref_minus_min) * c);
                     }
@@ -971,7 +1009,7 @@ BasicTableLayoutStrategy::ComputeColumnWidths(const nsHTMLReflowState& aReflowSt
     NS_ASSERTION(space == 0 &&
                  ((l2t == FLEX_PCT_LARGE)
                     ? (-0.001f < basis.f && basis.f < 0.001f)
-                    : (basis.c == 0)),
+                    : (basis.c == 0 || basis.c == nscoord_MAX)),
                  "didn't subtract all that we added");
 #ifdef DEBUG_TABLE_STRATEGY
     printf("ComputeColumnWidths final\n");

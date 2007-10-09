@@ -44,6 +44,8 @@
 #include <stdlib.h>
 #include "prmem.h"
 
+#include "nsStringGlue.h"
+
 #include "nsICanvasRenderingContextGLBuffer.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsIDOMHTMLCanvasElement.h"
@@ -64,7 +66,6 @@
 #include "nsIImageLoadingContent.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIImage.h"
-#include "nsIFrame.h"
 #include "nsDOMError.h"
 #include "nsIJSRuntimeService.h"
 
@@ -73,12 +74,13 @@
 
 #include "nsDOMError.h"
 
-#include "nsContentUtils.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsIXPConnect.h"
 #include "jsapi.h"
 
-#include "cairo.h"
+#include "gfxContext.h"
+
 #include "glew.h"
 
 #include "nsGLPbuffer.h"
@@ -122,18 +124,16 @@ public:
     // nsICanvasRenderingContextInternal
     NS_IMETHOD SetCanvasElement(nsICanvasElement* aParentCanvas);
     NS_IMETHOD SetDimensions(PRInt32 width, PRInt32 height);
-    NS_IMETHOD Render(nsIRenderingContext *rc);
-    NS_IMETHOD RenderToSurface(cairo_surface_t *surf);
-    NS_IMETHOD GetInputStream(const nsACString& aMimeType,
-                              const nsAString& aEncoderOptions,
+    NS_IMETHOD Render(gfxContext *ctx);
+    NS_IMETHOD GetInputStream(const char* aMimeType,
+                              const PRUnichar* aEncoderOptions,
                               nsIInputStream **aStream);
 
 protected:
     PRBool SafeToCreateCanvas3DContext();
-    nsIFrame *GetCanvasLayoutFrame();
     nsresult DoSwapBuffers();
     nsresult CairoSurfaceFromElement(nsIDOMElement *imgElt,
-                                     cairo_surface_t **aCairoSurface,
+                                     gfxASurface **aThebesSurface,
                                      PRUint8 **imgData,
                                      PRInt32 *widthOut, PRInt32 *heightOut,
                                      nsIURI **uriOut, PRBool *forceWriteOnlyOut);
@@ -281,8 +281,14 @@ public:
         if (NS_FAILED(error))
             return;
 
+        JS_BeginRequest(ctx);
+
         ncc->GetArgc(&argc);
         ncc->GetArgvPtr(&argv);
+    }
+
+    ~NativeJSContext() {
+        JS_EndRequest(ctx);
     }
 
     PRBool AddGCRoot (void *aPtr, const char *aName) {
@@ -412,6 +418,8 @@ public:
         return PR_TRUE;
     }
 
+    // We can't use ns*Substring, because we don't have internal linkage
+#if 0
     PRBool DefineProperty(const char *name, const nsCSubstring& val) {
         JSString *jsstr = JS_NewStringCopyN(mCtx->ctx, val.BeginReading(), val.Length());
         if (!jsstr ||
@@ -427,6 +435,7 @@ public:
             return PR_FALSE;
         return PR_TRUE;
     }
+#endif
 
     PRBool DefineProperty(const char *name, const char *val, PRUint32 len) {
         JSString *jsstr = JS_NewStringCopyN(mCtx->ctx, val, len);

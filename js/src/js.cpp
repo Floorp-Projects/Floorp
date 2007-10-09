@@ -2372,6 +2372,9 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
     }
 
+#ifdef JS_THREADSAFE
+    JS_BeginRequest(scx);
+#endif
     src = JS_GetStringChars(str);
     srclen = JS_GetStringLength(str);
     lazy = JS_FALSE;
@@ -2399,13 +2402,23 @@ EvalInContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     } else {
         fp = JS_GetScriptedCaller(cx, NULL);
         JS_SetGlobalObject(scx, sobj);
+        JS_ToggleOptions(scx, JSOPTION_DONT_REPORT_UNCAUGHT);
         ok = JS_EvaluateUCScript(scx, sobj, src, srclen,
                                  fp->script->filename,
                                  JS_PCToLineNumber(cx, fp->script, fp->pc),
                                  rval);
+        if (!ok) {
+            if (JS_GetPendingException(scx, &v))
+                JS_SetPendingException(cx, v);
+            else
+                JS_ReportOutOfMemory(cx);
+        }
     }
 
 out:
+#ifdef JS_THREADSAFE
+    JS_EndRequest(scx);
+#endif
     JS_DestroyContext(scx);
     return ok;
 }

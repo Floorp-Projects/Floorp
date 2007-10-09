@@ -42,24 +42,14 @@ const nsIPKIParamBlock = Components.interfaces.nsIPKIParamBlock;
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 
 var certdb;
-var certs = [];
 var gParams;
 
 function setWindowName()
 {
   gParams = window.arguments[0].QueryInterface(nsIDialogParamBlock);
   
-  //  Get the cert from the cert database
-  certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
-  
   var typeFlag = gParams.GetString(0);
   var numberOfCerts = gParams.GetInt(0);
-  var dbkey;
-  for(var x=0; x<numberOfCerts;x++)
-  {
-     dbkey = gParams.GetString(x+1);
-     certs[x] = certdb.findCertByDBKey(dbkey , null);
-  }
   
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var title;
@@ -74,9 +64,9 @@ function setWindowName()
   }
   else if(typeFlag == "websites_tab")
   {
-     title = bundle.GetStringFromName("deleteSslCertTitle");
-     confirm = bundle.GetStringFromName("deleteSslCertConfirm");
-     impact = bundle.GetStringFromName("deleteSslCertImpact");
+     title = bundle.GetStringFromName("deleteSslCertTitle2");
+     confirm = bundle.GetStringFromName("deleteSslCertConfirm2");
+     impact = bundle.GetStringFromName("deleteSslCertImpact2");
   }
   else if(typeFlag == "ca_tab")
   {
@@ -108,12 +98,10 @@ function setWindowName()
 
   var box=document.getElementById("certlist");
   var text;
-  for(x=0;x<certs.length;x++)
+  for(var x=0;x<numberOfCerts;x++)
   {
-    if (!certs[x])
-      continue;
     text = document.createElement("text");
-    text.setAttribute("value",certs[x].commonName);
+    text.setAttribute("value", gParams.GetString(x+1));
     box.appendChild(text);
   }
 
@@ -122,32 +110,12 @@ function setWindowName()
 
 function doOK()
 {
-  // On returning our param list will contain keys of those certs that were deleted.
-  // It will contain empty strings for those certs that are still alive.
-
-  for(var i=0;i<certs.length;i++)
-  {
-    if (certs[i]) {
-      try {
-        certdb.deleteCertificate(certs[i]);
-      }
-      catch (e) {
-        gParams.SetString(i+1, "");
-      }
-      certs[i] = null;
-    }
-  }
   gParams.SetInt(1, 1); // means OK
   return true;
 }
 
 function doCancel()
 {
-  var numberOfCerts = gParams.GetInt(0);
-  for(var x=0; x<numberOfCerts;x++)
-  {
-     gParams.SetString(x+1, "");
-  }
   gParams.SetInt(1, 0); // means CANCEL
   return true;
 }

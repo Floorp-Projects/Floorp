@@ -11,6 +11,7 @@ Contributors:
   Steffen Wilberg <steffen.wilberg@web.de>
   Ryan Flint <rflint@dslr.net>
   Jeff Walden <jwalden+code@mit.edu>
+  Myk Melez <myk@mozilla.org>
 -->
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -29,7 +30,7 @@ Contributors:
     <li><a href="#main_options">Main &pref.pluralCaps;</a></li>
     <li><a href="#tabs_options">Tabs &pref.pluralCaps;</a></li>
     <li><a href="#content_options">Content &pref.pluralCaps;</a></li>
-    <li><a href="#feeds_options">Feeds &pref.pluralCaps;</a></li>
+    <li><a href="#applications_options">Applications &pref.pluralCaps;</a></li>
     <li><a href="#privacy_options">Privacy &pref.pluralCaps;</a></li>
     <li><a href="#security_options">Security &pref.pluralCaps;</a></li>
     <li><a href="#advanced_options">Advanced &pref.pluralCaps;</a></li>
@@ -109,6 +110,13 @@ Contributors:
     whenever an application tries to display a web page.  You can also click the
     <em>Check Now</em> button to do a check right now.</p>
 
+  <h3 id="addons">Add-ons</h3>
+  <p><em>Manage Add-ons</em><br/>
+    To install or uninstall, update or configure add-ons, click the <em>Manage
+    Add-ons</em> button to open the Add-ons manager. This is also accessible
+    from <span class="menuPath">Tools &gt; Add-ons</span>. A detailed
+    description of add-ons and the Add-on manager is available <a href=
+    "customization.xhtml#add_ons">here</a>.</p>
 
 <h2 id="tabs_options">Tabs &pref.pluralCaps;</h2>
 <p><em>New pages should be opened in:</em><br/>
@@ -271,59 +279,48 @@ Contributors:
       author. Disabling this &pref.singular; will force all sites to use your
       default colors instead.</p>
 
-  <h3 id="file_types">File Types</h3>
-  <p>The Download Actions dialog, which can be opened by clicking the
-    <em>Manage...</em> button, contains file types that you have downloaded.
-    You can choose what &brandShortName; should do when clicking on a specific
-    file type by selecting the file type you want to modify and clicking the
-    <em>Change Action...</em> button.</p>
 
-  <p>This will display the Download Actions dialog, where you can choose to have
-    the file type opened by the default application, opened by a particular
-    application, saved to disk, or shown with an installed plugin.  For example,
-    if you view lots of media files on web pages, you might want to specify that
-    &brandShortName; always open media files in your media player instead of
-    asking where you want each media file to be saved.</p>
+<h2 id="applications_options">Applications &pref.pluralCaps;</h2>
 
-  <ul>
-    <li><em>Open them with the default application:</em><br/>
-      Select this &pref.singular; to open this file type in the default
-      application for that file type (determined by the operating system).</li>
-    <li><em>Open them with this application:</em><br/>
-      Select this &pref.singular; to specify another application that should
-      handle this file type. You will see a dialog asking you to specify the
-      application to use.</li>
-    <li><em>Save them on my computer:</em><br/>
-      This &pref.singular; will save the files to disk (automatically if you
-      have selected the <em>Save files to</em> &pref.singular; in the
-      <em>Main</em> panel).</li>
-    <li><em>Use this Plugin:</em><br/>
-      Select this &pref.singular; to let a plugin handle this file type.</li>
-  </ul>
+<p>The <em>Applications</em> panel lets you choose applications and other
+  handlers to handle different types of content (e.g. PDF documents).  It shows
+  you a list of content types and lets you select a handler for each type.</p>
 
+<p>You can choose a local application to handle any type.  For some types,
+  you can also choose a web application to handle the type, choose a feature
+  (like <a href="glossary.xhtml#live_bookmark">Live Bookmarks</a> for feeds)
+  or a <a href="glossary.xhtml#Plugin">plugin</a> in &brandShortName; to handle
+  the type, or save the type on your computer.</p>
 
-<h2 id="feeds_options">Feeds &pref.pluralCaps;</h2>
-<p>Feeds are specially formatted documents which summarize the content of web
-  sites.  For example, a feed might summarize the latest news headlines from a
-  news site or the latest posts on a blog.  You can view the content of feeds in
-  &brandShortName;, create Live Bookmarks for them, or add them to a feed reader
-  on your computer or on the Web.  The &pref.plural; in this pane determine what
-  &brandShortName; does when you view a feed.</p>
+<p>To choose a handler for a type, select the type from the list. The current
+  handler for the type will turn into a menu. Open the menu and select the
+  handler you want to handle the type.</p>
 
-<p><em>Show me a preview and ask me which Feed Reader to use</em><br/>
-  When you view a feed within &brandShortName;, you will be shown a preview of
-  its contents. With this &pref.singular; selected, you are always given a
-  choice of what you would like to use to subscribe to the feed at the top of
-  the preview page.</p>
-    
-<p><em>Subscribe to the feed using</em><br/>
-  Instead of displaying a preview of the feed when you view one, you can have
-  the feed be opened directly in a feed reader by selecting a reader from the
-  list of available readers.  You can choose to use an application on your
-  computer to subscribe to feeds by clicking the <em>Choose Application...</em>
-  button and finding the application on your computer.  Alternately, you can
-  choose to automatically subscribe to feeds by saving them as Live Bookmarks.
-  To choose a subscription method, simply select it from the list.</p>
+<ul>
+  <li><em>Choose an application</em><br/>
+    To choose a local or web application to handle a type, select the application
+    from the menu.  If you want a local application that is not in the menu
+    to handle the type, select <em>Choose Application...</em> from the menu
+    and point &brandShortName; to its location.</li>
+
+  <li><em>Choose a feature or plugin</em><br/>
+    If you want a feature or a plugin in &brandShortName; to handle the type,
+    and one is available, select it from the menu.</li>
+
+  <li><em>Save on your computer</em><br/>
+    If you want to save the type on your computer, and it is possible to do so,
+    select <em>Save File</em> from the menu.  If you have selected the <em>Save
+    files to</em> &pref.singular; in the <em>Main</em> panel, &brandShortName;
+    will save content of the type on your computer automatically.  Otherwise,
+    when you encounter the type, &brandShortName; will prompt you for a location
+    on your computer to save it to.</li>
+</ul>
+
+<p><strong>Note:</strong> When a plugin is available to handle a type, and you
+  choose another handler to handle that type, &brandShortName; will only use
+  your chosen handler when you access the type directly.  When the type is
+  embedded inside a web page, &brandShortName; will continue to use the plugin
+  to handle the type.</p>
 
 
 <h2 id="privacy_options">Privacy &pref.pluralCaps;</h2>
@@ -689,7 +686,7 @@ Contributors:
       than the one in &brandShortName;, click the <em>Security Devices</em>
       button.</p>
 
-<div class="contentsBox"><em>17 September 2007</em></div>
+<div class="contentsBox"><em>07 October 2007</em></div>
 <p>Copyright &copy; &copyright.years; Contributors to the Mozilla Help Viewer Project.</p>
 
 </body>

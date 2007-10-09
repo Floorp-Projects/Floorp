@@ -549,26 +549,16 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
 
       PRBool is_primary = value.LowerCaseEqualsLiteral("content-primary");
 
-      nsCOMPtr<nsIDocShellTreeOwner_MOZILLA_1_8_BRANCH> owner2 =
-        do_QueryInterface(parentTreeOwner);
+      parentTreeOwner->ContentShellRemoved(docShellAsItem);
 
-      if (!owner2) {
-        // XXXbz this adds stuff even if it's not of type content-*, but not
-        // much we can do about that....
+      if (value.LowerCaseEqualsLiteral("content") ||
+          StringBeginsWith(value, NS_LITERAL_STRING("content-"),
+                           nsCaseInsensitiveStringComparator())) {
+        PRBool is_targetable = is_primary ||
+          value.LowerCaseEqualsLiteral("content-targetable");
+
         parentTreeOwner->ContentShellAdded(docShellAsItem, is_primary,
-                                           value.get());
-      } else {
-        owner2->ContentShellRemoved(docShellAsItem);
-
-        if (value.LowerCaseEqualsLiteral("content") ||
-            StringBeginsWith(value, NS_LITERAL_STRING("content-"),
-                             nsCaseInsensitiveStringComparator())) {
-          PRBool is_targetable = is_primary ||
-            value.LowerCaseEqualsLiteral("content-targetable");
-
-          owner2->ContentShellAdded2(docShellAsItem, is_primary, is_targetable,
-                                     value);
-        }
+                                           is_targetable, value);
       }
     }
   }

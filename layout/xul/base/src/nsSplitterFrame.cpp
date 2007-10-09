@@ -347,16 +347,16 @@ nsSplitterFrame::Init(nsIContent*      aContent,
 
   // determine orientation of parent, and if vertical, set orient to vertical
   // on splitter content, then re-resolve style
-  // |newContext| to Release the reference after the call to nsBoxFrame::Init
-  nsRefPtr<nsStyleContext> newContext;
+  // XXXbz this is pretty messed up, since this can change whether we should
+  // have a frame at all.  This really needs a better solution.
   if (aParent && aParent->IsBoxFrame()) {
     if (!aParent->IsHorizontal()) {
       if (!nsContentUtils::HasNonEmptyAttr(aContent, kNameSpaceID_None,
                                            nsGkAtoms::orient)) {
         aContent->SetAttr(kNameSpaceID_None, nsGkAtoms::orient,
                           NS_LITERAL_STRING("vertical"), PR_FALSE);
-        nsStyleContext* parentStyleContext = aParent->GetStyleContext();
-        newContext = GetStyleContext()->GetRuleNode()->GetPresContext()->StyleSet()->
+        nsStyleContext* parentStyleContext = GetStyleContext()->GetParent();
+        nsRefPtr<nsStyleContext> newContext = PresContext()->StyleSet()->
           ResolveStyleFor(aContent, parentStyleContext);
         SetStyleContextWithoutNotification(newContext);
       }

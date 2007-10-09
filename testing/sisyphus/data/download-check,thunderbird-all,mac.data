@@ -1,7 +1,7 @@
-allurl=http://khan.landfill.bugzilla.org/en-US/thunderbird/all.html
+allurl=http://www.mozilla.com/en-US/thunderbird/all.html
 product=firefox
 branch=1.8.1
-url=http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.3/mac/en-US/Firefox%202.0.0.3.dmg
+url=http://releases.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.7/mac/en-US/Firefox%202.0.0.7.dmg
 profilename=firefox-1.8.1-profile
 profiledirectory=/tmp/firefox-1.8.1-profile
 executablepath=/tmp/firefox-1.8.1

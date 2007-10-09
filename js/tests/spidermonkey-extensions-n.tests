@@ -24,6 +24,7 @@ ecma_2/extensions/instanceof-006.js
 ecma_3/extensions/10.1.3-2.js
 ecma_3/extensions/regress-274152.js
 ecma_3/extensions/regress-320854.js
+ecma_3/extensions/regress-385393-03.js
 ecma/extensions/10.1.4-9.js
 ecma/extensions/10.1.6.js
 ecma/extensions/10.1.8-1.js
@@ -171,6 +172,7 @@ js1_5/extensions/regress-361558.js
 js1_5/extensions/regress-361571.js
 js1_5/extensions/regress-361856.js
 js1_5/extensions/regress-361964.js
+js1_5/extensions/regress-363258.js
 js1_5/extensions/regress-363988.js
 js1_5/extensions/regress-365527.js
 js1_5/extensions/regress-365692.js
@@ -205,6 +207,17 @@ js1_5/extensions/regress-381205.js
 js1_5/extensions/regress-381211.js
 js1_5/extensions/regress-382509.js
 js1_5/extensions/regress-383965.js
+js1_5/extensions/regress-384680.js
+js1_5/extensions/regress-385134.js
+js1_5/extensions/regress-385393-02.js
+js1_5/extensions/regress-385393-09.js
+js1_5/extensions/regress-390597.js
+js1_5/extensions/regress-390598.js
+js1_5/extensions/regress-391033-01.js
+js1_5/extensions/regress-391033-02.js
+js1_5/extensions/regress-391851.js
+js1_5/extensions/regress-394967.js
+js1_5/extensions/regress-396326.js
 js1_5/extensions/regress-44009.js
 js1_5/extensions/regress-50447-1.js
 js1_5/extensions/regress-50447.js
@@ -215,6 +228,7 @@ js1_5/extensions/regress-96284-002.js
 js1_5/extensions/scope-001.js
 js1_6/extensions/regress-312385-01.js
 js1_6/extensions/regress-352392.js
+js1_6/extensions/regress-385393-08.js
 js1_7/extensions/basic-for-each.js
 js1_7/extensions/basic-for-in.js
 js1_7/extensions/basic-Iterator.js
@@ -262,5 +276,14 @@ js1_7/extensions/regress-379566.js
 js1_7/extensions/regress-380933.js
 js1_7/extensions/regress-381301.js
 js1_7/extensions/regress-381303.js
+js1_7/extensions/regress-387955-01.js
+js1_7/extensions/regress-387955-02.js
+js1_7/extensions/regress-392308.js
+js1_7/extensions/regress-396326.js
 js1_8/extensions/regress-300079.js
 js1_8/extensions/regress-378789.js
+js1_8/extensions/regress-385393-01.js
+js1_8/extensions/regress-385393-10.js
+js1_8/extensions/regress-385393-11.js
+js1_8/extensions/regress-385729.js
+js1_8/extensions/regress-394709.js

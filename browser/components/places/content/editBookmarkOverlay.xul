@@ -49,6 +49,8 @@
           src="chrome://browser/content/places/editBookmarkOverlay.js"/>
 
   <vbox id="editBookmarkPanelContent">
+    <broadcaster id="paneElementsBroadcaster"/>
+
     <grid id="editBookmarkPanelGrid" flex="1">
       <columns>
         <column/>
@@ -57,14 +59,16 @@
       <rows>
         <row align="center" id="editBMPanel_nameRow">
           <label value="&editBookmarkOverlay.name.label;"
-                 contorl="editBMPanel_namePicker"/>
+                 control="editBMPanel_namePicker"
+                 observes="paneElementsBroadcaster"/>
           <menulist id="editBMPanel_namePicker"
                     flex="1"
                     editable="true"
                     droppable="false"
                     oninput="gEditItemOverlay.onNamePickerInput();"
                     onblur="gEditItemOverlay.onNamePickerChange();"
-                    oncommand="gEditItemOverlay.onNamePickerChange();">
+                    oncommand="gEditItemOverlay.onNamePickerChange();"
+                    observes="paneElementsBroadcaster">
             <menupopup>
               <menuitem id="editBMPanel_userEnteredName"/>
               <menuitem disabled="true">
@@ -77,17 +81,39 @@
 
         <row align="center" id="editBMPanel_locationRow">
           <label value="&editBookmarkOverlay.location.label;"
-                 contorl="editBMPanel_locationField"/>
+                 control="editBMPanel_locationField"
+                 observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_locationField"
-                   onblur="gEditItemOverlay.onLocationFieldBlur();"/>
+                   onblur="gEditItemOverlay.onLocationFieldBlur();"
+                   observes="paneElementsBroadcaster"/>
+        </row>
+
+        <row align="center" id="editBMPanel_feedLocationRow">
+          <label value="&editBookmarkOverlay.feedLocation.label;"
+                 control="editBMPanel_feedLocationField"
+                 observes="paneElementsBroadcaster"/>
+          <textbox id="editBMPanel_feedLocationField"
+                   onblur="gEditItemOverlay.onFeedLocationFieldBlur();"
+                   observes="paneElementsBroadcaster"/>
+        </row>
+
+        <row align="center" id="editBMPanel_siteLocationRow">
+          <label value="&editBookmarkOverlay.siteLocation.label;"
+                 control="editBMPanel_siteLocationField"
+                 observes="paneElementsBroadcaster"/>
+          <textbox id="editBMPanel_siteLocationField"
+                   onblur="gEditItemOverlay.onSiteLocationFieldBlur();"
+                   observes="paneElementsBroadcaster"/>
         </row>
 
         <row align="center" id="editBMPanel_folderRow">
           <label value="&editBookmarkOverlay.folder.label;"
-                 control="editBMPanel_folderMenuList"/>
+                 control="editBMPanel_folderMenuList"
+                 observes="paneElementsBroadcaster"/>
           <menulist id="editBMPanel_folderMenuList"
                     class="folder-icon"
-                    oncommand="gEditItemOverlay.onFolderMenuListCommand();">
+                    oncommand="gEditItemOverlay.onFolderMenuListCommand();"
+                    observes="paneElementsBroadcaster">
             <menupopup>
               <!-- Static item for special folders -->
               <menuitem id="editBMPanel_unfiledRootItem"
@@ -107,7 +133,8 @@
                   tooltiptext="&editBookmarkOverlay.foldersExpanderDown.tooltip;"
                   tooltiptextdown="&editBookmarkOverlay.foldersExpanderDown.tooltip;"
                   tooltiptextup="&editBookmarkOverlay.expanderUp.tooltip;"
-                  oncommand="gEditItemOverlay.toggleFolderTreeVisibility();"/>
+                  oncommand="gEditItemOverlay.toggleFolderTreeVisibility();"
+                  observes="paneElementsBroadcaster"/>
         </row>
 
         <tree id="editBMPanel_folderTree"
@@ -118,7 +145,8 @@
               onselect="gEditItemOverlay.onFolderTreeSelect();"
               showRoot="true"
               place="place:folder=2&amp;group=3&amp;excludeItems=1&amp;excludeQueries=1&amp;excludeReadOnlyFolders=1"
-              hidecolumnpicker="true">
+              hidecolumnpicker="true"
+              observes="paneElementsBroadcaster">
           <treecols>
             <treecol anonid="title" flex="1" primary="true" hideheader="true"/>
           </treecols>
@@ -127,25 +155,46 @@
 
         <row align="center" id="editBMPanel_tagsRow">
           <label value="&editBookmarkOverlay.tags.label;"
-                 control="tagsField"/>
+                 control="editBMPanel_tagsField"
+                 observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_tagsField"
-                   onblur="gEditItemOverlay.onTagsFieldBlur();"/>
+                   onblur="gEditItemOverlay.onTagsFieldBlur();"
+                   observes="paneElementsBroadcaster"/>
           <button id="editBMPanel_tagsSelectorExpander"
                   class="expander-down"
                   tooltiptext="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
                   tooltiptextdown="&editBookmarkOverlay.tagsExpanderDown.tooltip;"
                   tooltiptextup="&editBookmarkOverlay.expanderUp.tooltip;"
-                  oncommand="gEditItemOverlay.toggleTagsSelector();"/>
+                  oncommand="gEditItemOverlay.toggleTagsSelector();"
+                  observes="paneElementsBroadcaster"/>
         </row>
 
-        <listbox id="editBMPanel_tagsSelector" height="150" collapsed="true"/>
+        <listbox id="editBMPanel_tagsSelector"
+                 height="150" collapsed="true"
+                 observes="paneElementsBroadcaster"/>
 
-        <row id="editBMPanel_descriptionRow" align="center">
+        <row id="editBMPanel_keywordRow">
+          <label value="&editBookmarkOverlay.keyword.label;"
+                 control="editBMPanel_keywordField"
+                 observes="paneElementsBroadcaster"/>
+          <textbox id="editBMPanel_keywordField"
+                   onblur="gEditItemOverlay.onKeywordFieldBlur();"
+                   observes="paneElementsBroadcaster"/>
+        </row>
+
+        <row id="editBMPanel_descriptionRow">
           <label value="&editBookmarkOverlay.description.label;"
-                 control="editBMPanel_descriptionField"/>
+                 control="editBMPanel_descriptionField"
+                 observes="paneElementsBroadcaster"/>
           <textbox id="editBMPanel_descriptionField"
-                   onblur="gEditItemOverlay.onDescriptionFieldBlur();"/>
+                   multiline="true"
+                   onblur="gEditItemOverlay.onDescriptionFieldBlur();"
+                   observes="paneElementsBroadcaster"/>
         </row>
+        <checkbox id="editBMPanel_loadInSidebarCheckbox"
+                  label="&editBookmarkOverlay.loadInSidebar.label;"
+                  oncommand="gEditItemOverlay.onLoadInSidebarCheckboxCommand();"
+                  observes="paneElementsBroadcaster"/>
       </rows>
     </grid>
   </vbox>

@@ -141,6 +141,8 @@ random == 328829-1.xhtml 328829-1-ref.xhtml # bug 369046 (intermittent)
 == 332360-width-ltr.html 332360-ltr-ref.html
 == 332557-1.html 332557-1-ref.html
 == 332975-1.html 332975-1-ref.html
+== 334829-1a.xhtml 334829-1-ref.xhtml
+== 334829-1b.xhtml 334829-1-ref.xhtml
 == 335628-1.html 335628-1-ref.html
 != 335628-2.xul 335628-2-ref.xul
 == 336147-1.html 336147-1-ref.html
@@ -296,6 +298,7 @@ fails == 368504-2.html 368504-2-ref.html # bug 368504
 == 370692-1.xhtml 370692-1-ref.xhtml
 == 371041-1.html 371041-1-ref.html
 == 371043-1.html 371043-1-ref.html
+== 371483-1.html about:blank # assertion test 
 == 371925-1a.html 371925-1-ref.html
 == 371925-1b.html 371925-1-ref.html
 == 372553-1.html 372553-1-ref.html
@@ -350,6 +353,7 @@ random-if(MOZ_WIDGET_TOOLKIT=="cocoa") == 379316-2.html 379316-2-ref.html # bug 
 == 384576-1.html 384576-1-ref.html
 == 384762-1.html about:blank
 == 384876-1.html 384876-1-ref.html
+== 385533-1.html about:blank # assertion test
 == 385870-1.html 385870-1-ref.html
 == 385870-2.html 385870-2-ref.html
 == 386014-1a.html 386014-1-ref.html
@@ -368,6 +372,10 @@ fails == 386310-1d.html 386310-1-ref.html
 == 387201-2.html about:blank  # Really an assertion test rather than a rendering test
 == 387201-3.html about:blank  # Really an assertion test rather than a rendering test
 == 387344-1.html 387344-1-ref.html
+== 387876-1.html 387876-1-ref.html
+== 387876-2.html 387876-2-ref.html
+== 387876-3a.html 387876-3-ref.html
+== 387876-3b.html 387876-3-ref.html
 == 389636-1.html about:blank  # assertion test
 == 389924-1a.html 389924-1-ref.html
 == 389924-1b.html 389924-1-ref.html
@@ -389,4 +397,6 @@ fails == 386310-1d.html 386310-1-ref.html
 == 394676-1.xhtml 394676-1-ref.xhtml
 == 395130-1.html 395130-1-ref.html
 == 395130-2.html 395130-2-ref.html
+== 395331-1.xml 395331-1-ref.xml
 == 396286-1.html about:blank  # crash test
+== 398289-1.html 398289-1-ref.html

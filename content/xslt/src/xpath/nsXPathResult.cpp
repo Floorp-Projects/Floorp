@@ -47,6 +47,7 @@
 #include "nsIDOMDocument.h"
 #include "nsDOMString.h"
 #include "txXPathTreeWalker.h"
+#include "nsCycleCollectionParticipant.h"
 
 nsXPathResult::nsXPathResult() : mDocument(nsnull),
                                  mCurrentPos(0),
@@ -57,20 +58,51 @@ nsXPathResult::nsXPathResult() : mDocument(nsnull),
 
 nsXPathResult::~nsXPathResult()
 {
+    RemoveObserver();
+}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsXPathResult)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXPathResult)
+    {
+        tmp->RemoveObserver();
+    }
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXPathResult)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
+    {
+        txAExprResult *result = tmp->mResult.get();
+        if (result && result->getResultType() == txAExprResult::NODESET) {
+            txNodeSet *nodeSet = static_cast<txNodeSet*>(result);
+            nsCOMPtr<nsIDOMNode> node;
+            PRInt32 count = nodeSet->size();
+            PRInt32 i;
+            for (i = 0; i < count; ++i) {
+                txXPathNativeNode::getNode(nodeSet->get(i),
+                                           getter_AddRefs(node));
+                cb.NoteXPCOMChild(node);
+            }
+        }
+    }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXPathResult, nsIDOMXPathResult)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXPathResult, nsIDOMXPathResult)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXPathResult)
+    NS_INTERFACE_MAP_ENTRY(nsIDOMXPathResult)
+    NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIXPathResult)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXPathResult)
+    NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XPathResult)
+NS_INTERFACE_MAP_END
+
+void
+nsXPathResult::RemoveObserver()
+{
     if (mDocument) {
         mDocument->RemoveMutationObserver(this);
     }
 }
-
-NS_IMPL_ADDREF(nsXPathResult)
-NS_IMPL_RELEASE(nsXPathResult)
-NS_INTERFACE_MAP_BEGIN(nsXPathResult)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMXPathResult)
-  NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIXPathResult)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXPathResult)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XPathResult)
-NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 nsXPathResult::GetResultType(PRUint16 *aResultType)

@@ -673,7 +673,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
                     PRUint32 aLoadFlags,
                     PRBool aFirstParty)
 {
-    if (mFiredUnloadEvent) {
+    if (!IsNavigationAllowed()) {
       return NS_OK; // JS may not handle returning of an error code
     }
     nsresult rv;
@@ -5706,9 +5706,33 @@ nsDocShell::RestoreFromHistory()
     // Now we simulate appending child docshells for subframes.
     for (i = 0; i < childShells.Count(); ++i) {
         nsIDocShellTreeItem *childItem = childShells.ObjectAt(i);
+        nsCOMPtr<nsIDocShell> childShell = do_QueryInterface(childItem);
+
+        // Make sure to not clobber the state of the child.  Since AddChild
+        // always clobbers it, save it off first.
+        PRBool allowPlugins;
+        childShell->GetAllowPlugins(&allowPlugins);
+
+        PRBool allowJavascript;
+        childShell->GetAllowJavascript(&allowJavascript);
+
+        PRBool allowRedirects;
+        childShell->GetAllowMetaRedirects(&allowRedirects);
+
+        PRBool allowSubframes;
+        childShell->GetAllowSubframes(&allowSubframes);
+
+        PRBool allowImages;
+        childShell->GetAllowImages(&allowImages);
+        
         AddChild(childItem);
 
-        nsCOMPtr<nsIDocShell> childShell = do_QueryInterface(childItem);
+        childShell->SetAllowPlugins(allowPlugins);
+        childShell->SetAllowJavascript(allowJavascript);
+        childShell->SetAllowMetaRedirects(allowRedirects);
+        childShell->SetAllowSubframes(allowSubframes);
+        childShell->SetAllowImages(allowImages);
+
         rv = childShell->BeginRestore(nsnull, PR_FALSE);
         NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -6861,6 +6885,28 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
     // If we have a saved content viewer in history, restore and show it now.
     if (aSHEntry && (mLoadType & LOAD_CMD_HISTORY)) {
+        // It's possible that the previous viewer of mContentViewer is the
+        // viewer that will end up in aSHEntry when it gets closed.  If that's
+        // the case, we need to go ahead and force it into its shentry so we
+        // can restore it.
+        if (mContentViewer) {
+            nsCOMPtr<nsIContentViewer> prevViewer;
+            mContentViewer->GetPreviousViewer(getter_AddRefs(prevViewer));
+            if (prevViewer) {
+#ifdef DEBUG
+                nsCOMPtr<nsIContentViewer> prevPrevViewer;
+                prevViewer->GetPreviousViewer(getter_AddRefs(prevPrevViewer));
+                NS_ASSERTION(!prevPrevViewer, "Should never have viewer chain here");
+#endif
+                nsCOMPtr<nsISHEntry> viewerEntry;
+                prevViewer->GetHistoryEntry(getter_AddRefs(viewerEntry));
+                if (viewerEntry == aSHEntry) {
+                    // Make sure this viewer ends up in the right place
+                    mContentViewer->SetPreviousViewer(nsnull);
+                    prevViewer->Destroy();
+                }
+            }
+        }
         nsCOMPtr<nsISHEntry> oldEntry = mOSHE;
         PRBool restoring;
         rv = RestorePresentation(aSHEntry, &restoring);
@@ -7968,7 +8014,8 @@ nsDocShell::LoadHistoryEntry(nsISHEntry * aEntry, PRUint32 aLoadType)
         // Replace the current document with about:blank now to prevent
         // anything from the current document from leaking into any JavaScript
         // code in the URL.
-        rv = CreateAboutBlankContentViewer(nsnull);
+        nsCOMPtr<nsIPrincipal> prin = do_QueryInterface(owner);
+        rv = CreateAboutBlankContentViewer(prin);
 
         if (NS_FAILED(rv)) {
             // The creation of the intermittent about:blank content

@@ -1,2 +1,2 @@
 HTTP 200 OK
-Content-Access-Control: allow <localhost:8888> exclude <localhost.bar> <bar.localhost>, deny <*> exclude <localhost:8888>
+Access-Control: allow <localhost:8888> exclude <localhost.bar> <bar.localhost>, deny <*> exclude <localhost:8888>

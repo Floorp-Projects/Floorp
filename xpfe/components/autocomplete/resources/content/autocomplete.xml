@@ -1405,7 +1405,7 @@
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content>
+    <content minwidth="100">
       <xul:tree anonid="tree" class="autocomplete-tree plain" flex="1">
         <xul:treecols anonid="treecols">
           <xul:treecol class="autocomplete-treecol" id="treecolAutoCompleteValue" flex="2"/>
@@ -1440,6 +1440,11 @@
       <field name="view">
         null
       </field>
+
+      <!-- Setting tree.view doesn't always immediately create a selection,
+           so we ensure the selection by asking the tree for the view. Note:
+           this.view.selection is quicker if we know the selection exists. -->
+      <property name="selection" onget="return this.tree.view.selection;"/>
 
      <property name="pageCount"
                onget="return this.tree.treeBoxObject.getPageLength();"/>
@@ -1481,7 +1486,7 @@
 
       <method name="clearSelection">
         <body>
-          this.view.selection.clearSelection();
+          this.selection.clearSelection();
         </body>
       </method>
 
@@ -1538,7 +1543,7 @@
 
       <property name="selectedIndex">
         <getter>
-          if (!this.view || !this.view.selection.count)
+          if (!this.view || !this.selection.count)
             return -1;
           var start = {}, end = {};
           this.view.selection.getRangeAt(0, start, end);
@@ -1546,7 +1551,7 @@
         </getter>
         <setter>
           if (this.view) {
-            this.view.selection.select(val);
+            this.selection.select(val);
             if (val >= 0) {
               this.view.selection.currentIndex = -1;
               this.tree.treeBoxObject.ensureRowIsVisible(val);
@@ -1560,21 +1565,22 @@
 
       <method name="openAutocompletePopup">
         <parameter name="aInput"/>
-        <parameter name="aX"/>
-        <parameter name="aY"/>
-        <parameter name="aWidth"/>
-        <body>
+        <parameter name="aElement"/>
+        <body><![CDATA[
           if (!this.input) {
             this.tree.view = aInput.controller;
             this.view = this.tree.view;
             this.showCommentColumn = aInput.showCommentColumn;
             this.input = aInput;
-            this.width = aWidth;
             this.invalidate();
-            this.openPopupAtScreen(aX, aY, false);
+
+            var rect = aElement.getBoundingClientRect();
+            this.setAttribute("width", rect.right - rect.left);            
+            this.openPopup(aElement, "after_start", 0, 0, false, false);
+
             this.popupBoxObject.setConsumeRollupEvent(aInput.consumeRollupEvent);
           }
-        </body>
+        ]]></body>
       </method>
 
       <method name="closePopup">

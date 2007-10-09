@@ -1744,6 +1744,26 @@ nsChildView::GetThebesSurface()
 }
 
 
+NS_IMETHODIMP
+nsChildView::BeginSecureKeyboardInput()
+{
+  nsresult rv = nsBaseWidget::BeginSecureKeyboardInput();
+  if (NS_SUCCEEDED(rv))
+    ::EnableSecureEventInput();
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsChildView::EndSecureKeyboardInput()
+{
+  nsresult rv = nsBaseWidget::EndSecureKeyboardInput();
+  if (NS_SUCCEEDED(rv))
+    ::DisableSecureEventInput();
+  return rv;
+}
+
+
 #ifdef ACCESSIBILITY
 void
 nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
@@ -1784,19 +1804,20 @@ nsChildView::GetDocumentAccessible(nsIAccessible** aAccessible)
 NSPasteboard* globalDragPboard = nil;
 
 
-// globalDragView and globalDragEvent are only non-null during calls to |mouseDragged:|
+// gLastDragView and gLastDragEvent are only non-null during calls to |mouseDragged:|
 // in our native NSView. They are used to communicate information to the drag service
 // during drag invocation (starting a drag in from the view). All drag service drag
 // invocations happen only while these two global variables are non-null, while |mouseDragged:|
 // is on the stack.
-NSView* globalDragView = nil;
-NSEvent* globalDragEvent = nil;
+NSView* gLastDragView = nil;
+NSEvent* gLastDragEvent = nil;
 
 
 // initWithFrame:geckoChild:eventSink:
 - (id)initWithFrame:(NSRect)inFrame geckoChild:(nsChildView*)inChild eventSink:(nsIEventSink*)inSink
 {
   if ((self = [super initWithFrame:inFrame])) {
+    mWindow = nil;
     mGeckoChild = inChild;
     mIsPluginView = NO;
     mCurKeyEvent = nil;
@@ -1818,6 +1839,9 @@ NSEvent* globalDragEvent = nil;
                                                           NSURLPboardType,
                                                           NSFilesPromisePboardType,
                                                           kWildcardPboardType,
+                                                          kCorePboardType_url,
+                                                          kCorePboardType_urld,
+                                                          kCorePboardType_urln,
                                                           nil]];
 
   return self;
@@ -2782,8 +2806,8 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
     return;
   }
 
-  globalDragView = self;
-  globalDragEvent = theEvent;
+  gLastDragView = self;
+  gLastDragEvent = theEvent;
 
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
@@ -2799,8 +2823,8 @@ static nsEventStatus SendGeckoMouseEnterOrExitEvent(PRBool isTrusted,
 
   mGeckoChild->DispatchMouseEvent(geckoEvent);    
 
-  globalDragView = nil;
-  globalDragEvent = nil;
+  gLastDragView = nil;
+  gLastDragEvent = nil;
   // XXX maybe call markedTextSelectionChanged:client: here?
 }
 
@@ -3967,8 +3991,16 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   if (!mGeckoChild || nsTSMManager::IsComposing())
     return NO;
 
+  // Retain and release our native window to avoid crashes when it's closed
+  // as a result of processing a key equivalent (e.g. Command+w or Command+q).
+  NSWindow *ourNativeWindow = [self nativeWindow];
+  if (ourNativeWindow)
+    ourNativeWindow = [ourNativeWindow retain];
   // see if the menu system will handle the event
-  if ([[NSApp mainMenu] performKeyEquivalent:theEvent])
+  BOOL menuRetval = [[NSApp mainMenu] performKeyEquivalent:theEvent];
+  if (ourNativeWindow)
+    [ourNativeWindow release];
+  if (menuRetval)
     return YES;
 
   // don't handle this if certain modifiers are down - those should

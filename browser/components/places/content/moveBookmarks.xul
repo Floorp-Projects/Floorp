@@ -61,7 +61,7 @@
           src="chrome://browser/content/places/moveBookmarks.js"/>
 
   <hbox flex="1">
-    <label id="movetolabel" value="&moveTo.label;"/>
+    <label id="movetolabel" value="&moveTo.label;" control="foldersTree"/>
     <hbox flex="1">
       <tree id="foldersTree"
             class="placesTree"
@@ -77,7 +77,8 @@
         <treechildren id="placesListChildren" view="placesList" flex="1"/>
       </tree>
       <vbox>
-        <button label="&newFolderButton.label;"
+        <button id="newFolderButton"
+                label="&newFolderButton.label;"
                 accesskey="&newFolderButton.accesskey;"
                 oncommand="gMoveBookmarksDialog.newFolder();"/>
       </vbox>

@@ -160,6 +160,14 @@ nsSHEntry::~nsSHEntry()
   if (viewer) {
     viewer->Destroy();
   }
+
+#ifdef DEBUG
+  nsExpirationTracker<nsSHEntry,3>::Iterator iterator(gHistoryTracker);
+  nsSHEntry* elem;
+  while ((elem = iterator.Next()) != nsnull) {
+    NS_ASSERTION(elem != this, "Found dead entry still in the tracker!");
+  }
+#endif
 }
 
 //*****************************************************************************

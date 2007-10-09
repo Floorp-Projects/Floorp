@@ -86,7 +86,7 @@ public:
 
   /* make sure you clone it, if you need to do stuff to it */
   nsIFile* GetGREDir() { return mGREDir; }
-  nsIFile* GetAppDir() { 
+  nsIFile* GetAppDir() {
     if (mXULAppDir)
       return mXULAppDir;
     return mGREDir;
@@ -118,6 +118,14 @@ protected:
   static nsresult GetUserDataDirectory(nsILocalFile* *aFile, PRBool aLocal);
   static nsresult EnsureDirectoryExists(nsIFile* aDirectory);
   void EnsureProfileFileExists(nsIFile* aFile);
+
+  // Determine the profile path within the UAppData directory. This is different
+  // on every major platform.
+  static nsresult AppendProfilePath(nsIFile* aFile);
+
+  // Internal helper that splits a path into components using the '/' and '\\'
+  // delimiters.
+  static inline nsresult AppendProfileString(nsIFile* aFile, const char* aPath);
 
   // Calculate all bundle directories, including distribution bundles,
   // extensions, and themes

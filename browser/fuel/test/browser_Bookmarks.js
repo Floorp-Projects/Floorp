@@ -15,7 +15,7 @@ function test() {
   ok(!root.parent, "Check root parent (should be null)");
 
   var rootKidCount = root.children.length;
-  
+
   // test adding folders
   var testFolder = root.addFolder("FUEL");
   ok(testFolder, "Check folder creation");
@@ -43,7 +43,7 @@ function test() {
   testFolder.annotations.remove("testing/folder");
   ok(!testFolder.annotations.has("testing/folder"), "Checking existence of removed annotation");
   is(gLastFolderAction, "testing/folder", "Check event handler for removing annotation");
-  
+
   testFolder.events.addListener("addchild", onFolderAddChild);
   testFolder.events.addListener("removechild", onFolderRemoveChild);
 
@@ -55,7 +55,7 @@ function test() {
   is(testBookmark.type, "bookmark", "Check 'bookmark.type' after creation");
   is(testBookmark.title, "Mozilla", "Check 'bookmark.title' after creation");
   is(testBookmark.uri.spec, "http://www.mozilla.com/", "Check 'bookmark.uri' after creation");
-  
+
   is(testFolder.children.length, 1, "Check test folder child count after adding a child bookmark");
 
   // test modifying a bookmark
@@ -67,7 +67,7 @@ function test() {
   testBookmark.keyword = "moz"
   is(testBookmark.keyword, "moz", "Check setting 'bookmark.keyword'");
   is(gLastBookmarkAction, "keyword", "Check event handler for setting 'bookmark.keyword'");
-  
+
   testBookmark.title = "MozCorp"
   is(testBookmark.title, "MozCorp", "Check setting 'bookmark.title'");
   is(gLastBookmarkAction, "title", "Check event handler for setting 'bookmark.title'");
@@ -85,6 +85,7 @@ function test() {
   testBookmark.annotations.remove("testing/bookmark");
   ok(!testBookmark.annotations.has("testing/bookmark"), "Checking existence of removed annotation");
   is(gLastBookmarkAction, "testing/bookmark", "Check event handler for removing annotation");
+  is(testBookmark.annotations.get("testing/bookmark"), null, "Check existence of a missing annotation");
 
   // quick annotation type tests
   testBookmark.annotations.set("testing/bookmark/string", "annotate-this", 0);
@@ -102,7 +103,7 @@ function test() {
   is(testBookmark.annotations.get("testing/bookmark/double"), 3.333, "Checking value of added double annotation");
   is(gLastBookmarkAction, "testing/bookmark/double", "Check event handler for setting annotation");
   gLastBookmarkAction = "";
-  
+
   // test names array - NOTE: "bookmarkProperties/description" is an annotation too
   var names = testBookmark.annotations.names;
   is(names[1], "testing/bookmark/string", "Checking contents of annotation names array");
@@ -130,18 +131,18 @@ function test() {
   is(gLastBookmarkAction, "remove", "Check event handler for removing bookmark");
   is(gLastFolderAction, "removechild", "Check event handler for removing a child from a folder");
   is(testFolder.children.length, 0, "Check test folder child count after removing a child bookmark");
-  
+
   // test removing a folder
   testFolder.events.addListener("remove", onFolderRemove);
   testFolder.remove();
   is(gLastFolderAction, "remove", "Check event handler for removing child folder");
   rootKidCount--;
   is(root.children.length, rootKidCount, "Check root folder child count after removing a child folder");
-  
+
   // test moving between folders
   var testFolderA = root.addFolder("folder-a");
   var testFolderB = root.addFolder("folder-b");
-  
+
   var testMove = testFolderA.addBookmark("Mozilla", url("http://www.mozilla.com/"));
   testMove.events.addListener("move", onBookmarkMove);
   is(testMove.parent.title, "folder-a", "Checking for new parent before moving bookmark");

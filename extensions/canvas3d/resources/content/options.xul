@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<prefwindow id="canvas3d-options" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <prefpane>
+    <preferences>
+      <preference id="webcontent" name="extensions.canvas3d.enabledForWebContent" type="bool"/>
+    </preferences>
+
+    <checkbox label="Enable 3D canvas in web content" preference="webcontent"/>
+
+  </prefpane>
+</prefwindow>

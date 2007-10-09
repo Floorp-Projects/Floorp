@@ -1,0 +1,34 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="test">
+      <content>
+        <span><children/></span>
+      </content>
+    </binding>
+  </bindings>
+  <script type="application/x-javascript">
+    function runTest() {
+      var div = document.getElementById("testDiv");
+
+      // First we have to make sure that we've looked up the primary frame for
+      // the previous child span.  Appending text to it should do the trick.
+      div.firstChild.
+          appendChild(document.createTextNode("This is text in a div "));
+
+      // Now flush out reflow
+      document.body.offsetWidth;
+
+      var node = document.createElementNS("http://www.w3.org/1999/xhtml",
+                                          "span");
+      div.appendChild(node);
+      node.appendChild(document.createTextNode("This text should appear"));
+    }
+  </script>
+</head>
+
+<body onload="runTest()">
+<div id="testDiv" style="width: 0; -moz-binding: url(#test)"><span></span></div>
+
+</body>
+</html>

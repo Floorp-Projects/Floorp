@@ -150,7 +150,6 @@ function plInit() {
                      browserWindow.focus();
 
                      content = browserWindow.getBrowser();
-                     content.addEventListener('load', plLoadHandler, true);
                      setTimeout(plLoadPage, 100);
                    }, 500);
       };
@@ -182,7 +181,7 @@ function plLoadPage() {
     removeLastAddedListener();
 
   if (plPageFlags() & TEST_DOES_OWN_TIMING) {
-    // if the page does its own timing, use a capturig handler
+    // if the page does its own timing, use a capturing handler
     // to make sure that we can set up the function for content to call
     content.addEventListener('load', plLoadHandlerCapturing, true);
     removeLastAddedListener = function() {
@@ -222,8 +221,7 @@ function plRecordTime(time) {
 function plLoadHandlerCapturing(evt) {
   // make sure we pick up the right load event
   if (evt.type != 'load' ||
-      (!(evt.originalTarget instanceof Ci.nsIDOMHTMLDocument) ||
-       evt.originalTarget.defaultView.frameElement))
+       evt.originalTarget.defaultView.frameElement)
       return;
 
   if (!(plPageFlags() & TEST_DOES_OWN_TIMING)) {
@@ -242,8 +240,7 @@ function plLoadHandlerCapturing(evt) {
 function plLoadHandler(evt) {
   // make sure we pick up the right load event
   if (evt.type != 'load' ||
-      (!(evt.originalTarget instanceof Ci.nsIDOMHTMLDocument) ||
-       evt.originalTarget.defaultView.frameElement))
+       evt.originalTarget.defaultView.frameElement)
       return;
 
   var end_time = Date.now();
@@ -298,10 +295,11 @@ function plStop(force) {
 
       var formats = reportFormat.split(",");
 
-      for each (var fmt in formats)
-        dumpLine(report.getReport(fmt));
-
-      if (renderReport) {
+      if (!renderReport) {
+        for each (var fmt in formats)
+          dumpLine(report.getReport(fmt));
+      }
+      else {
         dumpLine ("*************** Render report *******************");
         for each (var fmt in formats)
           dumpLine(renderReport.getReport(fmt));

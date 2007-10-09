@@ -41,6 +41,7 @@
 #include "nsDOMError.h"
 #include "jsdbgapi.h"
 #include "jsobj.h"    // For OBJ_GET_PROPERTY.
+#include "jscntxt.h"  // For JSAutoTempValueRooter.
 #include "XPCWrapper.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowCollection.h"
@@ -87,6 +88,9 @@ XPC_XOW_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 JS_STATIC_DLL_CALLBACK(JSBool)
 XPC_XOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp);
 
+JS_STATIC_DLL_CALLBACK(JSObject *)
+XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly);
+
 JSExtendedClass sXPC_XOW_JSClass = {
   // JSClass (JSExtendedClass.base) initialization
   { "XPCCrossOriginWrapper",
@@ -101,8 +105,13 @@ JSExtendedClass sXPC_XOW_JSClass = {
     nsnull,              nsnull,
     nsnull,              nsnull
   },
+
   // JSExtendedClass initialization
-  XPC_XOW_Equality
+  XPC_XOW_Equality,
+  nsnull,             // outerObject
+  nsnull,             // innerObject
+  XPC_XOW_Iterator,
+  JSCLASS_NO_RESERVED_MEMBERS
 };
 
 // The slot that we stick our scope into.
@@ -657,25 +666,17 @@ XPC_XOW_GetOrSetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp,
     return JS_FALSE;
   }
 
-  if (checkProto && JS_GetPrototype(cx, wrappedObj) != proto) {
-    // Ensure that this __proto__ setting didn't create a cycle. The JS
-    // engine tries to do this, but XOWs confuse it. So here we deal with
-    // them by unwrapping each step up the prototype chain.
+  JSObject *newProto;
+  if (checkProto &&
+      (newProto = JS_GetPrototype(cx, wrappedObj)) != proto &&
+      newProto) {
+    // __proto__ setting is a bad hack, people shouldn't do it. In the
+    // interests of sanity, only allow them to set XOW wrapped protos
+    // to null.
 
-    JSObject *oldProto = proto;
-    proto = wrappedObj;
-    while ((proto = JS_GetPrototype(cx, proto)) != nsnull) {
-      JSObject *unwrapped = GetWrappedObject(cx, proto);
-      if (unwrapped) {
-        proto = unwrapped;
-      }
-
-      if (proto == wrappedObj) {
-        JS_SetPrototype(cx, wrappedObj, oldProto);
-        JS_ReportError(cx, "cyclic __proto__ value");
-        return JS_FALSE;
-      }
-    }
+    JS_SetPrototype(cx, wrappedObj, proto);
+    JS_ReportError(cx, "invalid __proto__ value (can only be set to null)");
+    return JS_FALSE;
   }
 
   return WrapSameOriginProp(cx, obj, vp);
@@ -789,9 +790,15 @@ XPC_XOW_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     return JS_TRUE;
   }
 
+  // Note: JSTYPE_VOID and JSTYPE_STRING are equivalent.
   nsresult rv = IsWrapperSameOrigin(cx, wrappedObj);
   if (NS_FAILED(rv) &&
-      (rv != NS_ERROR_DOM_PROP_ACCESS_DENIED || type != JSTYPE_STRING)) {
+      (rv != NS_ERROR_DOM_PROP_ACCESS_DENIED ||
+       (type != JSTYPE_STRING && type != JSTYPE_VOID))) {
+    // Ensure that we report some kind of error.
+    if (rv == NS_ERROR_DOM_PROP_ACCESS_DENIED) {
+      ThrowException(rv, cx);
+    }
     return JS_FALSE;
   }
 
@@ -815,10 +822,10 @@ XPC_XOW_Finalize(JSContext *cx, JSObject *obj)
 
   // Now that we have our scope, see if it's going away. If it is,
   // then our work here is going to be done when we destroy the scope
-  // entirely.
+  // entirely. Scope can be null if we're an enumerating XOW.
   XPCWrappedNativeScope *scope = reinterpret_cast<XPCWrappedNativeScope *>
                                                  (JSVAL_TO_PRIVATE(scopeVal));
-  if (XPCWrappedNativeScope::IsDyingScope(scope)) {
+  if (!scope || XPCWrappedNativeScope::IsDyingScope(scope)) {
     return;
   }
 
@@ -937,6 +944,160 @@ XPC_XOW_Equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
   test = other->GetFlatJSObject();
   return ((JSExtendedClass *)JS_GET_CLASS(cx, obj))->
     equality(cx, obj, OBJECT_TO_JSVAL(test), bp);
+}
+
+JS_STATIC_DLL_CALLBACK(void)
+IteratorFinalize(JSContext *cx, JSObject *obj)
+{
+  jsval v;
+  JS_GetReservedSlot(cx, obj, 0, &v);
+
+  JSIdArray *ida = reinterpret_cast<JSIdArray *>(JSVAL_TO_PRIVATE(v));
+  if (ida) {
+    JS_DestroyIdArray(cx, ida);
+  }
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+IteratorNext(JSContext *cx, uintN argc, jsval *vp)
+{
+  JSObject *obj = JSVAL_TO_OBJECT(vp[1]);
+  jsval v;
+
+  JS_GetReservedSlot(cx, obj, 0, &v);
+  JSIdArray *ida = reinterpret_cast<JSIdArray *>(JSVAL_TO_PRIVATE(v));
+
+  JS_GetReservedSlot(cx, obj, 1, &v);
+  jsint idx = JSVAL_TO_INT(v);
+
+  if (idx == ida->length) {
+    return JS_ThrowStopIteration(cx);
+  }
+
+  JS_GetReservedSlot(cx, obj, 2, &v);
+  jsid id = ida->vector[idx++];
+  if (JSVAL_TO_BOOLEAN(v)) {
+    if (!JS_IdToValue(cx, id, &v)) {
+      return JS_FALSE;
+    }
+
+    *vp = v;
+  } else {
+    // We need to return an [id, value] pair.
+    if (!OBJ_GET_PROPERTY(cx, JS_GetParent(cx, obj), id, &v)) {
+      return JS_FALSE;
+    }
+
+    jsval name;
+    if (!JS_IdToValue(cx, id, &name)) {
+      return JS_FALSE;
+    }
+
+    jsval vec[2] = { name, v };
+    JSAutoTempValueRooter tvr(cx, 2, vec);
+    JSObject *array = JS_NewArrayObject(cx, 2, vec);
+    if (!array) {
+      return JS_FALSE;
+    }
+
+    *vp = OBJECT_TO_JSVAL(array);
+  }
+
+  JS_SetReservedSlot(cx, obj, 1, INT_TO_JSVAL(idx));
+  return JS_TRUE;
+}
+
+static JSClass IteratorClass = {
+  "XOW iterator", JSCLASS_HAS_RESERVED_SLOTS(3),
+  JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_PropertyStub,
+  JS_EnumerateStub, JS_ResolveStub,
+  JS_ConvertStub, IteratorFinalize,
+
+  JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
+
+JS_STATIC_DLL_CALLBACK(JSObject *)
+XPC_XOW_Iterator(JSContext *cx, JSObject *obj, JSBool keysonly)
+{
+  // This is rather ugly: we want to use the trick seen in Enumerate,
+  // where we use our wrapper's resolve hook to determine if we should
+  // enumerate a given property. However, we don't want to pollute the
+  // identifiers with a next method, so we create an object that
+  // delegates (via the __proto__ link) to a XOW.
+
+  jsval root = JSVAL_NULL;
+
+  // Root v's address so we can set it and have the right value rooted.
+  JSAutoTempValueRooter tvr(cx, 1, &root);
+
+  JSObject *wrapperIter = JS_NewObject(cx, &sXPC_XOW_JSClass.base, nsnull,
+                                       JS_GetGlobalForObject(cx, obj));
+  if (!wrapperIter) {
+    return nsnull;
+  }
+
+  root = OBJECT_TO_JSVAL(wrapperIter);
+
+  JSObject *iterObj = JS_NewObject(cx, &IteratorClass, wrapperIter, obj);
+  if (!iterObj) {
+    return nsnull;
+  }
+
+  root = OBJECT_TO_JSVAL(iterObj);
+
+  // Do this sooner rather than later to avoid complications in
+  // IteratorFinalize.
+  if (!JS_SetReservedSlot(cx, iterObj, 0, PRIVATE_TO_JSVAL(nsnull))) {
+    return nsnull;
+  }
+
+  // Initialize iterObj.
+  if (!JS_DefineFunction(cx, iterObj, "next", (JSNative)IteratorNext, 0,
+                         JSFUN_FAST_NATIVE)) {
+    return nsnull;
+  }
+
+  // Initialize our XOW.
+  JSObject *innerObj = GetWrappedObject(cx, obj);
+  if (!innerObj) {
+    ThrowException(NS_ERROR_INVALID_ARG, cx);
+    return nsnull;
+  }
+
+  jsval v = OBJECT_TO_JSVAL(innerObj);
+  if (!JS_SetReservedSlot(cx, wrapperIter, XPCWrapper::sWrappedObjSlot, v) ||
+      !JS_SetReservedSlot(cx, wrapperIter, XPCWrapper::sResolvingSlot,
+                          JSVAL_FALSE) ||
+      !JS_SetReservedSlot(cx, wrapperIter, XPCWrapper::sNumSlots,
+                          PRIVATE_TO_JSVAL(nsnull))) {
+    return nsnull;
+  }
+
+  // Start enumerating over all of our properties.
+  do {
+    if (!XPCWrapper::Enumerate(cx, iterObj, innerObj)) {
+      return nsnull;
+    }
+  } while ((innerObj = JS_GetPrototype(cx, innerObj)) != nsnull);
+
+  JSIdArray *ida = JS_Enumerate(cx, iterObj);
+  if (!ida) {
+    return nsnull;
+  }
+
+  if (!JS_SetReservedSlot(cx, iterObj, 0, PRIVATE_TO_JSVAL(ida)) ||
+      !JS_SetReservedSlot(cx, iterObj, 1, JSVAL_ZERO) ||
+      !JS_SetReservedSlot(cx, iterObj, 2, BOOLEAN_TO_JSVAL(keysonly))) {
+    return nsnull;
+  }
+
+  if (!JS_SetPrototype(cx, iterObj, nsnull)) {
+    return nsnull;
+  }
+
+  return iterObj;
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)

@@ -5,7 +5,7 @@
 package Bootstrap::Step::Repack;
 use Bootstrap::Step;
 use Bootstrap::Config;
-use Bootstrap::Util qw(CvsCatfile);
+use Bootstrap::Util qw(CvsCatfile SyncNightlyDirToStaging);
 use MozBuild::Util qw(MkdirWithPath);
 @ISA = ("Bootstrap::Step");
 
@@ -18,6 +18,7 @@ sub Execute {
     my $rc = $config->Get(var => 'rc');
     my $logDir = $config->Get(sysvar => 'logDir');
     my $l10n_buildPlatform = $config->Get(sysvar => 'l10n_buildPlatform');
+    my $osname = $config->SystemInfo(var => 'osname');    
     my $rcTag = $productTag . '_RC' . $rc;
 
     my $buildLog = catfile($logDir, 'repack_' . $rcTag . '-build-l10n.log');
@@ -25,6 +26,16 @@ sub Execute {
     unlink($lastBuilt) 
       or $this->Log(msg => "Cannot unlink last-built file $lastBuilt: $!");
     $this->Log(msg => "Unlinked $lastBuilt");
+
+    # For Cygwin only, ensure that the system mount point is textmode
+    # This forces CVS to use DOS-style carriage-return EOL characters.
+    if ($osname eq 'win32') {
+        $this->Shell(
+          cmd => 'mount',
+          cmdArgs => ['-t', '-sc', '/cygdrive'],
+          dir => $buildDir,
+        );
+    }
 
     $this->Shell(
       cmd => './build-seamonkey.pl',
@@ -35,6 +46,16 @@ sub Execute {
       logFile => $buildLog,
       timeout => 36000
     );
+
+    # For Cygwin only, set the system mount point back to binmode
+    # This forces CVS to use Unix-style linefeed EOL characters.
+    if ($osname eq 'win32') {
+        $this->Shell(
+          cmd => 'mount',
+          cmdArgs => ['-b', '-sc', '/cygdrive'],
+          dir => $buildDir,
+        );
+    }
 }
 
 sub Verify {
@@ -211,6 +232,8 @@ sub Push {
                   $pushDir, $candidateDir],
       logFile => $pushLog,
     );
+
+    SyncNightlyDirToStaging(); 
 }
 
 sub Announce {

@@ -74,6 +74,8 @@ static const  PRInt32 kIndentIncrementHeaders = 2;  /* If mHeaderStrategy = 1,
 static const  PRInt32 kIndentSizeList = (kTabSize > kOLNumberWidth+3) ? kTabSize: kOLNumberWidth+3;
                                // Indention of non-first lines of ul and ol
 static const  PRInt32 kIndentSizeDD = kTabSize;  // Indention of <dd>
+static const  PRUnichar  kNBSP = 160;
+static const  PRUnichar kSPACE = ' ';
 
 static PRInt32 HeaderLevel(eHTMLTags aTag);
 static PRInt32 GetUnicharWidth(PRUnichar ucs);
@@ -1243,9 +1245,7 @@ nsPlainTextSerializer::Output(nsString& aString)
   if (!(mFlags & nsIDocumentEncoder::OutputPersistNBSP)) {
     // First, replace all nbsp characters with spaces,
     // which the unicode encoder won't do for us.
-    static PRUnichar nbsp = 160;
-    static PRUnichar space = ' ';
-    aString.ReplaceChar(nbsp, space);
+    aString.ReplaceChar(kNBSP, kSPACE);
   }
   mOutputString->Append(aString);
 }
@@ -1277,6 +1277,7 @@ nsPlainTextSerializer::AddToLine(const PRUnichar * aLineFragment,
          (
           '>' == aLineFragment[0] ||
           ' ' == aLineFragment[0] ||
+        kNBSP == aLineFragment[0] ||  // bug 215068
           !nsCRT::strncmp(aLineFragment, NS_LITERAL_STRING("From ").get(), 5)
           )
          && mCiteQuoteLevel == 0  // We space-stuff quoted lines anyway
@@ -1444,16 +1445,17 @@ nsPlainTextSerializer::EndLine(PRBool aSoftlinebreak)
     // No meaning
     return;
   }
-  
-  // In non-preformatted mode, remove SPACE from the end
-  // of the line, unless we got "-- " in a format=flowed
-  // output. "-- " is the sig delimiter by convention and
-  // shouldn't be touched even in format=flowed
-  // (see RFC 2646). We only check for "-- " when it's a hard line
-  // break for obvious reasons.
+
+  /* In non-preformatted mode, remove spaces from the end of the line for
+   * format=flowed compatibility. Don't do this for these special cases:
+   * "-- ", the signature separator (RFC 2646) shouldn't be touched and
+   * "- -- ", the OpenPGP dash-escaped signature separator in inline
+   * signed messages according to the OpenPGP standard (RFC 2440).
+   */  
   if(!(mFlags & nsIDocumentEncoder::OutputPreformatted) &&
-     (aSoftlinebreak || !mCurrentLine.EqualsLiteral("-- "))) {
-    // Remove SPACE:s from the end of the line.
+     (aSoftlinebreak || 
+     !(mCurrentLine.EqualsLiteral("-- ") || mCurrentLine.EqualsLiteral("- -- ")))) {
+    // Remove spaces from the end of the line.
     while(currentlinelength > 0 &&
           mCurrentLine[currentlinelength-1] == ' ') {
       --currentlinelength;
@@ -1569,8 +1571,12 @@ nsPlainTextSerializer::OutputQuotesAndIndent(PRBool stripTrailingSpaces /* = PR_
  * line wrapping, indentation, whitespace compression and other things.
  */
 void
-nsPlainTextSerializer::Write(const nsAString& aString)
+nsPlainTextSerializer::Write(const nsAString& aStr)
 {
+  // XXX Copy necessary to use nsString methods and gain
+  // access to underlying buffer
+  nsAutoString str(aStr);
+
 #ifdef DEBUG_wrapping
   printf("Write(%s): wrap col = %d\n",
          NS_ConvertUTF16toUTF8(aString).get(), mWrapColumn);
@@ -1579,17 +1585,32 @@ nsPlainTextSerializer::Write(const nsAString& aString)
   PRInt32 bol = 0;
   PRInt32 newline;
   
-  PRInt32 totLen = aString.Length();
+  PRInt32 totLen = str.Length();
 
   // If the string is empty, do nothing:
   if (totLen <= 0) return;
+
+  // For Flowed text change nbsp-ses to spaces at end of lines to allow them
+  // to be cut off along with usual spaces if required. (bug #125928)
+  if (mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
+    PRUnichar nbsp = 160;
+    for (PRInt32 i = totLen-1; i >= 0; i--) {
+      PRUnichar c = str[i];
+      if ('\n' == c || '\r' == c || ' ' == c || '\t' == c)
+        continue;
+      if (nbsp == c)
+        str.Replace(i, 1, ' ');
+      else
+        break;
+    }
+  }
 
   // We have two major codepaths here. One that does preformatted text and one
   // that does normal formatted text. The one for preformatted text calls
   // Output directly while the other code path goes through AddToLine.
   if ((mPreFormatted && !mWrapColumn) || IsInPre()
       || ((((!mQuotesPreformatted && mSpanLevel > 0) || mDontWrapAnyQuotes))
-          && mEmptyLines >= 0 && aString.First() == PRUnichar('>'))) {
+          && mEmptyLines >= 0 && str.First() == PRUnichar('>'))) {
     // No intelligent wrapping.
 
     // This mustn't be mixed with intelligent wrapping without clearing
@@ -1609,8 +1630,8 @@ nsPlainTextSerializer::Write(const nsAString& aString)
 
       // Find one of '\n' or '\r' using iterators since nsAString
       // doesn't have the old FindCharInSet function.
-      nsAString::const_iterator iter;           aString.BeginReading(iter);
-      nsAString::const_iterator done_searching; aString.EndReading(done_searching);
+      nsAString::const_iterator iter;           str.BeginReading(iter);
+      nsAString::const_iterator done_searching; str.EndReading(done_searching);
       iter.advance(bol); 
       PRInt32 new_newline = bol;
       newline = kNotFound;
@@ -1626,7 +1647,7 @@ nsPlainTextSerializer::Write(const nsAString& aString)
       // Done searching
       if(newline == kNotFound) {
         // No new lines.
-        nsAutoString stringpart(Substring(aString, bol, totLen - bol));
+        nsAutoString stringpart(Substring(str, bol, totLen - bol));
         if(!stringpart.IsEmpty()) {
           PRUnichar lastchar = stringpart[stringpart.Length()-1];
           if((lastchar == '\t') || (lastchar == ' ') ||
@@ -1644,7 +1665,9 @@ nsPlainTextSerializer::Write(const nsAString& aString)
       } 
       else {
         // There is a newline
-        nsAutoString stringpart(Substring(aString, bol, newline-bol));
+        nsAutoString stringpart(Substring(str, bol, newline-bol));
+        if (mFlags & nsIDocumentEncoder::OutputFormatFlowed)
+          stringpart.Trim(" ", PR_FALSE, PR_TRUE, PR_TRUE);
         mInWhitespace = PR_TRUE;
         mCurrentLine.Assign(stringpart);
         outputLineBreak = PR_TRUE;
@@ -1680,10 +1703,6 @@ nsPlainTextSerializer::Write(const nsAString& aString)
 #endif
     return;
   }
-
-  // XXX Copy necessary to use nsString methods and gain
-  // access to underlying buffer
-  nsAutoString str(aString);
 
   // Intelligent handling of text
   // If needed, strip out all "end of lines"

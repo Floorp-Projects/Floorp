@@ -127,7 +127,14 @@ endif
 PROFILE_CHROME = userChrome-example.css userContent-example.css
 
 libs:: $(addprefix $(LOCALE_SRCDIR)/,$(README_FILES))
+ifeq ($(OS_ARCH),WINNT)
+	$(EXIT_ON_ERROR) \
+	for file in $^; do \
+	  $(PERL) -pe 's/(?<!\r)\n/\r\n/g;' < $$file > $(FINAL_TARGET)/`basename $$file`; \
+	done
+else
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)
+endif
 
 libs:: $(addprefix $(LOCALE_SRCDIR)/profile/,$(PROFILE_FILES))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile

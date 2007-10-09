@@ -46,6 +46,7 @@
 #include "nsFrameList.h"
 #include "nsHTMLReflowState.h"
 #include "nsGkAtoms.h"
+#include "nsContainerFrame.h"
 
 class nsIAtom;
 class nsIFrame;
@@ -87,7 +88,7 @@ public:
                       nsIAtom*        aListName,
                       nsIFrame**      aFirstChild) const;
   nsIFrame* GetFirstChild() { return mAbsoluteFrames.FirstChild(); }
-  
+
   nsresult SetInitialChildList(nsIFrame*       aDelegatingFrame,
                                nsIAtom*        aListName,
                                nsIFrame*       aChildList);
@@ -113,11 +114,13 @@ public:
   //        positioned frames may be skipped based on whether they use
   //        placeholders for positioning and on whether the containing block
   //        width or height changed.
-  nsresult Reflow(nsIFrame*                aDelegatingFrame,
+  nsresult Reflow(nsContainerFrame*        aDelegatingFrame,
                   nsPresContext*           aPresContext,
                   const nsHTMLReflowState& aReflowState,
+                  nsReflowStatus&          aReflowStatus,
                   nscoord                  aContainingBlockWidth,
                   nscoord                  aContainingBlockHeight,
+                  PRBool                   aConstrainHeight,
                   PRBool                   aCBWidthChanged,
                   PRBool                   aCBHeightChanged,
                   nsRect*                  aChildBounds = nsnull);
@@ -139,6 +142,7 @@ protected:
                                const nsHTMLReflowState& aReflowState,
                                nscoord                  aContainingBlockWidth,
                                nscoord                  aContainingBlockHeight,
+                               PRBool                   aConstrainHeight,
                                nsIFrame*                aKidFrame,
                                nsReflowStatus&          aStatus,
                                nsRect*                  aChildBounds);

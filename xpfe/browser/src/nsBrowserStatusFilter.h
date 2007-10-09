@@ -68,6 +68,9 @@ public:
 private:
     nsresult StartDelayTimer();
     void ProcessTimeout();
+    void MaybeSendProgress();
+    void MaybeSendStatus();
+    void ResetMembers();
     PRBool DelayInEffect() { return mDelayedStatus || mDelayedProgress; }
 
     static void TimeoutHandler(nsITimer *aTimer, void *aClosure);
@@ -80,6 +83,10 @@ private:
     nsString                         mStatusMsg;
     PRInt64                          mCurProgress;
     PRInt64                          mMaxProgress;
+
+    nsString                         mCurrentStatusMsg;
+    PRBool                           mStatusIsDirty;
+    PRInt32                          mCurrentPercentage;
 
     // used to convert OnStart/OnStop notifications into progress notifications
     PRInt32                          mTotalRequests;

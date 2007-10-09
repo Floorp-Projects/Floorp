@@ -1558,7 +1558,7 @@ nsNavHistory::EvaluateQueryForNode(const nsCOMArray<nsNavHistoryQuery>& aQueries
       nsCOMArray<nsNavHistoryQuery> queries;
       queries.AppendObject(query);
       nsCOMArray<nsNavHistoryResultNode> filteredSet;
-      nsresult rv = FilterResultSet(nsnull, inputSet, &filteredSet, queries);
+      nsresult rv = FilterResultSet(nsnull, inputSet, &filteredSet, queries, aOptions);
       if (NS_FAILED(rv))
         continue;
       if (! filteredSet.Count())
@@ -2144,6 +2144,32 @@ PRBool IsHistoryMenuQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries, nsNavHi
   return PR_TRUE;
 }
 
+static
+PRBool NeedToFilterResultSet(const nsCOMArray<nsNavHistoryQuery>& aQueries, 
+                             nsNavHistoryQueryOptions *aOptions)
+{
+  // optimize the case where we just want a list with no grouping: this
+  // directly fills in the results and we avoid a copy of the whole list
+  PRUint32 groupCount;
+  const PRUint16 *groupings = aOptions->GroupingMode(&groupCount);
+
+  if (groupCount != 0 || aOptions->ExcludeQueries())
+    return PR_TRUE;
+
+  PRInt32 i;
+  for (i = 0; i < aQueries.Count(); i ++) {
+    if (aQueries[i]->Folders().Length() != 0) {
+      return PR_TRUE;
+    } else {
+      PRBool hasSearchTerms;
+      nsresult rv = aQueries[i]->GetHasSearchTerms(&hasSearchTerms);
+      if (NS_FAILED(rv) || hasSearchTerms)
+        return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
 nsresult
 nsNavHistory::ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                                    nsNavHistoryQueryOptions *aOptions, 
@@ -2238,8 +2264,7 @@ nsNavHistory::ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries
       "LEFT OUTER JOIN moz_historyvisits v ON b.fk = v.place_id "
       "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id ");
       groupBy = NS_LITERAL_CSTRING(" GROUP BY b.id");
-    }
-    else {
+    } else {
       // XXX: implement support for nsINavHistoryQueryOptions::QUERY_TYPE_UNIFIED 
       return NS_ERROR_NOT_IMPLEMENTED;
     }
@@ -2334,8 +2359,10 @@ nsNavHistory::ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries
       NS_NOTREACHED("Invalid sorting mode");
   }
 
-  // limit clause if there are 'maxResults'
-  if (aOptions->MaxResults() > 0) {
+  // determine whether we can push maxResults constraints
+  // into the queries as LIMIT, or if we need to do result count clamping later
+  // using FilterResultSet()
+  if (!NeedToFilterResultSet(aQueries, aOptions) && aOptions->MaxResults() > 0) {
     queryString += NS_LITERAL_CSTRING(" LIMIT ");
     queryString.AppendInt(aOptions->MaxResults());
     queryString.AppendLiteral(" ");
@@ -2389,56 +2416,39 @@ nsNavHistory::GetQueryResults(nsNavHistoryQueryResultNode *aResultNode,
 
   // bind parameters
   PRInt32 numParameters = 0;
-
-  // optimize the case where we just want a list with no grouping: this
-  // directly fills in the results and we avoid a copy of the whole list
-  PRBool resultAsList = PR_TRUE;
-  PRUint32 groupCount;
-  const PRUint16 *groupings = aOptions->GroupingMode(&groupCount);
-
-  if (groupCount != 0 || aOptions->ExcludeQueries()) {
-    resultAsList = PR_FALSE;
-  }
-
   PRInt32 i;
-  for (i = 0; i < aQueries.Count(); i ++) {
+  for (i = 0; i < aQueries.Count(); i++) {
     PRInt32 clauseParameters = 0;
     rv = BindQueryClauseParameters(statement, numParameters,
                                    aQueries[i], aOptions, &clauseParameters);
     NS_ENSURE_SUCCESS(rv, rv);
     numParameters += clauseParameters;
-    if (resultAsList) {
-      if (aQueries[i]->Folders().Length() != 0) {
-        resultAsList = PR_FALSE;
-      } else {
-        PRBool hasSearchTerms;
-        rv = aQueries[i]->GetHasSearchTerms(&hasSearchTerms);
-        if (hasSearchTerms)
-          resultAsList = PR_FALSE;
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-    }
   }
 
-  if (resultAsList) {
-    rv = ResultsAsList(statement, aOptions, aResults);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
+  // optimize the case where we just use the results as is
+  // and we don't need to do any post-query filtering
+  if (NeedToFilterResultSet(aQueries, aOptions)) {
     // generate the toplevel results
     nsCOMArray<nsNavHistoryResultNode> toplevel;
     rv = ResultsAsList(statement, aOptions, &toplevel);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    PRUint32 groupCount;
+    const PRUint16 *groupings = aOptions->GroupingMode(&groupCount);
+
     if (groupCount == 0) {
-      FilterResultSet(aResultNode, toplevel, aResults, aQueries);
+      FilterResultSet(aResultNode, toplevel, aResults, aQueries, aOptions);
     } else {
       nsCOMArray<nsNavHistoryResultNode> filteredResults;
-      FilterResultSet(aResultNode, toplevel, &filteredResults, aQueries);
+      FilterResultSet(aResultNode, toplevel, &filteredResults, aQueries, aOptions);
       rv = RecursiveGroup(aResultNode, filteredResults, groupings, groupCount,
                           aResults);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-  }
+  } else {
+    rv = ResultsAsList(statement, aOptions, aResults);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } 
 
   return NS_OK;
 }
@@ -4127,16 +4137,22 @@ nsNavHistory::URIHasTag(nsIURI* aURI, const nsAString& aTag)
 
 // nsNavHistory::FilterResultSet
 //
-//    This does some post-query-execution filtering:
-//      - searching on title & url
-//      - parent folder (recursively)
-//      - excludeQueries
+// This does some post-query-execution filtering:
+//   - searching on title & url
+//   - parent folder (recursively)
+//   - excludeQueries
+//   - tags
+//   - limit count
+//
+// Note:  changes to filtering in FilterResultSet() 
+// may require changes to NeedToFilterResultSet()
 
 nsresult
 nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
                               const nsCOMArray<nsNavHistoryResultNode>& aSet,
                               nsCOMArray<nsNavHistoryResultNode>* aFiltered,
-                              const nsCOMArray<nsNavHistoryQuery>& aQueries)
+                              const nsCOMArray<nsNavHistoryQuery>& aQueries,
+                              nsNavHistoryQueryOptions *aOptions)
 {
   nsresult rv;
 
@@ -4199,22 +4215,28 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
           // check ancestors
           PRInt64 ancestor = parentId, lastAncestor;
           PRBool belongs = PR_FALSE;
+          nsTArray<PRInt64> ancestorFolders;
 
           while (!belongs) {
             // Avoid using |ancestor| itself if GetFolderIdForItem failed.
             lastAncestor = ancestor;
+            ancestorFolders.AppendElement(ancestor);
 
             // GetFolderIdForItems throws when called for the places-root
             if (NS_FAILED(bookmarks->GetFolderIdForItem(ancestor,&ancestor))) {
+              break;
+            } else if (excludeFolders[queryIndex]->IndexOf(ancestor) != -1) {
               break;
             } else if (includeFolders[queryIndex]->IndexOf(ancestor) != -1) {
               belongs = PR_TRUE;
             }
           }
+          // if the parentId or any of its ancestors "belong",
+          // include all of them.  otherwise, exclude all of them.
           if (belongs) {
-            includeFolders[queryIndex]->AppendElement(lastAncestor);
+            includeFolders[queryIndex]->AppendElements(ancestorFolders);
           } else {
-            excludeFolders[queryIndex]->AppendElement(lastAncestor);
+            excludeFolders[queryIndex]->AppendElements(ancestorFolders);
             continue;
           }
         }
@@ -4254,6 +4276,9 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
     }
     if (appendNode)
       aFiltered->AppendObject(aSet[nodeIndex]);
+      
+    if (aOptions->MaxResults() > 0 && aFiltered->Count() >= aOptions->MaxResults())
+      break;
   }
 
   // de-allocate the matrixes

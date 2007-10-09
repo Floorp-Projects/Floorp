@@ -1485,7 +1485,7 @@ XPC_WN_GetterSetter(JSContext *cx, JSObject *obj,
         return Throw(NS_ERROR_XPC_CANT_GET_METHOD_INFO, cx);
 
     ccx.SetArgsAndResultPtr(argc, argv, vp);
-    if(argc)
+    if(argc && member->IsWritableAttribute())
     {
         ccx.SetCallInfo(iface, member, JS_TRUE);
         JSBool retval = XPCWrappedNative::SetAttribute(ccx);

@@ -1,0 +1,75 @@
+<?xml version="1.0"?> <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window 
+xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+orient="vertical"
+    height="300"
+    width="400"
+    windowtype="opener:test"	
+    onunload="restoreChromeURL();"
+    onload="scheduleNextWindow();">
+
+<script src="winopen.js" type="application/x-javascript"></script>
+
+<groupbox orient="vertical">
+<caption label="Window Opening Test"/>
+<html>
+This will open a series of browser windows, either "one at a
+      time" or in a sequence of some form. When this test is complete 
+      a final window will be opened which will report the overall results.
+    </html>
+<separator class="thick"/>
+<grid>
+<columns><column/><column/></columns>
+<rows>
+<row align="center">
+<text value="Index:"/>
+<textbox id="formIndex" size="6" value=""/>
+</row>
+<row align="center">
+<text value="Time:"/>
+<textbox id="formTime" size="6" value=""/>
+<text value="msec"/>
+</row>
+</rows>
+</grid>
+<separator class="thick"/>
+</groupbox>
+
+<groupbox orient="vertical">
+    <caption label="Results"/>
+    <grid>
+        <columns>
+            <column/>
+            <column/>
+        </columns>
+        <rows>
+            <row align="center">
+                <text value="Times (ignoring the first):"/>
+                <textbox id="formTimes" size="45" value=""/>
+            </row>
+            <row align="center">
+                <text value="Txul (median):"/>
+                <hbox>
+                    <textbox id="formMed" size="6" value=""/>
+                    <spring/>
+                    <button id="formAgain" onclick="tryAgain();" label="Try again" disabled="true"/>
+                </hbox>
+            </row>
+            <row align="center">
+                <text value="Avg:"/>
+                <hbox><textbox id="formAvg" size="6" value=""/></hbox>
+            </row>
+            <row align="center">
+                <text value="Min:"/>
+                <hbox><textbox id="formMin" size="6" value=""/></hbox>
+            </row>
+            <row align="center">
+                <text value="Max:"/>
+                <hbox><textbox id="formMax" size="6" value=""/></hbox>
+            </row>
+        </rows>
+    </grid>
+</groupbox>
+
+</window>
+

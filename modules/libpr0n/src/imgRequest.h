@@ -56,7 +56,7 @@
 #include "nsCategoryCache.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsVoidArray.h"
+#include "nsTObserverArray.h"
 #include "nsWeakReference.h"
 
 class imgCacheValidator;
@@ -89,9 +89,8 @@ public:
                 void *aCacheId,
                 void *aLoadId);
 
-  // Callers that pass aNotify==PR_FALSE must call NotifyProxyListener
-  // later.
-  nsresult AddProxy   (imgRequestProxy *proxy, PRBool aNotify);
+  // Callers must call NotifyProxyListener later.
+  nsresult AddProxy(imgRequestProxy *proxy);
 
   // aNotify==PR_FALSE still sends OnStopRequest.
   nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus, PRBool aNotify);
@@ -156,7 +155,7 @@ private:
   nsCOMPtr<imgIDecoder> mDecoder;
   nsCOMPtr<nsIProperties> mProperties;
 
-  nsAutoVoidArray mObservers;
+  nsTObserverArray<imgRequestProxy> mObservers;
 
   PRPackedBool mLoading;
   PRPackedBool mProcessing;

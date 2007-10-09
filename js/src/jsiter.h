@@ -77,6 +77,9 @@ js_CallIteratorNext(JSContext *cx, JSObject *iterobj, jsval *rval);
 extern void
 js_CloseNativeIterator(JSContext *cx, JSObject *iterobj);
 
+extern JSBool
+js_ThrowStopIteration(JSContext *cx);
+
 #if JS_HAS_GENERATORS
 
 /*

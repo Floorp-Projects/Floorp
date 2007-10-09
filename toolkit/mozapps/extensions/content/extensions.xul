@@ -52,8 +52,7 @@
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:xhtml2="http://www.w3.org/TR/xhtml2"
-        xmlns:wairole="http://www.w3.org/2005/01/wai-rdf/GUIRoleTaxonomy#"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
         id="extensionsManager" windowtype="Extension:Manager"
         orient="vertical" title="&addons.title;"
         screenX="10" screenY="10" width="&em.width;" height="&em.height;"
@@ -152,7 +151,7 @@
   <popup id="addonContextMenu" onpopupshowing="return buildContextMenu(event);"/>
 
   <stack id="topStackBar">
-    <radiogroup id="viewGroup" xhtml2:role="wairole:list" persist="last-selected"
+    <radiogroup id="viewGroup" xhtml:role="listbox" persist="last-selected"
                 class="viewSelector chromeclass-toolbar" orient="horizontal">
       <radio id="extensions-view" label="&extensions.label;" oncommand="showView('extensions');" persist="last-selected"/>
       <radio id="themes-view" label="&themes.label;" oncommand="showView('themes');" persist="last-selected"/>

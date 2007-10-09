@@ -63,8 +63,6 @@ static cairo_user_data_key_t gfxasurface_pointer_key;
 nsrefcnt
 gfxASurface::AddRef(void)
 {
-    NS_PRECONDITION(mSurface != nsnull, "gfxASurface::AddRef without mSurface");
-
     if (mSurfaceValid) {
         if (mFloatingRefs) {
             // eat a floating ref
@@ -84,8 +82,6 @@ gfxASurface::AddRef(void)
 nsrefcnt
 gfxASurface::Release(void)
 {
-    NS_PRECONDITION(mSurface != nsnull, "gfxASurface::Release without mSurface");
-
     if (mSurfaceValid) {
         NS_ASSERTION(mFloatingRefs == 0, "gfxASurface::Release with floating refs still hanging around!");
 
@@ -147,7 +143,8 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
         result = new gfxImageSurface(csurf);
     }
 #ifdef CAIRO_HAS_WIN32_SURFACE
-    else if (stype == CAIRO_SURFACE_TYPE_WIN32) {
+    else if (stype == CAIRO_SURFACE_TYPE_WIN32 ||
+             stype == CAIRO_SURFACE_TYPE_WIN32_PRINTING) {
         result = new gfxWindowsSurface(csurf);
     }
 #endif
@@ -304,4 +301,34 @@ gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit)
         return PR_FALSE;
 
     return PR_TRUE;
+}
+
+nsresult
+gfxASurface::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+gfxASurface::EndPrinting()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+gfxASurface::AbortPrinting()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+gfxASurface::BeginPage()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult
+gfxASurface::EndPage()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

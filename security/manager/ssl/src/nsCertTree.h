@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Ian McGreer <mcgreer@netscape.com>
+ *   Kai Engert <kengert@redhat.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,6 +40,7 @@
 #define _NS_CERTTREE_H_
 
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 #include "nsIServiceManager.h"
 #include "nsICertTree.h"
 #include "nsITreeView.h"
@@ -46,8 +48,11 @@
 #include "nsITreeSelection.h"
 #include "nsISupportsArray.h"
 #include "nsIMutableArray.h"
+#include "nsTArray.h"
 #include "pldhash.h"
 #include "nsIX509CertDB.h"
+#include "nsCertOverrideService.h"
+
 
 typedef struct treeArrayElStr treeArrayEl;
 
@@ -66,6 +71,36 @@ struct CompareCacheHashEntryPtr : PLDHashEntryHdr {
   CompareCacheHashEntry *entry;
 };
 
+class nsCertAddonInfo : public nsISupports
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  nsCertAddonInfo() : mUsageCount(0) {}
+
+  nsRefPtr<nsIX509Cert> mCert;
+  // how many display entries reference this?
+  // (and therefore depend on the underlying cert)
+  PRInt32 mUsageCount;
+};
+
+class nsCertTreeDispInfo : public nsICertTreeItem
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSICERTTREEITEM
+
+  nsCertTreeDispInfo();
+  nsCertTreeDispInfo(nsCertTreeDispInfo &other);
+  virtual ~nsCertTreeDispInfo();
+
+  nsRefPtr<nsCertAddonInfo> mAddonInfo;
+  enum {
+    direct_db, host_port_override
+  } mTypeOfEntry;
+  nsString mHostWithPort;
+  nsCertOverride::OverrideBits mOverrideBits;
+};
 
 class nsCertTree : public nsICertTree
 {
@@ -102,14 +137,13 @@ protected:
   nsCertCompareFunc GetCompareFuncFromCertType(PRUint32 aType);
   PRInt32 CountOrganizations();
 
-  PRBool GetCertsByType(PRUint32 aType, nsCertCompareFunc aCertCmpFn,
-                        void *aCertCmpFnArg, nsISupportsArray **_certs);
+  nsresult GetCertsByType(PRUint32 aType, nsCertCompareFunc aCertCmpFn,
+                          void *aCertCmpFnArg);
 
-  PRBool GetCertsByTypeFromCache(nsINSSCertCache *aCache, PRUint32 aType,
-                                 nsCertCompareFunc aCertCmpFn, void *aCertCmpFnArg,
-                                 nsISupportsArray **_certs);
+  nsresult GetCertsByTypeFromCache(nsINSSCertCache *aCache, PRUint32 aType,
+                                   nsCertCompareFunc aCertCmpFn, void *aCertCmpFnArg);
 private:
-  nsCOMPtr<nsISupportsArray>      mCertArray;
+  nsTArray< nsRefPtr<nsCertTreeDispInfo> > mDispInfo;
   nsCOMPtr<nsITreeBoxObject>  mTree;
   nsCOMPtr<nsITreeSelection>  mSelection;
   treeArrayEl                *mTreeArray;
@@ -117,18 +151,19 @@ private:
   PRInt32                         mNumRows;
   PLDHashTable mCompareCache;
   nsCOMPtr<nsINSSComponent> mNSSComponent;
+  nsCOMPtr<nsICertOverrideService> mOverrideService;
 
   treeArrayEl *GetThreadDescAtIndex(PRInt32 _index);
   nsIX509Cert *GetCertAtIndex(PRInt32 _index, PRInt32 *outAbsoluteCertOffset = nsnull);
-
+  nsCertTreeDispInfo *GetDispInfoAtIndex(PRInt32 index,  
+                                         PRInt32 *outAbsoluteCertOffset = nsnull);
   void FreeCertArray();
   nsresult UpdateUIContents();
 
-  PRBool GetCertsByTypeFromCertList(CERTCertList *aCertList,
-                                    PRUint32 aType,
-                                    nsCertCompareFunc  aCertCmpFn,
-                                    void              *aCertCmpFnArg,
-                                    nsISupportsArray **_certs);
+  nsresult GetCertsByTypeFromCertList(CERTCertList *aCertList,
+                                      PRUint32 aType,
+                                      nsCertCompareFunc  aCertCmpFn,
+                                      void              *aCertCmpFnArg);
 
   nsCOMPtr<nsIMutableArray> mCellText;
 

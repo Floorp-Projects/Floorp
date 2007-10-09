@@ -75,17 +75,22 @@ extern PRLogModuleInfo* sCocoaLog;
 #endif
 
 extern NSPasteboard* globalDragPboard;
-extern NSView* globalDragView;
-extern NSEvent* globalDragEvent;
+extern NSView* gLastDragView;
+extern NSEvent* gLastDragEvent;
 
 // This global makes the transferable array available to Cocoa's promised
 // file destination callback.
 nsISupportsArray *gDraggedTransferables = nsnull;
 
 NSString* const kWildcardPboardType = @"MozillaWildcard";
+NSString* const kCorePboardType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
+NSString* const kCorePboardType_urld = @"CorePasteboardFlavorType 0x75726C64"; // 'urld'  desc
+NSString* const kCorePboardType_urln = @"CorePasteboardFlavorType 0x75726C6E"; // 'urln'  title
 
 nsDragService::nsDragService()
 {
+  mNativeDragView = nil;
+  mNativeDragEvent = nil;
 }
 
 
@@ -129,7 +134,10 @@ static nsresult SetUpDragClipboard(nsISupportsArray* aTransferableArray)
     for (unsigned int i = 0; i < typeCount; i++) {
       NSString* currentKey = [types objectAtIndex:i];
       id currentValue = [pasteboardOutputDict valueForKey:currentKey];
-      if (currentKey == NSStringPboardType) {
+      if (currentKey == NSStringPboardType ||
+          currentKey == kCorePboardType_url ||
+          currentKey == kCorePboardType_urld ||
+          currentKey == kCorePboardType_urln) {
         [dragPBoard setString:currentValue forType:currentKey];
       }
       else if (currentKey == NSTIFFPboardType) {
@@ -150,7 +158,7 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
                                   nsRect* aDragRect,
                                   nsIScriptableRegion* aRegion)
 {
-  NSPoint screenPoint = [[globalDragView window] convertBaseToScreen:[globalDragEvent locationInWindow]];
+  NSPoint screenPoint = [[gLastDragView window] convertBaseToScreen:[gLastDragEvent locationInWindow]];
   // Y coordinates are bottom to top, so reverse this
   if ([[NSScreen screens] count] > 0)
     screenPoint.y = NSMaxY([[[NSScreen screens] objectAtIndex:0] frame]) - screenPoint.y;
@@ -269,21 +277,25 @@ nsDragService::InvokeDragSession(nsIDOMNode* aDOMNode, nsISupportsArray* aTransf
   else
     point.y = dragRect.y;
 
-  point = [[globalDragView window] convertScreenToBase: point];
-  NSPoint localPoint = [globalDragView convertPoint:point fromView:nil];
+  point = [[gLastDragView window] convertScreenToBase: point];
+  NSPoint localPoint = [gLastDragView convertPoint:point fromView:nil];
  
   // Save the transferables away in case a promised file callback is invoked.
   gDraggedTransferables = aTransferableArray;
 
   nsBaseDragService::StartDragSession();
 
-  [globalDragView dragImage:image
-                         at:localPoint
-                     offset:NSMakeSize(0,0)
-                      event:globalDragEvent
-                 pasteboard:[NSPasteboard pasteboardWithName:NSDragPboard]
-                     source:globalDragView
-                  slideBack:YES];
+  // We need to retain the view and the event during the drag in case either gets destroyed.
+  mNativeDragView = [gLastDragView retain];
+  mNativeDragEvent = [gLastDragEvent retain];
+
+  [mNativeDragView dragImage:image
+                          at:localPoint
+                      offset:NSMakeSize(0,0)
+                       event:mNativeDragEvent
+                  pasteboard:[NSPasteboard pasteboardWithName:NSDragPboard]
+                      source:mNativeDragView
+                   slideBack:YES];
 
   return NS_OK;
 }
@@ -516,6 +528,15 @@ nsDragService::GetNumDropItems(PRUint32* aNumItems)
 NS_IMETHODIMP
 nsDragService::EndDragSession(PRBool aDoneDrag)
 {
+  if (mNativeDragView) {
+    [mNativeDragView release];
+    mNativeDragView = nil;
+  }
+  if (mNativeDragEvent) {
+    [mNativeDragEvent release];
+    mNativeDragEvent = nil;
+  }
+
   mDataItems = nsnull;
   return nsBaseDragService::EndDragSession(aDoneDrag);
 }

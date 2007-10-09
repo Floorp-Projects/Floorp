@@ -87,9 +87,9 @@ const jsConsoleHandler = {
           console.focus();
         }
 
-        // note that since we don't prevent the default action, you'll get
-        // an additional application window, unless you specified another
-        // command line flag
+        if (cmdLine.state ==  nsICommandLine.STATE_REMOTE_AUTO) {
+            cmdLine.preventDefault = true;
+        }
     },
 
     helpInfo : "  -jsconsole           Open the Error console.\n",

@@ -41,6 +41,13 @@
 #define _nsARIAMap_H_
 
 #include "prtypes.h"
+#include "nsAccessibilityAtoms.h"
+
+#define ARIA_PROPERTY(atom) eAria_##atom,
+enum EAriaProperty {
+#include "nsARIAPropertyList.h"
+  eAria_none };
+#undef ARIA_PROPERTY
 
 // Name mapping rule: can the name be computed from descendants?
 enum ENameRule
@@ -79,7 +86,7 @@ enum EValueRule
 // nsStateMapEntry.state
 struct nsStateMapEntry
 {
-  const char* attributeName;  // magic value of nsnull means last entry in map
+  EAriaProperty attributeName;  // eARIA_none indicates last entry in map
   const char* attributeValue; // magic value of kBoolState (0) means supports "true" and "false"
   PRUint32 state;             // If match, this is the nsIAccessibleStates to map to
 };
@@ -124,6 +131,8 @@ struct nsRoleMapEntry
  */
 struct nsARIAMap
 {
+  static nsIAtom** gAriaAtomPtrsNS[eAria_none];
+  static nsIAtom** gAriaAtomPtrsHyphenated[eAria_none];
   static nsRoleMapEntry gWAIRoleMap[];
   static nsStateMapEntry gWAIUnivStateMap[];
 };

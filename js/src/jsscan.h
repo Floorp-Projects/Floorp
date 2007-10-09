@@ -84,7 +84,7 @@ typedef enum JSTokenType {
     TOK_NAME = 29,                      /* identifier */
     TOK_NUMBER = 30,                    /* numeric constant */
     TOK_STRING = 31,                    /* string constant */
-    TOK_OBJECT = 32,                    /* RegExp or other object constant */
+    TOK_REGEXP = 32,                    /* RegExp constant */
     TOK_PRIMARY = 33,                   /* true, false, null, this, super */
     TOK_FUNCTION = 34,                  /* function keyword */
     TOK_EXPORT = 35,                    /* export keyword */
@@ -204,10 +204,8 @@ struct JSToken {
             JSOp        op;             /* operator, for minimal parser */
             JSAtom      *atom;          /* atom table entry */
         } s;
-        struct {                        /* object literal */
-            JSOp        op;             /* operator, for minimal parser */
-            JSParsedObjectBox *pob;     /* object literal node */
-        } o;
+        uintN           reflags;        /* regexp flags, use tokenbuf to access
+                                           regexp chars */
         struct {                        /* atom pair, for XML PIs */
             JSAtom      *atom2;         /* auxiliary atom table entry */
             JSAtom      *atom;          /* main atom table entry */
@@ -217,7 +215,7 @@ struct JSToken {
 };
 
 #define t_op            u.s.op
-#define t_pob           u.o.pob
+#define t_reflags       u.reflags
 #define t_atom          u.s.atom
 #define t_atom2         u.p.atom2
 #define t_dval          u.dval
@@ -248,13 +246,11 @@ struct JSTokenStream {
     JSStringBuffer      tokenbuf;       /* current token string buffer */
     const char          *filename;      /* input filename or null */
     FILE                *file;          /* stdio stream if reading from file */
-    JSPrincipals        *principals;    /* principals associated with source */
     JSSourceHandler     listener;       /* callback for source; eg debugger */
     void                *listenerData;  /* listener 'this' data */
     void                *listenerTSData;/* listener data for this TokenStream */
     jschar              *saveEOL;       /* save next end of line in userbuf, to
                                            optimize for very long lines */
-    JSParseContext      *parseContext;
 };
 
 #define CURRENT_TOKEN(ts)       ((ts)->tokens[(ts)->cursor])
@@ -308,21 +304,16 @@ struct JSTokenStream {
  * Create a new token stream, either from an input buffer or from a file.
  * Return null on file-open or memory-allocation failure.
  *
- * NB: All of js_New{,Buffer,File}TokenStream() return a pointer to transient
- * memory in the current context's temp pool.  This memory is deallocated via
- * JS_ARENA_RELEASE() after parsing is finished.
+ * The function uses JSContext.tempPool to allocate internal buffers. The
+ * caller should release them using JS_ARENA_RELEASE after it has finished
+ * with the token stream and has called js_CloseTokenStream.
  */
-extern JSTokenStream *
-js_NewTokenStream(JSContext *cx, const jschar *base, size_t length,
-                  const char *filename, uintN lineno, JSPrincipals *principals);
+extern JSBool
+js_InitTokenStream(JSContext *cx, JSTokenStream *ts,
+                   const jschar *base, size_t length,
+                   FILE *fp, const char *filename, uintN lineno);
 
-extern JS_FRIEND_API(JSTokenStream *)
-js_NewBufferTokenStream(JSContext *cx, const jschar *base, size_t length);
-
-extern JS_FRIEND_API(JSTokenStream *)
-js_NewFileTokenStream(JSContext *cx, const char *filename, FILE *defaultfp);
-
-extern JS_FRIEND_API(JSBool)
+extern void
 js_CloseTokenStream(JSContext *cx, JSTokenStream *ts);
 
 extern JS_FRIEND_API(int)
@@ -361,11 +352,10 @@ extern JSBool
 js_ReportCompileErrorNumberUC(JSContext *cx, void *handle, uintN flags,
                               uintN errorNumber, ...);
 
-/* Steal some JSREPORT_* bits (see jsapi.h) to tell handle's type. */
-#define JSREPORT_HANDLE 0x300
+/* Steal one JSREPORT_* bit (see jsapi.h) to tell handle's type. */
+#define JSREPORT_HANDLE 0x100
 #define JSREPORT_TS     0x000
-#define JSREPORT_CG     0x100
-#define JSREPORT_PN     0x200
+#define JSREPORT_PN     0x100
 
 /*
  * Look ahead one token and return its type.

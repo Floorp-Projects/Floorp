@@ -97,7 +97,7 @@
             accesskey="&validation.updatecrl.accesskey;"
             oncommand="UpdateCRL();"/>
     <button id="importCRL" class="push"
-            label="&certmgr.restore.label;"
+            label="&certmgr.restore2.label;"
             accesskey="&certmgr.restore.accesskey;"
             oncommand="ImportCRL();"/>
     <spacer flex="2"/>

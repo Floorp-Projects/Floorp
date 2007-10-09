@@ -56,8 +56,8 @@ const CHECK_INTERVAL = 15 * 1000; // 15 seconds
 // How often to check for generator updates, in seconds
 const GENERATOR_INTERVAL = 7 * 86400; // 1 week
 
-const MICSUM_NS = new Namespace("http://www.mozilla.org/microsummaries/0.1");
-const XSLT_NS = new Namespace("http://www.w3.org/1999/XSL/Transform");
+const MICSUM_NS = "http://www.mozilla.org/microsummaries/0.1";
+const XSLT_NS = "http://www.w3.org/1999/XSL/Transform";
 
 const ANNO_MICSUM_GEN_URI    = "microsummary/generatorURI";
 const ANNO_MICSUM_EXPIRATION = "microsummary/expiration";
@@ -1767,8 +1767,7 @@ MicrosummaryResource.prototype = {
   // and abort loads for bad SSL certs and HTTP authorization requests.
   
   // Interfaces this component implements.
-  interfaces: [Ci.nsIBadCertListener,
-               Ci.nsIAuthPromptProvider,
+  interfaces: [Ci.nsIAuthPromptProvider,
                Ci.nsIAuthPrompt,
                Ci.nsIPrompt,
                Ci.nsIProgressEventSink,
@@ -1798,25 +1797,6 @@ MicrosummaryResource.prototype = {
   
   getInterface: function MSR_getInterface(iid) {
     return this.QueryInterface(iid);
-  },
-
-  // nsIBadCertListener
-
-  // Suppress UI and abort secure loads from servers with bad SSL certificates.
-  
-  confirmUnknownIssuer: function MSR_confirmUnknownIssuer(socketInfo, cert, certAddType) {
-    return false;
-  },
-
-  confirmMismatchDomain: function MSR_confirmMismatchDomain(socketInfo, targetURL, cert) {
-    return false;
-  },
-
-  confirmCertExpired: function MSR_confirmCertExpired(socketInfo, cert) {
-    return false;
-  },
-
-  notifyCrlNextupdate: function MSR_notifyCrlNextupdate(socketInfo, targetURL, cert) {
   },
 
   // Suppress UI and abort loads for files secured by authentication.
@@ -2065,8 +2045,10 @@ MicrosummaryResource.prototype = {
     if (request.responseXML) {
       this._isXML = true;
       // XXX Figure out the parsererror format and log a specific error.
-      if (request.responseXML.documentElement.nodeName == "parsererror")
-        throw(request.channel.originalURI.spec + " contains invalid XML");
+      if (request.responseXML.documentElement.nodeName == "parsererror") {
+        this._handleError(event);
+        return;
+      }
       this._content = request.responseXML;
       this._contentType = request.channel.contentType;
       this._loadCallback(this);
@@ -2110,8 +2092,10 @@ MicrosummaryResource.prototype = {
     // even prefer other windows, since there's less chance of any browser
     // window machinery like throbbers treating our load like one initiated
     // by the user.
-    if (!window)
-      throw(this._uri.spec + " can't parse; no browser window");
+    if (!window) {
+      this._handleError(event);
+      return;
+    }
     var document = window.document;
     var rootElement = document.documentElement;
   

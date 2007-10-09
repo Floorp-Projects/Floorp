@@ -12,19 +12,20 @@
       <!-- Firefox -->
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-	<!-- this version needs to be set to the exact version this 
+	<!-- this version needs to be set to the exact version this
 	     extension was built for, because of the way we're tied
 	     to internal interfaces.
 	  -->
-        <em:minVersion>3.0a4pre</em:minVersion>
-        <em:maxVersion>3.0a4pre</em:maxVersion>
+        <em:minVersion>3.0a8pre</em:minVersion>
+        <em:maxVersion>3.0a8pre</em:maxVersion>
       </Description>
     </em:targetApplication>
-	
+
     <!-- front-end metadata -->
     <em:creator>Vladimir Vukicevic/mozilla.com</em:creator>
     <em:name>Canvas 3D (Gecko 1.9)</em:name>
     <em:description>Canvas 3D context(s) for Gecko 1.9</em:description>
     <em:homepageURL>http://people.mozilla.com/~vladimir/canvas3d/</em:homepageURL>
+    <em:optionsURL>chrome://canvas3d/content/options.xul</em:optionsURL>
   </Description>
 </RDF>

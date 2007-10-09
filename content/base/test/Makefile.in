@@ -86,10 +86,13 @@ _TEST_FILES = 	test_bug5141.html \
 		test_bug373181.xhtml \
 		test_bug375314.html \
 		test_bug382113.html \
+		test_bug390219.html \
 		test_bug390735.html \
 		test_bug392318.html \
 		test_bug392511.html \
 		test_bug395915.html \
+		test_bug398243.html \
+		formReset.html \
 		bug382113_object.html \
 		test_CrossSiteXHR.html \
 		file_CrossSiteXHR_fail1.xml \
@@ -101,6 +104,11 @@ _TEST_FILES = 	test_bug5141.html \
 		file_CrossSiteXHR_pass1.xml^headers^ \
 		file_CrossSiteXHR_pass2.xml \
 		file_CrossSiteXHR_pass3.xml \
+		test_bug326337.html \
+		file_bug326337_inner.html \
+		file_bug326337.xml \
+		file_bug326337_multipart.txt \
+		file_bug326337_multipart.txt^headers^ \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

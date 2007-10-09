@@ -131,7 +131,9 @@ nsSessionStorageEntry::~nsSessionStorageEntry()
 
 nsDOMStorageManager* nsDOMStorageManager::gStorageManager;
 
-NS_IMPL_ISUPPORTS1(nsDOMStorageManager, nsIObserver)
+NS_IMPL_ISUPPORTS2(nsDOMStorageManager,
+                   nsIDOMStorageManager,
+                   nsIObserver)
 
 //static
 nsresult
@@ -154,6 +156,16 @@ nsDOMStorageManager::Initialize()
     os->AddObserver(gStorageManager, "cookie-changed", PR_FALSE);
 
   return NS_OK;
+}
+
+//static
+nsDOMStorageManager*
+nsDOMStorageManager::GetInstance()
+{
+  NS_ASSERTION(gStorageManager,
+               "nsDOMStorageManager::GetInstance() called before Initialize()");
+  NS_IF_ADDREF(gStorageManager);
+  return gStorageManager;
 }
 
 //static
@@ -192,6 +204,16 @@ nsDOMStorageManager::Observe(nsISupports *aSubject,
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMStorageManager::GetUsage(const nsAString& aDomain,
+                              PRInt32 *aUsage)
+{
+  nsresult rv = nsDOMStorage::InitDB();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return nsDOMStorage::gStorageDB->GetUsage(aDomain, aUsage);
 }
 
 void

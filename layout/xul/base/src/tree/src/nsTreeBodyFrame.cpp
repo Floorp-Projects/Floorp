@@ -672,7 +672,7 @@ nsTreeBodyFrame::InvalidateRow(PRInt32 aIndex)
     return NS_OK;
 
   nsRect rowRect(mInnerBox.x, mInnerBox.y+mRowHeight*aIndex, mInnerBox.width, mRowHeight);
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   // Mac can't process the event loop during a drag, so if we're dragging,
   // invalidate synchronously.
   nsLeafBoxFrame::Invalidate(rowRect, mSlots && mSlots->mDragSession ? PR_TRUE : PR_FALSE);
@@ -2565,7 +2565,9 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
         mSlots->mDropAllowed = PR_FALSE;
         InvalidateDropFeedback(lastDropRow, lastDropOrient);
       }
-#if !defined(XP_MACOSX)
+#ifdef XP_MACOSX
+      ScrollByLines(mSlots->mScrollLines);
+#else
       if (!lastScrollLines) {
         // Cancel any previously initialized timer.
         if (mSlots->mTimer) {
@@ -2578,8 +2580,6 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
                     LazyScrollCallback, nsITimer::TYPE_ONE_SHOT,
                     getter_AddRefs(mSlots->mTimer));
        }
-#else
-      ScrollByLines(mSlots->mScrollLines);
 #endif
       // Bail out to prevent spring loaded timer and feedback line settings.
       return NS_OK;
@@ -3880,7 +3880,7 @@ nsresult nsTreeBodyFrame::ScrollToRowInternal(const ScrollParts& aParts, PRInt32
 {
   ScrollInternal(aParts, aRow);
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#ifdef XP_MACOSX
   // mac can't process the event loop during a drag, so if we're dragging,
   // grab the scroll widget and make it paint synchronously. This is
   // sorta slow (having to paint the entire tree), but it works.

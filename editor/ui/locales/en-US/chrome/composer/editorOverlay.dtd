@@ -496,7 +496,7 @@
 <!ENTITY saveToolbarCmd.tooltip "Save file to a local location">
 <!ENTITY publishToolbarCmd.tooltip "Upload file to a remote location">
 <!ENTITY previewToolbarCmd.label "Browse">
-<!ENTITY previewToolbarCmd.tooltip "Load this page into Navigator">
+<!ENTITY previewToolbarCmd.tooltip "Load this page in the browser">
 <!ENTITY printToolbarCmd.label "Print">
 <!ENTITY printToolbarCmd.tooltip "Print this page">
 <!ENTITY findToolbarCmd.label "Find">
@@ -563,7 +563,7 @@
 <!ENTITY HTMLSourceMode.tooltip "Edit HTML source">
 <!ENTITY PreviewMode.label "Preview">
 <!ENTITY PreviewMode.accesskey "p">
-<!ENTITY PreviewMode.tooltip "Display as WYSIWYG (as in Navigator)">
+<!ENTITY PreviewMode.tooltip "Display as WYSIWYG (as in the browser)">
 
 <!-- LOCALIZATION NOTE: Do NOT translate text for 'SourceTabDirection'
      Use latin "ltr" if you want the <html> image to left of the 

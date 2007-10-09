@@ -73,6 +73,9 @@ protected:
   nsresult AttachListeners();
   nsresult DetachListeners();
 
+  // clears mRequests, cancels each timer in mTimer and then clears mTimers
+  void ClearPendingEvents();
+
   // Pull the URI out of the request.
   nsresult GetRequestUri(nsIRequest* aReq, nsIURI** uri);
 };
