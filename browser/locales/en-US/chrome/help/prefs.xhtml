@@ -652,16 +652,19 @@ Contributors:
       sites.</p>
 
     <h4 id="certificates">Certificates</h4>
-    <p>Certificates help perform encryption and decryption of connections to
-      <a href="glossary.xhtml#secure_site">secure sites</a>.</p>
+    <p><a href="glossary.xhtml#certificate">Certificates</a> help perform
+      encryption and decryption of connections to <a
+      href="glossary.xhtml#secure_site">secure sites</a>.</p>
 
     <p><em>When a web site requires a certificate:</em><br/>
-      When a web site requests a secure connection, &brandShortName; will by
-      default automatically use an appropriate certificate.  If you wish to
-      manually choose a certificate (for example, if you wish to use a certain
-      type of encryption instead of what is automatically selected), select the
-      &pref.singular; <em>Ask me every time</em> and you'll be in complete
-      control of what certificates you use while browsing.</p>
+      Some servers ask you to identify yourself with a personal certificate. In
+      order to do so, they ask &brandShortName; to generate one for you. When
+      you visit the site in the future, &brandShortName; selects the certificate
+      without asking you by default. If you wish to manually choose a
+      certificate (for example, if you have multiple certificates stored for
+      multiple web sites), select the <em>Ask me every time</em> &pref.singular;
+      and you'll be in complete control of what certificates are being sent to
+      web sites while browsing.</p>
 
     <p><em>View Certificates</em><br/>
       Click this button to view stored certificates, import new certificates,
@@ -673,12 +676,14 @@ Contributors:
       <em>Revocation Lists</em> button to manage the CRLs installed on your
       computer.</p>
 
-    <p><em>Verification</em><br/>
-      &brandShortName; verify the validity of your certificates using OCSP
-      (Online Certificate Status Protocol) every time they are viewed or used.
-      &brandShortName; does not use OCSP by default, but if you want to enable
-      it, you can do so here.  You will most likely only need to change this if
-      your Internet environment requires it.</p>
+    <p><em>Validation</em><br/>
+      &brandShortName; may ask an OCSP (Online Certificate Status Protocol)
+      server to confirm that a certificate is still valid. By default,
+      &brandShortName; validates a certificate if the certificate provides an
+      OCSP server. Alternately, you can choose an OCSP server against which to
+      validate all certificates. Click the <em>Validation</em> button to manage
+      these &pref.plural;. You will most likely only need to change this if your
+      Internet environment requires it.</p>
 
     <p><em>Security Devices</em><br/>
       Security devices can encrypt and decrypt connections and store
@@ -686,7 +691,7 @@ Contributors:
       than the one in &brandShortName;, click the <em>Security Devices</em>
       button.</p>
 
-<div class="contentsBox"><em>07 October 2007</em></div>
+<div class="contentsBox"><em>09 October 2007</em></div>
 <p>Copyright &copy; &copyright.years; Contributors to the Mozilla Help Viewer Project.</p>
 
 </body>
