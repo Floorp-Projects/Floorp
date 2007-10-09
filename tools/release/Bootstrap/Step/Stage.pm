@@ -203,20 +203,22 @@ sub Execute {
     # Create the staging directory.
 
     my $stageDir = $this->GetStageDir();
-    my $mergeDir = catfile($stageDir, 'stage-merged');
 
     if (not -d $stageDir) {
         MkdirWithPath(dir => $stageDir) 
           or die("Could not mkdir $stageDir: $!");
         $this->Log(msg => "Created directory $stageDir");
     }
- 
+
     # Create skeleton batch directory.
     my $skelDir = catfile($stageDir, 'batch-skel', 'stage');
     if (not -d $skelDir) {
         MkdirWithPath(dir => $skelDir) 
           or die "Cannot create $skelDir: $!";
         $this->Log(msg => "Created directory $skelDir");
+        chmod(0755, $skelDir)
+          or die("Could not chmod 755 $skelDir: $!");
+        $this->Log(msg => "Changed mode of $skelDir to 0775");
     }
     my (undef, undef, $gid) = getgrnam($product)
       or die "Could not getgrname for $product: $!";
