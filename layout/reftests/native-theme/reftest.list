@@ -8,3 +8,21 @@ fails-if(MOZ_WIDGET_TOOLKIT=="cocoa"&&TARGET_CPU=="powerpc") != button-not-blank
 != radio-not-blank.html about:blank
 != text-control-not-blank.html about:blank
 != textarea-not-blank.html about:blank
+
+# The following tests will fail if the platform does not have native
+# theme support (which all platforms should have).
+!= text-input-native.html text-input-nonnative.html
+== text-input-nonnative-when-styled.html text-input-nonnative-when-styled-ref.html
+!= textarea-native.html textarea-nonnative.html
+== textarea-nonnative-when-styled.html textarea-nonnative-when-styled-ref.html
+!= button-native.html button-nonnative.html
+== button-nonnative-when-styled.html button-nonnative-when-styled-ref.html
+!= combobox-native.html combobox-nonnative.html
+== combobox-nonnative-when-styled.html combobox-nonnative-when-styled-ref.html
+!= listbox-native.html listbox-nonnative.html
+== listbox-nonnative-when-styled.html listbox-nonnative-when-styled-ref.html
+!= radio-native.html radio-nonnative.html
+== radio-still-native-when-styled.html radio-still-native-when-styled-ref.html
+!= checkbox-native.html checkbox-nonnative.html
+== checkbox-still-native-when-styled.html checkbox-still-native-when-styled-ref.html
+== native-theme-disabled-cascade-levels.html native-theme-disabled-cascade-levels-ref.html
