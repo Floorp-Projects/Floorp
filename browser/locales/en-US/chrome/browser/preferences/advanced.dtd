@@ -1,5 +1,5 @@
 <!-- Note: due to bug 143065, the only remaining accesskeys available to be used
-     in the Advanced pane are: "j", "q", "z" -->
+     in the Advanced pane are: "j", "o", "q", "z" -->
 
 <!ENTITY generalTab.label                "General">
 
@@ -20,13 +20,6 @@
 <!ENTITY useSmoothScrolling.accesskey    "m">
 <!ENTITY checkSpelling.label             "Check my spelling as I type">
 <!ENTITY checkSpelling.accesskey         "t">
-
-<!ENTITY languages.label                 "Languages">
-
-<!ENTITY chooseLanguage.label            "Choose your preferred language for displaying pages">
-<!ENTITY chooseButton.label              "Choose...">
-<!ENTITY chooseButton.accesskey          "o">
-
 
 <!ENTITY networkTab.label                "Network">
 
