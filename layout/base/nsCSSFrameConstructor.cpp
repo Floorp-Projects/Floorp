@@ -9923,23 +9923,13 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
           viewMgr->SynthesizeMouseMove(PR_FALSE);
       }
     }
-
-#ifdef DEBUG
-    // reget from content since it may have been regenerated...
-    if (content) {
-      nsIFrame* frame = mPresShell->GetPrimaryFrameFor(content);
-      if (frame) {
-        mPresShell->FrameManager()->DebugVerifyStyleTree(frame);
-      }
-    } else {
-      NS_WARNING("Unable to test style tree integrity -- no content node");
-    }
-#endif
   }
 
   EndUpdate();
   
-  // cleanup references
+  // cleanup references and verify the style tree.  Note that the latter needs
+  // to happen once we've processed the whole list, since until then the tree
+  // is not in fact in a consistent state.
   index = count;
   while (0 <= --index) {
     const nsStyleChangeData* changeData;
@@ -9948,6 +9938,18 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
       propTable->DeleteProperty(changeData->mFrame,
                                 nsGkAtoms::changeListProperty);
     }
+
+#ifdef DEBUG
+    // reget frame from content since it may have been regenerated...
+    if (changeData->mContent) {
+      nsIFrame* frame = mPresShell->GetPrimaryFrameFor(changeData->mContent);
+      if (frame) {
+        mPresShell->FrameManager()->DebugVerifyStyleTree(frame);
+      }
+    } else {
+      NS_WARNING("Unable to test style tree integrity -- no content node");
+    }
+#endif
   }
 
   aChangeList.Clear();
