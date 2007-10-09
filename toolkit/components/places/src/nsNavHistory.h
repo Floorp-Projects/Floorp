@@ -369,6 +369,7 @@ protected:
   nsCOMPtr<mozIStorageStatement> mDBGetPageVisitStats; // used by AddVisit
   nsCOMPtr<mozIStorageStatement> mDBUpdatePageVisitStats; // used by AddVisit
   nsCOMPtr<mozIStorageStatement> mDBAddNewPage; // used by InternalAddNewPage
+  nsCOMPtr<mozIStorageStatement> mDBURIHasTag; // used by UriHasTag
 
   // these are used by VisitIdToResultNode for making new result nodes from IDs
   nsCOMPtr<mozIStorageStatement> mDBVisitToURLResult; // kGetInfoIndex_* results
