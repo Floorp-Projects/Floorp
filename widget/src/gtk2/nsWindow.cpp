@@ -524,7 +524,7 @@ nsWindow::SetModal(PRBool aModal)
 {
     LOG(("nsWindow::SetModal [%p] %d\n", (void *)this, aModal));
 
-    // find the toplevel window and add it to the grab list
+    // find the toplevel window and set its modality
     GtkWidget *grabWidget = nsnull;
 
     GetToplevelWidget(&grabWidget);
@@ -532,10 +532,20 @@ nsWindow::SetModal(PRBool aModal)
     if (!grabWidget)
         return NS_ERROR_FAILURE;
 
+    // block focus tracking via gFocusWindow internally in case the window
+    // manager does not block focus to parents of modal windows
+    if (mTransientParent) {
+        GtkWidget *transientWidget = GTK_WIDGET(mTransientParent);
+        nsRefPtr<nsWindow> parent = get_window_for_gtk_widget(transientWidget);
+        if (!parent)
+            return NS_ERROR_FAILURE;
+        parent->mContainerBlockFocus = aModal;
+    }
+
     if (aModal)
-        gtk_grab_add(grabWidget);
+        gtk_window_set_modal(GTK_WINDOW(grabWidget), TRUE);
     else
-        gtk_grab_remove(grabWidget);
+        gtk_window_set_modal(GTK_WINDOW(grabWidget), FALSE);
 
     return NS_OK;
 }
