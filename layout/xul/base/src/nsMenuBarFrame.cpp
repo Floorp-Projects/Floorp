@@ -372,7 +372,7 @@ public:
     nsMenuBarFrame* menubar = nsnull;
     if (mOldMenu && mNewMenu) {
       menubar = static_cast<nsMenuBarFrame *>
-        (pm->GetFrameOfTypeForContent(mMenuBar, nsGkAtoms::menuBarFrame));
+        (pm->GetFrameOfTypeForContent(mMenuBar, nsGkAtoms::menuBarFrame, PR_FALSE));
       menubar->SetStayActive(PR_TRUE);
     }
 
