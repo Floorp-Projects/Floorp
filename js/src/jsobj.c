@@ -1276,6 +1276,12 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSPrincipals *principals;
     JSScript *script;
     JSBool ok;
+#if JS_HAS_EVAL_THIS_SCOPE
+    JSObject *callerScopeChain = NULL, *callerVarObj = NULL;
+    JSObject *setCallerScopeChain = NULL;
+    JSBool setCallerVarObj = JS_FALSE;
+#endif
+
 
     fp = cx->fp;
     caller = JS_GetScriptedCaller(cx, fp);
@@ -1323,6 +1329,44 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     if (!scopeobj) {
+#if JS_HAS_EVAL_THIS_SCOPE
+        /* If obj.eval(str), emulate 'with (obj) eval(str)' in the caller. */
+        if (indirectCall) {
+            callerScopeChain = js_GetScopeChain(cx, caller);
+            if (!callerScopeChain)
+                return JS_FALSE;
+            OBJ_TO_INNER_OBJECT(cx, obj);
+            if (!obj)
+                return JS_FALSE;
+            if (obj != callerScopeChain) {
+                if (!js_CheckPrincipalsAccess(cx, obj,
+                                              caller->script->principals,
+                                              cx->runtime->atomState.evalAtom))
+                {
+                    return JS_FALSE;
+                }
+
+                scopeobj = js_NewWithObject(cx, obj, callerScopeChain, -1);
+                if (!scopeobj)
+                    return JS_FALSE;
+
+                /* Set fp->scopeChain too, for the compiler. */
+                caller->scopeChain = fp->scopeChain = scopeobj;
+
+                /* Remember scopeobj so we can null its private when done. */
+                setCallerScopeChain = scopeobj;
+            }
+
+            callerVarObj = caller->varobj;
+            if (obj != callerVarObj) {
+                /* Set fp->varobj too, for the compiler. */
+                caller->varobj = fp->varobj = obj;
+                setCallerVarObj = JS_TRUE;
+            }
+        }
+        /* From here on, control must exit through label out with ok set. */
+#endif
+
         /*
          * Compile using caller's current scope object.
          *
@@ -1331,15 +1375,19 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          */
         if (caller) {
             scopeobj = js_GetScopeChain(cx, caller);
-            if (!scopeobj)
-                return JS_FALSE;
+            if (!scopeobj) {
+                ok = JS_FALSE;
+                goto out;
+            }
         }
     }
 
     /* Ensure we compile this eval with the right object in the scope chain. */
     scopeobj = js_CheckScopeChainValidity(cx, scopeobj, js_eval_str);
-    if (!scopeobj)
-        return JS_FALSE;
+    if (!scopeobj) {
+        ok = JS_FALSE;
+        goto out;
+    }
 
     str = JSVAL_TO_STRING(argv[0]);
     if (caller) {
@@ -1373,8 +1421,10 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                                              JSSTRING_CHARS(str),
                                              JSSTRING_LENGTH(str),
                                              file, line);
-    if (!script)
-        return JS_FALSE;
+    if (!script) {
+        ok = JS_FALSE;
+        goto out;
+    }
 
     if (argc < 2) {
         /* Execute using caller's new scope object (might be a Call object). */
@@ -1392,6 +1442,19 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
 
     JS_DestroyScript(cx, script);
+
+out:
+#if JS_HAS_EVAL_THIS_SCOPE
+    /* Restore OBJ_GET_PARENT(scopeobj) not callerScopeChain in case of Call. */
+    if (setCallerScopeChain) {
+        caller->scopeChain = callerScopeChain;
+        JS_ASSERT(OBJ_GET_CLASS(cx, setCallerScopeChain) == &js_WithClass);
+        JS_SetPrivate(cx, setCallerScopeChain, NULL);
+    }
+    if (setCallerVarObj)
+        caller->varobj = callerVarObj;
+#endif
+
     return ok;
 }
 
