@@ -52,7 +52,6 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULDocument.h"
-#include "nsISupportsArray.h"
 #include "nsCOMArray.h"
 #include "nsIURI.h"
 #include "nsIXULDocument.h"

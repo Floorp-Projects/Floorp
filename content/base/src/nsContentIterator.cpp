@@ -42,7 +42,6 @@
 #include "nsRange.h"
 #include "nsIContent.h"
 #include "nsIDOMText.h"
-#include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
 #include "nsIComponentManager.h"

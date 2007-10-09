@@ -52,7 +52,6 @@
 #include "nsIContentViewer.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsMappedAttributes.h"
-#include "nsISupportsArray.h"
 #include "nsRuleData.h"
 #include "nsIFrame.h"
 #include "nsIDocShell.h"
