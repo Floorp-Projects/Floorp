@@ -225,16 +225,18 @@ nsAccessNode::GetApplicationAccessible()
     if (!gApplicationAccessible)
       return nsnull;
 
+    // Addref on create. Will Release in ShutdownXPAccessibility()
     NS_ADDREF(gApplicationAccessible);
 
     nsresult rv = gApplicationAccessible->Init();
     if (NS_FAILED(rv)) {
       NS_RELEASE(gApplicationAccessible);
+      gApplicationAccessible = nsnull;
       return nsnull;
     }
   }
 
-  NS_ADDREF(gApplicationAccessible);
+  NS_ADDREF(gApplicationAccessible);   // Addref because we're a getter
   return gApplicationAccessible;
 }
 
@@ -297,9 +299,12 @@ void nsAccessNode::ShutdownXPAccessibility()
   NS_IF_RELEASE(sAccService);
 
   nsApplicationAccessibleWrap::Unload();
-  NS_IF_RELEASE(gApplicationAccessible);
-
   ClearCache(gGlobalDocAccessibleCache);
+
+  // Release gApplicationAccessible after everything else is shutdown
+  // so we don't accidently create it again while tearing down root accessibles
+  NS_IF_RELEASE(gApplicationAccessible);
+  gApplicationAccessible = nsnull;  
 
   gIsAccessibilityActive = PR_FALSE;
   NotifyA11yInitOrShutdown();
