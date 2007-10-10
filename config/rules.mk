@@ -981,6 +981,12 @@ endif
 SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib} $(CLEANUP1); done;)
 endif
 endif
+ifdef MOZILLA_PROBE_LIBS
+PROBE_LOBJS	= $(shell for lib in $(MOZILLA_PROBE_LIBS); do $(AR_LIST) $${lib} $(CLEANUP1); done;)
+endif
+ifdef DTRACE_PROBE_OBJ
+EXTRA_DEPS += $(DTRACE_PROBE_OBJ)
+endif
 
 $(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DEPS) Makefile Makefile.in
 	rm -f $@
@@ -1070,7 +1076,26 @@ ifdef SHARED_LIBRARY_LIBS
 	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
 endif # SHARED_LIBRARY_LIBS
 endif # NO_LD_ARCHIVE_FLAGS
-	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
+ifdef NEED_DTRACE_PROBE_OBJ
+	@rm -f $(PROBE_LOBJS)
+	@for lib in $(MOZILLA_PROBE_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
+	dtrace -G -C -32 -s $(MOZILLA_DTRACE_SRC) -o  $(NEED_DTRACE_PROBE_OBJ) $(PROBE_LOBJS)
+	@for lib in $(MOZILLA_PROBE_LIBS); do \
+		ofiles=`$(AR_LIST) $${lib}`; \
+		$(AR_DELETE) $${lib} $$ofiles; \
+	done
+	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(NEED_DTRACE_PROBE_OBJ) $(PROBE_LOBJS) $(RESFILE) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
+	@rm -f $(PROBE_LOBJS)
+	@rm -f $(NEED_DTRACE_PROBE_OBJ)
+	@for lib in $(MOZILLA_PROBE_LIBS); do \
+		if [ -L $${lib} ]; then rm -f `readlink $${lib}`; fi; \
+	done
+	@rm -f $(MOZILLA_PROBE_LIBS)
+
+else
+	$(MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(DTRACE_PROBE_OBJ) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
+endif # NEED_DTRACE_PROBE_OBJ
+
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 ifdef MSMANIFEST_TOOL
 ifdef EMBED_MANIFEST_AT
