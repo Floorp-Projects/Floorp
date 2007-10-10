@@ -394,8 +394,11 @@ nsBoxObject::GetProperty(const PRUnichar* aPropertyName, PRUnichar** aResult)
   nsCOMPtr<nsISupportsString> supportsStr = do_QueryInterface(data);
   if (!supportsStr) 
     return NS_ERROR_FAILURE;
+  nsAutoString result;  
+  supportsStr->GetData(result);
 
-  return supportsStr->ToString(aResult);
+  *aResult = result.IsVoid() ? nsnull : ToNewUnicode(result);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

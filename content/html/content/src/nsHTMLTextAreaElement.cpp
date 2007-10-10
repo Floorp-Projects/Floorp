@@ -75,7 +75,6 @@
 #include "nsLayoutErrors.h"
 #include "nsStubMutationObserver.h"
 #include "nsDOMError.h"
-#include "nsISupportsPrimitives.h"
 
 static NS_DEFINE_CID(kXULControllersCID,  NS_XULCONTROLLERS_CID);
 
@@ -909,11 +908,6 @@ nsHTMLTextAreaElement::SaveState()
   if (mValueChanged) {
     rv = GetPrimaryPresState(this, &state);
     if (state) {
-      nsCOMPtr<nsISupportsString> pState
-        (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
-
-      if (!pState) return NS_ERROR_OUT_OF_MEMORY;
-
       nsAutoString value;
       GetValueInternal(value, PR_TRUE);
 
@@ -921,10 +915,9 @@ nsHTMLTextAreaElement::SaveState()
                value,
                nsLinebreakConverter::eLinebreakPlatform,
                nsLinebreakConverter::eLinebreakContent);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      pState->SetData(value);
-      state->SetStateProperty(pState);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Converting linebreaks failed!");
+      rv = state->SetStateProperty(NS_LITERAL_STRING("value"), value);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "value save failed!");
     }
   }
 
@@ -935,7 +928,14 @@ nsHTMLTextAreaElement::SaveState()
     if (state) {
       PRBool disabled;
       GetDisabled(&disabled);
-      state->SetDisabled(disabled);
+      if (disabled) {
+        rv |= state->SetStateProperty(NS_LITERAL_STRING("disabled"),
+                                      NS_LITERAL_STRING("t"));
+      } else {
+        rv |= state->SetStateProperty(NS_LITERAL_STRING("disabled"),
+                                      NS_LITERAL_STRING("f"));
+      }
+      NS_ASSERTION(NS_SUCCEEDED(rv), "disabled save failed!");
     }
   }
   return rv;
@@ -944,18 +944,17 @@ nsHTMLTextAreaElement::SaveState()
 PRBool
 nsHTMLTextAreaElement::RestoreState(nsPresState* aState)
 {
+  nsAutoString value;
+  nsresult rv =
+    aState->GetStateProperty(NS_LITERAL_STRING("value"), value);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "value restore failed!");
+  SetValue(value);
 
-  nsCOMPtr<nsISupportsString> state
-    (do_QueryInterface(aState->GetStateProperty()));
-
-  if (!state) return false;
-
-  nsAutoString data;
-  state->GetData(data);
-  SetValue(data);
-
-  if (aState->DisabledIsSet()) {
-    SetDisabled(aState->GetDisabled());
+  nsAutoString disabled;
+  rv = aState->GetStateProperty(NS_LITERAL_STRING("disabled"), disabled);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "disabled restore failed!");
+  if (rv == NS_STATE_PROPERTY_EXISTS) {
+    SetDisabled(disabled.EqualsLiteral("t"));
   }
 
   return PR_FALSE;

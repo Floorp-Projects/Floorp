@@ -52,6 +52,75 @@
 // Implementation /////////////////////////////////////////////////////////////////
 
 nsresult
+nsPresState::Init()
+{
+  return mPropertyTable.Init(8) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+nsresult
+nsPresState::GetStateProperty(const nsAString& aName, nsAString& aResult)
+{
+  nsresult rv = NS_STATE_PROPERTY_NOT_THERE;
+  aResult.Truncate();
+
+  // Retrieve from hashtable.
+  nsISupports *data = mPropertyTable.GetWeak(aName);
+
+  // Strings are stored in the table as UTF-8, to save space.
+  // XXX minimize conversions here...
+
+  nsCOMPtr<nsISupportsCString> supportsStr = do_QueryInterface(data);
+  if (supportsStr) {
+    nsCAutoString data;
+    supportsStr->GetData(data);
+
+    CopyUTF8toUTF16(data, aResult);
+    aResult.SetIsVoid(data.IsVoid());
+    rv = NS_STATE_PROPERTY_EXISTS;
+  }
+
+  return rv;
+}
+
+nsresult
+nsPresState::SetStateProperty(const nsAString& aName, const nsAString& aValue)
+{
+  // Add to hashtable
+  nsCOMPtr<nsISupportsCString> supportsStr(do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
+  NS_ENSURE_TRUE(supportsStr, NS_ERROR_OUT_OF_MEMORY);
+  NS_ConvertUTF16toUTF8 data(aValue);
+  data.SetIsVoid(aValue.IsVoid());
+  supportsStr->SetData(data);
+
+  mPropertyTable.Put(aName, supportsStr);
+  return NS_OK;
+}
+
+nsresult
+nsPresState::RemoveStateProperty(const nsAString& aName)
+{
+  mPropertyTable.Remove(aName);
+  return NS_OK;
+}
+
+nsresult
+nsPresState::GetStatePropertyAsSupports(const nsAString& aName,
+                                        nsISupports** aResult)
+{
+  // Retrieve from hashtable.
+  mPropertyTable.Get(aName, aResult);
+  return NS_OK;
+}
+
+nsresult
+nsPresState::SetStatePropertyAsSupports(const nsAString& aName,
+                                        nsISupports* aValue)
+{
+  mPropertyTable.Put(aName, aValue);
+  return NS_OK;
+}
+
+nsresult
 nsPresState::SetScrollState(const nsRect& aRect)
 {
   if (!mScrollState) {
@@ -78,16 +147,20 @@ nsPresState::GetScrollState()
 nsresult
 NS_NewPresState(nsPresState** aState)
 {
-  NS_ENSURE_ARG_POINTER(aState);
+  nsPresState *state;
 
-  nsPresState *state = new nsPresState();
-
+  *aState = nsnull;
+  state = new nsPresState();
   if (!state)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  nsresult rv = state->Init();
+  if (NS_SUCCEEDED(rv))
+    *aState = state;
+  else
+    delete state;
 
-  *aState = state;
-  return NS_OK;
+  return rv;
 }
 
   

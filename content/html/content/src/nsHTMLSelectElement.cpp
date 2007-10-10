@@ -70,7 +70,6 @@
 #include "nsEventDispatcher.h"
 
 NS_IMPL_ISUPPORTS0(nsSelectState)
-NS_DEFINE_STATIC_IID_ACCESSOR(nsSelectState, NS_SELECT_STATE_IID)
 
 //----------------------------------------------------------------------
 //
@@ -1513,14 +1512,21 @@ nsHTMLSelectElement::SaveState()
   nsPresState *presState = nsnull;
   nsresult rv = GetPrimaryPresState(this, &presState);
   if (presState) {
-
-    presState->SetStateProperty(state);
-
+    rv = presState->SetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"),
+                                           state);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "selecteditems set failed!");
 
     if (mDisabledChanged) {
       PRBool disabled;
       GetDisabled(&disabled);
-      presState->SetDisabled(disabled);
+      if (disabled) {
+        rv |= presState->SetStateProperty(NS_LITERAL_STRING("disabled"),
+                                          NS_LITERAL_STRING("t"));
+      } else {
+        rv |= presState->SetStateProperty(NS_LITERAL_STRING("disabled"),
+                                          NS_LITERAL_STRING("f"));
+      }
+      NS_ASSERTION(NS_SUCCEEDED(rv), "disabled save failed!");
     }
   }
 
@@ -1531,20 +1537,22 @@ PRBool
 nsHTMLSelectElement::RestoreState(nsPresState* aState)
 {
   // Get the presentation state object to retrieve our stuff out of.
+  nsCOMPtr<nsISupports> state;
+  nsresult rv = aState->GetStatePropertyAsSupports(NS_LITERAL_STRING("selecteditems"),
+                                                   getter_AddRefs(state));
+  if (NS_SUCCEEDED(rv)) {
+    RestoreStateTo((nsSelectState*)(nsISupports*)state);
 
-  nsCOMPtr<nsSelectState> state(do_QueryInterface(aState->GetStateProperty()));
+    // Don't flush, if the frame doesn't exist yet it doesn't care if
+    // we're reset or not.
+    DispatchContentReset();
+  }
 
-  if (!state) return PR_FALSE;
-
-  RestoreStateTo(state);
-
-
-  // Don't flush, if the frame doesn't exist yet it doesn't care if
-  // we're reset or not.
-  DispatchContentReset();
-
-  if (aState->DisabledIsSet()) {
-    SetDisabled(aState->GetDisabled());
+  nsAutoString disabled;
+  rv = aState->GetStateProperty(NS_LITERAL_STRING("disabled"), disabled);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "disabled restore failed!");
+  if (rv == NS_STATE_PROPERTY_EXISTS) {
+    SetDisabled(disabled.EqualsLiteral("t"));
   }
 
   return PR_FALSE;
@@ -1582,8 +1590,8 @@ nsHTMLSelectElement::RestoreStateTo(nsSelectState* aNewSelected)
     nsIDOMHTMLOptionElement *option = mOptions->ItemAsOption(i);
     if (option) {
       nsAutoString value;
-      nsresult rv = option->GetValue(value);
-      if (NS_SUCCEEDED(rv) && aNewSelected->ContainsOption(i, value)) {
+      option->GetValue(value);
+      if (aNewSelected->ContainsOption(i, value)) {
         SetOptionsSelectedByIndex(i, i, PR_TRUE, PR_FALSE, PR_TRUE, PR_TRUE, nsnull);
       }
     }
