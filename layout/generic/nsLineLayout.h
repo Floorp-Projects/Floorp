@@ -166,9 +166,7 @@ protected:
   PRBool GetFlag(PRUint32 aFlag) const
   {
     NS_ASSERTION(aFlag<=LL_LASTFLAG, "bad flag");
-    PRBool result = (mFlags & aFlag);
-    if (result) return PR_TRUE;
-    return PR_FALSE;
+    return !!(mFlags & aFlag);
   }
 
 public:
@@ -447,9 +445,7 @@ protected:
     PRBool GetFlag(PRUint32 aFlag) const
     {
       NS_ASSERTION(aFlag<=PFD_LASTFLAG, "bad flag");
-      PRBool result = (mFlags & aFlag);
-      if (result) return PR_TRUE;
-      return PR_FALSE;
+      return !!(mFlags & aFlag);
     }
 
 
