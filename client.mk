@@ -174,6 +174,7 @@ MODULES_core :=                                 \
   mozilla/modules/staticmod                     \
   mozilla/plugin/oji                            \
   mozilla/profile                               \
+  mozilla/probes                                \
   mozilla/rdf                                   \
   mozilla/security/manager                      \
   mozilla/sun-java                              \
