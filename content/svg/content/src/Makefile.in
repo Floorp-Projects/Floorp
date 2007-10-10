@@ -71,7 +71,6 @@ CPPSRCS		= \
 		nsDOMSVGEvent.cpp \
 		nsSVGAElement.cpp \
 		nsSVGAngle.cpp \
-		nsSVGAnimatedAngle.cpp \
 		nsSVGAnimatedLengthList.cpp \
 		nsSVGAnimatedNumberList.cpp \
 		nsSVGAnimatedRect.cpp \
