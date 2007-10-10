@@ -1425,6 +1425,66 @@ ns4xPluginInstance::GetJSObject(JSContext *cx)
   return obj;
 }
 
+void
+ns4xPluginInstance::DefineJavaProperties()
+{
+  // Enable this code only if OJI is defined, even though this is the
+  // code that does what OJI does in the case where a Java plugin with
+  // NPRuntime support is installed. We do this because OJI being
+  // defined also states whether or not window.java etc is defined,
+  // which this code is all about.
+
+#ifdef OJI
+  NPObject *plugin_obj = nsnull;
+
+  // The dummy Java plugin's scriptable object is what we want to
+  // expose as window.Packages. And Window.Packages.java will be
+  // exposed as window.java.
+
+  // Get the scriptable plugin object.
+  nsresult rv = GetValueInternal(NPPVpluginScriptableNPObject, &plugin_obj);
+
+  if (NS_FAILED(rv) || !plugin_obj) {
+    return;
+  }
+
+  // Get the NPObject wrapper for window.
+  NPObject *window_obj = _getwindowobject(&fNPP);
+
+  if (!window_obj) {
+    _releaseobject(plugin_obj);
+
+    return;
+  }
+
+  NPIdentifier java_id = _getstringidentifier("java");
+  NPIdentifier packages_id = _getstringidentifier("Packages");
+
+  NPObject *java_obj = nsnull;
+  NPVariant v;
+  OBJECT_TO_NPVARIANT(plugin_obj, v);
+
+  // Define the properties.
+
+  bool ok = _setproperty(&fNPP, window_obj, packages_id, &v);
+  if (ok) {
+    ok = _getproperty(&fNPP, plugin_obj, java_id, &v);
+
+    if (ok && NPVARIANT_IS_OBJECT(v)) {
+      // Set java_obj so that we properly release it at the end of
+      // this function.
+      java_obj = NPVARIANT_TO_OBJECT(v);
+
+      ok = _setproperty(&fNPP, window_obj, java_id, &v);
+    }
+  }
+
+  _releaseobject(window_obj);
+  _releaseobject(plugin_obj);
+  _releaseobject(java_obj);
+#endif
+}
+
 nsresult
 ns4xPluginInstance::GetFormValue(nsAString& aValue)
 {

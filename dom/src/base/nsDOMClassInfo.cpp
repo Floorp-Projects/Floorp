@@ -1326,6 +1326,16 @@ jsval nsDOMClassInfo::sOnpaste_id         = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnbeforecopy_id    = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnbeforecut_id     = JSVAL_VOID;
 jsval nsDOMClassInfo::sOnbeforepaste_id   = JSVAL_VOID;
+#ifdef OJI
+jsval nsDOMClassInfo::sJava_id            = JSVAL_VOID;
+jsval nsDOMClassInfo::sPackages_id        = JSVAL_VOID;
+jsval nsDOMClassInfo::sNetscape_id        = JSVAL_VOID;
+jsval nsDOMClassInfo::sSun_id             = JSVAL_VOID;
+jsval nsDOMClassInfo::sJavaObject_id      = JSVAL_VOID;
+jsval nsDOMClassInfo::sJavaClass_id       = JSVAL_VOID;
+jsval nsDOMClassInfo::sJavaArray_id       = JSVAL_VOID;
+jsval nsDOMClassInfo::sJavaMember_id      = JSVAL_VOID;
+#endif
 
 const JSClass *nsDOMClassInfo::sObjectClass = nsnull;
 const JSClass *nsDOMClassInfo::sXPCNativeWrapperClass = nsnull;
@@ -1511,6 +1521,16 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSVAL_TO_STRING(sOnbeforecopy_id,    cx, "oncopy");
   SET_JSVAL_TO_STRING(sOnbeforecut_id,     cx, "oncut");
   SET_JSVAL_TO_STRING(sOnbeforepaste_id,   cx, "onpaste");
+#ifdef OJI
+  SET_JSVAL_TO_STRING(sJava_id,            cx, "java");
+  SET_JSVAL_TO_STRING(sPackages_id,        cx, "Packages");
+  SET_JSVAL_TO_STRING(sNetscape_id,        cx, "netscape");
+  SET_JSVAL_TO_STRING(sSun_id,             cx, "sun");
+  SET_JSVAL_TO_STRING(sJavaObject_id,      cx, "JavaObject");
+  SET_JSVAL_TO_STRING(sJavaClass_id,       cx, "JavaClass");
+  SET_JSVAL_TO_STRING(sJavaArray_id,       cx, "JavaArray");
+  SET_JSVAL_TO_STRING(sJavaMember_id,      cx, "JavaMember");
+#endif
 
   return NS_OK;
 }
@@ -4050,6 +4070,16 @@ nsDOMClassInfo::ShutDown()
   sOnbeforecopy_id    = JSVAL_VOID;
   sOnbeforecut_id     = JSVAL_VOID;
   sOnbeforepaste_id   = JSVAL_VOID;
+#ifdef OJI
+  sJava_id            = JSVAL_VOID;
+  sPackages_id        = JSVAL_VOID;
+  sNetscape_id        = JSVAL_VOID;
+  sSun_id             = JSVAL_VOID;
+  sJavaObject_id      = JSVAL_VOID;
+  sJavaClass_id       = JSVAL_VOID;
+  sJavaArray_id       = JSVAL_VOID;
+  sJavaMember_id      = JSVAL_VOID;
+#endif
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
@@ -6032,6 +6062,46 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
       return NS_OK;
     }
+
+#ifdef OJI
+    if (id == sJava_id || id == sPackages_id || id == sNetscape_id ||
+        id == sSun_id || id == sJavaObject_id || id == sJavaClass_id ||
+        id == sJavaArray_id || id == sJavaMember_id
+        ) {
+      static PRBool isResolvingJavaProperties;
+
+      if (!isResolvingJavaProperties) {
+        isResolvingJavaProperties = PR_TRUE;
+
+        PRBool oldVal = sDoSecurityCheckInAddProperty;
+        sDoSecurityCheckInAddProperty = PR_FALSE;
+
+        // Tell the window to initialize the Java properties. The
+        // window needs to do this as we need to do this only once,
+        // and detecting that reliably from here is hard.
+
+        win->InitJavaProperties(); 
+
+        sDoSecurityCheckInAddProperty = oldVal;
+
+        PRBool hasProp;
+        PRBool ok = ::JS_HasProperty(cx, obj, ::JS_GetStringBytes(str),
+                                     &hasProp);
+
+        isResolvingJavaProperties = PR_FALSE;
+
+        if (!ok) {
+          return NS_ERROR_FAILURE;
+        }
+
+        if (hasProp) {
+          *objp = obj;
+
+          return NS_OK;
+        }
+      }
+    }
+#endif
   }
 
   return nsEventReceiverSH::NewResolve(wrapper, cx, obj, id, flags, objp,

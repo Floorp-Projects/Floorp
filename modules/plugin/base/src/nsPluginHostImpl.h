@@ -150,6 +150,7 @@ public:
   PRPackedBool  mCanUnloadLibrary;
   PRPackedBool  mXPConnected;
   PRPackedBool  mIsJavaPlugin;
+  PRPackedBool  mIsNPRuntimeEnabledJavaPlugin;
   char          *mFileName;
   char          *mFullPath;
   PRInt64       mLastModifiedTime;
