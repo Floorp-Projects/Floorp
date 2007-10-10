@@ -90,6 +90,8 @@ protected:
   static bool NP_RemoveProperty(NPObject *obj, NPIdentifier property);
   static bool NP_Enumerate(NPObject *npobj, NPIdentifier **identifier,
                            uint32_t *count);
+  static bool NP_Construct(NPObject *obj, const NPVariant *args,
+                           uint32_t argCount, NPVariant *result);
 
 public:
   static NPClass sJSObjWrapperNPClass;
