@@ -5410,6 +5410,7 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
   gfxSkipCharsIterator iter = start;
   const nsStyleText* textStyle = GetStyleText();
   gfxFloat delta = 0;
+  PRUint32 trimmedEnd = iter.ConvertOriginalToSkipped(trimmed.GetEnd());
   
   if (GetStateBits() & TEXT_TRIMMED_TRAILING_WHITESPACE) {
     aLastCharIsJustifiable = PR_TRUE;
@@ -5427,18 +5428,6 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
       // removed from the overall count? I think so...
       aLastCharIsJustifiable = PR_TRUE;
     }
-  }
-
-  PRUint32 trimmedEnd = iter.ConvertOriginalToSkipped(trimmed.GetEnd());
-  // 'iter' is now at the end
-  if (HasSoftHyphenBefore(frag, mTextRun, trimmed, iter)) {
-    // Fix up metrics to include hyphen
-    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, aReflowState.rendContext));
-    if (hyphenTextRun.get()) {
-      AddCharToMetrics(hyphenTextRun.get(),
-                       mTextRun, &textMetrics, needTightBoundingBox, ctx);
-    }
-    AddStateBits(TEXT_HYPHEN_BREAK);
   }
 
   if (!aLastCharIsJustifiable &&
@@ -5549,8 +5538,6 @@ nsresult nsTextFrame::GetRenderedText(nsAString* aAppendToString,
   PRUint32 keptCharsLength = 0;
   PRUint32 validCharsLength = 0;
 
-  // XXX should we return a soft hyphen here?
-  
   // Build skipChars and copy text, for each text frame in this continuation block
   for (textFrame = this; textFrame;
        textFrame = static_cast<nsTextFrame*>(textFrame->GetNextContinuation())) {
