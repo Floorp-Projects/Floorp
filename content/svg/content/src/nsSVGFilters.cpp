@@ -1343,7 +1343,7 @@ nsSVGFEColorMatrixElement::Filter(nsSVGFilterInstance *instance)
 
     colorMatrix[10] = 0.213f - 0.213f * s;
     colorMatrix[11] = 0.715f - 0.715f * s;
-    colorMatrix[12] = 0.715f - 0.715f * s;
+    colorMatrix[12] = 0.072f + 0.928f * s;
 
     break;
 
