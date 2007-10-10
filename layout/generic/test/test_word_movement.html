@@ -22,7 +22,26 @@ SimpleTest.waitForExplicitFinish();
 // This seems to be necessary because the selection is not set up properly otherwise
 setTimeout(test, 0);
 
+function getPrefs() {
+  const prefSvcContractID = "@mozilla.org/preferences-service;1";
+  const prefSvcIID = Components.interfaces.nsIPrefService;
+  return Components.classes[prefSvcContractID].getService(prefSvcIID)
+                                               .getBranch("layout.word_select.");
+}
+
+function setEatSpace(newValue) {
+  getPrefs().setBoolPref("eat_space_to_next_word", newValue);
+}
+
+function restoreEatSpace() {
+  try {
+    getPrefs().clearUserPref("eat_space_to_next_word");
+  } catch(ex) {}
+}
+
 function test() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
   var wordModifiers =
       (navigator.platform.indexOf("Mac") >= 0) ? {altKey:true} : {ctrlKey:true};
   var sel = window.getSelection();
@@ -39,6 +58,8 @@ function test() {
     is(sel.anchorNode, node, "Left movement broken in " + editor.innerHTML);
     is(sel.anchorOffset, offset, "Left movement broken in " + editor.innerHTML);
   }
+
+  setEatSpace(false);
 
   editor.innerHTML = "Hello Kitty";
   sel.collapse(editor.firstChild, 0);
@@ -71,6 +92,8 @@ function test() {
   testLeft(editor.firstChild.nextSibling, 1);
   testLeft(editor.firstChild.firstChild, 4);
   testLeft(editor.firstChild.firstChild, 0);
+
+  restoreEatSpace();
 
   SimpleTest.finish();
 }
