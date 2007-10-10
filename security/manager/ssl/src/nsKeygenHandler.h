@@ -67,7 +67,7 @@ public:
                           nsAString& aValue); 
 
   NS_IMETHOD ProvideContent(const nsAString& aFormType, 
-                            nsVoidArray& aContent, 
+                            nsStringArray& aContent, 
                             nsAString& aAttribute); 
   NS_DECL_ISUPPORTS 
 
