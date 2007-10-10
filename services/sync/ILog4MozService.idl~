@@ -25,10 +25,13 @@
 
 #include "nsISupports.idl"
 
+interface nsIFile;
+
 [scriptable, uuid(eeb0adbc-afa3-4326-9a52-040ce4855e9d)]
 interface ILogMessage : nsISupports
 {
   attribute PRInt32 level;
+  attribute AString levelDesc;
   attribute AString message;
   attribute PRTime date;
 };
@@ -127,6 +130,8 @@ interface ILog4MozService : nsISupports
   ILogger getLogger(in AString name);
 
   IAppender newAppender(in AString kind, in IFormatter formatter);
+  IAppender newFileAppender(in AString kind, in nsIFile file,
+                            in IFormatter formatter);
 
   IFormatter newFormatter(in AString kind);
 };
