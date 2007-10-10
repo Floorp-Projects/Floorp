@@ -30,10 +30,11 @@ interface nsIFile;
 [scriptable, uuid(eeb0adbc-afa3-4326-9a52-040ce4855e9d)]
 interface ILogMessage : nsISupports
 {
+  attribute AString loggerName;
   attribute PRInt32 level;
   attribute AString levelDesc;
   attribute AString message;
-  attribute PRTime date;
+  attribute PRTime time;
 };
 
 [scriptable, uuid(ac7f40df-49e7-4270-86ec-9c905047e70e)]
@@ -54,7 +55,6 @@ interface ILogger : nsISupports
 {
   /*
    * Level constants
-   * Also here (in addition to the service) for convenience
    */
   const PRInt32 LEVEL_FATAL  = 70;
   const PRInt32 LEVEL_ERROR  = 60;
@@ -99,18 +99,6 @@ interface ILoggerRepository : nsISupports
 [scriptable, uuid(a60e50d7-90b8-4a12-ad0c-79e6a1896978)]
 interface ILog4MozService : nsISupports
 {
-  /*
-   * Level constants
-   */
-  const PRInt32 LEVEL_FATAL  = 70;
-  const PRInt32 LEVEL_ERROR  = 60;
-  const PRInt32 LEVEL_WARN   = 50;
-  const PRInt32 LEVEL_INFO   = 40;
-  const PRInt32 LEVEL_CONFIG = 30;
-  const PRInt32 LEVEL_DEBUG  = 20;
-  const PRInt32 LEVEL_TRACE  = 10;
-  const PRInt32 LEVEL_ALL    = 0;
-
   /*
    * The root logger.  Appenders added to this logger will be
    * inherited by all other loggers

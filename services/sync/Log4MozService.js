@@ -49,14 +49,14 @@ const LEVEL_TRACE  = 10;
 const LEVEL_ALL    = 0;
 
 const LEVEL_DESC = {
-  70: "FATAL ",
-  60: "ERROR ",
-  50: "WARN  ",
-  40: "INFO  ",
+  70: "FATAL",
+  60: "ERROR",
+  50: "WARN",
+  40: "INFO",
   30: "CONFIG",
-  20: "DEBUG ",
-  10: "TRACE ",
-  0:  "ALL   "
+  20: "DEBUG",
+  10: "TRACE",
+  0:  "ALL"
 };
 
 const ONE_BYTE = 1;
@@ -202,9 +202,9 @@ Logger.prototype = {
 
   parent: null,
 
-  _level: -1,
+  _level: null,
   get level() {
-    if (this._level >= 0)
+    if (this._level != null)
       return this._level;
     if (this.parent)
       return this.parent.level;
@@ -240,25 +240,25 @@ Logger.prototype = {
   },
 
   fatal: function Logger_fatal(string) {
-    this.log(new LogMessage(LEVEL_FATAL, string));
+    this.log(new LogMessage(this._name, LEVEL_FATAL, string));
   },
   error: function Logger_error(string) {
-    this.log(new LogMessage(LEVEL_ERROR, string));
+    this.log(new LogMessage(this._name, LEVEL_ERROR, string));
   },
   warning: function Logger_warning(string) {
-    this.log(new LogMessage(LEVEL_WARN, string));
+    this.log(new LogMessage(this._name, LEVEL_WARN, string));
   },
   info: function Logger_info(string) {
-    this.log(new LogMessage(LEVEL_INFO, string));
+    this.log(new LogMessage(this._name, LEVEL_INFO, string));
   },
   config: function Logger_config(string) {
-    this.log(new LogMessage(LEVEL_CONFIG, string));
+    this.log(new LogMessage(this._name, LEVEL_CONFIG, string));
   },
   debug: function Logger_debug(string) {
-    this.log(new LogMessage(LEVEL_DEBUG, string));
+    this.log(new LogMessage(this._name, LEVEL_DEBUG, string));
   },
   trace: function Logger_trace(string) {
-    this.log(new LogMessage(LEVEL_TRACE, string));
+    this.log(new LogMessage(this._name, LEVEL_TRACE, string));
   }
 };
 
@@ -298,7 +298,6 @@ Appender.prototype = {
 function DumpAppender(formatter) {
   this._name = "DumpAppender";
   this._formatter = formatter;
-  this._level = LEVEL_ALL;
 }
 DumpAppender.prototype = new Appender();
 DumpAppender.prototype.doAppend = function DApp_doAppend(message) {
@@ -313,19 +312,15 @@ DumpAppender.prototype.doAppend = function DApp_doAppend(message) {
 function ConsoleAppender(formatter) {
   this._name = "ConsoleAppender";
   this._formatter = formatter;
-  this._level = LEVEL_ALL;
 }
 ConsoleAppender.prototype = new Appender();
 ConsoleAppender.prototype.doAppend = function CApp_doAppend(message) {
-  //error or normal?    
-  if(message.level > LEVEL_WARN){
+  if (message.level > LEVEL_WARN) {
     Cu.reportError(message);
-  } else {
-    //get the js console
-    var consoleService = Components.classes["@mozilla.org/consoleservice;1"].
-    getService(Ci.nsIConsoleService);
-    consoleService.logStringMessage(message);
+    return;
   }
+  Cc["@mozilla.org/consoleservice;1"].
+    getService(Ci.nsIConsoleService).logStringMessage(message);
 };
 
 /*
@@ -337,7 +332,6 @@ function FileAppender(file, formatter) {
   this._name = "FileAppender";
   this._file = file; // nsIFile
   this._formatter = formatter;
-  this._level = LEVEL_ALL;
   this.__fos = null;
 }
 FileAppender.prototype = new Appender();
@@ -381,7 +375,6 @@ function RotatingFileAppender(file, formatter, maxSize, maxBackups) {
   this._name = "RotatingFileAppender";
   this._file = file; // nsIFile
   this._formatter = formatter;
-  this._level = LEVEL_ALL;
   this._maxSize = maxSize;
   this._maxBackups = maxBackups;
 }
@@ -442,9 +435,11 @@ BasicFormatter.prototype = {
     this._dateFormat = format;
   },
   format: function BF_format(message) {
-    // FIXME: message.date.toLocaleFormat(this.dateFormat) + " " +
-           
-    return message.levelDesc + " " + message.message + "\n";
+    dump("time is " + message.time + "\n");
+    let date = new Date(message.time);
+    return date.toLocaleFormat(this.dateFormat) + "\t" +
+      message.loggerName + "\t" + message.levelDesc + "\t" +
+      message.message + "\n";
   }
 };
 
@@ -452,10 +447,11 @@ BasicFormatter.prototype = {
  * LogMessage
  * Encapsulates a single log event's data
  */
-function LogMessage(level, message){
+function LogMessage(loggerName, level, message){
+  this.loggerName = loggerName;
   this.message = message;
   this.level = level;
-  this.date = new Date();
+  this.time = Date.now();
 }
 LogMessage.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.ILogMessage, Ci.nsISupports]),
@@ -465,8 +461,9 @@ LogMessage.prototype = {
       return LEVEL_DESC[this.level];
     return "UNKNOWN";
   },
+
   toString: function LogMsg_toString(){
-    return "LogMessage [" + this.date + " " + this.level + " " +
+    return "LogMessage [" + this._date + " " + this.level + " " +
       this.message + "]";
   }
 };

@@ -115,14 +115,6 @@ BookmarksSyncService.prototype = {
     return this.__os;
   },
 
-  __console: null,
-  get _console() {
-    if (!this.__console)
-      this.__console = Cc["@mozilla.org/consoleservice;1"]
-        .getService(Ci.nsIConsoleService);
-    return this.__console;
-  },
-
   __dirSvc: null,
   get _dirSvc() {
     if (!this.__dirSvc)
@@ -171,7 +163,7 @@ BookmarksSyncService.prototype = {
       serverURL = branch.getCharPref("browser.places.sync.serverURL");
     }
     catch (ex) { /* use defaults */ }
-    this._log.config("Bookmarks login server: " + serverURL);
+    this._log.info("Bookmarks login server: " + serverURL);
     this._dav = new DAVCollection(serverURL);
     this._readSnapshot();
   },
@@ -187,11 +179,11 @@ BookmarksSyncService.prototype = {
     root.level = root.LEVEL_ALL;
 
     let capp = logSvc.newAppender("console", formatter);
-    capp.level = root.LEVEL_INFO;
+    capp.level = root.LEVEL_WARN;
     root.addAppender(capp);
 
     let dapp = logSvc.newAppender("dump", formatter);
-    dapp.level = root.LEVEL_INFO;
+    dapp.level = root.LEVEL_WARN;
     root.addAppender(dapp);
 
     let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
@@ -204,11 +196,12 @@ BookmarksSyncService.prototype = {
     verboseFile.QueryInterface(Ci.nsILocalFile);
 
     let fapp = logSvc.newFileAppender("rotating", logFile, formatter);
-    fapp.level = root.LEVEL_CONFIG;
+    fapp.level = root.LEVEL_INFO;
     root.addAppender(fapp);
     let vapp = logSvc.newFileAppender("rotating", verboseFile, formatter);
     vapp.level = root.LEVEL_ALL;
     root.addAppender(vapp);
+    this._log.info("WHEE");
   },
 
   _saveSnapshot: function BSS__saveSnapshot() {
@@ -570,7 +563,7 @@ BookmarksSyncService.prototype = {
 
   _applyCommandsToObj: function BSS__applyCommandsToObj(commands, obj) {
     for (let i = 0; i < commands.length; i++) {
-      this._log.info("Applying cmd to obj: " + uneval(commands[i]));
+      this._log.debug("Applying cmd to obj: " + uneval(commands[i]));
       switch (commands[i].action) {
       case "create":
         obj[commands[i].GUID] = eval(uneval(commands[i].data));
@@ -592,7 +585,7 @@ BookmarksSyncService.prototype = {
   _applyCommands: function BSS__applyCommands(commandList) {
     for (var i = 0; i < commandList.length; i++) {
       var command = commandList[i];
-      this._log.info("Processing command: " + uneval(command));
+      this._log.debug("Processing command: " + uneval(command));
       switch (command["action"]) {
       case "create":
         this._createCommand(command);
@@ -619,11 +612,10 @@ BookmarksSyncService.prototype = {
       parentId = this._bms.bookmarksRoot;
     }
 
-    this._log.info(" -> creating item");
-
     switch (command.data.type) {
     case "bookmark":
     case "microsummary":
+      this._log.info(" -> creating bookmark \"" + command.data.title + "\"");
       let URI = makeURI(command.data.URI);
       newId = this._bms.insertBookmark(parentId,
                                        URI,
@@ -634,17 +626,20 @@ BookmarksSyncService.prototype = {
       this._bms.setKeywordForBookmark(newId, command.data.keyword);
 
       if (command.data.type == "microsummary") {
+        this._log.info("   \-> is a microsummary");
         let genURI = makeURI(command.data.generatorURI);
         let micsum = this._ms.createMicrosummary(URI, genURI);
         this._ms.setMicrosummary(newId, micsum);
       }
       break;
     case "folder":
+      this._log.info(" -> creating folder \"" + command.data.title + "\"");
       newId = this._bms.createFolder(parentId,
                                      command.data.title,
                                      command.data.index);
       break;
     case "livemark":
+      this._log.info(" -> creating livemark \"" + command.data.title + "\"");
       newId = this._ls.createLivemark(parentId,
                                       command.data.title,
                                       makeURI(command.data.siteURI),
@@ -652,6 +647,7 @@ BookmarksSyncService.prototype = {
                                       command.data.index);
       break;
     case "separator":
+      this._log.info(" -> creating separator");
       newId = this._bms.insertSeparator(parentId, command.data.index);
       break;
     default:
@@ -1160,7 +1156,7 @@ BookmarksSyncService.prototype = {
 
   _onLogin: function BSS__onLogin(success) {
     if (success) {
-      this._log.config("Bookmarks sync server: " + this._dav.baseURL);
+      this._log.info("Bookmarks sync server: " + this._dav.baseURL);
       this._os.notifyObservers(null, "bookmarks-sync:login", "");
     } else {
       this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
