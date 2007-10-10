@@ -1047,8 +1047,10 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     // spoofing.
     // XXX ideally we should rescale. Also, we could modify the API to
     // allow trusted content to set larger cursors.
-    if (width > 128 || height > 128)
+    if (width > 128 || height > 128) {
+        gdk_pixbuf_unref(pixbuf);
         return NS_ERROR_NOT_AVAILABLE;
+    }
 
     // Looks like all cursors need an alpha channel (tested on Gtk 2.4.4). This
     // is of course not documented anywhere...
@@ -1066,14 +1068,17 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     if (!_gdk_cursor_new_from_pixbuf || !_gdk_display_get_default) {
         // Fallback to a monochrome cursor
         GdkPixmap* mask = gdk_pixmap_new(NULL, width, height, 1);
-        if (!mask)
+        if (!mask) {
+            gdk_pixbuf_unref(pixbuf);
             return NS_ERROR_OUT_OF_MEMORY;
+        }
 
         PRUint8* data = Data32BitTo1Bit(gdk_pixbuf_get_pixels(pixbuf),
                                         gdk_pixbuf_get_rowstride(pixbuf),
                                         width, height);
         if (!data) {
             g_object_unref(mask);
+            gdk_pixbuf_unref(pixbuf);
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -1082,6 +1087,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
         delete[] data;
         if (!image) {
             g_object_unref(mask);
+            gdk_pixbuf_unref(pixbuf);
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -4261,10 +4267,17 @@ get_gtk_cursor(nsCursor aCursor)
         cursor = gdk_bitmap_create_from_data(NULL,
                                              (char *)GtkCursors[newType].bits,
                                              32, 32);
+        if (!cursor)
+            return NULL;
+
         mask =
             gdk_bitmap_create_from_data(NULL,
                                         (char *)GtkCursors[newType].mask_bits,
                                         32, 32);
+        if (!mask) {
+            gdk_bitmap_unref(cursor);
+            return NULL;
+        }
 
         gdkcursor = gdk_cursor_new_from_pixmap(cursor, mask, &fg, &bg,
                                                GtkCursors[newType].hot_x,
