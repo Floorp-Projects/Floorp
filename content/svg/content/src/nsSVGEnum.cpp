@@ -104,7 +104,7 @@ nsSVGEnum::SetBaseValue(PRUint16 aValue,
 
   while (tmp && tmp->mKey) {
     if (tmp->mVal == aValue) {
-      mAnimVal = mBaseVal = static_cast<PRUint8>(aValue);
+      mAnimVal = mBaseVal = PRUint8(aValue);
       aSVGElement->DidChangeEnum(mAttrEnum, aDoSetAttr);
       return NS_OK;
     }

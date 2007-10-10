@@ -567,7 +567,7 @@ nsSVGSVGElement::CreateSVGLength(nsIDOMSVGLength **_retval)
 NS_IMETHODIMP
 nsSVGSVGElement::CreateSVGAngle(nsIDOMSVGAngle **_retval)
 {
-  return NS_NewSVGAngle(_retval);
+  return NS_NewDOMSVGAngle(_retval);
 }
 
 /* nsIDOMSVGPoint createSVGPoint (); */
