@@ -579,7 +579,7 @@ struct nsStyleOutline: public nsStyleStruct {
 
   PRBool GetOutlineInitialColor() const
   {
-    return (mOutlineStyle & OUTLINE_COLOR_INITIAL);
+    return !!(mOutlineStyle & OUTLINE_COLOR_INITIAL);
   }
 
 protected:

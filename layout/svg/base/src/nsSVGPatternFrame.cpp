@@ -854,7 +854,7 @@ nsSVGPatternFrame::SetupPaintServer(gfxContext *aContext,
   }
 
   if (pMatrix.IsSingular()) {
-    return NS_ERROR_FAILURE;
+    return PR_FALSE;
   }
 
   pMatrix.Invert();
@@ -862,7 +862,7 @@ nsSVGPatternFrame::SetupPaintServer(gfxContext *aContext,
   nsRefPtr<gfxPattern> pattern = new gfxPattern(surface);
 
   if (!pattern)
-    return NS_ERROR_FAILURE;
+    return PR_FALSE;
 
   pattern->SetMatrix(pMatrix);
   pattern->SetExtend(gfxPattern::EXTEND_REPEAT);

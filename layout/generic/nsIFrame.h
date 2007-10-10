@@ -1430,7 +1430,7 @@ public:
    *
    * GetView returns non-null if and only if |HasView| returns true.
    */
-  PRBool HasView() const { return mState & NS_FRAME_HAS_VIEW; }
+  PRBool HasView() const { return !!(mState & NS_FRAME_HAS_VIEW); }
   nsIView* GetView() const;
   virtual nsIView* GetViewExternal() const;
   nsresult SetView(nsIView* aView);

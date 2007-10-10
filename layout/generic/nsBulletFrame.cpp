@@ -290,7 +290,7 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
 
   case NS_STYLE_LIST_STYLE_HEBREW:
     aRenderingContext.GetHints(hints);
-    isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
+    isBidiSystem = !!(hints & NS_RENDERING_HINT_BIDI_REORDERING);
     if (!isBidiSystem) {
       if (GetListItemText(*myList, text)) {
          charType = eCharType_RightToLeft;
@@ -401,7 +401,7 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
       else {
 //Mohamed
         aRenderingContext.GetHints(hints);
-        isBidiSystem = (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
+        isBidiSystem = !!(hints & NS_RENDERING_HINT_ARABIC_SHAPING);
         bidiUtils->FormatUnicodeText(presContext, (PRUnichar*)buffer, textLength,
                                      charType, level, isBidiSystem, isNewTextRunSystem);//Mohamed
       }

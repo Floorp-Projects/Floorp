@@ -1324,7 +1324,7 @@ nsSprocketLayout::GetPrefSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aS
    nsIBox* child = aBox->GetChildBox();
    nsFrameState frameState = 0;
    GetFrameState(aBox, frameState);
-   PRBool isEqual = frameState & NS_STATE_EQUAL_SIZE;
+   PRBool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
    PRInt32 count = 0;
    
    while (child) 
@@ -1382,7 +1382,7 @@ nsSprocketLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
    nsIBox* child = aBox->GetChildBox();
    nsFrameState frameState = 0;
    GetFrameState(aBox, frameState);
-   PRBool isEqual = frameState & NS_STATE_EQUAL_SIZE;
+   PRBool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
    PRInt32 count = 0;
 
    while (child) 
@@ -1453,7 +1453,7 @@ nsSprocketLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSi
    nsIBox* child = aBox->GetChildBox();
    nsFrameState frameState = 0;
    GetFrameState(aBox, frameState);
-   PRBool isEqual = frameState & NS_STATE_EQUAL_SIZE;
+   PRBool isEqual = !!(frameState & NS_STATE_EQUAL_SIZE);
    PRInt32 count = 0;
 
    while (child) 

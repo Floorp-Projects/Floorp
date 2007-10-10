@@ -592,7 +592,7 @@ nsCaret::DrawAtPositionWithHint(nsIDOMNode*             aNode,
     if (aBidiLevel & BIDI_LEVEL_UNDEFINED) {
       nsFrameSelection* frameSelection = GetFrameSelection();
       if (!frameSelection)
-        return NS_ERROR_FAILURE;
+        return PR_FALSE;
       frameSelection->SetCaretBidiLevel(NS_GET_EMBEDDING_LEVEL(theFrame));
     }
 
