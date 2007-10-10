@@ -5085,18 +5085,6 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     SetLength(maxContentLength);
   }
 
-  PRUint32 flowEndInTextRun;
-  nsIFrame* lineContainer = lineLayout.GetLineContainerFrame();
-  gfxSkipCharsIterator iter =
-    EnsureTextRun(aReflowState.rendContext, lineContainer,
-                  lineLayout.GetLine(), &flowEndInTextRun);
-
-  if (!mTextRun) {
-    ClearMetrics(aMetrics);
-    aStatus = NS_FRAME_COMPLETE;
-    return NS_OK;
-  }
-
   const nsTextFragment* frag = mContent->GetText();
   // DOM offsets of the text range we need to measure, after trimming
   // whitespace, restricting to first-letter, and restricting preformatted text
@@ -5120,6 +5108,35 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
       length -= whitespaceCount;
     }
   }
+
+  PRUint32 flowEndInTextRun;
+  nsIFrame* lineContainer = lineLayout.GetLineContainerFrame();
+  gfxSkipCharsIterator iter =
+    EnsureTextRun(aReflowState.rendContext, lineContainer,
+                  lineLayout.GetLine(), &flowEndInTextRun);
+
+  PRInt32 skippedRunLength;
+  if (mTextRun && mTextRun->GetLength() == iter.GetSkippedOffset() &&
+      length > 0 &&
+      (!iter.IsOriginalCharSkipped(&skippedRunLength) || skippedRunLength < length)) {
+    // The textrun does not map enough text for this frame. This can happen
+    // when the textrun was ended in the middle of a text node because a
+    // preformatted newline was encountered, and prev-in-flow frames have
+    // consumed all the text of the textrun. We need a new textrun.
+    ClearTextRun();
+    iter = EnsureTextRun(aReflowState.rendContext, lineContainer,
+                         lineLayout.GetLine(), &flowEndInTextRun);
+  }
+  
+  if (!mTextRun) {
+    ClearMetrics(aMetrics);
+    aStatus = NS_FRAME_COMPLETE;
+    return NS_OK;
+  }
+
+  NS_ASSERTION(gfxSkipCharsIterator(iter).ConvertOriginalToSkipped(offset + length)
+                    <= mTextRun->GetLength(),
+               "Text run does not map enough text for our reflow");
 
   // Restrict to just the first-letter if necessary
   PRBool completedFirstLetter = PR_FALSE;
