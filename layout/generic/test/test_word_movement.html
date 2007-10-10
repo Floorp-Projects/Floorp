@@ -42,6 +42,12 @@ function restoreEatSpace() {
 function test() {
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
+  // Disable tests on Windows and Linux for now
+  if (navigator.platform.indexOf("Mac") < 0) {
+    SimpleTest.finish();
+    return;
+  }
+
   var wordModifiers =
       (navigator.platform.indexOf("Mac") >= 0) ? {altKey:true} : {ctrlKey:true};
   var sel = window.getSelection();
