@@ -2663,17 +2663,13 @@ const DOMLinkHandler = {
             if (!gPrefService.getBoolPref("browser.chrome.site_icons"))
               break;
 
-            try {
-              var contentPolicy = Cc["@mozilla.org/layout/content-policy;1"].
-                                  getService(Ci.nsIContentPolicy);
-            } catch(e) {
-              break; // Refuse to load if we can't do a security check.
-            }
-
             var targetDoc = link.ownerDocument;
             var ios = Cc["@mozilla.org/network/io-service;1"].
                       getService(Ci.nsIIOService);
             var uri = ios.newURI(link.href, targetDoc.characterSet, null);
+
+            if (gBrowser.isFailedIcon(uri))
+              break;
 
             // Verify that the load of this icon is legal.
             // error pages can load their favicon, to be on the safe side,
@@ -2689,6 +2685,13 @@ const DOMLinkHandler = {
               } catch(e) {
                 break;
               }
+            }
+
+            try {
+              var contentPolicy = Cc["@mozilla.org/layout/content-policy;1"].
+                                  getService(Ci.nsIContentPolicy);
+            } catch(e) {
+              break; // Refuse to load if we can't do a security check.
             }
 
             // Security says okay, now ask content policy
@@ -3301,22 +3304,9 @@ nsBrowserStatusHandler.prototype =
   
   onLinkIconAvailable : function(aBrowser)
   {
-    if (gProxyFavIcon &&
-        gBrowser.mCurrentBrowser == aBrowser &&
+    if (gProxyFavIcon && gBrowser.mCurrentBrowser == aBrowser &&
         gBrowser.userTypedValue === null)
-    {
-      // update the favicon in the URL bar
-      PageProxySetIcon(aBrowser.mIconURL);
-    }
-
-    // Save this favicon in the favicon service
-    if (aBrowser.mIconURL) {
-      var faviconService = Components.classes["@mozilla.org/browser/favicon-service;1"]
-        .getService(Components.interfaces.nsIFaviconService);
-      var uri = Components.classes["@mozilla.org/network/io-service;1"]
-        .getService(Components.interfaces.nsIIOService).newURI(aBrowser.mIconURL, null, null);
-      faviconService.setAndLoadFaviconForPage(aBrowser.currentURI, uri, false);
-    }
+      PageProxySetIcon(aBrowser.mIconURL); // update the favicon in the URL bar
   },
 
   onProgressChange : function (aWebProgress, aRequest,

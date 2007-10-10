@@ -119,8 +119,7 @@
                                   node = node.parentNode;
                                 node.removeCurrentTab();">
             <xul:tab selected="true" validate="never"
-                     onerror="this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image'));
-                              this.removeAttribute('image');"
+                     onerror="this.removeAttribute('image');"
                      maxwidth="250" width="0" minwidth="100" flex="100"
                      class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
           </xul:tabs>
@@ -143,6 +142,10 @@
       <field name="mURIFixup" readonly="true">
         Components.classes["@mozilla.org/docshell/urifixup;1"]
                   .getService(Components.interfaces.nsIURIFixup);
+      </field>
+      <field name="mFaviconService" readonly="true">
+        Components.classes["@mozilla.org/browser/favicon-service;1"]
+                  .getService(Components.interfaces.nsIFaviconService);
       </field>
       <field name="mTabBox" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "tabbox");
@@ -188,9 +191,6 @@
       </field>
       <field name="mIsBusy">
         false
-      </field>
-      <field name="mMissedIconCache">
-        null
       </field>
       <field name="mContextTab">
         null
@@ -493,6 +493,16 @@
             var browser = this.getBrowserForTab(aTab);
             browser.mIconURL = aURI;
 
+            if (aURI) {
+              if (!(aURI instanceof Components.interfaces.nsIURI)) {
+                var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                                    .getService(Components.interfaces.nsIIOService);
+                aURI = ios.newURI(aURI, null, null);
+              }
+              this.mFaviconService.setAndLoadFaviconForPage(browser.currentURI,
+                                                            aURI, false);
+            }
+
             this.updateIcon(aTab);
 
             for (var i = 0; i < this.mProgressListeners.length; i++) {
@@ -552,61 +562,24 @@
             }
             else if (this.shouldLoadFavIcon(browser.currentURI)) {
               var url = browser.currentURI.prePath + "/favicon.ico";
-              if (!this.isIconKnownMissing(url))
+              if (!this.isFailedIcon(url))
                 this.setIcon(aTab, url);
             }
           ]]>
         </body>
       </method>
 
-      <method name="addToMissedIconCache">
+      <method name="isFailedIcon">
         <parameter name="aURI"/>
         <body>
           <![CDATA[
-            var entry = this.openCacheEntry(aURI, Components.interfaces.nsICache.ACCESS_READ_WRITE);
-            if (!entry)
-              return;
-
-            if (entry.accessGranted == Components.interfaces.nsICache.ACCESS_WRITE)
-              // It's a new entry.  Just write a bit of metadata in to the entry.
-              entry.setMetaDataElement("Icon", "Missed");
-            entry.markValid();
-            entry.close();
-          ]]>
-        </body>
-      </method>
-
-      <method name="openCacheEntry">
-        <parameter name="key"/>
-        <parameter name="access"/>
-        <body>
-          <![CDATA[
-            try {
-              if (!this.mMissedIconCache) {
-                var cacheService = Components.classes['@mozilla.org/network/cache-service;1'].getService(Components.interfaces.nsICacheService);
-                this.mMissedIconCache = cacheService.createSession("MissedIconCache", Components.interfaces.nsICache.STORE_ANYWHERE, true);
-                if (!this.mMissedIconCache)
-                  return null;
-              }
-              return this.mMissedIconCache.openCacheEntry(key, access, true);
+            if (!(aURI instanceof Components.interfaces.nsIURI)) {
+              var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                                  .getService(Components.interfaces.nsIIOService);
+              aURI = ios.newURI(aURI, null, null);
             }
-            catch (e) {
-              return null;
-            }
-          ]]>
-        </body>
-      </method>
 
-      <method name="isIconKnownMissing">
-        <parameter name="key"/>
-        <body>
-          <![CDATA[
-            var e = this.openCacheEntry(key, Components.interfaces.nsICache.ACCESS_READ);
-            if (e) {
-                e.close();
-                return true;
-            }
-            return false;
+            return this.mFaviconService.isFailedFavicon(aURI);
           ]]>
         </body>
       </method>
@@ -1132,7 +1105,7 @@
             t.width = 0;
             t.setAttribute("flex", "100");
             t.setAttribute("validate", "never");
-            t.setAttribute("onerror", "this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image')); this.removeAttribute('image');");
+            t.setAttribute("onerror", "this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
 
             this.mTabContainer.appendChild(t);
