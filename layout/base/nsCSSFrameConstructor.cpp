@@ -8807,13 +8807,10 @@ PRBool NotifyListBoxBody(nsPresContext*    aPresContext,
   nsIAtom* tag =
     aDocument->BindingManager()->ResolveTag(aContainer, &namespaceID);
 
-  // Just ignore tree tags, anyway we don't create any frames for them.
-  if (aContainer->GetParent() &&
-      (tag == nsGkAtoms::treechildren ||
-       tag == nsGkAtoms::treeitem ||
-       tag == nsGkAtoms::treerow ||
-       (namespaceID == kNameSpaceID_XUL && aUseXBLForms &&
-        ShouldIgnoreSelectChild(aContainer))))
+  // XBL form control cruft... should that really be testing that the
+  // namespace is XUL?  Seems odd...
+  if (aUseXBLForms && aContainer->GetParent() &&
+      namespaceID == kNameSpaceID_XUL && ShouldIgnoreSelectChild(aContainer))
     return PR_TRUE;
 
   return PR_FALSE;
