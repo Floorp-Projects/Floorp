@@ -300,7 +300,7 @@ nsBoxFrame::CacheAttributes()
     else
         mState &= ~NS_STATE_EQUAL_SIZE;
 
-  PRBool autostretch = mState & NS_STATE_AUTO_STRETCH;
+  PRBool autostretch = !!(mState & NS_STATE_AUTO_STRETCH);
   GetInitialAutoStretch(autostretch);
   if (autostretch)
         mState |= NS_STATE_AUTO_STRETCH;
@@ -1170,7 +1170,7 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
       }
 #endif
 
-      PRBool autostretch = mState & NS_STATE_AUTO_STRETCH;
+      PRBool autostretch = !!(mState & NS_STATE_AUTO_STRETCH);
       GetInitialAutoStretch(autostretch);
       if (autostretch)
         mState |= NS_STATE_AUTO_STRETCH;

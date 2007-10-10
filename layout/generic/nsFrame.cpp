@@ -4108,7 +4108,7 @@ nsFrame::GetSelected(PRBool *aSelected) const
 {
   if (!aSelected )
     return NS_ERROR_NULL_POINTER;
-  *aSelected = (PRBool)(mState & NS_FRAME_SELECTED_CONTENT);
+  *aSelected = !!(mState & NS_FRAME_SELECTED_CONTENT);
   return NS_OK;
 }
 
@@ -6758,7 +6758,7 @@ DR_Rule* DR_State::ParseRule(FILE* aFile)
   while (GetToken(aFile, buf)) {
     if (GetNumber(buf, doDisplay)) {
       if (rule) { 
-        rule->mDisplay = (PRBool)doDisplay;
+        rule->mDisplay = !!doDisplay;
         break;
       }
       else {

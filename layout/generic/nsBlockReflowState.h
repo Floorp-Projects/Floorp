@@ -286,9 +286,7 @@ public:
   PRBool GetFlag(PRUint32 aFlag) const
   {
     NS_ASSERTION(aFlag<=BRS_LASTFLAG, "bad flag");
-    PRBool result = (mFlags & aFlag);
-    if (result) return PR_TRUE;
-    return PR_FALSE;
+    return !!(mFlags & aFlag);
   }
 };
 
