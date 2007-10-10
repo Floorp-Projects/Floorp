@@ -239,6 +239,10 @@ bool NP_CALLBACK
 _enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
            uint32_t *count);
 
+bool NP_CALLBACK
+_construct(NPP npp, NPObject* npobj, const NPVariant *args,
+           uint32_t argCount, NPVariant *result);
+
 void NP_CALLBACK
 _releasevariantvalue(NPVariant *variant);
 

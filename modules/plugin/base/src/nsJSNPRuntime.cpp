@@ -91,7 +91,8 @@ NPClass nsJSObjWrapper::sJSObjWrapperNPClass =
     nsJSObjWrapper::NP_GetProperty,
     nsJSObjWrapper::NP_SetProperty,
     nsJSObjWrapper::NP_RemoveProperty,
-    nsJSObjWrapper::NP_Enumerate
+    nsJSObjWrapper::NP_Enumerate,
+    nsJSObjWrapper::NP_Construct
   };
 
 JS_STATIC_DLL_CALLBACK(JSBool)
@@ -114,12 +115,19 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
                         JSObject **objp);
 
+JS_STATIC_DLL_CALLBACK(JSBool)
+NPObjWrapper_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp);
+
 JS_STATIC_DLL_CALLBACK(void)
 NPObjWrapper_Finalize(JSContext *cx, JSObject *obj);
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 NPObjWrapper_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                   jsval *rval);
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+NPObjWrapper_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                       jsval *rval);
 
 static bool
 CreateNPObjectMember(NPP npp, JSContext *cx, JSObject *obj,
@@ -132,9 +140,9 @@ static JSClass sNPObjectJSWrapperClass =
     NPObjWrapper_AddProperty, NPObjWrapper_DelProperty,
     NPObjWrapper_GetProperty, NPObjWrapper_SetProperty,
     (JSEnumerateOp)NPObjWrapper_newEnumerate,
-    (JSResolveOp)NPObjWrapper_NewResolve, JS_ConvertStub,
-    NPObjWrapper_Finalize, nsnull, nsnull, NPObjWrapper_Call, nsnull, nsnull,
-    nsnull
+    (JSResolveOp)NPObjWrapper_NewResolve, NPObjWrapper_Convert,
+    NPObjWrapper_Finalize, nsnull, nsnull, NPObjWrapper_Call,
+    NPObjWrapper_Construct, nsnull, nsnull
   };
 
 typedef struct NPObjectMemberPrivate {
@@ -537,7 +545,7 @@ nsJSObjWrapper::NP_HasMethod(NPObject *npobj, NPIdentifier identifier)
 
 static bool
 doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
-         uint32_t argCount, NPVariant *result)
+         uint32_t argCount, PRBool ctorCall, NPVariant *result)
 {
   NPP npp = NPPStack::Peek();
   JSContext *cx = GetJSContext(npp);
@@ -596,8 +604,23 @@ doInvoke(NPObject *npobj, NPIdentifier method, const NPVariant *args,
   }
 
   jsval v;
-  JSBool ok = ::JS_CallFunctionValue(cx, npjsobj->mJSObj, fv, argCount, jsargs,
-                                     &v);
+  JSBool ok;
+
+  if (ctorCall) {
+    JSObject *global = ::JS_GetGlobalForObject(cx, npjsobj->mJSObj);
+    JSObject *newObj =
+      ::JS_ConstructObjectWithArguments(cx, JS_GET_CLASS(cx, npjsobj->mJSObj),
+                                        nsnull, global, argCount, jsargs);
+
+    if (newObj) {
+      v = OBJECT_TO_JSVAL(newObj);
+      ok = JS_TRUE;
+    } else {
+      ok = JS_FALSE;
+    }
+  } else {
+    ok = ::JS_CallFunctionValue(cx, npjsobj->mJSObj, fv, argCount, jsargs, &v);
+  }
 
   JS_POP_TEMP_ROOT(cx, &tvr);
 
@@ -622,7 +645,7 @@ nsJSObjWrapper::NP_Invoke(NPObject *npobj, NPIdentifier method,
     return PR_FALSE;
   }
 
-  return doInvoke(npobj, method, args, argCount, result);
+  return doInvoke(npobj, method, args, argCount, PR_FALSE, result);
 }
 
 // static
@@ -630,7 +653,8 @@ bool
 nsJSObjWrapper::NP_InvokeDefault(NPObject *npobj, const NPVariant *args,
                                  uint32_t argCount, NPVariant *result)
 {
-  return doInvoke(npobj, (NPIdentifier)JSVAL_VOID, args, argCount, result);
+  return doInvoke(npobj, (NPIdentifier)JSVAL_VOID, args, argCount, PR_FALSE,
+                  result);
 }
 
 // static
@@ -865,6 +889,16 @@ nsJSObjWrapper::NP_Enumerate(NPObject *npobj, NPIdentifier **identifier,
 
   return PR_TRUE;
 }
+
+//static
+bool
+nsJSObjWrapper::NP_Construct(NPObject *npobj, const NPVariant *args,
+                             uint32_t argCount, NPVariant *result)
+{
+  return doInvoke(npobj, (NPIdentifier)JSVAL_VOID, args, argCount, PR_TRUE,
+                  result);
+}
+
 
 class JSObjWrapperHashEntry : public PLDHashEntryHdr
 {
@@ -1164,19 +1198,12 @@ NPObjWrapper_GetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
   }
 
-  if (!hasMethod) {
-    ThrowJSException(cx, "Trying to get unsupported property on scriptable "
-                     "plugin object!");
-
-    return JS_FALSE;
-  }
-
   return ReportExceptionIfPending(cx);
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
-CallNPMethod(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-             jsval *rval)
+CallNPMethodInternal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                     jsval *rval, PRBool ctorCall)
 {
   while (obj && JS_GET_CLASS(cx, obj) != &sNPObjectJSWrapperClass) {
     obj = ::JS_GetPrototype(cx, obj);
@@ -1240,20 +1267,47 @@ CallNPMethod(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
   JSObject *funobj = JSVAL_TO_OBJECT(argv[-2]);
   JSBool ok;
+  const char *msg = "Error calling method on NPObject!";
 
-  if (funobj != obj) {
+  if (ctorCall) {
+    // construct a new NPObject based on the NPClass in npobj. Fail if
+    // no construct method is available.
+
+    if (NP_CLASS_STRUCT_VERSION_HAS_CTOR(npobj->_class) &&
+        npobj->_class->construct) {
+      ok = npobj->_class->construct(npobj, npargs, argc, &v);
+    } else {
+      ok = JS_FALSE;
+
+      msg = "Attempt to construct object from class with no constructor.";
+    }
+  } else if (funobj != obj) {
     // A obj.function() style call is made, get the method name from
     // the function object.
 
-    JSFunction *fun = (JSFunction *)::JS_GetPrivate(cx, funobj);
-    jsval method = STRING_TO_JSVAL(::JS_GetFunctionId(fun));
+    if (npobj->_class->invoke) {
+      JSFunction *fun = (JSFunction *)::JS_GetPrivate(cx, funobj);
+      jsval method = STRING_TO_JSVAL(::JS_GetFunctionId(fun));
 
-    ok = npobj->_class->invoke(npobj, (NPIdentifier)method, npargs, argc, &v);
+      ok = npobj->_class->invoke(npobj, (NPIdentifier)method, npargs, argc,
+                                 &v);
+    } else {
+      ok = JS_FALSE;
+
+      msg = "Attempt to call a method on object with no invoke method.";
+    }
   } else {
-    // obj is a callable object that is being called, no method name
-    // available then. Invoke the default method.
+    if (npobj->_class->invokeDefault) {
+      // obj is a callable object that is being called, no method name
+      // available then. Invoke the default method.
 
-    ok = npobj->_class->invokeDefault(npobj, npargs, argc, &v);
+      ok = npobj->_class->invokeDefault(npobj, npargs, argc, &v);
+    } else {
+      ok = JS_FALSE;
+
+      msg = "Attempt to call a default method on object with no "
+        "invokeDefault method.";
+    }
   }
 
   // Release arguments.
@@ -1266,7 +1320,7 @@ CallNPMethod(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   if (!ok) {
-    ThrowJSException(cx, "Error calling method on NPObject!");
+    ThrowJSException(cx, msg);
 
     return JS_FALSE;
   }
@@ -1277,6 +1331,13 @@ CallNPMethod(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   _releasevariantvalue(&v);
 
   return ReportExceptionIfPending(cx);
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+CallNPMethod(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+             jsval *rval)
+{
+  return CallNPMethodInternal(cx, obj, argc, argv, rval, PR_FALSE);
 }
 
 struct NPObjectEnumerateState {
@@ -1418,6 +1479,18 @@ NPObjWrapper_NewResolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
   return ReportExceptionIfPending(cx);
 }
 
+JS_STATIC_DLL_CALLBACK(JSBool)
+NPObjWrapper_Convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
+{
+  // The sole reason we implement this hook is to prevent the JS
+  // engine from calling valueOf() on NPObject's. Some NPObject's may
+  // actually implement a method named valueOf, but it's unlikely to
+  // behave as the JS engine expects it to. IOW, this is an empty hook
+  // that overrides what the default hook does.
+
+  return JS_TRUE;
+}
+
 JS_STATIC_DLL_CALLBACK(void)
 NPObjWrapper_Finalize(JSContext *cx, JSObject *obj)
 {
@@ -1439,7 +1512,16 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 NPObjWrapper_Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                   jsval *rval)
 {
-  return CallNPMethod(cx, JSVAL_TO_OBJECT(argv[-2]), argc, argv, rval);
+  return CallNPMethodInternal(cx, JSVAL_TO_OBJECT(argv[-2]), argc, argv, rval,
+                              PR_FALSE);
+}
+
+JS_STATIC_DLL_CALLBACK(JSBool)
+NPObjWrapper_Construct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                       jsval *rval)
+{
+  return CallNPMethodInternal(cx, JSVAL_TO_OBJECT(argv[-2]), argc, argv, rval,
+                              PR_TRUE);
 }
 
 class NPObjWrapperHashEntry : public PLDHashEntryHdr

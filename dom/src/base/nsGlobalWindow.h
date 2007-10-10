@@ -118,6 +118,9 @@ class nsIDocShellLoadInfo;
 class WindowStateHolder;
 class nsGlobalWindowObserver;
 class nsGlobalWindow;
+#ifdef OJI
+class nsDummyJavaPluginOwner;
+#endif
 
 class nsDOMOfflineResourceList;
 class nsDOMOfflineLoadStatusList;
@@ -419,6 +422,10 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsGlobalWindow,
                                            nsIScriptGlobalObject)
 
+#ifdef OJI
+  void InitJavaProperties();
+#endif
+
 protected:
   // Object Management
   virtual ~nsGlobalWindow();
@@ -626,6 +633,10 @@ protected:
   // we're in the middle of doing just that.
   PRPackedBool                  mIsFrozen : 1;
 
+  // True if the Java properties have been initialized on this
+  // window. Only used on inner windows.
+  PRPackedBool                  mDidInitJavaProperties : 1;
+  
   // These members are only used on outer window objects. Make sure
   // you never set any of these on an inner object!
   PRPackedBool                  mFullScreen : 1;
@@ -693,6 +704,10 @@ protected:
   PRUint32                      mTimeoutPublicIdCounter;
   PRUint32                      mTimeoutFiringDepth;
   nsCOMPtr<nsIDOMStorage>       mSessionStorage;
+
+#ifdef OJI
+  nsRefPtr<nsDummyJavaPluginOwner> mDummyJavaPluginOwner;
+#endif
 
   // These member variables are used on both inner and the outer windows.
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;

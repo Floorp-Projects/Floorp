@@ -45,8 +45,8 @@ struct JSContext;
 #define NPRUNTIME_JSCLASS_NAME "NPObject JS wrapper class"
 
 #define NS_IPLUGININSTANCEINTERNAL_IID \
-  { 0x301f13ed, 0x50f2, 0x4ed2, \
-    { 0x83, 0x0d, 0x78, 0x36, 0x1d, 0x01, 0x76, 0xaf }}
+  {0x1a9c2ae8, 0xab75, 0x4296, \
+    { 0xaf, 0xcb, 0x39, 0x54, 0x39, 0x96, 0x06, 0xa9 }}
 
 class NS_NO_VTABLE nsIPluginInstanceInternal : public nsISupports
 {
@@ -61,6 +61,8 @@ public:
   virtual void PopPopupsEnabledState() = 0;
 
   virtual PRUint16 GetPluginAPIVersion() = 0;
+
+  virtual void DefineJavaProperties() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIPluginInstanceInternal,
