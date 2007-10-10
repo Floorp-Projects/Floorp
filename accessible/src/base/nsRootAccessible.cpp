@@ -917,15 +917,16 @@ nsRootAccessible::Init()
 
 NS_IMETHODIMP nsRootAccessible::Shutdown()
 {
+  // Called manually or by nsAccessNode::LastRelease()
+  if (!mWeakShell) {
+    return NS_OK;  // Already shutdown
+  }
+
   nsRefPtr<nsApplicationAccessibleWrap> root = GetApplicationAccessible();
   NS_ENSURE_STATE(root);
 
   root->RemoveRootAccessible(this);
 
-  // Called manually or by nsAccessNode::LastRelease()
-  if (!mWeakShell) {
-    return NS_OK;  // Already shutdown
-  }
   mCurrentARIAMenubar = nsnull;
 
   if (mFireFocusTimer) {
