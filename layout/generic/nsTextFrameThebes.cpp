@@ -4408,7 +4408,7 @@ public:
   PRBool NextCluster();
   PRBool IsWhitespace();
   PRBool IsPunctuation();
-  PRBool HaveWordBreakBefore() { return mHaveWordBreak; }
+  PRBool HaveWordBreakBefore();
   PRInt32 GetAfterOffset();
   PRInt32 GetBeforeOffset();
 
@@ -4421,7 +4421,6 @@ private:
   PRInt32                     mCharIndex;
   nsTextFrame::TrimmedOffsets mTrimmed;
   nsTArray<PRPackedBool>      mWordBreaks;
-  PRPackedBool                mHaveWordBreak;
 };
 
 PRBool
@@ -4494,6 +4493,12 @@ ClusterIterator::IsPunctuation()
   return c == nsIUGenCategory::kPunctuation || c == nsIUGenCategory::kSymbol;
 }
 
+PRBool
+ClusterIterator::HaveWordBreakBefore()
+{
+  return mWordBreaks[GetBeforeOffset() - mTextFrame->GetContentOffset()];
+}
+
 PRInt32
 ClusterIterator::GetBeforeOffset()
 {
@@ -4515,32 +4520,30 @@ ClusterIterator::NextCluster()
     return PR_FALSE;
   gfxTextRun* textRun = mTextFrame->GetTextRun();
 
-  mHaveWordBreak = PR_FALSE;
   while (PR_TRUE) {
-    PRBool keepGoing = PR_FALSE;
     if (mDirection > 0) {
       if (mIterator.GetOriginalOffset() >= mTrimmed.GetEnd())
         return PR_FALSE;
-      keepGoing = mIterator.IsOriginalCharSkipped() ||
+      if (mIterator.IsOriginalCharSkipped() ||
           mIterator.GetOriginalOffset() < mTrimmed.mStart ||
-          !textRun->IsClusterStart(mIterator.GetSkippedOffset());
+          !textRun->IsClusterStart(mIterator.GetSkippedOffset())) {
+        mIterator.AdvanceOriginal(1);
+        continue;
+      }
       mCharIndex = mIterator.GetOriginalOffset();
       mIterator.AdvanceOriginal(1);
     } else {
       if (mIterator.GetOriginalOffset() <= mTrimmed.mStart)
         return PR_FALSE;
       mIterator.AdvanceOriginal(-1);
-      keepGoing = mIterator.IsOriginalCharSkipped() ||
+      if (mIterator.IsOriginalCharSkipped() ||
           mIterator.GetOriginalOffset() >= mTrimmed.GetEnd() ||
-          !textRun->IsClusterStart(mIterator.GetSkippedOffset());
+          !textRun->IsClusterStart(mIterator.GetSkippedOffset()))
+        continue;
       mCharIndex = mIterator.GetOriginalOffset();
     }
 
-    if (mWordBreaks[GetBeforeOffset() - mTextFrame->GetContentOffset()]) {
-      mHaveWordBreak = PR_TRUE;
-    }
-    if (!keepGoing)
-      return PR_TRUE;
+    return PR_TRUE;
   }
 }
 
@@ -4560,7 +4563,6 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, PRInt32 aPosition,
   mFrag = aTextFrame->GetContent()->GetText();
   mTrimmed = aTextFrame->GetTrimmedOffsets(mFrag, PR_TRUE);
 
-  PRInt32 textOffset = aTextFrame->GetContentOffset();
   PRInt32 textLen = aTextFrame->GetContentLength();
   if (!mWordBreaks.AppendElements(textLen + 1)) {
     mDirection = 0; // signal failure
@@ -4568,7 +4570,7 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, PRInt32 aPosition,
   }
   memset(mWordBreaks.Elements(), PR_FALSE, textLen + 1);
   nsAutoString text;
-  mFrag->AppendTo(text, textOffset, textLen);
+  mFrag->AppendTo(text, aTextFrame->GetContentOffset(), textLen);
   nsIWordBreaker* wordBreaker = nsContentUtils::WordBreaker();
   PRInt32 i = 0;
   while ((i = wordBreaker->NextWord(text.get(), textLen, i)) >= 0) {
@@ -4576,13 +4578,7 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, PRInt32 aPosition,
   }
   // XXX this never allows word breaks at the start or end of the frame, but to fix
   // this we would need to rewrite word-break detection to use the text from
-  // textruns or something. Not a regression, at least. For now we can make things
-  // a little better by noting a word break opportunity when the frame starts
-  // or ends with white-space.
-  if (textLen > 0) {
-    mWordBreaks[0] = IsSelectionSpace(mFrag, textOffset);
-    mWordBreaks[textLen] = IsSelectionSpace(mFrag, textOffset + textLen - 1);
-  }
+  // textruns or something. Not a regression, at least.
 }
 
 PRBool
@@ -5408,10 +5404,10 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
   const nsTextFragment* frag = mContent->GetText();
   TrimmedOffsets trimmed = GetTrimmedOffsets(frag, PR_TRUE);
   gfxSkipCharsIterator iter = start;
+  PRUint32 trimmedEnd = iter.ConvertOriginalToSkipped(trimmed.GetEnd());
   const nsStyleText* textStyle = GetStyleText();
   gfxFloat delta = 0;
-  PRUint32 trimmedEnd = iter.ConvertOriginalToSkipped(trimmed.GetEnd());
-  
+
   if (GetStateBits() & TEXT_TRIMMED_TRAILING_WHITESPACE) {
     aLastCharIsJustifiable = PR_TRUE;
   } else if (trimmed.GetEnd() < GetContentEnd()) {
