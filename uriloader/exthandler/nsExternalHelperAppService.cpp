@@ -1165,17 +1165,14 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
   mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
 
 #ifdef XP_MACOSX
- // Now that the file exists set Mac type and creator
-  if (mMimeInfo)
-  {
+  // Now that the file exists set Mac type if the file has no extension
+  // and we can determine a type.
+  if (ext.IsEmpty() && mMimeInfo) {
     nsCOMPtr<nsILocalFileMac> macfile = do_QueryInterface(mTempFile);
-    if (macfile)
-    {
-      PRUint32 type, creator;
+    if (macfile) {
+      PRUint32 type;
       mMimeInfo->GetMacType(&type);
-      mMimeInfo->GetMacCreator(&creator);
       macfile->SetFileType(type);
-      macfile->SetFileCreator(creator);
     }
   }
 #endif
