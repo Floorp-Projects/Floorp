@@ -1803,6 +1803,9 @@ NSEvent* gLastDragEvent = nil;
 - (void)widgetDestroyed
 {
   mGeckoChild = nsnull;
+  // Just in case we're destroyed abruptly and missed the draggingExited
+  // or performDragOperation message.
+  NS_IF_RELEASE(mDragService);
 }
 
 
@@ -4199,12 +4202,15 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
   PR_LOG(sCocoaLog, PR_LOG_ALWAYS, ("ChildView draggingExited: entered\n"));
 
   [self doDragAction:NS_DRAGDROP_EXIT sender:sender];
+  NS_IF_RELEASE(mDragService);
 }
 
 
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
-  return [self doDragAction:NS_DRAGDROP_DROP sender:sender];
+  BOOL handled = [self doDragAction:NS_DRAGDROP_DROP sender:sender];
+  NS_IF_RELEASE(mDragService);
+  return handled;
 }
 
 
