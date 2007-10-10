@@ -3037,7 +3037,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                 static_cast<nsContainerFrame*>(nextFrame->GetParent());
               rv = parent->StealFrame(aState.mPresContext, nextFrame);
               NS_ENSURE_SUCCESS(rv, rv);
-              ReparentFrame(nextFrame, parent, this);
+              if (parent != this)
+                ReparentFrame(nextFrame, parent, this);
               nextFrame->SetNextSibling(frame->GetNextSibling());
               frame->SetNextSibling(nextFrame);
               madeContinuation = PR_TRUE; // needs to be added to mLines
@@ -5200,10 +5201,23 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
 
   nsPresContext* presContext = PresContext();
   if (NS_FRAME_IS_OVERFLOW_CONTAINER & aDeletedFrame->GetStateBits()) {
-    if (aDestroyFrames)
-      nsContainerFrame::DeleteNextInFlowChild(presContext, aDeletedFrame);
-    else
-      return nsContainerFrame::StealFrame(presContext, aDeletedFrame);
+    if (aDestroyFrames) {
+      nsIFrame* nif = aDeletedFrame->GetNextInFlow();
+      if (nif)
+        nsContainerFrame::DeleteNextInFlowChild(presContext, nif);
+      nsresult rv = nsContainerFrame::StealFrame(presContext, aDeletedFrame);
+      NS_ENSURE_SUCCESS(rv, rv);
+      aDeletedFrame->Destroy();
+    }
+    else {
+      PR_NOT_REACHED("We can't not destroy overflow containers");
+      return NS_ERROR_NOT_IMPLEMENTED;
+      //XXXfr It seems not destroying frames is only used for placeholder
+      // continuations; see nsBlockFrame::HandleOverflowPlaceholdersForPulledFrame.
+      // If we get rid of placeholder continuations, we can simplify this
+      // function by getting rid of that option.
+    }
+    return NS_OK;
   }
 
   if (aDeletedFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
