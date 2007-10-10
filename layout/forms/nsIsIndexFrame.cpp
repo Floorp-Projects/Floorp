@@ -534,7 +534,13 @@ nsIsIndexFrame::SaveState(SpecialStateID aStateID, nsPresState** aState)
     // Construct a pres state and store value in it.
     res = NS_NewPresState(aState);
     NS_ENSURE_SUCCESS(res, res);
-    res = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), stateString);
+    
+    nsCOMPtr<nsISupportsString> state
+      (do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+    if (!state) return NS_ERROR_OUT_OF_MEMORY;
+
+    state->SetData(stateString);
+    (*aState)->SetStateProperty(state);
   }
 
   return res;
@@ -546,10 +552,11 @@ nsIsIndexFrame::RestoreState(nsPresState* aState)
   NS_ENSURE_ARG_POINTER(aState);
 
   // Set the value to the stored state.
-  nsAutoString stateString;
-  nsresult res = aState->GetStateProperty(NS_LITERAL_STRING("value"), stateString);
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr<nsISupportsString> stateString
+    (do_QueryInterface(aState->GetStateProperty()));
 
-  SetInputValue(stateString);
+  nsAutoString data;
+  stateString->GetData(data);
+  SetInputValue(data);
   return NS_OK;
 }
