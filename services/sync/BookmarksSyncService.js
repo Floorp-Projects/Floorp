@@ -50,6 +50,10 @@ const PERMS_DIRECTORY = 0755;
 
 const STORAGE_FORMAT_VERSION = 0;
 
+const ONE_BYTE = 1;
+const ONE_KILOBYTE = 1024 * ONE_BYTE;
+const ONE_MEGABYTE = 1024 * ONE_KILOBYTE;
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function BookmarksSyncService() { this._init(); }
@@ -127,7 +131,7 @@ BookmarksSyncService.prototype = {
     return this.__dirSvc;
   },
 
-  // File output stream to a log file
+  // Logger object
   _log: null,
 
   // Timer object for yielding to the main loop
@@ -159,7 +163,7 @@ BookmarksSyncService.prototype = {
   },
 
   _init: function BSS__init() {
-    this._initLog();
+    this._initLogs();
     let serverURL = 'https://dotmoz.mozilla.org/';
     try {
       let branch = Cc["@mozilla.org/preferences-service;1"].
@@ -167,35 +171,48 @@ BookmarksSyncService.prototype = {
       serverURL = branch.getCharPref("browser.places.sync.serverURL");
     }
     catch (ex) { /* use defaults */ }
-    this.notice("Bookmarks login server: " + serverURL);
+    this._log.config("Bookmarks login server: " + serverURL);
     this._dav = new DAVCollection(serverURL);
     this._readSnapshot();
   },
 
-  _initLog: function BSS__initLog() {
+  _initLogs: function BSS__initLogs() {
+    let logSvc = Cc["@mozilla.org/log4moz/service;1"].
+      getService(Ci.ILog4MozService);
+
+    this._log = logSvc.getLogger("main");
+
+    let formatter = logSvc.newFormatter("basic");
+    let root = logSvc.rootLogger;
+    root.level = root.LEVEL_ALL;
+
+    let capp = logSvc.newAppender("console", formatter);
+    capp.level = root.LEVEL_INFO;
+    root.addAppender(capp);
+
+    let dapp = logSvc.newAppender("dump", formatter);
+    dapp.level = root.LEVEL_INFO;
+    root.addAppender(dapp);
+
     let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-    getService(Ci.nsIProperties);
+      getService(Ci.nsIProperties);
+    let logFile = dirSvc.get("ProfD", Ci.nsIFile);
+    let verboseFile = logFile.clone();
+    logFile.append("bm-sync.log");
+    logFile.QueryInterface(Ci.nsILocalFile);
+    verboseFile.append("bm-sync-verbose.log");
+    verboseFile.QueryInterface(Ci.nsILocalFile);
 
-    let file = dirSvc.get("ProfD", Ci.nsIFile);
-    file.append("bm-sync.log");
-    file.QueryInterface(Ci.nsILocalFile);
-
-    if (file.exists())
-      file.remove(false);
-    file.create(file.NORMAL_FILE_TYPE, PERMS_FILE);
-
-    this._log = Cc["@mozilla.org/network/file-output-stream;1"]
-      .createInstance(Ci.nsIFileOutputStream);
-    let flags = MODE_WRONLY | MODE_CREATE | MODE_APPEND;
-    this._log.init(file, flags, PERMS_FILE, 0);
-
-    let str = "Bookmarks Sync Log\n------------------\n\n";
-    this._log.write(str, str.length);
-    this._log.flush();
+    let fapp = logSvc.newFileAppender("rotating", logFile, formatter);
+    fapp.level = root.LEVEL_CONFIG;
+    root.addAppender(fapp);
+    let vapp = logSvc.newFileAppender("rotating", verboseFile, formatter);
+    vapp.level = root.LEVEL_ALL;
+    root.addAppender(vapp);
   },
 
   _saveSnapshot: function BSS__saveSnapshot() {
-    this.notice("Saving snapshot to disk");
+    this._log.info("Saving snapshot to disk");
 
     let dirSvc = Cc["@mozilla.org/file/directory_service;1"].
       getService(Ci.nsIProperties);
@@ -245,7 +262,7 @@ BookmarksSyncService.prototype = {
     json = eval(json);
 
     if (json && 'snapshot' in json && 'version' in json && 'GUID' in json) {
-      this.notice("Reading saved snapshot from disk");
+      this._log.info("Read saved snapshot from disk");
       this._snapshot = json.snapshot;
       this._snapshotVersion = json.version;
       this._snapshotGUID = json.GUID;
@@ -292,7 +309,7 @@ BookmarksSyncService.prototype = {
     } else if (node.type == node.RESULT_TYPE_SEPARATOR) {
       item.type = "separator";
     } else {
-      this.notice("Warning: unknown item type, cannot serialize: " + node.type);
+      this._log.logWarn("Warning: unknown item type, cannot serialize: " + node.type);
       return;
     }
 
@@ -427,7 +444,7 @@ BookmarksSyncService.prototype = {
         return true;
       return false;
     default:
-      this.notice("_commandLike: Unknown item type: " + uneval(a));
+      this._log.error("_commandLike: Unknown item type: " + uneval(a));
       return false;
     }
   },
@@ -549,16 +566,11 @@ BookmarksSyncService.prototype = {
     this._timer = null;
     let ret = {propagations: propagations, conflicts: conflicts};
     generatorDone(this, onComplete, ret);
-
-    // shutdown protocol
-    let cookie = yield;
-    if (cookie != "generator shutdown")
-      this.notice("_reconcile: Error: generator not properly shut down.")
   },
 
   _applyCommandsToObj: function BSS__applyCommandsToObj(commands, obj) {
     for (let i = 0; i < commands.length; i++) {
-      this.notice("Applying cmd to obj: " + uneval(commands[i]));
+      this._log.info("Applying cmd to obj: " + uneval(commands[i]));
       switch (commands[i].action) {
       case "create":
         obj[commands[i].GUID] = eval(uneval(commands[i].data));
@@ -580,7 +592,7 @@ BookmarksSyncService.prototype = {
   _applyCommands: function BSS__applyCommands(commandList) {
     for (var i = 0; i < commandList.length; i++) {
       var command = commandList[i];
-      this.notice("Processing command: " + uneval(command));
+      this._log.info("Processing command: " + uneval(command));
       switch (command["action"]) {
       case "create":
         this._createCommand(command);
@@ -592,7 +604,7 @@ BookmarksSyncService.prototype = {
         this._editCommand(command);
         break;
       default:
-        this.notice("unknown action in command: " + command["action"]);
+        this._log.error("unknown action in command: " + command["action"]);
         break;
       }
     }
@@ -603,11 +615,11 @@ BookmarksSyncService.prototype = {
     let parentId = this._bms.getItemIdForGUID(command.data.parentGUID);
 
     if (parentId <= 0) {
-      this.notice("Warning: creating node with unknown parent -> reparenting to root");
+      this._log.warning("Creating node with unknown parent -> reparenting to root");
       parentId = this._bms.bookmarksRoot;
     }
 
-    this.notice(" -> creating item");
+    this._log.info(" -> creating item");
 
     switch (command.data.type) {
     case "bookmark":
@@ -643,7 +655,7 @@ BookmarksSyncService.prototype = {
       newId = this._bms.insertSeparator(parentId, command.data.index);
       break;
     default:
-      this.notice("_createCommand: Unknown item type: " + command.data.type);
+      this._log.error("_createCommand: Unknown item type: " + command.data.type);
       break;
     }
     if (newId)
@@ -656,19 +668,19 @@ BookmarksSyncService.prototype = {
 
     switch (type) {
     case this._bms.TYPE_BOOKMARK:
-      this.notice("  -> removing bookmark " + command.GUID);
+      this._log.info("  -> removing bookmark " + command.GUID);
       this._bms.removeItem(itemId);
       break;
     case this._bms.TYPE_FOLDER:
-      this.notice("  -> removing folder " + command.GUID);
+      this._log.info("  -> removing folder " + command.GUID);
       this._bms.removeFolder(itemId);
       break;
     case this._bms.TYPE_SEPARATOR:
-      this.notice("  -> removing separator " + command.GUID);
+      this._log.info("  -> removing separator " + command.GUID);
       this._bms.removeItem(itemId);
       break;
     default:
-      this.notice("removeCommand: Unknown item type: " + type);
+      this._log.error("removeCommand: Unknown item type: " + type);
       break;
     }
   },
@@ -676,7 +688,7 @@ BookmarksSyncService.prototype = {
   _editCommand: function BSS__editCommand(command) {
     var itemId = this._bms.getItemIdForGUID(command.GUID);
     if (itemId == -1) {
-      this.notice("Warning: item for GUID " + command.GUID + " not found.  Skipping.");
+      this._log.warning("Item for GUID " + command.GUID + " not found.  Skipping.");
       return;
     }
 
@@ -687,7 +699,7 @@ BookmarksSyncService.prototype = {
         if (existing == -1)
           this._bms.setItemGUID(itemId, command.data.GUID);
         else
-          this.notice("Warning: can't change GUID " + command.GUID +
+          this._log.warning("Can't change GUID " + command.GUID +
               " to " + command.data.GUID + ": GUID already exists.");
         break;
       case "title":
@@ -728,7 +740,7 @@ BookmarksSyncService.prototype = {
         this._ls.setFeedURI(itemId, makeURI(command.data.feedURI));
         break;
       default:
-        this.notice("Warning: Can't change item property: " + key);
+        this._log.warning("Can't change item property: " + key);
         break;
       }
     }
@@ -748,7 +760,7 @@ BookmarksSyncService.prototype = {
 
     for (let guid in unfiled) {
       if (guid in filed)
-        this.notice("Warning: same bookmark (guid) in both " +
+        this._log.warning("Same bookmark (guid) in both " +
                     "filed and unfiled trees!");
       else
         filed[guid] = unfiled[guid];
@@ -796,7 +808,7 @@ BookmarksSyncService.prototype = {
     let cont = yield;
 
     this._os.notifyObservers(null, "bookmarks-sync:start", "");
-    this.notice("Beginning sync");
+    this._log.info("Beginning sync");
 
     try {
       if (!this._dav.lock.async(this._dav, cont))
@@ -804,14 +816,14 @@ BookmarksSyncService.prototype = {
       let locked = yield;
 
       if (locked)
-        this.notice("Lock acquired");
+        this._log.info("Lock acquired");
       else {
-        this.notice("Could not acquire lock, aborting sync");
+        this._log.warning("Could not acquire lock, aborting sync");
         return;
       }
 
       var localJson = this._getBookmarks();
-      //this.notice("local json:\n" + this._mungeNodes(localJson));
+      //this._log.info("local json:\n" + this._mungeNodes(localJson));
 
       // 1) Fetch server deltas
       if (this._getServerData.async(this, cont, localJson))
@@ -819,35 +831,35 @@ BookmarksSyncService.prototype = {
       else
         return
 
-      this.notice("Local snapshot version: " + this._snapshotVersion);
-      this.notice("Server status: " + server.status);
+      this._log.info("Local snapshot version: " + this._snapshotVersion);
+      this._log.info("Server status: " + server.status);
 
       if (server['status'] != 0) {
         this._os.notifyObservers(null, "bookmarks-sync:end", "");
-        this.notice("Sync error: could not get server status, " +
-                    "or initial upload failed.");
+        this._log.error("Sync error: could not get server status, " +
+                        "or initial upload failed.");
         return;
       }
 
-      this.notice("Server maxVersion: " + server.maxVersion);
-      this.notice("Server snapVersion: " + server.snapVersion);
-      this.notice("Server updates: " + this._mungeCommands(server.updates));
+      this._log.info("Server maxVersion: " + server.maxVersion);
+      this._log.info("Server snapVersion: " + server.snapVersion);
+      this._log.debug("Server updates: " + this._mungeCommands(server.updates));
 
       // 2) Generate local deltas from snapshot -> current client status
 
       let localUpdates = this._detectUpdates(this._snapshot, localJson);
-      this.notice("Local updates: " + this._mungeCommands(localUpdates));
+      this._log.debug("Local updates: " + this._mungeCommands(localUpdates));
 
       if (server.updates.length == 0 && localUpdates.length == 0) {
         this._snapshotVersion = server.maxVersion;
         this._os.notifyObservers(null, "bookmarks-sync:end", "");
-        this.notice("Sync complete (1): no changes needed on client or server");
+        this._log.info("Sync complete (1): no changes needed on client or server");
         return;
       }
 	  
       // 3) Reconcile client/server deltas and generate new deltas for them.
 
-      this.notice("Reconciling client/server updates");
+      this._log.info("Reconciling client/server updates");
       if (this._reconcile.async(this, cont,
                                 localUpdates, server.updates))
         let ret = yield;
@@ -871,15 +883,19 @@ BookmarksSyncService.prototype = {
       if (ret.conflicts && ret.conflicts[1])
         serverConflicts = ret.conflicts[1];
 
-      this.notice("Changes for client: " + this._mungeCommands(clientChanges));
-      this.notice("Changes for server: " + this._mungeCommands(serverChanges));
-      this.notice("Client conflicts: " + this._mungeConflicts(clientConflicts));
-      this.notice("Server conflicts: " + this._mungeConflicts(serverConflicts));
+      this._log.info("Changes for client: " + clientChanges.length);
+      this._log.info("Changes for server: " + serverChanges.length);
+      this._log.info("Client conflicts: " + clientConflicts.length);
+      this._log.info("Server conflicts: " + serverConflicts.length);
+      this._log.debug("Changes for client: " + this._mungeCommands(clientChanges));
+      this._log.debug("Changes for server: " + this._mungeCommands(serverChanges));
+      this._log.debug("Client conflicts: " + this._mungeConflicts(clientConflicts));
+      this._log.debug("Server conflicts: " + this._mungeConflicts(serverConflicts));
 
       if (!(clientChanges.length || serverChanges.length ||
             clientConflicts.length || serverConflicts.length)) {
         this._os.notifyObservers(null, "bookmarks-sync:end", "");
-        this.notice("Sync complete (2): no changes needed on client or server");
+        this._log.info("Sync complete (2): no changes needed on client or server");
         this._snapshot = localJson;
         this._snapshotVersion = server.maxVersion;
         this._saveSnapshot();
@@ -887,12 +903,12 @@ BookmarksSyncService.prototype = {
       }
 
       if (clientConflicts.length || serverConflicts.length) {
-        this.notice("\nWARNING: Conflicts found, but we don't resolve conflicts yet!\n");
+        this._log.error("\nWARNING: Conflicts found, but we don't resolve conflicts yet!\n");
       }
 
       // 3.1) Apply server changes to local store
       if (clientChanges.length) {
-        this.notice("Applying changes locally");
+        this._log.info("Applying changes locally");
         // Note that we need to need to apply client changes to the
         // current tree, not the saved snapshot
 
@@ -903,8 +919,9 @@ BookmarksSyncService.prototype = {
         let newSnapshot = this._getBookmarks();
         let diff = this._detectUpdates(this._snapshot, newSnapshot);
         if (diff.length != 0) {
-          this.notice("Error: commands did not apply correctly.  Diff:\n" +
-                      uneval(diff));
+          this._log.error("Commands did not apply correctly");
+          this._log.debug("Diff from snapshot+commands -> " +
+                          "new snapshot after commands:\n" + uneval(diff));
           this._snapshot = newSnapshot;
           // FIXME: What else can we do?
         }
@@ -913,7 +930,7 @@ BookmarksSyncService.prototype = {
 
       // 3.2) Append server delta to the delta file and upload
       if (serverChanges.length) {
-        this.notice("Uploading changes to server");
+        this._log.info("Uploading changes to server");
         this._snapshot = this._getBookmarks();
         this._snapshotVersion = ++server.maxVersion;
         server.deltas.push(serverChanges);
@@ -932,24 +949,24 @@ BookmarksSyncService.prototype = {
 
         if (deltasPut.target.status >= 200 && deltasPut.target.status < 300 &&
             statusPut.target.status >= 200 && statusPut.target.status < 300) {
-          this.notice("Successfully updated deltas and status on server");
+          this._log.info("Successfully updated deltas and status on server");
           this._saveSnapshot();
         } else {
           // FIXME: revert snapshot here? - can't, we already applied
           // updates locally! - need to save and retry
-          this.notice("Error: could not update deltas on server");
+          this._log.error("Could not update deltas on server");
         }
       }
       this._os.notifyObservers(null, "bookmarks-sync:end", "");
-      this.notice("Sync complete");
+      this._log.info("Sync complete");
     } finally {
       if (!this._dav.unlock.async(this._dav, cont))
         return;
       let unlocked = yield;
       if (unlocked)
-        this.notice("Lock released");
+        this._log.info("Lock released");
       else
-        this.notice("Error: could not unlock DAV collection");
+        this._log.error("Could not unlock DAV collection");
       this._os.notifyObservers(null, "bookmarks-sync:end", "");
     }
   },
@@ -981,27 +998,27 @@ BookmarksSyncService.prototype = {
                formatVersion: null, maxVersion: null, snapVersion: null,
                snapshot: null, deltas: null, updates: null};
 
-    this.notice("Getting bookmarks status from server");
+    this._log.info("Getting bookmarks status from server");
     this._dav.GET("bookmarks-status.json", cont);
     let statusResp = yield;
 
     switch (statusResp.target.status) {
     case 200:
-      this.notice("Got bookmarks status from server");
+      this._log.info("Got bookmarks status from server");
 
       let status = eval(statusResp.target.responseText);
       let snap, deltas, allDeltas;
 
       // Bail out if the server has a newer format version than we can parse
       if (status.formatVersion > STORAGE_FORMAT_VERSION) {
-        this.notice("Error: server uses storage format v" + status.formatVersion +
-                    ", this client understands up to v" + STORAGE_FORMAT_VERSION);
+        this._log.error("Server uses storage format v" + status.formatVersion +
+                  ", this client understands up to v" + STORAGE_FORMAT_VERSION);
         generatorDone(this, onComplete, ret)
         return;
       }
 
       if (status.GUID != this._snapshotGUID) {
-        this.notice("Remote/local sync GUIDs do not match.  " +
+        this._log.info("Remote/local sync GUIDs do not match.  " +
                     "Forcing initial sync.");
         this._snapshot = {};
         this._snapshotVersion = -1;
@@ -1010,23 +1027,23 @@ BookmarksSyncService.prototype = {
 
       if (this._snapshotVersion < status.snapVersion) {
         if (this._snapshotVersion >= 0)
-          this.notice("Local snapshot is out of date");
+          this._log.info("Local snapshot is out of date");
 
-        this.notice("Downloading server snapshot");
+        this._log.info("Downloading server snapshot");
         this._dav.GET("bookmarks-snapshot.json", cont);
         let snapResp = yield;
         if (snapResp.target.status < 200 || snapResp.target.status >= 300) {
-          this.notice("Error: could not download server snapshot");
+          this._log.error("Could not download server snapshot");
           generatorDone(this, onComplete, ret)
           return;
         }
         snap = eval(snapResp.target.responseText);
 
-        this.notice("Downloading server deltas");
+        this._log.info("Downloading server deltas");
         this._dav.GET("bookmarks-deltas.json", cont);
         let deltasResp = yield;
         if (deltasResp.target.status < 200 || deltasResp.target.status >= 300) {
-          this.notice("Error: could not download server deltas");
+          this._log.error("Could not download server deltas");
           generatorDone(this, onComplete, ret)
           return;
         }
@@ -1037,11 +1054,11 @@ BookmarksSyncService.prototype = {
                  this._snapshotVersion < status.maxVersion) {
         snap = eval(uneval(this._snapshot));
 
-        this.notice("Downloading server deltas");
+        this._log.info("Downloading server deltas");
         this._dav.GET("bookmarks-deltas.json", cont);
         let deltasResp = yield;
         if (deltasResp.target.status < 200 || deltasResp.target.status >= 300) {
-          this.notice("Error: could not download server deltas");
+          this._log.error("Could not download server deltas");
           generatorDone(this, onComplete, ret)
           return;
         }
@@ -1052,11 +1069,11 @@ BookmarksSyncService.prototype = {
         snap = eval(uneval(this._snapshot));
 
         // FIXME: could optimize this case by caching deltas file
-        this.notice("Downloading server deltas");
+        this._log.info("Downloading server deltas");
         this._dav.GET("bookmarks-deltas.json", cont);
         let deltasResp = yield;
         if (deltasResp.target.status < 200 || deltasResp.target.status >= 300) {
-          this.notice("Error: could not download server deltas");
+          this._log.error("Could not download server deltas");
           generatorDone(this, onComplete, ret)
           return;
         }
@@ -1064,7 +1081,7 @@ BookmarksSyncService.prototype = {
         deltas = [];
 
       } else { // this._snapshotVersion > status.maxVersion
-        this.notice("Error: server snapshot is older than local snapshot");
+        this._log.error("Server snapshot is older than local snapshot");
         generatorDone(this, onComplete, ret)
         return;
       }
@@ -1083,7 +1100,7 @@ BookmarksSyncService.prototype = {
       break;
 
     case 404:
-      this.notice("Server has no status file, Initial upload to server");
+      this._log.info("Server has no status file, Initial upload to server");
 
       this._snapshot = localJson;
       this._snapshotVersion = 0;
@@ -1093,7 +1110,7 @@ BookmarksSyncService.prototype = {
                     uneval(this._snapshot), cont);
       let snapPut = yield;
       if (snapPut.target.status < 200 || snapPut.target.status >= 300) {
-        this.notice("Error: could not upload snapshot to server, error code: " +
+        this._log.error("Could not upload snapshot to server, error code: " +
                     snapPut.target.status);
         generatorDone(this, onComplete, ret)
         return;
@@ -1102,7 +1119,7 @@ BookmarksSyncService.prototype = {
       this._dav.PUT("bookmarks-deltas.json", uneval([]), cont);
       let deltasPut = yield;
       if (deltasPut.target.status < 200 || deltasPut.target.status >= 300) {
-        this.notice("Error: could not upload deltas to server, error code: " +
+        this._log.error("Could not upload deltas to server, error code: " +
                    deltasPut.target.status);
         generatorDone(this, onComplete, ret)
         return;
@@ -1115,13 +1132,13 @@ BookmarksSyncService.prototype = {
                             maxVersion: this._snapshotVersion}), cont);
       let statusPut = yield;
       if (statusPut.target.status < 200 || statusPut.target.status >= 300) {
-        this.notice("Error: could not upload status file to server, error code: " +
+        this._log.error("Could not upload status file to server, error code: " +
                    statusPut.target.status);
         generatorDone(this, onComplete, ret)
         return;
       }
 
-      this.notice("Initial upload to server successful");
+      this._log.info("Initial upload to server successful");
       this._saveSnapshot();
 
       ret.status = 0;
@@ -1134,8 +1151,8 @@ BookmarksSyncService.prototype = {
       break;
 
     default:
-      this.notice("Could not get bookmarks.status: unknown HTTP status code " +
-                  statusResp.target.status);
+      this._log.error("Could not get bookmarks.status: unknown HTTP status code " +
+                      statusResp.target.status);
       break;
     }
     generatorDone(this, onComplete, ret)
@@ -1143,25 +1160,23 @@ BookmarksSyncService.prototype = {
 
   _onLogin: function BSS__onLogin(success) {
     if (success) {
-      this.notice("Bookmarks sync server: " + this._dav.baseURL);
+      this._log.config("Bookmarks sync server: " + this._dav.baseURL);
       this._os.notifyObservers(null, "bookmarks-sync:login", "");
     } else {
       this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
     }
   },
 
-  // Interfaces this component implements.
-  interfaces: [Ci.nsIBookmarksSyncService, Ci.nsISupports],
-
   // XPCOM registration
   classDescription: "Bookmarks Sync Service",
   contractID: "@mozilla.org/places/sync-service;1",
-  classID: Components.ID("{6efd73bf-6a5a-404f-9246-f70a1286a3d6}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBookmarksSyncService, Ci.nsISupports]),
+  classID: Components.ID("{efb3ba58-69bc-42d5-a430-0746fa4b1a7f}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.IBookmarksSyncService,
+                                         Ci.nsISupports]),
 
   // nsISupports
 
-  // nsIBookmarksSyncService
+  // IBookmarksSyncService
 
   sync: function BSS_sync() {
     this._doSync.async(this);
@@ -1176,20 +1191,6 @@ BookmarksSyncService.prototype = {
   logout: function BSS_logout() {
     this._dav.logout();
     this._os.notifyObservers(null, "bookmarks-sync:logout", "");
-  },
-
-  log: function BSS_log(line) {
-  },
-
-  notice: function BSS_notice(line) {
-    let fullLine = line + "\n";
-    dump(fullLine);
-    this._console.logStringMessage(line);
-    this._log.write(fullLine, fullLine.length);
-    this._log.flush();
-  },
-
-  error: function BSS_error(line) {
   }
 };
 
@@ -1260,21 +1261,14 @@ function EventListener(handler) {
   this._handler = handler;
 }
 EventListener.prototype = {
-  QueryInterface: function(iid) {
-    if (iid.Equals(Components.interfaces.nsITimerCallback) ||
-        iid.Equals(Components.interfaces.nsISupports))
-      return this;
-    throw Components.results.NS_ERROR_NO_INTERFACE;
-  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback, Ci.nsISupports]),
 
   // DOM event listener
-
   handleEvent: function EL_handleEvent(event) {
     this._handler(event);
   },
 
   // nsITimerCallback
-
   notify: function EL_notify(timer) {
     this._handler(timer);
   }
@@ -1706,3 +1700,4 @@ DummyAuthProvider.prototype = {
 function NSGetModule(compMgr, fileSpec) {
   return XPCOMUtils.generateModule([BookmarksSyncService]);
 }
+

@@ -15,7 +15,7 @@
  * The Original Code is Places.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corp.
+ * Mozilla Corporation
  * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
@@ -38,8 +38,8 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(0a1eed46-f832-495c-bce7-cb308ccfd599)]
-interface nsIBookmarksSyncService : nsISupports
+[scriptable, uuid(efb3ba58-69bc-42d5-a430-0746fa4b1a7f)]
+interface IBookmarksSyncService : nsISupports
 {
   /**
    * The currently logged-in user
@@ -60,12 +60,4 @@ interface nsIBookmarksSyncService : nsISupports
    * Initiate a sync operation.
    */
   void sync();
-
-  /**
-   * Write a notice to the logfile
-   *
-   *  @param line
-   *         The line of text to print to the logfile
-   */
-  void notice(in AString line);
 };

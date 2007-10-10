@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 if [[ ! -d $MOZOBJDIR ]]; then
     echo "MOZOBJDIR environment variable must point to a Mozilla build obj tree (with xptgen)"
@@ -9,4 +9,5 @@ if [[ ! -d $MOZSRCDIR ]]; then
     exit 1
 fi
 
-$MOZOBJDIR/dist/bin/xpidl -m typelib -I $MOZSRCDIR/xpcom/base/ -o nsIBookmarksSyncService nsIBookmarksSyncService.idl
+$MOZOBJDIR/dist/bin/xpidl -m typelib -I $MOZSRCDIR/xpcom/base/ -o IBookmarksSyncService IBookmarksSyncService.idl
+$MOZOBJDIR/dist/bin/xpidl -m typelib -I $MOZSRCDIR/xpcom/base/ -o ILog4MozService ILog4MozService.idl
