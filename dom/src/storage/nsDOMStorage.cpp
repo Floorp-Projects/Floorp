@@ -53,6 +53,7 @@
 #include "nsIPrefBranch.h"
 #include "nsICookiePermission.h"
 #include "nsIPermissionManager.h"
+#include "nsCycleCollectionParticipant.h"
 
 static const PRUint32 ASK_BEFORE_ACCEPT = 1;
 static const PRUint32 ACCEPT_SESSION = 2;
@@ -255,15 +256,37 @@ nsDOMStorageEntry::~nsDOMStorageEntry()
 {
 }
 
-NS_INTERFACE_MAP_BEGIN(nsDOMStorage)
+PLDHashOperator PR_CALLBACK
+SessionStorageTraverser(nsSessionStorageEntry* aEntry, void* userArg) {
+  nsCycleCollectionTraversalCallback *cb = 
+    static_cast<nsCycleCollectionTraversalCallback*>(userArg);
+
+  cb->NoteXPCOMChild((nsIDOMStorageItem *) aEntry->mItem);
+
+  return PL_DHASH_NEXT;
+}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMStorage)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMStorage)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mURI)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMStorage)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mURI)
+  {
+    if (tmp->mItems.IsInitialized()) {
+      tmp->mItems.EnumerateEntries(SessionStorageTraverser, &cb);
+    }
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorage, nsIDOMStorage)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorage, nsIDOMStorage)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorage)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorage)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorage)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMStorage)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Storage)
 NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsDOMStorage)
-NS_IMPL_RELEASE(nsDOMStorage)
 
 NS_IMETHODIMP
 NS_NewDOMStorage(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -1066,15 +1089,26 @@ NS_NewDOMStorageList(nsIDOMStorageList** aResult)
 // nsDOMStorageItem
 //
 
-NS_INTERFACE_MAP_BEGIN(nsDOMStorageItem)
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMStorageItem)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMStorageItem)
+  {
+    tmp->mStorage = nsnull;
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMStorageItem)
+  {
+    cb.NoteXPCOMChild((nsIDOMStorage*) tmp->mStorage);
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorageItem, nsIDOMStorageItem)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorageItem, nsIDOMStorageItem)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorageItem)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorageItem)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageItem)
   NS_INTERFACE_MAP_ENTRY(nsIDOMToString)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(StorageItem)
 NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(nsDOMStorageItem)
-NS_IMPL_RELEASE(nsDOMStorageItem)
 
 nsDOMStorageItem::nsDOMStorageItem(nsDOMStorage* aStorage,
                                    const nsAString& aKey,
