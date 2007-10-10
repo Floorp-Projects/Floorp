@@ -156,15 +156,6 @@ private:
 };
 
 
-#define NS_SELECT_STATE_IID                        \
-{ /* 4db54c7c-d159-455f-9d8e-f60ee466dbf3 */       \
-  0x4db54c7c,                                      \
-  0xd159,                                          \
-  0x455f,                                          \
-  {0x9d, 0x8e, 0xf6, 0x0e, 0xe4, 0x66, 0xdb, 0xf3} \
-}
-
-
 /**
  * The restore state used by select
  */
@@ -177,7 +168,6 @@ public:
   {
   }
 
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_SELECT_STATE_IID)
   NS_DECL_ISUPPORTS
 
   void PutOption(PRInt32 aIndex, const nsAString& aValue)
@@ -500,7 +490,7 @@ protected:
    * The temporary restore state in case we try to restore before parser is
    * done adding options
    */
-  nsCOMPtr<nsSelectState> mRestoreState;
+  nsRefPtr<nsSelectState> mRestoreState;
 };
 
 #endif

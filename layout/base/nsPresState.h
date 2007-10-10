@@ -53,29 +53,21 @@
 class nsPresState
 {
 public:
-  nsPresState() : mContentState(nsnull), mDisabledSet(PR_FALSE), 
-                  mScrollState(nsnull) {};
+  NS_HIDDEN_(nsresult) Init();
 
-  PRBool GetDisabled() {
-    return mDisabled;
-  }
+  NS_HIDDEN_(nsresult) GetStatePropertyAsSupports(const nsAString& aName,
+                                                  nsISupports** aResult);
 
-  PRBool DisabledIsSet() {
-    return mDisabledSet;
-  }
+  NS_HIDDEN_(nsresult) SetStatePropertyAsSupports(const nsAString& aName,
+                                                  nsISupports* aValue);
 
-  void SetDisabled(PRBool aDisabled) {
-    mDisabled = aDisabled;
-    mDisabledSet = PR_TRUE;
-  }
+  NS_HIDDEN_(nsresult) GetStateProperty(const nsAString& aProperty,
+                                        nsAString& aResult);
 
-  nsISupports* GetStateProperty() {
-    return mContentState;
-  }
+  NS_HIDDEN_(nsresult) SetStateProperty(const nsAString& aProperty,
+                                        const nsAString& aValue);
 
-  void SetStateProperty(nsISupports *aProperty) {
-    mContentState = aProperty;
-  }
+  NS_HIDDEN_(nsresult) RemoveStateProperty(const nsAString& aProperty);
 
   NS_HIDDEN_(nsresult) SetScrollState(const nsRect& aState);
 
@@ -83,10 +75,7 @@ public:
 
 // MEMBER VARIABLES
 protected:
-  nsCOMPtr<nsISupports> mContentState;
-  PRPackedBool mDisabled;
-  PRPackedBool mDisabledSet;
-
+  nsInterfaceHashtable<nsStringHashKey,nsISupports> mPropertyTable;
   nsAutoPtr<nsRect> mScrollState;
 };
 
