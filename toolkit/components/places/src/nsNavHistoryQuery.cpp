@@ -738,8 +738,8 @@ nsNavHistory::TokensToQueries(const nsTArray<QueryKeyValuePair>& aTokens,
                           &nsINavHistoryQueryOptions::SetQueryType);
     // unknown key
     } else {
-      aQueries->Clear();
-      return NS_ERROR_INVALID_ARG;
+      NS_WARNING("TokensToQueries(), ignoring unknown key: ");
+      NS_WARNING(kvp.key.get());
     }
   }
 
