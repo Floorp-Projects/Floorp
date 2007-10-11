@@ -71,11 +71,8 @@
 #include "nsGUIEvent.h"
 #include "nsIPrefService.h"
 
-#ifdef MOZ_CAIRO_GFX
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
-
-#endif
 
 #define DRAGIMAGES_PREF "nglayout.enable_drag_images"
 
@@ -359,8 +356,6 @@ nsBaseDragService::FireDragEventAtSource(PRUint32 aMsg)
   return NS_OK;
 }
 
-#ifdef MOZ_CAIRO_GFX
-
 static nsIPresShell*
 GetPresShellForContent(nsIDOMNode* aDOMNode)
 {
@@ -574,5 +569,3 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
   gfxRect outRect = gfxRect(destRect.x, destRect.y, destRect.width, destRect.height);
   return img->Draw(*rc, inRect, outRect);
 }
-
-#endif
