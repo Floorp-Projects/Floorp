@@ -4052,7 +4052,7 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
     // Process the child content
     nsFrameItems childItems;
     rv = ProcessChildren(aState, aContent, aNewCellInnerFrame, 
-                         PR_TRUE, childItems, PR_FALSE);
+                         PR_TRUE, childItems, isBlock);
 
     if (NS_FAILED(rv)) {
       // Clean up
