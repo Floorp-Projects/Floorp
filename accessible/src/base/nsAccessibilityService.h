@@ -355,4 +355,29 @@ static const char kEventTypeNames[][40] = {
   "reorder"                                  // EVENT_REORDER
 };
 
+/**
+ * Map nsIAccessibleRelation constants to strings. Used by
+ * nsIAccessibleRetrieval::getStringRelationType() method.
+ */
+static const char kRelationTypeNames[][20] = {
+  "unknown",             // RELATION_NUL
+  "controlled by",       // RELATION_CONTROLLED_BY
+  "controller for",      // RELATION_CONTROLLER_FOR
+  "label for",           // RELATION_LABEL_FOR
+  "labelled by",         // RELATION_LABELLED_BY
+  "member of",           // RELATION_MEMBER_OF
+  "node child of",       // RELATION_NODE_CHILD_OF
+  "flows to",            // RELATION_FLOWS_TO
+  "flows from",          // RELATION_FLOWS_FROM
+  "subwindow of",        // RELATION_SUBWINDOW_OF
+  "embeds",              // RELATION_EMBEDS
+  "embedded by",         // RELATION_EMBEDDED_BY
+  "popup for",           // RELATION_POPUP_FOR
+  "parent window of",    // RELATION_PARENT_WINDOW_OF
+  "described by",        // RELATION_DESCRIBED_BY
+  "description for",     // RELATION_DESCRIPTION_FOR
+  "default button"       // RELATION_DEFAULT_BUTTON
+};
+
 #endif /* __nsIAccessibilityService_h__ */
+
