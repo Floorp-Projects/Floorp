@@ -68,6 +68,7 @@ static const char sAccessibilityKey [] =
 static guint (* gail_add_global_event_listener) (GSignalEmissionHook listener,
                                                  const gchar *event_type);
 static void (* gail_remove_global_event_listener) (guint remove_listener);
+static void (* gail_remove_key_event_listener) (guint remove_listener);
 static AtkObject * (*gail_get_root) (void);
 
 /* maiutil */
@@ -230,6 +231,7 @@ mai_util_class_init(MaiUtilClass *klass)
     // save gail function pointer
     gail_add_global_event_listener = atk_class->add_global_event_listener;
     gail_remove_global_event_listener = atk_class->remove_global_event_listener;
+    gail_remove_key_event_listener = atk_class->remove_key_event_listener;
     gail_get_root = atk_class->get_root;
 
     atk_class->add_global_event_listener =
@@ -307,6 +309,12 @@ mai_util_remove_global_event_listener(guint remove_listener)
             }
         }
         else {
+            // atk-bridge is initialized with gail (e.g. yelp)
+            // try gail_remove_global_event_listener
+            if (gail_remove_global_event_listener) {
+                return gail_remove_global_event_listener(remove_listener);
+            }
+
             g_warning("No listener with the specified listener id %d",
                       remove_listener);
         }
@@ -412,6 +420,12 @@ mai_util_add_key_event_listener (AtkKeySnoopFunc listener,
 static void
 mai_util_remove_key_event_listener (guint remove_listener)
 {
+    if (!key_listener_list) {
+        // atk-bridge is initialized with gail (e.g. yelp)
+        // try gail_remove_key_event_listener
+        return gail_remove_key_event_listener(remove_listener);
+    }
+
     g_hash_table_remove(key_listener_list, GUINT_TO_POINTER (remove_listener));
     if (g_hash_table_size(key_listener_list) == 0) {
         gtk_key_snooper_remove(key_snooper_id);
