@@ -6290,6 +6290,7 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
        pseudo == nsCSSAnonBoxes::fieldsetContent ||
        pseudo == nsCSSAnonBoxes::scrolledContent ||
        pseudo == nsCSSAnonBoxes::columnContent) &&
+      !IsFrameOfType(eMathML) &&
       nsRefPtr<nsStyleContext>(GetFirstLetterStyle(presContext)) != nsnull;
     NS_ASSERTION(haveFirstLetterStyle ==
                  ((mState & NS_BLOCK_HAS_FIRST_LETTER_STYLE) != 0),
