@@ -805,8 +805,8 @@ SessionStoreService.prototype = {
         tabs.push(browser.parentNode.__SS_data);
         continue;
       }
+
       var history = null;
-      
       try {
         history = browser.sessionHistory;
       }
@@ -828,20 +828,25 @@ SessionStoreService.prototype = {
         tabData.entries[0] = { url: browser.currentURI.spec };
         tabData.index = 1;
       }
+
       tabData.zoom = browser.markupDocumentViewer.textZoom;
       
-      var disallow = CAPABILITIES.filter(function(aCapability) {
-        return !browser.docShell["allow" + aCapability];
-      });
-      tabData.disallow = disallow.join(",");
+      var disallow = [];
+      for (let i = 0; i < CAPABILITIES.length; i++) {
+        if (!browser.docShell["allow" + CAPABILITIES[i]])
+          disallow.push(CAPABILITIES[i]); 
+      }
+      if (disallow.length != 0)
+        tabData.disallow = disallow.join(",");
       
-      var _this = this;
-      var xulattr = Array.filter(tabbrowser.mTabs[i].attributes, function(aAttr) {
-        return (_this.xulAttributes.indexOf(aAttr.name) > -1);
-      }).map(function(aAttr) {
-        return aAttr.name + "=" + encodeURI(aAttr.value);
-      });
-      tabData.xultab = xulattr.join(" ");
+      if (this.xulAttributes.length != 0) {
+        var xulattr = Array.filter(tabbrowser.mTabs[i].attributes, function(aAttr) {
+          return (this.xulAttributes.indexOf(aAttr.name) > -1);
+        }, this).map(function(aAttr) {
+          return aAttr.name + "=" + encodeURI(aAttr.value);
+        });
+        tabData.xultab = xulattr.join(" ");
+      }
       
       tabData.extData = tabbrowser.mTabs[i].__SS_extdata || null;
       
