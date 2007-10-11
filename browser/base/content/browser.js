@@ -1313,6 +1313,9 @@ function nonBrowserWindowDelayedStartup()
   gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch2);
 
+  // initialise the offline listener
+  BrowserOffline.init();
+  
   // Set up Sanitize Item
   gSanitizeListener = new SanitizeListener();
 }
@@ -1321,6 +1324,8 @@ function nonBrowserWindowShutdown()
 {
   if (gSanitizeListener)
     gSanitizeListener.shutdown();
+
+  BrowserOffline.uninit();
 }
 #endif
 
