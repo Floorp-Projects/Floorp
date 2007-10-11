@@ -1056,6 +1056,21 @@ nsAccessibilityService::GetStringEventType(PRUint32 aEventType,
   return NS_OK;
 }
 
+// nsIAccessibleRetrieval::getStringRelationType()
+NS_IMETHODIMP
+nsAccessibilityService::GetStringRelationType(PRUint32 aRelationType,
+                                              nsAString& aString)
+{
+  if (aRelationType >= NS_ARRAY_LENGTH(kRelationTypeNames)) {
+    aString.AssignLiteral("unknown");
+    return NS_OK;
+  }
+
+  CopyUTF8toUTF16(kRelationTypeNames[aRelationType], aString);
+  return NS_OK;
+}
+
+
 /**
   * GetAccessibleFor - get an nsIAccessible from a DOM node
   */
