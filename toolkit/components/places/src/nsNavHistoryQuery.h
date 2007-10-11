@@ -125,6 +125,8 @@ public:
                                mExpandQueries(PR_TRUE),
                                mIncludeHidden(PR_FALSE),
                                mShowSessions(PR_FALSE),
+                               mResolveNullBookmarkTitles(PR_FALSE),
+                               mApplyOptionsToContainers(PR_FALSE),
                                mMaxResults(0),
                                mQueryType(nsINavHistoryQueryOptions::QUERY_TYPE_HISTORY)
   { }
@@ -149,6 +151,8 @@ public:
   PRBool ExpandQueries() const { return mExpandQueries; }
   PRBool IncludeHidden() const { return mIncludeHidden; }
   PRBool ShowSessions() const { return mShowSessions; }
+  PRBool ResolveNullBookmarkTitles() const { return mResolveNullBookmarkTitles; }
+  PRBool ApplyOptionsToContainers() const { return mApplyOptionsToContainers; }
   PRUint32 MaxResults() const { return mMaxResults; }
   PRUint16 QueryType() const { return mQueryType; }
 
@@ -167,7 +171,7 @@ private:
   //  * Add to the nsNavHistory.cpp::GetSimpleBookmarksQueryFolder function if applicable
   PRUint16 mSort;
   nsCString mSortingAnnotation;
-
+  nsCString mParentAnnotationToExclude;
   PRUint16 mResultType;
   PRUint32 mGroupCount;
   PRUint16 *mGroupings;
@@ -177,6 +181,8 @@ private:
   PRPackedBool mExpandQueries;
   PRPackedBool mIncludeHidden;
   PRPackedBool mShowSessions;
+  PRPackedBool mResolveNullBookmarkTitles;
+  PRPackedBool mApplyOptionsToContainers;
   PRUint32 mMaxResults;
   PRUint16 mQueryType;
 };

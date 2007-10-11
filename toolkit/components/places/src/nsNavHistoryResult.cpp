@@ -599,6 +599,10 @@ nsNavHistoryContainerResultNode::GetSortingComparator(PRUint16 aSortType)
       return &SortComparison_LastModifiedLess;
     case nsINavHistoryQueryOptions::SORT_BY_LASTMODIFIED_DESCENDING:
       return &SortComparison_LastModifiedGreater;
+    case nsINavHistoryQueryOptions::SORT_BY_COUNT_ASCENDING:
+      return &SortComparison_CountLess;
+    case nsINavHistoryQueryOptions::SORT_BY_COUNT_DESCENDING:
+      return &SortComparison_CountGreater;
     default:
       NS_NOTREACHED("Bad sorting type");
       return nsnull;
@@ -834,6 +838,58 @@ PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_LastModified
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -nsNavHistoryContainerResultNode::SortComparison_LastModifiedLess(a, b, closure);
+}
+
+// nsNavHistoryContainerResultNode::SortComparison_Count*
+//
+
+PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_CountLess(
+    nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
+{
+  PRUint32 count1 = 0;
+  PRUint32 count2 = 0;
+
+  if (a->IsContainer()) {
+    nsNavHistoryResult* result = a->GetResult();
+    if (result && result->GetView())
+      result->GetView()->SetIgnoreInvalidateContainer(PR_TRUE);
+    nsresult rv = a->GetAsContainer()->SetContainerOpen(PR_TRUE);
+    if (NS_SUCCEEDED(rv))
+      rv = a->GetAsContainer()->GetChildCount(&count1);
+    if (NS_FAILED(rv))
+      count1 = 0;
+    (void)a->GetAsContainer()->SetContainerOpen(PR_FALSE);
+    if (result && result->GetView())
+      result->GetView()->SetIgnoreInvalidateContainer(PR_FALSE);
+  }
+
+  if (b->IsContainer()) {
+    nsNavHistoryResult* result = b->GetResult();
+    if (result && result->GetView())
+      result->GetView()->SetIgnoreInvalidateContainer(PR_TRUE);
+    nsresult rv = b->GetAsContainer()->SetContainerOpen(PR_TRUE);
+    if (NS_SUCCEEDED(rv))
+      rv = b->GetAsContainer()->GetChildCount(&count2);
+    if (NS_FAILED(rv))
+      count2 = 0;
+    (void)b->GetAsContainer()->SetContainerOpen(PR_FALSE);
+    if (result && result->GetView())
+      result->GetView()->SetIgnoreInvalidateContainer(PR_FALSE);
+  }
+
+  PRInt32 value = CompareIntegers(count1, count2);
+  if (value == 0) {
+    value = SortComparison_StringLess(NS_ConvertUTF8toUTF16(a->mTitle),
+                                      NS_ConvertUTF8toUTF16(b->mTitle));
+    if (value == 0)
+      value = nsNavHistoryContainerResultNode::SortComparison_Bookmark(a, b, closure);
+  }
+  return value;
+}
+PRInt32 PR_CALLBACK nsNavHistoryContainerResultNode::SortComparison_CountGreater(
+    nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
+{
+  return -nsNavHistoryContainerResultNode::SortComparison_CountLess(a, b, closure);
 }
 
 // nsNavHistoryContainerResultNode::SortComparison_URI*
@@ -1209,8 +1265,12 @@ nsNavHistoryContainerResultNode::InsertSortedChild(
     // level. Doing this twice shouldn't be a large performance penalty because
     // when we are inserting new containers, they typically contain only one
     // item (because we've browsed a new page).
-    if (! aIsTemporary && aNode->IsContainer())
-      aNode->GetAsContainer()->FillStats();
+    if (! aIsTemporary && aNode->IsContainer()) {
+      // need to update all the new item's children
+      nsNavHistoryContainerResultNode* container = aNode->GetAsContainer();
+      container->mResult = mResult;
+      container->FillStats();
+    }
 
     nsCAutoString sortingAnnotation;
     GetSortingAnnotation(sortingAnnotation);
@@ -2125,6 +2185,14 @@ nsNavHistoryQueryResultNode::FillChildren()
   if (comparator)
     RecursiveSort(sortingAnnotation.get(), comparator);
 
+  // if our options apply to containers and we are limiting our results
+  // remove items from the end of the mChildren array after sorting.
+  // note, if count < max results, we won't do anything.
+  if (mOptions->ApplyOptionsToContainers() && mOptions->MaxResults()) {
+    while (mChildren.Count() > mOptions->MaxResults())
+      mChildren.RemoveObjectAt(mChildren.Count() - 1);
+  }
+
   nsNavHistoryResult* result = GetResult();
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
 
@@ -2955,8 +3023,14 @@ nsNavHistoryFolderResultNode::StartIncrementalUpdate()
 {
   // if any items are excluded, we can not do incremental updates since the
   // indices from the bookmark service will not be valid
-  if (! mOptions->ExcludeItems() && ! mOptions->ExcludeQueries() && 
-      ! mOptions->ExcludeReadOnlyFolders()) {
+  nsCAutoString parentAnnotationToExclude;
+  nsresult rv = mOptions->GetExcludeItemIfParentHasAnnotation(parentAnnotationToExclude);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  if (! mOptions->ExcludeItems() && 
+      ! mOptions->ExcludeQueries() && 
+      ! mOptions->ExcludeReadOnlyFolders() && 
+      parentAnnotationToExclude.IsEmpty()) {
 
     // easy case: we are visible, always do incremental update
     if (mExpanded || AreChildrenVisible())
@@ -3432,9 +3506,9 @@ nsNavHistoryResult::Init(nsINavHistoryQuery** aQueries,
       return NS_ERROR_OUT_OF_MEMORY;
   }
   rv = aOptions->Clone(getter_AddRefs(mOptions));
+  NS_ENSURE_SUCCESS(rv, rv);
   mSortingMode = aOptions->SortingMode();
-  aOptions->GetSortingAnnotation(mSortingAnnotation);
-
+  rv = aOptions->GetSortingAnnotation(mSortingAnnotation);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mPropertyBags.Init();
