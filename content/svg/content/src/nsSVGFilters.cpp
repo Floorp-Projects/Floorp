@@ -1078,7 +1078,7 @@ nsSVGFEBlendElement::Filter(nsSVGFilterInstance *instance)
 NS_IMETHODIMP
 nsSVGFEBlendElement::GetRequirements(PRUint32 *aRequirements)
 {
-  *aRequirements = CheckStandardNames(mIn1);
+  *aRequirements = CheckStandardNames(mIn1) | CheckStandardNames(mIn2);
   return NS_OK;
 }
 
@@ -1694,7 +1694,7 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance)
 NS_IMETHODIMP
 nsSVGFECompositeElement::GetRequirements(PRUint32 *aRequirements)
 {
-  *aRequirements = CheckStandardNames(mIn1);
+  *aRequirements = CheckStandardNames(mIn1) | CheckStandardNames(mIn2);
   return NS_OK;
 }
 
