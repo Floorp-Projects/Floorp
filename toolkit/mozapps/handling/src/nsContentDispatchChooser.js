@@ -46,9 +46,7 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 
 const CONTENT_HANDLING_URL = "chrome://mozapps/content/handling/dialog.xul";
-// TODO this needs to move to locale, but l10n folks want to wait until we
-//      finalize these for sure before doing so
-const STRINGBUNDLE_URL = "chrome://mozapps/content/handling/handling.properties";
+const STRINGBUNDLE_URL = "chrome://mozapps/locale/handling/handling.properties";
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsContentDispatchChooser class
