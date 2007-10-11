@@ -7,6 +7,7 @@ package Bootstrap::Step;
 use IO::Handle;
 use File::Spec::Functions;
 use POSIX qw(strftime);
+use File::Temp qw(tempfile);
 
 use Bootstrap::Config;
 use Bootstrap::Util;
@@ -203,4 +204,51 @@ sub SendAnnouncement {
     }
 }
     
+sub GetBuildIDFromFTP() {
+    my $this = shift;
+    my %args = @_;
+
+    my $os = $args{'os'};
+    if (! defined($os)) {
+        die("ASSERT: Bootstrap::Step::GetBuildID(): os is required argument");
+    }
+    my $releaseDir = $args{'releaseDir'};
+    if (! defined($releaseDir)) {
+        die("ASSERT: Bootstrap::Step::GetBuildID(): releaseDir is required argument");
+    }
+
+    my $config = new Bootstrap::Config();
+    my $stagingUser = $config->Get(var => 'stagingUser');
+    my $stagingServer = $config->Get(var => 'stagingServer');
+
+    my ($bh, $buildIDTempFile) = tempfile(UNLINK => 1);
+    $bh->close();
+    $this->Shell(
+      cmd => 'scp',
+      cmdArgs => [$stagingUser . '@' . $stagingServer . ':' . 
+                  $releaseDir .'/' . $os . '_info.txt',
+                  $buildIDTempFile],
+    );
+    my $buildID;
+    open(FILE, "< $buildIDTempFile") || 
+     die("Could not open buildID temp file $buildIDTempFile: $!");
+    while (<FILE>) {
+      my ($var, $value) = split(/\s*=\s*/, $_, 2);
+      if ($var eq 'buildID') {
+          $buildID = $value;
+      }
+    }
+    close(FILE) || 
+     die("Could not close buildID temp file $buildIDTempFile: $!");
+    if (! defined($buildID)) {
+        die("Could not read buildID from temp file $buildIDTempFile: $!");
+    }
+    if (! $buildID =~ /^\d+$/) {
+        die("ASSERT: BumpPatcherConfig: $buildID is non-numerical");
+    }
+    chomp($buildID);
+
+    return $buildID;
+}
+
 1;
