@@ -299,10 +299,12 @@ function DumpAppender(formatter) {
   this._name = "DumpAppender";
   this._formatter = formatter;
 }
-DumpAppender.prototype = new Appender();
-DumpAppender.prototype.doAppend = function DApp_doAppend(message) {
-  dump(message);
+DumpAppender.prototype = {
+  doAppend: function DApp_doAppend(message) {
+    dump(message);
+  }
 };
+DumpAppender.prototype.__proto__ = new Appender();
 
 /*
  * ConsoleAppender
@@ -313,15 +315,17 @@ function ConsoleAppender(formatter) {
   this._name = "ConsoleAppender";
   this._formatter = formatter;
 }
-ConsoleAppender.prototype = new Appender();
-ConsoleAppender.prototype.doAppend = function CApp_doAppend(message) {
-  if (message.level > LEVEL_WARN) {
-    Cu.reportError(message);
-    return;
+ConsoleAppender.prototype = {
+  doAppend: function CApp_doAppend(message) {
+    if (message.level > LEVEL_WARN) {
+      Cu.reportError(message);
+      return;
+    }
+    Cc["@mozilla.org/consoleservice;1"].
+      getService(Ci.nsIConsoleService).logStringMessage(message);
   }
-  Cc["@mozilla.org/consoleservice;1"].
-    getService(Ci.nsIConsoleService).logStringMessage(message);
 };
+ConsoleAppender.prototype.__proto__ = new Appender();
 
 /*
  * FileAppender
@@ -332,39 +336,47 @@ function FileAppender(file, formatter) {
   this._name = "FileAppender";
   this._file = file; // nsIFile
   this._formatter = formatter;
-  this.__fos = null;
 }
-FileAppender.prototype = new Appender();
-FileAppender.prototype._fos = function FApp__fos_get() {
-  if (!this.__fos)
-    this.openStream();
-  return this.__fos;
-};
-FileAppender.prototype.openStream = function FApp_openStream() {
-  this.__fos = Cc["@mozilla.org/network/file-output-stream;1"].
-    createInstance(Ci.nsIFileOutputStream);
-  let flags = MODE_WRONLY | MODE_CREATE | MODE_APPEND;
-  this.__fos.init(this._file, flags, PERMS_FILE, 0);
-};
-FileAppender.prototype.closeStream = function FApp_closeStream() {
-  if (!this.__fos)
-    return;
-  try {
-    this.__fos.close();
-    this.__fos = null;
-  } catch(e) {
-    dump("Failed to close file output stream\n" + e);
+FileAppender.prototype = {
+  __fos: null,
+  get _fos() {
+    if (!this.__fos)
+      this.openStream();
+    return this.__fos;
+  },
+
+  openStream: function FApp_openStream() {
+    dump("OPENING STREAM\n");
+    if (!this._file)
+      dump("THERE IS NO FILE\n");
+    this.__fos = Cc["@mozilla.org/network/file-output-stream;1"].
+      createInstance(Ci.nsIFileOutputStream);
+    let flags = MODE_WRONLY | MODE_CREATE | MODE_APPEND;
+    this.__fos.init(this._file, flags, PERMS_FILE, 0);
+  },
+
+  closeStream: function FApp_closeStream() {
+    if (!this.__fos)
+      return;
+    try {
+      this.__fos.close();
+      this.__fos = null;
+    } catch(e) {
+      dump("Failed to close file output stream\n" + e);
+    }
+  },
+
+  doAppend: function FApp_doAppend(message) {
+    if (message === null || message.length <= 0)
+      return;
+    try {
+      this._fos().write(message, message.length);
+    } catch(e) {
+      dump("Error writing file:\n" + e);
+    }
   }
 };
-FileAppender.prototype.doAppend = function FApp_doAppend(message) {
-  if (message === null || message.length <= 0)
-    return;
-  try {
-    this._fos().write(message, message.length);
-  } catch(e) {
-    dump("Error writing file:\n" + e);
-  }
-};
+FileAppender.prototype.__proto__ = new Appender();
 
 /*
  * RotatingFileAppender
@@ -378,37 +390,39 @@ function RotatingFileAppender(file, formatter, maxSize, maxBackups) {
   this._maxSize = maxSize;
   this._maxBackups = maxBackups;
 }
-RotatingFileAppender.prototype = new FileAppender();
-RotatingFileAppender.prototype.doAppend = function RFApp_doAppend(message) {
-  if (message === null || message.length <= 0)
-    return;
-  try {
-    this.rotateLogs();
-    this._fos().write(message, message.length);
-  } catch(e) {
-    dump("Error writing file:\n" + e);
+RotatingFileAppender.prototype = {
+  doAppend: function RFApp_doAppend(message) {
+    if (message === null || message.length <= 0)
+      return;
+    try {
+      this.rotateLogs();
+      this._fos.write(message, message.length);
+    } catch(e) {
+      dump("Error writing file:\n" + e);
+    }
+  },
+  rotateLogs: function RFApp_rotateLogs() {
+    if(this._file.exists() &&
+       this._file.fileSize < this._maxSize)
+      return;
+
+    this.closeStream();
+
+    for (let i = this.maxBackups - 1; i > 0; i--){
+      let backup = this._file.parent.clone();
+      backup.append(this._file.leafName + "." + i);
+      if (backup.exists())
+        backup.moveTo(this._file.parent, this._file.leafName + "." + (i + 1));
+    }
+
+    let cur = this._file.clone();
+    if (cur.exists())
+      cur.moveTo(cur.parent, cur.leafName + ".1");
+
+    // Note: this._file still points to the same file
   }
 };
-RotatingFileAppender.prototype.rotateLogs = function RFApp_rotateLogs() {
-  if(this._file.exists() &&
-     this._file.fileSize < this._maxSize)
-    return;
-
-  this.closeStream();
-
-  for (let i = this.maxBackups - 1; i > 0; i--){
-    let backup = this._file.parent.clone();
-    backup.append(this._file.leafName + "." + i);
-    if (backup.exists())
-      backup.moveTo(this._file.parent, this._file.leafName + "." + (i + 1));
-  }
-
-  let cur = this._file.clone();
-  if (cur.exists())
-    cur.moveTo(cur.parent, cur.leafName + ".1");
-
-  // this._file still points to the same file
-};
+RotatingFileAppender.prototype.__proto__ = new FileAppender();
 
 /*
  * Formatters
@@ -416,14 +430,19 @@ RotatingFileAppender.prototype.rotateLogs = function RFApp_rotateLogs() {
  * Only the BasicFormatter is currently implemented
  */
 
+// Abstract formatter
+function Formatter() {}
+Formatter.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.IFormatter, Ci.nsISupports]),
+  format: function Formatter_format(message) {}
+};
+
 // FIXME: should allow for formatting the whole string, not just the date
 function BasicFormatter(dateFormat) {
   if (dateFormat)
     this.dateFormat = dateFormat;
 }
 BasicFormatter.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.IFormatter, Ci.nsISupports]),
-
   _dateFormat: null,
 
   get dateFormat() {
@@ -431,17 +450,19 @@ BasicFormatter.prototype = {
       this._dateFormat = "%Y-%m-%d %H:%M:%S";
     return this._dateFormat;
   },
+
   set dateFormat(format) {
     this._dateFormat = format;
   },
+
   format: function BF_format(message) {
-    dump("time is " + message.time + "\n");
     let date = new Date(message.time);
     return date.toLocaleFormat(this.dateFormat) + "\t" +
       message.loggerName + "\t" + message.levelDesc + "\t" +
       message.message + "\n";
   }
 };
+BasicFormatter.prototype.__proto__ = new Formatter();
 
 /*
  * LogMessage
