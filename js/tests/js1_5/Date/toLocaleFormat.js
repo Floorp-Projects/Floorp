@@ -21,6 +21,8 @@
  *
  * Contributor(s): Mike Shaver
  *                 Bob Clary
+ *                 Michael Daumling
+ *                 Mats Palmgren
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,6 +46,13 @@ var actual = '';
 var expect = '';
 var temp;
 
+/*
+ * SpiderMonkey only.
+ *
+ * When the output of toLocaleFormat exceeds 100 bytes toLocaleFormat
+ * defaults to using toString to produce the result.
+*/
+
 enterFunc ('test');
 printBugNumber(BUGNUMBER);
 printStatus (summary);
@@ -66,69 +75,9 @@ expect = 'June';
 actual = date.toLocaleFormat('%B');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%B")');
 
-/*
-  expect = date.toLocaleFormat('%a %b %e %H:%M:%S %Y');
-  actual = date.toLocaleFormat('%c');
-  reportCompare(expect, actual,
-  'Date.toLocaleFormat("%a %b %e %H:%M:%S %Y") == ' +
-  'Date.toLocaleFormat("%c")');
-*/
-
-/*
-  expect = '20';
-  actual = date.toLocaleFormat('%C');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%C")');
-*/
-
-/*
-  expect = date.toLocaleFormat('%C%y');
-  actual = date.toLocaleFormat('%Y');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%C%y") == ' +
-  'Date.toLocaleFormat("%Y")');
-*/
-
 expect = (date.getTimezoneOffset() > 0) ? '04' : '05';
 actual = date.toLocaleFormat('%d');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%d")');
-
-/*
-  expect = date.toLocaleFormat('%m/%d/%y');
-  actual = date.toLocaleFormat('%D');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%m/%d/%y") == ' +
-  'Date.toLocaleFormat("%D")');
-*/
-
-/*
-  expect = (date.getTimezoneOffset() > 0) ? ' 4' : ' 5';
-  actual = date.toLocaleFormat('%e');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%e")');
-*/
-
-/*
-  expect = date.toLocaleFormat('%Y-%m-%d');
-  actual = date.toLocaleFormat('%F');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%Y-%m-%d") == ' +
-  'Date.toLocaleFormat("%F")');
-*/
-
-/*
-  expect = '05';
-  actual = date.toLocaleFormat('%g');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%g")');
-*/
-
-/*
-  expect = '2005';
-  actual = date.toLocaleFormat('%G');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%G")');
-*/
-
-/*
-  expect = date.toLocaleFormat('%b');
-  actual = date.toLocaleFormat('%h');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%b") == ' +
-  'Date.toLocaleFormat("%h")');
-*/
 
 expect = '0';
 actual = String((Number(date.toLocaleFormat('%H')) +
@@ -152,63 +101,18 @@ expect = '00';
 actual = date.toLocaleFormat('%M');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%M")');
 
-/*
-  expect = '\n';
-  actual = date.toLocaleFormat('%n');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%n") == "\\n"');
-*/
-
 expect = true;
 temp   = date.toLocaleFormat('%p');
 actual = temp == 'AM' || date.toLocaleFormat('%p') == 'PM';
 reportCompare(expect, actual, 'Date.toLocaleFormat("%p") is AM or PM');
 
-/*
-  expect = date.toLocaleFormat('%I:%M:%S %p');
-  actual = date.toLocaleFormat('%r');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%I:%M:%S %p") == ' +
-  'Date.toLocaleFormat("%r")');
-*/
-
-/*
-  expect = date.toLocaleFormat('%H:%M');
-  actual = date.toLocaleFormat('%R');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%H:%M") == ' +
-  'Date.toLocaleFormat("%R")');
-*/
-
 expect = '00';
 actual = date.toLocaleFormat('%S');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%S")');
 
-/*
-  expect = '\t';
-  actual = date.toLocaleFormat('%t');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%t") == "\\t"');
-*/
-
-/*
-  expect = date.toLocaleFormat('%H:%M:%S');
-  actual = date.toLocaleFormat('%T');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%H:%M:%S") == ' +
-  'Date.toLocaleFormat("%T")');
-*/
-
-/*
-  expect = String(6 + ((date.getTimezoneOffset() > 0) ? 0 : 1));
-  actual = date.toLocaleFormat('%u');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%u")');
-*/
-
 expect = String(22 + ((date.getTimezoneOffset() > 0) ? 0 : 1));
 actual = date.toLocaleFormat('%U');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%U")');
-
-/*
-  expect = '22';
-  actual = date.toLocaleFormat('%V');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%V")');
-*/
 
 expect = String((6 + ((date.getTimezoneOffset() > 0) ? 0 : 1))%7);
 actual = date.toLocaleFormat('%w');
@@ -217,13 +121,6 @@ reportCompare(expect, actual, 'Date.toLocaleFormat("%w")');
 expect = '22';
 actual = date.toLocaleFormat('%W');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%W")');
-
-/*
-  expect = date.toLocaleFormat('%m/%d/%y');
-  actual = date.toLocaleFormat('%x');
-  reportCompare(expect, actual, 'Date.toLocaleFormat("%m/%d/%y) == ' +
-  'Date.toLocaleFormat("%x")');
-*/
 
 expect = date.toLocaleTimeString();
 actual = date.toLocaleFormat('%X');
@@ -241,3 +138,134 @@ reportCompare(expect, actual, 'Date.toLocaleFormat("%Y")');
 expect = '%';
 actual = date.toLocaleFormat('%%');
 reportCompare(expect, actual, 'Date.toLocaleFormat("%%")');
+
+
+expect = '1899 99';
+temp='%Y %y';
+actual = new Date(0, 0, 0, 13, 14, 15, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = '1899189918991899189918991899189918991899189918991899189918991899189918991899189918991899';
+temp = '%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(0, 0, 0, 13, 14, 15, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = 'xxx189918991899189918991899189918991899189918991899189918991899189918991899189918991899189918991899';
+temp = 'xxx%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(0, 0, 0, 13, 14, 15, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = new Date(0, 0, 0, 13, 14, 15, 0).toString();
+temp = 'xxxx%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(0, 0, 0, 13, 14, 15, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = 'xxxx189918991899189918991899189918991899';
+temp = 'xxxx%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(0, 0, 0, 13, 14, 15, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+
+expect = '-51 49';
+temp = '%Y %y';
+actual = new Date(-51, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = '-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51';
+temp = '%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(-51, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = 'xxx-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51-51';
+temp = 'xxx%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(-51, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = new Date(-51, 0).toString();
+temp = 'xxxx%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(-51, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+
+expect = '1851 51';
+temp = '%Y %y';
+actual = new Date(1851, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = '1851185118511851185118511851185118511851185118511851185118511851185118511851185118511851';
+temp = '%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(1851, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = 'xxx185118511851185118511851185118511851185118511851185118511851185118511851185118511851185118511851';
+temp = 'xxx%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(1851, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = new Date(1851, 0).toString();
+temp = 'xxxx%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(1851, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+
+expect = '-1 99';
+temp = '%Y %y';
+actual = new Date(-1, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = '-100 00';
+temp = '%Y %y';
+actual = new Date(-100, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = '1900 00';
+temp = '%Y %y';
+actual = new Date(0, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = '1901 01';
+temp = '%Y %y';
+actual = new Date(1, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = '1970 70';
+temp = '%Y %y';
+actual = new Date(1970, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+
+expect = new Date(32767, 0).toString();
+temp = 'xxxx%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(32767, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = '32767327673276732767327673276732767327673276732767327673276732767327673276732767327673276732767';
+temp = '%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(32767, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = 'xxxx32767327673276732767327673276732767327673276732767327673276732767327673276732767327673276732767';
+temp = 'xxxx%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(32767, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = new Date(32767, 0).toString();
+temp = 'xxxxx%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(32767, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+
+expect = '-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999';
+temp = '%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(-9999, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = 'xxxx-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999-9999';
+temp = 'xxxx%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(-9999, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
+
+expect = new Date(-9999, 0).toString();
+temp = 'xxxx%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y%Y';
+actual = new Date(-9999, 0).toLocaleFormat(temp);
+reportCompare(expect, actual, 'Date.toLocaleFormat("'+temp+'")');
