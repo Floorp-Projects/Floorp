@@ -95,7 +95,7 @@ class nsISoftwareUpdate : public nsISupports
             NS_IMETHOD RegisterListener(nsIXPIListener *aListener) = 0;
 
             /* FIX: these should be in a private interface */
-            NS_IMETHOD_(void) InstallJarCallBack() = 0;
+            virtual void InstallJarCallBack() = 0;
             NS_IMETHOD GetMasterListener(nsIXPIListener **aListener) = 0;
             NS_IMETHOD SetActiveListener(nsIXPIListener *aListener) = 0;
 };
