@@ -218,32 +218,8 @@ sub BumpPatcherConfig {
     # grab os-specific buildID file on FTP
     my $candidateDir = $config->GetFtpCandidateDir(bitsUnsigned => 0);
     foreach my $os ('linux', 'macosx', 'win32') {
-        my ($bh, $buildIDTempFile) = tempfile(DIR => '.');
-        $bh->close();
-        $this->Shell(
-          cmd => 'scp',
-          cmdArgs => [$stagingUser . '@' . $stagingServer . ':' . 
-                      $candidateDir .'/' . $os . '_info.txt',
-                      $buildIDTempFile],
-        );
-        my $buildID;
-        open(FILE, "< $buildIDTempFile") || 
-         die("Could not open buildID temp file $buildIDTempFile: $!");
-        while (<FILE>) {
-          my ($var, $value) = split(/\s*=\s*/, $_, 2);
-          if ($var eq 'buildID') {
-              $buildID = $value;
-          }
-        }
-        close(FILE) || 
-         die("Could not close buildID temp file $buildIDTempFile: $!");
-        if (! defined($buildID)) {
-            die("Could not read buildID from temp file $buildIDTempFile: $!");
-        }
-        if (! $buildID =~ /^\d+$/) {
-            die("ASSERT: BumpPatcherConfig: $buildID is non-numerical");
-        }
-        chomp($buildID);
+        my $buildID = $this->GetBuildIDFromFTP(os => $os, releaseDir => $candidateDir);
+
         if ($os eq 'linux') {
             $linBuildId = "$buildID";
         } elsif ($os eq 'macosx') {
