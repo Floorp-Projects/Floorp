@@ -73,7 +73,7 @@ function add_visit(aURI, aTime) {
 
 // main
 function run_test() {
-  var testRoot = bmsvc.createFolder(root,
+  var testRoot = bmsvc.createFolder(bmsvc.placesRoot,
                                     "Result-sort functionality tests root",
                                     bmsvc.DEFAULT_INDEX);
   var uri1 = uri("http://foo.tld/a");

@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *   Asaf Romano <mano@mozilla.com> (Original Author)
+ *   Seth Spitzer <sspitzer@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -64,65 +65,45 @@ try {
 
 // main
 function run_test() {
-  var options = histsvc.getNewQueryOptions();
-  var query = histsvc.getNewQuery();
-
-  query.setFolders([bmsvc.tagRoot], 1);
-  var result = histsvc.executeQuery(query, options);
-  var tagRoot = result.root;
-  tagRoot.containerOpen = true;
-
-  do_check_eq(tagRoot.childCount, 0);
-
   var uri1 = uri("http://foo.tld/");
   var uri2 = uri("https://bar.tld/");
 
-  // this also tests that the multiple folders are not created for the same tag
   tagssvc.tagURI(uri1, ["tag 1"]);
-  tagssvc.tagURI(uri2, ["tag 1"]);
-  do_check_eq(tagRoot.childCount, 1);
+  tagssvc.tagURI(uri2, ["tag 2"]);
 
-  var tag1node = tagRoot.getChild(0)
-                        .QueryInterface(Ci.nsINavHistoryContainerResultNode);
-  do_check_eq(tag1node.title, "tag 1");
-  tag1node.containerOpen = true;
-  do_check_eq(tag1node.childCount, 2);
+  histsvc.addVisit(uri1, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.setPageDetails(uri1, "foo title", 0, false, true);
+  histsvc.addVisit(uri2, Date.now(), 0, histsvc.TRANSITION_TYPED, false, 0);
+  histsvc.setPageDetails(uri2, "bar title", 0, false, true);
 
-  // Tagging the same url twice with the same tag should be a no-op
-  tagssvc.tagURI(uri1, ["tag 1"]);
-  do_check_eq(tag1node.childCount, 2);
+  var options = histsvc.getNewQueryOptions();
+  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
+  options.maxResults = 2;
 
-  // the former should be ignored.
-  do_check_eq(tagRoot.childCount, 1);
-  tagssvc.tagURI(uri1, ["tag 1", "tag 2"]);
-  do_check_eq(tagRoot.childCount, 2);
+  // test without the "resolveNullBookmarkTitles" option, 
+  // our tag items don't have titles.
+  var query = histsvc.getNewQuery();
+  query.setFolders([bmsvc.tagRoot], 1);
+  var result = histsvc.executeQuery(query, options);
+  var root = result.root;
+  root.containerOpen = true;
+  do_check_eq(root.childCount, 2);
+  do_check_eq(root.getChild(0).title, null);
+  do_check_eq(root.getChild(1).title, null);
 
-  // test getTagsForURI
-  var uri1tags = tagssvc.getTagsForURI(uri1, {});
-  do_check_eq(uri1tags.length, 2);
-  do_check_eq(uri1tags[0], "tag 1");
-  do_check_eq(uri1tags[1], "tag 2");
-  var uri2tags = tagssvc.getTagsForURI(uri2, {});
-  do_check_eq(uri2tags.length, 1);
-  do_check_eq(uri2tags[0], "tag 1");
+  // test with the "resolveNullBookmarkTitles" option, 
+  // our tag items have titles from history
+  options = histsvc.getNewQueryOptions();
+  options.resolveNullBookmarkTitles = true;
+  options.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS;
+  options.maxResults = 2;
 
-  // test getURIsForTag
-  var tag1uris = tagssvc.getURIsForTag("tag 1");
-  do_check_eq(tag1uris.length, 2);
-  do_check_true(tag1uris[0].equals(uri1));
-  do_check_true(tag1uris[1].equals(uri2));
-
-  // test allTags attribute
-  var allTags = tagssvc.allTags;
-  do_check_eq(allTags.length, 2);
-  do_check_eq(allTags[0], "tag 1");
-  do_check_eq(allTags[1], "tag 2");
-
-  // test untagging
-  tagssvc.untagURI(uri1, ["tag 1"]);
-  do_check_eq(tag1node.childCount, 1);
-
-  // removing the last uri from a tag should remove the tag-container
-  tagssvc.untagURI(uri2, ["tag 1"]);
-  do_check_eq(tagRoot.childCount, 1);
+  query = histsvc.getNewQuery();
+  query.setFolders([bmsvc.tagRoot], 1);
+  var result = histsvc.executeQuery(query, options);
+  var root = result.root;
+  root.containerOpen = true;
+  do_check_eq(root.childCount, 2);
+  do_check_eq(root.getChild(0).title, "foo title");
+  do_check_eq(root.getChild(1).title, "bar title");
 }

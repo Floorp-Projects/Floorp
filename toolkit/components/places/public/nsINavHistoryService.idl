@@ -474,7 +474,7 @@ interface nsINavHistoryResultViewObserver : nsISupports
  *
  * @see nsINavHistoryResult for where this fits in
  */
-[scriptable, uuid(2a709a8e-34c3-4c80-b559-789b99a4bbe6)]
+[scriptable, uuid(39c6b2d5-c061-4f2f-a068-235d02dadc91)]
 interface nsINavHistoryResultViewer : nsISupports
 {
   /**
@@ -525,6 +525,11 @@ interface nsINavHistoryResultViewer : nsISupports
    * child containers have closed as well.
    */
   void containerClosed(in nsINavHistoryContainerResultNode item);
+
+  /**
+   * When this attribute is true, we will ignore calls to invalidateContainer()
+   */
+  attribute boolean ignoreInvalidateContainer;
 
   /**
    * Called when something significant has happened within the container. The
@@ -934,7 +939,7 @@ interface nsINavHistoryQuery : nsISupports
 /**
  * This object represents the global options for executing a query.
  */
-[scriptable, uuid(923489f0-7ed7-476b-ba86-2fc3e1e474b6)]
+[scriptable, uuid(ed29f063-0c5f-471c-b4bc-b1e889524cd2)]
 interface nsINavHistoryQueryOptions : nsISupports
 {
   /**
@@ -945,7 +950,7 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short GROUP_BY_DAY = 0;
 
   /**
-   * Groping by exact host. The results will be an array of nsINavHistoryResults
+   * Grouping by exact host. The results will be an array of nsINavHistoryResults
    * with type = RESULT_TYPE_HOST, one for each unique host (for example,
    * "bugzilla.mozilla.org" and "www.mozilla.org" will be separate). The
    * children of these will correspond to the results for each host.
@@ -961,12 +966,11 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short GROUP_BY_DOMAIN = 2;
 
   /**
-   * Group by bookmark folder.  Since this determines the entire subtree
-   * hierarchy, it must be the last grouping option given.  This option
-   * requires the query to have onlyBookmarked set, and for there to be
-   * at least one parent folder specified via nsINavHistoryQuery::setFolders.
-   * If all of the top-level results belong to a single folder, the folder will
-   * be omitted and its children will become the toplevel result nodes.
+   * Group by bookmark folders.  Results from the query are grouped in folders
+   * containers.  This option requires there to be at least one parent folder specified 
+   * via nsINavHistoryQuery::setFolders.  Note, since the folder containers are built
+   * from the items that match the results that we are grouping, you will not get any
+   * folders (when grouping by folder) with zero items.
    */
   const unsigned short GROUP_BY_FOLDER = 3;
 
@@ -995,8 +999,10 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short SORT_BY_DATEADDED_DESCENDING = 12;
   const unsigned short SORT_BY_LASTMODIFIED_ASCENDING = 13;
   const unsigned short SORT_BY_LASTMODIFIED_DESCENDING = 14;
-  const unsigned short SORT_BY_ANNOTATION_ASCENDING = 15;
-  const unsigned short SORT_BY_ANNOTATION_DESCENDING = 16;
+  const unsigned short SORT_BY_COUNT_ASCENDING = 15;
+  const unsigned short SORT_BY_COUNT_DESCENDING = 16;
+  const unsigned short SORT_BY_ANNOTATION_ASCENDING = 17;
+  const unsigned short SORT_BY_ANNOTATION_DESCENDING = 18;
 
 
   /**
@@ -1077,6 +1083,15 @@ interface nsINavHistoryQueryOptions : nsISupports
   attribute boolean excludeReadOnlyFolders;
 
   /**
+   * This option excludes items from a bookmarks query
+   * if the parent of the item has this annotation.
+   * An example is to exclude livemark items
+   * (parent folders have the "livemark/feedURI" annotation)
+   * Ignored for queries over history.
+   */
+  attribute AUTF8String excludeItemIfParentHasAnnotation;
+
+  /**
    * When set, allows items with "place:" URIs to appear as containers,
    * with the container's contents filled in from the stored query.
    * If not set, these will appear as normal items. Doesn't do anything if
@@ -1116,11 +1131,23 @@ interface nsINavHistoryQueryOptions : nsISupports
    * ones, and THEN sort by title.
    */
   attribute unsigned long maxResults;
+  
+  /**
+   * if a bookmark title is null (note, not empty), 
+   * attempt to use the history title.
+   * Note, this is false by default.
+   */
+  attribute boolean resolveNullBookmarkTitles;
+
+  /**
+   * only apply our query options to the containers
+   */
+  attribute boolean applyOptionsToContainers;
 
   const unsigned short QUERY_TYPE_HISTORY = 0;
   const unsigned short QUERY_TYPE_BOOKMARKS = 1;
   const unsigned short QUERY_TYPE_UNIFIED = 2;
-
+  
   /**
    * The type of search to use when querying the DB; This attribute is only
    * honored by query nodes. It is silently ignored for simple folder queries.

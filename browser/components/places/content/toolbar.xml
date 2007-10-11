@@ -138,7 +138,9 @@
       <field name="_openedMenuButton">null</field>
       
       <field name="_result">null</field>
-      
+
+      <field name="_ignoreInvalidateContainer">false</field>
+
       <!-- nsIPlacesView -->
       <method name="getResult">
         <body><![CDATA[
@@ -576,7 +578,18 @@
           this.invalidateContainer(aNode);
         },
 
+        get ignoreInvalidateContainer() {
+          return this._self._ignoreInvalidateContainer;
+        },
+
+        set ignoreInvalidateContainer(val) {
+          return this._self._ignoreInvalidateContainer = val;
+        },
+
         invalidateContainer: function TV_V_invalidateContainer(aContainer) {
+          if (this._self._ignoreInvalidateContainer)
+            return;
+
           function isChildOf(node, container) {
             var parent = node.parent;
             while (parent) {
