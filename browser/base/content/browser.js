@@ -3573,6 +3573,15 @@ nsBrowserStatusHandler.prototype =
     } 
     else
       this.asyncUpdateUI();
+
+    // Catch exceptions until bug 376222 gets fixed so we don't hork
+    // other progress listeners if this call throws an exception.
+    try {
+      ContentPrefSink.handleLocationChanged(aLocationURI);
+    }
+    catch(ex) {
+      Components.utils.reportError(ex);
+    }
   },
   
   asyncUpdateUI : function () {
