@@ -615,7 +615,7 @@ protected:
   static void VacuumTimerCallback(nsITimer* aTimer, void* aClosure);
 
   PRInt64 mTagRoot;
-  PRInt64 nsNavHistory::GetTagRoot();
+  PRInt64 GetTagRoot();
 };
 
 /**
