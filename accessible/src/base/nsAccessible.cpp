@@ -2021,54 +2021,55 @@ nsAccessible::GetAttributes(nsIPersistentProperties **aAttributes)
 
   nsCOMPtr<nsIContent> content = GetRoleContent(mDOMNode);
   nsAutoString id;
+  nsAutoString oldValueUnused;
   if (content && nsAccUtils::GetID(content, id)) {
-    nsAutoString oldValueUnused;
     attributes->SetStringProperty(NS_LITERAL_CSTRING("id"), id, oldValueUnused);
-    // XXX In the future we may need to expose the dynamic content role inheritance chain
-    // through this attribute
-    nsAutoString xmlRole;
-    if (GetARIARole(content, xmlRole)) {
-      attributes->SetStringProperty(NS_LITERAL_CSTRING("xml-roles"), xmlRole, oldValueUnused);          
-    }
+  }
 
-    // Make sure to keep these two arrays in sync
-    PRUint32 ariaPropTypes = nsAccUtils::GetAriaPropTypes(content, mWeakShell);
-    char *ariaPropertyString[] = { "live", "channel", "atomic", "relevant", "datatype", "level",
-                               "posinset", "setsize", "sort", "grab", "dropeffect"};
-    EAriaProperty ariaPropertyEnum[] = { eAria_live, eAria_channel, eAria_atomic, eAria_relevant,
-                                       eAria_datatype, eAria_level, eAria_posinset, eAria_setsize,
-                                       eAria_sort, eAria_grab, eAria_dropeffect};
-    NS_ASSERTION(NS_ARRAY_LENGTH(ariaPropertyString) == NS_ARRAY_LENGTH(ariaPropertyEnum),
-                 "ARIA attributes and object property name arrays out of sync");
-    for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(ariaPropertyString); index ++) {
-      nsAutoString value;
-      if (nsAccUtils::GetAriaProperty(content, mWeakShell, ariaPropertyEnum[index], value, ariaPropTypes)) {
-        ToLowerCase(value);
-        attributes->SetStringProperty(nsDependentCString(ariaPropertyString[index]), value, oldValueUnused);    
-      }
-    }
+  // XXX In the future we may need to expose the dynamic content role inheritance chain
+  // through this attribute
+  nsAutoString xmlRole;
+  if (GetARIARole(content, xmlRole)) {
+    attributes->SetStringProperty(NS_LITERAL_CSTRING("xml-roles"), xmlRole, oldValueUnused);          
+  }
 
-    // Get container-foo computed live region properties based on the closest container with
-    // the live region attribute
-    nsAutoString atomic, live, relevant, channel, busy;
-    while (content) {
-      if (relevant.IsEmpty() &&
-          nsAccUtils::GetAriaProperty(content, mWeakShell, eAria_relevant, relevant, ariaPropTypes))
-        attributes->SetStringProperty(NS_LITERAL_CSTRING("container-relevant"), relevant, oldValueUnused);
-      if (live.IsEmpty() &&
-          nsAccUtils::GetAriaProperty(content, mWeakShell, eAria_live, live, ariaPropTypes))
-        attributes->SetStringProperty(NS_LITERAL_CSTRING("container-live"), live, oldValueUnused);
-      if (channel.IsEmpty() &&
-          nsAccUtils::GetAriaProperty(content, mWeakShell, eAria_channel, channel, ariaPropTypes))
-        attributes->SetStringProperty(NS_LITERAL_CSTRING("container-channel"), channel, oldValueUnused);
-      if (atomic.IsEmpty() &&
-          nsAccUtils::GetAriaProperty(content, mWeakShell, eAria_atomic, atomic, ariaPropTypes))
-        attributes->SetStringProperty(NS_LITERAL_CSTRING("container-atomic"), atomic, oldValueUnused);
-      if (busy.IsEmpty() &&
-          nsAccUtils::GetAriaProperty(content, mWeakShell, eAria_busy, busy, ariaPropTypes))
-        attributes->SetStringProperty(NS_LITERAL_CSTRING("container-busy"), busy, oldValueUnused);
-      content = content->GetParent();
+  // Make sure to keep these two arrays in sync
+  PRUint32 ariaPropTypes = nsAccUtils::GetAriaPropTypes(content, mWeakShell);
+  char *ariaPropertyString[] = { "live", "channel", "atomic", "relevant", "datatype", "level",
+                             "posinset", "setsize", "sort", "grab", "dropeffect"};
+  EAriaProperty ariaPropertyEnum[] = { eAria_live, eAria_channel, eAria_atomic, eAria_relevant,
+                                     eAria_datatype, eAria_level, eAria_posinset, eAria_setsize,
+                                     eAria_sort, eAria_grab, eAria_dropeffect};
+  NS_ASSERTION(NS_ARRAY_LENGTH(ariaPropertyString) == NS_ARRAY_LENGTH(ariaPropertyEnum),
+               "ARIA attributes and object property name arrays out of sync");
+  for (PRUint32 index = 0; index < NS_ARRAY_LENGTH(ariaPropertyString); index ++) {
+    nsAutoString value;
+    if (nsAccUtils::GetAriaProperty(content, mWeakShell, ariaPropertyEnum[index], value, ariaPropTypes)) {
+      ToLowerCase(value);
+      attributes->SetStringProperty(nsDependentCString(ariaPropertyString[index]), value, oldValueUnused);    
     }
+  }
+
+  // Get container-foo computed live region properties based on the closest container with
+  // the live region attribute
+  nsAutoString atomic, live, relevant, channel, busy;
+  while (content) {
+    if (relevant.IsEmpty() &&
+        nsAccUtils::GetAriaProperty(content, mWeakShell, eAria_relevant, relevant, ariaPropTypes))
+      attributes->SetStringProperty(NS_LITERAL_CSTRING("container-relevant"), relevant, oldValueUnused);
+    if (live.IsEmpty() &&
+        nsAccUtils::GetAriaProperty(content, mWeakShell, eAria_live, live, ariaPropTypes))
+      attributes->SetStringProperty(NS_LITERAL_CSTRING("container-live"), live, oldValueUnused);
+    if (channel.IsEmpty() &&
+        nsAccUtils::GetAriaProperty(content, mWeakShell, eAria_channel, channel, ariaPropTypes))
+      attributes->SetStringProperty(NS_LITERAL_CSTRING("container-channel"), channel, oldValueUnused);
+    if (atomic.IsEmpty() &&
+        nsAccUtils::GetAriaProperty(content, mWeakShell, eAria_atomic, atomic, ariaPropTypes))
+      attributes->SetStringProperty(NS_LITERAL_CSTRING("container-atomic"), atomic, oldValueUnused);
+    if (busy.IsEmpty() &&
+        nsAccUtils::GetAriaProperty(content, mWeakShell, eAria_busy, busy, ariaPropTypes))
+      attributes->SetStringProperty(NS_LITERAL_CSTRING("container-busy"), busy, oldValueUnused);
+    content = content->GetParent();
   }
 
   if (!nsAccUtils::HasAccGroupAttrs(attributes)) {
