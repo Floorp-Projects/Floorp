@@ -576,3 +576,6 @@ pref("browser.places.importBookmarksHTML", true);
 
 // Show infobar on chromeless windows
 pref("browser.warn_chromeless_window.infobar", false);
+
+// disable adding the "Places" folder with pre-defined queries
+pref("browser.places.createdDefaultQueries", true);
