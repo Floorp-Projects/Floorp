@@ -137,7 +137,10 @@
 
       <method name="_ensureColumnOrder">
         <body><![CDATA[
-          if (this._columnsDirty) {
+          if (!this._columnsDirty)
+            return;
+
+          if (this.columns) {
             // update the ordinal position of each column to assure that it is
             // an odd number and 2 positions above its next sibling
             var cols = [];
@@ -152,9 +155,8 @@
             var splitters = this.getElementsByTagName("splitter");
             for (i = 0; i < splitters.length; ++i)
               splitters[i].setAttribute("ordinal", (i+1)*2);
-            
-            this._columnsDirty = false;
           }
+          this._columnsDirty = false;
         ]]></body>
       </method>
 
