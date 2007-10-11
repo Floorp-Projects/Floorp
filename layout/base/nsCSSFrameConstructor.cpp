@@ -4013,12 +4013,18 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
                           nsCSSAnonBoxes::cellContent, aStyleContext);
 
   // Create a block frame that will format the cell's content
+  PRBool isBlock;
 #ifdef MOZ_MATHML
-  if (kNameSpaceID_MathML == aNameSpaceID)
+  if (kNameSpaceID_MathML == aNameSpaceID) {
     aNewCellInnerFrame = NS_NewMathMLmtdInnerFrame(mPresShell, innerPseudoStyle);
+    isBlock = PR_FALSE;
+  }
   else
 #endif
+  {
     aNewCellInnerFrame = NS_NewTableCellInnerFrame(mPresShell, innerPseudoStyle);
+    isBlock = PR_TRUE;
+  }
 
 
   if (NS_UNLIKELY(!aNewCellInnerFrame)) {
@@ -4031,18 +4037,22 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsFrameConstructorState& aState,
 
   if (!aIsPseudo) {
     PRBool haveFirstLetterStyle, haveFirstLineStyle;
-    ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
-                                &haveFirstLetterStyle, &haveFirstLineStyle);
+    if (isBlock) {
+      ShouldHaveSpecialBlockStyle(aContent, aStyleContext,
+                                  &haveFirstLetterStyle, &haveFirstLineStyle);
+    }
 
     // The block frame is a float container
     nsFrameConstructorSaveState floatSaveState;
-    aState.PushFloatContainingBlock(aNewCellInnerFrame, floatSaveState,
-                                    haveFirstLetterStyle, haveFirstLineStyle);
+    if (isBlock) {
+      aState.PushFloatContainingBlock(aNewCellInnerFrame, floatSaveState,
+                                      haveFirstLetterStyle, haveFirstLineStyle);
+    }
 
     // Process the child content
     nsFrameItems childItems;
     rv = ProcessChildren(aState, aContent, aNewCellInnerFrame, 
-                         PR_TRUE, childItems, PR_TRUE);
+                         PR_TRUE, childItems, PR_FALSE);
 
     if (NS_FAILED(rv)) {
       // Clean up
