@@ -109,6 +109,12 @@ class nsIntervalSet;
  */
 
 // see nsHTMLParts.h for the public block state bits
+
+/**
+ * Something in the block has changed that requires Bidi resolution to be
+ * performed on the block. This flag must be either set on all blocks in a 
+ * continuation chain or none of them.
+ */
 #define NS_BLOCK_NEEDS_BIDI_RESOLUTION      0x00100000 
 #define NS_BLOCK_HAS_LINE_CURSOR            0x01000000
 #define NS_BLOCK_HAS_OVERFLOW_LINES         0x02000000
