@@ -374,9 +374,6 @@ static PRBool sThemeChanged;
 void
 nsPresContext::GetFontPreferences()
 {
-  if (!mLangGroup)
-    return;
-
   /* Fetch the font prefs to be used -- see bug 61883 for details.
      Not all prefs are needed upfront. Some are fallback prefs intended
      for the GFX font sub-system...
@@ -396,8 +393,10 @@ nsPresContext::GetFontPreferences()
   mDefaultVariableFont.size = CSSPixelsToAppUnits(16);
   mDefaultFixedFont.size = CSSPixelsToAppUnits(13);
 
-  const char *langGroup;
-  mLangGroup->GetUTF8String(&langGroup);
+  const char *langGroup = "x-western"; // Assume x-western is safe...
+  if (mLangGroup) {
+    mLangGroup->GetUTF8String(&langGroup);
+  }
 
   nsCAutoString pref;
 
