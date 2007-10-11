@@ -27,7 +27,5 @@ toolkit.jar:
   content/mozapps/plugins/missingPluginBinding.css              (plugins/content/missingPluginBinding.css)
   content/mozapps/handling/handler.css                          (handling/content/handler.css)
   content/mozapps/handling/handler.xml                          (handling/content/handler.xml)
-  content/mozapps/handling/handling.properties                  (handling/content/handling.properties)
-  content/mozapps/handling/handling.dtd                         (handling/content/handling.dtd)
   content/mozapps/handling/dialog.xul                           (handling/content/dialog.xul)
   content/mozapps/handling/dialog.js                            (handling/content/dialog.js)

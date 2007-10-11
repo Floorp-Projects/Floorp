@@ -39,8 +39,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!-- TODO this needs to move to locale/ once we are certain of the strings -->
-<!DOCTYPE dialog SYSTEM "chrome://mozapps/content/handling/handling.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://mozapps/locale/handling/handling.dtd">
 
 <dialog id="handling"
         ondialogaccept="return dialog.onAccept();"
@@ -53,7 +52,7 @@
 
   <stringbundleset id="strings">
     <stringbundle id="base-strings"
-                  src="chrome://mozapps/content/handling/handling.properties"/>
+                  src="chrome://mozapps/locale/handling/handling.properties"/>
   </stringbundleset>
 
   <hbox>
