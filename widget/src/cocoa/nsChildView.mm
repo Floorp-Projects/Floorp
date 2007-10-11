@@ -3234,6 +3234,45 @@ enum
 };
 
 
+static PRUint32 GetGeckoKeyCodeFromChar(PRUnichar aChar)
+{
+  switch (aChar)
+  {
+    case kReturnCharCode:
+    case kEnterCharCode:
+    case '\n':
+      return NS_VK_RETURN;
+    case '{':
+    case '[':
+      return NS_VK_OPEN_BRACKET;
+    case '}':
+    case ']':
+      return NS_VK_CLOSE_BRACKET;
+    case '\'':
+    case '"':
+      return NS_VK_QUOTE;
+
+    case '\\':                  return NS_VK_BACK_SLASH;
+    case ' ':                   return NS_VK_SPACE;
+    case ';':                   return NS_VK_SEMICOLON;
+    case '=':                   return NS_VK_EQUALS;
+    case ',':                   return NS_VK_COMMA;
+    case '.':                   return NS_VK_PERIOD;
+    case '/':                   return NS_VK_SLASH;
+    case '`':                   return NS_VK_BACK_QUOTE;
+    case '\t':                  return NS_VK_TAB;
+
+    default:
+      if (aChar >= 'a' && aChar <= 'z') // lowercase
+        return PRUint32(toupper(aChar));
+      else if (aChar >= 'A' && aChar <= 'Z') // uppercase
+        return PRUint32(aChar);
+  }
+  NS_WARNING("GetGeckoKeyCodeFromChar has failed.");
+  return 0;
+}
+
+
 static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, NSString* characters)
 {
   PRUint32 geckoKeyCode = 0;
@@ -3317,32 +3356,7 @@ static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, 
 
     default:
       // if we haven't gotten the key code already, look at the char code
-      switch (charCode)
-      {
-        case kReturnCharCode:       geckoKeyCode = NS_VK_RETURN;        break;
-        case kEnterCharCode:        geckoKeyCode = NS_VK_RETURN;        break;
-        case ' ':                   geckoKeyCode = NS_VK_SPACE;         break;
-        case ';':                   geckoKeyCode = NS_VK_SEMICOLON;     break;
-        case '=':                   geckoKeyCode = NS_VK_EQUALS;        break;
-        case ',':                   geckoKeyCode = NS_VK_COMMA;         break;
-        case '.':                   geckoKeyCode = NS_VK_PERIOD;        break;
-        case '/':                   geckoKeyCode = NS_VK_SLASH;         break;
-        case '`':                   geckoKeyCode = NS_VK_BACK_QUOTE;    break;
-        case '{':
-        case '[':                   geckoKeyCode = NS_VK_OPEN_BRACKET;  break;
-        case '\\':                  geckoKeyCode = NS_VK_BACK_SLASH;    break;
-        case '}':
-        case ']':                   geckoKeyCode = NS_VK_CLOSE_BRACKET; break;
-        case '\'':
-        case '"':                   geckoKeyCode = NS_VK_QUOTE;         break;
-
-        default:
-          if (charCode >= 'a' && charCode <= 'z') // lowercase
-            geckoKeyCode = toupper(charCode);
-          else if (charCode >= 'A' && charCode <= 'Z') // uppercase
-            geckoKeyCode = charCode;
-            break;
-      }
+      geckoKeyCode = GetGeckoKeyCodeFromChar(charCode);
   }
 
   return geckoKeyCode;
@@ -3576,7 +3590,6 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     geckoEvent.time      = PR_IntervalNow();
     geckoEvent.charCode  = bufPtr[0]; // gecko expects OS-translated unicode
     geckoEvent.isChar    = PR_TRUE;
-    geckoEvent.isShift   = ([mCurKeyEvent modifierFlags] & NSShiftKeyMask) != 0;
     if (mKeyHandled)
       geckoEvent.flags |= NS_EVENT_FLAG_NO_DEFAULT;
     // don't set other modifiers from the current event, because here in
@@ -3588,6 +3601,13 @@ static PRBool IsSpecialGeckoKey(UInt32 macKeyCode)
     if (mCurKeyEvent) {
       ConvertCocoaKeyEventToMacEvent(mCurKeyEvent, macEvent);
       geckoEvent.nativeMsg = &macEvent;
+      geckoEvent.isShift   = ([mCurKeyEvent modifierFlags] & NSShiftKeyMask) != 0;
+      geckoEvent.keyCode   =
+        ConvertMacToGeckoKeyCode([mCurKeyEvent keyCode], &geckoEvent,
+                                 [mCurKeyEvent charactersIgnoringModifiers]);
+    } else {
+      // Note that insertText is not called only at key pressing.
+      geckoEvent.keyCode = GetGeckoKeyCodeFromChar(geckoEvent.charCode);
     }
 
     mGeckoChild->DispatchWindowEvent(geckoEvent);
