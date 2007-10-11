@@ -89,6 +89,8 @@
 
       <field name="_built">false</field>
 
+      <field name="_ignoreInvalidateContainer">false</field>
+
       <method name="onPopupShowing">
         <body><![CDATA[
         if (!this._resultNode)
@@ -167,10 +169,13 @@
 
           // If static items at the beginning were found, remove all items between
           // them and the static content at the end.
-          for (var i = 0; i < items.length; ++i) {
-            items[i].parentNode.removeChild(items[i]);
-            if (this._endMarker > 0)
-              --this._endMarker;
+          for (var i = 0; i < items.length; ++i) { 
+            // skip the empty menu item
+            if (this._emptyMenuItem != items[i]) {
+              items[i].parentNode.removeChild(items[i]);
+              if (this._endMarker > 0)
+                --this._endMarker;
+            }
           }
 
           // If no static items were found at the beginning, remove all items before
@@ -178,9 +183,12 @@
           if (this._startMarker == -1) {
             var end = (this._endMarker == -1) ? this.childNodes.length - 1 : this._endMarker - 1;
             for (var i = end; i >=0; i--) {
-              this.removeChild(this.childNodes[i]);
-              if (this._endMarker > 0)
-                --this._endMarker;
+              // skip the empty menu item
+              if (this._emptyMenuItem != this.childNodes[i]) {
+                this.removeChild(this.childNodes[i]);
+                if (this._endMarker > 0)
+                  --this._endMarker;
+              }
             }
           }
           //LOG("KIDS = " + this.childNodes.length);
@@ -254,7 +262,7 @@
             popup._containerNodesMap = this._containerNodesMap;
             this._containerNodesMap.push({ resultNode: child, domNode: popup });
           }
-
+          
           if (element) {
             element.node = child;
             element.node.viewIndex = 0;
@@ -484,8 +492,19 @@
         containerClosed: function PMV_containerClosed(aNode) {
           this.invalidateContainer(aNode);
         },
+ 
+        get ignoreInvalidateContainer() {
+          return this._self._ignoreInvalidateContainer;
+        },
+
+        set ignoreInvalidateContainer(val) {
+          return this._self._ignoreInvalidateContainer = val;
+        },
 
         invalidateContainer: function PMV_invalidateContainer(aContainer) {
+          if (this._self_ignoreInvalidateContainer)
+            return;
+
           if (!this._self._built)
             return;
 

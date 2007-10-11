@@ -69,7 +69,6 @@
 // This is the maximum results we'll return for a "typed" search
 // This happens in response to clicking the down arrow next to the URL.
 #define AUTOCOMPLETE_MAX_PER_TYPED 100
-#define LMANNO_FEEDURI "livemark/feedURI"
 
 // nsNavHistory::InitAutoComplete
 nsresult
@@ -100,13 +99,6 @@ nsresult
 nsNavHistory::CreateAutoCompleteQueries()
 {
   nsCString sql = NS_LITERAL_CSTRING(
-    "SELECT annos.item_id, annos.content FROM moz_anno_attributes attrs " 
-    "JOIN moz_items_annos annos ON attrs.id = annos.anno_attribute_id "
-    "WHERE attrs.name = \"" LMANNO_FEEDURI "\";");
-  nsresult rv = mDBConn->CreateStatement(sql, getter_AddRefs(mLivemarkFeedsQuery));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  sql = NS_LITERAL_CSTRING(
     "SELECT h.url, h.title, f.url, b.id, b.parent "
     "FROM moz_places h "
     "JOIN moz_historyvisits v ON h.id = v.place_id "
@@ -122,7 +114,7 @@ nsNavHistory::CreateAutoCompleteQueries()
     "(h.title LIKE ?3 ESCAPE '/' OR h.url LIKE ?3 ESCAPE '/') "
     "GROUP BY h.id ORDER BY h.typed DESC, h.visit_count DESC, MAX(v.visit_date) DESC;");
 
-  rv = mDBConn->CreateStatement(sql, getter_AddRefs(mDBAutoCompleteQuery));
+  nsresult rv = mDBConn->CreateStatement(sql, getter_AddRefs(mDBAutoCompleteQuery));
   NS_ENSURE_SUCCESS(rv, rv);
 
   sql = NS_LITERAL_CSTRING(
@@ -175,6 +167,8 @@ static const PRInt64 USECS_PER_DAY = LL_INIT(20, 500654080);
 // as we will be off searching the database.
 // too big, and results won't come back in fast enough to feel snappy.
 #define AUTOCOMPLETE_SEARCH_TIMEOUT 100
+
+#define LMANNO_FEEDURI "livemark/feedURI"
 
 // nsNavHistory::AutoCompleteTimerCallback
 
@@ -304,15 +298,21 @@ nsNavHistory::StartSearch(const nsAString & aSearchString,
     // it is not really a bookmark, but a rss feed item.
     // if a results URI matches a saved URI, the result is a bookmark,
     // so we should show the star.
-    mozStorageStatementScoper scope(mLivemarkFeedsQuery);
+    mozStorageStatementScoper scope(mFoldersWithAnnotationQuery);
+
+    rv = mFoldersWithAnnotationQuery->BindUTF8StringParameter(0, NS_LITERAL_CSTRING(LMANNO_FEEDURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
     PRBool hasMore = PR_FALSE;
-    while (NS_SUCCEEDED(mLivemarkFeedsQuery->ExecuteStep(&hasMore)) && hasMore) {
+    while (NS_SUCCEEDED(mFoldersWithAnnotationQuery->ExecuteStep(&hasMore)) && hasMore) {
       PRInt64 itemId = 0;
-      mLivemarkFeedsQuery->GetInt64(0, &itemId);
+      rv = mFoldersWithAnnotationQuery->GetInt64(0, &itemId);
+      NS_ENSURE_SUCCESS(rv, rv);
       mLivemarkFeedItemIds.Put(itemId, PR_TRUE);
       nsAutoString feedURI;
       // no need to worry about duplicates.
-      mLivemarkFeedsQuery->GetString(1, feedURI);
+      rv = mFoldersWithAnnotationQuery->GetString(1, feedURI);
+      NS_ENSURE_SUCCESS(rv, rv);
       mLivemarkFeedURIs.Put(feedURI, PR_TRUE);
     }
   }

@@ -104,6 +104,7 @@ var viewer = {
     this.sortingMode = sortingMode;
   },
   result: null,
+  ignoreInvalidateContainer: false,
   addViewObserver: function(observer, ownsWeak) {},
   removeViewObserver: function(observer) {},
   reset: function() {

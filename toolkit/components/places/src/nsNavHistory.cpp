@@ -256,7 +256,8 @@ nsNavHistory::nsNavHistory() : mNowValid(PR_FALSE),
                                mAutoCompleteOnlyTyped(PR_FALSE),
                                mBatchLevel(0),
                                mLock(nsnull),
-                               mBatchHasTransaction(PR_FALSE)
+                               mBatchHasTransaction(PR_FALSE),
+                               mTagRoot(-1)
 {
 #ifdef LAZY_ADD
   mLazyTimerSet = PR_TRUE;
@@ -888,6 +889,14 @@ nsNavHistory::InitStatements()
         "b1.id = b.parent AND LOWER(b1.title) = LOWER(?2)) = ?3 "
       "LIMIT 1"),
     getter_AddRefs(mDBURIHasTag));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // mFoldersWithAnnotationQuery
+  rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
+    "SELECT annos.item_id, annos.content FROM moz_anno_attributes attrs " 
+    "JOIN moz_items_annos annos ON attrs.id = annos.anno_attribute_id "
+    "WHERE attrs.name = ?1"), 
+    getter_AddRefs(mFoldersWithAnnotationQuery));
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -2120,9 +2129,22 @@ PRBool IsHistoryMenuQuery(const nsCOMArray<nsNavHistoryQuery>& aQueries, nsNavHi
   if (aOptions->ShowSessions())
     return PR_FALSE;
 
+  if (aOptions->ResolveNullBookmarkTitles())
+    return PR_FALSE;
+
+  if (aOptions->ApplyOptionsToContainers())
+    return PR_FALSE;
+
   nsCString sortingAnnotation;
-  aOptions->GetSortingAnnotation(sortingAnnotation);
+  nsresult rv = aOptions->GetSortingAnnotation(sortingAnnotation);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
   if (!sortingAnnotation.IsEmpty())
+    return PR_FALSE;
+
+  nsCString parentAnnotationToExclude;
+  rv = aOptions->GetExcludeItemIfParentHasAnnotation(parentAnnotationToExclude);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  if (!parentAnnotationToExclude.IsEmpty()) 
     return PR_FALSE;
 
   if (aQuery->MinVisits() != -1 || aQuery->MaxVisits() != -1)
@@ -2165,6 +2187,12 @@ PRBool NeedToFilterResultSet(const nsCOMArray<nsNavHistoryQuery>& aQueries,
   const PRUint16 *groupings = aOptions->GroupingMode(&groupCount);
 
   if (groupCount != 0 || aOptions->ExcludeQueries())
+    return PR_TRUE;
+
+  nsCString parentAnnotationToExclude;
+  nsresult rv = aOptions->GetExcludeItemIfParentHasAnnotation(parentAnnotationToExclude);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+  if (!parentAnnotationToExclude.IsEmpty())
     return PR_TRUE;
 
   PRInt32 i;
@@ -2266,14 +2294,24 @@ nsNavHistory::ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries
         "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id ");
       groupBy = NS_LITERAL_CSTRING(" GROUP BY h.id");
     } else if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS) {
-      queryString = NS_LITERAL_CSTRING(
-        "SELECT b.fk, h.url, b.title, h.rev_host, h.visit_count, "
+      queryString = NS_LITERAL_CSTRING("SELECT b.fk, h.url, ");
+      if (aOptions->ResolveNullBookmarkTitles()) {
+        // COALESCE, first non NULL param
+        queryString += NS_LITERAL_CSTRING(
+          "COALESCE(b.title, "
+          "(SELECT h.title FROM moz_bookmarks b2, moz_places h2 WHERE b2.fk = h2.id AND b2.id = b.id)), ");
+      }
+      else {
+        queryString += NS_LITERAL_CSTRING("b.title, ");
+      }
+      queryString += NS_LITERAL_CSTRING(
+        "h.rev_host, h.visit_count, "
         "(SELECT MAX(visit_date) FROM moz_historyvisits WHERE place_id = b.fk), "
         "f.url, null, b.id, b.dateAdded, b.lastModified "
-      "FROM moz_bookmarks b "
-      "JOIN moz_places h ON b.fk = h.id "
-      "LEFT OUTER JOIN moz_historyvisits v ON b.fk = v.place_id "
-      "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id ");
+        "FROM moz_bookmarks b "
+        "JOIN moz_places h ON b.fk = h.id "
+        "LEFT OUTER JOIN moz_historyvisits v ON b.fk = v.place_id "
+        "LEFT OUTER JOIN moz_favicons f ON h.favicon_id = f.id ");
       groupBy = NS_LITERAL_CSTRING(" GROUP BY b.id");
     } else {
       // XXX: implement support for nsINavHistoryQueryOptions::QUERY_TYPE_UNIFIED 
@@ -2366,6 +2404,12 @@ nsNavHistory::ConstructQueryString(const nsCOMArray<nsNavHistoryQuery>& aQueries
       if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
         queryString += NS_LITERAL_CSTRING(" ORDER BY 11 DESC"); // b.lastModified
       break;
+    case nsINavHistoryQueryOptions::SORT_BY_COUNT_ASCENDING:
+    case nsINavHistoryQueryOptions::SORT_BY_COUNT_DESCENDING:
+      // "count" of the items in a folder is not something we have in the database
+      // sorting is done at nsNavHistoryQueryResultNode::FillChildren
+      if (aOptions->QueryType() == nsINavHistoryQueryOptions::QUERY_TYPE_BOOKMARKS)
+        break;
     default:
       NS_NOTREACHED("Invalid sorting mode");
   }
@@ -3874,9 +3918,8 @@ nsNavHistory::RecursiveGroup(nsNavHistoryQueryResultNode *aResultNode,
       rv = GroupByHost(aResultNode, aSource, aDest, PR_TRUE);
       break;
     case nsINavHistoryQueryOptions::GROUP_BY_FOLDER:
-      // not yet supported (this code path is not reached for simple bookmark
-      // folder queries)
-      return NS_ERROR_NOT_IMPLEMENTED;
+      rv = GroupByFolder(aResultNode, aSource, aDest);
+      break;
     default:
       // unknown grouping mode
       return NS_ERROR_INVALID_ARG;
@@ -3919,14 +3962,14 @@ GetAgeInDays(PRTime aNormalizedNow, PRTime aDate)
     return ((aNormalizedNow - dateMidnight) / USECS_PER_DAY);
 }
 
-const PRInt64 UNDEFINED_AGE_IN_DAYS = -1;
+const PRInt64 UNDEFINED_URN_VALUE = -1;
 
 // Create a urn (like
 // urn:places-persist:place:group=0&group=1&sort=1&type=1,,%28local%20files%29)
 // to be used to persist the open state of this container in localstore.rdf
 nsresult
 CreatePlacesPersistURN(nsNavHistoryQueryResultNode *aResultNode, 
-                      PRInt64 aAgeInDays, const nsCString& aTitle, nsCString& aURN)
+                      PRInt64 aValue, const nsCString& aTitle, nsCString& aURN)
 {
   nsCAutoString uri;
   nsresult rv = aResultNode->GetUri(uri);
@@ -3936,8 +3979,8 @@ CreatePlacesPersistURN(nsNavHistoryQueryResultNode *aResultNode,
   aURN.Append(uri);
 
   aURN.Append(NS_LITERAL_CSTRING(","));
-  if (aAgeInDays != UNDEFINED_AGE_IN_DAYS)
-    aURN.AppendInt(aAgeInDays);
+  if (aValue != UNDEFINED_URN_VALUE)
+    aURN.AppendInt(aValue);
 
   aURN.Append(NS_LITERAL_CSTRING(","));
   if (!aTitle.IsEmpty()) {
@@ -4085,7 +4128,7 @@ nsNavHistory::GroupByHost(nsNavHistoryQueryResultNode *aResultNode,
       TitleForDomain(curHostName, title);
 
       nsCAutoString urn;
-      nsresult rv = CreatePlacesPersistURN(aResultNode, UNDEFINED_AGE_IN_DAYS, title, urn);
+      nsresult rv = CreatePlacesPersistURN(aResultNode, UNDEFINED_URN_VALUE, title, urn);
       NS_ENSURE_SUCCESS(rv, rv);
 
       curTopGroup = new nsNavHistoryContainerResultNode(urn, title,
@@ -4102,6 +4145,103 @@ nsNavHistory::GroupByHost(nsNavHistoryQueryResultNode *aResultNode,
     }
     if (! curTopGroup->mChildren.AppendObject(aSource[i]))
       return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+PRInt64
+nsNavHistory::GetTagRoot()
+{
+  // cache our tag root
+  // note, we can't do this in nsNavHistory::Init(), 
+  // as getting the bookmarks service would initialize it.
+  if (mTagRoot == -1) {
+    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_TRUE(bookmarks, -1);
+    
+    nsresult rv = bookmarks->GetTagRoot(&mTagRoot);
+    NS_ENSURE_SUCCESS(rv, -1);
+  }
+  return mTagRoot;
+}
+
+// nsNavHistory::GroupByFolder
+nsresult
+nsNavHistory::GroupByFolder(nsNavHistoryQueryResultNode *aResultNode,
+                         const nsCOMArray<nsNavHistoryResultNode>& aSource,
+                         nsCOMArray<nsNavHistoryResultNode>* aDest)
+{
+  nsresult rv;
+  nsDataHashtable<nsTrimInt64HashKey, nsNavHistoryContainerResultNode*> folders;
+  if (!folders.Init(512))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCOMPtr<nsITaggingService> tagService =
+    do_GetService(TAGGING_SERVICE_CID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCAutoString tagContainerIconSpec;
+  rv = tagService->GetTagContainerIconSpec(tagContainerIconSpec);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+  if (!bookmarks)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  // iterate over source, creating container nodes for each
+  // entry's parent folder, adding to hash
+  for (PRInt32 i = 0; i < aSource.Count(); i ++) {
+    if (aSource[i]->mItemId == -1)
+      continue; // only bookmark nodes can be grouped by folder
+
+    PRInt64 parentId;
+    rv = bookmarks->GetFolderIdForItem(aSource[i]->mItemId, &parentId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // if parent id is not in the hash, add it
+    nsNavHistoryContainerResultNode* folderNode = nsnull;
+    if (!folders.Get(parentId, &folderNode)) {
+      // get parent folder title
+      nsAutoString title;
+      rv = bookmarks->GetItemTitle(parentId, title);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      nsCAutoString urn;
+      rv = CreatePlacesPersistURN(aResultNode, parentId, NS_ConvertUTF16toUTF8(title), urn);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      PRInt64 grandparentId;
+      rv = bookmarks->GetFolderIdForItem(parentId, &grandparentId);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // create parent node
+      // if the grandparent is the tag root, the parent is a tag container
+      // so use the tag container icon
+      folderNode = new nsNavHistoryContainerResultNode(urn, 
+        NS_ConvertUTF16toUTF8(title),
+        (grandparentId == GetTagRoot()) ? tagContainerIconSpec : EmptyCString(),
+        nsNavHistoryResultNode::RESULT_TYPE_FOLDER,
+        PR_TRUE, EmptyCString(), aResultNode->mOptions);
+
+      if (!folders.Put(parentId, folderNode))
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      rv = aDest->AppendObject(folderNode);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // add self to parent node
+    if (!folderNode->mChildren.AppendObject(aSource[i]))
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    // when grouping by folders, we create new nsNavHistoryContainerResultNode
+    // nodes.  set the date added and last modified values for that node
+    // to be the greatest value from the children in that group.
+    if (aSource[i]->mDateAdded > folderNode->mDateAdded)
+      folderNode->mDateAdded = aSource[i]->mDateAdded;
+
+    if (aSource[i]->mLastModified > folderNode->mLastModified)
+      folderNode->mLastModified = aSource[i]->mLastModified;
   }
   return NS_OK;
 }
@@ -4143,6 +4283,7 @@ nsNavHistory::URIHasTag(nsIURI* aURI, const nsAString& aTag)
 //   - excludeQueries
 //   - tags
 //   - limit count
+//   - excludingLivemarkItems
 //
 // Note:  changes to filtering in FilterResultSet() 
 // may require changes to NeedToFilterResultSet()
@@ -4177,11 +4318,37 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
   }
 
   // filter against query options
-  // XXX only excludeQueries is supported at the moment
+  // XXX only excludeQueries and excludeItemIfParentHasAnnotation are supported at the moment
   PRBool excludeQueries = PR_FALSE;
   if (aQueryNode) {
     rv = aQueryNode->mOptions->GetExcludeQueries(&excludeQueries);
     NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  nsCString parentAnnotationToExclude;
+  nsTArray<PRInt64> parentFoldersToExclude;
+  if (aQueryNode) {
+    rv = aQueryNode->mOptions->GetExcludeItemIfParentHasAnnotation(parentAnnotationToExclude);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (!parentAnnotationToExclude.IsEmpty()) {
+    // find all the folders that have the annotation we are excluding
+    // and save off their item ids. when doing filtering, 
+    // if a result's parent item id matches a saved item id, 
+    // the result should be excluded
+    mozStorageStatementScoper scope(mFoldersWithAnnotationQuery);
+
+    rv = mFoldersWithAnnotationQuery->BindUTF8StringParameter(0, parentAnnotationToExclude);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRBool hasMore = PR_FALSE;
+    while (NS_SUCCEEDED(mFoldersWithAnnotationQuery->ExecuteStep(&hasMore)) && hasMore) {
+      PRInt64 folderId = 0;
+      rv = mFoldersWithAnnotationQuery->GetInt64(0, &folderId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      parentFoldersToExclude.AppendElement(folderId);
+    }
   }
 
   for (PRInt32 nodeIndex = 0; nodeIndex < aSet.Count(); nodeIndex ++) {
@@ -4195,6 +4362,11 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
       rv = bookmarks->GetFolderIdForItem(aSet[nodeIndex]->mItemId, &parentId);
       NS_ENSURE_SUCCESS(rv, rv);
     }
+
+    // if we are excluding items by parent annotation, 
+    // exclude items who's parent is a folder with that annotation
+    if (!parentAnnotationToExclude.IsEmpty() && (parentFoldersToExclude.IndexOf(parentId) != -1))
+      continue;
 
     // Append the node if it matches one of the queries
     PRBool appendNode = PR_FALSE;
@@ -4277,7 +4449,12 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
     if (appendNode)
       aFiltered->AppendObject(aSet[nodeIndex]);
       
-    if (aOptions->MaxResults() > 0 && aFiltered->Count() >= aOptions->MaxResults())
+    // stop once we've seen max results
+    // unless our options apply to containers, in which case we need to
+    // handle max results after sorting, see FillChildren()
+    if (!aOptions->ApplyOptionsToContainers() && 
+        aOptions->MaxResults() > 0 && 
+        aFiltered->Count() >= aOptions->MaxResults())
       break;
   }
 
@@ -4928,13 +5105,22 @@ PRBool IsNumericHostName(const nsCString& aHost)
 //    folder with no other constraints. In these common cases, we can more
 //    efficiently compute the results.
 //
+//    A simple bookmarks query will result in a hierarchical tree of
+//    bookmark items, folders and separators.
+//
 //    Returns the folder ID if it is a simple folder query, 0 if not.
-
 static PRInt64
 GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries,
                               nsNavHistoryQueryOptions* aOptions)
 {
   if (aQueries.Count() != 1)
+    return 0;
+
+  // if there are any groupings, including GROUP_BY_FOLDER, this is not a simple
+  // bookmarks query
+  PRUint32 groupCount;
+  const PRUint16 *groupings = aOptions->GroupingMode(&groupCount);
+  if (groupings)
     return 0;
 
   nsNavHistoryQuery* query = aQueries[0];
