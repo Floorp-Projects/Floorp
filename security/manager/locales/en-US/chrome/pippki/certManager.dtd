@@ -133,9 +133,12 @@
 
 <!ENTITY exceptionMgr.title                   "Add Security Exception">
 <!ENTITY exceptionMgr.exceptionButton         "Confirm Security Exception">
+<!ENTITY exceptionMgr.exceptionButtonAccess   "C">
 <!ENTITY exceptionMgr.supplementalWarning     "Legitimate banks, stores, and other public sites will not ask you to do this.">
 <!ENTITY exceptionMgr.certlocation.caption2   "Server">
 <!ENTITY exceptionMgr.certlocation.url        "Location:">
 <!ENTITY exceptionMgr.certlocation.download   "Get Certificate">
+<!ENTITY exceptionMgr.certlocation.accesskey  "G">
 <!ENTITY exceptionMgr.certstatus.caption      "Certificate Status">
 <!ENTITY exceptionMgr.certstatus.viewCert     "View…">
+<!ENTITY exceptionMgr.certstatus.accesskey    "V">
