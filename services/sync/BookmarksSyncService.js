@@ -156,6 +156,8 @@ BookmarksSyncService.prototype = {
 
   _init: function BSS__init() {
     this._initLogs();
+    this._log.info("Bookmarks Sync Service Initializing");
+
     let serverURL = 'https://dotmoz.mozilla.org/';
     try {
       let branch = Cc["@mozilla.org/preferences-service;1"].
@@ -163,6 +165,7 @@ BookmarksSyncService.prototype = {
       serverURL = branch.getCharPref("browser.places.sync.serverURL");
     }
     catch (ex) { /* use defaults */ }
+
     this._log.info("Bookmarks login server: " + serverURL);
     this._dav = new DAVCollection(serverURL);
     this._readSnapshot();
@@ -172,7 +175,7 @@ BookmarksSyncService.prototype = {
     let logSvc = Cc["@mozilla.org/log4moz/service;1"].
       getService(Ci.ILog4MozService);
 
-    this._log = logSvc.getLogger("main");
+    this._log = logSvc.getLogger("Service.Main");
 
     let formatter = logSvc.newFormatter("basic");
     let root = logSvc.rootLogger;
@@ -201,7 +204,6 @@ BookmarksSyncService.prototype = {
     let vapp = logSvc.newFileAppender("rotating", verboseFile, formatter);
     vapp.level = root.LEVEL_ALL;
     root.addAppender(vapp);
-    this._log.info("WHEE");
   },
 
   _saveSnapshot: function BSS__saveSnapshot() {
@@ -1156,9 +1158,11 @@ BookmarksSyncService.prototype = {
 
   _onLogin: function BSS__onLogin(success) {
     if (success) {
+      this._log.info("Logged in");
       this._log.info("Bookmarks sync server: " + this._dav.baseURL);
       this._os.notifyObservers(null, "bookmarks-sync:login", "");
     } else {
+      this._log.info("Could not log in");
       this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
     }
   },
@@ -1175,16 +1179,19 @@ BookmarksSyncService.prototype = {
   // IBookmarksSyncService
 
   sync: function BSS_sync() {
+    this._log.info("Syncing");
     this._doSync.async(this);
   },
 
   login: function BSS_login() {
+    this._log.info("Logging in");
     let callback = bind2(this, this._onLogin);
     if (!this._dav.login.async(this._dav, callback))
       this._os.notifyObservers(null, "bookmarks-sync:login-error", "");
   },
 
   logout: function BSS_logout() {
+    this._log.info("Logging out");
     this._dav.logout();
     this._os.notifyObservers(null, "bookmarks-sync:logout", "");
   }
