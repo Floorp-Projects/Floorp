@@ -2145,7 +2145,7 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
 
         PRUint32 status;
         imgRequest->GetImageStatus(&status);
-        if (status != imgIRequest::STATUS_LOAD_COMPLETE)
+        if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0)
             return NS_ERROR_NOT_AVAILABLE;
 
         nsCOMPtr<nsIURI> uri;
