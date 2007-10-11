@@ -611,7 +611,12 @@ nsBlockFrame::MarkIntrinsicWidthsDirty()
   nsBlockFrame* dirtyBlock = static_cast<nsBlockFrame*>(GetFirstContinuation());
   dirtyBlock->mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
   dirtyBlock->mPrefWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
-  dirtyBlock->AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
+  if (!(GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)) {
+    for (nsIFrame* frame = dirtyBlock; frame; 
+         frame = frame->GetNextContinuation()) {
+      frame->AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
+    }
+  }
 
   nsBlockFrameSuper::MarkIntrinsicWidthsDirty();
 }
@@ -636,7 +641,8 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   AutoNoisyIndenter indent(gNoisyIntrinsic);
 #endif
 
-  ResolveBidi();
+  if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
+    ResolveBidi();
   InlineMinWidthData data;
   for (nsBlockFrame* curFrame = this; curFrame;
        curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
@@ -708,7 +714,8 @@ nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   AutoNoisyIndenter indent(gNoisyIntrinsic);
 #endif
 
-  ResolveBidi();
+  if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
+    ResolveBidi();
   InlinePrefWidthData data;
   for (nsBlockFrame* curFrame = this; curFrame;
        curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
@@ -896,7 +903,8 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
                            marginRoot, marginRoot, needSpaceManager);
 
 #ifdef IBMBIDI
-  ResolveBidi();
+  if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
+    static_cast<nsBlockFrame*>(GetFirstContinuation())->ResolveBidi();
 #endif // IBMBIDI
 
   if (RenumberLists(aPresContext)) {
@@ -6253,7 +6261,8 @@ nsBlockFrame::Init(nsIContent*      aContent,
 
   nsresult rv = nsBlockFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
-  if (!aPrevInFlow)
+  if (!aPrevInFlow ||
+      aPrevInFlow->GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
     AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
 
   return rv;
@@ -6684,11 +6693,6 @@ nsBlockFrame::ResolveBidi()
   NS_ASSERTION(!GetPrevInFlow(),
                "ResolveBidi called on non-first continuation");
 
-  if (!(GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION))
-    return NS_OK;
- 
-  RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
-
   nsPresContext* presContext = PresContext();
   if (!presContext->BidiEnabled()) {
     return NS_OK;
@@ -6698,9 +6702,9 @@ nsBlockFrame::ResolveBidi()
   if (!bidiUtils)
     return NS_ERROR_NULL_POINTER;
 
-  for (nsBlockFrame* curFrame = this;
-       curFrame; curFrame = static_cast<nsBlockFrame*>
-                                       (curFrame->GetNextContinuation())) {
+  for (nsBlockFrame* curFrame = this; curFrame;
+       curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
+    curFrame->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
     if (!curFrame->mLines.empty()) {
       nsresult rv = bidiUtils->Resolve(curFrame,
                                        curFrame->mLines.front()->mFirstChild,
