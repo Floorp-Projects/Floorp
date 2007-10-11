@@ -302,7 +302,7 @@ sub BumpVerifyConfig {
 
     # add data for latest release
     my @data = ("# $oldVersion $osname\n",
-                'release="' . $version . '" product="' . ucfirst($product) . 
+                'release="' . $oldVersion . '" product="' . ucfirst($product) . 
                 '" platform="' .$buildTarget . '" build_id="' . $buildID . 
                 '" locales="' . join(' ', sort(@locales)) . '" channel="' . 
                 $channel . '" from="/' . $product . '/releases/' . 
