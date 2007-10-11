@@ -582,7 +582,19 @@ extern "C" void PR_CALLBACK RunInstallOnThread(void *data)
     if (scriptBuffer) delete [] scriptBuffer;
 
     softwareUpdate->SetActiveListener(0);
-    softwareUpdate->InstallJarCallBack();
+    
+    if (installInfo->GetFlags() & XPI_NO_NEW_THREAD)
+    {
+        softwareUpdate->InstallJarCallBack();
+    }
+    else
+    {
+        // Proxy the callback to the main thread
+        nsCOMPtr<nsIRunnable> callback = NS_NEW_RUNNABLE_METHOD(nsISoftwareUpdate,
+                                                                softwareUpdate,
+                                                                InstallJarCallBack);
+        NS_DispatchToMainThread(callback);
+    }
 }
 
 
