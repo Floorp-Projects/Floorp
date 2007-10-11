@@ -4366,6 +4366,21 @@ AC_SUBST(MOZ_EMBEDDING_LEVEL_DEFAULT)
 AC_SUBST(MOZ_EMBEDDING_LEVEL_BASIC)
 AC_SUBST(MOZ_EMBEDDING_LEVEL_MINIMAL)
 
+MOZ_ARG_WITH_STRING(xulrunner-stub-name,
+[  --with-xulrunner-stub-name=appname   Create the xulrunner stub with the given name],
+  XULRUNNER_STUB_NAME=$withval)
+
+if test -z "$XULRUNNER_STUB_NAME"; then
+  case "$target_os" in
+  darwin*)
+    XULRUNNER_STUB_NAME=xulrunner
+    ;;
+  *)
+    XULRUNNER_STUB_NAME=xulrunner-stub
+  esac
+fi
+AC_SUBST(XULRUNNER_STUB_NAME)
+
 if test -z "$MOZ_BUILD_APP"; then
   AC_MSG_ERROR([--enable-application=APP was not specified and is required.])
 else
