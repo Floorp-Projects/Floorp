@@ -257,7 +257,7 @@ Logger.prototype = {
   error: function Logger_error(string) {
     this.log(new LogMessage(this._name, LEVEL_ERROR, string));
   },
-  warning: function Logger_warning(string) {
+  warn: function Logger_warn(string) {
     this.log(new LogMessage(this._name, LEVEL_WARN, string));
   },
   info: function Logger_info(string) {
