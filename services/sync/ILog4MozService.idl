@@ -96,7 +96,7 @@ interface ILogger : nsISupports
 
   void fatal(in AString message);
   void error(in AString message);
-  void warning(in AString message);
+  void warn(in AString message);
   void info(in AString message);
   void config(in AString message);
   void debug(in AString message);
