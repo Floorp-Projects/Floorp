@@ -100,7 +100,6 @@ CPPSRCS = 				\
   nsKeyModule.cpp \
   nsIdentityChecking.cpp \
   nsDataSignatureVerifier.cpp \
-  nsRandomGenerator.cpp \
   $(NULL)
 
 ifdef MOZ_XUL
