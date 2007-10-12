@@ -1,2 +1,0 @@
-<!ENTITY junkImgs.title "Nicht verwendete Grafiken in aktuellem Theme suchen...">
-<!ENTITY junkImgsDescription "Damit diese Suche wirklich effektiv funktionieren kann, müssen Sie ein Dokument inspizieren, das JEDE CSS-Datei im aktuellen Theme lädt. Dann zeigen Sie die Adresse auf der Festplatte, auf der das Hauptverzeichnis des aktuellen Themes gefunden werden kann.">
