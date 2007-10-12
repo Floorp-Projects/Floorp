@@ -182,6 +182,5 @@ LDFLAGS	+= \
 	$(NULL)
 
 CXXFLAGS += \
-	-DUSE_COCOA \
-	-fobjc-exceptions \
-	$(NULL)
+  -DUSE_COCOA \
+  $(NULL)
