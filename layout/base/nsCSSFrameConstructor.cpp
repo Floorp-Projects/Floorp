@@ -6744,8 +6744,67 @@ nsCSSFrameConstructor::ResolveStyleContext(nsIFrame*         aParentFrame,
   }
 }
 
+static void
+ReparentFrame(nsFrameManager* aFrameManager,
+              nsIFrame* aNewParentFrame,
+              nsIFrame* aFrame)
+{
+  aFrame->SetParent(aNewParentFrame);
+  aFrameManager->ReParentStyleContext(aFrame);
+  if (aFrame->GetStateBits() &
+      (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
+    // No need to walk up the tree, since the bits are already set
+    // right on the parent of aNewParentFrame.
+    NS_ASSERTION(aNewParentFrame->GetParent()->GetStateBits() &
+                   NS_FRAME_HAS_CHILD_WITH_VIEW,
+                 "aNewParentFrame's parent should have this bit set!");
+    aNewParentFrame->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
+  }
+}
+
 // MathML Mod - RBS
 #ifdef MOZ_MATHML
+nsresult
+nsCSSFrameConstructor::FlushAccumulatedBlock(nsFrameConstructorState& aState,
+                                             nsIContent* aContent,
+                                             nsIFrame* aParentFrame,
+                                             nsFrameItems* aBlockItems,
+                                             nsFrameItems* aNewItems)
+{
+  if (!aBlockItems->childList) {
+    // Nothing to do
+    return NS_OK;
+  }
+
+  nsStyleContext* parentContext =
+    nsFrame::CorrectStyleParentFrame(aParentFrame,
+                                     nsCSSAnonBoxes::mozMathMLAnonymousBlock)->GetStyleContext(); 
+  nsStyleSet *styleSet = mPresShell->StyleSet();
+  nsRefPtr<nsStyleContext> blockContext;
+  blockContext = styleSet->ResolvePseudoStyleFor(aContent,
+                                                 nsCSSAnonBoxes::mozMathMLAnonymousBlock,
+                                                 parentContext);
+
+  // then, create a block frame that will wrap the child frames. Make it a
+  // MathML frame so that Get(Absolute/Float)ContainingBlockFor know that this
+  // is not a suitable block.
+  nsIFrame* blockFrame = NS_NewMathMLmathBlockFrame(mPresShell, blockContext,
+                          NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
+  if (NS_UNLIKELY(!blockFrame))
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  InitAndRestoreFrame(aState, aContent, aParentFrame, nsnull, blockFrame);
+  for (nsIFrame* f = aBlockItems->childList; f; f = f->GetNextSibling()) {
+    ReparentFrame(aState.mFrameManager, blockFrame, f);
+  }
+  // abs-pos and floats are disabled in MathML children so we don't have to
+  // worry about messing up those.
+  blockFrame->SetInitialChildList(nsnull, aBlockItems->childList);
+  *aBlockItems = nsFrameItems();
+  aNewItems->AddChild(blockFrame);
+  return NS_OK;
+}
+
 nsresult
 nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
                                             nsIContent*              aContent,
@@ -6860,7 +6919,8 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     nsIFrame* blockFrame = NS_NewBlockFrame(mPresShell, blockContext,
                                             NS_BLOCK_SPACE_MGR |
                                             NS_BLOCK_MARGIN_ROOT);
-    if (NS_UNLIKELY(!newFrame)) {
+    if (NS_UNLIKELY(!blockFrame)) {
+      newFrame->Destroy();
       return NS_ERROR_OUT_OF_MEMORY;
     }
     InitAndRestoreFrame(aState, aContent, newFrame, nsnull, blockFrame);
@@ -6967,6 +7027,37 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsFrameConstructorState& aState,
     CreateAnonymousFrames(aTag, aState, aContent, newFrame, PR_FALSE,
                           childItems);
 
+    // Wrap runs of inline children in a block
+    if (NS_SUCCEEDED(rv)) {
+      nsFrameItems newItems;
+      nsFrameItems currentBlock;
+      nsIFrame* f;
+      while ((f = childItems.childList) != nsnull) {
+        PRBool wrapFrame = IsInlineFrame(f) || IsFrameSpecial(f);
+        if (!wrapFrame) {
+          rv = FlushAccumulatedBlock(aState, aContent, newFrame, &currentBlock, &newItems);
+          if (NS_FAILED(rv))
+            break;
+        }
+          
+        childItems.RemoveChild(f, nsnull);
+        if (wrapFrame) {
+          currentBlock.AddChild(f);
+        } else {
+          newItems.AddChild(f);
+        }
+      }
+      rv = FlushAccumulatedBlock(aState, aContent, newFrame, &currentBlock, &newItems);
+
+      if (childItems.childList) {
+        // an error must have occurred, delete unprocessed frames
+        CleanupFrameReferences(aState.mFrameManager, childItems.childList);
+        nsFrameList(childItems.childList).DestroyFrames();
+      }
+      
+      childItems = newItems;
+    }
+    
     // Set the frame's initial child list
     newFrame->SetInitialChildList(nsnull, childItems.childList);
  
@@ -8606,6 +8697,11 @@ nsCSSFrameConstructor::ContentAppended(nsIContent*     aContainer,
     return NS_OK;
   }
   
+#ifdef MOZ_MATHML
+  if (parentFrame->IsFrameOfType(nsIFrame::eMathML))
+    return RecreateFramesForContent(parentFrame->GetContent());
+#endif
+
   // If the frame we are manipulating is a ``special'' frame (that is, one
   // that's been created as a result of a block-in-inline situation) then we
   // need to append to the last special sibling, not to the frame itself.
@@ -8991,7 +9087,12 @@ nsCSSFrameConstructor::ContentInserted(nsIContent*            aContainer,
   if (parentFrame->IsLeaf()) {
     return NS_OK;
   }
-  
+
+#ifdef MOZ_MATHML
+  if (parentFrame->IsFrameOfType(nsIFrame::eMathML))
+    return RecreateFramesForContent(parentFrame->GetContent());
+#endif
+
   nsFrameConstructorState state(mPresShell, mFixedContainingBlock,
                                 GetAbsoluteContainingBlock(parentFrame),
                                 GetFloatContainingBlock(parentFrame),
@@ -9456,13 +9557,24 @@ nsCSSFrameConstructor::ContentRemoved(nsIContent*     aContainer,
 
     // Get the childFrame's parent frame
     nsIFrame* parentFrame = childFrame->GetParent();
+    nsIAtom* parentType = parentFrame->GetType();
 
-    if (parentFrame->GetType() == nsGkAtoms::frameSetFrame &&
+    if (parentType == nsGkAtoms::frameSetFrame &&
         IsSpecialFramesetChild(aChild)) {
       // Just reframe the parent, since framesets are weird like that.
       return RecreateFramesForContent(parentFrame->GetContent());
     }
 
+#ifdef MOZ_MATHML
+    // If we're a child of MathML, then we should reframe the MathML content.
+    // If we're non-MathML, then we would be wrapped in a block so we need to
+    // check our grandparent in that case.
+    nsIFrame* possibleMathMLAncestor = parentType == nsGkAtoms::blockFrame ? 
+         parentFrame->GetParent() : parentFrame;
+    if (possibleMathMLAncestor->IsFrameOfType(nsIFrame::eMathML))
+      return RecreateFramesForContent(possibleMathMLAncestor->GetContent());
+#endif
+    
     // Examine the containing-block for the removed content and see if
     // :first-letter style applies.
     nsIFrame* containingBlock = GetFloatContainingBlock(parentFrame);
@@ -11114,6 +11226,18 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent)
   // containing block reframes, hence the code here.
 
   nsIFrame* frame = mPresShell->GetPrimaryFrameFor(aContent);
+  if (frame && frame->IsFrameOfType(nsIFrame::eMathML)) {
+    // Reframe the topmost MathML element to prevent exponential blowup
+    // (see bug 397518)
+    while (PR_TRUE) {
+      nsIContent* parentContent = aContent->GetParent();
+      nsIFrame* parentContentFrame = mPresShell->GetPrimaryFrameFor(parentContent);
+      if (!parentContentFrame || !parentContentFrame->IsFrameOfType(nsIFrame::eMathML))
+        break;
+      aContent = parentContent;
+      frame = parentContentFrame;
+    }
+  }
 
   nsresult rv = NS_OK;
 
@@ -11330,24 +11454,6 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
 //----------------------------------------------------------------------
 
 // Support for :first-line style
-
-static void
-ReparentFrame(nsFrameManager* aFrameManager,
-              nsIFrame* aNewParentFrame,
-              nsIFrame* aFrame)
-{
-  aFrame->SetParent(aNewParentFrame);
-  aFrameManager->ReParentStyleContext(aFrame);
-  if (aFrame->GetStateBits() &
-      (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
-    // No need to walk up the tree, since the bits are already set
-    // right on the parent of aNewParentFrame.
-    NS_ASSERTION(aNewParentFrame->GetParent()->GetStateBits() &
-                   NS_FRAME_HAS_CHILD_WITH_VIEW,
-                 "aNewParentFrame's parent should have this bit set!");
-    aNewParentFrame->AddStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW);
-  }
-}
 
 // Special routine to handle placing a list of frames into a block
 // frame that has first-line style. The routine ensures that the first
