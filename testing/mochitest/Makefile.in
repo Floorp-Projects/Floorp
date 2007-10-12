@@ -66,16 +66,20 @@ _SERV_FILES = 	runtests.pl \
 
 _DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)
 
-# XXXsayrer will work on making this work better with other apps
-# You can still pass --appname with a path to use something else
+ifeq ($(USE_SHORT_LIBNAME), 1)
+PROGRAM = $(MOZ_APP_NAME)$(BIN_SUFFIX)
+else
+PROGRAM = $(MOZ_APP_NAME)-bin$(BIN_SUFFIX)
+endif
+
 ifeq ($(OS_ARCH),Darwin)
 ifdef MOZ_DEBUG
-browser_path = \"../$(DIST)/MinefieldDebug.app/Contents/MacOS/firefox\"
+browser_path = \"../$(DIST)/$(MOZ_APP_DISPLAYNAME)Debug.app/Contents/MacOS/$(PROGRAM)\"
 else
-browser_path = \"../$(DIST)/Minefield.app/Contents/MacOS/firefox\"
+browser_path = \"../$(DIST)/$(MOZ_APP_DISPLAYNAME).app/Contents/MacOS/$(PROGRAM)\"
 endif
 else
-browser_path = \"../$(DIST)/bin/firefox\"
+browser_path = \"../$(DIST)/bin/$(PROGRAM)\"
 endif
 
 # These go in _tests/ so they need to go up an extra path segement
