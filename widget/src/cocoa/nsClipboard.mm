@@ -48,6 +48,7 @@
 #include "nsStringStream.h"
 #include "nsDragService.h"
 #include "nsEscape.h"
+#include "nsPrintfCString.h"
 
 // Screenshots use the (undocumented) png pasteboard type.
 #define IMAGE_PASTEBOARD_TYPES NSTIFFPboardType, @"Apple PNG pasteboard type", nil
@@ -210,17 +211,6 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhi
       if (!type)
         continue;
 
-      // Read data off the clipboard, make sure to catch any exceptions (timeouts)
-      // XXX should convert to @try/@catch someday?
-      NSData *pasteboardData = nil;
-      NS_DURING
-        pasteboardData = [cocoaPasteboard dataForType:type];
-      NS_HANDLER
-        NS_ASSERTION(0, "Exception raised while getting data from the pasteboard.");
-      NS_ENDHANDLER
-      if (!pasteboardData)
-        continue;
-
       // Figure out what type we're converting to
       CFStringRef outputType = NULL; 
       if (flavorStr.EqualsLiteral(kJPEGImageMime))
@@ -231,6 +221,16 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhi
         outputType = CFSTR("com.compuserve.gif");
       else
         continue;
+
+      // Read data off the clipboard
+      NSData *pasteboardData = nil;
+      @try {
+        pasteboardData = [cocoaPasteboard dataForType:type];
+      } @catch (NSException* e) {
+        NS_WARNING(nsPrintfCString(256, "Exception raised while getting data from the pasteboard: \"%s - %s\"", 
+                                   [[e name] UTF8String], [[e reason] UTF8String]).get());
+        continue;
+      }
 
       // Use ImageIO to interpret the data on the clipboard and transcode.
       // Note that ImageIO, like all CF APIs, allows NULLs to propagate freely
