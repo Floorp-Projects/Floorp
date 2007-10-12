@@ -88,6 +88,7 @@
 #ifndef PANGO_GLYPH_EMPTY
 #define PANGO_GLYPH_EMPTY           ((PangoGlyph)0)
 #endif
+// For g a PangoGlyph,
 #define IS_MISSING_GLYPH(g) (((g) & PANGO_GLYPH_UNKNOWN_FLAG) || (g) == PANGO_GLYPH_EMPTY)
 
 static PangoLanguage *GetPangoLanguage(const nsACString& aLangGroup);
@@ -625,8 +626,9 @@ gfxPangoFontGroup::InitTextRun(gfxTextRun *aTextRun, const gchar *aUTF8Text,
 #else
 #if defined(ENABLE_FAST_PATH_8BIT)
     if (aTake8BitPath && CanTakeFastPath(aTextRun->GetFlags())) {
-        CreateGlyphRunsFast(aTextRun, aUTF8Text, aUTF8Length);
-        return;
+        nsresult rv = CreateGlyphRunsFast(aTextRun, aUTF8Text, aUTF8Length);
+        if (NS_SUCCEEDED(rv))
+            return;
     }
 #endif
 
@@ -666,6 +668,8 @@ CreateScaledFont(cairo_t *aCR, cairo_matrix_t *aCTM, PangoFont *aPangoFont)
         cairo_scaled_font_create(face, &fontMatrix, aCTM, fontOptions);
     cairo_font_options_destroy(fontOptions);
     cairo_font_face_destroy(face);
+    NS_ASSERTION(cairo_scaled_font_status(scaledFont) == CAIRO_STATUS_SUCCESS,
+                 "Failed to create scaled font");
     return scaledFont;
 #endif
 }
@@ -1001,7 +1005,7 @@ gfxPangoFontGroup::SetMissingGlyphs(gfxTextRun *aTextRun,
 }
 
 #if defined(ENABLE_FAST_PATH_8BIT) || defined(ENABLE_FAST_PATH_ALWAYS)
-void
+nsresult
 gfxPangoFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
                                        const gchar *aUTF8, PRUint32 aUTF8Length)
 {
@@ -1030,6 +1034,9 @@ gfxPangoFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
         } else {
             NS_ASSERTION(!IsInvalidChar(ch), "Invalid char detected");
             FT_UInt glyph = pango_fc_font_get_glyph (fcfont, ch);
+            if (!glyph)                  // character not in font,
+                return NS_ERROR_FAILURE; // fallback to CreateGlyphRunsItemizing
+
             PangoRectangle rect;
             pango_font_get_glyph_extents (pangofont, glyph, NULL, &rect);
 
@@ -1039,10 +1046,6 @@ gfxPangoFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
                 gfxTextRun::CompressedGlyph::IsSimpleGlyphID(glyph)) {
                 aTextRun->SetCharacterGlyph(utf16Offset,
                                             g.SetSimpleGlyph(advance, glyph));
-            } else if (IS_MISSING_GLYPH(glyph)) {
-                // Note that missing-glyph IDs are not simple glyph IDs, so we'll
-                // always get here when a glyph is missing
-                aTextRun->SetMissingGlyph(utf16Offset, ch);
             } else {
                 gfxTextRun::DetailedGlyph details;
                 details.mIsLastGlyph = PR_TRUE;
@@ -1064,6 +1067,7 @@ gfxPangoFontGroup::CreateGlyphRunsFast(gfxTextRun *aTextRun,
 
         ++utf16Offset;
     }
+    return NS_OK;
 }
 #endif
 
