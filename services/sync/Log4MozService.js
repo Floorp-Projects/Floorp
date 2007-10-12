@@ -358,9 +358,6 @@ FileAppender.prototype = {
   },
 
   openStream: function FApp_openStream() {
-    dump("OPENING STREAM\n");
-    if (!this._file)
-      dump("THERE IS NO FILE\n");
     this.__fos = Cc["@mozilla.org/network/file-output-stream;1"].
       createInstance(Ci.nsIFileOutputStream);
     let flags = MODE_WRONLY | MODE_CREATE | MODE_APPEND;
