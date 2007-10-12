@@ -385,10 +385,12 @@ BookmarksSyncService.prototype = {
   },
 
   _conflicts: function BSS__conflicts(a, b) {
+    /*
     if ((a.depth < b.depth) &&
         (b.parents.indexOf(a.GUID) >= 0) &&
         a.action == "remove")
       return true;
+    */
     if ((a.GUID == b.GUID) && !this._deepEquals(a, b))
       return true;
     return false;
@@ -596,7 +598,22 @@ BookmarksSyncService.prototype = {
         obj[commands[i].GUID] = eval(uneval(commands[i].data));
         break;
       case "edit":
+        if ("GUID" in commands[i].data) {
+          // special-case guid changes
+          let newGUID = commands[i].data.GUID,
+              oldGUID = commands[i].GUID;
+
+          obj[newGUID] = obj[oldGUID];
+          delete obj[oldGUID]
+
+          for (let GUID in obj) {
+            if (obj[GUID].parentGUID == oldGUID)
+              obj[GUID].parentGUID = newGUID;
+          }
+        }
         for (let prop in commands[i].data) {
+          if (prop == "GUID")
+            continue;
           obj[commands[i].GUID][prop] = commands[i].data[prop];
         }
         break;
@@ -635,7 +652,7 @@ BookmarksSyncService.prototype = {
     let parentId = this._bms.getItemIdForGUID(command.data.parentGUID);
 
     if (parentId <= 0) {
-      this._log.warning("Creating node with unknown parent -> reparenting to root");
+      this._log.warn("Creating node with unknown parent -> reparenting to root");
       parentId = this._bms.bookmarksRoot;
     }
 
@@ -711,7 +728,7 @@ BookmarksSyncService.prototype = {
   _editCommand: function BSS__editCommand(command) {
     var itemId = this._bms.getItemIdForGUID(command.GUID);
     if (itemId == -1) {
-      this._log.warning("Item for GUID " + command.GUID + " not found.  Skipping.");
+      this._log.warn("Item for GUID " + command.GUID + " not found.  Skipping.");
       return;
     }
 
@@ -722,8 +739,8 @@ BookmarksSyncService.prototype = {
         if (existing == -1)
           this._bms.setItemGUID(itemId, command.data.GUID);
         else
-          this._log.warning("Can't change GUID " + command.GUID +
-              " to " + command.data.GUID + ": GUID already exists.");
+          this._log.warn("Can't change GUID " + command.GUID +
+                         " to " + command.data.GUID + ": GUID already exists.");
         break;
       case "title":
         this._bms.setItemTitle(itemId, command.data.title);
@@ -763,7 +780,7 @@ BookmarksSyncService.prototype = {
         this._ls.setFeedURI(itemId, makeURI(command.data.feedURI));
         break;
       default:
-        this._log.warning("Can't change item property: " + key);
+        this._log.warn("Can't change item property: " + key);
         break;
       }
     }
@@ -783,8 +800,8 @@ BookmarksSyncService.prototype = {
 
     for (let guid in unfiled) {
       if (guid in filed)
-        this._log.warning("Same bookmark (guid) in both " +
-                    "filed and unfiled trees!");
+        this._log.warn("Same bookmark (guid) in both " +
+                       "filed and unfiled trees!");
       else
         filed[guid] = unfiled[guid];
     }
@@ -857,7 +874,7 @@ BookmarksSyncService.prototype = {
       if (locked)
         this._log.info("Lock acquired");
       else {
-        this._log.warning("Could not acquire lock, aborting sync");
+        this._log.warn("Could not acquire lock, aborting sync");
         return;
       }
 
@@ -955,7 +972,8 @@ BookmarksSyncService.prototype = {
         if (diff.length != 0) {
           this._log.error("Commands did not apply correctly");
           this._log.debug("Diff from snapshot+commands -> " +
-                          "new snapshot after commands:\n" + uneval(diff));
+                          "new snapshot after commands:\n" +
+                          this._mungeCommands(diff));
           this._snapshot = newSnapshot;
           // FIXME: What else can we do?
         }
@@ -968,11 +986,11 @@ BookmarksSyncService.prototype = {
       // current client snapshot.  In the case where there are no
       // conflicts, it should be the same as what the resolver returned
 
-      let serverDelta = this._detectUpdates(this._snapshot, server.snapshot);
+      let serverDelta = this._detectUpdates(server.snapshot, this._snapshot);
 
       // Log an error if not the same
       if (!(serverConflicts.length ||
-            this.deepEquals(serverChanges, serverDelta)))
+            this._deepEquals(serverChanges, serverDelta)))
         this._log.error("Predicted server changes differ from " +
                         "actual server->client diff");
 
@@ -982,7 +1000,8 @@ BookmarksSyncService.prototype = {
         this._snapshotVersion = ++server.maxVersion;
         server.deltas.push(serverDelta);
 
-        this._dav.PUT("bookmarks-deltas.json", uneval(server.deltas), cont);
+        this._dav.PUT("bookmarks-deltas.json",
+                      this._mungeCommands(server.deltas), cont);
         let deltasPut = yield;
 
         // FIXME: need to watch out for the storage format version changing,
@@ -1153,7 +1172,7 @@ BookmarksSyncService.prototype = {
       this._snapshotGUID = null; // in case there are other snapshots out there
 
       this._dav.PUT("bookmarks-snapshot.json",
-                    uneval(this._snapshot), cont);
+                    this._mungeNodes(this._snapshot), cont);
       let snapPut = yield;
       if (snapPut.target.status < 200 || snapPut.target.status >= 300) {
         this._log.error("Could not upload snapshot to server, error code: " +
@@ -1589,10 +1608,13 @@ DAVCollection.prototype = {
       if (!this._getActiveLock.async(this, cont))
         return;
       this._token = yield;
-  
-      if (!this.unlock.async(this, cont))
-        return;
-      let unlocked = yield;
+
+      let unlocked = true;
+      if (this._token) {
+        if (!this.unlock.async(this, cont))
+          return;
+        unlocked = yield;
+      }
 
       if (unlocked && this.lock.async(this, cont))
         stolen = yield;
