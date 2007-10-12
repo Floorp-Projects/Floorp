@@ -120,10 +120,6 @@
 
 #include "nsLocalHandlerApp.h"
 
-#include "nsIRandomGenerator.h"
-#include "plbase64.h"
-#include "prmem.h"
-
 #ifdef PR_LOGGING
 PRLogModuleInfo* nsExternalHelperAppService::mLog = nsnull;
 #endif
@@ -1077,6 +1073,14 @@ void nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
 
 }
 
+#define SALT_SIZE 8
+#define TABLE_SIZE 36
+const PRUnichar table[] = 
+  { 'a','b','c','d','e','f','g','h','i','j',
+    'k','l','m','n','o','p','q','r','s','t',
+    'u','v','w','x','y','z','0','1','2','3',
+    '4','5','6','7','8','9'};
+
 /**
  * Make mTempFileExtension contain an extension exactly when its previous value
  * is different from mSuggestedFileName's extension, so that it can be appended
@@ -1128,56 +1132,36 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
 #endif
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // At this point, we do not have a filename for the temp file.  For security
-  // purposes, this cannot be predictable, so we must use a cryptographic
-  // quality PRNG to generate one.
-  // We will request raw random bytes, and transform that to a base64 string,
-  // as all characters from the base64 set are acceptable for filenames.  For
-  // each three bytes of random data, we will get four bytes of ASCII.  Request
-  // a bit more, to be safe, and truncate to the length we want in the end.
-
-  const PRUint32 wantedFileNameLength = 8;
-  const PRUint32 requiredBytesLength =
-    static_cast<PRUint32>((wantedFileNameLength + 1) / 4 * 3);
-
-  nsCOMPtr<nsIRandomGenerator> rg =
-    do_GetService("@mozilla.org/security/random-generator;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  PRUint8 *buffer;
-  rv = rg->GenerateRandomBytes(requiredBytesLength, &buffer);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  char *b64 = PL_Base64Encode(reinterpret_cast<const char *>(buffer),
-                              requiredBytesLength, nsnull);
-  NS_Free(buffer);
-  buffer = nsnull;
-
-  if (!b64)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ASSERTION(strlen(b64) >= wantedFileNameLength,
-               "not enough bytes produced for conversion!");
-
-  nsCAutoString tempLeafName(b64, wantedFileNameLength);
-  PR_Free(b64);
-  b64 = nsnull;
+  // We need to generate a name for the temp file that we are going to be streaming data to. 
+  // We don't want this name to be predictable for security reasons so we are going to generate a 
+  // "salted" name.....
+  nsAutoString saltedTempLeafName;
+  // this salting code was ripped directly from the profile manager.
+  // turn PR_Now() into milliseconds since epoch
+  // and salt rand with that. 
+  double fpTime;
+  LL_L2D(fpTime, PR_Now());
+  srand((uint)(fpTime * 1e-6 + 0.5));
+  PRInt32 i;
+  for (i=0;i<SALT_SIZE;i++) 
+  {
+    saltedTempLeafName.Append(table[(rand()%TABLE_SIZE)]);
+  }
 
   // now append our extension.
   nsCAutoString ext;
   mMimeInfo->GetPrimaryExtension(ext);
   if (!ext.IsEmpty()) {
     if (ext.First() != '.')
-      tempLeafName.Append('.');
-    tempLeafName.Append(ext);
+      saltedTempLeafName.Append(PRUnichar('.'));
+    AppendUTF8toUTF16(ext, saltedTempLeafName);
   }
 
   // Add an additional .part to prevent the OS from running this file in the
   // default application.
-  tempLeafName.Append(NS_LITERAL_CSTRING(".part"));
+  saltedTempLeafName.Append(NS_LITERAL_STRING(".part"));
 
-  mTempFile->Append(NS_ConvertUTF8toUTF16(tempLeafName));
-  // make this file unique!!!
+  mTempFile->Append(saltedTempLeafName); // make this file unique!!!
   mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0600);
 
 #ifdef XP_MACOSX
