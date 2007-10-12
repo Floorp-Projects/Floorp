@@ -34,12 +34,15 @@ bin\js3250.dll
 bin\plc4.dll
 bin\plds4.dll
 bin\xpcom.dll
+bin\nspr4.dll
+#ifdef MOZ_ENABLE_LIBXUL
+bin\xul.dll
+#else
 bin\xpcom_core.dll
 bin\xpistub.dll
-bin\nspr4.dll
-bin\xul.dll
 bin\components\xpinstal.dll
 bin\components\jar50.dll
+#endif
 bin\Microsoft.VC80.CRT.manifest
 bin\msvcm80.dll
 bin\msvcp80.dll
@@ -121,7 +124,9 @@ bin\components\imgicon.xpt
 bin\components\intl.xpt
 bin\components\jar.xpt
 bin\components\jsconsole-clhandler.js
+#ifndef MOZ_ENABLE_LIBXUL
 bin\components\jsd3250.dll
+#endif
 bin\components\jsdservice.xpt
 bin\components\layout_base.xpt
 bin\components\layout_printing.xpt
@@ -154,28 +159,24 @@ bin\components\plugin.xpt
 bin\components\pref.xpt
 bin\components\prefetch.xpt
 bin\components\profile.xpt
-bin\components\progressDlg.xpt
 bin\components\proxyObject.xpt
 bin\components\rdf.xpt
 bin\components\satchel.xpt
 bin\components\saxparser.xpt
 bin\components\shistory.xpt
-bin\components\signonviewer.xpt
 bin\components\storage.xpt
 bin\components\toolkitprofile.xpt
 bin\components\txtsvc.xpt
 bin\components\txmgr.xpt
+#ifdef MOZ_USE_NATIVE_UCONV
 bin\components\ucnative.xpt
+#endif
 bin\components\uconv.xpt
 bin\components\unicharutil.xpt
 bin\components\uriloader.xpt
-bin\components\wallet.xpt
-bin\components\walleteditor.xpt
-bin\components\walletpreview.xpt
 bin\components\webBrowser_core.xpt
 bin\components\webbrowserpersist.xpt
 bin\components\webshell_idls.xpt
-bin\components\websrvcs.xpt
 bin\components\widget.xpt
 bin\components\windowds.xpt
 bin\components\windowwatcher.xpt
@@ -203,7 +204,6 @@ bin\components\nsBrowserContentHandler.js
 bin\components\nsBrowserGlue.js
 bin\components\nsSetDefaultBrowser.js
 bin\components\nsTryToClose.js
-bin\components\nsDictionary.js
 bin\components\nsHelperAppDlg.js
 bin\components\nsDownloadManagerUI.js
 bin\components\nsProxyAutoConfig.js
