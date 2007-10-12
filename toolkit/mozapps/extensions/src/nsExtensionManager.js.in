@@ -834,6 +834,77 @@ function getInstallManifest(file) {
 }
 
 /**
+ * Selects the closest matching localized resource in the given RDF resource
+ * @param   aDataSource The datasource to look in
+ * @param   aResource   The root resource containing the localized sections
+ * @returns The nsIRDFResource of the best em:localized section or null
+ *          if no valid match was found
+ */
+function findClosestLocalizedResource(aDataSource, aResource) {
+  var localizedProp = EM_R("localized");
+  var localeProp = EM_R("locale");
+
+  // Holds the best matching localized resource
+  var bestmatch = null;
+  // The number of locale parts it matched with
+  var bestmatchcount = 0;
+  // The number of locale parts in the match
+  var bestpartcount = 0;
+
+  var locales = [gLocale.toLowerCase()];
+  /* If the current locale is English then it will find a match if there is
+     a valid match for en-US so no point searching that locale too. */
+  if (locales[0].substring(0, 3) != "en-")
+    locales.push("en-us");
+
+  for each (var locale in locales) {
+    var lparts = locale.split("-");
+    var localizations = aDataSource.GetTargets(aResource, localizedProp, true);
+    while (localizations.hasMoreElements()) {
+      var localized = localizations.getNext().QueryInterface(Ci.nsIRDFNode);
+      var list = aDataSource.GetTargets(localized, localeProp, true);
+      while (list.hasMoreElements()) {
+        var found = stringData(list.getNext().QueryInterface(Ci.nsIRDFNode));
+        if (!found)
+          continue;
+
+        found = found.toLowerCase();
+
+        // Exact match is returned immediately
+        if (locale == found)
+          return localized;
+  
+        var fparts = found.split("-");
+        /* If we have found a possible match and this one isn't any longer
+           then we dont need to check further. */
+        if (bestmatch && fparts.length < bestmatchcount)
+          continue;
+  
+        // Count the number of parts that match
+        var maxmatchcount = Math.min(fparts.length, lparts.length);
+        var matchcount = 0;
+        while (matchcount < maxmatchcount &&
+               fparts[matchcount] == lparts[matchcount])
+          matchcount++;
+  
+        /* If we matched more than the last best match or matched the same and
+           this locale is less specific than the last best match. */
+        if (matchcount > bestmatchcount ||
+           (matchcount == bestmatchcount && fparts.length < bestpartcount)) {
+          bestmatch = localized;
+          bestmatchcount = matchcount;
+          bestpartcount = fparts.length;
+        }
+      }
+    }
+    // If we found a valid match for this locale return it
+    if (bestmatch)
+      return bestmatch;
+  }
+  return null;
+}
+    
+/**
  * An enumeration of items in a JS array.
  * @constructor
  */
@@ -4437,19 +4508,10 @@ ExtensionManager.prototype = {
     ds.updateVisibleList(id, installLocation.name, false);
 
     var name = null;
-    var localizationProp = EM_R("localized");
-    var localeProp = EM_R("locale");
-    var localizations = installManifest.GetTargets(gInstallManifestRoot, localizationProp, true);
-    while (localizations.hasMoreElements()) {
-      var localization = localizations.getNext().QueryInterface(Ci.nsIRDFNode);
-      var locales = installManifest.GetTargets(localization, localeProp, true);
-      while (locales.hasMoreElements()) {
-        var locale = locales.getNext().QueryInterface(Ci.nsIRDFNode);
-        if (stringData(locale) == gLocale)
-          name = installManifest.GetTarget(localization, EM_R("name"), true);
-      }
-    }
-    if (!name)
+    var localized = findClosestLocalizedResource(installManifest, gInstallManifestRoot);
+    if (localized)
+      name = installManifest.GetTarget(localized, EM_R("name"), true);
+    else
       name = EM_L(getManifestProperty(installManifest, "name"));
 
     var props = { name            : name,
@@ -8111,26 +8173,6 @@ ExtensionsDataSource.prototype = {
   },
 
   /**
-   * Finds the localized resource for an add-on.
-   */
-  _getLocalizedResource: function(item)
-  {
-    var localizedProp = EM_R("localized");
-    var localeProp = EM_R("locale");
-    var localizations = this._inner.GetTargets(item, localizedProp, true);
-    while (localizations.hasMoreElements()) {
-      var localized = localizations.getNext().QueryInterface(Ci.nsIRDFNode);
-      var list = this._inner.GetTargets(localized, localeProp, true);
-      while (list.hasMoreElements()) {
-        var locale = list.getNext().QueryInterface(Ci.nsIRDFNode);
-        if (stringData(locale) == gLocale)
-          return localized;
-      }
-    }
-    return null;
-  },
-
-  /**
    * Gets a localizable property. Install Manifests are generally only in one
    * language, however an item can customize by providing localized prefs in
    * the form:
@@ -8154,7 +8196,7 @@ ExtensionsDataSource.prototype = {
     catch (e) {
     }
 
-    var localized = this._getLocalizedResource(item);
+    var localized = findClosestLocalizedResource(this._inner, item);
     if (localized) {
       var value = this._inner.GetTarget(localized, property, true);
       return value ? value : EM_L("");
@@ -8287,7 +8329,7 @@ ExtensionsDataSource.prototype = {
     if (values.length > 0)
       return values;
 
-    var localized = this._getLocalizedResource(item);
+    var localized = findClosestLocalizedResource(this._inner, item);
     if (localized) {
       var targets = this._inner.GetTargets(localized, property, true);
       while (targets.hasMoreElements())
