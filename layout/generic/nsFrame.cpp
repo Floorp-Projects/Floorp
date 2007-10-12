@@ -881,9 +881,9 @@ nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
 }
 
 PRBool
-nsFrame::HasBorder()
+nsFrame::HasBorder() const
 {
-  return GetStyleBorder()->GetBorder() != nsMargin(0,0,0,0);
+  return GetUsedBorder() != nsMargin(0,0,0,0);
 }
 
 nsresult
@@ -3063,6 +3063,37 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
     result.height = 0;
 
   return result;
+}
+
+nsRect
+nsIFrame::ComputeTightBounds(gfxContext* aContext) const
+{
+  return GetOverflowRect();
+}
+
+nsRect
+nsFrame::ComputeSimpleTightBounds(gfxContext* aContext) const
+{
+  if (GetStyleOutline()->GetOutlineStyle() != NS_STYLE_BORDER_STYLE_NONE ||
+      HasBorder() || !GetStyleBackground()->IsTransparent() ||
+      GetStyleDisplay()->mAppearance) {
+    // Not necessarily tight, due to clipping, negative
+    // outline-offset, and lots of other issues, but that's OK
+    return GetOverflowRect();
+  }
+
+  nsRect r(0, 0, 0, 0);
+  PRInt32 listIndex = 0;
+  nsIAtom* childList = nsnull;
+  do {
+    nsIFrame* child = GetFirstChild(childList);
+    while (child) {
+       r.UnionRect(r, child->ComputeTightBounds(aContext) + child->GetPosition());
+       child = child->GetNextSibling();
+    }
+    childList = GetAdditionalChildListName(listIndex++);
+  } while (childList);
+  return r;
 }
 
 /* virtual */ nsSize
