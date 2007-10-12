@@ -227,6 +227,8 @@ sub BumpVerifyConfig {
     my $appName = $config->Get(var => 'appName');
     my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
     my $verifyDir = $config->Get(var => 'verifyDir');
+    my $ausServer = $config->Get(var => 'ausServer');
+    my $externalStagingServer = $config->Get(var => 'externalStagingServer');
     my $verifyConfig = $config->Get(sysvar => 'verifyConfig');
     my $logDir = $config->Get(sysvar => 'logDir');
 
@@ -307,8 +309,10 @@ sub BumpVerifyConfig {
                 '" locales="' . join(' ', sort(@locales)) . '" channel="' . 
                 $channel . '" from="/' . $product . '/releases/' . 
                 $oldVersion . '/' . $ftpOsname . '/%locale%/' . $releaseFile .
-                '" to="/' . $product . '/nightly/' . $version . 
-                '-candidates/rc' . $rc . '/' . $nightlyFile . '"' . "\n");
+                '" aus_server="' . $ausServer . '" ftp_server="' .
+                $externalStagingServer . '" to="/' . $product . '/nightly/' . 
+                $version .  '-candidates/rc' . $rc . '/' . $nightlyFile . '"' . 
+                "\n");
 
     open(FILE, "> $configFile") or die ("Could not open file $configFile: $!");
     print FILE @data;
