@@ -34,15 +34,12 @@ bin/libmozjs.so
 bin/libplc4.so
 bin/libplds4.so
 bin/libxpcom.so
-bin/libnspr4.so
-#ifdef MOZ_ENABLE_LIBXUL
-bin/libxul.so
-#else
 bin/libxpcom_core.so
 bin/libxpistub.so
+bin/libnspr4.so
+bin/libxul.so
 bin/components/libxpinstall.so
 bin/components/libjar50.so
-#endif
 
 [browser]
 ; [Base Browser Files]
@@ -114,14 +111,14 @@ bin/components/filepicker.xpt
 bin/components/find.xpt
 bin/components/fuel.xpt
 bin/components/gfx.xpt
+bin/components/helperAppDlg.xpt
 bin/components/htmlparser.xpt
 bin/components/imglib2.xpt
 ; bin/components/imgicon.xpt
 bin/components/intl.xpt
 bin/components/jar.xpt
-#ifndef MOZ_ENABLE_LIBXUL
+bin/components/jsconsole.xpt
 bin/components/libjsd.so
-#endif
 bin/components/libimgicon.so
 bin/components/jsdservice.xpt
 bin/components/layout_base.xpt
@@ -143,6 +140,7 @@ bin/components/necko_dns.xpt
 bin/components/necko_file.xpt
 bin/components/necko_ftp.xpt
 bin/components/necko_http.xpt
+bin/components/necko_jar.xpt
 bin/components/necko_res.xpt
 bin/components/necko_socket.xpt
 bin/components/necko_strconv.xpt
@@ -154,11 +152,13 @@ bin/components/places.xpt
 bin/components/plugin.xpt
 bin/components/prefetch.xpt
 bin/components/pref.xpt
+bin/components/progressDlg.xpt
 bin/components/proxyObjInst.xpt
 bin/components/toolkitremote.xpt
 bin/components/rdf.xpt
 bin/components/satchel.xpt
 bin/components/saxparser.xpt
+bin/components/search.xpt
 bin/components/shistory.xpt
 bin/components/storage.xpt
 bin/components/profile.xpt
@@ -171,6 +171,7 @@ bin/components/uriloader.xpt
 bin/components/webBrowser_core.xpt
 bin/components/webbrowserpersist.xpt
 bin/components/webshell_idls.xpt
+bin/components/websrvcs.xpt
 bin/components/widget.xpt
 bin/components/windowds.xpt
 bin/components/windowwatcher.xpt
@@ -183,6 +184,7 @@ bin/components/xpcom_threads.xpt
 bin/components/xpcom_xpti.xpt
 bin/components/xpconnect.xpt
 bin/components/xpinstall.xpt
+bin/components/xremoteservice.xpt
 bin/components/xulapp.xpt
 bin/components/xuldoc.xpt
 bin/components/xultmpl.xpt
@@ -207,11 +209,16 @@ bin/components/nsLoginManagerPrompter.js
 bin/components/storage-Legacy.js
 bin/components/jsconsole-clhandler.js
 bin/components/nsTryToClose.js
+bin/components/nsDictionary.js
 bin/components/nsFilePicker.js
 bin/components/nsHelperAppDlg.js
 bin/components/nsDownloadManagerUI.js
+bin/components/nsInterfaceInfoToIDL.js
+; bin/components/nsProgressDialog.js   not needed for firefox
 bin/components/nsProxyAutoConfig.js
+; bin/components/nsResetPref.js    not needed for firefox
 bin/components/nsSidebar.js
+; bin/components/nsUpdateNotifier.js not needed for firefox
 bin/components/nsExtensionManager.js
 bin/components/nsBlocklistService.js
 bin/components/nsUpdateService.js
@@ -250,6 +257,7 @@ bin/components/libauth.so
 
 ; GNOME hooks
 bin/components/libmozgnome.so
+bin/components/mozgnome.xpt
 
 ; [Browser Chrome Files]
 bin/chrome/browser.jar
@@ -288,6 +296,7 @@ bin/res/ua.css
 bin/res/html.css
 bin/res/quirk.css
 bin/res/forms.css
+bin/res/platform-forms.css
 bin/res/EditorOverride.css
 bin/res/contenteditable.css
 bin/res/designmode.css
@@ -344,6 +353,7 @@ bin/libfreebl3.chk
 bin/libfreebl3.so
 bin/libssl3.so
 bin/libnssdbm3.so
+bin/chrome/pipnss.jar
 bin/chrome/pippki.jar
 bin/chrome/pippki.manifest
 
