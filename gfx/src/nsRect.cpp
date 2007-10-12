@@ -60,10 +60,12 @@ PRBool nsRect::Contains(nscoord aX, nscoord aY) const
                    (aX < XMost()) && (aY < YMost()));
 }
 
+//Also Returns true if aRect is Empty
 PRBool nsRect::Contains(const nsRect &aRect) const
 {
-  return (PRBool) ((aRect.x >= x) && (aRect.y >= y) &&
-                   (aRect.XMost() <= XMost()) && (aRect.YMost() <= YMost()));
+  return aRect.IsEmpty() || 
+          ((PRBool) ((aRect.x >= x) && (aRect.y >= y) &&
+                    (aRect.XMost() <= XMost()) && (aRect.YMost() <= YMost())));
 }
 
 // Intersection. Returns TRUE if the receiver overlaps aRect and
