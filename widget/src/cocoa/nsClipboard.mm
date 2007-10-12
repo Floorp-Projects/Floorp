@@ -222,6 +222,11 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhi
       else
         continue;
 
+      // Needed because after we use @try, local vars get the volatile attribute,
+      // (read up on setjmp/longjmp for the why) and nsXPIDLCString does not like
+      // being volatile.
+      const char *flavorCStr = flavorStr;
+
       // Read data off the clipboard
       NSData *pasteboardData = nil;
       @try {
@@ -254,8 +259,8 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, PRInt32 aWhi
         nsCOMPtr<nsIInputStream> byteStream;
         NS_NewByteInputStream(getter_AddRefs(byteStream), (const char*)[encodedData bytes],
                                    [encodedData length], NS_ASSIGNMENT_COPY);
-  
-        aTransferable->SetTransferData(flavorStr, byteStream, sizeof(nsIInputStream*));
+
+        aTransferable->SetTransferData(flavorCStr, byteStream, sizeof(nsIInputStream*));
       }
 
       if (dest)
