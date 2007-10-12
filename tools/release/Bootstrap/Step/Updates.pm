@@ -370,9 +370,10 @@ sub Push {
    );
 
     # push update snippets to AUS server
+    my $pushDir = strftime("%Y%m%d", localtime) . '-' . ucfirst($product) . 
+                           '-' . $version;
     my $targetPrefix =  CvsCatfile('/opt','aus2','snippets','staging',
-                          strftime("%Y%m%d", localtime) . '-' . 
-                          ucfirst($product) . '-' . $version);
+                                   $pushDir);
     $config->Set(var => 'ausDeliveryDir', value => $targetPrefix);
 
     my @snippetDirs = glob(catfile($fullUpdateDir, "aus2*"));
@@ -396,6 +397,15 @@ sub Push {
     }
 
     SyncNightlyDirToStaging();
+
+    # Push test channels live
+    $this->Shell(
+      cmd => 'ssh', 
+      cmdArgs => ['-i ' . catfile($ENV{'HOME'},'.ssh','aus'),
+                  $ausUser . '@' . $ausServer,
+                  '/home/cltbld/bin/pushsnip', $pushDir . '-test'],
+      logFile => $pushLog,
+    );
 }
 
 sub Announce {
@@ -408,7 +418,7 @@ sub Announce {
 
     $this->SendAnnouncement(
       subject => "$product $version update step finished",
-      message => "$product $version updates finished. Partial mars were copied to the candidates dir, and the snippets to AUS in $ausDeliveryDir*.",
+      message => "$product $version updates finished. Partial mars were copied to the candidates dir, and the snippets in $ausDeliveryDir-test were pushed live.",
     );
 }
 
