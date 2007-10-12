@@ -355,7 +355,7 @@ nsPromptService::ConfirmCheck(nsIDOMWindow *parent,
   *_retval = tempInt ? PR_FALSE : PR_TRUE;
 
   block->GetInt(eCheckboxState, & tempInt);
-  *checkValue = PRBool( tempInt );
+  *checkValue = !!tempInt;
   
   return rv;
 }
