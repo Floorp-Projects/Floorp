@@ -42,7 +42,9 @@
 #ifndef MOZ_PNG_READ
 #define PNG_NO_READ_SUPPORTED
 #endif
-#define PNG_NO_WARN_UNINITIALIZED_ROW
+#if defined(XP_MACOSX) && !defined(PNG_NO_MMX_CODE)
+#define PNG_NO_MMX_CODE
+#endif
 #define PNG_NO_READ_BACKGROUND
 #define PNG_NO_READ_DITHER
 #define PNG_NO_READ_INVERT
@@ -69,7 +71,6 @@
 #define PNG_NO_READ_OPT_PLTE
 #define PNG_NO_READ_STRIP_ALPHA
 #define PNG_NO_READ_oFFs
-#define PNG_NO_SEQUENTIAL_READ_SUPPORTED
 
 #ifndef MOZ_PNG_WRITE
 #define PNG_NO_WRITE_SUPPORTED
@@ -103,7 +104,6 @@
 #define PNG_NO_WRITE_USER_CHUNKS
 #define PNG_NO_WRITE_EMPTY_PLTE
 #define PNG_NO_WRITE_OPT_PLTE
-#define PNG_NO_WRITE_FILTER
 #define PNG_NO_WRITE_WEIGHTED_FILTER
 #define PNG_NO_WRITE_INTERLACING_SUPPORTED  /* effective libpng-1.3.0 */
 #endif
@@ -118,6 +118,7 @@
 #define PNG_NO_ZALLOC_ZERO
 #define PNG_NO_ERROR_NUMBERS
 #define PNG_NO_EASY_ACCESS
+#define PNG_NO_SEQUENTIAL_READ_SUPPORTED
 
 
 /* Mangle names of exported libpng functions so different libpng versions
