@@ -159,6 +159,8 @@ public:
                        const nsHTMLReflowState*  aReflowState,
                        nsDidReflowStatus         aStatus);
 
+  virtual PRBool HonorPrintBackgroundSettings();
+
   virtual ~nsBoxFrame();
   
   nsBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
