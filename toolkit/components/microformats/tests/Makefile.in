@@ -45,10 +45,11 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
 		test_Microformats.html \
-		test_Microformats_hCard.html \
 		test_Microformats_geo.html \
 		test_Microformats_hCalendar.html \
 		$(NULL)
+
+# disabled test_Microformats_hCard.html because of random network problems.
 
 libs::	$(_TEST_FILES)
 	$(INSTALL) $^ $(DEPTH)/_tests/testing/mochitest/tests/browser/microformats/test
