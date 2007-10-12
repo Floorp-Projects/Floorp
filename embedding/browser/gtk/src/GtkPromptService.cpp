@@ -539,7 +539,7 @@ GtkPromptService::CookieDialog(
       aExpires,
       NULL);
   }
-  *aRememberDecision = cookie_struct->remember_decision;
+  *aRememberDecision = !!(cookie_struct->remember_decision);
   *aAccept = cookie_struct->accept;
   return NS_OK;
 }
