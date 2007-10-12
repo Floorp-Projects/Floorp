@@ -98,8 +98,10 @@ enum {
   NODE_MAY_HAVE_CLASS =          0x00000400U,
   NODE_MAY_HAVE_STYLE =          0x00000800U,
 
+  NODE_IS_INSERTION_PARENT =     0x00001000U,
+
   // Four bits for the script-type ID
-  NODE_SCRIPT_TYPE_OFFSET =               12,
+  NODE_SCRIPT_TYPE_OFFSET =               13,
 
   NODE_SCRIPT_TYPE_SIZE =                  4,
 
