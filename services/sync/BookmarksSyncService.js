@@ -384,18 +384,6 @@ BookmarksSyncService.prototype = {
     return cmds;
   },
 
-  _conflicts: function BSS__conflicts(a, b) {
-    /*
-    if ((a.depth < b.depth) &&
-        (b.parents.indexOf(a.GUID) >= 0) &&
-        a.action == "remove")
-      return true;
-    */
-    if ((a.GUID == b.GUID) && !this._deepEquals(a, b))
-      return true;
-    return false;
-  },
-
   // Bookmarks are allowed to be in a different index as long as they
   // are in the same folder.  Folders and separators must be at the
   // same index to qualify for 'likeness'.
@@ -484,20 +472,11 @@ BookmarksSyncService.prototype = {
     }
   },
 
-  // FIXME: todo: change the conflicts data structure to hold more
-  // information about which specific command pars conflict; an what
-  // commands would apply once those are resolved.  Perhaps something
-  // like:
-
-  // [[direct-conflictA, 2nd-degree-conflictA1, ...],
-  //  [direct-conflictB, 2nd-degree-conflict-B1, ...], ...]
-
-  // possible problem: a 2nd-degree conflict could show up in multiple
-  // lists (that is, there are multiple direct conflicts that prevent
-  // another command pair from cleanly applying). maybe:
-
-  // [[[dcA1, dcB1], [dcA2. dcB2], ...],
-  //  [2dcA1, 2dcA2, ...], [2dcB1, 2dcB2, ...]]
+  _conflicts: function BSS__conflicts(a, b) {
+    if ((a.GUID == b.GUID) && !this._deepEquals(a, b))
+      return true;
+    return false;
+  },
 
   _reconcile: function BSS__reconcile(onComplete, listA, listB) {
     let cont = yield;
@@ -508,7 +487,6 @@ BookmarksSyncService.prototype = {
     let conflicts = [[], []];
 
     for (let i = 0; i < listA.length; i++) {
-
       this._timer.initWithCallback(listener, 0, this._timer.TYPE_ONE_SHOT);
       yield; // Yield to main loop
 
@@ -533,7 +511,6 @@ BookmarksSyncService.prototype = {
     listB = listB.filter(function(elt) { return elt });
 
     for (let i = 0; i < listA.length; i++) {
-
       this._timer.initWithCallback(listener, 0, this._timer.TYPE_ONE_SHOT);
       yield; // Yield to main loop
 
@@ -551,7 +528,6 @@ BookmarksSyncService.prototype = {
     }
 
     for (let i = 0; i < listA.length; i++) {
-
       this._timer.initWithCallback(listener, 0, this._timer.TYPE_ONE_SHOT);
       yield; // Yield to main loop
 
@@ -568,7 +544,6 @@ BookmarksSyncService.prototype = {
         propagations[1].push(listA[i]);
     }
     for (let j = 0; j < listB.length; j++) {
-
       this._timer.initWithCallback(listener, 0, this._timer.TYPE_ONE_SHOT);
       yield; // Yield to main loop
 
