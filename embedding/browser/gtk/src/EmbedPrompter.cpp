@@ -39,6 +39,12 @@
 
 #include "EmbedPrompter.h"
 
+#include <gtk/gtkversion.h>
+
+#if GTK_CHECK_VERSION(2,3,1)
+#define USE_GTK_COMBOBOX
+#endif
+
 #define ALLOC_NOT_CHECKED(newed) PR_BEGIN_MACRO               \
   /* This might not crash, but the code probably isn't really \
    * designed to handle it, perhaps the code should be fixed? \
@@ -240,6 +246,14 @@ EmbedPrompter::Create(PromptType aType, GtkWindow* aParentWindow)
   }
   // Add a dropdown menu
   if (aType == TYPE_SELECT) {
+#ifdef USE_GTK_COMBOBOX
+    // Build up a GtkComboBox containing the items
+    mOptionMenu = gtk_combo_box_new_text ();
+
+    for (PRUint32 i = 0; i < mItemCount; ++i) {
+      gtk_combo_box_append_text(GTK_COMBO_BOX(mOptionMenu), mItemList[i].get());
+    }
+#else
     // Build up a GtkMenu containing the items
     GtkWidget* menu = gtk_menu_new();
     for (PRUint32 i = 0; i < mItemCount; ++i) {
@@ -251,6 +265,7 @@ EmbedPrompter::Create(PromptType aType, GtkWindow* aParentWindow)
     mOptionMenu = gtk_option_menu_new();
 
     gtk_option_menu_set_menu(GTK_OPTION_MENU(mOptionMenu), menu);
+#endif /* USE_GTK_COMBOBOX */
     gtk_box_pack_start(GTK_BOX(contentsVBox), mOptionMenu, FALSE, FALSE, 0);
   }
 
@@ -430,5 +445,9 @@ EmbedPrompter::SaveDialogValues()
     mTextValue.Assign(gtk_entry_get_text(GTK_ENTRY(mTextField)));
 
   if (mOptionMenu)
+#ifdef USE_GTK_COMBOBOX
+    mSelectedItem = gtk_combo_box_get_active(GTK_COMBO_BOX(mOptionMenu));
+#else
     mSelectedItem = gtk_option_menu_get_history(GTK_OPTION_MENU(mOptionMenu));
+#endif /* USE_GTK_COMBOBOX */
 }
