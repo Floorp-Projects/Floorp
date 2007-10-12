@@ -55,6 +55,7 @@
 #include "nsCSSRuleProcessor.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
+#include "nsContentUtils.h"
 
 nsIURI *nsStyleSet::gQuirkURI = 0;
 
@@ -508,7 +509,7 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   nsRuleNode* lastPresHintRN = mRuleWalker->GetCurrentNode();
 
   mRuleWalker->SetLevel(eUserSheet, PR_FALSE);
-  PRBool skipUserStyles = IsNativeAnonymous(aData->mContent);
+  PRBool skipUserStyles = nsContentUtils::IsNativeAnonymous(aData->mContent);
   if (!skipUserStyles && mRuleProcessors[eUserSheet]) // NOTE: different
     (*aCollectorFunc)(mRuleProcessors[eUserSheet], aData);
   nsRuleNode* lastUserRN = mRuleWalker->GetCurrentNode();
@@ -572,7 +573,7 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
   if (mRuleProcessors[ePresHintSheet])
     (*aFunc)(mRuleProcessors[ePresHintSheet], aData);
 
-  PRBool skipUserStyles = IsNativeAnonymous(aData->mContent);
+  PRBool skipUserStyles = nsContentUtils::IsNativeAnonymous(aData->mContent);
   if (!skipUserStyles && mRuleProcessors[eUserSheet]) // NOTE: different
     (*aFunc)(mRuleProcessors[eUserSheet], aData);
 
@@ -1003,21 +1004,4 @@ nsStyleSet::HasAttributeDependentStyle(nsPresContext* aPresContext,
   }
 
   return result;
-}
-
-PRBool
-nsStyleSet::IsNativeAnonymous(nsIContent* aContent)
-{
-  while (aContent) {
-    nsIContent* bindingParent = aContent->GetBindingParent();
-    if (bindingParent == aContent) {
-      NS_ASSERTION(bindingParent->IsNativeAnonymous() ||
-                   bindingParent->IsNodeOfType(nsINode::eXUL),
-                   "Bogus binding parent?");
-      return PR_TRUE;
-    }
-    aContent = bindingParent;
-  }
-
-  return PR_FALSE;
 }

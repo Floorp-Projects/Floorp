@@ -607,6 +607,13 @@ nsBoxFrame::DidReflow(nsPresContext*           aPresContext,
   return rv;
 }
 
+PRBool
+nsBoxFrame::HonorPrintBackgroundSettings()
+{
+  return (!mContent || !nsContentUtils::IsNativeAnonymous(mContent)) &&
+    nsContainerFrame::HonorPrintBackgroundSettings();
+}
+
 #ifdef DO_NOISY_REFLOW
 static int myCounter = 0;
 static void printSize(char * aDesc, nscoord aSize) 
