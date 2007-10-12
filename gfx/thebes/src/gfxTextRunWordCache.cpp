@@ -362,12 +362,34 @@ TextRunWordCache::FinishTextRun(gfxTextRun *aTextRun, gfxTextRun *aNewRun,
     }
 }
 
+static gfxTextRun *
+MakeBlankTextRun(const void* aText, PRUint32 aLength,
+                         gfxFontGroup *aFontGroup,
+                         const gfxFontGroup::Parameters *aParams,
+                         PRUint32 aFlags)
+{
+    nsAutoPtr<gfxTextRun> textRun;
+    textRun = new gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags);
+    if (!textRun || !textRun->GetCharacterGlyphs())
+        return nsnull;
+    gfxFont *font = aFontGroup->GetFontAt(0);
+    textRun->AddGlyphRun(font, 0);
+    return textRun.forget();
+}
+
 gfxTextRun *
 TextRunWordCache::MakeTextRun(const PRUnichar *aText, PRUint32 aLength,
                               gfxFontGroup *aFontGroup,
                               const gfxFontGroup::Parameters *aParams,
                               PRUint32 aFlags)
 {
+    if (aFontGroup->GetStyle()->size == 0) {
+        // Short-circuit for size-0 fonts, as Windows and ATSUI can't handle
+        // them, and always create at least size 1 fonts, i.e. they still
+        // render something for size 0 fonts.
+        return MakeBlankTextRun(aText, aLength, aFontGroup, aParams, aFlags);
+    }
+
     nsAutoPtr<gfxTextRun> textRun;
     textRun = new gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags);
     if (!textRun || !textRun->GetCharacterGlyphs())
@@ -443,6 +465,13 @@ TextRunWordCache::MakeTextRun(const PRUint8 *aText, PRUint32 aLength,
                               const gfxFontGroup::Parameters *aParams,
                               PRUint32 aFlags)
 {
+    if (aFontGroup->GetStyle()->size == 0) {
+        // Short-circuit for size-0 fonts, as Windows and ATSUI can't handle
+        // them, and always create at least size 1 fonts, i.e. they still
+        // render something for size 0 fonts.
+        return MakeBlankTextRun(aText, aLength, aFontGroup, aParams, aFlags);
+    }
+
     aFlags |= gfxTextRunFactory::TEXT_IS_8BIT;
     nsAutoPtr<gfxTextRun> textRun;
     textRun = new gfxTextRun(aParams, aText, aLength, aFontGroup, aFlags);
