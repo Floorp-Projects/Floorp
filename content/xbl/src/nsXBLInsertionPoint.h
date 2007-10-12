@@ -63,6 +63,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXBLInsertionPoint)
 
   already_AddRefed<nsIContent> GetInsertionParent();
+  void ClearInsertionParent() { mParentElement = nsnull; }
+
   PRInt32 GetInsertionIndex() { return mIndex; }
 
   void SetDefaultContent(nsIContent* aDefaultContent) { mDefaultContent = aDefaultContent; }
