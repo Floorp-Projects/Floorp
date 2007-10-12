@@ -164,6 +164,9 @@ public:
 
   PRBool AllowScripts();  // XXX make const
 
+  void RemoveInsertionParent(nsIContent* aParent);
+  PRBool HasInsertionParent(nsIContent* aParent);
+
 // MEMBER VARIABLES
 protected:
   nsAutoRefCnt mRefCnt;

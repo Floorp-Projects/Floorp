@@ -87,6 +87,10 @@
 // = nsAnonymousContentList 
 // ==================================================================
 
+#define NS_ANONYMOUS_CONTENT_LIST_IID \
+  { 0xa29df1f8, 0xaeca, 0x4356, \
+    { 0xa8, 0xc2, 0xa7, 0x24, 0xa2, 0x11, 0x73, 0xac } }
+
 class nsAnonymousContentList : public nsIDOMNodeList
 {
 public:
@@ -102,10 +106,13 @@ public:
 
   nsXBLInsertionPoint* GetInsertionPointAt(PRInt32 i) { return static_cast<nsXBLInsertionPoint*>(mElements->ElementAt(i)); }
   void RemoveInsertionPointAt(PRInt32 i) { mElements->RemoveElementAt(i); }
-
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ANONYMOUS_CONTENT_LIST_IID)
 private:
   nsInsertionPointList* mElements;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(nsAnonymousContentList,
+                              NS_ANONYMOUS_CONTENT_LIST_IID)
 
 nsAnonymousContentList::nsAnonymousContentList(nsInsertionPointList* aElements)
   : mElements(aElements)
@@ -129,6 +136,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsAnonymousContentList)
 
 NS_INTERFACE_MAP_BEGIN(nsAnonymousContentList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNodeList)
+  NS_INTERFACE_MAP_ENTRY(nsAnonymousContentList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(NodeList)
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsAnonymousContentList)
@@ -299,8 +307,17 @@ SetOrRemoveObject(PLDHashTable& table, nsIContent* aKey, nsISupports* aValue)
   }
 
   // no value, so remove the key from the table
-  if (table.ops)
-    RemoveObjectEntry(table, aKey);
+  if (table.ops) {
+    ObjectEntry* entry =
+      static_cast<ObjectEntry*>
+        (PL_DHashTableOperate(&table, aKey, PL_DHASH_LOOKUP));
+    if (entry && PL_DHASH_ENTRY_IS_BUSY(entry)) {
+      // Keep key and value alive while removing the entry.
+      nsCOMPtr<nsISupports> key = entry->GetKey();
+      nsCOMPtr<nsISupports> value = entry->GetValue();
+      RemoveObjectEntry(table, aKey);
+    }
+  }
   return NS_OK;
 }
 
@@ -402,10 +419,58 @@ nsBindingManager::~nsBindingManager(void)
     PL_DHashTableFinish(&mContentListTable);
   if (mAnonymousNodesTable.ops)
     PL_DHashTableFinish(&mAnonymousNodesTable);
+  NS_ASSERTION(!mInsertionParentTable.ops || !mInsertionParentTable.entryCount,
+               "Insertion parent table isn't empty!");
   if (mInsertionParentTable.ops)
     PL_DHashTableFinish(&mInsertionParentTable);
   if (mWrapperTable.ops)
     PL_DHashTableFinish(&mWrapperTable);
+}
+
+PLDHashOperator
+PR_CALLBACK RemoveInsertionParentCB(PLDHashTable* aTable, PLDHashEntryHdr* aEntry,
+                                  PRUint32 aNumber, void* aArg)
+{
+  return (static_cast<ObjectEntry*>(aEntry)->GetValue() ==
+          static_cast<nsISupports*>(aArg)) ? PL_DHASH_REMOVE : PL_DHASH_NEXT;
+}
+
+static void
+RemoveInsertionParentForNodeList(nsIDOMNodeList* aList, nsIContent* aParent)
+{
+  nsCOMPtr<nsAnonymousContentList> list = do_QueryInterface(aList);
+  if (list) {
+    PRInt32 count = list->GetInsertionPointCount();
+    for (PRInt32 i = 0; i < count; ++i) {
+      nsRefPtr<nsXBLInsertionPoint> currPoint = list->GetInsertionPointAt(i);
+      nsCOMPtr<nsIContent> defContent = currPoint->GetDefaultContent();
+      if (defContent) {
+        defContent->UnbindFromTree();
+      }
+#ifdef DEBUG
+      nsCOMPtr<nsIContent> parent = currPoint->GetInsertionParent();
+      NS_ASSERTION(!parent || parent == aParent, "Wrong insertion parent!");
+#endif
+      currPoint->ClearInsertionParent();
+    }
+  }
+}
+
+void
+nsBindingManager::RemoveInsertionParent(nsIContent* aParent)
+{
+  nsCOMPtr<nsIDOMNodeList> contentlist;
+  GetContentListFor(aParent, getter_AddRefs(contentlist));
+  RemoveInsertionParentForNodeList(contentlist, aParent);
+
+  nsCOMPtr<nsIDOMNodeList> anonnodes;
+  GetAnonymousNodesFor(aParent, getter_AddRefs(anonnodes));
+  RemoveInsertionParentForNodeList(anonnodes, aParent);
+
+  if (mInsertionParentTable.ops) {
+    PL_DHashTableEnumerate(&mInsertionParentTable, RemoveInsertionParentCB,
+                           static_cast<nsISupports*>(aParent));
+  }
 }
 
 nsXBLBinding*
@@ -433,8 +498,18 @@ nsBindingManager::SetBinding(nsIContent* aContent, nsXBLBinding* aBinding)
   // constructor twice (if aBinding inherits from it) or firing its constructor
   // after aContent has been deleted (if aBinding is null and the content node
   // dies before we process mAttachedStack).
-  nsXBLBinding* oldBinding = mBindingTable.GetWeak(aContent);
+  nsRefPtr<nsXBLBinding> oldBinding = GetBinding(aContent);
   if (oldBinding) {
+    if (aContent->HasFlag(NODE_IS_INSERTION_PARENT)) {
+      nsRefPtr<nsXBLBinding> parentBinding =
+        GetBinding(aContent->GetBindingParent());
+      // Clear insertion parent only if we don't have a parent binding which
+      // marked content to be an insertion parent. See also ChangeDocumentFor().
+      if (!parentBinding || !parentBinding->HasInsertionParent(aContent)) {
+        RemoveInsertionParent(aContent);
+        aContent->UnsetFlags(NODE_IS_INSERTION_PARENT);
+      }
+    }
     mAttachedStack.RemoveElement(oldBinding);
   }
   
@@ -471,6 +546,8 @@ nsBindingManager::GetInsertionParent(nsIContent* aContent)
 nsresult
 nsBindingManager::SetInsertionParent(nsIContent* aContent, nsIContent* aParent)
 {
+  NS_ASSERTION(!aParent || aParent->HasFlag(NODE_IS_INSERTION_PARENT),
+               "Insertion parent should have NODE_IS_INSERTION_PARENT flag!");
   return SetOrRemoveObject(mInsertionParentTable, aContent, aParent);
 }
 
@@ -505,6 +582,19 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
   // Hold a ref to the binding so it won't die when we remove it from our
   // table.
   nsRefPtr<nsXBLBinding> binding = GetBinding(aContent);
+  if (aContent->HasFlag(NODE_IS_INSERTION_PARENT)) {
+    nsRefPtr<nsXBLBinding> parentBinding = GetBinding(aContent->GetBindingParent());
+    if (parentBinding) {
+      parentBinding->RemoveInsertionParent(aContent);
+      // Clear insertion parent only if we don't have a binding which
+      // marked content to be an insertion parent. See also SetBinding().
+      if (!binding || !binding->HasInsertionParent(aContent)) {
+        RemoveInsertionParent(aContent);
+        aContent->UnsetFlags(NODE_IS_INSERTION_PARENT);
+      }
+    }
+  }
+
   if (binding) {
     binding->ChangeDocument(aOldDocument, aNewDocument);
     SetBinding(aContent, nsnull);
