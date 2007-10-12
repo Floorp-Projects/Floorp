@@ -189,14 +189,13 @@ nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, ThemeButtonKind inKind,
     drawFrame.size.height = offscreenHeight - NATIVE_PUSH_BUTTON_HEIGHT_DIFF;
 
     // draw into offscreen image
-    @try {
+    NS_DURING
       [image lockFocus];
-    } @catch (NSException* e) {
-      NS_WARNING(nsPrintfCString(256, "Exception raised while drawing to offscreen buffer: \"%s - %s\"", 
-                                 [[e name] UTF8String], [[e reason] UTF8String]).get());
+    NS_HANDLER
+      NS_ASSERTION(0, "Could not lock focus on offscreen buffer");
       [image release];
       return;
-    }
+    NS_ENDHANDLER
     [[NSGraphicsContext currentContext] setImageInterpolation:NSImageInterpolationLow];
     HIThemeDrawButton(&drawFrame, &bdi, (CGContext*)[[NSGraphicsContext currentContext] graphicsPort], kHIThemeOrientationInverted, NULL);
     [image unlockFocus];
@@ -521,14 +520,13 @@ nsNativeThemeCocoa::DrawScrollbar(CGContextRef aCGContext, const HIRect& aBoxRec
     ::HIThemeDrawTrack(&tdi, NULL, aCGContext, HITHEME_ORIENTATION);
   else {
     NSImage *buffer = [[NSImage alloc] initWithSize:NSMakeSize(aBoxRect.size.width, aBoxRect.size.height)];
-    @try {
+    NS_DURING
       [buffer lockFocus];
-    } @catch (NSException* e) {
-      NS_WARNING(nsPrintfCString(256, "Exception raised while drawing to offscreen buffer: \"%s - %s\"", 
-                                 [[e name] UTF8String], [[e reason] UTF8String]).get());
+    NS_HANDLER
+      NS_ASSERTION(0, "Could not lock focus on offscreen buffer");
       [buffer release];
       return;
-    }
+    NS_ENDHANDLER
     ::HIThemeDrawTrack(&tdi, NULL, (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort],
                        kHIThemeOrientationInverted);
     [buffer unlockFocus];
