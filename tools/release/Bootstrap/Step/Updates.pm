@@ -310,9 +310,9 @@ sub BumpVerifyConfig {
                 $channel . '" from="/' . $product . '/releases/' . 
                 $oldVersion . '/' . $ftpOsname . '/%locale%/' . $releaseFile .
                 '" aus_server="' . $ausServer . '" ftp_server="' .
-                $externalStagingServer . '" to="/' . $product . '/nightly/' . 
-                $version .  '-candidates/rc' . $rc . '/' . $nightlyFile . '"' . 
-                "\n");
+                $externalStagingServer . '/pub/mozilla.org" to="/' . 
+                $product . '/nightly/' .  $version .  '-candidates/rc' . 
+                $rc . '/' . $nightlyFile . '"' .  "\n");
 
     open(FILE, "> $configFile") or die ("Could not open file $configFile: $!");
     print FILE @data;
