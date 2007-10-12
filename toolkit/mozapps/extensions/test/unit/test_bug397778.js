@@ -39,8 +39,8 @@
 const PREF_MATCH_OS_LOCALE = "intl.locale.matchOS";
 const PREF_SELECTED_LOCALE = "general.useragent.locale";
 
-const ADDON = "test_bug257155";
-const ID = "bug257155@tests.mozilla.org";
+const ADDON = "test_bug397778";
+const ID = "bug397778@tests.mozilla.org";
 
 function run_test()
 {
@@ -54,33 +54,56 @@ function run_test()
   gEM.installItemFromFile(do_get_addon(ADDON), NS_INSTALL_LOCATION_APPPROFILE);
   var addon = gEM.getItemForID(ID);
   do_check_neq(addon, null);
-  do_check_eq(addon.name, "fr-FR Name");
+  do_check_eq(addon.name, "fr Name");
   restartEM();
 
   addon = gEM.getItemForID(ID);
   do_check_neq(addon, null);
-  do_check_eq(addon.name, "fr-FR Name");
-  do_check_eq(getManifestProperty(ID, "description"), "fr-FR Description");
+  do_check_eq(addon.name, "fr Name");
+  do_check_eq(getManifestProperty(ID, "description"), "fr Description");
   
   // Disable item
   gEM.disableItem(ID);
   restartEM();
   addon = gEM.getItemForID(ID);
   do_check_neq(addon, null);
-  do_check_eq(addon.name, "fr-FR Name");
+  do_check_eq(addon.name, "fr Name");
   
-  // Change locale
-  gPrefs.setCharPref(PREF_SELECTED_LOCALE, "de-DE");
+  // Change locale. The more specific de-DE is the best match
+  gPrefs.setCharPref(PREF_SELECTED_LOCALE, "de");
   addon = gEM.getItemForID(ID);
   do_check_neq(addon, null);
   do_check_eq(addon.name, "de-DE Name");
   do_check_eq(getManifestProperty(ID, "description"), "");
   
-  // Change to a locale not provided by the add-on
+  // Change locale. Locale case should have no effect
+  gPrefs.setCharPref(PREF_SELECTED_LOCALE, "DE-de");
+  addon = gEM.getItemForID(ID);
+  do_check_neq(addon, null);
+  do_check_eq(addon.name, "de-DE Name");
+  do_check_eq(getManifestProperty(ID, "description"), "");
+  
+  // Change locale. es-ES should closely match
+  gPrefs.setCharPref(PREF_SELECTED_LOCALE, "es-AR");
+  addon = gEM.getItemForID(ID);
+  do_check_neq(addon, null);
+  do_check_eq(addon.name, "es-ES Name");
+  do_check_eq(getManifestProperty(ID, "description"), "es-ES Description");
+  
+  // Change locale. Either zh-CN or zh-TW could match
+  gPrefs.setCharPref(PREF_SELECTED_LOCALE, "zh");
+  addon = gEM.getItemForID(ID);
+  do_check_neq(addon, null);
+  if (addon.name != "zh-TW Name" && addon.name != "zh-CN Name")
+    do_throw("zh matched to " + addon.name);
+  
+  // Unknown locale should try to match against en-US as well. Of en,en-GB
+  // en should match as being less specific
   gPrefs.setCharPref(PREF_SELECTED_LOCALE, "nl-NL");
   addon = gEM.getItemForID(ID);
   do_check_neq(addon, null);
-  do_check_eq(addon.name, "Fallback Name");
+  do_check_eq(addon.name, "en Name");
+  do_check_eq(getManifestProperty(ID, "description"), "en Description");
   
   shutdownEM();
 }
