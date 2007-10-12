@@ -766,6 +766,15 @@ nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   return mPrefWidth;
 }
 
+nsRect
+nsBlockFrame::ComputeTightBounds(gfxContext* aContext) const
+{
+  // be conservative
+  if (GetStyleContext()->HasTextDecorations())
+    return GetOverflowRect();
+  return ComputeSimpleTightBounds(aContext);
+}
+
 static nsSize
 CalculateContainingBlockSizeForAbsolutes(const nsHTMLReflowState& aReflowState,
                                          nsSize aFrameSize)

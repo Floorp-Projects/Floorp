@@ -807,7 +807,7 @@ BuildTextRunsScanner::FindBoundaries(nsIFrame* aFrame, FindBoundaryState* aState
  * out the block (slowly)
  */
 static void
-BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
+BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
               nsIFrame* aLineContainer, const nsLineList::iterator* aForFrameLine)
 {
   if (!aLineContainer) {
@@ -817,9 +817,7 @@ BuildTextRuns(nsIRenderingContext* aRC, nsTextFrame* aForFrame,
   }
 
   nsPresContext* presContext = aLineContainer->PresContext();
-  gfxContext* ctx = static_cast<gfxContext*>
-                               (aRC->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
-  BuildTextRunsScanner scanner(presContext, ctx, aLineContainer);
+  BuildTextRunsScanner scanner(presContext, aContext, aLineContainer);
 
   nsBlockFrame* block = nsnull;
   aLineContainer->QueryInterface(kBlockFrameCID, (void**)&block);
@@ -1213,18 +1211,37 @@ GetFontGroupForFrame(nsIFrame* aFrame)
   return fm->GetThebesFontGroup();
 }
 
+static already_AddRefed<gfxContext>
+GetReferenceRenderingContext(nsTextFrame* aTextFrame, nsIRenderingContext* aRC)
+{
+  nsCOMPtr<nsIRenderingContext> tmp = aRC;
+  if (!tmp) {
+    nsresult rv = aTextFrame->PresContext()->PresShell()->
+      CreateRenderingContext(aTextFrame, getter_AddRefs(tmp));
+    if (NS_FAILED(rv))
+      return nsnull;
+  }
+
+  gfxContext* ctx = static_cast<gfxContext*>
+          (tmp->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  NS_ADDREF(ctx);
+  return ctx;
+}
+
 /**
  * The returned textrun must be released via gfxTextRunCache::ReleaseTextRun
  * or gfxTextRunCache::AutoTextRun.
  */
 static gfxTextRun*
-GetHyphenTextRun(gfxTextRun* aTextRun, nsIRenderingContext* aRefContext)
+GetHyphenTextRun(gfxTextRun* aTextRun, gfxContext* aContext, nsTextFrame* aTextFrame)
 {
-  if (NS_UNLIKELY(!aRefContext)) {
-    return nsnull;
+  nsRefPtr<gfxContext> ctx = aContext;
+  if (!ctx) {
+    ctx = GetReferenceRenderingContext(aTextFrame, nsnull);
   }
-  gfxContext* ctx = static_cast<gfxContext*>
-                               (aRefContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  if (!ctx)
+    return nsnull;
+
   gfxFontGroup* fontGroup = aTextRun->GetFontGroup();
   PRUint32 flags = gfxFontGroup::TEXT_IS_PERSISTENT;
 
@@ -1685,24 +1702,8 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
   }
 }
 
-static already_AddRefed<nsIRenderingContext>
-GetReferenceRenderingContext(nsTextFrame* aTextFrame, nsIRenderingContext* aRC)
-{
-  if (aRC) {
-    NS_ADDREF(aRC);
-    return aRC;
-  }
-
-  nsIRenderingContext* result;      
-  nsresult rv = aTextFrame->PresContext()->PresShell()->
-    CreateRenderingContext(aTextFrame, &result);
-  if (NS_FAILED(rv))
-    return nsnull;
-  return result;      
-}
-
 gfxSkipCharsIterator
-nsTextFrame::EnsureTextRun(nsIRenderingContext* aRC, nsIFrame* aLineContainer,
+nsTextFrame::EnsureTextRun(gfxContext* aReferenceContext, nsIFrame* aLineContainer,
                            const nsLineList::iterator* aLine,
                            PRUint32* aFlowEndInTextRun)
 {
@@ -1711,10 +1712,12 @@ nsTextFrame::EnsureTextRun(nsIRenderingContext* aRC, nsIFrame* aLineContainer,
       gTextRuns->MarkUsed(mTextRun);
     }
   } else {
-    nsCOMPtr<nsIRenderingContext> rendContext =
-      GetReferenceRenderingContext(this, aRC);
-    if (rendContext) {
-      BuildTextRuns(rendContext, this, aLineContainer, aLine);
+    nsRefPtr<gfxContext> ctx = aReferenceContext;
+    if (!ctx) {
+      ctx = GetReferenceRenderingContext(this, nsnull);
+    }
+    if (ctx) {
+      BuildTextRuns(ctx, this, aLineContainer, aLine);
     }
     if (!mTextRun) {
       // A text run was not constructed for this frame. This is bad. The caller
@@ -1858,9 +1861,6 @@ static void ClearMetrics(nsHTMLReflowMetrics& aMetrics)
   aMetrics.width = 0;
   aMetrics.height = 0;
   aMetrics.ascent = 0;
-#ifdef MOZ_MATHML
-  aMetrics.mBoundingMetrics.Clear();
-#endif
 }
 
 static PRInt32 FindChar(const nsTextFragment* frag,
@@ -2258,8 +2258,7 @@ gfxFloat
 PropertyProvider::GetHyphenWidth()
 {
   if (mHyphenWidth < 0) {
-    nsCOMPtr<nsIRenderingContext> rc = GetReferenceRenderingContext(mFrame, nsnull);
-    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, rc));
+    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, mFrame));
     mHyphenWidth = mLetterSpacing;
     if (hyphenTextRun.get()) {
       mHyphenWidth += hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull);
@@ -2369,8 +2368,7 @@ PropertyProvider::SetupJustificationSpacing()
     mTextRun->GetAdvanceWidth(mStart.GetSkippedOffset(),
                               GetSkippedDistance(mStart, realEnd), this);
   if (mFrame->GetStateBits() & TEXT_HYPHEN_BREAK) {
-    nsCOMPtr<nsIRenderingContext> rc = GetReferenceRenderingContext(mFrame, nsnull);
-    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, rc));
+    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, mFrame));
     if (hyphenTextRun.get()) {
       naturalWidth +=
         hyphenTextRun->GetAdvanceWidth(0, hyphenTextRun->GetLength(), nsnull);
@@ -3863,8 +3861,7 @@ nsTextFrame::PaintTextWithSelectionColors(gfxContext* aCtx,
       gfxFloat hyphenBaselineX = aFramePt.x + xOffset + mTextRun->GetDirection()*advance;
       // Get a reference rendering context because aCtx might not have the
       // reference matrix currently set
-      nsCOMPtr<nsIRenderingContext> rc = GetReferenceRenderingContext(this, nsnull);
-      gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, rc));
+      gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, this));
       if (hyphenTextRun.get()) {
         hyphenTextRun->Draw(aCtx, gfxPoint(hyphenBaselineX, aTextBaselinePt.y),
                             0, hyphenTextRun->GetLength(), &aDirtyRect, nsnull, nsnull);
@@ -3992,8 +3989,10 @@ void
 nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
                        const nsRect& aDirtyRect)
 {
+  // Don't pass in aRenderingContext here, because we need a *reference*
+  // context and aRenderingContext might have some transform in it
   // XXX get the block and line passed to us somehow! This is slow!
-  gfxSkipCharsIterator iter = EnsureTextRun(aRenderingContext);
+  gfxSkipCharsIterator iter = EnsureTextRun();
   if (!mTextRun)
     return;
 
@@ -4031,8 +4030,9 @@ nsTextFrame::PaintText(nsIRenderingContext* aRenderingContext, nsPoint aPt,
                  &dirtyRect, &provider, needAdvanceWidth);
   if (GetStateBits() & TEXT_HYPHEN_BREAK) {
     gfxFloat hyphenBaselineX = textBaselinePt.x + mTextRun->GetDirection()*advanceWidth;
-    nsCOMPtr<nsIRenderingContext> rc = GetReferenceRenderingContext(this, nsnull);
-    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, rc));
+    // Don't use ctx as the context, because we need a reference context here,
+    // ctx may be transformed.
+    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, nsnull, this));
     if (hyphenTextRun.get()) {
       hyphenTextRun->Draw(ctx, gfxPoint(hyphenBaselineX, textBaselinePt.y),
                           0, hyphenTextRun->GetLength(), &dirtyRect, nsnull, nsnull);
@@ -4745,8 +4745,10 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
                                       nsIFrame::InlineMinWidthData *aData)
 {
   PRUint32 flowEndInTextRun;
+  gfxContext* ctx = static_cast<gfxContext*>
+    (aRenderingContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
   gfxSkipCharsIterator iter =
-    EnsureTextRun(aRenderingContext, nsnull, aData->line, &flowEndInTextRun);
+    EnsureTextRun(ctx, nsnull, aData->line, &flowEndInTextRun);
   if (!mTextRun)
     return;
 
@@ -4845,8 +4847,10 @@ nsTextFrame::AddInlinePrefWidthForFlow(nsIRenderingContext *aRenderingContext,
                                        nsIFrame::InlinePrefWidthData *aData)
 {
   PRUint32 flowEndInTextRun;
+  gfxContext* ctx = static_cast<gfxContext*>
+    (aRenderingContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
   gfxSkipCharsIterator iter =
-    EnsureTextRun(aRenderingContext, nsnull, aData->line, &flowEndInTextRun);
+    EnsureTextRun(ctx, nsnull, aData->line, &flowEndInTextRun);
   if (!mTextRun)
     return;
 
@@ -4934,6 +4938,44 @@ nsTextFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
 {
   // Inlines and text don't compute size before reflow.
   return nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+}
+
+static nsRect
+RoundOut(const gfxRect& aRect)
+{
+  nsRect r;
+  r.x = NSToCoordFloor(aRect.X());
+  r.y = NSToCoordFloor(aRect.Y());
+  r.width = NSToCoordCeil(aRect.XMost()) - r.x;
+  r.height = NSToCoordCeil(aRect.YMost()) - r.y;
+  return r;
+}
+
+nsRect
+nsTextFrame::ComputeTightBounds(gfxContext* aContext) const
+{
+  if ((GetStyleContext()->HasTextDecorations() &&
+       eCompatibility_NavQuirks == PresContext()->CompatibilityMode()) ||
+      (GetStateBits() & TEXT_HYPHEN_BREAK)) {
+    // This is conservative, but OK.
+    return GetOverflowRect();
+  }
+
+  gfxSkipCharsIterator iter = const_cast<nsTextFrame*>(this)->EnsureTextRun();
+  if (!mTextRun)
+    return nsRect(0, 0, 0, 0);
+
+  PropertyProvider provider(const_cast<nsTextFrame*>(this), iter);
+  // Trim trailing whitespace
+  provider.InitializeForDisplay(PR_TRUE);
+
+  gfxTextRun::Metrics metrics =
+        mTextRun->MeasureText(provider.GetStart().GetSkippedOffset(),
+                              ComputeTransformedLength(provider), PR_TRUE,
+                              aContext, &provider);
+  // mAscent should be the same as metrics.mAscent, but it's what we use to
+  // paint so that's the one we'll use.
+  return RoundOut(metrics.mBoundingBox) + nsPoint(0, mAscent);
 }
 
 static void
@@ -5111,9 +5153,10 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
 
   PRUint32 flowEndInTextRun;
   nsIFrame* lineContainer = lineLayout.GetLineContainerFrame();
+  gfxContext* ctx = static_cast<gfxContext*>
+    (aReflowState.rendContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
   gfxSkipCharsIterator iter =
-    EnsureTextRun(aReflowState.rendContext, lineContainer,
-                  lineLayout.GetLine(), &flowEndInTextRun);
+    EnsureTextRun(ctx, lineContainer, lineLayout.GetLine(), &flowEndInTextRun);
 
   PRInt32 skippedRunLength;
   if (mTextRun && mTextRun->GetLength() == iter.GetSkippedOffset() &&
@@ -5124,7 +5167,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     // preformatted newline was encountered, and prev-in-flow frames have
     // consumed all the text of the textrun. We need a new textrun.
     ClearTextRun();
-    iter = EnsureTextRun(aReflowState.rendContext, lineContainer,
+    iter = EnsureTextRun(ctx, lineContainer,
                          lineLayout.GetLine(), &flowEndInTextRun);
   }
   
@@ -5161,9 +5204,8 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   gfxTextRun::Metrics textMetrics;
   PRBool needTightBoundingBox = (GetStateBits() & TEXT_FIRST_LETTER) != 0;
 #ifdef MOZ_MATHML
-  if (NS_REFLOW_CALC_BOUNDING_METRICS & aMetrics.mFlags) {
-    needTightBoundingBox = PR_TRUE;
-  }
+  NS_ASSERTION(!(NS_REFLOW_CALC_BOUNDING_METRICS & aMetrics.mFlags),
+               "We shouldn't be passed NS_REFLOW_CALC_BOUNDING_METRICS anymore");
 #endif
   PRBool suppressInitialBreak = !lineLayout.LineIsBreakable() ||
     !lineLayout.HasTrailingTextFrame();
@@ -5200,8 +5242,6 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   gfxFloat availWidth = aReflowState.availableWidth;
   PRBool canTrimTrailingWhitespace = !textStyle->WhiteSpaceIsSignificant() &&
     textStyle->WhiteSpaceCanWrap();
-  gfxContext* ctx = static_cast<gfxContext*>
-    (aReflowState.rendContext->GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
   PRUint32 transformedCharsFit =
     mTextRun->BreakAndMeasureText(transformedOffset, transformedLength,
                                   (GetStateBits() & TEXT_START_OF_LINE) != 0,
@@ -5236,7 +5276,7 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
   }
   if (usedHyphenation) {
     // Fix up metrics to include hyphen
-    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, aReflowState.rendContext));
+    gfxTextRunCache::AutoTextRun hyphenTextRun(GetHyphenTextRun(mTextRun, ctx, this));
     if (hyphenTextRun.get()) {
       AddCharToMetrics(hyphenTextRun.get(),
                        mTextRun, &textMetrics, needTightBoundingBox, ctx);
@@ -5293,21 +5333,6 @@ nsTextFrame::Reflow(nsPresContext*           aPresContext,
     ConvertGfxRectOutward(textMetrics.mBoundingBox + gfxPoint(0, textMetrics.mAscent));
   aMetrics.mOverflowArea.UnionRect(boundingBox,
                                    nsRect(0, 0, aMetrics.width, aMetrics.height));
-
-#ifdef MOZ_MATHML
-  // Store MathML bounding metrics. We've already calculated them above.
-  if (needTightBoundingBox) {
-    aMetrics.mBoundingMetrics.ascent =
-      NSToCoordCeil(PR_MAX(0, -textMetrics.mBoundingBox.Y()));
-    aMetrics.mBoundingMetrics.descent =
-      NSToCoordCeil(PR_MAX(0, textMetrics.mBoundingBox.YMost()));
-    aMetrics.mBoundingMetrics.leftBearing =
-      NSToCoordFloor(textMetrics.mBoundingBox.X());
-    aMetrics.mBoundingMetrics.rightBearing =
-      NSToCoordCeil(textMetrics.mBoundingBox.XMost());
-    aMetrics.mBoundingMetrics.width = aMetrics.width;
-  }
-#endif
 
   /////////////////////////////////////////////////////////////////////
   // Clean up, update state
@@ -5400,7 +5425,9 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
   if (!contentLength)
     return NS_OK;
 
-  gfxSkipCharsIterator start = EnsureTextRun(&aRC);
+  gfxContext* ctx = static_cast<gfxContext*>
+    (aRC.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
+  gfxSkipCharsIterator start = EnsureTextRun(ctx);
   if (!mTextRun)
     return NS_ERROR_FAILURE;
   PRUint32 trimmedStart = start.GetSkippedOffset();
@@ -5447,8 +5474,6 @@ nsTextFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
     }
   }
 
-  gfxContext* ctx = static_cast<gfxContext*>
-                               (aRC.GetNativeGraphicData(nsIRenderingContext::NATIVE_THEBES_CONTEXT));
   gfxFloat advanceDelta;
   mTextRun->SetLineBreaks(trimmedStart, trimmedEnd - trimmedStart,
                           (GetStateBits() & TEXT_START_OF_LINE) != 0, PR_TRUE,

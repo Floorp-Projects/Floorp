@@ -120,7 +120,8 @@ public:
 
   virtual PRBool IsFrameOfType(PRUint32 aFlags) const
   {
-    return nsHTMLContainerFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
+    return !(aFlags & nsIFrame::eLineParticipant) &&
+      nsHTMLContainerFrame::IsFrameOfType(aFlags & ~(nsIFrame::eMathML));
   }
 
   NS_IMETHOD
@@ -221,13 +222,6 @@ public:
               nsHTMLReflowMetrics&     aDesiredSize,
               const nsHTMLReflowState& aReflowState,
               nsReflowStatus&          aStatus);
-
-  nsresult 
-  ReflowForeignChild(nsIFrame*                aKidFrame,
-                     nsPresContext*           aPresContext,
-                     nsHTMLReflowMetrics&     aDesiredSize,
-                     const nsHTMLReflowState& aReflowState,
-                     nsReflowStatus&          aStatus);
 
   // helper to add the inter-spacing when <math> is the immediate parent.
   // Since we don't (yet) handle the root <math> element ourselves, we need to
@@ -330,7 +324,8 @@ protected:
 // Issues: If/when mathml becomes a pluggable component, the separation will be needed.
 class nsMathMLmathBlockFrame : public nsBlockFrame {
 public:
-  friend nsIFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+  friend nsIFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell,
+          nsStyleContext* aContext, PRUint32 aFlags);
 
   // beware, mFrames is not set by nsBlockFrame
   // cannot use mFrames{.FirstChild()|.etc} since the block code doesn't set mFrames

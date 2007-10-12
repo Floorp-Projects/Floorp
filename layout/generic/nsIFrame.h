@@ -92,6 +92,7 @@ class nsDisplayListSet;
 class nsDisplayList;
 class gfxSkipChars;
 class gfxSkipCharsIterator;
+class gfxContext;
 class nsLineList_iterator;
 
 struct nsPeekOffsetStruct;
@@ -1304,6 +1305,16 @@ public:
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              PRBool aShrinkWrap) = 0;
+
+  /**
+   * Compute a tight bounding rectangle for the frame. This is a rectangle
+   * that encloses the pixels that are actually drawn. We're allowed to be
+   * conservative and currently we don't try very hard. The rectangle is
+   * in appunits and relative to the origin of this frame.
+   * @param aContext a rendering context that can be used if we need
+   * to do measurement
+   */
+  virtual nsRect ComputeTightBounds(gfxContext* aContext) const;
 
   /**
    * Pre-reflow hook. Before a frame is reflowed this method will be called.
