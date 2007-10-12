@@ -224,7 +224,9 @@ NS_IMETHODIMP nsDocAccessible::GetValue(nsAString& aValue)
 NS_IMETHODIMP 
 nsDocAccessible::GetDescription(nsAString& aDescription)
 {
-  aDescription.Truncate();
+  nsAutoString description;
+  GetTextFromRelationID(eAria_describedby, description);
+  aDescription = description;
   return NS_OK;
 }
 

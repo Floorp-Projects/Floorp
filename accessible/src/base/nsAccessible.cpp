@@ -1725,7 +1725,7 @@ nsresult nsAccessible::GetTextFromRelationID(EAriaProperty aIDProperty, nsString
 {
   // Get DHTML name from content subtree pointed to by ID attribute
   aName.Truncate();
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
+  nsCOMPtr<nsIContent> content = GetRoleContent(mDOMNode);
   NS_ASSERTION(content, "Called from shutdown accessible");
 
   nsAutoString ids;
@@ -1734,8 +1734,7 @@ nsresult nsAccessible::GetTextFromRelationID(EAriaProperty aIDProperty, nsString
   }
   ids.CompressWhitespace(PR_TRUE, PR_TRUE);
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mDOMNode->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(content->GetOwnerDoc());
   NS_ENSURE_TRUE(domDoc, NS_ERROR_FAILURE);
   
   nsresult rv = NS_ERROR_FAILURE;
