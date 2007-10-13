@@ -1036,7 +1036,7 @@ BookmarksSyncService.prototype = {
       node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
       node.containerOpen = true;
       for (var i = 0; i < node.childCount; i++) {
-        this._resetGUIDs(node.getChild(i));
+        this._resetGUIDsInt(node.getChild(i));
       }
     }
   },
