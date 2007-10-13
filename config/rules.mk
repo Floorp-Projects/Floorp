@@ -307,6 +307,8 @@ endif
 
 ALL_TRASH = \
 	$(GARBAGE) $(TARGETS) $(OBJS) $(PROGOBJS) LOGS TAGS a.out \
+	$(OBJS:.$(OBJ_SUFFIX)=.s) $(OBJS:.$(OBJ_SUFFIX)=.ii) \
+	$(OBJS:.$(OBJ_SUFFIX)=.i) \
 	$(HOST_PROGOBJS) $(HOST_OBJS) $(IMPORT_LIBRARY) $(DEF_FILE)\
 	$(EXE_DEF_FILE) so_locations _gen _stubs $(wildcard *.res) $(wildcard *.RES) \
 	$(wildcard *.pdb) $(CODFILE) $(MAPFILE) $(IMPORT_LIBRARY) \
@@ -1214,6 +1216,7 @@ host_%.$(OBJ_SUFFIX): %.mm Makefile Makefile.in
 moc_%.cpp: %.h Makefile Makefile.in
 	$(MOC) $< $(OUTOPTION)$@ 
 
+ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.
 %.$(OBJ_SUFFIX): %.$(ASM_SUFFIX) Makefile Makefile.in
@@ -1221,6 +1224,7 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(AS) -Fdo:./$(OBJDIR) -Feo:.$(OBJ_SUFFIX) $(ASFLAGS) $(AS_DASH_C_FLAG) $<
 else
 	$(AS) -o $@ $(ASFLAGS) $(AS_DASH_C_FLAG) $(_VPATH_SRCS)
+endif
 endif
 
 %.$(OBJ_SUFFIX): %.S Makefile Makefile.in
@@ -2014,7 +2018,6 @@ endif
 # hundreds of built-in suffix rules for stuff we don't need.
 #
 .SUFFIXES:
-.SUFFIXES: .out .a .ln .o .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in .$(OBJ_SUFFIX) .m .mm .idl $(BIN_SUFFIX)
 
 #
 # Fake targets.  Always run these rules, even if a file/directory with that
