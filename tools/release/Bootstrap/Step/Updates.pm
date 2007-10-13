@@ -259,13 +259,13 @@ sub BumpVerifyConfig {
         $platform = 'osx';
         $ftpOsname = 'mac';
         $releaseFile = ucfirst($product).' '.$oldVersion.'.dmg';
-        $nightlyFile = $product.'-'.$version.'.%locale%.'.$osname.'.mac.dmg';
+        $nightlyFile = $product.'-'.$version.'.%locale%.mac.dmg';
     } elsif ($osname eq 'win32') {
         $buildTarget = 'WINNT_x86-msvc';
         $platform = 'win32';
         $ftpOsname = 'win32';
         $releaseFile = ucfirst($product).' Setup '.$oldVersion.'.exe';
-        $nightlyFile = $product.'-'.$version.'.%locale%.'.$osname.'.installer.exe';
+        $nightlyFile = $product.'-'.$version.'.%locale%.win32.installer.exe';
     } else {
         die("ASSERT: unknown OS $osname");
     }
