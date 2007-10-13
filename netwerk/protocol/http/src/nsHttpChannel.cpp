@@ -803,7 +803,8 @@ nsHttpChannel::ProcessResponse()
         // Per RFC 2616, 14.35.2, "A server MAY ignore the Range header".
         // So if a server does that and sends 200 instead of 206 that we
         // expect, notify our caller.
-        if (mResuming) {
+        // However, if we wanted to start from the beginning, let it go through
+        if (mResuming && mStartPos != 0) {
             LOG(("Server ignored our Range header, cancelling [this=%p]\n", this));
             Cancel(NS_ERROR_NOT_RESUMABLE);
             rv = CallOnStartRequest();
@@ -917,7 +918,8 @@ nsHttpChannel::ProcessNormal()
             // If creating an entity id is not possible -> error
             Cancel(NS_ERROR_NOT_RESUMABLE);
         }
-        else if (mResponseHead->Status() != 206) {
+        else if (mResponseHead->Status() != 206 &&
+                 mResponseHead->Status() != 200) {
             // Probably 404 Not Found, 412 Precondition Failed or
             // 416 Invalid Range -> error
             LOG(("Unexpected response status while resuming, aborting [this=%p]\n",
