@@ -403,13 +403,4 @@ XRE_API(nsresult,
 XRE_API(void,
         XRE_FreeAppData, (nsXREAppData *aAppData))
 
-/**
- * Stores the  application.ini file to pass as an argument during a
- * possible restart. It should be called before calling XRE_main().
- *
- * @param aINIFile The application.ini file to store.
- */
-XRE_API(void,
-        XRE_SetAppDataFile, (nsILocalFile* aINIFile))
-
 #endif // _nsXULAppAPI_h__
