@@ -700,8 +700,6 @@ js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map)
     JS_HashTableEnumerateEntries(map->table, gc_sharp_table_entry_marker, trc);
 }
 
-#define OBJ_TOSTRING_EXTRA      4       /* for 4 local GC roots */
-
 #if JS_HAS_TOSOURCE
 static JSBool
 obj_toSource(JSContext *cx, uintN argc, jsval *vp)
@@ -722,6 +720,8 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
     uintN attrs;
 #endif
     jsval *val;
+    jsval localroot[4] = {JSVAL_NULL, JSVAL_NULL, JSVAL_NULL, JSVAL_NULL};
+    JSTempValueRooter tvr;
     JSString *gsopold[2];
     JSString *gsop[2];
     JSString *idstr, *valstr, *str;
@@ -732,12 +732,17 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
+    /* After this, control must flow through out: to exit. */
+    JS_PUSH_TEMP_ROOT(cx, 4, localroot, &tvr);
+
     /* If outermost, we need parentheses to be an expression, not a block. */
     outermost = (cx->sharpObjectMap.depth == 0);
     obj = JSVAL_TO_OBJECT(vp[1]);
     he = js_EnterSharpObject(cx, obj, &ida, &chars);
-    if (!he)
-        return JS_FALSE;
+    if (!he) {
+        ok = JS_FALSE;
+        goto out;
+    }
     if (IS_SHARP(he)) {
         /*
          * We didn't enter -- obj is already "sharp", meaning we've visited it
@@ -833,10 +838,10 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
 
     /*
      * We have four local roots for cooked and raw value GC safety.  Hoist the
-     * "vp + 4" out of the loop using the val local, which refers to the raw
-     * (unconverted, "uncooked") values.
+     * "localroot + 2" out of the loop using the val local, which refers to
+     * the raw (unconverted, "uncooked") values.
      */
-    val = vp + 4;
+    val = localroot + 2;
 
     for (i = 0, length = ida->length; i < length; i++) {
         JSBool idIsLexicalIdentifier, needOldStyleGetterSetter;
@@ -946,7 +951,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                 ok = JS_FALSE;
                 goto error;
             }
-            vp[2 + j] = STRING_TO_JSVAL(valstr);        /* local root */
+            localroot[j] = STRING_TO_JSVAL(valstr);     /* local root */
             JSSTRING_CHARS_AND_LENGTH(valstr, vchars, vlength);
 
             if (vchars[0] == '#')
@@ -1121,21 +1126,26 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
     if (!ok) {
         if (chars)
             free(chars);
-        return ok;
+        goto out;
     }
 
     if (!chars) {
         JS_ReportOutOfMemory(cx);
-        return JS_FALSE;
+        ok = JS_FALSE;
+        goto out;
     }
   make_string:
     str = js_NewString(cx, chars, nchars);
     if (!str) {
         free(chars);
-        return JS_FALSE;
+        ok = JS_FALSE;
+        goto out;
     }
     *vp = STRING_TO_JSVAL(str);
-    return JS_TRUE;
+    ok = JS_TRUE;
+  out:
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return ok;
 
   overflow:
     JS_free(cx, vsharp);
@@ -1817,23 +1827,23 @@ const char js_lookupSetter_str[] = "__lookupSetter__";
 
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,             obj_toSource, 0,0,0,OBJ_TOSTRING_EXTRA),
+    JS_FN(js_toSource_str,             obj_toSource, 0,0,0),
 #endif
-    JS_FN(js_toString_str,             obj_toString,             0,0,0,0),
-    JS_FN(js_toLocaleString_str,       obj_toLocaleString,       0,0,0,0),
-    JS_FN(js_valueOf_str,              obj_valueOf,              0,0,0,0),
+    JS_FN(js_toString_str,             obj_toString,             0,0,0),
+    JS_FN(js_toLocaleString_str,       obj_toLocaleString,       0,0,0),
+    JS_FN(js_valueOf_str,              obj_valueOf,              0,0,0),
 #if JS_HAS_OBJ_WATCHPOINT
-    JS_FN(js_watch_str,                obj_watch,                2,2,0,0),
-    JS_FN(js_unwatch_str,              obj_unwatch,              1,1,0,0),
+    JS_FN(js_watch_str,                obj_watch,                2,2,0),
+    JS_FN(js_unwatch_str,              obj_unwatch,              1,1,0),
 #endif
-    JS_FN(js_hasOwnProperty_str,       obj_hasOwnProperty,       1,1,0,0),
-    JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,        1,1,0,0),
-    JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable, 1,1,0,0),
+    JS_FN(js_hasOwnProperty_str,       obj_hasOwnProperty,       1,1,0),
+    JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,        1,1,0),
+    JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable, 1,1,0),
 #if JS_HAS_GETTER_SETTER
-    JS_FN(js_defineGetter_str,         obj_defineGetter,         2,2,0,0),
-    JS_FN(js_defineSetter_str,         obj_defineSetter,         2,2,0,0),
-    JS_FN(js_lookupGetter_str,         obj_lookupGetter,         1,1,0,0),
-    JS_FN(js_lookupSetter_str,         obj_lookupSetter,         1,1,0,0),
+    JS_FN(js_defineGetter_str,         obj_defineGetter,         2,2,0),
+    JS_FN(js_defineSetter_str,         obj_defineSetter,         2,2,0),
+    JS_FN(js_lookupGetter_str,         obj_lookupGetter,         1,1,0),
+    JS_FN(js_lookupSetter_str,         obj_lookupSetter,         1,1,0),
 #endif
     JS_FS_END
 };

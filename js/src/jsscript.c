@@ -804,14 +804,14 @@ static const char js_thaw_str[] = "thaw";
 
 static JSFunctionSpec script_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,   script_toSource,   0,0,0,0),
+    JS_FN(js_toSource_str,   script_toSource,   0,0,0),
 #endif
-    JS_FN(js_toString_str,   script_toString,   0,0,0,0),
-    JS_FN("compile",         script_compile,    0,2,0,0),
-    JS_FN("exec",            script_exec,       0,1,0,0),
+    JS_FN(js_toString_str,   script_toString,   0,0,0),
+    JS_FN("compile",         script_compile,    0,2,0),
+    JS_FN("exec",            script_exec,       0,1,0),
 #if JS_HAS_XDR_FREEZE_THAW
-    JS_FN("freeze",          script_freeze,     0,0,0,0),
-    JS_FN(js_thaw_str,       script_thaw,       0,1,0,0),
+    JS_FN("freeze",          script_freeze,     0,0,0),
+    JS_FN(js_thaw_str,       script_thaw,       0,1,0),
 #endif /* JS_HAS_XDR_FREEZE_THAW */
     JS_FS_END
 };
@@ -904,7 +904,7 @@ script_static_thaw(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec script_static_methods[] = {
-    JS_FN(js_thaw_str,       script_static_thaw,     1,1,0,0),
+    JS_FN(js_thaw_str,       script_static_thaw,     1,1,0),
     JS_FS_END
 };
 

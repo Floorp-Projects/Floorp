@@ -482,15 +482,15 @@ const char js_decodeURIComponent_str[] = "decodeURIComponent";
 const char js_encodeURIComponent_str[] = "encodeURIComponent";
 
 static JSFunctionSpec string_functions[] = {
-    JS_FN(js_escape_str,             str_escape,                1,1,0,0),
-    JS_FN(js_unescape_str,           str_unescape,              1,1,0,0),
+    JS_FN(js_escape_str,             str_escape,                1,1,0),
+    JS_FN(js_unescape_str,           str_unescape,              1,1,0),
 #if JS_HAS_UNEVAL
-    JS_FN(js_uneval_str,             str_uneval,                1,1,0,0),
+    JS_FN(js_uneval_str,             str_uneval,                1,1,0),
 #endif
-    JS_FN(js_decodeURI_str,          str_decodeURI,             1,1,0,0),
-    JS_FN(js_encodeURI_str,          str_encodeURI,             1,1,0,0),
-    JS_FN(js_decodeURIComponent_str, str_decodeURI_Component,   1,1,0,0),
-    JS_FN(js_encodeURIComponent_str, str_encodeURI_Component,   1,1,0,0),
+    JS_FN(js_decodeURI_str,          str_decodeURI,             1,1,0),
+    JS_FN(js_encodeURI_str,          str_encodeURI,             1,1,0),
+    JS_FN(js_decodeURIComponent_str, str_decodeURI_Component,   1,1,0),
+    JS_FN(js_encodeURIComponent_str, str_encodeURI_Component,   1,1,0),
 
     JS_FS_END
 };
@@ -1285,16 +1285,18 @@ match_glob(JSContext *cx, jsint count, GlobData *data)
 static JSBool
 str_match(JSContext *cx, uintN argc, jsval *vp)
 {
+    JSTempValueRooter tvr;
     MatchData mdata;
     JSBool ok;
 
+    JS_PUSH_SINGLE_TEMP_ROOT(cx, JSVAL_NULL, &tvr);
     mdata.base.flags = MODE_MATCH;
     mdata.base.optarg = 1;
-    mdata.arrayval = &vp[4];
-    *mdata.arrayval = JSVAL_NULL;
+    mdata.arrayval = &tvr.u.value;
     ok = match_or_replace(cx, match_glob, NULL, &mdata.base, argc, vp);
     if (ok && !JSVAL_IS_NULL(*mdata.arrayval))
         *vp = *mdata.arrayval;
+    JS_POP_TEMP_ROOT(cx, &tvr);
     return ok;
 }
 
@@ -2227,52 +2229,52 @@ str_sub(JSContext *cx, uintN argc, jsval *vp)
 
 static JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN("quote",             str_quote,             0,0,GENERIC_PRIMITIVE,0),
-    JS_FN(js_toSource_str,     str_toSource,          0,0,JSFUN_THISP_STRING,0),
+    JS_FN("quote",             str_quote,             0,0,GENERIC_PRIMITIVE),
+    JS_FN(js_toSource_str,     str_toSource,          0,0,JSFUN_THISP_STRING),
 #endif
 
     /* Java-like methods. */
-    JS_FN(js_toString_str,     str_toString,          0,0,JSFUN_THISP_STRING,0),
-    JS_FN(js_valueOf_str,      str_toString,          0,0,JSFUN_THISP_STRING,0),
-    JS_FN("substring",         str_substring,         0,2,GENERIC_PRIMITIVE,0),
-    JS_FN("toLowerCase",       str_toLowerCase,       0,0,GENERIC_PRIMITIVE,0),
-    JS_FN("toUpperCase",       str_toUpperCase,       0,0,GENERIC_PRIMITIVE,0),
-    JS_FN("charAt",            str_charAt,            1,1,GENERIC_PRIMITIVE,0),
-    JS_FN("charCodeAt",        str_charCodeAt,        1,1,GENERIC_PRIMITIVE,0),
-    JS_FN("indexOf",           str_indexOf,           1,1,GENERIC_PRIMITIVE,0),
-    JS_FN("lastIndexOf",       str_lastIndexOf,       1,1,GENERIC_PRIMITIVE,0),
-    JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,0,GENERIC_PRIMITIVE,0),
-    JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,0,GENERIC_PRIMITIVE,0),
-    JS_FN("localeCompare",     str_localeCompare,     1,1,GENERIC_PRIMITIVE,0),
+    JS_FN(js_toString_str,     str_toString,          0,0,JSFUN_THISP_STRING),
+    JS_FN(js_valueOf_str,      str_toString,          0,0,JSFUN_THISP_STRING),
+    JS_FN("substring",         str_substring,         0,2,GENERIC_PRIMITIVE),
+    JS_FN("toLowerCase",       str_toLowerCase,       0,0,GENERIC_PRIMITIVE),
+    JS_FN("toUpperCase",       str_toUpperCase,       0,0,GENERIC_PRIMITIVE),
+    JS_FN("charAt",            str_charAt,            1,1,GENERIC_PRIMITIVE),
+    JS_FN("charCodeAt",        str_charCodeAt,        1,1,GENERIC_PRIMITIVE),
+    JS_FN("indexOf",           str_indexOf,           1,1,GENERIC_PRIMITIVE),
+    JS_FN("lastIndexOf",       str_lastIndexOf,       1,1,GENERIC_PRIMITIVE),
+    JS_FN("toLocaleLowerCase", str_toLocaleLowerCase, 0,0,GENERIC_PRIMITIVE),
+    JS_FN("toLocaleUpperCase", str_toLocaleUpperCase, 0,0,GENERIC_PRIMITIVE),
+    JS_FN("localeCompare",     str_localeCompare,     1,1,GENERIC_PRIMITIVE),
 
     /* Perl-ish methods (search is actually Python-esque). */
-    JS_FN("match",             str_match,             1,1,GENERIC_PRIMITIVE,2),
-    JS_FN("search",            str_search,            1,1,GENERIC_PRIMITIVE,0),
-    JS_FN("replace",           str_replace,           2,2,GENERIC_PRIMITIVE,0),
-    JS_FN("split",             str_split,             0,2,GENERIC_PRIMITIVE,0),
+    JS_FN("match",             str_match,             1,1,GENERIC_PRIMITIVE),
+    JS_FN("search",            str_search,            1,1,GENERIC_PRIMITIVE),
+    JS_FN("replace",           str_replace,           2,2,GENERIC_PRIMITIVE),
+    JS_FN("split",             str_split,             0,2,GENERIC_PRIMITIVE),
 #if JS_HAS_PERL_SUBSTR
-    JS_FN("substr",            str_substr,            0,2,GENERIC_PRIMITIVE,0),
+    JS_FN("substr",            str_substr,            0,2,GENERIC_PRIMITIVE),
 #endif
 
     /* Python-esque sequence methods. */
-    JS_FN("concat",            str_concat,            0,1,GENERIC_PRIMITIVE,0),
-    JS_FN("slice",             str_slice,             1,2,GENERIC_PRIMITIVE,0),
+    JS_FN("concat",            str_concat,            0,1,GENERIC_PRIMITIVE),
+    JS_FN("slice",             str_slice,             1,2,GENERIC_PRIMITIVE),
 
     /* HTML string methods. */
 #if JS_HAS_STR_HTML_HELPERS
-    JS_FN("bold",              str_bold,              0,0,PRIMITIVE,0),
-    JS_FN("italics",           str_italics,           0,0,PRIMITIVE,0),
-    JS_FN("fixed",             str_fixed,             0,0,PRIMITIVE,0),
-    JS_FN("fontsize",          str_fontsize,          1,1,PRIMITIVE,0),
-    JS_FN("fontcolor",         str_fontcolor,         1,1,PRIMITIVE,0),
-    JS_FN("link",              str_link,              1,1,PRIMITIVE,0),
-    JS_FN("anchor",            str_anchor,            1,1,PRIMITIVE,0),
-    JS_FN("strike",            str_strike,            0,0,PRIMITIVE,0),
-    JS_FN("small",             str_small,             0,0,PRIMITIVE,0),
-    JS_FN("big",               str_big,               0,0,PRIMITIVE,0),
-    JS_FN("blink",             str_blink,             0,0,PRIMITIVE,0),
-    JS_FN("sup",               str_sup,               0,0,PRIMITIVE,0),
-    JS_FN("sub",               str_sub,               0,0,PRIMITIVE,0),
+    JS_FN("bold",              str_bold,              0,0,PRIMITIVE),
+    JS_FN("italics",           str_italics,           0,0,PRIMITIVE),
+    JS_FN("fixed",             str_fixed,             0,0,PRIMITIVE),
+    JS_FN("fontsize",          str_fontsize,          1,1,PRIMITIVE),
+    JS_FN("fontcolor",         str_fontcolor,         1,1,PRIMITIVE),
+    JS_FN("link",              str_link,              1,1,PRIMITIVE),
+    JS_FN("anchor",            str_anchor,            1,1,PRIMITIVE),
+    JS_FN("strike",            str_strike,            0,0,PRIMITIVE),
+    JS_FN("small",             str_small,             0,0,PRIMITIVE),
+    JS_FN("big",               str_big,               0,0,PRIMITIVE),
+    JS_FN("blink",             str_blink,             0,0,PRIMITIVE),
+    JS_FN("sup",               str_sup,               0,0,PRIMITIVE),
+    JS_FN("sub",               str_sub,               0,0,PRIMITIVE),
 #endif
 
     JS_FS_END
@@ -2331,7 +2333,7 @@ str_fromCharCode(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec string_static_methods[] = {
-    JS_FN("fromCharCode",    str_fromCharCode,       0,1,0,0),
+    JS_FN("fromCharCode",    str_fromCharCode,       0,1,0),
     JS_FS_END
 };
 

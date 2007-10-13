@@ -311,8 +311,8 @@ iterator_self(JSContext *cx, uintN argc, jsval *vp)
 #define JSPROP_ROPERM   (JSPROP_READONLY | JSPROP_PERMANENT)
 
 static JSFunctionSpec iterator_methods[] = {
-    JS_FN(js_iterator_str,  iterator_self,  0,0,JSPROP_ROPERM,0),
-    JS_FN(js_next_str,      iterator_next,  0,0,JSPROP_ROPERM,0),
+    JS_FN(js_iterator_str,  iterator_self,  0,0,JSPROP_ROPERM),
+    JS_FN(js_next_str,      iterator_next,  0,0,JSPROP_ROPERM),
     JS_FS_END
 };
 
@@ -1033,11 +1033,11 @@ generator_close(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec generator_methods[] = {
-    JS_FN(js_iterator_str,  iterator_self,      0,0,JSPROP_ROPERM,0),
-    JS_FN(js_next_str,      generator_next,     0,0,JSPROP_ROPERM,0),
-    JS_FN(js_send_str,      generator_send,     1,1,JSPROP_ROPERM,0),
-    JS_FN(js_throw_str,     generator_throw,    1,1,JSPROP_ROPERM,0),
-    JS_FN(js_close_str,     generator_close,    0,0,JSPROP_ROPERM,0),
+    JS_FN(js_iterator_str,  iterator_self,      0,0,JSPROP_ROPERM),
+    JS_FN(js_next_str,      generator_next,     0,0,JSPROP_ROPERM),
+    JS_FN(js_send_str,      generator_send,     1,1,JSPROP_ROPERM),
+    JS_FN(js_throw_str,     generator_throw,    1,1,JSPROP_ROPERM),
+    JS_FN(js_close_str,     generator_close,    0,0,JSPROP_ROPERM),
     JS_FS_END
 };
 
