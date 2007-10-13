@@ -1447,9 +1447,9 @@ struct JSFunctionSpec {
  * in preference to JS_FS if the native in question does not need its own stack
  * frame when activated.
  */
-#define JS_FN(name,fastcall,minargs,nargs,flags,extra)                        \
+#define JS_FN(name,fastcall,minargs,nargs,flags)                              \
     {name, (JSNative)(fastcall), nargs, (flags) | JSFUN_FAST_NATIVE,          \
-     (minargs) << 16 | (uint16)(extra)}
+     (minargs) << 16}
 
 extern JS_PUBLIC_API(JSObject *)
 JS_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
