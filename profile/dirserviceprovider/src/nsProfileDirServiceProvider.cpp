@@ -401,7 +401,7 @@ nsProfileDirServiceProvider::InitProfileDir(nsIFile *profileDir)
             return rv;
     }
 
-#if !defined(XP_MAC) && !defined(WINCE)
+#if !defined(WINCE)
     rv = profileDir->SetPermissions(0700);
     if (NS_FAILED(rv))
       return rv;
