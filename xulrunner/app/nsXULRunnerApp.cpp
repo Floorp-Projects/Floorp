@@ -402,25 +402,33 @@ int main(int argc, char* argv[])
     }
   }
 
-  if (argc < 2) {
-    Usage(argv[0]);
-    return 1;
-  }
+  const char *appDataFile = PR_GetEnv("XUL_APP_FILE");
 
-  if (IsArg(argv[1], "app")) {
-    if (argc == 2) {
+  if (!(appDataFile && *appDataFile)) {
+    if (argc < 2) {
       Usage(argv[0]);
       return 1;
     }
+
+    if (IsArg(argv[1], "app")) {
+      if (argc == 2) {
+        Usage(argv[0]);
+        return 1;
+      }
+      argv[1] = argv[0];
+      ++argv;
+      --argc;
+    }
+
+    appDataFile = argv[1];
     argv[1] = argv[0];
     ++argv;
     --argc;
-  }
 
-  const char *appDataFile = argv[1];
-  argv[1] = argv[0];
-  ++argv;
-  --argc;
+    static char kAppEnv[MAXPATHLEN];
+    PR_snprintf(kAppEnv, MAXPATHLEN, "XUL_APP_FILE=%s", appDataFile);
+    PR_SetEnv(kAppEnv);
+  }
 
   nsCOMPtr<nsILocalFile> appDataLF;
   nsresult rv = XRE_GetFileFromPath(appDataFile, getter_AddRefs(appDataLF));
@@ -434,8 +442,6 @@ int main(int argc, char* argv[])
     Output(PR_TRUE, "Error: couldn't parse application.ini.\n");
     return 2;
   }
-
-  XRE_SetAppDataFile(appDataLF);
 
   return XRE_main(argc, argv, appData);
 }

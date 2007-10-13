@@ -115,7 +115,16 @@ int main(int argc, char* argv[])
 
   // Allow firefox.exe to launch XULRunner apps via -app <application.ini>
   // Note that -app must be the *first* argument.
-  if (argc > 1 && IsArg(argv[1], "app")) {
+  char *appEnv = nsnull;
+  const char *appDataFile = PR_GetEnv("XUL_APP_FILE");
+  if (appDataFile && *appDataFile) {
+    rv = XRE_GetFileFromPath(appDataFile, getter_AddRefs(appini));
+    if (NS_FAILED(rv)) {
+      Output("Invalid path found: '%s'", appDataFile);
+      return 255;
+    }
+  }
+  else if (argc > 1 && IsArg(argv[1], "app")) {
     if (argc == 2) {
       Output("Incorrect number of arguments passed to -app");
       return 255;
@@ -127,6 +136,8 @@ int main(int argc, char* argv[])
       return 255;
     }
 
+    appEnv = PR_smprintf("XUL_APP_FILE=%s", argv[2]);
+    PR_SetEnv(appEnv);
     argv[2] = argv[0];
     argv += 2;
     argc -= 2;
@@ -139,10 +150,10 @@ int main(int argc, char* argv[])
     return 255;
   }
 
-  XRE_SetAppDataFile(appini);
-
   int result = XRE_main(argc, argv, appData);
   XRE_FreeAppData(appData);
+  if (appEnv)
+    PR_smprintf_free(appEnv);
   return result;
 }
 
