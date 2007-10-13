@@ -342,19 +342,13 @@ LivemarkService.prototype = {
   *         startup.
   */
   getSiteURI: function LS_getSiteURI(container) {
-    try {
-      this._ensureLivemark(container);
-      
-      // getItemAnnotation() can throw if there is no annotation
+    this._ensureLivemark(container);
+
+    if (this._ans.itemHasAnnotation(container, LMANNO_SITEURI)) {
       var siteURIString =
         this._ans.getItemAnnotation(container, LMANNO_SITEURI);
 
       return gIoService.newURI(siteURIString, null, null);
-    }
-    catch (ex) {
-      // temporary logging, for bug #381894
-      LOG("getSiteURI failed: " + ex);
-      LOG("siteURIString: " + siteURIString);
     }
     return null;
   },
