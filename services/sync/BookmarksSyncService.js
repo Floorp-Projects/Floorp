@@ -1016,10 +1016,18 @@ BookmarksSyncService.prototype = {
     }
   },
 
-  _resetGUIDs: function BSS__resetGUIDs(node) {
-    if (!node)
-      node = this._getBookmarks();
+  _getFolderNodes: function BSS__getFolderNodes(folder) {
+    let query = this._hsvc.getNewQuery();
+    query.setFolders([folder], 1);
+    return this._hsvc.executeQuery(query, this._hsvc.getNewQueryOptions()).root;
+  },
 
+  _resetGUIDs: function BSS__resetGUIDs() {
+    this._resetGUIDsInt(this._getFolderNodes(this._bms.bookmarksRoot));
+    this._resetGUIDsInt(this._getFolderNodes(this._bms.unfiledRoot));
+  },
+
+  _resetGUIDsInt: function BSS__resetGUIDsInt(node) {
     if (this._ans.itemHasAnnotation(node.itemId, "placesInternal/GUID"))
       this._ans.removeItemAnnotation(node.itemId, "placesInternal/GUID");
 
