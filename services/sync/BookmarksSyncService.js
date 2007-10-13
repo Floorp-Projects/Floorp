@@ -495,14 +495,19 @@ BookmarksSyncService.prototype = {
           delete listA[i];
           delete listB[j];
         } else if (this._commandLike(listA[i], listB[j])) {
-          // Disregard likeness if the target GUID already exists locally
-          if (this._bms.getItemIdForGUID(listB[j].GUID) >= 0)
-            continue;
           this._fixParents(listA, listA[i].GUID, listB[j].GUID);
           listB[j].data = {GUID: listB[j].GUID};
           listB[j].GUID = listA[i].GUID;
           listB[j].action = "edit";
           delete listA[i];
+        }
+
+        // watch out for create commands with GUIDs that already exist
+        if (listB[j] && listB[j].action == "create" &&
+            this._bms.getItemForGUID(listB[j].GUID) >= 0) {
+          this._log.error("Remote command has GUID that already exists " +
+                          "locally. Dropping command.");
+          delete listB[j];
         }
       }
     }
@@ -857,7 +862,7 @@ BookmarksSyncService.prototype = {
       this._log.debug("local json:\n" + this._mungeNodes(localJson));
 
       // 1) Fetch server deltas
-      if (!this._getServerData.async(this, cont, localJson))
+      if (!this._getServerData.async(this, cont))
         return
       let server = yield;
 
@@ -1011,6 +1016,23 @@ BookmarksSyncService.prototype = {
     }
   },
 
+  _resetGUIDs: function BSS__resetGUIDs(node) {
+    if (!node)
+      node = this._getBookmarks();
+
+    if (this._ans.itemHasAnnotation(node.itemId, "placesInternal/GUID"))
+      this._ans.removeItemAnnotation(node.itemId, "placesInternal/GUID");
+
+    if (node.type == node.RESULT_TYPE_FOLDER &&
+        !this._ls.isLivemark(node.itemId)) {
+      node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
+      node.containerOpen = true;
+      for (var i = 0; i < node.childCount; i++) {
+        this._resetGUIDs(node.getChild(i));
+      }
+    }
+  },
+
   /* Get the deltas/combined updates from the server
    * Returns:
    *   status:
@@ -1031,7 +1053,7 @@ BookmarksSyncService.prototype = {
    *     the relevant deltas (from our snapshot version to current),
    *     combined into a single set.
    */
-  _getServerData: function BSS__getServerData(onComplete, localJson) {
+  _getServerData: function BSS__getServerData(onComplete) {
     let cont = yield;
 
     let ret = {status: -1,
@@ -1060,6 +1082,7 @@ BookmarksSyncService.prototype = {
       if (status.GUID != this._snapshotGUID) {
         this._log.info("Remote/local sync GUIDs do not match.  " +
                     "Forcing initial sync.");
+        this._resetGUIDs();
         this._snapshot = {};
         this._snapshotVersion = -1;
         this._snapshotGUID = status.GUID;
@@ -1142,7 +1165,7 @@ BookmarksSyncService.prototype = {
     case 404:
       this._log.info("Server has no status file, Initial upload to server");
 
-      this._snapshot = localJson;
+      this._snapshot = this._getBookmarks();
       this._snapshotVersion = 0;
       this._snapshotGUID = null; // in case there are other snapshots out there
 
