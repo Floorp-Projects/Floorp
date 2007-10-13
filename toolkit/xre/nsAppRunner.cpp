@@ -1558,7 +1558,7 @@ static nsresult LaunchChild(nsINativeAppSupport* aNative,
   // if supported by the platform.  Otherwise, use NSPR.
  
   if (aBlankCommandLine) {
-    gRestartArgc = 1;
+    gRestartArgc = 1 + (gRestartArgc - gArgc);
     gRestartArgv[gRestartArgc] = nsnull;
   }
 
@@ -2248,34 +2248,6 @@ static void RemoveComponentRegistries(nsIFile* aProfileDir, nsIFile* aLocalProfi
   file->Remove(PR_FALSE);
 }
 
-// To support application initiated restart via nsIAppStartup.quit, we
-// need to save various environment variables, and then restore them
-// before re-launching the application.
-
-static struct {
-  const char *name;
-  char *value;
-} gSavedVars[] = {
-  {"XUL_APP_FILE", nsnull}
-};
-
-static void SaveStateForAppInitiatedRestart()
-{
-  for (size_t i = 0; i < NS_ARRAY_LENGTH(gSavedVars); ++i) {
-    const char *s = PR_GetEnv(gSavedVars[i].name);
-    if (s)
-      gSavedVars[i].value = PR_smprintf("%s=%s", gSavedVars[i].name, s);
-  }
-}
-
-static void RestoreStateForAppInitiatedRestart()
-{
-  for (size_t i = 0; i < NS_ARRAY_LENGTH(gSavedVars); ++i) {
-    if (gSavedVars[i].value)
-      PR_SetEnv(gSavedVars[i].value);
-  }
-}
-
 #ifdef MOZ_CRASHREPORTER
 // When we first initialize the crash reporter we don't have a profile,
 // so we set the minidump path to $TEMP.  Once we have a profile,
@@ -2303,6 +2275,12 @@ static void MakeOrSetMinidumpPath(nsIFile* profD)
 #endif
 
 const nsXREAppData* gAppData = nsnull;
+nsILocalFile* gAppDataFile = nsnull;
+ 
+void XRE_SetAppDataFile(nsILocalFile* aAppDataFile)
+{
+  SetStrongPtr(gAppDataFile, aAppDataFile);
+}
 
 #if defined(XP_OS2)
 // because we use early returns, we use a stack-based helper to un-set the OS2 FP handler
@@ -2628,14 +2606,28 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   PR_SetEnv("MOZ_LAUNCHED_CHILD=");
 
   gRestartArgc = gArgc;
-  gRestartArgv = (char**) malloc(sizeof(char*) * (gArgc + 1));
-  if (!gRestartArgv) return 1;
-
-  int i;
-  for (i = 0; i < gArgc; ++i) {
-    gRestartArgv[i] = gArgv[i];
+  if (gAppDataFile) {
+    gRestartArgc += 2;
   }
-  gRestartArgv[gArgc] = nsnull;
+  gRestartArgv = (char**) malloc(sizeof(char*) * (gRestartArgc + 1));
+  if (!gRestartArgv) return 1;
+ 
+  int i = 0;
+  int j = 0;
+  if (gAppDataFile) {
+    // The first argument is the path to the executable. It needs to remain the first argument.
+    if (gArgc) {
+      gRestartArgv[j++] = gArgv[i++];
+    }
+    nsCAutoString iniPath;
+    gAppDataFile->GetNativePath(iniPath);
+    gRestartArgv[j++] = "--app";
+    gRestartArgv[j++] = strdup(iniPath.get());
+  }
+  while (i < gArgc) {
+    gRestartArgv[j++] = gArgv[i++];
+  }
+  gRestartArgv[gRestartArgc] = nsnull;
 
 #if defined(XP_OS2)
   PRBool StartOS2App(int aArgc, char **aArgv);
@@ -3088,8 +3080,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         }
 
         if (!upgraded && !needsRestart) {
-          SaveStateForAppInitiatedRestart();
-
           // clear out any environment variables which may have been set 
           // during the relaunch process now that we know we won't be relaunching.
           PR_SetEnv("XRE_PROFILE_PATH=");
@@ -3098,7 +3088,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           PR_SetEnv("XRE_START_OFFLINE=");
           PR_SetEnv("XRE_IMPORT_PROFILES=");
           PR_SetEnv("NO_EM_RESTART=");
-          PR_SetEnv("XUL_APP_FILE=");
           PR_SetEnv("XRE_BINARY_PATH=");
 
 #ifdef XP_MACOSX
@@ -3189,10 +3178,7 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     // Restart the app after XPCOM has been shut down cleanly. 
     if (needsRestart) {
-      if (appInitiatedRestart) {
-        RestoreStateForAppInitiatedRestart();
-      }
-      else {
+      if (!appInitiatedRestart) {
         char* noEMRestart = PR_GetEnv("NO_EM_RESTART");
         if (noEMRestart && *noEMRestart) {
           PR_SetEnv("NO_EM_RESTART=1");
