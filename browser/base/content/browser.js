@@ -328,30 +328,40 @@ function initPlacesDefaultQueries() {
   if (createdDefaultQueries)
     return;
 
-  try {
-    var placesFolderTitle = PlacesUtils.getString("placesFolderTitle");
-    var recentlyCreatedBookmarksTitle = PlacesUtils.getString("recentlyCreatedBookmarksTitle");
-    var recentlyVisitedBookmarksTitle = PlacesUtils.getString("recentlyVisitedBookmarksTitle");
-    var mostVisitedBookmarksTitle = PlacesUtils.getString("mostVisitedBookmarksTitle");
-    var recentlyUsedTagsTitle = PlacesUtils.getString("recentlyUsedTagsTitle");
-    var mostUsedTagsTitle = PlacesUtils.getString("mostUsedTagsTitle");
-    var mostVisitedSitesTitle = PlacesUtils.getString("mostVisitedSitesTitle");
+  var bmsvc = PlacesUtils.bookmarks;
+  var callback = {
+    runBatched: function() {
+      var placesFolderTitle =
+        PlacesUtils.getString("placesFolderTitle");
+      var recentlyCreatedBookmarksTitle =
+        PlacesUtils.getString("recentlyCreatedBookmarksTitle");
+      var recentlyVisitedBookmarksTitle =
+        PlacesUtils.getString("recentlyVisitedBookmarksTitle");
+      var mostVisitedBookmarksTitle =
+        PlacesUtils.getString("mostVisitedBookmarksTitle");
+      var recentlyUsedTagsTitle =
+        PlacesUtils.getString("recentlyUsedTagsTitle");
+      var mostUsedTagsTitle =
+        PlacesUtils.getString("mostUsedTagsTitle");
+      var mostVisitedSitesTitle =
+        PlacesUtils.getString("mostVisitedSitesTitle");
 
-    var bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-                  getService(Ci.nsINavBookmarksService);
+      var bookmarksRoot = PlacesUtils.bookmarksRootId;
+      var unfiledRoot = PlacesUtils.unfiledRootId;
+      var tagRoot = PlacesUtils.tagRootId;
+      var defaultIndex = bmsvc.DEFAULT_INDEX;
 
-    var bookmarksRoot = PlacesUtils.bookmarksRootId;
-    var unfiledRoot = PlacesUtils.unfiledRootId;
-    var tagRoot = PlacesUtils.tagRootId;
+      // index = 0, make it the first folder
+      var placesFolder = bmsvc.createFolder(bmsvc.toolbarFolder,
+                                            placesFolderTitle,
+                                            0);
 
-    var placesFolder = bmsvc.createFolder(bmsvc.toolbarFolder, placesFolderTitle,
-                                          0 /* index = 0, make it the first folder */);
+      // XXX should this be a pref?  see bug #399268
+      var maxResults = 10;
 
-    var maxResults = 10;  // XXX should this be a pref?  see bug #399268
-
-    // exclude queries so that user created "saved searches" 
-    // and these queries (added automatically) are excluded
-    var recentlyCreatedBookmarksItem = bmsvc.insertBookmark(placesFolder,
+      // exclude queries so that user created "saved searches" 
+      // and these queries (added automatically) are excluded
+      var recentlyCreatedBookmarksItem = bmsvc.insertBookmark(placesFolder,
         IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
             "&sort=" + 
@@ -359,24 +369,24 @@ function initPlacesDefaultQueries() {
             "&excludeItemIfParentHasAnnotation=livemark%2FfeedURI" +
             "&maxResults=" + maxResults +
             "&excludeQueries=1"),
-        bmsvc.DEFAULT_INDEX, recentlyCreatedBookmarksTitle);
+            defaultIndex, recentlyCreatedBookmarksTitle);
 
-    var recentlyVisitedBookmarksItem = bmsvc.insertBookmark(placesFolder,
+      var recentlyVisitedBookmarksItem = bmsvc.insertBookmark(placesFolder,
         IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
             "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING + 
             "&minVisits=1&maxResults=" + maxResults),
-        bmsvc.DEFAULT_INDEX, recentlyVisitedBookmarksTitle);
+            defaultIndex, recentlyVisitedBookmarksTitle);
 
-    var mostVisitedBookmarksItem = bmsvc.insertBookmark(placesFolder,
+      var mostVisitedBookmarksItem = bmsvc.insertBookmark(placesFolder,
         IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
             "&sort=" + 
             Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING + 
             "&minVisits=1&maxResults=" + maxResults),
-        bmsvc.DEFAULT_INDEX, mostVisitedBookmarksTitle);
+            defaultIndex, mostVisitedBookmarksTitle);
 
-    var recentlyUsedTagsItem = bmsvc.insertBookmark(placesFolder,
+      var recentlyUsedTagsItem = bmsvc.insertBookmark(placesFolder,
         IO.newURI("place:folder=" + tagRoot +
             "&group=" + Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
@@ -385,9 +395,9 @@ function initPlacesDefaultQueries() {
             Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING + 
             "&resolveNullBookmarkTitles=1" +
             "&maxResults=" + maxResults),
-        bmsvc.DEFAULT_INDEX, recentlyUsedTagsTitle);
+            defaultIndex, recentlyUsedTagsTitle);
 
-    var mostUsedTagsItem = bmsvc.insertBookmark(placesFolder,
+      var mostUsedTagsItem = bmsvc.insertBookmark(placesFolder,
         IO.newURI("place:folder=" + tagRoot + 
             "&group=" + Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER +
             "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
@@ -395,18 +405,22 @@ function initPlacesDefaultQueries() {
             "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_COUNT_DESCENDING + 
             "&resolveNullBookmarkTitles=1" +
             "&maxResults=" + maxResults),
-        bmsvc.DEFAULT_INDEX, mostUsedTagsTitle);
+            defaultIndex, mostUsedTagsTitle);
 
-    var mostVisitedSitesItem = bmsvc.insertBookmark(placesFolder,
+      var mostVisitedSitesItem = bmsvc.insertBookmark(placesFolder,
         IO.newURI("place:queryType=" + 
             Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY +
             "&sort=" + 
             Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING + 
             "&maxResults=" + maxResults),
-        bmsvc.DEFAULT_INDEX, mostVisitedSitesTitle);
+            defaultIndex, mostVisitedSitesTitle);
+    }
   }
-  catch(ex) {
-  } finally {
+  
+  try {
+    bmsvc.runInBatchMode(callback, null)
+  }
+  finally {
     prefBranch.setBoolPref("browser.places.createdDefaultQueries", true);
   }
 }
@@ -1056,8 +1070,8 @@ function delayedStartup()
     sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
   }
 
-  initBookmarksToolbar();
   initPlacesDefaultQueries();
+  initBookmarksToolbar();
   PlacesUtils.bookmarks.addObserver(gBookmarksObserver, false);
   PlacesStarButton.init();
 
