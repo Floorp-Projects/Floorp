@@ -180,7 +180,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafeAboutProtocolHandler)
 
 #ifdef NECKO_PROTOCOL_about
 // about
+#ifdef NS_BUILD_REFCNT_LOGGING
 #include "nsAboutBloat.h"
+#endif
 #include "nsAboutCache.h"
 #include "nsAboutCacheEntry.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAboutCacheEntry)
@@ -1000,11 +1002,13 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       nsAboutBlank::Create
     },
 #ifdef NECKO_PROTOCOL_about
+#ifdef NS_BUILD_REFCNT_LOGGING
     { "about:bloat", 
       NS_ABOUT_BLOAT_MODULE_CID,
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "bloat", 
       nsAboutBloat::Create
     },
+#endif
     { "about:cache", 
       NS_ABOUT_CACHE_MODULE_CID,
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "cache", 
