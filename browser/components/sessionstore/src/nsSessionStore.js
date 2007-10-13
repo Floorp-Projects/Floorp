@@ -848,7 +848,8 @@ SessionStoreService.prototype = {
         tabData.xultab = xulattr.join(" ");
       }
       
-      tabData.extData = tabbrowser.mTabs[i].__SS_extdata || null;
+      if (tabbrowser.mTabs[i].__SS_extdata)
+        tabData.extData = tabbrowser.mTabs[i].__SS_extdata;
       
       tabs.push(tabData);
       
@@ -866,7 +867,7 @@ SessionStoreService.prototype = {
    * @returns object
    */
   _serializeHistoryEntry: function sss_serializeHistoryEntry(aEntry) {
-    var entry = { url: aEntry.URI.spec, children: [] };
+    var entry = { url: aEntry.URI.spec };
     
     if (aEntry.title && aEntry.title != entry.url) {
       entry.title = aEntry.title;
@@ -879,18 +880,21 @@ SessionStoreService.prototype = {
     }
     
     var cacheKey = aEntry.cacheKey;
-    if (cacheKey && cacheKey instanceof Ci.nsISupportsPRUint32) {
+    if (cacheKey && cacheKey instanceof Ci.nsISupportsPRUint32 &&
+        cacheKey.data != 0) {
       // XXXbz would be better to have cache keys implement
       // nsISerializable or something.
       entry.cacheKey = cacheKey.data;
     }
     entry.ID = aEntry.ID;
     
-    entry.contentType = aEntry.contentType;
+    if (aEntry.contentType)
+      entry.contentType = aEntry.contentType;
     
     var x = {}, y = {};
     aEntry.getScrollPosition(x, y);
-    entry.scroll = x.value + "," + y.value;
+    if (x.value != 0 || y.value != 0)
+      entry.scroll = x.value + "," + y.value;
     
     try {
       var prefPostdata = this._prefBranch.getIntPref("sessionstore.postdata");
@@ -944,13 +948,16 @@ SessionStoreService.prototype = {
       return entry;
     }
     
-    for (var i = 0; i < aEntry.childCount; i++) {
-      var child = aEntry.GetChildAt(i);
-      if (child) {
-        entry.children.push(this._serializeHistoryEntry(child));
-      }
-      else { // to maintain the correct frame order, insert a dummy entry 
-        entry.children.push({ url: "about:blank" });
+    if (aEntry.childCount > 0) {
+      entry.children = [];
+      for (var i = 0; i < aEntry.childCount; i++) {
+        var child = aEntry.GetChildAt(i);
+        if (child) {
+          entry.children.push(this._serializeHistoryEntry(child));
+        }
+        else { // to maintain the correct frame order, insert a dummy entry 
+          entry.children.push({ url: "about:blank" });
+        }
       }
     }
     
@@ -1054,7 +1061,8 @@ SessionStoreService.prototype = {
         if (aBrowser.currentURI.spec == "about:config") {
           text = ["#textbox=" + encodeURI(aBrowser.contentDocument.getElementById("textbox").wrappedJSObject.value)];
         }
-        tabData.text = text.join(" ");
+        if (text.length != 0)
+          tabData.text = text.join(" ");
         
         updateRecursively(aBrowser.contentWindow, tabData.entries[tabData.index - 1]);
       }
@@ -1144,14 +1152,29 @@ SessionStoreService.prototype = {
     var winData = this._windows[aWindow.__SSi];
     
     WINDOW_ATTRIBUTES.forEach(function(aAttr) {
-      winData[aAttr] = this._getWindowDimension(aWindow, aAttr);
+      var value = this._getWindowDimension(aWindow, aAttr);
+      switch (aAttr) {
+        case "screenX":
+        case "screenY":
+          if (value != 0)
+            winData[aAttr] = value;
+          break;
+        default:
+          winData[aAttr] = value;
+      }
     }, this);
     
-    winData.hidden = WINDOW_HIDEABLE_FEATURES.filter(function(aItem) {
-      return aWindow[aItem] && !aWindow[aItem].visible;
-    }).join(",");
-    
-    winData.sidebar = aWindow.document.getElementById("sidebar-box").getAttribute("sidebarcommand");
+    var hidden = [];
+    WINDOW_HIDEABLE_FEATURES.forEach(function(aItem) {
+      if (aWindow[aItem] && !aWindow[aItem].visible)
+        hidden.push(aItem);
+    });
+    if (hidden.length != 0)
+      winData.hidden = hidden.join(",");
+
+    var sidebar = aWindow.document.getElementById("sidebar-box").getAttribute("sidebarcommand");
+    if (sidebar)
+      winData.sidebar = sidebar;
   },
 
   /**
@@ -1473,9 +1496,11 @@ SessionStoreService.prototype = {
                     getService(Ci.nsIIOService);
     shEntry.setURI(ioService.newURI(aEntry.url, null, null));
     shEntry.setTitle(aEntry.title || aEntry.url);
-    shEntry.setIsSubFrame(aEntry.subframe || false);
+    if (aEntry.subframe)
+      shEntry.setIsSubFrame(aEntry.subframe || false);
     shEntry.loadType = Ci.nsIDocShellLoadInfo.loadHistory;
-    shEntry.contentType = aEntry.contentType;
+    if (aEntry.contentType)
+      shEntry.contentType = aEntry.contentType;
     
     if (aEntry.cacheKey) {
       var cacheKey = Cc["@mozilla.org/supports-PRUint32;1"].
@@ -1483,6 +1508,7 @@ SessionStoreService.prototype = {
       cacheKey.data = aEntry.cacheKey;
       shEntry.cacheKey = cacheKey;
     }
+
     if (aEntry.ID) {
       // get a new unique ID for this frame (since the one from the last
       // start might already be in use)
@@ -1495,9 +1521,11 @@ SessionStoreService.prototype = {
       shEntry.ID = id;
     }
     
-    var scrollPos = (aEntry.scroll || "0,0").split(",");
-    scrollPos = [parseInt(scrollPos[0]) || 0, parseInt(scrollPos[1]) || 0];
-    shEntry.setScrollPosition(scrollPos[0], scrollPos[1]);
+    if (aEntry.scroll) {
+      var scrollPos = (aEntry.scroll || "0,0").split(",");
+      scrollPos = [parseInt(scrollPos[0]) || 0, parseInt(scrollPos[1]) || 0];
+      shEntry.setScrollPosition(scrollPos[0], scrollPos[1]);
+    }
 
     var postdata;
     if (aEntry.postdata_b64) {  // Firefox 3
