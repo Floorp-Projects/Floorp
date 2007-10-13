@@ -229,7 +229,7 @@
                 element.setAttribute("siteURI", siteURI.spec);
             }
             var popup = document.createElementNS(XULNS, "menupopup");
-            //popup.setAttribute("type", "places");
+            popup.setAttribute("type", "places");
             element.appendChild(popup);
 #ifndef XP_MACOSX
             // No context menus on menus on Mac
@@ -246,7 +246,7 @@
             // get applied correctly.
             if (this._needsBindingAttachment) {
               const MENU_URI = "chrome://browser/content/places/menu.xml#places-menupopup";
-        //      document.addBinding(popup, MENU_URI);
+              document.addBinding(popup, MENU_URI);
             }
 #endif
             popup._containerNodesMap = this._containerNodesMap;
