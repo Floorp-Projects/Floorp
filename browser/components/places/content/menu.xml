@@ -47,20 +47,6 @@
   <binding id="places-menupopup"
            extends="chrome://global/content/bindings/popup.xml#popup">
     <implementation>
-      <constructor><![CDATA[
-#if 0
-        // Support an asyncinit attribute that causes the view to populate
-        // itself only after the window has been shown. This is to ensure we
-        // do not regress browser window show time (Ts/Txul)
-        if (this.hasAttribute("asyncinit")) {
-          var self = this;
-          //setTimeout(function() { self._init(); }, 0);
-        }
-        else
-#endif
-        this._init();
-      ]]></constructor>
-
       <destructor><![CDATA[
         this._resultNode = null;
         if (this._result) {
@@ -69,8 +55,12 @@
         }
       ]]></destructor>
 
-      <method name="_init">
+      <field name="_initialized">false</field>
+      <method name="_ensureInitialized">
         <body><![CDATA[
+          if (this._initialized)
+            return;
+
           this._controller = new PlacesController(this);
           this.controllers.appendController(this._controller);
 
@@ -80,6 +70,7 @@
             // Do the initial build.
             this.place = this.place;
           }
+          this._initialized = true;
         ]]></body>
       </method>
 
@@ -93,16 +84,15 @@
 
       <method name="onPopupShowing">
         <body><![CDATA[
-        if (!this._resultNode)
-          this._init();
+          this._ensureInitialized();
 
-        if (!this._resultNode.containerOpen)
-          this._resultNode.containerOpen = true;
-        if (!this._built)
-          this._rebuild();
+          if (!this._resultNode.containerOpen)
+            this._resultNode.containerOpen = true;
+          if (!this._built)
+            this._rebuild();
 
-        if (this.popupShowingCallback)
-          this.popupShowingCallback();
+          if (this.popupShowingCallback)
+            this.popupShowingCallback();
         ]]></body>
       </method>
 
@@ -936,6 +926,7 @@
       <method name="buildContextMenu">
         <parameter name="aPopup"/>
         <body><![CDATA[
+          this._ensureInitialized();
           this.focus();
           return this.controller.buildContextMenu(aPopup);
         ]]></body>
