@@ -554,8 +554,6 @@ MAKEFILES_xpfe="
   xpfe/components/related/Makefile
   xpfe/components/related/src/Makefile
   xpfe/components/related/public/Makefile
-  xpfe/components/sidebar/Makefile
-  xpfe/components/sidebar/src/Makefile
   xpfe/components/startup/Makefile
   xpfe/components/startup/public/Makefile
   xpfe/components/startup/src/Makefile

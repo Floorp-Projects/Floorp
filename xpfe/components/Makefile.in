@@ -88,7 +88,6 @@ DIRS += \
         related \
         autocomplete \
         download-manager \
-        sidebar \
         $(NULL)
 ifndef MOZ_XUL_APP
 DIRS += \
