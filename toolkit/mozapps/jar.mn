@@ -7,7 +7,7 @@ toolkit.jar:
 * content/mozapps/downloads/downloads.js                        (downloads/content/downloads.js)
 * content/mozapps/downloads/DownloadProgressListener.js         (downloads/content/DownloadProgressListener.js)
   content/mozapps/downloads/downloads.css                       (downloads/content/downloads.css)
-* content/mozapps/downloads/download.xml                        (downloads/content/download.xml)
+  content/mozapps/downloads/download.xml                        (downloads/content/download.xml)
 * content/mozapps/preferences/ocsp.js                           (preferences/ocsp.js)
 * content/mozapps/preferences/ocsp.xul                          (preferences/ocsp.xul)
 * content/mozapps/preferences/fontbuilder.js                    (preferences/fontbuilder.js)
