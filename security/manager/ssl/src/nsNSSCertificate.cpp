@@ -442,6 +442,44 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
       details.Append(PRUnichar('\n'));
     }
 
+    PRUint32 num;
+    PRUnichar **emailAddr = NULL;
+    if (NS_SUCCEEDED(GetEmailAddresses(&num, &emailAddr)) && num > 0) {
+      details.AppendLiteral("  ");
+      if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoEmail", info))) {
+        details.Append(info);
+        details.AppendLiteral(": ");
+      }
+      details.Append(*emailAddr);
+
+      /*
+       * If the first email address from the subject DN is also present
+       * in the subjectAltName extension, GetEmailAddresses() will return
+       * it twice (as received from NSS). Remember the first address so that
+       * we can filter out duplicates later on.
+       */
+      PRUnichar *firstEmail = *emailAddr;
+      emailAddr++;
+      num--;
+
+      /* append remaining addresses */
+      while (num > 0) {
+        if (!nsDependentString(firstEmail).Equals(nsDependentString(*emailAddr))) {
+          details.AppendLiteral(", ");
+          details.Append(*emailAddr);
+        }
+        nsMemory::Free(*emailAddr);
+        *emailAddr = nsnull;
+        emailAddr++;
+        num--;
+      }
+
+      details.Append(PRUnichar('\n'));
+      nsMemory::Free(firstEmail);
+    }
+    nsMemory::Free(emailAddr);
+    emailAddr = nsnull;
+
     if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertInfoIssuedBy", info))) {
       details.Append(info);
       details.Append(PRUnichar(' '));
@@ -463,12 +501,14 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
     }
 
     /*
-      the above produces output the following output:
+      the above produces the following output:
 
       Issued to: $subjectName
         Serial number: $serialNumber
         Valid from: $starting_date to $expiration_date
         Purposes: $purposes
+        Certificate Key usage: $usages
+        Email: $address(es)
       Issued by: $issuerName
       Stored in: $token
     */
