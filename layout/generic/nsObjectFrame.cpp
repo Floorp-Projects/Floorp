@@ -1387,6 +1387,7 @@ nsObjectFrame::PrepareInstanceOwner()
   NS_ADDREF(mInstanceOwner);
   mInstanceOwner->Init(PresContext(), this, GetContent());
 
+#ifdef OJI
   if (mContent->Tag() == nsGkAtoms::applet) {
     nsGlobalWindow *win =
       (nsGlobalWindow *)mContent->GetOwnerDoc()->GetScriptGlobalObject();
@@ -1399,6 +1400,7 @@ nsObjectFrame::PrepareInstanceOwner()
       win->InitJavaProperties();
     }
   }
+#endif
 
   return NS_OK;
 }
