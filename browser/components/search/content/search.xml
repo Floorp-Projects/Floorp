@@ -161,6 +161,14 @@
       <field name="_ss">null</field>
       <field name="_engines">null</field>
 
+      <property name="engines" readonly="true">
+        <getter><![CDATA[
+          if (!this._engines)
+            this._engines = this.searchService.getVisibleEngines({ });
+          return this._engines;
+        ]]></getter>
+      </property>
+
       <property name="searchButton" readonly="true">
         <getter><![CDATA[
           if (!this._searchButton) {
@@ -258,6 +266,9 @@
               // An engine was removed (or hidden) or added, or an icon was
               // changed.  Do nothing special.
             }
+
+            // Make sure the engine list is refetched next time it's needed
+            this._engines = null;
 
             // Rebuild the popup and update the display after any modification.
             this.rebuildPopup();
@@ -434,25 +445,24 @@
           const kXULNS =
                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-          // Prepend visible engines
-          this._engines = this.searchService.getVisibleEngines({ });
-          for (var i = this._engines.length - 1; i >= 0; --i) {
+          var engines = this.engines;
+          for (var i = engines.length - 1; i >= 0; --i) {
             var menuitem = document.createElementNS(kXULNS, "menuitem");
-            var name = this._engines[i].name;
+            var name = engines[i].name;
             menuitem.setAttribute("label", name);
             menuitem.setAttribute("id", name);
             menuitem.setAttribute("class", "menuitem-iconic searchbar-engine-menuitem");
             // Since this menu is rebuilt by the observer method whenever a new
             // engine is selected, the "selected" attribute does not need to be
             // explicitly cleared anywhere.
-            if (this._engines[i] == this.currentEngine)
+            if (engines[i] == this.currentEngine)
               menuitem.setAttribute("selected", "true");
             var tooltip = this._stringBundle.getFormattedString("searchtip", [name]);
             menuitem.setAttribute("tooltiptext", tooltip);
-            if (this._engines[i].iconURI)
-              menuitem.setAttribute("src", this._engines[i].iconURI.spec);
+            if (engines[i].iconURI)
+              menuitem.setAttribute("src", engines[i].iconURI.spec);
             popup.insertBefore(menuitem, popup.firstChild);
-            menuitem.engine = this._engines[i];
+            menuitem.engine = engines[i];
           }
 
           this._needToBuildPopup = false;
@@ -483,11 +493,11 @@
         <parameter name="isNextEngine"/>
         <body><![CDATA[
           // Find the new index
-          var newIndex = this._engines.indexOf(this.currentEngine);
+          var newIndex = this.engines.indexOf(this.currentEngine);
           newIndex += (isNextEngine) ? 1 : -1;
 
-          if (newIndex >= 0 && newIndex < this._engines.length)
-            this.currentEngine = this._engines[newIndex];
+          if (newIndex >= 0 && newIndex < this.engines.length)
+            this.currentEngine = this.engines[newIndex];
 
           aEvent.preventDefault();
           aEvent.stopPropagation();
