@@ -157,8 +157,8 @@ protected:
                                   const gchar *aUTF8, PRUint32 aUTF8Length);
 #if defined(ENABLE_FAST_PATH_8BIT) || defined(ENABLE_FAST_PATH_ALWAYS)
     PRBool CanTakeFastPath(PRUint32 aFlags);
-    void CreateGlyphRunsFast(gfxTextRun *aTextRun,
-                             const gchar *aUTF8, PRUint32 aUTF8Length);
+    nsresult CreateGlyphRunsFast(gfxTextRun *aTextRun,
+                                 const gchar *aUTF8, PRUint32 aUTF8Length);
 #endif
 
     static PRBool FontCallback (const nsAString& fontName,

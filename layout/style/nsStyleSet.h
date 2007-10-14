@@ -245,10 +245,6 @@ class nsStyleSet
 
   nsPresContext* PresContext() { return mRuleTree->GetPresContext(); }
 
-  // Return true if aContent or one of its ancestors in the
-  // bindingParent chain is native anonymous.
-  static PRBool IsNativeAnonymous(nsIContent* aContent);
-
   static nsIURI  *gQuirkURI;
 
   // The sheets in each array in mSheets are stored with the most significant

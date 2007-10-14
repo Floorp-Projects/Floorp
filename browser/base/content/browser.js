@@ -314,6 +314,117 @@ function initBookmarksToolbar() {
     PlacesUtils.getQueryStringForFolder(PlacesUtils.bookmarks.toolbarFolder);
 }
 
+/**
+ * Add the special "Places" folder (with some special queries) to the personal toolbar folder
+ */
+function initPlacesDefaultQueries() {
+  var createdDefaultQueries = false;
+  try {
+    createdDefaultQueries = gPrefService.getBoolPref("browser.places.createdDefaultQueries");
+  } catch(ex) {}
+
+  if (createdDefaultQueries)
+    return;
+
+  var bmsvc = PlacesUtils.bookmarks;
+  var callback = {
+    runBatched: function() {
+      var placesFolderTitle =
+        PlacesUtils.getString("placesFolderTitle");
+      var recentlyCreatedBookmarksTitle =
+        PlacesUtils.getString("recentlyCreatedBookmarksTitle");
+      var recentlyVisitedBookmarksTitle =
+        PlacesUtils.getString("recentlyVisitedBookmarksTitle");
+      var mostVisitedBookmarksTitle =
+        PlacesUtils.getString("mostVisitedBookmarksTitle");
+      var recentlyUsedTagsTitle =
+        PlacesUtils.getString("recentlyUsedTagsTitle");
+      var mostUsedTagsTitle =
+        PlacesUtils.getString("mostUsedTagsTitle");
+      var mostVisitedSitesTitle =
+        PlacesUtils.getString("mostVisitedSitesTitle");
+
+      var bookmarksRoot = PlacesUtils.bookmarksRootId;
+      var unfiledRoot = PlacesUtils.unfiledRootId;
+      var tagRoot = PlacesUtils.tagRootId;
+      var defaultIndex = bmsvc.DEFAULT_INDEX;
+
+      // index = 0, make it the first folder
+      var placesFolder = bmsvc.createFolder(bmsvc.toolbarFolder,
+                                            placesFolderTitle,
+                                            0);
+
+      // XXX should this be a pref?  see bug #399268
+      var maxResults = 10;
+
+      // exclude queries so that user created "saved searches" 
+      // and these queries (added automatically) are excluded
+      var recentlyCreatedBookmarksItem = bmsvc.insertBookmark(placesFolder,
+        IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
+            "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
+            "&sort=" + 
+            Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
+            "&excludeItemIfParentHasAnnotation=livemark%2FfeedURI" +
+            "&maxResults=" + maxResults +
+            "&excludeQueries=1"),
+            defaultIndex, recentlyCreatedBookmarksTitle);
+
+      var recentlyVisitedBookmarksItem = bmsvc.insertBookmark(placesFolder,
+        IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
+            "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
+            "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING + 
+            "&minVisits=1&maxResults=" + maxResults),
+            defaultIndex, recentlyVisitedBookmarksTitle);
+
+      var mostVisitedBookmarksItem = bmsvc.insertBookmark(placesFolder,
+        IO.newURI("place:folder=" + bookmarksRoot + "&folder=" + unfiledRoot +
+            "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
+            "&sort=" + 
+            Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING + 
+            "&minVisits=1&maxResults=" + maxResults),
+            defaultIndex, mostVisitedBookmarksTitle);
+
+      var recentlyUsedTagsItem = bmsvc.insertBookmark(placesFolder,
+        IO.newURI("place:folder=" + tagRoot +
+            "&group=" + Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER +
+            "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
+            "&applyOptionsToContainers=1" +  
+            "&sort=" + 
+            Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING + 
+            "&resolveNullBookmarkTitles=1" +
+            "&maxResults=" + maxResults),
+            defaultIndex, recentlyUsedTagsTitle);
+
+      var mostUsedTagsItem = bmsvc.insertBookmark(placesFolder,
+        IO.newURI("place:folder=" + tagRoot + 
+            "&group=" + Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER +
+            "&queryType=" + Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
+            "&applyOptionsToContainers=1" +
+            "&sort=" + Ci.nsINavHistoryQueryOptions.SORT_BY_COUNT_DESCENDING + 
+            "&resolveNullBookmarkTitles=1" +
+            "&maxResults=" + maxResults),
+            defaultIndex, mostUsedTagsTitle);
+
+      var mostVisitedSitesItem = bmsvc.insertBookmark(placesFolder,
+        IO.newURI("place:queryType=" + 
+            Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY +
+            "&sort=" + 
+            Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING + 
+            "&maxResults=" + maxResults),
+            defaultIndex, mostVisitedSitesTitle);
+    }
+  }
+  
+  try {
+    bmsvc.runInBatchMode(callback, null);
+  } finally {
+    // We need to persist this preference change, since we want to
+    // check it at next app start even if the browser exits abruptly
+    gPrefService.setBoolPref("browser.places.createdDefaultQueries", true);
+    gPrefService.savePrefFile(null);
+  }
+}
+
 const gSessionHistoryObserver = {
   observe: function(subject, topic, data)
   {
@@ -959,6 +1070,7 @@ function delayedStartup()
     sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
   }
 
+  initPlacesDefaultQueries();
   initBookmarksToolbar();
   PlacesUtils.bookmarks.addObserver(gBookmarksObserver, false);
   PlacesStarButton.init();
@@ -1215,6 +1327,9 @@ function nonBrowserWindowDelayedStartup()
   gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch2);
 
+  // initialise the offline listener
+  BrowserOffline.init();
+  
   // Set up Sanitize Item
   gSanitizeListener = new SanitizeListener();
 }
@@ -1223,6 +1338,8 @@ function nonBrowserWindowShutdown()
 {
   if (gSanitizeListener)
     gSanitizeListener.shutdown();
+
+  BrowserOffline.uninit();
 }
 #endif
 
@@ -2663,17 +2780,13 @@ const DOMLinkHandler = {
             if (!gPrefService.getBoolPref("browser.chrome.site_icons"))
               break;
 
-            try {
-              var contentPolicy = Cc["@mozilla.org/layout/content-policy;1"].
-                                  getService(Ci.nsIContentPolicy);
-            } catch(e) {
-              break; // Refuse to load if we can't do a security check.
-            }
-
             var targetDoc = link.ownerDocument;
             var ios = Cc["@mozilla.org/network/io-service;1"].
                       getService(Ci.nsIIOService);
             var uri = ios.newURI(link.href, targetDoc.characterSet, null);
+
+            if (gBrowser.isFailedIcon(uri))
+              break;
 
             // Verify that the load of this icon is legal.
             // error pages can load their favicon, to be on the safe side,
@@ -2689,6 +2802,13 @@ const DOMLinkHandler = {
               } catch(e) {
                 break;
               }
+            }
+
+            try {
+              var contentPolicy = Cc["@mozilla.org/layout/content-policy;1"].
+                                  getService(Ci.nsIContentPolicy);
+            } catch(e) {
+              break; // Refuse to load if we can't do a security check.
             }
 
             // Security says okay, now ask content policy
@@ -3301,22 +3421,9 @@ nsBrowserStatusHandler.prototype =
   
   onLinkIconAvailable : function(aBrowser)
   {
-    if (gProxyFavIcon &&
-        gBrowser.mCurrentBrowser == aBrowser &&
+    if (gProxyFavIcon && gBrowser.mCurrentBrowser == aBrowser &&
         gBrowser.userTypedValue === null)
-    {
-      // update the favicon in the URL bar
-      PageProxySetIcon(aBrowser.mIconURL);
-    }
-
-    // Save this favicon in the favicon service
-    if (aBrowser.mIconURL) {
-      var faviconService = Components.classes["@mozilla.org/browser/favicon-service;1"]
-        .getService(Components.interfaces.nsIFaviconService);
-      var uri = Components.classes["@mozilla.org/network/io-service;1"]
-        .getService(Components.interfaces.nsIIOService).newURI(aBrowser.mIconURL, null, null);
-      faviconService.setAndLoadFaviconForPage(aBrowser.currentURI, uri, false);
-    }
+      PageProxySetIcon(aBrowser.mIconURL); // update the favicon in the URL bar
   },
 
   onProgressChange : function (aWebProgress, aRequest,
@@ -3583,6 +3690,15 @@ nsBrowserStatusHandler.prototype =
     } 
     else
       this.asyncUpdateUI();
+
+    // Catch exceptions until bug 376222 gets fixed so we don't hork
+    // other progress listeners if this call throws an exception.
+    try {
+      ContentPrefSink.handleLocationChanged(aLocationURI);
+    }
+    catch(ex) {
+      Components.utils.reportError(ex);
+    }
   },
   
   asyncUpdateUI : function () {

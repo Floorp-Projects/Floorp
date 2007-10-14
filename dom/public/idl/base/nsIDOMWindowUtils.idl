@@ -71,7 +71,8 @@ interface nsIDOMWindowUtils : nsISupports {
 
   /**
    * Whether the charset of the window's current document has been forced by
-   * the user
+   * the user.
+   * Cannot be accessed from unprivileged context (not content-accessible)
    */
   readonly attribute boolean docCharsetIsForced;
 
@@ -105,6 +106,10 @@ interface nsIDOMWindowUtils : nsISupports {
    * mouseover and mouseout events, a movemove event fired on the new element
    * should be sufficient to generate the correct over and out events as well.
    *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
    * @param aType event type
    * @param aX x offset
    * @param aY y offset
@@ -125,6 +130,10 @@ interface nsIDOMWindowUtils : nsISupports {
    *
    * Key events generally end up being sent to the focused node.
    *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
+   *
    * @param aType event type
    * @param aKeyCode key code
    * @param aCharCode character code
@@ -139,6 +148,10 @@ interface nsIDOMWindowUtils : nsISupports {
    * Focus the element aElement. The element should be in the same document
    * that the window is displaying. Pass null to blur the element, if any,
    * that currently has focus, and focus the document.
+   *
+   * Cannot be accessed from unprivileged context (not content-accessible)
+   * Will throw a DOM security error if called without UniversalXPConnect
+   * privileges.
    *
    * @param aElement the element to focus
    */

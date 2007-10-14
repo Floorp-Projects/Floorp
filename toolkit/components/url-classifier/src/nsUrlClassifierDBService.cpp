@@ -940,13 +940,18 @@ nsUrlClassifierDBServiceWorker::GetTables(nsIUrlClassifierCallback* c)
 
     mGetTablesStatement->GetUTF8String(1, val);
 
+    PRBool haveAdds = PR_FALSE;
     if (!val.IsEmpty()) {
       response.Append("a:");
       response.Append(val);
+      haveAdds = PR_TRUE;
     }
 
     mGetTablesStatement->GetUTF8String(2, val);
     if (!val.IsEmpty()) {
+      if (haveAdds)
+        response.Append(":");
+
       response.Append("s:");
       response.Append(val);
     }

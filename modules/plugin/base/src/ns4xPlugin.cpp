@@ -374,6 +374,9 @@ ns4xPlugin::CheckClassInitialized(void)
   CALLBACKS.enumerate =
     NewNPN_EnumerateProc(FP2TV(_enumerate));
 
+  CALLBACKS.construct =
+    NewNPN_ConstructProc(FP2TV(_construct));
+
   CALLBACKS.releasevariantvalue =
     NewNPN_ReleaseVariantValueProc(FP2TV(_releasevariantvalue));
 
@@ -1734,6 +1737,22 @@ _enumerate(NPP npp, NPObject *npobj, NPIdentifier **identifier,
   return npobj->_class->enumerate(npobj, identifier, count);
 }
 
+bool NP_CALLBACK
+_construct(NPP npp, NPObject* npobj, const NPVariant *args,
+               uint32_t argCount, NPVariant *result)
+{
+  if (!npp || !npobj || !npobj->_class ||
+      !NP_CLASS_STRUCT_VERSION_HAS_CTOR(npobj->_class) ||
+      !npobj->_class->construct) {
+    return false;
+  }
+
+  NPPExceptionAutoHolder nppExceptionHolder;
+  NPPAutoPusher nppPusher(npp);
+
+  return npobj->_class->construct(npobj, args, argCount, result);
+}
+
 void NP_CALLBACK
 _releasevariantvalue(NPVariant* variant)
 {
@@ -2344,6 +2363,8 @@ OnShutdown()
 
   if (sPluginThreadAsyncCallLock) {
     nsAutoLock::DestroyLock(sPluginThreadAsyncCallLock);
+
+    sPluginThreadAsyncCallLock = nsnull;
   }
 }
 

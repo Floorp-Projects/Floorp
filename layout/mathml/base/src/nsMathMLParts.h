@@ -70,12 +70,12 @@ nsIFrame* NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsStyleContext* aCont
 nsIFrame* NS_NewMathMLmrootFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 nsIFrame* NS_NewMathMLmactionFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-nsIFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+nsIFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsStyleContext* aContext, PRUint32 aFlags);
 nsIFrame* NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 inline nsIFrame* NS_NewMathMLmathFrame(nsIPresShell* aPresShell, PRBool aIsBlock, nsStyleContext* aContext)
 {
   return (aIsBlock)
-    ? NS_NewMathMLmathBlockFrame(aPresShell, aContext)
+    ? NS_NewMathMLmathBlockFrame(aPresShell, aContext, 0)
     : NS_NewMathMLmathInlineFrame(aPresShell, aContext);
 }
 #endif /* nsMathMLParts_h___ */

@@ -63,8 +63,6 @@
 #include <winbase.h>
 #include <math.h>     /* for fabs */
 #include <mmsystem.h> /* for timeBegin/EndPeriod */
-#include <stdlib.h>   /* for _set_invalid_parameter_handler */
-#include <crtdbg.h>   /* for _CrtSetReportMode */
 
 #ifdef JS_THREADSAFE
 #include <prinit.h>
@@ -558,29 +556,12 @@ PRMJ_DSTOffset(JSInt64 local_time)
     return(local_time);
 }
 
-#ifdef XP_WIN
-JS_STATIC_DLL_CALLBACK(void)
-PRMJ_InvalidParameterHandler(const wchar_t* expression,
-                             const wchar_t* function, 
-                             const wchar_t* file, 
-                             unsigned int line, 
-                             uintptr_t pReserved)
-{
-    /* empty */
-}
-#endif
-
 /* Format a time value into a buffer. Same semantics as strftime() */
 size_t
 PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
 {
-    size_t result;
 #if defined(XP_UNIX) || defined(XP_WIN) || defined(XP_OS2) || defined(XP_BEOS)
     struct tm a;
-#ifdef XP_WIN
-   _invalid_parameter_handler oldHandler;
-   int oldReportMode;
-#endif
 
     /* Zero out the tm struct.  Linux, SunOS 4 struct tm has extra members int
      * tm_gmtoff, char *tm_zone; when tm_zone is garbage, strftime gets
@@ -626,20 +607,8 @@ PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *prtm)
     }
 #endif
 
-#ifdef XP_WIN
-   oldHandler = _set_invalid_parameter_handler(PRMJ_InvalidParameterHandler);
-   oldReportMode = _CrtSetReportMode(_CRT_ASSERT, 0);
+    return strftime(buf, buflen, fmt, &a);
 #endif
-
-    result = strftime(buf, buflen, fmt, &a);
-
-#ifdef XP_WIN
-    _set_invalid_parameter_handler(oldHandler);
-    _CrtSetReportMode(_CRT_ASSERT, oldReportMode);
-#endif
-
-#endif
-    return result;
 }
 
 /* table for number of days in a month */

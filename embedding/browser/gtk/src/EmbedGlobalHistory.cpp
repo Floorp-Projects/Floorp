@@ -197,7 +197,7 @@ nsresult SetLastVisitTime(HistoryEntry *entry, const PRInt64& aTime)
 // Return TRUE if an entry has been written
 PRBool GetIsWritten(HistoryEntry *entry)
 {
-  NS_ENSURE_ARG(entry);
+  NS_ENSURE_TRUE(entry, PR_FALSE);
   return entry->mWritten;
 }
 

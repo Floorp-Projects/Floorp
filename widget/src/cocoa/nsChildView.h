@@ -49,7 +49,6 @@
 #include "nsISupports.h"
 #include "nsBaseWidget.h"
 #include "nsIPluginWidget.h"
-#include "nsIEventSink.h"
 #include "nsIScrollableView.h"
 #include "nsWeakPtr.h"
 
@@ -178,8 +177,7 @@ private:
 
 class nsChildView : public nsBaseWidget,
                     public nsIPluginWidget,
-                    public nsIKBStateControl,
-                    public nsIEventSink
+                    public nsIKBStateControl
 {
 private:
   typedef nsBaseWidget Inherited;
@@ -189,7 +187,6 @@ public:
   virtual                 ~nsChildView();
   
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIEVENTSINK 
 
   // nsIKBStateControl interface
   NS_IMETHOD              ResetInputState();

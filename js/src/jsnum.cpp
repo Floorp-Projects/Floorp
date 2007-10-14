@@ -148,10 +148,10 @@ const char js_parseFloat_str[] = "parseFloat";
 const char js_parseInt_str[]   = "parseInt";
 
 static JSFunctionSpec number_functions[] = {
-    JS_FN(js_isNaN_str,         num_isNaN,              1,1,0,0),
-    JS_FN(js_isFinite_str,      num_isFinite,           1,1,0,0),
-    JS_FN(js_parseFloat_str,    num_parseFloat,         1,1,0,0),
-    JS_FN(js_parseInt_str,      num_parseInt,           1,2,0,0),
+    JS_FN(js_isNaN_str,         num_isNaN,              1,1,0),
+    JS_FN(js_isFinite_str,      num_isFinite,           1,1,0),
+    JS_FN(js_parseFloat_str,    num_parseFloat,         1,1,0),
+    JS_FN(js_parseInt_str,      num_parseInt,           1,2,0),
     JS_FS_END
 };
 
@@ -474,14 +474,14 @@ num_toPrecision(JSContext *cx, uintN argc, jsval *vp)
 
 static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,       num_toSource,       0,0,JSFUN_THISP_NUMBER,0),
+    JS_FN(js_toSource_str,       num_toSource,       0,0,JSFUN_THISP_NUMBER),
 #endif
-    JS_FN(js_toString_str,       num_toString,       0,0,JSFUN_THISP_NUMBER,0),
-    JS_FN(js_toLocaleString_str, num_toLocaleString, 0,0,JSFUN_THISP_NUMBER,0),
-    JS_FN(js_valueOf_str,        num_valueOf,        0,0,JSFUN_THISP_NUMBER,0),
-    JS_FN("toFixed",             num_toFixed,        1,1,JSFUN_THISP_NUMBER,0),
-    JS_FN("toExponential",       num_toExponential,  1,1,JSFUN_THISP_NUMBER,0),
-    JS_FN("toPrecision",         num_toPrecision,    1,1,JSFUN_THISP_NUMBER,0),
+    JS_FN(js_toString_str,       num_toString,       0,0,JSFUN_THISP_NUMBER),
+    JS_FN(js_toLocaleString_str, num_toLocaleString, 0,0,JSFUN_THISP_NUMBER),
+    JS_FN(js_valueOf_str,        num_valueOf,        0,0,JSFUN_THISP_NUMBER),
+    JS_FN("toFixed",             num_toFixed,        1,1,JSFUN_THISP_NUMBER),
+    JS_FN("toExponential",       num_toExponential,  1,1,JSFUN_THISP_NUMBER),
+    JS_FN("toPrecision",         num_toPrecision,    1,1,JSFUN_THISP_NUMBER),
     JS_FS_END
 };
 

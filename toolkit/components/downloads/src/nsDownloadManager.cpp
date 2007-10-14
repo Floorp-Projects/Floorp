@@ -995,7 +995,7 @@ nsDownloadManager::GetUserDownloadsDirectory(nsILocalFile **aResult)
         NS_ENSURE_SUCCESS(rv, rv);
         (*aResult)->Exists(&bRes);
         if (!bRes) {
-          rv = (*aResult)->Create(nsIFile::DIRECTORY_TYPE, 755);
+          rv = (*aResult)->Create(nsIFile::DIRECTORY_TYPE, 0755);
           NS_ENSURE_SUCCESS(rv, rv);
         }
         return NS_OK;
@@ -1013,7 +1013,7 @@ nsDownloadManager::GetUserDownloadsDirectory(nsILocalFile **aResult)
             NS_ADDREF(*aResult = customDirectory);
             return NS_OK;
           }
-          rv = customDirectory->Create(nsIFile::DIRECTORY_TYPE, 755);
+          rv = customDirectory->Create(nsIFile::DIRECTORY_TYPE, 0755);
           NS_ENSURE_SUCCESS(rv, rv);
           NS_ADDREF(*aResult = customDirectory);
           return NS_OK;
@@ -1022,7 +1022,7 @@ nsDownloadManager::GetUserDownloadsDirectory(nsILocalFile **aResult)
         NS_ENSURE_SUCCESS(rv, rv);
         (*aResult)->Exists(&bRes);
         if (!bRes) {
-          rv = (*aResult)->Create(nsIFile::DIRECTORY_TYPE, 755);
+          rv = (*aResult)->Create(nsIFile::DIRECTORY_TYPE, 0755);
           NS_ENSURE_SUCCESS(rv, rv);
           // Update dir pref
           prefBranch->SetComplexValue(NS_PREF_DIR,

@@ -406,7 +406,7 @@ var gEditItemOverlay = {
       // hide the tag selector if it was previously visible
       var tagsSelector = this._element("tagsSelector");
       if (!tagsSelector.collapsed)
-        this._toggleTagsSelector();
+        this.toggleTagsSelector();
     }
 
     if (this._observersAdded) {

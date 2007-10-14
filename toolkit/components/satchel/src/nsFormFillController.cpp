@@ -105,7 +105,6 @@ nsFormFillController::nsFormFillController() :
   mSuppressOnInput(PR_FALSE)
 {
   mController = do_GetService("@mozilla.org/autocomplete/controller;1");
-  mLoginManager = do_GetService("@mozilla.org/login-manager;1");
   mDocShells = do_CreateInstance("@mozilla.org/supports-array;1");
   mPopups = do_CreateInstance("@mozilla.org/supports-array;1");
   mPwmgrInputs.Init();
@@ -172,6 +171,9 @@ nsFormFillController::MarkAsLoginManagerField(nsIDOMHTMLInputElement *aInput)
    * form history (so it doesn't save usernames).
    */
   mPwmgrInputs.Put(aInput, 1);
+
+  if (!mLoginManager)
+    mLoginManager = do_GetService("@mozilla.org/login-manager;1");
 
   return NS_OK;
 }

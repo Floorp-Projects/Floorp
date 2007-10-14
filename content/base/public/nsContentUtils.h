@@ -1098,6 +1098,13 @@ public:
                           nsIURI *aLinkURI, const nsString& aTargetSpec,
                           PRBool aClick, PRBool aIsUserTriggered);
 
+  /**
+   * Return true if aContent or one of its ancestors in the
+   * bindingParent chain is native anonymous.
+   */
+  static PRBool IsNativeAnonymous(nsIContent* aContent);
+
+
 private:
 
   static PRBool InitializeEventTable();

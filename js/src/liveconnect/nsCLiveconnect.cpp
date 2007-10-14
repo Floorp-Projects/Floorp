@@ -113,6 +113,8 @@ AutoPushJSContext::AutoPushJSContext(nsISupports* aSecuritySupports,
     nsCOMPtr<nsIJSContextStack> contextStack =
         do_GetService("@mozilla.org/js/xpc/ContextStack;1");
 
+    JS_BeginRequest(cx);
+
     JSContext* currentCX;
     if(contextStack &&
        // Don't push if the current context is already on the stack.
@@ -195,6 +197,7 @@ AutoPushJSContext::~AutoPushJSContext()
     if (mFrame.script)
         mContext->fp = mFrame.down;
 
+    JS_EndRequest(mContext);
 }
 
 

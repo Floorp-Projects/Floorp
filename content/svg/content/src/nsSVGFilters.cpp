@@ -1078,7 +1078,7 @@ nsSVGFEBlendElement::Filter(nsSVGFilterInstance *instance)
 NS_IMETHODIMP
 nsSVGFEBlendElement::GetRequirements(PRUint32 *aRequirements)
 {
-  *aRequirements = CheckStandardNames(mIn1);
+  *aRequirements = CheckStandardNames(mIn1) | CheckStandardNames(mIn2);
   return NS_OK;
 }
 
@@ -1343,7 +1343,7 @@ nsSVGFEColorMatrixElement::Filter(nsSVGFilterInstance *instance)
 
     colorMatrix[10] = 0.213f - 0.213f * s;
     colorMatrix[11] = 0.715f - 0.715f * s;
-    colorMatrix[12] = 0.715f - 0.715f * s;
+    colorMatrix[12] = 0.072f + 0.928f * s;
 
     break;
 
@@ -1694,7 +1694,7 @@ nsSVGFECompositeElement::Filter(nsSVGFilterInstance *instance)
 NS_IMETHODIMP
 nsSVGFECompositeElement::GetRequirements(PRUint32 *aRequirements)
 {
-  *aRequirements = CheckStandardNames(mIn1);
+  *aRequirements = CheckStandardNames(mIn1) | CheckStandardNames(mIn2);
   return NS_OK;
 }
 

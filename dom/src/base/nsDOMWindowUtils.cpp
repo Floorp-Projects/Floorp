@@ -297,6 +297,11 @@ nsDOMWindowUtils::GetWidget()
 NS_IMETHODIMP
 nsDOMWindowUtils::Focus(nsIDOMElement* aElement)
 {
+  PRBool hasCap = PR_FALSE;
+  if (NS_FAILED(nsContentUtils::GetSecurityManager()->IsCapabilityEnabled(
+    "UniversalXPConnect", &hasCap)) || !hasCap)
+    return NS_ERROR_DOM_SECURITY_ERR;
+
   if (mWindow) {
     nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
     if (content) {

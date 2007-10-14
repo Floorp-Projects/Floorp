@@ -415,44 +415,37 @@ nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
     if (!mUseCache)
         return NS_ERROR_NOT_AVAILABLE;
 
-    if (!mCacheSession_ANY) {
-        nsCOMPtr<nsICacheService> serv = do_GetService(kCacheServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
+    // We want to get the pointer to the cache service each time we're called,
+    // because it's possible for some add-ons (such as Google Gears) to swap
+    // in new cache services on the fly, and we want to pick them up as
+    // appropriate.
+    nsCOMPtr<nsICacheService> serv = do_GetService(NS_CACHESERVICE_CONTRACTID,
+                                                   &rv);
+    if (NS_FAILED(rv)) return rv;
 
-        rv = serv->CreateSession("HTTP",
-                                 nsICache::STORE_ANYWHERE,
-                                 nsICache::STREAM_BASED,
-                                 getter_AddRefs(mCacheSession_ANY));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = mCacheSession_ANY->SetDoomEntriesIfExpired(PR_FALSE);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = serv->CreateSession("HTTP-memory-only",
-                                 nsICache::STORE_IN_MEMORY,
-                                 nsICache::STREAM_BASED,
-                                 getter_AddRefs(mCacheSession_MEM));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = mCacheSession_MEM->SetDoomEntriesIfExpired(PR_FALSE);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = serv->CreateSession("HTTP-offline",
-                                 nsICache::STORE_OFFLINE,
-                                 nsICache::STREAM_BASED,
-                                 getter_AddRefs(mCacheSession_OFFLINE));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = mCacheSession_OFFLINE->SetDoomEntriesIfExpired(PR_FALSE);
-        if (NS_FAILED(rv)) return rv;
+    const char *sessionName = "HTTP";
+    switch (storagePolicy) {
+    case nsICache::STORE_IN_MEMORY:
+        sessionName = "HTTP-memory-only";
+        break;
+    case nsICache::STORE_OFFLINE:
+        sessionName = "HTTP-offline";
+        break;
+    default:
+        break;
     }
 
-    if (storagePolicy == nsICache::STORE_IN_MEMORY)
-        NS_ADDREF(*result = mCacheSession_MEM);
-    else if (storagePolicy == nsICache::STORE_OFFLINE)
-        NS_ADDREF(*result = mCacheSession_OFFLINE);
-    else
-        NS_ADDREF(*result = mCacheSession_ANY);
+    nsCOMPtr<nsICacheSession> cacheSession;
+    rv = serv->CreateSession(sessionName,
+                             storagePolicy,
+                             nsICache::STREAM_BASED,
+                             getter_AddRefs(cacheSession));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = cacheSession->SetDoomEntriesIfExpired(PR_FALSE);
+    if (NS_FAILED(rv)) return rv;
+
+    NS_ADDREF(*result = cacheSession);
 
     return NS_OK;
 }
@@ -1051,11 +1044,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetBoolPref(HTTP_PREF("use-cache"), &cVar);
         if (NS_SUCCEEDED(rv)) {
             mUseCache = cVar;
-            if (!mUseCache) {
-                // release our references to the cache
-                mCacheSession_ANY = 0;
-                mCacheSession_MEM = 0;
-            }
         }
     }
 

@@ -77,7 +77,6 @@ class nsIPrincipal;
 class nsIDOMDocument;
 class nsIDOMDocumentType;
 class nsIObserver;
-class nsISupportsArray;
 class nsScriptLoader;
 class nsIContentSink;
 class nsIScriptEventManager;

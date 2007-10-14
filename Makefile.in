@@ -58,6 +58,7 @@ TIERS += base
 tier_base_dirs = \
 	config \
 	build \
+	probes \
 	$(NULL)
 
 include $(topsrcdir)/$(MOZ_BUILD_APP)/build.mk

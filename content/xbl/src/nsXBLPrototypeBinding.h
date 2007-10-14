@@ -55,7 +55,6 @@
 class nsIAtom;
 class nsIDocument;
 class nsIScriptContext;
-class nsISupportsArray;
 class nsSupportsHashtable;
 class nsIXBLService;
 class nsFixedSizeAllocator;

@@ -594,6 +594,17 @@ private:
 
 //MathML Mod - RBS
 #ifdef MOZ_MATHML
+  /**
+   * Takes the frames in aBlockItems and wraps them in a new anonymous block
+   * frame whose content is aContent and whose parent will be aParentFrame.
+   * The anonymous block is added to aNewItems and aBlockItems is cleared.
+   */
+  nsresult FlushAccumulatedBlock(nsFrameConstructorState& aState,
+                                 nsIContent* aContent,
+                                 nsIFrame* aParentFrame,
+                                 nsFrameItems* aBlockItems,
+                                 nsFrameItems* aNewItems);
+
   nsresult ConstructMathMLFrame(nsFrameConstructorState& aState,
                                 nsIContent*              aContent,
                                 nsIFrame*                aParentFrame,

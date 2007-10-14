@@ -4181,12 +4181,12 @@ regexp_test(JSContext *cx, uintN argc, jsval *vp)
 
 static JSFunctionSpec regexp_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,  regexp_toString,    0,0,0,0),
+    JS_FN(js_toSource_str,  regexp_toString,    0,0,0),
 #endif
-    JS_FN(js_toString_str,  regexp_toString,    0,0,0,0),
-    JS_FN("compile",        regexp_compile,     0,2,0,0),
-    JS_FN("exec",           regexp_exec,        0,1,0,0),
-    JS_FN("test",           regexp_test,        0,1,0,0),
+    JS_FN(js_toString_str,  regexp_toString,    0,0,0),
+    JS_FN("compile",        regexp_compile,     0,2,0),
+    JS_FN("exec",           regexp_exec,        0,1,0),
+    JS_FN("test",           regexp_test,        0,1,0),
     JS_FS_END
 };
 

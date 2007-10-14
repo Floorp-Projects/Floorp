@@ -96,7 +96,7 @@ TaggingService.prototype = {
   // Feed XPCOMUtils
   classDescription: "Places Tagging Service",
   contractID: "@mozilla.org/browser/tagging-service;1",
-  classID: Components.ID("{6a059068-1630-11dc-8314-0800200c9a66}"),
+  classID: Components.ID("{bbc23860-2553-479d-8b78-94d9038334f7}"),
 
   // nsISupports
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITaggingService,
@@ -141,7 +141,7 @@ TaggingService.prototype = {
     var faviconService = Cc[FAV_CONTRACTID].getService(Ci.nsIFaviconService);
     var uri = this._bms.getFolderURI(id);
     faviconService.setFaviconUrlForPage(uri, this._tagContainerIcon);
-  
+
     return id;
   },
 
@@ -185,12 +185,12 @@ TaggingService.prototype = {
       var tagNode = this._getTagNode(aTags[i]);
       if (!tagNode) {
         var tagId = this._createTag(aTags[i]);
-        this._bms.insertBookmark(tagId, aURI, this._bms.DEFAULT_INDEX, "");
+        this._bms.insertBookmark(tagId, aURI, this._bms.DEFAULT_INDEX, null);
       }
       else {
         var tagId = tagNode.itemId;
         if (!this._isURITaggedInternal(aURI, tagNode.itemId, {}))
-          this._bms.insertBookmark(tagId, aURI, this._bms.DEFAULT_INDEX, "");
+          this._bms.insertBookmark(tagId, aURI, this._bms.DEFAULT_INDEX, null);
       }
     }
   },
@@ -292,6 +292,11 @@ TaggingService.prototype = {
     // sort the tag list
     tags.sort();
     return tags;
+  },
+  
+  // nsITaggingService
+  get tagContainerIconSpec() {
+    return TAG_CONTAINER_ICON_URI;
   },
 
   // nsIObserver

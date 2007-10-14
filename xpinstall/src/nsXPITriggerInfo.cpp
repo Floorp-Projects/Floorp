@@ -323,7 +323,7 @@ void nsXPITriggerInfo::SendStatus(const PRUnichar* URL, PRInt32 status)
 {
     nsresult rv;
 
-    if ( mCx && mGlobalWrapper && mCbval )
+    if ( mCx && mGlobalWrapper && !JSVAL_IS_NULL(mCbval) )
     {
         // create event and post it
         nsRefPtr<XPITriggerEvent> event = new XPITriggerEvent();

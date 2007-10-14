@@ -70,6 +70,10 @@
   list-style-image: url("chrome://global/skin/tree/folder.png");
 }
 
+.query-item[container] {
+  list-style-image: url("chrome://browser/skin/places/query.png");
+}
+
 toolbarbutton.bookmark-item:hover
 {
   background: url("chrome://global/skin/toolbar/toolbarbutton-customhover-left.png") no-repeat left center;

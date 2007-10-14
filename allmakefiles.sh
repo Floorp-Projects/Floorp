@@ -63,6 +63,7 @@ config/Makefile
 config/autoconf.mk
 config/mkdepend/Makefile
 config/doxygen.cfg
+probes/Makefile
 extensions/Makefile
 "
 

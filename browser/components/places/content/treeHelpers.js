@@ -210,7 +210,6 @@ var OptionsFilter = {
     var defaultHistoryOptions = history.getNewQueryOptions();
     defaultHistoryOptions.sortingMode = NHQO.SORT_BY_DATE_DESCENDING;
     var defaultBookmarksOptions = history.getNewQueryOptions();
-    defaultBookmarksOptions.setGroupingMode([NHQO.GROUP_BY_FOLDER], 1);
     var defaultSubscriptionsOptions = history.getNewQueryOptions();
   
     this.historyHandler = 

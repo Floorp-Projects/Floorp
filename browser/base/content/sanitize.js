@@ -140,7 +140,10 @@ Sanitizer.prototype = {
         // Clear last URL of the Open Web Location dialog
         var prefs = Components.classes["@mozilla.org/preferences-service;1"]
                               .getService(Components.interfaces.nsIPrefBranch2);
-        prefs.clearUserPref("general.open_location.last_url");
+        try {
+          prefs.clearUserPref("general.open_location.last_url");
+        }
+        catch (e) { }
       },
       
       get canClear()

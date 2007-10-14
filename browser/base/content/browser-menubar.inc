@@ -375,7 +375,7 @@
         ondragexit="PlacesMenuDNDController.onDragExit(event);">
     <menupopup id="bookmarksMenuPopup"
                type="places" asyncinit="true"
-               place="place:folder=2&amp;group=3&amp;expandQueries=1"
+               place="place:folder=2&amp;expandQueries=1"
                context="placesContext"
                openInTabs="children"
                oncommand="BookmarksEventHandler.onCommand(event);"

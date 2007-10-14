@@ -40,16 +40,6 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-#ifdef XP_WIN
-#define SHOW_ICONS
-#endif
-#ifdef XP_BEOS
-#define SHOW_ICONS
-#endif
-#ifdef XP_MACOSX
-#define SHOW_ICONS
-#endif
-
 <!DOCTYPE bindings [
   <!ENTITY % downloadDTD SYSTEM "chrome://mozapps/locale/downloads/downloads.dtd" >
   %downloadDTD;
@@ -120,12 +110,10 @@
   <binding id="download-starting" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
-#ifdef SHOW_ICONS
         <xul:vbox pack="start">
           <xul:image class="downloadTypeIcon" validate="always" 
                      xbl:inherits="src=image"/>
         </xul:vbox>
-#endif
         <xul:vbox pack="start" flex="1">
           <xul:label xbl:inherits="value=target,tooltiptext=target"
                      crop="center" class="name"/>
@@ -145,12 +133,10 @@
   <binding id="download-downloading" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1" class="downloadContentBox">
-#ifdef SHOW_ICONS
         <xul:vbox pack="start">
           <xul:image class="downloadTypeIcon" validate="always" 
                      xbl:inherits="src=image"/>
         </xul:vbox>
-#endif
         <xul:vbox flex="1">
           <xul:label xbl:inherits="value=target,tooltiptext=target"
                        crop="center" flex="2" class="name"/>
@@ -176,12 +162,10 @@
   <binding id="download-paused" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
-#ifdef SHOW_ICONS
         <xul:vbox pack="start">
           <xul:image class="downloadTypeIcon" validate="always"
                      xbl:inherits="src=image"/>
         </xul:vbox>
-#endif
         <xul:vbox flex="1">
           <xul:label xbl:inherits="value=target,tooltiptext=target"
                      crop="center" flex="2" class="name"/>
@@ -207,12 +191,10 @@
   <binding id="download-done" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
-#ifdef SHOW_ICONS
         <xul:vbox pack="start">
           <xul:image class="downloadTypeIcon" validate="always" 
                      xbl:inherits="src=image"/>
         </xul:vbox>
-#endif
         <xul:vbox pack="start" flex="1">
           <xul:label xbl:inherits="value=target,tooltiptext=target"
                      crop="center" class="name"/>
@@ -235,12 +217,10 @@
   <binding id="download-canceled" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
-#ifdef SHOW_ICONS
         <xul:vbox pack="start"> 
           <xul:image class="downloadTypeIcon" validate="always"
                      xbl:inherits="src=image"/>
         </xul:vbox>
-#endif
         <xul:vbox pack="start" flex="1">
           <xul:label xbl:inherits="value=target,tooltiptext=target"
                      crop="center" class="name"/>
@@ -263,12 +243,10 @@
   <binding id="download-failed" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
-#ifdef SHOW_ICONS
         <xul:vbox pack="start">
           <xul:image class="downloadTypeIcon" validate="always"
                      xbl:inherits="src=image"/>
         </xul:vbox>
-#endif
         <xul:vbox pack="start" flex="1">
           <xul:label xbl:inherits="value=target,tooltiptext=target"
                      crop="center" class="name"/>
@@ -291,11 +269,9 @@
   <binding id="download-blocked" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
-#ifdef SHOW_ICONS
         <xul:vbox pack="start">
           <xul:image class="downloadTypeIcon blockedIcon"/>
         </xul:vbox>
-#endif
         <xul:vbox pack="start" flex="1">
           <xul:label xbl:inherits="value=target,tooltiptext=target"
                      crop="center" class="name"/>
@@ -318,12 +294,10 @@
   <binding id="download-scanning" extends="chrome://mozapps/content/downloads/download.xml#download-base">
     <content>
       <xul:hbox flex="1">
-#ifdef SHOW_ICONS
         <xul:vbox pack="start">
           <xul:image class="downloadTypeIcon" validate="always"
                      xbl:inherits="src=image"/>
         </xul:vbox>
-#endif
         <xul:vbox pack="start" flex="1">
           <xul:label xbl:inherits="value=target,tooltiptext=target"
                        crop="center" flex="2" class="name"/>
