@@ -118,6 +118,7 @@ function run_test() {
   do_check_eq(allTags[0], "tag 1");
   do_check_eq(allTags[1], "tag 2");
 
+  // test untagging
   tagssvc.untagURI(uri1, ["tag 1"]);
   do_check_eq(tag1node.childCount, 1);
 

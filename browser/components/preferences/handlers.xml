@@ -84,7 +84,7 @@
         </xul:hbox>
         <xul:hbox flex="1">
           <xul:menulist class="actionsMenu" flex="1" crop="end" selectedIndex="1"
-                        oncommand="gApplicationsPane.onSelectAction(event)">
+                        oncommand="gApplicationsPane.onSelectAction(event.originalTarget)">
             <xul:menupopup/>
           </xul:menulist>
         </xul:hbox>

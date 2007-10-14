@@ -65,10 +65,10 @@
 #define XPI_NO_NEW_THREAD   0x1000
 
 #define NS_ISOFTWAREUPDATE_IID                   \
-{ 0x18c2f992, 									 \
-  0xb09f, 										 \
-  0x11d2,						                 \
- {0xbc, 0xde, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53}\
+{ 0xfc7c086f,                                    \
+  0xdae0,                                        \
+  0x45e0,                                        \
+ {0x99, 0x10, 0xd5, 0xda, 0x91, 0xc8, 0x27, 0x46}\
 }
 
 class nsIPrincipal;
@@ -95,7 +95,7 @@ class nsISoftwareUpdate : public nsISupports
             NS_IMETHOD RegisterListener(nsIXPIListener *aListener) = 0;
 
             /* FIX: these should be in a private interface */
-            NS_IMETHOD InstallJarCallBack()                   = 0;
+            virtual void InstallJarCallBack() = 0;
             NS_IMETHOD GetMasterListener(nsIXPIListener **aListener) = 0;
             NS_IMETHOD SetActiveListener(nsIXPIListener *aListener) = 0;
 };

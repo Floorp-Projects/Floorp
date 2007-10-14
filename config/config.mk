@@ -531,7 +531,7 @@ endif
 
 CFLAGS		= $(OS_CFLAGS)
 CXXFLAGS	= $(OS_CXXFLAGS)
-LDFLAGS		= $(OS_LDFLAGS)
+LDFLAGS		= $(OS_LDFLAGS) $(MOZ_FIX_LINK_PATHS)
 
 # Allow each module to override the *default* optimization settings
 # by setting MODULE_OPTIMIZE_FLAGS if the developer has not given

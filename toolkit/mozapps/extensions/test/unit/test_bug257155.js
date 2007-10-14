@@ -47,27 +47,27 @@ function run_test()
   // Setup for test
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1");
   gPrefs.setBoolPref(PREF_MATCH_OS_LOCALE, false);
-  gPrefs.setCharPref(PREF_SELECTED_LOCALE, "en-US");
+  gPrefs.setCharPref(PREF_SELECTED_LOCALE, "fr-FR");
 
   // Install test add-on
   startupEM();
   gEM.installItemFromFile(do_get_addon(ADDON), NS_INSTALL_LOCATION_APPPROFILE);
   var addon = gEM.getItemForID(ID);
   do_check_neq(addon, null);
-  do_check_eq(addon.name, "en-US Name");
+  do_check_eq(addon.name, "fr-FR Name");
   restartEM();
 
   addon = gEM.getItemForID(ID);
   do_check_neq(addon, null);
-  do_check_eq(addon.name, "en-US Name");
-  do_check_eq(getManifestProperty(ID, "description"), "en-US Description");
+  do_check_eq(addon.name, "fr-FR Name");
+  do_check_eq(getManifestProperty(ID, "description"), "fr-FR Description");
   
   // Disable item
   gEM.disableItem(ID);
   restartEM();
   addon = gEM.getItemForID(ID);
   do_check_neq(addon, null);
-  do_check_eq(addon.name, "en-US Name");
+  do_check_eq(addon.name, "fr-FR Name");
   
   // Change locale
   gPrefs.setCharPref(PREF_SELECTED_LOCALE, "de-DE");

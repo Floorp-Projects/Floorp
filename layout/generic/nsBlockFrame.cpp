@@ -611,7 +611,12 @@ nsBlockFrame::MarkIntrinsicWidthsDirty()
   nsBlockFrame* dirtyBlock = static_cast<nsBlockFrame*>(GetFirstContinuation());
   dirtyBlock->mMinWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
   dirtyBlock->mPrefWidth = NS_INTRINSIC_WIDTH_UNKNOWN;
-  dirtyBlock->AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
+  if (!(GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)) {
+    for (nsIFrame* frame = dirtyBlock; frame; 
+         frame = frame->GetNextContinuation()) {
+      frame->AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
+    }
+  }
 
   nsBlockFrameSuper::MarkIntrinsicWidthsDirty();
 }
@@ -636,7 +641,8 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
   AutoNoisyIndenter indent(gNoisyIntrinsic);
 #endif
 
-  ResolveBidi();
+  if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
+    ResolveBidi();
   InlineMinWidthData data;
   for (nsBlockFrame* curFrame = this; curFrame;
        curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
@@ -708,7 +714,8 @@ nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
   AutoNoisyIndenter indent(gNoisyIntrinsic);
 #endif
 
-  ResolveBidi();
+  if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
+    ResolveBidi();
   InlinePrefWidthData data;
   for (nsBlockFrame* curFrame = this; curFrame;
        curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
@@ -757,6 +764,15 @@ nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 
   mPrefWidth = data.prevLines;
   return mPrefWidth;
+}
+
+nsRect
+nsBlockFrame::ComputeTightBounds(gfxContext* aContext) const
+{
+  // be conservative
+  if (GetStyleContext()->HasTextDecorations())
+    return GetOverflowRect();
+  return ComputeSimpleTightBounds(aContext);
 }
 
 static nsSize
@@ -896,7 +912,8 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
                            marginRoot, marginRoot, needSpaceManager);
 
 #ifdef IBMBIDI
-  ResolveBidi();
+  if (GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
+    static_cast<nsBlockFrame*>(GetFirstContinuation())->ResolveBidi();
 #endif // IBMBIDI
 
   if (RenumberLists(aPresContext)) {
@@ -3037,7 +3054,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                 static_cast<nsContainerFrame*>(nextFrame->GetParent());
               rv = parent->StealFrame(aState.mPresContext, nextFrame);
               NS_ENSURE_SUCCESS(rv, rv);
-              ReparentFrame(nextFrame, parent, this);
+              if (parent != this)
+                ReparentFrame(nextFrame, parent, this);
               nextFrame->SetNextSibling(frame->GetNextSibling());
               frame->SetNextSibling(nextFrame);
               madeContinuation = PR_TRUE; // needs to be added to mLines
@@ -3458,12 +3476,12 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     //
     // What we do is to advance past the first float we find and
     // then reflow the line all over again.
-    NS_ASSERTION(aState.IsImpactedByFloat(),
-                 "redo line on totally empty line");
     NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aState.mAvailSpaceRect.height,
                  "unconstrained height on totally empty line");
 
     if (aState.mAvailSpaceRect.height > 0) {
+      NS_ASSERTION(aState.IsImpactedByFloat(),
+                   "redo line on totally empty line with non-empty band...");
       aState.mY += aState.mAvailSpaceRect.height;
     } else {
       NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aState.mReflowState.availableHeight,
@@ -5200,10 +5218,23 @@ nsBlockFrame::DoRemoveFrame(nsIFrame* aDeletedFrame, PRBool aDestroyFrames,
 
   nsPresContext* presContext = PresContext();
   if (NS_FRAME_IS_OVERFLOW_CONTAINER & aDeletedFrame->GetStateBits()) {
-    if (aDestroyFrames)
-      nsContainerFrame::DeleteNextInFlowChild(presContext, aDeletedFrame);
-    else
-      return nsContainerFrame::StealFrame(presContext, aDeletedFrame);
+    if (aDestroyFrames) {
+      nsIFrame* nif = aDeletedFrame->GetNextInFlow();
+      if (nif)
+        nsContainerFrame::DeleteNextInFlowChild(presContext, nif);
+      nsresult rv = nsContainerFrame::StealFrame(presContext, aDeletedFrame);
+      NS_ENSURE_SUCCESS(rv, rv);
+      aDeletedFrame->Destroy();
+    }
+    else {
+      PR_NOT_REACHED("We can't not destroy overflow containers");
+      return NS_ERROR_NOT_IMPLEMENTED;
+      //XXXfr It seems not destroying frames is only used for placeholder
+      // continuations; see nsBlockFrame::HandleOverflowPlaceholdersForPulledFrame.
+      // If we get rid of placeholder continuations, we can simplify this
+      // function by getting rid of that option.
+    }
+    return NS_OK;
   }
 
   if (aDeletedFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
@@ -6239,7 +6270,8 @@ nsBlockFrame::Init(nsIContent*      aContent,
 
   nsresult rv = nsBlockFrameSuper::Init(aContent, aParent, aPrevInFlow);
 
-  if (!aPrevInFlow)
+  if (!aPrevInFlow ||
+      aPrevInFlow->GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION)
     AddStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
 
   return rv;
@@ -6276,6 +6308,7 @@ nsBlockFrame::SetInitialChildList(nsIAtom*        aListName,
        pseudo == nsCSSAnonBoxes::fieldsetContent ||
        pseudo == nsCSSAnonBoxes::scrolledContent ||
        pseudo == nsCSSAnonBoxes::columnContent) &&
+      !IsFrameOfType(eMathML) &&
       nsRefPtr<nsStyleContext>(GetFirstLetterStyle(presContext)) != nsnull;
     NS_ASSERTION(haveFirstLetterStyle ==
                  ((mState & NS_BLOCK_HAS_FIRST_LETTER_STYLE) != 0),
@@ -6669,11 +6702,6 @@ nsBlockFrame::ResolveBidi()
   NS_ASSERTION(!GetPrevInFlow(),
                "ResolveBidi called on non-first continuation");
 
-  if (!(GetStateBits() & NS_BLOCK_NEEDS_BIDI_RESOLUTION))
-    return NS_OK;
- 
-  RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
-
   nsPresContext* presContext = PresContext();
   if (!presContext->BidiEnabled()) {
     return NS_OK;
@@ -6683,9 +6711,9 @@ nsBlockFrame::ResolveBidi()
   if (!bidiUtils)
     return NS_ERROR_NULL_POINTER;
 
-  for (nsBlockFrame* curFrame = this;
-       curFrame; curFrame = static_cast<nsBlockFrame*>
-                                       (curFrame->GetNextContinuation())) {
+  for (nsBlockFrame* curFrame = this; curFrame;
+       curFrame = static_cast<nsBlockFrame*>(curFrame->GetNextContinuation())) {
+    curFrame->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
     if (!curFrame->mLines.empty()) {
       nsresult rv = bidiUtils->Resolve(curFrame,
                                        curFrame->mLines.front()->mFirstChild,

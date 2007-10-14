@@ -50,7 +50,6 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsElementMap.h"
-#include "nsISupportsArray.h"
 #include "nsString.h"
 #include "nsIAtom.h"
 #include "nsReadableUtils.h"

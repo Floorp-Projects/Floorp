@@ -107,7 +107,7 @@ EmbedContentListener::OnStartURIOpen(nsIURI     *aURI,
                   moz_embed_signals[OPEN_URI],
                   specString.get(), &return_val);
 
-  *aAbortOpen = return_val;
+  *aAbortOpen = !!return_val;
 
   return NS_OK;
 }

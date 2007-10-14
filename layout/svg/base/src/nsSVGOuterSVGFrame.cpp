@@ -301,18 +301,6 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
 //----------------------------------------------------------------------
 // container methods
 
-NS_IMETHODIMP
-nsSVGOuterSVGFrame::InsertFrames(nsIAtom*        aListName,
-                                 nsIFrame*       aPrevFrame,
-                                 nsIFrame*       aFrameList)
-{
-  SuspendRedraw();
-  nsSVGOuterSVGFrameBase::InsertFrames(aListName, aPrevFrame, aFrameList);
-  UnsuspendRedraw();
-  
-  return NS_OK;
-}
-
 class nsDisplaySVG : public nsDisplayItem {
 public:
   nsDisplaySVG(nsSVGOuterSVGFrame* aFrame) : nsDisplayItem(aFrame) {

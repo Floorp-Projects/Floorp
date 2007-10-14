@@ -65,3 +65,6 @@ include image-region/reftest.list
 
 # block-inside-inline splits
 include ib-split/reftest.list
+
+# line-breaking
+include line-breaking/reftest.list

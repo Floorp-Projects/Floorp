@@ -1367,7 +1367,7 @@ gtk_moz_embed_find_text(GtkMozEmbed *embed, const gchar *string,
   g_return_val_if_fail (GTK_WIDGET_REALIZED(GTK_WIDGET(embed)), FALSE);
   embedPrivate = (EmbedPrivate *)embed->data;
   if (embedPrivate->mWindow)
-    return embedPrivate->FindText(string, reverse, whole_word, case_sensitive, restart);
+    return embedPrivate->FindText(string, !!reverse, !!whole_word, !!case_sensitive, !!restart);
   return FALSE;
 }
 

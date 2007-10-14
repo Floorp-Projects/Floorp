@@ -33,7 +33,7 @@ classic.jar:
         skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png       (xpinstall/xpinstallItemGeneric.png)
 #ifdef MOZ_PLACES
         skin/classic/mozapps/places/defaultFavicon.png                (places/defaultFavicon.png)
-        skin/classic/mozapps/places/tagContainerIcon.png                (places/tagContainerIcon.png)
+        skin/classic/mozapps/places/tagContainerIcon.png              (places/tagContainerIcon.png)
 #endif
         skin/classic/mozapps/handling/handling.css                    (handling/handling.css)
 #endif

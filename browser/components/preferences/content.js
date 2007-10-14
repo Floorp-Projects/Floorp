@@ -262,6 +262,16 @@ var gContentPane = {
   {
     document.documentElement.openSubDialog("chrome://browser/content/preferences/colors.xul",
                                            "", null);  
-  }
+  },
 
+  // LANGUAGES
+
+  /**
+   * Shows a dialog in which the preferred language for web content may be set.
+   */
+  showLanguages: function ()
+  {
+    document.documentElement.openSubDialog("chrome://browser/content/preferences/languages.xul",
+                                           "", null);
+  }
 };

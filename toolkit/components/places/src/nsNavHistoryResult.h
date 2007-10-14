@@ -230,12 +230,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryResult, NS_NAVHISTORYRESULT_IID)
   NS_IMETHOD GetBookmarkIndex(PRInt32* aIndex) \
     { *aIndex = mBookmarkIndex; return NS_OK; } \
   NS_IMETHOD GetItemId(PRInt64* aId) \
-    { *aId= mItemId; return NS_OK; } \
+    { *aId = mItemId; return NS_OK; } \
   NS_IMETHOD GetDateAdded(PRTime* aDateAdded) \
     { *aDateAdded = mDateAdded; return NS_OK; } \
   NS_IMETHOD GetLastModified(PRTime* aLastModified) \
     { *aLastModified = mLastModified; return NS_OK; }
-
 
 // This is used by the base classes instead of
 // NS_FORWARD_NSINAVHISTORYRESULTNODE(nsNavHistoryResultNode) because they
@@ -610,6 +609,10 @@ public:
   PR_STATIC_CALLBACK(int) SortComparison_LastModifiedLess(
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
   PR_STATIC_CALLBACK(int) SortComparison_LastModifiedGreater(
+      nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
+  PR_STATIC_CALLBACK(int) SortComparison_CountLess(
+      nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
+  PR_STATIC_CALLBACK(int) SortComparison_CountGreater(
       nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure);
 
   // finding children: THESE DO NOT ADDREF

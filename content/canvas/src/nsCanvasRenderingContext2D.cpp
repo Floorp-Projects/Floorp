@@ -1156,12 +1156,17 @@ nsCanvasRenderingContext2D::ClearRect(float x, float y, float w, float h)
     if (!FloatValidate(x,y,w,h))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
+    cairo_path_t *old_path = cairo_copy_path (mCairo);
     cairo_save (mCairo);
     cairo_set_operator (mCairo, CAIRO_OPERATOR_CLEAR);
     cairo_new_path (mCairo);
     cairo_rectangle (mCairo, x, y, w, h);
     cairo_fill (mCairo);
     cairo_restore (mCairo);
+    cairo_new_path (mCairo);
+    if (old_path->status == CAIRO_STATUS_SUCCESS && old_path->num_data != 0)
+        cairo_append_path (mCairo, old_path);
+    cairo_path_destroy (old_path);
 
     return Redraw();
 }
@@ -1172,11 +1177,16 @@ nsCanvasRenderingContext2D::FillRect(float x, float y, float w, float h)
     if (!FloatValidate(x,y,w,h))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
+    cairo_path_t *old_path = cairo_copy_path (mCairo);
     cairo_new_path (mCairo);
     cairo_rectangle (mCairo, x, y, w, h);
 
     ApplyStyle(STYLE_FILL);
     cairo_fill (mCairo);
+    cairo_new_path (mCairo);
+    if (old_path->status == CAIRO_STATUS_SUCCESS && old_path->num_data != 0)
+        cairo_append_path (mCairo, old_path);
+    cairo_path_destroy (old_path);
 
     return Redraw();
 }
@@ -1187,11 +1197,16 @@ nsCanvasRenderingContext2D::StrokeRect(float x, float y, float w, float h)
     if (!FloatValidate(x,y,w,h))
         return NS_ERROR_DOM_SYNTAX_ERR;
 
+    cairo_path_t *old_path = cairo_copy_path (mCairo);
     cairo_new_path (mCairo);
     cairo_rectangle (mCairo, x, y, w, h);
 
     ApplyStyle(STYLE_STROKE);
     cairo_stroke (mCairo);
+    cairo_new_path (mCairo);
+    if (old_path->status == CAIRO_STATUS_SUCCESS && old_path->num_data != 0)
+        cairo_append_path (mCairo, old_path);
+    cairo_path_destroy (old_path);
 
     return Redraw();
 }
@@ -1868,7 +1883,8 @@ nsCanvasRenderingContext2D::DrawImage()
 
     cairo_surface_t *imgSurf = nsnull;
     cairo_matrix_t surfMat;
-    cairo_pattern_t* pat;
+    cairo_pattern_t *pat;
+    cairo_path_t *old_path;
     PRUint8 *imgData = nsnull;
     PRInt32 imgWidth, imgHeight;
     nsCOMPtr<nsIURI> uri;
@@ -1942,6 +1958,7 @@ nsCanvasRenderingContext2D::DrawImage()
     pat = cairo_pattern_create_for_surface(imgSurf);
     cairo_pattern_set_matrix(pat, &surfMat);
 
+    old_path = cairo_copy_path(mCairo);
     cairo_save(mCairo);
     cairo_translate(mCairo, dx, dy);
     cairo_new_path(mCairo);
@@ -1965,6 +1982,11 @@ nsCanvasRenderingContext2D::DrawImage()
 #endif
 
     cairo_pattern_destroy(pat);
+
+    cairo_new_path(mCairo);
+    if (old_path->status == CAIRO_STATUS_SUCCESS && old_path->num_data != 0)
+        cairo_append_path(mCairo, old_path);
+    cairo_path_destroy(old_path);
 
 FINISH:
     if (imgSurf)
@@ -2123,7 +2145,7 @@ nsCanvasRenderingContext2D::CairoSurfaceFromElement(nsIDOMElement *imgElt,
 
         PRUint32 status;
         imgRequest->GetImageStatus(&status);
-        if (status != imgIRequest::STATUS_LOAD_COMPLETE)
+        if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0)
             return NS_ERROR_NOT_AVAILABLE;
 
         nsCOMPtr<nsIURI> uri;
@@ -2592,6 +2614,7 @@ nsCanvasRenderingContext2D::PutImageData()
         imgsurf = cairo_image_surface_create_for_data (imageBuffer.get(),
                                                        CAIRO_FORMAT_ARGB32,
                                                        w, h, w*4);
+        cairo_path_t *old_path = cairo_copy_path (mCairo);
         cairo_save (mCairo);
         cairo_identity_matrix (mCairo);
         cairo_translate (mCairo, x, y);
@@ -2601,6 +2624,10 @@ nsCanvasRenderingContext2D::PutImageData()
         cairo_set_operator (mCairo, CAIRO_OPERATOR_SOURCE);
         cairo_fill (mCairo);
         cairo_restore (mCairo);
+        cairo_new_path (mCairo);
+        if (old_path->status == CAIRO_STATUS_SUCCESS && old_path->num_data != 0)
+            cairo_append_path (mCairo, old_path);
+        cairo_path_destroy (old_path);
 
         cairo_surface_destroy (imgsurf);
     }

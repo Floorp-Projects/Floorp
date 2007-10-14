@@ -1405,7 +1405,7 @@
       <stylesheet src="chrome://global/skin/autocomplete.css"/>
     </resources>
 
-    <content minwidth="100">
+    <content>
       <xul:tree anonid="tree" class="autocomplete-tree plain" flex="1">
         <xul:treecols anonid="treecols">
           <xul:treecol class="autocomplete-treecol" id="treecolAutoCompleteValue" flex="2"/>
@@ -1575,7 +1575,8 @@
             this.invalidate();
 
             var rect = aElement.getBoundingClientRect();
-            this.setAttribute("width", rect.right - rect.left);            
+            var width = rect.right - rect.left;
+            this.setAttribute("width", width > 100 ? width : 100);
             this.openPopup(aElement, "after_start", 0, 0, false, false);
 
             this.popupBoxObject.setConsumeRollupEvent(aInput.consumeRollupEvent);

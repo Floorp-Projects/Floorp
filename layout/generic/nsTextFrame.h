@@ -196,6 +196,7 @@ public:
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              PRBool aShrinkWrap);
+  virtual nsRect ComputeTightBounds(gfxContext* aContext) const;
   NS_IMETHOD Reflow(nsPresContext* aPresContext,
                     nsHTMLReflowMetrics& aMetrics,
                     const nsHTMLReflowState& aReflowState,
@@ -294,7 +295,7 @@ public:
    * to offsets into the textrun; its initial offset is set to this frame's
    * content offset
    */
-  gfxSkipCharsIterator EnsureTextRun(nsIRenderingContext* aRC = nsnull,
+  gfxSkipCharsIterator EnsureTextRun(gfxContext* aReferenceContext = nsnull,
                                      nsIFrame* aLineContainer = nsnull,
                                      const nsLineList::iterator* aLine = nsnull,
                                      PRUint32* aFlowEndInTextRun = nsnull);

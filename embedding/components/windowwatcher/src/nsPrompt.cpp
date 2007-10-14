@@ -80,8 +80,21 @@ NS_NewPrompter(nsIPrompt **result, nsIDOMWindow *aParent)
 nsresult
 NS_NewAuthPrompter(nsIAuthPrompt **result, nsIDOMWindow *aParent)
 {
-
   nsresult rv;
+  nsCOMPtr<nsIPromptFactory> factory =
+    do_GetService(NS_PWMGR_AUTHPROMPTFACTORY);
+  if (factory) {
+    // We just delegate everything to the pw mgr if we can
+    rv = factory->GetPrompt(aParent,
+                            NS_GET_IID(nsIAuthPrompt),
+                            reinterpret_cast<void**>(result));
+    // If the password manager doesn't support the interface, fall back to the
+    // old way of doing things. This will allow older apps that haven't updated
+    // to work still.
+    if (rv != NS_NOINTERFACE)
+      return rv;
+  }
+
   *result = 0;
 
   nsPrompt *prompter = new nsPrompt(aParent);

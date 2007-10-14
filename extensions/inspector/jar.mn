@@ -70,6 +70,8 @@ inspector.jar:
   content/inspector/viewers/accessibleObject/accessibleObject.xul     (resources/content/viewers/accessibleObject/accessibleObject.xul)
   content/inspector/viewers/accessibleProps/accessibleProps.js        (resources/content/viewers/accessibleProps/accessibleProps.js)
   content/inspector/viewers/accessibleProps/accessibleProps.xul       (resources/content/viewers/accessibleProps/accessibleProps.xul)
+  content/inspector/viewers/accessibleRelations/accessibleRelations.js  (resources/content/viewers/accessibleRelations/accessibleRelations.js)
+  content/inspector/viewers/accessibleRelations/accessibleRelations.xul (resources/content/viewers/accessibleRelations/accessibleRelations.xul)
   content/inspector/viewers/accessibleTree/accessibleTree.js          (resources/content/viewers/accessibleTree/accessibleTree.js)
   content/inspector/viewers/accessibleTree/accessibleTree.xul         (resources/content/viewers/accessibleTree/accessibleTree.xul)
   content/inspector/viewers/computedStyle/computedStyle.js            (resources/content/viewers/computedStyle/computedStyle.js)

@@ -119,10 +119,22 @@ function run_test() {
   do_check_true(bmsvc.toolbarFolder > 0);
   do_check_true(bmsvc.unfiledRoot > 0);
 
+  // test getFolderIdForItem() with bogus item id will throw
+  try {
+    var title = bmsvc.getFolderIdForItem(0);
+    do_throw("getFolderIdForItem accepted bad input");
+  } catch(ex) {}
+
+  // test getFolderIdForItem() with bogus item id will throw
+  try {
+    var title = bmsvc.getFolderIdForItem(-1);
+    do_throw("getFolderIdForItem accepted bad input");
+  } catch(ex) {}
+
   // test root parentage
   do_check_eq(bmsvc.getFolderIdForItem(bmsvc.bookmarksRoot), bmsvc.placesRoot);
   do_check_eq(bmsvc.getFolderIdForItem(bmsvc.tagRoot), bmsvc.placesRoot);
-
+  
   // create a folder to hold all the tests
   // this makes the tests more tolerant of changes to default_places.html
   var testRoot = bmsvc.createFolder(root, "places bookmarks xpcshell tests", bmsvc.DEFAULT_INDEX);
@@ -471,7 +483,6 @@ function run_test() {
 
     // query
     var options = histsvc.getNewQueryOptions();
-    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
     var query = histsvc.getNewQuery();
     query.setFolders([testFolder], 1);
     var result = histsvc.executeQuery(query, options);
@@ -613,7 +624,6 @@ function run_test() {
   // for a folder query
   try {
     var options = histsvc.getNewQueryOptions();
-    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
     var query = histsvc.getNewQuery();
     query.setFolders([testRoot], 1);
     var result = histsvc.executeQuery(query, options);

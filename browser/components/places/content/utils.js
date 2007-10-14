@@ -887,7 +887,6 @@ var PlacesUtils = {
     var query = this.history.getNewQuery();
     query.setFolders([aFolderId], 1);
     var options = this.history.getNewQueryOptions();
-    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
     options.excludeItems = aExcludeItems;
     options.expandQueries = aExpandQueries;
 
@@ -1415,7 +1414,6 @@ var PlacesUtils = {
    */
   getQueryStringForFolder: function PU_getQueryStringForFolder(aFolderId) {
     var options = this.history.getNewQueryOptions();
-    options.setGroupingMode([Ci.nsINavHistoryQueryOptions.GROUP_BY_FOLDER], 1);
     var query = this.history.getNewQuery();
     query.setFolders([aFolderId], 1);
     return this.history.queriesToQueryString([query], 1, options);

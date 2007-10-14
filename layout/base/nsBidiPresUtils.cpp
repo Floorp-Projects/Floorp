@@ -1359,7 +1359,7 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
 
   PRUint32 hints = 0;
   aRenderingContext.GetHints(hints);
-  PRBool isBidiSystem = (hints & NS_RENDERING_HINT_BIDI_REORDERING);
+  PRBool isBidiSystem = !!(hints & NS_RENDERING_HINT_BIDI_REORDERING);
       
   for(int nPosResolve=0; nPosResolve < aPosResolveCount; ++nPosResolve)
   {
@@ -1407,7 +1407,7 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
       CalculateCharType(lineOffset, typeLimit, subRunLimit, subRunLength, subRunCount, charType, prevType);
 
       if (eCharType_RightToLeftArabic == charType) {
-        isBidiSystem = (hints & NS_RENDERING_HINT_ARABIC_SHAPING);
+        isBidiSystem = !!(hints & NS_RENDERING_HINT_ARABIC_SHAPING);
       }
       if (isBidiSystem && (CHARTYPE_IS_RTL(charType) ^ isRTL) ) {
         // set reading order into DC

@@ -235,6 +235,7 @@ protected:
 
 // MEMBER VARIABLES
 protected: 
+  void RemoveInsertionParent(nsIContent* aParent);
   // A mapping from nsIContent* to the nsXBLBinding* that is
   // installed on that element.
   nsRefPtrHashtable<nsISupportsHashKey,nsXBLBinding> mBindingTable;

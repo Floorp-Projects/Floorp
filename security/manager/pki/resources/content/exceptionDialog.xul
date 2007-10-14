@@ -22,6 +22,7 @@
    - Contributor(s):
    -   Kai Engert <kengert@redhat.com>
    -   Johnathan Nightingale <johnath@mozilla.com>
+   -   Steffen Wilberg <steffen.wilberg@web.de>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -45,13 +46,15 @@
         windowtype="mozilla:exceptiondialog"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
         title="&exceptionMgr.title;"
-        buttons="cancel,extra1"
+        buttons="cancel,extra1,extra2"
         buttonlabelextra1="&exceptionMgr.exceptionButton;"
+        buttonaccesskeyextra1="&exceptionMgr.exceptionButtonAccess;"
         style="width: 500px; height: 480px;"
         onload="initExceptionDialog();"
         ondialogextra1="addException();"
+        ondialogextra2="checkCert();"
         persist="screenX screenY width height"
-        defaultButton="null">
+        defaultButton="extra2">
   
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://pippki/content/pippki.js"/>
@@ -76,9 +79,11 @@
     <caption label="&exceptionMgr.certlocation.caption2;"/>
     <hbox align="center">
       <label control="locationTextBox" value="&exceptionMgr.certlocation.url;"/>
-      <textbox id="locationTextBox" flex="1" oninput="handleTextChange();" value="https://"/>
-      <button id="checkCertButton" disabled="true"
-              label="&exceptionMgr.certlocation.download;" onclick="checkCert();"/>
+      <textbox id="locationTextBox" flex="1" oninput="handleTextChange();"
+               value="https://"/>
+      <button id="checkCertButton" disabled="true" dlgtype="extra2"
+              accesskey="&exceptionMgr.certlocation.accesskey;"
+              label="&exceptionMgr.certlocation.download;"/>
     </hbox>
   </groupbox>
 
@@ -89,7 +94,8 @@
                    flex="1"/>
       <vbox>
         <button id="viewCertButton" label="&exceptionMgr.certstatus.viewCert;"
-                disabled="true" onclick="viewCertButtonClick();"/>
+                accesskey="&exceptionMgr.certstatus.accesskey;"
+                disabled="true" oncommand="viewCertButtonClick();"/>
       </vbox>
     </hbox>      
     <description id="statusDescription"

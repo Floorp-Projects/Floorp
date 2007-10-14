@@ -1061,10 +1061,15 @@ richlistbox {
   -moz-binding: url('chrome://global/content/bindings/richlistbox.xml#richlistbox');
   -moz-user-focus: normal;
   -moz-appearance: listbox;
+  -moz-box-orient: vertical;
 }
 
 richlistitem {
   -moz-binding: url('chrome://global/content/bindings/richlistbox.xml#richlistitem');
+}
+
+richlistbox > listheader {
+  -moz-box-ordinal-group: 1;
 }
 
 /********** datepicker and timepicker ********/

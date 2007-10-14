@@ -165,7 +165,6 @@ private:
 
 // the output end of a pipe (allocated as a member of the pipe).
 class nsPipeOutputStream : public nsIAsyncOutputStream
-                         , public nsISeekableStream
                          , public nsIClassInfo
 {
 public:
@@ -178,7 +177,6 @@ public:
 
     NS_DECL_NSIOUTPUTSTREAM
     NS_DECL_NSIASYNCOUTPUTSTREAM
-    NS_DECL_NSISEEKABLESTREAM
     NS_DECL_NSICLASSINFO
 
     nsPipeOutputStream(nsPipe *pipe)
@@ -994,10 +992,9 @@ NS_IMPL_QUERY_INTERFACE3(nsPipeOutputStream,
                          nsIAsyncOutputStream,
                          nsIClassInfo)
 
-NS_IMPL_CI_INTERFACE_GETTER3(nsPipeOutputStream,
+NS_IMPL_CI_INTERFACE_GETTER2(nsPipeOutputStream,
                              nsIOutputStream,
-                             nsIAsyncOutputStream,
-                             nsISeekableStream)
+                             nsIAsyncOutputStream)
 
 NS_IMPL_THREADSAFE_CI(nsPipeOutputStream)
 
@@ -1257,32 +1254,6 @@ nsPipeOutputStream::AsyncWait(nsIOutputStreamCallback *callback,
         }
     }
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPipeOutputStream::Seek(PRInt32 whence, PRInt64 offset)
-{
-    NS_NOTREACHED("nsPipeOutputStream::Seek");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsPipeOutputStream::Tell(PRInt64 *offset)
-{
-    nsAutoMonitor mon(mPipe->mMonitor);
-
-    if (NS_FAILED(mPipe->mStatus))
-        return mPipe->mStatus;
-
-    *offset = mLogicalOffset;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPipeOutputStream::SetEOF()
-{
-    NS_NOTREACHED("nsPipeOutputStream::SetEOF");
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

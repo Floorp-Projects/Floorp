@@ -1140,7 +1140,7 @@ CNavDTD::HandleKeyGen(nsIParserNode* aNode)
 
     if (NS_SUCCEEDED(result)) {
       PRInt32      theAttrCount = aNode->GetAttributeCount();
-      nsVoidArray  theContent;
+      nsStringArray  theContent;
       nsAutoString theAttribute;
       nsAutoString theFormType;
       CToken*      theToken = nsnull;
@@ -1163,7 +1163,7 @@ CNavDTD::HandleKeyGen(nsIParserNode* aNode)
           mTokenizer->PushTokenFront(theToken);
 
           for (theIndex = theContent.Count()-1; theIndex > -1; --theIndex) {
-            theTextValue = (nsString*)theContent[theIndex];
+            theTextValue = theContent[theIndex];
             theToken = mTokenAllocator->CreateTokenOfType(eToken_text,
                                                           eHTMLTag_text,
                                                           *theTextValue);

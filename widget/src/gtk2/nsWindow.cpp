@@ -524,7 +524,7 @@ nsWindow::SetModal(PRBool aModal)
 {
     LOG(("nsWindow::SetModal [%p] %d\n", (void *)this, aModal));
 
-    // find the toplevel window and add it to the grab list
+    // find the toplevel window and set its modality
     GtkWidget *grabWidget = nsnull;
 
     GetToplevelWidget(&grabWidget);
@@ -532,10 +532,20 @@ nsWindow::SetModal(PRBool aModal)
     if (!grabWidget)
         return NS_ERROR_FAILURE;
 
+    // block focus tracking via gFocusWindow internally in case the window
+    // manager does not block focus to parents of modal windows
+    if (mTransientParent) {
+        GtkWidget *transientWidget = GTK_WIDGET(mTransientParent);
+        nsRefPtr<nsWindow> parent = get_window_for_gtk_widget(transientWidget);
+        if (!parent)
+            return NS_ERROR_FAILURE;
+        parent->mContainerBlockFocus = aModal;
+    }
+
     if (aModal)
-        gtk_grab_add(grabWidget);
+        gtk_window_set_modal(GTK_WINDOW(grabWidget), TRUE);
     else
-        gtk_grab_remove(grabWidget);
+        gtk_window_set_modal(GTK_WINDOW(grabWidget), FALSE);
 
     return NS_OK;
 }
@@ -1037,8 +1047,10 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     // spoofing.
     // XXX ideally we should rescale. Also, we could modify the API to
     // allow trusted content to set larger cursors.
-    if (width > 128 || height > 128)
+    if (width > 128 || height > 128) {
+        gdk_pixbuf_unref(pixbuf);
         return NS_ERROR_NOT_AVAILABLE;
+    }
 
     // Looks like all cursors need an alpha channel (tested on Gtk 2.4.4). This
     // is of course not documented anywhere...
@@ -1056,14 +1068,17 @@ nsWindow::SetCursor(imgIContainer* aCursor,
     if (!_gdk_cursor_new_from_pixbuf || !_gdk_display_get_default) {
         // Fallback to a monochrome cursor
         GdkPixmap* mask = gdk_pixmap_new(NULL, width, height, 1);
-        if (!mask)
+        if (!mask) {
+            gdk_pixbuf_unref(pixbuf);
             return NS_ERROR_OUT_OF_MEMORY;
+        }
 
         PRUint8* data = Data32BitTo1Bit(gdk_pixbuf_get_pixels(pixbuf),
                                         gdk_pixbuf_get_rowstride(pixbuf),
                                         width, height);
         if (!data) {
             g_object_unref(mask);
+            gdk_pixbuf_unref(pixbuf);
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -1072,6 +1087,7 @@ nsWindow::SetCursor(imgIContainer* aCursor,
         delete[] data;
         if (!image) {
             g_object_unref(mask);
+            gdk_pixbuf_unref(pixbuf);
             return NS_ERROR_OUT_OF_MEMORY;
         }
 
@@ -4251,10 +4267,17 @@ get_gtk_cursor(nsCursor aCursor)
         cursor = gdk_bitmap_create_from_data(NULL,
                                              (char *)GtkCursors[newType].bits,
                                              32, 32);
+        if (!cursor)
+            return NULL;
+
         mask =
             gdk_bitmap_create_from_data(NULL,
                                         (char *)GtkCursors[newType].mask_bits,
                                         32, 32);
+        if (!mask) {
+            gdk_bitmap_unref(cursor);
+            return NULL;
+        }
 
         gdkcursor = gdk_cursor_new_from_pixmap(cursor, mask, &fg, &bg,
                                                GtkCursors[newType].hot_x,
@@ -5119,6 +5142,55 @@ nsWindow::IMEReleaseData(void)
     mIMEData = nsnull;
 }
 
+// Work around gtk bug http://bugzilla.gnome.org/show_bug.cgi?id=483223:
+// The gtk xim module registers closed signal handlers on the display, but
+// there are two problems:
+//  * The signal handlers are not disconnected when the module is unloaded.
+//  * When the signal handler is run (with the module loaded) it tries
+//    XFree (and fails) on a pointer that did not come from Xmalloc.
+//
+// To prevent the signal handler from being run, find the signal handlers
+// and remove them.
+//
+// GtkIMContextXIMs share XOpenIM connections and display closed signal
+// handlers (where possible).
+
+static void disconnect_gtk_xim_display_closed(GtkWidget *aGtkWidget,
+                                              GtkIMContext *aContext)
+{
+    GtkIMMulticontext *multicontext = GTK_IM_MULTICONTEXT (aContext);
+    GtkIMContext *slave = multicontext->slave;
+    if (!slave)
+        return;
+
+    GType slaveType = G_TYPE_FROM_INSTANCE(slave);
+    if (strcmp(g_type_name(slaveType), "GtkIMContextXIM") != 0)
+        return; // not problem xim module
+
+    struct GtkIMContextXIM
+    {
+        GtkIMContext parent;
+        gpointer private_data;
+        // ... other fields
+    };
+    gpointer signal_data =
+        reinterpret_cast<GtkIMContextXIM*>(slave)->private_data;
+    if (!signal_data)
+        return; // no corresponding handler
+
+    guint disconnected =
+        g_signal_handlers_disconnect_matched(gtk_widget_get_display(aGtkWidget),
+                                             G_SIGNAL_MATCH_DATA, 0, 0, NULL,
+                                             NULL, signal_data);
+
+    if (disconnected) {
+        // Add a reference to prevent the xim module being unloaded
+        // and reloaded: each time the module is loaded and used, it
+        // opens (and doesn't close) new XOpenIM connections.
+        g_type_class_ref(slaveType);
+    }
+}
+
 void
 nsWindow::IMEDestroyContext(void)
 {
@@ -5152,12 +5224,19 @@ nsWindow::IMEDestroyContext(void)
     mIMEData->mEnabled = nsIKBStateControl::IME_STATUS_DISABLED;
 
     if (mIMEData->mContext) {
+        if (gtk_check_version(2,12,1) != NULL) { // need gtk bug workaround
+            disconnect_gtk_xim_display_closed(GTK_WIDGET(mContainer),
+                                              mIMEData->mContext);
+        }
         gtk_im_context_set_client_window(mIMEData->mContext, nsnull);
         g_object_unref(G_OBJECT(mIMEData->mContext));
         mIMEData->mContext = nsnull;
     }
 
     if (mIMEData->mDummyContext) {
+        // mIMEData->mContext and mIMEData->mDummyContext have the same
+        // slaveType and signal_data so no need for another
+        // disconnect_gtk_xim_display_closed.
         gtk_im_context_set_client_window(mIMEData->mDummyContext, nsnull);
         g_object_unref(G_OBJECT(mIMEData->mDummyContext));
         mIMEData->mDummyContext = nsnull;

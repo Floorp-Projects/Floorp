@@ -224,7 +224,9 @@ NS_IMETHODIMP nsDocAccessible::GetValue(nsAString& aValue)
 NS_IMETHODIMP 
 nsDocAccessible::GetDescription(nsAString& aDescription)
 {
-  aDescription.Truncate();
+  nsAutoString description;
+  GetTextFromRelationID(eAria_describedby, description);
+  aDescription = description;
   return NS_OK;
 }
 
@@ -684,8 +686,9 @@ nsresult nsDocAccessible::AddEventListeners()
   nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
   docShellTreeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
   if (rootTreeItem) {
-    GetDocAccessibleFor(rootTreeItem, PR_TRUE); // Ensure root accessible is created;
-    nsRefPtr<nsRootAccessible> rootAccessible = GetRootAccessible();
+    nsCOMPtr<nsIAccessibleDocument> rootAccDoc =
+      GetDocAccessibleFor(rootTreeItem, PR_TRUE); // Ensure root accessible is created;
+    nsRefPtr<nsRootAccessible> rootAccessible = GetRootAccessible(); // Then get it as ref ptr
     NS_ENSURE_TRUE(rootAccessible, NS_ERROR_FAILURE);
     nsRefPtr<nsCaretAccessible> caretAccessible = rootAccessible->GetCaretAccessible();
     if (caretAccessible) {

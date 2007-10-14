@@ -153,6 +153,31 @@ function getLocalHandlerApp(aFile) {
   return localHandlerApp;
 }
 
+/**
+ * An enumeration of items in a JS array.
+ *
+ * FIXME: use ArrayConverter once it lands (bug 380839).
+ * 
+ * @constructor
+ */
+function ArrayEnumerator(aItems) {
+  this._index = 0;
+  this._contents = aItems;
+}
+
+ArrayEnumerator.prototype = {
+  _index: 0,
+  _contents: [],
+
+  hasMoreElements: function() {
+    return this._index < this._contents.length;
+  },
+
+  getNext: function() {
+    return this._contents[this._index++];
+  }
+};
+
 
 //****************************************************************************//
 // HandlerInfoWrapper
@@ -236,8 +261,7 @@ HandlerInfoWrapper.prototype = {
     // Make sure the preferred handler is in the set of possible handlers.
     if (aNewValue) {
       var found = false;
-      var possibleApps = this.possibleApplicationHandlers.
-                         QueryInterface(Ci.nsIArray).enumerate();
+      var possibleApps = this.possibleApplicationHandlers.enumerate();
       while (possibleApps.hasMoreElements() && !found)
         found = possibleApps.getNext().equals(aNewValue);
       if (!found)
@@ -263,21 +287,19 @@ HandlerInfoWrapper.prototype = {
     if (this.plugin && !this.isDisabledPluginType)
       return kActionUsePlugin;
 
-    // XXX nsIMIMEService::getFromTypeAndExtension returns handler infos
-    // whose default action is saveToDisk; should we do that here too?
-    // And will there ever be handler info objects with no preferred action?
-    if (!this.wrappedHandlerInfo.preferredAction) {
-      if (gApplicationsPane.isValidHandlerApp(this.preferredApplicationHandler))
-        return Ci.nsIHandlerInfo.useHelperApp;
-      else
-        return Ci.nsIHandlerInfo.useSystemDefault;
-    }
-
     // If the action is to use a helper app, but we don't have a preferred
-    // helper app, switch to using the system default.
+    // handler app, then switch to using the system default, if any; otherwise
+    // fall back to saving to disk, which is the default action in nsMIMEInfo.
+    // Note: "save to disk" is an invalid value for protocol info objects,
+    // but the alwaysAskBeforeHandling getter will detect that situation
+    // and always return true in that case to override this invalid value.
     if (this.wrappedHandlerInfo.preferredAction == Ci.nsIHandlerInfo.useHelperApp &&
-        !gApplicationsPane.isValidHandlerApp(this.preferredApplicationHandler))
-      return Ci.nsIHandlerInfo.useSystemDefault;
+        !gApplicationsPane.isValidHandlerApp(this.preferredApplicationHandler)) {
+      if (this.wrappedHandlerInfo.hasDefaultHandler)
+        return Ci.nsIHandlerInfo.useSystemDefault;
+      else
+        return Ci.nsIHandlerInfo.saveToDisk;
+    }
 
     return this.wrappedHandlerInfo.preferredAction;
   },
@@ -300,6 +322,16 @@ HandlerInfoWrapper.prototype = {
     // plugin-handled types by returning false here.
     if (this.plugin && this.handledOnlyByPlugin)
       return false;
+
+    // If this is a protocol type and the preferred action is "save to disk",
+    // which is invalid for such types, then return true here to override that
+    // action.  This could happen when the preferred action is to use a helper
+    // app, but the preferredApplicationHandler is invalid, and there isn't
+    // a default handler, so the preferredAction getter returns save to disk
+    // instead.
+    if (!(this.wrappedHandlerInfo instanceof Ci.nsIMIMEInfo) &&
+        this.preferredAction == Ci.nsIHandlerInfo.saveToDisk)
+      return true;
 
     return this.wrappedHandlerInfo.alwaysAskBeforeHandling;
   },
@@ -520,28 +552,55 @@ var feedHandlerInfo = {
     }
   },
 
-  get possibleApplicationHandlers() {
-    var handlerApps = Cc["@mozilla.org/array;1"].
-                      createInstance(Ci.nsIMutableArray);
+  _possibleApplicationHandlers: null,
 
-    // Add the "selected" local application, if there is one and it's different
-    // from the default handler for the OS.  Unlike for other types, there can
-    // be only one of these at a time for the feed type, since feed preferences
-    // only store a single local app.
+  get possibleApplicationHandlers() {
+    if (this._possibleApplicationHandlers)
+      return this._possibleApplicationHandlers;
+
+    // A minimal implementation of nsIMutableArray.  It only supports the two
+    // methods its callers invoke, namely appendElement and nsIArray::enumerate.
+    this._possibleApplicationHandlers = {
+      _inner: [],
+
+      QueryInterface: function(aIID) {
+        if (aIID.equals(Ci.nsIMutableArray) ||
+            aIID.equals(Ci.nsIArray) ||
+            aIID.equals(Ci.nsISupports))
+          return this;
+
+        throw Cr.NS_ERROR_NO_INTERFACE;
+      },
+
+      enumerate: function() {
+        return new ArrayEnumerator(this._inner);
+      },
+
+      appendElement: function(aHandlerApp, aWeak) {
+        this._inner.push(aHandlerApp);
+      }
+    };
+
+    // Add the selected local app if it's different from the OS default handler.
+    // Unlike for other types, we can store only one local app at a time for the
+    // feed type, since we store it in a preference that historically stores
+    // only a single path.  But we display all the local apps the user chooses
+    // while the prefpane is open, only dropping the list when the user closes
+    // the prefpane, for maximum usability and consistency with other types.
     var preferredAppFile = this.element(PREF_FEED_SELECTED_APP).value;
-    if (preferredAppFile && preferredAppFile.exists()) {
+    if (preferredAppFile) {
       let preferredApp = getLocalHandlerApp(preferredAppFile);
       let defaultApp = this._defaultApplicationHandler;
       if (!defaultApp || !defaultApp.equals(preferredApp))
-        handlerApps.appendElement(preferredApp, false);
+        this._possibleApplicationHandlers.appendElement(preferredApp, false);
     }
 
     // Add the registered web handlers.  There can be any number of these.
     var webHandlers = this._converterSvc.getContentHandlers(this.type, {});
     for each (let webHandler in webHandlers)
-      handlerApps.appendElement(webHandler, false);
+      this._possibleApplicationHandlers.appendElement(webHandler, false);
 
-    return handlerApps;
+    return this._possibleApplicationHandlers;
   },
 
   __defaultApplicationHandler: undefined,
@@ -669,12 +728,6 @@ var feedHandlerInfo = {
 
 
   //**************************************************************************//
-  // Plugin Handling
-
-  handledOnlyByPlugin: false,
-
-
-  //**************************************************************************//
   // Storage
 
   // Changes to the preferred action and handler take effect immediately
@@ -706,6 +759,21 @@ var gApplicationsPane = {
   // The set of types the app knows how to handle.  A hash of HandlerInfoWrapper
   // objects, indexed by type.
   _handledTypes: {},
+  
+  // The list of types we can show, sorted by the sort column/direction.
+  // An array of HandlerInfoWrapper objects.  We build this list when we first
+  // load the data and then rebuild it when users change a pref that affects
+  // what types we can show or change the sort column/direction.
+  // Note: this isn't necessarily the list of types we *will* show; if the user
+  // provides a filter string, we'll only show the subset of types in this list
+  // that match that string.
+  _visibleTypes: [],
+
+  // A count of the number of times each visible type description appears.
+  // We use these counts to determine whether or not to annotate descriptions
+  // with their types to distinguish duplicate descriptions from each other.
+  // A hash of integer counts, indexed by string description.
+  _visibleTypeDescriptionCount: {},
 
 
   //**************************************************************************//
@@ -760,7 +828,7 @@ var gApplicationsPane = {
     window.addEventListener("unload", this, false);
 
     // Figure out how we should be sorting the list.  We persist sort settings
-    // across sessions, so we can't assume the default sort column and direction.
+    // across sessions, so we can't assume the default sort column/direction.
     // XXX should we be using the XUL sort service instead?
     if (document.getElementById("typeColumn").hasAttribute("sortDirection"))
       this._sortColumn = document.getElementById("typeColumn");
@@ -776,7 +844,9 @@ var gApplicationsPane = {
     // XXX Shouldn't we perhaps just set a max-height on the richlistbox?
     var _delayedPaneLoad = function(self) {
       self._loadData();
-      self.rebuildView();
+      self._rebuildVisibleTypes();
+      self._sortVisibleTypes();
+      self._rebuildView();
     }
     setTimeout(_delayedPaneLoad, 0, this);
   },
@@ -811,8 +881,19 @@ var gApplicationsPane = {
   observe: function (aSubject, aTopic, aData) {
     // Rebuild the list when there are changes to preferences that influence
     // whether or not to show certain entries in the list.
-    if (aTopic == "nsPref:changed")
-      this.rebuildView();
+    if (aTopic == "nsPref:changed") {
+      // These two prefs alter the list of visible types, so we have to rebuild
+      // that list when they change.
+      if (aData == PREF_SHOW_PLUGINS_IN_LIST ||
+          aData == PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS) {
+        this._rebuildVisibleTypes();
+        this._sortVisibleTypes();
+      }
+
+      // All the prefs we observe can affect what we display, so we rebuild
+      // the view when any of them changes.
+      this._rebuildView();
+    }
   },
 
 
@@ -837,6 +918,7 @@ var gApplicationsPane = {
 
   _loadFeedHandler: function() {
     this._handledTypes[TYPE_MAYBE_FEED] = feedHandlerInfo;
+    feedHandlerInfo.handledOnlyByPlugin = false;
   },
 
   /**
@@ -864,19 +946,19 @@ var gApplicationsPane = {
       let plugin = navigator.plugins[i];
       for (let j = 0; j < plugin.length; ++j) {
         let type = plugin[j].type;
-        let handlerInfoWrapper;
 
-        if (typeof this._handledTypes[type] == "undefined") {
+        let handlerInfoWrapper;
+        if (type in this._handledTypes)
+          handlerInfoWrapper = this._handledTypes[type];
+        else {
           let wrappedHandlerInfo =
             this._mimeSvc.getFromTypeAndExtension(type, null);
           handlerInfoWrapper = new HandlerInfoWrapper(type, wrappedHandlerInfo);
+          handlerInfoWrapper.handledOnlyByPlugin = true;
           this._handledTypes[type] = handlerInfoWrapper;
         }
-        else
-          handlerInfoWrapper = this._handledTypes[type];
 
         handlerInfoWrapper.plugin = plugin;
-        handlerInfoWrapper.handledOnlyByPlugin = true;
       }
     }
   },
@@ -887,17 +969,17 @@ var gApplicationsPane = {
   _loadApplicationHandlers: function() {
     var wrappedHandlerInfos = this._handlerSvc.enumerate();
     while (wrappedHandlerInfos.hasMoreElements()) {
-      let wrappedHandlerInfo = wrappedHandlerInfos.getNext().
-                               QueryInterface(Ci.nsIHandlerInfo);
+      let wrappedHandlerInfo =
+        wrappedHandlerInfos.getNext().QueryInterface(Ci.nsIHandlerInfo);
       let type = wrappedHandlerInfo.type;
-      let handlerInfoWrapper;
 
-      if (typeof this._handledTypes[type] == "undefined") {
+      let handlerInfoWrapper;
+      if (type in this._handledTypes)
+        handlerInfoWrapper = this._handledTypes[type];
+      else {
         handlerInfoWrapper = new HandlerInfoWrapper(type, wrappedHandlerInfo);
         this._handledTypes[type] = handlerInfoWrapper;
       }
-      else
-        handlerInfoWrapper = this._handledTypes[type];
 
       handlerInfoWrapper.handledOnlyByPlugin = false;
     }
@@ -907,35 +989,12 @@ var gApplicationsPane = {
   //**************************************************************************//
   // View Construction
 
-  rebuildView: function() {
-    // Clear the list of entries.
-    while (this._list.childNodes.length > 1)
-      this._list.removeChild(this._list.lastChild);
+  _rebuildVisibleTypes: function() {
+    // Reset the list of visible types and the visible type description counts.
+    this._visibleTypes = [];
+    this._visibleTypeDescriptionCount = {};
 
-    var visibleTypes = this._getVisibleTypes();
-
-    if (this._sortColumn)
-      this._sortTypes(visibleTypes);
-
-    for each (let visibleType in visibleTypes) {
-      let item = document.createElement("richlistitem");
-      item.setAttribute("type", visibleType.type);
-      item.setAttribute("typeDescription", visibleType.description);
-      if (visibleType.smallIcon)
-        item.setAttribute("typeIcon", visibleType.smallIcon);
-      item.setAttribute("actionDescription",
-                        this._describePreferredAction(visibleType));
-      item.setAttribute("actionIcon",
-                        this._getIconURLForPreferredAction(visibleType));
-      this._list.appendChild(item);
-    }
-
-    this._selectLastSelectedType();
-  },
-
-  _getVisibleTypes: function() {
-    var visibleTypes = [];
-
+    // Get the preferences that help determine what types to show.
     var showPlugins = this._prefSvc.getBoolPref(PREF_SHOW_PLUGINS_IN_LIST);
     var hideTypesWithoutExtensions =
       this._prefSvc.getBoolPref(PREF_HIDE_PLUGINS_WITHOUT_EXTENSIONS);
@@ -958,21 +1017,66 @@ var gApplicationsPane = {
       if (handlerInfo.handledOnlyByPlugin && !showPlugins)
         continue;
 
-      // If the user is filtering the list, then only show matching types.
-      if (this._filter.value && !this._matchesFilter(handlerInfo))
-        continue;
-
       // We couldn't find any reason to exclude the type, so include it.
-      visibleTypes.push(handlerInfo);
+      this._visibleTypes.push(handlerInfo);
+
+      if (handlerInfo.description in this._visibleTypeDescriptionCount)
+        this._visibleTypeDescriptionCount[handlerInfo.description]++;
+      else
+        this._visibleTypeDescriptionCount[handlerInfo.description] = 1;
+    }
+  },
+
+  _rebuildView: function() {
+    // Clear the list of entries.
+    while (this._list.childNodes.length > 1)
+      this._list.removeChild(this._list.lastChild);
+
+    var visibleTypes = this._visibleTypes;
+
+    // If the user is filtering the list, then only show matching types.
+    if (this._filter.value)
+      visibleTypes = visibleTypes.filter(this._matchesFilter, this);
+
+    for each (let visibleType in visibleTypes) {
+      let item = document.createElement("richlistitem");
+      item.setAttribute("type", visibleType.type);
+      item.setAttribute("typeDescription", this._describeType(visibleType));
+      if (visibleType.smallIcon)
+        item.setAttribute("typeIcon", visibleType.smallIcon);
+      item.setAttribute("actionDescription",
+                        this._describePreferredAction(visibleType));
+      item.setAttribute("actionIcon",
+                        this._getIconURLForPreferredAction(visibleType));
+      this._list.appendChild(item);
     }
 
-    return visibleTypes;
+    this._selectLastSelectedType();
   },
 
   _matchesFilter: function(aType) {
     var filterValue = this._filter.value.toLowerCase();
-    return aType.description.toLowerCase().indexOf(filterValue) != -1 ||
+    return this._describeType(aType).toLowerCase().indexOf(filterValue) != -1 ||
            this._describePreferredAction(aType).toLowerCase().indexOf(filterValue) != -1;
+  },
+
+  /**
+   * Describe, in a human-readable fashion, the type represented by the given
+   * handler info object.  Normally this is just the description provided by
+   * the info object, but if more than one object presents the same description,
+   * then we annotate the duplicate descriptions with the type itself to help
+   * users distinguish between those types.
+   *
+   * @param aHandlerInfo {nsIHandlerInfo} the type being described
+   * @returns {string} a description of the type
+   */
+  _describeType: function(aHandlerInfo) {
+    if (this._visibleTypeDescriptionCount[aHandlerInfo.description] > 1)
+      return this._prefsBundle.getFormattedString("typeDescriptionWithType",
+                                                  [aHandlerInfo.description,
+                                                   aHandlerInfo.type]);
+
+    return aHandlerInfo.description;
   },
 
   /**
@@ -985,6 +1089,7 @@ var gApplicationsPane = {
    *
    * @param aHandlerInfo {nsIHandlerInfo} the type whose preferred action
    *                                      is being described
+   * @returns {string} a description of the action
    */
   _describePreferredAction: function(aHandlerInfo) {
     // alwaysAskBeforeHandling overrides the preferred action, so if that flag
@@ -1069,9 +1174,7 @@ var gApplicationsPane = {
       return false;
 
     if (aHandlerApp instanceof Ci.nsILocalHandlerApp)
-      return aHandlerApp.executable &&
-             aHandlerApp.executable.exists() &&
-             aHandlerApp.executable.isExecutable();
+      return this._isValidHandlerExecutable(aHandlerApp.executable);
 
     if (aHandlerApp instanceof Ci.nsIWebHandlerApp)
       return aHandlerApp.uriTemplate;
@@ -1080,6 +1183,24 @@ var gApplicationsPane = {
       return aHandlerApp.uri;
 
     return false;
+  },
+
+  _isValidHandlerExecutable: function(aExecutable) {
+    return aExecutable &&
+           aExecutable.exists() &&
+           aExecutable.isExecutable() &&
+// XXXben - we need to compare this with the running instance executable
+//          just don't know how to do that via script...
+// XXXmano TBD: can probably add this to nsIShellService
+#ifdef XP_WIN
+#expand    aExecutable.leafName != "__MOZ_APP_NAME__.exe";
+#else
+#ifdef XP_MACOSX
+#expand    aExecutable.leafName != "__MOZ_APP_DISPLAYNAME__.app";
+#else
+#expand    aExecutable.leafName != "__MOZ_APP_NAME__-bin";
+#endif
+#endif
   },
 
   /**
@@ -1091,7 +1212,7 @@ var gApplicationsPane = {
     var handlerInfo = this._handledTypes[typeItem.type];
     var menu =
       document.getAnonymousElementByAttribute(typeItem, "class", "actionsMenu");
-    var menuPopup = menu.firstChild;
+    var menuPopup = menu.menupopup;
 
     // Clear out existing items.
     while (menuPopup.hasChildNodes())
@@ -1139,8 +1260,7 @@ var gApplicationsPane = {
 
     // Create menu items for possible handlers.
     let preferredApp = handlerInfo.preferredApplicationHandler;
-    let possibleApps = handlerInfo.possibleApplicationHandlers.
-                       QueryInterface(Ci.nsIArray).enumerate();
+    let possibleApps = handlerInfo.possibleApplicationHandlers.enumerate();
     var possibleAppMenuItems = [];
     while (possibleApps.hasMoreElements()) {
       let possibleApp = possibleApps.getNext();
@@ -1248,23 +1368,24 @@ var gApplicationsPane = {
     else
       column.setAttribute("sortDirection", "ascending");
 
-    this.rebuildView();
+    this._sortVisibleTypes();
+    this._rebuildView();
   },
 
   /**
-   * Given an array of HandlerInfoWrapper objects, sort them according to
-   * the current sort order.  Used by rebuildView to sort the set of visible
-   * types before building the list from them.
+   * Sort the list of visible types by the current sort column/direction.
    */
-  _sortTypes: function(aTypes) {
+  _sortVisibleTypes: function() {
     if (!this._sortColumn)
       return;
 
+    var t = this;
+
     function sortByType(a, b) {
-      return a.description.toLowerCase().localeCompare(b.description.toLowerCase());
+      return t._describeType(a).toLowerCase().
+             localeCompare(t._describeType(b).toLowerCase());
     }
 
-    var t = this;
     function sortByAction(a, b) {
       return t._describePreferredAction(a).toLowerCase().
              localeCompare(t._describePreferredAction(b).toLowerCase());
@@ -1272,15 +1393,15 @@ var gApplicationsPane = {
 
     switch (this._sortColumn.getAttribute("value")) {
       case "type":
-        aTypes.sort(sortByType);
+        this._visibleTypes.sort(sortByType);
         break;
       case "action":
-        aTypes.sort(sortByAction);
+        this._visibleTypes.sort(sortByAction);
         break;
     }
 
     if (this._sortColumn.getAttribute("sortDirection") == "descending")
-      aTypes.reverse();
+      this._visibleTypes.reverse();
   },
 
   /**
@@ -1292,7 +1413,7 @@ var gApplicationsPane = {
       return;
     }
 
-    this.rebuildView();
+    this._rebuildView();
 
     document.getElementById("clearFilter").disabled = false;
   },
@@ -1313,7 +1434,7 @@ var gApplicationsPane = {
   
   clearFilter: function() {
     this._filter.value = "";
-    this.rebuildView();
+    this._rebuildView();
 
     this._filter.focus();
     document.getElementById("clearFilter").disabled = true;
@@ -1328,16 +1449,15 @@ var gApplicationsPane = {
   //**************************************************************************//
   // Changes
 
-  onSelectAction: function(event) {
-    var actionItem = event.originalTarget;
+  onSelectAction: function(aActionItem) {
     var typeItem = this._list.selectedItem;
     var handlerInfo = this._handledTypes[typeItem.type];
 
-    if (actionItem.hasAttribute("alwaysAsk")) {
+    if (aActionItem.hasAttribute("alwaysAsk")) {
       handlerInfo.alwaysAskBeforeHandling = true;
     }
-    else if (actionItem.hasAttribute("action")) {
-      let action = parseInt(actionItem.getAttribute("action"));
+    else if (aActionItem.hasAttribute("action")) {
+      let action = parseInt(aActionItem.getAttribute("action"));
 
       // Set the plugin state if we're enabling or disabling a plugin.
       if (action == kActionUsePlugin)
@@ -1352,7 +1472,7 @@ var gApplicationsPane = {
       // of possible apps still include the preferred app in the list of apps
       // the user can choose to handle the type.
       if (action == Ci.nsIHandlerInfo.useHelperApp)
-        handlerInfo.preferredApplicationHandler = actionItem.handlerApp;
+        handlerInfo.preferredApplicationHandler = aActionItem.handlerApp;
 
       // Set the "always ask" flag.
       handlerInfo.alwaysAskBeforeHandling = false;
@@ -1362,6 +1482,10 @@ var gApplicationsPane = {
     }
 
     handlerInfo.store();
+
+    // Make sure the handler info object is flagged to indicate that there is
+    // now some user configuration for the type.
+    handlerInfo.handledOnlyByPlugin = false;
 
     // Update the action label and image to reflect the new preferred action.
     typeItem.setAttribute("actionDescription",
@@ -1380,39 +1504,42 @@ var gApplicationsPane = {
     fp.init(window, winTitle, Ci.nsIFilePicker.modeOpen);
     fp.appendFilters(Ci.nsIFilePicker.filterApps);
 
-    if (fp.show() == Ci.nsIFilePicker.returnOK && fp.file) {
-      // XXXben - we need to compare this with the running instance executable
-      //          just don't know how to do that via script...
-      // XXXmano TBD: can probably add this to nsIShellService
-#ifdef XP_WIN
-#expand      if (fp.file.leafName == "__MOZ_APP_NAME__.exe")
-#else
-#ifdef XP_MACOSX
-#expand      if (fp.file.leafName == "__MOZ_APP_DISPLAYNAME__.app")
-#else
-#expand      if (fp.file.leafName == "__MOZ_APP_NAME__-bin")
-#endif
-#endif
-        { this.rebuildActionsMenu(); return; }
+    var handlerApp;
 
-      let handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
-                       createInstance(Ci.nsIHandlerApp);
+    // Prompt the user to pick an app.  If they pick one, and it's a valid
+    // selection, then add it to the list of possible handlers.
+    if (fp.show() == Ci.nsIFilePicker.returnOK && fp.file &&
+        this._isValidHandlerExecutable(fp.file)) {
+      handlerApp = Cc["@mozilla.org/uriloader/local-handler-app;1"].
+                   createInstance(Ci.nsILocalHandlerApp);
       handlerApp.name = getDisplayNameForFile(fp.file);
-      handlerApp.QueryInterface(Ci.nsILocalHandlerApp);
       handlerApp.executable = fp.file;
 
-      var handlerInfo = this._handledTypes[this._list.selectedItem.type];
-
-      handlerInfo.preferredApplicationHandler = handlerApp;
-      handlerInfo.preferredAction = Ci.nsIHandlerInfo.useHelperApp;
-
-      handlerInfo.store();
+      // Add the app to the type's list of possible handlers.
+      let handlerInfo = this._handledTypes[this._list.selectedItem.type];
+      handlerInfo.possibleApplicationHandlers.appendElement(handlerApp, false);
     }
 
-    // We rebuild the actions menu whether the user picked an app or canceled.
+    // Rebuild the actions menu whether the user picked an app or canceled.
     // If they picked an app, we want to add the app to the menu and select it.
     // If they canceled, we want to go back to their previous selection.
     this.rebuildActionsMenu();
+
+    // If the user picked a new app from the menu, select it.
+    if (handlerApp) {
+      let typeItem = this._list.selectedItem;
+      let actionsMenu =
+        document.getAnonymousElementByAttribute(typeItem, "class", "actionsMenu");
+      let menuItems = actionsMenu.menupopup.childNodes;
+      for (let i = 0; i < menuItems.length; i++) {
+        let menuItem = menuItems[i];
+        if (menuItem.handlerApp && menuItem.handlerApp.equals(handlerApp)) {
+          actionsMenu.selectedIndex = i;
+          this.onSelectAction(menuItem);
+          break;
+        }
+      }
+    }
   },
 
   // Mark which item in the list was last selected so we can reselect it

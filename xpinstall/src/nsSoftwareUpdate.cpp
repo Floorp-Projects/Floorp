@@ -358,7 +358,7 @@ nsSoftwareUpdate::InstallChrome( PRUint32 aType,
 }
 
 
-NS_IMETHODIMP
+void
 nsSoftwareUpdate::InstallJarCallBack()
 {
     PR_Lock(mLock);
@@ -375,7 +375,7 @@ nsSoftwareUpdate::InstallJarCallBack()
 
     PR_Unlock(mLock);
 
-    return RunNextInstall();
+    RunNextInstall();
 }
 
 

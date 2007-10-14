@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Word Movement (including nsTextFrame::PeekOffsetWord)</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: block">
+<div contentEditable id="editor"></div>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript;version=1.7">
+
+/** Test for Bug 384147 **/
+
+SimpleTest.waitForExplicitFinish();
+
+// This seems to be necessary because the selection is not set up properly otherwise
+setTimeout(test, 0);
+
+function getPrefs() {
+  const prefSvcContractID = "@mozilla.org/preferences-service;1";
+  const prefSvcIID = Components.interfaces.nsIPrefService;
+  return Components.classes[prefSvcContractID].getService(prefSvcIID)
+                                               .getBranch("layout.word_select.");
+}
+
+function setEatSpace(newValue) {
+  getPrefs().setBoolPref("eat_space_to_next_word", newValue);
+}
+
+function restoreEatSpace() {
+  try {
+    getPrefs().clearUserPref("eat_space_to_next_word");
+  } catch(ex) {}
+}
+
+function test() {
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+  // Disable tests on Windows and Linux for now
+  if (navigator.platform.indexOf("Mac") < 0) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var wordModifiers =
+      (navigator.platform.indexOf("Mac") >= 0) ? {altKey:true} : {ctrlKey:true};
+  var sel = window.getSelection();
+  var editor = document.getElementById("editor");
+
+  function testRight(node, offset) {
+    synthesizeKey("VK_RIGHT", wordModifiers);
+    is(sel.anchorNode, node, "Right movement broken in " + editor.innerHTML);
+    is(sel.anchorOffset, offset, "Right movement broken in " + editor.innerHTML);
+  }
+
+  function testLeft(node, offset) {
+    synthesizeKey("VK_LEFT", wordModifiers);
+    is(sel.anchorNode, node, "Left movement broken in " + editor.innerHTML);
+    is(sel.anchorOffset, offset, "Left movement broken in " + editor.innerHTML);
+  }
+
+  setEatSpace(false);
+
+  editor.innerHTML = "Hello Kitty";
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, 5);
+  testRight(editor.firstChild, 11);
+  testLeft(editor.firstChild, 6);
+  testLeft(editor.firstChild, 0);
+
+  editor.innerHTML = "<b>Hello</b> Kitty";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.nextSibling, 0);
+  testRight(editor.firstChild.nextSibling, 6);
+  testLeft(editor.firstChild.nextSibling, 1);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "<b>Hello </b>Kitty";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.firstChild, 5);
+  testRight(editor.firstChild.nextSibling, 5);
+  testLeft(editor.firstChild.firstChild, 6);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  editor.innerHTML = "<b>Log out</b>  roc";
+  sel.collapse(editor.firstChild.firstChild, 0);
+  testRight(editor.firstChild.firstChild, 3);
+  testRight(editor.firstChild.nextSibling, 0);
+  testRight(editor.firstChild.nextSibling, 5);
+  // In the next test, we expect to be at the end of the
+  // space that is not collapsed away
+  testLeft(editor.firstChild.nextSibling, 1);
+  testLeft(editor.firstChild.firstChild, 4);
+  testLeft(editor.firstChild.firstChild, 0);
+
+  restoreEatSpace();
+
+  SimpleTest.finish();
+}
+
+
+</script>
+</pre>
+</body>
+</html>

@@ -42,9 +42,11 @@
 #include "nsPluginNativeWindow.h"
 %}
 
+interface nsIPluginInstanceOwner;
+
 [ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
 
-[uuid(8e3d71e6-2319-11d5-9cf8-0060b0fbd8ac)]
+[uuid(42338435-a38f-4901-97b9-d7cba643d28d)]
 interface nsPIPluginHost : nsISupports
 {
  /**
@@ -93,4 +95,12 @@ interface nsPIPluginHost : nsISupports
   *  Deletes plugin native window object created by NewPluginNativeWindow
   */
   void deletePluginNativeWindow(in nsPluginNativeWindowPtr aPluginNativeWindow);
+  /**
+   * Instantiate a "dummy" java plugin if a java plugin that supports
+   * NPRuntime is installed. This plugin is used for exposing
+   * window.java and window.Packages. If the java plugin supports
+   * NPRuntime and instantiation was successful, aOwners instance will
+   * be non-null, if not, it will be null.
+   */
+  [noscript] void instantiateDummyJavaPlugin(in nsIPluginInstanceOwner aOwner);
 };

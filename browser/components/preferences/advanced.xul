@@ -169,19 +169,6 @@
                       preference="layout.spellcheckDefault"/>
           </groupbox>
 
-          <!-- Languages -->
-          <groupbox id="languagesGroup">
-            <caption label="&languages.label;"/>
-
-            <hbox id="languagesBox" align="center">
-              <description flex="1" control="chooseLanguage">&chooseLanguage.label;</description>
-              <button id="chooseLanguage"
-                      label="&chooseButton.label;"
-                      accesskey="&chooseButton.accesskey;"
-                      oncommand="gAdvancedPane.showLanguages();"/>
-            </hbox>
-          </groupbox>
-
         </tabpanel>
 
         <!-- Network -->

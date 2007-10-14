@@ -1268,7 +1268,7 @@ nsSVGGlyphFrame::ContainsPoint(float x, float y)
   gfxContext *gfx = ctx.GetContext();
   gfxTextRun *textRun = ctx.GetTextRun();
   if (!gfx || !textRun)
-    return NS_ERROR_OUT_OF_MEMORY;
+    return PR_FALSE;
 
   nsresult rv = GetGlobalTransform(gfx);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);

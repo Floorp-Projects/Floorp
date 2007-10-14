@@ -180,6 +180,16 @@ class SVNFileInfo(VCSFileInfo):
     repo = None
     svndata = {}
 
+    # This regex separates protocol and optional username/password from a url.
+    # For instance, all the following urls will be transformed into
+    # 'foo.com/bar':
+    #
+    #   http://foo.com/bar
+    #   svn+ssh://user@foo.com/bar
+    #   svn+ssh://user:pass@foo.com/bar
+    #
+    rootRegex = re.compile(r'^\S+?:/+(?:[^\s/]*@)?(\S+)$')
+
     def __init__(self, file):
         """ We only want to run subversion's info tool once so pull all the data
             here. """
@@ -187,15 +197,15 @@ class SVNFileInfo(VCSFileInfo):
         VCSFileInfo.__init__(self, file)
 
         if os.path.isfile(file):
-            _regex = re.compile(r'^(.+):\s(.+)$')
-
             command = os.popen("svn info %s" % file, "r")
             for line in command:
-                match = _regex.match(line.strip())
-                if match:
-                    key = match.group(1)
-                    if key in ["Repository Root", "Revision", "URL"]:
-                        self.svndata[key] = match.group(2)
+                # The last line of the output is usually '\n'
+                if line.strip() == '':
+                    continue
+                # Split into a key/value pair on the first colon
+                key, value = line.split(':', 1)
+                if key in ["Repository Root", "Revision", "URL"]:
+                    self.svndata[key] = value.strip()
 
             exitStatus = command.close()
             if exitStatus:
@@ -204,7 +214,7 @@ class SVNFileInfo(VCSFileInfo):
     def GetRoot(self):
         key = "Repository Root"
         if key in self.svndata:
-            match = re.match(r'^\w+:\/+(\S+)', self.svndata[key])
+            match = self.rootRegex.match(self.svndata[key])
             if match:
                 return match.group(1)
         print >> sys.stderr, "Failed to get SVN Root for %s" % self.file

@@ -51,7 +51,6 @@ class nsPresContext;
 class nsVoidArray;
 class nsIDOMEvent;
 class nsIContent;
-class nsISupportsArray;
 class nsIEventListenerManager;
 class nsIURI;
 class nsICSSStyleRule;

@@ -115,8 +115,7 @@ XPIDLSRCS	+= nsIPrintSettingsWin.idl
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-XPIDLSRCS	+= nsIEventSink.idl \
-		nsIPrintSettingsX.idl \
+XPIDLSRCS	+= nsIPrintSettingsX.idl \
 		nsIPrintSessionX.idl
 endif
 
