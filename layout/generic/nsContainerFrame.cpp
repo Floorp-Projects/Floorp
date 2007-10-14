@@ -1282,7 +1282,7 @@ nsOverflowContinuationTracker::nsOverflowContinuationTracker(nsPresContext*    a
       SetUpListWalker();
     }
   }
-  else {
+  if (!mOverflowContList) {
     mOverflowContList =
       mParent->GetPropTableFrames(aPresContext,
                                   nsGkAtoms::excessOverflowContainersProperty);

@@ -120,11 +120,6 @@
 #include "prlog.h"
 #include "prthread.h"
 
-#ifdef OJI
-#include "nsIJVMManager.h"
-#include "nsILiveConnectManager.h"
-#endif
-
 const size_t gStackSize = 8192;
 
 #ifdef PR_LOGGING
@@ -2329,36 +2324,6 @@ nsJSContext::InitializeExternalClasses()
 }
 
 nsresult
-nsJSContext::InitializeLiveConnectClasses(JSObject *aGlobalObj)
-{
-  nsresult rv = NS_OK;
-
-#ifdef OJI
-  nsCOMPtr<nsIJVMManager> jvmManager =
-    do_GetService(nsIJVMManager::GetCID(), &rv);
-
-  if (NS_SUCCEEDED(rv) && jvmManager) {
-    PRBool javaEnabled = PR_FALSE;
-
-    rv = jvmManager->GetJavaEnabled(&javaEnabled);
-
-    if (NS_SUCCEEDED(rv) && javaEnabled) {
-      nsCOMPtr<nsILiveConnectManager> liveConnectManager =
-        do_QueryInterface(jvmManager);
-
-      if (liveConnectManager) {
-        JSAutoRequest ar(mContext);
-        rv = liveConnectManager->InitLiveConnectClasses(mContext, aGlobalObj);
-      }
-    }
-  }
-#endif /* OJI */
-
-  // return all is well until things are stable.
-  return NS_OK;
-}
-
-nsresult
 nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArgs)
 {
   PRUint32  argc;
@@ -3022,9 +2987,6 @@ nsJSContext::InitClasses(void *aGlobalObj)
   rv = InitializeExternalClasses();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = InitializeLiveConnectClasses(globalObj);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   JSAutoRequest ar(mContext);
 
   // Initialize the options object and set default options in mContext
@@ -3519,22 +3481,6 @@ nsJSRuntime::Init()
   nsIXPConnect *xpc = nsContentUtils::XPConnect();
   xpc->SetCollectGarbageOnMainThreadOnly(PR_TRUE);
   xpc->SetDeferReleasesUntilAfterGarbageCollection(PR_TRUE);
-
-#ifdef OJI
-  // Initialize LiveConnect.  XXXbe use contractid rather than GetCID
-  // NOTE: LiveConnect is optional so initialisation will still succeed
-  //       even if the service is not present.
-  nsCOMPtr<nsILiveConnectManager> manager =
-           do_GetService(nsIJVMManager::GetCID());
-
-  // Should the JVM manager perhaps define methods for starting up
-  // LiveConnect?
-  if (manager) {
-    PRBool started = PR_FALSE;
-    rv = manager->StartupLiveConnect(sRuntime, started);
-    // XXX Did somebody mean to check |rv| ?
-  }
-#endif /* OJI */
 
   nsContentUtils::RegisterPrefCallback("dom.max_script_run_time",
                                        MaxScriptRunTimePrefChangedCallback,

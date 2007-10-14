@@ -273,7 +273,7 @@ namespace_toString(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec namespace_methods[] = {
-    JS_FN(js_toString_str,  namespace_toString,        0,0,0,0),
+    JS_FN(js_toString_str,  namespace_toString,        0,0,0),
     JS_FS_END
 };
 
@@ -546,7 +546,7 @@ qname_toString(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec qname_methods[] = {
-    JS_FN(js_toString_str,  qname_toString,    0,0,0,0),
+    JS_FN(js_toString_str,  qname_toString,    0,0,0),
     JS_FS_END
 };
 
@@ -7176,46 +7176,46 @@ xml_valueOf(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec xml_methods[] = {
-    JS_FN("addNamespace",          xml_addNamespace,          1,1,0,0),
-    JS_FN("appendChild",           xml_appendChild,           1,1,0,0),
-    JS_FN(js_attribute_str,        xml_attribute,             1,1,0,0),
-    JS_FN("attributes",            xml_attributes,            0,0,0,0),
-    JS_FN("child",                 xml_child,                 1,1,0,0),
-    JS_FN("childIndex",            xml_childIndex,            0,0,0,0),
-    JS_FN("children",              xml_children,              0,0,0,0),
-    JS_FN("comments",              xml_comments,              0,0,0,0),
-    JS_FN("contains",              xml_contains,              1,1,0,0),
-    JS_FN("copy",                  xml_copy,                  0,0,0,0),
-    JS_FN("descendants",           xml_descendants,           0,1,0,0),
-    JS_FN("elements",              xml_elements,              0,1,0,0),
-    JS_FN("hasOwnProperty",        xml_hasOwnProperty,        1,1,0,0),
-    JS_FN("hasComplexContent",     xml_hasComplexContent,     1,1,0,0),
-    JS_FN("hasSimpleContent",      xml_hasSimpleContent,      1,1,0,0),
-    JS_FN("inScopeNamespaces",     xml_inScopeNamespaces,     0,0,0,0),
-    JS_FN("insertChildAfter",      xml_insertChildAfter,      2,2,0,0),
-    JS_FN("insertChildBefore",     xml_insertChildBefore,     2,2,0,0),
-    JS_FN(js_length_str,           xml_length,                0,0,0,0),
-    JS_FN(js_localName_str,        xml_localName,             0,0,0,0),
-    JS_FN(js_name_str,             xml_name,                  0,0,0,0),
-    JS_FN(js_namespace_str,        xml_namespace,             0,1,0,0),
-    JS_FN("namespaceDeclarations", xml_namespaceDeclarations, 0,0,0,0),
-    JS_FN("nodeKind",              xml_nodeKind,              0,0,0,0),
-    JS_FN("normalize",             xml_normalize,             0,0,0,0),
-    JS_FN(js_xml_parent_str,       xml_parent,                0,0,0,0),
-    JS_FN("processingInstructions",xml_processingInstructions,0,1,0,0),
-    JS_FN("prependChild",          xml_prependChild,          1,1,0,0),
-    JS_FN("propertyIsEnumerable",  xml_propertyIsEnumerable,  1,1,0,0),
-    JS_FN("removeNamespace",       xml_removeNamespace,       1,1,0,0),
-    JS_FN("replace",               xml_replace,               2,2,0,0),
-    JS_FN("setChildren",           xml_setChildren,           1,1,0,0),
-    JS_FN("setLocalName",          xml_setLocalName,          1,1,0,0),
-    JS_FN("setName",               xml_setName,               1,1,0,0),
-    JS_FN("setNamespace",          xml_setNamespace,          1,1,0,0),
-    JS_FN(js_text_str,             xml_text,                  0,0,0,0),
-    JS_FN(js_toString_str,         xml_toString,              0,0,0,0),
-    JS_FN(js_toXMLString_str,      xml_toXMLString,           0,0,0,0),
-    JS_FN(js_toSource_str,         xml_toXMLString,           0,0,0,0),
-    JS_FN(js_valueOf_str,          xml_valueOf,               0,0,0,0),
+    JS_FN("addNamespace",          xml_addNamespace,          1,1,0),
+    JS_FN("appendChild",           xml_appendChild,           1,1,0),
+    JS_FN(js_attribute_str,        xml_attribute,             1,1,0),
+    JS_FN("attributes",            xml_attributes,            0,0,0),
+    JS_FN("child",                 xml_child,                 1,1,0),
+    JS_FN("childIndex",            xml_childIndex,            0,0,0),
+    JS_FN("children",              xml_children,              0,0,0),
+    JS_FN("comments",              xml_comments,              0,0,0),
+    JS_FN("contains",              xml_contains,              1,1,0),
+    JS_FN("copy",                  xml_copy,                  0,0,0),
+    JS_FN("descendants",           xml_descendants,           0,1,0),
+    JS_FN("elements",              xml_elements,              0,1,0),
+    JS_FN("hasOwnProperty",        xml_hasOwnProperty,        1,1,0),
+    JS_FN("hasComplexContent",     xml_hasComplexContent,     1,1,0),
+    JS_FN("hasSimpleContent",      xml_hasSimpleContent,      1,1,0),
+    JS_FN("inScopeNamespaces",     xml_inScopeNamespaces,     0,0,0),
+    JS_FN("insertChildAfter",      xml_insertChildAfter,      2,2,0),
+    JS_FN("insertChildBefore",     xml_insertChildBefore,     2,2,0),
+    JS_FN(js_length_str,           xml_length,                0,0,0),
+    JS_FN(js_localName_str,        xml_localName,             0,0,0),
+    JS_FN(js_name_str,             xml_name,                  0,0,0),
+    JS_FN(js_namespace_str,        xml_namespace,             0,1,0),
+    JS_FN("namespaceDeclarations", xml_namespaceDeclarations, 0,0,0),
+    JS_FN("nodeKind",              xml_nodeKind,              0,0,0),
+    JS_FN("normalize",             xml_normalize,             0,0,0),
+    JS_FN(js_xml_parent_str,       xml_parent,                0,0,0),
+    JS_FN("processingInstructions",xml_processingInstructions,0,1,0),
+    JS_FN("prependChild",          xml_prependChild,          1,1,0),
+    JS_FN("propertyIsEnumerable",  xml_propertyIsEnumerable,  1,1,0),
+    JS_FN("removeNamespace",       xml_removeNamespace,       1,1,0),
+    JS_FN("replace",               xml_replace,               2,2,0),
+    JS_FN("setChildren",           xml_setChildren,           1,1,0),
+    JS_FN("setLocalName",          xml_setLocalName,          1,1,0),
+    JS_FN("setName",               xml_setName,               1,1,0),
+    JS_FN("setNamespace",          xml_setNamespace,          1,1,0),
+    JS_FN(js_text_str,             xml_text,                  0,0,0),
+    JS_FN(js_toString_str,         xml_toString,              0,0,0),
+    JS_FN(js_toXMLString_str,      xml_toXMLString,           0,0,0),
+    JS_FN(js_toSource_str,         xml_toXMLString,           0,0,0),
+    JS_FN(js_valueOf_str,          xml_valueOf,               0,0,0),
     JS_FS_END
 };
 
@@ -7306,9 +7306,9 @@ xml_defaultSettings(JSContext *cx, uintN argc, jsval *vp)
 }
 
 static JSFunctionSpec xml_static_methods[] = {
-    JS_FN("settings",         xml_settings,          0,0,0,0),
-    JS_FN("setSettings",      xml_setSettings,       1,1,0,0),
-    JS_FN("defaultSettings",  xml_defaultSettings,   0,0,0,0),
+    JS_FN("settings",         xml_settings,          0,0,0),
+    JS_FN("setSettings",      xml_setSettings,       1,1,0),
+    JS_FN("defaultSettings",  xml_defaultSettings,   0,0,0),
     JS_FS_END
 };
 

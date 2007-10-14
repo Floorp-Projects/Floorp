@@ -72,8 +72,10 @@
 #include "nsICachingChannel.h"
 #include "nsPluginArray.h"
 #include "nsIPluginHost.h"
+#include "nsPIPluginHost.h"
 #ifdef OJI
 #include "nsIJVMManager.h"
+#include "nsILiveConnectManager.h"
 #endif
 #include "nsContentCID.h"
 #include "nsLayoutStatics.h"
@@ -150,6 +152,7 @@
 #include "nsIScriptError.h"
 #include "nsIScriptEventManager.h" // For GetInterface()
 #include "nsIConsoleService.h"
+#include "nsIControllers.h"
 #include "nsIControllerContext.h"
 #include "nsGlobalWindowCommands.h"
 #include "nsAutoPtr.h"
@@ -378,6 +381,153 @@ StripNullChars(const nsAString& aInStr,
   }
 }
 
+#ifdef OJI
+class nsDummyJavaPluginOwner : public nsIPluginInstanceOwner
+{
+public:
+  nsDummyJavaPluginOwner(nsIDocument *aDocument)
+    : mDocument(aDocument)
+  {
+  }
+
+  void Destroy();
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_NSIPLUGININSTANCEOWNER
+
+  // XXXjst: What's up with nsIPluginInstanceOwner and these functions?
+  NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData,
+                    PRUint32 aPostDataLen, void *aHeadersData,
+                    PRUint32 aHeadersDataLen, PRBool aIsFile = PR_FALSE);
+  NS_IMETHOD ShowStatus(const PRUnichar *aStatusMsg);
+
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsDummyJavaPluginOwner)
+
+private:
+  nsCOMPtr<nsIPluginInstance> mInstance;
+  nsCOMPtr<nsIDocument> mDocument;
+};
+
+NS_IMPL_CYCLE_COLLECTION_2(nsDummyJavaPluginOwner, mDocument, mInstance)
+
+// QueryInterface implementation for nsDummyJavaPluginOwner
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDummyJavaPluginOwner)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIPluginInstanceOwner)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDummyJavaPluginOwner)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDummyJavaPluginOwner)
+
+
+void
+nsDummyJavaPluginOwner::Destroy()
+{
+  // If we have a plugin instance, stop it and destroy it now.
+  if (mInstance) {
+    mInstance->Stop();
+    mInstance->Destroy();
+
+    mInstance = nsnull;
+  }
+
+  mDocument = nsnull;
+}
+
+NS_IMETHODIMP
+nsDummyJavaPluginOwner::SetInstance(nsIPluginInstance *aInstance)
+{
+  mInstance = aInstance;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDummyJavaPluginOwner::GetInstance(nsIPluginInstance *&aInstance)
+{
+  NS_IF_ADDREF(aInstance = mInstance);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDummyJavaPluginOwner::GetWindow(nsPluginWindow *&aWindow)
+{
+  aWindow = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDummyJavaPluginOwner::GetMode(nsPluginMode *aMode)
+{
+  // This is wrong, but there's no better alternative.
+  *aMode = nsPluginMode_Embedded;
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDummyJavaPluginOwner::CreateWidget(void)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDummyJavaPluginOwner::GetURL(const char *aURL, const char *aTarget,
+                               void *aPostData, PRUint32 aPostDataLen,
+                               void *aHeadersData, PRUint32 aHeadersDataLen,
+                               PRBool isFile)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDummyJavaPluginOwner::ShowStatus(const char *aStatusMsg)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDummyJavaPluginOwner::ShowStatus(const PRUnichar *aStatusMsg)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDummyJavaPluginOwner::GetDocument(nsIDocument **aDocument)
+{
+  NS_IF_ADDREF(*aDocument = mDocument);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDummyJavaPluginOwner::InvalidateRect(nsPluginRect *invalidRect)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDummyJavaPluginOwner::InvalidateRegion(nsPluginRegion invalidRegion)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDummyJavaPluginOwner::ForceRedraw()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDummyJavaPluginOwner::GetValue(nsPluginInstancePeerVariable variable,
+                                 void *value)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif
+
 /**
  * An indirect observer object that means we don't have to implement nsIObserver
  * on nsGlobalWindow, where any script could see it.
@@ -436,6 +586,7 @@ nsTimeout::~nsTimeout()
 nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
   : nsPIDOMWindow(aOuterWindow),
     mIsFrozen(PR_FALSE),
+    mDidInitJavaProperties(PR_FALSE),
     mFullScreen(PR_FALSE),
     mIsClosed(PR_FALSE), 
     mInClose(PR_FALSE), 
@@ -709,6 +860,19 @@ nsGlobalWindow::FreeInnerObjects(PRBool aClearScope)
     }
   }
 
+#ifdef OJI
+  if (mDummyJavaPluginOwner) {
+    // Tear down the dummy java plugin.
+
+    // XXXjst: On a general note, should windows with java stuff in
+    // them ever even make it into the fast-back cache?
+
+    mDummyJavaPluginOwner->Destroy();
+
+    mDummyJavaPluginOwner = nsnull;
+  }
+#endif
+
 #ifdef DEBUG
   nsCycleCollector_DEBUG_shouldBeFreed(static_cast<nsIScriptGlobalObject*>(this));
 #endif
@@ -789,6 +953,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGlobalWindow)
   // Traverse stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument)
+
+#ifdef OJI
+  // Traverse mDummyJavaPluginOwner
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDummyJavaPluginOwner)
+#endif
+
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
@@ -825,6 +995,15 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindow)
   // Unlink stuff from nsPIDOMWindow
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mChromeEventHandler)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDocument)
+
+#ifdef OJI
+  // Unlink mDummyJavaPluginOwner
+  if (tmp->mDummyJavaPluginOwner) {
+    tmp->mDummyJavaPluginOwner->Destroy();
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mDummyJavaPluginOwner)
+  }
+#endif
+
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
@@ -5072,6 +5251,82 @@ nsGlobalWindow::IsInModalState()
                     (static_cast<nsIDOMWindow *>
                                 (top.get()))->mModalStateDepth != 0;
 }
+
+#ifdef OJI
+void
+nsGlobalWindow::InitJavaProperties()
+{
+  nsIScriptContext *scx = GetContextInternal();
+
+  if (mDidInitJavaProperties || IsOuterWindow() || !scx || !mJSObject) {
+    return;
+  }
+
+  // Set mDidInitJavaProperties to true here even if initialization
+  // can fail. If it fails, we won't try again...
+  mDidInitJavaProperties = PR_TRUE;
+
+  // Check whether the plugin supports NPRuntime, if so, init through
+  // it, else use liveconnect.
+
+  nsCOMPtr<nsPIPluginHost> host(do_GetService("@mozilla.org/plugin/host;1"));
+  if (!host) {
+    return;
+  }
+
+  mDummyJavaPluginOwner = new nsDummyJavaPluginOwner(mDoc);
+  if (!mDummyJavaPluginOwner) {
+    return;
+  }
+
+  host->InstantiateDummyJavaPlugin(mDummyJavaPluginOwner);
+
+  nsCOMPtr<nsIPluginInstance> dummyPlugin;
+  mDummyJavaPluginOwner->GetInstance(*getter_AddRefs(dummyPlugin));
+
+  if (dummyPlugin) {
+    // A dummy plugin was instantiated. This means we have a Java
+    // plugin that supports NPRuntime. For such a plugin, the plugin
+    // instantiation code defines the Java properties for us, so we're
+    // done here.
+
+    return;
+  }
+
+  // No NPRuntime enabled Java plugin found, null out the owner we
+  // would have used in that case as it's no longer needed.
+  mDummyJavaPluginOwner = nsnull;
+
+  JSContext *cx = (JSContext *)scx->GetNativeContext();
+
+  nsCOMPtr<nsILiveConnectManager> manager =
+    do_GetService(nsIJVMManager::GetCID());
+
+  if (!manager) {
+    return;
+  }
+
+  PRBool started = PR_FALSE;
+  manager->StartupLiveConnect(::JS_GetRuntime(cx), started);
+
+  nsCOMPtr<nsIJVMManager> jvmManager(do_QueryInterface(manager));
+
+  if (!jvmManager) {
+    return;
+  }
+
+  PRBool javaEnabled = PR_FALSE;
+  if (NS_FAILED(jvmManager->GetJavaEnabled(&javaEnabled)) || !javaEnabled) {
+    return;
+  }
+
+  {
+    JSAutoRequest ar(cx);
+
+    manager->InitLiveConnectClasses(cx, mJSObject);
+  }
+}
+#endif
 
 NS_IMETHODIMP
 nsGlobalWindow::GetFrameElement(nsIDOMElement** aFrameElement)

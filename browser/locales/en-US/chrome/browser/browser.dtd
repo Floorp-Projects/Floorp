@@ -167,18 +167,13 @@
 <!ENTITY viewSidebarMenu.label "Sidebar">
 <!ENTITY viewSidebarMenu.accesskey "e">
 <!ENTITY viewCustomizeToolbar.label       "Customize..."> 
-<!ENTITY viewCustomizeToolbar.accesskey     "C"> 
+<!ENTITY viewCustomizeToolbar.accesskey     "C">
 
-<!-- XXX historyMenu entities are used with or without places (bug 336058) -->
 <!ENTITY historyMenu.label "History">
 <!ENTITY historyMenu.accesskey "s">
 <!ENTITY historyUndoMenu.label "Recently Closed Tabs">
 
-<!-- XXX places only -->
 <!ENTITY historyHomeCmd.label "Home">
-<!-- XXX remove below if places sticks -->
-<!ENTITY goHomeCmd.label "Home">
-<!-- XXX remove above if places sticks --> 
 <!ENTITY historyShowSidebarCmd.label "Show in Sidebar">
 
 <!ENTITY openCmd.commandkey           "l">

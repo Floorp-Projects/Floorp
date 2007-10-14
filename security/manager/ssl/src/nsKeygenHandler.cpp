@@ -349,6 +349,9 @@ nsKeygenFormProcessor::Init()
   if (NS_FAILED(rv))
     return rv;
 
+  // XXXbz this leaks the strings through shutdown.  There's got to be
+  // a better way to do this!  Of course that would involve having SOME
+  // shutdown code somewhere here.
   nssComponent->GetPIPNSSBundleString("HighGrade", str);
   SECKeySizeChoiceList[0].name = ToNewUnicode(str);
 
@@ -857,14 +860,13 @@ nsKeygenFormProcessor::ProcessValue(nsIDOMHTMLElement *aElement,
 } 
 
 NS_METHOD nsKeygenFormProcessor::ProvideContent(const nsAString& aFormType, 
-						nsVoidArray& aContent, 
+						nsStringArray& aContent, 
 						nsAString& aAttribute) 
 { 
   if (Compare(aFormType, NS_LITERAL_STRING("SELECT"), 
     nsCaseInsensitiveStringComparator()) == 0) {
     for (SECKeySizeChoiceInfo* choice = SECKeySizeChoiceList; choice && choice->name; ++choice) {
-      nsString *str = new nsString(choice->name);
-      aContent.AppendElement(str);
+      aContent.AppendString(nsDependentString(choice->name));
     }
     aAttribute.AssignLiteral("-mozilla-keygen");
   }

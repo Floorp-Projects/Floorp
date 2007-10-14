@@ -3375,7 +3375,7 @@ function GetSelectionContainer()
   return result;
 }
 
-function FillInHTMLTooltip(tooltip)
+function FillInHTMLTooltipEditor(tooltip)
 {
   const XLinkNS = "http://www.w3.org/1999/xlink";
   var tooltipText = null;

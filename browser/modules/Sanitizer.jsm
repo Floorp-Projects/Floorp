@@ -136,6 +136,14 @@ Sanitizer.prototype = {
           os.notifyObservers(null, "browser:purge-session-history", "");
         }
         catch (e) { }
+        
+        // Clear last URL of the Open Web Location dialog
+        var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                              .getService(Components.interfaces.nsIPrefBranch2);
+        try {
+          prefs.clearUserPref("general.open_location.last_url");
+        }
+        catch (e) { }
       },
       
       get canClear()

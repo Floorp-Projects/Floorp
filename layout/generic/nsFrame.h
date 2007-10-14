@@ -288,6 +288,10 @@ public:
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              PRBool aShrinkWrap);
 
+  // Compute tight bounds assuming this frame honours its border, background
+  // and outline, its children's tight bounds, and nothing else.
+  nsRect ComputeSimpleTightBounds(gfxContext* aContext) const;
+  
   /**
    * A helper, used by |nsFrame::ComputeSize| (for frames that need to
    * override only this part of ComputeSize), that computes the size
@@ -539,7 +543,7 @@ protected:
   /**
    * @return PR_FALSE if this frame definitely has no borders at all
    */                 
-  PRBool HasBorder();
+  PRBool HasBorder() const;
 
   /**
    * To be called by |BuildDisplayLists| of this class or derived classes to add

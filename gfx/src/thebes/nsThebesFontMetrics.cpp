@@ -72,10 +72,7 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLangGroup,
     mIsRightToLeft = PR_FALSE;
     mTextRunRTL = PR_FALSE;
 
-    // work around layout giving us 0 sized fonts...
     gfxFloat size = gfxFloat(aFont.size) / mP2A;
-    if (size == 0.0)
-        size = 1.0;
 
     nsCString langGroup;
     if (aLangGroup) {

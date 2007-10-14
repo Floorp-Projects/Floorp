@@ -6,7 +6,7 @@ package Bootstrap::Step::Updates;
 
 use Bootstrap::Step;
 use Bootstrap::Config;
-use Bootstrap::Util qw(CvsCatfile SyncNightlyDirToStaging);
+use Bootstrap::Util qw(CvsCatfile SyncNightlyDirToStaging GetLocaleManifest);
 
 use File::Find qw(find);
 use POSIX qw(strftime);
@@ -148,6 +148,8 @@ sub Verify {
           dir => $verifyDirVersion,
         );
     }
+
+    $this->BumpVerifyConfig();
     
     # Customize updates.cfg to contain the channels you are interested in 
     # testing.
@@ -213,6 +215,122 @@ sub PermissionsAusCallback {
     }
 }
 
+sub BumpVerifyConfig {
+    my $this = shift;
+
+    my $config = new Bootstrap::Config();
+    my $osname = $config->SystemInfo(var => 'osname');
+    my $product = $config->Get(var => 'product');
+    my $oldVersion = $config->Get(var => 'oldVersion');
+    my $version = $config->Get(var => 'version');
+    my $rc = $config->Get(var => 'rc');
+    my $appName = $config->Get(var => 'appName');
+    my $mozillaCvsroot = $config->Get(var => 'mozillaCvsroot');
+    my $verifyDir = $config->Get(var => 'verifyDir');
+    my $ausServer = $config->Get(var => 'ausServer');
+    my $externalStagingServer = $config->Get(var => 'externalStagingServer');
+    my $verifyConfig = $config->Get(sysvar => 'verifyConfig');
+    my $logDir = $config->Get(sysvar => 'logDir');
+
+    my $verifyDirVersion = catfile($verifyDir, $product . '-' . $version);
+    my $configFile = catfile($verifyDirVersion, 'updates', $verifyConfig);
+
+    # NOTE - channel is hardcoded to betatest
+    my $channel = 'betatest';
+
+    # grab os-specific buildID file on FTP
+    my $candidateDir = CvsCatfile($config->GetFtpNightlyDir(), $oldVersion . '-candidates', 'rc' . $rc ) . '/';
+
+    my $buildID = $this->GetBuildIDFromFTP(os => $osname, releaseDir => $candidateDir);
+
+    my $buildTarget = undef;
+    my $releaseFile = undef;
+    my $nightlyFile = undef;
+    my $ftpOsname = undef;
+
+    if ($osname eq 'linux') {
+        $buildTarget = 'Linux_x86-gcc3';
+        $platform = 'linux';
+        $ftpOsname = 'linux-i686';
+        $releaseFile = $product.'-'.$oldVersion.'.tar.gz';
+        $nightlyFile = $product.'-'.$version.'.%locale%.linux-i686.tar.gz';
+    } elsif ($osname eq 'macosx') {
+        $buildTarget = 'Darwin_Universal-gcc3';
+        $platform = 'osx';
+        $ftpOsname = 'mac';
+        $releaseFile = ucfirst($product).' '.$oldVersion.'.dmg';
+        $nightlyFile = $product.'-'.$version.'.%locale%.mac.dmg';
+    } elsif ($osname eq 'win32') {
+        $buildTarget = 'WINNT_x86-msvc';
+        $platform = 'win32';
+        $ftpOsname = 'win32';
+        $releaseFile = ucfirst($product).' Setup '.$oldVersion.'.exe';
+        $nightlyFile = $product.'-'.$version.'.%locale%.win32.installer.exe';
+    } else {
+        die("ASSERT: unknown OS $osname");
+    }
+
+    open(FILE, "< $configFile") or die ("Could not open file $configFile: $!");
+    my @origFile = <FILE>;
+    close(FILE) or die ("Could not close file $configFile: $!");
+
+    if ($origFile[0] =~ $oldVersion) {
+            $this->Log('msg' => "verifyConfig $configFile already bumped");
+            return;
+    }
+
+    # remove "from" and "to" vars from @origFile
+    my @strippedFile = ();
+    for(my $i=0; $i < scalar(@origFile); $i++) {
+        my $line = $origFile[$i];
+        $line =~ s/from.*$//;
+        $strippedFile[$i] = $line;
+    }
+
+    my $localeFileTag = uc($product).'_'.$oldVersion.'_RELEASE';
+    $localeFileTag =~ s/\./_/g;
+    my $localeManifest = GetLocaleManifest(app => $appName,
+                                           cvsroot => $mozillaCvsroot,
+                                           tag => $localeFileTag);
+
+    my @locales = ();
+    foreach my $locale (keys(%{$localeManifest})) {
+        foreach my $allowedPlatform (@{$localeManifest->{$locale}}) {
+            if ($allowedPlatform eq $platform) {
+                push(@locales, $locale);
+            }
+        }
+    }
+
+    # add data for latest release
+    my @data = ("# $oldVersion $osname\n",
+                'release="' . $oldVersion . '" product="' . ucfirst($product) . 
+                '" platform="' .$buildTarget . '" build_id="' . $buildID . 
+                '" locales="' . join(' ', sort(@locales)) . '" channel="' . 
+                $channel . '" from="/' . $product . '/releases/' . 
+                $oldVersion . '/' . $ftpOsname . '/%locale%/' . $releaseFile .
+                '" aus_server="' . $ausServer . '" ftp_server="' .
+                $externalStagingServer . '/pub/mozilla.org" to="/' . 
+                $product . '/nightly/' .  $version .  '-candidates/rc' . 
+                $rc . '/' . $nightlyFile . '"' .  "\n");
+
+    open(FILE, "> $configFile") or die ("Could not open file $configFile: $!");
+    print FILE @data;
+    print FILE @strippedFile;
+    close(FILE) or die ("Could not close file $configFile: $!");
+
+    $this->Shell(
+      cmd => 'cvs',
+      cmdArgs => ['-d', $mozillaCvsroot,
+                  'ci', '-m',
+                  '"Automated configuration bump, release for '
+                  . $product  . ' ' . $version . "rc$rc" . '"',
+                  $verifyConfig],
+      logFile => catfile($logDir, 'update_verify-checkin.log'),
+      dir => catfile($verifyDirVersion, 'updates')
+    );
+}
+
 sub Push {
     my $this = shift;
 
@@ -252,9 +370,10 @@ sub Push {
    );
 
     # push update snippets to AUS server
+    my $pushDir = strftime("%Y%m%d", localtime) . '-' . ucfirst($product) . 
+                           '-' . $version;
     my $targetPrefix =  CvsCatfile('/opt','aus2','snippets','staging',
-                          strftime("%Y%m%d", localtime) . '-' . 
-                          ucfirst($product) . '-' . $version);
+                                   $pushDir);
     $config->Set(var => 'ausDeliveryDir', value => $targetPrefix);
 
     my @snippetDirs = glob(catfile($fullUpdateDir, "aus2*"));
@@ -278,6 +397,15 @@ sub Push {
     }
 
     SyncNightlyDirToStaging();
+
+    # Push test channels live
+    $this->Shell(
+      cmd => 'ssh', 
+      cmdArgs => ['-i ' . catfile($ENV{'HOME'},'.ssh','aus'),
+                  $ausUser . '@' . $ausServer,
+                  '/home/cltbld/bin/pushsnip', $pushDir . '-test'],
+      logFile => $pushLog,
+    );
 }
 
 sub Announce {
@@ -290,7 +418,7 @@ sub Announce {
 
     $this->SendAnnouncement(
       subject => "$product $version update step finished",
-      message => "$product $version updates finished. Partial mars were copied to the candidates dir, and the snippets to AUS in $ausDeliveryDir*.",
+      message => "$product $version updates finished. Partial mars were copied to the candidates dir, and the snippets in $ausDeliveryDir-test were pushed live.",
     );
 }
 

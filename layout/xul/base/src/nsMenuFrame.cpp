@@ -543,7 +543,7 @@ nsMenuFrame::ToggleMenuState()
 {
   if (IsOpen())
     CloseMenu(PR_FALSE);
-  else
+  else if (!mMenuParent || !mMenuParent->IsRecentlyClosed(this))
     OpenMenu(PR_FALSE);
 }
 

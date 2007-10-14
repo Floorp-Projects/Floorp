@@ -889,7 +889,7 @@ MOZ_PNG_LIBS='$(call EXPAND_LIBNAME_PATH,mozpng,$(DEPTH)/modules/libimg/png)'
 MOZ_JS_LIBS='-L$(LIBXUL_DIST)/bin -lmozjs'
 DYNAMIC_XPCOM_LIBS='-L$(LIBXUL_DIST)/bin -lxpcom -lxpcom_core'
 MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin'
-XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/bin $(MOZ_FIX_LINK_PATHS) -lxpcom'
+XPCOM_FROZEN_LDOPTS='-L$(LIBXUL_DIST)/bin -lxpcom'
 LIBXUL_LIBS='$(XPCOM_FROZEN_LDOPTS) -lxul'
 XPCOM_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) $(XPCOM_FROZEN_LDOPTS)'
 XPCOM_STANDALONE_GLUE_LDOPTS='$(LIBXUL_DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX)'
@@ -2807,6 +2807,19 @@ AC_CHECK_HEADER(new, [NEW_H=new])
 AC_DEFINE_UNQUOTED(NEW_H, <$NEW_H>)
 AC_LANG_C
 
+AC_ARG_ENABLE(dtrace,
+              build with dtrace support if available (default=no),
+              [enable_dtrace="yes"],)
+if test "x$enable_dtrace" = "xyes"; then
+  AC_CHECK_HEADER(sys/sdt.h, HAVE_DTRACE=1)
+  if test -n "$HAVE_DTRACE"; then
+      AC_DEFINE(INCLUDE_MOZILLA_DTRACE)
+  else
+      AC_MSG_ERROR([dtrace enabled but sys/std.h not found]);
+  fi
+fi
+AC_SUBST(HAVE_DTRACE)
+
 case $target in
 *-aix4.3*|*-aix5*)
 	;;
@@ -4350,6 +4363,21 @@ esac
 AC_SUBST(MOZ_EMBEDDING_LEVEL_DEFAULT)
 AC_SUBST(MOZ_EMBEDDING_LEVEL_BASIC)
 AC_SUBST(MOZ_EMBEDDING_LEVEL_MINIMAL)
+
+MOZ_ARG_WITH_STRING(xulrunner-stub-name,
+[  --with-xulrunner-stub-name=appname   Create the xulrunner stub with the given name],
+  XULRUNNER_STUB_NAME=$withval)
+
+if test -z "$XULRUNNER_STUB_NAME"; then
+  case "$target_os" in
+  darwin*)
+    XULRUNNER_STUB_NAME=xulrunner
+    ;;
+  *)
+    XULRUNNER_STUB_NAME=xulrunner-stub
+  esac
+fi
+AC_SUBST(XULRUNNER_STUB_NAME)
 
 if test -z "$MOZ_BUILD_APP"; then
   AC_MSG_ERROR([--enable-application=APP was not specified and is required.])

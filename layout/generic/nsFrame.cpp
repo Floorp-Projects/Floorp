@@ -881,9 +881,9 @@ nsIFrame::DisplayCaret(nsDisplayListBuilder* aBuilder,
 }
 
 PRBool
-nsFrame::HasBorder()
+nsFrame::HasBorder() const
 {
-  return GetStyleBorder()->GetBorder() != nsMargin(0,0,0,0);
+  return GetUsedBorder() != nsMargin(0,0,0,0);
 }
 
 nsresult
@@ -3065,6 +3065,37 @@ nsFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
   return result;
 }
 
+nsRect
+nsIFrame::ComputeTightBounds(gfxContext* aContext) const
+{
+  return GetOverflowRect();
+}
+
+nsRect
+nsFrame::ComputeSimpleTightBounds(gfxContext* aContext) const
+{
+  if (GetStyleOutline()->GetOutlineStyle() != NS_STYLE_BORDER_STYLE_NONE ||
+      HasBorder() || !GetStyleBackground()->IsTransparent() ||
+      GetStyleDisplay()->mAppearance) {
+    // Not necessarily tight, due to clipping, negative
+    // outline-offset, and lots of other issues, but that's OK
+    return GetOverflowRect();
+  }
+
+  nsRect r(0, 0, 0, 0);
+  PRInt32 listIndex = 0;
+  nsIAtom* childList = nsnull;
+  do {
+    nsIFrame* child = GetFirstChild(childList);
+    while (child) {
+       r.UnionRect(r, child->ComputeTightBounds(aContext) + child->GetPosition());
+       child = child->GetNextSibling();
+    }
+    childList = GetAdditionalChildListName(listIndex++);
+  } while (childList);
+  return r;
+}
+
 /* virtual */ nsSize
 nsFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
                          nsSize aCBSize, nscoord aAvailableWidth,
@@ -4108,7 +4139,7 @@ nsFrame::GetSelected(PRBool *aSelected) const
 {
   if (!aSelected )
     return NS_ERROR_NULL_POINTER;
-  *aSelected = (PRBool)(mState & NS_FRAME_SELECTED_CONTENT);
+  *aSelected = !!(mState & NS_FRAME_SELECTED_CONTENT);
   return NS_OK;
 }
 
@@ -6758,7 +6789,7 @@ DR_Rule* DR_State::ParseRule(FILE* aFile)
   while (GetToken(aFile, buf)) {
     if (GetNumber(buf, doDisplay)) {
       if (rule) { 
-        rule->mDisplay = (PRBool)doDisplay;
+        rule->mDisplay = !!doDisplay;
         break;
       }
       else {

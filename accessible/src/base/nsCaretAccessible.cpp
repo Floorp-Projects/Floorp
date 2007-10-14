@@ -245,8 +245,8 @@ nsCaretAccessible::GetCaretRect(nsIWidget **aOutWidget)
   nsCOMPtr<nsIPresShell> presShell = mRootAccessible->GetPresShellFor(lastNodeWithCaret);
   NS_ENSURE_TRUE(presShell, caretRect);
 
-  nsICaret *caret;
-  presShell->GetCaret(&caret);
+  nsCOMPtr<nsICaret> caret;
+  presShell->GetCaret(getter_AddRefs(caret));
   NS_ENSURE_TRUE(caret, caretRect);
 
   PRBool isCollapsed;

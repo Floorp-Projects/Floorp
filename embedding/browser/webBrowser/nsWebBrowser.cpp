@@ -730,42 +730,42 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
         {
            NS_ENSURE_STATE(mDocShell);
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
-           mDocShell->SetAllowPlugins(aValue);
+           mDocShell->SetAllowPlugins(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_ALLOW_JAVASCRIPT:
         {
            NS_ENSURE_STATE(mDocShell);
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
-           mDocShell->SetAllowJavascript(aValue);
+           mDocShell->SetAllowJavascript(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_ALLOW_META_REDIRECTS:
         {
            NS_ENSURE_STATE(mDocShell);
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
-           mDocShell->SetAllowMetaRedirects(aValue);
+           mDocShell->SetAllowMetaRedirects(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_ALLOW_SUBFRAMES:
         {
            NS_ENSURE_STATE(mDocShell);
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
-           mDocShell->SetAllowSubframes(aValue);
+           mDocShell->SetAllowSubframes(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_ALLOW_IMAGES:
         {
            NS_ENSURE_STATE(mDocShell);
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
-           mDocShell->SetAllowImages(aValue);
+           mDocShell->SetAllowImages(!!aValue);
         }
         break;
     case nsIWebBrowserSetup::SETUP_USE_GLOBAL_HISTORY:
         {
            NS_ENSURE_STATE(mDocShell);
            NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
-           rv = EnableGlobalHistory(aValue);
+           rv = EnableGlobalHistory(!!aValue);
            mShouldEnableHistory = aValue;
         }
         break;

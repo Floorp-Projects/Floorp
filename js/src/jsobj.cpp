@@ -700,8 +700,6 @@ js_TraceSharpMap(JSTracer *trc, JSSharpObjectMap *map)
     JS_HashTableEnumerateEntries(map->table, gc_sharp_table_entry_marker, trc);
 }
 
-#define OBJ_TOSTRING_EXTRA      4       /* for 4 local GC roots */
-
 #if JS_HAS_TOSOURCE
 static JSBool
 obj_toSource(JSContext *cx, uintN argc, jsval *vp)
@@ -722,6 +720,8 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
     uintN attrs;
 #endif
     jsval *val;
+    jsval localroot[4] = {JSVAL_NULL, JSVAL_NULL, JSVAL_NULL, JSVAL_NULL};
+    JSTempValueRooter tvr;
     JSString *gsopold[2];
     JSString *gsop[2];
     JSString *idstr, *valstr, *str;
@@ -732,12 +732,17 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
+    /* After this, control must flow through out: to exit. */
+    JS_PUSH_TEMP_ROOT(cx, 4, localroot, &tvr);
+
     /* If outermost, we need parentheses to be an expression, not a block. */
     outermost = (cx->sharpObjectMap.depth == 0);
     obj = JSVAL_TO_OBJECT(vp[1]);
     he = js_EnterSharpObject(cx, obj, &ida, &chars);
-    if (!he)
-        return JS_FALSE;
+    if (!he) {
+        ok = JS_FALSE;
+        goto out;
+    }
     if (IS_SHARP(he)) {
         /*
          * We didn't enter -- obj is already "sharp", meaning we've visited it
@@ -833,10 +838,10 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
 
     /*
      * We have four local roots for cooked and raw value GC safety.  Hoist the
-     * "vp + 4" out of the loop using the val local, which refers to the raw
-     * (unconverted, "uncooked") values.
+     * "localroot + 2" out of the loop using the val local, which refers to
+     * the raw (unconverted, "uncooked") values.
      */
-    val = vp + 4;
+    val = localroot + 2;
 
     for (i = 0, length = ida->length; i < length; i++) {
         JSBool idIsLexicalIdentifier, needOldStyleGetterSetter;
@@ -946,7 +951,7 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
                 ok = JS_FALSE;
                 goto error;
             }
-            vp[2 + j] = STRING_TO_JSVAL(valstr);        /* local root */
+            localroot[j] = STRING_TO_JSVAL(valstr);     /* local root */
             JSSTRING_CHARS_AND_LENGTH(valstr, vchars, vlength);
 
             if (vchars[0] == '#')
@@ -1121,21 +1126,26 @@ obj_toSource(JSContext *cx, uintN argc, jsval *vp)
     if (!ok) {
         if (chars)
             free(chars);
-        return ok;
+        goto out;
     }
 
     if (!chars) {
         JS_ReportOutOfMemory(cx);
-        return JS_FALSE;
+        ok = JS_FALSE;
+        goto out;
     }
   make_string:
     str = js_NewString(cx, chars, nchars);
     if (!str) {
         free(chars);
-        return JS_FALSE;
+        ok = JS_FALSE;
+        goto out;
     }
     *vp = STRING_TO_JSVAL(str);
-    return JS_TRUE;
+    ok = JS_TRUE;
+  out:
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return ok;
 
   overflow:
     JS_free(cx, vsharp);
@@ -1276,6 +1286,12 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSPrincipals *principals;
     JSScript *script;
     JSBool ok;
+#if JS_HAS_EVAL_THIS_SCOPE
+    JSObject *callerScopeChain = NULL, *callerVarObj = NULL;
+    JSObject *setCallerScopeChain = NULL;
+    JSBool setCallerVarObj = JS_FALSE;
+#endif
+
 
     fp = cx->fp;
     caller = JS_GetScriptedCaller(cx, fp);
@@ -1323,6 +1339,44 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     if (!scopeobj) {
+#if JS_HAS_EVAL_THIS_SCOPE
+        /* If obj.eval(str), emulate 'with (obj) eval(str)' in the caller. */
+        if (indirectCall) {
+            callerScopeChain = js_GetScopeChain(cx, caller);
+            if (!callerScopeChain)
+                return JS_FALSE;
+            OBJ_TO_INNER_OBJECT(cx, obj);
+            if (!obj)
+                return JS_FALSE;
+            if (obj != callerScopeChain) {
+                if (!js_CheckPrincipalsAccess(cx, obj,
+                                              caller->script->principals,
+                                              cx->runtime->atomState.evalAtom))
+                {
+                    return JS_FALSE;
+                }
+
+                scopeobj = js_NewWithObject(cx, obj, callerScopeChain, -1);
+                if (!scopeobj)
+                    return JS_FALSE;
+
+                /* Set fp->scopeChain too, for the compiler. */
+                caller->scopeChain = fp->scopeChain = scopeobj;
+
+                /* Remember scopeobj so we can null its private when done. */
+                setCallerScopeChain = scopeobj;
+            }
+
+            callerVarObj = caller->varobj;
+            if (obj != callerVarObj) {
+                /* Set fp->varobj too, for the compiler. */
+                caller->varobj = fp->varobj = obj;
+                setCallerVarObj = JS_TRUE;
+            }
+        }
+        /* From here on, control must exit through label out with ok set. */
+#endif
+
         /*
          * Compile using caller's current scope object.
          *
@@ -1331,15 +1385,19 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
          */
         if (caller) {
             scopeobj = js_GetScopeChain(cx, caller);
-            if (!scopeobj)
-                return JS_FALSE;
+            if (!scopeobj) {
+                ok = JS_FALSE;
+                goto out;
+            }
         }
     }
 
     /* Ensure we compile this eval with the right object in the scope chain. */
     scopeobj = js_CheckScopeChainValidity(cx, scopeobj, js_eval_str);
-    if (!scopeobj)
-        return JS_FALSE;
+    if (!scopeobj) {
+        ok = JS_FALSE;
+        goto out;
+    }
 
     str = JSVAL_TO_STRING(argv[0]);
     if (caller) {
@@ -1373,8 +1431,10 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                                              JSSTRING_CHARS(str),
                                              JSSTRING_LENGTH(str),
                                              file, line);
-    if (!script)
-        return JS_FALSE;
+    if (!script) {
+        ok = JS_FALSE;
+        goto out;
+    }
 
     if (argc < 2) {
         /* Execute using caller's new scope object (might be a Call object). */
@@ -1392,6 +1452,19 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         ok = js_Execute(cx, scopeobj, script, caller, JSFRAME_EVAL, rval);
 
     JS_DestroyScript(cx, script);
+
+out:
+#if JS_HAS_EVAL_THIS_SCOPE
+    /* Restore OBJ_GET_PARENT(scopeobj) not callerScopeChain in case of Call. */
+    if (setCallerScopeChain) {
+        caller->scopeChain = callerScopeChain;
+        JS_ASSERT(OBJ_GET_CLASS(cx, setCallerScopeChain) == &js_WithClass);
+        JS_SetPrivate(cx, setCallerScopeChain, NULL);
+    }
+    if (setCallerVarObj)
+        caller->varobj = callerVarObj;
+#endif
+
     return ok;
 }
 
@@ -1754,23 +1827,23 @@ const char js_lookupSetter_str[] = "__lookupSetter__";
 
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,             obj_toSource, 0,0,0,OBJ_TOSTRING_EXTRA),
+    JS_FN(js_toSource_str,             obj_toSource, 0,0,0),
 #endif
-    JS_FN(js_toString_str,             obj_toString,             0,0,0,0),
-    JS_FN(js_toLocaleString_str,       obj_toLocaleString,       0,0,0,0),
-    JS_FN(js_valueOf_str,              obj_valueOf,              0,0,0,0),
+    JS_FN(js_toString_str,             obj_toString,             0,0,0),
+    JS_FN(js_toLocaleString_str,       obj_toLocaleString,       0,0,0),
+    JS_FN(js_valueOf_str,              obj_valueOf,              0,0,0),
 #if JS_HAS_OBJ_WATCHPOINT
-    JS_FN(js_watch_str,                obj_watch,                2,2,0,0),
-    JS_FN(js_unwatch_str,              obj_unwatch,              1,1,0,0),
+    JS_FN(js_watch_str,                obj_watch,                2,2,0),
+    JS_FN(js_unwatch_str,              obj_unwatch,              1,1,0),
 #endif
-    JS_FN(js_hasOwnProperty_str,       obj_hasOwnProperty,       1,1,0,0),
-    JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,        1,1,0,0),
-    JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable, 1,1,0,0),
+    JS_FN(js_hasOwnProperty_str,       obj_hasOwnProperty,       1,1,0),
+    JS_FN(js_isPrototypeOf_str,        obj_isPrototypeOf,        1,1,0),
+    JS_FN(js_propertyIsEnumerable_str, obj_propertyIsEnumerable, 1,1,0),
 #if JS_HAS_GETTER_SETTER
-    JS_FN(js_defineGetter_str,         obj_defineGetter,         2,2,0,0),
-    JS_FN(js_defineSetter_str,         obj_defineSetter,         2,2,0,0),
-    JS_FN(js_lookupGetter_str,         obj_lookupGetter,         1,1,0,0),
-    JS_FN(js_lookupSetter_str,         obj_lookupSetter,         1,1,0,0),
+    JS_FN(js_defineGetter_str,         obj_defineGetter,         2,2,0),
+    JS_FN(js_defineSetter_str,         obj_defineSetter,         2,2,0),
+    JS_FN(js_lookupGetter_str,         obj_lookupGetter,         1,1,0),
+    JS_FN(js_lookupSetter_str,         obj_lookupSetter,         1,1,0),
 #endif
     JS_FS_END
 };

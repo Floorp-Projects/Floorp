@@ -300,7 +300,7 @@ nsBoxFrame::CacheAttributes()
     else
         mState &= ~NS_STATE_EQUAL_SIZE;
 
-  PRBool autostretch = mState & NS_STATE_AUTO_STRETCH;
+  PRBool autostretch = !!(mState & NS_STATE_AUTO_STRETCH);
   GetInitialAutoStretch(autostretch);
   if (autostretch)
         mState |= NS_STATE_AUTO_STRETCH;
@@ -605,6 +605,13 @@ nsBoxFrame::DidReflow(nsPresContext*           aPresContext,
   nsresult rv = nsFrame::DidReflow(aPresContext, aReflowState, aStatus);
   mState |= preserveBits;
   return rv;
+}
+
+PRBool
+nsBoxFrame::HonorPrintBackgroundSettings()
+{
+  return (!mContent || !nsContentUtils::IsNativeAnonymous(mContent)) &&
+    nsContainerFrame::HonorPrintBackgroundSettings();
 }
 
 #ifdef DO_NOISY_REFLOW
@@ -1170,7 +1177,7 @@ nsBoxFrame::AttributeChanged(PRInt32 aNameSpaceID,
       }
 #endif
 
-      PRBool autostretch = mState & NS_STATE_AUTO_STRETCH;
+      PRBool autostretch = !!(mState & NS_STATE_AUTO_STRETCH);
       GetInitialAutoStretch(autostretch);
       if (autostretch)
         mState |= NS_STATE_AUTO_STRETCH;

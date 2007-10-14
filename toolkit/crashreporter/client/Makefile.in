@@ -48,9 +48,6 @@ PROGRAM = crashreporter$(BIN_SUFFIX)
 DIST_PROGRAM = crashreporter$(BIN_SUFFIX)
 REQUIRES = sender
 
-#XXX: should move to toolkit/locale
-DIST_FILES = crashreporter.ini
-
 LOCAL_INCLUDES = -I$(srcdir)/../google-breakpad/src
 
 CPPSRCS = crashreporter.cpp
@@ -102,8 +99,6 @@ libs::
 	$(NSINSTALL) -D $(DIST)/bin/crashreporter.app/Contents/MacOS
 	$(NSINSTALL) $(DIST)/bin/crashreporter $(DIST)/bin/crashreporter.app/Contents/MacOS
 	rm -f $(DIST)/bin/crashreporter
-	$(NSINSTALL) $(DIST)/bin/crashreporter.ini $(DIST)/bin/crashreporter.app/Contents/MacOS
-	rm -f $(DIST)/bin/crashreporter.ini
 endif
 
 ifeq ($(OS_ARCH),Linux)

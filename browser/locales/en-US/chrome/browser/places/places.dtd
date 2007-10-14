@@ -209,5 +209,4 @@
 <!ENTITY detailsPane.more.label "More">
 <!ENTITY detailsPane.less.label "Less">
 <!ENTITY detailsPane.noPreviewAvailable.label "Preview">
-<!ENTITY detailsPane.selectAnItemText.description
-         "Select an item to view and edit its properties">
+<!ENTITY detailsPane.selectAnItemText.description "Select an item to view and edit its properties">

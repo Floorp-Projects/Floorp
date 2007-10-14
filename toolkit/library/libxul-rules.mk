@@ -37,7 +37,6 @@
 # ***** END LICENSE BLOCK *****
 
 EXTRA_DSO_LDOPTS += \
-	$(MOZ_FIX_LINK_PATHS) \
 	$(LIBS_DIR) \
 	$(JPEG_LIBS) \
 	$(PNG_LIBS) \

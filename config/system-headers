@@ -138,6 +138,9 @@ cstdio
 cstdlib
 cstring
 ctype.h
+curl/curl.h
+curl/easy.h
+curl/types.h
 curses.h
 cxxabi.h
 DateTimeUtils.h

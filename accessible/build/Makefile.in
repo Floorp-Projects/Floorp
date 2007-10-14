@@ -83,7 +83,6 @@ EXTRA_DSO_LIBS = \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS =           \
-	$(MOZ_FIX_LINK_PATHS)    \
 	$(LIBS_DIR)              \
 	$(EXTRA_DSO_LIBS)        \
 	$(MOZ_UNICHARUTIL_LIBS)  \

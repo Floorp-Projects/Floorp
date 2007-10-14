@@ -16,9 +16,9 @@
     </em:targetApplication>
     
     <em:localized>
-      <Description em:locale="en-US">
-        <em:name>en-US Name</em:name>
-        <em:description>en-US Description</em:description>
+      <Description em:locale="fr-FR">
+        <em:name>fr-FR Name</em:name>
+        <em:description>fr-FR Description</em:description>
       </Description>
     </em:localized>
     

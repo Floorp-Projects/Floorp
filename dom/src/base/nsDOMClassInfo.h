@@ -318,6 +318,16 @@ protected:
   static jsval sOnbeforecopy_id;
   static jsval sOnbeforecut_id;
   static jsval sOnbeforepaste_id;
+#ifdef OJI
+  static jsval sJava_id;
+  static jsval sPackages_id;
+  static jsval sNetscape_id;
+  static jsval sSun_id;
+  static jsval sJavaObject_id;
+  static jsval sJavaClass_id;
+  static jsval sJavaArray_id;
+  static jsval sJavaMember_id;
+#endif
 
   static const JSClass *sObjectClass;
   static const JSClass *sXPCNativeWrapperClass;

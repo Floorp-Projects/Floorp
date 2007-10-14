@@ -172,7 +172,6 @@ public:
 
 protected:
   nsresult InitializeExternalClasses();
-  nsresult InitializeLiveConnectClasses(JSObject *aGlobalObj);
   // aHolder should be holding our global object
   nsresult FindXPCNativeWrapperClass(nsIXPConnectJSObjectHolder *aHolder);
 

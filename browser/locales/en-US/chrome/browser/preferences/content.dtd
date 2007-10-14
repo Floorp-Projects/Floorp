@@ -29,3 +29,9 @@
 
 <!ENTITY  colors.label                "Colors...">
 <!ENTITY  colors.accesskey            "C">
+
+
+<!ENTITY languages.label              "Languages">
+<!ENTITY chooseLanguage.label         "Choose your preferred language for displaying pages">
+<!ENTITY chooseButton.label           "Choose...">
+<!ENTITY chooseButton.accesskey       "o">

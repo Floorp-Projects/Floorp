@@ -66,7 +66,7 @@ class nsSoftwareUpdate: public nsISoftwareUpdate,
 
         NS_IMETHOD RegisterListener(nsIXPIListener *aListener);
 
-        NS_IMETHOD InstallJarCallBack();
+        virtual void InstallJarCallBack();
         NS_IMETHOD GetMasterListener(nsIXPIListener **aListener);
         NS_IMETHOD SetActiveListener(nsIXPIListener *aListener);
 

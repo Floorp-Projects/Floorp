@@ -52,6 +52,7 @@
 #include "nsDOMEvent.h"
 #include "nsIDOMStorageEvent.h"
 #include "nsIDOMStorageManager.h"
+#include "nsCycleCollectionParticipant.h"
 
 #ifdef MOZ_STORAGE
 #include "nsDOMStorageDB.h"
@@ -119,7 +120,8 @@ public:
   virtual ~nsDOMStorage();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMStorage, nsIDOMStorage)
 
   // nsIDOMStorage
   NS_DECL_NSIDOMSTORAGE
@@ -262,7 +264,8 @@ public:
   virtual ~nsDOMStorageItem();
 
   // nsISupports
-  NS_DECL_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsDOMStorageItem, nsIDOMStorageItem)
 
   // nsIDOMStorage
   NS_DECL_NSIDOMSTORAGEITEM

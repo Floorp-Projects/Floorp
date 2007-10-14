@@ -223,7 +223,10 @@ function clear()
 AccessibleEventsView.prototype.getDOMNode =
 function getDOMNode(aRow)
 {
-  return this.mEvents[aRow].node;
+  var DOMNode = this.mEvents[aRow].node;
+  var accessNode = this.mEvents[aRow].accessnode;
+  DOMNode.setUserData("accessible", accessNode, null);
+  return DOMNode;
 }
 
 AccessibleEventsView.prototype.getCellText =

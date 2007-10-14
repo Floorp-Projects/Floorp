@@ -87,17 +87,17 @@ class Row
     void SetOpen(PRBool aOpen) {
       aOpen ? mFlags |= ROW_FLAG_OPEN : mFlags &= ~ROW_FLAG_OPEN;
     }
-    PRBool IsOpen() { return mFlags & ROW_FLAG_OPEN; }
+    PRBool IsOpen() { return !!(mFlags & ROW_FLAG_OPEN); }
 
     void SetEmpty(PRBool aEmpty) {
       aEmpty ? mFlags |= ROW_FLAG_EMPTY : mFlags &= ~ROW_FLAG_EMPTY;
     }
-    PRBool IsEmpty() { return mFlags & ROW_FLAG_EMPTY; }
+    PRBool IsEmpty() { return !!(mFlags & ROW_FLAG_EMPTY); }
 
     void SetSeparator(PRBool aSeparator) {
       aSeparator ? mFlags |= ROW_FLAG_SEPARATOR : mFlags &= ~ROW_FLAG_SEPARATOR;
     }
-    PRBool IsSeparator() { return mFlags & ROW_FLAG_SEPARATOR; }
+    PRBool IsSeparator() { return !!(mFlags & ROW_FLAG_SEPARATOR); }
 
     // Weak reference to a content item.
     nsIContent*         mContent;

@@ -870,14 +870,14 @@ exn_toString(JSContext *cx, uintN argc, jsval *vp)
 static JSBool
 exn_toSource(JSContext *cx, uintN argc, jsval *vp)
 {
-    jsval *localroots;
     JSObject *obj;
     JSString *name, *message, *filename, *lineno_as_str, *result;
+    jsval localroots[3] = {JSVAL_NULL, JSVAL_NULL, JSVAL_NULL};
+    JSTempValueRooter tvr;
+    JSBool ok;
     uint32 lineno;
     size_t lineno_length, name_length, message_length, filename_length, length;
     jschar *chars, *cp;
-
-    localroots = JS_ARGV(cx, vp) + argc;
 
     obj = JS_THIS_OBJECT(cx, vp);
     if (!OBJ_GET_PROPERTY(cx, obj,
@@ -890,27 +890,32 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     *vp = STRING_TO_JSVAL(name);
 
-    if (!JS_GetProperty(cx, obj, js_message_str, &localroots[0]) ||
-        !(message = js_ValueToSource(cx, localroots[0]))) {
-        return JS_FALSE;
-    }
+    /* After this, control must flow through label out: to exit. */
+    JS_PUSH_TEMP_ROOT(cx, 3, localroots, &tvr);
+
+    ok = JS_GetProperty(cx, obj, js_message_str, &localroots[0]) &&
+         (message = js_ValueToSource(cx, localroots[0]));
+    if (!ok)
+        goto out;
     localroots[0] = STRING_TO_JSVAL(message);
 
-    if (!JS_GetProperty(cx, obj, js_fileName_str, &localroots[1]) ||
-        !(filename = js_ValueToSource(cx, localroots[1]))) {
-        return JS_FALSE;
-    }
+    ok = JS_GetProperty(cx, obj, js_fileName_str, &localroots[1]) &&
+         (filename = js_ValueToSource(cx, localroots[1]));
+    if (!ok)
+        goto out;
     localroots[1] = STRING_TO_JSVAL(filename);
 
-    if (!JS_GetProperty(cx, obj, js_lineNumber_str, &localroots[2]) ||
-        !js_ValueToECMAUint32 (cx, localroots[2], &lineno)) {
-        return JS_FALSE;
-    }
+    ok = JS_GetProperty(cx, obj, js_lineNumber_str, &localroots[2]) &&
+         js_ValueToECMAUint32 (cx, localroots[2], &lineno);
+    if (!ok)
+        goto out;
 
     if (lineno != 0) {
         lineno_as_str = js_ValueToString(cx, localroots[2]);
-        if (!lineno_as_str)
-            return JS_FALSE;
+        if (!lineno_as_str) {
+            ok = JS_FALSE;
+            goto out;
+        }
         lineno_length = JSSTRING_LENGTH(lineno_as_str);
     } else {
         lineno_as_str = NULL;
@@ -941,8 +946,10 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
     }
 
     cp = chars = (jschar *) JS_malloc(cx, (length + 1) * sizeof(jschar));
-    if (!chars)
-        return JS_FALSE;
+    if (!chars) {
+        ok = JS_FALSE;
+        goto out;
+    }
 
     *cp++ = '('; *cp++ = 'n'; *cp++ = 'e'; *cp++ = 'w'; *cp++ = ' ';
     js_strncpy(cp, JSSTRING_CHARS(name), name_length);
@@ -979,18 +986,23 @@ exn_toSource(JSContext *cx, uintN argc, jsval *vp)
     result = js_NewString(cx, chars, length);
     if (!result) {
         JS_free(cx, chars);
-        return JS_FALSE;
+        ok = JS_FALSE;
+        goto out;
     }
     *vp = STRING_TO_JSVAL(result);
-    return JS_TRUE;
+    ok = JS_TRUE;
+
+out:
+    JS_POP_TEMP_ROOT(cx, &tvr);
+    return ok;
 }
 #endif
 
 static JSFunctionSpec exception_methods[] = {
 #if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,   exn_toSource,           0,0,0,3),
+    JS_FN(js_toSource_str,   exn_toSource,           0,0,0),
 #endif
-    JS_FN(js_toString_str,   exn_toString,           0,0,0,0),
+    JS_FN(js_toString_str,   exn_toString,           0,0,0),
     JS_FS_END
 };
 

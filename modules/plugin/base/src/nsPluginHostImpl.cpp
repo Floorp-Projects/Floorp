@@ -50,6 +50,7 @@
 #include "ns4xPluginStreamListener.h"
 #include "nsPluginInstancePeer.h"
 #include "nsIPlugin.h"
+#include "nsIPluginInstanceInternal.h"
 #ifdef OJI
 #include "nsIJVMPlugin.h"
 #include "nsIJVMPluginInstance.h"
@@ -730,17 +731,24 @@ inline char* new_str(const char* str)
 
 ////////////////////////////////////////////////////////////////////////
 nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
+  : mPluginHost(nsnull),
+    mName(new_str(aPluginTag->mName)),
+    mDescription(new_str(aPluginTag->mDescription)),
+    mVariants(aPluginTag->mVariants),
+    mMimeTypeArray(nsnull),
+    mMimeDescriptionArray(nsnull),
+    mExtensionsArray(nsnull),
+    mLibrary(nsnull),
+    mEntryPoint(nsnull),
+    mCanUnloadLibrary(PR_TRUE),
+    mXPConnected(PR_FALSE),
+    mIsJavaPlugin(aPluginTag->mIsJavaPlugin),
+    mIsNPRuntimeEnabledJavaPlugin(aPluginTag->mIsNPRuntimeEnabledJavaPlugin),
+    mFileName(new_str(aPluginTag->mFileName)),
+    mFullPath(new_str(aPluginTag->mFullPath)),
+    mLastModifiedTime(0),
+    mFlags(NS_PLUGIN_FLAG_ENABLED)
 {
-  mPluginHost = nsnull;
-  mNext = nsnull;
-  mName = new_str(aPluginTag->mName);
-  mDescription = new_str(aPluginTag->mDescription);
-  mVariants = aPluginTag->mVariants;
-
-  mMimeTypeArray = nsnull;
-  mMimeDescriptionArray = nsnull;
-  mExtensionsArray = nsnull;
-
   if(aPluginTag->mMimeTypeArray != nsnull)
   {
     mMimeTypeArray = new char*[mVariants];
@@ -761,36 +769,49 @@ nsPluginTag::nsPluginTag(nsPluginTag* aPluginTag)
     for (int i = 0; i < mVariants; i++)
       mExtensionsArray[i] = new_str(aPluginTag->mExtensionsArray[i]);
   }
-
-  mLibrary = nsnull;
-  mCanUnloadLibrary = PR_TRUE;
-  mEntryPoint = nsnull;
-  mFlags = NS_PLUGIN_FLAG_ENABLED;
-  mXPConnected = PR_FALSE;
-  mIsJavaPlugin = aPluginTag->mIsJavaPlugin;
-  mFileName = new_str(aPluginTag->mFileName);
-  mFullPath = new_str(aPluginTag->mFullPath);
 }
 
 
 ////////////////////////////////////////////////////////////////////////
 nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
+  : mPluginHost(nsnull),
+    mName(new_str(aPluginInfo->fName)),
+    mDescription(new_str(aPluginInfo->fDescription)),
+    mVariants(aPluginInfo->fVariantCount),
+    mMimeTypeArray(nsnull),
+    mMimeDescriptionArray(nsnull),
+    mExtensionsArray(nsnull),
+    mLibrary(nsnull),
+    mEntryPoint(nsnull),
+#ifdef XP_MACOSX
+    mCanUnloadLibrary(!aPluginInfo->fBundle),
+#else
+    mCanUnloadLibrary(PR_TRUE),
+#endif
+    mXPConnected(PR_FALSE),
+    mIsJavaPlugin(PR_FALSE),
+    mIsNPRuntimeEnabledJavaPlugin(PR_FALSE),
+    mFileName(new_str(aPluginInfo->fFileName)),
+    mFullPath(new_str(aPluginInfo->fFullPath)),
+    mLastModifiedTime(0),
+    mFlags(NS_PLUGIN_FLAG_ENABLED)
 {
-  mPluginHost = nsnull;
-  mNext = nsnull;
-  mName = new_str(aPluginInfo->fName);
-  mDescription = new_str(aPluginInfo->fDescription);
-  mVariants = aPluginInfo->fVariantCount;
-
-  mMimeTypeArray = nsnull;
-  mMimeDescriptionArray = nsnull;
-  mExtensionsArray = nsnull;
-  mIsJavaPlugin = PR_FALSE;
-
   if(aPluginInfo->fMimeTypeArray != nsnull)
   {
     mMimeTypeArray = new char*[mVariants];
     for (int i = 0; i < mVariants; i++) {
+      if (mIsJavaPlugin && aPluginInfo->fMimeTypeArray[i] &&
+          strcmp(aPluginInfo->fMimeTypeArray[i],
+                 "application/x-java-vm-npruntime") == 0) {
+        mIsNPRuntimeEnabledJavaPlugin = PR_TRUE;
+
+        // Stop processing here, any mimetypes after the magic "I'm a
+        // NPRuntime enabled Java plugin" mimetype will be ignored.
+        mVariants = i;
+
+        break;
+      }
+
       mMimeTypeArray[i] = new_str(aPluginInfo->fMimeTypeArray[i]);
       if (nsPluginHostImpl::IsJavaMIMEType(mMimeTypeArray[i]))
         mIsJavaPlugin = PR_TRUE;
@@ -833,18 +854,6 @@ nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo)
     for (int i = 0; i < mVariants; i++)
       mExtensionsArray[i] = new_str(aPluginInfo->fExtensionArray[i]);
   }
-
-  mFileName = new_str(aPluginInfo->fFileName);
-  mFullPath = new_str(aPluginInfo->fFullPath);
-
-  mLibrary = nsnull;
-  mCanUnloadLibrary = PR_TRUE;
-  mEntryPoint = nsnull;
-#ifdef XP_MACOSX
-  mCanUnloadLibrary = !aPluginInfo->fBundle;
-#endif
-  mFlags = NS_PLUGIN_FLAG_ENABLED;
-  mXPConnected = PR_FALSE;
 }
 
 
@@ -860,7 +869,9 @@ nsPluginTag::nsPluginTag(const char* aName,
                          PRInt32 aVariants,
                          PRInt64 aLastModifiedTime,
                          PRBool aCanUnload)
-  : mNext(nsnull),
+  : mPluginHost(nsnull),
+    mName(new_str(aName)),
+    mDescription(new_str(aDescription)),
     mVariants(aVariants),
     mMimeTypeArray(nsnull),
     mMimeDescriptionArray(nsnull),
@@ -869,22 +880,30 @@ nsPluginTag::nsPluginTag(const char* aName,
     mEntryPoint(nsnull),
     mCanUnloadLibrary(aCanUnload),
     mXPConnected(PR_FALSE),
+    mIsJavaPlugin(PR_FALSE),
+    mIsNPRuntimeEnabledJavaPlugin(PR_FALSE),
+    mFileName(new_str(aFileName)),
+    mFullPath(new_str(aFullPath)),
     mLastModifiedTime(aLastModifiedTime),
     mFlags(0) // Caller will read in our flags from cache
 {
-  mPluginHost = nsnull;
-  mName            = new_str(aName);
-  mDescription     = new_str(aDescription);
-  mFileName        = new_str(aFileName);
-  mFullPath        = new_str(aFullPath);
-  mIsJavaPlugin    = PR_FALSE;
-
-  if (mVariants) {
+  if (aVariants) {
     mMimeTypeArray        = new char*[mVariants];
     mMimeDescriptionArray = new char*[mVariants];
     mExtensionsArray      = new char*[mVariants];
 
     for (PRInt32 i = 0; i < aVariants; ++i) {
+      if (mIsJavaPlugin && aMimeTypes[i] &&
+          strcmp(aMimeTypes[i], "application/x-java-vm-npruntime") == 0) {
+        mIsNPRuntimeEnabledJavaPlugin = PR_TRUE;
+
+        // Stop processing here, any mimetypes after the magic "I'm a
+        // NPRuntime enabled Java plugin" mimetype will be ignored.
+        mVariants = i;
+
+        break;
+      }
+
       mMimeTypeArray[i]        = new_str(aMimeTypes[i]);
       mMimeDescriptionArray[i] = new_str(aMimeDescriptions[i]);
       mExtensionsArray[i]      = new_str(aExtensions[i]);
@@ -904,17 +923,13 @@ nsPluginTag::~nsPluginTag()
     RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginUnregister);
   }
 
-  if (nsnull != mName) {
-    delete[] (mName);
-    mName = nsnull;
-  }
+  delete[] (mName);
+  mName = nsnull;
 
-  if (nsnull != mDescription) {
-    delete[] (mDescription);
-    mDescription = nsnull;
-  }
+  delete[] (mDescription);
+  mDescription = nsnull;
 
-  if (nsnull != mMimeTypeArray) {
+  if (mMimeTypeArray) {
     for (int i = 0; i < mVariants; i++)
       delete[] mMimeTypeArray[i];
 
@@ -922,7 +937,7 @@ nsPluginTag::~nsPluginTag()
     mMimeTypeArray = nsnull;
   }
 
-  if (nsnull != mMimeDescriptionArray) {
+  if (mMimeDescriptionArray) {
     for (int i = 0; i < mVariants; i++)
       delete[] mMimeDescriptionArray[i];
 
@@ -930,7 +945,7 @@ nsPluginTag::~nsPluginTag()
     mMimeDescriptionArray = nsnull;
   }
 
-  if (nsnull != mExtensionsArray) {
+  if (mExtensionsArray) {
     for (int i = 0; i < mVariants; i++)
       delete[] mExtensionsArray[i];
 
@@ -938,18 +953,11 @@ nsPluginTag::~nsPluginTag()
     mExtensionsArray = nsnull;
   }
 
-  if(nsnull != mFileName)
-  {
-    delete [] mFileName;
-    mFileName = nsnull;
-  }
+  delete [] mFileName;
+  mFileName = nsnull;
 
-  if(nsnull != mFullPath)
-  {
-    delete [] mFullPath;
-    mFullPath = nsnull;
-  }
-
+  delete [] mFullPath;
+  mFullPath = nsnull;
 }
 
 NS_IMPL_ISUPPORTS1(nsPluginTag, nsIPluginTag)
@@ -2895,7 +2903,7 @@ nsresult nsPluginHostImpl::UserAgent(const char **retstring)
   return res;
 }
 
-nsresult nsPluginHostImpl:: GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPrompt)
+nsresult nsPluginHostImpl::GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt **aPrompt)
 {
   nsresult rv;
   nsCOMPtr<nsIPrompt> prompt;
@@ -3756,10 +3764,11 @@ nsresult nsPluginHostImpl::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
                                                nsIPluginInstancePeer* peer)
 
 {
-  NS_ENSURE_ARG_POINTER(aURL);
-
   nsCAutoString url;
-  (void)aURL->GetSpec(url);
+  // It's OK to not have a URL here, as is the case with the dummy
+  // Java plugin. In that case simply use an empty string...
+  if (aURL)
+    aURL->GetSpec(url);
 
   // let's find the corresponding plugin tag by matching nsIPlugin pointer
   // it's legal for XPCOM plugins not to have nsIPlugin implemented but
@@ -3899,9 +3908,10 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
   return rv;
 }
 
-NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
-                                                       nsIURI *aURL,
-                                                       nsIPluginInstanceOwner *aOwner)
+NS_IMETHODIMP
+nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
+                                         nsIURI *aURL,
+                                         nsIPluginInstanceOwner *aOwner)
 {
 #ifdef PLUGIN_LOGGING
   nsCAutoString urlSpec;
@@ -3920,13 +3930,10 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
   nsCOMPtr<nsIPlugin> plugin;
   const char* mimetype = nsnull;
 
-  if(!aURL)
-    return NS_ERROR_FAILURE;
-
   // if don't have a mimetype or no plugin can handle this mimetype
   // check by file extension
   nsPluginTag* pluginTag = FindPluginForType(aMimeType, PR_TRUE);
-  if (!pluginTag) {
+  if (aURL && !pluginTag) {
     nsCOMPtr<nsIURL> url = do_QueryInterface(aURL);
     if (!url) return NS_ERROR_FAILURE;
 
@@ -3971,7 +3978,7 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
   // browser, before plugin gets a chance.
   //
 
-  if (isJavaPlugin) {
+  if (isJavaPlugin && !pluginTag->mIsNPRuntimeEnabledJavaPlugin) {
     // If Java is installed, get proxy JNI.
     nsCOMPtr<nsIJVMManager> jvmManager = do_GetService(nsIJVMManager::GetCID(),
                                                      &result);
@@ -4017,7 +4024,7 @@ NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType,
 
 #ifdef XP_WIN
       if (!firstJavaPlugin && restoreOrigDir) {
-        BOOL bCheck = :: SetCurrentDirectory(origDir);
+        BOOL bCheck = ::SetCurrentDirectory(origDir);
         NS_ASSERTION(bCheck, " Error restoring driectoy");
         firstJavaPlugin = TRUE;
       }
@@ -5601,7 +5608,7 @@ nsPluginHostImpl::WritePluginInfo()
         (tag->mName ? tag->mName : ""),
         PLUGIN_REGISTRY_FIELD_DELIMITER,
         PLUGIN_REGISTRY_END_OF_LINE_MARKER,
-        tag->mVariants);
+        tag->mVariants + (tag->mIsNPRuntimeEnabledJavaPlugin ? 1 : 0));
 
       // Add in each mimetype this plugin supports
       for (int i=0; i<tag->mVariants; i++) {
@@ -5612,6 +5619,18 @@ nsPluginHostImpl::WritePluginInfo()
           (tag->mMimeDescriptionArray && tag->mMimeDescriptionArray[i] ? tag->mMimeDescriptionArray[i] : ""),
           PLUGIN_REGISTRY_FIELD_DELIMITER,
           (tag->mExtensionsArray && tag->mExtensionsArray[i] ? tag->mExtensionsArray[i] : ""),
+          PLUGIN_REGISTRY_FIELD_DELIMITER,
+          PLUGIN_REGISTRY_END_OF_LINE_MARKER);
+      }
+
+      if (tag->mIsNPRuntimeEnabledJavaPlugin) {
+        PR_fprintf(fd, "%d%c%s%c%s%c%s%c%c\n",
+          tag->mVariants, PLUGIN_REGISTRY_FIELD_DELIMITER,
+          "application/x-java-vm-npruntime",
+          PLUGIN_REGISTRY_FIELD_DELIMITER,
+          "",
+          PLUGIN_REGISTRY_FIELD_DELIMITER,
+          "",
           PLUGIN_REGISTRY_FIELD_DELIMITER,
           PLUGIN_REGISTRY_END_OF_LINE_MARKER);
       }
@@ -6835,6 +6854,38 @@ NS_IMETHODIMP
 nsPluginHostImpl::DeletePluginNativeWindow(nsPluginNativeWindow * aPluginNativeWindow)
 {
   return PLUG_DeletePluginNativeWindow(aPluginNativeWindow);
+}
+
+NS_IMETHODIMP
+nsPluginHostImpl::InstantiateDummyJavaPlugin(nsIPluginInstanceOwner *aOwner)
+{
+  // Pass PR_FALSE as the second arg, we want the answer to be the
+  // same here whether the Java plugin is enabled or not.
+  nsPluginTag *plugin = FindPluginForType("application/x-java-vm", PR_FALSE);
+
+  if (!plugin || !plugin->mIsNPRuntimeEnabledJavaPlugin) {
+    // No NPRuntime enabled Java plugin found, no point in
+    // instantiating a dummy plugin then.
+
+    return NS_OK;
+  }
+
+  nsresult rv = SetUpPluginInstance("application/x-java-vm", nsnull, aOwner);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPluginInstance> instance;
+  aOwner->GetInstance(*getter_AddRefs(instance));
+
+  nsCOMPtr<nsIPluginInstanceInternal> plugin_internal =
+    do_QueryInterface(instance);
+
+  if (!plugin_internal) {
+    return NS_OK;
+  }
+
+  plugin_internal->DefineJavaProperties();
+
+  return NS_OK;
 }
 
 /* ----- end of nsPIPluginHost implementation ----- */

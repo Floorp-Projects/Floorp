@@ -442,6 +442,10 @@ BuildContentLists(nsISupports* aKey,
   // Figure out the relevant content node.
   nsXBLInsertionPoint* currPoint = aData->ElementAt(0);
   nsCOMPtr<nsIContent> parent = currPoint->GetInsertionParent();
+  if (!parent) {
+    data->mRv = NS_ERROR_FAILURE;
+    return PL_DHASH_STOP;
+  }
   PRInt32 currIndex = currPoint->GetInsertionIndex();
 
   nsCOMPtr<nsIDOMNodeList> nodeList;
@@ -526,6 +530,10 @@ RealizeDefaultContent(nsISupports* aKey,
         // actual default content (through cloning).
         // Clone this insertion point element.
         nsCOMPtr<nsIContent> insParent = currPoint->GetInsertionParent();
+        if (!insParent) {
+          data->mRv = NS_ERROR_FAILURE;
+          return PL_DHASH_STOP;
+        }
         nsIDocument *document = insParent->GetOwnerDoc();
         if (!document) {
           data->mRv = NS_ERROR_FAILURE;
@@ -1326,6 +1334,47 @@ nsXBLBinding::AllowScripts()
   return NS_SUCCEEDED(rv) && canExecute;
 }
 
+void
+nsXBLBinding::RemoveInsertionParent(nsIContent* aParent)
+{
+  if (mNextBinding) {
+    mNextBinding->RemoveInsertionParent(aParent);
+  }
+  if (mInsertionPointTable) {
+    nsInsertionPointList* list = nsnull;
+    mInsertionPointTable->Get(aParent, &list);
+    if (list) {
+      PRInt32 count = list->Length();
+      for (PRInt32 i = 0; i < count; ++i) {
+        nsRefPtr<nsXBLInsertionPoint> currPoint = list->ElementAt(i);
+        nsCOMPtr<nsIContent> defContent = currPoint->GetDefaultContent();
+        if (defContent) {
+          defContent->UnbindFromTree();
+        }
+#ifdef DEBUG
+        nsCOMPtr<nsIContent> parent = currPoint->GetInsertionParent();
+        NS_ASSERTION(!parent || parent == aParent, "Wrong insertion parent!");
+#endif
+        currPoint->ClearInsertionParent();
+      }
+      mInsertionPointTable->Remove(aParent);
+    }
+  }
+}
+
+PRBool
+nsXBLBinding::HasInsertionParent(nsIContent* aParent)
+{
+  if (mInsertionPointTable) {
+    nsInsertionPointList* list = nsnull;
+    mInsertionPointTable->Get(aParent, &list);
+    if (list) {
+      return PR_TRUE;
+    }
+  }
+  return mNextBinding ? mNextBinding->HasInsertionParent(aParent) : PR_FALSE;
+}
+
 nsresult
 nsXBLBinding::GetInsertionPointsFor(nsIContent* aParent,
                                     nsInsertionPointList** aResult)
@@ -1348,6 +1397,9 @@ nsXBLBinding::GetInsertionPointsFor(nsIContent* aParent,
       delete *aResult;
       *aResult = nsnull;
       return NS_ERROR_OUT_OF_MEMORY;
+    }
+    if (aParent) {
+      aParent->SetFlags(NODE_IS_INSERTION_PARENT);
     }
   }
 

@@ -59,9 +59,12 @@
                   name="pref.privacy.disable_button.view_passwords_exceptions"
                   type="bool"/>
 
-      <!-- Add-ons, phishing -->
+      <!-- Add-ons, malware, phishing -->
       <preference id="xpinstall.whitelist.required"
                   name="xpinstall.whitelist.required"
+                  type="bool"/>
+      <preference id="browser.safebrowsing.malware.enabled"
+                  name="browser.safebrowsing.malware.enabled"
                   type="bool"/>
       <preference id="browser.safebrowsing.enabled"
                   name="browser.safebrowsing.enabled"
@@ -99,7 +102,10 @@
       </hbox>
 
       <separator class="thin"/>
-
+      <checkbox id="tellMaybeAttackSite"
+                label="&tellMaybeAttackSite.label;"
+                accesskey="&tellMaybeAttackSite.accesskey;"
+                preference="browser.safebrowsing.malware.enabled" />
       <checkbox id="tellMaybeForgery"
                 label="&tellMaybeForgery.label;"
                 accesskey="&tellMaybeForgery.accesskey;"

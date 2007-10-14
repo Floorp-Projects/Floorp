@@ -2431,6 +2431,10 @@ void nsTreeBodyFrame::CalcInnerBox()
 nscoord
 nsTreeBodyFrame::CalcHorzWidth(const ScrollParts& aParts)
 {
+  // Compute the adjustment to the last column. This varies depending on the
+  // visibility of the columnpicker and the scrollbar.
+  mAdjustWidth = mRect.width - aParts.mColumnsFrame->GetRect().width;
+
   nscoord width = 0;
   nscoord height;
 
@@ -2444,14 +2448,8 @@ nsTreeBodyFrame::CalcHorzWidth(const ScrollParts& aParts)
   }
 
   // If no horz scrolling periphery is present, then just return our width
-  if (width == 0) {
-    mAdjustWidth = 0;
+  if (width == 0)
     width = mRect.width;
-  } else {
-    // Compute the adjustment to the last column. This varies depending on the
-    // visibility of the columnpicker and the scrollbar.
-    mAdjustWidth = mRect.width - aParts.mColumnsFrame->GetRect().width;
-  }
 
   return width;
 }

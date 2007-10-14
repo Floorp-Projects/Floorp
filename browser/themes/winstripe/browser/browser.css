@@ -242,6 +242,12 @@ menuitem.bookmark-item {
   -moz-image-region: rect(16px, 32px, 32px, 16px) !important;
 }
 
+/* ::::: query items ::::: */
+
+.query-item[container] {
+  list-style-image: url("chrome://browser/skin/places/query.png");
+}
+
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {
