@@ -406,7 +406,8 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { TEXT_HTML, "htm" },
   { APPLICATION_XPINSTALL, "xpi" },
   { "application/xhtml+xml", "xhtml" },
-  { "application/xhtml+xml", "xht" }
+  { "application/xhtml+xml", "xht" },
+  { TEXT_PLAIN, "txt" }
 };
 
 /**
