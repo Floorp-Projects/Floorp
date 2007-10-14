@@ -303,12 +303,15 @@
               disableDownButton = true;
           }
 
-          this._scrollButtonUp.disabled = disableUpButton;
-          this._scrollButtonDown.disabled = disableDownButton;
+          if (this._scrollButtonUp.disabled != disableUpButton ||
+              this._scrollButtonDown.disabled != disableDownButton) {
+            this._scrollButtonUp.disabled = disableUpButton;
+            this._scrollButtonDown.disabled = disableDownButton;
 
-          var event = document.createEvent("Events");
-          event.initEvent("UpdatedScrollButtonsDisabledState", true, false);
-          this.dispatchEvent(event);
+            var event = document.createEvent("Events");
+            event.initEvent("UpdatedScrollButtonsDisabledState", true, false);
+            this.dispatchEvent(event);
+          }
         ]]></body>
       </method>
     </implementation>
