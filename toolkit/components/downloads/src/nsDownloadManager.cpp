@@ -721,9 +721,9 @@ nsDownloadManager::Init()
 
   rv = mDBConn->CreateStatement(NS_LITERAL_CSTRING(
     "UPDATE moz_downloads "
-    "SET startTime = ?1, endTime = ?2, state = ?3, referrer = ?4, "
-        "entityID = ?5, currBytes = ?6, maxBytes = ?7 "
-    "WHERE id = ?8"), getter_AddRefs(mUpdateDownloadStatement));
+    "SET tempPath = ?1, startTime = ?2, endTime = ?3, state = ?4, "
+        "referrer = ?5, entityID = ?6, currBytes = ?7, maxBytes = ?8 "
+    "WHERE id = ?9"), getter_AddRefs(mUpdateDownloadStatement));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Do things *after* initializing various download manager properties such as
@@ -2039,6 +2039,7 @@ nsDownload::Finalize()
 
   // Reset values that aren't needed anymore, so the DB can be updated as well
   mEntityID.Truncate();
+  mTempFile = nsnull;
 
   // Remove ourself from the active downloads
   (void)mDownloadManager->mCurrentDownloads.RemoveObject(this);
@@ -2299,8 +2300,14 @@ nsDownload::UpdateDB()
   mozIStorageStatement *stmt = mDownloadManager->mUpdateDownloadStatement;
 
   PRInt32 i = 0;
+  // tempPath
+  nsAutoString tempPath;
+  if (mTempFile)
+    (void)mTempFile->GetPath(tempPath);
+  nsresult rv = stmt->BindStringParameter(i++, tempPath);
+
   // startTime
-  nsresult rv = stmt->BindInt64Parameter(i++, mStartTime);
+  rv = stmt->BindInt64Parameter(i++, mStartTime);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // endTime
