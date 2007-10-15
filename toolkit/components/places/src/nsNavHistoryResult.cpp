@@ -3208,18 +3208,16 @@ nsNavHistoryFolderResultNode::OnItemRemoved(PRInt64 aItemId,
   PRUint32 index;
   nsNavHistoryResultNode* node = FindChildById(aItemId, &index);
   if (!node) {
-    NS_NOTREACHED("Removing item we don't have");
-    return NS_ERROR_FAILURE;
+    if (mOptions->ExcludeItems()) {
+      return NS_OK; // if we're excluding items, this could be totally valid.
+    }
+    else {
+      NS_NOTREACHED("Removing item we don't have");
+      return NS_ERROR_FAILURE;
+    }
   }
 
   NS_ASSERTION(aParentFolder == mItemId, "Got wrong bookmark update");
-
-  if ((node->IsURI() || node->IsSeparator()) && mOptions->ExcludeItems()) {
-    // don't update items when we aren't displaying them, but we do need to
-    // adjust everybody's bookmark indices to account for the removal
-    ReindexRange(aIndex, PR_INT32_MAX, -1);
-    return NS_OK;
-  }
 
   if (!StartIncrementalUpdate())
     return NS_OK; // we are completely refreshed
@@ -3909,8 +3907,7 @@ nsNavHistoryResult::OnItemChanged(PRInt64 aItemId,
     if (folder) {
       PRUint32 nodeIndex;
       nsNavHistoryResultNode* node = folder->FindChildById(aItemId, &nodeIndex);
-      if (node && !(folder->mOptions->ExcludeItems()) &&
-          folder->StartIncrementalUpdate()) {
+      if (node && folder->StartIncrementalUpdate()) {
         node->OnItemChanged(aItemId, aProperty, aIsAnnotationProperty, aValue);
       }
     }

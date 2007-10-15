@@ -293,7 +293,9 @@ nsSVGAngle::SetBaseValueString(const nsAString &aValueAsString,
   PRUint16 unitType;
   
   nsresult rv = GetValueFromString(aValueAsString, &value, &unitType);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   mBaseVal = mAnimVal = value;
   mSpecifiedUnitType = PRUint8(unitType);

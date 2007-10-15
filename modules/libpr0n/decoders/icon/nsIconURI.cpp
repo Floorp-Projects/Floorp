@@ -266,7 +266,7 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
   {
     nsCOMPtr<nsIAtomService> atoms(do_GetService(NS_ATOMSERVICE_CONTRACTID));
     nsCOMPtr<nsIAtom> atom;
-    atoms->GetAtomUTF8(sizeString.get(),
+    atoms->GetAtomUTF8(stateString.get(),
                        getter_AddRefs(atom));
     for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gStateAtoms); i++)
     {
