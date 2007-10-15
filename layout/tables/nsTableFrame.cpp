@@ -5045,11 +5045,6 @@ LimitBorderWidth(PRUint16 aWidth)
    the flipping is done.
  */
 
-#define TOP_DAMAGED(aRowIndex)    ((aRowIndex) >= propData->mDamageArea.y) 
-#define RIGHT_DAMAGED(aColIndex)  ((aColIndex) <  propData->mDamageArea.XMost()) 
-#define BOTTOM_DAMAGED(aRowIndex) ((aRowIndex) <  propData->mDamageArea.YMost()) 
-#define LEFT_DAMAGED(aColIndex)   ((aColIndex) >= propData->mDamageArea.x) 
-
 #define TABLE_EDGE  PR_TRUE
 #define ADJACENT    PR_TRUE
 #define HORIZONTAL  PR_TRUE
@@ -5346,7 +5341,7 @@ nsTableFrame::CalcBCBorders()
         // update lastVerBorders and see if a new segment starts
         startSeg = SetBorder(currentBorder, lastVerBorders[cellEndColIndex + 1]);
         // store the border segment in the cell map and update cellBorders
-        if (RIGHT_DAMAGED(cellEndColIndex) && TOP_DAMAGED(rowX) && BOTTOM_DAMAGED(rowX)) {
+        if (cellEndColIndex < damageArea.XMost() && rowX >= damageArea.y && rowX < damageArea.YMost()) {
           tableCellMap->SetBCBorderEdge(NS_SIDE_RIGHT, *info.cellMap, iter.mRowGroupStart, rowX, 
                                         cellEndColIndex, segLength, currentBorder.owner, currentBorder.width, startSeg);
           // update the borders of the cells and cols affected 
@@ -5382,7 +5377,7 @@ nsTableFrame::CalcBCBorders()
           trCorner->Update(NS_SIDE_RIGHT, currentBorder);
         }
         // store the top right corner in the cell map 
-        if (RIGHT_DAMAGED(cellEndColIndex) && TOP_DAMAGED(rowX)) {
+        if (cellEndColIndex < damageArea.XMost() && rowX >= damageArea.y) {
           if (0 != rowX) {
             tableCellMap->SetBCBorderCorner(eTopRight, *info.cellMap, iter.mRowGroupStart, rowX, cellEndColIndex, 
                                             trCorner->ownerSide, trCorner->subWidth, trCorner->bevel);
@@ -5504,7 +5499,7 @@ nsTableFrame::CalcBCBorders()
         if (update) {
           blCorner.Update(NS_SIDE_RIGHT, currentBorder);
         }
-        if (BOTTOM_DAMAGED(cellEndRowIndex) && LEFT_DAMAGED(colX)) {
+        if (cellEndRowIndex < damageArea.YMost() && colX >= damageArea.x) {
           if (hitsSpanBelow) {
             tableCellMap->SetBCBorderCorner(eBottomLeft, *info.cellMap, iter.mRowGroupStart, cellEndRowIndex, colX,
                                             blCorner.ownerSide, blCorner.subWidth, blCorner.bevel);
@@ -5532,7 +5527,7 @@ nsTableFrame::CalcBCBorders()
         }
 
         // store the border segment the cell map and update cellBorders
-        if (BOTTOM_DAMAGED(cellEndRowIndex) && LEFT_DAMAGED(colX) && RIGHT_DAMAGED(colX)) {
+        if (cellEndRowIndex < damageArea.YMost() && colX >= damageArea.x && colX < damageArea.XMost()) {
           tableCellMap->SetBCBorderEdge(NS_SIDE_BOTTOM, *info.cellMap, iter.mRowGroupStart, cellEndRowIndex,
                                         colX, segLength, currentBorder.owner, currentBorder.width, startSeg);
           // update the borders of the affected cells and rows
