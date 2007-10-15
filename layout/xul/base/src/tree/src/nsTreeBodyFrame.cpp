@@ -47,7 +47,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
 #include "nsPresContext.h"
 #include "nsINameSpaceManager.h"
 
