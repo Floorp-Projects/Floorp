@@ -3236,6 +3236,10 @@ enum
 
 static PRUint32 GetGeckoKeyCodeFromChar(PRUnichar aChar)
 {
+  // We don't support the key code for non-ASCII characters
+  if (aChar > 0x7F)
+    return 0;
+
   switch (aChar)
   {
     case kReturnCharCode:
@@ -3276,7 +3280,7 @@ static PRUint32 GetGeckoKeyCodeFromChar(PRUnichar aChar)
 static PRUint32 ConvertMacToGeckoKeyCode(UInt32 keyCode, nsKeyEvent* aKeyEvent, NSString* characters)
 {
   PRUint32 geckoKeyCode = 0;
-  PRUint8 charCode = 0;
+  PRUnichar charCode = 0;
   if ([characters length])
     charCode = [characters characterAtIndex: 0];
 
