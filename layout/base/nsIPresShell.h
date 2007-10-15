@@ -86,6 +86,7 @@ class nsFrameSelection;
 class nsFrameManager;
 class nsILayoutHistoryState;
 class nsIReflowCallback;
+class nsISupportsArray;
 class nsIDOMNode;
 class nsIRegion;
 class nsIStyleFrameConstruction;
