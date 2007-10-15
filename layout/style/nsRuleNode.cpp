@@ -4335,6 +4335,8 @@ SetSVGPaint(const nsCSSValuePair& aValue, const nsStyleSVGPaint& parentPaint,
             nsStyleSVGPaint& aResult, nsStyleSVGPaintType aInitialPaintType,
             PRBool& aInherited)
 {
+  aResult.~nsStyleSVGPaint();
+  new (&aResult) nsStyleSVGPaint();
   if (aValue.mXValue.GetUnit() == eCSSUnit_Inherit) {
     aResult = parentPaint;
     aInherited = PR_TRUE;

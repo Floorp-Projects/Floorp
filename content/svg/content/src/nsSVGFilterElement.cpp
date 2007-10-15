@@ -196,35 +196,18 @@ nsSVGFilterElement::GetHref(nsIDOMSVGAnimatedString * *aHref)
 //----------------------------------------------------------------------
 // nsIContent methods
 
-nsresult
-nsSVGFilterElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                            nsIAtom* aPrefix, const nsAString& aValue,
-                            PRBool aNotify)
+PRBool
+nsSVGFilterElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                   const nsAString& aValue,
+                                   nsAttrValue& aResult)
 {
-  nsresult rv = nsSVGFilterElementBase::SetAttr(aNameSpaceID, aName, aPrefix,
-                                                aValue, aNotify);
-
   if (aName == nsGkAtoms::filterRes && aNameSpaceID == kNameSpaceID_None) {
-    PRUint32 resX, resY;
-    char *str;
-    str = ToNewCString(aValue);
-    int num = sscanf(str, "%d %d\n", &resX, &resY);
-    switch (num) {
-    case 2:
-      mIntegerAttributes[FILTERRES_X].SetBaseValue(resX, this, PR_FALSE);
-      mIntegerAttributes[FILTERRES_Y].SetBaseValue(resY, this, PR_FALSE);
-      break;
-    case 1:
-      mIntegerAttributes[FILTERRES_X].SetBaseValue(resX, this, PR_FALSE);
-      mIntegerAttributes[FILTERRES_Y].SetBaseValue(resX, this, PR_FALSE);
-      break;
-    default:
-      break;
-    }
-    nsMemory::Free(str);
+    return ParseIntegerOptionalInteger(aName, aValue,
+                                       FILTERRES_X, FILTERRES_Y,
+                                       aResult);
   }
-
-  return rv;
+  return nsSVGFilterElementBase::ParseAttribute(aNameSpaceID, aName,
+                                                aValue, aResult);
 }
 
 NS_IMETHODIMP_(PRBool)

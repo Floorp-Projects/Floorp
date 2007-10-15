@@ -55,7 +55,6 @@
 #include "nsISVGValueUtils.h"
 #include "nsSVGFilters.h"
 #include "nsSVGUtils.h"
-#include "prdtoa.h"
 #include "nsStyleContext.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
@@ -298,52 +297,6 @@ nsSVGFE::Init()
   }
 
   return NS_OK;
-}
-
-PRBool
-nsSVGFE::ScanDualValueAttribute(const nsAString& aValue, nsIAtom* aAttribute,
-                                nsSVGNumber2* aNum1, nsSVGNumber2* aNum2,
-                                NumberInfo* aInfo1, NumberInfo* aInfo2,
-                                nsAttrValue& aResult)
-{
-  float x = 0.0f, y = 0.0f;
-  char *rest;
-  PRBool parseError = PR_FALSE;
-
-  NS_ConvertUTF16toUTF8 value(aValue);
-  value.CompressWhitespace(PR_FALSE, PR_TRUE);
-  const char *str = value.get();
-  x = static_cast<float>(PR_strtod(str, &rest));
-  if (str == rest) {
-    //first value was illformed
-    parseError = PR_TRUE;
-  } else {
-    if (*rest == '\0') {
-      //second value was not supplied
-      y = x;
-    } else {
-      y = static_cast<float>(PR_strtod(rest, &rest));
-      if (*rest != '\0') {
-        //second value was illformed or there was trailing content
-        parseError = PR_TRUE;
-      }
-    }
-  }
-
-  if (parseError) {
-    ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
-    x = aInfo1->mDefaultValue;
-    y = aInfo2->mDefaultValue;
-  }
-
-  aNum1->SetBaseValue(x, this, PR_FALSE);
-  aNum2->SetBaseValue(y, this, PR_FALSE);
-
-  if (parseError)
-    return PR_FALSE;
-
-  aResult.SetTo(aValue);
-  return PR_TRUE;
 }
 
 nsresult
@@ -643,12 +596,9 @@ nsSVGFEGaussianBlurElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                                            nsAttrValue& aResult)
 {
   if (aName == nsGkAtoms::stdDeviation && aNameSpaceID == kNameSpaceID_None) {
-    return ScanDualValueAttribute(aValue, nsGkAtoms::stdDeviation,
-                                  &mNumberAttributes[STD_DEV_X],
-                                  &mNumberAttributes[STD_DEV_Y],
-                                  &sNumberInfo[STD_DEV_X],
-                                  &sNumberInfo[STD_DEV_Y],
-                                  aResult);
+    return ParseNumberOptionalNumber(aName, aValue,
+                                     STD_DEV_X, STD_DEV_Y,
+                                     aResult);
   }
   return nsSVGFEGaussianBlurElementBase::ParseAttribute(aNameSpaceID, aName,
                                                         aValue, aResult);
@@ -3203,12 +3153,9 @@ nsSVGFETurbulenceElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                                          nsAttrValue& aResult)
 {
   if (aName == nsGkAtoms::baseFrequency && aNameSpaceID == kNameSpaceID_None) {
-    return ScanDualValueAttribute(aValue, nsGkAtoms::baseFrequency,
-                                  &mNumberAttributes[BASE_FREQ_X],
-                                  &mNumberAttributes[BASE_FREQ_Y],
-                                  &sNumberInfo[BASE_FREQ_X],
-                                  &sNumberInfo[BASE_FREQ_Y],
-                                  aResult);
+    return ParseNumberOptionalNumber(aName, aValue,
+                                     BASE_FREQ_X, BASE_FREQ_Y,
+                                     aResult);
   }
   return nsSVGFETurbulenceElementBase::ParseAttribute(aNameSpaceID, aName,
                                                       aValue, aResult);
@@ -3658,12 +3605,9 @@ nsSVGFEMorphologyElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                                          nsAttrValue& aResult)
 {
   if (aName == nsGkAtoms::radius && aNameSpaceID == kNameSpaceID_None) {
-    return ScanDualValueAttribute(aValue, nsGkAtoms::radius,
-                                  &mNumberAttributes[RADIUS_X],
-                                  &mNumberAttributes[RADIUS_Y],
-                                  &sNumberInfo[RADIUS_X],
-                                  &sNumberInfo[RADIUS_Y],
-                                  aResult);
+    return ParseNumberOptionalNumber(aName, aValue,
+                                     RADIUS_X, RADIUS_Y,
+                                     aResult);
   }
   return nsSVGFEMorphologyElementBase::ParseAttribute(aNameSpaceID, aName,
                                                       aValue, aResult);
@@ -4038,54 +3982,17 @@ nsSVGFEConvolveMatrixElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aNam
                                              const nsAString& aValue,
                                              nsAttrValue& aResult)
 {
-  if (aName == nsGkAtoms::order && aNameSpaceID == kNameSpaceID_None) {
-    PRInt32 x = 0, y = 0;
-    char *rest;
-    PRBool parseError = PR_FALSE;
-
-    NS_ConvertUTF16toUTF8 value(aValue);
-    value.CompressWhitespace(PR_FALSE, PR_TRUE);
-    const char *str = value.get();
-    x = strtol(str, &rest, 10);
-    if (str == rest) {
-      //first value was illformed
-      parseError = PR_TRUE;
-    } else {
-      if (*rest == '\0') {
-        //second value was not supplied
-        y = x;
-      } else {
-        y = strtol(rest, &rest, 10);
-        if (*rest != '\0') {
-          //second value was illformed or there was trailing content
-          parseError = PR_TRUE;
-        }
-      }
+  if (aNameSpaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::order) {
+      return ParseIntegerOptionalInteger(aName, aValue,
+                                         ORDER_X, ORDER_Y,
+                                         aResult);
     }
-
-    if (parseError) {
-      ReportAttributeParseFailure(GetOwnerDoc(), aName, aValue);
-      x = sIntegerInfo[ORDER_X].mDefaultValue;
-      y = sIntegerInfo[ORDER_Y].mDefaultValue;
+    if (aName == nsGkAtoms::kernelUnitLength) {
+      return ParseNumberOptionalNumber(aName, aValue,
+                                       KERNEL_UNIT_LENGTH_X, KERNEL_UNIT_LENGTH_Y,
+                                       aResult);
     }
-
-    mIntegerAttributes[ORDER_X].SetBaseValue(x, this, PR_FALSE);
-    mIntegerAttributes[ORDER_Y].SetBaseValue(y, this, PR_FALSE);
-
-    if (parseError)
-      return PR_FALSE;
-
-    aResult.SetTo(aValue);
-    return PR_TRUE;
-  }
-
-  if (aName == nsGkAtoms::kernelUnitLength && aNameSpaceID == kNameSpaceID_None) {
-    return ScanDualValueAttribute(aValue, nsGkAtoms::kernelUnitLength,
-                                  &mNumberAttributes[KERNEL_UNIT_LENGTH_X],
-                                  &mNumberAttributes[KERNEL_UNIT_LENGTH_Y],
-                                  &sNumberInfo[KERNEL_UNIT_LENGTH_X],
-                                  &sNumberInfo[KERNEL_UNIT_LENGTH_Y],
-                                  aResult);
   }
 
   return nsSVGFEConvolveMatrixElementBase::ParseAttribute(aNameSpaceID, aName,
@@ -4710,15 +4617,13 @@ nsSVGFELightingElement::ParseAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                                        nsAttrValue& aResult)
 {
   if (aName == nsGkAtoms::kernelUnitLength && aNameSpaceID == kNameSpaceID_None) {
-    return ScanDualValueAttribute(aValue, nsGkAtoms::radius,
-                                  &mNumberAttributes[KERNEL_UNIT_LENGTH_X],
-                                  &mNumberAttributes[KERNEL_UNIT_LENGTH_Y],
-                                  &sNumberInfo[KERNEL_UNIT_LENGTH_X],
-                                  &sNumberInfo[KERNEL_UNIT_LENGTH_Y],
-                                  aResult);
+    return ParseNumberOptionalNumber(aName, aValue,
+                                     KERNEL_UNIT_LENGTH_X, KERNEL_UNIT_LENGTH_Y,
+                                     aResult);
+
   }
   return nsSVGFELightingElementBase::ParseAttribute(aNameSpaceID, aName,
-                                                      aValue, aResult);
+                                                    aValue, aResult);
 }
 
 NS_IMETHODIMP
