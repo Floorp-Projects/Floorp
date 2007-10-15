@@ -2395,21 +2395,34 @@ static nsresult MacErrorMapper(OSErr inErr)
             break;
 
         case fnfErr:
+        case afpObjectNotFound:
+        case afpDirNotFound:
             outErr = NS_ERROR_FILE_NOT_FOUND;
             break;
 
         case dupFNErr:
+        case afpObjectExists:
             outErr = NS_ERROR_FILE_ALREADY_EXISTS;
             break;
         
         case dskFulErr:
+        case afpDiskFull:
             outErr = NS_ERROR_FILE_DISK_FULL;
             break;
         
         case fLckdErr:
+        case afpVolLocked:
             outErr = NS_ERROR_FILE_IS_LOCKED;
             break;
         
+        case afpAccessDenied:
+            outErr = NS_ERROR_FILE_ACCESS_DENIED;
+            break;
+
+        case afpDirNotEmpty:
+            outErr = NS_ERROR_FILE_DIR_NOT_EMPTY;
+            break;
+            
         // Can't find good map for some
         case bdNamErr:
             outErr = NS_ERROR_FAILURE;
