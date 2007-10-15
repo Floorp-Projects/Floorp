@@ -478,6 +478,23 @@ BookmarksSyncService.prototype = {
     return false;
   },
 
+  _getPropagations: function BSS__getPropagations(commands, conflicts, propagations) {
+    for (let i = 0; i < commands.length; i++) {
+      let alsoConflicts = function(elt) {
+        return elt.action == "remove" &&
+          commands[i].parents.indexOf(elt.GUID) >= 0;
+      };
+      if (conflicts.some(alsoConflicts))
+        conflicts.push(commands[i]);
+
+      let cmdConflicts = function(elt) {
+        return elt.GUID == commands[i].GUID;
+      };
+      if (!conflicts.some(cmdConflicts))
+        propagations.push(commands[i]);
+    }
+  },
+
   _reconcile: function BSS__reconcile(onComplete, listA, listB) {
     let cont = yield;
     let listener = new EventListener(cont);
@@ -504,7 +521,7 @@ BookmarksSyncService.prototype = {
 
         // watch out for create commands with GUIDs that already exist
         if (listB[j] && listB[j].action == "create" &&
-            this._bms.getItemForGUID(listB[j].GUID) >= 0) {
+            this._bms.getItemIdForGUID(listB[j].GUID) >= 0) {
           this._log.error("Remote command has GUID that already exists " +
                           "locally. Dropping command.");
           delete listB[j];
@@ -532,38 +549,12 @@ BookmarksSyncService.prototype = {
       }
     }
 
-    for (let i = 0; i < listA.length; i++) {
-      this._timer.initWithCallback(listener, 0, this._timer.TYPE_ONE_SHOT);
-      yield; // Yield to main loop
+    this._getPropagations(listA, conflicts[0], propagations[1]);
 
-      let alsoConflictsA = function(elt) {
-        return listA[i].parents.indexOf(elt.GUID) >= 0;
-      };
-      if (conflicts[0].some(alsoConflictsA))
-        conflicts[0].push(listA[i]);
+    this._timer.initWithCallback(listener, 0, this._timer.TYPE_ONE_SHOT);
+    yield; // Yield to main loop
 
-      let conflictsA = function(elt) {
-        return elt.GUID == listA[i].GUID;
-      };
-      if (!conflicts[0].some(conflictsA))
-        propagations[1].push(listA[i]);
-    }
-    for (let j = 0; j < listB.length; j++) {
-      this._timer.initWithCallback(listener, 0, this._timer.TYPE_ONE_SHOT);
-      yield; // Yield to main loop
-
-      let alsoConflictsB = function(elt) {
-        return listB[j].parents.indexOf(elt.GUID) >= 0;
-      };
-      if (conflicts[1].some(alsoConflictsB))
-        conflicts[1].push(listB[j]);
-
-      let conflictsB = function(elt) {
-        return elt.GUID == listB[j].GUID;
-      };
-      if (!conflicts[1].some(conflictsB))
-        propagations[0].push(listB[j]);
-    }
+    this._getPropagations(listB, conflicts[1], propagations[0]);
 
     this._timer = null;
     let ret = {propagations: propagations, conflicts: conflicts};
@@ -631,7 +622,7 @@ BookmarksSyncService.prototype = {
     let newId;
     let parentId = this._bms.getItemIdForGUID(command.data.parentGUID);
 
-    if (parentId <= 0) {
+    if (parentId < 0) {
       this._log.warn("Creating node with unknown parent -> reparenting to root");
       parentId = this._bms.bookmarksRoot;
     }
@@ -707,7 +698,7 @@ BookmarksSyncService.prototype = {
 
   _editCommand: function BSS__editCommand(command) {
     var itemId = this._bms.getItemIdForGUID(command.GUID);
-    if (itemId == -1) {
+    if (itemId < 0) {
       this._log.warn("Item for GUID " + command.GUID + " not found.  Skipping.");
       return;
     }
@@ -716,7 +707,7 @@ BookmarksSyncService.prototype = {
       switch (key) {
       case "GUID":
         var existing = this._bms.getItemIdForGUID(command.data.GUID);
-        if (existing == -1)
+        if (existing < 0)
           this._bms.setItemGUID(itemId, command.data.GUID);
         else
           this._log.warn("Can't change GUID " + command.GUID +
@@ -858,14 +849,14 @@ BookmarksSyncService.prototype = {
         return;
       }
 
-      var localJson = this._getBookmarks();
-      this._log.debug("local json:\n" + this._mungeNodes(localJson));
-
       // 1) Fetch server deltas
       if (!this._getServerData.async(this, cont))
         return
       let server = yield;
 
+      var localJson = this._getBookmarks();
+
+      this._log.debug("local json:\n" + this._mungeNodes(localJson));
       this._log.info("Local snapshot version: " + this._snapshotVersion);
       this._log.info("Server status: " + server.status);
 
