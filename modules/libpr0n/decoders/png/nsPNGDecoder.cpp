@@ -226,20 +226,21 @@ NS_IMETHODIMP nsPNGDecoder::Close()
   if (mPNG)
     png_destroy_read_struct(&mPNG, mInfo ? &mInfo : NULL, NULL);
 
-  nsresult result = mImage->RestoreDataDone();
-  if (NS_FAILED (result)) {
+  if (mImage) { // mImage could be null in the case of an error
+    nsresult result = mImage->RestoreDataDone();
+    if (NS_FAILED(result)) {
+        PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
+            ("PNGDecoderAccounting: nsPNGDecoder::Close(): failure in RestoreDataDone() for image container %p",
+                mImage.get()));
+
+        mError = PR_TRUE;
+        return result;
+    }
+
     PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
-           ("PNGDecoderAccounting: nsPNGDecoder::Close(): failure in RestoreDataDone() for image container %p",
+            ("PNGDecoderAccounting: nsPNGDecoder::Close(): image container %p is now with RestoreDataDone",
             mImage.get()));
-
-    mError = PR_TRUE;
-    return result;
   }
-
-  PR_LOG(gPNGDecoderAccountingLog, PR_LOG_DEBUG,
-         ("PNGDecoderAccounting: nsPNGDecoder::Close(): image container %p is now with RestoreDataDone",
-          mImage.get()));
-
   return NS_OK;
 }
 
