@@ -86,6 +86,7 @@
 #include "nsIDOMSVGAnimatedRect.h"
 #include "nsSVGRect.h"
 #include "nsSVGAnimatedString.h"
+#include "prdtoa.h"
 #include <stdarg.h>
 
 nsSVGEnumMapping nsSVGElement::sSVGUnitTypesMap[] = {
@@ -1161,6 +1162,106 @@ nsSVGElement::DidChangeEnum(PRUint8 aAttrEnum, PRBool aDoSetAttr)
 
   SetAttr(kNameSpaceID_None, *info.mEnumInfo[aAttrEnum].mName,
           newStr, PR_TRUE);
+}
+
+PRBool
+nsSVGElement::ParseNumberOptionalNumber(nsIAtom* aAttribute, const nsAString& aValue,
+                                        PRUint32 aIndex1, PRUint32 aIndex2,
+                                        nsAttrValue& aResult)
+{
+  NS_ConvertUTF16toUTF8 value(aValue);
+  const char *str = value.get();
+
+  PRBool parseError = NS_IsAsciiWhitespace(*str);
+  float x, y;
+
+  if (!parseError) {
+    char *rest;
+    x = y = float(PR_strtod(str, &rest));
+
+    if (str == rest) {
+      //first value was illformed
+      parseError = PR_TRUE;
+    } else if (*rest != '\0') {
+      while (NS_IsAsciiWhitespace(*rest)) {
+        ++rest;
+      }
+      if (*rest == ',') {
+        ++rest;
+      }
+
+      y = float(PR_strtod(rest, &rest));
+      if (*rest != '\0') {
+        //second value was illformed or there was trailing content
+        parseError = PR_TRUE;
+      }
+    }
+  }
+
+  NumberAttributesInfo numberInfo = GetNumberInfo();
+
+  if (parseError) {
+    ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
+    x = numberInfo.mNumberInfo[aIndex1].mDefaultValue;
+    y = numberInfo.mNumberInfo[aIndex2].mDefaultValue;
+  } else {
+    aResult.SetTo(aValue);
+  }
+
+  numberInfo.mNumbers[aIndex1].SetBaseValue(x, this, PR_FALSE);
+  numberInfo.mNumbers[aIndex2].SetBaseValue(y, this, PR_FALSE);
+
+  return (!parseError);
+}
+
+PRBool
+nsSVGElement::ParseIntegerOptionalInteger(nsIAtom* aAttribute, const nsAString& aValue,
+                                          PRUint32 aIndex1, PRUint32 aIndex2,
+                                          nsAttrValue& aResult)
+{
+  NS_ConvertUTF16toUTF8 value(aValue);
+  const char *str = value.get();
+
+  PRBool parseError = NS_IsAsciiWhitespace(*str);
+  PRInt32 x, y;
+
+  if (!parseError) {
+    char *rest;
+    x = y = strtol(str, &rest, 10);
+
+    if (str == rest) {
+      //first value was illformed
+      parseError = PR_TRUE;
+    } else if (*rest != '\0') {
+      while (NS_IsAsciiWhitespace(*rest)) {
+        ++rest;
+      }
+      if (*rest == ',') {
+        ++rest;
+      }
+
+      y = strtol(rest, &rest, 10);
+      if (*rest != '\0') {
+        //second value was illformed or there was trailing content
+        parseError = PR_TRUE;
+      }
+    }
+  }
+
+  IntegerAttributesInfo integerInfo = GetIntegerInfo();
+
+  if (parseError) {
+    ReportAttributeParseFailure(GetOwnerDoc(), aAttribute, aValue);
+    x = integerInfo.mIntegerInfo[aIndex1].mDefaultValue;
+    y = integerInfo.mIntegerInfo[aIndex2].mDefaultValue;
+  } else {
+    aResult.SetTo(aValue);
+  }
+
+  integerInfo.mIntegers[aIndex1].SetBaseValue(x, this, PR_FALSE);
+  integerInfo.mIntegers[aIndex2].SetBaseValue(y, this, PR_FALSE);
+
+  return (!parseError);
 }
 
 nsresult
