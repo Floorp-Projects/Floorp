@@ -54,6 +54,7 @@
 #include "nsIMenuFrame.h"
 #include "nsXULPopupManager.h"
 #include "nsITimer.h"
+#include "nsISupportsArray.h"
 #include "nsIDOMText.h"
 #include "nsIContent.h"
 #include "nsIScrollableViewProvider.h"

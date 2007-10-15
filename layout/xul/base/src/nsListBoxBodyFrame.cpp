@@ -43,6 +43,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsGridRowGroupLayout.h"
+#include "nsISupportsArray.h"
 #include "nsIServiceManager.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
