@@ -89,7 +89,7 @@ def send_to_csv(csv_file, results):
   import csv
   for res in results:
     browser_dump, counter_dump = results[res]
-    writer = csv.writer(open(csv_file + '_' +  res, "wb"))
+    writer = csv.writer(open(csv_file + '_' +  res + '.csv', "wb"))
     if res in ('ts', 'twinopen'):
       i = 0
       writer.writerow(['i', 'val'])
@@ -118,7 +118,7 @@ def send_to_csv(csv_file, results):
           i += 1
     for cd in counter_dump:
       for count_type in cd:
-        writer = csv.writer(open(csv_file + '_' + res + '_' + count_type, "wb"))
+        writer = csv.writer(open(csv_file + '_' + res + '_' + count_type + '.csv', "wb"))
         writer.writerow(['i', 'value'])
         i = 0
         for val in cd[count_type]:
