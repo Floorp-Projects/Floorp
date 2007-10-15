@@ -837,11 +837,6 @@ nsStyleSVGPaint::~nsStyleSVGPaint() {
 
 nsStyleSVGPaint& nsStyleSVGPaint::operator=(const nsStyleSVGPaint& aOther) 
 {
-  if (this == &aOther)
-    return *this;
-  this->~nsStyleSVGPaint();
-  new (this) nsStyleSVGPaint();
-
   mType = aOther.mType;
   mFallbackColor = aOther.mFallbackColor;
   if (mType == eStyleSVGPaintType_Server) {
@@ -1268,8 +1263,6 @@ nsStyleContentData& nsStyleContentData::operator=(const nsStyleContentData& aOth
   if (this == &aOther)
     return *this;
   this->~nsStyleContentData();
-  new (this) nsStyleContentData();
-
   mType = aOther.mType;
   if (mType == eStyleContentType_Image) {
     mContent.mImage = aOther.mContent.mImage;
