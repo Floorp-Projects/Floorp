@@ -77,7 +77,7 @@ case $product in
     if [[ ! ( -d mozilla && \
         -e mozilla/js && \
         -e mozilla/js/src ) ]]; then
-        eval cvs -z3 -q co $BRANCH_CO_FLAGS $DATE_CO_FLAGS mozilla/js/src
+        eval cvs -z3 -q co $BRANCH_CO_FLAGS $DATE_CO_FLAGS mozilla/js
     fi
 
     cd mozilla/js/src
