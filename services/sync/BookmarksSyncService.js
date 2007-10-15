@@ -1240,6 +1240,16 @@ BookmarksSyncService.prototype = {
     }
   },
 
+  _onResetLock: function BSS__resetLock(success) {
+    if (success) {
+      this._log.info("Lock reset");
+      this._os.notifyObservers(null, "bookmarks-sync:lock-reset", "");
+    } else {
+      this._log.warn("Lock reset error");
+      this._os.notifyObservers(null, "bookmarks-sync:lock-reset-error", "");
+    }
+  },
+
   // XPCOM registration
   classDescription: "Bookmarks Sync Service",
   contractID: "@mozilla.org/places/sync-service;1",
@@ -1268,6 +1278,11 @@ BookmarksSyncService.prototype = {
     this._log.info("Logging out");
     this._dav.logout();
     this._os.notifyObservers(null, "bookmarks-sync:logout", "");
+  },
+
+  resetLock: function BSS_resetLock() {
+    this._log.info("Resetting lock");
+    this._dav.forceUnlock.async(this._dav, bind2(this, this._onResetLock));
   }
 };
 
@@ -1606,21 +1621,33 @@ DAVCollection.prototype = {
     }
   },
 
-  stealLock: function DC_stealLock(onComplete) {
+  forceUnlock: function DC_forceUnlock(onComplete) {
     let cont = yield;
-    let stolen = null;
+    let unlocked = true;
 
     try {
       if (!this._getActiveLock.async(this, cont))
         return;
       this._token = yield;
 
-      let unlocked = true;
       if (this._token) {
         if (!this.unlock.async(this, cont))
           return;
         unlocked = yield;
       }
+    } finally {
+      generatorDone(this, onComplete, unlocked);
+    }
+  },
+
+  stealLock: function DC_stealLock(onComplete) {
+    let cont = yield;
+    let stolen = null;
+
+    try {
+      if (!this.forceUnlock.async(this, cont))
+        return;
+      let unlocked = yield;
 
       if (unlocked && this.lock.async(this, cont))
         stolen = yield;

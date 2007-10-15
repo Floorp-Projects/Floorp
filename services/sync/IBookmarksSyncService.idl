@@ -60,4 +60,10 @@ interface IBookmarksSyncService : nsISupports
    * Initiate a sync operation.
    */
   void sync();
+
+  /**
+   * Reset a server lock
+   * (for stale locks, useful for debugging after a crash)
+   */
+  void resetLock();
 };
