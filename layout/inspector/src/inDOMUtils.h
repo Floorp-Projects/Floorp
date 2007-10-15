@@ -41,7 +41,6 @@
 #include "inIDOMUtils.h"
 
 #include "nsIEventStateManager.h"
-#include "nsISupportsArray.h"
 #include "nsIInspectorCSSUtils.h"
 
 class inDOMUtils : public inIDOMUtils

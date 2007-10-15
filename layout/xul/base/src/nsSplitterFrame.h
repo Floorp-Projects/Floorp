@@ -45,7 +45,6 @@
 
 #include "nsBoxFrame.h"
 
-class nsISupportsArray;
 class nsSplitterFrameInner;
 
 nsIFrame* NS_NewSplitterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
