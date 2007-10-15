@@ -2433,7 +2433,10 @@ nsTreeBodyFrame::CalcHorzWidth(const ScrollParts& aParts)
 {
   // Compute the adjustment to the last column. This varies depending on the
   // visibility of the columnpicker and the scrollbar.
-  mAdjustWidth = mRect.width - aParts.mColumnsFrame->GetRect().width;
+  if (aParts.mColumnsFrame)
+    mAdjustWidth = mRect.width - aParts.mColumnsFrame->GetRect().width;
+  else
+    mAdjustWidth = 0;
 
   nscoord width = 0;
   nscoord height;

@@ -197,28 +197,14 @@
           }
           if (!this._isLTRScrollbox)
             index *= -1;
-          var nextElement;
-          var elements = this.hasChildNodes() ?
-                         this.childNodes :
-                         document.getBindingParent(this).childNodes;
+
           var scrollBox = this.scrollBoxObject;
           var edge = scrollBox.screenX;
-          if (index < 0) {
-            for (var i = 0; nextElement = elements[i]; i++) {
-              var x = nextElement.boxObject.screenX;
-              if (x < edge &&
-                  x + nextElement.boxObject.width + 1 >= edge)
-                break;
-            }
-          } else {
+          if (index > 0)
             edge += scrollBox.width;
-            for (var i = 0; nextElement = elements[i]; i++) {
-              var x = nextElement.boxObject.screenX;
-              if (x <= edge &&
-                  x + nextElement.boxObject.width > edge)
-                break;
-            }
-          }
+          else
+            edge--;
+          var nextElement = this._elementFromPoint(edge);
           if (!nextElement)
             return;
 
@@ -236,6 +222,32 @@
           }
 
           this.ensureElementIsVisible(targetElement);
+        ]]></body>
+      </method>
+
+      <method name="_elementFromPoint">
+        <parameter name="aX"/>
+        <body><![CDATA[
+          var elements = this.hasChildNodes() ?
+                         this.childNodes :
+                         document.getBindingParent(this).childNodes;
+          var low = 0;
+          var high = elements.length - 1;
+
+          while (low <= high) {
+            var mid = Math.floor((low + high) / 2);
+            var element = elements[mid];
+            var bO = element.boxObject;
+            var x = bO.screenX;
+            if (x > aX)
+              high = mid - 1; 
+            else if (x + bO.width < aX)
+              low = mid + 1;
+            else
+              return element;
+          }
+
+          return null;
         ]]></body>
       </method>
 
@@ -303,12 +315,15 @@
               disableDownButton = true;
           }
 
-          this._scrollButtonUp.disabled = disableUpButton;
-          this._scrollButtonDown.disabled = disableDownButton;
+          if (this._scrollButtonUp.disabled != disableUpButton ||
+              this._scrollButtonDown.disabled != disableDownButton) {
+            this._scrollButtonUp.disabled = disableUpButton;
+            this._scrollButtonDown.disabled = disableDownButton;
 
-          var event = document.createEvent("Events");
-          event.initEvent("UpdatedScrollButtonsDisabledState", true, false);
-          this.dispatchEvent(event);
+            var event = document.createEvent("Events");
+            event.initEvent("UpdatedScrollButtonsDisabledState", true, false);
+            this.dispatchEvent(event);
+          }
         ]]></body>
       </method>
     </implementation>
@@ -536,53 +551,29 @@
           if (!this._isLTRScrollbox)
             scrollLeft = !scrollLeft;
           var targetElement;
-          var elements = this.hasChildNodes() ?
-                         this.childNodes :
-                         document.getBindingParent(this).childNodes;
 
           if (aEvent.detail == 2) {
             // scroll by the width of the scrollbox; make sure that the next
-            // partly-offscreen element will become fully visible.
+            // partly-hidden element will become fully visible.
             var scrollBox = this.scrollBoxObject;
             var edge = scrollBox.screenX;
-            if (scrollLeft) {
-              for (var i = 0; targetElement = elements[i]; i++) {
-                var x = targetElement.boxObject.screenX;
-                if (x < edge &&
-                    x + targetElement.boxObject.width + 1 >= edge)
-                  break;
-              }
-              if (!targetElement)
-                return;
-              edge = targetElement.boxObject.screenX +
-                     targetElement.boxObject.width - scrollBox.width;
-              while ((targetElement = targetElement.previousSibling))
-                if (targetElement.boxObject.screenX < edge)
-                  break;
-              if (targetElement)
-                targetElement = targetElement.nextSibling;
-            } else {
-              edge += scrollBox.width;
-              for (var i = 0; targetElement = elements[i]; i++) {
-                var x = targetElement.boxObject.screenX;
-                if (x <= edge &&
-                    x + targetElement.boxObject.width > edge)
-                  break;
-              }
-              if (!targetElement)
-                return;
-              edge = targetElement.boxObject.screenX + scrollBox.width;
-              while ((targetElement = targetElement.nextSibling))
-                if (targetElement.boxObject.screenX + targetElement.boxObject.width > edge)
-                  break;
-              if (targetElement)
-                targetElement = targetElement.previousSibling;
-            }
+            if (scrollLeft)
+              edge -= scrollBox.width;
+            else
+              edge += scrollBox.width * 2;
+            targetElement = this._elementFromPoint(edge);
+
+            if (targetElement)
+              targetElement = scrollLeft ?
+                              targetElement.nextSibling :
+                              targetElement.previousSibling;
           }
 
-          if (!targetElement)
+          if (!targetElement) {
             // scroll to the first resp. last element
-            targetElement = scrollLeft ? elements[0] : elements[elements.length - 1];
+            var container = this.hasChildNodes() ? this : document.getBindingParent(this);
+            targetElement = scrollLeft ? container.firstChild : container.lastChild;
+          }
 
           this.ensureElementIsVisible(targetElement);
         ]]></body>
