@@ -55,11 +55,6 @@ protected:
   nsSVGFE(nsINodeInfo *aNodeInfo) : nsSVGFEBase(aNodeInfo) {}
   nsresult Init();
 
-  PRBool ScanDualValueAttribute(const nsAString& aValue, nsIAtom* aAttribute,
-                                nsSVGNumber2* aNum1, nsSVGNumber2* aNum2,
-                                NumberInfo* aInfo1, NumberInfo* aInfo2,
-                                nsAttrValue& aResult);
-
   struct ScaleInfo {
     nsRefPtr<gfxImageSurface> mRealSource;
     nsRefPtr<gfxImageSurface> mRealTarget;
