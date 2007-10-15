@@ -934,7 +934,7 @@ BookmarksSyncService.prototype = {
       }
 
       if (clientConflicts.length || serverConflicts.length) {
-        this._log.error("\nWARNING: Conflicts found, but we don't resolve conflicts yet!\n");
+        this._log.warn("Conflicts found!  Discarding server changes");
       }
 
       // 3.1) Apply server changes to local store
