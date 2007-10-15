@@ -64,7 +64,7 @@ import ffsetup
 if platform.system() == "Linux":
     from cmanager_linux import *
     platform_type = 'unix_'
-elif platform.system() == "Windows":
+elif platform.system() in ("Windows", "Microsoft"):
     from cmanager_win32 import *
     platform_type = 'win_'
 elif platform.system() == "Darwin":
