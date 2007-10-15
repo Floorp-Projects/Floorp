@@ -49,7 +49,7 @@ import subprocess
 
 if platform.system() == "Linux":
     from ffprocess_linux import *
-elif platform.system() == "Windows":
+elif platform.system() in ("Windows", "Microsoft"):
     from ffprocess_win32 import *
 elif platform.system() == "Darwin":
     from ffprocess_mac import *
